@@ -1,33 +1,34 @@
-From: hpa@zytor.com (H. Peter Anvin)
-Subject: People using RAID-6?
-Date: Fri, 13 Feb 2004 06:20:56 +0000 (UTC)
+From: Dominik Kubla <dominik@kubla.de>
+Subject: Re: RAIDn technology
+Date: Fri, 13 Feb 2004 08:10:15 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <c0hqc8$fvv$1@terminus.zytor.com>
+Message-ID: <20040213071015.GB1555@intern.kubla.de>
+References: <Pine.LNX.4.44.0402111508210.8702-100000@picard.science-computing.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44.0402111508210.8702-100000@picard.science-computing.de>
+To: Oliver Tennert <tennert@science-computing.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-People, if you actually use RAID-6, please do let me know.  I'd like
-to gauge the size of the user commnunity; it's going to matter a lot
-for how stable it can be assumed to be.
+On Wed, Feb 11, 2004 at 03:20:05PM +0100, Oliver Tennert wrote:
+> 
+> Hello,
+> 
+> has anybody ever heard of RAID^n technology, developed and patented by a
+> company called Inostor (http://www.inostor.com)?
 
-Please include the # of disks as well as if you have had any
-recoveries.
+Yes. Similiar to the RAID6 apporach of the md device. Tandberg Data. seems to
+be using it.  There is a (german language article) by somebody from Tandberg
+at:
+http://www.speicherguide.de/magazin/background.asp?theID=112
 
-	-hpa
---=20
-PGP public key available - finger hpa@zytor.com
-Key fingerprint: 2047/2A960705 BA 03 D3 2C 14 A8 A8 BD  1E DF FE 69 EE =
-35 BD 74
-"The earth is but one country, and mankind its citizens."  --  Bah=E1'u=
-'ll=E1h
-Just Say No to Morden * The Shadows were defeated -- Babylon 5 is renew=
-ed!!
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Just asking google for "RAIDn" will give you a bunch of references...
+
+Regards,
+  Dominik Kubla
+-- 
+When God created two sexes, he may have been overdoing it.
+		-- Charles Merrill Smith
