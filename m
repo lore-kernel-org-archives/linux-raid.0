@@ -1,52 +1,42 @@
-From: Song Pan <pansong@ookyy.com>
-Subject: Howto recover 2 SoftRaid 5 device fail
-Date: Fri, 28 Nov 2003 20:48:29 +0000
+From: Ricky Beam <jfbeam@bluetronic.net>
+Subject: Re: RAID1 always resyncs at boot???
+Date: Sat, 29 Nov 2003 22:31:37 -0500 (EST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3FC7B49D.6020207@ookyy.com>
+Message-ID: <Pine.GSO.4.33.0311292206580.13188-100000@sweetums.bluetronic.net>
+References: <hp1ps8.7u9xet@mail.drtebi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <hp1ps8.7u9xet@mail.drtebi.com>
+To: drtebi@drtebi.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Help:
+On Thu, 27 Nov 2003 drtebi@drtebi.com wrote:
+>Trying to mark the drive faulty and add it back in (as described in the man
+>page) does not work. But I suppose that couldn't, since it's already faulty.
 
-I got power fail on my server(I was stupid enough to unplug the wrong
-cable). After reboot, my SoftRAID 5, /dev/md4 device is no longer
-working. It got 6 device in total and two of them /dev/sda2 and
-/dev/sdb2 is out of sync.
+Of course, you could remove it completely (RAID doesn't even know it exists)
+and proceed.  I would suggest this followed by a zero'ing (dd if=/dev/zero)
+of the suspect drive.  If you still see errors, check it's warantee status.
 
-The kernel message shows following:
+>However, if I do the "unplugged concert" again, and the RAID fails to
+>reconstruct again, what do you suggest? Try another power supply? Give it up,
+>spend $200 more on SCSI drives? ...
 
-kernel: md: superblock update time inconsistency -- using the most
-recent one
-Nov 28 18:33:59 kernel: md: freshest: hda7
+No, buy more cheap IDE drives.  One chooses IDE because they are cheap
+with the understanding they will need to be replaced about once every one
+to two years.  Your mileage may vary... I've been around computers for
+20 years; I've never seen a SCSI drive bad right out of the box.  I've
+seen dozens of still-born IDE drives. (and at least one that should never
+have been boxed. the low-level format of that drive failed, why they
+put a controller on it and sold it is beyond me.)
 
-The raidtab configure is following:
+Personally, when I care about the bits, I'll gladly pay more for drives
+that have actually been tested and certified to last more than a week.
+However, most people only see $$$ and don't see the headaches that
+come from lost data.
 
-riaddev /dev/md4
-raid-level 5
-nr-raid-disks 6
-chunk-size 64k
-persistent-superblock 1
-nr-spare-disks 0
-/dev/hda7
-/dev/hdc7
-/dev/hde2
-/dev/hdg2
-/dev/sda2
-/dev/sdb2
-
-I read the Softraid howto, and it seems I can use "mkraid --force" to
-get my data back. Is this ok with my situation?
-
-I am using redhat 9.0
-
-thanks
-
-
-
-
+--Ricky
 
 
