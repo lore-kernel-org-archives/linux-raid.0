@@ -1,64 +1,59 @@
-From: dean gaudet <dean-list-linux-raid@arctic.org>
-Subject: Re: reconstructing raid5 with bad sectors
-Date: Mon, 4 Aug 2003 11:36:32 -0700 (PDT)
+From: "Ryan P. Joseph" <rjoseph@jaw.lanl.gov>
+Subject: Faulty disk detection code: looking to tweak it for network devices
+Date: Mon, 4 Aug 2003 16:27:44 -0600 (MDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.53.0308041128110.21796@twinlark.arctic.org>
-References: <Pine.LNX.4.53.0308041002360.21796@twinlark.arctic.org>
- <20030804181415.GA3575@willow.seitz.com>
+Message-ID: <Pine.LNX.4.44.0308041612440.965-100000@jaw.lanl.gov>
+Reply-To: rjoseph@kerr.lanl.gov
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20030804181415.GA3575@willow.seitz.com>
-To: Ross Vandegrift <ross@willow.seitz.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hello,
 
+My group here at LANL is attemping to create commodity distributed disk arrays
+with open source software to achieve good price/performance ratios.  To that
+end, we use the network block device (NBD) in linux for our network transport.
+Yes, we've looked pretty deeply into ENBD but for various reasons (namely it's
+"intelligent RAID" is only RAID-1) it didn't fit the bill.
 
-On Mon, 4 Aug 2003, Ross Vandegrift wrote:
+However, we've run into a problem: our cluster (space-simulator.lanl.gov) is
+our test-bed (because each node has a basically unused hard disk), and it is
+under constant use (as you would expect, it's a simulation machine).
 
-> On Mon, Aug 04, 2003 at 10:08:15AM -0700, dean gaudet wrote:
-> > is there an offline tool which can reconstruct such an array?  or even an
-> > offline tool which already has the parity calculation code and such which
-> > i could extend to support such reconstruction?
-> >
-> > i considered copying the two bad disks with "dd conv=noerror,sync", which
-> > would stop the kernel from marking the drives as bad, but that seems a bit
-> > less than ideal because i really would like to reconstruct the bad stripes
-> > using the 3 valid copies and not include an all-zeroes copy created by dd.
->
-> dd_rescue sounds like your friend - it'll let you make raw backups of
-> the partitions, but instead of quitting on errors, it'll keep going
-> until it passes the bad areas.  You'll probably need a few disks to use
-> as dd_rescue targets, but once you have images of the needed partitions,
-> rebuild should work fine (assuming of course, that you're correct in saying
-> the errors never overlap).
+Because of the use on the Space Simulator, network congestion is quite common,
+and when the network gets congested, if any of the node's NBD devices are in a
+running RAID array, that disk is immediatley marked as failed and the RAID
+array goes into degraded mode.
 
+This is quite a problem when it comes to fairly large (1-2TB) arrays, because
+the time required to resync them over the network is tremendous and places a
+heavy load on the switch, slowing the entire cluster down.
 
-hmm i don't see what dd_rescue does which "dd conv=noerror,sync" doesn't
-do.
+What I'd *like* to do (yes, I know about ENBD's "intelligent" RAID and the
+"fr" fast RAID device, but both only allow RAID-1, which is completley against
+the point of providing a very large disk array as we loose a huge amount of
+disk space using it) is to locate - in the kernel RAID drivers - where a disk
+is marked as faulty and add some network-intelligent code that would basically
+just hold off marking that disk faulty for a specified period of time, as 95%
+of the time the network will "fix itself" and the NBD device will come back.
 
-i did use "dd conv=noerror,sync" to copy the dead disks to other new disks
--- and with that i can bring up the array (in degraded mode because i
-don't want reconstruction to occur).
+I've managed to track down the faulty disk detection to raid5.c,
+raid5_end_read_request() and raid5_end_write_request() (I'm really only
+interested in RAID-5 at the moment).  However, all I can really tell is that
+these methods get called quite a bit, and when the device "fails", the call
+md_error() to make this known.
 
-but the problem is that this doesn't help me recover my data from the
-stripes which had errors.
+So, my real question is: where in the blazes does the MD/RAID system actually,
+really, seriously detect a failed disk?!  And when it does this, what is the
+path of function calls taken to say "hey, this disk is failed, don't use it!"?
 
-i.e. my sitation is like this, for some stripes i've got:
+Thanks for the help!
+Ryan Joseph
 
-	{ good, good, unreadable, good }
+-- 
+Ryan P. Joseph                    T-6 Theoretical Astrophysics
+rjoseph@lanl.gov                        TA 3, SM 123 - MS B227
+505-664-0830                    Los Alamos National Laboratory
 
-dd or dd_rescue create this situation:
-
-	{ good, good, all zeros, good }
-
-which doesn't help recovery... knowing which sectors are unreadable in the
-first case i can recover the entire stripe by redoing the parity
-calculation -- which would let me write out the proper data to a new disk.
-
-this is basically what the online raid recovery does, but the online
-recovery only supports "good/bad" on a per-disk granularity, rather than
-on a per-stripe granularity.
-
--dean
