@@ -1,100 +1,68 @@
-From: Mike Tran <mhtran@us.ibm.com>
-Subject: Re: many ide drives, raid0/raid5
-Date: 03 Nov 2003 10:02:45 -0600
+From: AndyLiebman@aol.com
+Subject: Drives labeled as faulty by mdadm but are present
+Date: Tue, 4 Nov 2003 13:11:33 EST
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1067875365.1947.2.camel@dyn95395183.austin.ibm.com>
-References: <20031102031713.GA3464@squat.noreply.org>
+Message-ID: <147.1bd05af5.2cd945d5@aol.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20031102031713.GA3464@squat.noreply.org>
-To: Florian Reitmeir <squat@riot.org>
-Cc: linux-raid@vger.kernel.org, evms-devel@lists.sourceforge.net
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Florian,
+Hi, 
 
-I am forwarding this to EVMS list.  This seems like a EVMS related
-problem.
+I'm puzzled. I have 6 Firewire drives -- sda1-sdf1 -- in a RAID 10 array. 
 
-Regards,
-Mike T.
+Each drive has only one primary partition. I have three pairs of RAID 1 
+arrays. On top of that I have a RAID 0 array using all six drives. 
 
-On Sat, 2003-11-01 at 21:17, Florian Reitmeir wrote:
-> Hi,
-> 
-> i'm using on the machine kernel 2.6.0-test6-mm1 and 15 IDE Drives. Everything worked fine (uptime about 30 days)
-> I used, some raid5's, below some raid0's and on top evms.
-> 
-> heres "cat /proc/mdstat" so its more clear
-> 
-> ============ cut 
-> Personalities : [raid0] [raid5]
-> md4 : active raid5 hdp[2] hdo[1] hdn[0]
->       120627072 blocks level 5, 32k chunk, algorithm 2 [4/3] [UUU_]
-> 
-> md3 : active raid0 hdm[1] hdl[0]
-> 			49956352 blocks 32k chunks
-> 
-> md0 : inactive hdc[0]
-> 			80418176 blocks
-> unused devices: <none>
-> ============ cut 
-> 
-> here are some drives missig, 
-> 	md0, is one drive missing
-> 	md1, complete
-> 	md2, also
-> 									
-> when i make a "evms_activate" i get
-> 
-> 
-> ========= CUT
-> MDRaid5RegMgr: Region md/md4 object index 3 is faulty. Array may be degraded.
-> MDRaid5RegMgr: Region md/md4 disks array not zeroed
-> MDRaid5RegMgr: Region md/md4 has disk counts that are not correct.
-> MDRaid5RegMgr: RAID5 array md/md4 is missing the member md/md3 with RAID index 3.  The array is running in degrade mode.
-> LvmRegMgr: Container lvm/rubbish has incorrect number of objects!
-> LvmRegMgr: Looking for 3 objects, found 2 objects.
-> LvmRegMgr: A UUID is recorded for PV 3, but PV 3 was not found.
-> LvmRegMgr:      UUID: vWAf1j-veQx-IDk7-SaJ0-dhga-Lase-rQ9ydR
-> LvmRegMgr: Container lvm/rubbish has a UUID recorded for PV 3, but PV 3 was not found. Would you like to remove PV 3 from container lvm/rubbish *PERMANENTLY*?
-> 
-> You should only remove this PV if you know the PV will *NEVER* be available again. If you think it is just temporarily missing, do not remove it from the container.evms_activate: Responding with default selection "Don't Remove".
-> LvmRegMgr: Would you like to fix the metadata for container lvm/rubbish?
-> evms_activate: Responding with default selection "Don't Fix".
-> LvmRegMgr: Region lvm/rubbish/basket has an incomplete LE map.
-> Missing 7327 out of 14359 LEs.
-> MDRaid5RegMgr: RAID5 array md/md2 is missing the member  with RAID index 3.  The array is running in degrade mode.
-> MDRaid0RegMgr: Region md/md1 object index incorrect: is 0, should be 1
-> MDRaid0RegMgr: Region md/md1 object index 1 is greater than nr_disks.
-> MDRaid0RegMgr: Region md/md1 object index 1 is in invalid state.
-> MDRaid0RegMgr: Region md/md1 disk counts incorrect
-> Engine: Error code 5 (Input/output error) when reading the primary copy of feature header on object lvm/rubbish/basket.
-> Engine: Error code 5 (Input/output error) when reading the secondary copy of feature header on object lvm/rubbish/basket.
-> MDRaid0RegMgr: Region md/md1 object index incorrect: is 0, should be 1
-> MDRaid0RegMgr: Region md/md1 object index 1 is greater than nr_disks.
-> MDRaid0RegMgr: Region md/md1 object index 1 is in invalid state.
-> MDRaid0RegMgr: Region md/md1 disk counts incorrect
-> MDRaid0RegMgr: Region md/md1 object index incorrect: is 0, should be 1
-> MDRaid0RegMgr: Region md/md1 object index 1 is greater than nr_disks.
-> MDRaid0RegMgr: Region md/md1 object index 1 is in invalid state.
-> MDRaid0RegMgr: Region md/md1 disk counts incorrect
-> ========= CUT
-> 
-> 
-> or in other words, its a mess. I verfied, all drives are found and work correct, so its "only" the meta information which is broken, i uses evmsgui to configure the whole thing, so there is no raidtab file, which i could use to force the configuration.
-> 
-> I also tried newer Kernel versions, but there is a timing problem i think, i use promise ide-pci controllers, and the new test9 always tries to reset those with UDMA(i think so), which won't work with that many drives.
-> 
-> So, is there someone who can help me ? 
-> 
-> --
-> mfG Florian Reitmeir
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
--- 
+I just had to reinstall Mandrake 9.2. After successful installation, when I 
+tried to activate the arrays with mdadm (I saved the uuid information for each 
+array, of course) , two of the drives came up as faulty. 
 
+When I ran  mdadm -E /dev/sdX1   on each drive, I saw that there were indeed 
+two drives with each of the three uuid's. In other words, all of the required 
+drives with the correct uuids were found. The two drives marked "faulty" say 
+"dirty, no errors" -- and they have uuids that match two of the other drives 
+that ARE active. 
+
+And when I run  mdadm -Av uuid={string of numbers/letters} /dev/md0  or   
+/dev/md2, mdadm tells me that 2 drives have been found but it's only starting the 
+array with one drive. 
+
+My questions are:  
+
+1)  Does anybody know why this has happened? It is likely that the device ids 
+changed for my drives with this Mandrake reinstallation because I moved 
+around one of my PCI firewire cards to a different slot. Is it possible that, as a 
+result Linux Raid getting confused about which of the two drives in each array 
+is supposed to be the "main drive" and which is the "copy"? Does that matter? 
+
+2)  At this point, Is there a way to reactivate the faulty drives without 
+having to resync the arrays? 
+
+3)  If the answer to number 2 is "no", what do I have to do to get the faulty 
+drives back into the arrays? 
+
+4)  Do you think this could have anything to do with using the XFS filesystem 
+on those arrays? 
+
+
+
+Finally, I have one more question. 
+
+When I reinstalled Mandrake 9.2, the installation program detected that the 
+arrays were there. (Last time I installed Mandrake, I built the arrays AFTER 
+installation) 
+
+So now each time I boot up Linux, I see that the raid autostart is being 
+detected on my drives. I never used to see this before this re-install  -- even 
+after creating the arrays. I want to start my arrays manually after each boot 
+up. I don't want them to start automatically. I don't even want Linux to try to 
+start them automatically. 
+
+Have I gotten myself into an unstable situation? If so, how do I correct it? 
+
+
+Thanks in advance for your help. 
