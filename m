@@ -1,42 +1,33 @@
-From: anthony mayes <anmayes@siue.edu>
-Subject: Re: raid0 + raid1 question
-Date: Thu, 09 Oct 2003 16:00:11 -0500
+From: Maurice Hilarius <maurice@harddata.com>
+Subject: interesting md problem
+Date: Thu, 09 Oct 2003 17:45:42 -0600
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3F85CC5B.5020107@siue.edu>
-References: <3F84793F.6060400@siue.edu> <1065729282.10027.127.camel@localhost.localdomain>
+Message-ID: <5.1.1.6.2.20031009170729.0718b5a0@mail.harddata.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1065729282.10027.127.camel@localhost.localdomain>
-To: "Rechenberg, Andrew" <ARechenberg@shermanfinancialgroup.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Rechenberg, Andrew wrote:
+I ran into an interesting problem:
 
->We actually used to backup our data in this fashion, but we used a
->triple mirror.  We had three hardware RAID arrays and then we used Linux
->software RAID to mirror those three (i.e. /dev/hdc1, /dev/hdd1, and
->/dev/hde1).  At night we used mdadm to break the mirror, mount the
->removed partition and backup, and then add the partition back in and
->re-mirror.
->
-Exactly what we do now.
+Machine is built around a Tyan S2880 dual Opteron motherboard.
+Memory installed is 6GB.
 
->The database is unavailable for less than 1 minute while the snapshot is
->taken (it actually takes less than 10 seconds to snapshot ~360GB, the
->other time is just the script sleeping, making sure all transactions
->complete).  This solution ensures a consistent database, while also
->having near-line backups available on disk.
->
-I'm assuming the snapshot it the same size as the FS to backup.  What if 
-you don't have enough disk space to do this?
+Install is Red Hat Taroon, version 2
+64 bit environment.
 
--- 
-Anthony Mayes
-UNIX Server Administration
-Southern Illinois University Edwardsville
-anmayes@siue.edu
+2 IDE disk running on the motherboard, set up as RAID1
 
+We can load the system, fdisk the drives, do all manner of things in a 
+normal fashion.
+
+The moment we load the md driver the system locks up hard.
+
+IF we set the kernel boot line to tell it to use under 4GB, no problems.
+
+So as to avoid re-inventing any wheels I thought to post this here in hope 
+somebody would know something..
+
+Thanks!
 
