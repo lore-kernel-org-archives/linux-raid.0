@@ -1,21 +1,50 @@
-From: Gordon Henderson <gordon@drogon.net>
+From: "Guy" <bugzilla@watkins-home.com>
 Subject: RE: Good news / bad news - The joys of RAID
-Date: Mon, 22 Nov 2004 23:26:48 +0000 (GMT)
-Message-ID: <Pine.LNX.4.56.0411221754520.4195@lion.drogon.net>
-References: <200411221751.iAMHpAN32404@www.watkins-home.com>
+Date: Mon, 22 Nov 2004 18:48:14 -0500
+Message-ID: <200411222348.iAMNmJN01404@www.watkins-home.com>
+References: <Pine.LNX.4.56.0411221754520.4195@lion.drogon.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200411221751.iAMHpAN32404@www.watkins-home.com>
+In-Reply-To: <Pine.LNX.4.56.0411221754520.4195@lion.drogon.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Guy <bugzilla@watkins-home.com>
+To: 'Gordon Henderson' <gordon@drogon.net>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+Amanda...
+I looked into this about 2 years ago.  From what I found, each daily backup
+used a different tape.  This is crazy!  I can put 10-20 days on 1 tape.
+Maybe more, not really sure.  Of course it is based on how much data changes
+each day.  So, my full backups are only needed about once every 2-3 weeks.  
+
+Since Amanda uses up too many tapes, I use a home grown set of scripts that
+maintain the tape position and use cpio for the backup.
+
+Do you know if the above is true about Amanda?
+
+About tape age.  I know of a system that has DLT tapes that are over 7 years
+old.  They have 21 tape drives total in 7 tape juke boxes.  No idea about
+the number of tapes, but well over 4000.  These very in age from less than 1
+year to over 7 years old.  They also have 2 copies of all data.  So, if a
+tape fails, just find the copy.  Also make a new copy to maintain 2 copies.
+
+Guy
+
+-----Original Message-----
+From: Gordon Henderson [mailto:gordon@drogon.net] 
+Sent: Monday, November 22, 2004 6:27 PM
+To: Guy
+Cc: linux-raid@vger.kernel.org
+Subject: RE: Good news / bad news - The joys of RAID
 
 On Mon, 22 Nov 2004, Guy wrote:
 
 > Yes, I was going for affordable!  A tape drive with native capacity of 160
-> Gig costs over $2600 US (SDLT).  And tapes cost $89 each.  You need to do a
+> Gig costs over $2600 US (SDLT).  And tapes cost $89 each.  You need to do
+a
 > lot of backups before tapes cost less than an IDE disk.  An IDE disk is so
 > much faster too.
 
@@ -40,7 +69,8 @@ again though)
 > I am sure you could get a quantity discount on tapes, but disk drives too.
 >
 > Now we just need to be able to hot plug ultra 100 disk drives.
-> SATA hardware supports hot plug, but I read Linux does not support that yet.
+> SATA hardware supports hot plug, but I read Linux does not support that
+yet.
 
 I've had good results with SCSI hot pluggability and with a FireWire drive
 where the underlying hardware uses the SCSI stack, also with USB mass
@@ -56,7 +86,8 @@ like SCSI drives might be the way to go...
 > business should have 2 copies where one goes off site.  I did have a power
 > supply fail in a way that it fried everything in the box.  I think line
 > voltage was send directly to the 12V or 5V line.  DVD drive, disk drive,
-> motherboard, RAM, video card, ... all gone.   So if my backups were on-line
+> motherboard, RAM, video card, ... all gone.   So if my backups were
+on-line
 > with the same power supply as the main disk(s), all would have been lost.
 
 Ouch. I've not had anythng this bad, (yet?) Different businesses have
@@ -72,7 +103,8 @@ but usable, and as these are 200 miles away from me, I need these to be as
 reliable as possible within the money restaints put upon me by my client
 (mutter)
 
-> Some people seem to think tape is better than disk.  Somehow since there is
+> Some people seem to think tape is better than disk.  Somehow since there
+is
 > no filesystem, so you can't delete a file by mistake.  So, fine, just use
 > the disk drive the same way.  Use cpio and output to /dev/hda or similar.
 
@@ -84,8 +116,10 @@ for many years no - PITA to setup, but once going, it's very good (with
 tapes, anyway - I'm not actually sure I'll be able to get it to backup to
 individual files on the single drive)
 
-> The only thing tapes have that is better than disk drives is the eof and eot
-> marks.  I can put 10-20 daily backups on the same tape and let the hardware
+> The only thing tapes have that is better than disk drives is the eof and
+eot
+> marks.  I can put 10-20 daily backups on the same tape and let the
+hardware
 > track the position of each backup.  With disk, you would need to count the
 > blocks used, and track the start and length of each.  Or you could use a
 > file system, but like I said, some people seem to think that has too much
@@ -102,3 +136,4 @@ again... (The good side is that densities have improved immensely, so
 long-term storage costs ought to decrease...)
 
 Gordon
+
