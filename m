@@ -1,39 +1,36 @@
-From: Daniel Brahneborg <daniel.com@wtnord.net>
-Subject: Re: Status of Promise drivers?
-Date: Sat, 10 Jan 2004 16:14:29 +0100
-Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <20040110161429.B6153@nettis.grimsta>
-References: <20031230200012.C14399@nettis.grimsta> <3FF1CCC1.3050304@pobox.com> <20031230202447.D14399@nettis.grimsta> <3FF1D8AE.2000107@pobox.com> <20031230211826.F14399@nettis.grimsta> <3FF1DF2B.3000501@pobox.com>
+From: "Stephen Hargrove" <stephen@exitwound.org>
+Subject: Re: Bad Recovery
+Date: Sat, 10 Jan 2004 14:08:23 -0600 (CST)
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <3460.192.168.1.81.1073765303.squirrel@exitwound.org>
+References: <4648.192.168.1.81.1073694507.squirrel@exitwound.org>
+    <20040110124512.GB5928@percy.comedia.it>
+Reply-To: stephen@exitwound.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <3FF1DF2B.3000501@pobox.com>; from jgarzik@pobox.com on Tue, Dec 30, 2003 at 03:25:15PM -0500
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20040110124512.GB5928@percy.comedia.it>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Dec 30, 2003 at 03:25:15PM -0500, Jeff Garzik wrote:
-> For VIA SATA, neither IDE nor libata program the chipset 100%, so I'm 
-> not surprised you're seeing failures.  I'm working with VIA to get more 
-> details as we speak.  They've been helpful so far.  I would recommend 
-> sata_via over the generic IDE driver, but that's sorta a toss-up at present.
+Luca Berra said:
+> On Fri, Jan 09, 2004 at 06:28:27PM -0600, Stephen Hargrove wrote:
+>># mdadm -a /dev/hde1
+>>mdadm: /dev/hde1 does not appear to be an md device
+>
+> syntax is: mdadm /dev/md<number> -a /dev/hde1
 
-I've made some tests with 2.6.1 and 2.6.1-mm2.
 
-Good news: RAID1 works on two SATA disks with the IDE VIA
-driver (via82cxxx).  At least after a while (see below).
+Oh man ... I can't believe I screwed that up.  This did it.  Thanks!
 
-Bug 1: Doing a "modprobe via82cxxx" fails, since it tries to
-aquire ide0 and ide1 even though they are used by other drivers.
-Statically linked, it takes ide2 and ide3, just as it should.
-My ide0 and ide1 are PATA connectors that I'd like to keep
-even though the SATA connectors are activated.  The siimage
-driver behaves correctly here, but only with the -mm2 version.
-
-Bug 2: Using the RAID1 array while it is being synced causes
-data corruption.  When the sync is complete, everything seems
-to work fine.
-
-/Basic
+--
+Steve
+------------------------------------------
+http://www.exitwound.org......hard to find
+http://www.buckowensfan.com...he's the man
+------------------------------------------
+On some days, it's hard to believe I
+out-swam a million other sperm.
+------------------------------------------
 
