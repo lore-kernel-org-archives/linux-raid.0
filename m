@@ -1,39 +1,74 @@
-From: Stephan van Hienen <raid@a2000.nu>
-Subject: Re: non-optimal RAID 5 performance with 8 drive array
-Date: Sun, 6 Mar 2005 18:09:02 +0100 (CET)
-Message-ID: <Pine.LNX.4.61.0503061808320.10115@adsl.a2000.nu>
-References: <42246D1F.3070407@variant.ch>  <Pine.LNX.4.61.0503061516330.3998@adsl.a2000.nu>
- <1110120198.2032.11.camel@zwerg.variant.ch>
+From: <gawallace@voyager.net>
+Subject: =?koi8-r?B?bm93IHN1cGVyIHNpdGUgbmV3?=
+	=?koi8-r?B?IGZvciBjaHxsZHJlbiQgcGFz?=
+	=?koi8-r?B?czogaDM3bDhhdQ==?=
+Date: Sun, 6 Mar 2005 23:21:54 -0500
+Message-ID: <001d01c4e7a8$88992f8c$6afc6e7d@qwq>
+Reply-To: <mprof@globetrotter.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-In-Reply-To: <1110120198.2032.11.camel@zwerg.variant.ch>
+Content-Type: multipart/mixed;
+        boundary="----=_NextPart_000_0019_01C46E7D.6AFC2F8C"
 Sender: linux-raid-owner@vger.kernel.org
-To: Nicola Fankhauser <nicola.fankhauser@variant.ch>
-Cc: RAID Linux <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, 6 Mar 2005, Nicola Fankhauser wrote:
+------=_NextPart_000_0019_01C46E7D.6AFC2F8C
+Content-Type: text/plain;
+        charset="koi8-r"
+Content-Transfer-Encoding: quoted-printable
 
-> hi
->
-> On Sun, 2005-03-06 at 15:25, Stephan van Hienen wrote:
->> which kernel are you using ?
->
-> currently 2.6.8.
->
->> 2.4:
->> write 100MB/s
->> read  140MB/s
->>
->> 2.6
->> write 100MB/s
->> read  280MB/s
->
-> are you sure that 2.6 gives you better read performance than 2.4? it's
-> been reported the other way 'round.
 
-oops typo
-2.4 does 280MB/s
-and 2.6 140MB/s
+cl!ent expens!
+t5 scandalous material new ch|ldren$
+hELL0 DEAR USERS!         3 new site
+,fascinat|ng, ,sIx ,,super, site new for ,ch|ldren$, new new new,
+          ,scandal0us, ,materIa|, ,new, ,ch|ldren$, ,p0rn0,..
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+if link:does not work click in minute! do not delete letter and link will w=
+ork. +THROUGH MINUTE+
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+ftp://v5508:xnauxgog@66.55.132.2/public_html/good/site.htm
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+http://www.suppornowmasrcpnowsitego.com
+if link:does not work click here below..
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+if link:does not work click here below..
+http://webgo.newglobalnewsitegoldsecret.com
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+if link:does not work click here below..
+http://www.geocities.com/newgoodeshol727/indexxx.html
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3Dif link:does not work click here below..
+if link:does not work click here below..  http://www.geocities.com/newgoode=
+sholes111/indexxxx.html
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+GOOD BYE!
+Your mail is linux-raid@vger.kernel.org
+Your  fax=20
+
+[/cyrlat]p ch|ldren$ new site p0rn0
+
+
+if link:does not work click in minute! do not delete letter link will work.=
+ +THROUGH MINUTE+
+http://www.wwwretdnewsite.com
+ftp://consultwerwww1:3rehydoLityl@wwwretdnewsitecesre.com/wwwretdnewsiteces=
+re.com/site.htm
+if link:does not work click in minute! do not delete letter link will work.=
+ +THROUGH MINUTE+
+
+
+------=_NextPart_000_0019_01C46E7D.6AFC2F8C--
 
 
