@@ -1,55 +1,64 @@
-From: Evan Felix <evan.felix@pnl.gov>
-Subject: Re: 3ware JBOD
-Date: Mon, 01 Mar 2004 12:50:20 -0800
+From: Corey McGuire <coreyfro@coreyfro.com>
+Subject: Re: Bizarre RAID "failure"
+Date: Tue, 2 Mar 2004 08:56:53 -0800
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1078174220.3010.13.camel@e-linux>
-References: <40429940.9000408@sauce.co.nz>
+Message-ID: <200403020856.53518.coreyfro@coreyfro.com>
+References: <1077230692.28817.485.camel@s8n-1.thereinc.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: <40429940.9000408@sauce.co.nz>
-To: Richard Scobie <richard@sauce.co.nz>
+In-Reply-To: <1077230692.28817.485.camel@s8n-1.thereinc.com>
+Content-Disposition: inline
+To: Tom Maddox <tmaddox@thereinc.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-You will have to look In the bios setup screens to make sure all the
-drives are in the 'Available Drives' Section.  If I remember right they
-have to be here to show up in linux as separate drives.
 
-It may be holding the drives as 'previously used' and not as availible.
+I don't know if this till help, but I was having lots of trouble with my promise controllers until 2.4.23... before that, they were locking up drives all the time.  I had one drop out entirely, with two drives.  I had to rebuild a raid5 with two dead drives.
 
-These options may be different as I think we have different Cards than
-you.  
+Once I upgraded, I stopped having such trouble.
 
-Evan
+One more thing I might add, I too had 3 promise controllers and that was hard to manage as well.  I moved two drives to my onboard controller which not only made things a bit less flaky (I am assuming 33% less flaky) but also seemed to speed things up (later VIA chipsets take the HDD controller off of the PCI bus, and three PCI HDD controllers can easily saturate that.)
 
-On Sun, 2004-02-29 at 18:00, Richard Scobie wrote:
-> I have a 3ware 7506-4LP with 4 x 250 which when first installed showed 
-> up in the system as SCSI devices sda-d.
+On Thursday 19 February 2004 02:44 pm, Tom Maddox wrote:
+> Hi, all,
 > 
-> I built and tested various software RAID arrays on it, then decided to 
-> try various hardware arrays, which tested fine.
+> I'm encountering a bizarre problem with software RAID 5 under Linux that
+> I'm hoping someone on this list can help me solve or at least
+> understand.
 > 
-> Wishing to go back and build some more linux software arrays, I used the 
-> 3ware CLI utility to delete the array.
+> I've got a box running Red Hat 7.3 with SGI's 2.4.18 XFS 1.1 kernel. 
+> It's using three FastTrak TX 2000 (PDC20271) cards in non-RAID mode with
+> three Western Digital 200 GB drives.  I'm using those controllers
+> because they were handy and they support large drives.  The drives are
+> in an XFS-formatted RAID 5 array using md, which has never given me
+> problems before.  In this case, however, I'm running into some seriously
+> anomalous behavior.
 > 
-> Now, when I boot up, although all 4 drives show up in the 3ware BIOS, 
-> dmesg now shows:
+> If the system goes down unexpectedly (e.g., because of a power failure),
+> the RAID array comes back up dirty and begins to rebuild itself, which
+> is odd enough on its own.  What's worse is that, whenever this happens,
+> the rebuild hangs at about 2.4%.  When it reaches that point, the array
+> becomes totally nonresponsive--I can't even query its status with mdadm
+> or any other tool, although I can use "cat /proc/mdstat" to see the
+> status of the rebuild.  Any command that attempts to access the RAID
+> drive hangs.
 > 
-> SCSI subsystem driver Revision: 1.00
-> 3ware Storage Controller device driver for Linux v1.02.00.037.
-> 3w-xxxx: No valid units for card 0.
-> scsi0 : Found a 3ware Storage Controller at 0x7000, IRQ: 28, P-chip: 1.3
-> scsi0 : 3ware Storage Controller.
+> My assumption would normally be that there's a hardware failure
+> somewhere, but I've swapped out each component individually (including
+> cables!) and the same problem keeps happening.
 > 
-> Can anyone please tell me how I get to see sda-d again?
+> Has anyone seen this behavior before, and can you recommend a solution?
 > 
-> Regards,
+> Thanks,
 > 
-> Richard
+> Tom
 > 
 > -
 > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
