@@ -1,47 +1,98 @@
-From: Andrew Hogue <hogue@cs.yorku.ca>
-Subject: Re: recommended sata controllers?
-Date: Tue, 18 Nov 2003 14:33:45 -0500 (EST)
+From: "James R Bamford" <jim@jimtreats.com>
+Subject: HELP.. how to remove a spare drive i accidently added
+Date: Tue, 18 Nov 2003 20:12:16 -0000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.56.0311181431340.11397@nemesis.cs.yorku.ca>
-References: <Pine.LNX.4.44.0311181027270.20994-100000@coffee.psychology.mcmaster.ca>
+Message-ID: <PPEOJEIEFLAONFNHJPOOKEHMGOAA.jim@jimtreats.com>
+References: <Pine.LNX.4.56.0311181431340.11397@nemesis.cs.yorku.ca>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44.0311181027270.20994-100000@coffee.psychology.mcmaster.ca>
-To: Mark Hahn <hahn@physics.mcmaster.ca>
-Cc: linux-raid@vger.kernel.org
+In-Reply-To: <Pine.LNX.4.56.0311181431340.11397@nemesis.cs.yorku.ca>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+Help..
 
-I tried the Adaptec 1210-SA, however it's linux drivers are only for stock
-redhat 7.2 and redhat 8 kernels... and its closed source.  So I wouldn't
-recommend it until they open it up.
+as in i came home early to test and then to rebuild the array that just
+takes ages..
 
-I'm currently using the onboard controller which is a CMD Technology 3112
-device, seems to work pretty well with the current driver in 2.4.22.
+I followed the advice in the FAQ.. took out one drive, booted up.. it listed
+it as failed.. I powered down.. reconnected drive.. booted up.. it still
+only used 1 drive... I thought i'd try using mdadm so i tried to add it..
+its gone and added it as spare...
 
--- Andrew
+I'd tried assemble but that only ever used the 1 drive.. not both..
+
+now i try to remove the spare
+
+[root@backup root]# mdadm /dev/md0 -r /dev/hdg1
+mdadm: hot remove failed for /dev/hdg1: Device or resource busy
+
+and just cannot
+
+I stop the array and i can't remove it as array isn't running..
+
+Ahh stupid.. I've just looked at /proc/mdstat
+
+Personalities : [raid1]
+read_ahead 1024 sectors
+md0 : active raid1 hde1[0] hdg1[2]
+      16064896 blocks [2/1] [U_]
+      [====>................]  recovery = 22.5% (3625536/16064896)
+finish=20.2min speed=10225K/sec
+unused devices: <none>
+
+Its already recovering... phew.. i didn't find this clear..
+
+mdadm -D revealed this
+
+/dev/md0:
+        Version : 00.90.00
+  Creation Time : Mon Nov 17 22:16:09 2003
+     Raid Level : raid1
+     Array Size : 16064896 (15.32 GiB 16.45 GB)
+    Device Size : 16064896 (15.32 GiB 16.45 GB)
+   Raid Devices : 2
+  Total Devices : 2
+Preferred Minor : 0
+    Persistence : Superblock is persistent
+
+    Update Time : Tue Nov 18 20:03:00 2003
+          State : dirty, no-errors
+ Active Devices : 1
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 1
 
 
-On Tue, 18 Nov 2003, Mark Hahn wrote:
+    Number   Major   Minor   RaidDevice State
+       0      33        1        0      active sync   /dev/hde1
+       1       0        0        1      faulty removed
+       2      34        1        2      spare   /dev/hdg1
+           UUID : f3be955c:8902d2ea:fb455a5e:8ea38b70
+         Events : 0.24
 
-> do you have any recommendations for multiport sata controllers?
-> my bias is in the direction of multiple cheap cards, rather than
-> expensive ones like 3ware.
->
-> ideally, I'd like 8-12 ports in a box, preferably on PCI-X.
-> (I'll be using a dual-Opteron/Xeon server board with 1 CPU,
-> and don't mind dumb controllers at all)
->
-> has anyone had good luck with either the Promise FastTrack s150/tx4
-> (4pt, and seems to be well-supported but is PCI-X compatible?)
-> or the highpoint rr1820 (6 ports, claims 64x133 PCI-X).
->
-> thanks, mark hahn.
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+It didn't really shout out to me that the spare drive was being used to
+restore.. I did in panic go to the FAQ and follow their advice of
+"raidhotadd /dev/mdX /dev/sdX" but this failed as it was already in use as
+spare..
+
+So could someone point out what to do when my harddrive really does fail...
+take out the faulty one.. put a new one in, partition it.. and then add it
+with
+
+mdadm -a /dev/md0 /dev/<harddisk>
+
+this will add it with spare and is equivelant to raidhotadd so will start
+syncing the drive in!?
+
+If its that easy then thats fine :)
+
+Great even...
+
+Thanks... sorry.. I'm nearly up to speed with this.. slowly..
+
+Jim
+
