@@ -1,64 +1,47 @@
-From: "Peter T. Breuer" <ptb@it.uc3m.es>
-Subject: Re: Fast (intelligent) raid1
-Date: Tue, 11 Feb 2003 20:47:04 +0100 (MET)
+From: Bryan O'Sullivan <bos@serpentine.com>
+Subject: Re: [Ext2-devel] Re: fsck out of memory
+Date: 11 Feb 2003 12:04:17 -0800
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200302111947.h1BJl4j25128@oboe.it.uc3m.es>
-References: <Pine.LNX.4.44.0301240354520.3568-100000@devserv.devel.redhat.com>
-Reply-To: ptb@it.uc3m.es
+Message-ID: <1044993857.6640.7.camel@plokta.s8.com>
+References: <Pine.LNX.4.53.0302071555110.718@ddx.a2000.nu>
+	 <Pine.LNX.4.53.0302071800200.1306@ddx.a2000.nu>
+	 <20030207102858.P18636@schatzie.adilger.int>
+	 <Pine.LNX.4.53.0302090953440.1039@ddx.a2000.nu>
+	 <1044917060.11838.108.camel@sisko.scot.redhat.com>
+	 <Pine.LNX.4.53.0302111410350.13269@ddx.a2000.nu>
+	 <1044973982.1980.29.camel@sisko.scot.redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44.0301240354520.3568-100000@devserv.devel.redhat.com>
- from Ingo Molnar at "Jan 24, 2003 04:03:40 am"
-To: Ingo Molnar <mingo@redhat.com>
-Cc: "Peter T. Breuer" <ptb@it.uc3m.es>, neilb@cse.unsw.edu.au, linux-raid@vger.kernel.org
+In-Reply-To: <1044973982.1980.29.camel@sisko.scot.redhat.com>
+To: Stephan van Hienen <raid@a2000.nu>
+Cc: linux-raid@vger.kernel.org, ext2-devel@lists.sourceforge.net, tbm@a2000.nu
 List-Id: linux-raid.ids
 
-"A month of sundays ago Ingo Molnar wrote:"
-> [ptb wrote]
-> > The driver keeps a bitmap of pending writes in memory, and writes them
-> > to the mirror component that's just been repaired when it comes back on
-> > line.  The bitmap is two-level and created pagewise on demand, so it's
-> > not too expensive. [...]
+On Tue, 2003-02-11 at 06:33, Stephen C. Tweedie wrote:
+
+> I've no idea.  Ben has some lb patches up at
 > 
-> how do you ensure that the 'repaired' drive indeed only differs in the
-> dirty-bitmap portions of the data disk? It's perfectly valid to add a
-> completely new (and unsynced) disk to the system when one disk fails. Or
-> is this the responsibility of the administrator?
+>   http://people.redhat.com/bcrl/lb/
+> 
+> but there's nothing broken out against the latest lbd diffs.
 
-I've  now built the technology into the kernel raid1 code. It's
-available from
+Ugh, that stuff is ancient.
 
-   ftp://oboe.it.uc3m.es/pub/Programs/fr1-2.0.tgz
+Peter Chubb has a backport of his (very thorough) 2.5 patch to support
+large block devices on 32-bit platforms, against much newer kernels
+(e.g. 2.4.20) than Ben's stuff.  His site seems to be down, but you
+should be able to get it from somewhere under
+http://www.gelato.unsw.edu.au/~peterc/
 
-list:
-   fr1-2.0/src/Makefile
-   fr1-2.0/patches/linux-2.4.20-xfs.patch
-   fr1-2.0/patches/linux-2.4.19-xfs.patch
-   fr1-2.0/patches/linux-2.4.generic.patch
-   fr1-2.0/LICENCE
-   fr1-2.0/Makefile
-   fr1-2.0/README
+I haven't used Peter's patch, but a similar patch, developed
+independently, definitely allows ext3 filesystems of up to 8TB in size
+to work fine on x86, under 2.4.
 
-The patch modifies md.c in order to allow hotadd directly after
-setfaulty (which I count as a "hotrepair").  It does this by
-detecting the attempt to hotadd a faulty disk, and doing a hotremove
-first, after saving the metadata.
+The nominal limit on device/filesystem size looks to be 16TB on a 32-bit
+platform, but there are dozens of sign truncation errors throughout the
+VFS and block layers that are unlikely to get fixed.  Hence, 8TB it is.
 
-It also modifies raid1.c. It makes the resync skip blocks that are not
-marked in the bitmap, if there is a bitmap. It makes ordinary writes
-mark the bitmap of every mirror component that is currently not
-operational. On being marked bad, the bitmap is created for the
-component. On being marked active (i.e. after a resync) the bitmap
-is taken away.
+	<b
 
-Then it combines raid1.c with the support in bitmap.c to form a new
-module, fr1.o, which replaces raid1.o.
-
-I would be grateful for corrections. I would like it if a "hotrepair"
-could be detected automatically from the disk component uuid. I would
-also like it if the bitmap could be marked clean block by block in the
-raid1_end_io. Well, maybe I could do that - I haven't so far. The
-bitmap is vamooshed when the sync is complete, presently. I think
-that's the same since I don't think the resync starts from zero if
-interrupted and resumed.
-
-Peter
