@@ -1,120 +1,30 @@
-From: Heinz Mauelshagen <mauelshagen@redhat.com>
-Subject: *** Announcement: dmraid 1.0.0-rc3 ***
-Date: Wed, 18 Aug 2004 21:06:10 +0200
+From: "Pankaj Agarwal" <pankaj@pnpexports.com>
+Subject: Help Root Raid
+Date: Thu, 19 Aug 2004 08:47:27 +0530
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040818190610.GA6275@redhat.com>
-Reply-To: mauelshagen@redhat.com
+Message-ID: <00ea01c4859b$12cac440$9a59023d@dreammachine>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi,
 
-               *** Announcement: dmraid 1.0.0-rc3 ***
+I need your help regarding root raid. I have a root raid implemented server
+and it not booting anymore. I tried to use that harddisc as secondary hard
+disk to on of my other linux installation..so i can take a backup of files.
+The other installation has raid precompiled....as in booting process it
+checks for raid arays and at shutdown it gives messages regarding md
+devices. however it doesn't show any dev in lsdev or /proc/mdstat. My
+problem is when i try to mount it using "mount -t ext2 /dev/md0 /mnt/hdc1"
+it gives me error as "wronf fs, bad option, bad superblock on
+/dev/md0.........................(aren't you trying to mount a block device
+on a logical device)". Kindly show me the way to mount the filesystem.
 
-dmraid 1.0.0-rc3 is available at
-http://people.redhat.com:/~heinzm/sw/dmraid/ in source, source rpm and i386 rpm.
+thanks and regards,
 
-dmraid (Device-Mapper Raid tool) discovers, [de]activates and displays
-properties of software RAID sets (ie. ATARAID) and contained DOS
-partitions using the device-mapper runtime of the 2.6 kernel.
+Pankaj Agarwal
 
-The following ATARAID types are supported on Linux 2.6:
-
-Highpoint HPT37X
-Highpoint HPT45X
-Intel Software RAID
-Promise FastTrack
-Silicon Image Medley
-
-This ATARAID type is only basically supported in this version (I need
-better metadata format specs; please help):
-LSI Logic MegaRAID
-
-Please provide insight to support those metadata formats completely.
-
-Thanks.
-
-See files README and CHANGELOG, which come with the source tarball for
-prerequisites to run this software, further instructions on installing
-and using dmraid!
-
-CHANGELOG is contained below for your convenience as well.
-
-
-Call for testers:
------------------
-
-I need testers with the above ATARAID types, to check that the mapping
-created by this tool is correct (see options "-t -ay") and access to the ATARAID
-data is proper.
-
-You can activate your ATARAID sets without danger of overwriting
-your metadata, because dmraid accesses it read-only unless you use
-option -E with -r in order to erase ATARAID metadata (see 'man dmraid')!
-
-This is a release candidate version so you want to have backups of your valuable
-data *and* you want to test accessing your data read-only first in order to
-make sure that the mapping is correct before you go for read-write access.
-
-
-The author is reachable at <Mauelshagen@RedHat.com>.
-
-For test results, mapping information, discussions, questions, patches,
-enhancement requests and the like, please subscribe and mail
-to <ataraid@redhat.com>.
-
---
-
-Regards,
-Heinz    -- The LVM Guy --
-
-
-CHANGELOG:
----------
-
-Changelog from dmraid 1.0.0-rc2 to 1.0.0-rc3		2004.08.18
-
-FIXES:
-------
-o HPT37X mapping on first disk of set
-o dietlibc sscanf() use prevented activation
-o le*_to_cpu() for certain glibc environments (Luca Berra)
-o sysfs discovery (Luca Berra)
-o permissions to write on binary, which is needed
-  by newer strip versions (Luca Berra)
-o SCSI serial number string length bug
-o valgrinded memory leaks
-o updated design document
-o comments
-
-FEATURES:
----------
-o added basic support for activation of LSI Logic MegaRAID/MegaIDE;
-  more reengineering of the metadata needed!
-o root check using certain options (eg, activation of RAID sets)
-o implemented locking abstraction
-o implemented writing device metadata offsets with "-r[D/E]"
-  for ease of manual restore
-o file based locking to avoid parallel tool runs competing
-  with each other for the same resources
-o streamlined library context
-o implemented access functions for library context
-o streamlined RAID set consistency checks
-o implemented log function and removed macros to shrink binary size further
-o removed superfluous disk geometry code
-o cleaned up metadata.c collapsing free_*() functions
-o slimmed down minimal binary (configure option DMRAID_MINI
-  for early boot environment)
-
-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
-Heinz Mauelshagen                                 Red Hat GmbH
-Consulting Development Engineer                   Am Sonnenhang 11
-                                                  56242 Marienrachdorf
-                                                  Germany
-Mauelshagen@RedHat.com                            +49 2626 141200
-                                                       FAX 924446
-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
