@@ -1,31 +1,36 @@
-From: Vojtech Pavlik <vojtech@suse.cz>
-Subject: Re: RAID-6 support in kernel?
-Date: Mon, 3 Jun 2002 16:55:49 +0200
+From: Stephane Morand <Stephane.Morand@polytechnique.fr>
+Subject: Raid-1 booting problem
+Date: Mon, 3 Jun 2002 17:23:11 +0200 (CEST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20020603165549.A27667@ucw.cz>
-References: <Pine.LNX.4.33.0206031020290.30424-100000@mail.pronto.tv> <Pine.GSO.4.21.0206030213510.23709-100000@gecko.roadtoad.net> <20020603113128.C13204@ucw.cz> <3CFB82A0.EB2062AE@daimi.au.dk>
+Message-ID: <Pine.LNX.4.33.0206031722420.24915-100000@polux.polytechnique.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <3CFB82A0.EB2062AE@daimi.au.dk>; from kasperd@daimi.au.dk on Mon, Jun 03, 2002 at 04:52:16PM +0200
-To: Kasper Dupont <kasperd@daimi.au.dk>
-Cc: Vojtech Pavlik <vojtech@suse.cz>, Derek Vadala <derek@cynicism.com>, Roy Sigurd Karlsbakk <roy@karlsbakk.net>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, Tedd Hansen <tedd@konge.net>, Christian Vik <christian@konge.net>, Lars Christian Nygaard <lars@snart.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Jun 03, 2002 at 04:52:16PM +0200, Kasper Dupont wrote:
 
-> > He was thinking "mirror", not "stripe". Mirror of 2 RAID-5 arrays (would
-> > be probably called RAID-15 (when there is a RAID-10 for mirrored stripe
-> > arrays)), can withstand any two disks failing anytime.
-> 
-> It can actually withstand any *three* disks failing anytime.
 
-Yes, you're right.
+Hi,
 
-> > Even more for
-> > certain combinations. But it is terribly inefficient.
+I installed a Raid 1 linux system on our server, using the RedHat 7.2 
+utility raid system.
+Everything is mirrored on this disk (/, /boot, /usr, /tmp..)
 
--- 
-Vojtech Pavlik
-SuSE Labs
+I need to change one of these disks (the ibm is not working anymore). I 
+partitioned a new disk (exactly the same as the original) and then plugged 
+it in the computer. I used raidhotadd /dev/mdx /dev/hdcx to add the second 
+ disk. Everything worked fine, but if I unplugged the first disk I am not 
+able to boot anymore on the second, I guess there is a problem with lilo 
+trying to write on the MBR.
+
+I didn't find anything about it on the HowTos.. out of date. Can someone 
+tells me how to make the second disk bootable ?
+
+Thanks,
+
+-Stephan
+
+
+
+
