@@ -1,49 +1,52 @@
-From: ptb@lab.it.uc3m.es (Peter T. Breuer)
-Subject: Re: Spares and partitioning huge disks
-Date: Mon, 10 Jan 2005 10:38:04 +0100
-Message-ID: <s0v9b2-0ir.ln1@news.it.uc3m.es>
-References: <jsm9b2-iqp.ln1@news.it.uc3m.es> <200501100905.j0A95M920746@www.watkins-home.com>
+From: Krzysztof Oledzki <ole+md@ans.pl>
+Subject: Problem with UUID on mdadm v1.8.1
+Date: Mon, 10 Jan 2005 10:46:33 +0100 (CET)
+Message-ID: <Pine.LNX.4.61.0501101041410.4124@bizon.gios.gov.pl>
+Mime-Version: 1.0
+Content-Type: MULTIPART/MIXED; BOUNDARY="-187430788-1735576636-1105350393=:4124"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Guy <bugzilla@watkins-home.com> wrote:
-> Peter T. Breuer <ptb@lab.it.uc3m.es> wrote:
-> > Well, here is a patch to at least stop the array (RAID 1) being failed
-> > until all possible read sources have been exhausted for the sector in
-> > question.  It's untested - I only checked that it compiles.
-> A RAID1 array does not fail on a read error, unless the read error is on the
-> only disk.
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-I'm sorry, I meant "degraded", not "failed", when I wrote that summary.
+---187430788-1735576636-1105350393=:4124
+Content-Type: TEXT/PLAIN; charset=ISO-8859-2; format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 
-To clarify, the patch stops the mirror disk in question being _faulted_
-out of the array when a sector read _fails_ on the disk.  The read is
-instead retried on another disk (as is the case at present in the
-standard code, if I recall correctly - the patch only stops the current
-disk also being faulted while the retry is scheduled).
+Hello,
 
-In addition I pointed to what line to comment to stop any disk being
-ever faulted at all on a read error, which ("not faulting") in my
-opinion is more correct.  The reasoning is that either we try all disks
-and succeed on one, in which case there is nothing to mention to
-anybody, or we succeed on none and there really is an error in that
-position in the array, on all disks, and that's the right thing to say.
+I have just upgraded mdadm from v1.8.0 to v1.8.1 and now, each time when I=
+=20
+create new array, it contains the same UUID:
+6b8b4567:327b23c6:643c9869:66334873.
 
-What happens on recovery is another question. There may be scattered
-error blocks.
+root@fw1:~# mdadm --stop /dev/md6;echo y|mdadm --create /dev/md6 --level=3D=
+1 --raid-disks=3D2 /dev/sd[ab]7;mdadm -D /dev/md6|grep UUID
+mdadm: /dev/sda7 appears to be part of a raid array:
+     level=3D1 devices=3D2 ctime=3DMon Jan 10 09:45:29 2005
+mdadm: /dev/sdb7 appears to be part of a raid array:
+     level=3D1 devices=3D2 ctime=3DMon Jan 10 09:45:29 2005
+Continue creating array? VERS =3D 9001
+mdadm: array /dev/md6 started.
+            UUID : 6b8b4567:327b23c6:643c9869:66334873
 
-I would also like to submit a write to the dubious sectors, from the
-readable disk, once we have found it. 
+root@fw1:~# mdadm --stop /dev/md6;echo y|mdadm --create /dev/md6 --level=3D=
+1 --raid-disks=3D2 /dev/sd[ab]7;mdadm -D /dev/md6|grep UUID
+mdadm: /dev/sda7 appears to be part of a raid array:
+     level=3D1 devices=3D2 ctime=3DMon Jan 10 09:45:33 2005
+mdadm: /dev/sdb7 appears to be part of a raid array:
+     level=3D1 devices=3D2 ctime=3DMon Jan 10 09:45:33 2005
+Continue creating array? VERS =3D 9001
+mdadm: array /dev/md6 started.
+            UUID : 6b8b4567:327b23c6:643c9869:66334873
 
-> Maybe you have found a bug?
 
-There are bugs, but that is not one of them.
+Od version (v1.8.0) works just fine.
 
-If you want to check the patch, check to see if schedule_retry moves
-the current target of the bio to another disk in a fair way. I didn't
-check.
+Best regards,
 
-Peter
-
+ =09=09=09Krzysztof Ol=EAdzki
+---187430788-1735576636-1105350393=:4124--
