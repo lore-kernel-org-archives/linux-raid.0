@@ -1,8 +1,8 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
+From: Danilo Godec <danci@agenda.si>
 Subject: Re: Fw: DriveReady SeekComplete problems
-Date: Mon, 13 May 2002 07:01:28 +0200 (CEST)
+Date: Mon, 13 May 2002 08:22:28 +0200 (CEST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0205130659440.2333-100000@uplift.swm.pp.se>
+Message-ID: <Pine.LNX.4.30.0205130817280.20245-100000@duplo.agenda.si>
 References: <003401c1fa38$6e3ba600$050010ac@niunia.org>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
@@ -13,18 +13,23 @@ List-Id: linux-raid.ids
 
 On Sun, 12 May 2002, Artur Jasowicz wrote:
 
-> > Anyone know if I can force the kernel to not share interrupts.
-> I think that Highpoint chip only uses one IRQ for both channels, but it
->
-> might be helpfull to move your SCSI card's IRQ to another slot.
+> As long as DMA was on, I couldn't complete syncing array after configuring
+> it. Contstant lockups. After I did hdparm -d 0 /dev/hd[e,g,i,k] the arrays
+> synced and seem to be working correctly now. I need to develop a way of
+> checking for data corruption. Of course the price is the speed. With DMA on
+> I was getting 2000K/s syncing speed. without DMA - 800K. I am running plain
 
-How?
+I'm used to sync speeds above 20000K/s these days. With DMA, of course.
 
 > Is your CPU usage also close to 100% when using RAID?
 
-Nope, I barely have any CPU usage at all. If you turn off DMA though, I am 
-not surprised you have high CPU usage problems.
+Nope, not even close. But having the DMA turned off is certanly a way to
+put a lot of load on your CPU(s).
 
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+It seems that either the HPTs have a design flaw or the driver is not
+fully supporting them.
+
+
+  D.
+
 
