@@ -1,32 +1,40 @@
-From: "Amazon.com" <cust.service03@amazon.com>
-Subject: Your Amazon.com Inquiry
-Date: Thu, 13 May 2004 10:35:29 -0700
+From: "Jeffrey W. Baker" <jwbaker@acm.org>
+Subject: Just plain bad RAID5 performance?
+Date: Thu, 13 May 2004 17:08:14 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <i4DHZT0O024523.200405131735@mail-admin-1.amazon.com>
+Message-ID: <1084493294.20832.24.camel@noodles>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Greetings from Amazon.com. 
+I have this array:
 
-We're sorry.  You've written to an address that cannot accept incoming
-e-mail.
+md0 : active raid5 sdb[0] sdd[2] sdc[1]
+      145225728 blocks level 5, 256k chunk, algorithm 2 [3/3] [UUU]
 
-Please refer to the response we sent you and use the links at the end
-of our message to send us more information so that we may resolve your
-issue.  This will help us to associate your message with your previous
-correspondence.
+... on three Western Digital Raptor 74GB drives.  These are attached
+with a 3ware 8506-8 SATA thingy, the fs is ext2 w/ 4096 block size.
 
-If there are no links in the message you received, or if you need to
-contact us about a different issue, please visit
-http://www.amazon.com/contact-us to send e-mail to customer service.
-Please be sure to use the e-mail address associated with your
-Amazon.com account when you contact us.  
+Basic test: dd from all three devices at once.  Aggregate I/O: roughly
+150MB/sec, > 95% CPU usage.  dd from /dev/md0: about 60MB/sec, < 30% CPU
+usage.  Any way to improve this result?  I would expect it to be at
+least 100MB/sec.
 
-Thank you for shopping at Amazon.com.
+More complicated test: single postgresql query on a 40GB database. 
+Query uses three index scans, so it is highly random access.  On the
+RAID i'm getting about 10-20 tps per device, about 4MB/sec effective
+aggregate throughput, according to iostat.  On a single 5-year-old SCSI
+device I get 1000s of tps and the query finishes roughly 20 times
+faster.  What could I be seeing here?
 
+The machine is a dual opteron, so I doubt that the CPU is starving the
+RAID5 XOR routines or anything silly like that.
 
-Sincerely,
-Amazon.com Customer Service
-http://www.amazon.com/
+Software is: Linux 2.4.26, PostgreSQL 7.4.2.
 
+Any information appreciated.
+
+-jwb
