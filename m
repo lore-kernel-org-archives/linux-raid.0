@@ -1,39 +1,27 @@
-From: AndyLiebman@aol.com
-Subject: blockdev tuning
-Date: Mon, 24 May 2004 20:33:55 EDT
+From: "Henrik Lewander" <henrik@lewander.com>
+Subject: messed up raid5 array
+Date: Tue, 25 May 2004 14:16:22 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <6d.2a6fa829.2de3ee73@aol.com>
+Message-ID: <004001c44252$1845de00$7200a8c0@europe.ad.flextronics.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Question about tuning blockdev settings under Linux 2.6 kernel. 
+Hi!
 
-3ware tech support (and white papers on their web site) suggest tuning linux 
-blockdev settings to get better read speads on their hardware raid5. 3ware 
-suggests using 'blockdev --setra 16384 /dev/sdX' (where sdX is the device 
-corresponding to the hardware raid). 
+One disk failed in my four disk raid5 array this morning. I think I messed
+up a bit, anyway it ended with that I removed all disks from the raid array.
+Now when I add them again they show up as spares and I have no main disks at
+all. Is there a way to force the three remaining disks (excluding the faulty
+one) to be an array again and not lose the current data? If I do --create,
+mdadm warns me that they are already a part of md1, yes but just as spares!
+If I let mdadm do --create, I suppose I lose all the data? What can I do?
 
-My question is, might there be -- or is there -- an advantage to doing 
-similar tuning for Linux software raid5? 
+Really thankful for some insights here.
 
-Today, I tried using the 3ware blockdev setting on my mdX device. Before 
-tuning, I checked the default readahead value with 'blockdev --getra /dev/md1' and 
-it returned a value of 1709 or 1907. Something kind of low. 
+BR Henrik
 
-I tried using the 3ware suggested value for their hardware raid -- 16384. 
-With Bonnie++, (on an 18GB read/write) my read throughput increased from about 
-175 MB/sec to about 205MB/sec. 
-
-Does anybody know if there's a logical way to go about tuning blockdev 
-settings? And is it worth it? 
-
-I can see a 10 percent increase in reading throughput -- and a 100 percent 
-increase in the case of hardware raid5. But do these benchmark increases 
-translate into real world improvements? 
-
-Regards, 
-Andy Liebman
