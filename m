@@ -1,47 +1,38 @@
-From: Oliver Heinz <oheinz@stud.fbi.fh-darmstadt.de>
-Subject: libata + raid
-Date: Mon, 24 Nov 2003 18:42:39 +0100
+From: Hendrik Visage <hvisage@envisage.co.za>
+Subject: Re: libata + raid
+Date: Mon, 24 Nov 2003 21:58:15 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200311241842.39015.oheinz@stud.fbi.fh-darmstadt.de>
+Message-ID: <20031124195815.GS17908@hvs.envisage.co.za>
+References: <200311241842.39015.oheinz@stud.fbi.fh-darmstadt.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-To: linux-raid@vger.kernel.org
+In-Reply-To: <200311241842.39015.oheinz@stud.fbi.fh-darmstadt.de>
+To: Oliver Heinz <oheinz@stud.fbi.fh-darmstadt.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Mon, Nov 24, 2003 at 06:42:39PM +0100, Oliver Heinz wrote:
+> 
+> Libata support seems to be derived from the pdc-ultra-driver which seems to
+>  be non-raid only unlike the partly closed source par15-driver, right?
+> When I boot with libata enabled on a pdc20378 in raid-mode I get two
+> independend drives instead off one raid-array.
 
-Hi,
-after searching the web for a while i still could not find a definitive
-statement whether libata does/will support raid modes on it's supported
-controllers.
+Which is typically also the case with W2k/XP/etc. except that the driver
+"hides" that fact to you by interpreting the on disk/bios information and
+it then does the sofware RAID. Thus you are using Software RAID with BIOS
+support for booting the RAID. Elsewher called "quasi-raid".
 
-For those controllers which only pretend to be raid controllers and do the
-whole magic in their drivers, support of their vendor specific raid would be
-more a nifty comfort feature.
+> Will raid-mode be supported? Is there a way I can help? Or maybe it's just
+> stupid to complain about missing support on a quite powerful machine (2xXeon
+> 2.6GHz), and I should use software raid anyway?
 
-But i.e. some promise controllers 2037x seem to have a hardware xor engine
-(well my only source of information on that, is a posting from alan cox ;-) .
+Refer to the (getting obsolete) ataraid/pdcraid/hptraid modules, which emulated
+the Windows driver.
 
-Libata support seems to be derived from the pdc-ultra-driver which seems to
- be non-raid only unlike the partly closed source par15-driver, right?
-When I boot with libata enabled on a pdc20378 in raid-mode I get two
-independend drives instead off one raid-array.
+> Does libata (need to?) support hot-plugging?
 
-Will raid-mode be supported? Is there a way I can help? Or maybe it's just
-stupid to complain about missing support on a quite powerful machine (2xXeon
-2.6GHz), and I should use software raid anyway?
-
-Does libata (need to?) support hot-plugging?
-
-Sorry for so many questions at once, but there seems to be very little
-(uptodate) Information about this on the web - well at least I didn't find
-it...
-
-Bye,
-Oliver
-
-
+Hopefully it does :)
 
