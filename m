@@ -1,95 +1,94 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: raid5 won't resync
-Date: Tue, 31 Aug 2004 16:40:11 -0400
+From: "Augustine Ortiz, Jr." <aortizjr@lanl.gov>
+Subject: RE: Getting HD Serial Numbers in RAID
+Date: Tue, 31 Aug 2004 15:10:48 -0600
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200408312040.i7VKeG311366@watkins-home.com>
-References: <Pine.LNX.4.58.0408311549460.1949@web1.mmaero.com>
+Message-ID: <1093986648.27891.35.camel@afgar.lanl.gov>
+References: <200408312036.i7VKan311353@watkins-home.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.58.0408311549460.1949@web1.mmaero.com>
-To: 'Jon Lewis' <jlewis@lewis.org>, linux-raid@vger.kernel.org
-Cc: aaron@america.com
+In-Reply-To: <200408312036.i7VKan311353@watkins-home.com>
+To: linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-raid.ids
 
-I think what you did should work, but...
-I have had similar problems.
-Try again, but this time don't include any spare disks, or any other disks.
-Only include the disks you know have the data.
-Or, just list the disks on the command line.
+Usually, most hardware RAID stuff does give software. However since this
+one (AACRAID/PERC) is such a common controller, this manufacturer didn't
+include it. We do have some for other systems, but they are in Windows,
+and I can't seem to figure out how to get the serial numbers through
+that either.
 
-Keep your fingers crossed!
+Interestingly, if you have the arrays broken, you can pull the serial
+numbers just fine.
 
-Guy
+Some RAID cards (ie. DAC90 chipset) will report all the disks when the
+kernel module is loaded. I figured I could just sorta re-work that stuff
+and see if I could probe it. 
 
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Jon Lewis
-Sent: Tuesday, August 31, 2004 4:10 PM
-To: linux-raid@vger.kernel.org
-Cc: aaron@america.com
-Subject: RE: raid5 won't resync
+I am having some trouble with the AACRAID module though. It looks like
+it grabs the info, but I can't tell if it does it when the drives are
+actually RAIDed. 
 
-Now we've got a new problem with the raid array from last night.  We've
-switched qlogic drivers to one that some people have posted is more stable
-than the one we were using.  This unfortunately changed all the scsi
-device names.  i.e.
+Thank you for the info, I will see if I can get it via the SMART stuff.
+I will post if I have any luck.
 
-abcdefg hijklmn has become
-hijklmn abcdefg
+Thanks!
 
-I put the following in /etc/mdadm.conf:
+Augustine
 
-DEVICE /dev/sd[abcdefghijklmn][1]
-ARRAY /dev/md2 level=raid5 num-devices=10
-UUID=532d4b61:48f5278b:4fd2e730:6dd4a608
 
-That DEVICE line should cover all the members (under their new device
-names) for the raid5 array.
+>                             From: 
+> Derek Vadala <derek@cynicism.com>
+> You could try smartctl, but I don't know what luck you'll have
+> accessing
+> the raw devices if they are behind a hardware controller.
+> 
+> http://smartmontools.sourceforge.net/
+> http://www.linuxjournal.com/article.php?sid=6983
+> 
 
-then I ran:
 
-mdadm --assemble /dev/md2 --uuid 532d4b61:48f5278b:4fd2e730:6dd4a608
-or
-mdadm --assemble /dev/md2 --scan
+> hddtemp will get you more info on the disk ... not sure if it works
+> on aacraid/perc etc
+> 
+> c ya
+> alvin
 
-Both terminate with the same result:
 
-mdadm: /dev/md2 assembled from 4 drives and 1 spare - not enough to start
-the array.
-
-but if I look at /proc/mdstat, it did find all 10 (actually 11) devices.
-
-# cat /proc/mdstat
-Personalities : [raid1]
-read_ahead 1024 sectors
-md2 : inactive sdc1[6] sdm1[10] sdf1[9] sde1[8] sdd1[7] sdg1[5] sdl1[4]
-sdn1[3] sdk1[2] sdj1[1] sdi1[0]
-      0 blocks
-md1 : active raid1 hda1[0] hdc1[1]
-      30716160 blocks [2/2] [UU]
-      [>....................]  resync =  3.5% (1098392/30716160)
-finish=298.2min speed=1654K/sec
-md0 : active raid1 sdh2[0] sda2[1]
-      104320 blocks [2/2] [UU]
-
-unused devices: <none>
-
-I suspect it's found both the failed drive (originally sde1, now named
-sdl1) and the spare that it had started, but never finished, rebuilding
-on (sdg1, now sdn1).  Why is mdadm saying there are only 4 devices + 1
-spare?  Is there a best way to proceed at this point to try to get this
-array repaired?
-
-----------------------------------------------------------------------
- Jon Lewis                   |  I route
- Senior Network Engineer     |  therefore you are
- Atlantic Net                |
-_________ http://www.lewis.org/~jlewis/pgp for PGP public key_________
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Tue, 2004-08-31 at 14:36, Guy wrote:
+> When I have used hardware RAID, the vender supplies software that will do
+> what you want.  But it is tied to the vender's hardware, not general.
+> 
+> Guy
+> 
+> -----Original Message-----
+> From: linux-raid-owner@vger.kernel.org
+> [mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Augustine Ortiz, Jr.
+> Sent: Tuesday, August 31, 2004 3:45 PM
+> To: linux-raid@vger.kernel.org; linux-scsi@vger.kernel.org
+> Subject: Getting HD Serial Numbers in RAID
+> 
+> Hi...
+> 
+> I have been working on getting serial numbers electronically off of hard
+> drives for various reasons.
+> 
+> I have been successful with IDE and most SCSI drives (using hdparm and
+> scsiinfo). However I am running into trouble with ones that are on
+> AACRAID/PERC3 adaptors and actually in a RAID array.
+> 
+> The only serial number I can seem to grab is the one for the entire
+> volume which is just assigned.
+> 
+> Are there any tools available to get the serial number off the drives in
+> the array? Or can I get some pointers on writing such a tool?
+> 
+> Thank you.
+> 
+> Augustine
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
