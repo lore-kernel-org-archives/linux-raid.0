@@ -1,34 +1,89 @@
-From: peter.zeipelt@arcor.de
-Subject: raidreconf "disk too small"
-Date: Sun, 22 Feb 2004 08:15:30 +0100 (CET)
+From: Pavol Luptak <P.Luptak@sh.cvut.cz>
+Subject: SW RAID5 + cryptoloop problem: data corruption in 2.6.3
+Date: Sun, 22 Feb 2004 15:09:29 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <349425.1077434131016.JavaMail.ngmail@webmail01.arcor-online.net>
+Message-ID: <20040222140928.GG29211@psilocybus>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="61jdw2sOBCFtR2d/"
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+Content-Disposition: inline
+To: linux-kernel@vger.kernel.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello List
 
-Experimenting with Software-Raid 5, I tried to expand an array with 3 partions.
-I wanted to add one more partittion with raidreconf.
-I took the /etc/raidtab, copied it and made a newraidtab, as subcribed in the Howto.
-But when I ran raidreconf --test -o ... -n .. -m /dev/md0, I get the message
-/dev/hdx too small (0kB).
-I wrote hdx, because it seems that it is the first partition in mentioned in the
-raidtabfiles .
-I changed the configuration with different disks and different partitons.
-Every time the messages prints out the first partition in raidtab.
-The partitions are 9.3GB.
-The disks I tried are 3X 120 GB mator, 1X 20GB IBM and 1X 20 GB IBM.
+--61jdw2sOBCFtR2d/
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Any idea?
-Thanks
+Hello,
+I created software RAID5 from 4 disks (two Western Digital 120 GB JB 8MB and
+another two Western Digital 120 GB Serial ATA) each on a separate channel=
+=20
+using standart AMD/nVidia IDE disk driver and SII 3112 serial ATA disk
+driver. I use A7N8X Deluxe mainboard and the latest vanilla 2.6.3 kernel.
+For the RAID I choosed left-symmetric parity-algoritm and 256 kb chunksize=
+=20
+(I found this value is optimal for my purposes). I set up crypto loop devic=
+e on
+my raid device and choosed AES for encryption. On the loop device I created
+ext2 filesystem using 'mke2fs -b 4096 -R stride=3D64 /dev/loop0'. I mounted=
+ this
+device and started to copying about the 250 GB of data from unencrypted IDE
+disk to the encrypted RAID (it took a lot of hours with permanent load aver=
+age
+7.0-8.0).
 
-Peter
+I got a lot of these messages in the random time interval (for a few minutes
+after one or two hours)
 
+Feb 21 13:58:45 psil kernel: init_special_inode: bogus i_mode (54131)
+Feb 21 13:58:47 psil kernel: init_special_inode: bogus i_mode (162354)
+Feb 21 13:58:47 psil kernel: init_special_inode: bogus i_mode (52412)
+Feb 21 15:23:27 psil kernel: init_special_inode: bogus i_mode (54131)
+Feb 21 15:23:28 psil kernel: init_special_inode: bogus i_mode (171767)
+Feb 21 15:23:29 psil kernel: init_special_inode: bogus i_mode (153374)
+Feb 21 15:45:54 psil kernel: init_special_inode: bogus i_mode (165515)
+Feb 21 16:45:26 psil kernel: init_special_inode: bogus i_mode (54131)
+Feb 21 16:45:27 psil kernel: init_special_inode: bogus i_mode (153374)
+Feb 21 22:53:14 psil kernel: init_special_inode: bogus i_mode (54131)
+Feb 21 22:53:17 psil kernel: init_special_inode: bogus i_mode (50242)
+=2E.
 
+Each message corresponds to the invalid (and unusable) creation of file on =
+my
+crypto RAID (creation of invalid i-node).
 
+I have no problem with cryptoloop + SW RAID1 (two parallel ATA disks) on
+2.6.1/2.6.2.
 
+Can someone explain this behaviour?
+I have no idea if this problem is in SII3122 disk driver, RAID5 or cryptolo=
+op
+driver.
+
+Regards,
+
+Pavol Luptak
+--=20
+___________________________________________________________________________=
+__
+[wilder@hq.sk] [http://trip.sk/wilder/] [talker: ttt.sk 5678] [ICQ: 1334035=
+56]
+
+--61jdw2sOBCFtR2d/
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.4 (GNU/Linux)
+
+iD8DBQFAOLgYhL+8XxdK5TIRAh+DAKDBSwFOk0ixVr+IsUK1MnpoM5I6hgCeOlgW
+yBFVTaJuEcGMPl8HKm9UPZM=
+=fdfj
+-----END PGP SIGNATURE-----
+
+--61jdw2sOBCFtR2d/--
