@@ -1,35 +1,34 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
+From: Stephan van Hienen <raid@a2000.nu>
 Subject: Re: Promise SX6000 problems.
-Date: Tue, 4 Feb 2003 18:30:14 +0100 (CET)
+Date: Tue, 4 Feb 2003 20:14:36 +0100 (CET)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0302041827130.4208-100000@uplift.swm.pp.se>
-References: <3E3EF6E3.CBA898DC@speech.mit.edu>
+Message-ID: <Pine.LNX.4.53.0302042011510.22284@ddx.a2000.nu>
+References: <Pine.LNX.4.44.0302041827130.4208-100000@uplift.swm.pp.se>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3E3EF6E3.CBA898DC@speech.mit.edu>
-To: Linux Raid List <linux-raid@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.44.0302041827130.4208-100000@uplift.swm.pp.se>
+To: Mikael Abrahamsson <swmike@swm.pp.se>
+Cc: Linux Raid List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, 3 Feb 2003, Seth Hall wrote:
+On Tue, 4 Feb 2003, Mikael Abrahamsson wrote:
 
-> Hi,
-> 
-> Has anyone had better success with this card than we have? To wit:
+> I have absolutely NO IDEA why Promise doesnt release these or even
+> acknowledge that they exists.
+same thing with the FastTrak TX4
+no bios update on their website for lba48 support
 
-Yes. I have received Redhat 7.3 and 8.0 beta drivers from Promise for the
-SX6000 that works properly (been running them since october).
+but 1 email to support (and quick response within 1 hour) and they sended
+the bios update
 
-I have absolutely NO IDEA why Promise doesnt release these or even 
-acknowledge that they exists. I have emailed them to 6-7 people so far and 
-nobody has reported back stating that they have any problems with them. 
-They all expressed frustration from dealing with Promise on the issue. 
-Promise needs to get their act together and release supported 
-updated Redhat drivers, or even better, work with redhat so that redhat 
-can include the latest drivers with their newer kernels directly.
+with reaction :
 
-Seems I got lucky and caught the right person at Promise when I emailed.
+--
+Our website is managed by Promise Technology International based in
+Taiwan.
+With this mail you receive the latest drivers and BIOS fot the TX4 which
+also supports LBA48
+--
 
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
-
+So i think the .tw people are a bit slow... (bit=1 year)
