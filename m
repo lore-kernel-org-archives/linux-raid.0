@@ -1,29 +1,40 @@
-From: "Eric Wood" <eric@interplas.com>
-Subject: Re: Sync rates?
-Date: Wed, 12 May 2004 14:04:43 -0400
+From: "Arnab Chowdry" <achowdry@socrates.Berkeley.EDU>
+Subject: mkraid hangs system
+Date: Wed, 12 May 2004 11:21:32 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <043b01c4384b$9abdd010$b100000a@M145Primary>
-References: <00a401c4339e$7f86b340$6705a8c0@a30> <yw1xsmede4hk.fsf@kth.se> <409A94BD.40207@steeleye.com> <00cb01c433a3$64865eb0$6705a8c0@a30>
+Message-ID: <200405121819.i4CIJO60013175@socrates.Berkeley.EDU>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="iso-8859-1"
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
------ Original Message ----- >
-> platinum:~# cat /proc/sys/dev/raid/speed_limit_min
-> 1000
-> platinum:~# cat /proc/sys/dev/raid/speed_limit_max
-> 200000
-> 
-> Are these acceptable?
-> 
-> Jay
+Hello all,
 
-# echo -n 500000 > /proc/sys/dev/raid/speed_limit_max
+I know there's a similar thread created a few days ago, but I think my
+situation might be different. I'm setting up a software RAID for my lab, and
+I've run into no end of problems.
 
-That'll speed it up.
+The RAID setup I'm going for is a 1+0 using four IDE disks. Each disk is
+connected to a unique controller on two Promise PCI cards. Due to some
+hardware problems with the motherboard, the system crashed during an initial
+RAID reconstruction. Now that I've worked out the hardware problems with the
+motherboard, the system hangs whenever I try to mkraid.
 
+The system hangs within the first few seconds of mkraid, after it says that
+it's analyzing the superblock. I've tried mkraid --really-force, tried
+partitioning the drives using fdisk, and even tried to reset their MBR's.
+Nothing seems to help the problem. 
+
+I suspect it's some sort of corruption on the drives because of the original
+crash that the RAID layer can't handle...so I'm wondering if there's some
+way to wipe the drives completely and start from scratch again? Or if there
+are any other suggestions?
+
+I'm using Mandrake 9.2 with raidtools installed using urpmi.
+
+Thanks,
+Arnab Chowdry
 
