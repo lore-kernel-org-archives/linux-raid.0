@@ -1,42 +1,74 @@
-From: Kasper Dupont <kasperd@daimi.au.dk>
-Subject: Re: SV: RAID-6 support in kernel?
-Date: Mon, 03 Jun 2002 13:08:09 +0200
+From: Alvin Oga <aoga@Maggie.Linux-Consulting.com>
+Subject: Re: RH 7.3 raid1 setup
+Date: Mon, 3 Jun 2002 04:10:20 -0700 (PDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3CFB4E19.C916D938@daimi.au.dk>
-References: <A2C65A3296DA4A4FB30DB57A9A464A16436851@exchange.lan.vanadis.no> <200206030959.g539xXb31139@mail.pronto.tv>
+Message-ID: <Pine.LNX.3.96.1020603040836.18456A-100000@Maggie.Linux-Consulting.com>
+References: <0617855078.20020603123922@vo.lu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
-Cc: Christian Vik <cvik@vanadis.no>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, dstephenson@snapserver.com
+In-Reply-To: <0617855078.20020603123922@vo.lu>
+To: Christian Schmit <cschmit@vo.lu>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Roy Sigurd Karlsbakk wrote:
->=20
-> Below is a (patented?)
 
-No problem for me I live in Europe.
+hi ya christian..
 
-> version that works. This is from the linux-raid list
->=20
-> >  A1   A2  (P1) (PA)
-> > (P2) (PB)  B2   B1
+did you use "fd" partition type when creating/partitioning the disk ??
 
-Nice, looks like it works.
+what does lilo.conf ( or grub ) look like ??
 
-> >  C4   C3  (PC) (P3)
-> > (PD) (P4)  D3   D4
+thanx
+alvin
 
-In this encoding the roles of disk one and two are
-switched, and three and four are also switched. Are
-there any reason for this?
+On Mon, 3 Jun 2002, Christian Schmit wrote:
 
---=20
-Kasper Dupont -- der bruger for meget tid p=E5 usenet.
-=46or sending spam use mailto:razor-report@daimi.au.dk
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> I installed RH 7.3 on raid1 using the standard
+> RH 7.3 GUI setup.
+> 
+> Everything installs fine. According to mdstat
+> raid1 seems to be running fine:
+> 
+> # cat /proc/mdstat 
+> Personalities : [raid1] 
+> read_ahead 1024 sectors
+> md1 : active raid1 hda5[0] hdc5[1]
+>       3494016 blocks [2/2] [UU]
+>       
+> md2 : active raid1 hda3[0] hdc3[1]
+>       16892224 blocks [2/2] [UU]
+>       
+> md3 : active raid1 hda2[0] hdc2[1]
+>       19454592 blocks [2/2] [UU]
+>       
+> md0 : active raid1 hda1[0] hdc1[1]
+>       361344 blocks [2/2] [UU]
+>       
+> unused devices: <none>
+> 
+> However when shutting down the system and 
+> disconnecting the 1st IDE drive I cannot 
+> boot from the mirrored disk. I assume this 
+> is because the MBR is not mirrored.
+> 
+> So to see if all the data is present on the 
+> mirrored disk I launch the "linux rescue" mode
+> from the RH7.3 CD but it cannot find any partitions
+> to mount from on the 2nd mirrored disk.
+> 
+> Making the same with the primary ide disk works 
+> fine, in thsi case "linux rescue" can mount all 
+> partitions.
+> 
+> How can I check if all data is being mirrored
+> on the 2nd ide disk?
+> 
+> How do I make the 2nd ide disk bootable? 
+> (I use grub as bootloader)
+> I already tried: 
+> 
+> root (hd1,0)
+> setup (hd1)
+
