@@ -1,54 +1,24 @@
-From: Gordon Henderson <gordon@drogon.net>
-Subject: Re: experiences with 3Ware 6400 3W-6400?
-Date: Fri, 27 Jun 2003 21:19:37 +0100 (BST)
+From: "Corey McGuire" <mcguire.corey@ssd.loral.com>
+Subject: Victory! re: RAID5 causing lockups
+Date: Fri, 27 Jun 2003 13:45:57 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.43.0306272111500.32150-100000@unicorn.drogon.net>
-References: <3841.208.48.139.163.1056738220.squirrel@www.greenhydrant.com>
+Message-ID: <200306271345570203.57E7F751@messaging.ssd.loral.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3841.208.48.139.163.1056738220.squirrel@www.greenhydrant.com>
-To: linux-raid@vger.kernel.org
+To: alewman@sjdccd.cc.ca.us, bort@partikelsoft.com, corvus@consolex.com, kratz.franz@ssd.loral.com, blatt.guy@ssd.loral.com, linux-raid@vger.kernel.org, mario.scalise@schwab.com, harbeck.seth@ssd.loral.com
 List-Id: linux-raid.ids
 
-On Fri, 27 Jun 2003, David Rees wrote:
+KNOCK ON WOOD
 
-> Gordon Henderson said:
-> >
-> > Eg. the PC I'm currently typing this email on is 100 miles away and I
-> > don't particularly want to drive to it to fix it if a disk fails...
-> >
-> > gordon @ unicorn: df -h /
-> > Filesystem            Size  Used Avail Use% Mounted on
-> > /dev/md0              236M   20M  204M   9% /
-> >
-> > gordon @ unicorn: cat /proc/mdstat
-> > ...
-> > md0 : active raid1 hdc1[1] hda1[0]
-> >       249856 blocks [2/2] [UU]
-> > ...
->
-> So what do you do when /dev/hda fails and the computer won't reboot?  Have
-> you managed to get it to boot off /dev/hdc when /dev/hda isn't available?
+I got my RAID5 up, built and sync'd and everything.
 
-Yes. Works a treat. No point doing stuff if you don't test it enough to
-trust it.
+I don't quite remember exactly what I did, because I have gotten less and less sleep and steadily lost more and more sanity/memory as the week has passed, but I fixed it.
 
-You do need a modern mobo/BIOS combination that will boot off something
-other than the first IDE drive, but thats been fairly standard for a few
-years now IIRC.
+The WD utility didn't find anything (or fix anything) and I nearly killed all my data (well, almost nearly) but after I took a torch to all but one member of my system partition RAID (HDA was my problem, so I had to break it off my system mirror) I rebuilt every RAID from the ground up.  It took forever to do, and the devil is in the details (which I don't recall at all) but once done, it didn't take long to see that this fixed my problem.  Still, I sat up and watched it build and build and build just to make sure my RAID goblin didn't pack up and move to another spot.
 
-I've recently built another system with 5 IDE drives; hde,g,i,k,m and it
-boots off e which is mirrored on i and that boots also when e isn't
-present.
+I want to thank everyone for their help.  This was a very trying and tedious experience and I tried my best not to be a pest.  I hope to stick around and help others as they come by, because I definitely owe it to the list.
 
-> Not having to worry about these sorts of things is one reason it's nice to
-> have hardware RAID for at least the boot device.
-
-You do have a valid point there though, especially on older system that
-can't do this. Maybe SCSI too - I haven't had a chance to build an
-all-SCSI system for some time, but I get a chance in a few weeks time, so
-that'll be nice to experiment with.
-
-Gordon
+But, first, I think I'll sleep all weekend.
 
