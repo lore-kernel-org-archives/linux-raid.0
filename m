@@ -1,77 +1,120 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: Spare-group drive affinity with mdadm?
-Date: Wed, 18 Aug 2004 12:27:36 +1000
+From: Heinz Mauelshagen <mauelshagen@redhat.com>
+Subject: *** Announcement: dmraid 1.0.0-rc3 ***
+Date: Wed, 18 Aug 2004 21:06:10 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16674.48792.132076.666009@cse.unsw.edu.au>
-References: <411AA9D5.7090508@redhat.com>
+Message-ID: <20040818190610.GA6275@redhat.com>
+Reply-To: mauelshagen@redhat.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Brendan Conoboy on Wednesday August 11
-To: Brendan Conoboy <blc@redhat.com>
-Cc: linux-raid@vger.kernel.org
+Content-Disposition: inline
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday August 11, blc@redhat.com wrote:
-> Hello,
-> 
-> I've just setup a raid 10 array (6 mirrors striped together) and have 
-> two extra drives available as hot spares.  The mirrors themselves are 
-> composed of two drives on separate scsi controllers to keep the SCSI bus 
-> from saturating.  The performance of this setup is just phenomenal, but 
-> the hot spares are not yet setup.
-> 
-> It appears that when using mdadm that one can use the spare-group 
-> feature to share a single hot-spare amongst multiple raid groups. 
-> AFAICT, this is done by placing the hot spare or spares in a single 
-> mirror, then designating it as part of the same spare group as a number 
-> of other mirrors using the same spare-group name.  For instance, if 
-> /dev/md0 has two spare drives, but /dev/md1 does not, I can do this to 
-> share the spares:
-> 
-> ARRAY /dev/md0 level=raid1 num-devices=2 
-> devices=/dev/sda1,/dev/sde1,/dev/sdc1,/dev/sdd1 spare-group=g1
-> ARRAY /dev/md1 level=raid1 num-devices=2 devices=/dev/sdb1,/dev/sdf1 
-> spare-group=g1
-> ARRAY /dev/md2 level=raid0 num-devices=2 devices=/dev/md0,/dev/md1
-> 
-> This is very handy, but performance-wise it's suboptimal.  When a drive 
-> fails the system might activate a spare that's on a different scsi chain 
-> than the drive that just failed, reducing overall redundancy and 
-> throughput.   It'd be nice if when a drive fails, a hot spare on the 
-> same chain would be preferred over a drive on a different chain.  Of 
-> course this is a pretty arbitrary distinction and something that would 
-> need configuration, but it doesn't seem like too much of a stretch over 
-> what mdadm can do already.  Maybe some sort of extended mdadm.conf 
-> syntax like:
-> 
-> AFFINITY /dev/sda,/dev/sdb spares=/dev/sdc
-> AFFINITY /dev/sde,/dev/sdf spares=/dev/sdd
-> 
-> (Assuming sda, sdb and sdc are on one chain and sde, sdf, and sdd are on 
-> another).
-> 
-> Is an enhancement like this feasible?
 
-No, at least not in that form.
-Device names (like "sda") are not stable.  If drive is added or
-removed, lots of names can change.  So hard coding them in mdadm.conf
-is a bad idea.
+               *** Announcement: dmraid 1.0.0-rc3 ***
 
-I think the best solution would be to allow mdadm to run an external
-program which makes a selection.
-It could be given an MD array and a list of possible spares, and it
-should return the preferred on.
+dmraid 1.0.0-rc3 is available at
+http://people.redhat.com:/~heinzm/sw/dmraid/ in source, source rpm and i386 rpm.
 
-You would then want to write a program (script?) that implemented
-whatever policy you wanted.
-You policy seems to be "balance active drives across scsi busses",
-which would require checking each array, and possibly looking at drive
-stats to see which drives were actually being used.
-This is certainly a reasonable policy, but someone else might want a
-different one....
+dmraid (Device-Mapper Raid tool) discovers, [de]activates and displays
+properties of software RAID sets (ie. ATARAID) and contained DOS
+partitions using the device-mapper runtime of the 2.6 kernel.
 
-Does that sound reasonable?
+The following ATARAID types are supported on Linux 2.6:
 
-NeilBrown
+Highpoint HPT37X
+Highpoint HPT45X
+Intel Software RAID
+Promise FastTrack
+Silicon Image Medley
+
+This ATARAID type is only basically supported in this version (I need
+better metadata format specs; please help):
+LSI Logic MegaRAID
+
+Please provide insight to support those metadata formats completely.
+
+Thanks.
+
+See files README and CHANGELOG, which come with the source tarball for
+prerequisites to run this software, further instructions on installing
+and using dmraid!
+
+CHANGELOG is contained below for your convenience as well.
+
+
+Call for testers:
+-----------------
+
+I need testers with the above ATARAID types, to check that the mapping
+created by this tool is correct (see options "-t -ay") and access to the ATARAID
+data is proper.
+
+You can activate your ATARAID sets without danger of overwriting
+your metadata, because dmraid accesses it read-only unless you use
+option -E with -r in order to erase ATARAID metadata (see 'man dmraid')!
+
+This is a release candidate version so you want to have backups of your valuable
+data *and* you want to test accessing your data read-only first in order to
+make sure that the mapping is correct before you go for read-write access.
+
+
+The author is reachable at <Mauelshagen@RedHat.com>.
+
+For test results, mapping information, discussions, questions, patches,
+enhancement requests and the like, please subscribe and mail
+to <ataraid@redhat.com>.
+
+--
+
+Regards,
+Heinz    -- The LVM Guy --
+
+
+CHANGELOG:
+---------
+
+Changelog from dmraid 1.0.0-rc2 to 1.0.0-rc3		2004.08.18
+
+FIXES:
+------
+o HPT37X mapping on first disk of set
+o dietlibc sscanf() use prevented activation
+o le*_to_cpu() for certain glibc environments (Luca Berra)
+o sysfs discovery (Luca Berra)
+o permissions to write on binary, which is needed
+  by newer strip versions (Luca Berra)
+o SCSI serial number string length bug
+o valgrinded memory leaks
+o updated design document
+o comments
+
+FEATURES:
+---------
+o added basic support for activation of LSI Logic MegaRAID/MegaIDE;
+  more reengineering of the metadata needed!
+o root check using certain options (eg, activation of RAID sets)
+o implemented locking abstraction
+o implemented writing device metadata offsets with "-r[D/E]"
+  for ease of manual restore
+o file based locking to avoid parallel tool runs competing
+  with each other for the same resources
+o streamlined library context
+o implemented access functions for library context
+o streamlined RAID set consistency checks
+o implemented log function and removed macros to shrink binary size further
+o removed superfluous disk geometry code
+o cleaned up metadata.c collapsing free_*() functions
+o slimmed down minimal binary (configure option DMRAID_MINI
+  for early boot environment)
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+Heinz Mauelshagen                                 Red Hat GmbH
+Consulting Development Engineer                   Am Sonnenhang 11
+                                                  56242 Marienrachdorf
+                                                  Germany
+Mauelshagen@RedHat.com                            +49 2626 141200
+                                                       FAX 924446
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
