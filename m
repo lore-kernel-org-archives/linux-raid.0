@@ -1,35 +1,41 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: resync on every raidstart
-Date: Tue, 23 Sep 2003 16:47:26 +1000
+From: Lars Marowsky-Bree <lmb@suse.de>
+Subject: Re: Locking bugs in 2.4 md.c
+Date: Tue, 23 Sep 2003 13:08:36 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16239.60542.191148.816664@notabene.cse.unsw.edu.au>
-References: <7e6d.3f6de874.1ece7@altium.nl>
+Message-ID: <20030923110836.GJ8670@marowsky-bree.de>
+References: <20030918152310.GD30852@marowsky-bree.de> <16234.25885.855209.372799@notabene.cse.unsw.edu.au> <20030919072610.GB3143@marowsky-bree.de> <20030919083639.GE3143@marowsky-bree.de> <16238.36518.991915.293076@notabene.cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Dick Streefland on Sunday September 21
-To: Dick Streefland <dick.streefland@xs4all.nl>
-Cc: linux-raid@vger.kernel.org
+Content-Disposition: inline
+In-Reply-To: <16238.36518.991915.293076@notabene.cse.unsw.edu.au>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sunday September 21, dick.streefland@xs4all.nl wrote:
-> Every time I stop a RAID1 device with raidstop, and start it again
-> with raidstart, it resyncs. Is this normal, or am I doing something
-> wrong? Here is an example with a RAID1 device on two loopback
-devices:
+On 2003-09-22T15:54:46,
+   Neil Brown <neilb@cse.unsw.edu.au> said:
 
-I cannot reproduce this.
-Does it happen with real devices, or only loopback devices?
+> If you can show me a stack trace or some pointers to wher it panics, =
+I
+> can look further.
 
-Can you try with mdadm and see if that makes a difference?
+OK, it looks like the patch indeed fixes the locking races in md. The
+other one I've been seeing was unrelated to md.
 
-After raidstop, and before raidstart, can you
+Though I did change the ITERATE_MDDEV/*_LOCK*/ in the the complete raid
+state printout to the locked version.
 
-  mdadm -E /dev/loop1
-  mdadm -E /dev/loop2
+Sincerely,
+    Lars Marowsky-Br=E9e <lmb@suse.de>
 
-and show me the results?
+--=20
+High Availability & Clustering		ever tried. ever failed. no matter.
+SuSE Labs				try again. fail again. fail better.
+Research & Development, SUSE LINUX AG		-- Samuel Beckett
 
-Thanks,
-NeilBrown
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
