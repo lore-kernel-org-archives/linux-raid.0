@@ -1,34 +1,49 @@
-From: "EmlakAraBul" <emlakarabul@yahoo.com>
-Subject: EmlakAraBul.com
-Date: Fri, 20 Aug 2004 22:29:56 +0300
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: mdadm question
+Date: Sat, 21 Aug 2004 08:11:54 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <S268697AbUHTT35/20040820193013Z+832@vger.kernel.org>
-Reply-To: "EmlakAraBul" <emlakarabul@yahoo.com>
+Message-ID: <16678.30506.677976.584229@cse.unsw.edu.au>
+References: <41262445.8010509@aj.net-lab.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-9
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=unknown
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: message from Andreas John on Friday August 20
+To: Andreas John <lists@aj.net-lab.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Emlakta Tek Adresde Bulu=FEal=FDm...
+On Friday August 20, lists@aj.net-lab.net wrote:
+> Hello!
+> 
+> I have a question about mdadm usage. One of me customers killed a
+> raid5+1 by accidently removing an ide bus with two disk on it (dont't
+> ask, I know ;-))
+> 
+> Assuming that the data is on the disks I'm looking for a way to convince
+>   linux to mark the superblocks (of the missing disk only?) as "not
+> failed" so that the raid comes up again. mdadm seems to have what I am
+> looking for, like "madm --assemble --update=? --force" can write the
+> superblocks freshly without destorying the data on it? Do I have to use
+> --update=super$,1rp(Bminor or --update=super$,1rp(Bminor on ia32?
+> Or is there an recovery tool for such a case (i.e. mddump?)?
 
-www.emlakarabul.com
+You don't need any --update.  Just --assemble --force.  mdadm will
+then pick the best available drives to assemble a degraded array (one
+drive missing).  If the result seems good (e.g. fsck reports ok), then
+you can add the other drive (--add) and it will be reconstructed with
+consistent data.
 
-=DCcretsiz ilan=FDn=FDz=FD verin, aray=FDn...
+NeilBrown
 
-G=FCncel Konut Kredileri Hakk=FDnda bilgi al=FDn...
-=20
-Konut kredisi hesaplama makinas=FD ile alternatif kredileri hesaplay=FD=
-n...
-
-Arad=FD=F0=FDn=FDz emla=F0=FDn ilan=FDn=FD girin...
-
-Konut Sigortalar=FD, Hukuki Dan=FD=FEman...
-
-Tam size g=F6re...
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> If this does not work, can anyone point me out where I can find an
+> overview about the structure of a superblock, so that I may fix the
+> problem via hex-editor (my skills point back to C64 times ... :-))
+> I've seen the source but some kind of overview/scheme would be nice.
+> 
+> I'm scared. :)
+> 
+> Rgds,
+> Andreas
+> 
