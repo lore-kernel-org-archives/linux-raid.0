@@ -1,104 +1,49 @@
-From: Sven Anders <anders@anduras.de>
-Subject: Re: Linux 2.6.10 / RAID1 problem
-Date: Thu, 06 Jan 2005 13:01:39 +0100
-Message-ID: <41DD28A3.5090308@anduras.de>
-References: <41DC515C.7030208@anduras.de> <16860.27580.73601.462427@cse.unsw.edu.au>
+From: maarten <maarten@ultratux.net>
+Subject: Spares and partitioning huge disks
+Date: Thu, 6 Jan 2005 15:16:47 +0100
+Message-ID: <200501061516.47376.maarten@ultratux.net>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------070104000803010102040203"
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <16860.27580.73601.462427@cse.unsw.edu.au>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: Neil Brown <neilb@cse.unsw.edu.au>
 List-Id: linux-raid.ids
 
-This is a multi-part message in MIME format.
---------------070104000803010102040203
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 8bit
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+Hi
 
-Neil Brown wrote:
-| On Wednesday January 5, anders@anduras.de wrote:
-|
-|>-----BEGIN PGP SIGNED MESSAGE-----
-|>Hash: SHA1
-|>
-|>Hello!
-|>
-|>I'm expirencing strange problems on my server running Software RAID1 (Mirroring) under
-|>the Linux kernel 2.6.10. It works nicely under Linux 2.4.18!
+I just got my 4 new 250GB disks.  I have read someone on this list advocating 
+that it is better to build arrays with smaller volumes, as that decreases the 
+chance of failure, especially failures of two disks in a raid5 configuration. 
 
-(Correction: not 2.4.18, it's a 2.4.25 kernel!)
+The idea behind it was that since a drive gets kicked when a read-error 
+occurs, the chance is lower that a 40 GB part develops a read error than for 
+the full size 250 GB.  Thus, if you have 24 40GB parts, there is no fatal two 
+disk failure when part sda6 and part sdc4 develop a bad sector at the same 
+time. On the other hand, if the (full-size) disk sda1 and sdc1 do fail at the 
+same time, you're in deep shit. 
+I thought it was real insightful, so I would like to try that now.
 
-|
-|
-| Why do you think it is a raid problem rather than an ext3 problem?
-|
-| Are you able to run the same test on a single unraided drive?
+(Thanks to the original poster, I don't recall your name, sorry)
 
-Yes I've done it today and running on the same harddisk (one disk alone and both
-in parallel) everything worked fine!
+Now my two questions regarding this.
 
-Then I created a RAID1 of this disks and tried the test again... Same error!
+1) What is better, make 6 raid5 arrays consisting of all 40GB partitions and 
+group them in a LVM set, or group them in a raid-0 set (if the latter is even 
+possible that is) ?
 
-Maybe it's an problem with ext3 running on RAID1, but it's worked under 2.4.25!
+2) Seen as the 'physical' volumes are now 40 GB, I could add an older 80GB 
+disk partitioned in two 40GB halves, and use those two as hot-spares. 
+However, for that to work you'd have to be able to add the spares to _all_ 
+raid sets, not specific ones, if you understand what I mean.  So they would 
+act as 'roaming' spares, and they would get used by the first array that 
+needs a spare (when a failure occurs of course).  But... is this possible ? 
 
-|>Any special kernel compile options not to use when using RAID?
-|
-| No.
+Thanks for any insights!
+Maarten
 
-One difference between the kernels is, the 2.6.10 is optimized for the current
-processor (Athlon) and the old 2.4.25 is optimized for AMD-K6/2 (the old processor).
+-- 
 
-
-What do you think??
-
-Regards
-~ Sven
-
-- --
-~ Sven Anders <anders@anduras.de>
-
-~ ANDURAS service solutions AG
-~ Innstraße 71 - 94036 Passau - Germany
-~ Web: www.anduras.de - Tel: +49 (0)851-4 90 50-0 - Fax: +49 (0)851-4 90 50-55
-
-Rechtsform: Aktiengesellschaft - Sitz: Passau - Amtsgericht Passau HRB 6032
-Mitglieder des Vorstands: Sven Anders, Marcus Junker, Michael Schön
-Vorsitzender des Aufsichtsrats: Dipl. Kfm. Karlheinz Antesberger
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.5 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
-
-iD8DBQFB3Sij5lKZ7Feg4EcRAu3XAJ40M9WdVCZDdmFTuZny+vsrZKMD5ACgjskA
-bltLWcobu2pliqojMHg4ZQQ=
-=CJJC
------END PGP SIGNATURE-----
-
---------------070104000803010102040203
-Content-Type: text/x-vcard; charset=utf8;
- name="anders.vcf"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="anders.vcf"
-
-begin:vcard
-fn:Sven Anders
-n:Anders;Sven
-org:ANDURAS AG;Research and Development
-adr;quoted-printable:;;Innstra=C3=9Fe 71;Passau;Bavaria;94036;Germany
-email;internet:anders@anduras.de
-title:Dipl. Inf.
-tel;work:++49 (0)851 / 490 50 - 0
-tel;fax:+49 (0)851 / 4 90 50 - 55
-x-mozilla-html:FALSE
-url:http://www.anduras.de
-version:2.1
-end:vcard
-
-
---------------070104000803010102040203--
