@@ -1,90 +1,55 @@
-From: Oliver Heinz <oheinz@fbihome.de>
-Subject: Re: Multipath problem [zero Block multipath device creation with
- mdadm 1.8.1]
-Date: Thu, 25 Nov 2004 10:43:53 +0100
-Message-ID: <41A5A959.2050201@fbihome.de>
-References: <41A32AE7.2080502@fbihome.de> <20041123201650.GA8972@percy.comedia.it>
+From: Gordon Henderson <gordon@drogon.net>
+Subject: Re: Preparation advice?
+Date: Sat, 27 Nov 2004 08:46:37 +0000 (GMT)
+Message-ID: <Pine.LNX.4.56.0411270837340.5805@lion.drogon.net>
+References: <6d5bedd8041126205255c0fe7d@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20041123201650.GA8972@percy.comedia.it>
+In-Reply-To: <6d5bedd8041126205255c0fe7d@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-Cc: linux-raid@vger.kernel.org
+To: Ewan Grantham <ewan.grantham@gmail.com>
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Luca Berra schrieb:
+On Fri, 26 Nov 2004, Ewan Grantham wrote:
 
-> On Tue, Nov 23, 2004 at 01:19:51PM +0100, Oliver Heinz wrote:
->
->> Mixing mdadm-1.6 and 1.8.1 for creating/managing the device doesn't 
->> work, it gives me an segfault.
->
->
-> try patching mdadm-1.8.1 with this patch, it might help with the
-> segfault.
+> Am about to venture into the MD world. I have 4 250-Gig HDs, 1 on
+> IDE1, 1 on IDE2, 1 on the internal firewire port, 1 on a PCI Firewire
+> card. So I think I have my failure points reasonably spread :-)
 
-This works! Thanks a lot!
+Sounds like a bit of a homebrew bits & pieces box... :)
 
-Now creating the md-device with versions prior 1.8.1 works (I tested 
-1.60 and 1.8.0) - restarting the array with them fails.
-With 1.8.1 (with patch applied) I get an 0 Block device created bit I 
-can restart the (correct) device I created with 1.60.
+> Since two of these are external drives, any special considerations?
 
-Now of course it would be great to get the device created and restarted 
-with the same utility. We'd like to use it in production environment 
-here, can more experienced mdadm users recommend that, these problems  
-did not really strengthen our confidence in mdadm (at least when it 
-comes to multipath, we have (of course) been using mdadm successfully 
-for raid on severall systems).
+Make sure their power and data cables, and on/off switches are secure...
 
-Are the code changes in 1.8.1 so drastic that you would recommend to 
-stick with prior versions and fix the issue with starting the array or 
-would you suggest to get 1.8.1 to get MD creation in 1.8.1 fixed (well 
-it need's to be fixed anyway ;-).
+> I
+> am running a Debian from a Knoppix 3.6 HD Install with a 2.4.27
+> kernel. I just updated the mdadm package using synaptic to 1.7, which
+> I assume is the best version to run. My OS/Boot Disk is seperate, so I
+> don't have to worry about that, but would like to have the array come
+> up when the system does. Pointers to FAQs on any of this would also be
+> appreciated.
 
-Bye,
-Oliver
+Read the Software RAID FAQ on
 
+  http://www.tldp.org/HOWTO/Software-RAID-HOWTO.html
 
->
->
->------------------------------------------------------------------------
->
->--- mdadm-1.8.1/mdadm.c.bluca	2004-11-14 19:44:26.000000000 +0100
->+++ mdadm-1.8.1/mdadm.c	2004-11-14 19:44:31.747309097 +0100
->@@ -80,11 +80,10 @@
-> 
-> 	int mdfd = -1;
-> 
->-	ident.uuid_set=0;
->+	memset(&ident,0,sizeof(struct mddev_ident_s));
-> 	ident.level = UnSet;
-> 	ident.raid_disks = UnSet;
-> 	ident.super_minor= UnSet;
->-	ident.devices=0;
-> 
-> 	while ((option_index = -1) ,
-> 	       (opt=getopt_long(argc, argv,
->--- mdadm-1.8.1/config.c.bluca	2004-11-02 06:11:06.000000000 +0100
->+++ mdadm-1.8.1/config.c	2004-11-14 19:44:35.693660204 +0100
->@@ -266,15 +266,11 @@
-> 	struct mddev_ident_s mis;
-> 	mddev_ident_t mi;
-> 
->-	mis.uuid_set = 0;
->+	memset(&mis,0,sizeof(struct mddev_ident_s));
-> 	mis.super_minor = UnSet;
-> 	mis.level = UnSet;
-> 	mis.raid_disks = UnSet;
-> 	mis.spare_disks = UnSet;
->-	mis.devices = NULL;
->-	mis.devname = NULL;
->-	mis.spare_group = NULL;
->-	mis.autof = 0;
-> 
-> 	for (w=dl_next(line); w!=line; w=dl_next(w)) {
-> 		if (w[0] == '/') {
->  
->
-.
+It's got basic instructions for both the older raidtools and the newer
+mdadm.
+
+What is your boot disk connected to? Hopefully not the same controller as
+one of your RAID disks...
+
+And might you not want to make the bood drive mirrored also?
+
+Anyway, for the big array, assuming you just want one big ~750GB array
+(RAID 5 gives N-1 capacity) partition each drive the same way with one
+partition for the whole disk, then mark each partition with type FD and
+build the array. Make sure the kernel has RAID built-in to it, or the RAID
+modules are loaded at boot time and off you go. Once it's built, make a
+mount point for it and put an entry in the /etc/fstab for it and it'll be
+there for all time....
+
+Gordon
