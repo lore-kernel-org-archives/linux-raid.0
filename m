@@ -1,39 +1,39 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: mdadm Some Makefile changes , Hth , JimL
-Date: Mon, 8 Apr 2002 13:22:50 +1000 (EST)
+From: Brad Hubbard <brad@congosystems.com>
+Subject: Re: Winfast ATA100
+Date: Mon, 8 Apr 2002 13:24:03 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <15537.3338.998757.24915@notabene.cse.unsw.edu.au>
-References: <15534.8419.129112.229266@notabene.cse.unsw.edu.au>
-	<Pine.LNX.4.44.0204051751270.25112-100000@filesrv1.baby-dragons.com>
+Message-ID: <02040813240308.06637@badnote>
+References: <20020312225411.6487E22AB@hermes.fra.hollants.com>
+Reply-To: brad@congosystems.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-In-Reply-To: message from Mr. James W. Laferriere on Friday April 5
-To: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
-Cc: linux-raid maillist <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+In-Reply-To: <20020312225411.6487E22AB@hermes.fra.hollants.com>
+To: Pieter Hollants <pieter@hollants.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Friday April 5, babydr@baby-dragons.com wrote:
-> 
-> 	Hello Neil ,  Something funny in the --Detail output from a raid5
-> 	array I maintain , see below .  Tia ,  JimL
-> 
->  mdadm-0.8.1# mdadm -v -D /dev/md0
-> /dev/md0:
->         Version : 00.90.00
->   Creation Time : Sat Apr 14 06:16:46 2001
->      Raid Level : raid5
->      Array Size : 892800 (871.87 MiB 914.22 MB)
->                   ^^^^^^
+On Wed, 13 Mar 2002 09:54, Pieter Hollants did align ASCII characters thusly:
+> > Has anyone got any experience with getting the Leadtek Winfast ATA100
+> > cards
+> > under Linux?
+>
+> They seem to use the CMD/Silicon Image chips, which have excellent Linux
+> support. When I researched chipsets in last August, the driver hadn't
+> changed since kernel 2.4.4. My SW RAID-1 has run stable and reliable
+> ever since.
 
-Thanks:
- I had
-     larray_size = array_size << 9;
- when array_size was a "long" and larray_size was "long long"
- so some high bits got lost.
- It is now 
-     larray_size = array_size;
-     larray_size <<= 9;
- which should work correctly.
+Finally got this going (got absolutely no response from CMD or Leadtek by the 
+way).
 
-NeilBrown
+Needed a line like this in lilo.conf
+
+append="ide2=0xdc00,0xd802,17 ide3=0xd400,0xd002,17 ide0=autotune 
+ide1=autotune ide2=autotune ide3=autotune"
+
+Note: This line is, of course, system specific.
+
+Hope this stops someone burning as many hours on it as I did :-)
+
+Cheers,
+Brad
