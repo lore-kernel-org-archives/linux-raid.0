@@ -1,48 +1,45 @@
-From: Joshua Baker-LePain <jlb17@duke.edu>
-Subject: Re: building a large/fast server
-Date: Wed, 29 Jan 2003 15:44:39 -0500 (EST)
+From: Lucas Barbuto <lucas@qk.com.au>
+Subject: Re: Order of RAID creation in boot process
+Date: Thu, 30 Jan 2003 13:25:20 +1100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0301291534250.12434-100000@chaos.egr.duke.edu>
-References: <Pine.LNX.4.44.0301292122570.24750-100000@uplift.swm.pp.se>
+Message-ID: <20030130022520.GA1931@qk.com.au>
+References: <20030129074954.GA30915@qk.com.au> <3E37913D.8070005@ratnet.stw.uni-erlangen.de>
+Reply-To: Lucas Barbuto <lucas@qk.com.au>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44.0301292122570.24750-100000@uplift.swm.pp.se>
-To: Mikael Abrahamsson <swmike@swm.pp.se>
-Cc: linux-raid@vger.kernel.org
+Content-Disposition: inline
+In-Reply-To: <3E37913D.8070005@ratnet.stw.uni-erlangen.de>
+To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, 29 Jan 2003 at 9:23pm, Mikael Abrahamsson wrote
+Hi Norman,
 
-> On Wed, 29 Jan 2003, Joshua Baker-LePain wrote:
-> 
-> > As for comments, in my testing on a single 3ware board (in hardware 
-> > RAID5), ext3's write speeds sucked.  I'd suggest including XFS in your 
-> > testing.
-> 
-> Will xfs help write speeds with 3ware hardware raid5? You have tested 
-> this? Just as you have experienced, my 3ware raid5 write speeds are lousy, 
-> approx 5-15 megs/s.
+Thanks for continuing to try to help me out, I was really floundering
+there for a while.  I've sorted things out now.  I've put my system
+disks back in the primary and secondary IDE slots and I'm going to use
+the ataraid slots for non-OS disks.
 
-Here's the output of a bonnie++ run on a single 3ware hardware RAID5 
-array.  The system is dual 2.2GHz Xeons on a SuperMicro P4DPE-G2 with 
-2GB of RAM.  I'm using the 160GB Maxtors, and I've setup a hot spare (so 
-it's a 7 drive array).  I'm running Red Hat 7.3 with kernel 2.4.18-17 
-patched with XFS 1.2pre3 from SGI:
+I've got a software RAID-0 going over hda and hdc, I'm booting off it,
+I've got my root partition on it and I've got a combination of ext3 for
+the root and boot partitions and XFS for the rest.
 
-Version 1.02c       ------Sequential Output------ --Sequential Input- --Random-
-                    -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- --Seeks--
-Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP  /sec %CP
-$BOX             4G 24222  99 56221  16 31373  13 24478  95 204587  39 394.6   2
-                    ------Sequential Create------ --------Random Create--------
-                    -Create-- --Read--- -Delete-- -Create-- --Read--- -Delete--
-              files  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP
-                 16  1901  15 +++++ +++  1099   8   979   8 +++++ +++   960   7
-$BOX,4G,24222,99,56221,16,31373,13,24478,95,204587,39,394.6,2,16,1901,15,+++++,+++,1099,8,979,8,+++++,+++,960,7
+I accomplished this by installing onto hda, then creating the raid
+devices across hda and hdc one by one and using the failed-disk
+directive and a boot disk to make the root partition a raid device.  All
+standard stuff.
 
+I've removed the ataraid and pdcraid code from the kernel and compiled
+it as modules, with this setup, the md devices are created before the
+root file system is mounted.  I still don't really understand why they
+aren't created first when ataraid and pdcraid are compiled in.  I guess
+there is a conflict there?  I can now access hde and hdg by loading the
+module after the system has booted, this will work out fine for me as
+those drives will now just be used to store non-OS data (backups and
+stuff).
 
--- 
-Joshua Baker-LePain
-Department of Biomedical Engineering
-Duke University
+Again, thanks for your help.
 
+Regards,
+
+Lucas
