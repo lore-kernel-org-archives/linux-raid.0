@@ -1,72 +1,40 @@
-From: "bo" <bo@sosnetwork.net>
+From: Maurice Hilarius <maurice@harddata.com>
 Subject: Re: raid 5 question
-Date: Mon, 29 Apr 2002 08:43:34 -0700
+Date: Mon, 29 Apr 2002 09:56:42 -0600
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <072d01c1ef94$9f31bdc0$6501a8c0@bomoon>
-References: <20020426084705.GA22119@comet.tr.rdts.de> <20020429041335.A12337@unthought.net>
+Message-ID: <5.1.0.14.2.20020429095305.03c07e90@mail.harddata.com>
+References: <20020426084705.GA22119@comet.tr.rdts.de>
+ <20020429041335.A12337@unthought.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="us-ascii"; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: =?iso-8859-1?Q?Jakob_=D8stergaard?= <jakob@unthought.net>, Marcus Schommer <schommer@rdts.de>
+In-Reply-To: <072d01c1ef94$9f31bdc0$6501a8c0@bomoon>
+To: bo <bo@sosnetwork.net>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Is this URL right?
+With regards to your message at 09:43 AM 4/29/02, bo. Where you stated:
+>Is this URL right?
+>
+>  " http://unthought.net/raidreconf)"
+>
+>I could nto access it???
 
- " http://unthought.net/raidreconf)"
+Delete the bracket!!
 
-I could nto access it???
-
-Bo
-
------ Original Message -----
-=46rom: "Jakob =D8stergaard" <jakob@unthought.net>
-To: "Marcus Schommer" <schommer@rdts.de>
-Cc: <linux-raid@vger.kernel.org>
-Sent: Sunday, April 28, 2002 7:13 PM
-Subject: Re: raid 5 question
+>http://unthought.net/raidreconf
 
 
-> On Fri, Apr 26, 2002 at 10:47:05AM +0200, Marcus Schommer wrote:
-> > hello,
-> > is an existing raid5 array expandable in the way lvm is,
-> > so that i can add a disk, repartition and expand the file system on=
- it?
->
-> Well, yes and no.
->
-> raidreconf (http://unthought.net/raidreconf) will do what you are ask=
-ing,
-> so that makes it a "yes".  But the conversion can take considerable t=
-ime
-> (a full day or more is not unheard of) - since you should take a full
-> backup of your system anyway, maybe the fastest solution would be to
-> simply get the backup done, re-create the array, and restore.
->
-> If your system has a lot of memory, it is possible that raidreconf is
-> faster.
->
-> In any case, I would be interested in hearing your experiences if you
-> decide to try out raidreconf.
->
->
-> --
-> ................................................................
-> :   jakob@unthought.net   : And I see the elder races,         :
-> :.........................: putrid forms of man                :
-> :   Jakob =D8stergaard      : See him rise and claim the earth,  :
-> :        OZ9ABN           : his downfall is at hand.           :
-> :.........................:............{Konkhra}...............:
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+I  just tried the above version of the URL and it works for me..
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+With our best regards,
+
+Maurice W. Hilarius       Telephone: 01-780-456-9771
+Hard Data Ltd.               FAX:       01-780-456-9772
+11060 - 166 Avenue        mailto:maurice@harddata.com
+Edmonton, AB, Canada      http://www.harddata.com/
+    T5X 1Y3
+
+Ask me about the UP1500 Alpha - Full systems from $3,500!
+
