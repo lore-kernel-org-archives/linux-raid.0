@@ -1,17 +1,34 @@
-From: Jeff Woods <Kazrak+kernel@cesmail.net>
-Subject: Re: Sanity check installation scheme
-Date: Wed, 14 Apr 2004 18:12:51 -0600
+From: "Andrew Herdman" <andrew@whine.com>
+Subject: RE: Sanity check installation scheme
+Date: Wed, 14 Apr 2004 22:13:55 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <6.0.1.1.0.20040414175626.04221ec0@no.incoming.mail>
-References: <S262063AbUDNXhL/20040414233712Z+1806@vger.kernel.org>
+Message-ID: <20040415021355.9824110185@mail.whine.com>
+References: <6.0.1.1.0.20040414175626.04221ec0@no.incoming.mail>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <S262063AbUDNXhL/20040414233712Z+1806@vger.kernel.org>
-References: <S262063AbUDNXhL/20040414233712Z+1806@vger.kernel.org>
+In-Reply-To: <6.0.1.1.0.20040414175626.04221ec0@no.incoming.mail>
+To: linux-raid@vger.kernel.org
+List-Id: linux-raid.ids
+
+With that configuration, when you loose a disk, you loose the computer, swap
+does not do any raid features itself, important sections of memory may have
+been on that disk.  I would actually suggest creating the mirrors over all
+four disks for the swap, / and /boot.  You'll eat more disk space, but you
+will recover from a failed disk no matter which disk failed.
+
+Andrew
+
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Jeff Woods
+Sent: Wednesday, April 14, 2004 8:13 PM
 To: robin-lists@robinbowes.com
 Cc: linux-raid@vger.kernel.org
-List-Id: linux-raid.ids
+Subject: Re: Sanity check installation scheme
 
 At 4/15/2004 12:37 AM +0100, robin-lists@robinbowes.com wrote:
 >Partition | sda          | sdb          | sdc      | sdd      |
@@ -64,4 +81,9 @@ based; i.e. RAM+swap) for /tmp.
 --
 Jeff Woods <kazrak+kernel@cesmail.net> 
 
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
