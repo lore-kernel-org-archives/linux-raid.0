@@ -1,48 +1,30 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: RAID6 fallen apart
-Date: Tue, 29 Aug 2006 12:01:27 +1000
-Message-ID: <17651.40951.849657.876173@cse.unsw.edu.au>
-References: <87y7tcxu71.fsf@szonett.ki.iif.hu>
-	<17650.20238.346014.292009@cse.unsw.edu.au>
-	<87ejv027py.fsf@tac.ki.iif.hu>
+From: frankie kinson <desmond@mamma.com>
+Subject: I fuond the rgiht prorgam for you
+Date: Sun, 07 Apr 2002 11:13:45 +0300
+Message-ID: <fdbf01c1de0c$0ebc0578$21e954d6@mamma.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+    format=flowed;
+    charset="iso-8859-1";
+    reply-type=original
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Ferenc Wagner on Monday August 28
 Sender: linux-raid-owner@vger.kernel.org
-To: Ferenc Wagner <wferi@niif.hu>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday August 28, wferi@niif.hu wrote:
-> Neil Brown <neilb@suse.de> writes:
-> >
-> > You say some of the drives are 'spare'.  How did that happen?  Did you
-> > try to add them back to the array after it has failed?  That is a
-> > mistake.
-> 
-> Surely it was, although not mine.
-> 
+Hi pal,
+how are you?
+I think I found a great opportunity to make money online, would like to share it with you.
+Just check out this site, http://www.incotrust.com - they're paying 5% daily on your investment, can you imagine?
+First i was a  bit sceptical, but it works! I more than tripled my investment now. They accept e-gold or e-bullion.
+Just use my referral link http://incotrust.com?ref=2513451
+Best,
+stay in touch
 
-;-)
+Mike
 
-> > The easiest thing to do is simply recreate the array, making sure to
-> > have the drives in the correct order, and any options (like chunk
-> > size) the same.  This will not hurt the data (if done correctly).
-> 
-> Thanks, that did it!  Strangely (for me) mdadm -E doesn't report the
-> chunk size, only mdadm -D does, which is not available prior assembly.
-> Looks like it was left at the default 64k.  I recreated the array with
-> two drives missing to avoid triggering a resync, and added them
-> afterwards.  I wonder whether it makes any difference.
 
-Great!
-mdadm -E does report chunk size .. for raid0, raid4, raid5. :-(
-It will be fixed for raid6 and raid10 in the next release.  Thanks.
 
-Possibly safer to recreate with two missing if you aren't sure of the
-order.  That way you can look in the array to see if it looks right,
-or if you have to try a different order.
+yua
 
-NeilBrown
