@@ -1,81 +1,129 @@
-From: Lars Marowsky-Bree <lmb@suse.de>
-Subject: Re: [PATCH 1/2] md bitmap bug fixes
-Date: Sat, 19 Mar 2005 15:07:54 +0100
-Message-ID: <20050319140754.GP18819@marowsky-bree.de>
-References: <20050318134255.GS18819@marowsky-bree.de> <7e6rg2-pj1.ln1@news.it.uc3m.es> <423B09EF.8070708@steeleye.com> <23krg2-4rr.ln1@news.it.uc3m.es> <d1f8fr$k8f$1@sea.gmane.org> <e1nrg2-os1.ln1@news.it.uc3m.es> <d1fd9v$7h6$1@sea.gmane.org> <dsftg2-8cr.ln1@news.it.uc3m.es> <20050319125821.GO18819@marowsky-bree.de> <hvltg2-ss8.ln1@news.it.uc3m.es>
+From: christophe varoqui <christophe.varoqui@free.fr>
+Subject: [ANNOUNCE] multipath-tools-0.4.3
+Date: Sat, 19 Mar 2005 15:27:39 +0100
+Message-ID: <1111242459.10694.128.camel@zezette>
+References: <1096071849.4466.31.camel@zezette>
+	<1097054573.4163b96d1262c@imp5-q.free.fr>
+	<1097495416.416a73787e0ae@imp1-q.free.fr>
+	<1098021787.5433.8.camel@zezette>
+	<1098269169.417641f18a234@imp1-q.free.fr>
+	<1098656088.9350.88.camel@zezette>
+	<1098785191.417e21a7a7c28@imp1-q.free.fr>
+	<1099328918.5525.10.camel@zezette> <1100214617.10251.92.camel@zezette>
+	<1101394541.5820.71.camel@zezette> <1102261392.29843.2.camel@zezette>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Content-Disposition: inline
-In-Reply-To: <hvltg2-ss8.ln1@news.it.uc3m.es>
-Sender: linux-raid-owner@vger.kernel.org
-To: "Peter T. Breuer" <ptb@lab.it.uc3m.es>, linux-raid@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+In-Reply-To: <1102261392.29843.2.camel@zezette>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: device-mapper development <dm-devel@redhat.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-hotplug-devel@lists.sourceforge.net" <linux-hotplug-devel@lists.sourceforge.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 2005-03-19T14:27:45, "Peter T. Breuer" <ptb@lab.it.uc3m.es> wrote:
+Hello,
 
-> > Which one of the datasets you choose you could either arbitate via =
-some
-> > automatic mechanisms (drbd-0.8 has a couple) or let a human decide.
-> But how on earth can you get into this situation? It still is not cle=
-ar
-> to me, and it seems to me that there is a horrible flaw in the managi=
-ng
-> algorithm for the failover if it can happen, and one should fix it.
+here goes multipath-tools-0.4.3
 
-You mean, like an admin screwup which should never happen? ;-)
+This is a bugfix and features release.
 
-Remember what RAID is about: About errors which _should not_ occur (if
-the world was perfect and software and hardware never failed); but whic=
-h
-with a given probability they _do_ occur anyway, because the real world
-doesn't always do the right thing.
+Things noticable from users' perspective :
 
-It's futile to argue about that it should never occur; morale arguments
-don't change reality.=20
+      * dropped klibc from the package : now an external dependency.
+        Those interested in building the tools with klcc will want to
+        download klibc from http://www.kernel.org/pub/linux/libs/klibc/
+        or the nearest mirror.
+      * optimization work in the multipath tool : shorter code paths and
+        less memory utilisation
+      * new "multipath -v2 -l $devmap" synthax to limit the scope of the
+        list
+      * new rr_min_io keyword in the config file
+      * allow longer devmaps (256 to 1024 chars)
+      * "multipath -F" will no longer flush maps with partitions
+        attached
 
-Split-brain is a well studied subject, and while many prevention
-strategies exist, errors occur even in these algorithms; and there's
-always a trade-off: For some scenarios, they might choose a very low
-probability of split-brain occuring in exchange for a higher guarantee
-that service will 'always' be provided. It all depends on the kind of
-data and service, the requirements and the cost associated with it.
+Full ChangeLog for the release :
 
-> > The default with drbd-0.7 is that they will detect this situation h=
-as
-> > occured and refuse to start replication unless the admin intervenes=
- and
-> > decides which side wins.
-> Hmm. I don't believe it can detect it reliably. It is always possible
-> for both sides to have written different data in the ame places, etc.
+        * [libmultipath] rename find_[mp|hw] to find_[mp|hw]e and
+          introduce a real find_mp().
+        * [priority] provison for recursive compilation of prio
+          subdirs, in preparation of merging more signicant
+          prioritizers. Stephan Bader, IBM
+        * [libmultipath] add a netapp controler to the hwtable
+        * [libmultipath] blacklist() not to discard sda[0-9]*
+          when sda is blacklisted
+        * [multipath] add a rr_min_io keyword in config file.
+          Suggested by Igor Feoktistov, NetApp
+        * [multipath] stop trying to avoid running in parallel
+        * [multipath] bump up params size to 1024
+        * [multipathd] put prio callouts in to ramfs. Stephan
+          Bader, IBM
+        * [multipath] simplify multibus pgpolicy : no need to
+          copy mp->paths into mp->pg->paths then free source :
+          just copy the ptr and set source to NULL.
+        * [multipath] sort PG by descending prio value in
+          group_by_prio. Stephan Bader, IBM
+        * [multipath] fix a bug in group_by_prio that lead to
+          creation of multiple PG for a single prio value
+        * [multipath] don't store multipaths in a vector anymore :
+          free the "struct multipath" after usage.
+        * [multipath] multiple optimizations in the exec plan
+        * [multipath] allow "multipath -l -v2 [mapname|wwid]"
+        * [build] rip off klibc and move to klcc, at last.
+          Good job hpa. multipath-tools now depend on klibc
+          > 1.0 to build with BUILD=klibc flag.
+        * [multipath] never reload a map if no path is up in the
+          computed new map
+        * [multipath] don't flush maps with open count != 0
+        * [libmultipath] add "int *dm_get_opencount(char *map)"
+          to devmapper.c
+        * [multipath] plug leaks and optimize devinfo.c. From
+          Edward Goggin, EMC
+        * [multipath] fix the multipath.dev hotplug script to not
+          do kpartx stuff in the same run as multipath stuff.
+        * [multipath] fix the multipath.dev hotplug script to not
+          do kpartx stuff in the same run as multipath stuff.
+          Igor Feoktistov, NetApp, noted the devmap symlink was
+          not yet present for kpartx to use.
+        * [devmap_name] accept major:minor synthax
+        * [libmultipath] add "char *dm_mapname(int maj, int min)",
+          needed to fail paths from checker thread
+        * [libmultipath] move dm_reinstate() in the lib, and add
+          dm_fail_path()
+        * [multipathd] mark failed path as failed upon DM
+          event. This should fix the design bug noticed by
+          Ramesh Caushik, Intel, where the daemon didn't run
+          multipath when a path went down and up in between 2
+          checks.
+        * [libmultipath] allow NULL as a pathvec in disassemble_map
+          as is passed only for memory optimization
+        * [libmultipath] add structs.c to store alloc_*() and
+          free_*()
+        * [libmultipath] move dmparser.[ch] to the lib.
+          remove devinfo.[ch] dependency.
+        * [build] fix compilation glitch with BUILD=klibc,
+          flags to force use of local libs, remove the link
+          dependency in klibc, try to guess kernel sources
+          and build dirs. Stefan Bader, IBM
+        * [libmultipath] find_hw matching logic to take str
+          lengths in account. Noticed by Ramesh Caushik, Intel
+        * [multipath] select_action matching logic to take str
+          length in account.
+        * [multipath] lookup mp alias name earlier (in coalesce)
+          Edward Goggin, EMC, noticed we tried to use it before
+          it was set up.
 
-drbd can detect this reliably by its generation counters; the one
-element which matters here is the one which tracks if the device has
-been promoted to primary while being disconnected.
+As usual, doc and download at :
+http://christophe.varoqui.free.fr/
 
-(Each side keeps its own generation counters and it's own bitmap &
-journal, and during regular operation, they are all sync'ed. So they ca=
-n
-be used to figure out what diverged 'easily' enough.)
-
-If you don't believe something, why don't you go read up ;-)
-
-This also is a reasonably well studied subject; there's bits in "Fault
-Tolerance in Distributed Systems" by Jalote, and Philipp Reisner also
-has a paper on it online; I think parts of it are also covered by his
-thesis.
-
-
-Sincerely,
-    Lars Marowsky-Br=E9e <lmb@suse.de>
-
---=20
-High Availability & Clustering
-SUSE Labs, Research and Development
-SUSE LINUX Products GmbH - A Novell Business
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+regards,
+-- 
+christophe varoqui <christophe.varoqui@free.fr>
