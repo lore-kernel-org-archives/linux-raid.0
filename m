@@ -1,31 +1,73 @@
-From: Andrew Pam <xanni@glasswings.com.au>
-Subject: md.c patch for root on RAID-10
-Date: Wed, 21 Apr 2004 18:19:36 +1000
+From: Lars Gaarden <lar-gaar@online.no>
+Subject: HighPoint Rocket 1540 hang driver load (Was: Re: Which raid card
+ to buy for Sarge)
+Date: Wed, 21 Apr 2004 13:28:44 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040421081936.GS1352@glasswings.com.au>
+Message-ID: <40865AEC.8040604@online.no>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-To: Ingo Molnar <mingo@redhat.com>, Neil Brown <neilb@cse.unsw.edu.au>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I have a server that is configured with the root partition on a RAID-10
-array (/dev/md5 is RAID-1 /dev/md[34], /dev/md3 is RAID-0 /dev/sd[ab]2,
-/dev/md4 is RAID-0 /dev/sd[cd]2).
+This is ironic. I found this thread just after reporting this:
+http://bugme.osdl.org/show_bug.cgi?id=2555
 
-This server boots Linux kernel 2.6.3 off /dev/md0 RAID-1 /dev/sd[abcd]1
-(about to upgrade to 2.6.5) but unfortunately requires a complicated
-custom initrd to boot correctly since the RAID autorun code does not
-appear to autostart multilayer RAID arrays.  Can you offer me any
-assistance in patching md.c to make it check if any autostarted RAID
-arrays are themselves components of other RAID arrays that should also
-be autostarted?
+Nick Maynard <nick@tastycake.net> writes:
 
-Thanks,
-	Andrew Pam
+>>> I'm running four disks off a RocketRAID 1540 SATA card with Linux
+>>> software RAID since kernel 2.6.0.  The driver included with the kernel
+>>> works just fine.  Any card using the hpt374 chip should work, whatever
+>>> the name on the box happens to be.
+>> Yea.  You should note that I have a Rocket 1540, not a RocketRAID
+>> 1540.  There's a difference
+
+>More than the box and the BIOS?
+
+The PCB layout is different, at least.
+http://www.highpoint-tech.com/image/Product/r1540-pix.gif
+http://www.highpoint-tech.com/image/Product/rr1540pix-1.jpg
+
+Also, loading a RocketRAID BIOS on a Rocket card doesn't work
+very well. If any drives are connected, it will cause a hard
+hang when the card probes for drives during POST.
+
+>> - shown particularly by the fact that Highpoint release open drivers
+>> for the RocketRAID and not the Rocket.
+
+HPT does indeed provide 'open source' drivers for both the Rocket 1540
+and the RocketRAID 1540. You just need to look around a bit.
+
+http://www.highpoint-tech.com/374drivers_down.htm
+http://www.highpoint-tech.com/hpt374-opensource-v111.tgz
+
+>I wouldn't use those drivers, having looked briefly at the source code
+>they do release.  It wasn't pretty.
+
+IANA driver programmer, so I can't comment on the quality. But using
+that v111 from above compiled with NON_RAID=1 and some boot trickery
+(boot with no drives connected to the controller, so the BIOS on the
+card isn't loaded. Then connect drives before loading driver) seems to
+be the only way for me to make the card work properly.
+
+Using the same trick with the hpt366 driver cause slow data rates
+and drive_cmd: status=0x58 { DriveReady SeekComplete DataRequest }
+status error: status=0x58 { DriveReady SeekComplete DataRequest }
+errors,
+
+>> Should doesn't necessarily mean does, unfortunately.
+
+>Could the onboard bios be messing with you? Can it be disabled?
+
+Probably. All the drivers i have tried (except for the official binary
+drivers) will lock the computer hard if any drives are connected to the
+controller at BOOT/POST.
+
+I have found no other way of disabling the BIOS.
+
+Anyway, I have the time and hardware to do testing if someone has
+the time to take a look at it.
+
 -- 
-mailto:xanni@xanadu.net                         Andrew Pam
-http://www.xanadu.com.au/                       Chief Scientist, Xanadu
-http://www.glasswings.com.au/                   Technology Manager, Glass Wings
-http://www.sericyb.com.au/                      Manager, Serious Cybernetics
+LarsG
