@@ -1,47 +1,49 @@
 From: Tim Small <tim@buttersideup.com>
 Subject: Re: disk testing
-Date: Tue, 14 Sep 2004 10:15:43 +0100
+Date: Tue, 14 Sep 2004 13:17:17 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <4146B6BF.1050408@buttersideup.com>
-References: <20040914085007.486103E2F@xprdmailfe12.nwk.excite.com>
+Message-ID: <4146E14D.2090404@buttersideup.com>
+References: <20040914095208.E790A3969@xprdmailfe9.nwk.excite.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20040914085007.486103E2F@xprdmailfe12.nwk.excite.com>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <20040914095208.E790A3969@xprdmailfe9.nwk.excite.com>
+To: hfranklin97@excite.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
-
-
-If there is an unreadable sector on the disk, then reading it will fail,
-but if you write to it, the drive firmware will reallocate the sector,
-and then allow reading (actually the sector it is reading is now
-somewhere else on the disk, but the firmware hides this).  If the raid5
-sync was trying to read such a sector, but your other tests have written
-it, then it will now appear to be fine (and the raid5 should now work).
-
-If I were you I would use smartmontools to check out the drive (you can
-then see if it has reallocated any sectors, and read errors should show
-up in the SMART error log).
-
-Tim.
-
-
-p.s. Prelim SMART support for libata:
-
-http://www.ussg.iu.edu/hypermail/linux/kernel/0408.3/2304.html
-
-
-
 
 harry wrote:
 
->I just bought 3 sata drives and set them up in a raid5 array. About 45% into syncing them, the first disk gets an error and goes offline. I figure I did something wrong, so I retrace my steps and try again, and again, I get an error about 45% of the way through, the first disk errors and goes offline. 
+>Here's an interesting twist: smartctl claims that all three disks don't support smart. However, I think this is because the disks show up as scsi and not ata disks (the controller they're attached to is a promise sata150 tx4). I tried tricking it into looking at the drive as an ata device with the '-d ata' option, but no dice. 
 >
->So, I think I have a bad disk. But wait! I created a raid 1 array on the remaining two to see if there are any other errors later on those two (there weren't), and I create a normal partition/fs on the failing disk. I begin writing various bitpatterns across the entire disk and reading them back, trying to find the problem. So far, I've done about 5 passes over the entire disk without error! 
+>(I'm fairly certain that these 3 disks support smart because I have two more attached through a sata controller built into the motherboard, which both show up as hd? drives, and smartctl gives loads of info for them). All of the drives in question (3 new ones, 2 bought about 8 months ago) are Western Digital 2500JD's. 
 >
->So, any idea why raid would be getting errors from the disk, but I don't seem to be able to? (or, what I should tell the store I bought it from when I try to get it replaced?)
+>
+>
+>And finally, forgive my ignorance, but what does libata do/provide? (I'm guessing it would allow smartctl to see disks that show up as scsi on the system as ata disks, but just want to verify). The system involved is running debian sid with a custom 2.4.27 kernel, and I just did an apt-file and apt-cache search for libata and both came up empty.
 >
 >  
 >
+libata is the new SATA controller support in 2.6.x (also available for 
+2.4.x).  If you are seeing your SATA disks as /dev/sdx then you are 
+probably using libata.  libata lives here:
+
+http://www.kernel.org/pub/linux/kernel/people/jgarzik/libata/
+
+and here:
+
+http://gkernel.bkbits.net/
+
+
+
+The necessary ioctls to support SMART are not in libata yet, but this patch:
+
+http://www.ussg.iu.edu/hypermail/linux/kernel/0408.3/2304.html
+
+will allow you to use smartctl (with the "-d ata" argument) - however it 
+doesn't do the proper locking, so you probably wouldn't want to use it 
+on active disks whilst a system is in production (and certainly not with 
+smartd).
+
+Tim.
 
