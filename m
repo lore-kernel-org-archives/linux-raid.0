@@ -1,21 +1,23 @@
 From: linux@horizon.com
-Subject: Re: Forcing a more random uuid (random seed bug)
-Date: 8 Feb 2005 14:05:38 -0000
-Message-ID: <20050208140538.12557.qmail@science.horizon.com>
+Subject: Re: Software RAID 0+1 with mdadm.
+Date: 8 Feb 2005 14:32:45 -0000
+Message-ID: <20050208143245.13933.qmail@science.horizon.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org, niccolo@texnet.it
+To: brad@seatab.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-+        if ((my_fd = open("/dev/random", O_RDONLY)) != -1) {
+The only issue is that the md code only auto-scans non-MD partitions when
+assembling a RAID array.  You can use mdadm at boot time to put them
+together as other people have shown, or you can add an option to the kernel
+command line (LILO append="..." option; other boot loaders have something
+similar) to help it out.
 
-Please use /dev/urandom for such applications.  /dev/random is the
-highest-quality generator, but will block if entropy isn't available.
-/dev/urandom provides the best available, immediately, which is what
-this application wants.
+Since I have my root partition on RAID1+0, I have "md=4,/dev/md2,/dev/md3"
+on the kernel command line.  This gets /dev/md4 (which is a RAID-0
+made of two RAID-1s) going.
 
-Also, this will only produce 2^32 possible UUIDs, since that's the
-size of the seed.  Meaning that after you've generated 2^16 of them,
-the chances are excellent that they're not UU any more.
+Oh, regarding data placement: I also have the RAID-1 split across
+controllers.  Also, I have half the mirror in removable drive trays
+for emergency insta-backup (fire or other natural disaster) uses.
 
-You might just want to get all 128 (minus epsilon) bits from /dev/urandom
-directly.
+There are uses for such things.
