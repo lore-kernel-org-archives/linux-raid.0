@@ -1,67 +1,36 @@
-From: Steven Dake <sdake@mvista.com>
+From: Ricky Beam <jfbeam@bluetronic.net>
 Subject: Re: RAID 1 cannot boot (using grub)
-Date: Mon, 16 Jun 2003 10:10:18 -0700
+Date: Mon, 16 Jun 2003 20:50:39 -0400 (EDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3EEDF9FA.70707@mvista.com>
+Message-ID: <Pine.GSO.4.33.0306162042180.7750-100000@sweetums.bluetronic.net>
 References: <Pine.LNX.4.44.0306122342440.4181-100000@gpu.utcc>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <Pine.LNX.4.44.0306122342440.4181-100000@gpu.utcc>
 To: Derek Yeung <dky@utcc.utoronto.ca>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Derek,
+On Fri, 13 Jun 2003, Derek Yeung wrote:
+>modified the fstab accordingly.  Without the primary device added to
+>the md set (meaning still working in degraded mode), the machine boots
+>(with a few hitches -- something about a bad superblock and ext3
+>mounting, which i will post more detail later)  -- but, it boots.
+>The problem is after I add the /boot partition to the md set (i.e.: add
+>hda1 to md1, which md1 already has hdc1), and then reboot, the machine
+>fails to boot.  It stops after printing "GRUB".  Does anyone have any idea
+>why?
 
-Lilo supports booting to RAID 1 volumes, and I know it has worked since 
-I've tested it.
+Simple.  You've destroyed part of the bootloader.  In this case, you
+didn't wait for the mirroring to complete, did you?  If so, hda1, or
+(hd0,0) to grub, does not contain a valid filesystem.  Thus, there is
+no stage2 or grub.conf.
 
-As for GRUB, I've never managed to get it to work, but I have not tried 
-with a new grub for 9 months atlesat.
+You'll have to install grub on both hda and hdc as the stage1 and stage1.5
+are outside partitions being mirrored (MBR and the space following it.)  And
+you have go out of your way to do it so it'll work if one of the drives dies.
 
-So the recomendation is to try lilo.
+--Ricky
 
-Good luck
--steve
-
-Derek Yeung wrote:
-
->Hello everyone,
->
->I would very much appreciate insight onto this problem:
->
->System: IBM xSeries 335 / IDE Mirroring / RedHat 8 / Grub
->
->I'm working on setting up mirroring on 2 IDE disks in RedHat 8.  I 
->followed  Neil Brown's email to Stephen Lee (dated 20 Apr 2002).  
->
->I created a degraded RAID 1 using /dev/hdc1, created a filesystem on 
->it, copied everything from the existing boot to the new md device, 
->modified the fstab accordingly.  Without the primary device added to 
->the md set (meaning still working in degraded mode), the machine boots 
->(with a few hitches -- something about a bad superblock and ext3 
->mounting, which i will post more detail later)  -- but, it boots.  
->The problem is after I add the /boot partition to the md set (i.e.: add 
->hda1 to md1, which md1 already has hdc1), and then reboot, the machine 
->fails to boot.  It stops after printing "GRUB".  Does anyone have any idea 
->why?  
->
->I'd very much appreciate any ideas/solutions.  
->
->Thank you very, very much
->
->/dky
->
->
->-
->To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->
->
->  
->
 
