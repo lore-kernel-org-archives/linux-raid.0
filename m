@@ -1,179 +1,162 @@
-From: Michael Tokarev <mjt@tls.msk.ru>
+From: ptb@lab.it.uc3m.es (Peter T. Breuer)
 Subject: Re: "Robust Read"
-Date: Sun, 20 Mar 2005 01:05:19 +0300
-Message-ID: <423CA21F.9060503@tls.msk.ru>
-References: <422F7621.8090602@steeleye.com> <16949.5768.392061.95882@cse.unsw.edu.au> <20050314094454.GK3858@marowsky-bree.de> <16949.26113.68948.938529@cse.unsw.edu.au> <20050314112403.GT3858@marowsky-bree.de> <16950.5692.594941.130741@cse.unsw.edu.au> <20050318103326.GA18819@marowsky-bree.de> <6ivqg2-qsn.ln1@news.it.uc3m.es> <20050318134255.GS18819@marowsky-bree.de> <20050318171608.GA28494@percy.comedia.it> <423B4C4B.7070404@tls.msk.ru> <9phtg2-6c1.ln1@news.it.uc3m.es> <423C1C58.1090609@tls.msk.ru> <vvjtg2-t16.ln1@news.it.uc3m.es> <423C4E62.4070704@tls.msk.ru> <gj2ug2-9q3.ln1@news.it.uc3m.es> <423C897B.1030100@tls.msk.ru> <19gug2-0bj.ln1@news.it.uc3m.es>
+Date: Sat, 19 Mar 2005 23:30:58 +0100
+Message-ID: <2qlug2-snu.ln1@news.it.uc3m.es>
+References: <422F7621.8090602@steeleye.com> <16949.5768.392061.95882@cse.unsw.edu.au> <20050314094454.GK3858@marowsky-bree.de> <16949.26113.68948.938529@cse.unsw.edu.au> <20050314112403.GT3858@marowsky-bree.de> <16950.5692.594941.130741@cse.unsw.edu.au> <20050318103326.GA18819@marowsky-bree.de> <6ivqg2-qsn.ln1@news.it.uc3m.es> <20050318134255.GS18819@marowsky-bree.de> <20050318171608.GA28494@percy.comedia.it> <423B4C4B.7070404@tls.msk.ru> <9phtg2-6c1.ln1@news.it.uc3m.es> <423C1C58.1090609@tls.msk.ru> <vvjtg2-t16.ln1@news.it.uc3m.es> <423C4E62.4070704@tls.msk.ru> <gj2ug2-9q3.ln1@news.it.uc3m.es> <423C897B.1030100@tls.msk.ru> <19gug2-0bj.ln1@news.it.uc3m.es> <423CA21F.9060503@tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------060108060107090806050509"
-In-Reply-To: <19gug2-0bj.ln1@news.it.uc3m.es>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This is a multi-part message in MIME format.
---------------060108060107090806050509
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Michael Tokarev <mjt@tls.msk.ru> wrote:
+> The point a) is moot, because this whole structure is used in raid1.c=
+ ONLY.
+> (I don't know why it is placed into raid1.h header file instead of in=
+to
+> raid1.c directly, but that's a different topic).
 
-Peter T. Breuer wrote:
-> Michael Tokarev <mjt@tls.msk.ru> wrote:
-[]
-> But your approach is fine - it's just that (a) I don't like to mess
-> with the struct sizes, as that makes modules binary incompatible,
-> instead of just having extra functionalities, and (b) I really think
-> it's not going to be easily maintainable to subvert read_balance, and
-> (c), it fragments the patch more, and (d), I really think you only need
-> to count and pray, not keep an exact map.
+Hmm. I'm a little surprised. I would be worried that it had escaped
+somewhere.
 
-The point a) is moot, because this whole structure is used in raid1.c ONLY.
-(I don't know why it is placed into raid1.h header file instead of into
-raid1.c directly, but that's a different topic).
+> > Maybe if you were to use the existing "remaining" field for the bir=
+map,
+> > you would get rid of objection (a)! :-). You could even rename it v=
+ia a
+> > #define :-).
+>=20
+> atomic_t has its own API, it can't be used for &=3D and |=3D operatio=
+ns for
+> example.
 
-> Maybe if you were to use the existing "remaining" field for the birmap,
-> you would get rid of objection (a)! :-). You could even rename it via a
-> #define :-).
+Ah - was the remaining field atomic_t, then? But one can use it - at
+least in i386. I recall there are bit ops. Yes. Atomic.h
 
-atomic_t has its own API, it can't be used for &= and |= operations for
-example.
+/* These are x86-specific, used by some header files */
+#define atomic_clear_mask(mask, addr) \
+__asm__ __volatile__(LOCK =E4ndl %0,%1" \
+: : "r" (~(mask)),"m" (*addr) : "memory")
 
->>BTW, what's the reason to use raid1d for retries in the first place?
->>Why not just resubmit the request in reschedule_retry() directly,
->>the same way it is done in raid1d?
-> 
-> No reason that I recall.  Isn't raid1d going to do it offline?  You want
-> to do it sync instead?  Anyway, the rerite code is completely
-> uninvestigated, so please try anything you like!
+#define atomic_set_mask(mask, addr) \
+__asm__ __volatile__(LOCK =F6rl %0,%1" \
+: : "r" (mask),"m" (*(addr)) : "memory")
 
-I asked about retrying failed read, not about re-writes.
+I also seem to recall "writing" equivalents for sparc - where I think
+they were just the ordinary ops.
 
-[]
->>>>+       r1_bio->tried_disks = 0;
->>>
->>>Hmm. Ditto. I suppose we are making the read request here. Yes we are.
->>>I had set the "remaining" count instead.
+But take no notice.
 
-Note in your version you have a chance to request a read from
-first disk again, in case you have some failed/missing disks.
+> >>BTW, what's the reason to use raid1d for retries in the first place=
+?
+> >>Why not just resubmit the request in reschedule_retry() directly,
+> >>the same way it is done in raid1d?
+> >=20
+> > No reason that I recall.  Isn't raid1d going to do it offline?  You=
+ want
+> > to do it sync instead?  Anyway, the rerite code is completely
+> > uninvestigated, so please try anything you like!
+>=20
+> I asked about retrying failed read, not about re-writes.
+>=20
 
-So i think that instead of usage of "remaining" field, it's better
-to remember the disk from which we did the first read, and loop
-over all disks up to the first one.
+Sorry - I wasn't following too closely because of a conversation with
+Lars, and I wan't looking at my original patch, so .... but as I
+recall, the failed read is retried with reschedule_retry(), since
+that's what happens when the flow falls out the bottom of the patch int
+the remainder of the raid1_end_read_request() code, after an
+not-uptdate request is seen.
 
-/mjt
+        /*
+         * we have only one bio on the read side
+         */
+        if (uptodate
+#ifdef CONFIG_MD_RAID1_ROBUST_READ
+                /* Give up and error if we're last */
+                || atomic_dec_and_test(&r1_bio->remaining)
+#endif /* CONFIG_MD_RAID1_ROBUST_READ */
+                )
+#ifdef DO_ADD_READ_WRITE_CORRECT
+                if (uptodate && test_bit(R1BIO_ReadRetry, &r1_bio->stat=
+e)) {
+                        /* Success at last - rewrite failed reads */
+                        set_bit(R1BIO_IsSync, &r1_bio->state);
+                        reschedule_retry(r1_bio);
+                } else
+#endif /* DO_ADD_READ_WRITE_CORRECT */
+                        raid_end_bio_io(r1_bio);
+        else {
+                /*
+                 * oops, read error:
+                 */
+                char b[BDEVNAME_SIZE];
+                if (printk_ratelimit())
+                        printk(KERN_ERR "raid1: %s: rescheduling sector=
+ %llu\n",
+                               bdevname(conf->mirrors[mirror].rdev->bde=
+v,b), (un
+signed long long)r1_bio->sector);
+                reschedule_retry(r1_bio);
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^ here
+        }
 
---------------060108060107090806050509
-Content-Type: text/plain;
- name="raid1_robust_read-2.6.11.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="raid1_robust_read-2.6.11.diff"
 
---- ./include/linux/raid/raid1.h.orig	Wed Mar  2 10:38:10 2005
-+++ ./include/linux/raid/raid1.h	Sun Mar 20 00:50:59 2005
-@@ -83,6 +83,7 @@ struct r1bio_s {
- 	 * if the IO is in READ direction, then this is where we read
- 	 */
- 	int			read_disk;
-+	unsigned long		first_disk;	/* disk we started read from */
- 
- 	struct list_head	retry_list;
- 	/*
---- ./drivers/md/raid1.c.orig	Wed Mar  2 10:38:10 2005
-+++ ./drivers/md/raid1.c	Sun Mar 20 00:51:57 2005
-@@ -231,12 +231,13 @@ static int raid1_end_read_request(struct
- 		return 1;
- 	
- 	mirror = r1_bio->read_disk;
-+
-+	update_head_pos(mirror, r1_bio);
-+
- 	/*
--	 * this branch is our 'one mirror IO has finished' event handler:
-+	 * we have only one bio on the read side
- 	 */
--	if (!uptodate)
--		md_error(r1_bio->mddev, conf->mirrors[mirror].rdev);
--	else
-+	if (uptodate) {
- 		/*
- 		 * Set R1BIO_Uptodate in our master bio, so that
- 		 * we will return a good error code for to the higher
-@@ -247,14 +248,8 @@ static int raid1_end_read_request(struct
- 		 * wait for the 'master' bio.
- 		 */
- 		set_bit(R1BIO_Uptodate, &r1_bio->state);
+Or do you mean "skip the r_r call and do what it would do instead"?
+Well, that would broaden the patch cross-section here at least.
+
+What r_r does is just place things on the retry list, and shout:
+
+  list_add(&r1_bio->retry_list, &retry_list_head);
+  md_wakeup_thread(mddev->thread);
+
+The raid1d thread on the read side apears to redirect the bio, when it
+pics it up, and resubmit it:
+
+    r1_bio->read_disk =3D disk; // we chose this with map()
+    ...
+    bio =3D bio_clone(r1_bio->master_bio, GFP_NOIO);
+    ...
+    generic_make_request(bio);
+
+I don't see why one shouldn't take advantage of all that code. It
+didn't need altering.
+
+I only had to add a little bit on the write side.
+
+
+> []
+> >>>>+       r1_bio->tried_disks =3D 0;
+> >>>
+> >>>Hmm. Ditto. I suppose we are making the read request here. Yes we =
+are.
+> >>>I had set the "remaining" count instead.
+>=20
+> Note in your version you have a chance to request a read from
+> first disk again, in case you have some failed/missing disks.
+
+I don't think so - unless you suspect a race condition between retrying
+and changing the config. One can forget that - the worst that can
+happen is that we try the same disk again and fail again, which will
+ultimately lead to an error return. But the admin deserves it for
+changing config while a request is busy failing and looking for new
+disks to try :-).  I wouldn't go solving likely very rare problems at
+this stage until the problem turns out to have significance. Leave a
+comment in the code if you see the problem.
+
+
+> So i think that instead of usage of "remaining" field, it's better
+> to remember the disk from which we did the first read, and loop
+> over all disks up to the first one.
+
+That's a possibility too, but as I said, getting things wrong is not
+disastrous! We can't do worse that what happened without the patch. If
+you like, try "n+1" times instead  of "n" times, and that should make
+real sure! Keep it simple.
+
+Peter
+
 -
--	update_head_pos(mirror, r1_bio);
--
--	/*
--	 * we have only one bio on the read side
--	 */
--	if (uptodate)
- 		raid_end_bio_io(r1_bio);
-+	}
- 	else {
- 		/*
- 		 * oops, read error:
-@@ -421,6 +416,42 @@ rb_out:
- 	return new_disk;
- }
- 
-+/*
-+ * This routine returns the disk from which the requested read should
-+ * be done in case previous read failed.  We don't try to optimize
-+ * read positions here as in read_balance().
-+ *
-+ * The rdev for the device selected will have nr_pending incremented.
-+ */
-+static int read_remap(conf_t *conf, r1bio_t *r1_bio)
-+{
-+	int disk;
-+	int first_disk;
-+
-+	rcu_read_lock();
-+
-+	/* Choose the next operation device */
-+	first_disk = r1_bio->first_disk;
-+	disk = r1_bio->read_disk;
-+
-+	do {
-+		++disk;
-+		if (disk >= conf->raid_disks)
-+			disk = 0;
-+		if (disk == first_disk) {
-+			rcu_read_unlock();
-+			return -1;
-+		}
-+	} while (!conf->mirrors[disk].rdev ||
-+	         !conf->mirrors[disk].rdev->in_sync);
-+
-+	/* don't bother updating last position */
-+	atomic_inc(&conf->mirrors[disk].rdev->nr_pending);
-+	rcu_read_unlock();
-+
-+	return disk;
-+}
-+
- static void unplug_slaves(mddev_t *mddev)
- {
- 	conf_t *conf = mddev_to_conf(mddev);
-@@ -560,6 +591,7 @@ static int make_request(request_queue_t 
- 		mirror = conf->mirrors + rdisk;
- 
- 		r1_bio->read_disk = rdisk;
-+		r1_bio->first_disk = rdisk;
- 
- 		read_bio = bio_clone(bio, GFP_NOIO);
- 
-@@ -934,7 +966,7 @@ static void raid1d(mddev_t *mddev)
- 		} else {
- 			int disk;
- 			bio = r1_bio->bios[r1_bio->read_disk];
--			if ((disk=read_balance(conf, r1_bio)) == -1) {
-+			if ((disk=read_remap(conf, r1_bio)) < 0) {
- 				printk(KERN_ALERT "raid1: %s: unrecoverable I/O"
- 				       " read error for block %llu\n",
- 				       bdevname(bio->bi_bdev,b),
-
---------------060108060107090806050509--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
