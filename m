@@ -1,62 +1,25 @@
-From: "Oscar I. del Rey" <nacho@rlc01.sertecnet.com>
-Subject: Recovery Raid 5 from other server
-Date: Mon, 08 Mar 2004 16:00:08 +0100
+From: Ian Pilcher <i.pilcher@comcast.net>
+Subject: Measuring RAID-0 CPU load
+Date: Mon, 08 Mar 2004 11:15:20 -0600
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <404C8A78.5060607@rlc01.sertecnet.com>
+Message-ID: <404CAA28.6030502@comcast.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: owner-linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-  Hi list
+I need to quantify the additional CPU load that RAID-0 adds (vs. the
+boost in I/O performance).  I don't need to do anything fancy;
+'dd if=/dev/zero of=/dev/md?" should do the trick, but I'm not sure how
+to track the processor utilization during the run.
 
-I have a raid 5 with 4 scsi disks.
-This raid was on other server and I would like to mount it on a new 
-server without lost dat, if it is possible
-Before it was configured as:
------------------/etc/raidtab--------------------
-raiddev /dev/md0
-    raid-level                5
-    nr-raid-disks             4
-    nr-spare-disks            0
-    persistent-superblock     1
-    chunk-size                4
-    device                    /dev/sda1
-    raid-disk                 0
-    device                    /dev/sdb1
-    raid-disk                 1
-    device                    /dev/sdc1
-    raid-disk                 2
-    device                    /dev/sdd1
-    raid-disk                 3
-------------------------------------------------
-Now, I make another /etc/raidtab on the new server as:
------------------/etc/raidtab--------------------
-raiddev /dev/md1
-    raid-level                5
-    nr-raid-disks             4
-    nr-spare-disks            0
-    persistent-superblock     1
-    chunk-size                4
-    device                    /dev/sda1
-    raid-disk                 0
-    device                    /dev/sdb1
-    raid-disk                 1
-    device                    /dev/sdc1
-    raid-disk                 2
-    device                    /dev/sdd1
-    raid-disk                 3
-------------------------------------------------
-but it can't start.
+Any ideas?
 
-I have tested the disks with   --> mdadm -E /dev/sda1 , mdadm -E 
-/dev/sdb1, mdadm -E /dev/sdc1, mdadm -E /dev/sdd1 and all the results are ok
-I think the problem is that I use /dev/md1 instead of /dev/md0, but for 
-several reasons I can't use /dev/md0 to do it.
-Then, are there any solution to mount this raid without lost data?
-
-Thanks in advance
-
+Thanks!
+-- 
+========================================================================
+Ian Pilcher                                        i.pilcher@comcast.net
+========================================================================
 
