@@ -1,43 +1,105 @@
-From: "bmoon" <bo@anthologysolutions.com>
-Subject: 4k issue on MD device block size
-Date: Thu, 15 May 2003 19:31:02 -0700
+From: Farkas Levente <lfarkas@bnap.hu>
+Subject: mdadm never notify, grub cause fault
+Date: Fri, 16 May 2003 11:21:30 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <009001c31b53$32b36900$6901a8c0@bmoon>
-References: <3EC3685E.3010202@cc.kuleuven.ac.be> <16067.28056.186816.649850@notabene.cse.unsw.edu.au> <3EC3A1D9.5010201@cc.kuleuven.ac.be>
+Message-ID: <3EC4AD9A.6090104@bnap.hu>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
+Cc: Neil Brown <neilb@cse.unsw.edu.au>
 List-Id: linux-raid.ids
 
-Hello,
+hi,
+we've got an raid1 arroy with two 120Gb maxtor hd (hda, hdc) runs rh9. 
+very ofter hdc faild (although it seems there is no physical error). in
+/etc/mdadm.conf:
+--------------------------
+DEVICE /dev/hd[ac]1
+ARRAY /dev/md0 UUID=a64f771d:9934a60a:39c1483d:2f4a9138
+MAILADDR root@bnap.hu
+--------------------------
+we assume if we run:
+/sbin/mdadm --monitor --scan --daemonise > /var/run/mdadm
+than we'll get a notification in this case. unfortunately we didn't get 
+any notice! even when I stop this monitor and start it again we still 
+didn't got any email. do mdadm periodicaly send the notification? or it 
+send only once and if it fails for some reason we never get notified?
+I'd like to get notification about it! even in every minutes. or is 
+there any other way to check the state in every hour?
 
-Please provide me an advice on  the following issues;
+another important question why we loose one of out hd? I assume grub 
+cause it. since yesterday I upgrade the kernel and after that I've to 
+manualy install grub (root device is on md0). so I run
+--------------------------
+grub
+ > root (hd0,0)
+ > setup (hd0)
+ > root (hd1,0)
+ > setup (hd1)
+--------------------------
+during the next boot:
+--------------------------
+hdc: dma_intr: status=0x51 { DriveReady SeekComplete Error }
+hdc: dma_intr: error=0x40 { UncorrectableError }, LBAsect=23072927, 
+sector=23072864
+end_request: I/O error, dev 16:01 (hdc), sector 23072864
+raid1: Disk failure on hdc1, disabling device.
+         Operation continuing on 1 devices
+raid1: hdc1: rescheduling block 23072864
+md: updating md0 RAID superblock on device
+md: hda1 [events: 00000013]<6>(write) hda1's sb offset: 117949120
+md: recovery thread got woken up ...
+md0: no spare disk to reconstruct array! -- continuing in degraded mode
+md: recovery thread finished ...
+md: (skipping faulty hdc1 )
+raid1: hda1: redirecting sector 23072864 to another mirror
+--------------------------
+currently
+--------------------------
+cat /proc/mdstat
+Personalities : [raid1]
+read_ahead 1024 sectors
+md0 : active raid1 hda1[0] hdc1[1](F)
+       117949120 blocks [2/1] [U_]
 
-I'd like to use 4k block size for both MD super block I/O and regular file
-I/O,
-which will improve the performance.
+unused devices: <none>
+--------------------------
+and
+--------------------------
+mdadm --detail /dev/md0
+/dev/md0:
+         Version : 00.90.00
+   Creation Time : Sun May  4 12:12:40 2003
+      Raid Level : raid1
+      Array Size : 117949120 (112.49 GiB 120.78 GB)
+     Device Size : 117949120 (112.49 GiB 120.78 GB)
+    Raid Devices : 2
+   Total Devices : 2
+Preferred Minor : 0
+     Persistence : Superblock is persistent
 
-Q1: I noticed that it set the "blksize_size" to 4k for MD SB I/O but it use
-1K
-       for the regular file I/O.  It usually set the size to 1k at system
-init by "md-init",
-       then it set to 4k for MD SB I/O later. I could not find the place
-that set it
-      back to 1k.   However, it changes to 1 k????  How?
+     Update Time : Thu May 15 23:57:06 2003
+           State : dirty, no-errors
+  Active Devices : 1
+Working Devices : 1
+  Failed Devices : 1
+   Spare Devices : 0
 
-Q2: I modified md.c to use the 4k blksize_size. It works but sometimes it
-crash.
-      System "BLOCK_SIZE" is still 1k, and my hd device blksize_size=1k,
-too.
-      I changed ONLY 1024 to 4096 on every occurences on md.c.
 
-     What am I missing?
+     Number   Major   Minor   RaidDevice State
+        0       3        1        0      active sync   /dev/hda1
+        1      22        1        1      faulty   /dev/hdc1
+            UUID : a64f771d:9934a60a:39c1483d:2f4a9138
+          Events : 0.19
+--------------------------
+what is the prefered reconstruction in this case?:
+mdadm /dev/md0 -f /dev/hdc1 -r /dev/hdc1 -a /dev/hdc1
+or?
+thanks for any help in advance.
 
-Thanks in advance,
-
-Bo
+-- 
+   Levente                               "Si vis pacem para bellum!"
 
 
