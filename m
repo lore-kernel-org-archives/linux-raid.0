@@ -1,64 +1,37 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: Which (physical) disk is broken?
-Date: Wed, 22 Dec 2004 19:52:47 -0500
-Message-ID: <200412230052.iBN0qs913210@www.watkins-home.com>
-References: <16841.65275.437988.190177@cse.unsw.edu.au>
+From: Srinivasa S <srinivasa.s@gmail.com>
+Subject: a minor query - please help
+Date: Thu, 23 Dec 2004 12:34:51 +0530
+Message-ID: <8f8a519404122223042106571b@mail.gmail.com>
+Reply-To: Srinivasa S <srinivasa.s@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <16841.65275.437988.190177@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: michael@insulin-pumpers.org
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I have never seen a disk system without per disk lights.  You may need to
-open a door or something.
+I have configured a 3 disk raid5 on my linux system (fedora core 1
+running 2.6.5-1.358 OS). I am basically trying to alter the RMW method
+a bit, which I think might improve performance.
 
-If you don't have per disk labels, how would you ever know what disk to
-remove?  At least the manual should give details.  I have seen this issue, I
-then add my own labels.
+Multiple writes come to a stripe at the same time.
+Here is the output of the debug stmts I've put in raid5.c code:
+-----
 
-This seems like a large enough system that you should add custom labels so
-you know which disk is which, and which array uses each disk.  Which SCSI
-tray connects to which SCSI host, ...
+Dec 23 11:16:01 raider kernel: check 2: state 0x4 read 00000000 write
+2456be00 written 00000000
+Dec 23 11:16:02 raider kernel: check 1: state 0x1 read 00000000 write
+00000000 written 00000000
+Dec 23 11:16:02 raider kernel: check 0: state 0x4 read 00000000 write
+41fc8440 written 00000000
+Dec 23 11:16:02 raider kernel: locked=0 uptodate=1 to_read=0
+to_write=2 failed=0 failed_num=0
 
-Guy
+-----
 
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Neil Brown
-Sent: Wednesday, December 22, 2004 6:11 PM
-To: michael@insulin-pumpers.org
-Cc: linux-raid@vger.kernel.org
-Subject: RE: Which (physical) disk is broken?
+Is there any method by which I can make only one write go through at a time?
+I'd be glad if any of you could reply to this... 
 
-On Wednesday December 22, michael@insulin-pumpers.org wrote:
-> <snip>
-> > Use a command like this to cause your disks to have activity, then look
-for
-> > the blinking lights:
-> > dd if=/dev/md/1 of=/dev/null bs=64k
-> > 
-> 
-> Oh swell!.... I have one blinking light for ALL the disks on all 12 of 
-> our raid systems. There has to be a better way.
-
-
-There are really only two ways:
-
- 1/ make lights blinks.
- 2/ have labels on the front of each bay saying what SCSI (or
-    whatever) ID the device has.
-
-If your storage array does not have per-device lights, or per-device
-labels, you should speak sternly to your hardware provider.
-
-NeilBrown
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+Regards, 
+Srinivasa S
