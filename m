@@ -1,125 +1,38 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: RFC - new raid superblock layout for md driver
-Date: Mon, 9 Dec 2002 14:52:11 +1100
+From: Joe Pruett <joey@q7.com>
+Subject: large await discrepancies
+Date: Mon, 9 Dec 2002 15:50:56 -0800 (PST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <15860.4971.982540.695313@notabene.cse.unsw.edu.au>
-References: <15835.2798.613940.614361@notabene.cse.unsw.edu.au>
-	<Pine.SOL.3.96.1021120095120.2764A-100000@libra.cus.cam.ac.uk>
-	<20021121170823.A54989@panzer.kdm.org>
+Message-ID: <Pine.LNX.4.44.0212091539330.1479-100000@q7.q7.com>
+References: <15860.4971.982540.695313@notabene.cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Kenneth D. Merry on Thursday November 21
-To: "Kenneth D. Merry" <ken@kdm.org>
-Cc: Anton Altaparmakov <aia21@cantab.net>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+In-Reply-To: <15860.4971.982540.695313@notabene.cse.unsw.edu.au>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday November 21, ken@kdm.org wrote:
-> 
-> This is a good idea.  Having all of the devices listed in the metadata on
-> each disk is very helpful.  (See below for why.)
-> 
-> Here are some of my ideas about the features you'll want out of a new type
-> of metadata:
-...
-> 
-> [ these are features I think would be good to have ]
-> 
->  - Per-array state that lets you know whether you're doing a resync,
->    reconstruction, verify, verify and fix, and so on.  This is part of the
->    state you'll need to do checkpointing -- picking up where you left off
->    after a reboot during the middle of an operation.
-> 
- 
-Yes, a couple of flags in the 'state' field could do this.
+i have a system with two identical drives (WDC WD800BB-00CAA0) hooked to
+two identical controllers (CMD649 based) in a simple mirror.  randomly,
+the system will exhibit very high load averages, almost exclusively from
+blocked processes.  running iostat -x at that time will show that the hde
+drive will have much large await and svctime values that hda.  i had a
+different set of controllers (PDC based) in there before and saw similar 
+problems.  i used to be running ext3 on the filesystems, but have dropped 
+back to ext2 because of theories of the journal causing periodic 
+slowdowns.  i have also tweaked bdflush via:
+vm.bdflush = 20 2000 128 0 60 512 60 0 0
+based on some info on the web.  each change i make seemed to help, but 
+then eventually the problem comes back.
 
->  - Per-array block number that tells you how far along you are in a verify,
->    resync, reconstruction, etc.  If you reboot, you can, for example, pick
->    a verify back up where you left off.
+so i have another theory:  should i use dissimilar controllers so that the
+device driver code isn't being shared?  i'm just wondering if the 
+underlying code could somehow be starving the second disk while servicing 
+the first?  or am i maybe just running into plain old bandwidth issues 
+(pci or ide)?
 
-Got that, called "resync-position" (though I guess I have to change
-the hypen...).
+the system is just a general isp 'everything' box.  email, web, radius, 
+mysql, etc.  it is a dual 1ghz p3 with 1g of ram on some intel server 
+board.
 
-> 
->  - Enough per-disk state so you can determine, if you're doing a resync or
->    reconstruction, which disk is the target of the operation.  When I was
->    doing a lot of work on md a while back, one of the things I ran into is
->    that when you do a resync of a RAID-1, it always resyncs from the first
->    to the second disk, even if the first disk is the one out of sync.  (I
->    changed this, with Adaptec metadata at least, so it would resync onto
->    the correct disk.)
+any other great ideas?
 
-When a raid1 array is out of sync, it doesn't mean anything to say
-which disc is out of sync.  They all are, with each other...
-Nonetheless, the per-device stateflags have an 'in-sync' bit which can
-be set or cleared as appropriate.
-
-> 
->  - Each component knows about every other component in the array.  (It
->    knows by UUID, not just that there are N other devices in the array.)
->    This is an important piece of information:
-> 	- You can compose the array now, using each disk's set_uuid and the
-> 	  position of the device in the array, and by using the events
-> 	  field to filter out the older of two disks that claim the same
-> 	  position.
-> 
-> 	  The problem comes in more complicated scenarios.  For example:
-> 		- user pulls one disk out of a RAID-1 with a spare
-> 		- md reconstructs onto the spare
-> 		- user shuts down machine, pulls the (former) spare that is
-> 		  now part of the machine, and replaces the disk that he
-> 		  originally pulled.
-> 
-> 	  So now you've got a scenario where you have a disk that claims to
-> 	  be part of the array (same set_uuid), but its events field is a
-> 	  little behind.  You could just resync the disk since it is out of
-> 	  date, but still claims to be part of the array.  But you'd be
-> 	  back in the same position if the user pulls the disk again and
-> 	  puts the former spare back in -- you'd have to resync again.
-> 
-> 	  If each disk had a list of the uuids of every disk in the array,
-> 	  you could tell from the disk table on the "freshest" disk that
-> 	  the disk the user stuck back in isn't part of the array, despite
-> 	  the fact that it claims to be.  (It was at one point, and then
-> 	  was removed.)  You can then make the user add it back explicitly,
-> 	  instead of just resyncing onto it.
-
-The event counter is enough to determine if a device is really part of
-the current array or not, and I cannot see why you need more than
-that.
-As far as I can tell, everything that you have said can be achieved
-with setuid/devnumber/event.
-
-> 
->  - Possibly the ability to setup multilevel arrays within a given piece of
->    metadata.  As far as multilevel arrays go, there are two basic
->    approaches to the metadata:
-
-How many actual uses of multi-level arrays are there??
-
-The most common one is raid0 over raid1, and I think there is a strong
-case for implementing a 'raid10' module that does that, but also
-allows a raid10 of an odd number of drives and things like that.
-
-I don't think anything else is sufficiently common to really deserve
-special treatment:  recursive metadata is adequate I think.
-
-Concerning the  auto-assembly of multi-level arrays, that is not
-particularly difficult, it just needs to be described precisely, and
-coded.
-It is a user-space thing and easily solved at that level.
-
-> 
-> I know Neil has philosophical issues with autoconfiguration (or perhaps
-> in-kernel autoconfiguration), but it really is helpful, especially in
-> certain situations.
-
-I have issues with autoconfiguration that is not adequately
-configurable, and current linux in-kernel autoconfiguration is not
-adequately configurable.  With mdadm autoconfiguration is (very
-nearly) adequately configurable and is fine.  There is still room for
-some improvement, but not much.
-
-Thanks for your input,
-NeilBrown
