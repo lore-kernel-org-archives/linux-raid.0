@@ -1,39 +1,36 @@
-From: Hendrik Visage <hvisage@envisage.co.za>
-Subject: Re: striping and mirroring with only two disks
-Date: Mon, 2 Feb 2004 10:46:20 +0200
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: Some raid1 questions
+Date: Tue, 3 Feb 2004 08:48:26 +1100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040202084619.GI6504@hvs.envisage.co.za>
-References: <20040131195302.GA18341@rap.rap.dk> <6.0.1.1.2.20040131152717.03fe1f28@a.cs.okstate.edu> <20040131235556.GB19891@rap.rap.dk> <16413.55539.501199.360377@notabene.cse.unsw.edu.au>
+Message-ID: <16414.50602.162401.424505@notabene.cse.unsw.edu.au>
+References: <200402011438.01880.yg@mind.lu>
+	<16413.54658.442268.733528@notabene.cse.unsw.edu.au>
+	<24725.213.135.224.9.1075707187.squirrel@www.mind.lu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <16413.55539.501199.360377@notabene.cse.unsw.edu.au>
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>, Nathan Lewis <nathapl@cs.okstate.edu>, linux-raid@vger.kernel.org
+In-Reply-To: message from Yves Glodt on Monday February 2
+To: yg@mind.lu
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Feb 02, 2004 at 03:58:27PM +1100, Neil Brown wrote:
-> On Sunday February 1, keld@dkuug.dk wrote:
+On Monday February 2, yg@mind.lu wrote:
 > 
-> I started work on a "raid10" personality a while back, which could do
-> what you describe, or could stripe/mirror across 3 drives and other
-> combination.
+> Sorry for being unclear...
+> After an unclean shutdown, my raid always rebuilds, and the filesystem never
+> replays the journal. I just does not see that it was not properly
+> unmounted.
 
-Sounds like the RAID1E and RAID5E of some of the IBM ServeRAID controllers...
+That is certainly odd.  Are you sure that is what is happening?
+There are two ways that the journal can be replayed:
+   1/ fsck can replay it or
+   2/ ext3 in the kernel can replay it.
 
-1E: Works across minimum of 3 drives, with the stripes written as:
+The former will not appear in any logs and will only be seen if you
+watch the boot-time messages go past.  The latter will cause a kernel
+message to be logged.
 
-Drive: 1 2 3
-       a b c
-       b c a
-       d e f
-       e f d
+Were you watching for fsck messages, or only looking in logs?
 
-Ie. you still lose half the disk space, but will work over unequal
- number of wrives with still a single drive failure resilience and a full
- speed read.
-
-
-5E: minimum 4drives, similar story just a tad different (No, I've mislaid
-the documentation :()
+NeilBrown
