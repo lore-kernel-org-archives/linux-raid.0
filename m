@@ -1,31 +1,46 @@
-From: Zeno Davatz <zdavatz@generika.cc>
-Subject: raidhotadd error
-Date: 07 May 2003 20:18:07 +0200
+From: NeilBrown <neilb@cse.unsw.edu.au>
+Subject: [PATCH] md - 5 of 6 - Always allow a half-built md array to be stopped.
+Date: Thu, 08 May 2003 11:39:44 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1052331487.742.175.camel@zrr>
-References: <1052325714.1551.137.camel@zrr> <3EB93BF5.4E3912EE@SteelEye.com>
-	 <1052327381.649.140.camel@zrr>  <3EB93F4D.501B2106@SteelEye.com>
-Reply-To: zdavatz@generika.cc
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Message-ID: <E19DaNs-0004uu-00@notabene.cse.unsw.edu.au>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3EB93F4D.501B2106@SteelEye.com>
-To: Linux-Raid <linux-raid@vger.kernel.org>
+To: Linus Torvalds <torvalds@transmeta.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi List
+### Comments for ChangeSet
 
-df gives me /dev/md0
+When starting an array fails, we have to tear it down, but
+in some circumstances (particularly autostart_array) the
+reference count will be 3, so do_md_stop will fail.
 
-raidhotadd /dev/md0 /dev/hdc2
+With this patch we only worry about the number of users
+is the array has been fully started.
 
-gives me:
 
-md: can not import ide/host0/bus1/target0/lun0/part2, has active inodes!
-md: error, md_import_device() returned -16
+ ----------- Diffstat output ------------
+ ./drivers/md/md.c |   11 +++++------
+ 1 files changed, 5 insertions(+), 6 deletions(-)
 
-Why would that be? Thanks for you time an help.
-
-Zeno
-
+diff ./drivers/md/md.c~current~ ./drivers/md/md.c
+--- ./drivers/md/md.c~current~	2003-05-02 16:41:28.000000000 +1000
++++ ./drivers/md/md.c	2003-05-07 15:52:27.000000000 +1000
+@@ -1668,13 +1668,12 @@ static int do_md_stop(mddev_t * mddev, i
+ 	int err = 0;
+ 	struct gendisk *disk = disks[mdidx(mddev)];
+ 
+-	if (atomic_read(&mddev->active)>2) {
+-		printk("md: md%d still in use.\n",mdidx(mddev));
+-		err = -EBUSY;
+-		goto out;
+-	}
+-
+ 	if (mddev->pers) {
++		if (atomic_read(&mddev->active)>2) {
++			printk("md: md%d still in use.\n",mdidx(mddev));
++			return -EBUSY;
++		}
++
+ 		if (mddev->sync_thread) {
+ 			set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+ 			md_unregister_thread(mddev->sync_thread);
