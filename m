@@ -1,82 +1,72 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: Spares and partitioning huge disks
-Date: Wed, 12 Jan 2005 23:55:41 -0500
-Message-ID: <200501130453.j0D4rj902025@www.watkins-home.com>
-References: <16869.55164.244476.436097@cse.unsw.edu.au>
+From: Mike Hardy <mhardy@h3c.com>
+Subject: the dreaded double disk failure
+Date: Wed, 12 Jan 2005 23:14:09 -0800
+Message-ID: <41E61FC1.6060603@h3c.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <16869.55164.244476.436097@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Neil Brown' <neilb@cse.unsw.edu.au>
-Cc: 'maarten' <maarten@ultratux.net>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-1. Would the re-sync of the RAID5 wait for the re-sync of the RAID1, since 2
-different arrays depend on the same device?
 
-2. Will the "bitmap of potentially dirty blocks" be able to keep a disk in
-the array if it has bad blocks?
+Alas, I've been bitten.
 
-3. Will RAID1 be able to re-sync to another disk if the source disk has bad
-blocks?  Even if they are un-correctable?  Once the re-sync is done, then
-RAID5 could re-construct the missing data, and correct the RAID1 array.
-Ouch!, seems like a catch 22.  RAID5 should go first and correct the bad
-blocks first, and then, any new bad blocks found during the RAID1 re-sync.
-But, the bitmap would need to be quad-state (synced, right is good, left is
-good, both are bad).  Since RAID1 can have more than 2 devices, maybe 1 bit
-per device (synced, not synced).  The more I think, the harder it gets!  :)
+Worse, it was after attempting to use raidreconf and having it trash the 
+array with my backup on it instead of extending it. I know raidreconf is 
+a use-at-your-own-risk tool, but it was the backup, so I didn't mind.
 
-If 1, 2 and 3 above are all yes, then it seems like a usable workaround.
+Until I got this (partial mdadm -E output):
 
-And, in the future, maybe RAID5 arrays would be made up of RAID1 arrays with
-only 1 disk each.  Using grow to copy a failing disk to another (RAID1),
-then removing the failing disk.  Then shrinking the RAID1 back to 1 disk.
-Then there would be no window.  Using this method, #1 above is irrelevant,
-or less relevant!
+       Number   Major   Minor   RaidDevice State
+this     7      91        1        7      active sync   /dev/hds1
+    0     0      33        1        0      active sync   /dev/hde1
+    1     1      34        1        1      active sync   /dev/hdg1
+    2     2      56        1        2      active sync   /dev/hdi1
+    3     3      57        1        3      faulty   /dev/hdk1
+    4     4      88        1        4      active sync   /dev/hdm1
+    5     5      89        1        5      faulty   /dev/hdo1
+    6     6      90        1        6      active sync   /dev/hdq1
+    7     7      91        1        7      active sync   /dev/hds1
 
-Guy
+/dev/hdk1 has at least one unreadable block around LBA 3,600,000 or so, 
+and /dev/hdo1 has at least one unreadable blok around LBA 8,000,000 or so.
 
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Neil Brown
-Sent: Wednesday, January 12, 2005 9:06 PM
-To: Guy
-Cc: 'maarten'; linux-raid@vger.kernel.org
-Subject: RE: Spares and partitioning huge disks
+Further, the array was resyncing (power failure due to construction, yes 
+its been one of those days - but it was actually in sync) when the first 
+bad block hit, but I know that all the data I care about was static at 
+the time, so barring some fsck cleanup, all the important blocks should 
+have correct parity.
 
-On Saturday January 8, bugzilla@watkins-home.com wrote:
-> 
-> Guy says:
-> But, I could tell md which disk I want to spare.  After all, I know which
-> disk I am going to fail.  Maybe even an option to mark a disk as "to be
-> failed", which would cause it to be spared before it goes off-line.  Then
-md
-> could fail the disk after it has been spared.  Neil, add this to the wish
-> list!  :)
+Which is to say that I think my data exists, its just a bit far away at 
+the moment.
 
-Once the "bitmap of potentially dirty blocks" is working, this could
-be done in user space (though there would be a small window).
+The first question is, would you agree?
 
-- fail out the chosen drive.
-- combine it with the spare in a raid1 with no superblock
-- add this raid1 back into the main array.
-- md will notice that it has recently been removed and will only
-  rebuild those blocks which need to be rebuilt
-- wait for the raid1 to fully sync
-- fail out the drive you want to remove.
+Assuming its there, my general plan is to do this to get my data out:
 
-You only have a tiny window where the array is degraded, and if we
-were to allow an md array to block all IO requests for a time, you
-could make that window irrelevant.
+1) resurrect the backup array
+2) add one faulty drive to the array, with bad blocks there
+    (an mdadm assemble with 7 of the 8, forced?)
+3) start the backup, fully anticipating the read error and disk ejection
+4) add the other faulty drive in, with bad blocks there
+    (mdadm assemble with 7 of the 8, forced again?)
+5) finish the backup
 
-NeilBrown
+The second question is, does that sound sane? Or is there a better way?
 
- 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Finally, to get the main array healthy, I'm going to take note of which 
+files kicked out which drives, and clobber them with the backed up version.
 
+Alternately, how hard would it be to write a utility that inspected the 
+array, took the LBA(s) of the bad block on one component, and 
+reconstructed it for rewrite via parity. A very smart dd, in a way. Is 
+that possible?
+
+Finally, I heard mention (fromo Peter Breuer I think) of a raid5 patch 
+that tolerates sector read errors and re-writes automagically. Any info 
+on that would be interesting.
+
+Thanks for your time
+-Mike
