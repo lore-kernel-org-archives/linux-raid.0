@@ -1,37 +1,34 @@
-From: Frank van Maarseveen <frankvm@frankvm.com>
-Subject: Re: RAID5 Not coming back up after crash
-Date: Tue, 30 Nov 2004 22:29:25 +0100
-Message-ID: <20041130212925.GA14220@janus>
-References: <41AB4F52.3030001@wisc.edu> <200411291741.iATHf0N05834@www.watkins-home.com>
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: read-balancing not working in 2.6?
+Date: Wed, 1 Dec 2004 10:21:35 +1100
+Message-ID: <16813.127.117484.960555@cse.unsw.edu.au>
+References: <16811.50006.976036.367501@cse.unsw.edu.au>
+	<20041130123841.GA19796@cistron.nl>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <200411291741.iATHf0N05834@www.watkins-home.com>
+In-Reply-To: message from Miquel van Smoorenburg on Tuesday November 30
 Sender: linux-raid-owner@vger.kernel.org
-To: Guy <bugzilla@watkins-home.com>
-Cc: "'B. J. Zolp'" <bjzolp@wisc.edu>, linux-raid@vger.kernel.org
+To: Miquel van Smoorenburg <miquels@cistron.nl>
+Cc: linux-raid@vger.kernel.org, Per Andreas Buer <perbu@linpro.no>
 List-Id: linux-raid.ids
 
-On Mon, Nov 29, 2004 at 12:40:54PM -0500, Guy wrote:
+On Tuesday November 30, miquels@cistron.nl wrote:
+> > 
+> > If you can confirm that it wasn't resyncing, I will look into it.
 > 
-> Also, it is common for a disk to grow bad spots over time.  These bad spots
-> (sectors) can be re-mapped by the drive to a spare sector.  This re-mapping
-> will occur when an attempt is made to write to the bad sector.  So, you can
-> repair your disk by writing to the bad sectors.  But, be careful not to
-> overwrite good data.  I have done this using dd.
+> You already did that in June :) It's a known bug in 2.6.6
+> 
+> http://marc.theaimsgroup.com/?t=108686719100002&r=1&w=2
+> http://marc.theaimsgroup.com/?l=linux-raid&m=108725741411235&w=2
+> 
+> Mike.
 
-If you know the pathname of the file containing the bad spot (and have a copy
-of the file then you could use shred(1):
+Oh yes, so I did..  Thanks for the reminder.
+I hadn't noticed that it was such an old kernel...
 
-NAME
-       shred  -  delete a file securely, first overwriting it to hide its con-
-       tents
+I love it when a problem turns out already to be fixed :-)
 
-SYNOPSIS
-       shred [OPTIONS] FILE [...]
-...
-
-
--- 
-Frank
+thanks again
+NeilBrown
