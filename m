@@ -1,108 +1,121 @@
-From: Nick Piggin <piggin@cyberone.com.au>
-Subject: Re: Benefits from computing physical IDE disk geometry?
-Date: Wed, 16 Apr 2003 11:59:06 +1000
+From: Stef Telford <stef@chronozon.artofdns.com>
+Subject: Re: mdadm and raid5 hot-rebuild problem on 2.5.67
+Date: Wed, 16 Apr 2003 02:13:09 +0000 (UTC)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3E9CB8EA.6060403@cyberone.com.au>
-References: <200304151436_MC3-1-3487-215F@compuserve.com> <3E9CAED5.7000000@cyberone.com.au>
+Message-ID: <1050545634.13739.14.camel@testlin.hades>
+References: <1050536716.13739.6.camel@testlin.hades>
+	 <16028.46697.488363.56989@notabene.cse.unsw.edu.au>
+	 <1050544298.13739.9.camel@testlin.hades>
+	 <16028.47242.348607.436021@notabene.cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3E9CAED5.7000000@cyberone.com.au>
-To: Nick Piggin <piggin@cyberone.com.au>
-Cc: Chuck Ebbert <76306.1226@compuserve.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-raid <linux-raid@vger.kernel.org>
+In-Reply-To: <16028.47242.348607.436021@notabene.cse.unsw.edu.au>
+Date: 16 Apr 2003 22:13:54 -0400
+To: Neil Brown <neilb@cse.unsw.edu.au>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Nick Piggin wrote:
+> raidstart!  Horrible tool.  Throw it away.
+> 
 
-> Chuck Ebbert wrote:
->
->> Nick Piggin wrote:
->>
->>
->>
->>> OK right. As far as I can see, the algorithm in the RAID1 code
->>> is used to select the best drive to read from? If that is the
->>> case then I don't think it could make better decisions given
->>> more knowledge.
->>>
->>
->>
->>  How about if it just asks the elevator whether or not a given read
->> is a good fit with its current workload?  I saw in 2.5 where the balance
->> code is looking at the number of pending requests and if it's zero then
->> it sends it to that device.  Somehow I think something better than
->> that could be done, anyway.
->>
-> That balance code is probably the IDE or SCSI channel balancing?
-> In that case, the driver simply wants to know which device it
-> should service next, which is an appropriate fit (is that what
-> you were talking about? I don't have source here sorry)
->
->
-> We could ask the elevator if a given read is a good fit. It
-> would probably help.
->
->>
->>
->>
->>> It seems to me that a better way to layer it would be to have
->>> the complex (ie deadline/AS/CFQ/etc) scheduler handling all
->>> requests into the raid block device, then having a raid
->>> scheduler distributing to the disks, and having the disks
->>> run no scheduler (fifo).
->>>
->>
->>
->> That only works if RAID1 is working at the physical disk level (which
->> it should be AFAIC but people want flexibility to mirror partitions.)
->>
-> How so? Basically you want your high level scheduler to run first.
-> You want it to act on the stream of requests from the system, not
-> on the stream of requests to the device. If you know what I mean.
->
-> I might be wrong here. I haven't done any testing, and only a
-> little bit of thinking.
->
->>
->>
->>
->>> In practice the current scheme probably works OK, though I
->>> wouldn't know due to lack of resources here :P
->>>
->>
->>
->> I've been playing with the 2.4 read balance code and have some
->> improvements, but real gains need a new approach.
->>
-> The problem I see, is the higher level schedulers (deadline for
-> example, as opposed to the RAID scheduler) will find it difficult
-> to tell if a request will be "good" for them or not. For example
-> we have 2 devices, 100 requests in each scheduler queue.
->
-> Device A's head is at sector x and next request is at x+100,
-> Device B's head is at sector x+10 and next request is at x+200.
->
-> RAID wants to know which queue should take a request at sector
-> x+1000. What do you do?
->
-> The way you would do a good "goodness" function, I guess,
-> would be to search through all requests on the device, and return
-> the minimum distance from the request you are running the query
-> on. Do this for both queues, and insert the request into the
-> queue with the smallest delta. I don't see much else doing any
-> good. 
+consider it gone :)
 
-Well no I'm an idiot. You obviously don't have to "search
-through all requests" as they are (for AS, DL, CFQ) in an
-rbtree. So that might not be too bad an idea to investigate.
-But...
-It still means you get the high level scheduling below where
-you want it. This means the read/write batches for each queue
-will not stay in sync (not sure if this is a bad thing), request
-deadlines will mean even the good "goodness" calculation
-does not always be good, process fairness could be badly
-impacted for some loads, and AS has other problems
-(hopefully not too bad).
+> You will need
+>    mdadm --assemble --force ....
+> to start this array as it seems to have suffered an unclean shutdown
+> while degraded.
+> 
 
+hrm, seems to not want to 'fly' to be honest...
+
+
+[root@survivor stef]# mdadm --detail /dev/md0
+/dev/md0:
+        Version : 00.90.00
+  Creation Time : Fri Dec 20 14:45:52 2002
+     Raid Level : raid5
+    Device Size : 58633216 (55.92 GiB 60.04 GB)
+   Raid Devices : 4
+  Total Devices : 3
+Preferred Minor : 0
+    Persistence : Superblock is persistent
+
+    Update Time : Tue Apr 15 17:45:24 2003
+          State : dirty, no-errors
+ Active Devices : 3
+Working Devices : 3
+ Failed Devices : 0
+  Spare Devices : 0
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+    Number   Major   Minor   RaidDevice State
+       0      33        6        0      active sync  
+/dev/ide/host2/bus0/target0/lun0/part6
+       1      34        1        1      active sync  
+/dev/ide/host2/bus1/target0/lun0/part1
+       2       0        0       -1      removed
+       3      57        1        3      active sync  
+/dev/ide/host4/bus1/target0/lun0/part1
+           UUID : 5bced80a:8f74bfa6:3e658b6a:46a5055d
+         Events : 0.1895
+[root@survivor stef]# mdadm --assemble --force /dev/md0
+mdadm: device /dev/md0 already active - cannot assemble it
+[root@survivor stef]# mdadm --manage /dev/md0 -a
+/dev/ide/host4/bus0/target0/lun0/part2
+mdadm: added /dev/ide/host4/bus0/target0/lun0/part2
+[root@survivor stef]# mdadm --assemble --force /dev/md0
+mdadm: device /dev/md0 already active - cannot assemble it
+[root@survivor stef]# mdadm --detail /dev/md0
+/dev/md0:
+        Version : 00.90.00
+  Creation Time : Fri Dec 20 14:45:52 2002
+     Raid Level : raid5
+    Device Size : 58633216 (55.92 GiB 60.04 GB)
+   Raid Devices : 4
+  Total Devices : 4
+Preferred Minor : 0
+    Persistence : Superblock is persistent
+
+    Update Time : Tue Apr 15 17:45:24 2003
+          State : dirty, no-errors
+ Active Devices : 3
+Working Devices : 4
+ Failed Devices : 0
+  Spare Devices : 1
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+    Number   Major   Minor   RaidDevice State
+       0      56        2        0       
+/dev/ide/host4/bus0/target0/lun0/part2
+       1      34        1        1      active sync  
+/dev/ide/host2/bus1/target0/lun0/part1
+       2       0        0       -1      removed
+       3      57        1        3      active sync  
+/dev/ide/host4/bus1/target0/lun0/part1
+           UUID : 5bced80a:8f74bfa6:3e658b6a:46a5055d
+         Events : 0.1895
+
+surely, when i -a a drive into the array, it should
+'fit into' the removed slot on item '2', or does it
+do that already and i am reading the output wrong :\
+
+> > is there anything else you need or would like ?
+> 
+> Well, an answer to my original question would be nice:-)  You should
+> have kernel logs of the time when you got "device busy" from "mdadm -a". 
+> 
+
+ah this being the rub, there isnt any oops or anything
+like that in the kernel log when i get the device busy,
+not even a 'device currently locked' or 'missing device'
+from what i can see. sorry :\
+
+> regards 
+> Stef Telford <stef@chronozon.artofdns.com>
 
