@@ -1,47 +1,31 @@
-From: Lars Marowsky-Bree <lmb@suse.de>
-Subject: Re: Reduce Timeout on Disk Failure
-Date: Tue, 29 Apr 2003 16:18:19 +0200
+From: Dan Noe <dpn@isomerica.net>
+Subject: Moving disks
+Date: Tue, 29 Apr 2003 21:17:05 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20030429141819.GA25744@marowsky-bree.de>
-References: <20030429132329.20854.qmail@rome.rubylane.com> <3EAE86D6.D4DC56B2@SteelEye.com>
+Message-ID: <20030430011705.GA32223@isomerica.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <3EAE86D6.D4DC56B2@SteelEye.com>
-To: Paul Clements <Paul.Clements@SteelEye.com>, jim@rubylane.com
-Cc: Andreas Kahnt <aka@aka.coware.de>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2003-04-29T10:06:14,
-   Paul Clements <Paul.Clements@SteelEye.com> said:
+Hi,
 
-> Well, this particular retry problem does not exist in 2.4. And in
-> general, as far as software RAID is concerned, 2.4 is a lot better...=
-I
-> know, at least with raid1, you can fail a device just about anytime y=
-ou
-> want (with lots of write activity, during a resync, etc.) and as ofte=
-n
-> as you want, and it doesn't hang...
+I'm not on the mailing list, so please send any replies to my email as well.
 
-This depends on the lower level device. qlaxxxx takes about 30s to
-report the unplugging of a cable as an IO error; so access to the md
-device blocks for 30s...
+I have a machine which experienced a motherboard failure (leaky capacitors :<
+).  In short, I need to access the data off the array with the disks in
+different positions (hdc and hdd instead of the previous hde and hdg).  To
+make matter worse, the person who removed the drives from the old machine
+did not label them, thusly eliminating any way of knowing which disk was
+number 1.
 
+These disks have the persistant raid superblocks, and a cursory glance at
+the comments in md.c seems to indicate that md will autorun the devices on
+boot magically without intervention.  However, I would like to be absolutely
+sure this is true.  Anything special I need to consider?
 
-Sincerely,
-    Lars Marowsky-Br=E9e <lmb@suse.de>
+Thanks so much in advance for anyone who can help
 
---=20
-SuSE Labs - Research & Development, SuSE Linux AG
- =20
-"If anything can go wrong, it will." "Chance favors the prepared (mind)=
-=2E"
-  -- Capt. Edward A. Murphy            -- Louis Pasteur
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Dan
