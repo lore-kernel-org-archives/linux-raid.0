@@ -1,13 +1,32 @@
-From: David Wuertele <dave-gnus@bfnet.com>
-Subject: Please help!  How to reconstitute array (drive order problem)?
-Date: Wed, 27 Oct 2004 03:51:58 -0700
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: Please help!  How to reconstitute array (drive order problem)?
+Date: Wed, 27 Oct 2004 14:31:31 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <m3vfcw3035.fsf@bfnet.com>
+Message-ID: <200410271831.i9RIVaN05680@www.watkins-home.com>
+References: <m3vfcw3035.fsf@bfnet.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <m3vfcw3035.fsf@bfnet.com>
+To: 'David Wuertele' <dave-gnus@bfnet.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+Use mdadm to start your array.
+
+Details: "man mdadm"
+
+You may need to install mdadm.
+
+Guy
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of David Wuertele
+Sent: Wednesday, October 27, 2004 6:52 AM
+To: linux-raid@vger.kernel.org
+Subject: Please help! How to reconstitute array (drive order problem)?
 
 My 1.5TB SW RAID5 array is hosed because my motherboard stopped
 recognizing drives on two of its controllers.  I have moved drives
@@ -63,4 +82,9 @@ appreciated.
 
 Thanks!
 Dave
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
