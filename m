@@ -1,34 +1,46 @@
-From: hpa@zytor.com (H. Peter Anvin)
-Subject: Re: Partitioned raid and major number
-Date: Wed, 25 Feb 2004 18:46:31 +0000 (UTC)
+From: Adam Radford <aradford@3WARE.com>
+Subject: RE: 3w 8500 supported in 2.6?
+Date: Wed, 25 Feb 2004 11:20:40 -0800
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <c1iqi7$glv$1@terminus.zytor.com>
-References: <20040225145624.GA1513@cistron.nl>
+Message-ID: <A1964EDB64C8094DA12D2271C04B8126F8C95A@tabby>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+To: 'John Williams Floroiu' <floroiu@fokus.fraunhofer.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Followup to:  <20040225145624.GA1513@cistron.nl>
-By author:    Miquel van Smoorenburg <miquels@cistron.nl>
-In newsgroup: linux.dev.raid
->
-> Hello,
-> 
-> 	I see that Linus merged partitioned raid into bitkeeper.
-> The major number of partitioned raid devices is allocated dynamically.
-> 
-> I want to set up a server with 2 disks in RAID1 mode, partitioned.
-> To be able to boot from it, the RAID1 device needs to have a fixed
-> major number (I don't want to be forced to use an initrd). Is it
-> planned to ask LANANA for a fixed major number? If not, would a
-> patch to pass the major number on the kernel command line be accepted ?
-> 
+It is supported.  
 
-Please ask <device@lanana.org> for a device number.  Make sure to
-specify if it's 2.6-specific (and hence will be assigned a number
-above 255) or not.
+-Adam
 
-	-hpa
+-----Original Message-----
+From: John Williams Floroiu [mailto:floroiu@fokus.fraunhofer.de]
+Sent: Wednesday, February 25, 2004 3:24 AM
+To: linux-raid@vger.kernel.org
+Subject: 3w 8500 supported in 2.6?
+
+
+
+hi,
+
+I intend to purchase a 3ware Escalade 8500-4 S-ATA RAID controller. could
+anybody confirm whether this card/family is 
+supported by the 3w-xxxx standard driver of the 2.6.x kernels? thanks in
+advance.
+
+cheers,
+John.
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+DISCLAIMER: The information contained in this electronic mail transmission
+is intended by 3ware for the use of the named individual or entity to which
+it is directed and may contain information that is confidential or
+privileged and should not be disseminated without prior approval from 3ware 
+
+
