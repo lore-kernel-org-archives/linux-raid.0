@@ -1,39 +1,53 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: Re: RAID 5 questions
-Date: Sun, 1 Aug 2004 11:33:50 +0200
+From: Mark Watts <mrwatts@fast24.co.uk>
+Subject: Re: 1x 3ware controllers vs. 2x 3ware controllers
+Date: Sun, 1 Aug 2004 10:51:00 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040801093349.GB6768@percy.comedia.it>
-References: <1091325475.2374.11.camel@localhost>
+Message-ID: <200408011051.00300.mrwatts@fast24.co.uk>
+References: <Pine.LNX.4.44.0408011110400.7382-100000@uplift.swm.pp.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.44.0408011110400.7382-100000@uplift.swm.pp.se>
 Content-Disposition: inline
-In-Reply-To: <1091325475.2374.11.camel@localhost>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, Aug 01, 2004 at 11:27:56AM +0930, Ninti Systems wrote:
->Q1: Is it true that Linux can't/shouldn't boot off a RAID 5 array?
-it cannot no boot loader can load the kernel from a striped (or raid
-3/4/5/6) device
-create a small raid 1 array spanning the 4 disks and use it for /boot
 
->Q2: The four disks have identical manufacturer, model and size, but two
->are brand new while two have had NTFS filesystems on them. Accordingly,
->if I run hdparm -g on them, two disks have these specs:
+> On Sun, 1 Aug 2004, Gordon Henderson wrote:
+> > What I find amusing these days is trying to work out the "boundary" point
+> > between a "traditional" server with an (external) RAID controller and say
+> > a Linux server with software RAID in a purely fileserving environment
+> > (eg. NFS/Samba, not used for local operations at all) ... Both systems as
+> > a unit provide the same services - ie. filespace at the end of the Ether,
+> > but what are the advantages of one over the other, and why would I ever
+> > want a hardware RAID controller in a PCI slot in a Server PC?
+> >
+> > Discuss... ;-)
 >
->geometry = 2498/255/63, sectors = 40132503, start = 0
-...
->geometry = 39813/16/63, sectors = 40132503, start = 0
+> Let's say you have a database server with a large RAID1+0 array. If you do
+> this in software, you have to transfer data over the PCI bus twice if you
+> do the raid in software, not so if you do it in hardware.
 >
->Is this an issue with software RAID? 
-no, nevertheless if you wipe the partition table on the to 'used' disks
-linux will see them just like the 'new' ones.
+> But I agree, it's like "what is the best car?" It all depends on your
+> needs and budget. A Porsche 911 is perfect for people who need to go
+> places fast, it's useless for people who need to haul things.
+>
+> You always have to optimize everything after your needs, do you need
+> highspeed sequencial access, do you need low latency small accesses, do
+> you need a lot of fast low latency writes, etc. All these require
+> different solutions.
 
--- 
-Luca Berra -- bluca@comedia.it
-        Communication Media & Services S.r.l.
- /"\
- \ /     ASCII RIBBON CAMPAIGN
-  X        AGAINST HTML MAIL
- / \
+Ok, I understand that for many areas, a software raid-5 will thrash the pants 
+off of a hardware one.
+
+This doesn't help explain why some of us are experiencing crap performance and 
+un-responsive systems whereas others are having none of these problems  with 
+the same 3Ware cards.
+
+We have the hardware so we'd like to use it to the best of its ability. 
+Obviously something isn't right with our systems - does anyone have any 
+insight as to what this might be?
+
+Mark.
