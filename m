@@ -1,32 +1,69 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: striping and mirroring with only two disks
-Date: Mon, 2 Feb 2004 15:58:27 +1100
+From: "WEI Yongjun" <yjwei@nanjing-fnst.com>
+Subject: [raidtools]Linux device number bug report
+Date: Mon, 2 Feb 2004 15:01:25 +0800
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16413.55539.501199.360377@notabene.cse.unsw.edu.au>
-References: <20040131195302.GA18341@rap.rap.dk>
-	<6.0.1.1.2.20040131152717.03fe1f28@a.cs.okstate.edu>
-	<20040131235556.GB19891@rap.rap.dk>
+Message-ID: <01a401c3e95a$60b292b0$3001a8c0@WEIYONGJUN>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=gb2312
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Keld  =?ISO-8859-1?Q?=20J=F8rn?= Simonsen on Sunday February 1
-To: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
-Cc: Nathan Lewis <nathapl@cs.okstate.edu>, linux-raid@vger.kernel.org
+To: mingo@redhat.com
+Cc: linux-raid@vger.rutgers.edu, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sunday February 1, keld@dkuug.dk wrote:
-> 
-> Why has nobody thought of it before? All descriptions I have seen of
-> RAID0+1 says that it needs 4 disks.
+Hello,
 
-Just because it hasn't been implemented doesn't mean it hasn't been
-thought of....
+I have some questions about device number extension.
 
-I started work on a "raid10" personality a while back, which could do
-what you describe, or could stripe/mirror across 3 drives and other
-combination.
+In Linux kernel 2.6, device number will be extended from 16-bit to 32-b=
+it.
+All utilities and libraries should make corresponding extension for thi=
+s new
+feature in kernel 2.6.
 
-It feel by the wayside as some things often do.
+I find that "raidtools-1.00.3-7" uses structure dev_t and operates the
+device number as 16-bit.
+-----------------------------------------------------------------------=
+-----
+--------------
+lsraid.c line 59:
 
-NeilBrown
+#define MAJORBITS 8
+#define MINORBITS 8
+#define MAJORS (1 << MAJORBITS)
+#define MINORS (1 << MINORBITS)
+
+It defined major device number and minor device number as 8 bit, but no=
+w
+major device number is 12 bit and minor device is 20 bit.
+-----------------------------------------------------------------------=
+-----
+--------------
+
+Since I didn=A1=AFt find any information about this aspect in homepage =
+of this
+package, I wonder whether the latest version has completed the device n=
+umber
+extension? If not, will it be completed in the future? And when?
+
+Looking forward to answering.
+
+
+Best Regards
+
+--------------------------------------------------
+Wei Yongjun
+Dept. of Technology and Development
+Nanjing Fujitsu Nanda Software Tech. Co., Ltd.(FNST)
+No. 16-5, Guanzhou Rd., Nanjing, P.R.China
+PHONE: +86+25-6630523-633
+=46UJITSU INTERNAL: 79955-651
+=46AX: +86+25-3317685
+Mail: yjwei@nanjing-fnst.com
+--------------------------------------------------
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
