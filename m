@@ -1,54 +1,52 @@
-From: Tim Moore <linux-raid@nsr500.net>
-Subject: Re: quick help needed - smaller disk in raid5?
-Date: Sat, 19 Feb 2005 21:56:51 -0800
-Message-ID: <421826A3.30806@nsr500.net>
-References: <200502192028.17397.michael.hebenstreit@fh-joanneum.at>
+From: Alvin Oga <aoga@ns.Linux-Consulting.com>
+Subject: Re: Tyan, RAID-6, and other recent hassles... (long, a bit OT)
+Date: Sat, 19 Feb 2005 22:11:31 -0800 (PST)
+Message-ID: <Pine.LNX.3.96.1050219220620.11501A-100000@Maggie.Linux-Consulting.com>
+References: <Pine.GSO.4.33.0502192217280.5536-100000@sweetums.bluetronic.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-In-Reply-To: <200502192028.17397.michael.hebenstreit@fh-joanneum.at>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+In-Reply-To: <Pine.GSO.4.33.0502192217280.5536-100000@sweetums.bluetronic.net>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-'fdisk -lu' shows in sectors of 512 bytes, useful in matching partition 
-sizes for slightly different disks.
 
-You will have to resize to the smallest (30401 cylinders).
+hi ya
 
-Hebenstreit Michael wrote:
-> Hello everybody,
-> 
-> I've been using a Raid5 with 3 disks of exactly the same size, a little bit 
-> more than 250 GB (reported as 251)
-> 
-> Disk /dev/sdc: 251.0 GB, 251000193024 bytes
-> 255 heads, 63 sectors/track, 30515 cylinders
-> Units = cylinders of 16065 * 512 = 8225280 bytes
-> 
->    Device Boot      Start         End      Blocks   Id  System
-> /dev/sdc1               1       30513   245095641   fd  Linux raid autodetect
-> 
-> Now I want to add a 4th disk - and got one slightly smaller:
-> 
-> sanjose:~ # fdisk -l /dev/sdd
-> Disk /dev/sdd: 250.0 GB, 250059350016 bytes
-> 255 heads, 63 sectors/track, 30401 cylinders
-> Units = cylinders of 16065 * 512 = 8225280 bytes
-> 
-> Disk /dev/sdd doesn't contain a valid partition table
-> 
-> 
-> 
-> Is it nevertheless possible (with some minimal losses in possible size) to add 
-> the new disk? The Funny thing - all disks are from Maxtor, and should have 
-> the same size.
-> 
-> Thanks a lot
-> 
-> Michael
-> 
-> 
+On Sat, 19 Feb 2005, Ricky Beam wrote:
 
--- 
+> On Sun, 20 Feb 2005, Bernd Schubert wrote:
+> >> Mobo was a Tyan Thunder K8W. (S2885)
+> >
+> >personally I'm very disappointed about Tyan, well I only know their
+> >opteron mainboards, but thats already sufficient to never buy their
+> >mainboards again.
+> 
+> You're doing yurself a huge disservice based on very little experience.
+> Using one or two of a manufacturer's MBs is not sufficient grounds to
+> blacklist them.  Tyan sells a lot of these boards.  If there were serious
+> stability problems with them, tyan wouldn't be shipping them.
+> 
+> Tyan makes very good hardware.  I don't know what your problems are,
+> but I've never had any such problems.
+
+ditto ... i would buy tyan motherboards since its very cost effective
+for its performance and very good reliability 
+( it's my 2nd choice mb for certain apps and sometimes 1st choice )
+
+we buy lots of um  for customers that requests certain models 
+
+--- 
+
+usually, if there's hardware problems, it's usually an installation
+problem and/or very unlikely, 1%-5% probability of bad hardware
+	- things dont always work out of the box ( cdrom installation )
+	and one *-do-* need to know how to tweek it to make it work
+	"right"
+
+	- one should buy parts from reputable cpu/mb/disk distributors 
+	and not any mom-n-pop website that sells "everything"
+
+c ya
+alvin
 
