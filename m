@@ -1,8 +1,8 @@
 From: Zeno Davatz <zdavatz@generika.cc>
 Subject: Re: Fatal: map file must be on the boot RAID partition
-Date: 07 May 2003 19:35:36 +0200
+Date: 07 May 2003 19:46:11 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1052328936.649.157.camel@zrr>
+Message-ID: <1052329570.1551.165.camel@zrr>
 References: <1052325714.1551.137.camel@zrr> <3EB93BF5.4E3912EE@SteelEye.com>
 	 <1052327381.649.140.camel@zrr>  <3EB93F4D.501B2106@SteelEye.com>
 Reply-To: zdavatz@generika.cc
@@ -11,7 +11,8 @@ Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <3EB93F4D.501B2106@SteelEye.com>
-To: Linux-Raid <linux-raid@vger.kernel.org>
+To: Paul Clements <Paul.Clements@SteelEye.com>
+Cc: Linux-Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
 On Wed, 2003-05-07 at 19:15, Paul Clements wrote:
@@ -23,30 +24,30 @@ On Wed, 2003-05-07 at 19:15, Paul Clements wrote:
 > > 
 > > Why would that be?
 > 
-> did you change your /etc/fstab? 
-Yes. I done
+> did you change your /etc/fstab? what does /proc/mdstat say?
 
-/dev/md0	/	default 0	0
+Ok it worked YES!!
 
-but this give me a kernel panic if I set
+When I reboot 'df' now gives me:
 
-root=/dev/md0 in my lilo.conf
+/dev/md0
 
+What I done:
 
-> what does /proc/mdstat say?
-I tells me that my raid is up and running:
+lilo.conf:
+disk=/dev/md0
+boot=/dev/hda
+root=/dev/hdc
 
-Personalities : [linear] [raid1] [multipath]
-read_ahead 1024 sectors
-md0 : active raid1 ide/host0/bus0/target0/lun0/part2[0]
-      76131968 blocks [2/1] [U_]
-       
-unused devices: <none>
+I also done 
 
-I installed mdadm but it makes no difference.
+append="md=0,/dev/hda2,/dev/hdc2"
+
+I am quite happy now, as I do not have to recompile the kernel.
+
+Lets see what happens after Raidhodadd.
 
 Thanks for your time and help.
 
 Zeno
-
 
