@@ -1,30 +1,18 @@
-From: William Knop <wknop@andrew.cmu.edu>
-Subject: Re: libata badness
-Date: Mon, 4 Oct 2004 14:03:56 -0400 (EDT)
-Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.60-041.0410041353270.9105@unix43.andrew.cmu.edu>
-References: <Pine.LNX.4.60-041.0410040656001.2350@unix48.andrew.cmu.edu>
- <41617AA0.9020809@pobox.com> <Pine.LNX.4.60-041.0410041323160.9105@unix43.andrew.cmu.edu>
- <20041004175003.GA10814@jim.sh>
+From: Philip Molter <philip@corp.texas.net>
+Subject: IO scheduler choice?
+Date: Mon, 04 Oct 2004 15:37:58 -0500
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <4161B4A6.9060302@corp.texas.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20041004175003.GA10814@jim.sh>
-To: Jim Paris <jim@jtan.com>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
-> Or else something else on your system is bad.  Like your CPU or RAM.
-> Run memtest for a while.
-
-I ran memtest for a few hours. It all checks out. Also, CPU intensive 
-stuff doesn't cause weirdness.
-
-The only things which cause corruption, so far as I can tell, are 
-operations on my raid device, md0. Copying from the array takes a while 
-for a crash, while rebuilding a drive on the array is very prompt (<1m) at 
-causing a crash. The crashes likely as not cause widespread kernel 
-corruption. It's only a matter of time before my root fs is blown away 
-again.
-
+Under 2.6, which I/O scheduler is best to use with software RAID?  There 
+was some discussion early last week on kerneltrap about how the noop 
+scheduler might be better for large RAID1s.  The noop scheduler is 
+certainly better for hardware RAID in my limited testing.  Does anyone 
+have any idea which scheduler is best for high load RAID 1, RAID 1+0 and 
+RAID5 environments under software RAID?
