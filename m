@@ -1,73 +1,56 @@
 From: maarten <maarten@ultratux.net>
 Subject: Re: Checking if RAID does work?
-Date: Wed, 19 Jan 2005 22:47:47 +0100
-Message-ID: <200501192247.47026.maarten@ultratux.net>
-References: <20050117010355.GH347@unthought.net> <200501192217.29258.maarten@ultratux.net> <bqv2c2-uec.ln1@news.it.uc3m.es>
+Date: Wed, 19 Jan 2005 22:59:46 +0100
+Message-ID: <200501192259.46359.maarten@ultratux.net>
+References: <20050117010355.GH347@unthought.net> <200501192217.29258.maarten@ultratux.net> <yw1xk6q9xgg6.fsf@ford.inprovide.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <bqv2c2-uec.ln1@news.it.uc3m.es>
+In-Reply-To: <yw1xk6q9xgg6.fsf@ford.inprovide.com>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday 19 January 2005 22:24, Peter T. Breuer wrote:
-> maarten <maarten@ultratux.net> wrote:
-> > On Wednesday 19 January 2005 21:19, Peter T. Breuer wrote:
-> > > Poonam Dalya <poonamsbox@yahoo.com> wrote:
-
-> > Sigh.
+On Wednesday 19 January 2005 22:22, M=E5ns Rullg=E5rd wrote:
+> maarten <maarten@ultratux.net> writes:
+> > To the OP: Yes, every part of a raid-1 array (but only a raid-1
+> > array) will / should be mountable and have the same filesystem as
+> > the array has.  HOWEVER you should never ever mount the array AT TH=
+E
+> > SAME TIME as one of its underlying devices!  Always umount first,
+> > and only then mount the other.
 >
-> You don't understand - he mounted the raw partitions that make up the
-> raid array WHILE THE RAID WAS RUNNING somewhere else.
+> Furthermore, never ever mount a raid-1 component alone in read-write
+> mode.  Modifying the mirrors individually will almost certainly resul=
+t
+> in breakage when the array is activated again.
 
-In that case, okay.
+Speaking from personal experience, I _think_ that modifying a drive tha=
+t's=20
+part of an array gets noticed by md (somehow).  At least it always lead=
+ to a=20
+mirror breakage with me, and thus a re-add and a resync was in order.
 
-> If the mount had failed he would have said. Therefore it did not fail.
-> If he had unmounted the raid array first, then the umount would have
-> flushed buffers to that device (the kernel sends flush_buffers or
-> whatever it is called nowadays) and the file would have been visible
-> when he did the later mount.
+I'm not sure if it really does that, and neither how it is done, but I'=
+m led=20
+to believe it does get noticed. Maybe md (or the kernel?) writes a mark=
+er=20
+just before deactivation which signifies "drive was shutdown @..." ?
 
-I tried to reproduce it, and it is even more serious than that, upon first 
-glance.  So you're right.  Witness below:
-
-dozer:~ # df
-/dev/md0               1953344   1758636    194708  91% /
-
-dozer:~ # cat /proc/mdstat
-md0 : active raid1 hde1[1]
-      1953408 blocks [3/1] [_U_]
-
-dozer:~ # mount -o ro /dev/hde1 /mnt/
-dozer:~ # df
-/dev/md0               1953344   1758640    194704  91% /
-/dev/hde1              1953344   1758636    194708  91% /mnt
-
-dozer:~ # touch /foobar
-
-dozer:~ # ls -l /mnt/foobar
-/bin/ls: /mnt/foobar: No such file or directory
-
-dozer:~ # sync
-
-dozer:~ # ls -l /mnt/foobar
-/bin/ls: /mnt/foobar: No such file or directory
-
-dozer:~ # umount /mnt/
-dozer:~ # mount -o ro /dev/hde1 /mnt/
-dozer:~ # ls -l /mnt/foobar
-/bin/ls: /mnt/foobar: No such file or directory
-
-dozer:~ # ls -l /foobar
--rw-r--r--    1 root     root            0 Jan 19 22:33 /foobar
-
-Strange, eh ? (obviously I can't umount /dev/md0 to see...)
+OTOH, I've also seen that I just modified /etc/fstab on hda1 to reflect=
+ that=20
+not /de/hda1 was root, but /dev/md0 instead, only to find that after a=20
+reboot /dev/md0 is _indeed_ now mounted as root, but that those recent=20
+changes in /fstab are gone.  So... maybe I'm just losing my head. (-:
 
 Maarten
 
--- 
+--=20
 
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
