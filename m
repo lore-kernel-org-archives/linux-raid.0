@@ -1,17 +1,56 @@
-From: Steven Ihde <x-linux-raid@hamachi.dyndns.org>
-Subject: Re: Looking for the cause of poor I/O performance
-Date: Wed, 8 Dec 2004 14:00:04 -0800
-Message-ID: <20041208220004.GA13541@hamachi.us>
-References: <41B6C846.7000702@dgreaves.com> <200412081831.iB8IVW914745@www.watkins-home.com>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: Looking for the cause of poor I/O performance
+Date: Wed, 8 Dec 2004 17:25:24 -0500
+Message-ID: <200412082225.iB8MPT915415@www.watkins-home.com>
+References: <20041208220004.GA13541@hamachi.us>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <200412081831.iB8IVW914745@www.watkins-home.com>
+In-Reply-To: <20041208220004.GA13541@hamachi.us>
 Sender: linux-raid-owner@vger.kernel.org
-To: Guy <bugzilla@watkins-home.com>
+To: 'Steven Ihde' <x-linux-raid@hamachi.dyndns.org>
 Cc: 'David Greaves' <david@dgreaves.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+Good question!
+"One other point -- apparently 2.6 allows one to set the read-ahead on a
+per-device basis (maybe 2.4 does too, I don't know).  So would it make sense
+to set read-ahead on the disks low (or zero), and read ahead on the MD
+device high?  Perhaps this could allow us to avoid the overhead of reading
+unnecessary parity chunks.  As the number of disks increases this would be
+less and less significant."
+
+I was wondering about this myself.
+
+I have read other people have played with the numbers, but I can't.
+# blockdev --getra /dev/md2
+1024
+# blockdev --setra 2048 /dev/md2
+BLKRASET: Invalid argument
+# blockdev --setra 1024 /dev/md2
+BLKRASET: Invalid argument
+
+I can change read ahead on each drive.  I can set read ahead from 0 to 255
+on my disks, but this seems to have no effect.  My performance using "hdparm
+-t /dev/md2" stays about the same.
+
+Odd, I just tried other sizes with md2.  I can change read ahead from 0 to
+255 also.  But it was 1024.  With read ahead set to 0 on all of my disks and
+on md2, I still get the same performance.  I guess on on-disk cache read
+ahead does just fine.
+
+My kernel is 2.4.28.
+
+Guy
+
+-----Original Message-----
+From: Steven Ihde [mailto:x-linux-raid@hamachi.dyndns.org] 
+Sent: Wednesday, December 08, 2004 5:00 PM
+To: Guy
+Cc: 'David Greaves'; linux-raid@vger.kernel.org
+Subject: Re: Looking for the cause of poor I/O performance
 
 
 OK, between your discussion of read-ahead and Monday's post by Morten
@@ -42,21 +81,25 @@ On Wed, 08 Dec 2004 13:31:27 -0500, Guy wrote:
 > "read ahead" only helps sequential access, it hurts random access.
 > 
 > Yes, I understand "read balancing" to be balancing the IO over 2 or more
-> disks, when only 1 disk is really needed.  So, you need 2 or more copies of
+> disks, when only 1 disk is really needed.  So, you need 2 or more copies
+of
 > the data, as in RAID1.
 > 
 > About read ahead...
 > The physical disks read ahead.
 > md does read ahead.
 > Since the disks and md are doing read ahead, you should have more than 1
-> disk reading at the same time.  The physical disks are not very smart about
+> disk reading at the same time.  The physical disks are not very smart
+about
 > RAID5, when reading ahead, they will also read the parity data, which is
 > wasted effort.
 > 
-> With all of the above going on you should get more than 1 disk reading data
+> With all of the above going on you should get more than 1 disk reading
+data
 > at the same time.
 > 
-> With RAID(0, 4, 5 and 6) no one can choose which disk(s) to read.  You can't
+> With RAID(0, 4, 5 and 6) no one can choose which disk(s) to read.  You
+can't
 > balance anything.  You can only predict what data will be needed before it
 > is requested.  Read ahead does this for large files (sequential reads).  I
 > would not consider this to be "read balancing", just read ahead.
@@ -119,7 +162,8 @@ On Wed, 08 Dec 2004 13:31:27 -0500, Guy wrote:
 > >  
 > >
 > >>RAID5 can't do read balancing.  Any 1 piece of data is only on 1 drive.
-> >>However, RAID5 does do read ahead, my speed is about 3.5 times as fast as
+> >>However, RAID5 does do read ahead, my speed is about 3.5 times as fast
+as
 > a
 > >>single disk.  A single disk: 18 M/sec, my RAID5 array, 65 M/sec.
 > >>
@@ -185,3 +229,4 @@ On Wed, 08 Dec 2004 13:31:27 -0500, Guy wrote:
 > >>Thanks,
 > >>
 > >>Steve
+
