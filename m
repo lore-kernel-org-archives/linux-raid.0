@@ -1,59 +1,34 @@
-From: Jurriaan <thunder7@xs4all.nl>
-Subject: Re: new superblock and raid10 support in mdadm
-Date: Tue, 14 Sep 2004 08:40:51 +0200
+From: <peter.greis@ubs.com>
+Subject: setup confusion - what to use ?
+Date: Tue, 14 Sep 2004 09:37:19 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040914064051.GA28661@middle.of.nowhere>
-References: <1095088590.3713.4.camel@rich> <16710.17573.491674.378912@cse.unsw.edu.au>
-Reply-To: Jurriaan <thunder7@xs4all.nl>
+Message-ID: <6F9171BE257CA742BFBCFA87B8F20F8D030E3C47@NZURC900PEX1.ubsgs.ubsgroup.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <16710.17573.491674.378912@cse.unsw.edu.au>
+Content-class: urn:content-classes:message
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Date: Tue, Sep 14, 2004 at 11:08:53AM +1000
-> A new format is being supported because the old format has problems.
-> One is that it cannot work with devices larger than 2 Gigabytes (and I
-> have had a request from someone who wanted to include such a device in
-> an MD array).
+Greetings All,
 
-I presume you mean terabyte, but I'm not sure you don't mean petabyte or
-something else very large?
+Perhaps someone could clear up a few questions....
 
-> The raid10 module is in 2.4.9-rc2 and will be in 2.4.9 when it gets
-> released. 
+I just took delivery of an ASUS K8NED (AMD 64), which has two sets of onboard SATA controllers. The first is the nVidia nForce3 250Gb (two channels), the second Silicon Image 3114 (four channels).
 
-2.6.9 I presume?
+Using SUSE 9.1, I would like to configure the nForce for RAID 10 (two hitachi 80gb drives), and the SI 3114 for RAID 5. Allegedly there is BIOS support for all of this.
 
-> /*
->  * RAID10 provides a combination of RAID0 and RAID1 functionality.
->  * The layout of data is defined by
->  *    chunk_size
->  *    raid_disks
->  *    near_copies (stored in low byte of layout)
->  *    far_copies (stored in second byte of layout)
->  *
->  * The data to be stored is divided into chunks using chunksize.
->  * Each device is divided into far_copies sections.
->  * In each section, chunks are laid out in a style similar to raid0, but
->  * near_copies copies of each chunk is stored (each on a different drive).
->  * The starting device for each section is offset near_copies from the starting
->  * device of the previous section.
->  * Thus there are (near_copies*far_copies) of each chunk, and each is on a different
->  * drive.
->  * near_copies and far_copies must be at least one, and there product is at most
+What I am not sure of....
 
-----------------------------------------------------------their
+1. Should I set anything up with the bios settings, or just ignore them ? I have seen a posted decrying the bios stuff as "crap".
 
->  * raid_disks.
->  */
+2. Should I use the vendor drivers, or the code provided by Garzik and co ? Any comments ?
 
-Good luck,
-Jurriaan
--- 
-If you hear muffled screams, consider it a request for beam out.
-	Tom Paris in Voyager
-Debian (Unstable) GNU/Linux 2.6.9-rc1-mm4 2x6209 bogomips load 0.14
+3. I have seen the comments that this is not really hardware RAID - does this imply that I should generally follow the software RAID setup (http://www.ram.org/computing/linux/dpt_raid.html) ?
+
+If anyone has set up one of these mobos, I would appreciate hearing from you.
+
+regards,
+
+-Peter
