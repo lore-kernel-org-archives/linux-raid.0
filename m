@@ -1,103 +1,64 @@
-From: "Stephen Hargrove" <stephen@exitwound.org>
-Subject: Power Outage and Recovery
-Date: Thu, 17 Jun 2004 11:42:34 -0500 (CDT)
+From: Paul Clements <paul.clements@steeleye.com>
+Subject: Re: [ANNOUNCE][PATCH 2.6] md: persistent (file-backed) bitmap and
+ async writes
+Date: Thu, 17 Jun 2004 13:57:13 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1273.66.230.1.97.1087490554.squirrel@exitwound.org>
-Reply-To: stephen@exitwound.org
+Message-ID: <40D1DB79.5080507@steeleye.com>
+References: <40198E85.29EBC8E0@SteelEye.com>	<16422.62911.755570.855200@notabene.cse.unsw.edu.au>	<4027E342.D02202F1@SteelEye.com>	<16424.8182.876520.280031@notabene.cse.unsw.edu.au>	<402D3A86.97CF894F@SteelEye.com>	<16456.2775.641721.204171@notabene.cse.unsw.edu.au>	<4048F9AA.1BBD67F@SteelEye.com>	<406B1024.7BF88C@SteelEye.com>	<16528.49083.998593.199805@cse.unsw.edu.au>	<40C6273B.2060200@steeleye.com> <16590.38597.170409.499394@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <16590.38597.170409.499394@cse.unsw.edu.au>
+To: Neil Brown <neilb@cse.unsw.edu.au>
+Cc: linux-raid@vger.kernel.org, ptb@it.uc3m.es, mingo@redhat.com, "james.bottomley" <james.bottomley@steeleye.com>
 List-Id: linux-raid.ids
 
-I'm running a raid-5 setup at the house.  Earlier today, an electrical
-storm caused a power outage and my system went down.  When I got home, I
-booted the system and it complained bitterly about ReiserFS when trying to
-mount my raid array.  It dropped me to root prompt and advised me to run
-fsck.  I hit ctl-D and let the boot cycle complete.
+Neil Brown wrote:
 
-dmesg shows the following:
+> The changes to mdadm need a bit of work.
+>  
+> You have added "--persistent" and "--non-persistent" flags for
+> --create.  This is wrong.
+> --create always uses persistent superblocks.
+> --build makes arrays without persistent superblocks.
 
-sh-2006: reiserfs read_super_block: bread failed (dev 09:00, block 8, size
-1024)
-sh-2006: reiserfs read_super_block: bread failed (dev 09:00, block 64,
-size 1024)
-sh-2021: reiserfs_read_super: can not find reiserfs on md(9,0)
+Yes, I think --build didn't use to work for raid1, though, which is why 
+I went the create route. I'll fix this.
 
-The above is repeated 3 more times.  dmesg does see the four drives that
-should compose /dev/md0 (hde is a spare):
+> I don't think I like --create-bitmap.  A bitmap file should always be
+> created in the context of a particular array (partly so that the size
+> and uuid can be set correctly).  I think I would like to bitmap to be
+> specified as a "--bitmap=filename" option to --create, --build, or
+> --grow.  I haven't thought this through in great detail yet, but that
+> is my leaning.
 
-# dmesg | grep hd
-...
-hdc: Maxtor 6Y120P0, ATA DISK drive
-hdd: Maxtor 6Y120P0, ATA DISK drive
-hde: Maxtor 6Y120P0, ATA DISK drive
-hdg: Maxtor 6Y120P0, ATA DISK drive
-...
+That all sounds fine except for --build. How do we know if we're doing 
+the initial build or just a rebuild. We need to know this so we know 
+whether to initialize the bitmap or simply use it. So I think we still 
+need --create-bitmap for the build command (and then build will just use 
+the bitmap, not initialize it). For --create I can make it so that the 
+bitmap is always initialized using the array parameters, so no separate 
+--create-bitmap will be needed. I'll need to work out the conflict that 
+this will create with the --chunk option, though, since --chunk is the 
+array chunk size for --create and --chunk is the bitmap chunk size for 
+--bitmap-create. Any suggestions?
 
-# cat /proc/mdstat:
+> --examine-bitmap is a bit of a pain too. 
 
-Personalities : [raid5]
-read_ahead not set
-unused devices: <none>
+-X is usually what I use...that's a lot easier to remember and type...
 
-# cat /etc/mdadm/mdadm.conf
-DEVICE /dev/hd*
-ARRAY /dev/md0 level=raid5 num-devices=3
-UUID=fef44719:ddd66a49:0a337b48:b53e14c0
-   devices=/dev/hdg1,/dev/hdd1,/dev/hdc1
+> I think I would like
+> --examine to figure out what it has been given to look at, and report
+> on whatever it finds.
 
-# mdadmin --assemble --scan
-mdadm: no devices found for /dev/md0
-
-# cat /proc/partitions
-major minor  #blocks  name
-
-  34     0  120060864 hdg
-  34     1  120060832 hdg1
-  33     0  120060864 hde
-  33     1  120060832 hde1
-  22     0  120060864 hdc
-  22     1  120060832 hdc1
-  22    64  120060864 hdd
-  22    65  120060832 hdd1
-   3     0   39062500 hda
-   3     1      40131 hda1
-   3     2     996030 hda2
-   3     3    4883760 hda3
-   3     4          1 hda4
-   3     5    9767488 hda5
-   3     6    1461883 hda6
-   3     7   21912628 hda7
-
-
-# mdadm -E /dev/hd[gedc]1
-mdadm: No super block found on /dev/hdc1 (Expected magic a92b4efc, got
-00000000)
-mdadm: No super block found on /dev/hdd1 (Expected magic a92b4efc, got
-00000000)
-mdadm: No super block found on /dev/hde1 (Expected magic a92b4efc, got
-00000000)
-mdadm: No super block found on /dev/hdg1 (Expected magic a92b4efc, got
-00000000)
-
-How should I proceed in order to recover my array?
-
-If I've left out anything important, just let me know and I'll be glad to
-supply it.
-
-Thanks for any advice you guys have.  I do appreciate it.
+Well, that gets into a little bit of black magic when you're talking 
+about examining a disk or partition, which could conceivably contain 
+both an md superblock at the end and a bitmap at the front. How do we 
+know which one it is "supposed" to be? Or do you just want examine to 
+print information for both? That would seem a little confusing to me 
+(granted this would only happen when a disk changed roles between bitmap 
+and array component).
 
 --
-Steve
----------------------------------------------------------
-http://stephenhargrove.com ... thoughts on stuff
-http://exitwound.org ......... a gaping hole of intellect
-http://buckowensfan.com ...... he's the man
----------------------------------------------------------
-Pardo's First Postulate: Anything good in life is
-either illegal, immoral, or fattening. Arnold's
-Addendum: Everything else causes cancer in rats.
----------------------------------------------------------
-
+Paul
