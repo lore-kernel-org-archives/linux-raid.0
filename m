@@ -1,45 +1,30 @@
 From: "Peter T. Breuer" <ptb@inv.it.uc3m.es>
-Subject: Re: RAID code doubt
-Date: Tue, 28 Dec 2004 08:13:34 +0100 (MET)
-Message-ID: <200412280713.iBS7DYT25268@inv.it.uc3m.es>
+Subject: miscount in md_p.h
+Date: Tue, 28 Dec 2004 08:21:30 +0100 (MET)
+Message-ID: <200412280721.iBS7LUW25590@inv.it.uc3m.es>
 Reply-To: ptb@inv.it.uc3m.es
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: From (env: ptb) at "Dec 27, 2004 01:39:23 am"
 Sender: linux-raid-owner@vger.kernel.org
 To: linux raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-"Also sprach ptb:"
->     mbio = bio_clone(bio, GFP_NOIO);
->     ...
->     mbio->bi_sector = r1_bio->sector + conf->mirrors[i].rdev->data_offset;          
 
-OK - the GFP_NOIO includes wait flags, so it seems to wait at least for
-a bit.
+Isn't this a miscount in md_p.h, in struct mdp_superblock_1:
 
-      include/linux/gfp.h:#define GFP_NOIO    (__GFP_WAIT)
+        ...
+        __u8    pad2[64-56];    /* set to 0 when writing */
 
-But can't the allocation still fail sometimes? And if not won't we just
-stall forever in a deadlock if for example the only available memory is
-in buffers that are aimed at this same raid device?
+        /* array state information - 64 bytes */
+        __u64   utime;          /* 40 bits second, 24 btes microseconds */
+        __u64   events;         /* incremented when superblock updated */
+        __u64   resync_offset;  /* data before this offset (from data_offset) known to be in sync */
+        __u32   sb_csum;        /* checksum upto devs[max_dev] */
+        __u32   max_dev;        /* size of devs[] array to consider */
+        __u8    pad3[64-40];    /* set to 0 when writing */
 
 
-> but I don't think bio_clone is GUARANTEED to produce a non-null result,
-> is it? It uses bio_alloc to get a bio, and bio_alloc does ...
-> 
->         bio = mempool_alloc(bio_pool, gfp_mask);
->         if (unlikely(!bio))
->                 goto out;
-> 
-> out:
->                 return bio;
->         }
-> 
->         mempool_free(bio, bio_pool);
->         bio = NULL;
->         goto out;
->   
-> So it looks perfectly capable of producing a NULL.
+I count 3 * 64b + 2 * 32b = 3 * 8B + 2 * 4B = 32B, not 40B, before the
+padding for this section starts. It looks like somebody counted 5 * 64b
+= 5 * 8B = 40B.
 
 Peter
-
