@@ -1,33 +1,20 @@
-From: David Morton <skyman@mindspring.com>
-Subject: Perc 4e/DI on Poweredge 2850/LSI Logic MegaRaid SCSI 320-2x with
- Fedora Core 3
-Date: Tue, 16 Nov 2004 18:54:32 -0500
-Message-ID: <419A9338.9000000@mindspring.com>
+From: <peter.greis@ubs.com>
+Subject: mdadm safe for all versions ?
+Date: Wed, 17 Nov 2004 10:27:09 +0100
+Message-ID: <6F9171BE257CA742BFBCFA87B8F20F8D030E3EDC@NZURC900PEX1.ubsgs.ubsgroup.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+content-class: urn:content-classes:message
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Morning All,
 
-    I'm getting the error messages on startup:
-"Asking For Cache Data Failed"
-"assuming drive cache: write through"
+Perhaps you all could clear this up for me... I have mdadm 1.5 installed (from an RPM) on SuSE 9.1 (now running kernel 2.6.8.1). Is it safe to back out 1.5 and install 1.8x from source, or does this require a kernel upgrade ?
 
-    I'm told this is bad.  Dell does not provide drivers that I've been 
-able to compile:
-http://support.dell.com/support/downloads/format.aspx?c=us&cs=04&l=en&s=bsd&SystemID=PWE_PNT_P3C_2850&os=LE30&osl=en&deviceid=6395&devlib=35&category=35&releaseid=R79751
+regards,
 
-    I haven't figured out how to compile this for fedora core 3 yet:
-http://www.lsilogic.com/files/support/rsa/Linux_2.10.8.2-1.zip
-
-or this:
-ftp://ftp.lsil.com/pub/linux-megaraid/drivers/version-2.20.3.1
-
-
-    Which one is correct for Fedora Core 3?  has anybody done it?
-
-Thanks
-Dave
+-Peter 
