@@ -1,27 +1,32 @@
-From: Mario Holbe <Mario.Holbe@TU-Ilmenau.DE>
-Subject: Re: RAID1 and data safety?
-Date: Tue, 29 Mar 2005 22:07:52 +0200
-Message-ID: <d2cch1$tde$1@sea.gmane.org>
-References: <76592C4D3DA1AC4FB8424084D10D31A80611527B@mchh2c4e.mchh.siemens.de> <16969.10547.894461.398225@cse.unsw.edu.au> <ipqnh2-o1n.ln1@news.it.uc3m.es>
+From: Nils-Henner Krueger <nhk@netuse.de>
+Subject: syncing RAID1 with more than 10MB/sec
+Date: Wed, 30 Mar 2005 11:12:57 +0200
+Message-ID: <424A6D99.6070501@netuse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Peter T. Breuer <ptb@lab.it.uc3m.es> wrote:
-> Neil Brown <neilb@cse.unsw.edu.au> wrote:
->> Due to the system crash the data on hdb is completely ignored.  Data
-> Neil - can you explain the algorithm that stamps the superblocks with
-> an event count, once and for all? (until further amendment :-).
+Syncing a raid1 takes long time for large disks because of
+the 10MB/sec limit:
 
-This has nothing to do with the event count but with the state bits.
-And the state is set to active/dirty on start and set to clean on
-stop/ro. It's just like a filesystem's state but on block device
-layer.
+Mar 30 10:58:31 imap1 kernel: raid1: raid set md2 not clean;
+reconstructing mirrors
+Mar 30 10:58:31 imap1 kernel: raid1: raid set md2 active with 2 out of 2
+mirrors
+Mar 30 10:58:31 imap1 kernel: md: syncing RAID array md2
+Mar 30 10:58:31 imap1 kernel: md: minimum _guaranteed_ reconstruction
+speed: 100 KB/sec/disc.
+Mar 30 10:58:31 imap1 kernel: md: using maximum available idle IO
+bandwith (but not more than 10000 KB/sec) for reconstruction.
 
+Is it possible to raise this value (without recompiling)?
+I know about possible performance tradeoffs with other
+processes, I'm just generally interested.
 
-regards
-   Mario
--- 
-I thought the only thing the internet was good for was porn.  -- Futurama
+Thanks.
 
+nils-henner
