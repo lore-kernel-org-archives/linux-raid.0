@@ -1,73 +1,29 @@
-From: "Robert L. Harris" <Robert.L.Harris@rdlg.net>
-Subject: Re: raidtab -> mdadm conf file?
-Date: Wed, 19 Feb 2003 15:56:21 -0500
+From: "Peter T. Breuer" <ptb@it.uc3m.es>
+Subject: Re: Fast (intelligent) raid1
+Date: Wed, 19 Feb 2003 21:59:10 +0100 (MET)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20030219205621.GE13439@rdlg.net>
-References: <20030219202516.GC13439@rdlg.net> <20030219205355.542BD3B82A@jaded.cynicism.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="6Nae48J/T25AfBN4"
+Message-ID: <200302192059.h1JKxAH28572@oboe.it.uc3m.es>
+Reply-To: ptb@it.uc3m.es
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20030219205355.542BD3B82A@jaded.cynicism.com>
-To: Derek Vadala <derek@cynicism.com>
-Cc: Linux-Raid <linux-raid@vger.kernel.org>
+In-Reply-To: From "(env:" "ptb)" at "Feb 19, 2003 12:29:55 pm"
+To: ptb@it.uc3m.es
+Cc: Neil Brown <neilb@cse.unsw.edu.au>, Ross Vandegrift <ross@willow.seitz.com>, Ingo Molnar <mingo@redhat.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+"ptb wrote:"
+> "A month of sundays ago ptb wrote:"
+> >  ftp://oboe.it.uc3m.es/pub/Programs/fr1-2.2.tgz
 
---6Nae48J/T25AfBN4
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+I've now added asynchronous writes to the fr1-2.4 patch (note,
+2.4, not 2.2). This uses the bitmap as a journal log. Ordinary
+writes mark the bitmap and they bitmap is cleared when the last i/o in
+the set completes.
 
+However, success is reported back to the user after ONE successful
+completion (i.e. we run the original end_io handed down to md), not
+after two or more or however many components are in the array...
 
+We can afford to do that because the bitmap records if we miss
+any.
 
-What should the output of "mdadm --detail --scan" look like?
-
-root@disk2:~# mdadm --detail --scan
-mdadm: option s not valid in mode D
-
-
-Thus spake Derek Vadala (derek@cynicism.com):
-
-> On Wed, 19 Feb 2003, Robert L. Harris wrote:
->=20
-> >   I currently have about 30 machines using raidtools and /etc/raidtab.
-> > Does anyone have a script that will generate a complete mdadm conf
-> > file based on a raidtab or output from mdadm --detail?  While mdadm may
->=20
-> Assuming the arrays are operational you could do something like:
->=20
->=20
-> # echo "DEVICES /dev/sd*" > /etc/mdadm.conf
-> # mdadm --detail --scan >> /etc/mdadm.conf
->=20
-> Just adjust the first command so that it has the desired device set.
->=20
-> --
-> Derek Vadala, derek@cynicism.com, http://www.cynicism.com/~derek
-
-:wq!
----------------------------------------------------------------------------
-Robert L. Harris                     | PGP Key ID: E344DA3B
-                                         @ x-hkp://pgp.mit.edu=20
-DISCLAIMER:
-      These are MY OPINIONS ALONE.  I speak for no-one else.
-FYI:
- perl -e 'print $i=3Dpack(c5,(41*2),sqrt(7056),(unpack(c,H)-2),oct(115),10)=
-;'
-
-
---6Nae48J/T25AfBN4
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.1 (GNU/Linux)
-
-iD8DBQE+U+918+1vMONE2jsRAj/uAJ4hFEw5QqQwej/wvi0jg0tYzZG4uACghfNs
-3y6Qgn5Fn7qZQieu8WToln4=
-=7FbC
------END PGP SIGNATURE-----
-
---6Nae48J/T25AfBN4--
+Peter
