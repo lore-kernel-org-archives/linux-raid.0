@@ -1,120 +1,86 @@
-From: rrk <rrk@prairie.lakes.com>
-Subject: Re: raid1 creation problems
-Date: Sat, 12 Jun 2004 04:38:11 -0500
+From: "Jay Strauss" <me@heyjay.com>
+Subject: Re: re mdadm  raid1 creation problems
+Date: Sat, 12 Jun 2004 07:58:30 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <40CACF03.6070900@prairie.lakes.com>
+Message-ID: <006401c4507c$f7e62b40$6705a8c0@a30>
+References: <40CAD765.7040307@prairie.lakes.com>
+Reply-To: "Jay Strauss" <me@heyjay.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+To: rrk <rrk@prairie.lakes.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Friday June 11, rrk@prairie.lakes.com wrote:
+rrk,
 
-sorry i sent a relpy but never showed on the list 
-so i'll try this
+You say make filesystem on hda, do you really mean you created
+filesystems hda[123]?
+
+After you edited /etc/boot/grub/menu.lst did you run grub?
+
+You don't need to reboot so often
+
+take a look at:
+http://marc.theaimsgroup.com/?l=linux-raid&m=108571782912454&w=2
+
+Jay
+----- Original Message ----- 
+From: "rrk" <rrk@prairie.lakes.com>
+To: <linux-raid@vger.kernel.org>
+Sent: Saturday, June 12, 2004 5:13 AM
+Subject: re mdadm raid1 creation problems
 
 
->> why would mdadm be creating a md device (raid1) that was larger than the 
->> partition table?
->  
+> sorry my reply's are not making it to the list
 >
-
-Because the partition table hadn't  been read after it was last
-changed maybe.
-
-
-****
-i was trying to be real carefull about rebooting after any partion changes
-
-
->> these are two identical seagate 120's --debian 2.4.26 with raid compiled in.
->> i have built the partition tables with fdisk cfdisk and parted same 
->> problem everytime . everything is fine
->> up until i boot at which time it say's the superblock is larger than the 
->> partition by about 20 or 30 blocks
->  
+> the error msg i get is
 >
-
-At which time *what* says that *what* superblock is larger by exactly
-*how*many* blocks.
-
-*****
-i get the following error on the intial boot after adding the second drive 
-and waiting for the rsync. The add and rsync was done with the drives unmounted
-under a mepis resuce disk
-
-/dev/md1 file system size (according to the superblock) is 2560351
-the pyhical size of the device is 2560320 either the superblock or the partion
-is corrupt
-
-/dev/md1: unexpected inconsistency; run fsck manually
- 
-
->> I have built several other raid1 system's  over the last year and have 
->> not seen this problem before.
->> to add the drives to the array i boot under a recuse disk and sync under 
->> the rescue disk. same mdadm
->> version as they were built with. The partition tables match in all cases 
->> -- with fdisk i kept everything on cyl
->> boundaries.
->  
+> /dev/md1 file system size ( according to the superblock) is 2560351
+> the pyhical size of the device is 2560320 either the superblock or
+> the partion table is corrupt
 >
-
-I really think that if you want help, you need to provide better
-details.  I'm guessing that this is a raid array that you are booting
-off. Is that correct?
-
-Exactly what do you do, and exactly what happens.
-
-build process order
-
-build hda with debian and compile new kernel with raid 2.4.26
-use sfdisk -d /dev/hda |sfdisk /dev/hdc to create hdc partions
-set hdc partion type to fd
-reboot
-mk file system for hdc copy hda to hdc
-test hdc with a reboot as primary
-reboot with hda as primary
-mdadm --create /dev/md1 --level=1 --raid-devices=2 missing /dev/hdc1
-reboot
-test mount md1
-unmount md1
-change hda partion type to fd
-shutdown 
-boot mepis rescue 
-mdadm --add /dev/md1 /dev/hd1
-wait for rsync
-shutdown 
-reboot with /dev/md1 as primary boot
-that when i get the error:
-
-/dev/md1 file system size (according to the superblock) is 2560351
-the pyhical size of the device is 2560320 either the superblock or the partion
-is corrupt
-
-/dev/md1: unexpected inconsistency; run fsck manually
-
-
-
-
-
-
-
-
-
-
->> 
->> where and how does mdadm check partition size?
->  
+> /dev/md1: UNEXPECTED INCONSISTENCY; RUN fsck MANUALLY
 >
-
-It uses an ioctl to ask the partition device how big it is.
-
-NeilBrown
-
-
->> 
+> i get this msg on the first boot with md1 as the primary boot partion
+>
+> i thought i was being pretty careful about rebooting after all partion
+> changes
+>
+> the build order/process is
+>
+> build and test hda  debian 2.4.26 with raid compiled in
+> sfdisk to transfer partions   sfdisk -d /dev/hda | sfdisk /dev/hdc
+> set hdc partion type  to fd
+> reboot
+> mk file system on hdc and copy hda to hdc
+> reboot
+> test hdc as primary boot
+> reboot
+> create md1   mdadm --create /dev/md1 --level=1 --raid-devices=2 missing
+> /dev/hdc1
+> there are 3 md devices / home & var
+> reboot
+> mount md device for test
+> change hda partion type to fd
+> reboot
+> edit fstab and grub on md devices
+> shutdown
+> boot from mepis rescue disk
+> mdadm --add /dev/md1 /dev/hda1
+> wait for resync
+> shutdown
+> reboot from md1
+>
+> thanks
+> rob
+>
+>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 >
 
