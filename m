@@ -1,126 +1,57 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: Proposed enhancements to MD
-Date: Thu, 15 Jan 2004 10:07:34 +1100
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <16389.52150.148792.875315@notabene.cse.unsw.edu.au>
-References: <40033D02.8000207@adaptec.com>
+From: Terrence Martin <tmartin@physics.ucsd.edu>
+Subject: Best Practice for Raid1 Root
+Date: Wed, 14 Jan 2004 15:43:04 -0800
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <4005D408.8060002@physics.ucsd.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: message from Scott Long on Monday January 12
-To: Scott Long <scott_long@adaptec.com>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday January 12, scott_long@adaptec.com wrote:
-> All,
-> 
-> Adaptec has been looking at the MD driver for a foundation for their
-> Open-Source software RAID stack.  This will help us provide full
-> and open support for current and future Adaptec RAID products (as
-> opposed to the limited support through closed drivers that we have
-> now).
+Hi,
 
-Sounds like a great idea.
+I wanted to post this question for a while.
 
-> 
-> While MD is fairly functional and clean, there are a number of 
-> enhancements to it that we have been working on for a while and would
-> like to push out to the community for review and integration.  These
-> include:
+On several systems I have configured a root software raid setup with two 
+IDE hard drives. The systems are always some version of redhat. Each 
+disk has its own controller and is partitioned similar to the following, 
+maybe with more partitions, but this is the minimum.
 
-It would help if you said up-front if you were thinking of 2.4 or 2.6
-or 2.7 or all of whatever.  I gather from subsequent emails in the
-thread that you are thinking of 2.6 and hoping for 2.4.
-It is definately too late for any of this to go into kernel.org 2.4,
-but some of it could live in an external patch set that people or
-vendors can choose or not.
+hda1 fd   100M
+hda2 swap 1024M
+hda3 fd   10G
 
-> 
-> - partition support for md devices:  MD does not support the concept of
->    fdisk partitions; the only way to approximate this right now is by
->    creating multiple arrays on the same media.  Fixing this is required
->    for not only feature-completeness, but to allow our BIOS to recognise
->    the partitions on an array and properly boot them as it would boot a
->    normal disk.
+hdc1 fd   100M
+hdc2 swap 1024M
+hdc3 fd   10G
 
-Your attached patch is completely unacceptable as it breaks backwards
-compatability.  /dev/md1 (blockdev 9,1) changes from being the second
-md array to being the first partition of the first md array.
+The Raid devices would be
 
-I too would like to support partitions of md devices but there is not
-really elegant way to do it.
-I'm beginning to think the best approach is to use a new major number
-(which will be dynammically allocated because Linus has forbidden new
-static allocations).  This should be fairly easy to do.
+/dev/md0 mounted under /boot made of /dev/hda1 and /dev/hdc1
+/dev/md1 mounted under / made of /dev/hda3 and /dev/hdc3
 
-A reasonable alternate is to use DM.  As I understand it, DM can work
-with any sort of metadata (As metadata is handled by user-space) so
-this should work just fine.
+The boot loader is grub and I want both /boot and / raided.
 
-Note that kernel-based autodetection is seriously a thing of the past.
-As has been said already, it should be just as easy and much more
-manageable to do autodtection in early user-space.  If it isn't, then
-we need to improve the early user-space tools.
+In the event of a failure of hda I would like the system to switch to 
+hdc. This works fine. However what I have had problems with is if the 
+system reboots. If /dev/hda is unavailable I no longer have a disk with 
+a boot sector set up correctly. Unless I have a floppy or CDROM with a 
+boot loader the system will not come up.
 
-> 
-> - generic device arrival notification mechanism:  This is needed to
->    support device hot-plug, and allow arrays to be automatically
->    configured regardless of when the md module is loaded or initialized.
->    RedHat EL3 has a scaled down version of this already, but it is
->    specific to MD and only works if MD is statically compiled into the
->    kernel.  A general mechanism will benefit MD as well as any other
->    storage system that wants hot-arrival notices.
+So my main question is what is the best practice to get a workable boot 
+sector on /dev/hdc? How are other people making sure that their system 
+remains bootable after a disk failure of the boot disk? Is it even 
+possible with software raid and PC BIOS? Also when you replace /dev/hda 
+how are you getting a valid boot sector on that disk?
 
-This has largely been covered, but just to add or clarify slightly:
+I have found grub to often be problematic so that even when I move the 
+good drive to be hda grub does not like to install itself correctly.
 
- This is not an md issue.  This is either a buss controller or
- userspace issue.
- 2.6 has a "hotplug" infrastructure and each buss should report
- hotplug events to userspace.
- If they don't they should be enhanced so they do.
- If they do, then userspace needs to be told what to do with these
- events, and when to assemble devices into arrays.
+I am sure I am approaching this incorrect in some way, I am just not 
+sure what is the right way.
 
- 
-> 
-> - RAID-0 fixes:  The MD RAID-0 personality is unable to perform I/O
->    that spans a chunk boundary.  Modifications are needed so that it can
->    take a request and break it up into 1 or more per-disk requests.
+Terrence Martin
+UCSD Physics
 
-In 2.4 it cannot, but arguable doesn't need to.  However I have a
-fairly straight-forward patch which supports raid0 request splitting.
-In 2.6, this should work properly already.
-
-> 
-> - Metadata abstraction:  We intend to support multiple on-disk metadata
->    formats, along with the 'native MD' format.  To do this, specific
->    knowledge of MD on-disk structures must be abstracted out of the core
->    and personalities modules.
-
-In 2.4, this would be a massive amount of work and I don't recommend
-it.
-In 2.6, most of this is already done - the knowledge about superblock
-format is very localised.  I would like to extend this so that a
-loadable module can add a new format.  Patches welcome.
-
-Note that the kernel does need to know about the format of the
-superblock.
-DM can manage without knowing as it's superblock is read mostly and
-the very few updates (for reconfiguration) are managed by userspace.
-For raid1 and raid5 (which DM doesn't support), we need to update the
-superblock on errors and I think that is best done in the kernel.
-
-
-> 
-> - DDF Metadata support: Future products will use the 'DDF' on-disk
->    metadata scheme.  These products will be bootable by the BIOS, but
->    must have DDF support in the OS.  This will plug into the abstraction
->    mentioned above.
-
-I'm looking forward to seeing the specs for DDF (but isn't it pretty
-dump to develop a standard in a closed forum).  If DDF turns out to
-have real value I would he happy to have support for it in linux/md.
-
-NeilBrown
