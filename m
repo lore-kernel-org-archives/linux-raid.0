@@ -1,34 +1,52 @@
-From: "Haofeng Kou" <haofengk@ptu.promise.com>
-Subject: Tasklet, TaskQ and Int
-Date: Wed, 24 Jul 2002 20:55:52 -0700
+From: <martin@hack.org>
+Subject: Re: BSD disklabel and autodetection
+Date: Fri, 26 Jul 2002 17:09:32 +0000 (GMT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <F6A3AFC9BCD92E48B79C14E4AAAEA20F45A51D@nonamea.ptu.promise.com>
+Message-ID: <Pine.LNX.4.32.0207261708230.1091-100000@dope.pingdynasty.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-content-class: urn:content-classes:message
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I meet some problems in my RAID system developing.
-As we know , Linux Kernel schedule methods:
-1> Task Queues: <1>Scheduler queue; <2>Timer queue; <3>Immediate queue
-2> Tasklet
-3> Kernel timer
+
+hi - i'm resending this as it didn't seem to make the list first time.
+sorry if you've already seen it.
 
 
-I have questions about the "Tasklet",  "Scheduler queue" and the
-Interrupt:
-For "Tasklet" and "Scheduler queue" tasks, do they have the priority,
-which one is more higher and how does the kernel deal with this?
-For example that if the Interrupt happen during the "Scheduler queue"
-task, then Interrupt finish and schedule another "Tasklet". At this
-time, I want the "Tasklet" can execute before this "Scheduler queue"
-task, is it possible? How to handle it?
+On 23 Jul 2002, Hein Roehrig wrote:
+> <martin at hack.org> writes:
+> > i'm trying to get autodetection to work on a RAID 5 raiddevice made up
+> > from three devices. two of them reside on disks with DOS-style partition
+> > tables, the third is on a disk with a BSD disklabel. all of them have the
+> > partition type set to 0xfd, but only the first two devices are configured
+> > at boot time.
+>
+> See message <1019846049.1670.76.camel@peecee> on this mailing list. I
+> am in the process of patching my personal 2.4.19-rc3 to do
+> autodetection -- in the long run initrd is the way to go.
+
+Hein, i don't quite understand how initrd will solve my problem? i'm
+quite happy with my handrolled kernel, it's just that some of the
+partitions of the raid device are not detected.
+
+following some hints i've seen elsewhere on the list i tried to pass md
+parameters to the kernel ->
+
+Booting on Nautilus using machine vector Nautilus from SRM
+Command line: ro root=/dev/md1 md=1,/dev/sdb5,/dev/sdc2,/dev/sdd2 raid=noautodetect
+md: Will configure md1 (super-block) from /dev/sdb5,/dev/sdc2,/dev/sdd2, below.
+
+with the raid=noautodetect option it works.
+
+what other raid/md options can be passed this way? and how do i configure
+more than one device? geez, hope there's not a 256 char limit to the
+command line...
+are these options documented somewhere??
 
 
-Thanks,
-haofeng
+with regards,
+
+/m
+
 
