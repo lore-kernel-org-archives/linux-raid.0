@@ -1,31 +1,54 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: Hot adding active disk to RAID1?
-Date: Tue, 10 Feb 2004 19:22:19 +1100
+From: Thomas Horsten <thomas@horsten.com>
+Subject: ATARAID userspace configuration tool
+Date: Tue, 10 Feb 2004 14:18:15 +0000 (GMT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16424.38075.333116.361351@notabene.cse.unsw.edu.au>
-References: <20040207152948.GA17368@fscked.org>
-	<20040207173716.GA10996@fscked.org>
-	<1076178191.3328.32.camel@picard.intra.techwiz.ca>
-	<20040210075406.GB15112@fscked.org>
+Message-ID: <Pine.LNX.4.40.0402101405190.25784-100000@jehova.dsm.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Mike Perry on Tuesday February 10
-To: Mike Perry <mikepery@fscked.org>
-Cc: linux-raid@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday February 10, mikepery@fscked.org wrote:
-> 
-> I concur. The manpages really should clear up that raidhotadd (and mdadm
-> -a) only add spares. And they should further clarify that spares are
-> essentially useless and lie dormant.. The names of these
-> commands/options are very deceptive to the new user...
+Hi,
 
-Patches are more that welcome.
-It is very hard for someone how knows the system "inside-out" to see
-which areas aren't explained well.
+I'm writing a userspace utility to detect/configure Medley (and later
+other) ataraid devices in 2.6.
 
-NeilBrown
+It's intended to run from initramfs (or initrd for those who use that).
+
+I have a couple of questions and requests for clarification.
+
+- Is there a "recommended" way to enumerate all block devices (not
+partitions) from userside? Since this is ATA RAID, I could of course just
+read the ideX majors from /proc/devices and try all the minors, but I
+would prefer to get a list of all detected block devices in a portable
+way.
+
+- After I have used the DM (and possible MD for some RAID types) to map
+the ataraid devices, is there a way to remove the partitions from the
+underlying disks from the kernel? This was my main reason for wanting to
+do kernel-level autodetection of these arrays, so I could prevent add_disk
+from being called and analysing the partition table (on these BIOS RAIDs,
+in striped mode the first disk contains the partition table for the entire
+array in sector 0, and if the user (or a script) tries to mount the
+partitions (or even read the extended partition table) it may try to read
+after the end of the disk and will in any case use wrong sector numbers -
+leading to possible disk corruption.
+
+On top of this it would be useful to make the underlying devices
+inaccessible after the mapped device is created (to prevent people from
+doing things like fdisk /dev/hda, when what they really wanted was
+something like fdisk /dev/ataraid/disc).
+
+Detecting the partition table in userspace would fix this, but it's not
+planned before 2.7 and I don't think it is safe to leave the false
+partitions exposed.
+
+- Some RAID types will need (I think) to use the MD framework as well as
+DM (e.g. RAID0+1), so the device the users would be the md device which
+would be composed of two dm devices. Is there a way to hide the underlying
+dm devices from the user so he they only see the ones they should use (or
+prevent these from being used directly some other way)?
+
+// Thomas
 
