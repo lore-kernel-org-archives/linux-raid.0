@@ -1,83 +1,72 @@
-From: "Nicolas" <nm-ml@fingerprint.fr>
-Subject: RE: System keep booting in degradedmode
-Date: Mon, 25 Nov 2002 12:11:51 +0100
+From: "Stephen C. Tweedie" <sct@redhat.com>
+Subject: Re: Assertion failure, BUG at journal.c:1732
+Date: Mon, 25 Nov 2002 15:08:25 +0000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <NFEBKDECMMGIAKCMGJGDMEPKDNAA.nm-ml@fingerprint.fr>
-References: <Pine.LNX.4.33.0211251151200.15189-100000@nooks.wimpunk.com>
+Message-ID: <20021125150825.A11869@redhat.com>
+References: <Pine.NEB.4.44.0211231926020.11197-100000@iceland.freeshell.org> <Pine.NEB.4.44.0211232017520.8377-200000@iceland.freeshell.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="sm4nu43k4a2Rpi4c"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.33.0211251151200.15189-100000@nooks.wimpunk.com>
-To: Wim Vinckier <wim-raid@tisnix.be>
-Cc: linux-raid@vger.kernel.org
+Content-Disposition: inline
+In-Reply-To: <Pine.NEB.4.44.0211232017520.8377-200000@iceland.freeshell.org>; from schaller@freeshell.org on Sat, Nov 23, 2002 at 08:18:26PM +0000
+To: Jeff Schaller <schaller@freeshell.org>
+Cc: sct@redhat.com, akpm@zip.com.au, adilger@clusterfs.com, mingo@redhat.com, neilb@cse.unsw.edu.au, ext3-users@redhat.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Well, you're right... I did forget to change my partition type to FD...
-Seems quite obvious now I know it...
-Thanks a lot
 
+--sm4nu43k4a2Rpi4c
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
+Hi,
 
------Message d'origine-----
-De : linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org]De la part de Wim Vinckier
-Envoye : lundi 25 novembre 2002 11:52
-A : Nicolas
-Cc : linux-raid@vger.kernel.org
-Objet : Re: System keep booting in degradedmode
+On Sat, Nov 23, 2002 at 08:18:26PM +0000, Jeff Schaller wrote:
+> Boy, it'd help if I actually attached the log, eh?
 
+Yes. :)
 
-I'm not sure but maybe it's just a partiontable issue.  Did you change the
-partitiontable?
+Content-Description: kern.log
+> Nov 19 06:58:47 debian kernel: attempt to access beyond end of device
+> Nov 19 06:58:47 debian kernel: 09:00: rw=1, want=39121480, limit=39121408
 
+Corruption on disk.  Undiagnosable without more info --- it could be
+hardware or software.
 
+> Nov 19 06:58:47 debian kernel: Assertion failure in __journal_remove_journal_head() at journal.c:1732: "buffer_jbd(bh)"
+> Nov 19 06:58:47 debian kernel: kernel BUG at journal.c:1732!
 
-On Mon, 25 Nov 2002, Nicolas wrote:
+That's a core driver layer bug which we found recently, but it's
+too close to 2.4.20 to include the fix.  Basically, on an
+out-of-bounds IO the ll_rw_block code was clearing most of the bits in
+the buffer_head state, leading to the above assert failure when ext3
+found its critical metadata had been corrupted.
 
-> Hey list
->
-> I want to get RAID1 running on a system currently running with no RAID.
-> I followed the RAID howto
-> I added one more disk and created a raidtab file with my currently running
-> disk as failed-disk. I made my raid device on my new disk, gave him a
-> filesystem, dumped my currently running disk on it, modified lilo.conf,
-ran
-> lilo, and rebooted on the raid disk. It worked great. According to
-> /proc/mdstat, My raid disk was OK, in degraded mode. I changed my
-> failed-disk into a raid-disk in the raidtab file, and raidhotadd(ed) my
-old
-> disk in the array. Again, it worked fine, and after reconstruction, the
-raid
-> array was no longer in degraded mode, and working fine (still according to
-> /proc/mdstat).
-> My problem is, each time I reboot, the raid is in degraded mode again, as
-if
-> I had never modified the raidtab. If I raidhotadd my old disk, it will be
-OK
-> again, until the next reboot, and so on.
-> Does anybody know what's wrong?
->
-> Thanks
->
-> Nicolas
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Patch is below, I'll send it to Marcelo for 2.4.21-pre.
 
-------------------------------------------------------------------------
-Wim VINCKIER
-Wasstraat 38                                          Wim-Raid@tisnix.be
-B-9000  Gent                                               ICQ 100545109
-------------------------------------------------------------------------
-'Windows 98 or better required' said the box... so I installed linux
+--Stephen
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--sm4nu43k4a2Rpi4c
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="000-buffer_clearbits.patch"
 
+--- linux-2.4-ext3merge/drivers/block/ll_rw_blk.c.=K0026=.orig	Mon Nov 25 15:03:18 2002
++++ linux-2.4-ext3merge/drivers/block/ll_rw_blk.c	Mon Nov 25 15:04:00 2002
+@@ -1129,7 +1129,7 @@
+ 
+ 		if (maxsector < count || maxsector - count < sector) {
+ 			/* Yecch */
+-			bh->b_state &= (1 << BH_Lock) | (1 << BH_Mapped);
++			bh->b_state &= ~(1 << BH_Dirty);
+ 
+ 			/* This may well happen - the kernel calls bread()
+ 			   without checking the size of the device, e.g.,
+@@ -1140,7 +1140,6 @@
+ 			       kdevname(bh->b_rdev), rw,
+ 			       (sector + count)>>1, minorsize);
+ 
+-			/* Yecch again */
+ 			bh->b_end_io(bh, 0);
+ 			return;
+ 		}
+
+--sm4nu43k4a2Rpi4c--
