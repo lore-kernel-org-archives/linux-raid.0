@@ -1,47 +1,59 @@
-From: "Gernot A. Weber" <gernot@tux-web.de>
-Subject: Re: Mirroring
-Date: Thu, 11 Apr 2002 14:49:14 +0200 (CEST)
+From: Anders Nielsen <anielsen@diku.dk>
+Subject: Re: How to change the preferred minor
+Date: 11 Apr 2002 17:07:58 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.33.0204111442160.25430-100000@kopernikus.tux-web.de>
-References: <3CB58024.9080008@memscap.com>
+Message-ID: <1018537678.1902.88.camel@localhost>
+References: <1018431578.10844.32.camel@anders>
+	<15540.57161.433718.491297@notabene.cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3CB58024.9080008@memscap.com>
-To: Mohamed Farouk <mohamed.farouk@memscap.com>
-Cc: linux-raid@vger.kernel.org
+In-Reply-To: <15540.57161.433718.491297@notabene.cse.unsw.edu.au>
+To: Linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Dear Mr Farouk,
+tor, 2002-04-11 kl. 02:56 skrev Neil Brown:
+> On  April 10, anielsen@diku.dk wrote:
+> > When I try to boot my box with disks which previously was configured in
+> > other machines md tries to autodetect which array should have a given
+> > minor number.
+> > 
+> > I use the wonderful :-) mdadm -E and I can see a preferred minor value
+> > which is very nice, but since more than one array is competing for the
+> > same minor number it is kind of difficult for me to figure out what to
+> > put in my /etc/fstab.
+> > 
+> > Therefore my question is: how do I change the preferred minor value on a
+> > array so I can prevent conflicts? I would of course like to be able to
+> > use mdadm for this job :-)
+> 
+> This would be one of the reasons that I neither use nor recommend RAID
+> autostart.  It is too dependant on the preferred-minor which is hard
+> to change.
+> I guess I could add an option to mdadm to change the preferred-minor
+> as it could be useful, but I'm not highly motivated.  Maybe a
+> --rewrite-superblock option to --assemble...
+> 
+> I recommend that you enumerate the uuids of your arrays, create
+> /etc/mdadm.conf to say which uuid matches which /dev/md? and use 
+>  mdadm --assemble --scan
+> to assemble your arrays.
+> 
+> NeilBrown
 
-> (which contain the boot commands) while the other failed to boot. I
-> tried to put a bootable disk but it gives me something related to kernel
-> panics.
->
 
-I assume that you wrote the bootdisk when your master disk was running. So
-the LILO searches for the root partition on the master disk. When there is
-no master disk it fails to read it. I think it should be enough to write a
-new MBR with an alternate lilo.conf, which tells the kernel to boot not
-the master disks root partition but the slave root partition. In other
-words search for the entry root=. It might say something like
-root=/dev/hda1. Change it to the slave disk, eg root=/dev/hdb1 (This
-example assumes master / in hda1 and slave / on hdb1). Probably lilo won't
-write to MBR and complains about hdb being not first disk. But you can
-fake this entry. I can't remember the rigth syntax. But I think a quick
-google search should solve this problem.
+I see that the method you recommend is more flexible since there are
+more uuids than minor numbers :-)
 
-Best wishes,
+But I am not sure how I disable autostart and replace it with mdadm -A
+--scan so I could use some help.
 
-   Gernot Weber
+I am using Redhat 7.2. I guess I have to change an initscript or
+something.
+
+Thanks,
+ Anders
 
 
--- 
-Gernot A. Weber
-http://www.tux-web.de
-
-Only wimps use tape backup: _real_ men just upload their important stuff
-on ftp, and let the rest of the world mirror it.
-
-                              Linus Torvalds, after a hard drive crash
 
