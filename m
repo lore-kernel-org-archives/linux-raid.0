@@ -1,71 +1,116 @@
-From: NeilBrown <neilb@cse.unsw.edu.au>
-Subject: [PATCH] md - 4 of 4 - Fix another two bug in raid5
-Date: Thu, 07 Nov 2002 11:56:16 +1100
+From: "Gernot A. Weber" <gernot@tux-web.de>
+Subject: Failed Raid 5
+Date: Thu, 7 Nov 2002 20:56:00 +0100 (CET)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <E189ay0-0008JX-00@notabene.cse.unsw.edu.au>
+Message-ID: <Pine.LNX.4.44.0211072051220.2926-100000@kopernikus.tux-web.de>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Linus Torvalds <torvalds@transmeta.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi,
 
-### Comments for ChangeSet
+I just got home from holidays... And when I tried to read my mails I
+noticed a drive og my raid 5 was marked as faulty. When reconstructing it
+another drive seemed to failed - but I think there was some trouble with
+my SCSI controller and another drive was marked as faulty...
 
- A partial block write over a block on a failed device
- would need to pre-read that block, which means pre-read all
- blocks in stripe and generate that block.  But the generate-block
- code never checked for this possibility, so it wouldn't happen.
+How can I try to recover the raid. The first and third disk should be
+fine.
+
+Here is my raidtab:
+
+raiddev                 /dev/md3
+raid-level              5
+nr-raid-disks           3
+chunk-size              128
+persistent-superblock   1
+parity-algorithm        left-symmetric
+device                  /dev/sda6
+raid-disk               0
+device                  /dev/sdb6
+raid-disk               1
+device                  /dev/sdc6
+raid-disk               2
 
 
+when trying to make a raidstart /dev/md3, I get the following output in
+/var/log/messages:
+
+ 20:22:29 kopernikus kernel:  [events: 000000eb]
+Nov  7 20:22:29 kopernikus kernel:  [events: 000000ec]
+Nov  7 20:22:29 kopernikus kernel:  [events: 000000ec]
+Nov  7 20:22:29 kopernikus kernel: md: autorun ...
+Nov  7 20:22:29 kopernikus kernel: md: considering
+scsi/host0/bus0/target1/lun0/part6 ...
+Nov  7 20:22:29 kopernikus kernel: md:  adding
+scsi/host0/bus0/target1/lun0/part6 ...
+Nov  7 20:22:29 kopernikus kernel: md:  adding
+scsi/host0/bus0/target2/lun0/part6 ...
+Nov  7 20:22:29 kopernikus kernel: md:  adding
+scsi/host0/bus0/target0/lun0/part6 ...
+Nov  7 20:22:29 kopernikus kernel: md: created md3
+Nov  7 20:22:29 kopernikus kernel: md:
+bind<scsi/host0/bus0/target0/lun0/part6,1>
+Nov  7 20:22:29 kopernikus kernel: md:
+bind<scsi/host0/bus0/target2/lun0/part6,2>
+Nov  7 20:22:29 kopernikus kernel: md:
+bind<scsi/host0/bus0/target1/lun0/part6,3>
+Nov  7 20:22:29 kopernikus kernel: md: running:
+<scsi/host0/bus0/target1/lun0/part6><scsi/host0/bus0/target2/lun0/part6><scsi/host0/bus0/target0/lun0/part6>
+Nov  7 20:22:29 kopernikus kernel: md:
+scsi/host0/bus0/target1/lun0/part6's event counter: 000000ec
+Nov  7 20:22:29 kopernikus kernel: md:
+scsi/host0/bus0/target2/lun0/part6's event counter: 000000ec
+Nov  7 20:22:29 kopernikus kernel: md:
+scsi/host0/bus0/target0/lun0/part6's event counter: 000000eb
+Nov  7 20:22:29 kopernikus kernel: md: freshest:
+scsi/host0/bus0/target1/lun0/part6
+Nov  7 20:22:29 kopernikus kernel: md3: kicking faulty
+scsi/host0/bus0/target0/lun0/part6!
+Nov  7 20:22:29 kopernikus kernel: md:
+unbind<scsi/host0/bus0/target0/lun0/part6,2>
+Nov  7 20:22:29 kopernikus kernel: md:
+export_rdev(scsi/host0/bus0/target0/lun0/part6)
+Nov  7 20:22:29 kopernikus kernel: md3: max total readahead window set to
+1024k
+Nov  7 20:22:29 kopernikus kernel: md3: 2 data-disks, max readahead per
+data-disk: 512k
+Nov  7 20:22:29 kopernikus kernel: raid5: spare disk
+scsi/host0/bus0/target1/lun0/part6
+Nov  7 20:22:29 kopernikus kernel: raid5: device
+scsi/host0/bus0/target2/lun0/part6 operational as raid disk 2
+Nov  7 20:22:29 kopernikus kernel: RAID5 conf printout:
+Nov  7 20:22:29 kopernikus kernel:  --- rd:3 wd:1 fd:2
+Nov  7 20:22:29 kopernikus kernel:  disk 0, s:0, o:0, n:0 rd:0 us:1
+dev:[dev 00:00]
+Nov  7 20:22:29 kopernikus kernel:  disk 1, s:0, o:0, n:1 rd:1 us:1
+dev:[dev 00:00]
+Nov  7 20:22:29 kopernikus kernel:  disk 2, s:0, o:1, n:2 rd:2 us:1
+dev:scsi/host0/bus0/target2/lun0/part6
+Nov  7 20:22:29 kopernikus kernel: md :do_md_run() returned -22
+Nov  7 20:22:29 kopernikus kernel: md: md3 stopped.
+Nov  7 20:22:29 kopernikus kernel: md:
+unbind<scsi/host0/bus0/target1/lun0/part6,1>
+Nov  7 20:22:29 kopernikus kernel: md:
+export_rdev(scsi/host0/bus0/target1/lun0/part6)
+Nov  7 20:22:29 kopernikus kernel: md:
+unbind<scsi/host0/bus0/target2/lun0/part6,0>
+Nov  7 20:22:29 kopernikus kernel: md:
+export_rdev(scsi/host0/bus0/target2/lun0/part6)
+Nov  7 20:22:29 kopernikus kernel: md: ... autorun DONE.
+Nov  7 20:26:27 kopernikus kernel:  [events: 000000ec]
+Nov  7 20:26:27 kopernikus kernel: md:
+bind<scsi/host0/bus0/target2/lun0/part6,1>
+Nov  7 20:26:27 kopernikus kernel:  [events: 000000eb]
+Nov  7 20:26:27 kopernikus kernel: md:
+bind<scsi/host0/bus0/target0/lun0/part6,2>
 
 
+I hope somebody out there is able to help me :))
 
- ----------- Diffstat output ------------
- ./drivers/md/raid5.c |   18 +++++++++++++++---
- 1 files changed, 15 insertions(+), 3 deletions(-)
+Thanks,
 
---- ./drivers/md/raid5.c	2002/11/06 23:05:40	1.2
-+++ ./drivers/md/raid5.c	2002/11/06 23:07:44	1.3
-@@ -836,6 +836,7 @@ static void handle_stripe(struct stripe_
- 	int i;
- 	int syncing;
- 	int locked=0, uptodate=0, to_read=0, to_write=0, failed=0, written=0;
-+	int non_overwrite = 0;
- 	int failed_num=0;
- 	struct r5dev *dev;
- 
-@@ -883,7 +884,11 @@ static void handle_stripe(struct stripe_
- 
- 		
- 		if (dev->toread) to_read++;
--		if (dev->towrite) to_write++;
-+		if (dev->towrite) {
-+			to_write++;
-+			if (!test_bit(R5_OVERWRITE, &dev->flags))
-+				non_overwrite++;
-+		}
- 		if (dev->written) written++;
- 		rdev = conf->disks[i].rdev; /* FIXME, should I be looking rdev */
- 		if (!rdev || !rdev->in_sync) {
-@@ -975,12 +980,19 @@ static void handle_stripe(struct stripe_
- 
- 	/* Now we might consider reading some blocks, either to check/generate
- 	 * parity, or to satisfy requests
-+	 * or to load a block that is being partially written.
- 	 */
--	if (to_read || (syncing && (uptodate+failed < disks))) {
-+	if (to_read || non_overwrite || (syncing && (uptodate+failed < disks))) {
- 		for (i=disks; i--;) {
- 			dev = &sh->dev[i];
- 			if (!test_bit(R5_LOCKED, &dev->flags) && !test_bit(R5_UPTODATE, &dev->flags) &&
--			    (dev->toread || syncing || (failed && sh->dev[failed_num].toread))) {
-+			    (dev->toread ||
-+			     (dev->towrite && !test_bit(R5_OVERWRITE, &dev->flags)) ||
-+			     syncing ||
-+			     (failed && (sh->dev[failed_num].toread ||
-+					 (sh->dev[failed_num].towrite && !test_bit(R5_OVERWRITE, &sh->dev[failed_num].flags))))
-+				    )
-+				) {
- 				/* we would like to get this block, possibly
- 				 * by computing it, but we might not be able to
- 				 */
+   Gernot
+
