@@ -1,74 +1,64 @@
-From: =?iso-8859-1?Q?Agust=EDn_Ciciliani?= <agustin@maderonet.net.ar>
-Subject: Re: Raid 1 - md "Total Disks" question
-Date: Mon, 20 Sep 2004 13:05:03 -0300
+From: Martin Josefsson <gandalf@wlug.westbo.se>
+Subject: Re: Problem with raid1 read error patch
+Date: Mon, 20 Sep 2004 18:14:27 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <008a01c49f2b$9cb64ea0$6800a8c0@Agus>
-References: <019801c499ab$405f20d0$6800a8c0@Agus><16710.16837.832998.503557@cse.unsw.edu.au><1095374065.4196.22.camel@compaq.xsintricity.com> <16718.6808.294471.886458@cse.unsw.edu.au>
+Message-ID: <1095696866.8380.23.camel@tux.rsn.bth.se>
+References: <Pine.LNX.4.58.0409201700460.12286@tux.rsn.bth.se>
+	 <414EF709.7040505@steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Zb49rqfpk5B5lpRprXlR"
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: dledford@redhat.com
-Cc: linux-raid@vger.kernel.org
+In-Reply-To: <414EF709.7040505@steeleye.com>
+To: Paul Clements <paul.clements@steeleye.com>
+Cc: neilb@cse.unsw.edu.au, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Ok, so I will apply the patch. Thank you!
 
------ Original Message -----=20
-=46rom: "Neil Brown" <neilb@cse.unsw.edu.au>
-To: "Doug Ledford" <dledford@redhat.com>
-Cc: "Agust=EDn Ciciliani" <agustin@maderonet.net.ar>; <linux-raid@vger.=
-kernel.org>; "Marcelo
-Tosatti" <marcelo.tosatti@cyclades.com>
-Sent: Sunday, September 19, 2004 8:47 PM
-Subject: Re: Raid 1 - md "Total Disks" question
+--=-Zb49rqfpk5B5lpRprXlR
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
+On Mon, 2004-09-20 at 17:28, Paul Clements wrote:
 
-> On Thursday September 16, dledford@redhat.com wrote:
-> > On Mon, 2004-09-13 at 20:56, Neil Brown wrote:
-> > > On Monday September 13, agustin@maderonet.net.ar wrote:
-> > > > Hi Everybody,
-> > > >
-> > > > I was wondering if you could take a look to the following and g=
-ive some advice...
-I just
-> > > > have TWO SATA WD800 disks and "mdadm" says I have "three" and o=
-ne of
-> > > > them has "failed"!!!
-> > >
-> > > It's just some odd accounting in the kernel.  Don't worry about i=
-t.
-> >
-> > It is just some odd accounting stuff, but it's hardly something I w=
-ould
-> > say "don't worry about it".  I had to chase a similar looking probl=
-em
-> > down in our RHEL3 product line.  In fact, it was raid1 where I was
-> > seeing this problem.  I've attached the email I sent about the prob=
-lem
-> > to the internal kernel people, the patch I originally sent in for i=
-t,
-> > and the update patch that catches a couple spots I originally misse=
-d in
-> > my first patch (apologies if my mailer horks this up, haven't tried=
- to
-> > send sent mail in exactly the way I'm trying it now).
->
-> Well, the accounting and the locking are really to separate issues,
-> but your patch looks good, thanks.
->
-> NeilBrown
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->
+Hi Paul
 
+> > After backing that patch out, with some minor modifications because the
+> > code has changed a little bit, I get a number of scsi-errors and after =
+a
+> > while the drive gets disabled like above but life continues like before
+> > the patch went in. That is, no infinite loop and everything works :)
+> >=20
+> > Any ideas to what went wrong?
+>=20
+> Yes. You're getting the infinite retries because the BIO_UPTODATE flag=20
+> in the bio is not set.
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Ah
+
+> I've been debugging the same problem just recently. In addition to this=20
+> patch from Neil, you'll also need a patch that I posted here last week,=20
+> which does a bio_put() and a bio_clone() to get rid of the old bio that=20
+> the read error occurred on, and create a new (clean) bio to retry the=20
+> read against:
+>=20
+> http://marc.theaimsgroup.com/?l=3Dlinux-raid&m=3D109527014728404&w=3D2
+
+Thanks, will try it out tomorrow when I'm back in front of the machine.
+Didn't expect an answer so soon :)
+
+--=20
+/Martin
+
+--=-Zb49rqfpk5B5lpRprXlR
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.4 (GNU/Linux)
+
+iD8DBQBBTwHiWm2vlfa207ERAjloAKCxjak5blzpbSrAlaag6jwizA1fTACfdsqw
+xpCsOK8eBOTYieEeyEktrTQ=
+=6rLd
+-----END PGP SIGNATURE-----
+
+--=-Zb49rqfpk5B5lpRprXlR--
