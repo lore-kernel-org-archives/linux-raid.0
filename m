@@ -1,102 +1,67 @@
-From: Sven Anders <anders@anduras.de>
+From: Tony Mantler <nicoya@ubb.ca>
 Subject: Re: RAID1 Corruption
-Date: Mon, 17 Jan 2005 20:21:45 +0100
-Message-ID: <41EC1049.8000209@anduras.de>
-References: <41EBD827.80701@pipi.ma.cx> <200501171624.47645.andrew@walrond.org> <20050117165133.GC99565@caffreys.strugglers.net> <200501171704.10374.andrew@walrond.org> <41EC0371.9060106@infinia.de>
-Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------040403080507010209050205"
+Date: Mon, 17 Jan 2005 13:35:00 -0600
+Message-ID: <E0D27788-68BE-11D9-87D6-0005023722B8@ubb.ca>
+References: <41EBD827.80701@pipi.ma.cx> <200501171624.47645.andrew@walrond.org> <20050117165133.GC99565@caffreys.strugglers.net> <200501171704.10374.andrew@walrond.org> <41EC0371.9060106@infinia.de> <41EC0E7F.5090303@steeleye.com>
+Mime-Version: 1.0 (Apple Message framework v619)
+Content-Type: text/plain; charset=US-ASCII; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <41EC0371.9060106@infinia.de>
+In-Reply-To: <41EC0E7F.5090303@steeleye.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Markus Gehring <markus.gehring@infinia.de>
+To: Paul Clements <paul.clements@steeleye.com>
+Cc: linux-raid@vger.kernel.org, anders@anduras.de, Markus Gehring <markus.gehring@infinia.de>
 List-Id: linux-raid.ids
 
-This is a multi-part message in MIME format.
---------------040403080507010209050205
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 8bit
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+On 17-Jan-05, at 1:14 PM, Paul Clements wrote:
 
-Markus Gehring wrote:
-| Hi Folks!
-|
-| I have a reproducable problem with corrupted data read from a RAID1-array.
-|
-| Everything works fine with only one drive in the array. If the second is
-| synced up read accesses return corrupted data.
-|
-| Interesting: If you remove again the second disk. The same files will be
-|  read correctly again (no matter if written while only one disk is in
-| the array or two are synced!)!
-|
-| Tests with differend disks (2x80GB Seagate and 2x160GB Samsung),
-| different partition sizes (20, 40, 80, 160GB), different filesytems
-| (ext3, ext2, reiser) showed the same results.
-|
-| If i use the drive without raid everything works fine.
+> Hi,
+>
+> Markus Gehring wrote:
+>
+>> I have a reproducable problem with corrupted data read from a 
+>> RAID1-array.
+>> Setup:
+>>  HW:
+>>   2 S-ATA-Disks (160GB each) -> /dev/md4 RAID1
+>>   Promise S150 TX4 - Controller
+>>   AMD Sempron 2200+
+>>  SW:
+>>   Fedora Core 3
+>>   Kernel 2.6.10 unpatched
+>>   Samba (for read/write-accesses)
+>>   SW-Raid
+>> Everything works fine with only one drive in the array. If the second 
+>> is
+>> synced up read accesses return corrupted data.
+>> Interesting: If you remove again the second disk. The same files will 
+>> be
+>>  read correctly again (no matter if written while only one disk is in
+>> the array or two are synced!)!
+>
+> This makes it sound like bad data is getting written to the second 
+> disk during resync. Could you give more details about your test 
+> procedure (a script or list of steps that reproduces the problem would 
+> be great)?
+>
+> I don't think samba is the culprit, but just to be sure, is there any 
+> chance you could reproduce the problem without samba in the equation? 
+> (From what you say above, I assume all reads and writes are coming 
+> from a samba client of some sort?)
 
-It's seems to be the same problem I have (see my posting from 5.1.2005
-on this mailing-list).
+I've run into this before. I don't think Samba was the issue, as it was 
+puking on unrelated files, usually showing up as exec format errors 
+when trying to run various commands.
 
-The problem was reproducable. I changed to ext2, but problem persists.
-I tried several kernel configurations (with a special extra-small
-configuration, which had only the absolute necessary turned on), but
-it had no effect (It only took longer to reproduce the problem).
-I tried the kernels 2.6.9 with and without the -ac patches, wth no
-success at all.
-
-Because I'm not at home till 29.01., I could not run any tests at the
-moment, but the problem seem to be the same. The seems to be no problem
-with the 2.4 kernel series.
-
-Any ideas?
-
-Regards
-~ Sven
-
-- --
-~ Sven Anders <anders@anduras.de>                 () Ascii Ribbon Campaign
-~                                                 /\ Support plain text e-mail
-~ ANDURAS service solutions AG
-~ Innstraße 71 - 94036 Passau - Germany
-~ Web: www.anduras.de - Tel: +49 (0)851-4 90 50-0 - Fax: +49 (0)851-4 90 50-55
-
-Rechtsform: Aktiengesellschaft - Sitz: Passau - Amtsgericht Passau HRB 6032
-Mitglieder des Vorstands: Sven Anders, Marcus Junker, Michael Schön
-Vorsitzender des Aufsichtsrats: Dipl. Kfm. Thomas Träger
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.5 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
-
-iD8DBQFB7BBI5lKZ7Feg4EcRAukBAKCewS2zwYERnzfojr/W1K3F3Y7bAACfUuXP
-ulBaaE5BGl9nKu16tpLCLm8=
-=xh5T
------END PGP SIGNATURE-----
-
---------------040403080507010209050205
-Content-Type: text/x-vcard; charset=utf8;
- name="anders.vcf"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="anders.vcf"
-
-begin:vcard
-fn:Sven Anders
-n:Anders;Sven
-org:ANDURAS AG;Research and Development
-adr;quoted-printable:;;Innstra=C3=9Fe 71;Passau;Bavaria;94036;Germany
-email;internet:anders@anduras.de
-title:Dipl. Inf.
-tel;work:++49 (0)851 / 490 50 - 0
-tel;fax:+49 (0)851 / 4 90 50 - 55
-x-mozilla-html:FALSE
-url:http://www.anduras.de
-version:2.1
-end:vcard
+The controller in question was a Promise Ultra66 or Ultra100 (I can't 
+remember which), plugged into a Powermac 9600. I wonder if the Promise 
+driver is interacting poorly with MD?
 
 
---------------040403080507010209050205--
+Cheers - Tony 'Nicoya' Mantler :)
+
+--
+Tony 'Nicoya' Mantler -- Master of Code-fu -- nicoya@ubb.ca
+--  http://nicoya.feline.pp.se/  --  http://www.ubb.ca/  --
+
