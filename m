@@ -1,51 +1,36 @@
-From: AndyLiebman@aol.com
-Subject: Hardware versus Software
-Date: Wed, 19 May 2004 02:49:44 EDT
+From: Ricky Beam <jfbeam@bluetronic.net>
+Subject: Re: Hardware versus Software
+Date: Wed, 19 May 2004 15:00:40 -0400 (EDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <ac.5847806b.2ddc5d88@aol.com>
+Message-ID: <Pine.GSO.4.33.0405191452450.14297-100000@sweetums.bluetronic.net>
+References: <ac.5847806b.2ddc5d88@aol.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <ac.5847806b.2ddc5d88@aol.com>
+To: AndyLiebman@aol.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I'm sure this has been discussed many times on the list but I was asked this 
-question today and I'm not sure how to respond: 
+On Wed, 19 May 2004 AndyLiebman@aol.com wrote:
+>But the question still remains, is there any other safety and reliability
+>advantage to using Hardware? Is the data on a Hardware RAID more likely to
+>remain intact in the event of a computer crash or freeze?
 
-Under Linux (i.e., a distribution such as Mandrake 10 -- with an up-to-date 
-2.6 kernel), is a "true hardware RAID-5" created through a SATA card such as 
-the 3ware 8506 or the new 3ware 9500 series any SAFER or MORE RELIABLE than a 
-software RAID created with the same card? 
+The linux software RAID is good stuff.  It *can* be difficult to repair
+an array in a few cases -- don't put the root FS in a non-mirrored array
+and they shouldn't be a problem.
 
-In my benchmark comparisons between software and hardware RAID, I get 
-significantly better performance using "software RAID". With eight 250 GB disks, I 
-get about 175 MB/sec reading and about 150 MB/sec writing when my system is 
-configured as software RAID. With hardware RAID the figures drop to about 125/100 
-MB/sec. 
+As you don't care about CPU cycles used by the array, you're far better
+off using the software raid with normal drive controllers. (esp. true
+for SATA.)  Hardware RAID cards generally offer better managability
+and stability -- the OS doesn't have to know if a drive fails, they're
+designed to hot-swap drives with little or no fuss, etc.  But, they will
+be just a reliable as anything else.
 
-I'm only using my machines as file servers, so they aren't busy doing any 
-other tasks besides sending data packets through Gigabit Ethernet and running 
-disk I/O. 
+For a system I never want to have to touch, I use hardware raid.  For those
+systems sitting at my feet, that isn't as important.
 
-But the question still remains, is there any other safety and reliability 
-advantage to using Hardware? Is the data on a Hardware RAID more likely to remain 
-intact in the event of a computer crash or freeze? 
+--Ricky
 
-Or in the event of an abrupt power failure (I have a UPS on the system, but 
-that could fail, or the power cables could be pulled out of the computer or 
-somebody could accidently shut it down). All of these power failure scenarios are 
-very unlikely, but they COULD occur. 
 
-Would Hardware RAID survive better than Software? I can't see why, but maybe 
-I'm missing something. 
-
-In my situation where the server isn't running any other software, the only 
-advantage I can see to hardware RAID is that rebuilding in the event of a disk 
-failure is a little easier for non-experts. But I'm writing a program to 
-automate the software RAID rebuilding process so that non-experts can do it 
-themselves. 
-
-Your informed comments would be appreciated. 
-
-Andy Liebman
