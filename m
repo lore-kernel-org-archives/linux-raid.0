@@ -1,48 +1,88 @@
 From: ptb@lab.it.uc3m.es (Peter T. Breuer)
 Subject: Re: ext3 journal on software raid (was Re: PROBLEM: Kernel 2.6.10 crashing repeatedly and hard)
-Date: Wed, 5 Jan 2005 00:20:26 +0100
-Message-ID: <qukra2-s1j.ln1@news.it.uc3m.es>
-References: <l1nna2-e9i.ln1@news.it.uc3m.es> <20050104024108.GK99565@caffreys.strugglers.net> <895qa2-0qa.ln1@news.it.uc3m.es> <200501042002.32292.maarten@ultratux.net> <j6dra2-9vs.ln1@news.it.uc3m.es> <41DB127F.3090303@wasp.net.au>
+Date: Wed, 5 Jan 2005 00:53:00 +0100
+Message-ID: <srmra2-n0n.ln1@news.it.uc3m.es>
+References: <2h9ra2-mfj.ln1@news.it.uc3m.es> <200501042138.j04Lcs921349@www.watkins-home.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Brad Campbell <brad@wasp.net.au> wrote:
-> I'm wondering how difficult it may be for you to extend your md5sum script to diff the pair of files 
-> and actually determine the extent of the corruption. bit/byte/word/.../sector/.../stripe wise?
+Guy <bugzilla@watkins-home.com> wrote:
+> A birthday candle lasts about 2 minutes (as a guess).  I think they would
+> light 1000 candles at the same time.  Then monitor them until the first one
+> fails, say at 2 minutes.  I think the MTBF would then be computed as 2000
+> minutes MTBF!
 
-Not much.  But I don't bother.  It's a majority vote amongst all the
-identical machines involved and the loser gets rewritten. The script
-identifies a majority group and a minority group. If the minority is 1
-it rewrites it without question.  If the minority group is bigger it
-refers the notice to me.
+If the distribution is Poisson (i.e. the probabilty of dying per moment
+time is constant over time) then that is correct. I don't know offhand
+if that is an unbiassed estimator. I would imagine not. It would be
+biassed to the short side.
 
-> I have 2 RAID-5 arrays here. a 3x233GiB and a 10x233GiB and I when I install new data on the drives 
-> I add the md5sum of that data to an existing database stored on another machine. This gets compared 
-> against the data on the arrays weekly and I have yet to see a silent corruption in 18 months.
+> But we can be sure that by 2.5 minutes, at least 90% of them
+> would have failed.
 
-Looking at the lists of pending repairs over xmas, I see a pile that
-will have to be investigated. I am about to do it, since you reminded me
-to look at these.
+Then you would be sure that the distribution was not Poisson. What is
+the problem here, exactly?  Many different distributions can have the
+same mean.  For example, this one:
 
-> I do occasionally remove/re-add a drive to each array, which causes a full resync of the array and 
-> should show up any parity inconsistency by a faulty fsck or md5sum. It has not as yet.
+deaths per unit time
+|
+|   /\
+|  /  \
+| /    \
+|/      \
+---------->t
 
-No - it should not show it. 
+and this one
 
-> Honestly, in my years running Linux and multiple drive arrays I have never experienced errors such 
-> as you are getting.
+deaths per unit time
+|
+|\      /
+| \    /
+|  \  /
+|   \/
+---------->t
 
-Then you are not trying to manage hundreds of clients at a time.
+have the same mean. The same mtbf.
 
-> Oh.. and both my arrays are running ext3 with an internal journal (as are all my other partitions on 
-> all my other machines).
-> 
-> Perhaps I'm lucky?
+Is this a surprise ? The mean on its own is only one parameter of a
+distribution - for a posson distribution, it is the only parameter, but
+that is a particular case.  For the normal disribution you require both
+the mean and the standard deviation in order to specify the
+distribution.  You can get very different normal distributions with the
+same mean!
 
-You're both not looking in the right way and not running the right
-experiment.
+I can't draw a Poisson distribution in ascii, but it has a short sharp
+rise to the peak, then a long slow decline to infinity. If you were to
+imagine that half the machines had died by the time the mtbf were
+reached, you would be very wrong! Many more have died than half. But
+that long tail of those very few machines that live a LOT longer than
+the mtbf balances it out.
+
+I already did this once for you, but I'll do it again: if the mtbf is
+ten years, then 10% die every year.  Or 90% survive every year.  This
+means that by the time 10 years have passed only 35% have survived
+(90%^10).  So 2/3 of the machines have died by the time the mtbf is
+reached!
+
+If you want to know where the peak of the death rate occurs, well, it
+looks to me as though it is at the mtbf (but I am calculating mentally,
+not on paper, so do your own checks). After that deaths become less
+frequent in the population as a whole.
+
+To estimate the mtbf, I would imagine that one averages the proportion
+of the population that die per month, for several months. But I guess
+serious appicative statisticians have evolved far more sophisticated
+and more efficient estimators.
+
+And then there is the problem that the distribution is bipolar, not pure
+poisson.  There will be a subpopulation of faulty disks that die off
+earlier.  So they need to discount early measurements in favour of the
+later ones (bad luck if you get one of the subpopulation of defectives
+:) - but that's what their return policy is for).
+
+
 
 Peter
 
