@@ -1,54 +1,43 @@
-From: Janusz Zamecki <janusz@pipi.ma.cx>
-Subject: Re: RAID1 & 2.6.9 performance problem
-Date: Mon, 17 Jan 2005 21:49:09 +0100
-Message-ID: <1105994949.14134.236.camel@pipi.ma.cx>
-References: <41EBD827.80701@pipi.ma.cx>
-	 <Pine.LNX.4.56.0501171528010.21510@lion.drogon.net>
-	 <1105977081.15184.12.camel@linux.local>
+From: Robin Bowes <robin-lists@robinbowes.com>
+Subject: Re: RAID5 drive failure, please verify my commands
+Date: Mon, 17 Jan 2005 23:53:15 +0000
+Message-ID: <cshj5a$21v$4@sea.gmane.org>
+References: <7C8198B3-67EA-11D9-9A87-00039363AEBE@bitart.com> <41EADBAE.6070400@h3c.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-2
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1105977081.15184.12.camel@linux.local>
+In-Reply-To: <41EADBAE.6070400@h3c.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-W li=B6cie z pon, 17-01-2005, godz. 16:51, Hans Kristian Rosbach pisze:=
-=20
+Mike Hardy wrote:
+> 
+> 
+> Gerd Knops wrote:
+> 
+>> Hello all,
+>>
+>> One of the dreaded Maxtor SATA drives in my RAID5 failed, after just 3 
+>> months of light use. Anyhow I neither have the disk capacity nor the 
+>> money to buy it to make a backup. To make sure I do it correctly, 
+>> could you folks please double-check my intended course of action? I 
+>> would really appreciate that.
+> 
+> 
+> Failed how? I have tons and tons of Maxtor drives in service, and only 
+> one actually had a complete failure (verified by their utility, which is 
+> present on some bootable CD I got called "UltimateBootDisk").
 
-[...]
+Mike,
 
-> Actually I have managed to get about 30-40% higher throughput with ju=
-st
-> a little hacking on the code that selects what disk to use.
->=20
-> Problem is
-> -It selects the disk that is closest to the wanted sector by remember=
-ing
->  what sector was last requested and what disk was used for it.
-> -For sequential reads (sucha as hdparm) it will override and use the
->  same disk anyways. (sector =3D lastsector+1)
->=20
-> I gained a lot of throughput by alternating disk, but seek time was
-> roughly doubled. I also tried to get smart and played some with the
-> code in order to avoid seeking both disks back and forth wildly when
-> there were two sequential reads. I didn't find a good way to do it
-> unfortunately.
+When one of my drives fails I test it with the Maxtor Powermax tool - 
+it's this tool that is confirming that the drive(s) is(are) dieing.
 
-What about the special case where whole disks are mirrored?=20
-Then there is no need for selecting disks other than round-robin,
-because the heads should be in similar positions (except for rebuild
-situation).
+The only saving grace is the three-year warranty.
 
-I will be more than happy to give up partitions to get better
-performance instead. I have two disks, so raid 1+0 is not an option.
+R.
+-- 
+http://robinbowes.com
 
-Could you please reconsider releasing your patch?
-
-Best regards, Janusz
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
