@@ -1,37 +1,30 @@
-From: David Nedved <dnedved@nuvox.net>
-Subject: how do I change md1 to md2?
-Date: Mon, 10 Jun 2002 10:09:00 -0400
+From: Guillaume Rousse <rousse@ccr.jussieu.fr>
+Subject: Post-install Raid setup
+Date: Mon, 10 Jun 2002 17:13:49 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20020610100900.T2266@nuvox.net>
+Message-ID: <200206101713.49154.rousse@ccr.jussieu.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi All,
+From following 
+http://marc.theaimsgroup.com/?l=linux-raid&m=101435499712822&w=2 message, i 
+understand this is possible by 
+1) setting a up a degraded raid array
+2 copying at filesystem level files from normal partitions to raid partitions
+3) mouting raid partitions in place normal partitions
+4) restoring raid array to normal state
 
-Thanks for everyone who helped me get my md1 data volume brought up
-correctly.  Now I have another issue.  I've rebuilt my host OS using
-RedHat 7.3, and I loaded it on RAID1 also.  I built my data volume as
-md1 so that I could load the OS on md0, but I forgot about swap.
-
-Now I have md0 as /, md1 as swap, and another md1 data volume that
-won't activate since there is already an md1 in use as swap.
-
-Can anyone help me get my data volume brought up as md2?  I have it in
-the raidtab as md2, but during boot it reads the superblock and knows it's
-md1, but won't bring it up since there's already an md1.  I've gone back
-to the old OS disk, so I don't have logs handy, but if they're critical it
-won't be a problem to post them.  I looked byt coulnd't find any pointer
-in the FAQ or Howto's...
-
-I know I could probably turn swap off, so that the data volume activates
-correctly, but I'm considering putting software RAID1 onto production
-servers, and now that I've found this issue, I really feel I need to
-understand how to manage it rather than work around it.
-
-Thanks in advance,
-
-David
+However, the previous mail mention a mdctl tool that is not present in my 
+Linux distribution (mdk 8.2). I suppose this is just another raid management 
+tool, and that i can safely use mkraid from raidtools instead, provided i set 
+my normal partitions as "failed-disk" in /etc/raidtab, as explained in 
+http://unthought.net/Software-RAID.HOWTO/Software-RAID.HOWTO-4.html#ss4.4
+Am i correct here ?
+-- 
+Guillaume Rousse <rousse@ccr.jussieu.fr>
+GPG key http://lis.snv.jussieu.fr/~rousse/gpgkey.html
