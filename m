@@ -1,43 +1,66 @@
-From: "Ryan B. Lynch" <rlynch@strozllc.com>
-Subject: Re: Partition or whole disk ?
-Date: Wed, 30 Jun 2004 08:09:27 +0000
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: Partition or whole disk ?
+Date: Wed, 30 Jun 2004 12:11:59 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200406300809.28587.rlynch@strozllc.com>
-References: <1088604941.2840.1.camel@JubJub> <20040630145547.GV29086@lug-owl.de>
+Message-ID: <200406301611.i5UGBx330434@watkins-home.com>
+References: <20040630145547.GV29086@lug-owl.de>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20040630145547.GV29086@lug-owl.de>
-Content-Disposition: inline
-To: linux-raid@vger.kernel.org
+To: 'Jan-Benedict Glaw' <jbglaw@lug-owl.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+A partition of type FD is required to autodetect the array(s).
 
-On Wednesday 30 June 2004 02:55 pm, Jan-Benedict Glaw wrote:
-> On Wed, 2004-06-30 10:15:41 -0400, Josh Litherland <josh@emperorlinux.com>
+Guy
 
-> I can't remember any recommendation being spoken out ever. Personally, I
-> prefer having a number of partitions, but that's not a general guide for
-> everybody else:)
->
-> > Is there any functional reason why either one is better ?
+-----Original Message-----
+=46rom: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Jan-Benedict Gla=
+w
+Sent: Wednesday, June 30, 2004 10:56 AM
+To: linux-raid@vger.kernel.org
+Subject: Re: Partition or whole disk ?
 
-Isn't it true that autodetection won't work if you build it out of whole 
-disks, though?  The kernel looks for "fd" type partitions to add to RAID 
-arrays on boot and sets them up according to their superblocks.  An array 
-made of whole-disks couldn't have partition types, so it couldn't use this to 
-setup.
+On Wed, 2004-06-30 10:15:41 -0400, Josh Litherland <josh@emperorlinux.c=
+om>
+wrote in message <1088604941.2840.1.camel@JubJub>:
+>=20
+> Couldn't find an authoritative answer to this in the faq or elsewhere=
+=2E..
 
-This is my understanding, so if I'm wrong, please let me know.
+Use either one of those.
 
-- -Ryan
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.4 (GNU/Linux)
+> Is it preferred to build md sets out of whole disks or of partitions =
+?=20
 
-iD8DBQFA4nU3KQgTRJGqPXQRAgE7AJ49oaNdKngkoQEWdXbqd0SuGtjq9wCfbE0t
-yqLMf/+Ehn8+ST56+HJMxcQ=
-=ZgQv
------END PGP SIGNATURE-----
+I can't remember any recommendation being spoken out ever. Personally, =
+I
+prefer having a number of partitions, but that's not a general guide fo=
+r
+everybody else:)
+
+> Is there any functional reason why either one is better ?
+
+Not really... You loose a few KBs or MBs if you use partitions, but
+that's it...
+
+MfG, JBG
+
+--=20
+   Jan-Benedict Glaw       jbglaw@lug-owl.de    . +49-172-7608481
+   "Eine Freie Meinung in  einem Freien Kopf    | Gegen Zensur | Gegen =
+Krieg
+    fuer einen Freien Staat voll Freier B=FCrger" | im Internet! |   im=
+ Irak!
+   ret =3D do_actions((curr | FREE_SPEECH) & ~(NEW_COPYRIGHT_LAW | DRM =
+|
+TCPA));
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
