@@ -1,74 +1,47 @@
-From: Schuett Thomas EXT <Thomas.Schuett.extern@mchh.siemens.de>
-Subject: AW: AW: RAID1 and data safety?
-Date: Tue, 29 Mar 2005 16:18:52 +0200
-Message-ID: <76592C4D3DA1AC4FB8424084D10D31A80611527C@mchh2c4e.mchh.siemens.de>
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: RAID1 and data safety?
+Date: Tue, 29 Mar 2005 18:46:45 +0200
+Message-ID: <20050329164645.GD2080@percy.comedia.it>
+References: <76592C4D3DA1AC4FB8424084D10D31A80611527B@mchh2c4e.mchh.siemens.de> <16969.10547.894461.398225@cse.unsw.edu.au> <ipqnh2-o1n.ln1@news.it.uc3m.es>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <ipqnh2-o1n.ln1@news.it.uc3m.es>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->> Does this sound reasonable?
+On Tue, Mar 29, 2005 at 01:29:22PM +0200, Peter T. Breuer wrote:
+>Neil Brown <neilb@cse.unsw.edu.au> wrote:
+>> Due to the system crash the data on hdb is completely ignored.  Data
 >
->Does to me.  Great example!
+>Neil - can you explain the algorithm that stamps the superblocks with
+>an event count, once and for all? (until further amendment :-).
 
-Thanks for the flowers :)
-However, I am sure, the raid developers have thought through
-all this over and over, and still have some asses in their hands.
+IIRC it is updated at every event (start, stop, add, remove, fail etc...)
 
-I'd like to hear from them about the event count in the superblock 
-Peter mentioned, and the algorithm, that decides, which blocks still 
-needs to be synced.
-As Luca wrote:
- > there isn't one [non-volatile storage about blocks needing sync] for 
- > lack of a non-volatile storage for dirty cache
-but probably Neil knows a bit more about that?
+>It goes without saying that sb's are not stamped at every write, and the
+>event count is not incremented at every write, so when and when?
 
+the event count is not incremented at every write, but the dirty flag
+is, and it is cleared lazily after some idle time.
+in older code it was set at array start and cleared only at stop.
 
-Probably, to be on the save side, one would have to perform 
-real HD internal write cache flushes after each
-- write of start-of-transaction-info
-- write of data
-- write of end-of-transaction-info
-I think, this is necessary, because otherwise the HD write cache
-flush might start with a write, that came in later, so it might
-first write the end-of-transaction-info, then the data, and then
-the start-of-transaction-info. A chrash in between would
-smash everything. 
+so in case of a disk failure the other disks get updated about the
+failure.
 
-Actually this should be a problem for journaling fs writers in the 
-first place, but as raid subsystems in between do some caching on 
-there own in a very special way, it becomes a topic for raid designers 
-too. What do I mean with "very special way". I mean, that they write,
-and then say, that they have written o.k. And if you read back the 
-written data (after a crash in between), you may by chance (=by having the
-faster HD choosen for read) find everything fine, even if it actually 
-did write to one of the HDs only. 
+in case of a restart (crash) the array will be dirty and a coin tossed
+to chose which mirror to use as an authoritative source (the coin is
+biased, but it doesn't matter). At this point any possible parallel
+reality is squashed out of existance.
 
-I still believe, that things would be better, if reads would go to both HDs,
-and compare the results. Even if a difference would not be solvable for data 
-(and so would not improve that situation), it would improve the situation for 
-reading transaction-info:
+L.
 
-difference in start-of-transaction-info
- -> the data write has not started jet, so just 
-    delete the start-of-transaction-info
-
-difference in end-of-transaction-info
- -> The data write has finished already, so just
-    update the end-of-transaction-info
-
-difference in data
- -> can not happen,because the jfs would have rolled back
-    at boot after crash
-
-
-
-Thomas
-
-
-PS:
->Do you see any problem in this [more complex 4 HD] scenario?
-It looks like the easier example is still not clarified, so we stay with
-that one for now :-)
+-- 
+Luca Berra -- bluca@comedia.it
+        Communication Media & Services S.r.l.
+ /"\
+ \ /     ASCII RIBBON CAMPAIGN
+  X        AGAINST HTML MAIL
+ / \
