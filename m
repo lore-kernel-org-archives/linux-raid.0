@@ -1,54 +1,62 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: [PATCH] md - 2 of 3 - Add BLKSSZGET ioctl for md driver
-Date: Thu, 19 Jun 2003 11:30:44 +1000
+From: "Ionut Nistor" <ionut@modulo.ro>
+Subject: Re: Multipath problem in a SAN enviromnent
+Date: Thu, 19 Jun 2003 18:25:34 +0300
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16113.4676.114600.293538@gargle.gargle.HOWL>
-References: <E19SQog-0000Vl-00@notabene>
-	<Pine.LNX.4.55L.0306182023150.25830@freak.distro.conectiva>
-	<16113.60.984584.449998@gargle.gargle.HOWL>
-	<Pine.LNX.4.55L.0306182055050.25903@freak.distro.conectiva>
+Message-ID: <028401c33677$07904790$0cc7e7c1@EEL>
+References: <02d201c33023$13fd45a0$3351960a@EEL> <3EE7585E.45D851CE@SteelEye.com> <20030612100423.GA14106@marowsky-bree.de> <007c01c330d0$86dda7b0$0cc7e7c1@EEL> <3EE893A4.E0518632@SteelEye.com> <00e801c33183$8072cd70$0cc7e7c1@EEL> <20030618102157.GD27378@marowsky-bree.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Marcelo Tosatti on Wednesday June 18
-To: Marcelo Tosatti <marcelo@conectiva.com.br>
+To: Lars Marowsky-Bree <lmb@suse.de>, Paul Clements <Paul.Clements@SteelEye.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday June 18, marcelo@conectiva.com.br wrote:
-> 
-> Ok, I just pusheed your stuff to bkbits.net.
-> 
+Thanks Lars,
 
-Thanks.
-It seems that patch is now in there.  Maybe I sent it twice by
-mistake.
+I'll try this and see how it goes.
+I've seen that you also included a mdadm patch (probably to support the
+other ioctls clean, active, inactive).
 
-The only missing bit is the following which I sent as a followup to on
-of the NFS patches.
-Thanks,
-NeilBrown
+Have a nice day,
+Ionut
+
+----- Original Message -----=20
+=46rom: "Lars Marowsky-Bree" <lmb@suse.de>
+To: "Ionut Nistor" <ionut@modulo.ro>; "Paul Clements"
+<Paul.Clements@SteelEye.com>
+Cc: <linux-raid@vger.kernel.org>
+Sent: Wednesday, June 18, 2003 1:21 PM
+Subject: Re: Multipath problem in a SAN enviromnent
 
 
-diff ./net/sunrpc/svcsock.c~current~ ./net/sunrpc/svcsock.c
---- ./net/sunrpc/svcsock.c~current~	2003-06-19 11:27:05.000000000 +1000
-+++ ./net/sunrpc/svcsock.c	2003-06-19 11:27:05.000000000 +1000
-@@ -826,7 +826,7 @@ svc_tcp_recvfrom(struct svc_rqst *rqstp)
- 			goto error;
- 		svsk->sk_tcplen += len;
- 		if (len < want) {
--			dprintk("svc: short recvfrom while reading record length (%d of %d)\n",
-+			dprintk("svc: short recvfrom while reading record length (%d of %ld)\n",
- 			        len, want);
- 			svc_sock_received(svsk);
- 			return -EAGAIN; /* record header not complete */
-@@ -973,7 +973,7 @@ svc_tcp_init(struct svc_sock *svsk)
- 				    3 * svsk->sk_server->sv_bufsz);
- 
- 		set_bit(SK_CHNGBUF, &svsk->sk_flags);
--		if (sk->sk_state != TCP_ESTABLISHED) 
-+		if (sk->state != TCP_ESTABLISHED) 
- 			set_bit(SK_CLOSE, &svsk->sk_flags);
- 	}
- 
+> On 2003-06-13T11:12:15,
+>    Ionut Nistor <ionut@modulo.ro> said:
+>
+> > Agreed, but Lars mentioned 'the patch in 2.4 went even further' -  =
+hence
+I
+> > assume what's at the link you posted is obsolete - am I correct?
+> > While I'm patching it, I want to make sure it's the latest one.
+>
+> I've pulled out the latest patch set against our kernel and made it
+> available at ftp://ftp.suse.com/pub/people/lmb/md-mp/; however, it
+> probably will not apply cleanly against 2.4.21 yet.
+>
+>
+> Sincerely,
+>     Lars Marowsky-Br=E9e <lmb@suse.de>
+>
+> --=20
+> SuSE Labs - Research & Development, SuSE Linux AG
+>
+> "If anything can go wrong, it will." "Chance favors the prepared (min=
+d)."
+>   -- Capt. Edward A. Murphy            -- Louis Pasteur
+>
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
