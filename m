@@ -1,44 +1,21 @@
-From: Louis Erickson <wwonko@rdwarf.com>
-Subject: Re: Bringing broken raid 5 back on-line.
-Date: Wed, 4 Feb 2004 13:07:46 -0800 (PST)
+From: Mark Hahn <hahn@physics.mcmaster.ca>
+Subject: Re: Root Drive Mirroring and LVM.
+Date: Wed, 4 Feb 2004 17:32:01 -0500 (EST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.33.0402041304480.26694-100000@holly.rdwarf.com>
-References: <20040204010047.GA26264@hamachi.dyndns.org>
+Message-ID: <Pine.LNX.4.44.0402041726350.20232-100000@coffee.psychology.mcmaster.ca>
+References: <20040204122317.K27780@forte.austin.ibm.com>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20040204010047.GA26264@hamachi.dyndns.org>
-To: Steven Ihde <sihde@cs.stanford.edu>
+In-Reply-To: <20040204122317.K27780@forte.austin.ibm.com>
+To: linas@austin.ibm.com
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 3 Feb 2004, Steven Ihde wrote:
+> So what's wrong with autodetect, again?
 
->
-> I didn't see any other answers, so I'll take a shot...
+my guess is: in-kernel autodetect is the problem.  
+out-of-kernel detection can be much smarter, 
+and can be more easily tested/replaced.
 
-I did get one other private answer, from Andreas Arens.
-
-I thought I'd take a moment and thank both of you for your assitance with
-this.  The suggestions were correct and were exactly what I needed to get
-the RAID5 back on-line and all the data was intact.
-
-Thank you VERY much.  I suspect I'd have figured it out eventually, but
-not only did this make it much simpler, it reassured me that I'm not the
-only one fool enough to have such a problem.
-
-> I advise you to get and install mdadm -- it has worked fine for me and
-> mdadm seems to be the overwhelming preference of the posters to this
-> list and thus easier to get support for.
-
-I did install mdadm, and it did the trick.  It seems to be much simpler.
-I'll also be able to retire my Perl script in favor of monitor mode.
-
-Thanks again!
-
--- 
-Louis Erickson - wwonko@rdwarf.com - http://www.rdwarf.com/~wwonko/
-
-In Pocataligo, Georgia, it is a violation for a woman over 200 pounds
-and attired in shorts to pilot or ride in an airplane.
 
