@@ -1,39 +1,33 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: Can't mount after mkfs -b 8192
-Date: Fri, 04 Jun 2004 10:14:16 +0100
+From: "Robin Bowes" <robin-lists@robinbowes.com>
+Subject: Re: ANNOUNCE: mdadm 1.6.0 - A tool for managing Soft RAID under
+     Linux
+Date: Fri, 4 Jun 2004 11:12:33 +0100 (BST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <40C03D68.2060900@dgreaves.com>
-References: <200406040127.i541RB316590@watkins-home.com>
+Message-ID: <40498.194.60.85.4.1086343953.squirrel@194.60.85.4>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200406040127.i541RB316590@watkins-home.com>
-To: Guy <bugzilla@watkins-home.com>
+To: Neil Brown <neilb@cse.unsw.edu.au>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Guy wrote:
+On Fri, June 4, 2004 7:29, Neil Brown said:
+>   - Further support for partitionable arrays included "--auto=" option
+>     and "auto=" config file entry which instructs mdadm to create the necessary
+>     device files after allocating an unused array number.
 
->Don't know about your mount issue, but I did notice 4096 in you dmesg,
->should it be 8192?  I did not see any mount options for block size.
->
->sh-2011: read_super_block: can't find a reiserfs filesystem on (dev
->dm-0, block 16, size 4096)
->  
->
-Yep
-I got a response on the reiser list that prompted me to try XFS.
+Neil,
 
-It rather nicely said:
-XFS: Attempted to mount file system with blocksize 8192 bytes
-XFS: Only page-sized (4096) or less blocksizes currently work.
-XFS: SB validate failed
+I am interpreting this to mean that I can create, for example, a large (e.g. 1TB) RAID5
+array and create smaller partitions (/home, /usr, etc) on top of the RAID5 array? Is
+this correct?
 
-David
-PS http://www.namesys.com/mkreiserfs.html says :
-   -b | --block-size N
-   N is block size in bytes. It may only be set to a power of 2 within 
-the 512-8192 interval.
+Where can I read more about this?
 
-So that might help googlers in the future ;)
+Thanks,
+
+R.
+-- 
+http://robinbowes.com
+
