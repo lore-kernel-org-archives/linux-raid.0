@@ -1,49 +1,35 @@
-From: Ekkehard Lissner <ekkehard@lissners.de>
-Subject: mkraid-problems
-Date: Fri, 15 Aug 2003 22:33:21 +0200
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: mkraid-problems
+Date: Sat, 16 Aug 2003 07:01:58 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3F3D4391.2020702@lissners.de>
+Message-ID: <16189.19014.742060.8200@gargle.gargle.HOWL>
+References: <3F3D4391.2020702@lissners.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: message from Ekkehard Lissner on Friday August 15
+To: Ekkehard Lissner <ekkehard@lissners.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
+On Friday August 15, ekkehard@lissners.de wrote:
+> 
+> If there is no normal way to reconstruct the array without losing my 
+> data, how about patching the timestamps with
+> a disk-editor? Which bytes must be read from sdc1 and be written to sdd1 
+> and sdb1?
+> 
 
-I have a problem with a raid-5-array. The array consits of 3 disks, 
-sdb1, sdc1 and sdd1.
+Your array sounds very sick, though it is not at all clear what the
+problem really is.
 
-First I found disk sdb1 out of synch - the timestamp caused it to be 
-kicked out of the array.
-Second I added the device again with raidhotadd to the array.
-Third I rebooted the machine after I had seen a "synched"-message in syslog.
+I suggest you get mdadm, and use
+  mdadm --assemble --force /dev/md0 /dev/sd[bcd]1
 
-When the machine boots up, it stopped because the raid could not start 
-up again.
+It will try to assemble the array for force-update event counts as
+necessary.
 
-When starting the raid manually with raidstart, it shows up that sdb1 
-and sdc1 have the same timestamp,
-sdd1 is a lower timestamp. But for some strange reason, sdb1 is also not 
-in the array. This results in
-the array not comming up, because it can not run with only one disk left.
+What kernel version are you running?
 
-My question here:
-How can I reconstruct the array without losing my data?
-The device was formated with a ext2-fs, and since the first failure im 
-very confident that no write-access
-has been done to the array (it was mounted read-only).
-What is the effect of mkraid -f? Does it force a re-construct and does 
-this destroy the filesystem on the md-device?
-
-If there is no normal way to reconstruct the array without losing my 
-data, how about patching the timestamps with
-a disk-editor? Which bytes must be read from sdc1 and be written to sdd1 
-and sdb1?
-
-Regards
-Ekkehard Lissner
-
-
-
+NeilBrown
