@@ -1,67 +1,239 @@
-From: Gregory Leblanc <gleblanc@linuxweasel.com>
-Subject: Re: Tiobench results LOWER with more threads
-Date: Thu, 17 Oct 2002 19:31:37 -0700
+From: Karl Hiramoto <karl@mail.accusense.com>
+Subject: duplicate entry in mdstat with RAID-5
+Date: Thu, 17 Oct 2002 22:46:18 -0400 (EDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20021018023137.GC18294@peeps.cable.rcn.com>
-References: <3DABCFE7.9070701@webmail.co.za> <20021017215014.GA7875@unthought.net>
+Message-ID: <Pine.LNX.4.44.0210172230540.6331-100000@mail.accusense.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20021017215014.GA7875@unthought.net>
-To: Vladimir Milovanovic <vlad@webmail.co.za>, linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
+Cc: jakob@unthought.net, karl@hiramoto.org, rek2@linuxbusca.com, wlug@mail.wlug.org
 List-Id: linux-raid.ids
 
-On Thu, Oct 17, 2002 at 11:50:14PM +0200, Jakob Oestergaard wrote:
-> On Tue, Oct 15, 2002 at 10:20:55AM +0200, Vladimir Milovanovic wrote:
-> > OK, just joined the list and rad the faq, and something caught my eye. 
-> > Tiobench results are apparently supposed to INCREASE when there are more 
-> > threads.
-> 
-> No, what gave you that idea?
-> 
-> It is so much easier for the kernel to handle one sequential stream of
-> I/O, instead of many streams.
-> 
-> If you have more than one stream, you need to seek. Seeking is bad. One
-> sequential I/O is almost always (with the notable exception of RAID-1
-> reads) faster in total sustained throughput, and always (as in really
-> always) faster in per-thread sustained throughput.
 
-Err, so are you saying that a single sequential I/O is slower on RAID
-1 when compared with a single disk?  That doesn't make a lot of
-sense.  There -are- instances where parallel I/O is required.  In
-these cases, any RAID-1 should be much faster than a single disk, as
-should RAID 10.  I'm not sure that RAID 5 should give a similar
-benefit, but given the cost of disks, I don't care about RAID 5.
+Can someone please help me fix this problem?  I don't know if my data is 
+safe at the moment.
 
-> > Celeron 633
-> > 196 MB PC 133
-> > Adaptec 29160 SCSI controller (PCI)
-> > 5 IBM Ultrastar 18XP (18gig, SCSI-3) disks hanging off the Adaptec 
-> > controller
-> > Red Hat 7.3 Linux (2.4.18-3)
-> > 
-> > Experimenting with different RAID configurations, I have found that I 
-> > can not get more than 32 MB/s from this array with 4 disks, one spare. I 
-> > have actually found out that the disks set the SCSI bus at 40 MB/s 
-> > (since the disks are old) and that in RAID 0 it scales well, the speed 
-> > doubles for two disks, and then the third disk brings in a little more 
-> > performance, and then things topp off at 32 MB/s with four disks. Adding 
-> > the fifth disk gains no extra performance.
 
-Interesting.  How fast are you getting single-threaded reads from a
-single disk?  And what are the real specs on the drives (RPM, cache,
-SCSI version support (SCSI 3 is a family, not a version)).
+I have double entries for hde1 and hde in /proc/mdstat.  The problem arose
+when i did a raidhotadd for /dev/hde then again for /dev/hde1.  Doh. Is
+this a problem? How do i fix it?  I would like to be using hde1, hdf1,
+hdc1
 
-> > Apparently VIA chipsets have problems with PCI bursting, so that is why 
-> > I can't see the full 40 MB/s. That's fine.
-> 
-> There's some SCSI overhead as well.  And probably you have some RAM
-> bandwidth limitation also - although that is probably not very important
-> at the speed you're seeing.  But it all adds up.
+The problem arose when the 60GB /dev/hde failed.  I replaced it with an 
+80GB drive. 
 
-Yeah, if this is a 40MB/sec bus, you shouldn't expect to get more than
-35MB/sec out of the bus.  It'd be slick to get more, but overhead eats
-the rest.
-    Greg
+I am running redhat 7.2 with their kernel 2.4.9-31
+
+
+# cat /proc/mdstat 
+Personalities : [raid5] 
+read_ahead 1024 sectors
+md0 : active raid5 hde1[3] hde[2] hdf1[1] hdc1[0]
+      120102912 blocks level 5, 64k chunk, algorithm 0 [3/3] [UUU]
+      
+unused devices: <none>
+
+----
+# fdisk -l /dev/hde
+
+Disk /dev/hde: 16 heads, 63 sectors, 155061 cylinders
+Units = cylinders of 1008 * 512 bytes
+
+Disk /dev/hde doesn't contain a valid partition table
+-----
+
+# fdisk -l /dev/hdc
+Disk /dev/hdc: 16 heads, 63 sectors, 119150 cylinders
+Units = cylinders of 1008 * 512 bytes
+
+   Device Boot    Start       End    Blocks   Id  System
+/dev/hdc1   *         1    119150  60051568+  fd  Linux raid autodetect
+
+----
+# fdisk -l /dev/hdf
+Disk /dev/hdf: 16 heads, 63 sectors, 119150 cylinders
+Units = cylinders of 1008 * 512 bytes
+
+   Device Boot    Start       End    Blocks   Id  System
+/dev/hdf1             1    119150  60051568+  fd  Linux raid autodetect
+
+
+-- 
+/var/log/messages  file
+when i tried to remove /dev/hde with raidhotremove
+
+
+Oct 17 22:17:15 data kernel: md: trying to remove hde from md0 ... 
+Oct 17 22:17:15 data kernel: md: bug in file md.c, line 2344
+Oct 17 22:17:15 data kernel: 
+Oct 17 22:17:15 data kernel: md:^I**********************************
+Oct 17 22:17:15 data kernel: md:^I* <COMPLETE RAID STATE PRINTOUT> *
+Oct 17 22:17:15 data kernel: md:^I**********************************
+Oct 17 22:17:15 data kernel: md0: <hde1><hde><hdf1><hdc1> array 
+superblock:
+Oct 17 22:17:15 data kernel: md:  SB: (V:0.90.0) 
+ID:<a595074f.25e94a64.bec4b48a.e946a7b6> CT:3bdeb7e7
+Oct 17 22:17:15 data kernel: md:     L5 S60051456 ND:4 RD:3 md0 LO:0 
+CS:65536
+Oct 17 22:17:15 data kernel: md:     UT:3daf6d69 ST:0 AD:3 WD:4 FD:0 SD:1 
+CSUM:99d87466 E:0000009c
+Oct 17 22:17:15 data kernel:      D  0:  DISK<N:0,hdc1(22,1),R:0,S:6>
+Oct 17 22:17:15 data kernel:      D  1:  DISK<N:1,hdf1(33,65),R:1,S:6>
+Oct 17 22:17:15 data kernel:      D  2:  DISK<N:2,hde(33,0),R:2,S:6>
+Oct 17 22:17:15 data kernel:      D  3:  DISK<N:3,hde1(33,1),R:3,S:0>
+Oct 17 22:17:15 data kernel: md:     THIS:  DISK<N:3,hde1(33,1),R:3,S:0>
+Oct 17 22:17:15 data kernel: md: rdev hde1: O:hde1, SZ:60051456 F:0 DN:3 
+md: rdev superblock:
+Oct 17 22:17:15 data kernel: md:  SB: (V:0.90.0) 
+ID:<a595074f.25e94a64.bec4b48a.e946a7b6> CT:3bdeb7e7
+Oct 17 22:17:15 data kernel: md:     L5 S60051456 ND:4 RD:3 md0 LO:0 
+CS:65536
+Oct 17 22:17:15 data kernel: md:     UT:3daf6d69 ST:0 AD:3 WD:4 FD:0 SD:1 
+CSUM:99d874aa E:0000009c
+Oct 17 22:17:15 data kernel:      D  0:  DISK<N:0,hdc1(22,1),R:0,S:6>
+Oct 17 22:17:15 data kernel:      D  1:  DISK<N:1,hdf1(33,65),R:1,S:6>
+Oct 17 22:17:15 data kernel:      D  2:  DISK<N:2,hde(33,0),R:2,S:6>
+Oct 17 22:17:15 data kernel:      D  3:  DISK<N:3,hde1(33,1),R:3,S:0>
+Oct 17 22:17:15 data kernel: md:     THIS:  DISK<N:3,hde1(33,1),R:3,S:0>
+Oct 17 22:17:15 data kernel: md: rdev hde: O:hde, SZ:78150656 F:0 DN:2 md: 
+rdev superblock:
+Oct 17 22:17:15 data kernel: md:  SB: (V:0.90.0) 
+ID:<a595074f.25e94a64.bec4b48a.e946a7b6> CT:3bdeb7e7
+Oct 17 22:17:15 data kernel: md:     L5 S60051456 ND:4 RD:3 md0 LO:0 
+CS:65536
+Oct 17 22:17:15 data kernel: md:     UT:3daf6d69 ST:0 AD:3 WD:4 FD:0 SD:1 
+CSUM:99d874ad E:0000009c
+
+Oct 17 22:17:15 data kernel:      D  0:  DISK<N:0,hdc1(22,1),R:0,S:6>
+Oct 17 22:17:15 data kernel:      D  1:  DISK<N:1,hdf1(33,65),R:1,S:6>
+Oct 17 22:17:15 data kernel:      D  2:  DISK<N:2,hde(33,0),R:2,S:6>
+Oct 17 22:17:15 data kernel:      D  3:  DISK<N:3,hde1(33,1),R:3,S:0>
+Oct 17 22:17:15 data kernel: md:     THIS:  DISK<N:2,hde(33,0),R:2,S:6>
+Oct 17 22:17:15 data kernel: md: rdev hdf1: O:hdf1, SZ:60051456 F:0 DN:1 
+md: rdev superblock:
+Oct 17 22:17:15 data kernel: md:  SB: (V:0.90.0) 
+ID:<a595074f.25e94a64.bec4b48a.e946a7b6> CT:3bdeb7e7
+Oct 17 22:17:15 data kernel: md:     L5 S60051456 ND:4 RD:3 md0 LO:0 
+CS:65536
+Oct 17 22:17:15 data kernel: md:     UT:3daf6d69 ST:0 AD:3 WD:4 FD:0 SD:1 
+CSUM:99d874ec E:0000009c
+Oct 17 22:17:15 data kernel:      D  0:  DISK<N:0,hdc1(22,1),R:0,S:6>
+Oct 17 22:17:15 data kernel:      D  1:  DISK<N:1,hdf1(33,65),R:1,S:6>
+Oct 17 22:17:15 data kernel:      D  2:  DISK<N:2,hde(33,0),R:2,S:6>
+Oct 17 22:17:15 data kernel:      D  3:  DISK<N:3,hde1(33,1),R:3,S:0>
+Oct 17 22:17:15 data kernel: md:     THIS:  DISK<N:1,hdf1(33,65),R:1,S:6>
+Oct 17 22:17:15 data kernel: md: rdev hdc1: O:hdc1, SZ:60051456 F:0 DN:0 
+md: rdev superblock:
+Oct 17 22:17:15 data kernel: md:  SB: (V:0.90.0) 
+ID:<a595074f.25e94a64.bec4b48a.e946a7b6> CT:3bdeb7e7
+Oct 17 22:17:15 data kernel: md:     L5 S60051456 ND:4 RD:3 md0 LO:0 
+CS:65536
+Oct 17 22:17:15 data kernel: md:     UT:3daf6d69 ST:0 AD:3 WD:4 FD:0 SD:1 
+CSUM:99d8749f E:0000009c
+Oct 17 22:17:15 data kernel:      D  0:  DISK<N:0,hdc1(22,1),R:0,S:6>
+Oct 17 22:17:15 data kernel:      D  1:  DISK<N:1,hdf1(33,65),R:1,S:6>
+Oct 17 22:17:15 data kernel:      D  2:  DISK<N:2,hde(33,0),R:2,S:6>
+Oct 17 22:17:15 data kernel:      D  3:  DISK<N:3,hde1(33,1),R:3,S:0>
+Oct 17 22:17:15 data kernel: md:     THIS:  DISK<N:0,hdc1(22,1),R:0,S:6>
+Oct 17 22:17:15 data kernel: md:^I**********************************
+Oct 17 22:17:15 data kernel: 
+Oct 17 22:17:15 data kernel: md: cannot remove active disk hde from md0 
+... 
+Oct 17 22:23:11 data kernel: md: interrupting MD-thread pid 130
+Oct 17 22:23:11 data kernel: md:   raid5d(130) flushing signals.
+Oct 17 22:23:11 data kernel: md: marking sb clean...
+Oct 17 22:23:11 data kernel: md: updating md0 RAID superblock on device
+Oct 17 22:23:11 data kernel: md: hde1 [events: 0000009d](write) hde1's sb 
+offset: 60051456
+Oct 17 22:23:11 data kernel: md: hde [events: 0000009d](write) hde's sb 
+offset: 78150656
+Oct 17 22:23:11 data kernel: md: hdf1 [events: 0000009d](write) hdf1's sb 
+offset: 60051456
+Oct 17 22:23:11 data kernel: md: hdc1 [events: 0000009d](write) hdc1's sb 
+offset: 60051456
+Oct 17 22:23:11 data kernel: md: md0 stopped.
+Oct 17 22:23:11 data kernel: md: unbind<hde1,3>
+Oct 17 22:23:11 data kernel: md: export_rdev(hde1)
+Oct 17 22:23:11 data kernel: md: unbind<hde,2>
+Oct 17 22:23:11 data kernel: md: export_rdev(hde)
+Oct 17 22:23:11 data kernel: md: unbind<hdf1,1>
+Oct 17 22:23:11 data kernel: md: export_rdev(hdf1)
+Oct 17 22:23:11 data kernel: md: unbind<hdc1,0>
+Oct 17 22:23:11 data kernel: md: export_rdev(hdc1)
+Oct 17 22:28:12 data dhcpd: DHCPREQUEST for 192.168.2.113 from 
+00:50:fc:21:77:64 via eth0
+Oct 17 22:29:48 data kernel: (read) hdc1's sb offset: 60051456 [events: 
+0000009d]
+Oct 17 22:29:48 data kernel: (read) hdf1's sb offset: 60051456 [events: 
+0000009d]
+Oct 17 22:29:48 data kernel: (read) hde's sb offset: 78150656 [events: 
+0000009d]
+Oct 17 22:29:49 data kernel: (read) hde1's sb offset: 60051456 [events: 
+0000009d]
+Oct 17 22:29:49 data kernel: md: autorun ...
+Oct 17 22:29:49 data kernel: md: considering hde1 ...
+Oct 17 22:29:49 data kernel: md:  adding hde1 ...
+Oct 17 22:29:49 data kernel: md:  adding hde ...
+Oct 17 22:29:49 data kernel: md:  adding hdf1 ...
+Oct 17 22:29:49 data kernel: md:  adding hdc1 ...
+Oct 17 22:29:49 data kernel: md: created md0
+Oct 17 22:29:49 data kernel: md: bind<hdc1,1>
+Oct 17 22:29:49 data kernel: md: bind<hdf1,2>
+Oct 17 22:29:49 data kernel: md: bind<hde,3>
+Oct 17 22:29:49 data kernel: md0: WARNING: hde1 appears to be on the same 
+physical disk as hde. True
+Oct 17 22:29:49 data kernel:      protection against single-disk failure 
+might be compromised.
+Oct 17 22:29:49 data kernel: md: bind<hde1,4>
+Oct 17 22:29:49 data kernel: md: running: <hde1><hde><hdf1><hdc1>
+Oct 17 22:29:49 data kernel: md: hde1's event counter: 0000009d
+Oct 17 22:29:49 data kernel: md: hde's event counter: 0000009d
+Oct 17 22:29:49 data kernel: md: hdf1's event counter: 0000009d
+Oct 17 22:29:49 data kernel: md: hdc1's event counter: 0000009d
+Oct 17 22:29:49 data kernel: md0: max total readahead window set to 512k
+Oct 17 22:29:49 data kernel: md0: 2 data-disks, max readahead per 
+data-disk: 256k
+Oct 17 22:29:49 data kernel: raid5: spare disk hde1
+Oct 17 22:29:49 data kernel: raid5: device hde operational as raid disk 2
+Oct 17 22:29:49 data kernel: raid5: device hdf1 operational as raid disk 1
+Oct 17 22:29:49 data kernel: raid5: device hdc1 operational as raid disk 0
+Oct 17 22:29:49 data kernel: raid5: allocated 3291kB for md0
+Oct 17 22:29:49 data kernel: raid5: raid level 5 set md0 active with 3 out 
+of 3 devices, algorithm 0
+Oct 17 22:29:49 data kernel: RAID5 conf printout:
+Oct 17 22:29:49 data kernel:  --- rd:3 wd:3 fd:0
+Oct 17 22:29:49 data kernel:  disk 0, s:0, o:1, n:0 rd:0 us:1 dev:hdc1
+Oct 17 22:29:49 data kernel:  disk 1, s:0, o:1, n:1 rd:1 us:1 dev:hdf1
+Oct 17 22:29:49 data kernel:  disk 2, s:0, o:1, n:2 rd:2 us:1 dev:hde
+Oct 17 22:29:49 data kernel: RAID5 conf printout:
+Oct 17 22:29:49 data kernel:  --- rd:3 wd:3 fd:0
+Oct 17 22:29:49 data kernel:  disk 0, s:0, o:1, n:0 rd:0 us:1 dev:hdc1
+Oct 17 22:29:49 data kernel:  disk 1, s:0, o:1, n:1 rd:1 us:1 dev:hdf1
+Oct 17 22:29:49 data kernel:  disk 2, s:0, o:1, n:2 rd:2 us:1 dev:hde
+Oct 17 22:29:49 data kernel: md: updating md0 RAID superblock on device
+Oct 17 22:29:49 data kernel: md: hde1 [events: 0000009e](write) hde1's sb 
+offset: 60051456
+Oct 17 22:29:49 data kernel: md: hde [events: 0000009e](write) hde's sb 
+offset: 78150656
+Oct 17 22:29:49 data kernel: md: hdf1 [events: 0000009e](write) hdf1's sb 
+offset: 60051456
+Oct 17 22:29:49 data kernel: md: hdc1 [events: 0000009e](write) hdc1's sb 
+offset: 60051456
+Oct 17 22:29:49 data kernel: md: ... autorun DONE.
+
+
+
+
+
+Thanks,
+
+
+--------------------------------------------------------------------
+Karl Hiramoto  - Design Engineer
+Cambridge Accusense
+www.accusense.com
+Tel: 978-425-2090
+Toll Free in US: 1-800-313-9271
+Fax: 978-425-4062
+
