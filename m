@@ -1,50 +1,120 @@
-From: "Grantham, Ewan R." <egrantham@swri.org>
-Subject: RAID-5 on Firewire problems after initial troublefree operation
-Date: Fri, 21 May 2004 15:43:35 -0500
+From: "Dominik Sennfelder" <Sennfelder@gmx.de>
+Subject: RE: Raid Failed What to to
+Date: Fri, 21 May 2004 22:58:58 +0200 (MEST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <AF4CBD49C827BA4F9BDD00E297CD804802624618@adsms01.dyn.datasys.swri.edu>
+Message-ID: <23885.1085173138@www14.gmx.net>
+References: <200405211459.i4LExPB24054@www.watkins-home.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-To: linux-raid@vger.kernel.org
+To: Guy <bugzilla@watkins-home.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Setup is a Debian-based distribution running a 2.4.24 shell that has
-been patched to support RAID and to add 1394 support into the kernel
-(rather than as modules).
+Hello
 
-Have been running for a week as a RAID-5 using mdadm. When turning the
-machine off I would use:
-mdadm -S /dev/md0
+Thanks for your help.
+I created the array with mkraid /dev/md0 after i added the entrys in
+/etc/raidtab.
+I analyzed the logs an saw that one disk failed one day before,
+so the raid run with 3 discs. My fault was to raidsetfault the wrong drive.
+But in that moment the Raid broke up an no write was possilble because it
+got remountet -ro. After i hotadded it again, it tried to sync but with only
+two discs syncing wouldn't be possible. The drive i removed wan't really
+faulty, it was just set faulty. I even could browse the filesystem when just
+2 discs run. 
+So can i reassamble the drive mith mdadm? or do i have to use mkraid?
 
-then upon booting I would first run the rescan-scsi-bus.sh script from
-the Linux1394.org site (to bring up all 4 drives) and then bring up the
-array using:
+Thanks for your help and suggestions.
 
-mdadm -A /dev/md0 /dev/sdb1 /dev/sdc1 /dev/sdd1 /dev/sde1
+Dominik
 
-and finally mount the array as:
 
-mount -t reiserfs /dev/md0 /disks/RAID
+> This is an example for using mdadm where the second of three disks is bad.
+> But you must use the same chunk size and other RAID5 parameters or the
+> array
+> will have bogus data.  It would be nice if you still have the original
+> command you used to create the array.
+> 
+> mdadm -C /dev/md0 -l 5 -n 3 /dev/hda3 missing /dev/hdc3
+> 
+> Guy
+> 
+> -----Original Message-----
+> From: Guy [mailto:bugzilla@watkins-home.com] 
+> Sent: Friday, May 21, 2004 10:00 AM
+> To: 'Clemens Schwaighofer'; 'Dominik Sennfelder'
+> Cc: 'linux-raid@vger.kernel.org'
+> Subject: RE: Raid Failed What to to
+> 
+> If you re-make the array with the same parameters as it has now the data
+> will not be lost (assuming it is still there now).  If 1 disk is really
+> bad
+> then leave it out.
+> 
+> The procedures depend on which program you use to create the array.  Do
+> you
+> use mkraid or mdadm?
+> 
+> Guy
+> 
+> -----Original Message-----
+> From: linux-raid-owner@vger.kernel.org
+> [mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Clemens
+> Schwaighofer
+> Sent: Friday, May 21, 2004 4:45 AM
+> To: Dominik Sennfelder
+> Cc: linux-raid@vger.kernel.org
+> Subject: Re: Raid Failed What to to
+> 
+> -----BEGIN PGP SIGNED MESSAGE-----
+> Hash: SHA1
+> 
+> Dominik Sennfelder wrote:
+> | Hello
+> |
+> | I have got a Raid 5 with 4 160 GB Disk,
+> | On of the Disks Failed because. But I know its OK I had this for some
+> | times.
+> | A Restart solved The Problem.
+> | But now  Tried to raidhotremove the Drive and removed the wrong drive.
+> | I just recongized the Problem after i raidhotadded itagain.
+> | No the Raid tries to sync again.
+> 
+> well if you removed two drives from your Raid5 array, it might got
+> competly out of sync and then there is no way to recover. I have never
+> tried this with my raid, but if you add another disk it well be
+> re-synced, ergo it tries to rebuild the array out of the CRCs on the
+> other drives, if you remove two, you don't have enough redudant data to
+> do this (raid 6 can recover from a 2 drive failure).
+> 
+> I hope you have a backup.
+> 
+> - --
+> Clemens Schwaighofer - IT Engineer & System Administration
+> ==========================================================
+> TEQUILA\Japan, 6-17-2 Ginza Chuo-ku, Tokyo 104-8167, JAPAN
+> Tel: +81-(0)3-3545-7703            Fax: +81-(0)3-3545-7343
+> http://www.tequila.co.jp
+> ==========================================================
+> -----BEGIN PGP SIGNATURE-----
+> Version: GnuPG v1.2.4 (GNU/Linux)
+> 
+> iD8DBQFArcGmjBz/yQjBxz8RAkYKAJ9TAc03OnmIth/M03xBmopKerZLOQCcCiiG
+> wk/lAjdcrd1jPWSoLyOGLAE=
+> =5uyj
+> -----END PGP SIGNATURE-----
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
 
-Again, this seemed to work just fine for a little over a week until last
-night. When I went to bring up the system with the mdadm -A command it
-would complain that it could only load two of the drives and that wasn't
-enough to bring up the array. The rescan script showed all four, but to
-be safe I did the "modprobe sbp2" to see if there was an issue.
-
-Trying to bring up the array after that I keep getting a message that
-the drives are missing a superblock.
-
-What research I've been able to do on the archives here leads me to
-think that getting a newer version of mdadm that supports the
---update=summaries option might allow me to bring up the array. Will
-that work, or is that going to seriously "munge" my data? Any other
-suggestions on what to do?
-
-Thanks,
-Ewan Grantham
+-- 
+Mfg Dominik Sennfelder
+--------------
+Sennfelder@gmx.de         IRC: #spooky  
+ICQ: 18164192          Blue Skies          
 
