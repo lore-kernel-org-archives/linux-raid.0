@@ -1,30 +1,38 @@
 From: Mads Peter Bach <mpb@hum.auc.dk>
 Subject: Re: Last ditch effort for RH9 and LSR0
-Date: Wed, 14 May 2003 02:45:20 +0200
+Date: Wed, 14 May 2003 03:03:57 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3EC191A0.8050801@hum.auc.dk>
-References: <20030514001320.55709.qmail@web14401.mail.yahoo.com>
+Message-ID: <3EC195FD.70609@hum.auc.dk>
+References: <20030514005119.10758.qmail@web14410.mail.yahoo.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1;
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20030514001320.55709.qmail@web14401.mail.yahoo.com>
+In-Reply-To: <20030514005119.10758.qmail@web14410.mail.yahoo.com>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 Brennahn Chesteine wrote:
-> I am at my witts and with trying to install a new
-> kernel under RH9. My system is set up with "root" and
-> "swap" in LSR0 and "/boot" in LSR5. I have taken all
-> know suggestions to get 2.4.20 to boot but nothing
-> after a month.=20
+> Then how does the stock RH kernel boot this cursid thing up? I have h=
+ad 1
+> and 5 and just a lone /boot partition but nothing has worked so far.
 
-If you by LSR5 mean Linux software RAID5, I'm not surprised it isn't wo=
-rking.=20
-You can't boot from a software RAID5 on Linux. To do that, lilo would h=
-ave to=20
-know how to pull different data chunks from different drives.
-/boot on RAID1 works because RAID1 puts the same data on both drives.
+I have no idea. I can't see how they would be able to do it with RAID5,=
+ unless
+grub or whatever bootloader RedHat uses is MUCH smarter than I give it =
+credit for.
+
+If you can't get it to boot, when your /boot is just a normal partition=
+, then
+you should probably look elsewhere for a problem.
+
+If you include your bootup messages, it would be much easier to figure =
+out what
+goes wrong.
+
+You could also include the output of "cat /proc/mdstat" and "mount", wh=
+en your
+system is bootet with the redhat kernel.
 
 --=20
 Mads Peter Bach
