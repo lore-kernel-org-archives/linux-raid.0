@@ -1,100 +1,62 @@
-From: Philip Cameron <pecameron@attbi.com>
-Subject: Re: Raid1 fast resync
-Date: Thu, 02 Jan 2003 20:40:01 -0500
+From: Oliver Elphick <olly@lfix.co.uk>
+Subject: Linux dpti driver in 2.4 kernel with Adaptec 2400A card
+Date: 03 Jan 2003 17:26:12 +0000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3E14E9F1.1040809@attbi.com>
-References: <Pine.LNX.3.96.1030102013608.31808A-100000@Maggie.Linux-Consulting.com>
+Message-ID: <1041614772.19602.379.camel@linda.lfix.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Alvin Oga <aoga@Maggie.Linux-Consulting.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Alvin,
+I'm trying to install Debian Linux with kernel 2.4.20 on a machine with an
+Adaptec 2400A RAID card with 3 40Gb IDE disks attached.  The machine has
+no disks other than those connected to this card. 
 
-Thanks for the comments. The hardware includes two hot swappable  IO 
-assemblies each of which includes a PCI bus, SCSI HBA and 3 hot swapable 
-SCSI disk slots. All of the issues related to hot-swap have been 
-resolved so I don't need to deal with SCSI and PCI bus issues (thankfully).
+I am able to boot the system, and the RAID card is recognised (as
+/dev/sda) but it cannot be accessed.  I get these messages recorded by
+dmesg:
 
-Because of the redundant IO assemblies, the system is not considered 
-fully operational until either assembly can fail or be pulled at random. 
-This means the resync must be complete. So the real deal is reducing the 
-resync so that the system can be considered fully operational sooner. I 
-am looking to reduce the multiple hour resync times to a few minutes.
+SCSI subsystem driver Revision: 1.00
+Loading Adaptec I20 RAID: Version 2.4 Build 5
+Detecting Adaptec RAID controllers...
+Adaptec I20 RAID controller 0 at f8898000 size=100000 irq=11
+dpti: If you have a lot of devices this could take a few minutes.
+dpti0: Reading the hardware resource table.
+TID 008  Vendor: HIGHPOINT    Device: IDEhpt370    Rev: 00000001
+TID 009  Vendor: HIGHPOINT    Device: IDEhpt370    Rev: 00000001
+TID 010  Vendor: HIGHPOINT    Device: IDEhpt370    Rev: 00000001
+TID 011  Vendor: HIGHPOINT    Device: IDEhpt370    Rev: 00000001
+TID 519  Vendor: ADAPTEC      Device: RAID-5       Rev: 370L
+scsi0 : Vendor: Adaptec  Model: 2400A            FW:370L
+  Vendor: ADAPTEC   Model: RAID-5            Rev: 370L
+  Type:   Direct-Access                      ANSI SCSI revision: 02
+[scsi1: Adaptec SCSI card]
+[scsi2: IDE-SCSI]
+Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
+SCSI device sda: 156327936 512-byte hdwr sectors (80040 MB)
+Partition check:
+ sda:<4>dpti0: SCSI Data Protect-Device (0,0,0) hba_status=0x0, dev_status=0x2, cmd=0x28
+dpti0: Trying to reset device
+dpti0: Device reset not supported
+dpti0: Bus reset: SCSI Bus 0: tid: 11
+dpti0: Bus reset success.
+scsi: device set offline - not ready or command retry failed after bus reset: host 0 channel 0 id 0 lun 0
+SCSI disk error:  host 0 channel 0 id 0 lun 0 return code = 30002
+ I/O error: dev 08:00, sector 0
+ I/O error: dev 08:00, sector 2
+ I/O error: dev 08:00, sector 0
+ unable to read partition table
 
-Thanks again,
-Phil Cameron
----------------------------
+I can't find any previous references to this problem and I'm stuck. 
+What can I do to get this working, please?
 
-Alvin Oga wrote:
-
->hi ya philip
->
->On Wed, 1 Jan 2003, Philip Cameron wrote:
->
->  
->
->>Do any of you know of work that is going on to improve the raid 1 resync 
->>speed? I am starting to evaluate approaches to reducing the time to 
->>resync the disks.
->>
->>I am involved in a project on a fault tolerant x86 based server that has 
->>hot plugable scsi disks and PCI busses. There are two PCI busses and 3 
->>mirrrored sets of two disks. When a PCI bus is pulled all of the mirrors 
->>are broken so when the PCI bus is again inserted, all of the disks 
->>resync which takes hours. Also, during development the resync after 
->>crash really slows down debug.
->>    
->>
->
->without knowing more details ... here's some comments
->
->- when a pci card is pulled out, you stand a good chance that the cpu bios
->  will need to be reset ( re-saved )
->	- the machine goes into bios mode, whether you like it or not
->
->- since you are using scsi disks..
->	- when you pull out a scsi disk, the next time you reboot,
->	the scsi drives will be in different order if you lost sda
->	or lost sdb and you had sdc  which is now your new sdb
->
->- if you have 2 pci buses...
->	- put sda  on pci #1
->	and put sdb ( mirrored ) onto pci #2
->
->	- if any pci buss dies, your system can still function properly
->	since its mirror is on the other pci buss which is working
->
->- to avoid resyncing the raid data...
->	- use a 3rd (spare) disk local to the 2 disks
->	when one disk dies, the spare supposed to kick-in 
->
->	- have a spare system, that mirror's the "main" data,
->	and rebuild a spare disk on a constant basis so that
->	the "spare" can be plugged into the "main" data asap
->	whenver a disk dies that didnt have a spare previously
->
->	- when resyncing... you only need to "resync changed data"
->	( changed/new files for today ) and NOT the whole array
->	which might have a year's worth of data..
->
->	- yesterday's hot swap ( spare ) is ready to go anytime
->
->- if you want more raid interactivity and keyboard/ssh control,
->  renice the apps and raid parameters
->
->have fun
->alvin
->
->-
->To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->  
->
-
+-- 
+Oliver Elphick                                Oliver.Elphick@lfix.co.uk
+Isle of Wight, UK                             http://www.lfix.co.uk/oliver
+GPG: 1024D/3E1D0C1C: CA12 09E0 E8D5 8870 5839  932A 614D 4C34 3E1D 0C1C
+                 ========================================
+     "I love them that love me; and those that seek me early
+      shall find me."                Proverbs 8:17 
 
