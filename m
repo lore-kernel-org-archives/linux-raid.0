@@ -1,41 +1,58 @@
-From: "Peter T. Breuer" <ptb@it.uc3m.es>
-Subject: Re: Fast (intelligent) raid1
-Date: Tue, 18 Feb 2003 01:57:37 +0100 (MET)
+From: stef@chronozon.artofdns.com (Stef Telford)
+Subject: 2.5.62 oops and Raid-5
+Date: Mon, 17 Feb 2003 18:46:19 -0500 (EST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200302180057.h1I0vbN29768@oboe.it.uc3m.es>
-References: <15952.20989.131713.951636@notabene.cse.unsw.edu.au>
-Reply-To: ptb@it.uc3m.es
+Message-ID: <20030217234619.CBF2B23134@chronozon.artofdns.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <15952.20989.131713.951636@notabene.cse.unsw.edu.au> from Neil Brown
- at "Feb 17, 2003 02:07:41 pm"
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: ptb@it.uc3m.es, Ross Vandegrift <ross@willow.seitz.com>, Ingo Molnar <mingo@redhat.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: stef@chronozon.artofdns.com
 List-Id: linux-raid.ids
 
-"Neil Brown wrote:"
-> Rather than having several bitmaps, have just one.  Normally it is
-> full of zero and isn't touched.
+Hello,
+        sorry to be a pain, but for some reason I
+am getting a symoops under 2.5.62, yet everything
+works fine in 2.5.58 (although i notice reiserfs
+corruption in that one. not good)
+ 
+        The symoops only comes after the raid-5 has
+finished rebuilding, or if i try to mount it whilst
+its still in degraded mode/rebuilding. either way,
+it crashes.
+ 
+md: md0: sync done.
+RAID5 conf printout:
+ --- rd:4 wd:4 fd:0
+ disk 0, o:1, dev:ide/host2/bus0/target0/lun0/part6
+ disk 1, o:1, dev:ide/host2/bus1/target0/lun0/part1
+ disk 2, o:1, dev:ide/host4/bus0/target0/lun0/part6
+ disk 3, o:1, dev:ide/host4/bus1/target0/lun0/part1
+md: updating md0 RAID superblock on device
+md: ide/host4/bus1/target0/lun0/part1 <6>(write) ide/host4/bus1/target0/lun0/part1's sb offset: 58633216
+md: ide/host4/bus0/target0/lun0/part6 <6>(write) ide/host4/bus0/target0/lun0/part6's sb offset: 58633728
+md: ide/host2/bus1/target0/lun0/part1 <6>(write) ide/host2/bus1/target0/lun0/part1's sb offset: 58633216
+md: ide/host2/bus0/target0/lun0/part6 <6>(write) ide/host2/bus0/target0/lun0/part6's sb offset: 58633728
+Unable to handle kernel NULL pointer dereference at virtual address 00000000
+ printing eip:
+00000000
+*pde = 00000000
+Oops: 0000
+CPU:    0
+EIP:    0060:[<00000000>]    Not tainted
+EFLAGS: 00010046
+eax: 00000000   ebx: cfd904ac   ecx: cfd905d0   edx: 00000000
+esi: cffe8880   edi: cfd90584   ebp: c12ba000   esp: c12bbf4c
+ds: 007b   es: 007b   ss: 0068
+Process events/0 (pid: 3, threadinfo=c12ba000 task=c12bec40)
+Stack: c0267f47 cfd904ac cfd90588 c012c403 cfd904ac cffe8884 c12ba000 cfd904ac
+       c0267f50 cffe8884 cffe8880 c1299fa8 cffe888c c012c078 cffe8880 c12bbfa0
+       00000000 00000000 c12ba000 c12ba000 c12ba000 00000001 00000000 c0119fd0
+Call Trace: [<c0267f47>]  [<c012c403>]  [<c0267f50>]  [<c012c078>]  [<c0119fd0>]  [<c0119fd0>]  [<c012beb0>]  [<c0108d39>]
+Code:  Bad EIP value.
+ <6>note: events/0[3] exited with preempt_count 1
 
-> On hot-add, read the old superblock.  If it looks valid and matches
-> the current array, and has an event counter of X or more, then ignore
-
-I've made a preliminary patch. Available as
-
-  ftp://oboe.it.uc3m.es/pub/Programs/fr1-2.2.tgz
-
-This still needs to have the checkpoint (X) stuff put in, but I'm too
-tired to do it right now. What it has is
-
-  1) single bitmap
-  2) recognition of a "hotrepair" via the superblock on a persistent 
-    sb array
-
-and also
-
-  3) allow "hotrepair" on a nonpersistent sb array when a hotadd
-     follows a setfaulty directlym without hotremove.
-
-I'll complete it tomorrow. I checked basic functionality (i.e. "it
-works", tm).
-
-Peter
+ 
+If there is anything else that may be of use,
+jst let me know and i will forward that as well.
+ 
+Thanks
+Stef.
