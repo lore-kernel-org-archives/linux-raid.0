@@ -1,41 +1,25 @@
-From: bfowler@ewitness.co.uk (ewitness - Ben Fowler)
-Subject: Re: RAID 5 disk format for Promise SuperTrak Sx6000 (Linux)
-Date: Sun, 26 May 2002 20:01:37 +0100
+From: "3tcdgwg3" <3tcdgwg3@prodigy.net>
+Subject: Re: other RAID features
+Date: Sun, 26 May 2002 19:23:58 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <f04330105b916dfd66f7e@[192.168.254.56]>
-References: <f04330107b915ec475e78@[192.168.254.56]>
- <001801c204e5$1daf12f0$0505a8c0@PLUTO>
+Message-ID: <004701c20525$8f2e4be0$0505a8c0@PLUTO>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <001801c204e5$1daf12f0$0505a8c0@PLUTO>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-At 11:42 am -0700 26/5/02, 3tcdgwg3 wrote:
->Ben,
->
->If I understand you correctly - you are trying to use
->Linux RAID (which is a self contained software system),
->to read the disk information written by the IBM/Mylex
->controller (which is proprietary hardware RAID system
->deveoped by IBM/Mylex), instead of using IBM/Mylex
->controller - there is no easy way to do that, unless you 
->know the IBM/Mylex RAID firmware and data structures.
+Hello,
+Please,  any body know if there is a plan to support
+more RAID features under Linux?  If yes, when.
+I am interested in two of them (can either online or offline, 
+but online will be really good):
+1. Expend capacity.
+2. RAID level migration.
+ 
+ Thanks.
+ 
+ -Wei G
 
-You are definitely on the right lines. I am trying to read
-RAID data structures written by a hardware RAID controller,
-with Linux software RAID.
-
-The Promise SuperTrak Sx6000 is the card in question.
-
-I mention the Mylex, because someone else has done it,
-which confirms the possibility.
-
-I am grateful for your comments. So far I have not
-heard of any direct way of doing what I want, but i
-have had some excellent advice from the list, and
-the outcome, whilst is dubious character, is far, far
-better than it first appeared.
-
-Ben.
