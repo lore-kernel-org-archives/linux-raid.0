@@ -1,49 +1,49 @@
-From: Maurice Hilarius <maurice@harddata.com>
-Subject: Re: Software Raid Cache
-Date: Sun, 23 Feb 2003 23:12:45 -0700
+From: "David PARRIEL" <dparriel@gfi.fr>
+Subject: Mount root filesystem on Raid 1 Software
+Date: Mon, 24 Feb 2003 12:18:49 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <5.1.1.6.2.20030223231035.0686d400@mail.harddata.com>
-References: <message from SoulBlazer on Friday February 21>
- <3E56910F.6050509@lamp-post.net>
+Message-ID: <C1256CD7.003DBA2C.00@mta-out.gfi.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <15961.46603.166633.265132@notabene.cse.unsw.edu.au>
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: linux-raid@vger.kernel.org
+Content-Disposition: inline
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-With regards to your message at 11:04 PM 2/23/03, Neil Brown. Where you stated:
-> > If this is even something doable (tweakable) Im wondering what the perf
-> > gain from allocating say 2 or 4gb just to raid cache would be.
-> >
-> > Comments ?
->
->How do you imagine this extra 'cache' would be used.
->
->Cache on raid cards tends to be battery backed (I believe) and to
->operate as a write-behind cache thereby increasing performance.  As
->main system memory is not battery backed, you cannot use it as a
->write-behind cache.
->
->NeilBrown
-
-
-True, and the cache on a RAID controller is not clobbered when the OS or 
-computer crashes.
-Mind you the same problem exists to some degree with PCI based RAID 
-controllers, so the most robust are host independent SCSI/SCSI RAID 
-controllers.
-
-Too bad these cost about as much as a typical server!
 
 
 
-With our best regards,
+Hello,
 
-Maurice W. Hilarius       Telephone: 01-780-456-9771
-Hard Data Ltd.               FAX:       01-780-456-9772
-11060 - 166 Avenue        mailto:maurice@harddata.com
-Edmonton, AB, Canada      http://www.harddata.com/
-    T5X 1Y3
+I try to use Raid 1 software on a Linux Debian 3.0 (kernel 2.4).
+
+I've no problems to mount my /boot partition on /dev/md1 device and my /usr
+partition on /dev/md2 device, no problems to reboot.
+
+On boot when Debian system try to mount the root filesystem on /dev/md0
+(/dev/sdb3 is raid-disk and /dev/sda3 is failed-disk), I obtain this message :
+
+"fsck.ext3 : invalid argument while trying to open /dev/md0.
+
+ The superblock could not be read or does not describe a correct ext2
+ filesystem. If the device is valid and it really contain an ext2
+ filesystem then the superblock is corrupt and you might try running
+ e2fsck with an alternate superblock.
+      e2fsck -b 8193 <device>
+ fsck failed. Please repair manually."
+
+ I ran "fsck /dev/md0" and bellow the result :
+ "Bad magic number in superblock while trying to open /dev/hda. The
+ superblock could not be read or does not describe a correct
+ filesystem" .
+
+ I tried with mke2fs -b 4096 -R stride=8 /dev/md0 and other values, I've always
+the same problem when I reboot.
+
+ Have you got an idea of this problem ?
+
+ In advance, thank you.
+
+ David
+
 
