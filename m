@@ -1,14 +1,21 @@
 From: Anthony Johnson <anthony@storix.com>
 Subject: linux mkraid: segmentation fault
-Date: Sun, 19 May 2002 23:14:29 -0700
+Date: Sun, 19 May 2002 23:17:22 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3CE89445.51B54454@storix.com>
+Message-ID: <3CE894F2.B802D66F@storix.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+One other thing I forgot to mention. My raid tools are at 0.90-23. I
+can't really update to the latest to try it again since I need to be
+able to support back-level versions. Plus, the problem only happens when
+I boot from my recovery media, so I'm certain it's something missing
+there....Thanks.
+------------
 
 Hi,
 Can you please help me or provide me a contact where I can get some
