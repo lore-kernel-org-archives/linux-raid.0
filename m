@@ -1,37 +1,28 @@
-From: Ross Vandegrift <ross@willow.seitz.com>
-Subject: Re: Fast (intelligent) raid1
-Date: Tue, 11 Feb 2003 15:17:28 -0500
+From: Matthew Wilcox <willy@debian.org>
+Subject: Re: [Ext2-devel] Re: fsck out of memory
+Date: Tue, 11 Feb 2003 20:21:57 +0000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20030211201728.GA18346@willow.seitz.com>
-References: <Pine.LNX.4.44.0301240354520.3568-100000@devserv.devel.redhat.com> <200302111947.h1BJl4j25128@oboe.it.uc3m.es>
+Message-ID: <20030211202157.Q5992@parcelfarce.linux.theplanet.co.uk>
+References: <Pine.LNX.4.53.0302071555110.718@ddx.a2000.nu> <Pine.LNX.4.53.0302071800200.1306@ddx.a2000.nu> <20030207102858.P18636@schatzie.adilger.int> <Pine.LNX.4.53.0302090953440.1039@ddx.a2000.nu> <1044917060.11838.108.camel@sisko.scot.redhat.com> <Pine.LNX.4.53.0302111410350.13269@ddx.a2000.nu> <1044973982.1980.29.camel@sisko.scot.redhat.com> <1044993857.6640.7.camel@plokta.s8.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <200302111947.h1BJl4j25128@oboe.it.uc3m.es>
-To: "Peter T. Breuer" <ptb@it.uc3m.es>
-Cc: Ingo Molnar <mingo@redhat.com>, neilb@cse.unsw.edu.au, linux-raid@vger.kernel.org
+In-Reply-To: <1044993857.6640.7.camel@plokta.s8.com>; from bos@serpentine.com on Tue, Feb 11, 2003 at 12:04:17PM -0800
+To: Bryan O'Sullivan <bos@serpentine.com>
+Cc: Stephan van Hienen <raid@a2000.nu>, linux-raid@vger.kernel.org, ext2-devel@lists.sourceforge.net, tbm@a2000.nu
 List-Id: linux-raid.ids
 
-On Tue, Feb 11, 2003 at 08:47:04PM +0100, Peter T. Breuer wrote:
-> I've  now built the technology into the kernel raid1 code. It's
-> available from
-> 
->    ftp://oboe.it.uc3m.es/pub/Programs/fr1-2.0.tgz
+On Tue, Feb 11, 2003 at 12:04:17PM -0800, Bryan O'Sullivan wrote:
+> The nominal limit on device/filesystem size looks to be 16TB on a 32-bit
+> platform, but there are dozens of sign truncation errors throughout the
+> VFS and block layers that are unlikely to get fixed.  Hence, 8TB it is.
 
-How much testing has this recieved?  I'd love to try it out, but it
-might take me a bit to setup an array that could stand data loss.  On
-the other hand, if it's stable, I'd move to it pretty quickly.  This is
-a way cool feature.
+and even this isn't a hard limit.  if we actually make PAGE_CACHE_SIZE
+larger, then we can grow devices by the same factor.  of course, everybody
+should switch to 64-bit machines.
 
 -- 
-Ross Vandegrift
-ross@willow.seitz.com
-
-A Pope has a Water Cannon.                               It is a Water Cannon.
-He fires Holy-Water from it.                        It is a Holy-Water Cannon.
-He Blesses it.                                 It is a Holy Holy-Water Cannon.
-He Blesses the Hell out of it.          It is a Wholly Holy Holy-Water Cannon.
-He has it pierced.                It is a Holey Wholly Holy Holy-Water Cannon.
-He makes it official.       It is a Canon Holey Wholly Holy Holy-Water Cannon.
-Batman and Robin arrive.                                       He shoots them.
+"It's not Hollywood.  War is real, war is primarily not about defeat or
+victory, it is about death.  I've seen thousands and thousands of dead bodies.
+Do you think I want to have an academic debate on this subject?" -- Robert Fisk
