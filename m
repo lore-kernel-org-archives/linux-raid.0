@@ -1,52 +1,31 @@
-From: "Adam J Morand" <Adam.Morand@midnightmoon.ca>
+From: Mike Dresser <mdresser_l@windsormachine.com>
 Subject: Re: RAID 1 / Power Loss / No SuperBlock
-Date: Sun, 2 Feb 2003 13:01:33 -0800
+Date: Sun, 2 Feb 2003 16:21:27 -0500 (EST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <00f601c2cafe$4f4dd500$6701a8c0@bc.hsia.telus.net>
-References: <Pine.LNX.4.33.0302021607270.17543-100000@router.windsormachine.com>
+Message-ID: <Pine.LNX.4.33.0302021621110.17543-100000@router.windsormachine.com>
+References: <00f601c2cafe$4f4dd500$6701a8c0@bc.hsia.telus.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Mike Dresser <mdresser_l@windsormachine.com>
+In-Reply-To: <00f601c2cafe$4f4dd500$6701a8c0@bc.hsia.telus.net>
+To: Adam J Morand <Adam.Morand@midnightmoon.ca>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Mike,
-
-I could not get the md0 to resync / reinitialize
-raidstop / raidstart / etc...
-
-so I am unable to do fsck /dev/md0
-I was thinking if I could get one drive to work I could wipe the other one,
-and then rebuild the pair, no??
-
-aj
-
-
-
-
------ Original Message -----
-From: "Mike Dresser" <mdresser_l@windsormachine.com>
-To: "Adam J Morand" <Adam.Morand@illuminatedtechnologies.com>
-Cc: <linux-raid@vger.kernel.org>
-Sent: Sunday, February 02, 2003 1:08 PM
-Subject: Re: RAID 1 / Power Loss / No SuperBlock
-
-
-
 On Sun, 2 Feb 2003, Adam J Morand wrote:
 
-> The error I get
-> [aj@r2d2 aj]$ fsck /dev/hdd1
+> Mike,
+>
+> I could not get the md0 to resync / reinitialize
+> raidstop / raidstart / etc...
+>
+> so I am unable to do fsck /dev/md0
+> I was thinking if I could get one drive to work I could wipe the other one,
+> and then rebuild the pair, no??
+>
+> aj
 
-Why would you be modifying the /dev/hdd device?
+Can you list your /etc/raidtab, and what errors you were getting?
 
-You're lucky this isn't working, you want to do a fsck /dev/md0 or
-whatever your raid1 device is numbered.
-
-Never touch the original partitions.
-
-Mike
+mike
 
