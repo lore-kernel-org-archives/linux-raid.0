@@ -1,37 +1,50 @@
-From: "Michael Paul" <radius.mp@verizon.net>
-Subject: How to recover linear array
-Date: Wed, 25 Jun 2003 21:55:22 -0700
+From: "Riley Williams" <Riley@Williams.Name>
+Subject: RE: Mirroring swap
+Date: Thu, 26 Jun 2003 08:07:47 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <00d301c33b9f$26a85230$1400020a@mike>
+Message-ID: <BKEGKPICNAKILKJKMHCAEEFPEHAA.Riley@Williams.Name>
+References: <Pine.LNX.4.44.0306251535120.16603-100000@gpu.utcc>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <Pine.LNX.4.44.0306251535120.16603-100000@gpu.utcc>
+To: Derek Yeung <dky@utcc.utoronto.ca>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi Derek.
 
+ > I'm running Red Hat 9 on stock kernel 2.4.20 with software
+ > RAID 1.
+ >
+ > I was wondering if it's a good idea to also mirror the swap
+ > partition? I was reading old posts in the newsgroups that
+ > suggest this may not be a good idea but I can't seem to find
+ > an answer as to why. I think mirroring swap would be a good
+ > idea as it would increase redundancy. Any thoughts?  
 
-     Hi there..
+Personally, I can't see the point. the contents of swap are by
+definition short term temporary data with copies held either in
+memory or elsewhere on the hard disk subsystem.
 
- Long time lurker here...
+My preference is to create multiple swap partitions, one on each
+hard drive, as in that situation, the swap subsystem always uses
+a swap partition on a different drive to the original copy when
+it decides where to swap out to.
 
- I have a RH 7.3 system that had a fully functioning linear raid array. When
-I originally installed the system, I put the /usr, /var, /tmp, /bin, etc,
-directories on different drives in order to balance the load a bit. The
-problem is that the drive that had /usr, /var and /tmp on it died a horrible
-nasty death. The data was unrecoverable.
+Remember that using a raided swap partition means that the swap
+code has no idea which drive any particular part of that swap
+partition is on, so could result in the swap copy being on the
+same failed drive as the original copy.
 
- Since it now appears that I will have to reinstall and reconfigure
-everything, my question is how can I rebuild the linear raid without
-destroying the data? IIRC, when you do mkraid it resynchronizes the disks,
-destroying the data. Normally, this wouldn't be a problem, but I've been a
-bad boy and neglected my backups.
+Best wishes from Riley.
+---
+ * Nothing as pretty as a smile, nothing as ugly as a frown.
 
- Any ideas?
-
-Thanks,
-Michael
-
+---
+Outgoing mail is certified Virus Free.
+Checked by AVG anti-virus system (http://www.grisoft.com).
+Version: 6.0.491 / Virus Database: 290 - Release Date: 18-Jun-2003
 
