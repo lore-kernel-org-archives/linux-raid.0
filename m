@@ -1,46 +1,51 @@
-From: Ruth Ivimey-Cook <Ruth.Ivimey-Cook@ivimey.org>
-Subject: Making more space in RAID5 array: questions
-Date: Sat, 05 Jul 2003 00:16:10 +0100
+From: system_lists@nullzone.org
+Subject: =?iso-8859-1?Q?Re:_=BF_the_best_journalist-filesystem_for_a?=
+    raid5 ?
+Date: Sat, 05 Jul 2003 02:06:45 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <5.2.0.9.0.20030704235310.00b2ea38@mailhost.ivimey.org>
+Message-ID: <5.2.1.1.2.20030705020423.0312f008@192.168.2.130>
+References: <5.2.1.1.2.20030703173829.023eabe8@192.168.2.130>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.44.0307031157450.18503-100000@chaos.egr.duke.ed
+ u>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Folks,
 
-I have a 112GB Linux-SW RAID-5 array on 4x40GB Seagate Barracuda ATA IV IDE 
-disks that is currently ok but is low on free space. There is no raid-spare 
-drive.
+Thanks to Joshua, Stephen C Woods and Mikael Abrahamsson for all
 
-I am not using LVM and the FS is IBMs JFS. The OS is Linux RH9 with a 
-kernel.org kernel 2.4.22-pre2. The IDE controller is an motherboard Promise 
-20276.
+Regards
 
-I have a spare 40G partition on my system (physical) drive and am thinking 
-of adding it to the array.
+At 11:59 03/07/2003 -0400, Joshua Baker-LePain wrote:
+>On Thu, 3 Jul 2003 at 5:42pm, system_lists@nullzone.org wrote
+>
+> >     i dont wanna create a discusion between gurus. My question is so 
+> simple
+> > (well .. its not simple but ...).
+> >
+> > What do u think is the best journalist filesystem for a software raid5 of
+> > 4*120 GB IDE UATA ?
+> > I will use this one for big files (lots of them) and small ones (just a 
+> ftp
+> > but too for the users space).
+> >
+> > For a non-specific BIG/SMALL files .... JFS? Reiser3? Reiser4? EXT3?
+>
+>I've had very good luck with XFS for a long time now (over 2 years in
+>production, currently 5.5TB of formatted space).
+>
+>--
+>Joshua Baker-LePain
+>Department of Biomedical Engineering
+>Duke University
+>
+>-
+>To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-I am aware of "raidreconf" being able to resize a raid array, but it's 
-reportedly _very_ slow, is still beta, and the backup-before rule applies. 
-However backing up and/or restoring is also very slow and error-prone 
-because it's to multiple 12GB (DDS3) DAT tapes using "tar" (JFS has no 
-"dump"). I am aware what LVM is but have little experience of it and have 
-been wary of using it together with raid. My reason for using raid is to 
-improve the reliability of my data.
 
-Q1: What is the usual [ideal] strategy for adding space to a raid-5 disk array?
-
-Q2: Has anyone experienced resizing JFS file systems using LVM: is it stable?
-
-Q3: What should I do from here?
-
-Q4: <afterthought> I could leave the spare 40G partition for array 
-hot-spare -- would that be a Good Thing(TM)?
-
-Thanks
-
-Ruth
 
 
