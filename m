@@ -1,44 +1,33 @@
-From: Luke Rosenthal <luke@luko.org>
-Subject: Re: I'm about ready to do SW-Raid5 - pointers needed
-Date: Tue, 28 Oct 2003 16:37:03 +1100 (EST)
+From: Hendrik Visage <hvisage@envisage.co.za>
+Subject: Re: mdadm --assemble --scan hassles....
+Date: Tue, 28 Oct 2003 08:24:45 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0310281610290.11061-100000@gw.luko.org>
-References: <200310280255.51504.maarten@vbvb.nl>
+Message-ID: <20031028062445.GD3236@hvs.envisage.co.za>
+References: <20031008111709.GV1277@hvs.envisage.co.za> <16270.5184.302596.951547@notabene.cse.unsw.edu.au> <20031025212433.GE23767@hvs.envisage.co.za> <16285.38655.754527.236684@notabene.cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200310280255.51504.maarten@vbvb.nl>
-To: maarten van den Berg <maarten@vbvb.nl>
-Cc: linux-raid@vger.kernel.org
+Content-Disposition: inline
+In-Reply-To: <16285.38655.754527.236684@notabene.cse.unsw.edu.au>
+To: Neil Brown <neilb@cse.unsw.edu.au>
+Cc: Hendrik Visage <hvisage@envisage.co.za>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 28 Oct 2003, maarten van den Berg wrote:
-
-> One of the cheapest "backup" mediums right now are harddisks themselves
-> (weird, isn't it?) so it stands to reason some people try to build
-> something that is foolproof (at least against hardware failure) using
-> that, just disks.
-
-Ok, most folks would argue that hard disk failure is a byproduct of them
-being run continuously.  Especially in the case of IDE disks, which are
-usually cheaper than their SCSI counterparts on a cost-per-MB ratio, but
-consequently have a much shorter MTBF.
-
-So here's my question - would it be possible to use a very large IDE disk
-in a system purely for backups, eg one of those new 300GB behemoths - but
-with one caveat - leave it "asleep".  Ie. leave it "spun down", and only
-activate it once a day at backup time, run the backup, verify it, then
-unmount it, and put it to sleep in a cron job.  Feasible?
-
-I know there's the appropriate commands to do it, but are they risky?  If
-a drive's not mounted, but powered off, it should present no problems or
-lock up the OS, correct?
-
-> > PS: did I tell you about the importance of backups? ;)
+On Tue, Oct 28, 2003 at 09:06:55AM +1100, Neil Brown wrote:
+> On Saturday October 25, hvisage@envisage.co.za wrote:
+> > > That would be because mdadm.conf describes /dev/md/1 as:
+> > >     UUID=c2a91233:5ffd5398:eac27773:e12945dd
+> > > but mdadm --examine doesn't show any arrays with that uuid.
+> > > 
+> > > NeilBrown
+> > 
+> > Then how do I fix it??
+> > 
 > 
-> Yea. I think you did.   ;-)
+> Edit /etc/mdadm.conf
 
-Everyone's got a horror story.. :)  and most people learn from it :)
+I've tried without any succes as yet :(
 
-Luke.
+so what would the correct mdadm.conf look like in my case?
+
 
