@@ -1,43 +1,50 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: sbp2 logging out causing raid1 to fail
-Date: Thu, 25 Mar 2004 13:36:24 +1100
+From: "Justin T. Gibbs" <gibbs@scsiguy.com>
+Subject: "Enhanced" MD version 0.8.0 now available
+Date: Thu, 25 Mar 2004 07:22:01 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16482.17832.115638.995092@notabene.cse.unsw.edu.au>
-References: <s061fb8d.089@med-gwia-02a.med.umich.edu>
+Message-ID: <880550000.1080224521@aslan.btc.adaptec.com>
+Reply-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Robert Welsh on Wednesday March 24
-To: Robert Welsh <rcwelsh@med.umich.edu>
-Cc: linux-raid@vger.kernel.org
+Content-Disposition: inline
+To: linux-raid@vger.kernel.org
+Cc: linux-kernel@vger.kernel.og
 List-Id: linux-raid.ids
 
-On Wednesday March 24, rcwelsh@med.umich.edu wrote:
-> Neil,
-> 
-> I am running kernel 2.4.25 which has the latest (1193) release of
-> ieee1394 as far as I can tell by comparing kernel source to ieee1394
-> branch.
-> 
-> Anyway I have built a raid1 array with two 200 gig lacie fw800  drives
-> using a lacie fw pci card (ohci compliant chip). The build went fine as
-> did the resync. But then I started copying alot over and it died. 
-> 
-> >From what I can gather in the log files it looks like sbp2 is logging
-> out of one of the drives when then manifests as a drive failure - which
-> it in a way is. 
-> 
-> I did see that you had made change in 1016 of sbp2 to allow a second to
-> log back in after a bus reset. But what is causing this to actually log
-> out and is there a way to prevent?
+An updated snapshot of the Enahanced MD project is now available here:
 
-I'm afraid I cannot help you.  I have never dealt with firewire.
+	http://people.freebsd.org/~gibbs/linux/SRC/emd-0.8.0-tar.gz
 
-This looks like a firewire problem.  It is returning an error so raid
-is failing the drive. I don't know what is causing the error, whether
-it should be fixed, and if so, how.
+and as diffs relative to the current 2.6 MD implementation:
 
-Maybe you should ask on a fire-wire related list, or on linux-kernel.
+	http://people.freebsd.org/~gibbs/linux/SRC/emd-2.6-20040425-diffs.gz
 
-NeilBrown
+A version of "emdadm" is also avaible to for this driver:
+
+	http://people.freebsd.org/~gibbs/linux/SRC/emdadm-0.00.1.tgz
+
+This snapshot includes support for RAID0, RAID1, and the Adaptec
+ASR and DDF meta-data formats.  Additional RAID personalities and
+support for the Super90 and Super 1 meta-data formats will be added
+in the coming weeks, the end goal being to provide a superset of
+the functionality in the current MD.
+
+This drop adds the ability to create, delete, and monitor DDF and
+Adaptec ASR meta-data based arrays from emdadm in addition to including
+several bug fixes.  
+
+This release is still structured as an MD replacement.  While this
+makes the diffs supplied above more relevant from a review standpoint,
+we believe that it makes more sense at this stage in EMD development
+to provide it as a separate driver.  This change will be reflected
+in our next release.  The hope is for EMD and MD to merge as EMD is
+reviewed and altered to suite the communities needs.
+
+As always, your questions, comments, and suggestions for EMD are
+greatly appreciated.
+
+--
+Justin
+
