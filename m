@@ -1,48 +1,97 @@
-From: "Marcus Williams" <marcus@quintic.co.uk>
-Subject: RAID1 and auto-detect flag
-Date: Thu, 12 Feb 2003 14:38:46 -0000
-Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <b2dm72$6s4$1@main.gmane.org>
-Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+From: "Mike Black" <mblack@csi-inc.com>
+Subject: Re: raid5 2TB+ NO GO ?
+Date: Wed, 12 Feb 2003 10:13:33 -0500
+Sender: ext2-devel-admin@lists.sourceforge.net
+Message-ID: <044101c2d2a9$4fcdf980$f6de11cc@black>
+References: <Pine.LNX.4.53.0302060059210.6169@ddx.a2000.nu> <Pine.LNX.4.53.0302060123150.6169@ddx.a2000.nu> <Pine.LNX.4.53.0302060211030.6169@ddx.a2000.nu> <15937.50001.367258.485512@wombat.chubb.wattle.id.au> <Pine.LNX.4.53.0302061915390.17629@ddx.a2000.nu> <15945.31516.492846.870265@wombat.chubb.wattle.id.au> <Pine.LNX.4.53.0302121129480.13462@ddx.a2000.nu>
+Mime-Version: 1.0
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <ext2-devel-admin@lists.sourceforge.net>
+Errors-To: ext2-devel-admin@lists.sourceforge.net
+List-Help: <mailto:ext2-devel-request@lists.sourceforge.net?subject=help>
+List-Post: <mailto:ext2-devel@lists.sourceforge.net>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/ext2-devel>,
+	<mailto:ext2-devel-request@lists.sourceforge.net?subject=subscribe>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/ext2-devel>,
+	<mailto:ext2-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=ext2-devel>
+To: Stephan van Hienen <raid@a2000.nu>, Peter Chubb <peter@chubb.wattle.id.au>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, bernard@biesterbos.nl, ext2-devel@lists.sourceforge.net
 List-Id: linux-raid.ids
 
-Hi -
-I have a RAID1, 2 disk mirror set that contains a drive that fails
-intermittently (or at least gets disk errors intermittently and so
-gets marked as failed). Obviously I want to swap the failing drive for
-a new spare (we arent running with a spare currently).
-So, I shutdown when the drive failed, replaced the drive and rebooted.
-What this got me was a degraded root partition (md0) and a non-working
-/export area (where the md1 device is mounted).
-md0 (root device) is hda1 and hdc1
-md1 (/export) is hda3 and hdc3
-hda1 and hdc1 are tagged as bootable, and of type raid-autodetect. On
-reboot the root partition gets auto-detected as raid, issues an error
-about "invalid raid superblock magic on hda1" and automagically sorts
-itself out mounting md0 in degraded mode.
-However, md1 does not. The only difference I can think of is that the
-md1 device is made up of two hd partitions that have not been set to
-the auto-detect type (the raidtab entries for md0 and md1 are
-identical bar the devices they use). When I reboot I get:
-Feb 10 18:58:05 bart kernel: md: invalid raid superblock magic on hda3
-Feb 10 18:58:05 bart kernel: md: hda3 has invalid sb, not importing!
-Feb 10 18:58:05 bart kernel: md: could not import hda3!
-Feb 10 18:58:05 bart kernel: md: autostart hda3 failed!
-If I set the type to autodetect, will this device come up in degraded
-mode instead of failing like this?
-What I want is a system where, if a drive fails, someone can shut it
-down, replace the failed drive, reboot in degraded mode (at this point
-everyone else can start working again) and then partition the new
-drive and raidhotadd it back into the set. At the moment I've got a
-system thats got a more long winded process to repair (and requires
-knowledge of the RAID setup).
-Obviously having a spare in the set would be even better, but thats
-not an option at the moment.
-Thanks
-Marcus
--- 
-Marcus Williams - http://www.onq2.com
-Quintic Ltd, 39 Newnham Road, Cambridge, UK
+I did a 12x180G and as I recall was unable to do 13x180G as it overflowed during mke2fs.  This was a year ago though so I don't know
+if that's been improved since then.
+
+I've got 13 of these with one drive marked as a spare:
+Disk /dev/sda: 255 heads, 63 sectors, 22072 cylinders
+Units = cylinders of 16065 * 512 bytes
+
+  Device Boot    Start       End    Blocks   Id  System
+/dev/sda1             1     22072 177293308+  fd  Linux raid autodetect
+
+   Number   Major   Minor   RaidDevice State
+      0       8      177        0      active sync   /dev/sdl1
+      1       8       17        1      active sync   /dev/sdb1
+      2       8       33        2      active sync   /dev/sdc1
+      3       8        1        3      active sync   /dev/sda1
+      4       8       49        4      active sync   /dev/sdd1
+      5       8       65        5      active sync   /dev/sde1
+      6       8       81        6      active sync   /dev/sdf1
+      7       8       97        7      active sync   /dev/sdg1
+      8       8      113        8      active sync   /dev/sdh1
+      9       8      129        9      active sync   /dev/sdi1
+     10       8      145       10      active sync   /dev/sdj1
+     11       8      161       11      active sync   /dev/sdk1
+     12      65       49       12        /dev/sdt1
+
+----- Original Message -----
+From: "Stephan van Hienen" <raid@a2000.nu>
+To: "Peter Chubb" <peter@chubb.wattle.id.au>
+Cc: <linux-kernel@vger.kernel.org>; <linux-raid@vger.kernel.org>; <bernard@biesterbos.nl>; <ext2-devel@lists.sourceforge.net>
+Sent: Wednesday, February 12, 2003 5:39 AM
+Subject: Re: raid5 2TB+ NO GO ?
 
 
+> On Wed, 12 Feb 2003, Peter Chubb wrote:
+>
+> > >>>>> "Stephan" == Stephan van Hienen <raid@a2000.nu> writes:
+> >
+> > Stephan,
+> > Just noticed you're using raid5 --- I don't believe that level
+> > 5 will work, as its data structures and  internal algorithms are
+> > 32-bit only.  I've done no work on it to make it work (I've been
+> > waiting for the rewrite in 2.5), and don't have time to do anything now.
+> >
+> > You could try making sector in the struct stripe_head a sector_t, but
+> > I'm pretty sure you'll run into other problems.
+> >
+> > I only managed to get raid 0 and linear to work when I was testing.
+>
+> ok clear, so no raid5 for 2TB+ then :(
+>
+> looks like i have to remove some hd's then
+>
+> what will be the limit ?
+>
+> 13*180GB in raid5 ?
+> or 12*180GB in raid5 ?
+>
+>     Device Size : 175823296 (167.68 GiB 180.09 GB)
+>
+> 13* will give me 1,97TiB but will there be an internal raid5 problem ?
+> (since it will be 13*180GB to be adressed)
+>
+>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
+-------------------------------------------------------
+This SF.NET email is sponsored by:
+SourceForge Enterprise Edition + IBM + LinuxWorld = Something 2 See!
+http://www.vasoftware.com
