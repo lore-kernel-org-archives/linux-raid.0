@@ -1,67 +1,70 @@
-From: "Michael" <michael@insulin-pumpers.org>
-Subject: Boot+Root+Raid+Lilo howto
-Date: Mon, 27 Oct 2003 16:03:06 -0800
+From: David Anderson <david.anderson@calixo.net>
+Subject: Re: I'm about ready to do SW-Raid5 - pointers needed
+Date: Tue, 28 Oct 2003 01:37:26 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200310280003.h9S031205132@bzs.org>
-References: <200310272311.19232.dusty@strike.wu-wien.ac.at>
-Reply-To: michael@insulin-pumpers.org
+Message-ID: <3F9DBA46.7020806@calixo.net>
+References: <3F9DAD4C.3000002@verizon.net>
+Reply-To: david.anderson@calixo.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: <200310280002.38968.maarten@vbvb.nl>
+In-Reply-To: <3F9DAD4C.3000002@verizon.net>
 To: linux-raid@vger.kernel.org
+Cc: berk walker <berk.walker@verizon.net>
 List-Id: linux-raid.ids
 
-> On Monday 27 October 2003 23:11, Hermann Himmelbauer wrote:
-> > On Monday 27 October 2003 17:00, Paul Clements wrote:
-> > > Don Jessup wrote:
-> 
-> 
-> > BTW, assuming I have md.o not as module but statically in the kernel, which
-> > bootloader would support RAID1? I heard LlLO does this job but does also
-> > grub - which I prefer - support Linux SW-RAID1?
-> >
-> > What about RAID5? Is there any bootloader that supports it?
-> 
-> It has been a while since I read it, but doesn't the
-> Boot+Root+Raid+Lilo howto [google] go into those setups ?  It helped
-> me a lot at the time...
-> 
-> A related question:  There are a lot of old and deprecated Raid
-> howto's floating around the net, even about the antique version 0.4.
->  Is there no mechanism that gets these (very confusing for a
-> newbie!) old versions removed or upgraded ?  And is this
-> Boot+Root+Raid+Lilo howto I mentioned deprecated, or not ? Shouldn't
-> it be integrated into the 'official' Raid howto ? (Or at least,
-> there could be links to each other in the howtos) 
-> 
-> Greetings,
-> Maarten
-> 
+Hi there.
 
-The obsolete Root-Raid-HOWTO, covers all you need to know about 
-booting raid using initrd -- that used to be the only way you could 
-do it.
+First of all, as a satisfied swraid5 user for some time, I would like to 
+point out someting: data loss is not just about the redundancy of a raid 
+array. If you bought your disks from a faulty batch and they all die, 
+you're still hosed. Raid is absolutely no excuse for not backing up data.
 
-I'm the author of  Boot+Root+Raid+Lilo and the answer to your first 
-question is yes... and ... no.
+Now, on to the questions ;)
 
-The howto is up to date with respect to how booting occurs and what 
-is necessary to get disks of various geometries to work when they are 
-not the same or when the motherboard bios does not automatically 
-switch to the next numeric device when the first hard drive will not 
-boot. It does not cover using the newer LILO which does not require 
-specifying the geometries, but then it will not deal with those 
-exceptions either. Everything in Boot+Root+Raid+Lilo works for the 
-new LILO just fine, it just doesn't mention the easier setup which in 
-my opinion only covers a small number of the boot requirements. i.e. 
-Current HOWTO is far more comprehensive and I still recommend 
-multiple lilo.conf files -- one for each boot drive. That way it's 
-always correct, even for the corner conditions.
+> is there an advantage to >more< than 1 spare drive?
 
-And.... no, I've not updated it in some time but there really isn't 
-anything new.
+If several disks die _in a row_. ie one dies, a spare is synced, a 
+second dies after the sync. A fairly rare occurence I reckon (in my 
+experience, multiple failures come in flocks, not in rows). And if it 
+does happen, you'll have a little degraded mode time while you add a 
+clean disk and add it to the array. No big deal _if_ you have an 
+efficient backup routine.
 
-Michael Robinton
-Michael@Insulin-Pumpers.org
+> .. more than 3 drives in mdx?
+
+Depends on how many you have, and how much failure you want your array 
+to tolerate. The more you add disks, the more your array becomes 
+intolerant to failure (more active disks means more potential failure 
+points, but the threshold of 1 failed disk only remains). But you "lose" 
+less space to parity.
+In short, if you can afford it, stick to 3-disk raid5 with a few spares.
+
+> why not cp old boot/root/whatever drive to mdx after 
+> booting on floppy?
+
+I wasn't aware of anything against that... When I got hold of higher 
+capacity disks I created a new larger raid5 array and copied the old to 
+the new (not a raw copy of course, a copy at the file system level).
+But then again, my array was for a special mountpoint (/var/data), so I 
+could mount it readonly and copy it. Maybe the warnings against copying 
+/ were because of the write issue which could leave you with an 
+inconsistent copy?
+
+> is there an advantage to having various mdx's allocated to various 
+> /directories?..ie: /home, var, /etc
+
+I don't see any myself. The only advantage would be less data loss in 
+the event of a failure, but since you backup on a regular basis, a 
+catastrophic failure shouldn't bring you down too long anyway.
+
+A final reminder: Have efficient backup routines!! Raid will help you 
+prevent disasters, but when a disaster does occur (not if, when), you'll 
+need fast recovery with minimal loss.
+
+David Anderson
+
+PS: did I tell you about the importance of backups? ;)
+
+
