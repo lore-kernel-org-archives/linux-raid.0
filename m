@@ -1,16 +1,45 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: Raid 5 questions
-Date: Thu, 03 Jun 2004 16:50:49 +0100
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: Raid 5 questions
+Date: Thu, 3 Jun 2004 12:43:53 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <40BF48D9.6020409@dgreaves.com>
-References: <40BF35D7.9050902@dgreaves.com>
+Message-ID: <200406031643.i53Ghw314661@watkins-home.com>
+References: <40BF48D9.6020409@dgreaves.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <40BF35D7.9050902@dgreaves.com>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <40BF48D9.6020409@dgreaves.com>
+To: 'David Greaves' <david@dgreaves.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+To allow autodetection on startup:
+	Yes, 1 big partition.
+
+Monitor:
+	Need MAILADDR and/or PROGRAM keywords in /etc/mdadm.conf
+	Example:
+		MAILADDR  bugzilla@watkins-home.com
+	And/or
+		PROGRAM /root/bin/handle-mdadm-events
+
+handle-mdadm-events is a script I created.  The default messages did not
+include enough info for me.  And if I recall, without "PROGRAM" the event
+types are limited to just a few.
+
+For the most part the script looks like this:
+(date;cat /proc/mdstat;mdadm --detail $2)|mail -s "md event: $1 $2 $3"
+bugzilla@watkins-home.com
+
+Guy
+
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of David Greaves
+Sent: Thursday, June 03, 2004 11:51 AM
+To: linux-raid@vger.kernel.org
+Subject: Re: Raid 5 questions
 
 Answering my own post:
 <snip>
@@ -96,4 +125,10 @@ by a monitor restart doesn't give a DegradedArray event.
 
 
 David
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 
