@@ -1,81 +1,125 @@
-From: Ralph =?iso-8859-1?q?Pa=DFgang?= <ralph@debianbase.de>
-Subject: Re: Which raid card to buy for Sarge
-Date: Wed, 31 Mar 2004 20:03:41 +0200
+From: Paul Clements <Paul.Clements@SteelEye.com>
+Subject: Re: [ANNOUNCE][PATCH 2.6] md: persistent (file-backed) bitmap and async
+ writes
+Date: Wed, 31 Mar 2004 13:38:28 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200403312003.41762.ralph@debianbase.de>
-References: <008f01c41737$8b57be40$6405a8c0@a30> <002501c4173f$3cfda1d0$6405a8c0@a30> <yw1xekr9uf6a.fsf@kth.se>
+Message-ID: <406B1024.7BF88C@SteelEye.com>
+References: <40198E85.29EBC8E0@SteelEye.com>
+			<16422.62911.755570.855200@notabene.cse.unsw.edu.au>
+			<4027E342.D02202F1@SteelEye.com>
+			<16424.8182.876520.280031@notabene.cse.unsw.edu.au>
+			<402D3A86.97CF894F@SteelEye.com> <16456.2775.641721.204171@notabene.cse.unsw.edu.au> <4048F9AA.1BBD67F@SteelEye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <yw1xekr9uf6a.fsf@kth.se>
-Content-Disposition: inline
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@cse.unsw.edu.au>, linux-raid@vger.kernel.org, ptb@it.uc3m.es, mingo@redhat.com, "james.bottomley" <james.bottomley@SteelEye.com>
 List-Id: linux-raid.ids
 
-Am Mittwoch, 31. M=E4rz 2004 18:58 schrieben Sie:
-> <me@heyjay.com> writes:
-> > Seems like 3ware is the card of choice.  I'll probably pick one up =
-at
-> > cdw, unless anyone knows where I can get them on the cheap.
-> >
-> > Speaking of cheap, anyone ever have any luck with the Highpoint
-> > RocketRaid cards on Sarge?
->
-> I don't use debian, but my rocketraid is doing well with recent kerne=
-ls.
->
-> > They're roughly 80% the price of 3ware (maybe you get what you pay
-> > for)
->
-> 80%?  You must mean 20%.  The Highpoint cards are software raid cards=
-,
-> meaning that they are just regular ATA cards with a "RAID" label
-> slapped on the box.
+Paul Clements wrote:
+> Neil Brown wrote:
+> > So, if you can produce a patch which *only* adds a persistent bitmap
+> > in a file, uses it to record which blocks are not in-sync, and
+> > optimises resync using the bitmap,  and which uses address_space
+> > operations for fileio, then I will see if it is acceptable, and we can
+> > then start adding bits like hot-repair and async-write etc on top of
+> > that.
+> 
+> I'll work on that and get it out as soon as I can...
 
-If would not use the "raid" feature of the Highpoint cards, because it =
-is only=20
-software raid and not so performant as a hardware raid. If you don't ne=
-ed a=20
-high-end system, then you can make a software raid with linux standard =
-tools=20
-like: mdadm. If you need performance, then you should think about a scs=
-i raid=20
-setup and a good adapter, maybe adaptec or 3ware or something like that=
-=2E
+OK, so here it is. The changes from the previous patch are, basically:
 
-If software raid, then I would prefer a linux software raid (with mdadm=
- for=20
-example) and would not use not good supported third-party software raid=
-=20
-"drivers". For mdadm you will find more support and you can migrate the=
- disks=20
-in another linux box and it will read the raid... With the Highpoint ra=
-id=20
-function you are forced to continue using the highpoint card.
+1) The patch is a little less intrusive now. The diffs against md/raid1
+are smaller as more of the bitmap handling code is now isolated in the
+bitmap.c and bitmap.h files. Also, the diff against mdadm, while now a
+little larger, is less intrusive as I've created a bitmap.c file in the
+mdadm sources, as well.
 
-And just for your information, you don't have to look after a card that=
- is=20
-specially supported by Debian. Debian uses a normal linux kernel (+ som=
-e=20
-patches, but nothing revolutionary) so it can handle each raid adapter =
-that=20
-is supported by the linux kernel... It's the same for SuSE and RedHat,=20
-because they support each adapter supported by the standard linux kerne=
-l plus=20
-maybe some patched-in drivers). But even when the adapter is not suppor=
-ted in=20
-the vanilla kernel you can patch a kernel-source by yourself... But it =
-is=20
-always a good decision to only use hardware that is supported in a stoc=
-k=20
-kernel.
+2) The bitmap file I/O routines have been totally rewritten and are now
+much simpler. We now use read_cache_page, prepare_write/commit_write (to
+extend the file at init time, if necessary), and bmap/submit_bh (to
+"sync" the file pages). The use of bmap and submit_bh is due to a
+limitation in jbd that allows only one ongoing transaction per process
+(see comment in bitmap.c regarding current->journal_info).
 
-So better look after general linux support. I think there is not one pi=
-ece of=20
-hardware that is declared as: "ready for debian sarge" :))
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+3) The bitmap file now has a superblock containing various configuration
+information. The bitmap superblock is checked against the md superblock
+when the array is assembled. 
+
+Options have been added to mdadm to create and examine bitmap files, and
+also to specify the bitmap file to be used with an array:
+
+Create a bitmap file:
+--------------------
+
+# mdadm --create-bitmap=65536,3,580480 /tmp/bitmap --force
+
+(this creates a bitmap file with a chunksize of 64KB, a 3 second bitmap
+daemon sleep period, and a bitmap (initially dirtied) which is
+appropriate for use with an array of 580480 blocks)
+
+Examine a bitmap file:
+---------------------
+
+# mdadm --examine-bitmap /tmp/bitmap (or just: mdadm -X /tmp/bitmap)
+        Filename : /tmp/bitmap
+           Magic : 6d746962
+         Version : 2
+            UUID : 997cb579.99d31d20.3014cae8.4bb4bf9d
+          Events : 5
+           State : OK
+       Chunksize : 4 KB
+          Daemon : 5s flush period
+      Array Size : 580480 (566.88 MiB 594.41 MB)
+          Bitmap : 145120 bits (chunks), 145120 dirty (100.0%)
+
+(in addition, mdadm -D <array> gives the bitmap information if a bitmap
+is attached to the array)
+
+
+Create or Assemble array using a bitmap:
+---------------------------------------
+
+# mdadm -C /dev/md2 -n 2 -l 1 --bitmap=/tmp/bitmap /dev/sda5 missing
+
+# mdadm -A /dev/md2 --bitmap=/tmp/bitmap /dev/sda5 /dev/sdb5
+
+
+
+Patch Location:
+--------------
+
+Patch vs. linux 2.6.5-rc2
+=========================
+http://parisc-linux.org/~jejb/md_bitmap/md_bitmap_2_31_2_6_5_RC2.diff
+
+Patch vs. mdadm 1.5.0
+=====================
+http://parisc-linux.org/~jejb/md_bitmap/mdadm_1_5_0-bitmap.diff
+
+(no async write patch has been generated, these patches contain only the
+bitmap code)
+
+
+Notes:
+-----
+
+1) an is_create flag was added to do_md_run to tell bitmap_create
+whether we are creating or just assembling the array -- this is
+necessary since 0.90 superblocks do not have a UUID until one is
+generated randomly at array creation time, therefore, we must set the
+bitmap UUID equal to this newly generated array UUID when the array is
+created
+
+2) bitmap.h was not included in the mdadm patch, but a link (or copy)
+must be made to the kernel's include/linux/raid/bitmap.h file in order
+to build mdadm now
+
+3) code was added to mdadm to allow creation of arrays with
+non-persistent superblocks (also, device size calculation with
+non-persistent superblocks was fixed)
+
+4) a fix was made to the hot_remove code to allow a faulty device to be
+removed
+
+5) various typo and minor bug fixes were also included in the patches
