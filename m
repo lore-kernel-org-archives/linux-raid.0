@@ -1,51 +1,46 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: Good news / bad news - The joys of RAID
-Date: Tue, 23 Nov 2004 15:03:44 -0500
-Message-ID: <200411232003.iANK3nN06500@www.watkins-home.com>
-References: <co01vl$m4$1@terminus.zytor.com>
+From: Carl-Daniel Hailfinger <c-d.hailfinger.kernel.2004@gmx.net>
+Subject: mdadm problems with partitioned md devices
+Date: Tue, 23 Nov 2004 21:06:30 +0100
+Message-ID: <41A39846.9070002@gmx.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <co01vl$m4$1@terminus.zytor.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "'H. Peter Anvin'" <hpa@zytor.com>, linux-raid@vger.kernel.org
+To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-When will you learn?  :)
+Hi,
 
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of H. Peter Anvin
-Sent: Tuesday, November 23, 2004 2:11 PM
-To: linux-raid@vger.kernel.org
-Subject: Re: Good news / bad news - The joys of RAID
+[please CC: me]
+while trying to use md to overcome limitations of dm, I
+stumbled upon the following problem: It is impossible to
+have more than 4 partitioned md devices since mdadm will
+create the 5th device with major:minor 255:0, which is
+bogus.
 
-Followup to:
-<Pine.LNX.4.44.0411201238320.19120-100000@coffee.psychology.mcmaster.ca>
-By author:    Mark Hahn <hahn@physics.mcmaster.ca>
-In newsgroup: linux.dev.raid
->
-> > Never buy Maxtor drives again!
-> 
-> you imply that Maxtor drives are somehow inherently flawed.
-> can you explain why you think millions of people/companies
-> are naive idiots for continuing to buy Maxtor disks?
-> 
-> this sort of thing is just not plausible: Maxtor competes 
-> with the other top-tier disk vendors with similar products 
-> and prices and reliability.
-> 
+Way to reproduce the problem:
 
-In my experience, that is bullshit.  Maxtor competes on price using
-inferior products.  I bought two Maxtor drives, both of them failed
-within 13 months.  That was my first attempt at trying Maxtor again
-after taking them off my sh*tlist from last time.
+linux:~ # mdadm --stop --scan
+linux:~ # rm /dev/md_d*
+linux:~ # sync
+linux:~ # mdadm -B /dev/md_d0 -f -l linear -n 1 -ap63 /dev/hdb5
+mdadm: array /dev/md_d0 built and started.
+linux:~ # mdadm -B /dev/md_d1 -f -l linear -n 1 -ap63 /dev/hdb6
+mdadm: array /dev/md_d1 built and started.
+linux:~ # mdadm -B /dev/md_d2 -f -l linear -n 1 -ap63 /dev/hdb7
+mdadm: array /dev/md_d2 built and started.
+linux:~ # mdadm -B /dev/md_d3 -f -l linear -n 1 -ap63 /dev/hdb8
+mdadm: array /dev/md_d3 built and started.
+linux:~ # mdadm -B /dev/md_d4 -f -l linear -n 1 -ap63 /dev/hdb9
+mdadm: error opening /dev/md_d4: No such device or address
+linux:~ # mdadm --version
+mdadm - v1.8.1 - 05 November 2004
+linux:~ # uname -a
+Linux linux 2.6.10-rc2suseconfig #5 Tue Nov 23 14:12:13 CET 2004 i686 i686 i386 GNU/Linux
+linux:~ #
 
-	-hpa
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+Regards,
+Carl-Daniel
+-- 
+http://www.hailfinger.org/
