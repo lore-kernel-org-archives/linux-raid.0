@@ -1,42 +1,38 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: raid 0 on different size devices?
-Date: Thu, 20 Nov 2003 10:51:45 +1100
+From: "Luke Rosenthal" <luke@luko.org>
+Subject: Recovery question - not strictly raid related
+Date: Thu, 20 Nov 2003 20:17:22 +1100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16316.529.860479.5567@notabene.cse.unsw.edu.au>
-References: <Pine.LNX.4.44.0311191154050.5855-100000@eglifamily.dnsalias.net>
-	<1069268427.6956.21.camel@opus>
-	<200311192018.14555.dusty@strike.wu-wien.ac.at>
-	<1069269741.6952.33.camel@opus>
+Message-ID: <008901c3af47$1ba93a40$5002a8c0@desktop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from seth vidal on  November 19
-To: seth vidal <skvidal@phy.duke.edu>
-Cc: Hermann Himmelbauer <dusty@strike.wu-wien.ac.at>, Dan Egli <dan@eglifamily.dnsalias.net>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On  November 19, skvidal@phy.duke.edu wrote:
-> 
-> > AFAIK they have to be of equal size but as you can create a 27GB partition on 
-> > the 40GB drive, you could at least get 54GB out of this configuration. 
-> 
-> No. I have a 120GB and a 60GB disk in a linear array working just fine.
-> 
-> it's not technically raid0, but it lets the person do what they're
-> wanting to do.
-> 
+This isn't strictly raid related, but after lurking I've noticed the folks
+here know a LOT about partition stuff in general, so I'm hoping someone can
+shed some light on this:
 
-The 'md' driver will let you set up an 'raid0' array using these two
-drives.  This will result in a 180GB array.
+Say I had a disk with a handful of ext3 partitions on it, ala RedHat 7.3 -
+eg. /, /boot, /usr, /var and so forth.  I accidentally scrubbed all those
+partitions, created one large ext3 partition that filled the disk, began
+copying, then realised my mistake and needed information that would have
+been about three quarters the way thru the disk (on the last partition,
+thankfully).  At this stage I had not copied anywhere near enough data, if
+it were written sequentially, to go that far through the disk.
 
-The first 120 Gb will be striped over the two drives.  The remaining
-60Gb will simply be the end of the larger drive.
+Is it too late to recover files from that last partition?  Does ext3 copy
+sequentially?  I've noticed that backup superblocks will be written through
+a partition as well.  Will that complicate things if they were written into
+the partition I'm trying to recover?
 
-You can, ofcourse, also set up a linear array.
+So far the best chance is a program called "parted".  But I've come into
+some usability problems with that - it won't seem to reconstruct the
+partition table to the point where anything's mountable.  I also fear if it
+were mountable, the process of recovering it to the point of being usable
+might destroy it.  Anyone got any experience doing this stuff?
 
-man md
+Luke.
 
-(with mdadm installed).
-
-NeilBrown
