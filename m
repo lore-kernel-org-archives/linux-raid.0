@@ -1,71 +1,89 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: how to which to bigger disk (md can do it?)
-Date: Tue, 18 Nov 2003 09:29:30 +1100
+From: "James R Bamford" <jim@jimtreats.com>
+Subject: RE: Software Raid 1 data corruptions..
+Date: Mon, 17 Nov 2003 23:15:34 -0000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16313.19402.432049.249742@notabene.cse.unsw.edu.au>
-References: <3FB75992.3020608@bnap.hu>
-	<20031117092922.GD30745@percy.comedia.it>
-	<16312.39435.330127.598268@notabene.cse.unsw.edu.au>
-	<3FB8D5A6.4040909@bnap.hu>
+Message-ID: <PPEOJEIEFLAONFNHJPOOGEGMGOAA.jim@jimtreats.com>
+References: <16312.15921.440148.830272@notabene.cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Farkas Levente on Monday November 17
-To: Farkas Levente <lfarkas@bnap.hu>
-Cc: Luca Berra <bluca@comedia.it>, linux-raid@vger.kernel.org
+In-Reply-To: <16312.15921.440148.830272@notabene.cse.unsw.edu.au>
+To: Neil Brown <neilb@cse.unsw.edu.au>
+Cc: david.anderson@calixo.net, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday November 17, lfarkas@bnap.hu wrote:
-> this's one of our production server, so I'd like to be sure. so:
-> - switch the disk one by one (do these steps 8 times):
->    - put out one 120 hd (mdadm /dev/md0 -f /dev/sda1 -r /dev/sda1)
+> -----Original Message-----
+> From: linux-raid-owner@vger.kernel.org
+> [mailto:linux-raid-owner@vger.kernel.org]On Behalf Of Neil Brown
+> Sent: 17 November 2003 03:19
+> To: James R Bamford
+> Cc: david.anderson@calixo.net; linux-raid@vger.kernel.org
+> Subject: RE: Software Raid 1 data corruptions..
+>
+>
+> On Saturday November 15, jim@jimtreats.com wrote:
+>
+> > raiddev /dev/md0
+> >         raid-level      1
+> >         nr-raid-disks   2
+> >         nr-spare-disks  0
+> >         chunk-size      4
+> >         persistent-superblock   1
+> >         device          /dev/hde1
+> >         raid-disk       0
+> >         device          /dev/hdh1
+> >         raid-disk       1
+>
+> Would I be right in guessing that hde1 is a master, but hdh1 is a
+> slave (though on different busses)?  That's kind of an odd
+> configuration.
+>
+> You could try turning of DMA on the drives (hdparm ...) and see if you
+> still get corruption.  If you don't, the finger point very much at the
+> IDE controller...
 
-I would do this as two separate steps
-   mdadm /dev/md0 -f /dev/sda1
-   mdadm /dev/md0 -r /dev/sda1
+Ok i managed to get corruptions (always only on the 2nd disk) according to
+md5sum on the same file, when they were mounted seperately and i performed
+the test on both drives simultaneously.. that at least made sense..
 
-as there are some possibly race problems when removing a device the
-instant that it failes.
+I will try the hdparm if it happens again but i just nuked the array,
+repartitioned to 15gig, rebuilt the array (sorry i followed the howto again
+as i tried dmadm to rebuild but it asked for a personality.. where do i
+specify this i couldn't see it in the conf file... anyways this just
+completed
 
->    - put the new 200 GB one and create a 200 GB partition (Linux raid
->      autodetect)
->    - add to md0 (mdadm -a /dev/hda1) this step do not change the device
->      order???
+Performed the test and its fine.. the md5sum results are constant on the
+file... hopefully this has fixed it.. its unlikely this was a localised
+problem on the disk (as in using a higher point on the disk that currently
+isn't available) but i will rebuild the full array tomorrow and retest
+again..
 
-No, it shouldnt' but it shouldn't matter.
+it stood up with md5sum occuring on the raid array as well as on my / drive
+on the MB's standard ide controller... good signs indeed.. perhaps i wont
+need to buy that hardware raid card just yet :)
 
-> - resize2fs
-> 
-> when should I use --force??
+I will look up on how to use mdadm to create the array but if you have any
+advice on this then that'd be good..
 
-When you have the array full of 200GB drives, use
-  mdadm -D /dev/md0
-to find out what it looks like.  This will include algorithm, chunk
-size, etc.  Keep a copy of the output.
-Then 
-   mdadm -S /dev/md0
+Finally i've been hearing these conversations on how to rebuild the array as
+well.. i guess this is the final test... i will simulate it with these mini
+partitions as it'll be quicker... i am right that the sync time will take as
+long when adding new devices as it did when adding it in the first place.. 3
+hours or more for these 160gig drives..
 
-It probably would be to use the "missing" directive as Luca
-suggested.  This will create a degraded array and so will not
-automatically regenerate any data.  
+Thanks.. hopefully i'm getting a break and this will all work from now on :)
 
-Something like:
-mdadm -C /dev/md0 --level 5 -n 8 --chunk=64 /dev/sda1 /dev/sdb1 /dev/sdc1
-    .... /dev/sdf1 /dev/sdg1 missing
+Cheers
 
-If you do this, it will only over-write the raid superblocks and will
-not touch the data.
+Jim
 
-You can then
-   fsck -n /dev/md0
-just to make sure it looks right (you don't have to let this run to
-completion. Just let it run for a new minutes to make sure nothing
-obvious is wrong) Then mount the filesystem and have a look around.
-If everything is OK, unmount and try resize2fs.
 
-When you are happy the the array looks good, add the last drive back
-in with
-   mdadm /dev/md0 -a /dev/sdh1
+>
+> NeilBrown
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-NeilBrown
