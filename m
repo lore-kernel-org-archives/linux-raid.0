@@ -1,62 +1,64 @@
-From: Christian Diehl <christian.diehl@kmstudiosystems.com>
-Subject: Re: 3ware bad write speed.
-Date: 02 Apr 2003 09:20:10 +0200
+From: Illtud Daniel <illtud.daniel@llgc.org.uk>
+Subject: Re: about the speed
+Date: Wed, 02 Apr 2003 10:58:29 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1049268010.670.2245.camel@hippokrates>
-References: <004f01c2f0b3$f72478d0$df01010a@moon>
+Message-ID: <3E8AB445.A76ED9D6@llgc.org.uk>
+References: <3E87FC9D.5010605@bnap.hu>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <004f01c2f0b3$f72478d0$df01010a@moon>
-To: linux-raid@vger.kernel.org
+To: raid-list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi * 
+=46arkas Levente wrote:
 
-I am using several hardware raid systems based on 3Ware, Adaptec and 
-AC&NC hardware. 
+> I'm just read
+> http://www.hpl.hp.com/techreports/2002/HPL-2002-352.pdf
+> may be it's worth to read. an intersting thing about performance (XP,
+> their user-space raid and than comes kernel raid).
 
-The Mainboard of the test machine is a Supermicro P4DMS-6GM with two
-Xeon 2.4GHz Processors and 1 Gig of RAM. 
+Any comments from md developers? This is from the abstract:
 
-IDE (WD 120 Gig) disks are used in the AC&NC Jetstor III (14 disks) and
-in the 3Ware (7 disks). The Adaptec Raids use SCSI (Seagate) Disks. 
+ The paper contains preliminary results from an investigation comparing
+ Linux and WindowsXP disk I/O using kernel-based software RAID on
+ identical hardware. WindowsXP performance is shown to be substantially
+ superior to Linux performance, for reasons not currently understood.
 
-All these systems show a remarkably bad performance (max. 80 MB/s write
-and max. 70 MB/s read, exact figures (bonnie++,iostat) available). 
+And the meat of the report:
 
-I am using kernel 2.4.20 without any patches (Highmem on / i2o off) 
-and an ext3 filesystem. 
-I have played around with different stride settings and block sizes as
-well as chunk sizes on the raid and experienced minor differences within
-the above limits. 
+ 5.5. Direct comparison
 
-By setting 
+ Of crucial interest is the direct comparison between WindowsXP,
+ the kernel-based Linux software RAID implementation, and the
+ userlevel software RAID implementation.
 
-echo 256 > /proc/sys/vm/max-readahead 
-echo 128 > /proc/sys/vm/min-readahead 
+ From Figure 8 it can be seen that csraid generally outperforms
+ the kernel-based RAID driver, and its performance is far more
+ stable, particularly for large requests. Also, the WindowsXP
+ RAID driver is astonishingly good, even compared to JBOD, with
+ JBOD=92s performing better for request sizes smaller than 4MB
+ and WindowsXP performing better at the larger sizes.
 
-I could convince the 3ware to read data with up to 114 MB/s. 
-
-So basically I am experiencing the same bad speeds (especially write
-speeds) as Donghui (and others). 
-
-It seems to me like there might be a common reason behind the bad
-performance. (the VM Layer settings?) 
-
-While writing this email I just finished a bonnie++ run on a new
-software raid using 8 SCSI Disks: 
-
-softr.8disk.64chunk,2000M:64k,13630,99,41206,41,27280,27,15278,97,156480,62,329.8,12,16,1322,81,+++++,+++,29177,99,1510,99,+++++,+++,3981,98 
-
-That's an amazing difference in reading speed to the hardware raids
-(soft:156480;hard:70155). I will most probably not be able to convert
-all my Raids to Software Raids, so I would like to reach a similar
-performance with the Hardware Raid. 
+ csraid=92s performance is generally less than WindowsXP, but
+ overall the loss is not catastrophic, and is likely
+ sufficient for the most purposes.
 
 
-Any ideas,comments,...? 
+=46igure 8 shows that XP's RAID can be 60+% faster than md at
+writing, and up to 100% faster at reading (at request size
+7MB, which is rather a blip). Any inital thoughts on this report?
+Has the performance changed substantially since? The distro was
+Mandrake 8.2, the kernel 2.4.18-6mdk. Any comments on the
+methodology or conclusions?
 
-
-Christian
+--=20
+Illtud Daniel                                 illtud.daniel@llgc.org.uk
+Uwch Ddadansoddwr Systemau                       Senior Systems Analyst
+Llyfrgell Genedlaethol Cymru                  National Library of Wales
+Yn siarad drosof fy hun, nid LlGC   -  Speaking personally, not for NLW
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
