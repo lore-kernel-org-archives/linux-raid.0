@@ -1,80 +1,57 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: raid5 performance after upgrade to 2.4.28
-Date: Wed, 12 Jan 2005 02:44:59 -0500
-Message-ID: <200501120743.j0C7h2929495@www.watkins-home.com>
-References: <200501120615.j0C6FG929329@www.watkins-home.com>
+From: Gordon Henderson <gordon@drogon.net>
+Subject: RAID-6 ...
+Date: Wed, 12 Jan 2005 11:41:13 +0000 (GMT)
+Message-ID: <Pine.LNX.4.56.0501121020490.21510@lion.drogon.net>
+References: <200501101713.j0AHDx922062@www.watkins-home.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200501120615.j0C6FG929329@www.watkins-home.com>
+In-Reply-To: <200501101713.j0AHDx922062@www.watkins-home.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Now the bad news...
 
-I have 2 CPUs  P3-500Mhz, 512Meg ram.  So I ran 2 bonnies at the same time.
+Until now I haven't really paid too much attention to the RAID-6 stuff,
+but I have an application which needs to be as resilient to disk failures
+as possible.
 
-Kernel 2.4.20-8 with 2 Bonnies at the same time:
-Version  1.03 ------Sequential Output------ --Sequential Input- --Random-
-              -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- --Seeks--
-Machine  Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP  /sec %CP
-watkins-ho 1G  3091  85 18593  44  9733  24  3443  97 59895  60 249.6   6
-watkins-ho 1G  2980  87 21176  54 10167  23  3478  99 44525  44 384.2   9
-               ----     -----     -----      ----    ------     -----
-Total          6071     39769     19900      6921    104420     633.8
+So other than what's at:
 
-Kernel 2.4.28 with 2 Bonnies at the same time:
-watkins-ho 1G  4456  92 17922  52  6489  17  4961  96 26571  32 320.4  12
-watkins-ho 1G  4343  89 17987  52  6197  17  4946  96 25646  31 363.7   7
-               ----     -----     -----      ----    ------     -----
-Total          8799     35909     12686      9907     52217     684.1
+  ftp://ftp.kernel.org/pub/linux/kernel/people/hpa/
 
-Very odd, the sequential read speed is almost exactly 1/2 now.
+and the archives of this list (which I'm re-reading now), can anyone give
+me a quick heads-up about it?
 
-Oh well, I still can't tell without a tool to measure the speed.
-But I still don't like it!
+Specifically I'm still buried in the dark days of 2.4.27/28 - are there
+recent patches against 2.4?
 
-My network is only 100BaseT, so it is still well beyond that!
+If RAID-6 isn't viable for me right now, what I'm planning is as follows:
 
-Guy
+Put 8 x 250GB SATA drives in the system, and arrange them in 4 pairs of
+RAID-1 units.
 
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Guy
-Sent: Wednesday, January 12, 2005 1:17 AM
-To: linux-raid@vger.kernel.org
-Subject: raid5 performance after upgrade to 2.4.28
+Assemble the 4 RAID-1 units into a RAID-5.
 
-About 1 month ago I upgraded from Kernel 2.4.20-8 to 2.4.28.
-Today I noticed my sequential read speed is up by about 12%.
+Big waste of disk space, but thats not really important for this
+application, and disk is cheap, (relatively) So I'll end up with just over
+700GB of usable storage, with the potential of surviving a minimum of any
+3 disks disks failing, and possibly 4 or 5, depending on just where they
+fail (although disks would be replaced way before it got to that stage!)
 
-I don't recall making any other changes that would affect speed.
-So, I guess the Kernel upgrade made the difference.
+Certainly any 2 can fail, and if it were 2 in the same RAID-1 unit, (which
+would cause the RAID-5 to become degraded) and I were desperate, I could
+move a disk and deliberately fail another RAID-1 to recover the RAID-5 ...
 
-An old bonnie output:
-Version  1.03 ------Sequential Output------ --Sequential Input- --Random-
-              -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- --Seeks--
-Machine  Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP  /sec %CP
-watkins-ho 1G  3293  97 34587  89 22306  53  3549  99 67492  63 500.1   9
+In the absence of RAID-6, would anyone do it differently?
 
-Today:
-watkins-ho 1G  4944  99 31719  65 18538  43  5184  98 75440  71 602.5   8
-               ^^^^                          ^^^^     ^^^^^     ^^^^^
+Note: I'm relatively new to mdadm, but can see it's the way of the future,
+(especially after I had to use it in-anger recently to recover from a
+2-disk failure in an old 8-disk RAID-5 array), and I'm looking at the
+spare-groups part of it all and wondering if that might be an alternative,
+but I'd like to avoid the possibility of the array failing
+catastrophically during a re-build if at all possible.
 
-Some things improved, others decreased.
+Cheers,
 
-Of course, no change I can notice on my own.
-I needed to measure performance to notice.
-
-I guess I should try Kernel 2.6 some day.
-
-Guy
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+Gordon
