@@ -1,8 +1,8 @@
 From: NeilBrown <neilb@cse.unsw.edu.au>
-Subject: [PATCH] md - 4 of 8 - Make sure the size of a raid5/6 array is a multiple of the chunk size.
+Subject: [PATCH] md - 5 of 8 - Handle hot-add for arrays with non-persistent superblocks
 Date: Fri, 28 May 2004 16:45:25 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <E1BTb7N-0002To-DB@notabene.cse.unsw.edu.au>
+Message-ID: <E1BTb7N-0002Ts-E2@notabene.cse.unsw.edu.au>
 References: <20040528163700.9426.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: Andrew Morton <akpm@osdl.org>
@@ -10,41 +10,31 @@ Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-Normally the size is chosen as a multiple of the chunk size,
-but if the size is explicitly chosen, it might not be.
-So we force it.
 
+If the superblock isn't persistent, we shouldn't allow
+room for it.
+
+From: Paul Clements <Paul.Clements@SteelEye.com>
 Signed-off-by: Neil Brown <neilb@cse.unsw.edu.au>
 
  ----------- Diffstat output ------------
- ./drivers/md/raid5.c     |    3 +++
- ./drivers/md/raid6main.c |    3 +++
- 2 files changed, 6 insertions(+)
+ ./drivers/md/md.c |    7 ++++++-
+ 1 files changed, 6 insertions(+), 1 deletion(-)
 
-diff ./drivers/md/raid5.c~current~ ./drivers/md/raid5.c
---- ./drivers/md/raid5.c~current~	2004-05-28 15:48:33.000000000 +1000
-+++ ./drivers/md/raid5.c	2004-05-28 15:48:55.000000000 +1000
-@@ -1611,6 +1611,9 @@ static int run (mddev_t *mddev)
- 	conf->algorithm = mddev->layout;
- 	conf->max_nr_stripes = NR_STRIPES;
+diff ./drivers/md/md.c~current~ ./drivers/md/md.c
+--- ./drivers/md/md.c~current~	2004-05-28 15:48:47.000000000 +1000
++++ ./drivers/md/md.c	2004-05-28 15:49:25.000000000 +1000
+@@ -2285,7 +2285,12 @@ static int hot_add_disk(mddev_t * mddev,
+ 		return -EINVAL;
+ 	}
  
-+	/* device size must be a multiple of chunk size */
-+	mddev->size &= ~(mddev->chunk_size/1024 -1);
+-	rdev->sb_offset = calc_dev_sboffset(rdev->bdev);
++	if (mddev->persistent)
++		rdev->sb_offset = calc_dev_sboffset(rdev->bdev);
++	else
++		rdev->sb_offset =
++			rdev->bdev->bd_inode->i_size >> BLOCK_SIZE_BITS;
 +
- 	if (!conf->chunk_size || conf->chunk_size % 4) {
- 		printk(KERN_ERR "raid5: invalid chunk size %d for %s\n",
- 			conf->chunk_size, mdname(mddev));
-
-diff ./drivers/md/raid6main.c~current~ ./drivers/md/raid6main.c
---- ./drivers/md/raid6main.c~current~	2004-05-28 15:48:33.000000000 +1000
-+++ ./drivers/md/raid6main.c	2004-05-28 15:48:55.000000000 +1000
-@@ -1775,6 +1775,9 @@ static int run (mddev_t *mddev)
- 	conf->algorithm = mddev->layout;
- 	conf->max_nr_stripes = NR_STRIPES;
+ 	size = calc_dev_size(rdev, mddev->chunk_size);
+ 	rdev->size = size;
  
-+	/* device size must be a multiple of chunk size */
-+	mddev->size &= ~(mddev->chunk_size/1024 -1);
-+
- 	if (conf->raid_disks < 4) {
- 		printk(KERN_ERR "raid6: not enough configured devices for %s (%d, minimum 4)\n",
- 		       mdname(mddev), conf->raid_disks);
