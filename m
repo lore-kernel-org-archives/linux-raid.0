@@ -1,46 +1,58 @@
-From: Maurice Hilarius <maurice@harddata.com>
+From: Alvin Oga <aoga@Maggie.Linux-Consulting.com>
 Subject: Re: large devices (3ware)
-Date: Wed, 21 Aug 2002 13:34:53 -0600
+Date: Wed, 21 Aug 2002 12:53:56 -0700 (PDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <5.1.0.14.2.20020821133327.03b47680@mail.harddata.com>
-References: <200208211522.g7LFMrZ59772@cynaptic.com>
+Message-ID: <Pine.LNX.3.96.1020821124910.22717A-100000@Maggie.Linux-Consulting.com>
+References: <Pine.LNX.4.33.0208211514040.31769-100000@router.windsormachine.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; format=flowed
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44.0208211506030.20657-100000@redhat1.mmaero.co
- m>
-To: jlewis@lewis.org
-Cc: linux-raid@vger.kernel.org
+In-Reply-To: <Pine.LNX.4.33.0208211514040.31769-100000@router.windsormachine.com>
+To: Mike Dresser <mdresser_l@windsormachine.com>
+Cc: jlewis@lewis.org, effrem.norwood@exstor.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-With regards to your message at 01:07 PM 8/21/02, jlewis@lewis.org. Where 
-you stated:
-
-> > Yes, it will work just fine. We have several of the 3ware 7500-12's 
-> here with
-> > exactly the setup you're looking at, save for we use Debian. 3ware makes a
-> > driver for Redhat and the kernel if recompiled with the option has one 
-> built
-> > in. It's a solid setup.
->
->What sorts of cases are you using that allow for mounting 12 drives close
->enough to the controller for all the cables to reach?
 
 
-We have 3U cases with 8 or 12 hot-swap IDE trays, 4U cases with 16 IDE trays.
-Also towers with support for up to 16 IDE trays.
-3Ware can support a 36" IDE cable using the right cables.
-In our 3U the cables are only 18" long, and in the 4U they are 24" long.
+On Wed, 21 Aug 2002, Mike Dresser wrote:
 
+> On Wed, 21 Aug 2002 jlewis@lewis.org wrote:
+> 
 
+...
 
-With our best regards,
+> > What sorts of cases are you using that allow for mounting 12 drives close
+> > enough to the controller for all the cables to reach?
+> 
+> I was looking at a rack mount case today, that would let me put 23 drives
+> in a 7" high case.  All those cables should reach with standard 18"
+> cables.
+> 
+> About 450 bucks for the case, and around 900 for the adapters.
+> 
 
-Maurice W. Hilarius       Telephone: 01-780-456-9771
-Hard Data Ltd.               FAX:       01-780-456-9772
-11060 - 166 Avenue        mailto:maurice@harddata.com
-Edmonton, AB, Canada      http://www.harddata.com/
-    T5X 1Y3
+3ware has modified hardware that allows it to drive longer ide cables
+( that exceed the 18" cable length )
 
-2.3TB RAID5 NAS server - dual AthlonMP CPU, Linux, $10,995 CAD / $6850 USD
+3ware has a 8-port ide card ... for 8 master ide disks but its
+still on one pci buss ( i think thats the bottle neck )
+
+if you have 12, 26 ide disks... you'd need a 2nd pci slot...but again
+on the one pci buss...
+
+8 disks ( 160GB each ) is 1TeraByte of data that can be moving back and
+forth on that pci buss...
+
+i think it'd be better to put one ide controller ( like the 3-ware )
+into one motherboard... and use a different server for the next 8 disks
+
+-- am looking for benchmarks of 8-24-48 hard disks systems
+
+we have 8-drive 1U chassis  - cabling is an issue... due to 18" maximum
+but so far, we havent seen any major problems w/ the 24" and 26" length
+cables..
+	http://www.Linux-1U.net/Dwg/jpg.sm/c2610.jpg
+
+thanx
+alvin
 
