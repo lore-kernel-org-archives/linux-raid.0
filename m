@@ -1,7 +1,7 @@
 From: "Guy" <bugzilla@watkins-home.com>
 Subject: RE: Good news / bad news - The joys of RAID
-Date: Fri, 19 Nov 2004 16:28:48 -0500
-Message-ID: <200411192128.iAJLSrN12727@www.watkins-home.com>
+Date: Fri, 19 Nov 2004 16:42:21 -0500
+Message-ID: <200411192142.iAJLgRN12792@www.watkins-home.com>
 References: <419E6060.8030000@robinbowes.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
@@ -13,8 +13,28 @@ Sender: linux-raid-owner@vger.kernel.org
 To: 'Robin Bowes' <robin-lists@robinbowes.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Reminder....
+The re-sync to the spare should have been automatic, without a re-boot.
+Your errors related to ata timeout is not a Linux issue.  My guess is the
+bios could see the drive, but the drive was not responding correctly.  I
+think this is life with ata.  I have had similar problems with SCSI.  1
+drive failed in a way that it caused problems with other drives on the same
+SCSI bus.
+
+It could be that your array was re-building, but did not finish.  In that
+case it would start over from the beginning.  Which may look like it did not
+attempt to re-build until the re-boot.  Did you check the status before you
+shut it down?  I use mdadm's monitor mode to send me email when events
+occur.  By the time I read my emails, a drive has failed and the re-sync to
+the spare is done.  No need to check logs.
+
+Yes, it is normal that md will not re-sync 2 arrays that share a common
+device.  One will be delayed until the other finishes.
+
+Second reminder....
 Never buy Maxtor drives again!
+
+This quote seems to fit real well!
+"Sure you saved money, but at what cost?" - Guy Watkins
 
 Guy
 
