@@ -1,117 +1,83 @@
-From: ptb@lab.it.uc3m.es (Peter T. Breuer)
-Subject: Re: [PATCH 1/2] md bitmap bug fixes
-Date: Tue, 22 Mar 2005 23:35:02 +0100
-Message-ID: <m5j6h2-mbo.ln1@news.it.uc3m.es>
-References: <16950.5692.594941.130741@cse.unsw.edu.au> <20050318103326.GA18819@marowsky-bree.de> <6ivqg2-qsn.ln1@news.it.uc3m.es> <20050318134255.GS18819@marowsky-bree.de> <7e6rg2-pj1.ln1@news.it.uc3m.es> <423B09EF.8070708@steeleye.com> <23krg2-4rr.ln1@news.it.uc3m.es> <423B2F7C.3030907@steeleye.com> <qehtg2-6c1.ln1@news.it.uc3m.es> <423EF12A.4030207@steeleye.com> <20050321185606.GA27541@percy.comedia.it> <423F2780.5000601@steeleye.com> <qbo3h2-kjo.ln1@news.it.uc3m.es> <423F3A69.5090502@steeleye.com>
+From: NeilBrown <neilb@cse.unsw.edu.au>
+Subject: [PATCH md ] md: allow degraded raid1 array to resync after an unclean shutdown.
+Date: Wed, 23 Mar 2005 14:31:20 +1100
+Message-ID: <E1DDwaW-0003NC-5X@notabene.cse.unsw.edu.au>
+References: <20050323142016.12770.patches@notabene>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Marcelo Tosatti <marcelo.tosatti@cyclades.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Paul Clements <paul.clements@steeleye.com> wrote:
->      system A
->      [raid1]
->      /     \
-> [disk]    [nbd] --> system B
-> 
-> 2) you're writing, say, block 10 to the raid1 when A crashes (block 10 
-> is dirty in the bitmap, and you don't know whether it got written to the 
-> disk on A or B, neither, or both)
+The following is (I think) appropriate for 2.4.30.  The bug it fixes
+can result in data corruption in a fairly unusual circumstance (having
+a 3 drive raid1 array running in degraded mode, and suffering a system
+crash). 
 
-Let me offer an example based on this scenario.  Block 10 is sent to
-both, and B's bitmap is dirtied for it, but the data itself never
-arrives.  At the same time block 10 is sent to A, and the bitmap is
-dirtied for it, the data sent, and (miraculously) the bitmap on A is
-cleared for the received data (I don't now why or how - nobody has yet
-specified the algorithm with enough precision for me to say).
+### Comments for Changeset
 
-At this point B's bitmap is dirty for block 10, and A's is not. A has
-received the data for block 10, and B has not.
+If a raid1 array has more than two devices, and not all are working,
+then it will not resync after an unclean shutdown (as it will think
+that it should reconstruct a failed drive, and will find there aren't
+any spares...)
 
-> 3) something (i.e., your cluster framework) notices that A is gone and 
-> brings up a new raid1, with an empty bitmap, on system B:
+This patch fixes the problem.
 
-Now, this looks wrong, because to sync A from B we will later need to
-copy block 10 from B to A in order to "undo" the extra write already
-done on A, and A's bitmap is not marked dirty for block 10, only B's is,
-so we cannot zero B's bitmap because that would lose the information
-about block 10.
+Problem found by Mario Holbe <Mario.Holbe@TU-Ilmenau.DE> (thanks!)
 
- --
+Signed-off-by: Neil Brown <neilb@cse.unsw.edu.au>
 
-I've been thinking about this in more general terms, and it seems to me
-that the algorithms offered (and I say I have not seen enough
-detail to be sure) may be in general "insufficiently pessimistic".
+### Diffstat output
+ ./drivers/md/raid1.c |   13 ++++++++-----
+ 1 files changed, 8 insertions(+), 5 deletions(-)
 
-That is, they may clear the bitmap too soon (as in the thought
-experiment above).  Or they may not dirty the bitmaps soon enough.
-
-I believe that you are aiming for algorithms in which the _combined_
-bitmaps are "sufficiently pessimistic", but the individual bitmaps
-are not necesarily so.
-
-But it appears to me as though it may not be much trouble to ensure that
-_each_ bitmap is sufficiently pessimistic on its own with respect to
-clearing.  Just clear _each_ bitmap only when _both_ writes have been
-done.
-
- --
-
-Can this plan fail to be pessimistic enough with respect to dirtying
-the bitmaps in the first place?
-
-What if block 10 is sent to A, which is to say the bitmap on A is
-dirtied, and the data sent, and received on A. Can B _not_ have its
-bitmap dirtied for block 10?
-
-Well, yes, if A dies before sending out the bitmap dirty to B, but after
-sending out the bitmap dirty AND the data to A.  That's normally not
-possible. We normally surely send out all bitmap dirties before sending
-out any data. But can we wait for these to complete before starting on
-the data writes? If B times out, we will have to go ahead and dirty A's
-bitmap on its own and thereafter always dirty and never clear it.
-
-So this corresponds to A continuing to work after losing contact with B.
-
-Now, if A dies after that, and for some reason we start using B, then B
-will need eventually to have its block 10 sent to A when we resync A
-from B.
-
-But we never should have switched to B in the first place! B was
-expelled from the array.  But A maybe died before saying so to anyone.
-
-Well, plainly A should not have gone on to write anything in the array
-after expelling B until it was able to write in its (A's) superblock
-that B had been expelled.
-
-Then, later, on recovery with a sync from B to A (even though it is the
-wrong direction), A will either say in its sb that B has not been
-expelled AND contain no extra writes t be undone from B, or A will say
-that B has been expelled, and its bitmap will say which writes have
-been done that were not done on B, and we can happily decide to sync
-from B, or sync from A.
-
-So it looks like there are indeed several admin foul-ups and crossed
-wires which could give us reason to sync in the rong direction, and
-then we will want to know what the recipient has in its bitmap. But
-we will be able to see that that is the situuation.
-
-In all other cases, it is sufficient to know just the bitmap on the
-master.
-
-The particular dubious situation outlined here is
-
-1) A loses contact with B and continues working without B in the array,
-  so B is out of date.
-
-2) A dies, and B is recovered, becoming used as the master.
-
-3) When A is recovered, we choose to sync A from B, not B from A.
-
-In that case we need to look at bitmaps both sides. But note that one
-bitmap per array (on the "local" side) would suffice in this case. The
-array node location shifts during the process outlined, givig two
-bitmaps to make use of eventually.
-
-
-Peter
-
+diff ./drivers/md/raid1.c~current~ ./drivers/md/raid1.c
+--- ./drivers/md/raid1.c~current~	2005-03-23 11:28:56.000000000 +1100
++++ ./drivers/md/raid1.c	2005-03-23 11:38:41.000000000 +1100
+@@ -891,6 +891,8 @@ static int raid1_diskop(mddev_t *mddev, 
+ 	mdp_disk_t *failed_desc, *spare_desc, *added_desc;
+ 	mdk_rdev_t *spare_rdev, *failed_rdev;
+ 
++	if (conf->resync_mirrors)
++		return 1; /* Cannot do any diskops during a resync */
+ 
+ 	switch (state) {
+ 	case DISKOP_SPARE_ACTIVE:
+@@ -1333,6 +1335,8 @@ static void raid1syncd (void *data)
+ 
+ 	up(&mddev->recovery_sem);
+ 	raid1_shrink_buffers(conf);
++
++	md_recover_arrays(); /* incase we are degraded and a spare is available */
+ }
+ 
+ /*
+@@ -1741,10 +1745,6 @@ static int raid1_run (mddev_t *mddev)
+ 	conf->last_used = j;
+ 
+ 
+-	if (conf->working_disks != sb->raid_disks) {
+-		printk(KERN_ALERT "raid1: md%d, not all disks are operational -- trying to recover array\n", mdidx(mddev));
+-		start_recovery = 1;
+-	}
+ 
+ 	{
+ 		const char * name = "raid1d";
+@@ -1756,7 +1756,7 @@ static int raid1_run (mddev_t *mddev)
+ 		}
+ 	}
+ 
+-	if (!start_recovery && !(sb->state & (1 << MD_SB_CLEAN)) &&
++	if (!(sb->state & (1 << MD_SB_CLEAN)) &&
+ 	    (conf->working_disks > 1)) {
+ 		const char * name = "raid1syncd";
+ 
+@@ -1769,6 +1769,9 @@ static int raid1_run (mddev_t *mddev)
+ 		printk(START_RESYNC, mdidx(mddev));
+ 		conf->resync_mirrors = 1;
+ 		md_wakeup_thread(conf->resync_thread);
++	} else if (conf->working_disks != sb->raid_disks) {
++		printk(KERN_ALERT "raid1: md%d, not all disks are operational -- trying to recover array\n", mdidx(mddev));
++		start_recovery = 1;
+ 	}
+ 
+ 	/*
