@@ -1,34 +1,24 @@
-From: Luther Best <ruqagerih@168city.com>
-Subject: 9GL: A custom Logo that expresses your company!
-Date: Fri, 25 Mar 2005 14:00:19 +0000
-Message-ID: <80764760038.7551685675126__25930.855170782$1111809757$gmane$org@[201.15.164.252]>
-Reply-To: Luther Best <ruqagerih@168city.com>
+From: Mark Hahn <hahn@physics.mcmaster.ca>
+Subject: forcing larger block sizes?
+Date: Sat, 26 Mar 2005 12:05:48 -0500 (EST)
+Message-ID: <Pine.LNX.4.44.0503261159550.8358-100000@coffee.psychology.mcmaster.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=Windows-1252
-Content-Transfer-Encoding: 8bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Your business lacks visual identity?
+it's obvious in retrospect, but I was recently surprised to find 
+how huge a difference it makes to use larger blocks with raid,
+especially raid5.  (a large, aligned r5 write can avoid parity reads,
+and thus *flies*!).
 
-Marketing efforts falling short?
+so how do you get the filesystem to produce larger IOs?  "large" here
+is much larger than the typical FS blocksize.  ideally, you want chunks
+of, say, 64K going to each disk, so if you have an 8+1 r5, you'd really
+like to see writes of at least 512K.
 
-Invisible among a sea of competitors?
+I was wondering whether perhaps DM could "reblock" a filesystem.
 
-You're on the right track for a solution - keep reading...
-Our professional designers specialize in the creation of custom logos and business/corporate identities. Our design needs to be seen only once to gain customer attention and recognition. With one of our unique, eye-catching mages you'll never have to introduce yourself twice!
-We promise fast turnaround and 100% customer satisfaction. Choose from as any design ideas as necessary, select as many colors as you wish, order any modifications you like, and request any format. Our prices are affordable for any size of business, and get this: there are no hidden fees.
+thanks, mark hahn.
 
-Follow the link below to browse our portfolio and check out our Sweet Deals.
-Wipe the "in" from "invisible" in just a few days - with us!
-http://www.innerlogos.com/
-
-Sincerely,
-Luther Best
-
-
-
-======
-To cancel subscribtion, click here:
-http://www.innerlogos.com/u.php
