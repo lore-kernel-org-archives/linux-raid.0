@@ -1,31 +1,54 @@
-From: Joshua Baker-LePain <jlb17@duke.edu>
-Subject: Re: 3ware 9500s-8
-Date: Thu, 16 Sep 2004 08:08:18 -0400 (EDT)
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: Software RAID crash > /dev/md0: Invalid argument
+Date: Thu, 16 Sep 2004 15:02:15 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.58.0409160807560.6936@chaos.egr.duke.edu>
-References: <20040916120440.GA19566@bluff>
+Message-ID: <20040916130214.GA21249@percy.comedia.it>
+References: <52074.10.0.0.151.1095334249.squirrel@10.0.0.151>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20040916120440.GA19566@bluff>
-To: Sandro Dentella <sandro@e-den.it>
-Cc: linux-raid@vger.kernel.org
+Content-Disposition: inline
+In-Reply-To: <52074.10.0.0.151.1095334249.squirrel@10.0.0.151>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 16 Sep 2004 at 2:04pm, Sandro Dentella wrote
+On Thu, Sep 16, 2004 at 07:30:49AM -0400, Scott Bolander wrote:
+>I have a Mandrake 10 server with a 40gb boot drive and a three 200gb disk
+>software raid 5 array using reiserfs.  A disk went bad; so i have replaced
+>it.
+>
+>Doing the normal things to get it back up don't work:
+>
+>[root@server root]#raidhotadd /dev/md0 /dev/hdg
+....
+># cat /etc/raidtab
+>raiddev       /dev/md0
+>raid-level    5
+>chunk-size    128k
+>persistent-superblock 1
+>nr-raid-disks 3
+>    device    /dev/hdg1
+>    raid-disk 0
+>    device    /dev/hdi1
+>    raid-disk 1
+>    device    /dev/hdk1
+>    raid-disk 2
+>
+so you replaced the first disk in the array?
+raidtools are not capable of handling this.
+switch to mdadm
+echo "DEVICE partitions" >> /etc/mdadm.conf
+mdadm -Esc partitions | grep ARRAY >> /etc/mdadm.conf
+mdadm -ARs
+mdadm -a /dev/md0 /dev/hdg1
+mv /etc/raidtab /etc/raidtab.FOOBAR (this is important)
 
->   I'd like to know if 3ware 9500s SATA controller is supported by
->   3w-xxxx module. I'm using 2.4.26 kernel. When I try to load the module I
->   get:
-> 
-> /lib/modules/2.4.26-fix/kernel/drivers/scsi/3w-xxxx.o: init_module: No such device
-> Hint: insmod errors can be caused by incorrect module parameters, including invalid IO or IRQ parameters
-> /lib/modules/2.4.26-fix/kernel/drivers/scsi/3w-xxxx.o: insmod /lib/modules/2.4.26-fix/kernel/drivers/scsi/3w-xxxx.o failed
-> /lib/modules/2.4.26-fix/kernel/drivers/scsi/3w-xxxx.o: insmod 3w-xxxx failed
-
-No, it isn't.  You need 3w-9xxx, which you can download from 3ware.
+L.
 
 -- 
-Joshua Baker-LePain
-Department of Biomedical Engineering
-Duke University
+Luca Berra -- bluca@comedia.it
+        Communication Media & Services S.r.l.
+ /"\
+ \ /     ASCII RIBBON CAMPAIGN
+  X        AGAINST HTML MAIL
+ / \
