@@ -1,29 +1,17 @@
 From: "Duncan, Mike" <Mike.Duncan@Sonopress.com>
 Subject: RE: MD/RAID1 Large File Support
-Date: Mon, 12 May 2003 22:31:24 -0400
+Date: Mon, 12 May 2003 22:32:44 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <EC803175C921D411BCE2000000006429081C3641@ash-exch_lg>
+Message-ID: <EC803175C921D411BCE2000000006429081C3642@ash-exch_lg>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="iso-8859-1"
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: 'Matti Aarnio ' <matti.aarnio@zmailer.org>
+To: 'Matti Aarnio ' <matti.aarnio@zmailer.org>, "Duncan, Mike" <Mike.Duncan@Sonopress.com>
 Cc: "''linux-raid@vger.kernel.org' '" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Sorry for not giving the error. I was trying "cat /dev/zero > test" as a
-test and receiving the error "File too large.". I have 2 machines setup
-pretty much identically, except the one that I am receiving the error for is
-software-raided with md and raid1. The other one (running SuSE 8.0 as well
-with 2.4.20 kernel) does not give this error.
-
-I have tried recompiling the kernel (to several different versions, the last
-2.5.69) and recompiling gcc, glibc, and other packages...but no luck ...
-still get the same error.
-
-I don't think ulimit is used in newer glibc now...right? Anyways, you may be
-right about the drivers not caring about the filesizes, but wouldn't there
-be a 32bit limit on blocks if the LFS support was not there?
+BTW, ulimit did return "unlimited". 
 
 
 -----Original Message-----
