@@ -1,16 +1,32 @@
-From: Chris Birkinshaw <chris@postbox.org.uk>
-Subject: Re: Raid 5 always degraded!
-Date: Sun, 27 Jun 2004 02:15:24 +0100
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: Raid 5 always degraded!
+Date: Sat, 26 Jun 2004 22:27:15 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <777CC932-C7D7-11D8-BDC2-000A959A30DC@postbox.org.uk>
-References: <533299FD-C7A4-11D8-BDC2-000A959A30DC@postbox.org.uk> <16605.65410.732438.763886@cse.unsw.edu.au>
-Mime-Version: 1.0 (Apple Message framework v618)
-Content-Type: text/plain; charset=US-ASCII; format=flowed
+Message-ID: <200406270227.i5R2RF305822@watkins-home.com>
+References: <777CC932-C7D7-11D8-BDC2-000A959A30DC@postbox.org.uk>
+Mime-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <16605.65410.732438.763886@cse.unsw.edu.au>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <777CC932-C7D7-11D8-BDC2-000A959A30DC@postbox.org.uk>
+To: 'Chris Birkinshaw' <chris@postbox.org.uk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+Do:
+	fdisk -l /dev/hdd
+
+The Id for /dev/hdd3 should be fd.
+fd=" Linux raid autodetect"
+
+Guy
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Chris Birkinshaw
+Sent: Saturday, June 26, 2004 9:15 PM
+To: linux-raid@vger.kernel.org
+Subject: Re: Raid 5 always degraded!
 
 Firstly, thanks for the response and the offer to help, it's very much 
 appreciated - at the moment I am stressing about lack of protection 
@@ -200,4 +216,9 @@ On 26 Jun 2004, at 23:58, Neil Brown wrote:
 > in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
