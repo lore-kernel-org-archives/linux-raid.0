@@ -1,58 +1,55 @@
 From: Philip Molter <philip@corp.texas.net>
-Subject: Software RAID & Filesystem Cache
-Date: Thu, 05 Aug 2004 11:31:55 -0500
+Subject: Re: Software RAID & Filesystem Cache
+Date: Thu, 05 Aug 2004 12:34:00 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <411260FB.4080604@corp.texas.net>
+Message-ID: <41126F88.7040006@corp.texas.net>
+References: <411260FB.4080604@corp.texas.net> <411268C7.9070804@h3c.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <411268C7.9070804@h3c.com>
+To: Mike Hardy <mhardy@h3c.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-What is the relationship to software RAID, filesystem caching, and I/O? 
-  Here's why I ask:
+Mike Hardy wrote:
 
-I have a software application that uses RRD files to monitor numerous 
-devices.  All told, we're talking about 21GB of RRD files, about 75% of 
-which are being updated every 5 minutes.  Each RRD file is about 3MB in 
-size, and updating an RRD file involves a lot of seeking, and writing 
-small bits of data to very small parts.  The application should never be 
-reading the entire file into memory.  On a properly running system, 
-reads are done almost entirely out of filesystem cache on a 4GB box. 
-Checking iostat, there is very little read util (<10KB/s over 5 minutes).
+> 
+> I was just researching a similar problem. I turned up a few things that 
+> pointed at the filesystem readahead values/strategies, apparently those 
+> things changed quite a bit between 2.4 and 2.6. You might try twiddling 
+> those knobs, and you can find some linux-kernel threads where various 
+> values were tested
+> 
+> Also, for my specific case, I found that the default I/O scheduler in 
+> Fedora Core 2, the "Complete Fair Queueing" scheduler ('cfq') wasn't as 
+> good as the 'deadline' scheduler, and neither was good as the 
+> 'anticipatory' scheduler. So now I boot with the kernel command line 
+> parameter 'scheduler=as' and things are faster. That's extremely 
+> workload specific though - so you might run your own scheduler derby and 
+> see what works.
+> 
+> The readahead is the first place I'd look though. All in all, it appears 
+> that 2.6 kernels need a great deal more I/O tuning before they can be 
+> put in production. While I like the flexibility that's available, the 
+> default settings seem to be a major negative change from 2.4. This sort 
+> of thing is just now being quantified and hopefully it gets sorted out 
+> in the next couple of releases
 
-Now, I have a box with 12 37GB Raptor 10000RPM drives hooked up to a 
-3ware 8500-12 controller.  In software RAID10 under kernel 2.4 (1024k 
-chunks), the system works as expected.  Read load is light.  The box has 
-plenty of I/O to spare (which it should; those drives are monsters).  In 
-software RAID10 under kernel 2.6 (1024k chunks), read load is 
-excessively heavy.  Each *drive* reports anywhere from 8-12MB/s (5 
-minute average).  The RAID10 device itself reports 95-120MB/s (5 minute 
-average).  There is no way the application is actually requesting to 
-read that much data.  I trust the figures reported by iostat, though, 
-because the application cannot keep up and the system feels excessively 
-heavy.  In software RAID10 under kernel 2.6 (32k chunks), the read load 
-is lighter, on the order of 1MB/s per disk and 10-12MB/s for the RAID10 
-device.  If I convert the box to hardware RAID, the box functions 
-normally.  Read levels are even better than 2.4 software RAID 
-configuration (literally, less than 1KB/s over a 5 minute average). 
-Each configuration is doing exactly the same work, with the exact same 
-code and data.  The only difference is the kernel and software RAID 
-configurations.
+Hi Mike,
 
-It's almost as if every read request to software RAID under 2.6 is 
-bypassing the filesystem cache and furthermore, reading the entire 
-chunk, not just the bit of information it needs (that's the only way I 
-can explain the drop in read activity between 1024k and 32k).
+Thanks for the response.  I run the system under the anticipatory 
+scheduler, too, but I tried all of this under the default, deadline and 
+as schedulers with no difference between the two.
 
-Kernels are:
-2.4.20-31.9 (roughtly 2.4.22)
-2.6.7-1.494.2.2 (roughtly 2.6.8-rc2)
+My first suspicion was readahead as well, but I couldn't find any of the 
+sysctl options to control readahead in the kernel (as there were under 
+2.4).  I did mess around with readahead directly on the drives, but as 
+expected, that had no effect.  I tried other reading options, but none 
+seemed to have any effect.  The RAID seemed very insistent on reading 
+all of that data.
 
-Filesystem is ext3
+I was flummoxed.
 
-The RAIDs are setup as 6 RAID1 mirrors (2 drives each), striped together.
-
-Any insight is greatly appreciated.
 Philip
