@@ -1,39 +1,64 @@
-From: Matthew Bloch <matthew@bytemark.co.uk>
-Subject: Nearest mdadm equivalent of kernel RAID autostart code?
-Date: Fri, 21 Jan 2005 16:22:21 +0000
-Message-ID: <csra7t$21h$1@sea.gmane.org>
+From: Mike Tran <mhtran@us.ibm.com>
+Subject: Re: [PATCH] Version 1 super block
+Date: Fri, 21 Jan 2005 09:59:55 -0600
+Message-ID: <1106323194.8425.4.camel@dyn95390186.austin.ibm.com>
+References: <41E9D66E.9080100@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <41E9D66E.9080100@us.ibm.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: neilb@cse.unsw.edu.au
+Cc: akpm@osdl.org, linux-raid@vger.kernel.org, kevcorry@us.ibm.com
 List-Id: linux-raid.ids
 
-Hi there,
+Hello Neil,
 
-After a lot of compiling static kernels, I'm building a generic one for our
-particular mix of servers, so the md code is now modular.  I didn't realise
-that I'd lose the automatic array assembly functionality, though I
-appreciate reasons for trying to deprecate it.
+I've been wondering if you had a chance to look at this patch.  Please
+let me know.
 
-Can anyone suggest a better shell equivalent of the array assembly
-functionality that I can use with a modular md?  So far I've got:
+--
+Thanks,
+Mike T.
 
-for DEV in 0 1 2 3 4 5 6 7 ; do
-  mdadm -Ac partitions -m $DEV /dev/md$DEV
-done
-
-But this seems a bit slow as it tears through every device in /dev on each
-call (about 30 seconds per mdadm call).  I don't want to have RAID
-configuration files on each server if I can avoid it, as I know that all
-the info I need will be in the relevant discs' superblocks.
-
-Any better ideas for doing the job?
-
--- 
-Matthew Bloch                             Bytemark Hosting
-                                http://www.bytemark.co.uk/
-                phone UK: 0845 004 3 004 US: 1-877 BYTEMAR
-          Dedicated Linux hosts from 15ukp ($26) per month
+On Sat, 2005-01-15 at 20:50, Mike Tran wrote:
+> Hello Neil,
+> 
+> I found 2 problems in the kernel MD driver:
+> 1) if disk index 0 is used, counting of max_dev is wrong
+> 2) missing checksum calculation
+> 
+> Please consider the attached patch for 2.6.10 kernel.
+> --
+> Thanks,
+> Mike T.
+> 
+> 
+> ______________________________________________________________________
+> --- a/linux-2.6.10/drivers/md/md.c	2005-01-15 07:52:14.000000000 -0600
+> +++ b/linux-2.6.10/drivers/md/md.c	2005-01-15 07:52:14.000000000 -0600
+> @@ -939,9 +939,13 @@
+>  		sb->resync_offset = cpu_to_le64(0);
+>  
+>  	max_dev = 0;
+> -	ITERATE_RDEV(mddev,rdev2,tmp)
+> +	i = 0;
+> +	ITERATE_RDEV(mddev,rdev2,tmp) {
+> +		i++;
+>  		if (rdev2->desc_nr > max_dev)
+>  			max_dev = rdev2->desc_nr;
+> +	}
+> +	max_dev = max(max_dev, i);
+>  	
+>  	sb->max_dev = cpu_to_le32(max_dev);
+>  	for (i=0; i<max_dev;i++)
+> @@ -958,6 +962,7 @@
+>  	}
+>  
+>  	sb->recovery_offset = cpu_to_le64(0); /* not supported yet */
+> +	sb->sb_csum = calc_sb_1_csum(sb);
+>  }
+>  
+> 
 
