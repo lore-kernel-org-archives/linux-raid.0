@@ -1,51 +1,30 @@
-From: Leon Woestenberg <leonw@mailcan.com>
+From: Neil Brown <neilb@cse.unsw.edu.au>
 Subject: Re: mapping of md device blocks to component blocks? (and vice versa)
-Date: Mon, 20 Dec 2004 19:51:53 +0100
-Message-ID: <41C71F49.4040700@mailcan.com>
+Date: Tue, 21 Dec 2004 09:24:04 +1100
+Message-ID: <16839.20740.219768.963440@cse.unsw.edu.au>
 References: <1102689902.3987.60.camel@localhost.localdomain>
+	<41C71F49.4040700@mailcan.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1102689902.3987.60.camel@localhost.localdomain>
+In-Reply-To: message from Leon Woestenberg on Monday December 20
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Leon Woestenberg <leonw@mailcan.com>
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hello,
+On Monday December 20, leonw@mailcan.com wrote:
+> Hello,
+> 
+> I would like to re-issue my earlier question:
+> 
+> Given the LBA (bad) block number of a disk drive, or the block number
+> of a partition, how can I tell which block on the /dev/mdX device
+> corresponds with it?
 
-I would like to re-issue my earlier question:
+There is no easy answer.
+You need to understand the layout of the array, and do some
+arithmetic.
 
-Given the LBA (bad) block number of a disk drive, or the block number
-of a partition, how can I tell which block on the /dev/mdX device
-corresponds with it?
-
-Or should I ask this elsewhere?
-
-Regards,
-
-Leon.
-
-
-Leon Woestenberg wrote:
-
->Hello,
->
->given the LBA (bad) block of a disk drive, or the block number of
->a partition, how can I tell which block on the /dev/md? device
->corresponds with it?
->
->Also, vice versa, given a block number on the /dev/md device, how
->can I tell to which blocks it maps on the components?
->
->Regards,
->
->Leon.
->
->-
->To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->  
->
-
+NeilBrown
