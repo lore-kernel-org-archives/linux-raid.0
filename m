@@ -1,202 +1,220 @@
-From: michael238@connecttech.com
-Subject: I am prostitute...         fkIuO   tUvJu
-Date: Tue, 02 Sep 2003 11:01:58 +0000
+From: Michael Welsh Duggan <md5i@cs.cmu.edu>
+Subject: RAID reconstruction problems
+Date: Mon, 01 Sep 2003 23:04:20 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <A20EELH30KLG8ECG@connecttech.com>
-References: <AF8CEG31I8L0KB93@vger.kernel.org>
+Message-ID: <87wucrnb63.fsf@cs.cmu.edu>
+Reply-To: Michael Duggan <md5i@sei.cmu.edu>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="----=_NextPart_7DGKAFG36_9279IFE407EAA5_"
+Content-Type: multipart/mixed; boundary="=-=-="
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AF8CEG31I8L0KB93@vger.kernel.org>
-To: Linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-------=_NextPart_7DGKAFG36_9279IFE407EAA5_
-Content-Type: text/plain
-Content-Transfer-Encoding: 8bit
+--=-=-=
+
+I currently have two small Software RAIDs, a RAID 1 for my root
+partition, and a RAID 5 for my usr partition.  One of the disks in the
+arrays died, and I threw in a new disk in with the intention of
+rebuilding the arrays.
+
+The rebuilds failed, but in an extremely strange fashion.  Monitoring
+/proc/mdstat, it seems that the rebuilds are going just fine.  When
+they finish however, /proc/mdstat includes the new disk, but also
+declares it invalid.  The system continues running in degraded mode.
+
+When I run this from the root console, I get some messages from the
+raid subsystem, including full debugging output.  I have not yet
+figured out how to capture this output in order to include in this
+message, but I did write down a part of one attempt (this was by hand,
+so there may be small inconsistancies):
+
+RAID5 conf printout
+ --- rd:3 wd:2 fd:1
+ disk 0, s:0, o:1, n:0 rd:0 us:1 dev:ide/host0/bus0/target1/lun0/part3
+ disk 1, s:0, o:0, n:0 rd:0 us:0 dev:[dev 00:00]
+ disk 2, s:0, o:1, n:2 rd:2 us:1 dev:ide/host2/bus1/target0/lun0/part3
+md: bug in file raid5.c, line 1901
+
+Here is some output from my system.  If any more information would be
+useful, or anyone thinks I should try something else, please let me
+know.  I would like to get out of my currently degraded state!
 
 
-Hello
+--=-=-=
+Content-Disposition: attachment
+Content-Description: Output from my system
 
-I am prostitute from Ukraine
+maru:/# uname -a
+Linux maru 2.4.21 #3 Fri Aug 29 13:14:01 EDT 2003 i686 GNU/Linux
+maru:/# cat ~md5i/dmesg-raid
+md: raid1 personality registered as nr 3
+md: raid5 personality registered as nr 4
+raid5: measuring checksumming speed
+   8regs     :  1841.200 MB/sec
+   32regs    :   935.600 MB/sec
+   pIII_sse  :  2052.000 MB/sec
+   pII_mmx   :  2247.600 MB/sec
+   p5_mmx    :  2383.200 MB/sec
+raid5: using function: pIII_sse (2052.000 MB/sec)
+md: md driver 0.90.0 MAX_MD_DEVS=256, MD_SB_DISKS=27
+md: Autodetecting RAID arrays.
+ [events: 00000198]
+ [events: 00000008]
+ [events: 00000196]
+ [events: 000000f3]
+ [events: 00000086]
+ [events: 00000008]
+md: autorun ...
+md: considering ide/host2/bus1/target0/lun0/part3 ...
+md:  adding ide/host2/bus1/target0/lun0/part3 ...
+md:  adding ide/host0/bus0/target1/lun0/part3 ...
+md: created md0
+md: bind<ide/host0/bus0/target1/lun0/part3,1>
+md: bind<ide/host2/bus1/target0/lun0/part3,2>
+md: running: <ide/host2/bus1/target0/lun0/part3><ide/host0/bus0/target1/lun0/part3>
+md: ide/host2/bus1/target0/lun0/part3's event counter: 00000008
+md: ide/host0/bus0/target1/lun0/part3's event counter: 00000008
+md0: max total readahead window set to 496k
+md0: 2 data-disks, max readahead per data-disk: 248k
+raid5: device ide/host2/bus1/target0/lun0/part3 operational as raid disk 2
+raid5: device ide/host0/bus0/target1/lun0/part3 operational as raid disk 0
+raid5: md0, not all disks are operational -- trying to recover array
+raid5: allocated 3284kB for md0
+raid5: raid level 5 set md0 active with 2 out of 3 devices, algorithm 2
+RAID5 conf printout:
+ --- rd:3 wd:2 fd:1
+ disk 0, s:0, o:1, n:0 rd:0 us:1 dev:ide/host0/bus0/target1/lun0/part3
+ disk 1, s:0, o:0, n:1 rd:1 us:1 dev:[dev 00:00]
+ disk 2, s:0, o:1, n:2 rd:2 us:1 dev:ide/host2/bus1/target0/lun0/part3
+RAID5 conf printout:
+ --- rd:3 wd:2 fd:1
+ disk 0, s:0, o:1, n:0 rd:0 us:1 dev:ide/host0/bus0/target1/lun0/part3
+ disk 1, s:0, o:0, n:1 rd:1 us:1 dev:[dev 00:00]
+ disk 2, s:0, o:1, n:2 rd:2 us:1 dev:ide/host2/bus1/target0/lun0/part3
+md: updating md0 RAID superblock on device
+md: ide/host2/bus1/target0/lun0/part3 [events: 00000009]<6>(write) ide/host2/bus1/target0/lun0/part3's sb offset: 53640960
+md: recovery thread got woken up ...
+md0: no spare disk to reconstruct array! -- continuing in degraded mode
+md: recovery thread finished ...
+md: ide/host0/bus0/target1/lun0/part3 [events: 00000009]<6>(write) ide/host0/bus0/target1/lun0/part3's sb offset: 53616832
+md: considering ide/host2/bus1/target0/lun0/part1 ...
+md:  adding ide/host2/bus1/target0/lun0/part1 ...
+md:  adding ide/host0/bus1/target0/lun0/part1 ...
+md:  adding ide/host0/bus0/target1/lun0/part1 ...
+md: created md1
+md: bind<ide/host0/bus0/target1/lun0/part1,1>
+md: bind<ide/host0/bus1/target0/lun0/part1,2>
+md: bind<ide/host2/bus1/target0/lun0/part1,3>
+md: running: <ide/host2/bus1/target0/lun0/part1><ide/host0/bus1/target0/lun0/part1><ide/host0/bus0/target1/lun0/part1>
+md: ide/host2/bus1/target0/lun0/part1's event counter: 00000086
+md: ide/host0/bus1/target0/lun0/part1's event counter: 00000196
+md: ide/host0/bus0/target1/lun0/part1's event counter: 00000198
+md: superblock update time inconsistency -- using the most recent one
+md: freshest: ide/host0/bus0/target1/lun0/part1
+md: kicking non-fresh ide/host2/bus1/target0/lun0/part1 from array!
+md: unbind<ide/host2/bus1/target0/lun0/part1,2>
+md: export_rdev(ide/host2/bus1/target0/lun0/part1)
+md: kicking non-fresh ide/host0/bus1/target0/lun0/part1 from array!
+md: unbind<ide/host0/bus1/target0/lun0/part1,1>
+md: export_rdev(ide/host0/bus1/target0/lun0/part1)
+md1: removing former faulty ide/host0/bus1/target0/lun0/part1!
+md: RAID level 1 does not need chunksize! Continuing anyway.
+md1: max total readahead window set to 124k
+md1: 1 data-disks, max readahead per data-disk: 124k
+raid1: device ide/host0/bus0/target1/lun0/part1 operational as mirror 0
+raid1: md1, not all disks are operational -- trying to recover array
+raid1: raid set md1 active with 1 out of 2 mirrors
+md: updating md1 RAID superblock on device
+md: ide/host0/bus0/target1/lun0/part1 [events: 00000199]<6>(write) ide/host0/bus0/target1/lun0/part1's sb offset: 6144704
+md: recovery thread got woken up ...
+md1: no spare disk to reconstruct array! -- continuing in degraded mode
+md0: no spare disk to reconstruct array! -- continuing in degraded mode
+md: recovery thread finished ...
+md: considering ide/host0/bus1/target0/lun0/part3 ...
+md:  adding ide/host0/bus1/target0/lun0/part3 ...
+md: md0 already running, cannot run ide/host0/bus1/target0/lun0/part3
+md: export_rdev(ide/host0/bus1/target0/lun0/part3)
+md: (ide/host0/bus1/target0/lun0/part3 was pending)
+md: ... autorun DONE.
+maru:/# cat /proc/mdstat 
+Personalities : [raid1] [raid5] 
+read_ahead 1024 sectors
+md1 : active raid1 ide/host0/bus0/target1/lun0/part1[0]
+      6144704 blocks [2/1] [U_]
+      
+md0 : active raid5 ide/host2/bus1/target0/lun0/part3[2] ide/host0/bus0/target1/lun0/part3[0]
+      107233664 blocks level 5, 32k chunk, algorithm 2 [3/2] [U_U]
+      
+unused devices: <none>
+maru:/# lsraid -A -a /dev/md0
+[dev   9,   0] /dev/md0         94BF0D82.2B9C1BFB.89401B38.92B8F93B online
+[dev   3,  67] /dev/ide/host0/bus0/target1/lun0/part3 94BF0D82.2B9C1BFB.89401B38.92B8F93B good
+[dev   ?,   ?] (unknown)        00000000.00000000.00000000.00000000 missing
+[dev  34,   3] /dev/ide/host2/bus1/target0/lun0/part3 94BF0D82.2B9C1BFB.89401B38.92B8F93B good
 
-See my photo in attached file
+maru:/# lsraid -A -a /dev/md1
+[dev   9,   1] /dev/md1         0E953226.03C91D46.CD00D52F.83A1334E online
+[dev   3,  65] /dev/ide/host0/bus0/target1/lun0/part1 0E953226.03C91D46.CD00D52F.83A1334E good
+[dev   ?,   ?] (unknown)        00000000.00000000.00000000.00000000 missing
+
+maru:/# cat /etc/raidtab
+raiddev /dev/md0
+        raid-level      5
+        nr-raid-disks   3
+        nr-spare-disks  0
+        persistent-superblock 1
+        parity-algorithm        left-symmetric
+        chunk-size      32
+        device          /dev/hdb3
+        raid-disk       0
+        device          /dev/hdc3
+        raid-disk       1
+        device		/dev/hdg3
+        raid-disk       2
+
+raiddev /dev/md1
+        raid-level      1
+        nr-raid-disks   2
+        nr-spare-disks  1
+        persistent-superblock 1
+        chunk-size      4
+        device          /dev/hdb1
+        raid-disk       0
+        device          /dev/hdc1
+        raid-disk       1
+	device		/dev/hdg1
+	spare-disk	0
+maru:/# ls -l /dev/hdb1
+lr-xr-xr-x    1 root     root           33 Sep  1 18:29 /dev/hdb1 -> ide/host0/bus0/target1/lun0/part1
+maru:/# ls -l /dev/hdc1
+lr-xr-xr-x    1 root     root           33 Sep  1 18:29 /dev/hdc1 -> ide/host0/bus1/target0/lun0/part1
+maru:/# ls -l /dev/hdg1
+lr-xr-xr-x    1 root     root           33 Sep  1 18:29 /dev/hdg1 -> ide/host2/bus1/target0/lun0/part1
+maru:/# ls -l /dev/hdb3
+lr-xr-xr-x    1 root     root           33 Sep  1 18:29 /dev/hdb3 -> ide/host0/bus0/target1/lun0/part3
+maru:/# ls -l /dev/hdc3
+lr-xr-xr-x    1 root     root           33 Sep  1 18:29 /dev/hdc3 -> ide/host0/bus1/target0/lun0/part3
+maru:/# ls -l /dev/hdg3
+lr-xr-xr-x    1 root     root           33 Sep  1 18:29 /dev/hdg3 -> ide/host2/bus1/target0/lun0/part3
+maru:/# raidhotadd /dev/md1 /dev/hdc1
+maru:/# echo Waited for some time...
+Waited for some time...
+maru:/# cat /proc/mdstat
+Personalities : [raid1] [raid5] 
+read_ahead 1024 sectors
+md1 : active raid1 ide/host0/bus1/target0/lun0/part1[2] ide/host0/bus0/target1/lun0/part1[0]
+      6144704 blocks [2/1] [U_]
+      
+md0 : active raid5 ide/host2/bus1/target0/lun0/part3[2] ide/host0/bus0/target1/lun0/part3[0]
+      107233664 blocks level 5, 32k chunk, algorithm 2 [3/2] [U_U]
+      
+unused devices: <none>
+maru:/# 
+--=-=-=
 
 
+-- 
+Michael Welsh Duggan
+(md5i@cs.cmu.edu)
 
-I cost 100$ per hour
-
-If you want fuck me contact this e-mail:
-t03223@bk.ru
-
-Thank you.
-
-
-FHNMivP
-
-
-
-
-
-
-
-------=_NextPart_7DGKAFG36_9279IFE407EAA5_
-Content-Type: image/jpeg; name="mypic.jpg"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="mypic.jpg"
-Content-ID: <mypic.jpg>
-
-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
-
-------=_NextPart_7DGKAFG36_9279IFE407EAA5_--
-
+--=-=-=--
