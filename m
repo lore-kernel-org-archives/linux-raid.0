@@ -1,21 +1,20 @@
 From: sandra <sandra@ccuec.unicamp.br>
-Subject: intel server raid controller SRCU31
-Date: Tue, 18 Jun 2002 17:24:40 -0400
+Subject: [Fwd: intel server raid controller SRCU31]
+Date: Tue, 18 Jun 2002 17:28:03 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3D0FA518.9B3DAFEC@ccuec.unicamp.br>
+Message-ID: <3D0FA5E3.8D2DED66@ccuec.unicamp.br>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="------------8E68A3FF57EAE24654E1B20C"
+ boundary="------------B30219B10656CE369A9AB52C"
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 This is a multi-part message in MIME format.
---------------8E68A3FF57EAE24654E1B20C
+--------------B30219B10656CE369A9AB52C
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 
->
 
 Is there anybody there that has configured RedHat Linux  with
 this card SRCU31 (intel server raid controller SRCU31) ?
@@ -29,7 +28,9 @@ Sandra
 sandra@ccuec.unicamp.br
 
 
---------------8E68A3FF57EAE24654E1B20C
+
+
+--------------B30219B10656CE369A9AB52C
 Content-Type: message/rfc822
 Content-Transfer-Encoding: 7bit
 Content-Disposition: inline
@@ -113,5 +114,5 @@ Redhat-list mailing list
 Redhat-list@redhat.com
 https://listman.redhat.com/mailman/listinfo/redhat-list
 
---------------8E68A3FF57EAE24654E1B20C--
+--------------B30219B10656CE369A9AB52C--
 
