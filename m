@@ -1,56 +1,66 @@
-From: Maurice Hilarius <maurice@harddata.com>
-Subject: Fwd: Maxtor announcement on its MaxAttach product line
-Date: Fri, 16 Aug 2002 13:08:07 -0600
+From: Troy Benjegerdes <hozer@drgw.net>
+Subject: Re: [PATCH] raid superblock sanity checking (validate_sb)
+Date: Sat, 17 Aug 2002 12:38:48 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <5.1.0.14.2.20020816124639.03c2dde0@mail.harddata.com>
+Message-ID: <20020817173848.GF27123@altus.drgw.net>
+References: <A5974D8E5F98D511BB910002A50A664702CD66F8@hdsmsx103.hd.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: maurice@harddata.com
+Content-Disposition: inline
+In-Reply-To: <A5974D8E5F98D511BB910002A50A664702CD66F8@hdsmsx103.hd.intel.com>
+To: "Cress, Andrew R" <andrew.r.cress@intel.com>
+Cc: 'Neil Brown' <neilb@cse.unsw.edu.au>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Bye bye..
-(Hooray!)
+On Fri, Aug 16, 2002 at 10:03:05AM -0700, Cress, Andrew R wrote:
+> Neil,
+> 
+> The problem is due to several md kernel bugs that corrupt the superblock.
+> And, since my target environment is a raid1 root mirror, it's a bigger deal
+> to reboot to a removable and manually fix it from userspace with mdadm.  
 
-Date: 16 Aug 2002 18:10:35 GMT
-From: Maxtor Announcement <vip@maxtorvip.com>
-Subject: Maxtor announcement on its MaxAttach product line
+With the corruption I encountered, the kernel would panic on autodetecting
+the raid, since the superblock on disk got corrupted. Yes, the original
+cause should be fixed, but IMHO, the kernel should never dereference a
+bogus pointer because of corrupt data on the superblock. Spit out a big
+fat warning, and maybe panic after that yes.
 
-Dear _______________
+> It's a can of worms, but you are right, the right approach is to fix all of
+> the locations where a blind increment or decrement of the values takes
+> place, which I guess are the same locations where I put the validate_sb
+> routine.  I'll drill down further to try to fix the root problems.
+> 
+> Andy
+> 
+> -----Original Message-----
+> From: Neil Brown [mailto:neilb@cse.unsw.edu.au] 
+> Sent: Thursday, August 15, 2002 9:43 PM
+> To: Cress, Andrew R
+> Cc: 'Troy Benjegerdes'; linux-raid@vger.kernel.org
+> Subject: Re: [PATCH] raid superblock sanity checking (validate_sb)
+> 
+> On Monday August 12, andrew.r.cress@intel.com wrote:
+> > I've written a patch to help this problem.  [...]
+> > Neil, 
+> > 
+> > You've seen a lot of these type problems corrected with mdadm.  Does this
+> > cover most of the cases?
+> 
+> If there is a kernel bug that corrupts the superblock, then we should
+> fix the bug, not put in lots of validation to see if the bug has hit..
+> 
+> And if a superblock did get corrupted, then fixing it is a userspace
+> (mdadm) issue, not kernel.
+> 
+> Or maybe I'm not understanding what problem you are trying to solve.
+> 
+> NeilBrown
+> 
 
-On Thursday afternoon, Maxtor announced that it has discontinued the 
-manufacturing and sales of its MaxAttach TM branded network attached 
-storage (NAS) products. Maxtor will continue to support its end-user 
-customers and channel partners who own MaxAttach products, as well as 
-current OEM NAS customers, providing hard drives and storage subsystem 
-solutions.
-
-Maxtor will continue to honor the warranty programs for customers who have 
-purchased MaxAttach products.  Service contracts that are currently in 
-place will also be supported for the length of the contract. If you have 
-additional questions regarding warranty or support issues please contact 
-Maxtor directly at 1-866-MAX-TACH.
-
-Maxtor will better serve our partners by focusing our resources and 
-building on our core strengths; including developing and production of 
-best-in-class hard disk drives designed specifically for storage systems 
-solutions.  We will continue to deliver to our partners a broad line of 
-consumer, desktop and enterprise hard disk drives. As one of the world s 
-leading suppliers of information storage solutions, Maxtor is committed to 
-assisting our channel partners through this transition and appreciate your 
-continued support.
-
-For further information regarding the announcement, please review the press 
-release found on www.Maxtor.com .
-
-
-With our best regards,
-
-Maurice W. Hilarius       Telephone: 01-780-456-9771
-Hard Data Ltd.               FAX:       01-780-456-9772
-11060 - 166 Avenue        mailto:maurice@harddata.com
-Edmonton, AB, Canada      http://www.harddata.com/
-    T5X 1Y3
-
-2.3TB RAID5 NAS server - dual AthlonMP CPU, Linux, $10,995 CAD / $6850 USD
-
+-- 
+Troy Benjegerdes | master of mispeeling | 'da hozer' |  hozer@drgw.net
+-----"If this message isn't misspelled, I didn't write it" -- Me -----
+"Why do musicians compose symphonies and poets write poems? They do it
+because life wouldn't have any meaning for them if they didn't. That's 
+why I draw cartoons. It's my life." -- Charles Schulz
