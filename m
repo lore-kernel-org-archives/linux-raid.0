@@ -1,14 +1,31 @@
-From: "Peter Evertz" <leo2@pec.homeip.net>
-Subject: Spare disk could not sleep / standby
-Date: Tue, 08 Mar 2005 05:05:01 +0100
-Message-ID: <422D327D.11718.F8DB3@localhost>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: Spare disk could not sleep / standby
+Date: Mon, 7 Mar 2005 23:14:11 -0500
+Message-ID: <200503080414.j284EG510309@www.watkins-home.com>
+References: <422D327D.11718.F8DB3@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Content-description: Mail message body
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+In-Reply-To: <422D327D.11718.F8DB3@localhost>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: 'Peter Evertz' <leo2@pec.homeip.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+I have no idea, but...
+
+Is the disk IO reads or writes.  If writes, scary!!!!  Maybe data destined
+for the array goes to the spare sometimes.  I hope not.  I feel safe with my
+2.4 kernel.  :)
+
+Guy
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Peter Evertz
+Sent: Monday, March 07, 2005 11:05 PM
+To: linux-raid@vger.kernel.org
+Subject: Spare disk could not sleep / standby
 
 I have 2 Raid5 arrays on a hpt375. Each has a (unused) spare disk. 
 With change from 2.4 to 2.6 I can not put the spare disk to sleep or  
@@ -85,4 +102,9 @@ Linux version 2.6.8-24.11-default (geeko@buildhost) (gcc version
 3.3.4 (pre  
 3.3.5 20040809)) #1 Fri Jan 14 13:01:26 UTC 2005  
 
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
