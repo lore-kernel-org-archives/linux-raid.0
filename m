@@ -1,94 +1,68 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: [PATCH 1/2] md bitmap bug fixes
-Date: Mon, 14 Mar 2005 15:43:52 +1100
-Message-ID: <16949.5768.392061.95882@cse.unsw.edu.au>
-References: <422F7621.8090602@steeleye.com>
+From: Mitchell Laks <mlaks@verizon.net>
+Subject: Re: disaster. raid1 drive failure rsync=DELAYED why?? please help
+Date: Mon, 14 Mar 2005 02:43:24 -0500
+Message-ID: <200503140243.25308.mlaks@verizon.net>
+References: <200503122351.23430.mlaks@verizon.net>
+ <423460EE.9070602@dgreaves.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-8-i
 Content-Transfer-Encoding: 7bit
-In-Reply-To: message from Paul Clements on Wednesday March 9
+In-reply-to: <423460EE.9070602@dgreaves.com>
+Content-disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Paul Clements <paul.clements@steeleye.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday March 9, paul.clements@steeleye.com wrote:
-> Neil,
+On Sunday 13 March 2005 10:49 am, David Greave wrote: Many Helpful remarks:
 > 
-> here are a couple of patches -- this one for the kernel, the next for 
-> mdadm. They fix a few issues that I found while testing the new bitmap 
-> intent logging code.
-> 
-> Briefly, the issues were:
-> 
-> kernel:
-> 
-> added call to bitmap_daemon_work() from raid1d so that the bitmap would 
-> actually get cleared
+David I am grateful that you were there for me.
+I went to the site. I connected a monitor to the headless machine. I saw the 
+screen flooded with write errors to the spare drive in the original raid1.
 
-Yes... well... uhmm...  how did I miss that??
-I would actually rather call it from md_check_recovery (which is
-called from raid1d).  I should rename md_check_recovery at some
-stage as it does more than it's name says.
+The terminals were flooded on tty1-6. I had to log in remotely  on network. I 
+tried to shutdown -h now. I tried "init 1" as root. No go. I had to hard 
+power down the machine. Debian boot dropped me into single user mode on 
+bootup and I took /dev/md0 out of the /etc/fstab to get the machine to boot 
+past the fsck on boot.
 
-> 
-> fixed the marking of pages with BITMAP_CLEAN so that the bitmap would 
-> get cleared correctly after resync and normal write I/O
+I looked through /var/log/messages.0. I found that on last wednesday at 10am 
+drive /dev/hda1 failed. The paired drive (it actually was /dev/hdg1)  in the 
+raid1 began to issue bad kernel messages immediately. These filled the /var 
+directory to 100% and seemed to have caused all the bad  behavior we saw.
 
-I don't agree with this bit.  The BITMAP_PAGE_CLEAN bit needs to be
-cleared before processing it rather than after as the current code
-does.  However I see that this causes it to ignore all but the first
-bit of the page, so I have fixed that with:
+I had noticed that /var was full initially and made room by cutting out much 
+of /var/log/messages.
 
-diff ./drivers/md/bitmap.c~current~ ./drivers/md/bitmap.c
---- ./drivers/md/bitmap.c~current~	2005-03-14 11:51:29.000000000 +1100
-+++ ./drivers/md/bitmap.c	2005-03-14 12:54:02.000000000 +1100
-@@ -940,6 +940,7 @@ int bitmap_daemon_work(struct bitmap *bi
- 
- 		page = filemap_get_page(bitmap, j);
- 		/* skip this page unless it's marked as needing cleaning */
-+		if (page != lastpage)
- 		if (!((attr=get_page_attr(bitmap, page)) & BITMAP_PAGE_CLEAN)) {
- 			if (attr & BITMAP_PAGE_NEEDWRITE) {
- 				page_cache_get(page);
+I likely could not successfully run "shutdown -h now" because the /var 
+partition likely needed some kind of fsck or something to deal with having 
+been filled and the many many processes that had been writing to it were very 
+"angry" and in a "messy state". They needed a powerdown. (Very m$ftlike).
 
-> 
-> pass back errors from write_page() since it now does actual writes
-> itself
+I am not sure I mentioned here, (but  I discussed on another mailing list :)), 
+that my main application on the server is a database backed application 
+running off of a postgresql backend. 
 
-Yep, thanks.
+Postgresql was also put into a weird state by this incident - not because 
+there was anything wrong with it. Just because filling /var partition caused 
+multiple effects, cause postgresql databases live in /var/lib/postgres. I 
+could not run pg_ctl stop or pg_ctl stop -m fast. Only pg_ctl stop -m 
+immediate. Luckily I was able to rescue the database.
 
-> 
-> sync_size changed to sectors (was array_size which was KB) -- some 
-> divisions by 2 were needed
+My assessment (correct me if I am wrong) is that I have to rethink my 
+architecture. As I continue to work with software raid, I likely will have to 
+move the postgresql database to a separate partition, so I will not have 
+mixing of points of failure.  
 
-Yes.
+I took out the 2 drives /dev/hda1 and /dev/hdg1 from the machine. I restored 
+my systems from the most recent backup, with only a few days worth of suspect 
+data (wed/thur/friday ...). I replaced with new hard drives. Its good to have 
+duplicate servers and raids. Both are neccesary I see.
 
-> 
-> mdadm:
-> 
-> avoid setting of sb->events_lo = 1 when creating a 0.90 superblock -- it 
-> doesn't seem to be necessary and it was causing the event counters to 
-> start at 4 billion+ (events_lo is actually the high part of the events 
-> counter, on little endian machines anyway)
+I will play with /dev/hdg1 a little on a different machine to see what it 
+behaves like. I suspect with all those errors it is really dead too.
 
-events_lo really should be the low part of the counter and it is for
-me....  something funny must be happening for you...
+I just had bad luck. A double disk failure.
 
-> 
-> some sync_size changes, as in the kernel
+Thank you David again!
 
-Yep.
-
-> 
-> if'ed out super1 definition which is now in the kernel headers
-
-I don't like this.  I don't mdadm to include the kernel raid headers.
-I want it to use it's own. 
-
-> 
-> included sys/time.h to avoid compile error
-
-I wonder why I don't get an error.. What error do you get?
-
-NeilBrown
+Mitchell
