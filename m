@@ -1,59 +1,78 @@
-From: Evan Felix <evan.felix@pnl.gov>
-Subject: Re: mount-by-label finds drive not array ????
-Date: Tue, 06 Jul 2004 08:55:11 -0700
+From: Heinz Mauelshagen <mauelshagen@redhat.com>
+Subject: *** Announcement: dmraid 1.0.0-rc1 available at http://people.redhat.com:~heinzm/sw/dmraid
+Date: Tue, 6 Jul 2004 21:07:00 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1089129311.3463.23.camel@e-linux>
-References: <Pine.LNX.4.58.0407010736180.15444@jupiter.toms.net>
+Message-ID: <20040706190700.GA26177@redhat.com>
+Reply-To: mauelshagen@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: <Pine.LNX.4.58.0407010736180.15444@jupiter.toms.net>
-To: Tom Oehser <tom@toms.net>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+Content-Disposition: inline
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I've always found the mount by Label system to be a little confused
-about things.  My specific issues cam from haveing devfs turned on in
-the kernel, but not mounting it.
 
-Basically the mount code scans /proc/partitions and examines each one in
-turn,  which usually lists devices as the were 'discovered' or in the
-order device drivers were loaded.  so it sounds like the IDE drives come
-up first, a valid label is found, and it tries to mount it.  if you
-could magically load the md code before your ide code it would find it
-first.(build the raid code into your kernel?)
+               *** Announcement: dmraid 1.0.0-rc1 ***
 
-I would suggest avoiding mount by label like the plauge, but thats just
-me.  It just consuses things, doesent always work and makes reading
-/etc/fstab confusing.
+dmraid 1.0.0-rc1 available at http://people.redhat.com:/~heinzm/sw/dmraid/
+in source and i386 rpm.
 
-Evan
+dmraid (Device-Mapper Raid tool) discovers, [de]activates and displays
+properties of software RAID sets (ie. ATARAID) and contained MSDOS
+partitions using the device-mapper runtime of the 2.6 kernel.
 
-On Thu, 2004-07-01 at 04:41, Tom Oehser wrote:
-> Hi,
-> 
-> I'm accustomed to doing something like:
-> 
-> LABEL=tomsvol2  /mnt/foo   ext3      defaults        0 2
-> 
-> But if I do that on my raid-5 md arrays, it tries to mount
-> disk 1 of the 4 disks that make up the array!  Apparently,
-> the first stripe has enough of the filesystem that it must
-> be thinking that is what to mount!  Even with type "FD"!!!
-> 
-> So, with an array /dev/md0 made of hda1 hdb1 hdc1 hdd1, I
-> am having to do a literal:
-> 
-> /dev/md0        /mnt/bar      ext3      defaults        0 4
-> 
-> Since if I do it by "LABEL=", it tries to mount hda1, not md0!
-> 
-> Is this just a known/accepted brain-deadness of the mount code?
-> 
-> -Tom
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The following ATARAID types are supported on Linux 2.6:
+
+Highpoint HPT37X
+Highpoint HPT45X
+Promise FastTrack
+Silicon Image Medley
+
+These ATARAID types can be discovered only in this version:
+Intel Software RAID
+LSI Logic MegaRAID
+
+Please provide insight to support those metadata formats completely.
+
+Thanks.
+
+See file README, which comes with the source tarball for prerequisites
+to run this software and further instructions on installing and using dmraid!
+
+
+Call for testers:
+-----------------
+
+I need testers with the above ATARAID types, to check that the mapping
+created by this tool is correct (see options "-t -ay") and access to the ATARAID
+data is proper.
+
+You can activate your ATARAID sets without danger of overwriting
+your metadata, because dmraid accesses it read-only unless you use
+option -E with -r in order to erase ATARAID metadata (see 'man dmraid')!
+
+This is a release candidate version so you want to have backups of your valuable
+data *and* you want to test accessing your data read-only first in order to
+make sure that the mapping is correct before you go for read-write access.
+
+
+The author is reachable at <Mauelshagen@RedHat.com>.
+
+For test results, mapping information, discussions, questions, patches,
+enhancement requests, free beer offers and the like, please subscribe and
+mail to <ataraid@redhat.com>.
+
+--
+
+Regards,
+Heinz    -- The LVM Guy --
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+Heinz Mauelshagen                                 Red Hat GmbH
+Consulting Development Engineer                   Am Sonnenhang 11
+                                                  56242 Marienrachdorf
+                                                  Germany
+Mauelshagen@RedHat.com                            +49 2626 141200
+                                                       FAX 924446
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
