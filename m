@@ -1,22 +1,29 @@
-From: "TJ" <tjharrel@eagle.fgcu.edu>
-Subject: (unknown)
-Date: Fri, 27 Dec 2002 20:25:39 -0500
+From: Marco Shaw <marco@nbnet.nb.ca>
+Subject: Re: RAID5 reconfig
+Date: 28 Dec 2002 08:39:27 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <001101c2ae10$0881cfb0$6500a8c0@system>
+Message-ID: <1041079167.13887.156.camel@redhat80>
+References: <001101c2ae10$0881cfb0$6500a8c0@system>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Subject: 
+In-Reply-To: <001101c2ae10$0881cfb0$6500a8c0@system>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Do the current raidtools allow enlarging a RAID 5 array by adding more disks
-to it without initializing a new
-array? This feature is found in some hardware raid controllers.
+On Fri, 2002-12-27 at 21:25, TJ wrote:
+> Do the current raidtools allow enlarging a RAID 5 array by adding more disks
+> to it without initializing a new
+> array? This feature is found in some hardware raid controllers.
 
-Even if the array must be taken down and processed while offline by a
-utility, this would be greatly
-appreciated.
+Use with extreme care:
+http://unthought.net/raidreconf/index.shtml
+
+Someone posted a success story on this list a few weeks ago using a
+pretty big RAID5 volume/array.
+
+Marco
+
+PS: Please use the 'Subject' field.
 
