@@ -1,16 +1,43 @@
-From: Ferenc-Jan <ferenc@avz.xs4all.nl>
-Subject: Re: create raid5 with missing disk; not possible?
-Date: Fri, 14 Jan 2005 23:32:30 +0100
-Message-ID: <41E8487E.4090507@avz.xs4all.nl>
-References: <200501142103.j0EL3d911716@www.watkins-home.com>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: create raid5 with missing disk; not possible?
+Date: Fri, 14 Jan 2005 18:08:36 -0500
+Message-ID: <200501142306.j0EN6f912224@www.watkins-home.com>
+References: <41E8487E.4090507@avz.xs4all.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200501142103.j0EL3d911716@www.watkins-home.com>
+In-Reply-To: <41E8487E.4090507@avz.xs4all.nl>
 Sender: linux-raid-owner@vger.kernel.org
-To: Guy <bugzilla@watkins-home.com>, linux-raid@vger.kernel.org
+To: 'Ferenc-Jan' <ferenc@avz.xs4all.nl>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+Maybe your mdadm V1.8.1 is an issue!
+It is an experimental version.
+Try version 1.8.0.
+
+Yes, 2 IDE disks are fine, until one fails!
+Then it will be a pain in the @$$.
+
+If 666 scares you, do this to verify your speed.  :)
+grep "CPU clock" /var/log/dmesg
+
+I bet it is closer to 663 MHz.  :)
+
+You should trust Mr. Brown!  He knows all, well, knows most! :)
+
+I have never seen a "0 0 0 sync" before.  It does seem wrong.
+What does /proc/mdstat have?
+
+Guy
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Ferenc-Jan
+Sent: Friday, January 14, 2005 5:33 PM
+To: Guy; linux-raid@vger.kernel.org
+Subject: Re: create raid5 with missing disk; not possible?
 
 Guy wrote:
 
@@ -58,3 +85,8 @@ Thanks for the swift replies.
 cheers
 
 Ferenc
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
