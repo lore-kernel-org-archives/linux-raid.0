@@ -1,38 +1,59 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: query regarding raidtool and 2.6 kernel
-Date: Tue, 4 May 2004 12:31:02 +1000
+From: <me@heyjay.com>
+Subject: Re: mdadm: SET_ARRAY_INFO failed for /dev/md0: File exists
+Date: Mon, 3 May 2004 21:38:35 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16535.102.662088.857364@cse.unsw.edu.au>
-References: <20040420134257.10801.qmail@web61004.mail.yahoo.com>
+Message-ID: <017401c43180$e7b01cb0$6705a8c0@a30>
+References: <012001c430c5$a3e12b70$6705a8c0@a30> <16534.64220.901221.482562@cse.unsw.edu.au> <014601c4317e$b083e250$6705a8c0@a30>
+Reply-To: <me@heyjay.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from John Abraham on Tuesday April 20
-To: John Abraham <johnabraham291077@yahoo.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday April 20, johnabraham291077@yahoo.com wrote:
-> Hello List
-> I am newbie for raid so sorry of a silly query. I have
-> following query regarding the raid support on linux. 
->  
-> In linux kernel 2.6 source i have found there is
-> implementation of version 1 superblock (in file
-> drivers/md/md.c), but i have not found any raidtool,
-> which is using this version of superblock.
-> I have looked at raidtools-1.00.3 (i suppose it is
-> latest one, if not pls provide me latest tools which
-> are using version 1.0 of super block) and found that
-> tools are using 0.90 version of raid super block.
->  
-> Can anybody tell me, why the newer version of raid
-> superblock is introduced in linux kenel 2.6 ? Any
-> updates regarding this would be helpful.
->  
-> Kindly cc reply to me also as i am not member of list.
+Nevermind,  For the next newbie:
 
-There is not yet any tool for working with version 1 superblocks.
+mdadm --stop /dev/md0
+mdadm --zero-superblock /dev/hda1
+mdadm --zero-superblock /dev/hdb1
+...
 
-NeilBrown
+Jay
+
+----- Original Message ----- 
+From: <me@heyjay.com>
+To: "Neil Brown" <neilb@cse.unsw.edu.au>; <linux-raid@vger.kernel.org>
+Sent: Monday, May 03, 2004 9:22 PM
+Subject: Re: mdadm: SET_ARRAY_INFO failed for /dev/md0: File exists
+
+
+> > What does
+> >   cat /proc/mdstat
+> > show?  I suspect /dev/md0 has already been assembled somehow.
+>
+> platinum:~# cat /proc/mdstat
+> Personalities : [linear] [raid0] [raid1] [raid5]
+> md3 : active raid1 hdc1[1]
+>       20000768 blocks [2/1] [_U]
+>
+> md1 : active raid1 hdc2[1]
+>       40001728 blocks [2/1] [_U]
+>
+> md2 : active raid1 hdc3[1]
+>       40001728 blocks [2/1] [_U]
+>
+> unused devices: <none>
+>
+> But how??? I didn't build it.  Is it possible to remain after installs?
+Can
+> I delete an md?  If so how?
+>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
+
