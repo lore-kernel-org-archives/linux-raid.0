@@ -1,41 +1,42 @@
-From: Sven Luther <sven.luther@wanadoo.fr>
-Subject: Re: Root Drive Mirroring and LVM.
-Date: Thu, 29 Jan 2004 08:22:22 +0100
+From: AndyLiebman@aol.com
+Subject: Re: mdadm and email warnings
+Date: Thu, 29 Jan 2004 06:32:03 EST
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040129072222.GB10459@iliana>
-References: <868055F9-5045-11D8-8066-00039382032A@mindspring.com> <200401270801.i0R81HdT022197@kruuna.Helsinki.FI> <20040127093213.GA10049@iliana> <20040129010101.GA13800@zero>
+Message-ID: <86.4133f77.2d4a4933@aol.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20040129010101.GA13800@zero>
-To: Tom Vier <tmv@comcast.net>
-Cc: Sven Luther <sven.luther@wanadoo.fr>, linuxppc-dev@lists.linuxppc.org, linux-raid@vger.kernel.org
+To: neilb@cse.unsw.edu.au
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Jan 28, 2004 at 08:01:01PM -0500, Tom Vier wrote:
-> On Tue, Jan 27, 2004 at 10:32:13AM +0100, Sven Luther wrote:
-> > Seems ok for me. Also, i guess that there are other partition types,
-> > like the amiga partitition table the pegasos boxes mostly use, which has
-> > a 32bit identifier for partition types. I guess it is the task of the
-> > RAID code to have some per partition type checking for this RAID autodetect
-> > magic.
+Thank you Neil. I guess my question is, can I invoke Mozilla mail or KMail or 
+something that's easy to configure to get my warnings?
+
+The "fileserver" that I want to monitor with mdadm isn't set up as a mail 
+server. And, frankly, I'm completely baffled about how to configure sendmail to 
+just act as an intermediary for sending and receiving mail from an outside 
+Internet Service Provider. Is there a simple mail client -- even one that's just 
+text based (Pine?) that's easy to configure so that it will work with mdadm? 
+I'm not being lazy. I just don't want to become an expert in every aspect of 
+Linux services just to run a local file server. 
+
+Appreciate your thoughts. 
+
+Andy Liebman
+
 > 
-> it's done in fs/partitions/. it could be made anything, as long as it's put
-> in the raid docs so people know.
+> For instance, I see that I can enter an email address with the flag -m and 
+> the address. But do I need to specify a program that will send that email? 
+It 
+> looks that way to me. Can I use KDE Mail to do the job? Or do I need to use 
+> something that doesn't involve a GUI? 
 
-Ok, thanks. On amiga filesystem, partitition types are in 32bit ints,
-but can also be represented as 4 chars, so maybe `RAID` would be a good
-type for that ? I will try patching the kernel, and adding support in
-libparted for recognizing such partitions, and try it out.
+No, you don't need to specify a program to send the mail.  mdadm
+already knows to use sendmail.
+The --program option is to specify a program that can do other things
+with alerts from mdadm.  e.g. log them, page a sysadmin, send a
+differently formatted email. etc.
 
-Does it make sense to do Software Raid on two partititons of the same
-disk, just for testing purpose ?
-
-> here's a patch of mine for alpha, to give you an idea.
-
-Ok, thanks.
-
-Friendly,
-
-Sven Luther
+NeilBrown
