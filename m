@@ -1,118 +1,77 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: Joys of spare disks!
-Date: Wed, 2 Mar 2005 11:16:55 -0500
-Message-ID: <200503021617.j22GH0516373@www.watkins-home.com>
-References: <62b0912f05030204054b1ab8ae@mail.gmail.com>
+From: Michael Tokarev <mjt@tls.msk.ru>
+Subject: Severe, huge data corruption with softraid
+Date: Thu, 03 Mar 2005 02:23:32 +0300
+Message-ID: <42264AF4.4000600@tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-In-Reply-To: <62b0912f05030204054b1ab8ae@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Molle Bestefich' <molle.bestefich@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This is what you said:
-"A more consistent and risk-free way of doing it would probably be to
-do the above partial resync in a background thread or so?.."
+Too bad I can't diagnose the problem correctly, but it is
+here somewhere, and is (hardly) reproduceable.
 
-This sounded like Neil's current plan.  But if I understand the plan, the
-drive would be kicked out of the array.  A log would track which stripes
-were effected by the bad block and other writes to the array.  A partial
-re-sync would be done and the disk put back into the array.  I think the
-array would be degraded during the re-sync.  This is why I made my comments.
-On a related subject, I don't like Neil's plan if it causes the array to be
-degraded, since while degraded, if another disk has a bad block the array
-then goes off-line.  Not a good plan IMO.
+I'm doing alot of experiments right now with various raid options
+and read/write speed.  And 3 times now, the whole system went boom
+during the experiments.  It is writing into random places on all
+disks, including boot sectors, partition tables and whatnot, so
+obviously every filesystem out there becomes corrupt to hell.
 
-I also never said a full re-sync, I was referring to correcting the bad
-block(s).  And 1000 bad blocks!  I have never had 2 on the same disk at the
-same time.  AFAIK.  I would agree that 1000 would put a strain on the
-system!  Normally only 1 block is bad at a time IMO.  However, I guess it is
-possible to have a full track go bad.  Sometime in the past I have said
-there should be a threshold on the number of bad blocks allowed.  Once the
-threshold is reached, the disk should be assumed bad, or at least failing,
-and should be replaced.  I would also say the bad block repair should have a
-speed limit so the effect on the overall system is minimized.  Maybe only
-allow it to repair 1 bad block per minute.  (a configurable parameter).  But
-your 1000 bad block example would take almost 17 hours.
+It seems the problem is due to integer overflow somewhere in raid
+(very probably raid5) or ext3fs code, as it is starting to write
+to the beginning of all disks instead of the raid partitions being
+tested.  It *may* be related to direct-io (O_DIRECT) into a file
+in ext3 filesystem which is on top of softraid5 array.  It may also
+be related to raid10 code, but it is less likely.
 
-I think 1000 bad blocks at one time is an indication you have a head
-failure.  In that case, the disk is bad.
+Here's the scenario.
 
-Does anyone know how many spare blocks are on a disk?
-My worse disk has 28 relocated bad blocks.
+I have 7 scsi disks, sda..sdg, 36GB each.
+On each drive there's a 3GB partition at the end (sdX10)
+where I'm testing stuff.
+I tried to create various raid arrays out of those sdX10 partitions,
+including raid5 (various chunk sizes), raid1+raid0 and raid10.
+On top of the raid array, I also tried to create ext3 fs.
+And did various read/write tests on both the md device (without the
+filesystem) and a file on the filesystem.
+The tests - just sequential read and write with various I/O size
+(8k, 16k, 32k, ..., 1m) and various O_DIRECT/O_SYNC/fsync() combinations.
 
-Guy
+Ofcourse I created/stopped raid arrays (all on the same sdX11), created,
+mounted and umounted filesystem on that arrays and did alot of reading
+and writing.  I'm sure I didn't access other devices during all this
+testing (like trying to write to /dev/sdX instead of /dev/sdX11), and
+did not write to the device while there was filesystem mounted.  And
+yes, my /dev/ major/minor numbers are correct (just verified to be sure).
 
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Molle Bestefich
-Sent: Wednesday, March 02, 2005 7:05 AM
-To: Guy
-Cc: linux-raid@vger.kernel.org
-Subject: Re: Joys of spare disks!
+The symthom is simple: at some time, partition table on /dev/sdX becomes
+corrupt (either primary or extended which is at about 1.2Gb of the start
+of each disk), just like alot of other stuff, mostly at the beginning of
+all disks -- on all but one or two disks involved in testing.
 
-Hm..  I said partial resync, because a full resync would be a waste of
-time if it's just a thousand sectors or so that needs to be relocated.
- Anyhow.
+We lost the system this way after first series of testing, and during
+re-install (as there's no data anymore anyway), I descided to perform
+some more testing, and hit the same prob again and (after restoring
+partition tables) yet again.
 
-There's no overhead to the application with the (theoretically
-"partial") degraded mode, since it happens in parallel.
+All my attempts to reproduce it failed so far, but when I din't watch
+partition tables after each operation, it happened again after yet more
+series of tests.
 
-The latency of doing it while the read operation is ongoing would be,
-say, 3 seconds or so per bad sector on a standard disk?  Imagine a
-thousand bad sectors, and any sane person would quickly pull the plug
-from the dead box and have it resync when it boots instead of staring
-at a hung system.  When that happens there's even the risk that the
-resync fails completely, if md decides to pull one of the disks other
-than the one with bad blocks on it from the array before it resyncs.
+One note: every time before it "crashed", I tried to create/use a raid5
+array out of 3, 4 or 5 drives with chunk size = 4Kb (each partition is
+3GB large), and -- if i recall correctly -- experimented with direct
+write on the filesystem created on top of the array.  Maybe it dislikes
+chunk size this small...
 
-I prefer the first scenario (the system keeps running, the array isn't
-potentially destroyed), even if it means a slightly lower I/O rate and
-thus a minor overhead if and only if running applications utilize the
-I/O subsystem 100%..
+Now it's 02:18 here, deep night and I'm still in office -- I have to re-
+install the server by morning so our users will have something to do,
+so I have very limited time for more testing.  Any quick suggestions
+about what/where to look at right now welcome...
 
-Am I wrong?
+BTW, the hardware is good, drives, memory, mobo and CPUs.
+This happens on either 2.6.10 or 2.6.9 the first time, now it is
+running 2.6.9.
 
-Guy wrote:
-> I think the overhead related to fixing the bad blocks would be
-insignificant
-> compared to the overhead of degraded mode.
-> 
-> Guy
-> 
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org
-> [mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Molle Bestefich
-> Sent: Tuesday, March 01, 2005 10:51 PM
-> To: linux-raid@vger.kernel.org
-> Subject: Re: Joys of spare disks!
-> 
-> Robin Bowes wrote:
-> > I envisage something like:
-> >
-> > md attempts read
-> > one disk/partition fails with a bad block
-> > md re-calculates correct data from other disks
-> > md writes correct data to "bad" disk
-> >   - disk will re-locate the bad block
-> 
-> Probably not that simple, since some times multiple blocks will go
-> bad, and you wouldn't want the entire system to come to a screeching
-> halt whenever that happens.
-> 
-> A more consistent and risk-free way of doing it would probably be to
-> do the above partial resync in a background thread or so?..
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
->
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+/mjt
