@@ -1,28 +1,51 @@
-From: Andreas Dilger <adilger@clusterfs.com>
-Subject: Re: Proposed Enhancements to MD
-Date: Tue, 13 Jan 2004 15:26:07 -0700
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20040113222607.GL1437@schnapps.adilger.int>
-References: <40036902.8080403@adaptec.com>
- <20040113081932.A721@lists.us.dell.com>
- <20040113171350.GI1437@schnapps.adilger.int>
+From: Jure =?UTF-8?B?UGXEjWFy?= <pegasus@nerv.eu.org>
+Subject: Re: Proposed enhancements to MD
+Date: Tue, 13 Jan 2004 23:33:20 +0100
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <20040113233320.23e4cfef.pegasus@nerv.eu.org>
+References: <40043C75.6040100@pobox.com>
+	<400457E3.5030602@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-reply-to: <20040113171350.GI1437@schnapps.adilger.int>
-Content-Disposition: inline
-To: Matt Domsch <Matt_Domsch@dell.com>, Scott Long <scott_long@adaptec.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <400457E3.5030602@adaptec.com>
+To: Scott Long <scott_long@adaptec.com>
+Cc: jgarzik@pobox.com, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, neilb@cse.unsw.edu.au
 List-Id: linux-raid.ids
 
-On Jan 13, 2004  10:13 -0700, Andreas Dilger wrote:
-> So, why not use EVMS and/or Device Mapper to read the DDF metadata and
-> set up the mappings that way?
+On Tue, 13 Jan 2004 13:41:07 -0700
+Scott Long <scott_long@adaptec.com> wrote:
 
-PS - outgoing email was delayed, this has already been covered.  Sorry.
+> A problem that we've encountered, though, is the following sequence:
+>=20
+> 1) md is inialized during boot
+> 2) drives X Y and Z are probed during boot
+> 3) root fs exists on array [X Y Z], but md didn't see them show up,
+>     so it didn't auto-configure the array
+>=20
+> I'm not sure how this can be addressed by a userland daemon.  Remembe=
+r
+> that we are focused on providing RAID during boot; configuring a
+> secondary array after boot is a much easier problem.
 
-Cheers, Andreas
---
-Andreas Dilger
-http://sourceforge.net/projects/ext2resize/
-http://www-mddsp.enel.ucalgary.ca/People/adilger/
+Looking at this chicken-and-egg problem of booting from an array from
+administrator's point of view ...
+
+What do you guys think about Intel's EFI? I think it would be the most
+apropriate place to put a piece of code that would scan the disks, asse=
+mble
+any arrays and present them to the OS as bootable devices ... If we're =
+going
+to get a common metadata layout, that would be even easier.
+
+Thoughts?
+
+--=20
+
+Jure Pe=C4=8Dar
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
