@@ -1,77 +1,50 @@
-From: noriok <noriok@kitakami.hss.iwate-u.ac.jp>
-Subject: Software RAID 1 Prpblem: "raid_autorun failed" booting from /dev/md0
-Date: Thu, 26 Jun 2003 17:01:50 +0900
+From: Gordon Henderson <gordon@drogon.net>
+Subject: RE: Mirroring swap
+Date: Thu, 26 Jun 2003 09:30:23 +0100 (BST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200306260801.AA01558@ran.kitakami.hss.iwate-u.ac.jp>
-References: <200306260750.AA01552@ran.kitakami.hss.iwate-u.ac.jp>
+Message-ID: <Pine.LNX.4.43.0306260916190.5551-100000@unicorn.drogon.net>
+References: <BKEGKPICNAKILKJKMHCAEEFPEHAA.Riley@Williams.Name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200306260750.AA01552@ran.kitakami.hss.iwate-u.ac.jp>
+In-Reply-To: <BKEGKPICNAKILKJKMHCAEEFPEHAA.Riley@Williams.Name>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi, everyone,
+On Thu, 26 Jun 2003, Riley Williams wrote:
 
-I have a problem with the following System-2 on booting from /dev/md0.
-Whould anyone kindly give me an advise?
+> Personally, I can't see the point. the contents of swap are by
+> definition short term temporary data with copies held either in
+> memory or elsewhere on the hard disk subsystem.
 
-Thank you from Japan.
+Not strictly true. The whole point of "virual memory" is that the OS has
+the right to shift parts of, or an entire programs data segment (and
+stack, and other volatile data needed to resume execution of that program
+which isn't mirrored elsewhere in memory or the filing system)  onto a
+swap device when memory becomes tight. If later, it tries to read that
+data back to resume execution of the program and it fails then at best it
+will abort the program and at worst it'll just give up and panic. I've had
+the latter happen when a swap partition developed a bad sector.
 
---
-1) System 1; Red Hat Linux 7.1  : succeeded
-   Kernel 2.4.20-18.7 on an i686
-2) System 2; Vine Linux 2.6 : failed  
-   with the booting message  "raid_autorun failed" 
-   Kernel 2.4.20-0vl29.1 on an i686
-   (Japanese local destribution based upon Red Hat 6.2)
+So now with important machines which had mirrored or RAIDed disk systems,
+I always put swap on a mirrored or RAID5d device.
 
-There were no problems with the System-1. 
-The system could be booted by /dev/md0 [/deb/hdb1] by bootable FD.
+Eg.
 
-I have not completed the setting yet, so I booted the machine from 
-the bootable floppy disk.
+gordonh @ red: cat /proc/swaps
+Filename                        Type            Size    Used    Priority
+/dev/md2                        partition       1991672 12512   -1
 
---
-$ pwd
-/mnt/etc
-$ cat lilo.conf
-disk=/dev/md0
-boot=/dev/fd0
-map=/boot/map-fd
-install=/boot/boot.b
-lba32
-image=/boot/vmlinuz
-        label=linuxRaid
-        root=/dev/md0
-        read-only
-        initrd=/boot/initrd_raid
+md2 : active raid5 hdm2[2] hdk2[4] hdi2[1] hdg2[3] hde2[0]
+      1991680 blocks level 5, 32k chunk, algorithm 0 [5/5] [UUUUU]
 
-$ cat raidtab
-# md0 is the root array
-raiddev                 /dev/md0
-raid-level              1
-nr-raid-disks           2
-nr-spare-disks          0
-chunk-size              4
-persistent-superblock   1
-device                  /dev/hdb1
-raid-disk               0
-device                  /dev/hda1
-failed-disk             1
+> My preference is to create multiple swap partitions, one on each
+> hard drive, as in that situation, the swap subsystem always uses
+> a swap partition on a different drive to the original copy when
+> it decides where to swap out to.
 
-# md1 is the swap array
-raiddev                 /dev/md1
-raid-level              1
-nr-raid-disks           2
-nr-spare-disks          0
-chunk-size              4
-persistent-superblock   1
-device                  /dev/hdb2
-raid-disk               0
-device                  /dev/hda2
-failed-disk             1
+Linux will round-robbin swap allocation between all swap devices, unless
+you give a device a higher priority in the fstab. (or swapon command)
 
-$ cat fstab
-/dev/md0               /                       ext2    defaults        1 1
-/dev/md1               swap                    swap    defaults        0 0
+Gordon
+
