@@ -1,59 +1,57 @@
-From: Olivier Mueller <om-lists-linux@omx.ch>
-Subject: Re: "megaraid mbox: critical hardware error" on new dell poweredge
-	1850, suse 9.2, kernel 2.6.8
-Date: Mon, 24 Jan 2005 20:49:32 +0100
-Message-ID: <1106596172.5082.12.camel@bigapple.omnis.ch>
-References: <1106436197.14192.4.camel@bigapple.omnis.ch>
+From: Mike Tran <mhtran@us.ibm.com>
+Subject: Re: [PATCH] Version 1 super block
+Date: Mon, 24 Jan 2005 13:16:15 -0600
+Message-ID: <1106594175.8425.18.camel@dyn95390186.austin.ibm.com>
+References: <41E9D66E.9080100@us.ibm.com>
+	 <1106323194.8425.4.camel@dyn95390186.austin.ibm.com>
+	 <16884.20857.878835.1376@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1106436197.14192.4.camel@bigapple.omnis.ch>
+In-Reply-To: <16884.20857.878835.1376@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@cse.unsw.edu.au>
+Cc: linux-raid@vger.kernel.org, kevcorry@us.ibm.com
 List-Id: linux-raid.ids
 
-On Sun, 2005-01-23 at 00:23 +0100, Olivier Mueller wrote:
-> I'm trying to get a quite standard "suse linux 9.2" setup working
-> on a brand new dell poweredge 1850 with 2 scsi disks in raid1 setup.
->=20
-> Installation went completely fine, everything is working. But now (an=
-d
-> every time), after 2-3h of uptime and some high disk I/O load (rsync =
-of
-> some GB of data), it badly crashes with the following messages:
->                                                                      =
-                                                                       =
-          =20
-> -------------------------------------------------------------------
-> megaraid: aborting-1164069 cmd=3D2a <c=3D1 t=3D0 l=3D0>
-> megaraid abort: 1164069:48[255:0], fw owner
-> megaraid: aborting-1164070 cmd=3D2a <c=3D1 t=3D0 l=3D0>
-> megaraid abort: 1164070:59[255:0], fw owner
-> megaraid: aborting-1164071 cmd=3D2a <c=3D1 t=3D0 l=3D0>
-> megaraid abort: 1164071:19[255:0], fw owner
-> megaraid: aborting-1164072 cmd=3D2a <c=3D1 t=3D0 l=3D0>
-> megaraid abort: 1164072:18[255:0], fw owner
+On Sun, 2005-01-23 at 19:38, Neil Brown wrote:
+> On Friday January 21, mhtran@us.ibm.com wrote:
+> > Hello Neil,
+> > 
+> > I've been wondering if you had a chance to look at this patch.  Please
+> > let me know.
+> 
+> No I hadn't, but I have now.
+> > 
+> > On Sat, 2005-01-15 at 20:50, Mike Tran wrote:
+> > > Hello Neil,
+> > > 
+> > > I found 2 problems in the kernel MD driver:
+> > > 1) if disk index 0 is used, counting of max_dev is wrong
+> 
+> Yes, but I think that the correct fix is simply to add 1 to max_dev,
+> rather than setting it to max(max_dev, i).
+> It should really be renamed to "max_devs" (i.e. the maximum number of
+> devices) rather than "max_dev" (i.e. the maximum device number).
+> Possibly "num_slots" wold be an even better name...
+> 
+> 
+> > > 2) missing checksum calculation
+> 
+> Yes .... how did I miss that :-(
+> 
+> 
+> > > 
+> > > Please consider the attached patch for 2.6.10 kernel.
+> 
+> 
+> How about the following?
+> I'll add a changelog entry and forward it to Andrew shortly.
+> 
 
+sounds good.
 
-=46YI, I tried some "load tests" with under linux kernel 2.4 (knoppix,=20
-with module megaraid2 loaded, and it doesn't crash yet after 2-3h of
-work  (under 2.6 and megaraid it would have crashed after 30 minutes).
+Thanks,
+Mike T.
 
-Has the megaraid module been "improved" between 2.4 and 2.6 ?  The
-server is brand new, and the disks doesn't seem overheated...=20
-Is there anybody else working with dell 1850 servers ? :)
-
-regards,
-Olivier
---=20
-_______________________________________________________
- Olivier M=FCller - PGP key ID: 0x0E84D2EA - Switzerland=20
-    E-Mail: http://omx.ch/mail/ - AIM/iChat: swix3k
-
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
