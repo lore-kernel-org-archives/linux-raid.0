@@ -1,37 +1,33 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: AW: RAID1 and data safety?
-Date: Thu, 24 Mar 2005 09:31:13 +1100
-Message-ID: <16961.60977.412402.996171@cse.unsw.edu.au>
-References: <76592C4D3DA1AC4FB8424084D10D31A80611526B@mchh2c4e.mchh.siemens.de>
+From: Andy Sy <andy@nospam.com>
+Subject: Software RAID0 behaviour/performance on ATA drives
+Date: Fri, 25 Mar 2005 00:29:47 +0800
+Message-ID: <4242EAFB.9060008@nospam.com>
+Reply-To: andy@neotitans.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-In-Reply-To: message from Schuett Thomas EXT on Tuesday March 22
 Sender: linux-raid-owner@vger.kernel.org
-To: Schuett Thomas EXT <Thomas.Schuett.extern@mchh.siemens.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday March 22, Thomas.Schuett.extern@mchh.siemens.de wrote:
-> >Neil Brown wrote:
-> >>> Is there any way to tell MD to [...] and
-> >>> read-from-all-disks on a RAID1 array?
-> >
-> >Not sure why a checksum of X data blocks should be cheaper
-> >performance-wise than a comparison between X data blocks, but I can
-> >see the point in that you only have to load the data once and check
-> >the checksum.  Not quite the same security, but almost.
-> 
-> Still, if there is different data on the two disks due to a previous 
-> power failure, the comparsion could really be the better choise, isn't it?
-> 
+The recommended setup for doing RAID0 with ATA drives is
+that each hard drive should be on its own IDE channel.  The
+reasoning is so they can operate concurrently... i.e.  if you
+put them in a master-slave configuration on the same channel,
+you lose the benefits of striping since both drives cannot
+use the channel at the same time and have to wait for the
+others' read/write to finish first.
 
-What does a comparison of two blocks tell you?  That they are
-different, not which one is "right".
+QUESTION:  Is this really accurate?  Is the md driver smart/multi-threaded
+enough to read/write ahead non-consecutive sectors simultaneously?
+When writing, for example, the 1st to 4th chunks of a file across
+a striped two-drive array, would it write the 2nd and 4th
+chunks on one drive without waiting for the 1st and 3rd chunks
+to finish writing on the other?
 
-A filesystem designed to handle these sort of problems wouldn't suffer
-from data inconsistencies due to power off.  It would "know" where it
-was up to and would either re-write or ignore any data that it doesn't
-know to certainly be safe.
+If it can't, and the writes have to proceed in sequence/lockstep,
+how can putting the striped drives on separate channels help?
 
-NeilBrown
+
+-- 
+reply-to: a n d y @ n e o t i t a n s . c o m
