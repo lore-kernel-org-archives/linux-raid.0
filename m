@@ -1,78 +1,81 @@
-From: maarten van den Berg <maarten@vbvb.nl>
+From: Jeff Woods <kazrak+kernel@cesmail.net>
 Subject: Re: RAID1 VS RAID5
-Date: Mon, 27 Oct 2003 12:08:04 +0100
+Date: Mon, 27 Oct 2003 04:03:59 -0800
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200310271208.04442.maarten@vbvb.nl>
-References: <1067179519.1222.107.camel@cala> <200310261716.17030.maarten@vbvb.nl> <200310270927.32751.dusty@strike.wu-wien.ac.at>
+Message-ID: <5.2.1.1.0.20031027034847.01b25630@no.incoming.mail>
+References: <200310270927.32751.dusty@strike.wu-wien.ac.at>
+ <1067179519.1222.107.camel@cala>
+ <200310261716.17030.maarten@vbvb.nl>
+ <200310270927.32751.dusty@strike.wu-wien.ac.at> <200310271208.04442.maarten@vbvb.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset="us-ascii"; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200310270927.32751.dusty@strike.wu-wien.ac.at>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <200310271208.04442.maarten@vbvb.nl>
+References: <200310270927.32751.dusty@strike.wu-wien.ac.at>
+ <1067179519.1222.107.camel@cala>
+ <200310261716.17030.maarten@vbvb.nl>
+ <200310270927.32751.dusty@strike.wu-wien.ac.at>
+To: maarten van den Berg <maarten@vbvb.nl>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday 27 October 2003 09:27, Hermann Himmelbauer wrote:
-> On Sunday 26 October 2003 17:16, maarten van den Berg wrote:
-> > On Sunday 26 October 2003 15:45, Mario Giammarco wrote:
-> > > Hello,
-> > >
-> > >
-> > > My problem is: I have seen that RAID1 code does not interleave reads so
-> > > it does not improve performance very much putting two hard disks.
-> >
-> > After thinking about your question for a minute, I think I found the
-> > obvious reason for that.  Raid1 being a mirror set it does not make sense
-> > to interleave anything. Either disk1 reads it first or disk2 reads it
-> > first. Once you get the data from either disk, then you're done; no need
-> > to wait for the second disk (giving you the identical datablock).
-> > Interleaving only makes sense with other raid levels, but not with level
-> > 1.
+maarten van den Berg wrote (in part):
+>The way it works now, AFAIK, is that concurrent read commands are issued 
+>to all the drives in Raid1.  Because of seek times and the amount of 
+>rotation needed to get the right sector underneath the head(s), one of the 
+>disks will be first to transfer the data. This can be 'sooner' by a large 
+>amount.
 >
-> It seems you're missing something: Interleaving means here, reading one
-> part of the data from one disk and another part from the other disk, not
-> reading the same data from both.
+>If you instead want to interleave reads you lose the possibility to gain 
+>speed from this mechanism described above. It would be a trade-off and I'm 
+>not sure interleaving would come out as the winner here.
 
-I know what interleaving means; I just think it is counterproductive in Raid1.
+IIUC, neither duplicate reads nor interleaved reads closely matches how 
+(Linux software) RAID1 works.  I'm not sure what the local protocol is (and 
+if I'm stepping way out of line here, someone please correct me offlist), 
+but I'm going to quote another post sent via this listserver last month:
 
-> When reading a file from the RAID1, you could e.g. read the first block
-> from the first disk, the second from the second disk, the third from the
-> first disk and so on.
+>>From: "Bailey, Scott" <scott.bailey@eds.com>
+>>To: "'Andrew Herdman'" <andrew@whine.com>
+>>Cc: linux-raid@vger.kernel.org
+>>Subject: RE: RAID1: Disks alternating on reads
+>>Date: Tue, 23 Sep 2003 11:12:29 -0400
+>>
+>>>Pardon me if my assumption was incorrect, but I was under the belief 
+>>>that when using software RAID1, that when reads occurred on the RAID 
+>>>device that it would read from both drives in a striped fashion similar 
+>>>to how RAID0 works to improve the speed of the md devices.   I am 
+>>>actually seeing this, but it appears that the reads on each drive are 
+>>>continuing for 10 to 20 seconds before moving onto the next drive and 
+>>>then another 10-20 seconds and back again.  This is not allowing for any 
+>>>performance increase, it just lets the drives rest alternately.
+>>
+>>My impression from crawling through the code a few months back was that 
+>>this behavior was a design feature. On a read request, the request is 
+>>sent to the device with heads "closest" to the target sector, EXCEPT that 
+>>for sequential reads, the device gets reused on the assumption that the 
+>>disk can be kept streaming, EXCEPT that after some maximum number of 
+>>reads, another drive gets chosen to give the previous device a rest.
+>>
+>>I speculate your files are contiguous (or nearly so) with the result that 
+>>the initially closest drive gets hammered until its 'work quota' gets 
+>>exceeded, and then the next drive will get pounded. And so on. To test 
+>>this, I think you could reduce MAX_WORK_PER_DISK in raid1.c from the 
+>>default 128 (in 2.4.21) to something smaller (perhaps 8 sectors for a 
+>>filesystem with 4K block size?) and see if the load evens out.
+>>
+>>Good luck,
+>>
+>>         Scott Bailey
+>>         scott.bailey at eds.com
 
-The way it works now, AFAIK, is that concurrent read commands are issued to 
-all the drives in Raid1.  Because of seek times and the amount of rotation 
-needed to get the right sector underneath the head(s), one of the disks will 
-be first to transfer the data. This can be 'sooner' by a large amount.
+I believe the method Scott says the present code uses to be near optimal 
+and am skeptical that arbitrary changes to it would be improvements.  Of 
+course, someone actually making such changes and then multiple people 
+benchmarking it in a variety of different, well-designed, controlled tests 
+is the only way to really tell.
 
-If you instead want to interleave reads you lose the possibility to gain speed 
-from this mechanism described above. It would be a trade-off and I'm not sure 
-interleaving would come out as the winner here. Interleaving comes from for 
-instance RAM access. But a RAM chip has to 'recover' from a read, i.e. it 
-needs a little bit of time in between each read. Interleaving there is very 
-sensible since you can let one bank 'rest' while the other bank 'works'.
+--
+Jeff Woods <kazrak+kernel@cesmail.net>  
 
-For disks, this is not so; once the right sector is under the head the hard 
-work is done; reading on onto following or adjacent sectors happens at or 
-near the theoretical full speed. If you switch drives after 128 blocks you 
-slow your transfer, not speed it up.  This will depend on many many factors 
-like how large a read it is and how scattered the data is across the platter.
 
-But, maybe I'm way off base here and new insights have changed this.  :-)
-
-Greetings,
-Maarten
-
-> This would *theoretically* double the read speed - like with RAID0.
->
-> Practically this speed doubling would not occur as you have to add the seek
-> times when reading files, but I assume with TCQ and things like that there
-> could be some tricks to optimize the read behavior.
->
-> Anyway - it seems no RAID1 implementation - be it hardware or software
-> RAID1 - seems to make use of this read performance increase.
->
-> 		Best Regards,
-> 		Hermann
-
--- 
-Yes of course I'm sure it's the red cable. I guarante[^%!/+)F#0c|'NO CARRIER
