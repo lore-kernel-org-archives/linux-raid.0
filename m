@@ -1,62 +1,55 @@
 From: Norman Schmidt <norman.schmidt@ratnet.stw.uni-erlangen.de>
-Subject: Re: ADD_NEW_DISK failed
-Date: Sun, 23 Feb 2003 16:41:21 +0100
+Subject: wait-option for assembly during boot process ?
+Date: Sun, 23 Feb 2003 16:54:27 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3E58EBA1.7010305@ratnet.stw.uni-erlangen.de>
-References: <5.1.0.14.0.20030223085025.00b08b30@psimail.spindrift.on.ca>
+Message-ID: <3E58EEB3.30503@ratnet.stw.uni-erlangen.de>
 Reply-To: schmidt@naa.net
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1;
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Victor Geller <vgeller@spindrift.on.ca>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi Victor!
+Hi folks!
 
-Victor Geller schrieb:
-> Hi,
->=20
-> I have the following problem:
->=20
-> [root@wti7 vic]# mdadm -Cv /dev/md0 -l1 -n2 /dev/hda1 /dev/hdc1
-> mdadm: chunk size defaults to 64K
-> mdadm: /dev/hda1 appears to contain an ext2fs file system
->     size=3D5630748K  mtime=3DSun Feb 23 08:52:48 2003
-> mdadm: /dev/hdc1 appears to contain an ext2fs file system
->     size=3D5630748K  mtime=3DSun Feb 23 08:52:54 2003
-> mdadm: size set to 5630656K
-> Continue creating array? y
-> mdadm: ADD_NEW_DISK for /dev/hda1 failed: Invalid argument
->=20
-> [root@wti7 vic]# mount
-> /dev/hda1 on / type ext3 (rw)
-> /dev/hdc1 on /mnt/raid1_1 type ext3 (rw)
->=20
-> I would appreciate your help
->=20
-> Victor Geller , vgeller@spindrift.on.ca
+Since some (including me) use software raid (1 and 5 in this case) for=20
+swap and ext3 external journal partitions, I would appreciate it if Nei=
+l=20
+or some of the code hackers (I myself actually don=B4t understand any C=
+)=20
+could add the following option.
 
-That is easy:
+I boot from a software raid / and /boot (which is assembled after an=20
+according append to the kernel parameter line (here is the documentatio=
+n=20
+for that, anyway?)). During the boot process, the other md devices,=20
+which hold for example an ext-3 external journal and swap space, and=20
+other data partitions, are assembled and mounted (or just used).
 
-You MUST unmount /dev/hda1 and /dev/hdc1 before using them as part of a=
+But if the last shutdown left the md devices dirty, they are resynced=20
+during the next bootup while already in use. For normal ext2/ext3 data=20
+partitions, this is no problem, but for swap and possibly ext-3 journal=
+s=20
+this is deadly.
+
+What I would like to have is an option in mdadm.conf (through which the=
 =20
-md device! Later, you will NEVER mount one of both but ONLY /dev/md0 on=
- /.
-But this will not work with your current configuration, since you=20
-actually cannot unmount the root fs while it is running.
-Ask Neil or whoever how to use the failed disk way for circumventing th=
+arrays are configured and started automatically) like "WAIT" which hold=
+s=20
+up the boot process (i.e. usage of the not yet resynced devices) as lon=
+g=20
+as resync takes. And these devices should be resynced first, so that on=
 e=20
-need to copy your rootfs twice to another place (forth and back) or=20
-newly install the system (I am preparing a modified Debian Woody=20
-bootable CD just for that).
+does not have to wait for the resync of a terabyte-big data array that=20
+uses part of the same disks.
 
-By the way: This failed-disk approach is not so well documented for=20
-mdadm, or did I overlook something? Any documentation anywhere?
+How can I determine the order of assembly anyway? From top to bottom in=
+=20
+the config file (at least for arrays that don=B4t share the same disks)=
+?
 
-Hth, Norman.
-
+Thanks very much, Norman.
 --=20
 --
 
