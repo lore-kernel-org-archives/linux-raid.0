@@ -1,31 +1,31 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: Creating failed-mode RAID1 with mdadm
-Date: Fri, 3 May 2002 15:49:41 +1000 (EST)
+From: "mousebusiness.com" <arturj@mousebusiness.com>
+Subject: Adding spare drive
+Date: Mon, 6 May 2002 22:42:28 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <15570.9461.715820.460557@notabene.cse.unsw.edu.au>
-References: <20020430184832.GA381@willow.seitz.com>
-	<20020430190315.GA680@willow.seitz.com>
+Message-ID: <002901c1f579$464ec5a0$050010ac@niunia.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Ross Vandegrift on Tuesday April 30
-To: Ross Vandegrift <ross@willow.seitz.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday April 30, ross@willow.seitz.com wrote:
-> > # mdadm --create /dev/md0 --level 1 --raid-disks=2 /dev/hde1 /dev/hdg1
-> > 
-> > I get:
-> > 
-> > mdadm: Cannot open /dev/hdg1: No such device or address
-> > mdadm: create aborted
-> 
-> Hmmm, funny - as it turns out, mdadm actually created the array and
-> started it with /dev/hdg1 failed.  It just said it didn't.
+I will be building a RAID5 array with 5 data drives and one hot spare. I
+need to use the drive for hot spare for something else at the moment. Is it
+possible to build my array with 5 drives and add hot spare later by simply
+adding the entry for it in /etc/raidtab?
 
-That surprises me?   Are you in a position to try it again and see?
-If so, what version of mdadm?
+The array will be built with 6 drives connected to 3 IDE controllers, one
+per channel, 2 channels on each board. If one controller fails, obviously
+the array will go down with it. Does that mean that all data will be
+irrecoverably lost or will things go back to normal after I replace
+defective controller and let the array resync?
 
-NeilBrown
+I know these are basic questions, but I didn't find answers in FAQ (hint,
+hint)
+
+Comments greatly appreciated.
+
+Artur
+
