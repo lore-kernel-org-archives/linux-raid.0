@@ -1,101 +1,59 @@
-From: "Guy" <bugzilla@watkins-home.com>
+From: "Stephen Hargrove" <stephen@exitwound.org>
 Subject: RE: Should I Start Over?
-Date: Wed, 7 Jul 2004 15:07:37 -0400
+Date: Wed, 7 Jul 2004 14:40:46 -0500 (CDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200407071907.i67J7b309004@watkins-home.com>
+Message-ID: <2354.66.230.1.97.1089229246.squirrel@exitwound.org>
 References: <2128.66.230.1.97.1089224667.squirrel@exitwound.org>
+    <200407071907.i67J7b309004@watkins-home.com>
+Reply-To: stephen@exitwound.org
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <2128.66.230.1.97.1089224667.squirrel@exitwound.org>
-To: stephen@exitwound.org
+In-Reply-To: <200407071907.i67J7b309004@watkins-home.com>
+To: Guy <bugzilla@watkins-home.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I said:
-> Do this command to determine which disk is being re-built:
-> cat /proc/mdadm
-
-You said:
-I do not have a /proc/mdadm.  All I have is /proc/mdstat.
-Thanks!
-
-My bad! cat /proc/mdstat
-Now I don't think /proc/mdstat will help.
-
-Send me the output from these 2 commands:
-Cat /proc/mdstat
-mdadm -D /dev/md0
-
-Omit the disk that is being re-built!!!!!!  Not hde1.  hde1 was added as a
-spare.  It may still have good data.  The disk being re-built is toast!  The
-other 2 may also have good data.
-
-Take your time!!!  Re-read everything.  Then when you get to "re-read
-everything", do it again!  :)
-
-If you are not sure, just ask another question.
-
-Lots of odd things can go wrong.  You can recover from most of them!!  But,
-the documentation on recovery is non-existent!  I have learned what I know
-from monitoring this list, asking on this list, and playing with the stuff.
-
-Once we get things working we will try to determine why your re-build is so
-slow!
-
-Guy
-
------Original Message-----
-From: Stephen Hargrove [mailto:stephen@exitwound.org] 
-Sent: Wednesday, July 07, 2004 2:24 PM
-To: Guy
-Cc: linux-raid@vger.kernel.org
-Subject: RE: Should I Start Over?
-
 Guy said:
-> You did not use the "missing" keyword.  You just created a 3 disk array.
-> If
-> your array had 3 disks, you should have listed 2 of them and the "missing"
-> keyword for the third.
+>
+> Send me the output from these 2 commands:
+> Cat /proc/mdstat
 
-Hrm.  Ok.  I should have read the man page before proceeding.  Well, it's
-official.  I am an idiot.
+# cat /proc/mdstat
+Personalities : [raid5]
+read_ahead not set
+unused devices: <none>
 
-> Why did you add a spare(hde1)?
+> mdadm -D /dev/md0
 
-See above.
+n# mdadm -D /dev/md0
+mdadm: md device /dev/md0 does not appear to be active.
 
-> You should have done something like this:
-> mdadm --create /dev/md0 --level=5 --raid-devices=4 /dev/hdg1 /dev/hdd1
-> /dev/hdc1 missing
+As I mentioned, I shut it off when it had reached 1.1% of the rebuild.  I
+haven't turned it back on because I don't want it to begin rebuilding
+again.  My minimal experience has shown that it will likely pick up where
+it left off.  The startup script (Debian Sarge -- /etc/init.d/mdadm-raid)
+is going to use /etc/mdadm/mdadm.conf, which is:
 
-# mdadm --create /dev/md0 --level=5 --raid-devices=4 /dev/hdg1 /dev/hdd1
-/dev/hdc1 missing
-mdadm: /dev/hdg1 appears to be part of a raid array:
-    level=5 devices=3 ctime=Wed Jul  7 08:11:18 2004
-mdadm: /dev/hdd1 appears to be part of a raid array:
-    level=5 devices=3 ctime=Wed Jul  7 08:11:18 2004
-mdadm: /dev/hdc1 appears to be part of a raid array:
-    level=5 devices=3 ctime=Wed Jul  7 08:11:18 2004
-Continue creating array? n
+# cat /etc/mdadm/mdadm.conf
+DEVICE /dev/hd*
+ARRAY /dev/md0 level=raid5 num-devices=3
+UUID=fef44719:ddd66a49:0a337b48:b53e14c0
+   devices=/dev/hdg1,/dev/hdd1,/dev/hdc1
 
-Yeah, it looks like I screwed the pooch on this one.  The array was
-composed of hd[gdc] with hde as the spare.  I managed to stop the rebuild
-at 1.1% complete.  I guess at this point I don't have anything to lose by
-letting it rebuild.  Would there be any benefit to omitting hdg and
-letting it rebuild from hd[cde]?  Like this:
+(And apparently doesn't reflect the fact that hde is my spare ...)
 
-# mdadm --create /dev/md0 --level=5 --raid-devices=4 /dev/hdd1 /dev/hdc1
-/dev/hde1 missing
+> Omit the disk that is being re-built!!!!!!  Not hde1.  hde1 was added as a
+> spare.  It may still have good data.  The disk being re-built is toast!
+> The other 2 may also have good data.
 
-> Do this command to determine which disk is being re-built:
-> cat /proc/mdadm
+I'm guessing it was rebuilding hdg since that was the first device I
+listed on the commandline.
 
-I do not have a /proc/mdadm.  All I have is /proc/mdstat.
+> If you are not sure, just ask another question.
 
-Thanks!
+Thanks, Guy!  I sure do appreciate your assistance.
+
 --
 Steve
-
