@@ -1,51 +1,64 @@
-From: Glyn Davies <scrumpydude@yahoo.com>
-Subject: System hangs when starting RAID5
-Date: Sat, 20 Nov 2004 12:15:25 +0000 (GMT)
-Message-ID: <20041120121525.5520.qmail@web13608.mail.yahoo.com>
+From: Maurilio Longo <maurilio.longo@libero.it>
+Subject: Re: Badstripe proposal (was Re: Bad blocks are killing us!)
+Date: Sat, 20 Nov 2004 14:15:30 +0100
+Message-ID: <419F4372.CD77B4DD@libero.it>
+References: <200411162307.iAGN7lN28260@www.watkins-home.com>
+		<419B5050.1010501@dgreaves.com>
+		<419C729D.3E36A473@libero.it> <20041119181222.6ce1f1be.pegasus@nerv.eu.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Jure Pe ar <pegasus@nerv.eu.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi All,
+Jure Pe,
 
-Long story here but I'll just give the current
-sypmtoms for the time being.
+can we use dm-bbr without installing evms? I'd like not to install it s=
+ince it
+seems to me a cumbersome tool while my systems with raid1 and grub are =
+fairly
+easy to create and maintain.
 
-I have 4x160GB (hde to hdh) disks, RAID5. Volume
-manager on top of that. System disk
-(/,usr,var,boot,swap) on hda.  OS is Fedora Core2.
-System died in a big lock up. Now, when booting it
-hangs after announcing "Remounting root filesystem in
-read-write mode". The OK prompt for this action is
-never displayed. The system is locked up.
-
-Booting FC2 disk1 as rescue disk I can mount the
-volumes on the raid but after a short while 10-20s or
-as soon as I try to browse into the directories the
-system hangs. Booting the rescue CD but not starting
-md0 is fine. Start it with raidstart and (after the
-few seconds) it hangs. It looks to me as if this is
-one well corrupted RAID5. Any suggestions of how this
-can be fixed or at least kept alive long enough to get
-some data off (possibly by not starting the
-reconstruction - forgot to say the raid is dirty).
-
-MTIA
-
-=3D=3D=3D=3D=3D
-Best Regards
-Glyn
+regards.
 
 
-	=09
-___________________________________________________________=20
-Moving house? Beach bar in Thailand? New Wardrobe? Win =A310k with Yaho=
-o! Mail to make your dream a reality.=20
-Get Yahoo! Mail www.yahoo.co.uk/10k
+
+Jure Pe ar ha scritto:
+
+> On Thu, 18 Nov 2004 10:59:58 +0100
+> Maurilio Longo <maurilio.longo@libero.it> wrote:
+>
+> > David and others,
+> >
+> > I'd like to add that evms ( http://evms.sourceforge.net/ ) already =
+has a
+> > bad-block management layer, maybe it could be merged inside md to h=
+ave
+> > write errors management as well, maybe :)
+>
+> BBR as it is called is implemented with a device mapper. AFAIK one ca=
+n take
+> dm managed block devices and build md with them.
+>
+> --
+>
+> Jure Pe=E8ar
+> http://jure.pecar.org/
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+--
+ __________
+|  |  | |__| md2520@mclink.it
+|_|_|_|____| Team OS/2 Italia
+
+
 -
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
