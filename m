@@ -1,52 +1,45 @@
-From: Arjan van de Ven <arjanv@redhat.com>
-Subject: Re: Proposed enhancements to MD
-Date: Fri, 16 Jan 2004 10:57:38 +0100
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: Raid Array with 3.5Tb
+Date: Fri, 16 Jan 2004 22:18:15 +1100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1074247058.4434.0.camel@laptop.fenrus.com>
-References: <40033D02.8000207@adaptec.com> <40043C75.6040100@pobox.com>
-	 <20040113134107.A7646@lists.us.dell.com>
-	 <20040116093120.GH22417@marowsky-bree.de>
-Reply-To: arjanv@redhat.com
+Message-ID: <16391.51319.698137.120756@notabene.cse.unsw.edu.au>
+References: <1074196167.1382.8.camel@e-linux>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-7afQEDI97XKKLBcPtXFa"
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20040116093120.GH22417@marowsky-bree.de>
-To: Lars Marowsky-Bree <lmb@suse.de>
-Cc: Matt Domsch <Matt_Domsch@dell.com>, Jeff Garzik <jgarzik@pobox.com>, Scott Long <scott_long@adaptec.com>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-raid <linux-raid@vger.kernel.org>, Neil Brown <neilb@cse.unsw.edu.au>
+In-Reply-To: message from Evan Felix on Thursday January 15
+To: Evan Felix <evan.felix@pnl.gov>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+On Thursday January 15, evan.felix@pnl.gov wrote:
+> I've been attempting to create a large raid 5 device using the linux
+> 2.6.1 kernel, with the Large Block Device configured on.  I have in the
+> system 16 250G disks.  I built an array with mdadm -C -n 15 -x 1
+> /dev/md2 /dev/sd[a-p]
+> 
+> The resync/recovery seemed to be going fine, but at some point i started
+> seeing:
+> 
+> kernel: compute_blocknr: map not correct
+> kernel: compute_blocknr: map not correct
+...
+> 
+> Has anyone else made an array this large? and does anybody have any
+> pointers on where i can start looking at code to fix this?
 
---=-7afQEDI97XKKLBcPtXFa
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I would look in  drivers/md/raid5.c and compute_blocknr() in that file.
 
-On Fri, 2004-01-16 at 10:31, Lars Marowsky-Bree wrote:
-> On 2004-01-13T13:41:07,
->    Matt Domsch <Matt_Domsch@dell.com> said:
->=20
-> > > You sorta hit a bad time for 2.4 development.  Even though my employe=
-r=20
-> > > (Red Hat), Adaptec, and many others must continue to support new=20
-> > > products on 2.4.x kernels,
-> > Indeed, enterprise class products based on 2.4.x kernels will need
-> > some form of solution here too.
->=20
-> Yes, namely not supporting this feature and moving onwards to 2.6 in
-> their next release ;-)
+I would change "chunk_number" to a sector_t and change:
+	chunk_number = stripe * data_disks + i;
+to read
+	chunk_number = (sector_t)stripe * data_disks + i;
 
-hear hear
+Possibly "stripe" and "chunk_number" should both be "sector_t", but
+I'm not at all sure.
 
+Please let me know if it helps.
 
---=-7afQEDI97XKKLBcPtXFa
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+NeilBrown
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.3 (GNU/Linux)
-
-iD8DBQBAB7WRxULwo51rQBIRAhy4AJ4u9LY979em5HJLASaH7CVj5r+3ugCgjRTJ
-1NgkLP+B3W2IaHt0sB5RrbQ=
-=M0Y6
------END PGP SIGNATURE-----
-
---=-7afQEDI97XKKLBcPtXFa--
