@@ -1,146 +1,79 @@
-From: "Brett I. Holcomb" <brettholcomb@charter.net>
-Subject: RE: Adaptec 3210S Problems
-Date: Sun, 3 Apr 2005 10:47:36 -0400
-Message-ID: <Pine.LNX.4.62.0504031046360.9889@gandalf>
-References: <Pine.LNX.4.62.0504022059120.9514@gandalf>
- <200504030332.j333Wrm26782@www.watkins-home.com>
+From: Ronny Plattner <ronny_p@gmx.net>
+Subject: Re: once again raid5
+Date: Sun, 03 Apr 2005 18:56:24 +0200
+Message-ID: <d2p73g$9u5$1@sea.gmane.org>
+References: <d2gr28$aeb$1@sea.gmane.org> <16971.62329.939077.933653@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200504030332.j333Wrm26782@www.watkins-home.com>
+In-Reply-To: <16971.62329.939077.933653@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Yes, sorry, there is a terminator block on the end of the cable but the 
-key was to enable term power on the last drive.  This made things work 
-and I 
-haven't had anymore trouble.
+Hi !
+
+Neil Brown schrieb:
+> Your best bet would be:
+> 
+>   mdadm --create /dev/md2 --level 5 -n 4 /dev/hda1 /dev/hdk1 missing  /dev/hdo1
+> 
+> and hope that the data you find on md2 isn't too corrupted.  You might be
+> lucky, but I'm not holding my breath - sorry.
+
+This worked AFAIS but there are troubles with the filesystems ( no 
+superblocks ...ext3,xfs) :-(
+
+-snip-
+~# mdadm  --detail /dev/md2
+/dev/md2:
+         Version : 00.90.01
+   Creation Time : Sun Apr  3 12:34:42 2005
+      Raid Level : raid5
+      Array Size : 735334848 (701.27 GiB 752.98 GB)
+     Device Size : 245111616 (233.76 GiB 250.99 GB)
+    Raid Devices : 4
+   Total Devices : 3
+Preferred Minor : 2
+     Persistence : Superblock is persistent
+
+     Update Time : Sun Apr  3 12:34:42 2005
+           State : clean, degraded
+  Active Devices : 3
+Working Devices : 3
+  Failed Devices : 0
+   Spare Devices : 0
+
+          Layout : left-symmetric
+      Chunk Size : 64K
+
+            UUID : 39e90883:c8f824d7:16732793:9ba70289
+          Events : 0.60470023
+
+     Number   Major   Minor   RaidDevice State
+        0      56        1        0      active sync   /dev/hdi1
+        1      57        1        1      active sync   /dev/hdk1
+        2       0        0        -      removed
+        3      89        1        3      active sync   /dev/hdo1
+-snap-
 
 
-On Sat, 2 Apr 2005, Guy wrote:
+Thanks
+Ronny
 
->
->
->> -----Original Message-----
->> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
->> owner@vger.kernel.org] On Behalf Of Brett I. Holcomb
->> Sent: Saturday, April 02, 2005 9:01 PM
->> To: linux-raid@vger.kernel.org
->> Subject: RE: Adaptec 3210S Problems
->>
->> This system had a series of caddies, one for each drive and the cable went
->> from the controller to each drive ending with a terminator block after the
->> last drive.  I did not find any place in or on the caddy frame for
->> termination so I put the term power jumper on the last drive.
->>
->> You are correct in that it shouldn't have to be that way - and that's one
->> reason I did not jump on the termination right away.  Evidently I have
->> cheap caddies <G>.
->
-> You just said the cable has a terminator block after the last drive!!  What
-> is that?  It sounds like the terminator.
->
-> Guy
->
->
->>
->>
->>
->>
->>   On Sat, 2 Apr 2005, Guy wrote:
->>
->>>
->>>
->>>> -----Original Message-----
->>>> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
->>>> owner@vger.kernel.org] On Behalf Of Brett I. Holcomb
->>>> Sent: Saturday, April 02, 2005 6:54 PM
->>>> To: linux-raid@vger.kernel.org
->>>> Subject: RE: Adaptec 3210S Problems
->>>>
->>>> Followup for the archives.  With the help of several it turns out to be
->>>> termination (surprise!!! <G>).  I've used non-RAID SCSI for years and
->> have
->>>> always been paranoid about terminating.  However, this system was set
->> up
->>>> for me by someone that I assumed (yes, I know <G>) knew RAID better
->> than I
->>>> did.  The drives are in caddies that are hot swappable and the drive ID
->> is
->>>> assigned by the caddy frame.  Consequently the installer did not put
->> any
->>>> jumpers on the  drives and did not terminate the last drive.
->>>>
->>>> Thanks all.
->>>
->>> In a cabinet as you describe, it is normal to put a terminator on the
->>> cabinet, not the drive.  Maybe that is what you did, but you made it
->> sound
->>> like you installed a jumper on the last drive.  In a cabinet as you
->> describe
->>> you would not put jumpers directly on the drives.  If you did so, then
->> it
->>> makes it harder when replacing a drive.  All drives should be just plug
->> and
->>> go.
->>>
->>>>
->>>>
->>>>
->>>> On Mon, 21 Mar 2005, Salyzyn, Mark wrote:
->>>>
->>>>> Termination, Cabling and/or Drive Firmware Incompatibilities. Good
->> idea
->>>>> to get your TSID ready, list of components and their firmware versions
->>>>> and call Adaptec Support and work through the discovery cookbook.
->>>>>
->>>>> Sincerely -- Mark Salyzyn
->>>>>
->>>>> -----Original Message-----
->>>>> From: linux-raid-owner@vger.kernel.org
->>>>> [mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Brett I.
->> Holcomb
->>>>> Sent: Saturday, March 19, 2005 1:22 AM
->>>>> To: linux-raid@vger.kernel.org
->>>>> Subject: Adaptec 3210S Problems
->>>>>
->>>>> I'm running a Linux system with a Adaptec 3210S controller.  Right now
->>>>> the
->>>>> system has nothing on it and I have not created any RAID.  I've notice
->>>>> that when I boot into the Adaptec CD and watch the drives they keep
->>>>> getting flagged as missing.  If I do a "Read system config" the drives
->>>>> show up and the flag goes away.  A few minutes later they are flagged
->> as
->>>>>
->>>>> missing again.  This is a little discouraging as it appears I have a
->>>>> problem.  Any ideas on what is happening - why do my drives keep
->> getting
->>>>>
->>>>> flagged as missing?  I need to find out before I install Linux!
->>>>>
->>>>> Thanks.
->>>>>
->>>>>
->>>
->>> Guy
->>>
->>> -
->>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>
->>>
->>
->> -
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->
+ps: For people which are interested in...
+
+-snip-
+server:~# mount -t ext3 /dev/mapper/raid5--volume-home /mnt/data
+mount: wrong fs type, bad option, bad superblock on 
+/dev/mapper/raid5--volume-home,
+        or too many mounted file systems
+        (could this be the IDE device where you in fact use
+        ide-scsi so that sr0 or sda or so is needed?)
+
+server:~# mount -t xfs /dev/mapper/raid5--volume-data  /mnt/data
+mount: /dev/mapper/raid5--volume-data: can't read superblock
+-snap-
+
 
