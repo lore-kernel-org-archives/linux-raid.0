@@ -1,24 +1,133 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: [PATCH] declare raid6_intx32 to fix ia64 build
-Date: Fri, 23 Jan 2004 01:55:09 +0000 (UTC)
+From: AndyLiebman@aol.com
+Subject: Re: Linux Raid confused about one drive and two arrays
+Date: Thu, 22 Jan 2004 22:22:41 EST
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <buputt$rch$1@terminus.zytor.com>
-References: <200401221600.53591.bjorn.helgaas@hp.com>
+Message-ID: <15d.2c334826.2d41ed81@aol.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+To: neilb@cse.unsw.edu.au
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Followup to:  <200401221600.53591.bjorn.helgaas@hp.com>
-By author:    Bjorn Helgaas <bjorn.helgaas@hp.com>
-In newsgroup: linux.dev.raid
->
-> This patch against 2.6.2-rc1 fixes a build failure on ia64
-> and fixes a trivial comment error.
+In a message dated 1/22/2004 7:42:48 PM Eastern Standard Time, 
+neilb@cse.unsw.edu.au writes:
+
 > 
+> My questions are:
+> 
+> How do I fix this problem?
 
-Thanks, verified and forwarded to akpm.
+Check that sdh1 is ok (do a simple read check) and then
+  mdadm /dev/md6 -a /dev/sdh1
 
-	-hpa
+Neil, 
+
+Thanks for taking the time to answer my previous email. 
+
+Please excuse my follow up question. How do I do a "simple read check" on a 
+partition/drive that's been removed from an array but that doesn't have it's 
+own file system on it? 
+
+Assuming the "failed removed" drive tests out okay on a read check, I 
+understand that you're suggesting I add the drive back to my array. But why isn't it 
+appropriate to Assemble the array with the "force" option? Is it NOT 
+appropriate to use this option once a drive/partition has been marked as "failed and 
+removed"? If not, when is "force" appropriate? 
+
+Wish there was some more info about these options (like "run" as well). The 
+manual pages give very brief explanations without examples of where they are 
+appropriate. I know it's not your job to educate the whole world. Is this 
+information in any book that one could buy? Is it in the Derek ??? book? Exhaustive 
+google searches (and searches through the Linux Raid archives) have given me 
+clues here and there. But no hard and fast rules of thumb from the person who 
+should know best about mdadm!
+
+That said, I -- and others -- certainly appreciate all you contribute to 
+Linux! 
+
+Regards, 
+Andy Liebman
+
+-----------------------------------------------------------------------------
+FOR REFERENCE, HERE'S YOUR REPLY TO ME:
+
+> I have just encountered a very disturbing RAID problem. I hope somebody 
+> understands what happened and can tell me how to fix it.
+
+It doesn't look very serious.
+
+> 
+> I have two RAID 5 arrays on my Linux machine -- md4 and md6.. Each array 
+> consists of 5 firewire (1394a) drives -- one partition on each drive, 10 
+drives in 
+> total. Because the device ID's on these drives can change, I always use 
+MDADM 
+> to create and manage my arrays based on UUIDs. I am using MDADM 1.3. 
+Mandrake 
+> 9.2 with mandrake's 2.4.22-21 kernel.
+> 
+> After running these arrays successfully for two months -- rebooting my file 
+> server every day -- one of my arrays came up in a degraded mode. It looks 
+as if 
+> the Linux RAID subsystem "thinks" one of my drives belongs to both arrays.
+> 
+> As you can see below, when I run mdadm -E on each of my ten firewire 
+drives, 
+> mdadm is telling me that for each of the drives in the md4 array (UUID 
+group 
+> 62d8b91d:a2368783:6a78ca50:5793492f )  there are 5 Raid devices and 6 total 
+> devices with one failed. However this array always only had 5
+> devices.
+
+The "total" and "failed" device counts are (unfortuantely) not very
+reliable.
+
+> 
+> On the other hand, for most of the drives in the md6 arary (UUID group  
+> 57f26496:25520b96:41757b62:f83fcb7b), mdadm is telling me that there are 5 
+raid 
+> devices and 5 total devices with one failed.
+> 
+> However, when I run mdadm -E on the drive currently identified as /dev/sdh1 
+> -- which also belongs to md6 or  the UUID group 
+> 57f26496:25520b96:41757b62:f83fcb7b -- mdadm tells me that sdh1 is part of 
+an array with 6 total devices, 5 
+> raid devices, one failed.
+> 
+> /dev/sdh1 is identified as device number 3 in the RAID with the UUID 
+> 57f26496:25520b96:41757b62:f83fcb7b.  Howver, when I run mdadm -E on the 
+other 4 
+> drives that belong to md6, mdadm tells me that device number 3 is
+> faulty.
+
+So presumably md thought that sdh1 failed un some way and removed it
+from the array.  It updated the superblock on the remaining devices to
+say that sdh1 had failed, but it didn't update the superblock on sdh1,
+because it had failed, and writing to the superblock would be
+pointless.
+
+
+> 
+> My questions are:
+> 
+> How do I fix this problem?
+
+Check that sdh1 is ok (do a simple read check) and then
+  mdadm /dev/md6 -a /dev/sdh1
+
+> Why did it occur?
+
+Look in your kernel logs to find out when and why sdh1 was removed
+from the array.
+
+> How can I prevent it from occurring again?
+
+You cannot.  Drives fail occasionally.  That is why we have raid.
+
+Or maybe a better answer is:
+  Monitor your RAID arrays and correct problems when they occur.
+
+BY THE WAY, I WAS MONITORING MY ARRAYS -- WHICH IS WHY I PICKED UP THE 
+PROBLEM JUST AFTER IT OCCURRED. 
