@@ -1,62 +1,39 @@
-From: Gregory Leblanc <gleblanc@linuxweasel.com>
-Subject: Re: EIO AP-1680 ATA133 RAID PCI Controller
-Date: 12 Feb 2003 15:00:26 -0800
+From: Peter Chubb <peter@chubb.wattle.id.au>
+Subject: Re: [Ext2-devel] Re: fsck out of memory
+Date: Thu, 13 Feb 2003 14:30:27 +1100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1045090825.12695.34.camel@gregdell>
-References: <3E493005.4030702@mvista.com> <3E4329CE.5020706@netscape.net>
-	 <3E47E248.3080006@mvista.com> <3E48871A.3010709@netscape.net>
-	 <3E493005.4030702@mvista.com>
-	 <5.1.1.6.2.20030212083307.039a1dd0@mail.harddata.com>
+Message-ID: <15947.4435.829168.530565@wombat.chubb.wattle.id.au>
+References: <5250726@toto.iv>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-mJL3Atx6JQLmYqiB36M4"
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5.1.1.6.2.20030212083307.039a1dd0@mail.harddata.com>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <5250726@toto.iv>
+To: "Stephen C. Tweedie" <sct@redhat.com>
+Cc: Stephan van Hienen <raid@a2000.nu>, Andreas Dilger <adilger@clusterfs.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, ext2-devel@lists.sourceforge.net, Theodore Ts'o <tytso@mit.edu>, peter@chubb.wattle.id.au, tbm@a2000.nu
 List-Id: linux-raid.ids
 
+>>>>> "Stephen" == Stephen C Tweedie <sct@redhat.com> writes:
 
---=-mJL3Atx6JQLmYqiB36M4
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Stephen> Hi, On Tue, 2003-02-11 at 13:11, Stephan van Hienen wrote:
 
-It's really impolite to send encrypted mail to the list.  Anyone to whom
-the message is encrypted won't be able to read it
+Stephen> I've no idea.  Ben has some lb patches up at
 
-On Wed, 2003-02-12 at 07:36, Maurice Hilarius wrote:
-> -----BEGIN PGP MESSAGE-----
-[snip]
+Stephen>   http://people.redhat.com/bcrl/lb/
 
-> With regards to your message at 02:16 PM 2/11/03, Gregory Leblanc.
-> Where you stated:
-> While the performance of RAID 5 using software RAID is generally far
-> superior to that provided by hardware RAID, host CPU usage can be
-> -quite- high in high-load situations.  The benchmarks recently posted
-> had cpu usage numbers at over 90% on most sequeential writes and
-> reads.
-> 	Greg
->=20
-> Naturally. There is no such thing as a free lunch.
-> Look at it this way:
-> If you have X amount of data to write, and it takes half as long, but
-> uses 30% more CPU, you are ahead of the game..
+Stephen> but there's nothing broken out against the latest lbd diffs.
 
-The formatting of this message is all wonky, sorry about it being
-confusing.  Anyway, I agree, except that I have no numbers to back up
-the CPU use differences, or the MB/sec differences.  Without them, any
-claims are pretty silly to try to make.
-	Greg
 
---=-mJL3Atx6JQLmYqiB36M4
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+Ben's patches are against a very old version of the kernel (2.4.6-pre8)
+and require linking against libgcc to get 64-bit division.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.1 (GNU/Linux)
 
-iD8DBQA+StIJnAkVXO6fw4sRAu1bAJ0VPAn8dn33YVSo4zjST/H75n+P2ACaA0HZ
-g2zfJfm+O06VZx0eOijtKkE=
-=Cb1S
------END PGP SIGNATURE-----
+The main issue is 64-bit division.  In the limited time I had I
+couldn't convince myself that I could rely on all divisors being less
+than 2^31 in the raid4/5 code.  If you can convince yourself of that,
+then t's a straightforward but tedious task to make raid1, raid4 and
+raid5 LBD-safe.
 
---=-mJL3Atx6JQLmYqiB36M4--
-
+--
+Dr Peter Chubb				    peterc@gelato.unsw.edu.au
+You are lost in a maze of BitKeeper repositories, all almost the same.
