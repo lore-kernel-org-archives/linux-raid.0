@@ -1,14 +1,35 @@
-From: "Marc" <linux-raid@liquid-nexus.net>
-Subject: Poor RAID5 performance on new SMP system
-Date: Mon, 18 Oct 2004 10:11:58 +0800
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: Poor RAID5 performance on new SMP system
+Date: Sun, 17 Oct 2004 23:37:49 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20041018015803.M50347@liquid-nexus.net>
+Message-ID: <200410180337.i9I3bsN14047@www.watkins-home.com>
+References: <20041018015803.M50347@liquid-nexus.net>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset=iso-8859-1
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <20041018015803.M50347@liquid-nexus.net>
+To: 'Marc' <linux-raid@liquid-nexus.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+I have a P3-500 SMP system.  It performs better than your SMP system.  So I
+don't think SMP is the issue.  This is a SCSI system with 3 SCSI buses and
+14 disks.
+
+Version  1.03    ------Sequential Output------ --Sequential Input- --Random-
+                 -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- --Seeks--
+Machine     Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP  /sec %CP
+watkins-home. 1G  3403  98 35480  86 22074  47  3589  99 68735  63 512.6  11
+
+Guy
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Marc
+Sent: Sunday, October 17, 2004 10:12 PM
+To: linux-raid@vger.kernel.org
+Subject: Poor RAID5 performance on new SMP system
 
 Hi,
 I recently upgraded my file server to a dual AMD 2800+ on a Tyan Tiger MPX 
@@ -42,7 +63,8 @@ Before (PIII 700/440BX):
 128k chunk
               -------Sequential Output-------- ---Sequential Input-- --
 Random--
-              -Per Char- --Block--- -Rewrite-- -Per Char- --Block--- --Seeks-
+              -Per Char- --Block--- -Rewrite-- -Per Char- --Block---
+--Seeks-
 --
 Machine    MB K/sec %CPU K/sec %CPU K/sec %CPU K/sec %CPU K/sec %CPU  /sec %
 CPU
@@ -53,7 +75,8 @@ After: (Dual AMD MP 2800+/Tiger MPX(AMD760)
 
               -------Sequential Output-------- ---Sequential Input-- --
 Random--
-              -Per Char- --Block--- -Rewrite-- -Per Char- --Block--- --Seeks-
+              -Per Char- --Block--- -Rewrite-- -Per Char- --Block---
+--Seeks-
 --
 Machine    MB K/sec %CPU K/sec %CPU K/sec %CPU K/sec %CPU K/sec %CPU  /sec %
 CPU
@@ -102,9 +125,11 @@ AGP Bridge
 03)
 0000:00:10.0 PCI bridge: Advanced Micro Devices [AMD] AMD-768 [Opus] PCI 
 (rev 05)
-0000:02:00.0 USB Controller: Advanced Micro Devices [AMD] AMD-768 [Opus] USB 
+0000:02:00.0 USB Controller: Advanced Micro Devices [AMD] AMD-768 [Opus] USB
+
 (rev 07)
-0000:02:04.0 VGA compatible controller: NVidia / SGS Thomson (Joint Venture) 
+0000:02:04.0 VGA compatible controller: NVidia / SGS Thomson (Joint Venture)
+
 Riva128 (rev 10)
 0000:02:05.0 RAID bus controller: Silicon Image, Inc. (formerly CMD 
 Technology Inc) PCI0680 Ultra ATA-133 Host Controller (rev 02)
@@ -116,4 +141,9 @@ Controller
 (rev 78)
 
 --
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
