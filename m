@@ -1,83 +1,53 @@
-From: Iain <iain@minihub.org>
-Subject: Re: URGENT lilo problems
-Date: Wed, 24 Apr 2002 20:13:42 +1000
+From: Dovli X <the_dovlets@yahoo.com>
+Subject: Replacing a RAID 1 array
+Date: Wed, 24 Apr 2002 05:07:46 -0700 (PDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20020424101934Z311424-22651+15811@vger.kernel.org>
-References: <20020424090459Z310953-22651+15685@vger.kernel.org> <20020424115234.A30278@unthought.net>
+Message-ID: <20020424120746.33046.qmail@web13707.mail.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20020424115234.A30278@unthought.net>
-To: Jakob =?iso-8859-1?q?=D8stergaard?= <jakob@unthought.net>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 24 Apr 2002 07:52, Jakob =D8stergaard wrote:
+Hello!
 
-> > The map file is in /boot which is on /dev/md0 the partition I want =
-to
-> > boot from.
->
-> Can you send  /proc/mdstat and /etc/lilo.conf ?
+I intend to change the RAID configuration on a RedHat
+Linux server(with kernel 2.4.9-6) that uses raidtools
+0.90.
+At this moment I have a RAID 1 array made up of two
+devices /dev/hde2 and /dev/hdg2. The problem is these
+are 20MB hard drives and they're almost full at this
+moment. I have another 2 60GB drives that I intend to
+use instead of those two disks. Another problem is
+that I cannot keep the 20GB drives that are to be
+moved on another server.
+Here is my scenario for the move , I would like to
+know whether this is possible:
+1) install the two 60Gb hard-drives as /dev/hdf and
+/dev/hdh (slaves on the two IDE buses used by the
+current RAID installation)
+2) initialize a new RAID 1 device /dev/md1 made up of
+/dev/hdf2 and /dev/hdh2 format it.
+3) copy the contents of the first RAID device
+(/dev/md0/) to the new RAID(/dev/md1) device.
+Now comes the hard part that I am not sure it will
+work:
+4) stop /dev/md0 and /dev/md1. Update /etc/raidtab to
+leave only the second RAID installation with the 60Gb
+hard disks repositioned as masters on the IDE buses (
+I also want to physically move the new disks in the
+position of the old disks)
+5) turn off the computer and eject the old hard drives
+and reposition the new hard-drives
+6)Turn the computer on and pray to God it works
 
-Ok the problem seems to have changed now. After reinstalling lilo and t=
-he=20
-kernel I was able to use lilo. However, only the first hard drive will =
-=20
-boot. If I disable the first hard drive and try and boot off the second=
- I get
+Will that work? Is there another way to do that? I
+need your help
+Thank you very much for your support
+Dovli 
 
-L 40
 
-When I reinstalled LILO it installed a MBR on /dev/hda so now when lilo=
- boots=20
-it shows
-
-MBR
-
-LILO 22.2
-
-I'm not sure if this is right.
-
-Here is my lilo.conf
-
-lba32
-boot=3D/dev/md0
-root=3D/dev/md0
-install=3D/boot/boot.b
-delay=3D20
-map=3D/boot/map
-vga=3Dnormal
-image=3D/vmlinuz
-        label=3DLinux
-        read-only
-
-And cat /proc/mdstat
-
-candela:~# cat /proc/mdstat
-Personalities : [raid1]
-read_ahead 1024 sectors
-md0 : active raid1 hdc1[1] hda1[0]
-      192640 blocks [2/2] [UU]
-
-md1 : active raid1 hdc6[1] hda6[0]
-      2931712 blocks [2/2] [UU]
-
-md2 : active raid1 hdc7[1] hda7[0]
-      19534912 blocks [2/2] [UU]
-
-md3 : active raid1 hdc8[1] hda8[0]
-      15430336 blocks [2/2] [UU]
-
-unused devices: <none>
-
-thanks, Iain.
-
---=20
-public key available at http://www.minihub.org/~iain/iain.asc
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+__________________________________________________
+Do You Yahoo!?
+Yahoo! Games - play chess, backgammon, pool and more
+http://games.yahoo.com/
