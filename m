@@ -1,18 +1,44 @@
-From: Andre Correa <andre.correa@pobox.com>
-Subject: Trouble with a Adaptec 2010S RAID PCI adapter
-Date: Tue, 15 Jun 2004 14:01:21 -0300
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: Trouble with a Adaptec 2010S RAID PCI adapter
+Date: Tue, 15 Jun 2004 13:13:32 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <40CF2B61.4070104@pobox.com>
+Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189FD23E52@otce2k03.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+content-class: urn:content-classes:message
+To: Andre Correa <andre.correa@pobox.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+The 2010 Adapter is a Zero Channel RAID card that does *not* purely
+follow the I2O standard. It separates out the message unit from the
+message pool, each having its own Base Address register (BAR) rather
+than a single unifying BAR.
+
+There were recent patches to the I2O layer to support this adapter
+posted to the linux-scsi list. Pick them up and check them out. I
+believe that there are still problems with that code.
+
+The dpt_i2o driver, which supports 64 bit operation, continues to
+properly support this adapter in the 2.6 tree, and updates to this
+driver were also posted to the linux-scsi list w/o feedback (so in, not
+in, don't know).
+
+Sincerely -- Mark Salyzyn
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Andre Correa
+Sent: Tuesday, June 15, 2004 1:01 PM
+To: linux-raid@vger.kernel.org
+Subject: Trouble with a Adaptec 2010S RAID PCI adapter
 
 
 Hi list, I'm in trouble trying to use a Adaptec 2010S RAID PCI adapter
-in a i386 linux box running kernel 2.6.6. I've enabled I2O in the kernel 
+in a i386 linux box running kernel 2.6.6. I've enabled I2O in the kernel
+
 and support for my SCSI adapter, that in fact works fine.
 
 CONFIG_I2O=y
@@ -63,7 +89,8 @@ Engine connect failed: COMPATIBILITY number
 osdIOrequest : File /dev/dpti17 Could Not Be Opened
 
 
-Following the site info I have applied the following patchs to my kernel:
+Following the site info I have applied the following patchs to my
+kernel:
 
 i2o-64-bit-fix.patch
 i2o-adaptec-zerochannel-support.patch
@@ -90,3 +117,7 @@ Andre
 
 
 
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
