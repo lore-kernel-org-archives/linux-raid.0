@@ -1,34 +1,27 @@
-From: mru@kth.se (=?iso-8859-1?q?M=E5ns_Rullg=E5rd?=)
+From: Joshua Baker-LePain <jlb17@duke.edu>
 Subject: Re: Measuring RAID-0 CPU load
-Date: Mon, 08 Mar 2004 18:19:16 +0100
+Date: Mon, 8 Mar 2004 12:21:08 -0500 (EST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <yw1x1xo3w92j.fsf@kth.se>
+Message-ID: <Pine.LNX.4.58.0403081220430.8750@chaos.egr.duke.edu>
 References: <404CAA28.6030502@comcast.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <404CAA28.6030502@comcast.net>
+To: Ian Pilcher <i.pilcher@comcast.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Ian Pilcher <i.pilcher@comcast.net> writes:
+On Mon, 8 Mar 2004 at 11:15am, Ian Pilcher wrote
 
 > I need to quantify the additional CPU load that RAID-0 adds (vs. the
 > boost in I/O performance).  I don't need to do anything fancy;
-> 'dd if=3D/dev/zero of=3D/dev/md?" should do the trick, but I'm not su=
-re how
+> 'dd if=/dev/zero of=/dev/md?" should do the trick, but I'm not sure how
 > to track the processor utilization during the run.
->
-> Any ideas?
 
-top not good?
+bonnie++ reports CPU usage.
 
---=20
-M=E5ns Rullg=E5rd
-mru@kth.se
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Joshua Baker-LePain
+Department of Biomedical Engineering
+Duke University
