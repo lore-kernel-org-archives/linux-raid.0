@@ -1,43 +1,30 @@
-From: Daniel Pittman <daniel@rimspace.net>
-Subject: Re: RAID 5 questions
-Date: Sun, 01 Aug 2004 13:08:34 +1000
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: 1x 3ware controllers vs. 2x 3ware controllers
+Date: Sun, 1 Aug 2004 09:00:25 +0200 (CEST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <871xira72l.fsf@enki.rimspace.net>
-References: <1091325475.2374.11.camel@localhost>
+Message-ID: <Pine.LNX.4.44.0408010858370.7382-100000@uplift.swm.pp.se>
+References: <20040731174002.GA9738@middle.of.nowhere>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20040731174002.GA9738@middle.of.nowhere>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 1 Aug 2004, Ninti Systems wrote:
-> I'm about to embark on building a RAID 5 Linux software array with 4
-> disks (I've only ever built 2 disk RAID 1 arrays before).
->
-> Q1: Is it true that Linux can't/shouldn't boot off a RAID 5 array?
+On Sat, 31 Jul 2004, Jurriaan wrote:
 
-Grub certainly can't boot of a software RAID-5 array, and I don't
-believe that lilo can either.  This is because of these tools not
-understanding the RAID-5 disk layout, not any other limitation.
+> > So why are scsi raid-5 systems so much better?
+> 
+> compared to other scsi raid-arrays, they are not 'better' for small
+> random writes. If they are better than ide, it's probably because of the
+> smaller access times for 15k rpm drives.
 
-> Q2: The four disks have identical manufacturer, model and size, but two
-> are brand new while two have had NTFS filesystems on them. Accordingly,
-> if I run hdparm -g on them, two disks have these specs:
->
-> geometry = 2498/255/63, sectors = 40132503, start = 0
->
-> while the other two disks have these specs:
->
-> geometry = 39813/16/63, sectors = 40132503, start = 0
->
-> Is this an issue with software RAID?
+And also because scsi drives can do tagged queueing which makes it more 
+efficient to do a lot of smaller operations. Historically the SCSI drives 
+also had more cache memory which helps the situation, and the scsi 
+RAID controllers probably also had more cache memory on them (I know RAID 
+systems that have gigabytes of cache memory).
 
-No. Software RAID, unlike hardware raid, cares only that you have enough
-blocks on the disk. You don't need to match *any* other characteristic
-of the disks, and not even that if you don't mind wasting a few bytes.
-
-   Daniel
 -- 
-The PC is the LSD of the '90s.
-        -- Timothy Leary, __Guardian_ (June 1, 1996)
+Mikael Abrahamsson    email: swmike@swm.pp.se
 
