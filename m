@@ -1,188 +1,142 @@
 From: "Diamon" <diamon@io.com>
 Subject: Re: md: badblocks(pid 1216) used obsolete MD ioctl
-Date: Tue, 2 Jul 2002 16:13:36 -0500
+Date: Tue, 2 Jul 2002 16:29:20 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <003201c2220d$54a64fe0$9255e0ce@cust.io.com>
-References: <NDBBIAKEEKGGEIKCBKNACEBFDBAA.kc130iseo@coastalnet.com>
+Message-ID: <003501c2220f$8749a6c0$9255e0ce@cust.io.com>
+References: <NDBBIAKEEKGGEIKCBKNAGEBHDBAA.kc130iseo@coastalnet.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
+Cc: kc130iseo@coastalnet.com
 List-Id: linux-raid.ids
 
-<forgot to CC: the list, my bad>
-
-    You might want to look into a low-level format tool called sformat if
-memory serves.  I seem to recall it works for a lot of platforms.
-
-    Adaptec SCSI bios can properly spot and reallocate bad blocks rather
-well.  None of the tools you named can actually reallocate bad sectors,
-unless the underlying drive itself initiates the reallocation when your tool
-touches it.  If it would do that, I'd think it would have been done already.
-
-    A proper low-level format refreshes sector marks and can reorganize a
-disk for more optimal use for that specific controller (Move a drive
-formatted on a Buslogic card to an Adaptec card and you can see, measure,
-and sometimes even HEAR the difference), and even recover any heat-weakened
-sectors.
-
-    I used to need to low-level format my Seagate 18Gb LVD2 drive every 6-8
-months or so until I got it below 45C (somewhere about 120F I think) from
-the 55C it had run at before.  Now that they're below 45 I have no problems
-with them.
-
-    Properly twisted LVD cabling should have very minimal crosstalk and
-power loss.  I'd doubt that providing bus term power from the drives would
-do any good, but that's just my opinion.
-
-    Anyway, I hope some of this helps.
 
 
------ Original Message -----
-From: "Cal Webster" <kc130iseo@coastalnet.com>
-To: "Maurice Hilarius" <maurice@harddata.com>
-Cc: <linux-raid@vger.kernel.org>
-Sent: Tuesday, July 02, 2002 2:29 PM
-Subject: RE: md: badblocks(pid 1216) used obsolete MD ioctl
 
+    <-- Snip snip -->
+> [snip]
+> > These commands are SCSI command set mode commands, and after the drive
+> > receives the instruction it performs the format itself.
+> > mke2fs and so on only do high level filesystem formats.
 
-> > -----Original Message-----
-> > From: Maurice Hilarius [mailto:maurice@harddata.com]
-> > Sent: Monday, July 01, 2002 2:26 PM
-> > To: cwebster@ec.rr.com
-> > Subject: RE: md: badblocks(pid 1216) used obsolete MD ioctl
-> >
-> > I missed that. Always the same drive and sectors?
->
-> That's right: single drive, one bad sector.
->
-> > It might be worthwhile to run a SCSI (low level) format on this drive,
-so
-> > that any bad sectors get marked bad and are not used.
->
-> The tools at my disposal relevant to this task are fdisk, mke2fs, e2fsck,
-> and badblocks. I don't believe that the "surface analysis" done by most
-SCSI
-> BIOS utilities on Intel machines does much more than these tools.
->
-> > It never hurts to have device close to the terminator ALSO providing
-term
-> > power. By the time the current gets from the host, all the way to
-> > the other
-> > end of the cabling, especially with an external cabinet, the voltage may
-> > drop quite a bit.
-> > It does no harm to enable it on the drives as well, and makes sure the
-> > attenuation is not a problem.
->
-> I appreciate what you're saying, especially since I did not indicate the
-> proximity of the RAID array to the host computer. However, the length of
-> wire between this on-board interface connector and the last device in the
-> external array is less than 8 feet total, so I would expect zero benefit.
-To
-> the contrary, in our situation all it would do is make the drives run
-hotter
-> in an already warm environment. I've never found this (current drain) to
-be
-> a factor with cable lengths under 8-feet, even with single-ended segments.
-> As I'm sure you are aware, differential SCSI has substantially extended
+    Exactly.
+
+> Of course, most storage people know that the "CHS" value vendors assign to
+a
+> drive almost never represent the physical geometry. The drive and/or
+> controller must be capable of translating to "physical" locations for
+> read/write operations. I assume that the "low-level" format you refer to
+> operates at this level.
+
+    SCSI doesn't really have a CHS, and never has.  It pretends to, but a
+SCSI device as I recall is actually (at least internally) addressed by
+sectors, regardless of where on the disk the sectors are actually located.
+
+> A crude overview (my understanding): During a "low-level" format the
+> controller, activating machine instructions stored on the drive, will scan
+> for defects then re-write BOT (Beginning Of Track) markers and sector
+> addresses on the media, skipping the bad spots it found and storing them
+for
+> future reference in some non-volatile medium (often it will do more).
+> "fdisk" and the tools in the e2fsprogs package merely overlay partition,
+> sector, and block data atop this low-level framework to create and manage
+> the filesystems.
+
+    Actually, the controller usually should do nothing.  There is a command
+to pass to the drive to tell it to format itself, and off it goes.  Most if
+not all drives do no error-checking during the format operation, trusting to
+their 'Media Verify" to be done later.  SCSI drives don't skip bad sectors.
+If the drive really knows it's bad and has been allowed to, it will
+reallocate the sector, but oddly most drives are set to NOT reallocate on
+Read Errors.  Not sure why.
+
+> > > > It does no harm to enable it on the drives as well, and makes sure
 the
-> range of SCSI signals on longer cables.
->
-> > >Please note that this is an UltraSparc IIi, not in Intel box. It does
-not
-> > >load a separate SCSI BIOS on startup the way Intel machines do.
+> > > > attenuation is not a problem.
+> [snip]
+> > >in an already warm environment. I've never found this (current
+> > >drain) to be a factor with cable lengths under 8-feet, even
+> > >with single-ended segments. As I'm sure you are aware,
+> > >differential SCSI has substantially extended the range of SCSI
+> > >signals on longer cables.
 > >
-> > True, but lots of people put Adaptec PCI controllers in SPARCS, Macs,
-etc.
-> > If so, it may be necessary to temporarily plug it into a PC to
-> > check/adjust
-> > these settings.
-> > There are likely to be SPARC specific utilities which can do the
-> > same thing of course..
+> > True. Still, I have seen many cases where this helped.
 >
-> Okay, I've got to ask now. What benefit could I expect from pulling a
-drive
-> from my array and plugging it into a PC? What could I do on the PC that I
-> could not do with one of the utilities mentioned above?
+> Thanks, I'll keep that in mind. I know from my own experience that there
+are
+> times when a certain action fixes a problem even though it doesn't seem to
+> make sense at the time.
+
+    Arrgh, how true that is...
+
+> Often it is more expedient to just try something that might work, rather
+> than to enter an in-depth analysis. I cannot let things like this go
+> indefinitely, though. I've got to know "why". When encountering these
+> situations, I usually make time later to conduct a forensic analysis. Over
+> the years I've found that there is usually a contributing factor, often
+> related to the "interim fix" I was forced to employ.
 >
-> > >That's my point. At most, I'm willing to concede that there is a
-> > bad sector,
-> > >(32772736 as reported in the system log). Even so, e2fsck should
-> > be able to
-> > >"mark" these "bad blocks", adding them to the list for the device. Once
-> > >marked, these blocks will not be written to again.
-> > You are right, it should, assuming that it sees the sector is bad
-> > on a read.
-> > However, if you want to make sure, format the filesystem with option to
-> > write to all sectors and verify.
-> > In mke2fs for example, using the "-c" flag.
->
-> You may have hit on it here. If you look at my original post, you'll see
-> that I did specify the "-c" flag to e2fsck. The "-c" flag to mke2fs does
-> exactly the same as the same flag on e2fsck. It starts a "badblocks"
-> read-only test. To accomplish a thorough, non-destructive, read-write
-test,
-> I'd have to run "badblocks" by itself, specifying this option (i.e.
-> badblocks -svn -o badblks.md0 /dev/md0). I could then use the output of
-this
-> test to mark the bad sectors with either e2fsck or mke2fs (using the "-l"
-> flag).
->
-> I still think there is a problem with e2fsck and fdisk, though, or
-possibly
-> with the libraries upon which they depend. I monitored the system log
-while
-> working on this problem. The following errors coincided with the
-> command/event shown. I'll be updating most of this stuff to the latest
-> versions with Aurora 0.3 (Equivalent to RHL 7.3). Hopefully, some of these
-> problems will be fixed then.
->
-> =======================
-> [root@winggear root]# e2fsck -c /dev/md0
-> e2fsck 1.23, 15-Aug-2001 for EXT2 FS 0.5b, 95/08/09
-> Checking for bad blocks (read-only test):     81504/ 30942912
-> -----------------------
-> >From /var/log/messages:
-> -----------------------
-> Jul  2 10:17:27 winggear kernel: md: badblocks(pid 1175) used obsolete MD
-> ioctl, upgrade your software to use new ictls.
-> =======================
->
-> =======================
-> [root@winggear samba]# fdisk /dev/sdi
->
-> Command (m for help):
->
-> -----------------------
-> >From /var/log/messages:
-> -----------------------
-> Jul  2 09:08:56 winggear kernel: sys32_ioctl(fdisk:1588): Unknown cmd
-fd(3)
-> cmd(00000330) arg(effffb10)
-> =======================
->
->
-> > Still, if you suspect bad sectors, a low level format is the
-> > first order of
-> > the day.
-> > If this marks MANY sectors as bad, it is likely the drive is
-> > either dying,
-> > or a head skip occurred in the past.
->
-> Whatever the term "low-level format" means to you, I certainly agree that
-> multiple bad blocks could be signal of impending doom, especially if there
-> are a growing number of them. Even if the drive was formatted with "spare"
-> cylinders, the inevitable can only be delayed.
->
->
+> > >Okay, I've got to ask now. What benefit could I expect from
+> > pulling a drive
+> > >from my array and plugging it into a PC? What could I do on the PC that
+I
+> > >could not do with one of the utilities mentioned above?
+> >
+> > Low level SCSI format command.
+> > This marks bad all defective sectors ON THE DRIVE.
+> > SCSI drives have factory and "grown" defect tables in their firmware,
+and
+> > this is more effective and reliable than filesystem tools ability to
+mark
+> > bad sectors.
+
+    Yes, the drive usually knows best if it has a problem...  I think the
+glist (grown defect list, as opposed to the plist, or primary list) is
+stored on disk in a reserved sector, and woe betide THAT sector going bad.
+:P  I think sformat can scrup the glist as well.  Again I can't swear to
+that, it's been years since I used sformat.
+
+> Okay, I've used low-level SCSI format for that purpose many times on
+> "Windoze" PC's. In fact, I've searched in vain for utilities that do this
+on
+> a Sparc Linux machine. Admittedly, having the bad sectors stored on the
+> drive itself prevents losing track of them, making it more reliable.
+> However, I still don't see how it is more effective than Linux e2fsprogs
+at
+> detecting and marking them.
+
+    E2fsprogs only look at the high-level, not the disk itself.  If your
+disk has reallocate on error disabled, all the formatting in the world
+(except low-level formats) will do nothing.
+
+> I suppose that, if there were many of these bad spots to manage, there may
+> be some performance gain by relieving the filesystem/kernel drivers of the
+> burden. I don't see how physically re-mapping a few bad areas is
+> significantly more efficient that simply allowing the filesystem to avoid
+> them. To low-level format drives on my Sparc Linux machines I would have
+to
+> disconnect and remove the chassis from the 19-inch rack, extract the
+drive,
+> open SCSI capable PC and install the drive, power it up and run the
+format,
+> then re-install everything. This is way too much trouble for the expected
+> benefit, at least for my situation.
+
+    Again, check into sformat.  I can't get a good URL currently, but I
+think the current version is 3.5 from what I see, and it's from that fellow
+Joerg Schilling who does cdrecord.  A good program, but you need generic
+scsi devices to work it, as sofrmat bypasses the scsi driver to operate.
+
 > --Cal Webster
 >
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+> P.S. Why don't you post to the list?
+
+    I did this time, forgot on the first message.  :)
+
+        Diamon
+
 
 
