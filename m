@@ -1,55 +1,50 @@
-From: Miquel van Smoorenburg <miquels@cistron.nl>
-Subject: Re: Raid1 doesn't balance under high load [patch]
-Date: Mon, 14 Jun 2004 13:30:37 +0200
+From: Brad Campbell <brad@wasp.net.au>
+Subject: Re: 3 disk raid-5 without parity
+Date: Mon, 14 Jun 2004 15:28:56 +0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040614113037.GC13422@traveler.cistron.net>
-References: <20040610113019.GA8660@cistron.nl> <16585.2632.321497.620210@cse.unsw.edu.au>
+Message-ID: <40CD8BF8.5040601@wasp.net.au>
+References: <20040614111920.GA17785@middle.of.nowhere>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <16585.2632.321497.620210@cse.unsw.edu.au> (from neilb@cse.unsw.edu.au on Fri, Jun 11, 2004 at 03:26:32 +0200)
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: Miquel van Smoorenburg <miquels@cistron.nl>, linux-raid@vger.kernel.org
+In-Reply-To: <20040614111920.GA17785@middle.of.nowhere>
+To: Jurriaan <thunder7@xs4all.nl>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2004.06.11 03:26, Neil Brown wrote:
-> On Thursday June 10, miquels@cistron.nl wrote:
-> > The problem is in raid1.c:read_balance().
-> > 
-> > Now if you write to the array, the array is marked not in sync by
-> > md.c:md_write_start(). conf->next_resync is initialized to zero, so
-> > that means read balancing doesn't work anymore.
+Jurriaan wrote:
+> I am trying to convince my boss our new database-server wants raid-0+1,
+> not raid-5, and I got an idea while reading endless articles about
+> raid-5 being slow when writing and management not listening.
 > 
-> Yes, you are right.  Thanks.
-> Your patch is close, but not quite right (though it would be hard to
-> cause it to actually fail).
-> I think it patch is more correct.  I would appreciate it if you could
-> confirm that it works for you.
+> suppose you make a 3-disc raid-5 without parity:
+> 
+> data    disc1 disc2 disc3
+> A       A     A     B
+> B       B     C     C
+> 
+> How would that perform compared to raid-5 and raid-0+1?
+> 
+> As I understand, the performance problem with raid-5 when writing is
+> that you may need to read old data to recompute the parity block, and
+> the write the parity block and the data in parallel.
+> 
+> So in this case, you can read straight away from all 3 disks (with
+> raid-5 one of the disks will have parity information) and you can write
+> without reading old data.
 
-It doesn't because of a small typo:
+What you propose is not quite raid-5, but appears to be a striping hybrid between raid-0 and raid-1.
+If I get what you are saying, you are writing each block twice, and ensuring each block is written 
+to at least 2 different drives. Interesting idea, but not really efficient. In addition, you are 
+doubling your write bandwidth requirements (not unlike pure raid-1).
 
-> diff ./drivers/md/raid1.c~current~ ./drivers/md/raid1.c
-> --- ./drivers/md/raid1.c~current~	2004-06-11 11:20:34.000000000 +1000
-> +++ ./drivers/md/raid1.c	2004-06-11 11:21:57.000000000 +1000
-> @@ -375,7 +375,8 @@ static int read_balance(conf_t *conf, st
->  	 * device if no resync is going on, or below the resync window.
->  	 * We take the first readable disk when above the resync window.
->  	 */
-> -	if (!conf->mddev->in_sync && (this_sector + sectors >= conf->next_resync)) {
-> +	if (!conf->mddev->recovery_cp < MaxSector &&
-> +	    (this_sector + sectors >= conf->next_resync)) {
->  		/* make sure that disk is operational */
->  		new_disk = 0;
+Yes, raid-5 random write performance is limited by read-modify-write cycles when they are required. 
+The raid-5 md driver does do a pretty good job of avoiding this where possible though.
 
-I think that should read:
+I have not really benchmarked my raid-5 write performance, but on reads I sit around 90MB/s across 
+my 10 drives. (Even my SATA raid-0 with 2 7200RPM drives has trouble getting much quicker than this 
+as I keep saturating the PCI bus)
 
-
--	if (!conf->mddev->in_sync && (this_sector + sectors >= conf->next_resync)) {
-+	if (conf->mddev->recovery_cp < MaxSector &&
-+	    this_sector + sectors >= conf->next_resync) {
-
-and then it works.
-
-Mike.
+Regards,
+Brad
