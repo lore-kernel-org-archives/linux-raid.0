@@ -1,17 +1,46 @@
-From: Steven Dake <sdake@mvista.com>
-Subject: Re: cluster RAID
-Date: Tue, 27 May 2003 12:24:57 -0700
+From: Brian Schwarz <Brian.Schwarz@veritas.com>
+Subject: RE: cluster RAID
+Date: Tue, 27 May 2003 12:47:05 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3ED3BB89.5070703@mvista.com>
-References: <000801c3228d$c6816dd0$3200a8c0@nimiak> <16080.41341.194808.277607@notabene.cse.unsw.edu.au>
+Message-ID: <C587FF391BCAD411B8120008C7864670057DA55D@mtvxch07.veritas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <16080.41341.194808.277607@notabene.cse.unsw.edu.au>
-To: Neil Brown <neilb@cse.unsw.edu.au>
+To: 'Steven Dake' <sdake@mvista.com>, Neil Brown <neilb@cse.unsw.edu.au>
 Cc: Kai-Min Sung <k@kaisung.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+I'll apologize in advance for the blatant marketing.
+
+Steven is correct, a clusterized volume manager with built in RAID
+functionality would be ideal in this situation. VERITAS is plans to release
+a software suite that includes clusterized versions of our volume manager
+and the VERITAS File System. 
+
+The VERITAS File System and Volume Manager are available today on Linux.
+This includes RAID, online config changes, multi-pathing, etc... The
+clusterized versions will be available towards the end of this year. The
+clusterized versions use some of the clustering infrastructure from our
+VERITAS Cluster Server offering, which is available today on Linux as well. 
+
+For more info:
+www.veritas.com/linux
+www.veritas.com/forlinux
+
+or contact me directly.
+
+Regards,
+
+-Brian
+
+-----Original Message-----
+From: Steven Dake [mailto:sdake@mvista.com]
+Sent: Tuesday, May 27, 2003 12:25 PM
+To: Neil Brown
+Cc: Kai-Min Sung; linux-raid@vger.kernel.org
+Subject: Re: cluster RAID
+
 
 Cluster RAID (accessing one storage device from multiple nodes) is 
 useful when using a clustered volume manager or clustered filesystem.  
@@ -82,3 +111,7 @@ Neil Brown wrote:
 >  
 >
 
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
