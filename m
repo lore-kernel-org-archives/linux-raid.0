@@ -1,35 +1,35 @@
-From: maarten van den Berg <maarten@vbvb.nl>
-Subject: Re: I'm about ready to do SW-Raid5 - pointers needed
-Date: Tue, 28 Oct 2003 20:51:06 +0100
+From: seth vidal <skvidal@phy.duke.edu>
+Subject: Re: reconstruction -- where is the upper bound?
+Date: 28 Oct 2003 14:58:34 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200310282051.06208.maarten@vbvb.nl>
-References: <Pine.LNX.4.44.0310281327090.8137-100000@redhat1.mmaero.com>
+Message-ID: <1067371114.24429.42.camel@opus>
+References: <bWpzdHVtcGY=.2225bde2e3ae0856f1ad7359480d334c@1067370925.cotse.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44.0310281327090.8137-100000@redhat1.mmaero.com>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <bWpzdHVtcGY=.2225bde2e3ae0856f1ad7359480d334c@1067370925.cotse.net>
+To: mjstumpf@pobox.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday 28 October 2003 19:28, jlewis@lewis.org wrote:
-> On Tue, 28 Oct 2003, maarten van den Berg wrote:
-> > Promise cards do suck somewhat -albeit I use them- but what else is there
-> > ? The highpoint-equipped cards are even more sucky in many cases.
->
-> What about Adaptec's IDE/ATA versions of their DPT RAID controllers?
-> AFAIK, they even use the same dpt driver.
+On Tue, 2003-10-28 at 14:55, mjstumpf wrote:
+> I'm considering my options; currently I've got a server running on a
+> p2-400.  What causes the upper bound--IO bandwidth or CPU speed--with
+> regard to reconstruction of an array (say, a failed drive)?
+> 
+> I forget the numbers I usually see, because I do this a lot.  But it seems
+> to me it has more to do with IO bandwidth than CPU horsepower.  I've done
+> this with both SCSI and ATA, but currently I'm referring to an ATA system.
+> 
+> True?
+> 
+> Is there anything I can do to speed this up
 
-Can't comment on the adaptec.  Adaptec usually makes a good product, so...
+cd /proc/sys/dev/raid/
+cat speed_limit_max
+echo numberinKB/s > speed_limit_max
 
-My experiences with HPT chipsets were that it _seems_ to work at first but 
-then when you turn on DMA all hell breaks loose. Either the chipset or the 
-linux driver just can't cope with DMA (and we all know how fast PIO is...)
-This behaviour was observed with a HPT366 onboard version, and (much) later 
-again with a standalone HPT370. From then on, I refused to touch highpoint 
-chipset based cards with a 10' pole.     ( YMMV )
+-sv
 
-Maarten
 
--- 
-Yes of course I'm sure it's the red cable. I guarante[^%!/+)F#0c|'NO CARRIER
