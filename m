@@ -1,60 +1,86 @@
 From: NeilBrown <neilb@cse.unsw.edu.au>
-Subject: [PATCH md ] Fix up handling for read error in raid1.
-Date: Thu, 24 Jun 2004 14:37:05 +1000
+Subject: [PATCH md ] XOR template selection redo
+Date: Thu, 24 Jun 2004 14:58:34 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <E1BdLyz-0001Jy-Tq@notabene.cse.unsw.edu.au>
-References: <20040624143619.5067.patches@notabene>
+Message-ID: <E1BdMJm-0002Uv-Mt@notabene.cse.unsw.edu.au>
+References: <20040624145809.9583.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: Andrew Morton <akpm@osdl.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-There is severe bit-rot in this code, which is to say that it doesn't work
-at all: an io error during read will do bad things.  It should work
-better with this patch.
+From: Josh Litherland <josh@emperorlinux.com>
 
+The XOR routine selection process is often confusing as it
+often doesn't choose the routine that measures the fastest,
+as sometime one routine is known to have better cache
+performance.
+
+This patch avoids the comparison when there is a known best choice,
+and makes the report more meaningful.
 
 Signed-off-by: Neil Brown <neilb@cse.unsw.edu.au>
 
 ### Diffstat output
- ./drivers/md/raid1.c |   10 +++++++---
- 1 files changed, 7 insertions(+), 3 deletions(-)
+ ./drivers/md/xor.c |   39 +++++++++++++++++++++++++--------------
+ 1 files changed, 25 insertions(+), 14 deletions(-)
 
-diff ./drivers/md/raid1.c~current~ ./drivers/md/raid1.c
---- ./drivers/md/raid1.c~current~	2004-06-23 14:37:05.000000000 +1000
-+++ ./drivers/md/raid1.c	2004-06-23 14:37:13.000000000 +1000
-@@ -206,7 +206,7 @@ static int map(mddev_t *mddev, mdk_rdev_
- 			*rdevp = rdev;
- 			atomic_inc(&rdev->nr_pending);
- 			spin_unlock_irq(&conf->device_lock);
--			return 0;
-+			return i;
- 		}
+diff ./drivers/md/xor.c~current~ ./drivers/md/xor.c
+--- ./drivers/md/xor.c~current~	2004-06-24 14:53:51.000000000 +1000
++++ ./drivers/md/xor.c	2004-06-24 14:53:51.000000000 +1000
+@@ -108,29 +108,40 @@ calibrate_xor_block(void)
  	}
- 	spin_unlock_irq(&conf->device_lock);
-@@ -945,18 +945,22 @@ static void raid1d(mddev_t *mddev)
+ 	b2 = b1 + 2*PAGE_SIZE + BENCH_SIZE;
  
- 		mddev = r1_bio->mddev;
- 		conf = mddev_to_conf(mddev);
--		bio = r1_bio->master_bio;
- 		if (test_bit(R1BIO_IsSync, &r1_bio->state)) {
- 			sync_request_write(mddev, r1_bio);
- 			unplug = 1;
- 		} else {
--			if (map(mddev, &rdev) == -1) {
-+			int disk;
-+			bio = r1_bio->bios[r1_bio->read_disk];
-+			if ((disk=map(mddev, &rdev)) == -1) {
- 				printk(KERN_ALERT "raid1: %s: unrecoverable I/O"
- 				       " read error for block %llu\n",
- 				       bdevname(bio->bi_bdev,b),
- 				       (unsigned long long)r1_bio->sector);
- 				raid_end_bio_io(r1_bio);
- 			} else {
-+				r1_bio->bios[r1_bio->read_disk] = NULL;
-+				r1_bio->read_disk = disk;
-+				r1_bio->bios[r1_bio->read_disk] = bio;
- 				printk(KERN_ERR "raid1: %s: redirecting sector %llu to"
- 				       " another mirror\n",
- 				       bdevname(rdev->bdev,b),
+-	printk(KERN_INFO "raid5: measuring checksumming speed\n");
++	/*
++	 * If this arch/cpu has a short-circuited selection, don't loop through all
++	 * the possible functions, just test the best one
++	 */
+ 
++	fastest = NULL;
++
++#ifdef XOR_SELECT_TEMPLATE
++		fastest = XOR_SELECT_TEMPLATE(fastest);
++#endif
++	
+ #define xor_speed(templ)	do_xor_speed((templ), b1, b2)
+ 
+-	XOR_TRY_TEMPLATES;
++	if (fastest) {
++		printk(KERN_INFO "raid5: automatically using best checksumming function: %s\n",
++			fastest->name);
++		xor_speed(fastest);
++	} else {
++		printk(KERN_INFO "raid5: measuring checksumming speed\n");
++		XOR_TRY_TEMPLATES;
++		fastest = template_list;
++		for (f = fastest; f; f = f->next) 
++			if (f->speed > fastest->speed)
++				fastest = f;
++	}
++
++	printk("raid5: using function: %s (%d.%03d MB/sec)\n",
++	       fastest->name, fastest->speed / 1000, fastest->speed % 1000);
+ 
+ #undef xor_speed
+ 
+ 	free_pages((unsigned long)b1, 2);
+ 
+-	fastest = template_list;
+-	for (f = fastest; f; f = f->next)
+-		if (f->speed > fastest->speed)
+-			fastest = f;
+-
+-#ifdef XOR_SELECT_TEMPLATE
+-	fastest = XOR_SELECT_TEMPLATE(fastest);
+-#endif
+-
+ 	active_template = fastest;
+-	printk("raid5: using function: %s (%d.%03d MB/sec)\n",
+-	       fastest->name, fastest->speed / 1000, fastest->speed % 1000);
+-
+ 	return 0;
+ }
+ 
