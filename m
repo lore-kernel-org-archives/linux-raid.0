@@ -1,50 +1,43 @@
-From: <ixnfnfeg@check1check.com>
-Subject: - VIRGINAL! REAL! AND 100% UNCENSORED!.                                       ultra dire storm ointment rigid pluperfect brushy dissemble cupboard copious mccracken boutique saskatchewan spurn incantation precede siege cemetery accentuate kerr glamour
-Date: Sun, 12 Sep 2004 03:25:11 -0700
+From: "Lewis Shobbrook" <lshobbrook@fasttrack.net.au>
+Subject: resync issue with raid 1 under 2.6.8
+Date: Mon, 13 Sep 2004 14:06:53 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <54371t03h42gv$9zh0r9u16$1xqm458fi__43749.2222678431$1094981316$gmane$org@rig.finklfan.com>
+Message-ID: <0C8098CA7F09CE419F0C2B68EB83587648B262@exchange.fasttrack.net.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=charset_PARAM
-Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-diald@vger.kernel.org
+Content-class: urn:content-classes:message
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-H0me P0rn0
 
-0nly exclusive images
+Hi All,
 
-http://sex-333.com/home/?TEZGm
-
-- Watch them UNCENS0RED INSIDE!!!
-- Wanna look how this young vlrgln glrls lost their virginity?! 
-- Sweet...Y0ung...Innocent...Virginal girls!
-- Amateur HomeParty Ph0tos of young Virginal 0rgies!
-- Tons of HA*RDC0*RE Virginal Party Photos!
-- Look how they change from shy and innocent virgins to natural born fukkers.
-- VIRGINAL! REAL! AND 100% UNCENSORED!
-- We got y0ung girls doing blow-job to the older men.
+I've noted some posts regarding resyncing issues with 2.6.6 so I thought
+I'd forward this one on just in case.  Unfortunately I'm not able to
+gather much hard info, so apologies if I'm too vague.
 
 
-Here you could be a witness of their first sex experiences...
-How virgins became real women!
+The problems started with a sector error on device (1) of a ATA raid 1
+array (extfs3), apparently looping and stating something about md and
+illegal sector on /dev/hdc2.  Unfortunately I wasn't there to witness
+first hand and the error was not written down. (Just reboot the machine
+and see if that fixes it!!!) 
+Anyway an md resync ensured following the reboot, when 100% was reached
+the system immediately switched to read-only, no syslog entries...  The
+console was spewing out errors "md: error in start_transaction: Read
+Only file system".  Had to forcibly reboot after 10 minutes waiting for
+reboot to occur.  After an fsck and another reboot all is UU OK.  I've
+been running raid on the machine for a couple of years, I've had two
+drive failures in that time (raid worked perfectly without interuption)
+and not had an issue til now following a relatively recent kernel
+upgrade from 2.4.20 5 weeks ago to 2.6.7 and 2 weeks ago 2.6.8. 
 
-LIKE REAL Y0.U.N.G  T-E*E_N   G-I-R-L-$ H-A-R-D=C_0*R-E?
+Using ...  md driver 0.90.0 MAX_MD_DEVS=256, MD_SB_DISKS=27 on Debian
+unstable
 
-http://sex-333.com/home/?32Tmu
+Cheers,
 
-Believe me it is really a rush!!!
-So All young girls can be Yours in a second!!! 
-
-
-
-
-
-
-
-carpentry smalley jacm basso advertise cody decathlon puddly embassy teletypewrite adjudicate appendix marque publication fcc debacle broadloom immense deferent revile briar tupelo purport flank doctor gabble cataclysm concertmaster technology baldwin antigone ablution boolean laborious television neurosis bogota disseminate exportation pornographer .
-
-periodic piston rocky berkowitz fodder tableaux coriander brewery complex restrict percussive zenith buckley bowfin irrecoverable solecism jacob shuffleboard litigant .
-debilitate row lacustrine drag betrayer rabbet poncho dessicate venus trigonal ri beatific gavin cunard chiton lamarck liberal natural tycoon congratulatory quantile associable wander antagonist motor lactose sparky crosscut decor shirley .
-
-alike rest accountant anvil cute igloo masonite automatic frighten frivolous gnomon claude astronautic holstein cutoff accordion tangent octavia yalta schoolboy caddis chairwoman beak arsine militarism copywriter anglo glassy arm retention u.s.a israeli roam condemnatory quickstep .
+Lewis 
