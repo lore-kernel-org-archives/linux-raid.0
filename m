@@ -1,32 +1,29 @@
-From: Russell Ivey <uuain@gbconsulting.com>
-Subject: rusdeluxe ltd.
-Date: Sun, 06 Mar 2005 11:42:28 +0000
-Message-ID: <3DB3A1GCI50F35I7@gbconsulting.com>
-References: <4KDG803LGHD895I8@vger.kernel.org>
+From: Dirk Jagdmann <jagdmann@gmail.com>
+Subject: Re: Creating RAID1 with "missing" - mdadm 1.90
+Date: Sun, 6 Mar 2005 14:29:01 +0100
+Message-ID: <5d0f6099050306052950914bad@mail.gmail.com>
+References: <422A2FD1.2010106@panix.com>
+Reply-To: Dirk Jagdmann <jagdmann@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-In-Reply-To: <4KDG803LGHD895I8@vger.kernel.org>
+Content-Transfer-Encoding: 7bit
+In-Reply-To: <422A2FD1.2010106@panix.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux-raid <linux-raid@vger.kernel.org>
+To: berk walker <berk@panix.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
+I have successfully set up a raid1 in degraded mode with this command line:
 
-We're dating agency "RusDeluxe" Group Ltd.
-License number 00042247933 since 21.07.03.
+mdadm --create /dev/md0 --level=1 --raid-devices=2 missing /dev/hda2
 
-Due the expansion of our organization, our agency need employees from USA for accomplishing of bank transactions.You must have an account in USA bank.
-Payment will be made immediately, for every transaction (receiving and sending of money) you will get 400-1100 USD.
+I have experienced problems when the "missing" drive was the second
+and the array would not initialize correctly when a real disk was
+added later. When "missing" is the first I did not have any problems.
+(Those problems were with linux 2.4 kernels, maybe this is solved with
+2.6, but I did had the opportunity to check yet)
 
-We have two offices:
-1) 12 Pushkinskaya street, office #19.
-       St. Petersburg, Russia.
-
-2) 33 Bolshaya Nikitskaya street, office #7
-   Moscow, Russia.
-
-If you are interested in our offer,then you may to contact to our manager for other detailes by e-mail: inforusdeluxe@km.ru or by ICQ# 338818190
-
-Best regards!
-
+-- 
+---> Dirk Jagdmann
+----> http://cubic.org/~doj
+-----> http://llg.cubic.org
