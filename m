@@ -1,37 +1,33 @@
-From: Ninti Systems <office@ninti.com.au>
-Subject: RE: Please review: Slackware RAID How-To
-Date: 17 May 2004 18:32:17 +0930
+From: "Martin Bene" <martin.bene@icomedias.com>
+Subject: AW: Please review: Slackware RAID How-To
+Date: Mon, 17 May 2004 11:54:51 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1084784537.2692.19.camel@localhost>
-References: <200405170451.i4H4pqB05999@www.watkins-home.com>
-Reply-To: office@ninti.com.au
+Message-ID: <FA095C015271B64E99B197937712FD02262EC5@freedom.grz.icomedias.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200405170451.i4H4pqB05999@www.watkins-home.com>
-To: 'LinuxRaid' <linux-raid@vger.kernel.org>
+Content-class: urn:content-classes:message
+To: LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-I too considered lilo a relic of the past until I started using
-Slackware. Oh well, it seems to do much the same thing, so I'm getting
-used to it again. Slackware is very up to date in most other areas, so I
-guess Patrick Volkerding hasn't seen a good enough reason to switch to
-grub. I suppose newer doesn't always mean better. Still, a grub section
-as you suggest would help round things out. BTW John, I'm happy to help
-out with the HOW-TO in any way if I can, don't expect you to do
-everything!
+Hi,
 
-Mick
- 
+> I too considered lilo a relic of the past until I started using
+> Slackware. Oh well, it seems to do much the same thing, so I'm getting
+> used to it again. 
 
-On Mon, 2004-05-17 at 14:21, Guy wrote:
+There's one feature in lilo I haven't yet found in grub that keeps me
+from switching:
 
-> On a related subject...
-> 	I use grub, not lilo!
-> 	Please consider a grub section.
-> 	Is one better than the other?
-> 	The only reason I use grub is 2-3 years ago I was told grub was
-> newer.
-> 
+I can specify a kernel image to use just for the next reboot (reverting
+to the default image afterwards). This is great for upgrading kernel in
+remote locations with limited access to systems - if something goes
+wrong, and the system doesn't come up with the new kernel, just have the
+system reset to go gack to using a known good kernel.
+
+Bye, Martin
+
+
 
