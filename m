@@ -1,98 +1,103 @@
-From: "Aleks Sheynkman" <aleks@Narus.com>
-Subject: megaraid megaraid2-2.10.7 causing kernel panic
-Date: Fri, 3 Sep 2004 10:06:20 -0700
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <FA6D803197D0E14C88E1B74C5A021B822DDF9B@snitch.narus.com>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: filesystem corruption with RAID6.
+Date: Fri, 3 Sep 2004 13:15:01 -0400
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <200409031715.i83HF6327457@watkins-home.com>
+References: <wxx7jrbo87d.fsf@nommo.uio.no>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-content-class: urn:content-classes:message
-To: linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <wxx7jrbo87d.fsf@nommo.uio.no>
+To: 'Terje Kvernes' <terjekv@math.uio.no>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Greetings,
-  I'm really sorry to bother you ,and I hope this is a correct list to post these kind of messages. I did post a similar message a day ago. We are currently experiencing problem with a new version of megaraid driver (megaraid2-2.10.7). All our severs in the past were running RH 7.3 and now we started migration process AS 2.1 specifically to update 2.4.9-e.49smp and dkms megaraid version 2.10.7. After upgrade, all our systems were stable until we started to run our hardware monitoring software. What it does, it polls the status of all physical and logical driver through ioctl call. Please see sample code below that would cause a kernel panic.  The code was working just fine until version 1.8f version of megaraid drivers, with introduction of new driver it started to fail and cause kernel panics, which kind of inconstant, sometimes it kills kernel swapper sometimes wait queues.  It seems l
- ike ioctl "M_RD_IOCTL_CMD " is totally broken, we can retrieve correct number of adapters by issuing ioctl suboption MEGAIOC_QNADAP.
+I can't help debug it.  But you may be able to determine if it is RAID6
+related.  Can you re-do your test, this time use RAID5?  The problems should
+go away if it is RAID6 related.
 
-Did any one ever seen this before, can you please advice ?
+Guy
 
-Thank you !
-
-Code that will panic the kernel, run it few times:
-
-#include "megaraid.h"
-
-int main()
-{
-        int         fd;
-       struct uioctl_t uioctl;
-
-       if ( (fd = open("/dev/megadev0", O_RDWR)) < 0 && (fd = open("/dev/megadev", O_RDWR)) < 0)
-                return -1;
-
-        uioctl.inlen =  1024;
-        uioctl.outlen = 1024;
-
-        if(!(uioctl.data = malloc(1024))){
-                return 0;
-        }
-        memset(uioctl.data, 0, 1024);
-
-        uioctl.ui.fcs.opcode     = M_RD_IOCTL_CMD;
-        uioctl.ui.fcs.subopcode  = 0;
-        uioctl.ui.fcs.adapno     = MKADAP(0);
-
-        uioctl.mbox[0]           = FC_NEW_CONFIG;
-        uioctl.mbox[2]           = NC_SUBOP_ENQUIRY3;
-        uioctl.mbox[3]           = ENQ3_GET_SOLICITED_FULL;
-
-        if(ioctl(fd, MEGAIOCCMD, &uioctl) == -1){
-                fprintf(stderr,"Error %d \n\n", uioctl.ui.fcs.adapno);
-                fflush(stderr);
-                free(uioctl.data);
-                close(fd);
-                return 0;
-        }
-
-     close(fd);
- return 0;
-}
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Terje Kvernes
+Sent: Friday, September 03, 2004 8:20 AM
+To: linux-raid@vger.kernel.org
+Subject: filesystem corruption with RAID6.
 
 
-Panic:
-1) 
-ug 31 20:54:03 Analyzer kernel: EIP is at iput_free [kernel] 0x1e
-Aug 31 20:54:03 Analyzer kernel: eax: 2e0001e3   ebx: f6880e40   ecx: f6880e50   edx: f6880e50
-Aug 31 20:54:03 Analyzer kernel: esi: f6880e40   edi: 00000000   ebp: 0008e000   esp: f7383f60
-Aug 31 20:54:03 Analyzer kernel: ds: 0018   es: 0018   ss: 0018
-Aug 31 20:54:03 Analyzer kernel: Process kswapd (pid: 10, stackpage=f7383000)
-Aug 31 20:54:03 Analyzer kernel: Stack: f587cb40 f5753b60 c015a45c f587cb40 f393c3e0 f6880e40 00000006 c015a41b
-Aug 31 20:54:03 Analyzer kernel:        f6880e40 f393c3f8 f393c3e0 c015a806 f393c3e0 c02fa190 00000286 00000286
-Aug 31 20:54:03 Analyzer kernel:        00000000 f7382000 00000000 00000000 00000000 00000000 00000000 00000000
-Aug 31 20:54:03 Analyzer kernel: Call Trace: [dput+28/304] dput [kernel] 0x1c (0xf7383f68)
-Aug 31 20:54:03 Analyzer kernel: Call Trace: [<c015a45c>] dput [kernel] 0x1c (0xf7383f68)
-Aug 31 20:54:03 Analyzer kernel: [dentry_iput+75/112] dentry_iput [kernel] 0x4b (0xf7383f7c)
-Aug 31 20:54:03 Analyzer kernel: [<c015a41b>] dentry_iput [kernel] 0x4b (0xf7383f7c)
-Aug 31 20:54:03 Analyzer kernel: [prune_dcache+182/336] prune_dcache [kernel] 0xb6 (0xf7383f8c)
- 
-2)p  1 18:41:36 Analyzer kernel: Oops: 0000
-Sep  1 18:41:36 Analyzer kernel: Kernel 2.4.9-e.49smp
-Sep  1 18:41:36 Analyzer kernel: CPU:    1
-Sep  1 18:41:36 Analyzer kernel: EIP:    0010:[__wake_up+51/144]    Tainted: P
-Sep  1 18:41:36 Analyzer kernel: EIP:    0010:[<c01198a3>]    Tainted: P
-Sep  1 18:41:36 Analyzer kernel: EFLAGS: 00010046
-Sep  1 18:41:36 Analyzer kernel: EIP is at __wake_up [kernel] 0x33
-Sep  1 18:41:36 Analyzer kernel: eax: f688800c   ebx: f6888014   ecx: 00000001   edx: 00000000
-Sep  1 18:41:36 Analyzer kernel: esi: 00000001   edi: f4c8a880   ebp: f4f25a94   esp: f4f25a7c
-Sep  1 18:41:36 Analyzer kernel: ds: 0018   es: 0018   ss: 0018
-Sep  1 18:41:36 Analyzer kernel: Process snmpd (pid: 626, stackpage=f4f25000)
-Sep  1 18:41:36 Analyzer kernel: Stack: 00000000 00000282 00000001 f4c8a880 f4c7f040 00000000 f4ec28c0 c01daad9
-Sep  1 18:41:36 Analyzer kernel:        00000002 00000026 f4c7f178 00001060 00007fff f4c7f178 c01ff422 f4c7f040
-Sep  1 18:41:36 Analyzer kernel:        00000000 c01fe2f4 f4c7f040 f4c7f178 ffffffff f4a8f0c0 3a6ade00 00000000
-Sep  1 18:41:36 Analyzer kernel: Call Trace: [sock_def_readable+57/112] sock_def_readable [kernel] 0x39 (0xf4f25a98)
-Sep  1 18:41:36 Analyzer kernel: Call Trace: [<c01daad9>] sock_def_readable [kernel] 0x39 (0xf4f25a98)
-Sep  1 18:41:36 Analyzer kernel: [tcp_data_queue+898/2688] tcp_data_queue [kernel] 0x382 (0xf4f25ab4)
-Sep  1 18:41:36 Analyzer kernel: [<c01ff422>] tcp_data_queue [kernel] 0x382 (0xf4f25ab4)
-Sep  1 18:41:36 Analyzer kernel: [tcp_ack+180/784] tcp_ack [kernel] 0xb4 (0xf4f25ac0)
-Sep  1 18:41:36 Analyzer kernel: [<c01fe2f4>] tcp_ack [kernel] 0xb4 (0xf4f25ac0)
+  howdy.
+
+  I've recently started testing RAID6 on a Promise SATA150 TX4, using
+  the controller as a pure SATA-controller and running software RAID
+  over the four drives connected to it.  the kernel is 2.6.8.1-mm4.
+  the drives are all identical, WD2500JD-00H.
+
+  I've fiddled a bit with testing the array, setting drives as faulty
+  and removing them, only to reinsert them afterwards.  there were no
+  complaints from the system while doing these trials, and everything
+  looked good.  my md was then turned into a PV and added to a VG.
+  all was seemingly well.  I probably created the PV while the system
+  was doing the initial sync of the RAIDset, I am however unsure if
+  that should cause any problems as the pvcreate didn't report any
+  errors from the block device.
+
+  I then created two LVs and copied data from the network onto one of
+  the LVs while a recovery was in process (the re-adding of
+  /dev/sdc1), which didn't report any errors.  upon copying from the
+  recently populated LV to the blank LV however, I get a lot of I/O
+  errors while reading from the recently populated filesystem.  I've
+  removed the LVs, tested different filesystems (ext3, reiserfs) but
+  the errors always show in the same way.  
+
+  now, this isn't exactly a good thing.  especially since the only
+  thing I see are I/O errors upon reading the data.  I'm not quite
+  sure what I can provide to help anyone debug this, but I'm more than
+  willing to help with testing.  
+
+  thanks for all the great md-work, and please CC me, I'm not on the
+  list.
+
+
+gayomart:/# cat /proc/mdstat 
+Personalities : [linear] [raid0] [raid1] [raid5] [multipath] [raid6] 
+md0 : active raid6 sdc1[2] sdd1[3] sdb1[1] sda1[0]
+      488391808 blocks level 6, 64k chunk, algorithm 2 [4/4] [UUUU]
+      
+unused devices: <none>
+gayomart:/# mdadm --detail /dev/md0
+/dev/md0:
+        Version : 00.90.01
+  Creation Time : Thu Sep  2 22:00:49 2004
+     Raid Level : raid6
+     Array Size : 488391808 (465.77 GiB 500.11 GB)
+    Device Size : 244195904 (232.88 GiB 250.06 GB)
+   Raid Devices : 4
+  Total Devices : 4
+Preferred Minor : 0
+    Persistence : Superblock is persistent
+
+    Update Time : Fri Sep  3 14:07:43 2004
+          State : clean, no-errors
+ Active Devices : 4
+Working Devices : 4
+ Failed Devices : 0
+  Spare Devices : 0
+
+
+    Number   Major   Minor   RaidDevice State
+       0       8        1        0      active sync   /dev/sda1
+       1       8       17        1      active sync   /dev/sdb1
+       2       8       33        2      active sync   /dev/sdc1
+       3       8       49        3      active sync   /dev/sdd1
+           UUID : a9b70f65:e3d7bda8:a0a37b4d:4ae0aab1
+         Events : 0.1835
+
+-- 
+Terje
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
