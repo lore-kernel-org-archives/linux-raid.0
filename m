@@ -1,35 +1,53 @@
-From: Sandro Dentella <sandro.dentella@tin.it>
-Subject: SRCS14L Controller?
-Date: Wed, 14 Apr 2004 22:50:58 +0200
+From: <robin-lists@robinbowes.com>
+Subject: Sanity check installation scheme
+Date: Thu, 15 Apr 2004 00:37:17 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040414205058.GA11159@bluff>
+Message-ID: <S262063AbUDNXhL/20040414233712Z+1806@vger.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-A customer of mine asked me to set up a fileserver on raid system. The
-hardware they bought is an Intel RAID SRCS14L (a "hardware-based Serial ATA
-(sata) RAID card"). Linux see it via gdth module.
+Hi,
 
-My (and their) idea was to use sw RAID. Beside general discussion on which
-is best (sw as opposed to hw), that I already followed on this list, I'd
-like to know if there is any particular comment on this card that I
-personally never used. I never used any SATA hard disks, really.
+I'm building a server from a few bits and pieces I have spare, including
+several 4.3GB SCSI drives. I'll most likely be using Fedora since I'm
+familiar with the Redhat flavour of linux.
 
-I only worked on that machine running on a live CD that I use to install
-from remote, but what strickes me is that after loading the gdth module I
-couldn't see any disks, even thought the module loaded correctly: using
-devfs 'find /dev -name disc' gave no results. Any clues?
+To maximise disk space I'd like to use software RAID-5 across either 3 or 4
+disks (depends how many I can squeeze into the case!). However, I am aware
+that it is not possible to boot from a Software RAID-5 array. To overcome
+this, I propose to create a small RAID-1 array across two drives to hold
+/boot, plus swap partitions on one or two other drives. I may also consider
+another RAID-1 array for /.
 
-Thank in advance
-sandro
-*:-)
+Here's what I envisage:
 
+Partition | sda          | sdb          | sdc      | sdd      |
+----------+--------------+--------------+----------+----------+
+        1 | RAID-1       | RAID-1       | swap     | swap     |
+          | (/boot, 80M) | (/boot, 80M) | (180M)   | (180M)   |
+          +--------------+--------------+----------+----------+
+        2 | RAID-1       | RAID-1       | RAID-5   | RAID-5   |
+          | (/, 100M)    | (/, 100M)    | (~4G)    | (~4G)    |
+          +--------------+--------------+----------+----------+
+        3 | RAID-5       | RAID-5       |
+          | (~4G)        | (~4G)        |
+          +--------------+--------------+
 
--- 
-Sandro Dentella  *:-)
-e-mail: sandro.dentella@tin.it 
-http://www.tksql.org                    TkSQL Home page - My GPL work
+This will give me the following partitions:
+
+/     100MB, mirrored
+/boot 80MB, mirrored
+/usr, /var, et. All on ~12G RAID-5 array.
+
+Does this look feasible? Can you see any major gotchas? Any better
+suggestions?
+
+Thanks,
+
+R.
+
