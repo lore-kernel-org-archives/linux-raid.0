@@ -1,48 +1,74 @@
-From: Matthew Mitchell <matthew@geodev.com>
-Subject: Re: RAID5 causing lockups
-Date: Thu, 26 Jun 2003 08:32:15 -0500
+From: "Zeno R.R. Davatz" <zdavatz@ywesee.com>
+Subject: Warning: /dev/md/0 is not on the first disk
+Date: Thu, 26 Jun 2003 19:32:30 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3EFAF5DF.70104@geodev.com>
-References: <200306252054340612.008AB828@ilneval.coreyfro.com>
+Message-ID: <20030626193230.4482503e.zdavatz@ywesee.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200306252054340612.008AB828@ilneval.coreyfro.com>
-To: Corey McGuire <coreyfro@coreyfro.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Going along with some suggestions of other respondents, be very 
-suspicious of your power cables.  I had a hell of a time getting a 
-stable raid running because of dodgy power cables.  More accurately, the 
-5v or 12v lines in some of the little plugs were kind of loose, and they 
-would lose contact.  So get in there with a pair of teeny pliers or 
-tweezers and crimp those babies on tight.
+Hi List
 
-As an aside, has anyone ever experimented with any type of conductive 
-compound when putting these things together?  IMO the cheesiest part of 
-the setup is the crappy PC-style power connector, and I wondered about 
-various solutions from compound to soldering on a PCB for a more 
-reliable means of powering drives.
+I am trying to set up my second software raid and encounter following problems:
 
-Best of luck to you.
+lilo gives me:
+Warning: device outside of RAID set  /dev/hda  0x0300
+Warning: using BIOS device code 0x81 for RAID boot blocks
+Warning: /dev/md/0 is not on the first disk
+Fatal: map file must be on the boot RAID partition
 
-Corey McGuire wrote:
-> Well, two of my drives did have an older bios, but the upgrade changed nothing.
-> 
-> I noticed that even unmounted, as long as I didn't raidstop the device, the system still crashes.
-> 
-> I tried setting down my bios as much as possible, and I am looking to do the same with the kernel, 2.4.21.  I'll try the magic sysrq key, but I can't find my nulmodem cable to save my life, so I'll have to barrow one from work.
-> 
-> My server marches on, but without /dev/md2... I'll try just letting it sit, /dev/md2 intact, over night, but for now, I need it up, even if it is only for fits and spurts.
-> 
-> Thanks everyone, keep the ideas rolling in.
+My lilo.conf is:
 
+boot=/dev/md/0
+raid-extra-boot="/dev/hdc,/dev/hda"
 
--- 
-Matthew Mitchell
-Systems Programmer/Administrator            matthew@geodev.com
-Geophysical Development Corporation         phone 713 782 1234
-1 Riverway Suite 2100, Houston, TX  77056     fax 713 782 1829
+root=/dev/md/1
 
+append="md=0,/dev/hdc3,/dev/hda3"
+
+cat /proc/mdstat gives me:
+md0 : active raid1 ide/host1/bus0/target0/lun0/part1[0]
+      97664 blocks [2/1] [U_]
+       
+md1 : active raid1 ide/host1/bus0/target0/lun0/part3[0]
+      76126592 blocks [2/1] [U_]
+
+My /etc/raidtab is:
+raiddev /dev/md/0
+        raid-level      1
+        nr-raid-disks   2
+        nr-spare-disks  0
+        chunk-size      32
+        persistent-superblock 1
+        device          /dev/hdc1
+        raid-disk       0
+        device          /dev/hda1
+        failed-disk     1
+                                                                                                                                              
+raiddev /dev/md/1
+        raid-level      1
+        nr-raid-disks   2
+        nr-spare-disks  0
+        chunk-size      32
+        persistent-superblock 1
+        device          /dev/hdc3
+        raid-disk       0
+        device          /dev/hda3
+        failed-disk     1
+
+My /mnt/root/etc/fstab is:
+# <Dateisystem> <Mountpunkt>    <Typ>   <Optionen>                      <dump>  <pass>
+/dev/md/1       /               reiserfs        defaults        0       0
+/dev/hda2       none            swap    sw                      0       0
+/dev/hdc2       none            swap    sw                      0       0
+proc            /proc           proc    defaults                0       0
+/dev/fd0        /floppy         auto    user,noauto             0       0
+/dev/cdrom      /cdrom          iso9660 ro,user,noauto          0       0
+/dev/md/0       /boot           reiserfs        defaults        0       2
+
+Thanks in advance for any help and hints.
+
+Zeno
