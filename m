@@ -1,34 +1,39 @@
 From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: raidreconf error
-Date: Fri, 12 Sep 2003 15:18:51 +1000
+Subject: Re: Software Raid Autodetection Problem
+Date: Fri, 12 Sep 2003 15:22:10 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16225.22331.898383.849144@notabene.cse.unsw.edu.au>
-References: <6B238F130041BF46AF3592E6700E7E14770639@panda.eea.eu.int>
+Message-ID: <16225.22530.855610.571698@notabene.cse.unsw.edu.au>
+References: <200309102119.11307.darrylb@iprimus.com.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Cristian Banciu on Thursday September 11
-To: Cristian Banciu <Cristian.Banciu@eea.eu.int>
+In-Reply-To: message from Darryl Barlow on Wednesday September 10
+To: Darryl Barlow <darrylb@iprimus.com.au>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday September 11, Cristian.Banciu@eea.eu.int wrote:
-> Hi,
+On Wednesday September 10, darrylb@iprimus.com.au wrote:
+> I am having problems with autodetection of a software raid0 array running on 
+> Debian unstable with kernel 2.4.21.  The Kernel was compiled with all 
+> necessary support as suggested by the howto (except there no longer seems to 
+> be a specific configuration option for autodetection).  Once loaded the array 
+> starts normally with raidstart --all.  I used Debian kernel sources and built 
+> the kernel with make-kpkg.  Debian kernel sources are set up for initrd and I 
+> have had no luck compiling non-initrd Debian kernels, so the kernel does use 
+> initrd.
 > 
-> I have done a software raid5 with 5 scci disks. Now I want to add one more disk to the current configuration without loosing data. But for some unkown reason the operation fails. Has anyone any idea why could I make this thing working ?
-> 
-> Thank you very much!
-> 
-> 
-> #raidreconf -o /etc/raidtab -n /etc/raidtab.new -m /dev/md0
-> Working with device /dev/md0
-> Parsing /etc/raidtab
-> Parsing /etc/raidtab.new
-> Your on-disk array MUST be clean first.
+> Dmesg seems to indicate it is scanning for raid arrays but for some reason is 
+> not finding this particular one.  I might add that the partitions concerned 
+> are set up as type fd (Linux Raid) and the array was created with 
+> persistent-superblock in the raidtab.  As I would ultimately like to boot 
+> from the software raid I would welcome any assistance in solving this 
+> problem.  Incidentally, is it correct that Lilo supports booting only from a 
+> software raid1 and not a software raid0 array?
 
-At a guess, you still have /dev/md0 active.
-Use "mdadm -S /dev/md0" or "raidstop /dev/md0" to stop it, then try
-again.
+Is md compiled as a module or is it linked into the kernel? Because
+autodetec won't work with md as a module.
+
+Lilo does support booting from raid1, but no other raid level.
 
 NeilBrown
