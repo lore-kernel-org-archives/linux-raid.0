@@ -1,197 +1,113 @@
 From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: Which (physical) disk is broken?
-Date: Fri, 24 Dec 2004 12:14:07 -0500
-Message-ID: <200412241714.iBOHED921515@www.watkins-home.com>
-References: <874qic2brg.fsf@pumba.bayour.com>
+Subject: RE: Raid-5 rebuild
+Date: Fri, 24 Dec 2004 12:19:52 -0500
+Message-ID: <200412241720.iBOHJx921533@www.watkins-home.com>
+References: <41CC1794.7050607@wasp.net.au>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <874qic2brg.fsf@pumba.bayour.com>
+In-Reply-To: <41CC1794.7050607@wasp.net.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Turbo Fredriksson' <turbo@bayour.com>, linux-raid@vger.kernel.org
+To: 'Brad Campbell' <brad@wasp.net.au>, 'RAID Linux' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-The info is in the superblock.  But if the disk has failed, you may not be
-able to read the superblock.
-
-Did you say you don't use superblocks?
-I guess you better keep a paper trail!
-
-You said:
-"when persistent super blocks is used (which I don't)."
-
-But the output from mdadm said:
-"Persistence : Superblock is persistent"
+Since your removed the disk, then added it.  It is like a new disk.  I think
+this is reasonable.  If I recall, Mdadm has an option to verify parity now.
+I don't have time to find the details for you.  But I think it requires
+Kernel 2.6.?.  I have 2.4, so I can't play with it yet.
 
 Guy
 
 -----Original Message-----
 From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Turbo Fredriksson
-Sent: Friday, December 24, 2004 6:10 AM
-To: linux-raid@vger.kernel.org
-Subject: Re: Which (physical) disk is broken?
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Brad Campbell
+Sent: Friday, December 24, 2004 8:20 AM
+To: RAID Linux
+Subject: Raid-5 rebuild
 
->>>>> "Neil" == Neil Brown <neilb@cse.unsw.edu.au> writes:
+G'day all,
 
-    Neil> On Wednesday December 22, turbo@bayour.com wrote:
-    >> >>>>> "Guy" == Guy <bugzilla@watkins-home.com> writes:
-    >> 
-    Guy> If you access your array, every disk in it will have disk
-    Guy> activity.
-    >>  He. That's one way I guess... I was more hoping for some
-    >> support for this in mdadm...
+I'm using a 2.6.10-rc1 (ish.. some BK just after that) kernel and I have a
+10 drive raid-5 /dev/md0.
+I noticed SMART telling me I have some pending reallocations on /dev/sdj, so
+I decided to force the 
+matter with a
+mdadm --fail /dev/md0 /dev/sdj1
+mdadm --remove /dev/md0 /dev/sdj1
+mdadm --add /dev/md0 /dev/sdj1
 
-    Neil> Would be nice....  but until disks have little blue lights
-    Neil> that can be turned on and off under software control, and
-    Neil> the linux block-device layer has an interface to access this
-    Neil> control, there isn't much mdadm can usefully do.
+Fine.. all going well, but I noticed using iostat that instead of doing
+read-compare cycles, the 
+kernel is rebuilding the drive regardless.
 
-I was more thinking on the 'magic'. When I created the array, I included
-this broken disk. I later removed it, but there should still (?) be a
-record of it in the super block (or wherever mdadm checks).
+I thought (and I may be wrong) that adding a drive to a raid-5 triggered the
+kernel to read each 
+stripe, and only write out new parity info if the stripe contents are wrong.
+Given this array was idle, and I failed/removed/added the drive within about
+10 seconds, I would 
+have thought that about 99.999% of the stripes should be consistent. The
+kernel however is writing 
+the whole lot out again. (Not a bad thing in this case as it will *force*
+the block reallocations)
 
-It knows how many disks there SHOULD be, and it knows how many is working.
+What is going on?
 
------ s n i p -----
-aurora:~# mdadm -D /dev/md1
-/dev/md1:
-        Version : 00.90.01
-  Creation Time : Wed Oct 27 08:12:44 2004
-     Raid Level : raid5
-     Array Size : 141483520 (134.93 GiB 144.88 GB)
-    Device Size : 17685440 (16.87 GiB 18.11 GB)
-   Raid Devices : 9
-  Total Devices : 8
-Preferred Minor : 1
-    Persistence : Superblock is persistent
-
-    Update Time : Fri Dec 24 11:45:11 2004
-          State : clean, degraded
- Active Devices : 8
-Working Devices : 8
- Failed Devices : 0
-  Spare Devices : 0
-
-         Layout : left-symmetric
-     Chunk Size : 32K
-
-    Number   Major   Minor   RaidDevice State
-       0       8       49        0      active sync
-/dev/scsi/host3/bus0/target4/lun0/part1
-       1       8       81        1      active sync
-/dev/scsi/host3/bus0/target8/lun0/part1
-       2       8       97        2      active sync
-/dev/scsi/host3/bus0/target9/lun0/part1
-       3       8      241        3      active sync
-/dev/scsi/host4/bus0/target4/lun0/part1
-       4      65        1        4      active sync
-/dev/scsi/host4/bus0/target5/lun0/part1
-       5      65       17        5      active sync
-/dev/scsi/host4/bus0/target8/lun0/part1
-       6      65       33        6      active sync
-/dev/scsi/host4/bus0/target9/lun0/part1
-       7      65      113        7      active sync
-/dev/scsi/host4/bus0/target14/lun0/part1
-       8       0        0       -1      removed
-           UUID : d0b4e775:290f5785:2e6ad7d1:5a66178b
-         Events : 0.1005733
------ s n i p -----
+On another note, looks like one of my Maxtors is going south (18
+reallocations and counting in the 
+past week). Go on, say I told you so! I have another 15 of them sitting here
+in a box waiting for 
+the howswap racks to arrive. I guess I'll be testing out Maxtors RMA process
+soon.
 
 
-Maybe it's to late now, but can't mdadm write a 'tag' somehow that 'this
-disk
-have broken down' and/or 'this disk have been removed from the array'?
+iostat 5
 
-I don't know how the (software) RAID works on kernel/hardware level, only
-how I, as a user/admin uses it :)
+avg-cpu:  %user   %nice    %sys %iowait   %idle
+           31.45    0.00   68.55    0.00    0.00
 
-But if I check one of the disks scsi4:4:part1 for example:
-
------ s n i p -----
-aurora:~# mdadm -E /dev/scsi/host4/bus0/target4/lun0/part1
-/dev/scsi/host4/bus0/target4/lun0/part1:
-          Magic : a92b4efc
-        Version : 00.90.00
-           UUID : d0b4e775:290f5785:2e6ad7d1:5a66178b
-  Creation Time : Wed Oct 27 08:12:44 2004
-     Raid Level : raid5
-    Device Size : 17685440 (16.87 GiB 18.11 GB)
-   Raid Devices : 9
-  Total Devices : 8
-Preferred Minor : 1
-
-    Update Time : Fri Dec 24 11:49:46 2004
-          State : clean
- Active Devices : 8
-Working Devices : 8
- Failed Devices : 1
-  Spare Devices : 0
-       Checksum : b038c0d3 - correct
-         Events : 0.1005753
-
-         Layout : left-symmetric
-     Chunk Size : 32K
-
-      Number   Major   Minor   RaidDevice State
-this     3       8      241        3      active sync
-/dev/scsi/host4/bus0/target4/lun0/part1
-   0     0       8       49        0      active sync
-/dev/scsi/host3/bus0/target4/lun0/part1
-   1     1       8       81        1      active sync
-/dev/scsi/host3/bus0/target8/lun0/part1
-   2     2       8       97        2      active sync
-/dev/scsi/host3/bus0/target9/lun0/part1
-   3     3       8      241        3      active sync
-/dev/scsi/host4/bus0/target4/lun0/part1
-   4     4      65        1        4      active sync
-/dev/scsi/host4/bus0/target5/lun0/part1
-   5     5      65       17        5      active sync
-/dev/scsi/host4/bus0/target8/lun0/part1
-   6     6      65       33        6      active sync
-/dev/scsi/host4/bus0/target9/lun0/part1
-   7     7      65      113        7      active sync
-/dev/scsi/host4/bus0/target14/lun0/part1
-   8     8       0        0        8      faulty removed
------ s n i p -----
-
-It (mdadm?) know exactly what md it belongs to etc... If I check
-the disk that i THINK is the 'faulty removed' one, it 'knows nothing':
-
------ s n i p -----
-aurora:~# mdadm -E /dev/scsi/host4/bus0/target15/lun0/part1
-mdadm: No super block found on /dev/scsi/host4/bus0/target15/lun0/part1
-(Expected magic a92b4efc, got 00000000)
------ s n i p -----
-
-So, IF this is the disk, then what did mdadm do when it was removed?
-Did it clear the super block? Couldn't it write something else instead?
-Or at least keep the UUID?
-
-Hmm, looking trough the code (I do that freely, before someone throws
-it at me :) i see that all mdadm do is a ioctl() so I guess it's something
-that have to be done in the kernel (?)...
-
-But how come mdadm knows that there's one removed? Common sence? There's
-9 raid devices (how come it knows that?) and 8 total devices, hence one
-must be/have been removed?
+Device:            tps   Blk_read/s   Blk_wrtn/s   Blk_read   Blk_wrtn
+hda              33.87        29.03      1970.97         72       4888
+sda             122.58     27187.10         0.00      67424          0
+sdb             122.18     27187.10         0.00      67424          0
+sdc             122.18     27187.10         0.00      67424          0
+sdd             122.18     27187.10         0.00      67424          0
+sde             122.58     27187.10         0.00      67424          0
+sdf             123.39     27187.10         0.00      67424          0
+sdg             123.79     27187.10         0.00      67424          0
+sdh             124.60     27187.10         0.00      67424          0
+sdi             122.58     27187.10         0.00      67424          0
+sdj             141.53         0.00     27354.84          0      67840
+sdk              25.00       416.13       335.48       1032        832
+sdl              25.40       354.84       380.65        880        944
+sdm              26.61       377.42       419.35        936       1040
+md0               0.00         0.00         0.00          0          0
+md2              79.44       829.03       600.00       2056       1488
 
 
-Looking at md.c in the kernel, I see that it don't write to the disk
-(when removing a device from an array) when persistent super blocks
-is used (which I don't). There don't seem to be an option in mdadm
-for this (I do remember using it with raidtools long ago)..
+Personalities : [raid0] [raid5] [raid6]
+md2 : active raid5 sdl[0] sdm[2] sdk[1]
+       488396800 blocks level 5, 128k chunk, algorithm 2 [3/3] [UUU]
 
+md0 : active raid5 sdj1[10] sda1[0] sdi1[8] sdh1[7] sdg1[6] sdf1[5] sde1[4]
+sdd1[3] sdc1[2] sdb1[1]
+       2206003968 blocks level 5, 128k chunk, algorithm 0 [10/9]
+[UUUUUUUUU_]
+       [>....................]  recovery =  0.8% (2182696/245111552)
+finish=585.3min speed=6913K/sec
+unused devices: <none>
 
-Am I way of? It's early on christmas eve, and my blood to coffein ratio
-is high... :)
+Oh, while I'm here. If you celebrate Christmas, Merry Christmas! (I have
+become somewhat more 
+sensitive to this living in an Arab country!)
+
 -- 
-Iran arrangements [Hello to all my fans in domestic surveillance]
-Kennedy pits 767 Peking Clinton assassination Cocaine PLO Ft. Meade
-killed $400 million in gold bullion kibo
-[See http://www.aclu.org/echelonwatch/index.html for more about this]
+Brad
+                    /"\
+Save the Forests   \ /     ASCII RIBBON CAMPAIGN
+Burn a Greenie.     X      AGAINST HTML MAIL
+                    / \
 -
 To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 the body of a message to majordomo@vger.kernel.org
