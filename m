@@ -1,48 +1,68 @@
-From: Marc MERLIN <marc_news@merlins.org>
-Subject: Re: SW Raid doesn't play nice with devfs?
-Date: Sun, 8 Sep 2002 23:27:37 -0700
+From: Arne Wiebalck <wiebalck@kip.uni-heidelberg.de>
+Subject: Re: Partitioning a RAID device
+Date: Mon, 9 Sep 2002 09:38:21 +0200 (METDST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20020909062737.GA3806@merlins.org>
-References: <20020909054800.GV3806@merlins.org> <15740.15774.911597.853392@notabene.cse.unsw.edu.au>
+Message-ID: <Pine.HPX.4.43.0209090937250.27829-100000@electra.kip.uni-heidelberg.de>
+References: <15736.14823.863026.285510@notabene.cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <15740.15774.911597.853392@notabene.cse.unsw.edu.au>
+In-Reply-To: <15736.14823.863026.285510@notabene.cse.unsw.edu.au>
 To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: linux-raid@vger.kernel.org
+Cc: Derek Vadala <derek@cynicism.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Sep 09, 2002 at 04:20:14PM +1000, Neil Brown wrote:
-> Yep, raidstart is broken by design.  It depends on device number being
-> stable, and SCSI device number aren't, especially if they are added
-> after boot time.
-> 
-> That is part of the reason that I wrote mdadm.  It can do the right
-> thing for you.
-> 
->   http://www.cse.unsw.edu.au/~neilb/source/mdadm/
 
-I will try this, thanks (I can't reboot the system this exact minute)
+ok, works fine. thanks for your help.
 
-That said, the problem occurs both with the kernel autorun and raidstart:
-when I load the qla1280 module, the drives get detected, md wakes up and
-tries to create md3 since the partitions have type 0xfd, and fails in the
-same way:
-(...)
-kernel:  /dev/scsi/host3/bus0/target13/lun0: p1
-kernel: SCSI device sdl: 354600001 512-byte hdwr sectors
-kernel:  /dev/scsi/host3/bus0/target14/lun0: p1
-kernel:  [events: 00000002]
-kernel: md: could not lock sdm1, zero-size? Marking faulty.
-(...)
+arne
 
-Is the kernel autorun code going to be fixed too or will I need to use mdadm
-for the forseable future?
 
-Marc
--- 
-"A mouse is a device used to point at the xterm you want to type in" - A.S.R.
-Microsoft is to operating systems & security ....
-                                      .... what McDonalds is to gourmet cooking 
-Home page: http://marc.merlins.org/   |   Finger marc_f@merlins.org for PGP key
+On Fri, 6 Sep 2002, Neil Brown wrote:
+
+> On Thursday September 5, wiebalck@kip.uni-heidelberg.de wrote:
+> >
+> > fdisk(pid 1344) tried BLKRRPART ioctl on MD device. Should use MDP
+> > device.
+>
+> Yes, you shold use the MDP devices... look in /proc/devices to find
+> the major number.
+> >
+> > md: fdisk(pid 2486) used obsolete MD ioctl, upgrade your software to use
+> > new ictls.
+>
+> Ignore this, it doesn't really mean anything.
+>
+> >
+> > so, partitioning did not work.
+> >
+> > my fdisk version is 2.11.
+> > should I use another tool for partitioning?
+>
+> fdisk, cfdisk, sfdisk all work fine.
+>
+> > who is responsible for making the device special files?
+>
+> You.  (or devfs).
+> The first 16 minors for mdp correspond to md0
+> The second 16 minors for mdp correspond to md1
+> etc.
+>
+> NeilBrown
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
+**********************************************************************
+ Arne Wiebalck                        Kirchhoff Institute for Physics
+                                           Technical Computer Science
+                                                     Schroederstr. 90
+                                                   D-69120 Heidelberg
+
+ e-mail: wiebalck@kip.uni-heidelberg.de      Tel.: (+49) 6221/54-4362
+ web   : http://www.kip.uni-heidelberg.de    Fax.: (+49) 6221/54-4345
+**********************************************************************
+
+
