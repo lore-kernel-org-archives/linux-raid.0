@@ -1,77 +1,36 @@
-From: "BO MOON" <bmoon@anthologysolutions.com>
-Subject: RE: Raid0 or Raid1 READ performance
-Date: Thu, 16 Dec 2004 20:24:27 -0800
-Message-ID: <000c01c4e3f0$4ecb77b0$040a10ac@asitest>
-References: <Pine.LNX.4.44.0412161741200.19312-100000@coffee.psychology.mcmaster.ca>
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: mdadm segfault
+Date: Fri, 17 Dec 2004 15:35:16 +1100
+Message-ID: <16834.25092.142003.103800@cse.unsw.edu.au>
+References: <41C20D66.8040906@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44.0412161741200.19312-100000@coffee.psychology.mcmaster.ca>
+In-Reply-To: message from Michael Stumpf on Thursday December 16
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Mark Hahn' <hahn@physics.mcmaster.ca>
+To: mjstumpf@pobox.com
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Thursday December 16, mjstumpf@pobox.com wrote:
+> mdadm 1.8.1 is segfaulting on red hat linux 7.3.  Kernel is 2.4.18smp5.  
+> Happened when I try to assemble a 3 drive array with only 2 drives.
+> 
+> Not important to me; I just downgraded to 1.2.0 and it worked like a 
+> champ, but I figured I'd throw that out there as an FYI.
+> 
 
-Mark,
+Why don't people read the release notes?
 
-Thanks for your opinion and suggestion.
-You are right to get the real and meaningful performance, I should
-Follow your suggestion.
+ From "ANNOUNCE-1.8.1":
 
-My real attention is to find the difference in READ operation between
-Single(one HDD) and RAID0 or RAID1 by the parallelism( 
-access or read data block from more than 2 HDDs at the same time).
-
-I tried with "time dd if=dev of=/dev/zero bs=64K". There is no
-Difference.
-
-Any more comments?
-
-Thanks,
-
-Bo  
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Mark Hahn
-Sent: Thursday, December 16, 2004 2:48 PM
-To: BO MOON
-Cc: linux-raid@vger.kernel.org
-Subject: Re: Raid0 or Raid1 READ performance
-
-> I am expecting the faster performance on READ than WRITE because of
-> parallel read from disks more than 2(2 for RAID1, 3 for RAID0) at the
-> same time.
-
-if I understand your description, each of your tests involves either
-reading or writing from a single disk (and also writing/reading a raid.)
-such tests will always run at the speed of the slowest disk,
-presumably the single one.  for instance,
-
-    cp /some-2-disk-raid0/file /other-single-disk/
-
-will be limited by the write speed of other-single-disk, 
-and not the raid.
-
-    cp /other-single-disk/file /some-2-disk-raid0/
-
-is similar, though now it's the reading from a single disk which 
-is the bottleneck.
-
-> Any suggestion or opinion?
-
-test bandwidth with something more reasonable than time cp.
-even "time dd if=/disk-to-read-from of=/dev/zero bs=64k"
-is more sensible.
-
-regards, mark hahn.
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+   This is a "development" release of mdadm.  It should *not* be
+   considered stable and should be used primarily for testing.
+   The current "stable" version is 1.8.0.
 
 
+I guess I should release a "1.9.0" and use "1.8.2 ..." for devel
+releases.
 
+NeilBrown
