@@ -1,71 +1,41 @@
-From: "Lewis Shobbrook" <lshobbrook@fasttrack.net.au>
-Subject: RE: Kernel 2.6.6 does not recognise /dev/md0 automatically
-Date: Mon, 12 Jul 2004 15:41:27 +1000
-Message-ID: <0C8098CA7F09CE419F0C2B68EB8358761EBA8B@exchange.fasttrack.net.au>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [RFC] Hardware RAID offload
+Date: Mon, 12 Jul 2004 13:09:07 +0100
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <1089634146.11248.6.camel@localhost.localdomain>
+References: <40F1A04E.8070105@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <bounce-debian-testing=debian-testing=m.gmane.org@lists.debian.org>
-Content-class: urn:content-classes:message
-Resent-Message-ID: <7iMx7.A.M8B.JSi8AB@murphy>
-List-Post: <mailto:debian-testing@lists.debian.org>
-List-Help: <mailto:debian-testing-request@lists.debian.org?subject=help>
-List-Subscribe: <mailto:debian-testing-request@lists.debian.org?subject=subscribe>
-List-Unsubscribe: <mailto:debian-testing-request@lists.debian.org?subject=unsubscribe>
-List-Archive: <http://lists.debian.org/debian-testing/>
-To: Clement <clement@ans.com.au>
-Cc: debian-testing@lists.debian.org, linux-raid@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <40F1A04E.8070105@pobox.com>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-raid@vger.kernel.org, Device mapper devel list <dm-devel@redhat.com>, Jens Axboe <axboe@suse.de>
 List-Id: linux-raid.ids
 
-Hi Clement,
->>>Trouble is, I cannot upgrade the kernel with a simple
->>>apt-get.  It will be great if the std kernel can have this=20
->>>problem fixed.
->>>
->>>   =20
->>>
->>This does work with std kernels using initrd!  You'll need to start
-off=20
->>with a custom prepared initrd as explained earlier, and load such=20
->>required modules as ide_detect and others into the initrd.  Once
-you've=20
->>done that you are away and running for apt upgrades.  During the deb=20
->>package kernel_image install, the install script checks to see what
-the=20
->>current kernel is using and customises the initrd accordingly=20
->(brilliant work by the package maintainers & kernel team that allows=20
->>the automatic kernel upgrade).  This is where your problem is; if you=20
->>have the modules compiled into the kernel, they won't get picked up at
+On Sul, 2004-07-11 at 21:17, Jeff Garzik wrote:
+> 1) Transaction sequencing.  Consider that N disk transactions comprise a 
+> single RAID1 write.  The hardware can be set up to wait until all N 
+> transactions are complete, before sending an interrupt.  This is 
+> applicable to Marvell and Promise SATA, among others.
 
->>install time by the install script and thus don't make it into the=20
->>initrd.  If the modules are loaded after boot,(e.g. like Sound modules
+So this is basically IRQ mitigation. Can you flip the "cause an IRQ"
+status on the fly ?
 
->>etc..) they also will be missing in the initrd.
+> 2) Copy elimination.  All disk transactions on the Promise SX4 go 
+> through an on-board DIMM (128M - 2G), before being sent to the attached 
+> controllers.  I would love to use this to eliminate data duplication on 
+> RAID1 and RAID5 writes.
 
-> The initrd was customed already.  In kernel 2.4.25, there is a module=20
-> ide-detect  in  kernel/drivers/ide.  However, in kernel=20
-> 2.6.6, there is=20
-> no such module named ide-detect or ide_detect anywhere!
->=20
-This makes sense when migrating from 2.4 to 2.6 series, the two are
-markedly different. I honestly can't recall if I recompiled to get the
-2.6 series working.
-I'd suspect it may be necessary, unless you can find the initrd modules
-you require for the 2.6 kernel and add these to /etc/mkinitrd/modules
-before chrooting to the raid root and using mkinitrd.
+Big win for PCI cards because it cuts PCI bandwidth way down. It
+doesn't seem like it should be that hard to add to the drivers either
+depending upon how the RAM is presented. Is it mapped into PCI space ?
 
-Normally you can chroot & mkinitrd, but I don't think this works quite
-the same way with raid, it'd be a great timesaver if you could simply
-chroot mkinitrd without the need to modify /etc/mkinitrd/modules.
+> Or maybe, allow the user to set a flag that tells md to pass a request 
+> directly through to the low-level driver, in certain situations ("pass 
+> through all RAID1 writes, but handle everything else in software").  /me 
+> thinks out loud...
 
-Herbert Xu the package maintainer for initrd-tools is the authority on
-this, I'd best not spoil his hard work with too many inaccurate rubbish
-statements. =20
+As some kind of driver "md_ops" or as a separate raid1-promise plugin ?
 
-Perhaps someone in the linux-raid mail group can shed some light on this
-and as to which kernel modules are required?
 
-Cheers,
-
-Lew
