@@ -1,39 +1,34 @@
 From: Maurice Hilarius <maurice@harddata.com>
 Subject: Re: recovering after a /dev/sda failure on raid1
-Date: Mon, 05 Aug 2002 12:35:47 -0600
+Date: Mon, 05 Aug 2002 12:38:59 -0600
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <5.1.0.14.2.20020805123301.03eecec0@mail.harddata.com>
-References: <15690.63749.164322.929689@notabene.cse.unsw.edu.au>
+Message-ID: <5.1.0.14.2.20020805123619.03eee0a0@mail.harddata.com>
+References: <message from Louis-David Mitterrand on Monday August 5>
  <20020801144922.GA5284@apartia.org>
  <15690.63749.164322.929689@notabene.cse.unsw.edu.au>
+ <20020805092641.GA577@apartia.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20020805092641.GA577@apartia.org>
-To: Louis-David Mitterrand <vindex@apartia.org>
+In-Reply-To: <15694.27770.60339.958313@notabene.cse.unsw.edu.au>
+To: Neil Brown <neilb@cse.unsw.edu.au>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-With regards to your message at 03:26 AM 8/5/02, Louis-David Mitterrand. 
-Where you stated:
-><<snip>>
->FWIW the disk that is malfunctioning is a 3-month-old Fujitsu 15k 36G
->(MAM3367MP) which is an expensive server-grade disk. The reason I
->selected Fujitsu was because of reported quality problems on IBM disks
->and Fujitsu's good reputation on SCSI (their IDE line is bad however).
->I am looking for informed opinions on these disks and recommendations
->for future purchases. What are the most reliable SCSI disks out there?
+With regards to your message at 06:15 AM 8/5/02, Neil Brown. Where you stated:
+>Somehow, I wish you hadn't said that.....
 >
->It must be: fast, affordable, reliable, (select any two ;-)
-The Fujitsu disks have a track record of good reliability.
-The IDE disk you mention were discontinued a year ago.
-In our experiences Fujitsu disks have as low a failure rate as can be found.
-Drives we have used with higher failure rates (SCSI) came from IBM and Seagate.
-The best failure rate we have seen is from Hitachi.
-In the case of Fujitsu, Hitachi, and Seagate the rates are very close.
-Quantum/Maxtor SCSI are a bit worse.
-IBM are substantially worse.
-This is based on our DOA and in service SCSI disk failures over the past year.
+>I just recently commissioned a fileserver with 14 Fujitsu MAM3367MC drives.
+>I wander what the difference between P and C is...
+
+SCA versus 68 pin SCSI connector interface.
+Otherwise the same drives.
+
+Per:
+http://www.fujitsu.ca/products/storage/scsi/al7lx-mcmp.html
+
+"Interface Ultra 160 SCSI (MC:SCA-2 80-pin wide MP:68-pin) "
+
 
 
 With our best regards,
