@@ -1,136 +1,86 @@
-From: Sharif Islam <mislam@uiuc.edu>
-Subject: recreate superblock? (was Re: mdadm: failed to RUN_ARRAY)
-Date: Mon, 11 Oct 2004 11:16:33 -0500
+From: Mike Tran <mhtran@us.ibm.com>
+Subject: Re: RAID 0 went down...
+Date: Mon, 11 Oct 2004 05:10:40 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <416AB1E1.1070605@uiuc.edu>
-References: <4168064D.3050903@uiuc.edu> <4168140A.6070300@uiuc.edu>
+Message-ID: <1097489440.5815.30.camel@langvan2.homenetwork>
+References: <4aaefdb041011052847dd1c18@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4168140A.6070300@uiuc.edu>
+In-Reply-To: <4aaefdb041011052847dd1c18@mail.gmail.com>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Is there any way to regain the superblock? I mistakenly did a 
---zero-superblock on /dev/hdi and /dev/hdk
-/dev/hdi is one of the bad one, but I think it is not totally gone. So I 
-was trying to force it.
+Hi Romeyn,
 
-[root@pep root]# mdadm -A /dev/md0 --force /dev/hd[efghi]1
-mdadm: no RAID superblock on /dev/hdi1
-mdadm: /dev/hdi1 has no superblock - assembly aborted
+If there were I/O errors on one of the disks, I am not sure that you
+want to re-assemble/re-create this "corrupted" raid0 array.  However, if
+you just want to get some data out of the volume /dev/md0, you can use
+mdadm to re-create the array:
 
-I would appreciate some hints. Thanks.
--Sharif
+mdmadm -C -R /dev/md0 -c 64 -l 0 -n 2 /dev/sdb1 /dev/sdc1
 
+Regards,
+Mike T.
 
-Sharif Islam wrote:
-
-> Ok, more on this. I think two of my RAID drives failed. and after  I
-> posted the email below, I did something that I am guessign I shouldn't 
-> have.
->
-> mdadm --zero-superblock /dev/hdk1
-> mdadm --zero-superblock /dev/hdi1
->
-> Should I try recreating the array in degrading mode.
->
-> mdadm --create /dev/md0 --level=5 /dev/hde1 /dev/hdf1 /dev/hdg1 
-> /dev/hdh1 missing
->
-> But I think that only works with one failed device.
-> -Sharif
->
->
-> Sharif Islam wrote:
->
->> One of my RAID 5 stopped last night.  I get this when I try to
->> restart it:
->> [root@pep raid]# mdadm -A /dev/md0
->> mdadm: device 5 in /dev/md0 has wrong state in superblock, but 
->> /dev/hdk1 seems ok
->> mdadm: failed to RUN_ARRAY /dev/md0: Invalid argument
->>
->> Is my hdk1 gone. Should I try to replace that?
->>
->> from dmesg:
->>
->> Oct  9 10:36:04 pep kernel: md: export_rdev(hdf1)
->> Oct  9 10:36:04 pep kernel:  [events: 0000000b]
->> Oct  9 10:36:04 pep kernel: md: bind<hdf1,1>
->> Oct  9 10:36:04 pep kernel:  [events: 0000000b]
->> Oct  9 10:36:04 pep kernel: md: bind<hdg1,2>
->> Oct  9 10:36:04 pep kernel:  [events: 0000000b]
->> Oct  9 10:36:04 pep kernel: md: bind<hdh1,3>
->> Oct  9 10:36:04 pep kernel:  [events: 00000009]
->> Oct  9 10:36:04 pep kernel: md: bind<hdi1,4>
->> Oct  9 10:36:04 pep kernel:  [events: 0000000a]
->> Oct  9 10:36:04 pep kernel: md: bind<hdk1,5>
->> Oct  9 10:36:04 pep kernel:  [events: 0000000b]
->> Oct  9 10:36:04 pep kernel: md: bind<hde1,6>
->> Oct  9 10:36:04 pep kernel: md: hde1's event counter: 0000000b
->> Oct  9 10:36:04 pep kernel: md: hdk1's event counter: 0000000a
->> Oct  9 10:36:04 pep kernel: md: hdi1's event counter: 00000009
->> Oct  9 10:36:04 pep kernel: md: hdh1's event counter: 0000000b
->> Oct  9 10:36:04 pep kernel: md: hdg1's event counter: 0000000b
->> Oct  9 10:36:04 pep kernel: md: hdf1's event counter: 0000000b
->> Oct  9 10:36:04 pep kernel: md: superblock update time inconsistency 
->> -- using the most recent one
->> Oct  9 10:36:04 pep kernel: md: freshest: hde1
->> Oct  9 10:36:04 pep kernel: md: kicking non-fresh hdi1 from array!
->> Oct  9 10:36:04 pep kernel: md: unbind<hdi1,5>
->> Oct  9 10:36:04 pep kernel: md: export_rdev(hdi1)
->> Oct  9 10:36:04 pep kernel: md0: removing former faulty hdi1!
->> Oct  9 10:36:04 pep kernel: md0: kicking faulty hdk1!
->> Oct  9 10:36:04 pep kernel: md: unbind<hdk1,4>
->> Oct  9 10:36:04 pep kernel: md: export_rdev(hdk1)
->> Oct  9 10:36:04 pep kernel: md: md0: raid array is not clean -- 
->> starting background reconstruction
->> Oct  9 10:36:04 pep kernel: md0: max total readahead window set to 2560k
->> Oct  9 10:36:04 pep kernel: md0: 5 data-disks, max readahead per 
->> data-disk: 512k
->> Oct  9 10:36:04 pep kernel: raid5: device hde1 operational as raid 
->> disk 0
->> Oct  9 10:36:04 pep kernel: raid5: device hdh1 operational as raid 
->> disk 3
->> Oct  9 10:36:04 pep kernel: raid5: device hdg1 operational as raid 
->> disk 2
->> Oct  9 10:36:04 pep kernel: raid5: device hdf1 operational as raid 
->> disk 1
->> Oct  9 10:36:04 pep kernel: raid5: not enough operational devices for 
->> md0 (2/6 failed)
->> Oct  9 10:36:04 pep kernel: RAID5 conf printout:
->> Oct  9 10:36:04 pep kernel:  --- rd:6 wd:4 fd:2
->> Oct  9 10:36:04 pep kernel:  disk 0, s:0, o:1, n:0 rd:0 us:1 dev:hde1
->> Oct  9 10:36:04 pep kernel:  disk 1, s:0, o:1, n:1 rd:1 us:1 dev:hdf1
->> Oct  9 10:36:04 pep kernel:  disk 2, s:0, o:1, n:2 rd:2 us:1 dev:hdg1
->> Oct  9 10:36:04 pep kernel:  disk 3, s:0, o:1, n:3 rd:3 us:1 dev:hdh1
->> Oct  9 10:36:04 pep kernel:  disk 4, s:0, o:0, n:4 rd:4 us:1 dev:[dev 
->> 00:00]
->> Oct  9 10:36:04 pep kernel:  disk 5, s:0, o:0, n:5 rd:5 us:1 dev:[dev 
->> 00:00]
->> Oct  9 10:36:04 pep kernel: raid5: failed to run raid set md0
->> Oct  9 10:36:04 pep kernel: md: pers->run() failed ...
->> Oct  9 10:36:04 pep kernel: md: md0 stopped.
->> Oct  9 10:36:04 pep kernel: md: unbind<hde1,3>
->> Oct  9 10:36:04 pep kernel: md: export_rdev(hde1)
->> Oct  9 10:36:04 pep kernel: md: unbind<hdh1,2>
->> Oct  9 10:36:04 pep kernel: md: export_rdev(hdh1)
->> Oct  9 10:36:04 pep kernel: md: unbind<hdg1,1>
->> Oct  9 10:36:04 pep kernel: md: export_rdev(hdg1)
->> Oct  9 10:36:04 pep kernel: md: unbind<hdf1,0>
->> Oct  9 10:36:04 pep kernel: md: export_rdev(hdf1)
->>
->> [root@pep raid]# cat /proc/mdstat
->> Personalities : [raid5]
->> read_ahead not set
->> unused devices: <none
->>
->> Thanks.
->> -Sharif
->>
->>
->
->
+On Mon, 2004-10-11 at 07:28, Romeyn Prescott wrote:
+> I have a RH 9.0 box with a RAID 0.  I started getting some I/O errors
+> and when I rebooted the box md0 wouldn't mount.
+> 
+> /etc/raiddtab:
+> -----
+> raiddev             /dev/md0
+> raid-level                  0
+> nr-raid-disks               2
+> chunk-size                  64k
+> persistent-superblock       1
+> nr-spare-disks              0
+>     device          /dev/sdb1
+>     raid-disk     0
+>     device          /dev/sdc1
+>     raid-disk     1
+> -----
+> 
+> The problem appears to be with /dev/sdc, yet it passes all of the
+> manufacturer's (Seagate) diagnostics.  Here's what /var/log/dmesg
+> says:
+> -----
+> md: Autodetecting RAID arrays.
+>  [events: 00000095]
+>  [events: 00000031]
+> md: autorun ...
+> md: considering sdc1 ...
+> md:  adding sdc1 ...
+> md:  adding sdb1 ...
+> md: created md0
+> md: bind<sdb1,1>
+> md: bind<sdc1,2>
+> md: running: <sdc1><sdb1>
+> md: sdc1's event counter: 00000031
+> md: sdb1's event counter: 00000095
+> md: superblock update time inconsistency -- using the most recent one
+> md: freshest: sdb1
+> md: kicking non-fresh sdc1 from array!
+> md: unbind<sdc1,1>
+> md: export_rdev(sdc1)
+> md0: former device sdc1 is unavailable, removing from array!
+> md0: max total readahead window set to 512k
+> md0: 2 data-disks, max readahead per data-disk: 256k
+> md: md0, array needs 2 disks, has 1, aborting.
+> raid0: disks are not ordered, aborting!
+> md: pers->run() failed ...
+> md :do_md_run() returned -22
+> md: md0 stopped.
+> md: unbind<sdb1,0>
+> md: export_rdev(sdb1)
+> md: ... autorun DONE.
+> -----
+> 
+> Is there any way I can recover from this?  I've been googling my
+> brains out, but most of what I find relates to RAID1.  Restoring from
+> a backup is possible, but..."complicated" and is my last resort.
+> 
+> TIA,
+> ...ROMeyn
 
