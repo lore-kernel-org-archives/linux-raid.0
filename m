@@ -1,40 +1,38 @@
-From: Brad Campbell <brad@wasp.net.au>
+From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: Which raid card to buy for Sarge
-Date: Thu, 01 Apr 2004 09:56:40 +0400
+Date: Thu, 01 Apr 2004 00:58:23 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <406BAF18.8010005@wasp.net.au>
-References: <Pine.LNX.4.44.0403311442520.31572-100000@coffee.psychology.mcmaster.ca> <406B9F3E.4020701@wasp.net.au> <406BAC2F.8090407@pobox.com>
+Message-ID: <406BAF7F.2030307@pobox.com>
+References: <008f01c41737$8b57be40$6405a8c0@a30> <006401c417a1$36a45790$6405a8c0@a30>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <406BAC2F.8090407@pobox.com>
-To: Jeff Garzik <jgarzik@pobox.com>
+In-Reply-To: <006401c417a1$36a45790$6405a8c0@a30>
+To: me@heyjay.com
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Jeff Garzik wrote:
+me@heyjay.com wrote:
+> I'd like to thank everyone who responded, and I didn't mean to start a
+> software vs hardware war.  But now that I did I'm sort of happy, because
+> it's made me question if my direction is proper for my goals.
 
->> With the Highpoint driver I get a drive failure and the card starts 
->> beeping. I fire up the management util, remove the faulty drive, swap 
->> it out and insert the new drive in the array. The array starts 
->> rebuilding - no effect on the uptime and only a slight loss in 
->> throughput. Plus it's seamless.
-> 
-> 
-> Yeah, md+mdadm can do all this right now, provided the hardware and 
-> driver support is there...
-> 
+Not your fault, it's inevitable ;-)
 
-Yes, my point however is for low budget stuff with software raid the driver support is not yet there 
-in a vanilla kernel.
-I can't just whack a sata drive off one of my promise SATA150-TX4 controllers, pop another one in 
-and have the kernel rescan the partition table and realise a new drive was present. (YET!)
 
-My entire point was that for the types of controllers that were being discussed (Highpoint was 
-particularly mentioned, but you can really interchange any multi-port ATA/SATA controller for this) 
-that the kernel support was not there *yet* but hardware raid or faux hardware raid will buy you 
-this support *now*.
+> - I'm using a (fairly) old machine, I have to figure processor speed has to
+> be an issue with software raid
+> - When the box is being stressed most of the work is computational, the
+> process I run puts the CPU% at 98% (according to top).
 
-Regards,
-Brad
+98% cpu doing just raid 1?  That sounds highly strange, even on an older 
+CPU.
+
+Typically RAID1 doesn't stress the cpu as much as PCI bus bandwidth and 
+the drives...
+
+	Jeff
+
+
+
