@@ -1,64 +1,36 @@
 From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: RAID5 rebuild difficulties
-Date: Thu, 21 Aug 2003 14:08:32 +1000
+Subject: Re: [PATCH 2.6.0-test3] avoid raid1 resync abort
+Date: Fri, 22 Aug 2003 16:59:56 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16196.17856.566945.807140@gargle.gargle.HOWL>
-References: <200308201453.38427.ebenard@free.fr>
+Message-ID: <16197.49004.663149.827887@gargle.gargle.HOWL>
+References: <3F43A0C4.E215B858@SteelEye.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Eric BENARD / Free on Wednesday August 20
-To: Eric BENARD / Free <ebenard@free.fr>
+In-Reply-To: message from Paul Clements on Wednesday August 20
+To: Paul Clements <Paul.Clements@SteelEye.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday August 20, ebenard@free.fr wrote:
-> Hi,
+On Wednesday August 20, Paul.Clements@SteelEye.com wrote:
+> Neil,
 > 
-> I'm having some troubles to rebuild a software RAID5 after several power 
-> failures.
-> Does anyone have an idea on how I could resync superblock of 4 partitions in 
-> order to rebuild the raid without loosing data ?
-> 
-> Many thanks and best regards
-> Eric
-> 
-> [root@serv root]# mdadm -Eb /dev/hde8
-> ARRAY /dev/md5 level=raid5 num-devices=3 
-> UUID=adecf616:84cf5266:30d2b689:ec3729e7
->    devices=/dev/hde8
-> [root@serv root]# mdadm -Eb /dev/hdf6
-> ARRAY /dev/md5 level=raid5 num-devices=3 
-> UUID=adecf616:84cf5266:30d2b689:ec3729e7
->    devices=/dev/hdf6
-> [root@serv root]# mdadm -Eb /dev/hdg8
-> ARRAY /dev/md5 level=raid5 num-devices=3 
-> UUID=adecf616:84cf5266:310000c4:ec3729e7
->    devices=/dev/hdg8
-> [root@serv root]# mdadm -Eb /dev/hdh6
-> ARRAY /dev/md5 level=raid5 num-devices=3 
-> UUID=adecf616:84cf5266:30d2b689:003729e7
->    devices=/dev/hdh6
-> 
-> [root@serv root]# mdadm -Af /dev/md5 /dev/hde8 /dev/hdf6 /dev/hdg8 /dev/hdh6
-> mdadm: superblock on /dev/hdg8 doesn't match others - assembly
-> aborted
+> I don't know if you've noticed this one yet, but it looks like we need
+> to set the master_bio->bi_bdev field at the beginning of every resync
+> request. We use this value later on in sync_request_write() to determine
+> whether a write should take place on a particular device. Without the
+> field being properly set, we will end up aborting the resync process.
+> This happens because the master_bios are pulled from a pool, so we
+> eventually end up getting a master_bio that already has our destination
+> disk set in its bi_bdev field. This causes sync_request_write() to fail
+> since it thinks there is nowhere to write the data to. 
 
-Try leaving out /dev/hdg8:
+Thanks.  Your analysis looks right.
+However it raises a question:  why are we cloning a separate bio for
+reading instead of jus using the "master bio" ???
 
-  madm -Af /dev/md5 /dev/hde8 /dev/hdf6 /dev/hdg8 /dev/hdh6
-
-hdg8 seem to have a different UUID anyway - are you sure it is part of
-the same array.
+I'll have a deeper look at raid1 in a few days and see what I can
+find.
 
 NeilBrown
-
-> 
-> [root@serv root]# mdadm -V
-> mdadm - v1.3.0 - 29 Jul 2003
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
