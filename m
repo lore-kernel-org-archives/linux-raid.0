@@ -1,16 +1,30 @@
-From: Steven Ihde <x-linux-raid@hamachi.dyndns.org>
-Subject: Re: Looking for the cause of poor I/O performance
-Date: Mon, 6 Dec 2004 09:48:51 -0800
-Message-ID: <20041206174851.GA521@hamachi.dyndns.org>
-References: <200412041759.iB4HxG922078@www.watkins-home.com> <Pine.LNX.4.44.0412041809530.21262-100000@coffee.psychology.mcmaster.ca> <20041205010008.GA8091@hamachi.dyndns.org>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: Looking for the cause of poor I/O performance
+Date: Mon, 6 Dec 2004 14:29:40 -0500
+Message-ID: <200412061929.iB6JTj904159@www.watkins-home.com>
+References: <20041206174851.GA521@hamachi.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20041205010008.GA8091@hamachi.dyndns.org>
+In-Reply-To: <20041206174851.GA521@hamachi.dyndns.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: 'Steven Ihde' <x-linux-raid@hamachi.dyndns.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+RAID5 can't do read balancing.  Any 1 piece of data is only on 1 drive.
+However, RAID5 does do read ahead, my speed is about 3.5 times as fast as a
+single disk.  A single disk: 18 M/sec, my RAID5 array, 65 M/sec.
+
+Guy
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Steven Ihde
+Sent: Monday, December 06, 2004 12:49 PM
+To: linux-raid@vger.kernel.org
+Subject: Re: Looking for the cause of poor I/O performance
 
 On Sat, 04 Dec 2004 17:00:08 -0800, Steven Ihde wrote:
 [snip]
@@ -54,3 +68,8 @@ Does raid5 do read-balancing at all or am I just fantasizing?
 Thanks,
 
 Steve
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
