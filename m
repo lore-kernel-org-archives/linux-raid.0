@@ -1,95 +1,49 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: Failed Devices = -1 ?????
-Date: Mon, 5 Jul 2004 17:11:53 -0400
+From: Scibek@pcp03394610pcs.midltn01.ct.comcast.net
+Subject: Free Morgage Quotes... TheBest rates Nationwide... Inside
+Date: Tue, 06 Jul 2004 06:00:37 +0000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200407052111.i65LBs330685@watkins-home.com>
-References: <Pine.LNX.4.44.0407051600250.2153-100000@westhost38.westhost.net>
+Message-ID: <CL7C3GKK9767JAF5@pcp03394610pcs.midltn01.ct.comcast.net>
+References: <85HG97DI9G19LE30@vger.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44.0407051600250.2153-100000@westhost38.westhost.net>
-To: linux-lists@artelesys.com, 'linux-raid' <linux-raid@vger.kernel.org>
+In-Reply-To: <85HG97DI9G19LE30@vger.kernel.org>
+To: Linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Some sort of bug.  The counts are wrong and they only get worse over time.
-I have read that it has been fixed.  Don't recall the details, but the
-current 2.6 kernel should have the fix if it exists.
+Programs for You
 
-I have 2.4, I have the bug(s).
+> Programs For Every Credit Situation
+> Lenders Reply Within 24hours 
+> Borrow Up To 120 % of Your Homes Value
+> Special Programs For Self Employed
+> No Income Verification Programs
 
-I get this:
-   Raid Devices : 14
-  Total Devices : 13
-          State : dirty, no-errors
- Active Devices : 14
-Working Devices : 12
- Failed Devices : 1
-  Spare Devices : 1
-    Number   Major   Minor   RaidDevice State
-       0       8       49        0      active sync   /dev/sdd1
-       1       8      161        1      active sync   /dev/sdk1
-       2       8       65        2      active sync   /dev/sde1
-       3       8      177        3      active sync   /dev/sdl1
-       4       8       81        4      active sync   /dev/sdf1
-       5       8      193        5      active sync   /dev/sdm1
-       6       8       97        6      active sync   /dev/sdg1
-       7       8      209        7      active sync   /dev/sdn1
-       8       8      113        8      active sync   /dev/sdh1
-       9       8      225        9      active sync   /dev/sdo1
-      10       8      129       10      active sync   /dev/sdi1
-      11       8      241       11      active sync   /dev/sdp1
-      12       8      145       12      active sync   /dev/sdj1
-      13       8       33       13      active sync   /dev/sdc1
-      14      65        1       14        /dev/sdq1
-
-I really have 14 raid5 disks and 1 spare.  No failed disks.
-
-Guy
-
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of
-linux-lists@artelesys.com
-Sent: Monday, July 05, 2004 5:04 PM
-To: 'linux-raid'
-Subject: Failed Devices = -1 ?????
+http://etIndCo.fkmjecb.info/?7k9qFX7NcbK4s77zcMWvGR
 
 
-Hello.
-Can anyone tell me why failed devices is is appearing as "-1" ?
-Thanks.
 
 
-/sbin/mdadm -D  /dev/md2
-/dev/md2:
-        Version : 00.90.00
-  Creation Time : Fri Dec 13 20:27:49 2002
-     Raid Level : raid1
-     Array Size : 521984 (509.75 MiB 534.51 MB)
-    Device Size : 521984 (509.75 MiB 534.51 MB)
-   Raid Devices : 2
-  Total Devices : 1
-Preferred Minor : 2
-    Persistence : Superblock is persistent
 
-    Update Time : Thu Jul  1 17:03:36 2004
-          State : dirty
- Active Devices : 2
-Working Devices : 2
- Failed Devices : -1
-  Spare Devices : 0
-
-
-    Number   Major   Minor   RaidDevice State
-       0       3        6        0      active sync   /dev/hda6
-       1      22        6        1      active sync   /dev/hdc6
-           UUID : 255a65a8:5e8e0a35:0aef765e:6f307c50
-         Events : 0.196
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ My love it knows no bounds
+ You have awakened an unkindled fire
+ It grows by leaps and bounds
+ Larger than any pyre
+ 
+ Rather than ending, just beginning
+ To grow higher, and higher
+ With only the sun up above
+ All else, neath the fire
+ 
+ Ecstasy growing
+ Adventure and passion lie ahead
+ Earth Shakers, down Thunder Road
+ Trailing paths of glory, do we go
+ 
+ Take my hand, my love
+ We have many miles to explore
+ Until we rest, adventure is with us
+ Until we rest, adventure is with us
+ 
 
