@@ -1,49 +1,56 @@
-From: Tim Small <tim@buttersideup.com>
-Subject: Re: disk testing
-Date: Tue, 14 Sep 2004 13:17:17 +0100
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: Array of disks attached to multiple controllers
+Date: Tue, 14 Sep 2004 09:57:37 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <4146E14D.2090404@buttersideup.com>
-References: <20040914095208.E790A3969@xprdmailfe9.nwk.excite.com>
+Message-ID: <200409141357.i8EDvg332052@watkins-home.com>
+References: <4146F05C.9090206@opf.slu.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20040914095208.E790A3969@xprdmailfe9.nwk.excite.com>
-To: hfranklin97@excite.com, linux-raid@vger.kernel.org
+In-Reply-To: <4146F05C.9090206@opf.slu.cz>
+To: 'Lukas Kubin' <kubin@opf.slu.cz>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-harry wrote:
+Give us more info.
+Output from mdadm -D /dev/md?
 
->Here's an interesting twist: smartctl claims that all three disks don't support smart. However, I think this is because the disks show up as scsi and not ata disks (the controller they're attached to is a promise sata150 tx4). I tried tricking it into looking at the drive as an ata device with the '-d ata' option, but no dice. 
->
->(I'm fairly certain that these 3 disks support smart because I have two more attached through a sata controller built into the motherboard, which both show up as hd? drives, and smartctl gives loads of info for them). All of the drives in question (3 new ones, 2 bought about 8 months ago) are Western Digital 2500JD's. 
->
->
->
->And finally, forgive my ignorance, but what does libata do/provide? (I'm guessing it would allow smartctl to see disks that show up as scsi on the system as ata disks, but just want to verify). The system involved is running debian sid with a custom 2.4.27 kernel, and I just did an apt-file and apt-cache search for libata and both came up empty.
->
->  
->
-libata is the new SATA controller support in 2.6.x (also available for 
-2.4.x).  If you are seeing your SATA disks as /dev/sdx then you are 
-probably using libata.  libata lives here:
-
-http://www.kernel.org/pub/linux/kernel/people/jgarzik/libata/
-
-and here:
-
-http://gkernel.bkbits.net/
+Guy
 
 
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Lukas Kubin
+Sent: Tuesday, September 14, 2004 9:22 AM
+To: linux-raid@vger.kernel.org
+Subject: Array of disks attached to multiple controllers
 
-The necessary ioctls to support SMART are not in libata yet, but this patch:
+I'm having troubles creating Raid-5 array consisted of 16 (+1 spare) 
+disks attached to two 3ware (not same version) SATA controllers.
 
-http://www.ussg.iu.edu/hypermail/linux/kernel/0408.3/2304.html
+Mkraid creates the array without problems, however the array's total 
+size only equals the sum of space on drives attached to the first of 2 
+controllers. Ie, sd{b..f} are on scsi0 and sd{g..r} on scsi1. The space 
+of created array is close to the sum of drives attechted to scsi0 only.
 
-will allow you to use smartctl (with the "-d ata" argument) - however it 
-doesn't do the proper locking, so you probably wouldn't want to use it 
-on active disks whilst a system is in production (and certainly not with 
-smartd).
+Is it possible to combine drives on 2 controllers into one array? If 
+not, what solution should I use to have one filesystem containing whole 
+the drivespace on Raid-5?
 
-Tim.
+Thank you.
+
+lukas
+
+-- 
+Lukas Kubin
+
+phone: +420596398275
+email: kubin@opf.slu.cz
+
+Information centre
+The School of Business Administration in Karvina
+Silesian University in Opava
+Czech Republic
+http://www.opf.slu.cz
 
