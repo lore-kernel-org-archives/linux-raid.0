@@ -1,26 +1,38 @@
-From: Alvin Oga <aoga@ns.Linux-Consulting.com>
+From: Tim Moore <linux-raid@nsr500.net>
 Subject: Re: Tyan, RAID-6, and other recent hassles... (long, a bit OT)
-Date: Sat, 19 Feb 2005 22:11:31 -0800 (PST)
-Message-ID: <Pine.LNX.3.96.1050219220620.11501A-100000@Maggie.Linux-Consulting.com>
+Date: Sat, 19 Feb 2005 22:15:55 -0800
+Message-ID: <42182B1B.6070404@nsr500.net>
 References: <Pine.GSO.4.33.0502192217280.5536-100000@sweetums.bluetronic.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 In-Reply-To: <Pine.GSO.4.33.0502192217280.5536-100000@sweetums.bluetronic.net>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+I've been running an S2885 since Feb 1.  After flashing to 2.02b and 
+replacing a faulty SATA cable, zero problems.  System runs constantly as a 
+NAS load generator client except for shutdowns needed to test different 
+disks or memory configs.
 
-hi ya
+I'll be getting 3 more next month, racked using:
+http://www.antec.com/us/productDetails.php?ProdID=94326
+http://www.antec.com/us/productDetails.php?ProdID=94550
 
-On Sat, 19 Feb 2005, Ricky Beam wrote:
+Also a good EPS12V power supply does wonders.
 
+Cheers.
+
+Ricky Beam wrote:
 > On Sun, 20 Feb 2005, Bernd Schubert wrote:
-> >> Mobo was a Tyan Thunder K8W. (S2885)
-> >
-> >personally I'm very disappointed about Tyan, well I only know their
-> >opteron mainboards, but thats already sufficient to never buy their
-> >mainboards again.
+> 
+>>>Mobo was a Tyan Thunder K8W. (S2885)
+>>
+>>personally I'm very disappointed about Tyan, well I only know their
+>>opteron mainboards, but thats already sufficient to never buy their
+>>mainboards again.
+> 
 > 
 > You're doing yurself a huge disservice based on very little experience.
 > Using one or two of a manufacturer's MBs is not sufficient grounds to
@@ -28,25 +40,31 @@ On Sat, 19 Feb 2005, Ricky Beam wrote:
 > stability problems with them, tyan wouldn't be shipping them.
 > 
 > Tyan makes very good hardware.  I don't know what your problems are,
-> but I've never had any such problems.
+> but I've never had any such problems.  I've used Tyan hardware for
+> a decade.  Yes, they've made a few mistakes over the years -- bad
+> SIMM slots on the earily tomcat boards, using a VIA chipset for the
+> tiger 133...
+> 
+> 
+>>Server B (failover): S2880, as soon as a cable is plugged in into one of
+>>the onboard broadcom NICs, the system crashes. Broadcom driver doesn't
+>>need to be loaded, system may already crash during the pre-boot
+>>initialisation or later on during the kernel boot-procedure.
+> 
+> 
+> I've seen a few systems do this.  It was due to bad memory and bad memory
+> configuration (BIOS).  Those systems (i7501's) have been running fine
+> (over a year now) since replacing the RAM with Tyan "ok'ed" memory and
+> disabling "spread spectrum" in the chipset.
+> 
+> --Ricky
+> 
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-ditto ... i would buy tyan motherboards since its very cost effective
-for its performance and very good reliability 
-( it's my 2nd choice mb for certain apps and sometimes 1st choice )
-
-we buy lots of um  for customers that requests certain models 
-
---- 
-
-usually, if there's hardware problems, it's usually an installation
-problem and/or very unlikely, 1%-5% probability of bad hardware
-	- things dont always work out of the box ( cdrom installation )
-	and one *-do-* need to know how to tweek it to make it work
-	"right"
-
-	- one should buy parts from reputable cpu/mb/disk distributors 
-	and not any mom-n-pop website that sells "everything"
-
-c ya
-alvin
+-- 
 
