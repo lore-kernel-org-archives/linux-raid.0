@@ -1,59 +1,27 @@
-From: Bob Glamm <glamm@a-s-i.com>
+From: Michael Tokarev <mjt@tls.msk.ru>
 Subject: Re: RAID migration from 2.4 -> 2.6
-Date: Mon, 16 Aug 2004 17:35:41 -0500
+Date: Tue, 17 Aug 2004 02:55:14 +0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040816223541.GA1197@romulus.a-s-i.com>
-References: <20040812152939.GD5326@romulus.a-s-i.com>
+Message-ID: <41213B52.60903@tls.msk.ru>
+References: <20040812152939.GD5326@romulus.a-s-i.com> <20040816223541.GA1197@romulus.a-s-i.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20040812152939.GD5326@romulus.a-s-i.com>
+In-Reply-To: <20040816223541.GA1197@romulus.a-s-i.com>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-As a follow-up, I tried using md=10,/dev/sda1,/dev/sdf1 as a kernel
-parameter.  Still no luck:
+Bob Glamm wrote:
+[]
+> I'm not sure why the devices can't be found: the Adaptec driver appears
+> to go through its initialization routines just fine and find all the
+> disks.
 
-Loading md10: /dev/sda1
-could not lock sda1
-md_import_device returned -6
-could not lock sdf1
-md_import_device returned -6
-bug in file drivers/md/md.c, line 1513.
+How about sd_mod (scsi disk module)?  Is it loaded (or compiled into the
+kernel) together with the adaptec driver?  Does the kernel prints a line
+like
+  sda: sda1 sda2 sda3 sda4 < sda5 sda6 sda7 sda8 sda9 >
+(partition layout) for all your disks?
 
-But apparently this error is misleading (-6 == ENXIO, no such device).
-I traced the code all the way back to do_open in fs/block_dev.c
-which is where it appears to be coming from.
-
-I'm not sure why the devices can't be found: the Adaptec driver appears
-to go through its initialization routines just fine and find all the
-disks.
-
-Anyone have any ideas here?
-
--Bob
-
-> At the moment I'm stumped, so I wonder if someone might be able
-> to give me a hand.
-> 
-> First, my RAID setup: I have a pair of Adaptec 7899 controllers
-> with five 9GB SCSI disks on each.  The first disks on each controller
-> are allocated in a RAID 1 configuration for boot, swap, /usr, etc.,
-> while the next three disks on each controller are allocated in
-> a RAID 5 configuration to our running services and data.  The last
-> disk on each controller is designated as a spare disk for each RAID.
-> 
-> These RAIDs work well with 2.4.  I've got them configured
-> for autodetect, so the system brings them up at startup in 2.4.
-> 
-> Now I'm trying to migrate to 2.6.7, and autodetection basically
-> ignores all my SCSI disks.  I get three lines:
-> 
->   Autodetecting RAID arrays:
->     ..  autodetecting
->   Done.
-> 
-> when I try to boot 2.6.7.  (Additional note: all SCSI controllers
-> and disks are discovered just fine, although I am using the new
-> Adaptec driver in 2.6.)
+/mjt
