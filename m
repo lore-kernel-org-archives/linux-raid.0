@@ -1,22 +1,36 @@
-From: Ronny Plattner <ronny_p@gmx.net>
-Subject: Re: sw_raid5-failed_disc(s)-2
-Date: Sat, 12 Mar 2005 19:53:47 +0100
-Message-ID: <d0vdln$h8s$1@sea.gmane.org>
-References: <d0ur31$ud$1@sea.gmane.org> <200503121749.j2CHnT529953@www.watkins-home.com>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: sw_raid5-failed_disc(s)-2
+Date: Sat, 12 Mar 2005 17:15:08 -0500
+Message-ID: <200503122215.j2CMFE530626@www.watkins-home.com>
+References: <d0vdln$h8s$1@sea.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-In-Reply-To: <200503121749.j2CHnT529953@www.watkins-home.com>
+In-Reply-To: <d0vdln$h8s$1@sea.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: 'Ronny Plattner' <ronny_p@gmx.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+I guess I need to know more history.  Before your problems, was hdi1 a
+spare?
+
+Describe the array before you had problems.  Then what went wrong.
+
+Guy
+
+-----Original Message-----
+=46rom: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Ronny Plattner
+Sent: Saturday, March 12, 2005 1:54 PM
+To: linux-raid@vger.kernel.org
+Subject: Re: sw_raid5-failed_disc(s)-2
 
 Hi !
 
 Guy schrieb:
 > It seems like a trick question! :)
-> You don't use "missing" on assemble, it is a keyword for the create c=
-ommand.
+> You don't use "missing" on assemble, it is a keyword for the create
+command.
 
 Oh!
 
@@ -138,6 +152,12 @@ Is there a way to get the raid working?
 
 Regards
 Ronny
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 -
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
