@@ -1,44 +1,32 @@
-From: "Tomi Orava" <tomimo+linux-raid@ncircle.nullnet.fi>
-Subject: Re: How safe is software RAID compared to how safe hardware RAID
-     is!?
-Date: Thu, 20 Nov 2003 22:53:38 +0200 (EET)
+From: AndyLiebman@aol.com
+Subject: Mis-matched disks RAID 1
+Date: Thu, 20 Nov 2003 16:08:40 EST
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <48898.192.168.9.10.1069361618.squirrel@ncircle.nullnet.fi>
-References: <16314.40792.616508.878124@notabene.cse.unsw.edu.au><PPEOJEIEFLAONFNHJPOOAEICGOAA.jim@jimtreats.com>
-    <16314.44161.438158.27514@notabene.cse.unsw.edu.au>
+Message-ID: <114.2bc61a06.2cee8758@aol.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <16314.44161.438158.27514@notabene.cse.unsw.edu.au>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Can somebody tell me what I have to do to make a RAID 1 array with 
+mis-matched disks (1 is 200 GB, one is 160 GB)? 
 
->  I had a mirrored pair that kept getting data corruption.  It turned
->  out that one of the drives had a bad bit in an internal buffer, and
->  would occasionally return 1 for the 12th bit (or similar) of each
->  sector even when it should be zero.   Neither software raid or
->  hardware raid would cope with that.
+I am assuming I have to make 2 partitions on the 200 GB drive -- one exactly 
+the same size as the 160 GB drive, one with whatever is left. Is that true? 
+And is there an easy way to make the big partition EXACTLY the same as the size 
+of the 160 GB drive? (When I look at the 160 GB drive with fdisk, I see a size 
+that's a certain number of sectors (?)  xxxxxxxxxx+  with a plus sign at the 
+end. )
 
-How did you manage to figure out what was the reason for this
-corruption ? I mean, does there exist a some sort of "generic"
-way how to solve such errors, or was it just hard work in comparing
-what got written to the different disks ...
+My situation is the following: 
+I have 5 Maxtor 160 GB firewire drives and 1 Maxtor 200 GB firewire drive. I 
+want to make 3 pairs of RAID 1 arrays and then stripe them as a single RAID 0 
+array. 
 
->  Some people find that their IDE controller works fine until they try
->  to use RAID1.  RAID1 hits multiple discs concurrently a lot, and some
->  (few, specific) ide controllers don't appear to cope.  You probably
->  would not get that with hardware raid.  You can with software raid
->  because it is a "whole-system" thing.
+I have already done essentially the same thing with 6 200 GB drives and it 
+works great. But now for the second set of drives I have one that's bigger than 
+the rest. I want to be sure I don't have any problems. 
 
-Can you name the controllers which have had problems in this area ?
-I'm having big problems in Linux 2.4 kernels IDE-stability with
-heavy I/O (all disks are RAID1), perhaps either the Sil680 or
-HPT374 are just problematic controllers ... ? (it would be just great
-to solve all of these problems by buying new IDE-cards :)
-
-Regards,
-Tomi Orava
-
-
+Good advice appreciated. Thanks in advance. 
