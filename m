@@ -1,82 +1,34 @@
-From: Friedrich Lobenstock <fl@fl.priv.at>
-Subject: question regarding the output of "mdadm --examine /dev/hdxx"
-Date: Fri, 24 Jan 2003 14:16:07 +0100
+From: Andrej <andrej@rikom.si>
+Subject: RAID-1 on RedHat 7.3 (resize problems)
+Date: Fri, 24 Jan 2003 17:32:53 +0100 (CET)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3E313C97.1090100@fl.priv.at>
-Reply-To: Linux RAID Mailing Liste <linux-raid@vger.kernel.org>
+Message-ID: <Pine.LNX.4.30.0301241727400.24381-100000@www.sk-branik.si>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Linux RAID Mailing Liste <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi!
+Hello!
 
-Can someone enlight me why "mdadm --examine" prints out the
-current examined disk as "this". I see no real sense behind this.
-Mdadm already states at the top of the output which device it
-examined.
+I have been trying to setup raid 1 on an Redhat 7.3 box. I
+have used the "Software Raid HOWTO"
+(http://www.tldp.org/HOWTO/Software-RAID-HOWTO.html).
+In setting up the raid I have booted using rescue mode and tried to follow
+the 13 steps in the howto but get stuck on one of the last steps. The
+final step tells me I should have all md based filesytems unmounted except
+root which is remount as read-only. When I try to resize the partion using
+resize2fs /dev/md0 it complains that it is mounted. I can not unmount it
+as it is in use (as read-only). Should the resize command work with the
+partion as read-only as the howto suggests?
+How else do I complete this step?
 
-# mdadm --examine /dev/hda1
-/dev/hda1:
-           Magic : a92b4efc
-         Version : 00.90.00
-            UUID : c8756d0c:a668883a:6751424c:5fddb03d
-   Creation Time : Tue Jan 21 01:05:23 2003
-      Raid Level : raid1
-     Device Size : 40209024 (38.35 GiB 41.22 GB)
-    Raid Devices : 2
-   Total Devices : 2
-Preferred Minor : 0
+I have two identical disks (hda,hdc) and the following setup :
+md0(hda1,hdc1) /boot
+md1(hda2,hdc2) /
+md2(hda3,hdc3) SWAP
 
-     Update Time : Fri Jan 24 14:07:39 2003
-           State : clean, no-errors
-  Active Devices : 2
-Working Devices : 2
-  Failed Devices : 0
-   Spare Devices : 0
-        Checksum : 5dfc8bc1 - correct
-          Events : 0.17
+Thanks for your help and have a nice day,
 
-
-       Number   Major   Minor   RaidDevice State
-this     0       3        1        0      active sync   /dev/hda1
-    0     0       3        1        0      active sync   /dev/hda1
-    1     1      22        1        1      active sync   /dev/hdc1
-
-# mdadm --examine /dev/hdc1
-/dev/hdc1:
-           Magic : a92b4efc
-         Version : 00.90.00
-            UUID : c8756d0c:a668883a:6751424c:5fddb03d
-   Creation Time : Tue Jan 21 01:05:23 2003
-      Raid Level : raid1
-     Device Size : 40209024 (38.35 GiB 41.22 GB)
-    Raid Devices : 2
-   Total Devices : 2
-Preferred Minor : 0
-
-     Update Time : Fri Jan 24 14:07:39 2003
-           State : clean, no-errors
-  Active Devices : 2
-Working Devices : 2
-  Failed Devices : 0
-   Spare Devices : 0
-        Checksum : 5dfc8bd6 - correct
-          Events : 0.17
-
-
-       Number   Major   Minor   RaidDevice State
-this     1      22        1        1      active sync   /dev/hdc1
-    0     0       3        1        0      active sync   /dev/hda1
-    1     1      22        1        1      active sync   /dev/hdc1
-
--- 
-MfG / Regards
-Friedrich Lobenstock
-____________________________________________________________________
-Friedrich Lobenstock         FL226-RIPE             Internetservices
-URL: http://www.fl.priv.at/                     Email: fl@fl.priv.at
-____________________________________________________________________
+	Andrej.
 
