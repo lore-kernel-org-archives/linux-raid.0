@@ -1,35 +1,80 @@
-From: "T. Ermlich" <pelegrine@gmx.net>
-Subject: Broken harddisk
-Date: Sat, 29 Jan 2005 01:22:23 +0100
-Message-ID: <41FAD73F.1070504@gmx.net>
+From: Norman Gaywood <norm@turing.une.edu.au>
+Subject: panic in raid1_end_write_request
+Date: Sat, 29 Jan 2005 14:51:22 +1100
+Message-ID: <20050129035122.GB16287@turing.une.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello there,
+This is similar to a message send to linux-kernel recently.
 
-I just got here from http://cgi.cse.unsw.edu.au/~neilb/Contact ...
-Hopefully I'm more/less right here.
+I have a Dell PE2650, Dual Xeon, 1G memory and several software raid1
+partitions, ext3. Main duties include NFS, DHCP and samba. A Fedora
+kernel 2.6.10-1.747_FC3smp. This has 2.6.10-ac10 which includes the
+recent  "bio clone memory corruption" patch.
 
-Several month ago I set-up an raid1 using mdadm.
-Two drives (/dev/sda & /dev/sdb, each one is an 160GB Samsung SATA 
-disks) are used, and provide now /dev/md0, /dev/md1, /dev/md2 & 
-/dev/md3. In november 2004 I upgraded to mdadm 1.8.1.
-This afternoon, about 9 hours ago, /dev/sda broke down ... no chnace to 
-get it working again .. :(
+This system panics frequently, between several hours to several days. It
+does not seem to be related to load. Hardware and memory tests indicate
+a good system.
 
-My question now is: what does I have to do now?
-The system is up and running, so I'd do an actual backup of the most 
-important data ... but how to 'replace' the broken drive, and 'restore' 
-the data content there (sorry, as english is not my native language I 
-have no idea how to explain it correctly).
-Is there a way to do so, or does I have to create an raid1 from scratch, 
-and copy all data from /dev/md0-3 there manually?
+A sample panic message:
 
-Thanks in advance
-Torsten
+Unable to handle kernel NULL pointer dereference at virtual address 00000038
+ printing eip:
+f882940f
+*pde = 379c9001
+Oops: 0000 [#1]
+SMP 
+Modules linked in: iptable_filter ip_tables nfsd exportfs md5 ipv6 parport_pc lp parport autofs4 i2c_dev i2c_core nfs lockd sunrpc microcode dm_mod video button battery ac cfi_probe gen_probe scb2_flash mtdcore chipreg map_funcs tg3 floppy sg ext3 jbd raid1 aic7xxx sd_mod scsi_mod
+CPU:    3
+EIP:    0060:[<f882940f>]    Not tainted VLI
+EFLAGS: 00010246   (2.6.10-1.747_FC3smp) 
+EIP is at raid1_end_write_request+0x8e/0xb2 [raid1]
+eax: 00000000   ebx: f7dda400   ecx: f79e78a0   edx: 00000000
+esi: 00000018   edi: f7dd6e00   ebp: f7dda400   esp: c03aef18
+ds: 007b   es: 007b   ss: 0068
+Process swapper (pid: 0, threadinfo=c03ae000 task=f7f5fa40)
+Stack: f7fbd100 00001000 f8829381 00000000 c01564ce 00001000 f7fbd100 00000000 
+       c03aef60 c0217b6f f7bcca24 00000000 00000000 00000000 00001000 f7bcca24 
+       f7d4b33c f78f4080 00000001 f88435ec 00000001 e4d10b80 f7bcca24 f78f4080 
+Call Trace:
+ [<f8829381>] raid1_end_write_request+0x0/0xb2 [raid1]
+ [<c01564ce>] bio_endio+0x50/0x55
+ [<c0217b6f>] __end_that_request_first+0xea/0x1ab
+ [<f88435ec>] scsi_end_request+0x1b/0x9d [scsi_mod]
+ [<f88439a7>] scsi_io_completion+0x206/0x40f [scsi_mod]
+ [<c011a394>] __wake_up+0x29/0x3c
+ [<f883fadd>] scsi_finish_command+0xad/0xb1 [scsi_mod]
+ [<f883fa02>] scsi_softirq+0xb6/0xbe [scsi_mod]
+ [<c0121f60>] __do_softirq+0x4c/0xb1
+ [<c0105d9f>] do_softirq+0x41/0x48
+ =======================
+ [<c0105cd0>] do_IRQ+0x74/0x7e
+ [<c010467e>] common_interrupt+0x1a/0x20
+ [<c0102018>] default_idle+0x0/0x2f
+ [<c02b007b>] xfrm_sk_policy_lookup+0x2cd/0x355
+ [<c0102041>] default_idle+0x29/0x2f
+ [<c01020a0>] cpu_idle+0x26/0x3b
+Code: 53 08 89 44 0e 04 89 54 0e 08 f0 ff 0b 0f 94 c0 84 c0 74 0f 8b 43 14 e8 bf 5f a3 c7 89 d8 e8 15 fe ff ff 8b 47 04 8b 1f 8b 04 06 <8b> 48 38 f0 ff 48 48 0f 94 c2 84 d2 74 0d 85 c9 74 09 f0 0f ba 
+ <0>Kernel panic - not syncing: Fatal exception in interrupt
+ 
 
+-- 
+Norman Gaywood, Systems Administrator
+School of Mathematics, Statistics and Computer Science
+University of New England, Armidale, NSW 2351, Australia
+
+norm@turing.une.edu.au            Phone: +61 (0)2 6773 2412
+http://turing.une.edu.au/~norm    Fax:   +61 (0)2 6773 3312
+
+Please avoid sending me Word or PowerPoint attachments.
+See http://www.fsf.org/philosophy/no-word-attachments.html
+-
+To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Please read the FAQ at  http://www.tux.org/lkml/
