@@ -1,28 +1,58 @@
-From: "darrel" <mm65icallef@hotmail.com>
-Subject: As Seen on CNN, the Winningest CAS1N0! aliens benoit!
-Date: Mon, 03 May 2004 14:36:31 GMT
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: [PATCH] Linux Raid5/6 abover 2 Terabytes
+Date: Tue, 4 May 2004 11:24:39 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1083594991-20113__32741.0028818578$1083619769@excite.com>
-Content-Type: text/plain;
+Message-ID: <16534.61655.526793.777576@cse.unsw.edu.au>
+References: <249C1CB246997C48BB74963CCD361C1B02376A60@pnlmse28.pnl.gov>
+	<1081785234.22588.5.camel@e-linux>
+	<40934CD8.3050108@wasp.net.au>
+	<1083606555.2494.5.camel@e-linux>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-kernel@vger.kernel.org
+In-Reply-To: message from Evan Felix on Monday May 3
+To: Evan Felix <evan.felix@pnl.gov>
+Cc: Brad Campbell <brad@wasp.net.au>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-PREMI}ERE ONLIN!E CAS'INO!
-50% BONU{S for YOUR FIRST DEPO}SIT as a New Player.
+On Monday May 3, evan.felix@pnl.gov wrote:
+> here is the bitkeeper changeset for it, I dont know enough about the
+> bitkeeper system to tell if it will be in the next version or not.
+> 
+> 
+> http://linux.bkbits.net:8080/linux-2.5/patch@1.1371.702.338
+> 
 
-SI:GN UP now! Don't wait!
+It is 2.6.6-rc1.  It looks like Davem picked it up.
 
-http://www.casinoes-4-you.com/_e4faa55afa1972493c43ac8a3f66f869/
-
-Once you're a Mem!ber, there are near WEEK{LY 2-T{O-1, and 3-T`O-1 depo:sit offers!
-
-Imagine, put in $25, GET $50 CRE{DIT BE{FORE YOU PL{ACE YO}UR FI}RST BET!!
-
-CLIC`K HER|E!
-
-http://www.casinoes-4-you.com/_e4faa55afa1972493c43ac8a3f66f869/
+NeilBrown
 
 
-
-blondie goblue october cherry young jimbo mishka qwerty12 doug smiths tequila october master1 valhalla god bigman medical tracy barry larry depeche october lloyd cherry hanna shawn
+> Evan
+> 
+> On Sat, 2004-05-01 at 00:08, Brad Campbell wrote:
+> > Evan Felix wrote:
+> > > Niel, did you push this patch to the kernel guys for inclusion in the
+> > > next 2.6 kernel?
+> > > 
+> > > Also by way of status i've built a 5.7Tb SATA array (level 5/6) with
+> > > this change in the kernel.
+> > > 
+> > > so that pushes us to about 4 Arrays now..
+> > > 
+> > > Evan
+> > > 
+> > 
+> > Has this patch been pushed forwards? It does not appear in 2.6.6-rc3.
+> > 
+> > Regards,
+> > Brad
+> > -
+> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
