@@ -1,52 +1,47 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: Re: [PATCH md 3 of 4] Delete unplug timer before shutting down md array.
-Date: Tue, 2 Nov 2004 08:12:59 +0100
-Message-ID: <20041102071258.GA9190@percy.comedia.it>
-References: <20041102143440.12019.patches@notabene> <E1COpUP-000392-Hw@notabene.cse.unsw.edu.au> <20041101205735.5fc68d69.akpm@osdl.org> <20041101210044.20c4a8e0.akpm@osdl.org> <16775.3329.279178.375487@cse.unsw.edu.au> <20041101213333.201769d0.akpm@osdl.org>
+From: Lars Marowsky-Bree <lmb@suse.de>
+Subject: Re: [PATCH md 4 of 4] "Faulty" personality of md
+Date: Tue, 2 Nov 2004 10:31:41 +0100
+Message-ID: <20041102093141.GH32712@marowsky-bree.de>
+References: <20041102143440.12019.patches@notabene> <E1COpUP-000396-JF@notabene.cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20041101213333.201769d0.akpm@osdl.org>
+In-Reply-To: <E1COpUP-000396-JF@notabene.cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@cse.unsw.edu.au>, Andrew Morton <akpm@osdl.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Nov 01, 2004 at 09:33:33PM -0800, Andrew Morton wrote:
->> md has the misfortune of working in a way that doesn't fit very well
->> with some aspects of the blkdev layer.
->> 
->> To create an md array, you open /dev/mdX, and use some ioctls to set
->> up the array.  Thus the block device must exist internally as a block
->> device before any details about it are available.
->> 
->> Similarly, to shut down an array, you open /dev/mdX and use an ioctl
->> to shut it down.  This it will still be open (though only once) after
->> it has been shut down.
->> 
->> (as I understand it) I can only safely use blk_cleanup_queue on the
->> queue after (or during) the last close.  Thus I cannot use it while
->> shutting down an array.
->> However I need to release the md personality as part of shutting down
->> the array, so I have to disable the unplug function (which is handled
->> by the personality).
->> 
->> I could change ->unplug_fn to point to something safe, but there is
->> still a race with the timer going off at just the wrong time.
->
->hm, OK.  So perhaps using /dev/mdX as a control channel for creating and
->destroying /dev/mdX was unfortunate design.  Ho hum.
+On 2004-11-02T14:37:45, NeilBrown <neilb@cse.unsw.edu.au> wrote:
 
-would it be unfeasible to create a custom (misc) character device, say
-/dev/mdadm and use that to control arrays instead of /dev/md0?
+> The 'faulty' personality provides a layer over any block device
+> in which errors may be synthesised.
+>=20
+> A variety of errors are possible including transient and persistent
+> read and write errors, and read errors that persist until the next
+> write.
+>=20
+> There error mode can be changed on a live array.
 
-Regards,
-L.
+Duplicates functionality already present with the device-mapper error
+target, or functionality present with the (not yet merged) flakey dm
+target.
 
--- 
-Luca Berra -- bluca@comedia.it
-        Communication Media & Services S.r.l.
- /"\
- \ /     ASCII RIBBON CAMPAIGN
-  X        AGAINST HTML MAIL
- / \
+I think we should strive for convergence, not for more duplication.
+
+
+Sincerely,
+    Lars Marowsky-Br=E9e <lmb@suse.de>
+
+--=20
+High Availability & Clustering
+SUSE Labs, Research and Development
+SUSE LINUX AG - A Novell company
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
