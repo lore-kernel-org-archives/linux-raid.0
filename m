@@ -1,32 +1,54 @@
-From: Ninti Systems <office@ninti.com.au>
+From: "Guy" <bugzilla@watkins-home.com>
 Subject: RE: Please review: Slackware RAID How-To
-Date: 21 May 2004 12:17:37 +0930
+Date: Thu, 20 May 2004 22:55:26 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1085107657.1945.31.camel@localhost>
-References: <200405200502.i4K52rB18138@www.watkins-home.com>
-	 <1085039936.10231.74.camel@localhost>
-Reply-To: office@ninti.com.au
+Message-ID: <200405210255.i4L2tWB21950@www.watkins-home.com>
+References: <1085106315.1945.25.camel@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1085039936.10231.74.camel@localhost>
-To: John Lange <john.lange@bighostbox.com>
+In-Reply-To: <1085106315.1945.25.camel@localhost>
+To: office@ninti.com.au, 'John Lange' <john.lange@bighostbox.com>
 Cc: 'LinuxRaid' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Further to my last posting re RAID1 on Slackware 9.1 using the "Lange
-Method":
+That will teach you!
+mkraid and raidstart are considered obsolete by this group.
+Use mdadm.
 
-Building extra arrays after booting into the installed system seems to
-work as expected. It just means that "core" filesystems like /var or
-/tmp can't be easily installed across more than 4 raid arrays during
-setup. I guess that some filesystem copying and fstab editing might
-solve this if really necessary.
+Guy
 
-How/where can I access the raidtab file on the install CD during setup?
-This would be a good point to include in the HOW-TO.
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Ninti Systems
+Sent: Thursday, May 20, 2004 10:25 PM
+To: John Lange
+Cc: 'LinuxRaid'
+Subject: RE: Please review: Slackware RAID How-To
+
+Here's a couple more Slackware RAID1 tidbits:
+
+I'm building another RAID1 array right now on Slackware 9.1 using the
+"Lange Method" :-)
+
+1. I omitted "chunk-size" from /etc/raidtab, and got an error message. I
+had to add it before I could proceed. I suppose that answers my own "is
+chnk-size really necessary for RAID1" question. I went for size=4.
+
+2. I am trying to create 5 devices (/dev/md0 to /dev/md4). The /dev/
+directory (the one on the install CD I suppose it must be) only has 4 md
+devices (0 to 3). I tried creating an extra /dev/md4, but couldn't make
+it happen. An installed system has 16 possible md devices. 
 
 Mick
+
+
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
