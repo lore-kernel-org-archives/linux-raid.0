@@ -1,33 +1,122 @@
 From: Greg KH <greg@kroah.com>
-Subject: Re: [cgl_discussion] RE: ANNOUNCE: User-space System Device Enumation	(uSDE)
-Date: Wed, 29 Oct 2003 11:07:16 -0800
+Subject: Re: ANNOUNCE: User-space System Device Enumation (uSDE)
+Date: Wed, 29 Oct 2003 11:04:21 -0800
 Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20031029190715.GA4241@kroah.com>
-References: <OF3ACB2DB7.10C92CBA-ONC1256DCE.00538D5B@netfr.alcatel.fr>
+Message-ID: <20031029190421.GA4173@kroah.com>
+References: <3ACA40606221794F80A5670F0AF15F840215DC2F@pdsmsx403.ccr.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <OF3ACB2DB7.10C92CBA-ONC1256DCE.00538D5B@netfr.alcatel.fr>
-To: Eric.Chacron@alcatel.fr
-Cc: "Guo, Min" <min.guo@intel.com>, Steven Dake <sdake@mvista.com>, linux-raid@vger.kernel.org, linux-hotplug-devel@lists.sourceforge.net, Lars Marowsky-Bree <lmb@suse.de>, "Ling, Xiaofeng" <xiaofeng.ling@intel.com>, Mark Bellon <mbellon@mvista.com>, linux-kernel@vger.kernel.org, cgl_discussion@osdl.org
+In-Reply-To: <3ACA40606221794F80A5670F0AF15F840215DC2F@pdsmsx403.ccr.corp.intel.com>
+To: "Guo, Min" <min.guo@intel.com>
+Cc: Steven Dake <sdake@mvista.com>, Lars Marowsky-Bree <lmb@suse.de>, Mark Bellon <mbellon@mvista.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, linux-hotplug-devel@lists.sourceforge.net, cgl_discussion@osdl.org, "Ling, Xiaofeng" <xiaofeng.ling@intel.com>
 List-Id: linux-raid.ids
 
-On Wed, Oct 29, 2003 at 05:20:01PM +0100, Eric.Chacron@alcatel.fr wrote:
+On Wed, Oct 29, 2003 at 01:12:26PM +0800, Guo, Min wrote:
+> Here I try to summary out some difference for uSDE and uDEV,any comments are welcome!
+> In my opinion, competition is good and user can choose one they like because both of them
+> are user-space applications with a little minor kernel changes,is that right?
+> 
+> 1.For the IDE/SCSI/PCI hotplug devices. 
+>  uDEV:
+
+What's with the wierd intercaps of the udev name?
+
+> 	edit namedev.config manually to specify certain map,
+> 	if slot change or device change, user can re-edit namedev.config
+
+Then use something that will not change if you move the device.  Like a
+serial number, or other unique identifier.  It's not udev's fault that
+you used a non-flexible rule :)
+
+Oh, and the file is called udev.config.
+
+>  uSDE
+> 	record the id or slot at the first time, when move device to new slot or change to a new same type device,
+> 	automatically persist the name.
+> 	user can also specify map manually.
+> 
+> 2.For non-hotplug device
+
+What do you mean by this?  Memory devices?
+
+>  uDEV:
+> 	   not deal with it
+
+See Robert Love's very simple script to populate stuff from sysfs.  It
+can run from initscript just like SDE.  But in the end, udev will end up
+in initramfs and we will not need to do this.
+
+>  uSDE
+> 	   scan at boot time and also perform policy method. so when moved or replaced devcie when the machine is
+> down, the name can also be persisted.
 > 
 > 
-> >From a pure technical point of view  and from presentations made by the
-> authors of u*** perspective
-> i think uSDE could add some interresting features like a customizable
-> naming policy.
+> 3. for multipath device.
+> uDEV
+> 	    not support it.
 
-udev doesn't provide such a feature right now?
+Not true.  The CALLOUT rule handles this just fine.  I have a small
+userspace program here from someone else that handles multipath devices
+through the CALLOUT rule.
 
-> For instance: geographical addressing to identify devices using rack,
-> subrack, slot numbers seems possible.
+In fact I think this shows the flexibility of udev.  If you come up with
+some new kind of device, or subsystem, or way of determining that you
+want to name a device, udev can run _any_ program to do this.  No
+rebuilding the code, or creating a shared library.  Small simple
+programs all talking together in a universal manner.  Hm, where have I
+heard that design decision before....
 
-Sure, udev can do that today, if you have a way of identifying devices
-in such a manner.
+> uSDE
+> 	    automatically detect mulitpath device and create md device. support hot add a new path and remove a path.
+> 
+> 4. ethernet
+>  uDEV
+> 	    not deal with it 
+
+And this is on purpose.  Why would we, when there are so many other
+programs out there that do deal with network devices.   Remember, not
+all network connections are ethernet, which shows the limitation of SDE
+in not handling all of them (ppp, ipsec, usb network devices, isdn, atm,
+wireless, etc.)
+
+>  nameif
+> 	   name interface based on MAC, 
+>  uSDE
+> 	   can set map based on MAC, SLOT.
+> 	   support both setting manually map and automatic processing
+> 	   support hotplug, eg. when exchange two device, the name can also be exchanged automatically.
+>   . 
+> 5.devfs simulation
+>   uDEV
+> 	   No such function
+
+Huh?  All it needs is a single config file to be created.  As the
+current installed base of devfs users can probably all fit into my
+basement with room to spare, and no one is coming up with such a file
+for udev yet, I don't think this is a real need yet :)
+
+But again, no rebuilding needed, if such a config file shows up, udev
+will do this just fine.
+
+>   uSDE
+> 	    provide devfs simulation method.
+> 
+> >From the above comparsion, we can see uSDE really have some advantages.As far maintaince,
+> I think that more codes don't mean lacking maintainability.
+
+But it is at least one indicator, correct?
+
+> Thanks
+> Guo Min
+
+In the interest of full disclosure, Min is one of the SDE authors, and I
+am one of the udev authors.
+
+Min, maybe you can answer why Intel has spent effort on this project
+instead of offering to help udev, which has been public for a long time
+now?
 
 thanks,
 
