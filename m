@@ -1,41 +1,44 @@
-From: Lars Marowsky-Bree <lmb@suse.de>
-Subject: Re: possible to use 1 drive as hot failover for 2 raid1's?
-Date: Tue, 7 Oct 2003 12:54:37 +0200
+From: Nerijus Baliunas <nerijus@users.sourceforge.net>
+Subject: Re: mounting /dev/hdax and xfs problems
+Date: Tue, 7 Oct 2003 14:04:03 +0300 (EEST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20031007105437.GF28158@marowsky-bree.de>
-References: <Pine.LNX.4.44.0310061625260.12382-100000@sasami.anime.net>
+Message-ID: <S262139AbTJGLEJ/20031007110409Z+9566@vger.kernel.org>
+References: <S262703AbTJDX0w/20031004232652Z+8001@vger.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; CHARSET=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44.0310061625260.12382-100000@sasami.anime.net>
-To: Dan Hollis <goemon@anime.net>, linux-raid@vger.kernel.org
+Content-Disposition: INLINE
+In-Reply-To: <S262703AbTJDX0w/20031004232652Z+8001@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2003-10-06T16:27:59,
-   Dan Hollis <goemon@anime.net> said:
+Hello,
 
-> is it possible to use the single drive as hot-failover for both md0 a=
-nd=20
-> md1?
+could plese someone answer my question? I am afraid if server
+reboots, it might loose filesystem.
 
-In theory yes, in practice not.
+Nerijus
 
-One could imagine (rather easily) a global hot-spare pool for all mds,
-but it's not implemented right now.
+On Sun, 5 Oct 2003 02:26:02 +0300 (EEST) Nerijus Baliunas <nerijus@users.sourceforge.net> wrote:
 
+> Hello,
+> 
+> I have on debian /home mounted on raid1. Some time ago
+> it was remounted as 'mount /dev/hda2 /home' instead of
+> 'mount /dev/md0 /home'. Now when I umount it and try
+> to mount /dev/md0, I see in dmesg:
+> 
+> XFS mounting filesystem md(9,0)
+> Starting XFS recovery on filesystem: md(9,0) (dev: 9/0)
+> XFS: dirty log written in incompatible format - can't recover
+> XFS: log mount/recovery failed
+> XFS: log mount failed
+> 
+> When mounting /dev/hda2 it succeeds. The question is -
+> does mounting part of raid1 mirror when raid is still running
+> do anything bad for a raid? How raid works in this situation -
+> is it still mirroring info from /dev/hda2 to /dev/hdb2?
+> If I raidstop and raidstart, can it damage filesystem?
+> 
+> /proc/mdstat shows that everything is OK.
 
-Sincerely,
-    Lars Marowsky-Br=E9e <lmb@suse.de>
-
---=20
-High Availability & Clustering		ever tried. ever failed. no matter.
-SuSE Labs				try again. fail again. fail better.
-Research & Development, SUSE LINUX AG		-- Samuel Beckett
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
