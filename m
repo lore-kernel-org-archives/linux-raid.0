@@ -1,42 +1,42 @@
-From: Bill Davidsen <davidsen@tmr.com>
+From: Pavel Machek <pavel@suse.cz>
 Subject: Re: RAID-6 support in kernel?
-Date: Tue, 4 Jun 2002 14:50:39 -0400 (EDT)
+Date: Tue, 4 Jun 2002 15:49:05 +0000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <adj2k6$430$2@main.gmane.org>
-References: <Pine.GSO.4.21.0206021721120.15478-100000@gecko.roadtoad.net>
+Message-ID: <adj71k$enu$2@main.gmane.org>
+References: <Pine.LNX.4.33.0206031020290.30424-100000@mail.pronto.tv> <Pine.GSO.4.21.0206030213510.23709-100000@gecko.roadtoad.net> <20020603113128.C13204@ucw.cz>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.GSO.4.21.0206021721120.15478-100000@gecko.roadtoad.net>
-To: Derek Vadala <derek@cynicism.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org
+In-Reply-To: <20020603113128.C13204@ucw.cz>; from vojtech@suse.cz on Mon, Jun 03, 2002 at 11:31:28AM +0200
+To: Vojtech Pavlik <vojtech@suse.cz>
+Cc: Derek Vadala <derek@cynicism.com>, Roy Sigurd Karlsbakk <roy@karlsbakk.net>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, Tedd Hansen <tedd@konge.net>, Christian Vik <christian@konge.net>, Lars Christian Nygaard <lars@snart.com>
 List-Id: linux-raid.ids
 
-On Sun, 2 Jun 2002, Derek Vadala wrote:
+Hi!
 
-> You can always fake this effect by combining two 8-disk RAID-5s into a
-> RAID-0. It's not technically RAID-6, but can withstand a 2-disk failure,
-> although not _any_ 2-disk failure. However, it's my understanding that
-> RAID-6 cannot withstand _any_ two disk failure either (see the above
-> thread). 
+> > > It'll waste 9 drives, giving me a total capacity of 7n instead of 14n. 
+> > > And, by definition, RAID-6 _can_ withstand _any_ two-drive failure.
+> > 
+> > This is certainly not true. 
+> > 
+> > Combining N RAID-5 into a stripe wastes on N disks. 
+> > 
+> > If you combine two it wastes 2 disks, etc.
+> > 
+> > That is, for each RAID-5 you waste a single disk worth of storage for
+> > partiy. I don't know what equation you're using where you get 9 drives
+> > from.
+> 
+> He was thinking "mirror", not "stripe". Mirror of 2 RAID-5 arrays (would
+> be probably called RAID-15 (when there is a RAID-10 for mirrored stripe
+> arrays)), can withstand any two disks failing anytime. Even more for
 
-I think (hope) you meant 1+5, which will stand any three disk failure, and
-up to 1+N/2 if just the right drives fail. They never do, of course.
- 
-> I also suspect that the use of dual RAID-5s combined with the CPU overhead
-> of ATA will kill most systems under any kind of load. For that matter, the
-> 2x parity hit from RAID-6 probably wouldn't make you CPU too happy either,
-> even if there was a kernel driver that implemented it.
+RAID-1 over two RAID-5s should withstand any three failures, AFAICS.
 
-I doubt it. Unless you run a system with heavy CPU demand there are lots
-of cycles for this stuff. I run 0+1 several places and I don't see serious
-CPU load. I would be very interested in RAID-6 in the kernel, but I have
-the feeling that RAID-6 means diferent things to diferent people, judging
-from posts here and articles online. I haven't found the performance info
-you, I assume I will.
-
+You could do RAID-5 over RAID-5. That should survive any 2 failures and
+still be reasonably efficient.
+								Pavel
 -- 
-bill davidsen <davidsen@tmr.com>
-  CTO, TMR Associates, Inc
-Doing interesting things with little computers since 1979.
+Philips Velo 1: 1"x4"x8", 300gram, 60, 12MB, 40bogomips, linux, mutt,
+details at http://atrey.karlin.mff.cuni.cz/~pavel/velo/index.html.
 
