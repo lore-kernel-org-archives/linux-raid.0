@@ -1,109 +1,156 @@
-From: maarten <maarten@ultratux.net>
-Subject: Re: Spares and partitioning huge disks
-Date: Mon, 10 Jan 2005 00:16:58 +0100
-Message-ID: <200501100016.58847.maarten@ultratux.net>
-References: <crmt7e$8d6$1@sea.gmane.org> <200501092226.25910.maarten@ultratux.net> <20050109222900.GA12793@janus>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: Spares and partitioning huge disks
+Date: Sun, 9 Jan 2005 18:20:18 -0500
+Message-ID: <200501092320.j09NKQ918671@www.watkins-home.com>
+References: <200501092226.25910.maarten@ultratux.net>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20050109222900.GA12793@janus>
-Content-Disposition: inline
+In-Reply-To: <200501092226.25910.maarten@ultratux.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: 'maarten' <maarten@ultratux.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sunday 09 January 2005 23:29, Frank van Maarseveen wrote:
-> On Sun, Jan 09, 2005 at 10:26:25PM +0100, maarten wrote:
-> > On Sunday 09 January 2005 20:33, Frank van Maarseveen wrote:
-> > > On Sat, Jan 08, 2005 at 05:49:32PM +0100, maarten wrote:
+It was said:
+"> I think RAID6 but especially RAID1 is safer.
 
-> > Well, yes and no.  You can decide to do a full backup in case you hadn't,
+Well, duh :)  At the expense of buying everything twice, sure it's safer
+:))"
+
+Guy says:
+I disagree with the above.
+
+True, RAID6 can lose 2 disks without data loss.
+But, RAID1 and RAID5 can only lose 1 disk without data loss.
+
+If RAID1 or RAID5 had a read error during a re-sync, both would die.
+
+Now, RAID5 has more disks, so the odds are increased that a read error could
+occur.  But you can improve those odds by partitioning the disks and
+creating sub arrays, then combining them.  Per Maarten's plan.
+
+Of course, having a bad sector should not cause a disk to be kicked out!
+The RAID software should handle this.  Most hardware based RAID systems can
+handle bad blocks.  But this is another issue. 
+
+Why is RAID1 preferred over RAID5?
+RAID1 is considered faster than RAID5.  Most systems tend to read much more
+than they write.  So, having 2 disks to read from (RAID1) can double your
+read rate.  RAID5 tends to have better seek time in a multi threaded
+environment (more then 1 seek attempted concurrently).  If you test with
+bonnie++, try 10 bonnies at the same time and note the sum of the seek times
+(you must add them yourself).  With RAID1 it should about double, with
+RAID5, it depends on the number of disks in the array.  Most home systems
+tend to only do 1 thing at a time.  So, most people don't focus on seek
+time, they tent to focus on sequential read or write rates.  In a multi
+user/process/thread environment, you don't do much sequential I/O, it tends
+to be random.
+
+But, assuming you need the extra space RAID5 yields, if you choose RAID1
+instead, you would have many more disks than just 2, in a RAID10 environment
+you would have the improved seek rates of RAID5 (times ~2) and about double
+the overall read rate of RAID5.  This is why some large systems tend to use
+RAID1 over RAID5.  The largest system I worked on had over 300 disks,
+configured as RAID1.  I think it was over kill on performance, RAID5 would
+have been just fine!  But it was not my choice, also not my money.
+
+Guy
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of maarten
+Sent: Sunday, January 09, 2005 4:26 PM
+To: linux-raid@vger.kernel.org
+Subject: Re: Spares and partitioning huge disks
+
+On Sunday 09 January 2005 20:33, Frank van Maarseveen wrote:
+> On Sat, Jan 08, 2005 at 05:49:32PM +0100, maarten wrote:
+
+> > However, IF during that
+> > resync one other drive has a read error, it gets kicked too and the
+array
+> > dies.  The chances of that happening are not very small;
 >
-> backup (or taking snapshots) is orthogonal to this.
+> Ouch! never considered this. So, RAID5 will actually decrease reliability
+> in a significant number of cases because:
 
-Hm.  Okay, you're right.  
+> -	>1 read errors can cause a total break-down whereas it used
+> 	to cause only a few userland I/O errors, disruptive but not foobar.
 
-> > prior to changing drives. And if it is _just_ a bad sector, you can
-> > 'assemble --force' yielding what you would've had in a non-raid setup;
-> > some file somewhere that's got corrupted. No big deal, ie. the same
-> > trouble as was caused without raid-5.
->
-> I doubt that it's the same: either it wil fail totally during the
-> reconstruction or it might fail with a silent corruption. Silent
-> corruptions are a big deal.  It won't loudly fail _and_ leave the array
-> operational for an easy fixup later on so I think it's not the same.
+Well, yes and no.  You can decide to do a full backup in case you hadn't, 
+prior to changing drives. And if it is _just_ a bad sector, you can
+'assemble 
+--force' yielding what you would've had in a non-raid setup; some file 
+somewhere that's got corrupted. No big deal, ie. the same trouble as was 
+caused without raid-5.
 
-I either don't understand this, or I don't agree. Assemble --force effectively 
-disables all sanitychecks, so it just can't "fail" that.  The result is 
-therefore an array that either (A) holds a good FS with a couple of corrupted 
-files (silent corruption) or (B) a filesystem that needs [metadata] fixing, 
-or (C) one big mess that hardly resembles a FS. 
-It stands to reason that in case (C) you either made a user error assembling 
-the wrong parts or what you had wasn't a bad sector error in the first place 
-but media failure or another type of disastrous corruption. 
+> -	disk replacement is quite risky. This is totally unexpected to me
+> 	but it should have been obvious: there's no bad block list in MD
+> 	so if we would postpone I/O errors during reconstruction then
+> 	1:	it might cause silent data corruption when I/O error
+> 		unexpectedly disappears.
+> 	2:	we might silently loose redundancy in a number of places.
 
-I've been there. I suffered through a raid-5 two-disk failure, and I've got 
-all of my data back eventually, even if some silent corruptions have happened 
-(though I did not notice it, but that's no wonder with 500.000+ files)
-It is ugly, and the last resort, but that doesn't mean it can't work.
+Not sure if I understood all of that, but I think you're saying that md 
+_could_ disregard read errors _when_already_running_in_degraded_mode_ so as 
+to preserve the array at all cost.  Hum.  That choice should be left to the 
+user if it happens, he probably knows best what to choose in the 
+circumstances.
 
-> > > -	disk replacement is quite risky. This is totally unexpected to me
-> > > 	but it should have been obvious: there's no bad block list in MD
-> > > 	so if we would postpone I/O errors during reconstruction then
-> > > 	1:	it might cause silent data corruption when I/O error
-> > > 		unexpectedly disappears.
-> > > 	2:	we might silently loose redundancy in a number of places.
-> >
-> > Not sure if I understood all of that, but I think you're saying that md
-> > _could_ disregard read errors _when_already_running_in_degraded_mode_ so
-> > as to preserve the array at all cost.
->
-> We can't. Imagine a 3 disk RAID5 array, one disk being replaced. While
-> writing the new disk we get a single randon read error on one of the
-> other two disks. Ignoring that implies either:
-> 1:	making up a phoney data block when a checksum block was hit by the
-> error. 2:	generating a garbage checksum block.
+No really, what would be best is that md made a difference between total
+media 
+failure and sector failure.  If one sector is bad on one drive [and it gets 
+kicked therefore] it should be possible when a further read error occurs on 
+other media, to try and read the missing sector data from the kicked drive, 
+who may well have the data there waiting, intact and all.
 
-Well, yes.  But some people -when confronted with the choice between losing 
-everything or having silent corruptions- will happily accept the latter.  At 
-least you could try to find the bad file(s) by md5sum, whereas in the total 
-failure scenario you're left with nothing.
-Of course that choice depends on how good and recent your backups are.
+Don't know how hard that is really, but one could maybe think of pushing a 
+disk in an intermediate state between "failed" and "good" like "in_disgrace"
 
-For my scenario, I wholly depend on md raid to preserve my files; I will not 
-and cannot start backing up TV shows to DLT tape or something.  That is a 
-no-no economically.  There is just no way to backup 700GB data in a home user 
-environment, unless you want to spend a full week to burn it onto 170 DVDs.
-(Or buy twice the amount of disks and leave them locked in a safe)
+what signals to the end user "Don't remove this disk as yet; we may still 
+need it, but add and resync a spare at your earliest convenience as we're 
+running in degraded mode as of now".
+Hmm.  Complicated stuff. :-)
 
-So I certainly would opt for the "possibility of silent corruption" choice. 
-And if I ever find the corrupted file I delete it and mark it for 'new 
-retrieval" or some such followup.  Or restore from tape where applicable.
+This kind of error will get more and more predominant with growing media and
 
-> RAID won't remember these events because there is no bad block list. Now
-> suppose the array is operational again and hits a read error after some
-> random interval. Then either it may:
-> 1:	return corrupt data without notice.
-> 2:	recalculate a block based on garbage.
+decreasing disk quality. Statistically there is not a huge chance of getting
 
-Definitely true, but we're still talking about errors on a single block, or a 
-couple of blocks at most.  The other 1000.000+ blocks are still okay.
-Again, it all depends on your circumstances what is worse: losing all the 
-files including the good ones, or having silent corruptions somewhere.
+a read failure on a 18GB scsi disk, but on a cheap(ish) 500 GB ATA disk that
 
-> so, we can't ignore errors during RAID5 reconstruction and we're toast
-> if it happens, even more toast than we would have been with a normal
-> disk (barring the case of an entirely dead disk). If you look at the
-> lower level then of course RAID5 has an advantage but to me it seems to
-> vaporize when exposed to the _complexity_ of handling secondary errors
-> during the reconstruction.
+is an entrirely different ballpark. 
 
-You cut out my entire idea about leaving the 'failed' disk around to 
-eventually being able to compensate a further block error on another media.  
-Why ?  It would _solve_ your problem, wouldn't it ?
+> I think RAID6 but especially RAID1 is safer.
+
+Well, duh :)  At the expense of buying everything twice, sure it's safer :))
+
+> A small side note on disk behavior:
+> If it becomes possible to do block remapping at any level (MD, DM/LVM,
+> FS) then we might not want to write to sectors with read errors at all
+> but just remap the corresponding blocks by software as long as we have
+> free blocks: save disk-internal spare sectors so the disk firmware can
+> pre-emptively remap degraded but ECC correctable sectors upon read.
+
+Well I dunno.  In ancient times, the OS was charged with remapping bad
+sectors 
+back when disk drives had no intelligence.  Now we delegated that task to
+the 
+disk.  I'm not sure reverting back to the old behaviour is a smart move.
+But with raid, who knows...
+
+And as it is I don't think you get the chance to save the disk-internal
+spare 
+sectors; the disk handles that transparently so any higher layer cannot only
+
+not prevent that, but is even kept completely ignorant to it happening. 
 
 Maarten
 
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
