@@ -1,47 +1,150 @@
-From: Brad Dameron <brad@seatab.com>
-Subject: RE: Software RAID 0+1 with mdadm.
-Date: Wed, 26 Jan 2005 12:32:36 -0800
-Message-ID: <1106771556.21977.1.camel@serpent>
-References: <200501252302.j0PN2A904022@www.watkins-home.com>
+From: Carlos Knowlton <cknowlton@mail.fsix.com>
+Subject: hda: irq timeout: status=0xd0 { Busy }
+Date: Wed, 26 Jan 2005 13:52:22 -0600
+Message-ID: <41F7F4F6.2010405@mail.fsix.com>
+Reply-To: cknowlton@science.edu
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200501252302.j0PN2A904022@www.watkins-home.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 2005-01-25 at 15:04, Guy wrote:
-> For a more stable array, build a RAID0 out of 2 RAID1 arrays.
-> 
-> Like this:
-> 
-> mdadm --create /dev/md1 --level=1 --chunk=4 --raid-devices=2 /dev/sdb1
-> /dev/sdc1
-> mdadm --create /dev/md2 --level=1 --chunk=4 --raid-devices=2 /dev/sdd1
-> /dev/sde1
-> mdadm --create /dev/md0 --level=0 --chunk=4 --raid-devices=2 /dev/md1
-> /dev/md2
-> 
-> You can put a file system directly on /dev/md0
-> 
-> Are all of the disks on the same cable?
-> 
-> Not sure about your booting issue.
-> 
-> Guy
-> 
+Hi
 
+I'm new to this list, but I have a lot of projects that involve RAID and 
+Linux.  And consequently, a lot of questions.  (But maybe a few answers 
+too :)
 
-Ya I did this setup as well. Still the same booting issue. Once it's
-booted I can run mdadm --assemble --scan and it will find just the
-stripe and then add it. I saw several people having this issue on a
-google search. But never any solutions.
+I have a 3 disk RAID5 array, and one of the member was recently 
+rejected, and I'm trying to get to the bottom of it.  I reformatted the 
+failed member, and started an fsck on it.  The fsck came up clean, but 
+dmesg pulled up the following error:
 
-Brad Dameron
-SeaTab Software
-www.seatab.com
+"hda: irq timeout: status=0xd0 { Busy }
+ide: failed opcode was: 0xb0
+hda: status error: status=0x58 { DriveReady SeekComplete DataRequest }
+ide: failed opcode was: unknown
+hda: drive not ready for command"
 
+Is this a hardware issue, configuration, or driver?
 
+I'm running kernel version 2.6.9-667 (FC3) on a 2.4GHz P4 Celeron.  Here 
+more details:
+-------------------------------------------------------------------
+Dev1 ~]# cat /proc/mdstat
+Personalities : [raid5]
+md0 : active raid5 hdc3[2] hdb3[1]
+      156376576 blocks level 5, 64k chunk, algorithm 2 [3/2] [_UU]
 
+unused devices: <none>
+-------------------------------------------------------------------
+Dev1 ~]# dmesg
+...
+Uniform Multi-Platform E-IDE driver Revision: 7.00alpha2
+ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=xx
+...
+    ide0: BM-DMA at 0xf000-0xf007, BIOS settings: hda:DMA, hdb:DMA
+    ide1: BM-DMA at 0xf008-0xf00f, BIOS settings: hdc:DMA, hdd:pio
+Probing IDE interface ide0...
+hda: IC35L080AVVA07-0, ATA DISK drive
+hdb: IC35L080AVVA07-0, ATA DISK drive
+Using cfq io scheduler
+ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
+Probing IDE interface ide1...
+hdc: IC35L080AVVA07-0, ATA DISK drive
+ide1 at 0x170-0x177,0x376 on irq 15
+Probing IDE interface ide2...
+ide2: Wait for ready failed before probe !
+Probing IDE interface ide3...
+ide3: Wait for ready failed before probe !
+Probing IDE interface ide4...
+ide4: Wait for ready failed before probe !
+Probing IDE interface ide5...
+ide5: Wait for ready failed before probe !
+hda: max request size: 128KiB
+hda: 160836480 sectors (82348 MB) w/1863KiB Cache, CHS=65535/16/63, 
+UDMA(100)
+hda: cache flushes supported
+ hda: hda1 hda2 hda3
+hdb: max request size: 128KiB
+hdb: 160836480 sectors (82348 MB) w/1863KiB Cache, CHS=65535/16/63, 
+UDMA(100)
+hdb: cache flushes supported
+ hdb: hdb1 hdb2 hdb3
+hdc: max request size: 128KiB
+hdc: 160836480 sectors (82348 MB) w/1863KiB Cache, CHS=65535/16/63, 
+UDMA(100)
+hdc: cache flushes supported
+ hdc: hdc1 hdc2 hdc3
+ide-floppy driver 0.99.newide
+...
+md: md driver 0.90.0 MAX_MD_DEVS=256, MD_SB_DISKS=27
+...
+Freeing unused kernel memory: 184k freed
+SCSI subsystem initialized
+libata version 1.02 loaded.
+device-mapper: 4.1.0-ioctl (2003-12-10) initialised: dm@uk.sistina.com
+EXT3-fs: INFO: recovery required on readonly filesystem.
+EXT3-fs: write access will be enabled during recovery.
+kjournald starting.  Commit interval 5 seconds
+EXT3-fs: recovery complete.
+EXT3-fs: mounted filesystem with ordered data mode.
+...
+inserting floppy driver for 2.6.9-1.667smp
+floppy0: no floppy controllers found
+...
+md: Autodetecting RAID arrays.
+md: autorun ...
+md: considering hdc3 ...
+md:  adding hdc3 ...
+md: hdc1 has different UUID to hdc3
+md:  adding hdb3 ...
+md:  adding hda3 ...
+md: created md0
+md: bind<hda3>
+md: bind<hdb3>
+md: bind<hdc3>
+md: running: <hdc3><hdb3><hda3>
+md: kicking non-fresh hda3 from array!
+md: unbind<hda3>
+md: export_rdev(hda3)
+raid5: automatically using best checksumming function: pIII_sse
+   pIII_sse  :  2240.000 MB/sec
+raid5: using function: pIII_sse (2240.000 MB/sec)
+md: raid5 personality registered as nr 4
+raid5: device hdc3 operational as raid disk 2
+raid5: device hdb3 operational as raid disk 1
+raid5: allocated 3162kB for md0
+raid5: raid level 5 set md0 active with 2 out of 3 devices, algorithm 2
+RAID5 conf printout:
+ --- rd:3 wd:2 fd:1
+ disk 1, o:1, dev:hdb3
+ disk 2, o:1, dev:hdc3
+md: considering hdc1 ...
+md:  adding hdc1 ...
+md: md0 already running, cannot run hdc1
+md: export_rdev(hdc1)
+md: ... autorun DONE.
+...
+EXT3 FS on hda1, internal journal
+SGI XFS with ACLs, security attributes, large block numbers, no debug 
+enabled
+SGI XFS Quota Management subsystem
+XFS mounting filesystem md0
+Ending clean XFS mount for filesystem: md0
+Adding 128512k swap on /dev/hda2.  Priority:-1 extents:1
+...
+hda: irq timeout: status=0xd0 { Busy }
+
+ide: failed opcode was: 0xb0
+hda: status error: status=0x58 { DriveReady SeekComplete DataRequest }
+
+ide: failed opcode was: unknown
+hda: drive not ready for command
+-----------------------------------------------------------------------------
+
+Thanks,
+
+Carlos Knowlton
