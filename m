@@ -1,43 +1,34 @@
-From: bnfwatxsyepj@msn.com
-Subject: Debt stopping you from getting ahead? Read NOW              poiopsda
-Date: Tue, 12 Aug 2003 15:21:59 +0900
+From: "Bo Moon" <bo@anthologysolutions.com>
+Subject: Any mdadm based cgi perl script for webmin?
+Date: Tue, 12 Aug 2003 19:06:15 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <S275077AbTHLGUI/20030812062008Z+13650@vger.kernel.org>
+Message-ID: <003301c3613f$7b2d34e0$6601a8c0@antholog2>
+References: <3F378CF3.7030809@fibrespeed.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
+Cc: Neil Brown <neilb@cse.unsw.edu.au>
 List-Id: linux-raid.ids
 
-Check this out, this is helpful..
+Hello,
 
-Debt sucks. So does lining your bank managers pockets!
-We tear up your debt and give you and your family a fresh start ..
+I downloaded the latest WEBMIN, but its RAID tools are based
+on the RAIDTAB config and old tool.
 
-- Save you a lot of money by eliminating late fees
-- Settle your accounts for a substantially reduced amount
-- Stop creditors calling you on the phone
-- Avoid bankruptcy
+I want to use new MDADM tool, but I am not an expert on PERL.
 
-... and more!
+If anyone already modified it or know where some references are,
+May I get some new cgi perl program(or prototype) which use MDADM for
+webmin?
 
-Why keep dealing with the stress, and headaches?
+Those are under /usr/share/webmin/raid:
+               create_raid.cgi,  raid_form.cgi, raid-lib.pl, ......
 
-Combine your debt into a low interest repayment and
-get on with your life today!!
+Thanks in advance,
 
-Come here and take a look at how we can help.
-
-http://srd.yahoo.com/drst/432890/*http://www.slashmonthlypayments.com/index.php?N=g
+Bo
 
 
-
-
-
-
-
-
-
-
-for no more
-http://srd.yahoo.com/drst/11/*http://www.slashmonthlypayments.com/r.php
