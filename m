@@ -1,211 +1,181 @@
 From: NeilBrown <neilb@cse.unsw.edu.au>
-Subject: [PATCH] MD - 3 of 27 - Get multipath to use mempool
-Date: Thu, 18 Jul 2002 23:32:27 +1000
+Subject: [PATCH] MD - 1 of 27 - Remove bdput calls from raid personalities.
+Date: Thu, 18 Jul 2002 23:31:46 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1020718133227.4769@cse.unsw.edu.au>
+Message-ID: <1020718133146.4736@cse.unsw.edu.au>
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: Linus Torvalds <torvalds@transmeta.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-### Comments for ChangeSet
-Get multipath to use mempool
+Linus (and others)
+ here is another patch-bomb for md/raid.
 
-... rather than maintaining it's own mempool
+Currently the structure of the raid superblock is deeply entwined into
+the code.  Lots of bits of code query and update the superblock.  The
+main thrust of this series of patches is to move all of the important
+information in the the mddev structure (which describes the whole
+array) or the rdev structure (which describes a component device).
+
+The information then gets initialised in these structures when the
+superblock is read, and the superblock is regenerated from info in
+these structures when the superblock is written.
+This will mean that it is easier to support different superblock
+formats, and all means that a lot of data redundancy is removed.
+
+On the way to effecting these changes a lot of tidying up gets done,
+particularly in multipath, but also elsewhere.
+
+I must admit that I haven't heavily tested the end result of these
+patches.  That will come...
+
+I foresee about one more patch-bomb like this to get md into a state
+where I can start making functional enhancements and can verify
+correctness more easily.
+
+This and the follow 26 patches are cummulative against 2.5.26.
+I don't foresee backporting much if any of this to 2.4.
+
+NeilBrown
+
+
+### Comments for ChangeSet
+Remove bdput calls from raid personalities.
+
+Some of the md personalities currently hold a counted reference
+on a bdev.  This is not necessary as the main md module will always
+hold a counted reference in the rdev.
+This patch removes the code to take and drop these unnecessary 
+references.
+
 
 
 
  ----------- Diffstat output ------------
- ./drivers/md/multipath.c         |  110 ++++++---------------------------------
- ./include/linux/raid/multipath.h |   11 ---
- 2 files changed, 19 insertions(+), 102 deletions(-)
+ ./drivers/md/linear.c    |   11 +----------
+ ./drivers/md/multipath.c |    8 --------
+ ./drivers/md/raid1.c     |   10 ----------
+ 3 files changed, 1 insertion(+), 28 deletions(-)
 
---- ./drivers/md/multipath.c	2002/07/18 11:58:06	1.3
-+++ ./drivers/md/multipath.c	2002/07/18 11:59:52	1.4
-@@ -58,87 +58,20 @@ struct multipath_bh *multipath_retry_lis
- static int multipath_spare_write(mddev_t *, int);
- static int multipath_spare_active(mddev_t *mddev, mdp_disk_t **d);
+--- ./drivers/md/linear.c	2002/07/18 11:57:38	1.1
++++ ./drivers/md/linear.c	2002/07/18 11:57:48	1.2
+@@ -61,7 +61,6 @@ static int linear_run (mddev_t *mddev)
+ 		}
  
--static struct multipath_bh *multipath_alloc_mpbh(multipath_conf_t *conf)
-+static void *mp_pool_alloc(int gfp_flags, void *data)
- {
--	struct multipath_bh *mp_bh = NULL;
--
--	do {
--		spin_lock_irq(&conf->device_lock);
--		if (!conf->freer1_blocked && conf->freer1) {
--			mp_bh = conf->freer1;
--			conf->freer1 = mp_bh->next_mp;
--			conf->freer1_cnt--;
--			mp_bh->next_mp = NULL;
--			mp_bh->state = (1 << MPBH_PreAlloc);
--		}
--		spin_unlock_irq(&conf->device_lock);
--		if (mp_bh)
--			return mp_bh;
--		mp_bh = (struct multipath_bh *) kmalloc(sizeof(struct multipath_bh),
--					GFP_NOIO);
--		if (mp_bh) {
--			memset(mp_bh, 0, sizeof(*mp_bh));
--			return mp_bh;
--		}
--		conf->freer1_blocked = 1;
--		wait_disk_event(conf->wait_buffer,
--				!conf->freer1_blocked ||
--				conf->freer1_cnt > NR_RESERVED_BUFS/2
--		    );
--		conf->freer1_blocked = 0;
--	} while (1);
--}
--
--static inline void multipath_free_mpbh(struct multipath_bh *mp_bh)
--{
--	multipath_conf_t *conf = mddev_to_conf(mp_bh->mddev);
--
--	if (test_bit(MPBH_PreAlloc, &mp_bh->state)) {
--		unsigned long flags;
--		mp_bh->bio = NULL;
--		spin_lock_irqsave(&conf->device_lock, flags);
--		mp_bh->next_mp = conf->freer1;
--		conf->freer1 = mp_bh;
--		conf->freer1_cnt++;
--		spin_unlock_irqrestore(&conf->device_lock, flags);
--		wake_up(&conf->wait_buffer);
--	} else {
--		kfree(mp_bh);
--	}
--}
--
--static int multipath_grow_mpbh (multipath_conf_t *conf, int cnt)
--{
--	int i = 0;
--
--	while (i < cnt) {
--		struct multipath_bh *mp_bh;
--		mp_bh = (struct multipath_bh*)kmalloc(sizeof(*mp_bh), GFP_KERNEL);
--		if (!mp_bh)
--			break;
--		memset(mp_bh, 0, sizeof(*mp_bh));
--		set_bit(MPBH_PreAlloc, &mp_bh->state);
--		mp_bh->mddev = conf->mddev;	       
--
--		multipath_free_mpbh(mp_bh);
--		i++;
--	}
--	return i;
-+	struct multipath_bh *mpb;
-+	mpb = kmalloc(sizeof(*mpb), gfp_flags);
-+	if (mpb) 
-+		memset(mpb, 0, sizeof(*mpb));
-+	return mpb;
- }
+ 		disk->bdev = rdev->bdev;
+-		atomic_inc(&rdev->bdev->bd_count);
+ 		disk->size = rdev->size;
  
--static void multipath_shrink_mpbh(multipath_conf_t *conf)
-+static void mp_pool_free(void *mpb, void *data)
- {
--	spin_lock_irq(&conf->device_lock);
--	while (conf->freer1) {
--		struct multipath_bh *mp_bh = conf->freer1;
--		conf->freer1 = mp_bh->next_mp;
--		conf->freer1_cnt--;
--		kfree(mp_bh);
--	}
--	spin_unlock_irq(&conf->device_lock);
-+	kfree(mpb);
- }
- 
--
- static int multipath_map (mddev_t *mddev, struct block_device **bdev)
- {
- 	multipath_conf_t *conf = mddev_to_conf(mddev);
-@@ -185,10 +118,11 @@ static void multipath_reschedule_retry (
- static void multipath_end_bh_io (struct multipath_bh *mp_bh, int uptodate)
- {
- 	struct bio *bio = mp_bh->master_bio;
-+	multipath_conf_t *conf = mddev_to_conf(mp_bh->mddev);
- 
- 	bio_endio(bio, uptodate);
- 	bio_put(mp_bh->bio);
--	multipath_free_mpbh(mp_bh);
-+	mempool_free(mp_bh, conf->pool);
- }
- 
- void multipath_end_request(struct bio *bio)
-@@ -251,7 +185,7 @@ static int multipath_make_request (reque
- 	struct multipath_bh * mp_bh;
- 	struct multipath_info *multipath;
- 
--	mp_bh = multipath_alloc_mpbh (conf);
-+	mp_bh = mempool_alloc(conf->pool, GFP_NOIO);
- 
- 	mp_bh->master_bio = bio;
- 	mp_bh->mddev = mddev;
-@@ -864,24 +798,15 @@ static int multipath_run (mddev_t *mddev
- 	conf->mddev = mddev;
- 	conf->device_lock = SPIN_LOCK_UNLOCKED;
- 
--	init_waitqueue_head(&conf->wait_buffer);
--
- 	if (!conf->working_disks) {
- 		printk(NONE_OPERATIONAL, mdidx(mddev));
- 		goto out_free_conf;
- 	}
- 
--
--	/* pre-allocate some buffer_head structures.
--	 * As a minimum, 1 mpbh and raid_disks buffer_heads
--	 * would probably get us by in tight memory situations,
--	 * but a few more is probably a good idea.
--	 * For now, try NR_RESERVED_BUFS mpbh and
--	 * NR_RESERVED_BUFS*raid_disks bufferheads
--	 * This will allow at least NR_RESERVED_BUFS concurrent
--	 * reads or writes even if kmalloc starts failing
--	 */
--	if (multipath_grow_mpbh(conf, NR_RESERVED_BUFS) < NR_RESERVED_BUFS) {
-+	conf->pool = mempool_create(NR_RESERVED_BUFS,
-+				    mp_pool_alloc, mp_pool_free,
-+				    NULL);
-+	if (conf->pool == NULL) {
- 		printk(MEM_ERROR, mdidx(mddev));
- 		goto out_free_conf;
- 	}
-@@ -916,7 +841,8 @@ static int multipath_run (mddev_t *mddev
+ 		if (!conf->smallest || (disk->size < conf->smallest->size))
+@@ -112,12 +111,8 @@ static int linear_run (mddev_t *mddev)
  	return 0;
  
+ out:
+-	if (conf) {
+-		for (i = 0; i < MD_SB_DISKS; i++)
+-			if (conf->disks[i].bdev)
+-				bdput(conf->disks[i].bdev);
++	if (conf)
+ 		kfree(conf);
+-	}
+ 	MOD_DEC_USE_COUNT;
+ 	return 1;
+ }
+@@ -125,11 +120,7 @@ out:
+ static int linear_stop (mddev_t *mddev)
+ {
+ 	linear_conf_t *conf = mddev_to_conf(mddev);
+-	int i;
+   
+-	for (i = 0; i < MD_SB_DISKS; i++)
+-		if (conf->disks[i].bdev)
+-			bdput(conf->disks[i].bdev);
+ 	kfree(conf->hash_table);
+ 	kfree(conf);
+ 
+--- ./drivers/md/multipath.c	2002/07/18 11:57:39	1.1
++++ ./drivers/md/multipath.c	2002/07/18 11:57:49	1.2
+@@ -881,7 +881,6 @@ static int multipath_run (mddev_t *mddev
+ 		disk->number = desc->number;
+ 		disk->raid_disk = desc->raid_disk;
+ 		disk->bdev = rdev->bdev;
+-		atomic_inc(&rdev->bdev->bd_count);
+ 		disk->operational = 0;
+ 		disk->spare = 1;
+ 		disk->used_slot = 1;
+@@ -1006,9 +1005,6 @@ static int multipath_run (mddev_t *mddev
+ 
  out_free_conf:
--	multipath_shrink_mpbh(conf);
-+	if (conf->pool)
-+		mempool_destroy(conf->pool);
+ 	multipath_shrink_mpbh(conf);
+-	for (i = 0; i < MD_SB_DISKS; i++)
+-		if (conf->multipaths[i].bdev)
+-			bdput(conf->multipaths[i].bdev);
  	kfree(conf);
  	mddev->private = NULL;
  out:
-@@ -941,7 +867,7 @@ static int multipath_stop (mddev_t *mdde
+@@ -1031,13 +1027,9 @@ out:
+ static int multipath_stop (mddev_t *mddev)
+ {
  	multipath_conf_t *conf = mddev_to_conf(mddev);
+-	int i;
  
  	md_unregister_thread(conf->thread);
--	multipath_shrink_mpbh(conf);
-+	mempool_destroy(conf->pool);
+ 	multipath_shrink_mpbh(conf);
+-	for (i = 0; i < MD_SB_DISKS; i++)
+-		if (conf->multipaths[i].bdev)
+-			bdput(conf->multipaths[i].bdev);
  	kfree(conf);
  	mddev->private = NULL;
  	MOD_DEC_USE_COUNT;
---- ./include/linux/raid/multipath.h	2002/07/18 11:59:50	1.1
-+++ ./include/linux/raid/multipath.h	2002/07/18 11:59:52	1.2
-@@ -27,16 +27,7 @@ struct multipath_private_data {
- 	struct multipath_info	*spare;
- 	spinlock_t		device_lock;
+--- ./drivers/md/raid1.c	2002/07/18 11:57:39	1.1
++++ ./drivers/md/raid1.c	2002/07/18 11:57:49	1.2
+@@ -1301,7 +1301,6 @@ static int run(mddev_t *mddev)
+ 			disk->number = descriptor->number;
+ 			disk->raid_disk = disk_idx;
+ 			disk->bdev = rdev->bdev;
+-			atomic_inc(&rdev->bdev->bd_count);
+ 			disk->operational = 0;
+ 			disk->write_only = 0;
+ 			disk->spare = 0;
+@@ -1333,7 +1332,6 @@ static int run(mddev_t *mddev)
+ 			disk->number = descriptor->number;
+ 			disk->raid_disk = disk_idx;
+ 			disk->bdev = rdev->bdev;
+-			atomic_inc(&rdev->bdev->bd_count);
+ 			disk->operational = 1;
+ 			disk->write_only = 0;
+ 			disk->spare = 0;
+@@ -1348,7 +1346,6 @@ static int run(mddev_t *mddev)
+ 			disk->number = descriptor->number;
+ 			disk->raid_disk = disk_idx;
+ 			disk->bdev = rdev->bdev;
+-			atomic_inc(&rdev->bdev->bd_count);
+ 			disk->operational = 0;
+ 			disk->write_only = 0;
+ 			disk->spare = 1;
+@@ -1434,9 +1431,6 @@ static int run(mddev_t *mddev)
+ out_free_conf:
+ 	if (conf->r1bio_pool)
+ 		mempool_destroy(conf->r1bio_pool);
+-	for (i = 0; i < MD_SB_DISKS; i++)
+-		if (conf->mirrors[i].bdev)
+-			bdput(conf->mirrors[i].bdev);
+ 	kfree(conf);
+ 	mddev->private = NULL;
+ out:
+@@ -1447,14 +1441,10 @@ out:
+ static int stop(mddev_t *mddev)
+ {
+ 	conf_t *conf = mddev_to_conf(mddev);
+-	int i;
  
--	/* buffer pool */
--	/* buffer_heads that we have pre-allocated have b_pprev -> &freebh
--	 * and are linked into a stack using b_next
--	 * multipath_bh that are pre-allocated have MPBH_PreAlloc set.
--	 * All these variable are protected by device_lock
--	 */
--	struct multipath_bh	*freer1;
--	int			freer1_blocked;
--	int			freer1_cnt;
--	wait_queue_head_t	wait_buffer;
-+	mempool_t		*pool;
- };
- 
- typedef struct multipath_private_data multipath_conf_t;
+ 	md_unregister_thread(conf->thread);
+ 	if (conf->r1bio_pool)
+ 		mempool_destroy(conf->r1bio_pool);
+-	for (i = 0; i < MD_SB_DISKS; i++)
+-		if (conf->mirrors[i].bdev)
+-			bdput(conf->mirrors[i].bdev);
+ 	kfree(conf);
+ 	mddev->private = NULL;
+ 	MOD_DEC_USE_COUNT;
