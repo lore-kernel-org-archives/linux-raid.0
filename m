@@ -1,45 +1,59 @@
 From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: is raid compatible between 2.4.22 & 2.6.5 ?
-Date: Sat, 12 Jun 2004 12:55:57 +1000
+Subject: Re: raid1 creation problems
+Date: Sat, 12 Jun 2004 13:00:31 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16586.28861.88315.964028@cse.unsw.edu.au>
-References: <1086974499.5186.12.camel@localhost>
+Message-ID: <16586.29135.598399.909655@cse.unsw.edu.au>
+References: <40C9AAA4.4020603@prairie.lakes.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from John Lange on Friday June 11
-To: John Lange <john.lange@bighostbox.com>
+In-Reply-To: message from rrk on Friday June 11
+To: rrk <rrk@prairie.lakes.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Friday June 11, john.lange@bighostbox.com wrote:
-> Is there some reason why a RAID 1 set built under 2.6.5 would not work
-> under 2.4.22?
+On Friday June 11, rrk@prairie.lakes.com wrote:
+> why would mdadm be creating a md device (raid1) that was larger than the 
+> partition table?
 
-No, unless you are partitioning the array.
+Because the partition table hadn't  been read after it was last
+changed maybe.
+
+> these are two identical seagate 120's --debian 2.4.26 with raid compiled in.
+> i have built the partition tables with fdisk cfdisk and parted same 
+> problem everytime . everything is fine
+> up until i boot at which time it say's the superblock is larger than the 
+> partition by about 20 or 30 blocks
+
+At which time *what* says that *what* superblock is larger by exactly
+*how*many* blocks.
+
+> I have built several other raid1 system's  over the last year and have 
+> not seen this problem before.
+> to add the drives to the array i boot under a recuse disk and sync under 
+> the rescue disk. same mdadm
+> version as they were built with. The partition tables match in all cases 
+> -- with fdisk i kept everything on cyl
+> boundaries.
+
+I really think that if you want help, you need to provide better
+details.  I'm guessing that this is a raid array that you are booting
+off. Is that correct?
+
+Exactly what do you do, and exactly what happens.
 
 > 
-> I build a machine (Slackware) with two RAID 1 mirrored drives under a
-> 2.6.5 kernel.
-> 
-> I later discovered that I needed to drop back to a 2.4.22 kernel in
-> order to do some clustering under openMosix and TKCluster so I
-> downloaded the recommended TKCluster 2.4.22 kernel. This kernel is a
-> standard kernel with patches for libata and openMosix.
-> 
-> I rebuilt the kernel including support for RAID and serial ATA (ICH5).
-> 
-> When I boot the 2.4.22 kernel it goes along nicely until it tries to
-> mount the root partition. It then throws up a "modprobe" error.
-> Something about char-major 9 I think? (I'm sorry but I am not near the
-> console at the moment).
+> where and how does mdadm check partition size?
 
-Precise message are always more helpful.
-
-If it was actually "block-major 9", then maybe your kernel is compiled
-without  support for md, as block-major 9 corresponds to the md
-driver.
+It uses an ioctl to ask the partition device how big it is.
 
 NeilBrown
 
+> thanks
+> rob 
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
