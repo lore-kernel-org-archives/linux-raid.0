@@ -1,47 +1,61 @@
-From: "Robin Bowes" <robin@robinbowes.com>
-Subject: RE: Add disks to RAID5 array
-Date: Thu, 22 Jul 2004 19:51:38 +0100
+From: <robin-lists@robinbowes.com>
+Subject: Raidtools vs. mdadm?
+Date: Thu, 22 Jul 2004 20:05:35 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <S266903AbUGVSvk/20040722185140Z+2514@vger.kernel.org>
-References: <002f01c4701a$5712b180$0201a8c0@windows>
+Message-ID: <S266871AbUGVTFi/20040722190538Z+2544@vger.kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <002f01c4701a$5712b180$0201a8c0@windows>
-To: 'TJ Harrell' <systemloc@earthlink.net>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org 
-> [mailto:linux-raid-owner@vger.kernel.org] On Behalf Of TJ Harrell
-> Sent: 22 July 2004 18:33
-> To: linux-raid@vger.kernel.org
-> Subject: Re: Add disks to RAID5 array
-> 
-> I've used raidreconf to convert from RAID 1 to RAID 5 and to 
-> grow RAID 5 arrays. I would recommend a UPS. If the power 
-> blips, the array will be lost.
-> Other then that, I've never had any trouble whatsoever with 
-> it. IMO, resize2fs is more dangerous than using raidreconf. I 
-> have had resize2fs corrupt file systems badly before. It's 
-> important to run fsck -f both before and after resize2fs. It 
-> catches a lot of minor, fixable problems after the resize2fs 
-> is run. Doing this, I have successfully grown RAID 5 arrays 
-> many times without any trouble.
-> 
-> In any case, backing up is highly recommended if you value the data!
+Hi,
 
-TJ,
+I've been using mdadm to create and manage my RAID devices (RAID1 and
+RAID5).
 
-I didn't say, but I've been using mdadm to create/manage my RAID so far. Do
-you know if it's possible to achieve this using just mdadm?
+I've not really given much thought to how they are started at boot time -
+they just are!
 
-That actually prompts me to ask another question...which I'll save for
-another thread!
+On Fedora Core 2, RAID devics are started from /etc/rc.d/rc.sysinit. The
+default install used raidtools to start the arrays, but I have patched
+rc.sysinit with the following patch:
+
+--- rc.sysinit.orig     2004-02-04 01:42:10.000000000 -0600
++++ rc.sysinit  2004-02-04 02:26:45.000000000 -0600
+@@ -435,6 +435,10 @@
+        /etc/rc.modules
+ fi
+
++if [ -f /etc/mdadm.conf ]; then
++       /sbin/mdadm -A -s
++fi
++
+ update_boot_stage RCraid
+ if [ -f /etc/raidtab ]; then
+        # Add raid devices
+@@ -467,6 +471,10 @@
+                                RESULT=0
+                                RAIDDEV="$RAIDDEV(skipped)"
+                        fi
++                       if [ $RESULT -gt 0 -a -x /sbin/mdadm ]; then
++                               /sbin/mdadm -Ac partitions $i -m dev
++                               RESULT=$?
++                       fi
+                        if [ $RESULT -gt 0 -a -x /sbin/raidstart ]; then
+                                /sbin/raidstart $i
+                                RESULT=$?
+
+
+So, my question is: do I still need raidtools? Does it do anything that
+mdadm can't?
+
+Thanks,
 
 R.
+
 --
-http://robinbowes.com  
+http://robinbowes.com 
 
