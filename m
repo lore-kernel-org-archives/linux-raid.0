@@ -1,61 +1,53 @@
-From: maarten <maarten@ultratux.net>
-Subject: Re: Spares and partitioning huge disks
-Date: Fri, 14 Jan 2005 18:46:54 +0100
-Message-ID: <200501141846.54441.maarten@ultratux.net>
-References: <crmt7e$8d6$1@sea.gmane.org> <20050110081526.GA15920@janus> <41E80188.60601@conterra.de>
+From: Brad Campbell <brad@wasp.net.au>
+Subject: Re: "Rebuild" speed on a forced resync
+Date: Fri, 14 Jan 2005 22:34:02 +0400
+Message-ID: <41E8109A.7000603@wasp.net.au>
+References: <41E3A0B5.209@wasp.net.au> <16868.28778.598528.338592@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <41E80188.60601@conterra.de>
-Content-Disposition: inline
+In-Reply-To: <16868.28778.598528.338592@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@cse.unsw.edu.au>
+Cc: RAID Linux <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Neil Brown wrote:
+> On Tuesday January 11, brad@wasp.net.au wrote:
+> 
+>>G'day all,
+>>
+>>Just started my big raid using mdadm --update resync to ensure the parity blocks are A-OK after a 
+>>kernel panic, and I have been monitoring my Disk IO with
+>>iostat -k 5
+>>
+>>Now this is an average for a 5 second period.
+>>I note I'm seeing about 12,456 Kilobytes/sec from each drive, but a cat /proc mdstat is giving me 
+>>6716 Kilobytes/sec. Given I'm doing a read consistency check I would expect an mdstat speed 9/10ths 
+>>of my bulk per-drive read speed. (This array is sda -> sdj)
+>>Am I missing something really obvious?
 
-Mod parent "+5 Insightful".
+>>
+>>avg-cpu:  %user   %nice    %sys %iowait   %idle
+>>           39.18    0.00   60.82    0.00    0.00
+>>
+>>Device:            tps    kB_read/s    kB_wrtn/s    kB_read    kB_wrtn
+>>hda               0.00         0.00         0.00          0          0
+>>sda              97.76     12465.67         0.00      33408          0
+>>sdb              97.76     12465.67         0.00      33408          0
+>>sdc              97.76     12465.67         0.00      33408          0
+> 
+> 
+> So this is a 5 second sample...
+> In 5 seconds, 33408 kB were read.
+> That's 6681.6 kB/sec according to my calculator.
+> 
+> So it looks like iostat is reporting something wrongly.  I would look
+> there first.
 
-Very well though out and said, Dieter.
+Ok, fair call on those stats. Having said that, we are talking 6.6 MB/sec per disk. Do I take it the 
+/proc/mdstat figure of 6 MB/sec is not a total array rebuild speed, but a speed per array member?
 
-Maarten
-
-On Friday 14 January 2005 18:29, Dieter Stueken wrote:
-> Frank van Maarseveen wrote:
-
-> > I did not intend to cut it out but simplified the situation a bit: if
-> > you have all the RAID5 disks even with a bunch of errors spread out over
-> > all of them then yes, you basically still have the data.  Nothing is
-> > lost provided there's no double fault and disks are not dead yet. But
-> > there are not many technical people I would trust for recovering from
-> > this situation. And I wouldn't trust myself without a significant
-> > coffee intake either :)
->
-> I think read errors are to be handled very differently compared to disk
-> failures. In particular the affected disk should not be kicked out
-> incautious. If done so, you waste the real power of the RAID5 system
-> immediately! As long, as any other part of the disk can still be read,
-> this data must be preserved by all means. As long as only parts of a disk
-> (even of different disks) can't be read, it is not a fatal problem, as long
-> as the data can still be read from an other disk of the array. There is no
-> reason to kill any disk in advance.
->
-> What I'm missing is some improved concept of replacing a disk:
-> Kicking off some disk at first and starting to resync to a spare
-> disk thereafter is a very dangerous approach. Instead some "presync"
-> should be possible: After a decision to replace some disk, the new
-> (spare) disk should be prepared in advance, while all other disks are still
-> running. After the spare disk was successfully prepared, the disk to
-> replace may be disabled.
->
-> This sounds a bit like RAID6, but it is much simpler. The complicated part
-> may be the phase where I have one additional disk. A simple solution would
-> be to perform a resync offline, while no write takes place. This may even
-> be performed by a userland utility. If I want to perform the "presync"
-> online, I have to carry out writes to both disks simultaneously, while the
-> presync takes place.
->
-> Dieter.
-
-
+Regards,
+Brad
