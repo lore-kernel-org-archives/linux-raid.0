@@ -1,77 +1,65 @@
-From: Nick Lindsell <nick@nexnix.co.uk>
-Subject: Am I dead?
-Date: Mon, 02 Dec 2002 12:21:30 +0000
+From: Jakob Oestergaard <jakob@unthought.net>
+Subject: Re: Recovering from a disaster...
+Date: Mon, 2 Dec 2002 13:27:19 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <5.1.1.6.0.20021202114409.06af4530@core>
+Message-ID: <20021202122719.GB6155@unthought.net>
+References: <C65F89D1AC0BB54B865127151A24DA780BAD6494@nbexchm2.aliant.icn>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; format=flowed
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+Content-Disposition: inline
+In-Reply-To: <C65F89D1AC0BB54B865127151A24DA780BAD6494@nbexchm2.aliant.icn>
+To: "Shaw, Marco" <marco.shaw@nbtel.nb.ca>
+Cc: "'linux-raid@vger.kernel.org'" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Greetings list,
-	My server died last night while copying 4Gb data over the network to
-it's IDE raid5 array. While trying to boot it cannot mount root as the 
-superblock
-is bad for that raid device.
-	I've moved the array to another machine with it's own disk so I may be
-able to effect a repair by running the raidtools.
-	I recreated /etc/raidtab and tried to start the arrays but I get this
-in the syslog:
+On Thu, Nov 28, 2002 at 08:53:59AM -0400, Shaw, Marco wrote:
+> Going for my RHCE in a few weeks...  Always wondered:
+>=20
+> 1. Are there any gotchas in a corrupted software RAID filesystem?  Fo=
+r example, /dev/md0 is an RAID1 MD device, and either the 1st superbloc=
+k on /dev/md0 or maybe the underlying /dev/sda1 partition is zero'ed ou=
+t.  How does one go about fixing it?  Will a simple fsck here work?  Bu=
+t in the above case, is fsck run against md0 or sda1?
 
-Dec 2 12:41:18 nexnix-192 kernel: [events: 00000018]
-Dec 2 12:41:18 nexnix-192 kernel: [events: 0000001d]
-Dec 2 12:41:18 nexnix-192 kernel: [events: 0000001c]
-Dec 2 12:41:18 nexnix-192 kernel: md: autorun ...
-Dec 2 12:41:18 nexnix-192 kernel: md: considering sdc2 ...
-Dec 2 12:41:18 nexnix-192 kernel: md: adding sdc2 ...
-Dec 2 12:41:18 nexnix-192 kernel: md: adding sdb2 ...
-Dec 2 12:41:18 nexnix-192 kernel: md: adding sda2 ...
-Dec 2 12:41:18 nexnix-192 kernel: md: created md2
-Dec 2 12:41:18 nexnix-192 kernel: md: bind<sda2,1>
-Dec 2 12:41:18 nexnix-192 kernel: md: bind<sdb2,2>
-Dec 2 12:41:18 nexnix-192 kernel: md: bind<sdc2,3>
-Dec 2 12:41:18 nexnix-192 kernel: md: running: <sdc2><sdb2><sda2>
-Dec 2 12:41:18 nexnix-192 kernel: md: sdc2's event counter: 0000001c
-Dec 2 12:41:18 nexnix-192 kernel: md: sdb2's event counter: 0000001d
-Dec 2 12:41:18 nexnix-192 kernel: md: sda2's event counter: 00000018
-Dec 2 12:41:18 nexnix-192 kernel: md: superblock update time inconsistency 
--- using the most recent one
-Dec 2 12:41:18 nexnix-192 kernel: md: freshest: sdb2
-Dec 2 12:41:18 nexnix-192 kernel: md: kicking non-fresh sda2 from array!
-Dec 2 12:41:18 nexnix-192 kernel: md: unbind<sda2,2>
-Dec 2 12:41:18 nexnix-192 kernel: md: export_rdev(sda2)
-Dec 2 12:41:18 nexnix-192 kernel: md2: kicking faulty sdc2!
-Dec 2 12:41:18 nexnix-192 kernel: md: unbind<sdc2,1>
-Dec 2 12:41:18 nexnix-192 kernel: md: export_rdev(sdc2)
-Dec 2 12:41:18 nexnix-192 kernel: md: md2: raid array is not clean -- 
-starting background reconstruction
-Dec 2 12:41:18 nexnix-192 kernel: md2: max total readahead window set to 512k
-Dec 2 12:41:18 nexnix-192 kernel: md2: 2 data-disks, max readahead per 
-data-disk: 256k
-Dec 2 12:41:18 nexnix-192 kernel: raid5: device sdb2 operational as raid 
-disk 1
-Dec 2 12:41:18 nexnix-192 kernel: raid5: not enough operational devices for 
-md2 (2/3 failed)
-Dec 2 12:41:18 nexnix-192 kernel: RAID5 conf printout:
-Dec 2 12:41:18 nexnix-192 kernel: --- rd:3 wd:1 fd:2
-Dec 2 12:41:18 nexnix-192 kernel: disk 0, s:0, o:0, n:0 rd:0 us:1 dev:[dev 
-00:00]
-Dec 2 12:41:18 nexnix-192 kernel: disk 1, s:0, o:1, n:1 rd:1 us:1 dev:sdb2
-Dec 2 12:41:18 nexnix-192 kernel: disk 2, s:0, o:0, n:2 rd:2 us:1 dev:[dev 
-00:00]
-Dec 2 12:41:18 nexnix-192 kernel: raid5: failed to run raid set md2
-Dec 2 12:41:18 nexnix-192 kernel: md: pers->run() failed ...
-Dec 2 12:41:18 nexnix-192 kernel: md :do_md_run() returned -22
-Dec 2 12:41:18 nexnix-192 kernel: md: md2 stopped.
-Dec 2 12:41:18 nexnix-192 kernel: md: unbind<sdb2,0>
-Dec 2 12:41:18 nexnix-192 kernel: md: export_rdev(sdb2)
-Dec 2 12:41:18 nexnix-192 kernel: md: ... autorun DONE.
+Well, with RAID-1 you know that the underlying partitions *should*
+contain identical information.  So if your array is screwed, there is a
+chance that one of the partitions actually contains good information.
 
-Am I dead or can I "freshen" sda2 so I can at least have 2 devices in my 
-array and therefore
-have a chance of either backing off the data or rebulding with a new sdc ?
+If you array isn't running at all, try mounting the two partitions - se=
+e
+which one contains good data.  If any of the two are good, get a backup
+of that one.
 
-tia
-nick
+I'm sure you can assemble the array again, telling the MD code to
+rebuild the array from a specific partition, using mdadm (but I can't
+tell you how).   Can anyone shed some light on this one  ?   :)
 
+If your array is running, non-degraded, then the underlying partitions
+are identical, and there is little else you can do except for fsck.
+
+>=20
+> 2. If one knows that /dev/md0 is in trouble (composed of /dev/sda1 an=
+d /dev/sdb1), but /dev/sda1 is fine, can one, upon boot, simply change =
+LILO/GRUB from trying to mount root from /dev/md0 to /dev/sda1?  My gue=
+ss is no, since the disk label is different.
+
+On the kernel command line, specify root=3D/dev/sda1 or root=3D/dev/sdb=
+1 -
+you can tell your boot-loader to do this.
+
+Disk labels don't matter here.
+
+--=20
+=2E...............................................................
+:   jakob@unthought.net   : And I see the elder races,         :
+:.........................: putrid forms of man                :
+:   Jakob =D8stergaard      : See him rise and claim the earth,  :
+:        OZ9ABN           : his downfall is at hand.           :
+:.........................:............{Konkhra}...............:
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
