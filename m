@@ -1,34 +1,56 @@
-From: Paul Clements <Paul.Clements@SteelEye.com>
-Subject: Re: Move md raid5 from intel to sparc?
-Date: Thu, 12 Jun 2003 11:04:40 -0400
+From: Bernd Schubert <bernd-schubert@web.de>
+Subject: Re: Crashing a software raid 5 partition ( disk trouble )
+Date: Thu, 12 Jun 2003 18:14:31 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3EE89688.71AFFAB6@SteelEye.com>
-References: <3EE74472.9010505@geodev.com>		 <1055350640.1929.28.camel@langvan.austin.ibm.com>		 <3EE76EDA.1060000@geodev.com>		 <1055359074.1929.70.camel@langvan.austin.ibm.com>		 <00c701c33050$00057360$7b07a8c0@pluto> <1055361035.1930.81.camel@langvan.austin.ibm.com> <3EE78D29.2EEFA36A@SteelEye.com> <3EE89211.4030805@geodev.com>
+Message-ID: <200306121814.32072.bernd-schubert@web.de>
+References: <007201c330b9$c316f310$3001a8c0@melkor> <16104.22361.508001.916567@gargle.gargle.HOWL> <00db01c330ca$5ae72290$3001a8c0@melkor>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Matthew Mitchell <matthew@geodev.com>
-Cc: Mike Tran <mhtran@us.ibm.com>, 3tcdgwg3 <3tcdgwg3@prodigy.net>, linux-raid@vger.kernel.org
+In-Reply-To: <00db01c330ca$5ae72290$3001a8c0@melkor>
+Content-Disposition: inline
+To: Nicolas Meaux <nicolas.meaux@artabel.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Matthew Mitchell wrote:
+On Thursday 12 June 2003 12:06, Nicolas Meaux wrote:
+> Thanks for you quick respond Neil  ;)
+>
+> >    mdadm -A --force /dev/md2 /dev/sd[a-f]
+>
+> So, i type this command :
+>
+> # mdadm -A --force /dev/md2 /dev/sd[a-h]
+> mdadm: /dev/md2 has been started with 7 drives.
+>
+> ( i do a [a-h] , because i have 8 scsi disk )
+>
+> I try too mount md2, it work fine, but :
+> # ls -al
+> ls: nohup.out: Input/output error
+> ls: tape.sh: Input/output error
+> ls: .viminfo: Input/output error
+> ls: .bash_history: Input/output error
+> ls: .bashrc~: Input/output error
+> ls: .xauth: Input/output error
+>
+> It seem that there is many errors on the partition.
+> So, in good newbie, i decided too reboot the machine, but now and since one
+> hour, he is blocking on these lines :
+>
+> [...]
+> md: updating md2 RAID superblock device
+> md: sdg [events: 000005a]<6>write sdg's sb offset 35843584
+> md: sdh [events: 000005a]<6>write sdh's sb offset 35843584
+> md: sde [events: 000005a]<6>write sde's sb offset 35843584
+> md: sdd [events: 000005a]<6>write sdd's sb offset 35843584
+>
 
-> Paul Clements wrote:
+Hi,
 
-> > Neil's new version 1 superblock, which is present in the 2.5 kernel,
-> > addresses the byte ordering issues that are a problem in the current
-> > 0.90 superblock of the 2.4 md driver.
-> > The new superblock code stores all numeric values in little endian
-> > on-disk and converts them to CPU endianness before use.
+why are you rebooting that often ? Even after sdd failed I wouldn't have 
+rebooted that fast. Just do 'cat /proc/mdstat' and see in what state your 
+raid-array is!
 
-> Any possibility of a backport?  If it's not too hairy I don't mind
-> attempting it myself, but I haven't even looked at md in 2.5.
-
-If you just wanted to rip out the superblock code from the 2.5 md.c and
-use that in 2.4, it probably wouldn't be too bad. The superblock
-handling code has been improved and modularized quite a bit, and the md
-driver can now handle various different superblock formats.
-
---
-Paul
+Bernd
