@@ -1,56 +1,63 @@
-From: Hermann Himmelbauer <dusty@strike.wu-wien.ac.at>
-Subject: Re: Consensus on controllers?
-Date: Wed, 22 Oct 2003 10:11:18 +0200
+From: "Ryan B. Lynch" <rlynch@strozllc.com>
+Subject: Re: two-disk-failure question
+Date: Wed, 22 Oct 2003 12:55:12 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200310221011.18327.dusty@strike.wu-wien.ac.at>
-References: <1066782075.31741.6.camel@south.rosestar.lan>
+Message-ID: <3F96B670.2020802@strozllc.com>
+References: <200310172315.56815.maarten@vbvb.nl>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1066782075.31741.6.camel@south.rosestar.lan>
-Content-Disposition: inline
-To: Bob Hillegas <bobhillegas@houston.rr.com>, linux-raid@vger.kernel.org
+In-Reply-To: <200310172315.56815.maarten@vbvb.nl>
+To: maarten van den Berg <maarten@vbvb.nl>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday 22 October 2003 02:21, Bob Hillegas wrote:
-> Assuming I'm installing a software raid, is there any consensus on which
-> controller is best suited to that duty?
+Hey Maarten,
+
+Maarten van den Berg wrote:
+
+>cables and such. So my obvious question is:  Is this step (mkraid --force 
+>with one of the offline disks defined as failed-disk) destructive, or could I 
+>(theoretically) experiment endlessly with the order in which the disks are 
+>defined in /etc/raidtab before I decide to mount it read-write and raidhotadd 
+>a fresh disk ?
 >
-> Best scsi and best IDE.
+I had to do this about a year ago, on account of a bad IDE controller, 
+and was successful on the first try.  I recall from the HOWTO that the 
+'mkraid --force' command IS destructive, and it WILL lose the array if 
+you get it wrong.
 
-What you first have to take in mind is that the PCI bus can be a bottleneck. 
-The 32bit/33Mhz PCI bus can manage 133MB/s (without overhead). If you e.g. 
-connect two fast IDE-Harddisks, like the WD-Raptor (which has max. ~ 60MB/s 
-read performance) and do a RAID0, then  you would theoretically achieve 
-120MB/s - if you pipe this out to a 100MBit NW, you get around 130MB/s. I'd 
-say this is already too much for the PCI bus as there is around 30% overhead 
-included. 
-There are two workarounds to this problem:
+My incident involved data which would have been a bear to restore from 
+backup, so I didn't take any chances.  Prior to the 'mkraid --force' 
+step, I labelled each physical disk with it's number in the array, and 
+then copied each disk to an identical disk using the 'dd' command 
+[somthing like 'dd if=/dev/sda of=/dev/sdb bs=8192' where /dev/sda is 
+the original and /dev/sdb is a handy blank disk, repeated for each 
+original disk in the array].  Of course, this required five extra hard 
+disks, but I had them lying around anyway.  And that's the foolproof 
+method.  If you're really paranoid (you don't have a backup of the 
+failed array), you might want to also do an 'md5sum /dev/sdb; md5sum 
+/dev/sda' and compare the two hash values to ensure that each copy is 
+faithful--re-do the copy that doesn't pass the hash check.  Since you're 
+juggling so many hard drives, make sure you label all the 
+disks--scotch-taped sticky notes on the cover, with the array #s written 
+in felt pen worked for me.
 
-- Use 64-bit PCI Hardware (expensive)
-- Use onboard Controller that are directly connected to the Southbridge - but 
-notice: Not all onboard controllers are directly connected, many are simply 
-connected to the 32-bit/33Mhz PCI bus.
+Then, you can run off and do whatever with the originals, and you'll 
+always have something to go back to if you utterly wipe out your array 
+while trying to restore it.  If that happens, you just take the 
+clobbered disks, and re-do the 'dd' command to write the copy back to 
+the originals.  Hash if necessary, and go to town again.  Repeat until 
+you either successfully restore the array, or you swear off computers 
+and enroll in florists' school.
 
-Moreover the controllers vary with the CPU Load. I only know that e.g. the 
-SATA RAID controller from Silcon Image (sil3112A) has a low CPU load but 
-AFAIK the sil3112 is a simple PCI device.
+Keep in mind that this can add a LOT of time to a restore operation.  
+With Western Digital WD200 IDE disks (7200 RPM, 18.6 GB), I can move 
+about 30-22 MB/sec (beginning-end) on direct disk-to-disk copies like 
+this, with an average around 25 MB/sec.  That's ~1.5 GB/min, so you can 
+estimate your own ETAs.  Hashing will take a similar amount of time if 
+you use 'md5sum' on a reasonably fast machine (P4 1.8+).
 
-An example of an IDE-Onboard controller that is connected to the Southbridge 
-is the Intel ICH5(R) southbridge that is implemented in the 875/865 intel 
-chipsets.
-
-Moreover you have to find out if these IC's are properly supported with Linux.
-
-Sorry - with SCSI I have not much knowledge.
-
-		Best Regards,
-		Hermann
-
--- 
-x1@aon.at
-GPG key ID: 299893C7 (on keyservers)
-FP: 0124 2584 8809 EF2A DBF9  4902 64B4 D16B 2998 93C7
+-R
 
