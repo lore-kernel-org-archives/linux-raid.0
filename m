@@ -1,129 +1,43 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: RAID 5 On Linux
-Date: Fri, 25 Jul 2003 11:05:40 +1000
+From: David Anderson <david.anderson@calixo.net>
+Subject: Software RAID within RAID
+Date: Fri, 25 Jul 2003 03:48:42 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16160.33380.483731.124089@gargle.gargle.HOWL>
-References: <33208.202.73.109.166.1059094499.power.web.id@mail2.oke.net.id>
+Message-ID: <20030725034842.52114001.david.anderson@calixo.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from c4c3m@oke.net.id on Friday July 25
-To: c4c3m@oke.net.id
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Friday July 25, c4c3m@oke.net.id wrote:
-> Dear All,
-> 
-> Let me introduce my self, my name is Hendri, i'm application
-> administrator at
-> www.6221.net.I find your email from the source code, i try to solve my
-> self but
-> it seems i must contact you personally to ask your help about my
-> problem.That
-> Problem are :I had installed RH 6.2 on IBM Netfinity 5100, it seems ok
-> for 1
-> year till today, the partition  doesn't Work, i have 6 partition that
-> doesnt
-> alive.4 partition contain about Oracle Data, and 3 2 more is /usr
-> partition(From
-> Now On, i think its a very Bad Idea to locate RAID 5 to /usr :(( )then i
-> discovered /dev/md1 - /dev/md6 won't work, and the error message on
-> /proc/mdstat
-> wont show up.i can "reconfigure" at all, what should i do for saving
-> all those
-> data, because i dont have any backup
-> the md modules already loaded, because some partition, for example md0
-> is up and
-> can be mounted as /, and /proc/mdstat show some information that inform
-> any
-> partition that already sucess to load, such as / -> md0, /home -> md9
-> beside
-> that, mdx partition doesnt show any information.
-> Could i recover that partition
-> (which doesnt alive?)?
+Hi all,
 
-There isn't really enough information here to see what is happening.
-Could you run
-   mdadm -Eb /dev/sd*
-and
-   mdadm -E /dev/sd*
+First of all I would like to thank the developers of the linux software
+RAID system for their excellent work which has saved my data on several
+occasions.
 
-and send the output.
+Recently I lost one of the disks on my software RAID5 (3x2Gb SCSI on a
+2.4.21 Debian Woody). Seeking replacements, I came across two 4Gb SCSI
+drives. After inserting one of them as a temporary replacement for the
+dead 2Gb, I am now looking into ways of better integrating these two new
+disks into my existing setup.
 
-If you don't have mdadm, you can get it from
-   http://www.kernel.org/pub/linux/utils/raid/mdadm/
+The most best solution I came up with was to extend the array's overall
+capacity from 4 to 8Gb. To do this I would first combine the two
+remaining 2Gb disks into a RAID0 array, and then combine that array and
+the two 4Gb disks into a RAID5 array. To clarify this, here is a diagram
+of this solution: http://polaris-outpost.net/vrac/Solution.png .
 
-NeilBrown
+However, there are a few things I would like to know before I make an
+attempt at this setup. First of all, would the software-raid driver
+handle disk failures properly even with the RAID within RAID? I do not
+see why not, but I'd rather be sure before I jump...
+The other question I have is about performances. Would the RAID0 array
+significantly impact on the overall I/O perfomances of the RAID5 array?
+If anyone has already had the opportunity of comparing performances on a
+regular RAID5 and a RAID5 containing a RAID0, I would be interested in
+the results. I will of course conduct my own tests once this setup is in
+place.
 
-> 
-> Created md5
-> md : superblock update time inconsistency -- using the most recent one
-> md : kicking non - fresh sdc10 from array !
-> md : kicking non - fresh sdc10 from array !
-> md : md5 : raid array is not clean -- Starting background reconstruction
-> md5 : max total readhead window set to 512k
-> raid 5 : not enough operational devices for md5 (2/3 failed)
-> raid 5 : failed to run raid set md5
-> do_md_run() returned -22
-> md5 stopped
-> 
-> /proc/mdstat
-> 
-> Personalities : [raid1][raid5] read_ahead 1024 sectors
-> md0 : active raid1 sdb1p0[ sda[1] 1566208 blocks [2/2][UU]
-> md9 : active raid5 sdc4[2] sdc3[1] sdc1[0] 995140 blocks level 5, 64k
-> chunk,
-> algorithm 0[3/3][UUU]
-> md2 : active raid5 sdc7[2] sda7[1] 1043968 blocks level 5, 64 k chunk,
-> algorithm
-> 0[3/2][_UU]
-> md7 : active raid5 sdc12[2] sdb12[0] sda12[1] 819072 blocks level 5,
-> 64k chunk,
-> algorithm 0[3/3][UUU]
-> md8 : active raid5 sdc13[2] sdb13[0] sda13[1] 1268864 blocks level 5,
-> 64k chunk,
-> algorithm 0[3/3] [UUU]
-> unused devices : <none>/2][_UU]] [UUU]e raid5 sdc12[2] sdb12[0]
-> sda12[1] 819072
-> blocks c13[2] sdb13[0] sda13[1] 1268864 blocks level 5, 64k chunk,
-> algorithm
-> 0[3/3] [UUU]e raid5 sdc12[2] sdb12[0] sda12[1] 819072 blocks level 5,
-> 64k chunk,
-> 0[3/2][_UU]
-> 
-> but in my /etc/fstab contain :
-> /dev/md0 until /dev/md9
-> so in /proc/mdstat doesnt apear beside md0, md9, md2, md7 and md8
-> 
-> When i look at the source
-> #define OUT_OF_DATE KERN_ERR \
-> "md: superblock update time inconsistency -- using the most recent
-> one\n"
-> md : kicking non - fresh sdc10 from array !
-> md : kicking non - fresh sdc10 from array !
-> menunjukkan ke source
-> if (ev1 < ev2) {
-> printk(KERN_WARNING "md: kicking non-fresh %s from
-> array!\n",
-> partition_name(rdev->dev));
-> kick_rdev_from_array(rdev);
-> continue;
-> }
-> 
-> Thanks for the attention
-> 
-> 
-> 
-> 
-> -----------------------------------------
-> This email was sent using OkeMail.
->  "Your Communication LifeStyle!"
->       http://www.oke.net.id/
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks in advance for your help
+David Anderson
