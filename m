@@ -1,68 +1,46 @@
-From: "John P. Looney" <valen@tuatha.org>
-Subject: Re: Problems with RAID1 on cobalt raq3
-Date: Mon, 19 Aug 2002 15:08:16 +0100
+From: "bo" <bo@sosnetwork.net>
+Subject: RE:What are those changes  for fixing the RAID0 performance?
+Date: Mon, 19 Aug 2002 08:01:53 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20020819140815.GY26818@jinny.ie>
-References: <200208172056.g7HKuHm05754@raq.iceblink.org> <1029624922.14769.119.camel@atherton>
-Reply-To: valen@tuatha.org
+Message-ID: <010401c24791$5aeb3830$5701a8c0@bomoon>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1029624922.14769.119.camel@atherton>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, Aug 17, 2002 at 03:55:38PM -0700, Duncan Laurie mentioned:
-> > [root@midir root]# raidhotadd /dev/md1 /dev/hda2                   
-> > md: can not import hda2, has active inodes!
-> > md: error, md_import_device() returned -16
-> > /dev/md1: can not hot-add disk: invalid argument.
+Neil And RAIDers,
 
- I've just tryed to get RAID1 going on another non-cobalt host, and I seem
-to be doing something simple wrong, as I get something quite similar here
-too:
+I have been looking for "what changes are made to fix/improve the parallel
+access(?) to disks simultanously?".
+I noticed as follow;
 
-[root@jny02 /root]# raidhotadd  /dev/md0 /dev/hda5
-/dev/md0: can not hot-add disk: invalid argument.
-md: trying to hot-add hda5 to md0 ... 
-md: can not import hda5, has active inodes!
-md: error, md_import_device() returned -16
-[root@jny02 /root]# mount
-/dev/md0 on / type ext2 (rw)
-none on /proc type proc (rw)
-/dev/hda1 on /boot type ext2 (rw)
-none on /dev/pts type devpts (rw,gid=5,mode=620)
- 
- This is likely because to get it to boot, like the cobalt, I'm actually
-passing root=/dev/hda5 to the kernel, not /dev/md0. 
+Up to Linux2.4.9  it got the same performance for RAID0(2-way stripe) and a
+single disk(JBOD),
+about 15 MB/sec with DMA on(hdparm -tT /dev/mdx).
 
- When I used "root=/dev/md0", the kernel booted, mounted root, and then
-moaned that it couldn't find init (so I had to wonder what filesystem it
-ended up mounting). I tryed to setup my lilo.conf from;
-    http://www.tldp.org/HOWTO/mini/Boot+Root+Raid+LILO-5.html
-but because I don't quite understand what it's doing, I could be doing
-something wrong:
+On Linux 2.4.10 it improves to about 25 MB/sec for RAID0, 15 MB/sec for
+single disk.
+On Linux 2.4.18 it got the right performance; about 31 MB/sec for RAID0.
 
- My lilo.conf is:
+I tried to port the difference on /driver/ide and /drivers/md, but it did
+not help.
+I think there were changes on other functions to fix the parallel access(?)
+to disks simultanously OR
+to improve the RAID0 performance .
 
-boot=/dev/hda
-map=/boot/map
-install=/boot/boot.b
-linear
-disk=/dev/md0
-    bios=0x80
-    sectors=63
-    heads=255
-    cylinders=5005
-partition=/dev/md1
-    start=63
-image=/boot/bzImage
-    label=2.4.18
-    read-only
-    root=/dev/md0
+Why am I doing this kind of homework?
 
- Is there anything obviously wrong with that ?
-                                                        
-John                                                    
+I can not migrate our linux to 2.4.18 so I want to port ONLY the fixes for
+this performance
+issue. I use Linux2.4.5.
+
+Please help me if you know how I can work around.
+
+Thanks in advance,
+
+Bo
+
 
