@@ -1,24 +1,33 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: SATA Raid0 in 2.4?
-Date: Mon, 15 Mar 2004 10:01:46 -0500
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: [PATCH] klibc update
+Date: Tue, 16 Mar 2004 00:52:29 -0800
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <4055C55A.8030501@pobox.com>
-References: <Pine.LNX.4.58.0403150928140.21510@wormwood.cs.yorku.ca>      <4055BF4A.3080103@pobox.com> <18783.208.27.111.121.1079362035.squirrel@mail.davidoffdotcom.com>
+Message-ID: <20040316005229.53e08c0c.akpm@osdl.org>
+References: <4056B0DB.9020008@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18783.208.27.111.121.1079362035.squirrel@mail.davidoffdotcom.com>
-To: Samuel Davidoff <sam@davidoffdotcom.com>
-Cc: Andrew Hogue <hogue@cs.yorku.ca>, linux-raid@vger.kernel.org
+In-Reply-To: <4056B0DB.9020008@pobox.com>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-kernel@vger.kernel.org, viro@parcelfarce.linux.theplanet.co.uk, greg@kroah.com, bos@serpentine.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Samuel Davidoff wrote:
-> Is there a 2.4 patch to add support for the promise sx4 controller?
+Jeff Garzik <jgarzik@pobox.com> wrote:
+>
+> Too big to post,
+> 
+>  http://www.kernel.org/pub/linux/kernel/people/jgarzik/patchkits/2.6/2.6.5-rc1-klibc1.patch.bz2
+>  	or
+>  bk://kernel.bkbits.net/jgarzik/klibc-2.5
+> 
+>  IIRC, this is:  my update of Bryan O'Sullivan's update of Greg KH's 
+>  update of my merge of hpa's and viro's hacking :)
+> 
+>  WRT overall klibc merge:  when it can do md RAID autorun, it's 
+>  mergeable.  And didn't somebody write a tiny mdctl program...
 
-Yes, it's at the URL I posted in the first email.
+It's so long since klibc was discussed (ie: more than five minutes ago)
+that I forget the reasons why it should be delivered via the kernel tree.
 
-	Jeff
-
-
-
+Remind me please?
