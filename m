@@ -1,71 +1,33 @@
-From: Arkadiusz Miskiewicz <arekm@pld-linux.org>
-Subject: Re: raid5 on 2.4.21 and reconstruction problem
-Date: Wed, 13 Aug 2003 12:36:44 +0200
+From: Derek Yeung <dky@utcc.utoronto.ca>
+Subject: Raid 1 / Multiple Reboot Problem
+Date: Wed, 13 Aug 2003 10:35:09 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200308131236.44311.arekm@pld-linux.org>
+Message-ID: <Pine.LNX.4.44.0308131028050.11694-100000@gpu.utcc>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-2
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-After patching 2.4.21 kernel md0 resync started as you said but now I h=
-ave:
 
-[root@perfo root]# mdadm -D /dev/md0
-/dev/md0:
-        Version : 00.90.00
-  Creation Time : Tue May  4 09:37:53 1999
-     Raid Level : raid5
-     Array Size : 9960064 (9.50 GiB 10.20 GB)
-    Device Size : 4980032 (4.75 GiB 5.10 GB)
-   Raid Devices : 3
-  Total Devices : 4
-Preferred Minor : 0
-    Persistence : Superblock is persistent
+Hi software raid experts!
 
-    Update Time : Wed Aug 13 12:24:12 2003
-          State : dirty, no-errors
- Active Devices : 1
-Working Devices : -1
- Failed Devices : 4
-  Spare Devices : 1
+I'm currently running on Redhat 9 Stock kernel/Raid 1 (mirroring) with 2 
+disks
 
-         Layout : left-symmetric
-     Chunk Size : 32K
+I was testing one of my boxes last night and decided to set initdefault to
+6, thus letting the machine to reboot infinitely.  The theory is that the
+machine should boot non-stop.  After a few reboots, one of the devices
+would fail and the machine will drop to a single user prompt requesting
+that the raid set be repaired.  (all it looked like was that the mirrors
+wanted to resync)..  Is this the correct behaviour?  I thought that the 
+machine (mirror) should survive this?
 
-    Number   Major   Minor   RaidDevice State
-       0       8        2        0      active sync   /dev/sda2
-       1       8       18        1      faulty   /dev/sdb2
-       2       0        0        2      faulty removed
-       3       8       34        3      spare   /dev/sdc2
-           UUID : c6839323:6d5bd707:731f0c8c:10e7b89b
-         Events : 0.161
+I'd also like to know how would i be able to set the parameter in 
+/proc/sys/dev/raid/speed_limit_max to be a large number automatically?  
+Where should I set this parameter?  Should I do it in /etc/sysctl.conf?  
+How would I go about doing it?
 
-I've removed sdb2 and readded it as spare. Of course that didn't help.
 
-Now ext3 reports failed IO, after reboot machine doesn't start (.mdadm:=
- /dev/
-md0 assembled from 1 drive and 2 spares - not enough to start the array=
-).=20
+Thanks very, very much in advance!
 
-I'm going to try ,,alternative method'' but I want to be sure of one th=
-ing -=20
-if I recreate array with the same parameters I wont loose any data on i=
-t?
-
-ps. I'm not getting your mails directly (no idea why) and read them via=
- google=20
-(that's why there is no references or in-reply-to in headers).
-
---=20
-Arkadiusz Mi=B6kiewicz    CS at FoE, Wroclaw University of Technology
-arekm@sse.pl   AM2-6BONE, 1024/3DB19BBD, arekm(at)ircnet, PLD/Linux
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
