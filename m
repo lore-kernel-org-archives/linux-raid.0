@@ -1,18 +1,34 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: Raid5 Construction Question
-Date: Fri, 20 Aug 2004 11:21:20 +1000
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: Raid5 Construction Question
+Date: Thu, 19 Aug 2004 21:56:00 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16677.21008.119662.799869@cse.unsw.edu.au>
-References: <200408191730.i7JHUd313659@watkins-home.com>
-	<4124E8F5.1010105@psc.edu>
+Message-ID: <200408200156.i7K1u0315123@watkins-home.com>
+References: <16677.21008.119662.799869@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from PAulN on Thursday August 19
-To: PAulN <pauln@psc.edu>
-Cc: Guy <bugzilla@watkins-home.com>, linux-raid@vger.kernel.org
+In-Reply-To: <16677.21008.119662.799869@cse.unsw.edu.au>
+To: 'Neil Brown' <neilb@cse.unsw.edu.au>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+Why does it check the parity and not just write the correct parity?
+Does it log the count that were wrong, or anything?
+
+And does your new --update=resync option do the same thing?
+
+Thanks,
+Guy
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Neil Brown
+Sent: Thursday, August 19, 2004 9:21 PM
+To: PAulN
+Cc: Guy; linux-raid@vger.kernel.org
+Subject: Re: Raid5 Construction Question
 
 On Thursday August 19, pauln@psc.edu wrote:
 > 
@@ -58,3 +74,8 @@ In either case it should stop the resync and start reconstruction
 which will be much faster.
 
 NeilBrown
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
