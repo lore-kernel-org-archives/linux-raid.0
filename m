@@ -1,56 +1,182 @@
-From: Nathan Hunsperger <linux-raid@hunsperger.com>
-Subject: Re: Bizarre RAID "failure"
-Date: Fri, 20 Feb 2004 00:33:27 -0800
+From: "Hans Otto Lunde" <ho@egmont-hs.dk>
+Subject: Software raid5 problem on 2.4.24 update from 2.4.18
+Date: Fri, 20 Feb 2004 13:58:50 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040220083327.GB5535@munchnet.com>
-References: <1077230692.28817.485.camel@s8n-1.thereinc.com>
+Message-ID: <20040220125850.1175.qmail@egmont-hs.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; format=flowed; charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1077230692.28817.485.camel@s8n-1.thereinc.com>
-To: Tom Maddox <tmaddox@thereinc.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Feb 19, 2004 at 02:44:52PM -0800, Tom Maddox wrote:
-<SNIP>
-> If the system goes down unexpectedly (e.g., because of a power failure),
-> the RAID array comes back up dirty and begins to rebuild itself, which
-> is odd enough on its own.  What's worse is that, whenever this happens,
-> the rebuild hangs at about 2.4%.  When it reaches that point, the array
-> becomes totally nonresponsive--I can't even query its status with mdadm
-> or any other tool, although I can use "cat /proc/mdstat" to see the
-> status of the rebuild.  Any command that attempts to access the RAID
-> drive hangs.
-<SNIP>
-> Has anyone seen this behavior before, and can you recommend a solution?
+I have a Redhat server (7.2) with a custom-compiled kernel (2.4.18)
+with all necessary modules compiled in running raid5 on /home (etx3)
+with 3 20 Gb IBM ide-disks. It's been running fine for years. 
 
-Tom,
+Problem: I would like to upgrade to the newest kernel for security
+reasons, but I get the following error when tring to boot kernel 2.4.24
+ -------------------------------------------------------------------------
+" The superblock could not be read or does not describe a correct ext2
+filesystem. If the device is valid and it really contains an ext2
+filesystem then the superblock is corrupt and you might try running
+e2fsck with an alternate superblock 
 
-I have had problems very similar to this before.  I was running 14 fibre
-channel disks on a QLA2100 HBA w/ various 2.4 kernels.  What I found
-was that after a while of heavy IO, all access to the disks stopped,
-and the rebuild would hang.  Additionally, any command that required
-access to any filesystem data that wasn't cached (on any filesystem)
-would hang.  By switching between the 3 or so available QLA drivers,
-I could affect the delta between reboot and stall.  I knew the hardware
-was fine, as it worked flawlessly under Solaris.  In the end, I had
-to upgrade the HBA to a QLA2200, at which time I had no more problems.
-Because the hardware works under different OSs, I have to believe that
-my problem was an incompatability between the QLA2100 and the drivers
-(even though they claimed to work for it).
+e2fsck -b 8193 <device> 
 
-I hope that at least gives you some possible insight.
+fsck.ext3: invalid argument while trying to open /dev/md0"
+ -------------------------------------------------------------------------- 
 
-- Nathan
 
-> 
-> Thanks,
-> 
-> Tom
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+But the superblock is ok.
+Have something changed in recent kernels?
+Should I create a new raid with 2.4.24 and put data back from backup or 
+what? 
+
+Forgive me if I'm being plain stupid. 
+
+Hans Otto Lunde
+Denmark 
+
+Here are some listings done when running 2.4.18 with active /dev/md0. 
+
+[root@ns root]# cat /etc/raidtab
+raiddev             /dev/md0
+raid-level                  5
+nr-raid-disks               3
+chunk-size                  64k
+persistent-superblock       1
+nr-spare-disks              0
+   device          /dev/hdc1
+   raid-disk     0
+   device          /dev/hde1
+   raid-disk     1
+   device          /dev/hdg1
+   raid-disk     2 
+
+ ------------------------------------------------------------- 
+
+mdadm --misc -E /dev/hdc
+/dev/hdc:
+         Magic : a92b4efc
+       Version : 00.90.00
+          UUID : 29f52295:6e5e40bc:f513abc1:c01af7c8
+ Creation Time : Mon Oct 30 03:29:09 2000
+    Raid Level : raid5
+   Device Size : 20066176 (19.13 GiB 20.54 GB)
+  Raid Devices : 3
+ Total Devices : 3
+Preferred Minor : 0 
+
+   Update Time : Wed Mar 13 16:45:20 2002
+         State : dirty, no-errors
+Active Devices : 3
+Working Devices : 3
+Failed Devices : 0
+ Spare Devices : 0
+      Checksum : 6e6dd84b - correct
+        Events : 0.147 
+
+        Layout : left-symmetric
+    Chunk Size : 128K 
+
+     Number   Major   Minor   RaidDevice State
+this     0      22        0        0      active sync   /dev/hdc
+  0     0      22        0        0      active sync   /dev/hdc
+  1     1      33        0        1      active sync   /dev/hde
+  2     2      34        0        2      active sync   /dev/hdg 
+
+ ------------------------------------------------------------- 
+
+mdadm --misc -E /dev/hde
+/dev/hde:
+         Magic : a92b4efc
+       Version : 00.90.00
+          UUID : 29f52295:6e5e40bc:f513abc1:c01af7c8
+ Creation Time : Mon Oct 30 03:29:09 2000
+    Raid Level : raid5
+   Device Size : 20066176 (19.13 GiB 20.54 GB)
+  Raid Devices : 3
+ Total Devices : 2
+Preferred Minor : 0 
+
+   Update Time : Fri Mar 22 13:41:30 2002
+         State : dirty, no-errors
+Active Devices : 1
+Working Devices : 1
+Failed Devices : 1
+ Spare Devices : 0
+      Checksum : 6e798a81 - correct
+        Events : 0.206 
+
+        Layout : left-symmetric
+    Chunk Size : 128K 
+
+     Number   Major   Minor   RaidDevice State
+this     1      33        0        1      active sync   /dev/hde
+  0     0       0        0        0      faulty removed
+  1     1      33        0        1      active sync   /dev/hde
+  2     2      34        0        2      faulty   /dev/hdg 
+
+ ------------------------------------------------------------- 
+
+mdadm --misc -E /dev/hdg
+/dev/hdg:
+         Magic : a92b4efc
+       Version : 00.90.00
+          UUID : 29f52295:6e5e40bc:f513abc1:c01af7c8
+ Creation Time : Mon Oct 30 03:29:09 2000
+    Raid Level : raid5
+   Device Size : 20066176 (19.13 GiB 20.54 GB)
+  Raid Devices : 3
+ Total Devices : 2
+Preferred Minor : 0 
+
+   Update Time : Fri Mar 22 12:37:16 2002
+         State : dirty, no-errors
+Active Devices : 2
+Working Devices : 2
+Failed Devices : 0
+ Spare Devices : 0
+      Checksum : 6e797b7b - correct
+        Events : 0.205 
+
+        Layout : left-symmetric
+    Chunk Size : 128K 
+
+     Number   Major   Minor   RaidDevice State
+this     2      34        0        2      active sync   /dev/hdg
+  0     0       0        0        0      faulty removed
+  1     1      33        0        1      active sync   /dev/hde
+  2     2      34        0        2      active sync   /dev/hdg 
+
+ ------------------------------------------------------------- 
+
+mdadm --misc -D /dev/md0
+/dev/md0:
+       Version : 00.90.00
+ Creation Time : Fri Mar 29 23:11:20 2002
+    Raid Level : raid5
+    Array Size : 40131200 (38.27 GiB 41.09 GB)
+   Device Size : 20065600 (19.13 GiB 20.54 GB)
+  Raid Devices : 3
+ Total Devices : 3
+Preferred Minor : 0
+   Persistence : Superblock is persistent 
+
+   Update Time : Thu Feb  5 00:10:11 2004
+         State : dirty, no-errors
+Active Devices : 3
+Working Devices : 3
+Failed Devices : 0
+ Spare Devices : 0 
+
+        Layout : left-asymmetric
+    Chunk Size : 64K 
+
+   Number   Major   Minor   RaidDevice State
+      0      22        1        0      active sync   /dev/hdc1
+      1      33        1        1      active sync   /dev/hde1
+      2      34        1        2      active sync   /dev/hdg1
+          UUID : c7330fe7:a2728c71:411b051f:e93f4d07 
+
