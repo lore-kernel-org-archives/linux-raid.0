@@ -1,57 +1,42 @@
-From: "Potthoff, Kay" <Kay.Potthoff@force.de>
-Subject: RE: Q: Priority of md_thread()
-Date: Thu, 23 May 2002 10:31:04 +0200
+From: lilha@legend.com.cn
+Subject: some question in SoftRaid
+Date: Thu, 23 May 2002 17:08:22 +0800
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <9CFB9DA5261CD611A29B00508B789048654303@ex-deu-munich02.force.de>
+Message-ID: <OF3F6026D2.567B40AF-ON48256BC2.00308831@legend.com.cn>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: =?iso-8859-1?Q?=27Jakob_=D8stergaard=27?= <jakob@unthought.net>
-Cc: "Linux RAID Mailing List (E-mail)" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-First of all, thanks for your reply! I feel relieved!
+hello,everyone.i am a freshman in linux raid.
 
-> 
-> Remember the -20 is only for the CPU scheduler, and the 
-> md_thread is not CPU
-> bound (unless you have ISA controllers, or *very* special 
-> disks).  What I am
-> trying to say is, I doubt much would change if the nice level 
-> was changed to
-> 20 instead...
+i want to know some limits about raid,i try to find it in Raid-Howto and
+Raid-FAQ,etc..
+but i cann't find it.
 
-Me too, I'm not sure what influences such a change would have. If I
-understood you correct, does that mean that setting the nice level to -20 is
-necessary to avoid trouble on multi-processor platforms? If so, can the
-problem be solved binding md_thread to one CPU during its livetime? I don't
-know if Linux is offering such a feature, but as I remember once Solaris
-supported that.
+Follow is my question:
 
-> 
-> I think your problem is that something (and probably as you 
-> state, md_thread)
-> is causing fluctuations in the ping replies, causing your 
-> other nodes to take
-> an action which they shouldn't take based on a ping 
-> fluctuation (that could
-> just as easily be caused by a packet loss or some other 
-> random event in the
-> whole computer-network-computer system).
-> 
+1.Raid 0,1,5 must install in differ disk?right?
+RAID-0 and RAID-1 need at lest 2 disk
+RAID-5 need at lest 3 disk,is it right?
+then is there any requrement about the partition Type(such as
+primary,logical or extend partition )?
 
-That is right. I have an High-Availability framework that realizes an
-active-standby model on two nodes. That means only one owns the RAID at a
-time the other node is standby and does not access the disks while it is
-standby. Only in case of a node failure of the active node the HA-framework
-decides to move the ownership of the RAID to the standby node. This
-detection mechanism is realized using keep alive pings through two seperate
-heartbeat ethernet connections exclusively between the nodes.
+2.can i setup raid0,1,5 in the partition which has different size?
+such as:
+/dev/hda1 500M
+/dev/hdc1 600M
+can i setup raid-0 or raid-1?i try it,but failed.
 
-> 
-> Please let me know if I completely misunderstood the situation   :)
+3.how can I remove raid from disk?
+such as,i have md0(RAID 0),it use /dev/hda2 and /dev/hdc2
+now i want to these partitions don't use raid,i want to release these
+partition
+then how can I do?
 
-Don't be anxious, you didn't ;-)
 
-Regards, Kay
+thanks a lot.
+
+Regards, echo
+
