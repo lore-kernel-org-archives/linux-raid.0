@@ -1,26 +1,36 @@
-From: Brad Campbell <brad@wasp.net.au>
-Subject: Re: "Rebuild" speed on a forced resync
-Date: Wed, 12 Jan 2005 08:31:40 +0400
-Message-ID: <41E4A82C.4030108@wasp.net.au>
-References: <200501120047.j0C0l1928164@www.watkins-home.com>
+From: Tim Moore <linux-raid@nsr500.net>
+Subject: Re: raid5 performance - 2.4.28
+Date: Tue, 11 Jan 2005 21:18:44 -0800
+Message-ID: <41E4B334.2020104@nsr500.net>
+References: <Pine.LNX.4.44.0501101600250.28809-100000@coffee.psychology.mcmaster.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200501120047.j0C0l1928164@www.watkins-home.com>
+In-Reply-To: <Pine.LNX.4.44.0501101600250.28809-100000@coffee.psychology.mcmaster.ca>
 Sender: linux-raid-owner@vger.kernel.org
-To: Guy <bugzilla@watkins-home.com>
-Cc: 'RAID Linux' <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Guy wrote:
-> On my system, iostat only reports since re-boot.  Not since last run of
-> iostat.  I use "sar -d" for current speeds.  In the past, sar has agreed
-> with /dev/mdstat.
+Mark Hahn wrote:
+...
+>>I'm also experimenting with this patch to see if the xor hardwire for 
+>>modern intel/AMD architectures is still valid.  With the old processor 
+>>p5_mmx was always picked and always within a few MB/s.  The new XP is all 
+>>over the map.
 > 
+> 
+> this choice (using pIII_sse even if there's a faster alternative)
+> is made because it doesn't dirty the cache.  are you suggesting that 
+> whole-system performance is better with p5_mmx, even though or *because*
+> the blocks are then in cache?  seems unlikley to me, since the checksum
+> is only used on writes or degraded mode.  having written blocks in cache
+> seems worthless, almost...
 
-run iostat 5 and it will report since last reboot on the first itteration, then from then on it only 
-reports since the last itteration and will update every 5 seconds. Same as vmstat does.
+I'm an experimentor, not a theorist.  I am running a series of experiments 
+to determine if, and by how much, the xor algorithm in 
+include/asm-<arch>/xor.h influences RAID5 write performance and reconstruction.
 
-Regards,
-Brad
+I'll post results.
+
+-- 
