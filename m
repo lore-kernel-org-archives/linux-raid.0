@@ -1,114 +1,50 @@
-From: raid@ddx.a2000.nu
+From: Adam Radford <aradford@3WARE.com>
 Subject: RE: 3ware 7500-12, bad write speed
-Date: Sat, 12 Oct 2002 00:03:26 +0200 (CEST)
+Date: Mon, 14 Oct 2002 11:08:33 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0210120001500.29225-100000@ddx.a2000.nu>
-References: <A1964EDB64C8094DA12D2271C04B812672C771@tabby>
+Message-ID: <A1964EDB64C8094DA12D2271C04B812672C77E@tabby>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <A1964EDB64C8094DA12D2271C04B812672C771@tabby>
-To: Adam Radford <aradford@3WARE.com>
+To: "'raid@ddx.a2000.nu'" <raid@ddx.a2000.nu>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Adam,
+You probably won't get any benefit of 3ware with software raid by
+changing max/min readahead, since md.c sets its own readahead.
 
-results after changing these settings
-read is faster, but write is still half sw raid speed
+For the writes, try it and find out.
 
+-Adam
 
-Version 1.02c       ------Sequential Output------ --Sequential Input-
---Random-
-                    -Per Chr- --Block-- -Rewrite- -Per Chr- --Block--
---Seeks--
-Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP
-/sec %CP
-storagenew.a2000 1G 18240  90 30134  22 12535   6 24634  98 82337  16
-468.0   1
-                    ------Sequential Create------ --------Random
-Create--------
-                    -Create-- --Read--- -Delete-- -Create-- --Read---
--Delete--
-              files  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP
-/sec %CP
-                 16  1926  95 +++++ +++ +++++ +++  1960  97 +++++ +++
-5627  99
-storagenew.a2000.nu,1G,18240,90,30134,22,12535,6,24634,98,82337,16,468.0,1,16,1926,95,+++++,+++,+++++,+++,1960,97,+++++,+++,5627,99
+-----Original Message-----
+From: raid@ddx.a2000.nu [mailto:raid@ddx.a2000.nu]
+Sent: Friday, October 11, 2002 3:05 PM
+To: Adam Radford
+Cc: linux-raid@vger.kernel.org
+Subject: RE: 3ware 7500-12, bad write speed
 
 
 On Thu, 10 Oct 2002, Adam Radford wrote:
 
-> Can you run the following commands, then re-run your 3ware benchmark and see
+> Can you run the following commands, then re-run your 3ware benchmark and
+see
 > if the results change?
 >
 > echo "60" > /proc/sys/vm/bdflush
 > echo "512" > /proc/sys/vm/max-readahead
 > echo "256" > /proc/sys/vm/min-readahead
->
-> -Adam
->
-> -----Original Message-----
-> From: raid@ddx.a2000.nu [mailto:raid@ddx.a2000.nu]
-> Sent: Thursday, October 10, 2002 2:18 PM
-> To: linux-raid@vger.kernel.org
-> Subject: Re: 3ware 7500-12, bad write speed
->
->
-> Ok did a benchmark between software raid en hw raid
-> controller 3ware 7850 (7500-8 now?) with 5 * WDC 120GB 7200RPM (2mb cache)
-> On xeon dual 2GHZ (controller in 64bits pci)
->
-> results :
->
-> ---raid5 5*120gb sw raid :
->
-> Version 1.02c       ------Sequential Output------ --Sequential Input-
-> --Random-
->                     -Per Chr- --Block-- -Rewrite- -Per Chr- --Block--
-> --Seeks--
-> Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP
-> /sec %CP
-> storagenew.a2000 1G 18850  99 78959  77 29982  29 24052  99 81547  22
-> 510.5   2
->                     ------Sequential Create------ --------Random
-> Create--------
->                     -Create-- --Read--- -Delete-- -Create-- --Read---
-> -Delete--
->               files  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP
-> /sec %CP
->                  16  1933  97 +++++ +++ +++++ +++  1986  98 +++++ +++
-> 5056  98
-> storagenew.a2000.nu,1G,18850,99,78959,77,29982,29,24052,99,81547,22,510.5,2,
-> 16,1933,97,+++++,+++,+++++,+++,1986,98,+++++,+++,5056,98
->
->
-> ---raid5 5*120gb hw raid :
->
-> Version 1.02c       ------Sequential Output------ --Sequential Input-
-> --Random-
->                     -Per Chr- --Block-- -Rewrite- -Per Chr- --Block--
-> --Seeks--
-> Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP
-> /sec %CP
-> storagenew.a2000 1G 17100  85 32250  23 12053   5 22660  91 49603  10
-> 466.9   1
->                     ------Sequential Create------ --------Random
-> Create--------
->                     -Create-- --Read--- -Delete-- -Create-- --Read---
-> -Delete--
->               files  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP
-> /sec %CP
->                  16  1872  93 +++++ +++ +++++ +++  1976  98 +++++ +++
-> 5677 100
-> storagenew.a2000.nu,1G,17100,85,32250,23,12053,5,22660,91,49603,10,466.9,1,1
-> 6,1872,93,+++++,+++,+++++,+++,1976,98,+++++,+++,5677,100
->
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+
+Do any of this settings (or any other settings in /proc/sys/vm) help sw
+raid ?
+
+also what are the best parameters for mke2fs (both sw and hw raid)
+(i now run mke2fs -j -m 0 /dev/sdb1 (or /dev/md0)
 
 
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
