@@ -1,25 +1,36 @@
-From: linas@austin.ibm.com
-Subject: Re: Root Drive Mirroring and LVM.
-Date: Wed, 4 Feb 2004 18:37:22 -0600
-Sender: linux-hotplug-devel-admin@lists.sourceforge.net
-Message-ID: <20040204183722.R27780@forte.austin.ibm.com>
-References: <20040204122317.K27780@forte.austin.ibm.com> <Pine.LNX.4.44.0402041726350.20232-100000@coffee.psychology.mcmaster.ca> <20040204164946.P27780@forte.austin.ibm.com> <16417.31540.78193.699721@notabene.cse.unsw.edu.au>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: Root Drive Mirroring and LVM.
+Date: Wed, 4 Feb 2004 20:31:01 -0500
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <200402050129.i151T2i30440@dns1.watkins-home.com>
+References: <20040204183722.R27780@forte.austin.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-hotplug-devel-admin@lists.sourceforge.net>
-Content-Disposition: inline
-In-Reply-To: <16417.31540.78193.699721@notabene.cse.unsw.edu.au>; from neilb@cse.unsw.edu.au on Thu, Feb 05, 2004 at 10:07:32AM +1100
-Errors-To: linux-hotplug-devel-admin@lists.sourceforge.net
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel>,
-	<mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Post: <mailto:linux-hotplug-devel@lists.sourceforge.net>
-List-Help: <mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel>,
-	<mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=subscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-hotplug-devel>
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: Mark Hahn <hahn@physics.mcmaster.ca>, linux-raid@vger.kernel.org, linuxppc64-dev@lists.linuxppc.org, linux-hotplug-devel@lists.sourceforge.net
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20040204183722.R27780@forte.austin.ibm.com>
+To: linas@austin.ibm.com, 'Neil Brown' <neilb@cse.unsw.edu.au>
+Cc: 'Mark Hahn' <hahn@physics.mcmaster.ca>, linux-raid@vger.kernel.org, linuxppc64-dev@lists.linuxppc.org, linux-hotplug-devel@lists.sourceforge.net
 List-Id: linux-raid.ids
+
+I upgraded my firmware on a 2940U2W.  That changed the order my SCSI buses
+were scanned.  This changed the boot order of my disks.  I had to disable
+the bios on the 2940U2W so it would not attempt to boot from the disks on
+that bus.
+
+My MB has 2 SCSI buses and I have 2 SCSI cards.
+
+So, anything that could have prevented this would be good.
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of linas@austin.ibm.com
+Sent: Wednesday, February 04, 2004 7:37 PM
+To: Neil Brown
+Cc: Mark Hahn; linux-raid@vger.kernel.org;
+linuxppc64-dev@lists.linuxppc.org; linux-hotplug-devel@lists.sourceforge.net
+Subject: Re: Root Drive Mirroring and LVM.
 
 On Thu, Feb 05, 2004 at 10:07:32AM +1100, Neil Brown wrote:
 > On Wednesday February 4, linas@austin.ibm.com wrote:
@@ -157,10 +168,8 @@ sysadmin issue on enterprise-class machines.
 cc.ing hot-plug because this is a cold-plug issue.
 
 Note you get similar crud for multiple ethernet cards ... 
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-
--------------------------------------------------------
-The SF.Net email is sponsored by EclipseCon 2004
-Premiere Conference on Open Tools Development and Integration
-See the breadth of Eclipse activity. February 3-5 in Anaheim, CA.
-http://www.eclipsecon.org/osdn
