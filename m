@@ -1,99 +1,117 @@
-From: Corey McGuire <coreyfro@coreyfro.com>
-Subject: Re: RAID 5 lost two disks
-Date: Fri, 5 Mar 2004 12:25:30 -0800
+From: Paul Clements <Paul.Clements@SteelEye.com>
+Subject: Re: [ANNOUNCE][PATCH 2.6] md: persistent (file-backed) bitmap and async
+ writes
+Date: Fri, 05 Mar 2004 17:05:30 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200403051225.30661.coreyfro@coreyfro.com>
-References: <200403050926.42047.coreyfro@coreyfro.com> <200403051005.20830.coreyfro@coreyfro.com>
+Message-ID: <4048F9AA.1BBD67F@SteelEye.com>
+References: <40198E85.29EBC8E0@SteelEye.com>
+		<16422.62911.755570.855200@notabene.cse.unsw.edu.au>
+		<4027E342.D02202F1@SteelEye.com>
+		<16424.8182.876520.280031@notabene.cse.unsw.edu.au>
+		<402D3A86.97CF894F@SteelEye.com> <16456.2775.641721.204171@notabene.cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200403051005.20830.coreyfro@coreyfro.com>
-Content-Disposition: inline
-To: linux-raid@vger.kernel.org, bugzilla@watkins-home.com
+To: Neil Brown <neilb@cse.unsw.edu.au>
+Cc: linux-raid@vger.kernel.org, ptb@it.uc3m.es, mingo@redhat.com, "james.bottomley" <james.bottomley@SteelEye.com>
 List-Id: linux-raid.ids
 
-That kinda worked!!!!!! I need to FSCK it, but i'm still afraid of fscking it 
-up...
+Neil Brown wrote:
+> On Friday February 13, Paul.Clements@SteelEye.com wrote:
 
-Does anyone in San Jose/San Francisco/Anywhere-in-frag'n-California have a 
-free TB I can use for a DD?  I will offer you my first child!
+> I finally had a chance to look at this properly -- or atleast at the
+> "bitmap" patch.
 
-If I need to sweeten the deal, I have LOTS to share... I have a TB of goodies 
-just looking to be backed up!
+Thanks for looking this over...
 
-On Friday 05 March 2004 10:14 am, you wrote:
-> I had a 2 disk failure; I will explain what I did.
-> 1 disk was bad; it affected all disks on that SCSI buss.
-> The RAID software got into a bad state, I think I needed to reboot, or
-> power cycle.
-> After the reboot, it said 2 disks were non fresh or whatever.
-> My array had 14 disks, 7 on the buss with the 2 non fresh disks.
-> I could not do a dd read test with much success on most of the disks, maybe
-> 2 or 3 seemed ok, but not if I did 2 dd's at the same time.
-> So I unplugged all disks but 1, tested the 1.  If success repeat with the
-> next disk.  I found 1 disk that did not work.  So I connected the 6 good
-> disks.  Did 6 dd's at the same time, all was well.
->
-> So, now I have 13 of 14 disks and 1 of the 13 is non fresh.  I issued this
-> command.
->
-> mdadm -A --force /dev/md2 --scan
-> For some reason my filesystem was corrupt.  I noticed that the spare disk
-> was in the list.  I knew the rebuild to the spare never finished.  It may
-> not have been synced at all since so many disks were not working.  So, I
-> knew the spare should not be part of the array, yet!
->
-> I had trouble stopping the array, so reboot.
->
-> This time I listed the disks excluding the spare and the failed disk.
->
-> mdadm -A --force /dev/md2 /dev/sdk1 /dev/sdd1 /dev/sdl1 /dev/sde1 /dev/sdm1
-> /dev/sdf1 /dev/sdn1 /dev/sdg1 /dev/sdh1 /dev/sdo1 /dev/sdi1 /dev/sdp1
-> /dev/sdj1
->
-> I did not include the missing disk, but I did include the non fresh disk.
-> Now my filesystem is fine.
->
-> I added the spare, it re-built, a good day!  I bet if this had happened to
-> a hardware RAID it could not have been saved.
->
-> I replaced the bad disk and added it as a spare.
-> That was about 1 month ago, everything is still fine.
->
-> You will need to install mdadm if you don't have it.  mdadm does not use
-> raidtab, it uses /etc/mdadm.conf
->
-> Man mdadm for details!
->
-> Good luck!
->
-> Guy
->
-> ===========================================================================
->= Tips:
->
-> This will give details of each disk.
-> mdadm -E /dev/hda3
-> repeat for hdc3, hde3, hdg3, hdi3, hdk3.
->
-> dd test...  To test a disk to determine if the surface is good.
-> This is just a read test!
-> dd if=/dev/hda of=/dev/null bs=64k
-> repeat for hdc, hde, hdg, hdi, hdk.
->
-> My mdadm.conf:
-> MAILADDR bugzilla@watkins-home.com
-> PROGRAM /root/bin/handle-mdadm-events
->
-> DEVICE /dev/sd[abcdefghijklmnopqrstuvwxyz][12]
->
-> ARRAY /dev/md0 level=raid1 num-devices=2
-> UUID=1fb2890c:2c9c47bf:db12e1e3:16cd7ffe
->
-> ARRAY /dev/md1 level=raid1 num-devices=2
-> UUID=8f183b62:ea93fe30:a842431c:4b93c7bb
->
-> ARRAY /dev/md2 level=raid5 num-devices=14
-> UUID=8357a389:8853c2d1:f160d155:6b4e1b99
+ 
+> Using "generic_file_write" is wrong.  It is a service routine for
+> filesystems to call.  Not an interface for clients of a filesystem to
+> call.
+
+Agreed. I'm pretty unfamiliar with some of these interfaces, so I was
+not sure which ones were the correct ones to use. After looking over the
+interfaces a bit more and with some guidance from a couple of experts, I
+have a much better idea about what to do...
+ 
+> You should look at loop.c.  It seems to be closer to correct.
+> You need to see the files as an "address_space" and use address_space
+> operations to access it.
+>   ->readpage to read a page
+
+I'm already using read_cache_page(). Didn't realize that it would
+actually extend the file for me automatically. Given that it can do
+that, the generic read and write stuff can just be thrown out
+completely.
+
+>   ->prepare_write / ->commit_write to write a page 
+
+Yes, these combined with read_cache_page are all I need...
+
+
+>  The more I think about it, the less I like extra fields being added
+>  to the superblock.
+
+OK, fair enough. I'll look at adding a header to the bitmap file and
+I'll axe the superblock fields and the new ioctl I created.
+
+
+>  I think the bitmap file should have a header with
+>    magic
+>    uuid (which must match raid array)
+>    events counter (which must also match)
+>    chunk size
+>    other configurables.
+
+...and maybe a version field and some padding to allow for future
+changes.
+
+This all means no more in-memory-only bitmaps, but I think that's not
+really a critical feature anyway.
+
+ 
+>  Then to assemble an array with a bitmap you create the bitmap file,
+>  and pass it down with a new ioctl.
+
+Right. Probably a lot simpler than the existing method.
+
+ 
+>  If the array has a persistent superblock, md check the header against
+>  the superblock, otherwise it just trusts you.
+
+Yep.
+
+ 
+>  You don't need any ioctls to get or set extra information about the
+>  array.  Just read the header off the bitmap file.
+
+Yep.
+
+ 
+>  I'm not 100% sure what R1BIO_NotUptodate is supposed to do, but I'm
+>  fairly sure it does it wrongly, and I don't like the name (as it
+>  seems similar to "R1BIO_Uptodate", but is clearly a lot different.
+
+Yes, looking back at this, there were a couple of errors in the way that
+bit was handled. I've corrected those and renamed the bit to
+R1BIO_Degraded. I think this is a better name as it's closer to what the
+bit really signifies. If the bit is set, it means:
+
+1) either we've got a degraded array (only 1 disk), or 
+2) we've gotten a write failure (and we're about to degrade the array)
+
+In either case, we will not clear the bitmap.
+
+ 
+> So, if you can produce a patch which *only* adds a persistent bitmap
+> in a file, uses it to record which blocks are not in-sync, and
+> optimises resync using the bitmap,  and which uses address_space
+> operations for fileio, then I will see if it is acceptable, and we can
+> then start adding bits like hot-repair and async-write etc on top of
+> that.
+
+I'll work on that and get it out as soon as I can...
+
+Thanks again,
+Paul
