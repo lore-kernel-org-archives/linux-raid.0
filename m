@@ -1,52 +1,35 @@
-From: "Calvin Webster" <cwebster@ec.rr.com>
-Subject: RE: Software RAID Stopped Working With Aurora Kernel
-Date: Wed, 29 May 2002 09:07:09 -0400
+From: Danilo Godec <danci@agenda.si>
+Subject: Re: mdadm mail option configuration
+Date: Wed, 29 May 2002 16:04:57 +0200 (CEST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <CPEAKNIMKMJOCFPEOBGAMEDNCFAA.cwebster@ec.rr.com>
-References: <15601.48418.82978.28645@notabene.cse.unsw.edu.au>
-Reply-To: <cwebster@ec.rr.com>
+Message-ID: <Pine.LNX.4.30.0205291602130.23219-100000@duplo.agenda.si>
+References: <15604.45423.781175.499314@notabene.cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <15601.48418.82978.28645@notabene.cse.unsw.edu.au>
+In-Reply-To: <15604.45423.781175.499314@notabene.cse.unsw.edu.au>
 To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+Cc: Jeff Hill <jhill@hronline.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Wed, 29 May 2002, Neil Brown wrote:
 
-
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org
-> [mailto:linux-raid-owner@vger.kernel.org]On Behalf Of Neil Brown
-> Sent: Monday, May 27, 2002 12:59 AM
-> To: cwebster@ec.rr.com
-> Cc: linux-raid
-> Subject: Re: Software RAID Stopped Working With Aurora Kernel
+> > Then, I just have an init script that runs:
+> >
+> > 	/sbin/mdadm -Fs --delay=600 &
 >
->
-> On Wednesday May 22, cwebster@ec.rr.com wrote:
-> >
-> > There were a few other minor inconsistencies that I thought you might be
-> > interested in between the output of "mdadm" and that of "lsraid" from
-> > the new raidtools.
-> >
-> >
-> > "mdadm --examine /dev/sda1" shows "State : dirty, no-errors". All other
-> > RAID drives show the same.
-> >
-> > "lsraid -D -a /dev/md0" shows "state		= good".
-> All other RAID devices
-> > show the same.
->
-> I have never looked at "lsraid".  My guess is that "good" is
-> equivalent to "no-errors" and that lsraid doesn't bother to report
-> "dirty".  This shouldn't relate to the filesystem superblock though...
->  still, a fsck every few months is a good idea.
+> Why 600 (10 minutes)?? I would suggest 60seconds for normal operation
+> and 1 second for testing.
 
-What made this observation noteworthy, however, was that it persisted even
-_after_ e2fsck was run on /dev/md0.
+I've tried this and maybe I'm missing something. I've set a 5 second
+interval for checking and I only got one mail - notifiyng me about
+a failure.
 
---Cal Webster
+Now I'm not sure whether mdadm is supposed to send mail on every check? Or
+is it sending mail just when a BAD thing happens?
+
+  D.
+
+PS: The PROGRAM was started more often (I think three times).
+
 
