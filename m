@@ -1,91 +1,86 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: No swap can be dangerous (was Re: swap on RAID (was Re: swp - Re: ext3 journal on software raid))
-Date: Thu, 6 Jan 2005 18:15:18 -0500
-Message-ID: <200501062316.j06NFP900855@www.watkins-home.com>
-References: <41DDC25C.2040404@h3c.com>
+From: Alvin Oga <aoga@ns.Linux-Consulting.com>
+Subject: confused Re: swap on RAID (was Re: swp - Re: ext3 journal on software raid)
+Date: Thu, 6 Jan 2005 17:31:48 -0800 (PST)
+Message-ID: <Pine.LNX.3.96.1050106171610.13564A-100000@Maggie.Linux-Consulting.com>
+References: <20050106093811.GB99565@caffreys.strugglers.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <41DDC25C.2040404@h3c.com>
+In-Reply-To: <20050106093811.GB99565@caffreys.strugglers.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Mike Hardy' <mhardy@h3c.com>, 'Jesper Juhl' <juhl-lkml@dif.dk>
-Cc: 'Andrew Walrond' <andrew@walrond.org>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Andy Smith <andy@lug.org.uk>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-If I MUST/SHOULD have swap space....
-Maybe I will create a RAM disk and use it for swap!  :)  :)  :)
-
-Guy
-
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Mike Hardy
-Sent: Thursday, January 06, 2005 5:58 PM
-To: Jesper Juhl
-Cc: Andrew Walrond; linux-raid@vger.kernel.org; linux-kernel@vger.kernel.org
-Subject: Re: No swap can be dangerous (was Re: swap on RAID (was Re: swp -
-Re: ext3 journal on software raid))
 
 
+On Thu, 6 Jan 2005, Andy Smith wrote:
 
-Jesper Juhl wrote:
-> On Thu, 6 Jan 2005, Andrew Walrond wrote:
+> On Wed, Jan 05, 2005 at 09:04:00PM -0800, Alvin Oga wrote:
+> > On Wed, 5 Jan 2005, Mike Hardy wrote:
+> > 
+> > > There are those that think if they size the machine correctly, they 
+> > > shouldn't need swap, and they're right.
+> > 
+> > bingo
 > 
+> Yet in an earlier reply you state that your machines have swap
+> configured.
 > 
->>On Thursday 06 January 2005 17:46, Mike Hardy wrote:
->>
->>>You are correct that I was getting at the zero swap argument - and I
->>>agree that it is vastly different from simply not expecting it. It is
->>>important to know that there is no inherent need for swap in the kernel
->>>though - it is simply used as more "memory" (albeit slower, and with
->>>some optimizations to work better with real memory) and if you don't
->>>need it, you don't need it.
->>>
->>
->>If I recollect a recent thread on LKML correctly, your 'no inherent need
-for 
->>swap' might be wrong.
->>
->>I think the gist was this: the kernel can sometimes needs to move bits of 
->>memory in order to free up dma-able ram, or lowmem. If I recall correctly,
+> There is a difference between these two statements:
 
->>the kernel can only do this move via swap, even if there is stacks of free
+since you're implying/saying i said those two statements 
+below ( a and b ):
 
->>(non-dmaable or highmem) memory.
->>
->>I distinctly remember the moral of the thread being "Always mount some
-swap, 
->>if you can"
->>
->>This might have changed though, or I might have got it completely wrong. -
+you are one totally confused dude ... sorry to say ...
 
->>I've cc'ed LKML incase somebody more knowledgeable can comment...
->>
+i never said either of those two statements ... that is yur words
+and you're understanding of some mixture of lots of comments
+
+	== grep "under normal load" sent-mail raid ==
+	( pick any set of words of your "quote" for grep )
+
+ 	- it's not even in anybody comments posted, since i save
+	all of my posts ( in sent-mail ) and not in anybody elses 
+	replies that is saved here
+	( thus my comment ... you're confused .. )
+
+please refrain from making (re)quotes .. i didn't say so that
+i don't have to reply
+
+please do try to use:  instead of "implying" i said something
+as in your "there is two different statments" in response to me
+which i didn't say either statments you're "quoting" incorrectly
+
+	"from what i gather, i understand that ... "
+	"i think this is ..."
+	.. blah blah ..
+
+>         a) I need some amount of swap configured but don't expect a
+>         significant swap usage under normal load.
 > 
-> 
-> http://kerneltrap.org/node/view/3202
-> 
+>         b) I expect my server to always be using a significant
+>         amount of swap.
 
-Interesting - I was familiar with the original swappiness thread 
-(http://kerneltrap.org/node/view/3000) but haven't seen anything since 
-then (I mainly follow via kernel-traffic - enjoyable, but nowhere near 
-real time). There's clearly been a bunch more discussion...
+i personally do not expect any system i'm involved with to use any
+swap and if it does, i'd be adding more memory, as soon as they
+complain its running too slow when xxx or yyy job is running
+	- they have choices of what they want done about it
 
-Not to rehash the performance arguments, but it appears from my read of 
-the kernel trap page referenced above that the primary argument for swap 
-is still the performance argument - I didn't see anything referencing 
-swap being necessary to move DMAable ram or lowmem. Was that posted 
-previously on linux-kernel but not on kerneltrap?
+and it is NOT the same thing ... "not using swap" vs not creating one
+	- i don't use swap and i rather the system not use it ...
+	but i do create an itty bitty 250MB of swap partition 
+	even if there's is 2GB of system memory
 
-I'm still under the impression that "to swap or not" is a 
-performance/policy/risk-management question, not a correctness question. 
-If I'm wrong, I'd definitely like to know...
+	- in other cases ... like embedded systems ...
 
--Mike
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+	it has no swap files .. no swap partitions adn things
+	works just fine
+
+	another example might be cell phones .. does those
+	puppies have swap space ?? ( probably not )
+
+c ya
+alvin
+ 
 
