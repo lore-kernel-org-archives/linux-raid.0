@@ -1,9 +1,8 @@
-From: "Donghui Wen" <dhwen@protegonetworks.com>
-Subject: A simple question
-Date: Wed, 16 Jul 2003 11:11:32 -0700
+From: "Mikael Chambon" <raid-ml@cronos.org>
+Subject: hardware raid
+Date: Wed, 16 Jul 2003 08:43:08 -1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <000f01c34bc5$afc68790$df01010a@moon>
-References: <Pine.LNX.4.43.0307121548180.6220-100000@unicorn.drogon.net>
+Message-ID: <003c01c34bca$1d037a30$01e703ca@magnus>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="iso-8859-1"
@@ -12,25 +11,31 @@ Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
-   I have a simple question:
-    Can software raid survive one disk hot unplug when the raid is under
-heavy load?
+Hi All,
 
-    During my test (3ware 7500-8 jbod mode, software raid 5), I ran bonnie++
-on the
-top of md and then unplugged one disk. I saw a lot of scsi disk errors from
-dmesg, and then
-scsi layer marked this disk offline. Finnally md detected disk failure and
-mark this disk
-as faulty. But bonnie++ still hangs there with state 'D' which could not be
-killed by -9.
+As I wrote in my previous emails, I am working
+on a root raid1 array with two IDE HD.
+I would like to mirror the entire system to make it able
+to boot even if one of the disk crash.
 
-Thanks!
+It's not working yet but I am still trying.
 
-Donghui Wen
+Anyway I am also considering bying an hardware
+raid controller like the 3ware 7000-2 or 7506-4LP 
+(seem to be what I need).
+
+http://www.3ware.com/products/parallel_ata.asp
 
 
+Does someone has any experiences with these cards
+and Linux, it is well supported, stable ?
+
+Is it hard to implement or configure (kernel patch, etc ..) ?
 
 
+Thanks a lot guys and have a nice day.
+
+
+--
+Mikael Chambon
 
