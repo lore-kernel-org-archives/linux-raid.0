@@ -1,40 +1,30 @@
-From: Mads Peter Bach <mpb@hum.auc.dk>
-Subject: Re: Disks keep disapearing
-Date: Sat, 10 May 2003 19:01:38 +0200
+From: Mikael Johansson <mpjohans@pcu.helsinki.fi>
+Subject: fsck on raidvolumes at boot
+Date: Sat, 10 May 2003 20:18:30 +0300 (EEST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3EBD3072.4090205@hum.auc.dk>
-References: <Pine.GSO.4.30.0305091654350.23888-100000@multivac.sdsc.edu> <3EBD2D2C.1050900@visiarc.com>
+Message-ID: <Pine.OSF.4.51.0305102009550.135362@soul.helsinki.fi>
+References: <871y0ejtdf.fsf@jumper.lonesom.pp.fi>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3EBD2D2C.1050900@visiarc.com>
-To: =?ISO-8859-1?Q?Johan_Sch=F6n?= <johan.schon@visiarc.com>
-Cc: linux-raid@vger.kernel.org
+In-Reply-To: <871y0ejtdf.fsf@jumper.lonesom.pp.fi>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Johan Sch=F6n wrote:
 
-> The disk itself doesn't appear to know about any failures
-> (using smartctl), and it works again when hotadded to the raidset. I'=
-ve
-> also had a multiple drive "failure" twice, both times with two drives
-> using the same IDE channel.
+Hello All!
 
-Using more than one drive on an IDE channel is considered risky by many=
-=2E If a=20
-drive fails, it's likely to bring down the entire channel.
-In any case, don't put more than one drive of an array on the same chan=
-nel.
+When making an unclean shutdown/reset of the system, Linux normally checks
+the disk partitions at boot with fsck (e2fsck). For raided mounts this
+does not happen however, instead only a warning message of "unclean
+partition mounted" (or similar) appears, as fstab is read and, say,
+/dev/md0 gets mounted to, say, /wrk.
 
---=20
-Mads Peter Bach
-Systemadministrator,  Det Humanistiske Fakultet, Aalborg Universitet
-Kroghstr=E6de 3 - 5.111, DK-9220 Aalborg =D8st - (+45) 96358062
-# whois MPB1-DK@whois.dk-hostmaster.dk
+Is there a way to make Linux automatically check the /dev/md*'s before
+mounting them if they are dirty?
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I'm using Debian 3.0 and raidtools2.
+
+Have a nice weekend,
+    Mikael J.
+    http://www.helsinki.fi/~mpjohans/
