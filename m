@@ -1,29 +1,27 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
+From: Daniel Pittman <daniel@rimspace.net>
 Subject: Re: Md cache?
-Date: Thu, 3 Jun 2004 12:10:45 +1000
+Date: Thu, 03 Jun 2004 13:03:45 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16574.34981.255417.263054@cse.unsw.edu.au>
+Message-ID: <871xkxz6jy.fsf@enki.rimspace.net>
 References: <8125762.1086227309322.JavaMail.root@wamui05.slb.atl.earthlink.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Brian Pontius on Wednesday June 2
-To: Brian Pontius <linuxboy123@mindspring.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday June 2, linuxboy123@mindspring.com wrote:
-> to all,
-> 
-> Is anyone aware of a way to cause the md devices to use some system memory as a write cache? (maybe through mdadm?).  I have looked everywhere and cannot seem to find anything about such a feature.
-> 
-> If not, anyone  know if this is a possibility for the future, Neil?
+On 3 Jun 2004, Brian Pontius wrote:
+> Is anyone aware of a way to cause the md devices to use some system
+> memory as a write cache? (maybe through mdadm?). I have looked
+> everywhere and cannot seem to find anything about such a feature.
 
-What is it exactly that you want.
+Linux uses system memory to cache writes; adding a second layer of
+caching is really quite unlikely to add anything except a second point
+of failure, unless your system memory is battery backed...
 
-All device IO is cached in memory before being written to the device.
-The only real value of a cache with a RAID array is if it we a
-non-volatile cache.  Is that what you were thinking of.
+   Daniel
+-- 
+Gratitude is one of the least articulate of the emotions, 
+especially when it is deep.
+        -- Felix Frankfurter
 
-NeilBrown
