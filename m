@@ -1,41 +1,42 @@
-From: Stephan van Hienen <raid@a2000.nu>
-Subject: WD1800XX / WD2000XX raid
-Date: Sat, 5 Apr 2003 13:36:56 +0200 (CEST)
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: MD device id change
+Date: Sun, 6 Apr 2003 15:20:10 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.53.0304051335110.2985@ddx.a2000.nu>
+Message-ID: <16015.47370.218258.430178@notabene.cse.unsw.edu.au>
+References: <Pine.LNX.4.33.0304031754490.5184-100000@worf.desy.de>
+	<16012.45741.447317.341813@notabene.cse.unsw.edu.au>
+	<019301c2faac$fcde9640$f6de11cc@black>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: message from Mike Black on Friday April 4
+To: Mike Black <mblack@csi-inc.com>
+Cc: raid-list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-today found this article :
+On Friday April 4, mblack@csi-inc.com wrote:
+> Here's one I've run into Neil -- Put an already-running md on another system with the same minor #.
+> 
+> Can you start the new md and not have to stop the old one?
+> 
+> i.e.
+> /dev/md2 on system#1
+> /dev/md2 on system#2
+> move /dev/md2 chassis to system#2
+> 
+> Would this work?
+> mdadm --assemble --uuid=MOVED_MD2 --super-minor=2 /dev/md3
 
-http://wdc.custhelp.com/cgi-bin/wdc.cfg/php/enduser/std_adp.php?p_admin=
-=3D1&p_faqid=3D913&p_created=3D1047068027
-(http://support.wdc.com/raid.asp)
+You would need to tell mdadm that devices to look at, possibly
+using --config=partitions, but that would work to assemble the array.
+> 
+> And would the array now stay as md3?
 
-Problem:
-WD EIDE 180GB and 200GB drives are dropped from an IDE RAID configurati=
-on
-after several days or weeks of operation.
+Not in 2.4 (though in 2.5 it would).
 
-Solution:
-The problem is a result of a feature that reduces idle acoustic noise i=
-n
-desktop drives. This feature can cause a timeout in a IDE RAID
-environment. To disable the feature, you can run a simple Western Digit=
-al
-utility to turn off a single bit in the drive=92s run-time configuratio=
-n.
-Disabling of this feature will NOT impact normal system operations in a
-RAID environment. No firmware or hardware changes are required.
+You need --update=super-minor for that to happen.  Ofcourse if you use
+mdadm for assembling arrays and always use UUID, then you don't need
+to convern yourself with the minor number in the superblock at all.
 
-
-can this 'single bit' also be set with an linux util ? (like hdparm?)
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+NeilBrown
