@@ -1,27 +1,62 @@
-From: Martin Hermanowski <martin@martin.mh57.net>
-Subject: Re: raid1 over lvm and nbd => recovery thread fails
-Date: Tue, 9 Jul 2002 19:25:55 +0200
+From: Mario Vodisek <vodisek@upb.de>
+Subject: Setting a buffer_heads 'real_device'
+Date: Wed, 10 Jul 2002 13:25:07 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20020709172555.GJ15958@martin.mh57.net>
-References: <20020705105215.GK26595@martin.mh57.net> <Pine.LNX.4.10.10207071427540.7165-100000@clements.sc.steeleye.com> <20020707210745.GF15958@martin.mh57.net>
+Message-ID: <3D2C1993.ABA5EEA0@upb.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+ boundary="------------9CAF818A292EB84D2B3564EF"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20020707210745.GF15958@martin.mh57.net>
-To: Paul Clements <clemep@steeleye.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, Jul 07, 2002 at 11:07:45PM +0200, Martin Hermanowski wrote:
-[...]
->> I can give you some patches that will most likely fix these problems, if
->> you are willing/able to patch your kernel. Or, as I said, you can wait until
->> 2.4.19 is available.
-> 
-> I surely would like to try this.
-> 
-> Thanks for your explanation.
-> I will post the results with your patches/with 2.4.19 when available.
+Dies ist eine mehrteilige Nachricht im MIME-Format.
+--------------9CAF818A292EB84D2B3564EF
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 
-I installed the patch for md, and now it seems to work stable. Thanks!
+Hi,
+
+I'm writing a virtual disk driver consisting of serveral real disks.
+Hence I've to map read/write requests for my virtual device to
+underlying
+real devices, like md does so for RAID-Arrays.
+
+So my question is how a virtual device driver (like 'md') manages the
+read/write
+request associated with a virtual (md-) device to get data from a
+specific real
+device within a 'block_read/block/write()' invokation !
+I know that the buffer head-structure contains an entry for a virtual
+and a real
+device, but i don't know when and in which proper way to set these
+components.
+
+Somebody to help me ??
+
+Mario Vodisek
+--------------9CAF818A292EB84D2B3564EF
+Content-Type: text/x-vcard; charset=us-ascii;
+ name="vodisek.vcf"
+Content-Transfer-Encoding: 7bit
+Content-Description: Visitenkarte für Mario Vodisek
+Content-Disposition: attachment;
+ filename="vodisek.vcf"
+
+begin:vcard 
+n:Vodisek;Mario
+tel;fax:---
+tel;home:0160/632 96 92
+tel;work:---
+x-mozilla-html:FALSE
+org:University of Paderborn;AG Meyer auf der Heide - Theoretical computing -
+version:2.1
+email;internet:vodisek@upb.de
+title:research assistant
+adr;quoted-printable:;;Liebfrauenweg 9=0D=0A	;33334 Gütersloh;;;Germany
+x-mozilla-cpt:;-9984
+fn:Mario Vodisek
+end:vcard
+
+--------------9CAF818A292EB84D2B3564EF--
+
