@@ -1,81 +1,42 @@
-From: "Effrem Norwood" <enorwood@effrem.com>
-Subject: RE: RAID backup
-Date: Thu, 3 Oct 2002 16:59:57 -0700
-Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <CFEAJJEGMGECBCJFLGDBCENHCEAA.enorwood@effrem.com>
-References: <3D9CA1C7.2000405@cfht.hawaii.edu>
+From: Lars Marowsky-Bree <lmb@suse.de>
+Subject: Re: RAID backup
+Date: Fri, 4 Oct 2002 10:00:51 +0200
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20021004080051.GB10028@marowsky-bree.de>
+References: <3D9CA1C7.2000405@cfht.hawaii.edu> <CFEAJJEGMGECBCJFLGDBCENHCEAA.enorwood@effrem.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3D9CA1C7.2000405@cfht.hawaii.edu>
-To: Kanoalani Withington <kanoa@cfht.hawaii.edu>, Roy Sigurd Karlsbakk <roy@karlsbakk.net>
-Cc: jbradford@dial.pipex.com, jakob@unthought.net, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CFEAJJEGMGECBCJFLGDBCENHCEAA.enorwood@effrem.com>
+To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> I have to pipe in here and agree that the idea of using a disk array
-> alone for backups is not a sound idea. Sure, backing up 2Tb to an old
-> exabyte drive isn't going to work, if you really have that much data you
-> need some more modern equipment.
+On 2002-10-03T16:59:57,
+   Effrem Norwood <enorwood@effrem.com> said:
 
-I've worked in the storage industry for years and surprisingly more and more
-organizations *are* moving to disk only backup strategies with a lot of good
-reasons for doing so. Large companies are replacing 100% of their tape
-infrastructure with multiple large yet inexpensive disk array's. Disk backup
-infrastructure prices are now equal to or lower than tape backup
-infrastructure prices on initial acquisition, and significantly lower if you
-factor in ROI and TCO - not to mention huge backup/restore time savings and
-potential disaster recovery possibilities.
+> With multiple inexpensive large disk arrays from companies like Netwo=
+rk
+> Appliance (NearStor) and Exstor (T-2120) organizations are asynchrono=
+usly
+> mirroring their data to geographically distant locations to prevent s=
+ingle
+> points of failure with their arrays.
 
-> Essentially I believe the idea of a redundant array sounds safer than it
-> really is in practice, especially when dealing with very large arrays
-> and with level 5 arrays. The reasons why this is so are manifold,
-> suffice to say that a few years of actually using such devices shows
-> that they have much more potential for catastrophic failure and latent
-> failure (you don't know it's broken until you go to use it and find out
-> it's broken) than a well designed tape archive or backup.
+Let's just point out that Linux can do that too with drbd.
 
-With multiple inexpensive large disk arrays from companies like Network
-Appliance (NearStor) and Exstor (T-2120) organizations are asynchronously
-mirroring their data to geographically distant locations to prevent single
-points of failure with their arrays. As you suggest, a single array can fail
-and lose data. From a tape perspective, a tape in a backup set can fail as
-well-potentially presenting the same catastrophic situation of not being
-able to recover. Just as organizations have multiple sets of tapes on a
-rotation schedule, organizations now often have multiple large near-line
-storage arrays with a data rotation schedule.
-
-> Not that disk to disk backups are a completely bad idea. In my
-> experience a combination works best. For example, automatic backups to
-> reserved disks or disk arrays on remote systems every night, but once a
-> week tape snapshots of that data. It's a lot of tapes but over time it
-> will prove to be worthwhile. If the data volume is too high, simple
-> backup scripts that write every file only once (essentially an archive)
-> to tape to make it more practical.
-
-Classical Hierarchical Storage Management (HSM) as you describe here is
-being undermined by the fact that these large IDE based disk arrays are
-equally or less expensive than tapes. In addition, HSM software costs
-something (even if you write it yourself) on top of the tape infrastructure.
-One customer of ours was quoted 40K per TB of HSM *software* alone. Well
-designed tape replacement disk systems can cost 25K per TB or less and have
-many advantages over tape. Online data, faster data access, and disaster
-recovery just to name a few. Further, backup software vendors like Veritas
-and Legato now recognize disks as a viable tape replacement and are
-incorporating that fact into their software.
-
-If tape is absolutely required, the infrastructure required per TB of taped
-data can be significantly smaller and the backup window can be massively
-extended - from hours to weeks with a large near-line disk approach. The
-tape/library cost component in this way is significantly reduced.
-
-For purposes of full disclosure, I work at Exstor and we provide tape
-replacement solutions as well as high performance NAS solutions for the
-enterprise.
-
-Regards,
-
-Eff Norwood
+(I wonder if that will stay a separate module or whether it'll become a=
+ EVMS
+plugin ;-)
 
 
+Sincerely,
+    Lars Marowsky-Br=E9e <lmb@suse.de>
+
+--=20
+Principal Squirrel
+Research and Development, SuSE Linux AG
+=20
+``Immortality is an adequate definition of high availability for me.''
+	--- Gregory F. Pfister
