@@ -1,25 +1,46 @@
-From: Tzung Liu <tzungl@yahoo.com>
-Subject: Cache block size in RAID5 stripe cache
-Date: Wed, 19 Jan 2005 17:07:31 -0800 (PST)
-Message-ID: <20050120010732.62053.qmail@web80507.mail.yahoo.com>
+From: "Jennifer" <xbfxyqs@verizon.net>
+Subject: Re: Re: Need assistance
+Date: Thu, 20 Jan 2005 02:10:24 -0600
+Message-ID: <000301c4fec7$9539b2b0$486f6483__41430.6901897818$1106213788$gmane$org@YRXG>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="iso-8859-2";
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Casey Linux-kernel-owner <linux-kernel-owner@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Currently (in 2.6.x), the RAID5 stripe cache has a cache
-unit size of PAGE_SIZE (4KB for x86, as STRIPE_SIZE is
-defined in md/raid5.c).
+Order Number: 940029
+Order Date:   Thu, 20 Jan 2005 14:10:02 +0600
 
-For 2.4.x, due to buffer_head restriction of one vector per
-header, this is a reasonable restriction.  For 2.6.x with
-bio capable of multiple vectors, we might consider
-increasing STRIPE_SIZE for performance reasons.
+We appreciate your patience in the processing of your
+m o rrtgage   request.
 
-Is there any work or patch available in this area?
+We have prepared 3.4% deal for you at this time. Verify
+your information so we can proceed as planned.
 
-Thanks.
+http://www.xpojga.com/
 
-Tzung.
+Thank you.
+
+Sincerely,
+Jennifer
+CustomerDepartment
+
+
+
+
+
+
+
+
+
+
+
+
+spoonful the at knifelike
+we our a anne sandy appellant
+a emulate and obverse bath purr
+via Vsofa elephantine beatific avertive
+medial the englander, cushing
+
