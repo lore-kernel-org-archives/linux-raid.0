@@ -1,39 +1,36 @@
 From: Gordon Henderson <gordon@drogon.net>
-Subject: Re: Software RAID-1: step-by-step help needed...
-Date: Tue, 10 Aug 2004 09:53:59 +0100 (BST)
+Subject: Re: Force parity resync on raid5?
+Date: Tue, 10 Aug 2004 10:04:23 +0100 (BST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.56.0408100948230.1665@lion.drogon.net>
-References: <41188A95.5000608@provincia.verbania.it>
+Message-ID: <Pine.LNX.4.56.0408100958470.1665@lion.drogon.net>
+References: <4118046A.1070002@corp.texas.net>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <41188A95.5000608@provincia.verbania.it>
-To: Boniforti Flavio <boniforti@provincia.verbania.it>
+In-Reply-To: <4118046A.1070002@corp.texas.net>
+To: Philip Molter <philip@corp.texas.net>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 10 Aug 2004, Boniforti Flavio wrote:
+On Mon, 9 Aug 2004, Philip Molter wrote:
 
-> Hello all!
-> I'm a pure newbie in facts of RAID on Linux, therefore I'd like to get
-> some help and some explanations about RAID-1 (Software-RAID) onto a
-> Linux server I have to configure.
-> How should I proceed to get my RAID-1 set up and working?
-> Are there known issues about the booting process on RAID?
-> Do I have to "mirror" each single partition or is it possible to
-> "mirror" the whole disk?
+> How do I force a parity resync on a raid5 array?  Under 2.4, I would do
+> this by hard cycling the box and when it came back up, it would
+> automatically resync the array.  Under 2.6, this appears to have gone away.
 
-You can do either. Personally, I create identical partitions on each drive
-and then mirror them.
+I don't know about 2.6, (still living with 2.4) but can't you simply do:
 
-Probably the easiest way to get started is to pick a distribution that
-lets you build the disks as a mirror from install time - Eg. Red Hat (or
-whatever it's called these days) If you have an existing server with one
-disk and want to add a 2nd as a mirror, thats not too difficult. you need
-to read the stuff in the Software RADI HowTo which has the information on
-how to do it all.
+  raidhotremove /dev/mdX /dev/hdYZ
 
-Booting RAID1 with Lilo is easy, I presume you can do it too with grub,
-but I don't use grub.
+followed by
 
-Gordon
+  raidhotadd /dev/mdX /dev/hdYZ
+
+or /dev/sdYZ if SCSI disks...
+
+However, picking the right disk to remove might be tricky... And if you
+were at all unsure about data on the disks, maybe rebooting and doing a
+hard fsck of the partition(s) in maintenance mode might be a good thing
+too...
+
+Good luck!
