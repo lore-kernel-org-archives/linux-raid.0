@@ -1,60 +1,72 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: [PATCH] md - 2 of 10 - Don't allow raid5 rebuild to swamp raid5
- stripe cache
-Date: Thu, 15 Jan 2004 17:55:15 -0800
+From: Lars Marowsky-Bree <lmb@suse.de>
+Subject: Re: Proposed Enhancements to MD
+Date: Fri, 16 Jan 2004 10:29:29 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040115175515.0f064aa7.akpm@osdl.org>
-References: <E1AhIe9-0002U2-00@notabene>
-	<20040115173317.3a356afc.akpm@osdl.org>
-	<16391.16842.560527.897653@notabene.cse.unsw.edu.au>
+Message-ID: <20040116092929.GG22417@marowsky-bree.de>
+References: <20040113102433.GK8418@marowsky-bree.de> <400432FC.6050209@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <16391.16842.560527.897653@notabene.cse.unsw.edu.au>
-To: Neil Brown <neilb@cse.unsw.edu.au>
+Content-Disposition: inline
+In-Reply-To: <400432FC.6050209@adaptec.com>
+To: Scott Long <scott_long@adaptec.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown <neilb@cse.unsw.edu.au> wrote:
->
-> On Thursday January 15, akpm@osdl.org wrote:
-> > NeilBrown <neilb@cse.unsw.edu.au> wrote:
-> > >
-> > > +	if (sh == NULL) {
-> > > +		sh = get_active_stripe(conf, sector_nr, pd_idx, 0);
-> > > +		/* make sure we don't swamp the stripe cache if someone else
-> > > +		 * is trying to get access 
-> > > +		 */
-> > > +		yield();
-> > > +	}
-> > 
-> > In 2.6, yield() has utterly awful behaviour when there are a lot of other
-> > runnable tasks.
-> > 
-> > Have you tested this when the kernel is busy doing other stuff, like a
-> > `make -j2' or a few busywait loops?  You might find that rebuild simply
-> > stops.
-> > 
-> 
-> No I haven't, and I'm not near my test box today, so it would be
-> awkward. 
+On 2004-01-13T11:03:40,
+   Scott Long <scott_long@adaptec.com> said:
 
-OK.  We had a yeild like that in ext3 for a while.  The CPU scheduler
-changes killed it stone dead.  I ended up just making it a schedule(),
-which is too weak and probably broke the transaction batching speedup :(
+> The biggest issue here is that a real fdisk table needs to exist on t=
+he
+> array in order for our BIOS to recognise it as a boot device.
 
-> No other patches are dependant on that one so you can just leave it
-> out if you like.
+Hm, ok.
 
-OK.  It'll take a few days after Linus gets back from .au to get all this
-stuff flushed out anyway.   I'll probably have >700 patches by then.
+> >Yes. Is anything missing from the 2.6 & hotplug & udev solution whic=
+h
+> >you require?
+>=20
+> I'll admit that I'm not as familiar with 2.6 as I should be.  Does a
+> disk arrival mechanism already exist?
 
-> I just want to wait until every other runnable process has had a
-> turn.  Maybe cond_resched() would be better??  I try some things out.
+Yes. hotplug already will get you events when new disks arrive.
 
-There isn't an equivalent, really.  We could add one to the CPU scheduler.
+> >In particular, I'm wondering whether partitions using the new activi=
+ty
+> >logging features of md will still be bootable, or whether the boot
+> >partitions need to be 'md classic'.
+>=20
+> Our products will only recognise and boot off of DDF arrays.  They ha=
+ve
+> no concept of classic MD metadata.
 
-With HZ=1000 you'll probably find that a brief schedule_timeout() is OK. 
-blk_congestion_wait() probably does the wrong thing too.
+OK. The question was meant differently. In 2.6, we have the ability to
+log resyncs and journal updates (see the discussions on linux-raid). I
+was just wondering whether DDF would allow this, or whether it is a
+simple minded "this disk good, that disk bad", and thus the boot drive
+might not be able to use the new md features with the DDF metadata.
 
+> This work was originally started on 2.4.  With the closing of 2.4 and
+> release of 2.6, we are porting are work forward.  It would be nice to
+> integrate the changes into 2.4 also, but we recognise the need for 2.=
+4
+> to remain as stable as possible.
+
+2.4 is dead and shouldn't see new features.
+
+
+Sincerely,
+    Lars Marowsky-Br=E9e <lmb@suse.de>
+
+--=20
+High Availability & Clustering	      \ ever tried. ever failed. no matt=
+er.
+SUSE Labs			      | try again. fail again. fail better.
+Research & Development, SUSE LINUX AG \ 	-- Samuel Beckett
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
