@@ -1,7 +1,7 @@
 From: NeilBrown <neilb@cse.unsw.edu.au>
-Subject: [PATCH md 9 of 9] Optimise reconstruction when re-adding a recently failed drive.
+Subject: [PATCH md 6 of 9] Improve the interface to sync_request
 Date: Fri, 18 Feb 2005 11:40:44 +1100
-Message-ID: <E1D1wCK-0000Xe-Qm@notabene.cse.unsw.edu.au>
+Message-ID: <E1D1wCK-0000XS-Hm@notabene.cse.unsw.edu.au>
 References: <20050218111131.790.patches@notabene>
 Sender: linux-raid-owner@vger.kernel.org
 To: Andrew Morton <akpm@osdl.org>
@@ -9,207 +9,296 @@ Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-When an array is degraded, bit in the intent-bitmap are
-never cleared. So if a recently failed drive is re-added, we only need
-to reconstruct the block that are still reflected in the
-bitmap.
-This patch adds support for this re-adding.
+1/ change the return value (which is number-of-sectors synced)
+ from 'int' to 'sector_t'.
+ The number of sectors is usually easily small enough to fit 
+ in an int, but if resync needs to abort, it may want to return
+ the total number of remaining sectors, which could be large.
+ Also errors cannot be returned as negative numbers now, so use
+ 0 instead
+2/ Add a 'skipped' return parameter to allow the array to report
+ that it skipped the sectors.  This allows md to take this into account
+ in the speed calculations.
+ Currently there is no important skipping, but the bitmap-based-resync
+ that is coming will use this.
 
 Signed-off-by: Neil Brown <neilb@cse.unsw.edu.au>
 
 ### Diffstat output
- ./drivers/md/md.c           |   71 ++++++++++++++++++++++++++++++++++----------
- ./drivers/md/raid1.c        |    7 +++-
- ./include/linux/raid/md_k.h |    4 ++
- 3 files changed, 65 insertions(+), 17 deletions(-)
+ ./drivers/md/md.c           |   39 ++++++++++++++++++++++++---------------
+ ./drivers/md/raid1.c        |    8 ++++----
+ ./drivers/md/raid10.c       |   19 ++++++++++++-------
+ ./drivers/md/raid5.c        |    6 +++---
+ ./drivers/md/raid6main.c    |    6 +++---
+ ./include/linux/raid/md_k.h |    2 +-
+ 6 files changed, 47 insertions(+), 33 deletions(-)
 
 diff ./drivers/md/md.c~current~ ./drivers/md/md.c
---- ./drivers/md/md.c~current~	2005-02-18 11:11:26.000000000 +1100
+--- ./drivers/md/md.c~current~	2005-02-18 11:11:25.000000000 +1100
 +++ ./drivers/md/md.c	2005-02-18 11:11:26.000000000 +1100
-@@ -620,6 +620,8 @@ static int super_90_validate(mddev_t *md
- 	mdp_disk_t *desc;
- 	mdp_super_t *sb = (mdp_super_t *)page_address(rdev->sb_page);
+@@ -3361,12 +3361,13 @@ static void md_do_sync(mddev_t *mddev)
+ 	mddev_t *mddev2;
+ 	unsigned int currspeed = 0,
+ 		 window;
+-	sector_t max_sectors,j;
++	sector_t max_sectors,j, io_sectors;
+ 	unsigned long mark[SYNC_MARKS];
+ 	sector_t mark_cnt[SYNC_MARKS];
+ 	int last_mark,m;
+ 	struct list_head *tmp;
+ 	sector_t last_check;
++	int skipped = 0;
  
-+	rdev->raid_disk = -1;
-+	rdev->in_sync = 0;
- 	if (mddev->raid_disks == 0) {
- 		mddev->major_version = 0;
- 		mddev->minor_version = sb->minor_version;
-@@ -650,16 +652,24 @@ static int super_90_validate(mddev_t *md
- 		memcpy(mddev->uuid+12,&sb->set_uuid3, 4);
+ 	/* just incase thread restarts... */
+ 	if (test_bit(MD_RECOVERY_DONE, &mddev->recovery))
+@@ -3432,7 +3433,7 @@ static void md_do_sync(mddev_t *mddev)
  
- 		mddev->max_disks = MD_SB_DISKS;
--	} else {
--		__u64 ev1;
--		ev1 = md_event(sb);
-+	} else if (mddev->pers == NULL) {
-+		/* Insist on good event counter while assembling */
-+		__u64 ev1 = md_event(sb);
- 		++ev1;
- 		if (ev1 < mddev->events) 
- 			return -EINVAL;
--	}
-+	} else if (mddev->bitmap) {
-+		/* if adding to array with a bitmap, then we can accept an
-+		 * older device ... but not too old.
-+		 */
-+		__u64 ev1 = md_event(sb);
-+		if (ev1 < mddev->bitmap->events_cleared)
-+			return 0;
-+	} else /* just a hot-add of a new device, leave raid_disk at -1 */
-+		return 0;
-+
- 	if (mddev->level != LEVEL_MULTIPATH) {
--		rdev->raid_disk = -1;
--		rdev->in_sync = rdev->faulty = 0;
-+		rdev->faulty = 0;
- 		desc = sb->disks + rdev->desc_nr;
+ 	if (test_bit(MD_RECOVERY_SYNC, &mddev->recovery))
+ 		/* resync follows the size requested by the personality,
+-		 * which default to physical size, but can be virtual size
++		 * which defaults to physical size, but can be virtual size
+ 		 */
+ 		max_sectors = mddev->resync_max_sectors;
+ 	else
+@@ -3451,9 +3452,10 @@ static void md_do_sync(mddev_t *mddev)
+ 		j = mddev->recovery_cp;
+ 	else
+ 		j = 0;
++	io_sectors = 0;
+ 	for (m = 0; m < SYNC_MARKS; m++) {
+ 		mark[m] = jiffies;
+-		mark_cnt[m] = j;
++		mark_cnt[m] = io_sectors;
+ 	}
+ 	last_mark = 0;
+ 	mddev->resync_mark = mark[last_mark];
+@@ -3478,26 +3480,32 @@ static void md_do_sync(mddev_t *mddev)
+ 	}
  
- 		if (desc->state & (1<<MD_DISK_FAULTY))
-@@ -669,7 +679,8 @@ static int super_90_validate(mddev_t *md
- 			rdev->in_sync = 1;
- 			rdev->raid_disk = desc->raid_disk;
+ 	while (j < max_sectors) {
+-		int sectors;
+-
+-		sectors = mddev->pers->sync_request(mddev, j, currspeed < sysctl_speed_limit_min);
+-		if (sectors < 0) {
++		sector_t sectors;
++		skipped = 0;
++		sectors = mddev->pers->sync_request(mddev, j, &skipped,
++						    currspeed < sysctl_speed_limit_min);
++		if (sectors == 0) {
+ 			set_bit(MD_RECOVERY_ERR, &mddev->recovery);
+ 			goto out;
  		}
--	}
-+	} else /* MULTIPATH are always insync */
-+		rdev->in_sync = 1;
- 	return 0;
- }
+-		atomic_add(sectors, &mddev->recovery_active);
++		if (!skipped) { /* actual IO requested */
++			io_sectors += sectors;
++			atomic_add(sectors, &mddev->recovery_active);
++		}
++
+ 		j += sectors;
+ 		if (j>1) mddev->curr_resync = j;
++
++		if (last_check + window > io_sectors || j == max_sectors)
++			continue;
++
+ 		if (last_check==0)
+ 			/* This is the earliest that rebuild will be visible
+ 			 * in /proc/mdstat
+ 			 */
+ 			md_new_event();
  
-@@ -911,6 +922,8 @@ static int super_1_validate(mddev_t *mdd
- {
- 	struct mdp_superblock_1 *sb = (struct mdp_superblock_1*)page_address(rdev->sb_page);
+-		if (last_check + window > j || j == max_sectors)
+-			continue;
+-
+-		last_check = j;
++		last_check = io_sectors;
  
-+	rdev->raid_disk = -1;
-+	rdev->in_sync = 0;
- 	if (mddev->raid_disks == 0) {
- 		mddev->major_version = 1;
- 		mddev->patch_version = 0;
-@@ -928,13 +941,21 @@ static int super_1_validate(mddev_t *mdd
- 		memcpy(mddev->uuid, sb->set_uuid, 16);
- 
- 		mddev->max_disks =  (4096-256)/2;
--	} else {
--		__u64 ev1;
--		ev1 = le64_to_cpu(sb->events);
-+	} else if (mddev->pers == NULL) {
-+		/* Insist of good event counter while assembling */
-+		__u64 ev1 = le64_to_cpu(sb->events);
- 		++ev1;
- 		if (ev1 < mddev->events)
- 			return -EINVAL;
--	}
-+	} else if (mddev->bitmap) {
-+		/* If adding to array with a bitmap, then we can accept an
-+		 * older device, but not too old.
-+		 */
-+		__u64 ev1 = le64_to_cpu(sb->events);
-+		if (ev1 < mddev->bitmap->events_cleared)
-+			return 0;
-+	} else /* just a hot-add of a new device, leave raid_disk at -1 */
-+		return 0;
- 
- 	if (mddev->level != LEVEL_MULTIPATH) {
- 		int role;
-@@ -942,14 +963,10 @@ static int super_1_validate(mddev_t *mdd
- 		role = le16_to_cpu(sb->dev_roles[rdev->desc_nr]);
- 		switch(role) {
- 		case 0xffff: /* spare */
--			rdev->in_sync = 0;
- 			rdev->faulty = 0;
--			rdev->raid_disk = -1;
- 			break;
- 		case 0xfffe: /* faulty */
--			rdev->in_sync = 0;
- 			rdev->faulty = 1;
--			rdev->raid_disk = -1;
- 			break;
- 		default:
- 			rdev->in_sync = 1;
-@@ -957,7 +974,9 @@ static int super_1_validate(mddev_t *mdd
- 			rdev->raid_disk = role;
- 			break;
+ 		if (test_bit(MD_RECOVERY_INTR, &mddev->recovery) ||
+ 		    test_bit(MD_RECOVERY_ERR, &mddev->recovery))
+@@ -3511,7 +3519,7 @@ static void md_do_sync(mddev_t *mddev)
+ 			mddev->resync_mark = mark[next];
+ 			mddev->resync_mark_cnt = mark_cnt[next];
+ 			mark[next] = jiffies;
+-			mark_cnt[next] = j - atomic_read(&mddev->recovery_active);
++			mark_cnt[next] = io_sectors - atomic_read(&mddev->recovery_active);
+ 			last_mark = next;
  		}
--	}
-+	} else /* MULTIPATH are always insync */
-+		rdev->in_sync = 1;
-+
- 	return 0;
- }
  
-@@ -2211,6 +2230,18 @@ static int add_new_disk(mddev_t * mddev,
- 				PTR_ERR(rdev));
- 			return PTR_ERR(rdev);
- 		}
-+		/* set save_raid_disk if appropriate */
-+		if (!mddev->persistent) {
-+			if (info->state & (1<<MD_DISK_SYNC)  &&
-+			    info->raid_disk < mddev->raid_disks)
-+				rdev->raid_disk = info->raid_disk;
-+			else
-+				rdev->raid_disk = -1;
-+		} else
-+			super_types[mddev->major_version].
-+				validate_super(mddev, rdev);
-+		rdev->saved_raid_disk = rdev->raid_disk;
-+
- 		rdev->in_sync = 0; /* just to be sure */
- 		rdev->raid_disk = -1;
- 		err = bind_rdev_to_array(rdev, mddev);
-@@ -3829,6 +3860,14 @@ void md_check_recovery(mddev_t *mddev)
- 				mddev->pers->spare_active(mddev);
- 			}
- 			md_update_sb(mddev);
-+
-+			/* if array is no-longer degraded, then any saved_raid_disk
-+			 * information must be scrapped
-+			 */
-+			if (!mddev->degraded)
-+				ITERATE_RDEV(mddev,rdev,rtmp)
-+					rdev->saved_raid_disk = -1;
-+			
- 			mddev->recovery = 0;
- 			/* flag recovery needed just to double check */
- 			set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+@@ -3538,7 +3546,8 @@ static void md_do_sync(mddev_t *mddev)
+ 		mddev->queue->unplug_fn(mddev->queue);
+ 		cond_resched();
+ 
+-		currspeed = ((unsigned long)(j-mddev->resync_mark_cnt))/2/((jiffies-mddev->resync_mark)/HZ +1) +1;
++		currspeed = ((unsigned long)(io_sectors-mddev->resync_mark_cnt))/2
++			/((jiffies-mddev->resync_mark)/HZ +1) +1;
+ 
+ 		if (currspeed > sysctl_speed_limit_min) {
+ 			if ((currspeed > sysctl_speed_limit_max) ||
+@@ -3558,7 +3567,7 @@ static void md_do_sync(mddev_t *mddev)
+ 	wait_event(mddev->recovery_wait, !atomic_read(&mddev->recovery_active));
+ 
+ 	/* tell personality that we are finished */
+-	mddev->pers->sync_request(mddev, max_sectors, 1);
++	mddev->pers->sync_request(mddev, max_sectors, &skipped, 1);
+ 
+ 	if (!test_bit(MD_RECOVERY_ERR, &mddev->recovery) &&
+ 	    mddev->curr_resync > 2 &&
 
 diff ./drivers/md/raid1.c~current~ ./drivers/md/raid1.c
---- ./drivers/md/raid1.c~current~	2005-02-18 11:11:26.000000000 +1100
+--- ./drivers/md/raid1.c~current~	2005-02-18 11:11:25.000000000 +1100
 +++ ./drivers/md/raid1.c	2005-02-18 11:11:26.000000000 +1100
-@@ -811,9 +811,12 @@ static int raid1_add_disk(mddev_t *mddev
+@@ -1010,7 +1010,7 @@ static int init_resync(conf_t *conf)
+  * that can be installed to exclude normal IO requests.
+  */
+ 
+-static int sync_request(mddev_t *mddev, sector_t sector_nr, int go_faster)
++static sector_t sync_request(mddev_t *mddev, sector_t sector_nr, int *skipped, int go_faster)
  {
- 	conf_t *conf = mddev->private;
- 	int found = 0;
--	int mirror;
-+	int mirror = 0;
- 	mirror_info_t *p;
+ 	conf_t *conf = mddev_to_conf(mddev);
+ 	mirror_info_t *mirror;
+@@ -1023,7 +1023,7 @@ static int sync_request(mddev_t *mddev, 
  
-+	if (rdev->saved_raid_disk >= 0 &&
-+	    conf->mirrors[rdev->saved_raid_disk].rdev == NULL)
-+		mirror = rdev->saved_raid_disk;
- 	for (mirror=0; mirror < mddev->raid_disks; mirror++)
- 		if ( !(p=conf->mirrors+mirror)->rdev) {
+ 	if (!conf->r1buf_pool)
+ 		if (init_resync(conf))
+-			return -ENOMEM;
++			return 0;
  
-@@ -830,6 +833,8 @@ static int raid1_add_disk(mddev_t *mddev
- 			p->head_position = 0;
- 			rdev->raid_disk = mirror;
- 			found = 1;
-+			if (rdev->saved_raid_disk != mirror)
-+				conf->fullsync = 1;
- 			p->rdev = rdev;
- 			break;
+ 	max_sector = mddev->size << 1;
+ 	if (sector_nr >= max_sector) {
+@@ -1107,8 +1107,8 @@ static int sync_request(mddev_t *mddev, 
+ 		/* There is nowhere to write, so all non-sync
+ 		 * drives must be failed - so we are finished
+ 		 */
+-		int rv = max_sector - sector_nr;
+-		md_done_sync(mddev, rv, 1);
++		sector_t rv = max_sector - sector_nr;
++		*skipped = 1;
+ 		put_buf(r1_bio);
+ 		rdev_dec_pending(conf->mirrors[disk].rdev, mddev);
+ 		return rv;
+
+diff ./drivers/md/raid10.c~current~ ./drivers/md/raid10.c
+--- ./drivers/md/raid10.c~current~	2005-02-18 11:11:25.000000000 +1100
++++ ./drivers/md/raid10.c	2005-02-18 11:11:26.000000000 +1100
+@@ -1321,7 +1321,7 @@ static int init_resync(conf_t *conf)
+  *
+  */
+ 
+-static int sync_request(mddev_t *mddev, sector_t sector_nr, int go_faster)
++static sector_t sync_request(mddev_t *mddev, sector_t sector_nr, int *skipped, int go_faster)
+ {
+ 	conf_t *conf = mddev_to_conf(mddev);
+ 	r10bio_t *r10_bio;
+@@ -1335,7 +1335,7 @@ static int sync_request(mddev_t *mddev, 
+ 
+ 	if (!conf->r10buf_pool)
+ 		if (init_resync(conf))
+-			return -ENOMEM;
++			return 0;
+ 
+  skipped:
+ 	max_sector = mddev->size << 1;
+@@ -1343,15 +1343,15 @@ static int sync_request(mddev_t *mddev, 
+ 		max_sector = mddev->resync_max_sectors;
+ 	if (sector_nr >= max_sector) {
+ 		close_sync(conf);
++		*skipped = 1;
+ 		return sectors_skipped;
+ 	}
+ 	if (chunks_skipped >= conf->raid_disks) {
+ 		/* if there has been nothing to do on any drive,
+ 		 * then there is nothing to do at all..
+ 		 */
+-		sector_t sec = max_sector - sector_nr;
+-		md_done_sync(mddev, sec, 1);
+-		return sec + sectors_skipped;
++		*skipped = 1;
++		return (max_sector - sector_nr) + sectors_skipped;
+ 	}
+ 
+ 	/* make sure whole request will fit in a chunk - if chunks
+@@ -1565,17 +1565,22 @@ static int sync_request(mddev_t *mddev, 
  		}
+ 	}
+ 
++	if (sectors_skipped)
++		/* pretend they weren't skipped, it makes
++		 * no important difference in this case
++		 */
++		md_done_sync(mddev, sectors_skipped, 1);
++
+ 	return sectors_skipped + nr_sectors;
+  giveup:
+ 	/* There is nowhere to write, so all non-sync
+ 	 * drives must be failed, so try the next chunk...
+ 	 */
+ 	{
+-	int sec = max_sector - sector_nr;
++	sector_t sec = max_sector - sector_nr;
+ 	sectors_skipped += sec;
+ 	chunks_skipped ++;
+ 	sector_nr = max_sector;
+-	md_done_sync(mddev, sec, 1);
+ 	goto skipped;
+ 	}
+ }
+
+diff ./drivers/md/raid5.c~current~ ./drivers/md/raid5.c
+--- ./drivers/md/raid5.c~current~	2005-02-18 11:11:26.000000000 +1100
++++ ./drivers/md/raid5.c	2005-02-18 11:11:26.000000000 +1100
+@@ -1475,7 +1475,7 @@ static int make_request (request_queue_t
+ }
+ 
+ /* FIXME go_faster isn't used */
+-static int sync_request (mddev_t *mddev, sector_t sector_nr, int go_faster)
++static sector_t sync_request(mddev_t *mddev, sector_t sector_nr, int *skipped, int go_faster)
+ {
+ 	raid5_conf_t *conf = (raid5_conf_t *) mddev->private;
+ 	struct stripe_head *sh;
+@@ -1498,8 +1498,8 @@ static int sync_request (mddev_t *mddev,
+ 	 * nothing we can do.
+ 	 */
+ 	if (mddev->degraded >= 1 && test_bit(MD_RECOVERY_SYNC, &mddev->recovery)) {
+-		int rv = (mddev->size << 1) - sector_nr;
+-		md_done_sync(mddev, rv, 1);
++		sector_t rv = (mddev->size << 1) - sector_nr;
++		*skipped = 1;
+ 		return rv;
+ 	}
+ 
+
+diff ./drivers/md/raid6main.c~current~ ./drivers/md/raid6main.c
+--- ./drivers/md/raid6main.c~current~	2005-02-18 11:11:26.000000000 +1100
++++ ./drivers/md/raid6main.c	2005-02-18 11:11:26.000000000 +1100
+@@ -1634,7 +1634,7 @@ static int make_request (request_queue_t
+ }
+ 
+ /* FIXME go_faster isn't used */
+-static int sync_request (mddev_t *mddev, sector_t sector_nr, int go_faster)
++static sector_t sync_request(mddev_t *mddev, sector_t sector_nr, int *skipped, int go_faster)
+ {
+ 	raid6_conf_t *conf = (raid6_conf_t *) mddev->private;
+ 	struct stripe_head *sh;
+@@ -1657,8 +1657,8 @@ static int sync_request (mddev_t *mddev,
+ 	 * nothing we can do.
+ 	 */
+ 	if (mddev->degraded >= 2 && test_bit(MD_RECOVERY_SYNC, &mddev->recovery)) {
+-		int rv = (mddev->size << 1) - sector_nr;
+-		md_done_sync(mddev, rv, 1);
++		sector_t rv = (mddev->size << 1) - sector_nr;
++		*skipped = 1;
+ 		return rv;
+ 	}
+ 
 
 diff ./include/linux/raid/md_k.h~current~ ./include/linux/raid/md_k.h
 --- ./include/linux/raid/md_k.h~current~	2005-02-18 11:11:26.000000000 +1100
 +++ ./include/linux/raid/md_k.h	2005-02-18 11:11:26.000000000 +1100
-@@ -183,6 +183,10 @@ struct mdk_rdev_s
- 
- 	int desc_nr;			/* descriptor index in the superblock */
- 	int raid_disk;			/* role of device in array */
-+	int saved_raid_disk;		/* role that device used to have in the 
-+					 * array and could again if we did a partial
-+					 * resync from the bitmap
-+					 */
- 
- 	atomic_t	nr_pending;	/* number of pending requests.
- 					 * only maintained for arrays that
+@@ -298,7 +298,7 @@ struct mdk_personality_s
+ 	int (*hot_add_disk) (mddev_t *mddev, mdk_rdev_t *rdev);
+ 	int (*hot_remove_disk) (mddev_t *mddev, int number);
+ 	int (*spare_active) (mddev_t *mddev);
+-	int (*sync_request)(mddev_t *mddev, sector_t sector_nr, int go_faster);
++	sector_t (*sync_request)(mddev_t *mddev, sector_t sector_nr, int *skipped, int go_faster);
+ 	int (*resize) (mddev_t *mddev, sector_t sectors);
+ 	int (*reshape) (mddev_t *mddev, int raid_disks);
+ 	int (*reconfig) (mddev_t *mddev, int layout, int chunk_size);
