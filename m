@@ -1,8 +1,8 @@
-From: Alvin Oga <aoga@Maggie.Linux-Consulting.com>
+From: Gordon Henderson <gordon@drogon.net>
 Subject: Re: Test program for raid
-Date: Thu, 19 Dec 2002 03:46:35 -0800 (PST)
+Date: Thu, 19 Dec 2002 12:13:28 +0000 (GMT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.3.96.1021219034027.25632A-100000@Maggie.Linux-Consulting.com>
+Message-ID: <Pine.LNX.4.43.0212191145360.20588-100000@unicorn.drogon.net>
 References: <984305F1827DD5118FEA0000D1105F0A01BDC0B7@HW_MAIL>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
@@ -12,50 +12,64 @@ To: "SCHEP. - Schepke, Arnt" <SCHEP@Hoeft-Wessel.de>
 Cc: "'linux-raid@vger.kernel.org'" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-
-hi ya
-
 On Thu, 19 Dec 2002, SCHEP. - Schepke, Arnt wrote:
 
 > Hi,
 > just a little question: I want to test my Software-RAID1 System.
 > I have some errors and want something like a one year usage in a one day
 > test.
-> 
+
+What sort of errors?
+
 > Do you have an idea what program to use?
 
-- pull the power cord "now" .... see if the system keeps working
+It depends on what you want to test ...
 
-- pull the ide cable to disk ... see if it keeps working and boots in
-  degraded mode
+To test the disk system, data paths and so on, I use 'bonnie' which is a
+disk benchmark program. I run about 6 or 8 of them in a loop for several
+days (if possible) before making a server go live. Running more than one
+is obviously no use as a benchmark, but it does seem give it it good
+thrashing. The trick is to not start them at the same time, but to stagger
+them - that way you get a good mix of the different operations that Bonnie
+performs.
 
-- resync everything... 
+I use this:
 
--- load up your PC with lots of jobs... say an xload of 10 or 50 ...
-   and see if the system dies or hangs....
-	- not a fair test to renice things either...
+  #!/bin/sh
+  # /usr/local/bin/dob
+  dobon & sleep 120 ;  dobon & sleep 120
+  dobon & sleep 120 ;  dobon & sleep 120
+  dobon & sleep 120 ;  dobon & sleep 120
+  dobon & sleep 120 ;  dobon & sleep 120
 
-- now increase room temperature by 10C ....
-	- that should simulate  what would be 10yr lifespan
-	and drop it to failur in 5 years
-	( whatever the normal lifespan was is cut in 1/2 for
-	( every 10C increase in ambient temp
+And:
 
-	- you can simulate 4 years of work in 1 year at 20C above normal
+  #!/bin/csh
+  #	/usr/local/bin/dobon
+  @ n = 1
+  while (1)
+    echo Pass number $n
+    bonnie -s1047 -n0 -u0
+    @ n++
+  end
 
-- amount of work it does ... your machine will fail long before you
-  hit a year's work to be tested in 1 day
+You many have to alter the flags to bonnie depending on what version you
+use (this is for bonnie++ as supplied with Debian 3)
 
-- whatever it says is the MTBF on your components... divide that in half
-  and that might be your expected lifespan...
+Make sure the filesystem has enough disk space - this will require 8GB of
+disk space...
 
-- no simple way to do "lifespan tests"
-	- other than increase room temp by +10C, +20C, +30C ...
+I've managed to break an IBM server raid controller with this - so much
+for RAID in hardware. IBM acknowledge the fault too and are supposed to be
+working on it... Don't buy IBM, stick to software raid :)
 
--- just save your data daily to other "offline backup media"
-   as you never know when things will die
+However, I recently had a Linux (s/w raid + ext2) system which would run
+this all night, but FAIL on FSCK... So after running this for some time,
+stop it, then umount the filesystem and run several FSCKs on it. (The
+failure reason was an AMD hardware fault - cured by plugging in a PS2
+mouse and compiling the mouse driver back into the kernel)
 
-c ya
-alvin
+Good luck!
 
+Gordon
 
