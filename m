@@ -1,24 +1,32 @@
-From: Robin Bowes <robin-lists@robinbowes.com>
-Subject: Re: Joys of spare disks!
-Date: Mon, 28 Feb 2005 19:25:33 +0000
-Message-ID: <cvvqu9$1lc$1@sea.gmane.org>
-References: <cvv9ai$svg$1@sea.gmane.org> <Pine.LNX.4.58.0502281000290.32355@web1.mmaero.com> <cvvcnt$cmf$1@sea.gmane.org> <42233EA8.4050508@variant.ch> <cvvikv$35a$1@sea.gmane.org> <422369F0.5070404@variant.ch>
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: "Global spare" with mdadm
+Date: Tue, 1 Mar 2005 09:12:56 +1100
+Message-ID: <16931.38760.582760.803244@cse.unsw.edu.au>
+References: <013701c51da9$feb6d280$020aa8c0@llnx7pzaq0g0w3>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-In-Reply-To: <422369F0.5070404@variant.ch>
+In-Reply-To: message from Slawomir Socha on Monday February 28
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Slawomir Socha <socha_s@tlen.pl>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Nicola Fankhauser wrote:
-> the RAID 5 array has 8 drives. the "server" is in my basement and thus 
-> accessible all the time. the (tested :) 9th drive is lying in my drawer 
-> and will serve as replacement as soon as a drive dies. I hope it's enough.
+On Monday February 28, socha_s@tlen.pl wrote:
+> Hello!
+> 
+> Does anyone know if it is possible to assign a single spare drive to
+> multiple RAID sets using mdadm?
+> 
+> For example:  a system with 2 x RAID5 would generally have a single spare
+> drive.. the first RAID5 to fail grabs it and utilizes it.
 
-Is that because you can't fit it in the case with the other 8?
+Sure is.  Have you read the man page?
 
-R.
--- 
-http://robinbowes.com
+Check out "--monitor" mode and the "spare-group=" option in the config
+file.
 
+If you find the man page doesn't make it clear enough, I would be
+happy to receive suggestions on how to improve it.
+
+NeilBrown
