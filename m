@@ -1,133 +1,139 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
-Subject: an idea for enhancement of raid-1 to do striping
-Date: Fri, 16 Jan 2004 18:59:14 +0100
+From: gannan10@comcast.net
+Subject: error during raid config
+Date: Fri, 16 Jan 2004 18:18:07 +0000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040116175914.GA30548@rap.rap.dk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Message-ID: <011620041818.1453.804@comcast.net>
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi!
-
-An idea for a RAID 1 like mirror with striping (not implemented yet)
-
-Maybe you can telle me whether the idea is viable oand worth
-implementing.
-
-Analyses:
-
-RAID 1 does not give performance enhancements for sequential reads,
-while it gives some enhancement when multiple operations are concurrent,
-due to its optimizing of head movements. This is because RAID 1 does not allow for striping,
-that is that the different disks can read data for a file at the same time.
-The problem is especially disk seek times, which with current technology
-(2004) is about 8 ms on the most common 7200 RPM IDE disks.
-A problem is also latency time, which is the time it takes in average to reach
-the right sector once a disk read/write head has been positioned on a track,
-this is directly related to the rotation
-speed of the disk, for a 7200 RPM disk it is about 4 ms. You can in average get maybe 40 MB/s thruput
-for these types of disk, that is per 8 ms 320 KB, or 160 KB per 4 ms is transferred.
-So in the time you would need to access a specific sector, (access time
-plus latency time) you could have transferred about half a meg of data instead.
-The seek and latency times are thus very time consuming, and if you can 
-lower them, much is gained. Cylinder track to track seek time can be about 1 ms.
-
-Design: Striping with mirroring:
-
-The idea is here to let reading be simultaneous on the two disks
-and with as little seek and latency time as possible.
-This would mean sequential reads (and writes) of all sectors on a track,
-and minimizing cylinder track to track seek times to the minimum,
-which occurs with adjacant tracks.
-Buffering in the hardisk may speed up this smoothening the read or write process.
-
-If we alternate the chunks on each of the two disks, we will get a striping effect.
-The mirroring of the data can then be done by using the second half of the disks
-and alternating the mirror chunks also there. The alternating should then
-be swiched so one disk contains all the data of the file system, and
-the loss of one of the disks would still leave all the data
-available on the other disk.
-
-You can get even improved performance with employing more disks,
-and also if one or more of these disk fail, there will be improved
-performance anyway, as the remaining disks can do some striping.
-
-Using the first half of the disks as the primary chunks and the
-second half of the disks as mirror backup should also improve
-performance slightly, especially for reads. Restricting reads to make seeks
-over only half of the size of the partitions should improve average seek 
-times with a little less than double speed, and using the beginning of the disks where rotation
-speeds and thus transfer rates are typically somewhat faster than in the end of the
-partition should also do a little to improving performance.
-
-The scheme allows for speeding up disk performance on normal pc
-systems by a factor of a little less than 2, using the 2 dma channels on a normal 
-IDE controller and relatively cheap standard IDE disks.
-
-The scheme could be called RAID-A to signify that it is almost
-a RAID-1 solution.
+From:  gannan10@comcast.net  [ Save Address ]  
+To:  linux-raid@vger.rutgers.edu 
+Subject:  error during raid config 
+Date:  Fri, 16 Jan 2004 05:27:40 +0000 
 
 
-Chunk layout for two disks:
+Hello,
 
-    disk 1                        disk 2
+I get the following error when I tried to setup my raid:
 
-  --------------              -----------------
-  !            !              !               !
-  !            !              !               !
-  !            !              !               !
-  ! chunk 1    !              !   chunk 2     !
-  !            !              !               !
-  !            !              !               !
-  !            !              !               !
-  --------------              -----------------
-  !            !              !               !
-  !            !              !               !
-  !            !              !               !
-  ! chunk 3    !              !   chunk 4     !
-  !            !              !               !
-  !            !              !               !
-  !            !              !               !
-  !            !              !               !
-  !            !              !               !
-  --------------              -----------------
-  !            !              !               !
-  !            !              !               !
-  !            !              !               !
-  !            !              !               !
-  ! chunk 5    !              !   chunk 6     !
-  !            !              !               !
-  !            !              !               !
-  !            !              !               !
-  --------------              -----------------
-  !            !              !               !
-  !            !              !               !
+# mkraid /dev/md0
+handling MD device /dev/md0
+analyzing super-block
+disk 0: /dev/hda1, 489951kB, raid superblock at 489856kB
+/dev/hda1 is mounted
+mkraid: aborted, see the syslog and /proc/mdstat for potential clues.
+
+Here is my config information:
+
+# cat /proc/mdstat
+Personalities :
+read_ahead not set
+unused devices: <none>
+
+cat /etc/raidtab
+# Persistent raid-1 configuration - md0
+raiddev                 /dev/md0
+raid-level              1
+nr-raid-disks           2
+nr-spare-disks          0
+persistent-superblock   1
+chunk-size              4
+
+device                  /dev/hda1
+raid-disk               0
+
+device                  /dev/hdb1
+raid-disk               1
+
+# Persistent raid-1 configuration - md1
+raiddev                 /dev/md1
+raid-level              1
+nr-raid-disks           2
+nr-spare-disks          0
+persistent-superblock   1
+chunk-size              4
+
+device                  /dev/hda3
+
+raid-disk               0
+
+device                  /dev/hdb3
+raid-disk               1
+
+# Persistent raid-1 configuration - md2
+raiddev                 /dev/md2
+raid-level              1
+nr-raid-disks           2
+nr-spare-disks          0
+persistent-superblock   1
+chunk-size              4
+
+device                  /dev/hda5
+raid-disk               0
+
+device                  /dev/hdb5
+raid-disk               1
+
+# Persistent raid-1 configuration - md3
+raiddev                 /dev/md3
+raid-level              1
+nr-raid-disks           2
+nr-spare-disks          0
+persistent-superblock   1
+chunk-size              4
+
+device                  /dev/hda6
+raid-disk               0
+
+device                  /dev/hdb6
+raid-disk               1
+
+# Persistent raid-1 configuration - md4
+raiddev                 /dev/md4
+raid-level              1
+nr-raid-disks           2
+nr-spare-disks          0
+persistent-superblock   1
+chunk-size              4
+
+device                  /dev/hda7
+
+raid-disk               0
+
+device                  /dev/hdb7
+raid-disk               1
 
 
-..... half the size of the smaller disk.....
+# fdisk -l /dev/hda
 
-  !            !              !               !
-  !            !              !               !
-  !            !              !               !
-  !            !              !               !
-  --------------              -----------------
-  !            !              !               !
-  !            !              !               !
-  !            !              !               !
-  ! chunk 2    !              !   chunk 1     !
-  ! mirror     !              !   mirror      !
-  !            !              !               !
-  !            !              !               !
-  --------------              -----------------
-  !            !              !               !
-  !            !              !               !
-  !            !              !               !
-  ! chunk 4    !              !   chunk 3     !
-  ! mirror     !              !   mirror      !
-  !            !              !               !
+Disk /dev/hda: 255 heads, 63 sectors, 4111 cylinders
+Units = cylinders of 16065 * 512 bytes
 
-Best regards
-Keld Simonsen
+   Device Boot    Start       End    Blocks   Id  System
+/dev/hda1   *         1        61    489951   fd  Linux raid autodetect
+/dev/hda2            62       122    489982+  82  Linux swap
+/dev/hda3           123       495   2996122+  fd  Linux raid autodetect
+/dev/hda4           496      4111  29045520    5  Extended
+/dev/hda5           496      1700   9679131   fd  Linux raid autodetect
+/dev/hda6          1701      2905   9679131   fd  Linux raid autodetect
+/dev/hda7          2906      4111   9687163+  fd  Linux raid autodetect
+
+# fdisk -l /dev/hdb
+
+Disk /dev/hdb: 255 heads, 63 sectors, 4865 cylinders
+Units = cylinders of 16065 * 512 bytes
+
+   Device Boot    Start       End    Blocks   Id  System
+/dev/hdb1             1        61    489951   fd  Linux raid autodetect
+
+/dev/hdb2            62       122    489982+  82  Linux swap
+/dev/hdb3           123       495   2996122+  fd  Linux raid autodetect
+/dev/hdb4           496      4111  29045520    5  Extended
+/dev/hdb5           496      1700   9679131   fd  Linux raid autodetect
+/dev/hdb6          1701      2905   9679131   fd  Linux raid autodetect
+/dev/hdb7          2906      4111   9687163+  fd  Linux raid autodetect
+
+
+
+
