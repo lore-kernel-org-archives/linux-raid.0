@@ -1,77 +1,55 @@
-From: Mike Hardy <mhardy@h3c.com>
-Subject: Re: /dev/md* Device Files
-Date: Wed, 26 Jan 2005 15:51:12 -0800
-Message-ID: <41F82CF0.8080206@h3c.com>
-References: <Pine.LNX.4.61.0501251445420.6553@electra.rsc.raytheon.com> <Pine.LNX.4.56.0501260726100.12589@lion.drogon.net> <200501260841.59090.andrew@walrond.org> <Pine.LNX.4.61.0501261059490.13740@electra.rsc.raytheon.com>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: booting from a HW RAID volume
+Date: Wed, 26 Jan 2005 20:15:27 -0500
+Message-ID: <200501270113.j0R1DU908227@www.watkins-home.com>
+References: <41F7D75B.1040806@mail.fsix.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.61.0501261059490.13740@electra.rsc.raytheon.com>
+In-Reply-To: <41F7D75B.1040806@mail.fsix.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Steve Witt <sawitt@electra.rsc.raytheon.com>
-Cc: linux-raid@vger.kernel.org
+To: cknowlton@science.edu, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Many hardware based RAID systems allow you to create more that 1 virtual
+disk.  This is done with luns.  If your hardware supports it, you could
+split your monster disk (2.75TB) into 2 or more virtual disks.  The first
+would be very small, just for boot, or maybe the OS.
 
-Q: How do you make devices persistent in udev, so they stop getting 
-created dynamically?
+Or you could split the 2.75TB into virtual disks that are all smaller than
+2TB.
 
-A: you can cd into /dev/ and ./MAKEDEV md, then cp /etc/md* to 
-/etc/udev/devices/
+Just some ideas.
 
-then they'll reappear on boot. I wasted some time on this prior (I have 
-a hot-swappable ide/cdrom drive and cd-burning stopped working when I 
-went from RH9 to FC3, thanks udev!)
+Guy
 
-Works for me, anyway. Hope it helps
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Carlos Knowlton
+Sent: Wednesday, January 26, 2005 12:46 PM
+To: linux-raid@vger.kernel.org
+Subject: booting from a HW RAID volume
 
--Mike
+Hello,
 
-Steve Witt wrote:
-> On Wed, 26 Jan 2005, Andrew Walrond wrote:
-> 
->> On Wednesday 26 January 2005 07:28, Gordon Henderson wrote:
->>
->>> On Tue, 25 Jan 2005, Steve Witt wrote:
->>>
->>>> I'm installing a software raid system on a new server that I've just
->>>> installed Debian 3.1 (sarge) on. It will be a raid5 on 5 IDE disks 
->>>> using
->>>> mdadm. I'm trying to create the array with 'mdadm --create /dev/md0 
->>>> ...'
->>>> and am getting an error: 'mdadm: error opening /dev/md0: No such 
->>>> file or
->>>> directory'. There are no /dev/md* devices in /dev at the present 
->>>> time. I
->>>> do have the md and raid5 kernel modules loaded. My question is: how do
->>>> the /dev/md* files get created? Are they normal device file that are
->>>> created with MAKEDEV?
->>>
->>>
->>> It's odd that they aren't there - they are with Debian 3.0, and have
->>> remained there when I've upgraded a few test servers to testing/Sarge.
->>>
->>>  # cd /dev
->>>  # ./MAKEDEV md
->>>
->>> should do the business.
->>>
->>
->> A useful trick I discovered yesterday: Add --auto to your mdadm 
->> commandline
->> and it will create the device for you if it is missing :)
->>
-> 
-> Well, it seems that this machine is using the udev scheme for managing 
-> device files. I didn't realize this as udev is new to me, but I probably 
-> should have mentioned the kernel version (2.6.8) I was using. So I need 
-> to research udev and how one causes devices to be created, etc.
-> 
-> Thanks for the help!!
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+I'm using a 3Ware 9500 12 Hardware RAID controller that has 12 of 250GB 
+S-ATA drives (total storage = 2.75TB).  To my 64bit FC3 box, this looks 
+like a single huge SCSI disk (/dev/sda).  I used parted to create GPT 
+partitions on it, (because nothing else would work on a volume that 
+big).  This seems to work fine, except that grub doesn't seem to 
+recognize GPT partitions.
+So here's my question:  Does anyone know a way to boot from huge volumes 
+(where "huge" =  >2TB)?   even if it doesn't involve grub, or GPT, I'm 
+open to suggestions.  Any clues?
+
+
+Thanks!
+-Carlos Knowlton
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
