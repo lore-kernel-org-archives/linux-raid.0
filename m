@@ -1,25 +1,84 @@
-From: "Shaw, Marco" <marco.shaw@nbtel.nb.ca>
-Subject: Recovering from a disaster...
-Date: Thu, 28 Nov 2002 08:53:59 -0400
+From: Jeff Schaller <schaller@freeshell.org>
+Subject: Re: Assertion failure, BUG at journal.c:1732
+Date: Mon, 2 Dec 2002 11:15:10 +0000 (UTC)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <C65F89D1AC0BB54B865127151A24DA780BAD6494@nbexchm2.aliant.icn>
+Message-ID: <Pine.NEB.4.44.0212021058460.21200-100000@iceland.freeshell.org>
+References: <20021124234220.GA17874@think.thunk.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: "'linux-raid@vger.kernel.org'" <linux-raid@vger.kernel.org>
+In-Reply-To: <20021124234220.GA17874@think.thunk.org>
+To: Theodore Ts'o <tytso@mit.edu>
+Cc: sct@redhat.com, akpm@zip.com.au, adilger@clusterfs.com, mingo@redhat.com, neilb@cse.unsw.edu.au, ext3-users@redhat.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Going for my RHCE in a few weeks...  Always wondered:
+Ted & all,
 
-1. Are there any gotchas in a corrupted software RAID filesystem?  For example, /dev/md0 is an RAID1 MD device, and either the 1st superblock on /dev/md0 or maybe the underlying /dev/sda1 partition is zero'ed out.  How does one go about fixing it?  Will a simple fsck here work?  But in the above case, is fsck run against md0 or sda1?
+Here's the typescript; it showed no errors. I did not stop the
+raid device before running the fsck; let me know if that would
+make a difference.
 
-2. If one knows that /dev/md0 is in trouble (composed of /dev/sda1 and /dev/sdb1), but /dev/sda1 is fine, can one, upon boot, simply change LILO/GRUB from trying to mount root from /dev/md0 to /dev/sda1?  My guess is no, since the disk label is different.
+schaller@debian:~$ sudo e2fsck /dev/hdc
+e2fsck 1.27 (8-Mar-2002)
+/dev/hdc: clean, 24724/4898816 files, 8018633/9780372 blocks
 
-3. I also wonder about LVM (now with RedHat 8.0), but will ask an LVM list...
+schaller@debian:~$ sudo e2fsck /dev/hdd
+e2fsck 1.27 (8-Mar-2002)
+/dev/hdd: clean, 24724/4898816 files, 8018633/9780372 blocks
 
-A typical scnerario could be LVM sitting on top of MD, and have to recover from some kind of disaster.
 
-A co-worker just screwed up a system I suspect was setup with a combination of LVM and MD.  I may have too quickly tried mounting /dev/sda2 (root on on disk), and maybe should have tried mounting /dev/md0.  After trying to mount /dev/sda2 (with an raid autodetect type), I think mount complained about invalid options, so I proceeded to do an fsck on /dev/sda2, only to have mention something about the superblock (yes, I should write all the errors down), so I tried fsck on something like 32768,
-and it started up... And ran... And ran.  Result aftewards: all /dev/sda2 contains now after an attempt to mount it is "lost+found"!  :(
+I then ran "e2fsck -f" on each device:
 
-Marco
+schaller@debian:~$ sudo e2fsck -f /dev/hdc
+e2fsck 1.27 (8-Mar-2002)
+Pass 1: Checking inodes, blocks, and sizes
+Pass 2: Checking directory structure
+Pass 3: Checking directory connectivity
+Pass 4: Checking reference counts
+Pass 5: Checking group summary information
+/dev/hdc: 24724/4898816 files (21.1% non-contiguous), 8018633/9780372 blocks
+
+schaller@debian:~$ sudo e2fsck -f /dev/hdd
+e2fsck 1.27 (8-Mar-2002)
+Pass 1: Checking inodes, blocks, and sizes
+Pass 2: Checking directory structure
+Pass 3: Checking directory connectivity
+Pass 4: Checking reference counts
+Pass 5: Checking group summary information
+/dev/hdd: 24724/4898816 files (21.1% non-contiguous), 8018633/9780372 blocks
+
+-jeff
+
+
+On Sun, 24 Nov 2002, Theodore Ts'o wrote:
+
+> These messages tend to indicate that the filesystem is probably
+> corrupted.  For some reason the kernel is triggering a BUG
+> before marking the filesystem as containing an error, so fsck
+> isn't being run on the filesystem.  If you run e2fsck on the
+> filesystem manually, before it is mounted (or remounted
+> read-write, if it the root filesystem), it should correct the
+> problem.
+>
+> I am curious what was the specific form of filesystem corruption
+> which was triggerring your problem.  If you could save a
+> transcript of the e2fsck run (say, by running it under the
+> script program, assuming you have a writeable filesystem
+> available to you when you rune2fsck), I would be much obliged.
+>
+> 						- Ted
+>
+> > Nov 20 18:35:39 debian kernel: attempt to access beyond end of device
+> > Nov 20 18:35:39 debian kernel: 09:00: rw=1, want=39121472, limit=39121408
+> > Nov 20 18:35:39 debian kernel: attempt to access beyond end of device
+> > Nov 20 18:35:39 debian kernel: 09:00: rw=1, want=39121476, limit=39121408
+> > Nov 20 18:35:39 debian kernel: attempt to access beyond end of device
+> > Nov 20 18:35:39 debian kernel: 09:00: rw=1, want=39121480, limit=39121408
+> > Nov 20 18:35:39 debian kernel: attempt to access beyond end of device
+> > Nov 20 18:35:39 debian kernel: 09:00: rw=1, want=39121484, limit=39121408
+> > Nov 20 18:35:39 debian kernel: attempt to access beyond end of device
+> > Nov 20 18:35:39 debian kernel: 09:00: rw=1, want=39121488, limit=39121408
+> > Nov 20 18:35:48 debian kernel: Assertion failure in __journal_remove_journal_head() at journal.c:1732: "buffer_jbd(bh)"
+> > Nov 20 18:35:48 debian kernel: kernel BUG at journal.c:1732!
+> > Nov 20 18:35:48 debian kernel: invalid operand: 0000
+
