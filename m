@@ -1,44 +1,24 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: Q: How does raid1 sync if superblocks are dirty?
-Date: Tue, 17 Sep 2002 09:35:35 +1000
+From: z_q_c_x@diamond.com
+Subject: PCD&PCBN tools
+Date: Wed, 18 Sep 2002 03:56:04 +0800
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <15750.27335.284105.794045@notabene.cse.unsw.edu.au>
-References: <9CFB9DA5261CD611A29B00508B7890486543B8@ex-deu-munich02.force.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Message-ID: <20020917195059Z264555-685+49797@vger.kernel.org>
+Reply-To: master@ct-diamond.com
+Content-Type: text/plain;charset="GB2312"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Potthoff, Kay on Monday September 16
-To: "Potthoff, Kay" <Kay.Potthoff@fci.com>
-Cc: "Linux RAID Mailing List (E-mail)" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday September 16, Kay.Potthoff@fci.com wrote:
-> Hi,
-> 
-> I have oberserved a little bit obscure behavior of my RAID setup if my
-> system 
-> comes up after a reset. I have setup a mirror and if I start the RAID after
-> a 
-> reset MD detects that the superblocks on the disks are not clean and starts
-> a 
-> resync.
-> 
-> If I check the output MD tells me that both disks of the mirror are
-> operational;
-> the same if I look at the output of /proc/mdstat: both disks are operational
-> 
-> "... [2/2] [UU] ...". But a resync is still in progress.
-> 
-> My question is: In which direction the resync is done; resp. what is the
-> sync algorithm in that case?
+Dear Sir or Madam:
 
-The raid1 driver arbitrarily chooses one drive and copies all data
-from it onto all other drives (normally there is only one other).
-While this is happening, all read requests are served off the chosen
-drive.
+We are very glad to inform you that now you have a better choice when you grinding the PCD&PCBN tools, we can supply the grinding wheels (vitrified/metal/resin bond) with low cost and high quality, have a try and you will know how better we are.
 
-The driver currently chooses the first drive as it's arbitrary choice,
-and this is not likely to change.
+We supply one sample without charge, don't lose it.
 
-NeilBrown
+More information, please visit: www.ct-diamond.com
+
+Sorry to disturb you.   
+
+CHN-TOP S&T Co., Ltd.
+Tel: +86-10-62710436,62710437
+Fax: +86-10-62710402
