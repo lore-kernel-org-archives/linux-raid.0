@@ -1,76 +1,74 @@
-From: maarten van den Berg <maarten@vbvb.nl>
-Subject: Re: new problem has developed
-Date: Thu, 30 Oct 2003 14:14:45 +0100
+From: "Cress, Andrew R" <andrew.r.cress@intel.com>
+Subject: RE: Booting from a raid1 device ?
+Date: Thu, 30 Oct 2003 09:11:33 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200310301414.45160.maarten@vbvb.nl>
-References: <Pine.LNX.4.44.0310290050190.10948-100000@coffee.psychology.mcmaster.ca>
+Message-ID: <E5DA6395B8F9614EB7A784D628184B200E33E8@hdsmsx402.hd.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44.0310290050190.10948-100000@coffee.psychology.mcmaster.ca>
-To: Mark Hahn <hahn@physics.mcmaster.ca>, linux-raid@vger.kernel.org
+content-class: urn:content-classes:message
+To: Michael Tokarev <mjt@tls.msk.ru>
+Cc: donj@asaca.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday 29 October 2003 06:52, Mark Hahn wrote:
-> > For various reasons I decided to decommission the old hardware (AMD K6)
-> > and I built a newer (and 100% known-good) board in it earlier today. That
-> > makes a BIG difference in initial speed, I now get 14000K/sec instead of
-> > the dead slow AMD K6 did. However, at 5.2% the speed drops significantly.
-> > We're now back at 5.3% and speed has dropped from 13000K to 170K and
-> > continues to drop.
->
-> this sort of thing *can* actually occur because of sick disks.
+Michael,
 
-Thanks for replying.  Yes, it was a bad disk and I solved it eventually.
+If you only have an MBR on the first disk, and it fails, your system
+will not boot, since BIOS won't be able to read an MBR from the
+redundant disk (the only working one).  You may be thinking of a use
+case in which the first disk has a corrupted partition, but its MBR is
+intact.
 
-> > I investigated already on the old machine with several tools, of course
-> > mdadm, but also iostat and keeping an eye on /var/log/messages.  All
-> > seems proper.
->
-> smartctl on the disks?
+You have to also have a working MBR on the redundant disk as well, or
+you'll never get to the loader if the first disk really fails.  Usually
+it is the loader's responsibility to set up (or at least verify) the
+MBR.  
 
-If only my BIOS would support that... :-( 
-I don't know if it's the main BIOS or the promise cards that must support it, 
-but 'ide-smart' just gives no output at all.
+Andy
 
-I did a 'badblocks' on one disk that was part of the array but already got 
-kicked twice from it.  Lo and behold, starting at about 4GB it developed a 
-problem (slow reads due to endless retries).  As I desperately NEEDED this 
-drive (my array was already degraded!) I decided to use 'dd_rescue' to clone 
-it to a good disk and re-assemble the array from there. The dd_rescue 
-operation took more than 30 hours(!) and showed that there was a problem 
-around the 4GB and also around 71 GB markers. Several MB could not be 
-recovered (which is close to nothing, percentage-wise).
-Mdadm then reassembled the array with the fresh drive, and subsequent 
-hot-adding went as fast as it should. One day later I added a new hot-spare. 
-All is well now. I will surely find corrupted data at some point due to the 
-missing MB's.  But I see no way to avoid this anyhow...
-I just hope it is a file, not reiserfs meta-data, that got killed.
+-----Original Message-----
+From: Michael Tokarev [mailto:mjt@tls.msk.ru] 
+Sent: Wednesday, October 29, 2003 7:55 PM
+To: Cress, Andrew R
+Cc: donj@asaca.com; linux-raid@vger.kernel.org
+Subject: Re: Booting from a raid1 device ?
 
-Taking into account that dd_rescue took 30 hours it stands to reason that 
-maybe the resync would have worked after all, if only I would have let it run 
-longer.  The problem is partly that the resync just seems to grind to a halt, 
-whereas dd_rescue is much more verbose in what it does.  If I could 
-distinguish between a 'crash' and a slow process (that still works -albeit 
-slow) this probably wouldn't have happened. Well, now we know...
 
-> > I'm unsure if this could be due to a disk hardware fault but then it
-> > would surely show up in syslog, right ?
->
-> no.  there's no syslog-over-ata/scsi afaikt ;)
->
-> > Could disk corruption be the culprit ? My
->
-> I'd guess vibration.  I've experienced several kinds of recent disks that
-> under bad conditions (vibration, near-death) just get amazingly slow,
-> but continue to work.  this is, of course, really, really good...
+Cress, Andrew R wrote:
+> Don,
+> 
+> Yes, it certainly can be done.  I do it all the time.
+> 
+> It's not hard with lilo, but grub doesn't support raid/md boot devices
+> yet.  This means that the grub boot record doesn't automatically get
+> written to the second disk.  In short, choose lilo for root mirroring
+if
+> possible.
 
-They vibrate, yeah.  That's just what happens if you put eight disks together 
-in a cabinet and put two 120mm papst fans right in front of them...  ;-)
-(But at least they stay quite cool, really quite cool...)
+Ugh-blah.  Excuse me folks, but.. maybe someone will be able to
+answer this one:
 
-Maarten
+  why the hell a boot loader should "mirror" anything to the second
+disk? :)
 
--- 
-Yes of course I'm sure it's the red cable. I guarante[^%!/+)F#0c|'NO CARRIER
+That is.  Place standard MBR into the boot sector.  An MBR that will
+boot
+from active partition.  Be it e.g. /dev/hda and /dev/hdb.  Create raid1
+device from /dev/hda1 and /dev/hdb1.  Mark both partitions as active.
+And install whatever boot loader you want into /dev/md1 - it will be
+mirrored automatically to /dev/hda1 and /dev/hdb1 (and to whatever else
+disks you'll use).
+
+Should your first disk fail, the system will either not boot because
+of bios limitations, or bios may "remap" /dev/hdb into /dev/hda (to
+be 0x80), and in this case boot procedure will work.
+
+Well, ok, a boot loader should be able to determine real offsets from
+the start of the disk, not from the start of raid device.  I don't
+know whenever grub can do that - lilo apparently does, as all our
+systems are set up exactly this way...
+
+/mjt
+
