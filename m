@@ -1,35 +1,40 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: Removing a Raid Partition? How-to?
-Date: Wed, 15 May 2002 09:00:00 +1000 (EST)
+From: dean gaudet <dean-list-linux-raid@arctic.org>
+Subject: is there any way to delay reconstruction?
+Date: Tue, 14 May 2002 16:09:54 -0700 (PDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <15585.38640.715130.181439@notabene.cse.unsw.edu.au>
-References: <Pine.LNX.4.31L.02.0205141604120.12302-100000@linux2.gl.umb
- c.edu>
-	<5.1.0.14.0.20020514171826.01f64070@205.233.215.4>
+Message-ID: <Pine.LNX.4.44.0205141557330.5308-100000@twinlark.arctic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Jeff Hill on Tuesday May 14
-To: Jeff Hill <jhill@hronline.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday May 14, jhill@hronline.com wrote:
-> Oddly, it seems I can't change the partitions of a previously formatted 
-> raid disk.  When I use fdisk to repartition a drive previously formatted 
-> with the type set to Linux autoraid detect, I reboot only to find the 
-> autoraid partitions are still there. I have stopped the raid devices, but 
-> it seems I can't kill the persistent superblock. I tried reformatting with 
-> mke2fs and of course that failed to do the trick.
+this weekend i was trying to diagnose a system instability, and i kept on
+having to hard cycle my system.
 
-If you change the partition type to something else, it really
-shouldn't autodetect any more.. Do you have an /etc/raidtab describing
-the array, and is raidstart being run at boottime by some script?
+i was generally doing this from "init=/bin/sh" boots with all filesystems
+mounted ro ... however i've got LVM on top of md here, and perhaps LVM was
+doing some writing even when the filesystems were ro.
 
-In any case, 
-   mdadm --zero-superblock /dev/hda1
+because of the hard cycle, every time i booted, md was convinced the disks
+were out of sync and it went and reconstructed parity.
 
-will zero the md/raid superblock on /dev/hda1
+one of the things i was attempting to do with this system was reduce it
+from ata5 to ata2 -- because i suspect my main issues are with cable
+length.  the only way i see to do this presently is with "hdparm -X66",
+but hdparm won't be able to do this successfully when md is busy doing
+reconstruction...
 
-NeilBrown
+and i saw no way to stop or delay reconstruction.
+
+is there a way to stop reconstruction?
+
+is there a way to force md to be read-only?
+
+it'd be rad if there was an inexpensive bit of battery backed ram which
+could be added to a system so md had somewhere to keep track of the state
+of the raid... so that a hard cycle doesn't necessarily require parity
+reconstruction :)
+
+-dean
+
