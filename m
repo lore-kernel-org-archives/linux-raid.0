@@ -1,39 +1,79 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: Question regarding mdadm and RAID boxes
-Date: Mon, 1 Nov 2004 14:06:15 +1100
-Message-ID: <16773.43047.28740.455757@cse.unsw.edu.au>
-References: <4185A048.1070308@cox.net>
+From: Nathan Dietsch <njd@ndietsch.com>
+Subject: Re: RAID5 crash and burn
+Date: Mon, 01 Nov 2004 15:26:35 +1100
+Message-ID: <4185BAFB.50502@ndietsch.com>
+References: <Pine.LNX.4.44.0410311434240.17633-100000@coffee.psychology.mcmaster.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Bill Cronk on Sunday October 31
+In-Reply-To: <Pine.LNX.4.44.0410311434240.17633-100000@coffee.psychology.mcmaster.ca>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Cronk <ngc4013@cox.net>
+To: Mark Hahn <hahn@physics.mcmaster.ca>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sunday October 31, ngc4013@cox.net wrote:
-> 
-> Now the question: Is there anything in mdadm allowing one to take a 
-> previously setup RAID box from another server and attach it to a second 
-> SCSI port and modify only the superblocks to change out the /dev/md0 to 
-> /dev/md1 or md2 or ....... so on?
-> 
+Mark Hahn wrote:
 
-Yes.  --update=super-minor during --assemble
+>>If you are seriously considering the performance implications of RAID1 
+>>vs RAID5 for swap, you are already done for performance wise.
+>>    
+>>
+>
+>I disagree.  the whole point of Linux's approach to swap is that 
+>it's fairly cheap to write a page to swap.
+>
+Writing to any form of secondary storage is not "cheap" when compared to 
+memory.
+Writing to a swap RAID5 volume, where you will probably incur a 
+read-modify-write operation is not considered "cheap" either.
 
-It is best to identify array by "uuid".  Use "mdadm --examine" on
-various component devices to discover the uuid or
-e.g.
-   mdadm --examine --scan --config=partitions
+>whether you ever need 
+>it again depends on how overcommitted you are.  this is assuming that
+>the kernel successfully chooses not-likley-to-be-reused pages to 
+>write to swap, and that your swap partitions are reasonably fast 
+>to write to. 
+>
+This is what I am getting at: Any partition can not be considered 
+reasonably fast to write to when compared to memory.
 
-Once you have determined a particular UUID use
-e.g.
-   mdadm --assemble /dev/mdX --update=super-minor --uuid=ebe07606:c0b4c223:3f00e978:949a6a60  /dev/sd*a
+>this approach works very well, excepting heuristic problems
+>in certain kernel versions.
+>
+>in other words, reading from swap is permitted to be expensive,
+>since any disk read is always assumed to be slow.  
+>
+Agreed.
 
-This will find all devices with the right uuid, assemble them in
-/dev/mdX (you choose X) and update the superblock to reflect the
-correct md number.
+>but writing to 
+>swap really should be fairly cheap, and this is a premise of the 
+>kernel's swap policies.
+>  
+>
+Sorry, I still don't buy the premise that writing to disk can be 
+considered cheap.
 
-NeilBrown
+>I would not use raid5 swap for this reason; raid1 is not insane,
+>since you don't need *that* much swap space, so the 50% overhead 
+>is not crippling.  (don't even think about things like raid 10
+>for swap - the kernel already has zero-overhead swap striping.)
+>  
+>
+I would agree with that.
+
+What I was trying to say was that if you are forced to go to swap, for a 
+page out or a page in, you are going to incur overhead which is 
+incredibly inefficient compared to memory.
+Putting swap on RAID5, where you incur even more overhead is worse.
+
+Putting swap on RAID1, as Guy pointed out, avoids crashes. So for the 
+one time that you will go to swap, it is worse the extra bit of overhead 
+to write it to a second disk to avoid losing the machine in the event of 
+a disk failure.
+
+Simply: Looking for performance improvements in swap means that you are 
+already very, very overloaded OR it is simply an exercise in theory.
+
+Kind Regards,
+
+Nathan
