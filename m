@@ -1,114 +1,98 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: mdadm - comments on command layout
-Date: Sat, 14 Aug 2004 12:26:03 -0400
+From: =?iso-8859-1?Q?M=E5rten_Berggren?= <berg@enea.se>
+Subject: Device naming problem(?)
+Date: Sun, 15 Aug 2004 20:19:41 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200408141626.i7EGQ3320304@watkins-home.com>
-References: <200408141646.43625.maarten@ultratux.net>
+Message-ID: <000401c482f4$70de1450$820113ac@enea.se>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200408141646.43625.maarten@ultratux.net>
-To: 'maarten van den Berg' <maarten@ultratux.net>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I have never had any problems using mdadm's command syntax, but...
+Hi,
 
-From the man page:
-SYNOPSIS
-       mdadm [mode] <raiddevice> [options] <component-devices>
+I have troubles running RAID on my PC under Linux. The short version of
+it
+is that I some time ago bought an Asus A7V333 (VIA-KT333-based)
+motherboard which
+featured a Promise PDC20276 RAID controller. (It seems to be software
+RAID
+only, but anyway.) I have happily been running the machine with RAID
+disabled
+as a dual-boot between Suse 8.2 and Win XP Pro. Recently I bought a pai=
+r
+of
+Seagate 160 Mb drives with the purpose of having a shared drive between
+Windows and Linux, but Linux will not boot with the RAID controller
+enabled;
+it panics during booting, unable to mount the system drive.
 
-Mode is optional.  Since some options are the same or similar (-b -B, -f -F,
--c -C, -r -R, -m --mail -m --super-minor) maybe the mode should not be
-optional.  Over time even more options will be added, this will increase the
-risk of mdadm not doing what I intended when I make a typo, or maybe
-miss-understand the options.  It is common for me to forget the case of an
-option, when this has happened I got errors, but there is a chance it was a
-valid option but not what I intended.  It would suck to lose my BIG :) 200G
-array due to a typo.  But, this is Unix, many commands could trash the
-system with a simple 1 byte typo.  I use mode when I use mdadm, maybe I
-never noticed it was optional, not sure.
+Two questions:
 
-In short...
-	1. To make mdadm safer to use, make mode not optional.
-	2. I am fine with it, as it is.
-	3. Neil, spend your spare time adding new feature!
+* How do I make Linux boot with the RAID controller enabled?
 
-Guy
+* Is it possible to share it between Linux and Windows?
+  (ataraid seems to have some pdc subsystem, but I got no idea what tha=
+t
+means.)
 
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of maarten van den Berg
-Sent: Saturday, August 14, 2004 10:47 AM
-To: linux-raid@vger.kernel.org
-Subject: Re: mdadm - comments on command layout
+Things that might be relevant:
 
-On Saturday 14 August 2004 14:33, Neil Brown wrote:
-> On Friday August 13, stoffel@lucent.com wrote:
-> > Hi Neil,
-> >
-> > I've been using mdadm recently to work with some arrays and I really
-> > have to say I dislike how the commands are laid out and used.  First
-> > off, they're not consistent from one usage to another.  Of course, I'm
-> > going to be jerk and not give good examples since my personal box at
-> > home is down and I'm at work.  But the idea is that when you assemble
-> > a RAID device, it should look similiar to how you manage that raid
-> > device.
->
-> Examples would really help.  In my mind it is very regular.  There is
-> some room for flexibility, but generally, the usage is
->
->    mdadm --mode --option...  /dev/md-device  [ component devices  ... ]
+* The BIOS seems to play tricks (with int13?) to make it possible to
+boot from
+  the array, but I got no desire to do so (unless neccessary).
 
-Hi Neil,
+* Suse is configured to boot using lilo and an initrd containing the
+reiserfs
+  module needed for the root partition.
 
-In my mind, either the manpage is somewhat confusing, or the program is.
-From the exact syntax above I would assume that to (hot)add a device I need
-to 
-type 'mdadm --manage -a ...'.  But just 'mdadm -a ...' is enough.  So is the
+* Without reconfiguring lilo, the booting stops with the message
 
-case for some other modes.  The syntax given isn't mdadm [--mode] --option ,
+  "Kernel panic: VFS: Unable to mount root fs on 03:02"
 
-so one would assume just omitting --manage would lead to an error.
+* Booting the Suse CD in rescue mode, I can find the system drive under
+/dev/hda2.
 
-This was, I mean still is, indeed confusing to me. 
+* Trying to boot from a floppy with grub installed, I get the same erro=
+r
+as for lilo with
 
-There is another bit.  Quoting from the manpage you first have MODES, then
-the 
-6 modi are explained, and directly thereafter comes OPTIONS, but some of
-them 
-seem to list modes, not options:
+  root (hd0,1)                          # i e boot from first drive,
+second partition
+  kernel /boot/vmlinuz root=3D/boot/hda2  # i e boot using vmlinuz,
+telling it root is /dev/hda2
+  initrd /boot/initrd                   # i e use this initrd
+  boot
 
- -A, --assemble
- -B, --build
- -C, --create
-etc.
+* Changing the kernel line above to
 
-So that leaves a big question; is it a mode, an option...?
-The whole mode thing is either not clear to _me_, or it is somewhat
-confusing 
-in general.  I wouldn't really suggest that typing 'mdadm -a' instead of 
-'mdadm --manage -a'  should lead to an error, but the concept of the modi
-now 
-makes little sense (to me personally). But maybe I just misunderstood
-things.
-.
-So moving the -A, -B etc. "options" to the section "modes" above, adding a
--M 
---manage mode there as well might make everything clearer. (That's just
-MHO.)
+  kernel /boot/vmlinuz root=3D/boot/hde2  # i e boot using vmlinuz,
+telling it root is /dev/hde2
 
-But anyhow, the program does what it's supposed to do, so...  :-)
+  gets me much further, in fact it seems like even modules are loaded,
+but it ends with
+  a suggestion that I should run fsck on /dev/hda2. This happens even i=
+f
+I change /etc/fstab
+  to point root to /dev/hde2 instead of /dev/hda2. (Where does the
+/dev/hda2 come from then?)
+  "mount" tells me /dev/hda2 is mounted in rw mode. (How can it mount
+/dev/hda2 when I have to
+  boot it as /dev/hde2?)
 
-Respectfully,
-Maarten
+* Kernel version is 2.4.20 from Suse (2.4.20-4GB)
 
--- 
-When I answered where I wanted to go today, they just hung up -- Unknown
+It seems to me that there is some inconsistencies in naming (/dev/hda2
+vs /dev/hde2)?
+Suggestions, anyone? Should I send this to linux-ide?
+
+Regards
+
+M=E5rten Berggren
 
 -
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
 the body of a message to majordomo@vger.kernel.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
