@@ -1,60 +1,79 @@
-From: Maurice Hilarius <maurice@harddata.com>
-Subject: Re: SCSI - help
-Date: Mon, 24 Mar 2003 10:21:58 -0700
+From: "Donghui Wen" <dhwen@protegonetworks.com>
+Subject: Re: 3ware bad write speed.
+Date: Mon, 24 Mar 2003 11:49:57 -0800
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <5.1.1.6.2.20030324102010.06da31a0@mail.harddata.com>
-References: <20030324102233.3c0978bf.skowalsk@us.edu.pl>
+Message-ID: <004501c2f23e$8c2b5760$df01010a@moon>
+References: <Pine.LNX.4.44.0303240912080.2059-100000@chaos.egr.duke.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; format=flowed
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20030324102233.3c0978bf.skowalsk@us.edu.pl>
-To: Seweryn Kowalski <skowalsk@us.edu.pl>
+To: Joshua Baker-LePain <jlb17@duke.edu>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-With regards to your message at 02:22 AM 3/24/03, Seweryn Kowalski. Where 
-you stated:
->On aic7xx I've soft raid5 (and it's o.k.) but when I try to make soft 
->raid5 on  atp870u (with 9 disk) this process crash, tranfser goes down and 
->in my log file I've:
+Thanks! Joshua:
+    We are runing oracle on rehat advanced server 2.1. Oracle only certified
+this version of redhat with ext2. That' why we could not switch to another
+linux
+or file system. :-(
+
+Donghui
+
+> The card is capable of much better than that.  Here are my numbers from a
+> 7 disk RAID5 array (8th is a hot spare) on a 7500-8 board:
 >
->Mar  5 08:20:19  kernel: scsi : aborting command due to timeout : pid 
->46081, scsi1, channel 0, id 11, lun 0 Read (10) 00 00 15 89 67 00 00 f8 00
->Mar  5 08:20:19  kernel:  r3b=20
->Mar  5 08:20:19  kernel:
->Mar  5 08:20:19  kernel:  que 
->cdb=  28   0   0  15  88  6f   0   0  f8   0  last_lenu= 1f000
->Mar  5 08:20:19  kernel:  que 
->cdb=  28   0   0  15  89  67   0   0  f8   0  last_lenu= 1f000
->Mar  5 08:20:19  kernel:  que 
->cdb=  28   0   0  15  8c  4f   0   0  f8   0  last_lenu= 1f000 scsi : 
->aborting command due to timeout : pid 46082, scsi1, channel 0, id 10, lun 
->0 Read (10) 00 00 15 88 6f 00
->00 f8 00
->Where is proble?
->What I've to do?
->Thanks for help
->seweryn
-
-
-In order of likelihood (IMHO):
-
-Bad termination
-Bad cabling
-Bad drive(s)
-SCSI Driver problem..
-Lack of power ( too small or weak power supply in computer)
-
-What "works" with one or two drives being used at a time will often fail 
-when sufficiently stressed.
-
-
-
-With our best regards,
-
-Maurice W. Hilarius       Telephone: 01-780-456-9771
-Hard Data Ltd.               FAX:       01-780-456-9772
-11060 - 166 Avenue        mailto:maurice@harddata.com
-Edmonton, AB, Canada      http://www.harddata.com/
-    T5X 1Y3
+> Sequential Writes
+>                               File  Blk   Num                   Avg
+> Maximum
+>       Lat%     Lat%    CPU
+> Identifier                    Size  Size  Thr   Rate  (CPU%)  Latency
+> Latency
+>       >2s      >10s    Eff
+> ---------------------------- ------ ----- ---  ------ ------ ---------
+> ---------
+> --  -------- -------- -----
+> 2.4.18-17SGI_XFS_1.2pre3smp   4096  4096    1   49.50 20.52%     0.068
+> 2915.
+> 71   0.00124  0.00000   241
+> 2.4.18-17SGI_XFS_1.2pre3smp   4096  4096    2   45.17 23.21%     0.141
+> 7873.
+> 45   0.00343  0.00000   195
+> 2.4.18-17SGI_XFS_1.2pre3smp   4096  4096    4   39.98 23.29%     0.335
+> 13338.
+> 23   0.00887  0.00010   172
+> 2.4.18-17SGI_XFS_1.2pre3smp   4096  4096    8   39.23 24.30%     0.631
+> 7887.
+> 96   0.01535  0.00000   161
+>
+> Obviously I've got more spindles, but your speeds shouldn't be *that* bad.
+> Some things to check:
+>
+> 1) You said latest drivers, but make sure that you upgraded everything --
+> a driver set from 3ware is driver+firmware+3dm.  Specifically, make sure
+> your firmware is up to date with your driver.
+>
+> 2) Make sure that your kernel supports HIGHIO.  I don't know if that
+> enterprise kernel does (do you need to run it?), but it makes a *big*
+> difference.  The latest 3ware drivers support HIGHIO, but the kernel needs
+> to as well.
+>
+> 3) Make sure your drives are listed as compatible.
+>
+> 4) Try a different FS.  The numbers above are with XFS -- with ext3 I was
+> getting write speeds of only half that (at best).
+>
+> Good luck.
+>
+> --
+> Joshua Baker-LePain
+> Department of Biomedical Engineering
+> Duke University
+>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
