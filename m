@@ -1,61 +1,47 @@
-From: "Cal Webster" <kc130iseo@coastalnet.com>
-Subject: RE: raidreconf: Successful RAID5 Reconstruction (re-size)
-Date: Wed, 26 Jun 2002 11:35:06 -0600
+From: Ken Causey <ken@ineffable.com>
+Subject: Can't add missing member back in???
+Date: 26 Jun 2002 12:10:57 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <NDBBIAKEEKGGEIKCBKNACEOIDAAA.kc130iseo@coastalnet.com>
-References: <NDBBIAKEEKGGEIKCBKNAAEOGDAAA.kc130iseo@coastalnet.com>
-Reply-To: <cwebster@ec.rr.com>
+Message-ID: <1025111457.596.13.camel@temp>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <NDBBIAKEEKGGEIKCBKNAAEOGDAAA.kc130iseo@coastalnet.com>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi,
+
+Interesting problem.  I'm setting up an all software RAID system and
+after a few fits and starts have reached some success.  I started to do
+some testing and have run into a problem.  What I was doing is I was one
+by one unplugging one of the SCSI drives and then powering up the system
+to make sure it would power up properly.  The first time I did this
+everything worked great.  I plugged the drive back up and used
+raidhotadd to recover and got everything to UUU.  I then powered off and
+unplugged another drive, system boots up great with only two drives. 
+Now its time to plug the drive back in and rebuild the array to be ready
+to unplug the last of the three drives for a thorough test.  Only, now I
+can ONLY boot up if I DO NOT have the missing drive plugged in.  This is
+really weird.  If I have all three devices attached then it claims that
+2/3 of the devices that make up md2 (my root) are unavailable and well
+then we are screwed.  WTF?
+
+Anyway, here's my setup, let me know what else you need to know:
+
+/boot	/dev/md0 	RAID1	(/dev/sda1 /dev/sdb1 /dev/sdc1)
+swap	/dev/md1	RAID1	(/dev/sda2 /dev/sdb2 /dev/sdc2)
+/	/dev/md2	RAID5	(/dev/sda3 /dev/sdb3 /dev/sdc3)
+/home	/dev/md3	RAID5	(/dev/sda5 /dev/sdb5 /dev/sdc5)
+/var	/dev/md4	RAID5	(/dev/sda6 /dev/sdb6 /dev/sdc6)
+
+The drive that is currently "failed" is /dev/sdb.  Again, the system
+boots up happily with sdb disconnected.  But has fits if it is
+reconnected and all 3 drives are connected.
+
+All help is appreciated,
+
+Ken Causey
 
 
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org
-> [mailto:linux-raid-owner@vger.kernel.org]On Behalf Of Cal Webster
-> Sent: Wednesday, June 26, 2002 10:41 AM
-> To: linux-raid@vger.kernel.org
-> Subject: raidreconf: Successful RAID5 Reconstruction (re-size)
->
-
-I spoke too soon!
-
-Although there were no indications of errors and initial indications were
-promising, deeper investigation revealed that the data (or at least the
-directories) have been corrupted.
-
-When attempting to re-mount iso images located on the RAID device, I got
-"Not a directory" errors.
-
-A listing at the top level of the mounted RAID5 device shows a somewhat
-garbled directory:
-
-[root@winggear archive]# df -k
-Filesystem           1k-blocks      Used Available Use% Mounted on
-/dev/hda5              1008952    149796    807904  16% /
-/dev/hda2             25134948  11767212  12090936  50% /home
-/dev/hda1             25134948   2299120  21559028  10% /usr
-/dev/hda4             25136164  18782060   5077244  79% /var
-/dev/md0              69616104  37240476  28839296  57% /usr/local/archive
-
-[root@winggear root]# cd /usr/local/archive/
-
-[root@winggear archive]# ls -l
-total 16
-?-wSrwxr-T  38216 843638119 136403541 3092718354 May 21  1957 backup
-sr-x--S--t  62581 1917696496 1424539385 3344111388 Nov 13  1975 iso
-drwxr-xr-x    2 root     root        16384 Apr 26  2001 lost+found
-b--Sr-xrw-  24320 1593859840 1902061873  44,  49 Jul  8  2002 shares
-
-There should be four normal directory entries here.
-
-Anyone know what could have caused this?
-
---Cal Webster
 
