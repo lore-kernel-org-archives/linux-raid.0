@@ -1,41 +1,39 @@
-From: Lars Marowsky-Bree <lmb@suse.de>
-Subject: Re: [PATCH md 0 of 12] Introduction
-Date: Wed, 23 Mar 2005 18:53:17 +0100
-Message-ID: <20050323175317.GY3670@marowsky-bree.de>
-References: <20050323164208.16240.patches@notabene>
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: raid and power off savety
+Date: Wed, 23 Mar 2005 21:12:18 +0100
+Message-ID: <20050323201218.GC26683@percy.comedia.it>
+References: <76592C4D3DA1AC4FB8424084D10D31A806115268@mchh2c4e.mchh.siemens.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Disposition: inline
-In-Reply-To: <20050323164208.16240.patches@notabene>
+In-Reply-To: <76592C4D3DA1AC4FB8424084D10D31A806115268@mchh2c4e.mchh.siemens.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@cse.unsw.edu.au>, Andrew Morton <akpm@osdl.org>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2005-03-23T16:47:10, NeilBrown <neilb@cse.unsw.edu.au> wrote:
+On Tue, Mar 22, 2005 at 12:29:57PM +0100, Schuett Thomas EXT wrote:
+Define RAID,
+I will answer for RAID = MD driver, but hw raid solutions might have
+different answers (eg battery backed up cache)
 
-> Andrew: Are you happy to keep collecting these as a list of patches
-> (bugs followed by bug-fixes :-), or would it be easier if I merged al=
-l
-> the bug fixes into earlier patches and just resent a small number of
-> "add-functionality" patches??
+>If you think through system crash scenarios, what types of chrashes 
+>are you are thinking of? Do you only consider harddisk faults, or 
+>do you consider power failures as well?
+md protects against disk failures
 
-I'm not Andrew, but as we're pulling out fixes for the existing code
-from -mm too, having it split into bugfixes + new features (w/fixes)
-makes it a bit easier for us...
+>Or more extreme: Does RAID gives you savety on HD HW failures, but may
+>make things worse for power failures (hard power switch off)?
+a power failure _might_ make things worse
 
+>Or more academic: Does raid have some journaling of its dirty cache 
+>(and/or whatever would need to be journaled) in a non volatile way,
+>or isn't there any need for it for any tricky reason?
+there isn't one for lack of a non-volatile storage for dirty cache
 
-Sincerely,
-    Lars Marowsky-Br=E9e <lmb@suse.de>
-
---=20
-High Availability & Clustering
-SUSE Labs, Research and Development
-SUSE LINUX Products GmbH - A Novell Business
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Luca Berra -- bluca@comedia.it
+        Communication Media & Services S.r.l.
+ /"\
+ \ /     ASCII RIBBON CAMPAIGN
+  X        AGAINST HTML MAIL
+ / \
