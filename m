@@ -1,81 +1,50 @@
-From: Tim Moore <linux-raid@nsr500.net>
-Subject: Re: raid5 performance - 2.4.28
-Date: Mon, 10 Jan 2005 08:26:34 -0800
-Message-ID: <41E2ACBA.6030503@nsr500.net>
-References: <Pine.LNX.4.44.0501091639260.13461-100000@coffee.psychology.mcmaster.ca>
+From: maarten <maarten@ultratux.net>
+Subject: Re: Spares and partitioning huge disks
+Date: Mon, 10 Jan 2005 17:34:24 +0100
+Message-ID: <200501101734.24851.maarten@ultratux.net>
+References: <crmt7e$8d6$1@sea.gmane.org> <200501081749.32816.maarten@ultratux.net> <200501082001.09317.maarten@ultratux.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44.0501091639260.13461-100000@coffee.psychology.mcmaster.ca>
+In-Reply-To: <200501082001.09317.maarten@ultratux.net>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: Mark Hahn <hahn@physics.mcmaster.ca>
 List-Id: linux-raid.ids
 
+On Saturday 08 January 2005 20:01, maarten wrote:
+> On Saturday 08 January 2005 17:49, maarten wrote:
+> > On Saturday 08 January 2005 15:52, Frank van Maarseveen wrote:
+> > > On Fri, Jan 07, 2005 at 04:57:35PM -0500, Guy wrote:
 
+> As the system is now online again, busy copying, I can show the exact
+> config:
+>
 
-Mark Hahn wrote:
->>Here's a data point in favor of raw horsepower when considering
->>software raid performance.
-> 
-> 
-> mostly sw r5 write performance, right?
+Well all about the array is done and working fine up to now.  Except one thing 
+that I didn't anticipate: The application that's supposed to run has some 
+problems under -I suppose- the new 2.4.28 kernel. I've had two panics / 
+oopses in syslog already, and the process then is unkillable, so a reboot is 
+in order.   But I think that's bttv related, not the I/O layer.
+In any case I suffered through two lengthy raid resyncs already... ;-|
 
-Correct.  Writes increased by 3X, Rewrites by 50%, Reads about the same.
+So I've been shopping around for a *big* servercase today so I can put all 
+disks (these 5, plus 6 from the current fileserver) in one big tower. I'll 
+then use that over NFS and can revert back to my older working kernel.
 
->>Athlon K7 (18u) @ 840MHz, 1GB PC133, Abit KA7
->>Athlon XP 2800 @ 2075MHz, 1GB PC2700, Asus A7V400-MX
-> 
-> 
-> so your dram bandwidth (measured by stream, say) went from maybe 
-> .8 GB/s to around 2 GB/s.  do you still have boot logs from the 
-> older configuration around?  it would be interesting to know 
-> the in-cache checksumming speed gain, ie:
-> 
-> raid5: using function: pIII_sse (3128.000 MB/sec)
+I've chosen a Chieftec case, as can be seen here 
+http://www.chieftec.com/products/Workcolor/CA-01.htm
+and here in detail
+http://www.chieftec.com/products/Workcolor/NewBA.htm
+Nice drive cages, eh ? :-)
 
-The Abit KA7 was the first consumer mobo to use leading+trailing mem clock 
-and bank interleaving, so memory speed has only slightly more than doubled:
+P.S.:  I get this filling up my logs. Should I be worried about that ?
+Jan 10 11:30:32 dozer kernel: raid5: switching cache buffer size, 512 --> 4096
+Jan 10 11:30:33 dozer kernel: raid5: switching cache buffer size, 4096 --> 512
+Jan 10 11:30:33 dozer kernel: raid5: switching cache buffer size, 512 --> 4096
+Jan 10 11:30:36 dozer kernel: raid5: switching cache buffer size, 4096 --> 512
 
-Athlon slot-A @ 850MHz + PC133 SDRAM
-------------------------------------
-kernel: raid5: measuring checksumming speed
-kernel:    8regs     :  1285.600 MB/sec
-kernel:    32regs    :   780.800 MB/sec
-kernel:    pII_mmx   :  1972.400 MB/sec
-kernel:    p5_mmx    :  2523.600 MB/sec
-kernel: raid5: using function: p5_mmx (2523.600 MB/sec)
-kernel: md: md driver 0.90.0 MAX_MD_DEVS=256, MD_SB_DISKS=27
-
-Athlon XP @ 2075MHz + PC2700 DDR
---------------------------------
-kernel: raid5: measuring checksumming speed
-kernel:    8regs     :  3172.800 MB/sec
-kernel:    32regs    :  1932.400 MB/sec
-kernel:    pIII_sse  :  3490.800 MB/sec
-kernel:    pII_mmx   :  4868.400 MB/sec
-kernel:    p5_mmx    :  6229.200 MB/sec
-kernel: raid5: using function: pIII_sse (3490.800 MB/sec)
-kernel: md: md driver 0.90.0 MAX_MD_DEVS=256, MD_SB_DISKS=27
-
-I'm also experimenting with this patch to see if the xor hardwire for 
-modern intel/AMD architectures is still valid.  With the old processor 
-p5_mmx was always picked and always within a few MB/s.  The new XP is all 
-over the map.
-
-pre-patch: always pIII_sse (35xx)
-post-patch: always p5_mmx (62xx)
-
---- ./include/asm-i386/xor.h.orig       Fri Aug  2 17:39:45 2002
-+++ ./include/asm-i386/xor.h    Sun Jan  9 22:32:37 2005
-@@ -876,3 +876,8 @@
-     deals with a load to a line that is being prefetched.  */
-  #define XOR_SELECT_TEMPLATE(FASTEST) \
-         (cpu_has_xmm ? &xor_block_pIII_sse : FASTEST)
-+
-+/* This may have been true in 1998, but lets try what appears to be
-+   nearly 4x faster */
-+#define XOR_SELECT_TEMPLATE(FASTEST) \
-+       (cpu_has_xmm ? &xor_block_p5_mmx : FASTEST)
+Maarten
 
