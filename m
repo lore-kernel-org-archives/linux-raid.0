@@ -1,46 +1,51 @@
-From: Andy Smith <andy@lug.org.uk>
+From: Michael Tokarev <mjt@tls.msk.ru>
 Subject: Re: [PATCH 1/2] md bitmap bug fixes
-Date: Fri, 18 Mar 2005 21:01:22 +0000
-Message-ID: <20050318210122.GK82728@caffreys.strugglers.net>
-References: <16950.5692.594941.130741@cse.unsw.edu.au> <20050318103326.GA18819@marowsky-bree.de> <6ivqg2-qsn.ln1@news.it.uc3m.es> <20050318134255.GS18819@marowsky-bree.de> <7e6rg2-pj1.ln1@news.it.uc3m.es> <423B09EF.8070708@steeleye.com> <23krg2-4rr.ln1@news.it.uc3m.es> <d1f8fr$k8f$1@sea.gmane.org> <e1nrg2-os1.ln1@news.it.uc3m.es> <d1fd9v$7h6$1@sea.gmane.org>
+Date: Sat, 19 Mar 2005 00:46:51 +0300
+Message-ID: <423B4C4B.7070404@tls.msk.ru>
+References: <422F7621.8090602@steeleye.com> <16949.5768.392061.95882@cse.unsw.edu.au> <20050314094454.GK3858@marowsky-bree.de> <16949.26113.68948.938529@cse.unsw.edu.au> <20050314112403.GT3858@marowsky-bree.de> <16950.5692.594941.130741@cse.unsw.edu.au> <20050318103326.GA18819@marowsky-bree.de> <6ivqg2-qsn.ln1@news.it.uc3m.es> <20050318134255.GS18819@marowsky-bree.de> <20050318171608.GA28494@percy.comedia.it>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="mqp/jWTyA3e+I98c"
-Content-Disposition: inline
-In-Reply-To: <d1fd9v$7h6$1@sea.gmane.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+In-Reply-To: <20050318171608.GA28494@percy.comedia.it>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Luca Berra <bluca@comedia.it>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Luca Berra wrote:
+> On Fri, Mar 18, 2005 at 02:42:55PM +0100, Lars Marowsky-Bree wrote:
+> 
+>> The problem is for multi-nodes, both sides have their own bitmap. When a
+>> split scenario occurs, and both sides begin modifying the data, that
+>> bitmap needs to be merged before resync, or else we risk 'forgetting'
+>> that one side dirtied a block.
+> 
+> on a side note i am wondering what would the difference be on using this
+> approach within the md driver versus DRBD?
 
---mqp/jWTyA3e+I98c
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+DRBD is more suitable for the task IMHO.  Several points:
 
-On Fri, Mar 18, 2005 at 09:24:05PM +0100, Mario Holbe wrote:
-> There is no such thing like "the right data" from a block device's
-> point of view. Both mirrors have "right data", since both got written
-> independently. Thus, somebody has to choose one mirror being the
-> "more right" one. This, of course, is in administrators hands.
-> However, if somebody did so, exactly the sync you described above
-> (union of the mapped data areas) must happen.
+o For md, all drives are equal, that is, for example, raid1
+  code will balance reads among all the available drives a-la
+  striping, while DRBD knows one mirror is remote and hence
+  will not try to read from it.  Well, todays GigE is fast,
+  but it is yet another layer between your data and the memory,
+  and we also have such a thing as latency.
 
-When would it ever be acceptable to throw away the "losing" node's
-data?  Seems like in the majority of cases it would be better to
-focus on never getting into the position where two nodes in a
-cluster end up with inconsistent but legitimate data.  Unless I am
-missing something here...
+o We all know how md "loves" to kick off "faulty" array components
+  after first I/O error, don't we?  DRBD allows "temporary" failures
+  of remote component, and will recover automatically when the
+  remote comes back.
 
---mqp/jWTyA3e+I98c
-Content-Type: application/pgp-signature
-Content-Disposition: inline
+o DRBD allows local drive to be a bit ahead compared to remote one
+  (configurable), while md will wait for all drives to complete a write.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.0 (FreeBSD)
+There's a case which is questionable in the first place: what to
+do if local part of the mirror fails?  Md will happily run on
+single remote component in degraded mode, while DRBD will probably
+fail...  Dunno which behaviour is "better" or "more correct"
+(depends on the usage scenario I think).
 
-iD8DBQFCO0GiIJm2TL8VSQsRAizjAJwOHIqZT+/mV9My53tAhCqYHOKe/gCeJl7M
-7xZSbmNp4mb64LdjHTxR2uo=
-=AAUl
------END PGP SIGNATURE-----
+But oh, I haven't looked at DRBD for about 5 years...
 
---mqp/jWTyA3e+I98c--
+/mjt
