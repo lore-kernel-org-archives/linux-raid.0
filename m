@@ -1,59 +1,44 @@
-From: Jason Gordon <fifreak@fifreak.dyndns.org>
-Subject: RAID1 help
-Date: Sun, 8 Jun 2003 14:56:15 -0400
+From: Ross Vandegrift <ross@willow.seitz.com>
+Subject: Re: RAID1 help
+Date: Sun, 8 Jun 2003 17:10:51 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <E15502AC-99E2-11D7-8B62-000393795060@fifreak.dyndns.org>
-Mime-Version: 1.0 (Apple Message framework v552)
-Content-Type: text/plain; charset=US-ASCII; format=flowed
-Content-Transfer-Encoding: 7bit
+Message-ID: <20030608211051.GA17000@willow.seitz.com>
+References: <E15502AC-99E2-11D7-8B62-000393795060@fifreak.dyndns.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+Content-Disposition: inline
+In-Reply-To: <E15502AC-99E2-11D7-8B62-000393795060@fifreak.dyndns.org>
+To: Jason Gordon <fifreak@fifreak.dyndns.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I have been trying to setup software RAID 1 on a new debian based 
-system for the last day and I cant seem to get it right.  I have a 
-Promise Ultra ATA 66 PCI card with 2 IDE channels on it.  I have two 
-identical 27.3 GB HDs hooked to this card, each on its own channel.
+On Sun, Jun 08, 2003 at 02:56:15PM -0400, Jason Gordon wrote:
+> I have been trying to setup software RAID 1 on a new debian based 
+> system for the last day and I cant seem to get it right.
+<snip>
 
-I followed the instructions on 
-http://docman.sourceforge.net/home_html/md-raid1.html exactly but I 
-also looked at various HOW-Tos.
+It sounds like you're trying to use the default Debian kernels.  This is
+very difficult.  I've tried pretty seriously three times and failed.
+Google doesn't find anyone who ever succeeded.  A recent inquiry to
+linux-raid and debian-user mailing lists yielded zero responses.
 
-My layout is as follows.
+> Any help, ideas suggestions, im getting pretty frustrated here.
 
-/dev/hde1	~26 GB 	/
-/dev/hde2	~700 MB	swap
+Give up on the Debian kernels and build your own that includes the RAID1
+drivers as modules.
 
-/dev/hdg has the same layout.
+(OTOH, if you do stick it out with the Debian kernels and figure
+something out, please report back)
 
-When I installed, /dev/hdg* was the failed disk, so I installed onto 
-/dev/hde1.
+-- 
+Ross Vandegrift
+ross@willow.seitz.com
 
-With both disks detatched, the system boots properly.  With /dev/hde 
-only attached, the system boots properly and reports it is in degraded 
-mode.  However, with /dev/hdg attached, the system kernel panics.  Lilo 
-comes up, loads, grabs the RAM disk image (from initrd) and loads that 
-into memory and starts to boot.  But then it eventually somewhere in 
-the boot process it kernel panics.  Here are some of the messages:
-
-isofs_read_super: bread failed, dev=09:00, iso_blknum=16, block=32
-mount: wrong fs type, bad option, bad superblock on /dev2/root, or too 
-many mounted file systems
-...
-cramfs: wrong magic
-warning: can't open /etc/mtab: no such file or directory
-pivot_root: No such file or directory
-/sbin/init: cannot open dev/console: no such file
-Kernel panic: Attempted to kill init!
-
-The only thing I can think to do right now is to try again with a 
-slightly different layout.  Some articles had mentioned something about 
-a small /boot partition.
-/dev/hde1	~100 MB	/boot
-/dev/hde2	~26 GB		/
-/dev/hde3	~700 MB	swap
-
-Any help, ideas suggestions, im getting pretty frustrated here.
-
-Jason
-
+A Pope has a Water Cannon.                               It is a Water Cannon.
+He fires Holy-Water from it.                        It is a Holy-Water Cannon.
+He Blesses it.                                 It is a Holy Holy-Water Cannon.
+He Blesses the Hell out of it.          It is a Wholly Holy Holy-Water Cannon.
+He has it pierced.                It is a Holey Wholly Holy Holy-Water Cannon.
+He makes it official.       It is a Canon Holey Wholly Holy Holy-Water Cannon.
+Batman and Robin arrive.                                       He shoots them.
