@@ -1,77 +1,43 @@
-From: Herta Van den Eynde <herta.vandeneynde@cc.kuleuven.ac.be>
-Subject: Re: mdadm.conf questions
-Date: Thu, 15 May 2003 16:19:05 +0200
+From: "bmoon" <bo@anthologysolutions.com>
+Subject: 4k issue on MD device block size
+Date: Thu, 15 May 2003 19:31:02 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3EC3A1D9.5010201@cc.kuleuven.ac.be>
-References: <3EC3685E.3010202@cc.kuleuven.ac.be> <16067.28056.186816.649850@notabene.cse.unsw.edu.au>
+Message-ID: <009001c31b53$32b36900$6901a8c0@bmoon>
+References: <3EC3685E.3010202@cc.kuleuven.ac.be> <16067.28056.186816.649850@notabene.cse.unsw.edu.au> <3EC3A1D9.5010201@cc.kuleuven.ac.be>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Thanks for your prompt reply, Neil.
+Hello,
 
-You're right - of course - about the man pages.  Only, if you're new to 
-this, it's not always evident to determine what constitutes "unwanted 
-detail".  Thanks for explaining.
+Please provide me an advice on  the following issues;
 
-Kind regards,
+I'd like to use 4k block size for both MD super block I/O and regular file
+I/O,
+which will improve the performance.
 
-Herta
+Q1: I noticed that it set the "blksize_size" to 4k for MD SB I/O but it use
+1K
+       for the regular file I/O.  It usually set the size to 1k at system
+init by "md-init",
+       then it set to 4k for MD SB I/O later. I could not find the place
+that set it
+      back to 1k.   However, it changes to 1 k????  How?
 
-Neil Brown wrote:
+Q2: I modified md.c to use the 4k blksize_size. It works but sometimes it
+crash.
+      System "BLOCK_SIZE" is still 1k, and my hd device blksize_size=1k,
+too.
+      I changed ONLY 1024 to 4096 on every occurences on md.c.
 
->On Thursday May 15, herta.vandeneynde@cc.kuleuven.ac.be wrote:
->  
->
->>When I run "mdadm --detail --scan", the command outputs information about the devices in the array on a separate line:
->>
->># mdadm --detail --scan
->>ARRAY /dev/md3 level=raid0 num-devices=3 UUID=fc5d996b:15107473:e3e819c9:6829a450
->>   devices=/dev/md0,/dev/md1,/dev/md2
->>ARRAY /dev/md2 level=raid1 num-devices=2 UUID=32d034b8:e93cc8c7:f6335e14:829aefee
->>   devices=/dev/sde,/dev/sdh
->>ARRAY /dev/md1 level=raid1 num-devices=2 UUID=4efa3017:9dc3fa9b:6f4acac4:e1944bec
->>   devices=/dev/sdd,/dev/sdg
->>ARRAY /dev/md0 level=raid1 num-devices=2 UUID=1d078c62:2b90a2c3:1ec1d0af:75600395
->>   devices=/dev/sdc,/dev/sdf
->>
->>1. When I redirect this output to '/etc/mdadm.conf, should I then
->>edit the file to join the line listing the devices to the one
->>defining the ARRAY? 
->>    
->>
->
->Only if you want to.  mdadm is happy with continuing a line in the
->next line if it is indented.
->
->  
->
->>2. Should the devices tag be there at all?  sd[c-e] are on a
->>separate bus from sd[f-h].  If I add more devices to the first bus,
->>sd[f-h] will be renamed.  Won't that confuse the md driver?  
->>    
->>
->
->No, the device tag normally is not needed.  I think the man page makes
->a point of saying that the output of --detail --scan is only the
->starting point of an mdadm.conf.  You need to edit it based on how
->your system is managed.  In some cases, e.g. ide drives, a devices
->entry is a good idea.  In most cases, and particularly with SCSI it
->isn't.
->
->  
->
->>3. should I add /dev/md[0-2] as DEVICE in /etc/mdstat.conf?
->>    
->>
->
->Yes.
->
->NeilBrown
->  
->
+     What am I missing?
+
+Thanks in advance,
+
+Bo
+
 
