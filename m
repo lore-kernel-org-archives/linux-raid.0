@@ -1,41 +1,39 @@
-From: Derek Vadala <derek@cynicism.com>
+From: Claudio Fleiner <raid@fleiner.com>
 Subject: Re: raidtools-20010914
-Date: Thu, 19 Dec 2002 08:51:17 -0500 (EST)
+Date: Thu, 19 Dec 2002 16:22:45 GMT
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20021219135117.470063B807@jaded.cynicism.com>
+Message-ID: <200212191622.gBJGMbK08626@ars.net>
 References: <3E01CBD8.6A18B88F@softers.net>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=X-UNKNOWN
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3E01CBD8.6A18B88F@softers.net>
-To: linux-raid@vger.kernel.org
-Cc: =?X-UNKNOWN?Q?Jarmo_J=E4rvenp=E4=E4?= <Jarmo.Jarvenpaa@softers.net>
+In-Reply-To: <3E01CBD8.6A18B88F@softers.net>;	from Jarmo =?iso-8859-1?Q?J=E4rvenp=E4=E4?=         <Jarmo.Jarvenpaa@softers.net> on Thu, 19 Dec 2002 15:38:32 +0200
+To: Jarmo =?iso-8859-1?Q?J=E4rvenp=E4=E4?= <Jarmo.Jarvenpaa@softers.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 19 Dec 2002, Jarmo [iso-8859-1] J=E4rvenp=E4=E4 wrote:
+I had the same problem and a quick look at the kernel shows
+that although the ioctl for generating the fault exists
+in the kernel, the main part is commented out and therefore
+the operation is a noop.
 
+This is true for the 2.4.19 and at least the beginning of
+the 2.5.* kernels. If you want to use raidhotgenerateerror
+you need to edit a few kernel files.
+
+Claudio
+
+
+on Thu, 19 Dec 2002 15:38:32 +0200 Jarmo =?iso-8859-1?Q?J=E4rvenp=E4=E4?= 
+        <Jarmo.Jarvenpaa@softers.net> wrote:
 > - 3 RAID 1 devices with each having 2 partitions mirrored together.
 > - Kernel 2.4.20
+> 
+> I tried to remove /dev/hda1 from /dev/md0 by using raidhotgenerateerror
+> and got this:
+> 
 
-There are some known issues with this release of raidtools. Avoid using
-it. Either revert to the previous version, or move up to 1.0 (available=
- as
-a REdHat 8.0 rpm or source rpm). Does anyone know if the tar file for
-raidtools-1.0 is floating around yet?
-
-Don't use raidhotgenerateerror. Use raidsetfaulty to mark a disk as
-failed.
-
-Or, use mdadm.
+----------------------------------------------------------------------------
+Claudio Fleiner                                          claudio@fleiner.com
 
 
---
-Derek Vadala, derek@cynicism.com, http://www.cynicism.com/~derek
-
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
