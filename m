@@ -1,67 +1,115 @@
 From: maarten <maarten@ultratux.net>
-Subject: combining two raid systems
-Date: Thu, 13 Jan 2005 20:17:16 +0100
-Message-ID: <200501132017.16910.maarten@ultratux.net>
+Subject: Re: combining two raid systems
+Date: Thu, 13 Jan 2005 20:57:06 +0100
+Message-ID: <200501132057.06414.maarten@ultratux.net>
+References: <200501132017.16910.maarten@ultratux.net>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="us-ascii"
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <200501132017.16910.maarten@ultratux.net>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Thursday 13 January 2005 20:17, maarten wrote:
+> Hi,
+>
 
-Hi,
+Some more info:  The mdadm --detail --scan still cannot find the other md 
+devices so I examined the boot.log.  It starts out assembling the right md 
+device (the one I want as the first) but it then rejects it.
+Sorry, I have to type this in from the console since my booted kernel is not 
+the same version as the /lib/modules version on disk (it being the wrong disk 
+and all) so I can't load any modules, thus no network connectivity there...
 
-I'm currently combing two servers into one, and I'm trying to figure out the 
-safest way to do that.
+It sees the partitions, but it says a couple of times 
+"invalid raid superblock magic on ..."
+but then it continues with something like:
+created md1
+bind <hda3>
+bind <hdc3>
+bind <hde3>
+bind <hdg3>
+bind <hdq3>
+bind <hds3>
+running: <hds3><hdq3><hdg3><hde3><hdc3><hda3>
+personality 4 is not loaded !
 
-System one had two md arrays: one raid-1 with the OS and a second one with 
-data (raid-5)  It is bootable through lilo
+And then it stops md1again.
 
-System two had 9 arrays, one with the OS (raid-1) two raid-1's for swap, and 6 
-md devices that belong in an LVM volume. This system has grub.
+This same, or analogue, thing happens thereafter with md0 but now it says 
+personality 3 is not loaded !
 
-All md arrays are self-booting 0xFD partitions.
+Now I have to wonder... personality isn't the raid level, is it ? Because I 
+would never ever use or need raid-3 or raid-4.  What's happening here ?
 
-I want to boot off system one.  I verified that that boots fine if I 
-disconnect all the [system-2] drives, so that's working okay. 
+And these two arrays, that are attempted at boot at least, won't show up later 
+in mdadm --detail --scan.   If I run --examine on one of those partitions it 
+clearly sees it being part of an array, but --detail differs in this respect.
 
-Now when I boot I get a lilo prompt, so I know the right disk is booted by the 
-BIOS.  When logged in, I see only the md devices from system two, and thus 
-the current md0 "/" drive is from system two.  Now what options do I have ?
+I think I may now want to remove the 0xFD flags on all the arrays of system 2 
+so as to disable them, but that still might not fix the missing personalities 
+problem...
+Well first I'll examine the boot.log of the system 1 to see if when booted 
+standalone it says things about personality 3 & 4 as well...
 
-If I zero the superblock(s) (or even the whole partitions) from md0 of system 
-2, it will not boot off of that obviously, but what will now get to be md0 ? 
-It could be the second array from system 2 equally well as the first array 
-from system one, right ?
-
-I could experiment with finding the right array by using different kernel 
-root= commandlines, but only grub gives me that possibility, lilo has no 
-boot-time shell (well, it has a commandline...)
-
-Another thing that strikes me is that running 'mdadm --detail --scan' also 
-only finds the arrays from system 2. Is that expected since it just reads 
-its /etc/mdadm.conf file, or should it disregard that and show all arrays ?
-
-Upon first glance 'fdisk -l' does show all devices fine (there are 10 of them)
-
-I think (er, hope, actually) that with mdadm.conf one could probably force the 
-machine to recognize the right drives as md0 as opposed to them being 
-numbered mdX, but is that a right assumption ?  At the time the kernel md 
-code reads / assembles the various 0xFD partitions, the root-partition is not 
-mounted (obviously) so reading /etc/mdadm.conf will not be possible.
-
-I'll start to try out some things but I _really_ want to avoid having an 
-unbootable system: for one, this system has no CDrom nor floppy, and even 
-more importantly I don't think my rescue media have all neccessary drivers 
-for the ATA & SATA cards.
-
-Anyone have some good advice for me ?
+Any help greatly appreciated !
 
 Maarten
 
+> I'm currently combing two servers into one, and I'm trying to figure out
+> the safest way to do that.
+>
+> System one had two md arrays: one raid-1 with the OS and a second one with
+> data (raid-5)  It is bootable through lilo
+>
+> System two had 9 arrays, one with the OS (raid-1) two raid-1's for swap,
+> and 6 md devices that belong in an LVM volume. This system has grub.
+>
+> All md arrays are self-booting 0xFD partitions.
+>
+> I want to boot off system one.  I verified that that boots fine if I
+> disconnect all the [system-2] drives, so that's working okay.
+>
+> Now when I boot I get a lilo prompt, so I know the right disk is booted by
+> the BIOS.  When logged in, I see only the md devices from system two, and
+> thus the current md0 "/" drive is from system two.  Now what options do I
+> have ?
+>
+> If I zero the superblock(s) (or even the whole partitions) from md0 of
+> system 2, it will not boot off of that obviously, but what will now get to
+> be md0 ? It could be the second array from system 2 equally well as the
+> first array from system one, right ?
+>
+> I could experiment with finding the right array by using different kernel
+> root= commandlines, but only grub gives me that possibility, lilo has no
+> boot-time shell (well, it has a commandline...)
+>
+> Another thing that strikes me is that running 'mdadm --detail --scan' also
+> only finds the arrays from system 2. Is that expected since it just reads
+> its /etc/mdadm.conf file, or should it disregard that and show all arrays ?
+>
+> Upon first glance 'fdisk -l' does show all devices fine (there are 10 of
+> them)
+>
+> I think (er, hope, actually) that with mdadm.conf one could probably force
+> the machine to recognize the right drives as md0 as opposed to them being
+> numbered mdX, but is that a right assumption ?  At the time the kernel md
+> code reads / assembles the various 0xFD partitions, the root-partition is
+> not mounted (obviously) so reading /etc/mdadm.conf will not be possible.
+>
+> I'll start to try out some things but I _really_ want to avoid having an
+> unbootable system: for one, this system has no CDrom nor floppy, and even
+> more importantly I don't think my rescue media have all neccessary drivers
+> for the ATA & SATA cards.
+>
+> Anyone have some good advice for me ?
+>
+> Maarten
+
 -- 
+
 
