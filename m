@@ -1,14 +1,32 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Raid 5 questions
-Date: Thu, 03 Jun 2004 15:29:43 +0100
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: Raid 5 questions
+Date: Thu, 3 Jun 2004 11:13:06 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <40BF35D7.9050902@dgreaves.com>
+Message-ID: <200406031513.i53FDF314301@watkins-home.com>
+References: <40BF35D7.9050902@dgreaves.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <40BF35D7.9050902@dgreaves.com>
+To: 'David Greaves' <david@dgreaves.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+Did you notice:
+	Rebuild Status : 0% complete
+
+Do this:
+	cat /proc/mdstat
+
+Guy
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of David Greaves
+Sent: Thursday, June 03, 2004 10:30 AM
+To: linux-raid@vger.kernel.org
+Subject: Raid 5 questions
 
 Hi
 
@@ -127,3 +145,9 @@ mdadm - v1.5.0 - 22 Jan 2004
 Thanks
 
 David
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
