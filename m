@@ -1,54 +1,239 @@
-From: Maurice Hilarius <maurice@harddata.com>
-Subject: Re: I'm about ready to do SW-Raid5 - pointers needed
-Date: Tue, 28 Oct 2003 21:33:16 -0700
-Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <5.1.1.6.2.20031028213128.03ac8370@mail.harddata.com>
-References: <Pine.LNX.4.44.0310281327090.8137-100000@redhat1.mmaero.com>
- <Pine.LNX.4.44.0310281327090.8137-100000@redhat1.mmaero.com> <Pine.LNX.4.56.0310281910090.25548@unicorn.drogon.net>
+From: "Guo, Min" <min.guo@intel.com>
+Subject: RE: ANNOUNCE: User-space System Device Enumation
+	(uSDE)
+Date: Wed, 29 Oct 2003 13:12:26 +0800
+Sender: cgl_discussion-bounces@lists.osdl.org
+Message-ID: <3ACA40606221794F80A5670F0AF15F840215DC2F@pdsmsx403.ccr.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; format=flowed
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.56.0310281910090.25548@unicorn.drogon.net>
-References: <Pine.LNX.4.44.0310281327090.8137-100000@redhat1.mmaero.com>
- <Pine.LNX.4.44.0310281327090.8137-100000@redhat1.mmaero.com>
-To: Gordon Henderson <gordon@drogon.net>
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 8bit
+Return-path: <cgl_discussion-bounces@lists.osdl.org>
+content-class: urn:content-classes:message
+List-Unsubscribe: <http://lists.osdl.org/mailman/listinfo/cgl_discussion>,
+	<mailto:cgl_discussion-request@lists.osdl.org?subject=unsubscribe>
+List-Archive: <http://lists.osdl.org/pipermail/cgl_discussion>
+List-Post: <mailto:cgl_discussion@lists.osdl.org>
+List-Help: <mailto:cgl_discussion-request@lists.osdl.org?subject=help>
+List-Subscribe: <http://lists.osdl.org/mailman/listinfo/cgl_discussion>,
+	<mailto:cgl_discussion-request@lists.osdl.org?subject=subscribe>
+Errors-To: cgl_discussion-bounces@lists.osdl.org
+To: Greg KH <greg@kroah.com>, Steven Dake <sdake@mvista.com>
+Cc: linux-raid@vger.kernel.org, linux-hotplug-devel@lists.sourceforge.net, Lars Marowsky-Bree <lmb@suse.de>, "Ling,
+	Xiaofeng" <xiaofeng.ling@intel.com>, Mark Bellon <mbellon@mvista.com>, linux-kernel@vger.kernel.org, cgl_discussion@osdl.org
 List-Id: linux-raid.ids
 
-With regards to your message at 12:14 PM 10/28/03, Gordon Henderson. Where 
-you stated:
->Who knows. I've just tried to swap the 2 promise cards for 2 highpoint
->cards - with fairly disastrous results )-: It booted, recognised the 4
->disks (hde,g,i,k) but then started to whinge about DMA errors and general
->badness, so put the promise cards back in and it's now hapilly rebuilding
->the raid arrays.
->
->Maybe it's having 2 promise (or highpoint) cards? I had one highpoint card
->in another PC for a few days and it was performing well...
->
->It's very annoying, whatever it is, and unfortunately I don't have the
->resources or time to try to really get to the bottom of this )-:
->
->Gordon
+Here I try to summary out some difference for uSDE and uDEV,any comments are welcome!
+In my opinion, competition is good and user can choose one they like because both of them
+are user-space applications with a little minor kernel changes,is that right?
+
+1.For the IDE/SCSI/PCI hotplug devices. 
+ uDEV:
+	edit namedev.config manually to specify certain map,
+	if slot change or device change, user can re-edit namedev.config
+ uSDE
+	record the id or slot at the first time, when move device to new slot or change to a new same type device,
+	automatically persist the name.
+	user can also specify map manually.
+
+2.For non-hotplug device
+ uDEV:
+	   not deal with it
+ uSDE
+	   scan at boot time and also perform policy method. so when moved or replaced devcie when the machine is
+down, the name can also be persisted.
 
 
-3Ware.
-They work.
-Reliable
-Decent Open Source drivers.
-Decent support
-Fast.
-Do either hardware RAID ( real hardware RAID, not Promise so-called version)
-Make lovely 2, 4 8, or 12 port devices for MD RAID.
-12 channels, 12 disks, ummm, tasty.
+3. for multipath device.
+uDEV
+	    not support it.
+uSDE
+	    automatically detect mulitpath device and create md device. support hot add a new path and remove a path.
 
+4. ethernet
+ uDEV
+	    not deal with it 
+ nameif
+	   name interface based on MAC, 
+ uSDE
+	   can set map based on MAC, SLOT.
+	   support both setting manually map and automatic processing
+	   support hotplug, eg. when exchange two device, the name can also be exchanged automatically.
+  . 
+5.devfs simulation
+  uDEV
+	   No such function
+  uSDE
+	    provide devfs simulation method.
 
+From the above comparsion, we can see uSDE really have some advantages.As far maintaince,
+I think that more codes don't mean lacking maintainability.
 
-With our best regards,
+Thanks
+Guo Min
 
-Maurice W. Hilarius       Telephone: 01-780-456-9771
-Hard Data Ltd.               FAX:       01-780-456-9772
-11060 - 166 Avenue        mailto:maurice@harddata.com
-Edmonton, AB, Canada      http://www.harddata.com/
-    T5X 1Y3
-
+> -----Original Message-----
+> From: linux-hotplug-devel-admin@lists.sourceforge.net 
+> [mailto:linux-hotplug-devel-admin@lists.sourceforge.net]On 
+> Behalf Of Greg KH
+> Sent: Wednesday, October 29, 2003 6:44 AM
+> To: Steven Dake
+> Cc: Lars Marowsky-Bree; Mark Bellon; 
+> linux-raid@vger.kernel.org; linux-kernel@vger.kernel.org; 
+> linux-hotplug-devel@lists.sourceforge.net
+> Subject: Re: ANNOUNCE: User-space System Device Enumation (uSDE)
+> 
+> 
+> On Tue, Oct 28, 2003 at 11:12:07AM -0700, Steven Dake wrote:
+> > On Tue, 2003-10-28 at 04:00, Lars Marowsky-Bree wrote:
+> > > On 2003-10-27T14:14:18,
+> > >    Mark Bellon <mbellon@mvista.com> said:
+> > > 
+> > > > The uSDE and udev are simlar in some respects. The uSDE 
+> allows for 
+> > > > complete control of the policy handling a device - not 
+> just its naming. 
+> > > 
+> > > Well, so could udev in theory, and I had this plan to 
+> enhance it to do
+> > > so for the specific case of multipathing one day in the 
+> not too distant
+> > > future (ie, before q1/04).
+> > > 
+> > > In as far as I can see, udev and uSDE really do not have 
+> too different
+> > > goals. Competition is good, but only if they explore 
+> distinct approaches
+> > > ;-)
+> > > 
+> > There are several distinct approaches which have been enumerated in
+> > other mails.
+> > 
+> > Since this point has not been addressed, I'd like to focus 
+> on the major
+> > difference in philosophy.
+> > 
+> > SDE places all policy in the hands of the policy developer 
+> in a seperate
+> > policy program.  udev places the policies in the main 
+> processing loop of
+> > the system, effectively implementing whatever policy is 
+> desired by the
+> > udev maintainers.
+> 
+> What do you mean by "policy"?
+> 
+> If you are saying that SDE allows programmers the ability to write new
+> programs to plug into your framework to create new types of policies,
+> then I understand that.  Your loadable plugins look like they support
+> that.  But they require a dynamic loader :)
+> 
+> What udev is doing is trying to provide a flexible policy 
+> that will work
+> for everyone, with a heirchy of rules that can be easily 
+> controlled and
+> changed by anyone who can operate a text editor (and soon to 
+> be changed
+> by GUI applications, like the HAL project).
+> 
+> I have not heard of any situation in which the current udev 
+> set of rules
+> do not work out for them.  And if you can think of one, can't it be
+> covered by the CALLOUT rule?  For example, someone has sent me a small
+> userspace program that works with the CALLOUT rule that handles
+> multipath devices by talking to the dm code.  Now that's pretty
+> flexible.
+> 
+> If you (or anyone else) thinks of something that the existing 
+> udev rules
+> do not handle, please let me know.  If it's too complex, then yes, the
+> user should use write their own SDE plugin.  But remember, 
+> 99.9% of the
+> people out there just want the LSB device names, with possibly a
+> persistent entry for their digital camera and USB joystick, which udev
+> handles just fine today.
+> 
+> For people with 4000 real scsi disks, udev also works well.  
+> That seems
+> to cover the wide range of users.
+> 
+> > Without seperating policies from the core executive of device naming
+> > system, the core of udev suffers from the same issues as 
+> placing policy
+> > in the kernel suffers.   Lack of maintainability, lack of 
+> user-defined
+> > functionality, bloat, etc.
+> 
+> Easy Separation?  Hm, in looking at udev, if you just replace 
+> 2 .c files
+> with your new naming scheme, everything works just fine.
+> 
+> And if you want to go down the path of accusations about lack of
+> maintainability, bloat, etc. I will be glad to point people 
+> at your tree
+> and then they can see these kinds of numbers:
+> 
+> For SDE:
+> $ find . -type f | egrep '[.c|.h]$' | xargs wc -l | tail -1
+>   57328 total
+> 
+> Wow, you build 18 shared libraries:
+> $ find . -type f | grep '\.so' | wc
+>      18      18     625
+> 
+> For udev:
+> $ find . -type f | egrep '[.c|.h]$' | xargs wc -l | tail -1
+>   17632 total
+> 
+> And that includes all of klibc, which really is not fair for udev to
+> calculate.  So let's just look at the udev code size:
+> $ ls | egrep '[.c|.h]$' | xargs wc -l | tail -1
+>    2613 total
+> 
+> And to be complete, let's add the totals of libsysfs and tdb, 
+> but to be
+> fair any udev developer never has to look into those files:
+> 
+> libsysfs is this big:
+>    3798 total
+> 
+> And tdb is this big:
+>    2679 total
+> 
+> So adding those numbers up we get these kinds of numbers for 
+> size of the
+> .c and .h files in the different projects:
+> 	SDE:	57328 lines
+> 	udev:	 9090 lines
+> 
+> That makes SDE over 6 times bigger in source code alone than all of
+> udev (including tdb and libsysfs).
+> 
+> I can compare executable size too, if you really want to still claim
+> that udev is suffering from "lack of maintainability and bloat" if you
+> really want :)
+> 
+> Oh, any reason you all haven't shown a working uSDE system in public
+> anywhere?
+> 
+> thanks,
+> 
+> greg k-h
+> 
+> p.s. yes, I know lines of code is a horrible metric, and 
+> doesn't really
+> mean squat.  I just want to point out the huge size difference between
+> the current state of udev and SDE, with pretty much identical
+> functionality from what I can tell.
+> 
+> 
+> -------------------------------------------------------
+> This SF.net email is sponsored by: SF.net Giveback Program.
+> Does SourceForge.net help you be more productive?  Does it
+> help you create better code?   SHARE THE LOVE, and help us help
+> YOU!  Click Here: http://sourceforge.net/donate/
+> _______________________________________________
+> Linux-hotplug-devel mailing list  http://linux-hotplug.sourceforge.net
+> Linux-hotplug-devel@lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel
+> 
