@@ -1,27 +1,69 @@
 From: Mike Tran <mhtran@us.ibm.com>
-Subject: RE: raid and sleeping bad sectors
-Date: 29 Jun 2004 17:20:16 -0500
+Subject: Re: raid and sleeping bad sectors
+Date: 29 Jun 2004 18:45:26 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1088547616.5376.124.camel@star2.austin.ibm.com>
-References: <200406292151.i5TLpW325996@watkins-home.com>
+Message-ID: <1088552726.5376.201.camel@star2.austin.ibm.com>
+References: <200406291559.i5TFx6324611@watkins-home.com>
+	 <1088526607.13815.89.camel@localhost>
+	 <1088534585.5376.118.camel@star2.austin.ibm.com>
+	 <40E1D79A.5030405@conterra.de>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200406292151.i5TLpW325996@watkins-home.com>
-To: Guy <bugzilla@watkins-home.com>
-Cc: 'linux-raid' <linux-raid@vger.kernel.org>
+In-Reply-To: <40E1D79A.5030405@conterra.de>
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, 2004-06-29 at 16:51, Guy wrote:
-> But!!!
-> Most disks, if not all, already re-map bad blocks on write.  So, how will
-> EVMS help?  The disk can't do anything about a read error!  Only a redundant
-> system like md or a hardware raid can fix a read error.
+On Tue, 2004-06-29 at 15:56, Dieter Stueken wrote:
+> Mike Tran wrote:
+> > (Please note that I don't mean to advertise EVMS here :) just want to
+> > mention that the functionality is available)
+> > 
+> > EVMS, (http://evms.sourceforge.net) provides a solution to this "bad
+> > sectors" issue by having Bad Block Relocation (BBR) layer on the I/O
+> > stack.
 > 
-> Guy
+> Before proposing any solutions, i think it is very important to
+> distinguish carefully between different kinds of errors:
+> 
+> a) read errors: some alert bell should ring (syslog/mail..)
+>     but the system should not careless disable any disk to avoid
+>     making the problem even worse.
+> 
+> b) write errors: if some blocks are written partly, but can not
+>     be written to all disks, it may help, to write the data
+>     (may be temporary) somewhere else.
+> 
+> when we got a read error, due to an unreadable sector, we may
+> first try to rewrite it. In most cases, bad sector replacement
+> of the HD-firmware takes action and the problem is solved so far.
+> 
 
-Think of BBR as "addition" to hardware bad block relocation :)
+For raid1 mirroring, I think the code for "rewrite" does not look too
+bad.  For raid5/raid5, it's going be harder.  I'm not saying that it's
+not doable :)
 
+In fact, there is a cnt_corrected_read field in the MD ver 1
+superblock.  So, I hope this feature is coming soon.
+
+
+> Only after this failed, we should turn over to plan b)
+> 
+> case b) may also help, if some disk gets temporary unavailable
+> (i.E. cabling problem). After manual intervention, that brings
+> the disk back on line again, the redirected data may even be
+> copied back.
+> 
+
+Plan b) needs that "somewhere else."  This can also be achieved with the
+MD ver 1 superblock.  Where we can reserve some sectors by correcly
+setting the usable data_offset and data_size.
+
+Now, we need user-space tool to create MD arrays with ver 1 superblock. 
+In addition, of course, we will also need to enhance MD kernel code.
+
+
+Cheers,
 Mike T.
 
