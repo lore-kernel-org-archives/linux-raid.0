@@ -1,42 +1,48 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: hadware raid [_U] issue.
-Date: 24 Dec 2003 23:03:54 -0800
+From: Peter Jonsson <dal01pjn@mds.mdh.se>
+Subject: Invalid superblock on drives in array
+Date: Thu, 25 Dec 2003 17:58:15 +0100 (MET)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <bse24q$vhj$1@cesium.transmeta.com>
-References: <20031224192810.1e79f5a3.ietf@2c9d1f3141b658e37c53395b25a04078.nosense.org> <1072261391.21554.125.camel@localhost.localdomain>
+Message-ID: <Pine.GSO.4.44L.0312251708280.28023-100000@legolas.mdh.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Followup to:  <1072261391.21554.125.camel@localhost.localdomain>
-By author:    Vijay Kumar <vijay@calsoftinc.com>
-In newsgroup: linux.dev.raid
->
-> Hello, 
-> 
-> I have a redhat box with Hardware Raid. Below ar ethe outputs of various
-> files/commands. Please let me know whether there is anything wrong.
-> I think there might be some problem in md0, but I am not very sure. 
-> Somone told me that since the box runs hardware the md-status does not
-> matter. What does the "[UU]" mean in mdstat ? In md0, one U is missing. 
-> What should I do next ?
-> 
+Hi!
 
-U = working drive
-_ = broken drive
+I'm running a RAID-5 setup using six Seagate ST19171W SUN9.0G drives off a
+Sun Multipack connected to an Adaptec 2940UW. I used to have the multipack
+connected to a Sparcstation 5 but I moved it yesterday. Everything was
+running fine until I rebooted the machine.
 
-You need to replace the broken drive and use "mdadm -a" to replace it
-into the array.
+Now I get this error message :
 
-If you believe the hardware is actually OK you can test it out
-(e.g. using badblocks) and then add it back into the array.
+[events: 00000000]
+md: invalid raid superblock magic on sda1
+md: sda1 has invalid sb, not importing!
+md: could not import sda1!
+md: autostart sda1 failed!
 
-	-hpa
--- 
-<hpa@transmeta.com> at work, <hpa@zytor.com> in private!
-If you send me mail in HTML format I will assume it's spam.
-"Unix gives you enough rope to shoot yourself in the foot."
-Architectures needed: ia64 m68k mips64 ppc ppc64 s390 s390x sh v850 x86-64
+I tried to get some more information with mdadm. This is what I got :
+
+[root@colossus root]# mdadm -E /dev/sd[abcdef]
+mdadm: No super block found on /dev/sda (Expected magic a92b4efc, got 6c6c6c6c)
+mdadm: No super block found on /dev/sdb (Expected magic a92b4efc, got add66bb5)
+mdadm: No super block found on /dev/sdc (Expected magic a92b4efc, got add66bb5)
+mdadm: No super block found on /dev/sdd (Expected magic a92b4efc, got 6c6c6c6c)
+mdadm: No super block found on /dev/sde (Expected magic a92b4efc, got 6c6c6c6c)
+mdadm: No super block found on /dev/sdf (Expected magic a92b4efc, got 6c6c6c6c)
+
+I'm not really sure what happend. I think what I did was to reboot the
+machine to use a new kernel. This machine was a clean RH9 installation and
+I applied a 'yum upgrade' to it after installing yum. I have since tried
+to use the array with the older kernel but that don't work either.
+
+Is there anyway I can fix the super blocks and reclaim the data or is it
+lost?
+
+// peter
+--
+If God is real, s/he might be integer (e.g. 0). If God is complex, then s/he might be imaginary.
+
