@@ -1,48 +1,39 @@
 From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: recovery not starting: wrong superblock? multipath instead of raid1
- !? (long!)
-Date: Fri, 12 Sep 2003 14:38:30 +1000
+Subject: Re: help! how do I mark spare drive as active without reconstruct?
+Date: Fri, 12 Sep 2003 15:17:24 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16225.19910.726790.810174@notabene.cse.unsw.edu.au>
-References: <3F5E0F4E.5090404@gmx.net>
+Message-ID: <16225.22244.132454.180117@notabene.cse.unsw.edu.au>
+References: <Pine.GSO.4.33.0309102227050.4844-100000@usny54.ixs1.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Richard Ems on Tuesday September 9
-To: r.ems@gmx.net
+In-Reply-To: message from Bill Welch on Wednesday September 10
+To: Bill Welch <billw@ewaydirect.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday September 9, r.ems@gmx.net wrote:
+On Wednesday September 10, billw@ewaydirect.com wrote:
+> repost with different subject, previous subject line suggested this was an
+> answer, not a question.
 > 
-> /proc/mdstat and mdadm --examine show that /dev/hdb2 is active, so I 
-> tried setting /dev/hda2 to faulty, remove it and add it back again, but 
-> no recovery was started.
+> I have a drive marked as spare that I know is a synced member of a raid5.
+> I want to add it back into the array *without* a reconstruct, i.e. just
+> mark it as active and change it's position.
 
-I suggest you try to boot with hda2 not in the array at all.  Just
-hdb2.
-Probably this means usinf fdisk to tell hda2 that it isn't a raid
-device so it doesn't get auto-detected.
-Then When you have a raid1 array working off just hdb2, hot add hda2.
-Then set the partition type back, and reboot.
-> 
-> Why does it show "Raid Level : multipath" ???
+You can't.
+You don't want to.
+The time you have spent waiting for a reply, you could have more
+productively spent waiting for the resync to complete.  It probably
+would have completed by now.
 
-Weird.  No idea.  But it is getting it from hda2 which is why I say
-start the array without that.
-> 
-> What are "Raid Devices"? The ones defined in /etc/raidtab?
-Yes, the number of devices in a fully working array.
+(Well, actually you can by changing about 1 line in mdadm and
+re-creating the array, but I'm not going to tell you which line
+because I really don't think you want to do it.
+I think mkraid has an option that lets you do this, and I don't
+recommend mkraid, and if you figure out how to do it, and do it, and
+you loose you data, then just remember that I told you that you didn't
+want to, and I apologise for telling you about mkraid...)
 
-
-> Why "Total Devices : 1"? Is this the same as "Working Devices"?
-
-No.  It includes spares.  hdb2 thinks there is only 1 device of any
-sort at the moment.
-
-> Could devices be working but not active?
-
-Yes.  A hot spare is working but not active.
 
 NeilBrown
