@@ -1,40 +1,24 @@
-From: Juri Haberland <list-linux.raid@spoiled.org>
-Subject: Re: invalud argument when replacing disk of raid 5 set
-Date: Sat, 8 Nov 2003 17:23:19 +0000 (UTC)
+From: "zqcx" <z_q_c_x@263.net>
+Subject: PCD&PCBN tools
+Date: Sun, 9 Nov 2003 20:25:22 +0800
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <news2mail-boj8q7$g8p$1@cartman.spoiled.org>
-References: <3FAC523E.3050509@eglifamily.dnsalias.net> <news2mail-boj5ci$leu$1@cartman.spoiled.org> <3FAD1C2E.5010706@eglifamily.dnsalias.net>
-Reply-To: Juri Haberland <juri@koschikode.com>
+Message-ID: <S262410AbTKIMXk/20031109122340Z+1457@vger.kernel.org>
+Reply-To: z_q_c_x@263.net
+Content-Type: text/plain;charset="GB2312"
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Dan Egli <dan@eglifamily.dnsalias.net> wrote:
-> Juri Haberland wrote:
+Dear Sir or Madam:
 
-> | What commands do you exactly type and what error messages do you
-> | exactly get?
-> |
-> This is from memory because I"m at home and the machine is at the
-> office. But it should be close enough.
-> 
-> # raidstart /dev/md0
-> raidstart: Invalid Argument
-> 
-> if I let the system auto-start it during boot, it looks like this:
-> 
-> Starting Raid Devices: /dev/md0
-> raidstart: Invalid Argument
-> /dev/md0 is not a RAID0 or LINEAR set
+We are a Chinese manufacturer of diamond tools, and now we are very glad to inform you that now you have a better choice when you grinding the PCD&PCBN tools, we can supply the grinding wheels (vitrified/metal/resin bond) with the lowest cost and high quality. Almost all Chinese PCD&PCBN tools producer are our users.
 
-I think you should use mdadm:
+Now we are looking for the distributors all over the world, if you have good ability in this area, we think it is a good choice for you, also we will supply the first sample free.
 
-mdadm --assemble /dev/md0 /dev/hdc1 /dev/hdd1 --run
-mdadm --manage /dev/md0 --add /dev/hdb1
+No hesitate to contact to us.
 
-Cheers,
-Juri
+Sorry to disturb you.   
 
--- 
-Juri Haberland  <juri@koschikode.com> 
+Fax: +86-10-80725203
+E-mail: ctstc2003@sina.com
 
