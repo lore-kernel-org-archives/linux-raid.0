@@ -1,55 +1,50 @@
-From: Jeff Hill <jhill@hronline.com>
-Subject: mdadm mail option configuration
-Date: Tue, 28 May 2002 12:04:00 -0400
+From: James Fillman <jfillman@cucbc.com>
+Subject: just how dangerous is this??
+Date: Tue, 28 May 2002 10:55:11 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <5.1.0.14.0.20020528111927.01f28280@205.233.215.4>
+Message-ID: <200205281055.11601.jfillman@cucbc.com>
+Reply-To: jfillman@cucbc.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; format=flowed
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I'm having problems configuring mdadm to send e-mail alerts. From past list 
-discussions I configured it with:
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-devo:/#  cat /etc/mdadm.conf
 
-DEVICE /dev/hd*[0-9] /dev/sd*[0-9]
-ARRAY /dev/md1 level=raid1 num-devices=2 
-UUID=8e0114bb:e5b3a608:048bed2d:5fe33724
-ARRAY /dev/md2 level=raid1 num-devices=2 
-UUID=434dd79d:0c046e9b:867e8d98:86bdb5da
-ARRAY /dev/md3 level=raid1 num-devices=2 
-UUID=9a9a2078:44c22d83:25a32457:db7e3783
-ARRAY /dev/md5 level=raid1 num-devices=2 
-UUID=e3254469:34147651:c9298800:5a84cd06
-ARRAY /dev/md6 level=raid1 num-devices=2 
-UUID=80c78ac7:c0f4442a:3dd6517d:57edc79e
-MAILADDR jhill@hrpost.com
-PROGRAM /usr/local/sbin/raidalert
+I've got a large number of linux server to build and I'm using SuSE's ALICE 
+install program to build them. ALICE is SuSE's auto install program and has 
+limited functionality. Most importantly, it doesn't do RAID. So what I'm 
+doing is having ALICE partition two drives with the partitions being of type 
+"FD". It installs linux just fine on "sda" and when it's all done, I boot a 
+rescue disk, and do a "mkraid -c ./raidtab --really-force /dev/md[0-4]" to 
+create the mirrors. I'm just trying it out now and it seems to be working but 
+I've got very little experience working with SoftRAID and I thought I'd ask 
+if I'm playing with fire!!
 
-------
-Then, I just have an init script that runs:
+the mkraid command warns me that it will delete all the data on the partitions 
+when creating the mirrors, but it doesn't. 
 
-	/sbin/mdadm -Fs --delay=600 &
+What sort of implications am I looking at with this? Will it be unstable?
 
-I thought having that running would be right for monitoring and e-mailing, 
-but I've tried a few variations without success. When one of the component 
-devices fails and is booted out of the array, no alert is mailed. The 
-raidalert script is one I picked up from past discussions on the list, and 
-I wouldn't think it would be causing any problems:
 
-devo:/#  cat /usr/local/sbin/raidalert
-#!/bin/bash
-# Log Raid Problems
-logger -p kern.crit -t RAID $*
+cheers,
+- -- 
+#########################
+#  James Fillman
+#  Linux Systems Architect
+#  CUCBC
+#
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.0.6 (GNU/Linux)
+Comment: For info see http://www.gnupg.org
 
---------
-
-I know this should be simple. I must be missing the obvious, but hours of 
-tinkering and searching the list archives have gotten me nowhere.
-
-Thanks for any assistance,
-
-Jeff Hill
+iD8DBQE888R/B2UIX/PVkc0RAgDaAJ9zSa6lglc6+U6YtBQOlEi2IrmU0ACffnez
+2AXqeuFKQUELieKfree5nJo=
+=u7iJ
+-----END PGP SIGNATURE-----
 
