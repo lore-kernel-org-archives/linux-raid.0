@@ -1,61 +1,51 @@
-From: <robin-lists@robinbowes.com>
-Subject: Raidtools vs. mdadm?
-Date: Thu, 22 Jul 2004 20:05:35 +0100
+From: Kanoa Withington <kanoa@cfht.hawaii.edu>
+Subject: Re: I/O Blocking
+Date: Thu, 22 Jul 2004 09:51:56 -1000 (HST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <S266871AbUGVTFi/20040722190538Z+2544@vger.kernel.org>
+Message-ID: <Pine.LNX.4.55.0407220943170.7498@umi.cfht.hawaii.edu>
+References: <40FFEB55.2000905@ocis.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <40FFEB55.2000905@ocis.net>
+To: "Jason C. Leach" <jleach@ocis.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
 
-I've been using mdadm to create and manage my RAID devices (RAID1 and
-RAID5).
+Jason,
 
-I've not really given much thought to how they are started at boot time -
-they just are!
+There is a technical answer to your question which I cannot properly
+relate to you. The practical answer is yes, an SMP system will
+generally perform better under heavy interrupt conditions and would
+probably help with the situation you are having.
 
-On Fedora Core 2, RAID devics are started from /etc/rc.d/rc.sysinit. The
-default install used raidtools to start the arrays, but I have patched
-rc.sysinit with the following patch:
+That said, the problem you are having is not lack of CPU
+performance. I don't know what it is but you need to look into it
+before throwing another mega-cpu at it. You might have too many I/O
+devices sharing the same IRQ, it could be something weird like a
+haywire parallel port device. Take a careful look at how your
+equipment is set up and do some experiments turning things off and on,
+etc. You can probably get to the bottom of it without upgrading
+anything.
 
---- rc.sysinit.orig     2004-02-04 01:42:10.000000000 -0600
-+++ rc.sysinit  2004-02-04 02:26:45.000000000 -0600
-@@ -435,6 +435,10 @@
-        /etc/rc.modules
- fi
+-Kanoa
 
-+if [ -f /etc/mdadm.conf ]; then
-+       /sbin/mdadm -A -s
-+fi
-+
- update_boot_stage RCraid
- if [ -f /etc/raidtab ]; then
-        # Add raid devices
-@@ -467,6 +471,10 @@
-                                RESULT=0
-                                RAIDDEV="$RAIDDEV(skipped)"
-                        fi
-+                       if [ $RESULT -gt 0 -a -x /sbin/mdadm ]; then
-+                               /sbin/mdadm -Ac partitions $i -m dev
-+                               RESULT=$?
-+                       fi
-                        if [ $RESULT -gt 0 -a -x /sbin/raidstart ]; then
-                                /sbin/raidstart $i
-                                RESULT=$?
+On Thu, 22 Jul 2004, Jason C. Leach wrote:
 
-
-So, my question is: do I still need raidtools? Does it do anything that
-mdadm can't?
-
-Thanks,
-
-R.
-
---
-http://robinbowes.com 
-
+> Hi,
+>
+> Both the RAID (Promise SuperTrak 6000) or the USB subsystems really
+> drive the system load up. I'm using a AMD 3200+ system that is only a
+> few months old with the 2.4.25 kernel.  When the I/O systems are
+> blocking the system is very unresponsive. Some times samba will timeout,
+> or I'll wait several seconds for commands like df, top, w and so on.
+>
+> I am wondering if I were to use a dual CPU system, would this solve my
+> I/O blocking problem?  Would one CPU tend to the I/O subsystem and the
+> second would deal with other system requests I (samba, DB, LDAP, ...)?
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
