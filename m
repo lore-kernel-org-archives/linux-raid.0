@@ -1,146 +1,54 @@
-From: Alvin Oga <aoga@ns.Linux-Consulting.com>
+From: Andy Smith <andy@strugglers.net>
 Subject: Re: ext3 journal on software raid (was Re: PROBLEM: Kernel 2.6.10 crashing repeatedly and hard)
-Date: Mon, 3 Jan 2005 17:18:29 -0800 (PST)
-Message-ID: <Pine.LNX.3.96.1050103170449.22620A-100000@Maggie.Linux-Consulting.com>
-References: <jh4pa2-pi.ln1@news.it.uc3m.es>
+Date: Tue, 4 Jan 2005 02:41:08 +0000
+Message-ID: <20050104024108.GK99565@caffreys.strugglers.net>
+References: <l1nna2-e9i.ln1@news.it.uc3m.es> <200501031846.42950.maarten@ultratux.net> <200501032052.21459.maarten@ultratux.net> <a9noa2-o12.ln1@news.it.uc3m.es> <fh0pa2-kvp.ln1@news.it.uc3m.es> <16857.55609.534526.297577@cse.unsw.edu.au> <jh4pa2-pi.ln1@news.it.uc3m.es> <16857.64086.362458.177296@cse.unsw.edu.au> <6d5bedd80501031816eb8f296@mail.gmail.com> <16857.65024.745883.752981@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="u+fRANu8FDjhiqn/"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <jh4pa2-pi.ln1@news.it.uc3m.es>
+Content-Disposition: inline
+In-Reply-To: <16857.65024.745883.752981@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Peter T. Breuer" <ptb@lab.it.uc3m.es>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
+--u+fRANu8FDjhiqn/
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-On Tue, 4 Jan 2005, Peter T. Breuer wrote:
+On Tue, Jan 04, 2005 at 01:22:56PM +1100, Neil Brown wrote:
+> On Monday January 3, ewan.grantham@gmail.com wrote:
+> > I've setup a RAID-5 array using two internal 250 Gig HDs and two
+> > external 250 Gig HDs through a USB-2 interface. Each of the externals
+> > is on it's own card, and the internals are on seperate IDE channels.
+> >=20
+> > I "thought" I was doing a good thing by doing all of this and then
+> > setting them up using an ext3 filesystem.
+>=20
+> Sounds like a perfectly fine setup (providing always that external
+> cables are safe from stray feet etc).
+>=20
+> No need to change anything.
 
-> Neil Brown <neilb@cse.unsw.edu.au> wrote:
+Except that Peter says that the ext3 journals should be on separate
+non-mirrored devices and the reason this is not mentioned in any
+documentation (md / ext3) is that everyone sees it as obvious.
+Whether it is true or not it's clear to me that it's not obvious to
+everyone.
 
-> > > Let 
-> > > 
-> > >    p = probability of a detectible error occuring on a disk in a unit time
-> > >    p'= ................ indetectible .....................................
-> > > 
+--u+fRANu8FDjhiqn/
+Content-Type: application/pgp-signature
+Content-Disposition: inline
 
-i think the definitions and modes of failures is what each reader is
-interpretting from their perspective ??
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.6 (FreeBSD)
 
-> > think, the branch of mathematics that has the highest ratio of people
-> > who think that understand it to people to actually do (witness the
-> > success of lotteries).
+iD8DBQFB2gJEIJm2TL8VSQsRAtJbAJoDxT5OmfwhR8pJ2lVSwT/iV+NGXwCgt1ap
+utEna2fyRIfEI/Mi17haF4w=
+=jhL4
+-----END PGP SIGNATURE-----
 
-ahh ... but the stock market is the worlds largest casino
- 
-> Possibly. But not all of them teach probability at university level
-> (and did so when they were 21, at the University of Cambridge to boot,
-> and continued teaching pure math there at all subjects and all levels
-> until the age of twenty-eight - so puhleeeze don't bother!).
-
-:-)
-  
-> I mean an error occurs that can be detected (by the experiment you run,
-> which is prsumably an fsck, but I don't presume to dictate to you).
-
-or more simply, the disk doesnt work .. what you write is not what you get
-back ??
-	- below that level, there'd be crc errors, some fixable
-	some not
-	- below that, there'd be disk controller problems with
-	bad block mapping and temperature sensitive failures
-	- below that ... flaky heads and platters and oxide ..
-
-> > Is it a bit
-> > getting flipped on the media, or the drive detecting a CRC error
-> > during read?
-
-different error conditions ...
-	- bit flipping is trivially fixed ...
-	and the user probasbly doesnt know about it
-
-	- crc error of 1 bit error or 2 bit error or burst errors 
-	( all are different crc errors and ecc problems )
- 
-> I don't know. It's whatever your test can detect. You can tell me!
-
-i think most people only care about ... can we read the "right data"
-back some time later after we had previously written it
-"supposedly correctly"
-
-> > And what is your senario for an undetectable error happening?
-
-there's lots of undetectable errors ...
-
-there's lots of detectable errors that was fixed, so that the user
-doesnt know abut the underlying errors
-
-> Likewise, I don't know. It's whatever error your experiment
-> (presumably an fsck) will miss.
-
-fsck is too high a level to be worried about errors...
-	- it assume the disk is workiing fine
-	and fsck fixes the filesystem inodes and doesnt worry
-	about "disk errors"
- 
-> > My
-> > understanding of drive technology and CRCs suggests that undetectable
-> > errors don't happen without some sort of very subtle hardware error,
-
-some crc ( ecc ) will fix it ... some errors are Not fixable
-
-"crc" is not used too much ... ecc is used ...
-
-> 
-> > or high level software error (i.e. the wrong data was written - and
-> > that doesn't really count).
-> 
-> It counts just fine, since it's what does happen :- consider a system
-> crash that happens AFTER one of a pair of writes to the two disk
-> components has completed, but BEFORE the second has completed.  Then on
-> reboot your experiment (an fsck) has the task of finding the error
-> (which exists at least as a discrepency between the two disks), if it
-> can, and shouting at you about it.
-
-a common problem ... that data is partially written during a crash
-
-very hard to fix .. without knowing what the data should have been
- 
-> All I am saying is that the error is either detectible by your
-> experiment (the fsck), or not.
-
-or detectable/undetectable/fixable by other "methods"
-
- If it IS detectible, then there
-> is a 50% chance that it WON'T be deetcted,
-
-that'd depend on what the failure mode was ..
-
-> even though it COULD be
-> detected, because the system unfortunately chose to read the wrong
-> disk at that moment.
-
-the assumption is that if one writes data ... that the crc/ecc is
-written somewhere else that is correct or vice versa, but both
-could be written wrong
-
-> And if it is not detectible, it's still twice as likely as with one
-> disk, for the same reason - more real estate for it to happen on.
-
-more "(disk) real estate" increases the places where errors can 
-occur ... 
-
-but todays, disk drives is lots lots better than the old days
-
-and todays dd copying of disk might work, but doing dd on
-old disks w/ bad oxides will create lots of problems ...
-
-==
-== fun stuff ... how do you make your data more secure ...
-== and reliable
-==
-
-c ya
-alvin
-
-
+--u+fRANu8FDjhiqn/--
