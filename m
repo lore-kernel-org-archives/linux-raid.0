@@ -1,31 +1,33 @@
-From: NeilBrown <neilb@cse.unsw.edu.au>
-Subject: [PATCH] md - 2 of 6 - Improve test for which raid1 device doesn't need to be written to.
-Date: Thu, 08 May 2003 11:39:43 +1000
+From: "Armin Mohring" <arminmohring@surfeu.de>
+Subject: Raidsetup
+Date: Thu, 8 May 2003 09:04:16 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <E19DaNr-0004ue-00@notabene.cse.unsw.edu.au>
+Message-ID: <FEEPICBHELONLMDKJLPOOEEJCBAA.arminmohring@surfeu.de>
+Mime-Version: 1.0
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Linus Torvalds <torvalds@transmeta.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-### Comments for ChangeSet
+1. Setup
+actual setup:
+hda win xp
+hdb linux raid 0
+hdc linux raid 0
+hdd swap disk for win and linux
 
-Instead of testing last_used (which could change in unusual circumstances) we 
-test against the bdev that we read from, and don't write back to there.
+Is it better to setup as follows?
+hda liunx raid 0
+hdb win xp
+hdc linux raid 0
+hdd swap disk for win xp and linux
 
- ----------- Diffstat output ------------
- ./drivers/md/raid1.c |    2 +-
- 1 files changed, 1 insertion(+), 1 deletion(-)
+2. The disks for linux have a read-performance of ~28MB/s.
+   I only measure 40 MB/s read-performance for the raid.
 
-diff ./drivers/md/raid1.c~current~ ./drivers/md/raid1.c
---- ./drivers/md/raid1.c~current~	2003-05-02 13:26:51.000000000 +1000
-+++ ./drivers/md/raid1.c	2003-05-02 16:40:54.000000000 +1000
-@@ -825,7 +825,7 @@ static void sync_request_write(mddev_t *
- 		if (!conf->mirrors[i].rdev || 
- 		    conf->mirrors[i].rdev->faulty)
- 			continue;
--		if (i == conf->last_used)
-+		if (conf->mirrors[i].rdev->bdev == bio->bi_bdev)
- 			/*
- 			 * we read from here, no need to write
- 			 */
+TIA 
+
+Armin Mohring 
+
