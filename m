@@ -1,34 +1,90 @@
-From: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
-Subject: Re: http://www.cse.unsw.edu.au/~neilb/source/mdadm/ gone?
-Date: Sun, 19 Jan 2003 20:21:09 -0500 (EST)
+From: "Sandu Mihai" <mihai.sandu@kpnqwest.ro>
+Subject: Re: Raid Persistent Superblock Question..
+Date: Mon, 20 Jan 2003 03:57:06 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.52.0301192018450.31406@filesrv1.baby-dragons.com>
-References: <20030119232606.3E65C3B81C@jaded.cynicism.com>
+Message-ID: <008e01c2c027$3c9042e0$c7e60c0a@mihaisandu2>
+References: <Pine.LNX.3.96.1030119130208.20317A-100000@Maggie.Linux-Consulting.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20030119232606.3E65C3B81C@jaded.cynicism.com>
-To: Derek Vadala <derek@cynicism.com>
-Cc: Linux RAID Mailing Liste <linux-raid@vger.kernel.org>
+To: Alvin Oga <aoga@Maggie.Linux-Consulting.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Ok. I am carefull. But, I want to be able to mangle with the superblock, in
+order to have my kernel 'autodetect' a disk as being a member of a specific
+md device.
+If for example you install Redhat on a box, with all the things on software
+raid (including /), Redhat will autogenerate a raidtab, with every disk
+having a permanent superblock. That will glue forever your disks to md0,
+md1, etc (sadly, Redhat install will not allow you to specify which mdNNN
+you will use for what, except if you are doing kickstart install).
+If you will move the disks in another box (also Redhat), the other box will
+go bezerk, since by the 'magic' of array membership autodetection it will
+autodetect your new disks as part of a md device
+and then it will refuse to create the correct md device with the existing
+disks. (that is, if the box has md devices overlapping with those on the
+other box, eg. md0 used for / on both, etc)
+The new disks (in my case) got a correct SCSI assignment (newdisk 1 = sdc,
+new disk 2 = sdd, which is correct).
+So far, I have seen a lot of tools that either query the superblock, add a
+disk in the array, etc. I did not seen one that can let one edit the
+superblock of a raid device.
 
-	Hello Derek ,  Thank you for pointing that mirror out .
-	Nice to see the tool on kernel.org too .  I sure hope that
-	is what Neil is doing .  This almost looks like a failed restore
-	from backups .  Ie: all I had seen is directory structure and no
-	files .   Tnx ,  JimL
+/Mike
+----- Original Message -----
+From: "Alvin Oga" <aoga@Maggie.Linux-Consulting.com>
+To: "Sandu Mihai" <mihai.sandu@kpnqwest.ro>
+Cc: <linux-raid@vger.kernel.org>
+Sent: Sunday, January 19, 2003 11:04 PM
+Subject: Re: Raid Persistent Superblock Question..
 
-On Sun, 19 Jan 2003, Derek Vadala wrote:
-> On Sun, 19 Jan 2003, Friedrich Lobenstock wrote:
-> > Is http://www.cse.unsw.edu.au/~neilb/source/mdadm/ gone?
-> > I only get "Error 404 - File Not Found".
-> I noticed the same thing yesterday. Maybe Neil is reorganizing.
-> Try:
-> ftp.kernel.org/pub/linux/utils/raid/mdadm
--- 
-       +------------------------------------------------------------------+
-       | James   W.   Laferriere | System    Techniques | Give me VMS     |
-       | Network        Engineer |     P.O. Box 854     |  Give me Linux  |
-       | babydr@baby-dragons.com | Coudersport PA 16915 |   only  on  AXP |
-       +------------------------------------------------------------------+
+
+>
+> hi ya
+>
+> when you add a new scsi disk...  you have to be careful
+> about its unit number
+>
+> make sure your dirves are properly configured...
+> - sda is in fact the lowest scsi-ID
+> - sdb is in fact lowest scsi-ID +1
+> - add your new disks w/ higher scsi-IDs
+>
+> all should work fine
+>
+> sda, sdb, sdc is (re-)assigned in the sequence of scsi-IDs
+>
+> c ya
+> alvin
+>
+> On Sun, 19 Jan 2003, Sandu Mihai wrote:
+>
+> >
+> > Is there any tool that can help someone edit the persistent superblock
+of a
+> > partition/device that is a member of an RAID array?
+> >
+> > Problem:
+> >     I have md0 - raid1 - /dev/sda1 + /dev/sdb1 + persistent-superblock 1
+> > md0 happens to be my / partition.
+> >     If I will insert another two disks in that box (/dev/sdd, /dev/sdc
+with
+> > /dev/sdc1, /dev/sdd1 being members of md0 RAID1 array, the disks are
+from
+> > another box..) the kernel will mess-up the things, by 'autodetecting'
+the
+> > newly added disks as md0, and not _my_ disks.
+> >     If I could alter the superblock info on the newly added disks, well,
+> > that will be good.
+> > So far, no HOWTO, and no docs mention the existence of a tool like this
+(you
+> > can only query the superblock, and that is all..)
+> >
+>
+>
+>
+>
+
