@@ -1,88 +1,398 @@
-From: Paul Clements <paul.clements@steeleye.com>
-Subject: Re: [ANNOUNCE][PATCH 2.6] md: persistent (file-backed) bitmap and
- async writes
-Date: Wed, 23 Jun 2004 17:48:14 -0400
+From: gianluca.cecchi@tiscali.it
+Subject: RE: raid 5 lost 2 of 3 disks. Help please [solved]
+Date: Thu, 24 Jun 2004 00:47:14 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <40D9FA9E.9010003@steeleye.com>
-References: <40198E85.29EBC8E0@SteelEye.com>	<16422.62911.755570.855200@notabene.cse.unsw.edu.au>	<4027E342.D02202F1@SteelEye.com>	<16424.8182.876520.280031@notabene.cse.unsw.edu.au>	<402D3A86.97CF894F@SteelEye.com>	<16456.2775.641721.204171@notabene.cse.unsw.edu.au>	<4048F9AA.1BBD67F@SteelEye.com>	<406B1024.7BF88C@SteelEye.com>	<16528.49083.998593.199805@cse.unsw.edu.au>	<40C6273B.2060200@steeleye.com> <16590.38597.170409.499394@cse.unsw.edu.au>
+Message-ID: <40C6A469000265B3@mail-1.tiscali.it>
+References: <40C6A479000253BA@mail-5.tiscali.it>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <16590.38597.170409.499394@cse.unsw.edu.au>
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: linux-raid@vger.kernel.org, ptb@it.uc3m.es, mingo@redhat.com, "james.bottomley" <james.bottomley@steeleye.com>
+In-Reply-To: <40C6A479000253BA@mail-5.tiscali.it>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Neil,
 
-Here's the next round of patches:
+Update! I solved my problem also based on previous threads.
+Using dd from each disk to /dev/null I detected that the only failing disk
 
-kernel patch against 2.6.7:
---------------------------
-http://www.parisc-linux.org/~jejb/md_bitmap/md_bitmap_2_32_2_6_7.diff
+was /dev/sdd.
+I got these:
+scsi0: ERROR on channel 0, id 12, lun 0, CDB: 0x28 00 00 c9 d8 90 00 00
+c0 00
+Info fld=0xc9d91d, Current sdd: sense = f0  3
+ASC=11 ASCQ= 0
+Raw sense data:0xf0 0x00 0x03 0x00 0xc9 0xd9 0x1d 0x18 0x00 0x00 0x00 0x00
+0x11
+0x00 0x00 0x80 0x00 0x2e 0x00 0x00 0x10 0x66 0x00 0x00 0x0e 0x46 0x07 0x43
+0x00
+0x43 0x00 0x00
+end_request: I/O error, dev sdd, sector 13228316
+Buffer I/O error on device sdd, logical block 6614158
 
-mdadm patch against 1.6.0:
--------------------------
-http://www.parisc-linux.org/~jejb/md_bitmap/md_bitmap_2_32_2_6_7.diff
+and similar ones.
+So I unplugged the disk and modified raidtab adding "failed-disk   2"
+
+I was not able to start the array so I made:
+
+root@tkamd:~# mdadm -A --force /dev/md0 --scan
+mdadm: forcing event count in /dev/sdb1(0) from 2323794 upto 2323799
+mdadm: /dev/md0 has been started with 2 drives (out of 3).
+
+root@tkamd:~# cat /proc/mdstat
+Personalities : [raid0] [raid1] [raid5]
+md0 : active raid5 sdb1[0] sdc1[1]
+      35840768 blocks level 5, 128k chunk, algorithm 2 [3/2] [UU_]
+
+unused devices: <none>
+
+root@tkamd:~# fsck /dev/md0
+fsck 1.35 (28-Feb-2004)
+reiserfsck 3.6.17 (2003 www.namesys.com)
+
+*************************************************************
+** If you are using the latest reiserfsprogs and  it fails **
+** please  email bug reports to reiserfs-list@namesys.com, **
+** providing  as  much  information  as  possible --  your **
+** hardware,  kernel,  patches,  settings,  all reiserfsck **
+** messages  (including version),  the reiserfsck logfile, **
+** check  the  syslog file  for  any  related information. **
+** If you would like advice on using this program, support **
+** is available  for $25 at  www.namesys.com/support.html. **
+*************************************************************
+
+Will read-only check consistency of the filesystem on /dev/md0
+Will put log info to 'stdout'
+
+Do you want to run this program?[N/Yes] (note need to type Yes if you do):Yes
+###########
+reiserfsck --check started at Thu Jun 24 01:42:00 2004
+###########
+Replaying journal..
+Trans replayed: mountid 477, transid 1225054, desc 779, len 9, commit 789,
+next
+trans offset 772
+Reiserfs journal '/dev/md0' in blocks [18..8211]: 1 transactions replayed
+Checking internal tree..finished
+Comparing bitmaps..finished
+Checking Semantic tree:
+finished
+No corruptions found
+There are on the filesystem:
+        Leaves 47206
+        Internal nodes 323
+        Directories 15345
+        Other files 186552
+        Data block pointers 7938419 (249 of them are zero)
+        Safe links 0
+###########
+reiserfsck finished at Thu Jun 24 01:44:04 2004
+###########
+
+With dmesg I get this history:
+
+md: md0 stopped.
+md: bind<sdc1>
+md: bind<sdb1>
+raid5: device sdb1 operational as raid disk 0
+raid5: device sdc1 operational as raid disk 1
+raid5: allocated 3147kB for md0
+raid5: raid level 5 set md0 active with 2 out of 3 devices, algorithm 2
+RAID5 conf printout:
+ --- rd:3 wd:2 fd:1
+ disk 0, o:1, dev:sdb1
+ disk 1, o:1, dev:sdc1
+ReiserFS: md0: found reiserfs format "3.6" with standard journal
+ReiserFS: md0: using ordered data mode
+ReiserFS: md0: journal params: device md0, size 8192, journal first block
+18, ma
+x trans len 1024, max batch 900, max commit age 30, max trans age 30
+ReiserFS: md0: checking transaction log (md0)
+ReiserFS: md0: Using r5 hash to sort names
+
+The historical raid5 still survives... I think I have to buy new disk and
+
+keep on with refresh backups..
+A thanks to all developers for kernel, sw raid, reiserfs and so on!
+
+Sorry to have been posted before reading all the similar threads.
+Bye,
+Gianluca Cecchi
 
 
-Details below...
+
+>-- Messaggio Originale --
+>Date: Wed, 23 Jun 2004 01:03:39 +0200
+>From: "Raffaella Leo" <gianluca.cecchi@tiscali.it>
+>Subject: raid 5 lost 2 of 3 disks. Help please
+>To: linux-raid@vger.kernel.org
+>
+>
+>Hello,
+>I'm using a very old sw raid5 mantained since about 1999.
+>It has reiserfs on it, and is composed by 3 disks configured in raid5.
+>My raidtab is:
+>raiddev                 /dev/md0
+>raid-level              5
+>nr-raid-disks           3
+>chunk-size              128
+>parity-algorithm        left-symmetric
+>persistent-superblock   1
+>device                  /dev/sdb1
+>raid-disk               0
+>device                  /dev/sdc1
+>raid-disk               1
+>device                  /dev/sdd1
+>raid-disk               2
+>
+>My system is based at this moment on slackware-current with kernel 2.6.7
+>and raidstart v0.3d compiled for md raidtools-1.00.3
+>and I also have mdadm - v1.6.0 - 4 June 2004.
+>2 days ago I suppose I experienced a SCSI problem, as all operation
+>on that filesystem hung. With sysrq I tried to sync and then reboot.
+>At reboot I'm not able to start the array.
+>I'm trying to use mdadm to debug.
+>I create mdadm.conf so that
+>
+>root@tkamd:~# grep -v ^# /etc/mdadm.conf
+>gives:
+>DEVICE /dev/sdb1 /dev/sdc1 /dev/sdd1
+>ARRAY /dev/md0 devices=/dev/sdb1,/dev/sdc1,/dev/sdd1
+>
+>and I get:
+>
+>root@tkamd:~# mdadm -E /dev/sdb1
+>/dev/sdb1:
+>          Magic : a92b4efc
+>        Version : 00.90.00
+>           UUID : fbaeee10:09867c3e:d70fbd8f:b17d930f
+>  Creation Time : Mon Feb  5 01:06:17 2001
+>     Raid Level : raid5
+>    Device Size : 17920384 (17.09 GiB 18.35 GB)
+>   Raid Devices : 3
+>  Total Devices : 3
+>Preferred Minor : 0
+>
+>    Update Time : Mon Jun 21 20:53:55 2004
+>          State : dirty
+> Active Devices : 3
+>Working Devices : 3
+> Failed Devices : 0
+>  Spare Devices : 0
+>       Checksum : b37a0f18 - correct
+>         Events : 0.2323794
+>
+>         Layout : left-symmetric
+>     Chunk Size : 128K
+>
+>      Number   Major   Minor   RaidDevice State
+>this     0       8       17        0      active sync   /dev/sdb1
+>   0     0       8       17        0      active sync   /dev/sdb1
+>   1     1       8       33        1      active sync   /dev/sdc1
+>   2     2       8       49        2      active sync   /dev/sdd1
+>
+>
+>root@tkamd:~# mdadm -E /dev/sdc1
+>/dev/sdc1:
+>          Magic : a92b4efc
+>        Version : 00.90.00
+>           UUID : fbaeee10:09867c3e:d70fbd8f:b17d930f
+>  Creation Time : Mon Feb  5 01:06:17 2001
+>     Raid Level : raid5
+>    Device Size : 17920384 (17.09 GiB 18.35 GB)
+>   Raid Devices : 3
+>  Total Devices : 3
+>Preferred Minor : 0
+>
+>    Update Time : Mon Jun 21 21:04:52 2004
+>          State : clean
+> Active Devices : 1
+>Working Devices : 1
+> Failed Devices : 3
+>  Spare Devices : 0
+>       Checksum : b39d872c - correct
+>         Events : 0.2323799
+>
+>         Layout : left-symmetric
+>     Chunk Size : 128K
+>
+>      Number   Major   Minor   RaidDevice State
+>this     1       8       33        1      active sync   /dev/sdc1
+>   0     0       0        0        0      removed
+>   1     1       8       33        1      active sync   /dev/sdc1
+>   2     2       0        0        2      faulty removed
+>
+>root@tkamd:~# mdadm -E /dev/sdd1
+>/dev/sdd1:
+>          Magic : a92b4efc
+>        Version : 00.90.00
+>           UUID : fbaeee10:09867c3e:d70fbd8f:b17d930f
+>  Creation Time : Mon Feb  5 01:06:17 2001
+>     Raid Level : raid5
+>    Device Size : 17920384 (17.09 GiB 18.35 GB)
+>   Raid Devices : 3
+>  Total Devices : 3
+>Preferred Minor : 0
+>
+>    Update Time : Mon Jun 21 20:53:55 2004
+>          State : dirty
+> Active Devices : 2
+>Working Devices : 2
+> Failed Devices : 1
+>  Spare Devices : 0
+>       Checksum : b37a0f45 - correct
+>         Events : 0.2323795
+>
+>         Layout : left-symmetric
+>     Chunk Size : 128K
+>
+>      Number   Major   Minor   RaidDevice State
+>this     2       8       49        2      active sync   /dev/sdd1
+>   0     0       0        0        0      removed
+>   1     1       8       33        1      active sync   /dev/sdc1
+>   2     2       8       49        2      active sync   /dev/sdd1
+>
+>
+>oot@tkamd:~# cat /proc/mdstat
+>Personalities : [raid0] [raid1] [raid5]
+>md0 : inactive sdc1[1] sdd1[2] sdb1[0]
+>      53761152 blocks
+>unused devices: <none>
+>
+>Before the problem at boot I got:
+>
+>Jun 21 20:38:46 tkamd kernel: md: Autodetecting RAID arrays.
+>Jun 21 20:38:46 tkamd kernel: md: autorun ...
+>Jun 21 20:38:46 tkamd kernel: md: considering sdd1 ...
+>Jun 21 20:38:46 tkamd kernel: md:  adding sdd1 ...
+>Jun 21 20:38:46 tkamd kernel: md:  adding sdc1 ...
+>Jun 21 20:38:46 tkamd kernel: md:  adding sdb1 ...
+>Jun 21 20:38:46 tkamd kernel: md: created md0
+>Jun 21 20:38:46 tkamd kernel: md: bind<sdb1>
+>Jun 21 20:38:46 tkamd kernel: md: bind<sdc1>
+>Jun 21 20:38:46 tkamd kernel: md: bind<sdd1>
+>Jun 21 20:38:46 tkamd kernel: md: running: <sdd1><sdc1><sdb1>
+>Jun 21 20:38:46 tkamd kernel: raid5: device sdd1 operational as raid disk
+>2
+>Jun 21 20:38:46 tkamd kernel: raid5: device sdc1 operational as raid disk
+>1
+>Jun 21 20:38:46 tkamd kernel: raid5: device sdb1 operational as raid disk
+>0
+>Jun 21 20:38:46 tkamd kernel: raid5: allocated 3147kB for md0
+>Jun 21 20:38:46 tkamd kernel: md: ... autorun DONE.
+>[snip]
+>Jun 21 20:38:46 tkamd kernel: ReiserFS: md0: found reiserfs format "3.6"
+>with st
+>andard journal
+>Jun 21 20:38:46 tkamd kernel: ReiserFS: md0: using ordered data mode
+>Jun 21 20:38:46 tkamd kernel: ReiserFS: md0: journal params: device md0,
+>size 81
+>92, journal first block 18, max trans len 1024, max batch 900, max commit
+>age 30
+>, max trans age 30
+>Jun 21 20:38:46 tkamd kernel: ReiserFS: md0: checking transaction log (md0)
+>Jun 21 20:38:46 tkamd kernel: ReiserFS: md0: Using r5 hash to sort names
+>
+>when I had the problem I got:
+>
+>Jun 21 20:53:55 tkamd kernel: sym0: TARGET 10 has been reset.
+>Jun 21 20:53:56 tkamd kernel: sym0: TARGET 12 has been reset.
+>Jun 21 20:55:26 tkamd kernel: sym0: SCSI BUS has been reset.
+>[snip]
+>Jun 21 21:07:15 tkamd kernel: SysRq : Show Regs
+>Jun 21 21:07:25 tkamd last message repeated 7 times
+>Jun 21 21:07:32 tkamd kernel: SysRq : HELP : loglevel0-8 reBoot tErm kIll
+>saK sh
+>owMem powerOff showPc unRaw Sync showTasks Unmount
+>Jun 21 21:07:36 tkamd kernel: [<c0211da2>] do_con_write+0x292/0x760
+>Jun 21 21:07:38 tkamd kernel: 0000e f75ce310 f75ce4c0 f640d000 7fffffff
+>f640d930
+> f640c000
+>Jun 21 21:07:41 tkamd kernel:  syscall_call+0x7/0xb
+>Jun 21 21:07:43 tkamd kernel: [<c0211da2>] do_con_write+0x292/0x760
+>Jun 21 21:07:44 tkamd kernel: fffff f640d930 f640c000
+>Jun 21 21:07:45 tkamd kernel: [<c02068cc>] read_chan+0x6ec/0x880
+>Jun 21 21:07:47 tkamd kernel: fffff f640d930 f640c000
+>Jun 21 21:07:49 tkamd kernel: SysRq : HELP : loglevel0-8 reBoot tErm kIll
+>saK sh
+>owMem powerOff showPc unRaw Sync showTasks Unmount
+>Jun 21 21:07:57 tkamd kernel: SysRq : Show Memory
+>Jun 21 21:07:57 tkamd kernel: SysRq : HELP : loglevel0-8 reBoot tErm kIll
+>saK sh
+>owMem powerOff showPc unRaw Sync showTasks Unmount
+>Jun 21 21:08:02 tkamd kernel: SysRq : Show Memory
+>Jun 21 21:08:05 tkamd last message repeated 4 times
+>Jun 21 21:08:05 tkamd kernel: SysRq : HELP : loglevel0-8 reBoot tErm kIll
+>saK sh
+>owMem powerOff showPc unRaw Sync showTasks Unmount
+>Jun 21 21:08:17 tkamd kernel: SysRq : Emergency Sync
+>Jun 21 21:08:32 tkamd kernel: SysRq : HELP : loglevel0-8 reBoot tErm kIll
+>saK sh
+>owMem powerOff showPc unRaw Sync showTasks Unmount
+>Jun 21 21:08:34 tkamd kernel: SysRq : Emergency Sync
+>
+>
+>After that, at boot I have
+>Jun 23 01:21:30 tkamd kernel: md: Autodetecting RAID arrays.
+>Jun 23 01:21:30 tkamd kernel: md: autorun ...
+>Jun 23 01:21:30 tkamd kernel: md: considering sdd1 ...
+>Jun 23 01:21:30 tkamd kernel: md:  adding sdd1 ...
+>Jun 23 01:21:30 tkamd kernel: md:  adding sdc1 ...
+>Jun 23 01:21:30 tkamd kernel: md:  adding sdb1 ...
+>Jun 23 01:21:30 tkamd kernel: md: created md0
+>Jun 23 01:21:30 tkamd kernel: md: bind<sdb1>
+>Jun 23 01:21:30 tkamd kernel: md: bind<sdc1>
+>Jun 23 01:21:30 tkamd kernel: md: bind<sdd1>
+>Jun 23 01:21:30 tkamd kernel: md: running: <sdd1><sdc1><sdb1>
+>Jun 23 01:21:30 tkamd kernel: md: unbind<sdd1>
+>Jun 23 01:21:30 tkamd kernel: md: export_rdev(sdd1)
+>Jun 23 01:21:30 tkamd kernel: md: unbind<sdb1>
+>Jun 23 01:21:30 tkamd kernel: md: export_rdev(sdb1)
+>Jun 23 01:21:30 tkamd kernel: raid5: device sdc1 operational as raid disk
+>1
+>Jun 23 01:21:30 tkamd kernel: md: md0 stopped.
+>Jun 23 01:21:30 tkamd kernel: md: unbind<sdc1>
+>Jun 23 01:21:30 tkamd kernel: md: export_rdev(sdc1)
+>Jun 23 01:21:30 tkamd kernel: md: ... autorun DONE.
+>
+>
+>root@tkamd:~# mdadm -A /dev/md0 /dev/sdb1 /dev/sdc1 /dev/sdd1
+>mdadm: /dev/md0 assembled from 1 drive - not enough to start the array.
+>
+>I can see also now a message like:
+>
+>Jun 23 01:41:40 tkamd kernel: sym0: TARGET 6 has been reset.
+>Jun 23 01:42:10 tkamd kernel: sym0: SCSI BUS has been reset.
+>Jun 23 01:42:10 tkamd kernel: sym0: TARGET 6 has been reset.
+>
+>but I don't know if it depends on mdadm command or scsi error on bus...
+>
+>I don't know if I'm totally lost and how to proceed.
+>Any help?
+>I'm not subscribed to the list, so please keep also me directly in
+>your answers.
+>Thanks in advance.
+>Bye,
+>Gianluca
+>
+>__________________________________________________________________
+>Tiscali ADSL libera la velocita'!
+>Attiva Senza Canone entro il 28 giugno: navighi a 1,5 euro l'ora per i
+primi
+>3 mesi,se scegli il modem e' tuo in comodato gratuito e in piu' hai gratis
+>SuperMail per 12 mesi. Non aspettare, attivala subito!
+>http://abbonati.tiscali.it/adsl/prodotti/640Kbps/
+>
+>
+>
 
 
-Neil Brown wrote:
-> On Tuesday June 8, paul.clements@steeleye.com wrote:
-
-> This looks a lot better.  There are a few little issues that I noticed
-> on a quick read through:
->      - last_block_device should return "sector_t", not "unsigned
->        long".  It would be worth checking for other placed that
->        sector_t might be needed.
-
-Fixed.
-
->      - bitmap_checkpage still isn't quite safe.  If "hijacked" gets
->        set while it is allocating a page (unlikely, but possible), it
->        will exit with both highjacked set and an allocated page, which
->        isn't right.
-
-Fixed.
-
->      - The event comparison
-> +		    sb->events_hi >= refsb->bitmap_events_hi &&
-> +		    sb->events_lo >= refsb->bitmap_events_lo) {
->        in hot_add_disk is wrong. 
-
-This is still there, see my explanation in the previous email...
-
-> The changes to mdadm need a bit of work.
->  
-> You have added "--persistent" and "--non-persistent" flags for
-> --create.  This is wrong.
-> --create always uses persistent superblocks.
-> --build makes arrays without persistent superblocks.
-
-OK, changed. The --build command now also accepts the --bitmap option.
-
-> I don't think I like --create-bitmap.  A bitmap file should always be
-> created in the context of a particular array (partly so that the size
-> and uuid can be set correctly).  I think I would like to bitmap to be
-> specified as a "--bitmap=filename" option to --create, --build, or
-> --grow.  I haven't thought this through in great detail yet, but that
-> is my leaning.
-
-OK, --create-bitmap remains solely for the --build case, but is no 
-longer needed for --create. The --create command now does all the array 
-creation in userspace and simply Assembles the resulting collection of 
-disks. It also initialises the bitmap correctly for use with the array 
-(i.e., uuid and size match).
-
-> --examine-bitmap is a bit of a pain too.  I think I would like
-> --examine to figure out what it has been given to look at, and report
-> on whatever it finds.
-
-This also remains as-is for now, pending your reply to my previous emails.
+__________________________________________________________________
+Tiscali ADSL libera la velocita'!
+Attiva Senza Canone entro il 28 giugno: navighi a 1,5 euro l'ora per i primi
+3 mesi,se scegli il modem e' tuo in comodato gratuito e in piu' hai gratis
+SuperMail per 12 mesi. Non aspettare, attivala subito!
+http://abbonati.tiscali.it/adsl/prodotti/640Kbps/
 
 
-Thanks,
-Paul
+
