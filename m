@@ -1,94 +1,93 @@
-From: Sandro Dentella <sandro.dentella@tin.it>
-Subject: mdadm: hot add failed ... lun0/part6: No space left on device
-Date: Fri, 30 Jan 2004 13:32:11 +0100
+From: AndyLiebman@aol.com
+Subject: Performance Tuning Challenge
+Date: Fri, 30 Jan 2004 09:27:28 EST
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040130123211.GA10754@e-den.it>
+Message-ID: <db.2466cce.2d4bc3d0@aol.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi all,
-  while trying to substitute a failed disk, I'm using the command:  
+Can anyone give me some advice on a tuning issue that surely must involve 
+RAID settings? 
 
-    # mdadm /dev/md1 --add /dev/ide/host0/bus1/target0/lun0/part6
+I am using a Linux system (P4 3.06 Ghz, 1 GB RAM, Mandrake 9.2, mandrake 
+enterprise kernel 2.4.22-21 ) as a file server for 6-to-8 Windows XP video editing 
+systems. All shared video and audio files are stored on two RAID5 arrays each 
+built from 5 external firewire drives (connected to 5 true channels of 
+firewire controllers). I am getting excellent read/write performance from the 
+arrays. However, I'm trying to maximize performance of the system and I realize that 
+requires balancing a number of tunable settings that all must interact with 
+each other (virtual memory, RAID, tcp/ip, samba, xfs filesystem etc.). 
 
-  but I get:
+Please keep in mind that I have a limited number of users who are mostly 
+trying to access portions of very large video and audio files. For instance, if 
+the average user is looking at a string of video and audio clips that are around 
+5 seconds each, each editing machine is asking for 17 MBs of continuous video 
+and 1 MB of continuous audio for clip 1, and then the same for each 
+subsequent clip. If the video were edited with "quick cuts" of 1 sec duration each, 
+that would be 3.5 MBs of continuous video data and 150K of audio data for each 
+clip. Keep in mind that the data can be spread out all over the RAID arrays -- 
+so the disk heads have to move around constantly to get the data that each user 
+needs (Of course, sometimes users are just watching long continuous video 
+clips that are many minutes long -- which is less demanding on the system). 
 
-  mdadm: hot add failed for /dev/ide/host0/bus1/target0/lun0/part6: No space left on device
+My challenge is to tune the system so that the video and audio files required 
+by each user arrive at each users machine when needed and so that no frames 
+are skipped. When 6 editing machines (that's all I own) are operating 
+simultaneously, video and audio plays great at normal speed on all machines. When some 
+machines try to play video at 2x or 3x speed (which doubles or triples the 
+speed at which data must be read from the RAID arrays), some skipping occurs. I 
+have found, however, that by tweaking my virtual memory settings to 128 
+min-readahead and 512 max-readahead (up from the Mandrake defaults of 3 and 31) that 
+I can allow several machines to play video at 2x or 3x speed while the others 
+play at normal speed and nobody gets any skipping. I also had to play around 
+with the bdflush settings to get peak performance when writing video data to 
+the arrays. 
 
-  What does it mean?
+I have no idea whether the virtual memory readahead settings that I have made 
+make sense, and whether they are interacting in an ideal manner with the RAID 
+and filesystem settings. 
 
-  I don't know how to interpret it. I thought it was the partition that
-  is not same dime as the other one (disks are different) but the partition
-  I'm adding is bigger... as you can see further on.
+It seems that it's possible to specify the amount of readahead for the RAID 
+arrays. Regarding this, my questions are: 
 
-  I noticed that the 2 disks are not seen in the same way, as if the second
-  is not in LBA mode:
+-- Is it possible to set the RAID readahead after creating the arrays? And if 
+so, how? When I run "cat /proc/mdstat" I see that read_ahead is set to 1024 
+sectors. Can I -- and should I -- change that? In the kernel "info logs" I see 
+that each time my arrays start up the "max total readahead window" is "set to 
+2048k" and although the arrays are made up of 5 disks the log says "4 
+data-disks, max readahead per data-disk: 512k". 
 
-	cat /proc/ide/hda/model
-	MODEL: MAXTOR 6L040J2
-	GEOMETRY:
-	cat /proc/ide/hda/geometry
-	physical     77557/16/63
-	logical      4866/255/63
+-- Can anybody tell me, given the kind of video and audio data my client 
+machines are requesting, how to go about balancing the following variables? There 
+must be a logic to setting these things so that they all work in harmony: 
 
-	cat /proc/ide/hdc/model
-	MODEL: Maxtor 6E040L0
-	GEOMETRY:
-	cat /proc/ide/hdc/geometry
-	physical     79656/16/63
-	logical      79656/16/63
+-- xfs filesystem. Block size is currently set to 4096 the maximum allowed in 
+Linux. That can't be changed now without losing exiting data. 
+-- RAID stripe size = 128 currently. That can't be changed now without losing 
+existing data
+-- RAID readahead... Can that be changed?
+-- virtual memory readahead
+-- TCP/IP buffers... rmem_default, rmem_max, wmem_defaul, wmem_max (currently 
+set to 327675 and 655350 respectively) and net.ipv4.tcp_wmem, 
+ntet.ipv4.tcp_rmem 
+-- Samba SO_RCVBUF SO_SNDBUF (currently set to 524280 each)
+-- Samba read size and max smit (also set to 524280)
+-- Intel Gigabit Ethernet card settings:  RxDescriptors (currently 1024) 
+TxDescriptors (currently 4096)
+-- anything else that interacts with all this. 
 
-###########  mdstat ##########################################################
-    root@argo-cd root # cat /proc/mdstat 
-    Personalities : [raid1] 
-    read_ahead 1024 sectors
-    md0 : active raid1 hdc1[1] ide/host0/bus0/target0/lun0/part1[0]
-	  24000 blocks [2/2] [UU]
+Also, does anybody know how to check to see if the 8MB Cache that each of my 
+firewire drives has is being used for Read and Write Caching? Surely the use 
+of this cache memory can greatly affect performance. 
 
-    md1 : active raid1 ide/host0/bus0/target0/lun0/part6[0]
-	  2048192 blocks [2/1] [U_]
+This is like a wonderful puzzle. Changes do seem to make a big difference. 
+All ideas would be appreciated. Please keep in mind that I'm not a Linux expert. 
+I'm just a TV producer who knows a bit too much for his own good! So, please 
+keep your replies as "untechnical" as possible. Thanks.
 
-    md2 : active raid1 ide/host0/bus0/target0/lun0/part7[0]
-	  36491520 blocks [2/1] [U_]
-
-    unused devices: <none>
-
-
-###########  fdisk - parted ##################################################
-    And here are the partition tables of the disks:
-
-root@argo-cd root # parted /dev/hda print
-Disk geometry for /dev/ide/host0/bus0/target0/lun0/disc: 0.000-38172.750 megabytes
-Disk label type: msdos
-Minor    Start       End     Type      Filesystem  Flags
-1          0.031     23.532  primary   ext2        raid
-2         23.533  38170.063  extended              lba
-5         23.563    533.408  logical   linux-swap  
-6        533.439   2533.688  logical   reiserfs    raid
-7       2533.720  38170.063  logical   reiserfs    raid
-
-
-
-root@argo-cd root # parted /dev/hdc print
-Disk geometry for /dev/ide/host0/bus1/target0/lun0/disc: 0.000-39205.687 megabytes
-Disk label type: msdos
-Minor    Start       End     Type      Filesystem  Flags
-1          0.031     23.625  primary   ext2        raid
-2         23.625  39205.687  extended              lba
-5         23.656    533.531  logical               
-6        533.562   2536.242  logical               raid
-7       2536.273  39205.687  logical               raid
-
-Thanks in advance
-sandro
-*:-)
-
-
--- 
-Sandro Dentella  *:-)
-e-mail: sandro.dentella@tin.it 
-http://www.tksql.org                    TkSQL Home page - My GPL work
+Andy Liebman
+Resolute Films
