@@ -1,84 +1,116 @@
-From: Maurilio Longo <maurilio.longo@libero.it>
-Subject: Re: [PATCH md ] Fix up handling for read error in raid1.
-Date: Mon, 12 Jul 2004 16:29:41 +0200
+From: "Matthew (RAID)" <RAID@lists.elvey.com>
+Subject: Re: raid5+ lvm2 disaster
+Date: Mon, 12 Jul 2004 15:33:26 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <40F2A055.93DD9C4B@libero.it>
-References: <20040624143619.5067.patches@notabene> <E1BdLyz-0001Jy-Tq@notabene.cse.unsw.edu.au>
+Message-ID: <1089671606.706.200220968@webmail.messagingengine.com>
+References: <40EEFD38.8080805@dobbels.com>
+   <1089415087.17625.200079546@webmail.messagingengine.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux raid mailing list <linux-raid@vger.kernel.org>
-Cc: NeilBrown <neilb@cse.unsw.edu.au>
+Content-Disposition: inline
+In-Reply-To: <1089415087.17625.200079546@webmail.messagingengine.com>
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Neil,
+Hmm. I posted the following (from my subbed addr) but it never appeared
+- in my inbox or on MARC.
+Perhaps I hit a keyword; reposting with some tweaks.
 
-do you have a similar patch for a 2.4.x (x == 20 in my case) kernel?
+On Fri, 09 Jul 2004 16:18:07 -0700, "Matthew (RAID)"
+<RAID@lists.elvey.com> said:
+> One more thing - run hdparm to check that the DMA settings are
+> consistent - the same on all drives.
+> Switch to the most conservative settings (the slowest ones).
+> If they're not the same on all drives, I've heard (on /.) that it can
+> cause some of the problems you're seeing.
+> 
+> My original reply below - it just went to Bernhard; I didn't check the
+> addressing.
+> 
+> Let us know how things go.
+> 
+> PS Any ideas on my post?
+> 
+> On Fri, 09 Jul 2004 22:16:56 +0200, "Bernhard Dobbels"
+> <Bernhard@Dobbels.com> said:
+> 
+> 
+> >> <snip>
+> 
+> 
+> >> viking:/home/bernhard# cat /etc/raidtab
+> >> raiddev /dev/md0
+> >>          raid-level      5
+> >>          nr-raid-disks   3
+> >>          nr-spare-disks  0
+> >>          persistent-superblock   1
+> >>          parity-algorithm        left-symmetric
+> >> 
+> >>          device  /dev/hdc1
+> >>          raid-disk 0
+> >>          device  /dev/hde1
+> >>          failed-disk 1
+> >>          device  /dev/hdg1
+> >>          raid-disk 2
+> 
+> 
+> Hmm. So the array is c+e+g, which think they are spare, failed, and
+> good, respectively.
+> The array won't be accessible unless at least two are good.
+> 
+> I wonder if running mkraid with --really-force when e was marked failed
+> was a good idea; hopefully it didn't make things worse. 
+> 
+> 
+> >> 
+> >> 
+> >> viking:/home/bernhard# mkraid --really-force /dev/md0
+> >> DESTROYING the contents of /dev/md0 in 5 seconds, Ctrl-C if unsure!
+> >> handling MD device /dev/md0
+> >> analyzing super-block
+> >> disk 0: /dev/hdc1, 195358401kB, raid superblock at 195358336kB
+> >> disk 1: /dev/hde1, failed
+> >> disk 2: /dev/hdg1, 195358401kB, raid superblock at 195358336kB
+> >> /dev/md0: Invalid argument
+> >> 
+> >> viking:/home/bernhard# raidstart /dev/md0
+> >> /dev/md0: Invalid argument
+> >> 
+> >> 
+> >> viking:/home/bernhard# cat /proc/mdstat
+> >> Personalities : [raid1] [raid5]
+> >> md0 : inactive hdg1[2] hdc1[0]
+> >>        390716672 blocks
+> >> unused devices: <none>
+> >> viking:/home/bernhard# pvscan -v
+> >>      Wiping cache of LVM-capable devices
+> >>      Wiping internal cache
+> >>      Walking through all physical volumes
+> >>    Incorrect metadata area header checksum
+> >>    Found duplicate PV uywoDlobnH0pbnr09dYuUWqB3A5kkh8M: using /dev/hdg1 
+> >> not /dev/hdc1
+> >>    Incorrect metadata area header checksum
+> >>    Incorrect metadata area header checksum
+> >>    Incorrect metadata area header checksum
+> >>    Found duplicate PV uywoDlobnH0pbnr09dYuUWqB3A5kkh8M: using /dev/hdg1 
+> >> not /dev/hdc1
+> >>    PV /dev/hdc1   VG data_vg   lvm2 [372,61 GB / 1,61 GB free]
+> >>    PV /dev/hda1                lvm2 [4,01 GB]
+> >>    Total: 2 [376,63 GB] / in use: 1 [372,61 GB] / in no VG: 1 [4,01 GB]
+> 
+> 
+> Yow.  
+> 
+> I'm wondering if editing raidtab to make e (/dev/hde1) not failed and
+> trying mkraid again is a good idea.
+> 
+> Any idea why c would think it was a spare?  That's pretty strange.
+> 
 
-I can't change kernel easily since I use it to run mars-nwe which is a novell emulator
-which is going to be removed from every distro I'm aware of :(
+Anyway, I'm no expert - I just posted a call for help:
+ 
+http://marc.theaimsgroup.com/?l=linux-raid&m=108932298006669&w=2 
 
-regards.
-
-
-NeilBrown ha scritto:
-
-> There is severe bit-rot in this code, which is to say that it doesn't work
-> at all: an io error during read will do bad things.  It should work
-> better with this patch.
->
-> Signed-off-by: Neil Brown <neilb@cse.unsw.edu.au>
->
-> ### Diffstat output
->  ./drivers/md/raid1.c |   10 +++++++---
->  1 files changed, 7 insertions(+), 3 deletions(-)
->
-> diff ./drivers/md/raid1.c~current~ ./drivers/md/raid1.c
-> --- ./drivers/md/raid1.c~current~       2004-06-23 14:37:05.000000000 +1000
-> +++ ./drivers/md/raid1.c        2004-06-23 14:37:13.000000000 +1000
-> @@ -206,7 +206,7 @@ static int map(mddev_t *mddev, mdk_rdev_
->                         *rdevp = rdev;
->                         atomic_inc(&rdev->nr_pending);
->                         spin_unlock_irq(&conf->device_lock);
-> -                       return 0;
-> +                       return i;
->                 }
->         }
->         spin_unlock_irq(&conf->device_lock);
-> @@ -945,18 +945,22 @@ static void raid1d(mddev_t *mddev)
->
->                 mddev = r1_bio->mddev;
->                 conf = mddev_to_conf(mddev);
-> -               bio = r1_bio->master_bio;
->                 if (test_bit(R1BIO_IsSync, &r1_bio->state)) {
->                         sync_request_write(mddev, r1_bio);
->                         unplug = 1;
->                 } else {
-> -                       if (map(mddev, &rdev) == -1) {
-> +                       int disk;
-> +                       bio = r1_bio->bios[r1_bio->read_disk];
-> +                       if ((disk=map(mddev, &rdev)) == -1) {
->                                 printk(KERN_ALERT "raid1: %s: unrecoverable I/O"
->                                        " read error for block %llu\n",
->                                        bdevname(bio->bi_bdev,b),
->                                        (unsigned long long)r1_bio->sector);
->                                 raid_end_bio_io(r1_bio);
->                         } else {
-> +                               r1_bio->bios[r1_bio->read_disk] = NULL;
-> +                               r1_bio->read_disk = disk;
-> +                               r1_bio->bios[r1_bio->read_disk] = bio;
->                                 printk(KERN_ERR "raid1: %s: redirecting sector %llu to"
->                                        " another mirror\n",
->                                        bdevname(rdev->bdev,b),
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
---
- __________
-|  |  | |__| md2520@mclink.it
-|_|_|_|____|
-
-
+that went unanswered.
