@@ -1,8 +1,9 @@
-From: Greg Rasberry <rgreg-r@pacbell.net>
+From: Adriana Rasberry <adrianar@pacbell.net>
 Subject: Software RAID level 1 issue
 Date: Fri, 30 May 2003 10:53:45 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <01C32699.D5B0EE60.rgreg-r@pacbell.net>
+Message-ID: <01C32699.BEF0A6C0.adrianar@pacbell.net>
+Reply-To: "razcon@pacbell.net" <razcon@pacbell.net>
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: 'Linux raid mailing list' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
