@@ -1,97 +1,76 @@
-From: Martin Dohmen <md@tripnet.se>
-Subject: Re: badblock handling
-Date: Thu, 05 Feb 2004 08:35:26 +0100
+From: Catalin BOIE <util@deuroconsult.ro>
+Subject: raid5 + 2.6.2 [kernel BUG at drivers/md/raid5.c:1202!]
+Date: Thu, 5 Feb 2004 14:56:27 +0200 (EET)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <676854718.1075970126@[172.30.250.225]>
-References: <20040204122317.K27780@forte.austin.ibm.com>
- <Pine.LNX.4.44.0402041726350.20232-100000@coffee.psychology.mcmaster.ca>
- <20040204164946.P27780@forte.austin.ibm.com>
- <16417.31540.78193.699721@notabene.cse.unsw.edu.au>
- <001601c3eba2$e6110410$df01010a@moon>
+Message-ID: <Pine.LNX.4.58.0402051448360.2997@hosting.rdsbv.ro>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <001601c3eba2$e6110410$df01010a@moon>
-Content-Disposition: inline
-To: 'Donghui Wen' <dhwen@protegonetworks.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I have seen the same problem, but I have also noticed that if I use the=
-=20
-3ware cards own raid5 instead of md things work diffrently, the only th=
-ing=20
-that seems to happen when a disk develops a bad block is this in the lo=
-g:
+Hi!
 
-3w-xxxx: scsi0: AEN: ERROR: Drive error: Port #6.
-3w-xxxx: scsi0: AEN: WARNING: Sector repair occurred: Port #6.
+I build a raid5 array on 4 loop devices (associated with 4 files):
+3 + 1 spare.
 
-I do not now if 3ware sets some block asside when the raid is created f=
-or=20
-use when errors occure or if they justs writes the block agan and the d=
-isk=20
-does the realocation by it self.
-
-The downside of using 3ware raid5 is that performance is quite much low=
-er=20
-than with md, with 8 disks I get 90MB/s with md and 40MB/s with 3ware i=
-n=20
-writespeed.
+drivers/md/raid5.c:
+1021			if (uptodate != disks)
+1202				BUG();
 
 
---On den 4 februari 2004 20:45 -0800 Donghui Wen=20
-<dhwen@protegonetworks.com> wrote:
+I started the array ok.
+I mounted the reiserfs filesystem fine.
+I then ran: mdadm -f /dev/md0 /dev/loop5 to test a failing device.
+When it tried to resynced (dmesg follows):
 
-> Hi,
->      I am running a server with Linux software-raid (3ware controller=
-).
-> But from time to time,
-> a disk is kicked out by md. This will happen when 3ware card reports =
-a
-> unrecovered read error
-> for a sector. But when I run raidhotadd, the disk can added back to r=
-aid
-> with no problem.
->      So my questions are:
->         (1) Will md  kick out one disk if it find out ONE bad block?
->         (2) Is it possible to set up a threshold, only the amount of =
-bad
-> blocks pass this threshold,
->             the disk will be kicked out.
->         (3) Is it possible to remap the bad blocks to some spare bloc=
-ks
-> automatically on the fly?
->
-> Thanks!
->
-> Donghui
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+raid5: Disk failure on loop5, disabling device. Operation continuing on 2 devices
+RAID5 conf printout:
+ --- rd:3 wd:2 fd:1
+ disk 0, o:1, dev:loop4
+ disk 1, o:0, dev:loop5
+ disk 2, o:1, dev:loop6
+RAID5 conf printout:
+ --- rd:3 wd:2 fd:1
+ disk 0, o:1, dev:loop4
+ disk 2, o:1, dev:loop6
+RAID5 conf printout:
+ --- rd:3 wd:2 fd:1
+ disk 0, o:1, dev:loop4
+ disk 1, o:1, dev:loop7
+ disk 2, o:1, dev:loop6
+md: syncing RAID array md0
+md: minimum _guaranteed_ reconstruction speed: 1000 KB/sec/disc.
+md: using maximum available idle IO bandwith (but not more than 200000
+KB/sec) for reconstruction.
+md: using 128k window, over a total of 51136 blocks.
+kernel BUG at drivers/md/raid5.c:1202!
+invalid operand: 0000 [#1]
+CPU:    0
+EIP:    0060:[<c0265736>]    Tainted: P
+EFLAGS: 00010297
+EIP is at handle_stripe+0xa06/0xd70
+eax: 00000001   ebx: 00000001   ecx: 00000003   edx: c7a7bb78
+esi: 00000000   edi: 00000001   ebp: ffffffff   esp: cad1fe38
+ds: 007b   es: 007b   ss: 0068
+Process md0_resync (pid: 1490, threadinfo=cad1e000 task=ca348cc0)
+Stack: c011b8a7 cb73f2a0 cad1fe64 c011b6de cb73f2a0 072ce23c cfcc6240 ca348cc0
+       00000002 c0263b80 cf124e40 00000010 00000046 cb73f2a0 cad1e000 000017e1
+       00000001 00000001 00000000 00000000 00000001 00000000 00000000 00000002
+Call Trace:
+ [<c011b8a7>] try_to_wake_up+0xa7/0x160
+ [<c011b6de>] recalc_task_prio+0x8e/0x1b0
+ [<c0263b80>] get_active_stripe+0x30/0x2a0
+ [<c0265deb>] sync_request+0xcb/0x110
+ [<c0272fac>] md_do_sync+0x1ec/0x760
+ [<c0170aff>] iput+0x3f/0x80
+ [<c016d9e2>] dput+0x22/0x210
+ [<c0271f46>] md_thread+0xb6/0x190
+ [<c011c7a0>] default_wake_function+0x0/0x20
+ [<c0271e90>] md_thread+0x0/0x190
+ [<c0107289>] kernel_thread_helper+0x5/0xc
 
-
-
-Med v=E4nlig h=E4lsning
-TRIPNET AB
-
-Martin Dohmen
-_______________________________________________________________________=
-_
-Tripnet AB                Bes=F6ksadress:      Telefon:  031-725 25 00
-Box 5071                  =C5v=E4gen 42          Telefax:  031-725 25 0=
-1
-402 22  G=D6TEBORG          G=D6TEBORG           Direkt:   031-725 25 1=
-1
-http://www.tripnet.se     dohmen@tripnet.se  Mobil:    0733-58 25 11
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thank you very much!
+---
+Catalin(ux) BOIE
+catab@deuroconsult.ro
