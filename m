@@ -1,10 +1,10 @@
-From: Gil <gil@fooplanet.com>
+From: Paul Clements <paul.clements@steeleye.com>
 Subject: Re: [PATCH 1/2] md bitmap bug fixes
-Date: Mon, 21 Mar 2005 13:09:26 -0800
-Message-ID: <423F3806.9050903@fooplanet.com>
+Date: Mon, 21 Mar 2005 16:19:37 -0500
+Message-ID: <423F3A69.5090502@steeleye.com>
 References: <16950.5692.594941.130741@cse.unsw.edu.au> <20050318103326.GA18819@marowsky-bree.de> <6ivqg2-qsn.ln1@news.it.uc3m.es> <20050318134255.GS18819@marowsky-bree.de> <7e6rg2-pj1.ln1@news.it.uc3m.es> <423B09EF.8070708@steeleye.com> <23krg2-4rr.ln1@news.it.uc3m.es> <423B2F7C.3030907@steeleye.com> <qehtg2-6c1.ln1@news.it.uc3m.es> <423EF12A.4030207@steeleye.com> <20050321185606.GA27541@percy.comedia.it> <423F2780.5000601@steeleye.com> <qbo3h2-kjo.ln1@news.it.uc3m.es>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 In-Reply-To: <qbo3h2-kjo.ln1@news.it.uc3m.es>
 Sender: linux-raid-owner@vger.kernel.org
@@ -15,43 +15,47 @@ List-Id: linux-raid.ids
 Peter T. Breuer wrote:
 > Paul Clements <paul.clements@steeleye.com> wrote:
 > 
->> At any rate, this is all irrelevant given the second part of 
->> that email reply that I gave. You still have to do the bitmap 
->> combining, regardless of whether two systems were active at the
->> same time or not.
-> 
-> 
-> As I understand it, you want both bitmaps in order to make sure 
-> that on resync you wipe over whatever may have been accidentally 
-> dirtied on the other side by a clumsy admin or vicious gremlin 
-> (various guises - software bug, journal effects, design 
-> incompetency, etc.).
-> 
-> Writing everything across (and ignoring the bitmap) would do the 
-> trick, but given that we are being efficient and using bitmaps to
-> lower the write totals at resync time, we need to use both 
-> bitmaps so as not to miss out on overwriting anything we should 
-> be overwriting.
-> 
-> But why don't we already know from the _single_ bitmap on the 
-> array node ("the node with the array") what to rewrite in total? 
-> All writes must go through the array. We know how many didn't go 
-> to both components. Thus we know how many to rewrite from the 
-> survivor to the component that we lost contact with.
+>>At any rate, this is all irrelevant given the second part of that email 
+>>reply that I gave. You still have to do the bitmap combining, regardless 
+>>of whether two systems were active at the same time or not.
 
-Hi, I've been lurking on the list for a bit and am not as familiar
-with md internals as most but here goes:
+> But why don't we already know from the _single_ bitmap on the array
+> node ("the node with the array") what to rewrite in total? All writes
+> must go through the array. We know how many didn't go to both
+> components. Thus we know how many to rewrite from the survivor to the
+> component that we lost contact with.
 
-As I understand it, the scenario is that both systems can see
-themselves as the "node with the array" after a split.  Both can go
-on and modify different parts of the array.  To recover from the
-split, an administrator might decide which of the nodes is correct
-and then blow away the other node's data.
+I don't think we're talking about the same thing. I'm talking about this:
 
-We need the bitwise or of both bitmaps' dirty bits in order to know
-which blocks could possibly have changed while the array was split
-since both sides were changing independently.  As you note, this
-mechanism just a more efficient way to do things than copying every
-block.
+1) you have an array set up on system A:
 
---Gil
+     system A
+     [raid1]
+     /     \
+[disk]    [nbd] --> system B
+
+2) you're writing, say, block 10 to the raid1 when A crashes (block 10 
+is dirty in the bitmap, and you don't know whether it got written to the 
+disk on A or B, neither, or both)
+
+3) something (i.e., your cluster framework) notices that A is gone and 
+brings up a new raid1, with an empty bitmap, on system B:
+
+     system B
+     [raid1]
+     /     \
+[disk]    missing (eventually will connect back to system A)
+
+4) some things get written to the raid1 on system B (i.e., the bitmap is 
+dirty)
+
+5) system A comes back and we now want to get the two systems back in sync
+
+In this scenario, there are two bitmaps that must be consulted in order 
+to sync the proper blocks back to system A. Without bitmaps (or the 
+ability to combine the bitmaps), you must do a full resync from B to A.
+
+--
+Paul
+
+
