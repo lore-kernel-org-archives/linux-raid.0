@@ -1,21 +1,33 @@
-From: Mike Fedyk <mfedyk@matchmail.com>
-Subject: Re: md: bug in file md.c, line 1440 (2.4.22)
-Date: Tue, 2 Sep 2003 18:38:32 -0700
+From: "pg" <pg@newhonest.com>
+Subject: raid0 to raid1
+Date: Wed, 3 Sep 2003 13:34:40 +0800
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20030903013832.GD13684@matchmail.com>
-References: <3F5017CA.4080700@tomt.net> <16213.14893.955734.797630@gargle.gargle.HOWL>
+Message-ID: <005f01c371dd$12f0fc00$2101a8c0@newhonest.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="big5"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <16213.14893.955734.797630@gargle.gargle.HOWL>
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: Andre Tomt <andre@tomt.net>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, mingo@redhat.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Sep 03, 2003 at 10:47:41AM +1000, Neil Brown wrote:
-> I have not idea how it got the failed flag.
-> 
-> NeilBrown
+Excuse me for asking the question again, because my last question has not
+been answered.
 
-Andre, is there any chance you ran a 2.6 kernel on that raid array?
+I have two scsi hd of same geometry : 36G
+I want to have
+sda1 sdb1 map to /boot by raid1
+sda2 sdb2 map to /     by raid1
+
+Unfortunately, I wrongly formated sda2+sdb2 to raid0, and the error was
+discovered a few weeks after the server has been put into production.
+
+So my problem is how can I use minimum time to convert the raid0 back to
+radi1 safely?
+
+
+
+-Jason
+
+ps The usage of sda2+sdb2 is less than 10G at the present moment
+
