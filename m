@@ -1,58 +1,98 @@
-From: Abhishek Rai <abba@cs.sunysb.edu>
-Subject: [2.4.25], [scsi aic79xx-2.0.8], raid5, problems with aic79xx on 2.4
- (fwd)
-Date: Thu, 1 Apr 2004 18:44:55 -0500 (EST)
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: Problem with mdadm and raidstart
+Date: Fri, 2 Apr 2004 11:21:08 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.GSO.4.53.0404011844010.20022@compserv1>
+Message-ID: <16492.49156.322965.117365@notabene.cse.unsw.edu.au>
+References: <20040401192015.40822.qmail@web14522.mail.yahoo.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: message from Don Jessup on Thursday April 1
+To: donj@asaca.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Thursday April 1, donj@asaca.com wrote:
+> 
+> 
+>    I have been testing disk failures with RAID5.   I have problems that I
+>   have run into that happens with raidstart and mdadm. 
+> 
+>     Here is the scenario.   I stop a healthy raid5.     I then do either one
+>    of the following:  I poweroff the first disk in the raid5 and remove it or
+>    I zero out the raid superblock on the first disk.     I then go ahead and
+>     try to start the raid either by raidstart command or  
+>      mdadm --assemble --run  /dev/md8   /dev/sda1 /dev/sdb1 /dev/sdc1 /dev/sdd1
+>      /dev/sde1 
 
-Hi,
-I have an Adaptec 29320A Ultra320 SCSI host bus adapter with which I
-connect to a SCSI array of 9 disks, each of which is capable of 320MBps.
-Initially, in the BIOS settings, I configure each disk to operate at
-160MBps. aic79xx-2.0.8 driver for 2.4 works just fine on 2.4.25 with this
-setting. I am able to create a raid device on top of this 9-disk array,
-and everything works fine.
+When asking mdadm to assemble an array, you need to tell it what array
+to assemble.
+The above command essentially says "Assemble the array that /dev/sda1
+is part of, using it as well as b,c,d,e".
+Obviously this will fail if sda is bad.
 
-Now, I configure each disk in the BIOS settings to operate at 320MBps. I
-now start having trouble beginning with aic79xx module insertion itself.
+You can discover this fact about mdadm if you read the man page.
+In the section "ASSEMBLE MODE", it says:
 
-1. modprobe aic79xx.o (version 2.0.8 dated 3/16/2004, latest from justin's
-page) gives some warnings/errors (a couple of "overrun detected")
-2. sometimes upon insertion, aic79xx.o is able to configure all of the 9
-disks while at other times, it misses out on one of them (I couldn't
-repeat it for long enough to make sure if it misses out on more than one
-or is it just that disk, as this happened only once).
-3. After this, I can see all the 9 disks in /proc/scsi/scsi and I try to
-build raid on top of this array (mkraid -R /dev/md0). This eventually
-causes the kernel to crash with a NULL pointer dereference. But before
-that a lot of stuff happens. The Internet url to my log file is at the
-bottom of this email. The log file shows the trace following insmod of
-aic79xx (2.0.8, dated 3/16/2004), and later shows what all happens when a
-mkraid is started.
+       This usage assembles one or more raid arrays from  pre-existing  compo-
+       nents.  For each array, mdadm needs to know the md device, the identity
+       of the array, and a number of component-devices. These can be found  in
+       a number of ways.
 
-4. In addition, during this mkraid, there are no LEDs glowing on any of
-the 9 disks (as happens in the OK case, when the disks operate at 160MBps)
-while the driver times out again and again (as the following log shows)
-and the proc/mdstat keeps showing an increasingly long time until
-completion.
+A little later it says:
 
+       The  identity  can  be  given with the --uuid option, with the --super-
+       minor option, can be found  in the config file, or will be  taken  from
+       the  super  block  on  the first component-device listed on the command
+       line.
 
-The log files are at:
+giving three ways.  You are using the last.
 
-http://www.fsl.cs.sunysb.edu/~abba/scsi-raid-1.txt
-(this instance ended with a kernel NULL pointer dereference within 2
-minutes, couldn't ksymoops it)
+If you read the rest of the man page, I'm sure you will figure out how
+to do what you want, and possibly a good many other things too.
 
-http://www.fsl.cs.sunysb.edu/~abba/scsi-raid-2.txt
-(this instance ran with errors and without any actual disk activity (no
-LEDs glowing) for around 90 minutes before I terminated it).
+NeilBrown
 
-
-Abhishek
-
+> 
+>      Both of these commands fail.  I do admit when using the mdadm command I
+>      can get the RAID5 to start if I leave out the first disk. 
+> 
+>     But when I try this same test with any other disk in the raid set (so any
+>     disk other than disk 0 ) the command raidstart works and I 
+>      assuming mdadm command would work as well.   That is what I would like 
+>     to happen with disk0 as well.    Is there anyway to start
+>     a degraded raid set consistently without having to manually figure 
+>     out which disk failed?   
+> 
+> 
+>     Any way to make this work?  If it is a simple fix I could do it myself
+>     if someone could point me to right direction or maybe there is a latter
+>     version of the mdadm command that this is not a problem.  Any one ?
+>     Any ideas?
+> 
+>     I'm running linux 2.4.22 kernel with mdadm - v1.3.0 - 29 Jul 2003.
+> 
+>     Thank You
+> 
+> 
+> 
+>    
+>  
+> 
+>     
+> 
+> 
+> 
+> =====
+> Don Jessup
+> Asaca/Shibasoku Corp. of America
+> 400 Corporate Circle, Unit G
+> Golden, CO  80401
+> 303-278-1111 X232
+> donj@asaca.com
+> http://www.asaca.com
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
