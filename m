@@ -1,46 +1,64 @@
-From: Jeff Woods <Kazrak+kernel@cesmail.net>
-Subject: Re: make hpt37xx fails
-Date: Fri, 09 Apr 2004 13:32:40 -0600
+From: <me@heyjay.com>
+Subject: Building my first software raid
+Date: Fri, 9 Apr 2004 16:50:39 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <6.0.1.1.0.20040409132124.02880f90@no.incoming.mail>
-References: <4076F259.196B@ij.net>
+Message-ID: <00e201c41e7c$b40ee6f0$6405a8c0@a30>
+Reply-To: <me@heyjay.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; format=flowed
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4076F259.196B@ij.net>
-References: <4076F259.196B@ij.net>
-To: Felix Miata <mrmazda@ij.net>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-At 4/9/2004 02:58 PM -0400, Felix Miata wrote (in part):
-># make KERNELDIR=/usr/src/linux-2.6.3-7mdk
->
->When I do this, a bunch of messages scroll, ending with:
+Hi,
 
-Sorry, but I don't have an answer for your hard questions.  However:
+I've read all the linux raid how-tos, and thought I was ready to take the
+plunge on implementing software raid.  I've got a fresh install of Debian
+Sarge, 2 disks.  3 partitions (/boot, /, swap).  So I installed Sarge,
+partitioned hda during the installer with regular partitions:
 
->Where is this info scrolled off the screen too fast to read logged for 
->later inspection?
+abba:/usr/src# sfdisk -l /dev/hda
 
-It's not saved (unless you happen to be using some 
-console/terminal/whatever that logs. Try (assuming you're using bash or 
-similar):
+Disk /dev/hda: 2491 cylinders, 255 heads, 63 sectors/track
+Units = cylinders of 8225280 bytes, blocks of 1024 bytes, counting from 0
 
-         make 
-KERNELDIR=/usr/src/linux-2.6.3-7mdk >some-output-filename-you-like 2>&1
+   Device Boot Start     End   #cyls    #blocks   Id  System
+/dev/hda1   *      0+     11      12-     96358+  83  Linux
+/dev/hda2         12     133     122     979965   82  Linux swap
+/dev/hda3        134    1957    1824   14651280   83  Linux
+/dev/hda4          0       -       0          0    0  Empty
 
-or
+I wanted to do a raid 1.  So, then I went and partitioned hdc like:
 
-         make KERNELDIR=/usr/src/linux-2.6.3-7mdk 2>&1 |less
+abba:/usr/src# sfdisk -l /dev/hdc
 
-The first instance redirects stdout to a file and then redirects stderr to 
-stdout. The second redirects stderr to stdout and then pipes both to less 
-to allow you to scroll around and/or save the result. If you don't want or 
-need stderr output with stdout then just omit the "2>&1" or even replace it 
-with "2>/dev/null" to throw it away.
+Disk /dev/hdc: 1870 cylinders, 255 heads, 63 sectors/track
+Units = cylinders of 8225280 bytes, blocks of 1024 bytes, counting from 0
 
---
-Jeff Woods <kazrak+kernel@cesmail.net> 
+   Device Boot Start     End   #cyls    #blocks   Id  System
+/dev/hdc1   *      0+     12      13-    104391   fd  Linux raid autodetect
+/dev/hdc2         13     137     125    1004062+  fd  Linux raid autodetect
+/dev/hdc3        138    1756    1619   13004617+  fd  Linux raid autodetect
+/dev/hdc4          0       -       0          0    0  Empty
 
+So now I'd build my raid set:
+
+abba:/usr/src# mdadm --create /dev/md0 --level=1 --raid-devices=2 /dev/hda1
+/dev/hdc1
+mdadm: /dev/hda1 appears to contain an ext2fs file system
+    size=96358K  mtime=Thu Apr  8 12:50:04 2004
+mdadm: /dev/hdc1 appears to contain an ext2fs file system
+    size=96358K  mtime=Wed Dec 31 18:00:00 1969
+mdadm: largest drive (/dev/hdc1) exceed size (96256K) by more than 1%
+Continue creating array? n
+mdadm: create aborted.
+
+I've google for that "mdadm: largest drive...than 1%" error with no results
+
+Any help?
+
+Thanks
+Jay
 
