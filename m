@@ -1,94 +1,65 @@
-From: Gordon Henderson <gordon@drogon.net>
+From: Hermann Himmelbauer <dusty@strike.wu-wien.ac.at>
 Subject: Re: I'm about ready to do SW-Raid5 - pointers needed
-Date: Tue, 28 Oct 2003 08:26:38 +0000 (GMT)
+Date: Tue, 28 Oct 2003 09:39:41 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.56.0310280749080.23689@unicorn.drogon.net>
-References: <3F9DAD4C.3000002@verizon.net>
+Message-ID: <200310280939.41974.dusty@strike.wu-wien.ac.at>
+References: <Pine.LNX.4.44.0310281610290.11061-100000@gw.luko.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3F9DAD4C.3000002@verizon.net>
-To: berk walker <berk.walker@verizon.net>
+In-Reply-To: <Pine.LNX.4.44.0310281610290.11061-100000@gw.luko.org>
+Content-Disposition: inline
+To: Luke Rosenthal <luke@luko.org>, maarten van den Berg <maarten@vbvb.nl>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 27 Oct 2003, berk walker wrote:
+On Tuesday 28 October 2003 06:37, Luke Rosenthal wrote:
+> On Tue, 28 Oct 2003, maarten van den Berg wrote:
+> > One of the cheapest "backup" mediums right now are harddisks themselves
+> > (weird, isn't it?) so it stands to reason some people try to build
+> > something that is foolproof (at least against hardware failure) using
+> > that, just disks.
+>
+> Ok, most folks would argue that hard disk failure is a byproduct of them
+> being run continuously.  Especially in the case of IDE disks, which are
+> usually cheaper than their SCSI counterparts on a cost-per-MB ratio, but
+> consequently have a much shorter MTBF.
+>
+> So here's my question - would it be possible to use a very large IDE disk
+> in a system purely for backups, eg one of those new 300GB behemoths - but
+> with one caveat - leave it "asleep".  Ie. leave it "spun down", and only
+> activate it once a day at backup time, run the backup, verify it, then
+> unmount it, and put it to sleep in a cron job.  Feasible?
 
-> The purpose of my going to raid is to ensure, short of a total
-> meltdown/fire, etc, data loss prevention.  If my house and business
-> burn, I'm hosed anyway.
+I think that would be o.k. The system normally deals good with spun down 
+disks.
 
-Offsite backups...
+> I know there's the appropriate commands to do it, but are they risky?  If
+> a drive's not mounted, but powered off, it should present no problems or
+> lock up the OS, correct?
 
-> I am buying 4 maxtor 40 gb/200mb ultra 133 drives, and another promise
-> board, to finally do swraid5 (after reading this list for a few months,
-> it seems pretty scary in failure).
+No, many laptop users are spinning down they root disk, so I don't think there 
+are problems.
 
-Good luck with your promise board (what type is it?) I've had a lot of
-problems with them (kernels 2.4.20-22) They seem to work, but under heavy
-load, I see processes getting stuck in "D" state (eg. nfsd or anything
-doing lots of disk IO) Most of the time they recover, but I've load a disk
-partition on more than one occasion (saved by raid, and it re-built OK
-after a reboot). I've seen this in 2 different servers and tried both
-Intel and AMD CPUs. Tonight I try a set of different PCI IDE controllers
-in one server to see if that helps it.
+> Everyone's got a horror story.. :)  and most people learn from it :)
 
-It's hard to tell if it's a real hardware problem or a software one (the
-Promise driver being fairly new, patched in at 2.4.20, included in 2.4.22)
+Some more thoughts to the backup problem:
+- When a system gets very reliable (with RAID etc.) the possibility that a 
+user does a "rm *" gets more likely than a hardware/software failure.
 
+- Most users only have very little data that's worth backing up. When looking 
+at myself, there is not much more than 300MB of data and this is compressable 
+to ~ 150MB. But my homedir is filled up with a *lot* of junk that sums up to 
+~ 2GB. One possibility to deal with this is that the user denotes the 
+directories he wants to backup in a text file (or maybe web interface).
 
-> is there an advantage to >more< than 1 spare drive? .. more than 3
-> drives in mdx?  why not cp old boot/root/whatever drive to mdx after
-> booting on floppy?
+		Best Regards,
+		Hermann
 
-The more drives you have in the RAID set, then less "wastage" there is.
-Eg. with 3 drives, you get 2 drives worth of data storage, with 8 drives
-you get 7 drives of storage.
+-- 
+x1@aon.at
+GPG key ID: 299893C7 (on keyservers)
+FP: 0124 2584 8809 EF2A DBF9  4902 64B4 D16B 2998 93C7
 
-> is there an advantage to having various mdx's allocated to various
-> /directories?..ie: /home, var, /etc
-
-Traditionally yes. I usually build a machine with 4 partitions, root,
-swap, /usr and a data partition (may be /var or /home or something else,
-depending on the use of the server) Traditionally this was to minimise
-head movement between swap and /usr and help keep things separate should a
-crash happen, or someone fills up the /home or /var, but these days I'm
-not sure, but since I've been doing it that way for the past 18 years it
-kinda sticks...
-
-I don't bother with a /boot partition, (IIRC that was only needed in the
-bad old >1024 cylinder days) just allocate about 256M to root.  Even thats
-a lot more than needed if you have /var on a separate partition. So with 3
-disks, I'd have identical partitions:
-
-  0 - 256M
-  1 - 1024
-  2 - 2048
-  3 - Rest of disk
-
-Partitions 0 of the first 2 disks (masters on on-board controllers?) would
-be in a RAID1 configuration so you can boot off them, the others in RAID5
-configurations, partition 1 for swap, 2 for /usr and 3 for /var or /home
-or whatever you need. Your swap partition might need to be differend size
-- you'll want it twice the amount of RAM and then a bit more, or none at
-all. Disk is cheap these days, but so is memory! With this setup, you'll
-have single, spare partition of 256M, and in this case, I'd be happy to
-just ignore it. In a 4 disk system, you can combie the 2 spare partitions
-into a RAID one and use it for something - if you have use of a 256MB
-partition! (but IDE drives are cheap, so generally don't bother, but I
-have one server that uses the spare RAID1'd partition for the journal on
-an XFS filesystem which seems to improve things a lot)
-
-One interesting conundrum I had recently was with an 8-disk set I was
-recycling. (2 SCSI busses, 4 on each bus if you were wondering) Do I put 2
-partitions onto each disk and make 2 RAID sets over 8 disks, or use 4
-disks in each set to achieve the same results? In the end, I went for 2
-partitions on each disk to maximise data capacity (and it turned out to
-benchmark slightly faster too) The disadvantage is that if a disk does
-down it will mark both RAID sets as degraded, but I can live with that as
-we have a cold spare ready to slot in should this ever happen. (and in the
-past, this old array has suffered one failure - it's now nearly 5 years
-old and has been in a Linux box with RAID5 for all that time, starting
-with 2.2.10)
-
-Gordon
