@@ -1,7 +1,7 @@
 From: "Guy" <bugzilla@watkins-home.com>
 Subject: RE: Spares and partitioning huge disks
-Date: Sun, 9 Jan 2005 18:20:18 -0500
-Message-ID: <200501092320.j09NKQ918671@www.watkins-home.com>
+Date: Sun, 9 Jan 2005 19:42:56 -0500
+Message-ID: <200501100043.j0A0h4918904@www.watkins-home.com>
 References: <200501092226.25910.maarten@ultratux.net>
 Mime-Version: 1.0
 Content-Type: text/plain;
@@ -13,50 +13,39 @@ Sender: linux-raid-owner@vger.kernel.org
 To: 'maarten' <maarten@ultratux.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-It was said:
-"> I think RAID6 but especially RAID1 is safer.
+I really like the "in_disgrace" idea!  But, not for a simple bad block.
+Those should be corrected by recovering the redundant copy, and re-writing
+it to correct the bad block.
 
-Well, duh :)  At the expense of buying everything twice, sure it's safer
-:))"
+If you kick the disk out, but still depend on it if another disk gets a read
+error, then you must maintain a list of changed blocks, or stripes.  If a
+block or stripe has changed, you could not read the data from the
+"in_disgrace" disk, since it would not have current data.  This list must be
+maintained after a re-boot, or the "in_disgrace" disk must be failed if the
+list is lost.
 
-Guy says:
-I disagree with the above.
+"in_disgrace" would be good for write errors (maybe the drive ran out of
+spare blocks), or maybe read errors that exceed some user defined, per disk
+threshold.
 
-True, RAID6 can lose 2 disks without data loss.
-But, RAID1 and RAID5 can only lose 1 disk without data loss.
+"in_disgrace" would be a good way to replace a failed disk!
 
-If RAID1 or RAID5 had a read error during a re-sync, both would die.
+Assume a disk has failed and a spare has been re-built.  You now have a
+replacement disk.
 
-Now, RAID5 has more disks, so the odds are increased that a read error could
-occur.  But you can improve those odds by partitioning the disks and
-creating sub arrays, then combining them.  Per Maarten's plan.
+Remove the failed disk.
+Add the replacement disk, which becomes a spare.
+Set the spare to "in_disgrace".  :)
+System is not degraded.
+Rebuild starts to spare the "in_disgrace" disk.
+Rebuild finishes, the "in_disgrace" disk is changed to failed.
 
-Of course, having a bad sector should not cause a disk to be kicked out!
-The RAID software should handle this.  Most hardware based RAID systems can
-handle bad blocks.  But this is another issue. 
-
-Why is RAID1 preferred over RAID5?
-RAID1 is considered faster than RAID5.  Most systems tend to read much more
-than they write.  So, having 2 disks to read from (RAID1) can double your
-read rate.  RAID5 tends to have better seek time in a multi threaded
-environment (more then 1 seek attempted concurrently).  If you test with
-bonnie++, try 10 bonnies at the same time and note the sum of the seek times
-(you must add them yourself).  With RAID1 it should about double, with
-RAID5, it depends on the number of disks in the array.  Most home systems
-tend to only do 1 thing at a time.  So, most people don't focus on seek
-time, they tent to focus on sequential read or write rates.  In a multi
-user/process/thread environment, you don't do much sequential I/O, it tends
-to be random.
-
-But, assuming you need the extra space RAID5 yields, if you choose RAID1
-instead, you would have many more disks than just 2, in a RAID10 environment
-you would have the improved seek rates of RAID5 (times ~2) and about double
-the overall read rate of RAID5.  This is why some large systems tend to use
-RAID1 over RAID5.  The largest system I worked on had over 300 disks,
-configured as RAID1.  I think it was over kill on performance, RAID5 would
-have been just fine!  But it was not my choice, also not my money.
+It does not change what I have said before, but the label "in_disgrace"
+makes it much easier to explain!!!!!!
 
 Guy
+
+
 
 -----Original Message-----
 From: linux-raid-owner@vger.kernel.org
