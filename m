@@ -1,60 +1,98 @@
-From: Steven Ihde <x-linux-raid@hamachi.dyndns.org>
-Subject: Re: Looking for the cause of poor I/O performance
-Date: Wed, 8 Dec 2004 17:40:04 -0800
-Message-ID: <20041209014004.GA16666@hamachi.us>
-References: <200412082225.iB8MPT915415@www.watkins-home.com> <200412082241.iB8Mfo915469@www.watkins-home.com>
+From: Michael Stumpf <mjstumpf@pobox.com>
+Subject: Re: 2 drive dropout (and raid 5), simultaneous, after 3 years
+Date: Wed, 08 Dec 2004 22:46:03 -0600
+Message-ID: <41B7D88B.60803@pobox.com>
+References: <200412082207.iB8M7k915369@www.watkins-home.com>
+Reply-To: mjstumpf@pobox.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <200412082241.iB8Mfo915469@www.watkins-home.com>
+In-Reply-To: <200412082207.iB8M7k915369@www.watkins-home.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Guy <bugzilla@watkins-home.com>
-Cc: 'David Greaves' <david@dgreaves.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 08 Dec 2004 17:41:45 -0500, Guy wrote:
-> I also tried changing /proc/sys/vm/max-readahead.
-> I tried the default of 31, 0 and 127.  All gave me about the same
-> performance.
-> 
-> I started testing the speed with the dd command below.  It complete in about
-> 12.9 seconds.  None of the read ahead changes seem to affect my speed.
-> Everything is now set to 0, still 12.9 seconds.
-> 12.9 seconds = about 79.38 MB/sec.
-> 
-> time dd if=/dev/md2 of=/dev/null bs=1024k count=1024
+No idea what failure is occuring.  Your dd test, run from begin to end 
+of each drive, completed fine.  Smartd had no info to report.
 
-I'm running kernel 2.6.8; I found the readahead setting had a pretty
-dramatic effect.  I set readahead for all the drives and their
-partitions to zero:
+The fdisk weirdness was operator error; the /dev/sd* block nodes were 
+missing (forgotten detail on age old upgrade).  Fixed with mknod.
 
-blockdev --setra 0 /dev/{hdc,hdg,sda,hdc5,hdg5,sda5}
+So, I forced mdadm to assemble and it is reconstructing now.  
+Troublesome, though, that 2 drives fail at once like this.  I think I 
+should separate them to different raid-5s, just incase.
 
-I tested various readahead values for the array device by reading 1GB
-of data from the device using this procedure:
 
-blockdev --flushbufs /dev/md1
-blockdev --setra $readahead /dev/md1
-dd if=/dev/md1 of=/dev/null bs=1024k count=1024
 
-These are the results:
+Guy wrote:
 
-RA    transfer rate (B/s)
----------------
-   0: 15768513
- 128: 33680867
- 256: 42982770
- 512: 59223248
-1024: 78590551
-2048: 81918844
-4096: 82386839
+>What failure are you getting?  I assume a read error.  md will fail a drive
+>when it gets a read error from the drive.  It is "normal" to have a read
+>error once in a while, but more than 1 a year may indicate a drive going
+>bad.
+>
+>I test my drives with this command:
+>dd if=/dev/hdi of=/dev/null bs=64k
+>
+>You may look into using "smartd".  It monitors and tests disks for problems.
+>However, my dd test finds them first.  smartd has never told me anything
+>useful, but my drives are old, and are not smart enough for smartd.
+>
+>Guy
+>
+>-----Original Message-----
+>From: linux-raid-owner@vger.kernel.org
+>[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Michael Stumpf
+>Sent: Wednesday, December 08, 2004 4:03 PM
+>To: linux-raid@vger.kernel.org
+>Subject: 2 drive dropout (and raid 5), simultaneous, after 3 years
+>
+>
+>I've got a an LVM cobbled together of 2 RAID-5 md's.  For the longest 
+>time I was running with 3 promise cards and surviving everything 
+>including the occasional drive failure, then suddenly I had double drive 
+>dropouts and the array would go into a degraded state.
+>
+>10 drives in the system, Linux 2.4.22, Slackware 9, mdadm v1.2.0 (13 mar 
+>2003)
+>
+>I started to diagnose; fdisk -l /dev/hdi  returned nothing for the two 
+>failed drives, but "dmesg" reports that the drives are happy, and that 
+>the md would have been automounted if not for a mismatch on the event 
+>counters (of the 2 failed drives).
+>
+>I assumed that this had something to do with my semi-nonstandard 
+>application of a zillion (3) promise cards in 1 system, but I never had 
+>this problem before.  I ripped out the promise cards and stuck in 3ware 
+>5700s, cleaning it up a bit and also putting a single drive per ATA 
+>channel.  Two weeks later, the same problem crops up again.
+>
+>The "problematic" drives are even mixed; 1 is WD, 1 is Maxtor (both 120gig).
+>
+>Is this a known bug in 2.4.22 or mdadm 1.2.0?  Suggestions?
+>
+>
+>--------------------------------------------
+>My mailbox is spam-free with ChoiceMail, the leader in personal and
+>corporate anti-spam solutions. Download your free copy of ChoiceMail from
+>www.choicemailfree.com
+>
+>-
+>To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>-
+>To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
+>  
+>
 
-We seem to reach the point of diminishing returns at 1024 readahead,
-~80MB/sec throughput.  To recap, this is with three Seagate Barracuda
-drives, two of which are 80GB PATA, the other a 120GB SATA, in a RAID5
-configuration.  256 was the default readahead value.  The chunk size
-on my array is 32k.  I don't know if that has an effect or not.
 
--Steve
+--------------------------------------------
+My mailbox is spam-free with ChoiceMail, the leader in personal and corporate anti-spam solutions. Download your free copy of ChoiceMail from www.choicemailfree.com
 
