@@ -1,84 +1,30 @@
-From: Philippe =?ISO-8859-15?Q?Gramoull=E9?=
-	<philippe.gramoulle@mmania.com>
+From: AndyLiebman@aol.com
 Subject: Re: mdadm can't start RAID0 volume after power failure
-Date: Fri, 17 Dec 2004 18:59:14 +0100
-Message-ID: <20041217185914.1948cc26.philippe.gramoulle@mmania.com>
-References: <1e1.31adebd6.2ef474f4@aol.com>
+Date: Fri, 17 Dec 2004 13:06:56 EST
+Message-ID: <128.5252547e.2ef47a40@aol.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1e1.31adebd6.2ef474f4@aol.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: AndyLiebman@aol.com
+To: philippe.gramoulle@mmania.com
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-Hello Andy,
+Phillipe
 
-On Fri, 17 Dec 2004 12:44:20 EST
-AndyLiebman@aol.com wrote:
+>Still, this is the first time that such a thing happens to me. What could be 
+the reason that >UUID would be changed ?
 
-  | Looking at your mdadm.conf file, and at the results of your mdadm -QE --scan, 
-  | I can see that the UUID numbers are different. Which UUID numbers do you get 
-  | when you run mdadm -E /dev/sd{e,f,g,h,i,j,k}1?
+If I were a betting person, I would say that the mdadm.conf file was old, and 
+that you had created a new array since the time you made that conf file. And 
+you just didn't update the conf file. 
 
+As I'm sure you know, you don't need to use a conf file anyway to use mdadm. 
+That's what makes it so beautiful! All kinds of things -- like device ids -- 
+can change on your system and mdadm just figures it out (provided you give it a 
+minimal amount of info, like the correct uuid!). 
 
-  |  I tried to follow the web page  link in your post and I couldn't get to it.
-
-The link is ok and works.
-
-  |  Are you trying to start your array with the wrong UUID number by chance? 
-
-Indeed !! starting it with the detected UUID allowed me to start it:
-
-# mdadm -v -A /dev/md0 --uuid=3c1ad678:d3a7a1ed:1112143d:68b4e569
-mdadm: looking for devices for /dev/md0
-mdadm: /dev/sdk1 is identified as a member of /dev/md0, slot 6.
-mdadm: /dev/sdj1 is identified as a member of /dev/md0, slot 5.
-mdadm: /dev/sdi1 is identified as a member of /dev/md0, slot 4.
-mdadm: /dev/sdh1 is identified as a member of /dev/md0, slot 3.
-mdadm: /dev/sdg1 is identified as a member of /dev/md0, slot 2.
-mdadm: /dev/sdf1 is identified as a member of /dev/md0, slot 1.
-mdadm: /dev/sde1 is identified as a member of /dev/md0, slot 0.
-mdadm: added /dev/sdf1 to /dev/md0 as 1
-mdadm: added /dev/sdg1 to /dev/md0 as 2
-mdadm: added /dev/sdh1 to /dev/md0 as 3
-mdadm: added /dev/sdi1 to /dev/md0 as 4
-mdadm: added /dev/sdj1 to /dev/md0 as 5
-mdadm: added /dev/sdk1 to /dev/md0 as 6
-mdadm: added /dev/sde1 to /dev/md0 as 0
-mdadm: /dev/md0 has been started with 7 drives.
-
-and it mounted fine ! 
-
-Still, this is the first time that such a thing happens to me. What could be the reason that UUID would be changed ?
-
-Thanks much,
-
-Philippe
-
-  | 
-  | Regards, 
-  | Andy Liebman
-  | 
-  | ># cat /etc/mdadm/mdadm.conf
-  | >
-  | >DEVICE /dev/sd[efghijk]1
-  | >ARRAY /dev/md0 level=raid0 num-devices=7 
-  | >UUID=46c66ef8:8acf2810:48adb2d3:85b04900
-  | >
-  | 
-  | >Still, every # mdadm -E /dev/sd[efghijk]1 looks ok, output can be found 
-  | here: >http://philou.org/mdadm.log
-  | >mdadm.conf is here : http://philou.org/mdadm.conf
-  | >
-  | ># mdadm -QE --scan
-  | >ARRAY /dev/md0 level=raid0 num-devices=7 
-  | >UUID=3c1ad678:d3a7a1ed:1112143d:68b4e569
-  | -
-  | To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-  | the body of a message to majordomo@vger.kernel.org
-  | More majordomo info at  http://vger.kernel.org/majordomo-info.html
-  | 
-  | 
+Glad to help :)
+Andy Liebman
