@@ -1,40 +1,48 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: Adding a mirror to a RAID1 Device
-Date: Tue, 25 Nov 2003 18:21:00 +1100
-Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16323.732.390200.935640@notabene.cse.unsw.edu.au>
-References: <S262074AbTKYGHX/20031125060723Z+10693@vger.kernel.org>
-	<63168.209.233.26.53.1069741184.squirrel@sampson.crome.org>
+From: AndyLiebman@aol.com
+Subject: XFS RAID only writing half the time
+Date: Tue, 25 Nov 2003 10:07:56 EST
+Sender: linux-xfs-bounce@oss.sgi.com
+Message-ID: <1e2.143843bf.2cf4ca4c@aol.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Caleb Crome on Monday November 24
-To: Caleb Crome <linux-raid@crome.org>
-Cc: linux-raid@vger.kernel.org
+Return-path: <linux-xfs-bounce@oss.sgi.com>
+Errors-to: linux-xfs-bounce@oss.sgi.com
+To: linux-raid@vger.kernel.org, linux-xfs@oss.sgi.com
 List-Id: linux-raid.ids
 
-On Monday November 24, linux-raid@crome.org wrote:
-> Hello all, I've got a peculiar problem.  I added some new disk space to my
-> system (Linux 2.4.19, Mandrake), and created a RAID1 drive /dev/md0 with
-> only 1 active mirror because I didn't have enough space (yet) to put
-> everything on my new raid drive.  I had the intention of then addeding
-> another disk to the raid setup later so that it would just
-> auto-reconsctruct and be ready to go.
+A puzzle. 
 
-Sorry, but that was the wrong thing to do.
-A raid1 with only one drive is pretty pointless, but you asked for it
-and you got it :-)
+I am writing uncompressed video (18 MB/sec) to a RAID 5 array through a 
+Gigabit network. I am using the xfs filesystem on the array with a block size of 
+4096 and an internal log. The RAID has a chunk size of 128K. Otherwise, all 
+settings are the default (i.e., left symetric algorithm). 
 
-What you should have done is make a raid1 with 2 drives, one of which
-was missing/failed.  With mdadm, the command would be:
+I have a P4-3.06 with 1 GB RAM. I have hyperthreading enabled -- and Mandrake 
+9.2 (2.4.22 kernel) shows that I have 2 CPUs. 
 
-  mdadm -C /dev/md0 --level=raid1 --disks=2 /dev/hda3 missing
+While capturing video, I am running a monitoring program, XOSVIEW -- which 
+shows usage of memory, cpu, ints (interrupts?), and disk read/write/idle 
+activity. 
 
-then you can hot-add the extra drive when it arrives.
+Although data is coming into my Linux machine at a rate of 18 MB/sec, I don't 
+see any disk activity for as much as 30 or 40 seconds after I begin recording 
+video. Looking at XOSVIEW, I can see on the memory display that the cache 
+fills up until my memory is almost entirely full, and ONLY THEN does the disk 
+writing activity begin. 
 
-What you have to do now is recreate the raid1 with two drives.  You
-will have to have the filesystem unmounted and the raid stopped, but
-you will not lose any data.
+Usually this is fine, but once in a while -- after capturing video for 20 
+minutes or so, the system will have a "hiccup" and fail to write data fast 
+enough. My video editing application will then stop capturing. I don'
 
-NeilBrown
+It seems to me that there must be a way to tell my system not to cache so 
+much data before beginning to write so that there is more margin for delays. 
+
+It also seems there should be a way to tell my system to spend more time 
+writing to the RAID array. 
+
+When I test out my RAID with Bonnie++, it looks as if sequential writes are 
+about 30 MB/sec -- so the RAID itself is fast enough to keep up with the video. 
+And so is the gigabit network. 
+
+Does anybody have any ideas? 
