@@ -1,48 +1,72 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: multipath md devices
-Date: Fri, 24 Sep 2004 12:41:12 -0400
-Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1096044072.4196.1671.camel@compaq.xsintricity.com>
-References: <4151E37B.8040207@bms.com>
-	 <1095888922.4196.1548.camel@compaq.xsintricity.com>
-	 <20040923054607.GB27855@percy.comedia.it>
-	 <16723.29710.953435.739461@cse.unsw.edu.au>
+From: christophe varoqui <christophe.varoqui@free.fr>
+Subject: [ANNOUNCE] multipath-tools-0.2.9
+Date: Sat, 25 Sep 2004 02:24:09 +0200
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <1096071849.4466.31.camel@zezette>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <16723.29710.953435.739461@cse.unsw.edu.au>
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: Luca Berra <bluca@comedia.it>, linux-raid@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+To: dm-devel@redhat.com
+Cc: linux-raid@vger.kernel.org, linux-hotplug-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 2004-09-23 at 21:10, Neil Brown wrote:
-> On Thursday September 23, bluca@comedia.it wrote:
-> > On Wed, Sep 22, 2004 at 05:35:23PM -0400, Doug Ledford wrote:
-> > >Yeah, IBM wrote a little app to help with that.  We stuffed it into the
-> > >mdadm package we ship since that seemed the most appropriate place for
-> > >it.  It's called mdmpd and that's it's job basically.  Very simple app,
-> > >but doesn't run on upstream kernels at the moment (it wants the md event
-> > >interface which hasn't yet been submitted upstream by Neil).
-> > 
-> > iirc the it has been submitted and refused
-> > http://marc.theaimsgroup.com/?t=109417961300007&r=1&w=2&n=8
-> > 
-> 
-> Well..... it's still alive in -mm, and where there's life, there's
-> hope (and need of vitals, as the old Gaffer usually added:-).
+Hello,
 
-I didn't know that.  You know, I resubbed to linux-kernel about 2 days
-after this conversation ended, so I read the archives yesterday and
-wanted to write some responses to what was in there today.  Now, whether
-I'll have the time to get to it today or not is one thing, but I am
-planning on responding and it's nice to know that it's not *totally*
-dead already.
+here goes multipath-tools-0.2.9
 
+The ChangeLog is pretty big this time : changes accumulated while
+waiting for scsi_id-0.6 and while background-battling with an IA64
+compilation glitch.
+
+In short :
+
+	* compiles on IA64
+	* implement the alias OSDL CGL preconisation
+	* more work on single path devices and JBOD handling
+
+Regression testing is even lighter than the previous release, because I
+temporarily lost access to my favorite SAN.
+
+Full ChangeLog for the release :
+
+        * [multipathd] finally tame the clone compilation glitch on IA64
+          move from sys_clone to __clone / __clone2
+        * [kpartx] rework from Stephan Bader, IBM :
+                * handle s390x arch
+                * endianness fixes
+                * push the partname string size to handle wwwids
+                * quieten implicit cast warnings
+        * [multipath] add an 'alias' multipath keyword for friendlier
+	  device
+          names. This was "asked" by OSDL' CGL board of secret reviewers
+        * [multipath] last pass with JBOD and parallel SCSI support :
+          hard-code scsi_id as a fallback when disk strings doesn't
+	  match any hwtable entry
+        * [multipath & multipathd] change the parser to not coalesce
+          consecutive spaces (Patrick Mansfield)
+        * [multipath] remove the [UN]: output prefix, so that stdout can
+	  be easily fed to a tool like dmsetup
+        * [multipathd] DEBUG=3 logs more readable/usefull
+        * [multipathd] add a multipath_tool config keyword
+        * [multipathd] move to execute_program() like multipath already
+          did
+        * [multipath] don't print the "no path" msg in quiet mode
+        * [multipathd] include linux/unistd.h for _syscall2
+          definition on RedHat systems. Remove superfluous
+          asm/unistd.h include
+        * [libsysfs] forked : last version uses mntent, which
+          klibc doesn't provide. That, plus the fact we use
+          only 1/3 of the lib, pushed me to freeze the version
+          and strip all unused stuff.
+        * [multipathd] prepare_namespace() cleanup : no more "multipath"
+          special casing since we push it to binvec vector, like the
+          other callouts detected in the config file.
+
+As usual, doc and download at :
+http://christophe.varoqui.free.fr/
+
+regards,
 -- 
-  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
-         Red Hat, Inc.
-         1801 Varsity Dr.
-         Raleigh, NC 27606
-
+christophe varoqui <christophe.varoqui@free.fr>
 
