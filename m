@@ -1,34 +1,32 @@
-From: vak@erols.com
-Subject: Software
-Date: Sat, 11 Sep 2004 10:39:23 +0000
+From: "Terry" <dasha21wombat@hotmail.com>
+Subject: This drug makes Vi-ag-ra look like the minor leagues!
+Date: Sat, 11 Sep 2004 11:55:20 GMT
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <H3LA9BH7G703LEI4@erols.com>
-References: <5K42H4DF6KEE8D20@vger.kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Message-ID: <1094903720-30340__42888.4048866623$1094903567$gmane$org@excite.com>
+Content-Type: text/plain;
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5K42H4DF6KEE8D20@vger.kernel.org>
-To: Linux-raid <linux-raid@vger.kernel.org>
+To: linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Fresh Windows, Apple, Linux soft
-Windows 2000 Server - 50
-Adobe InDesign CS - 100
-Windows 2000 Server - 50
-Windows 2000 Server - 50
-Microsoft Windows 2000 Professional - 50
-Adobe Photoshop cs - 80   
-Adobe Illustrator 10 - 80
-Linux Redhat 7.3 - 200
-Adobe Illustrator CS - 90 
-Microsoft Windows 2000 Professional - 50
-Linux Redhat 7.3 - 200
-Adobe Photoshop cs - 80   
-Easy CD & DVD Creator 6 - 29 
-Microsoft Windows 2000 Professional - 50
-Easy CD & DVD Creator 6 - 29 
-Adobe Photoshop cs - 80   
-Office 2003 Professional - 110   
-and a lot more http://www.araholka.biz/
 
+CIAL1S delivered discreetly to your door in an unmarked envelope
+
+Lasts 8x times longer than V1AGRA, take one Friday, still working on Sunday!
+
+No one needs to know!
+
+Buy generic (exactly the same drug, but not with the big company prices..) to save 70%!!
+
+Check it out HERE!
+
+http://www.hfdabfdgsdf.info/c/?92
+
+
+
+
+
+
+
+julia planetflorida paula jeff naomi camping kitty 
+minou honda1jared obiwan strawber
+memory tracy metallic 
