@@ -1,60 +1,36 @@
-From: wimpunk <wim-raid@tisnix.be>
-Subject: Re: no auto detection of software raid 5 on boot
-Date: Fri, 07 Jan 2005 19:25:50 +0100
-Message-ID: <41DED42E.1000304@tisnix.be>
-References: <1105114981.41deb765668b9@familycook1.net> <41DEBD41.201@tisnix.be> <1105118089.41dec389f1b4d@familycook1.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Mario Holbe <Mario.Holbe@TU-Ilmenau.DE>
+Subject: Re: Spares and partitioning huge disks
+Date: Fri, 7 Jan 2005 21:59:26 +0100
+Message-ID: <crmt7e$8d6$1@sea.gmane.org>
+References: <200501061516.47376.maarten@ultratux.net>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1105118089.41dec389f1b4d@familycook1.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: google@familycook1.net
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I'm not running fedora so I can't tell exactly where you have to change 
-it.  It looks like the raid module is build-in the kernel but your scsi 
-driver isn't.  You'll have to get a new kernel: either with both drivers 
-build in or you can load both drivers from your initrd.
+maarten <maarten@ultratux.net> wrote:
+> I just got my 4 new 250GB disks.  I have read someone on this list advocating 
+> that it is better to build arrays with smaller volumes, as that decreases the 
+> chance of failure, especially failures of two disks in a raid5 configuration. 
 
-wim.
+This might be true for read-errors.
+However, if a whole disk dies (perhaps because the IDE controller fails,
+I assume you're having IDE disks or because of a temperature failure or
+something like that) with a couple of partitions on it, you get a lot of
+simultaneously 'disks' (partitions), which would completely kill your
+RAID5, because RAID5 can IMHO only recover one failing device.
+I'd assume, such a setup would kill you in this case, while with only
+4 devices (whole 250G disks) you'd survive it. I'm quite sure one
+could get it managed back together with more or less expert knowledge,
+but I belive the complete RAID would stop processing first.
+Just to make this clear - all this are spontaneous assumptions, I did
+never play with RAID5.
 
-google@familycook1.net wrote:
-> Thank you for your very fast responce.
-> 
-> Can you point me in the right direction on where I can change the order of
-> driver installs.  I am guessing rc.sysinit, but I am not sure.
-> 
-> thank you
-> donald
-> 
-> 
-> Quoting wimpunk <wim-raid@tisnix.be>:
-> 
-> 
->>You're trying to detect the raid before the scsi driver gets loaded.
->>
->>wim.
->>
->>google@familycook1.net wrote:
->>
->>>I am having a problem with auto detection of software raid 5.
->>>
->>>I can set up the the raid device, mkfs.ex3, and mount the disk; but at
->>
->>reboot
->>
->>>the raid device is not auto decteced.  After the system comes up I can do a
->>>mdadm -A and the raid will assemble and then I can mount it.
->>>
->>>One interesting note.  I am trying to get the raid system to work on Fedora
->>
->>core
->>
->>>2.  But if I boot a Fedora core 3 rescue CD, the raid gets auto detected.
->>>
->>>Any help would be very much appreciated.
->>>
-> 
-> 
+
+
+regards,
+   Mario
+-- 
+I heard, if you play a NT-CD backwards, you get satanic messages...
+That's nothing. If you play it forwards, it installs NT.
+
