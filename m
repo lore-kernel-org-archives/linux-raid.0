@@ -1,65 +1,55 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: ANNOUNCE: mdadm 1.7.0 - A tool for managing Soft RAID under
- Linux
-Date: Thu, 12 Aug 2004 09:04:21 +1000
+From: Brendan Conoboy <blc@redhat.com>
+Subject: Spare-group drive affinity with mdadm?
+Date: Wed, 11 Aug 2004 17:20:53 -0600
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16666.42485.178856.530123@cse.unsw.edu.au>
-References: <16665.33913.505058.370245@cse.unsw.edu.au>
-	<20040811155507.307d91d0.pegasus@nerv.eu.org>
+Message-ID: <411AA9D5.7090508@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Jure  =?ISO-8859-1?Q?=20Pe=E8ar?= on Wednesday August 11
-To: Jure =?UTF-8?Q?Pe=C3=A8ar?= <pegasus@nerv.eu.org>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday August 11, pegasus@nerv.eu.org wrote:
-> On Wed, 11 Aug 2004 12:29:13 +1000
-> Neil Brown <neilb@cse.unsw.edu.au> wrote:
-> 	 
-> >     -   Add support for "raid10", which is under development in 2.6.
-> > 	Not documented yet.
-> 
-> Where can one read more about this? I assume it's going to be a sepparate
-> raid personality, not just raid0 over raid1? Or is it going to be a dm
-> mapping scheme?
-> 
+Hello,
 
-It is a separate personality that has combined raid1 and raid0
-features.
-Data is laid out in a raid0 style, but multiple copies of each chunk
-are possible.  There can be "near" copies, where copies of the one
-block are at the same or similar offsets in different drives, and
-"far" copies, where copies of the one block are at a substantial
-offset from one drive to the next.
-e.g. 2 near copies on a 3 drive array would look like?
-  drive1  drive2  drive2
-    A       A       B
-    B       C       C
-    D       D       E
-    E       F       F
-    :       :       :
+I've just setup a raid 10 array (6 mirrors striped together) and have 
+two extra drives available as hot spares.  The mirrors themselves are 
+composed of two drives on separate scsi controllers to keep the SCSI bus 
+from saturating.  The performance of this setup is just phenomenal, but 
+the hot spares are not yet setup.
 
-2 far copies on a 3 drive array would look like
+It appears that when using mdadm that one can use the spare-group 
+feature to share a single hot-spare amongst multiple raid groups. 
+AFAICT, this is done by placing the hot spare or spares in a single 
+mirror, then designating it as part of the same spare group as a number 
+of other mirrors using the same spare-group name.  For instance, if 
+/dev/md0 has two spare drives, but /dev/md1 does not, I can do this to 
+share the spares:
 
-    A       B       C
-    D       E       F
-    G       H       I
-    :       :       :
-    C       A       B
-    F       D       E
-    I       G       H
-    :       :       :
+ARRAY /dev/md0 level=raid1 num-devices=2 
+devices=/dev/sda1,/dev/sde1,/dev/sdc1,/dev/sdd1 spare-group=g1
+ARRAY /dev/md1 level=raid1 num-devices=2 devices=/dev/sdb1,/dev/sdf1 
+spare-group=g1
+ARRAY /dev/md2 level=raid0 num-devices=2 devices=/dev/md0,/dev/md1
 
-My current code substantially works, but there are a few bugs left in
-it.  You can find it by hunting around in:
+This is very handy, but performance-wise it's suboptimal.  When a drive 
+fails the system might activate a spare that's on a different scsi chain 
+than the drive that just failed, reducing overall redundancy and 
+throughput.   It'd be nice if when a drive fails, a hot spare on the 
+same chain would be preferred over a drive on a different chain.  Of 
+course this is a pretty arbitrary distinction and something that would 
+need configuration, but it doesn't seem like too much of a stretch over 
+what mdadm can do already.  Maybe some sort of extended mdadm.conf 
+syntax like:
 
-http://neilb.web. cse.unsw.edu.au/patches/linux-devel/2.6/2004-08-11-22/
+AFFINITY /dev/sda,/dev/sdb spares=/dev/sdc
+AFFINITY /dev/sde,/dev/sdf spares=/dev/sdd
 
+(Assuming sda, sdb and sdc are on one chain and sde, sdf, and sdd are on 
+another).
 
-I included raid10 support in mdadm 1.7.0 so that as soon as the kernel
-patch was ready, people would be able to try it out.
+Is an enhancement like this feasible?
 
-NeilBrown
+Thanks,
+
+-Brendan (blc@redhat.com)
