@@ -1,31 +1,39 @@
-From: Gordon Henderson <gordon@drogon.net>
-Subject: raid5: switching cache buffer size
-Date: Fri, 13 Dec 2002 15:38:35 +0000 (GMT)
+From: Steven Dake <sdake@mvista.com>
+Subject: Re: autodetect RAID
+Date: Fri, 13 Dec 2002 08:56:18 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.43.0212131530510.6085-100000@unicorn.drogon.net>
-References: <Pine.LNX.4.43.0212091504450.30636-100000@unicorn.drogon.net>
+Message-ID: <3DFA0322.8060206@mvista.com>
+References: <Pine.LNX.4.21.0212122229250.19885-100000@karl.cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.43.0212091504450.30636-100000@unicorn.drogon.net>
-To: linux-raid@vger.kernel.org
+To: Anuradha Vaidyanathan <vaidyana@cs.wisc.edu>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Anuradha,
 
-Anyone know what this means?
+Autodetect works in all kernel revs (atleast 2.4 and 2.5 kernel revs).
 
-My big server is currently fscking a lvm partition which sits on-top of a
-raid5 device and the console is scrolling these messages as fast as it can.
-It says it's switching from 0 to 512, from 512 to 0 and 0 to 1024 ( or
-maybe 512 to 1024, its hard to tell).
+Just use fdisk to set the partition type to 0xfd (raid autostart) and 
+the RAID partitions will be autostarted on boot.
 
-What's happening and how do I stop it?
+Anuradha Vaidyanathan wrote:
 
-Cheers,
-
-Gordon
-
-Ps. earlier FSCK problems seemed to be due to dodgy AMD motherboard
-hardware and (U)DMA. It's a documented AMD bug and they have no
-workaround, but plugging a ps/2 mouse in seems to fix it...
+>hello, where can one obtain the patch for autodetecting and which versions
+>of the kernel does this work on??
+>
+>thanks
+>-a
+>
+>-
+>To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
+>
+>  
+>
 
