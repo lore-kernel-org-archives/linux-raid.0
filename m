@@ -1,75 +1,93 @@
 From: Michael Tokarev <mjt@tls.msk.ru>
-Subject: Re: ext3 journal on software raid (was Re: PROBLEM: Kernel 2.6.10
- crashing repeatedly and hard)
-Date: Tue, 04 Jan 2005 14:21:23 +0300
-Message-ID: <41DA7C33.8090705@tls.msk.ru>
-References: <200501032136.j03LaJ915438@www.watkins-home.com> <200501040115.36729.maarten@ultratux.net>
+Subject: Which drive gets read in case of inconsistency? [was: ext3 journal
+ on software raid etc]
+Date: Tue, 04 Jan 2005 14:57:57 +0300
+Message-ID: <41DA84C5.3070403@tls.msk.ru>
+References: <200501030916.j039Gqe23568@inv.it.uc3m.es> <l1nna2-e9i.ln1@news.it.uc3m.es> <200501031846.42950.maarten@ultratux.net> <200501032052.21459.maarten@ultratux.net> <a9noa2-o12.ln1@news.it.uc3m.es> <fh0pa2-kvp.ln1@news.it.uc3m.es> <16857.55609.534526.297577@cse.unsw.edu.au> <jh4pa2-pi.ln1@news.it.uc3m.es> <16857.64086.362458.177296@cse.unsw.edu.au> <ms4qa2-0qa.ln1@news.it.uc3m.es>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=KOI8-R; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200501040115.36729.maarten@ultratux.net>
+In-Reply-To: <ms4qa2-0qa.ln1@news.it.uc3m.es>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-maarten wrote:
-> On Monday 03 January 2005 22:36, Guy wrote:
+Peter T. Breuer wrote:
+> Neil Brown <neilb@cse.unsw.edu.au> wrote:
+[]
+>>If there is a system crash before correct, consistent data is written,
+>>then on restart, disk B will not be read at all until disk A as been
 > 
->>Maarten said:
->>"Doing the math, the outcome is still (200% divided by four)= 50%.
->>Ergo: the same as with a single disk.  No change."
->>
->>Guy said:
->>"I bet a non-mirror disk has similar risk as a RAID1."
->>
->>Guy and Maarten agree, but Maarten does a better job of explaining it!  :)
->>
->>I also agree with most of what Maarten said below, but not mirroring
->>swap???
+> Why do you think so? I know of no mechanism in RAID that records to
+> which of the two disks paired data has been written and to which it has
+> not!
 > 
-> 
-> Yeah... bad choice in hindsight.  
-> But, there once was a time, a long long time ago, that the software-raid howto 
-> explicitly stated that running swap on raid was a bad idea, and that by 
+> Please clarify - this is important. If you are thinking of the "event
+> count" that is stamped on the superblocks, that is only updated from
+> time to time as far as I know! Can you please specify (for my
+> curiousity) exactly when it is updated? That would be useful to know.
 
-In 2.2, and probably in early 2.4, there indeed was a prob with having
-swap on raid (md) array.  "Random" system lockups, especially during
-the array recovery.  That problem(s) has been fixed long ago.  But I
-think the howto in question tells about something different...
+Yes, this is the most dark corner in whole raid stuff for me still.
+I just looked at the code again, re-read it several times, but the
+code is a bit.. large to understand in a relatively short time.  This
+very question bothered me for quite some time now.  How md code "knows"
+which drive has "more recent" data on it in case of system crash (power
+loss, whatever) after one drive has completed the write but before
+another hasn't?  The "event counter" isn't updated on every write
+(it'd be very expensive in both time and disk health -- too much
+seeking and too much writes to a single block where the superblock
+is located).
 
-> telling the kernel all swap partitions had the same priority, the kernel 
-> itself would already 'raid' the swap, ie. divide equally between the swap 
-> spaces. I'm sure you can read it back somewhere.
+For me, and I'm just thinking how it can be done, the only possible
+solution in this case is to choose "random" drive and declare it as
+"up-to-date" -- it will not necessary be really up-to-date.  Or,
+maybe, write to "first" drive first and to "second" next, and assume
+first drive have the data written before second (no guarantee here
+because of reordering, differences in drive speed etc, but it is --
+sort of -- valid assumption).
 
-> Now we know better, and we realize that that will indeed loadbalance between 
-> the various swap partitions, but it will not provide redundancy at all.  
-> Oh well, new insights huh ? ;-)
+Speaking of a reasonable filesystem (journalling isn't relevant here,
+the key word is "reasonable", that it, the system that makes comples
+operations to be atomic) and filesystem metadata, choosing "random"
+drive as up-to-date makes some sense, at least the metadata will
+be consistent (not necessary up to date, ie, for example, it is
+still possible to lose some mail file which has been acknowleged
+by filesystem AND by the smtp server, but due to choosing the
+"wrong" (not recent) drive, that file operation has been "rolled
+back"), but still consistent (I'm not talking about data consistency
+and integrity, that's another long story).
 
-...that is, the howto tells about raid0 setup (striping), and yes, there's
-no "r" in "raid0" really (but there IS an "anti-r", as raid0 array is LESS
-reliable than a single drive).  That to say: instead of placing swap on
-raid0 array, let the swap code itself to perform the striping - swap code
-"knows better" about its needs.  This is still applies to recent kernels.
-But here, we aren't talking about *reilable* swap, we're talking about
-*fast* swap (raid1 aka reliable vs raid0 aka fast).  There's no code in
-"swap subsystem" to mirror swap space, but there IS such a code in md.
-Hence, if you want reliability, use raid1 arrays for swap space.  In the
-same time, if you want speed *too*, use multiple raid1 arrays with equal
-priority as swap areas (dunno how current raid10 code compares to "swap
-striping" on top of raid1 arrays, but that probably makes very small
-difference).
+Or, maybe it's better to ask the question slightly (?) differently:
+recalling "write barriers" etc and raid1 (for simplicity), will raid
+code acknowlege a write only after ALL drives has been written to?
+And thus, having reasonable filesystem (again), will the filesystem
+operation (at least metadata) succeed ONLY after the md layer will
+report ALL disks has the data written?  (This way, it really makes
+no difference which - fresh or not - drive will be considered up to
+date after the poweroff in the middle of some write, *at least* for
+filesystem metadata, and for applications that implements "commit"
+concept as needed to correctly implement "reasonable" metadata
+operations).
 
-Ie, nothing wrong with howto, which is talking about fast swap (sure it'd
-be good to mention reliability too), and nothing wrong with having raid
-arrays as swap (esp. when the abovementioned bug(s) has been fixed). Or,
-"nothing new"... ;)
+How it all fits together?
+Which drive will be declared "fresh"?
+How about several (>2) drives in raid1 array?
+How about data written without a concept of "commits", if "wrong"
+drive will be choosen -- will it contain some old data in it, while
+another drive contained new data but was declared "non fresh" at
+reconstruction?
+And speaking of the previous question, is there any difference here
+between md device and single disk, which also does various write
+reordering and stuff like that? -- I mean, does md layer increase
+probability to see old data after reboot caused by a power loss
+(for example) if an app (or whatever) was writing (or even when
+the filesystem reported the write is complete) some new data during
+the power loss?
 
-I learned to place swap to raid1 arrays instead of striping it (as suggested
-by the howto) the hard way, going the full cycle recovering damaged data
-because system got foobared after one component (stripe) of swapspace was
-lost, and I don't want to repeat that recovery again. ;)
+Alot of questions.. but I think it's really worth to understand
+how it all works.
 
-> Maarten
+Thanks.
 
 /mjt
