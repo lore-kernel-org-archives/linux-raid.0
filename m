@@ -1,39 +1,28 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
+From: "harry" <hfranklin97@excite.com>
 Subject: Re: disk testing
-Date: Tue, 14 Sep 2004 19:06:14 +1000
+Date: Tue, 14 Sep 2004 05:54:07 -0400 (EDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16710.46214.532578.693502@cse.unsw.edu.au>
-References: <20040914085007.486103E2F@xprdmailfe12.nwk.excite.com>
+Message-ID: <20040914095407.4EDF53969@xprdmailfe9.nwk.excite.com>
+Reply-To: hfranklin97@excite.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from harry on Tuesday September 14
-To: hfranklin97@excite.com
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday September 14, hfranklin97@excite.com wrote:
-> 
-> I just bought 3 sata drives and set them up in a raid5 array. About
-> 45% into syncing them, the first disk gets an error and goes
-> offline. I figure I did something wrong, so I retrace my steps and
-> try again, and again, I get an error about 45% of the way through,
-> the first disk errors and goes offline.  
-> 
 
-Presumably a read-error.  Did the kernel logs indicate the error type?
+Here's an interesting twist: smartctl claims that all three disks don't support smart. However, I think this is because the disks show up as scsi and not ata disks (the controller they're attached to is a promise sata150 tx4). I tried tricking it into looking at the drive as an ata device with the '-d ata' option, but no dice. 
+
+(I'm fairly certain that these 3 disks support smart because I have two more attached through a sata controller built into the motherboard, which both show up as hd? drives, and smartctl gives loads of info for them). All of the drives in question (3 new ones, 2 bought about 8 months ago) are Western Digital 2500JD's. 
 
 
-> So, I think I have a bad disk. But wait! I created a raid 1 array on
-> the remaining two to see if there are any other errors later on
-> those two (there weren't), and I create a normal partition/fs on the
-> failing disk. I begin writing various bitpatterns across the entire
-> disk and reading them back, trying to find the problem. So far, I've
-> done about 5 passes over the entire disk without error! 
 
-Maybe when you wrote it caused the drive to fix up the bad sector.
+And finally, forgive my ignorance, but what does libata do/provide? (I'm guessing it would allow smartctl to see disks that show up as scsi on the system as ata disks, but just want to verify). The system involved is running debian sid with a custom 2.4.27 kernel, and I just did an apt-file and apt-cache search for libata and both came up empty.
 
-Try building the raid5 again?
 
-NeilBrown
+Thanks, Harry
+
+_______________________________________________
+Join Excite! - http://www.excite.com
+The most personalized portal on the Web!
