@@ -1,28 +1,78 @@
-From: Stephen Lee <splee@plexio.com>
-Subject: Re: soft raid advice
-Date: 17 Jul 2002 06:47:54 -0700
+From: "bo" <bo@sosnetwork.net>
+Subject: Couldn't umount on /mnt/md0-device busy???
+Date: Wed, 17 Jul 2002 10:35:28 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1026913675.14529.2.camel@ralph.plexio.private>
-References: <09DC92F4BACCD31198FC009027D3A0C00299F2AD@exchange-s>
+Message-ID: <003c01c22db8$57b86590$5701a8c0@bomoon>
+References: <Pine.LNX.4.33.0207161515560.29547-100000@pandora.is.bizsystems.com> <15668.41627.988382.451061@notabene.cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <09DC92F4BACCD31198FC009027D3A0C00299F2AD@exchange-s>
-To: Raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 2002-07-17 at 03:11, Yildiz, Murat wrote:
-> Hi,
-> ok I give up trying to install suse 7.3 with root raid1.Can anyone suggest
-> me a distro for setting up 2 identical h.disks with all the partitions
-> raid1?
-> thx
+Hello!
 
-The Redhat 7.3 installer does raid 0,1 and 5 quite handily. You should
-still read the raid howtos to get a better understanding of what is
-going on though.
+I have found a VERY strange issue on using the name "md0" as a mount point.
+If I use "/mnt/md0" as a mount point for the md device or normal HD device,
+I could not umount it after booting the system having "device is busy"
+error.
 
-Stephen
+However, it is OK if I manually make a RAID then mount it to "/mnt/md0".
+I checked if it has any processes running on it with "fuser" but nothing.
+
+Does "/mnt/md0" have a special meaning(usage) for system?
+
+Please provide me a clue.
+
+Thanks,
+
+//Bo
+
+The followins are my experiment on this issue;
+
+root@P3000-PP1:/home/bmoon# cat /proc/mounts
+/dev/root / ext2 rw 0 0
+none /proc proc rw 0 0
+/dev/md0 /mnt/md0 ext2 rw 0 0
+/dev/md3 /mnt/md3 ext2 rw 0 0
+
+root@P3000-PP1:/home/bmoon# umount /mnt/md0
+umount: /mnt/md0: device is busy
+---------------
+root@P3000-PP1:/etc# fuser -v /mnt/md0
+
+                     USER        PID ACCESS COMMAND
+/mnt/md0            root     kernel mount  /mnt/md0
+
+----------------after chnage the name of mount point  from /mnt/md0 to
+/mnt/user---------------
+root@P3000-PP1:/home/bmoon# cat /proc/mounts
+/dev/root / ext2 rw 0 0
+none /proc proc rw 0 0
+/dev/md0 /mnt/user ext2 rw 0 0
+/dev/md3 /mnt/md3 ext2 rw 0 0
+
+root@P3000-PP1:/home/bmoon# umount /mnt/user
+root@P3000-PP1:/home/bmoon#
+------------------------
+root@P3000-PP1:/etc# vi fstab
+/dev/hda2        /               ext2    defaults        1 1
+none             /proc           proc    defaults        0 0
+/dev/hda3        swap            swap    defaults        0 0
+/dev/md0         /mnt/user       ext2    defaults        0 0
+/dev/md3         /mnt/md3        ext2    defaults        0 0
+
+Another experiment
+----------------------
+root@P3000-PP1:/home/bmoon# cat /proc/mounts
+/dev/root / ext2 rw 0 0
+none /proc proc rw 0 0
+/dev/hdb2  /mnt/md0 ext2 rw 0 0
+/dev/md3 /mnt/md3 ext2 rw 0 0
+
+root@P3000-PP1:/home/bmoon# umount /mnt/md0
+umount:  /mnt/md0:  device is busy
 
 
