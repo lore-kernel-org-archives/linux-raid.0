@@ -1,80 +1,49 @@
-From: Jakob Oestergaard <jakob@unthought.net>
-Subject: Re: Is Read speed faster when 1 disk is failed on raid5 ?
-Date: Tue, 29 Oct 2002 01:30:46 +0100
+From: Masaki Chikama <masaki-c@is.aist-nara.ac.jp>
+Subject: kernel upgrade problem on alpha arch.
+Date: Tue, 29 Oct 2002 20:11:58 +0900
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20021029003046.GE15779@unthought.net>
-References: <20021022104522.GC24075@unthought.net> <Pine.LNX.4.44.0210221248540.26127-100000@ddx.a2000.nu> <20021022112401.GA26549@unthought.net> <004e01c27eaf$b6c11940$707ba8c0@YQDING> <20021028210240.GB15779@unthought.net> <006501c27eca$3a1f0440$707ba8c0@YQDING>
+Message-ID: <200210291111.UAA02221@dec120.aist-nara.ac.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <006501c27eca$3a1f0440$707ba8c0@YQDING>
-To: Yiqiang Ding <yqding@rasilient.com>
-Cc: raid@ddx.a2000.nu, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Oct 28, 2002 at 01:37:34PM -0800, Yiqiang Ding wrote:
-> Hi Jakob,
->=20
-> I don't follow your guesses. Why do you think it may be related to ch=
-unk
-> size? Anyway, I'm using 32K.
+Hi all.
 
-Because in RAID-5, each disk will hold blocks like:
+I had two raid problem when upgrade kernel from 2.2(2.2.19aa1, which
+includes raid patch) to 2.4(2.4.20pre11) on alpha architecture.
 
-Disk 0:  [parity] [data]   [data]   [parity]
-Disk 1:  [data]   [parity] [data]   [data]
-Disk 2:  [data]   [data]   [parity] [data]
+The one is the raid superblock incompatibility. This is the same problem
+when Neil Brown added --sparc2.2 option to mdadm. I found it by
+Google and downloaded mdadm-1.0.1, then I broke superblock ;-) .
+Please release mdadm-1.0.2 soon that fix the --sparc2.2 option
+problem mentioned in the flowing mail.
 
-So when reading blocks 0, 1, 2, 3, 4, ... from the array, we will do:
+http://marc.theaimsgroup.com/?l=linux-raid&m=102198306132665&w=2
 
-Read disk 1 block 0
-Read disk 2 block 0
-Read disk 0 block 1
-Read disk 2 block 1
-Read disk 0 block 2
-Read disk 1 block 2
-Read disk 1 block 3
-Read disk 2 block 3
+After I recovered the superblock, I got another problem. It is the
+checksum of superblock incompatibility between mdadm and kernel.
 
-We can do read-ahead, but the access pattern for disk 0 is:
+The checksum routine of raid superblock in kernel is
+linux/driver/md/md.c            check_disk_sb ->
+                                calc_sb_csum  ->
+linux/arch/alpha/lib/checksum.c csum_partial  ->
+                                do_csum
+and it generates BAD_CSUM warning against mdadam's generating csum.
 
-Block 1, block 2, block 4, ...
+It may be a compiler problem.
+$ gcc -v
+Reading specs from /usr/lib/gcc-lib/alpha-redhat-linux/2.96/specs
+gcc version 2.96 20000731 (Red Hat Linux 7.1 2.96-85)
 
-=46or disk 1:
+I can successfully recovered the raid partition. But I hope
+these problem are solved.
 
-Block 0, block 2, block 3, ...
+Best Regards.
 
-etc...
-
-So we introduce seeks, because of the parity blocks.
-
-Seeking ruins performance.
-
-In a degraded array, the kernel cannot skip the parity blocks, it must
-use them for calculating the lost data.
-
-So my guess is, that this "penalty" actually turns out to be an
-optimization (if the chunk size is small - eg. the number of seeks
-introduced is large). We will do strictly sequential reads on all disks=
-=2E
-
-So tell me, have I been smoking something, or does this make sense?  :)
-
-Even better - measure degraded vs. non-degraded read performance on a
-RAID-5 array, first with chunk-size 4k, then 32k, then 128k, and post
-the results here   ;)
-
---=20
-=2E...............................................................
-:   jakob@unthought.net   : And I see the elder races,         :
-:.........................: putrid forms of man                :
-:   Jakob =D8stergaard      : See him rise and claim the earth,  :
-:        OZ9ABN           : his downfall is at hand.           :
-:.........................:............{Konkhra}...............:
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+(I'm not on the list, so please Cc: if you replay)
+-----------------------------------
+CHIKAMA Masaki @ NAIST
+E-Mail: masaki-c@is.aist-nara.ac.jp
