@@ -1,12 +1,30 @@
-From: "Peter T. Breuer" <ptb@it.uc3m.es>
-Subject: Fast RAID5
-Date: Mon, 30 Aug 2004 17:25:37 +0200 (MET DST)
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: Fast RAID5
+Date: Mon, 30 Aug 2004 12:03:08 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200408301525.i7UFPbL22810@oboe.it.uc3m.es>
-Reply-To: ptb@it.uc3m.es
+Message-ID: <200408301603.i7UG3E305454@watkins-home.com>
+References: <200408301525.i7UFPbL22810@oboe.it.uc3m.es>
+Mime-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux raid <linux-raid@vger.kernel.org>
+In-Reply-To: <200408301525.i7UFPbL22810@oboe.it.uc3m.es>
+To: ptb@it.uc3m.es, 'linux raid' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
+
+I like it!  No need to explain!
+I am happy with stripe level.
+I just want to be able to verify that nothing was wrong.
+
+Guy
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Peter T. Breuer
+Sent: Monday, August 30, 2004 11:26 AM
+To: linux raid
+Subject: Fast RAID5
 
 
 I have a rudimentary patch for fast raid 5. It is currently available
@@ -26,7 +44,8 @@ md: using 124k window, over a total of 4032 blocks.
 md0: retained bitmap a1c11e20
 raid5: dirty stripe 4, sector 512, done 2, skipped clean sectors 0-511
                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-raid5: clean stripe 5, sector 640, done 2, synced maybe dirty sectors 512-639
+raid5: clean stripe 5, sector 640, done 2, synced maybe dirty sectors
+512-639
 raid5: clean stripe 62, sector 8062, done 2, skipped clean sectors 640-8063
                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 md: md0: sync done.
@@ -52,4 +71,9 @@ but it could improve.
 
 Peter
 
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
