@@ -1,81 +1,99 @@
-From: Chuck Ebbert <76306.1226@compuserve.com>
-Subject: Two RAID1 mirrors are faster than three
-Date: Sun, 11 May 2003 22:10:07 -0400
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <200305112212_MC3-1-386B-32BF@compuserve.com>
+From: Paul Clements <Paul.Clements@SteelEye.com>
+Subject: Re: [PATCH 2.5.68] eliminate deprecated
+ MOD_INC_USE_COUNT/MOD_DEC_USE_COUNT in md.c
+Date: Mon, 12 May 2003 03:13:40 -0400
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <3EBF49A4.2BAFB3A4@SteelEye.com>
+References: <3EA595D9.E4CBB684@SteelEye.com>
+			 <16037.55226.267006.507998@notabene.cse.unsw.edu.au>
+			 <3EA6BA35.3A5F25CF@SteelEye.com>
+			 <16049.64476.440042.635337@notabene.cse.unsw.edu.au>
+			 <3EB2EA71.BA0DC039@SteelEye.com> <1052515181.2492.67.camel@ibm-c.pdx.osdl.net> <3EBC7D09.CF92454F@SteelEye.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	 charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-Content-Disposition: inline
-To: linux-raid <linux-raid@vger.kernel.org>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: multipart/mixed;
+ boundary="------------3FE747699996BBF03FBDD6BE"
+Return-path: <linux-raid-owner@vger.kernel.org>
+To: Daniel McNeil <daniel@osdl.org>, Neil Brown <neilb@cse.unsw.edu.au>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+This is a multi-part message in MIME format.
+--------------3FE747699996BBF03FBDD6BE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 
-  All these tests were run on 2.4.21-rc2-ac1...
-
-  We start out with a three disk raid1 array in failure mode:
-        md21 : active raid1 hdi9[1] hdg9[2]
-              3145856 blocks [3/2] [_UU]
-        
-  There are three 500 MiB contiguous files in the volume root:
-        -rw-r--r--    1 root     root     524288000 May 11 13:53 file1
-        -rw-r--r--    1 root     root     524288000 May 11 13:54 file2
-        -rw-r--r--    1 root     root     524288000 May 11 13:55 file3
-
-  First test is a single sequential stream:
-        # umount /mnt/md21; mount /mnt/md21
-        # time dd if=/mnt/md21/file1 of=/dev/null bs=64k &
-        real    0m18.230s   <==== 27.5 MiB/s 
-        user    0m0.020s
-        sys     0m3.760s
-
-  Now two streams:
-        # umount /mnt/md21; mount /mnt/md21
-        # time dd if=/mnt/md21/file1 of=/dev/null bs=64k &
-        # time dd if=/mnt/md21/file2 of=/dev/null bs=64k &
-        real    0m18.065s   <==== 27.6 MiB/s
-        user    0m0.040s
-        sys     0m4.280s
-        real    0m23.197s   <==== 21.6 MiB/s
-        user    0m0.020s
-        sys     0m4.250s
-
-  Add the third disk back into the array:
-        # raidhotadd /dev/md21 /dev/hde9
-        [rebuilt 3000MiB in 313s == (3000+3000)/313 == 19MiB/s throughput]
-        
-  Now rerun the two streams test:
-        # umount /mnt/md21; mount /mnt/md21
-        # time dd if=/mnt/md21/file1 of=/dev/null bs=64k &
-        # time dd if=/mnt/md21/file2 of=/dev/null bs=64k &
-        real    0m50.336s   <==== 9.94 MiB/s (!)
-        user    0m0.030s
-        sys     0m4.350s
-        real    0m50.431s   <==== 9.91 MiB/s (!)
-        user    0m0.030s
-        sys     0m4.200s
-
-  So 50% more hardware (disks, channels) gives a 60% performance drop
-  when using raid1 with sequential reads... and raid1.c:read_balance()
-  is the culprit.
+Daniel McNeil wrote:
+> The try_module_get() should be a __module_get() since we better already
+> have a module reference -- doing a try_module_get(THIS_MODULE)
+> better not add the 1st reference.
 
 
-Uniform Multi-Platform E-IDE driver Revision: 7.00beta3-.2.4
-  
-HPT370: IDE controller at PCI slot 00:0d.0  
-HPT370: chipset revision 3
+OK, after looking a little more closely at module.c, I think I see what
+you're saying:
 
-PDC20262: IDE controller at PCI slot 00:10.0
-PDC20262: chipset revision 1
+try_module_get(THIS_MODULE) is overkill (either that or we're running
+inside of md without a module reference to md, which is dangerous). So
+__module_get(THIS_MODULE) is enough. 
 
-hde: MAXTOR 4K060H3, ATA DISK drive
-hdg: MAXTOR 4K060H3, ATA DISK drive
-hdi: MAXTOR 4K060H3, ATA DISK drive
+Here's the updated patch, against 2.5.69, compiled and tested to verify
+that module ref counting is correct (esp. in the case of an inactive
+array with bound device(s)).
 
- hde: hde1 hde2 hde3 hde4 < hde5 hde6 hde7 hde8 hde9 hde10 >
- hdg: hdg1 hdg2 hdg3 hdg4 < hdg5 hdg6 hdg7 hdg8 hdg9 hdg10 >
- hdi: hdi1 hdi2 hdi3 hdi4 < hdi5 hdi6 hdi7 hdi8 hdi9 hdi10 >
+Daniel, thanks for your input on this...
+
+Neil, I believe this patch finally closes all the holes...
+
+--
+Paul
+--------------3FE747699996BBF03FBDD6BE
+Content-Type: text/plain; charset=us-ascii;
+ name="md_mod_ref-2.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="md_mod_ref-2.diff"
+
+--- linux-2.5/drivers/md/md.c.2.5.69	Sun May 11 22:42:41 2003
++++ linux-2.5/drivers/md/md.c	Sun May 11 22:43:25 2003
+@@ -181,7 +181,6 @@ static void mddev_put(mddev_t *mddev)
+ 		list_del(&mddev->all_mddevs);
+ 		mddev_map[mdidx(mddev)] = NULL;
+ 		kfree(mddev);
+-		MOD_DEC_USE_COUNT;
+ 	}
+ 	spin_unlock(&all_mddevs_lock);
+ }
+@@ -203,7 +202,6 @@ static mddev_t * mddev_find(int unit)
+ 		mddev_map[unit] = new;
+ 		list_add(&new->all_mddevs, &all_mddevs);
+ 		spin_unlock(&all_mddevs_lock);
+-		MOD_INC_USE_COUNT;
+ 		return new;
+ 	}
+ 	spin_unlock(&all_mddevs_lock);
+@@ -1016,7 +1014,11 @@ static int bind_rdev_to_array(mdk_rdev_t
+ 		if (find_rdev_nr(mddev, rdev->desc_nr))
+ 			return -EBUSY;
+ 	}
+-			
++
++	/* get a module ref if this is the first disk in the array */
++	if (list_empty(&mddev->disks))
++		__module_get(THIS_MODULE);
++
+ 	list_add(&rdev->same_set, &mddev->disks);
+ 	rdev->mddev = mddev;
+ 	printk(KERN_INFO "md: bind<%s>\n", bdev_partition_name(rdev->bdev));
+@@ -1031,6 +1033,11 @@ static void unbind_rdev_from_array(mdk_r
+ 	}
+ 	list_del_init(&rdev->same_set);
+ 	printk(KERN_INFO "md: unbind<%s>\n", bdev_partition_name(rdev->bdev));
++
++	/* drop module ref if this array has no more disks */
++	if (list_empty(&rdev->mddev->disks))
++		module_put(THIS_MODULE);
++
+ 	rdev->mddev = NULL;
+ }
  
+
+--------------3FE747699996BBF03FBDD6BE--
+
