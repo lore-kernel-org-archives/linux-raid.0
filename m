@@ -1,19 +1,58 @@
-From: Saurabh Barve <sa@atmos.colostate.edu>
-Subject: Persistent superblock error
-Date: Thu, 21 Oct 2004 16:54:32 -0600
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: Persistent superblock error
+Date: Thu, 21 Oct 2004 20:57:20 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <41783E28.9010209@atmos.colostate.edu>
+Message-ID: <200410220057.i9M0vPN03785@www.watkins-home.com>
+References: <41783E28.9010209@atmos.colostate.edu>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------090409050608010708070704"
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <41783E28.9010209@atmos.colostate.edu>
+To: 'Saurabh Barve' <sa@atmos.colostate.edu>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This is a multi-part message in MIME format.
---------------090409050608010708070704
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+You said: "Any advice on why my RAID array will not run?"
+Yes, you have 2 failed disks!
+
+     Number   Major   Minor   RaidDevice State
+        0      22        1        0      active sync   /dev/hdc1
+        1      22       65        1      faulty   /dev/hdd1
+        2       0        0        2      faulty removed
+        3      34       65        3      active sync   /dev/hdh1
+
+        4      34        1        4      spare   /dev/hdg1
+
+
+If you replaced 2 disks from a RAID5, then the data is lost!
+Are you sure this is what you wanted to do?
+
+How did you assemble with 2 failed/replaced disks?
+
+I am confused.  Based on the output of "mdadm --detail", the array should be
+down.
+
+Do you want to recover the data?
+If yes then
+	If you hope to save the data stop doing stuff!
+	And don't lose the failed disks!  They may not be bad.
+	And label them so you know which is which, if not too late!
+	If both disks are really bad (unreadable), then the data is gone.
+	Post another message with the status of the failed disks.
+If no then
+	Just recreate the array with the current disks and move on.
+	Use mkfs to create a new filesystem.
+
+Guy
+	
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Saurabh Barve
+Sent: Thursday, October 21, 2004 6:55 PM
+To: linux-raid@vger.kernel.org
+Subject: Persistent superblock error
 
 Hi,
 
@@ -122,25 +161,3 @@ Any advice on why my RAID array will not run?
 Thanks,
 Saurabh.
 
---------------090409050608010708070704
-Content-Type: text/x-vcard; charset=utf-8;
- name="sa.vcf"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="sa.vcf"
-
-begin:vcard
-fn:Saurabh Barve
-n:Barve;Saurabh
-org:Colorado State University;Department of Atmospheric Science
-adr:;;4100 West Laporte Avenue;Fort Collins;CO;80523;USA
-email;internet:sa@atmos.colostate.edu
-title:Systems Administrator
-tel;work:(970) 491-7714
-tel;home:(970) 416-7512
-x-mozilla-html:TRUE
-version:2.1
-end:vcard
-
-
---------------090409050608010708070704--
