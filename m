@@ -1,77 +1,54 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: RAID-5 Parity calculation
-Date: Thu, 14 Oct 2004 17:39:38 -0400
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: RAID-5 Parity calculation
+Date: Fri, 15 Oct 2004 10:57:15 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200410142139.i9ELdhN25029@www.watkins-home.com>
+Message-ID: <16751.8299.762282.747032@cse.unsw.edu.au>
 References: <1097778662.2926.9.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1097778662.2926.9.camel@localhost.localdomain>
-To: 'Yinan Liu' <yinan@ele.uri.edu>, linux-raid@vger.kernel.org
+In-Reply-To: message from Yinan Liu on Thursday October 14
+To: Yinan Liu <yinan@ele.uri.edu>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-If D1, D2, D3 or D4 change, then P must also change.
+On Thursday October 14, yinan@ele.uri.edu wrote:
+> Hi, I am a new guy for a Linux programming. I got a question for a
+> software RAID-5 parity calculation. 
+> 
+> If we suppose for data block D1, D2, D3, D4 with a parity block P, When
+> some data block is changed, P will be changed. I am not so clear how
+> does Linux md handle the parity re calculating, when data changed . 
+> 
+> Suppose there will be three cases, 
+> 
+> 1. sequential write, is that get new P' directly with new data D1', D2',
+> D3' and D4' or need read D1-4 out from disk doing the normal operation. 
+> 
+> 2. if we changed there blocks, D1',D2' and D3', does md read D1, D2, D3
+> out to rebuild P or just read D4 out from disk and rebuild P with D1',
+> D2', D3' and D4. 
+> 
+> 3. is the simple case, just change one block. 
+> 
+> Thanks a lot, if some can help me get understand it. 
 
-If all D1, D2, D3 and D4 change, then md can compute P without any reads.
-Then write D1, D2, D3, D4 and P.
+There are two ways raid5 can update the parity block:
 
-If less than all D1, D2, D3 and D4 change, then md has 2 options, md does
-whichever requires less disk I/O.
+ 1/ read the old parity block and the old data blocks for all changed
+ blocks, do the appropriate calculation, and write out the new parity
+ and new data blocks.  This is called READ_MODIFY_WRITE.
+ 2/ read all data blocks in the stripe that *aren't* being changed,
+ calculate the new parity from those and the changed blocks, and write
+ out the new parity and new blocks.  This is called RECONSTRUCT_WRITE.
 
-1) md must read the unchanging data and read P, compute a new P and write
-the changes.
+Both require the same number of writes, but possibly different numbers
+of reads.  Having some blocks already in the cache may also affect the
+number of reads required.
+raid5 delays processing stripes as long as possible (but no longer) in
+the "hope" of gathering multiple updates in a single stripe.  It then
+calculates how many reads will be needed to updated the parity using
+each mechanism, and chooses the mechanism that results in the fewest reads.
 
-2) Read the old D1, D2, D3 and/or D4 (whichever is changing) and read P.
-Then factor out the old data from P, then factor in the new data, write all
-changes.
-
-Example 1:
-	D1, D2 and D3 are changing.
-	md will read D4, using D1, D2, D3 and D4 (from memory) compute new
-P, write D1, D2, D3 and P.
-
-Example 2:
-	D1 is changing.
-	md will read old D1 and P.  Factor out old D1 from P.  Factor new D1
-into new P, write D1 and P.
-
-Guy
-
-
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Yinan Liu
-Sent: Thursday, October 14, 2004 2:31 PM
-To: linux-raid@vger.kernel.org
-Subject: RAID-5 Parity calculation
-
-Hi, I am a new guy for a Linux programming. I got a question for a
-software RAID-5 parity calculation. 
-
-If we suppose for data block D1, D2, D3, D4 with a parity block P, When
-some data block is changed, P will be changed. I am not so clear how
-does Linux md handle the parity re calculating, when data changed . 
-
-Suppose there will be three cases, 
-
-1. sequential write, is that get new P' directly with new data D1', D2',
-D3' and D4' or need read D1-4 out from disk doing the normal operation. 
-
-2. if we changed there blocks, D1',D2' and D3', does md read D1, D2, D3
-out to rebuild P or just read D4 out from disk and rebuild P with D1',
-D2', D3' and D4. 
-
-3. is the simple case, just change one block. 
-
-Thanks a lot, if some can help me get understand it. 
-
-
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+NeilBrown
