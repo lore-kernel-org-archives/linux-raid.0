@@ -1,35 +1,32 @@
 From: Danilo Godec <danci@agenda.si>
 Subject: Re: couple of seemingly dumb questions
-Date: Sat, 20 Apr 2002 00:22:55 +0200 (CEST)
+Date: Sat, 20 Apr 2002 00:26:32 +0200 (CEST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.30.0204200016170.25558-100000@duplo.agenda.si>
-References: <01b501c1e7b9$c3c9e8c0$6501a8c0@bomoon>
+Message-ID: <Pine.LNX.4.30.0204200023260.25558-100000@duplo.agenda.si>
+References: <5.1.0.14.2.20020419100004.03944e40@mail.harddata.com>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <01b501c1e7b9$c3c9e8c0$6501a8c0@bomoon>
-To: bo <bo@sosnetwork.net>
-Cc: Maurice Hilarius <maurice@harddata.com>, Linux-raid <linux-raid@vger.kernel.org>
+In-Reply-To: <5.1.0.14.2.20020419100004.03944e40@mail.harddata.com>
+To: Maurice Hilarius <maurice@harddata.com>
+Cc: bo <bo@sosnetwork.net>, Linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Fri, 19 Apr 2002, bo wrote:
+On Fri, 19 Apr 2002, Maurice Hilarius wrote:
 
-> Danilo,
+> >If I have a h/w support for IDE hot swap then what do you recommand for
+> >the same as you suggested for scsi below?
+> The issue seems to be one of "while the hardware supports replacing drives
+> and bus rescans, the Linux IDE driver may not"
 >
-> If I have a h/w support for IDE hot swap then what do you recommand for
-> the same as you suggested for scsi below?
+> Or am I completely missing the point here???
 
-I'm not sure, but I guess such H/W support for IDE hot swap would include
-an IDE RAID card that would probably handle such things by itself and
-kernel wouldn't use disks directly. Instead the RAID card will provide
-some 'pseudo' devices which will appear as disks to the kernel.
+Something like that. However, IDE RAID cards *may* handle the issue by
+providing a 'pseudo' device acting like a disk to the kernel. I guess the
+kernel does need special support (a driver) for such card(s).
 
-Most probably this is handled by the special IDE RAID card drivers that
-exists in late kernels (Promise Fasttrak).
-
-But if you just want 'normal' hot-swap IDE disks on Linux, you're out of
-luck (somebody, correct me if I'm wrong). You could also check out
-http://www.linux-ide.org/, where I saw something about IDE hot-swap...
+In a couple of days I may know more about it as I just got a motherboard
+with an on-board Promise Fasttrak... :)
 
   D.
 
