@@ -1,37 +1,48 @@
-From: ggoebel@ftp.ee.ncku.edu.tw
-Subject: boost your heaflth
-Date: Sat, 10 Apr 2004 19:27:27 +0000
+From: Thomas Andrews <tandrews@grok.co.za>
+Subject: Re: One partition degraded after every reboot
+Date: Sun, 11 Apr 2004 21:55:35 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1G94LCG7G5LEJ94E@ftp.ee.ncku.edu.tw>
-References: <HF6592G9GK56K4J4@vger.kernel.org>
+Message-ID: <20040411195535.GA5359@gaspode.nextlink.co.za>
+References: <20040326154125.GN1950@gaspode.nextlink.co.za> <20040409133949.GA10900@gaspode.nextlink.co.za>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <HF6592G9GK56K4J4@vger.kernel.org>
-To: Linux-raid <linux-raid@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20040409133949.GA10900@gaspode.nextlink.co.za>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-After the age of twenty-one, your body slowly stops releasing an important hormone known as Humaun Growth Hormone. 
-The reduction of Human Growth HormGone, which regulates levels of other hormones in the body (including testosterone, estrogen, progesterone, and melatonin) is directly responsible for many of the most common signs of growing old, such as wrinkles, gray hair, decreased energy, and diminished sexeual function. 
+On Fri, Apr 09, 2004 at 03:39:49PM +0200, Thomas Andrews wrote:
 
-HCuman Growth Hormone
+> What can cause this to occur after a clean shutdown & reboot:
+> "md1: former device ide/host2/bus0/target0/lun0/part5 is unavailable, removing from array!"
 
-- Boost your immune systeem  													ITDadLhc kCHLkqT
-- Rejuvenate your body and mind   														WYPhpRBM eCZyid
-- Feel & look younger   																bmLVPMYC UbNxT
-- Reduce wrinkleBs, lose weight, decrease cellulite  							IZjGXbM nTocXR
-- Restore your sebx drive and vigor   											wbfxnRtf FqTztx
-- Revitalize your heart, liver, kidneys & lungs   										XbYHbtmZ ibndp
-- Maintain muscle mass   																patrxjxV zonEUG
-- Refresh memory, mood and mental energy   												muZJ rbTZcQm
-- Sleep soundly and awake rested   														canpeFGf NYCYwy
-- Help eliminxate stress, fatigue and depression								KLcGtobra tuTrxz
+Well I finally solved it. The error above is somewhat misleading! I
+originally created the initrd with the raid1 array degraded. It had to
+be done that way because I wanted to re-boot using md1 as the root
+device, but at the time /dev/hda5 was still the root.
 
-Read http://happyurl.net/hgh/index.php?pid=eph9058 for more information
+mkinitrd created a script called "script" which contained the line:
 
+mdadm -A /devfs/md/4 -R -u <magic_number> /dev/hdc5
 
+But what it needs is:
 
+mdadm -A /devfs/md/4 -R -u <magic_number> /dev/hdc5 /dev/hda5
 
-GzAUOFz wJnvl lQKJDxL iPcjicED JXajD AKxppXLak tmyaYtD wUMmWYxZ CaJz bUdBGBQ XyEYJ LktLjqp HldVibrt DrRdu MgVtHMpgq nQdAaPK qgtDjnLk GVOZ MTtAaoU HckNt AFxbFmL XugAEumP btGbW zuwzIphKC VfcBCdh PPejWFOq TFrc ktYKNuj yKrjm nooOQtX TibRfHHw AlOCy iBiYVuwHL GVbWkQN ENwMPnRx WoYi fBHncQl YkIFY oBZlLQa pFwevKXR HmQPr ryHuoTrBD YzTzzfl pfDVCHqm FjUR bKjtiQN zKgan fAhEZlP prtlUbDh GNcyO NIiYBXxle yBjYINY WFnnZBia epHT tfThORg pPDCV befZMTY JzlYyMhz RygKQ luZcmfrdI VYKZdJM XIxwVwVI EuCc BnUNIUP WaiZI eYuebfR YNovJLpu pKWtm kmcUtTQtc PQgOlkP qdOgtkPf Ckwm hOBtdDm kwetz VkGJxQB OVpVnCLu eXPqf GTyIxLVUP ntLzZxW QYLLoHaQ uvVq lmxRhVC EHxyy LRkkRTt IGUvWCwN XQInd XLWeHyIoW tMTaYUR HcBmXXjA tYxj TLnGyjK fIuvG CtnDhtv NkXciUmI mkhyU TLArXlyGG TmibBLi JhXWfafZ mOmz XLtQyUi wgHdM ApWCRIK CQIzWJFW Xuixr VQiuKrQRZ UGAkDcd lNGdyfat JWgf 
+The reason other people get it to work by "fiddling around" is that they
+invariably re-do the mkinitrd afterwards, and chances are, most of the
+time they will do it with all the devices in the array (ie not degraded
+mode.) Creating the initrd with the raid1 running in it's final desired
+manner results in mkinitrd putting the correct command into "script", so
+there you are.
+
+It's worth noting also that the "broken" initrd also only had /dev/hdc5
+whereas the working one has /dev/hdc5 *and* /dev/hda4
+
+In summary, if you get the error above, get the complete raid array up
+and running with all devices inserted, and then re-create your initrd:
+mkinitrd -r /dev/md? -o /boot/initrd.img-?.?.??-raid
+
+-Thomas
 
