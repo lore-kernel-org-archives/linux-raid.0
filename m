@@ -1,38 +1,44 @@
-From: "Shaw, Marco" <Marco.Shaw@aliant.ca>
-Subject: RE: mdadm -D shows incorrect working devices ?
-Date: Thu, 2 Jan 2003 11:23:49 -0400
+From: David Caldwell <david@porkrind.org>
+Subject: RAID 5 recover locks up with 2.4.20
+Date: Thu, 02 Jan 2003 14:50:46 -0800
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <C65F89D1AC0BB54B865127151A24DA780E49023D@nbexchm2.aliant.icn>
+Message-ID: <2147483647.1041519046@[10.0.0.2]>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Pretty much everyone is on vacation, and likely not checking their messages lately.  Now, if it's something nobody has encountered before then that's a different thing.
+Hi,
 
-Marco
+  I have a 4 disk RAID 5 array. I upgraded to the 2.4.20 kernel and one of 
+my disks went kaput (loose power connector). I fixed the disk and tried to 
+rebuilt the raid but it locked up hard (no magic sys-req key, no oops, 
+nothing!). So I rebooted and it locked up everytime it started the recovery 
+process. So then I tried kernel 2.4.19-rc3 (my old faithful kernel) and it 
+rebuilt just fine.
 
------Original Message-----
-From: Stephan van Hienen [mailto:raid@a2000.nu] 
-Sent: Thursday, January 02, 2003 11:12 AM
-To: linux-raid@vger.kernel.org
-Subject: Re: mdadm -D shows incorrect working devices ?
+More details:
+  The 4 disks are connected to 2 promise chips. One is on a PCI card and is 
+just a ATA-100 host adapter. The other is on the motherboard and is a raid 
+adapter that I run in straight ATA host adapter mode. All the disks are 
+masters. Here are the lines from lspci:
 
+00:0f.0 RAID bus controller: Promise Technology, Inc. PDC20276 IDE (rev 01)
+00:09.0 Unknown mass storage controller: Promise Technology, Inc. 20267 
+(rev 02)
 
-There is no one that can tell me what is going wrong ?
+  Before it locked up the second time it did a ext-3 journal recovery on 
+the disk and that worked ok. I mention this because that shows the 
+read/write path to the drives is at least partially working.
 
-On Sun, 22 Dec 2002, Stephan van Hienen wrote:
+  Since it locks up completely, I'm not sure how to debug any further. Does 
+anyone know what the problem might be?
 
-> On Wed, 18 Dec 2002 raid@ddx.a2000.nu wrote:
->
-> > Today rebuiled raid5 (8/8 disks)
-> > mdadm -D is still showing incorrect info
-> > (9 devices total/8 active/7 working/2 failed)
-> > can someone explain this ?
->
-> Hi again, still have this 'incorrect' information here
-> I'm a bit worried that maybe my raid config is 'a bit corrupted' or is 
-> this just a bug in mdadm ?
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in the body of a message to majordomo@vger.kernel.org More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks,
+  David
+
+ps. I am not subscribed to the list so if you could cc me that would be 
+great.
