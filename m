@@ -1,104 +1,65 @@
-From: Micah Anderson <micah@riseup.net>
-Subject: Re: Unable to read superblock
-Date: Thu, 18 Jul 2002 16:58:47 -0700
+From: "bo" <bo@sosnetwork.net>
+Subject: Re: Couldn't umount on /mnt/md0-device busy???
+Date: Thu, 18 Jul 2002 17:43:50 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20020718235847.GG25867@riseup.net>
-References: <20020718033404.GR17829@riseup.net>
+Message-ID: <000501c22ebd$59bc3b40$5701a8c0@bomoon>
+References: <Pine.LNX.4.33.0207161515560.29547-100000@pandora.is.bizsystems.com> <15668.41627.988382.451061@notabene.cse.unsw.edu.au> <003c01c22db8$57b86590$5701a8c0@bomoon> <3D35BCD6.7030300@cfht.hawaii.edu> <06d001c22def$eaa10510$5701a8c0@bomoon> <009d01c22e54$54d968a0$f6de11cc@black> <073d01c22e7e$299d8020$5701a8c0@bomoon> <20020718174720.GD4712@willow.seitz.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20020718033404.GR17829@riseup.net>
-To: linux-raid@vger.kernel.org
+To: Ross Vandegrift <ross@willow.seitz.com>
+Cc: Mike Black <mblack@csi-inc.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Some addition information if it helps:
+Yes, you may be right.
+>showmount
+  Host on P300
+  10.0.0.2
+  192.168.1.151
 
-Both disks are partitioned the same:
+It looks like it got the old mount information from manufacturing test.
+I do not have those connections(users) now.
 
-Disk /dev/hda: 255 heads, 63 sectors, 5004 cylinders
-Units = cylinders of 16065 * 512 bytes
+How do I remove(erase) those information from lockd?
+Where is the file "statd"?
 
-   Device Boot    Start       End    Blocks   Id  System
-/dev/hda1             1         1      8001    1  FAT12
-/dev/hda2   *         2         2      8032+  fd  Linux raid autodetect
-/dev/hda3             3        20    144585   fd  Linux raid autodetect
-/dev/hda4            21      5005  40042012+   5  Extended
-/dev/hda5            21        29     72261   fd  Linux raid autodetect
-/dev/hda6            30       210   1453851   fd  Linux raid autodetect
-/dev/hda7           211       392   1461883+  fd  Linux raid autodetect
-/dev/hda8           393       423    248976   82  Linux swap
-/dev/hda9           424      4975  36563908+  fd  Linux raid autodetect
-/dev/hda10         4976      5005    240943+  fd  Linux raid autodetect
+Thanks,
 
-On Wed, 17 Jul 2002, Micah Anderson wrote:
+Bo
+----- Original Message -----
+From: "Ross Vandegrift" <ross@willow.seitz.com>
+To: "bo" <bo@sosnetwork.net>
+Cc: "Mike Black" <mblack@csi-inc.com>; <linux-raid@vger.kernel.org>
+Sent: Thursday, July 18, 2002 10:47 AM
+Subject: Re: Couldn't umount on /mnt/md0-device busy???
 
-> I'm confused, I've done this hundreds of times, but for some reason it
-> doesn't work now, I must be missing something, can someone poke me in
-> the eye with it?
-> 
-> I've currently got 2.2.20 with raid-1 devices booting fine:
-> 
-> Filesystem           1k-blocks      Used Available Use% Mounted on
-> /dev/md5                139945     28617    104103  22% /
-> /dev/md0                  7683      4253      3034  58% /boot
-> /dev/hda5                69904        15     66280   0% /tmp
-> /dev/md4               1430864    933128    425048  69% /usr
-> /dev/md3               1438768    392848    972832  29% /var
-> /dev/md2              35990024   3980340  30181492  12% /var/spool
-> /dev/md1                233225    160199     60985  72% /home
-> 
-> cat /proc/mdstat
-> Personalities : [linear] [raid0] [raid1] [raid5] [translucent] 
-> read_ahead 1024 sectors
-> md0 : active raid1 hdc2[0] hda2[1] 7936 blocks [2/2] [UU]
-> md5 : active raid1 hdc3[0] hda3[1] 144512 blocks [2/2] [UU]
-> md6 : active raid1 hdc5[0] hda5[1] 72192 blocks [2/2] [UU]
-> md4 : active raid1 hdc6[0] hda6[1] 1453760 blocks [2/2] [UU]
-> md3 : active raid1 hdc7[0] hda7[1] 1461760 blocks [2/2] [UU]
-> md2 : active raid1 hdc9[0] hda9[1] 36563840 blocks [2/2] [UU]
-> md1 : active raid1 hdc10[0] hda10[1] 240832 blocks [2/2] [UU]
-> unused devices: <none>
-> 
-> I had lilo set for:
-> 
-> boot=/dev/md0
-> root=/dev/md5
-> image=/boot/vmlinuz-2.2.20RAID
->         label=RAID
->         read-only
->         alias=4
-> 		
-> When I installed 2.4.18, all of a sudden I can't boot, EXT2-fs: unable
-> to read superblock. Yes, I selected all the RAID options on kernel
-> compile.
-> 
-> What the heck?
-> 
-> Ok, so I think it is a lilo problem, I wanted to toss lilo and put
-> grub on anyway:
-> 
-> My grub is set for:
-> kernel (hd0,1)/vmlinuz-2.2.20RAID root=/dev/md5
-> 
-> If I have grub set to:
-> 
-> kernel (hd0,1)/vmlinuz-2.4.18 root=/dev/md5
-> 
-> again with the unable to read superblock stuff....
-> 
-> if I have it set to:
-> kernel (hd0,1)/vmlinuz-2.4.18 root=/dev/hda3
-> 
-> request module [block major 3]: root fs not mounted
-> cannot open root device hda3
-> please append correct root= boot option
-> 
-> AGGGH?!
-> 
-> Thanks,
-> Micah
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+> On Thu, Jul 18, 2002 at 10:11:31AM -0700, bo wrote:
+> > Mike,
+> >
+> > It does not matter with the order in /etc/exports.
+> > This "umount" problem goes away when I remove "/mnt/md0" entry from
+> > /etc/exports.  I have 3 more;/mnt/md1, /mnt/md2, /mnt/md3 without any
+> > problem.
+> >
+> > I think system has a special meaning with "/mnt/md0".  What does it
+do???
+>
+> Perhaps:
+>
+> 1) A remote machine has a mount of /mnt/md0
+> 2) Your server has a stale mount record for /mnt/md0
+> 3) Something has wacked out lockd, which is keeping stuff locked
+>
+> Try "showmount" and see if any machines have your filesystems mounted
+> when you think they shouldn't.
+>
+> If some machine has a stale NFS mount, you may need to clear out the
+> saved statd information.
+>
+> Ross Vandegrift
+> ross@willow.seitz.com
+>
+
