@@ -1,50 +1,27 @@
-From: Matt E <mgeusenet@yahoo.com>
-Subject: Questions Degraded Array with LVM
-Date: Fri, 27 Jun 2003 16:49:20 -0700 (PDT)
+From: Ian Pilcher <pilchman@attbi.com>
+Subject: Safest way to renumber RAID-5 devices
+Date: Sat, 28 Jun 2003 03:03:11 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20030627234920.95101.qmail@web20418.mail.yahoo.com>
+Message-ID: <3EFD4BBF.1020405@attbi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello All.
+Hi all!
 
-Currently, I have an LVM running on my system that is
-composed of an 80 gig drive and a 120 gig drive.  I
-plan to install a 4 disk RAID-5 Array in my system.  1
-of the disk will come from the LVM array.
+I have several RAID-5 devices that I would like to renumber
+(incrementing each minor number by 1).
 
-I'd like to not loose any data doing this, if
-possible.
+Is it possible to do this without re-creating them?  I'd like to avoid
+unnecessary re-syncs as well as the possibility of screwing up.
 
-Here's what I want to do:
+Thanks!
+-- 
+========================================================================
+Ian Pilcher                                           pilchman@attbi.com
+========================================================================
 
-1) Install the 3 New 120 Gig Disks.  Use mdadm to
-create a degraded RAID-5 array.
 
-2) Put this array under LVM control.
-
-3) Use LVM to create a file system on the array.
-
-4) Copy the data from the old LVM array to the new
-RAID-5/LVM array.
-
-5) Take down the old (80 + 120 GIG) array.  Blank the
-120 Gig drive from this LVM and then install it into
-the degraded array (filling the missing slot).
-
-Does anyone know if this is the right way to do this? 
-Does anyone know if there will be issues with LVM
-created on the degraded array (perhaps this aspect is
-off topic)?
-
-Thanks in advance.
-
-Cheers
-
-__________________________________
-Do you Yahoo!?
-SBC Yahoo! DSL - Now only $29.95 per month!
-http://sbc.yahoo.com
