@@ -1,58 +1,48 @@
-From: Brian Schwarz <Brian.Schwarz@veritas.com>
+From: Stef Telford <stef@chronozon.artofdns.com>
 Subject: RE: Software RAID level 1 issue
-Date: Fri, 30 May 2003 11:28:19 -0700
+Date: 31 May 2003 13:44:27 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <C587FF391BCAD411B8120008C7864670057DA5B8@mtvxch07.veritas.com>
+Message-ID: <1054403067.14818.280.camel@testlin.hades>
+References: <C587FF391BCAD411B8120008C7864670057DA5B8@mtvxch07.veritas.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: 'Greg Rasberry' <rgreg-r@pacbell.net>, 'Linux raid mailing list' <linux-raid@vger.kernel.org>
+In-Reply-To: <C587FF391BCAD411B8120008C7864670057DA5B8@mtvxch07.veritas.com>
+To: Brian Schwarz <Brian.Schwarz@veritas.com>
+Cc: 'Greg Rasberry' <rgreg-r@pacbell.net>, 'Linux raid mailing list' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Greg,
+Brian Schwarz wrote:
+<snip>
 
-Can't help you with the LVM specifics, but I would suggest investigating
-functionality called Dirty Region Logging (DRL). I know we have a feature in
-the VERITAS Volume Manager that tracks changes at a block level so the
-resync can happen much more quickly. Think of it as similar to a transaction
-log or Redo log in Oracle. Not sure if LVM has the same type of
-functionality. Won't help you this time, but will save you next time. One
-trade-off is that it costs you some I/Os to write and clear the log, would
-recommend putting the log on a RAID 10 volume. More info on VERITAS Volume
-Manager at www.veritas.com/linux.
+okay, sorry to start this email with a 'jab' or
+tease, but really, this is a linux-raid development
+mailing list, not a veritas placement plug list.
 
-Regards,
+I think the MAIN thing that would cause a long resync
+(on any raid volume) is more than likely one of the
+disk drives or controllers is not setting the drive
+into the proper udma setting and that, has little to
+do with the RAID or LVM. suggesting 'veritas' as a
+solution is NOT the 'correct' solution, as that would
+be curing a symptom of the disease and not the actual
+problem.
 
--Brian
+When i had one drive out of a 5 disk raid volume fail
+to set to udma/133 and was stuck in udma/33, a typical
+resync/rebuild of the 240gb raid would take the best
+part of 2 days (scary but true). if in doubt, check
+and then double check your dmesg output to find which
+mode is being activated for each disk and if there is
+any such lines as 'masking irq' (usually a controller
+conflict)
 
+so, if in doubt, check dmesg, check /proc/interrupts
+for conflicts and no, during resync's on raid-1 the
+mirror will not be available. for that, use a raid
+level such as raid-5 or raid-10.
 
------Original Message-----
-From: Greg Rasberry [mailto:rgreg-r@pacbell.net]
-Sent: Friday, May 30, 2003 10:54 AM
-To: 'Linux raid mailing list'
-Subject: Software RAID level 1 issue
+regards
+Stef Telford <stef@chronozon.artofdns.com>
 
-
-I have a RedHat 9.0 server that went down. On re-start the server has 
-started to come up just fine. It started re-syncing, the first of the raid 
-partitions, the first one went buy fast, then the second took a day and the 
-last drive (md2) has been working on the re-sync for four days (it is 
-fairly large 70 Gig).  We are unable to use the server and cannot pull the 
-data off of it because the drives have not mounted, etc.
-
-I was wondering if anyone knows if this is normal, and/or how I can get 
-around this problem. I understand that the re-sync is supposed to happen in 
-the background?
-
-I have only been using Linux for about a year and could really use some 
-help with this, the system has been down for a week.
-Thanks in advance for your help.
-
-R,
-Greg
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
