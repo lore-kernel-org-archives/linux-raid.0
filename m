@@ -1,32 +1,38 @@
-From: "David Rees" <dbr@greenhydrant.com>
-Subject: Re: experiences with 3Ware 6400 3W-6400?
-Date: Fri, 27 Jun 2003 00:06:09 -0700 (PDT)
+From: Gordon Henderson <gordon@drogon.net>
+Subject: RE: Mirroring swap
+Date: Fri, 27 Jun 2003 09:49:50 +0100 (BST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1908.66.75.244.69.1056697569.squirrel@www.greenhydrant.com>
-References: <Pine.LNX.4.55.0306261656520.6883@datavibe.net><Pine.LNX.4.55.03062616
-     56520.6883@datavibe.net>
-     <5.1.1.6.2.20030626174603.03bacec0@mail.harddata.com>
+Message-ID: <Pine.LNX.4.43.0306270947001.32150-100000@unicorn.drogon.net>
+References: <1056662597.10690.6.camel@gregdell.example.com>
 Mime-Version: 1.0
-Content-Type: text/plain;charset=iso-8859-1
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5.1.1.6.2.20030626174603.03bacec0@mail.harddata.com>
+In-Reply-To: <1056662597.10690.6.camel@gregdell.example.com>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Maurice Hilarius said:
->>Rev. Jeffrey Paul said:
->> >
->> > I'm thinking of buying one of these for a production server that I'm
->> > setting up.  Has anyone had any experiences with these on linux, good
->> > or bad?
+On 26 Jun 2003, Gregory Leblanc wrote:
+
+> On Thu, 2003-06-26 at 01:30, Gordon Henderson wrote:
+> [snip]
+> > So now with important machines which had mirrored or RAIDed disk systems,
+> > I always put swap on a mirrored or RAID5d device.
 >
-> Why would you buy a 2 year old, nearly unsupported card?
-> ?Heck I can sell you 8 port 3W-7810 cards for under $300
-> And they work really well in software RAID.
+> Swap on RAID 5 is going to have pretty poor performance, in general.
+> Swap needs to be both high bandwidth and low latency, both for reading
+> and writing.  RAID 5 just isn't that.
 
-I was going to mention the same thing in my post, but forgot.  I didn't
-think that you could buy the 6400 new anymore, so where are you getting
-them from?  The 7500 runs about $250 which is a bit expensive for real
-low-budget servers.
+I don't actually care right now - these machines are servers and I really
+don't want them to swap - I'd rather run them without swap at all, but
+I've yet to see something that'll convince me that this is a good idea,
+and anyway.. Bonnie might not be the best thing in disk benchmarks, but..
 
--Dave
+Version 1.02b       ------Sequential Output------ --Sequential Input- --Random-
+                    -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- --Seeks--
+Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP  /sec %CP
+red              1G 15418  99 68565  37 31359  24 14286  97 150174  84 390.6   1
+
+is fairly reasonable.
+
+G
+
