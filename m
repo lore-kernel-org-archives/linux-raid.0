@@ -1,77 +1,61 @@
-From: Andy Smith <andy@lug.org.uk>
+From: Alvin Oga <aoga@mail.Linux-Consulting.com>
 Subject: Re: raid5 - failed disks
-Date: Fri, 1 Apr 2005 10:55:39 +0000
-Message-ID: <20050401105538.GI82728@caffreys.strugglers.net>
-References: <Pine.LNX.3.96.1050401015858.14428C-100000@Maggie.Linux-Consulting.com>
+Date: Fri, 1 Apr 2005 02:56:39 -0800 (PST)
+Message-ID: <Pine.LNX.3.96.1050401025007.30913A-100000@Maggie.Linux-Consulting.com>
+References: <424D238A.8030305@weisshuhn.de>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="fBy7zs94GxxmWtjp"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.3.96.1050401015858.14428C-100000@Maggie.Linux-Consulting.com>
+In-Reply-To: <424D238A.8030305@weisshuhn.de>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
---fBy7zs94GxxmWtjp
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+hi ya frank
 
-On Fri, Apr 01, 2005 at 02:08:21AM -0800, Alvin Oga wrote:
->=20
-> hi ya raiders ..
->=20
-> we(they) have 14x 72GB scsi disks config'd as raid5,
-> ( no hot spare .. )
+On Fri, 1 Apr 2005, Frank Wittig wrote:
 
-This seems like an awful lot of disks to have in a raid 5 with no
-hot spares, to me, but then I am fairly new to RAID issues so maybe
-I am wrong.. but I would much rather have raid 10.
+> > - my dumb question is,
+> >       - if 2 disks dies at the same time, i
+>
+> if 2 disks fail at the same time you data is lost.
+> if you have raid5 with 5 hot spares and a second disk dies, befor a hot
+> spare is synced into the array (will be listed as spare until sync hast
+> finished) the same - data gone.
 
-> - if 1 disk dies, no problem ... ez to recover
->=20
-> - my dumb question is,
-> 	- if 2 disks dies at the same time, i
-> 	assume the entire raid5 is basically hosed=20
-> 	if it won't reassemble and resync from
-> 	the point where it last was before the crash ??
+yup about failure before the resync completes..
 
-Technically it's screwed but it could be possible to recover it with
-some losses.. I've fortunately never yet had to do that, maybe
-someone who has could answer more fully.
+> > - i think 4x 300GB ide disks is better ( less likely to fail ?? )
+> 
+> it's a simple calculation.
+> if one disk fails with a risk of 1 to 100000, then 10 disks fail with 10
+> to 100000. which means that having 10 disks is two times as dangerous as
+> having 5 disks.
 
-> - i think 4x 300GB ide disks is better ( less likely to fail ?? )
+thanx ... that's also a good reaffirmation too ( that i'm not the only
+one to use n * MTBF )  or 1/n .. etc depending on point of view
 
-Hard to say.. the typical IDE disk is usually regarded as less
-reliable than the typical SCSI disk, and also there are then less
-spindles per array so the performance may be worse.
+> if i had an array with as much disks as you have i would chose raid
+> level 6 (not sure if dm supports this by now).
+> raid level 6 survives two disks failing at once.
 
-I think I would still be happier with 14x72GB SCSI in a RAID-10
-(504GB usable) than 14x72GB in RAID-5, although the RAID-10 would
-give only a bit more than half the capacity.  Also if I felt I
-needed the performance of a 14 disk SCSI RAID-5 then I probably
-wouldn't want to go down to a 4 disk IDE RAID-5.
+ah .. but its not my choices yet ...  stuff on inherits including
+the finger for somebody elses decisions to buy xx vs yy for nn reasons
 
-> 	and yes it has already crashed twice with
-> 	2 different disks running at 78F at nights
-> 	and weekends when the air conditioning is off
+> btw: what reason is there to switch off air conditioning of your it
+> equipment. temperature changes are poison to this fragile things.
 
-If you're running the disks in an environment that is too hot for
-them then I think you are wasting money by just throwing more disks
-(of any sort) at it.
+out here.. some building owners are greedy with their nickels, and
+its NOT uncommong to have air conditioning turned off on nights and
+weekends
+	- and for those thinking colo, the colo's too turn aircondition
+	off till people complain its to hot ( temp inching upward till
+	people complain )
+  
+	- ambient temp should be 65F or less
+	and disk operating temp ( hddtemp ) should be 35 or less
 
---fBy7zs94GxxmWtjp
-Content-Type: application/pgp-signature
-Content-Disposition: inline
+c ya
+alvin
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.0 (FreeBSD)
-
-iD8DBQFCTSiqIJm2TL8VSQsRAttGAJ9EqOBGB2M5rSTj4HM0yhDaaqklGwCfe4gX
-9x/YkHqsK3Ag5zjuBPiuPKY=
-=gAEl
------END PGP SIGNATURE-----
-
---fBy7zs94GxxmWtjp--
