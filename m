@@ -1,63 +1,48 @@
 From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: mdadm -A /dev/md3 fails
-Date: Mon, 9 Sep 2002 21:07:03 +1000
+Subject: Re: SW Raid doesn't play nice with devfs?
+Date: Mon, 9 Sep 2002 21:11:18 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <15740.32983.311512.759757@notabene.cse.unsw.edu.au>
+Message-ID: <15740.33238.383316.833368@notabene.cse.unsw.edu.au>
 References: <20020909054800.GV3806@merlins.org>
 	<15740.15774.911597.853392@notabene.cse.unsw.edu.au>
-	<20020909075559.GE3806@merlins.org>
+	<20020909062737.GA3806@merlins.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Marc MERLIN on Monday September 9
+In-Reply-To: message from Marc MERLIN on Sunday September 8
 To: Marc MERLIN <marc_news@merlins.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday September 9, marc_news@merlins.org wrote:
-> On Mon, Sep 09, 2002 at 04:20:14PM +1000, Neil Brown wrote:
-> > That is part of the reason that I wrote mdadm.  It can do the right
-> > thing for you.
+On Sunday September 8, marc_news@merlins.org wrote:
 > 
-> Apparently it can, but I'm having issues with it:
+> That said, the problem occurs both with the kernel autorun and raidstart:
+> when I load the qla1280 module, the drives get detected, md wakes up and
+> tries to create md3 since the partitions have type 0xfd, and fails in the
+> same way:
+> (...)
+> kernel:  /dev/scsi/host3/bus0/target13/lun0: p1
+> kernel: SCSI device sdl: 354600001 512-byte hdwr sectors
+> kernel:  /dev/scsi/host3/bus0/target14/lun0: p1
+> kernel:  [events: 00000002]
+> kernel: md: could not lock sdm1, zero-size? Marking faulty.
+> (...)
 > 
-> My conf file says:
-> DEVICE /dev/scsi/host*/bus*/target*/lun*/part*
-> ARRAY /dev/md3 level=raid5 num-devices=7 UUID=7f69d69c:2d523219:4f3d1ea7:9b7f4057 devices=/dev/scsi/host3/bus0/target8/lun0/part1,/dev/scsi/host3/bus0/target9/lun0/part1,/dev/scsi/host3/bus0/target10/lun0/part1,/dev/scsi/host3/bus0/target11/lun0/part1,/dev/scsi/host3/bus0/target12/lun0/part1,/dev/scsi/host3/bus0/target13/lun0/part1,/dev/scsi/host3/bus0/target14/lun0/part1
-> 
-> gargamel:/etc/mdadm# mdadm -A  -v /dev/md3
-> mdadm: No identity information available for /dev/md3 - cannot assemble.
-> 
-> Any idea why 
-> mdadm -A -v /dev/md3 doesn't work?
 
-As Derek says, add "--scan" to tell it that it is allowed to look in
-the config file.
-Also, get rid of the "devices=...." part of the ARRAY line or it will
-fail if any of the devices change address.
+I'm not sure what exactly is going on here, but it isn't regular
+auto-detect. That *only* happens at boot time.  Never after module
+load.
 
-> 
-> Am I supposed to actually start the device with
-> mdadm -A  -v /dev/md3 /dev/scsi/host3/bus0/target*/lun0/part1 ?
+> Is the kernel autorun code going to be fixed too or will I need to use mdadm
+> for the forseable future?
 
-That would probably work..
+I use and recommend mdadm to all non-root devices.  For a raid
+containing the root filesystem I use kernel parameters:
+   md=0,/dev/xxxx,/dev/yyyy
 
-> or
-> mdadm -A  -v -u 7f69d69c:2d523219:4f3d1ea7:9b7f4057 /dev/md3 ?
-
-That wouldn't.  Would would need to to mdadm where the devices are:
-
-mdadm -A  -v -u 7f69d69c:2d523219:4f3d1ea7:9b7f4057 /dev/md3 /dev/disk/*/part*
-
-would work.
-
-> 
-> (I thought mdadm would get that data from the config file)
-
-Only when you tell it to.  If that isn't clear from a second reading
-of the man page, I would appreciate suggestions on how to make it more
-clear.
-
+though in 2.6, I suspect that initramfs will mean that mdadm is the
+best choice for that too.  Don't do in kernel-space that which can
+effectively and efficiently be done in user-space.
 
 NeilBrown
