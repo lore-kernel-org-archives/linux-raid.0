@@ -1,33 +1,62 @@
-From: "Martin Bene" <martin.bene@icomedias.com>
-Subject: AW: Please review: Slackware RAID How-To
-Date: Mon, 17 May 2004 11:54:51 +0200
+From: "clark" <jamaicawarriors@beer-garden.com>
+Subject: Save a ton on Microsoft Office!
+Date: Mon, 17 May 2004 11:10:00 GMT
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <FA095C015271B64E99B197937712FD02262EC5@freedom.grz.icomedias.com>
-Mime-Version: 1.0
+Message-ID: <1084792200-10821__44211.3763223917$1084792316@excite.com>
 Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-To: LinuxRaid <linux-raid@vger.kernel.org>
+To: linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+Incredible DEALS on SOFTWARE you NEED!
 
-> I too considered lilo a relic of the past until I started using
-> Slackware. Oh well, it seems to do much the same thing, so I'm getting
-> used to it again. 
+Save 40% on Windows XP Professional!
+Save 40% on Microsoft Office 2003 Professional!
+Save $90 on Adobe Photoshop!
+Save 60% on Norton AntiVirus!!
 
-There's one feature in lilo I haven't yet found in grub that keeps me
-from switching:
+Save your company thousands of dollars when it needs software!
 
-I can specify a kernel image to use just for the next reboot (reverting
-to the default image afterwards). This is great for upgrading kernel in
-remote locations with limited access to systems - if something goes
-wrong, and the system doesn't come up with the new kernel, just have the
-system reset to go gack to using a known good kernel.
+That promotion just got closer...
 
-Bye, Martin
+Click here!!
+http://teddychoice.biz/index.php?s=7555
 
 
+Software packages you can save big on:
 
+Windows XP Professional
+Norton Antivirus 2004
+Adobe Photoshop 7.0
+Microsoft Office XP Professional
+Microsoft Office 2003 Professional
+Microsoft Money 2004
+Microsoft 2000 Professional
+Adobe Photoshop CS
+Adobe Pagemaker 7.0
+Adobe Illustrator 10
+Corel Draw Graphics Suite 11
+Adobe Acrobat 6.0 Professional
+Borland Delphi 7 Professional
+Visual Studio.Net Enterprise Architecht
+MS SQL Server 2000 Enterprise
+MS Windows Server 2003 Enterprise
+MS Windows 2000 Server
+Red Hat Linux 7.3
+
+
+
+Click here!!
+http://teddychoice.biz/index.php?s=7555
+
+
+
+
+
+
+
+
+
+pirate campbellbenson blowfish player dougie scooter1 chevy 
+sweety nauticasafety wolverin speedo
+canced petunia bozo 
