@@ -1,44 +1,36 @@
-From: "Bailey, Scott" <scott.bailey@eds.com>
-Subject: RE: Mirroring swap
-Date: Wed, 25 Jun 2003 15:58:14 -0400
+From: Matt Simonsen <matt_lists@careercast.com>
+Subject: Re: RAID5 causing lockups
+Date: 25 Jun 2003 13:36:35 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <7FD257BF8564D4119DA800508BDF07AA0B0AAA9B@usahm012.exmi01.exch.eds.com>
+Message-ID: <1056573394.24919.62.camel@mattswrk>
+References: <200306251216300921.4D495D48@shargaas.coreyfro.com>
 Mime-Version: 1.0
 Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: 'Derek Yeung' <dky@utcc.utoronto.ca>
+In-Reply-To: <200306251216300921.4D495D48@shargaas.coreyfro.com>
+To: Corey McGuire <coreyfro@coreyfro.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->I was wondering if it's a good idea to also mirror the swap partition?  
+On Wed, 2003-06-25 at 12:16, Corey McGuire wrote:
+> Hey folks,
+> 
+> I just upgraded my system from a ~200GB mirror to a ~1TB RAID5, but all has
+> not transitioned well.
 
-I've heard both sides of the argument, but my 2 cents says "mirror it".
-Otherwise you run the risk of having your swap area become unusable
-following a drive failure, which will make your system very upset if it
-decides it needs to swap in (or out) data associated with that area.
 
->If it's a good idea, can anyone suggest how i can do it?  (mirror swap?)  
+Did the RAID array every finish syncing? It may take a long time
+(1048576 megs / 10 mb/sec / 3600 seconds/hr = 29 hours!) ... 
 
-It's just another partition. :-) Assuming you have created a md device of
-the appropriate size, just use "/dev/md5" [or whatever] in your mkswap
-command and the first column of the swap entry in your /etc/fstab. Note that
-you do *NOT* have separate partitions on the md device itself.
+I have one (SCSI) system with a slower CPU, syncing the array I was sure
+something was wrong. Once the array was up, though, everything has
+worked great. I just have to be sure it shuts down clean or the rebuild
+is painful!
 
-My preference in this situation actually is to use LVM on top of RAID so
-that you don't have to mess around with so many md devices. In this
-scenario, you create a much larger md device, put it into a volume group,
-then create a logical volume of the desired size. That is: (very
-abbreviated)
+Maybe I'm way off, but I'd just give it a day to see if it eventually
+syncs. If you can login, do a cat of /proc/mdstat every 15 minutes, if
+it's making progress I'd leave it.
 
-# pvcreate /dev/md5
-# vgcreate myvg /dev/md5
-# lvcreate --contiguous y --size 128m --name swapvol myvg
-# mkswap /dev/myvg/swapvol
-# swapon /dev/myvg/swapvol
+Matt
 
-I can't remember making the volume contiguous is actually a requirement for
-Linux LVM or just garbage cluttering up my brain from HP-UX days. :-) 
-
-Have fun,
-
-	Scott
