@@ -1,55 +1,37 @@
-From: Matt Domsch <Matt_Domsch@dell.com>
+From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: DDF Trial Use draft specification now publicly available
-Date: Thu, 11 Mar 2004 10:18:28 -0600
+Date: Thu, 11 Mar 2004 15:43:18 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040311161828.GB6173@lists.us.dell.com>
-References: <20040311154542.GA6173@lists.us.dell.com> <39646.208.27.111.121.1079021333.squirrel@mail.davidoffdotcom.com>
+Message-ID: <4050CF66.8090409@pobox.com>
+References: <20040311154542.GA6173@lists.us.dell.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="8GpibOaaTibBMecb"
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <39646.208.27.111.121.1079021333.squirrel@mail.davidoffdotcom.com>
-To: Samuel Davidoff <sam@davidoffdotcom.com>
+In-Reply-To: <20040311154542.GA6173@lists.us.dell.com>
+To: Matt Domsch <Matt_Domsch@dell.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Matt Domsch wrote:
+> The Disk Data Format (DDF) trial use draft spec has now been published
+> by SNIA.  This is the common on-disk metadata format that
+> RAID vendors have been driving towards, which should allow one to move
+> disks from one vendor's RAID controller to another vendor's RAID
+> controller without the backup-rebuild-restore that's currently needed.
+> 
+> http://www.snia.org/tech_activities/ddftwg
 
---8GpibOaaTibBMecb
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Thanks for posting this.
+
+I haven't even read past "locality" section to find brokenness.  DDF 
+RAID groups (a.k.a. each RAID array) must store information about other 
+RAID groups "on the controller."  There is also apparently 
+per-controller state information one must care about.  While I 
+understand why they would want this, this also means the format is quite 
+a bit less flexible than md, and in some respects, more difficult to 
+work with.
+
+/me continues reading...
 
 
-On Thu, Mar 11, 2004 at 11:08:53AM -0500, Samuel Davidoff wrote:
-> Are there plans to incorporate this into md, allowing for compatibility
-> between software and hardware arrays?
-
-Scott Long and Justin Gibbs from Adaptec have been working on an
-"Enhanced MD" which allows for plugging in different metadata formats
-to MD, including md-traditional, DDF, and Adaptec's own format.  It
-was briefly discussed here a month or so ago.  Unfortunately at the
-time, the DDF spec wasn't publicly available yet for review and comment.
-
-Thanks,
-Matt
-
---=20
-Matt Domsch
-Sr. Software Engineer, Lead Engineer
-Dell Linux Solutions linux.dell.com & www.dell.com/linux
-Linux on Dell mailing lists @ http://lists.us.dell.com
-
---8GpibOaaTibBMecb
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.1 (GNU/Linux)
-
-iD8DBQFAUJFUIavu95Lw/AkRArs7AJ4hQWaz6bmFHPc9S/aRIzO/rh9XiQCfSrAs
-554Mx/vDtCFpZ0Rqm5zNpMs=
-=/Qq0
------END PGP SIGNATURE-----
-
---8GpibOaaTibBMecb--
