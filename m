@@ -1,94 +1,102 @@
-From: Stef Telford <stef@chronozon.artofdns.com>
-Subject: mdadm and raid5 hot-rebuild problem on 2.5.67
-Date: 16 Apr 2003 19:53:14 -0400
-Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1050536716.13739.6.camel@testlin.hades>
+From: Nick Piggin <piggin@cyberone.com.au>
+Subject: Re: Benefits from computing physical IDE disk geometry?
+Date: Wed, 16 Apr 2003 11:16:05 +1000
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <3E9CAED5.7000000@cyberone.com.au>
+References: <200304151436_MC3-1-3487-215F@compuserve.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <200304151436_MC3-1-3487-215F@compuserve.com>
+To: Chuck Ebbert <76306.1226@compuserve.com>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Chuck Ebbert wrote:
 
-or rather not a 'rebuild'. 
-
-The original problem was that one of the raid5 disks was
-dead on waking up this morning, so, i used mdadm to set
-it to fail, and then i set it removed. since it was software
-raid5, i shut down the machine (sort of crazy with raid5
-i know but) and then i put in a new 80gig drive and restarted
-the machine, now, all i had to do was add back the drive
-and then it should auto-rebuild. at least, thats the idea.
-
-
-
-[root@survivor root]# mdadm --manage /dev/md0 -a
-/dev/ide/host4/bus0/target0/lun0/part2
-mdadm: add new device failed for /dev/ide/host4/bus0/target0/lun0/part2:
-Device or resource busy
-
-okay, so you probably would think that this device (or
-/dev/hdi as its called short form) is being mounted or
-used in someway, except i can assure you that its not.
-this is the new disk and, yes, i have double checked
-the actual device name ;>
-
-this is under 2.5.67, under 2.5.62 it WOULD succeed however
-the device would be inserted in location '0' in the raid
-array rather than the empty (or -removed) slot. The output
-from the raid5 is below:
+>Nick Piggin wrote:
+>
+>
+>
+>>OK right. As far as I can see, the algorithm in the RAID1 code
+>>is used to select the best drive to read from? If that is the
+>>case then I don't think it could make better decisions given
+>>more knowledge.
+>>
+>
+>
+>  How about if it just asks the elevator whether or not a given read
+>is a good fit with its current workload?  I saw in 2.5 where the balance
+>code is looking at the number of pending requests and if it's zero then
+>it sends it to that device.  Somehow I think something better than
+>that could be done, anyway.
+>
+That balance code is probably the IDE or SCSI channel balancing?
+In that case, the driver simply wants to know which device it
+should service next, which is an appropriate fit (is that what
+you were talking about? I don't have source here sorry)
 
 
+We could ask the elevator if a given read is a good fit. It
+would probably help.
 
+>
+>
+>
+>>It seems to me that a better way to layer it would be to have
+>>the complex (ie deadline/AS/CFQ/etc) scheduler handling all
+>>requests into the raid block device, then having a raid
+>>scheduler distributing to the disks, and having the disks
+>>run no scheduler (fifo).
+>>
+>
+>
+> That only works if RAID1 is working at the physical disk level (which
+>it should be AFAIC but people want flexibility to mirror partitions.)
+>
+How so? Basically you want your high level scheduler to run first.
+You want it to act on the stream of requests from the system, not
+on the stream of requests to the device. If you know what I mean.
 
-[root@survivor root]# mdadm --detail /dev/md0
-/dev/md0:
-        Version : 00.90.01
-  Creation Time : Fri Dec 20 14:45:52 2002
-     Raid Level : raid5
-    Device Size : 58633216 (55.92 GiB 60.04 GB)
-   Raid Devices : 4
-  Total Devices : 3
-Preferred Minor : 0
-    Persistence : Superblock is persistent
+I might be wrong here. I haven't done any testing, and only a
+little bit of thinking.
 
-    Update Time : Tue Apr 15 17:45:24 2003
-          State : dirty, no-errors
- Active Devices : 3
-Working Devices : 3
- Failed Devices : 0
-  Spare Devices : 0
+>
+>
+>
+>>In practice the current scheme probably works OK, though I
+>>wouldn't know due to lack of resources here :P
+>>
+>
+>
+> I've been playing with the 2.4 read balance code and have some
+>improvements, but real gains need a new approach.
+>
+The problem I see, is the higher level schedulers (deadline for
+example, as opposed to the RAID scheduler) will find it difficult
+to tell if a request will be "good" for them or not. For example
+we have 2 devices, 100 requests in each scheduler queue.
 
-         Layout : left-symmetric
-     Chunk Size : 64K
+Device A's head is at sector x and next request is at x+100,
+Device B's head is at sector x+10 and next request is at x+200.
 
-    Number   Major   Minor   RaidDevice State
-       0      33        6        0      active sync  
-/dev/ide/host2/bus0/target0/lun0/part6
-       1      34        1        1      active sync  
-/dev/ide/host2/bus1/target0/lun0/part1
-       2       0        0       -1      removed
-       3      57        1        3      active sync  
-/dev/ide/host4/bus1/target0/lun0/part1
-           UUID : 5bced80a:8f74bfa6:3e658b6a:46a5055d
-         Events : 0.1895
+RAID wants to know which queue should take a request at sector
+x+1000. What do you do?
 
+The way you would do a good "goodness" function, I guess,
+would be to search through all requests on the device, and return
+the minimum distance from the request you are running the query
+on. Do this for both queues, and insert the request into the
+queue with the smallest delta. I don't see much else doing any
+good.
 
-and for good measure, here is /proc/mdstat
+On the other hand, if you simply have a fifo after the RAID
+scheduler, the RAID scheduler itself knows where each disk's
+head will end up simply by tracking the value of the last
+sector it has submitted to the device. It also has the advantage
+that it doesn't have "high level" scheduling stuff below it
+ie. request deadline handling, elevator scheme, etc.
 
-[root@survivor root]# cat /proc/mdstat
-Personalities : [linear] [raid0] [raid1] [raid5]
-md0 : inactive ide/host4/bus1/target0/lun0/part1[3]
-ide/host2/bus1/target0/lun0/part1[1]
-ide/host2/bus0/target0/lun0/part6[0]
-      175900160 blocks
-unused devices: <none>
-
-
-any ideas/pointers ? i really would like the raid5
-array back :D
-
-regards 
-Stef Telford <stef@chronozon.artofdns.com>
-
+This gives the RAID scheduler more information, without
+taking any away from the high level scheduler AFAIKS.
