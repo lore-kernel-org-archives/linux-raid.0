@@ -1,46 +1,45 @@
-From: Steven Rodenburg <steven.rodenburg@planet.nl>
-Subject: LVM / EXT3 production ready ?
-Date: 07 Apr 2002 15:22:18 +0200
+From: =?iso-8859-1?Q?Jakob_=D8stergaard?= <jakob@unthought.net>
+Subject: Re: mdadm Some Makefile changes , Hth , JimL
+Date: Sun, 7 Apr 2002 15:26:37 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1018185738.5687.16.camel@adagio.adagio.nl>
+Message-ID: <20020407152637.B26464@unthought.net>
+References: <15534.8419.129112.229266@notabene.cse.unsw.edu.au> <Pine.LNX.4.44.0204051751270.25112-100000@filesrv1.baby-dragons.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-To: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44.0204051751270.25112-100000@filesrv1.baby-dragons.com>; from babydr@baby-dragons.com on Fri, Apr 05, 2002 at 05:53:25PM -0500
+To: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
+Cc: Neil Brown <neilb@cse.unsw.edu.au>, linux-raid maillist <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi,
+On Fri, Apr 05, 2002 at 05:53:25PM -0500, Mr. James W. Laferriere wrote=
+:
+>=20
 
-I was wondering if the Logical Volume Manager (LVM) on for example SuSE
-7.3 is any good in a proffesional "24 x 7 x Forever" "many GB/TB's SAN"
-production enviroment.
+Hello all,
 
-In my/our company's case being able to logically expand hardware raid
-sets and partitions in a real production enviroment is important. We
-plan to use linux because Linux itself is stable and robust enough and a
-good alternative to say SUN Solaris.
+A little nit-picking here  :)
 
-But downtime due to a problem with the Linux LVM is not an option.
-Normally, we would add an array within the SAN and then create a new
-(very big) filesystem on it and mount it. But when we could expand a
-partition on the fly that would be better.
+=2E..
+> Preferred Minor : 0
+>     Persistance : Superblock is persistant
 
-And can the LVM be used with RedHat 7.2 as well (i can't find it on the
-distro) ?
+Persistant and Persistance are not english words.
 
-How does EXT3 (we need journaling) behave on very large filesystems
-(many GB/TB's) ?
+s/stan/sten/g
 
-I like EXT3 because loss of the journal do not pose big problems because
-the partition can be mounted EXT2 and run until a time-window arrives to
-repair the journal and mount it back again with EXT3.
+Cheers,
 
-It's all about MASSIVE fileserving.
-
-In short:  are LVM and EXT3 mature/stable enough ?
-
-
-Gr,
-Steve
-
-
+--=20
+=2E...............................................................
+:   jakob@unthought.net   : And I see the elder races,         :
+:.........................: putrid forms of man                :
+:   Jakob =D8stergaard      : See him rise and claim the earth,  :
+:        OZ9ABN           : his downfall is at hand.           :
+:.........................:............{Konkhra}...............:
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
