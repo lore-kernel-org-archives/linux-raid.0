@@ -1,31 +1,50 @@
-From: Mark Hahn <hahn@physics.mcmaster.ca>
-Subject: Re: Partition or whole disk ?
-Date: Thu, 1 Jul 2004 13:15:18 -0400 (EDT)
+From: linux-lists@artelesys.com
+Subject: mdadm info
+Date: Fri, 2 Jul 2004 00:13:06 -0500 (CDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0407011311110.21757-100000@coffee.psychology.mcmaster.ca>
-References: <1088604941.2840.1.camel@JubJub>
+Message-ID: <Pine.LNX.4.44.0407012355300.23562-100000@westhost38.westhost.net>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1088604941.2840.1.camel@JubJub>
-To: Josh Litherland <josh@emperorlinux.com>
-Cc: linux-raid@vger.kernel.org
+To: 'linux-raid' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-> Couldn't find an authoritative answer to this in the faq or elsewhere...
-> Is it preferred to build md sets out of whole disks or of partitions ? 
-> Is there any functional reason why either one is better ?
 
-as others have pointed out, there's little reason (save a track
-on whole-disk, lose partition-type-0xfd auto-detection).
+Hello.
+Was wondering if there is any additional documentation for the mdadm 
+program besides the man page. The values I get running mdadm -D are not 
+immediately intuitive to me, For instance, why do I get "-1" under the 
+"Failed Devices:" field ?  or why is the "Total Devices:" field "1" while
+all others "2"? 
 
-however, if you go the partition route, don't go too far!
-I've seen several cases where someone gets overly enthusiastic
-about multiple parallel raids across a small set of disks.
-they wind up shuffling the heads between partitions for an 
-obscene fraction of time.  this can be especially noticable 
-with journalling filesystems, since they tend to do synchronous
-log forces on a regular basis.  don't even get me started on 
-people who set their mail spools to pure-sync!  (hmm, why can 
-my awesome new quad-opteron mail server only receive 10 email/sec?)
+Thanks in advance for any pointers you can provide.   
+
+Arturo
+
+****
+/sbin/mdadm -D  /dev/md2
+/dev/md2:
+        Version : 00.90.00
+  Creation Time : Fri Dec 13 20:27:49 2002
+     Raid Level : raid1
+     Array Size : 521984 (509.75 MiB 534.51 MB)
+    Device Size : 521984 (509.75 MiB 534.51 MB)
+   Raid Devices : 2
+  Total Devices : 1
+Preferred Minor : 2
+    Persistence : Superblock is persistent
+
+    Update Time : Thu Jul  1 17:03:36 2004
+          State : dirty
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : -1
+  Spare Devices : 0
+
+
+    Number   Major   Minor   RaidDevice State
+       0       3        6        0      active sync   /dev/hda6
+       1      22        6        1      active sync   /dev/hdc6
+           UUID : 255a65a8:5e8e0a35:0aef765e:6f307c50
+         Events : 0.196
 
