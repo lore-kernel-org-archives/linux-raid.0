@@ -1,41 +1,35 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: Raid 1 - md "Total Disks" question
-Date: Mon, 20 Sep 2004 09:47:36 +1000
+From: Joshua Baker-LePain <jlb17@duke.edu>
+Subject: Re: Software RAID-0 striping over Hardware RAID-5
+Date: Mon, 20 Sep 2004 09:12:17 -0400 (EDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16718.6808.294471.886458@cse.unsw.edu.au>
-References: <019801c499ab$405f20d0$6800a8c0@Agus>
-	<16710.16837.832998.503557@cse.unsw.edu.au>
-	<1095374065.4196.22.camel@compaq.xsintricity.com>
+Message-ID: <Pine.LNX.4.58.0409200910590.6936@chaos.egr.duke.edu>
+References: <7e.58df669c.2e7cb92f@aol.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Doug Ledford on Thursday September 16
-To: Doug Ledford <dledford@redhat.com>
-Cc: =?ISO-8859-1?Q?Agust=EDn?= Ciciliani <agustin@maderonet.net.ar>, linux-raid@vger.kernel.org, Marcelo Tosatti <marcelo.tosatti@cyclades.com>
+In-Reply-To: <7e.58df669c.2e7cb92f@aol.com>
+To: AndyLiebman@aol.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday September 16, dledford@redhat.com wrote:
-> On Mon, 2004-09-13 at 20:56, Neil Brown wrote:
-> > On Monday September 13, agustin@maderonet.net.ar wrote:
-> > > Hi Everybody,
-> > > 
-> > > I was wondering if you could take a look to the following and give some advice... I just
-> > > have TWO SATA WD800 disks and "mdadm" says I have "three" and one of
-> > > them has "failed"!!!
-> > 
-> > It's just some odd accounting in the kernel.  Don't worry about it.
+On Fri, 17 Sep 2004 at 6:03pm, AndyLiebman@aol.com wrote
+
+> I have a Xeon machine (3.06 Ghz single processor, 2 GB RAM, SuperMicro 
+> motherboard) with two 3ware 9500S-8 cards. I'm getting good performance with 3ware's 
+> Hardware RAID-5 (I have reasons why I don't want to use Software RAID-5 on 
+> this machine). 
 > 
-> It is just some odd accounting stuff, but it's hardly something I would
-> say "don't worry about it".  I had to chase a similar looking problem
-> down in our RHEL3 product line.  In fact, it was raid1 where I was
-> seeing this problem.  I've attached the email I sent about the problem
-> to the internal kernel people, the patch I originally sent in for it,
-> and the update patch that catches a couple spots I originally missed in
-> my first patch (apologies if my mailer horks this up, haven't tried to
-> send sent mail in exactly the way I'm trying it now).
+> My question is, what kind of problems, if any, might I run into if I use 
+> Linux Software RAID to stripe the two RAID-5's together into a single RAID-0? The 
+> reason I'm thinking about doing this is to squeeze more performance out of the 
+> storage system for working with huge video files. 
 
-Well, the accounting and the locking are really to separate issues,
-but your patch looks good, thanks.
+I have a couple of dual 3ware boxes I do this with, and have never had a 
+problem.  I would make sure that you have a hot spare on your RAID5 
+arrays, though.  Because if one of them dies, you'll obviously lose 
+everything on both arrays.
 
-NeilBrown
+-- 
+Joshua Baker-LePain
+Department of Biomedical Engineering
+Duke University
