@@ -1,32 +1,39 @@
 From: Alvin Oga <aoga@ns.Linux-Consulting.com>
-Subject: RE: swp - Re: ext3 journal on software raid (was Re: PROBLEM: Kernel 2.6.10 crashing repeatedly and hard)
-Date: Wed, 5 Jan 2005 21:01:24 -0800 (PST)
-Message-ID: <Pine.LNX.3.96.1050105205953.11158A-100000@Maggie.Linux-Consulting.com>
-References: <200501060057.j060vk928131@www.watkins-home.com>
+Subject: Re: swp - Re: ext3 journal on software raid (was Re: PROBLEM: Kernel 2.6.10 crashing repeatedly and hard)
+Date: Wed, 5 Jan 2005 21:04:00 -0800 (PST)
+Message-ID: <Pine.LNX.3.96.1050105210224.11158B-100000@Maggie.Linux-Consulting.com>
+References: <41DC9420.5030701@h3c.com>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200501060057.j060vk928131@www.watkins-home.com>
+In-Reply-To: <41DC9420.5030701@h3c.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Guy <bugzilla@watkins-home.com>
+To: Mike Hardy <mhardy@h3c.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-hi ya guy
 
-On Wed, 5 Jan 2005, Guy wrote:
+On Wed, 5 Jan 2005, Mike Hardy wrote:
 
-> So, the question is:
-> 	Assume I have enough RAM to never need to swap.
+> There are those that think if they size the machine correctly, they 
+> shouldn't need swap, and they're right.
 
-that depends on what you ae using your box/system for,
-and for you to figure out based on what the system is supposed
-to do
+bingo
+ 
+> > I had 8 Meg of swap space.  So 12 meg total available virtual memory.
+> > One day I added 16 Meg of RAM.  So now I had 20 Meg of RAM.  I deleted my
+> > swap space.  Everyone told me I needed 20-40 Meg of swap space now!  Swap
+> > space should be 2 time RAM size.  How crazy, my memory requirements did not
+> > change, just the amount of memory.  I used that system for a year or so like
+> > that.  Go figure!
 
-> 	Do I need any swap space with Linux?
+the silly rule of 2x size of RAM == swap space came from the old days
+when memory was 10x the costs of disks or some silly cost performance
+that it made sense when grandpa was floating around
 
-it's not required ... many embedded systems runs without swap
+by todays ram and disk pricing ... and cpu speeds ...2x memory sorta
+goes out the door
 
 c ya
 alvin
