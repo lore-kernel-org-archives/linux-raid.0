@@ -1,60 +1,32 @@
-From: "berk walker" <berk@panix.com>
-Subject: Re: Migrating from SINGLE DISK to RAID1
-Date: Tue, 01 Feb 2005 17:57:32 -0500
-Message-ID: <opsljjd6o7v40d6c@berk.site>
-References: <41FFD1F8.3010101@gmx.net>
+From: Robin Bowes <robin-lists@robinbowes.com>
+Subject: Re: Broken harddisk
+Date: Tue, 01 Feb 2005 23:24:13 +0000
+Message-ID: <ctp321$di3$1@sea.gmane.org>
+References: <200501291617.j0TGHG918839@www.watkins-home.com> <41FBD68C.4040701@h3c.com> <cto5m9$5k9$1@sea.gmane.org> <20050201225742.GB22647@percy.comedia.it>
 Mime-Version: 1.0
-Content-Type: text/plain; format=flowed; delsp=yes; charset=utf-8
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <41FFD1F8.3010101@gmx.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+In-Reply-To: <20050201225742.GB22647@percy.comedia.it>
 Sender: linux-raid-owner@vger.kernel.org
-To: Robert Heinzmann <Robert.Heinzmann@gmx.net>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I seem to remember that one can create a degraded array.  Then copy over,  
-and shoot the old disk and add it to the aray.
-b-
+Luca Berra wrote:
+> On Tue, Feb 01, 2005 at 03:02:54PM +0000, Robin Bowes wrote:
+>> True enough. However, until SMART support makes it into linux SATA 
+>> drivers I'm pretty much stuck with dd!
+>>
+> http://www.kernel.org/pub/linux/kernel/people/jgarzik/libata/
 
-On Tue, 01 Feb 2005 20:01:12 +0100, Robert Heinzmann  
-<Robert.Heinzmann@gmx.net> wrote:
+I avoid patching kernels, preferring to use the stock Fedora releases.
 
-> Hello,
->
-> can someone verify if the following statements are true ?
->
-> - It's not possible to simply  convert a existing partition with a  
-> filesystem on it to a raid1 mirror set.
->
-> This may seem succesfull (filesystem can be mounted and must not be  
-> checked), but it will cause data integrity problems. One of the last  
-> Blocks of the device formaly used for file data will be used for the  
-> raid superblock and so all data on this block will be not accessible  
-> anymore.
->
-> - Using a former disk of a raid1 array as a usual disk (not mounted as  
-> degrated /dev/mdX, but instead mounted as /dev/sdX or /dev/hdX) is  
-> successfull.
->
-> This is because the MD device layer reports the device size as size of  
-> disk - superblock offset during the creation of a filesystem on the MD  
-> device. Thus the used size of the disk, when mounting it as /dev/sdX  
-> /dev/hdX, is some KB smaller than it could be, but no data is lost.
->
-> - Its always possible to use raid1 disks as regular disks (not taking  
-> the md autodiscovery into concern). Using regular disks as raid disks  
-> always requires data migration (new filesystem and copy).
->
-> Thank you very much. I would really appreshiate some somments on this  
-> one.
->
-> Robert Heinzmann
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Perhaps I should re-phrase the above statement to read "until the Fedora 
+Core 3 kernel includes SMART support in libata ..." :)
 
+Actually, I'm running 2.6.10 - how can I tell if SMART support is 
+included in libata?
 
-
+R.
 -- 
-Using Opera's revolutionary e-mail client: http://www.opera.com/m2/
+http://robinbowes.com
+
