@@ -1,70 +1,48 @@
-From: berk walker <berk.walker@verizon.net>
-Subject: Re: mdadm - comments on command layout
-Date: Fri, 13 Aug 2004 22:28:50 -0400
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: raid5 two disk temp failure
+Date: Sat, 14 Aug 2004 12:54:37 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <411D78E2.8000805@verizon.net>
-References: <16669.9163.392465.637229@gargle.gargle.HOWL>
+Message-ID: <16669.32493.775346.885436@cse.unsw.edu.au>
+References: <20040813134051.B3328@tictactoe.unixboxen.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <16669.9163.392465.637229@gargle.gargle.HOWL>
-To: John Stoffel <stoffel@lucent.com>
+In-Reply-To: message from Richard Massa on Friday August 13
+To: Richard Massa <ramassa@ucdavis.edu>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-hear hear (also, here here)
-b-
+On Friday August 13, ramassa@ucdavis.edu wrote:
+> Hi all,
+> 
+> I've got a 6 disk raid5 array that just failed because some little elf loosened the cable going 
+> to two of the disks in a scsi enclosure.  Both of them got kicked.
+> 
+> Using mdadm -a /dev/md2 gives a segfault in both versions 1.6.0 and
+> 1.7.0.
 
-John Stoffel wrote:
+Odd.  I doesn't when I try it.
+If you can get it to drop a core (ulimit -c unlimited), and then get a
+stack trace:
+    gdb `which mdadm` core
+    where
 
->Hi Neil,
->
->I've been using mdadm recently to work with some arrays and I really
->have to say I dislike how the commands are laid out and used.  First
->off, they're not consistent from one usage to another.  Of course, I'm
->going to be jerk and not give good examples since my personal box at
->home is down and I'm at work.  But the idea is that when you assemble
->a RAID device, it should look similiar to how you manage that raid
->device.
->
->I'd also love it if there was an mdadm shell, so I could just type
->'mdadm' and get back a shell prompt like:
->	
->	mdadm>
->
->which I could then use to manage my arrays.  
->
->For example, I think all the commands should be of the format:
->
->    mdadm <comand> [options] <array> [devices...]
->
->as much as possible.  I'm basing my thoughts on both the Vertias VxVM
->command set, as well as the ClearCase 'cleartool' command shell.  So
->ideally I could do either:
->
->  > mdadm assemble md0 /dev/hda1 /dev/hda2 ...
->
->or
->
->  > mdadm
->  madam> assemble md0 /dev/hda1 /dev/hda2 ...
->
->depending on my mood.  Currently, the mdadm commands use various
->formats for their arguement layouts and it's a pain to figure out what
->to use.  
->
->So before I get all worked up on this issue, and spend a bunch of time
->mapping out how I think the commands should work, do people agree with
->my observation?  
->
->Thanks,
->John
->-
->To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->  
->
+That might help.
+However "mdadm -a /dev/md2" is a no-op.  Is there a typo?
 
+> 
+> I can query the array using mdadm just fine, the output is attached. 
+> 
+> Anyone know what is going on?  I can attach a strace if that
+> helps...
+
+If you loose two drives, raid5 cannot cope. However if you are sure
+that the data on the drives is still good (as seems likely in this
+case) you can re-assemble the array with
+   mdadm --assemble /dev/md2 --force /dev/sd[abcdef]1
+
+and it will be assembled with one missing drive which you then might
+need to add in.
+
+NeilBrown
