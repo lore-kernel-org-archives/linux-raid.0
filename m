@@ -1,66 +1,111 @@
-From: mru@kth.se (=?iso-8859-1?q?M=E5ns_Rullg=E5rd?=)
-Subject: Re: RAID1 over RAID0 misbehavior
-Date: Wed, 07 Jan 2004 21:22:49 +0100
+From: Steven Ihde <sihde@cs.stanford.edu>
+Subject: 2.6.0: ext3 journal aborted with ext3/lvm/raid5
+Date: Wed, 7 Jan 2004 12:53:26 -0800
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <yw1xvfnntso6.fsf@ford.guide>
-References: <yw1xbrpgwq4f.fsf@ford.guide> <20040107200951.GB5143@localhost>
+Message-ID: <20040107205326.GA14511@hamachi.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Jose Luis Domingo Lopez <linux-raid@24x7linux.com> writes:
 
-> On Wednesday, 07 January 2004, at 01:37:20 +0100,
-> M=E5ns Rullg=E5rd wrote:
->
->> I recently created a RAID1 mirror from two identical RAID0 arrays
->> under Linux 2.6.0.  I was surprised when /proc/mdstat reported a
->> resync speed of 1 MB/s, even though the system was otherwise idle.  =
-I
->>
-> Anyways, it seems wiser to make two RAID1 arrays and then a RAID0 fro=
-m
-> them two. Apart from (maybe) preventing the problem you are
-> experiencing, this should give you better results in the case of a dr=
-ive
-> failure, when it happens.
->
-> Think for a moment about the event of a single hard drive failure: wi=
-th
-> two RAID1 arrays, one of then will go to degraded mode, but as far as=
- I
-> know the upper RAID0 will not notice a thing, so will continue workin=
-g
-> as usual, maybe with a little performance decrease.
->
-> On the other hand, if you have two RAID0 arrays and one of the hard
-> drives fail, the RAID0 where it happens will fail, the upper RAID1 wi=
-ll
-> run degraded, and when a new disk replaces the failed one you will ha=
-ve
-> to start the failed RADI0 again, and let the upper RAID1 reconstruct
-> itself. I think this situation is worse than the one depicted before.
->
-> Am I missing something ?
+I get "Aborting journal on device dm-x" and associated errors about
+every week or two.  This is on a 2.6.0 kernel, ext3 filesystem running
+on lvm over md raid5.  This has been happening since at least some
+point in the 2.6.0-test series.
 
-I had a few reasons:
+The "Aborting journal" is always preceded by some type of
+"ext3_readdir: bad entry" error.  At the end of this mail I have
+listed a selection of entries from my syslog showing the relevant
+occurences.  This normally happens around 6:25am when the locate
+database is being updated, though it has occasionally happened at
+other times when the partition was being accessed.
 
-- I read somewhere that RAID0 over RAID1 didn't work.  Maybe this
-information was outdated.
-- I was short on spare disks, so I had to build an initially degraded
-array and then add the other half of the mirror.
-- Performance after a disk failure isn't a big issue with this
-machine.  Resyncing takes only an hour or two anyway.
+The filesystem in question is my /usr partition.  When I take the
+system down to run fsck, it has always been able to recover (sometimes
+with modifications, sometimes without).  I have rebuilt the filesystem
+at least twice (by running mke2fs to create a fresh fs and copying in
+everything from an archive) and the problem has persisted.  I have
+also tried running my /usr partition on a plain disk partition (no lvm
+or raid5), and that went two weeks with no errors.  I have several
+other partitions on the same raid5 array and I only get problem with
+one of them.
 
---=20
-M=E5ns Rullg=E5rd
-mru@kth.se
+So, it seems the problem could be:
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+1. a hardware problem in a certain area of one of my disks (but there
+   has never been a hardware error in the logs)
+2. a problem with lvm
+3. a problem with raid5
+4. a problem with ext3
+
+Any suggestions as to whether raid5 might be the source of the
+problem, or how to rule it out?  I can provide more information or try
+out patches if necessary.
+
+Thanks for any suggestions,
+
+Steve
+
+
+
+More info about my system:
+
+Debian unstable, 2.6.0 kernel
+Abit IS-7 (with Intel i865PE chipset) motherboard
+Two 80G PATA Seagate drives hooked to separate channels on the
+on-board IDE controller
+One 120G SATA Seagate drive hooked to the onboard SATA controller
+
+One three-disk raid0 array one the first 1G of each disk
+One three-disk raid5 array on the remaining 79G of each disk
+  (all the errors have been on the /usr partition, which is on the
+  raid5 array)
+
+Here are some syslog entries (dm-1 and dm-2 are referring to the same
+logical volume; I changed my configuration slightly at some point
+which caused the numbering to change):
+
+Nov 26 06:25:31 hamachi kernel: EXT3-fs error (device dm-1): ext3_readdir: bad entry in directory #268586: rec_len %% 4 != 0 - offset=0, inode=298189867, rec_len=63517, name_len=32
+Nov 26 06:25:31 hamachi kernel: Aborting journal on device dm-1.
+Nov 26 06:25:32 hamachi kernel: ext3_abort called.
+Nov 26 06:25:32 hamachi kernel: EXT3-fs abort (device dm-1): ext3_journal_start: Detected aborted journal
+Nov 26 06:25:32 hamachi kernel: Remounting filesystem read-only
+
+Dec  5 06:25:53 hamachi kernel: EXT3-fs error (device dm-1): ext3_readdir: bad entry in directory #72235: rec_len is smaller than minimal - offset=0, inode=0, rec_len=0, name_len=0
+Dec  5 06:25:53 hamachi kernel: Aborting journal on device dm-1.
+Dec  5 06:25:54 hamachi kernel: ext3_abort called.
+Dec  5 06:25:54 hamachi kernel: EXT3-fs abort (device dm-1): ext3_journal_start: Detected aborted journal
+Dec  5 06:25:54 hamachi kernel: Remounting filesystem read-only
+
+Dec 14 20:00:12 hamachi kernel: EXT3-fs error (device dm-1): ext3_readdir: bad entry in directory #229414: directory entry across blocks - offset=0, inode=0, rec_len=61476, name_len=157
+Dec 14 20:00:12 hamachi kernel: Aborting journal on device dm-1.
+Dec 14 20:00:12 hamachi kernel: ext3_abort called.
+Dec 14 20:00:12 hamachi kernel: EXT3-fs abort (device dm-1): ext3_journal_start: Detected aborted journal
+Dec 14 20:00:12 hamachi kernel: Remounting filesystem read-only
+Dec 14 20:00:14 hamachi kernel: EXT3-fs error (device dm-1): ext3_readdir: bad entry in directory #229414: directory entry across blocks - offset=0, inode=0, rec_len=61476, name_len=157
+
+
+Jan  2 22:54:12 hamachi kernel: EXT3-fs error (device dm-2): ext3_readdir: bad entry in directory #182492: inode out of bounds - offset=0, inode=50462976, rec_len=1284, name_len=6
+Jan  2 22:54:12 hamachi kernel: Aborting journal on device dm-2.
+Jan  2 22:54:12 hamachi kernel: ext3_abort called.
+Jan  2 22:54:12 hamachi kernel: EXT3-fs abort (device dm-2): ext3_journal_start: Detected aborted journal
+Jan  2 22:54:12 hamachi kernel: Remounting filesystem read-only
+Jan  2 22:54:13 hamachi kernel: EXT3-fs error (device dm-2): ext3_readdir: bad entry in directory #184711: rec_len is smaller than minimal - offset=0, inode=0, rec_len=0, name_len=0
+Jan  2 22:54:13 hamachi kernel: EXT3-fs error (device dm-2): ext3_readdir: bad entry in directory #197622: rec_len is smaller than minimal - offset=0, inode=0, rec_len=0, name_len=0
+Jan  2 22:54:13 hamachi kernel: EXT3-fs error (device dm-2): ext3_readdir: bad entry in directory #295097: rec_len is smaller than minimal - offset=0, inode=0, rec_len=0, name_len=0
+Jan  2 22:54:13 hamachi kernel: EXT3-fs error (device dm-2): ext3_readdir: bad entry in directory #196845: rec_len is smaller than minimal - offset=0, inode=0, rec_len=0, name_len=0
+Jan  2 22:54:13 hamachi kernel: EXT3-fs error (device dm-2): ext3_readdir: bad entry in directory #197149: inode out of bounds - offset=0, inode=50462976, rec_len=1284, name_len=6
+Jan  2 22:54:14 hamachi kernel: EXT3-fs error (device dm-2): ext3_readdir: bad entry in directory #184553: inode out of bounds - offset=0, inode=50462976, rec_len=1284, name_len=6
+Jan  2 22:54:14 hamachi kernel: EXT3-fs error (device dm-2): ext3_readdir: bad entry in directory #197435: inode out of bounds - offset=0, inode=50462976, rec_len=1284, name_len=6
+Jan  2 22:54:24 hamachi kernel: EXT3-fs error (device dm-2): ext3_readdir: bad entry in directory #249397: directory entry across blocks - offset=0, inode=1886220131, rec_len=25964, name_len=116
+Jan  2 22:54:26 hamachi last message repeated 11 times
+
+Jan  7 06:25:19 hamachi kernel: EXT3-fs error (device dm-2): ext3_readdir: bad entry in directory #280327: rec_len is smaller than minimal - offset=0, inode=0, rec_len=0, name_len=0
+Jan  7 06:25:19 hamachi kernel: Aborting journal on device dm-2.
+Jan  7 06:25:19 hamachi kernel: ext3_abort called.
+Jan  7 06:25:19 hamachi kernel: EXT3-fs abort (device dm-2): ext3_journal_start: Detected aborted journal
+Jan  7 06:25:19 hamachi kernel: Remounting filesystem read-only
+
