@@ -1,79 +1,47 @@
-From: "Peter T. Breuer" <ptb@it.uc3m.es>
-Subject: Re: Fast (intelligent) raid1
-Date: Fri, 14 Feb 2003 12:33:06 +0100 (MET)
+From: Christian Melki <christian.melki@axis.com>
+Subject: Drive failure - block transfer possible?
+Date: Fri, 14 Feb 2003 15:40:59 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200302141133.h1EBX6D22963@oboe.it.uc3m.es>
-References: <200302112305.h1BN5nu16695@oboe.it.uc3m.es>
-Reply-To: ptb@it.uc3m.es
+Message-ID: <20030214144059.GA22990@aldur2.axis.se>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200302112305.h1BN5nu16695@oboe.it.uc3m.es> from "Peter T. Breuer"
- at "Feb 12, 2003 00:05:49 am"
-To: ptb@it.uc3m.es
-Cc: Ross Vandegrift <ross@willow.seitz.com>, Ingo Molnar <mingo@redhat.com>, neilb@cse.unsw.edu.au, linux-raid@vger.kernel.org
+Content-Disposition: inline
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I'll compress this down to an even more abstract summary ...
+Hilfe! ( help )
 
-"Peter T. Breuer wrote:"
-> "Peter T. Breuer wrote:"
-> > Have a look at the patch in the .tgz. I tried to make it as clean as I
-> > could. Every change I made in the md.c code is commented. There are 4
-> > "hunks" of changes to md.c, to allow hotadd after setfaulty, and about
-> > ten significant hunks of changes to raid1.c, inserting the extra
-> > technology. There is some extra debugging code in that, which I can
-> 
-> In fact - I'll publish and go through the patch here. Here we go.
+I own two maxtor 5400rpm 120G drives where
+one of them had an electronics failure..
+So all of the data is still there and intact,
+but i can't put together my raid0 array
+any more.. The data on it is somewhat valuable.
+If there is a slim possibility to resuce it,
+i would very much like to do so.
+The drive just went "clickety-click" in a matter
+of seconds with no previous warnings of failure..
+methinks its a "cold" soldering-joint somewhere
+that finally gave up on me...
+I do constantly monitor the drives with smart..
+( although that is no excuse for keeping the data
+in raid0.. beeing a poor student is.. )
+The drive in question isn't manufactured any
+more so i can't get hold of a spare and do
+a transfer ( dd ) with the drive electronics
+that is currently still working.
+And I dare not send it off to maxtor for repair,
+its a 3 yr warranty.. Since they might just
+replace the drive and send me a new one.. rendering
+my attempts for rescue null and void..
+So my question is.. how do the software-raid
+in linux react to a transfer of data to a
+completely new drive of a different brand..
+( if it fits sizewise. )? Will it puke on me
+or are there any other tricks that i can use?
+Any help is greatly appreciated.
 
-  1) change hotadd function in md.c with the objective of permitting
-     hotadd after setfaulty ("hotrepair") which should preserve a
-     bitmap which has been previously added to the disk metadata in
-     the main array (during setfaulty).
+Best regards.
+/Christian
+Sweden.
 
-  2) change write code in raid1.c to mark the bitmap of every mirror
-     component disk which is marked not operational, if it has a bitmap.
-  
-  3) change mark_disk_bad code in raid1.c to add a bitmap to the disk
-     metadata in the full raid array. This is called by setfaulty, and
-     also on error from below, I think.
-
-  4) at the point where a spare disk is marked active in the diskop
-     function in raid1.c (state SPARE_ACTIVE), remove any bitmap
-     associated with the disk metadata in the full raid array.
-     This is called after a successful resync, somehow, and possibly
-     on other occasions.
-
-  5) in the resync function in raid1.c, for each resync block or
-     blocks, find all the spare mirror components which are marked
-     nonoperational but writable ("write_only"), and if they have a
-     bitmap and it is clean for the blocks we are interested in, then
-     cheat for that device - report and account for having written
-     to it when it fact we have not. This means calling md_sync_acct
-     and sync_request_done and md_done_sync and possibly signalling
-     on the wait_ready wait queue for the raid device.  If we don't
-     cheat then fall through and do the normal thing, which is to launch
-     a write request for some blocks, do a bit of accounting and leave
-     the done functions and signalling for its end_io.
-
-I would be deeply obliged if somebody could indicate to me where to
-make some further changes. What I want to do is allow an underlying
-block device to notify the raid code when the block device has "fixed
-itself".
-
-My plan is to
-
-  a) get the raid code to signal the underlying block device during
-     a hotadd, presumably at the end, what the major and minor of the
-     raid device it has become part of is. This will be via an extra
-     ioctl which I will declare for all block devices. Possibly it
-     would be nice to actually pass the file system inode for the
-     special device node of md0 or whatever, if we have it.
-
-  b) when the block device feels well again, then it will signal
-     the raid code via the inode or more directly via the block_ops
-     array and a new ioctl that it has come back up, and the raid
-     code will then do a hotadd.
-
-and I would like pointers as to where to insert this in the current
-raid codes.
-
-Peter
