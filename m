@@ -1,20 +1,25 @@
-From: Philip Molter <philip@corp.texas.net>
-Subject: Re: Force parity resync on raid5?
-Date: Thu, 12 Aug 2004 12:07:36 -0500
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: Force parity resync on raid5?
+Date: Thu, 12 Aug 2004 13:15:24 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <411BA3D8.5030901@corp.texas.net>
-References: <200408121522.i7CFM7311834@watkins-home.com> <411B9A2C.6090108@dgreaves.com>
+Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189F013446A3@otce2k03.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <411B9A2C.6090108@dgreaves.com>
-To: linux-raid@vger.kernel.org
+content-class: urn:content-classes:message
+To: Philip Molter <philip@corp.texas.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> Anyway - the question remains - would this be the right approach?
-> 
-> Hmm - I wonder what would be needed to make the resync code do this...
+But, does this occur for full stripe writes?
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Philip Molter
+Sent: Thursday, August 12, 2004 1:08 PM
+To: linux-raid@vger.kernel.org
+Subject: Re: Force parity resync on raid5?
 
 No, it wouldn't.  In RAID5 implementations, parity isn't recalculated 
 when you write to a RAID,  It's updated.  My understanding is that 
@@ -27,23 +32,3 @@ xor with the parity data
 write the new data
 write the new parity data
 
-Thus a RAID5 write is really two disk reads and two disk writes, which 
-is why RAID5 is expensive for writing.  Under this scheme, if the parity 
-is bad, and you write data to "update" it, it's still bad because you 
-haven't recalculated anything.  If the parity is good, everything stays 
-in sync.
-
-If you were to truly recalculate parity every time you wrote to a block, 
-it'd be something like:
-
-write the new data
-read the corresponding data blocks from the other drives
-recalculate parity based on all blocks
-write the new parity data
-
-That would be n-1 reads and 2 writes for every write, which would get 
-expensive as your number of drives increased.  It's something like this 
-that the update=resync option in mdadm does, that is it reads every 
-drive's data and actually recalculates the parity based on that.
-
-Philip
