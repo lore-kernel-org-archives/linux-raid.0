@@ -1,106 +1,72 @@
-From: tk Voice <tkVoice@netscape.net>
-Subject: EIO AP-1680 ATA133 RAID PCI Controller
-Date: Thu, 06 Feb 2003 21:36:46 -0600
+From: Vitaly <agri@desnol.ru>
+Subject: ibm serveraid
+Date: Fri, 7 Feb 2003 15:25:10 +0300
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3E4329CE.5020706@netscape.net>
+Message-ID: <20030207152510.3e3be8ef.agri@desnol.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="pgp-sha1"; boundary="8274=.3aQ6OeN2YW"
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I was under the impression that these EIDE RAID cards were "hardware 
-RAID" as I see it this seems to just be a 2-Channel IDE controller That 
-I will have to set up as MD (Software RAID).
+--8274=.3aQ6OeN2YW
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-Has anyone got one of these working as a hardware RAID controller under 
-LINUX ?
+Hello
 
-Does anyone have any hints you can give me to get this working without 
-using "Software RAID" ?
+I have IBM ServeRAID controller
+> lspci -v
+<01:06.0 RAID bus controller: IBM Netfinity ServeRAID controller
+<        Subsystem: IBM: Unknown device 020e
+<        Flags: bus master, 66Mhz, slow devsel, latency 96, IRQ 10
+<        Memory at edffe000 (32-bit, prefetchable) [size=8K]
+<        Expansion ROM at <unassigned> [disabled] [size=512K]
+<        Capabilities: [80] Power Management version 2
+I want to compile new kernel with full support for the controller.
+What i need? Is scsi support enough and all disk array will work correctly? Or there should be some special initialization during boot time and i need some special features compiled in?
+Can i compile serverRAID support as a module?
+I already have working system based on linux with configured raid controller.
 
-Here are the details of this controller:
+Agri
 
-EIO (Extreme IO) is a division of InnoVISION (www.ivmm.com)
+PS: i suppose that ibm support team can't answer "2 x 2 = ?" :-(
 
-They have a ATA RAID solution: "EIO AP-1680 ATA133 RAID PCI Controller"
-It can be viewed here: http://www.ivmm.com/eio/products_ap1680.html
+-----BEGIN PGP PUBLIC KEY BLOCK-----
+Version: GnuPG v1.0.7 (GNU/Linux)
 
-Which they claim is LINUX compatible
+mQGiBD396OoRBAC8hupjq2bx4l0IQbxXYUYBsiNljXqG3L7Ezv2Kcwfi4L1gVOJQ
+7DcNFPTXRa7CREdtYhGtaBDtdx1xynIvTa6Wu7qNnTIvkxh0TxlAbcVoioz6Y3CA
+LO2MvyuuuafEPEDKj8u8lILl1RW4KTItwlf3x3dazyZNSduYKSfHI+NH8wCg8bE/
+mSYQwZBFHVuJyFZhUS8bNAcD/18K5L5pRPpQBqJX4ShS5gn5BgUWg/+XsE4ZLTuF
+beTziXLpGo01dTskNt++WuD0b6kLlKqJgSqP50fHDvWGD1JCYyD6RKM5yFYrEl1A
+wq0jCmRxDxg3k3ls/K1d5pkOWnafnA+Fo+EjJYQv89epPJ43FZHRPFpSHBIRUa29
+jHlTA/4nrQH5mIL1lfzJ0/IQfL5rU/BBc69Yq7YawSsOtHclMEbPLHQntygthSth
+f0E/2i6ZqS+4UgRBiMp6hol/OEpxqNrnxS6mOc3ABRy7yeDcnJuSWTyY4D0M92LS
+HipkTWQBblq4IdkKpuIlYNHLdyp+qkAXtUH9vPyHqkzUxMXhsLQ0Vml0YWx5IFYu
+IE1hbnVzaGtpbiAoYWRtaW5pc3RyYXRvcikgPGFncmlAZGVzbm9sLnJ1PohZBBMR
+AgAZBQI9/ejqBAsHAwIDFQIDAxYCAQIeAQIXgAAKCRBcuphZ4z54200gAJ9/drYg
+QEKs5GqKbNRwGtqShEh9kgCdE/esc/vN0Mep93nnGPW7Mqsbu/65AQ0EPf3o7RAE
+AOJVOEja9fQyrSvpgTtRir6h2Ga9MxF6vGyTo+9TnT4lC9yh6dGfM6dVPbwbXD9S
+A5yFsirLg3Qj+P6LSAv+MtdTQhHhwT3XhKcQYwrEzWxqwRRRLEpi91wqO/DauBDL
+Lk+ZcDlsh87yTBPnLTmSuJMOEjg2WPnZOD5EvYu8f3tjAAMFA/9wDguv2Dix/bEl
+eP4B2PdLVlKssqX65wSL/Z3P9ptfr3cU+j15kQ4WuUmy4dJ4wUBjit7ZJmpQYqVS
+lJX/9NwZD4jRwsKk0B2tjPAidTCAcUN2BnXYjpMs+FD+sZ2wv/4RROxnixa3+/pr
++V3ig+OqQKvVFT38HWI4sJ13iYhVbohGBBgRAgAGBQI9/ejtAAoJEFy6mFnjPnjb
+ZRYAn0GBCcRx0xvAtwbYQqE9sjhSi/AsAKCk6pN4KRUJhGxJSJKTlfBcHwELqw==
+=/1mC
+-----END PGP PUBLIC KEY BLOCK-----
 
-It is based on Silicon Image's "Sil 0680 Ultra ATA133" chipset.
+--8274=.3aQ6OeN2YW
+Content-Type: application/pgp-signature
 
-Silicon Image "Sil 0680" chipset link is:
-http://siimage.cubik.com/products/sii0680.asp
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.0.7 (GNU/Linux)
 
-The Driver for this chipset is in the kernel source:
-CONFIG_BLK_DEV_CMD64X and CONFIG_BLK_DEV_CMD680
+iD8DBQE+Q6WpXLqYWeM+eNsRAuogAKCMjumHjjhxHzkBJyrkFAd/Jiy2fwCeKRxx
+U4oh8vtmtX77bPgH23k7o60=
+=Jo/q
+-----END PGP SIGNATURE-----
 
-Output from lspci -vvv is this:
----------------------------------------------------------------------------
-00:09.0 RAID bus controller: CMD Technology Inc: Unknown device 0680 
-(rev 02)
-    Subsystem: Unknown device 1771:1680
-    Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- 
-Stepping- SERR- FastB2B-
-    Status: Cap+ 66Mhz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- 
-<TAbort- <MAbort- >SERR- <PERR-
-    Latency: 32, cache line size 01
-    Interrupt: pin A routed to IRQ 12
-    Region 0: I/O ports at a000 [size=8]
-    Region 1: I/O ports at a400 [size=4]
-    Region 2: I/O ports at a800 [size=8]
-    Region 3: I/O ports at ac00 [size=4]
-    Region 4: I/O ports at b000 [size=16]
-    Region 5: Memory at df001000 (32-bit, non-prefetchable) [size=256]
-    Expansion ROM at <unassigned> [disabled] [size=512K]
-    Capabilities: [60] Power Management version 2
-            Flags: PMEClk- DSI+ D1+ D2+ AuxCurrent=0mA 
-PME(D0-,D1-,D2-,D3hot-,D3cold-)
-            Status: D0 PME-Enable- DSel=0 DScale=2 PME-
------------------------------------------------------------------
-
-I have attached two(2) 40GB drives to this card one on each ide channel 
-both set as Master. I went into the controllers BIOS and made 
-configuration changes to reflect RAID 1 and built the set adding both 
-drives to it. Everything looks fine a boot time. The controllers BIOS 
-states two drives found combined as RAID 1 as 0x80. Under Window 98 I 
-only see one drive. Which is what I would expect.
-
-But after compiling these drivers into my LINUX kernel the system sees 
-my drives as 2 separate disks (I have an ATAPI CDROM drive on 
-Motherboard's 2nd-IDE channel) Here are my messages at boot time:
-----------------------------------------------------------
-VP_IDE: IDE controller on PCI bus 00 dev 39
-VP_IDE: chipset revision 6
-VP_IDE: not 100% native mode: will probe irqs later
-VP_IDE: VIA vt82c686b (rev 40) IDE UDMA100 controller on pci00:07.1
-ide0: BM-DMA at 0x9000-0x9007, BIOS settings: hda:pio, hdb:pio
-ide1: BM-DMA at 0x9008-0x900f, BIOS settings: hdc:pio, hdd:DMA
-PCI: Found IRQ 12 for device 00:09.0
-CMD680: chipset revision 2
-CMD680: not 100% native mode: will probe irqs later
-ide2: BM-DMA at 0xb000-0xb007, BIOS settings: hde:pio, hdf:pio
-ide3: BM-DMA at 0xb008-0xb00f, BIOS settings: hdg:pio, hdh:pio
-hdd: CD-ROM 56X/AKH, ATAPI CD/DVD-ROM drive
-hde: WDC WD400AB-00BVA0, ATA DISK drive
-hdg: WDC WD400AB-00BVA0, ATA DISK drive
-ide1 at 0x170-0x177,0x376 on irq 15
-ide2 at 0xa000-0xa007,0xa402 on irq 12
-ide3 at 0xa800-0xa807,0xac02 on irq 12
-blk: queue c02c766c, I/O limit 4095Mb (mask 0xffffffff)
-hde: 78165360 sectors (40021 MB) w/2048KiB Cache, CHS=77545/16/63, 
-UDMA(100)
-blk: queue c02c79d0, I/O limit 4095Mb (mask 0xffffffff)
-hdg: 78165360 sectors (40021 MB) w/2048KiB Cache, CHS=77545/16/63, 
-UDMA(100)
-Partition check:
-hde: [PTBL] [4865/255/63] hde1 hde2 hde3
-hdg: [PTBL] [4865/255/63] hdg1 hdg2 hdg3
---------------------------------------------------------------------
-
-Thanks
-
-Peter
-
+--8274=.3aQ6OeN2YW--
