@@ -1,59 +1,44 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: Good news / bad news - The joys of RAID
-Date: Sat, 20 Nov 2004 19:40:39 +0000
-Message-ID: <419F9DB7.7080600@dgreaves.com>
-References: <Pine.LNX.4.44.0411201238320.19120-100000@coffee.psychology.mcmaster.ca>
+From: "Mark Klarzynski" <mark.k@computer-design.co.uk>
+Subject: RE: Good news / bad news - The joys of RAID
+Date: Sat, 20 Nov 2004 20:03:42 -0000
+Message-ID: <037501c4cf3c$11c8dba0$030a0a0a@musicroom>
+References: <200411201937.iAKJbwN17977@www.watkins-home.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44.0411201238320.19120-100000@coffee.psychology.mcmaster.ca>
+In-Reply-To: <200411201937.iAKJbwN17977@www.watkins-home.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mark Hahn <hahn@physics.mcmaster.ca>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Mark Hahn wrote:
+MTBF is statistic based upon the expected 'use' of the drive and the
+replacement of the drive after its end of life (3-5 years)...
 
->>Never buy Maxtor drives again!
->>    
->>
->
->you imply that Maxtor drives are somehow inherently flawed.
->can you explain why you think millions of people/companies
->are naive idiots for continuing to buy Maxtor disks?
->
->this sort of thing is just not plausible: Maxtor competes 
->with the other top-tier disk vendors with similar products 
->and prices and reliability.  yes, if you buy a 1-year disk,
->you can expect it to have been less carefully tested, possibly
->be of lower-end design and reliability, and to have been handle
->more poorly by the supply chain.  thankfully, you don't have 
->to buy 1-year disks any more.
->
->read the specs.  make sure your supply chain knows how to 
->handle disks.  make sure your disks are mounted correctly,
->both mechanically and with enough airflow.  use raid and 
->some form of archiving/backups.  don't get hung up on which 
->of the 4-5 top-tier vendors makes your disk.
->
->  
->
+It's extremely complex and boring but the figure is only relative if the
+drive is being used within an environment that matches those of the
+calculations.
 
-Yeah, you're right.
-Of course - the fact that 2 of *my* 6 Maxtor 250Gb SATA drives (3 year 
-warranty) date stamped at various times in 2004 have failed is 
-coincidence and should, of course, be expected with a MTBF of millions 
-of hours.
+SATA / IDE drives have an MTBF similar to that of SCSI / Fibre. But this
+is based upon their expected use... i.e. SCSI used to be [power on hours
+= 24hr] [use = 8 hours].. whilst SATA used to be [power on = 8 hours]
+and [use = 20 mins].
 
-Oh, please note I'm not Robin - that must be a coincidence too :)
+Regardless of what some people clam (usually those that only sell sata
+based raids), the drives are not constructed the same in any way.
 
-Personally I'm waiting for the revelation that they are recycled IBM 
-Deskstar 70's ;)
+SATA's fail more within a raid environment (probably around 10:1)
+because of the heavy use and also because they are not as intelligent...
+therefore when they do not respond we have no way of interrogating them
+or resetting them, whilst with scsi we do both. This means that a raid
+controller / driver has no option to but simply fail the drive.
 
-I take your point about supply chain though - anything that's shipped by 
-courier is suspect.
+Maxtor lead the way in capacity and also reliability... I personal had
+to recall countless earlier IBMs and replace them with maxtor.  But the
+new generation of IBM's (Hitachi) have got it together.
 
-David
+So - I guess you are all right :) 
+
 
 
