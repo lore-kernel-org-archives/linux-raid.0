@@ -1,45 +1,54 @@
-From: Steven Dake <sdake@mvista.com>
-Subject: Re: Raid autodetection
-Date: Tue, 03 Dec 2002 12:22:14 -0700
+From: Maurice Hilarius <maurice@harddata.com>
+Subject: Re: some IDE trays are bad (was Re: SW-RAID 1 and kernel
+  2.4.18)
+Date: Tue, 03 Dec 2002 14:06:30 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3DED0466.2020707@mvista.com>
-References: <Pine.LNX.4.44.0212031137001.20853-100000@duplo.agenda.si>
+Message-ID: <5.1.1.6.2.20021203135305.06fa94e0@mail.harddata.com>
+References: <984305F1827DD5118FEA0000D1105F0A01BDC029@HW_MAIL>
+ <984305F1827DD5118FEA0000D1105F0A01BDC029@HW_MAIL>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: danci@agenda.si
+In-Reply-To: <20021203160141.GA7990@apartia.org>
+To: Louis-David Mitterrand <vindex@apartia.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Danci,
+With regards to your message at 09:01 AM 12/3/02, Louis-David Mitterrand. 
+Where you stated:
+>On Tue, Nov 26, 2002 at 02:56:41PM +0100, SCHEP. - Schepke, Arnt wrote:
+> > Hi, i have a running software raid 1. This consist of two ide devices hda
+> > and hdc. The root filesystem is running on this raid array. The harddiscs
+> > are installed in removable frames.
+>                    ^^^^^^^^^^^^^^^^^
+>
+>That is the issue.
+>
+><<snip>>
+>I've just had the same problem. My setup: 4 Maxtor 160G connected to a
+>Promise 133TX2 card, one of them was in an Icy Dock removable rack, the
+>three remaining were directly connected to the IDE cable.
+>
+>The tray-connected disk would always give us the BadCRC error upon
+>resynching with the raid5 array. That kind of error is typical of bad
+>cabling.
+That type of error is also typical of Promise and other inferior IDE cards.
+using IDE ports on motherboards, and using 3Ware cards we rarely see this 
+issue.
+Using Promise we frequently see it.
+Also, cables are important, I agree. Yellow Teflon/TPE cables make a big 
+difference.
+The cheap grey ones are not suitable for this type of use.
 
-You can set a RAID to autostart by setting its partition id to 0xfd 
-(RAID autostart) with the fdisk utility.  You could also use an initrd 
-to scan the configuration file and start the RAID arrays.
 
-The second is what most distributions do such as RedHat.
 
-Thanks
--steve
+With our best regards,
 
-danci@agenda.si wrote:
+Maurice W. Hilarius       Telephone: 01-780-456-9771
+Hard Data Ltd.               FAX:       01-780-456-9772
+11060 - 166 Avenue        mailto:maurice@harddata.com
+Edmonton, AB, Canada      http://www.harddata.com/
+    T5X 1Y3
 
->Hi!
->
->Is there a tool to force the kernel to try auto-detecting RAID? I think I
->saw that SuSE has something like that implemented, so they can use it in
->initrd...
->
->Thanks, D.
->
->-
->To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->
->
->  
->
+Ask me about NAS and near-line storage
 
