@@ -1,39 +1,55 @@
-From: Brad Hubbard <brad@congosystems.com>
-Subject: Re: Winfast ATA100
-Date: Mon, 8 Apr 2002 13:24:03 +1000
+From: SoulBlazer <soul@lamp-post.net>
+Subject: Floating Spare
+Date: Mon, 8 Apr 2002 13:41:30 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <02040813240308.06637@badnote>
-References: <20020312225411.6487E22AB@hermes.fra.hollants.com>
-Reply-To: brad@congosystems.com
+Message-ID: <20020408184316Z313731-22651+2106@vger.kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
-In-Reply-To: <20020312225411.6487E22AB@hermes.fra.hollants.com>
-To: Pieter Hollants <pieter@hollants.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 13 Mar 2002 09:54, Pieter Hollants did align ASCII characters thusly:
-> > Has anyone got any experience with getting the Leadtek Winfast ATA100
-> > cards
-> > under Linux?
->
-> They seem to use the CMD/Silicon Image chips, which have excellent Linux
-> support. When I researched chipsets in last August, the driver hadn't
-> changed since kernel 2.4.4. My SW RAID-1 has run stable and reliable
-> ever since.
+Can you share 2 or 3 'spare-disks' between multiple raid sets?
 
-Finally got this going (got absolutely no response from CMD or Leadtek by the 
-way).
+Eg. I have a 22 disk array chopped into multiple 4 disk raid-5 volumes, this 
+leaves me with 2 disks left over..  Can I assign these two drives as floating 
+spares incase of failure.. this will obviously be a 'first come first serve' 
+scenario for raid failure.. but its better then not using them.
 
-Needed a line like this in lilo.conf
+## Vol 00 ##
+raiddev /dev/md/0
+        raid-level              5
+        nr-raid-disks           3
+        nr-spare-disks          1
+        persistent-superblock   1
+        chunk-size              128
+        parity-algorithm        left-symmetric
 
-append="ide2=0xdc00,0xd802,17 ide3=0xd400,0xd002,17 ide0=autotune 
-ide1=autotune ide2=autotune ide3=autotune"
+        device          /dev/scsi/host2/bus0/target0/lun0/part1
+        raid-disk       0
+        device          /dev/scsi/host2/bus0/target1/lun0/part1
+        raid-disk       1
+        device          /dev/scsi/host2/bus0/target2/lun0/part1
+        raid-disk       2
+        device          /dev/scsi/host2/bus0/target3/lun0/part1
+        spare-disk      0
 
-Note: This line is, of course, system specific.
+## Vol 01 ##
+raiddev /dev/md/1
+        raid-level              5
+        nr-raid-disks           3
+        nr-spare-disks          1
+        persistent-superblock   1
+        chunk-size              128
+        parity-algorithm        left-symmetric
 
-Hope this stops someone burning as many hours on it as I did :-)
+        device          /dev/scsi/host2/bus0/target4/lun0/part1
+        raid-disk       0
+        device          /dev/scsi/host2/bus0/target5/lun0/part1
+        raid-disk       1
+        device          /dev/scsi/host2/bus0/target6/lun0/part1
+        raid-disk       2
+        device          /dev/scsi/host2/bus0/target3/lun0/part1
+        spare-disk      0
 
-Cheers,
-Brad
+
