@@ -1,56 +1,44 @@
-From: rob <rob@fantinibakery.com>
-Subject: Re: mdadm --assemble --scan hassles....
-Date: Tue, 28 Oct 2003 06:30:49 -0500
+From: maarten van den Berg <maarten@vbvb.nl>
+Subject: Re: I'm about ready to do SW-Raid5 - pointers needed
+Date: Tue, 28 Oct 2003 15:06:32 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3F9E5369.6050203@fantinibakery.com>
-References: <20031008111709.GV1277@hvs.envisage.co.za> <16270.5184.302596.951547@notabene.cse.unsw.edu.au> <20031025212433.GE23767@hvs.envisage.co.za> <16285.38655.754527.236684@notabene.cse.unsw.edu.au> <20031028062445.GD3236@hvs.envisage.co.za>
+Message-ID: <200310281506.32013.maarten@vbvb.nl>
+References: <3F9DAD4C.3000002@verizon.net> <Pine.LNX.4.56.0310280749080.23689@unicorn.drogon.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20031028062445.GD3236@hvs.envisage.co.za>
-To: Hendrik Visage <hvisage@envisage.co.za>
-Cc: Neil Brown <neilb@cse.unsw.edu.au>, linux-raid@vger.kernel.org
+In-Reply-To: <Pine.LNX.4.56.0310280749080.23689@unicorn.drogon.net>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-AFAIK you don't need DEVICE and ARRAY entries in mdadm.conf
+On Tuesday 28 October 2003 09:26, Gordon Henderson wrote:
+> On Mon, 27 Oct 2003, berk walker wrote:
 
-I only use MAILADDR    PROGRAM    entries to monitor the array.
+> Good luck with your promise board (what type is it?) I've had a lot of
+> problems with them (kernels 2.4.20-22) They seem to work, but under heavy
+> load, I see processes getting stuck in "D" state (eg. nfsd or anything
+> doing lots of disk IO) Most of the time they recover, but I've load a disk
+> partition on more than one occasion (saved by raid, and it re-built OK
+> after a reboot). I've seen this in 2 different servers and tried both
+> Intel and AMD CPUs. Tonight I try a set of different PCI IDE controllers
+> in one server to see if that helps it.
 
+Promise cards do suck somewhat -albeit I use them- but what else is there ? 
+The highpoint-equipped cards are even more sucky in many cases.
 
+> It's hard to tell if it's a real hardware problem or a software one (the
+> Promise driver being fairly new, patched in at 2.4.20, included in 2.4.22)
 
-Hendrik Visage wrote:
+Ehm, what ???  You're probably talking about the driver for the fasttrack 
+cards who are -in their own respect- raid cards. But if you use a 'plain' 
+card like the ultra it's just used as an additional IDE channel. That has 
+worked long long before 2.4.20 and it is what I use.  No sense in buying a 
+pricey fasttrack if you're not going to use the raid but use the md tools 
+instead.
 
->On Tue, Oct 28, 2003 at 09:06:55AM +1100, Neil Brown wrote:
->  
->
->>On Saturday October 25, hvisage@envisage.co.za wrote:
->>    
->>
->>>>That would be because mdadm.conf describes /dev/md/1 as:
->>>>    UUID=c2a91233:5ffd5398:eac27773:e12945dd
->>>>but mdadm --examine doesn't show any arrays with that uuid.
->>>>
->>>>NeilBrown
->>>>        
->>>>
->>>Then how do I fix it??
->>>
->>>      
->>>
->>Edit /etc/mdadm.conf
->>    
->>
->
->I've tried without any succes as yet :(
->
->so what would the correct mdadm.conf look like in my case?
->
->
->-
->To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->  
->
+Regards,
+Maarten
 
+-- 
+Yes of course I'm sure it's the red cable. I guarante[^%!/+)F#0c|'NO CARRIER
