@@ -1,58 +1,44 @@
-From: Maxim Frolov <wrungel@web.de>
-Subject: Re: Re: RAID1 failure recovery
-Date: Tue, 14 May 2002 07:56:52 +0200
+From: Maxwell Bottiger <mbotti1@gl.umbc.edu>
+Subject: Unrecognized raid partitions durring upgrade
+Date: Tue, 14 May 2002 16:14:19 -0400 (EDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200205140556.g4E5upX09454@mailgate5.cinetic.de>
+Message-ID: <Pine.LNX.4.31L.02.0205141604120.12302-100000@linux2.gl.umbc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I checked the partition type of my  RAID1 disk. It was FreeBSD (not 0xFD  - Linux Raid Autodetect)!
+Hello,
+	This is my first posting to this mailing list.  Since I haven't
+recieved any emails before writing this letter, please excuse me if this
+question has already been asked.
+	I have a server running redhat 7.2.  I'm using software raid 0
+partitions for /usr, /home and /mnt/shared.  The latter two partitions
+aren't critical at the moment, but /usr is being a bear right now.
+	I'm trying to install 7.3 and durring the upgrade process it
+appears that none of my raid devices are being mounted.  This is causing
+all the packages intended for /usr (that is, /dev/md0) to be installed in
+/.  This is a big problem since root isn't nearly large enough to
+accomidate the 700 or so packages ear-marked for upgrade.
+	So, that's my problem and here is my question.  How do I tell the
+kernel using boot params to mount /usr using a raid device.  Right now the
+box is totally down since it installed half of the new packages and died.
+That's really frustrating as I'm sure you can imagine.  Root itself is NOT
+a raid partiton, and unfortunately almost all the docs I've found talk
+about how to tell the kernel to boot off of raid.  I'm 99% sure this is
+not a hardware failure or anything like that, but that I've simply missed
+something.  If anyone has any sugestions, they're quite welcome.
 
-I changed it to 0xFD.
-I changed also boot=/dev/hda to boot=/dev/md0 in my lilo.conf and everything began working well!
-
-Thanks a lot to all people in this mailing list, who helped me with my problem!
+Thanks a lot.
 
 
----------------
-Maxim Frolov
+Maxwell (SleepyLight) Bottiger
+Theatre and Computer Science Graduate at UMBC
+       (o_   (o_
+  (o_  //\   //\
+  (/)_ V_/_  V_/_  If at first you don't succeed, redefine success.
 
 
-Neil Brown <neilb@cse.unsw.edu.au> schrieb am 10.05.02:
-> > My questions is: How do I recover the failed RAID1 disk (dev/hda1)?
-> > What I did wrong?
-> > 
-> You forgot to set the partition time of /dev/hda1 to "Linux RAID
-> autodetect" or whatever it is meant to be.
-
-
-Alvin Oga <aoga@Maggie.Linux-Consulting.com> schrieb am 11.05.02:
-> hi ya maxim
-> 
-> i'd also double check lilo.conf 
-> 	boot=/dev/md0
-> 	...
-> 	root=/dev/md0
-> 
-> i've seen people use 
-> 	boot=/dev/hda   
-> 
-> 	and make  different one on /dev/hdc w/ boot=/dev/hdc
-> 
-> what did suse-8 do to these lilo configs??
-> 
-> and as neil says...  check that its FD partition type ( not ext2 )
-
-michael@insulin-pumpers.org schrieb am 10.05.02:
-> change the partiton type to FD
-> > 
-
-________________________________________________________________
-Keine verlorenen Lotto-Quittungen, keine vergessenen Gewinne mehr! 
-Beim WEB.DE Lottoservice: http://tippen2.web.de/?x=13
 
 
