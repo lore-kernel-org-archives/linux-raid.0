@@ -1,49 +1,36 @@
-From: Jakob Oestergaard <jakob@unthought.net>
-Subject: Re: Not-fresh + failure
-Date: Wed, 19 Jun 2002 01:37:48 +0200
+From: Monty Charlton <monty@fullmonty.org>
+Subject: Re: raid 5 out of sync won't mount
+Date: Tue, 18 Jun 2002 17:57:26 -0600
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20020618233748.GA13086@unthought.net>
-References: <20020618162813.A2366@cs.hmc.edu>
+Message-ID: <20020618175726.A941@stan.fullmonty.org>
+References: <3D0F4799.5090403@fullmonty.org> <20020618161549.GA17321@colombina.comedia.it> <20020618165638.GA11713@unthought.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20020618162813.A2366@cs.hmc.edu>
-To: Titus Winters <twinters@odin.ac.hmc.edu>
-Cc: linux-raid@vger.kernel.org
+In-Reply-To: <20020618165638.GA11713@unthought.net>; from jakob@unthought.net on Tue, Jun 18, 2002 at 06:56:38PM +0200
+To: Jakob Oestergaard <jakob@unthought.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Jun 18, 2002 at 04:28:13PM -0700, Titus Winters wrote:
-> Please help my poor file server:=20
->=20
-> I've got 4 scsi drives on two controllers running RAID-5 in software.
->=20
-> So as near as I can tell I've got one drive that failed and cut off=20
-> communications with the other disk on the SCSI controller (or somethi=
-ng)
-> which made that second drive become not-fresh before the kernel panic=
-ked.
->=20
-> dmseg says that one is not-fresh, and the other is faulty.  How do I
-> proceed without data loss?  I've tried raidhotadd to bring up the=20
-> not-fresh drive, but the raid device can't start up and thus I can't=20
-> hot add it. =20
+On Tue, Jun 18, 2002 at 06:56:38PM +0200, Jakob Oestergaard wrote:
+> Yes, that is exactly the way to do it.
+> 
+> If you mark the right disk as failed, everything will succeed and you
+> will not lose your data even though mkraid claims that you will.
+> 
+> If you, however, mark the wrong disk as failed, or forget to mark a
+> disk as failed, no amount of magic is going to bring those data back.
+> 
+> If it is really important data, it might be advisable to do a raw copy
+> of the individual partitions to some other machine - just in case. But
+> again, if you do it right, there's no problem  ;)
 
-Section 6.1 in the Software RAID HOWTO:
+Thanks so much!  That worked great.  fullmonty.org lives again thanks to you guys. :)
 
-http://unthought.net/Software-RAID.HOWTO/Software-RAID.HOWTO-6.html#ss6=
-=2E1
+Monty
 
---=20
-=2E...............................................................
-:   jakob@unthought.net   : And I see the elder races,         :
-:.........................: putrid forms of man                :
-:   Jakob =D8stergaard      : See him rise and claim the earth,  :
-:        OZ9ABN           : his downfall is at hand.           :
-:.........................:............{Konkhra}...............:
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+--
+Monty Charlton
+http://fullMonty.org
+
