@@ -1,43 +1,53 @@
-From: Lars Marowsky-Bree <lmb@suse.de>
-Subject: Re: Multipath problem in a SAN enviromnent
-Date: Wed, 18 Jun 2003 12:21:57 +0200
+From: Per Andreas Buer <perbu@linpro.no>
+Subject: poor performance with raid1 / raid0
+Date: 18 Jun 2003 14:32:24 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20030618102157.GD27378@marowsky-bree.de>
-References: <02d201c33023$13fd45a0$3351960a@EEL> <3EE7585E.45D851CE@SteelEye.com> <20030612100423.GA14106@marowsky-bree.de> <007c01c330d0$86dda7b0$0cc7e7c1@EEL> <3EE893A4.E0518632@SteelEye.com> <00e801c33183$8072cd70$0cc7e7c1@EEL>
+Message-ID: <PERBUMSGID-ul6fzm7tvl3.fsf@ipchains.linpro.no>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <00e801c33183$8072cd70$0cc7e7c1@EEL>
-To: Ionut Nistor <ionut@modulo.ro>, Paul Clements <Paul.Clements@SteelEye.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2003-06-13T11:12:15,
-   Ionut Nistor <ionut@modulo.ro> said:
 
-> Agreed, but Lars mentioned 'the patch in 2.4 went even further' -  he=
-nce I
-> assume what's at the link you posted is obsolete - am I correct?
-> While I'm patching it, I want to make sure it's the latest one.
+Hi.
 
-I've pulled out the latest patch set against our kernel and made it
-available at ftp://ftp.suse.com/pub/people/lmb/md-mp/; however, it
-probably will not apply cleanly against 2.4.21 yet.
+I have two 70GB drives and a 140GB disk set up in RAID1 across the 140GB
+drive and a RAID0 built over the 70GB disks. Both the RAID0 and the big
+disk are quite fast (transfers ~ 110MB/s and 70MB/s) - but the mirror is
+dead slow.
+
+Resync lokes like this: 
+
+md1 : active raid1 md11[2] sdd1[0]
+      497856 blocks [2/1] [U_]
+      [=========>...........]  recovery = 48.0% (240188/497856)
+      finish=15.6min speed=272K/sec
+
+If this configuration unwise in some respect?
+
+Plain 2.4.20-kernel with some fixes (ext3 and ptrace bugs). Adaptec
+7899P (rev 08).~
+
+# cat /proc/scsi/scsi 
+Attached devices: 
+Host: scsi0 Channel: 00 Id: 00 Lun: 00
+  Vendor: IBM      Model: DDYS-T18350M     Rev: SA2A
+  Type:   Direct-Access                    ANSI SCSI revision: 03
+Host: scsi0 Channel: 00 Id: 01 Lun: 00
+  Vendor: FUJITSU  Model: MAN3735MC        Rev: 0109
+  Type:   Direct-Access                    ANSI SCSI revision: 03
+Host: scsi0 Channel: 00 Id: 02 Lun: 00
+  Vendor: FUJITSU  Model: MAN3735MC        Rev: 0109
+  Type:   Direct-Access                    ANSI SCSI revision: 03
+Host: scsi0 Channel: 00 Id: 03 Lun: 00
+  Vendor: SEAGATE  Model: ST3146807LC      Rev: 0004
+  Type:   Direct-Access                    ANSI SCSI revision: 03
+Host: scsi0 Channel: 00 Id: 06 Lun: 00
+  Vendor: SUPER    Model: GEM354 REV001    Rev: 1.04
+  Type:   Processor                        ANSI SCSI revision: 02
 
 
-Sincerely,
-    Lars Marowsky-Br=E9e <lmb@suse.de>
-
---=20
-SuSE Labs - Research & Development, SuSE Linux AG
- =20
-"If anything can go wrong, it will." "Chance favors the prepared (mind)=
-=2E"
-  -- Capt. Edward A. Murphy            -- Louis Pasteur
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+There are only 10 different kinds of people in the world, 
+those who understand binary, and those who don't.
