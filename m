@@ -1,24 +1,41 @@
-From: Michael Stumpf <mjstumpf@pobox.com>
-Subject: mdadm segfault
-Date: Thu, 16 Dec 2004 16:34:14 -0600
-Message-ID: <41C20D66.8040906@pobox.com>
-Reply-To: mjstumpf@pobox.com
+From: Mark Hahn <hahn@physics.mcmaster.ca>
+Subject: Re: Raid0 or Raid1 READ performance
+Date: Thu, 16 Dec 2004 17:48:15 -0500 (EST)
+Message-ID: <Pine.LNX.4.44.0412161741200.19312-100000@coffee.psychology.mcmaster.ca>
+References: <000401c4e3b9$2cef1f20$040a10ac@asitest>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <000401c4e3b9$2cef1f20$040a10ac@asitest>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: BO MOON <bmoon@anthologysolutions.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-mdadm 1.8.1 is segfaulting on red hat linux 7.3.  Kernel is 2.4.18smp5.  
-Happened when I try to assemble a 3 drive array with only 2 drives.
+> I am expecting the faster performance on READ than WRITE because of
+> parallel read from disks more than 2(2 for RAID1, 3 for RAID0) at the
+> same time.
 
-Not important to me; I just downgraded to 1.2.0 and it worked like a 
-champ, but I figured I'd throw that out there as an FYI.
+if I understand your description, each of your tests involves either
+reading or writing from a single disk (and also writing/reading a raid.)
+such tests will always run at the speed of the slowest disk,
+presumably the single one.  for instance,
 
+    cp /some-2-disk-raid0/file /other-single-disk/
 
+will be limited by the write speed of other-single-disk, 
+and not the raid.
 
---------------------------------------------
-My mailbox is spam-free with ChoiceMail, the leader in personal and corporate anti-spam solutions. Download your free copy of ChoiceMail from www.choicemailfree.com
+    cp /other-single-disk/file /some-2-disk-raid0/
+
+is similar, though now it's the reading from a single disk which 
+is the bottleneck.
+
+> Any suggestion or opinion?
+
+test bandwidth with something more reasonable than time cp.
+even "time dd if=/disk-to-read-from of=/dev/zero bs=64k"
+is more sensible.
+
+regards, mark hahn.
 
