@@ -1,47 +1,28 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: ANNOUNCE: mdadm 1.2.0 - A tool for managing Soft RAID under Linux
-Date: Thu, 13 Mar 2003 09:27:33 +1100
+From: Nick DeClario <nick@guardiandigital.com>
+Subject: Adaptec 2010s boot failure
+Date: Wed, 12 Mar 2003 19:21:06 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <15983.46165.380845.237040@notabene.cse.unsw.edu.au>
+Message-ID: <3E6FCEF2.9060402@guardiandigital.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi.  I have an Adaptec 2010s running on an Intel SE7501WV2 motherboard. 
+   I can get both EnGarde Linux and RedHat Linux 8.0 to install 
+perfectly but both systems fail on boot.  The RedHat system refuses to 
+load the kernel and reports "Isufficient memory" while the EnGarde 
+system starts to load the kernel into memory, stops and prints 80.
 
+I have searched for quite some time for information about this card and 
+have been coming up empty handed.  I can't even find references to it in 
+the kernel.  Adaptec does list the 2010s as compatible with the Intel 
+SE7501WV2 motherboard and RedHat 8.0 as well.
 
-I am pleased to announce the availability of 
-   mdadm version 1.2.0
-It is available at
-   http://www.cse.unsw.edu.au/~neilb/source/mdadm/
-and
-   http://www.{countrycode}.kernel.org/pub/utils/raid/mdadm/
+Does anyone have any suggestions or can point me to more information?
 
-as a source tar-ball and (at the first site) as an SRPM, and as an RPM for i386.
+Thanks,
+     -Nick
 
-mdadm is a tool for creating, managing and monitoring
-device arrays using the "md" driver in Linux, also
-known as Software RAID arrays.
-
-Release 1.2.0 is a bug-fix release over 1.1.0.
-
-    -   Fix bug where --daemonise required an argument.
-    -   In --assemble --verbose, print appropriate message if device is
-        not in devices= list
-    -   Updated mdadm.conf.5 to reflect fact that device= takes wildcards
-    -   Typos:  componenet -> component
-    -   Reduce size of "--help" message put excess into "--help-options"
-    -   Fix bug introduced when MD_SB_DISKS dependancy removed, and which
-        caused spares not be assembled properly.
-    -   Print appropriate message if --monitor --scan decides not to
-	monitor anything.  
-
-
-Development of mdadm is sponsored by CSE@UNSW: 
-  The School of Computer Science and Engineering
-at
-  The University of New South Wales
-
-NeilBrown  13/03/2003
