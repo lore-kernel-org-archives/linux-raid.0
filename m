@@ -1,49 +1,31 @@
-From: Anton Starikov <A.Starikov@utwente.nl>
-Subject: Re: Support for PATA in Promise 378 driver
-Date: Mon, 23 Feb 2004 14:45:19 +0100
+From: syrius.ml@no-log.org
+Subject: Re: SW RAID5 + high memory support freezes 2.6.3 kernel
+Date: Mon, 23 Feb 2004 15:05:27 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040223144519.45741d5a@hantst.kabel.utwente.nl>
-References: <20040223141636.20fed6ba@hantst.kabel.utwente.nl>
-	<20040223133539.GO6255@hvs.envisage.co.za>
+Message-ID: <wazza.874qthopqw.fsf@message.id>
+References: <20040223024124.GA1590@psilocybus>
+	<16441.33071.218049.163976@notabene.cse.unsw.edu.au>
+	<20040222213011.7e1b8bbf.akpm@osdl.org>
+	<20040223133503.GA1671@psilocybus>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20040223133539.GO6255@hvs.envisage.co.za>
-To: Hendrik Visage <hvisage@envisage.co.za>
-Cc: linux-raid@vger.kernel.org
+In-Reply-To: <20040223133503.GA1671@psilocybus> (Pavol Luptak's message of
+ "Mon, 23 Feb 2004 14:35:04 +0100")
+To: Pavol Luptak <P.Luptak@sh.cvut.cz>
+Cc: Andrew Morton <akpm@osdl.org>, Neil Brown <neilb@cse.unsw.edu.au>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-But what about driver from Promise? 
-Nobody yet forbid reverse engineering :)
-It could be a not a big fun of course...
+Pavol Luptak <P.Luptak@sh.cvut.cz> writes:
 
-Two facts make me optimistic:
-1) There open-source driver from Promise
-2) There is driver in FreeBSD (it use cam also as I understand), I have
-feeling that driver from BSD has support for PATA port, am I right?
+[...]
+>> Retest on current 2.6.3-bk or 2.6.3-mm3 please.
+>
+> I tried 2.6.3-bk4 and seems it works without problems :)
+> I'm going to copy about 300 GB data to this cryptoloop/RAID5 and report the
+> eventual bugs....
 
-Anton
+same here with 2.6.3-mm3 + some dm patches i need.
 
-On Mon, 23 Feb 2004 15:35:39 +0200
-Hendrik Visage <hvisage@envisage.co.za> wrote:
-
-> On Mon, Feb 23, 2004 at 02:16:36PM +0100, Anton Starikov wrote:
-> > Hi!
-> > 
-> > As I can see, there is no support for PATA port on promise 378 chip
-> > currently.
-> 
-> Correct.
-> 
-> > Is this support planned?
-> 
-> You have all the correct informatin to program/write the driver??
-> 
-> > If now, why? Is there some religious reasons?  ;) 
-> 
-> Elsewhere the answer is: Promise haven't provided the needed
-> information yet.
-> 
-> Hendir
-> 
+-- 
+S.
