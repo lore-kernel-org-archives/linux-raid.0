@@ -1,71 +1,59 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: BUG: mdadm --fail makes the kernel lose count (was Re: raid5 won't
- resync)
-Date: Wed, 1 Sep 2004 10:36:35 +1000
+From: "Rechenberg, Andrew" <ARechenberg@sfg.com>
+Subject: RE: raidtools vs mdadm
+Date: Tue, 31 Aug 2004 15:38:41 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16693.6547.499464.908456@cse.unsw.edu.au>
-References: <200408310408.i7V48p307444@watkins-home.com>
-	<Pine.LNX.4.58.0408310401070.1949@web1.mmaero.com>
-	<41344360.8060206@dgreaves.com>
+Message-ID: <8075D5C3061B9441944E1373776451186488CB@cinshrexc03.shermfin.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from David Greaves on Tuesday August 31
-To: David Greaves <david@dgreaves.com>
-Cc: Jon Lewis <jlewis@lewis.org>, Guy <bugzilla@watkins-home.com>, linux-raid@vger.kernel.org, aaron@america.com
+Content-class: urn:content-classes:message
+To: rich turner <rich@storix.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday August 31, david@dgreaves.com wrote:
-> Neil
-> copied you as I think there's a bug in resync behaviour (kernel.org
-2.6.6)
+I currently use a combination of raidtools and mdadm.  I may be the
+exception rather than the rule because I'm currently using an old
+distribution (Red Hat 7.3) because of application compatibility.
 
-Yes, thanks.
-It's just a small bug.  It only affect the content of /proc/mdstat
-and the "continuing on ... drives" message.
-Here is that patch which will be submitted shortly.
+I use mdadm exclusively for management of arrays though (failing, hot
+removing, hot adding, monitoring).  Fedora Core 2 is using mdadm for
+monitoring although I'm not sure what FC2 anaconda is using to setup
+RAID arrays.  I believe it still uses raidtools and rc.sysinit on FC2
+still uses raidtools.  I'm a RH die-hard so I'm not sure what other
+distros use.
 
-Thanks again,
-NeilBrown
+I would venture to say that mdadm is becoming the defacto although it's
+not quite there yet.
 
-=============================================
-Correct "working_disk" counts for raid5 and raid6
-
-This error only affects two message (and sysadmin heart-rate).
-It does not risk data.
-
-Signed-off-by: Neil Brown <neilb@cse.unsw.edu.au>
-
-### Diffstat output
- ./drivers/md/raid5.c     |    2 +-
- ./drivers/md/raid6main.c |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
-
-diff ./drivers/md/raid5.c~current~ ./drivers/md/raid5.c
---- ./drivers/md/raid5.c~current~	2004-08-30 14:43:27.000000000 +1000
-+++ ./drivers/md/raid5.c	2004-09-01 10:17:19.000000000 +1000
-@@ -477,8 +477,8 @@ static void error(mddev_t *mddev, mdk_rd
- 
- 	if (!rdev->faulty) {
- 		mddev->sb_dirty = 1;
--		conf->working_disks--;
- 		if (rdev->in_sync) {
-+			conf->working_disks--;
- 			mddev->degraded++;
- 			conf->failed_disks++;
- 			rdev->in_sync = 0;
-
-diff ./drivers/md/raid6main.c~current~ ./drivers/md/raid6main.c
---- ./drivers/md/raid6main.c~current~	2004-08-30 14:43:27.000000000 +1000
-+++ ./drivers/md/raid6main.c	2004-09-01 10:17:46.000000000 +1000
-@@ -498,8 +498,8 @@ static void error(mddev_t *mddev, mdk_rd
- 
- 	if (!rdev->faulty) {
- 		mddev->sb_dirty = 1;
--		conf->working_disks--;
- 		if (rdev->in_sync) {
-+			conf->working_disks--;
- 			mddev->degraded++;
- 			conf->failed_disks++;
- 			rdev->in_sync = 0;
+> -----Original Message-----
+> From: linux-raid-owner@vger.kernel.org 
+> [mailto:linux-raid-owner@vger.kernel.org] On Behalf Of rich turner
+> Sent: Tuesday, August 31, 2004 2:56 PM
+> To: linux-raid@vger.kernel.org
+> Subject: raidtools vs mdadm
+> 
+> i work for a software company that develops backup and 
+> disaster recovery software for linux. our product supports 
+> software raid, but i must say that we currently only support 
+> it when devices are created with raidtools. i only recently 
+> heard about mdadm and am very impressed with its flexibility 
+> and funtionality.
+> 
+> my question is how popular is mdadm in production 
+> environments as this compares to raidtools?
+> 
+> is mdadm used to configure software raid on any distribution 
+> installations?
+> 
+> is mdadm trending to become the defacto standard for software 
+> raid on linux?
+> 
+> rich turner
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe 
+> linux-raid" in the body of a message to 
+> majordomo@vger.kernel.org More majordomo info at  
+> http://vger.kernel.org/majordomo-info.html
+> 
