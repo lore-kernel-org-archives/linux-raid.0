@@ -1,9 +1,9 @@
 From: "Eric Wood" <eric@interplas.com>
-Subject: Re: Converting a non-RAID RedHat System to run on Software RAID
-Date: Thu, 11 Sep 2003 08:21:06 -0400
+Subject: Re: does ext3 trample on mkraid superblocks and visa-versa?
+Date: Thu, 11 Sep 2003 13:33:15 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <022d01c3785f$2d39e120$9100000a@intgrp.com>
-References: <E5DA6395B8F9614EB7A784D628184B200D9A56@hdsmsx402.hd.intel.com> <20030910131849.GA5267@ti19>
+Message-ID: <039101c3788a$c8269ea0$9100000a@intgrp.com>
+References: <107a01c376fe$a29bdc00$9100000a@intgrp.com> <03dd01c377d1$a28c9be0$9100000a@intgrp.com> <Pine.LNX.4.53.0309101442180.1812@twinlark.arctic.org>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="iso-8859-1"
@@ -12,24 +12,25 @@ Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I may be wrong but simply 'e'diting the boot menu at boot time doesn't write
-back anything to the filesystem.  I edit my boot string all the time to try
-out all sorts of kernel arguments like "ide=nodma" and upon the next reboot
-that modification is gone.  Until you actually put it in
-/boot/grub/grub.conf is won't stick or do an "install" from within grub,
-then I can't see why grub is altering your /boot filesystem to get the
-mirror out of sync.  Sounds like a bug!
+I'm still trying to find out if I *must* remove the ext3 journal (tune2fs -O
+^has_journal /dev/hdaN) before going through the RAID setup.  I'm guess it
+would be trivial to convert back anyway, as I don't see any documentation
+stating the mkraid (or resize2fs, or mdadm) doesn't clobber the ext3
+journals.  Then again ext3 simple keeps it's journal in a .journal file or a
+hidden inode file as opposed the far end block - so the conversion back to
+ext2 doesn't seem to be neccessary.
+
+Whew... thanks for the info. I'm learning!  Sounds like some insight from
+Stephen Tweedie or Theodore Ts'o is needed.
 -eric wood
 
-Bill Rugolsky Jr. wrote:
-> desynchronizes the RAID1 set. [It seems that simply using 'e' to edit
-> the kernel args has this effect, though I haven't verified it
-> myself.]  We see this corruption in MD5 variation in our nightly
-> integrity-verification cron job.
+dean gaudet wrote:
+> the "easiest" way to do this is probably as follows (from a bootable
+> rescue CD, i don't think you want to attempt this live):
 >
-> Trivial workaround is to resync the second drive in the rc scripts;
-> for the typical 50-100MB /boot partition, this takes only a few
-> seconds.
->
-> Bill Rugolsky
+> - resize2fs the filesystem (via the /dev/hdaN or whatever partition
+>   device) to be 1MB smaller (be careful to use the right
+>   "blocks" here -- resize2fs blocks are the same size as the
+>   filesystem blocks, so most likely 4096 bytes, but could be 1024
+>   bytes in some cases... tune2fs -l is your friend.)
 
