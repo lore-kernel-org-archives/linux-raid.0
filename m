@@ -1,34 +1,32 @@
-From: Dominik Kubla <dominik.kubla@uni-mainz.de>
-Subject: Re: Bug in multipath code (Linux 2.6.x) ?
-Date: Mon, 26 Apr 2004 15:34:40 +0200
+From: blocked@spanservices.com
+Subject: Inflex scan report [04271221431]
+Date: Tue, 27 Apr 2004 12:21:10 +0530
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <408D0FF0.5000608@uni-mainz.de>
-References: <1082930553.3158.18.camel@zezette>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Message-ID: <200404270651.i3R6pAk00491@spanservices.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1082930553.3158.18.camel@zezette>
-To: christophe.varoqui@free.fr
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-christophe varoqui wrote:
+Administrator Email Reply Address: blocked@spanservices.com
+Email sent to:  admin@spanservices.com
+Inflex ID: 04271221431
+                                   Report Details 
+##################################################################################
+This mail is temporarily held by the mail server  at SPAN because of the following reasons
 
->>Unfortunately very little effort seems to be spent on documenting the features of device-mapper and how to use them. I originally intended to use DM, but since i could not find any information on how to configure mirrored multipath devices i decided against it.
->>
->>What is the word on MD and DM? I miss some sort of road map and a general overview (preferrably with executive summary). (I am willing to write one if i can find/get the necessary information.)
->>
-> 
-> I'm quite fond of my docs on multipath with the device-mapper subsystem.
-> You can find them at http://christophe.varoqui.free.fr
-> 
-> Hope it helps.
-> 
-> regards,
-> cvaroqui
-> 
+1. It contains an attachment type not generaly allowed at SPAN by the mail server.
+2. Our scanners have reported potential virus or worms.
+Administrator will recieve the mail and forward it to the intended recipient only on request if it is an official mail.
+####################################################################################
+AntiVirus Results...
 
-Excellent! Thanks a lot!
+File NAME/TYPE Scan Results
+/usr/local/inflex/tmp/inf_04271221431/unpacked/letter43.pif
 
-Dominik
+
+04271221431  from:linux-raid@vger.kernel.org  to: admin@spanservices.comType scanning off.
+
+END OF MESSAGE.
+
+End.
+.
