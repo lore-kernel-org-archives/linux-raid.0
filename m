@@ -1,54 +1,113 @@
-From: Friedrich Lobenstock <fl@fl.priv.at>
-Subject: Re: [BUG?] count of "Spare Devices" wrong after fail/remove/add
-Date: Wed, 22 Jan 2003 09:46:24 +0100
+From: James Ralston <qralston+ml.linux-raid@andrew.cmu.edu>
+Subject: how to swap devices to increase mirror size?
+Date: Wed, 22 Jan 2003 19:04:56 -0500 (EST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3E2E5A60.5070309@fl.priv.at>
-References: <3E2CA044.5030202@fl.priv.at> <15918.7346.888218.690481@notabene.cse.unsw.edu.au>
-Reply-To: Linux RAID Mailing Liste <linux-raid@vger.kernel.org>
+Message-ID: <Pine.LNX.4.44.0301221900450.11300-100000@pcmy.sei.cmu.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <15918.7346.888218.690481@notabene.cse.unsw.edu.au>
-To: Linux RAID Mailing Liste <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> On Tuesday January 21, fl@fl.priv.at wrote:
->>  Active Devices : 2
->>Working Devices : 2
->>  Failed Devices : 0
->>   Spare Devices : 2
->>
->>
->>     Number   Major   Minor   RaidDevice State
->>        0       3        1        0      active sync   /dev/hda1
->>        1      22        1        1      active sync   /dev/hdc1
->>            UUID : d876333b:694e852b:e9a6f40f:0beb90f9
->>
->>I do wounder why I've got 2 spare drives despite the fact that I
->>did not add any. I've just got two drives in this raid1 that's it.
-> 
-> Yes, it's probably a bug in the kernel code. The counting in the 2.4 code is very
-> clumsy.  I think it is benign so it wont be fixed.  The code in 2.5 is
-> very different and shouldn't have this problem.
+What is the recommend way to increase the capacity of a mirror on the
+fly?
 
-Ok. Just wanted to let you know.
+What seemed obvious to me (remove and then replace each part of the
+mirror in turn) doesn't work:
 
+E.g. (for simulation purposes):
 
->>PS: Array Size : 40209024 (38.35 GiB 41.22 GB)
->>should IMHO be
->>     Array Size : 40209024 (38.35 GiB 40.21 GB)
-> 
-> I disgree. An array side of 40209024 means that many kibibytes.
-> i.e. 40209024 * 1024 which is
->    41174040576  bytes.
-> 
+   Device Boot    Start       End    Blocks   Id  System
+/dev/sdb1             1        33    265041   fd  Linux raid autodetect
+/dev/sdb2            34        99    530145   fd  Linux raid autodetect
 
-Hmmm...why don't we forget about this kibibytes sh.. anyways,
-it's not worth the troubles IMHO.
+   Device Boot    Start       End    Blocks   Id  System
+/dev/sdc1             1        33    265041   fd  Linux raid autodetect
+/dev/sdc2            34        99    530145   fd  Linux raid autodetect
+
+$ mdadm --create /dev/md0 --verbose --level=mirror --raid-devices=2 /dev/sdb1 /dev/sdc1
+mdadm: array /dev/md0 started.
+
+$ cat /proc/mdstat
+Personalities : [raid1] 
+read_ahead 1024 sectors
+md0 : active raid1 sdc1[1] sdb1[0]
+      264960 blocks [2/2] [UU]
+unused devices: <none>
+
+$ mdadm --detail /dev/md0
+/dev/md0:
+        Version : 00.90.00
+  Creation Time : Wed Jan 22 18:40:33 2003
+     Raid Level : raid1
+     Array Size : 264960 (258.75 MiB 271.31 MB)
+    Device Size : 264960 (258.75 MiB 271.31 MB)
+   Raid Devices : 2
+  Total Devices : 2
+Preferred Minor : 0
+    Persistence : Superblock is persistent
+    Update Time : Wed Jan 22 18:40:33 2003
+          State : dirty, no-errors
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 0
+    Number   Major   Minor   RaidDevice State
+       0       8       17        0      active sync   /dev/sdb1
+       1       8       33        1      active sync   /dev/sdc1
+           UUID : 441d90a6:0f20b7cf:0ac9ed56:52bee387
+
+Ok, let's remove sdc1 and replace it with sdc2:
+
+$ mdadm /dev/md0 -f /dev/sdc1 -r /dev/sdc1 -a /dev/sdc2
+mdadm: set /dev/sdc1 faulty in /dev/md0
+mdadm: hot removed /dev/sdc1
+mdadm: hot added /dev/sdc2
+
+But no joy; /dev/sdc2 won't take as mirror:
+
+$ mdadm --detail /dev/md0
+/dev/md0:
+        Version : 00.90.00
+  Creation Time : Wed Jan 22 18:40:33 2003
+     Raid Level : raid1
+     Array Size : 264960 (258.75 MiB 271.31 MB)
+    Device Size : 264960 (258.75 MiB 271.31 MB)
+   Raid Devices : 2
+  Total Devices : 2
+Preferred Minor : 0
+    Persistence : Superblock is persistent
+    Update Time : Wed Jan 22 18:42:13 2003
+          State : dirty, no-errors
+ Active Devices : 1
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 1
+    Number   Major   Minor   RaidDevice State
+       0       8       17        0      active sync   /dev/sdb1
+       1       0        0        1      faulty removed
+       2       8       34        2        /dev/sdc2
+           UUID : 441d90a6:0f20b7cf:0ac9ed56:52bee387
+
+$ cat /proc/mdstat 
+Personalities : [raid1] 
+read_ahead 1024 sectors
+md0 : active raid1 sdc2[2] sdb1[0]
+      264960 blocks [2/1] [U_]
+unused devices: <none>
+
+The mirror won't rebuild /dev/sdc2 to match /dev/sdb1.
+
+What do I have to do in order to get /dev/sdc2 to *replace* /dev/sdc1
+in the array?
+
+If the answer is "you can't do that", then what is the recommended
+method for doing what I'm trying to do?
+
+Thanks,
 
 -- 
-MfG / Regards
-Friedrich Lobenstock
+James Ralston, Information Technology
+Software Engineering Institute
+Carnegie Mellon University, Pittsburgh, PA, USA
 
