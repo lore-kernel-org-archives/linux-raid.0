@@ -1,146 +1,49 @@
-From: Andy Smith <andy@lug.org.uk>
-Subject: Re: confused Re: swap on RAID (was Re: swp - Re: ext3 journal on software raid)
-Date: Fri, 7 Jan 2005 02:28:42 +0000
-Message-ID: <20050107022842.GL99565@caffreys.strugglers.net>
-References: <20050106093811.GB99565@caffreys.strugglers.net> <Pine.LNX.3.96.1050106171610.13564A-100000@Maggie.Linux-Consulting.com>
+From: Clemens Schwaighofer <cs@tequila.co.jp>
+Subject: Re: PROBLEM: Kernel 2.6.10 crashing repeatedly and hard
+Date: Fri, 07 Jan 2005 15:21:08 +0900
+Message-ID: <41DE2A54.1010902@tequila.co.jp>
+References: <m3is6k4oeu.fsf@reason.gnu-hamburg> <m38y7fn4ay.fsf@reason.gnu-hamburg> <v3rda2-hjn.ln1@news.it.uc3m.es>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="eBrISAf9+LvsIqzQ"
+Content-Type: text/plain; charset=ISO-2022-JP
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.3.96.1050106171610.13564A-100000@Maggie.Linux-Consulting.com>
+In-Reply-To: <v3rda2-hjn.ln1@news.it.uc3m.es>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: "Peter T. Breuer" <ptb@lab.it.uc3m.es>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
---eBrISAf9+LvsIqzQ
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+On 12/31/2004 02:39 AM, Peter T. Breuer wrote:
+> In gmane.linux.raid Georg C. F. Greve <greve@fsfeurope.org> wrote:
+> 
+>>The message I saw on the remote console when it crashed with pure ext3
+>>on raid5 was:
+>>
+>> Assertion failure in journal_start() at fs/jbd/transaction.c:271: "handle->h_transaction->t_journal == journal"
+>>
+> 
+> Yes, well, don't put the journal on the raid partition. Put it
+> elsewhere (anyway, journalling and raid do not mix, as write ordering
+> is not - deliberately - preserved in raid, as far as I can tell).
 
-On Thu, Jan 06, 2005 at 05:31:48PM -0800, Alvin Oga wrote:
->=20
->=20
-> On Thu, 6 Jan 2005, Andy Smith wrote:
->=20
-> > On Wed, Jan 05, 2005 at 09:04:00PM -0800, Alvin Oga wrote:
-> > > On Wed, 5 Jan 2005, Mike Hardy wrote:
-> > >=20
-> > > > There are those that think if they size the machine correctly, they=
-=20
-> > > > shouldn't need swap, and they're right.
-> > >=20
-> > > bingo
-> >=20
-> > Yet in an earlier reply you state that your machines have swap
-> > configured.
-> >=20
-> > There is a difference between these two statements:
->=20
-> since you're implying/saying i said those two statements=20
-> below ( a and b ):
+Thats a very new claim. I never ever heard of that. I have a lot of
+boxes running with software raid (1 or 5) and they run either XFS or
+ext3 on it, and since one year I never had a single problem (and they
+all use 2.6.7 or 2.6.8.1 kernels).
 
-No I was not implying that you said either of them.  Why is this hard
-to understand?  Look at Mike's response to me; he understood what I
-was getting at perfectly.  I was only trying to point out to you
-that what you've said isn't consistent with things you said in other
-posts.
-
-> you are one totally confused dude ... sorry to say ...
-
-Look.   It is quite simple.
-
-Mike above (which I leave quoted so you believe me) said:
-
-        There are those that think if they size the machine
-        correctly, they shouldn't need swap, and they're right.
-
-To which *you* replied:
-
-        bingo
-
-*However* in an earlier mail in this thread you said that your
-machines do have swap configured.  Mike has already clarified that
-he meant that these people say that no swap needs to be configured.
-
-So my point was that while you say "bingo" to Mike, you do not in
-reality do as Mike describes.
-
-> i never said either of those two statements ... that is yur words
-> and you're understanding of some mixture of lots of comments
-
-They were indeed my words and I never claimed otherwise.
-
-> 	=3D=3D grep "under normal load" sent-mail raid =3D=3D
-> 	( pick any set of words of your "quote" for grep )
->=20
->  	- it's not even in anybody comments posted, since i save
-> 	all of my posts ( in sent-mail ) and not in anybody elses=20
-> 	replies that is saved here
-> 	( thus my comment ... you're confused .. )
->=20
-> please refrain from making (re)quotes .. i didn't say so that
-> i don't have to reply
-
-I didn't attribute any words to you.  I quite clearly said
-they were my interpretation.  A direct quote:
-
-        There is a difference between these two statements:
-
-                a) I need some amount of swap configured but don't
-                expect a significant swap usage under normal load.
-
-                b) I expect my server to always be using a
-                significant amount of swap.
-
-        I interpret your views as (a) but I interpret Mike's as
-        "there are people who are saying that a correctly sized
-        machine can have zero swap configured."
-
-You now go on to say:
-
-> i personally do not expect any system i'm involved with to use any
-> swap and if it does, i'd be adding more memory, as soon as they
-> complain its running too slow when xxx or yyy job is running
-> 	- they have choices of what they want done about it
-
-Which appears to me to be pretty much exactly what (a) above says.
-So I'm at a loss to understand why you bothered to write this email
-complaining about being misrepresented.
-
-Now that we have in one email original unedited quotes of you saying
-you agree with someone who suggests configuring no swap, and then
-quotes of you saying you do configure swap, I hope you will now
-concede my point that you are being inconsistent.  If you don't
-agree, fine, I'm confident that what's been said speaks for itself
-and don't feel like pursuing the matter further.  Especially if it's
-going to result in you telling ME that I "must be an idiot" and am
-"confused."
-
-> and it is NOT the same thing ... "not using swap" vs not creating one
-
-Yes, exactly my point from two emails ago.
-
-> 	- i don't use swap and i rather the system not use it ...
-> 	but i do create an itty bitty 250MB of swap partition=20
-> 	even if there's is 2GB of system memory
-
-So you do configure swap, this is now my point from 3 emails ago.
-
-Why it has taken 3 *long* emails to get you to answer one simple question
-and concede a blatant inconsistency in your argument is beyond me.
-
---eBrISAf9+LvsIqzQ
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
+- --
+[ Clemens Schwaighofer                      -----=====:::::~ ]
+[ TBWA\ && TEQUILA\ Japan IT Group                           ]
+[                6-17-2 Ginza Chuo-ku, Tokyo 104-0061, JAPAN ]
+[ Tel: +81-(0)3-3545-7703            Fax: +81-(0)3-3545-7343 ]
+[ http://www.tequila.co.jp        http://www.tbwajapan.co.jp ]
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.0 (FreeBSD)
+Version: GnuPG v1.2.6 (GNU/Linux)
+Comment: Using GnuPG with Thunderbird - http://enigmail.mozdev.org
 
-iD8DBQFB3fPaIJm2TL8VSQsRAn3VAKCINLmzG/AABhJm+VdPcJ4MCx2tCwCeNR6c
-LDWa3Q1X7/l/1N+o+BVV7qo=
-=xQEK
+iD8DBQFB3ipTjBz/yQjBxz8RAsExAJ9ZhniY/vsm9TIpRtHhGsfdVjws6wCeO4RS
+rJ/o4roBjSBo3z5os/E6tKk=
+=d3Rn
 -----END PGP SIGNATURE-----
-
---eBrISAf9+LvsIqzQ--
