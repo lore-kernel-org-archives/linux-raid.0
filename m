@@ -1,18 +1,32 @@
-From: Mauricio <raub@afn.org>
-Subject: Fun with onboard raid in dell poweredge 2650
-Date: Mon, 24 Jan 2005 19:35:47 -0500
-Message-ID: <a06002001be1b44ca7362@[10.0.0.10]>
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: migrating raid-1 to different drive geometry ?
+Date: Tue, 25 Jan 2005 11:53:00 +1100
+Message-ID: <16885.39020.65563.568853@cse.unsw.edu.au>
+References: <20050124145910.GC29766@kaneda>
+	<16885.31484.125772.316987@cse.unsw.edu.au>
+	<ct447m$l90$1@sea.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii" ; format="flowed"
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from Robin Bowes on Tuesday January 25
 Sender: linux-raid-owner@vger.kernel.org
-To: 'LinuxRaid' <linux-raid@vger.kernel.org>
+To: Robin Bowes <robin-lists@robinbowes.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-	We have here a dell poweredge 2650 with the dell perc3/di 
-onboard raid running suse enterprise linux 9. The install process 
-went smoothly but we would like to have a way to check on the raid 
-without having to physically see if a hard drive has crashed and 
-thrown up the error lights. Initially, we have installed and tried 
-multiple versions of afacli including 2.7, 2.8, and 4.1.  None of 
-them see the array.  What else could we try on that?
+On Tuesday January 25, robin-lists@robinbowes.com wrote:
+> Neil Brown wrote:
+> > If you are using a recent 2.6 kernel and mdadm 1.8.0, you can grow the
+> > array with
+> >    mdadm --grow /dev/mdX --size=max
+> 
+> Neil,
+> 
+> Is this just for RAID1? OR will it work for RAID5 too?
+
+ --grow --size=max
+
+should work for raid 1,5,6.
+
+NeilBrown
