@@ -1,31 +1,66 @@
-From: Gordon Henderson <gordon@drogon.net>
-Subject: ECC: RE: ext3 blah blah blah ...
-Date: Wed, 5 Jan 2005 17:34:16 +0000 (GMT)
-Message-ID: <Pine.LNX.4.56.0501051729290.9117@lion.drogon.net>
-References: <Pine.LNX.3.96.1050105091502.9709A-100000@Maggie.Linux-Consulting.com>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: ext3 journal on software raid (was Re: PROBLEM: Kernel 2.6.10 crashing repeatedly and hard)
+Date: Wed, 5 Jan 2005 13:26:30 -0500
+Message-ID: <200501051826.j05IQa926617@www.watkins-home.com>
+References: <41DC234B.4090806@dgreaves.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.3.96.1050105091502.9709A-100000@Maggie.Linux-Consulting.com>
+In-Reply-To: <41DC234B.4090806@dgreaves.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: 'David Greaves' <david@dgreaves.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 5 Jan 2005, Alvin Oga wrote:
+You forgot one!
+Peter said: "There might be a small temporal displacement."
 
-> even if one uses ecc... ecc can only fix certain errors,
-> and non-correctable errors are flagged and not fixed
-> ( burst errors are hard to fix )
+This worries me!  RED ALERT!
+Beam me up!  Wait, I will take the shuttle craft please.
+"You cannot change the laws of physics!" - Scotty
+
+But, really, I do understand what Peter is saying.  It just seemed too funny
+to me.  And since I have disk read errors more than temporal displacement, I
+need RAID more than a temporal dampening field.  Maybe a temporal phase
+converter?
+
+And, a single non-RAID disk can suffer from temporal displacement.
+
+I love Star Trek, so I love temporal displacements!  :)
+
+Guy
+
+-----Original Message-----
+From: David Greaves [mailto:david@dgreaves.com] 
+Sent: Wednesday, January 05, 2005 12:27 PM
+To: Guy
+Cc: linux-raid@vger.kernel.org
+Subject: Re: ext3 journal on software raid (was Re: PROBLEM: Kernel 2.6.10
+crashing repeatedly and hard)
+
+Guy wrote:
+
+>RAID does not cause bad data!
+>  
 >
-> and people that use ecc memory ... usually have higher-end motherboards
-> and more memory in the system vs the $50 motherboard+cpu combo (disasters)
-> from fries ( a local pc store )
+Guy - how can you speak such heresy!!      ;)
+Haven't you seen the special 'make_undetectable_error(float p)' function?
 
-One thing thats been irritating me for a long time is that it's all very
-well using (and paying for!) ECC memory, but there are parts of the system
-that don't have ECC or parity - eg. the PCI bus, processor bus and
-internal paths, and so on...
+>Bad data can get on any disk, even if it is part of a RAID system.
+>The bad data does not come from the hard disk, CRCs prevent that.
+>
+>The problem is:  Where does the bad data come from?
+>Bad memory?  No, everyone use ECC memory, right?
+>  
+>
+I like to blame cosmic rays - I just like the image ;)
 
-But where do you draw the line?
+Of course voltage fluctuations, e/m interference, thermal variations, 
+mechanical interfaces, dust capacitance/resistance, insects shorts... 
+anywhere inside the tin box between the media and the corners of the 
+motherboard. It's amazing that some machines even boot.
 
-Gordon
+David
+
