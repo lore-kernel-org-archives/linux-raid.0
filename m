@@ -1,239 +1,92 @@
-From: Mitchell Laks <mlaks@verizon.net>
-Subject: Disaster with md0. Dead. Now md1 not showing in /proc/mdstat why?
- Drive is ok though!
-Date: Mon, 21 Mar 2005 00:35:11 -0500
-Message-ID: <200503210035.11371.mlaks@verizon.net>
+From: Nils-Henner Krueger <nhk@netuse.de>
+Subject: md autodetection
+Date: Mon, 21 Mar 2005 09:06:44 +0100
+Message-ID: <423E8094.7050809@netuse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Content-disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+I've got a few questions about raid autodetection at boot time.
 
-I am running  a server using debian sarge. Linux kernel 2.6.8, mdadm was 
-1.8.1. I described the onset of my disaster in an earlier exchange with David 
-Greaves on this list.
+To use a mirrored boot device, I have to use raid autodetection
+to have the md devices running early enough?
 
-My server had 1 sata system drive /dev/sda  and 5 ide data drives configured 
-as 3  different raid1's.
+To have autodection recognise a disk device, it has to run after
+the appropriate device driver, right?
 
-I had
+In my current setup, running RHEL3 with kernel 2.4.21, I have
+the system installed on a scsi disk. The scsi driver ist loaded
+as module and added to the initrd.
+Currently raid autodection takes place long before the scsi
+device driver is loaded:
 
-/dev/md0  /dev/hda1   /dev/hdg1
-/dev/md1  /dev/hdc1   /dev/hdi1
-/dev/md2  /dev/hde1    missing
+[...]
+ICH5: IDE controller at PCI slot 00:1f.1
+ICH5: chipset revision 2
+ICH5: not 100% native mode: will probe irqs later
+    ide0: BM-DMA at 0x1460-0x1467, BIOS settings: hda:pio, hdb:pio
+    ide1: BM-DMA at 0x1468-0x146f, BIOS settings: hdc:pio, hdd:pio
+hdc: DV-28E-C, ATAPI CD/DVD-ROM drive
+ide1 at 0x170-0x177,0x376 on irq 15
+ide-floppy driver 0.99.newide
+ide-floppy driver 0.99.newide
+md: md driver 0.90.0 MAX_MD_DEVS=256, MD_SB_DISKS=27
+md: Autodetecting RAID arrays.
+md: autorun ...
+md: ... autorun DONE.
+pci_hotplug: PCI Hot Plug PCI Core version: 0.5
+Initializing Cryptographic API
+NET4: Linux TCP/IP 1.0 for NET4.0
+IP: routing cache hash table of 65536 buckets, 512Kbytes
+TCP: Hash tables configured (established 524288 bind 65536)
+Linux IP multicast router 0.06 plus PIM-SM
+Initializing IPsec netlink socket
+NET4: Unix domain sockets 1.0/SMP for Linux NET4.0.
+RAMDISK: Compressed image found at block 0
+Freeing initrd memory: 610k freed
+VFS: Mounted root (ext2 filesystem).
+SCSI subsystem driver Revision: 1.00
+libata version 1.02 loaded.
+ata_piix version 1.02
+PCI: Setting latency timer of device 00:1f.2 to 64
+ata1: SATA max UDMA/133 cmd 0x1490 ctl 0x1486 bmdma 0x1470 irq 18
+ata2: SATA max UDMA/133 cmd 0x1488 ctl 0x1482 bmdma 0x1478 irq 18
+ata1: dev 0 cfg 49:2f00 82:74eb 83:7f63 84:4003 85:74e9 86:3c43 87:4003
+88:407f
+ata1: dev 0 ATA, max UDMA/133, 145226112 sectors: lba48
+ata1: dev 0 configured for UDMA/133
+ata2: dev 0 cfg 49:2f00 82:74eb 83:7f63 84:4003 85:74e9 86:3c43 87:4003
+88:407f
+ata2: dev 0 ATA, max UDMA/133, 145226112 sectors: lba48
+ata2: dev 0 configured for UDMA/133
+scsi0 : ata_piix
+scsi1 : ata_piix
+  Vendor: ATA       Model: WDC WD740GD-00FL  Rev: 27.0
+  Type:   Direct-Access                      ANSI SCSI revision: 05
+Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
+SCSI device sda: 145226112 512-byte hdwr sectors (74356 MB)
+Partition check:
+ sda: sda1 sda2 sda3 sda4 < sda5 sda6 >
+  Vendor: ATA       Model: WDC WD740GD-00FL  Rev: 27.0
+  Type:   Direct-Access                      ANSI SCSI revision: 05
+Attached scsi disk sdb at scsi1, channel 0, id 0, lun 0
+SCSI device sdb: 145226112 512-byte hdwr sectors (74356 MB)
+ sdb:
+[...]
 
-Then I had a catastrophic loss of /dev/md0. 
+Is there a way to run raid autodection (again?) later in the
+boot sequence to detect not only IDE devices but other things
+like scsi, too?
 
-What happened was that hda1 died and simultaneously hdg1 
-began to have nonstop write errors. 
-I then tried to rescue the data on /dev/hdg1.  I failed drive /dev/hdi1 from
-/dev/md1 and added it to /dev/md0. 
-
-Unfortunately, the rebuilding of /dev/md0 did not proceed, despite my allowing 
-a day for it to take place. 
-
-(Incidentally the copious write error messages from /dev/hdg1  were written to 
-syslog which filled the /var directory. This lead to many difficulties in my 
-administering the system, affecting a Postgresql database I had on the 
-system ... another story)
-
-I then removed the two hard drives (dead) hda1 and (dying) hdg1. I replaced 
-them with 2 new hard drives.
-
-Here was my 
-
-# /etc/fstab: static file system information.
-#
-# <file system> <mount point>   <type>  <options>       <dump>  <pass>
-proc            /proc           proc    defaults        0       0
-/dev/sda2       /               ext3    defaults,errors=remount-ro 0       1
-/dev/sda1       /boot           ext3    defaults        0       2
-/dev/sda3       /home           ext3    defaults        0       2
-/dev/sda8       /mirror         ext3    defaults        0       2
-/dev/sda7       /tmp            ext3    defaults        0       2
-/dev/sda6       /var            ext3    defaults        0       2
-/dev/sda5       none            swap    sw              0       0
-/dev/hda        /media/cdrom0   iso9660 ro,user,noauto  0       0
-/dev/md0       /home/big0              ext3    noauto   0     0
-/dev/md1       /home/big1              ext3    defaults        0       2
-/dev/md2       /home/big2              ext3    defaults        0       2
-
-Here was my /etc/mdadm/mdadm.conf
-
-DEVICE /dev/hda1 /dev/hdc1 /dev/hde1 /dev/hdg1 /dev/hdi1
-ARRAY /dev/md2 level=raid1 num-devices=2 
-UUID=6b8b4567:327b23c6:643c9869:6633483
-   devices=/dev/hde1
-ARRAY /dev/md1 level=raid1 num-devices=2 spares=1 
-UUID=6b8b4567:327b23c6:643c983
-   devices=/dev/hdc1,/dev/hdi1
-ARRAY /dev/md0 level=raid1 num-devices=2 spares=1 
-UUID=6b8b4567:327b23c6:643c983
-   devices=/dev/hda1,/dev/hdg1
-                           
-
-After I replaced the two new hard drives, I found that the machine would not 
-reboot unless I commented out the /dev/md0 and /dev/md1 in the /etc/fstab. 
-For good measure I also commented out /dev/md2 as well.
-
-Now I can reboot and I have.
-
-  A2:~# df -h
-Filesystem            Size  Used Avail Use% Mounted on
-/dev/sda2             9.2G  2.8G  6.0G  32% /
-tmpfs                 443M     0  443M   0% /dev/shm
-/dev/sda1              89M   11M   74M  13% /boot
-/dev/sda3             7.4G  365M  6.7G   6% /home
-/dev/sda8              11G  8.9G  1.1G  90% /mirror
-/dev/sda7             449M  8.1M  417M   2% /tmp
-/dev/sda6             7.4G  951M  6.1G  14% /var
+Last question:  :-)
+Is it possible to make a distinction between some md-devices which
+should be detected and started by raid autodetection and others which
+should be left untouched?
 
 
-Now comes the weird part. I expected that when I did cat /proc/mdstat
- I would see 2 working /dev/md1 and /dev/md2. Because both /dev/hdc1 
-and /dev/e1 are still ok.
+Thanks for help!
 
-In fact what I see is
- 
-A2:~# cat /proc/mdstat
-Personalities : [raid1]
-md2 : active raid1 hde1[1]
-      244195904 blocks [2/1] [_U]
-
-unused devices: <none>
-
-Question 1) What happened to /dev/md1 and /dev/hdc1?
-
-I then followed the advice of 
-David Greaves , and I upgraded to mdadm-1.9.0 as 1.8.1 is experimental.
-
-I then did 
-mdadm --examine /dev/hdc1
-
-A2:~# mdadm --examine /dev/hdc1
-/dev/hdc1:
-          Magic : a92b4efc
-        Version : 00.90.00
-           UUID : 6b8b4567:327b23c6:643c9869:66334873
-  Creation Time : Wed Jan 12 14:19:46 2005
-     Raid Level : raid1
-   Raid Devices : 2
-  Total Devices : 1
-Preferred Minor : 1
-
-    Update Time : Sun Mar 13 10:19:59 2005
-          State : clean
- Active Devices : 1
-Working Devices : 1
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : a4499264 - correct
-         Events : 0.514
-
-
-      Number   Major   Minor   RaidDevice State
-this     1      22        1        1      active sync   /dev/hdc1
-
-   0     0       0        0        0      removed
-   1     1      22        1        1      active sync   /dev/hdc1
-
-2:~# mdadm --examine /dev/hdi1
-
-/dev/hdi1:
-          Magic : a92b4efc
-        Version : 00.90.00
-           UUID : 6b8b4567:327b23c6:643c9869:66334873
-  Creation Time : Wed Jan 12 14:19:21 2005
-     Raid Level : raid1
-   Raid Devices : 2
-  Total Devices : 2
-Preferred Minor : 0
-
-    Update Time : Fri Mar 11 11:40:23 2005
-          State : clean
- Active Devices : 1
-Working Devices : 2
- Failed Devices : 1
-  Spare Devices : 1
-       Checksum : a4517972 - correct
-         Events : 0.343412
-
-
-      Number   Major   Minor   RaidDevice State
-this     2      56        1        2      spare   /dev/hdi1
-
-   0     0      34        1        0      active sync   /dev/hdg1
-   1     1       0        0        1      faulty removed
-   2     2      56        1        2      spare   /dev/hdi
-
-
-Then I did 
-
-fdisk -l 
-A2:~# fdisk -l
-
-Disk /dev/sda: 40.0 GB, 40020664320 bytes
-255 heads, 63 sectors/track, 4865 cylinders
-Units = cylinders of 16065 * 512 = 8225280 bytes
-
-   Device Boot      Start         End      Blocks   Id  System
-/dev/sda1               1          12       96358+  83  Linux
-/dev/sda2              13        1228     9767520   83  Linux
-/dev/sda3            1229        2201     7815622+  83  Linux
-/dev/sda4            2202        4865    21398580    f  W95 Ext'd (LBA)
-/dev/sda5            2202        2444     1951866   82  Linux swap
-/dev/sda6            2445        3417     7815591   83  Linux
-/dev/sda7            3418        3478      489951   83  Linux
-/dev/sda8            3479        4865    11141046   83  Linux
-
-Disk /dev/hde: 250.0 GB, 250059350016 bytes
-255 heads, 63 sectors/track, 30401 cylinders
-Units = cylinders of 16065 * 512 = 8225280 bytes
-
-   Device Boot      Start         End      Blocks   Id  System
-/dev/hde1               1       30401   244196001   fd  Linux raid autodetect
-
-Disk /dev/hdg: 250.0 GB, 250059350016 bytes
-255 heads, 63 sectors/track, 30401 cylinders
-Units = cylinders of 16065 * 512 = 8225280 bytes
-
-Disk /dev/hdg doesn't contain a valid partition table
-
-Disk /dev/hdi: 250.0 GB, 250059350016 bytes
-255 heads, 63 sectors/track, 30401 cylinders
-Units = cylinders of 16065 * 512 = 8225280 bytes
-
-   Device Boot      Start         End      Blocks   Id  System
-/dev/hdi1               1       30401   244196001   fd  Linux raid autodetect
-
-Disk /dev/hda: 250.0 GB, 250059350016 bytes
-255 heads, 63 sectors/track, 30401 cylinders
-Units = cylinders of 16065 * 512 = 8225280 bytes
-
-Disk /dev/hda doesn't contain a valid partition table
-
-Disk /dev/hdc: 250.0 GB, 250059350016 bytes
-255 heads, 63 sectors/track, 30401 cylinders
-Units = cylinders of 16065 * 512 = 8225280 bytes
-
-   Device Boot      Start         End      Blocks   Id  System
-/dev/hdc1               1       30401   244196001   fd  Linux raid autodetect
-
-
-Any Ideas on why I don't have an active /dev/md1??????
-
-What steps do I take to preserve the data on /dev/md1? I know I can now 
-rebuild /dev/md0 the usual way.
-
-Does the fact that the system booted with the /etc/mdadm/mdadm.conf that was 
-"incorrect" because it mentioned that /dev/hdi1 was a partner with /dev/hdc1 
-have anything to do with this????
-
-Thanks,
-
-
-Mitchell Laks
+nils-henner
