@@ -1,30 +1,33 @@
-From: "Roman Stokes" <xydaqxczun@swbell.net>
-Subject: Re: Re: Account Notification
-Date: Mon, 20 Dec 2004 00:31:02 -0600
-Message-ID: <000301c4e65d$a5cf74c0$ef7a673e__22254.5411707417$1103531503$gmane$org@vfyykrf>
+From: Gordon Henderson <gordon@drogon.net>
+Subject: /proc/partitions
+Date: Mon, 20 Dec 2004 10:50:01 +0000 (GMT)
+Message-ID: <Pine.LNX.4.56.0412201046050.4389@lion.drogon.net>
+References: <200411210433.iAL4XIN19967@www.watkins-home.com>
+ <Pine.LNX.4.61.0411220909180.5652@treant.hhmi.umbc.edu>  <41A281AD.8050404@verizon.net>
+  <41A301DA.4010303@robinbowes.com> <1101213077.2244.6.camel@south.rosestar.lan>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset=iso-8859-7;
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1101213077.2244.6.camel@south.rosestar.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: Winston <linux-net@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Christmas time is around the corner and we are offering
-the program of the year.
 
-We will    r  e f inance   your current   m o rtgage
-at 3%  and get you   c a sh   for holidays in just 3 days.
+Is there any plans to make the entries in /proc/partitions return anything
+sensible for the md devices?
 
-You will   s a ve   money on your payment and get 
-cash that you can spend on your family.  Buy your kids 
-gifts or get your wife or your husband some 
-thing nice this year.
+(Or is it just something that intrinsically hard to do in the drivers?)
 
-http://www.gtxtr.com/
+If not, is there any other way to get some stats on reading & writing each
+md device?
 
-But hurry this offer only lasts until New year.
+I'm intersted in graphing (mrtg) disk reads & writes per second for some
+file & web servers I'm running.
 
-Happy Holidays 
-Roman Stokes
+Cheers,
+
+Gordon
+
+Ps. I'm still in the dark days of 2.4.27 if this now works in 2.6.x it
+might be the push required to make me switch...
