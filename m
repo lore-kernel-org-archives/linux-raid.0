@@ -1,29 +1,25 @@
-From: Stephen C Woods <scw@seas.ucla.edu>
+From: "Kevin P. Fleming" <kpfleming@cox.net>
 Subject: Re: How to force raid to stop, cleanly? More info
-Date: Wed, 9 Apr 2003 11:22:45 -0700 (PDT)
+Date: Wed, 09 Apr 2003 11:33:18 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200304091822.LAA16207@washington.seas.ucla.edu>
-References: <16019.29496.215437.669497@notabene.cse.unsw.edu.au>
+Message-ID: <3E94676E.7030301@cox.net>
+References: <200304091822.LAA16207@washington.seas.ucla.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <16019.29496.215437.669497@notabene.cse.unsw.edu.au> from "Neil Brown" at Apr 09, 2003 11:11:20 AM
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: Linux-raid maillist <linux-raid@vger.kernel.org>
+In-Reply-To: <200304091822.LAA16207@washington.seas.ucla.edu>
+To: Linux-raid maillist <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Neil,
-   Thanks a lot, it raid did shutdown cleanly and restarted just fine,
-looks like JFS isn't quite mature enough yet.
+Stephen C Woods wrote:
 
-   With that in mind fiddling with fdisk implies that one can
-subpartition a raid device, the FAQ doesn't seem to have any info, so
-before we go and tear down what we already have.
+>    Does the md driver support partitions in a meaningful/useful way?
 
-   Does the md driver support partitions in a meaningful/useful way?
+No, the md driver (and many other block drivers in Linux) do not support 
+partitions. Yes, you can use your tool of choice to put a partition 
+table on the device, but it won't be used.
 
------
-Stephen C. Woods; UCLA SEASnet; 2567 Boelter hall; LA CA 90095; (310)-825-8614
-Unless otherwise noted these statements are my own, Not those of the 
-University of California.                      Internet mail:scw@seas.ucla.edu
+You can use LVM1/LVM2 to break up your md device into usable chunks 
+(which is what I do).
+
