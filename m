@@ -1,65 +1,57 @@
-From: Tom Coughlan <coughlan@redhat.com>
-Subject: Re: hard disk re-locates bad block on read.
-Date: Tue, 11 Jan 2005 09:34:33 -0500
-Message-ID: <1105454073.11357.96.camel@bianchi.boston.redhat.com>
-References: <200501101735.j0AHZI922122@www.watkins-home.com>
+From: Derek Piper <derek.piper@gmail.com>
+Subject: RAID5 on different sized disks on low-end machine
+Date: Tue, 11 Jan 2005 13:47:20 -0500
+Message-ID: <eaa6dfe050111104772af6240@mail.gmail.com>
+Reply-To: Derek Piper <derek.piper@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200501101735.j0AHZI922122@www.watkins-home.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Guy <bugzilla@watkins-home.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 2005-01-10 at 12:35, Guy wrote:
-> My disks have the option to relocate bad blocks on read error.
-> I was concerned that bogus data would be returned to the OS.
-> 
-> They say CRC errors return corrupt data to the OS!  I hope not!
-> So it seems CRC errors and unreadable blocks both are corrupt or lost.
-> But the OS does not know.
-> So, I will leave this option turned off.
-> 
-> Guy
-> 
-> I sent this to Seagate:
-> With ARRE (Automatic Read Reallocation Enable) turned on.  Does it  relocate
-> blocks that can't be read, or blocks that had correctable read  problems?
-> Or both?
+Hi,
 
-FWIW, the SCSI standard has been clear on this point for many years:
+I am new to RAID / md devices, although I've used Linux for a number
+of years. I decided it was high-time I had a RAID at home for
+important things (email, web-sites, son's baby pics, mp3s etc.). I
+happen to have a 3 Seagate 60GB hds and 1 80GB Seagate hd that I am
+considering using for a RAID.
 
-"An ARRE bit of one indicates that the device server shall enable
-automatic reallocation of defective data blocks during read operations.
-... The automatic reallocation shall then be performed only if the
-device server successfully recovers the data. The recovered data shall
-be placed in the reallocated block." (SBC-2)
+My question is this, is it possible (and even a good idea) to use all
+4 hard drives as members of a 4 x 60GB RAID5 array by leaving 20GB of
+the 80GB drive as a non-raided partition? I'll be using a Promise
+Ultra TX2/100 controller.
 
-Blocks that can not be read are not relocated. The read command simply
-returns an error to the OS.
+i.e.
 
-> 
->  If it re-locates un-readable blocks, then what data does it return to the
-> OS?
-> 
->  Thanks,
->  Guy
-> 
-> ==================================================================
-> 
-> Guy,
->  If the block is bad at a hardware level then it is reallocated and a spare
-> is used in it's place. In a bad block the data is lost, the sparing of the
-> block is transparent to the operating system. Blocks with correctable read
-> problems are one's with corrupt data at the OS level.
-> 
->  Jimmie P.
->  Seagate Technical Support
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+hde -> 60
+hdf -> 60
+hdg -> 60
+hdh -> 60/20
 
+I heard about RAID6 too, though I'm assuming that will use up another
+disk's worth of disk space too.
+
+i.e. RAID5 = 180GB usable size,wherease RAID6 = 120GB .. am I correct
+in my thinking?
+
+I know many of you use far larger hard drives, I'm just trying to use
+the components I already had spare from a number of machines and
+reorganize to a RAID-backed fileserver.
+
+The machine is a dual pentium-pro 200 (320MB RAM) .. would that be a
+dumb idea to use RAID5 on it because of the parity calculations
+needed?
+
+Further to that, would it be a smarter idea to use RAID1 on all 4 of
+some small partition(s) at the start of the disks to house
+boot/root/usr partitions, and only RAID5 on a larger 'data' area of
+the drive that is more likely to be read than written to?
+
+Comments are appreciated.
+
+Thanks,
+
+Derek
