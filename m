@@ -1,37 +1,34 @@
-From: "Grantham, Ewan R." <egrantham@swri.org>
-Subject: Looking for some help with device options
-Date: Wed, 26 May 2004 06:04:08 -0500
+From: "Henrik Lewander" <henrik@lewander.com>
+Subject: Re: messed up raid5 array
+Date: Wed, 26 May 2004 13:04:46 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <AF4CBD49C827BA4F9BDD00E297CD804802624917@adsms01.dyn.datasys.swri.edu>
+Message-ID: <00de01c44311$6aa94640$0580a8c0@europe.ad.flextronics.com>
+References: <004001c44252$1845de00$7200a8c0@europe.ad.flextronics.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Am setting up a test machine for some writing I am doing, and the idea
-is to do some RAID things without messing up my main machine and array
-:-)
+> One disk failed in my four disk raid5 array this morning. I think I messed
+> up a bit, anyway it ended with that I removed all disks from the raid
+array.
+> Now when I add them again they show up as spares and I have no main disks
+at
+> all. Is there a way to force the three remaining disks (excluding the
+faulty
+> one) to be an array again and not lose the current data? If I do --create,
+> mdadm warns me that they are already a part of md1, yes but just as
+spares!
+> If I let mdadm do --create, I suppose I lose all the data? What can I do?
 
-For the test machine I have three external firewire drives. The
-"opportunity" here is that two of them are 200 Gigs, and the other one
-is 80 Gigs.
+Replying to myself here... Can I do something like "mkraid --force" with
+mdadm? I don't have any raidtab and would prefer not to make one. I know
+about the -f flag but what I want to do is to not add the disks as spares, I
+want them back as the normal maindisks. The data on them should be OK, but I
+suppose some raid meta data is wrong?
 
-My first thought is to break each drive up into multiple 40 Gig
-partitions, and then RAID-5 all the partitions. Would I then be N-1
-based on partition size (so 440 Gigs) or N-1 based on the largest device
-(i.e. 280 Gigs)? Also, would setting up a RAID this way cause lousy
-performance and possibly be less stable - or am I worrying too much?
-
-Finally - any other "interesting" ideas for setting up the space? I
-thought about mixing RAID types on the drives so that I would have a
-RAID-5 of 80 Gig partitions, and then RAID-1 the remaining 120 Gig on
-the two 200 Gig drives. But that strikes me as going particularly far
-out on the limb.
-
-Thanks for your help,
-Ewan
+Regards, Henrik
 
