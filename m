@@ -1,51 +1,60 @@
-From: Anu Matthew <anu.matthew@bms.com>
-Subject: multipath md devices
-Date: Wed, 22 Sep 2004 16:41:31 -0400
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: musical chairs
+Date: Wed, 22 Sep 2004 17:17:01 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <4151E37B.8040207@bms.com>
+Message-ID: <1095887821.4196.1530.camel@compaq.xsintricity.com>
+References: <001501c4a0d6$7818e740$7000a8c0@gordo>
 Mime-Version: 1.0
-Content-Type: text/plain; format=flowed; charset=ISO-8859-1
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <001501c4a0d6$7818e740$7000a8c0@gordo>
+To: dr_snafu <dr_snafu@earthlink.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+On Wed, 2004-09-22 at 15:00, dr_snafu wrote:
+> hello, 
+> 
+> i have a disk with data on it /dev/hdc, 
+>     and a brand new empty disk /dev/hdb. 
 
-We have multipath devices created on SAN Luns. Say md0 is created on 
-/dev/sdj and /dev/sde, the latter being the alternate path for /dev/sdj.
+Partitions not in use?
 
-I've noticed the following:
+> want to set up raid 1 without moving data off hdc. 
+>     it very large and i have no where to put it
+> 
+> will this work?: (notice # of devices)
+> 
+> mdadm --create --verbose /dev/md0 --level=1 
+>         --raid-devices=1  /dev/hdb
 
-1) Without much IO to the md device, and  I pull out the cable to say 
-/dev/sdj, the /proc/mdstat still shows both devices.  /proc/mdstat won't 
-get updated unless I start some considerable IO to the md device. Even 
-mdadm scan/query o/p shows both the paths, which is not true. As we 
-start IO, /proc/mdstat reflects that one of the devices, /dev/sdj in 
-this case, has failed. Thereafter mdadm outputs would be correct too.
+Again, no partitions?  You can do that, don't get me wrong, but things
+like raidautodetect work a bit more smoothly if you actually have a
+partition table.
 
-The entries (link down) in syslog and dmesg are almost instantaneous 
-when the cable is pulled out. This makes it very difficult to monitor 
-multipath devices, as we cannot rely on /proc/mdstat to read.  
+> will this create an unmirrored raid 1 setup? 
+>     can i start and mount md0?
+>     then copy the data from hdb to md0?
+> 
+> then?:
+> 
+> mdadm /dev/md0 --add /dev/hdc
+> 
+> 
+> seems too good to be true, 
+>     maybe you know another way?
 
-2) Another situation: Device md0 is active, with healthy multipaths 
-/dev/sdj and /dev/sde, under reasonable IO activity. If the cable to 
-/dev/sdj is yanked out, md0 remains still active, thanks to the 
-alternate path, sde. However, it fails to go back and re-construct the 
-spare path allocation even after the fibre link is restored. Here, if I 
-pull the cable out for sde even after 30 minutes, the machine ends up 
-failing to write to /dev/md0 as it does not care whether /dev/sdj is 
-back online, unless I failed, removed and add /dev/sdj  manually from 
-the mdadm command line. If something is hard mounted on /dev/md0, it may 
-end up in a system crash.
+Use e2fsresize or whatever it's called to shrink the size of the e2fs on
+/dev/hdc by 64k, then mdadm -C /dev/md0 -l raid1 -n 2 /dev/hdc failed,
+then mdadm /dev/md0 -a /dev/hdb and all the data will then be synced
+from hdc to hdb and when it's done the raid array will be up, running,
+and fully operational.
 
-To conclude, if one path goes off, and comes back after a while, and 
-then the second path goes off, md0 cannot be read, unless someone 
-manually did fail, remove and add the first device which came back 
-online, before the second path goes off.
+-- 
+  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
+         Red Hat, Inc.
+         1801 Varsity Dr.
+         Raleigh, NC 27606
 
-Any help towards this will be much appreciated.
 
-Thanks,
-
---AM.
