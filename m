@@ -1,13 +1,67 @@
-From: <Vick@kiskapu.hu>
-Subject: (unknown)
-Date: Mon, 23 Aug 2004 19:55:34 -0400
+From: Bob Hillegas <bobhillegas@houston.rr.com>
+Subject: How to stop raid prior to shutdown...
+Date: Mon, 23 Aug 2004 23:23:32 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <S269003AbUHWXze/20040823235604Z+495@vger.kernel.org>
+Message-ID: <1093321412.2221.101.camel@south.rosestar.lan>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+To: linux raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Received=3A from 79=2E212=2E218=2E86 by modemcable218=2E188-70-69=2Emc=2Evideotron=2Eca=3B Mon=2C 23 Aug 2004 18=3A55=3A17 -0500=0D=0AMessage-ID=3A =3Clxubpqzadtiyibfnharfz=40brars=2Eorg=2Euk=3E=0D=0AFrom=3A =22Saundra Cortez=22 =3CVick=40kiskapu=2Ehu=3E=0D=0AReply-To=3A =22Saundra Cortez=22 =3CVick=40kiskapu=2Ehu=3E=0D=0ATo=3A linux-raid=40vger=2Ekernel=2Eorg=0D=0ASubject=3A The Best Soft=2Eware For Accessible Pric=2Ees =28inequality=29=0D=0ADate=3A Mon=2C 23 Aug 2004 18=3A55=3A17 -0500=0D=0AMIME-Version=3A 1=2E0=0D=0AContent-Type=3A multipart=2Falternative=3B=0D=0A=09boundary=3D=22--6627085957013902083=22=0D=0AX-Webmail-Time=3A Mon=2C 23 Aug 2004 18=3A55=3A17 -0500=0D=0A=0D=0A----6627085957013902083=0D=0AContent-Type=3A text=2Fhtml=3B=0D=0A=09 charset=3D=22ISO-8859-1=22=0D=0AContent-Transfer-Encoding=3A quoted-printable=0D=0A=0D=0A=3Chtml=3E=0D=0A=3Cbody=3E=0D=0A=3Cdiv align=3D=22cente
- r=22=3E=0D=0A  =3Ccenter=3E=0D=0A  =3Ctable border=3D=221=22 width=3D=22600=22 style=3D=22border-collapse=3A collapse=22 =0D=0Abordercolor=3D=22#C0C0C0=22 cellpadding=3D=222=22=3E=0D=0A    =3Ctr=3E=0D=0A      =3Ctd align=3D=22center=22 colspan=3D=224=22 width=3D=22782=22=3E=0D=0A      =3Cp style=3D=22margin-top=3A 2=3B margin-bottom=3A 2=22=3E=3Cb=3E=0D=0A      =3Cfont face=3D=22Tahoma=22=3EThe Best Software For Accessible Prices =0D=0A!=3C=2Ffont=3E=3C=2Fb=3E=3C=2Fp=3E=0D=0A      =3Cp style=3D=22margin-top=3A 2=3B margin-bottom=3A 2=22=3E=0D=0A      =3Cfont face=3D=22Arial=22 size=3D=221=22 color=3D=22#FFFFFC=22=3Esaran icicle =0D=0Afilter =0D=0A      dominique agleam=3C=2Ffont=3E=3C=2Ftd=3E=0D=0A    =3C=2Ftr=3E=0D=0A    =3Ctr=3E=0D=0A      =3Ctd colspan=3D=222=22 width=3D=22361=22 bgcolor=3D=22#C0C0C0=22=3E=3Cfont =0D=0Acolor=3D=22#000080=22=3E=3Cb=3EMS Windows XP =0D=0A      Profess
- ional=3C=2Fb=3E=3C=2Ffont=3E=3C=2Ftd=3E=0D=0A      =3Ctd width=3D=22413=22 colspan=3D=222=22=3E=3Cfont color=3D=22#808080=22=3E=3Cb=3EAhead NERO =0D=0A6=2E3 =0D=0A      POWERPACK=3C=2Fb=3E=3C=2Ffont=3E=3C=2Ftd=3E=0D=0A    =3C=2Ftr=3E=0D=0A    =3Ctr=3E=0D=0A      =3Ctd width=3D=2256=22 bgcolor=3D=22#CCCCCC=22=3E=0D=0A      =3Cp align=3D=22center=22=3E=3Cfont color=3D=22#FF0000=22=3E=3Cb=3E$80=3C=2Fb=3E=3C=2Ffont=3E=3C=2Ftd=3E=0D=0A      =3Ctd width=3D=22301=22 bgcolor=3D=22#CCCCCC=22=3E=0D=0A      =3Cp style=3D=22margin-top=3A 0=3B margin-bottom=3A 0=22=3E=0D=0A      =3Cfont face=3D=22Tahoma=22 size=3D=222=22=3E&nbsp=3B- Retail Price=3A =3Cstrike=3E=3Cb=3E=0D=0A$270=2E99=3C=2Fb=3E=3C=2Fstrike=3E=3C=2Ffont=3E=3C=2Fp=3E=0D=0A      =3Cp style=3D=22margin-top=3A 0=3B margin-bottom=3A 0=22=3E=0D=0A      =3Cfont face=3D=22Tahoma=22 size=3D=222=22=3E&nbsp=3B- Our Price=3A =3Cb=3E$80=3C=2Fb=3E=
- 0D=0A=3C=2Ffont=3E=3C=2Fp=3E=0D=0A      =3Cp style=3D=22margin-top=3A 0=3B margin-bottom=3A 3=22=3E=0D=0A      =3Cfont face=3D=22Tahoma=22 size=3D=222=22=3E&nbsp=3B- You save=3A =3Cfont =0D=0Acolor=3D=22#000080=22=3E=3Cb=3E$190=2C99=3C=2Fb=3E=3C=2Ffont=3E=3C=2Ffont=3E=3Cp style=3D=22margin-top=3A 0=3B =0D=0Amargin-bottom=3A 0=22 align=3D=22center=22=3E=0D=0A      =3Cb=3E=3Cfont face=3D=22Tahoma=22 size=3D=222=22=3E=0D=0A      =3Ca href=3D=22http=3A=2F=2Fonlineprog=2Einfo=2Findex=2Ephp=3Fs=3D1078=22=3EBUY NOW=3C=2Fa=3E=0D=0A=3C=2Ffont=3E=3C=2Fb=3E=3C=2Ftd=3E=0D=0A      =3Ctd width=3D=2273=22=3E=0D=0A      =3Cp align=3D=22center=22=3E=3Cfont color=3D=22#FF0000=22=3E=3Cb=3E$60=3C=2Fb=3E=3C=2Ffont=3E=3C=2Ftd=3E=0D=0A      =3Ctd width=3D=22340=22=3E=0D=0A      =3Cp style=3D=22margin-top=3A 0=3B margin-bottom=3A 0=22=3E=0D=0A      =3Cfont face=3D=22Tahoma=22 size=3D=222=22=3E&nbsp=3B- Retail
-  Price=3A =3Cstrike=3E=3Cb=3E=0D=0A$130=2E99=3C=2Fb=3E=3C=2Fstrike=3E=3C=2Ffont=3E=3C=2Fp=3E=0D=0A      =3Cp style=3D=22margin-top=3A 0=3B margin-bottom=3A 0=22=3E=0D=0A      =3Cfont face=3D=22Tahoma=22 size=3D=222=22=3E&nbsp=3B- Our Price=3A =3Cb=3E$60=3C=2Fb=3E=0D=0A=3C=2Ffont=3E=3C=2Fp=3E=0D=0A      =3Cp style=3D=22margin-top=3A 0=3B margin-bottom=3A 3=22=3E=0D=0A      =3Cfont face=3D=22Tahoma=22 si
+Sorry for newbie question. Software-RAID-HOWTO said the following
+would stop an array for shutdown. mdadm complains the array is still 
+in use. Why? 
+
+mdadm --stop --scan
+
+md: md0 still in use.
+mdadm: fail to stop array /dev/md0: Device or resource busy
+
+/dev/md0 is not mounted. 
+There is no filesystem built on the partitions yet.
+
+Just mdadm --create --verbose /dev/md0 --level=raid1 --raid-devices=2
+           /dev/sda1 /dev/sdb1
+
+cat /proc/mdstat
+
+Personalities : [raid1] 
+md0 : active raid1 sdb1[1] sda1[0]
+      71826496 blocks [2/2] [UU]
+      
+unused devices: <none>
+
+mdadm --query --detail /dev/md0
+
+/dev/md0:
+        Version : 00.90.01
+  Creation Time : Mon Aug 23 20:54:44 2004
+     Raid Level : raid1
+     Array Size : 71826496 (68.50 GiB 73.55 GB)
+    Device Size : 71826496 (68.50 GiB 73.55 GB)
+   Raid Devices : 2
+  Total Devices : 2
+Preferred Minor : 0
+    Persistence : Superblock is persistent
+
+    Update Time : Mon Aug 23 21:16:09 2004
+          State : clean, no-errors
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 0
+
+
+    Number   Major   Minor   RaidDevice State
+       0       8        1        0      active sync   /dev/sda1
+       1       8       17        1      active sync   /dev/sdb1
+           UUID : 4b2b674d:2b170d5e:3fbbf170:373f1bee
+         Events : 0.2
+Thanks, BobH
+-- 
+------------------------------
+Bob Hillegas
+bobhillegas@houston.rr.com
+
