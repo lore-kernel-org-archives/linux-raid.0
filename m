@@ -1,27 +1,42 @@
-From: Brad Campbell <brad@wasp.net.au>
-Subject: Re: RAID5 - 2nd drive died whilst waiting for RMA
-Date: Tue, 16 Nov 2004 10:13:47 +0400
-Message-ID: <41999A9B.2000907@wasp.net.au>
-References: <200411132039.iADKdDN07474@www.watkins-home.com> <41968282.6060306@dgreaves.com> <4198DF79.8080809@dgreaves.com>
+From: Lars Marowsky-Bree <lmb@suse.de>
+Subject: Re: PROBLEM: kernel crashes on RAID1 drive error
+Date: Tue, 16 Nov 2004 16:51:41 +0100
+Message-ID: <20041116155141.GL3973@marowsky-bree.de>
+References: <8FA83ADB-22E4-11D9-AC9C-0003934F6348@aol.com> <20041021084514.GY10531@suse.de> <4177BF22.7060208@steeleye.com> <20041021135557.GN10531@suse.de> <4177C13C.10007@steeleye.com> <20041021140236.GO10531@suse.de> <88F77D21-2443-11D9-AAEE-0003934F6348@aol.com> <91146D2E-2918-11D9-B6DC-0003934F6348@aol.com> <2BF4BB83-2E93-11D9-804F-0003934F6348@mac.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4198DF79.8080809@dgreaves.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: David Greaves <david@dgreaves.com>
-Cc: Guy <bugzilla@watkins-home.com>, =?UTF-8?B?TcOlbnMgUnVsbGfDpXJk?= <mru@inprovide.com>, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <2BF4BB83-2E93-11D9-804F-0003934F6348@mac.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Mark Rustad <mrustad@mac.com>, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-raid.ids
 
-David Greaves wrote:
+On 2004-11-04T12:56:01, Mark Rustad <mrustad@mac.com> wrote:
 
-> Now all I need is SMART through libata.
+> I came up with a patch that seems to fix the kernel crashing on a RAI=
+D1=20
+> device failure problem. I do not have confidence that it really is th=
+e=20
+> correct fix, but I'm pretty sure that it is touching the right area.=20
+> I'm sure someone more familiar with this area of the kernel will=20
+> recognize from this what the correct fix is, if this is not it.=20
+> Submitted for your consideration:
 
-If you are using a UP system, grab the patches from Jeff's libata-dev tree and have at it.
-I have been beating it hard on 14 drives here on a loaded working server for weeks and have not 
-managed to toast anything yet. It's great being able to keep tabs on the remaining whirly bits and 
-hopefully get an early warning before they expire.
+Hi Mark, checking back whether any better fix has since been proposed?
 
-(Fingers crossed. 12 of them are Maxtor Maxline-II drives but all sit between 35 & 40 deg C)
 
-Brad
+Sincerely,
+    Lars Marowsky-Br=E9e <lmb@suse.de>
+
+--=20
+High Availability & Clustering
+SUSE Labs, Research and Development
+SUSE LINUX Products GmbH - A Novell Business
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
