@@ -1,30 +1,41 @@
-From: Hein Roehrig <hpr@eml.cc>
-Subject: Re: 2.2.17 -> 2.4.19-rc3: bub in file md.c, line 1311
-Date: 24 Jul 2002 14:51:02 +0200
+From: "Lawson,Jonathan" <Jonathan.Lawson@Edwards.BOC.com>
+Subject: DPT PM3224
+Date: Wed, 24 Jul 2002 20:29:56 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1027515064.2448.27.camel@qaip3>
-References: <87r8huqy5t.fsf@qaip3.ins.cwi.nl>
-	<15678.23310.273599.821682@notabene.cse.unsw.edu.au>
+Message-ID: <13078.552686102$1027539547@news.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <15678.23310.273599.821682@notabene.cse.unsw.edu.au>
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: linux-raid@vger.kernel.org
+To: "'linux-raid@vger.kernel.org'" <linux-raid@vger.kernel.org>
+Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, 2002-07-24 at 09:45, Neil Brown wrote:
-> The 2.2 patches got the superblock layout wrong for sparc64, so raid
-> array made on those systems are not directly compatable with 2.4.
+Hello everyone,
+	Please does someone have a DPT-PM3224 SmartRaid III manual I could
+have a copy of. I bought a second hand computer a while back, unfortunately
+it came with very little documentation. I am currently having some IRQ/IO
+conflict problems with the card and a U.S. Robotics modem and I am hoping
+the manual would shed some light on the matter. I've been to the Adaptec
+website to no avail; I emailed their sales reps and the only response I got
+was that the product had been made obsolete and so is unsupported - so no
+manual
 
-Ah, thanks for the information, I hadn't found that on Google or the
-mailing list archive.
+Regards
 
-I gather that fixing the superblock for 2.4 will make it unusuable for
-2.2? So I'll have to be very careful... 
+Jonathan
 
-Thanks,
-Hein
+--
+Jonathan Lawson
+Experimental & Applied Thermodynamicist
+BOC Edwards, Manor Royal, Crawley, 
+West Sussex RH10 9LW. UK.
+T: 01293 60 3482 F: 01293 53 3453
+
+Lord, for the erring thought, not into evil wrought;
+Lord, for the wicked will, betrayed and baffled still. 
+For the heart from itself kept ... Our thanksgiving, accept.
 
 
+_____________________________________________________________________
+This e-mail has been scanned for viruses by the WorldCom Internet Managed Scanning Service - powered by MessageLabs. For further information visit http://www.worldcom.com
