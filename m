@@ -1,17 +1,42 @@
-From: Robin Bowes <robin-lists@robinbowes.com>
-Subject: Re: RAID5 - 2nd drive died whilst waiting for RMA
-Date: Mon, 15 Nov 2004 20:56:43 +0000
-Message-ID: <4199180B.6070408@robinbowes.com>
-References: <41948B65.3090504@dgreaves.com>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: RAID5 - 2nd drive died whilst waiting for RMA
+Date: Mon, 15 Nov 2004 16:24:27 -0500
+Message-ID: <200411152124.iAFLOWN22186@www.watkins-home.com>
+References: <4199180B.6070408@robinbowes.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <41948B65.3090504@dgreaves.com>
+In-Reply-To: <4199180B.6070408@robinbowes.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Greaves <david@dgreaves.com>
+To: 'Robin Bowes' <robin-lists@robinbowes.com>, 'David Greaves' <david@dgreaves.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+I learned years ago that Maxtor drives have a high failure rate.  I had
+hoped they improved over the years, I guess not.  My last Maxtor drive was
+800 Meg.  Way overkill.  :)  Those were the days.
+
+Most of the time Maxtor drives have the best price.
+You get what you paid for.
+
+I like SeaGate myself.  But they have had some lemons.  But those were 1
+model.
+
+Something to consider.  A bad block does not indicate a failed drive.
+However, this point is debatable.  There is a reason they have spare blocks.
+Most or all drives can re-locate a bad block to a spare.
+
+Guy
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Robin Bowes
+Sent: Monday, November 15, 2004 3:57 PM
+To: David Greaves
+Cc: linux-raid@vger.kernel.org
+Subject: Re: RAID5 - 2nd drive died whilst waiting for RMA
 
 David Greaves wrote:
   > Then RMA *this* Maxtor and hope to resync in a couple of weeks (well,
@@ -96,3 +121,8 @@ Working Devices : 6
 R.
 -- 
 http://robinbowes.com
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
