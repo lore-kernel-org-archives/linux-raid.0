@@ -1,182 +1,63 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: Adaptec 3210S Problems
-Date: Sun, 3 Apr 2005 13:18:52 -0400
-Message-ID: <200504031718.j33HIvm00974@www.watkins-home.com>
-References: <Pine.LNX.4.62.0504031046360.9889@gandalf>
+From: Michael Tokarev <mjt@tls.msk.ru>
+Subject: interesting failure scenario
+Date: Mon, 04 Apr 2005 01:59:09 +0400
+Message-ID: <4250672D.6080403@tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.62.0504031046360.9889@gandalf>
 Sender: linux-raid-owner@vger.kernel.org
-To: "'Brett I. Holcomb'" <brettholcomb@charter.net>, linux-raid@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> owner@vger.kernel.org] On Behalf Of Brett I. Holcomb
-> Sent: Sunday, April 03, 2005 10:48 AM
-> To: linux-raid@vger.kernel.org
-> Subject: RE: Adaptec 3210S Problems
-> 
-> Yes, sorry, there is a terminator block on the end of the cable but the
-> key was to enable term power on the last drive.  This made things work
-> and I
-> haven't had anymore trouble.
+I just come across an interesting situation, here's the
+scenario.
 
-Maybe this should be a private discussion, if so , sorry.
+0. Have a RAID1 array composed of two components, d1 and d2.
+   The array was running, clean, event counter was 10.
+1. d1 failed (eg, hotplug-removed).
+2. on d2's superblock we now have event=11, and d1 is marked
+    as failed.
+3. the array is running in degraded mode. Some writes happened.
+4. stop the array => d2 event counter = 12, clean.
+5. hotplug-remove d2, hotplug-add d1.
+6. start the array.  Now it is started off from d1, which is
+   clean with event count = 10.  Since d2 is unaccessible, it
+   is marked as faulty in d1's superblock.  The whole operation
+   changes event count to 11.
+7. do some writes to the array which is running on degraded
+   mode (writing to d1).
+8. Stop the array.  Event count on d1 is set to 12.
+9. Hotplug-add d2 back.
 
-Term power can be active on any device.  It supplies power to the
-terminator.  It is common for the SCSI card to supply term power.  Then all
-of your disks would be configured the same.
+Now we have an interesting situation.  Both superblocks in d1
+and d2 are identical, event counts are the same, both are clean.
+Things wich are different:
+   utime - on d1 it is "more recent" (provided we haven't touched
+     the system clock ofcourse)
+   on d1, d2 is marked as faulty
+   on d2, d1 is marked as faulty.
 
-Guy
+Neither of the conditions are checked by mdadm.
 
-> 
-> 
-> On Sat, 2 Apr 2005, Guy wrote:
-> 
-> >
-> >
-> >> -----Original Message-----
-> >> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> >> owner@vger.kernel.org] On Behalf Of Brett I. Holcomb
-> >> Sent: Saturday, April 02, 2005 9:01 PM
-> >> To: linux-raid@vger.kernel.org
-> >> Subject: RE: Adaptec 3210S Problems
-> >>
-> >> This system had a series of caddies, one for each drive and the cable
-> went
-> >> from the controller to each drive ending with a terminator block after
-> the
-> >> last drive.  I did not find any place in or on the caddy frame for
-> >> termination so I put the term power jumper on the last drive.
-> >>
-> >> You are correct in that it shouldn't have to be that way - and that's
-> one
-> >> reason I did not jump on the termination right away.  Evidently I have
-> >> cheap caddies <G>.
-> >
-> > You just said the cable has a terminator block after the last drive!!
-> What
-> > is that?  It sounds like the terminator.
-> >
-> > Guy
-> >
-> >
-> >>
-> >>
-> >>
-> >>
-> >>   On Sat, 2 Apr 2005, Guy wrote:
-> >>
-> >>>
-> >>>
-> >>>> -----Original Message-----
-> >>>> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> >>>> owner@vger.kernel.org] On Behalf Of Brett I. Holcomb
-> >>>> Sent: Saturday, April 02, 2005 6:54 PM
-> >>>> To: linux-raid@vger.kernel.org
-> >>>> Subject: RE: Adaptec 3210S Problems
-> >>>>
-> >>>> Followup for the archives.  With the help of several it turns out to
-> be
-> >>>> termination (surprise!!! <G>).  I've used non-RAID SCSI for years and
-> >> have
-> >>>> always been paranoid about terminating.  However, this system was set
-> >> up
-> >>>> for me by someone that I assumed (yes, I know <G>) knew RAID better
-> >> than I
-> >>>> did.  The drives are in caddies that are hot swappable and the drive
-> ID
-> >> is
-> >>>> assigned by the caddy frame.  Consequently the installer did not put
-> >> any
-> >>>> jumpers on the  drives and did not terminate the last drive.
-> >>>>
-> >>>> Thanks all.
-> >>>
-> >>> In a cabinet as you describe, it is normal to put a terminator on the
-> >>> cabinet, not the drive.  Maybe that is what you did, but you made it
-> >> sound
-> >>> like you installed a jumper on the last drive.  In a cabinet as you
-> >> describe
-> >>> you would not put jumpers directly on the drives.  If you did so, then
-> >> it
-> >>> makes it harder when replacing a drive.  All drives should be just
-> plug
-> >> and
-> >>> go.
-> >>>
-> >>>>
-> >>>>
-> >>>>
-> >>>> On Mon, 21 Mar 2005, Salyzyn, Mark wrote:
-> >>>>
-> >>>>> Termination, Cabling and/or Drive Firmware Incompatibilities. Good
-> >> idea
-> >>>>> to get your TSID ready, list of components and their firmware
-> versions
-> >>>>> and call Adaptec Support and work through the discovery cookbook.
-> >>>>>
-> >>>>> Sincerely -- Mark Salyzyn
-> >>>>>
-> >>>>> -----Original Message-----
-> >>>>> From: linux-raid-owner@vger.kernel.org
-> >>>>> [mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Brett I.
-> >> Holcomb
-> >>>>> Sent: Saturday, March 19, 2005 1:22 AM
-> >>>>> To: linux-raid@vger.kernel.org
-> >>>>> Subject: Adaptec 3210S Problems
-> >>>>>
-> >>>>> I'm running a Linux system with a Adaptec 3210S controller.  Right
-> now
-> >>>>> the
-> >>>>> system has nothing on it and I have not created any RAID.  I've
-> notice
-> >>>>> that when I boot into the Adaptec CD and watch the drives they keep
-> >>>>> getting flagged as missing.  If I do a "Read system config" the
-> drives
-> >>>>> show up and the flag goes away.  A few minutes later they are
-> flagged
-> >> as
-> >>>>>
-> >>>>> missing again.  This is a little discouraging as it appears I have a
-> >>>>> problem.  Any ideas on what is happening - why do my drives keep
-> >> getting
-> >>>>>
-> >>>>> flagged as missing?  I need to find out before I install Linux!
-> >>>>>
-> >>>>> Thanks.
-> >>>>>
-> >>>>>
-> >>>
-> >>> Guy
-> >>>
-> >>> -
-> >>> To unsubscribe from this list: send the line "unsubscribe linux-raid"
-> in
-> >>> the body of a message to majordomo@vger.kernel.org
-> >>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >>>
-> >>>
-> >>
-> >> -
-> >> To unsubscribe from this list: send the line "unsubscribe linux-raid"
-> in
-> >> the body of a message to majordomo@vger.kernel.org
-> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >
-> > -
-> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >
-> >
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+So, mdadm just starts a clean RAID1 array composed of two drives
+with different data on them.  And noone noticies this fact (fsck
+which is reading from one disk goes ok), until some time later when
+some app reports data corruption (reading from another disk); you
+go check what's going on, notice there's no data corruption (reading
+from 1st disk), suspects memory and.. it's quite a long list of
+possible bad stuff which can go on here... ;)
 
+The above scenario is just a theory, but the theory with some quite
+non-null probability.  Instead of hotplugging the disks, one can do
+a reboot having flaky ide/scsi cables or whatnot, so that disks will
+be detected on/off randomly...
+
+Probably it is a good idea to test utime too, in additional to event
+counters, in mdadm's Assemble.c (as comments says but code disagrees).
+Maybe list of faulty components in every superblock too.  And refuse
+to assemble the array if an inconsistency like this is detected
+(unelss --force is specified)...  But the logic becomes quite..
+problematic...
+
+/mjt
