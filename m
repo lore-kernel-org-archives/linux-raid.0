@@ -1,78 +1,74 @@
-From: maarten <maarten@ultratux.net>
+From: Neil Brown <neilb@cse.unsw.edu.au>
 Subject: Re: combining two raid systems
-Date: Fri, 14 Jan 2005 02:01:28 +0100
-Message-ID: <200501140201.28392.maarten@ultratux.net>
-References: <200501132017.16910.maarten@ultratux.net> <41E7084D.2040607@verizon.net>
+Date: Fri, 14 Jan 2005 13:18:32 +1100
+Message-ID: <16871.11256.955469.266210@cse.unsw.edu.au>
+References: <200501132017.16910.maarten@ultratux.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <41E7084D.2040607@verizon.net>
-Content-Disposition: inline
+In-Reply-To: message from maarten on Thursday January 13
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: maarten <maarten@ultratux.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Friday 14 January 2005 00:46, berk walker wrote:
-> Maarten, why not just leave them as they are, and mount the secondary FS
-> on the primary FS?
+On Thursday January 13, maarten@ultratux.net wrote:
+> 
+> Hi,
+> 
+> I'm currently combing two servers into one, and I'm trying to figure out the 
+> safest way to do that.
+....
+> 
+> All md arrays are self-booting 0xFD partitions.
+...
+> 
+> Now when I boot I get a lilo prompt, so I know the right disk is booted by the 
+> BIOS.  When logged in, I see only the md devices from system two, and thus 
+> the current md0 "/" drive is from system two.  Now what options do I have ?
 
-Can't.  That secondary server runs an app which doesn't play well with a newer 
-kernel. I need that kernel for SATA support, so I'm stuck.
-Therefore I decided to move all drives to my current fileserver.  That is no 
-problem at all for the PSU and physical space; I went out and bought a huge 
-tower and a 480 Watt quality PSU.
+This is exactly why I despise auto-detect (0xFD partitions). When it
+works, it works well, but when it doesn't it causes real problems.
 
-Besides, I want them together, because that actually _saves_ electricity.
-My AC power consumtion meter says the machine uses 160 VA now.
-That's a far cry from 480 watts, but I'm very glad it is :-)
-(it is normal for a PSU to be rather over-dimensioned)
+You seem to have solved a lot of your problems based on subsequent
+emails, but the simplest approach would be to remove the 0xFD setting
+on all partitions except those for the root filesystem. 
+Once you have done that, you should be able to boot fine, though only
+the root array will be assembled of course.
 
-> Less drag on the power supply, and fewer eggs in the basket.  If you
-> can't see the added array, it might be that, even in this great day of
-> standardisation, some boxes write to the disk differently, esp. in the
-> 1st cyl.
+Then something  like
+  mdadm -E -s -c partitions
 
-Nope, I fixed that already.  There were two arrays that claimed to be md0, and 
-that -presumably- clashes. When I disabled the 'other' md0[-drives], the 
-first one magically appeared.  So that's sorted out already.
+will cause mdadm to find all your arrays and report information about
+them.
+(mdadm -Ds, as you were trying, only reports assembled arrays. You
+want '-E' to find arrays make of devices that aren't currently
+assembled).
 
-No, I'm two or three stages further now; I had transmit timeouts on my NIC, a 
-Gbit intel (e1000) so I upgraded the kernel _and_ ran lilo.  However, lilo 
-being a biatch, that yielded an unbootable system (L 99 99 99 ...) :-((
-I should have known better, but NOT re-running lilo is worse still. ;)
+Put this information into mdadm.conf and edit out the bits you don't
+want leaving something like:
 
-So I booted using rescue CD, and installed grub but that did not work out 
-either. The problem is that my BIOS thinks differently about what the boot 
-drive is as my OS. The pri onboard channel drive gets, according to the 
-kernel, listed way at the end, after all the PCI (S)ATA controllers and there 
-are 3 of them.  So what would've been hda gets to be hdq (!!). Other drives 
-also get swapped around, because the grub shell from rescue media believes 
-(hd2,0) is my first accessible drive, and when booted it is (hd1,0).  
-It's a huge mess but I guess it goes with the (ATA) territory (?)
+  DEVICES partitions
+  ARRAY /dev/md1 UUID=....
+  ARRAY /dev/md2 UUID=.....
+  etc
 
-During all this my root fs on md0 got degraded, so I want to hotadd the two 
-missing devices (to make sure the grub config on all 3 is at least 
-consistent).  But alas, my BIG array got degraded too(*) so it did hotadd the 
-spare drive.  That will takes 120 minutes!  Grrr.  I tried to find a way to 
-stop that resync but I found no solution to that. At least stopping the md 
-device was impossible.  Failing the spare would've been possible but at this 
-point I DON'T want to fail an active drive by mistake, so I left that alone.
-So I'll have to wait two hours before my md0 rootdrive gets synced, and only 
-then I can re-try if grub finds its files. (And I'm not even sure of that.)
+i.e. each ARRAY entry only lists a device name and a UUID.
+The output of "mdadm -Es.." will list some device names
+twice. Naturally you will need to change this.
 
-Brrr.  Life can be hard on poor sysdamins like us...  ;-|
- 
-(*) there was no other way as I needed one ATA channel for the rescue CDRom. I 
-forgot / omitted to remove more drives (to make the array too degraded to 
-start). That wouldn't have been helpful; I'm trying to fix my bootloader so 
-removing drives isn't too smart then; I might well remove a boot drive, or 
-mess with the boot-order so that grub gets even more confused, later on.
+Then
+   mdadm -As
 
-But people, getting a system to boot (again) if it has 10 (ten) ATA drives is 
-something that you _really_ will want to avoid at all cost...! 
-Take my word for it  :-((
+will assemble the rest of your arrays.
 
-Maarten
+You also wondered about "personality" numbers.
+A "personality" corresponds to a module that handles 1 or more raid
+levels.
+Personality 3 handles raid1
+Personality 4 handles raid5 and raid4
 
+see include/linux/raid/md_k.h
+
+NeilBrown
