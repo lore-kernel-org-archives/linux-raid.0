@@ -1,60 +1,49 @@
-From: Gregory Leblanc <gleblanc@linuxweasel.com>
-Subject: Re: Soft-/Hardware RAID Performance
-Date: 20 Feb 2003 10:31:38 -0800
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: ANNOUNCE: mdadm-1.0.9 - prelease for 1.1.0
+Date: Fri, 21 Feb 2003 11:02:41 +1100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1045765895.2116.2.camel@gregdell>
-References: <5.1.0.14.0.20030220112347.028ef5c0@195.90.31.33>
+Message-ID: <15957.27809.433977.124341@notabene.cse.unsw.edu.au>
+References: <15945.38175.58593.681394@notabene.cse.unsw.edu.au>
+	<20030220175523.30AF33B809@jaded.cynicism.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-JHpiVSQhP7ncU3t7xgcp"
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5.1.0.14.0.20030220112347.028ef5c0@195.90.31.33>
-To: linux-raid@vger.kernel.org
+In-Reply-To: message from Derek Vadala on Thursday February 20
+To: Derek Vadala <derek@cynicism.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Thursday February 20, derek@cynicism.com wrote:
+> On Wed, 12 Feb 2003, Neil Brown wrote:
+> 
+> >     -   If the config file is called 'partitions' then it will be treated
+> >         as though it contained exactly 'device partitions' so e.g.
+> > 	  mdadm -Ebsc partitions
+> > 	will fill all raid partitions easily.
+> 
+> So the difference between this and mdadm -Dbs is that it generates config
+> entries for arrays that are online, but -Ebcs partitions gets a list of
+> all the block devices from /proc/partitions and generates array lines
+> based on those.
 
---=-JHpiVSQhP7ncU3t7xgcp
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Yep.
 
-On Thu, 2003-02-20 at 02:55, Daniel Brockhaus wrote:
-[snip]
-> One suggestion to speed up the reads was to issue several reads in=20
-> parallel. Silly me didn't think of that, I was completely focused on the=20
-> writes, which are more important for my application. Anyway. Using parall=
-el=20
-> reads (from four processes), read performance scales almost with the numb=
-er=20
-> of disks in the array. This goes for both, hardware and software RAID, wi=
-th=20
-> software RAID being about 15% faster.
->=20
-> Write performance on the other hand does not change at all when using=20
-> multiple processes - for obvious reasons: The kernel queues, sorts and=20
-> merges write requests anyway, so the number of processes doing the writes=
-=20
-> does not matter. But I've noticed something peculiar: If I change my=20
-> benchmark to write 4K blocks at 4K boundaries, write performance increase=
-s=20
-> to almost 300%. This is quite logical, since the kernel can write a 'page=
-=20
+> 
+> How come -Dbs lists only num-device, and UUID while -Ebsc lists both of
+> those as well as the devices list?
+> 
 
-What was your previous benchmark write size?  And what parameters did
-you use when creating the RAID 0 array and filesystem?  There may be
-opportunities for tuning there.
-	Greg
-[snip]
+Because the information is trivially and obviously available when
+doing -E, but not quite so obviously available when doing -D.  Still
+it shouldn't be hard to add that info.  I will put it on my todo list
+for 1.1.
 
---=-JHpiVSQhP7ncU3t7xgcp
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.1 (GNU/Linux)
+> This -Ebsc partitions is a nice feature by the way.
+> 
 
-iD8DBQA+VR8GnAkVXO6fw4sRAnKqAJ9ksAQ2Lxf8+GEiuhruPmX9PWg8WwCeL3x1
-uJFklugLBG1SXYyGmeNAhgI=
-=c2gA
------END PGP SIGNATURE-----
+Thanks,  It's the result of user feed back.  I like to encourage user
+feedback!! 
 
---=-JHpiVSQhP7ncU3t7xgcp--
-
+NeilBrown
