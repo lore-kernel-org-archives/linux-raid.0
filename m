@@ -1,44 +1,39 @@
-From: Dragan Simic <dsimic@urc.bl.ac.yu>
-Subject: Re: recovery of hosed raid5 array
-Date: Mon, 13 Oct 2003 15:54:06 +0200 (CEST)
+From: Scott Kopel <skopel@english.fsu.edu>
+Subject: recovery question?
+Date: Mon, 13 Oct 2003 11:21:51 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.58.0310131544260.2746@oracle.urc.bl.ac.yu>
-References: <slrnbog9og.t0c.lunz@orr.homenet> <no.Yo.24973.N.nN.0310111457280@business.com>
- <slrnboirt8.me8.lunz@orr.homenet> <Pine.LNX.4.58.0310121034090.7866@twinlark.arctic.org>
+Message-ID: <6.0.0.22.2.20031013111015.032c1a58@englishmail.fsu.edu>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="us-ascii"; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.58.0310121034090.7866@twinlark.arctic.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, 12 Oct 2003, dean gaudet wrote:
+I have a raid1 with two disks /dev/hda and /dev/hdc ... three md devices
+/dev/md0 made up of hda1 and hdc1
+/dev/md1 made up of hda2 and hdc2
+/dev/md2 made up of hda3 and hdc3
 
-> querying SMART shouldn't cause this to happen -- but i've seen it occur
-> with a promise controller and maxtor disks.  i used to query the SMART
-> data once a night just to have a log.  then i switched it to once every 5
-> minutes so i could graph the drive temperature... and when i went to once
-> every 5 minutes the system became unstable.  the kernel would randomly
-> lose the ability to talk to a disk.  the problem would go away after a
-> reboot.  i assume it was some sort of race condition.
-
-Just a small drop-in: I have a Promise FastTrak133 with two Maxtor HDDs
-attached to it, and running smartmontools every 5 minutes, didn't notice
-any troubles or signs of instability.
-
-And, about data recovery, if there are two failing HDDs in a RAID5 array,
-and you had nr-spare-disks equal to zero, I *think* there is no chance to
-revover your data, because RAID5 is protecting you against at most one
-HDD failure.
-
-If I'm wrong, please correct me. ;)
+--I accidently formatted hda1 using #mke2fs -vj /dev/hda1 ... bonehead move 
+number 1
+--then I booted from a backup drive and resynced the raid
+--when I tried to boot from the /dev/md0 I couldn't boot because of 
+filesystem errors
+--so then I ran e2fsck /dev/md0 and several errors were noted and fixed.. I 
+didn't write down the error messages because I was too harried, bonehead 
+move number 2, however I think the errors were files without inodes... the 
+errors were fixed and a bunch of files and directories were put in 
+lost&found ... mostly they were a recently installed phpmyadmin directory 
+in /var/www/html/phpmyadmin and the only other file I've found missing so 
+far is /usr/bin/info..
+--I am curious what happened.. did the format remove the superblock and 
+resyncing rewrote the superblock using the inodes for  these files?
+any info would be appreciated
 
 
--- 
 
-.----------------------------------------------------------------------------.
-| Pozdrav / Best Wishes,     dsimic@urc.bl.ac.yu  | LL   The Choice of       |
-| Dragan Simic                 RS.BA Hostmaster   | LL            GNU        |
-| URC B.Luka / RSKoming.NET  System/Network Admin | LLLL i n u x  Generation |
-`----------------------------------------------------------------------------'
+Scott Kopel
+English Department, FSU
+Mail Code 1580
+850 644 6177 
 
