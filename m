@@ -1,35 +1,47 @@
-From: Mike Hardy <mhardy@h3c.com>
-Subject: Re: RAID 1 on a server with possible mad mobo
-Date: Tue, 08 Mar 2005 18:14:07 -0800
-Message-ID: <422E5BEF.9040706@h3c.com>
-References: <bbfa52890503081019478cb6cf@mail.gmail.com>	 <422DF363.6090105@steeleye.com> <bbfa528905030816484108fa7@mail.gmail.com>
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: [PATCH md 0 of 4] Introduction
+Date: Wed, 9 Mar 2005 14:17:28 +1100
+Message-ID: <16942.27336.208536.334897@cse.unsw.edu.au>
+References: <20050308165021.3745.patches@notabene>
+	<20050307221006.16806431.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-In-Reply-To: <bbfa528905030816484108fa7@mail.gmail.com>
+In-Reply-To: message from Andrew Morton on Monday March 7
 Sender: linux-raid-owner@vger.kernel.org
-To: Colin McDonald <ce.mcdonald@gmail.com>
-Cc: Paul Clements <paul.clements@steeleye.com>, linux-raid@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Monday March 7, akpm@osdl.org wrote:
+> NeilBrown <neilb@cse.unsw.edu.au> wrote:
+> >
+> > The first two are trivial and should apply equally to 2.6.11
+> > 
+> >  The second two fix bugs that were introduced by the recent 
+> >  bitmap-based-intent-logging patches and so are not relevant
+> >  to 2.6.11 yet. 
+> 
+> The changelog for the "Fix typo in super_1_sync" patch doesn't actually say
+> what the patch does.  What are the user-visible consequences of not fixing
+> this?
 
+-------
+This fixes possible inconsistencies that might arise in a version-1 
+superblock when devices fail and are removed.
 
-Colin McDonald wrote:
+Usage of version-1 superblocks is not yet widespread and no actual
+problems have been reported.
+--------
+> 
+> 
+> Is the bitmap stuff now ready for Linus?
 
-  Is it a bad idea to write the grub to a software mirror. Is it written
-> to a specific disk when this is done?
+I agree with Paul - not yet.
+I'd also like to get a bit more functionality in before it goes to
+Linus, as the functionality may necessitate in interface change (I'm
+not sure).
+Specifically, I want the bitmap to be able to live near the superblock
+rather than having to be in a file on a different filesystem.
 
-The "Software Raid and Grub HOW-TO"
-
-http://lists.us.dell.com/pipermail/linux-poweredge/2003-July/014331.html
-
-I use grub+raid1 on the root drive of a number of machines, but you do 
-have to be careful as its my understanding its not raid aware, and 
-"picks" a drive, whereas lilo was raid-aware and wrote the boot sector 
-on all components.
-
-After following the directions at the link above, I've been able to boot 
-the machine off each component (during failure testing), so the 
-directions appear to work, to me.
-
--Mike
+NeilBrown
