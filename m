@@ -1,41 +1,47 @@
-From: "Andre' Breiler" <andre.breiler@null-mx.org>
+From: Gordon Henderson <gordon@drogon.net>
 Subject: Re: powersupply for 16disks +dual xeon
-Date: Sun, 2 Feb 2003 10:41:57 +0000 (GMT)
+Date: Sun, 2 Feb 2003 11:55:00 +0000 (GMT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.33.0302021036530.535-100000@pegasus.teamwerk.com>
-References: <Pine.LNX.4.44.0302011449420.12785-100000@redhat1.mmaero.com>
+Message-ID: <Pine.LNX.4.43.0302021143540.17825-100000@unicorn.drogon.net>
+References: <20030202004849.GA28521@willow.seitz.com>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44.0302011449420.12785-100000@redhat1.mmaero.com>
-To: jlewis@lewis.org
-Cc: Mikael Abrahamsson <swmike@swm.pp.se>, linux-raid@vger.kernel.org
+In-Reply-To: <20030202004849.GA28521@willow.seitz.com>
+To: Ross Vandegrift <ross@willow.seitz.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+On Sat, 1 Feb 2003, Ross Vandegrift wrote:
 
-On Sat, 1 Feb 2003 jlewis@lewis.org wrote:
-
-> On Sat, 1 Feb 2003, Mikael Abrahamsson wrote:
+> On Sat, Feb 01, 2003 at 01:30:10PM -0500, Jeffrey Paul wrote:
+> > You could try hacking together another powersupply to run some of the
+> > harddisks... I'm not sure of the ATX pinouts, but it shouldn't be too hard
+> > to hack up a 12vdc relay or array of relays to one of the 12VDC pins on a
+> > molex connector of the existing power supply to turn on the second power
+> > supply, kind of slaving it to the first.
 >
-> > You should try to fit another powersupply to drive the disks. ATX
-> > powersupplies can be made powermanently on by shorting ping 14 and 15 (I
-> > think it was, there is a FAQ page out there I found on when I was looking
-> > a month back). If you don't want to do this, get yourself an AT power
-> > supply.
+> I Am Not an Electrican Engineer, But My Boss Is.  I did this once, and
+> he had a cow.  There was some problem he yelled at me, having to do with
+> different PSUs pulling voltage up at a different rate.  There's someway
+> he said that the differential in voltages would feed back through the
+> IDE channels, for some reason....
 >
-> So can this trick (connecting 14 to 15) be used as a work-around for brain
-> damaged motherboards that won't power-on after power-loss to keep a system
-> always on?
+> The short of it was that someone qualified to judge said it was a really
+> bad idea to use multiple seperate power supplies.
 
-No, this won't work in most cases (as the board doesn't know that it
-should start up).
-What I usally do is an really small mono flop + trigger combination which
-waits for 10s to switch an relais (you can draw power from the standby
-power) which simulates the atx power switch. Note, that for some boards
-to function correctly it's needed to release the relais after 5V are
-present on the normal power.
+I've built many SCSI based systems where the disks are in a separate
+enclosure with their own power supplies. There are many commercial system
+built just like this. (eg. Sun used to supply separate external CD ROMs,
+tapes and hard drive storage boxes all with their own PSU) I don't see why
+it would be a problem with IDE drives - cable length would be the one
+thing you might have a problem with though.
 
-Bye Andre'
--- 
+It's a lot of eggs in one basket though - do you really need contiguous
+filespace, or might it be better split up into separate servers for each
+'volume' ?
+
+Good luck!
+
+Gordon
 
