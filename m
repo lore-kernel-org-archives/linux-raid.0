@@ -1,44 +1,79 @@
-From: kernel@ddx.a2000.nu
-Subject: Re: raid5 2TB+ NO GO ?
-Date: Fri, 14 Feb 2003 11:21:41 +0100 (CET)
-Sender: ext2-devel-admin@lists.sourceforge.net
-Message-ID: <Pine.LNX.4.53.0302141120230.19336@ddx.a2000.nu>
-References: <Pine.LNX.4.53.0302060059210.6169@ddx.a2000.nu>
- <Pine.LNX.4.53.0302060123150.6169@ddx.a2000.nu> <Pine.LNX.4.53.0302060211030.6169@ddx.a2000.nu>
- <15937.50001.367258.485512@wombat.chubb.wattle.id.au>
- <Pine.LNX.4.53.0302061915390.17629@ddx.a2000.nu>
- <15945.31516.492846.870265@wombat.chubb.wattle.id.au>
- <Pine.LNX.4.53.0302121129480.13462@ddx.a2000.nu> <044101c2d2a9$4fcdf980$f6de11cc@black>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <ext2-devel-admin@lists.sourceforge.net>
-In-Reply-To: <044101c2d2a9$4fcdf980$f6de11cc@black>
-Errors-To: ext2-devel-admin@lists.sourceforge.net
-List-Help: <mailto:ext2-devel-request@lists.sourceforge.net?subject=help>
-List-Post: <mailto:ext2-devel@lists.sourceforge.net>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/ext2-devel>,
-	<mailto:ext2-devel-request@lists.sourceforge.net?subject=subscribe>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/ext2-devel>,
-	<mailto:ext2-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=ext2-devel>
-To: Mike Black <mblack@csi-inc.com>
-Cc: Stephan van Hienen <raid@a2000.nu>, Peter Chubb <peter@chubb.wattle.id.au>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, bernard@biesterbos.nl, ext2-devel@lists.sourceforge.net
+From: "Peter T. Breuer" <ptb@it.uc3m.es>
+Subject: Re: Fast (intelligent) raid1
+Date: Fri, 14 Feb 2003 12:33:06 +0100 (MET)
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <200302141133.h1EBX6D22963@oboe.it.uc3m.es>
+References: <200302112305.h1BN5nu16695@oboe.it.uc3m.es>
+Reply-To: ptb@it.uc3m.es
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <200302112305.h1BN5nu16695@oboe.it.uc3m.es> from "Peter T. Breuer"
+ at "Feb 12, 2003 00:05:49 am"
+To: ptb@it.uc3m.es
+Cc: Ross Vandegrift <ross@willow.seitz.com>, Ingo Molnar <mingo@redhat.com>, neilb@cse.unsw.edu.au, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 12 Feb 2003, Mike Black wrote:
+I'll compress this down to an even more abstract summary ...
 
-> I did a 12x180G and as I recall was unable to do 13x180G as it overflowed during mke2fs.  This was a year ago though so I don't know
-> if that's been improved since then.
->
+"Peter T. Breuer wrote:"
+> "Peter T. Breuer wrote:"
+> > Have a look at the patch in the .tgz. I tried to make it as clean as I
+> > could. Every change I made in the md.c code is commented. There are 4
+> > "hunks" of changes to md.c, to allow hotadd after setfaulty, and about
+> > ten significant hunks of changes to raid1.c, inserting the extra
+> > technology. There is some extra debugging code in that, which I can
+> 
+> In fact - I'll publish and go through the patch here. Here we go.
 
-does anyone know for sure what is the limit for md raid5 ?
+  1) change hotadd function in md.c with the objective of permitting
+     hotadd after setfaulty ("hotrepair") which should preserve a
+     bitmap which has been previously added to the disk metadata in
+     the main array (during setfaulty).
 
-can i use 13*180GB in raid5 ?
-or should i go for 12*180GB in raid5 ?
+  2) change write code in raid1.c to mark the bitmap of every mirror
+     component disk which is marked not operational, if it has a bitmap.
+  
+  3) change mark_disk_bad code in raid1.c to add a bitmap to the disk
+     metadata in the full raid array. This is called by setfaulty, and
+     also on error from below, I think.
 
+  4) at the point where a spare disk is marked active in the diskop
+     function in raid1.c (state SPARE_ACTIVE), remove any bitmap
+     associated with the disk metadata in the full raid array.
+     This is called after a successful resync, somehow, and possibly
+     on other occasions.
 
--------------------------------------------------------
-This SF.NET email is sponsored by: FREE  SSL Guide from Thawte
-are you planning your Web Server Security? Click here to get a FREE
-Thawte SSL guide and find the answers to all your  SSL security issues.
-http://ads.sourceforge.net/cgi-bin/redirect.pl?thaw0026en
+  5) in the resync function in raid1.c, for each resync block or
+     blocks, find all the spare mirror components which are marked
+     nonoperational but writable ("write_only"), and if they have a
+     bitmap and it is clean for the blocks we are interested in, then
+     cheat for that device - report and account for having written
+     to it when it fact we have not. This means calling md_sync_acct
+     and sync_request_done and md_done_sync and possibly signalling
+     on the wait_ready wait queue for the raid device.  If we don't
+     cheat then fall through and do the normal thing, which is to launch
+     a write request for some blocks, do a bit of accounting and leave
+     the done functions and signalling for its end_io.
+
+I would be deeply obliged if somebody could indicate to me where to
+make some further changes. What I want to do is allow an underlying
+block device to notify the raid code when the block device has "fixed
+itself".
+
+My plan is to
+
+  a) get the raid code to signal the underlying block device during
+     a hotadd, presumably at the end, what the major and minor of the
+     raid device it has become part of is. This will be via an extra
+     ioctl which I will declare for all block devices. Possibly it
+     would be nice to actually pass the file system inode for the
+     special device node of md0 or whatever, if we have it.
+
+  b) when the block device feels well again, then it will signal
+     the raid code via the inode or more directly via the block_ops
+     array and a new ioctl that it has come back up, and the raid
+     code will then do a hotadd.
+
+and I would like pointers as to where to insert this in the current
+raid codes.
+
+Peter
