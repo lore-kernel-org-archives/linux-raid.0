@@ -1,15 +1,54 @@
-From: Gordon Henderson <gordon@drogon.net>
-Subject: Re: [OT] best tape backup system?
-Date: Tue, 22 Feb 2005 15:41:28 +0000 (GMT)
-Message-ID: <Pine.LNX.4.56.0502221108550.4157@lion.drogon.net>
-References: <20050222102827.GA25255@apartia.fr>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: [OT] best tape backup system?
+Date: Tue, 22 Feb 2005 11:50:55 -0500
+Message-ID: <200502221651.j1MGp1922341@www.watkins-home.com>
+References: <Pine.LNX.4.56.0502221108550.4157@lion.drogon.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-In-Reply-To: <20050222102827.GA25255@apartia.fr>
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+In-Reply-To: <Pine.LNX.4.56.0502221108550.4157@lion.drogon.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Louis-David Mitterrand <vindex@apartia.org>
+To: 'Gordon Henderson' <gordon@drogon.net>, 'Louis-David Mitterrand' <vindex@apartia.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+I have NOT been able to share a SCSI cable/card with disks and a tape drive.
+Tried for days.  I would get disk errors, or timeouts.  I corrected the
+problem by putting the tape drive on a dedicated SCSI bus/card.  I don't
+recall the details of the failures, since it has been well over a year now.
+But I do know I only had problems while using the tape drive and the disks
+at the same time.  Like, during a backup.  The disks were happy while the
+tape drive was idle.  I also swapped parts, it had no effect.  I assumed
+Linux does not like to share SCSI.
+
+I have not had problems with 2 or more tape drives on the same SCSI
+bus/card.  I think I had 3 at one time.
+
+Amanda...  The last time I checked, incremental backups require a different
+tape each time.  You will need a lot of tapes.  If a full backup fits on a
+single tape, just do a full backup each night.  I need many tapes to do a
+full backup, but a single tape can hold many daily incremental backups.  I
+deemed Amanda to wasteful for me.  I use home made scripts and cpio and do a
+full backup about once per month, and do nightly incremental backups to 1
+tape.  Once the daily tape is full I do another full backup.  Works very
+well for me.  But, restoring is a pain, but that is very rare for me, only
+once in 1+ years, so far.  My scripts seek the tape as required, so I can
+eject the tape if needed, as long as I put it back in time for the nightly
+backup.
+
+If anyone gets 1.3 to 1 compression, that is real good!!!!  IMO.  The last
+time I checked, I got about 1.1 to 1.  What a marketing scam!!!!
+
+Guy
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Gordon Henderson
+Sent: Tuesday, February 22, 2005 10:41 AM
+To: Louis-David Mitterrand
+Cc: linux-raid@vger.kernel.org
+Subject: Re: [OT] best tape backup system?
 
 On Tue, 22 Feb 2005, Louis-David Mitterrand wrote:
 
@@ -102,3 +141,8 @@ etc. if you ever have to restore from scratch.
 Good luck,
 
 Gordon
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
