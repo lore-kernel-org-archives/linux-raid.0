@@ -1,37 +1,44 @@
-From: Andrew Walrond <andrew@walrond.org>
+From: ptb@lab.it.uc3m.es (Peter T. Breuer)
 Subject: Re: RAID1 & 2.6.9 performance problem
-Date: Mon, 17 Jan 2005 16:24:47 +0000
-Message-ID: <200501171624.47645.andrew@walrond.org>
-References: <41EBD827.80701@pipi.ma.cx> <Pine.LNX.4.56.0501171528010.21510@lion.drogon.net>
-Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Date: Mon, 17 Jan 2005 17:46:30 +0100
+Message-ID: <6o6tb2-cj2.ln1@news.it.uc3m.es>
+References: <41EBD827.80701@pipi.ma.cx> <Pine.LNX.4.56.0501171528010.21510@lion.drogon.net> <1105977081.15184.12.camel@linux.local>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.56.0501171528010.21510@lion.drogon.net>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday 17 January 2005 15:39, Gordon Henderson wrote:
-> On Mon, 17 Jan 2005, Janusz Zamecki wrote:
->
-> > I've expected much better /dev/md6 performance (at least 100MB/s).
->
-> I wouldn't - use RAID-0 if you want more performance.
->
+Hans Kristian Rosbach <hk@isphuset.no> wrote:
+> -It selects the disk that is closest to the wanted sector by remembering
+>  what sector was last requested and what disk was used for it.
+> -For sequential reads (sucha as hdparm) it will override and use the
+>  same disk anyways. (sector = lastsector+1)
+> 
+> I gained a lot of throughput by alternating disk, but seek time was
+> roughly doubled. I also tried to get smart and played some with the
+> code in order to avoid seeking both disks back and forth wildly when
+> there were two sequential reads. I didn't find a good way to do it
+> unfortunately.
 
-FWIW I get these results with RAID-0
+Interesting. How did you measure latency? Do you have a script you
+could post?
 
-andrew@orac ~ $ sudo hdparm -t /dev/sda /dev/sdb /dev/md0
+> I'm not going to make any patch available, because I removed bad-disk
+> checking in order to simplify it.
 
-/dev/sda:
- Timing buffered disk reads:  170 MB in  3.00 seconds =  56.64 MB/sec
+The FR1 patch measures disk latency and weights the disk head distances
+by the measured latency, which may help.  It probably also gets rid of
+that sequential read thing (I haven't done anything but port the patch
+to 2.6, not actually run it in anger!).
 
-/dev/sdb:
- Timing buffered disk reads:  170 MB in  3.02 seconds =  56.37 MB/sec
+  ftp://oboe.it.uc3m.es/pub/Programs/fr1-2.15b.tgz
 
-/dev/md0:
- Timing buffered disk reads:  236 MB in  3.02 seconds =  78.08 MB/sec
+(I am doing a 2.16 with the robust-read patch I suggested added in).
+
+I really don't think this measuring disk head position can help unless
+raid controls ALL of the disks in question, or the disks are otherwise
+inactive.  Is that your case?
+
+
+Peter
 
