@@ -1,81 +1,75 @@
-From: "Sarcar, Shourya C (MED)" <Shourya.Sarcar@med.ge.com>
-Subject: RE: RAID-5 and Chunk Size, What Filesystem to Use?
-Date: Mon, 31 Mar 2003 08:44:14 -0600
+From: "Cress, Andrew R" <andrew.r.cress@intel.com>
+Subject: RE: Raid1 and mdadm
+Date: Mon, 31 Mar 2003 09:22:08 -0800
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <EE1ED172E985D411A27B00508BE30A5E064ADE6F@uswaumsx11medge.med.ge.com>
+Message-ID: <A5974D8E5F98D511BB910002A50A66470580D71F@hdsmsx103.hd.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Jon Robertson <jonrobertson@sbcglobal.net>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Jon,
 
-I assume that /dev/sda is not your root filesystem disk. IF it is, you
-need to have RAID support compiled into the kernel or have appropriate
-initrd images. Other wise, you may not be able to boot into the system
-next time.
+You can use grub for root mirroring (software raid-1), but grub currently
+does not write the Master Boot Record to the 2nd disk, so you have to do
+that manually the first time.  Sample script below:
+# 
+tmpa=/tmp/a
+tmpg=/tmp/grub.out
+cat - <<%%% >$tmpa
+install (hd0,0)/grub/stage1 (hd1) (hd1,0)/grub/stage2 (hd0,0)/grub/grub.conf
+quit
+%%%
+grub <$tmpa  >$tmpg 2>&1
+# 
 
-ext2 or ext3 should suffice very well for the job. I would have
-reccommended xfs but kernel support for XFS is not a very straight
-forward option if you are using a distro like RedHat.
+However, you MUST link the md driver into the kernel.  It doesn't work right
+as a module, even in initrd.
+That's probably why it panic'd.
 
-Regards,
-Shourya
-Xtreamly yours !
-Shourya Sarcar 
-_____________________________________________________
-Global Recon Engine, Computed Tomography
-Edison Engineering Development Program, GE Medical Systems
-3000 N Grandview Blvd., MS W 1200, Waukesha, WI 53188, USA
-Tel: 262 312 7405 (O) | *320 7405 (DialComm)
- 
+Andy
+
+-----Original Message-----
+From: Friedrich Lobenstock [mailto:fl@fl.priv.at] 
+Sent: Monday, March 31, 2003 6:35 AM
+To: Linux RAID Mailing Liste
+Subject: Re: Raid1 and mdadm
 
 
-> -----Original Message-----
-> From: Jon Robertson [mailto:jonrobertson@sbcglobal.net]
-> Sent: Sunday, March 30, 2003 9:37 PM
-> To: linux-raid@vger.kernel.org
-> Subject: RAID-5 and Chunk Size, What Filesystem to Use?
+Max Booker wrote:
 > 
+> GRUB boot loader
 > 
-> I've been reading the Jakob Oostergard article...and it's 
-> amazing how easy
-> this can be, however I may have been typing too fast....
+>     hda1    /boot
+>     hda2    /
+>     hda3    swap
 > 
-> I have 3 SCSI that are 36GB each and I created my raidtab to 
-> look like the
-> following:
+>     hdd1    (intended) mirror partition of  /
 > 
-> raid-level                     5
-> chunk-size                   128
-> persistent-superblock   1
-> parity-algorithm            left-symmetric
-> nr-raid-disks                3
-> device                          /dev/sda
-> raid-disk                    0
-> device                          /dev/sda
-> raid-disk                    1
-> device                          /dev/sdb
-> raid-disk                    2
-> device                          /dev/sdc
+> I can create the (degraded) array on hdd1, mkfs on /dev/md0, mount
+/dev/md0
+> as /mnt, copy / to /mnt, and edit /mnt/etc/fstab.
 > 
-> my question is (are)
-> 1. is 128 ok for the chunk size?
-> 2. if it's not ok, do I just stop the raid-device and re-do 
-> my raidtab file
-> and then re-do my mkraid /dev/md0 command?
-> 3. what filesystem do you recommend?   All I'm using this 
-> server for is file
-> sharing with SAMBA...
+> Everything works well up to the point where I reboot, with kernel
+parameters
+> (md=0,/dev/hdd1 root=/dev/md0). This is where the kernel panics.
 > 
-> thanks in advance....
+> I think that I have not edited fstab properly, or GRUB is getting in the
+> way, or maybe it is not possible to add hda2 to the array because it
+already
+> has a filesystem on it.... How do I get hda2 to be part of the Raid array?
+> Nothing attempted so far has made any impression on the fact that mdadm
+> insists that /dev/hda2 is not an md component.
 > 
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe 
-> linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+
+As far as I know you have to use LILO instead of GRUB to boot
+from a root raid. Take care that raid1 is compiled into the kernel.
+
+-- 
+MfG / Regards
+Friedrich Lobenstock
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
