@@ -1,51 +1,61 @@
-From: "Richard F. Rebel" <rrebel@whenu.com>
-Subject: Multipath questions...
-Date: Fri, 17 Dec 2004 13:02:40 -0500
-Message-ID: <1103306560.18363.533.camel@rebel.corp.whenu.com>
+From: Philippe =?ISO-8859-15?Q?Gramoull=E9?=
+	<philippe.gramoulle@mmania.com>
+Subject: Re: mdadm can't start RAID0 volume after power failure
+Date: Sat, 18 Dec 2004 02:41:50 +0100
+Message-ID: <20041218024150.4ead56af.philippe.gramoulle@mmania.com>
+References: <128.5252547e.2ef47a40@aol.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-mZGNTtN2oP0aI3LEJK6q"
+Content-Type: text/plain; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <128.5252547e.2ef47a40@aol.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: AndyLiebman@aol.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
---=-mZGNTtN2oP0aI3LEJK6q
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Hello Andy,
 
+On Fri, 17 Dec 2004 13:06:56 EST
+AndyLiebman@aol.com wrote:
 
-Hello,
+  | 
+  | Phillipe
+  | 
+  | >Still, this is the first time that such a thing happens to me. What could be 
+  | the reason that >UUID would be changed ?
+  | 
+  | If I were a betting person, I would say that the mdadm.conf file was old,
 
-I have 4 luns available on two controllers, similtaniously, thus making
-the 4 luns visible twice.  I have 4 FCAL connections to multiple
-switches, leaving me with 32 scsi devices, only 4 of which are unique.
+Yes it was, the filesystem was created last February.
 
-When I create md's with the multipath option, which one is 'active'??
-The first one created?  The first one probed by mdadm when it scans for
-them upon boot?
+  |  and  that you had created a new array since the time you made that conf file. And 
+  | you just didn't update the conf file. 
 
-When a path fails, which of the other paths is used?   If the original
-path is restored does the traffic fail back to the original path?
+Nope, nothing has changed since, no new array was created nor deleted nor modified.
 
-Thanks!
+  | 
+  | As I'm sure you know, you don't need to use a conf file anyway to use mdadm. 
 
---=20
-Richard F. Rebel
+Yes, i used a straightforward mdadm command to create the array, 
 
-cat /dev/null > `tty`
+  | That's what makes it so beautiful! All kinds of things -- like device ids -- 
+  | can change on your system and mdadm just figures it out (provided you give it a 
+  | minimal amount of info, like the correct uuid!). 
 
---=-mZGNTtN2oP0aI3LEJK6q
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+Sure, but again, _nothing_ had changed between last February and today, at least regarding hardware
+and kernel. I regularly updated the Debian packages, including mdadm, but i don't think that was the problem
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.4 (GNU/Linux)
+The mdadm.conf is the one from when the array was created, and until today i have shutdown and powered on the box
+right fine, for weeks and months.
 
-iD8DBQBBwx9Ax1ZaISfnBu0RAmgZAJkBM8pmAdS2lHx1MbyH4yboIb7RBwCeKYXV
-s2tPi8frojw1HmHoHV1jYlk=
-=pUh8
------END PGP SIGNATURE-----
+Maybe someone will be able to explain how the UUID can change on the disks, so that what's on disk and
+what's in the conf can get out of sync.
+  | 
+  | Glad to help :)
 
---=-mZGNTtN2oP0aI3LEJK6q--
+You made my day :)
 
+Thanks,
+
+Philippe
