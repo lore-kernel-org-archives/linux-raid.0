@@ -1,59 +1,51 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: 4 questions. Chieftec chassis case CA-01B, resync times, selecting ide driver module loading,  raid5 :2 drives on same ide channel
-Date: Sun, 16 Jan 2005 16:58:45 -0500
-Message-ID: <200501162156.j0GLup926376@www.watkins-home.com>
-References: <200501162155.46495.maarten@ultratux.net>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+From: Gerd Knops <gerti@bitart.com>
+Subject: Re: RAID5 drive failure, please verify my commands
+Date: Sun, 16 Jan 2005 16:08:18 -0600
+Message-ID: <20939A19-680B-11D9-9A87-00039363AEBE@bitart.com>
+References: <7C8198B3-67EA-11D9-9A87-00039363AEBE@bitart.com> <csej4f$bra$1@sea.gmane.org>
+Reply-To: gerti@bitart.com
+Mime-Version: 1.0 (Apple Message framework v619)
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200501162155.46495.maarten@ultratux.net>
+In-Reply-To: <csej4f$bra$1@sea.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Maarten' <maarten@ultratux.net>, linux-raid@vger.kernel.org
+To: Robin Bowes <robin-lists@robinbowes.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Yes, RedHat 9 defaults to much less, 10,000 I think.
 
-I assumed it was the md default.  Maybe a RedHat 9 issue.
+On Jan 16, 2005, at 2:34 PM, Robin Bowes wrote:
 
-I just looked at the man page for md.  It says "The default is 100,000.".  I
-did upgrade to Kernel 2.4.28 a few weeks ago.  I guess the default was
-changed in a newer version of md.
-
-My /etc/sysctl.conf has a date of Dec 12, 2003.  So, whatever kernel I had
-over 1 year ago had a default of 10,000, or so.
-
-Anyway, it has helped some people in the past. :)
-I guess it depends on the kernel/md version.
-
-I guess a default of no limit would be nice.  But no support for that, yet!
-
-Guy
-
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Maarten
-Sent: Sunday, January 16, 2005 3:56 PM
-To: linux-raid@vger.kernel.org
-Subject: Re: 4 questions. Chieftec chassis case CA-01B, resync times,
-selecting ide driver module loading, raid5 :2 drives on same ide channel
-
-On Sunday 16 January 2005 20:39, Guy wrote:
-> If your rebuild seems too slow, make sure you increase the speed limit!
-> Details in "man md".
+> Gerd Knops wrote:
+>> Hello all,
+>> One of the dreaded Maxtor SATA drives in my RAID5 failed, after just 
+>> 3 months of light use. Anyhow I neither have the disk capacity nor 
+>> the money to buy it to make a backup. To make sure I do it correctly, 
+>> could you folks please double-check my intended course of action? I 
+>> would really appreciate that.
 >
-> echo 100000 > /proc/sys/dev/raid/speed_limit_max
+> Gerd,
+>
+> If you've got a credit card you can get Maxtor to send out a 
+> replacement  without having to pull the failed drive.
+>
+> I've done this several times :) (b****y Maxtor drives!)
+>
+Thanks for the tip, I'll give that a try. Their website's RMA stuff 
+doesn't seem to work (application unavailable bla bla), so I guess I'll 
+cll them Monday... Probably be on hold for half a day :-(
 
-Hi Guy,
-You always say that, but that never helps me (since my distro already has 
-100000 as default).  Are there even distros that have this set too low ? 
-
-Maarten
+Gerd
 
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> R.
+> -- 
+> http://robinbowes.com
+>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" 
+> in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
