@@ -1,8 +1,8 @@
 From: NeilBrown <neilb@cse.unsw.edu.au>
-Subject: [PATCH] MD - 5 of 27 - Embed bio in mp_bh rather than separate allocation.
-Date: Thu, 18 Jul 2002 23:32:46 +1000
+Subject: [PATCH] MD - 8 of 27 - Get rid of find_rdev_all
+Date: Thu, 18 Jul 2002 23:32:58 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1020718133246.4809@cse.unsw.edu.au>
+Message-ID: <1020718133258.4824@cse.unsw.edu.au>
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: Linus Torvalds <torvalds@transmeta.com>
 Cc: linux-raid@vger.kernel.org
@@ -10,15 +10,19 @@ List-Id: linux-raid.ids
 
 
 ### Comments for ChangeSet
-Embed bio in mp_bh rather than separate allocation.
+Get rid of find_rdev_all
 
-multipath currently allocates an mp_bh and a bio for each
-request.  With this patch, the bio is made to be part of the
-mp_bh so there is only one allocation, and it from a private 
-pool (the bio was allocated from a shared pool).
+find_rdev_all is now only used to check if a device is already
+used in an md array.
 
-Also remove "remaining" and "cmd" from mp_bh which aren't used.
-And remove spare (unused) from multipath_private_data.
+We change lock_rdev so that it claims the bdev for
+the specific rdev rather than for rdevs in general.
+Now lock_rdev will check if the bdev is inuse by another array
+or not, so the find_rdev_all check isn't needed and is removed,
+along with find_rdev_all itself.
+
+We also make sure that the error code from lock_rdev is
+propagated up properly.
 
 
 
@@ -26,95 +30,90 @@ And remove spare (unused) from multipath_private_data.
 
 
  ----------- Diffstat output ------------
- ./drivers/md/multipath.c         |   18 +++++++-----------
- ./include/linux/raid/multipath.h |   10 +++-------
- 2 files changed, 10 insertions(+), 18 deletions(-)
+ ./drivers/md/md.c |   34 ++++++----------------------------
+ 1 files changed, 6 insertions(+), 28 deletions(-)
 
---- ./drivers/md/multipath.c	2002/07/18 12:00:17	1.5
-+++ ./drivers/md/multipath.c	2002/07/18 12:00:24	1.6
-@@ -121,7 +121,6 @@ static void multipath_end_bh_io (struct 
- 	multipath_conf_t *conf = mddev_to_conf(mp_bh->mddev);
- 
- 	bio_endio(bio, uptodate);
--	bio_put(mp_bh->bio);
- 	mempool_free(mp_bh, conf->pool);
- }
- 
-@@ -164,7 +163,6 @@ static int multipath_make_request (reque
- {
- 	mddev_t *mddev = q->queuedata;
- 	multipath_conf_t *conf = mddev_to_conf(mddev);
--	struct bio *real_bio;
- 	struct multipath_bh * mp_bh;
- 	struct multipath_info *multipath;
- 
-@@ -172,20 +170,17 @@ static int multipath_make_request (reque
- 
- 	mp_bh->master_bio = bio;
- 	mp_bh->mddev = mddev;
--	mp_bh->cmd = bio_data_dir(bio);
- 
- 	/*
- 	 * read balancing logic:
- 	 */
- 	multipath = conf->multipaths + multipath_read_balance(conf);
- 
--	real_bio = bio_clone(bio, GFP_NOIO);
--	real_bio->bi_bdev = multipath->bdev;
--	real_bio->bi_rw = bio_data_dir(bio);
--	real_bio->bi_end_io = multipath_end_request;
--	real_bio->bi_private = mp_bh;
--	mp_bh->bio = real_bio;
--	generic_make_request(real_bio);
-+	mp_bh->bio = *bio;
-+	mp_bh->bio.bi_bdev = multipath->bdev;
-+	mp_bh->bio.bi_end_io = multipath_end_request;
-+	mp_bh->bio.bi_private = mp_bh;
-+	generic_make_request(&mp_bh->bio);
+--- ./drivers/md/md.c	2002/07/18 12:00:37	1.3
++++ ./drivers/md/md.c	2002/07/18 12:00:45	1.4
+@@ -603,7 +603,7 @@ static int lock_rdev(mdk_rdev_t *rdev)
+ 	err = blkdev_get(bdev, FMODE_READ|FMODE_WRITE, 0, BDEV_RAW);
+ 	if (err)
+ 		return err;
+-	err = bd_claim(bdev, lock_rdev);
++	err = bd_claim(bdev, rdev);
+ 	if (err) {
+ 		blkdev_put(bdev, BDEV_RAW);
+ 		return err;
+@@ -819,19 +819,6 @@ static int uuid_equal(mdk_rdev_t *rdev1,
  	return 0;
  }
  
-@@ -598,7 +593,8 @@ static void multipathd (void *data)
- 			printk(KERN_INFO "dirty sb detected, updating.\n");
- 			md_update_sb(mddev);
+-static mdk_rdev_t * find_rdev_all(kdev_t dev)
+-{
+-	struct list_head *tmp;
+-	mdk_rdev_t *rdev;
+-
+-	list_for_each(tmp, &all_raid_disks) {
+-		rdev = list_entry(tmp, mdk_rdev_t, all);
+-		if (kdev_same(rdev->dev, dev))
+-			return rdev;
+-	}
+-	return NULL;
+-}
+-
+ static int write_disk_sb(mdk_rdev_t * rdev)
+ {
+ 	kdev_t dev = rdev->dev;
+@@ -1007,9 +994,6 @@ static mdk_rdev_t *md_import_device(kdev
+ 	mdk_rdev_t *rdev;
+ 	unsigned int size;
+ 
+-	if (find_rdev_all(newdev))
+-		return ERR_PTR(-EEXIST);
+-
+ 	rdev = (mdk_rdev_t *) kmalloc(sizeof(*rdev), GFP_KERNEL);
+ 	if (!rdev) {
+ 		printk(KERN_ERR "md: could not alloc mem for %s!\n", partition_name(newdev));
+@@ -1021,10 +1005,10 @@ static mdk_rdev_t *md_import_device(kdev
+ 		goto abort_free;
+ 
+ 	rdev->dev = newdev;
+-	if (lock_rdev(rdev)) {
+-		printk(KERN_ERR "md: could not lock %s, zero-size? Marking faulty.\n",
++	err = lock_rdev(rdev);
++	if (err) {
++		printk(KERN_ERR "md: could not lock %s.\n",
+ 			partition_name(newdev));
+-		err = -EINVAL;
+ 		goto abort_free;
+ 	}
+ 	rdev->desc_nr = -1;
+@@ -2103,18 +2087,12 @@ static int add_new_disk(mddev_t * mddev,
+ 	unsigned int nr;
+ 	kdev_t dev;
+ 	dev = mk_kdev(info->major,info->minor);
+-
+-	if (find_rdev_all(dev)) {
+-		printk(KERN_WARNING "md: device %s already used in a RAID array!\n",
+-		       partition_name(dev));
+-		return -EBUSY;
+-	}
+ 	if (!mddev->sb) {
+ 		/* expecting a device which has a superblock */
+ 		rdev = md_import_device(dev, 1);
+ 		if (IS_ERR(rdev)) {
+ 			printk(KERN_WARNING "md: md_import_device returned %ld\n", PTR_ERR(rdev));
+-			return -EINVAL;
++			return PTR_ERR(rdev);
  		}
--		bio = mp_bh->bio;
-+		bio = &mp_bh->bio;
-+		bio->bi_sector = mp_bh->master_bio->bi_sector;
- 		bdev = bio->bi_bdev;
- 		
- 		multipath_map (mddev, &bio->bi_bdev);
---- ./include/linux/raid/multipath.h	2002/07/18 12:00:17	1.3
-+++ ./include/linux/raid/multipath.h	2002/07/18 12:00:24	1.4
-@@ -2,6 +2,7 @@
- #define _MULTIPATH_H
- 
- #include <linux/raid/md.h>
-+#include <linux/bio.h>
- 
- struct multipath_info {
- 	int		number;
-@@ -24,7 +25,6 @@ struct multipath_private_data {
- 	int			raid_disks;
- 	int			working_disks;
- 	mdk_thread_t		*thread;
--	struct multipath_info	*spare;
- 	spinlock_t		device_lock;
- 
- 	mempool_t		*pool;
-@@ -45,13 +45,9 @@ typedef struct multipath_private_data mu
-  */
- 
- struct multipath_bh {
--	atomic_t		remaining; /* 'have we finished' count,
--					    * used from IRQ handlers
--					    */
--	int			cmd;
- 	mddev_t			*mddev;
- 	struct bio		*master_bio;
--	struct bio		*bio;
--	struct multipath_bh	*next_mp; /* next for retry or in free list */
-+	struct bio		bio;
-+	struct multipath_bh	*next_mp; /* next for retry */
- };
- #endif
+ 		if (!list_empty(&mddev->disks)) {
+ 			mdk_rdev_t *rdev0 = list_entry(mddev->disks.next,
+@@ -2153,7 +2131,7 @@ static int add_new_disk(mddev_t * mddev,
+ 		rdev = md_import_device (dev, 0);
+ 		if (IS_ERR(rdev)) {
+ 			printk(KERN_WARNING "md: error, md_import_device() returned %ld\n", PTR_ERR(rdev));
+-			return -EINVAL;
++			return PTR_ERR(rdev);
+ 		}
+ 		rdev->old_dev = dev;
+ 		rdev->desc_nr = info->number;
