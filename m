@@ -1,29 +1,29 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: Re: Software RAID 0+1 with mdadm.
-Date: Wed, 26 Jan 2005 16:17:03 +0100
-Message-ID: <20050126151703.GA2040@percy.comedia.it>
-References: <1106692101.15355.16.camel@serpent>
+From: Carlos Knowlton <cknowlton@mail.fsix.com>
+Subject: booting from a HW RAID volume
+Date: Wed, 26 Jan 2005 11:46:03 -0600
+Message-ID: <41F7D75B.1040806@mail.fsix.com>
+Reply-To: cknowlton@science.edu
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1106692101.15355.16.camel@serpent>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Jan 25, 2005 at 02:28:21PM -0800, Brad Dameron wrote:
->Everything seems ok after boot. But again no /dev/md0 in /proc/mdstat.
->But then if I do a mdadm --assemble --scan it will then load /dev/md0. 
-there is a bug in mdadm, see my mail "patches for mdadm 1.8.0" or wait
-for 1.9.0
+Hello,
 
-L.
 
--- 
-Luca Berra -- bluca@comedia.it
-        Communication Media & Services S.r.l.
- /"\
- \ /     ASCII RIBBON CAMPAIGN
-  X        AGAINST HTML MAIL
- / \
+I'm using a 3Ware 9500 12 Hardware RAID controller that has 12 of 250GB 
+S-ATA drives (total storage = 2.75TB).  To my 64bit FC3 box, this looks 
+like a single huge SCSI disk (/dev/sda).  I used parted to create GPT 
+partitions on it, (because nothing else would work on a volume that 
+big).  This seems to work fine, except that grub doesn't seem to 
+recognize GPT partitions.
+So here's my question:  Does anyone know a way to boot from huge volumes 
+(where "huge" =  >2TB)?   even if it doesn't involve grub, or GPT, I'm 
+open to suggestions.  Any clues?
+
+
+Thanks!
+-Carlos Knowlton
