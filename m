@@ -1,45 +1,43 @@
-From: ptb@lab.it.uc3m.es (Peter T. Breuer)
-Subject: Re: *terrible* direct-write performance with raid5
-Date: Wed, 23 Feb 2005 18:55:39 +0100
-Message-ID: <rlsue2-0sc.ln1@news.it.uc3m.es>
-References: <421B6E5D.6030004@tls.msk.ru> <Pine.LNX.4.62.0502221507160.25248@twinlark.arctic.org> <421CBF7D.20801@tls.msk.ru>
+From: Michael Tokarev <mjt@tls.msk.ru>
+Subject: Re: [OT] best tape backup system?
+Date: Wed, 23 Feb 2005 21:28:31 +0300
+Message-ID: <421CCB4F.2020301@tls.msk.ru>
+References: <200502230126.j1N1Q5923933@www.watkins-home.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+In-Reply-To: <200502230126.j1N1Q5923933@www.watkins-home.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Michael Tokarev <mjt@tls.msk.ru> wrote:
-> (note raid5 performs faster than a single drive, it's expectable
-> as it is possible to write to several drives in parallel).
+Guy wrote:
+> I know a thing or 2 about SCSI.  I know I had it correct.  1 config was all
+> wide LVD (2940U2W).  My card has a LVD and a SE port on the same logical
+> SCSI bus.
 
-Each raid5 write must include at least ONE write to a target.  I think
-you're saying that the writes go to different targets from time to time
-and that when the targets are the bottlenecks then you get faster than
-normal response.
+I was surprized once when I noticied such "logical SCSI bus" really isn't
+"logical" per se.  I mean, if I plug ANY device into the "SE port", all
+devices, including the ones attached to "LVD port" switches to SE mode.
+Another channel - yes, sure, but not another port (connector) on the
+same channel.  Well, I can't say for all vendors and all cards, but the
+ones we have here (mostly adaptec and ncr/sym) works this way.  For example,
+Adaptec AHA-3940U2x controller: it's 2-channel card with 3 ports, two
+68pin LVD/SE (one per channel) and one older "scsi-like-ide" connector
+attached to 1st channel -- any device attached to this last connector
+forces the whole 1st channel to go into SE mode, and no LVD-only device
+works (in fact, it does not work at all in this case with any LVD-only
+device attached).
 
-Hmmmm. That's actually quite difficult to calculate, because if say you
-have three raid disks, then every time you write to the array you write
-to two of those three (foget the read, which will come via readahead and
-buffers).  Suppose that's no slower than one write to one disk, how
-could you get any speed INCREASE?
+>   Another config was wide LVD disks and a narrow SE tape.  Another,
+> my disks support SE, I had all SE wide and narrow.  Correct terminators in
+> each case.  I also tried a 2940UW, no LVD, all SE.  All configs worked if I
+> only used the disks or the tape drives, but failed if I used disks and tape
+> at the same time.
 
-Well, only by writing to a different two out of the three each time, or
-near each time. If you first write to AB, then to BC, then to CA, and
-repeat, then you have written 3 times but only kept each disk busy 2/3
-of the time, so I suppose there is some opportunity for pipelining. Can
-anyone see where?
+Well, this is weird.  We have numerous configurations with mixed tapes and
+disks (and other stuff) and had no single problem so far, everything just
+works (except of that obvious LVD vs SE issue).  Including 2940UW and other
+controllers.
 
-   A B C  A B C  ...
-   B C A  B C A  ...
-   1 2 3  1 2 3
-
-Maybe like this:
-
-
-   A1 A3  A1 A3  ...
-   B1 B2  B1 B2  ...
-   C2 C3  C2 C3  ...
-
-Yes. That seems to preserve local order and go 50% faster.
-
-Peter
-
+/mjt
