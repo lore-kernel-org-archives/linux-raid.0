@@ -1,45 +1,150 @@
-From: Matt E <mgeusenet@yahoo.com>
-Subject: Raid 5, Not Detected At Startup
-Date: Tue, 8 Jul 2003 14:48:06 -0700 (PDT)
+From: "Corey McGuire" <coreyfro@coreyfro.com>
+Subject: Re: Checking consistency of Linux software RAID
+Date: Tue, 08 Jul 2003 14:47:53 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20030708214806.48193.qmail@web20421.mail.yahoo.com>
+Message-ID: <200307081447530781.90C6A134@shargaas.coreyfro.com>
+References: <4D618F6493CE064A844A5D496733D667031A01@freedom.icomedias.com>
+ <200307072029.14998.bernd-schubert@web.de>
+ <200307071142330484.8AF6968B@shargaas.coreyfro.com>
+ <200307081851.31385.bernd-schubert@web.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <200307081851.31385.bernd-schubert@web.de>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello All!
+no big... I put "dd" to use, and it works like a charm... of course, I
+won't really know if it works like a charm until something breaks...
 
-I've created a RAID-5 Array on my system, and it isn't
-detected at startup.  Reading the software RAID HOWTO
-I see that I have to specify a partion type to get
-auto detection to work.
+That's the trouble with computers ;-)
 
-However, I never made partitions on the disk, I just
-used mdadm to allocate the whole disc (hde,hde,etc.)
-for the RAID array.
+*********** REPLY SEPARATOR  ***********
 
-Hence, there is no partition table on the disk, and I
-can't change the partition type.
+On 7/8/2003 at 6:51 PM Bernd Schubert wrote:
 
-I thought about removing one disk from the array,
-creating a single partion, setting it to be the
-correct type, then hot adding it to the array, allow
-the array to sync, stop the array and the repeat the
-process for the other 3 disks, which would give me
-partiton types on all 4
+>Hello Corey!
+>
+>> This question has been on the tip of my tongue... Thanks for your
+>answer...
+>>
+>> Out of curiousity, why do you use /dev/zero? Would dd to /dev/null c=
+ause
+>> problems or is /dev/zero required for proper results?
+>>
+>
+>D'oh it seems I was a bit sleepy yesterday, of course, you are right -=
+ it
+>has=20
+>to be /dev/null!=20
+>And of course, one can only read from /dev/zero.=20
+>
+>Sorry for posting improper commands.
+>
+>
+>Best regards,=09
+>	Bernd
+>
+>
+>> >Hi,
+>> >
+>> >/proc/mdstat is to monitor the status of your raid, so when one dri=
+ve
+>> >fails it
+>> >becomes dropped out of the raid-array. Using mdadm you can monitor
+>> >/proc/mdstat and it even can send you a mail when one of your disks
+>fails.
+>> >So
+>> >if you really want to scan your disk once a week, why not running '=
+dd
+>> >if=3D/dev/mdX of=3D/dev/zero' ? So every block of every raid-disk
+should
+>> >become
+>> >read and the md-driver should automatically drop a failing disk  ou=
+t of
+>> >the
+>> >raid.
+>> >I guess you could even try to repair a disk when it became dropped =
+out
+>of
+>> >the
+>> >raid by running some scripts, but since I never trusted any disk th=
+at
+>had
+>> >failed ones, I never worried about it.
+>> >
+>> >Bernd
+>> >-
+>> >To unsubscribe from this list: send the line "unsubscribe linux-rai=
+d"
+in
+>> >the body of a message to majordomo@vger.kernel.org
+>> >More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>> /\/\/\/\/\/\ Nothing is foolproof to a talented fool. /\/\/\/\/\/\
+>>
+>> coreyfro@coreyfro.com
+>> http://www.coreyfro.com/
+>> http://stats.distributed.net/rc5-64/psummary.php3?id=3D196879
+>> ICQ : 3168059
+>>
+>> -----BEGIN GEEK CODE BLOCK-----
+>> GCS d--(+) s: a-- C++++$ UBL++>++++ P+ L+ E W+++$ N+ o? K? w++++$>++=
++++$
+>> O---- !M--- V- PS+++ PE++(--) Y+ PGP- t--- 5(+) !X- R(+) !tv b-(+)
+>> Dl++(++++) D++ G+ e>+++ h++(---) r++>+$ y++*>$ H++++ n---(----) p? !=
+au
+w+
+>> v- 3+>++ j- G'''' B--- u+++*** f* Quake++++>+++++$
+>> ------END GEEK CODE BLOCK------
+>>
+>> Home of Geek Code - http://www.geekcode.com/
+>> The Geek Code Decoder Page - http://www.ebb.org/ungeek//
+>>
+>> -
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid=
+" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>--=20
+>Bernd Schubert
+>Physikalisch Chemisches Institut / Theoretische Chemie
+>Universit=E4t Heidelberg
+>INF 229
+>69120 Heidelberg
+>e-mail: bernd.schubert@pci.uni-heidelberg.de
+>-
+>To unsubscribe from this list: send the line "unsubscribe linux-raid" =
+in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Will this work with out blowing away my data?  Is
-there a better way to do it?  
 
-I realize that mdadm --assemble --scan will build the
-array, but I'd like it to be detected at boot, without
-mucking around with init scripts.
 
-Cheers! 
 
-__________________________________
-Do you Yahoo!?
-SBC Yahoo! DSL - Now only $29.95 per month!
-http://sbc.yahoo.com
+/\/\/\/\/\/\ Nothing is foolproof to a talented fool. /\/\/\/\/\/\
+
+coreyfro@coreyfro.com
+http://www.coreyfro.com/
+http://stats.distributed.net/rc5-64/psummary.php3?id=3D196879
+ICQ : 3168059
+
+-----BEGIN GEEK CODE BLOCK-----
+GCS d--(+) s: a-- C++++$ UBL++>++++ P+ L+ E W+++$ N+ o? K? w++++$>+++++=
+$
+O---- !M--- V- PS+++ PE++(--) Y+ PGP- t--- 5(+) !X- R(+) !tv b-(+)
+Dl++(++++) D++ G+ e>+++ h++(---) r++>+$ y++*>$ H++++ n---(----) p? !au =
+w+
+v- 3+>++ j- G'''' B--- u+++*** f* Quake++++>+++++$
+------END GEEK CODE BLOCK------
+
+Home of Geek Code - http://www.geekcode.com/
+The Geek Code Decoder Page - http://www.ebb.org/ungeek//
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
