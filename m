@@ -1,8 +1,8 @@
 From: mjstumpf <mjstumpf@cotse.net>
-Subject: bug with resync in specific config
-Date: Mon, 28 Jul 2003 09:12:19 -0400 (EDT)
+Subject: where to buy very very large cases
+Date: Mon, 28 Jul 2003 09:18:02 -0400 (EDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <bWpzdHVtcGY=.f9ad4b23e7168dc967940347ea06ba08@1059397939.cotse.net>
+Message-ID: <bWpzdHVtcGY=.14a9e78b52177716d8df11d88fc1d02c@1059398282.cotse.net>
 Reply-To: mjstumpf@pobox.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
@@ -11,30 +11,22 @@ Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+Perhaps off topic or FAQ.  My apologies, seemed like best forum.
 
-I have a production server that I can't really experiment with, but I
-thought I'd warn / ask if this has been seen before.  (Running stock
-2.4.20 kernel, 2 raid-5 IDE (via external promise card) arrays LVM'd
-together).
+I need to expand an x86-based fileserver that's already stacked with 11
+drives.  Where have you folks found reasonably-priced very very large ATX
+cases?  I need to go to 20 or so drives, but I'd like to hear the upper
+limit you have all found..
 
-I had issues before where multiple drives kicked out simultaneously, so I
-added a hot spare that was large enough to contain a hot spare volume for
-each of my raid-5 arrays.  Everything seemed great until I had a lockup
-that required an unclean poweroff/reboot, at which time I witnessed this:
+Are there other means of packing more drives into a small space -- IE, has
+anyone actually fabricated a bracket that would take multiple vertical
+5.25" form factor spaces, and let you mount 3.5" drives sideways
+[vertically] to pack 4 drives into the space of 3.. etc..
 
-Both raid-5s needed to be resynced.  Because a volume was shared between
-RAID-5s, the resync on one was delayed.  However, after the first RAID
-resynced, one time the machine locked up... the other, the second resync
-froze at 4% for about 8-12 hours.  In both cases I had to hard-power-off.
+May have to resort to home depot PVC + jigsaw + zipties.. !!
 
-I disconnected the hot spare drive, fired it up, and everything resynced
-nicely.
-
-Has this been seen?  Is there a fix?  I can't really provide much more
-info because I'm not willing to risk the data by experimenting..
-
-Regards,
+Thanks in advance for tips,
 Michael Stumpf
+
 
 
