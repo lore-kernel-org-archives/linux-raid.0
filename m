@@ -1,35 +1,36 @@
-From: Andrew Walrond <andrew@walrond.org>
-Subject: Re: raid1 fstab
-Date: Tue, 7 Sep 2004 18:40:44 +0100
+From: Tony Mantler <nicoya@ubb.ca>
+Subject: Re: Concatenation with redundancy
+Date: Tue, 7 Sep 2004 13:06:05 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200409071840.44395.andrew@walrond.org>
-References: <000301c494e3$1fc92720$0801a8c0@homelinux.net>
-Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Message-ID: <963EE6E4-00F8-11D9-94CF-0005023722B8@ubb.ca>
+References: <01C494D7.3E172440.bobhillegas@houston.rr.com>
+Mime-Version: 1.0 (Apple Message framework v619)
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <000301c494e3$1fc92720$0801a8c0@homelinux.net>
-Content-Disposition: inline
-To: linux-raid@vger.kernel.org
+In-Reply-To: <01C494D7.3E172440.bobhillegas@houston.rr.com>
+To: "bhillegas@dalcon.com" <bhillegas@dalcon.com>
+Cc: "'linux-raid@vger.kernel.org'" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tuesday 07 Sep 2004 15:01, Joe Pitts wrote:
-> Hello,
+
+On 7-Sep-04, at 12:36 PM, Bob Hillegas wrote:
+
+> How about an option to create a one-time RAID1 mirror on top of 
+> existing
+> raid structure? What it really is, is a backup. Install necessary 
+> drives,
+> trigger mirroring, remove drives, and array goes back to previous state
+> without additional mirror.
 >
-> I'm running FC2 kernel-2.6.8-1.521
->
-> I am converting a single disk setup to RAID1. I've been using the procedure
-> in OREILLY's Managing Raid on Linux, pp239 241 - Converting to software
-> raid.
-> I'm at the point where I'm have to edit the /etc/fstab file and aside from
-> listing the
-> md devices I have'nt a clue what else I should be putting in this file.
+> Beats backing up multi-tera-bytes to floppies. :-)
 
-All you need to know...
+True, but that's not *quite* what I'm looking for. ;)
 
-http://www.tldp.org/HOWTO/Software-RAID-HOWTO.html
 
-It's tells you how to setup fstab, and has a section on grub with raid1
+Cheers - Tony 'Nicoya' Mantler :)
 
-Andrew Walrond
+--
+Tony 'Nicoya' Mantler -- Master of Code-fu -- nicoya@ubb.ca
+--  http://nicoya.feline.pp.se/  --  http://www.ubb.ca/  --
+
