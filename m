@@ -1,71 +1,58 @@
-From: berk walker <berk@panix.com>
+From: Neil Brown <neilb@cse.unsw.edu.au>
 Subject: Re: md Grow for Raid 5
-Date: Tue, 08 Mar 2005 18:14:59 -0500
-Message-ID: <422E31F3.3070104@panix.com>
-References: <676e074ffe5f52e6671aac5a2c14e984@case.edu> <422DFE60.5020807@weisshuhn.de> <422E1C6A.2000006@h3c.com>
+Date: Wed, 9 Mar 2005 10:55:47 +1100
+Message-ID: <16942.15235.437442.433397@cse.unsw.edu.au>
+References: <676e074ffe5f52e6671aac5a2c14e984@case.edu>
+	<422DFE60.5020807@weisshuhn.de>
+	<422E1C6A.2000006@h3c.com>
+	<422E31F3.3070104@panix.com>
+	<422E3352.20002@h3c.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-In-Reply-To: <422E1C6A.2000006@h3c.com>
+In-Reply-To: message from Mike Hardy on Tuesday March 8
 Sender: linux-raid-owner@vger.kernel.org
 To: Mike Hardy <mhardy@h3c.com>
-Cc: Frank Wittig <fw@weisshuhn.de>, John Poirier <john.poirier@case.edu>, linux-raid@vger.kernel.org
+Cc: berk walker <berk@panix.com>, Frank Wittig <fw@weisshuhn.de>, John Poirier <john.poirier@case.edu>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Have you guys seen/tried mdadm 1.90?  I am delightfully experiencing the 
-neat issues [read problems] with MY system [sys1], and am too into 
-myself to be able to take on serious other-probs.  The doc [which is 
-still a tad lite, NB]  has a grow command.  Understand that your files 
-exist on/in a filesystem, which has a _size_.  Growing RAID and growing 
-fs are two, nonrelated things.  But if you want #2, then you have to do 
-both 1 & 2.  There is definately more than one way to "skin a cat", so 
-pgms of which you are familiar might be queried first.
+On Tuesday March 8, mhardy@h3c.com wrote:
+> 
+> berk walker wrote:
+> > Have you guys seen/tried mdadm 1.90?  I am delightfully experiencing the 
+> 
+> I believe the mdadm based grow does not work for raid5, but only for 
+> raid0 or raid1. raidreconf is actually capable of adding disks to raid5 
+> and re-laying out the stripes / moving parity blocks, etc
 
-Price - 2cents
-b-
-caveat:
-You may not get what you paid for -
-    but, you always pay for what you get.    <-Practise .sig
+There are different dimensions for growing....
+You can make the component devices bigger, or you can add component
+devices.  You can increase storage or you can increase redundancy.
 
-Mike Hardy wrote:
+If you replace all the devices in a raid1, raid5, or raid6 with large
+devices (presumably one at a time allowing for a reconstruct each
+time) then mdadm will allow you to "grow" the array to make use of the
+extra space.
 
->
-> Frank Wittig wrote:
->
->> It actually is available.
->> I've tested it and it worked fine for me. But taking a backup is 
->> highly recommended.
->> The trick is not to use mdadm, since growing with mdadm is not 
->> possible at the moment. Use raid-tools instead.
->> The program raidreconf comes along with raidtools. This prog takes 
->> two raid-tab files as input which describe the array configuration 
->> before and after reconfiguration. (See man raidreconf for further 
->> details)
->
->
-> I'll second both major points here:
->
-> raidreconf does work, but it can fail and leave things completely 
-> destroyed (imagine one bad block somewhere after parity was partially 
-> migrated), so take a backup.
->
-> Given that you're taking a backup already then, creating a new array 
-> (with its optimized resync) might be faster if its an online backup.
->
-> I'm 2 for 4 now on raidreconf working, with the two failures (sadly) 
-> being of the "operator error" variety - raidreconf is picky and fails 
-> slow if your disk sizes aren't what it expects, I found. It got to the 
-> end and ran out of space on me due to a slightly different "250GB" 
-> disk size once. The other was a bad block along the way - I should 
-> have done smartctl -t long on all drives prior to resize. Both lessons 
-> learned...
->
-> -Mike
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-> .
->
+mdadm will also allow you to "grow" and raid1 array by adding extra
+devices.  This only increases redundancy, not capacity.
 
+I code to allows you to "grow" a linear array by adding a drive to
+it.  I'm not sure if I have submitted this code.
+
+I plan a raid4 version that organises the data in a linear rather than
+a striped fashion.   It would be quite simple for mdadm to 'grow' this
+sort of array.
+
+All of these do not require moving data around, so they are easy.
+
+Growing a raid5 or raid6 by adding another drive is conceptually
+possible to do while the array is online, but I have not definite
+plans to do this (I would like to).  Growing a raid5 into a raid6
+would also be useful.
+These require moving lots of data around, and need to be able to cope
+with drive failure and system crash.... a fun project..
+
+As has been said, raidreconf does at least some of this off-line.
+
+NeilBrown
