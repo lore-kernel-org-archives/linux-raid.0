@@ -1,108 +1,58 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: lsraid reports wrong device list with online RAID5 array
-Date: Sun, 7 Nov 2004 12:53:16 -0500
-Message-ID: <200411071753.iA7HrLN05327@www.watkins-home.com>
-References: <Pine.LNX.4.61.0411071240340.13212@ge.kalou.net>
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: [PATCH md 3 of 4] Delete unplug timer before shutting down md array.
+Date: Mon, 8 Nov 2004 10:38:45 +1100
+Message-ID: <16782.45573.167835.261291@cse.unsw.edu.au>
+References: <20041102143440.12019.patches@notabene>
+	<E1COpUP-000392-Hw@notabene.cse.unsw.edu.au>
+	<20041103150315.47a7982e.akpm@osdl.org>
+	<20041104092107.GE14993@suse.de>
+	<20041105085250.GF16649@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.61.0411071240340.13212@ge.kalou.net>
+In-Reply-To: message from Jens Axboe on Friday November 5
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Olivier Kaloudoff' <kalou@kalou.net>, linux-raid@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: Andrew Morton <akpm@osdl.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Raidtools are not recommended.  You should learn and use mdadm.
+On Friday November 5, axboe@suse.de wrote:
+> On Thu, Nov 04 2004, Jens Axboe wrote:
+> > On Wed, Nov 03 2004, Andrew Morton wrote:
+> > > NeilBrown <neilb@cse.unsw.edu.au> wrote:
+> > > >
+> > > > As the unplug timer can potentially fire at any time, and
+> > > > and it access data that is released by the md ->stop function,
+> > > > we need to del_timer_sync before releasing that data.
+> > > 
+> > > I don't think I saw an update to this patch so I just knocked up the below
+> > > simple conversion.  If anyone can think up a nice description of what
+> > > blk_sync_queue() should do, it would be appreciated ;)
+> > 
+> > I don't see much merrit in this patch, you have to prevent new requests
+> > from setting it off again. Basically, from my understanding, Neil needs
+> > a way to atomically kill the timer and the unplug function. Correct?
+> 
+> Actually, with the online io scheduler switching we have a way to do
+> this already:
+> 
+> 	blk_wait_queue_drained(q, 1);
+> 	blk_sync_queue(q);
+> 
 
-Guy
+I couldn't find blk_sync_queue in 2.6.10-rc1-mm2 ....
 
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Olivier Kaloudoff
-Sent: Sunday, November 07, 2004 6:46 AM
-To: linux-raid@vger.kernel.org
-Subject: lsraid reports wrong device list with online RAID5 array
+> 
+> Would this work for you, Neil?
 
-Hi,
+I need it to do:
+	del_timer_sync(&q->unplug_timer);
+	kblockd_flush();
 
+(I now realise that the patch I started with wasn't enough, as
+kblockd_flush is needed as well).
 
- 	I noticed a weird behaviour for lsraid today, that I'm unable to 
-understand yet ... Are the raidtools still maintained, or at least bugs 
-corrected ?
+Anything that I can that eventually does that should be OK.
 
- 	here is what happens, as you can see, my /dev/md2 is 
-composed of /dev/hda3, /dev/hdb3, /dev/hdc3, that are reported right while 
-offline, but /dev/hdc3 is shown as /dev/null while online :-(
-
-
-[root@ge raidtools-1.00.3]# raidstop /dev/md2
-
-[root@ge raidtools-1.00.3]# ./lsraid -R -p | grep md2 -A 13
-# md device [dev 9, 2] /dev/md2 queried offline
-# Authoritative device is [dev 22, 3] /dev/hdc3
-raiddev /dev/md2
-         raid-level              5
-         nr-raid-disks           3
-         nr-spare-disks          0
-         persistent-superblock   1
-         chunk-size              128
-
-         device          /dev/hda3
-         raid-disk               0
-         device          /dev/hdb3
-         raid-disk               1
-         device          /dev/hdc3
-         raid-disk               2
-
-[root@ge raidtools-1.00.3]# raidstart /dev/md2
-
-[root@ge raidtools-1.00.3]# ./lsraid -R -p | grep md2 -A 13
-#       /dev/md2
-#       /dev/sda
-#       /dev/sda1
-#       /dev/sda2
-#       /dev/sda3
-#       /dev/hdc
-#       /dev/hdc1
-#       /dev/hdc2
-#       /dev/hdc3
-#       /dev/hda
-#       /dev/hda1
-#       /dev/hda2
-#       /dev/hda3
-#       /dev/hdb
---
-# md device [dev 9, 2] /dev/md2 queried online
-raiddev /dev/md2
-         raid-level              5
-         nr-raid-disks           3
-         nr-spare-disks          0
-         persistent-superblock   1
-         chunk-size              128
-
-         device          /dev/hda3
-         raid-disk               0
-         device          /dev/hdb3
-         raid-disk               1
-         device          /dev/null
-         failed-disk             2
-
-
-Additionnaly, you can see clearly that /dev/hdc3 is not in a failed state:
-
-
-kalou@ge cat /proc/mdstat  | grep -A1 md2
-md2 : active raid5 hdc3[2] hdb3[1] hda3[0]
-       120246272 blocks level 5, 128k chunk, algorithm 0 [3/3] [UUU]
-
-
-
-
-
-Olivier
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+NeilBrown
