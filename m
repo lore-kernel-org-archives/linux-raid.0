@@ -1,37 +1,50 @@
-From: "Michael" <michael@insulin-pumpers.org>
-Subject: Re: Booting from a raid1 device ?
-Date: Tue, 28 Oct 2003 08:23:21 -0800
+From: Norman Schmidt <norman.schmidt@ratnet.stw.uni-erlangen.de>
+Subject: Re: I'm about ready to do SW-Raid5 - pointers needed
+Date: Tue, 28 Oct 2003 17:37:33 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200310281623.h9SGNG229162@bzs.org>
-References: <200310272311.19232.dusty@strike.wu-wien.ac.at>
-Reply-To: michael@insulin-pumpers.org
+Message-ID: <3F9E9B4D.4000600@ratnet.stw.uni-erlangen.de>
+References: <3F9DAD4C.3000002@verizon.net> <200310281506.32013.maarten@vbvb.nl> <Pine.LNX.4.56.0310281418490.25548@unicorn.drogon.net> <200310281605.30225.maarten@vbvb.nl>
+Reply-To: schmidt@naa.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: <20031028105644.GF30725@marowsky-bree.de>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <200310281605.30225.maarten@vbvb.nl>
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-> On 2003-10-27T23:11:19,
->    Hermann Himmelbauer <dusty@strike.wu-wien.ac.at> said:
-> 
-> > BTW, assuming I have md.o not as module but statically in the kernel, which 
-> > bootloader would support RAID1? I heard LlLO does this job but does also grub 
-> > - which I prefer - support Linux SW-RAID1?
-> 
-> grub doesn't yet afaik.
-> 
-> > What about RAID5? Is there any bootloader that supports it?
-> 
-> No.
-> 
+maarten van den Berg schrieb:
 
-The appropriate solution is to put an 8-16 meg partition as the first 
-partition on the first two drives (all the drives) in the system. Set 
-those up as raid one and mount them on /boot. Use these as the boot 
-boot partitions in a mostly raid 5 system. Likewise, segment swap 
-partitions into pairs on the raid5 disk set and create raid 1 arrays 
-for swap
+>>The cards I have identify in /proc/pci as:
+>>
+>>  Unknown mass storage controller: Promise Technology, Inc. 20269 (#2) (rev
+>>2)
+> 
+> 
+> That's an Ultra 133 TX, I have the same one.
+> 
+> 
+>>They aren't RAID cards (as far as I'm aware!) and I needed to apply the AC
+>>patches to 2.4.20 to get them to be recognised. (These patches are
+>>integrated into 2.4.22)
+> 
+> 
+> Hmm.  Ok.  Weird...  My antique SuSE linux distro 7.3 recognized them right 
+> away, and so did the latest SuSE 8.2 I installed over that yesterday.
+> SuSE has been known to apply a lot of patches to their kernel though...
 
-Michael
+I use a plain kernel.org 2.4.22 kernel with tw0 Ultra133 and one 
+Ultra100 in one server. It works without problems. Are you sure you 
+activated ATA/IDE/MFM/RLL -> IDE, ATA and ATAPI Block devices -> PROMISE 
+PDC202(68|69|70|71|75|76|77)?
+
+That should do the trick.
+
+Hope this helps, Norman.
+-- 
+--
+
+Norman Schmidt          Institut fuer Physikal. u. Theoret. Chemie
+Dipl.-Chem.             Friedrich-Alexander-Universitaet
+schmidt@naa.net         Erlangen-Nuernberg
+
