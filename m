@@ -1,29 +1,37 @@
-From: Maxwell Bottiger <sleepylight@jive-turkey.net>
-Subject: recovery of software raid0 - continued
-Date: 16 Jun 2002 20:47:33 -0400
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: raid0_make_request bug: can't convert ...bigger than 8k
+Date: Mon, 17 Jun 2002 14:27:28 +1000 (EST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1024274853.2688.13.camel@jive-turkey.net>
+Message-ID: <15629.25904.914128.956704@notabene.cse.unsw.edu.au>
+References: <3D0A3100.9010506@umich.edu>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: message from Paul Kubicz on Friday June 14
+To: Paul Kubicz <pkube@umich.edu>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-The attempt to recover my missing raid arrays continues...
+On Friday June 14, pkube@umich.edu wrote:
+> I'm getting a message like this when trying to compile raid into the 
+> 2.5.x kernel (up to 2.5.21). I've picked up several semi-relevant 
+> messages in a search, but I couldn't find anything that directly 
+> addresses the problem.
 
-I have 3 arrays.  md0 is composed of sdd1 and sde1, md1 is composed of
-sdd2 and sde2 and md2 is composed of sdd3 and sde3.  md0 is mounted
-under /usr, md1 _should_ be mounted under /home and md2 _should_ mounted
-/mnt/shared.
+That would be because the problem hasn't been addressed yet...  I'm
+afraid you will have to live without raid0 (and probably linear) in
+2.5 kernels for a while longer.
 
-The problem I have right now is that md1 says that it is composed of
-sdd2 and sde2, however it is not the right size.  The same is true of
-md2.  It looks like the data and size of the two arrays have been
-reversed, even though they say the are composed of the right physical
-partitions.  Everything on /home looks fine, but /mnt/shared is empty
-save the lost+found directory.
+NeilBrown
 
-My questions are, first, what is wrong with the RAID mapping, and
-second, is it possible that my data in /mnt/shared (aka md2) is still in
-place?
+> 
+> I'm trying to mount md0 created under kernel 2.4.x. Thanks for any help.
+> 
+> 
+> 
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
