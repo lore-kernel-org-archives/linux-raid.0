@@ -1,59 +1,38 @@
-From: Brinley Craig <brinley.craig@godfreyhirst.com>
-Subject: Kernel Problem
-Date: Mon, 20 May 2002 16:04:33 +1000
+From: Anthony Johnson <anthony@storix.com>
+Subject: linux mkraid: segmentation fault
+Date: Sun, 19 May 2002 23:14:29 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <EED7EA5584A4D311AB4100E029444A3601761633@syspcb>
+Message-ID: <3CE89445.51B54454@storix.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: "'linux-raid@vger.kernel.org'" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi all,
+Hi,
+Can you please help me or provide me a contact where I can get some
+support for software raid?
 
-i have a kernel panic on my Sun E450,
-Runs RH 6.2 sparc64 2.2.19-6.2.16smp
-(with s/w raid 1 & 5)
-its under very little load, and has had a uptime of about 3 months.
+My company is developing a system recovery product that creates software
+raid devices, and I get a segmentation fault when I run:
+   mkraid -c /etc/raidtab --really-force /dev/md0
 
-Its been running well untill the following error appear on the console.
-any idea's what caused it? i havent reset it yet if there is any other info
-from the panic needed, or any other box info, let me know.
-Thanks
-Brin
+This problem doesn't occur on a normal running system, only after I have
+booted from my recovery diskettes, and it occurs no matter what I have
+configured in the raidtab file. I'm sure there is a problem due to
+something missing from the RAM filesystem created by the recovery
+diskettes but I can't find what it is.
 
+I have rebuilt the partition map (containing md0 devices), made the
+device nodes, updated the raidtab file correctly but nothing matters.
+The boot media contains the necessary commands and any libraries
+required (by running ldd on each executable).
 
-data_access_exception: Shit SFSR[0000000000801009] SFAR[fffff80000000030],
-going.
-(pic of face goes here)
-swapper(0): Dax
+Can you tell me what files or device nodes are required to make a raid
+device that I might be missing? This is quite urgent as we'll be
+releasing this product in only a month and we won't be able to support
+systems using software raid until I resolve this.
 
-CPU[1]: (irq counts)
-TSTATE: (stuff here)
-(cpu registers here)
-Instruction DUMP: (stuff here)
-Aiee, killing interupt handler
-CPU[3]: (irq counts)
-TSTATE: (stuff here)
-kernel panic: attempted to kill the idle task!
-In swapper task - not syncing
-(cpu register stuff)
-
-
-
-
----------------------------------------------------
-Brinley Craig
-Network Administrator
-Godfrey Hirst Australia Pty. Ltd.
-Ph: 03 5225-0139 Fx: 03 5222-3885
-brinley.craig@godfreyhirst.com
----------------------------------------------------
-
-
-
-PLEASE NOTE:
-Whilst we use software to detect viruses we exclude all liability
-for the presence of any virus or alike in any attachments.
-
+Thanks!
+Anthony
