@@ -1,45 +1,35 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: RE: Array of disks attached to multiple controllers
-Date: Wed, 15 Sep 2004 06:31:47 +1000
+From: Andy Arvai <arvai@scripps.edu>
+Subject: mkraid problem with 2+TB devices
+Date: Tue, 14 Sep 2004 23:33:50 -0700 (PDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16711.21811.373714.356892@cse.unsw.edu.au>
-References: <4146FB2F.9080103@opf.slu.cz>
-	<200409141459.i8EExv332327@watkins-home.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Message-ID: <200409150633.XAA16537@astra.scripps.edu>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Guy on Tuesday September 14
-To: Guy <bugzilla@watkins-home.com>
-Cc: 'Lukas Kubin' <kubin@opf.slu.cz>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday September 14, bugzilla@watkins-home.com wrote:
-> Well I have a clue!
-> <Device size> X (<Number of disks> - 1)
-> 195360896 X (16-1) = 2930413440 (a very nice number!)
-> 
-> I think you have crossed a 2T limit.
-> Subtract 2T from the expected size and you get you size.
-> 2930413440 - 2^31 = 782929792  (This is your size!)
-> 
-> 2^31 = 2T. (we have 1K blocks)
-> 
-> You have exceeded a 2T limit somewhere.  I don't know where the limit is.  I
-> thought I read that devices were limited to 2T, but arrays could be larger.
-> Maybe you have an older kernel that only supports 2T.  My 14 disk monster
-> array is just over 200Gig, so I have not had this problem.  A new kernel may
-> help, but I don't know.  Time for Neil to help! :)
 
-2.4 kernels on 32bit processors cannot handle devices larger than 2^32
-  sectors (2T).  Maybe not even bigger than 1T, I'm not sure.
+There's a problem with mkraid creating a raid device where the
+individual devices are each over 2TB:
 
-2.6 kernels can if you select CONFIG_LBD (Large Block Devices).
+  [root@rad7 3dm2]# mkraid --really-force /dev/md0
+  DESTROYING the contents of /dev/md0 in 5 seconds, Ctrl-C if unsure!
+  handling MD device /dev/md0
+  analyzing super-block
+  couldn't get device size for /dev/sdb -- File too large
+  mkraid: aborted.
+  (In addition to the above messages, see the syslog and /proc/mdstat as well
+   for potential clues.)
 
-> 
-> I think you will be fine if you only use 11 disks!
-> 195360896 * (11-1) = 1953608960 (this is under the 2T limit).
+The kernel (2.6.8-1) is able to read the device, although with a warning:
 
-Worth a try, as is using 2.6
+  Aug 26 16:38:59 localhost kernel: sdb : very big device. try to use READ CAPACITY(16).
+  Aug 26 16:38:59 localhost kernel: SCSI device sdb: 4687368192 512-byte hdwr sectors (2399933 MB)
+ 
+I assume mkraid needs to do something like use READ CAPACITY(16).
+There's a similar problem with mdadm and I've discussed this with Neil
+Brown who plans to fix it. I don't know if mkraid is being actively
+maintained, but if someone does come up with a patch soon, then
+I would be willing to try it.
 
-NeilBrown
+Andy
