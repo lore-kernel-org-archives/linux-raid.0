@@ -1,53 +1,34 @@
-From: maarten <maarten@ultratux.net>
+From: Frank van Maarseveen <frankvm@frankvm.com>
 Subject: Re: Spares and partitioning huge disks
-Date: Sat, 8 Jan 2005 13:19:00 +0100
-Message-ID: <200501081319.00799.maarten@ultratux.net>
-References: <crmt7e$8d6$1@sea.gmane.org> <200501072157.j07Lvg906301@www.watkins-home.com> <croc94$kiu$1@sea.gmane.org>
+Date: Sat, 8 Jan 2005 15:52:28 +0100
+Message-ID: <20050108145228.GB26475@janus>
+References: <crmt7e$8d6$1@sea.gmane.org> <200501072157.j07Lvg906301@www.watkins-home.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <croc94$kiu$1@sea.gmane.org>
 Content-Disposition: inline
+In-Reply-To: <200501072157.j07Lvg906301@www.watkins-home.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Guy <bugzilla@watkins-home.com>
+Cc: 'Mario Holbe' <Mario.Holbe@TU-Ilmenau.DE>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Saturday 08 January 2005 11:22, Mario Holbe wrote:
-> Guy <bugzilla@watkins-home.com> wrote:
-> > Each of his six RAID5 arrays will only use 1 partition of each physical
-> > disk.
-> > His plan is to combine the 6 arrays with LVM or a linear array.
->
-> Ah, I just missed that part, sorry & thanks :)
-> I agree with you then - it's something like a RAID5+0 (analogue
-> to RAID1+0) then and it *should* work just fine :)
+On Fri, Jan 07, 2005 at 04:57:35PM -0500, Guy wrote:
+> His plan is to split the disks into 6 partitions.
+> Each of his six RAID5 arrays will only use 1 partition of each physical
+> disk.
+> If he were to lose a disk, all 6 RAID5 arrays would only see 1 failed disk.
+> If he gets 2 read errors, on different disks, at the same time, he has a 1/6
+> chance they would be in the same array (which would be bad).
+> His plan is to combine the 6 arrays with LVM or a linear array.
 
-Yes, it should.  And the array does indeed work, but I'm plagued with a host 
-of other -unrelated- problems now. :-(
-First, I had to upgrade from kernel 2.4 to 2.6 because I lacked a driver for 
-my SATA card.  That was quite complicated as there is no official support to 
-run 2.6 kernels on Suse 9.0. It also entailed migrating to lvm2 as lvm is not 
-part of 2.6.  But as it turns out, the 2.6 kernel I eventually installed does 
-somehow not initialize my bttv cards correctly and also ALSA has problems.  
-So now I'm reverting back to a 2.4 kernel which should support SATA, version 
-2.4.28, which I'm building as we speak from vanilla kernel sources...
-But that has a lot of hurdles too, and I'd still have to find an ALSA driver 
-for that as well.  Worse, I fear that I will have to migrate back to lvm1 now 
-too, so that means copying all the 200 Gig data _again_, which by itself 
-takes about 10 hours... :-(
-Ah, if only I would have bought ATA disks instead of SATA !
-I've thought about putting the disks in another system and just use them over 
-NFS, but that would mean another system that is powered for 24/7, and that 
-gets to be a bit much.  Reinstalling from scratch with a 9.1 / 2.6 distro is 
-a worse option still, as mythtv carries such a bucket full of obscure 
-dependencies I'd hate to install all that again. 
+Intriguing setup. Do you think this actually improves the reliability
+with respect to disk failure compared to creating just one large RAID5
+array?
 
-In other words, I'm not there yet, but at least that has little or nothing to 
-do with lvm or md.  But this does 'suck' a lot.
-
-Maarten
+For one second I thought it's a clever trick but gut feeling tells
+me the odds of losing the entire array won't change (simplified --
+because the increased complexity creates room for additional errors).
 
 -- 
-
+Frank
