@@ -1,15 +1,35 @@
-From: Alistair Riddell <ali@gwc.org.uk>
-Subject: Re: Growing an Array?
-Date: Wed, 6 Nov 2002 15:12:34 +0000 (GMT)
+From: Huntress Gary B NPRI <HuntressGB@Npt.NUWC.Navy.Mil>
+Subject: RE: Growing an Array?
+Date: Wed, 06 Nov 2002 10:26:54 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0211061507140.21941-100000@frank.gwc.org.uk>
-References: <A506359028CAD21191C10008C75D895C040B8841@NPRI54EXC14.NPT.NUWC.NAVY.MIL>
+Message-ID: <A506359028CAD21191C10008C75D895C040B8844@NPRI54EXC14.NPT.NUWC.NAVY.MIL>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=iso-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <A506359028CAD21191C10008C75D895C040B8841@NPRI54EXC14.NPT.NUWC.NAVY.MIL>
+To: 'Alistair Riddell' <ali@gwc.org.uk>
 Cc: "'linux-raid@vger.kernel.org'" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
+
+
+My array is currently 6 X 73GB.
+
+I think you are saying that I can do this now using resize2fs?   I think I pessimistically assumed that tool was destructive.
+
+
+Regards,
+
+Gary Huntress
+Code 4113
+Naval Undersea Warfare Center
+Newport, RI  02841
+1-800-669-6892 x28990
+
+-----Original Message-----
+From: Alistair Riddell [mailto:ali@gwc.org.uk]
+Sent: Wednesday, November 06, 2002 10:13 AM
+Cc: 'linux-raid@vger.kernel.org'
+Subject: Re: Growing an Array?
+
 
 On Wed, 6 Nov 2002, Huntress Gary B NPRI wrote:
 
@@ -37,3 +57,7 @@ IT Manager, George Watson's College, Edinburgh
 Tel: +44 131 446 6070    Fax: +44 131 452 8594
 Microsoft - because god hates us
 
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
