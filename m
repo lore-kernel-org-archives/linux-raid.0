@@ -1,59 +1,49 @@
-From: murray evans <m.evans@rdg.ac.uk>
-Subject: Re: hostRAID, AIC-7901, disable?
-Date: Mon, 13 Dec 2004 21:15:22 +0000
-Message-ID: <cpl0tm$4sp$1@sea.gmane.org>
-References: <cpkem3$70s$1@sea.gmane.org> <bbfa52890412131309234b2d09@mail.gmail.com>
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: slow raid5 performance kernel 2.6 vs 2.4
+Date: Tue, 14 Dec 2004 15:49:05 +1100
+Message-ID: <16830.28865.842641.822948@cse.unsw.edu.au>
+References: <20041212211330.M51235-100000@xs3.xs4all.nl>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7Bit
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from ddx on Sunday December 12
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: ddx <ddx@xs4all.nl>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Colin McDonald wrote:
-
-> Cntl+A into the SCSI bios & disable it.
+On Sunday December 12, ddx@xs4all.nl wrote:
+> Hi,
 > 
-> Try that.
+> system :
 > 
+> P4 2.4GHz HT, 1GB DDR
+> 8*  S-ATA 250GB Hitachi on 2 Si3114 controllers
+> 
+> bonnie performance with 2.4 :
+> block input 126MB/sec
+> 
+> with 2.6 :
+> block input 90MB/sec
+> 
+> saw another posting about slow read performance with raid5 and 2.6
+> any ideas yet how to fix this ?
 > 
 
+Not yet.  I've been doing some testing which you can read about at
+    http://neilb.web.cse.unsw.edu.au/~neilb/01102979338
 
-Like I say, the setup tool has no option to disable it. this includes 
-both the bios, the the Adaptec SCSISelect tool (i.e. Ctrl A). Although
-the instructions do insist it is there, we've had a very thorough look,
-and it's not.
+I only get a drop from about 250 to 220 on my hardware, which still
+isn't good.
+I've got a few ideas but I'm not sure when I will have a chance to
+follow through with them.  I'm doing a bit more testing first to make
+sure I have a complete picture.
 
+NeilBrown
 
 > 
-> 
-> On Mon, 13 Dec 2004 16:04:08 +0000, murray evans <m.evans@rdg.ac.uk>
-> wrote:
->> We have recently aquired a new Dell Precision 670 workstation, on which
->> we intended to install linux, (Suse 9.1).
->> In the install, is reports it can not find any hard drives.
->> We think we have tracked this problem down to the AIC-7901 hostRAID
->> SCSI controller. From what I we can gather, linux no longer has
->> drivers for hostRAID hardware. We don't care about having RAID, just
->> a working system, so we would be content to simply disable the
->> hostRAID. the problem is, the setup tool does not have any option
->> to disable hostRAID.
->> 
->> Has anyone come across a solution? Is there a driver I don't know of?
->> Is there a way of disabling hostRAID?
->> 
->> *PS: From the SuSe install, when we try to add the appropriate SCSI
->> module for the AIC-7901, it fails.
->> 
->> -
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
 > -
 > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
