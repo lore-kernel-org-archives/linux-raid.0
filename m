@@ -1,62 +1,44 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: more mdadm questions
-Date: Wed, 1 Sep 2004 11:00:27 +1000
+From: Gordon Henderson <gordon@drogon.net>
+Subject: RE: raidtools vs mdadm
+Date: Wed, 1 Sep 2004 07:45:24 +0100 (BST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16693.7979.802560.41021@cse.unsw.edu.au>
-References: <1093997605.3399.34.camel@rich>
+Message-ID: <Pine.LNX.4.56.0409010739570.27250@lion.drogon.net>
+References: <200408311927.i7VJRi311085@watkins-home.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from rich turner on Tuesday August 31
-To: rich turner <rich@storix.com>
+In-Reply-To: <200408311927.i7VJRi311085@watkins-home.com>
+To: Guy <bugzilla@watkins-home.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday August 31, rich@storix.com wrote:
-> when mdadm queries information about the raid devices, does it simply
-> get the imformation from /proc/mdstat and format it accordingly?
+On Tue, 31 Aug 2004, Guy wrote:
 
-It also used the GET_ARRAY_INFO and GET_DISK_INFO ioctls.
-It also reads the super-block for more information.
+> As I understand it, raidtools is not supported anymore.  The gods of RAID
+> support mdadm.  I get this info from this list.
+>
+> RedHat 9 still uses raidtools.  I don't know about the newer versions of
+> redhat.  RedHat, you there?  Please use mdadm!  I don't know what other
+> distributions use.  I plan to give Debian a try the next time I setup a
+> system.
 
-> 
-> when mdadm displays information about the block devices raid devices are
-> built on how does it display the name the devices? does it show the
-> devfs name? does it show the mapper name if built on a logical volume?
-> are these names consistent?
+Debian Woody supplies both raidtools and mdadm - it's up to you which
+package you install. For the past 5-6 years, I've been using raidtools, as
+thats all I've had avalable, so I understand them well and still use them.
+However, I'm looking at mdadm for future builds and have just installed it
+on one of my servers (which I've already built with raidtools)
 
-It hunts through /dev for a special file with the name major/minor
-numbers, and uses the name of the file.
+Woody can't create RAID sets during install time, but I understand the new
+Debian (Sarge) installer is avalable now for testing which does
+incorporate this feature.
 
-> 
-> what about raid devices that were built with raidtools? does it look in
-> /proc/mdstat for information?
+> People have posted patches to remove raidstart from the startup scripts, and
+> replace them with mdadm.
 
-arrays built with raidtools are indistinguishable from arrays built
-with mdadm.
+Just don't install raidtools - by the looks of the startup scripts they
+are multually exclusive anyway, but I've patched the mdadm-raid startup to
+not execute on my local server (not strictly neccessary anyway as I'm
+using the auto start (0xFD) feature anyway) This is more or less essential
+to boot off RAID1 as far as I can tell.
 
-> 
-> how does mdadm know what devices to query if they are not defined in
-> /etc/mdadm/mdamd.conf with DEVICES?
-
-You must be using debian.  The conf file should be /etc/mdadm.conf,
-and is most places.
-
-I'm not sure what the question means.  "query" in what sense?
-The only devices mdadm queries are those that it has been told to
-query, possibly by /etc/mdadm.conf, possible by command line args.
-
-
-> 
-> if devices are missing from the raid device, is there a way of knowing
-> the name of the missing device without the configuration file?
-
-I'm not sure that question means anything.  If device is missing, then
-it doesn't exist.  You can add a spare that will be rebuilt.  It can
-be any un-used device of the right size.
-
-Supposing there was a way of "knowing the name of the missing device",
-how would you use that information?
-
-NeilBrown
+Gordon
