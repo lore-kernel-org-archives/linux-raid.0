@@ -1,57 +1,59 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: mdadm --monitor
-Date: Thu, 13 Feb 2003 20:10:16 +1100
+From: Sedlak Anton <ased@cce.cz>
+Subject: raid1 allow unintentional mount of low devices ...!!!
+Date: Thu, 13 Feb 2003 11:54:45 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <15947.24824.849512.207243@notabene.cse.unsw.edu.au>
-References: <Pine.LNX.4.44.0301291541270.10474-100000@duplo.agenda.si>
+Message-ID: <3E4B7975.2010005@cce.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-2; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from danci@agenda.si on Wednesday January 29
-To: danci@agenda.si
-Cc: linux-raid@vger.kernel.org
+To: jakob@unthought.net, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday January 29, danci@agenda.si wrote:
-> Hi!
-> 
-> I'm trying to use mdadm to monitor my Linux RAID stuff, but it fails to
-> send an email and/or run the program:
-> 
-> /etc/mdadm.conf
-> 
-> DEVICE /dev/hd*
-> ARRAY /dev/md0 uuid=9338f6b6:ccadf20b:0fd08433:8285e108
-> ARRAY /dev/md1 uuid=91bdf2b7:f6e83922:49437c5e:da5d7930
-> ARRAY /dev/md2 uuid=5f7f8c33:a492a6a3:4129ff63:ac152b4b
-> MAILADDR raidalert
-> PROGRAM /usr/local/sbin/raidalert
-> 
-> 'raidalert' is an alias for my account. If I do 'ls | mail raidalert', I
-> get a mail containin the directory listing...
-> 
-> /usr/local/sbin/raidalert is very simple (for now) and it works:
-> 
-> #!/bin/bash
-> /usr/bin/logger -p user.crit -t raidalert $@
-> 
-> So I guess I'm all set. I try 'mdadm --fail /dev/md0 /dev/hdg1' and wait.
-> On the console, where 'mdadm --monitor' is running, I get this:
+|Problem description in RAID1 - MIRROR - kernel-2.4.20, 
+raidtool2-0.90.200109:
+it look that while mirror raiddev is mounted and working it is possible 
+to mount devices
+that constitute that raid1. It means that it is also possible to mount 
+it when raid is stopped.
+And here is the problem: while in first case I can check if there is any 
+raid devices in advance using 'mount'
+in second I have no chance to do that - no partition type FD.
 
-Try adding "--scan" to the "mdadm --monitor" command.
-I can see this is not intuitive - I'll try to tidy up for mdadm-1.1
+Consider raid1 setup: /dev/md0 consist of /dev/hda1 and /dev/hdb1
+After (unintentional||) mounting /dev/hda1 I see on ext3 or ReiserFS: 
+journal reply n records.
+These records was replied without notice of raid system - later I made 
+check - creating dir or file
+on /dev/hda1 was not recognised by /dev/md0.
 
-NeilBrown
+Because I don't know in which state is now raid1 I always copy 
+everything to clean disk,
+reformat raid and copy back - but this take a lot of time.
 
-> 
-> Jan 29 15:48:25: FailSpare on /dev/md0 /dev/hdg1
-> 
-> But why doesn't it send the mail and/or run the program??
-> 
-> Thanks, D.
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I appreciate any suggestion how to synchronise low devices with raid 
+device or how
+to recognise in advance that given device is part of raid or to patch 
+'mount' to roar
+that there could be such problem.
+
+Sedlak Anton <ased@cce.cz>
+
+used config: /etc/raidtab
+
+raiddev /dev/md0
+|
+
+|        raid-level      1
+        nr-raid-disks   2
+        nr-spare-disks  0
+        chunk-size     4
+        persistent-superblock 1
+        device          /dev/hda1
+        raid-disk       0
+        device          /dev/hdb1
+        raid-disk       1
+|
+
+
+
