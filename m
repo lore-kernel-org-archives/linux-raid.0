@@ -1,86 +1,54 @@
-From: kernel@kamogawa.com.br
-Subject: Promise S150 TX4 - Driver compiled, but Kernel Panic
-Date: Mon, 26 Jul 2004 14:41:20 -0300 (BRT)
+From: Jim Paris <jim@jtan.com>
+Subject: Re: Call for RAID-6 users
+Date: Mon, 26 Jul 2004 17:38:11 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1965.192.168.1.14.1090863680.squirrel@webmail01.centralserver.com.br>
+Message-ID: <20040726213811.GA17363@jim.sh>
+References: <cds76e$ee7$1@terminus.zytor.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <cds76e$ee7$1@terminus.zytor.com>
 To: linux-raid@vger.kernel.org
-Cc: suporte@centralserver.com.br
 List-Id: linux-raid.ids
 
-Hello!
+> Thus, if you have used RAID-6 and have good or bad experiences, I'd
+> like to know them as soon as possible.
 
-I found the source code for Promise FastTrack S150 TX4 6 Port SATA
-RAID Controller. It was found at:
+Just tried setting up a RAID-6 on a new server, and I'm seeing
+complete filesystem corruption.
 
-http://www.promise.com/support/download/download2_eng.asp?productId=108&category=All&os=4#
+I have 6 250GB disks, and want them all in the array.  I've created it
+degraded, with the first disk missing, since that disk temporarily
+holds the system.
 
-I am using Tao Linux, a RedHat Enterprise Linux clone, and it uses
-kernel 2.4.21. Here is what I did:
+Using kernel 2.6.7, mdadm 1.6.0, I did something like this:
 
-1. Installed kernel-BOOT.2.4.21-15.TL2
-2. Booted with kernel-BOOT
-3. Installed the kernel source
-4. Compiled the code with Independent Modules
-5. Started an installation with driver disk
-6. Loaded the ft3xx module
-7. Kernel Panic
+# mdadm --create /dev/md1 --level=6 --chunk=128 --raid-devices=6 missing /dev/hd{g,i,k,m,o}2
 
-The system specs are:
+which gives me:
 
-Processor: Pentium 4 2GHz
-Memory: 256 DIMM
-Dist: Tao Linux (RHEL 3 Clone)
-Kernel: 2.4.21-15.TL2BOOT
-GCC: 3.23 20030502 (Red Hat Linux 3.2.3-34)
-MotherBoard: Intel S875WP1-E ( LX ) with onboard Promise FastTrack
-S150 TX4 SATA RAID Controller
+md1 : active raid6 hdo2[5] hdm2[4] hdk2[3] hdi2[2] hdg2[1]
+      976269312 blocks level 6, 128k chunk, algorithm 2 [6/5] [_UUUUU]
 
-When I loaded the module, the following error was shown:
+Then created the filesystem:
+# mkreiserfs /dev/md1
+# reiserfsck /dev/md1  # <-- no errors
+# df -H                # <-- shows proper size (1 TB)
 
----
+Then copied the system do it:
+# mount /dev/md1 /mnt/root
+# cd /mnt/root ; tar --one-file-system -cf - / | tar --preserve -xvf - ; cd /
+# umount /mnt/root
+# reiserfsck /dev/md1  # <-- many, many errors
 
-Oops: 0000
-CPU: 0
-EIP: 0060:[<c0188577>] Not Tainted
-EFLAGS: 00010246
+There were no errors in dmesg while copying the data to the
+filesystem, or while running reiserfsck.  The filesystem gives tons of
+errors if I try to use it as root.  Not sure what else to try.  It's
+easy to reproduce, and seems to fail the exact same way every time.
 
-EIP is at (2.4.21-15.TL2BOOT/i686)
-eax: 00000000	ebx: c1a8cb60	ecx: 33190100	edx: 00000020
-esi: 00000054	edi: 00000000	ebp: 00000002	esp: cfe27e80
-ds: 0068	es: 0068	ss: 0068
-Process Loader (pid: 16, stackpage=cfe27000)
-Stack:  00000020 c018bd49 c134a110 00000020 00000001 cfdf92e4 00000066
-080b9040
-	010001ff 00000000 00000000 ffffffff 00000012 00000066 c1a11800
-00000000 080b9040 c018c4c8 c1a18000 00000001 c02fc592 00000066
-00000066 cfe26000
-Call Trace: [<c018bd49>] (0xcfe27e04)
-[<c018c4c8>] (0xcfe27ec4)
-[<c0180c3f>] (0xcfe27ee0)
-[<c017f459>] (0xcfe27f4c)
-[<c017d16b>] (0xcfe27f74)elements | <Space> selects | <F12> next
-screen [<c0180a84>] (0xcfe27f78)
-[<c0142170>] (0xcfe27f9c)
+I need this server up soon, so I may just settle for RAID5, but I can
+keep it around for testing for a few days.  Let me know if you'd like
+access to the machine.
 
-Code: 8b 04 81 85 c8 74 10 83 e2 3f 0f b7 04 50 3d ff 01 00 00 89
-
-Kernel Panic: Fatal Exception
-
----
-
-The driver disk and kernel error can be found at:
-
-http://www.kamogawa.com.br/RAID
-
-Can somebody help me?
-
-Thanks and Best Regards,
-
-Helio Rubens Kamogawa
-kernel at kamogawa dot com dot br
-+55 41 3241993
-
+-jim
