@@ -1,58 +1,41 @@
-From: AndyLiebman@aol.com
-Subject: Re: Please Confirm I'm Solving Problem Correctly!
-Date: Thu, 4 Mar 2004 08:36:03 EST
+From: Juri Haberland <list-linux.raid@spoiled.org>
+Subject: Re: md: can not impport hdb1, has active inodes!
+Date: Thu, 4 Mar 2004 18:56:10 +0000 (UTC)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <be.6b4d003.2d788ac3@aol.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
+Message-ID: <news2mail-c27u4a$cch$1@cartman.spoiled.org>
+References: <4045A154.12266.4B21C5B@localhost> <4045FB6F.7D934181@SteelEye.com>
+Reply-To: Juri Haberland <juri@koschikode.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org, bugzilla@watkins-home.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->In a message dated 3/3/2004 11:11:54 PM Eastern Standard Time, 
-bugzilla@watkins->home.com writes:
+Paul Clements <Paul.Clements@steeleye.com> wrote:
+> Chris Evans wrote:
+> 
+>> a) confirm or deny my hunch that the ext2/ext3 issue is normal?
+> 
+> A reasonable hunch, but no, it is not normal for an ext3 root fs to show
+> up as ext2 in /proc/mounts:
+> 
+> # cat /proc/mounts
+> rootfs / rootfs rw 0 0
+> /dev/root / ext3 rw 0 0
+> /proc /proc proc rw 0 0
+> [snip]
 
->One failed drive should NOT cause data corruption!  The array should
->continue just fine.  In most cases you may not know a disk has failed,
->unless you notice a decrease in performance.
->
->I am not an expert, so wait for someone like Neil Brown to respond before
->you take any chances with your data.
->
->Your "fail, remove and add" is correct, but only after you assemble the
->array.  I would verify the data first, before doing the fail.
->
->Corruption?  I have 2 guesses.
->1. a bug in the RAID software.
->2. somehow the bad disk was returning bad data instead of giving a read
->error.  The RAID software did not detect a read error, so it did not fail
->the drive.
->
->Guy
+No, it is normal. It happens, when /etc/fstab still contains ext2 as fs-type
+for the root-fs. I don't recall the exact reason, but it has something
+to do with the fact that the mount command normally updates /etc/mtab
+when a filesystem is mounted. As the root-fs is first mounted read-only,
+mount cannot update /etc/mtab. When the root-fs gets remounted
+read-write, mount updates /etc/mtab, but (I think) has at that stage no
+clue of what filesystem type the root-fs is and therefore uses the entry
+from /etc/fstab. For an authorative answer search the mailing list archive
+from the ext3 mailing list.
 
-I was looking back at some old comments from Neil Brown regarding another 
-problem I once had.  I'm confused about whether I need to start the array with 
-RUN before I "fail/remove" the bad drive? 
+Regards,
+Juri
 
-Right now, if I try to assemble the array with 
+-- 
+Juri Haberland  <juri@koschikode.com> 
 
-'mdadm -Av /dev/md6 --uuid=[uuid string] /dev/sd*' 
-
-I get back a message: 
-mdadm: /dev/md6 assembled from 4 drives - need all 5 to start it (use --run 
-to insist)
-
-If I 'cat /proc/mdstat' the array shows up but is "inactive". Which I guess 
-means it isn't "started". But it seems to be "assembled". 
-
-In the past, Neil told me to do just what it says, use "run".  Meaning, 
-'mdadm -Av --run --uuid=[uuid string] /dev/sd*' 
-
-Does the array in fact need to be "started" (with run, if necessary) before I 
-can "fail" and "remove" the faulty drive? I guess that's my question? I 
-thought it only needed to be "assembled".  
-
-Hope I can get a good answer to this soon! Thanks. 
-
-Andy Liebman
