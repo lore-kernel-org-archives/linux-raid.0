@@ -1,51 +1,42 @@
-From: Jure =?UTF-8?B?UGXEjWFy?= <pegasus@nerv.eu.org>
+From: Luca Berra <bluca@comedia.it>
 Subject: Re: Proposed enhancements to MD
-Date: Tue, 13 Jan 2004 23:33:20 +0100
-Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040113233320.23e4cfef.pegasus@nerv.eu.org>
-References: <40043C75.6040100@pobox.com>
-	<400457E3.5030602@adaptec.com>
+Date: Tue, 13 Jan 2004 23:42:55 +0100
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20040113224255.GK26643@percy.comedia.it>
+References: <40033D02.8000207@adaptec.com> <40043C75.6040100@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <400457E3.5030602@adaptec.com>
-To: Scott Long <scott_long@adaptec.com>
-Cc: jgarzik@pobox.com, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, neilb@cse.unsw.edu.au
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <40043C75.6040100@pobox.com>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Scott Long <scott_long@adaptec.com>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-raid <linux-raid@vger.kernel.org>, Neil Brown <neilb@cse.unsw.edu.au>
 List-Id: linux-raid.ids
 
-On Tue, 13 Jan 2004 13:41:07 -0700
-Scott Long <scott_long@adaptec.com> wrote:
+On Tue, Jan 13, 2004 at 01:44:05PM -0500, Jeff Garzik wrote:
+>And I could have _sworn_ that Neil already posted a patch to do 
+>partitions in md, but maybe my memory is playing tricks on me.
+he did, and a long time ago also.
+http://cgi.cse.unsw.edu.au/~neilb/patches/
 
-> A problem that we've encountered, though, is the following sequence:
->=20
-> 1) md is inialized during boot
-> 2) drives X Y and Z are probed during boot
-> 3) root fs exists on array [X Y Z], but md didn't see them show up,
->     so it didn't auto-configure the array
->=20
-> I'm not sure how this can be addressed by a userland daemon.  Remembe=
-r
-> that we are focused on providing RAID during boot; configuring a
-> secondary array after boot is a much easier problem.
+>IMO, your post/effort all boils down to an open design question:  device 
+>mapper or md, for doing stuff like vendor-raid1 or vendor-raid5?  And it 
+>is even possible to share (for example) raid5 engine among all the 
+>various vendor RAID5's?
+I would believe the way to go is having md raid personalities turned
+into device mapper targets.
+the issue is that raid personalities need to be able to constantly
+update the metadata, so a callback must be in place to communicate
+`exceptions` to a layer that sits above device-mapper and handles
+metadatas.
 
-Looking at this chicken-and-egg problem of booting from an array from
-administrator's point of view ...
+L.
 
-What do you guys think about Intel's EFI? I think it would be the most
-apropriate place to put a piece of code that would scan the disks, asse=
-mble
-any arrays and present them to the OS as bootable devices ... If we're =
-going
-to get a common metadata layout, that would be even easier.
 
-Thoughts?
-
---=20
-
-Jure Pe=C4=8Dar
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Luca Berra -- bluca@comedia.it
+        Communication Media & Services S.r.l.
+ /"\
+ \ /     ASCII RIBBON CAMPAIGN
+  X        AGAINST HTML MAIL
+ / \
