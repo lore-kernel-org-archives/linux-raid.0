@@ -1,27 +1,35 @@
 From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: Can't mount after mkfs -b 8192
-Date: Fri, 4 Jun 2004 11:21:52 +1000
+Subject: Re: Power Outage and Recovery
+Date: Fri, 4 Jun 2004 11:23:41 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16575.52912.144833.436948@cse.unsw.edu.au>
-References: <40BFA6DD.6000904@dgreaves.com>
+Message-ID: <16575.53021.158720.522017@cse.unsw.edu.au>
+References: <1925.66.230.1.56.1086292161.squirrel@exitwound.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from David Greaves on Thursday June 3
-To: David Greaves <david@dgreaves.com>
+In-Reply-To: message from Stephen Hargrove on Thursday June 3
+To: stephen@exitwound.org
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday June 3, david@dgreaves.com wrote:
-> Hi
+On Thursday June 3, stephen@exitwound.org wrote:
 > 
-> First - thanks Guy - I've setup using 1 big partitions and I'll deal 
-> with monitoring as you suggest.
+> # mdadmin --assemble --scan
+> mdadm: no devices found for /dev/md0
 > 
-> (BTW, are patches to mdadm recvd well? If so I'll take a look - 
-> especially at the state=spare message when rebuilding.)
+> Do I need to run reiserfsck on each of the four drives?  How should I
+> proceed in order to recover my array?
 
-I like to think so.....
+No.
+
+> 
+> If I've left out anything important, just let me know and I'll be glad to
+> supply it.
+
+cat /proc/partitions
+mdadm -E /dev/hd?1
+
+might help.
 
 NeilBrown
