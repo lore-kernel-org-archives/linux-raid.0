@@ -1,103 +1,166 @@
-From: "Rechenberg, Andrew" <ARechenberg@sfg.com>
-Subject: RE: Low perfomance of RAID0,RAID5, RAID+LVM on 2.6
-Date: Thu, 19 Aug 2004 14:12:07 -0400
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: Raid5 Construction Question
+Date: Thu, 19 Aug 2004 14:17:43 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <8075D5C3061B9441944E1373776451186488C7@cinshrexc03.shermfin.com>
+Message-ID: <200408191817.i7JIHg313827@watkins-home.com>
+References: <4124E8F5.1010105@psc.edu>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 8BIT
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-To: "Vladimir I. Umnov" <uvi@ezmail.ru>
+In-Reply-To: <4124E8F5.1010105@psc.edu>
+To: 'PAulN' <pauln@psc.edu>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Vladimir,
+You don't need to wait.  You can use the array now.
 
-In the part of the message that was quoted to the linux-raid list the
-performance of the RAID devices isn't specified.  All I see is you
-testing /dev/sda1 and mentioning kernel modules, but no mention of
-/dev/mdX or /dev/YourVG/YourLV.
+But ouch 305K/sec!  If this a 386-33?  :)
 
-What types of numbers are you seeing when using your RAID/LVM devices in
-your dd test?  Also, you may want to try using bonnie++ to get some
-representative numbers as this program tends to be a little more
-representative of actual performance without involving the linux VM
-cache.
+Have you tried dd tests on each disk to verify each works well?
 
-I have yet to use 2.6 for RAID/LVM so I can't point you in a specific
-direction, however I didn't see any performance numbers for RAID or LVM
-devices.
+Something like:
+time dd if=/dev/sdc1 of=/dev/null bs=64k count=100000
+This is just a read test.  My disks take about 340 seconds.  Yours should be
+about twice as fast.
 
-Try running bonnie++ or /dev/mdX or /dev/YourVG/YourLV and seeing if
-it's what you expect.
+Each disk should give about the same performance.
+You may find 1 that has issues.
 
-Good luck,
-Andy.
+If you are willing to re-build the array, you could do a write test:
+time dd if=/dev/zero of=/dev/sdc1 bs=64k count=10000
+THIS WILL TRASH THE ARRAY!!!
 
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org 
-> [mailto:linux-raid-owner@vger.kernel.org] On Behalf Of David Greaves
-> Sent: Thursday, August 19, 2004 11:53 AM
-> To: Vladimir I. Umnov
-> Cc: linux-raid@vger.kernel.org
-> Subject: Re: Low perfomance of RAID0,RAID5, RAID+LVM on 2.6
-> 
-> -----BEGIN PGP SIGNED MESSAGE-----
-> Hash: SHA1
-> 
-> Vladimir I. Umnov wrote:
-> 
-> |HW: chipset 875WPE, P4 2.4HT, 3 SATA WD 160JD, 1 ATA Samsung 80Gb.
-> |SW: kernel 2.6.6, libata drivers for PROMISE S150 TX4.
-> |CONFIG: 256K readahead on all drives.
-> |    sda1,sdb1,sdc1->RAID0 (md0)
-> |    sda2,sdb2,sdc2,hda1->RAID5 (md1)
-> |    about 20 partitions on LVM2 with xfs,ext3,reiserfs
-> |    chunksize on md0, md1 = 256k - this was optimal with 
-> 2.6.0test3 about
-> |    year ago.
-> |
-> |Theoretically RAID0 read speed should be nearly read speed 
-> of one drive 
-> |multiply to number of drives, but I have:
-> |dd if=/dev/sda1 of=/dev/null gives about 44 Mb/s on all 
-> drives (but  on
-> |sii3112 ide driver with  WD 160JD about 55Mb/s and on libata the same
-> |44)
-> 
-> I use my arrays for large video files so large readahead is good.
-> 
-> I use blockdev on the lvms:
-> /sbin/blockdev --setra 4096 /dev/video_vg/video_lv 
-> /sbin/blockdev --setra 4096 /dev/video_vg/huge_lv
-> 
-> the md device:
-> /sbin/blockdev --setra 4096 /dev/md0
-> 
-> and the raw devices
-> /sbin/blockdev --setra 4096 /dev/sda
-> /sbin/blockdev --setra 4096 /dev/sdb
-> /sbin/blockdev --setra 4096 /dev/sdc
-> /sbin/blockdev --setra 4096 /dev/sdd
-> /sbin/blockdev --setra 4096 /dev/hdb
-> 
-> HTH
-> 
-> David
-> -----BEGIN PGP SIGNATURE-----
-> Version: GnuPG v1.2.5 (GNU/Linux)
-> Comment: Using GnuPG with Thunderbird - http://enigmail.mozdev.org
-> 
-> iD8DBQFBJMz08LvjTle4P1gRAkfpAJ9XA17vexSqmcN0LVFZOx0Dxik/BQCgjMk+
-> oAslumzTWosxF9WqnDXln3k=
-> =C3uO
-> -----END PGP SIGNATURE-----
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe 
-> linux-raid" in the body of a message to 
-> majordomo@vger.kernel.org More majordomo info at  
-> http://vger.kernel.org/majordomo-info.html
-> 
+Guy
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of PAulN
+Sent: Thursday, August 19, 2004 1:53 PM
+To: Guy
+Cc: linux-raid@vger.kernel.org
+Subject: Re: Raid5 Construction Question
+
+Guy,
+thanks for the snappy reply!  I wish my disks were as fast :)
+I failed to mention that I had been tweaking those proc values.  Currently
+they are:
+(root@lcn0:raid)# cat speed_limit_max
+200000
+(root@lcn0:raid)# cat speed_limit_min
+10000
+
+If I'm correct, this means that the min speed is 10MB/sec per device.
+I've verified that each device has a seq write speed of about 38MB/sec so
+each should be capable of handling 10,000Kbytes sec.  Right after I issue
+a raidstart the speed is pretty good (~30MB/sec) but is just falls until 
+it hits
+around 300K. 
+
+md0 : active raid5 sdh1[7] sdf1[6] sdg1[5] sde1[4] sdd1[3] sdc1[2] 
+sdb1[1] sda1[0]
+      481949184 blocks level 5, 64k chunk, algorithm 2 [7/7] [UUUUUUU]
+      [>....................]  resync =  2.4% (1936280/80324864) 
+finish=4261.4min speed=305K/sec
+
+In the docs I saw that "reconstruction" is possible with raidhotadd but 
+I didn't
+see anything about initialization.   So am I "screwed" until the resync 
+is fixed?  I was depeding
+on the disks to do some filesystem testing but maybe I'll have to wait a 
+few days.. 
+Thanks,
+Paul
+
+
+Guy wrote:
+
+>In short... Issue this command:
+>echo 100000 > /proc/sys/dev/raid/speed_limit_max
+>
+>If it does not help issue this command and send the results:
+>cat /proc/mdstat
+>
+>Details below.
+>
+>These are related to throttling:
+>/proc/sys/dev/raid/speed_limit_max
+>/proc/sys/dev/raid/speed_limit_min
+>
+>Do "man md" for more info.
+>
+>The speed limits are per device, not per array.
+>Make sure the max is large enough the permit your disks to go as fast as
+>they can.  I use 100000 (100,000K bytes/second).  My disks are not that
+>fast, and having too large of a number does not hurt.
+>At least as a test, set the min to the same value as max.
+>
+>I use these commands when I want to change by hand:
+>cat /proc/sys/dev/raid/speed_limit_max
+>cat /proc/sys/dev/raid/speed_limit_min
+>
+>echo 100000 > /proc/sys/dev/raid/speed_limit_max
+>echo 1000 > /proc/sys/dev/raid/speed_limit_min
+>
+>Guy
+>
+>-----Original Message-----
+>From: linux-raid-owner@vger.kernel.org
+>[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of PAulN
+>Sent: Thursday, August 19, 2004 1:25 PM
+>To: linux-raid@vger.kernel.org
+>Subject: Raid5 Construction Question
+>
+>Hi,
+>So I have a raid 5 which is around ~1TB and the problem I've been having 
+>is that
+>the resync rate is really bad.  This is understandable given that the 
+>raid5 has not
+>been initialized.  Does anyone know a way for me to initialize my raid5 
+>before I use it so
+>that the resync process doesn't run for 3 days?
+>thanks
+>paul
+>
+>
+>Config:
+>-------------------------------------------------
+>raiddev             /dev/md0
+>raid-level                  5
+>nr-raid-disks               7
+>nr-spare-disks              1
+>chunk-size                  64k
+>persistent-superblock       1
+>parity-algorithm        left-symmetric
+>    device          /dev/sda1
+>    raid-disk     0
+>    device          /dev/sdb1
+>    raid-disk     1
+>    device          /dev/sdc1
+>    raid-disk     2
+>    device          /dev/sdd1
+>    raid-disk     3
+>    device          /dev/sde1
+>    raid-disk     4
+>    device          /dev/sdg1
+>    raid-disk     5
+>    device          /dev/sdf1
+>    raid-disk    6
+>    device          /dev/sdh1
+>    spare-disk     0
+>----------------------------------------
+>
+>-
+>To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>  
+>
+
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
