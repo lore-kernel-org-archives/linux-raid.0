@@ -1,66 +1,69 @@
-From: Erik Mouw <erik@harddisk-recovery.com>
+From: David Greaves <david@dgreaves.com>
 Subject: Re: Looking for the cause of poor I/O performance
-Date: Fri, 3 Dec 2004 17:25:20 +0100
-Message-ID: <20041203162520.GC32559@harddisk-recovery.nl>
-References: <200412030630.51004.systemloc@earthlink.net> <20041203114635.GB21302@harddisk-recovery.com> <200412031009.23717.systemloc@earthlink.net>
+Date: Fri, 03 Dec 2004 16:32:43 +0000
+Message-ID: <41B0952B.1000302@dgreaves.com>
+References: <200412030630.51004.systemloc@earthlink.net> <20041203114635.GB21302@harddisk-recovery.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <200412031009.23717.systemloc@earthlink.net>
+In-Reply-To: <20041203114635.GB21302@harddisk-recovery.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: TJ <systemloc@earthlink.net>
-Cc: linux-raid@vger.kernel.org
+To: Erik Mouw <erik@harddisk-recovery.com>
+Cc: TJ <systemloc@earthlink.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Dec 03, 2004 at 10:09:23AM -0500, TJ wrote:
-> I did not know that auto-sensing was part of the Gigabit standard. I don't 
-> understand why you would think that performance would be worse with a 
-> crossover than a straight cable, though. I assure you, the link 
-> autonegotiates to a gigabit connection. The card driver reports this, the 
-> card's light indicator reports this, and my benchmarking of throughput has 
-> proven it.
+I paid about =A350 for a 5port gig switch
+I have 3 e1000 cards (about =A330 each) - they're relegated to doorstop=
+s=20
+I'm afraid :(
+Despite months of trying they just won't work with my consumer VIA/AMD=20
+systems (and Ganesh and gang have tried)
+I'm now using even cheaper Marvell based SMC EZ1000s (=A320ish) - I dou=
+bt=20
+I'll get close to the throughput the e1000s could achieve - but I get 3=
+=20
+times more then fast ethernet (and about 10 times more than e1000s)=20
+which is worthwhile.
 
-That means you have a crossover cable with two wire pairs crossed and
-two wire pairs straight, and guess what: gigE automatically detects
-badly wired cables (to a certain extent), correct it and negotiate to
-the correct speed: 1 Gbit/s. If you have a crossover cable using only
-two crossed wire pairs and the other pairs not connected, the link will
-negotiate to 100 Mbit/s.
+David
 
-> > The Intel gigE NICs are very good: good hardware, good driver, good
-> > support. Gigabit ethernet switches are becoming rather cheap: 200 EUR
-> > buys you an 8 port switch.
-> 
-> Yeah, I knew Intel made good NIC's, and I knew they were linux supported. I'm 
-> only worried because this is the lowest end model in the line. I wonder if it 
-> offloads work to the CPU, causing lower throughput on a busy link, while more 
-> expensive versions handle more work on the card.
+Erik Mouw wrote:
 
-We use the dual ported PCI-X server adapters in the file servers (dual
-Athlon and dual Opteron), but to be honest I haven't seen a difference
-in performance with the desktop adapters when we replaced them. It's
-just that they're 64 bit wide and have two NICs on a single board (and
-hence only use one PCI slot). The other machines (about 10 or so) have
-the cheaper desktop adapters.
+>On Fri, Dec 03, 2004 at 06:30:51AM -0500, TJ wrote:
+> =20
+>
+>>I'm cheap. I use a crossover so I didn't have to spring for the switc=
+h. The=20
+>>NICs are Intel 82540EM's. I got them for around $55 per. I didn't thi=
+nk that=20
+>>was too bad for gigabit. Of course, these controllers may be complete=
+ trash,=20
+>>I dunno.=20
+>>   =20
+>>
+>
+>You won't do any better than fast ethernet when you're using a
+>crossover cable. Gigabit ethernet doesn't need crossover cables for
+>direct connections, it uses all four wire pairs in cat5 cable and will
+>automatically figure out if there's a direct connection and do the
+>right thing (all mandatory by the gigE standard, so every NIC will
+>support it). If you use a fast ethernet cross cable, the NICs will
+>autonegotiate to 100 MB/s full-duplex.
+>
+>The Intel gigE NICs are very good: good hardware, good driver, good
+>support. Gigabit ethernet switches are becoming rather cheap: 200 EUR
+>buys you an 8 port switch.
+>
+>
+>Erik
+>
+> =20
+>
 
-> Also, I have read some traffic that the e1000 driver is better tuned
-> for light duty connections, and could use some improvement under a
-> heavy workload. If you knew about any documentation, or mailing lists
-> on the topic of tuning this, I'd appreciate it.
-
-I can't comment on that. We push several gigabytes/day through the
-cards and I haven't seen any real problems. We had performance problems
-with NatSemi gigE NICs; Broadcom gigE NICs looks like too much driver
-hassle to me (judging from posts on linux-kernel). 
-
-Documentation can be found on http://sourceforge.net/projects/e1000 ,
-the appropriate mailing list is the networking list: netdev@oss.sgi.com .
-
-
-Erik
-
--- 
-+-- Erik Mouw -- www.harddisk-recovery.com -- +31 70 370 12 90 --
-| Lab address: Delftechpark 26, 2628 XH, Delft, The Netherlands
-| Data lost? Stay calm and contact Harddisk-recovery.com
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
