@@ -1,172 +1,54 @@
-From: "Justin T. Gibbs" <gibbs@scsiguy.com>
+From: Arjan van de Ven <arjanv@redhat.com>
 Subject: Re: "Enhanced" MD code avaible for review
-Date: Mon, 22 Mar 2004 23:23:36 -0700
+Date: Tue, 23 Mar 2004 07:48:07 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <2128160000.1080023015@aslan.btc.adaptec.com>
-References: <760890000.1079727553@aslan.btc.adaptec.com> <16479.50592.944904.708098@notabene.cse.unsw.edu.au>
-Reply-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
+Message-ID: <20040323064807.GA6815@devserv.devel.redhat.com>
+References: <459805408.1079547261@aslan.scsiguy.com> <4058A481.3020505@pobox.com> <4058C089.9060603@adaptec.com> <200403172245.31842.bzolnier@elka.pw.edu.pl> <4058EBEC.8070309@adaptec.com> <1079788027.5225.4.camel@laptop.fenrus.com> <405E287E.3080706@adaptec.com> <1079946343.5296.5.camel@laptop.fenrus.com> <405F61C1.9090907@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="mYCpIKhGyMATD0i+"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <16479.50592.944904.708098@notabene.cse.unsw.edu.au>
 Content-Disposition: inline
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <405F61C1.9090907@adaptec.com>
+To: Scott Long <scott_long@adaptec.com>
+Cc: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, Jeff Garzik <jgarzik@pobox.com>, "Justin T. Gibbs" <gibbs@scsiguy.com>, linux-raid@vger.kernel.org, "Gibbs, Justin" <justin_gibbs@adaptec.com>, Linux Kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
->> o Any successful solution will have to have "meta-data modules" for
->>   active arrays "core resident" in order to be robust.  This
 
-...
+--mYCpIKhGyMATD0i+
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-> I agree.
-> 'Linear' and 'raid0' arrays don't really need metadata support in the
-> kernel as their metadata is essentially read-only.
-> There are interesting applications for raid1 without metadata, but I
-> think that for all raid personalities where metadata might need to be
-> updated in an error condition to preserve data integrity, the kernel
-> should know enough about the metadata to perform that update.
+On Mon, Mar 22, 2004 at 02:59:29PM -0700, Scott Long wrote:
+> >I think that all the arguments for using DM are techinical arguments not
+> >emotional ones. oh well.. you're free to write your code I'm free to not
+> >use it in my kernels ;)
 > 
-> It would be nice to keep the in-kernel knowledge to a minimum, though
-> some metadata formats probably make that hard.
+> Ok, the technical arguments I've heard in favor of the DM approach is 
+> that it reduces kernel bloat.  That fair, and I certainly agree with not
+> putting the kitchen sink into the kernel.  Our position on EMD is that
+> it's a special case because you want to reduce the number of failure
+> modes, and that it doesn't contribute in a significant way to the kernel
+> size. 
 
-Can you further explain why you want to limit the kernel's knowledge
-and where you would separate the roles between kernel and userland?
+There are serveral dozen such formats as DDF, should those be put in too?
+And then the next step is built in multipathing or stacking or .. or .... 
+And pretty soon you're back at the EVMS 1.0 situation. I see the general 
+kernel direction be to move such autodetection to early userland (there's 
+a reason DM and not EVMS1.0 is in the kernel, afaics even the EVMS guys now 
+agree that this was the right move); EMD is a step in the opposite direction.
 
-In reviewing one of our typical metadata modules, perhaps 80% of the code
-is generic meta-data record parsing and state conversion logic that would
-have to be retained in the kernel to perform "minimal meta-data updates".
-Some high portion of this 80% (less the portion that builds the in-kernel
-data structures to manipulate and update meta-data) would also need to be
-replicated into a user-land utility for any type of separation of labor to
-be possible.  The remaining 20% of the kernel code deals with validation of
-user meta-data creation requests.  This code is relatively small since
-it leverages all of the other routines that are already required for
-the operational requirements of the module.
 
-Splitting the roles bring up some important issues:
+--mYCpIKhGyMATD0i+
+Content-Type: application/pgp-signature
+Content-Disposition: inline
 
-1) Code duplication.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.1 (GNU/Linux)
 
-Depending on the complexity of the meta-data format being supported,
-the amount of code duplication between userland and kernel modules
-may be quite large.  Any time code is duplicated, the solution is
-prone to getting out of sync - bugs are fixed in one copy of the code
-but not another.
+iD8DBQFAX92nxULwo51rQBIRAok0AJ0ePgdjLl3qdy2n6Q4MkKSFSfOu+QCdGthm
+I2smD2CyRHOwHpB9uZ0bkJA=
+=qLIW
+-----END PGP SIGNATURE-----
 
-2) Solution Complexity
-
-Two entities understand how to read and manipulate the meta-data.
-Policies and APIs must be created to ensure that only one entity
-is performing operations on the meta-data at a time.  This is true
-even if one entity is primarily a read-only "client".  For example,
-a meta-data module may defer meta-data updates in some instances
-(e.g. rebuild checkpointing) until the meta-data is closed (writing
-the checkpoint sooner doesn't make sense considering that you should
-restart your scrub, rebuild or verify if the system is not safely
-shutdown).  How does the userland client get the most up-to-date
-information?  This is just one of the problems in this area.
-
-3) Size
-
-Due to code duplication, the total solution will be larger in
-code size.
-
-What benefits of operating in userland outweigh these issues?
-
->> o It is desirable for arrays to auto-assemble based on recorded
->>   meta-data.  This includes the ability to have a user hot-insert
->>   a "cold spare", have the system recognize it as a spare (based
->>   on the meta-data resident on it) and activate it if necessary to
->>   restore a degraded array.
-> 
-> Certainly.  It doesn't follow that the auto-assembly has to happen
-> within the kernel.  Having it all done in user-space makes it much
-> easier to control/configure.
-> 
-> I think the best way to describe my attitude to auto-assembly is that
-> it could be needs-driven rather than availability-driven.
-> 
-> needs-driven means: if the user asks to access an array that doesn't
->   exist, then try to find the bits and assemble it.
-> availability driven means: find all the devices that could be part of
->   an array, and combine as many of them as possible together into
->   arrays.
-> 
-> Currently filesystems are needs-driven.  At boot time, only to root
-> filesystem, which has been identified somehow, gets mounted. 
-> Then the init scripts mount any others that are needed.
-> We don't have any hunting around for filesystem superblocks and
-> mounting the filesystems just in case they are needed.
-
-Are filesystems the correct analogy?  Consider that a user's attempt
-to mount a filesystem by label requires that all of the "block devices"
-that might contain that filesystem be enumerated automatically by
-the system.  In this respect, the system is treating an MD device in
-exactly the same way as a SCSI or IDE disk.  The array must be exported
-to the system on an "availability basis" in order for the "needs-driven"
-features of the system to behave as expected.
-
-> Currently partitions are (sufficiently) needs-driven.  It is true that
-> any partitionable devices has it's partitions presented.  However the
-> existence of partitions does not affect access to the whole device at
-> all.  Only once the partitions are claimed is the whole-device
-> blocked. 
-
-This seems a slight digression from your earlier argument.  Is your
-concern that the arrays are auto-enumerated, or that the act of enumerating
-them prevents the component devices from being accessed (due to bd_clam)?
-
-> Providing that auto-assembly of arrays works the same way (needs
-> driven), I am happy for arrays to auto-assemble.
-> I happen to think this most easily done in user-space.
-
-I don't know how to reconcile a needs based approach with system
-features that require arrays to be exported as soon as they are
-detected.
-
-> With DDF format metadata, there is a concept of 'imported' arrays,
-> which basically means arrays from some other controller that have been
-> attached to the current controller.
-> 
-> Part of my desire for needs-driven assembly is that I don't want to
-> inadvertently assemble 'imported' arrays.
-> A DDF controller has NVRAM or a hardcoded serial number to help avoid
-> this.  A generic Linux machine doesn't.
-> 
-> I could possibly be happy with auto-assembly where a kernel parameter
-> of DDF=xx.yy.zz was taken to mean that we "need" to assemble all DDF
-> arrays that have a controler-id (or whatever it is) of xx.yy.zz.
-> 
-> This is probably simple enough to live entirely in the kernel.
-
-The concept of "importing" an array doesn't really make sense in
-the case of MD's DDF.  To fully take advantage of features like
-a controller BIOS's ability to natively boot an array, the disks
-for that domain must remain in that controller's domain.  Determining
-the domain to assign to new arrays will require input from the user
-since there is limited topology information available to MD.  The
-user will also have the ability to assign newly created  arrays to
-the "MD Domain" which is not tied to any particular controller domain.
-
-...
-
-> But back to your original post:  I suspect there is lots of valuable
-> stuff in your emd patch, but as you have probably gathered, big
-> patches are not the way we work around here, and with good reason.
-> 
-> If you would like to identify isolated pieces of functionality, create
-> patches to implement them, and submit them for review I will be quite
-> happy to review them and, when appropriate, forward them to
-> Andrew/Linus.
-> I suggest you start with less controversial changes and work your way
-> forward.
-
-One suggestion that was recently raised was to present these changes
-in the form of an alternate "EMD" driver to avoid any potential
-breakage of the existing MD.  Do you have any opinion on this?
-
---
-Justin
-
+--mYCpIKhGyMATD0i+--
