@@ -1,57 +1,60 @@
-From: "Mikael Chambon" <raid-ml@cronos.org>
-Subject: RAID design
-Date: Fri, 11 Jul 2003 12:10:14 -1000
+From: Gregory Leblanc <gleblanc@linuxweasel.com>
+Subject: Re: Performance difference between two raid0 arrays on same drives?
+Date: 11 Jul 2003 21:36:59 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <000201c3480a$9c7ebbd0$27e703ca@magnus>
+Message-ID: <1057984618.3382.81.camel@gregdell.example.com>
+References: <200307111813.26177.michel@ket.kth.se>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-/M5G0466MQoKENOI0kxj"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <200307111813.26177.michel@ket.kth.se>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi All,
-First I wish to thanks you guys for your answers, I really apreciate.
-Now I have a question about RAID design.
 
-I am trying to implement the best soft RAID system for a samba fileserver
-as safer as possible.
+--=-/M5G0466MQoKENOI0kxj
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Here is my first idea:
+On Fri, 2003-07-11 at 09:13, Michel wrote:
+> Hi!
+>=20
+> I have set two raid0 arrays on two hardrives, using 2x2 partitions. I did=
+ a=20
+> benchmark of the resulting arrays and one is much slower than the other o=
+ne.=20
+> I used bonnie++ and hdparm for the tests. It showed that /dev/md0 is 30%=20
+> slower than /dev/md1.=20
+> /dev/md1 is really close to twice the performance of a single drive.
+> I set the arrays with the same parameters. md0 is built from 2x 5 Gb whil=
+e md1=20
+> is built from 2x2 Gb. The harddrives have the same partition table. md0 i=
+s=20
+> the closest to the begining of the drives.
+> The filessystem is Reiserfs on both arrays.
+> Everything works well, except i am curious about such a difference in=20
+> performances, since the arrays share the same hardware.=20
+> I am new to linux raid, i do not know if this is normal or weird.
 
- 1) Using a small hard drive for the OS (2gigs)
-plugged as IDE 1 master (won't take part of the raid array).
-
-2) Using two 120 gig for the fileserver in a raid1 array
-The first one will be as IDE1 slave and the second one as
-IDE2 master (the cdrom drive will be IDE2 slave).
-
-The weakness here will be if the first hard drive with the OS
-failed.
+This is to be expected.  Partitions toward the "end" of the disk are
+written closer to the center of the platters, and as a result, data
+transfers suffer.  The drive spins at a constant number of revolutions
+per minute, making the linear velocity of the platter across the read
+head much higher at the outside of the disk than the outside.  HTH,
+	Greg
 
 
-My second idea is:
+--=-/M5G0466MQoKENOI0kxj
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-Use only 2 120 gig hard drives and implement a root raid array including
-the OS. The first one as IDE1 master and the second one as IDE2 master.
-(The cdrom drive as IDE1 slave).
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.2 (GNU/Linux)
 
-I am not RAID expert but I really don't see the benefits of including
-the OS in the RAID array as if the primary HD failed, the system won't be
-able to boot anyway. Am I right ?
+iD8DBQA/D5BqnAkVXO6fw4sRAn9wAJoDwf3NHQQ7D65F1dIezTQp4KyaMwCfUoMs
+AvjymEybJM2yJaDvflf410I=
+=CKYH
+-----END PGP SIGNATURE-----
 
-I mean if the primary disk failed, even if I ask the BIOS to boot the second
-hard drive, the system won't boot as everything is linked to hda in the
-system.
-
-As you can see I am a little confused about root-raid and the benefits, if
-someone
-could give me some advices and tell me which solution is the best I would
-really appreciate.
-
-Thanks a lot and have a nice day.
---
-Mikael Chambon
-
+--=-/M5G0466MQoKENOI0kxj--
 
