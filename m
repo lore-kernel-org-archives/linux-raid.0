@@ -1,56 +1,37 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: Joys of spare disks!
-Date: Wed, 2 Mar 2005 00:53:51 -0500
-Message-ID: <200503020553.j225ru513677@www.watkins-home.com>
-References: <422547B8.4090907@wasp.net.au>
+From: Jurriaan <thunder7@xs4all.nl>
+Subject: Re: dd version I used is 5.2.1, but...
+Date: Wed, 2 Mar 2005 08:45:33 +0100
+Message-ID: <20050302074533.GA5347@middle.of.nowhere>
+References: <4224C871.2000802@variant.ch>
+Reply-To: Jurriaan <thunder7@xs4all.nl>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-In-Reply-To: <422547B8.4090907@wasp.net.au>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <4224C871.2000802@variant.ch>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Brad Campbell' <brad@wasp.net.au>, 'Robin Bowes' <robin-lists@robinbowes.com>
+To: Nicola Fankhauser <nicola.fankhauser@variant.ch>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-That has not been my experience, but I have Seagate drives!
-
-Guy
-
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Brad Campbell
-Sent: Tuesday, March 01, 2005 11:57 PM
-To: Robin Bowes
-Cc: linux-raid@vger.kernel.org
-Subject: Re: Joys of spare disks!
-
-Robin Bowes wrote:
-
-> Thanks to some advice from Guy the "failed" disk is now back up and 
-> running.
+From: Nicola Fankhauser <nicola.fankhauser@variant.ch>
+Date: Tue, Mar 01, 2005 at 08:54:25PM +0100
+> hi
 > 
-> To fix it I did the following;
+> the version of dd I used is 5.2.1 (debian testing), but does anybody 
+> have an idea regarding my performance question?
 > 
-<snip>
+- please group messages in the same thread, thank you.
+- if there is no answer within a day, wait some more - not everybody is
+  constantly reading this list, you know.
+- wrt your question: how are those raid-controllers on your motherboard?
+  If they are all connected through a single pci-bus, the speed is
+  reasonable. The best way to test if it's your motherboard or your
+  raid, is to start multiple dd processes on different disks, or
+  multiple bonnie++ processes on different disks, all concurrently, of
+  course.
 
-Just watch that disk like a hawk. I had two disks fail recently in the same
-way, I did exactly what 
-you did and 2 days later they both started to grow defects again and got
-kicked out of the array. I 
-RMA'd both of them last week as they would not stay stable for more than a
-day or two after 
-re-allocation.
-
-
-Regards,
-Brad
+Good luck,
+Jurriaan
 -- 
-"Human beings, who are almost unique in having the ability
-to learn from the experience of others, are also remarkable
-for their apparent disinclination to do so." -- Douglas Adams
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+Never forget: 2 + 2 = 5 for extremely large values of 2.
+Debian (Unstable) GNU/Linux 2.6.11-rc3-mm1 2x4734 bogomips load 0.71
