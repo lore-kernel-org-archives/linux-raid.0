@@ -1,46 +1,44 @@
-From: "A. James Lewis" <james@fsck.co.uk>
-Subject: Re: [PATCH md 2 of 4] Fix raid6 problem
-Date: Wed, 3 Nov 2004 23:56:20 -0000 (GMT)
-Message-ID: <38038.212.158.231.74.1099526180.squirrel@mail.fsck.co.uk>
-Reply-To: james@fsck.co.uk
+From: matt brennan <raid@classforge.com>
+Subject: partition sizing and raid1
+Date: Thu, 04 Nov 2004 15:14:36 +1030
+Message-ID: <4189B3B4.2060203@classforge.com>
+References: <4179D9DB.2070709@classforge.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4179D9DB.2070709@classforge.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+I created a new raid1 array on two 300GB disks but it came in 
+underweight in size...
 
-Hi,
+Filesystem           1M-blocks      Used Available Use% Mounted on
+/dev/md0                129013     27322     95137  23% /home
 
-I'd like to put raid6 to use, and after reading through the process of
-tracking down this bug, it seems that a rational explanation was found =
-for
-the data corruption, and the fix well tested... but being new to a lot =
-of
-the process here, what is the process for this to get into the standard
-kernel... perhaps 2.6.10 will have this patch??
+I guess I stuffed up with the partitioning (from fdisk):
 
-Obviously I could apply the patch to raid6main.c on my system, but it
-would be  good to use a standard kernel...
+> Disk /dev/hda: 255 heads, 63 sectors, 16709 cylinders
+> Units = cylinders of 16065 * 512 bytes
+> 
+>    Device Boot    Start       End    Blocks   Id  System
+> /dev/hda1             1     16709 134215011   fd  Linux raid autodetect
 
-The problem is only when writing to a degraded array, but most of us ar=
-e
-impatient and want to write a filesystem and get it mounted before the
-first sync is complete... and those, like me cursed with bad hardware w=
-ill
-have 2 drives fail at the same time (last week!) and hence raid6 is ver=
-y
-appealing :).
+This was accepting fdisk's default max size.
 
---=20
-=AF=B7.=B8=B8.=B7=B4=AF=B7.=B8=B8.-> A. James Lewis (james@fsck.co.uk)
-http://www.fsck.co.uk/personal/nopistons.jpg
-MAZDA - World domination through rotary power.
+I realise this is not an fdisk mailing list but I guess you've probably 
+hit this problem when creating large disk arrays. Could anyone please 
+provide a quick hint on what I've stuffed up?
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+kernel: 2.4.18
+
+dpkg (debian woody) says fdisk is:
+ii  util-linux     2.11n-7        Miscellaneous system utilities.
+
+the fdisk man page suggests using cfdisk... is this likely to help? it 
+looks like a will have to recreate the raid1 array anyway. :-(
+
+   matt
+
