@@ -1,42 +1,23 @@
-From: Eric Drew Hollins <gte275e@mail.gatech.edu>
-Subject: Software RAID1 problem (bad superblock?)
-Date: Tue, 28 Jan 2003 10:39:23 -0500 (EST)
+From: David Chow <davidchow@shaolinmicro.com>
+Subject: readonly start of Linux RAID
+Date: Wed, 29 Jan 2003 01:49:55 +0800
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.SOL.4.33.0301281038380.24659-100000@acmez.gatech.edu>
+Message-ID: <3E36C2C3.3070101@shaolinmicro.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII;
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+To: neilb@cse.unsw.edu.au
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-OK, first off I have a Debian 3.0 testing box running with kernel 2.4.20.
-I have RAID1 working through software.  I have created a /dev/md0 device
-from the /dev/hde1 and /dev/hdg1 partitions which are identically Maxtor
-60GB hard drives with maxed out partitions that are connected to a Promise
-UDMA133 controller.
+Hi Neil,
 
-So, I created the RAID1 device and it synced up correctly.  I also
-changed the partition types to 0xfd (Linux auto RAID).  However, when
-I reboot the computer, I get this error:
-
-/dev/md0: THe filesystem size (according to the superblock) is 14658328
-blocks.  THe physical size of the device is 14658304 blocks.  Either the
-superblock or the partition table is likely to be corrupt!
-
-I ran fsck manually and it didn't correct the problem.  I have created
-this device twice now and I keep getting the same errors.  Does anyone
-have any clue as to what is going on and how I can fix it.
-
-BTW, I followed the Software RAID HOWTO when creating these devices if
-that helps at all.  THanks for the help.
+I've been reading some archives in the Linux RAID mailing list. Someone ask for implementing a readonly mode instead of degraded mode in RAID-1/5 setups. I'm falling into a similar problem . I think it is important to have a readonly mode on starting a RAID device or operating on a RAID device. Think of systems that didn't want to rebuild their RAID immediately after an unclean shutdown... Calling autorun() ioctls will make all devices starting rebuild themselves in case of any available disk exists. In case we are on a shared storage system, the active cluster might have using the RAID disks which seems to be unclean on the other standby cluster. The standby cluster might want to have a read-only inspection of the shared storage. In case of a high availability cluster system failover, the standby cluster might want to determine to start full read/write access by some tools instead of forced automatic at system boot (initrd calling raidautorun). In such circumstances, the cur
+ rent md driver cannot be used. This also prohibits many implementation of a high availability system from implement linux RAID on a shared storage on an HA system which is extremely important. I guess, this problem also comes with LVM and other similar volume management system. I'm currently studying the md.c code in a 2.4.19 kernel which I see implementing a read-only mode for md is possible. Please give advice or anything happening, so that I don't spend duplicated efforts. Thanks.
 
 
-
-**** Eric Drew Hollins ****
-**** Georgia Institute of Technology ****
-**** 336198 GT Station, Atlanta, GA  30332 ****
-**** W: http://jastermereel.org ****
-**** C: 404.312.0685 ****
-
+regards,
+David Chow
 
 
