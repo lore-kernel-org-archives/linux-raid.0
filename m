@@ -1,77 +1,72 @@
-From: "Caushik, Ramesh" <ramesh.caushik@intel.com>
-Subject: RE: [dm-devel] [ANNOUNCE] multipath-tools-0.4.1
-Date: Wed, 22 Dec 2004 13:54:45 -0800
-Message-ID: <EA4DC661A6353747A2E5C0DE8792DDDE075013FE@orsmsx404.amr.corp.intel.com>
+From: "BO MOON" <bmoon@anthologysolutions.com>
+Subject: RE: new superblock and raid10 support in mdadm
+Date: Wed, 22 Dec 2004 14:30:49 -0800
+Message-ID: <000201c4e875$e654c7b0$6d01a8c0@asitest>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-Sender: linux-scsi-owner@vger.kernel.org
-To: device-mapper development <dm-devel@redhat.com>
-Cc: linux-raid@vger.kernel.org, linux-hotplug-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: 
+Sender: linux-raid-owner@vger.kernel.org
+To: 'Neil Brown' <neilb@cse.unsw.edu.au>, 'rich turner' <rich@storix.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-The newer Qlogic (qla2xxx) driver for kernel versions 2.6.9 and later d=
-o not support the fc_transport class. The support is #ifdefed for kerne=
-ls > 2.6.6 & < 2.6.9. So I will have to wait till they support this for=
- newer kernels. Meanwhile I can work with a patched version of multipat=
-h tools. Thanks for feedback.=20
+Hello again,
 
-Ramesh.  =20
+I will re-iterate my question for raid10 or raid01.
+1.  Is raid10.c in ONLY linux2.6.xx? no support for 2.4.xx?
+2.  Does raid10.c support for RAID10 only? Or for both raid10 and
+raid01?
+3.  we can build raid10 or raid01 on linux2.4.xx without raid10.c code.
+    What issues or bugs does this code take care of?
+4.  What rev of mdadm should be used for raid10? Mdadm1.7 or greater?
+
+
+Thx,
+
+Bo
 
 -----Original Message-----
-=46rom: dm-devel-bounces@redhat.com [mailto:dm-devel-bounces@redhat.com=
-] On Behalf Of christophe varoqui
-Sent: Wednesday, December 22, 2004 3:31 PM
-To: device-mapper development
-Cc: linux-raid@vger.kernel.org; linux-hotplug-devel@lists.sourceforge.n=
-et; linux-scsi@vger.kernel.org
-Subject: RE: [dm-devel] [ANNOUNCE] multipath-tools-0.4.1
+From: BO MOON [mailto:bmoon@anthologysolutions.com] 
+Sent: Wednesday, December 22, 2004 10:59 AM
+To: 'Neil Brown'; 'rich turner'
+Cc: 'linux-raid@vger.kernel.org'
+Subject: RE: new superblock and raid10 support in mdadm
 
-James, thank you for the clarification (and I didn't mean to string
-anyone :).
+Hello,
 
-Ramesh, I don't feel like going through the hassle of supporting
-multiple synthax until the multipath target has made its way into the
-standard kernel, so I'll keep guessing the node_name in
-behing /sys/class/fc_transport/target<host>:<channel>:<target> or skip
-the node_name fetch.
+I noticed some discussions on last September email log,
+But I am not sure.
 
-ok with you ?
+I tried to make RAID10 or RAID01. I could make it but
+Problem is that I could not assemble it by "mdadm -As"
+When the system is rebooted.
 
-regards,
-cvaroqui
+My "mdadm.conf" is
 
-Le mercredi 22 d?embre 2004 =E0 16:05 -0500, James.Smart@Emulex.Com a
-=E9crit :
-> Qlogic shouldn't be strung out. It wasn't them....
->=20
-> As part of a change that went into the FC transport - the device repo=
-rted under this directory was moved from the LUN device to the Target d=
-evice - thus the change in name format (it killed replication of target=
- data that was being done for all luns). The attributes underneath rema=
-in the same. I believe this change occurred in the first rc1 patch to 2=
-=2E6.9.
->=20
-> As to the grand plan - you should be fine if you :
->  pre-2.6.10: it's the older name format "/sys/class/fc_transport/<hos=
-t>:<channel>:<target>:<lun>"
->  2.6.10 and later : it's the new format "/sys/class/fc_transport/targ=
-et<host>:<channel>:<target>"
->=20
->  and the folks running a patched 2.6.9 have to live by the new format=
-=2E
->=20
-> --
+    DEVICE /dev/hd*
+    ARRAY /dev/md0 level=raid1 num-devices=2 devices=/dev/hda4,/dev/hdc4
+    ARRAY /dev/md1 level=raid1 num-devices=2 devices=/dev/hde4,/dev/hdg4
+    ARRAY /dev/md2 level=raid0 num-devices=2 devices=/dev/md0,/dev/md1
+
+My S/W revs are:
+
+Linux 2.4.20
+Mdadm 1.2.0
+
+My HDD size are all greater than 120 GB.
+
+I tried it manually, too: first assemble the RAID1: md0 and md1.
+Then tried to assemble "md2" but it said "could not find devices for
+md2"
+
+We do not support RAID10 or RAID01 on linux2.4.xx?  
+or any issues on mdadm? 
+
+Please provide me any clues or advices,
+
+Bo
 
 
---
-dm-devel mailing list
-dm-devel@redhat.com
-https://www.redhat.com/mailman/listinfo/dm-devel
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
