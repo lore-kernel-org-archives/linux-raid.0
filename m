@@ -1,17 +1,25 @@
-From: Ian Pilcher <i.pilcher@comcast.net>
-Subject: Re: Measuring RAID-0 CPU load
-Date: Mon, 08 Mar 2004 11:23:35 -0600
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: Measuring RAID-0 CPU load
+Date: Mon, 8 Mar 2004 12:31:32 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <404CAC17.8070205@comcast.net>
-References: <404CAA28.6030502@comcast.net> <yw1x1xo3w92j.fsf@kth.se>
+Message-ID: <200403081731.i28HVZm30014@www.watkins-home.com>
+References: <404CAC17.8070205@comcast.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1;
-	format=flowed
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <yw1x1xo3w92j.fsf@kth.se>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <404CAC17.8070205@comcast.net>
+To: 'Ian Pilcher' <i.pilcher@comcast.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+man sar
+
+-----Original Message-----
+=46rom: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Ian Pilcher
+Sent: Monday, March 08, 2004 12:24 PM
+To: linux-raid@vger.kernel.org
+Subject: Re: Measuring RAID-0 CPU load
 
 M=E5ns Rullg=E5rd wrote:
 > Ian Pilcher <i.pilcher@comcast.net> writes:
@@ -43,6 +51,13 @@ t
 =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
 =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
 =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 
 -
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
