@@ -1,17 +1,24 @@
 From: "Guy" <bugzilla@watkins-home.com>
-Subject: Minor bugs in "mdadm --monitor --scan &"
-Date: Mon, 10 Jan 2005 00:27:41 -0500
-Message-ID: <200501100527.j0A5Rn919868@www.watkins-home.com>
-References: <200501100324.j0A3OZ919388@www.watkins-home.com>
+Subject: RE: Minor bugs in "mdadm --monitor --scan &"
+Date: Mon, 10 Jan 2005 02:00:28 -0500
+Message-ID: <200501100700.j0A70b920101@www.watkins-home.com>
+References: <200501100527.j0A5Rn919868@www.watkins-home.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200501100324.j0A3OZ919388@www.watkins-home.com>
+In-Reply-To: <200501100527.j0A5Rn919868@www.watkins-home.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Guy
+Sent: Monday, January 10, 2005 12:28 AM
+To: linux-raid@vger.kernel.org
+Subject: Minor bugs in "mdadm --monitor --scan &"
 
 I have mdadm configured to run a script when an event occurs.
 
@@ -114,4 +121,25 @@ queue.  Maybe something like /proc/mdevents could be usefull.
 I am using kernel 2.4.28 and mdadm 1.8.0.
 
 Guy
+
+=========================================================================
+I checked my email, I got this wrong:
+
+Guy said:
+"If I use MAILADDR and don't use PROGRAM, like this:
+MAILADDR bugzilla@watkins-home.com
+# PROGRAM /root/bin/handle-mdadm-events
+
+I don't get Fail events, but I do get some events, like SpareActive.
+No!  Another test I got the Fail event, but not the SpareActive.
+With the above I did wait 60 seconds or more!"
+
+I do get Fail events, but do not get SpareActive.
+Both tests were the same.  Not sure how I got that wrong.
+
+Guy
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
