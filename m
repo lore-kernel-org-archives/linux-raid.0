@@ -1,36 +1,35 @@
-From: Gordon Henderson <gordon@drogon.net>
+From: maarten van den Berg <maarten@vbvb.nl>
 Subject: Re: I'm about ready to do SW-Raid5 - pointers needed
-Date: Tue, 28 Oct 2003 19:14:06 +0000 (GMT)
+Date: Tue, 28 Oct 2003 20:51:06 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.56.0310281910090.25548@unicorn.drogon.net>
+Message-ID: <200310282051.06208.maarten@vbvb.nl>
 References: <Pine.LNX.4.44.0310281327090.8137-100000@redhat1.mmaero.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <Pine.LNX.4.44.0310281327090.8137-100000@redhat1.mmaero.com>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 28 Oct 2003 jlewis@lewis.org wrote:
-
+On Tuesday 28 October 2003 19:28, jlewis@lewis.org wrote:
 > On Tue, 28 Oct 2003, maarten van den Berg wrote:
->
-> > Promise cards do suck somewhat -albeit I use them- but what else is there ?
-> > The highpoint-equipped cards are even more sucky in many cases.
+> > Promise cards do suck somewhat -albeit I use them- but what else is there
+> > ? The highpoint-equipped cards are even more sucky in many cases.
 >
 > What about Adaptec's IDE/ATA versions of their DPT RAID controllers?
 > AFAIK, they even use the same dpt driver.
 
-Who knows. I've just tried to swap the 2 promise cards for 2 highpoint
-cards - with fairly disastrous results )-: It booted, recognised the 4
-disks (hde,g,i,k) but then started to whinge about DMA errors and general
-badness, so put the promise cards back in and it's now hapilly rebuilding
-the raid arrays.
+Can't comment on the adaptec.  Adaptec usually makes a good product, so...
 
-Maybe it's having 2 promise (or highpoint) cards? I had one highpoint card
-in another PC for a few days and it was performing well...
+My experiences with HPT chipsets were that it _seems_ to work at first but 
+then when you turn on DMA all hell breaks loose. Either the chipset or the 
+linux driver just can't cope with DMA (and we all know how fast PIO is...)
+This behaviour was observed with a HPT366 onboard version, and (much) later 
+again with a standalone HPT370. From then on, I refused to touch highpoint 
+chipset based cards with a 10' pole.     ( YMMV )
 
-It's very annoying, whatever it is, and unfortunately I don't have the
-resources or time to try to really get to the bottom of this )-:
+Maarten
 
-Gordon
+-- 
+Yes of course I'm sure it's the red cable. I guarante[^%!/+)F#0c|'NO CARRIER
