@@ -1,30 +1,25 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: RE: RAID detection and activation w/o auto detection
-Date: Wed, 1 May 2002 16:31:08 +1000 (EST)
+From: "Heiss, Christian" <Christian.Heiss@Datentechnik-Moll.De>
+Subject: (unknown)
+Date: Thu, 2 May 2002 14:36:45 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <15567.35756.955569.701182@notabene.cse.unsw.edu.au>
-References: <4913AB320D31DC4798D6FEF5F557351F18240F@hawk.exanet-il.co.il>
+Message-ID: <30014ACC2301D611A655000629899646023B3D@fs01>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Yuval Yeret on Wednesday May 1
-To: Yuval Yeret <yuval@exanet.com>
-Cc: linux-raid maillist <linux-raid@vger.kernel.org>
+Subject: 
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday May 1, yuval@exanet.com wrote:
-> 
-> 
-> Should we consider mdadm as a replacement to raidstart/raidstop ? 
+ 
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-I certainly consider mdadm a replacement for raidstart/raidstop.
+unsubscribe linux-raid
 
-If you find it works well for you, you might like to do the same.
+-----BEGIN PGP SIGNATURE-----
+Version: PGP 7.0.4
 
-Or to put it another way:
- I am happy to provide software and advice on how to use it for free.
- I am not comfortable providing advice as to what is best for you to
-   do for free.
-
-NeilBrown
+iQA/AwUBPNEzztealdhg/f9MEQIS+QCglnNwFqT+aiXjPhllcY+wjS9sqZwAoK2+
+X+SVsF40ITalYo8EV0m7ZSrP
+=eQ/s
+-----END PGP SIGNATURE-----
