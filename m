@@ -1,41 +1,38 @@
-From: Dominik Kubla <dominik@kubla.de>
+From: "H. Peter Anvin" <hpa@zytor.com>
 Subject: Re: People using RAID-6?
-Date: Fri, 13 Feb 2004 08:15:19 +0100
+Date: Thu, 12 Feb 2004 23:19:13 -0800
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040213071519.GC1555@intern.kubla.de>
-References: <c0hqc8$fvv$1@terminus.zytor.com>
+Message-ID: <402C7A71.50501@zytor.com>
+References: <c0hqc8$fvv$1@terminus.zytor.com> <20040213071519.GC1555@intern.kubla.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <c0hqc8$fvv$1@terminus.zytor.com>
-To: "H. Peter Anvin" <hpa@zytor.com>
+In-Reply-To: <20040213071519.GC1555@intern.kubla.de>
+To: Dominik Kubla <dominik@kubla.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Feb 13, 2004 at 06:20:56AM +0000, H. Peter Anvin wrote:
-> People, if you actually use RAID-6, please do let me know.  I'd like
-> to gauge the size of the user commnunity; it's going to matter a lot
-> for how stable it can be assumed to be.
+Dominik Kubla wrote:
 > 
-> Please include the # of disks as well as if you have had any
-> recoveries.
+> What is your own estimation? Is it useable for production systems?
+> What is the recommended code basis? Our customers are _VERY_ conservative
+> (read: bankers), so they are mostly going with mirrors or striped mirrors.
 > 
-> 	-hpa
 
-What is your own estimation? Is it useable for production systems?
-What is the recommended code basis? Our customers are _VERY_ conservative
-(read: bankers), so they are mostly going with mirrors or striped mirrors.
+I wouldn't try that at this point.  I'm trying to figure out if there is 
+a userbase and how big it is, but the code is still very new.
 
-Is there any performance data for different work loads? Eg. how does it
-work for file service with different file sizes, read/write patterns.
+> Is there any performance data for different work loads? Eg. how does it
+> work for file service with different file sizes, read/write patterns.
 
-Since most of our customers need database storage RAID1 still seems to be
-the best appoach.
+It seems to be comparable to RAID-5 for reads down to about half the 
+speed of RAID-5 for lots of small writes.
 
-Regards,
-  Dominik Kubla
--- 
-You'd best be snoozin', 'cause you don't be gettin' no work done at 5 a.m.
-anyway.
-		-- From the wall of the Wurster Hall stairwell
+> Since most of our customers need database storage RAID1 still seems to be
+> the best appoach.
+
+Probably.
+
+	-hpa
+
