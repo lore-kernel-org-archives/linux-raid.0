@@ -1,67 +1,71 @@
-From: Steven Dake <sdake@mvista.com>
-Subject: Patch to fix defect in raid 1 spinlocks
-Date: Fri, 12 Dec 2003 16:04:53 -0700
+From: Franc Carter <franc@tech.sirca.org.au>
+Subject: Re: multipath - stable ?
+Date: Sat, 13 Dec 2003 10:35:43 +1100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1071270293.31245.47.camel@persist.az.mvista.com>
-Reply-To: sdake@mvista.com
+Message-ID: <200312131035.43175.franc@tech.sirca.org.au>
+References: <200312121552.02975.franc@tech.sirca.org.au> <1071250518.13240.32.camel@persist.az.mvista.com>
+Reply-To: Franc Carter <franc@tech.sirca.org.au>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="=-C77/X8WV+uF5ir/QHAzw"
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <1071250518.13240.32.camel@persist.az.mvista.com>
+Content-Disposition: inline
+To: sdake@mvista.com
+Cc: Linux-raid maillist <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
 
---=-C77/X8WV+uF5ir/QHAzw
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Thanks, 
 
-Folks,
+can you give me a ballpark on 'high' >5 minutes ?
 
-I've audited the RAID 1 locking code in 2.4.23, and found a few
-problems.
+cheers
 
-The first problem is that in one instance of locking,
-spin_lock_irq/spin_unlock_irq are called, without knowing the prior
-state of the irq flags.  The result is that irqs could be reenabled when
-they were disabled before the spin lock was taken.
+On Sat, 13 Dec 2003 04:35 am, Steven Dake wrote:
+> The multipath code is simple and seems pretty stable to me.
+> 
+> There is one issue, in that failover can sometimes take a long time
+> because of the SCSI layer's insistence upon executing error recovery. 
+> In the case of multipath I/O's, there is no need to error recover before
+> processing the I/O.  Instead, once error is detected, failover, then
+> start error recovery.
+> 
+> The SCSI layer doesn't do this currently, so failover times are high.
+> 
+> Thanks
+> -steve
+> 
+> 
+> On Thu, 2003-12-11 at 21:52, Franc Carter wrote:
+> > Hi,
+> > 
+> > I've been using linux sofwtare raid for years and had no problems.
+> > We are about to install some disk systems that have dual contollers
+> > and am wondering wether multipath is as stable as the rest of software
+> > raid ?
+> > 
+> > thanks
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
 
-The spinlock is located in the function raid1_alloc_bh.  This function
-is called by raid1_make_request (spin_lock_irq is safe in this call
-path).  It is also called by raid1d (spin_lock_irq is unsafe in this
-call path, and spin_lock_irqsave should be used instead).
+-- 
+Franc Carter     Ph:61-2-8374-5071      Fax: 61-2-8374-5070
+Systems Manager, SIRCA Ltd              http://www.sirca.org.au/
 
-Thanks
--steve
-
---=-C77/X8WV+uF5ir/QHAzw
-Content-Disposition: attachment; filename=raid-spinlock-fix1.patch
-Content-Type: text/plain; name=raid-spinlock-fix1.patch; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-
---- linux-2.4.23/drivers/md/raid1.c	2003-06-13 07:51:34.000000000 -0700
-+++ linux-2.4.23.raidfix/drivers/md/raid1.c	2003-12-12 15:53:13.000000000 -0700
-@@ -62,10 +62,11 @@
- 	 * get all we need, otherwise we could deadlock
- 	 */
- 	struct buffer_head *bh=NULL;
-+	unsigned long flags;
- 
- 	while(cnt) {
- 		struct buffer_head *t;
--		md_spin_lock_irq(&conf->device_lock);
-+		md_spin_lock_irqsave(&conf->device_lock, flags);
- 		if (!conf->freebh_blocked && conf->freebh_cnt >= cnt)
- 			while (cnt) {
- 				t = conf->freebh;
-@@ -76,7 +77,7 @@
- 				conf->freebh_cnt--;
- 				cnt--;
- 			}
--		md_spin_unlock_irq(&conf->device_lock);
-+		md_spin_unlock_irqrestore(&conf->device_lock, flags);
- 		if (cnt == 0)
- 			break;
- 		t = kmem_cache_alloc(bh_cachep, SLAB_NOIO);
-
---=-C77/X8WV+uF5ir/QHAzw--
+DISCLAIMER: The contents of this email, inclusive of attachments, may
+be legally privileged and confidential. Any unauthorised use of the
+contents is expressly prohibited. If you have received this message in
+error or are not the intended recipient, you should destroy the email
+message along with any attachment(s).  Unintended recipients of this
+email are prohibited from retaining, disclosing, distributing or using
+any information contained herein.  This email is also subject to
+copyright. No part of it should be reproduced, adapted or transmitted
+without the written consent of the copyright owner.
 
