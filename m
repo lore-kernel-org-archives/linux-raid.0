@@ -1,59 +1,34 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: ANNOUNCE: mdadm 1.9.0 - A tool for managing Soft RAID under Linux
-Date: Fri, 4 Feb 2005 12:11:39 +1100
-Message-ID: <16898.52171.979070.715369@cse.unsw.edu.au>
+From: Max Waterman <davidmaxwaterman@fastmail.co.uk>
+Subject: Re: ANNOUNCE: mdadm 1.9.0 - A tool for managing Soft RAID under Linux
+Date: Fri, 04 Feb 2005 12:54:19 +0800
+Message-ID: <4202FFFB.6060604@fastmail.co.uk>
+References: <16898.52171.979070.715369@cse.unsw.edu.au>
+Reply-To: mwaterman@jingmei.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
+In-Reply-To: <16898.52171.979070.715369@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Neil Brown wrote:
+>
+> Release 1.9.0 adds:
+...
+>     -   --assemble --auto recognises 'standard' name and insists on using
+>         the appropriate major/minor number for them.
 
+Is this the problem I encountered when I added auto=md to my mdadm.conf 
+file?
 
-I am pleased to announce the availability of 
-   mdadm version 1.9.0
-It is available at
-   http://www.cse.unsw.edu.au/~neilb/source/mdadm/
-and
-   http://www.{countrycode}.kernel.org/pub/linux/utils/raid/mdadm/
+It caused all sorts of problems - which were recoverable, fortunately.
 
-as a source tar-ball and (at the first site) as an SRPM, and as an RPM for i386.
+I ended up putting a '/sbin/MAKEDEV md' into /etc/rc.sysinit just before 
+the call to mdadm, but that creates all the md devices, not just those 
+that are needed.
 
-mdadm is a tool for creating, managing and monitoring
-device arrays using the "md" driver in Linux, also
-known as Software RAID arrays.
+Will this new version allow me to remove this line in rc.sysinit again 
+and put the 'auto=md' back into mdadm.conf?
 
-Release 1.9.0 adds:
-    -   Fix rpm build problem (stray %)
-    -   Minor manpage updates
-    -   Change "dirty" status to "active" as it was confusing people.
-    -   --assemble --auto recognises 'standard' name and insists on using
-        the appropriate major/minor number for them.
-    -   Remove underscore from partition names, so partitions of 
-	"foo" are "foo1", "foo2" etc (unchanged) and partitions of
-	"f00" are "f00p1", "f00p2" etc rather than "f00_p1"...
-    -   Use "major", "minor", "makedev" macros instead of 
-	"MAJOR", "MINOR", "MKDEV" so that large device numbers work
-	on 2.6 (providing you have glibc 2.3.3 or later).
-    -   Add some missing closes of open file descriptors.
-    -   Reread /proc/partition for every array assembled when using
-	it to find devices, rather than only once.
-    -   Make "mdadm -Ss" stop stacked devices properly, by reversing the
-	order in which arrays are stopped.
-    -   Improve some error messages.
-    -   Allow device name to appear before first option, so e.g.
-	mdadm /dev/md0 -A /dev/sd[ab]
-	works.
-    -   Assume '-Q' if just a device is given, rather than being silent.
-
-This is based on 1.8.0 and *not* on 1.8.1 which was meant to be a pre-release 
-for the upcoming 2.0.0.  The next prerelease will have a more obvious name.
-
-Development of mdadm is sponsored by CSE@UNSW: 
-  The School of Computer Science and Engineering
-at
-  The University of New South Wales
-
-NeilBrown  04 February 2005
-
+Max.
