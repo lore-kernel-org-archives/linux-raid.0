@@ -1,17 +1,14 @@
-From: "Rev. Jeffrey Paul" <sneak@datavibe.net>
+From: Gordon Henderson <gordon@drogon.net>
 Subject: Re: experiences with 3Ware 6400 3W-6400?
-Date: Fri, 27 Jun 2003 15:45:08 -0400 (EDT)
+Date: Fri, 27 Jun 2003 21:19:37 +0100 (BST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.55.0306271540140.6883@datavibe.net>
-References: <Pine.LNX.4.55.0306270920010.6883@datavibe.net>     
- <Pine.LNX.4.43.0306271429480.32150-100000@unicorn.drogon.net>
- <3841.208.48.139.163.1056738220.squirrel@www.greenhydrant.com>
+Message-ID: <Pine.LNX.4.43.0306272111500.32150-100000@unicorn.drogon.net>
+References: <3841.208.48.139.163.1056738220.squirrel@www.greenhydrant.com>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <3841.208.48.139.163.1056738220.squirrel@www.greenhydrant.com>
-To: David Rees <dbr@greenhydrant.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 On Fri, 27 Jun 2003, David Rees wrote:
@@ -33,28 +30,25 @@ On Fri, 27 Jun 2003, David Rees wrote:
 >
 > So what do you do when /dev/hda fails and the computer won't reboot?  Have
 > you managed to get it to boot off /dev/hdc when /dev/hda isn't available?
->
+
+Yes. Works a treat. No point doing stuff if you don't test it enough to
+trust it.
+
+You do need a modern mobo/BIOS combination that will boot off something
+other than the first IDE drive, but thats been fairly standard for a few
+years now IIRC.
+
+I've recently built another system with 5 IDE drives; hde,g,i,k,m and it
+boots off e which is mirrored on i and that boots also when e isn't
+present.
+
 > Not having to worry about these sorts of things is one reason it's nice to
 > have hardware RAID for at least the boot device.
 
-Exactly.  Another issue is that I want them to be able to just swap out
-(not necessarily hot, but offline even) a failed drive without my
-intervention.... I assume the card will just resync it?  Under linux, it'd
-require mucking about with mdadm or the raidtools and I want this to be a
-fire-and-forget kind of system.  On solid hardware on a UPS, the only
-things likely to die are the processor fan, the power supply, and the
-drives...  all of which can be replaced with no knowledge of the raid or
-software configuration.
+You do have a valid point there though, especially on older system that
+can't do this. Maybe SCSI too - I haven't had a chance to build an
+all-SCSI system for some time, but I get a chance in a few weeks time, so
+that'll be nice to experiment with.
 
-Additionally, I didn't realize the 7xxx cards were that cheap.  If i'm
-just using raid 1 or possibly raid10, is it really going to make that much
-of a difference?
+Gordon
 
--j
-
---
---------------------------------------------------------
- Rev. Jeffrey Paul    -datavibe-     sneak@datavibe.net
-   aim:x736e65616b   pgp:0x15FA257E   phone:8777483467
-    70E0 B896 D5F3 8BF4 4BEE 2CCF EF2F BA28 15FA 257E
---------------------------------------------------------
