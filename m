@@ -1,46 +1,144 @@
-From: Markus Schoder <markus_schoder@yahoo.de>
-Subject: resizing RAID0 in-place
-Date: Tue, 23 Apr 2002 19:33:07 +0200
+From: SoulBlazer <soul@lamp-post.net>
+Subject: Re: 2 HBA's and Multipath.
+Date: Tue, 23 Apr 2002 17:45:35 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1704AK-2FyAT2C@fmrl00.sul.t-online.com>
+Message-ID: <20020423214812Z315350-22651+15329@vger.kernel.org>
+References: <20020408190441Z313735-22651+2113@vger.kernel.org> <20020419162031Z312453-22651+11469@vger.kernel.org> <20020419215843.GB21753@colombina.comedia.it>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <20020419215843.GB21753@colombina.comedia.it>
+To: bluca@comedia.it
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I want to resize a RAID0 device in-place to eventually switch from
-reiserfs to ext3.  I thought of doing it like
+Luca, 
 
-1. Shrink reiserfs (already done with resize_reiserfs tool).
-2. Shrink raid device where fs lives on.  This is the tricky bit because
-   it would involve running mkraid where it says in the man page that it
-   destroys all data.
+Here are the results the modifications you suggested :
 
-   However if I just shrink the partitions, keeping their
-   starting blocks the same and of course keep the chunk
-   size the same I would hope that I can do a mkraid without
-   loosing data.  Is that true?
+# : mdadm -D /dev/md/0
+/dev/md/0:
+        Version : 00.90.00
+  Creation Time : Tue Apr 23 15:55:33 2002
+     Raid Level : multipath
+     Array Size : 17688448 (16.86 GiB 18.11 GB)
+   Raid Devices : 1
+  Total Devices : 2
+Preferred Minor : 0
+    Persistence : Superblock is persistent
 
-3. Create 2 more partitions and new raid device on disks.
-4. Create ext2 fs on new raid device.
-5. Copy file system on file level from reiserfs to new ext2 fs.
-6. Format original raid device to ext2.
-7. Copy file system created in 5 to ext2 fs created in 6 on file level.
+    Update Time : Tue Apr 23 16:00:31 2002
+          State : dirty, no-errors
+ Active Devices : 1
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 1
 
-8. Delete additional partitions and extend original raid device to full
-   size again.  This is the other critical bit, but if step 2 works I
-   hope this does work too.
 
-9. Extend ext2 fs (with resize2fs).
-10. Convert to ext3
+    Number   Major   Minor   RaidDevice State
+       0       8        1        0      active sync   
+/dev/scsi/host2/bus0/target0/lun0/part1
+       1      65       97        1      active   
+/dev/scsi/host3/bus0/target0/lun0/part1
+           UUID : b0191dc2:e89b155f:66c3e4e4:fa925d37
 
-Optionally I would like to replace step 7 with a run of raidreconf so I
-could change the chunk size of the raid.
+# : cat /proc/mdstat
+md0 : active multipath scsi/host3/bus0/target0/lun0/part1[1] 
+scsi/host2/bus0/target0/lun0/part1[0]
+      17688448 blocks [1/2] [U]
 
-Does this sound feasible?  Or is there a simpler way (not involving
-additional hardware) that would accomplish the same thing?
+Again only one HBA is utilized, which is verified via the previous testing I 
+had run.  I believe that even after we hack the code to set all disks to 
+'active', the raid code will still only use the first drive it finds that is 
+not a spare.
 
---
-Markus
+--Snippit-- (multipath.c)
+  * Mark all disks as spare to start with, then pick our
+  * active disk.  If we have a disk that is marked active
+  * in the sb, then use it, else use the first rdev.  
+--Snippit--
+
+Additionally I have noticed the following in my syslog on the mkraid of the 
+multipath device.
+
+--Snippit--
+[events: 00000002]
+[events: 00000002]
+md: autorun ...
+md: considering scsi/host3/bus0/target0/lun0/part1 ...
+md:  adding scsi/host3/bus0/target0/lun0/part1 ...
+md:  adding scsi/host2/bus0/target0/lun0/part1 ...
+md: created md0
+md: bind<scsi/host2/bus0/target0/lun0/part1,1>
+md: bind<scsi/host3/bus0/target0/lun0/part1,2>
+md: running: 
+<scsi/host3/bus0/target0/lun0/part1><scsi/host2/bus0/target0/lun0/part1>
+md: scsi/host3/bus0/target0/lun0/part1's event counter: 00000002
+md: scsi/host2/bus0/target0/lun0/part1's event counter: 00000002
+md0: max total readahead window set to 124k
+md0: 1 data-disks, max readahead per data-disk: 124k
+multipath: making IO path scsi/host3/bus0/target0/lun0/part1 a spare path 
+(not in sync)
+multipath: device scsi/host3/bus0/target0/lun0/part1 operational as IO path 1
+multipath: device scsi/host2/bus0/target0/lun0/part1 operational as IO path 0
+(checking disk 0)
+(checking disk 1)
+multipath: array md0 active with 1 out of 1 IO paths (1 spare IO paths)
+md: updating md0 RAID superblock on device
+md: (skipping alias scsi/host3/bus0/target0/lun0/part1 )
+md: scsi/host2/bus0/target0/lun0/part1 [events: 00000003]<6>(write) 
+scsi/host2/bus0/target0/lun0/part1's sb offset: 17688448
+
+--Snippit--
+
+Please note the comment about host3 being marked a spare path (not in sync).
+
+
+
+Any comments as always, are welcome.
+
+
+On April 19, 2002 05:58 pm, Luca Berra wrote:
+
+> Oops,
+> seems i forgot about spares :(
+>
+> multipath.c sets all disks as spares to start with.
+> a dirty hack could be:
+>
+> look for:
+>         /*
+>          * Mark all disks as spare to start with, then pick our
+>          * active disk.  If we have a disk that is marked active
+>          * in the sb, then use it, else use the first rdev.
+>          */
+>
+> below you will find:
+>        if (disk_active(desc)) {
+>             if(!conf->working_disks) { //remove this line
+>                 printk(OPERATIONAL, partition_name(rdev->dev),
+>                     desc->raid_disk);
+>                 disk->operational = 1;
+>                 disk->spare = 0;
+>                 conf->working_disks++;
+>                 def_rdev = rdev;
+>             } else { //remove this line
+>                 mark_disk_spare(desc); //remove this line
+>             } //remove this line
+>         } else
+>             mark_disk_spare(desc);
+>
+> remove the lines i market with //remove this line
+> and it should activate the disks
+>
+> i wont have a system at hand to test this, so please let me know
+> if it works
+>
+> we then need to clean up the logic for initialization
+> since is nonsense to set a disk as spare then reset it back
+> again as operational, but this could work for a start
+>
+> good luck
+>
+> L.
