@@ -1,67 +1,46 @@
-From: Clemens Schwaighofer <cs@tequila.co.jp>
-Subject: Re: ANNOUNCE: mdadm 1.6.0 - A tool for managing Soft RAID under
-     Linux
-Date: Wed, 09 Jun 2004 16:01:43 +0900
+From: =?iso-8859-1?q?M=E5ns_Rullg=E5rd?= <mru@kth.se>
+Subject: Re: SATA chipset recomendations
+Date: Wed, 09 Jun 2004 09:08:08 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <40C6B5D7.7060801@tequila.co.jp>
-References: <40498.194.60.85.4.1086343953.squirrel@194.60.85.4> <40C346A6.1000001@xss.co.at>
+Message-ID: <yw1xise1tdif.fsf@kth.se>
+References: <200406082012.58968.linux_mail@rozpooh.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <40C346A6.1000001@xss.co.at>
-To: Andreas Haumer <andreas@xss.co.at>
-Cc: Robin Bowes <robin-lists@robinbowes.com>, Neil Brown <neilb@cse.unsw.edu.au>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+chris <linux_mail@rozpooh.com> writes:
 
-Andreas Haumer wrote:
-| Hi!
-|
-| Robin Bowes wrote:
-|
-|>>On Fri, June 4, 2004 7:29, Neil Brown said:
-|>>
-|>>
-|>>> - Further support for partitionable arrays included "--auto=" option
-|>>>   and "auto=" config file entry which instructs mdadm to create the
-necessary
-|>>>   device files after allocating an unused array number.
-|>>
-|>>
-|>>Neil,
-|>>
-|>>I am interpreting this to mean that I can create, for example, a
-large (e.g. 1TB) RAID5
-|>>array and create smaller partitions (/home, /usr, etc) on top of the
-RAID5 array? Is
-|>>this correct?
-|>>
-|
-| Hm.
-| Why would anyone use this, given that we can put LVM on
-| top of SW-RAID?
+> I want to setup a Linux software RAID 1 / Mirror array in the 2.6
+> kernel.  I am looking for feedback regarding the best supported SATA
+> chipsets.  Do any of these cards stick out as having better driver
+> support?  Can you reccommend another card I have not mentioned?
+>
+> (I am not wanting to spend the big bucks on hardware RAID, so I am no=
+t much=20
+> interested the expensive 3Ware or Adaptec cards)
+>
+> Promise SATA150 TX4 ~ $65
+> (I don't really need 4 ports, but, I would not mind having them for f=
+uture=20
+> use)
+>
+> Highpoint Rocket 1520 ~ $35
 
-Well I'd say to leave out one area of problems. LVM might get buggy or
-cause troubles. And if you can create partitions in a SW raid you can
-avoid that.
+I'm using a Highpoint RocketRAID 1540 without any problems.  There
+have been reports on this list from others having strange problems
+with Rocket 1540 (no fakeraid) cards.  FWIW, my card is in a slightly
+aging Alpha machine, which means that the BIOS on the card is pretty
+much ignored.
 
-eg on a firewall I want only real necessary software and LVM is
-definitly not one of them ...
+--=20
+M=E5ns Rullg=E5rd
+mru@kth.se
 
-- --
-Clemens Schwaighofer - IT Engineer & System Administration
-==========================================================
-TEQUILA\Japan, 6-17-2 Ginza Chuo-ku, Tokyo 104-8167, JAPAN
-Tel: +81-(0)3-3545-7703            Fax: +81-(0)3-3545-7343
-http://www.tequila.co.jp
-==========================================================
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.4 (GNU/Linux)
-
-iD8DBQFAxrXWjBz/yQjBxz8RAnu/AJ0YlAnEXGxK3hBiGmSWJiOfT3O+rQCgheXZ
-V5DTW6ESA7M8W9ZbUklefd8=
-=jwFK
------END PGP SIGNATURE-----
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
