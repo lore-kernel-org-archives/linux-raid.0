@@ -1,71 +1,62 @@
-From: "Matthew - RAID" <RAID@lists.elvey.com>
-Subject: Kluge Fails - Re: (Can I mark a RAID 1 drive as old?)
-Date: Wed, 14 Jul 2004 11:41:49 -0700
+From: Ninti Systems <office@ninti.com.au>
+Subject: Software RAID 1 problems
+Date: 15 Jul 2004 16:42:02 +0930
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1089830509.12996.200366142@webmail.messagingengine.com>
+Message-ID: <1089875522.1070.18.camel@localhost>
+Reply-To: office@ninti.com.au
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-To: linux-raid <linux-raid@vger.kernel.org>
+To: RAID Linux <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 7/8/04 2:42 PM, Matthew (RAID) sent forth electrons to convey:
+I have just got a server (Slackware 9.1) up and running after an unknown
+incident brought it down overnight (extended power failure most likely,
+but not necessarily).
 
->I'm wondering how handle a situation.  There are several issues, would
->appreciate help w/ ANY ONE of 'em.
->I'm most of the way there - I've been able to use RAID to create a
->backup system, but it's far from quite right.
->
->I think I want to make the raid code consider a disk in a raid 1 array
->older than another disk, and/or move arrays around, and/or resolve a
->hang when I insert SCA drives into the system.
->[...]
->One system is an already live system serving users, the other is a warm
->backup.  I call 'em LIVE and BK. 
->I've been using raid to make BK a backup of LIVE..
->[...]
->If I add and remove drives with the sytem off, I hit a different set of
->problems:
->1)If the system comes up with half the drives removed, the drives get
->relabled : they are always sda, sdb, and sdc.
->  I could rearrange things so that it's sdd,sde,and sdf that get pulled,
->  but I don't know how to do that. Hence the second question in this
->  email's subject.
->2)If I put back the pulled drives, when the system restarts, sometimes
->these drives are chosen by the RAID code as being newer than the drives
->that haven't been pulled. Hence the first question in this email's
->subject.
->
-I thought I found a kluge partial fix to this: run fdisk (actually I use
-sfdisk) and repartition the drive with partitions of size 0.
-The 'repartition' just writes to the partition table; the data on these
-drives seems to remain untouched when a system boots with 'em.
-I thought I'd be able to sfdisk back their normal partition tables and
-raidhotadd 'em.
+At first, when powering on the system would not recognise any IDE device
+at all. It would not boot off a CD, and after booting of a boot floppy,
+it would not mount any partitions on any IDE device.
 
-I tried this: I powered off and removed the second drive from the raid1
-arrays, replacing them will 'filler drives' made with the kluge above.
-Well,  on startup, md0 fails, and so md2 (the raid0 on top of md0 and
-md1) fails too.
-Error messages:
-"Starting up raid devices : /dev/md0: Invalid argument"
-"/dev/md0 is not a RAID0 or LINEAR array!"
-"md0 raid1: md1, not all disks are  operational -- trying to recover
-array"
-"md1 /dev/md2: Invalid arcument"
-"/dev/md2 must be a nonpersistent RAID0 or LINEAR array!
-md2"
-***
+After a ride a car, bingo, suddenly it would boot again. Then freeze,
+then reboot etc etc. Eventually, I have it at the point where it will
+reboot again everytime. But the problem isn't over yet ...
 
-I tried marking sdb1 as failed and doing raidstart --all - no dice:
-Invalid argument on md0,2. 1 already running.
-raidstart /dev/md0 /dev/sdc1 gives
-"device /dev/sdc1 is not decribed in config file."???  It is!!!  I don't
-get this!
- fdisk on sdc shows what I'd expect.
+It appears that two out of five md devices have disappeared. md0 was the
+/boot partition, and md2 was the swap partition, they are no longer
+present it seems. md1, md3 and md4 are all present but degraded I think
+(see output of mdadm below).
 
-> <rest snipped>
+Basically, I'm wondering where to go from here:
 
-I'm about ready to give up and go with hardware raid. :(
+- Does this look like a sudden-power-off issue or a broken HDD issue?
+
+- Any advice on how to resolve this issue (get back the missing md
+devices and restore full arrays?
+
+Thanks
+Mick
+
+
+
+Raid Devices:
+Personalities : [linear] [raid0] [raid1] [raid5] read_ahead 1024 sectors
+md1 : active raid1 hdc2[1] 9767424 blocks [2/1] [_U] md3 : active raid1
+hdc5[1] 58596992 blocks [2/1] [_U] md4 : active raid1 hdc6[1] 8297472
+blocks [2/1] [_U] unused devices: <none>
+
+Raid Array Status:
+
+[dev 9, 1] /dev/md1 0403E3A6.F7F2F6AD.76F1F7FF.76CF2410 online [dev ?,
+?] (unknown) 00000000.00000000.00000000.00000000 missing [dev 22, 2]
+/dev/hdc2 0403E3A6.F7F2F6AD.76F1F7FF.76CF2410 good
+
+[dev 9, 3] /dev/md3 0FD423CD.D4C229D1.9321323A.273CDDEB online [dev ?,
+?] (unknown) 00000000.00000000.00000000.00000000 missing [dev 22, 5]
+/dev/hdc5 0FD423CD.D4C229D1.9321323A.273CDDEB good
+[dev 9, 4] /dev/md4 EC8BAB76.40CC4FA6.C9FB44E3.1A8DE26A online [dev ?,
+?] (unknown) 00000000.00000000.00000000.00000000 missing [dev 22, 6]
+/dev/hdc6 EC8BAB76.40CC4FA6.C9FB44E3.1A8DE26A good
+
+
