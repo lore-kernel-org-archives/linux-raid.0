@@ -1,112 +1,79 @@
-From: Lars Marowsky-Bree <lmb@suse.de>
-Subject: Small fix for 2.4 md.c - using device information before lock_dev()
-Date: Wed, 12 Mar 2003 15:06:46 +0100
+From: "Sean Kormilo" <skormilo@nortelnetworks.com>
+Subject: Re: [PATCH] md - 1 of 12 - Missing mddev_put in md resync code
+Date: 12 Mar 2003 12:48:48 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20030312140646.GJ32759@marowsky-bree.de>
+Message-ID: <1047491327.30792.3.camel@wmery000.ca.nortel.com>
+References: <E18sxOy-0004pf-00@notabene.cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="qjNfmADvan18RZcF"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-To: Neil Brown <neilb@cse.unsw.edu.au>
+In-Reply-To: <E18sxOy-0004pf-00@notabene.cse.unsw.edu.au>
+To: NeilBrown <neilb@cse.unsw.edu.au>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Neil,
 
---qjNfmADvan18RZcF
-Content-Type: multipart/mixed; boundary="yEPQxsgoJgBvi8ip"
-Content-Disposition: inline
+Are these patches safe to apply against 2.4 kernels?
 
+It looks like one or more of these might reduce the chances of the
+kernel oops I experience on occasion when manipulating arrays.
 
---yEPQxsgoJgBvi8ip
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Also, this appears to change some of the way rebuilds are done, and am
+interested to see if this impacts some of the rebuild performance issues
+I've been seeing.
 
-Good morning,
+Thanks!
 
-I've been testing md under UML. It appears that UML is exposing a minor bug=
- in
-md.c: it is trying to use information about the device (in particular,
-blk_sizes[]) before having imported it (which calls lock_dev() and thus mak=
-es
-the information available in the first place).
-
-This was exposed because UML resets the blk_sizes[] information to zero on
-ubd_release().
-
-Working patch attached; it just reorders the function calls. Please apply to
-2.4 if appropriate.
+Sean.
 
 
-Sincerely,
-    Lars Marowsky-Br=E9e <lmb@suse.de>
+> Here are 12 patches for md/raid in 2.5.latest.
+> As well as some tidy-ups and bug fixes they include:
+> 
+>   /proc/mdstat as a seq_file
+>   "safe_mode" is always on, but normally with a 20msec delay. 
+>     This means that if there are no writes for 20msec, the superblock
+>     is marked 'clean' so that an unclean shutdown does not cause
+>     a complete resync.
+>   New super-block format (no user-level code to support this yet).
+> 
+> NeilBrown
+> 
+> ### Comments for ChangeSet
+> 
+> Whenever a ITERATE_MDDEV loop is exitted abnormally
+> we need to mddev_put the current mddev.  There was
+> one point in md_do_sync where we didn't so use counts
+> became wrong.
+> 
+>  ----------- Diffstat output ------------
+>  ./drivers/md/md.c |    4 +++-
+>  1 files changed, 3 insertions(+), 1 deletion(-)
+> 
+> diff ./drivers/md/md.c~current~ ./drivers/md/md.c
+> --- ./drivers/md/md.c~current~	2003-03-12 09:31:38.000000000 +1100
+> +++ ./drivers/md/md.c	2003-03-12 09:31:38.000000000 +1100
+> @@ -2920,8 +2920,10 @@ static void md_do_sync(void *data)
+>  					goto skip;
+>  				}
+>  			}
+> -			if (mddev->curr_resync == 1)
+> +			if (mddev->curr_resync == 1) {
+> +				mddev_put(mddev2);
+>  				break;
+> +			}
+>  		}
+>  	} while (mddev->curr_resync < 2);
+>  
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
 
---=20
-Principal Squirrel=20
-SuSE Labs - Research & Development, SuSE Linux AG
- =20
-"If anything can go wrong, it will." "Chance favors the prepared (mind)."
-  -- Capt. Edward A. Murphy            -- Louis Pasteur
+Sean C. Kormilo, STORM Software Architect, Nortel Networks
+              email: skormilo@nortelnetworks.com
+  
 
---yEPQxsgoJgBvi8ip
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="md.c.diff"
-Content-Transfer-Encoding: quoted-printable
-
---- md.c~	Tue Mar 11 15:21:11 2003
-+++ md.c	Tue Mar 11 16:54:22 2003
-@@ -2456,13 +2456,6 @@
- 	}
-=20
- 	persistent =3D !mddev->sb->not_persistent;
--	size =3D calc_dev_size(dev, mddev, persistent);
--
--	if (size < mddev->sb->size) {
--		printk(KERN_WARNING "md%d: disk size %d blocks < array size %d\n",
--				mdidx(mddev), size, mddev->sb->size);
--		return -ENOSPC;
--	}
-=20
- 	rdev =3D find_rdev(mddev, dev);
- 	if (rdev)
-@@ -2473,6 +2466,7 @@
- 		printk(KERN_WARNING "md: error, md_import_device() returned %d\n", err);
- 		return -EINVAL;
- 	}
-+=09
- 	rdev =3D find_rdev_all(dev);
- 	if (!rdev) {
- 		MD_BUG();
-@@ -2484,6 +2478,15 @@
- 		err =3D -EINVAL;
- 		goto abort_export;
- 	}
-+=09
-+	size =3D calc_dev_size(dev, mddev, persistent);
-+	if (size < mddev->sb->size) {
-+		printk(KERN_WARNING "md%d: disk size %d blocks < array size %d\n",
-+				mdidx(mddev), size, mddev->sb->size);
-+		err =3D -ENOSPC;
-+		goto abort_export;
-+	}
-+=09
- 	bind_rdev_to_array(rdev, mddev);
-=20
- 	/*
-
---yEPQxsgoJgBvi8ip--
-
---qjNfmADvan18RZcF
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.0.7 (GNU/Linux)
-
-iD8DBQE+bz72udf3XQV4S2cRAlHSAJ0YZ6tvmLTMl0sVX6CGfUcJQvcr+wCfQGBe
-xOmHdPlhcTHtTEQEVEcy9gg=
-=5YwE
------END PGP SIGNATURE-----
-
---qjNfmADvan18RZcF--
