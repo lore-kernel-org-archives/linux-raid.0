@@ -1,46 +1,82 @@
-From: Adam Radford <aradford@3WARE.com>
-Subject: RE: 3w 8500 supported in 2.6?
-Date: Wed, 25 Feb 2004 11:20:40 -0800
+From: Paul Clements <Paul.Clements@SteelEye.com>
+Subject: [PATCH] raid1: abort resync if there are no spare drives
+Date: Wed, 25 Feb 2004 16:39:10 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <A1964EDB64C8094DA12D2271C04B8126F8C95A@tabby>
+Message-ID: <403D15FE.CAACDC4A@SteelEye.com>
+References: <20040223024124.GA1590@psilocybus> <16441.33071.218049.163976@notabene.cse.unsw.edu.au> <403A30F9.D54AAC68@SteelEye.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: multipart/mixed;
+ boundary="------------5BF60CB0208FD7E6A670FBEC"
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: 'John Williams Floroiu' <floroiu@fokus.fraunhofer.de>, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@cse.unsw.edu.au>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-It is supported.  
+This is a multi-part message in MIME format.
+--------------5BF60CB0208FD7E6A670FBEC
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 
--Adam
+The attached patch makes sure that resync/recovery get aborted (and
+status recorded correctly) when there are no spare drives left (due to
+the failure of a spare during a resync). Previously, if a spare failed
+during a resync, the resync would continue until completed (and would
+appear to be successful). 
 
------Original Message-----
-From: John Williams Floroiu [mailto:floroiu@fokus.fraunhofer.de]
-Sent: Wednesday, February 25, 2004 3:24 AM
-To: linux-raid@vger.kernel.org
-Subject: 3w 8500 supported in 2.6?
+Also, there was an erroneous usage of master_bio->bi_bdev field (which
+is not always properly set) that has been changed to the simpler
+comparison vs. r1_bio->read_disk (as is done in raid1_end_request). I
+think Neil has already addressed this issue in another patch that has
+been pushed to Andrew...
 
+Thanks,
+Paul
+--------------5BF60CB0208FD7E6A670FBEC
+Content-Type: text/x-patch; charset=us-ascii;
+ name="raid1_abort_sync_no_targets.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="raid1_abort_sync_no_targets.diff"
 
+--- raid1.c.PRISTINE	Tue Feb 24 16:10:26 2004
++++ raid1.c	Wed Feb 25 16:22:34 2004
+@@ -818,6 +818,8 @@ static void sync_request_write(mddev_t *
+ 		put_buf(r1_bio);
+ 		return;
+ 	}
++	/* assume failure until we find a drive to write this to */
++	clear_bit(R1BIO_Uptodate, &r1_bio->state);
+ 
+ 	spin_lock_irq(&conf->device_lock);
+ 	for (i = 0; i < disks ; i++) {
+@@ -825,7 +827,7 @@ static void sync_request_write(mddev_t *
+ 		if (!conf->mirrors[i].rdev || 
+ 		    conf->mirrors[i].rdev->faulty)
+ 			continue;
+-		if (conf->mirrors[i].rdev->bdev == bio->bi_bdev)
++		if (i == r1_bio->read_disk)
+ 			/*
+ 			 * we read from here, no need to write
+ 			 */
+@@ -838,6 +840,8 @@ static void sync_request_write(mddev_t *
+ 			continue;
+ 		atomic_inc(&conf->mirrors[i].rdev->nr_pending);
+ 		r1_bio->write_bios[i] = bio;
++		/* we found a drive to write to */
++		set_bit(R1BIO_Uptodate, &r1_bio->state);
+ 	}
+ 	spin_unlock_irq(&conf->device_lock);
+ 
+@@ -859,7 +863,8 @@ static void sync_request_write(mddev_t *
+ 	}
+ 
+ 	if (atomic_dec_and_test(&r1_bio->remaining)) {
+-		md_done_sync(mddev, r1_bio->master_bio->bi_size >> 9, 1);
++		md_done_sync(mddev, r1_bio->master_bio->bi_size >> 9,
++				test_bit(R1BIO_Uptodate, &r1_bio->state));
+ 		put_buf(r1_bio);
+ 	}
+ }
 
-hi,
-
-I intend to purchase a 3ware Escalade 8500-4 S-ATA RAID controller. could
-anybody confirm whether this card/family is 
-supported by the 3w-xxxx standard driver of the 2.6.x kernels? thanks in
-advance.
-
-cheers,
-John.
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-DISCLAIMER: The information contained in this electronic mail transmission
-is intended by 3ware for the use of the named individual or entity to which
-it is directed and may contain information that is confidential or
-privileged and should not be disseminated without prior approval from 3ware 
-
+--------------5BF60CB0208FD7E6A670FBEC--
 
