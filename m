@@ -1,37 +1,37 @@
-From: Mark Hahn <hahn@physics.mcmaster.ca>
-Subject: Re: VT 8237 Support?
-Date: Wed, 21 Jan 2004 14:02:16 -0500 (EST)
+From: Ming Zhang <mingz@ele.uri.edu>
+Subject: Re: total sector number in each disk
+Date: Wed, 21 Jan 2004 14:37:13 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0401211357470.30312-100000@coffee.psychology.mcmaster.ca>
-References: <20040121082404.GA11827@hvs.envisage.co.za>
+Message-ID: <1074713832.2523.43.camel@dyn251.ele.uri.edu>
+References: <8003A8A6-4C3B-11D8-AA88-000A9576014E@cam.ac.uk>
+Reply-To: mingz@ele.uri.edu
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20040121082404.GA11827@hvs.envisage.co.za>
-To: Hendrik Visage <hvisage@envisage.co.za>
-Cc: Andrew Hogue <hogue@cs.yorku.ca>, linux-raid@vger.kernel.org
+In-Reply-To: <8003A8A6-4C3B-11D8-AA88-000A9576014E@cam.ac.uk>
+To: Bin Ren <br260@cam.ac.uk>
+Cc: Raid Linux <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-> "stock standard" in 2.6.0
+Check how md, hd, sd driver handle the BLKGETSIZE or BLKGETSIZE64 ioctl
+call. You will get that number. :)
 
-with 2.6, it's wise to track patches more aggresively.  in particular,
-I'd go with AKPM's latest mm prepatch and possibly jgarzik's libata update.
 
->   Vendor: ATA       Model: ST3120026AS       Rev: 0.81
->     Type:   Direct-Access                      ANSI SCSI revision: 05
-...
+ming
 
-> > Has anyone tried this patch?  How stable is libata for the VIA chipset...?
+On Wed, 2004-01-21 at 12:59, Bin Ren wrote:
+> Hi,
 > 
-> On 2.6.0 & 2.6.1 with the gentoo patches, I only have a single drive that
-> appears to be "problematic", but I suspect either heat or cabling troubles,
-> as it does the same on the Promise 20378 onboard controller.
-
-some Seagate SATA disks have a bug that makes them unable to handle 
-requests that don't contain a multiple of 16 sectors (or something similar).
-the latest libata patch has a quirk list to pick out those specific drives,
-and handle them.  previously, iirc, all ST's were worked around, with serious
-performance implications.
-
-the model above is not in the quirk list.  the quirk isn't controller-specific.
+> I'm reading the source codes of md and raid1. Could anyone tell me
+> where to find out the total number of sectors of a particular disk in a
+> raid set?
+> 
+> Thanks,
+> -- Bin
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
