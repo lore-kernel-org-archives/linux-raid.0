@@ -1,28 +1,24 @@
-From: Linus Torvalds <torvalds@transmeta.com>
+From: Andries Brouwer <aebr@win.tue.nl>
 Subject: Re: PATCH - change to blkdev->queue calling triggers BUG in md.c
-Date: Mon, 2 Sep 2002 15:00:27 -0700 (PDT)
+Date: Mon, 2 Sep 2002 23:58:03 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0209021459030.1401-100000@home.transmeta.com>
-References: <UTC200209022141.g82LfMV21308.aeb@smtp.cwi.nl>
+Message-ID: <20020902215803.GA9359@win.tue.nl>
+References: <UTC200209022127.g82LR3g12738.aeb@smtp.cwi.nl> <Pine.LNX.4.44.0209021542590.3270-100000@hawkeye.luckynet.adm>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <UTC200209022141.g82LfMV21308.aeb@smtp.cwi.nl>
-To: Andries.Brouwer@cwi.nl
-Cc: aebr@win.tue.nl, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, neilb@cse.unsw.edu.au
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44.0209021542590.3270-100000@hawkeye.luckynet.adm>
+To: Thunder from the hill <thunder@lightweight.ods.org>
+Cc: Andries.Brouwer@cwi.nl, torvalds@transmeta.com, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, neilb@cse.unsw.edu.au
 List-Id: linux-raid.ids
 
+On Mon, Sep 02, 2002 at 03:43:56PM -0600, Thunder from the hill wrote:
 
-On Mon, 2 Sep 2002 Andries.Brouwer@cwi.nl wrote:
+> > The faraway goal is: no partition table reading in the kernel.
 > 
-> No, my suggested changes would not break a single Linux installation
-> in the world.
+> Why not the faraway goal: no partition tables any more? They're annoying.
 
-.. by making your suggested behaviour not be used. Yes.
-
-But if that is the case, then we _still_ need to fix the media change and 
-partition read issue. Right? Which brings back _all_ my points for why it 
-should be done at open time, and by the generic routine. Agreed?
-
-		Linus
-
+As soon as the kernel stops reading partition tables, user space
+is entirely free in what it does. One of the possibilities is
+then of course: no partition tables.
