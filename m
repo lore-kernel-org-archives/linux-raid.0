@@ -1,44 +1,45 @@
-From: "Donghui Wen" <dhwen@protegonetworks.com>
-Subject: Re: software raid hangs.
-Date: Tue, 8 Jul 2003 14:41:13 -0700
+From: Matt E <mgeusenet@yahoo.com>
+Subject: Raid 5, Not Detected At Startup
+Date: Tue, 8 Jul 2003 14:48:06 -0700 (PDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <004601c34599$a7719ee0$df01010a@moon>
-References: <4D618F6493CE064A844A5D496733D667031A01@freedom.icomedias.com> <200307072029.14998.bernd-schubert@web.de> <200307071142330484.8AF6968B@shargaas.coreyfro.com> <200307081851.31385.bernd-schubert@web.de> <003401c34597$26521e40$df01010a@moon> <1057700295.16166.54.camel@mattswrk>
+Message-ID: <20030708214806.48193.qmail@web20421.mail.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Matt Simonsen <matt_lists@careercast.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Yes, I did. Actully, in order to verify this case,
-I create some small partitions (1G) to make raid.
+Hello All!
 
-Donghui
+I've created a RAID-5 Array on my system, and it isn't
+detected at startup.  Reading the software RAID HOWTO
+I see that I have to specify a partion type to get
+auto detection to work.
 
------ Original Message -----
-From: "Matt Simonsen" <matt_lists@careercast.com>
-To: "Donghui Wen" <dhwen@protegonetworks.com>
-Cc: <linux-raid@vger.kernel.org>
-Sent: Tuesday, July 08, 2003 2:38 PM
-Subject: Re: software raid hangs.
+However, I never made partitions on the disk, I just
+used mdadm to allocate the whole disc (hde,hde,etc.)
+for the RAID array.
 
+Hence, there is no partition table on the disk, and I
+can't change the partition type.
 
-> On Tue, 2003-07-08 at 14:23, Donghui Wen wrote:
-> > Hi,
-> >      I am testing software-raid with 3ware-7500 controller on a
-> > hot-swappable chassis.
-> > I found out that software-raid 5 could not even sustain 1 disk failure
-in
-> > this case.
->
->
-> Did you allow the array to first sync up before pulling out a disk? It
-> may take quite a while if you have large disks (several hours to days).
->
-> Matt
->
->
+I thought about removing one disk from the array,
+creating a single partion, setting it to be the
+correct type, then hot adding it to the array, allow
+the array to sync, stop the array and the repeat the
+process for the other 3 disks, which would give me
+partiton types on all 4
 
+Will this work with out blowing away my data?  Is
+there a better way to do it?  
+
+I realize that mdadm --assemble --scan will build the
+array, but I'd like it to be detected at boot, without
+mucking around with init scripts.
+
+Cheers! 
+
+__________________________________
+Do you Yahoo!?
+SBC Yahoo! DSL - Now only $29.95 per month!
+http://sbc.yahoo.com
