@@ -1,64 +1,72 @@
-From: Dan Egli <dan@eglifamily.dnsalias.net>
-Subject: Re: 15% used but "No space left on Device"
-Date: Sun, 16 Nov 2003 21:19:53 -0700
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: Linux RAID metadata format docs?
+Date: Mon, 17 Nov 2003 16:55:40 +1100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3FB84C69.40907@eglifamily.dnsalias.net>
-References: <Pine.LNX.4.56.0311161309010.12003@nemesis.cs.yorku.ca> <3FB7CE28.6090100@eglifamily.dnsalias.net> <Pine.LNX.4.56.0311161816320.12003@nemesis.cs.yorku.ca>
+Message-ID: <16312.25308.143873.280291@notabene.cse.unsw.edu.au>
+References: <20031114185013.GA11930@gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.56.0311161816320.12003@nemesis.cs.yorku.ca>
-To: Andrew Hogue <hogue@cs.yorku.ca>
+In-Reply-To: message from Jeff Garzik on Friday November 14
+To: Jeff Garzik <jgarzik@pobox.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+On Friday November 14, jgarzik@pobox.com wrote:
+> Do any docs exist, that describe the on-disk md format?
 
-Andrew Hogue wrote:
-| Hi again,
-|
-| Okay, so I ran fsck on the disk and it said that it had errors.  So I
-| "corrected" them all and everything was fine.
-|
-| However, now I'm getting a different message that seems related to this
-| problem.
-|
-| I have a set of images on this device that I'm trying to encode into a
-| movie.  So I run my program on it, which simply reads in an image then
-| adds it to the video file etc...
-|
-| This is a very large list of images, about 23000 images.
-|
-| Now, for some reason it works fine up to a point then dies with a bus
-| error.  I check the dmesg log and low and behold I get the following
-| message:
-|
-| attempt to access beyond end of device
-| 09:00: rw=0, want=707399196, limit=488396800
-|
-| Weird.  I try using display on that file and sometimes it dies and
-| sometimes it doesn't.  Very unpredictable.
-|
-| Why would the system 'think' that I'm trying to access outside of my disk
-| when the file exists and is the correct size?
-|
-| Any ideas?
+Not to my knowledge, beyond source code.
 
+> 
+> I'm talking with a vendor that would like to support booting off of 
+> "Linux RAID" (as they call it), from their card's BIOS, which implies
+> the vendor would need to add support for the md format to their BIOS.
 
-Yes, but not one you will like. When you "corrcted" the errors, you made
-changes that, while LOOKING correct, actually damaged the file(s). That
-is part of why I said you should backup the array before doing anything.
+I don't see that knowledge of the RAID format is needed by the bios.
 
-- --- Dan
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.2 (MingW32)
-Comment: Using GnuPG with Thunderbird - http://enigmail.mozdev.org
+It might be needed by the boot sector, and certainly by the next stage
+(whether that be the kernel itself, or grub or whatever).
 
-iD8DBQE/uExotwT22Jak4/4RArEiAKCAHgcR74D5K17q+61z71Oui/QvswCgtNgP
-cAw4nw918oqUsVzAhThksHM=
-=8AJV
------END PGP SIGNATURE-----
+Based on my limited understanding, the bios should only need:
+  1/ to be able to try subsequent drives if the first fails,
+  2/ be able to tell the boot sector which drive was used
+  3/ to allow the boot sector to indicate failure
+ and maybe
+  4/ be able to have a dynamically determined boot order
+   (so that when one drive fails, it gets put to the bottom of the 
+    list).
 
+Clearly 1,2,3 don't need the bios to know anything about RAID layout.  4
+could use raid layout information, and an easy interface for the
+kernel to tell it when things have changed would be a lot easier and
+more general.
 
+I think the simplest approach would be:
+
+ Bios attempts each potential boot device in some order, loading the
+ boot sector and telling the boot sector that the device is "0x80".
+ If the boot sector fails (e.g. bad code, such as all zeros), it tries
+ the next.
+
+ The boot sector tries to load a kernel or second-stage off "0x80" as
+ normal.   The kernel or second-stage understands raid and makes sure
+ the correct root is assembled.
+
+ Some daemon monitors drives that fail, and attempts to over-write
+ sector 0 of any such drive that is a boot-candidate.
+
+This wouldn't quite do the right thing if:
+  The "first" drive goes off line for some reason.
+  A new kernel/second-stage is installed on remaining drive(s).
+  machine is rebooted and "first" drive comes back online during the
+  boot.
+
+The "first" drive will look OK, but will not have a current kernel on
+it.
+
+Does any of this make sense?
+
+Were you thinking of some RAID level other than RAID1?
+
+NeilBrown
