@@ -1,39 +1,29 @@
-From: "Martin Eriksson" <nitrax@giron.wox.org>
+From: Neil Brown <neilb@cse.unsw.edu.au>
 Subject: Re: Enable HTT with dual xeon fileserver ?
-Date: Wed, 18 Sep 2002 11:53:04 +0200
+Date: Wed, 18 Sep 2002 20:49:32 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <001d01c25ef9$6bc25240$900d0d93@M02WS17219>
+Message-ID: <15752.23100.95651.59572@notabene.cse.unsw.edu.au>
 References: <Pine.LNX.4.44.0209162301200.24650-100000@ddx.a2000.nu>
+	<001d01c25ef9$6bc25240$900d0d93@M02WS17219>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: raid@ddx.a2000.nu, linux-raid@vger.kernel.org
+In-Reply-To: message from Martin Eriksson on Wednesday September 18
+To: Martin Eriksson <nitrax@giron.wox.org>
+Cc: raid@ddx.a2000.nu, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
------ Original Message -----
-From: <raid@ddx.a2000.nu>
-To: <linux-raid@vger.kernel.org>
-Sent: Monday, September 16, 2002 11:02 PM
-Subject: Enable HTT with dual xeon fileserver ?
+On Wednesday September 18, nitrax@giron.wox.org wrote:
+> 
+> A follow-up question: Does sw-raid5 checksumming use multiple CPUs in any
+> way?
 
+It could if separate threads were submitting requests on the same
+array, but I don't think it would be very likely.  Lots of the
+checksumming is done by raid5d which is single threaded.
 
-> I'm building a Dual Xeon Fileserver
-> i can enable HTT in the bios (so i have 4 logical processors)
+Ofcourse if you had 2 raid5 arrays, they could quite possibly use one
+cpu each.
 
-I'm very sceptical that a fileserver would gain any performance from HT.
-
-In fact, I don't really realize why you even need two CPU's? If you are
-doing database lookups it's another thing though, also HT could give a
-performance gain in that case (if it's supported by the linux kernel?).
-
-> what is the advise for a fileserver ?
-> (both running hardware raid5 (3ware) and software raid5 (on promise
-> controllers)
-
-A follow-up question: Does sw-raid5 checksumming use multiple CPUs in any
-way?
-
-/Martin
-
+NeilBrown
