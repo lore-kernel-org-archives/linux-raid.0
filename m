@@ -1,129 +1,99 @@
 From: ptb@lab.it.uc3m.es (Peter T. Breuer)
-Subject: Re: RAID1 robust read and read/write correct and EVMS-BBR
-Date: Wed, 23 Feb 2005 22:01:44 +0100
-Message-ID: <oi7ve2-qug.ln1@news.it.uc3m.es>
-References: <CAC3BCBB443DEC439198F230B4BCC7E9092C45CC@exna6-ftsaa.mis.stratus.com>
+Subject: Re: RAID1 robust read and read/write correct patch
+Date: Wed, 23 Feb 2005 22:15:16 +0100
+Message-ID: <4c8ve2-qug.ln1@news.it.uc3m.es>
+References: <421C628D.8080908@getsu.com> <p97ue2-1ld.ln1@news.it.uc3m.es> <421CEC3A.5010609@getsu.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: evms-devel@lists.sourceforge.net
 List-Id: linux-raid.ids
 
-In gmane.linux.raid Nagpure, Dinesh <Dinesh.Nagpure@stratus.com> wrote:
-> I noticed the discussion about robust read on the RAID list and similar one
-> on the EVMS list so I am sending this mail to both the lists. Latent media
-> faults which prevent data from being read from portions of a disk has always
-> been a concern for us. Such faults will go undetected till the time that
-> block is read.
-
-Well, sure, unless you have some other test. Finding latent faults is
-always a question of making them come out into the open. But do you
-want to? Testing something to destruction does not make it more useful.
-
-> RAID 1 depends on error free mirrors for proper operation and
-
-Err, if one mirror has a read error you can always read from another one
-instead.
-
-> undiscovered bad blocks would only give pseudo illusion of duplexity when in
-
-Well, undiscovered bad blocks are just that, nice and crypto! But I
-take your point. The problem with your reasoning however is that it is
-not raid-specific - undiscovered errors in ANYTHING are a problem
-waiting to be discovered :).
-
-Should we be concerned about that? Sometimes yes, sometimes no.
-
-When we shouldn't be concerned about it is when our aim is merely to DO
-BETTER.
-
-When we should be concerned about it is when our aim is to BE PERFECT.
-
-Personally, I am only looking to do better.
-
-> reality the array should be degraded.
-
-Why should we degrade a perfectly good mirror just because one of the
-disks has a read error on a particular sector?  You've lost me there!
-
-> Over long run all the mirrors might
-> develop latent media faults
-
-Sure they might.  But it's not a crime to have faults!  We all have them.
-We don't kill ourselves as soon as we develop a blackhead, which seems
-to be what you are suggesting!
-
-Personally I'd launch resyncs every so often. SInce robust-read makes
-the array tolerant of read faults during resync too, you will reduce
-the number of errors by 1/n (i.e. get rid of 50% of the errors in a
-2-disk array) every time you do this.
-
-And/Or you can  also help develop the write-correct addition to the
-robust-read patch to make the read errors get corrected on the fly.
-
-
->  and none can be replaced with a new disk.
-
-Sure they can. Whenever you like. But why?
-
-> Also
-> it is a disaster if the same block goes bad on all the mirrors in a RAID 1
-> volume.
-
-No it's not. It's an error. It's no worse than a block going bad on a
-single disk. The world doesn't cave in when that happens. It takes
-longer to happen on a 2 disk system because one needs to get both disks
-with errors in the same place. So the 2 disk raid is a lot BETTER.
-
-> With this concern we developed what we call "disk-scrubber". The
-
-Well, then you are up a gum-tree, because your concerns appear to be
-ill-reasoned. That's not to say that there isn't merit in what you
-might now propose, but it won't be fully justified by your reasoning so
-far, if it is what you have shown!
-
-> approach was to proactively seek for bad spots on the disk and when one is
-> discovered, read the correct data from the other mirror and use it to repair
-
-There's nothing wrong with that, if you like your disk humming away
-doing a resync in the background. One can do that. Just keep the raid1d
-resync thread occupied. There are several possible strategies.
-
-But I wouldn't say you "developed" this! Isn't it a standard tactic in
-classical raid to do background tests and syncs? I thought the idea was
-to combat the tendency of raid to develop errors that cannot be detected
-by the array itself afterwards!
-
-> the disk by way of a write. SCSI disks automatically repair bad spots on
-> write by internally mapping the bad spots to spare sectors (Being SCSI
-
-So do IDE. You seem to be a bit behind the times. Surely that's been
-the case for at least five years? Or more?
-
-> centric might be one limitation of this solution).
-
-I don't think so.
-
-> The implementation comprised of a thread that looks for bad spots by way of
-> slow repeated continuous scan through all disks.
-
-Brilliant , but it's trivial to make the resync thread active the whole
-time.
-
-> The RAID error management
-> was extended to attempt a repair on read error from a RAID 1 array to permit
-> fixing of user discovered bad spots as well as those discovered by the
-
-Wel, I'd like to see how you did that bit. I've only suggested code t
-do it, not actually tried it!
-
-> scrubber. The work is lk2.4.26 based as of now.
+J. David Beutel <jdb@getsu.com> wrote:
+> Peter T. Breuer wrote, on 2005-Feb-23 1:50 AM:
 > 
-> I can go back and put together a patch over the weekend if anyone is
-> interested in using it. 
+> > Quite possibly - I never tested the rewrite part of the patch, just
+> >
+> >wrote it to indicate how it should go and stuck it in to encourage
+> >others to go on from there.  It's disabled by default.  You almost
+> >certainly don't want to enable it unless you are a developer (or a
+> >guinea pig :).
+> 
+> Thanks for taking a look at it!  Unfortunately, I'm not a kernel 
+> developer.  I haven't even been using C for the last 8 years.  But I'd 
+> really like to have that rewrite functionality, and I can dedicate my 
+> system as a guinea pig for at least a little while, if there's a way I 
+> can test it in a finite amount of time and build some confidence in it 
+> before I start to really use that system.
 
-Go "back"? I don't understand .. how do you actually have the work if
-not as a patch? But yes - of course I would be interested. Please show
-the patch as soon as possible! Looks like a combined patch is in order!
+I'd say that theres's about a 50/50 chance that it will work as it is
+without crashing the kernel. But it's impossible to say until somebody
+tries it unless more people offer their kibbitzing thought-experiments
+first!
+
+I can run the 2.4 UML kernel safely for tests, but it's not as good as
+running a real kernel because you don't get an OOPS when things go bad.
+You just don't have to suffer the psych pain of rebooting! So you can
+do more debugging, although the debugging is not as good. And you stil 
+have to set up the test again each time.
+
+I'm particularly unclear in the present patch if end_io is run on the
+original read request after it's been retried and used as the first
+half of a read-write resync pair. I simply can't see from the code, and
+running is the only way of finding out. There are also possible race
+conditions against the resync thread proper under some conditions, but
+that won't be a problem in testing.
+
+> I'd like to start with an md unit test suite.  Is there one?  I don't 
+
+!! I always simply do
+
+   dd if=/dev/zero of=/tmp/core0 bs=4k count=1k
+   dd if=/dev/zero of=/tmp/core1 bs=4k count=1k
+   losetup /dev/loop0 /tmp/core0
+   losetup /dev/loop1 /tmp/core1
+   mdadm -C -l 1 -n 2 -x 0 --force /dev/md0 /dev/loop[01]
+
+or something very like that.
+
+> know if the architecture would allow for this, but naively I'm thinking 
+> that the test suite would use a mock disk driver (e.g., in memory only) 
+> to simulate various kinds of hardware failures and confirm that md 
+
+Uh, one can do that via the devicemapper (dmsetup?) but I've never
+bothered - it's much simpler to add a line or two to the code along the
+lines of "if (bio->b_sector == 1024) return -1;" in order to simulate an
+error. 
+
+One could add ioctls to make that configurable, but by then we're in dm
+territory.
+
+> responds as expected to both the layer above (the kernel?) and below 
+> (the disk driver?).  Unit tests are also good for simulating unlikely 
+> and hard to reproduce race conditions, although stress tests are better 
+
+Well, if you could make a dm-based testrig, yes please!
+
+> at discovering new ones.   But, should the test suite play the roll of 
+> the kernel by calling md functions directly in a user space sandbox 
+
+Never mind that for now. The actual user space reads or writes
+can be in a makefile. The difficulty is engineering the "devices"
+to have the intended failures.
+
+> (mock kernel, threads, etc)?  Or, should it play the roll of a user 
+> process by calling the real kernel to test the real md (broadening the 
+
+No - nothing like that. The testsuite will be run under a kernel. It's
+not your business to know if it's a real kernel or a uml kernel or some
+other kind of sandbox.
+
+> scope of the test)?  I'd appreciate opinions or advice from kernel or md 
+> developers.
+> 
+> Also, does anyone have advice on how I should do system and stress tests 
+> on this?
+
+Well, setting up is the major problem. After that running the tests is
+just standard scripting.
 
 Peter
 
