@@ -1,8 +1,8 @@
 From: Mario Giammarco <mgiammarco@virgilio.it>
 Subject: RAID1 VS RAID5
-Date: Sun, 26 Oct 2003 12:24:14 +0100
+Date: Sun, 26 Oct 2003 15:45:19 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1067167454.1222.102.camel@cala>
+Message-ID: <1067179519.1222.107.camel@cala>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
