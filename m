@@ -1,43 +1,55 @@
-From: mru@kth.se (=?iso-8859-1?q?M=E5ns_Rullg=E5rd?=)
-Subject: Re: Which raid card to buy for Sarge
-Date: Wed, 31 Mar 2004 18:58:21 +0200
+From: "Randy.Dunlap" <rddunlap@osdl.org>
+Subject: Re: "Enhanced" MD code avaible for review
+Date: Wed, 31 Mar 2004 09:07:54 -0800
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <yw1xekr9uf6a.fsf@kth.se>
-References: <008f01c41737$8b57be40$6405a8c0@a30> <406AEEA4.6080403@comedia.it>
- <002501c4173f$3cfda1d0$6405a8c0@a30>
+Message-ID: <20040331090754.7e12acef.rddunlap@osdl.org>
+References: <760890000.1079727553@aslan.btc.adaptec.com>
+	<40632804.1020101@pobox.com>
+	<20040325220434.GW15264@marowsky-bree.de>
+	<200403261319.28858.kevcorry@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <200403261319.28858.kevcorry@us.ibm.com>
+To: Kevin Corry <kevcorry@us.ibm.com>
+Cc: linux-kernel@vger.kernel.org, lmb@suse.de, jgarzik@pobox.com, neilb@cse.unsw.edu.au, gibbs@scsiguy.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-<me@heyjay.com> writes:
+On Fri, 26 Mar 2004 13:19:28 -0600 Kevin Corry wrote:
 
-> Seems like 3ware is the card of choice.  I'll probably pick one up at=
- cdw,
-> unless anyone knows where I can get them on the cheap.
->
-> Speaking of cheap, anyone ever have any luck with the Highpoint Rocke=
-tRaid
-> cards on Sarge?
+| On Thursday 25 March 2004 4:04 pm, Lars Marowsky-Bree wrote:
+| > On 2004-03-25T13:42:12,
+| >
+| >    Jeff Garzik <jgarzik@pobox.com> said:
+| > > >and -5). And we've talked for a long time about wanting to port RAID-1
+| > > > and RAID-5 (and now RAID-6) to Device-Mapper targets, but we haven't
+| > > > started on any such work, or even had any significant discussions about
+| > > > *how* to do it. I can't
+| > >
+| > > let's have that discussion :)
+| >
+| > Nice 2.7 material, and parts I've always wanted to work on. (Including
+| > making the entire partition scanning user-space on top of DM too.)
+| 
+| Couldn't agree more. Whether using EVMS or kpartx or some other tool, I think 
+| we've already proved this is possible. We really only need to work on making 
+| early-userspace a little easier to use.
+| 
+| > KS material?
+| 
+| Sounds good to me.
 
-I don't use debian, but my rocketraid is doing well with recent kernels=
-=2E
+Ditto.
 
-> They're roughly 80% the price of 3ware (maybe you get what you pay
-> for)
+I didn't see much conclusion to this thread, other than Neil's
+good suggestions.  (maybe on some other list that I don't read?)
 
-80%?  You must mean 20%.  The Highpoint cards are software raid cards,
-meaning that they are just regular ATA cards with a "RAID" label
-slapped on the box.
+I wouldn't want this or any other projects to have to wait for the
+kernel summit.  Email has worked well for many years...let's
+try to keep it working.  :)
 
---=20
-M=E5ns Rullg=E5rd
-mru@kth.se
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--
+~Randy
+"You can't do anything without having to do something else first."
+-- Belefant's Law
