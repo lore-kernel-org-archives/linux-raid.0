@@ -1,36 +1,146 @@
-From: Lars Marowsky-Bree <lmb@suse.de>
-Subject: Re: monitoring multipath arrays plus inconsistent /proc/mdstat?
-Date: Thu, 21 Oct 2004 18:51:19 +0200
+From: Saurabh Barve <sa@atmos.colostate.edu>
+Subject: Persistent superblock error
+Date: Thu, 21 Oct 2004 16:54:32 -0600
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20041021165119.GU3911@marowsky-bree.de>
-References: <4177E0D1.7090001@bms.com>
+Message-ID: <41783E28.9010209@atmos.colostate.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/mixed;
+ boundary="------------090409050608010708070704"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4177E0D1.7090001@bms.com>
-To: Anu Matthew <anu.matthew@bms.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2004-10-21T12:16:17, Anu Matthew <anu.matthew@bms.com> wrote:
+This is a multi-part message in MIME format.
+--------------090409050608010708070704
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
-> Whom to trust here? How do we monitor multipath arrays effectively?
+Hi,
 
-On 2.6, use multipath-tools, which are seeing active development.
-multipath storage is being moved to the Device-Mapper in 2.6.
+I recently lost 2 hard drives in my 4-drive RAID-5 array. I replaced the 
+two faulty hard drives and tried rebuilding the array. However, I 
+continue to get errors.
+
+I created the raid array using madam:
+mdadm --assemble /dev/md0 --update=summaries /dev/hdc1 /dev/hdd1 
+/dev/hdg1 /dev/hdh1
 
 
-Sincerely,
-    Lars Marowsky-Br=E9e <lmb@suse.de>
+I then tried to run fsck on /dev/md0 to make sure there were no file 
+system errors. However, fsck returned error messages that the number of 
+cylinders according to the superblock were 183833712, while the physical 
+size of the device was 183104736.
 
---=20
-High Availability & Clustering
-SUSE Labs, Research and Development
-SUSE LINUX AG - A Novell company
+Running fdisk on /dev/md0 returned the following:
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--------------
+Device contains neither a valid DOS partition table, nor Sun, SGI or OSF 
+disklabel
+Building a new DOS disklabel. Changes will remain in memory only,
+until you decide to write them. After that, of course, the previous
+content won't be recoverable.
+
+
+The number of cylinders for this disk is set to 183104736.
+There is nothing wrong with that, but this is larger than 1024,
+and could in certain setups cause problems with:
+1) software that runs at boot time (e.g., old versions of LILO)
+2) booting and partitioning software from other OSs
+    (e.g., DOS FDISK, OS/2 FDISK)
+Warning: invalid flag 0x0000 of partition table 4 will be corrected by 
+w(rite)
+
+Command (m for help): p
+
+Disk /dev/md0: 749.9 GB, 749996998656 bytes
+2 heads, 4 sectors/track, 183104736 cylinders
+Units = cylinders of 8 * 512 = 4096 bytes
+---------------
+
+
+
+I tried inspecting the raid array with mdamd - 'mdadm --detail --test 
+/dev/md0'. It gave me the following results:
+------------------
+/dev/md0:
+         Version : 00.90.00
+   Creation Time : Thu Oct 21 16:27:20 2004
+      Raid Level : raid5
+      Array Size : 732418944 (698.49 GiB 749.100 GB)
+     Device Size : 244139648 (232.83 GiB 249.100 GB)
+    Raid Devices : 4
+   Total Devices : 4
+Preferred Minor : 0
+     Persistence : Superblock is persistent
+
+     Update Time : Thu Oct 21 16:38:59 2004
+           State : dirty, degraded
+  Active Devices : 2
+Working Devices : 3
+  Failed Devices : 1
+   Spare Devices : 1
+
+          Layout : left-symmetric
+      Chunk Size : 64K
+
+            UUID : c7a73d47:a072c630:7693d236:dff40ca6
+          Events : 0.6
+
+     Number   Major   Minor   RaidDevice State
+        0      22        1        0      active sync   /dev/hdc1
+        1      22       65        1      faulty   /dev/hdd1
+        2       0        0        2      faulty removed
+        3      34       65        3      active sync   /dev/hdh1
+
+        4      34        1        4      spare   /dev/hdg1
+--------------------
+
+
+My /etc/raidtab files reads like this:
+
+---------
+raiddev /dev/md0
+         raid-level              5
+         nr-raid-disks           4
+         nr-spare-disks          0
+         persistent-superblock   1
+         parity-algorithm        left-symmetric
+         chunk-size              64
+         device                  /dev/hdc1
+         raid-disk               0
+         device                  /dev/hdd1
+         raid-disk               1
+         device                  /dev/hdg1
+         raid-disk               2
+         device                  /dev/hdh1
+         raid-disk               3
+----------
+
+
+Any advice on why my RAID array will not run?
+
+Thanks,
+Saurabh.
+
+--------------090409050608010708070704
+Content-Type: text/x-vcard; charset=utf-8;
+ name="sa.vcf"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="sa.vcf"
+
+begin:vcard
+fn:Saurabh Barve
+n:Barve;Saurabh
+org:Colorado State University;Department of Atmospheric Science
+adr:;;4100 West Laporte Avenue;Fort Collins;CO;80523;USA
+email;internet:sa@atmos.colostate.edu
+title:Systems Administrator
+tel;work:(970) 491-7714
+tel;home:(970) 416-7512
+x-mozilla-html:TRUE
+version:2.1
+end:vcard
+
+
+--------------090409050608010708070704--
