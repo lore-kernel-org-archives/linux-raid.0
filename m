@@ -1,32 +1,42 @@
-From: Gordon Henderson <gordon@drogon.net>
-Subject: Re: How safe is software RAID compared to how safe hardware RAID
-Date: Wed, 19 Nov 2003 22:28:05 +0000 (GMT)
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: raid 0 on different size devices?
+Date: Thu, 20 Nov 2003 10:51:45 +1100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.56.0311192224210.19690@unicorn.drogon.net>
-References: <PPEOJEIEFLAONFNHJPOOAEICGOAA.jim@jimtreats.com>
- <Pine.LNX.4.55.0311190935440.10628@umi.cfht.hawaii.edu>
+Message-ID: <16316.529.860479.5567@notabene.cse.unsw.edu.au>
+References: <Pine.LNX.4.44.0311191154050.5855-100000@eglifamily.dnsalias.net>
+	<1069268427.6956.21.camel@opus>
+	<200311192018.14555.dusty@strike.wu-wien.ac.at>
+	<1069269741.6952.33.camel@opus>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.55.0311190935440.10628@umi.cfht.hawaii.edu>
-To: linux-raid@vger.kernel.org
+In-Reply-To: message from seth vidal on  November 19
+To: seth vidal <skvidal@phy.duke.edu>
+Cc: Hermann Himmelbauer <dusty@strike.wu-wien.ac.at>, Dan Egli <dan@eglifamily.dnsalias.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 19 Nov 2003, Kanoa Withington wrote:
+On  November 19, skvidal@phy.duke.edu wrote:
+> 
+> > AFAIK they have to be of equal size but as you can create a 27GB partition on 
+> > the 40GB drive, you could at least get 54GB out of this configuration. 
+> 
+> No. I have a 120GB and a 60GB disk in a linear array working just fine.
+> 
+> it's not technically raid0, but it lets the person do what they're
+> wanting to do.
+> 
 
-> In a software RAID 1 array, each of the sub-volumes can be used just
-> like a normal partition+file system outside of the array and the whole
-> domain of software RAID, which is very nice for fault recovery. With a
-> hardware controller this usually cannot be done, the data on the disks
-> is useless without the controller.
+The 'md' driver will let you set up an 'raid0' array using these two
+drives.  This will result in a 180GB array.
 
-Just as an aside, I've recently had to build several near identical
-machines with a mirrored disk set (ie. s/w RAID1) and I used this feature
-to "clone" the other boxes... ie. build one with 2 disks, make sure the
-mirrors are syncd up, then take one drive out and use it to build a 2nd,
-and a 3rd, etc.  each time putting in a blank 2nd disk and partitioning it
-as before then letting the mirror re-sync...
+The first 120 Gb will be striped over the two drives.  The remaining
+60Gb will simply be the end of the larger drive.
 
-I'm sure there may be easier ways, but this worked for me!
+You can, ofcourse, also set up a linear array.
 
-Gordon
+man md
+
+(with mdadm installed).
+
+NeilBrown
