@@ -1,230 +1,352 @@
-From: "Cress, Andrew R" <andrew.r.cress@intel.com>
-Subject: RE: no resync after hotadd
-Date: Wed, 24 Sep 2003 14:56:37 -0400
+From: Loris <loris@sat.epfl.ch>
+Subject: (unknown)
+Date: Thu, 25 Sep 2003 01:37:04 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <E5DA6395B8F9614EB7A784D628184B200D9AB7@hdsmsx402.hd.intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Message-ID: <00A23F76-EEE8-11D7-AD04-000502DEFA47@sat.epfl.ch>
+Mime-Version: 1.0 (Apple Message framework v552)
+Content-Type: multipart/alternative; boundary=Apple-Mail-2-240078238
 Return-path: <linux-raid-owner@vger.kernel.org>
-content-class: urn:content-classes:message
+Subject: 
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-In looking at the code, hot_add_disk does:
-   mddev->sb>nr_disks++;
-   mddev->sb>spare_disks++;
-   mddev->sb>working_disks++;
-then do_recovery checks
-   if (sb->active_disks == sb->raid_disks) 
-       continue;
-which seems ok to me, but I'd guess that the problem is in the counters
-somewhere.
-Perhaps it is looking at the new sdb sb instead of the one from sda?
+--Apple-Mail-2-240078238
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset=US-ASCII;
+	format=flowed
 
-Andy
+Hello,
 
+I have some problems and I need to be sure of what to do?
 
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Cress, Andrew R
-Sent: Tuesday, September 23, 2003 10:44 AM
-To: linux-raid@vger.kernel.org
-Subject: no resync after hotadd
+I'm not sure if I have understood everything about chunks, superblocks 
+and other disk structure of raid level 5.
+I will try to write what I think to understand and I'd like to be 
+corrected if I made any error in following, please.
 
+Lets take an exemple:
+If the information I have is:
+0100 1011 0101 0100 0101 0100 1011 1011 0111 0101 0111 0101
+If I use 1 byte chunks, my chunks will be:
+0100 1011 0101 0100 0101 0100 1011 1011 0111 0101 0111 0101
+\-------/ \-------/ \-------/ \-------/ \-------/ \-------/
+so:
+chunk0: 0100 1011
+chunk1: 0101 0100
+chunk2: 0101 0100
+chunk3: 1011 1011
+chunk4: 0111 0101
+chunk5: 0111 0101
+A question now: is the chunk splited on the different disks or not?
+I mean is it like that:
+|     disk0     |     disk1     |     disk2     |
++---------------+---------------+---------------+
+|    chunk0     |    chunk1     | chunk0^chunk1 |
+|    chunk2     | chunk2^chunk3 |    chunk3     |
+| chunk4^chunk5 |    chunk4     |    chunk5     |
+|    chunk6     |    chunk7     | chunk6^chunk7 |
+|    chunk8     | chunk8^chunk9 |    chunk9     |
+etc. with ^ the bitwise xor (^=circumflexe (in case on mistransmission))
 
-Neil,
+Are the chunk splited in (n-1) parts distributed on the (n-1) disks?
 
-I've seen this before, but it is very reproducable on the SuSE/UL system
-I am testing on now.
-When I hotadd a new/replacement disk (sdb) into the raid device, the
-resync doesn't start.
-From the superblocks, apparently the active disk still has total disks=1
-so only 1 active, but the new disk superblock was written with total
-disks=2 and both active.  
+Are "parity chunks" first on disk2 then on disk1 next on disk0 next on 
+disk2 next on disk1 next on disk0... or order is another?
 
-The configuration is raid1 with sda and sdb, and sdb was hot-removed and
-hot-added (each partition with mdadm -a).
-I've included the resulting superblocks, and the syslog for the add
-sequence is attached.
+In this case, I understood everything right until now, the disks should 
+like that:
+|   disk0   |   disk1   |   disk2   |
++-----------+-----------+-----------+
+| 0100 1011 | 0101 0100 | 0001 1111 |
+| 0101 0100 | 1110 1111 | 1011 1011 |
+| 0000 0000 | 0111 0101 | 0111 0101 |
+without XORed chunk you should read information "horizontally"?
+|   disk0   |   disk1   |   disk2   |
++-----------+-----------+-----------+
+| 0100 1011 | 0101 0100 |           |
+| 0101 0100 |           | 1011 1011 |
+|           | 0111 0101 | 0111 0101 |
 
-Is this a problem with the md driver?  
+Here come my real problem: I must move the disks in another computer 
+after processor burning. I'm not sure on disk order (cause of 
+master,slave,cable select). But if what I said before is correct, even 
+if I now move the disks let's say:
+|   disk2   |   disk1   |   disk0   |
++-----------+-----------+-----------+
+| 0001 1111 | 0101 0100 | 0100 1011 |
+| 1011 1011 | 1110 1111 | 0101 0100 |
+| 0111 0101 | 0111 0101 | 0000 0000 |
 
-Andy
+for resyncing you only do the same because xor is commutative and so:
+disk0 = disk2^disk1
+|   disk2   |   disk1   |   disk0   |
++-----------+-----------+-----------+
+| 0001 1111 | 0101 0100 |           |
+| 1011 1011 | 1110 1111 |           |
+| 0111 0101 | 0111 0101 |           |
+be resynced as:
+|   disk2   |   disk1   |   disk0   |
++-----------+-----------+-----------+
+| 0001 1111 | 0101 0100 | 0100 1011 |
+| 1011 1011 | 1110 1111 | 0101 0100 |
+| 0111 0101 | 0111 0101 | 0000 0000 |
 
-# uname -a
-Linux telcoraid 2.4.21-55-smp #1 SMP Wed Aug 27 19:53:48 UTC 2003 i686
-unknown
-# cat /proc/mdstat
-Personalities : [raid1] 
-read_ahead 1024 sectors
-md2 : active raid1 sdb2[2] sda2[1]
-      136448 blocks [2/1] [_U]
-      
-md1 : active raid1 sdb1[2] sda1[1]
-      80256 blocks [2/1] [_U]
-      
-md0 : active raid1 sdb3[2] sda3[1]
-      17518784 blocks [2/1] [_U]
-      
-unused devices: <none>
+If everything is correct until now this should be non destructive? (is 
+that not the goal of raid5?)
 
-#
-# mdadm -E /dev/sda1
-/dev/sda1:
-          Magic : a92b4efc
-        Version : 00.90.00
-           UUID : 15e24cfe:af2ecf43:9c74fae1:7aabf6f0
-  Creation Time : Thu Sep 18 13:12:09 2003
-     Raid Level : raid1
-    Device Size : 80256 (78.38 MiB 82.18 MB)
-   Raid Devices : 2
-  Total Devices : 1
-Preferred Minor : 1
+I think that is all about real data part of the disk?
 
-    Update Time : Mon Sep 22 12:58:41 2003
-          State : dirty, no-errors
- Active Devices : 1
-Working Devices : 1
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : 43828e3 - correct
-         Events : 0.28
+Now other questions about structure of the disk:
+(I tried to read sources of the kernel but I didn't understand 
+everything...)
+what is inside the raid5 partition?
+What I think to understand is:
++-------partition------------------------------------------------
+| offset 0     +-------usable part-------------------------------
+| offset 1     | informations accessible after /dev/mdX mounting
+| offset 2     | a little scrambled...
+| ...          |
+| offset sb-1  +---end of usable part----------------------------
+| offset sb    +--suberblock-------------------------------------
+| offset sb+1  |
+| offset sb+2  |
+| ...          |
+| offset end   +---end of sb-------------------------------------
++-----end of partition-------------------------------------------
+Is there other parts?
+Does the "usable part" begins at the beginning of the partition?
+Where begins the superblock? Is that the end of the "usable part"? (In 
+case I need to "manually" reconstruct the informations)
+Is the end of the superblock the end of the partition?
+Does the resync only resync the usable part?
 
+If:
+-disks are physically good (I think) and
+-resyncing bad ordered disks don't corrupts data and
+-the resync only resync the usable part and
+-superblock were crush (by bad advises on moving disks found on web)
+I can try to mount read-only without corrupting data?
 
-      Number   Major   Minor   RaidDevice State
-this     1       8        1        1      active sync   /dev/sda1
-   0     0       0        0        0      faulty removed
-   1     1       8        1        1      active sync   /dev/sda1
+This is the end, my friend...
 
-/dev/sdb1:
-          Magic : a92b4efc
-        Version : 00.90.00
-           UUID : 15e24cfe:af2ecf43:9c74fae1:7aabf6f0
-  Creation Time : Thu Sep 18 13:12:09 2003
-     Raid Level : raid1
-    Device Size : 80256 (78.38 MiB 82.18 MB)
-   Raid Devices : 2
-  Total Devices : 2
-Preferred Minor : 1
+Thanks for helping,
 
-    Update Time : Mon Sep 22 09:37:09 2003
-          State : dirty, no-errors
- Active Devices : 2
-Working Devices : 2
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : 437fa2f - correct
-         Events : 0.25
+Loris
+--Apple-Mail-2-240078238
+Content-Transfer-Encoding: 7bit
+Content-Type: text/enriched;
+	charset=US-ASCII
 
-
-      Number   Major   Minor   RaidDevice State
-this     0       8       17        0      active sync   /dev/sdb1
-   0     0       8       17        0      active sync   /dev/sdb1
-   1     1       8        1        1      active sync   /dev/sda1
-
-/dev/sda2:
-          Magic : a92b4efc
-        Version : 00.90.00
-           UUID : 16df7960:13fe43ac:ac0cc4ba:42690535
-  Creation Time : Thu Sep 18 13:12:56 2003
-     Raid Level : raid1
-    Device Size : 136448 (133.25 MiB 139.72 MB)
-   Raid Devices : 2
-  Total Devices : 1
-Preferred Minor : 2
-
-    Update Time : Mon Sep 22 12:58:41 2003
-          State : dirty, no-errors
- Active Devices : 1
-Working Devices : 1
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : 415a7d7f - correct
-         Events : 0.30
+<fontfamily><param>Courier</param>Hello,
 
 
-      Number   Major   Minor   RaidDevice State
-this     1       8        2        1      active sync   /dev/sda2
-   0     0       0        0        0      faulty removed
-   1     1       8        2        1      active sync   /dev/sda2
-
-/dev/sdb2:
-          Magic : a92b4efc
-        Version : 00.90.00
-           UUID : 16df7960:13fe43ac:ac0cc4ba:42690535
-  Creation Time : Thu Sep 18 13:12:56 2003
-     Raid Level : raid1
-    Device Size : 136448 (133.25 MiB 139.72 MB)
-   Raid Devices : 2
-  Total Devices : 2
-Preferred Minor : 2
-
-    Update Time : Mon Sep 22 09:37:09 2003
-          State : dirty, no-errors
- Active Devices : 2
-Working Devices : 2
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : 415a4ecc - correct
-         Events : 0.27
+I have some problems and I need to be sure of what to do?
 
 
-      Number   Major   Minor   RaidDevice State
-this     0       8       18        0      active sync   /dev/sdb2
-   0     0       8       18        0      active sync   /dev/sdb2
-   1     1       8        2        1      active sync   /dev/sda2
+I'm not sure if I have understood everything about chunks, superblocks
+and other disk structure of raid level 5.
 
-/dev/sda3:
-          Magic : a92b4efc
-        Version : 00.90.00
-           UUID : 31b4390a:af5afa82:44c73f24:a2a36931
-  Creation Time : Thu Sep 18 13:13:12 2003
-     Raid Level : raid1
-    Device Size : 17518784 (16.71 GiB 17.94 GB)
-   Raid Devices : 2
-  Total Devices : 1
-Preferred Minor : 0
-
-    Update Time : Mon Sep 22 12:58:40 2003
-          State : dirty, no-errors
- Active Devices : 1
-Working Devices : 1
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : f18a0e32 - correct
-         Events : 0.28
+I will try to write what I think to understand and I'd like to be
+corrected if I made any error in following, please.
 
 
-      Number   Major   Minor   RaidDevice State
-this     1       8        3        1      active sync   /dev/sda3
-   0     0       0        0        0      faulty removed
-   1     1       8        3        1      active sync   /dev/sda3
+Lets take an exemple:
 
-/dev/sdb3:
-          Magic : a92b4efc
-        Version : 00.90.00
-           UUID : 31b4390a:af5afa82:44c73f24:a2a36931
-  Creation Time : Thu Sep 18 13:13:12 2003
-     Raid Level : raid1
-    Device Size : 17518784 (16.71 GiB 17.94 GB)
-   Raid Devices : 2
-  Total Devices : 2
-Preferred Minor : 0
+If the information I have is:
 
-    Update Time : Mon Sep 22 09:37:08 2003
-          State : dirty, no-errors
- Active Devices : 2
-Working Devices : 2
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : f189df80 - correct
-         Events : 0.25
+0100 1011 0101 0100 0101 0100 1011 1011 0111 0101 0111 0101
+
+If I use 1 byte chunks, my chunks will be:
+
+0100 1011 0101 0100 0101 0100 1011 1011 0111 0101 0111 0101
+
+\-------/ \-------/ \-------/ \-------/ \-------/ \-------/
+
+so:
+
+chunk0: 0100 1011
+
+chunk1: 0101 0100
+
+chunk2: 0101 0100
+
+chunk3: 1011 1011
+
+chunk4: 0111 0101
+
+chunk5: 0111 0101
+
+A question now: is the chunk splited on the different disks or not?
+
+I mean is it like that:
+
+|     disk0     |     disk1     |     disk2     |
+
++---------------+---------------+---------------+
+
+|    chunk0     |    chunk1     | chunk0^chunk1 |
+
+|    chunk2     | chunk2^chunk3 |    chunk3     |
+
+| chunk4^chunk5 |    chunk4     |    chunk5     |
+
+|    chunk6     |    chunk7     | chunk6^chunk7 |
+
+|    chunk8     | chunk8^chunk9 |    chunk9     |
+
+etc. with ^ the bitwise xor (^=circumflexe (in case on
+mistransmission))
 
 
-      Number   Major   Minor   RaidDevice State
-this     0       8       19        0      active sync   /dev/sdb3
-   0     0       8       19        0      active sync   /dev/sdb3
-   1     1       8        3        1      active sync   /dev/sda3
+Are the chunk splited in (n-1) parts distributed on the (n-1) disks?
+
+
+Are "parity chunks" first on disk2 then on disk1 next on disk0 next on
+disk2 next on disk1 next on disk0... or order is another?
+
+
+In this case, I understood everything right until now, the disks
+should like that:
+
+|   disk0   |   disk1   |   disk2   |
+
++-----------+-----------+-----------+
+
+| 0100 1011 | 0101 0100 | 0001 1111 |
+
+| 0101 0100 | 1110 1111 | 1011 1011 |
+
+| 0000 0000 | 0111 0101 | 0111 0101 |
+
+without XORed chunk you should read information "horizontally"?
+
+|   disk0   |   disk1   |   disk2   |
+
++-----------+-----------+-----------+
+
+| 0100 1011 | 0101 0100 |           |
+
+| 0101 0100 |           | 1011 1011 |
+
+|           | 0111 0101 | 0111 0101 |
+
+
+Here come my real problem: I must move the disks in another computer
+after processor burning. I'm not sure on disk order (cause of
+master,slave,cable select). But if what I said before is correct, even
+if I now move the disks let's say:
+
+|   disk2   |   disk1   |   disk0   |
+
++-----------+-----------+-----------+
+
+| 0001 1111 | 0101 0100 | 0100 1011 |
+
+| 1011 1011 | 1110 1111 | 0101 0100 |
+
+| 0111 0101 | 0111 0101 | 0000 0000 |
+
+
+for resyncing you only do the same because xor is commutative and so:
+
+disk0 = disk2^disk1
+
+|   disk2   |   disk1   |   disk0   |
+
++-----------+-----------+-----------+
+
+| 0001 1111 | 0101 0100 |           |
+
+| 1011 1011 | 1110 1111 |           |
+
+| 0111 0101 | 0111 0101 |           |
+
+be resynced as:
+
+|   disk2   |   disk1   |   disk0   |
+
++-----------+-----------+-----------+
+
+| 0001 1111 | 0101 0100 | 0100 1011 |
+
+| 1011 1011 | 1110 1111 | 0101 0100 |
+
+| 0111 0101 | 0111 0101 | 0000 0000 |
+
+
+If everything is correct until now this should be non destructive? (is
+that not the goal of raid5?)
+
+
+I think that is all about real data part of the disk?
+
+
+Now other questions about structure of the disk:
+
+(I tried to read sources of the kernel but I didn't understand
+everything...)
+
+what is inside the raid5 partition?
+
+What I think to understand is:
+
++-------partition------------------------------------------------
+
+| offset 0     +-------usable part-------------------------------
+
+| offset 1     | informations accessible after /dev/mdX mounting
+
+| offset 2     | a little scrambled...
+
+| ...          |
+
+| offset sb-1  +---end of usable part----------------------------
+
+| offset sb    +--suberblock-------------------------------------
+
+| offset sb+1  |
+
+| offset sb+2  |
+
+| ...          |
+
+| offset end   +---end of sb-------------------------------------
+
++-----end of partition-------------------------------------------
+
+Is there other parts?
+
+Does the "usable part" begins at the beginning of the partition?
+
+Where begins the superblock? Is that the end of the "usable part"? (In
+case I need to "manually" reconstruct the informations)
+
+Is the end of the superblock the end of the partition?
+
+Does the resync only resync the usable part?
+
+
+If:
+
+-disks are physically good (I think) and
+
+-resyncing bad ordered disks don't corrupts data and
+
+-the resync only resync the usable part and
+
+-superblock were crush (by bad advises on moving disks found on web)
+
+I can try to mount read-only without corrupting data?
+
+
+This is the end, my friend...
+
+
+Thanks for helping,
+
+
+Loris</fontfamily>
+--Apple-Mail-2-240078238--
+
