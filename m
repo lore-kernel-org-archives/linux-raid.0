@@ -1,64 +1,66 @@
-From: Lars Marowsky-Bree <lmb@suse.de>
+From: "Justin T. Gibbs" <gibbs@scsiguy.com>
 Subject: Re: "Enhanced" MD code avaible for review
-Date: Thu, 25 Mar 2004 23:04:34 +0100
+Date: Thu, 25 Mar 2004 15:59:00 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040325220434.GW15264@marowsky-bree.de>
-References: <760890000.1079727553@aslan.btc.adaptec.com> <16480.61927.863086.637055@notabene.cse.unsw.edu.au> <40624235.30108@pobox.com> <200403251200.35199.kevcorry@us.ibm.com> <40632804.1020101@pobox.com>
+Message-ID: <1019470000.1080255540@aslan.btc.adaptec.com>
+References: <760890000.1079727553@aslan.btc.adaptec.com> <16480.61927.863086.637055@notabene.cse.unsw.edu.au> <40624235.30108@pobox.com> <200403251200.35199.kevcorry@us.ibm.com>
+Reply-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <200403251200.35199.kevcorry@us.ibm.com>
 Content-Disposition: inline
-In-Reply-To: <40632804.1020101@pobox.com>
-To: Jeff Garzik <jgarzik@pobox.com>, Kevin Corry <kevcorry@us.ibm.com>
-Cc: linux-kernel@vger.kernel.org, Neil Brown <neilb@cse.unsw.edu.au>, "Justin T. Gibbs" <gibbs@scsiguy.com>, linux-raid@vger.kernel.org
+To: Kevin Corry <kevcorry@us.ibm.com>, linux-kernel@vger.kernel.org
+Cc: Jeff Garzik <jgarzik@pobox.com>, Neil Brown <neilb@cse.unsw.edu.au>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2004-03-25T13:42:12,
-   Jeff Garzik <jgarzik@pobox.com> said:
+>> Independent DM efforts have already started supporting MD raid0/1
+>> metadata from what I understand, though these efforts don't seem to post
+>> to linux-kernel or linux-raid much at all.  :/
+> 
+> I post on lkml.....occasionally. :)
 
-> >and -5). And we've talked for a long time about wanting to port RAID=
--1 and=20
-> >RAID-5 (and now RAID-6) to Device-Mapper targets, but we haven't sta=
-rted=20
-> >on any such work, or even had any significant discussions about *how=
-* to=20
-> >do it. I can't=20
-> let's have that discussion :)
+...
 
-Nice 2.7 material, and parts I've always wanted to work on. (Including
-making the entire partition scanning user-space on top of DM too.)
+> This decision was not based on any real dislike of the MD driver, but rather 
+> for the benefits that are gained by using Device-Mapper. In particular, 
+> Device-Mapper provides the ability to change out the device mapping on the 
+> fly, by temporarily suspending I/O, changing the table, and resuming the I/O 
+> I'm sure many of you know this already. But I'm not sure everyone fully 
+> understands how powerful a feature this is. For instance, it means EVMS can 
+> now expand RAID-linear devices online. While that particular example may not 
+> sound all that exciting, if things like RAID-1 and RAID-5 were "ported" to 
+> Device-Mapper, this feature would then allow you to do stuff like add new 
+> "active" members to a RAID-1 online (think changing from 2-way mirror to 
+> 3-way mirror). It would be possible to convert from RAID-0 to RAID-4 online 
+> simply by adding a new disk (assuming other limitations, e.g. a single 
+> stripe-zone). Unfortunately, these are things the MD driver can't do online, 
+> because you need to completely stop the MD device before making such changes 
+> (to prevent the kernel and user-space from trampling on the same metadata), 
+> and MD won't stop the device if it's open (i.e. if it's mounted or if you 
+> have other device (LVM) built on top of MD). Often times this means you need 
+> to boot to a rescue-CD to make these types of configuration changes.
 
-KS material?
+We should be clear about your argument here.  It is not that DM makes
+generic morphing easy and possible, it is that with DM the most basic
+types of morphing (no data striping or de-striping) is easily accomplished.
+You sight two examples:
 
-> My take on things...  the configuration of RAID arrays got a lot more=
-=20
-> complex with DDF and "host RAID" in general.
+1) Adding another member to a RAID-1.  While MD may not allow this to
+   occur while the array is operational, EMD does.  This is possible
+   because there is only one entity controlling the meta-data.
 
-And then add all the other stuff, like scenarios where half of your RAI=
-D
-is "somewhere" on the network via nbd, iSCSI or whatever and all the
-other possible stackings... Definetely user-space material, and partly
-because it /needs/ to have the input from the volume managers to do the
-sane things.
+2) Converting a RAID0 to a RAID4 while possible with DM is not particularly
+   interesting from an end user perspective.
 
-The point about this implying that the superblock parsing/updating logi=
-c
-needs to be duplicated between userspace and kernel land is valid too
-though, and I'm keen on resolving this in a way which doesn't suck...
+The fact of the matter is that neither EMD nor DM provide a generic
+morphing capability.  If this is desirable, we can discuss how it could
+be achieved, but my initial belief is that attempting any type of
+complicated morphing from userland would be slow, prone to deadlocks,
+and thus difficult to achieve in a fashion that guaranteed no loss of
+data in the face of unexpected system restarts.
 
+--
+Justin
 
-Sincerely,
-    Lars Marowsky-Br=E9e <lmb@suse.de>
-
---=20
-High Availability & Clustering	      \ ever tried. ever failed. no matt=
-er.
-SUSE Labs			      | try again. fail again. fail better.
-Research & Development, SUSE LINUX AG \ 	-- Samuel Beckett
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
