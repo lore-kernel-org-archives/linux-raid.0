@@ -1,41 +1,71 @@
-From: "Tim Harvey" <tharvey@alumni.calpoly.edu>
-Subject: Ateonix NASAS 2040 NAS device - recovering RAID5 array
-Date: Thu, 27 May 2004 15:15:55 -0700
+From: maarten van den Berg <maarten@ultratux.net>
+Subject: Re: Moving a RAID5 array
+Date: Fri, 28 May 2004 01:20:05 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <003201c44438$2fbd50d0$7001a8c0@darwin>
+Message-ID: <200405280120.05296.maarten@ultratux.net>
+References: <000001c44436$a5df15c0$7001a8c0@darwin>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="us-ascii"
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <000001c44436$a5df15c0$7001a8c0@darwin>
+Content-Disposition: inline
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Greetings,
+On Friday 28 May 2004 00:04, Tim Harvey wrote:
 
-I have an Ateonix NASAS 2040 NAS device that has gone bad.  Specifically
-the flash based OS (which is provided by a PCI 'flash disk' module made
-by Ateonix) is not booting because of a power glitch while that occurred
-obviously at a bad moment in time (while it was recovering from another
-glitch I believe)).
+Disclaimer: I'm not a real expert, but have had my share of raid5 experiences.
 
-Does anyone else out there have much knowledge of these devices?  I've
-had mine running 24/7 for about 9 months now without incident.  I've
-learned since that the company has gone out of business (unfortunate, it
-was a great entry-level product).
+> My question is that, not being very familiar with Linux raid or mdadm,
+> I'm wondering if I can mount the array on my Linux system when the
+> devices are other than described above (they would likely be /dev/hdc1,
+> /dev/hdd1, etc as my boot/root drives use hda/hdb).  Additionally, how
 
-I'm looking for anyone that may have firmware update files for it and
-any knowledge on how it operates.  Specifically, I'm interested in
-finding out how I can reset the unit to factory defaults while 'not'
-loosing the data on the existing array.  Also, I'm curious if anyone has
-found a way to get into the Linux OS (I've hooked up a keyboard/monitor
-to the mboard, but I can't get any prompt, nor have I been able to find
-any ports open for telnet/ssh).  Its not something they supported, but
-I'm thinking there may be an unsupported/undocumented way.
+I did shuffle my disks at several points in time, and it figures that out by 
+itself somehow (there must be something in the superblock identifying which 
+drive it is). 
 
-Any info on this product would be greatly appreciated!
+> should I go about mounting this array in a way that if anything doesn't
+> work right, it doesn't trash the array.  I'm a little paranoid that I
+> may do something wrong and the raidutils will start reconstructing or
+> otherwise altering the information on the array.
 
-Thanks,
+There are several things to note. You want to disallow the raid to start any 
+reconstruction, and you need to skip any fsck at mount, as well as replaying 
+of journals if they are journaling filesystems.
 
-Tim
+Issue #1 Can be assured (AFAIK) by just attaching one disk less. Then the 
+array will be in degraded mode and cannot / will not attempt a resync.
+In addition, this will enable you to choose another set of disks, should the 
+outlook on the first three be less than favourable...
+
+Issue #2 Should be assured by mounting read-only, without prior fsck.
+
+Issue #3 I'm not sure about. Consult the manualpage detailing your specific 
+filesystem...  Maybe instead of mounting you could run an fsck with an option 
+to do only a test-run / dry-run i.e. allow no writes whatsoever during fsck. 
+If that fsck succeeds, chances are very good that all is in order.
+
+Anyway, my guess is, you'll have no trouble at all.  A power-loss is not the 
+very worst that can happen to an array. In my humble opinion...
+
+> Thanks for any help.  I've read over the Linux RAID FAQ and looked
+> through the man pages for mdadm, but I'm pretty paranoid about loosing
+> the data and want to consult the experts here.
+
+<Grin> No backups huh ?  Been there,  done that,  still got my data back. :)
+
+Well, good luck with your endeavors !
+
+Maarten
+
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-- 
+When I answered where I wanted to go today, they just hung up -- Unknown
 
