@@ -1,17 +1,24 @@
-From: Stephan van Hienen <raid@a2000.nu>
-Subject: Re: mdadm -D shows incorrect working devices ?
-Date: Thu, 2 Jan 2003 16:12:28 +0100 (CET)
+From: "Shaw, Marco" <Marco.Shaw@aliant.ca>
+Subject: RE: mdadm -D shows incorrect working devices ?
+Date: Thu, 2 Jan 2003 11:23:49 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.51.0301021611450.11876@ddx.a2000.nu>
-References: <Pine.LNX.4.50.0212172214130.25725-100000@ddx.a2000.nu>
- <Pine.LNX.4.50.0212182153120.4838-100000@ddx.a2000.nu>
- <Pine.LNX.4.50.0212221112050.24883-100000@ddx.a2000.nu>
+Message-ID: <C65F89D1AC0BB54B865127151A24DA780E49023D@nbexchm2.aliant.icn>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.50.0212221112050.24883-100000@ddx.a2000.nu>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+Pretty much everyone is on vacation, and likely not checking their messages lately.  Now, if it's something nobody has encountered before then that's a different thing.
+
+Marco
+
+-----Original Message-----
+From: Stephan van Hienen [mailto:raid@a2000.nu] 
+Sent: Thursday, January 02, 2003 11:12 AM
+To: linux-raid@vger.kernel.org
+Subject: Re: mdadm -D shows incorrect working devices ?
+
 
 There is no one that can tell me what is going wrong ?
 
@@ -25,5 +32,7 @@ On Sun, 22 Dec 2002, Stephan van Hienen wrote:
 > > can someone explain this ?
 >
 > Hi again, still have this 'incorrect' information here
-> I'm a bit worried that maybe my raid config is 'a bit corrupted'
-> or is this just a bug in mdadm ?
+> I'm a bit worried that maybe my raid config is 'a bit corrupted' or is 
+> this just a bug in mdadm ?
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in the body of a message to majordomo@vger.kernel.org More majordomo info at  http://vger.kernel.org/majordomo-info.html
