@@ -1,41 +1,41 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: [PATCH] raid1: abort resync if there are no spare drives
-Date: Wed, 3 Mar 2004 11:21:01 +1100
-Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16453.9453.352217.737577@notabene.cse.unsw.edu.au>
-References: <20040223024124.GA1590@psilocybus>
-	<16441.33071.218049.163976@notabene.cse.unsw.edu.au>
-	<403A30F9.D54AAC68@SteelEye.com>
-	<403D15FE.CAACDC4A@SteelEye.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Paul Clements on Wednesday February 25
-To: Paul Clements <Paul.Clements@SteelEye.com>
-Cc: linux-raid@vger.kernel.org
+From: "Chris Evans" <chris1@psyctc.org>
+Subject: Re: md: can not impport hdb1, has active inodes!
+Date: Wed, 03 Mar 2004 00:36:27 -0000
+Message-ID: <4045288B.27321.2DA4EF3@localhost>
+References: <16453.6996.215724.636242@notabene.cse.unsw.edu.au>
+Return-path: <bounce-debian-user=debian-user=quimby.gnus.org@lists.debian.org>
+In-reply-to: <16453.6996.215724.636242@notabene.cse.unsw.edu.au>
+References: message from Chris Evans on Tuesday March 2
+Resent-Message-ID: <Kbb30C.A.2wC.yiSRAB@murphy>
+List-Post: <mailto:debian-user@lists.debian.org>
+List-Help: <mailto:debian-user-request@lists.debian.org?subject=help>
+List-Subscribe: <mailto:debian-user-request@lists.debian.org?subject=subscribe>
+List-Unsubscribe: <mailto:debian-user-request@lists.debian.org?subject=unsubscribe>
+List-Archive: <http://lists.debian.org/debian-user/>
+To: debian-user@lists.debian.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday February 25, Paul.Clements@SteelEye.com wrote:
-> The attached patch makes sure that resync/recovery get aborted (and
-> status recorded correctly) when there are no spare drives left (due to
-> the failure of a spare during a resync). Previously, if a spare failed
-> during a resync, the resync would continue until completed (and would
-> appear to be successful). 
+On 3 Mar 2004 at 10:40, Neil Brown wrote:
 
-Hi,
- could you clarify exactly what the problem is.
+> Wrong.
+>  mkfs -t ext3 /dev/md0
+> then mount /dev/md0. 
+> Once you have included /dev/hdc1 in an array, don't touch it again -
+> just access the array (/dev/md0).
 
- As far as I can see (without looking very deeply) the only problem is
- that the resync process continues on when there is no point doing so,
- thus wasting time.
- At the end of the process, any devices that failed should still be
- marked failed and so the array will be insync, but might be degraded
- - but there is no risk to data.
+Sorry, I was being hasty in writing the Email, that's what I did, 
+i.e. mkfs the /dev/md0 drive.  That's not the problem.
 
-Am I missing something?
+> You missed a step (step 9).  You have to reboot so that /dev/md0 is
+> your root device. Once you have done that and are happy with it, you
+> add in /dev/hdb1 and let it resync.
+Ditto: did that, no go.
 
-(I"m not saying I don't like the patch - it looks like a good idea - I
-just want to be sure I understand it).
+Thanks,
 
-NeilBrown
+C
+PSYCTC: Psychotherapy, Psychology, Psychiatry, Counselling
+   and Therapeutic Communities; practice, research, 
+   teaching and consultancy.
+Chris Evans & Jo-anne Carlyle
+http://psyctc.org/ Email: chris@psyctc.org
