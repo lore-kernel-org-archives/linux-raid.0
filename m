@@ -1,51 +1,67 @@
-From: Michael Tokarev <mjt@tls.msk.ru>
-Subject: Re: ext3 journal on software raid (was Re: PROBLEM: Kernel 2.6.10
- crashing repeatedly and hard)
-Date: Wed, 05 Jan 2005 17:37:34 +0300
-Message-ID: <41DBFBAE.1070309@tls.msk.ru>
-References: <Pine.LNX.3.96.1050105023623.27288A-100000@Maggie.Linux-Consulting.com> <41DBC7DE.509@wasp.net.au> <20050105141251.GE13684@harddisk-recovery.com>
+From: Alvin Oga <aoga@ns.Linux-Consulting.com>
+Subject: errors Re: ext3 journal on software raid (was Re: PROBLEM: Kernel 2.6.10 crashing repeatedly and hard)
+Date: Wed, 5 Jan 2005 06:55:50 -0800 (PST)
+Message-ID: <Pine.LNX.3.96.1050105064738.9245B-100000@Maggie.Linux-Consulting.com>
+References: <41DBFBAE.1070309@tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20050105141251.GE13684@harddisk-recovery.com>
+In-Reply-To: <41DBFBAE.1070309@tls.msk.ru>
 Sender: linux-raid-owner@vger.kernel.org
-To: Erik Mouw <erik@harddisk-recovery.com>
-Cc: Brad Campbell <brad@wasp.net.au>, Alvin Oga <aoga@ns.Linux-Consulting.com>, Andy Smith <andy@strugglers.net>, linux-raid@vger.kernel.org
+To: Michael Tokarev <mjt@tls.msk.ru>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Erik Mouw wrote:
-> On Wed, Jan 05, 2005 at 02:56:30PM +0400, Brad Campbell wrote:
-> 
->>I beg to differ on this one. Having spend several weeks tracking down 
->>random processes dying on a machine that turned out to be a bad sector in 
->>the swap partition, I have had great results by running swap on a RAID-1. 
->>If you develop a bad sector in a non-mirrored swap, bad things happen 
->>indeterminately and can be a royal PITA to chase down. It's just a little 
->>extra piece of mind.
-> 
-> If you have a  bad block in your swap partition and the device doesn't
-> report an error about it, no amount of RAID is going to help you
-> against it.
 
-The drive IS reporting read errors in most cases.  But that does not
-help, really: kernel swapped out some memory but can't read it back,
-so things are screwed.  Just like if you hot-remove a DIMM while the
-system is running: the kernel loses parts of it's memory, and it can't
-work anymore.  Depending on what was in there ofcourse: the whole
-system may be screwed, or a single process...  The talks isn't about
-"undetectable" (unreported etc) errors here, but about the fact that
-the error is here.  And if your swap is on raid, in case one component
-of the array behaves badly, another component will continue to work,
-so with swap on raid the system will work just fine as if nothing
-happened in case one of "swap components" (i mean underlying devices)
-failed for whatever reason.
+hi ya michael
 
-And please, pretty PLEASE stop talking about those mysterious
-"undetectable" or "unreported" errors here.  A drive that develops
-"unreported" errors just does not work and should not be here in
-the first place, just like bad memory or CPU: if your cpu or memory
-is failing, no software tricks helps and the failing part should
-be replaced BEFORE even thinking about possible ways to recover.
+On Wed, 5 Jan 2005, Michael Tokarev wrote:
 
-/mjt
+> The drive IS reporting read errors in most cases.
+
+and by the time it reports an error ... its too late ...
+
+- one has to play detective and figure out why the error occured
+  and prevent it next time
+
+- the worst possible thing to do is .. "disk seems to be dying"
+  so 95% of the people say backup the disks ..
+	-- its too too late
+	-- exercising a dead/dying disks will only aggravate the
+	problem even more
+
+- luckily, most "disks errors" are silly errors
+	- bad (cheap, not-too-specs) ide cables
+	- 80 conductor vs 40 conductor
+	- combining 2 different ata speed drives on the same idea cable
+	- too long of an ide cable ... 18" is max
+	- disk running too hot ... if its warm to the touch,
+	its too hot
+	( 35C is maybe okay .. use hddtemp to see what its running at )
+	- bent disk cables 
+	- bad (electrical characteristics) of the ide drivers from the
+	motherboard
+	- ... on and on ...
+
+	- todays drives are 1000x better quality than 5-10 years ago
+
+> so things are screwed.  Just like if you hot-remove a DIMM while the
+> system is running:
+
+those that do hot-swap of memory deserve what they get :-)
+( i know you're joking ... and i've seen it done by forgetful admins
+	- these atx power supplies are bad for that reason, since
+	the motherboard is still live, even if the pc is off, due to
+	standby voltages floating around
+
+>  The talks isn't about
+> "undetectable" (unreported etc) errors here, but about the fact that
+> the error is here.
+
+the trick is to find out what caused the error ... 
+	- if you dont figure out what happened ... the problem will 
+	continue 
+
+have fun raiding
+alvin
+
