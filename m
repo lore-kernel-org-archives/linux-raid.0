@@ -1,8 +1,8 @@
 From: NeilBrown <neilb@cse.unsw.edu.au>
-Subject: [PATCH] md - 5 of 7 - Avoid unnecessary bio allocation during raid1 resync
-Date: Fri, 06 Feb 2004 16:35:53 +1100
+Subject: [PATCH] md - 6 of 7 - Dynamically limit size of bio requests used for raid1 resync
+Date: Fri, 06 Feb 2004 16:35:54 +1100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <E1Aoyef-00083n-00@notabene>
+Message-ID: <E1Aoyeg-00083w-00@notabene>
 References: <20040206162532.30220.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: Andrew Morton <akpm@osdl.org>
@@ -10,144 +10,286 @@ Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-For each resync request, we allocate a "r1_bio" which has a
-bio "master_bio" attached that goes largely unused. We also
-allocate a read_bio which is used.
-This patch removes the read_bio and just uses the master_bio instead.
+Currently raid1 uses PAGE_SIZE read/write requests for resync, as it 
+doesn't know how to honour per-device restrictions.
+This patch uses to bio_add_page to honour those restrictions and ups the limit
+on request size to 64K.
+This has a measurable impact on rebuild speed (25M/s -> 60M/s)
 
-This fixes a bug wherein bi_bdev of the master_bio wasn't being set,
-but was being used.
-
-We also introduce a new "sectors" field into the r1_bio as we can
-no-longer rely in master_bio->bi_sectors.
 
  ----------- Diffstat output ------------
- ./drivers/md/raid1.c         |   37 ++++++++++++++++++-------------------
- ./include/linux/raid/raid1.h |    1 +
- 2 files changed, 19 insertions(+), 19 deletions(-)
+ ./drivers/md/raid1.c |  183 ++++++++++++++++++++++++++-------------------------
+ 1 files changed, 96 insertions(+), 87 deletions(-)
 
 diff ./drivers/md/raid1.c~current~ ./drivers/md/raid1.c
---- ./drivers/md/raid1.c~current~	2004-02-06 16:19:15.000000000 +1100
-+++ ./drivers/md/raid1.c	2004-02-06 16:19:44.000000000 +1100
-@@ -77,6 +77,9 @@ static void * r1buf_pool_alloc(int gfp_f
- 	if (!bio)
- 		goto out_free_r1_bio;
+--- ./drivers/md/raid1.c~current~	2004-02-06 16:19:44.000000000 +1100
++++ ./drivers/md/raid1.c	2004-02-06 16:20:51.000000000 +1100
+@@ -56,8 +56,8 @@ static void r1bio_pool_free(void *r1_bio
+ 	kfree(r1_bio);
+ }
  
+-//#define RESYNC_BLOCK_SIZE (64*1024)
+-#define RESYNC_BLOCK_SIZE PAGE_SIZE
++#define RESYNC_BLOCK_SIZE (64*1024)
++//#define RESYNC_BLOCK_SIZE PAGE_SIZE
+ #define RESYNC_SECTORS (RESYNC_BLOCK_SIZE >> 9)
+ #define RESYNC_PAGES ((RESYNC_BLOCK_SIZE + PAGE_SIZE-1) / PAGE_SIZE)
+ #define RESYNC_WINDOW (2048*1024)
+@@ -73,38 +73,39 @@ static void * r1buf_pool_alloc(int gfp_f
+ 	r1_bio = r1bio_pool_alloc(gfp_flags, conf->mddev);
+ 	if (!r1_bio)
+ 		return NULL;
+-	bio = bio_alloc(gfp_flags, RESYNC_PAGES);
+-	if (!bio)
+-		goto out_free_r1_bio;
+ 
+ 	/*
+-	 * Allocate RESYNC_PAGES data pages for this iovec.
++	 * Allocate bios : 1 for reading, n-1 for writing
+ 	 */
++	for (j = conf->raid_disks ; j-- ; ) {
++		bio = bio_alloc(gfp_flags, RESYNC_PAGES);
++		if (!bio)
++			goto out_free_bio;
++		r1_bio->bios[j] = bio;
++	}
 +	/*
-+	 * Allocate RESYNC_PAGES data pages for this iovec.
++	 * Allocate RESYNC_PAGES data pages and attach them to
++	 * the first bio;
 +	 */
++	bio = r1_bio->bios[0];
  	for (i = 0; i < RESYNC_PAGES; i++) {
  		page = alloc_page(gfp_flags);
  		if (unlikely(!page))
-@@ -87,9 +90,6 @@ static void * r1buf_pool_alloc(int gfp_f
- 		bio->bi_io_vec[i].bv_offset = 0;
+ 			goto out_free_pages;
+ 
+ 		bio->bi_io_vec[i].bv_page = page;
+-		bio->bi_io_vec[i].bv_len = PAGE_SIZE;
+-		bio->bi_io_vec[i].bv_offset = 0;
  	}
  
--	/*
--	 * Allocate a single data page for this iovec.
--	 */
- 	bio->bi_vcnt = RESYNC_PAGES;
- 	bio->bi_idx = 0;
- 	bio->bi_size = RESYNC_BLOCK_SIZE;
-@@ -122,8 +122,6 @@ static void r1buf_pool_free(void *__r1_b
+-	bio->bi_vcnt = RESYNC_PAGES;
+-	bio->bi_idx = 0;
+-	bio->bi_size = RESYNC_BLOCK_SIZE;
+-	bio->bi_end_io = NULL;
+-	atomic_set(&bio->bi_cnt, 1);
+-
+ 	r1_bio->master_bio = bio;
+ 
+ 	return r1_bio;
+ 
+ out_free_pages:
+-	for (j = 0; j < i; j++)
+-		__free_page(bio->bi_io_vec[j].bv_page);
+-	bio_put(bio);
+-out_free_r1_bio:
++	for ( ; i > 0 ; i--)
++		__free_page(bio->bi_io_vec[i-1].bv_page);
++out_free_bio:
++	while ( j < conf->raid_disks )
++		bio_put(r1_bio->bios[++j]);
+ 	r1bio_pool_free(r1_bio, conf->mddev);
+ 	return NULL;
+ }
+@@ -114,15 +115,15 @@ static void r1buf_pool_free(void *__r1_b
+ 	int i;
+ 	conf_t *conf = data;
+ 	r1bio_t *r1bio = __r1_bio;
+-	struct bio *bio = r1bio->master_bio;
++	struct bio *bio = r1bio->bios[0];
+ 
+-	if (atomic_read(&bio->bi_cnt) != 1)
+-		BUG();
+ 	for (i = 0; i < RESYNC_PAGES; i++) {
  		__free_page(bio->bi_io_vec[i].bv_page);
  		bio->bi_io_vec[i].bv_page = NULL;
  	}
--	if (atomic_read(&bio->bi_cnt) != 1)
--		BUG();
- 	bio_put(bio);
+-	bio_put(bio);
++	for (i=0 ; i < conf->raid_disks; i++)
++		bio_put(r1bio->bios[i]);
++
  	r1bio_pool_free(r1bio, conf->mddev);
  }
-@@ -249,7 +247,7 @@ static inline void update_head_pos(int d
+ 
+@@ -162,15 +163,8 @@ static inline void free_r1bio(r1bio_t *r
+ static inline void put_buf(r1bio_t *r1_bio)
+ {
  	conf_t *conf = mddev_to_conf(r1_bio->mddev);
+-	struct bio *bio = r1_bio->master_bio;
+ 	unsigned long flags;
  
- 	conf->mirrors[disk].head_position =
--		r1_bio->sector + (r1_bio->master_bio->bi_size >> 9);
-+		r1_bio->sector + (r1_bio->sectors);
- }
+-	/*
+-	 * undo any possible partial request fixup magic:
+-	 */
+-	if (bio->bi_size != RESYNC_BLOCK_SIZE)
+-		bio->bi_io_vec[bio->bi_vcnt-1].bv_len = PAGE_SIZE;
+-	put_all_bios(conf, r1_bio);
+ 	mempool_free(r1_bio, conf->r1buf_pool);
  
- static int raid1_end_read_request(struct bio *bio, unsigned int bytes_done, int error)
-@@ -507,6 +505,7 @@ static int make_request(request_queue_t 
- 	r1_bio = mempool_alloc(conf->r1bio_pool, GFP_NOIO);
+ 	spin_lock_irqsave(&conf->resync_lock, flags);
+@@ -810,12 +804,11 @@ static void sync_request_write(mddev_t *
+ 	conf_t *conf = mddev_to_conf(mddev);
+ 	int i;
+ 	int disks = conf->raid_disks;
+-	struct bio *bio, *mbio;
++	struct bio *bio, *wbio;
  
- 	r1_bio->master_bio = bio;
-+	r1_bio->sectors = bio->bi_size >> 9;
+-	bio = r1_bio->master_bio;
++	bio = r1_bio->bios[r1_bio->read_disk];
  
- 	r1_bio->mddev = mddev;
- 	r1_bio->sector = bio->bi_sector;
-@@ -799,7 +798,7 @@ static int end_sync_write(struct bio *bi
- 	update_head_pos(mirror, r1_bio);
- 
- 	if (atomic_dec_and_test(&r1_bio->remaining)) {
--		md_done_sync(mddev, r1_bio->master_bio->bi_size >> 9, uptodate);
-+		md_done_sync(mddev, r1_bio->sectors, uptodate);
- 		put_buf(r1_bio);
- 	}
- 	atomic_dec(&conf->mirrors[mirror].rdev->nr_pending);
-@@ -829,7 +828,7 @@ static void sync_request_write(mddev_t *
- 			" for block %llu\n",
- 			bdevname(bio->bi_bdev,b), 
- 			(unsigned long long)r1_bio->sector);
--		md_done_sync(mddev, r1_bio->master_bio->bi_size >> 9, 0);
-+		md_done_sync(mddev, r1_bio->sectors, 0);
- 		put_buf(r1_bio);
+ 	/*
+-	 * have to allocate lots of bio structures and
+ 	 * schedule writes
+ 	 */
+ 	if (!test_bit(R1BIO_Uptodate, &r1_bio->state)) {
+@@ -833,43 +826,16 @@ static void sync_request_write(mddev_t *
  		return;
  	}
-@@ -874,7 +873,7 @@ static void sync_request_write(mddev_t *
+ 
+-	spin_lock_irq(&conf->device_lock);
+-	for (i = 0; i < disks ; i++) {
+-		r1_bio->bios[i] = NULL;
+-		if (!conf->mirrors[i].rdev || 
+-		    conf->mirrors[i].rdev->faulty)
+-			continue;
+-		if (i == r1_bio->read_disk)
+-			/*
+-			 * we read from here, no need to write
+-			 */
+-			continue;
+-		if (conf->mirrors[i].rdev->in_sync && 
+-			r1_bio->sector + (bio->bi_size>>9) <= mddev->recovery_cp)
+-			/*
+-			 * don't need to write this we are just rebuilding
+-			 */
+-			continue;
+-		atomic_inc(&conf->mirrors[i].rdev->nr_pending);
+-		r1_bio->bios[i] = bio;
+-	}
+-	spin_unlock_irq(&conf->device_lock);
+-
+ 	atomic_set(&r1_bio->remaining, 1);
+-	for (i = disks; i-- ; ) {
+-		if (!r1_bio->bios[i])
++	for (i = 0; i < disks ; i++) {
++		wbio = r1_bio->bios[i];
++		if (wbio->bi_end_io != end_sync_write)
+ 			continue;
+-		mbio = bio_clone(bio, GFP_NOIO);
+-		r1_bio->bios[i] = mbio;
+-		mbio->bi_bdev = conf->mirrors[i].rdev->bdev;
+-		mbio->bi_sector = r1_bio->sector + conf->mirrors[i].rdev->data_offset;
+-		mbio->bi_end_io	= end_sync_write;
+-		mbio->bi_rw = WRITE;
+-		mbio->bi_private = r1_bio;
+ 
++		atomic_inc(&conf->mirrors[i].rdev->nr_pending);
+ 		atomic_inc(&r1_bio->remaining);
+-		md_sync_acct(conf->mirrors[i].rdev, mbio->bi_size >> 9);
+-		generic_make_request(mbio);
++		md_sync_acct(conf->mirrors[i].rdev, wbio->bi_size >> 9);
++		generic_make_request(wbio);
  	}
  
  	if (atomic_dec_and_test(&r1_bio->remaining)) {
--		md_done_sync(mddev, r1_bio->master_bio->bi_size >> 9, 1);
-+		md_done_sync(mddev, r1_bio->sectors, 1);
- 		put_buf(r1_bio);
- 	}
- }
-@@ -966,7 +965,7 @@ static int sync_request(mddev_t *mddev, 
- 	conf_t *conf = mddev_to_conf(mddev);
- 	mirror_info_t *mirror;
+@@ -967,7 +933,8 @@ static int sync_request(mddev_t *mddev, 
  	r1bio_t *r1_bio;
--	struct bio *read_bio, *bio;
-+	struct bio *bio;
+ 	struct bio *bio;
  	sector_t max_sector, nr_sectors;
- 	int disk, partial;
+-	int disk, partial;
++	int disk;
++	int i;
  
-@@ -1035,18 +1034,18 @@ static int sync_request(mddev_t *mddev, 
- 		bio->bi_io_vec[bio->bi_vcnt-1].bv_len = partial;
+ 	if (!conf->r1buf_pool)
+ 		if (init_resync(conf))
+@@ -1020,27 +987,69 @@ static int sync_request(mddev_t *mddev, 
+ 	set_bit(R1BIO_IsSync, &r1_bio->state);
+ 	r1_bio->read_disk = disk;
  
- 
--	read_bio = bio_clone(r1_bio->master_bio, GFP_NOIO);
+-	bio = r1_bio->master_bio;
+-	nr_sectors = RESYNC_BLOCK_SIZE >> 9;
+-	if (max_sector - sector_nr < nr_sectors)
+-		nr_sectors = max_sector - sector_nr;
+-	bio->bi_size = nr_sectors << 9;
+-	bio->bi_vcnt = (bio->bi_size + PAGE_SIZE-1) / PAGE_SIZE;
+-	/*
+-	 * Is there a partial page at the end of the request?
+-	 */
+-	partial = bio->bi_size % PAGE_SIZE;
+-	if (partial)
+-		bio->bi_io_vec[bio->bi_vcnt-1].bv_len = partial;
 -
--	read_bio->bi_sector = sector_nr + mirror->rdev->data_offset;
--	read_bio->bi_bdev = mirror->rdev->bdev;
--	read_bio->bi_end_io = end_sync_read;
--	read_bio->bi_rw = READ;
--	read_bio->bi_private = r1_bio;
--	r1_bio->bios[r1_bio->read_disk] = read_bio;
-+	bio->bi_sector = sector_nr + mirror->rdev->data_offset;
-+	bio->bi_bdev = mirror->rdev->bdev;
-+	bio->bi_end_io = end_sync_read;
-+	bio->bi_rw = READ;
-+	bio->bi_private = r1_bio;
-+	bio_get(bio);
-+	r1_bio->bios[r1_bio->read_disk] = bio;
-+	r1_bio->sectors = nr_sectors;
+-
+-	bio->bi_sector = sector_nr + mirror->rdev->data_offset;
+-	bio->bi_bdev = mirror->rdev->bdev;
+-	bio->bi_end_io = end_sync_read;
+-	bio->bi_rw = READ;
+-	bio->bi_private = r1_bio;
+-	bio_get(bio);
+-	r1_bio->bios[r1_bio->read_disk] = bio;
++	for (i=0; i < conf->raid_disks; i++) {
++		bio = r1_bio->bios[i];
++
++		/* take from bio_init */
++		bio->bi_next = NULL;
++		bio->bi_flags |= 1 << BIO_UPTODATE;
++		bio->bi_rw = 0;
++		bio->bi_vcnt = 0;
++		bio->bi_idx = 0;
++		bio->bi_phys_segments = 0;
++		bio->bi_hw_segments = 0;
++		bio->bi_size = 0;
++		bio->bi_end_io = NULL;
++		bio->bi_private = NULL;
++
++		if (i == disk) {
++			bio->bi_rw = READ;
++			bio->bi_end_io = end_sync_read;
++		} else if (conf->mirrors[i].rdev &&
++			   !conf->mirrors[i].rdev->faulty &&
++			   (!conf->mirrors[i].rdev->in_sync ||
++			    sector_nr + RESYNC_SECTORS > mddev->recovery_cp)) {
++			bio->bi_rw = WRITE;
++			bio->bi_end_io = end_sync_write;
++		} else
++			continue;
++		bio->bi_sector = sector_nr + conf->mirrors[i].rdev->data_offset;
++		bio->bi_bdev = conf->mirrors[i].rdev->bdev;
++		bio->bi_private = r1_bio;
++	}
++	nr_sectors = 0;
++	do {
++		struct page *page;
++		int len = PAGE_SIZE;
++		if (sector_nr + (len>>9) > max_sector)
++			len = (max_sector - sector_nr) << 9;
++		if (len == 0)	
++			break;
++		for (i=0 ; i < conf->raid_disks; i++) {
++			bio = r1_bio->bios[i];
++			if (bio->bi_end_io) {
++				page = r1_bio->bios[0]->bi_io_vec[bio->bi_vcnt].bv_page;
++				if (bio_add_page(bio, page, len, 0) == 0) {
++					/* stop here */
++					r1_bio->bios[0]->bi_io_vec[bio->bi_vcnt].bv_page = page;
++					while (i > 0) {
++						i--;
++						bio = r1_bio->bios[i];
++						if (bio->bi_end_io==NULL) continue;
++						/* remove last page from this bio */
++						bio->bi_vcnt--;
++						bio->bi_size -= len;
++						bio->bi_flags &= ~(1<< BIO_SEG_VALID);
++					}
++					goto bio_full;
++				}
++			}
++		}
++		nr_sectors += len>>9;
++		sector_nr += len>>9;
++	} while (r1_bio->bios[disk]->bi_vcnt < RESYNC_PAGES);
++ bio_full:
++	bio = r1_bio->bios[disk];
+ 	r1_bio->sectors = nr_sectors;
  
  	md_sync_acct(mirror->rdev, nr_sectors);
- 
--	generic_make_request(read_bio);
-+	generic_make_request(bio);
- 
- 	return nr_sectors;
- }
-
-diff ./include/linux/raid/raid1.h~current~ ./include/linux/raid/raid1.h
---- ./include/linux/raid/raid1.h~current~	2004-02-06 16:19:15.000000000 +1100
-+++ ./include/linux/raid/raid1.h	2004-02-06 16:19:44.000000000 +1100
-@@ -55,6 +55,7 @@ struct r1bio_s {
- 					    * used from IRQ handlers
- 					    */
- 	sector_t		sector;
-+	int			sectors;
- 	unsigned long		state;
- 	mddev_t			*mddev;
- 	/*
