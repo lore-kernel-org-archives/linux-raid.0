@@ -1,112 +1,96 @@
-From: Dieter Stueken <stueken@conterra.de>
-Subject: Re: Bad blocks are killing us!
-Date: Fri, 19 Nov 2004 19:47:30 +0100
-Message-ID: <419E3FC2.6080205@conterra.de>
-References: <200411180147.iAI1l5N02116@www.watkins-home.com>
+From: Robin Bowes <robin-lists@robinbowes.com>
+Subject: Good news / bad news - The joys of RAID
+Date: Fri, 19 Nov 2004 21:06:40 +0000
+Message-ID: <419E6060.8030000@robinbowes.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200411180147.iAI1l5N02116@www.watkins-home.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Guy Watkins wrote:
-> "but the md-level
-> approach might be better.  But I'm not sure I see the point of
-> it---unless you have raid 6 with multiple parity blocks, if a disk
-> actually has the wrong information recorded on it I don't think you
-> can detect which drive is bad, just that one of them is."
->=20
-> If there is a parity block that does not match the data, true you do =
-not
-> know which device has the wrong data.  However, if you do not "correc=
-t" the
-> parity, when a device fails, it will be constructed differently than =
-it was
-> before it failed.  This will just cause more corrupt data.  The parit=
-y must
-> be made consistent with whatever data is on the data blocks to preven=
-t this
-> corrosion of data.  With RAID6 it should be possible to determine whi=
-ch
-> block is wrong.  It would be a pain in the @$$, but I think it would =
-be
-> doable.  I will explain my theory if someone asks.
+The bad news is I lost another disk tonight. Remind me *never* to buy 
+Maxtor drives again.
 
-This is exactly the same conflict, a single drive has with a unreadable=
- sector.
-It notices the sector beeing bad, and it can not fulfill any read reque=
-st, until
-the data is not rewritten or erased. The single drive can not (and shou=
-ld never
-try to!) silently replace the bad sector by some spare sectors, as it c=
-an not
-recover the content.
+The good news is that my RAID5 array was configured as 5 + 1 spare. I 
+powered down the server, used the Maxtor PowerMax utility to identify 
+the bad disk, pulled it out and re-booted. My array is currently re-syncing.
 
-Also the RAID system can not solve this problem automagically, and neve=
-r should
-do so, as the former content can not be deduced any more. But notice, t=
-hat we
-have two very different problems to examine: The above problem arises, =
-if all
-disks of the RAID system claim to read correct data, whereas the parity=
- information
-tells us, that one of them must be wrong. As long as we don't have RAID=
-6,
-to recover single bit errors, the data is LOST and can not be recovered=
-=2E
-This is very different to the situation, if one of the disks DOES repor=
-t
-an internal crc-error. In this case your data CAN be recovered reliable=
- from the
-parity information, and in most cases even successfully written back to=
- the disk.
+[root@dude root]# mdadm --detail /dev/md5
+/dev/md5:
+         Version : 00.90.01
+   Creation Time : Thu Jul 29 21:41:38 2004
+      Raid Level : raid5
+      Array Size : 974566400 (929.42 GiB 997.96 GB)
+     Device Size : 243641600 (232.35 GiB 249.49 GB)
+    Raid Devices : 5
+   Total Devices : 5
+Preferred Minor : 5
+     Persistence : Superblock is persistent
 
-But there is also a difference between the problem for RAID compared to=
- the internal
-disk: Whereas the disk always reads all CRC data for the sector to veri=
-fy its integrity,
-the RAID system does not normally check the validity of the parity info=
-rmation
-by default. (this is, why the idea of data scans actually came up). So,=
- if a scan
-discovers a bad parity information, the only action that can (and must!=
-) be taken
-is, to tag this peace of data to be invalid. And it is very important, =
-not only
-to log that information somewhere. It is even more important to prevent=
- further readings
-of this peace of lost data. Otherwise those definitely invalid data may=
- be read
-without any notice, may get written back again and thus turn into valid=
- data,
-even though it become garbage.
+     Update Time : Fri Nov 19 20:52:58 2004
+           State : dirty, resyncing
+  Active Devices : 5
+Working Devices : 5
+  Failed Devices : 0
+   Spare Devices : 0
 
-People often argue for some spare sector management, which would solve =
-all problems.
-I think this is an illusion. Spare sectors can only be useful if you fa=
-il WRITING data,
-not when reading data failed or data loss occurred. This is realized al=
-ready within
-the single disks in a sufficient way (I think). If your disk gives writ=
-e errors, you
-either have a very old one, without internal spare sector management, o=
-r your disk
-run out of spare sectors already. Read errors are quite more frequent t=
-han write
-errors and thus a much more important issue.
+          Layout : left-symmetric
+      Chunk Size : 128K
 
-Dieter St=FCken.
---=20
-Dieter St=FCken, con terra GmbH, M=FCnster
-     stueken@conterra.de
-     http://www.conterra.de/
-     (0)251-7474-501
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+  Rebuild Status : 0% complete
+
+            UUID : a4bbcd09:5e178c5b:3bf8bd45:8c31d2a1
+          Events : 0.1765551
+
+     Number   Major   Minor   RaidDevice State
+        0       8        2        0      active sync   /dev/sda2
+        1       8       18        1      active sync   /dev/sdb2
+        2       8       34        2      active sync   /dev/sdc2
+        3       8       50        3      active sync   /dev/sdd2
+        4       8       66        4      active sync   /dev/sde2
+
+
+Thinking about what happened, I would have expected that the bad drive 
+would just be removed from the array and spare activated and re-syncing 
+started automatically.
+
+What actually happened was that I rebooted to activate a new kernel and 
+the box didn't come back up. As the machine runs headless, I had to 
+power it off and take it to a monitor/keyboard to check it. In the new 
+location it came up fine so I shut it down again and put it back in my 
+"server room" (read: cellar). I still couldn't see it from the network 
+so I dragged an old 14" CRT out of the shed and connected it up. The 
+login prompt was there but there was an "ata2 timeout" error message and 
+the console was dead. I power-cycled to reboot and as it booted I saw a 
+message something like "postponing resync of md0 as it uses the same 
+device as md5. waiting for md5 to resync. I then got a further ata 
+timeout error. I had to physically disconnect the bad drive and reboot 
+in order to re-start the re-sync.
+
+Further md information:
+
+[root@dude log]# mdadm --detail --scan
+ARRAY /dev/md2 level=raid1 num-devices=2 
+UUID=11caa547:1ba8d185:1f1f771f:d66368c9
+    devices=/dev/sdc1
+ARRAY /dev/md1 level=raid1 num-devices=2 
+UUID=be8ad31a:f13b6f4b:c39732fc:c84f32a8
+    devices=/dev/sdb1,/dev/sde1
+ARRAY /dev/md5 level=raid5 num-devices=5 
+UUID=a4bbcd09:5e178c5b:3bf8bd45:8c31d2a1
+    devices=/dev/sda2,/dev/sdb2,/dev/sdc2,/dev/sdd2,/dev/sde2
+ARRAY /dev/md0 level=raid1 num-devices=2 
+UUID=4b28338c:bf08d0bc:bb2899fc:e7f35eae
+    devices=/dev/sda1,/dev/sdd1
+
+It was /dev/sdf that failed which contained two partitions, one of them 
+part of md2 (now running un-mirrored but still showing two devices) and 
+the other part of md5 (now re-syncing but only showing five devices).
+
+Is this normal behaviour?
+
+R.
+-- 
+http://robinbowes.com
