@@ -1,115 +1,220 @@
-From: "Donghui Wen" <dhwen@protegonetworks.com>
-Subject: Re: badblock handling
-Date: Thu, 5 Feb 2004 20:43:47 -0800
+From: NeilBrown <neilb@cse.unsw.edu.au>
+Subject: [PATCH] md - 4 of 7 - Remove some un-needed fields from r1bio_s
+Date: Fri, 06 Feb 2004 16:35:53 +1100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <006001c3ec6b$cf529ee0$df01010a@moon>
-References: <20040204122317.K27780@forte.austin.ibm.com> <Pine.LNX.4.44.0402041726350.20232-100000@coffee.psychology.mcmaster.ca> <20040204164946.P27780@forte.austin.ibm.com> <16417.31540.78193.699721@notabene.cse.unsw.edu.au> <001601c3eba2$e6110410$df01010a@moon> <676854718.1075970126@[172.30.250.225]>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Message-ID: <E1Aoyef-00083e-00@notabene>
+References: <20040206162532.30220.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Martin Dohmen <md@tripnet.se>, linux-raid@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I read some posts before says 3ware's hardware raid is doing bad block
-remapping, which is transparent to file system. I was wondering if md i=
-s
-doing
-the same way.
 
-I am trying hardware raid 1+0 now, even it will lost half of the disk s=
-pace,
-but if it is stable and fast, I will go for it.
+next_r1 is never used, so it can just go.
 
-Donghui
+read_bio isn't needed as we can easily use one of the pointers
+in the write_bios array - write_bios[->read_disk].
+So rename "write_bios" to "bios" and store the pointer to the
+read bio in there.
 
------ Original Message -----=20
-=46rom: "Martin Dohmen" <md@tripnet.se>
-To: "'Donghui Wen'" <dhwen@protegonetworks.com>;
-<linux-raid@vger.kernel.org>
-Sent: Wednesday, February 04, 2004 11:35 PM
-Subject: Re: badblock handling
+ ----------- Diffstat output ------------
+ ./drivers/md/raid1.c         |   55 ++++++++++++++-----------------------------
+ ./include/linux/raid/raid1.h |    6 +---
+ 2 files changed, 21 insertions(+), 40 deletions(-)
 
-
-I have seen the same problem, but I have also noticed that if I use the
-3ware cards own raid5 instead of md things work diffrently, the only th=
-ing
-that seems to happen when a disk develops a bad block is this in the lo=
-g:
-
-3w-xxxx: scsi0: AEN: ERROR: Drive error: Port #6.
-3w-xxxx: scsi0: AEN: WARNING: Sector repair occurred: Port #6.
-
-I do not now if 3ware sets some block asside when the raid is created f=
-or
-use when errors occure or if they justs writes the block agan and the d=
-isk
-does the realocation by it self.
-
-The downside of using 3ware raid5 is that performance is quite much low=
-er
-than with md, with 8 disks I get 90MB/s with md and 40MB/s with 3ware i=
-n
-writespeed.
-
-
---On den 4 februari 2004 20:45 -0800 Donghui Wen
-<dhwen@protegonetworks.com> wrote:
-
-> Hi,
->      I am running a server with Linux software-raid (3ware controller=
-).
-> But from time to time,
-> a disk is kicked out by md. This will happen when 3ware card reports =
-a
-> unrecovered read error
-> for a sector. But when I run raidhotadd, the disk can added back to r=
-aid
-> with no problem.
->      So my questions are:
->         (1) Will md  kick out one disk if it find out ONE bad block?
->         (2) Is it possible to set up a threshold, only the amount of =
-bad
-> blocks pass this threshold,
->             the disk will be kicked out.
->         (3) Is it possible to remap the bad blocks to some spare bloc=
-ks
-> automatically on the fly?
->
-> Thanks!
->
-> Donghui
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
-
-
-Med v=E4nlig h=E4lsning
-TRIPNET AB
-
-Martin Dohmen
-_______________________________________________________________________=
-_
-Tripnet AB                Bes=F6ksadress:      Telefon:  031-725 25 00
-Box 5071                  =C5v=E4gen 42          Telefax:  031-725 25 0=
-1
-402 22  G=D6TEBORG          G=D6TEBORG           Direkt:   031-725 25 1=
-1
-http://www.tripnet.se     dohmen@tripnet.se  Mobil:    0733-58 25 11
-
+diff ./drivers/md/raid1.c~current~ ./drivers/md/raid1.c
+--- ./drivers/md/raid1.c~current~	2004-02-06 16:18:52.000000000 +1100
++++ ./drivers/md/raid1.c	2004-02-06 16:19:15.000000000 +1100
+@@ -42,7 +42,7 @@ static void * r1bio_pool_alloc(int gfp_f
+ 	mddev_t *mddev = data;
+ 	r1bio_t *r1_bio;
+ 
+-	/* allocate a r1bio with room for raid_disks entries in the write_bios array */
++	/* allocate a r1bio with room for raid_disks entries in the bios array */
+ 	r1_bio = kmalloc(sizeof(r1bio_t) + sizeof(struct bio*)*mddev->raid_disks,
+ 			 gfp_flags);
+ 	if (r1_bio)
+@@ -132,19 +132,10 @@ static void put_all_bios(conf_t *conf, r
+ {
+ 	int i;
+ 
+-	if (r1_bio->read_bio) {
+-		if (atomic_read(&r1_bio->read_bio->bi_cnt) != 1)
+-			BUG();
+-		bio_put(r1_bio->read_bio);
+-		r1_bio->read_bio = NULL;
+-	}
+ 	for (i = 0; i < conf->raid_disks; i++) {
+-		struct bio **bio = r1_bio->write_bios + i;
+-		if (*bio) {
+-			if (atomic_read(&(*bio)->bi_cnt) != 1)
+-				BUG();
++		struct bio **bio = r1_bio->bios + i;
++		if (*bio)
+ 			bio_put(*bio);
+-		}
+ 		*bio = NULL;
+ 	}
+ }
+@@ -291,8 +282,6 @@ static int raid1_end_read_request(struct
+ 
+ 	update_head_pos(mirror, r1_bio);
+ 
+-	if (!r1_bio->read_bio)
+-		BUG();
+ 	/*
+ 	 * we have only one bio on the read side
+ 	 */
+@@ -323,7 +312,7 @@ static int raid1_end_write_request(struc
+ 		return 1;
+ 	
+ 	for (mirror = 0; mirror < conf->raid_disks; mirror++)
+-		if (r1_bio->write_bios[mirror] == bio)
++		if (r1_bio->bios[mirror] == bio)
+ 			break;
+ 
+ 	/*
+@@ -345,8 +334,6 @@ static int raid1_end_write_request(struc
+ 
+ 	update_head_pos(mirror, r1_bio);
+ 
+-	if (r1_bio->read_bio)
+-		BUG();
+ 	/*
+ 	 *
+ 	 * Let's see if all mirrored write operations have finished
+@@ -531,9 +518,8 @@ static int make_request(request_queue_t 
+ 		mirror = conf->mirrors + read_balance(conf, bio, r1_bio);
+ 
+ 		read_bio = bio_clone(bio, GFP_NOIO);
+-		if (r1_bio->read_bio)
+-			BUG();
+-		r1_bio->read_bio = read_bio;
++
++		r1_bio->bios[r1_bio->read_disk] = read_bio;
+ 
+ 		read_bio->bi_sector = r1_bio->sector + mirror->rdev->data_offset;
+ 		read_bio->bi_bdev = mirror->rdev->bdev;
+@@ -550,16 +536,16 @@ static int make_request(request_queue_t 
+ 	 */
+ 	/* first select target devices under spinlock and
+ 	 * inc refcount on their rdev.  Record them by setting
+-	 * write_bios[x] to bio
++	 * bios[x] to bio
+ 	 */
+ 	spin_lock_irq(&conf->device_lock);
+ 	for (i = 0;  i < disks; i++) {
+ 		if (conf->mirrors[i].rdev &&
+ 		    !conf->mirrors[i].rdev->faulty) {
+ 			atomic_inc(&conf->mirrors[i].rdev->nr_pending);
+-			r1_bio->write_bios[i] = bio;
++			r1_bio->bios[i] = bio;
+ 		} else
+-			r1_bio->write_bios[i] = NULL;
++			r1_bio->bios[i] = NULL;
+ 	}
+ 	spin_unlock_irq(&conf->device_lock);
+ 
+@@ -567,11 +553,11 @@ static int make_request(request_queue_t 
+ 	md_write_start(mddev);
+ 	for (i = 0; i < disks; i++) {
+ 		struct bio *mbio;
+-		if (!r1_bio->write_bios[i])
++		if (!r1_bio->bios[i])
+ 			continue;
+ 
+ 		mbio = bio_clone(bio, GFP_NOIO);
+-		r1_bio->write_bios[i] = mbio;
++		r1_bio->bios[i] = mbio;
+ 
+ 		mbio->bi_sector	= r1_bio->sector + conf->mirrors[i].rdev->data_offset;
+ 		mbio->bi_bdev = conf->mirrors[i].rdev->bdev;
+@@ -773,7 +759,7 @@ static int end_sync_read(struct bio *bio
+ 	if (bio->bi_size)
+ 		return 1;
+ 
+-	if (r1_bio->read_bio != bio)
++	if (r1_bio->bios[r1_bio->read_disk] != bio)
+ 		BUG();
+ 	update_head_pos(r1_bio->read_disk, r1_bio);
+ 	/*
+@@ -804,7 +790,7 @@ static int end_sync_write(struct bio *bi
+ 		return 1;
+ 
+ 	for (i = 0; i < conf->raid_disks; i++)
+-		if (r1_bio->write_bios[i] == bio) {
++		if (r1_bio->bios[i] == bio) {
+ 			mirror = i;
+ 			break;
+ 		}
+@@ -850,11 +836,11 @@ static void sync_request_write(mddev_t *
+ 
+ 	spin_lock_irq(&conf->device_lock);
+ 	for (i = 0; i < disks ; i++) {
+-		r1_bio->write_bios[i] = NULL;
++		r1_bio->bios[i] = NULL;
+ 		if (!conf->mirrors[i].rdev || 
+ 		    conf->mirrors[i].rdev->faulty)
+ 			continue;
+-		if (conf->mirrors[i].rdev->bdev == bio->bi_bdev)
++		if (i == r1_bio->read_disk)
+ 			/*
+ 			 * we read from here, no need to write
+ 			 */
+@@ -866,16 +852,16 @@ static void sync_request_write(mddev_t *
+ 			 */
+ 			continue;
+ 		atomic_inc(&conf->mirrors[i].rdev->nr_pending);
+-		r1_bio->write_bios[i] = bio;
++		r1_bio->bios[i] = bio;
+ 	}
+ 	spin_unlock_irq(&conf->device_lock);
+ 
+ 	atomic_set(&r1_bio->remaining, 1);
+ 	for (i = disks; i-- ; ) {
+-		if (!r1_bio->write_bios[i])
++		if (!r1_bio->bios[i])
+ 			continue;
+ 		mbio = bio_clone(bio, GFP_NOIO);
+-		r1_bio->write_bios[i] = mbio;
++		r1_bio->bios[i] = mbio;
+ 		mbio->bi_bdev = conf->mirrors[i].rdev->bdev;
+ 		mbio->bi_sector = r1_bio->sector + conf->mirrors[i].rdev->data_offset;
+ 		mbio->bi_end_io	= end_sync_write;
+@@ -1056,10 +1042,7 @@ static int sync_request(mddev_t *mddev, 
+ 	read_bio->bi_end_io = end_sync_read;
+ 	read_bio->bi_rw = READ;
+ 	read_bio->bi_private = r1_bio;
 -
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-	if (r1_bio->read_bio)
+-		BUG();
+-	r1_bio->read_bio = read_bio;
++	r1_bio->bios[r1_bio->read_disk] = read_bio;
+ 
+ 	md_sync_acct(mirror->rdev, nr_sectors);
+ 
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff ./include/linux/raid/raid1.h~current~ ./include/linux/raid/raid1.h
+--- ./include/linux/raid/raid1.h~current~	2004-02-06 16:18:52.000000000 +1100
++++ ./include/linux/raid/raid1.h	2004-02-06 16:19:15.000000000 +1100
+@@ -62,18 +62,16 @@ struct r1bio_s {
+ 	 */
+ 	struct bio		*master_bio;
+ 	/*
+-	 * if the IO is in READ direction, then this bio is used:
++	 * if the IO is in READ direction, then this is where we read
+ 	 */
+-	struct bio		*read_bio;
+ 	int			read_disk;
+ 
+-	r1bio_t			*next_r1; /* next for retry or in free list */
+ 	struct list_head	retry_list;
+ 	/*
+ 	 * if the IO is in WRITE direction, then multiple bios are used.
+ 	 * We choose the number when they are allocated.
+ 	 */
+-	struct bio		*write_bios[0];
++	struct bio		*bios[0];
+ };
+ 
+ /* bits for r1bio.state */
