@@ -1,80 +1,56 @@
-From: Heiko Carstens <heiko.carstens@de.ibm.com>
-Subject: [BUG] raidtools-1.00.3 - BLKGETSIZE ioctl call wrong
-Date: Thu, 8 Jan 2004 14:42:14 +0100
+From: Martin F Krafft <krafft@ailab.ch>
+Subject: RAID 5 from 2.4.24 to 2.6.0
+Date: Thu, 8 Jan 2004 16:14:47 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200401081442.14339.heiko.carstens@de.ibm.com>
+Message-ID: <20040108151447.GA15294@piper.madduck.net>
 Mime-Version: 1.0
-Content-Type: Multipart/Mixed;
-  boundary="------------Boundary-00=_EEB6VCM0M8BZX5MZGQUK"
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="sdtB3X0nJg68CQEu"
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+Content-Disposition: inline
+To: linux raid mailing list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
 
---------------Boundary-00=_EEB6VCM0M8BZX5MZGQUK
-Content-Type: text/plain;
-  charset="us-ascii"
+--sdtB3X0nJg68CQEu
+Content-Type: text/plain; charset=iso-8859-15
+Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-Hi,
+Due to stability problems with the RAID code in 2.4 (detaailed
+message forthcoming), I would like to try 2.6.0 on one of our
+servers. However, anticipating problems, I want to make sure that
+this change is not irreversible.
 
-there is a bug in raidtools 1.00.3:
-when issueing the BLKGETSIZE ioctl, the raidtools expect the return value
-in a __u32 bit variable called nr_blocks. Since the BLKGETSIZE ioctl writ=
-es
-the result into an unsigned long, this doesn't fit on 64 bit architecture=
-s and
-therefore has some strange effects (at least on big endian machines). Ple=
-ase
-apply the attached patch.
+Can I mount RAID 1 and 5 partitions in 2.6.0 and 2.4.24
+interchangeably?
 
 Thanks,
-Heiko
 
---------------Boundary-00=_EEB6VCM0M8BZX5MZGQUK
-Content-Type: text/x-diff;
-  charset="us-ascii";
-  name="raid1.00.3.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment; filename="raid1.00.3.diff"
+--=20
+Martin F. Krafft                Artificial Intelligence Laboratory
+Ph.D. Student                   Department of Information Technology
+Email: krafft@ailab.ch          University of Zurich
+Tel: +41.(0)1.63-54323          Andreasstrasse 15, Office 2.20
+http://ailab.ch/people/krafft   CH-8050 Zurich, Switzerland
+=20
+Invalid/expired PGP subkeys? Use subkeys.pgp.net as keyserver!
+=20
+one has to multiply thoughts to the point
+where there aren't enough policemen to control them.
+                                               -- stanislaw jerzey lec
 
---- raidtools-1.00.3/raid_io.c	2003-01-15 09:58:25.000000000 +0100
-+++ raidtools-1.00.3-fix/raid_io.c	2004-01-08 14:34:20.136485704 +0100
-@@ -363,7 +363,7 @@
- 	md_raid_info_t *array;
- 	mdu_disk_info_t *disk;
- 	struct stat stat_buf;
--	__u32 nr_blocks;
-+	unsigned long nr_blocks;
- 
- 	if (!cfg)
- 		return 1;
-@@ -454,14 +454,14 @@
- 			}
- 			nr_blocks >>= 1;
- 			if (nr_blocks < MD_RESERVED_BLOCKS * 2) {
--				fprintf(stderr, "%s: device too small (%dkB)\n", cfg->device_name[i], nr_blocks);
-+				fprintf(stderr, "%s: device too small (%ldkB)\n", cfg->device_name[i], nr_blocks);
- 				close(fd);
- 				return 1;
- 			}
- 
-                 	cfg->sb_block_offset[i] = MD_NEW_SIZE_BLOCKS(nr_blocks);
- 			if (!cfg->array.param.not_persistent) {
--                		printf("disk %d: %s, %ukB, raid superblock at %dkB\n", i, cfg->device_name[i], nr_blocks, cfg->sb_block_offset[i]);
-+                		printf("disk %d: %s, %lukB, raid superblock at %dkB\n", i, cfg->device_name[i], nr_blocks, cfg->sb_block_offset[i]);
- 	                	if (sanity_checks(cfg->device_name[i], fd,
- 					 	cfg->sb_block_offset[i], forceSanity,
- 					 	upgradeArray, cfg, 0)) {
-@@ -495,7 +495,7 @@
- 			}
- 			nr_blocks >>= 1;
- 			if (nr_blocks < MD_RESERVED_BLOCKS * 2) {
--				fprintf(stderr, "%s: device too small (%dkB)\n", cfg->device_name[i], nr_blocks);
-+				fprintf(stderr, "%s: device too small (%ldkB)\n", cfg->device_name[i], nr_blocks);
- 				close(fd);
- 				return 1;
- 			}
+--sdtB3X0nJg68CQEu
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
 
---------------Boundary-00=_EEB6VCM0M8BZX5MZGQUK--
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.3 (GNU/Linux)
 
+iD8DBQE//XPnIgvIgzMMSnURAmj+AJ9gnRB8WaKK1BHQZf9escrh6aFuQwCg3SV8
+NjL6hJeCgHmhmfbHbnV+goo=
+=4bvq
+-----END PGP SIGNATURE-----
+
+--sdtB3X0nJg68CQEu--
