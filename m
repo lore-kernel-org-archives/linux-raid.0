@@ -1,44 +1,48 @@
-From: Jason Lunz <lunz@falooley.org>
-Subject: recovery of hosed raid5 array
-Date: Sat, 11 Oct 2003 15:52:40 +0000 (UTC)
+From: linux-raid@ied.com
+Subject: Re: recovery of hosed raid5 array
+Date: Sat, 11 Oct 2003 14:59:27 -0400 (EDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <slrnbog9og.t0c.lunz@orr.homenet>
+Message-ID: <no.Yo.24973.N.nN.0310111457280@business.com>
+References: <slrnbog9og.t0c.lunz@orr.homenet>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <slrnbog9og.t0c.lunz@orr.homenet>
+To: Jason Lunz <lunz@falooley.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-So I have a small raid5 array of 5 25G ide disks for a home server. It
-was built entirely on 2.4.22 with mdadm in debian unstable a couple of
-months ago.  One of the disks died last night and was removed from the
-array, which went on in degraded mode.  The dead disk, /dev/hdg, stopped
-responding and was deactivated by the promise ide driver.
 
-After rebooting, the raid continued to work in degraded mode, and
-/dev/hdg seemed to check out ok. After checking it with smartctl and
-doing some successful reads from it, I added it back to the array with
-"mdadm -a".
+ Hi,
 
-Once the rebuild started, I noticed an email from smartd, saying that
-the _other_ drive on the Promise controller (/dev/hde) had had errors.
-So I foolishly checked it out with smartctl, at which point everything
-went to hell. /dev/hde now clicks repeatedly and refuses to work for
-more than a minute or so, while /dev/hdg is partially destroyed from
-being re-added. The rebuild was 3-4% complete when hde died.
+On Sat, 11 Oct 2003, Jason Lunz wrote:
 
-So I realize I'm probably fucked, but I really want to get the 80G or so
-of data back. Three of the drives are fine, /dev/hde is dead, but if I
-can use even some of /dev/hdg, I should be able to at least recover part
-of the data if I can get the ext3 fs to mount. How would I go about
-this?
+> Date: Sat, 11 Oct 2003 15:52:40 +0000 (UTC)
+> From: Jason Lunz <lunz@falooley.org>
+> To: linux-raid@vger.kernel.org
+> Subject: recovery of hosed raid5 array
+> 
+[...]
+> Once the rebuild started, I noticed an email from smartd, saying that
+> the _other_ drive on the Promise controller (/dev/hde) had had errors.
+> So I foolishly checked it out with smartctl,
 
-I know if I just wanted to use the four good disks, I could do
-"mdadm -Af". But how do I go about getting at the pre-rebuild data on
-/dev/hdg? Is there any way to restore its superblock data to the
-pre-rebuild state?
+  Can you please share with us newbies why using "smartctl" 
+in such situation is foolish, so we don't make the same 
+mistake ?
 
-I will be eternally indebted to anyone that can help.
+  Thanks.
 
-thanks,
+    John
 
-Jason
 
+[...]
+> at which point everything
+> went to hell. /dev/hde now clicks repeatedly and refuses to work for
+> more than a minute or so, while /dev/hdg is partially destroyed from
+> being re-added. The rebuild was 3-4% complete when hde died.
+
+
+-- 
+-- Gospel of Jesus' kingdom = saving power of God for all who believe --
+                 ## To some, nothing is impossible. ##
