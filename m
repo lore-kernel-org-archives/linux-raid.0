@@ -1,99 +1,44 @@
-From: Mauricio <raub@afn.org>
-Subject: raid is read-only? (debian/sarge)
-Date: Fri, 26 Mar 2004 07:11:32 -0500
+From: Gordon Henderson <gordon@drogon.net>
+Subject: Re: raid is read-only? (debian/sarge)
+Date: Fri, 26 Mar 2004 12:32:03 +0000 (GMT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <a06002005bc89ce38bb27@[10.0.0.10]>
+Message-ID: <Pine.LNX.4.56.0403261224250.14553@lion.drogon.net>
+References: <a06002005bc89ce38bb27@[10.0.0.10]>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii" ; format="flowed"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <a06002005bc89ce38bb27@[10.0.0.10]>
+To: Mauricio <raub@afn.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-	I have 2 120GB IDE drives in the second IDE controller of a 
-P4 debian/sarge box that I would like to set up as a raid1 array. 
-Using info from the following links,
+On Fri, 26 Mar 2004, Mauricio wrote:
 
-http://www.linuxdevcenter.com/pub/a/linux/2002/12/05/RAID.html
-http://en.tldp.org/HOWTO/Software-RAID-HOWTO-5.html
+> 	I have 2 120GB IDE drives in the second IDE controller of a
+> P4 debian/sarge box that I would like to set up as a raid1 array.
+> Using info from the following links,
 
-I do
+Are you aware that using 2 disks on the same controller is generally
+regarded as a "bad thing"[tm]?
 
-<Note:  I partitioned /dev/hd{c,d} using fdisk, but it seems that was 
-not needed>
+I had personally lost access to a 2nd drive when one drive on the same bit
+of cable failed. Fortunately in my case, I didn't lose data on the good
+drive, but I wasunable to access it until I powered the PC down and
+removed the failed drive.
 
-laurel:/home/debian# mdadm -Cv /dev/md0 -l1 -n2 /dev/hd{c,d}1
-mdadm: /dev/hdd1 appears to contain a reiserfs file system
-     size = 117210208K
-mdadm: size set to 117210112K
-Continue creating array? y
-mdadm: array /dev/md0 started.
-laurel:/home/debian#urel:/home/debian# mdadm --detail --scan
-ARRAY /dev/md0 level=raid1 num-devices=2 
-UUID=a9ad3f4b:ec821a50:da01bd3e:1817087d
-    devices=/dev/hdc1,/dev/hdd1
-laurel:/home/debian#
-laurel:/home/debian# mdadm -E /dev/hdc1
-/dev/hdc1:
-           Magic : a92b4efc
-         Version : 00.90.00
-            UUID : a9ad3f4b:ec821a50:da01bd3e:1817087d
-   Creation Time : Fri Mar 26 05:01:20 2004
-      Raid Level : raid1
-     Device Size : 117210112 (111.78 GiB 120.02 GB)
-    Raid Devices : 2
-   Total Devices : 2
-Preferred Minor : 0
+Read the paragraph under "Fault Survival" at:
 
-     Update Time : Fri Mar 26 05:01:20 2004
-           State : dirty, no-errors
-  Active Devices : 2
-Working Devices : 2
-  Failed Devices : 0
-   Spare Devices : 0
-        Checksum : b937ea96 - correct
-          Events : 0.1
+  http://en.tldp.org/HOWTO/Software-RAID-HOWTO-4.html
 
+I'm sure you know this... Just checking....
 
-       Number   Major   Minor   RaidDevice State
-this     0      22        1        0      active sync   /dev/hdc1
-    0     0      22        1        0      active sync   /dev/hdc1
-    1     1      22       65        1      active sync   /dev/hdd1
-laurel:/home/debian#
+> <after rebooting...>
+> laurel:/# mount -o rw /dev/md0 /mnt
 
-# fdisk /dev/md0
-[...]
-Disk /dev/md0: 120.0 GB, 120023154688 bytes
-2 heads, 4 sectors/track, 29302528 cylinders
-Units = cylinders of 8 * 512 = 4096 bytes
+Looks like you forgot to mkfs the new md0 device..
 
-     Device Boot      Start         End      Blocks   Id  System
-/dev/md0p1               1    29302528   117210110   83  Linux
+However, I've never used mdadm, prefering the old /etc/raditab method so
+don't know if your mdadm command will preserve/extend the reiserfs
+(although personally I think this is unlikely)
 
-Command (m for help): w
-The partition table has been altered!
-
-Calling ioctl() to re-read partition table.
-
-WARNING: Re-reading the partition table failed with error 22: Invalid argument.
-The kernel still uses the old table.
-The new table will be used at the next reboot.
-Syncing disks.
-laurel:/home/debian#
-<after rebooting...>
-laurel:/# mount -o rw /dev/md0 /mnt
-laurel:/# df -h
-Filesystem            Size  Used Avail Use% Mounted on
-/dev/hda1              18G  3.5G   14G  21% /
-tmpfs                 252M     0  252M   0% /dev/shm
-/dev/md0              112G  177M  112G   1% /mnt
-laurel:/#
-
-But, when I try to write something to /mnt, I am told it is a 
-read-only filesystem:
-
-laurel:/# cd /mnt
-laurel:/mnt# touch m
-touch: cannot touch `m': Read-only file system
-laurel:/mnt#
-
-What am I missing here?
+Gordon
