@@ -1,80 +1,74 @@
-From: Sandro Dentella <sandro@e-den.it>
-Subject: Re: 3ware 9500s-8 & negative numbers...
-Date: Mon, 20 Sep 2004 17:42:53 +0200
+From: =?iso-8859-1?Q?Agust=EDn_Ciciliani?= <agustin@maderonet.net.ar>
+Subject: Re: Raid 1 - md "Total Disks" question
+Date: Mon, 20 Sep 2004 13:05:03 -0300
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040920154253.GA7720@bluff>
-References: <20040916120440.GA19566@bluff> <Pine.LNX.4.58.0409160807560.6936@chaos.egr.duke.edu>
+Message-ID: <008a01c49f2b$9cb64ea0$6800a8c0@Agus>
+References: <019801c499ab$405f20d0$6800a8c0@Agus><16710.16837.832998.503557@cse.unsw.edu.au><1095374065.4196.22.camel@compaq.xsintricity.com> <16718.6808.294471.886458@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.58.0409160807560.6936@chaos.egr.duke.edu>
-To: Joshua Baker-LePain <jlb17@duke.edu>
-Cc: Sandro Dentella <sandro@e-den.it>, linux-raid@vger.kernel.org
+To: dledford@redhat.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> >   I'd like to know if 3ware 9500s SATA controller is supported by
-> >   3w-xxxx module. 
+Ok, so I will apply the patch. Thank you!
 
-> No, it isn't.  You need 3w-9xxx, which you can download from 3ware.
-
-
-Thanks, I compiled. Now I have a module that loads, recognizes the array but
-sees a negative number of cylinder:
-
-   root@argo-cd scsi # parted /dev/sda
-   GNU Parted 1.4.24
-   Copyright (C) 1998, 1999, 2000, 2001, 2002 Free Software Foundation, Inc.
-   This program is free software, covered by the GNU General Public License.
-
-   This program is distributed in the hope that it will be useful, but WITHOUT ANY
-   WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
-   PARTICULAR PURPOSE.  See the GNU General Public License for more details.
-
-   Using /dev/scsi/host0/bus0/target0/lun0/disc
-   Information: The operating system thinks the geometry on
-   /dev/scsi/host0/bus0/target0/lun0/disc is 151963/255/63.  Therefore, cylinder
-   1024 ends at 8032.499M.
-   (parted) print
-   Disk geometry for /dev/scsi/host0/bus0/target0/lun0/disc: 0.000-1192040.000 megabytes
-   Disk label type: msdos
-   Minor    Start       End     Type      Filesystem  Flags
-   1          0.031     23.532  primary   ext2        boot
-   2         23.533 -905118.019  extended              
-   5         23.563   1004.062  logical   linux-swap  
-   6       1004.093  10589.721  logical   reiserfs    
-   7      10589.752 -905118.019  logical   reiserfs    
+----- Original Message -----=20
+=46rom: "Neil Brown" <neilb@cse.unsw.edu.au>
+To: "Doug Ledford" <dledford@redhat.com>
+Cc: "Agust=EDn Ciciliani" <agustin@maderonet.net.ar>; <linux-raid@vger.=
+kernel.org>; "Marcelo
+Tosatti" <marcelo.tosatti@cyclades.com>
+Sent: Sunday, September 19, 2004 8:47 PM
+Subject: Re: Raid 1 - md "Total Disks" question
 
 
-This same problems (guessing...) is reported bu GRUB that reports:
-   'Error 24: Attempt to access block outside partition'
-as you can see below. What possible couse do you see?
+> On Thursday September 16, dledford@redhat.com wrote:
+> > On Mon, 2004-09-13 at 20:56, Neil Brown wrote:
+> > > On Monday September 13, agustin@maderonet.net.ar wrote:
+> > > > Hi Everybody,
+> > > >
+> > > > I was wondering if you could take a look to the following and g=
+ive some advice...
+I just
+> > > > have TWO SATA WD800 disks and "mdadm" says I have "three" and o=
+ne of
+> > > > them has "failed"!!!
+> > >
+> > > It's just some odd accounting in the kernel.  Don't worry about i=
+t.
+> >
+> > It is just some odd accounting stuff, but it's hardly something I w=
+ould
+> > say "don't worry about it".  I had to chase a similar looking probl=
+em
+> > down in our RHEL3 product line.  In fact, it was raid1 where I was
+> > seeing this problem.  I've attached the email I sent about the prob=
+lem
+> > to the internal kernel people, the patch I originally sent in for i=
+t,
+> > and the update patch that catches a couple spots I originally misse=
+d in
+> > my first patch (apologies if my mailer horks this up, haven't tried=
+ to
+> > send sent mail in exactly the way I'm trying it now).
+>
+> Well, the accounting and the locking are really to separate issues,
+> but your patch looks good, thanks.
+>
+> NeilBrown
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
 
-Thanks In Advance.
-sandro
-*:-)
 
-
-
-   grub> root (hd0,0)
-    Filesystem type is ext2fs, partition type 0x83
-
-   grub> setup (hd0)
-    Checking if "/boot/grub/stage1" exists... no
-    Checking if "/grub/stage1" exists... yes
-    Checking if "/grub/stage2" exists... yes
-    Checking if "/grub/e2fs_stage1_5" exists... yes
-    Running "embed /grub/e2fs_stage1_5 (hd0)"...  16 sectors are embedded.
-   succeeded
-    Running "install /grub/stage1 d (hd0) (hd0)1+16 p (hd0,0)/grub/stage2 /grub/me
-   nu.lst"... failed
-
-   Error 24: Attempt to access block outside partition
-
-
-
-
--- 
-Sandro Dentella  *:-)
-e-mail: sandro@e-den.it 
-http://www.tksql.org                    TkSQL Home page - My GPL work
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
