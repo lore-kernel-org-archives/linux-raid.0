@@ -1,41 +1,33 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: Mdadm dirty, no errors?
-Date: Fri, 23 Aug 2002 14:17:07 +1000
+From: Jeroen Vriesman <jeroen.vriesman@dynaserv.nl>
+Subject: very slow reconstruction on firewire disks
+Date: Fri, 23 Aug 2002 13:22:43 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <15717.46915.800251.666970@notabene.cse.unsw.edu.au>
-References: <1122.68.14.247.164.1030103630.squirrel@mail.wearesimply.com>
+Message-ID: <20020823132243.082f383f.jeroen.vriesman@dynaserv.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Jason Pfingstmann on Friday August 23
-To: Jason Pfingstmann <stclists@wearesimply.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Friday August 23, stclists@wearesimply.com wrote:
-...
->           State : dirty, no-errors
-...
-> 
-> Again,  why is State:  dirty, no-errors??  Is this normal?
-> 
+Dear mr. linux-raid,
 
-Yes, that is normal.  While an array is active, it is 'dirty', as
-there could be parity blocks that are not correct (new data has hit
-disc but new parity block hasn't yet, or vice-versa).
+I'm running kernel 2.4.19 with two firewire disks attached (Maxtor 60G), as a normal disk they work fine, but when I configure it as raid-1 with the md module, the reconstruction would take about 60 days.
 
-Whenever you do
-   mdadm -D /dev/mdX
+In the log I get this:
 
-you will always get "dirty", unless you have set it to --readonly first.
+Aug 24 11:48:54 syngloom kernel: Read (10) 00 00 00 19 3f 00 00 30 00
+Aug 24 11:49:54 syngloom kernel: ieee1394: sbp2: aborting sbp2 command
+Aug 24 11:49:54 syngloom kernel: Write (10) 00 00 00 1a 3f 00 00 28 00
+Aug 24 11:50:54 syngloom kernel: ieee1394: sbp2: aborting sbp2 command
+Aug 24 11:50:54 syngloom kernel: Write (10) 00 00 00 1c 3f 00 00 18 00
+Aug 24 11:51:54 syngloom kernel: ieee1394: sbp2: aborting sbp2 command
+Aug 24 11:51:54 syngloom kernel: Write (10) 00 00 00 1e 3f 00 00 08 00
+Aug 24 11:52:54 syngloom kernel: ieee1394: sbp2: aborting sbp2 command
+Aug 24 11:52:54 syngloom kernel: Read (10) 00 00 00 2b bf 00 00 18 00
+Aug 24 11:53:54 syngloom kernel: ieee1394: sbp2: aborting sbp2 command
 
-If you shut the array down with
-   mdadm -S /dev/md0
-then ook at individual devices with, e.g.
-   mdadm -E /dev/hda1
+Note that it is exactly every 60 seconds, don't know if this is an md or an sbp2 problem.
 
-you will see that the array is clean.
-
-NeilBrown
-
+Regards,
+Jeroen.
