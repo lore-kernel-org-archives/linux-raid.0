@@ -1,47 +1,54 @@
 From: Andreas Dilger <adilger@clusterfs.com>
 Subject: Re: fsck out of memory
-Date: Fri, 7 Feb 2003 10:24:42 -0700
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20030207102442.O18636@schatzie.adilger.int>
-References: <Pine.LNX.4.53.0302071555110.718@ddx.a2000.nu>
+Date: Fri, 7 Feb 2003 10:28:58 -0700
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <20030207102858.P18636@schatzie.adilger.int>
+References: <Pine.LNX.4.53.0302071555110.718@ddx.a2000.nu> <Pine.LNX.4.53.0302071800200.1306@ddx.a2000.nu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.53.0302071555110.718@ddx.a2000.nu>; from kernel@ddx.a2000.nu on Fri, Feb 07, 2003 at 04:17:35PM +0100
-To: kernel@ddx.a2000.nu
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+In-Reply-To: <Pine.LNX.4.53.0302071800200.1306@ddx.a2000.nu>; from raid@a2000.nu on Fri, Feb 07, 2003 at 06:07:09PM +0100
+To: Stephan van Hienen <raid@a2000.nu>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, ext2-devel@lists.sourceforge.net, Theodore Ts'o <tytso@mit.edu>
 List-Id: linux-raid.ids
 
-On Feb 07, 2003  16:17 +0100, kernel@ddx.a2000.nu wrote:
-> i'm trying to run e2fsk after a system hang
-> after 1 hour running (70%) which had a memory usage for about 128M
-> i get these errors in the dmesg :
+On Feb 07, 2003  18:07 +0100, Stephan van Hienen wrote:
+> ok added some swap space (4 gigabyte)
 > 
-> Out of Memory: Killed process 732 (fsck.ext2).
-> Out of Memory: Killed process 732 (fsck.ext2).
-> Out of Memory: Killed process 732 (fsck.ext2).
-> Out of Memory: Killed process 732 (fsck.ext2).
+> usage was about 2.5GB
 > 
-> I really wonder if there is something wrong with e2fsk ?
-> does it really need that much memory ?
-> (fsck on 2.2TB /dev/md0)
+> till aborted :
+> 
+> d0:  64450554/dev/md0:  64450555/dev/md0:  64450556/dev/md0:
+> 64450557/dev/md0:  64450558/dev/md0:  64450559/dev/md0:  64450560/dev/md0:
+> 64450561/dev/md0:  64450562/dev/md0:  64450563/dev/md0:  64450564/dev/md0:
+> 64450565/dev/md0:  64450566/dev/md0:  64450567/dev/md0:  64450568/dev/md0:
+> 64450569/dev/md0:  64450570/dev/md0:  64450571/dev/md0:  64450572/dev/md0:
+> 64450573/dev/md0:  64450574/dev/md0:  64450575/dev/md0:  64450576/dev/md0:
+> 64450577/dev/md0:  64450578/dev/md0:  64450579/dev/md0:  64450580/dev/md0:
+> 64450581/dev/md0:  64450582/dev/md0:  64450583/dev/md0:  64450584/dev/md0:
+> 64450585/dev/md0:  64450586/dev/md0:  64450587/dev/md0:  64450588/dev/md0:
+> 64450589/dev/md0:  64450590e2fsck: Can't allocate block element
+> 
+> e2fsck: aborted
+> /dev/md0: 153834/76922880 files (9.3% non-contiguous), 181680730/615381536
+> blocks
+> 
+> any hints ?
+> (i really would like to get back a clean fs (with ext3 journal))
 
-I don't think many people have run e2fsck on such a large filesystem
-before when there are lots of problems.  It is entirely possible that
-you need so much memory for such a large filesystem.  I would suggest
-creating a larger swap file temporarily (on some other partition) so
-that e2fsck can complete.
+Hmm, I don't think that will be easy...  By default e2fsck will load all
+of the inode blocks into memory (pretty sure at least), and if you have
+76922880 inodes that is 9.6GB of memory, which you can't allocate from a
+single process on i386 no matter how much swap you have.  2.5GB sounds
+about right for the maximum amount of memory one can allocate.
 
-It _may_ be that e2fsck could reduce memory consumption somewhere (or
-enable a "use less memory but run slowly" heuristic, but that isn't
-very likely, or if it was it would be very slow.
-
-Regarding the "use fsck.ext3" response - ignore it, it is incorrect.
-There is no difference at all between fsck.ext2, fsck.ext3, e2fsck.
+Ted, any suggestions?
 
 Cheers, Andreas
 --
 Andreas Dilger
 http://sourceforge.net/projects/ext2resize/
 http://www-mddsp.enel.ucalgary.ca/People/adilger/
+
