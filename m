@@ -1,18 +1,39 @@
 From: "Guy" <bugzilla@watkins-home.com>
 Subject: RE: Looking for the cause of poor I/O performance
-Date: Wed, 8 Dec 2004 17:25:24 -0500
-Message-ID: <200412082225.iB8MPT915415@www.watkins-home.com>
-References: <20041208220004.GA13541@hamachi.us>
+Date: Wed, 8 Dec 2004 17:41:45 -0500
+Message-ID: <200412082241.iB8Mfo915469@www.watkins-home.com>
+References: <200412082225.iB8MPT915415@www.watkins-home.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20041208220004.GA13541@hamachi.us>
+In-Reply-To: <200412082225.iB8MPT915415@www.watkins-home.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Steven Ihde' <x-linux-raid@hamachi.dyndns.org>
+To: 'Guy' <bugzilla@watkins-home.com>, 'Steven Ihde' <x-linux-raid@hamachi.dyndns.org>
 Cc: 'David Greaves' <david@dgreaves.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+I also tried changing /proc/sys/vm/max-readahead.
+I tried the default of 31, 0 and 127.  All gave me about the same
+performance.
+
+I started testing the speed with the dd command below.  It complete in about
+12.9 seconds.  None of the read ahead changes seem to affect my speed.
+Everything is now set to 0, still 12.9 seconds.
+12.9 seconds = about 79.38 MB/sec.
+
+time dd if=/dev/md2 of=/dev/null bs=1024k count=1024
+
+Guy
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Guy
+Sent: Wednesday, December 08, 2004 5:25 PM
+To: 'Steven Ihde'
+Cc: 'David Greaves'; linux-raid@vger.kernel.org
+Subject: RE: Looking for the cause of poor I/O performance
 
 Good question!
 "One other point -- apparently 2.6 allows one to set the read-ahead on a
@@ -229,4 +250,9 @@ as
 > >>Thanks,
 > >>
 > >>Steve
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
