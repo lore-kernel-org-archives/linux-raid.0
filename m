@@ -1,68 +1,84 @@
-From: "Andre' Breiler" <andre.breiler@null-mx.org>
-Subject: Re: RAID strangeness
-Date: Tue, 27 May 2003 07:23:08 +0000 (GMT)
+From: Steven Dake <sdake@mvista.com>
+Subject: Re: cluster RAID
+Date: Tue, 27 May 2003 12:24:57 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.33.0305270713440.680-100000@pegasus.teamwerk.com>
-References: <3ED3158B.3080200@whack.org>
+Message-ID: <3ED3BB89.5070703@mvista.com>
+References: <000801c3228d$c6816dd0$3200a8c0@nimiak> <16080.41341.194808.277607@notabene.cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3ED3158B.3080200@whack.org>
-To: Bruce Pinsky <bep@whack.org>
-Cc: linux-raid@vger.kernel.org
+In-Reply-To: <16080.41341.194808.277607@notabene.cse.unsw.edu.au>
+To: Neil Brown <neilb@cse.unsw.edu.au>
+Cc: Kai-Min Sung <k@kaisung.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Bruce,
+Cluster RAID (accessing one storage device from multiple nodes) is 
+useful when using a clustered volume manager or clustered filesystem.  
+Without clustered RAID underneath, it is difficult to provide redundancy 
+unless the clustered volume manager provides this functionality (which 
+it currently does not).
 
-On Tue, 27 May 2003, Bruce Pinsky wrote:
+It is possible to deal with the consistency issue but requires node-node 
+communication within the cluster, and hence, a cluster framework.
 
-> I have a four disk RAID 5 array running on my SPARC 10 running Debian
-> 3.0+ (2.4.20 kernel) and RAID raidtools-0.90 with this raidtab:
+Thanks
+-steve
 
-[snip] as it has nothing to do with raid.
+Neil Brown wrote:
 
-> It was up and running for more than a month until this weekend.  My
-> system rebooted unexpectedly (looks like a power failure at this point)
-> and when it rebooted I got this message:
+>On Sunday May 25, k@kaisung.com wrote:
+>  
 >
-> raid5: measuring checksumming speed
->     8regs     :    60.000 MB/sec
->     32regs    :    62.400 MB/sec
->     SPARC     :    81.600 MB/sec
-> raid5: using function: SPARC (81.600 MB/sec)
-> md: md driver 0.90.0 MAX_MD_DEVS=256, MD_SB_DISKS=27
-> md: raid5 personality registered as nr 4
-> md: could not lock sdc1, zero-size? Marking faulty.
-> md: could not import sdc1!
-> md: autostart sdc1 failed!
+>>Hi,
+>>	I have a shared storage environment (2 disks accessible by 2
+>>nodes through iSCSI) and am trying to assemble the same RAID-1 array on
+>>both nodes. Whenever I try to assemble the RAID-1 array on the second
+>>node, it always begins reconstructing the mirror. My guess for why it's
+>>doing this is that after the first node assembles the array, it marks a
+>>dirty flag in the RAID metadata blocks on disk. (It only resets the
+>>dirty flag when it deactivates the array). When the second node tries to
+>>assemble the same array, it reads the metadata blocks and sees that it
+>>is dirty. Then it proceeds with reconstruction. My question is does
+>>reconstruction happen, simply because the dirty flag is set? Why doesn't
+>>it first check if the checksums on all the mirror disks match (i.e. the
+>>array is consistent) and bypass reconstruction? Btw, I plan for both
+>>nodes to be accessing different partitions in the array, so there
+>>shouldn't be any synchronization problems. Also, I'm using mdadm-1.2.0
+>>for my testing.
+>>    
+>>
 >
-> Investigation has led me to think that my partition tables have
-> disappeared based on this:
-
-> Disk /dev/sdc: 64 heads, 32 sectors, 8683 cylinders
-> Units = cylinders of 2048 * 512 bytes
+>What you are doing doesn't really make sense (at least not to me).
 >
-> Disk /dev/sdc doesn't contain a valid partition table
-
-I guess your partitions started from the beginning of the disk.
-
-> Thankfully nothing too important on the array yet, but I'm concerned for
-> when I do put stuff on it.  Anyone seen a situation where the array
-> craps and the partition tables are missing?   Can it be recovered?
-> Something wrong with my RAID setup?
-
-Yes I've seen that before but it isn't a problem with raid but sparc/linux
-.
-
-If you start your partition from the beginning of your drive then
-the partition table will be overwritten when data is written at the
-beginning of the first partition.
-
-You can recover your partition table (guess the bounderies) but make sure
-you don't write it to the drive or you will overwrite a bit of the first
-partition.
-
-Hope that helps,
- Andre'
--- 
+>Having two hosts both trying to control a raid1 array cannot work as
+>neither host can make an guarantees about consistancy.
+>
+>If you plan for both nodes to be accessing different partitions on the
+>array, why not be up-front about that and have two different raid1
+>arrays.
+>
+>e.g. If your two drives are sda and sdb, then partition them into
+>  sda1, sda2, sdb1, sdb2
+>
+>and then make md0 on node X from sda1 and sdb1, and
+>   md3 (or whatever) on node Y from sda2 and sdb2.
+>
+>
+>To answer your question - yes, the second node reconstucts because the
+>super block is marked dirty.  I'm not sure what you mean by "check if
+>the checksums on all mirror disks match".  What checksums?
+>  checksums of all data blocks?  That is as much work as a complete resync
+>  checksums of super blocks?  That wouldn't tell us anything useful.
+>
+>NeilBrown
+>-
+>To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
+>
+>  
+>
 
