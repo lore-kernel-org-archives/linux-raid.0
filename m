@@ -1,14 +1,40 @@
-From: coreyfro@coreyfro.com
-Subject: RAID5 crash and burn
-Date: Sat, 30 Oct 2004 21:59:02 -0700 (PDT)
-Message-ID: <1430.63.204.219.3.1099198742.squirrel@63.204.219.3>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: RAID5 crash and burn
+Date: Sun, 31 Oct 2004 01:18:18 -0400
+Message-ID: <200410310518.i9V5ION22004@www.watkins-home.com>
+References: <1430.63.204.219.3.1099198742.squirrel@63.204.219.3>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1430.63.204.219.3.1099198742.squirrel@63.204.219.3>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: coreyfro@coreyfro.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+Normally I would refer you to the man page for mdadm.
+
+--scan requires the config file, I have read that mdadm will crash if you
+use --scan with out it.
+
+Try this: 
+mdadm --assemble /dev/md2 /dev/hda3 /dev/hdc3 /dev/hde3 /dev/hdi3 /dev/hdk3
+
+or this:
+mdadm --assemble /dev/md2 --force /dev/hda3 /dev/hdc3 /dev/hde3 /dev/hdi3
+/dev/hdk3
+
+I left out hdg3, since you indicate it is the failed disk.
+
+Guy
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of coreyfro@coreyfro.com
+Sent: Sunday, October 31, 2004 12:59 AM
+To: linux-raid@vger.kernel.org
+Subject: RAID5 crash and burn
 
 Its that time of the year again.  My biannual RAID5 crash.  Yippie!
 
@@ -168,4 +194,9 @@ Segmentation fault
 
 ========================================================================
 
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
