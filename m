@@ -1,49 +1,40 @@
-From: "Bill Rugolsky Jr." <brugolsky@telemetry-investments.com>
-Subject: Re: Converting a non-RAID RedHat System to run on Software RAID
-Date: Wed, 10 Sep 2003 09:18:49 -0400
+From: "Eric Wood" <eric@interplas.com>
+Subject: does ext3 trample on mkraid superblocks and visa-versa?
+Date: Wed, 10 Sep 2003 15:27:55 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20030910131849.GA5267@ti19>
-References: <E5DA6395B8F9614EB7A784D628184B200D9A56@hdsmsx402.hd.intel.com>
-Reply-To: "Bill Rugolsky Jr." <brugolsky@telemetry-investments.com>
+Message-ID: <03dd01c377d1$a28c9be0$9100000a@intgrp.com>
+References: <107a01c376fe$a29bdc00$9100000a@intgrp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <E5DA6395B8F9614EB7A784D628184B200D9A56@hdsmsx402.hd.intel.com>
 To: linux-raid@vger.kernel.org
-Cc: Eric Wood <eric@interplas.com>, "Cress, Andrew R" <andrew.r.cress@intel.com>
 List-Id: linux-raid.ids
 
-On Tue, Sep 09, 2003 at 02:37:18PM -0400, Cress, Andrew R wrote:
-> The instructions are oriented to lilo, but the grub equivalent is
-> scripted in files/mdevt script:
-> http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/*checkout*/scsirastools/s
-> csirastools/files/mdevt?rev=HEAD&content-type=text/plain
+I wanted to reword my previous email a little different to hopefully get a
+response on this issue.
 
-A word of caution:
+If I want to mirror an existing ext3 filesystem, then I would
+"mkraid --really-force /dev/md0".  Then /dev/hda1 would copy over to
+/dev/hdc1 because /dev/hda1 is raid-disk 0  and /dev/hdc1 is raid-disk 1.
+If I had cross up this priority number in the raidtab file, then mkraid
+would have copied /dev/hdc1 over top of /dev/hda1 which would be a boo-boo.
 
-One miserable consequence of using GRUB on RAID1 is inadvertent corruption
-of (a small part of the) RAID-1 /boot partition.  Since grub (at least
-in Red Hat Rawhide) doesn't grok MD, if one sets up a RAID-1 /boot
-partitiion, say
+Now as I understand it, mkraid adds a superblock at the far-end block of the
+partition (whether or not that block is within the filesystem.  It looks
+like ext2 needs to be, but does ext3 need to be fsck'd and resized to
+protect this block?  Or does ext3 automatically see a raid superblock there
+and help protect it without fck'ing and resizing.  Or do you have to
+tune2fs -o ^nojournal the filesystem back into an ext2 system because ext3,
+journal block, mkraid, and raid superblocks step on each other's toes?
 
-   /dev/md1 ->  (/dev/sda1,dev/sdb1),
+-Eric Wood
 
-then modifications made at the grub prompt modify the filesystem and
-desynchronizes the RAID1 set. [It seems that simply using 'e' to edit the
-kernel args has this effect, though I haven't verified it myself.]  We see
-this corruption in MD5 variation in our nightly integrity-verification
-cron job.
+Eric Wood wrote:
+> http://unthought.net/Software-RAID.HOWTO/Software-RAID.HOWTO-4.html#ss4.14
+> 4. Sect. 4.14.14.  Do I first have to convert from ext3 back to ext2?
+> Since I use ext3 does this step still apply or does mkraid add the
+> second superblock in an acceptable manor for ext3?  Do I still have
+> to resize2fs the md devices?
 
-Grub has a --read-only option when running the grub shell from Linux;
-I haven't yet found the time to delve into the code to see whether it
-is simple to do the same in the stage2 loader, or whether the read-only
-behavior is purely a function of the device open() when running the grub
-shell.
-
-Trivial workaround is to resync the second drive in the rc scripts;
-for the typical 50-100MB /boot partition, this takes only a few seconds.
- 
-Regards,
-
-	Bill Rugolsky
