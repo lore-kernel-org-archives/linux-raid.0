@@ -1,40 +1,53 @@
 From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: RAID 4 and RAID 5
-Date: Tue, 15 Oct 2002 20:25:20 +1000
+Subject: Re: Md says 'bug' to kernel log
+Date: Tue, 15 Oct 2002 20:47:15 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <15787.60688.596988.799195@notabene.cse.unsw.edu.au>
-References: <3DABCC4A.9070206@webmail.co.za>
+Message-ID: <15787.62003.633385.687754@notabene.cse.unsw.edu.au>
+References: <20021012065457.GA26887@modeemi.fi>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Vladimir Milovanovic on Tuesday October 15
-To: Vladimir Milovanovic <vlad@webmail.co.za>
+In-Reply-To: message from Erkki Seppala on Saturday October 12
+To: Erkki Seppala <flux@modeemi.fi>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday October 15, vlad@webmail.co.za wrote:
+On Saturday October 12, flux@modeemi.fi wrote:
+...
 > 
-> Now here is the crunch : both RAID 4 and RAID 5 give me EXACTLY the same 
-> results, both in read write performance. I am using many programs for 
-> benching, hdparm, bonnie, iozone, tiobench and the results are 
-> consistent and repeatable.
+> After moving the data from the 'failed disk' to the raid, I tried to
+> raidhotadd the failed device, however the operation failed as the disk was
+> too small. A little bit of a surprise to me, because the disks were the same
+> model, but the geometry was different, hence there was a few blocks
+> difference..
 > 
-> Does anyone know with any degree of certainity whether RAID 4 is 
-> supported in Linux? What exactly is the status of that? I know that 
-> there is no point in using RAID 4 over RAID 5 but I want to know so that 
-> I am able to document it.
+> While trying to do that, I accidently added the whole disk to the raid. Of
+> course I tried to raidhotremove it, but that couldn't be done anymore, I
+> assumed due to the fact that it was already rebuilding the disk.
 
-raid4 is definately supported in linux.  It is supported by the raid5
-driver so there is a possibility of some confusion.  However it sounds
-like you are setting it up correctly.
+Yes.  raidhotremove will only remove an inactive spare or a failed
+device.  Once rebuilding has started, you have to cause the device to
+fail before it can be removed:
 
-You would only expect to see a performance difference between raid5
-and raid5 when doing lots of small widely distributed random writes.
-You would probably also need a fairly large array (at least 5 drives)
-to be able to measure much and you would need to be sure that none of
-the busses are in a position to cause a bottle neck.  Basically you
-need to get the raid4 parity drive overloaded with parity read/updates
-before you will see it slow down.
+   raidsetfaulty /dev/md0 /dev/hdX
+   raidhotremove /dev/md0 /dev/hdX
+
+
+> 
+> But I couldn't raithotremove it 800 minutes later either, which led me to
+> read the kernel logs, where I discovered the bug-statement.
+> 
+> Here follows a ~50-line exerpt from the log. The complete log is available
+> at http://www.modeemi.fi/~flux/kern.log . The time (19:31) fits nicely to
+> the time I started the raid and then tried to remove it. This can be seen in
+> the full log.
+> 
+> md: bug in file md.c, line 2351
+
+That MD_BUG shouldn't really be there.  It is just saying that you
+tried to remove a device that was busy.  That should cause an error,
+but not a MD_BUG... however MD_BUG is not as catastrophic as BUG, all
+you get is annoying (and confusing) error messages.
 
 NeilBrown
