@@ -1,73 +1,36 @@
-From: Sandro Dentella <sandro@e-den.it>
-Subject: raid1, cylinder, LBA and inexistent partitions
-Date: Mon, 10 Jan 2005 17:51:28 +0100
-Message-ID: <20050110165128.GA28377@bluff>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Scott Laird <scott@sigkill.org>
+Subject: Irritating RAID problem (kept spare, kicked data disks due to timestamp)
+Date: Mon, 10 Jan 2005 08:53:20 -0800
+Message-ID: <21F89945-6328-11D9-B5C2-000393667D82@sigkill.org>
+Mime-Version: 1.0 (Apple Message framework v619)
+Content-Type: text/plain; charset=US-ASCII; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi all,
+I found an interesting problem with software RAID 5 in 2.6.10:
 
-   A customer of mine have a sistem w/ very simple raid1
-   configuration. Yesterday, the UPS has been manually switched off by
-   mistake. The system woke up in degraded mode but in a strange way: one of
-   the discs does not seem to be partitioned, according to devfs. So that I
-   cannot use mdadm to assemble the partition. 
+I have a RAID 5 array, recently created with mdadm.  It consists of 4 
+160 GB drives plus a spare.  All 4 drives were active and fully synced 
+when the box locked up due to some sort of hardware problem.  When I 
+rebooted, the kernel refused to start the array because all 4 drives 
+had an older timestamp then the spare.  So the RAID code kicked them 
+out, one after another, until it was left with just a single spare 
+disk.  Since it can't start an array with 0/4 disks, it failed.  I was 
+able to repeat this with 2.6.10 and 2.6.2 (the only other kernel I had 
+handy).  Pulling the spare disk and rebooting fixed everything.
 
-   More: fdisk, cfdisk and /proc do not agree on the unmber of
-   cylinders. Only cfdisk sees it as remapped in LBA mode (9964) the others
-   see 158816: does that mean anything usefull? Should I change the disk (3
-   weeks) or can I try something different?
+I don't have an record of the logs during this period--the box was in 
+single-user mode with disk problems, and I didn't want to write 
+anything to the disk.
 
-   Thanks in advance
-   sandro
-   *:-)
-
-   PS: not to mention that the disk on bus1 was partitioned exactly as the
-   other one...
-
-# tree /dev/ide
-/dev/ide
-`-- host0
-    |-- bus0
-    |   `-- target0
-    |       `-- lun0
-    |           |-- disc
-    |           |-- part1
-    |           |-- part2
-    |           |-- part5
-    |           |-- part6
-    |           `-- part7
-    `-- bus1
-        |-- target0
-        |   `-- lun0
-        |       `-- disc
-        `-- target1
-            `-- lun0
-                `-- cd
-
-root@fw-voltimum root # cat /proc/mdstat 
-Personalities : [raid1] 
-read_ahead 1024 sectors
-md0 : active raid1 ide/host0/bus0/target0/lun0/part1[1]
-      32000 blocks [2/1] [_U]
-      
-md1 : active raid1 ide/host0/bus0/target0/lun0/part5[1]
-      995904 blocks [2/1] [_U]
-      
-md2 : active raid1 ide/host0/bus0/target0/lun0/part6[1]
-      1951744 blocks [2/1] [_U]
-      
-md3 : active raid1 ide/host0/bus0/target0/lun0/part7[1]
-      77055616 blocks [2/1] [_U]
+Logically, it seems like the kernel's RAID recovery code shouldn't look 
+for the newest disk, it should really look for a quorum, even if that 
+means kicking out newer timestamps.  *Especially* when the newer 
+timestamp is the spare disk.
 
 
+Scott
 
--- 
-Sandro Dentella  *:-)
-e-mail: sandro@e-den.it 
-http://www.tksql.org                    TkSQL Home page - My GPL work
