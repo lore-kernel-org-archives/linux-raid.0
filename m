@@ -1,65 +1,46 @@
-From: Oliver Tennert <tennert@science-computing.de>
-Subject: Re: RAIDn technology
-Date: Fri, 13 Feb 2004 08:37:16 +0100 (CET)
+From: Ming Zhang <mingz@ele.uri.edu>
+Subject: Re: Adding Reed-Solomon Personality to MD, need help/advice
+Date: Fri, 13 Feb 2004 09:18:30 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0402130835330.8552-100000@picard.science-computing.de>
-References: <20040213071015.GB1555@intern.kubla.de>
+Message-ID: <1076681910.1478.10.camel@dyn251.ele.uri.edu>
+References: <6.0.1.1.2.20040130235924.03f39710@mail.athenet.net>
+	 <16411.35140.244946.630202@notabene.cse.unsw.edu.au>
+	 <6.0.1.1.2.20040212220348.0289ee48@a.cs.okstate.edu>
+Reply-To: mingz@ele.uri.edu
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20040213071015.GB1555@intern.kubla.de>
-To: Dominik Kubla <dominik@kubla.de>
+In-Reply-To: <6.0.1.1.2.20040212220348.0289ee48@a.cs.okstate.edu>
+To: Nathan Lewis <nathapl@cs.okstate.edu>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 13 Feb 2004, Dominik Kubla wrote:
+The new book Linux Kernel Development and 
+http://lwn.net/Articles/driver-porting/
 
-> On Wed, Feb 11, 2004 at 03:20:05PM +0100, Oliver Tennert wrote:
-> >
-> > Hello,
-> >
-> > has anybody ever heard of RAID^n technology, developed and patented by a
-> > company called Inostor (http://www.inostor.com)?
->
-> Yes. Similiar to the RAID6 apporach of the md device. Tandberg Data. seems to
-> be using it.  There is a (german language article) by somebody from Tandberg
-> at:
-> http://www.speicherguide.de/magazin/background.asp?theID=112
->
-> Just asking google for "RAIDn" will give you a bunch of references...
+may give u some help.
 
 
-True, it points a bunch of marketing papers, but none of any value. What
-I am interested in is the actual algorithms used because they state that
-they DO NOT use any kind of RS code... strange...
+ming
 
-Best regards
-
-Oliver Tennert
-
-
-
-
-
-
-
-
-
->
-> Regards,
->   Dominik Kubla
-> --
-> When God created two sexes, he may have been overdoing it.
-> 		-- Charles Merrill Smith
->
-
-__
-________________________________________creating IT solutions
-
-Dr. Oliver Tennert			science + computing ag
-phone   +49(0)7071 9457-598		Hagellocher Weg 71-75
-fax     +49(0)7071 9457-411		D-72070 Tuebingen, Germany
-O.Tennert@science-computing.de		www.science-computing.de
-
-
+On Thu, 2004-02-12 at 23:35, Nathan Lewis wrote:
+> Now that I've got working Reed Soloman code, I need to make a decision 
+> really quickly on whether to use 2.4 or 2.6.  I've got both, and it does 
+> look like the raid code is much cleaner in 2.6, and it also helps that 
+> there is raid6 for 2.6, which shows me approximately where I'd need to 
+> modify code to turn it into RS.  However, I really need some documentation 
+> on the bio structure.  The bio.h file is sorely lacking comments, and, of 
+> course, the Rubini book isn't going to help me.
+> 
+> Can someone point me at some documentation for the bio structure?
+> 
+> 
+> >I strongly agree with Peter.  Base your work on 2.6, not 2.4.  The
+> >raid code is much cleaner in 2.6.
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
