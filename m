@@ -1,49 +1,41 @@
-From: "Cal Webster" <kc130iseo@coastalnet.com>
-Subject: RE: raidreconf: Successful RAID5 Reconstruction (re-size)
-Date: Wed, 26 Jun 2002 15:08:41 -0600
+From: "bo" <bo@sosnetwork.net>
+Subject: resync patch & Neil's recent patches
+Date: Wed, 26 Jun 2002 15:14:55 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <NDBBIAKEEKGGEIKCBKNAKEOLDAAA.kc130iseo@coastalnet.com>
-References: <20020626184440.GD4914@unthought.net>
-Reply-To: <cwebster@ec.rr.com>
+Message-ID: <009b01c21d5e$e68c7050$5701a8c0@bomoon>
+References: <1025113529.1793.8.camel@jason.storix.com><15642.421.825234.16918@notabene.cse.unsw.edu.au><1025114738.1794.19.camel@jason.storix.com> <15642.1309.651737.496391@notabene.cse.unsw.edu.au>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20020626184440.GD4914@unthought.net>
-To: Jakob Oestergaard <jakob@unthought.net>
-Cc: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@cse.unsw.edu.au>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Neil & Raiders,
+
+I am using Debian 2.4.5 linux(for ARM ). The "resync" speed is about
+26M/sec.
+I have 8*120G HDDs so it takes about 24 hours.
+
+I saw some bug fixes and improvement on this topic from
+ http://marc.theaimsgroup.com/?l=linux-kernel&m=100876771508736&w=2
+
+Q1: Can I apply this patch to my 2.4.5 linux?
+Q2: Which linux2.4.x has this fix?
+
+Q3: Neil released 22 + 3 patches a couple of weeks ago.
+       Can I apply these pathes to 2.4.5?
+
+       Which linux 2.4.x will include these fixes?
+
+Q3: The default MAX resync speed is 200M/sec. I am getting about
+       10 % of this default speed. Could anyone get it? Could I get
+       this average speed when I apply these patches?
+
+Thanks,
+
+Bo
 
 
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org
-> [mailto:linux-raid-owner@vger.kernel.org]On Behalf Of Jakob Oestergaard
-> Sent: Wednesday, June 26, 2002 12:45 PM
-> To: cwebster@ec.rr.com
-> Cc: linux-raid@vger.kernel.org
-> Subject: Re: raidreconf: Successful RAID5 Reconstruction (re-size)
->
-[snip]
-> I'll see if I can reproduce the spare-disk "feature" tonight.
-
-Good luck!
-
-If I screw up the restore and find I've got time on my hands I'll see if I
-can recreate the conditions prior to mkraid. It doesn't take long to build
-an array with the old configuration, put a little data on it. If the re-size
-wouldn't take as long with less data, it might be worth it. That is, _IF_ I
-manage to flub the restore.
-
-> (If anyone else need their arrays screwed up, you know where to get the
->  tools !   ;)
-
-You're killing me! >:-) I needed a good laugh. People around here don't have
-a sense of humor when "babies" are in my care.
-
---Cal Webster
-
-BTW, you don't need to cc: my personal email. I subscribe to the list and
-check it from home and work.
 
