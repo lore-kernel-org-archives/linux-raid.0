@@ -1,34 +1,43 @@
-From: Friedrich Lobenstock <fl@fl.priv.at>
-Subject: Comments on a raid howto for devil-linux
-Date: Thu, 23 Jan 2003 02:36:49 +0100
+From: "bmoon" <bo@anthologysolutions.com>
+Subject: Deadlock on mkfs while resyncing the raid1 device
+Date: Wed, 22 Jan 2003 18:26:53 -0800
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3E2F4731.904@fl.priv.at>
+Message-ID: <000b01c2c286$e4a574d0$6a01a8c0@bmoon>
+References: <Pine.LNX.4.44.0301221900450.11300-100000@pcmy.sei.cmu.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Linux RAID Mailing Liste <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello community!
+Hello Raiders!
 
-Might someone have a quick glance over my raid howto
-for devil-linux? Just take aside that it's not for a normal
-disk based distro and tell me if anything is really wrong.
+This is special for ARM linux with Debian package.
+I tried with linux2418 on pc without any problem.
 
-  ftp://ftp.fl.priv.at/pub/devil-linux/RAID-HOWTO.txt
+I am running linux2.4.18 with debian2.0 on ARM based system.
+The system will be hang if I try to run "mkfs" on the md device which
+is now resyncing on reboot after crash.
 
-As background info, you might want to take a look at the
-startup script:
-  ftp://ftp.fl.priv.at/pub/devil-linux/0.5/etc/init.d/mountfs
+Does the SMP compile option make any difference on this problem?
 
-Thanks for any feedback.
+Here are some clues and symptoms from my test on this hang case;
 
--- 
-MfG / Regards
-Friedrich Lobenstock
-____________________________________________________________________
-Friedrich Lobenstock         FL226-RIPE             Internetservices
-URL: http://www.fl.priv.at/                     Email: fl@fl.priv.at
-____________________________________________________________________
+From " raid1_sync_request" in raid1.c,
+
+It hangs while it is looping in " while (sector_nr >= conf->start_pending)".
+
+If it has 0 on conf->cnt_pending it should be OK. However, it is non-zero
+on conf->cnt_pending when we do "mkfs" while it is resyncing.
+
+Do you have any idea to solve or to work around this problem?
+
+Are there anyone who tried the ARM linux with SMP option? How?
+
+
+THanks in advance,
+
+BO
 
