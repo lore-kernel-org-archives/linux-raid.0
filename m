@@ -1,49 +1,81 @@
-From: Scibek@pcp03394610pcs.midltn01.ct.comcast.net
-Subject: Free Morgage Quotes... TheBest rates Nationwide... Inside
-Date: Tue, 06 Jul 2004 06:00:37 +0000
+From: Mark Overmeer <Mark@Overmeer.net>
+Subject: Re: Really fucked up raid0 array
+Date: Tue, 6 Jul 2004 09:22:35 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <CL7C3GKK9767JAF5@pcp03394610pcs.midltn01.ct.comcast.net>
-References: <85HG97DI9G19LE30@vger.kernel.org>
+Message-ID: <20040706092234.K31606@speeltuin.ATComputing.nl>
+References: <40E93DFC.6070507@pulz.no> <200407051658.02492.maarten@ultratux.net> <40E96CA5.9030500@pulz.no> <200407052029.48810.maarten@ultratux.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <85HG97DI9G19LE30@vger.kernel.org>
-To: Linux-raid <linux-raid@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <200407052029.48810.maarten@ultratux.net>; from maarten@ultratux.net on Mon, Jul 05, 2004 at 08:29:48PM +0200
+To: maarten van den Berg <maarten@ultratux.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Programs for You
+* maarten van den Berg (maarten@ultratux.net) [040705 20:22]:
+> > >Maybe you cannot umount it because it's still in use ?  In that case, run
+> > >'lsof | grep <mountpoint>' to see what resources use files on that
+> > > mountpoint, and terminate these processes first.
+> 
+> > Way ahead of you.
+> > lsof freeses to, so i arn't able to find out what is using the disk.
+> >
+> > All programs like:
+> > ps
+> > w
+> > finger
+> > who
+> > lsof
+> > ls
+> >
+> > and stuff like that freeses
 
-> Programs For Every Credit Situation
-> Lenders Reply Within 24hours 
-> Borrow Up To 120 % of Your Homes Value
-> Special Programs For Self Employed
-> No Income Verification Programs
+What I recall from a little investigation way-back, when a hanging NFS
+frooze the system all the time, this has to do with your mount-point...
 
-http://etIndCo.fkmjecb.info/?7k9qFX7NcbK4s77zcMWvGR
+Most program (I do not understand why, but really nearly all systems)
+call getcwd(), to get their current working directory.  getcwd() is
+quite silly... it does  cd ..; cd ..; cd .. until it arrives at /
+and then it descends back into the tree based in the inodes of the
+directories it encountered... this way, the absolute path (without
+symbolic links) of the command is found.
 
+Well, a problem appears when jumping up (with cd ..) over a mount point,
+because the root inode of each file-system has number 2.  In that case,
+descending back to figure out the path, the directory which contains the
+i-node will need to be scanned in detail.  Each mount-point in that
+directory will be asked for the device number.
 
+Asking for a device number of a stale-NFS or RAID-set in an illegal state
+may have different effects.  It is simply an implementation issue in the
+driver.  In some cases it then blocks (waiting for NFS or RAID to come
+up) and sometimes results in an error.  Both have their own advantage:
+for instance, a network connection may be lost for a few seconds, and
+you do not want all programs crash immediately because their NFS data
+is lost.  But when a remote NFS server is down for a long time, you may
+want to get an error as fast as possible.  Or at least you like to be
+able to interrupt the waiting process (in traditional UNIX systems,
+you cannot interrupt processes which are waiting in the kernel. NFS is
+in the kernel, so you cannot interrupt processes waiting for a response
+of the NFS server on those systems: stale NFS)
 
+So, it is really smart (as general rule-of-thumb for the average UNIX
+system) to have the mount-points of sub-systems/network systems away
+from the tree with normal commands.  So: do not mount in /, but for
+instance in /mnt.  Then, if you need to, simplify the path for the users
+by creating symlinks.
 
+    /home -> /mnt/home
+    /mnt/home is RAID array mount-point
 
- My love it knows no bounds
- You have awakened an unkindled fire
- It grows by leaps and bounds
- Larger than any pyre
- 
- Rather than ending, just beginning
- To grow higher, and higher
- With only the sun up above
- All else, neath the fire
- 
- Ecstasy growing
- Adventure and passion lie ahead
- Earth Shakers, down Thunder Road
- Trailing paths of glory, do we go
- 
- Take my hand, my love
- We have many miles to explore
- Until we rest, adventure is with us
- Until we rest, adventure is with us
- 
+Ok, long story, which may or may not have any relation to your
+problem.  However, the behavior you report is very charateric for
+this problem.
+-- 
+               MarkOv
 
+------------------------------------------------------------------------
+drs Mark A.C.J. Overmeer                                MARKOV Solutions
+       Mark@Overmeer.net                          solutions@overmeer.net
+http://Mark.Overmeer.net                   http://solutions.overmeer.net
