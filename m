@@ -1,85 +1,31 @@
-From: dick.streefland@xs4all.nl (Dick Streefland)
-Subject: resync on every raidstart
-Date: Sun, 21 Sep 2003 18:05:40 -0000
+From: Darryl Barlow <darrylb@iprimus.com.au>
+Subject: Initrd, Software Raid and Failure to Mount Root FS
+Date: Mon, 22 Sep 2003 08:57:32 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <7e6d.3f6de874.1ece7@altium.nl>
-Reply-To: dick.streefland@xs4all.nl (Dick Streefland)
+Message-ID: <200309220857.32744.darrylb@iprimus.com.au>
+Reply-To: darrylb@iprimus.com.au
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Every time I stop a RAID1 device with raidstop, and start it again
-with raidstart, it resyncs. Is this normal, or am I doing something
-wrong? Here is an example with a RAID1 device on two loopback devices:
+This is a description of a solved problem which may be of help to others.
 
-# cat /etc/raidtab
-raiddev /dev/md0
-	raid-level	1
-	nr-raid-disks	2
-	nr-spare-disks	0
-	chunk-size	4
-	device		/dev/loop1
-	raid-disk	0
-	device		/dev/loop2
-	raid-disk	1
-# mkraid /dev/md0
-handling MD device /dev/md0
-analyzing super-block
-disk 0: /dev/loop1, 10240kB, raid superblock at 10176kB
-disk 1: /dev/loop2, 10240kB, raid superblock at 10176kB
+I created a raid0 array on md0 intended to boot from a small non-raid boot 
+partition.  I copied the contents of my old root partition on hda1 to md0, 
+changed fstab and set up lilo to boot off the array, but found that no root 
+file system was recognised.
 
-Sep 21 19:30:16 zaphod kernel: md: bind<loop1>
-Sep 21 19:30:16 zaphod kernel: md: bind<loop2>
-Sep 21 19:30:16 zaphod kernel: raid1: raid set md0 active with 2 out of 2 mirrors
-Sep 21 19:30:16 zaphod kernel: md: syncing RAID array md0
-Sep 21 19:30:16 zaphod kernel: md: minimum _guaranteed_ reconstruction speed: 1000 KB/sec/disc.
-Sep 21 19:30:16 zaphod kernel: md: using maximum available idle IO bandwith (but not more than 200000 KB/sec) for reconstruction.
-Sep 21 19:30:16 zaphod kernel: md: using 128k window, over a total of 10176 blocks.
-Sep 21 19:30:17 zaphod kernel: md: md0: sync done.
+It turned out that the problem was lack of support for software raid in my 
+initrd file system.  I compiled and installed my kernel (Debian 2.4.22 using 
+make-kpkg) whilst hda1 was the root filesystem.  The problem was easily 
+rectified by creating and installing a new initrd.img using mkinitrd but 
+specifying the root filesystem as /dev/md0.
 
-# raidstop /dev/md0
-
-Sep 21 19:30:31 zaphod kernel: md: md0 stopped.
-Sep 21 19:30:31 zaphod kernel: md: unbind<loop2>
-Sep 21 19:30:31 zaphod kernel: md: export_rdev(loop2)
-Sep 21 19:30:31 zaphod kernel: md: unbind<loop1>
-Sep 21 19:30:31 zaphod kernel: md: export_rdev(loop1)
-
-# raidstart /dev/md0
-
-Sep 21 19:30:46 zaphod kernel: md: autorun ...
-Sep 21 19:30:46 zaphod kernel: md: considering loop2 ...
-Sep 21 19:30:46 zaphod kernel: md:  adding loop2 ...
-Sep 21 19:30:46 zaphod kernel: md:  adding loop1 ...
-Sep 21 19:30:46 zaphod kernel: md: created md0
-Sep 21 19:30:46 zaphod kernel: md: bind<loop1>
-Sep 21 19:30:46 zaphod kernel: md: bind<loop2>
-Sep 21 19:30:46 zaphod kernel: md: running: <loop2><loop1>
-Sep 21 19:30:46 zaphod kernel: raid1: raid set md0 active with 2 out of 2 mirrors
-Sep 21 19:30:46 zaphod kernel: md: ... autorun DONE.
-Sep 21 19:30:46 zaphod kernel: md: syncing RAID array md0
-Sep 21 19:30:46 zaphod kernel: md: minimum _guaranteed_ reconstruction speed: 1000 KB/sec/disc.
-Sep 21 19:30:46 zaphod kernel: md: using maximum available idle IO bandwith (but not more than 200000 KB/sec) for reconstruction.
-Sep 21 19:30:46 zaphod kernel: md: using 128k window, over a total of 10176 blocks.
-Sep 21 19:30:47 zaphod kernel: md: md0: sync done.
-
-I'm using raidtools2 version 1.00.3, and kernel 2.6.0-test5 with the
-following configuration:
-
-CONFIG_MD=y
-CONFIG_BLK_DEV_MD=y
-# CONFIG_MD_LINEAR is not set
-# CONFIG_MD_RAID0 is not set
-CONFIG_MD_RAID1=y
-# CONFIG_MD_RAID5 is not set
-# CONFIG_MD_MULTIPATH is not set
-CONFIG_BLK_DEV_DM=y
-# CONFIG_DM_IOCTL_V4 is not set
-
+It seems that initrd can be a trap for some newcomers to raid.
 -- 
-Dick Streefland                    ////               De Bilt
-dick.streefland@xs4all.nl         (@ @)       The Netherlands
-------------------------------oOO--(_)--OOo------------------
 
