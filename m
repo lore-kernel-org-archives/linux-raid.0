@@ -1,59 +1,62 @@
 From: Lars Marowsky-Bree <lmb@suse.de>
-Subject: Re: Proposed Enhancements to MD
-Date: Fri, 16 Jan 2004 10:29:29 +0100
+Subject: Re: Proposed enhancements to MD
+Date: Fri, 16 Jan 2004 10:24:47 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040116092929.GG22417@marowsky-bree.de>
-References: <20040113102433.GK8418@marowsky-bree.de> <400432FC.6050209@adaptec.com>
+Message-ID: <20040116092447.GF22417@marowsky-bree.de>
+References: <40033D02.8000207@adaptec.com> <16389.52150.148792.875315@notabene.cse.unsw.edu.au> <20040115155221.A31378@lists.us.dell.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <400432FC.6050209@adaptec.com>
-To: Scott Long <scott_long@adaptec.com>
-Cc: linux-raid@vger.kernel.org
+In-Reply-To: <20040115155221.A31378@lists.us.dell.com>
+To: Matt Domsch <Matt_Domsch@dell.com>, Neil Brown <neilb@cse.unsw.edu.au>
+Cc: Scott Long <scott_long@adaptec.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2004-01-13T11:03:40,
-   Scott Long <scott_long@adaptec.com> said:
+On 2004-01-15T15:52:21,
+   Matt Domsch <Matt_Domsch@dell.com> said:
 
-> The biggest issue here is that a real fdisk table needs to exist on t=
-he
-> array in order for our BIOS to recognise it as a boot device.
+> * Solution works in both 2.4 and 2.6 kernels
+>   - less ideal of two different solutions are needed
 
-Hm, ok.
+Sure, this is important.
 
-> >Yes. Is anything missing from the 2.6 & hotplug & udev solution whic=
-h
-> >you require?
->=20
-> I'll admit that I'm not as familiar with 2.6 as I should be.  Does a
-> disk arrival mechanism already exist?
+> * RAID 0,1 DDF format
+> * Bootable from degraded R1
 
-Yes. hotplug already will get you events when new disks arrive.
+We were looking at extending the boot loader (grub/lilo) to have
+additional support for R1 & multipath. (ie, booting from the first
+drive/path in the set where a consistent image can be read.) If the BIO=
+S
+supports DDF too, this would get even better.
 
-> >In particular, I'm wondering whether partitions using the new activi=
-ty
-> >logging features of md will still be bootable, or whether the boot
-> >partitions need to be 'md classic'.
->=20
-> Our products will only recognise and boot off of DDF arrays.  They ha=
-ve
-> no concept of classic MD metadata.
+=46or the boot drive, this is highly desireable!
 
-OK. The question was meant differently. In 2.6, we have the ability to
-log resyncs and journal updates (see the discussions on linux-raid). I
-was just wondering whether DDF would allow this, or whether it is a
-simple minded "this disk good, that disk bad", and thus the boot drive
-might not be able to use the new md features with the DDF metadata.
+Do you know whether DDF can also support simple multipathing?
 
-> This work was originally started on 2.4.  With the closing of 2.4 and
-> release of 2.6, we are porting are work forward.  It would be nice to
-> integrate the changes into 2.4 also, but we recognise the need for 2.=
-4
-> to remain as stable as possible.
+> * Boot from degraded RAID1 requires setup method early in boot
+>   process, either initrd or kernel code.
 
-2.4 is dead and shouldn't see new features.
+This is needed with DDF too; we need to parse the DDF data somewhere
+afterall.
+
+> From what I see about md:
+> * RAID 0,1 there today, no DDF
+
+Supporting additional metadata is desireable. For 2.6, this is already
+in the code, and I am looking forward to having this feature.
+
+> Am I way off base here? :-)
+
+I don't think so. But for 2.6, the functionality should go either into
+DM or MD, not into emd. I don't care which, really, both sides have goo=
+d
+arguments, none of which _really_ matter from a user-perspective ;-)
+
+(If, in 2.7 time, we rip out MD and fully integrate it all into DM, the=
+n
+we can see further.)
 
 
 Sincerely,
