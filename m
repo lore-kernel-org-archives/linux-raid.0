@@ -1,30 +1,41 @@
-From: Richard Scobie <richard@sauce.co.nz>
-Subject: Re: [PATCH md 2 of 4] Fix raid6 problem
-Date: Mon, 14 Feb 2005 12:14:32 +1300
-Message-ID: <420FDF58.1070100@sauce.co.nz>
-References: <Pine.LNX.4.44.0502131602470.16537-100000@coffee.psychology.mcmaster.ca> <420FDBAA.4010005@h3c.com>
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: [PATCH md 1 of 2] Fix multipath assembly bug
+Date: Mon, 14 Feb 2005 13:52:55 +1100
+Message-ID: <16912.4743.676766.127391@cse.unsw.edu.au>
+References: <20050210091909.1612.patches@notabene>
+	<E1Cz0ER-0000QW-TP@notabene.cse.unsw.edu.au>
+	<420B3BA8.2050907@tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-In-Reply-To: <420FDBAA.4010005@h3c.com>
+In-Reply-To: message from Michael Tokarev on Thursday February 10
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Michael Tokarev <mjt@tls.msk.ru>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Mike Hardy wrote:
+On Thursday February 10, mjt@tls.msk.ru wrote:
+> NeilBrown wrote:
+> > In md, there are "level" number and "personality" numbers.
+> > LEVEL_MULTIPATH is the level number for multipath.
+> > MULTIPATH is the personality number for multipath.
+> 
+> BTW, why the two in the first place?  Isn't it nice to
+> eliminate one of them?
 
-> Its running x86_64 (Fedora Core 3) and the problem is rooted in the 
-> chipset I believe. I don't think its Opterons per se, I think its just 
-> the Athlon take two - which is to say that its a wonderful chip, but 
-> some of the chipsets its saddled with are horrible, and careful 
-> selection (as well as heavy testing prior to putting a machine in 
-> service) is essential.
+Historical reasons....
 
-I'd be interested to hear the outcome, as I'll be looking at Opteron
-systems soon and having been badly bitten on dual Athlon (AMD768
-Southbridge), would prefer to avoid a repeat of the experience.
+The "Level" number corresponds to the common names of the raid levels:
+ 0, 1, 4, 5, 6 ...
+There is also "-1" for "linear", which is a bit of a hack.
 
-Regards,
+The personality numbers are dense small integers: 0 1 2 3 4 ...
+and are used for indexing.
 
-Richard
+You are right: the personality number isn't needed and could be
+eliminated, however it isn't a priority for me yet.  Patches welcome
+....
+
+NeilBrown
+
 
