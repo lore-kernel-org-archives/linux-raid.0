@@ -1,145 +1,152 @@
-From: ptb@lab.it.uc3m.es (Peter T. Breuer)
+From: maarten <maarten@ultratux.net>
 Subject: Re: ext3 journal on software raid (was Re: PROBLEM: Kernel 2.6.10 crashing repeatedly and hard)
-Date: Tue, 4 Jan 2005 21:05:22 +0100
-Message-ID: <2h9ra2-mfj.ln1@news.it.uc3m.es>
-References: <l1nna2-e9i.ln1@news.it.uc3m.es> <200501041436.17447.maarten@ultratux.net> <ctkqa2-4m2.ln1@news.it.uc3m.es> <200501042022.30072.maarten@ultratux.net>
+Date: Tue, 4 Jan 2005 21:55:34 +0100
+Message-ID: <200501042155.34455.maarten@ultratux.net>
+References: <200501030916.j039Gqe23568@inv.it.uc3m.es> <200501041631.16339.maarten@ultratux.net> <bdsqa2-55l.ln1@news.it.uc3m.es>
+Mime-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <bdsqa2-55l.ln1@news.it.uc3m.es>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-maarten <maarten@ultratux.net> wrote:
-> On Tuesday 04 January 2005 15:13, Peter T. Breuer wrote:
-> > Maarten <maarten@ultratux.net> wrote:
-> > > On Tuesday 04 January 2005 11:18, Peter T. Breuer wrote:
-> > > > Maarten <maarten@ultratux.net> wrote:
-> > > > > On Tuesday 04 January 2005 03:41, Andy Smith wrote:
-> > > > > > On Tue, Jan 04, 2005 at 01:22:56PM +1100, Neil Brown wrote:
-> > > > > > > On Monday January 3, ewan.grantham@gmail.com wrote:
-> > > >
-> > > > It's not "my" data center.  It is what it is.  I can only control
-> > > > certain things in it, such as the software on the machines, and which
-> > > > machines are bought.  Nor is it a "data center", but a working
-> > > > environment for about 200 scientists and engineers, plus thousands of
-> > > > incompetent monkeys.  I.e., a university department.
-> 
-> > I'm not "boasting"  about them. They simply ARE.
-> 
-> Are you not boasting about it, simply by providing all the little details no 
-> one cares about, except that it makes your story more believable ?
-
-What "little details"? Really, this is most aggravating!
-
-> If I state my IQ was tested as above 140, am I then boasting, or simply 
-> stating a fact ?
-
-You're being an improbability.
-
-> Stating a fact and boasting are not mutually exclusive. 
-
-But about WHAT? I have no idea what you may consider boasting!
-
-> > > on your whole secure data center turns out to be a school department,
-> >
-> > Eh?
-> 
-> What, "Eh?" ?  
-
-What "secure data center"? I have never mentioned such a thing! We have
-a big floor of a big building, plus a few labs in the basement, and a
-few labs in another couple of buldings.  We used to locate the servers
-in secure places in the various buildings, but nowadays we tend to dump
-most of them in a single highly a/c'ed rack room up here.  Mind you, I
-still have six in my office, and I don't use a/c.  I guess others are
-scattered arund the place too.
-
-However, all the servers are paired, and fail over to each other, and
-do each others mirroring. If I recall correctly, even the pairs fail
-over to backup pairs.  Last xmas I distinctly remember holding up the
-department on a single surviving server because a faulty cable had
-intermittently taken out one pair, and a faulty router had taken out
-another.  I forget what had happened to the remaining server.  Probably
-the cleaners switched it off!  Anyway, one survived and everything
-failed over to it, in a planned degradation.
-
-It would have been amusing, if I hadn't had  to deal with a horrible
-mail loop caused by mail being bounced by he server with intermittent
-contact through the faulty cable. There was no way of stopping it,
-since I couldn't open the building till Jan 6!
-
-> Are you taking offense to me calling a "university department" a school ? 
-
-No - it is a school. "La escuela superior de ...". What the french call
-an "ecole superior".
-
-> Is 
-> it not what you are, you are an educational institution, ie. a school.
-
-Schools are not generally universityies, except perhaps in the united
-states!  Elsewhere one goes to learn, not to be taught.
-
-> > > undoubtedly with viruses rampant, students hacking at the schools'
-> > > systems,
-> >
-> > Sure - that's precisely what there is.
-> 
-> Hah. Show me one school where there isn't.
-
-It doesn't matter. There is nothing they can do (provided that is, the
-comp department manages to learn how to configure ldap so that people
-don't send their passwords in the clear to their server for
-confirmation ... however, only you and I know that, eh?).
+On Tuesday 04 January 2005 17:21, Peter T. Breuer wrote:
+> Maarten <maarten@ultratux.net> wrote:
 
 
-> > Uh, no. We don't run windos. Well, it is on the clients, but I simply
-> > sabaotage them whenever I can :). That saves time. Then they can boot
-> > into the right o/s.
-> 
-> Ehm. p2p exists for linux too.  Look into it.  Are you so dead certain no 
+> > Nope, not 10 years, not 20 years, not even 40 years.  See this Seagate
+> > sheet below where they go on record with a whopping 1200.000 hours MTBF. 
+> > That translates to 137 years.
+>
+> I believe that too.  They REALLY have kept the monkeys well away.
+> They're only a factor of ten out from what I think it is, so I certainly
+> believe them.  And they probably discarded the ones that failed burn-in
+> too.
+>
+> > Now can you please state here and now that you
+> > actually believe that figure ?
+>
+> Of course. Why wouldn't I? They are stating something like 1% lossage
+> per year under perfect ideal conditions, no dust, no power spikes, no
+> a/c overloads, etc. I'd easily belueve that.
 
-Do you mean edonkey and emule by that? "p2p" signifies nothing to me
-except "peer to peer", which is pretty well everything. For example,
-samba. There's nothing wrong with using such protocols. If you mean
-using it to download fillums, that's a personal question - we don't
-check data contents, and indeed it's not clear that we legally could,
-since the digital information acts here recognise digital "property
-rights" and "rights to privacy" that we cannot intrude into. Legally,
-of course.
+No spindle will take 137 years of abuse at the incredibly high speed of 10000 
+rpm and not show enough wear so that the heads will either collide with the 
+platters or read on adjacent tracks.  Any mechanic can tell you this.
+I don't care what kind of special diamond bearings you use, it's just not 
+feasible.  We could even start a debate of how much decay we would see in the 
+silicon junctions in the chips, but that is not useful nor on-topic.  Let's 
+just say that the transistor barely exists 50 years and it is utter nonsense 
+to try to say anything meaningful about what 137 years will do to 
+semiconductors and their molecular structures over that vast a timespan.  
+Remember, it was not too long ago they said CDs were indestructible (by time 
+elapsed, not by force, obviously). And look what they say now. 
 
-> student of yours ever found a local root hole ?  
+I don't see where you come up with 1% per year.  Remember that MTBF means MEAN 
+time between failures, so for every single drive that dies in year one, one 
+other drive has to double its life expectancy to twice 137, which is 274 
+years.  If your reasoning is correct with one drive dying per year, the 
+remaining bunch after 50 years will have to survive another 250(!) years, on 
+average.  ...But wait, you're still not convinced, eh ?
 
-Absolutely. Besides - it would be trivial to do. I do it all the time.
+Also, I'm not used to big data centers buying disks by the container, but from 
+what I've heard no-one can actually say that they lose as little as 1 drive a 
+year for any hundred drives bought. Those figures are (much) higher.
+You yourself said in a previous post you expected 10% per year, and that is 
+WAY off the 1% mark you now state 'believeable'.  How come ?
 
-That's really not the point - we would see it at once if they decided to
-do anything with root - all the alarm systems would trigger if _anyone_
-does anything with root.  All the machines are alarmed like mines,
-checked daily, byte by byte, and rootkits are easy to see, whenever they
-turn up.  I have a nice collection.
+> > Cause it would show that you have indeed
+> > fully and utterly lost touch with reality.  No sane human being would
+> > take seagate for their word seen as we all experience many many more
+> > drive failures within the first 10 years,
+>
+> Of course we do. Why wouldn't we? That doesn't make their figures
+> wrong!
 
-Really, I am surprised at you! Any experienced sysadmin would know that
-such things are trivialities to spot and remove. It is merely an
-intelligence test, and the attacker does not have more intelligence
-or experience than the defenders! Quite the opposite.
+Yes it does. By _definition_ even. It clearly shows that one cannot account 
+for tens, nay hundreds, of years wear and tear by just taking a very small 
+sample of drives and having them tested for a very small amount of time.
 
-> Then you have more balls than you can carry.
+Look, _everybody_ knows this.  No serious admin will not change their drives 
+after five years as a rule, or 10 years at the most. And that is not simply 
+due to Moore's law.  The failure rate just gets too high, and economics 
+dictate that they must be decommissioned.  After "only" 10 years...!
 
-???
+> > let alone 20, to even remotely support
+> > that outrageous MTBF claim.
+>
+> The number looks believable to me. Do they reboot every day? I doubt
 
-> > Eh? It's as secure stable and organised as it can be, given that nobody
-> > is in charge of anything.
-> 
-> Normal people usually refer to such a state as "an anarchy".
+Of course they don't.  They never reboot. MTBF is not measured in adverse 
+conditions.  Even so, neither do disks in a data centre...
 
-Good - that's the way I like it.  Coping with and managing chaos amounts
-to giving the maximum freedom to all, and preserving their freedoms.
-Including the freedom to mess up.  To help them, I maintain copies of
-their work for them, and guard them against each other and outside
-threats.
+> it. It's not outrageous. Just optimistic for real-world conditions.
+> (And yes, I have ten year old disks, or getting on for it, and they
+> still work).
 
-> Not a perfect example of stability, security or organization by any stretch of 
-> the imagination...
+Some of em do, yes. Not all of them. 
+(to be fair, the MTBF in those days was much lower than now (purportedly)).
 
-Sounds great to me!
+> > All this goes to show -again- that you can easily make statistics which
+> > do not
+>
+> No, it means that statistics say what they say, and I understand them
+> fine, thanks.
 
-Peter
+Uh-huh.  So explain to me why drive manufacturers do not give a 10 year 
+warrantee. I say because they know full well that they would go bankrupt if 
+they did since not 8% but rather 50% or more would return in that time.
+
+> > resemble anything remotely possible in real life.  Seagate determines
+> > MTBF by setting up 1.200.000 disks, running them for one hour, applying
+> > some magic extrapolation wizardry which should (but clearly doesn't)
+> > properly account for aging, and hey presto, we've designed a drive with a
+> > statistical average life expectancy of 137 years.  Hurray.
+>
+> That's a fine technique. It's perfectly OK. I suppose they did state
+> the standard deviation of their estimator?
+
+Call them and find out; you're the math whiz. 
+And I'll say it again: if some statistical technique yields wildly different 
+results than the observable, verifiable real world does, then there is 
+something wrong with said technique, not with the real world.
+The real world is our frame of reference, not some dreamed-up math model which 
+attempts to describe the world. And if they do collide, a math theory gets 
+thrown out, not the real world observations instead...! 
+
+
+> > Any reasonable person will ignore that MTBF as gibberish,
+>
+> No they wouldn't - it looks a perfectly reasonable figure to me, just
+> impossibly optimisitic for the real world, which contains dust, water
+> vapour, mains spikes, reboots every day, static electrickery, and a
+> whole load of other gubbins that doesn't figure in their tests at all.
+
+Test labs have dust, water vapours and mains spikes too, albeit as little as 
+possible. They're testing on earth, not on some utopian other parallel world.  
+Good colo's do a good job to eliminate most adverse effects.  In any case, 
+dust is not a great danger to disks (but it is to fans), heat is. Especially 
+quick heat buildup, hence powercycles are amongst the worst.  Drives don't 
+really like the expansion of materials that occurs when temperatures rise, 
+nor the extra friction that a higher temperature entails. 
+
+> > and many people
+> > would probably even state as much as that NONE of those drives will still
+> > work after 137 years. (too bad there's no-one to collect the prize money)
+>
+> They wouldn't expect them to. If the mtbf is 137 years, then of a batch
+> of 1000, approx 0.6 and a bit PERCENT would die per year.  Now you get
+> to multiply.  99.3^n % is ...  well, anyway, it isn't linear, but they
+> would all be expected to die out by 137y.  Anyone got some logarithms?
+
+Look up what the word "mean" from mtbf means, and recompute.
+
+Maarten
+
+-- 
+When I answered where I wanted to go today, they just hung up -- Unknown
 
