@@ -1,40 +1,28 @@
-From: Paul Clements <paul.clements@steeleye.com>
-Subject: Re: Logging-Loop when a drive in a raid1 fails.
-Date: Mon, 13 Dec 2004 10:07:53 -0500
-Message-ID: <41BDB049.6060201@steeleye.com>
-References: <41BD2E02.8020100@geizhals.at>
+From: murray evans <m.evans@rdg.ac.uk>
+Subject: hostRAID, AIC-7901, disable?
+Date: Mon, 13 Dec 2004 16:04:08 +0000
+Message-ID: <cpkem3$70s$1@sea.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <41BD2E02.8020100@geizhals.at>
 Sender: linux-raid-owner@vger.kernel.org
-To: Michael Renner <michael.renner@geizhals.at>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Michael Renner wrote:
+We have recently aquired a new Dell Precision 670 workstation, on which
+we intended to install linux, (Suse 9.1). 
+In the install, is reports it can not find any hard drives.
+We think we have tracked this problem down to the AIC-7901 hostRAID
+SCSI controller. From what I we can gather, linux no longer has
+drivers for hostRAID hardware. We don't care about having RAID, just
+a working system, so we would be content to simply disable the 
+hostRAID. the problem is, the setup tool does not have any option
+to disable hostRAID.
 
-> one of the drives in a software raid1 failed, on a machine running 
-> 2.6.9-rc2, leading to this "logging-spree" (see attachment).
+Has anyone come across a solution? Is there a driver I don't know of?
+Is there a way of disabling hostRAID?
 
-> Sorry if this has been fixed in the meanwhile; it's not that easy to 
+*PS: From the SuSe install, when we try to add the appropriate SCSI
+module for the AIC-7901, it fails.
 
-It has. I sent the patch to Neil Brown a while back to fix this problem. 
-I believe it made 2.6.9.
-
-> test codepaths for failing drives with various kernels without having 
-> access to special block devices which support on-demand-failing.
-
-mdadm -f /dev/md0 <drive>
-
-roughly approximates a drive failure
-
-> Furthermore I'm a bit concerned about the overall quality of the md 
-> support in 2.6
-
-I don't think you should be. md in 2.6 (as of 2.6.9 or so) is as stable 
-as 2.4, at least according to our stress tests.
-
---
-Paul
