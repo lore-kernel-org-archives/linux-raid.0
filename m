@@ -1,62 +1,110 @@
-From: Ninti Systems <office@ninti.com.au>
-Subject: Software RAID 1 problems
-Date: 15 Jul 2004 16:42:02 +0930
+From: Heinz Mauelshagen <mauelshagen@redhat.com>
+Subject: *** Announcement: dmraid 1.0.0-rc2 ***
+Date: Thu, 15 Jul 2004 22:35:53 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1089875522.1070.18.camel@localhost>
-Reply-To: office@ninti.com.au
+Message-ID: <20040715203553.GA18636@redhat.com>
+Reply-To: mauelshagen@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: RAID Linux <linux-raid@vger.kernel.org>
+Content-Disposition: inline
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I have just got a server (Slackware 9.1) up and running after an unknown
-incident brought it down overnight (extended power failure most likely,
-but not necessarily).
 
-At first, when powering on the system would not recognise any IDE device
-at all. It would not boot off a CD, and after booting of a boot floppy,
-it would not mount any partitions on any IDE device.
+               *** Announcement: dmraid 1.0.0-rc2 ***
 
-After a ride a car, bingo, suddenly it would boot again. Then freeze,
-then reboot etc etc. Eventually, I have it at the point where it will
-reboot again everytime. But the problem isn't over yet ...
+Following a good tradition, dmraid 1.0.0-rc2 is available at
+http://people.redhat.com:/~heinzm/sw/dmraid/ in source and i386 rpm,
+before I leave for a 2 weeks vacation trip followed by LWE ;)
 
-It appears that two out of five md devices have disappeared. md0 was the
-/boot partition, and md2 was the swap partition, they are no longer
-present it seems. md1, md3 and md4 are all present but degraded I think
-(see output of mdadm below).
+Won't read my email before July, 30th.
 
-Basically, I'm wondering where to go from here:
+dmraid (Device-Mapper Raid tool) discovers, [de]activates and displays
+properties of software RAID sets (ie. ATARAID) and contained DOS
+partitions using the device-mapper runtime of the 2.6 kernel.
 
-- Does this look like a sudden-power-off issue or a broken HDD issue?
+The following ATARAID types are supported on Linux 2.6:
 
-- Any advice on how to resolve this issue (get back the missing md
-devices and restore full arrays?
+Highpoint HPT37X
+Highpoint HPT45X
+Intel Software RAID
+Promise FastTrack
+Silicon Image Medley
 
-Thanks
-Mick
+This ATARAID type can be discovered only in this version:
+LSI Logic MegaRAID
 
+Please provide insight to support those metadata formats completely.
 
+Thanks.
 
-Raid Devices:
-Personalities : [linear] [raid0] [raid1] [raid5] read_ahead 1024 sectors
-md1 : active raid1 hdc2[1] 9767424 blocks [2/1] [_U] md3 : active raid1
-hdc5[1] 58596992 blocks [2/1] [_U] md4 : active raid1 hdc6[1] 8297472
-blocks [2/1] [_U] unused devices: <none>
+See files README and CHANGELOG, which come with the source tarball for
+prerequisites to run this software, further instructions on installing
+and using dmraid!
 
-Raid Array Status:
-
-[dev 9, 1] /dev/md1 0403E3A6.F7F2F6AD.76F1F7FF.76CF2410 online [dev ?,
-?] (unknown) 00000000.00000000.00000000.00000000 missing [dev 22, 2]
-/dev/hdc2 0403E3A6.F7F2F6AD.76F1F7FF.76CF2410 good
-
-[dev 9, 3] /dev/md3 0FD423CD.D4C229D1.9321323A.273CDDEB online [dev ?,
-?] (unknown) 00000000.00000000.00000000.00000000 missing [dev 22, 5]
-/dev/hdc5 0FD423CD.D4C229D1.9321323A.273CDDEB good
-[dev 9, 4] /dev/md4 EC8BAB76.40CC4FA6.C9FB44E3.1A8DE26A online [dev ?,
-?] (unknown) 00000000.00000000.00000000.00000000 missing [dev 22, 6]
-/dev/hdc6 EC8BAB76.40CC4FA6.C9FB44E3.1A8DE26A good
+CHANGELOG is contained below for your convenience as well.
 
 
+Call for testers:
+-----------------
+
+I need testers with the above ATARAID types, to check that the mapping
+created by this tool is correct (see options "-t -ay") and access to the ATARAID
+data is proper.
+
+You can activate your ATARAID sets without danger of overwriting
+your metadata, because dmraid accesses it read-only unless you use
+option -E with -r in order to erase ATARAID metadata (see 'man dmraid')!
+
+This is a release candidate version so you want to have backups of your valuable
+data *and* you want to test accessing your data read-only first in order to
+make sure that the mapping is correct before you go for read-write access.
+
+
+The author is reachable at <Mauelshagen@RedHat.com>.
+Later, I told you ;)
+
+For test results, mapping information, discussions, questions, patches,
+enhancement requests and the like, please subscribe and mail
+to <ataraid@redhat.com>.
+
+CHANGELOG:
+---------
+
+Changelog from dmraid 1.0.0-rc1 to 1.0.0-rc2		2004.07.15
+
+o Intel Software RAID discovery and activation support
+o allow more than one format handler name with --format
+o display "raid10" sets properly rather than just "mirror"
+o enhanced activate.c to handle partial activation of sets (eg, degraded RAID0)
+o enhanced command line option checks
+o implemented a library context for variables such as debug etc.
+o fixed memory leak in discover_partitions
+o fixed recursion in _find_set()
+o continued writing subsets in case we fail on one because of RAID1
+o format handler template update
+o fixed dietlibc build
+o fixed shared library configure
+o use default_list_set() instead of &raid_sets where possible
+o name change of list_head members to the more commonly used 'list'
+o renamed msdos partition format handler to dos
+o lots of inline comments corrected/updated
+o streamlined tools/*.[ch]
+o moved get.*level() and get_status to metadata.[ch] and changed level
+  name to type
+
+--
+
+Regards,
+Heinz    -- The LVM Guy --
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+Heinz Mauelshagen                                 Red Hat GmbH
+Consulting Development Engineer                   Am Sonnenhang 11
+                                                  56242 Marienrachdorf
+                                                  Germany
+Mauelshagen@RedHat.com                            +49 2626 141200
+                                                       FAX 924446
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
