@@ -1,42 +1,32 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: ANNOUNCE: mdadm 1.10.0 - A tool for managing Soft RAID under Linux
-Date: Tue, 5 Apr 2005 11:49:13 +1000
-Message-ID: <16977.61081.999463.177414@cse.unsw.edu.au>
+From: Brad Campbell <brad@wasp.net.au>
+Subject: Re: EVMS or md?
+Date: Tue, 05 Apr 2005 10:17:00 +0400
+Message-ID: <42522D5C.8000500@wasp.net.au>
+References: <200504040708.j3478bm03863@www.watkins-home.com> <1112642928.25469.28.camel@dyn95395156> <200504041446.50337.kewley@gps.caltech.edu> <d2seal$ntf$1@terminus.zytor.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <d2seal$ntf$1@terminus.zytor.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+H. Peter n wrote:
+> No hiccups, data losses, or missing functionality.  At the end of the
+> whole ordeal, the filesystem (1 TB, 50% full) was still quite prisine,
+> and fsck confirmed this.  I was quite pleased :)
 
+I second this. I endured numerous kernel crashes and other lockup/forced restart issues while 
+setting up a 15 drive 3TB raid-6 (Crashes not really realted to the mb subsystem except for the 
+oddity in the -mm kernel, and that was not raid-6 specific). I have popped out various drives and 
+caused numerous failures/rebuilds with an ext3 system over 90% full while burn in testing and not 
+experienced one glitch.
+It has been used in production now for over a month and is performing flawlessly. I have run it in 
+full/1-disk and 2-disk degraded mode for testing. I certainly consider it stable.
 
-I am pleased to announce the availability of 
-   mdadm version 1.10.0
-It is available at
-   http://www.cse.unsw.edu.au/~neilb/source/mdadm/
-and
-   http://www.{countrycode}.kernel.org/pub/linux/utils/raid/mdadm/
-
-as a source tar-ball and (at the first site) as an SRPM, and as an RPM for i386.
-
-mdadm is a tool for creating, managing and monitoring
-device arrays using the "md" driver in Linux, also
-known as Software RAID arrays.
-
-Release 1.9.0 adds:
-    -   Fix bug with --config=partitions
-    -   Open sub-devices with O_EXCL to detect if already in use
-    -   Make sure superblock updates are flushed directly to disk.
-
-The first update is the most significant ("mdadm -Escpartitions" would crash).
-The others are mildly useful extras.
-
-Development of mdadm is sponsored by CSE@UNSW: 
-  The School of Computer Science and Engineering
-at
-  The University of New South Wales
-
-NeilBrown  04 April 2005
-
+Brad
+-- 
+"Human beings, who are almost unique in having the ability
+to learn from the experience of others, are also remarkable
+for their apparent disinclination to do so." -- Douglas Adams
