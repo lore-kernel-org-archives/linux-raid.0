@@ -1,47 +1,54 @@
-From: Ray Van Dolson <rayvd@digitalpath.net>
-Subject: dptapps and Engine connect failed: COMPATIBILITY number
-Date: Tue, 24 Aug 2004 20:45:05 -0700
-Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040825034505.GA1286@digitalpath.net>
+From: Brad Campbell <brad@wasp.net.au>
+Subject: Re: libata and md issues with 2.9.1-rc1
+Date: Wed, 25 Aug 2004 08:53:12 +0400
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <412C1B38.7090401@wasp.net.au>
+References: <412B79DF.2000705@wasp.net.au> <412BC1C4.2060506@clanhk.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-To: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <412BC1C4.2060506@clanhk.org>
+To: "J. Ryan Earl" <heretic@clanhk.org>
+Cc: linux-ide@vger.kernel.org, RAID Linux <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-This is somewhat related to my previous post. :-)  I decided to try out the
-Adaptec Storage Manager utilities, even though they are from May 31, 2001 and
-seem to be for Red Hat 7.0/6.2 (the box I'm on is RH 8.0).
+J. Ryan Earl wrote:
+> Brad Campbell wrote:
+> 
+>> Just a heads up. I'm experiencing "issues" with 2.6.9-rc1 that don't 
+>> occur with 2.6.5.
+>>
+>> I run a 10 disk raid-5 on 3xPromise SATA150 cards and a 2 disk raid-0 
+>> on the on-board VIA chipset.
+>> The 10 disks are Maxtor Maxline-II SATA drives and the raid-0 is a 
+>> pair of WD2000JB drives with
+>> Addonics SATA->PATA converters. 
+> 
+> 
+> Did you try RAID-0 with the pair of Western Digital drives on the two 
+> free Promise slots?  If that fails similarly, it might not be a libata 
+> issue.
 
-I installed the rpm with rpm -ivh --nodeps since it wanted the dptdrivers RPM,
-but the dpt_i2o driver was already installed on my system.
+I thought about it. Given the drives are giving write errors when I write to /dev/md1 and not giving 
+write errors when the raid is stopped and I write to the individual disks then it *must* be some 
+issue with the hardware drivers.
 
-I started upt the dpt daemons -- no problems there.  Also verified that the
-dpt_i2o driver was working:
+If the block layer can submit a block to the driver that causes the drive to error out, then it's 
+really a fault of the driver for trying to do something illegal.
 
-[root@pop adaptec]# cat /proc/scsi/dpt_i2o/0
-Adaptec I2O RAID Driver Version: 2.4 Build 5
+Anyway, I have done a clone of the libata-2.6 bk tree and I'm trying to figure out how to extract 
+all the individual csets between 2.6.6 and 2.6.7-rc1 so I can back them out 1 by 1 and see what 
+caused the problem.
 
-Vendor: Adaptec  Model: 2100S            FW:370F
-SCSI Host=scsi0  Control Node=/dev/dpti0  irq=11
-        post fifo size  = 255
-        reply fifo size = 255
-        sg table size   = 56
+My other tack is to enable full SCSI debugging and compare the trace from 2.6.5 and 2.6.7-rc1 to see 
+what is different.
 
-Devices:
-        ADAPTEC RAID-5           Rev: 370F
-        TID=519, (Channel=0, Target=0, Lun=0)  (online)
+I will give your suggestion a try when I get home tonight and fire it up on the extra promise channels.
 
-Looks good so far, right?  Now I try:
+Can anyone point me to a dummys guide to regression testing with BK? I read a great one by the WINE 
+guys years ago on regression testing by date with CVS and it has proved immensely helpful over the 
+years.
 
-[root@pop adaptec]# /usr/dpt/raidutil -d 0 -L physical
-Engine connect failed: COMPATIBILITY number
-
-:-(
-
-Stumped here.  Any suggestions?  I tried without -d 0 and with -L array and
-simply got the same error.  A google on the string brings up a few FreeBSD folks
-having the same issue which turned out to be shared memory related.  No idea if
-this is the case on my system or not, or if it would even translate the same way
-between FreeBSD / Linux...
+Regards,
+Brad
