@@ -1,53 +1,62 @@
-From: "J. David Beutel" <jdb@getsu.com>
-Subject: Re: RAID1 robust read and read/write correct patch
-Date: Wed, 23 Feb 2005 10:48:58 -1000
-Message-ID: <421CEC3A.5010609@getsu.com>
-References: <421C628D.8080908@getsu.com> <p97ue2-1ld.ln1@news.it.uc3m.es>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: RAID1 robust read and read/write correct and EVMS-BBR
+Date: Wed, 23 Feb 2005 15:52:31 -0500
+Message-ID: <200502232052.j1NKqb927350@www.watkins-home.com>
+References: <CAC3BCBB443DEC439198F230B4BCC7E9092C45CC@exna6-ftsaa.mis.stratus.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-In-Reply-To: <p97ue2-1ld.ln1@news.it.uc3m.es>
+In-Reply-To: <CAC3BCBB443DEC439198F230B4BCC7E9092C45CC@exna6-ftsaa.mis.stratus.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Peter T. Breuer" <ptb@lab.it.uc3m.es>
+To: "'Nagpure, Dinesh'" <Dinesh.Nagpure@stratus.com>, evms-devel@lists.sourceforge.net
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Peter T. Breuer wrote, on 2005-Feb-23 1:50 AM:
+This is very good!  But most of my disk space is RAID5.  Any chance you have
+similar plans for RAID5?
 
-> Quite possibly - I never tested the rewrite part of the patch, just
->
->wrote it to indicate how it should go and stuck it in to encourage
->others to go on from there.  It's disabled by default.  You almost
->certainly don't want to enable it unless you are a developer (or a
->guinea pig :).
->  
->
+Thanks,
+Guy
 
-Thanks for taking a look at it!  Unfortunately, I'm not a kernel 
-developer.  I haven't even been using C for the last 8 years.  But I'd 
-really like to have that rewrite functionality, and I can dedicate my 
-system as a guinea pig for at least a little while, if there's a way I 
-can test it in a finite amount of time and build some confidence in it 
-before I start to really use that system.
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Nagpure, Dinesh
+Sent: Wednesday, February 23, 2005 2:56 PM
+To: 'evms-devel@lists.sourceforge.net'
+Cc: 'linux-raid@vger.kernel.org'
+Subject: RAID1 robust read and read/write correct and EVMS-BBR
 
-I'd like to start with an md unit test suite.  Is there one?  I don't 
-know if the architecture would allow for this, but naively I'm thinking 
-that the test suite would use a mock disk driver (e.g., in memory only) 
-to simulate various kinds of hardware failures and confirm that md 
-responds as expected to both the layer above (the kernel?) and below 
-(the disk driver?).  Unit tests are also good for simulating unlikely 
-and hard to reproduce race conditions, although stress tests are better 
-at discovering new ones.   But, should the test suite play the roll of 
-the kernel by calling md functions directly in a user space sandbox 
-(mock kernel, threads, etc)?  Or, should it play the roll of a user 
-process by calling the real kernel to test the real md (broadening the 
-scope of the test)?  I'd appreciate opinions or advice from kernel or md 
-developers.
+Hi,
 
-Also, does anyone have advice on how I should do system and stress tests 
-on this?
+I noticed the discussion about robust read on the RAID list and similar one
+on the EVMS list so I am sending this mail to both the lists. Latent media
+faults which prevent data from being read from portions of a disk has always
+been a concern for us. Such faults will go undetected till the time that
+block is read. RAID 1 depends on error free mirrors for proper operation and
+undiscovered bad blocks would only give pseudo illusion of duplexity when in
+reality the array should be degraded. Over long run all the mirrors might
+develop latent media faults and none can be replaced with a new disk. Also
+it is a disaster if the same block goes bad on all the mirrors in a RAID 1
+volume. With this concern we developed what we call "disk-scrubber". The
+approach was to proactively seek for bad spots on the disk and when one is
+discovered, read the correct data from the other mirror and use it to repair
+the disk by way of a write. SCSI disks automatically repair bad spots on
+write by internally mapping the bad spots to spare sectors (Being SCSI
+centric might be one limitation of this solution).
+The implementation comprised of a thread that looks for bad spots by way of
+slow repeated continuous scan through all disks. The RAID error management
+was extended to attempt a repair on read error from a RAID 1 array to permit
+fixing of user discovered bad spots as well as those discovered by the
+scrubber. The work is lk2.4.26 based as of now.
 
-Cheers,
-11011011
+I can go back and put together a patch over the weekend if anyone is
+interested in using it. 
 
+-dinesh
+dinesh.nagpure@stratus.com
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
