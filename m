@@ -1,42 +1,35 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: ICH5 docs
-Date: Wed, 31 Dec 2003 08:02:13 -0500
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <3FF2C8D5.2050205@pobox.com>
-References: <20031230164953.GB4868@atrey.karlin.mff.cuni.cz> <3FF1B43A.9090707@pobox.com> <6.0.1.1.0.20031231003359.024626f0@no.incoming.mail>
+From: "ALOE VERA" <aloe@start.com>
+Subject: KENDI ISINIZI KURUN !!!
+Date: Thu, 1 Jan 2004 17:30:42 +0200
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <200401011625.i01GPFK09598@zeus.kernel.org>
+Reply-To: aloe@start.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <6.0.1.1.0.20031231003359.024626f0@no.incoming.mail>
-To: Jeff Woods <kazrak+kernel@cesmail.net>
-Cc: Karel Kulhavy <clock@atrey.karlin.mff.cuni.cz>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Jeff Woods wrote:
-> At 12/30/2003 12:22 PM -0500, Jeff Garzik wrote to linux-kernel:
-> 
->> Karel Kulhavy wrote:
->>
->>> Where can I learn about ICH5 SATA RAID driver in Linux kernel 2.6.0?  I
->>
->>
->> Intel "RAID" is software RAID.  There isn't any hardware RAID assist...
->> So ICH5 looks pretty much just like any other PATA host controller.
-> 
-> 
-> Oh?  My understanding (which I admit is very high-level) is that Intel's 
-> ICH5 southbridge supports SATA; but to get SATA+RAID requires the ICH5R 
-> southbridge.  If not, what are the practical differences (if any) 
-> between the ICH5 and ICH5R?
+Iyi gunler linux-raid ,
+
+D=FCnyanin en hizli b=FCy=FCyen pazarinda
+
+kendi isinizi kurup,
+evinizden veya ofisinizden,
+kendi patrononuz olarak tamamen bagimsiz,
+calisma saatlerini kendiniz belirleyerek,
+hic bir krizden etkilenmeden,
+hicbir riske girmeden,
+c=FCzi yatirimla,
+m=FCkemmel kazanclar elde etmek istemezmisiniz ?
+
+Geni=FE bilgi i=E7in: Tel. 0212 - 507 75 02, Faks. 0212 - 507 75 28
+start2004@mynet.com
 
 
-None; as I said, Intel's RAID is _software_ RAID.  You simply need to 
-use the "iswraid" Linux driver to access the proprietary vendor RAID 
-metadata format on your disks.
-
-If you do not wish to be locked into proprietary vendor RAID, then just 
-use Linux's md RAID, and you may pretend that ICH5 and ICH5R are exactly 
-the same :)
-
-	Jeff
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
