@@ -1,53 +1,38 @@
-From: Lars Marowsky-Bree <lmb@suse.de>
+From: "Justin T. Gibbs" <gibbs@scsiguy.com>
 Subject: Re: "Enhanced" MD code avaible for review
-Date: Fri, 26 Mar 2004 00:44:52 +0100
+Date: Thu, 25 Mar 2004 16:46:51 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040325234452.GC15264@marowsky-bree.de>
-References: <760890000.1079727553@aslan.btc.adaptec.com> <16480.61927.863086.637055@notabene.cse.unsw.edu.au> <40624235.30108@pobox.com> <200403251200.35199.kevcorry@us.ibm.com> <1019470000.1080255540@aslan.btc.adaptec.com>
+Message-ID: <1035780000.1080258411@aslan.btc.adaptec.com>
+References: <760890000.1079727553@aslan.btc.adaptec.com> <16480.61927.863086.637055@notabene.cse.unsw.edu.au> <40624235.30108@pobox.com> <200403251200.35199.kevcorry@us.ibm.com> <40632804.1020101@pobox.com> <40632994.7080504@pobox.com>
+Reply-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <40632994.7080504@pobox.com>
 Content-Disposition: inline
-In-Reply-To: <1019470000.1080255540@aslan.btc.adaptec.com>
-To: "Justin T. Gibbs" <gibbs@scsiguy.com>, Kevin Corry <kevcorry@us.ibm.com>, linux-kernel@vger.kernel.org
-Cc: Jeff Garzik <jgarzik@pobox.com>, Neil Brown <neilb@cse.unsw.edu.au>, linux-raid@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>, linux-kernel@vger.kernel.org
+Cc: Kevin Corry <kevcorry@us.ibm.com>, Neil Brown <neilb@cse.unsw.edu.au>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2004-03-25T15:59:00,
-   "Justin T. Gibbs" <gibbs@scsiguy.com> said:
+> Jeff Garzik wrote:
+> 
+> Just so there is no confusion...  the "failing over...in userland" thing I
+> mention is _only_ during discovery of the root disk.
 
-> The fact of the matter is that neither EMD nor DM provide a generic
-> morphing capability.  If this is desirable, we can discuss how it cou=
-ld
-> be achieved, but my initial belief is that attempting any type of
-> complicated morphing from userland would be slow, prone to deadlocks,
-> and thus difficult to achieve in a fashion that guaranteed no loss of
-> data in the face of unexpected system restarts.
+None of the solutions being talked about perform "failing over" in
+userland.  The RAID transforms which perform this operation are kernel
+resident in DM, MD, and EMD.  Perhaps you are talking about spare
+activation and rebuild?
 
-Uhm. DM sort of does (at least where the morphing amounts to resyncing =
-a
-part of the stripe, ie adding a new mirror, RAID1->4, RAID5->6 etc).
-=46reeze, load new mapping, continue.
+> Similar code would need to go into the bootloader, for controllers that do
+> not present the entire RAID array as a faked BIOS INT drive.
 
-I agree that more complex morphings (RAID1->RAID5 or vice-versa in
-particular) are more difficult to get right, but are not that often
-needed online - or if they are, typically such scenarios will have
-enough temporary storage to create the new target, RAID1 over,
-disconnect the old part and free it, which will work just fine with DM.
+None of the solutions presented here are attempting to make RAID
+transforms operate from the boot loader environment without BIOS
+support.  I see this as a completely tangental problem to what is
+being discussed.
 
+--
+Justin
 
-Sincerely,
-    Lars Marowsky-Br=E9e <lmb@suse.de>
-
---=20
-High Availability & Clustering	      \ ever tried. ever failed. no matt=
-er.
-SUSE Labs			      | try again. fail again. fail better.
-Research & Development, SUSE LINUX AG \ 	-- Samuel Beckett
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
