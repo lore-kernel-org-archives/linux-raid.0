@@ -1,103 +1,56 @@
-From: Paul Clements <Paul.Clements@SteelEye.com>
-Subject: Re: RAID md-personality
-Date: Fri, 11 Jul 2003 09:31:23 -0400
-Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3F0EBC2B.6537D31D@SteelEye.com>
-References: <007701c34778$32aea5e0$c9e903ca@magnus>
+From: Bernd Schubert <bernd.schubert@pci.uni-heidelberg.de>
+Subject: is raid of raid possible ?
+Date: Fri, 11 Jul 2003 16:09:54 +0200
+Sender: enbd-admin@lists.community.tummy.com
+Message-ID: <200307111609.54844.bernd.schubert@pci.uni-heidelberg.de>
+Reply-To: enbd@lists.community.tummy.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-To: Mikael Chambon <raid-ml@cronos.org>
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <enbd-admin@lists.community.tummy.com>
+Content-Disposition: inline
+Errors-To: enbd-admin@lists.community.tummy.com
+List-Unsubscribe: <http://lists.community.tummy.com/mailman/listinfo/enbd>,
+	<mailto:enbd-request@lists.community.tummy.com?subject=unsubscribe>
+List-Post: <mailto:enbd@lists.community.tummy.com>
+List-Help: <mailto:enbd-request@lists.community.tummy.com?subject=help>
+List-Subscribe: <http://lists.community.tummy.com/mailman/listinfo/enbd>,
+	<mailto:enbd-request@lists.community.tummy.com?subject=subscribe>
+List-Archive: <http://lists.community.tummy.com/pipermail/enbd/>
+To: linux-raid@vger.kernel.org
+Cc: enbd@lists.community.tummy.com
 List-Id: linux-raid.ids
 
-Mikael Chambon wrote:
- 
-> 1) During boot time, when md is trying to autodetect a RAID array before the
-> root
-> filesystem is mounted, I get the following error when kmod
-> is trying to load md-personality (someone know what this module is for ?).
+Hi,
 
-This first autorun attempt occurs at md initialization time, before the
-initrd is loaded, so there are no modules available. That's why the
-failure occurs. This is actually expected behavior for Red Hat and SuSE
-installations...more below...
+for fallback reasons of an existing server with software-raid5 I would like=
+ to=20
+install a raid1 via enbd to another system of this raid5-device.
 
- 
-> =========
-> Jul  9 15:28:29 mekare kernel: md: md driver 0.90.0 MAX_MD_DEVS=256,
-> MD_SB_DISKS=27
-> Jul  9 15:28:29 mekare kernel: md: Autodetecting RAID arrays.
-> Jul  9 15:28:29 mekare kernel:  [events: 00000004]
-> Jul  9 15:28:29 mekare kernel:  [events: 00000004]
-> Jul  9 15:28:29 mekare kernel: md: autorun ...
-> Jul  9 15:28:29 mekare kernel: md: considering hdc1 ...
-> Jul  9 15:28:29 mekare kernel: md:  adding hdc1 ...
-> Jul  9 15:28:29 mekare kernel: md:  adding hda8 ...
-> Jul  9 15:28:29 mekare kernel: md: created md0
-> Jul  9 15:28:29 mekare kernel: md: bind<hda8,1>
-> Jul  9 15:28:29 mekare kernel: md: bind<hdc1,2>
-> Jul  9 15:28:29 mekare kernel: md: running: <hdc1><hda8>
-> Jul  9 15:28:29 mekare kernel: md: hdc1's event counter: 00000004
-> Jul  9 15:28:29 mekare kernel: md: hda8's event counter: 00000004
-> Jul  9 15:28:29 mekare kernel: md: md0: raid array is not clean -- starting
-> background reconstruction
-> Jul  9 15:28:29 mekare kernel: md: RAID level 1 does not need chunksize!
-> Continuing anyway.
-> Jul  9 15:28:29 mekare kernel: kmod: failed to exec /sbin/modprobe -s -k
-> md-personality-3, errno = 2
-> Jul  9 15:28:29 mekare kernel: md: personality 3 is not loaded!
-> ==========
- 
+scheme-1:
+server1(software-raid5)-->raid1-->enbd-->fall-back server(hardisk or=20
+software-raid)
 
-> - I can' find this module anywhere.
+scheme-2:
+server1(software-raid5)-->enbd-->fall-back-server(hardisk)--raid1
 
-Look in /etc/modules.conf for an "alias md-personality ..." line.
+I guess that scheme-2, so exporting a mdX-device via enbd and importing thi=
+s=20
+device on the fallback-server and mirroring it via raid1 to another=20
+hardisk-partition should work anyway.
 
+But whats about scheme-1 in general ? Or in scheme-2 if one would like to p=
+ut=20
+the the raid1 to another software-raid5 ?
 
-> - I have tried to include the raid1 module in the RAMDISK using mkinitrd
-> but I still have the same error.
+Thanks in advance,
+	Bernd
 
-Yes, I would expect that.
-
-
-> - When the root filesystem is mounted, I don't have this error anymore as
-> you can see:
-> 
-> =========
-> Jul  9 15:28:29 mekare kernel: VFS: Mounted root (ext2 filesystem).
-> Jul  9 15:28:29 mekare kernel: md: raid1 personality registered as nr 3
-> Jul  9 15:28:29 mekare kernel: Journalled Block Device driver loaded
-> Jul  9 15:28:29 mekare kernel: md: Autodetecting RAID arrays.
-> Jul  9 15:28:29 mekare kernel:  [events: 00000004]
-> Jul  9 15:28:29 mekare kernel:  [events: 00000004]
-> Jul  9 15:28:29 mekare kernel: md: autorun ...
-> Jul  9 15:28:29 mekare kernel: md: considering hda8 ...
-> Jul  9 15:28:29 mekare kernel: md:  adding hda8 ...
-> Jul  9 15:28:29 mekare kernel: md:  adding hdc1 ...
-> Jul  9 15:28:29 mekare kernel: md: created md0
-> Jul  9 15:28:29 mekare kernel: md: bind<hdc1,1>
-> Jul  9 15:28:29 mekare kernel: md: bind<hda8,2>
-> Jul  9 15:28:29 mekare kernel: md: running: <hda8><hdc1>
-> Jul  9 15:28:29 mekare kernel: md: hda8's event counter: 00000004
-> Jul  9 15:28:29 mekare kernel: md: hdc1's event counter: 00000004
-> Jul  9 15:28:29 mekare kernel: md: md0: raid array is not clean -- starting
-> background reconstruction
-> Jul  9 15:28:29 mekare kernel: md: RAID level 1 does not need chunksize!
-> Continuing anyway.
-> Jul  9 15:28:29 mekare kernel: md0: max total readahead window set to 508k
-> Jul  9 15:28:29 mekare kernel: md0: 1 data-disks, max readahead per
-> data-disk: 508k
-> Jul  9 15:28:29 mekare kernel: raid1: device hda8 operational as mirror 0
-> ===========
-
-The way that distros (at least Red Hat and SuSE) do this is to let the
-initial autorun attempt fail and then, inside the initrd, they load the
-necessary raid personality modules, as well as the necessary storage
-drivers (in your case IDE is built-in) and then they manually call the
-RAID_AUTORUN ioctl of md, to trigger a second autorun. It's sort of
-convoluted...
-
---
-Paul
+=2D-=20
+Bernd Schubert
+Physikalisch Chemisches Institut / Theoretische Chemie
+Universit=E4t Heidelberg
+INF 229
+69120 Heidelberg
+e-mail: bernd.schubert@pci.uni-heidelberg.de
