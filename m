@@ -1,60 +1,100 @@
-From: Gregory Leblanc <gleblanc@linuxweasel.com>
-Subject: Re: Performance difference between two raid0 arrays on same drives?
-Date: 11 Jul 2003 21:36:59 -0700
+From: Gordon Henderson <gordon@drogon.net>
+Subject: Re: RAID design
+Date: Sat, 12 Jul 2003 09:28:44 +0100 (BST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1057984618.3382.81.camel@gregdell.example.com>
-References: <200307111813.26177.michel@ket.kth.se>
+Message-ID: <Pine.LNX.4.43.0307120912550.6220-100000@unicorn.drogon.net>
+References: <000201c3480a$9c7ebbd0$27e703ca@magnus>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-/M5G0466MQoKENOI0kxj"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200307111813.26177.michel@ket.kth.se>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <000201c3480a$9c7ebbd0$27e703ca@magnus>
+To: Mikael Chambon <raid-ml@cronos.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Fri, 11 Jul 2003, Mikael Chambon wrote:
 
---=-/M5G0466MQoKENOI0kxj
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> Hi All,
+> First I wish to thanks you guys for your answers, I really apreciate.
+> Now I have a question about RAID design.
+>
+> I am trying to implement the best soft RAID system for a samba fileserver
+> as safer as possible.
+>
+> Here is my first idea:
+>
+>  1) Using a small hard drive for the OS (2gigs)
+> plugged as IDE 1 master (won't take part of the raid array).
+>
+> 2) Using two 120 gig for the fileserver in a raid1 array
+> The first one will be as IDE1 slave and the second one as
+> IDE2 master (the cdrom drive will be IDE2 slave).
+>
+> The weakness here will be if the first hard drive with the OS
+> failed.
 
-On Fri, 2003-07-11 at 09:13, Michel wrote:
-> Hi!
->=20
-> I have set two raid0 arrays on two hardrives, using 2x2 partitions. I did=
- a=20
-> benchmark of the resulting arrays and one is much slower than the other o=
-ne.=20
-> I used bonnie++ and hdparm for the tests. It showed that /dev/md0 is 30%=20
-> slower than /dev/md1.=20
-> /dev/md1 is really close to twice the performance of a single drive.
-> I set the arrays with the same parameters. md0 is built from 2x 5 Gb whil=
-e md1=20
-> is built from 2x2 Gb. The harddrives have the same partition table. md0 i=
-s=20
-> the closest to the begining of the drives.
-> The filessystem is Reiserfs on both arrays.
-> Everything works well, except i am curious about such a difference in=20
-> performances, since the arrays share the same hardware.=20
-> I am new to linux raid, i do not know if this is normal or weird.
+It's a double weakness too - it's possible (and I've had it happen to me)
+for one drive on a controller to take the other one out with it too. In my
+case, when I removed the offending drive, the other drive was OK and
+intact, but who knows. So should your data drive fail on the first
+controller, it may not only take that out, but your OS disk out too.
+Remove the data drive and reboot and it may work, but ...
 
-This is to be expected.  Partitions toward the "end" of the disk are
-written closer to the center of the platters, and as a result, data
-transfers suffer.  The drive spins at a constant number of revolutions
-per minute, making the linear velocity of the platter across the read
-head much higher at the outside of the disk than the outside.  HTH,
-	Greg
+> My second idea is:
 
+Much better IMO :)
 
---=-/M5G0466MQoKENOI0kxj
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+> Use only 2 120 gig hard drives and implement a root raid array including
+> the OS. The first one as IDE1 master and the second one as IDE2 master.
+> (The cdrom drive as IDE1 slave).
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.2 (GNU/Linux)
+Unless you actually need the CDROM, I'd unplug it.
 
-iD8DBQA/D5BqnAkVXO6fw4sRAn9wAJoDwf3NHQQ7D65F1dIezTQp4KyaMwCfUoMs
-AvjymEybJM2yJaDvflf410I=
-=CKYH
------END PGP SIGNATURE-----
+> I am not RAID expert but I really don't see the benefits of including
+> the OS in the RAID array as if the primary HD failed, the system won't be
+> able to boot anyway. Am I right ?
 
---=-/M5G0466MQoKENOI0kxj--
+Not neccessarily. Modern motherboards will boot of either on-board
+controller, so if the primary failed, then the master drive on the 2nd
+controller ought to be able to boot. It's worth checking your motherboard
+though. All the systems I've built in the past 2-3 years like this have
+had this ability. You may need to physically unplug the failed drive
+though (and reboot) if it fails in a way that make it look like it's still
+active.
+
+> I mean if the primary disk failed, even if I ask the BIOS to boot the second
+> hard drive, the system won't boot as everything is linked to hda in the
+> system.
+
+Make everything RAID1 then it'll "just work". Not all distributions let
+you do this at install time though. I use Debian which doesn't let you do
+it at boot time, so it's a little fiddly, but the Root-RAID How-To does
+exactly what it says on the tin...
+
+What I'd do: Partition both drives exactly the same and RAID one on all
+the partitions. Even swap.  Eg.
+
+Partition	Use	Size
+  1		/	512MB
+  2		swap	1024M
+  3		/usr	2048M
+  4		/space	Rest of disk
+
+Unless you anticipate 100's of MB of log files every say you'll be fine
+with that. (And if you do, then put /var on its own partition, as big as
+you anticipate it being - 4GB is about right for some of the mail servers
+I've built like this, but only you know what the expected use of the
+machine is) I have several machines built just like this in SMEs and they
+work really well with both Samba and NFS exports of the filesystem.
+
+Remember to connect your drives up with 2 x 80-pin cables to take full
+advantage of modern DMA - it might also be worth while compiling a custom
+kernel too with the right drivers for the motherboard hardware installed,
+then you shouldn't need hdparm at boot time.
+
+You might also want to look at a journalling filesystem too. I've only
+recently started to use XFS and so-far it's saved me one hour-long FSCK
+which is a down-side of ext2 and large partitions )-:
+
+Gordon
 
