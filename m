@@ -1,17 +1,52 @@
-From: "James R Bamford" <jim@jimtreats.com>
-Subject: Raid array not clean (its barely used and a few weeks old.. how can i find out what went wrong?)
-Date: Thu, 11 Dec 2003 01:03:08 -0000
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: Raid array not clean (its barely used and a few weeks old.. how can i find out what went wrong?)
+Date: Wed, 10 Dec 2003 20:49:31 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <PPEOJEIEFLAONFNHJPOOKEHKGPAA.jim@jimtreats.com>
-References: <3FD7A643.7060602@hosttuls.com>
+Message-ID: <200312110149.hBB1nZW27762@dns1.watkins-home.com>
+References: <PPEOJEIEFLAONFNHJPOOKEHKGPAA.jim@jimtreats.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3FD7A643.7060602@hosttuls.com>
-To: Linux-raid maillist <linux-raid@vger.kernel.org>
+In-Reply-To: <PPEOJEIEFLAONFNHJPOOKEHKGPAA.jim@jimtreats.com>
+To: 'James R Bamford' <jim@jimtreats.com>, 'Linux-raid maillist' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
+
+This is normal, if...  Your system crashed.
+The system is syncing the mirror.
+Try this command to see the status:
+cat /proc/mdstat
+
+If your system resyncs each time you re-boot then some is wrong.
+If you re-boot before it is done, it will start over from the beginning.
+
+The default max speed if 10000K per second.
+
+Issue this command to change the speed now.
+echo 100000 > /proc/sys/dev/raid/speed_limit_max
+
+If you want the change to be permanent, add these 2 lines to
+/etc/sysctl.conf
+# RAID rebuild max speed per device
+dev.raid.speed_limit_max = 100000
+
+The speed can be whatever you want.  I use 100000, which is much faster than
+possible for my system.  Oh!  100000 is 100000K bytes per second per device.
+So if you have 2 disks, they will attempt 100Meg per second each!
+
+Based you the size of your disks, the resync will take just over 2 hours, at
+10000K per second.  Your disks should be much faster.
+
+Guy
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of James R Bamford
+Sent: Wednesday, December 10, 2003 8:03 PM
+To: Linux-raid maillist
+Subject: Raid array not clean (its barely used and a few weeks old.. how can
+i find out what went wrong?)
 
 Ok,
 
@@ -61,4 +96,10 @@ it!?
 Cheers
 
 Jim
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 
