@@ -1,50 +1,24 @@
-From: "Stephen C. Tweedie" <sct@redhat.com>
-Subject: Re: [Ext2-devel] Re: fsck out of memory
-Date: 11 Feb 2003 14:33:02 +0000
+From: Stephan van Hienen <raid@a2000.nu>
+Subject: Re:2TB+ fs ext3 (was fsck out of memory)
+Date: Tue, 11 Feb 2003 16:32:48 +0100 (CET)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1044973982.1980.29.camel@sisko.scot.redhat.com>
-References: <Pine.LNX.4.53.0302071555110.718@ddx.a2000.nu>
-	<Pine.LNX.4.53.0302071800200.1306@ddx.a2000.nu>
-	<20030207102858.P18636@schatzie.adilger.int>
-	<Pine.LNX.4.53.0302090953440.1039@ddx.a2000.nu>
-	<1044917060.11838.108.camel@sisko.scot.redhat.com>
-	<Pine.LNX.4.53.0302111410350.13269@ddx.a2000.nu>
+Message-ID: <Pine.LNX.4.53.0302111628230.15933@ddx.a2000.nu>
+References: <3E486596.2090800@ntr.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.53.0302111410350.13269@ddx.a2000.nu>
-To: Stephan van Hienen <raid@a2000.nu>
-Cc: Andreas Dilger <adilger@clusterfs.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, ext2-devel@lists.sourceforge.net, Theodore Ts'o <tytso@mit.edu>, peter@chubb.wattle.id.au, tbm@a2000.nu, Stephen Tweedie <sct@redhat.com>
+In-Reply-To: <3E486596.2090800@ntr.net>
+To: "Marco C. Mason" <mason@ntr.net>
+Cc: Andreas Dilger <adilger@clusterfs.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, ext2-devel@lists.sourceforge.net, Theodore Ts'o <tytso@mit.edu>, peter@chubb.wattle.id.au, bernard@biesterbos.nl
 List-Id: linux-raid.ids
 
-Hi,
+On Mon, 10 Feb 2003, Marco C. Mason wrote:
+> I don't know if anyone mentioned it or not, but the block addresses in your
+> error messages appear suspiciously close to 2^29.  I'm suspecting an
+> internal
+> overflow in a calculation somewhere...
 
-On Tue, 2003-02-11 at 13:11, Stephan van Hienen wrote:
-> > On Sun, 2003-02-09 at 10:08, Stephan van Hienen wrote:
-> >
-> > > Feb  7 04:18:15 storage kernel: EXT3-fs error (device md(9,0)):
-> > > ext3_new_block:
-> > > Allocating block in system zone - block = 536875638
-> >
-> > That looks like it could be a block wrap, amongst other possible causes.
-> hmms and this means ?
+615381536 blocks can this be over the limit ?
 
-One possible cause here is that some component of the system has wrapped
-the block number round at 2TB, rather than correctly going beyond 2TB,
-resulting in the wrong block being picked up as a bitmap block.
-
-> > Well, that's the most likely candidate, because it's the least tested
-> > component.  Are you using Ben LaHaise's LBD fixes for the md devices?
-> > Without those, md and lvm are not LBD-safe.
-> where can i find this lbd fixes for md ?
-
-I've no idea.  Ben has some lb patches up at
-
-  http://people.redhat.com/bcrl/lb/
-
-but there's nothing broken out against the latest lbd diffs.
-
-Cheers,
- Stephen
-
+(-b 8192 gives me warning : 'Warning: blocksize 8192 not usable on most
+systems.')
