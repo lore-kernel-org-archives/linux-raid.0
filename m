@@ -1,37 +1,97 @@
 From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: force spare to sync
-Date: Fri, 14 Nov 2003 11:26:17 +1100
+Subject: [RFCI] How best to partition MD/raid devices in 2.6
+Date: Fri, 14 Nov 2003 14:11:15 +1100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16308.8489.411169.830830@notabene.cse.unsw.edu.au>
-References: <200311140019.hAE0JR204528@bzs.org>
+Message-ID: <16308.18387.142415.469027@notabene.cse.unsw.edu.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Michael on Thursday November 13
-To: michael@insulin-pumpers.org
-Cc: linux-raid@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday November 13, michael@insulin-pumpers.org wrote:
-> > 
-> > If you want the spare to be in-sync with the rest of the array, then
-> > it is not a spare, it is full member.
-> > 
-> > i.e. instead of making a RAID1 array with 2 drives and one space,
-> > make it with three drives and no spare.
-> > 
-> > NeilBrown
-> > 
-> Can you really make a 3 partition raid 1 with no spare???? And all 3 
-> partitions will remain in sync???  I haven't dug into the kernel 
 
-Certainly you can.  There is nothing magic a "2" in raid1.  You can
-have a RAID1 array of 27 drives if you like and they will always be
-kept in sync.
+RFCI == Request For Clever Ideas.
 
-> ..... but wadda I know???
+Hi all..
 
-enough to ask questions, which is a good start.
+ I want be able to partition "md" raid arrays.
+ e.g. I want to be able to use RAID1 to mirror sda and sdb as whole
+ drives, and then partitions that into root, swap, other (or whatever
+ suits the particular situation).
 
+ I am already doing this on 2.4 based kernels using a local patch
+ which is unlikely ever to get into the kernel.
+
+ This patch declares a new major number and uses it to address upto 15
+ partitions on each of the first 16 md arrays.
+ Not only does this limit you do only partitioning 16 md arrays, but
+ it means that there are two separate devices (major+minor) that
+ access the same device.  In 2.4 this is just untidy.  In 2.6 it would
+ also subvert the exclusive access provided by bd_claim, and that
+ isn't a good thing. 
+
+ So I'm looking for a nice clean way to provide partitioning of md
+ devices in 2.6.
+ In 2.6 we have 20 bits for minor number and I am quite happy to
+ require the use of them - i.e. there is no need for the approach to
+ work equally well in 2.4.
+
+ Backwards compatibility is fairly important, and that means that the
+ first 256 minor numbers for block major number '9' have to still be
+ whole md arrays.
+
+ Some options that occur to me are:
+
+ 1/ compile time option that redefines major 9 to use 6 bits for
+   partition information.  This throws backwards compatibility out the
+   window and is a nice clean way forward.  I think this would be a
+   support nightmare and I wouldn't impose it on anyone.
+
+ 2/ new major number which uses 6 bits for partitioning and provide
+   some sort of interlock so that you cannot access the same raid
+   array from both the old and the new major at the same time.
+   I'm not sure how easy the interlock would be, but it is probably
+   do-able.  The problem is that I would like a well-defined major
+   number and Linus doesn't seem keen on any more of those (though I
+   realise that isn't unanimous).
+   There was once talk of a 'disk' major number and all the things
+   that looked like discs would come under that somehow, but that
+   doesn't seem to have eventuated.  Maybe it should, but there would
+   still be the interlock problem
+
+ 3/ define minor numbers of block-major-9 that are larger than 255 to
+   have 6 bits of partitioning information. i.e.
+     9,0 -> md0
+     9,1 -> md1
+      ...
+     9,255 -> md255
+     9,256 -> md256
+     9,257 -> md256p1
+     9,257 -> md256p2
+      ...
+     9,320 -> md257
+     9,321 -> md257p1
+      ...
+   This has least impact on other system and is in some ways simplest,
+   but it has the problem of lack of uniformity.  You wouldn't be able
+   to partition md0, but that isn't a big problem as long as you can
+   partition some md arrays.
+
+ 4/ just use 'dm', or write a new 'md' module that can present a
+    partition of a device.  Then leave the setup to user-space.
+    This is least impact on the kernel, but most impact on
+    user-space.  It would not be too hard to create a userspace tool
+    that made most of this fairly transparent.
+    Particularly if it was a new 'md' personality, userspace could
+    then effectively decide how the minor numbers of block-major-9
+    were used with respect to partitioning.
+
+
+There are probably other options and I would be happy to hear them.
+My personal preference is wavering between 4 (using md) and 2.
+Possibly I should learn more about how 'dm' could handle it for me..
+
+Opinions welcome,
+Thanks,
 NeilBrown
