@@ -1,101 +1,50 @@
-From: Ruth Ivimey-Cook <Ruth.Ivimey-Cook@ivimey.org>
-Subject: Strangeness when booting raid1: md5 already running?
-Date: Mon, 21 Mar 2005 12:26:18 +0000
-Message-ID: <1111407978.757.7.camel@filestore.ivimey.org>
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE:  Adaptec 3210S Problems
+Date: Mon, 21 Mar 2005 08:53:11 -0500
+Message-ID: <60807403EABEB443939A5A7AA8A7458BED2BDD@otce2k01.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+content-class: urn:content-classes:message
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: sxs.lists.linux-users@charter.net, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Folks,
+Termination, Cabling and/or Drive Firmware Incompatibilities. Good idea
+to get your TSID ready, list of components and their firmware versions
+and call Adaptec Support and work through the discovery cookbook.
 
-I had to pull the plug on my box today, and when it rebooted got this
-rather strange raid issue. The box has 5 raid1 arrays, consisting of 5
-partitions on each of 2 drives. When it rebooted, the md5 array came up
-like so:
+Sincerely -- Mark Salyzyn
 
-raid1: raid set md0 active with 2 out of 2 mirrors
-md: ... autorun DONE.
-md: Autodetecting RAID arrays.
-md: autorun ...
-md: considering hda9 ...
-md:  adding hda9 ...
-md: md5 already running, cannot run hda9
-md: export_rdev(hda9)
-md: ... autorun DONE.
-md: Autodetecting RAID arrays.
-md: autorun ...
-md: considering hda9 ...
-md:  adding hda9 ...
-md: md5 already running, cannot run hda9
-md: export_rdev(hda9)
-md: ... autorun DONE.
-md: Autodetecting RAID arrays.
-md: autorun ...
-md: considering hda9 ...
-md:  adding hda9 ...
-md: md5 already running, cannot run hda9
-md: export_rdev(hda9)
-md: ... autorun DONE.
-md: Autodetecting RAID arrays.
-md: autorun ...
-md: considering hda9 ...
-md:  adding hda9 ...
-md: md5 already running, cannot run hda9
-md: export_rdev(hda9)
-md: ... autorun DONE.
-md: Autodetecting RAID arrays.
-md: autorun ...
-md: considering hda9 ...
-md:  adding hda9 ...
-md: md5 already running, cannot run hda9
-md: export_rdev(hda9)
-md: ... autorun DONE.
-EXT3-fs: INFO: recovery required on readonly filesystem.
-EXT3-fs: write access will be enabled during recovery.
-EXT3-fs: recovery complete.
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Brett I. Holcomb
+Sent: Saturday, March 19, 2005 1:22 AM
+To: linux-raid@vger.kernel.org
+Subject: Adaptec 3210S Problems
 
-Now this was the first time the string "md5" appears in the log. And
-indeed, it appears that hda9 has been kicked out of the array:
+I'm running a Linux system with a Adaptec 3210S controller.  Right now
+the 
+system has nothing on it and I have not created any RAID.  I've notice 
+that when I boot into the Adaptec CD and watch the drives they keep 
+getting flagged as missing.  If I do a "Read system config" the drives 
+show up and the flag goes away.  A few minutes later they are flagged as
 
-mdadm --examine /dev/hdc9
-/dev/hdc9:
-          Magic : a92b4efc
-        Version : 00.90.00
-           UUID : a3f13998:4c0f70df:ea732842:0133b262
-  Creation Time : Thu Nov 25 11:50:26 2004
-     Raid Level : raid1
-    Device Size : 3301248 (3.15 GiB 3.38 GB)
-   Raid Devices : 2
-  Total Devices : 1
-Preferred Minor : 5
+missing again.  This is a little discouraging as it appears I have a 
+problem.  Any ideas on what is happening - why do my drives keep getting
 
-    Update Time : Mon Mar 21 12:23:24 2005
-          State : clean
- Active Devices : 1
-Working Devices : 1
- Failed Devices : 1
-  Spare Devices : 0
-       Checksum : 906511c - correct
-         Events : 0.937092
+flagged as missing?  I need to find out before I install Linux!
 
-
-      Number   Major   Minor   RaidDevice State
-this     0      22        9        0      active sync   /dev/hdc9
-   0     0      22        9        0      active sync   /dev/hdc9
-   1     1       0        0        1      faulty removed
-
-
-The equivalent command on hda9 produces the same info, barring the event
-count and that it says "active sync /dev/hda9" for itself.
-
-Any thoughts on why this happened?
-
-Ruth
-
+Thanks.
 
 -- 
-Ruth Ivimey-Cook <ruth@ivimey.org>
+Brett I. Holcomb
+brettholcomb@R777charter.net
+Registered Linux User #188143
+Remove R777 to email
 
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
