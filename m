@@ -1,41 +1,34 @@
-From: david@hpcf.upr.edu
-Subject: RAID5 bug on SuSE 8.2->9.1
-Date: Wed, 26 May 2004 09:21:37 -0400 (AST)
+From: <me@heyjay.com>
+Subject: Re: Can't add or delete a device from raid 1
+Date: Wed, 26 May 2004 08:33:32 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1803.136.145.126.5.1085577697.squirrel@136.145.126.5>
+Message-ID: <003e01c44326$0b682790$6705a8c0@a30>
+References: <Pine.LNX.4.33.0405261443440.32533-100000@lw2.cc-computer.de>
+Reply-To: <me@heyjay.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
-Cc: suse-linux@suse.com
+To: mk423@lw1.cc-computer.de, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+>
+> What do "mdadm --detail /dev/md0" and "mdadm --examine /dev/hda1"
+> report?
+>
+> Regards,
+> Martin
 
-I am having problems with the RAID 5 option on SuSE 8.2, 9.0, 9.1.
+When I did --detail it showed the array having 2 devices, the first of which
+was faulty (the bottom of the screen).  Unfortunately, I can't do
+the --examine.  This morning I got frustrated and:
 
-On each of the version the are diferent issues,
+dd if=/dev/zero of=/dev/hda &
+dd if=/dev/zero of=/dev/hdc &
 
-SuSE 9.1: First notice during the setup, the systems stops responding
-after a few MB have been copied, during this time I executed the command
-"cat /proc/mdstat" which will make the Raid volumen usefull again, ones
-the system is instaled the problem persisted.
-
-SuSE 9.0 & 8.2: Kernel panics, the parity disc 4/4 is never done.
-Reconstruct has to be issue with Knoppix bootcd.
-
-Loading the same volumen with any other Linux distro will make the volumen
-usefull without issues.
-
-My config:
-
-AMD64 3200
-1.5GB ram
-Asus k8v Deluxe
-Nvidia 5900
-2 Adaptec 29160 with 2 IBM 36GB each
+I'm going to start over with clean drives
 
 Thanks
+Jay
 
-David
