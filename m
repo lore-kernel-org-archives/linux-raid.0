@@ -1,50 +1,158 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: [PATCH] md - 1 of 12 - Missing mddev_put in md resync code
-Date: Fri, 14 Mar 2003 13:42:11 +1100
+From: "R. Scott Bailey" <rscottbailey@comcast.net>
+Subject: PATCH: raid1 on alpha
+Date: Thu, 13 Mar 2003 23:31:02 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <15985.16771.885438.47395@notabene.cse.unsw.edu.au>
-References: <E18sxOy-0004pf-00@notabene.cse.unsw.edu.au>
-	<1047491327.30792.3.camel@wmery000.ca.nortel.com>
-	<15983.43970.946123.962678@notabene.cse.unsw.edu.au>
-	<1047563289.30797.13.camel@wmery000.ca.nortel.com>
+Message-ID: <002d01c2e9e2$855de880$0201a8c0@spiffy>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Sean Kormilo on  March 13
-To: Sean Kormilo <skormilo@nortelnetworks.com>
-Cc: linux-raid@vger.kernel.org
+To: mingo@redhat.com, neilb@cse.unsw.edu.au
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, scott.bailey@eds.com
 List-Id: linux-raid.ids
 
-On  March 13, skormilo@nortelnetworks.com wrote:
-> > Would this be when removing a recently-failed device?  That can still
-> > oops.  I should send in a patch for that...
-> 
-> Yes in fact, that is the one I was seeing.
-> 
+Driven by desperation :-) I have churned out a patch that works around =
+a
+long-standing problem with software RAID1 on Alpha platforms. gcc (at l=
+east
+2.95 and 3.2) generated code for alpha apparently has a problem that is
+exercised by the form of the loops in raid1_read_balance.
 
-That one *should* be fixed in 2.4.-current-bk, but probably not
-completely.  It is actually rather hard to get it just-right in 2.4.
-I substantially reworked the 2.5 code so that proper locking could be
-done so that this sort of problem could be avoided.  
-2.4 will porbably have to stay with "close-enough".
+My admittedly lame patch, against 2.4.20, has been working for my SMP
+Alphaserver 4100 for a couple of weeks now without ill effect. (Everyth=
+ing,
+including root, on LVM on RAID1.) But I think I cut a corner or two in =
+order
+to get it working and keep it simple. I'm hoping a more artful/knowledg=
+eable
+programmer can massage this so it is acceptable for inclusion in the
+mainline kernels.
 
-> 
-> I have an odd problem where the first rebuild performs as expected
-> (about 40MB/s), but any subsequent rebuild plods along at about 6-7MB/s.
-> There is no IO activity on the system other than the rebuild during my
-> tests.
+Cheers,
 
-Does upping /proc/sys/dev/raid/speed_limit_min affect the speed?
+	Scott Bailey
+	scott.bailey@eds.com | rscottbailey@comcast.net
 
-Does increasing the magic "32" in is_mddev_idle help?
 
-> 
-> I tried putting in a couple of debug printk's here and there in the code
-> that backs off the resync, and the printk's themselves returned the
-> performance back to expected levels... some kind of a timing problem
-> perhaps?
+--- linux-2.4.20/drivers/md/raid1.c	2003-01-17 17:43:45.000000000 -0500
++++ linux-2.4.20-rsb/drivers/md/raid1.c	2003-01-17 17:43:20.000000000 -=
+0500
+@@ -11,6 +11,7 @@
+  *
+  * Fixes to reconstruction by Jakob =D8stergaard" <jakob@ostenfeld.dk>
+  * Various fixes by Neil Brown <neilb@cse.unsw.edu.au>
++ * Spastic hacks on raid1_read_balance by Scott Bailey
+<scott.bailey@eds.com>
+  *
+  * This program is free software; you can redistribute it and/or modif=
+y
+  * it under the terms of the GNU General Public License as published b=
+y
+@@ -475,6 +476,8 @@
+ 	int new_disk =3D conf->last_used;
+ 	const int sectors =3D bh->b_size >> 9;
+ 	const unsigned long this_sector =3D bh->b_rsector;
++	const int max_disk =3D conf->raid_disks;
++	const int loop_disk =3D max_disk - 1; /* optimizer is stooopid */
+ 	int disk =3D new_disk;
+ 	unsigned long new_distance;
+ 	unsigned long current_distance;
+@@ -488,22 +491,18 @@
 
-Don't you  hate that!
 
-NeilBrown
+ 	/* make sure that disk is operational */
+-	while( !conf->mirrors[new_disk].operational) {
+-		if (new_disk <=3D 0) new_disk =3D conf->raid_disks;
+-		new_disk--;
+-		if (new_disk =3D=3D disk) {
+-			/*
+-			 * This means no working disk was found
+-			 * Nothing much to do, lets not change anything
+-			 * and hope for the best...
+-			 */
+-
+-			new_disk =3D conf->last_used;
++	/* RSB: if not, be simple-minded and choose first readable disk */
+
+-			goto rb_out;
++	if (!conf->mirrors[new_disk].operational) {
++		for (disk =3D loop_disk; disk >=3D 0; disk--) {
++			if ((conf->mirrors[disk].operational) &&
++				(!conf->mirrors[disk].write_only)) break;
+ 		}
++		if (disk < 0) /* If no usable disk was found */
++			goto rb_out;
++		new_disk =3D disk;
+ 	}
+-	disk =3D new_disk;
++
+ 	/* now disk =3D=3D new_disk =3D=3D starting point for search */
+
+ 	/*
+@@ -519,35 +518,26 @@
+ 	 * This is for kicking those idling disks so that
+ 	 * they would find work near some hotspot.
+ 	 */
+-
+-	if (conf->sect_count >=3D conf->mirrors[new_disk].sect_limit) {
+-		conf->sect_count =3D 0;
+
+-#if defined(CONFIG_SPARC64) && (__GNUC__ =3D=3D 2) && (__GNUC_MINOR__ =
+=3D=3D 92)
+-		/* Work around a compiler bug in egcs-2.92.11 19980921 */
+-		new_disk =3D *(volatile int *)&new_disk;
+-#endif
+-		do {
+-			if (new_disk<=3D0)
+-				new_disk =3D conf->raid_disks;
+-			new_disk--;
+-			if (new_disk =3D=3D disk)
+-				break;
+-		} while ((conf->mirrors[new_disk].write_only) ||
+-			 (!conf->mirrors[new_disk].operational));
++	/*
++	 * RSB: Instead of making a scan for some other disk explicitly, just
++	 * mark the head position as being at start of the disk. Then the nex=
+t
++	 * loop checking for "close" disks is almost certain to pick somebody
++	 * else. Except for hot spots at front of disk, sigh.
++	 */
+
+-		goto rb_out;
++	if (conf->sect_count >=3D conf->mirrors[new_disk].sect_limit) {
++		conf->sect_count =3D 0;
++		conf->mirrors[new_disk].head_position =3D 0;
+ 	}
+
+-	current_distance =3D abs(this_sector -
+-				conf->mirrors[disk].head_position);
+-
+ 	/* Find the disk which is closest */
++	/* current_distance is initialized to guaranteed worse-than-worst
++	   so that we can simplify loop logic */
++
++	current_distance =3D conf->mirrors[0].sect_limit + 1;
+
+-	do {
+-		if (disk <=3D 0)
+-			disk =3D conf->raid_disks;
+-		disk--;
++	for (disk =3D loop_disk; disk >=3D 0; disk--) {
+
+ 		if ((conf->mirrors[disk].write_only) ||
+ 				(!conf->mirrors[disk].operational))
+@@ -561,7 +551,7 @@
+ 			current_distance =3D new_distance;
+ 			new_disk =3D disk;
+ 		}
+-	} while (disk !=3D conf->last_used);
++	}
+
+ rb_out:
+ 	conf->mirrors[new_disk].head_position =3D this_sector + sectors;
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
