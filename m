@@ -1,74 +1,55 @@
-From: "John Doe" <public_address_911@hotmail.com>
-Subject: Re: Problem converting raid-5 array from 2.2.17 into 2.4.22
-Date: Wed, 03 Sep 2003 02:28:28 +0300
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: md: bug in file md.c, line 1440 (2.4.22)
+Date: Wed, 3 Sep 2003 10:47:41 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Law12-F20LpCdNGFEN5000148c3@hotmail.com>
+Message-ID: <16213.14893.955734.797630@gargle.gargle.HOWL>
+References: <3F5017CA.4080700@tomt.net>
 Mime-Version: 1.0
-Content-Type: text/plain; format=flowed
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: message from Andre Tomt on Saturday August 30
+To: Andre Tomt <andre@tomt.net>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, mingo@redhat.com
 List-Id: linux-raid.ids
 
+On Saturday August 30, andre@tomt.net wrote:
+> Heya :-)
+> 
+> Having a funny showstopper problem here with md, the autostart fails 
+> miserably with "md: bug in file md.c, line 1440"
+> 
+> Here's the story;
+and a sad one it is...
 
-Ahem :-) Still replying to myself, I also found a very nice utility called 
-lsraid, which tells us things like:
+> md:	**********************************
+> md:	* <COMPLETE RAID STATE PRINTOUT> *
+> md:	**********************************
+> md5: <hda9> array superblock:
+> md:  SB: (V:0.90.0) ID:<80012e77.b449af86.6bccffae.ddda9474> CT:3e4caa02
+> md:     L1 S24394560 ND:-22 RD:2 md5 LO:0 CS:32768
+> md:     UT:3f50117d ST:1 AD:2 WD:2 FD:-24 SD:0 CSUM:a62f39ca E:0000006d
+>      D  0:  DISK<N:0,hdc9(22,9),R:0,S:6>
+>      D  1:  DISK<N:1,hda9(3,9),R:1,S:6>
+>      D  2:  DISK<N:2,[dev 00:00](0,0),R:2,S:9>
+>      D  3:  DISK<N:0,[dev 00:00](0,0),R:0,S:9>
+>      D  4:  DISK<N:0,[dev 00:00](0,0),R:0,S:9>
 
-# lsraid -D -l -d /dev/hda3 -d /dev/hdb1 -d /dev/hdc1 -d /dev/hdd1
+Your problem is that these extra slots (N:0) are flagged as failed
+(S:9) and this confuses md.c.
 
-[dev 3, 3] /dev/hda3:
-        md version              = 0.90.0
-        superblock uuid         = CF9E6AB4.00000000.00000000.00000000
-        md minor number         = 0
-        created                 = 974113695 (Mon Nov 13 13:08:15 2000)
-        last updated            = 1062524544 (Tue Sep  2 20:42:24 2003)
-        raid level              = 5
-        chunk size              = 128 KB
-        apparent disk size      = 78935296 KB
-        disks in array          = 4
-        required disks          = 4
-        active disks            = 4
-        working disks           = 4
-        failed disks            = 0
-        spare disks             = 0
-        position in disk list   = 0
-        position in md device   = 0
-        state                   = good
+If you get mdadm 1.3.0 and apply the three patches that can be found
+in
+   http://cgi.cse.unsw.edu.au/~neilb/source/mdadm/patch/applied/
 
-Others are identical except for the following lines:
+and then stop the array and use:
+   mdadm --assemble --update=summaries /dev/md5 /dev/sda9 /dev/sdc9
 
-[dev 3, 65] /dev/hdb1:
-        position in disk list   = 1
-        position in md device   = 1
+then it should fix things up for you.
+You will need to do a similar thing for all of the arrays.
+This will be difficult for md2 as it is 'root'.  You will need to boot
+a rescue disc to fix this one.
 
-[dev 22, 1] /dev/hdc1:
-        position in disk list   = 2
-        position in md device   = 2
+I have not idea how it got the failed flag.
 
-[dev 22, 65] /dev/hdd1:
-        position in disk list   = 3
-        position in md device   = 3
-
-Yet trying to access them via md0 causes failure:
-# lsraid -D -l -a /dev/md0
-lsraid: md device [dev 9, 0] /dev/md0 is offline: Please specify a disk to 
-query
-
-All partition types for the respective partitions are of type fd (Linux raid 
-autodetect)
-Kernel config with respect to raid stuff is as follows:
-
-CONFIG_MD=y
-CONFIG_BLK_DEV_MD=y
-CONFIG_MD_LINEAR=m
-CONFIG_MD_RAID0=m
-CONFIG_MD_RAID1=m
-CONFIG_MD_RAID5=y
-# CONFIG_MD_MULTIPATH is not set
-# CONFIG_BLK_DEV_LVM is not set
-
-All seems terribly normal - it just doesn't work :(
-
-_________________________________________________________________
-STOP MORE SPAM with the new MSN 8 and get 2 months FREE* 
-http://join.msn.com/?page=features/junkmail
-
+NeilBrown
