@@ -1,44 +1,27 @@
-From: seth vidal <skvidal@phy.duke.edu>
-Subject: Re: Recovering files on a raid...
-Date: 29 Sep 2003 09:33:09 -0400
+From: afu@fugmann.dhs.org
+Subject: Faulty raid5.
+Date: Mon, 29 Sep 2003 16:00:18 +0200 (CEST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1064842389.21690.0.camel@opus>
-References: <1064841623.2151.270.camel@localhost>
+Message-ID: <33117.80.165.96.2.1064844018.squirrel@webmail.fugmann.dhs.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;charset=iso-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1064841623.2151.270.camel@localhost>
-To: loic.paillotin@qualimucho.com
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 2003-09-29 at 09:20, Lo=EFc Paillotin wrote:
-> One of my machines as just been hacked. As you can guess, there is a
-> substantial amount of log files deleted.
->=20
-> I want to recover those log files, to trace the intruder.=20
-> So I tried the utility 'recover' on my raid. It segfaults merrily :-)=
-=2E
->=20
-> So can someone point me to a way of recovering deleted files over a
-> raid1 partition?=20
-> Thanks a lot for your help.=20
->=20
-> Loic PAilltotin.=20
->=20
-> Please reply to loic.paillotin@qualimucho.com since my mail is buggy =
-and
-> I can't receive responses to the list :)
+Hi,
 
-Go find the coroner's toolkit - that will help you resurrect some
-deleted files, or parts of them.
+I have a server running Raid5 on three discs. Last week, one of the discs
+was silently marked faulty. Today, the 2. drive was marked faulty, and the
+raid died of course.
 
--sv
+Is there any way for me to retrieve data from the array. I have some very
+importent data on the discs, so any help would be appriciated. I have read
+the Linux-software raid howto (esp. section 6.1). Is this the way to do
+it, and how would the commands be.
 
+Regards
+Anders Fugmann
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+p.s.
+Please cc me on replies, as I'm not subscribed to the list.
