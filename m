@@ -1,59 +1,111 @@
-From: Joe Thornber <joe@fib011235813.fsnet.co.uk>
-Subject: Re: RFC - new raid superblock layout for md driver
-Date: Fri, 22 Nov 2002 10:13:01 +0000
+From: Stuart Levine <stuart@reveltech.com>
+Subject: Help!  Head crash on IDE Seconday Master.  Slave has all the data
+ but wont boot
+Date: Sat, 23 Nov 2002 07:38:32 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20021122101301.GB1508@reti>
-References: <15835.2798.613940.614361@notabene.cse.unsw.edu.au> <20021120160259.GW806@nic1-pc.us.oracle.com>
+Message-ID: <3DDF76C8.8070605@reveltech.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; protocol="application/x-pkcs7-signature"; micalg=sha1; boundary="------------ms070309080109020107000600"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20021120160259.GW806@nic1-pc.us.oracle.com>
-To: Joel Becker <Joel.Becker@oracle.com>
-Cc: Neil Brown <neilb@cse.unsw.edu.au>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Nov 20, 2002 at 08:03:00AM -0800, Joel Becker wrote:
-> 	Hmm, what is the intended future interaction of DM and MD?  Two
-> ways at the same problem?  Just curious.
+This is a cryptographically signed message in MIME format.
 
+--------------ms070309080109020107000600
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
-There are a couple of good arguments for moving the _mapping_ code
-from md into dm targets:
+Hi,
 
-1) Building a mirror is essentially just copying large amounts of data
-   around, exactly what is needed to implement move functionality for
-   arbitrarily remapping volumes.  (see
-   http://people.sistina.com/~thornber/pvmove_outline.txt).
+So I build this great new P4 2.53GHz server.  I had two WD 100GB Caviar 
+Special editions running in a RAID1 format.  All seemed fine except one 
+drive was very noisy and caused excessive vibrations.  Thought nothing 
+of it because it's less than a month old.  Well, I was wrong, very 
+wrong.  Last night the drive failed and the next boot up sequence left 
+me with sound I will never forget.  Anyway, until I get a new drive to 
+rebuild and supplant the array, I was going to boot from /dev/md0 (/boot 
+partition) but to no avail the system does not want to recognize it as a 
+boot disk.  If I boot up in rescue mode, it says there are no partitions 
+on the disk (/dev/md0).  However, if I use the fdisk -l I get what you 
+would expect including a BOOT partition.  Luckily, I did make the 
+emergency boot floppy and I am able to boot the system on from that 
+floppy for the ROOT partition on the disk /dev/md2.  So, how do I tell 
+the boot loader to look at /dev/hdd instead of /dev/hdc (the dead disk 
+in the raid pair) without loosing my installed data?  I now new to RAID, 
+however, I am new to software RAID in Linux.  Any help and advise would 
+be greatly appreciated.
 
-   So I've always had every intention of implementing a mirror target
-   for dm.
+Thanks in advance,
 
-2) Extending raid 5 volumes becomes very simple if they are dm targets
-   since you just add another segment, this new segment could even
-   have different numbers of stripes.  eg,
+Stuart
 
+--------------ms070309080109020107000600
+Content-Type: application/x-pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
 
-       old volume                             new volume
-   +--------------------+      +--------------------+--------------------+
-   | raid5 across 3 LVs |   => | raid5 across 3 LVs | raid5 across 5 LVs |
-   +--------------------+      +--------------------+--------------------+
-
-   Of course this could be done ATM by stacking 'bottom LVs' -> mds ->
-   'top LV', but that does create more intermediate devices and
-   sacrifices space to the md metadata (eg, LVM has its own metadata
-   and doesn't need md to duplicate it).
-
-MD would continue to exist as a seperate driver, it needs to read and
-write the md metadata at the beginning of the physical volumes, and
-implement all the nice recovery/hot spare features.  ie. dm does the
-mapping, md implements the policies by driving dm appropriately.  If
-other volume managers such as EVMS or LVM want to implement features
-not provided by md, they are free to drive dm directly.
-
-I don't think it's a huge amount of work to refactor the md code, and
-now might be the right time if Neil is already changing things.  I
-would be more than happy to work on this if Neil agrees.
-
-- Joe
+MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIJUDCC
+AwYwggJvoAMCAQICAwgsljANBgkqhkiG9w0BAQQFADCBkjELMAkGA1UEBhMCWkExFTATBgNV
+BAgTDFdlc3Rlcm4gQ2FwZTESMBAGA1UEBxMJQ2FwZSBUb3duMQ8wDQYDVQQKEwZUaGF3dGUx
+HTAbBgNVBAsTFENlcnRpZmljYXRlIFNlcnZpY2VzMSgwJgYDVQQDEx9QZXJzb25hbCBGcmVl
+bWFpbCBSU0EgMjAwMC44LjMwMB4XDTAyMDgyOTE5MzAzOFoXDTAzMDgyOTE5MzAzOFowRjEf
+MB0GA1UEAxMWVGhhd3RlIEZyZWVtYWlsIE1lbWJlcjEjMCEGCSqGSIb3DQEJARYUc3R1YXJ0
+QHJldmVsdGVjaC5jb20wggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQC263CgkbqU
+wmceTfjfzHWlP4sB7iSegFlP5absbvfMC8zFM1jMGJa7JWftT3GJZ2YiOQsuZ4m1mZW/UMyf
+CUWnUEmJWGcfs7ConW6pbr5nZjNcCqDOnWi/9g1luwejOldZ7uD3laCm8VK92FgXnsBZScB1
+d3hS7/Z2DocjT80nXLIZKLX9teHx99pSUp/tKrIvw6qUuzlUaSEZy9rX+hTBvcmB6qsJEE6M
+VNAB9B109ynwdXtwjdAUQxbLjN72KeyCFSNhjwda9dfZFfTUGb62FuWirinpT5azifN5qGN5
+/g36apYHTLxys6zYSQFs45H/1VEE8LIrOd7wXydF8cLdAgMBAAGjMTAvMB8GA1UdEQQYMBaB
+FHN0dWFydEByZXZlbHRlY2guY29tMAwGA1UdEwEB/wQCMAAwDQYJKoZIhvcNAQEEBQADgYEA
+zsvx9MYmg2JOBHm6qhTYYf4rdPaQNEB8OQDk7azTPsNFH4amgGSPJd5qvqc3V2rV4Q60vik/
+PVmPLFi9n+q8+9zHYxkGthJSA3VitLN2OwUran1oWhqTDn7Gu52oRUVGFFTW4Jr/veh1mw5W
+CZpv9Bg7LJZJqkt4RruaPm0Sk1QwggMGMIICb6ADAgECAgMILJYwDQYJKoZIhvcNAQEEBQAw
+gZIxCzAJBgNVBAYTAlpBMRUwEwYDVQQIEwxXZXN0ZXJuIENhcGUxEjAQBgNVBAcTCUNhcGUg
+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
+PGev3EJikQAAAAAAAA==
+--------------ms070309080109020107000600--
 
