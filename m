@@ -1,54 +1,80 @@
-From: "Matthew (RAID)" <RAID@lists.elvey.com>
-Subject: Help; question follow-up.
-Date: Mon, 12 Jul 2004 16:11:09 -0700
+From: Mike Tran <mhtran@us.ibm.com>
+Subject: [PATCH] Consider user space generated checksum
+Date: 13 Jul 2004 10:54:16 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1089673869.14408.200223035@webmail.messagingengine.com>
+Message-ID: <1089734056.3065.97.camel@star2.austin.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="=-pf4ismvtUq3wQkpSUwBY"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Apropos 
-http://marc.theaimsgroup.com/?l=linux-raid&m=108932298006669&w=2
-- my first post - Subject:(Can I mark a RAID 1 drive as old? Move it?
-SCA hangs)  Troubles creating a reliable backup system.
 
-Was my post OT? Too long? Confusing? (Or just no one here felt like
-volunteering to answer it?)
-Just thought I'd ask before posting to, e.g. news:...linux...hardware.
+--=-pf4ismvtUq3wQkpSUwBY
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 
-In brief, the problems I'd love help with (from the Subject) are 3:
+On alpha systems, the kernel computed checksum, csum_partial(), and user
+space computed checksum are different.  As a consequence, the kernel MD
+driver aborts detection of MD superblock.  This means running mdadm
+--assemble -f or -U summaries will not always work.
 
-Can I mark a RAID 1 drive as old?
-(I.e. not 'failed', but rather old, as in older than the other drive(s)
-in the raid1 array it's in.)
+I have been wondering... Should MD driver use csum_partial() at all?
 
-Move it?  I.e. how can I move a drive in a raid array from one drive bay
-to another and have the resulting drive letter change not be a problem?
+The attached patch includes the checksum function found in mdadm code. 
+If the architecture dependent checksum validation fails, at least try
+the common function (only for 0.90 superblock format).
 
-Why is the system failing when I put a drive into the system? 
+Regards,
+Mike T.
 
-Details in original email at the URL above.
 
-Thinking about buying the O'Reilly RAID book, though I doubt it'll
-answer these off-the-beaten-path questions.
+--=-pf4ismvtUq3wQkpSUwBY
+Content-Disposition: attachment; filename=md.c.patch
+Content-Type: text/plain; name=md.c.patch; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
---
+--- a/drivers/md/md.c	2004-06-16 00:19:03.000000000 -0500
++++ b/drivers/md/md.c	2004-07-12 18:18:31.000000000 -0500
+@@ -439,6 +439,22 @@
+ 	return csum;
+ }
+ 
++static unsigned int calc_sb_csum_common(mdp_super_t *super)
++{
++	unsigned int  disk_csum = super->sb_csum;
++	unsigned long long newcsum = 0;
++	unsigned int csum;
++	int i;
++	unsigned int *superc = (int*) super;
++	super->sb_csum = 0;
++                                                                              
++	for (i=0; i<MD_SB_BYTES/4; i++)
++		newcsum+= superc[i];
++	csum = (newcsum& 0xffffffff) + (newcsum>>32);
++	super->sb_csum = disk_csum;
++	return csum;
++}
++
+ /*
+  * Handle superblock details.
+  * We want to be able to handle multiple superblock formats
+@@ -522,10 +538,15 @@
+ 		goto abort;
+ 
+ 	if (calc_sb_csum(sb) != sb->sb_csum) {
++		printk(KERN_WARNING "md: First attemp to validate checksum on %s failed."
++			"  Trying the common method...\n",
++			b);
++		if (calc_sb_csum_common(sb) != sb->sb_csum) {
+ 		printk(KERN_WARNING "md: invalid superblock checksum on %s\n",
+ 			b);
+ 		goto abort;
+ 	}
++	}
+ 
+ 	rdev->preferred_minor = sb->md_minor;
+ 	rdev->data_offset = 0;
 
-Mr. Elvey (<firstname>@<lastname>.com)
+--=-pf4ismvtUq3wQkpSUwBY--
 
-Ignore me. What follows is a test.
-
-Wondering if the text below triggered the keyword filter (pre- s/v/u) in
-my last post:
-
-(Yes, my post appeared twice - wasn't my fault - majordomo rejected my
-svbscription confirmation, and I didn't notice until I'd posted.  Then
-it accepted when I tried again, and I posted again, assuming it wouldn't
-accept the post of a non-svbscriber.  It accepted both posts, but only
-belatedly (or the moderator approved one) Majordomo requires the
-confirmation be sent from the svbscriber's address, which is silly; it
-has the approval code in it.)
