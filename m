@@ -1,37 +1,27 @@
-From: Jeff Garzik <jgarzik@pobox.com>
+From: "Kevin P. Fleming" <kpfleming@backtobasicsmgmt.com>
 Subject: Re: ATARAID userspace configuration tool
-Date: Tue, 10 Feb 2004 13:44:41 -0500
-Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <40292699.7070200@pobox.com>
-References: <Pine.LNX.4.40.0402101743020.28534-100000@jehova.dsm.dk>
+Date: Tue, 10 Feb 2004 12:24:32 -0700
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <40292FF0.3030504@backtobasicsmgmt.com>
+References: <Pine.LNX.4.40.0402101405190.25784-100000@jehova.dsm.dk>	 <1076425115.23946.18.camel@leto.cs.pocnet.net>	 <40292246.2030902@backtobasicsmgmt.com> <1076440714.27328.8.camel@leto.cs.pocnet.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.40.0402101743020.28534-100000@jehova.dsm.dk>
-To: Thomas Horsten <thomas@horsten.com>
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <1076440714.27328.8.camel@leto.cs.pocnet.net>
 Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Thomas Horsten wrote:
-> That's true of course, one example would be to remove the RAID superblock
-> with dd. The problem is if this is done by mistake, it could be
-> catastrophic. It might be enough to remove the wrong partitions (with
-> BLKPG_DEL_PARTITION, thanks to Matt Domsch for pointing me in the right
-> direction), it will at least prevent mkfs /dev/hda1 etc, which would have
-> unforeseeable consequences.
+Christophe Saout wrote:
 
+> Right. dmpartx should run on dm-[0-9]* and md[0-9]* events (but not
+> recursively of course ;)).
 
-There are 1001 things that could have unforseen consequences, when root 
-is doing something ;-)
-
-This is getting into the area of standard Linux kernel policy (or lack 
-thereof):  let root shoot himself in the foot, if he wishes.
-
-I would certainly -want- to be able to dd -from- my underlying disks, 
-even if an ataraid or md device is sitting on top, for example.
-
-	Jeff
-
-
-
+Oh I don't know, people have been asking for the ability to have 
+partitioned MD devices for so long, I can see where someone may very 
+well want to be able to have an MD device composed of three disks, 
+broken up into LVM2 volumes, one of which contains an image of a Sun 
+disk with a Solaris disklabel on it :-) For the little bit of extra time 
+that dmpartx would spend looking for partition tables I don't think the 
+recursion would be painful (unless dmpartx is unnecessarily noisy or 
+something).
