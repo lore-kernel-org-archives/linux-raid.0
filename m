@@ -1,46 +1,48 @@
-From: Louis-David Mitterrand <vindex@apartia.org>
+From: Maurice Hilarius <maurice@harddata.com>
 Subject: Re: recovering after a /dev/sda failure on raid1
-Date: Mon, 5 Aug 2002 14:36:55 +0200
+Date: Mon, 05 Aug 2002 12:35:47 -0600
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20020805143655.A541@apartia.org>
-References: <20020801144922.GA5284@apartia.org> <15690.63749.164322.929689@notabene.cse.unsw.edu.au> <20020805092641.GA577@apartia.org> <15694.27770.60339.958313@notabene.cse.unsw.edu.au>
+Message-ID: <5.1.0.14.2.20020805123301.03eecec0@mail.harddata.com>
+References: <15690.63749.164322.929689@notabene.cse.unsw.edu.au>
+ <20020801144922.GA5284@apartia.org>
+ <15690.63749.164322.929689@notabene.cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <15694.27770.60339.958313@notabene.cse.unsw.edu.au>
-To: Neil Brown <neilb@cse.unsw.edu.au>
+In-Reply-To: <20020805092641.GA577@apartia.org>
+To: Louis-David Mitterrand <vindex@apartia.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Aug 05, 2002 at 10:15:54PM +1000, Neil Brown wrote:
-> On Monday August 5, vindex@apartia.org wrote:
-> > 
-> > FWIW the disk that is malfunctioning is a 3-month-old Fujitsu 15k 36G
-> > (MAM3367MP) which is an expensive server-grade disk. The reason I
-> > selected Fujitsu was because of reported quality problems on IBM disks
-> > and Fujitsu's good reputation on SCSI (their IDE line is bad however).
-> > I am looking for informed opinions on these disks and recommendations
-> > for future purchases. What are the most reliable SCSI disks out there?
-> > 
-> > It must be: fast, affordable, reliable, (select any two ;-)
-> 
-> Somehow, I wish you hadn't said that.....
+With regards to your message at 03:26 AM 8/5/02, Louis-David Mitterrand. 
+Where you stated:
+><<snip>>
+>FWIW the disk that is malfunctioning is a 3-month-old Fujitsu 15k 36G
+>(MAM3367MP) which is an expensive server-grade disk. The reason I
+>selected Fujitsu was because of reported quality problems on IBM disks
+>and Fujitsu's good reputation on SCSI (their IDE line is bad however).
+>I am looking for informed opinions on these disks and recommendations
+>for future purchases. What are the most reliable SCSI disks out there?
+>
+>It must be: fast, affordable, reliable, (select any two ;-)
+The Fujitsu disks have a track record of good reliability.
+The IDE disk you mention were discontinued a year ago.
+In our experiences Fujitsu disks have as low a failure rate as can be found.
+Drives we have used with higher failure rates (SCSI) came from IBM and Seagate.
+The best failure rate we have seen is from Hitachi.
+In the case of Fujitsu, Hitachi, and Seagate the rates are very close.
+Quantum/Maxtor SCSI are a bit worse.
+IBM are substantially worse.
+This is based on our DOA and in service SCSI disk failures over the past year.
 
-Sorry, but I thoroughly checked the disk after taking it off the server
-and a lot of sectors are damaged, reiserfsck quits with a "can't read",
-and the spindle makes bad noises.
 
-> I just recently commissioned a fileserver with 14 Fujitsu MAM3367MC drives.
-> I wander what the difference between P and C is...
+With our best regards,
 
-It must be for 68 or 80 pin (ours is a 68).
+Maurice W. Hilarius       Telephone: 01-780-456-9771
+Hard Data Ltd.               FAX:       01-780-456-9772
+11060 - 166 Avenue        mailto:maurice@harddata.com
+Edmonton, AB, Canada      http://www.harddata.com/
+    T5X 1Y3
 
-> Previously we have used Seagates which have seemed quite reliable.
-> The only real problems that we have had is with the IBM IDE DeathStars
-> (oops, I meant DeskStars.  Naughty keyboard).
+2.3TB RAID5 NAS server - dual AthlonMP CPU, Linux, $10,995 CAD / $6850 USD
 
-Had a sorry experience with these as well, a 75 G.
-
--- 
-ldm@apartia.org 
