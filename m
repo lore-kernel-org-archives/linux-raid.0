@@ -1,59 +1,31 @@
-From: christophe varoqui <christophe.varoqui@free.fr>
-Subject: RE: [dm-devel] [ANNOUNCE] multipath-tools-0.4.1
-Date: Wed, 22 Dec 2004 22:52:34 +0100
-Message-ID: <1103752354.7432.4.camel@zezette>
-References: <EA4DC661A6353747A2E5C0DE8792DDDE07501278@orsmsx404.amr.corp.intel.com>
+From: Ferenc-Jan <ferenc@avz.xs4all.nl>
+Subject: mdadm -D /dev/md3: 1  0  0  0  sync ???
+Date: Wed, 22 Dec 2004 20:52:42 +0100
+Message-ID: <41C9D08A.5080303@avz.xs4all.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <EA4DC661A6353747A2E5C0DE8792DDDE07501278@orsmsx404.amr.corp.intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: device-mapper development <dm-devel@redhat.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-hotplug-devel@lists.sourceforge.net" <linux-hotplug-devel@lists.sourceforge.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Le mercredi 22 d?embre 2004 =C3=A0 11:26 -0800, Caushik, Ramesh a =C3=A9=
-crit :
-> On my system I have a Qlogic 2310 driver running on a 2.6.9 kernel. T=
-he fc_transport=20
-> directory in sysfs looks like=20
->=20
-> ls -ll /sys/class/fc_transport/
-> total 0
-> drwxr-xr-x   6 root root 0 Dec 16 13:59 .
-> drwxr-xr-x  20 root root 0 Dec 15 14:31 ..
-> drwxr-xr-x   2 root root 0 Dec 16 13:59 2:0:0:0
-> drwxr-xr-x   2 root root 0 Dec 16 13:59 2:0:1:0
-> drwxr-xr-x   2 root root 0 Dec 16 13:59 2:0:2:0
-> drwxr-xr-x   2 root root 0 Dec 16 13:59 2:0:3:0 =20
->=20
-> The patch addresses only this format. So please disregard the patch, =
-and sorry about the confusion.
->=20
-=2E..
-> [root@cl039 multipath]# ll /sys/class/fc_transport/
-> total 0
-> drwxr-xr-x    2 root     root            0 Dec 14 16:26 target2:0:0
-> drwxr-xr-x    2 root     root            0 Dec 14 16:26 target2:0:1
-> drwxr-xr-x    2 root     root            0 Dec 14 16:26 target2:0:2
-> drwxr-xr-x    2 root     root            0 Dec 14 16:27 target2:0:3
-> drwxr-xr-x    2 root     root            0 Dec 14 16:27 target3:0:0
-> drwxr-xr-x    2 root     root            0 Dec 14 16:27 target3:0:1
-> drwxr-xr-x    2 root     root            0 Dec 14 16:27 target3:0:2
-> drwxr-xr-x    2 root     root            0 Dec 14 16:27 target3:0:3
->=20
-Can someone, maybe from Qlogic, comment on these differences ?
-Is there a grant unified plan for driver objects representation through
-sysfs, and if so which is the right path name to fetch the node_name.
+Hello list,
 
-regards,
---=20
-christophe varoqui <christophe.varoqui@free.fr>
+Does anybody know what this means:
 
+# mdadm -D /dev/md3
+<snip>
+     Number   Major   Minor   RaidDevice State
+        0       3        6        0      active sync   /dev/hda6
+        1       0        0        0      sync
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+        2      22        6        2      active sync   /dev/hdc6
+
+Please help. Which disk is '1  0  0  0  sync'? The array is currently 
+degraded. How do I remove number 1 and bring number 2 up?
+
+thanks in advance
+
+Ferenc
+
