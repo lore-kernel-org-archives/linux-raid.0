@@ -1,97 +1,60 @@
-From: "Mike Black" <mblack@csi-inc.com>
-Subject: Re: raid5 2TB+ NO GO ?
-Date: Wed, 12 Feb 2003 10:13:33 -0500
-Sender: ext2-devel-admin@lists.sourceforge.net
-Message-ID: <044101c2d2a9$4fcdf980$f6de11cc@black>
-References: <Pine.LNX.4.53.0302060059210.6169@ddx.a2000.nu> <Pine.LNX.4.53.0302060123150.6169@ddx.a2000.nu> <Pine.LNX.4.53.0302060211030.6169@ddx.a2000.nu> <15937.50001.367258.485512@wombat.chubb.wattle.id.au> <Pine.LNX.4.53.0302061915390.17629@ddx.a2000.nu> <15945.31516.492846.870265@wombat.chubb.wattle.id.au> <Pine.LNX.4.53.0302121129480.13462@ddx.a2000.nu>
+From: Maurice Hilarius <maurice@harddata.com>
+Subject: Re: EIO AP-1680 ATA133 RAID PCI Controller
+Date: Wed, 12 Feb 2003 08:36:51 -0700
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <5.1.1.6.2.20030212083307.039a1dd0@mail.harddata.com>
+References: <3E493005.4030702@mvista.com>
+ <3E4329CE.5020706@netscape.net>
+ <3E47E248.3080006@mvista.com>
+ <3E48871A.3010709@netscape.net>
+ <3E493005.4030702@mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <ext2-devel-admin@lists.sourceforge.net>
-Errors-To: ext2-devel-admin@lists.sourceforge.net
-List-Help: <mailto:ext2-devel-request@lists.sourceforge.net?subject=help>
-List-Post: <mailto:ext2-devel@lists.sourceforge.net>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/ext2-devel>,
-	<mailto:ext2-devel-request@lists.sourceforge.net?subject=subscribe>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/ext2-devel>,
-	<mailto:ext2-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=ext2-devel>
-To: Stephan van Hienen <raid@a2000.nu>, Peter Chubb <peter@chubb.wattle.id.au>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, bernard@biesterbos.nl, ext2-devel@lists.sourceforge.net
+Content-Type: text/plain; charset="us-ascii"; format=flowed
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1044998190.12695.3.camel@gregdell>
+To: Gregory Leblanc <gleblanc@linuxweasel.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I did a 12x180G and as I recall was unable to do 13x180G as it overflowed during mke2fs.  This was a year ago though so I don't know
-if that's been improved since then.
+-----BEGIN PGP MESSAGE-----
+Version: PGPfreeware 7.0.3 for non-commercial use <http://www.pgp.com>
 
-I've got 13 of these with one drive marked as a spare:
-Disk /dev/sda: 255 heads, 63 sectors, 22072 cylinders
-Units = cylinders of 16065 * 512 bytes
+qANQR1DBwE4DpUAjANw7zLUQA/4ywsdT3nN/LPnpWKA4DXIrRXJXf34yW0CXLdKu
+MOZZTn5YxZgZWnKwP35j6kQS8kZM7RuwvCAYrkIt2BE3v9tNTdVM3/BZ9H+Im5XB
+eqcekJsx0Hv48EIOBIf+VKvvoIitaGUAn7alj/Gr1On6dfLkJlHLxeEYMd6nETsL
+EaVCqgQAo/EPu+aWJBTvOWMPnZ69HzfhWOoQzzh7QWi7MAWkfdPQtzhh1CYB2bUW
+CmauosibyUkRLXAFUR/zkVqM9oQz7ANHYG00qlVsH2+H+C/vsDylmzkKIr/V2crZ
+kS6wm4zcXlnm8oYNO+5mpvdnTa6SVXCDK8plPs1dmQzkLP76xFXBwU4DmGQ29uee
+dsAQB/4si6HCYAbKBG39H4sZ8/qrADvhJVtAZntzSJBJlvHLDTDG5K6Uk+O0ei9h
+S34wSKIXlqNPUTlE7s8z2b8o4Tgzgj9pP6cTj3wixIAH+DqW+l+sZukRDCkWlOH9
+7e+yYhyv4Lw4+vuPHqQa2S0pYy5TFO4kYrWWrAI/IVLVTk4g0YpmWSY/TtoqsLvc
+IJAWSi/3M9LeG8jEnvQ6adUKZBt1usZlZcP8vPaZFLFWz0OXCNkOefIMKt8zEn0w
+g+JPOieCpqvthtOKsCFqmwBujD5IESpK6DSTRLWKF5gwnpdMDBQbIjLq8g37D5WJ
+Per6MGb+TqWEuIKRHRwbSyHppdKPB/9Bke1byB3LLr367Mn3aMYTBUYbCY+1vSJy
+ED20c09ERBuW+jE+ZHxaUNdQv+Er/77YXEyvMdnlMyeUDOojDvporW8ohTNOWWw+
+ZPSWG//i07UvU7e3zBlO4oEo+CIJtwBuKQb3oyL1/7dX6tjUDlNEQURgo/QZYZg4
+SMM/re7BHH1YOgzQklignCMbaTYmlSjNDi6nAFsTFtH0OxepJNV5W4QgaTz75JJ+
+W9eWITaZ8QZUILtTsFbJVZEeElOA5J0RMQ8ljvZEtick6xwaNOQn6hiRXkHO9pqU
+1ydw4FgChnCB6h2F1KndYgKPPeYsgowXAHmyIz6Bakt572Suml/dycFO4kzuzGV9
+3kdEMPIqdiegNbGMqY94gVwwp2BtuvxNsl+Dasdk6uFeiQtQSvRQ2ra2tfCUiwgN
+D5zaUEuTjFa54BNs8hZ3OugpC1+xTjFNj4vUzT1rYE+A9qkRKXb/STvmyvoNh8yq
+1g857geLE+ycTkqR9A59hnpm25CZWGiOUN6ph3YvfpSxNMrk/vBYTHep/B8iD3io
+3ow5E0vCCwwbpjhDuKFa5Xbi9PrHzouzC1LR+4m1eMRUtQv4Xd8JGmA7sNR+UINO
+2pG/1N7drzzGe5N8Sq/6jdxgh+/SNUKI0gIXQVvogMZuQcIgi0gnIPtNJyrCSmGY
+zBi2CmXXEvup0g/1Ty1rWs8cpDUJan9JJnXCLVXVu1hwULTmrMFEiC+zH4ZnDEq7
+tPRZalLpanGE+5AOX9X/0yIjQpEee80p46mzNgQAyb+YNSC2NQzCM0OhMTLsc5Bv
+6zAlX1B1lltnlrs6AEtcGgg5J1jJ3vovo2FKn2uLoFoqz3Ai4e0nCeV/7lJHB3tu
+BxqObuuYQ8pvWLRBMOKrMMCPPW7jACmeM8RL2AzFgFKmizKZwW+g0u41oR1Sbjx9
+34mlS7UyjSnc7fD36kNtwN6Y3TOEtsBd6r5yoiDEKtp23FiDUd27/1HuaMLJ0z8j
+ICzYJkRbZ5BZMojkJUL6MTWKInVSo07KZetlh5q5YCntXPDrGYAARQ==
+=2bn1
+-----END PGP MESSAGE-----
 
-  Device Boot    Start       End    Blocks   Id  System
-/dev/sda1             1     22072 177293308+  fd  Linux raid autodetect
+With our best regards,
 
-   Number   Major   Minor   RaidDevice State
-      0       8      177        0      active sync   /dev/sdl1
-      1       8       17        1      active sync   /dev/sdb1
-      2       8       33        2      active sync   /dev/sdc1
-      3       8        1        3      active sync   /dev/sda1
-      4       8       49        4      active sync   /dev/sdd1
-      5       8       65        5      active sync   /dev/sde1
-      6       8       81        6      active sync   /dev/sdf1
-      7       8       97        7      active sync   /dev/sdg1
-      8       8      113        8      active sync   /dev/sdh1
-      9       8      129        9      active sync   /dev/sdi1
-     10       8      145       10      active sync   /dev/sdj1
-     11       8      161       11      active sync   /dev/sdk1
-     12      65       49       12        /dev/sdt1
+Maurice W. Hilarius       Telephone: 01-780-456-9771
+Hard Data Ltd.               FAX:       01-780-456-9772
+11060 - 166 Avenue        mailto:maurice@harddata.com
+Edmonton, AB, Canada      http://www.harddata.com/
+    T5X 1Y3
 
------ Original Message -----
-From: "Stephan van Hienen" <raid@a2000.nu>
-To: "Peter Chubb" <peter@chubb.wattle.id.au>
-Cc: <linux-kernel@vger.kernel.org>; <linux-raid@vger.kernel.org>; <bernard@biesterbos.nl>; <ext2-devel@lists.sourceforge.net>
-Sent: Wednesday, February 12, 2003 5:39 AM
-Subject: Re: raid5 2TB+ NO GO ?
-
-
-> On Wed, 12 Feb 2003, Peter Chubb wrote:
->
-> > >>>>> "Stephan" == Stephan van Hienen <raid@a2000.nu> writes:
-> >
-> > Stephan,
-> > Just noticed you're using raid5 --- I don't believe that level
-> > 5 will work, as its data structures and  internal algorithms are
-> > 32-bit only.  I've done no work on it to make it work (I've been
-> > waiting for the rewrite in 2.5), and don't have time to do anything now.
-> >
-> > You could try making sector in the struct stripe_head a sector_t, but
-> > I'm pretty sure you'll run into other problems.
-> >
-> > I only managed to get raid 0 and linear to work when I was testing.
->
-> ok clear, so no raid5 for 2TB+ then :(
->
-> looks like i have to remove some hd's then
->
-> what will be the limit ?
->
-> 13*180GB in raid5 ?
-> or 12*180GB in raid5 ?
->
->     Device Size : 175823296 (167.68 GiB 180.09 GB)
->
-> 13* will give me 1,97TiB but will there be an internal raid5 problem ?
-> (since it will be 13*180GB to be adressed)
->
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-
--------------------------------------------------------
-This SF.NET email is sponsored by:
-SourceForge Enterprise Edition + IBM + LinuxWorld = Something 2 See!
-http://www.vasoftware.com
