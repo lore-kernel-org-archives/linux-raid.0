@@ -1,40 +1,44 @@
-From: Stephan van Hienen <raid@a2000.nu>
+From: "Peter L. Ashford" <ashford@sdsc.edu>
 Subject: Re: powersupply for 16disks +dual xeon
-Date: Sat, 1 Feb 2003 22:07:35 +0100 (CET)
+Date: Sat, 1 Feb 2003 15:10:15 -0800 (PST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.53.0302012149470.11829@ddx.a2000.nu>
-References: <Pine.LNX.4.44.0302012036370.3772-100000@uplift.swm.pp.se>
+Message-ID: <Pine.GSO.4.30.0302011507070.27656-100000@multivac.sdsc.edu>
+References: <Pine.LNX.4.53.0302011823430.6789@ddx.a2000.nu>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44.0302012036370.3772-100000@uplift.swm.pp.se>
-To: Mikael Abrahamsson <swmike@swm.pp.se>
+In-Reply-To: <Pine.LNX.4.53.0302011823430.6789@ddx.a2000.nu>
+To: Stephan van Hienen <stephan@a2000.nu>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, 1 Feb 2003, Mikael Abrahamsson wrote:
+Stephan,
 
-> You should try to fit another powersupply to drive the disks. ATX
-prefer not to put 2 psu's in my system (not really much space (and
-connecting it, can be difficult))
-
-> think it was, there is a FAQ page out there I found on when I was looking
-> a month back). If you don't want to do this, get yourself an AT power
-> supply.
+> today tried to put 16 disks (15*ide7200 +1*scsi7200) in a intel sc5200
+> case
+> (which has an 450W powersupply)
 >
-> has worked fine, I think you're not too far off the limit. Perhaps that
-> 550W will do the trick.
-system runned ok with 11 disks (10ide7200 +1scsi 7200) for a few months
-also disks spinup ok if i remove 2 disk (so 13*ide7200 +1*scsi7200)
+> when i try to powerup the system, the powersupply goes off after 3 seconds
+> i think this is because off the spinupp for the disks
+>
+> any tips how to fix this ?
+> (as far as i know there is no spinup delay for ide disks)
+> maximum powersupply i found is 550W, not much more than i have in my
+> system
+>
+> (i need an 24pin xeon powersupply)
+>
+> (disks are WD180GB (which asks 15W for spinup)
 
-so looks like the 450 has just a few W's short for powering all disks
-and i should look for a 550 (or maybe 650 (do they exist?))
-any tips for brands to look for ?
+Someone already suggested a 550W PS.  The alternate path is the 460W
+redundant from Zippy.  These are a bit pricey, but they have three 230W
+modules.  The system should be able to run on two modules, but would
+require all three for initial power on.
 
-i found these 2 :
+Adding a slave power supply should work, but you'll have to make sure that
+all voltages have adequate load.  Most switching power supplies require a
+minimum load to function properly.
 
-http://www.enermax.com.tw/eg851ax-vh.htm
-http://www.enermax.com.tw/eg651pvefm24P.htm
-
-(why is the 851 talking about +12V1 +12V2 and +12V3 ?)
+Good luck.
+				Peter Ashford
 
