@@ -1,36 +1,65 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: raid on extended partitions
-Date: Wed, 2 Jun 2004 09:16:59 +1000
+From: "James Bamford" <jim@jimtreats.com>
+Subject: Raid 5: Lossless music archive server recommendations
+Date: Wed, 02 Jun 2004 01:03:27 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16573.3691.298127.116803@cse.unsw.edu.au>
-References: <16571.56114.265798.791241@cse.unsw.edu.au>
-	<20040601151312.72047.qmail@web61003.mail.yahoo.com>
+Message-ID: <opr8xw31sizwu3m5@smtp.bulldogdsl.com>
+References: <16571.56114.265798.791241@cse.unsw.edu.au> <20040601151312.72047.qmail@web61003.mail.yahoo.com> <16573.3691.298127.116803@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII;
+	format=flowed	delsp=yes
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from M K on Tuesday June 1
-To: M K <maheshext3@yahoo.com>
-Cc: linux-raid@vger.kernel.org
+In-Reply-To: <16573.3691.298127.116803@cse.unsw.edu.au>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday June 1, maheshext3@yahoo.com wrote:
-> 
-> --- Neil Brown <neilb@cse.unsw.edu.au> wrote:
-> > 
-> > What does
-> >    ls -l /dev/hd[eg]5
-> > show? How about
-> >    cat /proc/partitions
-> >    dd if=/dev/hde5 of=/dev/null bs=1024k
-> 
-> Thanks a lot, Neil, turns out those nodes were not
-> present. After I mknod'd them, all's fine in
-> RAIDland... 
->   Quick question: does using extended partitions for
-> RAID affect performance?
+Hi folks...
 
-The fact that the partitions are "extended" is invisible to most of
-the kernel, and it could not have any affect of performance.
+Its been a while since I've asked anything on here.. after some effort you  
+guys got me rolling with linux for a backup server on an old machine and  
+an old promise ide controller running a simple 2 drive software raid  
+mirror... Everything has been fine with it so far although its not in use  
+much at the moment as the machine to be backed up has since been  
+"upgraded" to be water cooled.. but i've yet to fit the controls to turn  
+the pump on automatically so it can't boot up without me being around and  
+so can't run the auto backup task..
 
-NeilBrown
+ANyways.. For a long time i've been waiting for bigger harddisks to make a  
+backup of my entire music catalogue a possibility, in lossless formats  
+about 400meg an album.. I've just realised that this only really needs  
+around 400-500gig and so is within reach of not too many hdds right here  
+right now..
+
+Its going to take some time to make these music rips and when i do i think  
+i'll want them to have some kind of backup which has got me thinking raid  
+again... I guess this time I would want raid5 as I need more space than is  
+really feasible off only a few drives..
+
+I'm a little wet behind the ears with all things raid but i was thinking  
+that 3x200gig drives would do for the data.. needing a 4th drive for the  
+raid5 parity disk or however it works..
+
+Beyond that i do continue to buy music so some form of expandability would  
+be nice.. 8 channels would allow me to scale although am i right in  
+thinking that i would have to stick to the same sized drives for any extra  
+drives i consider!?
+
+I then guess i need to have seperate channels for each hdd, which starts  
+taking me towards 3ware type cards with hardware to the task.. does this  
+then move me away from using software raid in linux if i have to get these  
+cards?
+
+I ideally would like SATA to try it but i can't find any 200gig Seagate  
+SATA drives in the UK at the moment, only Ultra ATA ..
+
+Anyways if you experts could tell me if i've got the right idea for  
+requirements that'd be great..
+
+Thanks for your time
+
+Cheers
+
+Jim
+
+-- 
+Using M2, Opera's revolutionary e-mail client: http://www.opera.com/m2/
