@@ -1,98 +1,55 @@
-From: "Guy" <bugzilla@watkins-home.com>
+From: Mark Hahn <hahn@physics.mcmaster.ca>
 Subject: RE: Good news / bad news - The joys of RAID
-Date: Sat, 20 Nov 2004 18:09:53 -0500
-Message-ID: <200411202309.iAKN9xN18810@www.watkins-home.com>
-References: <Pine.LNX.4.44.0411201657570.19120-100000@coffee.psychology.mcmaster.ca>
+Date: Sat, 20 Nov 2004 18:30:07 -0500 (EST)
+Message-ID: <Pine.LNX.4.44.0411201741300.19120-100000@coffee.psychology.mcmaster.ca>
+References: <200411201937.iAKJbwN17977@www.watkins-home.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44.0411201657570.19120-100000@coffee.psychology.mcmaster.ca>
+In-Reply-To: <200411201937.iAKJbwN17977@www.watkins-home.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Mark Hahn' <hahn@physics.mcmaster.ca>, linux-raid@vger.kernel.org
+To: Guy <bugzilla@watkins-home.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-You got any links related to this?
-"the deathstar incident was actually bad firmware"
+> Can you explain how the disks have a MTBF of 1,000,000 hours?  But fail more
+> often than that?  Maybe I just don't understand some aspect of MTBF.
 
-Can a user download and update the firmware?
+simple: the MTBF applies to very large sets of disks.  if you had 
+millions of disks, you'd expect to average mtbf/ndisks between failures.
+with statistically trivial sample sizes (10 disks), you can't 
+really say much.  of course, a proper model of the failure rate 
+would have a lot more than 1 parameter...
 
-If so, I know someone that may have some bad disks that are not so bad.
+for instance, my organization will be buying about .5 PB
+of storage soon.  here are some options:
 
-If he can repair his disks, I will report the status back on this list.
+disk		n	mtbf	hours	$/disk	$K total
 
-Previously I thought IBM made very good disks, until my friend had more than
-a 75% failure rate.  And within the warranty period.
+250GB SATA	1920	1e6	500	399	766
+600GB SATA	800	1e6	1250	600?	480
 
-I personally have an IBM SCSI disk that is running 100% of the time, and the
-cooling is real bad.  The drive is much too hot to touch.  Been like that
-for 5+ years.  Never had any issues.  The system also has a Seagate that is
-too hot to touch, but only been running 3+ years.  Both are 18 Gig.  The
-disks are in a system my wife uses!  Don't tell her. :)  I got to fix that
-someday.
+73GB SCSI/FC	6575	1.3e6	198	389	2558
+146GB SCSI/FC	3288	1.3e6	395	600	1973
+300GB SCSI/FC	1600	1.3e6	813	1200	1920
 
-Guy
+these mtbf's are basically made up, since disk vendors aren't really
+very helpful in publishing their true reliability distributions.
+these disk counts are starting to be big enough to give some meaning
+to the hours=mtbf/n calculation - I'd WAG that "hours" is within
+a factor of two.  (I looked at only three lines of SCSI disks to 
+get 1.3e6 - two quoted 1.2 and the newer was 1.4.)  vendors seem 
+to be switching to quoting "annualized failure rates", which are 
+probably easier to understand - 1.2e6 MTBF or 0.73% AFR, for instance.
+the latter makes it more clear that we're talking about gambling ;)
 
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Mark Hahn
-Sent: Saturday, November 20, 2004 5:18 PM
-To: linux-raid@vger.kernel.org
-Subject: RE: Good news / bad news - The joys of RAID
+but the message is clear: for a fixed, large capacity, your main 
+concern should be bigger disks.  since our money is also fixed,
+you can see that SCSI/FC prices are a big problem (these are 
+real list prices from a tier-1 vendor who marks up their SATA
+by an embarassing amount...)  further, there's absolutely no chance
+we could ever keep .5 PB of disks busy at 100% duty cycle, so that's
+not a reason to buy SCSI/FC either...
 
-> SATA / IDE drives have an MTBF similar to that of SCSI / Fibre. But this
-> is based upon their expected use... i.e. SCSI used to be [power on hours
-> = 24hr] [use = 8 hours].. whilst SATA used to be [power on = 8 hours]
-> and [use = 20 mins].
-
-the vendors I talk to always quote SCSI/FC at 100% power 100% duty,
-and PATA/SATA at 100% power 20% duty.
-
-> Regardless of what some people clam (usually those that only sell sata
-> based raids), the drives are not constructed the same in any way.
-
-obviously, there *have* been pairs of SCSI/ATA disks which had 
-identical mech/analog sections.  but the mech/analog fall into 
-just two kinds:
-
-	- optimized for IOPS: 10-15K rpm for minimal rotational 
-	latency, narrow recording area for low seek distance,
-	quite low bit and track density to avoid long waits for 
-	the head to stabilize after a seek.
-
-	- optimized for density/bandwidth: high bit/track density,
-	wide recording area, modest seeks/rotation speed.
-
-the first is SCSI/FC and the second ATA, mainly for historic reasons.
-
-> SATA's fail more within a raid environment (probably around 10:1)
-> because of the heavy use and also because they are not as intelligent...
-
-what connection are you drawing between raid and "heavy use"?
-how does being in a raid increase the IO load per disk?
-
-> therefore when they do not respond we have no way of interrogating them
-> or resetting them, whilst with scsi we do both. 
-
-you've never seen a SCSI reset that looks just like an ATA reset?
-sorry, but SCSI has no magic.
-
-> This means that a raid
-> controller / driver has no option to but simply fail the drive.
-
-no.
-
-> Maxtor lead the way in capacity and also reliability... I personal had
-> to recall countless earlier IBMs and replace them with maxtor.  But the
-
-afaikt, the deathstar incident was actually bad firmware 
-(didn't correctly flush data when hard powered off, resulting in 
-blocks on disk with bogus ECC, which had to be considered bad from
-then on, even if the media was perfect.)
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+regards, mark hahn.
 
