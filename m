@@ -1,34 +1,36 @@
-From: Daniel Pittman <daniel@rimspace.net>
+From: Gordon Henderson <gordon@drogon.net>
 Subject: Re: resync (what is it doing when making a new array?)
-Date: Sun, 08 Aug 2004 13:23:41 +1000
+Date: Sun, 8 Aug 2004 08:24:20 +0100 (BST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <87n016gvnm.fsf@enki.rimspace.net>
+Message-ID: <Pine.LNX.4.56.0408080821010.805@lion.drogon.net>
 References: <1091924709.209ea25bc637f@www.then7.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <1091924709.209ea25bc637f@www.then7.com>
+To: Eli Cantu <eli@then7.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 8 Aug 2004, Eli Cantu wrote:
-> I cannot find an answer to my question: After creating a new array, why is the
-> time consuming resync required?
+On Sat, 7 Aug 2004, Eli Cantu wrote:
 
-Because the disks need to contain the correct data, or they will cause
-faults when you try to use them after a disk failure. :)
+> (watching a raid 5 array, composed of five 250gb disks, resyncing...to
+> be completed 16 hours from now...)
 
-> I've built a few hardware RAID 5 arrays in my time using Mylex, Adaptec, AMI
-> etc. I don't recall this hours long, sometimes days long initial resync using
-> hardware raid.
+One thing to check (if it's IDE drives) is that they are working in DMA
+mode - use hdparm /dev/hda, etc. to check and force DMA if necessary
+(although you might need to re-compile your kernel to include the correct
+drivers for your IDE hardware)
 
-Usually, this is handled by either doing the sync in the background
-quietly, or by keeping an NVRAM bitmap of "unclean" blocks that starts
-with all the bits set.
+It'll still take a long time with 250GB drives, though.
 
-Regards,
-        Daniel
--- 
-I have always detested the belief that sex is the chief bond
-between man and woman. Friendship is far more human.
-        -- Agnes Smedley
+Other things you can fiddle with are
+
+  /proc/sys/dev/raid/speed_limit_max
+  /proc/sys/dev/raid/speed_limit_min
+
+which will affect resync speed versus array accessibility during the
+recync.
+
+Gordon
 
