@@ -1,45 +1,39 @@
-From: Michel Bellais <michel@ket.kth.se>
-Subject: Re: Performance difference between two raid0 arrays on same drives?
-Date: Sat, 12 Jul 2003 20:59:35 +0200
+From: Bernd Schubert <bernd.schubert@pci.uni-heidelberg.de>
+Subject: Re: [ENBD] is raid of raid possible ?
+Date: Mon, 14 Jul 2003 13:21:42 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200307122059.35252.michel@ket.kth.se>
-References: <200307121537.33889.michel@ket.kth.se> <3F102E0C.1000108@hum.auc.dk>
+Message-ID: <200307141321.42647.bernd.schubert@pci.uni-heidelberg.de>
+References: <200307111457.h6BEvIs28677@oboe.it.uc3m.es>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3F102E0C.1000108@hum.auc.dk>
+In-Reply-To: <200307111457.h6BEvIs28677@oboe.it.uc3m.es>
 Content-Disposition: inline
-To: linux-raid@vger.kernel.org
+To: enbd@lists.community.tummy.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I have done it with zcat!
-The transfer rate decreases steadily from the beginning of the disk to =
-the=20
-end. It doesn't look linear, but more like a square root..
-The loss is about 50% at the end of the disk compared to the beginning.
-
-The test shows that the decrease in performance is negligible in the fi=
-rst 10%=20
-of the disk, where the raid arrrays are.
-So i have really no clue about this performance loss.
-
-Thanks for the tip! It was interesting to test this drive.
-Michel Bellais
-
+On Friday 11 July 2003 16:57, Peter T. Breuer wrote:
+> "A month of sundays ago Ulrich Hahn wrote:"
 >
-> You can test the performance across your drives with the program zcav
-> (which should come with bonnie++ - if not, take a look at
-> http://www.coker.com.au/bonnie++/)
+> > scheme-1 and scheme-2 with software-raid on the fall-back-server will
+> > not work out. I'm not sure if sw-raid over sw-raid is prone to deadlocks
+> > (Peter?), but the tests I did showed that extremly low rebuild-rates,
+> > even
 >
->--
->Mads Peter Bach
->Systemadministrator,  Det Humanistiske Fakultet, Aalborg Universitet
->Kroghstr=E6de 3 - 5.111, DK-9220 Aalborg =D8st - (+45) 96358062
-># whois MPB1-DK@whois.dk-hostmaster.dk
+> It's impossible to say. The raid code is sophisticated = obscure.
+> I think there are no deadlocks - it maintains a separate local cache
+> of request structs per device, as I recall. Ummmm ... but what about
+> buffers? It may maybe deadlock for buffers if there is enough copying
+> and it's done synchronously ...
+>
+> > with tuned md-parameters, will make any medium sized raid unusable.
+>
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks Ulrich and Peter for your answers and help, that helps me a lot for our 
+future plans.
+
+Best regards,
+	Bernd
