@@ -1,30 +1,57 @@
-From: "Subodh S" <subodh_s_1975@mail.com>
-Subject: How to change retry count of lower layer drivers
-Date: Mon, 14 Apr 2003 08:44:02 -0500
+From: "Peter T. Breuer" <ptb@it.uc3m.es>
+Subject: async writes in raid1
+Date: Mon, 14 Apr 2003 16:58:58 +0200 (MET DST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20030414134402.32064.qmail@mail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Message-ID: <200304141458.h3EEwww16546@oboe.it.uc3m.es>
+Reply-To: ptb@it.uc3m.es
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-To: linux-raid@vger.kernel.org
+To: Paul.Clements@SteelEye.com
+Cc: neilb@cse.unsw.edu.au, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
 
-Whenever the path on which an I/O is in-progress, 
-goes down, sd takes a long time to detect it. As per 
-my knowledge it would be 60sec * 5(no. of retries) 
-plus the time taken by the lower layer driver(hba) 
-to detect the failure. Is this correct ?? Is there a 
-way available to reduce this "timeout/retry count" 
-value without modifying sd.c
+I simply went ahead and implemented async writes by
 
+ 1) in make_request:
+    duplicating the bh->b_data from the original request into a local
+    buffer obtained via kmalloc (if kmalloc fails, don't set the flag
+    in the rh1_bh for async writes). Then point all the mirrored bh's
+    mbh->b_data at this.
 
--subodh
--- 
-__________________________________________________________
-Sign-up for your own FREE Personalized E-mail at Mail.com
-http://www.mail.com/?sr=signup
+ 2) in the mirrored bh's end_request:
+    if we're the first mbh and async flag is set, ack the original bh.
+    if we're the last  mbh and async flag is set, kfree the mbh->b_data
+    that we kmalloc'ed earlier.
 
+I've done a few million async writes and haven't died yet. Of course I
+don't know if this procedure works always.
+
+Doubts: do I have to point mbh->b_page at something new too? There are
+occasional tests scattered in the code (on read, as far as I can see)
+to make sure it corresponds correctly to the b_data field.
+
+This is all in the fr1 driver.
+
+  ftp://oboe.it.uc3m.es/pub/Programs/fr1-2.14.tgz
+
+fr1.o needs to be loaded with async=1 to activate async writes.
+
+There's still a couple of debugging printks, but you can kill them
+yourself.
+
+  raid1: async end i/o on sectors 3956-3957
+  raid1: async end i/o on sectors 3958-3959
+  raid1: async end i/o on sectors 3960-3961
+  raid1: async end i/o on sectors 3962-3963
+  raid1: async end i/o on sectors 3964-3965
+  raid1: async end i/o on sectors 3966-3967
+  bitmap: free page enters with page count 6
+  bitmap: free page exits with page count 7
+
+Async writes "can work" because of the bitmap support architecture in
+fr1.  The bitmap is marked before the async write and cleared when the
+last mirrored bh completes.
+
+It all degrades nicely in out of memory conditions.
+
+Peter
