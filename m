@@ -1,55 +1,51 @@
-From: Jure Pecar <pegasus@telemach.net>
+From: Maurice Hilarius <maurice@harddata.com>
 Subject: Re: ServerWorks chipset
-Date: Mon, 26 Aug 2002 15:10:34 +0200
+Date: Mon, 26 Aug 2002 08:13:44 -0600
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20020826151034.4e04e5d0.pegasus@telemach.net>
+Message-ID: <5.1.0.14.2.20020826080713.03a18390@mail.harddata.com>
 References: <Pine.LNX.4.30.0208261440170.10850-100000@duplo.agenda.si>
+ <Pine.LNX.4.30.0208261440170.10850-100000@duplo.agenda.si>
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- boundary="=.Ui?PfpYs/Dm6c)"
+Content-Type: text/plain; charset="us-ascii"; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.30.0208261440170.10850-100000@duplo.agenda.si>
-To: Danilo Godec <danci@agenda.si>
+In-Reply-To: <20020826151034.4e04e5d0.pegasus@telemach.net>
+To: Jure Pecar <pegasus@telemach.net>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---=.Ui?PfpYs/Dm6c)
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+With regards to your message at 07:10 AM 8/26/02, Jure Pecar. Where you stated:
 
-On Mon, 26 Aug 2002 14:45:27 +0200 (CEST)
-Danilo Godec <danci@agenda.si> wrote:
+>On Mon, 26 Aug 2002 14:45:27 +0200 (CEST)
+>
+>ServerWorks ide is known for its DMA brokeness. See
+>http://www.uwsg.indiana.edu/hypermail/linux/kernel/0208.2/1137.html
+>for reference.
+>
+>Personally i dont care much about ide on intel's server boards ... use scsi
+>instead.
 
-> Hi!
-> 
-> I'm using several Intel server boards with ServerWorks CSB5 chipset for
-> IDE. Even though this chipset is supposed to support ATA100 and it is
-> supposed to be supported in Linux and I do have CONFIG_BLK_DEV_SVWKS=y in
-> my .config, I can't set speeds higher than 'hdparm -X66 /dev/hda'!
-> 
+I think that is a bit strong.
+Let' just say that the chip is a bit aggressive in timing, and the supplied 
+cables are pretty cheap.
+If one is to use decent teflon TPE cables, and be a bit selective about 
+drive choices it works very well at full speed.
+Look at it this way:
+If you were to set up Ultra160 SCSI with cheap grey polyester cables and no 
+terminator how well would it work.
+Also, some of the Linux IDE driver is pretty timing sensitive.
 
-ServerWorks ide is known for its DMA brokeness. See
-http://www.uwsg.indiana.edu/hypermail/linux/kernel/0208.2/1137.html
-for reference.
-
-Personally i dont care much about ide on intel's server boards ... use scsi
-instead.
-
---
+If one wants to enjoy the cost savings and modern technology of IDE drives, 
+without paying an exorbitant cost there are some very nice IDE cards out 
+there that are not nearly so fussy..
 
 
-Jure Pecar
+With our best regards,
 
---=.Ui?PfpYs/Dm6c)
-Content-Type: application/pgp-signature
+Maurice W. Hilarius       Telephone: 01-780-456-9771
+Hard Data Ltd.               FAX:       01-780-456-9772
+11060 - 166 Avenue        mailto:maurice@harddata.com
+Edmonton, AB, Canada      http://www.harddata.com/
+    T5X 1Y3
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.0.6 (GNU/Linux)
-
-iD8DBQE9aijMOHUMrcOSg+8RAoUMAJwMnljQ1OHYQa+Y016l7an27biUugCfYgDQ
-fnesLPI8uG7netYpgyOykgQ=
-=v85j
------END PGP SIGNATURE-----
-
---=.Ui?PfpYs/Dm6c)--
+2.3TB RAID5 NAS server - dual AthlonMP CPU, Linux, $10,995 CAD / $6850 USD
 
