@@ -1,45 +1,66 @@
-From: Nathan Dietsch <njd@ndietsch.com>
+From: coreyfro@coreyfro.com
 Subject: Re: RAID5 crash and burn
-Date: Mon, 01 Nov 2004 00:54:20 +1100
-Message-ID: <4184EE8C.2020408@ndietsch.com>
-References: <1430.63.204.219.3.1099198742.squirrel@63.204.219.3>    <200410310518.i9V5ION22004@www.watkins-home.com> <1867.63.204.219.3.1099216777.squirrel@63.204.219.3>
+Date: Sun, 31 Oct 2004 09:19:21 -0800 (PST)
+Message-ID: <1990.63.204.219.3.1099243161.squirrel@63.204.219.3>
+References: <1430.63.204.219.3.1099198742.squirrel@63.204.219.3>   
+    <200410310518.i9V5ION22004@www.watkins-home.com>
+    <1867.63.204.219.3.1099216777.squirrel@63.204.219.3>
+    <4184CBE3.10801@robinbowes.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1867.63.204.219.3.1099216777.squirrel@63.204.219.3>
+In-Reply-To: <4184CBE3.10801@robinbowes.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: coreyfro@coreyfro.com, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello Corey,
 
-coreyfro@coreyfro.com wrote:
+Hey everyone, I'll just get these all in one e-mail
 
->Ahhhhhh... doesn't use the raidtab... nothing needs raidtab anymore... i
->guess its time i got with the program...
->
->About swap failing, would there be much of a performence hit if i mirrored
->swap?  
->  
->
- From what I read earlier in the thread, you already have a swap 
-partition on software RAID5, so how would going to RAID1 hurt performance.?
-With swap on RAID5 -- unless you are paging very heavily (enough for a 
-full-stripe write) -- it seems you would go into Read-Modify-Write 
-anyway and this will hurt ... badly.
+First off, my disks had the following config each
 
-Mirroring swap is a good idea to avoid crashes as Guy suggests.
-If you are seriously considering the performance implications of RAID1 
-vs RAID5 for swap, you are already done for performance wise.
+2GB partition for mirrors (boot, backup, and upgrade mirrors)
+256MB swap paritions
+198GB RAID5 paritions
 
-Personally I would not consider software RAID5 suitable for tasks which 
-require performance. An exception would be for heavy I/O that causes 
-full-stripe writes, in which case you would probably get a win out of 
-the extra disks.
+so, i had six swap partitons for a total of 1.5GB + .5GB of RAM
 
-I hope this helps.
+This is way more than I need, and now that I think about it, a bad idea. 
+Swap was MAJORLY fast, but who cares, I rarely used it.
 
-Kind Regards,
+Because I used them all, I will be facing a slowdown, even with RAID1's
+distributed read, but I don't really care...  I plan on Mirroring it three
+ways, so I have two 256MB swap mirrors.  Overcompensating, I know.
 
-Nathan Dietsch
+What I was more concerned about was if people did it and it could be done.
+
+> What other reasons are these (genuine question - I'm curious)
+
+The other reasons for swap are these.
+
+1. Linux caches all HDD activity.  Allowing Linux to use RAM for cache and
+HDD for swap can actually speed up system with lots of RAM.  Now, linux
+may never actualy swap anything if you have WAY too much (is there such a
+thing?) RAM, but the point is still valid.
+2. Linux isn't very good at memory clean up.  Unused pages in RAM may
+never get flushed, or if they do, it requires actual processing (if forget
+which) while unused pages in Swap just get forgotten.  This may lead to
+guy's 100% CPU utilization, I don't know if the persons swap was full or
+buggy or what, but it sounds like the arguement for using swap.  So, in
+short, swap can be used as "/dev/null" for unused pages.
+3. Disk be cheap.
+
+There were more, but I forget
+
+There was a big debate on the Linux Kernel forum between the "Use" and the
+"Use nots" and the "Use" people made more good arguments, which the key
+argument was "It can't hurt" (which isn't 100% true, but, its around
+97.523423333_% true.)
+
+========================================================================
+For your reading pleasure
+
+Linux: Is Swap Necessary?
+http://kerneltrap.org/node/view/3202
+
