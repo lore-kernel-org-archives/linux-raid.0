@@ -1,52 +1,40 @@
-From: Ninti Systems <office@ninti.com.au>
-Subject: Re: Please review: Slackware RAID How-To
-Date: 16 May 2004 16:10:52 +0930
+From: "Jose Fernandez" <impresorasok@wanadoo.es>
+Subject: 10 cargas por el precio de 1
+Date: Sun, 16 May 2004 16:33:50
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1084689652.1197.34.camel@localhost>
-References: <1084290138.25942.30.camel@ws101.darkcore.net>
-Reply-To: office@ninti.com.au
+Message-ID: <200405161436.i4GEaEq25229@zeus.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1084290138.25942.30.camel@ws101.darkcore.net>
-To: John Lange <john.lange@bighostbox.com>
-Cc: LinuxRaid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I had another go with a new slackware.iso and lilo appears to have
-installed OK this time (no complaints anyway), but still can't boot
-(kernal panics as it cant find init).
+IMPRESION CON CALIDAD FOTOGRAFICA.
+OBTENGA HASTA 10 CARGAS-POR EL PRECIO DE UN CARTUCHO
+No pida información al e/mail emisor . Envie un fax al 911412099
+Disponemos de kits de tinta, para todas las impresoras.
+Con un Kit tiene para recargar los cartuchos de 5 a 12 veces como
+minimo, dependiendo de la marca.
+Su coste es de 28 EUROS (iva incluido) para negro y 34 para el de color.
+-ORDENADORES E IMPRESORAS LASER DESDE 150 EUROS
+Para TONER muy buenos precios.
+HAGA SU PEDIDO INDICANDO: marca de la impresora y modelo al -
+http://www.imprekits.com o al Fax911412099.o al tel 645043838
+Hay tantas marcas y modelos que si lo desea para simplificar, 
+puede rellenar esta ficha y enviarla al fax 911412099 ó al mail
+juan@imprekits.com
 
-Another start up message:
+Asesoramiento gratis, sobre impresoras.
 
-  RAID level 1 does not need chunksize! Continuing anyway.
+Nombre:___________________________________________________________
+Dirección:________________________________________________________
+C.P._____Población_______________________________ TEL_____________
+e/mail___________
 
-Mick
-
-
-On Wed, 2004-05-12 at 01:12, John Lange wrote:
-> As mentioned, I have created a Slackware RAID How-To and an initial
-> draft is located here:
-> 
-> http://www.langefamily.ca/howto/SlackwareRaidHowTo.html
-> 
-> This document covers getting Slackware installed on a system with RAID.
-> This technique does not require a temporary hard drive or anything other
-> than a Slackware boot CD.
-> 
-> I am fairly new to linux software RAID so I really hope some more
-> experienced people will take some time to read it and give me some
-> feedback. I would hate to have some glaring errors inflicted on others!
-> 
-> Thanks.
--- 
---------------------------------------
-Ninti Systems: Smart IT Solutions
-Michael Hall
-Mobile: 0429 095 392
-Ph/Fax: 08 8953 1442       
-Email:  office at ninti dot com dot au
-Web:    http://ninti.com.au
---------------------------------------
-
+Marca de la impresora, fax o fotocopiadora__________________
+Modelo___________
+Nos pondremos en contacto con Uds. a la mayor brevedad posible
+-Informe a un amigo
+Le enviamos este correo en la confianza de que pueda ser de su utilidad.
+No obstante, en cumplimiento de la Ley 34/2002(LSSI) y Ley Organiza 15/1999(PDCP) 
+si no desea recibir mas comunicaciones envie un e-mail a bajas@imprekits.com y le borraremos.
