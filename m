@@ -1,43 +1,24 @@
-From: Brad Campbell <brad@wasp.net.au>
-Subject: Re: max_sectors in libata when using md
-Date: Thu, 26 Aug 2004 20:44:11 +0400
-Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <412E135B.1030605@wasp.net.au>
-References: <412DFFA9.8030504@wasp.net.au> <8746466a0408260852205a7842@mail.gmail.com> <412E1039.7030508@pobox.com>
+From: Bob Glamm <glamm@a-s-i.com>
+Subject: device-mapper library
+Date: Thu, 26 Aug 2004 12:48:30 -0500
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <20040826174830.GA27929@romulus.a-s-i.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <412E1039.7030508@pobox.com>
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Dave <dave.jiang@gmail.com>, linux-ide@vger.kernel.org, SCSI Mailing List <linux-scsi@vger.kernel.org>, RAID Linux <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Jeff Garzik wrote:
-> Dave wrote:
-> 
->> I believe. I wish the SATA layer would allow a mechanism to auto
->> detect drive being LBA48 or LBA28 and adjust accordingly instead of
->> just default to a very low sector count.
-> 
-> 
-> 
-> The SATA layer already does this...  but only on 2.6.x kernels.
-> 
-> drivers/scsi/libata-scsi.c, ata_scsi_slave_config()
-> 
+I apologize if this is the wrong place to ask this; kindly direct
+me to the appropriate place if so.
 
-(Groan) <Places head in hands weeping>
+Is there an issue building device-mapper.1.00.1[89] against
+2.6 kernels?  struct dm_target_msg does not appear in the
+kernel headers for 2.6.5 or 2.6.7 (include/linux/dm-ioctl.h)
+but does appear in kernel/ioctl/dm-ioctl.h in the device-mapper
+sources.  Is there a set of 2.6.x patches somewhere I missed?
 
-I give up Batman.
+Thanks!
 
-In which case, these drives need to be knocked back to UDMA66 to function properly on anything later 
-than 2.6.6. Don't know why.
-I have tried multiple drives (I have 5 of them), multiple cables (lots of those) and multiple bridge 
-boards (I have 6 of those). There is no combination that is reliable on the VIA controller with any 
-transfer larger than about 0x80 sectors *OR* speeds greater than UDMA66 *OR* Kernel 2.6.6 or prior.
-
-
-
-Regards,
-Brad
+-Bob
