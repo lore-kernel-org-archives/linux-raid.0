@@ -1,58 +1,34 @@
-From: Frank Wittig <fw@weisshuhn.de>
-Subject: Re: raidreconf aborted after being almost done
-Date: Thu, 10 Mar 2005 11:31:53 +0100
-Message-ID: <42302219.6090605@weisshuhn.de>
-References: <1110443099.4230045b50735@www.rothert.de>
+From: David Greaves <david@dgreaves.com>
+Subject: Re: md Grow for Raid 5
+Date: Thu, 10 Mar 2005 12:10:27 +0000
+Message-ID: <42303933.8040908@dgreaves.com>
+References: <676e074ffe5f52e6671aac5a2c14e984@case.edu>	<422DFE60.5020807@weisshuhn.de>	<422E1C6A.2000006@h3c.com>	<422E31F3.3070104@panix.com>	<422E3352.20002@h3c.com> <16942.15235.437442.433397@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enig829E85A5ACBA70E5F781ECA3"
-In-Reply-To: <1110443099.4230045b50735@www.rothert.de>
-Sender: linux-raid-owner@vger.kernel.org
-To: yejj8xgg@rothert.de
-Cc: linux-raid@vger.kernel.org
-List-Id: linux-raid.ids
-
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enig829E85A5ACBA70E5F781ECA3
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
+In-Reply-To: <16942.15235.437442.433397@cse.unsw.edu.au>
+Sender: linux-raid-owner@vger.kernel.org
+To: Neil Brown <neilb@cse.unsw.edu.au>
+Cc: Mike Hardy <mhardy@h3c.com>, berk walker <berk@panix.com>, Frank Wittig <fw@weisshuhn.de>, John Poirier <john.poirier@case.edu>, linux-raid@vger.kernel.org
+List-Id: linux-raid.ids
 
-yejj8xgg@rothert.de wrote:
-> After searching the web I believe this is due to different disk sizes. Because I
-> use different disks (vendor and type) having different geometries it is not
-> possible to have partitions of exact the same size. They match as good as
-> possible but some always have different amounts of blocks.
+Neil Brown wrote:
 
-AFAIK the size of a block differs between disks with an unequal number 
-of heads. I had this problem with some identical drives. (some with 16 
-heads and some with 255)
-It is possible to set these parameters with fdisk and have drives with 
-equal geometry or (in case of different models) with comparible geometry 
-which allows to have partitions of exactly the same size.
+>Growing a raid5 or raid6 by adding another drive is conceptually
+>possible to do while the array is online, but I have not definite
+>plans to do this (I would like to).  Growing a raid5 into a raid6
+>would also be useful.
+>These require moving lots of data around, and need to be able to cope
+>with drive failure and system crash.... a fun project..
+>  
+>
+EVMS has this already.
 
-fdisk --help doesn't mention this possibility but ists manpage does:
+It works and is supported (whereas I didn't think raidreconf was).
+It would be nice to move the EVMS raid5 extension code into the core md.
 
-Run fdisk with
-fdisk -b <sectorsize> -C <cyls> -H <heads> -S <sects> device
-and alter the partition table. Then exit with writing.
-After that your disk has a new geometry.
+FYI, I used EVMS briefly and found it to be an excellent toolset. It's a 
+teeny bit rough and a bit OTT for a personal server though so I'm 
+sticking with md/lvm2 for now :)
 
-Greetings,
-Frank
-
---------------enig829E85A5ACBA70E5F781ECA3
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.6 (GNU/Linux)
-Comment: Using GnuPG with Thunderbird - http://enigmail.mozdev.org
-
-iD8DBQFCMCIex6tzaD9P7mkRAi6NAJ92ww24wWMhYzFl7XWdePE+LL6WSwCeKkDW
-diQxLkFtlhnN0irQmjU6PrI=
-=pq0x
------END PGP SIGNATURE-----
-
---------------enig829E85A5ACBA70E5F781ECA3--
+David
