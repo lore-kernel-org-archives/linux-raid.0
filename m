@@ -1,77 +1,98 @@
-From: Scott Ransom <sransom@cv.nrao.edu>
-Subject: always dirty RAID5 arrays
-Date: Tue, 9 Nov 2004 16:03:24 -0500
-Message-ID: <200411091603.24933.sransom@cv.nrao.edu>
-Reply-To: sransom@nrao.edu
+From: Mark Thompson <mark@ruthless.ws>
+Subject: Re: mdadm: Invalid Argument ("cannot start dirty degraded array")
+Date: Wed, 10 Nov 2004 10:41:18 +1300
+Message-ID: <4191397E.6080005@ruthless.ws>
+References: <m3ekj3f16q.fsf@bfnet.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <m3ekj3f16q.fsf@bfnet.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: sransom@nrao.edu
+To: Linux Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi All,
+David Wuertele wrote:
+> I have a gentoo system (kernel 2.6.8-gentoo-r3) with a 7 drive RAID5
+> array.  Recently that array went down, and I was advised by the list
+> to try mdadm.  I was unsuccessful, but perhaps someone here can advise
+> me where I went wrong.
+> 
+> When I boot, I see the "Starting up RAID devices: ... * Trying
+> md0... [ !!FAILED ]" and the system drops me to the shell.  I type:
+> 
+>   # cat /proc/mdstat
+>   Personalities : [raid1] [raid5]
+>   md0 : inactive hdm4[0] hde2[6] hdo2[5] hdh2[4] hdf2[3] hdg2[2]
+>         1464789888 blocks
+>   unused devices: <none>
+> 
+> OK, the array is missing partition hdp2.  dmesg says it has an invalid
+> superblock:
+> 
+>   # dmesg | grep hdp
+>       ide7: BM-DMA at 0xd808-0xd80f, BIOS settings: hdo:DMA, hdp:DMA
+>   hdp: WDC WD2500JB-00GVA0, ATA DISK drive
+>   hdp: max request size: 1024KiB
+>   hdp: 488397168 sectors (250059 MB) w/8192KiB Cache, CHS=30401/255/63, UDMA (100)
+>   md: invalid raid superblock magic on hdp2
+>   md: hdp2 has invalid sb, not importing!
+>   Adding 64220k swap on /dev/hdp1.  Priority:-2 extents:1
+> 
+> I didn't see any indication that there is anything wrong with the hdp
+> drive.  Here is my /etc/mdadm.conf file:
+> 
+>   # cat /etc/mdadm.conf
+>   DEVICE partitions
+>   ARRAY /dev/md0 level=raid5 num-devices=7 UUID=d312c423:e2eeeff5:3401806f:ab10e3c
+>      devices=/dev/ide/host2/bus0/target0/lun0/part2,/dev/ide/host2/bus0/target1/lun0/part2,/dev/ide/host2/bus1/target0/lun0/part2,/dev/ide/host2/bus1/target1/lun0/part2,/dev/ide/host6/bus0/target0/lun0/part4,/dev/ide/host6/bus1/target0/lun0/part2
+> 
+> Since /proc/mdstat reports that six of the seven drives are already
+> assembled, I tried running as-is:
+> 
+>   # mdadm --run /dev/md0
+>   mdadm: failed to run array /dev/md0: Invalid argument
+>   # mdadm -v --run --force /dev/md0
+>   mdadm: failed to run array /dev/md0: Invalid argument
+> 
+> Hmm... not very descriptive.  I looked at the end of dmesg again for
+> more hints:
+> 
+>   # dmesg | tail -18
+>   md: pers->run() failed ...
+>   raid5: device hdm4 operational as raid disk 0
+>   raid5: device hde2 operational as raid disk 6
+>   raid5: device hdo2 operational as raid disk 5
+>   raid5: device hdh2 operational as raid disk 4
+>   raid5: device hdf2 operational as raid disk 3
+>   raid5: device hdg2 operational as raid disk 2
+>   raid5: cannot start dirty degraded array for md0
+>   RAID5 conf printout:
+>    --- rd:7 wd:6 fd:1
+>    disk 0, o:1, dev:hdm4
+>    disk 2, o:1, dev:hdg2
+>    disk 3, o:1, dev:hdf2
+>    disk 4, o:1, dev:hdh2
+>    disk 5, o:1, dev:hdo2
+>    disk 6, o:1, dev:hde2
+>   raid5: failed to run raid set md0
+>   md: pers->run() failed ...
+> 
+> Any suggestions?
+> Thanks,
+> Dave
 
-On one of our servers we have 4 6-disk RAID5 arrays running.  Each of the 
-arrays was created using the following command:
+Hey there,
 
-mdadm --create /dev/md3 --level=5 --verbose --force --chunk=128 \ 
---raid-devices=6 /dev/sd[ijklmn]1
+I had the exact issue on the weekend this is how I fixed it:
+mdadm -S /dev/md0
+mdadm -Af /dev/md0 /dev/hdm4 /dev/hde2 /dev/hdo2 /dev/hdh2 /dev/hdf2 
+/dev/hdg2
 
-After building and a resync (and a reboot and a resync...), the array looks 
-like this:
+That -should- start the array without hdp2, once its started, add 
+/dev/hdp2 to the array and it should be all good.
 
---------------------------------------------
-spigot2  sransom 84: mdadm --detail /dev/md3
-/dev/md3:
-        Version : 00.90.00
-  Creation Time : Tue Sep 21 15:54:31 2004
-     Raid Level : raid5
-     Array Size : 1220979200 (1164.42 GiB 1250.28 GB)
-    Device Size : 244195840 (232.88 GiB 250.06 GB)
-   Raid Devices : 6
-  Total Devices : 6
-Preferred Minor : 3
-    Persistence : Superblock is persistent
+mdadm -a /dev/md0 /dev/hdp2
 
-    Update Time : Sat Nov  6 10:58:12 2004
-          State : dirty
- Active Devices : 6
-Working Devices : 6
- Failed Devices : 0
-  Spare Devices : 0
-
-         Layout : left-symmetric
-     Chunk Size : 128K
-
-           UUID : 264b9069:96d7a1a6:d3b17be5:23fa47ce
-         Events : 0.30
-
-    Number   Major   Minor   RaidDevice State
-       0       8      129        0      active sync   /dev/sdi1
-       1       8      145        1      active sync   /dev/sdj1
-       2       8      161        2      active sync   /dev/sdk1
-       3       8      177        3      active sync   /dev/sdl1
-       4       8      193        4      active sync   /dev/sdm1
-       5       8      209        5      active sync   /dev/sdn1
------------------------------------------------------------------
-
-
-Notice that the State is "dirty".  If we reboot, the arrays are in a dirty 
-status and always need to resync.  Any idea why would this be?  (I'm 
-running XFS on the RAIDs and am using a slightly modified RH9.0 kernel:  
-2.4.24aa1-xfs)
-
-Thanks for the help,
-
-Scott
-
--- 
-Scott M. Ransom            Address:  NRAO
-Phone:  (434) 296-0320               520 Edgemont Rd.
-email:  sransom@nrao.edu             Charlottesville, VA 22903 USA
-GPG Fingerprint: 06A9 9553 78BE 16DB 407B  FFCA 9BFA B6FF FFD3 2989
+Cheers,
+Mark
