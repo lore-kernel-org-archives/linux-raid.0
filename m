@@ -1,33 +1,48 @@
-From: Kanoa Withington <kanoa@cfht.hawaii.edu>
-Subject: Re: Adic Scalar 100 w/ Linux
-Date: Thu, 8 Apr 2004 13:50:35 -1000 (HST)
+From: KELEMEN Peter <Peter.Kelemen@cern.ch>
+Subject: Re: Which raid card to buy for Sarge
+Date: Fri, 9 Apr 2004 13:16:26 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.55.0404081347390.20005@umi.cfht.hawaii.edu>
-References: <4075E2AE.9070108@opsource.net>
+Message-ID: <20040409111626.GC3257@chihiro.cern.ch>
+References: <Pine.LNX.4.44.0403311442520.31572-100000@coffee.psychology.mcmaster.ca> <406B27E4.1000106@sauce.co.nz> <20040401090731.GI6923@chihiro.cern.ch> <406F936C.2090605@sauce.co.nz>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4075E2AE.9070108@opsource.net>
-To: Victor Gregorio <victor@opsource.net>
-Cc: linux-raid@vger.kernel.org
+Content-Disposition: inline
+In-Reply-To: <406F936C.2090605@sauce.co.nz>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-You are on the wrong list, but yes, I use one with Linux via "mtx"
-(look on sourceforge).
+* Richard Scobie (richard@sauce.co.nz) [20040404 16:47]:
 
-Aloha,
+> KELEMEN Peter wrote:
+> > * Richard Scobie (richard@sauce.co.nz) [20040401 08:19]:
+> > >3ware hardware RAID 10: Reads - 92.8MB/s    Writes - 88.9MB/s
+> > >Software RAID 10:  Reads - 53.7MB/s   Writes - 94.9 MB/s
 
--Kanoa
+> > 3ware HW-RAID1, Linux SW-RAID0:	read 263 MiB/s, write 157 MiB/s
+> > 3ware HW-RAID5, Linux SW-RAID0:	read 243 MiB/s, write 135 MiB/s
+> > Linux SW-RAID5:			read 225 MiB/s, write 135 MiB/s
+> > 3ware HW-RAID10:		read 119 MiB/s, write  91 MiB/s
 
-On Thu, 8 Apr 2004, Victor Gregorio wrote:
+> This array is obviously larger than the 4 disc one I have. Unfortunat=
+ely=20
+> you do not have the one result I would really like - SW-RAID10.
+> It would be interesting to see how it compares to 3ware HW-RAID10.
 
-> Has anyone had any success getting Linux to see an Adic's robotic arm?
->
-> Thanks,
-> Victor
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Well, I did those tests as well for the sake of interest.
+Linux SW-RAID10:		read 221 MiB/s, write 105 MiB/s
+
+Peter
+
+--=20
+    .+'''+.         .+'''+.         .+'''+.         .+'''+.         .+'=
+'
+ Kelemen P=E9ter     /       \       /       \     Peter.Kelemen@cern.c=
+h
+=2E+'         `+...+'         `+...+'         `+...+'         `+...+'
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
