@@ -1,32 +1,35 @@
-From: NeilBrown <neilb@cse.unsw.edu.au>
-Subject: [PATCH] md - 1 of 7 - Fix possible hang in raid shutdown.
-Date: Fri, 23 Jan 2004 11:14:23 +1100
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: [PATCH 2.6] md debug fixes
+Date: Fri, 23 Jan 2004 11:23:41 +1100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <E1Ajoxr-0000jH-00@notabene>
-References: <20040123105615.2237.patches@notabene>
+Message-ID: <16400.27021.639037.55877@notabene.cse.unsw.edu.au>
+References: <401039A1.D82E8B8D@SteelEye.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Andrew Morton <akpm@osdl.org>
+In-Reply-To: message from Paul Clements on Thursday January 22
+To: Paul Clements <Paul.Clements@SteelEye.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Thursday January 22, Paul.Clements@SteelEye.com wrote:
+> Hi Neil,
+> 
+> While running md with debug turned on, I noticed a couple of things that
+> could maybe use changing. 
+> 
+> The first change simply makes one of the debug messages a little more
+> useful (printing a thread's name rather than just a hex pointer value). 
+> 
+> The second fix is necessary to avoid an oops when md_error is called.
+> Because md_error is generally called when a device has failed, the
+> chance of the rdev parameter being NULL is fairly high. I hit this oops
+> several times in testing.
+> 
+> Patch attached, please apply.
 
-If a raid array was syncing on shutdown, it would hang on shutdown,
-constantly re-entering md_enter_safemade.  This fixes it.
+I've submitted it for 2.6.  I don't think I'll bother for 2.4
 
- ----------- Diffstat output ------------
- ./drivers/md/md.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletion(-)
-
-diff ./drivers/md/md.c~current~ ./drivers/md/md.c
---- ./drivers/md/md.c~current~	2004-01-23 10:30:08.000000000 +1100
-+++ ./drivers/md/md.c	2004-01-23 10:32:24.000000000 +1100
-@@ -3106,7 +3106,8 @@ static inline void md_enter_safemode(mdd
- {
- 	if (!mddev->safemode) return;
- 	if (mddev->safemode == 2 &&
--	    (atomic_read(&mddev->writes_pending) || mddev->in_sync))
-+	    (atomic_read(&mddev->writes_pending) || mddev->in_sync ||
-+		    mddev->recovery_cp != MaxSector))
- 		return; /* avoid the lock */
- 	mddev_lock_uninterruptible(mddev);
- 	if (mddev->safemode && !atomic_read(&mddev->writes_pending) &&
+Thanks,
+NeilBrown
