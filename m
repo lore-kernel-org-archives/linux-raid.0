@@ -1,41 +1,91 @@
-From: Theodore Ts'o <tytso@mit.edu>
-Subject: Re: Reproducable OOPS with MD RAID-5 on 2.6.0-test11
-Date: Fri, 5 Dec 2003 01:55:22 -0500
+From: Brandon Evans <maillists@hosttuls.com>
+Subject: mkraid creating 5G raid device from 110G partitions
+Date: Fri, 05 Dec 2003 17:38:42 -0800
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20031205065522.GA28825@thunk.org>
-References: <3FCB4AFB.3090700@backtobasicsmgmt.com> <20031201141144.GD12211@suse.de> <3FCB4CFA.4020302@backtobasicsmgmt.com> <20031201155143.GF12211@suse.de> <3FCC0EE0.9010207@backtobasicsmgmt.com> <20031202082713.GN12211@suse.de> <Pine.LNX.4.58.0312021009070.1519@home.osdl.org> <20031204011236.GA5622@simulated.ca> <Pine.LNX.4.58.0312031721210.2055@home.osdl.org> <20031204043106.GA19017@netnation.com>
+Message-ID: <3FD13322.4060906@hosttuls.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20031204043106.GA19017@netnation.com>
-To: Simon Kirby <sim@netnation.com>
-Cc: Linus Torvalds <torvalds@osdl.org>, Linux-raid maillist <linux-raid@vger.kernel.org>, Jens Axboe <axboe@suse.de>, Neil Brown <neilb@cse.unsw.edu.au>, "Kevin P. Fleming" <kpfleming@backtobasicsmgmt.com>, LKML <linux-kernel@vger.kernel.org>, linux-lvm@sistina.com
+To: Linux-raid maillist <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, Dec 03, 2003 at 08:31:06PM -0800, Simon Kirby wrote:
-> 
-> Without the patches, the box gets as far as assembling the array and
-> activating it, but dies on "mke2fs".  Running mke2fs through strace shows
-> that it stops during the early stages, before it even tries to write
-> anything.  mke2fs appears to seek through the whole device and do a bunch
-> of small reads at various points, and as soon as it tries to read from an
-> offset > 2 TB, it hangs.
+Hello all,
+	I'm trying to create a RAID-1 array  using 2 WD hard drives on  a 
+server running knoppix.  For some reason mkraid /dev/md1 creates a raid 
+device that is only 5 Gigs, however the partitions I am using in the 
+array are about 110Gigs.  This is urgent, so if the answer to this is 
+out there but I havent found it on google yet, I apologize.
 
-It sounds like mke2fs tried using BLKGETSIZE ioctl, but given that
-this returns the number of 512 byte sectors in a device in a 4 byte
-word, the BLKGETSIZE ioctl quite rightly threw up its hands and said,
-"sorry, I can't tell you the correct size."
 
-The mke2fs fell back to its backup algorithm, which uses a modified
-binary search to find the size of the device.  It started to see if
-the device was at least 1k, and checks to see if the device is at
-least 2k, 4k, 8k, 16k, 32k, 64k, 128k, etc.  So it sounds like it's
-dieing when it tries to seek past 2TB using llseek(). 
+Here is the relevant Raid configuration:
 
-It would probably be worthwhile to write a little test program which
-opens the disk, llseeks to 2TB+1, and then tries reading a byte.  If
-that fiailes, then there's definitely a bug somewhere in the device
-driver....
+The server is running knoppix 3.3, 2 WD 120Gig HD's, 2G Ram
 
-						- Ted
+mkraid version 0.90.0
+
+
+root@0[mnt]# fdisk -l
+
+Disk /dev/hda: 120.0 GB, 120034123776 bytes
+255 heads, 63 sectors/track, 14593 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+
+    Device Boot    Start       End    Blocks   Id  System
+/dev/hda1             1         6     48163+  fd  Linux raid autodetect
+/dev/hda2             7       132   1012095   82  Linux swap
+/dev/hda3           133     14593 116157982+  fd  Linux raid autodetect
+
+Disk /dev/hdb: 120.0 GB, 120000000000 bytes
+255 heads, 63 sectors/track, 14589 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+
+    Device Boot    Start       End    Blocks   Id  System
+/dev/hdb1             1         6     48163+  fd  Linux raid autodetect
+/dev/hdb2             7     14589 117137947+  fd  Linux raid autodetect
+
+
+
+root@0[mnt]# cat /proc/mdstat
+Personalities : [raid1]
+read_ahead 1024 sectors
+md1 : active raid1 hdb2[1] hda3[0]
+       5116608 blocks [2/2] [UU]
+
+md0 : active raid1 hdb1[1] hda1[0]
+       48064 blocks [2/2] [UU]
+
+unused devices: <none>
+
+
+root@0[mnt]# cat /etc/raidtab
+raiddev             /dev/md0
+raid-level                  1
+nr-raid-disks               2
+chunk-size                  64k
+persistent-superblock       1
+nr-spare-disks              0
+     device          /dev/hda1
+     raid-disk     0
+     device          /dev/hdb1
+     raid-disk     1
+raiddev             /dev/md1
+raid-level                  1
+nr-raid-disks               2
+chunk-size                  64k
+persistent-superblock       1
+nr-spare-disks              0
+     device          /dev/hda3
+     raid-disk     0
+     device          /dev/hdb2
+     raid-disk     1
+
+
+
+
+
+
+
+-- 
+Thanks,
+     Brandon E.
