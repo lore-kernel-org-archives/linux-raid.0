@@ -1,31 +1,40 @@
-From: Larisa <wavulivis@mail.com>
-Subject: Important Penis enlargement info
-Date: Mon, 22 Sep 2003 13:46:09 +0000
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: Locking bugs in 2.4 md.c
+Date: Mon, 22 Sep 2003 15:54:46 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <G5D5J34K9J47K9G0@mail.com>
-References: <2IEFCH0659FE4611@vger.kernel.org>
-Reply-To: Lola <rolapi@registerednurses.com>
+Message-ID: <16238.36518.991915.293076@notabene.cse.unsw.edu.au>
+References: <20030918152310.GD30852@marowsky-bree.de>
+	<16234.25885.855209.372799@notabene.cse.unsw.edu.au>
+	<20030919072610.GB3143@marowsky-bree.de>
+	<20030919083639.GE3143@marowsky-bree.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <2IEFCH0659FE4611@vger.kernel.org>
-To: Linux-raid <linux-raid@vger.kernel.org>
+In-Reply-To: message from Lars Marowsky-Bree on Friday September 19
+To: Lars Marowsky-Bree <lmb@suse.de>
+Cc: linux-raid@vger.kernel.org, axboe@suse.de
 List-Id: linux-raid.ids
 
-Dear Customer,
+On Friday September 19, lmb@suse.de wrote:
+> On 2003-09-19T09:26:10,
+>    Lars Marowsky-Bree <lmb@suse.de> said:
+> 
+> > > A patch against 2.4-current is below.  It probably works but I haven't
+> > > reviewed it in the context of other recent changes to md so I make no
+> > > promises.
+> > Thanks. I'll merge it against the current 2.4.
+> 
+> Hi Neil, turns out your patch did exactly what I did with lock_mddev(),
+> just with a bigger granularity (which I think is a good thing, but I was
+> too shy to introduce a new lock).
+> 
+> However, I can still reliably panic the kernel with the sequence I gave
+> on a SMP box, even though the panic now seems to occur in different
+> places...
 
-I know what you think about this, but I finally got a result! You know
-the size really matter and she was fucking happy! My dick was
-so fucking big :) hehe
+I can't !!
+If you can show me a stack trace or some pointers to wher it panics, I
+can look further.
 
-I bought this VRX fucking bottle at http://211.142.226.167:1794/cgi-bin/vrx.pl?123
-
-Call me today :)
-
-Jim
-
-----------------------------------------------------------------------
-You may remove your email at http://unsubscribe.vrx-penis-pills.com/
-
-
+NeilBrown
