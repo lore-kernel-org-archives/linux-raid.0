@@ -1,48 +1,49 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: SW Raid doesn't play nice with devfs?
-Date: Mon, 9 Sep 2002 21:11:18 +1000
+From: Alexander Junghans <alexander@leukefeld.com>
+Subject: Raid 5 Superblock redundant?
+Date: Mon, 09 Sep 2002 14:26:17 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <15740.33238.383316.833368@notabene.cse.unsw.edu.au>
-References: <20020909054800.GV3806@merlins.org>
-	<15740.15774.911597.853392@notabene.cse.unsw.edu.au>
-	<20020909062737.GA3806@merlins.org>
+Message-ID: <3D7C9369.7010802@leukefeld.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Marc MERLIN on Sunday September 8
-To: Marc MERLIN <marc_news@merlins.org>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sunday September 8, marc_news@merlins.org wrote:
-> 
-> That said, the problem occurs both with the kernel autorun and raidstart:
-> when I load the qla1280 module, the drives get detected, md wakes up and
-> tries to create md3 since the partitions have type 0xfd, and fails in the
-> same way:
-> (...)
-> kernel:  /dev/scsi/host3/bus0/target13/lun0: p1
-> kernel: SCSI device sdl: 354600001 512-byte hdwr sectors
-> kernel:  /dev/scsi/host3/bus0/target14/lun0: p1
-> kernel:  [events: 00000002]
-> kernel: md: could not lock sdm1, zero-size? Marking faulty.
-> (...)
-> 
+Hi,
+first of all thanks for the Raidsupport in the Kernel : -> using it for 
+Years!
 
-I'm not sure what exactly is going on here, but it isn't regular
-auto-detect. That *only* happens at boot time.  Never after module
-load.
+I have a general question about the implementation Raid 5. It happents 
+me twice that one of a 3 Disk Raid 5 faild.
+After new installing the faild drive the system has to read the complete 
+2 disks to rebuild the 3.
+But there will be also a bad block, so the system will kick the 2. Disk 
+and the Raid will fail.
 
-> Is the kernel autorun code going to be fixed too or will I need to use mdadm
-> for the forseable future?
+Now the Question:
 
-I use and recommend mdadm to all non-root devices.  For a raid
-containing the root filesystem I use kernel parameters:
-   md=0,/dev/xxxx,/dev/yyyy
+If I would give you 3 Blocks of a Raid 5 same Position differend Disk 
+could you tell me which is worg?
 
-though in 2.6, I suspect that initramfs will mean that mdadm is the
-best choice for that too.  Don't do in kernel-space that which can
-effectively and efficiently be done in user-space.
+A + B +C = Data
+Simpy fake A
+(A) + B + C =Data
+Without knowing the superblock that a has failed.
 
-NeilBrown
+The idea behind this ist to make a raid 5 readable with some faid Blocks 
+on any drive with the fact that
+no more than 1 Block on each "slide" is down.
+Block 1 A   + B + C = O.k.
+Block 2 (A) +B + C = O.k.
+...
+Block 8 A + (B) + C = O.k.
+-------------------------------
+All Data O.K.
+
+I would love to have a mode of Raid 5 where no drive is kicked and all 
+data are O.K, just for saving the Data.
+Would this tecnially possible?
+
+Thanks.
+
