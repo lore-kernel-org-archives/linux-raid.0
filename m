@@ -1,89 +1,93 @@
-From: "Andrew Herdman" <andrew@whine.com>
-Subject: RE: Sanity check installation scheme
-Date: Wed, 14 Apr 2004 22:13:55 -0400
+From: Gordon Henderson <gordon@drogon.net>
+Subject: Re: Sanity check installation scheme
+Date: Thu, 15 Apr 2004 09:15:40 +0100 (BST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040415021355.9824110185@mail.whine.com>
-References: <6.0.1.1.0.20040414175626.04221ec0@no.incoming.mail>
+Message-ID: <Pine.LNX.4.56.0404150825010.12357@lion.drogon.net>
+References: <S262063AbUDNXhL/20040414233712Z+1806@vger.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <6.0.1.1.0.20040414175626.04221ec0@no.incoming.mail>
-To: linux-raid@vger.kernel.org
-List-Id: linux-raid.ids
-
-With that configuration, when you loose a disk, you loose the computer, swap
-does not do any raid features itself, important sections of memory may have
-been on that disk.  I would actually suggest creating the mirrors over all
-four disks for the swap, / and /boot.  You'll eat more disk space, but you
-will recover from a failed disk no matter which disk failed.
-
-Andrew
-
-
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Jeff Woods
-Sent: Wednesday, April 14, 2004 8:13 PM
+In-Reply-To: <S262063AbUDNXhL/20040414233712Z+1806@vger.kernel.org>
 To: robin-lists@robinbowes.com
 Cc: linux-raid@vger.kernel.org
-Subject: Re: Sanity check installation scheme
+List-Id: linux-raid.ids
 
-At 4/15/2004 12:37 AM +0100, robin-lists@robinbowes.com wrote:
->Partition | sda          | sdb          | sdc      | sdd      |
->----------+--------------+--------------+----------+----------+
->         1 | RAID-1       | RAID-1       | swap     | swap     |
->           | (/boot, 80M) | (/boot, 80M) | (180M)   | (180M)   |
->           +--------------+--------------+----------+----------+
->         2 | RAID-1       | RAID-1       | RAID-5   | RAID-5   |
->           | (/, 100M)    | (/, 100M)    | (~4G)    | (~4G)    |
->           +--------------+--------------+----------+----------+
->         3 | RAID-5       | RAID-5       |
->           | (~4G)        | (~4G)        |
->           +--------------+--------------+
->
->This will give me the following partitions:
->
->/     100MB, mirrored
->/boot 80MB, mirrored
->/usr, /var, et. All on ~12G RAID-5 array.
->
->Does this look feasible? Can you see any major gotchas? Any better
->suggestions?
+On Thu, 15 Apr 2004 robin-lists@robinbowes.com wrote:
 
-How about:
+> Does this look feasible? Can you see any major gotchas? Any better
+> suggestions?
 
-Partition | sda          | sdb          | sdc      | sdd      |
-----------+--------------+--------------+----------+----------+
-         1 | RAID-1       | RAID-1       | swap     | swap     |
-           | (/boot, 80M) | (/boot, 80M) | (130M)   | (130M)   |
-           +--------------+--------------+          |          |
-         2 | swap         | swap         |          |          |
-           | (50M)        | (50M)        |          |          |
-           +--------------+--------------+----------+----------+
-         3 | RAID-5       | RAID-5       | RAID-5   | RAID-5   |
-           | (/, ~4G)     | (/, ~4G)     | (/, ~4G) | (/, ~4G) |
-           +--------------+--------------+----------+----------+
+Personally I'd keep life simple at the expense of a little disk space - my
+layouts are also based on wanting to split partitions to, so I'd never put
+/, /usr and /var on the same partition - historical reasons, including
+fsck time and maybe a distrust of very old PDP11 Unix systems...  (Yes,
+I'm a boring old fart) Anyway what I do with my own machines (and those I
+build for others) is as follows:
 
-This will give me the following partitions:
+Partition each disk identically. That way, if you need to swap out a
+drive, you already have a copy of what it's partition table ought to look
+like by simply looking at the other drives - sort of self documenting if
+you like.
 
-/boot 80MB, mirrored
-/, /usr, /var, et. All on ~12G RAID-5 array.
-360M swap spread across all 4 spindles
+So for a single disk system it might look like:
 
-Adjust the capacities to suit.
+  sda1	256MB		/
+  sda2    1GB		swap
+  sda3    2GB		/usr
+  sda4  Rest of disk	/var
 
-Alternatively, use the other two spindles "next to" the /boot RAID-1 
-partitions to provide a RAID-1 or RAID-0 /tmp filesystem.  However, I'd be 
-inclined to increase the swap area and use tmpfs (which is virtual-memory 
-based; i.e. RAM+swap) for /tmp.
---
-Jeff Woods <kazrak+kernel@cesmail.net> 
+Actually, /usr might be less and swap would be double memory, but you get
+the jist - use the 4 primary partitions and usually no more. In olden days
+consideration would be made to where the disk head spends most of its time
+- here, oscillating between the /usr (programs) and /var (data) might be
+optimal, but I don't think anyone cares about this these days.
+(historically, /usr was where users home directories lived too, then the
+head would be between /usr and swap and /bin with special programs having
+the 'sticky bit' set to make them reside in memory or swap to make them
+quicker to load)
 
+Partition the drives similar to this in a RAID system too. Then combine
+them as follows:
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+  sda1 and sdc1:	RAID 1		/
+  sda2,b2,c2,d2:	RAID 5		swap
+  sda3,b3,c3,d3:	RAID 5		/usr
+  sda4,b4,c4,d4:	RAID 5		/var
 
+You "lose" 2 partitions: sdb1 and sdd1. You can combine these in another
+RAID1 if you like, but it's not much use for anything.
+
+Putting swap on RAID5 probably isn't optimal, but if your machine is
+swapping heavily, buy more memory. If you are really tight on disk space
+and know you have plenty of RAM no swap is probably better than too little
+swap.
+
+You might need to adjust the sizes of the swap and /usr partitions - I
+usually aim for 2GB under /usr (that would be 4 x 768MB partitions under
+RAID5) - I've found that to be enough for Debian and X and space for other
+stuff, but YMMV. Remember with a 4-disk RAID 5 system you get 3 times the
+capacity.
+
+Debian also puts /home under /, so I always remove it before creating any
+users and create a /var/home and symlink /home to /var/home.
+
+If it's just a home server and you don't anticipate the log files growing,
+you may want to consider not having a separate /var partition and mounting
+that as /home instead...
+
+You need to make sure you can actually boot off sdc1 should you ever lose
+sda. This is vitally important! Most SCSI controllers allow you to change
+the boot drive, so it shouldn't be a problem, but it might mean manual
+intervention should you need to reboot it in a degraded mode.
+
+I've not used a /boot partition for about 8 years now. As far as I'm aware
+it was just a "hack" when BIOSes couldn't boot from cylinders > 1024, and
+putting / on the very first partition sorts this anyway. /boot on my
+servers is just a directory under / on all my machines.
+
+Knowing that you are only using 4.3GB drives, I might be tempted to merge
+the /usr and /var partitions.
+
+Enjoy,
+
+Gordon
