@@ -1,64 +1,45 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: Software RAID 0+1 with mdadm.
-Date: Thu, 27 Jan 2005 10:50:43 -0500
-Message-ID: <200501271548.j0RFml910827@www.watkins-home.com>
-References: <Pine.LNX.4.61.0501270801560.21209@diagnostix.dwd.de>
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: Software RAID 0+1 with mdadm.
+Date: Thu, 27 Jan 2005 17:01:58 +0100
+Message-ID: <20050127160158.GB21230@percy.comedia.it>
+References: <20050126151703.GA2040@percy.comedia.it> <OMEKLMBKKEOEENCKLEIDAECMCBAA.ryan@dynaconnections.com> <16888.31506.646380.934873@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.61.0501270801560.21209@diagnostix.dwd.de>
+Content-Disposition: inline
+In-Reply-To: <16888.31506.646380.934873@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Holger Kiehl' <Holger.Kiehl@dwd.de>, 'Neil Brown' <neilb@cse.unsw.edu.au>
-Cc: 'linux-raid' <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-RAID10 will work with an odd number of disks!  If really is cool!
-
-But, since you need control of what is where, you don't want RAID10.
-
-You should create RAID1 arrays.  Each of your RAID1 arrays should have 2
-disks, each on a different controller/channel.  Then create a single RAID0
-array out of the RAID1 arrays.
-
-Guy
-
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Holger Kiehl
-Sent: Thursday, January 27, 2005 3:13 AM
-To: Neil Brown
-Cc: linux-raid
-Subject: Re: Software RAID 0+1 with mdadm.
-
->>
->> I have since upgraded to mdadm 1.8 and setup a RAID10. However I need
->> something that is production worthy. Is a RAID10 something I could rely
->> on as well? Also under a RAID10 how do you tell it which drives you want
->> mirrored?
+On Thu, Jan 27, 2005 at 04:24:34PM +1100, Neil Brown wrote:
+>On Wednesday January 26, ryan@dynaconnections.com wrote:
+>> This bug that's fixed in 1.9.0, is in a bug when you create the array?  ie
+>> do we need to use 1.9.0 to create the array.  I'm looking to do the same but
+>> my bootdisk currently only has 1.7.soemthing on it.  Do I need to make a
+>> custom bootcd with 1.9.0 on it?
 >
-> raid10 is 2.6 only, but should be quite stable.
-> You cannot tell it which drives to mirror because you shouldn't care.
-> You just give it a bunch of identical drives and let it put the data
-> where it wants.
+>This issue that will be fixed in 1.9.0 has nothing to do with creating
+>the array.
 >
-> If you really want to care (and I cannot imagine why you would - all
-> drives in a raid10 are likely to get similar load) then you have to
-> build it "by hand" - a raid0 of multiple raid1s.
->
-But what about redundancy? The only reason why on some systems I choose
-raid 1+0 and not raid10, is that I want the raid 1 always on two different
-controllers or channels. So if there is some problem with the SCSI bus
-you will only loose one half of your array. I think with raid10 it
-can be that you loose your complete array, because a whole raid1 can
-sit on a single controller/channel. Is this assumption correct, or
-does raid10 have some magic to solve this?
+>It is only relevant for stacked arrays (e.g. a raid0 made out of 2 or
+>more raid1 arrays), and only if you are using
+>   mdadm --assemble --scan
+>(or similar) to assemble your arrays, and you specify the devices to
+>scan in mdadm.conf as
+>   DEVICES partitions
+>(i.e. don't list actual devices, just say to get them from the list of
+>known partitions).
+actually the last statement is not true, a missing close(mdfd); causes
+mdadm --assemble --scan to fail the first round even if you do specify
+DEV /dev/mdX in mdadm.conf.
 
-Thanks,
-Holger
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+L.
 
+-- 
+Luca Berra -- bluca@comedia.it
+        Communication Media & Services S.r.l.
+ /"\
+ \ /     ASCII RIBBON CAMPAIGN
+  X        AGAINST HTML MAIL
+ / \
