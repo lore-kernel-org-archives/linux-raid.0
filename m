@@ -1,9 +1,9 @@
 From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: inserting a new disk in a raid 1
-Date: Fri, 14 Jun 2002 19:56:20 +1000 (EST)
+Subject: Re: i just read in the archive.........
+Date: Fri, 14 Jun 2002 20:00:23 +1000 (EST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <15625.48580.739590.745519@notabene.cse.unsw.edu.au>
-References: <1024044540.2246.12.camel@Asterix>
+Message-ID: <15625.48823.906206.332483@notabene.cse.unsw.edu.au>
+References: <1024044823.2250.15.camel@Asterix>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
@@ -14,25 +14,16 @@ Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-> Hello there.
-> 
-> I recently set  up a linux system. I had only one hard drive by that
-> time, so I tought that I would configure it for software raid and see
-> later when I had my second drive.
-> I now have my second drive, and I don't have a clue on how to include i=
-> t
-> in my raid array. I tried to follow the tutorials ( that is, the raid
-> HOWTO, but I'm probalby missing someting......
-> thank you in advance,
+> I justy read in the archive that software raid would'nt work with ext3
+> file system. Is that true ? ( i mean is that still true? )
 
-Does
-  raidhotadd /dev/md0 /dev/hdc1
+This sounds like a 2.2 kernel comment.  There were issues in 2.2.  The
+same issues now longer exist in 2.4.
 
-work, where you replace /dev/hdc1 with the name of the partition on
-your new drive.
-If not, more details are needed, at the very least:
-
-  cat /proc/partitions
-  cat /proc/mdstat
+There have been some ext3 issues (that are only related to raid by
+coincidence) lately.  I'm not sure if they have all been fixed in an
+official release yet.  I know I can get file corruption with 0.9.18 if
+I am using data=journal.  With other data modes 0.9.18 should be fine
+(in www.{country}.kernel.org/pub/linux/kernel/people/sct/....)
 
 NeilBrown
