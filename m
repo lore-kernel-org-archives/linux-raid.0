@@ -1,34 +1,38 @@
-From: NeilBrown <neilb@cse.unsw.edu.au>
-Subject: [PATCH]  Disable raid5 handling of read-ahead
-Date: Mon, 11 Aug 2003 14:28:37 +1000
+From: "Jose Nathaniel G. Nengasca" <admin@sscrmnl.edu.ph>
+Subject: Raid Q
+Date: Mon, 11 Aug 2003 17:11:09 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <E19m4IP-0002ez-00@notabene>
+Message-ID: <MPEEJJCBBFOCGLEOCJNAGENKDKAA.admin@sscrmnl.edu.ph>
+Mime-Version: 1.0
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Linus Torvalds <torvalds@osdl.org>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This patch, against 2.6.0-test3, fixes a data corruption bug in raid5
-NeilBrown
+I just created RAID1, and now its running smoothly... Now how can I add raid
+device to fstab? coz i always type 'mkraid' during restart and to solve this
+i added it on /etc/rc.d/rc.local.. so i guess fstab is the answer, so that i
+dont use /etc/rc.d/rc.local or run mkraid manually everytime it start...
 
-### Comments for ChangeSet
+Thanks
 
-raid5 trys to honour RWA_MASK, but messes it up and can return bad data.
-Just ignore RAW_MASK for now.
+Jose Nathaniel G. Nengasca
+Internet Systems Administrator
+San Sebastian College-Recoletos
+Claro M. Recto Ave., Quiapo, Manila
+Ph +63 2 7348931 local 300
+Mo +63 9164582925
+Website : http://www.sscrmnl.edu.ph
+---
+Outgoing mail is certified Virus Free.
+Checked by AVG anti-virus system (http://www.grisoft.com).
+Version: 6.0.507 / Virus Database: 304 - Release Date: 8/4/2003
 
- ----------- Diffstat output ------------
- ./drivers/md/raid5.c |    2 +-
- 1 files changed, 1 insertion(+), 1 deletion(-)
 
-diff ./drivers/md/raid5.c~current~ ./drivers/md/raid5.c
---- ./drivers/md/raid5.c~current~	2003-08-11 09:01:44.000000000 +1000
-+++ ./drivers/md/raid5.c	2003-08-11 09:01:44.000000000 +1000
-@@ -1326,7 +1326,7 @@ static int make_request (request_queue_t
- 			(unsigned long long)new_sector, 
- 			(unsigned long long)logical_sector);
- 
--		sh = get_active_stripe(conf, new_sector, pd_idx, (bi->bi_rw&RWA_MASK));
-+		sh = get_active_stripe(conf, new_sector, pd_idx, 0/*(bi->bi_rw&RWA_MASK)*/);
- 		if (sh) {
- 
- 			add_stripe_bio(sh, bi, dd_idx, (bi->bi_rw&RW_MASK));
+-- 
+This message has been scanned for viruses and
+dangerous contents on SSCR Email Scanner Server, and is
+believed to be clean.
+
