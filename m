@@ -1,177 +1,79 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: combining two raid systems
-Date: Thu, 13 Jan 2005 18:04:32 -0500
-Message-ID: <200501132302.j0DN2b906389@www.watkins-home.com>
-References: <eaa6dfe050113132247a79efd@mail.gmail.com>
+From: berk walker <berk.walker@verizon.net>
+Subject: Re: combining two raid systems
+Date: Thu, 13 Jan 2005 18:46:21 -0500
+Message-ID: <41E7084D.2040607@verizon.net>
+References: <200501132017.16910.maarten@ultratux.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <eaa6dfe050113132247a79efd@mail.gmail.com>
+In-Reply-To: <200501132017.16910.maarten@ultratux.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Derek Piper' <derek.piper@gmail.com>, linux-raid@vger.kernel.org
+To: maarten <maarten@ultratux.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-My OS is on 2 disks.
-I have /boot as a RAID1 partition (md0).
-The rest of the disks are RAID1 (md1).
-LVM on md1, 2 logical volumes "/" and swap.
+Maarten, why not just leave them as they are, and mount the secondary FS 
+on the primary FS?
+Less drag on the power supply, and fewer eggs in the basket.  If you 
+can't see the added array, it might be that, even in this great day of 
+standardisation, some boxes write to the disk differently, esp. in the 
+1st cyl.
+Just a thought -
+b-
 
-I have never had any problems with the 2 boot disks and OS on LVM.
+maarten wrote:
 
-My big array (md2) is not LVM.
-
-I never changed anything related to LVM, so it never really helped me in any
-way.
-
-I installed using RedHat 9.0.  It was very easy to install/configure a RAID1
-LVM setup.
-
-Guy
-
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Derek Piper
-Sent: Thursday, January 13, 2005 4:23 PM
-To: linux-raid@vger.kernel.org
-Subject: Re: combining two raid systems
-
-Maarten, I'm curious as to how you get on with LVM. I've been looking
-around and have seen that LVM seems to be a Bad Idea to run it on the
-root FS, and devfs seems to be scary also, so I wasn't going to even
-attempt any of that. I know Robin Bowes mentioned he uses LVM in that
-way, to 'carve up' a large RAID array. I'm curious if other people do
-that too and if they've had any problems. I'm not even sure of the
-maturity of the LVM stuff, anyone got any words of wisdom?
-
-Derek
-
-/still yet to get his feet wet in the whole RAID thing
-
-On Thu, 13 Jan 2005 21:27:07 +0100, maarten <maarten@ultratux.net> wrote:
-> On Thursday 13 January 2005 20:40, Bob Hillegas wrote:
-> > Set the sequence of hard drives to boot from in BIOS. Once you combine
-> > drives on single server, the drive designations will probably change.
-> > Need to figure out which sdx to put at the top of list.
-> 
-> No, that's perfectly handled by the autodetection. My drive ID are
-reassigned
-> all over the place (of course) but that goes well.
-> 
-> > Depending how you assemble array, you may at this point also need to
-> > tweak config file before you get the right drives assembled.
-> 
-> Yes but as I said the config is only read when all the assembling is done
-so
-> that won't help much. (chicken and egg problem)
-> 
-> > Introducing new SCSI devices into the chain is always interesting.
-> 
-> Indeed.
-> 
-> But I think I'm on the right track now anyway;  I did --zero-superblock on
-the
-> unwanted md0 and md1 drives, and rebooted. At this point something
-> interesting happened: md1 now indeed was the right array (from system 1).
-> Md0 however was still from system 2. So I gathered from that that the SB
-also
-> 'knows' which md device number it has so I had two md0's that clashed.
-> Knowing that I took the risk of fdisk'ing the drives from 0xFD to 0x83 and
-> that helped: I'm now booted into my system 1 OS drive.
-> 
-> I'll check if everything works now... gotta do stuff with LVM still at
-least,
-> and tweaking the mdadm.conf.
-> 
-> Maarten
-> 
-> > BobH
-> >
-> > On Thu, 2005-01-13 at 13:17, maarten wrote:
-> > > Hi,
-> > >
-> > > I'm currently combing two servers into one, and I'm trying to figure
-out
-> > > the safest way to do that.
-> > >
-> > > System one had two md arrays: one raid-1 with the OS and a second one
-> > > with data (raid-5)  It is bootable through lilo
-> > >
-> > > System two had 9 arrays, one with the OS (raid-1) two raid-1's for
-swap,
-> > > and 6 md devices that belong in an LVM volume. This system has grub.
-> > >
-> > > All md arrays are self-booting 0xFD partitions.
-> > >
-> > > I want to boot off system one.  I verified that that boots fine if I
-> > > disconnect all the [system-2] drives, so that's working okay.
-> > >
-> > > Now when I boot I get a lilo prompt, so I know the right disk is
-booted
-> > > by the BIOS.  When logged in, I see only the md devices from system
-two,
-> > > and thus the current md0 "/" drive is from system two.  Now what
-options
-> > > do I have ?
-> > >
-> > > If I zero the superblock(s) (or even the whole partitions) from md0 of
-> > > system 2, it will not boot off of that obviously, but what will now
-get
-> > > to be md0 ? It could be the second array from system 2 equally well as
-> > > the first array from system one, right ?
-> > >
-> > > I could experiment with finding the right array by using different
-kernel
-> > > root= commandlines, but only grub gives me that possibility, lilo has
-no
-> > > boot-time shell (well, it has a commandline...)
-> > >
-> > > Another thing that strikes me is that running 'mdadm --detail --scan'
-> > > also only finds the arrays from system 2. Is that expected since it
-just
-> > > reads its /etc/mdadm.conf file, or should it disregard that and show
-all
-> > > arrays ?
-> > >
-> > > Upon first glance 'fdisk -l' does show all devices fine (there are 10
-of
-> > > them)
-> > >
-> > > I think (er, hope, actually) that with mdadm.conf one could probably
-> > > force the machine to recognize the right drives as md0 as opposed to
-them
-> > > being numbered mdX, but is that a right assumption ?  At the time the
-> > > kernel md code reads / assembles the various 0xFD partitions, the
-> > > root-partition is not mounted (obviously) so reading /etc/mdadm.conf
-will
-> > > not be possible.
-> > >
-> > > I'll start to try out some things but I _really_ want to avoid having
-an
-> > > unbootable system: for one, this system has no CDrom nor floppy, and
-even
-> > > more importantly I don't think my rescue media have all neccessary
-> > > drivers for the ATA & SATA cards.
-> > >
-> > > Anyone have some good advice for me ?
-> > >
-> > > Maarten
-> 
-> --
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
-
--- 
-Derek Piper - derek.piper@gmail.com
-http://doofer.org/
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>Hi,
+>
+>I'm currently combing two servers into one, and I'm trying to figure out the 
+>safest way to do that.
+>
+>System one had two md arrays: one raid-1 with the OS and a second one with 
+>data (raid-5)  It is bootable through lilo
+>
+>System two had 9 arrays, one with the OS (raid-1) two raid-1's for swap, and 6 
+>md devices that belong in an LVM volume. This system has grub.
+>
+>All md arrays are self-booting 0xFD partitions.
+>
+>I want to boot off system one.  I verified that that boots fine if I 
+>disconnect all the [system-2] drives, so that's working okay. 
+>
+>Now when I boot I get a lilo prompt, so I know the right disk is booted by the 
+>BIOS.  When logged in, I see only the md devices from system two, and thus 
+>the current md0 "/" drive is from system two.  Now what options do I have ?
+>
+>If I zero the superblock(s) (or even the whole partitions) from md0 of system 
+>2, it will not boot off of that obviously, but what will now get to be md0 ? 
+>It could be the second array from system 2 equally well as the first array 
+>from system one, right ?
+>
+>I could experiment with finding the right array by using different kernel 
+>root= commandlines, but only grub gives me that possibility, lilo has no 
+>boot-time shell (well, it has a commandline...)
+>
+>Another thing that strikes me is that running 'mdadm --detail --scan' also 
+>only finds the arrays from system 2. Is that expected since it just reads 
+>its /etc/mdadm.conf file, or should it disregard that and show all arrays ?
+>
+>Upon first glance 'fdisk -l' does show all devices fine (there are 10 of them)
+>
+>I think (er, hope, actually) that with mdadm.conf one could probably force the 
+>machine to recognize the right drives as md0 as opposed to them being 
+>numbered mdX, but is that a right assumption ?  At the time the kernel md 
+>code reads / assembles the various 0xFD partitions, the root-partition is not 
+>mounted (obviously) so reading /etc/mdadm.conf will not be possible.
+>
+>I'll start to try out some things but I _really_ want to avoid having an 
+>unbootable system: for one, this system has no CDrom nor floppy, and even 
+>more importantly I don't think my rescue media have all neccessary drivers 
+>for the ATA & SATA cards.
+>
+>Anyone have some good advice for me ?
+>
+>Maarten
+>
+>  
+>
 
