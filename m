@@ -1,57 +1,64 @@
-From: "Jim Buttafuoco" <jim@contactbda.com>
+From: Michael Tokarev <mjt@tls.msk.ru>
 Subject: Re: [PERFORM] Postgres on RAID5
-Date: Mon, 14 Mar 2005 15:35:41 -0500
-Message-ID: <20050314202823.M3327@contactbda.com>
-References: <4231F5F2.6000509@m-cam.com> <87hdje7sjm.fsf@stark.xeocode.com> <33c6269f050314115339b6861d@mail.gmail.com> <87zmx6rni0.fsf@stark.xeocode.com>
-Reply-To: jim@contactbda.com
+Date: Tue, 15 Mar 2005 01:47:16 +0300
+Message-ID: <42361474.9060500@tls.msk.ru>
+References: <4231F5F2.6000509@m-cam.com> <87hdje7sjm.fsf@stark.xeocode.com> <33c6269f050314115339b6861d@mail.gmail.com> <4235FC2F.9060000@m-cam.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset=iso-8859-1
-In-Reply-To: <87zmx6rni0.fsf@stark.xeocode.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+In-Reply-To: <4235FC2F.9060000@m-cam.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Greg Stark <gsstark@mit.edu>, Alex Turner <armtuk@gmail.com>
-Cc: Arshavir Grigorian <ag@m-cam.com>, linux-raid@vger.kernel.org, pgsql-performance@postgresql.org
+To: Arshavir Grigorian <ag@m-cam.com>
+Cc: linux-raid@vger.kernel.org, pgsql-performance@postgresql.org
 List-Id: linux-raid.ids
 
-All,
-
-I have a 13 disk (250G each) software raid 5 set using 1 16 port adaptec SATA controller.   
-I am very happy with the performance. The reason I went with the 13 disk raid 5 set was for the space NOT performance. 
-  I have a single postgresql database that is over 2 TB with about 500 GB free on the disk.   This raid set performs
-about the same as my ICP SCSI raid controller (also with raid 5).  
-
-That said, now that postgresql 8 has tablespaces, I would NOT create 1 single raid 5 set, but 3 smaller sets.  I also DO
-NOT have my wal and log's on this raid set, but on a  smaller 2 disk mirror.
-
-Jim
-
----------- Original Message -----------
-From: Greg Stark <gsstark@mit.edu>
-To: Alex Turner <armtuk@gmail.com>
-Cc: Greg Stark <gsstark@mit.edu>, Arshavir Grigorian <ag@m-cam.com>, linux-raid@vger.kernel.org,
-pgsql-performance@postgresql.org
-Sent: 14 Mar 2005 15:17:11 -0500
-Subject: Re: [PERFORM] Postgres on RAID5
-
-> Alex Turner <armtuk@gmail.com> writes:
+Arshavir Grigorian wrote:
+> Alex Turner wrote:
 > 
-> > a 14 drive stripe will max out the PCI bus long before anything else,
-> 
-> Hopefully anyone with a 14 drive stripe is using some combination of 64 bit
-> PCI-X cards running at 66Mhz...
-> 
-> > the only reason for a stripe this size is to get a total accessible
-> > size up.
-> 
-> Well, many drives also cuts average latency. So even if you have no need for
-> more bandwidth you still benefit from a lower average response time by adding
-> more drives.
-> 
-> -- 
-> greg
-> 
-> ---------------------------(end of broadcast)---------------------------
-> TIP 9: the planner will ignore your desire to choose an index scan if your
->       joining column's datatypes do not match
-------- End of Original Message -------
+[]
+> Well, by putting the pg_xlog directory on a separate disk/partition, I 
+> was able to increase this rate to about 50 or so per second (still 
+> pretty far from your numbers). Next I am going to try putting the 
+> pg_xlog on a RAID1+0 array and see if that helps.
 
+pg_xlog is written syncronously, right?  It should be, or else reliability
+of the database will be at a big question...
+
+I posted a question on Feb-22 here in linux-raid, titled "*terrible*
+direct-write performance with raid5".  There's a problem with write
+performance of a raid4/5/6 array, which is due to the design.
+
+Consider raid5 array (raid4 will be exactly the same, and for raid6,
+just double the parity writes) with N data block and 1 parity block.
+At the time of writing a portion of data, parity block should be
+updated too, to be consistent and recoverable.  And here, the size of
+the write plays very significant role.  If your write size is smaller
+than chunk_size*N (N = number of data blocks in a stripe), in order
+to calculate correct parity you have to read data from the remaining
+drives.  The only case where you don't need to read data from other
+drives is when you're writing by the size of chunk_size*N, AND the
+write is block-aligned.  By default, chunk_size is 64Kb (min is 4Kb).
+So the only reasonable direct-write size of N drives will be 64Kb*N,
+or else raid code will have to read "missing" data to calculate the
+parity block.  Ofcourse, in 99% cases you're writing in much smaller
+sizes, say 4Kb or so.  And here, the more drives you have, the
+LESS write speed you will have.
+
+When using the O/S buffer and filesystem cache, the system has much
+more chances to re-order requests and sometimes even omit reading
+entirely (when you perform many sequentional writes for example,
+without sync in between), so buffered writes might be much fast.
+But not direct or syncronous writes, again especially when you're
+doing alot of sequential writes...
+
+So to me it looks like an inherent problem of raid5 architecture
+wrt database-like workload -- databases tends to use syncronous
+or direct writes to ensure good data consistency.
+
+For pgsql, which (i don't know for sure but reportedly) uses syncronous
+writs only for the transaction log, it is a good idea to put that log
+only to a raid1 or raid10 array, but NOT to raid5 array.
+
+Just IMHO ofcourse.
+
+/mjt
