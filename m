@@ -1,23 +1,32 @@
-From: Mario 'BitKoenig' Holbe <Mario.Holbe@RZ.TU-Ilmenau.DE>
-Subject: Re: ANNOUNCE: mdadm 1.6.0 - A tool for managing Soft RAID under      Linux
-Date: Mon, 7 Jun 2004 09:50:00 +0200
+From: Nick Maynard <nick.maynard@alumni.doc.ic.ac.uk>
+Subject: Re: [PATCH md ] Fix BUG in raid5 resync code.
+Date: Mon,  7 Jun 2004 10:33:15 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <ca16n8$k3p$1@sea.gmane.org>
-References: <40498.194.60.85.4.1086343953.squirrel@194.60.85.4> <40C346A6.1000001@xss.co.at>
+Message-ID: <1086600795.40c4365bca98b@www.tastycake.net>
+References: <20040604163651.7946.patches@notabene> <E1BW8LY-00024X-F7@notabene.cse.unsw.edu.au>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <E1BW8LY-00024X-F7@notabene.cse.unsw.edu.au>
+To: NeilBrown <neilb@cse.unsw.edu.au>
+Cc: Andrew Morton <akpm@osdl.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Andreas Haumer <andreas@xss.co.at> wrote:
-> What are the advantages of a partitionable md device
-> compared to a SWRAID+LVM configuration?
+Hi Neil,
 
-You don't need LVM and thus you have one less layer
-with potential failures and errors.
+> Today I lucked upon a bug in raid5 that appears to have been there
+> since 2.4.0 and earlier.   I guess it doesn't trigger very often.
+>
+> 2.4 will need a similar fix.
+<snip>
 
+Do you have any idea when we can expect this fix ported to 2.4?
+Also, when the 2.6 kernel series will include it?
 
-regards,
-   Mario
--- 
-<delta> talk softly and carry a keen sword
+Thanks,
 
+--
+
+Nick Maynard
+nick.maynard@alumni.doc.ic.ac.uk
