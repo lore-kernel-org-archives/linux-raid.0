@@ -1,39 +1,57 @@
-From: "Peter L. Ashford" <ashford@sdsc.edu>
-Subject: Re: Tecs informations about Software RAID on Linux
-Date: Fri, 11 Jul 2003 16:06:20 -0700 (PDT)
+From: "Mikael Chambon" <raid-ml@cronos.org>
+Subject: RAID design
+Date: Fri, 11 Jul 2003 12:10:14 -1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.GSO.4.30.0307111558280.2345-100000@multivac.sdsc.edu>
-References: <20030711202626.19448.qmail@web13706.mail.yahoo.com>
+Message-ID: <000201c3480a$9c7ebbd0$27e703ca@magnus>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20030711202626.19448.qmail@web13706.mail.yahoo.com>
-To: =?iso-8859-1?q?Leonardo=20Dias?= <leoadias@yahoo.com.br>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Leonardo,
+Hi All,
+First I wish to thanks you guys for your answers, I really apreciate.
+Now I have a question about RAID design.
 
-> Where can I find tecs informations about Software RAID
-> on Linux. I need to know how RAID stores blocks on
-> discks and how parity is granted.
->
-> Where can I find it???
+I am trying to implement the best soft RAID system for a samba fileserver
+as safer as possible.
 
-I have a small web page that describes the relative location of RAID
-segments in a RAID-5 array, for the four different Linux RAID-5 algorithms
-(right/left synchronous/asynchronous).
+Here is my first idea:
 
-http://www.accs.com/p_and_p/RAID/LinuxRAID.html
+ 1) Using a small hard drive for the OS (2gigs)
+plugged as IDE 1 master (won't take part of the raid array).
 
-Some information on how the parity is maintained is on a related page I
-have.  This information is in the RAID-4 section, but the parity
-generation is the same for RAID-4 and RAID-5.
+2) Using two 120 gig for the fileserver in a raid1 array
+The first one will be as IDE1 slave and the second one as
+IDE2 master (the cdrom drive will be IDE2 slave).
 
-http://www.accs.com/p_and_p/RAID/BasicRAID.html
+The weakness here will be if the first hard drive with the OS
+failed.
 
-That's two pieces of the puzzle.  Is that enough?
 
-Good luck.
-				Peter Ashford
+My second idea is:
+
+Use only 2 120 gig hard drives and implement a root raid array including
+the OS. The first one as IDE1 master and the second one as IDE2 master.
+(The cdrom drive as IDE1 slave).
+
+I am not RAID expert but I really don't see the benefits of including
+the OS in the RAID array as if the primary HD failed, the system won't be
+able to boot anyway. Am I right ?
+
+I mean if the primary disk failed, even if I ask the BIOS to boot the second
+hard drive, the system won't boot as everything is linked to hda in the
+system.
+
+As you can see I am a little confused about root-raid and the benefits, if
+someone
+could give me some advices and tell me which solution is the best I would
+really appreciate.
+
+Thanks a lot and have a nice day.
+--
+Mikael Chambon
+
 
