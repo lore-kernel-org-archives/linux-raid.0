@@ -1,44 +1,42 @@
-From: lf <lf@xmission.com>
-Subject: linux pci raid card recommendations?
-Date: Sat, 22 Jan 2005 15:40:05 -0700
-Message-ID: <20050122224005.GA5906@xmission.xmission.com>
+From: =?iso-8859-1?q?M=E5ns_Rullg=E5rd?= <mru@inprovide.com>
+Subject: Re: linux pci raid card recommendations?
+Date: Sat, 22 Jan 2005 23:56:46 +0100
+Message-ID: <yw1xr7kdkr81.fsf@ford.inprovide.com>
+References: <20050122224005.GA5906@xmission.xmission.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <20050122224005.GA5906@xmission.xmission.com> (lf@xmission.com's
+ message of "Sat, 22 Jan 2005 15:40:05 -0700")
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
+Cc: lf <lf@xmission.com>
 List-Id: linux-raid.ids
 
+lf <lf@xmission.com> writes:
 
-Hello,
+> I've been looking at the highpoint and adaptec 8port SATA cards.  The
+> adaptec card costs twice as much.  Is it worth it?
 
-I recently had an unpleasant experience with a hdd failure in a software
-raid5 array.
+The highpoint card is fakeraid, so I'd consider it overpriced if it
+costs half as much as an Adaptec card.
 
-After at least 10 hours of trying everything I could think of, I finally
-managed to get my data off the array, thanks to info from posts on this
-mailing list.  (thanks guys!)
+> Is there some other card I haven't found that works better under
+> linux than either one?
 
-However, I didn't really enjoy having to recreate the array, making
-absolutely sure to use all the exact same parameters so as not to lose
-data.
+3ware cards have a good reputation, and from what I've seen they work
+pretty well.
 
-I am looking for something to make this process more pleasant next time.
-I was wondering if the people on this list could recommend a pci SATA
-raid5 card that handles hdd failures elegantly.  I'm not concerned with
-speed that much.  I want the maximum amount of reliability (read: nicest
-linux drivers), and extremely easy recovery from failure.
+When using a hardware raid controller, always remember that you are
+completely at the mercy of the vendor, since the on-disk format is
+generally proprietary.
 
-I've been looking at the highpoint and adaptec 8port SATA cards.  The
-adaptec card costs twice as much.  Is it worth it?  Is there some other
-card I haven't found that works better under linux than either one?
-
-Any help would be much appreciated.
-
-Thanks,
-
-	Eric
-
-P.S. Please cc me your replies, as I am not subscribed to this list.
-Thanks again.
+--=20
+M=E5ns Rullg=E5rd
+mru@inprovide.com
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
