@@ -1,16 +1,51 @@
-From: "Rechenberg, Andrew" <ARechenberg@sfg.com>
-Subject: Forcing raid1 resync
-Date: Mon, 16 Aug 2004 11:24:12 -0400
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: Forcing raid1 resync
+Date: Mon, 16 Aug 2004 12:38:28 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <8075D5C3061B9441944E1373776451186488C0@cinshrexc03.shermfin.com>
+Message-ID: <200408161638.i7GGcS331755@watkins-home.com>
+References: <8075D5C3061B9441944E1373776451186488C0@cinshrexc03.shermfin.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 8BIT
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-To: linux-raid@vger.kernel.org
+In-Reply-To: <8075D5C3061B9441944E1373776451186488C0@cinshrexc03.shermfin.com>
+To: "'Rechenberg, Andrew'" <ARechenberg@sfg.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+From what I understand...
+If the arrays don't share physical disks, that can re-sync at the same time.
+Maybe some throttling system is limiting it to just 5 at a time.  Maybe CPU
+load?  I don't know if md does things based on how busy the CPU is.  Is your
+CPU maxed out?
+
+These are related to throttling:
+/proc/sys/dev/raid/speed_limit_max
+/proc/sys/dev/raid/speed_limit_min
+
+Do "man md" for more info.
+
+The speed limits are per device, not per array.
+Make sure the max is large enough the permit your disks to go as fast as
+they can.  I use 100000 (100,000K bytes/second).  My disks are not that
+fast, and having too large of a number does not hurt.
+At least as a test, set the min to the same value as max.
+
+I use these commands when I want to change by hand:
+cat /proc/sys/dev/raid/speed_limit_max
+cat /proc/sys/dev/raid/speed_limit_min
+
+echo 100000 > /proc/sys/dev/raid/speed_limit_max
+echo 1000 > /proc/sys/dev/raid/speed_limit_min
+
+Guy
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Rechenberg, Andrew
+Sent: Monday, August 16, 2004 11:24 AM
+To: linux-raid@vger.kernel.org
+Subject: Forcing raid1 resync
 
 Hello,
 
@@ -64,3 +99,8 @@ any more information.
 Regards,
 Andrew Rechenberg
 Infrastructure Team, Sherman Financial Group
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
