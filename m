@@ -1,45 +1,64 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: readahead (blockdev --setra) with sw raid(5)?
-Date: Sat, 27 Nov 2004 23:52:29 +0000
-Message-ID: <41A9133D.5000809@dgreaves.com>
-References: <Pine.LNX.4.61.0411272328270.16979@adsl.a2000.nu>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: FW: [Bug 81258] Can't start raid 5 when device names have changed
+Date: Sat, 27 Nov 2004 19:09:15 -0500
+Message-ID: <200411280009.iAS09KN25148@www.watkins-home.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.61.0411272328270.16979@adsl.a2000.nu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Stephan van Hienen <raid@a2000.nu>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I routinely use --setra 4096 on the underlying devices, the md array 
-devices and the lvm devices
-I am generally reading 1-2 gigabyte files.
+Jan 7, 2003 I opened a support call with RedHat.
+Today they closed the call!  About 5 weeks short of 2 years!
 
-I use XFS and it is often suggested as a good fs (though I think there 
-may be some XFS/nfs issues with 2.6 at the moment - see lkml)
+Before today I never had anyone from RedHat contact me in any way related to
+this problem.  About 1 month ago I got an email that said the "assignedto"
+person had changed.
 
-David
+Resolution: WONTFIX
 
-Stephan van Hienen wrote:
+Good job RedHat!
 
-> Hi,
->
-> just saw a 3ware document with some hints for hardware raid5
-> they advice to use blockdev --setra 16384
->
-> since i'm not using 3ware hardware raid
-> (i'm using 2*7500 3ware's with sw raid5 over 14 disks)
-> i'm wondering if --setra can still improve my raid performance
->
-> any hints about this ?
-> or some other hints, improvements on filesystem ?
-> i'm currently using blocksize 128, maybe switching to 256 helps ? 
-> (with large files)
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Fixes have been posted here more than once, but not from RedHat.
+I think RedHat did finally drop raidtools in fudge-ora 3.  But I am not sure
+about that.
+
+BTW, mdadm resolved the problem!
+
+Guy
+
+-----Original Message-----
+From: bugzilla@redhat.com [mailto:bugzilla@redhat.com] 
+Sent: Saturday, November 27, 2004 6:19 PM
+To: bugzilla@watkins-home.com
+Subject: [Bug 81258] Can't start raid 5 when device names have changed
+
+Please do not reply directly to this email. All additional
+comments should be made in the comments box of this bug report.
+
+Summary: Can't start raid 5 when device names have changed
+
+
+https://bugzilla.redhat.com/beta/show_bug.cgi?id=81258
+
+
+davej@redhat.com changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+         Resolution|                            |WONTFIX
+             Status|NEW                         |CLOSED
+         AssignedTo|davej@redhat.com            |dledford@redhat.com
+
+
+
+
+-- 
+Configure bugmail: https://bugzilla.redhat.com/beta/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You reported the bug, or are watching the reporter.
+You are on the CC list for the bug, or are watching someone who is.
 
