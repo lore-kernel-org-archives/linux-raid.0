@@ -1,80 +1,41 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: Spares and partitioning huge disks
-Date: Thu, 6 Jan 2005 11:46:41 -0500
-Message-ID: <200501061646.j06Gkm931902@www.watkins-home.com>
-References: <200501061516.47376.maarten@ultratux.net>
+From: maarten <maarten@ultratux.net>
+Subject: Re: Spares and partitioning huge disks
+Date: Thu, 6 Jan 2005 18:08:23 +0100
+Message-ID: <200501061808.23813.maarten@ultratux.net>
+References: <200501061646.j06Gkm931902@www.watkins-home.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="us-ascii"
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200501061516.47376.maarten@ultratux.net>
+In-Reply-To: <200501061646.j06Gkm931902@www.watkins-home.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: 'maarten' <maarten@ultratux.net>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This is from "man mdadm":
-As  well  as  reporting  events,  mdadm may move a spare drive from one
-array to another if they are in the same spare-group and if the  desti-
-nation array has a failed drive but not spares.
+On Thursday 06 January 2005 17:46, Guy wrote:
+> This is from "man mdadm":
 
-You can do what you want.  I have never tried.  My arrays are too different.
-I don't want to waste an 18Gig spare on a 256M array.
+Oops. really ?  Sorry, I should have checked that myself.  Mea culpa.
 
-Guy
+> As  well  as  reporting  events,  mdadm may move a spare drive from one
+> array to another if they are in the same spare-group and if the  desti-
+> nation array has a failed drive but not spares.
+>
+> You can do what you want.  I have never tried.  My arrays are too
+> different. I don't want to waste an 18Gig spare on a 256M array.
 
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of maarten
-Sent: Thursday, January 06, 2005 9:17 AM
-To: linux-raid@vger.kernel.org
-Subject: Spares and partitioning huge disks
+Same (but different) idea here, I'd hate to waste a 250GB for a spare. :-)
 
+I still have one LVM issue to figure out, they say that you should set the 
+partition type to 0x8e, but I can't find if that applies to md devices too. 
+And if it does how do you set that. Running 'fdisk /dev/mdx' ?  Well, why not 
+I suppose, but I've never ran fdisk on an md device, only mkfs.*
 
-Hi
-
-I just got my 4 new 250GB disks.  I have read someone on this list
-advocating 
-that it is better to build arrays with smaller volumes, as that decreases
-the 
-chance of failure, especially failures of two disks in a raid5
-configuration. 
-
-The idea behind it was that since a drive gets kicked when a read-error 
-occurs, the chance is lower that a 40 GB part develops a read error than for
-
-the full size 250 GB.  Thus, if you have 24 40GB parts, there is no fatal
-two 
-disk failure when part sda6 and part sdc4 develop a bad sector at the same 
-time. On the other hand, if the (full-size) disk sda1 and sdc1 do fail at
-the 
-same time, you're in deep shit. 
-I thought it was real insightful, so I would like to try that now.
-
-(Thanks to the original poster, I don't recall your name, sorry)
-
-Now my two questions regarding this.
-
-1) What is better, make 6 raid5 arrays consisting of all 40GB partitions and
-
-group them in a LVM set, or group them in a raid-0 set (if the latter is
-even 
-possible that is) ?
-
-2) Seen as the 'physical' volumes are now 40 GB, I could add an older 80GB 
-disk partitioned in two 40GB halves, and use those two as hot-spares. 
-However, for that to work you'd have to be able to add the spares to _all_ 
-raid sets, not specific ones, if you understand what I mean.  So they would 
-act as 'roaming' spares, and they would get used by the first array that 
-needs a spare (when a failure occurs of course).  But... is this possible ? 
-
-Thanks for any insights!
+Thanks Guy,
 Maarten
 
 -- 
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
