@@ -1,25 +1,20 @@
-From: Stephen C Woods <scw@seas.ucla.edu>
+From: Joshua Baker-LePain <jlb17@duke.edu>
 Subject: Re: =?iso-8859-1?Q?=BF_the_best_journalist-filesystem_for_a_?=
-Date: Thu, 3 Jul 2003 08:51:39 -0700 (PDT)
+ raid5 ?
+Date: Thu, 3 Jul 2003 11:59:15 -0400 (EDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200307031551.IAA10204@washington.seas.ucla.edu>
+Message-ID: <Pine.LNX.4.44.0307031157450.18503-100000@chaos.egr.duke.edu>
 References: <5.2.1.1.2.20030703173829.023eabe8@192.168.2.130>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5.2.1.1.2.20030703173829.023eabe8@192.168.2.130> from "system_lists@nullzone.org" at Jul 03, 2003 05:42:51 PM
-To: linux-raid@vger.kernel.org
+In-Reply-To: <5.2.1.1.2.20030703173829.023eabe8@192.168.2.130>
+To: system_lists@nullzone.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-JFS seems to be a bit buggy still, we went with ext3 on LVM.
-  The bug we had was that everyonce in a while, under heavy load it
-would just lockup waiting on something in the JSF stack.
-<scw>
+On Thu, 3 Jul 2003 at 5:42pm, system_lists@nullzone.org wrote
 
-> 
-> Hi there,
-> 
 >     i dont wanna create a discusion between gurus. My question is so simple 
 > (well .. its not simple but ...).
 > 
@@ -29,10 +24,12 @@ would just lockup waiting on something in the JSF stack.
 > but too for the users space).
 > 
 > For a non-specific BIG/SMALL files .... JFS? Reiser3? Reiser4? EXT3?
-> 
-> Thanks!
 
------
-Stephen C. Woods; UCLA SEASnet; 2567 Boelter hall; LA CA 90095; (310)-825-8614
-Unless otherwise noted these statements are my own, Not those of the 
-University of California.                      Internet mail:scw@seas.ucla.edu
+I've had very good luck with XFS for a long time now (over 2 years in 
+production, currently 5.5TB of formatted space).
+
+-- 
+Joshua Baker-LePain
+Department of Biomedical Engineering
+Duke University
+
