@@ -1,28 +1,50 @@
-From: "ray" <dmalf1et@hotmail.com>
-Subject: CAS1N0: New Deal!! 50% Sign Up Bonus! chaos diane|
-Date: Fri, 07 May 2004 22:04:42 GMT
+From: <robin-lists@robinbowes.com>
+Subject: Multi-channel ATA controller cards
+Date: Sun, 9 May 2004 00:06:10 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1083967482-31435__48316.155296243$1083992328@excite.com>
+Message-ID: <S263851AbUEHXGM/20040508230612Z+21001@vger.kernel.org>
+Mime-Version: 1.0
 Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-kernel@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-PREMI}ERE ONLIN'E CAS{INO!
-50% BONU:S for YOUR FIRST DEPO`SIT as a New Player.
+Hi,
 
-SI`GN UP now! Don't wait!
+I'm putting together a (relatively) large capacity Raid 5 storage solution
+for home use to store rips of all my CDs, probably in flac format.
 
-http://www.bay-casino.com/_e4faa55afa1972493c43ac8a3f66f869/
+As I'm paying for it cost is a major factor, more so than performance but
+not over and above data integrity, i.e. my priorities are 1. Data Integrity,
+2. Cost, 3. Performance.
 
-Once you're a Mem'ber, there are near WEEK'LY 2-T{O-1, and 3-T{O-1 depo`sit offers!
+I'll be building this into a CoolerMaster case which can take up to six 3.5"
+drives. I've been looking into various controller options, both PATA and
+SATA, and have decided that PATA will give me best price/capacity.
 
-Imagine, put in $25, GET $50 CRE|DIT BE|FORE YOU PL!ACE YO!UR FI`RST BET!!
+So far, the most likely candidate (on a cost basis) is the Acard AEC6885S
+(http://www.acard.com/eng/product/adapter/pc/ide/aec-6885.html) which is a
+4-channel ATA-133 "RAID" Controller. I'm not too bothered about the RAID
+capabilities as I would configure it as JBOD, although I might use the
+controller RAID1 functionality to create mirrors to host /boot and swap, but
+that's just implementation detail.
 
-CLIC'K HER|E!
+Has anyone got any experience with this controller? Is it well supported
+under Linux?
 
-http://www.bay-casino.com/_e4faa55afa1972493c43ac8a3f66f869/
+I was planning to buy two of these and to hang three drives off each one.
+Does anyone know if two of these controllers will co-exist in the same
+machine?
 
+One other possibility is to use three two-channel controllers (two disks on
+each one). Does anyone know if this is feasible?
 
+Finally, does anyone know of any other 4-channel (or 6-channel) ATA
+controllers that would be worth my checking out?
 
-racerx wolverin blondie andre turbo butch yomama reznor booster buffy gretchen genius christop gordon castle eclipse bfi cookies rambo1 october ladybug sundance tango sailor dgj test2
+Thanks,
+
+R.
+
