@@ -1,49 +1,37 @@
-From: Max Waterman <davidmaxwaterman@fastmail.co.uk>
-Subject: Re: Add a spare to raid5 array?
-Date: Sat, 12 Mar 2005 08:22:57 +0800
-Message-ID: <42323661.9000002@fastmail.co.uk>
-References: <422FA1F8.4020709@advocap.org> <42320266.2040901@m-cam.com>
-Reply-To: mwaterman@jingmei.org
+From: Elliot Randall <gedohaj@kellychen.com>
+Subject: Customer recognition with your custom logo (42420447)
+Date: Fri, 11 Mar 2005 15:22:07 +0000
+Message-ID: <748565970682.02222322114082@dial-99.r3.mtmscy.infoave.net>
+Reply-To: Elliot Randall <gedohaj@kellychen.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-In-Reply-To: <42320266.2040901@m-cam.com>
+Content-Type: text/plain; charset=Windows-1252
+Content-Transfer-Encoding: 8bit
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux-ppp@vger.kernel.org
 List-Id: linux-raid.ids
 
-I recently had cause to do this (I had to RMA my WD2000 which would only 
-work as a slave device - see previous thread). I could just replace the 
-disk since it was a PATA disk and the others I have are SATA.
+Our art team creates a custom logo for you, based on your needs.  
 
-It worked very nicely.
 
-I am now wondering how this 'running with spare' state compares with the 
-original state (using the, now missing, disk).
 
-Is it the same now?
+Years of experience have taught us how to create a logo that makes a statement that is unique to you. 
 
-Max.
 
-Arshavir Grigorian wrote:
-> John McMonagle wrote:
-> 
->> Can  a  spare be added to an existing raid 5 array?
->>
->> I do not see any way to do it.
->>
->> John
->> -
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
-> How about mdadm --add?
-> 
-> Arshavir
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ In a professional manner we learn about your image and how you would like the world to perceive you and your company.
+With this informati on we then create a logo that is not only unique but reflects the purpose of you and your company. 
+
+ 
+For value and a logo that reflects your image, take a few minutes and visit Try Logos!
+http://www.try-logos-design.com/
+
+
+ 
+Sincerel y   
+Logo Design Team 
+
+
+
+
+-----
+{UNSUBSCRIBE_PREFIX}
+http://www.try-logos-design.com/uns.php
