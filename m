@@ -1,189 +1,118 @@
-From: John McMonagle <johnm@advocap.org>
-Subject: slow resync??
-Date: Wed, 02 Mar 2005 09:49:48 -0600
-Message-ID: <4225E09C.5010401@advocap.org>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: Joys of spare disks!
+Date: Wed, 2 Mar 2005 11:16:55 -0500
+Message-ID: <200503021617.j22GH0516373@www.watkins-home.com>
+References: <62b0912f05030204054b1ab8ae@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+In-Reply-To: <62b0912f05030204054b1ab8ae@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: 'Molle Bestefich' <molle.bestefich@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Have a backup system that recently had a kernel panic and am having 
-problems with rsync.
+This is what you said:
+"A more consistent and risk-free way of doing it would probably be to
+do the above partial resync in a background thread or so?.."
 
+This sounded like Neil's current plan.  But if I understand the plan, the
+drive would be kicked out of the array.  A log would track which stripes
+were effected by the bad block and other writes to the array.  A partial
+re-sync would be done and the disk put back into the array.  I think the
+array would be degraded during the re-sync.  This is why I made my comments.
+On a related subject, I don't like Neil's plan if it causes the array to be
+degraded, since while degraded, if another disk has a bad block the array
+then goes off-line.  Not a good plan IMO.
 
-It's a p2 460mhz mb 512 mb ram.
-promise sata comtroler.
-3 200gb sata drives
-debain sarge
-2.6.10 kernel  from kernel.org with  smart sata patches.
-mdadm  v1.9.0
+I also never said a full re-sync, I was referring to correcting the bad
+block(s).  And 1000 bad blocks!  I have never had 2 on the same disk at the
+same time.  AFAIK.  I would agree that 1000 would put a strain on the
+system!  Normally only 1 block is bad at a time IMO.  However, I guess it is
+possible to have a full track go bad.  Sometime in the past I have said
+there should be a threshold on the number of bad blocks allowed.  Once the
+threshold is reached, the disk should be assumed bad, or at least failing,
+and should be replaced.  I would also say the bad block repair should have a
+speed limit so the effect on the overall system is minimized.  Maybe only
+allow it to repair 1 bad block per minute.  (a configurable parameter).  But
+your 1000 bad block example would take almost 17 hours.
 
+I think 1000 bad blocks at one time is an indication you have a head
+failure.  In that case, the disk is bad.
 
-/proc/mdstat
+Does anyone know how many spare blocks are on a disk?
+My worse disk has 28 relocated bad blocks.
 
-Personalities : [raid1] [raid5]
-md0 : active raid1 sdb1[0] sda1[2] sdc1[1]
-      586240 blocks [3/3] [UUU]
+Guy
 
-md1 : active raid5 sda2[0] sdc2[2] sdb2[1]
-      389543936 blocks level 5, 128k chunk, algorithm 2 [3/3] [UUU]
-      [=====>...............]  resync = 28.9% (56429568/194771968) 
-finish=1374.9min speed=1675K/sec
-unused devices: <none>
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Molle Bestefich
+Sent: Wednesday, March 02, 2005 7:05 AM
+To: Guy
+Cc: linux-raid@vger.kernel.org
+Subject: Re: Joys of spare disks!
 
-Was running just fine for a few months.
+Hm..  I said partial resync, because a full resync would be a waste of
+time if it's just a thousand sectors or so that needs to be relocated.
+ Anyhow.
 
-System is very unresponsive.  Sometimes takes a minute to respond to cat 
-/proc/mdstat
-I know some of this is because it's doing it's normal programs but it 
-was not that much better in single user mode.
-Much to my amazement it managed to do the overnight backups while resyncing.
-Interested why it takes so long and if there is anything one can do?
+There's no overhead to the application with the (theoretically
+"partial") degraded mode, since it happens in parallel.
 
-As i recall it took about 120 minutes to build initially.
+The latency of doing it while the read operation is ongoing would be,
+say, 3 seconds or so per bad sector on a standard disk?  Imagine a
+thousand bad sectors, and any sane person would quickly pull the plug
+from the dead box and have it resync when it boots instead of staring
+at a hung system.  When that happens there's even the risk that the
+resync fails completely, if md decides to pull one of the disks other
+than the one with bad blocks on it from the array before it resyncs.
 
-Other related issue:
+I prefer the first scenario (the system keeps running, the array isn't
+potentially destroyed), even if it means a slightly lower I/O rate and
+thus a minor overhead if and only if running applications utilize the
+I/O subsystem 100%..
 
-Tried  to resync on the sarge 2.6.8 kernel it seemed to go a little bit 
-faster but it ended up kernel panicing at about 30%. Did this twice.  
-Now I'm on the 2.6.10 and getting close to that point . Will know if it 
-makes it past that soon.
+Am I wrong?
 
-I did get a smart message this morning but it not clear to me that there 
-is anything wrong.
-
-Here is the email:
-
-This email was generated by the smartd daemon running on:
-
-   host name: fonbackup
-  DNS domain: advocap.org
-  NIS domain: (none)
-
-The following warning/error was logged by the smartd daemon:
-
-Device: /dev/sdb, Self-Test Log error count increased from 0 to 1
-
-For details see host's SYSLOG (default: /var/log/messages).
-
-You can also use the smartctl utility for further investigation.
-
-..................................................
- smartctl -a -d ata /dev/sdb
-smartctl version 5.32 Copyright (C) 2002-4 Bruce Allen
-Home page is http://smartmontools.sourceforge.net/
-
-=== START OF INFORMATION SECTION ===
-Device Model:     WDC WD2000JD-00FYB0
-Serial Number:    WD-WMAEH2121689
-Firmware Version: 02.05D02
-Device is:        In smartctl database [for details use: -P show]
-ATA Version is:   6
-ATA Standard is:  Exact ATA specification draft version not indicated
-Local Time is:    Wed Mar  2 06:51:26 2005 CST
-SMART support is: Available - device has SMART capability.
-SMART support is: Enabled
-
-=== START OF READ SMART DATA SECTION ===
-SMART overall-health self-assessment test result: PASSED
-See vendor-specific Attribute list for marginal Attributes.
-
-General SMART Values:
-Offline data collection status:  (0x85) Offline data collection activity
-                                        was aborted by an interrupting command from host.
-                                        Auto Offline Data Collection: Enabled.
-Self-test execution status:      (  73) The previous self-test completed having
-                                        a test element that failed and the test
-                                        element that failed is not known.
-Total time to complete Offline
-data collection:                 (6933) seconds.
-Offline data collection
-capabilities:                    (0x79) SMART execute Offline immediate.
-                                        No Auto Offline data collection support.
-                                        Suspend Offline collection upon new
-                                        command.
-                                        Offline surface scan supported.
-                                        Self-test supported.
-                                        Conveyance Self-test supported.
-                                        Selective Self-test supported.
-SMART capabilities:            (0x0003) Saves SMART data before entering
-                                        power-saving mode.
-                                        Supports SMART auto save timer.
-Error logging capability:        (0x01) Error logging supported.
-                                        No General Purpose Logging support.
-Short self-test routine
-recommended polling time:        (   2) minutes.
-Extended self-test routine
-recommended polling time:        (  88) minutes.
-Conveyance self-test routine
-recommended polling time:        (   5) minutes.
-
-SMART Attributes Data Structure revision number: 16
-Vendor Specific SMART Attributes with Thresholds:
-ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE      UPDATED  WHEN_FAILED RAW_VALUE
-  1 Raw_Read_Error_Rate     0x000b   001   001   051    Pre-fail  Always   FAILING_NOW 12058
-  3 Spin_Up_Time            0x0007   124   122   021    Pre-fail  Always       -       4316
-  4 Start_Stop_Count        0x0032   100   100   040    Old_age   Always       -       24
-  5 Reallocated_Sector_Ct   0x0033   200   200   140    Pre-fail  Always       -       0
-  7 Seek_Error_Rate         0x000b   200   200   051    Pre-fail  Always       -       0
-  9 Power_On_Hours          0x0032   099   099   000    Old_age   Always       -       1263
- 10 Spin_Retry_Count        0x0013   100   253   051    Pre-fail  Always       -       0
- 11 Calibration_Retry_Count 0x0013   100   253   051    Pre-fail  Always       -       0
- 12 Power_Cycle_Count       0x0032   100   100   000    Old_age   Always       -       24
-194 Temperature_Celsius     0x0022   115   253   000    Old_age   Always       -       35
-196 Reallocated_Event_Count 0x0032   200   200   000    Old_age   Always       -       0
-197 Current_Pending_Sector  0x0012   200   200   000    Old_age   Always       -       0
-198 Offline_Uncorrectable   0x0012   200   200   000    Old_age   Always       -       0
-199 UDMA_CRC_Error_Count    0x000a   200   253   000    Old_age   Always       -       0
-200 Multi_Zone_Error_Rate   0x0009   200   155   051    Pre-fail  Offline      -       0
-
-SMART Error Log Version: 1
-No Errors Logged
-
-SMART Self-test log structure revision number 1
-Num  Test_Description    Status                  Remaining  LifeTime(hours)  LBA_of_first_error
-# 1  Short offline       Completed: unknown failure    90%       170         1114112
-# 2  Short offline       Completed without error       00%       126         -
-# 3  Short offline       Completed without error       00%       103         -
-# 4  Short offline       Completed without error       00%        79         -
-# 5  Short offline       Completed without error       00%        56         -
-# 6  Short offline       Completed without error       00%        32         -
-# 7  Short offline       Completed without error       00%         9         -
-# 8  Extended offline    Completed without error       00%      1081         -
-# 9  Short offline       Completed without error       00%      1079         -
-#10  Short offline       Completed without error       00%      1056         -
-#11  Short offline       Completed without error       00%      1032         -
-#12  Short offline       Completed without error       00%      1009         -
-#13  Short offline       Completed without error       00%       985         -
-#14  Short offline       Completed without error       00%       962         -
-#15  Short offline       Completed without error       00%       939         -
-#16  Extended offline    Completed without error       00%       919         -
-#17  Short offline       Completed without error       00%       916         -
-#18  Short offline       Completed without error       00%       893         -
-#19  Short offline       Completed without error       00%       869         -
-#20  Short offline       Completed without error       00%       846         -
-#21  Short offline       Completed without error       00%       823         -
-
-SMART Selective self-test log data structure revision number 1
- SPAN  MIN_LBA  MAX_LBA  CURRENT_TEST_STATUS
-    1        0        0  Not_testing
-    2        0        0  Not_testing
-    3        0        0  Not_testing
-    4        0        0  Not_testing
-    5        0        0  Not_testing
-Selective self-test flags (0x0):
-  After scanning selected spans, do NOT read-scan remainder of disk.
-If Selective self-test is pending on power-up, resume after 0 minute delay.
-
-
-......................................
-
-Any sugestions?
-
-John
-
-
-
+Guy wrote:
+> I think the overhead related to fixing the bad blocks would be
+insignificant
+> compared to the overhead of degraded mode.
+> 
+> Guy
+> 
+> -----Original Message-----
+> From: linux-raid-owner@vger.kernel.org
+> [mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Molle Bestefich
+> Sent: Tuesday, March 01, 2005 10:51 PM
+> To: linux-raid@vger.kernel.org
+> Subject: Re: Joys of spare disks!
+> 
+> Robin Bowes wrote:
+> > I envisage something like:
+> >
+> > md attempts read
+> > one disk/partition fails with a bad block
+> > md re-calculates correct data from other disks
+> > md writes correct data to "bad" disk
+> >   - disk will re-locate the bad block
+> 
+> Probably not that simple, since some times multiple blocks will go
+> bad, and you wouldn't want the entire system to come to a screeching
+> halt whenever that happens.
+> 
+> A more consistent and risk-free way of doing it would probably be to
+> do the above partial resync in a background thread or so?..
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+>
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
