@@ -1,44 +1,33 @@
-From: John Abraham <johnabraham291077@yahoo.com>
-Subject: query regarding raidtool and 2.6 kernel
-Date: Tue, 20 Apr 2004 06:42:57 -0700 (PDT)
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: new raid system for home use
+Date: Tue, 20 Apr 2004 12:12:18 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040420134257.10801.qmail@web61004.mail.yahoo.com>
+Message-ID: <40854BE2.2060307@pobox.com>
+References: <4084AC05.6090800@tequila.co.jp> <Pine.LNX.4.44.0404200734130.16115-100000@coffee.psychology.mcmaster.ca> <20040420125453.GD26365@chihiro.cern.ch>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
-Cc: johnabraham291077@yahoo.com
+In-Reply-To: <20040420125453.GD26365@chihiro.cern.ch>
+To: KELEMEN Peter <Peter.Kelemen@cern.ch>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello List
-I am newbie for raid so sorry of a silly query. I have
-following query regarding the raid support on linux. 
- 
-In linux kernel 2.6 source i have found there is
-implementation of version 1 superblock (in file
-drivers/md/md.c), but i have not found any raidtool,
-which is using this version of superblock.
-I have looked at raidtools-1.00.3 (i suppose it is
-latest one, if not pls provide me latest tools which
-are using version 1.0 of super block) and found that
-tools are using 0.90 version of raid super block.
- 
-Can anybody tell me, why the newer version of raid
-superblock is introduced in linux kenel 2.6 ? Any
-updates regarding this would be helpful.
- 
-Kindly cc reply to me also as i am not member of list.
- 
-looking for co-operation
-Thanks in Advance..
- 
-~John
+KELEMEN Peter wrote:
+> * Mark Hahn (hahn@physics.mcmaster.ca) [20040420 07:46]:
+> 
+> 
+>>[...] sw raid is faster, cheaper and not dependent on obscure
+>>hardware. [...]
+> 
+> 
+> For me, random reads are 10-15% better on 3ware 7506 HW-RAID5 than
+> on SW-RAID5.
+
+That's highly dependent on the hardware used for software RAID5.
+
+	Jeff
 
 
 
-	
-		
-__________________________________
-Do you Yahoo!?
-Yahoo! Photos: High-quality 4x6 digital prints for 25¢
-http://photos.yahoo.com/ph/print_splash
+
