@@ -1,83 +1,43 @@
-From: "Marc Marais" <marc@liquid-nexus.net>
-Subject: Double failure on RAID-5 array
-Date: Wed, 18 Jun 2003 15:13:23 +0800
+From: Lars Marowsky-Bree <lmb@suse.de>
+Subject: Re: Multipath problem in a SAN enviromnent
+Date: Wed, 18 Jun 2003 12:21:57 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20030618071323.M50246@liquid-nexus.net>
-References: <20030616161848.M47561@liquid-nexus.net>
+Message-ID: <20030618102157.GD27378@marowsky-bree.de>
+References: <02d201c33023$13fd45a0$3351960a@EEL> <3EE7585E.45D851CE@SteelEye.com> <20030612100423.GA14106@marowsky-bree.de> <007c01c330d0$86dda7b0$0cc7e7c1@EEL> <3EE893A4.E0518632@SteelEye.com> <00e801c33183$8072cd70$0cc7e7c1@EEL>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20030616161848.M47561@liquid-nexus.net>
-To: linux-raid@vger.kernel.org
+Content-Disposition: inline
+In-Reply-To: <00e801c33183$8072cd70$0cc7e7c1@EEL>
+To: Ionut Nistor <ionut@modulo.ro>, Paul Clements <Paul.Clements@SteelEye.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I've been running software raid on 2.2.19 for some time now (raidtools 0.9, 
-patched etc) without incident.
+On 2003-06-13T11:12:15,
+   Ionut Nistor <ionut@modulo.ro> said:
 
-I've recently upgraded to 2.4.18 (debian kernel-source pkg) and last night I 
-experienced a strange failure. I'm wondering if this is somehow related to 
-2.4.18 or if it was just a coincidence?
+> Agreed, but Lars mentioned 'the patch in 2.4 went even further' -  he=
+nce I
+> assume what's at the link you posted is obsolete - am I correct?
+> While I'm patching it, I want to make sure it's the latest one.
 
-I'm running a Raid-5 array with 3 WDC 80GB drives (each on separate IDE 
-busses).
+I've pulled out the latest patch set against our kernel and made it
+available at ftp://ftp.suse.com/pub/people/lmb/md-mp/; however, it
+probably will not apply cleanly against 2.4.21 yet.
 
-hde/g are on a CMD649 based controller (on separate channels). It appears 
-that a DMA timeout occurred on this device, causing a reset on both hde/g - 
-fortunately one channel recovered. I had to reboot to get all drives back 
-online.
 
-So much for having devices on separate channels - looks like devices should 
-be on separate controllers!
+Sincerely,
+    Lars Marowsky-Br=E9e <lmb@suse.de>
 
-Any suggestions for preventing a recurrence? Are there known issues with 
-CMD649 cards and software RAID in 2.4.18? Am I missing some patches for 
-2.4.18 relating to software RAID/CMD649/IDE?
-
-I'm hoping my move to 2.4 series wasn't a mistake - I have a lot of data on 
-this array!
-
-Appreciate any help. 
-
-Jun 16 19:26:22 xerces kernel: hde: timeout waiting for DMA
-Jun 16 19:26:22 xerces kernel: ide_dmaproc: chipset supported ide_dma_timeout 
-func only: 14
-Jun 16 19:26:22 xerces kernel: hde: status error: status=0x50 { DriveReady 
-SeekComplete }
-Jun 16 19:26:22 xerces kernel: hde: no DRQ after issuing MULTWRITE
-Jun 16 19:26:22 xerces kernel: hde: status error: status=0x50 { DriveReady 
-SeekComplete }
-Jun 16 19:26:22 xerces kernel: hde: no DRQ after issuing MULTWRITE
-Jun 16 19:26:22 xerces kernel: hdg: timeout waiting for DMA
-Jun 16 19:26:22 xerces kernel: ide_dmaproc: chipset supported ide_dma_timeout 
-func only: 14
-Jun 16 19:26:22 xerces kernel: hdg: status error: status=0x58 { DriveReady 
-SeekComplete DataRequest }
-Jun 16 19:26:22 xerces kernel: hdg: drive not ready for command
-Jun 16 19:26:22 xerces kernel: hdg: status timeout: status=0xd0 { Busy }
-Jun 16 19:26:22 xerces kernel: hdg: drive not ready for command
-Jun 16 19:26:22 xerces kernel: ide3: reset: success
-Jun 16 19:26:22 xerces kernel: hde: status error: status=0x50 { DriveReady 
-SeekComplete }
-Jun 16 19:26:22 xerces kernel: hde: no DRQ after issuing MULTWRITE
-Jun 16 19:26:22 xerces kernel: hde: status error: status=0x50 { DriveReady 
-SeekComplete }
-Jun 16 19:26:22 xerces kernel: hde: no DRQ after issuing WRITE
-Jun 16 19:26:22 xerces kernel: ide2: reset: master: error (0x50?)
-Jun 16 19:26:32 xerces kernel: hde: lost interrupt
-Jun 16 19:26:42 xerces kernel: hdg: timeout waiting for DMA
-Jun 16 19:26:42 xerces kernel: ide_dmaproc: chipset supported ide_dma_timeout 
-func only: 14
-Jun 16 19:26:42 xerces kernel: hdg: status error: status=0x58 { DriveReady 
-SeekComplete DataRequest }
-Jun 16 19:26:42 xerces kernel: hdg: drive not ready for command
-Jun 16 19:26:42 xerces kernel: hdg: status timeout: status=0xd0 { Busy }
-Jun 16 19:26:42 xerces kernel: hdg: drive not ready for command
-Jun 16 19:26:42 xerces kernel: hde: lost interrupt
-Jun 16 19:26:42 xerces kernel: hde: recal_intr: status=0xd0 { Busy }
-Jun 16 19:26:43 xerces kernel: ide3: reset: success
-Jun 16 19:26:43 xerces kernel: ide2: reset: master: error (0x50?)
-
---
-Marc Marais
-marc@liquid-nexus.net
-
+--=20
+SuSE Labs - Research & Development, SuSE Linux AG
+ =20
+"If anything can go wrong, it will." "Chance favors the prepared (mind)=
+=2E"
+  -- Capt. Edward A. Murphy            -- Louis Pasteur
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
