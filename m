@@ -1,42 +1,36 @@
-From: "bmoon" <bo@anthologysolutions.com>
-Subject: Re: Deadlock on mkfs while resyncing the raid1 device
-Date: Thu, 23 Jan 2003 15:43:51 -0800
+From: Ingo Molnar <mingo@redhat.com>
+Subject: Re: Fast (intelligent) raid1
+Date: Fri, 24 Jan 2003 04:03:40 -0500 (EST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <003101c2c339$483302d0$6a01a8c0@bmoon>
+Message-ID: <Pine.LNX.4.44.0301240354520.3568-100000@devserv.devel.redhat.com>
+References: <200301231707.h0NH72U31504@oboe.it.uc3m.es>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Neil Brown <neilb@cse.unsw.edu.au>, linux-raid@vger.kernel.org
+In-Reply-To: <200301231707.h0NH72U31504@oboe.it.uc3m.es>
+To: "Peter T. Breuer" <ptb@it.uc3m.es>
+Cc: neilb@cse.unsw.edu.au, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello Raiders!
 
-This is special for ARM linux with Debian package.
-I tried with linux2418 on pc without any problem.
+Peter,
 
-I am running linux2.4.18 with debian2.0 on ARM based system.
-The system will be hang if I try to run "mkfs" on the md device which
-is now resyncing on reboot after crash.
+your patch looks really interesting.
 
-Does the SMP compile option make any difference on this problem?
+> The driver keeps a bitmap of pending writes in memory, and writes them
+> to the mirror component that's just been repaired when it comes back on
+> line.  The bitmap is two-level and created pagewise on demand, so it's
+> not too expensive. [...]
 
-Here are some clues and symptoms from my test on this hang case;
+how do you ensure that the 'repaired' drive indeed only differs in the
+dirty-bitmap portions of the data disk? It's perfectly valid to add a
+completely new (and unsynced) disk to the system when one disk fails. Or
+is this the responsibility of the administrator?
 
-From " raid1_sync_request" in raid1.c,
+also, your resyncing method does not attempt to address the resync
+necessary to be done after an unclear shutdown (eg. power failure),
+correct?
 
-It hangs while it is looping in " while (sector_nr >= conf->start_pending)".
+	Ingo
 
-If it has 0 on conf->cnt_pending it should be OK. However, it is non-zero
-on conf->cnt_pending when we do "mkfs" while it is resyncing.
-
-Do you have any idea to solve or to work around this problem?
-
-Are there anyone who tried the ARM linux with SMP option? How?
-
-
-Thanks in advance,
-
-BO
 
