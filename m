@@ -1,88 +1,75 @@
-From: Chris Stromsoe <cbs@cts.ucla.edu>
-Subject: RE: mdadm -A -s and a mirror of two stripes
-Date: Sat, 17 Apr 2004 15:26:26 -0700 (PDT)
+From: Paul Phillips <paulp@improving.org>
+Subject: new raid system for home use
+Date: Sat, 17 Apr 2004 20:34:19 -0700 (PDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.58.0404171521040.7026@potato.cts.ucla.edu>
-References: <200404172218.i3HMIWQ24208@dns1.watkins-home.com>
+Message-ID: <Pine.LNX.4.58.0404171926100.3103@spoon.loc>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200404172218.i3HMIWQ24208@dns1.watkins-home.com>
-To: Guy <bugzilla@watkins-home.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, 17 Apr 2004, Guy wrote:
+I'm building a new system to be my home media server (as well as web,
+mail, etc.) I already have a terabyte of data so I'm aiming at about a
+three terabyte capacity.  My tentative plan is to use 8 of the new Hitachi
+Deskstar 7K400 400 GB SATA drives in a RAID-5 configuration, and 2
+additional drives in a RAID-1 configuration as the boot device and higher
+priority data storage.  I'd like to use debian unstable and kernel v2.6.
 
-> I took a quick look.  I think this is the issue.
-> Your device line does not have md0
+I've never built anything like this before though so I'm a bit nervous
+I'll make unwise hardware choices.  So I appeal to the locals for any
+specific or general advice you may care to offer.  Once it's running I'll
+document my setup for fellow degenerate home multi-terabyte data amassers.
+I did not find the web overflowing with instances of people building such
+large linux RAID servers in non-business settings.
 
-md0 is the device that I'm building; md1 and md2 are the members.  I
-believe that the problem is that mdadm is assembling md1 and md2, but not
-including them as potential candidates when looking for members to
-assemble md0.  Hence the "bug or feature" question.  But thanks for the
-suggestion. :)
+Important:
 
+  * top-notch linux support for { RAID card, gigabit ethernet chipset, ??? }
+  * components with proven linux functionality/reliability
+  * easy expandability
+  * no bottlenecks if I want to stream video to up to four locations
+  * doesn't demand rack-mount
 
+Would be nice:
 
--Chris
+  * open source drivers for all components if possible, or most if not
+  * all things being equal, the quieter and cooler-running version
 
+Not particularly important:
 
-> Change:
-> 	DEVICE /dev/sd[abcdefghij]1 /dev/md[12]
-> To:
->
-> 	DEVICE /dev/sd[abcdefghij]1 /dev/md[012]
->
-> Guy
->
->
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org
-> [mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Chris Stromsoe
-> Sent: Saturday, April 17, 2004 4:55 AM
-> To: linux-raid@vger.kernel.org
-> Subject: mdadm -A -s and a mirror of two stripes
->
-> I've got two stripes that were set up as
->
-> mdadm -C /dev/md1 --level=stripe -n 5 \
->     /dev/sda1 /dev/sdb1 /dev/sdc1 /dev/sdd1 /dev/sde1
-> mdadm -C /dev/md2 --level=stripe -n 5 \
->     /dev/sdf1 /dev/sdg1 /dev/sdh1 /dev/sdi1 /dev/sdj1
->
-> and a mirror that was set up by doing
->
-> mdadm -C /dev/md0 --level=mirror -n 2 /dev/md1 /dev/md2
->
->
-> My /etc/mdadm/mdadm.conf reads
->
-> DEVICE /dev/sd[abcdefghij]1 /dev/md[12]
-> ARRAY /dev/md1 level=raid0 num-devices=5
-> UUID=75892ebc:b52333a4:b77cbdca:9d50c65d
-> devices=/dev/sda1,/dev/sdb1,/dev/sdc1,/dev/sdd1,/dev/sde1
-> ARRAY /dev/md2 level=raid0 num-devices=5
-> UUID=c7547e18:48952f89:49893143:e477c407
-> devices=/dev/sdf1,/dev/sdg1,/dev/sdh1,/dev/sdi1,/dev/sdj1
-> ARRAY /dev/md0 level=raid1 num-devices=2
-> UUID=26e3111e:90a3407d:341ed800:1f431f24 devices=/dev/md1,/dev/md2
->
->
-> mdadm -A -s starts md1, then md2, but doesn't start md0.  I have to run it
-> a second time to get md0 to start.  The first run prints out:
->
-> mdadm: /dev/md1 has been started with 5 drives.
-> mdadm: /dev/md2 has been started with 5 drives.
-> mdadm: no devices found for /dev/md0
->
-> Is that a bug or a feature?  mdadm is v1.4.0.
->
->
-> -Chris
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->
+  * endless oodles of CPU (I'd think 2x3GHz would be megaplenty)
+  * hot swap
+  * uptime > 99.9%
+  * drive reliability (willing to keep spares handy and drop them
+      in as the occasion warrants)
+  * price (not cost-unconscious, but not spend-averse)
+
+Other matters of interest:
+
+  * Would RAID-6 be overkill? I doubt I'll be backing up the big array,
+      ever.  Losing it would suck a lot but not end my existence.
+  * Is EVMS mature enough to use if I'm bleeding edge averse in that
+      area? I'd never heard of it before reading this list.
+  * Software vs. Hardware RAID? I imagine this is a good place for
+      Hardware if I buy the right card, but maybe Software would require
+      less expertise and fiddling to get running in peak form.
+  * Would I be smarter to settle for kernel 2.4 at this time?
+  * I'm probably failing to consider the five most important factors...
+
+Examples of the items I might land on if I had to buy this today without
+wise feedback:
+
+  *  Chassis: http://www.baber.com/cases/mpe_ft2_black.htm
+  *     RAID: http://www.3ware.com/products/serial_ata9000.asp
+  * 10 Disks: http://www.hitachigst.com/hdd/desk/7k400.html
+  *     MoBo: ???
+  * CPU, RAM: TBD based on MoBo
+
+Many many thanks for all replies.
+
+-- 
+Paul Phillips      | All zork and no slay makes Jack a troll boy.
+Analgesic          |
+Empiricist         |
+pull his pi pal!   |----------* http://www.improving.org/paulp/ *----------
