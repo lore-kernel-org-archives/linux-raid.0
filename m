@@ -1,36 +1,56 @@
-From: Frank van Maarseveen <frankvm@xs4all.nl>
-Subject: Re: mdadm - comments on command layout
-Date: Sat, 14 Aug 2004 11:56:44 +0200
-Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040814095644.GA25051@janus>
-References: <16669.9163.392465.637229@gargle.gargle.HOWL>
+From: christophe varoqui <christophe.varoqui@free.fr>
+Subject: [ANNOUNCE] multipath-tools-0.2.8
+Date: Sat, 14 Aug 2004 13:59:25 +0200
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <1092484765.3571.17.camel@zezette>
+References: <1090836168.4104d6c8a2b22@imp6-q.free.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <16669.9163.392465.637229@gargle.gargle.HOWL>
-To: John Stoffel <stoffel@lucent.com>
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <1090836168.4104d6c8a2b22@imp6-q.free.fr>
+To: device-mapper development <dm-devel@redhat.com>
+Cc: linux-raid@vger.kernel.org, linux-hotplug-devel@lists.sourceforge.net, Jan Kunigk <jan.kunigk@de.ibm.com>, linux-scsi@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Aug 13, 2004 at 04:25:47PM -0400, John Stoffel wrote:
-> ideally I could do either:
-> 
->   > mdadm assemble md0 /dev/hda1 /dev/hda2 ...
-> 
-> or
-> 
->   > mdadm
->   madam> assemble md0 /dev/hda1 /dev/hda2 ...
-> 
+Hello,
 
-Both should have an identical command/argument syntax. The "shell"
-mode would allow for context sensitive argument completion and help (can
-mostly be done in bash as well but that's a bit clumsy).
-This might be useful for tools which aren't used on daily basis.
+here goes multipath-tools version 0.2.8
 
-On the other hand you have to figure it out anyway and better prepare
-the cookbooks/scripts to handle drive failure in advance.
+This is pre-vacation release, to sync up with guys working with the
+priority framework.
+I'll be mostly off till Sept 1st.
 
--- 
-Frank
+Reported build breakage on IA64 is not solved in this release. I don't
+have the hw to investigate this. If someone is interested, feel free to
+debug this and send a patch. The breakage seem to come from the clone
+syscall declaration.
+
+Todo, for next releases :
+
+* move to the new klibc development environment Sam Ravnborg is working
+on, as soon as it stabilizes : hope to drop the klibc tree from the
+multipath-tools tarball, and finally be packageable by distributors.
+
+* resolve the OOM scenarii for multipathd. I guess the kernel will have
+to help in some way. Anyway, advice badly needed here.
+
+2004-08-14 multipath-tools-0.2.8
+        * [multipathd] setsched prio to RT
+        * [multipath] massive include cleanup
+        * [multipath] add a "default_prio_callout" keyword
+          first user will be SPC-3 ALUA priority field fetcher
+          from IBM
+        * [multipath] reenable stdout on some error paths
+        * [build] spilt KERNEL_DIR into KERNEL_SOURCE &
+          KERNEL_BUILD as per 2.6 and SuSe convention
+        * [klibc] kill warnings due to awk parsing wrong locale in
+          arch/i386/MCONFIG
+        * [multipath] implement a generic group_by_prio pgpolicy
+        * [multipath] fix the broken failover pgpolicy
+
+Downloads and docs at http://christophe.varoqui.free.fr
+
+regards,
+cvaroqui
+
