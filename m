@@ -1,79 +1,68 @@
-From: Nathan Dietsch <njd@ndietsch.com>
+From: Mark Hahn <hahn@physics.mcmaster.ca>
 Subject: Re: RAID5 crash and burn
-Date: Mon, 01 Nov 2004 15:26:35 +1100
-Message-ID: <4185BAFB.50502@ndietsch.com>
-References: <Pine.LNX.4.44.0410311434240.17633-100000@coffee.psychology.mcmaster.ca>
+Date: Mon, 1 Nov 2004 00:29:11 -0500 (EST)
+Message-ID: <Pine.LNX.4.44.0411010019200.17633-100000@coffee.psychology.mcmaster.ca>
+References: <4185BAFB.50502@ndietsch.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44.0410311434240.17633-100000@coffee.psychology.mcmaster.ca>
+In-Reply-To: <4185BAFB.50502@ndietsch.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mark Hahn <hahn@physics.mcmaster.ca>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Mark Hahn wrote:
+> >>If you are seriously considering the performance implications of RAID1 
+> >>vs RAID5 for swap, you are already done for performance wise.
+> >>    
+> >>
+> >
+> >I disagree.  the whole point of Linux's approach to swap is that 
+> >it's fairly cheap to write a page to swap.
+> >
+> Writing to any form of secondary storage is not "cheap" when compared to 
+> memory.
 
->>If you are seriously considering the performance implications of RAID1 
->>vs RAID5 for swap, you are already done for performance wise.
->>    
->>
->
->I disagree.  the whole point of Linux's approach to swap is that 
->it's fairly cheap to write a page to swap.
->
-Writing to any form of secondary storage is not "cheap" when compared to 
-memory.
-Writing to a swap RAID5 volume, where you will probably incur a 
-read-modify-write operation is not considered "cheap" either.
+nonsense - from the cpu and kernel perspective, firing off 
+a write of a page really is normally cheap.  more expensive
+than doing nothing, well, yeah.
 
->whether you ever need 
->it again depends on how overcommitted you are.  this is assuming that
->the kernel successfully chooses not-likley-to-be-reused pages to 
->write to swap, and that your swap partitions are reasonably fast 
->to write to. 
->
-This is what I am getting at: Any partition can not be considered 
-reasonably fast to write to when compared to memory.
+> Writing to a swap RAID5 volume, where you will probably incur a 
+> read-modify-write operation is not considered "cheap" either.
 
->this approach works very well, excepting heuristic problems
->in certain kernel versions.
->
->in other words, reading from swap is permitted to be expensive,
->since any disk read is always assumed to be slow.  
->
-Agreed.
+hence my message.
 
->but writing to 
->swap really should be fairly cheap, and this is a premise of the 
->kernel's swap policies.
->  
->
-Sorry, I still don't buy the premise that writing to disk can be 
-considered cheap.
+> >whether you ever need 
+> >it again depends on how overcommitted you are.  this is assuming that
+> >the kernel successfully chooses not-likley-to-be-reused pages to 
+> >write to swap, and that your swap partitions are reasonably fast 
+> >to write to. 
+> >
+> This is what I am getting at: Any partition can not be considered 
+> reasonably fast to write to when compared to memory.
 
->I would not use raid5 swap for this reason; raid1 is not insane,
->since you don't need *that* much swap space, so the 50% overhead 
->is not crippling.  (don't even think about things like raid 10
->for swap - the kernel already has zero-overhead swap striping.)
->  
->
-I would agree with that.
+perhaps you missed the point because I was sloppy with "fast".
+what I meant was "low overhead".  that is, forcing a page to 
+swap is largely a fire-and-forget kind of operation.  yes, you 
+sometimes have to handle an interrupt, but it's not expensive,
+and doesn't slow you down.  you're not holding up progress until
+the write completes.  the overhead is largely book-keeping.
 
-What I was trying to say was that if you are forced to go to swap, for a 
-page out or a page in, you are going to incur overhead which is 
-incredibly inefficient compared to memory.
-Putting swap on RAID5, where you incur even more overhead is worse.
+> Sorry, I still don't buy the premise that writing to disk can be 
+> considered cheap.
 
-Putting swap on RAID1, as Guy pointed out, avoids crashes. So for the 
-one time that you will go to swap, it is worse the extra bit of overhead 
-to write it to a second disk to avoid losing the machine in the event of 
-a disk failure.
+do some benchmarking.
 
-Simply: Looking for performance improvements in swap means that you are 
-already very, very overloaded OR it is simply an exercise in theory.
+> Simply: Looking for performance improvements in swap means that you are 
+> already very, very overloaded OR it is simply an exercise in theory.
 
-Kind Regards,
+no.  current linux VM logic uses swap as a way of optimizing page 
+usage; handling overcommit is useful, even essential, but not a 
+normal function of swap, and not relevant to most machines.
 
-Nathan
+let me put it a completely other way: swap outs are normal, fairly
+frequent, and GOOD for performance.  swap *IN*s are unusual, quite
+infrequent, and bad for performance.  you're in trouble if you see
+more than a trivial number of swap-ins, but even a lot of swap-outs
+is not a problem.  (obviously, you don't want swapouts to starve your 
+explicit/non-swap IO needs.)
+
