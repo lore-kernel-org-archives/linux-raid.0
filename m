@@ -1,66 +1,46 @@
-From: NeilBrown <neilb@cse.unsw.edu.au>
-Subject: [PATCH] md - 2 of 2 - Set ra_pages for raid0/raid5 devices properly.
-Date: Fri, 21 Nov 2003 14:21:19 +1100
+From: Marcelo Tosatti <marcelo.tosatti@cyclades.com>
+Subject: Re: RAID-0 read perf. decrease after 2.4.20
+Date: Fri, 21 Nov 2003 11:47:49 -0200 (BRST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <E1AN1rD-0007ls-00@notabene>
+Message-ID: <Pine.LNX.4.44.0311211144130.15440-100000@logos.cnet>
+References: <Pine.OSF.4.58.0311201827090.515286@soul.helsinki.fi>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Linus Torvalds <torvalds@osdl.org>
-Cc: linux-raid@vger.kernel.org
+In-Reply-To: <Pine.OSF.4.58.0311201827090.515286@soul.helsinki.fi>
+To: Mikael Johansson <mpjohans@pcu.helsinki.fi>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-### Comments for ChangeSet
-stripe to be effective.  This patch sets ra_pages 
-appropriately.
 
- ----------- Diffstat output ------------
- ./drivers/md/raid0.c |   16 ++++++++++++++++
- ./drivers/md/raid5.c |   10 ++++++++++
- 2 files changed, 26 insertions(+)
 
-diff ./drivers/md/raid0.c~current~ ./drivers/md/raid0.c
---- ./drivers/md/raid0.c~current~	2003-11-21 14:10:24.000000000 +1100
-+++ ./drivers/md/raid0.c	2003-11-21 14:15:45.000000000 +1100
-@@ -311,6 +311,22 @@ static int raid0_run (mddev_t *mddev)
- 		conf->hash_spacing++;
- 	}
- 
-+	/* calculate the max read-ahead size.
-+	 * For read-ahead of large files to be effective, we need to 
-+	 * readahead at least a whole stripe. i.e. number of devices
-+	 * multiplied by chunk size.
-+	 * If an individual device has an ra_pages greater than the
-+	 * chunk size, then we will not drive that device as hard as it
-+	 * wants.  We consider this a configuration error: a larger
-+	 * chunksize should be used in that case.
-+	 */
-+	{
-+		int stripe = mddev->raid_disks * mddev->chunk_size / PAGE_CACHE_SIZE;
-+		if (mddev->queue->backing_dev_info.ra_pages < stripe)
-+			mddev->queue->backing_dev_info.ra_pages = stripe;
-+	}
-+
-+
- 	blk_queue_merge_bvec(mddev->queue, raid0_mergeable_bvec);
- 	return 0;
- 
+On Thu, 20 Nov 2003, Mikael Johansson wrote:
 
-diff ./drivers/md/raid5.c~current~ ./drivers/md/raid5.c
---- ./drivers/md/raid5.c~current~	2003-11-21 13:59:18.000000000 +1100
-+++ ./drivers/md/raid5.c	2003-11-21 14:16:52.000000000 +1100
-@@ -1571,6 +1571,16 @@ memory = conf->max_nr_stripes * (sizeof(
- 
- 	print_raid5_conf(conf);
- 
-+	/* read-ahead size must cover a whole stripe, which is
-+	 * (n-1) * chunksize where 'n' is the number of raid devices
-+	 */
-+	{
-+		int stripe = (mddev->raid_disks-1) * mddev->chunk_size
-+			/ PAGE_CACHE_SIZE;
-+		if (mddev->queue->backing_dev_info.ra_pages < stripe)
-+			mddev->queue->backing_dev_info.ra_pages = stripe;
-+	}
-+
- 	/* Ok, everything is just fine now */
- 	mddev->array_size =  mddev->size * (mddev->raid_disks - 1);
- 	return 0;
+> 
+> Hello All!
+> 
+> Has anyone else experienced a drastic drop in read performance on software
+> RAID-0 with post 2.4.20 kernels? We have a few Athlon XP's here at our
+> lab with double IDE disks on different channels set up as RAID-0. Some
+> bonnie++ benchmark results with various kernels, on the same machine
+> (Athlon XP 2400+, 2 GHz, 1.5 GB RAM, VIA chipset, 2*Maxtor 120 GB
+> 6Y060L0):
+> 		write	read
+> 2.4.20-ac1:	88,000 	135,000 K/sec
+> 2.4.21-pre7:	93,000   75,000
+> 2.4.22-ac4:	94,000	 82,000
+> 
+> So the write speed has gone up a bit, but the read speed performance has
+> plunged. Any ideas on what happened between 2.4.20 and 2.4.21 and what to
+> do about it? I'm eagerly awaiting suggestions, good read speed is quite
+> critical for many of our calculations :-) I will of course provide more
+> details if necessary.
+
+There have been no significant changes in the RAID driver in 2.4.21, so I
+suspect the cause for the slowdowns might the changes to the IO scheduler
+(ll_rw_blk.c) or VM changes.
+
+Isolating the -pre which the slowdown starts helps a lot.
+
+
+
