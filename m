@@ -1,38 +1,41 @@
-From: jlewis@lewis.org
+From: "Andre' Breiler" <andre.breiler@null-mx.org>
 Subject: Re: powersupply for 16disks +dual xeon
-Date: Sat, 1 Feb 2003 20:31:37 -0500 (EST)
+Date: Sun, 2 Feb 2003 10:41:57 +0000 (GMT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0302012028210.12785-100000@redhat1.mmaero.com>
-References: <Pine.LNX.4.44.0302020102410.3772-100000@uplift.swm.pp.se>
+Message-ID: <Pine.LNX.4.33.0302021036530.535-100000@pegasus.teamwerk.com>
+References: <Pine.LNX.4.44.0302011449420.12785-100000@redhat1.mmaero.com>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44.0302020102410.3772-100000@uplift.swm.pp.se>
-To: Mikael Abrahamsson <swmike@swm.pp.se>
-Cc: linux-raid@vger.kernel.org
+In-Reply-To: <Pine.LNX.4.44.0302011449420.12785-100000@redhat1.mmaero.com>
+To: jlewis@lewis.org
+Cc: Mikael Abrahamsson <swmike@swm.pp.se>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, 2 Feb 2003, Mikael Abrahamsson wrote:
+Hi,
 
-> > So can this trick (connecting 14 to 15) be used as a work-around for brain 
-> > damaged motherboards that won't power-on after power-loss to keep a system 
-> > always on?
-> 
-> I don't know, but I wouldnt suggest it and I wouldnt do it on a production 
-> system without extensive testing first. I haven't seen the behaviour you 
-> suggest above in motherboards since a PPRO200-board way back, all newer 
-> boards I have worked with have an option in Power Save-settings as to what 
+On Sat, 1 Feb 2003 jlewis@lewis.org wrote:
 
-Unfortunately, alot of cheaper boards have this problem.  Some of the
-lower end (either Tyan or Asus, don't remember which) have this.  I was
-looking at turning some IBM PC300 (Celeron) systems (really small desktop
-cases)  into small dedicated DNS servers, but they also apparently can't 
-be set to power-on after power-loss....But I guess I'm drifting way off 
-topic now.
+> On Sat, 1 Feb 2003, Mikael Abrahamsson wrote:
+>
+> > You should try to fit another powersupply to drive the disks. ATX
+> > powersupplies can be made powermanently on by shorting ping 14 and 15 (I
+> > think it was, there is a FAQ page out there I found on when I was looking
+> > a month back). If you don't want to do this, get yourself an AT power
+> > supply.
+>
+> So can this trick (connecting 14 to 15) be used as a work-around for brain
+> damaged motherboards that won't power-on after power-loss to keep a system
+> always on?
 
-----------------------------------------------------------------------
- Jon Lewis *jlewis@lewis.org*|  I route
- System Administrator        |  therefore you are
- Atlantic Net                |  
-_________ http://www.lewis.org/~jlewis/pgp for PGP public key_________
+No, this won't work in most cases (as the board doesn't know that it
+should start up).
+What I usally do is an really small mono flop + trigger combination which
+waits for 10s to switch an relais (you can draw power from the standby
+power) which simulates the atx power switch. Note, that for some boards
+to function correctly it's needed to release the relais after 5V are
+present on the normal power.
+
+Bye Andre'
+-- 
 
