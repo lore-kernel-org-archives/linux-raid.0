@@ -1,33 +1,39 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH md 1 of 2] Add interface to md driver for userspace monitoring of events.
-Date: Tue, 7 Sep 2004 12:45:34 +0200
+From: "Joe Pitts" <jpitts@hvc.rr.com>
+Subject: raid1 fstab
+Date: Tue, 7 Sep 2004 10:01:07 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040907104534.GA5511@lst.de>
-References: <20040903122034.15346.patches@notabene> <E1C33nX-00040i-9v@notabene.cse.unsw.edu.au> <20040903031920.11e31d3f.akpm@osdl.org> <16699.47090.307180.958993@cse.unsw.edu.au> <20040906140233.GB20941@lst.de> <16700.60002.246730.450275@cse.unsw.edu.au> <20040906160738.368c20f3.akpm@osdl.org> <16701.1683.847311.155379@cse.unsw.edu.au>
+Message-ID: <000301c494e3$1fc92720$0801a8c0@homelinux.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <16701.1683.847311.155379@cse.unsw.edu.au>
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: Andrew Morton <akpm@osdl.org>, hch@lst.de, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Sep 07, 2004 at 10:53:39AM +1000, Neil Brown wrote:
-> On Monday September 6, akpm@osdl.org wrote:
-> > Neil Brown <neilb@cse.unsw.edu.au> wrote:
-> > >
-> > > > poll on procfs is defintily abuse, even in categories of the use procfs
-> > >  > every times.
-> > >  > 
-> > > 
-> > >  Oh well..  If you gain more from the patch not going in than I gain
-> > >  from it going in, so be it.
-> > 
-> > That's not the point.  Sure, the code works and is useful.  But it takes a
-> > crappy interface and makes it crappier.
-> 
-> I'm sorry, but I don't see the "crap".
+Hello,
 
-IF you want poll/select do a character device.
+I'm running FC2 kernel-2.6.8-1.521
+
+I am converting a single disk setup to RAID1. I've been using the procedure
+in OREILLY's Managing Raid on Linux, pp239 241 - Converting to software
+raid.
+I'm at the point where I'm have to edit the /etc/fstab file and aside from
+listing the
+md devices I have'nt a clue what else I should be putting in this file.
+My raid devices are:
+/dev/md0 = /dev/sdb1 = /boot
+/dev/md1 = /dev/sdb2 = /usr
+/dev/md2 = /dev/sdb3 = /var/www
+/dev/md3 = /dev/sdb5 = /
+/dev/md4 = /dev/sdb6 = /tmp
+/dev/md5 = /dev/sdb7 = swap
+/dev/md6 = /dev/sdb8 = /var
+/dev/md7 = /dev/sdb9 = /home
+/dev/md8 = /dev/sdb10 = /var/lib
+/dev/md9 = /dev/sdb11 = /var/log
+
+Also can anyone point me in the direction as to how grub.conf woud be edited
+to
+properly boot this setup
 
