@@ -1,29 +1,34 @@
-From: Jim Paris <jim@jtan.com>
-Subject: Re: adding a disk smaller than the array size
-Date: Wed, 13 Oct 2004 18:46:43 -0400
+From: Yinan Liu <yinan@ele.uri.edu>
+Subject: RAID-5 Parity calculation
+Date: Thu, 14 Oct 2004 14:31:02 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20041013224643.GA9601@jim.sh>
-References: <dff3752704101313303d344fb8@mail.gmail.com> <200410132254.22483.maarten@ultratux.net> <dff375270410131406572e5ec8@mail.gmail.com> <200410140008.23084.maarten@ultratux.net>
+Message-ID: <1097778662.2926.9.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <200410140008.23084.maarten@ultratux.net>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> And failing everything, you could (maybe) clone the array-disk to the empty 
-> smaller one, run fsck to fix the partition size (but I'm not totally sure it 
-> does, so that remains doubtful), reverse the roles of the two disks and then 
-> add the -now free- larger disk to the array. But that would be a last resort.
-> I cannot vouch for how md copes with the few missing sectors, and neither how 
-> the filesystem reacts, so you'd better not try that without good testing.
+Hi, I am a new guy for a Linux programming. I got a question for a
+software RAID-5 parity calculation. 
 
-Or just do this same thing at the filesystem level.
+If we suppose for data block D1, D2, D3, D4 with a parity block P, When
+some data block is changed, P will be changed. I am not so clear how
+does Linux md handle the parity re calculating, when data changed . 
 
-Right now you have md0 with one missing disk.  Use your new disk to
-create md1 with one missing disk.  Create filesystem on md1, and copy
-files with e.g. tar, rsync, etc.  Then get rid of md0 and add that
-drive to md1.
+Suppose there will be three cases, 
 
--jim
+1. sequential write, is that get new P' directly with new data D1', D2',
+D3' and D4' or need read D1-4 out from disk doing the normal operation. 
+
+2. if we changed there blocks, D1',D2' and D3', does md read D1, D2, D3
+out to rebuild P or just read D4 out from disk and rebuild P with D1',
+D2', D3' and D4. 
+
+3. is the simple case, just change one block. 
+
+Thanks a lot, if some can help me get understand it. 
+
+
+
