@@ -1,40 +1,67 @@
-From: "Jose Fernandez" <impresorasok@wanadoo.es>
-Subject: 10 cargas por el precio de 1
-Date: Sun, 16 May 2004 16:33:50
+From: Ninti Systems <office@ninti.com.au>
+Subject: Re: Please review: Slackware RAID How-To
+Date: 17 May 2004 12:06:59 +0930
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200405161436.i4GEaEq25229@zeus.kernel.org>
+Message-ID: <1084761418.1963.11.camel@localhost>
+References: <1084290138.25942.30.camel@ws101.darkcore.net>
+Reply-To: office@ninti.com.au
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <1084290138.25942.30.camel@ws101.darkcore.net>
+To: John Lange <john.lange@bighostbox.com>
+Cc: LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-IMPRESION CON CALIDAD FOTOGRAFICA.
-OBTENGA HASTA 10 CARGAS-POR EL PRECIO DE UN CARTUCHO
-No pida información al e/mail emisor . Envie un fax al 911412099
-Disponemos de kits de tinta, para todas las impresoras.
-Con un Kit tiene para recargar los cartuchos de 5 a 12 veces como
-minimo, dependiendo de la marca.
-Su coste es de 28 EUROS (iva incluido) para negro y 34 para el de color.
--ORDENADORES E IMPRESORAS LASER DESDE 150 EUROS
-Para TONER muy buenos precios.
-HAGA SU PEDIDO INDICANDO: marca de la impresora y modelo al -
-http://www.imprekits.com o al Fax911412099.o al tel 645043838
-Hay tantas marcas y modelos que si lo desea para simplificar, 
-puede rellenar esta ficha y enviarla al fax 911412099 ó al mail
-juan@imprekits.com
+If at first you don't succeed ...
 
-Asesoramiento gratis, sobre impresoras.
+Success at last, or so it seems. The new sections on lilo were quite
+helpful, I could have used even more hand-holding on the whole lilo
+thing (MBR vs root, etc), though I suppose that is a different topic
+really. 
 
-Nombre:___________________________________________________________
-Dirección:________________________________________________________
-C.P._____Población_______________________________ TEL_____________
-e/mail___________
+One of my problems previously was that the box didn't have a floppy
+drive, so a boot disk wasn't an option for changing lilo.conf.
 
-Marca de la impresora, fax o fotocopiadora__________________
-Modelo___________
-Nos pondremos en contacto con Uds. a la mayor brevedad posible
--Informe a un amigo
-Le enviamos este correo en la confianza de que pueda ser de su utilidad.
-No obstante, en cumplimiento de la Ley 34/2002(LSSI) y Ley Organiza 15/1999(PDCP) 
-si no desea recibir mas comunicaciones envie un e-mail a bajas@imprekits.com y le borraremos.
+Also, this time I formatted with mke2fs rather than letting setup do it,
+as you suggest.
+
+I'm wondering, is the stride=32 parameter to mke2fs necessary for RAID1
+arrays? I used it anyway.
+
+If I were to suggest any new info to be included in the HOW-TO, maybe
+the setup of simple RAID1 with two disks could be explicitly addressed
+as well. Perhaps this could then lead onto RAID5 setup.
+
+Anyway, thanks a lot John, I've still got a lot to learn, but this is a
+great start.
+
+Mick
+
+
+On Wed, 2004-05-12 at 01:12, John Lange wrote:
+> As mentioned, I have created a Slackware RAID How-To and an initial
+> draft is located here:
+> 
+> http://www.langefamily.ca/howto/SlackwareRaidHowTo.html
+> 
+> This document covers getting Slackware installed on a system with RAID.
+> This technique does not require a temporary hard drive or anything other
+> than a Slackware boot CD.
+> 
+> I am fairly new to linux software RAID so I really hope some more
+> experienced people will take some time to read it and give me some
+> feedback. I would hate to have some glaring errors inflicted on others!
+> 
+> Thanks.
+-- 
+--------------------------------------
+Ninti Systems: Smart IT Solutions
+Michael Hall
+Mobile: 0429 095 392
+Ph/Fax: 08 8953 1442       
+Email:  office at ninti dot com dot au
+Web:    http://ninti.com.au
+--------------------------------------
+
