@@ -1,62 +1,56 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: Which raid card to buy for Sarge
-Date: Thu, 1 Apr 2004 00:39:22 -0500
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: Which raid card to buy for Sarge
+Date: Thu, 01 Apr 2004 00:44:15 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200404010539.i315dQW21693@dns1.watkins-home.com>
-References: <406BA23F.7000506@wasp.net.au>
+Message-ID: <406BAC2F.8090407@pobox.com>
+References: <Pine.LNX.4.44.0403311442520.31572-100000@coffee.psychology.mcmaster.ca> <406B9F3E.4020701@wasp.net.au>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <406BA23F.7000506@wasp.net.au>
-To: 'seth vidal' <skvidal@phy.duke.edu>
+In-Reply-To: <406B9F3E.4020701@wasp.net.au>
+To: Brad Campbell <brad@wasp.net.au>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Your RAID is 2MB/s?  I don't know how you make it so slow!
-Today's IDE disks are much faster than that!
-I bet something is configured wrong!
-
-My P3-500 system gives me 30-40MB/s on a 14 disk RAID5.
-It's SCSI, but my disks are slow compared to today's IDE disks.
-
-Guy
-
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Brad Campbell
-Sent: Thursday, April 01, 2004 12:02 AM
-To: seth vidal
-Cc: linux-raid@vger.kernel.org
-Subject: Re: Which raid card to buy for Sarge
-
-seth vidal wrote:
->>One point. Hardware raid (and faux hardware raid) provides real hot swap
-with on-the-fly rebuilds.
->>Linux software raid can't (yet).
+Brad Campbell wrote:
+> Mark Hahn wrote:
+> 
+>>> If would not use the "raid" feature of the Highpoint cards, because 
+>>> it is only software raid and not so performant as a hardware raid. If 
+>>> you don't need a 
+>>
+>>
+>>
+>> please don't say things like this.  HW raid is *NOT* generally
+>> faster or better than software raid.  yes, if you're building a 
+>> quad-gigabit fileserver out of an old P5/100 you had sitting around,
+>> you're not even going to start looking at sw raid.
 > 
 > 
-> umm. That's surprising. My software raid arrays running on dell
-> powervault 221s scsi boxes with adaptec 39160 controllers are
-> hotswappable and when I put in a new disk and add it to the array it
-> resyncs on the fly.
-> 
-> Are you just talking about ide-based raid?
+> One point. Hardware raid (and faux hardware raid) provides real hot swap 
+> with on-the-fly rebuilds.
+> Linux software raid can't (yet).
+> Both promise and highpoint proprietary ide raid drivers can, but no raw 
+> kernel or libata drivers can as yet, and the interface between the 
+> hotswap driver and md driver is no where near there.
 
-Yes. ATA and SATA raid (Which is the majority of low budget linux software
-raid stuff)
-I realise scsi is hotswap. It comes with the turf.
+No real need to have much interfacing.  As long as the low level 
+hardware and driver support hotswap, md will notice when the drive stops 
+responding, or starts spitting out nothing but errors.  Of course, it is 
+the nice thing to do, to use mdadm to hot-remove the drive first :)
 
-I would find it pretty hard to justify the expense of scsi for my 7 drive
-1.4TB low speed array (Low 
-speed because I never *need* more than about 2MB/s in any direction but I
-need heaps of space)
 
-Brad
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> With the Highpoint driver I get a drive failure and the card starts 
+> beeping. I fire up the management util, remove the faulty drive, swap it 
+> out and insert the new drive in the array. The array starts rebuilding - 
+> no effect on the uptime and only a slight loss in throughput. Plus it's 
+> seamless.
+
+Yeah, md+mdadm can do all this right now, provided the hardware and 
+driver support is there...
+
+	Jeff
+
 
 
