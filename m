@@ -1,37 +1,34 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
+From: Jean Jordaan <jean@upfrontsystems.co.za>
 Subject: Re: Recovering RAID5 array
-Date: Tue, 20 Jan 2004 17:59:53 +1100
+Date: Tue, 20 Jan 2004 09:17:51 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16396.53737.911347.812076@notabene.cse.unsw.edu.au>
-References: <400CD0BF.2010808@upfrontsystems.co.za>
+Message-ID: <400CD61F.9010502@upfrontsystems.co.za>
+References: <400CD0BF.2010808@upfrontsystems.co.za> <16396.53737.911347.812076@notabene.cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Jean Jordaan on Tuesday January 20
-To: Jean Jordaan <jean@upfrontsystems.co.za>
-Cc: linux-raid@vger.kernel.org
+In-Reply-To: <16396.53737.911347.812076@notabene.cse.unsw.edu.au>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday January 20, jean@upfrontsystems.co.za wrote:
-> Hi all
-> 
-> I'm having a RAID week. It looks like 1 disk out of a
-> 3-disk RAID5 array has failed. The array consists of
-> /dev/hda3 /dev/hdb3 /dev/hdc3 (all 40Gb)
-> I'm not sure which one is physically faulty. In an attempt
-> to find out, I did:
->    mdadm --manage --set-faulty /dev/md0 /dev/hda3
+Hi Neil
 
-   mdadm --detail /dev/md0
-didn't tell you??
+Thanks for the answer!
 
-> 
-> Does anyone here have any comments on what I've done so far,
-> or if there's anything better I can do next?
+>    mdadm --detail /dev/md0
+> didn't tell you??
 
-mdadm --assemble /dev/md0 --force /dev/hd[abc]3
+It probably tried, but I was too rattled to parse all the
+lun/target/part stuff at that point .. :(
 
-should put it back together for you.
+> mdadm --assemble /dev/md0 --force /dev/hd[abc]3
 
-NeilBrown
+OK, I'll try it on the copy, and if that doesn't work on
+the original data, since it isn't really an option to
+send the originals for recovery ..
+
+-- 
+Jean Jordaan
+http://www.upfrontsystems.co.za
+
