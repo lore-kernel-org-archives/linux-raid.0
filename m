@@ -1,59 +1,54 @@
-From: Jeff Hill <jhill@hronline.com>
-Subject: Re: Removing a Raid Partition? How-to?
-Date: Wed, 15 May 2002 11:48:29 -0400
+From: Danilo Godec <danci@agenda.si>
+Subject: mdadm --monitor
+Date: Thu, 16 May 2002 10:40:44 +0200 (CEST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <5.1.0.14.0.20020514195224.01f7cd18@205.233.215.4>
-References: <message from Jeff Hill on Tuesday May 14>
- <Pine.LNX.4.31L.02.0205141604120.12302-100000@linux2.gl.umb c.edu>
- <5.1.0.14.0.20020514171826.01f64070@205.233.215.4>
+Message-ID: <Pine.LNX.4.30.0205161032080.15557-100000@duplo.agenda.si>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; format=flowed
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <15585.38640.715130.181439@notabene.cse.unsw.edu.au>
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Thank you. I tried the zero-superblock before but must have done something 
-wrong because it worked this time.
+Hi!
 
-For academic interest, raidstart was not being run at boottime; nothing was 
-starting raid except the kernel (2.4.16). I tried changing the partition 
-types to both standard Linux partitions and to Windows partitions, and I 
-tried doing it with and without  the /etc/raidtab file It didn't seem to 
-make any difference. The systems were originally built as Debian (Woody and 
-Sid) with the raidtools2 packages.
+I'm trying out mdadm on a new system I'm building and it seems fine so
+far. However, right now I'm tryoung the '--monitor' feature and
+unfortunately it seems to do nothing...
 
-I thought of trying to boot with a non-raid kernel, but that would have 
-been a mess when it came to doing this on a production machine where all 
-partitions are raid autodetect.
+[root]# cat /etc/mdadm.conf
+DEVICE /dev/hd*[0-9] /dev/sd*[0-9]
+ARRAY /dev/md0 level=raid1 num-devices=3 UUID=9338f6b6:ccadf20b:0fd08433:8285e108
+ARRAY /dev/md1 level=raid5 num-devices=3 UUID=91bdf2b7:f6e83922:49437c5e:da5d7930
+ARRAY /dev/md2 level=raid5 num-devices=3 UUID=5f7f8c33:a492a6a3:4129ff63:ac152b4b
+MAILADDR raidalert
+PROGRAM /usr/local/sbin/raidalert
 
-Thanks for the assist (and thanks to Gernot Weber too),
+[root]# cat /usr/local/sbin/raidalert:
 
-Jeff Hill
+#!/bin/bash
+#
+#
 
+logger -p kern.crit -t RAID
 
-At 09:00 AM 15/05/2002 +1000, Neil Brown wrote:
->On Tuesday May 14, jhill@hronline.com wrote:
-> > Oddly, it seems I can't change the partitions of a previously formatted
-> > raid disk.  When I use fdisk to repartition a drive previously formatted
-> > with the type set to Linux autoraid detect, I reboot only to find the
-> > autoraid partitions are still there. I have stopped the raid devices, but
-> > it seems I can't kill the persistent superblock. I tried reformatting with
-> > mke2fs and of course that failed to do the trick.
->
->If you change the partition type to something else, it really
->shouldn't autodetect any more.. Do you have an /etc/raidtab describing
->the array, and is raidstart being run at boottime by some script?
->
->In any case,
->    mdadm --zero-superblock /dev/hda1
->
->will zero the md/raid superblock on /dev/hda1
->
->NeilBrown
->-
->To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
+[root]# cat /proc/mdstat
+Personalities : [raid1] [raid5]
+read_ahead 1024 sectors
+md0 : active raid1 hde1[2] hdi1[0] hdg1[1]
+      56128 blocks [3/3] [UUU]
+
+md1 : active raid5 hde2[3] hdi2[0] hdg2[1]
+      118912896 blocks level 5, 32k chunk, algorithm 2 [3/2] [UU_]
+      [===========>.........]  recovery = 55.9% (33294676/59456448) finish=13.9min speed=31157K/sec
+md2 : active raid5 hde3[2] hdi3[0] hdg3[1]
+      1076224 blocks level 5, 32k chunk, algorithm 2 [3/3] [UUU]
+
+root# mdadm --monitor --scan -d 5
+
+I think it should report at least something to my syslog ('echo "Test" |
+/usr/local/sbin/raidalert' does!), but it doesn't...
+
+What am I doing wrong?
+
+ Thanks, D.
 
