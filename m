@@ -1,41 +1,20 @@
-From: Lars Marowsky-Bree <lmb@suse.de>
-Subject: Re: [dm-devel] Re: [ANNOUNCE] multipath-tools-0.3.4
-Date: Mon, 25 Oct 2004 23:03:04 +0200
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20041025210304.GH3714@marowsky-bree.de>
-References: <1096071849.4466.31.camel@zezette> <1097054573.4163b96d1262c@imp5-q.free.fr> <1097495416.416a73787e0ae@imp1-q.free.fr> <1098021787.5433.8.camel@zezette> <1098269169.417641f18a234@imp1-q.free.fr> <1098656088.9350.88.camel@zezette> <1098692559.2798.7.camel@laptop.fenrus.org> <1098697123.417cc9a3b5bc5@imp1-q.free.fr>
+From: "Turbo Fredriksson" <turbo@swe.net>
+Subject: Can't reach OBP from 2.6.8.1 and serial
+Date: Tue, 26 Oct 2004 15:35:10 +0000
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <JAtlee9K.1098804910.3749110.turbo@emil.swe.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1098697123.417cc9a3b5bc5@imp1-q.free.fr>
-To: device-mapper development <dm-devel@redhat.com>, Arjan van de Ven <arjan@infradead.org>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-hotplug-devel@lists.sourceforge.net" <linux-hotplug-devel@lists.sourceforge.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-raid-owner@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2004-10-25T11:38:43, christophe.varoqui@free.fr wrote:
+.. and i've naturaly tried 'Ctrl-A F', 'kernel.sysrq = 1'...
+Absolutly nothing. Minicom IS sending BREAK, so it's not in minicom...
 
-> In fact all the sg stuff I use is done with the SG_IO ioctl (see
-> libcheckers/*.c) But somehow, it doesn't work as expected. I don't
-> remember how exactly it failed in my tests but it did ... I remembere=
-d
-> receiving bad path status and experiencing blocked checkers.
-
-Can you please clarify the error you saw? I didn't experience that yet
-with the SG_IO ioctl().
+Oh, and i can't send SysRQ commands either... I must have been missing
+something obvious (it worked fine exactly same configs in 2.4.x).
 
 
-Sincerely,
-    Lars Marowsky-Br=E9e <lmb@suse.de>
-
---=20
-High Availability & Clustering
-SUSE Labs, Research and Development
-SUSE LINUX AG - A Novell company
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+This message was sent using Swe.Net webmail
