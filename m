@@ -1,16 +1,52 @@
-From: Mark Hahn <hahn@physics.mcmaster.ca>
-Subject: Re: RAID5 crash and burn
-Date: Mon, 1 Nov 2004 01:32:55 -0500 (EST)
-Message-ID: <Pine.LNX.4.44.0411010106290.17633-100000@coffee.psychology.mcmaster.ca>
-References: <4185D22F.9040402@ndietsch.com>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: RAID5 crash and burn
+Date: Mon, 1 Nov 2004 02:01:21 -0500
+Message-ID: <200411010701.iA171QN31414@www.watkins-home.com>
+References: <Pine.LNX.4.44.0411010106290.17633-100000@coffee.psychology.mcmaster.ca>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4185D22F.9040402@ndietsch.com>
+In-Reply-To: <Pine.LNX.4.44.0411010106290.17633-100000@coffee.psychology.mcmaster.ca>
 Sender: linux-raid-owner@vger.kernel.org
-To: Nathan Dietsch <njd@ndietsch.com>
+To: 'Mark Hahn' <hahn@physics.mcmaster.ca>, 'Nathan Dietsch' <njd@ndietsch.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+You said:
+"swapouts mean that the kernel doesn't need to dedicate a page of 
+physical memory to keep track of some stale page.  swapping out 
+active pages would be mistake, obviously.  the kernel tries to 
+avoid that mistake in any OS."
+
+Any OS!  MS NT 2000 and XP favor disk cache over all running programs.  If
+you leave your computer during a virus scan, or disk backup, when you come
+back everything has been swapped, all windows are very slow to respond.  My
+system has 1 Gig of ram.  With 300-400Meg used, the disk cache can grow to
+700-600 Meg.  But it goes well beyond that!  Well, maybe you don't consider
+NT, 2000 or XP as operating systems!  :)
+
+Back to swapping.  I can't think how swapping could be better than having
+enough memory.
+
+In my example, I did not have enough memory.  The system was very very slow.
+But CPU usage was only 10-20% since everything runnable was sitting out on
+disk.  Once I added enough swap spindles, the system was able to swap fast
+enough to utilize most of the CPU, which was about 90% or more.  This made
+the users happy, it was like a new computer.  But if I was able to add more
+memory the system would have been even faster.  The memory was added at some
+point.  And swapping stopped, or at least most of it stopped.
+
+Guy
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Mark Hahn
+Sent: Monday, November 01, 2004 1:33 AM
+To: Nathan Dietsch
+Cc: linux-raid@vger.kernel.org
+Subject: Re: RAID5 crash and burn
 
 >  From Understanding the Linux Kernel "Every access by a program to a 
 > page that is swapped out increases the process execution time by an 
@@ -70,4 +106,9 @@ optimize which needs consume the limited, inadequate number of physical
 pages.  swapouts are nothing more than the kernel trying to find a 
 better (hotter) use for a page.  pure capacity swapouts aren't really
 interesting, since there's really nothing you can do about them.
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
