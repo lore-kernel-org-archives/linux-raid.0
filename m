@@ -1,89 +1,34 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: 4 questions. Chieftec chassis case CA-01B, resync times, selecting ide driver module loading,  raid5 :2 drives on same ide channel
-Date: Sun, 16 Jan 2005 14:39:43 -0500
-Message-ID: <200501161937.j0GJbn925823@www.watkins-home.com>
-References: <200501161119.41349.mlaks@verizon.net>
+From: Robin Bowes <robin-lists@robinbowes.com>
+Subject: Re: RAID5 drive failure, please verify my commands
+Date: Sun, 16 Jan 2005 20:34:24 +0000
+Message-ID: <csej4f$bra$1@sea.gmane.org>
+References: <7C8198B3-67EA-11D9-9A87-00039363AEBE@bitart.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200501161119.41349.mlaks@verizon.net>
+In-Reply-To: <7C8198B3-67EA-11D9-9A87-00039363AEBE@bitart.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Mitchell Laks' <mlaks@verizon.net>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-If your rebuild seems too slow, make sure you increase the speed limit!
-Details in "man md".
+Gerd Knops wrote:
+> Hello all,
+> 
+> One of the dreaded Maxtor SATA drives in my RAID5 failed, after just 3 
+> months of light use. Anyhow I neither have the disk capacity nor the 
+> money to buy it to make a backup. To make sure I do it correctly, could 
+> you folks please double-check my intended course of action? I would 
+> really appreciate that.
 
-echo 100000 > /proc/sys/dev/raid/speed_limit_max
+Gerd,
 
-I added this to /etc/sysctl.conf
-# RAID rebuild min/max speed K/Sec per device
-dev.raid.speed_limit_min = 1000
-dev.raid.speed_limit_max = 100000
+If you've got a credit card you can get Maxtor to send out a replacement 
+  without having to pull the failed drive.
 
-Guy
+I've done this several times :) (b****y Maxtor drives!)
 
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Mitchell Laks
-Sent: Sunday, January 16, 2005 11:20 AM
-To: maarten
-Cc: linux-raid@vger.kernel.org
-Subject: 4 questions. Chieftec chassis case CA-01B, resync times, selecting
-ide driver module loading, raid5 :2 drives on same ide channel
-
-HI,
-I have 3 questions. 
-
-1) Maarten, Where did you buy the big chieftec chasis (CA-01B  i think) and 
-what did you pay for it?  I have been using antec sx1000 chasis and yours 
-looks better and bigger. 
-
-2) Also what are reasonable resync times for your big raid5 arrays?
-I had resync time or two days by accident recently for 4x 250 hard drives 
-because i did not have dma enabled. that is solved, but i had switched to 
-raid1 in the interm and now i am curious what others are used to.
-
-3) Also, i have a module driver question.
-I use a asus K8V-X motherboard. It has sata and parallel ide channels. I use
-
-the sata for my system and use the  parallel for data storage on ide raid.
-I am using  combining the 2 motherboard IDE cable channels with highpoint 
-rocket133 cards to provide 2 more ide ata channels. 
-
-I installed debian and it defaulted to using the hpt366 modules for the 
-rocket133 controllers. 
-I suspect (correct me if I am wrong) that the hpt302 on the highpoint
-website 
-is the RIGHT module to use (I notice for instance that when I compare the 
-hdparm settings on the western digital drives on the motherboard ide
-channels 
-are set with more advanced dma settings "turned on" than   on the rocket133 
-controllers. Perhaps this is because it is using the 'incorrect hpt366' 
-module? 
- 
-Of course I would prefer to use the hpt302 module  (after i compile it...).
-So 
-how do I get to insure that the system will use the hpt302 over the hpt366 
-that it seems to be chosing. If I 
-1) compile the module hpt302 from source 
-2) dump it in the /lib/modules/2.6.9-1-386/kernel/drivers/ide/pci directory
-3) put a line hpt302 in the /etc/modules file (maybe at the top?)
-4) put a line hpt302 at  the top of the file /etc/mkinitd/modules.
-5) run mkinitrd to generate the new initrd.img
-
-will this insure that the module hpt302 is loaded on preference to the
-hpt366 
-module?
-
-4) Maarten mentioned that he had a problem with 2 different drives on the
-same 
-channel for raid5. What was the problem exactly with that.
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+R.
+-- 
+http://robinbowes.com
 
