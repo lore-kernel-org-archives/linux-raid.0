@@ -1,32 +1,42 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
+From: spam@altium.nl (Dick Streefland)
 Subject: Re: RAID1 recovery fails with 2.6 kernel
-Date: Mon, 20 Oct 2003 16:15:27 +1000
+Date: Mon, 20 Oct 2003 08:43:31 -0000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16275.32127.862408.701013@notabene.cse.unsw.edu.au>
-References: <7da.3f929f6e.d36f3@altium.nl>
+Message-ID: <297d.3f93a033.85d8f@altium.nl>
+References: <7da.3f929f6e.d36f3@altium.nl> <16275.32127.862408.701013@notabene.cse.unsw.edu.au>
+Reply-To: dick.streefland@altium.nl (Dick Streefland)
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Dick Streefland on Sunday October 19
-To: Dick Streefland <dick.streefland@xs4all.nl>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sunday October 19, spam@streefland.xs4all.nl wrote:
-> When I mark one of the devices in a RAID1 array faulty, remove it, and
-> re-add it, recovery starts, but stops too early, leaving the array in
-> degraded mode. I'me seeing this in the latest 2.6.0 kernels, including
-> 2.6.0-test8. The 2.4.22 kernel works OK, although the array is marked
-> "dirty" (?). Below is a script to reproduce the problem, followed by
-> the output of the script. I'm using mdadm-1.3.0.
+Neil Brown <neilb@cse.unsw.edu.au> wrote:
+| Thanks for providing a script...
+| It works fine for me (2.6.0-test8).
+| 
+| I don't suppose there is anything in the kernel logs about write
+| errors on loop2 ???
 
-Thanks for providing a script...
-It works fine for me (2.6.0-test8).
+No, there was nothing unusual in the log files. I have no access to
+the test machine at the moment, but there is a message when the
+recovery starts, and a few seconds later the message "sync done".
 
-I don't suppose there is anything in the kernel logs about write
-errors on loop2 ???
+| Does it fail consistently for you, or only occasionally?
 
-Does it fail consistently for you, or only occasionally?
+It fails every time. This test was on an dual PIII 450 system, but it
+also fails on a VIA C6 system with the 2.6.0-test5 kernel. Both
+kernels are compiled without CONFIG_PREEMPT, because I had other
+problems that might be related to this option:
 
-NeilBrown
+  http://www.spinics.net/lists/raid/msg03507.html
+
+Could this be related to CONFIG_DM_IOCTL_V4? I was not sure about this
+option, and have not enabled it. Otherwise, I think it is time to put
+in some printk's. Do you have suggestions where to start looking?
+
+-- 
+Dick Streefland                      ////                      Altium BV
+dick.streefland@altium.nl           (@ @)          http://www.altium.com
+--------------------------------oOO--(_)--OOo---------------------------
+
