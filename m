@@ -1,40 +1,51 @@
-From: dean gaudet <dean-list-linux-raid@arctic.org>
-Subject: is there any way to delay reconstruction?
-Date: Tue, 14 May 2002 16:09:54 -0700 (PDT)
+From: raid+news@reguly.net
+Subject: raidtools -> mdadm migration
+Date: Tue, 14 May 2002 22:19:08 -0300 (BRT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0205141557330.5308-100000@twinlark.arctic.org>
+Message-ID: <Pine.LNX.4.44.0205142154470.23293-100000@plazarus.plazahoteis.com.br>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-this weekend i was trying to diagnose a system instability, and i kept on
-having to hard cycle my system.
 
-i was generally doing this from "init=/bin/sh" boots with all filesystems
-mounted ro ... however i've got LVM on top of md here, and perhaps LVM was
-doing some writing even when the filesystems were ro.
+Hello, I am running Debian and RAID1 with XFS on top of it,
+how do I migrate to the mdadm ?
 
-because of the hard cycle, every time i booted, md was convinced the disks
-were out of sync and it went and reconstructed parity.
+In this migration process, I would like to try ext3 too
+(already have that in my kernel).
 
-one of the things i was attempting to do with this system was reduce it
-from ata5 to ata2 -- because i suspect my main issues are with cable
-length.  the only way i see to do this presently is with "hdparm -X66",
-but hdparm won't be able to do this successfully when md is busy doing
-reconstruction...
+this is my raidtab (both partitions are raid autodetect):
 
-and i saw no way to stop or delay reconstruction.
+raiddev /dev/md0
+ raid-level      1
+ nr-raid-disks   2
+ nr-spare-disks  0
+# chunk-size      32
+ persistent-superblock 1
 
-is there a way to stop reconstruction?
+ device          /dev/sda2
+ raid-disk       0
 
-is there a way to force md to be read-only?
+ device          /dev/sdb2
+ raid-disk       1
+# failed-disk	 1
 
-it'd be rad if there was an inexpensive bit of battery backed ram which
-could be added to a system so md had somewhere to keep track of the state
-of the raid... so that a hard cycle doesn't necessarily require parity
-reconstruction :)
 
--dean
+All this need to be done via ssh (well if I screw up I can have fisical
+access to the box, but it is on the other side of the city). Backup is
+already done (will do again of course).
+
+If anyone has written some sort of howto do this migration, please let me
+know.
+
+Thanks.
+
+-- 
+Alvaro
+
+
+
+
 
