@@ -1,222 +1,156 @@
-From: Arshavir Grigorian <ag@m-cam.com>
-Subject: Postgres on RAID5
-Date: Fri, 11 Mar 2005 16:18:28 -0500
-Message-ID: <42320B24.6040209@m-cam.com>
+From: Ronny Plattner <ronny_p@gmx.net>
+Subject: sw_raid5-failed_disc(s)
+Date: Fri, 11 Mar 2005 22:40:06 +0100
+Message-ID: <d0t31v$89o$1@sea.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-15
 Content-Transfer-Encoding: 7bit
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+Hi !
 
-I have a RAID5 array (mdadm) with 14 disks + 1 spare. This partition has
-an Ext3 filesystem which is used by Postgres. Currently we are loading a
-50G database on this server from a Postgres dump (copy, not insert) and
-are experiencing very slow write performance (35 records per second).
+The story:
+We are running a Softwareraid 5 with 4 ATA-Discs under Debian. A week
+ago, one disc (hdi) had 3 reallocated sectors (seems to be stable), so
+we decided to send it back to Maxtor, because the others discs were fine.
+After we had built out this disc, another disc (hdm) of this raid array
+filled our logfiles with a lot of seek errors. We were frustrated.
+I decided to put the harddisc back in the array and after this shutdown,
+the raid works and after some troubles [1] the disc was back in the
+array. There are two partitions (logical volumes-lvm) on the raid, i
+mounted one (/home..ext3) and copied the data to other discs. No
+troubles during this operation!
+Then i tried to mount the other partition. I was able to read directory
+structures, but if i tried to copy files, i got "I/O Errors".
+While i tried this, "the raid" (mdadm is started by startscripts) marks
+hdm as faulty ...
+The "reallocated sectors" counter of hdm shows an increasing amount of
+reallocated sectors and the ongoing resync of the raid filled our logs
+(some hundred MB) -> we sent hdm to maxtor.
+Now, the raid is running degraded mode....
 
-Top shows that the Postgres process (postmaster) is being constantly put
-into D state for extended periods of time (2-3 seconds) which I assume
-is because it's waiting for disk io. I have just started gathering
-system statistics and here is what sar -b shows: (this is while the db
-is being loaded - pg_restore)
+-snip-
+server:~# cat /proc/mdstat
+Personalities : [raid1] [raid5]
+md1 : active raid1 hdg2[1] hde2[0]
+      75709248 blocks [2/2] [UU]
 
-  	       tps        rtps     wtps      bread/s  bwrtn/s
-01:35:01 PM    275.77     76.12    199.66    709.59   2315.23
-01:45:01 PM    287.25     75.56    211.69    706.52   2413.06
-01:55:01 PM    281.73     76.35    205.37    711.84   2389.86
-02:05:01 PM    282.83     76.14    206.69    720.85   2418.51
-02:15:01 PM    284.07     76.15    207.92    707.38   2443.60
-02:25:01 PM    265.46     75.91    189.55    708.87   2089.21
-02:35:01 PM    285.21     76.02    209.19    709.58   2446.46
-Average:       280.33     76.04    204.30    710.66   2359.47
+md2 : inactive hdk1[1] hdi1[4] hdo1[3]
+      735334848 blocks
+md0 : active raid1 hdg1[1] hde1[0]
+      2441280 blocks [2/2] [UU]
 
-This is a Sun e450 with dual TI UltraSparc II processors and 2G of RAM.
-It is currently running Debian Sarge with a 2.4.27-sparc64-smp custom
-compiled kernel. Postgres is installed from the Debian package and uses
-all the configuration defaults.
+unused devices: <none>
+server:~# mdadm  --detail /dev/md2
+/dev/md2:
+        Version : 00.90.01
+  Creation Time : Mon Jun 14 18:43:20 2004
+     Raid Level : raid5
+    Device Size : 245111616 (233.76 GiB 250.99 GB)
+   Raid Devices : 4
+  Total Devices : 3
+Preferred Minor : 2
+    Persistence : Superblock is persistent
 
-I am also copying the pgsql-performance list.
+    Update Time : Sun Mar  6 16:40:29 2005
+          State : active, degraded
+ Active Devices : 2
+Working Devices : 3
+ Failed Devices : 0
+  Spare Devices : 1
 
-Thanks in advance for any advice/pointers.
+         Layout : left-symmetric
+     Chunk Size : 64K
 
+           UUID : 72c49e3a:de37c4f8:00a6d8a2:e8fddb2c
+         Events : 0.60470022
 
-Arshavir
+    Number   Major   Minor   RaidDevice State
+       0       0        0        -      removed
+       1      57        1        1      active sync   /dev/hdk1
+       2       0        0        -      removed
+       3      89        1        3      active sync   /dev/hdo1
 
-Following is some other info that might be helpful.
+       4      56        1        -      spare   /dev/hdi1
+server:~#
+-snap-
 
-/proc/scsi# mdadm -D /dev/md1
-/dev/md1:
-         Version : 00.90.00
-   Creation Time : Wed Feb 23 17:23:41 2005
-      Raid Level : raid5
-      Array Size : 123823616 (118.09 GiB 126.80 GB)
-     Device Size : 8844544 (8.43 GiB 9.06 GB)
-    Raid Devices : 15
-   Total Devices : 17
-Preferred Minor : 1
-     Persistence : Superblock is persistent
+I tried a raidstart
 
-     Update Time : Thu Feb 24 10:05:38 2005
-           State : active
-  Active Devices : 15
-Working Devices : 16
-  Failed Devices : 1
-   Spare Devices : 1
+-snip-
+server:~# raidstart /dev/md2
+/dev/md2: Invalid argument
+/dev/md2: Invalid argument
+/dev/md2: Invalid argument
+/dev/md2: Invalid argument
+/dev/md2: Invalid argument
+server:~#
+-snap-
 
-          Layout : left-symmetric
-      Chunk Size : 64K
+...entry in messages
 
-            UUID : 81ae2c97:06fa4f4d:87bfc6c9:2ee516df
-          Events : 0.8
+-snip-
+kernel: md: autostart failed!
+-snap-
 
-     Number   Major   Minor   RaidDevice State
-        0       8       64        0      active sync   /dev/sde
-        1       8       80        1      active sync   /dev/sdf
-        2       8       96        2      active sync   /dev/sdg
-        3       8      112        3      active sync   /dev/sdh
-        4       8      128        4      active sync   /dev/sdi
-        5       8      144        5      active sync   /dev/sdj
-        6       8      160        6      active sync   /dev/sdk
-        7       8      176        7      active sync   /dev/sdl
-        8       8      192        8      active sync   /dev/sdm
-        9       8      208        9      active sync   /dev/sdn
-       10       8      224       10      active sync   /dev/sdo
-       11       8      240       11      active sync   /dev/sdp
-       12      65        0       12      active sync   /dev/sdq
-       13      65       16       13      active sync   /dev/sdr
-       14      65       32       14      active sync   /dev/sds
+Okay...stopping the raid
 
-       15      65       48       15      spare   /dev/sdt
+-snip-
+server:~# mdadm  -S /dev/md2
+server:~# cat /proc/mdstat
+Personalities : [raid1] [raid5]
+md1 : active raid1 hdg2[1] hde2[0]
+      75709248 blocks [2/2] [UU]
 
-# dumpe2fs -h /dev/md1
-dumpe2fs 1.35 (28-Feb-2004)
-Filesystem volume name:   <none>
-Last mounted on:          <not available>
-Filesystem UUID:          1bb95bd6-94c7-4344-adf2-8414cadae6fc
-Filesystem magic number:  0xEF53
-Filesystem revision #:    1 (dynamic)
-Filesystem features:      has_journal dir_index needs_recovery large_file
-Default mount options:    (none)
-Filesystem state:         clean
-Errors behavior:          Continue
-Filesystem OS type:       Linux
-Inode count:              15482880
-Block count:              30955904
-Reserved block count:     1547795
-Free blocks:              28767226
-Free inodes:              15482502
-First block:              0
-Block size:               4096
-Fragment size:            4096
-Blocks per group:         32768
-Fragments per group:      32768
-Inodes per group:         16384
-Inode blocks per group:   512
-Filesystem created:       Wed Feb 23 17:27:13 2005
-Last mount time:          Wed Feb 23 17:45:25 2005
-Last write time:          Wed Feb 23 17:45:25 2005
-Mount count:              2
-Maximum mount count:      28
-Last checked:             Wed Feb 23 17:27:13 2005
-Check interval:           15552000 (6 months)
-Next check after:         Mon Aug 22 18:27:13 2005
-Reserved blocks uid:      0 (user root)
-Reserved blocks gid:      0 (group root)
-First inode:              11
-Inode size:               128
-Journal inode:            8
-Default directory hash:   tea
-Directory Hash Seed:      c35c0226-3b52-4dad-b102-f22feb773592
-Journal backup:           inode blocks
+md0 : active raid1 hdg1[1] hde1[0]
+      2441280 blocks [2/2] [UU]
 
-# lspci | grep SCSI
-0000:00:03.0 SCSI storage controller: LSI Logic / Symbios Logic 53c875
-(rev 14)
-0000:00:03.1 SCSI storage controller: LSI Logic / Symbios Logic 53c875
-(rev 14)
-0000:00:04.0 SCSI storage controller: LSI Logic / Symbios Logic 53c875
-(rev 14)
-0000:00:04.1 SCSI storage controller: LSI Logic / Symbios Logic 53c875
-(rev 14)
-0000:04:02.0 SCSI storage controller: LSI Logic / Symbios Logic 53c875
-(rev 03)
-0000:04:03.0 SCSI storage controller: LSI Logic / Symbios Logic 53c875
-(rev 03)
+unused devices: <none>
+-snap-
 
-/proc/scsi# more scsi
-Attached devices:
-Host: scsi0 Channel: 00 Id: 00 Lun: 00
-   Vendor: SEAGATE  Model: ST39103LCSUN9.0G Rev: 034A
-   Type:   Direct-Access                    ANSI SCSI revision: 02
-Host: scsi0 Channel: 00 Id: 01 Lun: 00
-   Vendor: SEAGATE  Model: ST39204LCSUN9.0G Rev: 4207
-   Type:   Direct-Access                    ANSI SCSI revision: 03
-Host: scsi0 Channel: 00 Id: 02 Lun: 00
-   Vendor: SEAGATE  Model: ST39103LCSUN9.0G Rev: 034A
-   Type:   Direct-Access                    ANSI SCSI revision: 02
-Host: scsi0 Channel: 00 Id: 03 Lun: 00
-   Vendor: SEAGATE  Model: ST39103LCSUN9.0G Rev: 034A
-   Type:   Direct-Access                    ANSI SCSI revision: 02
-Host: scsi1 Channel: 00 Id: 00 Lun: 00
-   Vendor: SEAGATE  Model: ST39103LCSUN9.0G Rev: 034A
-   Type:   Direct-Access                    ANSI SCSI revision: 02
-Host: scsi1 Channel: 00 Id: 01 Lun: 00
-   Vendor: SEAGATE  Model: ST39204LCSUN9.0G Rev: 4207
-   Type:   Direct-Access                    ANSI SCSI revision: 03
-Host: scsi1 Channel: 00 Id: 02 Lun: 00
-   Vendor: SEAGATE  Model: ST39204LCSUN9.0G Rev: 4207
-   Type:   Direct-Access                    ANSI SCSI revision: 03
-Host: scsi1 Channel: 00 Id: 03 Lun: 00
-   Vendor: SEAGATE  Model: ST39103LCSUN9.0G Rev: 034A
-   Type:   Direct-Access                    ANSI SCSI revision: 02
-Host: scsi2 Channel: 00 Id: 00 Lun: 00
-   Vendor: SEAGATE  Model: ST39204LCSUN9.0G Rev: 4207
-   Type:   Direct-Access                    ANSI SCSI revision: 03
-Host: scsi2 Channel: 00 Id: 01 Lun: 00
-   Vendor: SEAGATE  Model: ST39204LCSUN9.0G Rev: 4207
-   Type:   Direct-Access                    ANSI SCSI revision: 03
-Host: scsi2 Channel: 00 Id: 02 Lun: 00
-   Vendor: SEAGATE  Model: ST39204LCSUN9.0G Rev: 4207
-   Type:   Direct-Access                    ANSI SCSI revision: 03
-Host: scsi2 Channel: 00 Id: 03 Lun: 00
-   Vendor: SEAGATE  Model: ST39204LCSUN9.0G Rev: 4207
-   Type:   Direct-Access                    ANSI SCSI revision: 03
-Host: scsi3 Channel: 00 Id: 00 Lun: 00
-   Vendor: SEAGATE  Model: ST39204LCSUN9.0G Rev: 4207
-   Type:   Direct-Access                    ANSI SCSI revision: 03
-Host: scsi3 Channel: 00 Id: 01 Lun: 00
-   Vendor: SEAGATE  Model: ST39204LCSUN9.0G Rev: 4207
-   Type:   Direct-Access                    ANSI SCSI revision: 03
-Host: scsi3 Channel: 00 Id: 02 Lun: 00
-   Vendor: SEAGATE  Model: ST39204LCSUN9.0G Rev: 4207
-   Type:   Direct-Access                    ANSI SCSI revision: 03
-Host: scsi3 Channel: 00 Id: 03 Lun: 00
-   Vendor: SEAGATE  Model: ST39204LCSUN9.0G Rev: 4207
-   Type:   Direct-Access                    ANSI SCSI revision: 03
-Host: scsi4 Channel: 00 Id: 06 Lun: 00
-   Vendor: TOSHIBA  Model: XM6201TASUN32XCD Rev: 1103
-   Type:   CD-ROM                           ANSI SCSI revision: 02
-Host: scsi5 Channel: 00 Id: 00 Lun: 00
-   Vendor: FUJITSU  Model: MAG3091L SUN9.0G Rev: 1111
-   Type:   Direct-Access                    ANSI SCSI revision: 02
-Host: scsi5 Channel: 00 Id: 01 Lun: 00
-   Vendor: FUJITSU  Model: MAG3091L SUN9.0G Rev: 1111
-   Type:   Direct-Access                    ANSI SCSI revision: 02
-Host: scsi5 Channel: 00 Id: 02 Lun: 00
-   Vendor: FUJITSU  Model: MAG3091L SUN9.0G Rev: 1111
-   Type:   Direct-Access                    ANSI SCSI revision: 02
-Host: scsi5 Channel: 00 Id: 03 Lun: 00
-   Vendor: FUJITSU  Model: MAG3091L SUN9.0G Rev: 1111
-   Type:   Direct-Access                    ANSI SCSI revision: 02
+Fine.
+Okay..reassembling it...
+
+-snip-
+server:~# mdadm --assemble --run --force /dev/md2 /dev/hdk /dev/hdo /dev/hdi
+mdadm: no RAID superblock on /dev/hdk
+mdadm: /dev/hdk has no superblock - assembly aborted
+
+---> my fault :-)
+
+server:~# mdadm --assemble --run --force /dev/md2 /dev/hdk1 /dev/hdo1
+/dev/hdi1
+mdadm: failed to RUN_ARRAY /dev/md2: Invalid argument
+server:~# cat /proc/mdstat
+Personalities : [raid1] [raid5]
+md1 : active raid1 hdg2[1] hde2[0]
+      75709248 blocks [2/2] [UU]
+
+md2 : inactive hdk1[1] hdi1[4] hdo1[3]
+      735334848 blocks
+md0 : active raid1 hdg1[1] hde1[0]
+      2441280 blocks [2/2] [UU]
+
+unused devices: <none>
+server:~#
+-snap-
+...and the mdadm --detail above..
+
+Anyone knows whats happening here? I do not know how to get our data on
+the second partition (xfs there).
+I hope one of the gurus here is able to help me (and our data)
+
+Best Regards
+Ronny
+
+[1] Some troubles ...i solved that with dmsetup ..after that i was able
+to reassemble the array...german speaking people can read the whole
+postings, non-german speaking people were able to see "my way" ... here
+are the my postings (and raidtab too):
+http://www.sbox.tugraz.at/home/p/plattner/raid5_history/
 
 
-
-
-
-
--- 
-Arshavir Grigorian
-Systems Administrator/Engineer
+PS: There are also mdadm --examine - outputs
 
