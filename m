@@ -1,53 +1,38 @@
-From: "Phantazm" <phantazm@phantazm.nu>
-Subject: Re: [PATCH md 0 of 9] Introduction
-Date: Fri, 18 Feb 2005 15:25:35 +0100
-Message-ID: <cv4tne$o06$1@sea.gmane.org>
-References: <20050218111131.790.patches@notabene>
+From: Mario Holbe <Mario.Holbe@TU-Ilmenau.DE>
+Subject: RAID1: recovery wrongly overrides resync
+Date: Fri, 18 Feb 2005 23:37:42 +0100
+Message-ID: <cv5qi1$9eb$1@sea.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Would you recommend to apply this package 
-http://neilb.web.cse.unsw.edu.au/~neilb/patches/linux-devel/2.6/2005-02-18-00/patch-all-2005-02-18-00
-To a 2.6.10 kernel?
+Hello,
 
-Thank you for a bery good raid tool :)
+I'm running 7 3-mirror-RAID1s md0 to md6 in degraded mode, each of them
+with 2 active mirrors hda2,hdc2 to hda9,hdc9.
+I subsequently added hde2 to hde9 to the RAID1s and recovery took place:
+first on md6, then on md0 to md5 (dunno why it got this sequence, but
+I'm sure others do :)). While the recovery of md6/hde8 was still
+running, I did a hard-reset to the system (pushed the reset button).
+The system came up again and resync took place, first on md6 from
+hda9 to hdc9/hde9, all other RAID1s have been in resync DELAYED.
+After md6 resync was finished, md0 resync started from hda2 to
+hdc2/hde2 and when this was finished, recovery took md5 and *recovery*
+started from hda8 to hde8 *without* resync of hdc8. After md5 recovery
+finished, md1 to md4 got resynched correctly. Only md5 was not
+resynched but just recovered. Before recovery of md5 started, it
+definitely was in resync DELAYED. After recovery it wasn't anymore,
+but definitely nothing got written to hdc8! A reboot didn't solve the
+issue, I had to manually remove and re-add hdc8 to the array to get it
+in sync again.
 
-"NeilBrown" <neilb@cse.unsw.edu.au> skrev i meddelandet 
-news:20050218111131.790.patches@notabene...
->
-> 9 patches for md in 2.6.11-rc3-mm2 follow.
->
-> 1 - tightens up some locking to close a race that is extremely unlikely
->    to happen (famous last words).  It can only happen when failed devices 
-> are
->    being removed.
-> 2 - Fixes a resync related problem for raid5 and raid6 arrays that have
->    lost more devices than they can cope with.
-> 3 - Fixes a clumsy test that has very little real effect (just a printk).
->
-> These three can be considered stable.
->
-> 4,5 Improve handling of 'safemode' which is where we mark the superblock
->    clean whenever there have been no writes for a little while, and mark
->    it dirty before the next write.
-> 6-9 Introduce "bitmap based intent logging" which allows a file to
->    store - as a bitmap - all block that may have been written recently.
->    This allow resync to be optimised, which is more important as drives
->    get larger.
->
-> These should not be considerred stable - certainly actually using
-> the bitmap mode (which requires a 2.0 series version of mdadm) should
-> be seen as 'experimental'.
->
-> mdadm-2.0-devel-1  was released today.
->
-> NeilBrown
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+I'm running 2.4.27 kernel built from Debian's kernel-source-2.4.27.
+
+Is this a known issue and/or is it fixed in later kernels already?
 
 
+regards,
+   Mario
+-- 
+Ho ho ho! I am Santa Claus of Borg. Nice assimilation all together!
 
