@@ -1,72 +1,48 @@
-From: Robin Whittle <rw@firstpr.com.au>
-Subject: Thanks for software RAID!
-Date: Thu, 26 Jun 2003 22:31:47 +1000
+From: Matthew Mitchell <matthew@geodev.com>
+Subject: Re: RAID5 causing lockups
+Date: Thu, 26 Jun 2003 08:32:15 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3EFAE7B3.5010205@firstpr.com.au>
+Message-ID: <3EFAF5DF.70104@geodev.com>
+References: <200306252054340612.008AB828@ilneval.coreyfro.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Linux RAID <linux-raid@vger.kernel.org>
+In-Reply-To: <200306252054340612.008AB828@ilneval.coreyfro.com>
+To: Corey McGuire <coreyfro@coreyfro.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-A few days ago one of the two IBM 60 GXP drives (20 gig) in my RH 7.2
-server failed.  Two sectors were unreadable, generating these lines in
-/var/log/messages, all in the one second:
+Going along with some suggestions of other respondents, be very 
+suspicious of your power cables.  I had a hell of a time getting a 
+stable raid running because of dodgy power cables.  More accurately, the 
+5v or 12v lines in some of the little plugs were kind of loose, and they 
+would lose contact.  So get in there with a pair of teeny pliers or 
+tweezers and crimp those babies on tight.
 
- hda: dma_intr: status=0x51 { DriveReady SeekComplete Error }
- hda: dma_intr: error=0x40 { UncorrectableError }, LBAsect=32778538,
-      sector=12810992
- end_request: I/O error, dev 03:09 (hda), sector 12810992
- raid1: Disk failure on hda9, disabling device.
- ^IOperation continuing on 1 devices
- raid1: hda9: rescheduling block 12810992
- md: updating md5 RAID superblock on device
- md: hdc9 [events: 000000c9]<6>(write) hdc9's sb offset: 10080384
- md: recovery thread got woken up ...
- md5: no spare disk to reconstruct array! -- continuing in degraded mode
- md: recovery thread finished ...
- hda: dma_intr: status=0x51 { DriveReady SeekComplete Error }
- hda: dma_intr: error=0x40 { UncorrectableError }, LBAsect=32778538,
-      sector=12811000
- end_request: I/O error, dev 03:09 (hda), sector 12811000
- raid1: hda9: rescheduling block 12811000
- md: (skipping faulty hda9 )
- raid1: hdc9: redirecting sector 12810992 to another mirror
- raid1: hdc9: redirecting sector 12811000 to another mirror
+As an aside, has anyone ever experimented with any type of conductive 
+compound when putting these things together?  IMO the cheesiest part of 
+the setup is the crappy PC-style power connector, and I wondered about 
+various solutions from compound to soldering on a PCB for a more 
+reliable means of powering drives.
 
-There is an hourly cron job which uses "cat /proc/mdstat" to look for
-trouble and email me if there is any.  There are no-doubt other ways of
-doing this which are faster and more direct.
+Best of luck to you.
 
-The computer kept running like a charm and the next day I replaced the
-two 20 Gig IBM drives with 40 Gig Seagate Barracuda IV.  I used "cat
-/dev/hda > /dev/hdc" (after booting single user) to byte-for-byte clone
-the first half of the two new drives from the two old drives.  (This is
-possible since both drives have the same number of heads and sectors as
-far as Linux is concerned.  I could have used the second half of the 40
-gig drives for another partition, but I don't need it.)
-
-Then by recreating the md5 device (I first had to temporarily delete the
-md5 section of /etc/raidtab and reboot - probably there is a better
-way), which was the one which had a partition fail, and creating a file
-system there:
-
-  mkraid /dev/md5     (It took a while to synch the drives.)
-  mkfs -j /dev/md5
-
-I was nearly ready to roll.  I copied the data from the good 20 gig
-drive by mounting that raw partition (not as part of a RAID device) and
-then the system was ready to run.
-
-Software RAID-1 worked perfectly - the computer kept running and no data
-was lost.  There was no extra hardware and so no extra cost and no extra
-sources of unreliability.
-
-Thanks for Software RAID!
+Corey McGuire wrote:
+> Well, two of my drives did have an older bios, but the upgrade changed nothing.
+> 
+> I noticed that even unmounted, as long as I didn't raidstop the device, the system still crashes.
+> 
+> I tried setting down my bios as much as possible, and I am looking to do the same with the kernel, 2.4.21.  I'll try the magic sysrq key, but I can't find my nulmodem cable to save my life, so I'll have to barrow one from work.
+> 
+> My server marches on, but without /dev/md2... I'll try just letting it sit, /dev/md2 intact, over night, but for now, I need it up, even if it is only for fits and spurts.
+> 
+> Thanks everyone, keep the ideas rolling in.
 
 
-  Cheers
-
-    - Robin
+-- 
+Matthew Mitchell
+Systems Programmer/Administrator            matthew@geodev.com
+Geophysical Development Corporation         phone 713 782 1234
+1 Riverway Suite 2100, Houston, TX  77056     fax 713 782 1829
 
