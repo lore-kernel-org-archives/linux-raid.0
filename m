@@ -1,26 +1,45 @@
-From: berk walker <berk.walker@verizon.net>
-Subject: Re: Good news / bad news - The joys of RAID
-Date: Sat, 20 Nov 2004 20:01:34 -0500
-Message-ID: <419FE8EE.40505@verizon.net>
-References: <Pine.LNX.4.44.0411201238320.19120-100000@coffee.psychology.mcmaster.ca>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: Good news / bad news - The joys of RAID
+Date: Sat, 20 Nov 2004 23:33:33 -0500
+Message-ID: <200411210433.iAL4XcN19973@www.watkins-home.com>
+References: <419F9DB7.7080600@dgreaves.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44.0411201238320.19120-100000@coffee.psychology.mcmaster.ca>
+In-Reply-To: <419F9DB7.7080600@dgreaves.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mark Hahn <hahn@physics.mcmaster.ca>
+To: 'David Greaves' <david@dgreaves.com>, 'Mark Hahn' <hahn@physics.mcmaster.ca>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-ALL of the Maxtor junk that I have sitting next to me were in factory 
-packaging, and not likely to have been affected by either physical or 
-electrical shock.
+You said:
+"anything that's shipped by courier is suspect."
 
-HE might have implied, I am saying it!  Why ask someone as you did in 
-sentence #2?  Ask them - or yourself.
+Humm, the way the drives are packed you would have a hard time exceeding
+300Gs.  Even UPS can't do that I bet.  But I must admit, I have no idea what
+force a drive would "feel" in a 4 foot drop.  Remember, the drive is packed
+very well!  Also, they only refer to 2 ms.  So, no idea if that is equal to
+150 Gs for 4ms.  Or 75 Gs for 8ms.
 
-Of course, he probably missed the warranty statement to not run Linux.
+From a 300G Maxtor drive.
+
+Reliability 
+- Shock Tolerance: 60Gs @ 2 ms half-sine pulse (Operating), 300Gs @ 2 ms
+half-sine pulse (Non-operating) 
+- Data Error Rate: < 1 /10E15 bits read (Non-recoverable) 
+- MTBF: 1000000 Hours
+
+Guy
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of David Greaves
+Sent: Saturday, November 20, 2004 2:41 PM
+To: Mark Hahn
+Cc: linux-raid@vger.kernel.org
+Subject: Re: Good news / bad news - The joys of RAID
 
 Mark Hahn wrote:
 
@@ -46,10 +65,28 @@ Mark Hahn wrote:
 >some form of archiving/backups.  don't get hung up on which 
 >of the 4-5 top-tier vendors makes your disk.
 >
->-
->To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
 >  
 >
+
+Yeah, you're right.
+Of course - the fact that 2 of *my* 6 Maxtor 250Gb SATA drives (3 year 
+warranty) date stamped at various times in 2004 have failed is 
+coincidence and should, of course, be expected with a MTBF of millions 
+of hours.
+
+Oh, please note I'm not Robin - that must be a coincidence too :)
+
+Personally I'm waiting for the revelation that they are recycled IBM 
+Deskstar 70's ;)
+
+I take your point about supply chain though - anything that's shipped by 
+courier is suspect.
+
+David
+
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
