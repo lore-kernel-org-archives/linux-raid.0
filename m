@@ -1,27 +1,45 @@
-From: David Anderson <david.anderson@calixo.net>
+From: rob <rob@fantinibakery.com>
 Subject: Re: I'm about ready to do SW-Raid5 - pointers needed
-Date: Tue, 28 Oct 2003 02:55:57 +0100
+Date: Mon, 27 Oct 2003 22:32:27 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3F9DCCAD.7050607@calixo.net>
-References: <3F9DAD4C.3000002@verizon.net> <200310280207.27787.maarten@vbvb.nl> <3F9DC489.2060506@calixo.net> <200310280235.21550.maarten@vbvb.nl>
-Reply-To: david.anderson@calixo.net
+Message-ID: <3F9DE34B.5030701@fantinibakery.com>
+References: <3F9DAD4C.3000002@verizon.net> <3F9DBA46.7020806@calixo.net> <200310280255.51504.maarten@vbvb.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200310280235.21550.maarten@vbvb.nl>
+In-Reply-To: <200310280255.51504.maarten@vbvb.nl>
+To: maarten van den Berg <maarten@vbvb.nl>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-maarten van den Berg wrote:
-> Uhm, good point...!  :-)  But I wasn't aware user quotas were available for 
-> many of the filesystems except ext2.  Does reiserfs support quotas ?
+I use rsync and spare inexpensive computers to backup our servers.
 
-Good point also :) I don't know much about reiserfs (waiting for a large 
-disk to test it), but I'd reckon that they plan to put quota support in 
-a plugin if it is not integrated in the filesystem core. And I don't 
-find any reference to reiserfs quotas anywhere, so...
+Our business requires 7x24 computer access with minimal downtime when 
+the server fails.
 
-David Anderson
+I have 3 backup computers.
+
+1st - next to the main computer.
+
+2nd- at the other end of the building.
+
+3-rd at my house. 
+
+ hourly all our data files are rsynced to the 3 backup servers. This 
+takes  1-3 min.
+
+ also 2x  per hour  our main data files are synced.  this takes < 2 min.
+
+ Rsync is a great program for backup as it sends just the parts of the 
+file which changed.
+
+ In addition we use dds-4 tape to backup 1x per day. the tape is taken 
+offsite.
+
+So use rsync over ethernet to backup to a spare computer or 2.
+
+
+
 
 
