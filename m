@@ -1,32 +1,32 @@
-From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
-Subject: Re: SV: RAID-6 support in kernel?
-Date: Tue, 4 Jun 2002 14:59:55 +0200
+From: Maurice Hilarius <maurice@harddata.com>
+Subject: IDE bus rescan
+Date: Tue, 04 Jun 2002 12:40:48 -0600
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <adidsu$k6r$2@main.gmane.org>
-References: <2D0AFEFEE711D611923E009027D39F2B02F17E@nasexs1.meridian-data.com>
+Message-ID: <5.1.0.14.2.20020604123917.06a1ac50@mail.harddata.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset="us-ascii"; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <2D0AFEFEE711D611923E009027D39F2B02F17E@nasexs1.meridian-data.com>
-To: Dale Stephenson <dale.stephenson@quantum.com>, 'Kasper Dupont' <kasperd@daimi.au.dk>
-Cc: Christian Vik <cvik@vanadis.no>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> Of course, for a 4 drive setup there's no reason to use RAID 6 at all (RAID
-> 10 will withstand any two drive failure if you only use 4 drives), but
-> that's the reasoning.  I think the best way to deal with the read-modify
-> write problem for RAID 6 is to use a small chunk size and deal with NxN
-> chunks as a unit.  But YMMV.
+Hi There
 
-RAID10 will _not_ withstand any two-drive fail in a 4-drive scenario. If D1 
-and D3 fail, you're fscked
+Problem:
+On IDE software RAID setup, we want to be able to hot-swap out a failed disk.
+Using 3Ware cards we can swap only by rebooting system to recognise the new 
+drive
 
-D1 D2
-D3 D4
+Question: Is there a way to rescan IDE bus to recognise a new drive?
 
--- 
-Roy Sigurd Karlsbakk, Datavaktmester
+Thanks!
 
-Computers are like air conditioners.
-They stop working when you open Windows.
+With our best regards,
+
+Maurice W. Hilarius       Telephone: 01-780-456-9771
+Hard Data Ltd.               FAX:       01-780-456-9772
+11060 - 166 Avenue        mailto:maurice@harddata.com
+Edmonton, AB, Canada      http://www.harddata.com/
+    T5X 1Y3
+
+Ask me about the UP1500 Alpha - Full systems from $3,500!
+
