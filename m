@@ -1,72 +1,51 @@
-From: Derek Vadala <derek@cynicism.com>
-Subject: Re: just how dangerous is this??
-Date: Tue, 28 May 2002 17:55:07 -0700 (PDT)
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: mdadm mail option configuration
+Date: Wed, 29 May 2002 20:46:07 +1000 (EST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.GSO.4.21.0205281741370.18572-100000@gecko.roadtoad.net>
-References: <20020528215101.E20621@unthought.net>
+Message-ID: <15604.45423.781175.499314@notabene.cse.unsw.edu.au>
+References: <5.1.0.14.0.20020528111927.01f28280@205.233.215.4>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=X-UNKNOWN
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20020528215101.E20621@unthought.net>
-To: =?iso-8859-1?Q?Jakob_=D8stergaard?= <jakob@unthought.net>
-Cc: Danilo Godec <danci@agenda.si>, James Fillman <jfillman@cucbc.com>, linux-raid@vger.kernel.org
+In-Reply-To: message from Jeff Hill on Tuesday May 28
+To: Jeff Hill <jhill@hronline.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 28 May 2002, [iso-8859-1] Jakob =D8stergaard wrote:
+On Tuesday May 28, jhill@hronline.com wrote:
+> I'm having problems configuring mdadm to send e-mail alerts. From past list 
+> discussions I configured it with:
+> 
+> devo:/#  cat /etc/mdadm.conf
+> 
+> DEVICE /dev/hd*[0-9] /dev/sd*[0-9]
+> ARRAY /dev/md1 level=raid1 num-devices=2 
+> UUID=8e0114bb:e5b3a608:048bed2d:5fe33724
+> ARRAY /dev/md2 level=raid1 num-devices=2 
+> UUID=434dd79d:0c046e9b:867e8d98:86bdb5da
+> ARRAY /dev/md3 level=raid1 num-devices=2 
+> UUID=9a9a2078:44c22d83:25a32457:db7e3783
+> ARRAY /dev/md5 level=raid1 num-devices=2 
+> UUID=e3254469:34147651:c9298800:5a84cd06
+> ARRAY /dev/md6 level=raid1 num-devices=2 
+> UUID=80c78ac7:c0f4442a:3dd6517d:57edc79e
+> MAILADDR jhill@hrpost.com
+> PROGRAM /usr/local/sbin/raidalert
 
-> Either it reconstructs it "right" or it does it "wrong".  It seems in
-> his case it did it right.  Lucky him.
->=20
-> Hoever, the persistent superblocks will overwrite the last few KB of =
-his
-> *filesystem* on each partition.   So things *may* seem to work, but t=
-he
-> system will fail horribly later.  After an fsck the RAID suprblocks w=
-ill
-> be damaged.  After another mkraid the filesystem will be damaged agai=
-n.
+You need white-space infront of the UUID= bits, as it is continuation
+of the previous line... or did you suffer a mailer word wrap??
 
-You should be able to pre-plan by creating initial ext2 file systems th=
-at
-are smaller than the partition size. You can do this by specifying the
-number of blocks in the file system when you run mke2fs.=20
+Do you have a "/usr/lib/sendmail" or is it somewhere else on your
+system?
 
-mke2fs [options] device blocks
+> 
+> ------
+> Then, I just have an init script that runs:
+> 
+> 	/sbin/mdadm -Fs --delay=600 &
 
-You should be able to calculate the eventual location of the md superbl=
-ock
-and select an appropriate block size for each partition to insure that =
-the
-superlbock and the filesystem do not overlap.=20
+Why 600 (10 minutes)?? I would suggest 60seconds for normal operation
+and 1 second for testing.
 
-Even if you've had sucess thus far, it's likely that problems will aris=
-e
-as the filesystem fills up-- when the last blocks are allocated, and th=
-ey
-overlap the md superblock.
-
-This probably isn't worth the effort unless you are doing multiple
-installs with the same partition layout and hardware, but it seems that=
- it
-might be the case here.
-
-I think the formula should be something like:
-
-blocks - (blocks % 64) - 64 =3D md offset
-
-That's for 1k blocks... ( like from fdisk -l)
-
-I'm a bit lazy to double check, but I think that formula works.
-
-Then when creating a filesystem divide by block size and create a file
-system that's the right size...=20
-
----
-Derek Vadala, derek@cynicism.com, http://www.cynicism.com/~derek
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+NeilBrown
