@@ -1,33 +1,38 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: promise sx6000 success / raid options
-Date: Sat, 26 Oct 2002 14:35:58 +0200 (CEST)
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: replacing faulty hd
+Date: Mon, 28 Oct 2002 09:53:37 +1100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0210261429080.7303-100000@uplift.swm.pp.se>
+Message-ID: <15804.28273.492046.444615@notabene.cse.unsw.edu.au>
+References: <200210251430.21466.bernd-schubert@web.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: message from Bernd Schubert on Friday October 25
+To: Bernd Schubert <bernd-schubert@web.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Friday October 25, bernd-schubert@web.de wrote:
+> Hi,
+> 
+> we have a raid5 with persistent superblock and need to replace one of the 
+> harddisks.
+> 
+> Currently 3 of 4 md-devices (each built from 5 partition of 5 disks) work fine 
+> and have full raid5 support, but for md0 only 4 partitions are active.
+> 
+> What happens if we shutdown the server and replace the faulty disk by a new 
+> unpartitioned one ? I'm a bit worried that due to the autostart due to the 
+> persistent superblock something could become destroyed.
 
-I had initial problems with a Promise SX6000 controller with the i2o block
-driver and I also tried their source pti_st.o code but never got it to
-compile. I emailed promise and got a response back quite quickly which
-provided me with a new version of the source code version, plus beta
-drivers they themselves compiled for redhat 7.3 and redhat 8.0 kernels.
+It should work fine.
 
-I have today started using the redhat 8.0 kernel driver and it seems to
-work very well. Write performance is approx 15 meg/s to a 5 times 120gig
-drive stripe (seems a bit on the low side if you ask me but that's ok
-anyway, perhaps ext3 is slowing things down). I recommend anyone who have 
-problems with their SX6000 to do the same.
+> 
+> Actually I would prever an kernel parameter to disable raid autostart and 
+> first partition the harddisk, but so far I havn't found something like this.
+> 
 
-I made the filesystem with just mke2fs -j and no raid options, is the
-"stride" options anything I should use? Does it provide better
-performance? (I tried finding some information on this, but the mke2fs man
-page is so spread that all the search engines give me are copies of the
-man page).
+raid=noautodetect
 
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
-
+NeilBrown
