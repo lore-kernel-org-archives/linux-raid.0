@@ -1,90 +1,114 @@
-From: christophe varoqui <christophe.varoqui@free.fr>
-Subject: RE: [dm-devel] [ANNOUNCE] multipath-tools-0.4.1
-Date: Wed, 22 Dec 2004 02:26:12 +0100
-Message-ID: <1103678772.6030.11.camel@zezette>
-References: <EA4DC661A6353747A2E5C0DE8792DDDE074BF47E@orsmsx404.amr.corp.intel.com>
-	 <1103677780.6030.4.camel@zezette>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: Which (physical) disk is broken?
+Date: Wed, 22 Dec 2004 11:39:12 -0500
+Message-ID: <200412221639.iBMGdH911479@www.watkins-home.com>
+References: <87ekhj6h88.fsf@pumba.bayour.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1103677780.6030.4.camel@zezette>
+In-Reply-To: <87ekhj6h88.fsf@pumba.bayour.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: device-mapper development <dm-devel@redhat.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-hotplug-devel@lists.sourceforge.net" <linux-hotplug-devel@lists.sourceforge.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: 'Turbo Fredriksson' <turbo@bayour.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Le mercredi 22 d?embre 2004 =C3=A0 02:09 +0100, christophe varoqui a =C3=
-=A9crit :
-> Le mardi 21 d?embre 2004 =C3=A0 14:02 -0800, Caushik, Ramesh a =C3=A9=
-crit :
-> > The devinfo.c file in the multipath-tools-0.4.1 appears to have a t=
-ypo
-> > in the code to get the node_name attr in the fc_transport sysfs ent=
-ry.
-> > Path below should fix it. BTW why does a failure to get a node_name
-> > attribute, result in failure of multipath discovery (because devinf=
-o
-> > returns failure)even if the "group_by_node_name" policy is not used=
- ?
-> > Can't we just NULL out the tgt_node_name string in the sysfs_devinf=
-o
-> > routine and fail the group_by_node_name routine if that policy was
-> > chosen ? That is what happened in my case. Multipath discovery fail=
-ed
-> > due to above reason even though node_name grouping was not specifie=
-d.=20
-> >=20
-> You are absolutely right.
->=20
-> I was aware that introducing that FC-ism would break for iSCSI and ot=
-her
-> transports. I just thought I'll get that right in a next release beca=
-use
-> I wasn't aware someone was using the thing in such an "exotic"
-> environment.
->=20
-> I would gladly get a description of your topology, by the way.
-> It would help to get it right in the future.
->=20
-> Anyway, I'll fix that for 0.4.2
->=20
-That response was for the premature exit when the FC-ism is out of
-place.
+Since it was removed, it is not a disk.  It is no disk.
+The question is: what disk was it?
 
-Concerning the patch itself, I don't see the problem it adresses :
+You could determine which disks it is not!
+If you access your array, every disk in it will have disk activity.
+The disks that do not have activity are not in the array.
+If you have more arrays, you would need to determine which disks they use
+also.
+If you have non array disks, you will need to identify them also.
+Once all but one disk is identified, it must be your disk.
 
-[root@cl039 multipath]# ll /sys/class/fc_transport/
-total 0
-drwxr-xr-x    2 root     root            0 Dec 14 16:26 target2:0:0
-drwxr-xr-x    2 root     root            0 Dec 14 16:26 target2:0:1
-drwxr-xr-x    2 root     root            0 Dec 14 16:26 target2:0:2
-drwxr-xr-x    2 root     root            0 Dec 14 16:27 target2:0:3
-drwxr-xr-x    2 root     root            0 Dec 14 16:27 target3:0:0
-drwxr-xr-x    2 root     root            0 Dec 14 16:27 target3:0:1
-drwxr-xr-x    2 root     root            0 Dec 14 16:27 target3:0:2
-drwxr-xr-x    2 root     root            0 Dec 14 16:27 target3:0:3
+Use a command like this to cause your disks to have activity, then look for
+the blinking lights:
+dd if=/dev/md/1 of=/dev/null bs=64k
 
-[root@cl039 multipath]# ll /sys/class/fc_transport/target2\:0\:0
-total 0
-lrwxrwxrwx    1 root     root            0 Dec 14 16:26 device
--> ../../../devices/pci0000:00/0000:00:09.0/0000:03:04.0/host2/target2:=
-0:0
--r--r--r--    1 root     root         4096 Dec 14 16:26 node_name
--r--r--r--    1 root     root         4096 Dec 14 16:26 port_id
--r--r--r--    1 root     root         4096 Dec 14 16:26 port_name
+Guy
 
-This is with Qlogic hardware, but I'm not aware of HBA driver specifics
-in the area. If there is, I'm all for resolving the delta at the device
-driver level.
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Turbo Fredriksson
+Sent: Tuesday, December 21, 2004 6:09 AM
+To: linux-raid@vger.kernel.org
+Subject: Which (physical) disk is broken?
 
-> regards,
---=20
-christophe varoqui <christophe.varoqui@free.fr>
+I've forgot, and I can't seem to find out which physical disk
+is broken/removed from an array...
 
+----- s n i p -----
+aurora:~# mdadm -D /dev/md/1
+/dev/md/1:
+        Version : 00.90.01
+  Creation Time : Wed Oct 27 08:12:44 2004
+     Raid Level : raid5
+     Array Size : 141483520 (134.93 GiB 144.88 GB)
+    Device Size : 17685440 (16.87 GiB 18.11 GB)
+   Raid Devices : 9
+  Total Devices : 8
+Preferred Minor : 1
+    Persistence : Superblock is persistent
 
+    Update Time : Tue Dec 21 12:04:43 2004
+          State : dirty, degraded
+ Active Devices : 8
+Working Devices : 8
+ Failed Devices : 0
+  Spare Devices : 0
+
+         Layout : left-symmetric
+     Chunk Size : 32K
+
+    Number   Major   Minor   RaidDevice State
+       0       8       49        0      active sync
+/dev/scsi/host3/bus0/target4/lun0/part1
+       1       8       81        1      active sync
+/dev/scsi/host3/bus0/target8/lun0/part1
+       2       8       97        2      active sync
+/dev/scsi/host3/bus0/target9/lun0/part1
+       3       8      241        3      active sync
+/dev/scsi/host4/bus0/target4/lun0/part1
+       4      65        1        4      active sync
+/dev/scsi/host4/bus0/target5/lun0/part1
+       5      65       17        5      active sync
+/dev/scsi/host4/bus0/target8/lun0/part1
+       6      65       33        6      active sync
+/dev/scsi/host4/bus0/target9/lun0/part1
+       7      65      113        7      active sync
+/dev/scsi/host4/bus0/target14/lun0/part1
+       8       0        0       -1      removed
+           UUID : d0b4e775:290f5785:2e6ad7d1:5a66178b
+         Events : 0.974012
+----- s n i p -----
+
+I _THINK_ (!!) it's '/dev/scsi/host4/bus0/target15/lun0/part', but
+I'm not sure.... Don't want to yank a perfectly working disk :)
+
+----- s n i p -----
+aurora:~# mdadm -E /dev/scsi/host4/bus0/target15/lun0/part1
+mdadm: No super block found on /dev/scsi/host4/bus0/target15/lun0/part1
+(Expected magic a92b4efc, got 00000000)
+----- s n i p -----
+
+Is there any way I can find out exactly which disk 'number 8' is?
+
+----- s n i p -----
+aurora:~# mdadm --version
+mdadm - v1.6.0 - 4 June 2004
+aurora:~# uname -a
+Linux aurora 2.6.8.1 #1 SMP Sun Dec 12 21:04:58 CET 2004 sparc64 unknown
+----- s n i p -----
+-- 
+Ortega assassination explosion FBI president PLO Iran domestic
+disruption genetic Ft. Bragg Rule Psix $400 million in gold bullion
+Clinton Cocaine Treasury
+[See http://www.aclu.org/echelonwatch/index.html for more about this]
 -
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 the body of a message to majordomo@vger.kernel.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
