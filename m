@@ -1,31 +1,34 @@
 From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
-Subject: Re: [Jfs-discussion] maximum filesystem size limit
-Date: Wed, 9 Oct 2002 11:53:59 +0200
+Subject: Re: 5400 vs 7200 RPM IDE drives
+Date: Wed, 9 Oct 2002 11:55:41 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200210091153.59452.roy@karlsbakk.net>
-References: <8D587D949A61D411AFE300D0B74D75D703F0BF1B@server.s8.com>
+Message-ID: <200210091155.41257.roy@karlsbakk.net>
+References: <anvm48$l42$1@main.gmane.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <8D587D949A61D411AFE300D0B74D75D703F0BF1B@server.s8.com>
-To: Cameron Bahar <CBahar@s8.com>, "'jfs-discussion@www-124.ibm.com'" <jfs-discussion@www-124.southbury.usf.ibm.com>
-Cc: Kernel mailing list <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org
+In-Reply-To: <anvm48$l42$1@main.gmane.org>
+To: "David U." <davidu@everydns.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday 08 October 2002 23:14, Cameron Bahar wrote:
-> I need support for a single 12 TB filesystem on Linux. The documentation
-> indicates that JFS supports a theoretical 4PB limit, but that other
-> limitations (32 bit offsets) within limit prevent scaling to this large
-> size.
+On Wednesday 09 October 2002 00:27, David U. wrote:
+> Hi friends,
 >
-> Can someone please tell me if I can use JFS to create a single 12TB
-> filesystem under Linux?
+> I was just wondering what the most current opinions were with regard to
+> 5400 vs 7200 RPM drives.
+>
+> Also, have people been happy with the Western Digital 100gig Special
+> Edition drives?
+>
+> What are other people using?
 
-Afaik, you have a problem here concerning the Linux 2.4 maximum block device 
-size of 2TB.
+I have two servers with 16 IBM 120gigs each, and they mostly work. One disk 
+went boom the other day, but that's expected - I mean - one out of 32 drives 
+in half a year isn't that bad
 
-Anyone that knows if there's a workaround for this using LVM or something?
+The choice between 5,4 and 7,2 is to be taken on behalf of the seek time 
+needed. seek times on 5,4 drives are substantially slower...
 
 roy
 
