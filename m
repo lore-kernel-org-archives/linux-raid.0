@@ -1,26 +1,16 @@
-From: Jim Paris <jim@jtan.com>
-Subject: Re: mdadm output format
-Date: Thu, 2 Sep 2004 15:23:06 -0400
+From: NeilBrown <neilb@cse.unsw.edu.au>
+Subject: [PATCH md 0 of 4] Introduction
+Date: Fri, 03 Sep 2004 12:20:17 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040902192306.GA5095@jim.sh>
-References: <1094149263.8447.42.camel@rich>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Message-ID: <20040823130112.19428.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1094149263.8447.42.camel@rich>
-To: rich turner <rich@storix.com>
+To: Andrew Morton <akpm@osdl.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> also, is there any way with mdadm to create a raid device that does not
-> have persistent superblock? with raidtools there is a flag to indicate
-> whether you want a persistent superblock.
+Following are 4 patches for md in 2.6.8.1-mm4
 
-man mdadm
+The first three are minor improvements and modifications either
+required by or inspired by the fourth.
 
-       -B, --build
-              Build a legacy array without superblocks.
-
--jim
-
+The fourth adds a new raid pers
