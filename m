@@ -1,45 +1,42 @@
-From: Zeno Davatz <zdavatz@generika.cc>
-Subject: Re: raid1: module or compiled in?
-Date: 07 May 2003 18:03:40 +0200
+From: Derek Vadala <derek@cynicism.com>
+Subject: Re: mkraid to mdadm conversion?
+Date: Wed, 7 May 2003 12:02:16 -0400 (EDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1052323420.1551.116.camel@zrr>
-References: <1052320882.649.99.camel@zrr>  <3EB92AE6.91F9FED4@SteelEye.com>
-Reply-To: zdavatz@generika.cc
+Message-ID: <20030507160216.7F5FC3B84A@jaded.cynicism.com>
+References: <3EB9245E.2020901@cc.kuleuven.ac.be>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3EB92AE6.91F9FED4@SteelEye.com>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <3EB9245E.2020901@cc.kuleuven.ac.be>
+To: Herta Van den Eynde <herta.vandeneynde@cc.kuleuven.ac.be>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 2003-05-07 at 17:48, Paul Clements wrote:
-> Zeno Davatz wrote:
-> 
-> > I am a Debian Woody 2.4.20 user and got the following question:
-> > 
-> > If I want the software raid to work do I need to compile it into the
-> > kernel or does it suffice if I just load the support as module?
-> 
-> md generally does have to be compiled in...the raid personality modules
-> (raid1, raid5, etc.) can be compiled as modules... more below...
->  
-> > I was reading in the software-RAID Howto that the support should NOT be
-> > loaded as Module. Why would that be?
-> 
-> Were they talking about _md_ needing to be compiled in? Because it has
-> to be compiled into the kernel if you want to use persistent superblocks
-> and/or use it for your root partition. I have patches against 2.4 and
-> 2.5 to fix this md problem, BTW, if anyone wants them...I posted the 2.5
-> one a while back...
-Ok, thanks. This is useful. In that case I must patch the kernel with your patch
-or I must compile md into the kernel.
+On Wed, 7 May 2003, Herta Van den Eynde wrote:
 
-Thanks for the hint.
+> First of all, is there any documentation on mdadm other than the man
+> pages?  I currently have 2 systems with raid devices set up using the
+> mkraid, and would like to know what I'd need to do to convert them to mdadm.
 
-Zeno
+The man pages (and supporting docs) are comprehensive. If you are not
+finding something in the man page for madm try looking at the manual pages
+for mdadm.conf(5) and md(4). You might also want to look in
+/usr/share/doc/mdadm for some additional info.
 
+There's also this O'Reilly Network article (*cough*):
+http://linux.oreillynet.com/pub/a/linux/2002/12/05/RAID.html
 
-> --
-> Paul
+You don't need to 'convert' your arrays. You can just begin using mdadm to
+manage existing arrays, assuming you are working with current versions of
+all the tools and the md driver. Simply stop using raidtools and
+/etc/raidtab. If your arrays are not set to autostart, you will have to
+edit your init scripts to call mdadm and activate arrays much in the same
+way that raidstart would have been called.
+
+The best place for you to start is looking at how to generate an
+/etc/mdadm.conf from your existing arrays. This is well docummented in the
+texts cited above.
+
+--
+Derek Vadala, derek@cynicism.com, http://www.cynicism.com/~derek
 
