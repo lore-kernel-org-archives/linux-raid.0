@@ -1,19 +1,19 @@
-From: Richard Hirst <rhirst@linuxcare.com>
+From: Neil Brown <neilb@cse.unsw.edu.au>
 Subject: Re: making new device names with mknod
-Date: Tue, 10 Sep 2002 21:56:29 +0100
+Date: Wed, 11 Sep 2002 09:00:15 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20020910205629.GJ21440@sleepie.demon.co.uk>
+Message-ID: <15742.31103.899153.146439@notabene.cse.unsw.edu.au>
 References: <3D7E6020.8030402@ratnet.stw.uni-erlangen.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <3D7E6020.8030402@ratnet.stw.uni-erlangen.de>
+In-Reply-To: message from Norman Schmidt on Tuesday September 10
 To: schmidt@naa.net
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Sep 10, 2002 at 11:12:00PM +0200, Norman Schmidt wrote:
+On Tuesday September 10, norman.schmidt@ratnet.stw.uni-erlangen.de wrote:
 > Hi!
 > 
 > Can somebody tell me how to make new device names in /dev?
@@ -27,16 +27,35 @@ On Tue, Sep 10, 2002 at 11:12:00PM +0200, Norman Schmidt wrote:
 > 
 > I am using Debian Woody, so no makedev, only mknod is available.
 
-Should be there as /dev/MAKEDEV
+/dev/MAKEDEV ide4 ide5
 
-cd /dev
-./MAKEDEV hdi
+should make hd[ijkl]....
 
+MAKEDEV doesn't seem to know about md devices > 15.
+If you changed
 
-> I hope, I am not too off-topic, thanks, Norman.
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+        md)
+                major=`Major md 9` || continue
+                for part in 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15
+                do
+                        makedev md$part b $major $part $disk
+                done
+                ;;
+
+to
+
+        md)
+                major=`Major md 9` || continue
+                for part in 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 \
+                       17 18 19 20 21 22 23 24 25 26 27 28 29 30 31
+                do
+                        makedev md$part b $major $part $disk
+                done
+                ;;
+
+then 
+  /dev/MAKEDEV md
+
+should make you 31 md devices.
+
+NeilBrown
