@@ -1,70 +1,66 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: [ANNOUNCE][PATCH 2.6] md: persistent (file-backed) bitmap and
- async writes
-Date: Tue, 15 Jun 2004 16:27:17 +1000
+From: Louis-David Mitterrand <vindex@apartia.org>
+Subject: strange lilo error
+Date: Tue, 15 Jun 2004 09:39:53 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16590.38597.170409.499394@cse.unsw.edu.au>
-References: <40198E85.29EBC8E0@SteelEye.com>
-	<16422.62911.755570.855200@notabene.cse.unsw.edu.au>
-	<4027E342.D02202F1@SteelEye.com>
-	<16424.8182.876520.280031@notabene.cse.unsw.edu.au>
-	<402D3A86.97CF894F@SteelEye.com>
-	<16456.2775.641721.204171@notabene.cse.unsw.edu.au>
-	<4048F9AA.1BBD67F@SteelEye.com>
-	<406B1024.7BF88C@SteelEye.com>
-	<16528.49083.998593.199805@cse.unsw.edu.au>
-	<40C6273B.2060200@steeleye.com>
+Message-ID: <20040615073953.GA25753@apartia.fr>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Paul Clements on Tuesday June 8
-To: Paul Clements <paul.clements@steeleye.com>
-Cc: linux-raid@vger.kernel.org, ptb@it.uc3m.es, mingo@redhat.com, "james.bottomley" <james.bottomley@steeleye.com>
+Content-Disposition: inline
+To: Linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tuesday June 8, paul.clements@steeleye.com wrote:
-> Neil,
-> 
-> Here's the latest patch...it supports bitmaps in files as well as block 
-> devices (disks or partitions), contrary to what I had stated in my 
-> previous e-mail. I've tried to address all the issues you've pointed 
-> out, and generally cleaned up and fixed the patch some more...details 
-> below...
+Hello,
 
-This looks a lot better.  There are a few little issues that I noticed
-on a quick read through:
-     - last_block_device should return "sector_t", not "unsigned
-       long".  It would be worth checking for other placed that
-       sector_t might be needed.
-     - bitmap_checkpage still isn't quite safe.  If "hijacked" gets
-       set while it is allocating a page (unlikely, but possible), it
-       will exit with both highjacked set and an allocated page, which
-       isn't right.
-     - The event comparison
-+		    sb->events_hi >= refsb->bitmap_events_hi &&
-+		    sb->events_lo >= refsb->bitmap_events_lo) {
-       in hot_add_disk is wrong. 
+I am trying to convert a raid1 partition from reiserfs to ext3 by
+setting one drive faulty, removing it, creating a new degraded raid1
+set, copying data from the reiserfs partition to the ext3 one.
 
-I'll try to make time to try the patch out in a week or so to get a
-better feel for it.
+Here is the /proc/mdstat output before starting the conversion:
 
-The changes to mdadm need a bit of work.
- 
-You have added "--persistent" and "--non-persistent" flags for
---create.  This is wrong.
---create always uses persistent superblocks.
---build makes arrays without persistent superblocks.
+Personalities : [linear] [raid0] [raid1] [raid5] [multipath] [raid6]
+md1 : active raid1 hdb2[0] hda2[1]
+      313152 blocks [2/2] [UU]
 
-I don't think I like --create-bitmap.  A bitmap file should always be
-created in the context of a particular array (partly so that the size
-and uuid can be set correctly).  I think I would like to bitmap to be
-specified as a "--bitmap=filename" option to --create, --build, or
---grow.  I haven't thought this through in great detail yet, but that
-is my leaning.
+md0 : active raid1 hdb1[2] hda1[1]
+      77834816 blocks [2/2] [UU]
 
---examine-bitmap is a bit of a pain too.  I think I would like
---examine to figure out what it has been given to look at, and report
-on whatever it finds.
+Once /dev/hdb1 and /dev/hdb2 have been marked faulty and removed lilo
+will fail with the following message:
 
-NeilBrown
+Fatal: Trying to map files from unnamed device 0x0000 (NFS/RAID mirror down ?)
+
+The lilo.conf has:
+
+# boot=/dev/md0
+boot=/dev/hda
+root=/dev/md0
+# raid-extra-boot=mbr
+compact
+install=/boot/boot-menu.b
+map=/boot/map
+delay=20
+vga=normal
+default=Linux
+image=/vmlinuz
+    label=Linux
+    read-only
+image= /boot/vmlinuz-2.4.22-madrid
+    label=Linux-2.4.22
+    read-only
+
+I commented out "raid-extra-boot" and replaced "boot=/dev/md0" with
+"boot=/dev/hda" but the error persists.
+
+After running a few tests it appears lilo will only stop complaining
+once the original raid1 set is restored _and_ synchronized.
+
+This the first time we have this kind of error, having done the same
+conversion on other machines. This is with debian unstable and a 2.6.6
+kernel.
+
+Any idea? Thanks in advance,
+
+
+-- 
+In linux-dominated parallel world, all children's names begin with g, k or x
