@@ -1,52 +1,93 @@
-From: Miquel van Smoorenburg <miquels@cistron.nl>
-Subject: [PATCH] md=d0,/dev/hda,/dev/hdb fails if hda is missing
-Date: Mon, 22 Mar 2004 14:34:45 +0100
+From: "Robin Bowes" <robin-lists@robinbowes.com>
+Subject: Moving controllers
+Date: Mon, 22 Mar 2004 14:25:26 -0000 (GMT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040322133444.GA15384@cistron.nl>
+Message-ID: <24101.194.60.85.4.1079965526.squirrel@194.60.85.4>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-If you assemble disks with md=d0,/dev/hda,/dev/hdb it fails
-if /dev/hda is missing (for example because it's dead).
+Hi,
 
-This patch fixes it:
+I have a question about moving drives between controllers with software RAID.
 
---- linux-2.6.5-rc1/init/do_mounts_md.c.ORIG	2004-03-16 15:14:48.000000000 +0100
-+++ linux-2.6.5-rc1/init/do_mounts_md.c	2004-03-20 14:30:33.000000000 +0100
-@@ -142,7 +142,7 @@
- 		else
- 			dev = MKDEV(MD_MAJOR, minor);
- 		create_dev(name, dev, devfs_name);
--		for (i = 0; i < MD_SB_DISKS && devname != 0; i++) {
-+		for (i = 0; i < MD_SB_DISKS && devname != 0;) {
- 			char *p;
- 			char comp_name[64];
- 			u32 rdev;
-@@ -158,12 +158,11 @@
- 			rdev = bstat(comp_name);
- 			if (rdev)
- 				dev = new_decode_dev(rdev);
--			if (!dev) {
--				printk(KERN_WARNING "md: Unknown device name: %s\n", devname);
--				break;
--			}
--
--			devices[i] = dev;
-+			if (dev)
-+				devices[i++] = dev;
-+			else
-+				printk(KERN_WARNING "md: Unknown device name: "
-+						    "%s\n", devname);
- 
- 			devname = p;
- 		}
+I'm planning on building a linux box with a large software RAID5 array (4
+x 250/300GB disks) on which to store rips of my CD collection.
+
+The server I have earmarked for this has built-in to it a "HighPoint
+HPT370 PCI Dual Channel Ultra DMA/ATA 100 RAID Controller". I plan to
+connect my four disks to the two ports of this controller, i.e. I will
+have a master and slave drive on each channel.
+
+First question: what is the kernel support like for this controller?
+
+Secondly, I am aware that this is not the ideal configuration, but my
+performance requirements are not massive as I won't be doing much more
+than streaming MP3s to clients on my home network. However, if I were to
+discover that performance was unacceptable I want to know if it would be
+possible to install an additional controller in a PCI slot, and move the two
+slave disks onto the new controller without re-building the array.
+
+So, expressing my question explicitly:
+
+Can I initially create a RAID5 array on this disk configuration:
+
+HPT370--+--Channel A--+--master (Disk1)
+        |             |
+        |             +--slave (Disk2)
+        |
+        +--Channel B--+--master (Disk3)
+                      |
+                      +--slave (Disk4)
+
+...then move the disks around like this:
+
+HPT370--+--Channel A--+--master (Disk1)
+        |
+        +--Channel B--+--master (Disk3)
+
+FooBar--+--Channel A--+--master (Disk2)
+        |
+        +--Channel B--+--master (Disk4)
+
+...or this:
+
+FooBar--+--Channel A--+--master (Disk1)
+        |
+        +--Channel B--+--master (Disk3)
+        |
+        +--Channel C--+--master (Disk2)
+        |
+        +--Channel D--+--master (Disk4)
+
+...or even this:
+
+FooBar 1--+--Channel A--+--master (Disk1)
+          |
+          +--Channel B--+--master (Disk3)
+
+FooBar2--+--Channel A--+--master (Disk2)
+         |
+         +--Channel B--+--master (Disk4)
 
 
-Mike.
+...without trashing the array?
+
+Third question: If I were to decide on a replacement 4-port controller,
+what models are well-supported?
+
+Finally, I'd be interested to learn of any issues I might run into when
+dealing with disks and filesystems of this size. For example, are there
+any inherent limitations or absolute maximums I need to be aware of? What
+about low-level issues like chunk size and block size, etc.? Any
+recommendations as to the optimum settings, bearing in mind I will be
+dealing with relatively large files?
+
+Thanks for all comments.
+
+R.
 -- 
-Netu, v qba'g yvxr gur cynvagrkg :)
+http://robinbowes.com
