@@ -1,53 +1,70 @@
-From: Lars Marowsky-Bree <lmb@suse.de>
-Subject: multipath bug in 2.5
-Date: Wed, 19 Mar 2003 13:47:02 +0100
+From: "Robert L. Harris" <Robert.L.Harris@rdlg.net>
+Subject: What is needed?
+Date: Wed, 19 Mar 2003 09:50:30 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20030319124702.GB18650@marowsky-bree.de>
+Message-ID: <20030319145030.GD4955@rdlg.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="xXmbgvnjoT4axfJE"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-To: linux-raid@vger.kernel.org
+To: Linux-Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi,
 
-I've just casually glanced over 2.5 code to see how much work it would =
-be to
-port forward, and I think I noticed a bug in multipath_add_disk:
-
-        for (path=3D0; path<mddev->raid_disks; path++)
-                if ((p=3Dconf->multipaths+path)->rdev =3D=3D NULL) {
-                        p->rdev =3D rdev;
-                        conf->working_disks++;
-                        rdev->raid_disk =3D path;
-                        rdev->in_sync =3D 1;
-                        found =3D 1;
-                }
-
-Is it just me or will that fill in every empty path? Might make sense t=
-o add
-a break in there.
-
-But otherwise, wow, the code is looking so much nicer, finally no longe=
-r all
-thos replicated datastructures, bit fields, ordered lists etc to keep i=
-n
-sync... This is going to be a big step forward.
+--xXmbgvnjoT4axfJE
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
 
-Sincerely,
-    Lars Marowsky-Br=E9e <lmb@suse.de>
 
---=20
-SuSE Labs - Research & Development, SuSE Linux AG
- =20
-"If anything can go wrong, it will." "Chance favors the prepared (mind)=
-=2E"
-  -- Capt. Edward A. Murphy            -- Louis Pasteur
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Scenario:
+  Debian Woody Distro
+  Kernel 2.4.16 with RAID compiled in
+  System with 2 scsi disks, sda sdb
+
+  root (/) is built out on /dev/md1 (dev/md0 is pre-allocated for
+    something else)
+
+  /dev/sda has a hardware failure and dies
+    System should detach sda1 from md1 and continue on
+
+  1) If the disks are hotswapable then sda should be able to be replaced
+     and synced up normally correct?
+  2) If for some reason the system has to be booted off of /dev/md1
+     without /dev/sda would it be a matter of putting a floppy in the
+     drive that has a kernel written to it with dd and then use rdev to tell
+     it to boot /dev/sdb1 instead of sda1?
+
+  Anyone have a good walkthrough of setting something like this up?  I'd
+like to answer all the questions before I take it to my boss.
+
+Robert
+
+
+:wq!
+---------------------------------------------------------------------------
+Robert L. Harris                     | PGP Key ID: E344DA3B
+                                         @ x-hkp://pgp.mit.edu=20
+DISCLAIMER:
+      These are MY OPINIONS ALONE.  I speak for no-one else.
+
+Diagnosis: witzelsucht  =09
+
+IPv6 =3D robert@ipv6.rdlg.net	http://ipv6.rdlg.net
+IPv4 =3D robert@mail.rdlg.net	http://www.rdlg.net
+
+--xXmbgvnjoT4axfJE
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.1 (GNU/Linux)
+
+iD8DBQE+eIO28+1vMONE2jsRAtQhAKDESZ7x05OYpU6zhtLMNx8C7zfaPwCfQ2kw
+5Ge5kWibV2tNeye1vG/5H6w=
+=5qmZ
+-----END PGP SIGNATURE-----
+
+--xXmbgvnjoT4axfJE--
