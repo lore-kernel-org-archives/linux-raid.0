@@ -1,144 +1,128 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: Spares and partitioning huge disks
-Date: Sat, 8 Jan 2005 13:55:01 -0500
-Message-ID: <200501081855.j08It8910389@www.watkins-home.com>
-References: <200501081816.40144.maarten@ultratux.net>
+From: maarten <maarten@ultratux.net>
+Subject: Re: Spares and partitioning huge disks
+Date: Sat, 8 Jan 2005 20:01:09 +0100
+Message-ID: <200501082001.09317.maarten@ultratux.net>
+References: <crmt7e$8d6$1@sea.gmane.org> <20050108145228.GB26475@janus> <200501081749.32816.maarten@ultratux.net>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="us-ascii"
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200501081816.40144.maarten@ultratux.net>
+In-Reply-To: <200501081749.32816.maarten@ultratux.net>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: 'maarten' <maarten@ultratux.net>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-My warning about user error was not targeted at you!  :)
-Sorry if it seemed so.
+On Saturday 08 January 2005 17:49, maarten wrote:
+> On Saturday 08 January 2005 15:52, Frank van Maarseveen wrote:
+> > On Fri, Jan 07, 2005 at 04:57:35PM -0500, Guy wrote:
+> > > His plan is to split the disks into 6 partitions.
+> > > Each of his six RAID5 arrays will only use 1 partition of each physical
+> > > disk.
+> > > If he were to lose a disk, all 6 RAID5 arrays would only see 1 failed
+> > > disk. If he gets 2 read errors, on different disks, at the same time,
+> > > he has a 1/6 chance they would be in the same array (which would be
+> > > bad). His plan is to combine the 6 arrays with LVM or a linear array.
+> >
+> > Intriguing setup. Do you think this actually improves the reliability
+> > with respect to disk failure compared to creating just one large RAID5
+> > array?
 
-And the order does not matter!
+As the system is now online again, busy copying, I can show the exact config:
 
-A:
-Remove the failed disk.
-Fail the spare
-System is degraded.
-Add the failed/repaired disk.
-Rebuild starts.
+dozer:~ # fdisk -l /dev/hde
 
-B:
-Remove the failed disk.
-Add the failed/repaired disk.
-Fail the spare
-System is degraded.
-Rebuild starts.
+Disk /dev/hde: 250.0 GB, 250059350016 bytes
+255 heads, 63 sectors/track, 30401 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
 
-Both A and B above require the array to go degraded until the repaired disk
-is rebuilt.  But with A, the longer you delay adding the repaired disk, the
-longer you are degraded.  In my case, that would be less than 1 minute.  I
-do fail the spare last, but not really much of an issue.  No toast anyway!
+   Device Boot    Start       End    Blocks   Id  System
+/dev/hde1             1       268   2152678+  fd  Linux raid autodetect
+/dev/hde2           269       331    506047+  fd  Linux raid autodetect
+/dev/hde3           332       575   1959930   fd  Linux raid autodetect
+/dev/hde4           576     30401 239577345    5  Extended
+/dev/hde5           576      5439  39070048+  fd  Linux raid autodetect
+/dev/hde6          5440     10303  39070048+  fd  Linux raid autodetect
+/dev/hde7         10304     15167  39070048+  fd  Linux raid autodetect
+/dev/hde8         15168     20031  39070048+  fd  Linux raid autodetect
+/dev/hde9         20032     24895  39070048+  fd  Linux raid autodetect
+/dev/hde10        24896     29759  39070048+  fd  Linux raid autodetect
+/dev/hde11        29760     30401   5156833+  83  Linux
 
-It would be cool if the rebuild to the repaired disk could be done before
-the spare was failed or removed.  Then the array would not be degraded at
-all.
+dozer:~ # cat /proc/mdstat
+Personalities : [linear] [raid0] [raid1] [raid5] [multipath]
+read_ahead 1024 sectors
+md1 : active raid1 hdg2[1] hde2[0]
+      505920 blocks [2/2] [UU]
 
-If I ever re-build my system, or build a new system, I hope to use RAID6.
+md0 : active raid1 hdg1[1] hde1[0]
+      2152576 blocks [4/2] [UU__]
 
-The Seagate test is on-line.  Before I started using the Seagate tool, I
-used dd.
+md2 : active raid1 sdb2[0] sda2[1]
+      505920 blocks [2/2] [UU]
 
-My disks claim to be able to re-locate bad blocks on read error.  But I am
-not sure if this is correctable errors or not.  If not correctable errors
-are re-located, what data does the drive return?  Since I don't know, I
-don't use this option.  I did use this option for awhile, but after
-re-reading about it, I got concerned and turned it off.
+md3 : active raid5 sdb5[2] sda5[3] hdg5[1] hde5[0]
+      117209856 blocks level 5, 64k chunk, algorithm 2 [4/4] [UUUU]
 
-This is from the readme file:
-Automatic Read Reallocation Enable (ARRE)
-        -Marreon/off  enable/disable ARRE bit
-           On, drive automatically relocates bad blocks detected
-           during read operations.  Off, drive creates Check condition
-           status with sense key of Medium Error if bad blocks are
-           detected during read operations.
+md4 : active raid5 sdb6[2] sda6[3] hdg6[1] hde6[0]
+      117209856 blocks level 5, 64k chunk, algorithm 2 [4/4] [UUUU]
 
-Guy
+md5 : active raid5 sdb7[2] sda7[3] hdg7[1] hde7[0]
+      117209856 blocks level 5, 64k chunk, algorithm 2 [4/4] [UUUU]
 
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of maarten
-Sent: Saturday, January 08, 2005 12:17 PM
-To: linux-raid@vger.kernel.org
-Subject: Re: Spares and partitioning huge disks
+md6 : active raid5 sdb8[2] sda8[3] hdg8[1] hde8[0]
+      117209856 blocks level 5, 64k chunk, algorithm 2 [4/4] [UUUU]
 
-On Saturday 08 January 2005 17:32, Guy wrote:
-> I don't recall having 2 disks with read errors at the same time.  But
-> others on this list have.  Correctable read errors is my most common
-> problem with my 14 disk array.  I think this partitioning approach will
-> help.  But as you say, it is more complicated, which adds some risk, I
-> believe.  But you can compute the level of reduced risk, but you can't
-> compute the level of increased risk.
+md7 : active raid5 sdb9[2] sda9[3] hdg9[1] hde9[0]
+      117209856 blocks level 5, 64k chunk, algorithm 2 [4/4] [UUUU]
 
-true.  Especially since LVM is completely new to me.
+md8 : active raid5 sdb10[2] sda10[3] hdg10[1] hde10[0]
+      117209856 blocks level 5, 64k chunk, algorithm 2 [4/4] [UUUU]
 
-> Some added risk:
-> 	More complicated setup, increases user errors.
+# Where md0 is "/" (temporary degraded), and md1 and md2 are swap.  
+# The md3 through md8 are the big arrays that are part of LVM.
 
-I have confidence in myself (knock, knock).  I triplecheck every action I do
+dozer:~ # pvscan
+pvscan -- reading all physical volumes (this may take a while...)
+pvscan -- ACTIVE   PV "/dev/md3" of VG "lvm_video" [111.72 GB / 0 free]
+pvscan -- ACTIVE   PV "/dev/md4" of VG "lvm_video" [111.72 GB / 0 free]
+pvscan -- ACTIVE   PV "/dev/md5" of VG "lvm_video" [111.72 GB / 0 free]
+pvscan -- ACTIVE   PV "/dev/md6" of VG "lvm_video" [111.72 GB / 0 free]
+pvscan -- ACTIVE   PV "/dev/md7" of VG "lvm_video" [111.72 GB / 0 free]
+pvscan -- ACTIVE   PV "/dev/md8" of VG "lvm_video" [111.72 GB / 0 free]
+pvscan -- total: 6 [670.68 GB] / in use: 6 [670.68 GB] / in no VG: 0 [0]
 
-with the output of 'cat /proc/mdadm' before hitting [enter] so as to not
-make 
-thinking errors like using hdf5 instead of hde6, and similar mistakes.
-I'm paranoid by nature, so that helps, too ;-)
+dozer:~ # vgdisplay
+--- Volume group ---
+VG Name               lvm_video
+VG Access             read/write
+VG Status             available/resizable
+VG #                  0
+MAX LV                256
+Cur LV                1
+Open LV               1
+MAX LV Size           2 TB
+Max PV                256
+Cur PV                6
+Act PV                6
+VG Size               670.31 GB
+PE Size               32 MB
+Total PE              21450
+Alloc PE / Size       21450 / 670.31 GB
+Free  PE / Size       0 / 0
+VG UUID               F0EF61-uu4P-cnCq-6oQ6-CO5n-NE9g-5xjdTE
 
-> 	Example:  Maarten plans to have 2 spare partitions on an extra disk.
-> Once he corrects the read error on the failed partition, he needs to
-remove
-> the failed partition, fail the spare and add the original partition back
-to
-> the correct array.  He has a 6 times increased risk of choosing the wrong
+dozer:~ # df
+Filesystem           1K-blocks      Used Available Use% Mounted on
+/dev/md0               1953344   1877604     75740  97% /
+/dev/lvm_video/mythtv
+                     702742528  42549352 660193176   7% /mnt/store
 
-You must mean in the other order. If I fail the spare first, I'm toast! ;-)
-
-> partition to fail or remove.  Is that 36 time increased risk of user
-error?
-> Of course, the level of error may be negligible, depending on who the user
-> is.  But it is still an increase of risk.
-
-First of all you need to make everything as uniform as possible, meaning all
-
-disks belonging to array md3 are numbered hdX6, all of md4 are hdX7, etc.
-I suppose this goes without saying for most people here, but it helps a LOT.
-
-> than 6.  Is there a sweet spot?
-
-Heh. Somewhere between 1 and 36 I'd bet. :)
-
-> Also, Neil has an item on his wish list to handle bad blocks.  Once this
-is
-> built into md, the 6 partition idea is useless.
-
-I know but I'm not going to wait for that.  For now I have limited options.
-Mine has not only the benefits outlined, but also the benefit of being able
-to 
-use an older disk as a spare. I guess having this with a spare beats having 
-one huge array without a spare.  Or else I'd need to buy yet another 250GB 
-drive, and they're not really 'dirt cheap' if you know what I mean.  
-
-> I test my disks every night with a tool from Seagate.  I don't think I
-have
-> had a bad block since I started using this tool each night.  The tool is
-> free, it is called "SeaTools Enterprise Edition".  I assume it only works
-> with Seagate disks.
-
-That's interesting.  Is that an _online_ test, or do you stop the array
-every 
-night ?  The latter would seem quite error-prone by itself already, and the 
-former... well I don't suppose Seagate supports linux, really.
+# As of yet there are no spares.  This is a todo, the most important thing is 
+to get the app back in working state now.  I'll probably make a /usr md 
+device in future from hdX3, as "/" is completely full. This was because of 
+legacy constraints, migrating drives...
 
 Maarten
-
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
