@@ -1,44 +1,78 @@
-From: Steven Ihde <sihde@cs.stanford.edu>
-Subject: Re: 2.6.0: ext3 journal aborted with ext3/lvm/raid5
-Date: Wed, 7 Jan 2004 15:14:42 -0800
-Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040107231442.GA22624@hamachi.dyndns.org>
-References: <20040107205326.GA14511@hamachi.dyndns.org> <20040107210816.GQ1882@matchmail.com> <20040107213111.GA17713@hamachi.dyndns.org> <20040107224249.GS1882@matchmail.com>
+From: Daniel Brahneborg <basic@wtnord.net>
+Subject: Re: RAID5 over Serial-ATA success stories?
+Date: Thu, 8 Jan 2004 08:57:11 +0100
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <20040108085711.A2500@nettis.grimsta>
+References: <20040107223657.A5315@nettis.grimsta> <yw1xn08z8ltb.fsf@ford.guide>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20040107224249.GS1882@matchmail.com>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <yw1xn08z8ltb.fsf@ford.guide>; from mru@kth.se on Wed, Jan 07, 2004 at 10:56:32PM +0100
+To: =?iso-8859-1?Q?M=E5ns_Rullg=E5rd?= <mru@kth.se>
+Cc: linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Jan 07, 2004 at 02:42:49PM -0800, Mike Fedyk wrote:
-> On Wed, Jan 07, 2004 at 01:31:11PM -0800, Steven Ihde wrote:
-> > On Wed, Jan 07, 2004 at 01:08:16PM -0800, Mike Fedyk wrote:
-> > > Can you find the version of 2.6.0-test where this started?
-> > 
-> > This is a relatively new raid5 array -- I've been having this problem
-> > ever since I created the array, which was sometime after I switched to
-> > the 2.6.0-test series.  So I'm not claiming there is (or isn't) a
-> > version of 2.6.0-test that works -- only that 2.6.0-test* and 2.6.0
-> > are the only versions I've tried, and that's where I've seen the
-> > problem.
-> 
-> Then please verify it on a 2.4.24 kernel, or run some hardware tests.
-> 
->  o Memtest86 (running all tests with at least one pass (this can take 24
->    hours for one pass depending on how much memory you have...)
->  o burn{BX,MMX,etc}
+Thanks for the feedback, it's very valuable to me.
 
-I've run the full memtest86 within the past couple months and it came
-out OK (I bought a bad stick of RAM at some point and wanted to be
-sure the replacement was good).
+On Wed, Jan 07, 2004 at 10:56:32PM +0100, M=E5ns Rullg=E5rd wrote:
+> Daniel Brahneborg <daniel.com@wtnord.net> writes:
+>=20
+> > I'd like to hear some success stories for RAID5 on Serial-ATA disks=
+=2E
+> > Which Serial-ATA card are you using?  Do you get decent performance=
+?
+> > Is it stable with DMA enabled?  Do you use the 2.4 or 2.6 kernel?
+> >
+> > I know this much:
+> >
+> > It doesn't work with Silicon Image.
+>=20
+> What doesn't work?  There are drivers, at least in 2.6.  Raid should
+> care about what sort of disks you use.
 
-If noone has any suggestions other than to try 2.4.24, I'll give it a
-try and report back in a couple weeks (it'll take that long to be sure
-since this problem sometimes doesn't occur for 10-15 days at a time).
+When using it for normal disks e2fsck reports bad blocks all
+over the disk. When used for RAID, I get corrupted data.  Not
+much, maybe every second time for a file of 500MB.
+This is with the IDE driver.  With the SCSI driver, my computer
+completely freezes when I activate my second network card (as I
+reported earlier, unfortunately still without a solution).
+RAID might work with that driver, but unless the network card
+problem is solved, that doesn't help me.
 
-Thanks,
+> > It doesn't work with VIA (yet, anyway).
+> > It might work with HighPoint.
+>=20
+> I've run RAID5 on a Highpoint RocketRAID 1540.  I used ATA disks with
+> SATA converters, though.  Works with both 2.4 and 2.6.
 
-Steve
+Sounds good to hear.  It's the second cheapest card for me.
+
+> > It probably works with Promise.
+> > I don't know if there's a driver for Adaptec.
+>=20
+> Which Adaptec card?  The 12xx cards are fakeraid, but are supported a=
+s
+> normal cards.  The 24xx cards are true hardware RAID cards.  Linux
+> drivers exist for these, too.
+
+It's the 12xx cards that I'm looking at. I don't want hardware
+RAID, since hardware RAID5 costs an infinite amount of money.
+
+> > In case I have to replace my Silicon Image card, what should I repl=
+ace
+> > it with?  I'm currently leaning towards Promise TX4 (or TX2 if the =
+VIA
+> > driver is completed).
+>=20
+> I stay as far away as I can from Promise and VIA.  Anything is usuall=
+y
+> better than those two.
+
+Why the warning about Promise?  The reason I want the VIA
+driver to work is that I've got two VIA connectors on the
+motherboard, so I only need a 2 port SATA card.
+
+/Basic
 
