@@ -1,8 +1,8 @@
 From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: PATCH - md 20 of 22 - Provide SMP safe locking for all_mddevs list.
-Date: Wed, 19 Jun 2002 10:54:53 +1000 (EST)
+Subject: PATCH - md 21 of 22 - Improve handling of MD super blocks
+Date: Wed, 19 Jun 2002 10:55:04 +1000 (EST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <15631.54877.451803.348028@notabene.cse.unsw.edu.au>
+Message-ID: <15631.54888.507711.643358@notabene.cse.unsw.edu.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
@@ -13,155 +13,169 @@ List-Id: linux-raid.ids
 
 
 
-Provide SMP safe locking for all_mddevs list.
-
-the all_mddevs_lock is added to protect all_mddevs and mddev_map.
-
-ITERATE_MDDEV is moved to md.c (it isn't needed elsewhere) and enhanced
-to take the lock appropriately and always have a refcount on the object
-that is given to the body of the loop.
-
-mddev_find is changed so that the structure is allocated outside a lock,
-but test-and-set is done inside the lock.
-
+1/ don't free the rdev->sb on an error -- it might be
+   accessed again later.  Just wait for the device to be
+   exported.
+2/ Change md_update_sb to __md_update_sb and have it 
+   clear the sb_dirty flag.
+   New md_update_sb locks the device and calls __md_update_sb
+   if sb_dirty.  This avoids any possbile races around 
+   updating the superblock
 
 
  ----------- Diffstat output ------------
- ./drivers/md/md.c           |   73 +++++++++++++++++++++++++++++++++-----------
- ./include/linux/raid/md_k.h |   10 ------
- 2 files changed, 55 insertions(+), 28 deletions(-)
+ ./drivers/md/md.c         |   31 ++++++++++++++++++-------------
+ ./drivers/md/multipath.c  |    1 -
+ ./drivers/md/raid1.c      |    1 -
+ ./drivers/md/raid5.c      |    4 +---
+ ./include/linux/raid/md.h |    2 +-
+ 5 files changed, 20 insertions(+), 19 deletions(-)
 
---- ./drivers/md/md.c	2002/06/18 05:33:38	1.19
-+++ ./drivers/md/md.c	2002/06/18 06:05:22	1.20
-@@ -127,8 +127,33 @@
+--- ./drivers/md/md.c	2002/06/18 06:05:22	1.20
++++ ./drivers/md/md.c	2002/06/18 06:08:03	1.21
+@@ -921,12 +921,13 @@
+ 	return 0;
+ }
  
+-int md_update_sb(mddev_t * mddev)
++void __md_update_sb(mddev_t * mddev)
+ {
+ 	int err, count = 100;
+ 	struct list_head *tmp;
+ 	mdk_rdev_t *rdev;
+ 
++	mddev->sb_dirty = 0;
+ repeat:
+ 	mddev->sb->utime = CURRENT_TIME;
+ 	if (!(++mddev->sb->events_lo))
+@@ -948,7 +949,7 @@
+ 	 * nonpersistent superblocks
+ 	 */
+ 	if (mddev->sb->not_persistent)
+-		return 0;
++		return;
+ 
+ 	printk(KERN_INFO "md: updating md%d RAID superblock on device\n",
+ 					mdidx(mddev));
+@@ -976,9 +977,18 @@
+ 		}
+ 		printk(KERN_ERR "md: excessive errors occurred during superblock update, exiting\n");
+ 	}
+-	return 0;
+ }
+ 
++void md_update_sb(mddev_t *mddev)
++{
++	if (mddev_lock(mddev))
++		return;
++	if (mddev->sb_dirty)
++		__md_update_sb(mddev);
++	mddev_unlock(mddev);
++}
++
++
  /*
-  * Enables to iterate over all existing md arrays
-+ * all_mddevs_lock protects this list as well as mddev_map.
-  */
- static LIST_HEAD(all_mddevs);
-+static spinlock_t all_mddevs_lock = SPIN_LOCK_UNLOCKED;
-+
-+
-+/*
-+ * iterates through all used mddevs in the system.
-+ * We take care to grab the all_mddevs_lock whenever navigating
-+ * the list, and to always hold a refcount when unlocked.
-+ * Any code which breaks out of this loop while own
-+ * a reference to the current mddev and must mddev_put it.
-+ */
-+#define ITERATE_MDDEV(mddev,tmp)					\
-+									\
-+	for (spin_lock(&all_mddevs_lock), 				\
-+		     (tmp = all_mddevs.next),				\
-+		     (mddev = NULL);					\
-+	     (void)(tmp != &all_mddevs &&				\
-+			mddev_get(list_entry(tmp, mddev_t, all_mddevs))),\
-+		     spin_unlock(&all_mddevs_lock),			\
-+		     (mddev ? mddev_put(mddev):(void)NULL),		\
-+		     (mddev = list_entry(tmp, mddev_t, all_mddevs)),	\
-+		     (tmp != &all_mddevs);				\
-+	     spin_lock(&all_mddevs_lock),				\
-+		     (tmp = tmp->next)					\
-+		)
- 
- static mddev_t *mddev_map[MAX_MD_DEVS];
- 
-@@ -146,7 +171,7 @@
- 
- static void mddev_put(mddev_t *mddev)
- {
--	if (!atomic_dec_and_test(&mddev->active))
-+	if (!atomic_dec_and_lock(&mddev->active, &all_mddevs_lock))
- 		return;
- 	if (!mddev->sb && list_empty(&mddev->disks)) {
- 		list_del(&mddev->all_mddevs);
-@@ -154,33 +179,44 @@
- 		kfree(mddev);
- 		MOD_DEC_USE_COUNT;
+  * Import a device. If 'on_disk', then sanity check the superblock
+  *
+@@ -1648,7 +1658,7 @@
  	}
-+	spin_unlock(&all_mddevs_lock);
- }
  
- static mddev_t * mddev_find(int unit)
- {
--	mddev_t *mddev;
-+	mddev_t *mddev, *new = NULL;
+ 	mddev->sb->state &= ~(1 << MD_SB_CLEAN);
+-	md_update_sb(mddev);
++	__md_update_sb(mddev);
  
--	if ((mddev = mddev_map[unit])) {
--		return mddev_get(mddev);
-+ retry:
-+	spin_lock(&all_mddevs_lock);
-+	if (mddev_map[unit]) {
-+		mddev =  mddev_get(mddev_map[unit]);
-+		spin_unlock(&all_mddevs_lock);
-+		if (new)
-+			kfree(new);
-+		return mddev;
-+	}
-+	if (new) {
-+		mddev_map[unit] = new;
-+		list_add(&new->all_mddevs, &all_mddevs);
-+		spin_unlock(&all_mddevs_lock);
-+		MOD_INC_USE_COUNT;
-+		return new;
- 	}
--	mddev = (mddev_t *) kmalloc(sizeof(*mddev), GFP_KERNEL);
--	if (!mddev)
--		return NULL;
--
--	memset(mddev, 0, sizeof(*mddev));
-+	spin_unlock(&all_mddevs_lock);
- 
--	mddev->__minor = unit;
--	init_MUTEX(&mddev->reconfig_sem);
--	INIT_LIST_HEAD(&mddev->disks);
--	INIT_LIST_HEAD(&mddev->all_mddevs);
--	atomic_set(&mddev->active, 1);
-+	new = (mddev_t *) kmalloc(sizeof(*new), GFP_KERNEL);
-+	if (!new)
-+		return NULL;
- 
--	mddev_map[unit] = mddev;
--	list_add(&mddev->all_mddevs, &all_mddevs);
-+	memset(new, 0, sizeof(*new));
- 
--	MOD_INC_USE_COUNT;
-+	new->__minor = unit;
-+	init_MUTEX(&new->reconfig_sem);
-+	INIT_LIST_HEAD(&new->disks);
-+	INIT_LIST_HEAD(&new->all_mddevs);
-+	atomic_set(&new->active, 1);
- 
--	return mddev;
-+	goto retry;
- }
- 
- static inline int mddev_lock(mddev_t * mddev)
-@@ -3192,6 +3228,7 @@
- 							     mddev2->curr_resync < 2)) {
- 					flush_curr_signals();
- 					err = -EINTR;
-+					mddev_put(mddev2);
- 					goto out;
- 				}
+ 	/*
+ 	 * md_size has units of 1K blocks, which are
+@@ -1770,7 +1780,7 @@
+ 				printk(KERN_INFO "md: marking sb clean...\n");
+ 				mddev->sb->state |= 1 << MD_SB_CLEAN;
  			}
---- ./include/linux/raid/md_k.h	2002/06/18 05:29:05	1.8
-+++ ./include/linux/raid/md_k.h	2002/06/18 06:05:22	1.9
-@@ -277,16 +277,6 @@
- #define ITERATE_RDEV_PENDING(rdev,tmp)					\
- 	ITERATE_RDEV_GENERIC(pending_raid_disks,pending,rdev,tmp)
+-			md_update_sb(mddev);
++			__md_update_sb(mddev);
+ 		}
+ 		if (ro)
+ 			set_device_ro(dev, 1);
+@@ -2281,8 +2291,7 @@
  
--/*
-- * iterates through all used mddevs in the system.
-- */
--#define ITERATE_MDDEV(mddev,tmp)					\
--									\
--	for (tmp = all_mddevs.next;					\
--		mddev = list_entry(tmp, mddev_t, all_mddevs),	\
--			tmp = tmp->next, tmp->prev != &all_mddevs	\
--		; )
+ 	remove_descriptor(disk, mddev->sb);
+ 	kick_rdev_from_array(rdev);
+-	mddev->sb_dirty = 1;
+-	md_update_sb(mddev);
++	__md_update_sb(mddev);
+ 
+ 	return 0;
+ busy:
+@@ -2393,9 +2402,7 @@
+ 	mddev->sb->spare_disks++;
+ 	mddev->sb->working_disks++;
+ 
+-	mddev->sb_dirty = 1;
 -
- #define xchg_values(x,y) do { __typeof__(x) __tmp = x; \
- 				x = y; y = __tmp; } while (0)
+-	md_update_sb(mddev);
++	__md_update_sb(mddev);
  
+ 	/*
+ 	 * Kick recovery, maybe this spare has to be added to the
+@@ -2918,7 +2925,6 @@
+ 		return 0;
+ 	if (!mddev->pers->error_handler
+ 			|| mddev->pers->error_handler(mddev,rdev) <= 0) {
+-		free_disk_sb(rrdev);
+ 		rrdev->faulty = 1;
+ 	} else
+ 		return 1;
+@@ -3423,8 +3429,7 @@
+ 			sb->active_disks++;
+ 			sb->spare_disks--;
+ 		}
+-		mddev->sb_dirty = 1;
+-		md_update_sb(mddev);
++		__md_update_sb(mddev);
+ 		mddev->recovery_running = 0;
+ 	unlock:
+ 		mddev_unlock(mddev);
+--- ./drivers/md/raid5.c	2002/06/18 05:29:05	1.7
++++ ./drivers/md/raid5.c	2002/06/18 06:08:03	1.8
+@@ -1335,10 +1335,8 @@
+ 
+ 	handled = 0;
+ 
+-	if (mddev->sb_dirty) {
+-		mddev->sb_dirty = 0;
++	if (mddev->sb_dirty)
+ 		md_update_sb(mddev);
+-	}
+ 	spin_lock_irq(&conf->device_lock);
+ 	while (1) {
+ 		struct list_head *first;
+--- ./drivers/md/raid1.c	2002/06/18 05:29:05	1.3
++++ ./drivers/md/raid1.c	2002/06/18 06:08:03	1.4
+@@ -1084,7 +1084,6 @@
+ 		conf = mddev_to_conf(mddev);
+ 		if (mddev->sb_dirty) {
+ 			printk(KERN_INFO "raid1: dirty sb detected, updating.\n");
+-			mddev->sb_dirty = 0;
+ 			md_update_sb(mddev);
+ 		}
+ 		bio = r1_bio->master_bio;
+--- ./drivers/md/multipath.c	2002/06/18 04:18:35	1.2
++++ ./drivers/md/multipath.c	2002/06/18 06:08:03	1.3
+@@ -699,7 +699,6 @@
+ 		mddev = mp_bh->mddev;
+ 		if (mddev->sb_dirty) {
+ 			printk(KERN_INFO "dirty sb detected, updating.\n");
+-			mddev->sb_dirty = 0;
+ 			md_update_sb(mddev);
+ 		}
+ 		bio = mp_bh->bio;
+--- ./include/linux/raid/md.h	2002/06/18 04:37:53	1.3
++++ ./include/linux/raid/md.h	2002/06/18 06:08:03	1.4
+@@ -75,7 +75,7 @@
+ extern void md_unregister_thread (mdk_thread_t *thread);
+ extern void md_wakeup_thread(mdk_thread_t *thread);
+ extern void md_interrupt_thread (mdk_thread_t *thread);
+-extern int md_update_sb (mddev_t *mddev);
++extern void md_update_sb (mddev_t *mddev);
+ extern int md_do_sync(mddev_t *mddev, mdp_disk_t *spare);
+ extern void md_done_sync(mddev_t *mddev, int blocks, int ok);
+ extern void md_sync_acct(kdev_t dev, unsigned long nr_sectors);
