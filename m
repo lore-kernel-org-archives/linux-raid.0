@@ -1,50 +1,29 @@
-From: NeilBrown <neilb@cse.unsw.edu.au>
-Subject: [PATCH] md - 13 of 14 - Remove dependance on MD_SB_DISKS in linear personality
-Date: Tue, 27 May 2003 13:01:14 +1000
+From: danci@agenda.si
+Subject: Re: MD drivers problems on 2.4.x
+Date: Tue, 27 May 2003 07:30:12 +0200 (CEST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <E19KUiA-0003Hf-00@notabene.cse.unsw.edu.au>
+Message-ID: <Pine.LNX.4.53.0305270728140.9980@duplo.agenda.si>
+References: <200305231535.17808.ebenard@free.fr> <news2mail-barmsb$tl4$1@cartman.spoiled.org>
+ <200305260817.20409.ebenard@free.fr>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Linus Torvalds <torvalds@transmeta.com>
+In-Reply-To: <200305260817.20409.ebenard@free.fr>
+To: Eric BENARD / Free <ebenard@free.fr>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-### Comments for ChangeSet
+On Mon, 26 May 2003, Eric BENARD / Free wrote:
 
-Linear uses one array sized by MD_SB_DISKS inside a structure.
-We move it to the end of the structure, declare it as size 0,
-and arrange for approprate extra space to be allocated on 
-structure allocation.
+> in fact, I don't get to much error messages (or they were not reported to me
+> by the user of this PC).
+> I'm using a Promise PDC20277 IDE controler (with pseudo RAID functions but I'm
+> not using them).
+> 4 Western Digital 120 GB with 8MB of cache are connected (Master/slave with
+> good cables) to it.
 
- ----------- Diffstat output ------------
- ./drivers/md/linear.c         |    3 ++-
- ./include/linux/raid/linear.h |    2 +-
- 2 files changed, 3 insertions(+), 2 deletions(-)
+There is your problem - Western Digital. The firmware on some of WD drives
+is very BAD and WD offers an upgrade. Go check out their web site...
 
-diff ./drivers/md/linear.c~current~ ./drivers/md/linear.c
---- ./drivers/md/linear.c~current~	2003-05-27 12:01:31.000000000 +1000
-+++ ./drivers/md/linear.c	2003-05-27 12:01:35.000000000 +1000
-@@ -89,7 +89,8 @@ static int linear_run (mddev_t *mddev)
- 	unsigned int curr_offset;
- 	struct list_head *tmp;
- 
--	conf = kmalloc (sizeof (*conf), GFP_KERNEL);
-+	conf = kmalloc (sizeof (*conf) + mddev->raid_disks*sizeof(dev_info_t),
-+			GFP_KERNEL);
- 	if (!conf)
- 		goto out;
- 	memset(conf, 0, sizeof(*conf));
+  D.
 
-diff ./include/linux/raid/linear.h~current~ ./include/linux/raid/linear.h
---- ./include/linux/raid/linear.h~current~	2003-05-27 12:01:31.000000000 +1000
-+++ ./include/linux/raid/linear.h	2003-05-27 12:01:35.000000000 +1000
-@@ -19,9 +19,9 @@ struct linear_hash
- struct linear_private_data
- {
- 	struct linear_hash	*hash_table;
--	dev_info_t		disks[MD_SB_DISKS];
- 	dev_info_t		*smallest;
- 	int			nr_zones;
-+	dev_info_t		disks[0];
- };
- 
- 
