@@ -1,17 +1,45 @@
-From: Mario Holbe <Mario.Holbe@TU-Ilmenau.DE>
-Subject: Re: Spares and partitioning huge disks
-Date: Fri, 7 Jan 2005 21:59:26 +0100
-Message-ID: <crmt7e$8d6$1@sea.gmane.org>
-References: <200501061516.47376.maarten@ultratux.net>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: Spares and partitioning huge disks
+Date: Fri, 7 Jan 2005 16:57:35 -0500
+Message-ID: <200501072157.j07Lvg906301@www.watkins-home.com>
+References: <crmt7e$8d6$1@sea.gmane.org>
+Mime-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <crmt7e$8d6$1@sea.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: 'Mario Holbe' <Mario.Holbe@TU-Ilmenau.DE>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+His plan is to split the disks into 6 partitions.
+Each of his six RAID5 arrays will only use 1 partition of each physical
+disk.
+If he were to lose a disk, all 6 RAID5 arrays would only see 1 failed disk.
+If he gets 2 read errors, on different disks, at the same time, he has a 1/6
+chance they would be in the same array (which would be bad).
+
+Everything SHOULD work just fine.  :)
+
+His plan is to combine the 6 arrays with LVM or a linear array.
+
+Guy
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Mario Holbe
+Sent: Friday, January 07, 2005 3:59 PM
+To: linux-raid@vger.kernel.org
+Subject: Re: Spares and partitioning huge disks
+
 maarten <maarten@ultratux.net> wrote:
-> I just got my 4 new 250GB disks.  I have read someone on this list advocating 
-> that it is better to build arrays with smaller volumes, as that decreases the 
-> chance of failure, especially failures of two disks in a raid5 configuration. 
+> I just got my 4 new 250GB disks.  I have read someone on this list
+advocating 
+> that it is better to build arrays with smaller volumes, as that decreases
+the 
+> chance of failure, especially failures of two disks in a raid5
+configuration. 
 
 This might be true for read-errors.
 However, if a whole disk dies (perhaps because the IDE controller fails,
@@ -33,4 +61,9 @@ regards,
 -- 
 I heard, if you play a NT-CD backwards, you get satanic messages...
 That's nothing. If you play it forwards, it installs NT.
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
