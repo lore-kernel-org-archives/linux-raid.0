@@ -1,35 +1,28 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: Raid-6 hang on write.
-Date: Mon, 28 Feb 2005 16:49:59 +1100
-Message-ID: <16930.45319.682534.351648@cse.unsw.edu.au>
-References: <421DE9A9.4090902@wasp.net.au>
-	<421F4629.5080309@wasp.net.au>
+From: "Slawomir Socha" <socha_s@tlen.pl>
+Subject: Mdadm reporting on RAID0
+Date: Mon, 28 Feb 2005 14:09:36 +0100
+Message-ID: <000701c51d96$c0d176e0$020aa8c0@llnx7pzaq0g0w3>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="iso-8859-2"
 Content-Transfer-Encoding: 7bit
-In-Reply-To: message from Brad Campbell on Friday February 25
 Sender: linux-raid-owner@vger.kernel.org
-To: Brad Campbell <brad@wasp.net.au>
-Cc: lkml <linux-kernel@vger.kernel.org>, RAID Linux <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Friday February 25, brad@wasp.net.au wrote:
-> 
-> Turning on debugging in raid6main.c and md.c make it much harder to hit. So I'm assuming something 
-> timing related.
-> 
-> raid6d --> md_check_recovery --> generic_make_request --> make_request --> get_active_stripe
+Hi,
 
-Yes, there is a real problem here.  I see if I can figure out the best
-way to remedy it...
-However I think you reported this problem against a non "-mm" kernel,
-and the path from md_check_recovery to generic_make_requests only
-exists in "-mm".
+Forgive me if this is one of those simple questions and the answer is
+clearly documented, but I have tried to find it and can not.
 
-Could you please confirm if there is a problem with
-    2.6.11-rc4-bk4->bk10
 
-as reported, and whether it seems to be the same problem.
+If we have a RAID0 and remove a drive in turn causing a fatal fail state..
+How do we know (other than i/o errors)?  Mdadm seems to say that the raid is
+still 'active' and does not report it as faulty.. At least not the way we
+have configured it.
 
-Thanks,
-NeilBrown
+
+Any help would be appreciated
+
+Slawomir Socha
+
