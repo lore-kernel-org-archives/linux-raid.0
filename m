@@ -1,66 +1,38 @@
 From: "Guy" <bugzilla@watkins-home.com>
 Subject: RE: ext3 journal on software raid (was Re: PROBLEM: Kernel 2.6.10 crashing repeatedly and hard)
-Date: Wed, 5 Jan 2005 13:26:30 -0500
-Message-ID: <200501051826.j05IQa926617@www.watkins-home.com>
-References: <41DC234B.4090806@dgreaves.com>
+Date: Wed, 5 Jan 2005 13:28:08 -0500
+Message-ID: <200501051828.j05ISE926631@www.watkins-home.com>
+References: <qgnta2-mqm.ln1@news.it.uc3m.es>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <41DC234B.4090806@dgreaves.com>
+In-Reply-To: <qgnta2-mqm.ln1@news.it.uc3m.es>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'David Greaves' <david@dgreaves.com>
-Cc: linux-raid@vger.kernel.org
+To: "'Peter T. Breuer'" <ptb@lab.it.uc3m.es>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-You forgot one!
-Peter said: "There might be a small temporal displacement."
-
-This worries me!  RED ALERT!
-Beam me up!  Wait, I will take the shuttle craft please.
-"You cannot change the laws of physics!" - Scotty
-
-But, really, I do understand what Peter is saying.  It just seemed too funny
-to me.  And since I have disk read errors more than temporal displacement, I
-need RAID more than a temporal dampening field.  Maybe a temporal phase
-converter?
-
-And, a single non-RAID disk can suffer from temporal displacement.
-
-I love Star Trek, so I love temporal displacements!  :)
-
-Guy
+I think that is in some boot-up scripts!  :)
+But only if you don't have mirrors!  :)
 
 -----Original Message-----
-From: David Greaves [mailto:david@dgreaves.com] 
-Sent: Wednesday, January 05, 2005 12:27 PM
-To: Guy
-Cc: linux-raid@vger.kernel.org
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Peter T. Breuer
+Sent: Wednesday, January 05, 2005 1:16 PM
+To: linux-raid@vger.kernel.org
 Subject: Re: ext3 journal on software raid (was Re: PROBLEM: Kernel 2.6.10
 crashing repeatedly and hard)
 
-Guy wrote:
+David Greaves <david@dgreaves.com> wrote:
+> Haven't you seen the special 'make_undetectable_error(float p)' function?
 
->RAID does not cause bad data!
->  
->
-Guy - how can you speak such heresy!!      ;)
-Haven't you seen the special 'make_undetectable_error(float p)' function?
+ dd if=/dev/urandom of=/dev/hda1 bs=512 count=1 skip=$RANDOM
 
->Bad data can get on any disk, even if it is part of a RAID system.
->The bad data does not come from the hard disk, CRCs prevent that.
->
->The problem is:  Where does the bad data come from?
->Bad memory?  No, everyone use ECC memory, right?
->  
->
-I like to blame cosmic rays - I just like the image ;)
+Peter
 
-Of course voltage fluctuations, e/m interference, thermal variations, 
-mechanical interfaces, dust capacitance/resistance, insects shorts... 
-anywhere inside the tin box between the media and the corners of the 
-motherboard. It's amazing that some machines even boot.
-
-David
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
