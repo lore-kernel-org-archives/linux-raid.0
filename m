@@ -1,38 +1,57 @@
 From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: replacing faulty hd
-Date: Mon, 28 Oct 2002 09:53:37 +1100
+Subject: Re: md.c Kernel BUG(?) and reboot segfault
+Date: Mon, 28 Oct 2002 09:56:22 +1100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <15804.28273.492046.444615@notabene.cse.unsw.edu.au>
-References: <200210251430.21466.bernd-schubert@web.de>
+Message-ID: <15804.28438.676002.891659@notabene.cse.unsw.edu.au>
+References: <200210241315.g9ODFKGV028540@pcrz175.hrz.uni-marburg.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Bernd Schubert on Friday October 25
-To: Bernd Schubert <bernd-schubert@web.de>
+In-Reply-To: message from Thomas Gebhardt on Thursday October 24
+To: Thomas Gebhardt <gebhardt@HRZ.Uni-Marburg.DE>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Friday October 25, bernd-schubert@web.de wrote:
+On Thursday October 24, gebhardt@HRZ.Uni-Marburg.DE wrote:
 > Hi,
 > 
-> we have a raid5 with persistent superblock and need to replace one of the 
-> harddisks.
+> just tried to configure rootfs Software-RAID1 on a Debian Woody
+> (SMP-Kernel 2.4.19 with some of the jp Patches applied). When I reboot
+> the machine, the final reboot command in /etc/init.d/reboot
+> segfaults after the following error messages:
 > 
-> Currently 3 of 4 md-devices (each built from 5 partition of 5 disks) work fine 
-> and have full raid5 support, but for md0 only 4 partitions are active.
-> 
-> What happens if we shutdown the server and replace the faulty disk by a new 
-> unpartitioned one ? I'm a bit worried that due to the autostart due to the 
-> persistent superblock something could become destroyed.
+> md: stopping all md devices
+> invalidate; busy buffer
+> ...
+> md: marking sb clean
+> kernel BUG at md.c:1251!
 
-It should work fine.
-
-> 
-> Actually I would prever an kernel parameter to disable raid autostart and 
-> first partition the harddisk, but so far I havn't found something like this.
-> 
-
-raid=noautodetect
+Line 1251 of md.c in 2.4.19 doesn't have a 'BUG' sop the 'jp Patches'
+must have moved things around.  Maybe if you could send me a copy of
+you md.c.....
 
 NeilBrown
+
+> invalid operand: 0000
+> CPU:  1
+> EIP:  0010: [<c02080a2>]   Not tainted
+> EFLAGS:  00010202
+> ...
+> Segmentation fault
+> 
+> A second reboot command succeeds. So, as a workaround, I duplicated
+> the reboot command in /etc/init.d/reboot in order to shut the
+> system down without manual interaction.
+> 
+> Any hints what to do?
+> 
+> Thank you for your advice!
+> Cheers, Thomas
+> 
+> 
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
