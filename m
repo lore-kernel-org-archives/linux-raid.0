@@ -1,50 +1,41 @@
-From: David =?iso-8859-1?Q?H=E4rdeman?= <david@2gen.com>
-Subject: Hardware RAID recommendation
-Date: Mon, 25 Oct 2004 19:43:49 +0200
+From: Jure =?ISO-8859-2?Q?Pe=5Far?= <pegasus@nerv.eu.org>
+Subject: Re: raid5, media scans and stripe-wise resync
+Date: Mon, 25 Oct 2004 19:19:00 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20041025174347.GB14120@hardeman.nu>
+Message-ID: <20041025191900.713ae4b1.pegasus@nerv.eu.org>
+References: <1098718593.5399.29.camel@duxeon.cobite.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1;
-	format=flowed
+Content-Type: text/plain; charset=ISO-8859-2
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-To: linux-raid@vger.kernel.org
+In-Reply-To: <1098718593.5399.29.camel@duxeon.cobite.com>
+To: David Mansfield <md@dm.cobite.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+On Mon, 25 Oct 2004 11:36:33 -0400
+David Mansfield <md@dm.cobite.com> wrote:
 
-I'm currently considering which hardware RAID controller to buy and=20
-I've spent some time researching different cards. However, it's hard to=
-=20
-get a good idea about the available software for the different cards.
+> 2) how can we force (or manually perform) a stripe-wise resync? is it
+> possible to take the raid offline completely, read the data with dd,
+> compute the parity manually, reassign the bad block using SCU and
+> rewrite the parity block with dd then put the raid online again?
 
-Some seems to only have Windows-based software (which means that the=20
-BIOS setup must be used for all tasks which kind of defeats the purpose=
-=20
-of the RAID setup), some seems to have weird, awkward, closed-source,=20
-certified-to-work-on-redhat-only software and so on.
+In raid5 there's no real need for that. When you add disk back into arr=
+ay,
+it should get fully resynced anyway.
 
-So my question is if there is a hardware SCSI RAID solution that allows=
-=20
-all essential features to be monitored and controlled. Essential=20
-features would mean such things as online expansion, designating spare=20
-disks, creating new RAID sets, checking status, deleting RAID sets, etc=
-=2E
+I've written a short blurb in my blog about a rather rude method to han=
+dle
+misbehaving disks. Basically take it out of the array, run badblocks -w=
+ on
+it for a week and if it's ok, put it back :)
 
-So far I'm leaning towards the LSI MegaRaid 320-1 controller, but so fa=
-r=20
-I've only seen the megamgr/megamon software from LSI (which seems very=20
-non-open and redhat specific) and reading values from /proc (which=20
-pretty much excludes only monitoring, no control) as alternatives.
 
-So, basically I'm looking for some feedback on how people manage their=20
-hardware RAID controllers under Linux.
+--=20
 
-Please CC me on any replies as I'm not subscribed to the list...
-
-Re,
-David H=E4rdeman
+Jure Pe=E8ar
+http://jure.pecar.org/
 -
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
