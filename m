@@ -1,28 +1,28 @@
-From: "Martin K. Petersen" <mkp@mkp.net>
-Subject: Re: question regarding a raid-1 set
-Date: 26 Aug 2003 11:11:52 -0400
+From: "raidlist" <raidlist@area151.com>
+Subject: Power Saving possible ?
+Date: Tue, 26 Aug 2003 17:01:03 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <yq13cfov4g7.fsf@wilson.mkp.net>
-References: <200308261637.08588.jbaten@i2rs.nl>
+Message-ID: <200308261501.h7QF11Nl002975@mail.explainerdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200308261637.08588.jbaten@i2rs.nl>
-To: Jeroen Baten <jbaten@i2rs.nl>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->>>>> "Jeroen" == Jeroen Baten <jbaten@i2rs.nl> writes:
+Hi,
+I have a server that is rarely accessed, but I would like it to be available
+always.  
 
-Jeroen> md2 : active raid1 sdb6[1] sda6[0] 31848704 blocks [2/1] [U_]
-                           ^^^^^^^                                ^
+I've searched in FAQs and Google but could not find any good info about
+power saving. I'm using software RAID in Linux with IDE HDs connected to a
+3ware 7810.
 
-Jeroen> when he types 'raidhotadd /dev/md2 /dev/sdb6' it generates:
-Jeroen> "dev/md2: can not hot-add disk: disk busy"
+Is there a way of doing some power management on the HDs ?
+(Maybe something equivalent to "hdparm -S 242 /dev/hdb1" ?)
 
-sdb6 *is* busy.  It's sda6 that's out of sync.
+Thanks a lot for any help.
 
--- 
-Martin K. Petersen	Wild Open Source, Inc.
-mkp@wildopensource.com	http://www.wildopensource.com/
+Marcello
 
