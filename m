@@ -1,36 +1,28 @@
-From: Lars Marowsky-Bree <lmb@suse.de>
-Subject: Re: RAID1 VS RAID5
-Date: Mon, 27 Oct 2003 15:17:15 +0100
+From: Don Jessup <donj@asaca.com>
+Subject: Booting from a raid1 device ?
+Date: Mon, 27 Oct 2003 07:25:54 -0800 (PST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20031027141715.GJ13640@marowsky-bree.de>
-References: <1067179519.1222.107.camel@cala> <200310270933.37564.dusty@strike.wu-wien.ac.at> <Pine.LNX.4.56.0310270916270.5277@unicorn.drogon.net> <200310271201.10418.dusty@strike.wu-wien.ac.at>
+Message-ID: <20031027152554.7738.qmail@web14507.mail.yahoo.com>
+Reply-To: donj@asaca.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <200310271201.10418.dusty@strike.wu-wien.ac.at>
-To: Hermann Himmelbauer <dusty@strike.wu-wien.ac.at>, Gordon Henderson <gordon@drogon.net>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2003-10-27T12:01:10,
-   Hermann Himmelbauer <dusty@strike.wu-wien.ac.at> said:
-
-=46or reads, raid5 or not should not actually matter much, at least not
-negatively. The performance impact hits on write.
 
 
-Sincerely,
-    Lars Marowsky-Br=E9e <lmb@suse.de>
+  Is it possible to boot from a raid1 device with the md.o built as a 
+ 2.4.22 kernel module?  
 
---=20
-High Availability & Clustering	      \ ever tried. ever failed. no matt=
-er.
-SUSE Labs			      | try again. fail again. fail better.
-Research & Development, SUSE LINUX AG \ 	-- Samuel Beckett
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+=====
+Don Jessup
+Asaca/Shibasoku Corp. of America
+400 Corporate Circle, Unit G
+Golden, CO  80401
+303-278-1111 X232
+donj@asaca.com
+http://www.asaca.com
