@@ -1,108 +1,46 @@
-From: Sandro Dentella <sandro.dentella@tin.it>
-Subject: mdadm --detail output: 2 questions
-Date: Thu, 22 Apr 2004 19:58:33 +0200
+From: =?iso-8859-1?q?M=E5ns_Rullg=E5rd?= <mru@kth.se>
+Subject: Re: HighPoint Rocket 1540 hang driver load
+Date: Thu, 22 Apr 2004 20:29:38 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040422175833.GA30298@bluff>
+Message-ID: <yw1x7jw7uar1.fsf@kth.se>
+References: <40865AEC.8040604@online.no> <1082561078.40869236f3c14@www.tastycake.net>
+ <yw1xd66146fo.fsf@kth.se> <1082641732.4087cd44b504f@www.tastycake.net>
+ <yw1x7jw8qeff.fsf@kth.se> <40880724.3060600@online.no>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-To: Linux Raid List <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi all, 
+Lars Gaarden <lar-gaar@online.no> writes:
 
-  I made a raid5 array with command
+> M=E5ns Rullg=E5rd wrote:
+>> Nick Maynard <nick.maynard@alumni.doc.ic.ac.uk> writes:
+>>
+>>>The Rocket 1540 and the RocketRAID 1540 are different cards.  I am s=
+ure the
+>>>RocketRAID 1540 is a lovely card.  The Rocket 1540 is not, however.
+>> Apparently that is the case.  What is the exact PCI id and revision
+>> of
+>> the chip used on the Rocket1540?  My Rocketraid 1540 reports as
+>> 1103:0008 (rev 07).
+>>
+>
+> No chance distinguishing them based on PCI id/rev, it seems.
+> Here is the lspci -vvn for my Rocket1540.
+>
+> 00:08.0 Class 0104: 1103:0008 (rev 07)
+>          Subsystem: 1103:0001
 
-   mdadm -Cv /dev/md3 -n5 -x1 -l5  /dev/sd{a,b,c,d,e,f}1
+=46or the record, my rocketraid1540 has that same subsystem id too.
 
-  It took me a while to undertand that while syncing a raid5 mdadm --detail
-  marks as failed the spare disk + 1. Is that correct? here the output before
-  it was finished and afterwords. The last one really was produced by mdadm 1.5,
-  the first one by mdadm 1.2, since 
+--=20
+M=E5ns Rullg=E5rd
+mru@kth.se
 
-#######  mdadm --detail /dev/md3    mdadm v. 1.2 - while syncing #############
-root@nas-macpro root # mdadm --detail /dev/md3
-/dev/md3:
-        Version : 00.90.00
-  Creation Time : Thu Apr 22 12:55:22 2004
-     Raid Level : raid5
-     Array Size : 980317696 (934.90 GiB 1003.85 GB)
-    Device Size : 245079424 (233.73 GiB 250.96 GB)
-   Raid Devices : 5
-  Total Devices : 7
-Preferred Minor : 3
-    Persistence : Superblock is persistent
-
-    Update Time : Thu Apr 22 12:55:22 2004
-          State : dirty, no-errors
- Active Devices : 4
-Working Devices : 6
- Failed Devices : 1
-  Spare Devices : 2
-
-         Layout : left-symmetric
-     Chunk Size : 128K
-
-    Number   Major   Minor   RaidDevice State
-       0       8        1        0      active sync   /dev/scsi/host0/bus0/target0/lun0/part1
-       1       8       17        1      active sync   /dev/scsi/host0/bus0/target1/lun0/part1
-       2       8       33        2      active sync   /dev/scsi/host0/bus0/target2/lun0/part1
-       3       8       49        3      active sync   /dev/scsi/host1/bus0/target0/lun0/part1
-       4       0        0        4      faulty
-       5       8       81        5        /dev/scsi/host1/bus0/target2/lun0/part1
-       6       8       65        6        /dev/scsi/host1/bus0/target1/lun0/part1
-           UUID : 74aad38c:ee99c8cd:e8df8d30:c2d07f91
-         Events : 0.1
-
-
-#######  mdadm --detail /dev/md3    mdadm v. 1.5  -sync finished  #############
-root@nas-macpro root # mdadm --detail /dev/md3
-/dev/md3:
-        Version : 00.90.00
-  Creation Time : Thu Apr 22 12:55:22 2004
-     Raid Level : raid5
-     Array Size : 980317696 (934.90 GiB 1003.85 GB)
-    Device Size : 245079424 (233.73 GiB 250.96 GB)
-   Raid Devices : 5
-  Total Devices : 7
-Preferred Minor : 3
-    Persistence : Superblock is persistent
-
-    Update Time : Thu Apr 22 17:22:01 2004
-          State : dirty, no-errors
- Active Devices : 5
-Working Devices : 6
- Failed Devices : 1
-  Spare Devices : 1
-
-         Layout : left-symmetric
-     Chunk Size : 128K
-
-    Number   Major   Minor   RaidDevice State
-       0       8        1        0      active sync   /dev/scsi/host0/bus0/target0/lun0/part1
-       1       8       17        1      active sync   /dev/scsi/host0/bus0/target1/lun0/part1
-       2       8       33        2      active sync   /dev/scsi/host0/bus0/target2/lun0/part1
-       3       8       49        3      active sync   /dev/scsi/host1/bus0/target0/lun0/part1
-       4       8       65        4      active sync   /dev/scsi/host1/bus0/target1/lun0/part1
-       5       8       81        5      spare   /dev/scsi/host1/bus0/target2/lun0/part1
-           UUID : 74aad38c:ee99c8cd:e8df8d30:c2d07f91
-         Events : 0.2
-
-##########################################################################
-
-in both output I see 7 'Total devices' and 1 Failed but I don't have any
-failed in reality nor in the last part of the output. Am I misunderstanding
-the output? 
-
-Last question: what is the meaning of  'Events: 0.2' (0.1 during syncing)?
-
-Thaks in advance
-sandro
-*:-)
-
-
--- 
-Sandro Dentella  *:-)
-e-mail: sandro.dentella@tin.it 
-http://www.tksql.org                    TkSQL Home page - My GPL work
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
