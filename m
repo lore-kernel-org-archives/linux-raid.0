@@ -1,56 +1,197 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: RAID5 - 2nd drive died whilst waiting for RMA
-Date: Sat, 13 Nov 2004 21:54:10 +0000
-Message-ID: <41968282.6060306@dgreaves.com>
-References: <200411132039.iADKdDN07474@www.watkins-home.com>
+From: Robert Osiel <bob@osiel.org>
+Subject: Re: A few mdadm questions
+Date: Sat, 13 Nov 2004 18:35:39 -0600
+Message-ID: <4196A85B.5060106@osiel.org>
+References: <419580D8.1020900@osiel.org>	<200411130421.iAD4LwN03759@www.watkins-home.com> <16789.47235.818038.175157@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200411132039.iADKdDN07474@www.watkins-home.com>
+In-Reply-To: <16789.47235.818038.175157@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Guy <bugzilla@watkins-home.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Guy wrote:
+Guy/Neil:
 
->Sorry, the command should be:
->mdadm --assemble --force /dev/md0 /dev/sda1 /dev/sdb1 /dev/sdc1 /dev/hdb1
->
->Hope that helps.
->
->Guy
+Thanks a lot for the help.
+Sorry that I didn't include all of the info in my last message, but this 
+box is off the network right now and doesn't even have a floppy or 
+monitor, so I had to do a little work to get the info out.
+
+I tried to start the array with the 3 good disks and the 1 spare, but I 
+got an error to the effect that 3 good + 1 spare drives are not enough 
+to start the array (see below)
+
+ > cat /proc/mdstat
+Personalities : [linear] [raid0] [raid1] [raid5]  [multipath]
+read_ahead not set
+unused devices: <none>
+
+ > mdadm -D /dev/md0
+mdadm: md device /dev/md0 does not appear to be active
+
+ > mdadm --assemble --force /dev/md0 /dev/hde1 /dev/hdi1 /dev/hdm1 /dev/hdo1
+mdadm: /dev/md0 assembled from 3 drives and 1 spare - not enough to 
+start the array
+
+ > cat /proc/mdstat
+Personalities : [linear] [raid0] [raid1] [raid5]  [multipath]
+read_ahead not set
+md0: inactive
+ide/host2/bus0/target0/lun0/part1[0]
+ide/host4/bus0/target0/lun0/part1[5]
+ide/host6/bus1/target0/lun0/part1[4]
+ide/host6/bus0/target0/lun0/part1[3]
+
+Some notes:
+hdk1 is the disk which failed initially
+hdi1 is the disk which I removed and which thinks it is a 'spare'
+
+The other three drives report basically identical info, like this:
+ > mdadm -E /dev/hde1
+
+Magic : a92b4efc
+Version : 00.90.00
+UUID : ec2e64a8:fffd3e41:ffee5518:2f3e858c
+Creation Time : Sun Oct 5 01:25:49 2003
+Build Level: raid5
+Device Size : 160079488 (152.66 GiB 163.92 GB)
+Raid Devices : 5
+Total Devices : 5
+Preferred Minor : 0
+
+Update Time Sat Sep 25 22:07:26 2004
+State : dirty
+Active Devices : 3
+Working Devices : 4
+Failed Devices : 1
+Spare Devices : 1
+Checksum : 4ee5cc77 - correct
+Events : 0.10
+
+Layout : left-symmetric
+Chunk Size :  128K
+
+    Number        Major    Minor    RaidDevice    State
+this    0        22        1        0        active sync
+0        0        22        1        0        active sync
+1        1        0        0        1        faulty removed
+2        2        56        1        2        faulty 
+/dev/ide/host4/bus0/target0/lun0/part1
+3        3        57        1        3        active sync    
+/dev/ide/host4/bus1/target0/lun0/part1
+4        4        88        1        4        active sync 
+/dev/ide/host6/bus0/target0/lun0/part1
+5        5        34        1        5        spare
+
+Here are the two drives in question:
+
+__________mdadm -E /dev/hdi1:
+
+Magic : a92b4efc
+Version : 00.90.00
+UUID : ec2e64a8:fffd3e41:ffee5518:2f3e858c
+Creation Time : Sun Oct 5 01:25:49 2003
+Build Level: raid5
+Device Size : 160079488 (152.66 GiB 163.92 GB)
+Raid Devices : 5
+Total Devices : 5
+Preferred Minor : 0
+
+Update Time Sat Sep 25 22:07:26 2004
+State : dirty
+Active Devices : 3
+Working Devices : 4
+Failed Devices : 1
+Spare Devices : 1
+Checksum : 4ee5cc77 - correct
+Events : 0.10
+
+Layout : left-symmetric
+Chunk Size :  128K
+
+    Number        Major    Minor    RaidDevice    State
+this    5        34        1        5        spare
+0        0        22        1        0        active sync
+1        1        0        0        1        faulty removed
+2        2        56        1        2        faulty 
+/dev/ide/host4/bus0/target0/lun0/part1
+3        3        57        1        3        active sync    
+/dev/ide/host4/bus1/target0/lun0/part1
+4        4        88        1        4        active sync 
+/dev/ide/host6/bus0/target0/lun0/part1
+5        5        34        1        5        spare
+
+
+__________mdadm -E /dev/hdk1
+Magic : a92b4efc
+Version : 00.90.00
+UUID : ec2e64a8:fffd3e41:ffee5518:2f3e858c
+Creation Time : Sun Oct 5 01:25:49 2003
+Build Level: raid5
+Device Size : 160079488 (152.66 GiB 163.92 GB)
+Raid Devices : 5
+Total Devices : 5
+Preferred Minor : 0
+
+Update Time Sat Sep 25 22:07:24 2004
+State : dirty
+Active Devices : 4
+Working Devices : 5
+Failed Devices : 0
+Spare Devices : 1
+Checksum : 4ee5cc77 - correct
+Events : 0.9
+
+Layout : left-symmetric
+Chunk Size :  128K
+
+    Number        Major    Minor    RaidDevice    State
+this    2        56        1        2        active sync 
+/dev/ide/host4/bus0/target0/lun0/part1
+0        0        22        1        0        active sync
+1        1        0        0        1        faulty removed
+2        2        56        1        2        active sync 
+/dev/ide/host4/bus0/target0/lun0/part1
+3        3        57        1        3        active sync    
+/dev/ide/host4/bus1/target0/lun0/part1
+4        4        88        1        4        active sync 
+/dev/ide/host6/bus0/target0/lun0/part1
+5        5        34        1        5        spare
+
+
+
+
+Neil Brown wrote:
+
+>On Friday November 12, bugzilla@watkins-home.com wrote:
 >  
 >
-Yep.
+>>First, stop using the old raid tools.  Use mdadm only!  mdadm would not have
+>>allowed your error to occur.
+>>    
+>>
+>
+>I'm afraid this isn't correct, though the rest of Guy's advice is very
+>good (thanks Guy!).
+>
+>  mdadm --remove
+>does exactly the same thing as
+>  raidhotremove
+>
+>It is the kernel that should (and does) stop you from hot-removing a
+>device that is working and active.  So I'm not quite sure what
+>happened to Robert...
+>
+>Robert: it is always useful to provide specific with the output of 
+>    cat /proc/mdstat
+>and
+>    mdadm -D /dev/mdX
+>
+>This avoids possible confusion over terminology.
+>
+>NeilBrown
+>  
+>
 
-My fault though - no excuses - I should know this stuff and should have 
-checked more carefully.
-
-It's been a fraught day and coming back to take the server apart, screw 
-it back together etc etc made me sloppy.
-
-Anyway. The good news is that I let the 2nd dd_rescue finish - typed in 
-the command *with* a raid device to work on (doh!) and it worked.
-
-Then I started lvm and that worked.
-
-Then I tried to run xfs_check on the smaller (350Gb) partition - 
-oomkiller time.
-<Sigh>, nothing's easy is it.
-I have 256Mb of RAM and 512Mb swap - I've stopped all other daemons - 
-and still it dies...
-
-And to think one of my tasks in all this was to merge the two 
-filesystems into one and use xfs rather than reiserfs3.6 - but xfs won't 
-even fsck!!!
-
-OK, off to yank some RAM from another machine...
-
-Thanks for the help guys - I appreciate it.
-
-Is there a wiki for mdadm, raid around? I'd like to contribute to it (so 
-I can use it next time <grin>)
-
-David
