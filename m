@@ -1,17 +1,32 @@
-From: PAulN <pauln@psc.edu>
-Subject: Re: Raid5 Construction Question
-Date: Thu, 19 Aug 2004 14:24:15 -0400
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: Raid5 Construction Question
+Date: Thu, 19 Aug 2004 14:29:25 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <4124F04F.4030603@psc.edu>
-References: <200408191817.i7JIHg313827@watkins-home.com>
+Message-ID: <200408191829.i7JITP313879@watkins-home.com>
+References: <4124F04F.4030603@psc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200408191817.i7JIHg313827@watkins-home.com>
-To: Guy <bugzilla@watkins-home.com>
+In-Reply-To: <4124F04F.4030603@psc.edu>
+To: 'PAulN' <pauln@psc.edu>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+If the re-build is slow, I would expect the array to have bad performance
+even after it has finished re-building.
+
+I think you problems are beyond me!  Good luck!
+
+Guy
+
+-----Original Message-----
+From: PAulN [mailto:pauln@psc.edu] 
+Sent: Thursday, August 19, 2004 2:24 PM
+To: Guy
+Cc: linux-raid@vger.kernel.org
+Subject: Re: Raid5 Construction Question
 
 I have it mounted now but the performance sucks because
 the resync is going on.    I've already test each disk individually and 
@@ -35,7 +50,8 @@ Guy wrote:
 >
 >Something like:
 >time dd if=/dev/sdc1 of=/dev/null bs=64k count=100000
->This is just a read test.  My disks take about 340 seconds.  Yours should be
+>This is just a read test.  My disks take about 340 seconds.  Yours should
+be
 >about twice as fast.
 >
 >Each disk should give about the same performance.
@@ -182,5 +198,4 @@ Guy wrote:
 >More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >  
 >
-
 
