@@ -1,95 +1,59 @@
-From: Harland Christofferson <debian-user@zerocrossings.com>
-Subject: raid1 with kernel 2.6.9-2-k7
-Date: Wed, 05 Jan 2005 20:20:36 -0500
-Message-ID: <jUsT.aNoTheR.mEsSaGe.iD.11049747968563@24.45.154.254>
-Reply-To: debian-user@zerocrossings.com
+From: Mike Hardy <mhardy@h3c.com>
+Subject: Re: swp - Re: ext3 journal on software raid (was Re: PROBLEM: Kernel
+ 2.6.10 crashing repeatedly and hard)
+Date: Wed, 05 Jan 2005 17:28:00 -0800
+Message-ID: <41DC9420.5030701@h3c.com>
+References: <200501060057.j060vk928131@www.watkins-home.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso8859-1
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <200501060057.j060vk928131@www.watkins-home.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I upgraded to 2.6.9-2-k7 on Debian. My raid array does not seem to 
-be working:
 
-# cat /proc/mdstat
-Personalities : [raid1] 
-md0 : inactive
-unused devices: <none>
+Guy wrote:
 
-my raidtab file is:
+> So, the question is:
+> 	Assume I have enough RAM to never need to swap.
+> 	Do I need any swap space with Linux?
 
-# cat /etc/raidtab 
-raiddev /dev/md0
-        raid-level      1
-        nr-raid-disks   2
-        nr-spare-disks  0
-        chunk-size     4
-        persistent-superblock 1
-        device          /dev/hda
-        raid-disk       0
-        device          /dev/hdc
-        raid-disk       1
+This has been hashed out at great length on linux-kernel - with a few 
+entrenched positions emerging, if I recall correctly.
 
-when i probe w/ mdstat:
+There are those that think if they size the machine correctly, they 
+shouldn't need swap, and they're right.
 
-# mdadm -D /dev/md0
-/dev/md0:
-        Version : 00.90.01
-  Creation Time : Wed Jan  5 20:14:11 2005
-     Raid Level : raid1
-    Device Size : 40146560 (38.28 GiB 41.11 GB)
-     Raid Disks : 2
-    Total Disks : 0
-Preferred Minor : 0
-    Persistance : Superblock is persistant
+> I had 8 Meg of swap space.  So 12 meg total available virtual memory.
+> One day I added 16 Meg of RAM.  So now I had 20 Meg of RAM.  I deleted my
+> swap space.  Everyone told me I needed 20-40 Meg of swap space now!  Swap
+> space should be 2 time RAM size.  How crazy, my memory requirements did not
+> change, just the amount of memory.  I used that system for a year or so like
+> that.  Go figure!
 
-    Update Time : Wed Dec 31 19:00:00 1969
-          State : dirty, no-errors
-  Active Drives : 0
- Working Drives : 0
-  Failed Drives : 0
-   Spare Drives : 0
+This story pretty much sums up that position, and I've certainly been in 
+that position myself.
 
+There are others (notably the maintainer of part of that code - Andrea 
+Arcangeli if I recall correctly, though I apologize if that's a 
+misattribution) who believe you should always have swap because it will 
+allow your system to have higher throughput. If you process a large I/O, 
+for instance, the kernel can swap out live processes to devote more RAM 
+to VFS caching. That hurts latency though, and the nightly slocate run 
+is a pathlogical example of this. You wake up in the morning and your 
+machine is crawling while it swaps everything back in.
 
-    Number   Major   Minor   RaidDisk   State
-       0       0        0       -1      removed
-       1       0        0       -1      removed
+There's a "swappiness" knob you can twiddle in /proc or /sys to alter 
+this, but the general idea is that you can improve throughput on a 
+machine by having swap even if there is enough ram for all processes
 
-and when i try to mkraid i get:
+I've got machines with and without swap, but I typically run all servers 
+with swap to handle ram-usage spikes I'm not expecting (you never know) 
+while I run my laptop without swap when possible to avoid latency issues 
+with swappiness.
 
-# mkraid  /dev/md0
-handling MD device /dev/md0
-analyzing super-block
-disk 0: /dev/hda, 40146624kB, raid superblock at 40146560kB
-/dev/hda appears to be already part of a raid array -- use -f to
-force the destruction of the old superblock
-mkraid: aborted, see the syslog and /proc/mdstat for potential clues.
+As with all things, its policy decisions and tradeoffs :-)
 
-and the kern.log says:
-
-Jan  5 20:14:11 trader kernel: md: could not bd_claim hda.
-Jan  5 20:14:11 trader kernel: md: error, md_import_device() returned 
--16
-
-
-do i have any hope of fixing this? if so, how?!
-
-thanks!
-
-----------------------------------------------------------------------
-Zero Crossings, Inc. -- Embedded and Digital Signal Processing Systems
-
-http://www.zerocrossings.com/
-
-
-
-
-
-
-
-
-
-
+-Mike
