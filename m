@@ -1,60 +1,61 @@
-From: Paul Clements <Paul.Clements@SteelEye.com>
-Subject: Re: What does this mean?
-Date: Wed, 05 Mar 2003 01:37:38 -0500
+From: "Rechenberg, Andrew" <ARechenberg@shermanfinancialgroup.com>
+Subject: mdadm --assemble --scan not finding devices
+Date: Wed, 5 Mar 2003 17:14:35 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3E659B32.A8268302@SteelEye.com>
-References: <05ac01c2e2d3$72280f40$1400020a@mike>
+Message-ID: <8075D5C3061B9441944E137377645118012E7F@cinshrexc03.shermfin.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Michael Paul <radius.mp@verizon.net>
-Cc: linux-raid@vger.kernel.org
+content-class: urn:content-classes:message
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Michael Paul wrote:
-> 
->     Hi there...
-> 
->  I get the following message when cat'ing /proc/mdstat:
-> 
-> md0 : active linear [dev 08:30] [8]  [dev 08:20] [7] 
+OK,
 
-                           ^^^^^            ^^^^^
+I'm going to make the switch to mdadm, but I need it to start my arrays
+on boot and it's not doing it.  From what I gather from the man page and
+Googling all I should need to do is:
 
-Well, you're in luck, because these numbers are the major and minors for
-sdc and sdd:
+mdadm --assemble --scan
 
-$ ls -l /dev/sdd
-brw-rw----    1 root     disk       8,  48 May  5  1998 /dev/sdd
-$ ls -l /dev/sdc
-brw-rw----    1 root     disk       8,  32 May  5  1998 /dev/sdc
+Well when I run this command I get the following:
 
-(hex 20 and 30 => decimal 32 and 48)
+[root@cinshrinft1 ~]# mdadm --assemble --scan
+mdadm: no devices found for /dev/md0
+mdadm: no devices found for /dev/md1
 
-I'm not sure why md sometimes puts the major:minor instead of the device
-name. Perhaps has something to do with the driver for your sdc and sdd?
-I'm guessing here...
+Here is some other information you may need:
 
---
-Paul
+[root@cinshrinft1 ~]# cat /etc/mdadm.conf
+DEVICE /dev/sd*
 
+ARRAY /dev/md0
+        level=raid1
+        devices=/dev/sd[c,d,y,z]1
+        spare-group=group1
 
+ARRAY /dev/md1
+        level=raid1
+        devices=/dev/sd[e,f]1
+        spare-group=group1
 
+[root@cinshrinft1 ~]# mdadm -Es
+ARRAY /dev/md1 level=raid1 num-devices=2
+UUID=64a72aa6:1e47b105:fdb0a304:2e641d44
+   devices=/dev/sdy1,/dev/sdf1,/dev/sde1
+ARRAY /dev/md0 level=raid1 num-devices=2
+UUID=dee56bf5:1b2cc506:61f81aec:21b1a40f
+   devices=/dev/sdz1,/dev/sdd1,/dev/sdc1
 
- hdj[6]  hdi[5]  hdh[4]
-> hdg[3]  hde[2]  hdc[1]  hdb[0]
-> 182485184 blocks 4k rounding
-> 
->  In my raidtab file, sdc = 7 and sdd = 8. Is there some type of error here?
-> The linear seems to be working properly, but since I'm such a newbie, I
-> can't tell for sure. I wish there was a better way to check on the raid
-> status.
-> 
-> Thanks,
-> Michael
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The reason sdy1 is part of md1 is because I was testing the spare-group
+option which worked quite well :)
+
+I've already created them with 'mdadm --create' but I can't get them to
+start.  I've also tried 'DEVICE partitions' and the UUID of the array in
+the proper place in mdadm.conf and they still won't go.  Can someone
+point out my obvious blunder here please? :)
+
+Thanks,
+Andy.
