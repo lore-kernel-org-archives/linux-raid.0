@@ -1,9 +1,9 @@
 From: hpa@zytor.com (H. Peter Anvin)
 Subject: Re: Call for RAID-6 users
-Date: Thu, 5 Aug 2004 23:46:14 +0000 (UTC)
+Date: Thu, 5 Aug 2004 23:51:16 +0000 (UTC)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <ceugs6$rb3$1@terminus.zytor.com>
-References: <cds76e$ee7$1@terminus.zytor.com> <200407302311.04942.maarten@ultratux.net>
+Message-ID: <ceuh5k$reo$1@terminus.zytor.com>
+References: <cds76e$ee7$1@terminus.zytor.com> <200407302311.04942.maarten@ultratux.net> <200407302338.33823.maarten@ultratux.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
@@ -11,27 +11,36 @@ Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Followup to:  <200407302311.04942.maarten@ultratux.net>
+Followup to:  <200407302338.33823.maarten@ultratux.net>
 By author:    maarten van den Berg <maarten@ultratux.net>
 In newsgroup: linux.dev.raid
+>
+> On Friday 30 July 2004 23:11, maarten van den Berg wrote:
+> > On Saturday 24 July 2004 01:32, H. Peter Anvin wrote:
 > 
-> I'm still early in the testing phase, so nothing to report as yet.  
-> But I have a question:  I tried to reproduce a reported issue when creating a 
-> degraded raid6 array.  But when I created a raid6 array with one disk 
-> missing, /proc/mdstat reported no resync going on.  Am I not correct in 
-> assuming that raid6 with 1 missing drive should at least start resyncing the 
-> other drive(s) ?  It would only be really degraded with two missing drives...
+> > I'm still early in the testing phase, so nothing to report as yet.
+> > But I have a question:  I tried to reproduce a reported issue when creating
+> > a degraded raid6 array.  But when I created a raid6 array with one disk
+> > missing, /proc/mdstat reported no resync going on.  Am I not correct in
+> > assuming that raid6 with 1 missing drive should at least start resyncing
+> > the other drive(s) ?  It would only be really degraded with two missing
+> > drives...
+> >
+> > So instead, I defined a full raid6 array which it is now resyncing...
+> > My resync speed is rather slow (6000K/sec). I'll have to compare it to
+> > resyncing a raid5 array though before concluding anything from that.  Cause
+> > this system is somewhat CPU challenged indeed: a lowly celeron 500.
+> 
+> To confirm, after stopping the raid6 array (didn't want to wait this long) I 
+> created a raid5 array on the same machine and it resyncs at 14000K/sec.
+> Is this expected behaviour, the 6M/sec for raid6 vs 14M/sec for raid5 ?
+> I suppose raid6 has to sync two drives, which would maybe explain the speed 
+> difference(?)   In any case, hdparm -tT report 50M/sec on each single drive. 
+> Is this discrepancy in speed normal ?
+> (yes yes, I played with the /proc/sys/dev/raid/ speed settings (to no avail))
 > 
 
-This is correct; when an array is first created it needs resync, and
-with less than two drives missing this should happen.
-
-> So instead, I defined a full raid6 array which it is now resyncing...
-> My resync speed is rather slow (6000K/sec). I'll have to compare it to 
-> resyncing a raid5 array though before concluding anything from that.  Cause 
-> this system is somewhat CPU challenged indeed: a lowly celeron 500.
-
-The RAID-6 computations on that system will be quite slow indeed.  At
-least you have MMX.
+A newly created RAID-5 array uses a special trick to do the initial
+sync faster.  Unfortunately that trick is not possible for RAID-6.
 
 	-hpa
