@@ -1,31 +1,33 @@
-From: "Martin Bene" <martin.bene@icomedias.com>
-Subject: Checking consistency of Linux software RAID
-Date: Mon, 30 Jun 2003 14:58:19 +0200
+From: Gordon Henderson <gordon@drogon.net>
+Subject: Re: Checking consistency of Linux software RAID
+Date: Mon, 30 Jun 2003 14:13:57 +0100 (BST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <4D618F6493CE064A844A5D496733D667031A01@freedom.icomedias.com>
+Message-ID: <Pine.LNX.4.43.0306301411220.31613-100000@unicorn.drogon.net>
+References: <4D618F6493CE064A844A5D496733D667031A01@freedom.icomedias.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Class: urn:content-classes:message
+In-Reply-To: <4D618F6493CE064A844A5D496733D667031A01@freedom.icomedias.com>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+On Mon, 30 Jun 2003, Martin Bene wrote:
 
-Administrationg quite a few systems with HW raid controllers, I've come to
-really like a feature that seems to be missing from current SW raid: 
+> Is there any way to do this with SW raid? I truly hate situations where
+> some sectors on a drive fail silently and you don't notice until a 2nd
+> drive dies and you find you can't recostruct your raid data becaus of
+> silent "bitrot".
 
-Scheduling a (weekly) complete media scan where all surfaces of all drives
-get read; in case of read errors a repair is tried: the content for the
-failed sector is reconstructed just as if the drive had completely failed and
-rewritten to the failed sector; if reading works afterwards, regard the
-repair as successfull and continue using the drive.
+Try
 
-Is there any way to do this with SW raid? I truly hate situations where some
-sectors on a drive fail silently and you don't notice until a 2nd drive dies
-and you find you can't recostruct your raid data becaus of silent "bitrot".
+	badblocks -v -s /dev/md0
 
-Tnaks for any hints,
+Check the man page for various options, etc.
 
-Martin
+You might actually want to read the raw partitions rather than reading
+through the md driver - eg. badblocks /dev/hda1, etc. so do this twice for
+each partition of a RAID1, and N times for each slice of a RAID5 ...
+
+Gordon
+
+
