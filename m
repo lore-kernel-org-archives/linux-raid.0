@@ -1,38 +1,43 @@
-From: David Dougall <davidd@et.byu.edu>
-Subject: confusion or possible bug
-Date: Wed, 12 Jan 2005 13:15:44 -0700 (MST)
-Message-ID: <Pine.LNX.4.58.0501121304560.19586@lewis.et.byu.edu>
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: RE: Spares and partitioning huge disks
+Date: Thu, 13 Jan 2005 13:05:48 +1100
+Message-ID: <16869.55164.244476.436097@cse.unsw.edu.au>
+References: <200501082025.20463.maarten@ultratux.net>
+	<200501082309.j08N9t911087@www.watkins-home.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from Guy on Saturday January 8
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Guy <bugzilla@watkins-home.com>
+Cc: 'maarten' <maarten@ultratux.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I have several nfs servers that have had problems recently that I believe
-are related to software raid.  Perhaps it is a known bug, perhaps I am
-doing things wrong...
-Anyway, It is a layered approach as follows
-xfs filesystem ontop of LVM2 ontop of software raid1 ontop of fiber
-channel disks.
-This is a debian distro.  Kernel is standard 2.4.26 with patches for xfs
-quotas and device-mapper(for LVM2).  mdadm is version 1.7.0.  Fiber
-channel is emulex LP9802 driver version 4.30l.
+On Saturday January 8, bugzilla@watkins-home.com wrote:
+> 
+> Guy says:
+> But, I could tell md which disk I want to spare.  After all, I know which
+> disk I am going to fail.  Maybe even an option to mark a disk as "to be
+> failed", which would cause it to be spared before it goes off-line.  Then md
+> could fail the disk after it has been spared.  Neil, add this to the wish
+> list!  :)
 
-Anyway, a few days ago, one of our disk arrays had issues and returned I/O
-errors to the servers.  My understanding is that software raid should mask
-this from the higher layers(LVM and xfs).  This was not the case.  xfs
-threw all kinds of errors and eventually needed a xfs_repair to mount back
-up.  After things were fixed and I started the rebuild of this md, xfs
-began throwing I/O errors again.
-From my understanding of how software raid works, if a write request to a
-disk fails, the kernel marks that disk as bad and continues on the good
-one.  Looking through the kernel, read requests are round-robinned? among
-the disks, but if a read fails, it will retry it on the other disk(s).  Is
-this a correct understanding?
+Once the "bitmap of potentially dirty blocks" is working, this could
+be done in user space (though there would be a small window).
 
-If so, then what may be causing xfs to see the hardware issues?  Please
-advise on what I am missing here.
-Thanks
---David Dougall
+- fail out the chosen drive.
+- combine it with the spare in a raid1 with no superblock
+- add this raid1 back into the main array.
+- md will notice that it has recently been removed and will only
+  rebuild those blocks which need to be rebuilt
+- raid for the raid1 to fully sync
+- fail out the drive you want to remove.
 
+You only have a tiny window where the array is degraded, and it we
+were to allow an md array to block all IO requests for a time, you
+could make that window irrelevant.
+
+NeilBrown
+
+ 
