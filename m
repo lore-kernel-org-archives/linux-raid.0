@@ -1,42 +1,57 @@
-From: Mike Dresser <mdresser_l@windsormachine.com>
+From: Matti Aarnio <matti.aarnio@zmailer.org>
 Subject: Re: MD/RAID1 Large File Support
-Date: Mon, 12 May 2003 16:55:18 -0400 (EDT)
+Date: Tue, 13 May 2003 01:10:17 +0300
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.33.0305121649090.31347-100000@router.windsormachine.com>
+Message-ID: <20030512221017.GH24892@mea-ext.zmailer.org>
 References: <EC803175C921D411BCE2000000006429081C363F@ash-exch_lg>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 In-Reply-To: <EC803175C921D411BCE2000000006429081C363F@ash-exch_lg>
-To: linux-raid@vger.kernel.org
+To: "Duncan, Mike" <Mike.Duncan@Sonopress.com>
+Cc: "'linux-raid@vger.kernel.org'" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, 12 May 2003, Duncan, Mike wrote:
+On Mon, May 12, 2003 at 04:42:41PM -0400, Duncan, Mike wrote:
+...
+> Basically, we are trying to transfer (via FTP and SSH) files larger than 2G.
+> I have read that SuSE has LFS in all of its distros from 7.1 and up (kernels
+> 2.4.1 and up) and that kernel-wise and glibc-wise everything is ok. So after
+> re-compiling kernels, textutils, gcc, binutils, and glibc in an effort to
+> figure out which one is not compiled with LFS support in ... and ...
+> restarting from scratch once I found out it was not them ... I am left with
+> md.o or raid1.o as being the culprit. 
+> 
+> So --- is there LFS support in md.o and raid1.o modules? If not, is this
+> expected in 2.6 kernels? If so, do I need to apply a patch to get this
+> working or just maybe more kernel parameters?
 
-> $ cat /proc/mdstat
-> Personalities : [raid1]
-> md0 : active raid1 hdb2[1] hda2[0]
->       38925376 blocks [2/2] [UU]
-> unused devices: <none>
+Wrong layer.  MD/RAID does not see FILES, just bunches of diskblocks.
 
-You probably want to consider moving hdb to hdc, as if either hda or hdb
-should die, it will likely take down the bus that the other drive is
-sitting on.
+What is the problem you are encountering, to be exact ?
+You have two machines in between which you try to transfer files.
+Can you do following at both ?
 
-As well, a controller failure(rare), will take both drives offline.
+  dd if=/dev/zero bs=1024k count=3 seek=3000 of=test.file
 
-> md.o or raid1.o as being the culprit.
+That should create about 3 GB size file at both machines.
+(It does SKIP over 3G, and writes 3 MB, thus it does not
+need that much diskspace..)
 
-I ran a raid5 on the main backup server here, and it handled >2GB files
-via both ssh and smbtar, and everything else.  I also had another system
-running a software raid1, and it handled large files as well now that I
-think of it.
+If it doesn't, check that:
+$ ulimit -f
+unlimited
 
-Debian 3.0r1 though on both, with a custom built 2.4.20 kernel.
+If it does not give that, there is your problem.
 
-The one machine now runs a 4x250gb 3ware 7500-4 raid5 array though, and
-the other is a 2x40 3ware 7000-2 raid 1, so I can't double check for
-you with software raid.
-
-Mike
-
+> TIA for any and all help.
+> 
+> ------------------------------------ 
+> Mike Duncan
+> Web Master/Developer
+> Sonopress LLC
+> 
+> mike.duncan@sonopress.com
+> 828.658.6082 (desk)
+> 828.423.3310 (cell)
