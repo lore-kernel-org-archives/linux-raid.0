@@ -1,56 +1,44 @@
-From: Jan-Benedict Glaw <jbglaw@lug-owl.de>
-Subject: Re: Difference between RAID and Multihost disks
-Date: Wed, 4 Dec 2002 16:47:59 +0100
+From: danci@agenda.si
+Subject: Re: Raid autodetection
+Date: Fri, 6 Dec 2002 08:34:15 +0100 (CET)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20021204154759.GC951@lug-owl.de>
-References: <20021204133045.51162.qmail@mail.com>
+Message-ID: <Pine.LNX.4.44.0212060830030.24068-100000@duplo.agenda.si>
+References: <Pine.LNX.4.33.0212040849050.4409-100000@nooks.wimpunk.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="mpBUfgpRCnEyunvv"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20021204133045.51162.qmail@mail.com>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <Pine.LNX.4.33.0212040849050.4409-100000@nooks.wimpunk.com>
+To: Wim Vinckier <wim-raid@tisnix.be>
+Cc: Steven Dake <sdake@mvista.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Wed, 4 Dec 2002, Wim Vinckier wrote:
 
---mpBUfgpRCnEyunvv
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> On Wed, 4 Dec 2002 danci@agenda.si wrote:
+>
+> > On Tue, 3 Dec 2002, Steven Dake wrote:
+> >
+> > > You can set a RAID to autostart by setting its partition id to 0xfd
+> > > (RAID autostart) with the fdisk utility.
+> >
+> > I know that, it's what I do for last three years. But recently, I've
+> > been trying to use modular kernels with SCSI drivers as modules.
+> >
+> > As the inital kernel raid autodetection happens BEFORE initrd loads the
+> > SCSI drivers, it won't work.
+> >
+>
+> You have to build your own initrd which loads the correct modules.  I
+> thought SuSE has its own procedures to do it.  I thought you have to add
+> the modules somewhere in /etc/rc.config and run mkinitrd.  Just check the
+> documentation.
 
-On Wed, 2002-12-04 08:30:45 -0500, Nirmala S <nmala@mail.com>
-wrote in message <20021204133045.51162.qmail@mail.com>:
-> Hi,
->=20
-> Can someone help me understand the difference between RAID and
-> Multihost disks.
+I know and I'm NOT using SuSE.
 
-RAID is a clever construction of more than one HDD to achieve better
-speed or to protect against dieing(sp?) disks. Multihomed disks are HDDs
-(typically SCSI or fibre channel) which are connected to two (or more)
-computers to protect the admin from dead computers. (So this is RAIC -
-Redundant Array of Inexpensive Computers :-) instead of RAID - Redundant
-Array of Inexpensive Disks.
+I just noted a 'new' command that SuSE had while the normal, plain
+raidtools from Mingo had none. So I implemented the 'new' command
+(raidautorun) in my distro and now it's all OK.
 
-MfG, JBG
+  D.
 
---=20
-   Jan-Benedict Glaw       jbglaw@lug-owl.de    . +49-172-7608481
-   "Eine Freie Meinung in  einem Freien Kopf    | Gegen Zensur
-    fuer einen Freien Staat voll Freier B=FCrger" | im Internet!
-   Shell Script APT-Proxy: http://lug-owl.de/~jbglaw/software/ap2/
 
---mpBUfgpRCnEyunvv
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.1 (GNU/Linux)
-
-iD8DBQE97iOvHb1edYOZ4bsRAjpGAJoDsS2sOLLQvv2UrHAL4gauL0DEmgCeO79S
-F05lpHhEZXZq3Slle4Lc7cI=
-=oFNP
------END PGP SIGNATURE-----
-
---mpBUfgpRCnEyunvv--
