@@ -1,42 +1,28 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: RAID-6
-Date: Thu, 14 Nov 2002 09:50:53 +1100
+From: jbass@dmsd.com (John L. Bass)
+Subject: Robustness in the face of errors
+Date: Sat, 16 Nov 2002 02:56:49 -0700 (MST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <15826.55117.413932.676392@notabene.cse.unsw.edu.au>
-References: <aqou9k$ou5$1@cesium.transmeta.com>
-	<20021112162205.GB22407@unthought.net>
-	<15825.22660.685310.237185@notabene.cse.unsw.edu.au>
-	<20021113021343.GC22407@unthought.net>
-	<15825.51226.122496.604304@notabene.cse.unsw.edu.au>
-	<20021113122957.GE22407@unthought.net>
-	<3DD28CE7.6090704@zytor.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Message-ID: <20021116095649.49D701A9823@dmsd.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from H. Peter Anvin on Wednesday November 13
-To: "H. Peter Anvin" <hpa@zytor.com>
-Cc: Jakob Oestergaard <jakob@unthought.net>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday November 13, hpa@zytor.com wrote:
-> 
-> 	DISKS ------------------------------------>
-> 	 0	 4	 8	12	PARITY
-> 	 1	 5	 9	13	PARITY
-> 	 2	 6	10	14	PARITY
-> 	 3	 7	11	15	PARITY
-> 
-> If you only write blocks 0-3 you *have* to read in the 12 data blocks 
-> and write out all 4 parity blocks, whereas in RAID-3 you can get away 
-> with only writing 5 blocks.  [Well, technically you could also do a 
-> read-modify-write on the parity, since parity is linear.  This would 
-> greatly complicate the code.]
+On first error the system currently appears to just abandon a drive, forcing
+the system into degraded mode for all I/O which follows. A much more reasonable
+approach would be to not abandon the drive completely, but rather build a fast
+lookup table with known bad blocks which would allow accesses to most areas of
+the array to continue without degradation, and only areas that have bad blocks
+would be forced into degraded mode.
 
-We do read-modify-write if it involves fewer pre-reads than
-reconstruct-write.
-so in the above scenario, writing blocks 0,1,2,3 would cause a
-pre-read of those blocks and the 4 parity blocks, and then all 8
-blocks would be re-written.
+Many drives will trash a sector if power drops when writing, and that sector
+will generate read errors until written. It makes sense on those drives to
+recover the data in degraded mode, and re-write followed by a verify. If the
+verify fails, and the drive support dynamic sparing/remapping the sector
+should be remapped, rewritten, and verified again. On a large 200GB arry, this
+single feature would remove nearly a day of reconstruction time for normal
+errors and sector failures, substantially improving realized reliability.
 
-NeilBrown
+Doing dynamic error management would remove 99% of the gross software raid
+device failures I have seen over the last year.
+
+John Bass
