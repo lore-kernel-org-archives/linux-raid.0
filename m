@@ -1,41 +1,50 @@
-From: maarten van den Berg <maarten@ultratux.net>
-Subject: Re: Hard drive Reliability?
-Date: Tue, 25 May 2004 00:38:49 +0200
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: AW: Stupid Question?
+Date: Tue, 25 May 2004 08:58:42 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200405250038.49620.maarten@ultratux.net>
-References: <Pine.LNX.4.44.0405200801180.19972-100000@coffee.psychology.mcmaster.ca> <20040524132525.GA14721@janus> <40B2405E.8040801@wasp.net.au>
+Message-ID: <16562.32290.124423.951804@cse.unsw.edu.au>
+References: <16561.24317.771846.481608@cse.unsw.edu.au>
+	<006401c4416e$db1215a0$1600a8c0@kessler.local>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <40B2405E.8040801@wasp.net.au>
-Content-Disposition: inline
-To: linux-raid@vger.kernel.org
+In-Reply-To: message from root@warpy.yomeganet.biz on Monday May 24
+To: root@warpy.yomeganet.biz
+Cc: jim@rubylane.com, AndyLiebman@aol.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday 24 May 2004 20:35, Brad Campbell wrote:
-> Frank van Maarseveen wrote:
-> > On Sat, May 22, 2004 at 09:15:13AM +0400, Brad Campbell wrote:
+On Monday May 24, root@warpy.yomeganet.biz wrote:
+> > >             You can't make a raid out of /dev/hda and 
+> > /dev/hdb - whole 
+> > > devices.
+> > 
+> > Why not?  I do it all the time.
+> > 
+> > You cannot get the kernel to auto-detect the raid if it is 
+> > made from whole devices, but I don't care much about that.  
+> > It works for me.
+> 
+> Whats the benefit of doing an Array over the whole devices? Are there
+> any problems, for example that you maybe cannot boot from that array?
+> 
 
-> I have had a good look at the failure modes of 92mm double ball bearing
-> fans and I have not found much record of them failing catastrophically.
-> They slow down due to dust or bearing failure over time before they grind
-> to a halt usually.
+No particular benefit.  But if I want to RAID together a number of
+whole drives, there seems little point partitioning them first.  It
+would certainly work either way.  I choose the way that makes most
+sense in my situation.
 
-Well, that IS true.  Fans that die are often the 40mm and 60mm variants. (and 
-to a much lesser extent, 80 mm)  The bigger fans have a good balance between 
-motor strength and bearing surface, especially when it comes to places where 
-dust can enter or settle.  I've seen old Dells with 120 mm fans, where you 
-could barely turn the fan by hand but they still did spin up.  Incredible.
-Meanwhile, they made such a noise any admin within 200 feet would know they 
-were due for exchange. ;-)
+I often RAID1 a pair of whole devices, partition them into
+root/swap/rest and boot off them (this is using md partitioning code
+which isn't in 2.4, but is in 2.6).  There is a problem here that lilo
+thinks it knows all about md arrays.  However I figured out how to
+trick it into not realising they are md arrays and it works fine (I
+create a symlink from /dev/MD* -> /dev/md* and only tell lilo about
+/dev/MD*).
 
-> Give me one decent 92mm double ball raced fan against multiple 40mm crappy
-> sleeve fans you get in normal hotswap bays any day of the week!
+NeilBrown
 
-Hear hear !
-I tend to 'dremel' my way for a 120mm fan nowadays, if at all possible...
-
-Maarten
-
+> Thanks,
+> 
+> Greetings,
+> Stephan
