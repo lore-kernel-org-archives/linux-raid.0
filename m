@@ -1,38 +1,33 @@
-From: jlewis@lewis.org
-Subject: Re: Status of HighPoint / Promise drivers?
-Date: Tue, 30 Dec 2003 18:55:59 -0500 (EST)
-Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0312301852310.1212-100000@redhat1.mmaero.com>
-References: <3FF20C50.6000207@pobox.com>
+From: Jeff Woods <kazrak+kernel@cesmail.net>
+Subject: Re: ICH5 docs
+Date: Wed, 31 Dec 2003 00:40:10 -0800
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <6.0.1.1.0.20031231003359.024626f0@no.incoming.mail>
+References: <20031230164953.GB4868@atrey.karlin.mff.cuni.cz>
+ <3FF1B43A.9090707@pobox.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3FF20C50.6000207@pobox.com>
+Content-Type: text/plain; charset="us-ascii"; format=flowed
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <3FF1B43A.9090707@pobox.com>
+References: <20031230164953.GB4868@atrey.karlin.mff.cuni.cz>
+ <3FF1B43A.9090707@pobox.com>
 To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-raid@vger.kernel.org
+Cc: Karel Kulhavy <clock@atrey.karlin.mff.cuni.cz>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 30 Dec 2003, Jeff Garzik wrote:
+At 12/30/2003 12:22 PM -0500, Jeff Garzik wrote to linux-kernel:
+>Karel Kulhavy wrote:
+>>Where can I learn about ICH5 SATA RAID driver in Linux kernel 2.6.0?  I
+>
+>Intel "RAID" is software RAID.  There isn't any hardware RAID assist...
+>So ICH5 looks pretty much just like any other PATA host controller.
 
-> > While I'm investigating: How about the HighPoint drivers, more
-> > specifically the one for HPT374 (the HighPoint 1540 card)?
-> > It's significantly cheaper than the Promise cards.
-> 
-> There is a GPL'd driver for HighPoint SATA floating around somewhere... 
->   not really well support though, is the basic answer.
+Oh?  My understanding (which I admit is very high-level) is that Intel's 
+ICH5 southbridge supports SATA; but to get SATA+RAID requires the ICH5R 
+southbridge.  If not, what are the practical differences (if any) between 
+the ICH5 and ICH5R?
 
-Based on my experience with a HPT Rocket100 (not a RAID card), and the
-2.4.x kernel driver and the drivers supplied by HPT, I'd be very afraid.  
-I bought the Rocket100 thinking it was supported.  It's not.  Red Hat 8.0,
-9, and Fedora Core 1.0 installs either don't recognize it or lock up when
-probing the drives connected to it.  HPT's driver disks for 8.0 and 9 get
-as far as starting to install RPMS, then die with disk i/o errors.  Same
-hardware with a Promise UltraTX2-100 swapped for the Rocket100 works just
-fine.
- 
-----------------------------------------------------------------------
- Jon Lewis *jlewis@lewis.org*|  I route
- Senior Network Engineer     |  therefore you are
- Atlantic Net                |  
-_________ http://www.lewis.org/~jlewis/pgp for PGP public key_________
+TIA.
 
+--
+Jeff Woods <kazrak+kernel@cesmail.net> 
