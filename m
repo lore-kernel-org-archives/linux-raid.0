@@ -1,65 +1,49 @@
-From: Yu Chen <chen@hhmi.umbc.edu>
-Subject: Re: Which raid card to buy for SargeD
-Date: Fri, 9 Apr 2004 09:07:15 -0400 (EDT)
+From: Thomas Andrews <tandrews@grok.co.za>
+Subject: Re: One partition degraded after every reboot
+Date: Fri, 9 Apr 2004 15:09:44 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.58.0404090905540.21639@treant.hhmi.umbc.edu>
-References: <Pine.LNX.4.44.0403311442520.31572-100000@coffee.psychology.mcmaster.ca>
- <406B27E4.1000106@sauce.co.nz> <20040401090731.GI6923@chihiro.cern.ch>
- <406F936C.2090605@sauce.co.nz> <20040409111626.GC3257@chihiro.cern.ch>
+Message-ID: <20040409130944.GA10445@gaspode.nextlink.co.za>
+References: <406C00E3.4030205@chello.at>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20040409111626.GC3257@chihiro.cern.ch>
-To: KELEMEN Peter <Peter.Kelemen@cern.ch>
-Cc: linux-raid@vger.kernel.org
+Content-Disposition: inline
+In-Reply-To: <406C00E3.4030205@chello.at>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Sorry, this might be a silly question, since I am new to RAID, how do I=
- do
-those tests, I would like to check out our RAID.
+On Thu, Apr 01, 2004 at 01:45:39PM +0200, Philipp Gortan wrote:
 
-Thanks a lot in advance!
+> > I've set up RAID-1 on a pair of disks recently. When I reboot I get this
+> > in syslog, even though the partition was perfect & not degraded before:
+> >
+> > kernel: md1: former device ide/host2/bus0/target0/lun0/part5 is unavailable, removing from array!
+> >
+> > More specifically, of the 4 RAID-1 partitions, md1 (my root partition)
+> > is in degraded mode.
 
-Jeff
-On Fri, 9 Apr 2004, KELEMEN Peter wrote:
+[snip]
+> I solved the problem by creating a new initrd and fiddling with the lilo 
+> configuration:
+> for me,
+> after re-adding the always-failing drive to the raid
+> # mdadm -a /dev/md0 /dev/hda1
+> i updated my lilo.conf to:
+> 
+> ...
+> boot=/dev/md0
+> raid-extra-boot=/dev/hda,/dev/hdc
+> root=/dev/md0
+> ...
+> 
+> and created a new initrd
+> # mkinitrd -k -r /dev/md0 -o /boot/initrd.img-2.6.3-1-k7
+> 
+> and ran lilo again
+> # lilo
+[snip]
 
-> * Richard Scobie (richard@sauce.co.nz) [20040404 16:47]:
->
-> > KELEMEN Peter wrote:
-> > > * Richard Scobie (richard@sauce.co.nz) [20040401 08:19]:
-> > > >3ware hardware RAID 10: Reads - 92.8MB/s    Writes - 88.9MB/s
-> > > >Software RAID 10:  Reads - 53.7MB/s   Writes - 94.9 MB/s
->
-> > > 3ware HW-RAID1, Linux SW-RAID0:	read 263 MiB/s, write 157 MiB/s
-> > > 3ware HW-RAID5, Linux SW-RAID0:	read 243 MiB/s, write 135 MiB/s
-> > > Linux SW-RAID5:			read 225 MiB/s, write 135 MiB/s
-> > > 3ware HW-RAID10:		read 119 MiB/s, write  91 MiB/s
->
-> > This array is obviously larger than the 4 disc one I have. Unfortun=
-ately
-> > you do not have the one result I would really like - SW-RAID10.
-> > It would be interesting to see how it compares to 3ware HW-RAID10.
->
-> Well, I did those tests as well for the sake of interest.
-> Linux SW-RAID10:		read 221 MiB/s, write 105 MiB/s
->
-> Peter
->
-> --
->     .+'''+.         .+'''+.         .+'''+.         .+'''+.         .=
-+''
->  Kelemen P=E9ter     /       \       /       \     Peter.Kelemen@cern=
-=2Ech
-> .+'         `+...+'         `+...+'         `+...+'         `+...+'
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Unfortunately, installing lilo in place of grub hasn't solved the
+problem, so I'm still without a solution.
+
+-Thomas
