@@ -1,35 +1,51 @@
-From: Brad Campbell <brad@wasp.net.au>
-Subject: Re: Hard drive Reliability?
-Date: Sat, 22 May 2004 09:15:13 +0400
+From: Marcel de Riedmatten <mdr@dotforge.ch>
+Subject: RE: Hardware vs Software and Bad Block Relocation
+Date: Sat, 22 May 2004 17:23:44 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <40AEE1E1.8030603@wasp.net.au>
-References: <Pine.LNX.4.44.0405200801180.19972-100000@coffee.psychology.mcmaster.ca>    <006601c43e6e$edad2a90$180aa8c0@johnny> <33179.194.60.85.4.1085063918.squirrel@194.60.85.4>
+Message-ID: <1085239424.7133.5.camel@galadriel.nofida.ch>
+References: <200405211438.i4LEcxB24002@www.watkins-home.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-hu2nQgHLsR/uSPMIRzWK"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <33179.194.60.85.4.1085063918.squirrel@194.60.85.4>
-To: Robin Bowes <robin-lists@robinbowes.com>
-Cc: linux-raid@vger.kernel.org
+In-Reply-To: <200405211438.i4LEcxB24002@www.watkins-home.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Robin Bowes wrote:
 
-> I've just bought 6 of their 250GB SATA Maxline Plus II drives. I'll be building them
-> into a Coolermaster case with a couple of fans blowing over them (three drives per fan)
-> and running them off Promise SATA150 TX4 controllers with software Raid.
-> 
-> I'll let you know how I get on. (expect lots of questions here when I start trying to
-> build the arrays!
+--=-hu2nQgHLsR/uSPMIRzWK
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: quoted-printable
 
-I have 10 of the above drives with 3 of the above controllers in a Software Raid-5, if you have any 
-questions give me a yell :p)
+Le ven 21/05/2004 =E0 16:38, Guy a =E9crit :
 
-For those looking for great SATA hotswap bays with good cooling, I have 2 of these. Besides being a 
-bit on the noisy side, they keep the drives very cool and the added airflow inside the case keeps 
-everything else cool too!
+>=20
+> If a disk has a bad block in 1 partition you could just dd zero to that
+> partition, but still verify 100% of the disk.
 
-http://www.supermicro.com/products/accessories/mobilerack/CSE-M35T-1.cfm
+Hi
 
-Regards,
-Brad
+for the record a somewhat smarter way to do that manualy is discribed at
+
+http://smartmontools.sourceforge.net/BadBlockHowTo.txt
+
+Cheers
+
+--=20
+Marcel de Riedmatten
+
+
+--=-hu2nQgHLsR/uSPMIRzWK
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: Ceci est une partie de message
+	=?ISO-8859-1?Q?num=E9riquement?= =?ISO-8859-1?Q?_sign=E9e=2E?=
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.3 (GNU/Linux)
+
+iD8DBQBAr3CAwEgIdc/nA8oRAsKNAJ9cSK64AbtyT1/OYzSf+nE7SE1HHgCdHq73
+ZUJTqWWXXeSVuMzlUZzzUg8=
+=G85m
+-----END PGP SIGNATURE-----
+
+--=-hu2nQgHLsR/uSPMIRzWK--
+
