@@ -1,54 +1,61 @@
-From: Victor Geller <vgeller@spindrift.on.ca>
-Subject: Re: ADD_NEW_DISK failed
-Date: Sun, 23 Feb 2003 17:19:30 -0500
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: wait-option for assembly during boot process ?
+Date: Mon, 24 Feb 2003 09:37:47 +1100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <5.1.0.14.0.20030223170503.00b36180@psimail.spindrift.on.ca>
-References: <message from Norman Schmidt on Sunday February 23>
- <5.1.0.14.0.20030223085025.00b08b30@psimail.spindrift.on.ca>
- <3E58EBA1.7010305@ratnet.stw.uni-erlangen.de>
+Message-ID: <15961.19771.328817.288090@notabene.cse.unsw.edu.au>
+References: <3E58EEB3.30503@ratnet.stw.uni-erlangen.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; format=flowed
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <15961.12440.64252.132242@notabene.cse.unsw.edu.au>
-To: Neil Brown <neilb@cse.unsw.edu.au>, schmidt@naa.net
+In-Reply-To: message from Norman Schmidt on Sunday February 23
+To: schmidt@naa.net
 Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Norman, Neil and Adam,
+On Sunday February 23, norman.schmidt@ratnet.stw.uni-erlangen.de wrote:
+>=20
+> But if the last shutdown left the md devices dirty, they are resynced=
+=20
+> during the next bootup while already in use. For normal ext2/ext3 dat=
+a=20
+> partitions, this is no problem, but for swap and possibly ext-3 journ=
+als=20
+> this is deadly.
 
-Thank you for your help.
+Why do you think that resync is 'deadly' for 'swap and possibly ext-3
+journals' ?
 
-I am a bit confused on the sequence of steps I have to do.
-I can
-1. umount /dev/hdc*
-2. mdadm -Cv /dev/md0 -n2 -l1 /dev/hdc1 "missing"
-3. mdadm -Cv /dev/md1 -n2 -l1 /dev/hdc6 "missing"
+There were problems like this in 2.2, but they are long gone, unless
+there is something else you are thinking of..
 
-What would be the next steps?
+>=20
+> What I would like to have is an option in mdadm.conf (through which t=
+he=20
+> arrays are configured and started automatically) like "WAIT" which ho=
+lds=20
+> up the boot process (i.e. usage of the not yet resynced devices) as l=
+ong=20
+> as resync takes. And these devices should be resynced first, so that =
+one=20
+> does not have to wait for the resync of a terabyte-big data array tha=
+t=20
+> uses part of the same disks.
 
+There could be some value in atleast waiting until resync starts so
+that the order of arrays will match the order of resync.
 
-At 07:35 AM 2/24/2003 +1100, Neil Brown wrote:
->On Sunday February 23, norman.schmidt@ratnet.stw.uni-erlangen.de wrote:
-> >
-> > By the way: This failed-disk approach is not so well documented for
-> > mdadm, or did I overlook something? Any documentation anywhere?
-> >
->
->Fourth paragraph of the "CREATE MODE" section:
->
->        To create a "degraded" array in which some devices are 
-> missing,  simply
->        give the word missing in place of a device name.  This will cause 
-> mdadm
->        to leave the corresponding slot in the array 
-> empty.   For  a  RAID4  or
->        RAID5  array  at most one slot can be missing.  For a RAID1 array, 
-> only
->        one real device needs to be given.  All of the others can be missing.
->
->
->If that is not clear, please help me re-phrase it.
->
->
->NeilBrown
+>=20
+> How can I determine the order of assembly anyway? From top to bottom =
+in=20
+> the config file (at least for arrays that don=B4t share the same
+> disks)?
 
+Top to bottom.
+
+NeilBrown
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
