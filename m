@@ -1,33 +1,18 @@
-From: Tom Maddox <tmaddox@thereinc.com>
-Subject: Re: Bizarre RAID "failure"
-Date: Thu, 19 Feb 2004 16:44:42 -0800
+From: Nathan Lewis <nathapl@cs.okstate.edu>
+Subject: How are reads and writes kept in order in raid5.c?
+Date: Thu, 19 Feb 2004 20:07:59 -0600
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1077237882.9970.4.camel@s8n-1.thereinc.com>
-References: <1077230692.28817.485.camel@s8n-1.thereinc.com>
-	 <Pine.LNX.4.55.0402191434590.6370@umi.cfht.hawaii.edu>
+Message-ID: <6.0.1.1.2.20040219200054.028ffdb0@mail.athenet.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.55.0402191434590.6370@umi.cfht.hawaii.edu>
-To: Kanoa Withington <kanoa@cfht.hawaii.edu>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 2004-02-19 at 16:39, Kanoa Withington wrote:
-> It might not be related but I've seen odd behaviour with that kernel
-> and XFS family when xfs_repair/XFS Recovery is run while the array is
-> resyncing.
-> 
-> If you have the opportunity to try some tests, you might try booting
-> the system without the volume mounted to avoid the automatic XFS
-> checking. When the resync is complete, then try mounting the volume.
-> 
-> -Kanoa
-
-Yep, tried that.  I got identical results, unfortunately.
-
-Thanks,
-
-Tom
+I've gotten through most of handle_stripe, but I'm still confused on one 
+big thing:  The reads and the writes are separated into two separate lists 
+as soon as they come into make_request.  What guarantees they are done in 
+order?  I can't see any mechanism that maintains any specific ordering of 
+the bion.  Just that reads are done first, when possible, then 
+writes.  What am I missing?
 
