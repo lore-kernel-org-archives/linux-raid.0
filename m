@@ -1,56 +1,93 @@
-From: Robin Bowes <robin-lists@robinbowes.com>
-Subject: Re: Thanks :)
-Date: Sat, 23 Oct 2004 08:52:53 +0100
+From: Ming Zhang <mingz@ele.uri.edu>
+Subject: RE: md on partition
+Date: Sat, 23 Oct 2004 11:52:29 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <417A0DD5.4030109@robinbowes.com>
-References: <41794C1D.4080004@dgreaves.com> <41796ACC.2010601@robinbowes.com> <20041022205144.GA28719@hamachi.dyndns.org>
+Message-ID: <1098546749.3117.50.camel@localhost.localdomain>
+References: <200410230607.i9N677N10676@www.watkins-home.com>
+Reply-To: mingz@ele.uri.edu
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20041022205144.GA28719@hamachi.dyndns.org>
-To: Steven Ihde <x-linux-raid@hamachi.dyndns.org>
+In-Reply-To: <200410230607.i9N677N10676@www.watkins-home.com>
+To: Guy <bugzilla@watkins-home.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Steven Ihde wrote:
-> On Fri, 22 Oct 2004 21:17:16 +0100, Robin Bowes wrote:
+thx but i met this problem.
+
+i use 4 x 400GB SATA disks, i make a raid 0 or 5, and build a vg on top
+of md, then use bonnie++ to test read performance.
+
+LVM (MD = sda+sdb+..) = 95MBsec, md is built on top of whole disk.
+
+LVM (MD = sda1+sdb1+.) = 48MBsec, md is built on top of each partition.
+
+so where is the problem? does md chunk size matter? or lvm extent size
+matters? thx.
+
+
+ming
+
+On Sat, 2004-10-23 at 02:07, Guy wrote:
+> I found this old message:
+> "On Tuesday June 1, maheshext3@yahoo.com wrote:
+> > 
+> > --- Neil Brown <neilb@cse.unsw.edu.au> wrote:
+> > > 
+> > > What does
+> > >    ls -l /dev/hd[eg]5
+> > > show? How about
+> > >    cat /proc/partitions
+> > >    dd if=/dev/hde5 of=/dev/null bs=1024k
+> > 
+> > Thanks a lot, Neil, turns out those nodes were not present. After I 
+> > mknod'd them, all's fine in RAIDland...
+> >   Quick question: does using extended partitions for RAID affect 
+> > performance?
 > 
->>David Greaves wrote:
->>
->>>I got this yesterday
->>>
->>>#################
->>>This is an automatically generated mail message from mdadm
->>>running on cu.dgreaves.com
->>>
->>>A Fail event had been detected on md device /dev/md0.
->>>#################
->>
->>David,
->>
->>How have you set things up to achieve this?
+> The fact that the partitions are "extended" is invisible to most of the
+> kernel, and it could not have any affect of performance.
+> 
+> NeilBrown"
+> 
+> Guy
+> 
+> -----Original Message-----
+> From: linux-raid-owner@vger.kernel.org
+> [mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Ming Zhang
+> Sent: Friday, October 22, 2004 1:28 PM
+> To: linux-raid@vger.kernel.org
+> Subject: md on partition
+> 
+> Hi folks.
+> 
+> I remembered that there was a discussion on the list about some abnormal
+> performance penalty if u use a partition instead of a whole disk for MD.
+> But I could not find this discussion via archival or google.
+> 
+> Could somebody be kindly enough to point me to the right spot? Thanks a
+> lot.
+> 
+> Ming
 > 
 > 
-> See the section on Monitor mode (-F option) in the mdadm man page.
-> Debian's mdadm package, for example, sets it up so mdadm -F gets run
-> automatically at boot time to monitor your arrays.
-
-
-Sorry, I wasn't clear enough in my question...
-
-I am aware of mdadms' monitor mode; in fact, I'm sure it used to run 
-when I first started using mdadm (on Fedora Core 2 installed from rpm 
-built myself from src rpm).
-
-I seem to remember that this was disabled at some stage but can't 
-remember the detail - possibly something to do with preventing the array 
-from shutting down cleanly because mdadm -F was open on it.
-
-I am hoping that someone can suggest how best to run mdadm -F on Fedora 
-Core 2. Perhaps it could be as simple as creating a script in 
-/etc/init.d/ which would terminate before the array is shutdown?
-
-R.
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 -- 
-http://robinbowes.com
+ --------------------------------------------------
+| Ming Zhang, PhD. Student
+| Dept. of Electrical & Computer Engineering
+| College of Engineering
+| University of Rhode Island
+| Kingston RI. 02881
+| e-mail: mingz at ele.uri.edu
+| Tel. (401) 874-2293 
+| Fax. (401) 782-6422
+| http://www.ele.uri.edu/~mingz/
+| http://crab.ele.uri.edu/gallery/albums.php
+ --------------------------------------------------
+
+
