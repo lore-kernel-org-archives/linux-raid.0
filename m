@@ -1,37 +1,56 @@
-From: =?ISO-8859-1?Q?Jarmo_J=E4rvenp=E4=E4?=
-	<Jarmo.Jarvenpaa@softers.net>
-Subject: Re: RAID 5 questions
-Date: Mon, 02 Aug 2004 10:27:02 +0300
+From: Mark Watts <m.watts@eris.qinetiq.com>
+Subject: Re: 1x 3ware controllers vs. 2x 3ware controllers
+Date: Mon, 2 Aug 2004 10:40:02 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <410DECC6.6040403@softers.net>
-References: <1091325475.2374.11.camel@localhost> <20040801033109.GA23032@jim.sh> <410DD8AA.6060609@softers.net> <20040802060939.GA12472@jim.sh>
+Message-ID: <200408021040.02276.m.watts@eris.qinetiq.com>
+References: <Pine.LNX.4.44.0408011724460.7382-100000@uplift.swm.pp.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: Text/Plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20040802060939.GA12472@jim.sh>
-To: Jim Paris <jim@jtan.com>
-Cc: Ninti Systems <office@ninti.com.au>, RAID Linux <linux-raid@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.44.0408011724460.7382-100000@uplift.swm.pp.se>
+Content-Disposition: inline
+To: linux-raid@vger.kernel.org
+Cc: Mikael Abrahamsson <swmike@swm.pp.se>
 List-Id: linux-raid.ids
 
-Jim Paris wrote:
-
-> README.raid from lilo-22.5.9 (the latest version) states:
-> 
-> "Only RAID1 is supported.  LILO may be used to boot a system
-> containing other RAID level partitions, but it may not be installed
-> on any RAID partition other than RAID level 1."
-> 
-> so I don't believe you.  You may be confusing "booting off RAID-5"
-> with "having a RAID-5 root".
-
-Hmm, I'm not sure how to convince you :-)
-
-The only possibility I can think of is that the lilos.conf's 
-raid-extra-boot= -line affects the booting, thus it's silently booting 
-from /dev/hdX and not from /dev/md0. I'm not sure how to test this though.
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
 
-BR,
-Jarmo
+> On Sun, 1 Aug 2004, Mark Watts wrote:
+> > RAID Configuration:
+> > 4-disk RAID-5 with 64K block size.
+> >
+> > /dev/sda1 = / = 20GB
+> > /dev/sda2 = swap = 2048MB
+> > /dev/sda5 = /home = 100GB
+> >
+> > All partitions (except swap) formatted as ext3.
+>
+> It would be interesting to see difference if you put the system and swap
+> on another drive that is not part of the RAID5.
+>
+> > Kernel - 2.6.8rc1, SMP for x86_64
+>
+> I use v2.4, haven't used 2.6 with 3ware and SMP at all, so the problem
+> might be there. Did you try the smp_affinity thing I emailed about 1-2
+> days ago?
 
+Ok i tried this and it made no difference.
+
+
+- -- 
+Mark Watts
+Senior Systems Engineer
+QinetiQ Trusted Information Management
+Trusted Solutions and Services group
+GPG Public Key ID: 455420ED
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.4 (GNU/Linux)
+
+iD8DBQFBDgvyBn4EFUVUIO0RAqJ0AKC2CgF/qT32el1xq7JdGntZj2fl0wCfVkRt
+9sehETCi1tgs+ol/vRrkYu8=
+=Ven5
+-----END PGP SIGNATURE-----
