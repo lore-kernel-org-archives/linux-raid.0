@@ -1,41 +1,32 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: Hard drive Reliability?
-Date: Wed, 19 May 2004 20:34:47 -0400
+From: "TJ Harrell" <systemloc@earthlink.net>
+Subject: Re: Hard drive Reliability?
+Date: Wed, 19 May 2004 20:49:51 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200405200034.i4K0YpB17310@www.watkins-home.com>
-References: <200405200140.26636.maarten@vbvb.nl>
+Message-ID: <00b801c43e04$5c6dfd80$0201a8c0@windows>
+References: <200405192226.i4JMQLB16952@www.watkins-home.com> <200405200153.21371.maarten@vbvb.nl>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="us-ascii"
+	charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200405200140.26636.maarten@vbvb.nl>
-To: 'maarten van den Berg' <maarten@vbvb.nl>, 'LinuxRaid' <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-You said:
-<Well, It was more or less useless anyway. I can tell you just offhand that
-<you can lengthen the life expectancy of a drive maybe four-fold if you make
-<sure it stays below 35 degrees celsius its entire life, instead of ~45
-<degrees.
-<Don't hold me up on that, but you know what I mean, and it is true. :-)
-
-========================================================================
-I agree with you, but!
-
-I have an old system with 2 18 Gig SCSI disks.  One IBM and one Seagate.
-Both run very hot!  I added extra cooling fans.  Both fans failed about 2
-years ago.  Only the CPU and power supply fans still work.   The disk drives
-are too hot to touch.  Much too hot to touch!  The system is running 99.99%
-of the time.  No disk problems.  The system is 4-5 years old as a guess.  To
-help date it, it is a P3-350Mhz.  My wife uses this computer.  :)
-
-I just dripped some drops of water on the drives, it did not boil.  But I
-can only keep my finger on them for less than 1 second.
-
-Anyway I think I have been very lucky.  I don't recommend hot drives, just a
-funny example of "rules were made to be broken"!
-
-Guy
+    I've never bought Seagate. Seagate was horribly unreliable in earlier
+times, 10 years ago, or so. I buy WD exclusively now because it is the only
+IDE drive I can get a 3 year warranty on. I've never had the problems with
+them that other people have expressed, but I don't hold high expectations,
+either.
+    I have read that the bearings used in current WD drives tend to wear
+faster at higher operating temperatures. New fluid bearings are supposedly
+less sensitive to this problem, though.
+    In any case, it seems that IDE drives are designed as throwaway drives,
+constructed as cheaply as possible. Servers generally use only SCSI. SCSI
+drives in general are manufactured better because servers require it, and
+customers are willing to pay for it. IDE equipment will not be manufactured
+as well because the market is unwilling to pay the price premium for
+quality. The market is too competetive in the desktop market. Most buyers
+don't know about quality, and buy on price. Consequently, drive prices are
+marginalized, and quality becomes of less importance.
 
 
