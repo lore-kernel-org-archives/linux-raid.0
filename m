@@ -1,39 +1,30 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: Kernel panic, FS corruption  Was: Re: Call for RAID-6 users
-Date: Thu, 05 Aug 2004 17:36:49 -0700
+From: hpa@zytor.com (H. Peter Anvin)
+Subject: Re: RAID 5 questions
+Date: Fri, 6 Aug 2004 00:49:43 +0000 (UTC)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <4112D2A1.9000001@zytor.com>
-References: <cds76e$ee7$1@terminus.zytor.com> <200407310228.27969.maarten@ultratux.net> <200408011503.20452.maarten@ultratux.net> <20040801180536.GA3897@jim.sh> <ceuhbm$rgs$1@terminus.zytor.com> <20040806001909.GA19760@jim.sh>
+Message-ID: <ceukj7$s89$1@terminus.zytor.com>
+References: <1091325475.2374.11.camel@localhost> <20040801102430.GC28625@janus>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20040806001909.GA19760@jim.sh>
-To: Jim Paris <jim@jtan.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Jim Paris wrote:
+Followup to:  <20040801102430.GC28625@janus>
+By author:    Frank van Maarseveen <frankvm@xs4all.nl>
+In newsgroup: linux.dev.raid
+>
+> On Sun, Aug 01, 2004 at 11:27:56AM +0930, Ninti Systems wrote:
+> > 
+> > Q1: Is it true that Linux can't/shouldn't boot off a RAID 5 array?
 > 
-> No, I did see the same corruption with XFS; it just took more work
-> before it would show up (ie. I couldn't get it to show up by simply
-> copying one huge file; I had to untar a full filesystem onto it).
-> So I would suspect the odd access patterns.  I could also run a test
-> with EXT2/3 if you'd like.  I didn't manage to trigger the corruption
-> directly on the md device, but my access pattern was quite simple in
-> that case (dd big blocks to different areas).
-> 
-
-If you can reproduce it with ext2/3 it would make debugging simpler, because I 
-understand the ext code and data structures a lot better.
-
-Thanks for that data element; it pretty much confirms my suspicions.
-
- >
-> Are you able to reproduce the problem with the scripts I sent earlier?
-> If not, I can give you access to a machine that can.
+> From software RAID it can't.
 > 
 
-I hate to admit it, but I haven't had a chance to try yet.
+Actually, it should be able to if the firmware can see all the drives,
+AND you're not running it in degraded mode.  Obviously not a good
+solution.  Use RAID-1 for /boot.
 
 	-hpa
+
