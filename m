@@ -1,30 +1,35 @@
-From: "Toti Bilgisayar" <pehlivan@toti.net>
-Subject: ADSL  =?ISO-8859-1?Q?=20Sat=FD=FE?= Ve Servis  =?ISO-8859-1?Q?=20Noktas=FD?=
-Date: Mon, 9 Aug 2004 08:33:08 +0300
+From: "Jim Buttafuoco" <jim@contactbda.com>
+Subject: SATA Controller
+Date: Mon, 9 Aug 2004 10:53:55 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <S266124AbUHIFbn/20040809053143Z+338@vger.kernel.org>
+Message-ID: <20040809145342.M63373@contactbda.com>
+Reply-To: "Jim Buttafuoco" <jim@contactbda.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-9
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset=none
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Toti Bilgisayar Art=FDk T=FCrk Telekom =C7=F6z=FCm Orta=F0=FD
-ADSL Sat=FD=FE ve Servis noktas=FD
-Hep Daha =DDyiye
--_-_-_-_-_-_-_-
+All,
 
-Toti Bilgisayar Ltd.
-Tekzen =DEube
-Tekzen Al=FD=FEveri=FE Merk.
-=C7=FDrp=FDc=FD yolu
-Merter =DDst.
-Tel: (212) 543 8888
-www.toti.net
+I am thinking of going with the following SATA PCI controller (non raid) to replace my 3ware SATA controller (only 
+using JBOD but thats another story).  Any comments on linux support / issues / other controllers you have luck with.  
+I am planning on using software raid with 3 of these cards and 10 250G WD SATA disks.
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks
+Jim
+
+PROMISE PCI to SATA Controller Card, Model "SATA150 TX4" -OEM
+
+Model# Sata150 TX4 	
+Item # N82E16816102013	
+
+Specifications:
+Ports: 4x Serial ATA/150
+OS Support: Windows 98/Me/NT4/2000/XP; RedHat 7.3/8.0; SuSE 7.3/8.0
+Feature: Bus mastering offloads data I/O handling from host CPU; CRC
+error-checking of Serial ATA and Ultra ATA drives for data reliability
+during transfers; Data Transfer Rate:150MB/sec with Serial ATA/150 drives,
+133MB/sec with Ultra ATA/133 drives, 100MB/sec with Ultra ATA/100 drives;
+32-bit 33/66MHz PCI bus; PCI 2.3 compliant
