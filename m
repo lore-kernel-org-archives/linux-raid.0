@@ -1,72 +1,59 @@
-From: christophe varoqui <christophe.varoqui@free.fr>
-Subject: [ANNOUNCE] multipath-tools-0.2.9
-Date: Sat, 25 Sep 2004 02:24:09 +0200
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1096071849.4466.31.camel@zezette>
+From: Andrew McCready <ajmccready@yahoo.com>
+Subject: raid0 problem starting
+Date: Sat, 25 Sep 2004 11:40:19 -0700 (PDT)
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <20040925184019.12881.qmail@web50107.mail.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-To: dm-devel@redhat.com
-Cc: linux-raid@vger.kernel.org, linux-hotplug-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-raid-owner@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
+I have two sata disks in a raid0 array that show up on
+my system as hde and hdg. I tried adding an ide pata
+card, so I could add a few temporary disks to the
+system . That didn't go so well. However, I wasn't
+able to boot far enough to modify anything on the hard
+drives, so I pulled the pata card out and rebooted.
+Now, I'm getting the following error while starting
+the raid array:
 
-here goes multipath-tools-0.2.9
+md: could not lock [dev 38:01], zero-size? Marking
+faulty.
+md: could not import [dev 38:01], trying to run array
+nevertheless.
+md: could not lock [dev 39:01], zero-size? Marking
+faulty.
+md: could not import [dev 39:01], trying to run array
+nevertheless.
 
-The ChangeLog is pretty big this time : changes accumulated while
-waiting for scsi_id-0.6 and while background-battling with an IA64
-compilation glitch.
+then a few lines later
 
-In short :
+md: device name has changed from [dev 38:01] to hde1
+since last import!
 
-	* compiles on IA64
-	* implement the alias OSDL CGL preconisation
-	* more work on single path devices and JBOD handling
+I'm assuing its getting the old device names from the
+persistent-superblock, but I thought I'd at least be
+able to raidstart with a correct /etc/raidtab (it
+hasn't changed since I built the array), but I get the
+same errors then.
 
-Regression testing is even lighter than the previous release, because I
-temporarily lost access to my favorite SAN.
+I checked /dev, and there are no devices with a major
+number of 38 or 39. hde is 33 and hdg is 34. I don't
+know enough about the device system to know what would
+make those numbers change (but I was under the
+impression that they were pretty much 100% static),
+but the big question is, how can I get my raid0 array
+back? (or is this all a red herring and the disks are
+actually toast?)
 
-Full ChangeLog for the release :
 
-        * [multipathd] finally tame the clone compilation glitch on IA64
-          move from sys_clone to __clone / __clone2
-        * [kpartx] rework from Stephan Bader, IBM :
-                * handle s390x arch
-                * endianness fixes
-                * push the partname string size to handle wwwids
-                * quieten implicit cast warnings
-        * [multipath] add an 'alias' multipath keyword for friendlier
-	  device
-          names. This was "asked" by OSDL' CGL board of secret reviewers
-        * [multipath] last pass with JBOD and parallel SCSI support :
-          hard-code scsi_id as a fallback when disk strings doesn't
-	  match any hwtable entry
-        * [multipath & multipathd] change the parser to not coalesce
-          consecutive spaces (Patrick Mansfield)
-        * [multipath] remove the [UN]: output prefix, so that stdout can
-	  be easily fed to a tool like dmsetup
-        * [multipathd] DEBUG=3 logs more readable/usefull
-        * [multipathd] add a multipath_tool config keyword
-        * [multipathd] move to execute_program() like multipath already
-          did
-        * [multipath] don't print the "no path" msg in quiet mode
-        * [multipathd] include linux/unistd.h for _syscall2
-          definition on RedHat systems. Remove superfluous
-          asm/unistd.h include
-        * [libsysfs] forked : last version uses mntent, which
-          klibc doesn't provide. That, plus the fact we use
-          only 1/3 of the lib, pushed me to freeze the version
-          and strip all unused stuff.
-        * [multipathd] prepare_namespace() cleanup : no more "multipath"
-          special casing since we push it to binvec vector, like the
-          other callouts detected in the config file.
+Thanks, Andrew
 
-As usual, doc and download at :
-http://christophe.varoqui.free.fr/
 
-regards,
--- 
-christophe varoqui <christophe.varoqui@free.fr>
+ps. I just checked the smart data on the disks, and
+one has just one error and the other had 35, but the
+last errors occured after 390 hours, and the current
+power_on_hours is 4287. 
+
 
