@@ -1,42 +1,56 @@
-From: Thomas Steudten <alpha@steudten.com>
+From: Ivan Kokshaysky <ink@jurassic.park.msu.ru>
 Subject: Re: md raid oops on 2.4.25/alpha
-Date: Sun, 28 Mar 2004 19:30:22 +0200
+Date: Sun, 28 Mar 2004 22:30:13 +0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <40670BAE.4060901@steudten.com>
-References: <20031027141358.GA26271@gamma.logic.tuwien.ac.at> <20040327164153.GA7324@gamma.logic.tuwien.ac.at> <20040328160246.GA19965@gamma.logic.tuwien.ac.at>
+Message-ID: <20040328223013.A15859@jurassic.park.msu.ru>
+References: <20031027141358.GA26271@gamma.logic.tuwien.ac.at> <20040327164153.GA7324@gamma.logic.tuwien.ac.at> <20040328160246.GA19965@gamma.logic.tuwien.ac.at> <40670BAE.4060901@steudten.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20040328160246.GA19965@gamma.logic.tuwien.ac.at>
-To: Norbert Preining <preining@logic.at>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, mingo@redhat.com, neilb@cse.unsw.edu.au
+Content-Disposition: inline
+In-Reply-To: <40670BAE.4060901@steudten.com>; from alpha@steudten.com on Sun, Mar 28, 2004 at 07:30:22PM +0200
+To: Thomas Steudten <alpha@steudten.com>
+Cc: Norbert Preining <preining@logic.at>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, mingo@redhat.com, neilb@cse.unsw.edu.au
 List-Id: linux-raid.ids
 
-Looks like the well known bad assembler code with gcc.
-On the alpha you see the problem first in the
-raid1_read_balance() code sequence..
-You should use gcc 3.3.2 better 3.3.3.
-For alpha find the binary rpms here:
-http://www.steudten.org/alpha/packages/
+On Sun, Mar 28, 2004 at 07:30:22PM +0200, Thomas Steudten wrote:
+> Looks like the well known bad assembler code with gcc.
+> On the alpha you see the problem first in the
+> raid1_read_balance() code sequence..
 
-Tom
+Very likely.
 
-Norbert Preining wrote:
-> Hi Ingo, hi Neil, hi lists!
-> 
-> We have some problems with the md code on alpha. We get regular oops
-> when using the md raid1. Here we got another oops when fsck (at boot 
-> time) the raid:
-> This was after a fresh reboot. As long as only the raid is *not* mounted
-> of fsck the machine works without any oops.
-> 
-> I also can mount the hard disks *without* raid directly as hda1 and
-> hdc1, and do NOT get any errors here, so I suspect that only the md code
-> is the culprit.
+> You should use gcc 3.3.2 better 3.3.3.
 
->>>RA;  fffffc00004a8d7c <raid1_make_request+1dc/480>
-> 
-> 
->>>PC;  fffffc00004a8aa4 <raid1_read_balance+104/200>   <=====
+Also, here is a hack (originally from Jay Estabrook) which
+should work around a bug in older compilers.
 
+Ivan.
+
+--- linux.orig/drivers/md/raid1.c	Thu Feb  5 14:11:04 2004
++++ linux/drivers/md/raid1.c	Sun Mar 28 22:13:33 2004
+@@ -487,6 +487,12 @@ static int raid1_read_balance (raid1_con
+ 		goto rb_out;
+ 	
+ 
++#if defined(CONFIG_ALPHA) && ((__GNUC__ < 3) || \
++			      ((__GNUC__ == 3) && (__GNUC_MINOR__ < 3)))
++	/* Work around a compiler bug in older gcc */
++	new_disk = *(volatile int *)&new_disk;
++#endif
++
+ 	/* make sure that disk is operational */
+ 	while( !conf->mirrors[new_disk].operational) {
+ 		if (new_disk <= 0) new_disk = conf->raid_disks;
+@@ -544,6 +550,11 @@ static int raid1_read_balance (raid1_con
+ 	
+ 	/* Find the disk which is closest */
+ 	
++#if defined(CONFIG_ALPHA) && ((__GNUC__ < 3) || \
++			      ((__GNUC__ == 3) && (__GNUC_MINOR__ < 3)))
++	/* Work around a compiler bug in older gcc */
++	disk = *(volatile int *)&disk;
++#endif
+ 	do {
+ 		if (disk <= 0)
+ 			disk = conf->raid_disks;
