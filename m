@@ -1,54 +1,51 @@
-From: Michael Tokarev <mjt@tls.msk.ru>
+From: Brad Campbell <brad@wasp.net.au>
 Subject: Re: consistency detect
-Date: Mon, 11 Oct 2004 14:42:58 +0400
+Date: Mon, 11 Oct 2004 14:58:59 +0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <416A63B2.7020004@tls.msk.ru>
-References: <1097465522.3111.24.camel@localhost.localdomain> <416A4A29.9080906@wasp.net.au>
+Message-ID: <416A6773.1080104@wasp.net.au>
+References: <1097465522.3111.24.camel@localhost.localdomain> <416A4A29.9080906@wasp.net.au> <416A63B2.7020004@tls.msk.ru>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <416A4A29.9080906@wasp.net.au>
-To: Brad Campbell <brad@wasp.net.au>
+In-Reply-To: <416A63B2.7020004@tls.msk.ru>
+To: Michael Tokarev <mjt@tls.msk.ru>
 Cc: mingz@ele.uri.edu, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Brad Campbell wrote:
-> Ming Zhang wrote:
-> 
->> I have a question on RAID error detect. hope somebody can help me to
->> find it out. thanks.
->>
->> take raid1 as an example, if one disk fail, raid 1 can detect the data
->> on disk is compromised and then reconstruct it using a spare disk. this
->> is straight forward.
->>
->> but if one request comes to raid1 and raid1 sends requests to both
->> disks, at this time, system reboots because power outage, system
->> crashes, or any other reason. then after system reboots, how raid 1
->> detects which disk has consistent data? since before reboot, anything
->> can happen, data may in disk1 but not in disk2, or in disk2 but not in
->> disk1, or not in both disks, or already on both disks.
->>
->> how raid1 or other raid code deal with this?
+Michael Tokarev wrote:
+
+>> In short, it does not deal with it at all. RAID will deal with a disk 
+>> failure, it has no guarantees about consistency on power failures, 
+>> hard lockups or other catastrophic events.
 > 
 > 
-> In short, it does not deal with it at all. RAID will deal with a disk 
-> failure, it has no guarantees about consistency on power failures, hard 
-> lockups or other catastrophic events.
+> This is incorrect.  In-kernel raid code keeps track of arrays and
+> underlying disk state during write operations.  On clean shutdown,
+> when everything has been written, raid superblocks on all disks
+> gets updated to indicate this.  In case of unclean shutdown, raid
+> code will reconstruct older copies of data using most recent ones
+> (ie, from a disk which has most recent "events" value in superblock).
+> The same is done for all other raid levels (4, 5, 6), but onot for
+> raid0 for obvious reasons (as there's no R in raid0 per se).
 
-This is incorrect.  In-kernel raid code keeps track of arrays and
-underlying disk state during write operations.  On clean shutdown,
-when everything has been written, raid superblocks on all disks
-gets updated to indicate this.  In case of unclean shutdown, raid
-code will reconstruct older copies of data using most recent ones
-(ie, from a disk which has most recent "events" value in superblock).
-The same is done for all other raid levels (4, 5, 6), but onot for
-raid0 for obvious reasons (as there's no R in raid0 per se).
 
-> A UPS is cheap insurance against consistency issues in combination with 
-> a journalling filesystem.
+When does the "events" value in the superblock actually get updated? I understood it only got 
+updated on an event, ie raid start, raid stop, disk add/remove/fail.
 
-Well, it is another (albiet very good) layer of protection.
+I realise the system does an auto rebuild when started after an unclean shutdown, the question 
+really is how does it know which disk is the freshest in a raid-1? In a raid-4,5,6 it's pretty 
+obvious as there is really only one copy of the data, but then does the code actually ensure that 
+the data gets written before the updated parity? or does it just flush the lot to disk in what it 
+thinks is the most optimum fashion?
 
-/mjt
+The In-kernel data becomes pretty moot when the kernel has just blasted a couple of large blocks out 
+to a couple of disks and the plug has been pulled. It's going to be pretty indeterminate as to which 
+disk has the most accurate image of what was actually sent to it. Thus my comment that there is 
+really no way of accurately dealing with a catastrophic failure, and RAID is not there to do that 
+anyway.
+
+I guess if you had a hardware RAID card that had a battery backed up RAM you have a much better 
+chance but then you really have a mini-ups :p)
+
+Brad
