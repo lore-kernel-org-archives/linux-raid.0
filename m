@@ -1,72 +1,56 @@
-From: Herman Oosthuysen <Herman@WirelessNetworksInc.com>
-Subject: Re: RAID backup
-Date: Fri, 04 Oct 2002 12:51:17 -0600
+From: Alvin Oga <aoga@Maggie.Linux-Consulting.com>
+Subject: Re: RAID backup - media
+Date: Fri, 4 Oct 2002 14:37:49 -0700 (PDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3D9DE325.8070504@WirelessNetworksInc.com>
-References: <Pine.LNX.3.96.1021004041421.5688A-100000@Maggie.Linux-Consulting.com> <1033735943.31839.12.camel@irongate.swansea.linux.org.uk> <20021004132419.GF710@gallifrey> <3D9DA67A.8050608@comedia.it> <3D9DB44E.4090609@WirelessNetworksInc.com> <20021004171116.C31015@flint.arm.linux.org.uk>
+Message-ID: <Pine.LNX.3.96.1021004143424.10481A-100000@Maggie.Linux-Consulting.com>
+References: <1033735943.31839.12.camel@irongate.swansea.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org
+In-Reply-To: <1033735943.31839.12.camel@irongate.swansea.linux.org.uk>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Illtud Daniel <illtud.daniel@llgc.org.uk>, Effrem Norwood <enorwood@effrem.com>, Kanoalani Withington <kanoa@cfht.hawaii.edu>, Roy Sigurd Karlsbakk <roy@karlsbakk.net>, jbradford@dial.pipex.com, jakob@unthought.net, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Yep, a constant lowish temperature will also help a little, but I 
-honestly think that in storage, a disk drive bearing will seize due to 
-corrosion and lack of movement, before the electronics will fail.  You 
-can prevent bearing (and capacitor) problems by starting the drive up 
-every 6 months for a while though.
 
-The effects of long term storage is experienced with military equipment, 
-which frequently have to stay in storage for 40 or 50 years without ever 
-really being used.  The stuff in storage has to be cycled through the 
-workshops to keep them operational, which is part of the high cost of peace.
+hi ya alan
 
-If disk drives are used for backup purposes, then I would suggest that 
-they are rotated, so that they all remain in occational use, which 
-should help to keep them alive.  Of course, the first thing to fail, 
-would be the connector of the removable drive bay and there is nothing 
-you can do about that, except to make sure that the connectors are gold 
-plated to begin with.
+yuppers... 
 
-I don't think that people have to worry too much about transportation 
-vibration and shock to/from an off-site storage facility.  These things 
-are quite rugged when not spinning, so if you transport them in 
-styrofoam boxes and don't drop them on the floor, they should be OK.
+those 320GB disks are not cheap?? but are floating around
 
-BTW, putting a drive in storage for 40 or 50 years is not recommended 
-for another reason: Obsolecense.  In 40 or 50 years, you probably won't 
-have a computer that can use these drives anymore!  So, the only way to 
-keep data long term, is to rotate the media continuously and upgrade as 
-new technology is introduced.
+- i use backups for "warm swap".... and dont care about it over time sorta
+  thing ... need to be able to keep TBs of data online as fast as possible
+  ( few minutes ) to restore a dead/hacked box..
 
-Cheers,
+- for "fast turn around"... tapes have always been dayz of effort to
+  restore  and too much of a headache to keep the tapes and heads clean
+  and test it more rigorously than having to test disks 
 
-Herman
-http://www.AerospaceSoftware.com
+- you already implicitly trusts disks to hold your data .. till the disk
+  dies ... hopefully due to ball bearing/lubricant/heat failure etc
 
-Russell King wrote:
-> On Fri, Oct 04, 2002 at 09:31:26AM -0600, Herman Oosthuysen wrote:
+fun stuff
+
+have fun
+alvin
+
+On 4 Oct 2002, Alan Cox wrote:
+
+> On Fri, 2002-10-04 at 12:20, Alvin Oga wrote:
+> > we can build an 8-drive ( 120GB at $200ea )  or ( 160GB at $300>? each )
+> > 1U box...about 0.960 - 1.28 TB each backup server ( 1U ) for under $2,500 in parts
+> > +  cost of raid setup/testing is up to the user
+> > 	- am thinking the 1.6TB of storage for 10K lira(?) is too much
+> > 
+> > i prefer disks to backup data.. so that its always a semi-warm backup
+> > ( tapes have always been way tooo slow to find a file and to restore 
 > 
->>Self demagnetization used to be a problem of magnetic media and some 
->>components such as capacitors used to deteriorate with age, but I think 
->>that those problems have been solved decades ago, so equipment in clean 
->>and dry storage should last almost forever.
+> The problem with disks is you still have to archive them somewhere, and
+> they are bulky. I also dont know what studies are available on the
+> degradation of stored disk media over time. 
 > 
+> Capacity is not a problem, 3ware do a 12 channel sata card, with maxtor
+> drives that comes in at 320x12 = 3.5Tb
 > 
-> You missed "stable temperature" as well.  Some capacitors still
-> "dry out" with age and heat, even with todays technology.
-> 
-
--- 
-
-------------------------------------------------------------------------
-Herman Oosthuysen
-B.Eng.(E), Member of IEEE
-Wireless Networks Inc.
-http://www.WirelessNetworksInc.com
-E-mail: Herman@WirelessNetworksInc.com
-Phone: 1.403.569-5687, Fax: 1.403.235-3964
-------------------------------------------------------------------------
-
 
