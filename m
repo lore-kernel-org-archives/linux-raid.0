@@ -1,29 +1,45 @@
-From: Paul Clements <paul.clements@steeleye.com>
+From: Robert Heinzmann <Robert.Heinzmann@gmx.net>
 Subject: Re: Migrating from SINGLE DISK to RAID1
-Date: Tue, 01 Feb 2005 14:41:20 -0500
-Message-ID: <41FFDB60.1040008@steeleye.com>
-References: <41FFD1F8.3010101@gmx.net>
+Date: Tue, 01 Feb 2005 22:40:56 +0100
+Message-ID: <41FFF768.9000706@gmx.net>
+References: <41FFD1F8.3010101@gmx.net> <41FFD9C7.2090208@h3c.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-In-Reply-To: <41FFD1F8.3010101@gmx.net>
+In-Reply-To: <41FFD9C7.2090208@h3c.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Robert Heinzmann <Robert.Heinzmann@gmx.net>
+To: Mike Hardy <mhardy@h3c.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Robert,
+Hello Mike,
 
-Robert Heinzmann wrote:
-
-> can someone verify if the following statements are true ?
+Mike Hardy wrote:
 > 
-> - It's not possible to simply  convert a existing partition with a 
-> filesystem on it to a raid1 mirror set.
+> Robert Heinzmann wrote:
+> 
+>> Hello,
+>>
+>> can someone verify if the following statements are true ?
+>>
+>> - It's not possible to simply  convert a existing partition with a 
+>> filesystem on it to a raid1 mirror set.
+> 
+> 
+> I believe you're right, but I'm not totally sure on this one. I'd take 
+> the second disk, create a new RAID1 with the first drive "missing" on 
+> the mdadm --create commandline, copy everything over to it, put grub on 
+> it, then test that it boots correctly by pulling the first drive out.
+> 
+> Only once the RAID1 is working (in degraded mode) add the original first 
+> drive back in, but booting off the RAID1, then add it to the RAID set to 
+> complete the pair. With that process, the question is somewhat moot, 
+> although I'm interested in the real answer too
 
-If you create a raid1 without a superblock it is possible (although not 
-a very common configuration). If you do use a superblock, you'll need to 
-shrink your filesystem by 128KB (to be safe) prior to creating the mirror.
+Thats how I'm going to do it althought the version Paul Celemens is 
+mentioning sound very elegant (resizing the fs 128 KB prior to creating 
+the array).
 
---
-Paul
+Bye,
+Robert
+
