@@ -1,40 +1,102 @@
-From: Lan Huang <lanhuang@cs.sunysb.edu>
-Subject: high CPU utilization of RAID or JBOD
-Date: Thu, 15 Aug 2002 22:41:34 -0400 (EDT)
+From: "John P. Looney" <valen@tuatha.org>
+Subject: Problems with RAID1 on cobalt raq3
+Date: Fri, 16 Aug 2002 16:02:38 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.GSO.4.33.0208152230170.13408-100000@compserv3>
+Message-ID: <20020816150238.GH26818@jinny.ie>
+Reply-To: valen@tuatha.org
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 To: linux-raid@vger.kernel.org
-Cc: Lan Huang <lanhuang@cs.sunysb.edu>
 List-Id: linux-raid.ids
 
+ I've been battling with getting RAID1 working on the root filesystem of a
+Cobalt raq3 (running RedHat 7.3) for about a week.
 
-Hi,
+ The current problem is that the Raq3 PROM will not mount a root
+filesystem different to the one that it loads the kernel from initially.
 
-I am confused about the numbers regarding CPU utilization I got
-lately on a RAID or JBOD.
+ The PROM seems to use a variable "set_boot_dev" to get a partition name.
+It mounts this partition, gets a file /boot/vmlinux.gz from it, unzips it,
+and runs.
 
-With linux 2.4.18 kernel, Intel motherboard, 4 IBM DTLA 7200rpm
-disk connected to system through Promise Ultra100 card.
-I used vmstat to get CPU utilization. It is quite high.
+ I have hda2 (my original root partition) and hdg1 parts of a mirror setup
+as /dev/md1, which is to be mounted as /. I used the "failed-disk"
+directive to create md1 as / - however, after booting, md1 is mounted on /
+fine, but I cannot add hda2 to this with raidhotadd:
 
-One testing program open a raw device and sequentially read 64k chunk from
-it. I got 40% CPU utilization by sequential read one ide disk at 64K size.
-The throughput is about 37 MB/sec.
-100% when accessing four disk as JBOD, i.e., four testing program
-accessing four  disk separately.
-40% when accessing these 4 drives as one RAID-5 disk array.
+[root@midir root]# raidhotadd /dev/md1 /dev/hda2                   
+md: can not import hda2, has active inodes!
+md: error, md_import_device() returned -16
+/dev/md1: can not hot-add disk: invalid argument.
 
+ Does anyone have any idea what could be happening, or how I could resolve
+this ?
 
-It is just too high. Similar high numbers of CPU utilziation can be seen
-from others' tests like http://www.nobell.org/~gjm/linux/ide-raid/
+ I think I'm using lilo to some degree, as when the cobalt boots, it loads
+a 2.2.16 kernel from it's PROM, and spits out:
 
-What does the kernel do then? DMA is on. Is it memcpy? call back funtions?
-I don't think it is memcpy, as I simulate the amount of bytes to be
-memcpyed in use-level, it takes less than 5% CPU.
+VFS: Mounted root (ext2 filesystem) readonly.
+Freeing unused kernel memory: 76k freed
+Warning: unable to open an initial console.
+BOOTLOADER: Mapping in physical locations
+BOOTLOADER: load_addr=0xc1804000 ret_data=0xc1a050ac
+BOOTLOADER: opening "/boot/vmlinux.gz"
+BOOTLOADER: reading "/boot/vmlinux.gz"
+BOOTLOADER: read 1254176bytes
+BOOTLOADER: unmounting /
+BOOTLOADER: calling reboot notifiers
+stopping all md devices.
+flushing ide devices: hdg 
+disabling network interfaces.
+resetting sym53c8xx scsi bus(es)
+sym53c875-0: detaching ...
+sym53c875-0: resetting chip
+BOOTLOADER: mapping 16M-32M for ride home
+BOOTLOADER: disabling interupts
+BOOTLOADER: flushing cache
+BOOTLOADER: Leap of faith!
+Back in ramcode: done
+Second stage kernel: Decompressing - done
+  extract_header_info:
+    ehead: 0x01500000
+    shead: 0x01747eb0
+    Machine: 0x00000003
+    Kernel Entry: 0xc0105000
+    Program header size: 0x00000020
+    Number of Program headers: 1
+    Section Header size: 0x00000028
+    Number of section headers: 23
+  relocate_and_zero:
+    Offset: 0x00001000
+    VAddr: 0xc0100000
+    PAddr: 0xc0100000
+    Filesize: 0x0023f6a0
+    Memsize: 0x0027aa58
+    Flags: 0x00000007
+    relocate: src = 0x01501000, dest = 0x00100000, size = 0x0023f6a0
+  Kernel cmd line: console=ttyS0,115200 ip=off 
+  Booting kernel...
+Linux version 2.4.18-4jp (root@jlooney) (gcc version 2.96 20000731 (Red Hat Linux 7.3 2.2BIOS-provided physical RAM map:
 
-Thanks,
-Lan
+ But in case it is a problem with the lilo.conf:
+
+     disk=/dev/md1
+        bios=0x80
+        sectors=63
+        heads=16
+        cylinders=39560
+
+     boot=/dev/hda
+     map=/boot/map
+     install=/boot/boot.b
+     image=/boot/boot/vmlinuz-2.4.18-3
+         root=/dev/md1
+         read-only
+         label=LinuxRaid
+
+ Should that work ?
+
+John
 
