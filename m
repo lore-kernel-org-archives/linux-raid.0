@@ -1,48 +1,71 @@
-From: "Cress, Andrew R" <andrew.r.cress@intel.com>
-Subject: RE: Booting from a raid1 device ?
-Date: Thu, 30 Oct 2003 10:22:42 -0500
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: mdadm --assemble --scan hassles....
+Date: Fri, 31 Oct 2003 11:24:10 +1100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <E5DA6395B8F9614EB7A784D628184B207E1349@hdsmsx402.hd.intel.com>
+Message-ID: <16289.43946.51230.934853@notabene.cse.unsw.edu.au>
+References: <20031008111709.GV1277@hvs.envisage.co.za>
+	<16270.5184.302596.951547@notabene.cse.unsw.edu.au>
+	<20031025212433.GE23767@hvs.envisage.co.za>
+	<16285.38655.754527.236684@notabene.cse.unsw.edu.au>
+	<20031028062445.GD3236@hvs.envisage.co.za>
+	<16288.26356.482079.504183@notabene.cse.unsw.edu.au>
+	<20031030055625.GE3236@hvs.envisage.co.za>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-content-class: urn:content-classes:message
-To: Michael Tokarev <mjt@tls.msk.ru>
+In-Reply-To: message from Hendrik Visage on Thursday October 30
+To: Hendrik Visage <hvisage@envisage.co.za>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Michael,
+On Thursday October 30, hvisage@envisage.co.za wrote:
+> On Thu, Oct 30, 2003 at 12:18:44PM +1100, Neil Brown wrote:
+> > 
+> > Show me:
+> >  -  your current mdadm.conf
+> >  - the output of mdadm -Es -c partitions
+> >  - the output of mdadm -Ds
+> >  - the output of mdadm -Asv
+> > 
+> > And I'll try to tell you.
+> 
+> root@hvstress ~ # mdadm -Es -c partitions
+..etc...
 
-I think we agree, but do remember that the 'lifetime of the disk' is the
-real question here, and the whole reason we are doing mirroring anyway.
-When the disk fails and is swapped out with a replacement, the MBR also
-has to be rewritten then, and we want that to be as automatic as
-possible.
+Thanks.
 
-Andy
+So you have to raid arrays:
+  md0 is raid0 from 2 scsi partitions and has
+                   UUID=832ab839:9920da12:97991965:f9af96e2 
+  md1 is linear from another scsi partitions and md0, and has
+                   UUID=4478ef04:f7b90666:6a122182:c6b44cf4
 
------Original Message-----
-From: Michael Tokarev [mailto:mjt@tls.msk.ru] 
-Sent: Thursday, October 30, 2003 9:27 AM
-To: Cress, Andrew R
-Cc: donj@asaca.com; linux-raid@vger.kernel.org
-Subject: Re: Booting from a raid1 device ?
+So you want mdadm to scan all SCSI partitions and md0, and
+to assemble md0 first, then md1.  Identifying partitions
+by UUID is easiest so:
 
+ DEVICE /dev/sd* /dev/md0
+ ARRAY /dev/md0  UUID=832ab839:9920da12:97991965:f9af96e2 
+ ARRAY /dev/md1  UUID=4478ef04:f7b90666:6a122182:c6b44cf4
 
-[...snip...]
+should do it.  Having "level=xxx" and "num-devices=2" doesn't hurt,
+but isn't necessary.
 
-> You have to also have a working MBR on the redundant disk as well, or
-> you'll never get to the loader if the first disk really fails.
-Usually
-> it is the loader's responsibility to set up (or at least verify) the
-> MBR.  
+> root@hvstress ~ # cat /etc/mdadm.conf 
+> DEVICE /dev/md/* /dev/sd[a-z] partitions /dev/md*
+> 
+> ARRAY /dev/md/0 level=raid0 num-devices=2 UUID=832ab839:9920da12:97991965:f9af96
+> e2
+>    devices=/dev/scsi/host0/bus0/target1/lun0/part1,/dev/scsi/host0/bus0/target2/
+> lun0/part1
+> ARRAY /dev/md/1 level=linear num-devices=2 UUID=c2a91233:5ffd5398:eac27773:e1294
+> 5dd
+>  devices=/dev/md/0,/dev/scsi/host0/bus0/target1/lun0/part2
 
-Well.. not really.  Sure, working MBR should be on all disks involved.
-But it is necessary to set it up only once on every disk, and forgot
-about it.  "Standard" MBR that comes with MS-DOS, or any other similar
-MBR code will work, and there's no reason to touch it during the whole
-lifetime of the disk.
+I suspect the reason that this didn't work was the devices= lines.
+The "/dev/scsi/..." doesn't match (as a string) any of the devices
+listed in the DEVICE line.  It is fairly rare that you would need to
+want "devices=" entries in mdadm.conf
 
-[...snip...]
+NeilBrown
