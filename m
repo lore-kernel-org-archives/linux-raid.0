@@ -1,83 +1,52 @@
-From: Simon Valiquette <v.simon@ieee.org>
-Subject: Re: raid5 and adding disks
-Date: Fri, 17 Sep 2004 19:04:18 -0400
+From: Gordon Henderson <gordon@drogon.net>
+Subject: Re: So what is the bios doing, if anything ?
+Date: Sat, 18 Sep 2004 14:22:29 +0100 (BST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <414B6D72.6070602@ieee.org>
+Message-ID: <Pine.LNX.4.56.0409181413470.32100@lion.drogon.net>
+References: <6F9171BE257CA742BFBCFA87B8F20F8D030E3C9B@NZURC900PEX1.ubsgs.ubsgroup.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Andrew McCready <ajmccready@yahoo.com>
+In-Reply-To: <6F9171BE257CA742BFBCFA87B8F20F8D030E3C9B@NZURC900PEX1.ubsgs.ubsgroup.net>
+To: peter.greis@ubs.com
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Fri, 17 Sep 2004 peter.greis@ubs.com wrote:
 
------ Original Message -----
-From: Andrew McCready <ajmccready@yahoo.com>
-Date: 	Fri, 17 Sep 2004 10:23:01 -0700 (PDT)
-To: linux-raid@vger.kernel.org
-Subject: raid5 and adding disks
+> Greetings,
+>
+> Still attempting to get a new system built.... which raises a question:
+> My mobo has "bios" support for the nVidia nForce3 250Gb and SI 3114. In
+> the case of linux, is this doing anything for me ? Do I just ignore it ?
+> At present (80GB mirror), the two SATA drives show up as ide3 and ide4.
 
- > Is it possible to add a disk to a raid5 array after
- > that array has been created?
- >
+I did an install on a server which had a plug-in PCI card with a 2-port SI
+3112 controller on it with a SATA drives connected. (Is the 311 a 4-port
+version of the 3112, I wonder?) The BIOS was no help at all, but I was
+able to use the BIOS (on the card) to turn off the on-board mirror
+function. I had to do the install to another drive connected to the
+on-board standard IDE controller, then put a new kernel on which supports
+the SI 3112. (2.4.27 in this case) after that, they appeared as hde and
+hdg (ide3 and 4 like yours, I guess)
 
-   You can, using raidreconf, but it have to be done with the RAID 
-offline (which is probably fine for you).
+I used Linux s/w RAID1 on them once I had a kernel and persuaded the BIOS
+to boot from them and remove the ordinary IDE drive. Bit dissapointed with
+the performance - I could only get ~40MB/sec out of each drive when I'd
+expect ~50-55MB/sec out of an ordinary IDE drive these days. MAybe it's
+still early days for the driver though.
 
-   On Debian, you will find it in the raidtools2 package.
+I haven't spent much time looking into the SATA stuff yet - but it seems
+theres 2 camps - one which makes the drives look like IDE drives and one
+which makes the look like SCSI.. I did an install on a Dell last week
+which I patched in addditional drivers which made the on-board controllers
+suddenly switch from a generic IDE interface to SCSI...
 
-   It use 2 raidtab files: one containing the old raid config and 
-another containing the intended configuration.  From the doc, it is also 
-able to create a RAID-5 array directly from a RAID-1.  Maybe it is able 
-to convert directly from RAID-0 to RAID-5, but I would'nt bet on it. 
-Also, It is probably better to add only one disk at a time.
+> Also, does anyone know what Yast2 (with SuSE 9.1, kernel 2.6.4) is doing
+> under the hood during the setup ? Are we really running the md tools or
+> not ? Ideas ?
 
-   Keep in mind that raidreconf is not the safest tools around.  All of 
-those will likely destroy your data:
+Can't help there I'm afraid - I'm Debian only and haven't even looked at
+2.6 yet...
 
-  - Errors in the raidtab files
-  - Power outage
-  - Disk failure during the process
-  - Not enought memory (actually, the typical error handling code is 
-resumed by this error message: "Out of memory where we must not fail. 
-Hope you didn't need those data anyway...")
-  - Halting the process in the middle.
-
-
-   mdadm does'nt support what you need yet, but a --reshape option is 
-ready for that purpose (what I understood from the code).
-
-   I would like to eventually add the code to do that in mdadm (adding a 
-disk to a live RAID-5 array), but I still don't have a deep enought 
-understanding of the code.
-
-   I have myself a RAID-5 array completelly full (less than 40GB left), 
-but cannot use raidreconf because I cannot put my raid array offline for 
-more than a very short periode of time.  My most wanted features for 
-adding a disk to a RAID-5 array are:
-
-  - Safe, even in case of a disk failure.
-  - Be able to recover from a power (or power-supply) failure
-  - Be able to continue after interruption in the middle of the process
-  - Be done live, without unmounting the filesystem (growing a 
-filesystem live is a different issue).
-
-   I don't know when I will have enought time to build a experimental 
-prototype, but thought the issue would interest many people.
-
-Simon Valiquette
-http://gulus.USherbrooke.ca
-
-
- > I just bought 3 disks that I plan to turn into a raid5
- > array, and I have two more disks in a raid0 array that
- > I'd like to add to it. The problem is that the raid0
- > has 6months worth of data on it, and I have no where
- > else to stick that data while building the raid5
- > array. I was hoping I could build a 3 disk raid5
- > array, move the files over, then add the 2 remaining
- > disks to the raid5 array.
- >
- > Thanks, Andrew
- > -
+Gordon
