@@ -1,32 +1,42 @@
-From: yejj8xgg@rothert.de
-Subject: raidreconf aborted after being almost done
-Date: Thu, 10 Mar 2005 09:24:59 +0100 (CET)
-Message-ID: <1110443099.4230045b50735@www.rothert.de>
+From: Jimmy Hedman <jimmy.hedman@southpole.se>
+Subject: Re: Problem with auto-assembly on Itanium
+Date: Thu, 10 Mar 2005 11:03:44 +0100
+Message-ID: <1110449024.12242.2.camel@localhost>
+References: <1110364128.14707.19.camel@localhost>
+	 <20050309164352.GB21635@percy.comedia.it>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+In-Reply-To: <20050309164352.GB21635@percy.comedia.it>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Luca Berra <bluca@comedia.it>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I tried to add a 6th disk to a RAID-5 with raidreconf 0.1.2
+On Wed, 2005-03-09 at 17:43 +0100, Luca Berra wrote:
+> On Wed, Mar 09, 2005 at 11:28:48AM +0100, Jimmy Hedman wrote:
+> >Is there any way i can make this work? Could it be doable with mdadm in
+> >a initrd?
+> >
+> mdassembled was devise for this purpose.
+> 
+> create an /etc/mdadm.conf with
+> echo "DEVICE partitions" >> /etc/mdadm.conf
+> /sbin/mdadm -D -b /dev/md0 | grep '^ARRAY' >> /etc/mdadm.conf
+> 
+> copy the mdadm.conf and mdassemble to initrd
+> make linuxrc run mdassemble.
 
-Almost being done raidreconf aborted with the error message:
+So there are no way of doing it the same way i386 does it, ie scanning
+the partitions and assembly the raid by it self? Is this a bug on the
+itanium (GPT partition scheme) or is this intentional?
 
-raid5_map_global_to_local: disk 0 block out of range: 2442004 (2442004)
-gblock = 7326012
-aborted
+// Jimmy
 
-After searching the web I believe this is due to different disk sizes. Because I
-use different disks (vendor and type) having different geometries it is not
-possible to have partitions of exact the same size. They match as good as
-possible but some always have different amounts of blocks.
-It would be great if raidreconf would complain about the different disk sizes
-and abort prior to messing up the disks.
 
-Is there any way I can recover my RAID device? I tried raidstart on it but it
-started using only the old setup with 5 disks without including the new one. How
-do I start the array including the 6th disk?
 
-Regards
-Klaus
+
+
+> L.
+> 
+
