@@ -1,43 +1,46 @@
 From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: RE: Spares and partitioning huge disks
-Date: Thu, 13 Jan 2005 13:05:48 +1100
-Message-ID: <16869.55164.244476.436097@cse.unsw.edu.au>
-References: <200501082025.20463.maarten@ultratux.net>
-	<200501082309.j08N9t911087@www.watkins-home.com>
+Subject: Re: RAID-6 ...
+Date: Thu, 13 Jan 2005 13:11:55 +1100
+Message-ID: <16869.55531.489452.193862@cse.unsw.edu.au>
+References: <200501101713.j0AHDx922062@www.watkins-home.com>
+	<Pine.LNX.4.56.0501121020490.21510@lion.drogon.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Guy on Saturday January 8
+In-Reply-To: message from Gordon Henderson on Wednesday January 12
 Sender: linux-raid-owner@vger.kernel.org
-To: Guy <bugzilla@watkins-home.com>
-Cc: 'maarten' <maarten@ultratux.net>, linux-raid@vger.kernel.org
+To: Gordon Henderson <gordon@drogon.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Saturday January 8, bugzilla@watkins-home.com wrote:
+On Wednesday January 12, gordon@drogon.net wrote:
 > 
-> Guy says:
-> But, I could tell md which disk I want to spare.  After all, I know which
-> disk I am going to fail.  Maybe even an option to mark a disk as "to be
-> failed", which would cause it to be spared before it goes off-line.  Then md
-> could fail the disk after it has been spared.  Neil, add this to the wish
-> list!  :)
+> Until now I haven't really paid too much attention to the RAID-6 stuff,
+> but I have an application which needs to be as resilient to disk failures
+> as possible.
+> 
+> So other than what's at:
+> 
+>   ftp://ftp.kernel.org/pub/linux/kernel/people/hpa/
+> 
+> and the archives of this list (which I'm re-reading now), can anyone give
+> me a quick heads-up about it?
+> 
+> Specifically I'm still buried in the dark days of 2.4.27/28 - are there
+> recent patches against 2.4?
 
-Once the "bitmap of potentially dirty blocks" is working, this could
-be done in user space (though there would be a small window).
+There is no current support for raid6 in any 2.4 kernel and I am not
+aware of anyone planning such support.  Assume it is 2.6 only.
 
-- fail out the chosen drive.
-- combine it with the spare in a raid1 with no superblock
-- add this raid1 back into the main array.
-- md will notice that it has recently been removed and will only
-  rebuild those blocks which need to be rebuilt
-- raid for the raid1 to fully sync
-- fail out the drive you want to remove.
+> 
+> If RAID-6 isn't viable for me right now, what I'm planning is as follows:
+> 
+> Put 8 x 250GB SATA drives in the system, and arrange them in 4 pairs of
+> RAID-1 units.
+> 
+> Assemble the 4 RAID-1 units into a RAID-5.
 
-You only have a tiny window where the array is degraded, and it we
-were to allow an md array to block all IO requests for a time, you
-could make that window irrelevant.
+Sounds reasonable.
 
 NeilBrown
-
- 
