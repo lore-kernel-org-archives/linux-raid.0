@@ -1,32 +1,28 @@
-From: Jim Paris <jim@jtan.com>
-Subject: Re: RAID-6: help wanted
-Date: Mon, 25 Oct 2004 02:33:41 -0400
-Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20041025063341.GA17825@jim.sh>
-References: <cleqh6$ps4$1@terminus.zytor.com> <16764.37392.910080.718564@cse.unsw.edu.au> <20041025062026.GA17502@jim.sh> <16764.39990.547866.885761@cse.unsw.edu.au>
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: Re: [ANNOUNCE] multipath-tools-0.3.4
+Date: Mon, 25 Oct 2004 10:22:39 +0200
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <1098692559.2798.7.camel@laptop.fenrus.org>
+References: <1096071849.4466.31.camel@zezette>
+	 <1097054573.4163b96d1262c@imp5-q.free.fr>
+	 <1097495416.416a73787e0ae@imp1-q.free.fr> <1098021787.5433.8.camel@zezette>
+	 <1098269169.417641f18a234@imp1-q.free.fr>
+	 <1098656088.9350.88.camel@zezette>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <16764.39990.547866.885761@cse.unsw.edu.au>
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: "H. Peter Anvin" <hpa@zytor.com>, linux-raid@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <1098656088.9350.88.camel@zezette>
+To: christophe varoqui <christophe.varoqui@free.fr>
+Cc: device-mapper development <dm-devel@redhat.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-hotplug-devel@lists.sourceforge.net" <linux-hotplug-devel@lists.sourceforge.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-raid.ids
 
-> > > -	case UPDATE_PARITY:	/* Is this right? */
-> > 
-> > No, it does not.  Same sort of corruption with that line removed.
->  
-> Thanks.  I'll try harder...
-> 
-> Looking at the script, the corruption happens while resync is still
-> going on.  If you wait for resync to finish, do you still get
-> corruption?
+On Mon, 2004-10-25 at 00:14 +0200, christophe varoqui wrote:
 
-The problem shows up when the array is degraded (either 1 or 2 disks
-missing), regardless of resync.  If the array is not degraded,
-everything works fine, again regardless of resync.
+> 	* multipath & multipathd now use the same path checkers.
+> 	  Consequence being multipath now need sg loaded
 
--jim
-
+why sg and not using SG_IO on the actual devices ?
+mp-tools are 2.6 only anyway, right ?
+-- 
 
