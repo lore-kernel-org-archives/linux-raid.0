@@ -1,92 +1,50 @@
-From: Tim Moore <linux-raid@nsr500.net>
-Subject: raid5 performance - 2.4.28
-Date: Sat, 08 Jan 2005 21:28:35 -0800
-Message-ID: <41E0C103.4060600@nsr500.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Mario Holbe <Mario.Holbe@TU-Ilmenau.DE>
+Subject: Re: Spares and partitioning huge disks
+Date: Sun, 9 Jan 2005 11:10:11 +0100
+Message-ID: <crqvu3$q7e$1@sea.gmane.org>
+References: <200501081855.j08It8910389@www.watkins-home.com> <200501082025.20463.maarten@ultratux.net> <crpg32$2rr$1@sea.gmane.org> <200501090001.31738.maarten@ultratux.net>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Here's a data point in favor of raw horsepower when considering
-software raid performance.  I recently upgraded an Athlon Slot-A/SDRAM
-system to an Athlon XP/DDR system without changing OS, disks,
-disk controller or filesystems.
+maarten <maarten@ultratux.net> wrote:
+> Do you mean SCSI ones do ?  If so, I thought the firmware intelligence between 
 
-Athlon K7 (18u) @ 840MHz, 1GB PC133, Abit KA7
----------------------------------------------
-abit,1500M:4k,,,12862,36,11132,18,,,44953,32,284.0,1,,,,,,,,,,,,,
-abit,1500M:4k,,,13132,36,10231,17,,,57147,40,278.2,1,,,,,,,,,,,,,
-abit,1500M:4k,,,12595,36,11039,18,,,51269,36,281.6,1,,,,,,,,,,,,,
+I don't think, SCSI ones do so. However, I don't know many
+SCSI drives and thus I limited my sentence to IDE drives :)
 
-Athlon XP 2800 @ 2075MHz, 1GB PC2700, Asus A7V400-MX
-----------------------------------------------------
-abit,1500M:4k,,,41065,52,14636,15,,,49355,23,429.3,1,,,,,,,,,,,,,
-abit,1500M:4k,,,41330,58,15932,16,,,47045,22,415.7,2,,,,,,,,,,,,,
-abit,1500M:4k,,,43364,73,15395,17,,,52025,25,418.0,1,,,,,,,,,,,,,
+> 1.  If you write to it and that fails the drive will allocate a spare sector.  
 
-test: bonnie++ v1.03 (-q -s 1500:4k -r 0 -n 0 -f -u root -x 3)
-array: RAID 5 (2xIBM-DTLA-307020, 1xMAXTOR 6L020J1)
-md partition: 3x10GB (last 1/2 of each 20GB disk)
-controller: 3ware 6400, PATA, 66MHz (JBOD)
-filesystem: ext3, 4k block size, stride=16, noatime,data=ordered
-OS: RedHat 7.3, stock 2.4.28, raidtools 1.00.2, glibc 2.2.5, gcc 2.96
+As I said earlier:
 
-# cat /proc/mdstat
-Personalities : [raid0] [raid1] [raid5]
-read_ahead 1024 sectors
-md0 : active raid5 sdc5[2] sdb5[0] sda5[1]
-       4192768 blocks level 5, 64k chunk, algorithm 2 [3/3] [UUU]
+>> 1. would require some verify-operation, so I'm not sure if this
+>> is done at all in the wild.
 
-md1 : active raid5 sdc6[2] sdb6[0] sda6[1]
-       2425600 blocks level 5, 32k chunk, algorithm 2 [3/3] [UUU]
+A verify would take time and therefore I think, this is not done.
+Btw: *if* it would be done, write speed to disks should be read-speed/2
+or smaller, but usually it isn't.
 
-md2 : active raid5 sdc7[2] sdb7[0] sda7[1]
-       12707200 blocks level 5, 64k chunk, algorithm 2 [3/3] [UUU]
+> From that we [should be] able to conclude that if you get a write failure 
+> that the drive ran out of spare sectors. (is that a fact, or not??)
 
-md3 : active raid5 sdc8[2] sdb8[0] sda8[1]
-       20113152 blocks level 5, 64k chunk, algorithm 2 [3/3] [UUU]
+Yes, this is a fact.
 
-# fdisk -l
+> So basically what you're saying is that reallocation _only_ happens on 
+> _writes_ ?  Hm.  Maybe, I don't know...
 
-Disk /dev/sda: 255 heads, 63 sectors, 2501 cylinders
-Units = cylinders of 16065 * 512 bytes
+What I'm saying is: bad sectors are _only_ detected on reads and
+reallocations only happen on writes, yes.
 
-    Device Boot    Start       End    Blocks   Id  System
-/dev/sda1   *         1        13    104391   83  Linux
-/dev/sda2            14        45    257040   82  Linux swap
-/dev/sda3            46      2500  19719787+   5  Extended
-/dev/sda5            46       306   2096451   fd  Linux raid autodetect
-/dev/sda6           307       457   1212876   fd  Linux raid autodetect
-/dev/sda7           458      1248   6353676   fd  Linux raid autodetect
-/dev/sda8          1249      2500  10056658+  fd  Linux raid autodetect
+> Or maybe that isn't a problem since the disk gets kicked, and afterwards 
+> during resync the reallocation pays off. Yeah.  That must be it. :-)
 
-Disk /dev/sdb: 255 heads, 63 sectors, 2501 cylinders
-Units = cylinders of 16065 * 512 bytes
+This is what I said, yes :)
 
-    Device Boot    Start       End    Blocks   Id  System
-/dev/sdb1   *         1        13    104391   83  Linux
-/dev/sdb2            14        45    257040   82  Linux swap
-/dev/sdb3            46      2500  19719787+   5  Extended
-/dev/sdb5            46       306   2096451   fd  Linux raid autodetect
-/dev/sdb6           307       457   1212876   fd  Linux raid autodetect
-/dev/sdb7           458      1248   6353676   fd  Linux raid autodetect
-/dev/sdb8          1249      2500  10056658+  fd  Linux raid autodetect
 
-Disk /dev/sdc: 255 heads, 63 sectors, 2498 cylinders
-Units = cylinders of 16065 * 512 bytes
-
-    Device Boot    Start       End    Blocks   Id  System
-/dev/sdc1   *         1        13    104391   83  Linux
-/dev/sdc2            14        43    240975   82  Linux swap
-/dev/sdc3            44      2498  19719787+   5  Extended
-/dev/sdc5            44       304   2096451   fd  Linux raid autodetect
-/dev/sdc6           305       455   1212876   fd  Linux raid autodetect
-/dev/sdc7           456      1246   6353676   fd  Linux raid autodetect
-/dev/sdc8          1247      2498  10056658+  fd  Linux raid autodetect
-
-Cheers,
+regards,
+   Mario
 -- 
+() Ascii Ribbon Campaign
+/\ Support plain text e-mail
 
