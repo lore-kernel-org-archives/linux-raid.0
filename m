@@ -1,59 +1,44 @@
-From: Anders Nielsen <anielsen@diku.dk>
-Subject: Re: How to change the preferred minor
-Date: 11 Apr 2002 17:07:58 +0200
+From: Vidar <vl-list@ez.no>
+Subject: Problems moving a raid5 to other devices
+Date: Tue, 16 Apr 2002 14:25:44 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1018537678.1902.88.camel@localhost>
-References: <1018431578.10844.32.camel@anders>
-	<15540.57161.433718.491297@notabene.cse.unsw.edu.au>
+Message-ID: <200204161425.44277.vl-list@ez.no>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <15540.57161.433718.491297@notabene.cse.unsw.edu.au>
-To: Linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-tor, 2002-04-11 kl. 02:56 skrev Neil Brown:
-> On  April 10, anielsen@diku.dk wrote:
-> > When I try to boot my box with disks which previously was configured in
-> > other machines md tries to autodetect which array should have a given
-> > minor number.
-> > 
-> > I use the wonderful :-) mdadm -E and I can see a preferred minor value
-> > which is very nice, but since more than one array is competing for the
-> > same minor number it is kind of difficult for me to figure out what to
-> > put in my /etc/fstab.
-> > 
-> > Therefore my question is: how do I change the preferred minor value on a
-> > array so I can prevent conflicts? I would of course like to be able to
-> > use mdadm for this job :-)
-> 
-> This would be one of the reasons that I neither use nor recommend RAID
-> autostart.  It is too dependant on the preferred-minor which is hard
-> to change.
-> I guess I could add an option to mdadm to change the preferred-minor
-> as it could be useful, but I'm not highly motivated.  Maybe a
-> --rewrite-superblock option to --assemble...
-> 
-> I recommend that you enumerate the uuids of your arrays, create
-> /etc/mdadm.conf to say which uuid matches which /dev/md? and use 
->  mdadm --assemble --scan
-> to assemble your arrays.
-> 
-> NeilBrown
+
+Hi 
+
+system : RH7.2, all erratas installed (like raidtools-0.90-24 and 
+kernel-2.4.9-31)
+
+I got a RAID5, initially on hde1, hdg1, hdh1. Now I want to move the raid to 
+another computer and use hdb1, hdc1 and hdd1 instead.
+I have browsed the mailinglist archive 
+(http://marc.theaimsgroup.com/?l=linux-raid) and seen others with simular 
+problems but I have still not solved the problem.
+
+I have altered /etc/raidtab to reflect the device changes and run the command
+# raidstart -c /etc/raidtab /dev/md0
+
+My log then gives me messages like :
+ kernel: (read) hdb1's sb offset: 22073152 [events: 00000023]
+ modprobe: modprobe: Can't locate module block-major-33
+ kernel: md: could not lock [dev 21:01], zero-size? Marking faulty.
+
+It's obvious that linux still tries to access hde (block-major-33), hdg and 
+hdh.
+
+Do I have to install mdadm and perform some magic stunts ?
+If so, does mdadm require any particular version of kernel/raidtools ?
 
 
-I see that the method you recommend is more flexible since there are
-more uuids than minor numbers :-)
-
-But I am not sure how I disable autostart and replace it with mdadm -A
---scan so I could use some help.
-
-I am using Redhat 7.2. I guess I have to change an initscript or
-something.
-
-Thanks,
- Anders
-
+-- 
+vidar
 
 
