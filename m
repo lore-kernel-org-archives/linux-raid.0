@@ -1,19 +1,31 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
+From: Andrew Rechenberg <arechenberg@shermfin.com>
 Subject: Re: RAID-1 does not rebuild after hot-add
-Date: Mon, 4 Aug 2003 10:38:52 +1000
+Date: Mon, 04 Aug 2003 08:41:42 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16173.43804.617586.906225@gargle.gargle.HOWL>
+Message-ID: <1060000902.30302.9.camel@cinshrlnxws01.shermfin.com>
 References: <3F2D1FAC.9030905@shaolinmicro.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from David Chow on Sunday August 3
+In-Reply-To: <3F2D1FAC.9030905@shaolinmicro.com>
 To: David Chow <davidchow@shaolinmicro.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sunday August 3, davidchow@shaolinmicro.com wrote:
+I've seen this behavior occur on my RAID-1 arrays after using mdadm to
+hotadd drives.  If I wait a little while the recovery thread does wake
+up and starts the resync, but it doesn't occur immediately after the
+hotadd.
+
+I'm not sure if this type of behavior is expected, but I have seen it.
+
+Running RH 2.4.18-27bigmem with /proc/mdstat seq_file, and megaraid2
+patches
+
+
+
+On Sun, 2003-08-03 at 10:43, David Chow wrote:
 > Dear Neil,
 > 
 > A problem on hot adding a disk to an existing RAID array. I was 
@@ -31,13 +43,6 @@ On Sunday August 3, davidchow@shaolinmicro.com wrote:
 > but same result. Please give direction, as moving the root to somewhere 
 > else and use mkraid to start with is really stupid (my opinion), 
 > actually, I've no spare disk to that this time.
-
-I'm afraid I've got no idea what would be causing this.  
-I can only suggest you try a plain 2.4.21 kernel and if the problem
-persists we can add some extra printk's to find out what is happening.
-
-NeilBrown
-
 > 
 > regards,
 > David Chow
@@ -149,3 +154,6 @@ NeilBrown
 > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Andrew Rechenberg <arechenberg@shermfin.com>
+Infrastructure Team, Sherman Financial Group
