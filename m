@@ -1,54 +1,56 @@
-From: Lars Marowsky-Bree <lmb@suse.de>
-Subject: Re: stacked raid devices not autodetected?
-Date: Mon, 6 Dec 2004 14:16:26 +0100
-Message-ID: <20041206131626.GT3858@marowsky-bree.de>
-References: <912C966151E990A5186A8A78@pcmy.sei.cmu.edu> <51419.164.129.1.39.1102088099.squirrel@164.129.1.39> <20041206113752.GM3858@marowsky-bree.de> <20041206114923.GF4693@percy.comedia.it>
+From: Steven Ihde <x-linux-raid@hamachi.dyndns.org>
+Subject: Re: Looking for the cause of poor I/O performance
+Date: Mon, 6 Dec 2004 09:48:51 -0800
+Message-ID: <20041206174851.GA521@hamachi.dyndns.org>
+References: <200412041759.iB4HxG922078@www.watkins-home.com> <Pine.LNX.4.44.0412041809530.21262-100000@coffee.psychology.mcmaster.ca> <20041205010008.GA8091@hamachi.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20041206114923.GF4693@percy.comedia.it>
+In-Reply-To: <20041205010008.GA8091@hamachi.dyndns.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Luca Berra <bluca@comedia.it>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2004-12-06T12:49:24, Luca Berra <bluca@comedia.it> wrote:
+On Sat, 04 Dec 2004 17:00:08 -0800, Steven Ihde wrote:
+[snip]
+> A possible clue is that when tested individually but in parallel, hda
+> and hdc both halve their bandwidth:
+> 
+> /dev/hda:
+>  Timing cached reads:   1552 MB in  2.00 seconds = 774.57 MB/sec
+>  Timing buffered disk reads:   68 MB in  3.07 seconds =  22.15 MB/sec
+> /dev/hdc:
+>  Timing cached reads:   784 MB in  2.00 seconds = 391.86 MB/sec
+>  Timing buffered disk reads:   68 MB in  3.02 seconds =  22.54 MB/sec
+> /dev/sda:
+>  Timing cached reads:   836 MB in  2.00 seconds = 417.65 MB/sec
+>  Timing buffered disk reads:  120 MB in  3.00 seconds =  39.94 MB/sec
+> 
+> Could there be contention for some shared resource in the on-board
+> PATA chipset between hda and hdc?  Would moving one of them to a
+> separate IDE controller on a PCI card help?
+> 
+> Am I unreasonable to think that I should be getting better than 37
+> MB/sec on raid5 read performance, given that each disk alone seems
+> capable of 40 MB/sec?
 
-> >>> Is this a bug?  A design limitation?  Something else?
-> >>this is one of the limitations of the in-kernel autodetection
-> >You can pull a fix for that one out of the SUSE kernel, where we add=
- md
-> >devices we just started to the auto detection. It worked pretty well=
- in
-> >2.4, but my memory is hazed when I try to recall whether it was all
-> >ported to 2.6...
-> >
-> is it worth doing that in-kernel, i really believe that identifying
-> and starting arrays is a job that is better done in user-space.
+To answer my own question... I moved one of the PATA drives to a PCI
+PATA controller.  This did enable me to move 40MB/sec simultaneously
+from all three drives.  Guess there's some issue with the built-in
+PATA on the ICH5R southbridge.
 
-I'm not disagreeing, I'm only pointing out that it is possible and what
-the general fix looks like. We had a customer requirement to get it don=
-e
-that way, and at the time it was just the fastest way to code it.
+However, this didn't help raid5 performance -- it was still about
+35-39MB/sec.  I also have a raid1 array on the same physical disks,
+and observed the same thing there (same read performance as a single
+disk with hdparm -tT, about 40 MB/sec).  So:
 
-I'm a fan of moving discovery to user-land, alas I'm also a fan of fran=
-k
-words and right now the much hailed user-space discovery of RAIDs,
-partitions etc still has a couple of months to go to stabilize ;-)
+2.6.8 includes the raid1 read balancing fix which was mentioned
+previously on this list -- should this show up as substantially better
+hdparm -tT numbers for raid1 or is it more complicated than that?
 
+Does raid5 do read-balancing at all or am I just fantasizing?
 
-Sincerely,
-    Lars Marowsky-Br=E9e <lmb@suse.de>
+Thanks,
 
---=20
-High Availability & Clustering
-SUSE Labs, Research and Development
-SUSE LINUX Products GmbH - A Novell Business
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Steve
