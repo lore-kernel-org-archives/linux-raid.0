@@ -1,18 +1,28 @@
 From: "Guy" <bugzilla@watkins-home.com>
 Subject: RE: Should I Start Over?
-Date: Wed, 7 Jul 2004 09:40:18 -0400
+Date: Wed, 7 Jul 2004 09:45:44 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200407071340.i67DeJ307800@watkins-home.com>
-References: <1165.66.230.1.97.1089206618.squirrel@exitwound.org>
+Message-ID: <200407071345.i67Dji307824@watkins-home.com>
+References: <200407071340.i67DeJ307800@watkins-home.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1165.66.230.1.97.1089206618.squirrel@exitwound.org>
-To: stephen@exitwound.org
+In-Reply-To: <200407071340.i67DeJ307800@watkins-home.com>
+To: 'Guy' <bugzilla@watkins-home.com>, stephen@exitwound.org
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+Do you have the command you used to create the array the first time?
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Guy
+Sent: Wednesday, July 07, 2004 9:40 AM
+To: stephen@exitwound.org
+Cc: linux-raid@vger.kernel.org
+Subject: RE: Should I Start Over?
 
 You did not use the "missing" keyword.  You just created a 3 disk array.  If
 your array had 3 disks, you should have listed 2 of them and the "missing"
@@ -89,6 +99,11 @@ Thanks again, Luca.  You rock!
 
 --
 Steve
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 -
 To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 the body of a message to majordomo@vger.kernel.org
