@@ -1,47 +1,38 @@
-From: "Donghui Wen" <dhwen@protegonetworks.com>
-Subject: unable to read superblock ?
-Date: Mon, 9 Jun 2003 06:29:12 -0700
+From: Yu Chen <chen@hhmi.umbc.edu>
+Subject: SCSI or Ultra-ATA/133
+Date: Mon, 9 Jun 2003 09:41:43 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <004801c32e8b$1dac5170$4300a8c0@moon>
+Message-ID: <Pine.SGI.4.44.0306090850090.1754-100000@cobalt.hhmi.umbc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi, I have a machine setup as software-raid + ext3 + redhat ,
-but this morning, it seems the file system crash. here is
-the booting message, anyone has any idea how to fix it.
+Hello,
 
-Thanks!
+We are using hardware RAID, and considering expanding. I am wondering
+if someone could give me some advices on SCSI-SCSI RAID and SCSI-IDE RAID
+(like nexsan's ATA-boy2, configured with ultra-ATA/133 diskes). It seems
+the ultra-ATA raid is very impressive, but I don't know if we will notice
+the slowness of the ATA diskes.
 
-Donghui
+Thanks in advance for any advices!
 
-----------------------------------------------------------------------------
-------
-md: adding sda1
-md: created md2
-md: using <sdb1> <sda1>
-md: md2: raid array is not clean -- starting bacground reconstruction
-RAID level 1 does not need chunck size. Continuing anyway.
-md2: max total readahead window set to 124k
+Best
 
-raid1: device sdb1 operational as mirror1
-raid1: device sda1 operational as mirror 0
-raid1: raid set md2 mot clean, reconstructing mirror
-raid1: raid set md2 active with 2 out of 2 mirrors
-md: updating md2 RAID superblock device
-.
-.
-md: autorun DONE
-mounting root filesystem
-EXT3-fs: unable to read super block
-mount: error 22 mounting ext3
-pivotrot: oivot_root(/sysrot,/sysrot/initrd) failed :2
-freing unused kernal memory: 244k fred
-kernal panic: no init found. Try passing init= option to kernal
+===========================================
+Yu Chen
+Howard Hughes Medical Institute
+Chemistry Building, Rm 122
+University of Maryland at Baltimore County
+1000 Hilltop Circle
+Baltimore, MD 21250
 
------------------------------------------------------------
+phone: 	(410)455-6347
+	(410)455-2718
+fax: 	(410)455-1174
+email: 	chen@hhmi.umbc.edu
+===========================================
+
 
