@@ -1,25 +1,41 @@
-From: Warren Young <warren@etr-usa.com>
-Subject: Re: Adaptec 7XXX/DPT SmartRAID V
-Date: Thu, 31 Oct 2002 09:27:22 -0700
+From: Alistair Riddell <ali@gwc.org.uk>
+Subject: raidreconf success report
+Date: Sun, 3 Nov 2002 16:33:09 +0000 (GMT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3DC159EA.2040304@etr-usa.com>
-References: <334094430.20021030214559@wp.pl>
+Message-ID: <Pine.LNX.4.44.0211031621180.29013-100000@frank.gwc.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-gnu_is_not_unix wrote:
-> 
-> I got one problem with this configuration. When I try to boot from "my
-> self" compiled kernel (2.4.18), as first controller, linux recognize DPT,
-> so my root partitions can not be mounted (can not find root fs etc./etc.).
+I am happy to report successfully using raidreconf to grow a 7 x 73GB
+RAID5 to 10 x 73GB RAID5.
 
-Two solutions: 1) compile the Adaptec 2940 driver into the kernel, and 
-make the dpt_i2o driver a module.  This should force the 2940 to be seen 
-first.  2) Make sure your scsi_adapter aliases are set up right in 
-/etc/modules.conf, and re-generate your initrd.  They should set the 
-detection order.
+The operation took around 16 hours. Machine is a 4-way xeon with 6GB RAM;
+though the kernel on the CD I booted from only supported UP/1GB RAM. I'm
+not sure whether the extra CPUs/memory would have helped performance.
+Disks are 10kRPM scsi disks.
+
+The sequence of commands was:
+
+boot from cd (raid is root filesystem)
+reiserfsck /dev/md0
+raidstop /dev/md0
+raidreconf -o oldraidtab -n newraidtab -m /dev/md0
+go home and sleep!
+reiserfsck /dev/md0
+resize_reiserfs /dev/md0
+reiserfsck /dev/md0
+then reboot, and machine carried on as before!
+
+No errors were reported at any stage.
+
+All very impressive. Thanks for the good work!
+
+-- 
+Alistair Riddell - BOFH
+IT Manager, George Watson's College, Edinburgh
+Tel: +44 131 446 6070    Fax: +44 131 452 8594
+Microsoft - because god hates us
 
