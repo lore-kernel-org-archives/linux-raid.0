@@ -1,27 +1,51 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: Re: 1x 3ware controllers vs. 2x 3ware controllers
-Date: Mon, 2 Aug 2004 00:32:17 +0200 (CEST)
+From: =?ISO-8859-1?Q?Jarmo_J=E4rvenp=E4=E4?=
+	<Jarmo.Jarvenpaa@softers.net>
+Subject: Re: RAID 5 questions
+Date: Mon, 02 Aug 2004 09:01:14 +0300
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0408020025460.7382-100000@uplift.swm.pp.se>
-References: <410D4444.8000302@dgreaves.com>
+Message-ID: <410DD8AA.6060609@softers.net>
+References: <1091325475.2374.11.camel@localhost> <20040801033109.GA23032@jim.sh>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <410D4444.8000302@dgreaves.com>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <20040801033109.GA23032@jim.sh>
+To: Jim Paris <jim@jtan.com>
+Cc: Ninti Systems <office@ninti.com.au>, RAID Linux <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sun, 1 Aug 2004, David Greaves wrote:
+Umm, I maybe writing on complitely different setup (can't check the 
+original post), but our server with software raid 5 (3 disks) is booting 
+with lilo just fine.
 
-> I'm thinking about building a 2Tb SW RAID but will wait a few months
-> because I want PCI-X or similar to get the bandwidth to the gigabit card.
 
-According to Adaptec, their 16 port card with 64bit 66MHz PCI will 
-transfer up to 1.5gigabit/s. That's a tad low I must say, that's only 190 
-megabytes/s. I've gotten better read performance off of a 3ware card. Good 
-enough for feed a gig card though, especially if you have multiple PCI 
-buses.
+BR,
+Jarmo
 
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
 
+Jim Paris wrote:
+
+>>Q1: Is it true that Linux can't/shouldn't boot off a RAID 5 array?
+> 
+> 
+> LILO does not support booting off of RAID 5, and I don't think GRUB
+> does either.  I usually make a small RAID-1 partition to boot from
+> (mirrored across all four drives), since LILO does handle that just
+> fine.
+> 
+> 
+>>geometry = 2498/255/63, sectors = 40132503, start = 0
+> 
+> ..
+> 
+>>geometry = 39813/16/63, sectors = 40132503, start = 0
+>>Is this an issue with software RAID? 
+> 
+> 
+> No.
+> 
+> -jim
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
