@@ -1,45 +1,47 @@
-From: Mike Dresser <mdresser_l@windsormachine.com>
+From: Lars Marowsky-Bree <lmb@suse.de>
 Subject: Re: experiences with 3Ware 6400 3W-6400?
-Date: Fri, 27 Jun 2003 10:36:09 -0400 (EDT)
+Date: Fri, 27 Jun 2003 17:39:35 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.33.0306271017580.9087-100000@router.windsormachine.com>
-References: <Pine.LNX.4.44.0306261700260.12147-100000@chaos.egr.duke.edu>
+Message-ID: <20030627153935.GR7800@marowsky-bree.de>
+References: <Pine.LNX.4.55.0306270920010.6883@datavibe.net> <Pine.LNX.4.43.0306271429480.32150-100000@unicorn.drogon.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44.0306261700260.12147-100000@chaos.egr.duke.edu>
-To: Joshua Baker-LePain <jlb17@duke.edu>
-Cc: linux-raid@vger.kernel.org
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.43.0306271429480.32150-100000@unicorn.drogon.net>
+To: Gordon Henderson <gordon@drogon.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 26 Jun 2003, Joshua Baker-LePain wrote:
+On 2003-06-27T14:43:23,
+   Gordon Henderson <gordon@drogon.net> said:
 
-> As an IDE controller, it'll work great.  The hardware RAID performance
-> (especially RAID 5) ain't gonna' be hot, though.  The 7500 series performs
+> > project I'm working on at the moment.  It's either an older card, o=
+r
+> > software RAID1 (and, with all due respect, I don't want to use linu=
+x
+> > software raid in -this sort- of production environment).
+> Er.. Why not?
 
-Now that's an understatement :)
+Because the software RAID doesn't take care of problems like hotswap fo=
+r
+one.
 
-P4 2.53, Asus P4B533-e, 3ware 7500-4, 4 Maxtor Maxline 250 gb drives in
-raid5.
+That's about the only compelling reason for specialized hardware I can
+really think of, but it's a good one.
 
-mickey,512M,17840,60,19878,5,8683,2,28247,89,91356,8,243.0,0,16,2576,81,+++++,+++,+++++,+++,3184,96,+++++,+++,9392,96
 
-P4 2.53, Asus P4B533, 3ware 7500-4, 2 Maxtor DiamondMax 9 200 gb drives in
-Raid1. (different machine)
+Sincerely,
+    Lars Marowsky-Br=E9e <lmb@suse.de>
 
-r1,512M,26616,94,52362,15,21394,5,28918,92,47633,4,301.8,0,16,3145,99,+++++,+++,+++++,+++,3214,99,+++++,+++,10229,95
-
-Half to a third the write speed, although the read speed is a lot
-better.
-
-Haven't upgraded to the 7.6 firmware yet(still using 7.5.3 that was on
-the card), anyone notice any difference?
-
-The 7000-2 and 7500-4's in raid1 work quite nicely.  The 7500-4 in raid5
-actually lags the system for 3-5 seconds when doing a lot of disk i/o.
-Feels like working on a p120 with DMA shut off, to be honest.
-
-Works for what I'm doing with it though.
-
-Mike
-
+--=20
+SuSE Labs - Research & Development, SuSE Linux AG
+ =20
+"If anything can go wrong, it will." "Chance favors the prepared (mind)=
+=2E"
+  -- Capt. Edward A. Murphy            -- Louis Pasteur
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
