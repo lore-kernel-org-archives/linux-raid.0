@@ -1,76 +1,52 @@
-From: "Steve Pratt" <slpratt@us.ibm.com>
+From: Joel Becker <Joel.Becker@oracle.com>
 Subject: Re: RFC - new raid superblock layout for md driver
-Date: Wed, 20 Nov 2002 09:55:55 -0600
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <OF6B381288.73386F52-ON85256C77.00543682@pok.ibm.com>
+Date: Wed, 20 Nov 2002 08:03:00 -0800
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <20021120160259.GW806@nic1-pc.us.oracle.com>
+References: <15835.2798.613940.614361@notabene.cse.unsw.edu.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <15835.2798.613940.614361@notabene.cse.unsw.edu.au>
 To: Neil Brown <neilb@cse.unsw.edu.au>
 Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Wed, Nov 20, 2002 at 03:09:18PM +1100, Neil Brown wrote:
+> The interpretation of the 'name' field would be up to the user-space
+> tools and the system administrator.
+> I imagine having something like:
+> 	host:name
+> where if "host" isn't the current host name, auto-assembly is not
+> tried, and if "host" is the current host name then:
+>   if "name" looks like "md[0-9]*" then the array is assembled as that
+>     device
+>   else the array is assembled as /dev/mdN for some large, unused N,
+>     and a symlink is created from /dev/md/name to /dev/mdN
+> If the "host" part is empty or non-existant, then the array would be
+> assembled no-matter what the hostname is.  This would be important
+> e.g. for assembling the device that stores the root filesystem, as we
+> may not know the host name until after the root filesystem were loaded.
 
-Neil Brown wrote;
+	Hmm, what is the intended future interaction of DM and MD?  Two
+ways at the same problem?  Just curious.
+	Assuming MD as a continually used feature, the "name" bits above
+seem to be preparing to support multiple shared users of the array.  If
+that is the case, shouldn't the superblock contain everything needed for
+"clustered" operation?
 
->I would like to propose a new layout, and to receive comment on it..
+Joel
 
+-- 
 
- >/* constant this-device information - 64 bytes */
-    >u64  address of superblock in device
-    >u32  number of this device in array  /* constant over reconfigurations
-    */
+"When I am working on a problem I never think about beauty. I
+ only think about how to solve the problem. But when I have finished, if
+ the solution is not beautiful, I know it is wrong."
+         - Buckminster Fuller
 
- Does this mean that there can be holes in the numbering for disks that die
-    and are replaced?
-
-    >u32  device_uuid[4]
-    >u32  pad3[9]
-
- >/* array state information - 64 bytes */
-    >u32  utime
-    >u32  state    /* clean, resync-in-progress */
-    >u32  sb_csum
-
- These next 2 fields are not 64 bit aligned. Either rearrange or add
-    padding.
-
-    >u64  events
-    >u64  resync-position     /* flag in state if this is valid)
-    >u32  number of devices
-    >u32  pad2[8]
-
-
-
->Other features:
-   >A feature map instead of a minor version number.
-
-Good.
-
-   >64 bit component device size field.
-
-Size in sectors not blocks please.
-
-
-   >no "minor" field but a textual "name" field instead.
-
-Ok, I assume that there will be some way for userspace to query the minor
-   which gets dynamically assigned when the array is started.
-
-   >address of superblock in superblock to avoid misidentifying superblock.
-   e.g. is it >in a partition or a whole device.
-
-Really needed this.
-
-
->The interpretation of the 'name' field would be up to the user-space
->tools and the system administrator.
-
-Yes, so let's leave this out of this discussion.
-
-
-EVMS 2.0 with full user-space discovery should be able to support the new
-superblock format without any problems. We would like to work together on
-this new format.
-
-Keep up the good work, Steve
+Joel Becker
+Senior Member of Technical Staff
+Oracle Corporation
+E-mail: joel.becker@oracle.com
+Phone: (650) 506-8127
