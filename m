@@ -1,47 +1,73 @@
-From: Daniel McNeil <daniel@osdl.org>
-Subject: [PATCH 2.5.65] md/linear oops fix
-Date: 18 Mar 2003 10:45:56 -0800
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <1048013156.2542.11.camel@ibm-c.pdx.osdl.net>
+From: "Cress, Andrew R" <andrew.r.cress@intel.com>
+Subject: RE: Odd linux raid problems with debian testing.
+Date: Tue, 18 Mar 2003 12:56:35 -0800
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <A5974D8E5F98D511BB910002A50A66470580D6DD@hdsmsx103.hd.intel.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="=-iKuDKTgAesgz48O3oSK8"
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-To: NeilBrown <neilb@cse.unsw.edu.au>, Ingo Molnar <mingo@redhat.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain
+Return-path: <linux-raid-owner@vger.kernel.org>
+To: 'Paul Downs' <paul@positive-internet.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Paul,
 
---=-iKuDKTgAesgz48O3oSK8
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+3 partitions need to be mirrored for a root disk to be truly redundant:
+   root (your /dev/md0)
+   boot (presumably /dev/md1, mounted as /boot)
+   swap (perhaps /dev/md2)
 
-This fixes an oops caused by incorrect usage of sector_div()
-in which_dev() in md/linear.c.  It was dereferencing an non-existent
-hash table entry.
+The lilo.conf for these (once they boot ok), would have:
+boot=/dev/md1
+...
+root=/dev/md0
 
--- 
-Daniel McNeil <daniel@osdl.org>
+Of course the partition types should be set to fd (Linux Raid) also.
 
---=-iKuDKTgAesgz48O3oSK8
-Content-Disposition: attachment; filename=patch-2.5.65-linear
-Content-Type: text/x-patch; name=patch-2.5.65-linear; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+See the Software-RAID-HOWTO from http://www.tldp.org/docs.html#howto
+or http://scsirastools.sourceforge.net/docs/UserGuide section 4.0 
+for more information.
 
-diff -urNp -X /home/daniel/dontdiff linux-2.5.65/drivers/md/linear.c linux-2.5.65-md/drivers/md/linear.c
---- linux-2.5.65/drivers/md/linear.c	Mon Mar 17 13:44:04 2003
-+++ linux-2.5.65-md/drivers/md/linear.c	Tue Mar 18 09:34:09 2003
-@@ -37,7 +37,11 @@ static inline dev_info_t *which_dev(mdde
- 	linear_conf_t *conf = mddev_to_conf(mddev);
- 	sector_t block = sector >> 1;
- 
--	hash = conf->hash_table + sector_div(block, conf->smallest->size);
-+	/*
-+	 * sector_div(a,b) returns the remainer and sets a to a/b
-+	 */
-+	(void)sector_div(block, conf->smallest->size);
-+	hash = conf->hash_table + block;
- 
- 	if ((sector>>1) >= (hash->dev0->size + hash->dev0->offset))
- 		return hash->dev1;
+Andy
 
---=-iKuDKTgAesgz48O3oSK8--
+-----Original Message-----
+From: Paul Downs [mailto:paul@positive-internet.com] 
+Sent: Tuesday, March 18, 2003 1:19 PM
+To: linux-raid@vger.kernel.org
+Subject: Odd linux raid problems with debian testing.
+
+
+
+Hi,
+  Sorry if this subject is already done to death on the group but I have
+read the archives through google and couldn't find anything similar.  Also
+apologies for the rather long winded post, just be thankful I didn't include
+all the straces... ;-P
+
+  I have an easily repeatable problem with software raid and kernel
+2.4.18/19 + raidtools2 under debian.
+
+  The root device (/dev/md0) has /dev/hda1 and /dev/hdc1. Here is a chunk of
+the lilo.conf:
+
+[----- lilo.conf -----]
+# Specifies the boot device.  This is where Lilo installs its boot
+# block.  It can be either a partition, or the raw device, in which
+# case it installs in the MBR, and will overwrite the current MBR.
+#
+boot=/dev/hda
+
+# Specifies the device that should be mounted as root. (`/')
+#
+root=/dev/hda1
+[---------------------]
+
+  You cannot do the following:
+
+raidhotadd /dev/md0 /dev/hda1
+
+  as it returns this:
+
+/dev/md0: can not hot-add disk: invalid argument.
+
+  an strace indicates:
+[...]
