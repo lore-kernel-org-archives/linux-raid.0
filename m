@@ -1,37 +1,23 @@
-From: NeilBrown <neilb@cse.unsw.edu.au>
-Subject: [PATCH md ] Fix BUG in raid6 resync code.
-Date: Mon, 07 Jun 2004 13:39:52 +1000
+From: Mario 'BitKoenig' Holbe <Mario.Holbe@RZ.TU-Ilmenau.DE>
+Subject: Re: ANNOUNCE: mdadm 1.6.0 - A tool for managing Soft RAID under      Linux
+Date: Mon, 7 Jun 2004 09:50:00 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <E1BXAzI-0006I7-Oc@notabene.cse.unsw.edu.au>
-References: <20040607133613.19974.patches@notabene>
+Message-ID: <ca16n8$k3p$1@sea.gmane.org>
+References: <40498.194.60.85.4.1086343953.squirrel@194.60.85.4> <40C346A6.1000001@xss.co.at>
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This condtion on this loop is primarily to avoid the loop
-if it doesn't appear to be needed.  However it optimises
-a little too much and there is a case where it skips the
-loop when it is really needed.  This patch fixes it.
+Andreas Haumer <andreas@xss.co.at> wrote:
+> What are the advantages of a partitionable md device
+> compared to a SWRAID+LVM configuration?
 
-This is the raid6 version of the recent raid5 resync bugfix.
+You don't need LVM and thus you have one less layer
+with potential failures and errors.
 
 
-Signed-off-by: Neil Brown <neilb@cse.unsw.edu.au>
+regards,
+   Mario
+-- 
+<delta> talk softly and carry a keen sword
 
-### Diffstat output
- ./drivers/md/raid6main.c |    2 +-
- 1 files changed, 1 insertion(+), 1 deletion(-)
-
-diff ./drivers/md/raid6main.c~current~ ./drivers/md/raid6main.c
---- ./drivers/md/raid6main.c~current~	2004-06-04 16:36:24.000000000 +1000
-+++ ./drivers/md/raid6main.c	2004-06-07 13:35:02.000000000 +1000
-@@ -1157,7 +1157,7 @@ static void handle_stripe(struct stripe_
- 	 * parity, or to satisfy requests
- 	 * or to load a block that is being partially written.
- 	 */
--	if (to_read || non_overwrite || (syncing && (uptodate+failed < disks))) {
-+	if (to_read || non_overwrite || (syncing && (uptodate < disks))) {
- 		for (i=disks; i--;) {
- 			dev = &sh->dev[i];
- 			if (!test_bit(R5_LOCKED, &dev->flags) && !test_bit(R5_UPTODATE, &dev->flags) &&
