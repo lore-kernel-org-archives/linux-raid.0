@@ -1,38 +1,52 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: [PATCH][RFC] Fix "two RAID1 mirrors are faster than three"
-Date: Tue, 13 May 2003 13:53:45 +1000
+From: Matti Aarnio <matti.aarnio@zmailer.org>
+Subject: Re: MD/RAID1 Large File Support
+Date: Tue, 13 May 2003 09:47:30 +0300
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16064.27721.125256.295803@notabene.cse.unsw.edu.au>
-References: <200305121322_MC3-1-3884-D0AC@compuserve.com>
+Message-ID: <20030513064730.GI24892@mea-ext.zmailer.org>
+References: <EC803175C921D411BCE2000000006429081C3641@ash-exch_lg>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Chuck Ebbert on Monday May 12
-To: Chuck Ebbert <76306.1226@compuserve.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <EC803175C921D411BCE2000000006429081C3641@ash-exch_lg>
+To: "Duncan, Mike" <Mike.Duncan@Sonopress.com>
+Cc: Linux SW Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Monday May 12, 76306.1226@compuserve.com wrote:
-> 
->   This patch is only lightly tested on 2.4.21-rc2-ac1.
-> 
->   It attempts to speed up single sequential streaming reads as well as
-> fixing the problem with multiple streams not working on 3+ disk
-> mirrors.  With this patch applied I get full speed form all three
-> disks when reading three streams at once.
-> 
->   A version of this on 2.4.20aa1 gives about 60% performance gains on single
-> sequential streams but it yields effectively no gain on stock kernels (?)
-> I've given up trying to figure out why...
-> 
->   How much of this is worth merging?  (One line has already been
->   rejected.)
+On Mon, May 12, 2003 at 10:31:24PM -0400, Duncan, Mike wrote:
+> Sorry for not giving the error. I was trying "cat /dev/zero > test" as a
+> test and receiving the error "File too large.". I have 2 machines setup
+> pretty much identically, except the one that I am receiving the error for is
+> software-raided with md and raid1. The other one (running SuSE 8.0 as well
+> with 2.4.20 kernel) does not give this error.
 
-Hard to say.  As you mentioned in another email, it changes too much
-stuff.
+In that test, it all depends upon what your shell is doing when it
+is opening the file 'test' in that IO redirection.
 
-Either split it into logic bits, or explain in detail what it is
-trying to achieve, or both, and I will tell you what I think.
+If it does not do  O_LARGEFILE  properly, (likely when using open(2) 
+directly,) then the file won't be opened allowing its size to exceed 2G.
 
-NeilBrown
+From   man 2 open
+
+       O_LARGEFILE
+              On 32-bit systems that support the Large Files System, allow 
+              files whose sizes cannot be represented in 31 bits  to  be
+              opened.
+
+The world is still full of code that does not have  Large File Summit
+support in them:     http://www.sas.com/standards/large.file/
+(Heck, even I write code that does not support LFS -- its problem space
+does not include the need.)
+
+> I have tried recompiling the kernel (to several different versions, the last
+> 2.5.69) and recompiling gcc, glibc, and other packages...but no luck ...
+> still get the same error.
+> 
+> I don't think ulimit is used in newer glibc now...right? Anyways, you may be
+> right about the drivers not caring about the filesizes, but wouldn't there
+> be a 32bit limit on blocks if the LFS support was not there?
+
+The   ulimit (getrlimit / setrlimit) is implemented and eforced in the 
+kernel in conjunction with  O_LARGEFILE control flag.
+
+/Matti Aarnio
