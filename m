@@ -1,42 +1,45 @@
-From: AndyLiebman@aol.com
+From: Joshua Baker-LePain <jlb17@duke.edu>
 Subject: Re: Software RAID-0 striping over Hardware RAID-5
-Date: Mon, 20 Sep 2004 09:51:09 EDT
+Date: Mon, 20 Sep 2004 09:55:50 -0400 (EDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1cd.2b876cdc.2e803a4d@aol.com>
+Message-ID: <Pine.LNX.4.58.0409200953110.6936@chaos.egr.duke.edu>
+References: <1a1.29d2b13e.2e8039e4@aol.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: jlb17@duke.edu
+In-Reply-To: <1a1.29d2b13e.2e8039e4@aol.com>
+To: AndyLiebman@aol.com
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-jlb17@duke.edu writes:
+On Mon, 20 Sep 2004 at 9:49am, AndyLiebman@aol.com wrote
 
-> I have a couple of dual 3ware boxes I do this with, and have never had a 
-> problem.  I would make sure that you have a hot spare on your RAID5 
-> arrays, though.  Because if one of them dies, you'll obviously lose 
-> everything on both arrays.
+> Have you ever tested your systems while one of your RAID5 arrays is 
+> rebuilding or verifying? (I'm about to do that right now). I'm wondering if Linux 
+> Software RAID-0 might falter if one of the two arrays is significantly slower than 
+> the other (while rebuilding)?
 
-Thanks for the reply, Joshua. 
+I've had arrays under normal (sporadically heavy) usage during a rebuild, 
+and there wasn't a problem.
 
-Have you ever tested your systems while one of your RAID5 arrays is 
-rebuilding or verifying? (I'm about to do that right now). I'm wondering if Linux 
-Software RAID-0 might falter if one of the two arrays is significantly slower than 
-the other (while rebuilding)?
+> My inclination is to not use a hot spare. Instead, I rely on 3ware's email 
+> notification feature to alert me that a drive needs to be replaced. I always 
+> keep a spare handy that can be popped into place immediately. Also, I want to 
+> have control over when rebuilding takes place. It would be a bad thing to rebuild 
+> during certain critical high I/O moments of the day -- whereas rebuilding at 
+> night would be much less stressful on the system. Do you see anything wrong 
+> with this approach? 
 
-To test the integrity of the system, I'm going to remove a drive from one of 
-the RAID5 arrays, add it back and rebuild the array, and while the rebuilding 
-is taking place I'm going to run Bonnie++ several times (100GB of 
-writing/reading per test). 
+Yes -- it requires you to be on call 24x7 for maximum protection.  And 
+even then the level of protection is less than with a hot spare, given 
+that it will take you time to get from whereever you are to whereever the 
+server is.  Also, disks can sometimes have a tendency to go in quick 
+succession.  I would *strongly* recommend a hot spare.
 
-My inclination is to not use a hot spare. Instead, I rely on 3ware's email 
-notification feature to alert me that a drive needs to be replaced. I always 
-keep a spare handy that can be popped into place immediately. Also, I want to 
-have control over when rebuilding takes place. It would be a bad thing to rebuild 
-during certain critical high I/O moments of the day -- whereas rebuilding at 
-night would be much less stressful on the system. Do you see anything wrong 
-with this approach? 
+Remember, you're cutting your reliability in half by striping the two 
+arrays.  Why not maximally protect those individual arrays?
 
-Thanks again, 
-Andy
+-- 
+Joshua Baker-LePain
+Department of Biomedical Engineering
+Duke University
