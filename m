@@ -1,38 +1,26 @@
 From: Stephan van Hienen <raid@a2000.nu>
 Subject: Re: Promise FastTrak TX4 losing interrupts (with apic mode)
-Date: Thu, 6 Feb 2003 19:12:41 +0100 (CET)
+Date: Thu, 6 Feb 2003 19:15:11 +0100 (CET)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.53.0302061907550.17629@ddx.a2000.nu>
-References: <Pine.SGI.4.32.0302060924010.93623-100000@surfer.sbm.temple.edu>
+Message-ID: <Pine.LNX.4.53.0302061913210.17629@ddx.a2000.nu>
+References: <Pine.GSO.4.30.0302060728320.15885-100000@multivac.sdsc.edu>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.SGI.4.32.0302060924010.93623-100000@surfer.sbm.temple.edu>
-To: AU <au@surfer.sbm.temple.edu>
-Cc: Hans-Peter Jansen <hp@lisa-gmbh.de>, Shawn Evans <shawnwe@hotmail.com>, linux-raid@vger.kernel.org, Andre Hedrick <andre@linux-ide.org>, linux-kernel@vger.kernel.org
+In-Reply-To: <Pine.GSO.4.30.0302060728320.15885-100000@multivac.sdsc.edu>
+To: "Peter L. Ashford" <ashford@sdsc.edu>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 6 Feb 2003, AU wrote:
+On Thu, 6 Feb 2003, Peter L. Ashford wrote:
 
-> Try to boot with apic=no or acpi=oldboot
-like i do now with append noapic, it works ok
+> I just saw, and fixed, a very similar problem last night (lost interrupts,
+> but partition table was eventually read).  The system was a dual Xeon on a
+> P4DP6.  The Promise card was an Ultra100TX2.  The OS was RedHat 7.3.
+>
+> The fix was to increase the bus master time for the PCI slot in the BIOS.
+> This was also tried under SuSE 8.1, where it did NOT work.
 
-did some more tests today :
-plugged the fasttrak tx4 into 3 different machines
-all smp (dual p3/dual p2/dual xeon)
-with all i get lost interrupts
+ultra100tx2 / ultra66 cards work ok in the machines i tested it in (and
+also the onboard fasttrak100 on the xeon server (intel mainbord))
 
-if i boot with noapic problem is solved
-
-(tried updating the bios for the promise, but doesn't help)
-
-looks like there is really something wrong with the (bios?) tx4
-
-i have 3 of these cards here
-putting 2 together in an mainbord also doesn't work (then the tx4 bios is
-complaining about no assigned irq)
-
-and if i use 1 card in a system, i always have to press 'esc' to continu
-after the bios tells me there is no array
-
-i really think i should have bought the highpoint 4 port cards :(
