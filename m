@@ -1,37 +1,39 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: Re: RAID backup - mtx w/ tcl
-Date: Sat, 5 Oct 2002 14:30:36 +0200
-Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20021005123036.GB28819@percy.comedia.it>
-References: <Pine.LNX.3.96.1021004144923.10481C-100000@Maggie.Linux-Consulting.com> <3D9E148B.7050302@cfht.hawaii.edu>
+From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
+Subject: Re: AARGH! Please help. IDE controller fsckup
+Date: Sat, 05 Oct 2002 17:42:07 +0200
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <3D9F084F.1020200@karlsbakk.net>
+References: <200210021516.46668.roy@karlsbakk.net> <200210031225.11283.roy@karlsbakk.net> <20021003114020.GD7350@unthought.net> <200210031513.28459.roy@karlsbakk.net> <20021003132349.GE7350@unthought.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <3D9E148B.7050302@cfht.hawaii.edu>
-To: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+To: Jakob Oestergaard <jakob@unthought.net>
+Cc: Kernel mailing list <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Oct 04, 2002 at 12:22:03PM -1000, Kanoalani Withington wrote:
->Hi Alvin,
->
->Funny, when I searched for it on the web I didn't find anything. The 
->original was written by Leonard Zubkoff and subsequently modified by 
->Eric Lee Green. I never got it to work for me until around version 
->1.2.15. I emailed Eric to see what's up with it but in the meantime I 
->put my latest copy of it on my anonymous ftp server:
->
->ftp.cfht.hawaii.edu:/pub/daprog/kanoa/mtx-1.2.16rel.tar.gz
->
-mtx is hosted on sourceforge http://sourceforge.net/projects/mtx
-but i believe Alvin was referring to your tcl scripts
+Jakob Oestergaard wrote:
 
-L.
+>>>>But ... with persistent superblock - is it possible to fsckup the raid?
+>>>>        
+>>>>
+>>>You're root, it is indeed possible  :)
+>>>      
+>>>
+>>er - yes. I more meant like 'automagically'
+>>    
+>>
+>
+>It will only automagically screw up your arrays if you shuffle disks
+>between machines (mix several RAID arrays from other systems in one
+>system)  (you can of course move all your disks to one new machine, if
+>it has none of it's original RAIDed disks left).
+>
+>Just don't mix disks with persistent superblocks from multiple machines
+>into one single machine.  Unless you know exactly what you're doing.
+>  
+>
+Could it be some kind of idea to 'sign' the disks with some hash out of 
+hostname and  IP or something?
 
--- 
-Luca Berra -- bluca@comedia.it
-        Communication Media & Services S.r.l.
- /"\
- \ /     ASCII RIBBON CAMPAIGN
-  X        AGAINST HTML MAIL
- / \
+roy
