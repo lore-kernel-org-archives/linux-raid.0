@@ -1,36 +1,72 @@
-From: Thunder from the hill <thunder@lightweight.ods.org>
+From: Andries Brouwer <aebr@win.tue.nl>
 Subject: Re: PATCH - change to blkdev->queue calling triggers BUG in md.c
-Date: Mon, 2 Sep 2002 16:39:53 -0600 (MDT)
+Date: Tue, 3 Sep 2002 01:08:24 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0209021638230.3270-100000@hawkeye.luckynet.adm>
-References: <Pine.LNX.4.44.0209021501080.1401-100000@home.transmeta.com>
+Message-ID: <20020902230824.GB9359@win.tue.nl>
+References: <UTC200209022141.g82LfMV21308.aeb@smtp.cwi.nl> <Pine.LNX.4.44.0209021459030.1401-100000@home.transmeta.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44.0209021501080.1401-100000@home.transmeta.com>
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44.0209021459030.1401-100000@home.transmeta.com>
 To: Linus Torvalds <torvalds@transmeta.com>
-Cc: Thunder from the hill <thunder@lightweight.ods.org>, Andries.Brouwer@cwi.nl, aebr@win.tue.nl, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, neilb@cse.unsw.edu.au
+Cc: Andries.Brouwer@cwi.nl, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, neilb@cse.unsw.edu.au
 List-Id: linux-raid.ids
 
-Hi,
+On Mon, Sep 02, 2002 at 03:00:27PM -0700, Linus Torvalds wrote:
 
-On Mon, 2 Sep 2002, Linus Torvalds wrote:
-> On Mon, 2 Sep 2002, Thunder from the hill wrote:
-> > 
-> > Why not the faraway goal: no partition tables any more? They're annoying.
+> > No, my suggested changes would not break a single Linux installation
+> > in the world.
 > 
-> Guys, Linux is not a research project.
-> 
-> Partition tables are a fact of life.
+> .. by making your suggested behaviour not be used. Yes.
 
-Linus, can you spell "faraway"? I wasn't talking about kicking 
-partitioning code from Linux 2.5, I was talking about inventing a better 
-way in 2010.
+Not so pessimistic. We go by small steps.
 
-			Thunder
--- 
---./../...-/. -.--/---/..-/.-./..././.-../..-. .---/..-/.../- .-
---/../-./..-/-/./--..-- ../.----./.-../.-.. --./../...-/. -.--/---/..-
-.- -/---/--/---/.-./.-./---/.--/.-.-.-
---./.-/-.../.-./.././.-../.-.-.-
+I think it important to get rid of partition table reading in the kernel.
 
+It (pt reading) is wrong in principle, as we agree already.
+But there are also all kinds of practical reasons.
+
+ One argument is that our traditional DOS-type partition table will soon
+ be at the end of its useful life. Yes, maybe it survives a few more years
+ but our own stability requires slow changes, so we must start thinking a
+ long time in advance.
+ Another argument is that it sometimes takes a *long* time, like several
+ minutes, especially when this reading triggers hardware bugs.
+ Another argument is that nobody knows whether there is a partition table.
+ In the case of ZIP drives there sometimes is a jumper or special SCSI command
+ to switch between the "large floppy" and "removable disk" statuses, and
+ the kernel doesnt know.
+ Another argument is that tricky things happen in the presence of disk managers.
+
+So stage one is a kernel boot parameter "nopt" or so, that stops parsing
+of partition tables other than the root partition. Some people need it
+because of special problems, others just want to experiment. That is good,
+and we'll get some feedback on partx and family.
+
+Stage two happens a year later, when we have a working initrd. Seen from the
+outside the new (kernel + initrd) plays the role of the old kernel.
+Ha. That means that we can move the pt reading to initrd, and nobody notices.
+
+Stage three happens when initrd and kernel no longer are so tightly coupled.
+Initrd is just early userspace, tools exist to populate it, distributions make
+their own. Now the kernel does not need any partition reading code and
+nobody ever noticed. And the setup has become much more powerful.
+
+-----
+
+> But if that is the case, then we _still_ need to fix the media change and 
+> partition read issue. Right? Which brings back _all_ my points for why it 
+> should be done at open time, and by the generic routine. Agreed?
+
+The above was mainly about the partition reading at boot time.
+There are two other situations: partition reading at insmod time,
+and partition reading at media change time.
+
+But these are easier situations. There is a functioning userspace already.
+As I said, in view of the desired direction, I would not mind at all if
+a media change did not trigger partition reading today.
+(In fact, for me, under 2.5.33, it doesn't. But blockdev --rereadpt helps.)
+
+
+Andries
