@@ -1,51 +1,58 @@
-From: Frank van Maarseveen <frankvm@frankvm.com>
-Subject: Re: Spares and partitioning huge disks
-Date: Sun, 9 Jan 2005 20:33:53 +0100
-Message-ID: <20050109193353.GB9524@janus>
-References: <crmt7e$8d6$1@sea.gmane.org> <200501072157.j07Lvg906301@www.watkins-home.com> <20050108145228.GB26475@janus> <200501081749.32816.maarten@ultratux.net>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: Spares and partitioning huge disks
+Date: Sun, 9 Jan 2005 15:28:45 -0500
+Message-ID: <200501092028.j09KSr918180@www.watkins-home.com>
+References: <41E17117.2090500@tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <200501081749.32816.maarten@ultratux.net>
+In-Reply-To: <41E17117.2090500@tls.msk.ru>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: 'Michael Tokarev' <mjt@tls.msk.ru>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, Jan 08, 2005 at 05:49:32PM +0100, maarten wrote:
+It is on Neil's wish list (or to do list)!  Mine too!
+
+From Neil Brown:
+
+http://marc.theaimsgroup.com/?l=linux-raid&m=110055742813074&w=2
+
+Guy
+
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Michael Tokarev
+Sent: Sunday, January 09, 2005 1:00 PM
+To: linux-raid@vger.kernel.org
+Subject: Re: Spares and partitioning huge disks
+
+Peter T. Breuer wrote:
+> Michael Tokarev <mjt@tls.msk.ru> wrote:
 > 
-> > For one second I thought it's a clever trick but gut feeling tells
-> > me the odds of losing the entire array won't change (simplified --
-> > because the increased complexity creates room for additional errors).
+>>I think all modern drives support bad block remapping on both read and
+write.
+>>But think about it: if there's a read error, it means the drive CAN NOT
+read
+>>the "right" data for some reason (for some definition of "right" anyway)
+--
+>>ie, the drive "knows" there's some problem with the data and it can't
 > 
-> No.  It is somewhat more complex, true, but no different than making, for 
+> I really don't want RAID to fault the disk offline in this case.  I want
+> RAID to read from the other disk(s) instead, and rewrite the data on the
+> disk that gave the fail notice on that sector, and if that gives no error,
+> then just carry on and be happy ...
 
-Got it.
+There where some patches posted to this list some time ago that tries to
+do just that (or a discussion.. i don't remember).  Yes, md code currently
+doesn't do such things, and fails a drive after the first error -- it's
+the simplest way to go ;)
 
-> However, IF during that 
-> resync one other drive has a read error, it gets kicked too and the array 
-> dies.  The chances of that happening are not very small;
+/mjt
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Ouch! never considered this. So, RAID5 will actually decrease reliability
-in a significant number of cases because:
-
--	>1 read errors can cause a total break-down whereas it used
-	to cause only a few userland I/O errors, disruptive but not foobar.
--	disk replacement is quite risky. This is totally unexpected to me
-	but it should have been obvious: there's no bad block list in MD
-	so if we would postpone I/O errors during reconstruction then
-	1:	it might cause silent data corruption when I/O error
-		unexpectedly disappears.
-	2:	we might silently loose redundancy in a number of places.
-
-I think RAID6 but especially RAID1 is safer.
-
-A small side note on disk behavior:
-If it becomes possible to do block remapping at any level (MD, DM/LVM,
-FS) then we might not want to write to sectors with read errors at all
-but just remap the corresponding blocks by software as long as we have
-free blocks: save disk-internal spare sectors so the disk firmware can
-pre-emptively remap degraded but ECC correctable sectors upon read.
-
--- 
-Frank
