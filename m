@@ -1,67 +1,50 @@
-From: Matt Domsch <Matt_Domsch@dell.com>
-Subject: Re: Proposed Enhancements to MD
-Date: Tue, 13 Jan 2004 15:10:16 -0600
+From: Arjan van de Ven <arjanv@redhat.com>
+Subject: Re: Proposed enhancements to MD
+Date: Tue, 13 Jan 2004 23:10:49 +0100
 Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20040113151016.C7646@lists.us.dell.com>
-References: <40036902.8080403@adaptec.com> <20040113081932.A721@lists.us.dell.com> <400436CC.7020007@pobox.com>
+Message-ID: <1074031848.4981.4.camel@laptop.fenrus.com>
+References: <40033D02.8000207@adaptec.com> <40043C75.6040100@pobox.com>
+	 <20040113134107.A7646@lists.us.dell.com>
+Reply-To: arjanv@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-CSPhqZAP0rRo10gdZEWm"
 Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <400436CC.7020007@pobox.com>; from jgarzik@pobox.com on Tue, Jan 13, 2004 at 01:19:56PM -0500
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Scott Long <scott_long@adaptec.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <20040113134107.A7646@lists.us.dell.com>
+To: Matt Domsch <Matt_Domsch@dell.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Scott Long <scott_long@adaptec.com>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-raid <linux-raid@vger.kernel.org>, Neil Brown <neilb@cse.unsw.edu.au>
 List-Id: linux-raid.ids
 
-On Tue, Jan 13, 2004 at 01:19:56PM -0500, Jeff Garzik wrote:
-> Matt Domsch wrote:
-> > I haven't seen the spec yet myself, but I'm lead to believe that
-> > DDF allows for multiple logical drives to be created across a single
-> > set of disks (e.g. a 10GB RAID1 LD and a 140GB RAID0 LD together on
-> > two 80GB spindles), as well as whole disks be used.  It has a
-> 
-> 
-> Me either.  Any idea if there will be a public comment period, or is the 
-> spec "locked" into 1.0 when it's released in a month or so?
 
-As it happens, Bill Dawkins of Dell is the DDF committee chair at
-SNIA.  Here's what he's told me:
+--=-CSPhqZAP0rRo10gdZEWm
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-The current draft of the DDF specification is available for review
-to any member of SNIA. This is a "Work in Progress" draft. Anyone in a
-member company can go to www.snia.org and sign up for web access. They
-will then have to sign up for the DDF Technical Working Group.
-Acceptance to the DDF TWG is automatic and the current documents are
-available there.
-(As Dell is a member, I signed up for the DDF TWG as an observer.
-Other companies are also on the member list, including Sistina, so
-Jeff you may be able to get a Sistina collegue to mail you a copy.
-http://www.snia.org/about/member_list has the list of member
-companies. - Matt)
 
-For people and companies who are not members of SNIA, I am writing to
-the SNIA Technical Director to see if I can release copies of the
-draft spec now. I'll let you know when I get a response.
+> Ideally in 2.6 one can use device mapper, but DM hasn't been
+> incorporated into 2.4 stock, I know it's not in RHEL 3, and I don't
+> believe it's included in SLES8.  Can anyone share thoughts on if a DDF
+> solution were built on top of DM, that DM could be included in 2.4
+> stock, RHEL3, or SLES8?  Otherwise, Adaptec will be stuck with two
+> different solutions anyhow, one for 2.4 (they're proposing enhancing
+> MD), and DM for 2.6.
 
-As for the timeline, we have a face to face meeting of the DDF TWG
-next Tuesday and it is our intent to vote on releasing the
-specification as a "Trial Use" specification for public review and
-comment. If the vote is affirmative, the SNIA Technical Council will
-have to meet to determine when and if to release the "Trial Use"
-specification. This may take a few months, so we are probably looking
-at March for full release. Feel free to share this information with
-your Linux contacts.
+Well it's either putting DM into 2.4 or forcing some sort of partitioned
+MD into 2.4. My strong preference would be DM in that cases since it's
+already in 2.6 and is actually designed for the
+multiple-superblock-formats case.
 
 
 
-So, for now, if you're in SNIA, you can get access to the draft spec,
-and in a few months the draft spec should be publicly available.
+--=-CSPhqZAP0rRo10gdZEWm
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-Thanks,
-Matt
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.3 (GNU/Linux)
 
--- 
-Matt Domsch
-Sr. Software Engineer, Lead Engineer
-Dell Linux Solutions www.dell.com/linux
-Linux on Dell mailing lists @ http://lists.us.dell.com
+iD8DBQBABGzoxULwo51rQBIRAvB3AJ975gLeupCNmZHRCDZ41DylR+7cWgCgn5/9
+5lsgj7bmuCMG+c5VuTD5aC8=
+=Q7RG
+-----END PGP SIGNATURE-----
+
+--=-CSPhqZAP0rRo10gdZEWm--
