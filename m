@@ -1,48 +1,48 @@
-From: Stephan van Hienen <raid@a2000.nu>
-Subject: Re: raid5 2TB+ NO GO ?
-Date: Wed, 12 Feb 2003 11:39:14 +0100 (CET)
+From: "Marcus Williams" <marcus@quintic.co.uk>
+Subject: RAID1 and auto-detect flag
+Date: Thu, 12 Feb 2003 14:38:46 -0000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.53.0302121129480.13462@ddx.a2000.nu>
-References: <Pine.LNX.4.53.0302060059210.6169@ddx.a2000.nu>
- <Pine.LNX.4.53.0302060123150.6169@ddx.a2000.nu> <Pine.LNX.4.53.0302060211030.6169@ddx.a2000.nu>
- <15937.50001.367258.485512@wombat.chubb.wattle.id.au>
- <Pine.LNX.4.53.0302061915390.17629@ddx.a2000.nu>
- <15945.31516.492846.870265@wombat.chubb.wattle.id.au>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Message-ID: <b2dm72$6s4$1@main.gmane.org>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <15945.31516.492846.870265@wombat.chubb.wattle.id.au>
-To: Peter Chubb <peter@chubb.wattle.id.au>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, bernard@biesterbos.nl, ext2-devel@lists.sourceforge.net
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 12 Feb 2003, Peter Chubb wrote:
-
-> >>>>> "Stephan" == Stephan van Hienen <raid@a2000.nu> writes:
->
-> Stephan,
-> 	Just noticed you're using raid5 --- I don't believe that level
-> 5 will work, as its data structures and  internal algorithms are
-> 32-bit only.  I've done no work on it to make it work (I've been
-> waiting for the rewrite in 2.5), and don't have time to do anything now.
->
-> You could try making sector in the struct stripe_head a sector_t, but
-> I'm pretty sure you'll run into other problems.
->
-> I only managed to get raid 0 and linear to work when I was testing.
-
-ok clear, so no raid5 for 2TB+ then :(
-
-looks like i have to remove some hd's then
-
-what will be the limit ?
-
-13*180GB in raid5 ?
-or 12*180GB in raid5 ?
-
-    Device Size : 175823296 (167.68 GiB 180.09 GB)
-
-13* will give me 1,97TiB but will there be an internal raid5 problem ?
-(since it will be 13*180GB to be adressed)
+Hi -
+I have a RAID1, 2 disk mirror set that contains a drive that fails
+intermittently (or at least gets disk errors intermittently and so
+gets marked as failed). Obviously I want to swap the failing drive for
+a new spare (we arent running with a spare currently).
+So, I shutdown when the drive failed, replaced the drive and rebooted.
+What this got me was a degraded root partition (md0) and a non-working
+/export area (where the md1 device is mounted).
+md0 (root device) is hda1 and hdc1
+md1 (/export) is hda3 and hdc3
+hda1 and hdc1 are tagged as bootable, and of type raid-autodetect. On
+reboot the root partition gets auto-detected as raid, issues an error
+about "invalid raid superblock magic on hda1" and automagically sorts
+itself out mounting md0 in degraded mode.
+However, md1 does not. The only difference I can think of is that the
+md1 device is made up of two hd partitions that have not been set to
+the auto-detect type (the raidtab entries for md0 and md1 are
+identical bar the devices they use). When I reboot I get:
+Feb 10 18:58:05 bart kernel: md: invalid raid superblock magic on hda3
+Feb 10 18:58:05 bart kernel: md: hda3 has invalid sb, not importing!
+Feb 10 18:58:05 bart kernel: md: could not import hda3!
+Feb 10 18:58:05 bart kernel: md: autostart hda3 failed!
+If I set the type to autodetect, will this device come up in degraded
+mode instead of failing like this?
+What I want is a system where, if a drive fails, someone can shut it
+down, replace the failed drive, reboot in degraded mode (at this point
+everyone else can start working again) and then partition the new
+drive and raidhotadd it back into the set. At the moment I've got a
+system thats got a more long winded process to repair (and requires
+knowledge of the RAID setup).
+Obviously having a spare in the set would be even better, but thats
+not an option at the moment.
+Thanks
+Marcus
+-- 
+Marcus Williams - http://www.onq2.com
+Quintic Ltd, 39 Newnham Road, Cambridge, UK
 
 
