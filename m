@@ -1,44 +1,44 @@
-From: Nicola Fankhauser <nicola.fankhauser@variant.ch>
-Subject: non-optimal RAID 5 performance with 8 drive array
-Date: Tue, 01 Mar 2005 14:24:47 +0100
-Message-ID: <42246D1F.3070407@variant.ch>
+From: Robin Bowes <robin-lists@robinbowes.com>
+Subject: Re: non-optimal RAID 5 performance with 8 drive array
+Date: Tue, 01 Mar 2005 17:53:54 +0000
+Message-ID: <d029u5$65p$1@sea.gmane.org>
+References: <42246D1F.3070407@variant.ch>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
+In-Reply-To: <42246D1F.3070407@variant.ch>
 Sender: linux-raid-owner@vger.kernel.org
-To: RAID Linux <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi all
+Nicola Fankhauser wrote:
+> see [3] for a description of what I did and more details.
 
-I have a RAID 5 array consisting of 8 300GB Maxtor SATA drives 
-(6B300S0), hooked up to a Asus A8N-SLI deluxe motherboard with 4 NForce4 
-SATA ports and 4 SiI 3114 ports.
+Hi Nicola,
 
-see [3] for a description of what I did and more details.
+I read your description with interest.
 
-each single disk in the array gives a read performance (tested with dd) 
-of about 62MB/s (when reading the first 4GiB of a disk).
+I thought I'd try some speed tests myself but dd doesn't seem to work 
+the same for me (on FC3). Here's what I get:
 
-the array (reading the first 8GiB from /dev/md0 with dd, bs=1024K) 
-performs at about 174MiB/s, accessing the array through LVM2 (still with 
-bs=1024K) only 86MiB/s.
+[root@dude test]# dd if=/dev/zero of=/home/test/test.tmp bs=4096 
+count=100000
+100000+0 records in
+100000+0 records out
 
-my first conclusion was to leave out the LVM2 of the loop and directly 
-put a file system on /dev/md0.
+Notice there is no timing information.
 
-however, when reading Neil Brown's article [1], I got the impression 
-that my system should perform better, given the fact that each disk has 
-a transfer rate of minimally 37MiB/s, maximally 65MiB/s [2].
+For the read test:
 
-or is there a flaw in my argumentation and the current performance is 
-normal? are at last the controllers saturating?
+[root@dude test]# dd of=/dev/null if=/home/test/test.tmp bs=4096
+100000+0 records in
+100000+0 records out
 
-any suggestions are welcome.
+Again, no timing information.
 
-regards
-nicola
+Anyone know if this is a quirk of the FC3 version of dd?
 
-[1]: http://cgi.cse.unsw.edu.au/~neilb/01102979338
-[2]: http://www.storagereview.com/articles/200410/200410087B300S0-2_2.html
-[3]: http://variant.ch/phpwiki/WikiBlog/2005-02-27
+R.
+-- 
+http://robinbowes.com
+
