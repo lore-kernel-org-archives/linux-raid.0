@@ -1,166 +1,46 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: sw_raid5-failed_disc(s)-2
-Date: Sat, 12 Mar 2005 17:15:08 -0500
-Message-ID: <200503122215.j2CMFE530626@www.watkins-home.com>
-References: <d0vdln$h8s$1@sea.gmane.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-In-Reply-To: <d0vdln$h8s$1@sea.gmane.org>
+From: Can Sar <csar@stanford.edu>
+Subject: Raid Recovery after Machine Failure
+Date: Sat, 12 Mar 2005 17:54:20 -0800
+Message-ID: <94a5aa6f5e94171df4c070e741014f02@stanford.edu>
+Mime-Version: 1.0 (Apple Message framework v619.2)
+Content-Type: text/plain; charset=US-ASCII; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Ronny Plattner' <ronny_p@gmx.net>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I guess I need to know more history.  Before your problems, was hdi1 a
-spare?
+Hi,
 
-Describe the array before you had problems.  Then what went wrong.
+I am working with a research group that is currently building a tool to 
+automatically find bugs in file systems, and related questions. We are 
+trying to check whether file systems really guarantee the consistencies 
+they promise, and one aspect we are looking at is running them on top 
+of Raid devices. In order to do this we have to understand a few things 
+about the Linux Raid driver/tools and I haven't been able to figure 
+this out from the documention/source code, so maybe you can help me.
+I asked this same question a few days ago, but I think I didn't really 
+state it clearly, so let me try to rephrase it.
 
-Guy
+For Raid 4-6 and for say 5 disks say we write a block that is striped 
+across all the disks, and after 4 of the disks write their part of the 
+block to disk the machine crashes without the 5th disk being able to 
+complete the write. Because of this, the checksum for this stripe 
+should be incorrect, right?
 
------Original Message-----
-=46rom: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Ronny Plattner
-Sent: Saturday, March 12, 2005 1:54 PM
-To: linux-raid@vger.kernel.org
-Subject: Re: sw_raid5-failed_disc(s)-2
+The raid array is a Linux soft raid array set up using mdadm, and none 
+of the disks actually crashed or wrote had any errors during this 
+operation (the machine crashed for some other reason) We then reboot 
+the machine and recreate the array, then remount it and then try to 
+read the sector that was previously written (that has an incorrect 
+checksum). At what point will the raid driver discover that something 
+is wrong? Will it ever (I feel that it should discover this during the 
+read at latest). Will it try to perform any kind of recovery or simply 
+fail?
+How would this change if only 3 of the 5 disk writes made it to disk? 
+Fixing the error would be impossible of course (at least with Raid 4 
+and 5, i know little about 6), but detection should still work. Will 
+the driver complain?
 
-Hi !
+Thank you so very much for your help,
+Can
 
-Guy schrieb:
-> It seems like a trick question! :)
-> You don't use "missing" on assemble, it is a keyword for the create
-command.
-
-Oh!
-
-> For assemble. just don't list that device.
-> mdadm --assemble --run --force /dev/md2 /dev/hdi1 /dev/hdk1 /dev/hdo1
->=20
-> mdadm will know which disk is which.
-
-OKay, thank you
-
--snip-
-server:~# cat /proc/mdstat
-Personalities : [raid1] [raid5]
-md1 : active raid1 hdg2[1] hde2[0]
-      75709248 blocks [2/2] [UU]
-
-md0 : active raid1 hdg1[1] hde1[0]
-      2441280 blocks [2/2] [UU]
-
-unused devices: <none>
-server:~# mdadm  --assemble --run --force /dev/md2 /dev/hdi1 /dev/hdk1
-/dev/hdo1
-mdadm: failed to RUN_ARRAY /dev/md2: Invalid argument
-server:~# cat /proc/mdstat
-Personalities : [raid1] [raid5]
-md1 : active raid1 hdg2[1] hde2[0]
-      75709248 blocks [2/2] [UU]
-
-md2 : inactive hdk1[1] hdi1[4] hdo1[3]
-      735334848 blocks
-md0 : active raid1 hdg1[1] hde1[0]
-      2441280 blocks [2/2] [UU]
-
-unused devices: <none>
--snap-
-
-
-and
-
-
--snip-
-server:~# mdadm  --detail /dev/md2
-/dev/md2:
-        Version : 00.90.01
-  Creation Time : Mon Jun 14 18:43:20 2004
-     Raid Level : raid5
-    Device Size : 245111616 (233.76 GiB 250.99 GB)
-   Raid Devices : 4
-  Total Devices : 3
-Preferred Minor : 2
-    Persistence : Superblock is persistent
-
-    Update Time : Sun Mar  6 16:40:29 2005
-          State : active, degraded
- Active Devices : 2
-Working Devices : 3
- Failed Devices : 0
-  Spare Devices : 1
-
-         Layout : left-symmetric
-     Chunk Size : 64K
-
-           UUID : 72c49e3a:de37c4f8:00a6d8a2:e8fddb2c
-         Events : 0.60470022
-
-    Number   Major   Minor   RaidDevice State
-       0       0        0        -      removed
-       1      57        1        1      active sync   /dev/hdk1
-       2       0        0        -      removed
-       3      89        1        3      active sync   /dev/hdo1
-
-       4      56        1        -      spare   /dev/hdi1
-server:~#
--snap-
-
-
-Why is hdi1 (the drive which was built out and after troubles with hdm
-again built back in the server) a spare device?
-Why isn=B4t it marked as active device?
-Is it hopeless to get the raid working?
-
-Not much information in the logfile (/var/log/messages)...
-
-
--snip-
-Mar 12 19:33:57 server kernel: md: md2 stopped.
-Mar 12 19:33:57 server kernel: md: bind<hdo1>
-Mar 12 19:33:57 server kernel: md: bind<hdi1>
-Mar 12 19:33:57 server kernel: md: bind<hdk1>
-Mar 12 19:33:57 server kernel: raid5: device hdk1 operational as raid d=
-isk 1
-Mar 12 19:33:57 server kernel: raid5: device hdo1 operational as raid d=
-isk 3
-Mar 12 19:33:57 server kernel: RAID5 conf printout:
-Mar 12 19:33:57 server kernel:  --- rd:4 wd:2 fd:2
-Mar 12 19:33:57 server kernel:  disk 1, o:1, dev:hdk1
-Mar 12 19:33:57 server kernel:  disk 3, o:1, dev:hdo1
--snap-
-
-
-So, looks bad.
-
-
--snip-
-server:~# mdadm --detail --scan
-ARRAY /dev/md1 level=3Draid1 num-devices=3D2
-UUID=3D83effa33:2b40093b:84150bda:54575d43
-   devices=3D/dev/hde2,/dev/hdg2
-ARRAY /dev/md2 level=3Draid5 num-devices=3D4 spares=3D1
-UUID=3D72c49e3a:de37c4f8:00a6d8a2:e8fddb2c
-   devices=3D/dev/hdk1,/dev/hdo1,/dev/hdi1
-ARRAY /dev/md0 level=3Draid1 num-devices=3D2
-UUID=3D7131d3b3:6e026b72:52e66138:1401e760
-   devices=3D/dev/hde1,/dev/hdg1
--snap-
-
-
-Is there a way to get the raid working?
-
-Regards
-Ronny
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
