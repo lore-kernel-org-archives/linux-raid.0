@@ -1,38 +1,59 @@
 From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
-Subject: Re: Can't boot from /dev/md0 (RAID-1)
-Date: Mon, 1 Jul 2002 12:07:07 +0200
+Subject: Re: Can't boot from /dev/md0 (RAID-1) (more info)
+Date: Mon, 1 Jul 2002 12:17:46 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200207011207.07552.roy@karlsbakk.net>
-References: <200206302046.g5UKkgpS006815@ns2.is.bizsystems.com>
+Message-ID: <200207011217.46988.roy@karlsbakk.net>
+References: <Pine.LNX.3.96.1020630164412.31859A-100000@Maggie.Linux-Consulting.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200206302046.g5UKkgpS006815@ns2.is.bizsystems.com>
-To: michael@insulin-pumpers.org
-Cc: Kernel mailing list <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org
+In-Reply-To: <Pine.LNX.3.96.1020630164412.31859A-100000@Maggie.Linux-Consulting.com>
+To: Alvin Oga <aoga@Maggie.Linux-Consulting.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sunday 30 June 2002 23:46, Michael wrote:
-> > I hope this is not OT - didn't find any LILO mailing list. after
-> > trying virtually everything - can anyone help me with a tip?
+Please listen
+
+I've tried all this
+
+see the dmesg output
+
+On Monday 01 July 2002 01:50, Alvin Oga wrote:
+> hi ya
 >
-> The problem you're having is not with raid but with LILO in general.
-> I don't remember the specifics, but I've experienced the same thing
-> and it was an error in how I used lilo or the version of the boot
-> record -- something strange like that. Raid is not part of the
-> problem.
+> how was the floppy made ??
+> 	- does it have a initrd file ??
+> 	- initrd is notlisted in your lilo.conf.hda
+> 	- is the kernel on the bootable floppy the same as that
+> 	referenced in lilo.conf ?
 >
-> Read the docs that come with the LILO distribution in the source. The
-> man page does not have as much info. You may also be suffering from
-> differing version of the MBR -- a major source of pain and suffering.
-
-I've read the fscking manual - all I can find - for both grub and lilo, and 
-I've tried all possible configurations I can think of.
-
-point is - I beleive there's a BIOS/linux misunderstanding somewhere
-
-roy
+> i'd take out all those explicit defines and see if it helps
+>
+> simplified(?) lilo.conf
+> 	boot=/dev/md0
+> 		- not sure about boot= for /dev/hda vs /dev/md0
+> 	map=/boot/map
+> 	install=/boot/boot.b
+> 	prompt
+> 	timeout=50
+> 	lbad32
+>
+> 	image=/boot/vmlinuz
+> 	   root=/dev/md0
+> 	   label=raid
+> 	   read-only
+>
+> -- you'd also want to use /dev/hda  and /dev/hdc ...
+>
+> c ya
+> alvin
+>
+> On Sun, 30 Jun 2002, Roy Sigurd Karlsbakk wrote:
+> > see below for my original post
+> >
+> > I've uploaded some files to http://karlsbakk.net/bugs/ that may help to
+> > explain the problem. Still - I can't boot from nothing but floppy.
 
 -- 
 Roy Sigurd Karlsbakk, Datavaktmester
