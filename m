@@ -1,39 +1,25 @@
 From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: Neil B?
-Date: Fri, 23 Jul 2004 14:36:42 +1000
+Subject: Re: Raid 5 Kernel Bug
+Date: Fri, 23 Jul 2004 14:55:56 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16640.38362.999377.592314@cse.unsw.edu.au>
-References: <1090555251.2929.8.camel@localhost>
+Message-ID: <16640.39516.764215.633076@cse.unsw.edu.au>
+References: <200407221250.35040.knesmith@si2.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Ninti Systems on  July 23
-To: office@ninti.com.au
-Cc: RAID Linux <linux-raid@vger.kernel.org>
+In-Reply-To: message from Kevin A. Nesmith on Thursday July 22
+To: "Kevin A. Nesmith" <knesmith@si2.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On  July 23, office@ninti.com.au wrote:
-> Gday:
-> 
-> I was over at linux.org.au the other day and saw that they had an
-> 'Aussie contributors to Linux' page, so I suggested they add Neil Brown
-> given his excellent work with mdadm and NFS. But Neil's URL at UNSW is
-> broken, does anyone know if he is still at UNSW?
+On Thursday July 22, knesmith@si2.org wrote:
+> I am running SuSE Linux 9.1.  I have 8 SCSI harddrives all the same running raid 5.  It is just that simple.  
+> Nothing more, no third party stuff.  No other raid running on this box.  The harddrive that the OS is running 
+> on is an IDE at /dev/hda.  I386 AMD 900 MHZ 512 mg ram.  Any
+thoughts?
 
-I'm still here.
-
-And my webpage is now too (it is a cgi script which references
-"python2.2" and some local sysadmin removed python2.2 because that
-thought python2.3 was enough, which it probably is.....)
-
-http://neilb.web.cse.unsw.edu.au/
-
-is my (current) preferred URL.
-
-Google (Aussie contributors site:linux.org.au) notices that adding me
-has already been suggested... Maybe Pia is busy.
-
-Thanks,
+I suspect this is a SuSE-specific bug.  They certainly had one just
+like this in a recent 2.6 kernel.
 
 NeilBrown
