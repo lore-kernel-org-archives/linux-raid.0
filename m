@@ -1,31 +1,34 @@
-From: Mike Tran <mhtran@us.ibm.com>
-Subject: Re: Move md raid5 from intel to sparc?
-Date: 11 Jun 2003 14:17:54 -0500
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: Multipath problem in a SAN enviromnent
+Date: Wed, 11 Jun 2003 21:24:16 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1055359074.1929.70.camel@langvan.austin.ibm.com>
-References: <3EE74472.9010505@geodev.com>
-	 <1055350640.1929.28.camel@langvan.austin.ibm.com>
-	 <3EE76EDA.1060000@geodev.com>
+Message-ID: <3EE781E0.1020707@comedia.it>
+References: <02d201c33023$13fd45a0$3351960a@EEL>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3EE76EDA.1060000@geodev.com>
-To: Matthew Mitchell <matthew@geodev.com>
+In-Reply-To: <02d201c33023$13fd45a0$3351960a@EEL>
+To: Ionut Nistor <ionut@modulo.ro>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 2003-06-11 at 13:03, Matthew Mitchell wrote:
+Ionut Nistor wrote:
+> Hello,
+> 
+> I'm using a 2.4.18-ac3 kernel and the multipath module in order to ensure
+> automatic IO path failover. The systems connect to a FC SAN environment.
+> New logical disks are added/removed from the SAN periodically.
+> 
+> Unfortunatelly, linux's raid subsystem uses major and minor numbers in the
+> superblock in order to identify members for all raid types - including
+> multipath. This causes the multipath module to fail when attempting to
+> identify the members. When the scsi driver is loaded, the bus is scanned and
+> all the available devices/targets/luns are added to the scsi subsystem and
+> are allocated a major and minor number.
+> 
+you mean autodetection fails? don't use autodetection.
 
-> What _about_ the filesystem and data, though?  Some filesystems are 
-> certainly written in a known byte-order, like ISO 9660.  Are there any 
-> of (ext3, XFS, JFS, reiserfs) that this is true for?  Or are they all 
-> written in cpu native byte-order?
-
-Just look at the current releases of kernel, 2.4 and 2.5, all of the
-above filesytems seem to write metadata using one known byte-order (ei.
-always BE or always LE).  Now all we need is testing.
-
--Mike Tran
-
+regards,
+Luca.
 
