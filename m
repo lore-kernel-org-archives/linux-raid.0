@@ -1,67 +1,83 @@
-From: TrendVirusWall23@nuwc.navy.mil
-Subject: Content mail warning notification!
-Date: Mon, 26 Jul 2004 11:47:22 -0400
+From: kernel@kamogawa.com.br
+Subject: Promise S150 TX4 - Driver compiled, but Kernel Panic
+Date: Mon, 26 Jul 2004 14:34:48 -0300 (BRT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <T3MF08PB19JWHQ01LO@npri54mai01.npt.nuwc.navy.mil>
+Message-ID: <1948.192.168.1.14.1090863288.squirrel@webmail01.centralserver.com.br>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="----=_NextPart_000_1090856842_B78506032.R82506026"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This is a multi-part message in MIME format.
+Hello!
 
-------=_NextPart_000_1090856842_B78506032.R82506026
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+I found the source code for Promise FastTrack S150 TX4 6 Port SATA
+RAID Controller. It was found at:
 
-************* eManager Notification **************
+http://www.promise.com/support/download/download2_eng.asp?productId=108&category=All&os=4#
 
-Due to a restricted file type, Trend Virus Detector [23] has replaced the attachment with e-mail header information.
+I am using Tao Linux, a RedHat Enterprise Linux clone, and it uses
+kernel 2.4.21. Here is what I did:
 
-Source mailbox: "linux-raid-owner@vger.kernel.org"
-Destination mailbox(es): "linux-raid@vger.kernel.org"
+1. Installed kernel-BOOT.2.4.21-15.TL2
+2. Booted with kernel-BOOT
+3. Installed the kernel source
+4. Compiled the code with Independent Modules
+5. Started an installation with driver disk
+6. Loaded the ft3xx module
+7. Kernel Panic
 
-******************* End of message *******************
+The system specs are:
 
-------=_NextPart_000_1090856842_B78506032.R82506026
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Processor: Pentium 4 2GHz
+Memory: 256 DIMM
+Dist: Tao Linux (RHEL 3 Clone)
+Kernel: 2.4.21-15.TL2BOOT
+GCC: 3.23 20030502 (Red Hat Linux 3.2.3-34)
+MotherBoard: Intel S875WP1-E ( LX ) with onboard Promise FastTrack
+S150 TX4 SATA RAID Controller
 
-Received: from 164.223.1.100 by npri54exc23.npt.nuwc.navy.mil (InterScan E-Mail VirusWall NT); Mon, 26 Jul 2004 11:47:03 -0400
-Received: from vger.kernel.org (vger.kernel.org [12.107.209.244])
- by npri54mai01.npt.nuwc.navy.mil (PMDF V6.2-X17 #30632)
- with ESMTP id <T2F508PA95QCHQ019W@npri54mai01.npt.nuwc.navy.mil> for
- HuntressGB@npt.nuwc.navy.mil; Mon,
- 26 Jul 2004 11:46:59 -0400 (Eastern Daylight Time)
-Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand	id
- S266174AbUGZPki (ORCPT <rfc822;HuntressGB@npt.nuwc.navy.mil>); Mon,
- 26 Jul 2004 11:40:38 -0400
-Received: (majordomo@vger.kernel.org) by vger.kernel.org id S265817AbUGZPkh
-	(ORCPT <rfc822;linux-raid-outgoing>); Mon, 26 Jul 2004 11:40:37 -0400
-Received: from zeus.kernel.org ([204.152.189.113]:12988 "EHLO zeus.kernel.org")
-	by vger.kernel.org with ESMTP id S266120AbUGZPfo
- (ORCPT	<rfc822;linux-raid@vger.kernel.org>); Mon, 26 Jul 2004 11:35:44 -0400
-Received: from vger.kernel.org (ip-216-73-150-62.vantas.net [216.73.150.62])
-	by zeus.kernel.org (8.12.11/8.11.6) with ESMTP id i6QFZYZm008493	for
- <linux-raid@vger.kernel.org>; Mon, 26 Jul 2004 08:35:42 -0700
-Date: Mon, 26 Jul 2004 11:35:23 -0400
-From: Post Office <postmaster@vger.kernel.org>
-Subject: Test
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Message-id: <200407261535.i6QFZYZm008493@zeus.kernel.org>
-MIME-version: 1.0
-X-MIMEOLE: Produced By Microsoft MimeOLE V6.00.2600.0000
-X-Mailer: Microsoft Outlook Express 6.00.2600.0000
-Content-type: multipart/mixed;
- boundary="----=_NextPart_000_0007_1522B72D.AB9F6DE5"
-X-Priority: 3
-X-MSMail-priority: Normal
-Precedence: bulk
-X-Mailing-List: linux-raid@vger.kernel.org
+When I loaded the module, the following error was shown:
 
-------=_NextPart_000_1090856842_B78506032.R82506026--
+---
+
+Oops: 0000
+CPU: 0
+EIP: 0060:[<c0188577>] Not Tainted
+EFLAGS: 00010246
+
+EIP is at (2.4.21-15.TL2BOOT/i686)
+eax: 00000000	ebx: c1a8cb60	ecx: 33190100	edx: 00000020
+esi: 00000054	edi: 00000000	ebp: 00000002	esp: cfe27e80
+ds: 0068	es: 0068	ss: 0068
+Process Loader (pid: 16, stackpage=cfe27000)
+Stack:  00000020 c018bd49 c134a110 00000020 00000001 cfdf92e4 00000066
+080b9040
+	010001ff 00000000 00000000 ffffffff 00000012 00000066 c1a11800 00000000
+	080b9040 c018c4c8 c1a18000 00000001 c02fc592 00000066 00000066 cfe26000
+Call Trace: [<c018bd49>] (0xcfe27e04)
+[<c018c4c8>] (0xcfe27ec4)
+[<c0180c3f>] (0xcfe27ee0)
+[<c017f459>] (0xcfe27f4c)
+[<c017d16b>] (0xcfe27f74)elements | <Space> selects | <F12> next screen
+[<c0180a84>] (0xcfe27f78)
+[<c0142170>] (0xcfe27f9c)
+
+Code: 8b 04 81 85 c8 74 10 83 e2 3f 0f b7 04 50 3d ff 01 00 00 89
+
+Kernel Panic: Fatal Exception
+
+---
+
+The driver disk and kernel error can be found at:
+
+http://www.kamogawa.com.br/RAID
+
+Can somebody help me?
+
+Thanks and Best Regards,
+
+Helio Rubens Kamogawa
+kernel at kamogawa dot com dot br
++55 41 3241993
