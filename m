@@ -1,55 +1,67 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: Re: RAID-6 support in kernel?
-Date: Wed, 5 Jun 2002 21:42:39 +0200
+From: klink@clouddancer.com (Colonel)
+Subject: (unknown)
+Date: Tue,  4 Jun 2002 18:54:52 -0700 (PDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20020605194239.GB6516@colombina.comedia.it>
-References: <Pine.GSO.4.21.0206030213510.23709-100000@gecko.roadtoad.net> <1023125615.1051.1283.camel@peecee> <20020604222053.C31741@unthought.net> <20020605075701.GD2541@colombina.comedia.it> <20020605125341.E31741@unthought.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Message-ID: <20020605015452.70D1D8347@phoenix.clouddancer.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20020605125341.E31741@unthought.net>
-To: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org, pegasus@telemach.net
 List-Id: linux-raid.ids
 
-On Wed, Jun 05, 2002 at 12:53:41PM +0200, Jakob =D8stergaard wrote:
-> > is having a 'consistency check' function in md, that would read fro=
-m all disks
-> > and even compare data or calculate parity for raid5, it could be sc=
-heduled
-> > to run periodically with a very very low priority.
->=20
-> This definitely belongs in user-space.  But you are right, and I've d=
-iscussed
-> it with colleagues before as well - it would be a good thing to have =
-such a
-> tool.
->=20
-> In root's crontab you could easily just put a 'dd if=3D/dev/hda of=3D=
-/dev/null' and
-> so on for all your drives.   No need for kernel extensions here...
->=20
-well, yes and no
-a kernel thread could do compare and check parity and also
-when we have the support for this in md try to do a write and
-see if the disk error correction code can relocate the bad sector.
-also a 'dd if=3D/dev/hda of=3D/dev/null' would just sit a production
-machine, while we could give it a minumum and maximum bandwidth
-to use like we do in reconstruction.
+From: Colonel <klink@clouddancer.com>
+To: pegasus@telemach.net
+CC: linux-raid@vger.kernel.org
+In-reply-to: <20020604235518.2cb7d7d7.pegasus@telemach.net> (message from Jure
+	Pecar on Tue, 4 Jun 2002 23:55:18 +0200)
+Subject: Re: 
+Reply-to: klink@clouddancer.com
+References: <20020604154712.AD48D8347@phoenix.clouddancer.com> <20020604235518.2cb7d7d7.pegasus@telemach.net>
 
-L.
+   Date: Tue, 4 Jun 2002 23:55:18 +0200
+   From: Jure Pecar <pegasus@telemach.net>
+
+   On Tue,  4 Jun 2002 08:47:12 -0700 (PDT)
+   klink@clouddancer.com (Colonel) wrote:
+
+   > 
+   > True, I think that the point is that of the 5 possible 2 disk
+   > failures, 2 of them (in striped mirrors, not mirrored stripes) kill
+   > the array.  For RAID5, all of them kill the array.  But the fancy RAID
+   > setups are for _large_ arrays, not 4 disks, unless you are after the
+   > small write speed improvement (as I am).
+
+   going offtopic here ...
+   what kind of raid setup is the best for write intensive load like mail
+   queues & co?
+
+define "best"
+
+For sequential writes, RAID10 is considered 'best'.
+
+However, there are two ways to make "10", one has far better reliability
+-- which is best for some configurations, the striped mirrors.
+
+YMMV
+
+To truely answer your question requires knowing how many drives,
+detailed load and bandwidth info, economics and politics.
 
 
---=20
-Luca Berra -- bluca@comedia.it
-        Communication Media & Services S.r.l.
- /"\
- \ /     ASCII RIBBON CAMPAIGN
-  X        AGAINST HTML MAIL
- / \
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+   > Plus any raid metadevice made of metadevices cannot autostart, which
+   > means tinkering during startup, which is only worth it for those large
+   > drive arrays.
+
+   hm? it does for me. probalby the redhat's rc.sysinit does the right
+   thing ... 
+
+
+If you can run one on / (the root partition), then it autostarted.  If
+it's on /usr, then it was manually started (if it's striped mirrors)
+to my knowledge.  On the other hand, you may have mirrored stripes --
+which potentially do autostart (I vaguely remember this discussion
+many moons ago, when M.Ingo was introducing the current raid, but I
+wanted raid 5 ...).
+
+For myself, I grew disatisfied with the disk usage in RAID5. All drive
+'lights' were on too often.  Now, it's quieter, slightly faster, less
+blinky lights and smaller.
