@@ -1,30 +1,43 @@
-From: "3tcdgwg3" <3tcdgwg3@prodigy.net>
-Subject: Software RAID level performance
-Date: Thu, 6 Nov 2003 23:29:39 -0800
+From: Dan Egli <dan@eglifamily.dnsalias.net>
+Subject: invalud argument when replacing disk of raid 5 set
+Date: Fri, 07 Nov 2003 19:17:34 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <001d01c3a500$e99bf100$bb601e43@neptune>
-References: <C587FF391BCAD411B8120008C7864670057DA5B8@mtvxch07.veritas.com> <1054403067.14818.280.camel@testlin.hades> <3ED7B898.4409555F@SteelEye.com> <01f101c326e7$c9084890$7b07a8c0@pluto> <3ED7BF97.BAB11B12@SteelEye.com>
+Message-ID: <3FAC523E.3050509@eglifamily.dnsalias.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Cc: 'Linux raid mailing list' <linux-raid@vger.kernel.org>, Paul Clements <Paul.Clements@SteelEye.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
+Ok, this may be a smple question, but hear me out. I've looked and 
+cannot find the answer anywhere.
 
-I have a question regarding the RAID1 performance.
+I have a machine with a 3 disk raid 5 set. One of the disks has 
+developed bad sectors in the parity block (I'm assuming it is in the 
+block because badblocks /dev/hdb shows bad areas, badblocks /dev/md0 
+does not), which causes it to randomly get kicked out of the set. I got 
+a drive to replace it with today. It's not the exact same model, but 
+it's the same physical dimentions (C/H/S & capasity are identical). It's 
+just a little faster than the others, with a little more cache on the 
+drive. But when I repalce the bad drive with the good drive, I get 
+invalid arguments when trying to bring up the array. I don't get it. 
+There is a perfectly valid linux partition on the drive, /dev/hdb1 which 
+meeds the same specs as /dev/hdc1 and /dev/hdd1, but replacing hdb with 
+a drive showing no bad blocks won't work.
 
-I tought the RAID1 will access disk in a con-current way, but
-today I installed a 2.4-18 (Redhat 9.0). Seems RAID1 code
-is not doing the disk access in a balanced way? I see single disk
-is faster the RAID1.  
-First,  do dd, read from /dev/zero write to disk, 
-then  dd again,  read from disk write write to /dev/null,
-in both cases, single disk out run 2 disk RAID1.
+Help?
 
-Any one can help me to understand this?
 
-Thank you so much.
+The existing drives are IBM DTLA-305020 drives, and my replacemt is a 
+DTLA-307020. Both show their physical dimentions as:
+
+Capasity: 20.5GB
+CHS: 16383/16/63
+
+--- Dan
+
+
+
+
 
