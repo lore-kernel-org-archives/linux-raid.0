@@ -1,46 +1,51 @@
-From: Ming Zhang <mingz@ele.uri.edu>
-Subject: Re: Adding Reed-Solomon Personality to MD, need help/advice
-Date: Fri, 13 Feb 2004 09:18:30 -0500
+From: Marc Bevand <bevand_m@epita.fr>
+Subject: Re: RAIDn technology
+Date: Fri, 13 Feb 2004 17:48:55 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1076681910.1478.10.camel@dyn251.ele.uri.edu>
-References: <6.0.1.1.2.20040130235924.03f39710@mail.athenet.net>
-	 <16411.35140.244946.630202@notabene.cse.unsw.edu.au>
-	 <6.0.1.1.2.20040212220348.0289ee48@a.cs.okstate.edu>
-Reply-To: mingz@ele.uri.edu
+Message-ID: <c0iv82$q5a$1@sea.gmane.org>
+References: <Pine.LNX.4.44.0402111508210.8702-100000@picard.science-computing.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <6.0.1.1.2.20040212220348.0289ee48@a.cs.okstate.edu>
-To: Nathan Lewis <nathapl@cs.okstate.edu>
-Cc: linux-raid@vger.kernel.org
+In-Reply-To: <Pine.LNX.4.44.0402111508210.8702-100000@picard.science-computing.de>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-The new book Linux Kernel Development and 
-http://lwn.net/Articles/driver-porting/
-
-may give u some help.
-
-
-ming
-
-On Thu, 2004-02-12 at 23:35, Nathan Lewis wrote:
-> Now that I've got working Reed Soloman code, I need to make a decision 
-> really quickly on whether to use 2.4 or 2.6.  I've got both, and it does 
-> look like the raid code is much cleaner in 2.6, and it also helps that 
-> there is raid6 for 2.6, which shows me approximately where I'd need to 
-> modify code to turn it into RS.  However, I really need some documentation 
-> on the bio structure.  The bio.h file is sorely lacking comments, and, of 
-> course, the Rubini book isn't going to help me.
+Oliver Tennert wrote:
+> Hello,
 > 
-> Can someone point me at some documentation for the bio structure?
+> has anybody ever heard of RAID^n technology, developed and patented by a
+> company called Inostor (http://www.inostor.com)?
 > 
+> It is designed to offer protection against the simultaneous failure of an
+> arbitrary number of arbitrary disks.
 > 
-> >I strongly agree with Peter.  Base your work on 2.6, not 2.4.  The
-> >raid code is much cleaner in 2.6.
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> The pdf files publicly available on their homepage states that the
+> algorithms used by them to implement an m+n RAID system (m data disks, n
+> redundancy disks) are NOT the well-known Reed-Solomon codes as e.g.
+> described in a well-known paper by J. Plank.
+
+This paper is [1]. But AFAIK it describes only Vandermonde-based
+Reed-Solomon codes, not Cauchy-based ones.
+
+> Does anybody have a notion how RAID^n works? Their algorithms used seem to
+> hold a regular US patent.
+
+RAID^n is nothing more than FEC (Forward Error Correction). Any erasure
+code can be used to implement FEC:
+
+ - Cauchy-based Reed-Solomon codes
+ - Vandermonde-based Reed-Solomon codes
+ - Low-Density Parity-Check codes [2] (eg: Tornado Codes...)
+
+Tornado codes are patented by Digital Fountain [3] (RFC 3453 contains a
+list of the patents). Maybe Inostor uses them ?
+
+[1] http://www.cs.utk.edu/~plank/plank/papers/CS-96-332.html
+[2] http://www.cs.utk.edu/~plank/plank/papers/CS-03-510.html
+[3] http://www.digitalfountain.com
+
+-- 
+Marc Bevand
 
