@@ -1,34 +1,31 @@
-From: =?iso-8859-1?Q?Jakob_=D8stergaard?= <jakob@unthought.net>
-Subject: Re: mdadm mail option configuration
-Date: Sat, 1 Jun 2002 13:56:57 +0200
+From: klink@clouddancer.com (Colonel)
+Subject: (unknown)
+Date: Sun,  2 Jun 2002 04:20:56 -0700 (PDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20020601135657.B22230@unthought.net>
-References: <F6A3AFC9BCD92E48B79C14E4AAAEA20F2633D2@nonamea.ptu.promise.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: quoted-printable
+Message-ID: <20020602112056.2FEB38347@phoenix.clouddancer.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <F6A3AFC9BCD92E48B79C14E4AAAEA20F2633D2@nonamea.ptu.promise.com>; from haofengk@ptu.promise.com on Fri, May 31, 2002 at 06:43:26PM -0700
-To: Haofeng Kou <haofengk@ptu.promise.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, May 31, 2002 at 06:43:26PM -0700, Haofeng Kou wrote:
-> I finish one linux driver and want to do the whole features testing for
-> this driver, any body know certain tools for this testing ? It is a RAI=
-D
-> controller linux scsi driver.
+To: linux-raid@vger.kernel.org
+Subject: OOPS on raidtools-20010914
+Reply-to: klink@clouddancer.com
+From: Colonel <klink@clouddancer.com>
 
-You could run some disk benchmarks (tiotest, bonnie etc.)
 
-The best test is of course when you get the driver into the kernel (it is
-GPL right?) - then people will do all the testing for you   :)
+I recently switched to these tools, I'd been using the 1999 ones
+previously.  I run striped mirrors for /usr, I must (apparently)
+manually start that meta-device as part of the startup scripts.  So
+having raidstart and all it's pieces on the / partition is pretty
+important.  Imagine my fun after a reboot told me that lilpopt was
+unavailable for raidstart, thus I had no /usr and no way to do
+anything about it within this machine (because libpopt is stored in
+/usr/lib).  Fortunately, I had not upgraded all the other machines to
+these newer tools.
 
---=20
-................................................................
-:   jakob@unthought.net   : And I see the elder races,         :
-:.........................: putrid forms of man                :
-:   Jakob =D8stergaard      : See him rise and claim the earth,  :
-:        OZ9ABN           : his downfall is at hand.           :
-:.........................:............{Konkhra}...............:
+Perhaps libpopt is misplaced on my system, or perhaps the raidtool
+makefile doesn't expect a manual start raid array....
+
+Any solutions?
+
+Ron
