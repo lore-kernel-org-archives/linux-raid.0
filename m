@@ -1,52 +1,53 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: mkraid with 2.6.0
-Date: Fri, 9 Jan 2004 11:42:41 -0500
+From: "Stephen Hargrove" <stephen@exitwound.org>
+Subject: Bad Recovery
+Date: Fri, 9 Jan 2004 18:28:27 -0600 (CST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200401091642.i09Ggji05421@dns1.watkins-home.com>
-References: <20040109145547.B19523@beton.cybernet.src>
+Message-ID: <4648.192.168.1.81.1073694507.squirrel@exitwound.org>
+Reply-To: stephen@exitwound.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20040109145547.B19523@beton.cybernet.src>
-To: =?iso-8859-1?Q?'Karel_Kulhav=FD'?= <clock@twibright.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I had a similar problem when I added more disks to my system.
-Learn and mdadm!
+I recently underwent a fiasco that is far too long to describe.  Suffice
+it to say that all /dev/hd* were renamed.  I've recovered the primary
+elements of a raid-5 array, and the array successfully rebuilt during the
+night/day.
 
-Start here:
-man mdadm
+My array is composed of /dev/hdc1, /dev/hdg1, and /dev/hdd1.  Prior to
+said fiasco, /dev/hde1 was a member of the array but got kicked from the
+array.  /dev/hdd1 is a new drive that I just added to the system.  When
+the array was rebuilding, it kicked hde1 and used hdd1.
 
------Original Message-----
-=46rom: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Karel Kulhav=FD
-Sent: Friday, January 09, 2004 8:56 AM
-To: linux-raid@vger.kernel.org
-Subject: mkraid with 2.6.0
+I'm now unable to add /dev/hde1 as a spare.  It's there, and the system
+sees it, but
 
-bash-2.05b# mkraid /dev/md0
-/dev/md1: array is active -- run raidstop first.
-mkraid: aborted.
-(In addition to the above messages, see the syslog and /proc/mdstat as =
-well
- for potential clues.)
+# mdadm -a /dev/hde1
+mdadm: /dev/hde1 does not appear to be an md device
 
-It seems like mkraid from raidtools-1.00.3 doesn't work with 2.6.0 kern=
-el.
-I want it to make /dev/md0 and it tell me /dev/md1 is active - /dev/md1
-is active, but it is not a reason to refuse to work.
+--force results in the same message.
 
-Cl<
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I rebooted the system, and now can't get /dev/md0 to mount.
 
+# mount /stuff
+mount: wront fs type, bad option, bad superblock on /dev/md0,
+    or too many mounted file systems
+    (could this be the IDE devide where you in fact use
+    ide-scsi so that sr0 or sda or so is needed?)
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I'm sure I've left out a ton of information you might need.  If you'll let
+me know what's needed, I'll be glad to forward it.
+
+Thanks.
+--
+Steve
+------------------------------------------
+http://www.exitwound.org......hard to find
+http://www.buckowensfan.com...he's the man
+------------------------------------------
+You are a very redundant person, that's
+what kind of person you are.
+------------------------------------------
+
