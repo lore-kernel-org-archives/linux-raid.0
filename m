@@ -1,51 +1,53 @@
-From: "Michael Daskalov" <MDaskalov@technologica.biz>
-Subject: unable to stop /dev/md1 where root is mounted on 2.4.19.SuSE-246
-Date: Tue, 22 Apr 2003 16:38:35 +0300
+From: Paul Clements <Paul.Clements@SteelEye.com>
+Subject: [PATCH 2.5.68] eliminate deprecated MOD_INC_USE_COUNT/MOD_DEC_USE_COUNT
+ in md.c
+Date: Tue, 22 Apr 2003 15:19:54 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <15F26D0D9E18E24583D912511D668FF8027230@exchange.ad.tlogica.com>
+Message-ID: <3EA595D9.E4CBB684@SteelEye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: multipart/mixed;
+ boundary="------------2F95E52047DE6175EBA7F7AA"
 Return-path: <linux-raid-owner@vger.kernel.org>
-content-class: urn:content-classes:message
 To: linux-raid@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi all, 
-I have the following situation. I have my root partition on RAID1 (/dev/hda5 and /dev/sda5) - /dev/md1. 
+This is a multi-part message in MIME format.
+--------------2F95E52047DE6175EBA7F7AA
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 
-I have two partitions for boot, which are also in raid1 configuration. 
-/dev/md0 (/dev/hda1, /dev/sda1). 
+Following is a simple patch to remove deprecated MOD_INC_USE_COUNT from
+md.c.
 
-On system reboot or shutdown the md device is not stopped (a clean record is not written on it), 
-And after system reboot it always starts reconstructing. 
+If it looks good, please apply.
 
-Which is the correct way to setup the situation? 
+Thanks,
+Paul
+--------------2F95E52047DE6175EBA7F7AA
+Content-Type: text/plain; charset=us-ascii;
+ name="md_mod_unsafe.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="md_mod_unsafe.diff"
 
+--- md.c.PRISTINE	2003-04-22 12:59:37.000000000 -0400
++++ md.c	2003-04-22 12:59:50.000000000 -0400
+@@ -181,7 +181,6 @@ static void mddev_put(mddev_t *mddev)
+ 		list_del(&mddev->all_mddevs);
+ 		mddev_map[mdidx(mddev)] = NULL;
+ 		kfree(mddev);
+-		MOD_DEC_USE_COUNT;
+ 	}
+ 	spin_unlock(&all_mddevs_lock);
+ }
+@@ -203,7 +202,6 @@ static mddev_t * mddev_find(int unit)
+ 		mddev_map[unit] = new;
+ 		list_add(&new->all_mddevs, &all_mddevs);
+ 		spin_unlock(&all_mddevs_lock);
+-		MOD_INC_USE_COUNT;
+ 		return new;
+ 	}
+ 	spin_unlock(&all_mddevs_lock);
 
+--------------2F95E52047DE6175EBA7F7AA--
 
-I'm activating the raid devices through initrd's linuxrc, where I'm loading a 
-1) hpt302.o driver, 
-2) raid1.o, raid5.o - The raid personality modules, and then I run 
-3)raidstart --all. 
-
-
-
-On shutdown I see messages that 
-/dev/md2, /dev/md3, /dev/md4 are also stopped. 
-
-I see a message saying /dev/md0 is put in read-only mode. 
-
-Only /dev/md1 where is my rootfs is not stopped. 
-I see the following message: 
-md: md1 is still active 
-
-The problem occurs on SuSE 7.2 with kernel 2.4.19.
-
-I didn't have this problem with 2.4.4 kernel on SuSE 7.1
-
-For me this looks like a bug in the kernel shutdown (reboot) functionality, but I know too little to say.
-
-Best regards and 10x for any help, 
-Mihail Daskalov 
