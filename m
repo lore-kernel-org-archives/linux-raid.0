@@ -1,65 +1,58 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: Software RAID Stopped Working With Aurora Kernel
-Date: Wed, 22 May 2002 09:51:55 +1000 (EST)
+From: "Potthoff, Kay" <Kay.Potthoff@force.de>
+Subject: Q: Priority of md_thread()
+Date: Wed, 22 May 2002 13:59:57 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <15594.56731.169389.603464@notabene.cse.unsw.edu.au>
-References: <15594.14625.624567.495812@notabene.cse.unsw.edu.au>
-	<NDBBIAKEEKGGEIKCBKNAEENACPAA.kc130iseo@coastalnet.com>
-	<15594.45618.113616.670740@notabene.cse.unsw.edu.au>
-	<3CEAC664.8D738EC2@ec.rr.com>
+Message-ID: <9CFB9DA5261CD611A29B00508B789048654302@ex-deu-munich02.force.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Calvin D. Webster on Tuesday May 21
-To: linux-raid <linux-raid@vger.kernel.org>
+To: "Linux RAID Mailing List (E-mail)" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tuesday May 21, cwebster@ec.rr.com wrote:
-> 
-> There is only one thing that doesn't look right to me. That is the
-> contents of "/proc/mdstat".
-> The device numbers seem mismatched to their device names.
-> 
-> Also, different from what I'm used to seeing, is that the spare drive
-> (sdc1) is not shown in the "active" list as it was before.
+I have a question regarding the priority of the md_thread() function
+(defined in md.c).
 
-It is not there because you didn't tell "mdadm --assemble" about it.
-mdadm will only assemble the drives that you give it.  It doesn't
-matter what order you give them, but you should list all the drives
-that part of the array (live or spare).
-You can hot add /dev/sdc1 back in with
-   mdadm /dev/md0 --add /dev/sdc1
-or
-   raidhotadd /dev/md0 /dev/sdc1
+I have seen that the priority of this thread is set to -20 (parameter
+current->nice), which means that this thread takes the highest priority=
+=2E The
+problem I have is that this thread blocks some other task that is answe=
+ring
+keep alive network pings from another (sibling) node. Because the keep =
+alive
+answers are blocked the other node decides to take-over the RAID. This
+situation leeds to the fact that two nodes try to start the RAID. MD do=
+n't
+like this. The RAID is considered to be faulty and both nodes try to re=
+pair
+it, that is a problem.
 
-> 
-> ## /proc/mdstat before (with 2.2 kernel):
-> 
-> ----------------------------------------------------------------------------------
-> Personalities : [raid5]
-> read_ahead 1024 sectors
-> md0 : active raid5 sdf1[5] sde1[4] sdd1[3] sdc1[2] sdb1[1] sda1[0]
-> 70726656 bloc
-> ks level 5, 128k chunk, algorithm 0 [5/5] [UUUUU]
-> unused devices: <none>
-> ----------------------------------------------------------------------------------
-> 
-> ## /proc/mdstat after (with 2.4 kernel, fixed with mdadm):
-> 
-> ----------------------------------------------------------------------------------
-> Personalities : [raid5] 
-> read_ahead 1024 sectors
-> md0 : active raid5 sda1[4] sde1[3] sdd1[2] sdf1[1] sdb1[0]
->       70726656 blocks level 5, 128k chunk, algorithm 0 [5/5] [UUUUU]
->       
-> unused devices: <none>
-> ----------------------------------------------------------------------------------
+I figuered out that the cause of this problem is the high priority of t=
+he
+md_thread() function. I feel tempted to decrease this priority, but I f=
+eel
+some upcoming ache in my belly because I don't know the exact reason wh=
+y the
+priority had been set to -20. I hope that somebody can explain me why! =
+The
+comments in the sources seem to regard to RAID-5 personality. If so tha=
+t
+would be no problem, I intend only to use RAID-1.
 
-I don't know what caused the different numbering.  However as the raid
-drive is clearly putting the right disks in the right places I
-wouldn't worry about it.
+Thanks in advance, Kay
 
-I'm glad all went well.
-
-NeilBrown
+######################################################
+# Kay Potthoff              Senior Software Engineer
+#
+# FORCE Computers GmbH        Tel.: +49-89-60814-356
+# Prof.-Messerschmitt-Str. 1    FAX : +49-89-6097793
+# 85579 Neubiberg/M=FCnchen
+# Deutschland/Germany
+#
+# mailto:Kay.Potthoff@force.de
+######################################################
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
