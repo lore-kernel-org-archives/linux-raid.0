@@ -1,47 +1,38 @@
-From: "bmoon" <bo@anthologysolutions.com>
+From: "Peter L. Ashford" <ashford@sdsc.edu>
 Subject: Re: maximum disk capacity?
-Date: Fri, 13 Jun 2003 10:21:52 -0700
+Date: Fri, 13 Jun 2003 10:39:26 -0700 (PDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <016501c331d0$48854d00$6b01a8c0@bmoon>
-References: <007201c330b9$c316f310$3001a8c0@melkor> <16104.22361.508001.916567@gargle.gargle.HOWL> <00db01c330ca$5ae72290$3001a8c0@melkor> <200306121814.32072.bernd-schubert@web.de> <009001c3313d$54027880$df01010a@moon> <Pine.LNX.4.53.0306130949210.30359@ddx.a2000.nu>
+Message-ID: <Pine.GSO.4.30.0306131032590.1148-100000@multivac.sdsc.edu>
+References: <016501c331d0$48854d00$6b01a8c0@bmoon>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Stephan van Hienen <raid@a2000.nu>, Donghui Wen <dhwen@protegonetworks.com>
-Cc: linux-raid@vger.kernel.org
+In-Reply-To: <016501c331d0$48854d00$6b01a8c0@bmoon>
+To: bmoon <bo@anthologysolutions.com>
+Cc: Stephan van Hienen <raid@a2000.nu>, Donghui Wen <dhwen@protegonetworks.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-What is the reason that it can not cover more than 2TB?
-By the way you are able to use more than 2TB, ~2.3TB???
-Why?
+> What is the reason that it can not cover more than 2TB?
 
------ Original Message ----- 
-From: "Stephan van Hienen" <raid@a2000.nu>
-To: "Donghui Wen" <dhwen@protegonetworks.com>
-Cc: <linux-raid@vger.kernel.org>
-Sent: Friday, June 13, 2003 12:51 AM
-Subject: Re: maximum disk capacity?
+A 32-bit block number with 512-byte blocks.  This multiplies out to 2TB.
 
+> By the way you are able to use more than 2TB, ~2.3TB???
+> Why?
 
-> On Thu, 12 Jun 2003, Donghui Wen wrote:
-> 
-> > Hi, I am setting up hardware raid with 7 harddrives on redhat linux.
-> > I use 3ware + hardware raid 5, each harddrive is 200G. For
-> > linux, this raid sould act as a 1.2TB scsi hard drive. But it seems
-> > redhat could not reconize it. I am wondering may be a 1.2TB hard drive
-> > is too large to linux. So my question is: what't
-> > the maxium disk capacity Linux can support?
-> 
-> no problem till 2TB
-> if you need to go above to 2TB, you need the largedisk patch
-> which doesn't work with sw raid5 (so no 2TB+ with sw raid5)
-> 
-> i'm running with 13*180GB (+1 Hotspare) in sw raid5 (hd's
-> connected to 2*3ware 7850)
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+2TB binary is 2.2TB decimal (2,199,023,255,552).  You shouldn't be able to
+get 2.3TB without the patch.
+
+> > > Hi, I am setting up hardware raid with 7 harddrives on redhat linux.
+> > > I use 3ware + hardware raid 5, each harddrive is 200G. For
+> > > linux, this raid sould act as a 1.2TB scsi hard drive. But it seems
+> > > redhat could not reconize it. I am wondering may be a 1.2TB hard drive
+> > > is too large to linux. So my question is: what't
+> > > the maxium disk capacity Linux can support?
+
+There is a problem with the RedHat installation scripts.  When performing
+a Kickstart install, and using the Grub boot loader, disks are limited to
+1TB (binary).  Is this the problem you encountered?
+
+Good luck.
+				Peter Ashford
+
