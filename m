@@ -1,77 +1,33 @@
-From: Alvin Oga <aoga@Maggie.Linux-Consulting.com>
-Subject: Re: Re[2]: RH 7.3 raid1 setup
-Date: Mon, 3 Jun 2002 05:39:56 -0700 (PDT)
+From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
+Subject: Re: SV: RAID-6 support in kernel?
+Date: Mon, 3 Jun 2002 15:28:49 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.3.96.1020603053217.19266A-100000@Maggie.Linux-Consulting.com>
-References: <162623827266.20020603141854@vo.lu>
+Message-ID: <200206031328.g53DSoQ00464@mail.pronto.tv>
+References: <A2C65A3296DA4A4FB30DB57A9A464A16436851@exchange.lan.vanadis.no> <200206030959.g539xXb31139@mail.pronto.tv> <3CFB4E19.C916D938@daimi.au.dk>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <162623827266.20020603141854@vo.lu>
-To: Christian Schmit <cschmit@vo.lu>
-Cc: linux-raid@vger.kernel.org
+In-Reply-To: <3CFB4E19.C916D938@daimi.au.dk>
+To: Kasper Dupont <kasperd@daimi.au.dk>
+Cc: Christian Vik <cvik@vanadis.no>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, dstephenson@snapserver.com
 List-Id: linux-raid.ids
 
+> No problem for me I live in Europe.
 
-hi ya christian
-
-looks okay too me... not that i played with grub too much but..
-
-make a boot floppy so that we can recover if my experiment fails ...
-
-	dd=/vmlinuz-2.4.18-3  of=/dev/fd0 bs-1204
-
-	( or make a boot flop w/ syslinux
-	http://www.Linux-Consulting.com/Boot/boot.flop.syslinux.txt
-
-	( test that you can boot from floppy )
-	( you'll see lots of "...." on the screen as it boot
-
-	- should also work even if hda or hdc is disconnected
-
-than comment out initrd in your grub.conf and "re-run/re-initialize" grub
-
-	- that'd be my guess of why if you disconnect hda that the system
-	wont boot
-	- am guessing that the kernel that is in the initrd is NOT able
-	to support raid1
-
-- if its not the initrd.. ( guess i better go play with grub too one day )
-
-- interesting problem... :-)
-
-thanx
-alvin
+fine :-)
+Norge kaller :-)
 
 
-> grub.conf:
-> -----------
-> default=0
-> timeout=10
-> splashimage=(hd0,0)/grub/splash.xpm.gz
-> title Red Hat Linux (2.4.18-3)
->         root (hd0,0)
->         kernel /vmlinuz-2.4.18-3 ro root=/dev/md2
->         initrd /initrd-2.4.18-3.img
-> 
-> 
-> Partitions:
-> ------------
-> 
-> Disk /dev/hda: 255 heads, 63 sectors, 5005 cylinders
-> Units = cylinders of 16065 * 512 bytes
-> 
->    Device Boot    Start       End    Blocks   Id  System
-> /dev/hda1   *         1        45    361431   fd  Linux raid autodetect
-> /dev/hda2            46       810   6144862+  fd  Linux raid autodetect
-> /dev/hda3           811      1065   2048287+  fd  Linux raid autodetect
-> 
-> Disk /dev/hdc: 255 heads, 63 sectors, 5005 cylinders
-> Units = cylinders of 16065 * 512 bytes
-> 
->    Device Boot    Start       End    Blocks   Id  System
-> /dev/hdc1   *         1        45    361431   fd  Linux raid autodetect
-> /dev/hdc2            46       810   6144862+  fd  Linux raid autodetect
-> /dev/hdc3           811      1065   2048287+  fd  Linux raid autodetect
-> 
+There's some talk abuot different raid levels (including 6) here:
+http://www.pdl.cmu.edu/RAIDframe/raidframebook.pdf
 
+Hope this helps
+
+roy
+
+-- 
+Roy Sigurd Karlsbakk, Datavaktmester
+
+Computers are like air conditioners.
+They stop working when you open Windows.
