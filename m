@@ -1,66 +1,57 @@
-From: Maarten van den Berg <maarten@vbvb.nl>
-Subject: Re: AW: Raid 1 vs 5 ?
-Date: Fri, 7 May 2004 16:29:31 +0200
+From: "Paul M. Goorskis" <pmg@rimako.lv>
+Subject: remove 'spare' mark on drive
+Date: Fri, 07 May 2004 18:09:29 +0300
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200405071629.31420.maarten@vbvb.nl>
-References: <FA095C015271B64E99B197937712FD0227A85D@freedom.grz.icomedias.com> <1083909121.4287.19.camel@localhost>
+Message-ID: <409BA6A9.4080203@rimako.lv>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1083909121.4287.19.camel@localhost>
-Content-Disposition: inline
-To: LinuxRaid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Friday 07 May 2004 07:52, John Lange wrote:
-> Thank you Martin. You have some really great insights there.
->
-> A couple of things about the raid sets confused me:
-> > Each disk partitioned alike:
-> > 	1	30MB
-> > 	2	1/2 size_of_swap_
-> > 	5	rest_of_disk
-> >
-> > Now you can create mds on the disk:
-> > 	md0	raid1 sda1 sda2 sda3 sda4
-> > 	md1	raid1 sda1 sdb1
-> > 	md2	raid1 sdc1 sdd1
-> > 	md3	raid5 sda5 sdb5 sdc5 sdd5
->
-> First, why do we skip sdx3 and sdx4 on each disk and go directly to sdx5
-> for partition numbers?
+Looks like it's a good place to ask. Didn't noticed my question answered 
+in FAQ.
 
-That is the first number a logical partition gets, as opposed to primary.
+Software IDE RAID-5 (non-root/boot) with 3 drives.
+Array worked properly until one ide-drive came offline. Array started to 
+work in 'degraded' mode. I tryied removing/readding the faulty drive and 
+got it back to the array. Everything works fine for two weeks. Now the 
+drive came offline again (surprise-surprise :).
+Did some manipulations with raid-tools, like adding/removing drive from 
+the raid, marking faulty and such, have no success.
 
-> Second, I'm very confused by the way you divided up the raid sets....
-> I'm thinking you erred? I'm such a newb its possible I really don't
-> understand whats going on so hopefully you can verify.
+Here comes the problem:
+Initializing the array with raid-tools gives me the following: not 
+enough operational devices for md0
+Initializing the array with mdadm gives a little more info: /dev/md0 
+assembled from 1 drive and 2 spares.
 
-I concur, there are errors. This is probably what he meant
+So i suppose that i should do "something" to remove spare mark from 2 
+drives because they were part of an array and i hope my manipulations 
+did not destroyed them :). Just need to reconstruct the array with old 
+drives.
 
-> md0: did you mean sda1 sdb1 sdc1 sdd1 ?
+/proc/mdstat:
+Personalities : [raid5]
+read_ahead not set
+md0 : inactive hdc1[1] hdb[4] hdd[3]
+          0 blocks
+unused devices: <none>
 
-Yes. It was obviously a typo.
+/etc/raidtab:
+raiddev /dev/md0
+    raid-level    5
+    nr-raid-disks   3
+    nr-spare-disks   0
+    persistent-superblock   1
+    parity-algorithm   left-symmetric
+    chunk-size   128
+    device   /dev/hdb1
+    raid-disk   0
+    device   /dev/hdc1
+    raid-disk   1
+    device   /dev/hdd1
+    raid-disk   2
 
-> md1: did you mean sda2 sdb2 ?
-> md2: did you mean sdc2 sdd2 ?
-
-If it were me, why not do entire swap (not 1/2 size_of_swap) on a four-way 
-raid 1, just as with /boot ?  Is way simpler.
-
-> md3: did you mean sda5 sdb5 sdc5 sdd5 ?
->
-> And last, is it possible to build the system from the beginning on RAID?
-> I'm using slackware. I see there is a section in the how-to for
-> converting a red hat system after the fact but obviously it would be
-> easier if I didn't have to do that.
-
-What proved the easiest for me is installing the OS on a temporary scrap 
-harddisk, build your raid sets from there on the real target disks and copy.
-There is a more complicated way too, it involves setting failed-disk status on 
-the drive holding your original data. 
-
-Maarten
 
