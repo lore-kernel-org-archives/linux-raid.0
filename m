@@ -1,7 +1,7 @@
 From: Mitchell Laks <mlaks@verizon.net>
-Subject: disaster. raid1 drive failure rsync=DELAYED why?? please help
-Date: Sat, 12 Mar 2005 23:51:23 -0500
-Message-ID: <200503122351.23430.mlaks@verizon.net>
+Subject: Re: disaster. raid1 drive failure rsync=DELAYED why?? please help
+Date: Sun, 13 Mar 2005 01:23:40 -0500
+Message-ID: <200503130123.40428.mlaks@verizon.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
@@ -10,56 +10,62 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
-I have a remote system with a raid1 of a data disk. I got a call from  the 
-person using the system that the application that writes to the data disk was 
-not working.
+Hi: some additional information
 
-system drive is /dev/hda with separte partitions / , /var, /home, /tmp.
-data drive is linux software raid1 /dev/md0 with /dev/hdc1,  /dev/hde1. 
+1) I tried to add the new spare device to /dev/md0 on friday afternoon.  It
+still has not rebuilt. I am also unable to do "ls" of the directory of the 
+drive.
+2) I had another idea. Why not umount the drive and then run fsck.ext3 on the 
+drive. Maybe it needs fsck? When I tried that I got the message:
 
-I logged in remotely and discovered that the /var partition was full because 
-many write errors from /dev/hde1 in /var/log/syslog.
+A1:~# umount /home/big0
+umount: /home/big0: device is busy
+umount: /home/big0: device is busy
 
-When I looked into cat /proc/mdstat i discovered that /dev/md0 was degraded  
-because /dev/hdc1 had failed (there was an f there) and /dev/hde1 was 
-carrying the load.
+(/dev/md0 is mounted on /home/big0).
 
-I shut down the applications in background. I emptied out /var/log/syslog. I 
-then removed /dev/hdc1 from the array /dev/md0. 
+Here is the output from mdadm --detail.
 
-I had another pair of drives on the system that was part of another mirrored 
-array /dev/md1 with no useful information stored on them. 
+Note: I accidentally renamed the drives in the original posting (sorry..). 
+This is the 'rebuilt' setup. It has been 2 days of time for rebuilding with 
+no change. What do I do to restart the rebuilding???
 
-/dev/md1  /dev/hdf1 /dev/hdh1 
+A1: mdadm --detail /dev/md0
+/dev/md0:
+        Version : 00.90.01
+  Creation Time : Wed Jan 12 14:19:21 2005
+     Raid Level : raid1
+     Array Size : 244195904 (232.88 GiB 250.06 GB)
+    Device Size : 244195904 (232.88 GiB 250.06 GB)
+   Raid Devices : 2
+  Total Devices : 2
+Preferred Minor : 0
+    Persistence : Superblock is persistent
 
-I thought ok, let me detach /dev/hdf1 from the  other array /dev/md1  and try 
-attach it to /dev/md0 and rebuild the array /dev/md0. That way i would rescue 
-the data on the threatening drive /dev/hde1 which is spewing out error 
-messages to my /var/log/syslog and threatening to die! 
+    Update Time : Fri Mar 11 11:40:23 2005
+          State : clean, degraded
+ Active Devices : 1
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 1
 
-So stupidly (probably), I did
+           UUID : 6b8b4567:327b23c6:643c9869:66334873
+         Events : 0.343412
 
-mdadm /dev/md1  --fail /dev/hdf1 --remove /dev/hdf1
+    Number   Major   Minor   RaidDevice State
+       0      34        1        0      active sync   /dev/hdg1
+       1       0        0        -      removed
 
-then i did 
-mdadm /dev/md0 --add /dev/hdf1
-
-Now when i did 
-cat /proc/mdstat I see:
-
-md0 : active raid1 hdf1[2] hde1[0]
+       2      56        1        1      spare rebuilding   /dev/hdi1
+A1:~# cat /proc/mdstat
+Personalities : [raid1]
+md0 : active raid1 hdi1[2] hdg1[0]
       244195904 blocks [2/1] [U_]
         resync=DELAYED
+md1 : active raid1 hdc1[1]
+      244195904 blocks [2/1] [_U]
 
-I don't see any rebuilding action going on.
+md2 : active raid1 hde1[1]
+      244195904 blocks [2/1] [_U]
 
-Did I have to do something like fdisk 
-to the drive /dev/hdf1 before adding it to the array?? I didnt do anything to 
-zero out the data that was on the disk (no data really just whatever was 
-created on the disk when i made it part of an ext3 raid /dev/md1.  I had 
-fdisked it a while ago as a linux raid type partition...
-
-What do I do to rebuild the raid?
-Thanks millions for your help!!
-Mitchell
+unused devices: 
