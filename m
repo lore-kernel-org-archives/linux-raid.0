@@ -1,48 +1,71 @@
-From: Brad Campbell <brad@wasp.net.au>
-Subject: Re: ext3 journal on software raid (was Re: PROBLEM: Kernel 2.6.10
- crashing repeatedly and hard)
-Date: Wed, 05 Jan 2005 02:02:39 +0400
-Message-ID: <41DB127F.3090303@wasp.net.au>
-References: <l1nna2-e9i.ln1@news.it.uc3m.es> <20050104024108.GK99565@caffreys.strugglers.net> <895qa2-0qa.ln1@news.it.uc3m.es> <200501042002.32292.maarten@ultratux.net> <j6dra2-9vs.ln1@news.it.uc3m.es>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: ext3 journal on software raid (was Re: PROBLEM: Kernel 2.6.10 crashing repeatedly and hard)
+Date: Tue, 4 Jan 2005 16:46:01 -0500
+Message-ID: <200501042146.j04Lk7921369@www.watkins-home.com>
+References: <200501042205.13061.maarten@ultratux.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <j6dra2-9vs.ln1@news.it.uc3m.es>
+In-Reply-To: <200501042205.13061.maarten@ultratux.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Peter T. Breuer" <ptb@lab.it.uc3m.es>
-Cc: linux-raid@vger.kernel.org
+To: 'maarten' <maarten@ultratux.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Peter T. Breuer wrote:
-> maarten <maarten@ultratux.net> wrote:
+I have a PC with 2 disks, these disks are much too hot to touch for more
+than a second or less.  The system has been like that for 3-4 years.  I have
+no idea how they lasted so long!  1 is an IBM the other is Seagate.  Both
+are 18 Gig SCSI disks.  The Seagate is 10,000 RPM.
 
->>You can't flip a bit 
->>unnoticed. 
-> 
-> 
-> Not by me, but then I run md5sum every day. Of course, there is a
-> question if the bit changed on disk, in ram, or in the cpu's fevered
-> miscalculations. I've seen all of those. One can tell which after a bit
-> more detective work.
-> 
+As you said: "Go figure..."!  :)
 
-I'm wondering how difficult it may be for you to extend your md5sum script to diff the pair of files 
-and actually determine the extent of the corruption. bit/byte/word/.../sector/.../stripe wise?
+Guy
 
-I have 2 RAID-5 arrays here. a 3x233GiB and a 10x233GiB and I when I install new data on the drives 
-I add the md5sum of that data to an existing database stored on another machine. This gets compared 
-against the data on the arrays weekly and I have yet to see a silent corruption in 18 months.
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of maarten
+Sent: Tuesday, January 04, 2005 4:05 PM
+To: linux-raid@vger.kernel.org
+Subject: Re: ext3 journal on software raid (was Re: PROBLEM: Kernel 2.6.10
+crashing repeatedly and hard)
 
-I do occasionally remove/re-add a drive to each array, which causes a full resync of the array and 
-should show up any parity inconsistency by a faulty fsck or md5sum. It has not as yet.
+On Tuesday 04 January 2005 20:57, Mikael Abrahamsson wrote:
+> On Tue, 4 Jan 2005, Maarten wrote:
+> > failures within the first 10 years, let alone 20, to even remotely
+> > support that outrageous MTBF claim.
+>
+> One should note that environment seriously affects MTBF, even on
+> non-movable parts, and probably even more on movable parts.
 
-Honestly, in my years running Linux and multiple drive arrays I have never experienced errors such 
-as you are getting.
+Yes.  Heat especially above all else.
 
-Oh.. and both my arrays are running ext3 with an internal journal (as are all my other partitions on 
-all my other machines).
+> I've talked to people in the reliability business, and they use models
+> that say that MTBF for a part at 20 C as opposed to 40 C can differ by a
+> factor of 3 or 4, or even more. A lot of people skimp on cooling and then
+> get upset when their drives fail.
+>
+> I'd venture to guess that a drive that has an MTBF of 1.2M at 25C will
+> have less than 1/10th of that at 55-60C.
 
-Perhaps I'm lucky?
+Yes. I know that full well.  Therefore my server drives are mounted directly
 
-Brad
+behind two monstrous 12cm fans...  I don't take no risks.  :-)
+
+Still, two western digitals have died within the first or second year in
+that 
+enclosure. So much for MTBF vs. real world expectancy I guess.
+
+It should be public knowledge by now that heat is the number 1 killer for 
+harddisks.  However, you still see PC cases everywhere where disks are 
+sandwiched together and with no possible airflow at all. Go figure... 
+
+Maarten
+
+-- 
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
