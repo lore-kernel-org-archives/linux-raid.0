@@ -1,46 +1,59 @@
-From: rfu@kaneda.iguw.tuwien.ac.at
-Subject: migrating raid-1 to different drive geometry ?
-Date: Mon, 24 Jan 2005 15:59:10 +0100
-Message-ID: <20050124145910.GC29766@kaneda>
+From: Olivier Mueller <om-lists-linux@omx.ch>
+Subject: Re: "megaraid mbox: critical hardware error" on new dell poweredge
+	1850, suse 9.2, kernel 2.6.8
+Date: Mon, 24 Jan 2005 20:49:32 +0100
+Message-ID: <1106596172.5082.12.camel@bigapple.omnis.ch>
+References: <1106436197.14192.4.camel@bigapple.omnis.ch>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <1106436197.14192.4.camel@bigapple.omnis.ch>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+On Sun, 2005-01-23 at 00:23 +0100, Olivier Mueller wrote:
+> I'm trying to get a quite standard "suse linux 9.2" setup working
+> on a brand new dell poweredge 1850 with 2 scsi disks in raid1 setup.
+>=20
+> Installation went completely fine, everything is working. But now (an=
+d
+> every time), after 2-3h of uptime and some high disk I/O load (rsync =
+of
+> some GB of data), it badly crashes with the following messages:
+>                                                                      =
+                                                                       =
+          =20
+> -------------------------------------------------------------------
+> megaraid: aborting-1164069 cmd=3D2a <c=3D1 t=3D0 l=3D0>
+> megaraid abort: 1164069:48[255:0], fw owner
+> megaraid: aborting-1164070 cmd=3D2a <c=3D1 t=3D0 l=3D0>
+> megaraid abort: 1164070:59[255:0], fw owner
+> megaraid: aborting-1164071 cmd=3D2a <c=3D1 t=3D0 l=3D0>
+> megaraid abort: 1164071:19[255:0], fw owner
+> megaraid: aborting-1164072 cmd=3D2a <c=3D1 t=3D0 l=3D0>
+> megaraid abort: 1164072:18[255:0], fw owner
 
-I'm running Fedora Core 1 on a server with 2 identical
-60 GB ATA drives. These drives are organized in a RAID1
-with 4 partitions.
 
-I now want to replace both drives with two different
-(but also identical) ATA drives with about 80 to 120 GB
-capacity each.
+=46YI, I tried some "load tests" with under linux kernel 2.4 (knoppix,=20
+with module megaraid2 loaded, and it doesn't crash yet after 2-3h of
+work  (under 2.6 and megaraid it would have crashed after 30 minutes).
 
-how can the existing raid setup be moved to the new disks 
-without data loss ?
+Has the megaraid module been "improved" between 2.4 and 2.6 ?  The
+server is brand new, and the disks doesn't seem overheated...=20
+Is there anybody else working with dell 1850 servers ? :)
 
-I guess it must be something like this:
+regards,
+Olivier
+--=20
+_______________________________________________________
+ Olivier M=FCller - PGP key ID: 0x0E84D2EA - Switzerland=20
+    E-Mail: http://omx.ch/mail/ - AIM/iChat: swix3k
 
-1) physically remove first old drive
-2) physically add first new drive
-3) re-create partitions on new drive
-4) run raidhotadd for each partition
-5) wait until all partitions synced
-6) repeat with second drive
 
-the big question is: since the drive geometry will definitely different
-between old 60GB and new 80GB drive(s), how do the new partitions 
-have to be created on the new drive ?
-- do they have to have exactly the same amount of blocks ?
-- may they be bigger ?
-
-are there better strategies for such a migration ?
-
-tnx in advance.
-
-rainer. 
-
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
