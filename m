@@ -1,61 +1,72 @@
-From: Duncan Laurie <duncan@sunbalt.net>
-Subject: Re: Problems with RAID1 on cobalt raq3
-Date: 19 Aug 2002 20:56:41 -0700
+From: "Rechenberg, Andrew" <ARechenberg@shermanfinancialgroup.com>
+Subject: RE: Single md physical device limit
+Date: Tue, 20 Aug 2002 09:45:22 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1029815801.7736.13.camel@atherton>
-References: <200208172056.g7HKuHm05754@raq.iceblink.org>
-	<1029625780.14769.134.camel@atherton>  <20020819083834.GM26818@jinny.ie>
+Message-ID: <CDF05CB9FCA0C845B9778F9E463C4761255544@cinshrexc01.shermfin.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20020819083834.GM26818@jinny.ie>
-To: valen@tuatha.org
-Cc: linux-raid@vger.kernel.org
+Content-Class: urn:content-classes:message
+To: Maurice Hilarius <maurice@harddata.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 2002-08-19 at 01:38, John P. Looney wrote: 
+
+Can I just download the SRC RPM from 7.3 and build and install the
+binary RPM with the libs, etc. in Red Hat 7.1 and get the intended
+functionality or do most people recommend mdadm in place of raidtools?
+We currently have to run Red Hat 7.1 because of the database
+requirements for an application we are running on the box and cannot
+upgrade to 7.3 as of now.
+
+Thanks again to everyone for their help.
+
+Regards,
+Andy.
+
+-----Original Message-----
+From: Maurice Hilarius [mailto:maurice@harddata.com] 
+Sent: Monday, August 19, 2002 8:53 PM
+To: linux-raid@vger.kernel.org
+Cc: Rechenberg, Andrew
+Subject: RE: Single md physical device limit
+
+
+With regards to your message at 03:01 PM 8/19/02, Neil Brown. Where you
+stated:
+>On Monday August 19, ARechenberg@shermanfinancialgroup.com wrote:
+> > Interesting, when I initially built my array (with RedHat
+raidtools-0.90
+> > not mdctl/mdadm, on kernel 2.4.17) it stated that I could only
+stripe
+> > across 12 devices.  Do you have any idea from which this number
+comes?
+> > Is it an old limit?
 >
->  First off set_boot_dev was used to set the boot device to hda2 (I 
-> tryed hda1, and as you pointed out, you can't move the root device
-> easily to hda2 later).
-> 
->  I had originally planned that hda1 was /boot and hda2 was / - in the end,
-> to get *anything* booting, I'd to copy the /boot files into a /boot
-> directory on the / filesystem, and write off hda1 as a waste of disk
-> space.
+>Yes, some old limit.  I don't remember the exact details, they were
+>never important to me, but I think it involved some miscalculation
+>about how many entries would actually fit in the 4096 byte superblock.
 
-I think you want this to be md1, but to do that and have the kernel on
-a separate device (not a member of the raid set) will require you to 
-override the root device for the ROM kernel with set_lparams. 
 
-I was incorrect in saying that "set_boot_dev md1" does not have the same 
-effect as "set_params root=/dev/md1", what I was seeing is actually a bug 
-in the ROM.  When you run "set_boot_dev md1" it updates the major/minor 
-bytes in CMOS, but it does not set the variable that is used to create 
-the zero-page.  This means it will have the stale value until it is 
-rebooted. (this is with a 2.9.x ROM, I am not sure about 2.3.40) 
+As shipped in Red Hat 7.2 and earlier that limit existed.
+It was fixed in 7.3
+If you need a copy of the srpm or rpm with the patches applied let me
+know.
+If you are using Disk Druid from 7.2 or earlier, you will need to update
 
->  Woo-hoo. Exactly what I wanted. I think.
-> 
->  So, do I do 
-> 
->      set_boot_dev hda1                      (/boot)
->      set_params "root=/dev/md0 ro"         
-> 
->  And that should do what I've been trying to do ? Or do I have to change
-> the paramters to the ROM kernel also ?
+that as well, as it does not recognize the fix.
 
-I would try this:
 
-	set_boot_dev md1
-	[reboot here - bug workaround]
-	set_lparams root=/dev/hda1
 
-(this is assuming hda1 is /boot, and hda2+hdg1=md1 is /)
+With our best regards,
 
-The problem with this solution is you no longer get the ability to boot
-autonomously.  The different root device is not saved in CMOS so has to
-be re-entered each time.
+Maurice W. Hilarius       Telephone: 01-780-456-9771
+Hard Data Ltd.               FAX:       01-780-456-9772
+11060 - 166 Avenue        mailto:maurice@harddata.com
+Edmonton, AB, Canada      http://www.harddata.com/
+    T5X 1Y3
 
--duncan
+2.3TB RAID5 NAS server - dual AthlonMP CPU, Linux, $10,995 CAD / $6850
+USD
+
