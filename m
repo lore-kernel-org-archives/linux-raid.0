@@ -1,98 +1,87 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: Odd md related top output with kernel 2.4.28
-Date: Mon, 6 Dec 2004 02:15:13 -0500
-Message-ID: <200412060715.iB67FI901088@www.watkins-home.com>
-References: <200412060642.iB66g0900966@www.watkins-home.com>
+From: =?ISO-8859-1?Q?Jean-Yves_Mert=E8s?= <jym@skynet.be>
+Subject: mdadm problem
+Date: Mon, 06 Dec 2004 10:37:52 +0100
+Message-ID: <41B42870.7050207@skynet.be>
+Reply-To: jym@skynet.be
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200412060642.iB66g0900966@www.watkins-home.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I did a reboot, the same thing.  Even if the system is idle.
+Hello!
 
-From "top":
-    8 root     18446744073709551615 -20     0    0     0 SW<   0.0  0.0
-0:00
-   28 root     18446744073709551615 -20     0    0     0 SW<   0.0  0.0
-0:00
-   29 root     18446744073709551615 -20     0    0     0 SW<   0.0  0.0
-0:00
-   30 root     18446744073709551615 -20     0    0     0 SW<   0.0  0.0
-0:00
+I do not know if I may receive any support about mdadm through this 
+e-mail address. If not, please, could you forward this message to the 
+appropriate box if one exists.
 
-From "ps -ef"
-root         8     1  0 01:57 ?        00:00:00 [mdrecoveryd]
-root        28     1  0 01:57 ?        00:00:00 [raid5d]
-root        29     1  0 01:57 ?        00:00:00 [raid1d]
-root        30     1  0 01:57 ?        00:00:00 [raid1d]
+I am currently trying to migrate a Linux partition (Mandrake 10) to RAID 
+1. To this purpose I have installed mdadm V1.8.1. The first attempt was 
+to configure an equally-sized partition of my second disk (/dev/hdb) as 
+part of a degraded RAID 1 device. Unfortunately, starting the array 
+fails. The following shows pieces of information that should help  
+understanding the case:
 
-Guy
+The command I use is:
+mdadm -C /dev/md0 --metadata=1 --level=raid1 --raid-devices=2 missing 
+/dev/hdb5 -v
 
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Guy
-Sent: Monday, December 06, 2004 1:42 AM
-To: linux-raid@vger.kernel.org
-Subject: Odd md related top output with kernel 2.4.28
+To which mdadm answers:
+mdadm: /dev/hdb5 appears to contain an ext2fs file system
+    size=4843912K  mtime=Thu Dec  2 17:11:54 2004
+mdadm: /dev/hdb5 appears to be part of a raid array:
+    level=1 devices=2 ctime=Sat Dec  4 18:28:46 2004
+mdadm: size set to 4843904K
+Continue creating array? y
+VERS = 9000
+mdadm: ADD_NEW_DISK for /dev/hdb5 failed: Invalid argument
 
-Neil, (or anyone)
-	I just upgraded my system from kernel 2.4.20.8smp (redhat) to 2.4.28
-(from kernel.org).  I am making apache, and ran top to see how things were
-going.  2 processes have strange info.  PIDs 8 and 28.  Any ideas about what
-is going on?  The system seems fine.
+Running cat /proc/mdstat, it appears that the array has not been 
+started, despite it (and the corresponding superblock) seems having been 
+created:
+/dev/hdb5:
+          Magic : a92b4efc
+        Version : 01.00
+     Array UUID : 67458b6bc6:237b3269:983c6473:483366
+           Name :
+  Creation Time : Sat Dec  4 18:45:49 2004
+     Raid Level : raid1
+   Raid Devices : 2
 
-Thanks,
-Guy
+    Device Size : 9687808 (4.62 GiB 4.96 GB)
+   Super Offset : 9687808 sectors
+    Device UUID : 67458b6bc6:237b3269:983c6473:483366
+    Update Time : Sat Dec  4 18:45:49 2004
+       Checksum : b1fb29ae - correct
+         Events : 1
 
-From "ps -ef" they look like this:
-root         8     1  0 Dec05 ?        00:00:00 [mdrecoveryd]
-root        28     1  0 Dec05 ?        00:00:02 [raid5d]
 
-98 processes: 95 sleeping, 3 running, 0 zombie, 0 stopped
-CPU0 states:  62.1% user  11.0% system    0.0% nice   0.0% iowait  25.1%
-idle
-CPU1 states:  25.0% user  12.1% system    0.0% nice   0.0% iowait  62.0%
-idle
-Mem:   515296k av,  188588k used,  326708k free,       0k shrd,   22800k
-buff
-        36692k active,              84512k inactive
-Swap:  524280k av,       0k used,  524280k free                   70264k
-cached
+   Array State : _U 383 spares
 
-  PID USER     PRI  NI  SIZE  RSS SHARE STAT %CPU %MEM   TIME CPU COMMAND
-14574 root      13   0  2004 2004   960 R    24.9  0.3   0:00   0 sh
-14562 root      16   0  1160 1160   856 R     6.4  0.2   0:00   1 top
-14569 root       9   0   752  752   640 S     1.8  0.1   0:00   1 make
-14571 root       9   0  1028 1028   888 S     0.9  0.1   0:00   1 sh
-    1 root       9   0   472  472   424 S     0.0  0.0   0:03   1 init
-    2 root       9   0     0    0     0 SW    0.0  0.0   0:00   0 keventd
-    3 root      19  19     0    0     0 SWN   0.0  0.0   0:00   0
-ksoftirqd_CPU
-    4 root      19  19     0    0     0 SWN   0.0  0.0   0:00   1
-ksoftirqd_CPU
-    5 root       9   0     0    0     0 SW    0.0  0.0   0:00   1 kswapd
-    6 root       9   0     0    0     0 SW    0.0  0.0   0:00   0 bdflush
-    7 root       9   0     0    0     0 SW    0.0  0.0   0:00   1 kupdated
-    8 root     18446744073709551615 -20     0    0     0 SW<   0.0  0.0
-0:00
-   14 root       9   0     0    0     0 SW    0.0  0.0   0:00   1 ahc_dv_0
-   15 root       9   0     0    0     0 SW    0.0  0.0   0:00   0 ahc_dv_1
-   16 root       9   0     0    0     0 SW    0.0  0.0   0:00   0 ahc_dv_2
-   17 root       9   0     0    0     0 SW    0.0  0.0   0:00   1 ahc_dv_3
-   18 root       9   0     0    0     0 SW    0.0  0.0   0:00   0 scsi_eh_0
-   19 root       9   0     0    0     0 SW    0.0  0.0   0:00   1 scsi_eh_1
-   20 root       9   0     0    0     0 SW    0.0  0.0   0:00   1 scsi_eh_2
-   21 root       9   0     0    0     0 SW    0.0  0.0   0:00   1 scsi_eh_3
-   28 root     18446744073709551615 -20     0    0     0 SW<   0.0  0.0
-0:01
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Checking the log files, here is what I found:
+Dec  4 18:45:49 localhost kernel: md: invalid raid superblock magic on hdb5
+Dec  4 18:45:49 localhost kernel: md: hdb5 has invalid sb, not importing!
+Dec  4 18:45:49 localhost kernel: md: md_import_device returned -22
 
+So I tried to start the array by means of the -A switch together with an 
+/etc/mdadm.conf file I filled in manually:
+mdadm -A -s /dev/md0 -v
+
+Here is the result:
+mdadm: looking for devices for /dev/md0
+Segmentation fault
+
+A look at the log files gives:
+Dec  4 19:01:41 localhost kernel: md: md0 stopped.
+
+This log appears very strange to me since the array was not running ;-)
+
+I have not succeeded in finding some directions to understand the 
+problem. I hope someone could help me.
+
+Best regards.
+
+Jean-Yves MERTES
