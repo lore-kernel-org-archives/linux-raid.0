@@ -1,79 +1,141 @@
-From: berk walker <berk.walker@verizon.net>
-Subject: Re: combining two raid systems
-Date: Thu, 13 Jan 2005 18:46:21 -0500
-Message-ID: <41E7084D.2040607@verizon.net>
-References: <200501132017.16910.maarten@ultratux.net>
+From: ptb@lab.it.uc3m.es (Peter T. Breuer)
+Subject: Re: Spares and partitioning huge disks
+Date: Fri, 14 Jan 2005 00:32:46 +0100
+Message-ID: <u1djb2-d2j.ln1@news.it.uc3m.es>
+References: <u0nib2-4i2.ln1@news.it.uc3m.es> <200501132038.j0DKcB905895@www.watkins-home.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200501132017.16910.maarten@ultratux.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: maarten <maarten@ultratux.net>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Maarten, why not just leave them as they are, and mount the secondary FS 
-on the primary FS?
-Less drag on the power supply, and fewer eggs in the basket.  If you 
-can't see the added array, it might be that, even in this great day of 
-standardisation, some boxes write to the disk differently, esp. in the 
-1st cyl.
-Just a thought -
-b-
+Guy <bugzilla@watkins-home.com> wrote:
+> Maybe you missed my post from yesterday.
 
-maarten wrote:
+Possibly I did - I certainly don't read everything and not everything
+gets to me. Or maye I saw it and could not decipher it. I don't know!
 
->Hi,
->
->I'm currently combing two servers into one, and I'm trying to figure out the 
->safest way to do that.
->
->System one had two md arrays: one raid-1 with the OS and a second one with 
->data (raid-5)  It is bootable through lilo
->
->System two had 9 arrays, one with the OS (raid-1) two raid-1's for swap, and 6 
->md devices that belong in an LVM volume. This system has grub.
->
->All md arrays are self-booting 0xFD partitions.
->
->I want to boot off system one.  I verified that that boots fine if I 
->disconnect all the [system-2] drives, so that's working okay. 
->
->Now when I boot I get a lilo prompt, so I know the right disk is booted by the 
->BIOS.  When logged in, I see only the md devices from system two, and thus 
->the current md0 "/" drive is from system two.  Now what options do I have ?
->
->If I zero the superblock(s) (or even the whole partitions) from md0 of system 
->2, it will not boot off of that obviously, but what will now get to be md0 ? 
->It could be the second array from system 2 equally well as the first array 
->from system one, right ?
->
->I could experiment with finding the right array by using different kernel 
->root= commandlines, but only grub gives me that possibility, lilo has no 
->boot-time shell (well, it has a commandline...)
->
->Another thing that strikes me is that running 'mdadm --detail --scan' also 
->only finds the arrays from system 2. Is that expected since it just reads 
->its /etc/mdadm.conf file, or should it disregard that and show all arrays ?
->
->Upon first glance 'fdisk -l' does show all devices fine (there are 10 of them)
->
->I think (er, hope, actually) that with mdadm.conf one could probably force the 
->machine to recognize the right drives as md0 as opposed to them being 
->numbered mdX, but is that a right assumption ?  At the time the kernel md 
->code reads / assembles the various 0xFD partitions, the root-partition is not 
->mounted (obviously) so reading /etc/mdadm.conf will not be possible.
->
->I'll start to try out some things but I _really_ want to avoid having an 
->unbootable system: for one, this system has no CDrom nor floppy, and even 
->more importantly I don't think my rescue media have all neccessary drivers 
->for the ATA & SATA cards.
->
->Anyone have some good advice for me ?
->
->Maarten
->
->  
->
+> http://marc.theaimsgroup.com/?l=3Dlinux-raid&m=3D110559211400459&w=3D=
+2
 
+> No superblock was to prevent overwriting data on the failing componen=
+t of
+
+You say that no superblock in one of the raid1 subarray's disks stops
+overwriting data on a top raid5 array?  This really sounds like double
+dutch!  And if it does (What?  How?  Why?), so what?
+
+> the top RAID5 array.  If you build the top array with degraded RAID1 =
+arrays,
+> then use a super block for the RAID1 arrays.
+
+There possibly a missing verb in that sentence.  Or maybe not.  It is
+hard to tell. Hmmmmmmmm .......... nope, I really can't see where that
+sentence is trying to go.
+
+Let's suppose it really does have the form of a computer language IF
+THEN, so the conditional test would be "you build the top array with
+degraded RAID1 arrays".
+
+Well, I can interpret that to say that I build the top array (which is
+RAID5) OF degraded RAID1 arrays, and then that would match what I
+suggested.
+
+OK.  So that would mean "IF you do what you suggest THEN ...".  Then
+what?  Then "an imperative".  An imperative?  Why should I obey an
+imperative?  Well, what does this imperative say anyway?=20
+
+It says "use a super block for the RAID1 arrays".
+
+OK, that could be "use RAID1 arrays with superblocks".  That is "do the
+normal thing with RAID1".  So the whole sentence says "IF you do what
+you suggest THEN do the normal thing with RAID1".  OK - I agree.  You
+are trying to say "IF I do things my way THEN I don't have to do
+anything strange at the RAID1 level".
+
+OK?
+
+Whew! I can see why I skipped whatever you said before if that is what
+it takes to decipher it!
+
+Bt then the entire sentence says nothing strange or exciting.
+
+> Also, so all of the RAID1 arrays don't seem degraded, configure them =
+with
+> only 1 device.=20
+
+Whaaaaaaat? Oh no, I give up - I really can't parse this.=20
+
+Hang on - maybe the tenses are wrong.  Maybe you are trying to say "you
+don't have to configure the RAID1 arrays as having 1 good disk and 1
+failed disk".
+
+Well, I disagree. Correct me if I am wrong but as far as I know you
+cannot change the number of disks in a raid array. I'd be happy to
+learn you can, but for all I know if you start with n disks comprised
+of m good and p failed disks, then n =3D m + p and the total can never
+change. In my 2.6.3 codebase for raid there is only one point where=20
+conf->raid_disks is changed, and it is in the "run" routine, where=20
+it is set once and for all and never changed.
+
+
+> Grow them to 2 devices when needed.  Then shrink them back
+> to 1 when done.
+
+If it were possible I'd be happy to hear of it. Maybe it is possible -
+but it would be in a newer codebase than the 2.6.3 code I have running
+here.
+
+If so, why this convoluted way of saying that?
+
+> The RAID1 idea will not work since a bad block will take out the RAID=
+1.  But
+
+Uh - yes it will work, no a bad block will not "take out the RAID1",
+whatever you mean by that.=20
+
+I presume you mean that a bad block in the disk being read will mess up
+the raid1 subarray. No it won't - it will just prevent a block being
+copied. I see nothing terrible in that. The result will be that
+everything else but that block will be copied. If you like we can even
+arrange that the missing block be corrected THEN at that moment from
+data available in the superarray, but I don't see that as necessary.
+
+Why?
+
+Well,=20
+
+1) because now that you have told me that the disk you want to swap out
+is bad, then the top level array has morally lost its redundancy
+already!  So just take the disk out and replace it - you won't be
+degrading the top array any more than it already is while you do this.
+
+2) oh - but you say that yes we are losing redundancy on the good
+sectors of the disk. Oh? And which are those? Well let's just go ahead
+with the RAID1 sync and whenever we hit an unreadable sector then
+launch a request to the top level array for a read from the rest of the
+RAID5 for that sector only.
+
+3) oh, but you don't like to do that during resync? Shrug .. then mar
+the place on a bitmap and after the resync has finished as best you are
+able then launch an extra cleanup phase from the RAID5  to cover the
+blocks marked bad in the bitmap (one can do this periodically anyway).
+
+I don't see that one really needs to do 3 in place of 2, but I am
+experimenting.
+
+Anyway, the point is that =FFour "it will not work" is wrong.
+
+> there are more issues, see the above URL.
+
+Does it contain more of the same?
+
+Peter
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
