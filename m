@@ -1,97 +1,138 @@
-From: Scott Bisker <scott@bisker.com>
-Subject: Problem with Raid 1/5 2.4.x kernel
-Date: 06 Jun 2002 15:33:19 -0400
+From: David Nedved <dnedved@nuvox.net>
+Subject: RAID-1 md comes up degraded every time
+Date: Sat, 8 Jun 2002 11:06:45 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1023392000.15766.0.camel@rnd-187-213.usae.bah.com>
+Message-ID: <20020608110645.A16350@nuvox.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello All
+Hi All,
 
-I'm having some strange problems creating raid arrays on my RedHat 7.2
-machine.  When I run mkraid to try and create a RAID-1 or RAID-5 device,
-the the disks grind for about 2 seconds and then the mkraid process goes
-into a D state and /proc/mdstat always looks something like this (with
-and incrementing finish time).
+I created a RAID-1 volume on Linux 2.4.18 by creating the volume in degraded
+mode, then hot-adding the second disk.  It syncs up fine, but every time I
+reboot, it comes back in degraded mode.  Can someone help me figure out what
+I'm doing wrong?
 
-[root@feedback root]# cat /proc/mdstat 
-Personalities : [raid5] 
-read_ahead not set
-md0 : active raid5 hdg1[2] hdf1[1] hde1[0]
-      156301184 blocks level 5, 4k chunk, algorithm 2 [3/3] [UUU]
-      [>....................]  resync =  0.0% (128/78150592)
-finish=303612.3min speed=0K/sec
-unused devices: <none>
+(it looks like I've got two RAID's, both of which contain /dev/hde1, and
+I really don't quite understand what's happened).
 
-Here's the ps aux output
+Here is the /etc/raidtab:
 
-root       908  0.0  0.4  1432  524 tty1     D    10:01   0:00 mkraid
---really-force /dev/md0
-root       910  0.0  0.0     0    0 ?        SW<  10:01   0:00 [raid5d]
-root       911  0.0  0.0     0    0 ?        DWN  10:01   0:00
-[raid5syncd]
+raiddev	/dev/md1
+	raid-level		1
+	nr-raid-disks		2
+	nr-spare-disks		0
+	persistent-superblock	1
+	chunk-size		4
+	device			/dev/hde1
+	raid-disk		0
+	device			/dev/hdg1
+	raid-disk		1
 
+(device /dev/hdg1 was set as failed disk during build, and then switched to
+raid-disk before raidhotadd)
 
+Here is the section of /var/log/messages from when it boots:
 
-The only way (that I've found) to recover is to do a cold boot.  It
-doesn't appear that the process is oopsing, it looks like it's waiting
-for something to happen.  Occasionally, I can perform a reboot -fn and
-it will reboot.
+Jun  5 00:00:58 celeri kernel: md: raid1 personality registered as nr 3
+Jun  5 00:00:58 celeri kernel: md: md driver 0.90.0 MAX_MD_DEVS=256, MD_SB_DISKS=27
+Jun  5 00:00:58 celeri kernel: md: Autodetecting RAID arrays.
+Jun  5 00:00:58 celeri kernel:  [events: 00000014]
+Jun  5 00:00:58 celeri kernel: md: autorun ...
+Jun  5 00:00:58 celeri kernel: md: considering hde1 ...
+Jun  5 00:00:58 celeri kernel: md:  adding hde1 ...
+Jun  5 00:00:58 celeri kernel: md: created md1
+Jun  5 00:00:58 celeri kernel: md: bind<hde1,1>
+Jun  5 00:00:58 celeri kernel: md: running: <hde1>
+Jun  5 00:00:58 celeri kernel: md: hde1's event counter: 00000014
+Jun  5 00:00:58 celeri kernel: md: RAID level 1 does not need chunksize! Continuing anyway.
+Jun  5 00:00:58 celeri kernel: md1: max total readahead window set to 124k
+Jun  5 00:00:58 celeri kernel: md1: 1 data-disks, max readahead per data-disk: 124k
+Jun  5 00:00:59 celeri kernel: raid1: device hde1 operational as mirror 0
+Jun  5 00:00:59 celeri kernel: raid1: md1, not all disks are operational -- trying to recover array
+Jun  5 00:00:59 celeri kernel: raid1: raid set md1 active with 1 out of 2 mirrors
+Jun  5 00:00:59 celeri kernel: md: recovery thread got woken up ...
+Jun  5 00:00:59 celeri kernel: md1: no spare disk to reconstruct array! -- continuing in degraded mode
+Jun  5 00:00:59 celeri kernel: md: recovery thread finished ...
+Jun  5 00:00:59 celeri kernel: md: updating md1 RAID superblock on device
+Jun  5 00:00:59 celeri kernel: md: hde1 [events: 00000015]<6>(write) hde1's sb offset: 40202560
+Jun  5 00:00:59 celeri kernel: md: ... autorun DONE.
 
-I've tried the process with 2.4.9 and 2.4.18 RedHat kernels as well as
-2.4.19-pre10.  The machine is currently sitting with mkraid in a D
-state, so if there is anything that I can do to get more valuable
-information for you let me know.  One note, is that the creation of a
-RAID-0 device worked fined.  I'm totally stumped on this.  Below are my
-/etc/raidtab and the system specs.
+Here is the section during a raidhotadd /dev/md1 /dev/hdg1:
 
-Thanks,
+Jun  5 22:37:08 celeri kernel: md: trying to hot-add hdg1 to md1 ...
+Jun  5 22:37:08 celeri kernel: md: bind<hdg1,2>
+Jun  5 22:37:08 celeri kernel: RAID1 conf printout:
+Jun  5 22:37:08 celeri kernel:  --- wd:1 rd:2 nd:2
+Jun  5 22:37:08 celeri kernel:  disk 0, s:0, o:1, n:0 rd:0 us:1 dev:hde1
+Jun  5 22:37:08 celeri kernel:  disk 1, s:0, o:0, n:1 rd:1 us:1 dev:[dev 00:00]
+Jun  5 22:37:08 celeri kernel:  disk 2, s:0, o:0, n:0 rd:0 us:0 dev:[dev 00:00]
+Jun  5 22:37:08 celeri kernel:  disk 3, s:0, o:0, n:0 rd:0 us:0 dev:[dev 00:00]
+<SNIP UP TO DISK 26>
+Jun  5 22:37:08 celeri kernel: RAID1 conf printout:
+Jun  5 22:37:08 celeri kernel:  --- wd:1 rd:2 nd:3
+Jun  5 22:37:08 celeri kernel:  disk 0, s:0, o:1, n:0 rd:0 us:1 dev:hde1
+Jun  5 22:37:08 celeri kernel:  disk 1, s:0, o:0, n:1 rd:1 us:1 dev:[dev 00:00]
+Jun  5 22:37:08 celeri kernel:  disk 2, s:1, o:0, n:2 rd:2 us:1 dev:hdg1
+Jun  5 22:37:08 celeri kernel:  disk 3, s:0, o:0, n:0 rd:0 us:0 dev:[dev 00:00]
+<SNIP>
+Jun  5 22:37:08 celeri kernel: md: updating md1 RAID superblock on device
+Jun  5 22:37:08 celeri kernel: md: hdg1 [events: 00000016]<6>(write) hdg1's sb offset: 40202560
+Jun  5 22:37:08 celeri kernel: md: hde1 [events: 00000016]<6>(write) hde1's sb offset: 40202560
+Jun  5 22:37:08 celeri kernel: md: recovery thread got woken up ...
+Jun  5 22:37:08 celeri kernel: md1: resyncing spare disk hdg1 to replace failed disk
+Jun  5 22:37:08 celeri kernel: RAID1 conf printout:
+Jun  5 22:37:08 celeri kernel:  --- wd:1 rd:2 nd:3
+Jun  5 22:37:08 celeri kernel:  disk 0, s:0, o:1, n:0 rd:0 us:1 dev:hde1
+Jun  5 22:37:08 celeri kernel:  disk 1, s:0, o:0, n:1 rd:1 us:1 dev:[dev 00:00]
+Jun  5 22:37:08 celeri kernel:  disk 2, s:1, o:0, n:2 rd:2 us:1 dev:hdg1
+Jun  5 22:37:08 celeri kernel:  disk 3, s:0, o:0, n:0 rd:0 us:0 dev:[dev 00:00]
+<SNIP>
+Jun  5 22:37:08 celeri kernel: RAID1 conf printout:
+Jun  5 22:37:08 celeri kernel:  --- wd:1 rd:2 nd:3
+Jun  5 22:37:08 celeri kernel:  disk 0, s:0, o:1, n:0 rd:0 us:1 dev:hde1
+Jun  5 22:37:08 celeri kernel:  disk 1, s:0, o:0, n:1 rd:1 us:1 dev:[dev 00:00]
+Jun  5 22:37:08 celeri kernel:  disk 2, s:1, o:1, n:2 rd:2 us:1 dev:hdg1
+Jun  5 22:37:08 celeri kernel:  disk 3, s:0, o:0, n:0 rd:0 us:0 dev:[dev 00:00]
+<SNIP>
+Jun  5 22:37:08 celeri kernel: md: syncing RAID array md1
+Jun  5 22:37:08 celeri kernel: md: minimum _guaranteed_ reconstruction speed: 100 KB/sec/disc.
+Jun  5 22:37:08 celeri kernel: md: using maximum available idle IO bandwith (but not more than 100000 KB/sec) for reconstruction.
+Jun  5 22:37:08 celeri kernel: md: using 124k window, over a total of 40202560 blocks.
+Jun  5 22:39:31 celeri kernel: APIC error on CPU0: 04(04)
+Jun  5 22:47:56 celeri kernel: APIC error on CPU1: 08(08)
+Jun  5 22:47:56 celeri kernel: APIC error on CPU0: 04(04)
+Jun  5 22:50:56 celeri kernel: APIC error on CPU1: 08(08)
+Jun  5 22:50:56 celeri kernel: APIC error on CPU0: 04(04)
+Jun  5 22:57:58 celeri kernel: APIC error on CPU1: 08(08)
+Jun  5 22:57:58 celeri kernel: APIC error on CPU0: 04(04)
+Jun  5 23:04:00 celeri kernel: APIC error on CPU1: 08(08)
+Jun  5 23:04:00 celeri kernel: APIC error on CPU0: 04(04)
+Jun  5 23:04:33 celeri kernel: md: md1: sync done.
+Jun  5 23:04:33 celeri kernel: RAID1 conf printout:
+Jun  5 23:04:33 celeri kernel:  --- wd:1 rd:2 nd:3
+Jun  5 23:04:33 celeri kernel:  disk 0, s:0, o:1, n:0 rd:0 us:1 dev:hde1
+Jun  5 23:04:33 celeri kernel:  disk 1, s:0, o:0, n:1 rd:1 us:1 dev:[dev 00:00]
+Jun  5 23:04:33 celeri kernel:  disk 2, s:1, o:1, n:2 rd:2 us:1 dev:hdg1
+Jun  5 23:04:33 celeri kernel:  disk 3, s:0, o:0, n:0 rd:0 us:0 dev:[dev 00:00]
+<SNIP>
+Jun  5 23:04:33 celeri kernel: RAID1 conf printout:
+Jun  5 23:04:33 celeri kernel:  --- wd:2 rd:2 nd:3
+Jun  5 23:04:33 celeri kernel:  disk 0, s:0, o:1, n:0 rd:0 us:1 dev:hde1
+Jun  5 23:04:34 celeri kernel:  disk 1, s:0, o:1, n:1 rd:1 us:1 dev:hdg1
+Jun  5 23:04:34 celeri kernel:  disk 2, s:0, o:0, n:2 rd:2 us:0 dev:[dev 00:00]
+Jun  5 23:04:34 celeri kernel:  disk 3, s:0, o:0, n:0 rd:0 us:0 dev:[dev 00:00]
+Jun  5 23:04:34 celeri kernel: md: updating md1 RAID superblock on device
+Jun  5 23:04:34 celeri kernel: md: hdg1 [events: 00000017]<6>(write) hdg1's sb offset: 40202560
+Jun  5 23:04:34 celeri kernel: md: hde1 [events: 00000017]<6>(write) hde1's sb offset: 40202560
+Jun  5 23:04:34 celeri kernel: md: recovery thread finished ...
 
-Scott
+And that's that.  If anyone read down to here, THANK YOU, and I really hope
+there's something simple I did wrong (like somehow creating two RAID's with
+some of the same disks?)
 
-/etc/raidtab
-
-raiddev /dev/md0
-        raid-level              5
-        nr-raid-disks           3
-        nr-spare-disks          0
-        persistent-superblock   1
-        parity-algorithm        left-symmetric
-        chunk-size              4
-        device                  /dev/hde1
-        raid-disk               0       
-        device                  /dev/hdf1
-        raid-disk               1       
-        device                  /dev/hdg1
-        raid-disk               2       
-
-
-Here are the specs:
-
-Kernel 2.4.19-pre10
-modutils 2.4.14-3
-raidtools 1.00.2-1.3
-glibc 2.2.4-19-3
-kernel-utils 2.4-7.4
-
-
-Dual Proc Celeron MB (one 500 Mhz Processor installed)
-128 MB RAM
-2 Onboard PIIX4 IDE Controllers
-2 Onboard HPT366 Controllers
-
-0S Drives
-/dev/hda  WDC AC22100H  2GB Drive
-/dev/hdc  WDC AC38400L  8GB Drive
-
-Candidate RAID drives:
-/dev/hde  WDC WD800AB-60CBA0  80 GB Drive
-/dev/hdf  WDC WD800AB-00CBA0  80 GB Drive
-/dev/hdg  WDC WD800AB-00CBA0  80 GB Drive
-
-
-
+David
