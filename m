@@ -1,77 +1,36 @@
-From: Farkas Levente <lfarkas@bppiac.hu>
-Subject: mdadm always report SparesMissing
-Date: Wed, 05 May 2004 12:22:07 +0200
+From: Brad Campbell <brad@wasp.net.au>
+Subject: Raidtools-1.00.3
+Date: Wed, 05 May 2004 16:49:28 +0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <4098C04F.1050204@bppiac.hu>
+Message-ID: <4098E2D8.7070007@wasp.net.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
-Cc: Neil Brown <neilb@cse.unsw.edu.au>
+To: RAID Linux <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-hi,
-all the time we restart a server or restart mdadm monitor i.e.:
-/sbin/mdadm --monitor --scan --daemonise
-we'got the SparesMissing event. the intersting is that we got this event 
-only on the last raid device (ie/ if we have md0 and md1 than on md1, if 
-we got md0, md1 and md2 then on md2). we don't have spare device. 
-another intersting thing is that, mdadm report as we has many spare 
-devices. how can I remove them if I don't has device for them?
-thanks in advance.
-eg:
-# mdadm --detail /dev/md0 /dev/md1
-/dev/md0:
-         Version : 00.90.00
-   Creation Time : Mon Jun  2 15:26:34 2003
-      Raid Level : raid1
-      Array Size : 38049856 (36.29 GiB 38.96 GB)
-     Device Size : 38049856 (36.29 GiB 38.96 GB)
-    Raid Devices : 2
-   Total Devices : 2
-Preferred Minor : 0
-     Persistence : Superblock is persistent
+G'day all,
 
-     Update Time : Mon May  3 15:05:21 2004
-           State : dirty, no-errors
-  Active Devices : 2
-Working Devices : 2
-  Failed Devices : 0
-   Spare Devices : 3
+ From what I gather, the idea is to let the old raidtools just die and move over to mdadm for raid 
+maintenance?
+
+I'm just wondering as raidreconf relies pretty heavily at the moment on some of the raidtools 
+infrastructure and I'm wondering what to do long term.
+I have added raid-6 support to raidtools and updated it to work with kernel 2.6 and LBD, but if the 
+long term plan is to let it bitrot then perhaps I'd be better looking at migrating raidreconf to 
+some other framework and try to make it use mdadm for the low level stuff.
+
+Ideas or suggestions?
+
+As an aside, I successfully reconfigured a 7 disk 1.4TB raid-5 to a 10 disk 2.1TB raid 5 last week. 
+It took a little over 21 hours to do the reconf and 9 hours to do a resync, but it all came up great.
+
+I did have a full backup of the entire array, so of course Murphy took a hike. I'm sure had I not 
+had a backup it would have gone pear shaped :p)
 
 
-     Number   Major   Minor   RaidDevice State
-        0       3        1        0      active sync   /dev/hda1
-        1      22        1        1      active sync   /dev/hdc1
-            UUID : 885724e5:551dfc30:647f21ae:df0f7d18
-          Events : 0.512
-/dev/md1:
-         Version : 00.90.00
-   Creation Time : Mon Jun  2 13:44:46 2003
-      Raid Level : raid1
-      Array Size : 2056256 (2008.06 MiB 2105.61 MB)
-     Device Size : 2056256 (2008.06 MiB 2105.61 MB)
-    Raid Devices : 2
-   Total Devices : 2
-Preferred Minor : 1
-     Persistence : Superblock is persistent
+Blessed are the pessimists, for they make the backups.
 
-     Update Time : Mon May  3 15:05:21 2004
-           State : dirty, no-errors
-  Active Devices : 2
-Working Devices : 2
-  Failed Devices : 0
-   Spare Devices : 1
-
-
-     Number   Major   Minor   RaidDevice State
-        0       3        2        0      active sync   /dev/hda2
-        1      22        2        1      active sync   /dev/hdc2
-            UUID : 02e61e78:27cbd5fd:4f33d278:c026581f
-          Events : 0.304
-
-
--- 
-   Levente                               "Si vis pacem para bellum!"
-
+Regards,
+Brad
