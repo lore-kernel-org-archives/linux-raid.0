@@ -1,72 +1,100 @@
-From: "Jean-Rene Cormier" <jean-rene.cormier@cipanb.ca>
-Subject: Re: Software RAID1 problems
-Date: Sun, 2 Mar 2003 10:41:08 -0400
+From: Johnny Wezel <j@netfeed.ch>
+Subject: BUG? lockf () on RAID5
+Date: Sun, 02 Mar 2003 23:56:53 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <003301c2e0c9$c5eee010$8400a8c0@jrc>
-References: <Pine.LNX.3.96.1030301170531.29069A-100000@Maggie.Linux-Consulting.com>
+Message-ID: <3E628C35.8090601@netfeed.ch>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Alvin Oga <aoga@Maggie.Linux-Consulting.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi
 
------ Original Message -----
-From: "Alvin Oga" <aoga@Maggie.Linux-Consulting.com>
-To: "Jean-Rene Cormier" <jean-rene.cormier@cipanb.ca>
-Cc: <linux-raid@vger.kernel.org>
-Sent: Saturday, March 01, 2003 9:08 PM
-Subject: Re: Software RAID1 problems
+I moved my home directories onto a software RAID5 array, and from this 
+time on, Mozilla refused to start.
+
+Since I had some similar problems with pgp and StarOffice which turned 
+out to be lock problems on NFS, I also suspected a lock problem here.
+
+First, I tried to move to home directory onto a "normal" (ie. non-RAID 
+hosted) directory, and Mozilla worked.
+
+Then I wrote a short program, which tests the lockf () function:
+
+#include <sys/types.h>                                                                                                                                               
+#include <sys/stat.h>                                                                                                                                                
+#include <fcntl.h>                                                                                                                                                   
+#include <sys/file.h>                                                                                                                                                
+#include <errno.h>                                                                                                                                                   
+#include <stdio.h>                                                                                                                                                   
+                                                                                                                                                                     
+int main (int argc, char * argv [])                                                                                                                                  
+{                                                                                                                                                                    
+        int f, st;                                                                                                                                                   
+        if (argc < 2) exit (1);                                                                                                                                      
+        f = open (argv[1], O_RDWR);                                                                                                                                  
+        st = lockf (f, F_LOCK, 1);                                                                                                                                   
+        if (st) {                                                                                                                                                    
+                fprintf (stderr, "Error %d: ", errno);                                                                                                               
+                perror ("flock");                                                                                                                                    
+                exit (1);                                                                                                                                            
+        }                                                                                                                                                            
+        exit (0);                                                                                                                                                    
+}                                                                                                                                                                    
+
+Executed on a file in a RAID directory, it returned
+
+Error 37: flock: No locks available
+
+On files in non-RAID-directories it worked without error.
+
+So, I come to the conclusion, that the RAID system does not support 
+locks, or the lock support is buggy.
+
+The RAID hosts a ReiserFS. The kernel info is as follows:
+
+Linux jellyfish 2.4.20 #3 Tue Feb 18 17:35:43 CET 2003 i686 unknown
+ 
+Gnu C                  2.95.3
+Gnu make               3.79.1
+binutils               2.11.90.0.29
+util-linux             2.11i
+mount                  2.11i
+modutils               2.4.8
+e2fsprogs              1.24a
+reiserfsprogs          3.x.0k-pre9
+Linux C Library        x    1 root     root      1384072 Oct  1 18:10 /lib/libc.so.6
+Dynamic linker (ldd)   2.2.4
+Procps                 2.0.7
+Net-tools              1.60
+Kbd                    1.04
+Sh-utils               2.0
+Modules Loaded         isofs zlib_inflate vfat fat sr_mod cdrom sg ide-scsi reiserfs serial parport_pc lp parport nfsd lockd sunrpc uhci usbcore 8139too mii dummy0 nls_iso8859-1
 
 
->
-> On Sat, 1 Mar 2003, Jean-Rene Cormier wrote:
->
-> > Yes that was a typo sorry. I did reformat /dev/md0 and a when it started
-> > formating it gave me those errors again. I did a little searching and
-the
-> > problem is not in the raid array, but I'm still not sure what is causing
-the
-> > problem. The error was:
-> >
-> > hde: status error: status=0x58 { DriveReady SeekComplete DataRequest }
-> > hde: drive not ready for command
-> > hde: status timeout: status=0xf0 { Busy }
-> > hde: drive not ready for command
-> > ide2: reset: success
->
-> make sure you have the same speed disks on the same ide cable
-> - best to use only one ide drive per cable
-> - do NOT mix ata-33 w/ ata-66 w/ ata-100 w/ ata-133 on the same
-> cable
+The client kernl info is:
 
-Both drives are new 60Gb Maxtor DiamondMax Plus 9 on separate IDE channels
-on a Promise Ultra TX2 IDE card
+Linux beluga 2.4.20 #8 SMP Tue Feb 18 15:45:24 CET 2003 i686 Pentium III (Coppermine) GenuineIntel GNU/Linux
+ 
+Gnu C                  3.2.1
+Gnu make               3.80
+util-linux             2.11y
+mount                  2.11y
+modutils               2.4.22
+e2fsprogs              1.32
+reiserfsprogs          3.6.4
+Linux C Library        2.3.1
+Dynamic linker (ldd)   2.3.1
+Procps                 2.0.10
+Net-tools              1.60
+Kbd                    1.06
+Sh-utils               2.0.15
+Modules Loaded         snd-pcm-oss snd-mixer-oss parport_pc lp parport usb-uhci usbcore 8139too mii snd-intel8x0 snd-pcm snd-timer snd-ac97-codec snd-mpu401-uart snd-rawmidi snd-seq-device snd
 
-> use better and SHORTER ide cables ??   ( should be 80 conductor )
 
-I did switch the cable on the drives to see if it would make a difference
-and it's still the same drive who gave me those errors so I guess it's not
-the cables.
+Cheers
+Johnny Wezel
 
-> make sure you do NOT have kinks in the ide cable ( keep it straight )
->
-> make sure your kernel has the ide chipset support enabled for your
-> motherboard
-
-I noticed yesterday that my kernel didn't have IDE support for the Promise
-Ultra compiled in so I recompiled the kernel with it. I'll put the drive
-back in the computer and try it again to see if it works better
-
-> -- otherwise... you have a failing or dead disk drive...
-> -- if its an ibm deskstar... get rid of it...
-
-I'll try this drive in another computer to see what it'll say.
-
-Thanks
-
-Jean-Rene Cormier
 
