@@ -1,45 +1,71 @@
-From: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
-Subject: Re: http://www.cse.unsw.edu.au/~neilb/source/mdadm/ gone?
-Date: Mon, 20 Jan 2003 07:21:57 -0500 (EST)
+From: Steven Dake <sdake@mvista.com>
+Subject: Re: HA with qlogic FC and linux raid
+Date: Mon, 20 Jan 2003 12:17:27 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.52.0301200719110.32652@filesrv1.baby-dragons.com>
-References: <20030119232606.3E65C3B81C@jaded.cynicism.com>
- <Pine.LNX.4.52.0301192018450.31406@filesrv1.baby-dragons.com>
- <15915.45082.511318.926020@notabene.cse.unsw.edu.au>
+Message-ID: <3E2C4B47.2090004@mvista.com>
+References: <1042980305.3e2a9dd18c42a@secure.private.behner.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <15915.45082.511318.926020@notabene.cse.unsw.edu.au>
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: Linux RAID Mailing Liste <linux-raid@vger.kernel.org>
+In-Reply-To: <1042980305.3e2a9dd18c42a@secure.private.behner.org>
+To: frank@behner.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Do you see an OOPS when one of the paths of the multipath leaves, or 
+only when all paths are dead or in LIP.
 
-	Hello Neil ,  No sorrow necessary .  Was very glad that was
-	something very easy to fix .  Just wanted to see if you were upto
-	some mischief with mdadm and I had not seen an announce of it .
-		Tnx ,  JimL
+Thanks
+-steve
 
-On Mon, 20 Jan 2003, Neil Brown wrote:
-> On Sunday January 19, babydr@baby-dragons.com wrote:
-> > 	Hello Derek ,  Thank you for pointing that mirror out .
-> > 	Nice to see the tool on kernel.org too .  I sure hope that
-> > 	is what Neil is doing .  This almost looks like a failed restore
-> > 	from backups .  Ie: all I had seen is directory structure and no
-> > 	files .   Tnx ,  JimL
-> Sorry 'bout that.
-> I have a program (catchup) that syncronises my notebook with my home
-> directory at uni... but when I go over quota it makes a mess of things
-> (Should fix that!!) and then I had to leave for Perth for
-> linux.conf.au before I had a chance to put things back.
-> It should be all back now.
-> and yes,
->    http://www.{countrycode}.kernel.org/pub/linux/utils/raid/mdadm
-> is an alternate source.
-> NeilBrown
--- 
-       +------------------------------------------------------------------+
-       | James   W.   Laferriere | System    Techniques | Give me VMS     |
-       | Network        Engineer |     P.O. Box 854     |  Give me Linux  |
-       | babydr@baby-dragons.com | Coudersport PA 16915 |   only  on  AXP |
-       +------------------------------------------------------------------+
+frank@behner.org wrote:
+
+>Hi,
+>
+>We try to build a HA environment for a Document Management System. Before I come
+>to the problem I will briefly describe our setup. We have two buildings and a
+>fibrechannel switch in each building and attached to it a disk arrays, a DB
+>server for the metadata (Linux with Oracle) and a fileserver under W2K for the
+>bulk data. The fileserver runs under W2K, because the application server runs
+>under W2K. The servers are also connected to the switch in the other building.
+>The idea is to mirror the data over the buildings. All machines are connected
+>with two fibres (using QLA2202F cards) to each switch. Also the arrays are using
+>two connections to the switch. is true for. So we have a multiple pathes from
+>the machines to the arrays.
+>
+>The Linux machines are using md-raidtools to mirror over the buildings. To see
+>the correct number of devices we have used first the failover qlogic driver 6.01
+>and afterwards the standard version upto 6.04beta4 with the multipath
+>personality of the mdtools.
+>
+>The system runs till we need the failover. But if pathes are not available we
+>get a kernel Oops in the RAID1 personality of the md and any IO to the disk
+>arrays hangs forever, the machine does also not shutdown correctly. Because we
+>see this behaviour also if a windows machine boots and sends a LIP reset over
+>the fibre channel, this is even for normal operations not acceptable. Needless
+>to say that the W2K do not have this problem. Therefore we concluded that the
+>setup of the hardware is ok,(BIOS settings are the same for Linux and W2K). Of
+>course we are unsure whether the problem is in the mdtools or in the qlogic
+>driver (who should handle the LIP reset). We try to get help from Linux
+>companies, but we where not very successful.I could send the list Oops and more
+>information if it would help. Maybe it is well known problem having a raid1
+>personality over two multipath personalities. (The Oops says something from a
+>NULL pointer which he can't follow and if I understood it correctly, it happens
+>after all pathes are gone, due to LIP reset). The LIP reset problem was first
+>seen while the mirror was resyncing and a windows machine got rebooted.
+>
+>Thank you for some feedback
+>     Frank Behner
+>
+>
+>-
+>To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
+>
+>  
+>
+
