@@ -1,40 +1,34 @@
-From: Ferenc-Jan <ferenc@avz.xs4all.nl>
-Subject: Re: mdadm -D /dev/md3: 1  0  0  0  sync ???
-Date: Sun, 26 Dec 2004 10:01:18 +0100
-Message-ID: <41CE7DDE.6000008@avz.xs4all.nl>
-References: <41C9D08A.5080303@avz.xs4all.nl> <16841.64160.683580.423091@cse.unsw.edu.au>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: "Peter T. Breuer" <ptb@inv.it.uc3m.es>
+Subject: RAID code doubt
+Date: Mon, 27 Dec 2004 01:39:23 +0100 (MET)
+Message-ID: <200412270039.iBR0dNV06278@inv.it.uc3m.es>
+Reply-To: ptb@inv.it.uc3m.es
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <16841.64160.683580.423091@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Neil Brown <neilb@cse.unsw.edu.au>
+To: linux raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
->>     Number   Major   Minor   RaidDevice State
->>        0       3        6        0      active sync   /dev/hda6
->>        1       0        0        0      sync
->>
->>        2      22        6        2      active sync   /dev/hdc6
->>
->>Please help. Which disk is '1  0  0  0  sync'? The array is currently 
->>degraded. How do I remove number 1 and bring number 2 up?
-> 
-> This is a missing drive, that is marked as in-sync, which is bad.  
-> I don't know how it happened, but the best way to fix it is to remake
-> the array:
-> 
->    umount ....
->    mdadm -S /dev/md3
->    mdadm -C /dev/md3 -R -l1 -n2 /dev/hda6 missing
->    mdadm /dev/md3 -a /dev/hdc6
-> 
-> should make it work.  It won't destroy any data
+Question - in raid1.c, for example, I see:
 
-Worked as you said. Thank you very very much!
 
-cheers
+    mbio = bio_clone(bio, GFP_NOIO);
+    ...
+    mbio->bi_sector = r1_bio->sector + conf->mirrors[i].rdev->data_offset;          
+but I don't think bio_clone is GUARANTEED to produce a non-null result,
+is it? It uses bio_alloc to get a bio, and bio_alloc does ...
 
-Ferenc
+        bio = mempool_alloc(bio_pool, gfp_mask);
+        if (unlikely(!bio))
+                goto out;
+
+out:
+                return bio;
+        }
+
+        mempool_free(bio, bio_pool);
+        bio = NULL;
+        goto out;
+  
+So it looks perfectly capable of producing a NULL.
+
+Peter
