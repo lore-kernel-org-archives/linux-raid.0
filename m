@@ -1,55 +1,45 @@
-From: linux-raid@zerog.net
-Subject: Re: Raidreconf w/ 2.6.2
-Date: Mon, 16 Aug 2004 16:44:13 -0700 (PDT)
+From: Bob Glamm <glamm@a-s-i.com>
+Subject: Re: RAID migration from 2.4 -> 2.6
+Date: Mon, 16 Aug 2004 22:23:08 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0408161641350.11896-100000@arctic.zerog.net>
-References: <412133FD.6080207@earthlink.net>
+Message-ID: <20040817032308.GA31824@romulus.a-s-i.com>
+References: <20040812152939.GD5326@romulus.a-s-i.com> <20040816223541.GA1197@romulus.a-s-i.com> <41213B52.60903@tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <412133FD.6080207@earthlink.net>
-To: Mike Baynton <mikeb414@earthlink.net>
-Cc: linux-raid@vger.kernel.org
+Content-Disposition: inline
+In-Reply-To: <41213B52.60903@tls.msk.ru>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Mike,
+> >I'm not sure why the devices can't be found: the Adaptec driver appears
+> >to go through its initialization routines just fine and find all the
+> >disks.
+> 
+> How about sd_mod (scsi disk module)?  Is it loaded (or compiled into the
+> kernel) together with the adaptec driver?  Does the kernel prints a line
+> like
+>  sda: sda1 sda2 sda3 sda4 < sda5 sda6 sda7 sda8 sda9 >
+> (partition layout) for all your disks?
 
-Glad to know that it's helped someone else.  It's a little worrying to see
-the error messages...
+I cannot (at the moment) say anything about the partition line
+being printed out, but:
 
-I believe that is the error message I received.  It appears to happen when
-the disks are of differing sizes.  I think what's happening is that it
-runs off of the end of one of the disks - i.e., Disk1 = 200 blocks and
-Disk2 =99 blocks.  It assumes that all of the disks are the same size
-instead of looking at the lowest common denominator.
+  * legacy /proc/scsi/ support
+  * SCSI disk support
+  * SCSI tape support
+  * SCSI CDROM support
+  * SCSI generic support
+  * Verbose SCSI error reporting
+  * SCSI logging facility
+  SCSI Transport Attributes --> * SPI
+  SCSI low-level drivers --> AIC7xxx Fast -> U160 support (new driver)
+                         --> Adaptec AIC79xx U320 support
 
-Hope this helps.
+are all compiled into the kernel.
 
--steffan-
+I wonder if it's possible there's a collision between the AIC79xx
+and AIC7xxx driver.  I suppose I could try eliminating the AIC79xx driver
+(as I have a pair of 7899's and a 7892 in these systems, no 79xx..)
 
-
-On Mon, 16 Aug 2004, Mike Baynton wrote:
-
-> Hi
-> This is related to a message you put on linux-raid months ago
-> (http://marc.theaimsgroup.com/?l=linux-raid&m=108509877724484&w=2 ). I
-> am having the same problem (as near as I can tell so far all my data's
-> intact using the method you suggested in that post...I had no data near
-> the end of my array) but I'd like to be sure we're dealing with the same
-> problem/bug before I start speculating about a bug in raidreconf on
-> linux-raid.
->
-> Do you remember if you got an error message like
->
-> raid5_map_global_to_local: disk 0 block out of range: 2442004 (2442004)
-> gblock = 7326012
-> aborted (core dumped)
->
-> when this happened to you?
->
-> Thanks,
-> Mike Baynton
->
-
-
-
+-Bob
