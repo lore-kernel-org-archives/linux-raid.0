@@ -1,26 +1,40 @@
-From: Stephan van Hienen <raid@a2000.nu>
-Subject: Re: ANNOUNCE: mdadm 1.8.0 - A tool for managing Soft RAID under
- Linux
-Date: Tue, 30 Nov 2004 02:16:38 +0100 (CET)
-Message-ID: <Pine.LNX.4.61.0411300215520.32052@adsl.a2000.nu>
-References: <16775.316.540974.984718@cse.unsw.edu.au>
- <Pine.LNX.4.61.0411282059360.19614@adsl.a2000.nu> <16811.51432.38875.894801@cse.unsw.edu.au>
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: Good news / bad news - The joys of RAID
+Date: Tue, 30 Nov 2004 13:05:18 +1100
+Message-ID: <16811.54622.500830.508054@cse.unsw.edu.au>
+References: <200411192142.iAJLgRN12792@www.watkins-home.com>
+	<41A9CF7E.4000804@robinbowes.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <16811.51432.38875.894801@cse.unsw.edu.au>
+In-Reply-To: message from Robin Bowes on Sunday November 28
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: linux-raid@vger.kernel.org
+To: Robin Bowes <robin-lists@robinbowes.com>
+Cc: Guy <bugzilla@watkins-home.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 30 Nov 2004, Neil Brown wrote:
+On Sunday November 28, robin-lists@robinbowes.com wrote:
+> Guy wrote:
+> > I use mdadm's monitor mode to send me email when events occur.
+> 
+> Guy,
+> 
+> I've been meaning to write this for a while...
+> 
+> I tried monitoring once but had a problem when shutting down as the 
+> arrays were reported as "busy" because mdadm --monitor was running on 
+> them. I guess it needs to be killed earlier in the shutdown process.
 
-> I assume that is
->   - change %install to use "make install"
-> changed to
->   - change install to use "make install"
->
-> It's just that emacs counts it as line 53
+That bug was fixed in mdadm 1.6.0
 
-correct line 53
+NeilBrown
+
+
+ From the ChangeLog:
+Changes Prior to 1.6.0 release
+...
+    -   Fix bug in --monitor where an array could be held open and so
+	could not be stopped without killing mdadm.
+...
+
