@@ -1,52 +1,52 @@
-From: David Mansfield <md@dm.cobite.com>
-Subject: raid5, media scans and stripe-wise resync
-Date: Mon, 25 Oct 2004 11:36:33 -0400
+From: David =?iso-8859-1?Q?H=E4rdeman?= <david@2gen.com>
+Subject: Hardware RAID recommendation
+Date: Mon, 25 Oct 2004 19:43:49 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1098718593.5399.29.camel@duxeon.cobite.com>
+Message-ID: <20041025174347.GB14120@hardeman.nu>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi everyone,
+Hi,
 
-After a few recent severe raid failures (one linux md, one 3ware), my
-understanding and fear about linux md is greatly increased.  Single
-sector unrecoverable errors are doing us in!
+I'm currently considering which hardware RAID controller to buy and=20
+I've spent some time researching different cards. However, it's hard to=
+=20
+get a good idea about the available software for the different cards.
 
-To alleviate these fears, we (my coworkers and I) believe we need to
-start a policy of conducting a 'background media scan' of the actual
-underlying physical devices in a raid 5.  This is easily accomplished on
-the 3ware (it's built in), but we are struggling with linux md.
+Some seems to only have Windows-based software (which means that the=20
+BIOS setup must be used for all tasks which kind of defeats the purpose=
+=20
+of the RAID setup), some seems to have weird, awkward, closed-source,=20
+certified-to-work-on-redhat-only software and so on.
 
-A utility called SCU, http://www.bit-net.com/%7Ermiller/scu.html, will
-allow us to scan the media, and, if necessary, reassign the bad blocks. 
-We have used this on scsi disks before, it seems to work, as a lowlevel
-tool.
+So my question is if there is a hardware SCSI RAID solution that allows=
+=20
+all essential features to be monitored and controlled. Essential=20
+features would mean such things as online expansion, designating spare=20
+disks, creating new RAID sets, checking status, deleting RAID sets, etc=
+=2E
 
-However! If two bad blocks are discovered on two different disks in the
-raid 5 (even if the bad blocks are in different stripes), we will be
-screwed, because the raid system will kick out the disk immediately when
-the first bad sector is found, and then reconstruction will fail when
-the second bad sector is found.  screwed.
+So far I'm leaning towards the LSI MegaRaid 320-1 controller, but so fa=
+r=20
+I've only seen the megamgr/megamon software from LSI (which seems very=20
+non-open and redhat specific) and reading values from /proc (which=20
+pretty much excludes only monitoring, no control) as alternatives.
 
-Which brings me (finally) to my questions:
+So, basically I'm looking for some feedback on how people manage their=20
+hardware RAID controllers under Linux.
 
-1) does linux md have a plan for integrating background media scanning
-and automatic sector reassignment like hardware solutions have?
+Please CC me on any replies as I'm not subscribed to the list...
 
-2) how can we force (or manually perform) a stripe-wise resync? is it
-possible to take the raid offline completely, read the data with dd,
-compute the parity manually, reassign the bad block using SCU and
-rewrite the parity block with dd then put the raid online again?
-
-If #2 is possible, I'm sure a quick-and-dirty perl script could be
-created to do the work, which I'd be happy to do, if it's theoretically
-doable.
-
-Thanks,
-David
-
-
+Re,
+David H=E4rdeman
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
