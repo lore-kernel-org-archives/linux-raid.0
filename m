@@ -1,48 +1,29 @@
-From: hpa@zytor.com (H. Peter Anvin)
-Subject: Re: EVMS or md?
-Date: Mon, 4 Apr 2005 22:15:49 +0000 (UTC)
-Message-ID: <d2seal$ntf$1@terminus.zytor.com>
-References: <200504040708.j3478bm03863@www.watkins-home.com> <1112642928.25469.28.camel@dyn95395156> <200504041446.50337.kewley@gps.caltech.edu>
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: interesting failure scenario
+Date: Tue, 5 Apr 2005 00:15:00 +0200
+Message-ID: <20050404221500.GB23505@percy.comedia.it>
+References: <4250672D.6080403@tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4250672D.6080403@tls.msk.ru>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Followup to:  <200504041446.50337.kewley@gps.caltech.edu>
-By author:    David Kewley <kewley@gps.caltech.edu>
-In newsgroup: linux.dev.raid
+On Mon, Apr 04, 2005 at 01:59:09AM +0400, Michael Tokarev wrote:
+>I just come across an interesting situation, here's the
+>scenario.
 >
-> Mike Tran wrote on Monday 04 April 2005 12:28:
-> > We (EVMS team) intended to support RAID6 last year.  But as we all
-> > remember RAID6 was not stable then.  I may write a plugin to support
-> > RAID6 soon.
-> 
-> Hi Mike,
-> 
-> In your view, is RAID6 now considered stable?  How soon might you have an evms 
-> plugin for it? ;)  I'd love to use evms on my new filserver if it supported 
-> RAID6.
-> 
+C'mon, there's plenty of ways for you to shoot yourself in the feet. :)
 
-I can't speak for the EVMS people, but I got to stress-test my RAID6
-test system some this weekend; after having run in 1-disk degraded
-mode for several months (thus showing that the big bad "degraded
-write" bug has been thoroughly fixed) I changed the motherboard, and
-the kernel didn't support one of the controllers.  And now there were
-2 missing drives.  Due to some bootloader problems, I ended up
-yo-yoing between the two kernels a bit more than I intended to, and
-went through quite a few RAID disk losses and rebuilds as a result.
+L.
 
-No hiccups, data losses, or missing functionality.  At the end of the
-whole ordeal, the filesystem (1 TB, 50% full) was still quite prisine,
-and fsck confirmed this.  I was quite pleased :)
-
-Oh, and doing the N-2 -> N-1 rebuild is slow (obviously), but not
-outrageously so.  It rebuilt the 1 TB array in a matter of
-single-digit hours.  CPU utilitization was quite high, obviously, but
-it didn't cripple the system by any means.
-
-	-hpa
+-- 
+Luca Berra -- bluca@comedia.it
+        Communication Media & Services S.r.l.
+ /"\
+ \ /     ASCII RIBBON CAMPAIGN
+  X        AGAINST HTML MAIL
+ / \
