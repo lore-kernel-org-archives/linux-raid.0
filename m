@@ -1,142 +1,74 @@
-From: "Diamon" <diamon@io.com>
-Subject: Re: md: badblocks(pid 1216) used obsolete MD ioctl
-Date: Tue, 2 Jul 2002 16:29:20 -0500
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: Mdadm issue
+Date: Thu, 4 Jul 2002 11:14:44 +1000 (EST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <003501c2220f$8749a6c0$9255e0ce@cust.io.com>
-References: <NDBBIAKEEKGGEIKCBKNAGEBHDBAA.kc130iseo@coastalnet.com>
+Message-ID: <15651.41348.927793.745450@notabene.cse.unsw.edu.au>
+References: <006801c22142$d28ed790$2500010a@speedway.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
-Cc: kc130iseo@coastalnet.com
+In-Reply-To: message from Thomas Hicks on Monday July 1
+To: Thomas Hicks <thicks@speedfreak.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Monday July 1, thicks@speedfreak.org wrote:
+> This is the first time I am setting up raid using the mdadm tool. This
+> is what I am trying to do. 
+> 
+> The sever is as follows: 2 drives at 10gig
+>                          2 drives at 80gig
+> hda2 is /
+> hdd1 is my /home
+> 
+> I have the other drives in ad ready and would like to set up the 2 10
+> gig's as a mirror and the 2 80 gig as raid0
+> 
+> At the shell I run this command 
+> 
+> mdadm --create /dev/md0  --level=1 --raid-disks=2 /dev/hda2 /dev/hdb1
+> and get the following output:
+> 
+> mdadm: /dev/hda2 appears to contain an ext2fs file system
+>     size=7269412K  mtime=Mon Jul  1 11:56:16 2002
+> mdadm: /dev/hdb1 appears to contain an ext2fs file system
+>     size=7333640K  mtime=Mon Jul  1 11:56:29 2002
+> Continue creating array? y
+> mdadm: SET_ARRAY_INFO failed for /dev/md0: File exists
+> 
+> Could someone please help me with this problem. I am having a really
+> hard time finding any info on the web about this. 
 
+hda2 is mounted as / and you are trying to make a raid1 array
+containing it.  This cannot work.  
+What you want to do is:
 
+   mdadm --create /dev/md0 --level=1 --raid-disks=2 missing /dev/hdb1
 
-    <-- Snip snip -->
-> [snip]
-> > These commands are SCSI command set mode commands, and after the drive
-> > receives the instruction it performs the format itself.
-> > mke2fs and so on only do high level filesystem formats.
+to create a degraded array containing just hdb1.
+Then:
+    mkfs /dev/md0
+    mount /dev/md0 /mnt
+    cp -ax / /mnt
 
-    Exactly.
+to copy your root filesystem onto /dev/md0.
+Then tell lilo:
+   append= "root=/dev/md0 md=0,/dev/hdb1"
+and tell fstab that root in on /md0, and reboot.
 
-> Of course, most storage people know that the "CHS" value vendors assign to
-a
-> drive almost never represent the physical geometry. The drive and/or
-> controller must be capable of translating to "physical" locations for
-> read/write operations. I assume that the "low-level" format you refer to
-> operates at this level.
+Then you should be be running with root on /dev/md0 which consists of
+/dev/hdb1, and /dev/hda2 will be unused.
+Then
+   mdadm --add /dev/md0 /dev/hda2
+to add hda2 to the mirror.  Wait for resync.
+Change lilo.conf to say the right thinggs, run lilo and reboot.
 
-    SCSI doesn't really have a CHS, and never has.  It pretends to, but a
-SCSI device as I recall is actually (at least internally) addressed by
-sectors, regardless of where on the disk the sectors are actually located.
+Note:  it appears that hdb1 is bigger than hda2.  If this is so you
+will need to give a --size= to mdadm when created md0 so that it is
+small enough to be able to use hda2.
+Subtract 128 K from the size of hda2, so
+  mdadm --create /dev/md0 --size=7269280 ......
 
-> A crude overview (my understanding): During a "low-level" format the
-> controller, activating machine instructions stored on the drive, will scan
-> for defects then re-write BOT (Beginning Of Track) markers and sector
-> addresses on the media, skipping the bad spots it found and storing them
-for
-> future reference in some non-volatile medium (often it will do more).
-> "fdisk" and the tools in the e2fsprogs package merely overlay partition,
-> sector, and block data atop this low-level framework to create and manage
-> the filesystems.
-
-    Actually, the controller usually should do nothing.  There is a command
-to pass to the drive to tell it to format itself, and off it goes.  Most if
-not all drives do no error-checking during the format operation, trusting to
-their 'Media Verify" to be done later.  SCSI drives don't skip bad sectors.
-If the drive really knows it's bad and has been allowed to, it will
-reallocate the sector, but oddly most drives are set to NOT reallocate on
-Read Errors.  Not sure why.
-
-> > > > It does no harm to enable it on the drives as well, and makes sure
-the
-> > > > attenuation is not a problem.
-> [snip]
-> > >in an already warm environment. I've never found this (current
-> > >drain) to be a factor with cable lengths under 8-feet, even
-> > >with single-ended segments. As I'm sure you are aware,
-> > >differential SCSI has substantially extended the range of SCSI
-> > >signals on longer cables.
-> >
-> > True. Still, I have seen many cases where this helped.
->
-> Thanks, I'll keep that in mind. I know from my own experience that there
-are
-> times when a certain action fixes a problem even though it doesn't seem to
-> make sense at the time.
-
-    Arrgh, how true that is...
-
-> Often it is more expedient to just try something that might work, rather
-> than to enter an in-depth analysis. I cannot let things like this go
-> indefinitely, though. I've got to know "why". When encountering these
-> situations, I usually make time later to conduct a forensic analysis. Over
-> the years I've found that there is usually a contributing factor, often
-> related to the "interim fix" I was forced to employ.
->
-> > >Okay, I've got to ask now. What benefit could I expect from
-> > pulling a drive
-> > >from my array and plugging it into a PC? What could I do on the PC that
-I
-> > >could not do with one of the utilities mentioned above?
-> >
-> > Low level SCSI format command.
-> > This marks bad all defective sectors ON THE DRIVE.
-> > SCSI drives have factory and "grown" defect tables in their firmware,
-and
-> > this is more effective and reliable than filesystem tools ability to
-mark
-> > bad sectors.
-
-    Yes, the drive usually knows best if it has a problem...  I think the
-glist (grown defect list, as opposed to the plist, or primary list) is
-stored on disk in a reserved sector, and woe betide THAT sector going bad.
-:P  I think sformat can scrup the glist as well.  Again I can't swear to
-that, it's been years since I used sformat.
-
-> Okay, I've used low-level SCSI format for that purpose many times on
-> "Windoze" PC's. In fact, I've searched in vain for utilities that do this
-on
-> a Sparc Linux machine. Admittedly, having the bad sectors stored on the
-> drive itself prevents losing track of them, making it more reliable.
-> However, I still don't see how it is more effective than Linux e2fsprogs
-at
-> detecting and marking them.
-
-    E2fsprogs only look at the high-level, not the disk itself.  If your
-disk has reallocate on error disabled, all the formatting in the world
-(except low-level formats) will do nothing.
-
-> I suppose that, if there were many of these bad spots to manage, there may
-> be some performance gain by relieving the filesystem/kernel drivers of the
-> burden. I don't see how physically re-mapping a few bad areas is
-> significantly more efficient that simply allowing the filesystem to avoid
-> them. To low-level format drives on my Sparc Linux machines I would have
-to
-> disconnect and remove the chassis from the 19-inch rack, extract the
-drive,
-> open SCSI capable PC and install the drive, power it up and run the
-format,
-> then re-install everything. This is way too much trouble for the expected
-> benefit, at least for my situation.
-
-    Again, check into sformat.  I can't get a good URL currently, but I
-think the current version is 3.5 from what I see, and it's from that fellow
-Joerg Schilling who does cdrecord.  A good program, but you need generic
-scsi devices to work it, as sofrmat bypasses the scsi driver to operate.
-
-> --Cal Webster
->
-> P.S. Why don't you post to the list?
-
-    I did this time, forgot on the first message.  :)
-
-        Diamon
-
-
+NeilBrown
 
