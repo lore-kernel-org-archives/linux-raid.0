@@ -1,43 +1,44 @@
-From: <softwarenews@freemail.de>
-Subject: Photoshop 80 USD
-Date: Thu, 31 Mar 2005 19:33:20 +1100
-Message-ID: <1e1001c53628$7f17b8e0$49a1c263@softwarenews>
+From: Alvin Oga <aoga@mail.Linux-Consulting.com>
+Subject: raid5 - failed disks
+Date: Fri, 1 Apr 2005 02:08:21 -0800 (PST)
+Message-ID: <Pine.LNX.3.96.1050401015858.14428C-100000@Maggie.Linux-Consulting.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Geachte dames en heren,
- 
-Ergert u zich ook altijd over de hoge prijzen die voor software gevraagd
-worden?
- 
-Daar komt nu een einde aan. Wij leveren u alle mogelijke software voor een
-fractie van de normale prijs.
- 
-De software wordt vanuit het buitenland direct naar uw adres verzonden,
-omdat het daar minder kost dan in de winkels alhier.
- 
-Originele versies met originele serienummers en de normale support voor
-weinig geld, bijvoorbeeld:
- 
-Microsoft Windows XP prof. voor 50 USD in plaats van 270 USD
-Adobe Photoshop 80 USD in plaats van 650 USD
- 
-Deze en andere topprodukten kunt u verwachten. Aarzel niet en bezoek onze
-winkel. 
-De winkel is geheel Engelstalig, maar alle produkten kunnen in elke taal
-geinstalleerd worden.
- 
 
- 
-Veel winkelplezier.
- 
-Met vriendelijke groet,
- 
-ResellerNews
+hi ya raiders ..
+
+we(they) have 14x 72GB scsi disks config'd as raid5,
+( no hot spare .. )
+
+- if 1 disk dies, no problem ... ez to recover
+
+- my dumb question is,
+	- if 2 disks dies at the same time, i
+	assume the entire raid5 is basically hosed 
+	if it won't reassemble and resync from
+	the point where it last was before the crash ??
+
+	- i assume that the similar 2 disk failure
+	also applies to hw raid controllrs, but it'd
+	be more dependent upon the raid controller's 
+	firmware for it's ability to recover from 
+	2 of 14 simultaneous disk failures
+	( lets say the dell powervault 2205 series )
+
+- i think 4x 300GB ide disks is better ( less likely to fail ?? )
+
+	and yes it has already crashed twice with
+	2 different disks running at 78F at nights
+	and weekends when the air conditioning is off
+
+- i wish i can just change things but... its
+  not yet my call :-)
+
+c ya
+alvin
 
