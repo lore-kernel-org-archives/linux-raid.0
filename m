@@ -1,49 +1,31 @@
-From: Masaki Chikama <masaki-c@is.aist-nara.ac.jp>
-Subject: kernel upgrade problem on alpha arch.
-Date: Tue, 29 Oct 2002 20:11:58 +0900
+From: Antonello Piemonte <ap@cyberlab.de>
+Subject: raid 1 vs raid 0+1
+Date: Tue, 29 Oct 2002 13:29:23 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200210291111.UAA02221@dec120.aist-nara.ac.jp>
+Message-ID: <200210291229.g9TCTcO05488@gg.cyberlab.de>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi all.
+Hello
 
-I had two raid problem when upgrade kernel from 2.2(2.2.19aa1, which
-includes raid patch) to 2.4(2.4.20pre11) on alpha architecture.
+I have a server wich I would like to set up with
+mirroring for some data protections (against disk failure).
+the machine is supposed to deal mostly with writing of
+lots of small files (2kb perhaps 4kb each) to disk (well, array)
+and the goal would be to be able to write at least few hundreds 
+files per seconds (!).
 
-The one is the raid superblock incompatibility. This is the same problem
-when Neil Brown added --sparc2.2 option to mdadm. I found it by
-Google and downloaded mdadm-1.0.1, then I broke superblock ;-) .
-Please release mdadm-1.0.2 soon that fix the --sparc2.2 option
-problem mentioned in the flowing mail.
+the question is: for performance, is it better a raid 1 or a 
+raid 0+1 configuration? is the above load (number of files written
+per second) a realistic goal to attain with a SCSI based uniprocessor PIII 
+800MHZ with ext3 file system (this I will tackle separately, perhaps
+will use ext2 to increase performance) and 1 Gig of RAM? 
 
-http://marc.theaimsgroup.com/?l=linux-raid&m=102198306132665&w=2
+thanks in advance for any opinion/comment!
+regards
+antonello
 
-After I recovered the superblock, I got another problem. It is the
-checksum of superblock incompatibility between mdadm and kernel.
-
-The checksum routine of raid superblock in kernel is
-linux/driver/md/md.c            check_disk_sb ->
-                                calc_sb_csum  ->
-linux/arch/alpha/lib/checksum.c csum_partial  ->
-                                do_csum
-and it generates BAD_CSUM warning against mdadam's generating csum.
-
-It may be a compiler problem.
-$ gcc -v
-Reading specs from /usr/lib/gcc-lib/alpha-redhat-linux/2.96/specs
-gcc version 2.96 20000731 (Red Hat Linux 7.1 2.96-85)
-
-I can successfully recovered the raid partition. But I hope
-these problem are solved.
-
-Best Regards.
-
-(I'm not on the list, so please Cc: if you replay)
------------------------------------
-CHIKAMA Masaki @ NAIST
-E-Mail: masaki-c@is.aist-nara.ac.jp
