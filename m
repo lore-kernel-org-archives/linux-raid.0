@@ -1,53 +1,77 @@
-From: ptb@lab.it.uc3m.es (Peter T. Breuer)
-Subject: Re: RAID1 detection of faulty disks
-Date: Wed, 9 Feb 2005 21:08:29 +0100
-Message-ID: <t67qd2-48u.ln1@news.it.uc3m.es>
-References: <200502091849.TAA05566@node130.rhm.de>
+From: NeilBrown <neilb@cse.unsw.edu.au>
+Subject: [PATCH md 2 of 2] RAID Kconfig cleanups, remove experimental tag from RAID-6
+Date: Thu, 10 Feb 2005 09:22:47 +1100
+Message-ID: <E1Cz0ER-0000Qa-Uh@notabene.cse.unsw.edu.au>
+References: <20050210091909.1612.patches@notabene>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-bernd@rhm.de wrote:
-> just for my understanding of RAID1. When is a partition set faulty?
-> As soon as a read hits a bad block or only when a write attempts to
-> write to a bad block?
-> 
-> I'm a little bit confused as I read the thread 'Robust read patch for raid1'.
-> Does it mean that a read succeeds even if one disk is already gone?
 
-As far as I recall (and I wrote that patch, but I do not have a perfect
-memory of every bit of code I have studied or written ...) in ordinary
-unpatched raid1 the read request is rescheduled, but
+This patch removes the experimental tag from RAID-6 (unfortunately the 
+damage is already done...:-|) and cleans up a few more things in the 
+Kconfig file.
 
-   1) it will be retried on disk 0 on the array only (and every time,
-      if it fails again, if it can fail again). That's probably an
-      oversight, though I see the reasoning - if it fails again disk 0
-      will be ejected and disk 0 becomes something else, so the array
-      rotates under the call.
+Signed-Off-By: H. Peter Anvin <hpa@zytor.com>
+Signed-off-by: Neil Brown <neilb@cse.unsw.edu.au>
 
-   2) the disk is faulted out of the array when the read error occurs.
+### Diffstat output
+ ./drivers/md/Kconfig |   19 ++++++++-----------
+ 1 files changed, 8 insertions(+), 11 deletions(-)
 
-The patch changes the code - or intends, anyway! - to make (1) into
-"retry on the NEXT disk in the array", and changes (2) to "the disk
-is NOT faulted out of the array under any circumstances under a read
-error".
-
-At the very worst, the read error will result in a perceived error
-at user level, when every disk in the array errors on the read. In
-my judgment that is morally correct, since "error" is the unanimous
-opinion of all the disks, then.  It is another question if it is
-strategically correct, against some measure of an objective function,
-and some disaster scenario.
-
-Normally, the read will be retried on another disk and succeed.
-
-After the patch, disks will be faulted out of the array on a write
-error, only.
-
-The patch has another inactive and untried patch within it, which
-triggers a "write repair" request, using the information from a
-successful read. Volunteers needed to test and work on it!
-
-
-Peter
-
+diff ./drivers/md/Kconfig~current~ ./drivers/md/Kconfig
+--- ./drivers/md/Kconfig~current~	2005-02-09 14:32:06.000000000 +1100
++++ ./drivers/md/Kconfig	2005-02-09 14:32:06.000000000 +1100
+@@ -93,7 +93,7 @@ config MD_RAID10
+ 	  mirroring (RAID-1) with easier configuration and more flexable
+ 	  layout.
+ 	  Unlike RAID-0, but like RAID-1, RAID-10 requires all devices to
+-	  be the same size (or atleast, only as much as the smallest device
++	  be the same size (or at least, only as much as the smallest device
+ 	  will be used).
+ 	  RAID-10 provides a variety of layouts that provide different levels
+ 	  of redundancy and performance.
+@@ -102,6 +102,7 @@ config MD_RAID10
+ 
+ 	  ftp://ftp.kernel.org/pub/linux/utils/raid/mdadm/
+ 
++	  If unsure, say Y.
+ 
+ config MD_RAID5
+ 	tristate "RAID-4/RAID-5 mode"
+@@ -120,20 +121,16 @@ config MD_RAID5
+ 	  <http://www.tldp.org/docs.html#howto>. There you will also
+ 	  learn where to get the supporting user space utilities raidtools.
+ 
+-	  If you want to use such a RAID-4/RAID-5 set, say Y.  To compile
+-	  this code as a module, choose M here: the module will be called raid5.
++	  If you want to use such a RAID-4/RAID-5 set, say Y.  To
++	  compile this code as a module, choose M here: the module
++	  will be called raid5.
+ 
+ 	  If unsure, say Y.
+ 
+ config MD_RAID6
+-	tristate "RAID-6 mode (EXPERIMENTAL)"
+-	depends on BLK_DEV_MD && EXPERIMENTAL
++	tristate "RAID-6 mode"
++	depends on BLK_DEV_MD
+ 	---help---
+-	  WARNING: RAID-6 is currently highly experimental.  If you
+-	  use it, there is no guarantee whatsoever that it won't
+-	  destroy your data, eat your disk drives, insult your mother,
+-	  or re-appoint George W. Bush.
+-
+ 	  A RAID-6 set of N drives with a capacity of C MB per drive
+ 	  provides the capacity of C * (N - 2) MB, and protects
+ 	  against a failure of any two drives. For a given sector
+@@ -150,7 +147,7 @@ config MD_RAID6
+ 	  this code as a module, choose M here: the module will be
+ 	  called raid6.
+ 
+-	  If unsure, say N.
++	  If unsure, say Y.
+ 
+ config MD_MULTIPATH
+ 	tristate "Multipath I/O support"
