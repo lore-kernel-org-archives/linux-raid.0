@@ -1,41 +1,60 @@
 From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: Hot adding active disk to RAID1?
-Date: Wed, 11 Feb 2004 09:30:45 +1100
+Subject: Re: ATARAID userspace configuration tool
+Date: Wed, 11 Feb 2004 09:41:41 +1100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16425.23445.174722.587863@notabene.cse.unsw.edu.au>
-References: <20040207152948.GA17368@fscked.org>
-	<20040207173716.GA10996@fscked.org>
-	<1076178191.3328.32.camel@picard.intra.techwiz.ca>
-	<20040210075406.GB15112@fscked.org>
-	<16424.38075.333116.361351@notabene.cse.unsw.edu.au>
-	<20040210150041.GA4868@fscked.org>
+Message-ID: <16425.24101.755694.738298@notabene.cse.unsw.edu.au>
+References: <Pine.LNX.4.40.0402101405190.25784-100000@jehova.dsm.dk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Mike Perry on Tuesday February 10
-To: Mike Perry <mikepery@fscked.org>
-Cc: linux-raid@vger.kernel.org
+In-Reply-To: message from Thomas Horsten on Tuesday February 10
+To: Thomas Horsten <thomas@horsten.com>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday February 10, mikepery@fscked.org wrote:
-> Thus spake Neil Brown (neilb@cse.unsw.edu.au):
+On Tuesday February 10, thomas@horsten.com wrote:
+> Hi,
 > 
-> > On Tuesday February 10, mikepery@fscked.org wrote:
-> > > 
-> > > I concur. The manpages really should clear up that raidhotadd (and mdadm
-> > > -a) only add spares. And they should further clarify that spares are
-> > > essentially useless and lie dormant.. The names of these
-> > > commands/options are very deceptive to the new user...
-> > 
-> > Patches are more that welcome.
+> I'm writing a userspace utility to detect/configure Medley (and later
+> other) ataraid devices in 2.6.
+...
 > 
-> Is there a preferred version/cvs repository that I should diff against? The
-> raidtools are kinda helter-skelter in their net presence, it seems..
+> On top of this it would be useful to make the underlying devices
+> inaccessible after the mapped device is created (to prevent people from
+> doing things like fdisk /dev/hda, when what they really wanted was
+> something like fdisk /dev/ataraid/disc).
 
-Sorry, I should have been more specific.
-Patches *against mdadm* are welcome.
-I have no interest in "raid-tools" - it seems to be unmaintained.
-Patches against the lastest source tar-ball are fine.
+The best way to avoid this sort of problem is to change "fdisk" (and
+mkfs and fsck and ...) to (optionally) open the device with O_EXCL.
+
+In 2.6, a device that is "claimed" by a kernel subsystem - ie is
+mounted, or is part of an MD or DM array, or has a partition which is
+claimed in one of these ways, cannot be opened O_EXCL.
+
+So these tools that operate on block devices and expect exclusive
+access should ask for it.
+They probably should have a way to not use O_EXCL if the admin
+promises they know what they are doing, as fsck does need to run on a
+mounted partition some times, and fdisk can reasonably be used on
+devices with mounted partitions.  But the default should be O_EXCL.
 
 NeilBrown
+
+> 
+> Detecting the partition table in userspace would fix this, but it's not
+> planned before 2.7 and I don't think it is safe to leave the false
+> partitions exposed.
+> 
+> - Some RAID types will need (I think) to use the MD framework as well as
+> DM (e.g. RAID0+1), so the device the users would be the md device which
+> would be composed of two dm devices. Is there a way to hide the underlying
+> dm devices from the user so he they only see the ones they should use (or
+> prevent these from being used directly some other way)?
+> 
+> // Thomas
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
