@@ -1,22 +1,35 @@
-From: Stephan van Hienen <raid@a2000.nu>
-Subject: Re: 3ware bad write speed.
-Date: Wed, 26 Mar 2003 01:40:28 +0100 (CET)
+From: Seweryn Kowalski <skowalsk@us.edu.pl>
+Subject: Re: SCSI - help
+Date: Wed, 26 Mar 2003 11:53:55 +0100 (MET)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.53.0303260139360.21075@ddx.a2000.nu>
-References: <Pine.LNX.4.44.0303240912080.2059-100000@chaos.egr.duke.edu>
+Message-ID: <Pine.SOL.4.21.0303261146200.24503-100000@uranos.cto.us.edu.pl>
+References: <5.1.1.6.2.20030324102010.06da31a0@mail.harddata.com>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44.0303240912080.2059-100000@chaos.egr.duke.edu>
-To: Joshua Baker-LePain <jlb17@duke.edu>
+In-Reply-To: <5.1.1.6.2.20030324102010.06da31a0@mail.harddata.com>
+To: Maurice Hilarius <maurice@harddata.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 24 Mar 2003, Joshua Baker-LePain wrote:
+> In order of likelihood (IMHO):
+> 
+> Bad termination
+> Bad cabling
+> Bad drive(s)
+> SCSI Driver problem..
+> Lack of power ( too small or weak power supply in computer)
+> 
+> What "works" with one or two drives being used at a time will often fail 
+> when sufficiently stressed.
+hi 
+Thank you for answer.
+I checked termination, cabling, drive, power and SCSI. Everything looks
+good.
+I've one more strange observation. When I tried to make raid matrix with 4
+or 5 disk is o,k.. But 6 disks doesn't work. I've 120 GB IBM Dekstar
+disks. For instance two matrix by 4 disk is failed too. The same error
+output as befor
+Best regards
+s.k.
 
-> 2) Make sure that your kernel supports HIGHIO.  I don't know if that
-> enterprise kernel does (do you need to run it?), but it makes a *big*
-> difference.  The latest 3ware drivers support HIGHIO, but the kernel needs
-> to as well.
-
-what is this HIGHIO (patch?) ?
