@@ -1,43 +1,44 @@
-From: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
+From: "Dr. David Alan Gilbert" <gilbertd@treblig.org>
 Subject: Re: RAID backup
-Date: Fri, 4 Oct 2002 08:52:46 -0400 (EDT)
+Date: Fri, 4 Oct 2002 14:24:19 +0100
 Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0210040847360.16406-100000@filesrv1.baby-dragons.com>
-References: <1033735943.31839.12.camel@irongate.swansea.linux.org.uk>
+Message-ID: <20021004132419.GF710@gallifrey>
+References: <Pine.LNX.3.96.1021004041421.5688A-100000@Maggie.Linux-Consulting.com> <1033735943.31839.12.camel@irongate.swansea.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+Content-Disposition: inline
 In-Reply-To: <1033735943.31839.12.camel@irongate.swansea.linux.org.uk>
 To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-raid maillist <linux-raid@vger.kernel.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
-	Hello Alan ,  I do not know about modern disk media .  But I had a
-	Seagate st501 drive that sat shelved for 5 years & put it back
-	into the micro-pdp11/23 & booted fine .  I ran that for ~ another
-	year for a small project I was involved in .  I would hope that
-	more modern media would have better shelf life than that even ?-)
-		Twyl ,  JimL
-
-On 4 Oct 2002, Alan Cox wrote:
-> On Fri, 2002-10-04 at 12:20, Alvin Oga wrote:
-> > we can build an 8-drive ( 120GB at $200ea )  or ( 160GB at $300>? each )
-> > 1U box...about 0.960 - 1.28 TB each backup server ( 1U ) for under $2,500 in parts
-> > +  cost of raid setup/testing is up to the user
-> > 	- am thinking the 1.6TB of storage for 10K lira(?) is too much
-> > i prefer disks to backup data.. so that its always a semi-warm backup
-> > ( tapes have always been way tooo slow to find a file and to restore
-
+* Alan Cox (alan@lxorguk.ukuu.org.uk) wrote:
+> 
 > The problem with disks is you still have to archive them somewhere, and
 > they are bulky. I also dont know what studies are available on the
-> degradation of stored disk media over time.
+> degradation of stored disk media over time. 
+
+Not sure about that; DLT tapes are pretty bulky themselves; I think the
+difference between say a set of 4 DLT tapes and a single Maxtor 320 in
+caddy would be minimal. As for stored media, I think Maxtor are quoting
+1M hours MTTF - (I hate to think how you measure such a figure) - for
+the 320G, and that is probably longer than I'd trust either the tape or
+the drive to survive.
 
 > Capacity is not a problem, 3ware do a 12 channel sata card, with maxtor
 > drives that comes in at 320x12 = 3.5Tb
 
-       +------------------------------------------------------------------+
-       | James   W.   Laferriere | System    Techniques | Give me VMS     |
-       | Network        Engineer |     P.O. Box 854     |  Give me Linux  |
-       | babydr@baby-dragons.com | Coudersport PA 16915 |   only  on  AXP |
-       +------------------------------------------------------------------+
+Well to me there are two questions:
+  1) Price with caddy/drive - especially when you need to have
+	multiple backup sets.
+
+	2) Linux serial/ata working reliably with hot swapping.
+
+If both those came out on the right side then I'd happily swap to discs.
+
+Dave
+ ---------------- Have a happy GNU millennium! ----------------------   
+/ Dr. David Alan Gilbert    | Running GNU/Linux on Alpha,68K| Happy  \ 
+\ gro.gilbert @ treblig.org | MIPS,x86,ARM, SPARC and HP-PA | In Hex /
+ \ _________________________|_____ http://www.treblig.org   |_______/
