@@ -1,68 +1,57 @@
 From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: possible to use 1 drive as hot failover for 2 raid1's?
-Date: Thu, 16 Oct 2003 13:42:48 +1000
+Subject: Re: mdadm --assemble --scan hassles....
+Date: Thu, 16 Oct 2003 13:45:04 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16270.5048.970101.522470@notabene.cse.unsw.edu.au>
-References: <20031007105437.GF28158@marowsky-bree.de>
-	<Pine.LNX.4.44.0310071235060.12097-100000@praktifix.dwd.de>
+Message-ID: <16270.5184.302596.951547@notabene.cse.unsw.edu.au>
+References: <20031008111709.GV1277@hvs.envisage.co.za>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Holger Kiehl on Tuesday October 7
-To: Holger Kiehl <Holger.Kiehl@dwd.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+In-Reply-To: message from Hendrik Visage on Wednesday October 8
+To: Hendrik Visage <hvisage@envisage.co.za>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday October 7, Holger.Kiehl@dwd.de wrote:
-> On Tue, 7 Oct 2003, Lars Marowsky-Bree wrote:
+On Wednesday October 8, hvisage@envisage.co.za wrote:
+> Right, now if md would do auto detecting on mds then my
+> problem would have disappeared, but alas....
 > 
-> > On 2003-10-06T16:27:59,
-> >    Dan Hollis <goemon@anime.net> said:
-> > 
-> > > is it possible to use the single drive as hot-failover for both md0 and 
-> > > md1?
-> > 
-> > In theory yes, in practice not.
-> > 
-> > One could imagine (rather easily) a global hot-spare pool for all mds,
-> > but it's not implemented right now.
-> > 
-> Not sure about this but I thought this would be possible by using mdadm
-> in monitor mode? In the manpage of mdadm it says:
+> Anycase, I'm trying to make use of mdadm (I've tried different options etc.
+> inside mdadm.conf from what I could see on the mailing list), but I'm still
+> stuck with the following issue:
+> (right after boot):
 > 
->    As  well  as  reporting  events,  mdadm may move a spare drive from one
->    array to another if they are in the same spare-group and if the  desti-
->    nation array has a failed drive but not spares.
-> 
-> But I don't know how to create a spare-groupi or what is meant by it?
+> root@hvstress ~ # mdadm --assemble --scan
+> mdadm: no devices found for /dev/md/1
 
- From  "man mdadm"
-
-       For  mdadm  to  move  spares  from  one array to another, the different
-       arrays need to be labelled with the same spare-group in the  configura-
-       tion  file.   The spare-group name can be any string. It is only neces-
-       sary that different spare groups use different names.
-
- from "man mdadm.conf"
-
-           spare-group=
-                  The  value  is  a  textual  name for a group of arrays.  All
-                  arrays with the same spare-group name are considered  to  be
-                  part  of  the  same  group.   The significance of a group of
-                  arrays is that mdadm will, when monitoring the arrays,  move
-                  a  spare drive from one array in a group to another array in
-                  that group if the first array had a failed or missing  drive
-                  but no spare.
-
-
-does that help?
+That would be because mdadm.conf describes /dev/md/1 as:
+    UUID=c2a91233:5ffd5398:eac27773:e12945dd
+but mdadm --examine doesn't show any arrays with that uuid.
 
 NeilBrown
 
+> root@hvstress ~ # mdadm --examine --scan   
+> ARRAY /dev/md1 level=linear num-devices=2 UUID=8eb3a6c0:02e58fd9:a662938a:56f87147
+>    devices=/dev/md/0,/dev/md/0
+> root@hvstress ~ # mdadm --examine --scan --config=partitions
+> ARRAY /dev/md0 level=raid0 num-devices=2 UUID=832ab839:9920da12:97991965:f9af96e2
+>    devices=/dev/scsi/host0/bus0/target1/lun0/part1,/dev/scsi/host0/bus0/target2/lun0/part1
+> ARRAY /dev/md1 level=linear num-devices=2 UUID=8eb3a6c0:02e58fd9:a662938a:56f87147
+>    devices=/dev/md/0,/dev/scsi/host0/bus0/target1/lun0/part2
 > 
-> Regards,
-> Holger
+> root@hvstress ~ # mdadm --assemble --scan   
+> mdadm: no devices found for /dev/md/1
+> root@hvstress ~ # cat /etc/mdadm.conf 
+> DEVICE /dev/md/* /dev/sd*
+> DEVICE /dev/sd[ab]
+> DEVICE /dev/md0 
+> DEVICE /dev/md/0
+> 
+> ARRAY /dev/md/0 level=raid0 num-devices=2 UUID=832ab839:9920da12:97991965:f9af96e2
+>    devices=/dev/scsi/host0/bus0/target1/lun0/part1,/dev/scsi/host0/bus0/target2/lun0/part1
+> ARRAY /dev/md/1 level=linear num-devices=2 UUID=c2a91233:5ffd5398:eac27773:e12945dd
+> 
 > 
 > -
 > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
