@@ -1,18 +1,42 @@
-From: <peter.greis@ubs.com>
-Subject: Fresh setup....
-Date: Mon, 20 Sep 2004 15:21:26 +0200
+From: AndyLiebman@aol.com
+Subject: Re: Software RAID-0 striping over Hardware RAID-5
+Date: Mon, 20 Sep 2004 09:51:09 EDT
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <6F9171BE257CA742BFBCFA87B8F20F8D030E3CB2@NZURC900PEX1.ubsgs.ubsgroup.net>
+Message-ID: <1cd.2b876cdc.2e803a4d@aol.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-content-class: urn:content-classes:message
-To: linux-raid@vger.kernel.org
+To: jlb17@duke.edu
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-OK, I believe that I have determined that I need a newer kernel (2.6.7 or later) to get this new mobo running (Asus K8N-E deluxe) with RAID-1 OS disks. Is my only option here to build up the system on a normal IDE drive, get the kernel rebuilt and up to date, configure the raid, then "dd" the partitions over ?
+jlb17@duke.edu writes:
 
-regards,
+> I have a couple of dual 3ware boxes I do this with, and have never had a 
+> problem.  I would make sure that you have a hot spare on your RAID5 
+> arrays, though.  Because if one of them dies, you'll obviously lose 
+> everything on both arrays.
 
--Peter
+Thanks for the reply, Joshua. 
+
+Have you ever tested your systems while one of your RAID5 arrays is 
+rebuilding or verifying? (I'm about to do that right now). I'm wondering if Linux 
+Software RAID-0 might falter if one of the two arrays is significantly slower than 
+the other (while rebuilding)?
+
+To test the integrity of the system, I'm going to remove a drive from one of 
+the RAID5 arrays, add it back and rebuild the array, and while the rebuilding 
+is taking place I'm going to run Bonnie++ several times (100GB of 
+writing/reading per test). 
+
+My inclination is to not use a hot spare. Instead, I rely on 3ware's email 
+notification feature to alert me that a drive needs to be replaced. I always 
+keep a spare handy that can be popped into place immediately. Also, I want to 
+have control over when rebuilding takes place. It would be a bad thing to rebuild 
+during certain critical high I/O moments of the day -- whereas rebuilding at 
+night would be much less stressful on the system. Do you see anything wrong 
+with this approach? 
+
+Thanks again, 
+Andy
