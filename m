@@ -1,50 +1,42 @@
-From: Maurice Hilarius <maurice@harddata.com>
+From: Luca Berra <bluca@comedia.it>
 Subject: Re: 3ware 7500-8 confusion
-Date: 23 Feb 2003 00:53:41 -0800
+Date: Sun, 23 Feb 2003 10:36:49 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <5.1.1.6.2.20030222232508.039dbda0@mail.harddata.com>
+Message-ID: <20030223093648.GA4223@percy.comedia.it>
 References: <Pine.LNX.3.96.1030222210002.29904A-100000@Maggie.Linux-Consulting.com>
-	 <Pine.LNX.3.96.1030222210002.29904A-100000@Maggie.Linux-Consulting.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1045980219.2132.16.camel@gregdell>
-To: Gregory Leblanc <gleblanc@linuxweasel.com>
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.3.96.1030222210002.29904A-100000@Maggie.Linux-Consulting.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-With regards to your message at 11:03 PM 2/22/03, Gregory Leblanc. Where 
-you stated:
->There is a way to configure the 3ware card to just work as JBOD.  I
->don't recall what it is offhand (I've got an older card with only 4
->ports as well).  It doesn't seem to make much sense to buy a pretty nice
->RAID card like this one and then not use it's RAID features, though.
->HTH,
->         Greg
+On Sat, Feb 22, 2003 at 09:08:04PM -0800, Alvin Oga wrote:
+>3dm was installed from the cdrom that came w/ the controller
+>
+you may want to look in tw_cli (3ware commandline client)
+you can download it from 3ware site
+3dm sucks
 
-Actually it makes tons of sense.
-If you are using it for RAID5 you will get at least twice the performance.
-Yes, to echo an earlier message, you will get higher CPU load.
-That is to be expected when your writes take half as long.
-AND, as a bonus, if you partition each drive, leave a small partition at 
-the beginning of each disk you gain two things:
-1) You can make your system boot off the disks without the md RAID driver 
-being loaded, so emergency recovery is simpler
-2) If you lose a disk at a later date, you don;t have to worry about 
-getting the same exact drive to replace it with.
+>but now that i wanna use the hw raid, and want to do:
+>	fdisk /dev/md0
+>	mke2fsc -j -m 1 /dev/md0
+>	mount /dev/md0 /Raid
+>
+>but there is no such thing as /dev/md0 ... *pout*
+>
+>what is the name of the device ( /dev/xxx ) that 3ware built ??
+>	- went digging/googling around but didnt find my answer yet
 
-What you lose is:
-1) 3Wares nifty 3DM tool
+3ware is seen as a scsi controller
+/dev/sd*
+cat /proc/partitions helps a lot
 
-Still, you get most of its functionality with their CLI utility.
-
-
-With our best regards,
-
-Maurice W. Hilarius       Telephone: 01-780-456-9771
-Hard Data Ltd.               FAX:       01-780-456-9772
-11060 - 166 Avenue        mailto:maurice@harddata.com
-Edmonton, AB, Canada      http://www.harddata.com/
-    T5X 1Y3
-
-
+-- 
+Luca Berra -- bluca@comedia.it
+        Communication Media & Services S.r.l.
+ /"\
+ \ /     ASCII RIBBON CAMPAIGN
+  X        AGAINST HTML MAIL
+ / \
