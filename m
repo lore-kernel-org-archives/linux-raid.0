@@ -1,37 +1,37 @@
-From: <me@heyjay.com>
-Subject: Can't add or delete a device from raid 1
-Date: Tue, 25 May 2004 23:56:07 -0500
+From: "Grantham, Ewan R." <egrantham@swri.org>
+Subject: Looking for some help with device options
+Date: Wed, 26 May 2004 06:04:08 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <001e01c442dd$e9636f30$6705a8c0@a30>
-Reply-To: <me@heyjay.com>
+Message-ID: <AF4CBD49C827BA4F9BDD00E297CD804802624917@adsms01.dyn.datasys.swri.edu>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-class: urn:content-classes:message
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+Am setting up a test machine for some writing I am doing, and the idea
+is to do some RAID things without messing up my main machine and array
+:-)
 
-I'm trying to add a partition to a raid 1 set that I built with a "missing"
-partition.  But mdadm won't let me add it to md0, or remove it
+For the test machine I have three external firewire drives. The
+"opportunity" here is that two of them are 200 Gigs, and the other one
+is 80 Gigs.
 
-platinum:~# cd /
-platinum:/# mdadm /dev/md0 -r /dev/hda1
-mdadm: hot remove failed for /dev/hda1: No such device or address
-platinum:/# mdadm /dev/md0 -a /dev/hda1
-mdadm: hot add failed for /dev/hda1: Invalid argument
+My first thought is to break each drive up into multiple 40 Gig
+partitions, and then RAID-5 all the partitions. Would I then be N-1
+based on partition size (so 440 Gigs) or N-1 based on the largest device
+(i.e. 280 Gigs)? Also, would setting up a RAID this way cause lousy
+performance and possibly be less stable - or am I worrying too much?
 
-I don't get this.  I had it all working, then I tried to update my kernel to
-2.6.5, then the machine wouldn't boot without my interaction.  So now when
-I boot to the old (working) kernel.  I'm missing on partiion on
-/dev/md0.
+Finally - any other "interesting" ideas for setting up the space? I
+thought about mixing RAID types on the drives so that I would have a
+RAID-5 of 80 Gig partitions, and then RAID-1 the remaining 120 Gig on
+the two 200 Gig drives. But that strikes me as going particularly far
+out on the limb.
 
-I'm running on debian
-
-Thanks
-Jay
-
-
+Thanks for your help,
+Ewan
 
