@@ -1,29 +1,48 @@
-From: Jurriaan <thunder7@xs4all.nl>
-Subject: Re: Fresh setup....
-Date: Mon, 20 Sep 2004 19:20:57 +0200
+From: Lars Marowsky-Bree <lmb@suse.de>
+Subject: Re: SuSE Linux cluster using MC/ServiceGuard --- shared storage
+Date: Mon, 20 Sep 2004 20:33:18 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040920172057.GA8372@middle.of.nowhere>
-References: <6F9171BE257CA742BFBCFA87B8F20F8D030E3CB2@NZURC900PEX1.ubsgs.ubsgroup.net>
-Reply-To: Jurriaan <thunder7@xs4all.nl>
+Message-ID: <20040920183318.GP3592@marowsky-bree.de>
+References: <20040920132846.29970.qmail@web61108.mail.yahoo.com> <20040920135549.GA8201@percy.comedia.it>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <6F9171BE257CA742BFBCFA87B8F20F8D030E3CB2@NZURC900PEX1.ubsgs.ubsgroup.net>
-To: peter.greis@ubs.com
-Cc: linux-raid@vger.kernel.org
+In-Reply-To: <20040920135549.GA8201@percy.comedia.it>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-From: peter.greis@ubs.com <peter.greis@ubs.com>
-Date: Mon, Sep 20, 2004 at 03:21:26PM +0200
-> OK, I believe that I have determined that I need a newer kernel (2.6.7 or later) to get this new mobo running (Asus K8N-E deluxe) with RAID-1 OS disks. Is my only option here to build up the system on a normal IDE drive, get the kernel rebuilt and up to date, configure the raid, then "dd" the partitions over ?
-> 
-Why not just unplug one of the drives and resync when you have your new
-kernel up and running? The usual precautions apply (tested backups etc).
+On 2004-09-20T15:55:51,
+   Luca Berra <bluca@comedia.it> said:
 
-Good luck,
-Jurriaan
--- 
-Linux is obsolete
-	Andrew Tanenbaum
-Debian (Unstable) GNU/Linux 2.6.9-rc1-mm4 2x6209 bogomips load 1.38
+> >Do I still need to use the Driver Patch for EVA
+> >Controller Failover?=20
+> i believe using the qlogic driver failover is a viable solutio,
+
+The DM multipath in 2.6 should handle the EVA just fine.
+
+The qlogic internal failover is being depreciated and AFAIK isn't
+included in 2.6 mainline even...
+
+> another is purchasing securepath from HP. but i believe there were
+> issues using securepath and lvm together.
+
+Proprietary multipathing solutions are a thing of the past on Linux, on=
+e
+hopes.
+
+
+Sincerely,
+    Lars Marowsky-Br=E9e <lmb@suse.de>
+
+--=20
+High Availability & Clustering
+SUSE Labs, Research and Development
+SUSE LINUX AG - A Novell company
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
