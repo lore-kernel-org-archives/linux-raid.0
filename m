@@ -1,40 +1,35 @@
-From: Sasa Ostrouska <sasa.ostrouska@volja.net>
-Subject: Re: kernel 2.6.8.1 & HPT370 RAID 1 array
-Date: Thu, 07 Oct 2004 15:02:25 +0200
+From: "Zeno R.R. Davatz" <zdavatz@ywesee.com>
+Subject: RAID 1 (boot), RAID5 (root) and Lilo, Boot from Raid 1 (/dev/md0)
+Date: Thu, 7 Oct 2004 16:28:52 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1097154145.4268.17.camel@localhost>
-References: <1097136709.4268.11.camel@localhost>
-	 <1097153908.7962.867.camel@ws102.darkcore.net>
+Message-ID: <20041007162852.2ef1b003@zrr.local>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1097153908.7962.867.camel@ws102.darkcore.net>
-To: John Lange <john.lange@bighostbox.com>
-Cc: LinuxRaid <linux-raid@vger.kernel.org>
+To: RAID Linux <linux-raid@vger.kernel.org>
+Cc: John Coffman <johninsd@san.rr.com>
 List-Id: linux-raid.ids
 
-On Thu, 2004-10-07 at 07:58 -0500, John Lange wrote:
-> I'm not certain but your problem could very well be that the device
-> names for SATA devices are different under 2.4.x kernels making your
-> fstab invalid.
-> 
-This is exactly what I was thinking when I check the fstab. But who 
-knows. I have tried to find some docs in the kernel source for 
-RAID but have not been succesfull.  
+Hi 
 
-> My understanding is 2.4 uses different code for SATA support than 2.6
-> does and they assign different device names. 2.6 uses libata and 2.4
-> uses ... ? The matter is futher complicated by the fact that libata has
-> been recently backported to 2.4.27.
-> 
-> I have recently been trying to get some clarity on this issue myself so
-> hopefully others on this list can shed some light on it.
-> 
-> John
-Yes I hope somebody can help me with that. 
+Just for the books:
 
-Rgds
--- 
-Sasa Ostrouska <sasa.ostrouska@volja.net>
+After help from John Coffman and Bernd Fischer my Raid1 / Raid5 is now up and running.
 
+This is what I had to do.
+
+1. Install Lilo 22.6
+2. mdadm -a /dev/md0 /dev/sda1
+3. mount /dev/md1 /mnt/newroot
+4. mount /dev/md0 /mnt/newroot/boot
+5. Edit lilo.conf so boot = /dev/md0
+6. Lilo -x mbr (Thanks John!!)
+
+Paff!
+
+also see:
+http://www.ywesee.com/index.cgi?Software_Raid
+
+Thanks for all the help.
+Zeno
