@@ -1,25 +1,39 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: [PATCH md 0 of 9] Introduction
-Date: Mon, 21 Feb 2005 09:55:08 +1100
-Message-ID: <16921.5452.911631.733462@cse.unsw.edu.au>
-References: <20050218111131.790.patches@notabene>
-	<cv4tne$o06$1@sea.gmane.org>
+From: "Clayton Bean" <exsta@casholasavings.com>
+Subject: Approved mortage rate
+Date: Mon, 14 Feb 2005 06:36:10 -0700
+Message-ID: <200410031402.i93WwoTw003862__41768.8038004146$1108943179$gmane$org@www6.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-In-Reply-To: message from Phantazm on Friday February 18
+Content-Type: text/plain;
+From: "Clayton Bean" <exsta@casholasavings.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phantazm <phantazm@phantazm.nu>
-Cc: linux-raid@vger.kernel.org
+To: linux-laptop@vger.kernel.org
+Cc: linux-m68k@vger.kernel.org, linux-mm@vger.kernel.org, linux-msdos@vger.kernel.org, linux-msdos-owner@vger.kernel.org, linux-net@vger.kernel.org, linux-net-owner@vger.kernel.org, linux-newbie@vger.kernel.org, linux-perf@vger.kernel.org, linux-ppp@vger.kernel.org, linux-raid@vger.kernel.org, linux-raid-owner@vger.kernel.org, linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, linux-serial@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Friday February 18, phantazm@phantazm.nu wrote:
-> Would you recommend to apply this package 
-> http://neilb.web.cse.unsw.edu.au/~neilb/patches/linux-devel/2.6/2005-02-18-00/patch-all-2005-02-18-00
-> To a 2.6.10 kernel?
+Hello,
 
-No.  I don't think it would apply.
-That patch it mostly experimental stuff.  Only apply it if you want to
-experiment with the "bitmap resync" code.
+ We tried contacting you awhile ago about your low interest morta(ge rate.
 
-NeilBrown
+ You have qualified for the lowest rate in years...
+
+ You could get over $380,000 for as little as $500 a month!
+
+ Ba(d credit? Doesn't matter, low rates are fixed no matter what!
+
+ 
+ To get a free, no obli,gation consultation click below:
+
+ http://www.bestlenderz.com/x/loan.php?id=nu
+
+
+
+ Best Regards,
+
+ Lorene Talley
+ 
+ to be remov(ed:	http://www.bestlenderz.com/x/st.html
+
+ this process takes one week, so please be patient. we do our 
+ best to take your email/s off but you have to fill out a rem/ove
+ or else you will continue to recieve email/s.
+
