@@ -1,33 +1,29 @@
-From: Darryl Barlow <darrylb@iprimus.com.au>
-Subject: Re: Software Raid Autodetection Problem
-Date: Wed, 17 Sep 2003 03:04:02 +1000
+From: Don Jessup <donj@asaca.com>
+Subject: RAID5 questions
+Date: Wed, 17 Sep 2003 09:05:04 -0700 (PDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200309170304.03853.darrylb@iprimus.com.au>
+Message-ID: <20030917160504.95107.qmail@web14505.mail.yahoo.com>
+Reply-To: donj@asaca.com
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-To: neilb@cse.unsw.edu.au
-Cc: linux-raid@vger.kernel.org
+To: Linux Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Neil,
 
-Thanks for your help.  I seem to have solved the problem, but can only 
-speculate both as to the problem and the solution.  I updated to kernel 
-2.4.22, but it still failed to autodetect properly.  I then dumped raidtools2 
-and went to mdadm as per your suggestion.  I then generated an mdadm.conf 
-file which I altered to refer to the partitions on the raid consistently by 
-their devfs names rather than hde2 and hdg2.  I suspect this may have been 
-the problem.  I am not sufficiently informed as to the boot process to tell 
-for sure, but suspect that autodetection may have been having problems with 
-devfs when the config files referred to the old device names.
+  Is the linux RAID5 optimized for SMP? 
+   
+   I have RH9.0 kernel 2.4.20-19.9 errate kernel with Large Block Device Patch.
+  This works for RAID0 and Linear.  Is there a LBD patch for RAID5?  
 
-Whatever the reason, it is now working.
 
-regards,
+   
 
-Darryl
-
+=====
+Don Jessup
+Asaca/Shibasoku Corp. of America
+400 Corporate Circle, Unit G
+Golden, CO  80401
+303-278-1111 X232
+donj@asaca.com
+http://www.asaca.com
