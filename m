@@ -1,42 +1,77 @@
-From: Jurriaan <thunder7@xs4all.nl>
-Subject: Re: Fedora 2.0 - raid1 not working
-Date: Tue, 9 Nov 2004 20:57:06 +0100
-Message-ID: <20041109195706.GA21202@middle.of.nowhere>
-References: <419115A5.4050905@skybuilders.com> <20041109192219.GA5822@middle.of.nowhere> <41911ACB.2070604@skybuilders.com> <20041109194127.GA17963@middle.of.nowhere> <41911F09.2070403@skybuilders.com>
-Reply-To: Jurriaan <thunder7@xs4all.nl>
+From: Scott Ransom <sransom@cv.nrao.edu>
+Subject: always dirty RAID5 arrays
+Date: Tue, 9 Nov 2004 16:03:24 -0500
+Message-ID: <200411091603.24933.sransom@cv.nrao.edu>
+Reply-To: sransom@nrao.edu
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <41911F09.2070403@skybuilders.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jesse Burkhardt <jesse@skybuilders.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: sransom@nrao.edu
 List-Id: linux-raid.ids
 
-From: Jesse Burkhardt <jesse@skybuilders.com>
-Date: Tue, Nov 09, 2004 at 02:48:25PM -0500
->    What happens in failure mode is that the computer succeeds in completing
->    its POST (power on self test) cycle but never goes on to load the OS.
-> 
->    PS - Another user, [1]olchansk@sam.triumf.ca, says that kernel 2.6 is
->    broken as to raid1, but it has been patched, but not yet in the Fedora
->    version.
-> 
-I'm not sure if current BIOS code still requires a single 'active'
-partition on a single drive to boot. If it still does, that would
-explain what happens to you.
+Hi All,
 
-As for the kernel being at fault - perhaps, I never noticed anything,
-but if even grub doesn't come on, it surely isn't the kernel's fault.
+On one of our servers we have 4 6-disk RAID5 arrays running.  Each of the 
+arrays was created using the following command:
 
-Good luck,
-Jurriaan
+mdadm --create /dev/md3 --level=5 --verbose --force --chunk=128 \ 
+--raid-devices=6 /dev/sd[ijklmn]1
+
+After building and a resync (and a reboot and a resync...), the array looks 
+like this:
+
+--------------------------------------------
+spigot2  sransom 84: mdadm --detail /dev/md3
+/dev/md3:
+        Version : 00.90.00
+  Creation Time : Tue Sep 21 15:54:31 2004
+     Raid Level : raid5
+     Array Size : 1220979200 (1164.42 GiB 1250.28 GB)
+    Device Size : 244195840 (232.88 GiB 250.06 GB)
+   Raid Devices : 6
+  Total Devices : 6
+Preferred Minor : 3
+    Persistence : Superblock is persistent
+
+    Update Time : Sat Nov  6 10:58:12 2004
+          State : dirty
+ Active Devices : 6
+Working Devices : 6
+ Failed Devices : 0
+  Spare Devices : 0
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+           UUID : 264b9069:96d7a1a6:d3b17be5:23fa47ce
+         Events : 0.30
+
+    Number   Major   Minor   RaidDevice State
+       0       8      129        0      active sync   /dev/sdi1
+       1       8      145        1      active sync   /dev/sdj1
+       2       8      161        2      active sync   /dev/sdk1
+       3       8      177        3      active sync   /dev/sdl1
+       4       8      193        4      active sync   /dev/sdm1
+       5       8      209        5      active sync   /dev/sdn1
+-----------------------------------------------------------------
+
+
+Notice that the State is "dirty".  If we reboot, the arrays are in a dirty 
+status and always need to resync.  Any idea why would this be?  (I'm 
+running XFS on the RAIDs and am using a slightly modified RH9.0 kernel:  
+2.4.24aa1-xfs)
+
+Thanks for the help,
+
+Scott
+
 -- 
-REAL LIFE MANAGEMENT 'DILBERT QUOTATIONS':
-5: Doing it right is no excuse for not meeting the schedule. No one will
-   believe you solved this problem in one day! We've been working on it
-   for months. Now, go act busy for a few weeks and I'll let you know
-   when it's time to tell them. (R&D supervisor, Minnesota Mining and
-   Manufacturing/3M Corp.)
-Debian (Unstable) GNU/Linux 2.6.9-mm1 2x6078 bogomips load 1.17
+Scott M. Ransom            Address:  NRAO
+Phone:  (434) 296-0320               520 Edgemont Rd.
+email:  sransom@nrao.edu             Charlottesville, VA 22903 USA
+GPG Fingerprint: 06A9 9553 78BE 16DB 407B  FFCA 9BFA B6FF FFD3 2989
