@@ -1,85 +1,138 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: Re: 2.6.0: ext3 journal aborted with ext3/lvm/raid5
-Date: Sat, 21 Feb 2004 12:45:16 +0100
-Sender: linux-lvm-admin@redhat.com
-Message-ID: <20040221114515.GB31274@percy.comedia.it>
-References: <20040107205326.GA14511@hamachi.dyndns.org> <pan.2004.02.18.14.55.50.11785@dutra.fastmail.fm> <20040219210805.GA576@hamachi.dyndns.org>
-Reply-To: linux-lvm@redhat.com
+From: Ralph =?iso-8859-1?q?Pa=DFgang?= <ralph@debianbase.de>
+Subject: new RAID-1 Array always shows filesystem errors...
+Date: Sat, 21 Feb 2004 13:00:38 +0100
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <200402211300.38709.ralph@debianbase.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1; format=flowed
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-lvm-admin@redhat.com>
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20040219210805.GA576@hamachi.dyndns.org>
-Errors-To: linux-lvm-admin@redhat.com
-List-Help: <mailto:linux-lvm-request@redhat.com?subject=help>
-List-Post: <mailto:linux-lvm@redhat.com>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/linux-lvm>,
-	<mailto:linux-lvm-request@redhat.com?subject=subscribe>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/linux-lvm>,
-	<mailto:linux-lvm-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/linux-lvm/>
 To: linux-raid@vger.kernel.org
-Cc: linux-lvm@redhat.com
 List-Id: linux-raid.ids
 
-On Thu, Feb 19, 2004 at 01:08:05PM -0800, Steven Ihde wrote:
->On Wed, Feb 18, 2004 at 11:55:50AM -0300, Leandro Guimarães Faria Corsetti Dutra wrote:
->> On Wed, 07 Jan 2004 12:53:26 -0800, Steven Ihde wrote:
->> 
->> > I get "Aborting journal on device dm-x" and associated errors about every
->> > week or two.  This is on a 2.6.0 kernel, ext3 filesystem running on lvm
->> > over md raid5.
->> 
->> 	I've found a similar situation, have any fix came forth?
->
->Funny you should bring it up now.  When I posted back in January it
->was suggested that I verify my hardware/memory was OK and also try to
->reproduce the bug on 2.4.24.  So, I ran burnBX/burnMMX for a couple
->days, turned up no problems, did memtest86 overnight, also no
->problems, and then I switched to 2.4.24.
+Hi,
 
-I have seen this as well, no problem on 2.4 + md (raid5) + lvm2,
-about every night on 2.6.2
+in the past I used a raid1 with two 123,5GB drives for about 1,5 years now and 
+never expierenced problems with the raid part... A month ago one drive fails 
+(IRQ timeouts all the time) so I was thinking of a new system.   
 
->I ran 2.4.24 (plus dm-1.00.07 for lvm2) for about 25 days and had no
->problems.  This seemed like reasonable evidence the problem doesn't
->exist (or takes longer to show up) in 2.4.24.  So then I switched to
->2.6.2 (that being the latest 2.6 kernel).  After about six days uptime
->on 2.6.2, I started seeing the problem again.
->
->Can anyone suggest what the next step is?  
+I decided to start from the beginning, this time with: 2x RAID-1 (so 4 disks 
+all together). I wanted a lvm (one big vg) over the two raid-arrays...
 
-I believe it is another stacking problem, since there is no problem with
-using only one of md and lvm2, but i have no idea how to get
-more details on this. I also am an ext3 only user so i have no idea if
-other fs are affected.
+So I created the 2 NEW raid arrays, but I started in one of the two arrays 
+with only one disk  and the second mirror disk was missing (because I had the 
+old raid device (degraded due to the disk failure) with my old data which I 
+wanted to copy to the new lvm and then use the old disk to complete the new 
+raid array).
 
->Here are the latest entries from my syslog (this is 2.6.2).  As it
->usually does, this occurred early in the morning while the locatedb
->was being updated.
->
->Feb 14 06:12:44 hamachi kernel: EXT3-fs error (device dm-4): ext3_readdir: bad entry in directory #5160995: rec_len is smaller than minimal - offset=0, inode=0, rec_len=0, name_len=0
->Feb 14 06:12:44 hamachi kernel: Aborting journal on device dm-4.
->Feb 14 06:12:45 hamachi kernel: ext3_abort called.
->Feb 14 06:12:45 hamachi kernel: EXT3-fs abort (device dm-4): ext3_journal_start: Detected aborted journal
->Feb 14 06:12:45 hamachi kernel: Remounting filesystem read-only
->Feb 14 06:13:56 hamachi kernel: EXT3-fs error (device dm-4) in start_transaction: Journal has aborted
->Feb 14 06:13:57 hamachi last message repeated 741 times
+At first everything went fine, but later on I noticed massive filesystem 
+errors, so I deleted the new lvm and the 2 new raid1 arrays. I was happy that 
+I still had my old raid1 array with the old data, so no data loss happend...
 
-Regards,
-L.
+Then I created the 2 raid arrays again but this time without the lvm, because 
+I though the lvm part was the problem... I started again in the degraded mode 
+with only one disk out of two in each array.
 
--- 
-Luca Berra -- bluca@comedia.it
-        Communication Media & Services S.r.l.
- /"\
- \ /     ASCII RIBBON CAMPAIGN
-  X        AGAINST HTML MAIL
- / \
+This time the data seems to be ok, so I completed the frist new array with 
+puting the seconds disk in. The sync process was ok but then I noticed 
+problems again. If I want to read data I get massive filesystem errors... I 
+was suprised and removed the mirror disk (the one I just hotadded). Now the 
+data seems to be fine again, no data corruption, no filesystem errors...
 
-_______________________________________________
-linux-lvm mailing list
-linux-lvm@redhat.com
-https://www.redhat.com/mailman/listinfo/linux-lvm
-read the LVM HOW-TO at http://tldp.org/HOWTO/LVM-HOWTO/
+I tried the same on the second raid-array and notice the same strange 
+errors... In the degraded one-disk mode the raid is ok, but if the second 
+disk is added and resynced than I got these problems.
+
+On the second raid are some mp3, so I played some of them (to see if that are 
+actually errors or bogus errors) and I noticed that the song skips every 2-3 
+seconds for 1-2 seconds. One could think that the read access to disc 1 is 
+okay, but the half time disk2 should deliver the data and it doesn't... in 
+the log the filesystem errors are reported when i am playing mp3s...
+
+Even some Files or directories aren't accessible anymore. (Even if they would, 
+the data would be useless). If i "ls" in a directory inside the raid1 devices 
+(with two synced disks) it says for example for about half the files: 
+"perrmission denied"  or "file not found" (on a ls *) (i am root!)
+
+Strage is, that the old raid is/was fine, I just can't build a new raid1, 
+because after the disk sync I got these errors...
+
+Here a example filesystem errors I see (thousands in my log):
+Feb 21 01:27:52 services kernel: vs-5150: search_by_key: invalid format found 
+in block 3783953. Fsck?
+Feb 21 01:27:52 services kernel: is_tree_node: node level 0 does not match to 
+the expected one 1
+Feb 21 01:27:52 services kernel: vs-5150: search_by_key: invalid format found 
+in block 3783953. Fsck?
+...
+
+(It can't be a filesystem error, because as soon as I remove a drive the 
+errors are gone)
+
+My Setup is this:
+DEVICE  /dev/hde /dev/hdf /dev/hdb /dev/hdg
+
+ARRAY   /dev/md0 devices=/dev/hde,/dev/hdb
+ARRAY   /dev/md1 devices=/dev/hdf,missing
+
+(that are only the two new arrays, the old one is deleted now!!!... /dev/md1 
+is working in this setup... md0 gives the error (because both disks are in))
+
+I use: Debian Unstable with: linux-2.6.1 (vanilla +pnpbios patch), mdadm 
+1.4.0-3 (bugs.debian.org says there is no such bug in mdadm) and a reiserfs 
+3.6 partition on the md-devices.
+
+My hdd Setup is this:
+    ide0: BM-DMA at 0xfc00-0xfc07, BIOS settings: hda:DMA, hdb:DMA
+    ide1: BM-DMA at 0xfc08-0xfc0f, BIOS settings: hdc:pio, hdd:pio
+    ide2: BM-DMA at 0xdc00-0xdc07, BIOS settings: hde:pio, hdf:pio
+    ide3: BM-DMA at 0xdc08-0xdc0f, BIOS settings: hdg:pio, hdh:pio
+hda: IC35L060AVV207-0, ATA DISK drive
+hdb: IC35L120AVVA07-0, ATA DISK drive
+hde: IC35L120AVV207-1, ATA DISK drive
+hdf: IC35L120AVV207-1, ATA DISK drive
+hdg: IC35L120AVV207-0, ATA DISK drive
+
+hda: 120103200 sectors (61492 MB) w/1821KiB Cache, CHS=16383/255/63, UDMA(100)
+ hda: hda1 hda2
+hdb: max request size: 128KiB
+hdb: 241254720 sectors (123522 MB) w/1863KiB Cache, CHS=65535/15/63, UDMA(100)
+ hdb: unknown partition table
+hde: max request size: 1024KiB
+hde: 241254720 sectors (123522 MB) w/7965KiB Cache, CHS=16383/255/63, 
+UDMA(100)
+ hde: unknown partition table
+hdf: max request size: 1024KiB
+hdf: 241254720 sectors (123522 MB) w/7965KiB Cache, CHS=16383/255/63, 
+UDMA(100)
+ hdf: unknown partition table
+hdg: max request size: 1024KiB
+hdg: 241254720 sectors (123522 MB) w/1821KiB Cache, CHS=16383/255/63, 
+UDMA(100)
+ hdg: unknown partition table
+
+Personalities : [raid1]
+md1 : active raid1 hdf[0]
+      120627264 blocks [2/2] [UU]
+
+md0 : active raid1 hde[0]
+      120627264 blocks [2/1] [U_]
+
+unused devices: <none>
+
+the raid (/mdadm) doesn't seem to detect this error... I am quite sure that is 
+nothing with the drive or the pc... I use 4 drives with 2 raids, so it is not 
+a "one drive is broken" thing.
+
+Please help me, because the data on the two arrays is quite important to me, 
+so that running two normal disks which holds the data is no solution for me. 
+I had a drive failure once and the raid saved me... I need the two new raid 
+arrays... Maybe a kernel thing? 2.6.1 is not the latest... should I upgrade 
+to 2.6.3? Could it be mdadm? Should I recompile it against my kernel?
+
+Thanks for your help... and sorry for my bad english :)
+
+best regard,
+ Ralph
