@@ -1,102 +1,70 @@
-From: Linux Lists <user_linux@citma.cu>
-Subject: Re: Promise sx6000
-Date: Mon, 3 Feb 2003 21:53:37 +0000 (UTC)
+From: Seth Hall <seth@speech.mit.edu>
+Subject: Promise SX6000 problems.
+Date: Mon, 03 Feb 2003 18:10:27 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <5E38A4CF.9040405@citma.cu>
-References: <Pine.LNX.4.33.0302021631280.17543-100000@router.windsormachine.com> <016501c2cb01$e7811f00$6701a8c0@bc.hsia.telus.net>
+Message-ID: <3E3EF6E3.CBA898DC@speech.mit.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+To: Linux Raid List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi :
+Hi,
 
-I have followed your advises and finally , it seem to be ok with my 
-promise sx6000 card.
-I have installed Red Hat 8 with 2.4.18-14 ,i2o support as module, but i 
-can not find my card anywhere.
+Has anyone had better success with this card than we have? To wit:
 
-Here  i am sending you my dmesg and my modules.conf .
-Notes I have a  120GB in hda where i have installed red hat , and 5 
-hardrives in the promise card .
-.............
-.........
+------------------------------------------------------------------------
+I am still struggling with trying to get our new SuperTrac SX6000 to work
+properly with any version of Linux. I have not had any success since we received
+the card in late December. 
 
-VP_IDE: IDE controller on PCI bus 00 dev 21
-VP_IDE: chipset revision 6
-VP_IDE: not 100% native mode: will probe irqs later
-ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=xx
-VP_IDE: VIA vt82c686b (rev 40) IDE UDMA100 controller on pci00:04.1
-    ide0: BM-DMA at 0xd800-0xd807, BIOS settings: hda:DMA, hdb:pio
-    ide1: BM-DMA at 0xd808-0xd80f, BIOS settings: hdc:DMA, hdd:pio
-PDC20276: IDE controller on PCI bus 02 dev 00
-PDC20276: chipset revision 1
-ide: Found promise 20265 in RAID mode.
-PDC20276: not 100% native mode: will probe irqs later
-PDC20276: simplex device:  DMA disabled
-ide2: PDC20276 Bus-Master DMA disabled (BIOS)
-PDC20276: simplex device:  DMA disabled
-ide3: PDC20276 Bus-Master DMA disabled (BIOS)
-PDC20276: IDE controller on PCI bus 02 dev 08
-PDC20276: chipset revision 1
-ide: Found promise 20265 in RAID mode.
-PDC20276: not 100% native mode: will probe irqs later
-PDC20276: simplex device:  DMA disabled
-ide4: PDC20276 Bus-Master DMA disabled (BIOS)
-PDC20276: simplex device:  DMA disabled
-ide5: PDC20276 Bus-Master DMA disabled (BIOS)
-PDC20276: IDE controller on PCI bus 02 dev 10
-PDC20276: chipset revision 1
-ide: Found promise 20265 in RAID mode.
-PDC20276: not 100% native mode: will probe irqs later
-PDC20276: simplex device:  DMA disabled
-ide6: PDC20276 Bus-Master DMA disabled (BIOS)
-PDC20276: simplex device:  DMA disabled
-ide7: PDC20276 Bus-Master DMA disabled (BIOS)
-hda: WDC WD1200JB-75CRA0, ATA DISK drive
-hdb: no response (status = 0xa1), resetting drive
-hdb: no response (status = 0xa1)
-hdc: AOPEN 16XDVD-ROM/AMH 20020328, ATAPI CD/DVD-ROM drive
-ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
-ide1 at 0x170-0x177,0x376 on irq 15
-hda: setmax LBA 234441648, native  234375000
-hda: 234375000 sectors (120000 MB) w/8192KiB Cache, CHS=14589/255/63, UDMA(100)
-ide-floppy driver 0.99.newide
-Partition check:
- hda: hda1 hda2 hda3 hda4 < hda5 hda6 hda7 hda8 hda9 hda10 >
-Floppy drive(s): fd0 is 1.44M
-FDC 0 is a post-1991 82077
-NET4: Frame Diverter 0.46
-RAMDISK driver initialized: 16 RAM disks of 4096K size 1024 blocksize
-ide-floppy driver 0.99.newide
-md: md driver 0.90.0 MAX_MD_DEVS=256, MD_SB_DISKS=27
-md: Autodetecting RAID arrays.
-md: autorun ...
-md: ... autorun DONE.
-pci_hotplug: PCI Hot Plug PCI Core version: 0.4
-NET4: Linux TCP/IP 1.0 for NET4.0
-IP Protocols: ICMP, UDP, TCP, IGMP
-IP: routing cache hash table of 16384 buckets, 128Kbytes
-TCP: Hash tables configured (established 262144 bind 65536)
-Linux IP multicast router 0.06 plus PIM-SM
-NET4: Unix domain sockets 1.0/SMP for Linux NET4.0.
-RAMDISK: Compressed image found at block 0
-Freeing initrd memory: 220k freed
-VFS: Mounted root (ext2 filesystem).
-SCSI subsystem driver Revision: 1.00
-kmod: failed to exec /sbin/modprobe -s -k scsi_hostadapter, errno = 2
-I2O Core - (C) Copyright 1999 Red Hat Software
-I2O: Event thread created as pid 17
-I2O Block Storage OSM v0.9
-   (c) Copyright 1999-2001 Red Hat Software.
-i2o_block: registered device at major 80
-i2o_block: Checking for Boot device...
-i2o_block: Checking for I2O Block devices...
-Journalled Block Device driver loaded
+Most recently I have been trying to get the Promise Driver V1.02.0.22
+[06/27/2002] driver to work on a fresh distribution of RedHat v7.3, kernel
+2.4.18-3 installation described in the Readme seemed to succeed, but the ft.o
+driver refuses to load, with insmod giving the following error message:
 
-Why is not my RAID under /dev/i2o/hda ?
+#root_> insmod /lib/modules/2.4.18-3/kernel/drivers/scsi/ft.o
+Warning: loading /lib/modules/2.4.18-3/kernel/drivers/scsi/ft.o
+will taint the kernel: no license
 
-David
+/lib/modules/2.4.18-3/kernel/drivers/scsi/ft.o: init_module: operation not
+permitted
+Hint: insmod errors can be caused by incorrect module parameters, including
+invalid IO or IRQ parameters
 
+
+No SCSI devices are created and lsmod confirms that the ft.o module was not
+loaded.
+
+
+The system in question is a brand new:
+
+Dell Optiplex GX260, 1GB RAM, Gigabit ethernet (Intel e1000), 60GB Ultra ATA
+drive, Radeon graphics controller.
+
+The Promise RAID is configuer as follows:
+
+Promise SX6000 with 5 Seagate 120GB drives installed and configured as a 480GB
+RAID-5 device (BIOS state reported: Functional.)
+
+
+FastTrak Series Linux Driver 
+Version 1.02.0.22 [06/27/2002]
+For RedHat Linux 7.3 (kernel 2.4.18-3)
+
+The SX6000 works perfectly under W2K. I then deleted this test RAID-5 set. A new
+RAID-5 set was created and initialized for Linux following verification of the
+hardware using W2K.
+
+Incidentally, I also tried to use the new Open Linux driver you offer, using a
+driver Makefile Jordan Rhody sent me on December 18, 2002, with no success. The
+Makefile supplied built correctly under Slackware v8.1 (kernel v2.4.20) After
+booting, the sca device could not be found. I reverted to RH 7.3 since this is
+the release you claim to support.
+
+Help!?
+
+Seth Hall
+Speech Comm. Group
+MIT - Cambridge
