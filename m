@@ -1,50 +1,38 @@
-From: nelson_rufus@sunumail.sn
-Subject: IT'S  ME  YOUR  FRIEND
-Date: Fri, 9 Jul 2004 00:53:55 -0000 (GMT)
+From: "Mike Billings" <mike@carolina.rr.com>
+Subject: Re: Using raidreconf to create raid0 from non-raid works, but df is wrong
+Date: Fri, 9 Jul 2004 00:22:54 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1345.216.139.180.12.1089334435.sunumail@www.sunumail.sn>
+Message-ID: <083901c4656c$67da9c70$6401010a@stan>
+References: <07ec01c46498$240dd770$6401010a@stan> <16620.48692.991526.480905@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: nelson_rufus@sunumail.sn
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-DEAR PARTTNER,
+> On Wednesday July 7, mike@carolina.rr.com wrote:
+> > Hi,
+> >
+> > I originally had a 250G ide drive on my system.  I added a second 250G
+and
+> > used raidreconf to go from non-raid to raid using "raidreconf -i
+> > /dev/hde1 -n /etc/raidtab -m /dev/md0".  The conversion suceeded, mdadm
+> > reports that everything is ok, and the new raid0 works fine but df
+reports
+> > the wrong size.  Is there any way to get df to report the correct size
+> > without wiping the data?  Could I have done something with raidreconf
+> > differently to avoid this?
+>
+> If it is an ext2 or ext3, then resize2fs is what you need now.
+> If some other filesystem.... maybe some other tool.
+>
+> NeilBrown
+>
 
- MY NAME IS MR. NELSON RUFUS. I AM WRITING IN RESPECT OF FOREIGN CUSTOMER
-OF MY BANK WHO DIED IN A PLANE CRASH (ALASKA AIRLINES FLIGHT 261) WHICH
-CRASHED ON JANUARY 31 2000, INCLUDING HIS WIFE AND ONLY DAUGHTER SINCE
-THE DEATH OF THIS CUSTOMER, I PERSONALLY HAVE WATCHED WITH KEEN INTEREST
-TO SEE THE NEXT OF KIN BUT ALL HAS PROVED ABORTIVE AS NO ONE HAS COME TO
-CLAIM HIS FUNDS OF US$10.5M (TEN MILLION, FIVE HUNDRED THOUSAND UNITED
-STATES DOLLARS) WHICH HAS BEEN WITH MY BANK FOR A VERY LONG TIME.ON THIS
-NOTE I DECIDED TO SEEK FOR WHOSE NAME SHALL BE USED AS THE NEXT OF KIN AS
-NO ONE HAS COME UP TO BE THE NEXT OF KIN. IN VIEW OF THIS I GOT YOUR
-CONTACT THROUGH MY COUNTRY`S FOREIGN TRADE MISSION AFTER I WAS CONVINCED
-BY PROVIDENCE THAT YOU COULD BE USED AS THE NEXT OF KIN. THE REQUEST OF
-THE FOREIGNER AS A NEXT OF KIN IN THIS BUSINESS IS OCCASIONED BY THE FACT
-THAT THE CUSTOMER WAS A FOREIGNER AND A NIGERIAN CANNOT STAND AS THE NEXT
-OF KIN TO FOREIGNER.
+resize2fs did the trick!  Thanks all!
 
-I AGREED THAT 30% OF THIS MONEY WILL BE FOR YOU AS A FOREIGN PARTNER
-,WHILE THE REST WILL BE FOR ME, THERE AFTER,I WILL VISIT YOUR COUNTRY FOR
-DISBURSEMENT AS I AM ALMOST DUE FOR RETIREMENT.THEREFORE, TO FACILITATE
-THE IMMEDIATE TRANSFER OF THIS FUND TO YOUR ACCOUNT AS ARRANGED, YOU MUST
-APPLY FIRST TO THE BANK AS A RELATION TO THE DECEASED INDICATING YOUR
-PRIVATE TELEPHONE NUMBER, AND FAX NUMBER FOR EASY COMMUNICATION AND
-LOCATION WHERE THE MONEY WILL BE REMITTED.UPON THE RECEIPT OF YOUR REPLY,
-I WILL SEND YOU BY FAX OR E-MAIL THE NEXT STEP TO TAKE.
+Mike
 
- I WILL NOT FAIL TO BRING TO YOUR NOTICE THAT THIS BUSINESS IS HITCH-FREE
-AND THAT YOU SHOULD NOT ENTERTAIN ANY FEAR AS THE WHOLE REQUIRED
-ARRANGEMENT HAS BEEN MADE FOR THE TRANSFER.
 
-YOU SHOULD CONTACT ME THROUGH THIS EMAIL (nelsonruf@graffiti.net )
-IMMEDIATELY AS SOON AS YOU RECEIVE THIS LETTER
-
-TRUSTING TO HEAR FROM YOU.
-
-YOUR RESPECTFULLY,
-
- MR. NELSON RUFUS
