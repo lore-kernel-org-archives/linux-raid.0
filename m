@@ -1,44 +1,84 @@
-From: Robin Bowes <robin-lists@robinbowes.com>
-Subject: Stress testing system?
-Date: Fri, 08 Oct 2004 22:32:58 +0100
+From: Mike Hardy <mhardy@h3c.com>
+Subject: Re: Stress testing system?
+Date: Fri, 08 Oct 2004 15:00:19 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <4167078A.3030609@robinbowes.com>
+Message-ID: <41670DF3.5040807@h3c.com>
+References: <4167078A.3030609@robinbowes.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <4167078A.3030609@robinbowes.com>
+To: "'linux-raid@vger.kernel.org'" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi,
 
-I've got six 250GB Maxtor drives connected to 2 Promise SATA controllers 
-  configured as follows:
+This is a little off topic, but I stress systems with four loops
 
-Each disk has two partitions: 1.5G and 248.5G.
+loop one unpacks the kernel source, moves it to a new name, unpacks the 
+kernel source again, and diffs the two, deletes and repeats (tests 
+memory, disk caching)
 
-/dev/sda1 & /dev/sdd1 are mirrored and form the root filesystem.
+loop two unpacks the kernel source, does a make allconfig and a make -j5 
+bzImage modules, then a make clean and repeats. should get the cpu burning
 
-/dev/sd[abcdef]2 are configured as a RAID5 array with one hot spare.
+loop three should run bonnie++ on the array
 
-I use lvm to create a 10G /usr partition, a 5G /var partition, and the 
-rest of the array (994G) in /home.
+loop four should work with another machine. each machine should wget 
+some very large file (1GBish) with output to /dev/null so that the NIC 
+has to serve interrupts at max
 
-The system in which I installed these drives was rock-solid before I 
-added the RAID storage (it had a single 120G drive). However, since 
-adding the 6 disks I have experienced the system simply powering down 
-and requiring filesystem recovering when it restarted.
+If that doesn't cook your machine in 48 hours or so, I can't think of 
+anything that will.
 
-I suspected this was down to an inadequate power supply (it was 400W) so 
-I've upgrade to an OCZ 520W PSU.
+This catches out every machine I try it on for some reason or another, 
+but after a couple tweaks its usually solid.
 
-I'd like to stress test the system to see if the new PSU has sorted the 
-problem, i.e. really work the disks.
+Slightly more on-topic, one thing that I have do to frequently is boot 
+with noapic or acpi=off due to interrupt handling problems with various 
+motherboards.
 
-What's the best way to do get all six drives working as hard as possible?
+Additionally, I think there have been reports of problems with raid and 
+LVM, and there have also been problems with SATA and possibly with 
+Maxtor drives, so you have may have some tweaking to do. Mentioning 
+versions of things (distribution, kernel, hardware parts and part 
+numbers etc) would help
 
-Thanks,
+I'm interested to hear what other people do to burn their machines in 
+though...
 
-R.
--- 
-http://robinbowes.com
+Good luck.
+-Mike
+
+Robin Bowes wrote:
+> Hi,
+> 
+> I've got six 250GB Maxtor drives connected to 2 Promise SATA controllers 
+>  configured as follows:
+> 
+> Each disk has two partitions: 1.5G and 248.5G.
+> 
+> /dev/sda1 & /dev/sdd1 are mirrored and form the root filesystem.
+> 
+> /dev/sd[abcdef]2 are configured as a RAID5 array with one hot spare.
+> 
+> I use lvm to create a 10G /usr partition, a 5G /var partition, and the 
+> rest of the array (994G) in /home.
+> 
+> The system in which I installed these drives was rock-solid before I 
+> added the RAID storage (it had a single 120G drive). However, since 
+> adding the 6 disks I have experienced the system simply powering down 
+> and requiring filesystem recovering when it restarted.
+> 
+> I suspected this was down to an inadequate power supply (it was 400W) so 
+> I've upgrade to an OCZ 520W PSU.
+> 
+> I'd like to stress test the system to see if the new PSU has sorted the 
+> problem, i.e. really work the disks.
+> 
+> What's the best way to do get all six drives working as hard as possible?
+> 
+> Thanks,
+> 
+> R.
+
