@@ -1,61 +1,44 @@
-From: "Bradley D. Thornton" <website.is@www.NorthTech.US>
-Subject: Re:  =?ISO-8859-1?Q?=20=BF?= the best journalist-filesystem for a   raid5 ?
-Date: Tue, 8 Jul 2003 14:34:32 -0700
+From: "Donghui Wen" <dhwen@protegonetworks.com>
+Subject: Re: software raid hangs.
+Date: Tue, 8 Jul 2003 14:41:13 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <befdg2$ev7$1@main.gmane.org>
-References: <5.2.1.1.2.20030703173829.023eabe8@192.168.2.130> <Pine.LNX.4.44.0307031157450.18503-100000@chaos.egr.duke.edu>
-Reply-To: "Bradley D. Thornton" <gmane@tallship.net>
+Message-ID: <004601c34599$a7719ee0$df01010a@moon>
+References: <4D618F6493CE064A844A5D496733D667031A01@freedom.icomedias.com> <200307072029.14998.bernd-schubert@web.de> <200307071142330484.8AF6968B@shargaas.coreyfro.com> <200307081851.31385.bernd-schubert@web.de> <003401c34597$26521e40$df01010a@moon> <1057700295.16166.54.camel@mattswrk>
+Mime-Version: 1.0
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+To: Matt Simonsen <matt_lists@careercast.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Yes, I did. Actully, in order to verify this case,
+I create some small partitions (1G) to make raid.
 
-"Joshua Baker-LePain" <jlb17@duke.edu> wrote in message
-news:Pine.LNX.4.44.0307031157450.18503-100000@chaos.egr.duke.edu...
-> On Thu, 3 Jul 2003 at 5:42pm, system_lists@nullzone.org wrote
+Donghui
+
+----- Original Message -----
+From: "Matt Simonsen" <matt_lists@careercast.com>
+To: "Donghui Wen" <dhwen@protegonetworks.com>
+Cc: <linux-raid@vger.kernel.org>
+Sent: Tuesday, July 08, 2003 2:38 PM
+Subject: Re: software raid hangs.
+
+
+> On Tue, 2003-07-08 at 14:23, Donghui Wen wrote:
+> > Hi,
+> >      I am testing software-raid with 3ware-7500 controller on a
+> > hot-swappable chassis.
+> > I found out that software-raid 5 could not even sustain 1 disk failure
+in
+> > this case.
 >
-> >     i dont wanna create a discusion between gurus. My question is so
-simple
-> > (well .. its not simple but ...).
-> >
-> > What do u think is the best journalist filesystem for a software raid5
-of
-> > 4*120 GB IDE UATA ?
-> > I will use this one for big files (lots of them) and small ones (just a
-ftp
-> > but too for the users space).
-> >
-> > For a non-specific BIG/SMALL files .... JFS? Reiser3? Reiser4? EXT3?
 >
-> I've had very good luck with XFS for a long time now (over 2 years in
-> production, currently 5.5TB of formatted space).
-
-I guess that leads me to the question, does ReiserFS NOT support ACLs? I
-understand that XFS does (with a patch), but the page that I got this
-information from is kind of old
-(http://www.linux-mag.com/2002-10/jfs_01.html - which may also assist in
-helping one decide which file system to go with I suppose).
-
-The reason I ask is because I am interested in SAMBA/CIFS applications
-running Linux as a file server/PDC
-
+> Did you allow the array to first sync up before pulling out a disk? It
+> may take quite a while if you have large disks (several hours to days).
 >
-> -- 
-> Joshua Baker-LePain
-> Department of Biomedical Engineering
-> Duke University
+> Matt
 >
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >
-
-
----
-Outgoing mail is certified Virus Free.
-Checked by AVG anti-virus system (http://www.grisoft.com).
-Version: 6.0.449 / Virus Database: 251 - Release Date: 01/27/03
-
-
 
