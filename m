@@ -1,79 +1,99 @@
-From: Nathan Hunsperger <linux-raid@hunsperger.com>
-Subject: Re: A puzzling thing about RAID5: syslogd write the log success but another process can not read the /var/log/messages
-Date: Wed, 7 Apr 2004 08:22:58 -0700
+From: "Petriz, Pablo" <ppetriz@siscat.com.ar>
+Subject: RE: Promise SX6000 is a POS.
+Date: Wed, 7 Apr 2004 13:29:09 -0300
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040407152257.GJ17670@munchnet.com>
-References: <407400F1.8090809@sinosoft.com.cn>
+Message-ID: <1CEC5A75042ED51180E300A024E99257AD8227@zeus.sc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <407400F1.8090809@sinosoft.com.cn>
-To: Gewj <geweijin@sinosoft.com.cn>
-Cc: linux-raid@vger.kernel.org
+To: "'Jason C. Leach'" <Jason.Leach@jsthrower.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Gewj -
+We have a similar configuration (SX6000) and for the same purpose, store GIS
+files: shape files, tifs and jpg (not databases), it's like an image file
+repository. 
 
-I believe you have your RAID numbers crossed.  RAID 5 requires a minimum
-of 3 disks.  Perhaps you meant raid 1, which is a mirror.
+And we have seen an even lower perfomance than you.
 
-I don't believe RAID would have caused the symptoms you saw (When RAID
-detects a problem, assuming it has enough redundancy information, your
-view of the data should not change.  Of course, if you lose 1 too many
-disks, your data will not be intact, but you will be getting FS errors
-like crazy.)
+I'll tell you an overview of our configuration, and for the fine tuning
+numbers (perf tests, fs conf, blocks, stripes, all the raid stuff) please
+wait till next week (my sysadmin is on vacation).
 
-However, I have seen this type of symptom before on  some FreeBSD boxes
-I co-maintain.  In those cases, a less experienced member of root would
-notice a log file grow too big, delete it, and create a new 0-byte file.
-However, syslog would still have the old file open, and be writing into
-it.  But for anybody else, they would see a 0-byte file.  The problem
-is that when you delete a file, it isn't actually deleted, it is just
-unlinked from the directory structure.  When the last process to have the
-file open closes it, it will then be gone.  Of course, this means that
-your filesystem may fill up (check with df), although utilities like du
-and ls will not show the file.  Yes, that is really fun to track down
-at 3am when /var fills up.
+MAIN SERVER
+Intel Xeon 2.4Ghz on a SE7501BR2 motherboard with 1GB RAM and a Seagate 40GB
+IDE for the RedHat Linux 8 Kernel 2.4.18-14 attached to a Promise SX8000
+tower with 8 Maxtor MaxLineII 300GB 5400RPM (6 on RAID5, 2 hotspare)
 
-Hope that answers your questions,
-Nathan
+BACKUP SERVER
+Intel Xeon 2.4Ghz on a SE7501BR2 motherboard with 1GB RAM and a Seagate 40GB
+IDE for the RedHat Linux 9 Kernel 2.4.20-8 plus a Promise SX6000 with 5
+internal Maxtor MaxLineII 300GB 5400RPM (all on RAID5 on 1 EXT3 FS)
 
-On Wed, Apr 07, 2004 at 09:24:01PM +0800, Gewj wrote:
-> hammm,tonight is funny because I got a puzzling thing just as....
-> 
-> my setup is a two-scsi-disk raid5 configuration...
-> (Linux version 2.4.18-18.7.xsmp (Red Hat Linux 7.3 2.96-112)) #1 SMP Wed
-> Nov 13 19:01:42 EST 2002)
-> it work well for a long time, but now I found some day early one of the
-> scsi disks failed, and I found out
-> that that time syslogd restarted(why??) and it could write log infor to
-> log file successfully.
-> but at the same time , another process(named such as B,run by root) can
-> not read
-> the /var/log/messages,or what's more exactly, the messages file was look
-> like empty to B then.
-> (of course, the syslogd write log infor to /var/log/messages )
-> 
-> I wonder that if syslogd write the log infor to the well-work scsi disk
-> , but the process B
-> read the /var/log/messages from the crashed scsi disk,which cause it
-> just like a empty file.
-> 
-> yes, it is quite unbelievable. but can some one show me a clue to this
-> puzzling problem?
-> What is the proper course of this action?
-> 
-> 
-> 
-> 
+The fact is that the main server isn't working yet (that's another story...)
+but we have the backup server working. We are looking for storage capacity
+over performance, that makes the decision between 300GB 5400RPM over 250GB
+7200RPM... but what about the SX6000 performance? We expect a little
+better...
+
+We are really newbies in RAID stuff, and our goal was to design a reliable
+near 2TB storage + bkup with a uSs15.000 budget and here, in Argentina where
+it's not easy to get specific products and support.
+
+That's an overview of our situation, and i'm really interested in share our
+experience to help others and to make this work the best we can. So, as i
+said, wait till next week for the specific information.
+
+Thanks,
+
+
+PABLO
+
+
+
+> -----Mensaje original-----
+> De: Jason C. Leach [mailto:Jason.Leach@jsthrower.com]
+> Enviado el: viernes 2 de abril de 2004 02:53
+> Para: linux-raid@vger.kernel.org
+> Asunto: Promise SX6000 is a POS.
 > 
 > 
+> Linux-Raid:
+> 
+> I have a Promise SX6000 RAID card and on it an 1Tb RAID-5 
+> array (6*200G 
+> WD2000 ATA disks 7500rmp).  I am using Debian Woody with the 2.4.19 
+> Kernel on a AMD AthelonXP +2500 system. I am using the Promise driver 
+> downloaded and compiled from there website.
+> 
+> I am getting about 3.3Meg/sec from the array to an EIDE disk (segate 
+> barracuda ATA). While from the Array to the Array I get about  
+> 4.1Meg/sec; copying 200G is an overnight plus job for sure. 
+> To me this 
+> is stupid slow, and I must be doing something wrong. Even if 
+> the Promise 
+> card is the slowest one available (3Ware, Promise, Adaptek) it can't 
+> really be *this* slow: this card should not even be on the market at 
+> this speed.  All the while my system load average is about 1.5-2.  Is 
+> this Linux? Does it really run this slow under Windows as 
+> well? Should I 
+> be using i2o or some other driver? Perhaps the array is just 
+> too large?
+> 
+> PS: I get no errors, and the card is on it's own interrupt 
+> with a full 
+> 128MB cache.
+> 
+> Thanks,
+> Jason.
 > 
 > 
+> -- 
+> Jason C. Leach
+> IT Manager
+> J.S. Thrower & Associates Ltd.
+> Phone: (250) 314-0875 Fax (250) 314-0871
+> email: jason.leach@jsthrower.com
+> http://www.jsthrower.com
 > 
 > 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
