@@ -1,51 +1,38 @@
-From: "Gernot A. Weber" <gernot@tux-web.de>
-Subject: broken disk?
-Date: Mon, 8 Apr 2002 22:27:25 +0200 (CEST)
+From: Mathieu Chouquet-Stringer <mathieu@newview.com>
+Subject: Re: broken disk?
+Date: 08 Apr 2002 16:42:57 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.33.0204082219000.845-100000@kopernikus.tux-web.de>
+Message-ID: <xltsn65apm6.fsf@shookay.newview.com>
+References: <Pine.LNX.4.33.0204082219000.845-100000@kopernikus.tux-web.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-To: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <Pine.LNX.4.33.0204082219000.845-100000@kopernikus.tux-web.de>
+To: "\"Gernot A. Weber\"" <gernot@tux-web.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+        Hi Gernot!
+        
+gernot@tux-web.de ("Gernot A. Weber") writes:
+> Is the disk broken? And - WHICH disk is it (I assume it's the disk with
+> ID2, but is there a map, which tells me the meaning of Device 08:25?)?
 
-since last weekend my machine (dual PIII-450) is attached to a software
-raid 5 (three scsi-disks - several partitions on each - three raid
-arrays). After a few hours the system freezes. I found foolowing ebtries
-in the logs:
+I don't know for sure if the disk is broken but the device 08:25 is
+/dev/sdb9 (you can grep for the major:minor number in /dev or just take a
+look in linux/Documentation/devices.txt)
 
-Apr  8 20:56:01 kopernikus kernel: (scsi0:A:2:0): Unexpected busfree in
-Data-out
- phase
-Apr  8 20:56:01 kopernikus kernel: SEQADDR == 0x1a6
-Apr  8 20:56:01 kopernikus kernel: Device 08:25 not ready.
-Apr  8 20:56:01 kopernikus kernel:  I/O error: dev 08:25, sector 128
-Apr  8 20:56:01 kopernikus kernel: Device 08:25 not ready.
+> Apr  8 09:18:25 kopernikus kernel: (scsi0:A:2:0): Locking max tag count at
+> 64
+> 
+> Are these serios?
 
-Is the disk broken? And - WHICH disk is it (I assume it's the disk with
-ID2, but is there a map, which tells me the meaning of Device 08:25?)? One
-disk goes offline after some hours - but I'm able to reattach it and
-rebuild the data on it. I found a jumper on the disk which says enable
-auto spin - what does it mean? Sorry, when I'm probably a bit out of topic
-with this SCSI problems... I also got some messages like:
+No, this one is ok: it means the drive is able to handle 64 tags at most
+(and you're scsi driver probably defaulted to a higher value).
 
-Apr  8 09:18:25 kopernikus kernel: (scsi0:A:2:0): Locking max tag count at
-64
-
-Are these serios?
-
-Thanks a lot in advance
-
-    Gernot Weber
-
+Mathieu. 
 
 -- 
-Gernot A. Weber
-http://www.tux-web.de
-
-Only wimps use tape backup: _real_ men just upload their important stuff
-on ftp, and let the rest of the world mirror it.
-
-                              Linus Torvalds, after a hard drive crash
-
+Mathieu Chouquet-Stringer              E-Mail : mathieu@newview.com
+    It is exactly because a man cannot do a thing that he is a
+                      proper judge of it.
+                      -- Oscar Wilde
