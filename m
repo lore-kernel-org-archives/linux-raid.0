@@ -1,35 +1,39 @@
-From: Tim Small <tim@buttersideup.com>
-Subject: Re: Q: RAID-1 w/2x160GB, ReiserFS, Debian 'woody', homebrew 2.4.25
- kernel
-Date: Wed, 04 Aug 2004 11:34:40 +0100
+From: "Robin Bowes" <robin-lists@robinbowes.com>
+Subject: Re: Q: RAID-1 w/2x160GB, ReiserFS, Debian 'woody',
+      homebrew 2.4.25 kernel
+Date: Wed, 4 Aug 2004 11:37:44 +0100 (BST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <4110BBC0.90203@buttersideup.com>
-References: <ceq7ij$vj7$1@sea.gmane.org> <27897.194.60.85.4.1091613610.squirrel@194.60.85.4> <200408041129.44767.m.watts@eris.qinetiq.com>
+Message-ID: <54107.194.60.85.4.1091615864.squirrel@194.60.85.4>
+References: <ceq7ij$vj7$1@sea.gmane.org>
+    <27897.194.60.85.4.1091613610.squirrel@194.60.85.4>
+    <200408041129.44767.m.watts@eris.qinetiq.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <200408041129.44767.m.watts@eris.qinetiq.com>
 To: Mark Watts <m.watts@eris.qinetiq.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Mark Watts wrote:
+On Wed, August 4, 2004 11:29, Mark Watts said:
+ 
+> Talking of partitioning several disks the same, is there an easy way to
+> automate this?
+> 
 
->Talking of partitioning several disks the same, is there an easy way to 
->automate this?
->  
->
-Hmm, I gave a way to do this in my last email, but I've realised that I 
-missed out the "count" argument to dd...  I said:
+Yes. Something like:
 
-> dd if=/dev/hda of=/dev/hdc ; echo w | fdisk /dev/hdc 
+# sfdisk -d /dev/sda > partition.save
+# sfdisk /dev/sdb < partition.save
 
-This will work, but will take a while ;o)  it should really have been:
+Or all at once:
 
-dd if=/dev/hda of=/dev/hdc count=1 && echo w | fdisk /dev/hdc
+# sfdisk -d /dev/sda | sfdisk /dev/sdb
 
+I partition all my drives the same so if one fails it is easy to re-partion the new drive by copying the structure from an existing drive.
 
-
-Tim.
+R.
+-- 
+http://robinbowes.com
 
