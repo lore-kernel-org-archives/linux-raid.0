@@ -1,35 +1,59 @@
-From: KELEMEN Peter <Peter.Kelemen@cern.ch>
-Subject: Re: new raid system for home use
-Date: Tue, 20 Apr 2004 22:08:06 +0200
+From: Mike Mestnik <cheako911@yahoo.com>
+Subject: RAID1: Performance.
+Date: Tue, 20 Apr 2004 22:57:29 -0700 (PDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040420200806.GJ26365@chihiro.cern.ch>
-References: <4084AC05.6090800@tequila.co.jp> <Pine.LNX.4.44.0404200734130.16115-100000@coffee.psychology.mcmaster.ca> <20040420125453.GD26365@chihiro.cern.ch> <40854BE2.2060307@pobox.com>
+Message-ID: <20040421055729.90574.qmail@web11901.mail.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <40854BE2.2060307@pobox.com>
-To: linux-raid@vger.kernel.org
+To: Linux-RAID@vger.kernel.org
 List-Id: linux-raid.ids
 
-* Jeff Garzik (jgarzik@pobox.com) [20040420 12:12]:
+I have looked extensively at the code in raid1.c and found that it has a
+fue bugs that cause it not to do what it was intended.
+The Biggest problem is that it seams to not consider that a Write will
+move the heads into the same spot.  In the case of multi-process IO idle
+drives may stay idle if there heads are not CLOSEST.  The other problems I
+see were already discussed in a thread of a similar name.  The solution I
+have come up with I think will satisfy every ones concerns.
 
-> That's highly dependent on the hardware used for software RAID5.
+The idea of ordering the blocks ACEBDF is vary close to the right
+solution.  When drives are idle is there no point in not having them read
+ahead?
+If the heads are in the same place, having just finished a write, they are
+both just as close.  Lets use this to our advantage, after selecting what
+drive we will use.  Use that drives read-ahead plus the start of the read
+and use an idle disks and read that the length of it's read-ahead value. 
+This means the md device will have "N * read-ahead" read-ahead or the sum
+of all read-ahead, this should be then documented.
 
-Dual Xeon 2.6 GHz, 2G RAM, Intel e7501 chipset, 3x 3ware 7506
-sitting in 64bit/66MHz slots, 20x WD 120G.  RedHat 2.4.21 kernel.
+In the case of multi-io using idle disks, thought they may not be as
+close, will be better than talking a disk that is working and asking it to
+move the the end of the drive only to have it move back less than 1/4 of
+the disk.  Here is how...
 
-Peter
+20 <-- write.
+80 <-- read(1)
+96 <-- read(1) NOT 2 or 3 as they are still on 20
+81 <-- read(1)
+97 <-- read(1)
+73 <-- read(1)
 
---=20
-    .+'''+.         .+'''+.         .+'''+.         .+'''+.         .+'=
-'
- Kelemen P=E9ter     /       \       /       \     Peter.Kelemen@cern.c=
-h
-=2E+'         `+...+'         `+...+'         `+...+'         `+...+'
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Taking non-sequential read requests and handing them ought round-robin
+might look better for the example above.  IMHO the only thing saving the
+current code is that it some what randomly round-robins the disks.  If you
+take that ought you will see that only one drive takes the brunt of more
+than %70 of the load.
+
+I don't think the oldest used disk is a good way to go this only works if
+we know that the read-ahead is full of unused data.  This would mean that
+the drive is idle and it can be counted in the search for the closest
+drive of a new read.  Keeping in mind any wright erases all of our book keeping.
+
+
+	
+		
+__________________________________
+Do you Yahoo!?
+Yahoo! Photos: High-quality 4x6 digital prints for 25¢
+http://photos.yahoo.com/ph/print_splash
