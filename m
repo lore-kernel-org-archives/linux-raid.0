@@ -1,46 +1,125 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: Re: Fixes for SLES 8.0 s/w RAID --- mkraid, yast2 or md related
-Date: Thu, 16 Sep 2004 18:15:33 +0200
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: Software RAID crash > /dev/md0: Invalid argument
+Date: Thu, 16 Sep 2004 12:40:00 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040916161533.GC21249@percy.comedia.it>
-References: <20040916132718.GS26852@marowsky-bree.de> <20040916151021.81563.qmail@web90005.mail.scd.yahoo.com>
+Message-ID: <200409161640.i8GGe5311941@watkins-home.com>
+References: <52074.10.0.0.151.1095334249.squirrel@10.0.0.151>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20040916151021.81563.qmail@web90005.mail.scd.yahoo.com>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <52074.10.0.0.151.1095334249.squirrel@10.0.0.151>
+To: 'Scott Bolander' <scott@bolanderhome.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Sep 16, 2004 at 08:10:21AM -0700, Nirmal B wrote:
->Just some background info now. I am building an HP MC/
->ServiceGuard cluster of two servers (ProLiant)
->connected to an enterprise virtual array (EVA 3000)
->which is used as shared storage. The cluster formation
->is fine but I am unable to activate the shared storage
->because of issues with software RAID implementation of
+Why are you using "/dev/hdg"?
+Your array was using "/dev/hdg1".
+Did you forget to partition the disk?
 
-sorry to interrupt but i have a few notes to add.
-you don't give detailed info on your setup, still,
-if you are using the md driver for the shared storage under HP
-ServiceGuard, you should reread chapter 5 of the fine manual.
+Partitioning the disk is not required, but things will be easier if you do.
 
->The partitions are of type 'fd' and the arrays are
-don't they should be type 0x83
->started at boot time. But the first entry of the SCSI
-don't, they should be started by ServiceGuard
->disk mentioned in the /etc/raidtab file (for eg. if
-you should use $SGCONF/raidtab.sg
+mdadm is a much better product.  And supported!
 
-for other issues, please follow Lars suggestion and open a support call.
+I had an array that I could not start with raidstart, that is when I made
+the switch to mdadm.
 
-L.
+Guy
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Scott Bolander
+Sent: Thursday, September 16, 2004 7:31 AM
+To: linux-raid@vger.kernel.org
+Cc: scott@bolanderhome.com
+Subject: Software RAID crash > /dev/md0: Invalid argument
+
+I have a Mandrake 10 server with a 40gb boot drive and a three 200gb disk
+software raid 5 array using reiserfs.  A disk went bad; so i have replaced
+it.
+
+Doing the normal things to get it back up don't work:
+
+[root@server root]#raidhotadd /dev/md0 /dev/hdg
+
+/dev/md0: can not hot-add disk: array not running!
+
+[root@server root]# raidstart -a
+
+/dev/md0: Invalid argument
+
+I think the superblock on the virtual disk is corrupt.  Can anyone help?
+This is a production server and the backup was a removable drive that
+failed last week.
+
+Thanks
 
 
--- 
-Luca Berra -- bluca@comedia.it
-        Communication Media & Services S.r.l.
- /"\
- \ /     ASCII RIBBON CAMPAIGN
-  X        AGAINST HTML MAIL
- / \
+# cat /etc/fstab
+/dev/hde1 / reiserfs notail 1 1
+none /dev/pts devpts mode=0620 0 0
+# /dev/md0 /files reiserfs notail 1 2
+/dev/hda /mnt/cdrom auto
+umask=0,user,iocharset=iso8859-1,codepage=850,noauto,ro,exec 0 0
+none /mnt/floppy supermount
+dev=/dev/fd0,fs=ext2:vfat,--,umask=0,iocharset=iso8859-1,sync,codepage=850
+0 0
+none /proc proc defaults 0 0
+/dev/hde5 swap swap defaults 0 0
+
+# cat /etc/raidtab
+raiddev       /dev/md0
+raid-level    5
+chunk-size    128k
+persistent-superblock 1
+nr-raid-disks 3
+    device    /dev/hdg1
+    raid-disk 0
+    device    /dev/hdi1
+    raid-disk 1
+    device    /dev/hdk1
+    raid-disk 2
+
+dmesg:
+md: invalid raid superblock magic on hdg1
+md: hdg1 has invalid sb, not importing!
+md: could not import hdg1!
+md: autostart unknown-block(0,8705) failed!
+
+cat /proc/modules
+raid5 20512 0 - Live 0xd0a5e000
+
+# cat /proc/mdstat
+Personalities : [raid5]
+md0 : inactive hdi1[1] hdk1[2]
+      390716672 blocks
+unused devices: <none>
+
+
+# mdadm --examine /dev/md0
+mdadm: /dev/md0 is too small for md
+
+
+# raidhotremove /dev/md0 /dev/hdg1
+/dev/md0: can not hot-remove disk: array not running!
+
+
+# uname -a
+2.6.3-7mdk
+
+
+Scott Bolander
+Computer Services of Cincinnati
+http://www.cincysystems.com
+scott@cincysystems.com
+513-266-6656
+"I said, 'government is powerless to protect you,' not powerless to punish
+you." --Chief Wiggum, The Simpsons
+
+
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
