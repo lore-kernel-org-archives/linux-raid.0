@@ -1,48 +1,57 @@
-From: Lars Marowsky-Bree <lmb@suse.de>
-Subject: Re: SuSE Linux cluster using MC/ServiceGuard --- shared storage
-Date: Mon, 20 Sep 2004 20:33:18 +0200
+From: Paul Clements <paul.clements@steeleye.com>
+Subject: Re: [ANNOUNCE][PATCH 2.6] md: persistent (file-backed) bitmap and
+ async writes
+Date: Mon, 20 Sep 2004 23:28:20 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040920183318.GP3592@marowsky-bree.de>
-References: <20040920132846.29970.qmail@web61108.mail.yahoo.com> <20040920135549.GA8201@percy.comedia.it>
+Message-ID: <414F9FD4.4070308@steeleye.com>
+References: <40198E85.29EBC8E0@SteelEye.com>	<16422.62911.755570.855200@notabene.cse.unsw.edu.au>	<4027E342.D02202F1@SteelEye.com>	<16424.8182.876520.280031@notabene.cse.unsw.edu.au>	<402D3A86.97CF894F@SteelEye.com>	<16456.2775.641721.204171@notabene.cse.unsw.edu.au>	<4048F9AA.1BBD67F@SteelEye.com>	<406B1024.7BF88C@SteelEye.com>	<16528.49083.998593.199805@cse.unsw.edu.au>	<40C6273B.2060200@steeleye.com>	<16590.38597.170409.499394@cse.unsw.edu.au>	<40D9FA9E.9010003@steeleye.com>	<40F7E50F.2040308@steeleye.com>	<16649.61212.310271.36561@cse.unsw.edu.au>	<4119400A.40307@steeleye.com> <16668.12228.187383.596856@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20040920135549.GA8201@percy.comedia.it>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <16668.12228.187383.596856@cse.unsw.edu.au>
+To: Neil Brown <neilb@cse.unsw.edu.au>
+Cc: jejb@steeleye.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2004-09-20T15:55:51,
-   Luca Berra <bluca@comedia.it> said:
+OK, here we go again. The patch has been updated to 2.6.9-rc2 and mdadm 
+1.7.0, and I've implemented the suggestions you've made below...
 
-> >Do I still need to use the Driver Patch for EVA
-> >Controller Failover?=20
-> i believe using the qlogic driver failover is a viable solutio,
+Patches: http://parisc-linux.org/~jejb/md_bitmap/
 
-The DM multipath in 2.6 should handle the EVA just fine.
+Thanks,
+Paul
 
-The qlogic internal failover is being depreciated and AFAIK isn't
-included in 2.6 mainline even...
+----
 
-> another is purchasing securepath from HP. but i believe there were
-> issues using securepath and lvm together.
+Neil Brown wrote:
 
-Proprietary multipathing solutions are a thing of the past on Linux, on=
-e
-hopes.
+> This is definitely heading in the right direction.  However I think
+> you have missed some of the subtleties of plugging.
 
+[snip]
 
-Sincerely,
-    Lars Marowsky-Br=E9e <lmb@suse.de>
+> That should then have the bitmap updates happening before the
+> data updates, and should cluster bitmap updates better.
 
---=20
-High Availability & Clustering
-SUSE Labs, Research and Development
-SUSE LINUX AG - A Novell company
+OK, I've fixed that.
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> The next step would be to stop write_page from being synchronous - I'm
+> not comfortable about ->unplug-fn having to wait for disk io.
+
+Well, it still does have to wait for the bitmap writes to complete 
+before letting the regular writes go, but I see your point about the 
+writes being submitted simultaneously (nearly) rather than being 
+completely serialized.
+
+> This looks to be quite awkward as there is not call-back that happens
+> when writeback on a page is completed.  You need to have a kernel
+> thread to wait for the pages to complete.  I would get the
+> bitmap_daemon to do this.
+
+OK, this is what I've done...there didn't seem to be a better place to 
+do it.
+
+> Does that make sense?
+
+Certainly does, and seems to work...
