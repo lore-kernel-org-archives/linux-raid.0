@@ -1,96 +1,74 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: Looking for the cause of poor I/O performance - a
-	test script
-Date: Sun, 12 Dec 2004 08:56:34 +0000
-Message-ID: <41BC07C2.5020303@dgreaves.com>
-References: <200412082241.iB8Mfo915469@www.watkins-home.com>
-Reply-To: LVM general discussion and development <linux-lvm@redhat.com>
+From: christophe varoqui <christophe.varoqui@free.fr>
+Subject: [ANNOUNCE] multipath-tools-0.4.0
+Date: Sun, 12 Dec 2004 18:20:26 +0100
+Message-ID: <1102872026.9819.1.camel@zezette>
+References: <1096071849.4466.31.camel@zezette>
+	 <1097054573.4163b96d1262c@imp5-q.free.fr>
+	 <1097495416.416a73787e0ae@imp1-q.free.fr> <1098021787.5433.8.camel@zezette>
+	 <1098269169.417641f18a234@imp1-q.free.fr>
+	 <1098656088.9350.88.camel@zezette>
+	 <1098785191.417e21a7a7c28@imp1-q.free.fr>
+	 <1099328918.5525.10.camel@zezette> <1100214617.10251.92.camel@zezette>
+	 <1101394541.5820.71.camel@zezette>  <1102261392.29843.2.camel@zezette>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-lvm-bounces@redhat.com>
-In-Reply-To: <200412082241.iB8Mfo915469@www.watkins-home.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/linux-lvm>,
-	<mailto:linux-lvm-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/linux-lvm>
-List-Post: <mailto:linux-lvm@redhat.com>
-List-Help: <mailto:linux-lvm-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/linux-lvm>,
-	<mailto:linux-lvm-request@redhat.com?subject=subscribe>
-Sender: linux-lvm-bounces@redhat.com
-Errors-To: linux-lvm-bounces@redhat.com
-To: Guy <bugzilla@watkins-home.com>
-Cc: linux-raid@vger.kernel.org, 'Steven Ihde' <x-linux-raid@hamachi.dyndns.org>, linux-lvm@redhat.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <1102261392.29843.2.camel@zezette>
+Sender: linux-scsi-owner@vger.kernel.org
+To: device-mapper development <dm-devel@redhat.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-hotplug-devel@lists.sourceforge.net" <linux-hotplug-devel@lists.sourceforge.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-raid.ids
 
-I hacked up a quick script to test permutations of readahead - it's not 
-exactly bonnie+++ but it may be useful.
-I wish I'd bothered with mdadm stripe sizes too - but the array is 
-pretty full now and I'll live with what it delivers.
 
-Essentially I found the best performance on *my* system with all low 
-level devices and the md device set to a 0 readahead and the lvm device 
-set to 4096.
-I'm only interested in video streaming big (1+Gb) files. Your needs (and 
-hence test) may differ.
+Hello,
 
-my system is 2.6.10-rc2, xfs, lvm2, raid5, sata disks.
+here goes multipath-tools-0.4.0
 
-cc'ed the lvm group since this often seems to come up in conjunction 
-with you guys :)
+This is bugfix release.
+An important checker file descriptor leak fix, and checker context
+allocation size fix. 
+Don't print unchanged maps anymore and display adaptative human friendly
+map size units.
 
-For your entertainment...
 
-#!/bin/bash
-RAW_DEVS="/dev/sda /dev/sdb /dev/sdc /dev/sdd /dev/sde /dev/sdf /dev/hdb"
-MD_DEVS=/dev/md0
-LV_DEVS=/dev/huge_vg/huge_lv
+Full ChangeLog for the release :
 
-LV_RAS="0 128 256 1024 4096 8192"
-MD_RAS="0 128 256 1024 4096 8192"
-RAW_RAS="0 128 256 1024 4096 8192"
+        * [checkers] forgot to return back to caller the newly
+          allocated context. Lead to fd leak notably.
+        * [checkers] heavy check logic fix
+        * [checkers] really malloc the checker context size,
+          not the pointer size (stupidy may kill)
+        * [multipathd] check more sysfs calls return values
+        * [multipathd] search for sysfs mount point only once,
+          not on each updatepaths() iteration
+        * [multipathd] plug (char *) leak in the daemon
+        * [multipath] change pgcmp logic : we want to reload a
+          map only if a path is in computed map but not in cur
+          map (ie accept to load a map if it brings more paths)
+        * [multipath] undust coalesce_paths()
+        * [multipath] don't print unchanged multipath
+        * [multipath] store the action to take in the multipath
+          struct
+        * [multipath] print mp size with kB, MB, GB or TB units
+        * [multipath] compilation fix for merge_words() (Andy)
+        * [multipath] don't feed the kernel DM maps with paths of
+          different sizes : DM fails and we end up with an empty
+          map ... not fun
+        * [multipath] cover a new corner case : path listed in
+          status string but disappeared from sysfs
+        * [multipath] remove the "-D" command line flag : now
+          we can pass major:minor directly as last argument, like
+          device names or device map names. Update multipathd
+          accordingly.
+        * [multipath] try reinstate again paths after a switchpg
+        * [multipath] reinstate condition change :
 
-function show_ra()
-{
-for i in $RAW_DEVS $MD_DEVS $LV_DEVS
- do echo -n "$i `blockdev --getra $i`  ::  "
-done
-echo
-}
+As usual, doc and download at :
+http://christophe.varoqui.free.fr/
 
-function set_ra()
-{
-  RA=$1
-  shift
-  for dev in $@
-  do
-    blockdev --setra $RA $dev
-  done
-}
+regards,
+-- 
+christophe varoqui <christophe.varoqui@free.fr>
 
-function show_performance()
-{
-  COUNT=4000000
-  dd if=/dev/huge_vg/huge_lv of=/dev/null count=$COUNT 2>&1 | grep seconds
-}
 
-for RAW_RA in $RAW_RAS
-  do
-  set_ra $RAW_RA $RAW_DEVS
-  for MD_RA in $MD_RAS
-    do
-    set_ra $MD_RA $MD_DEVS
-    for LV_RA in $LV_RAS
-      do
-      set_ra $LV_RA $LV_DEVS
-      show_ra
-      show_performance
-      done
-    done
-  done
-
-_______________________________________________
-linux-lvm mailing list
-linux-lvm@redhat.com
-https://www.redhat.com/mailman/listinfo/linux-lvm
-read the LVM HOW-TO at http://tldp.org/HOWTO/LVM-HOWTO/
