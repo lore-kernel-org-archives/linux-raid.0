@@ -1,47 +1,51 @@
-From: "Matthew Simpson" <matthew@symatec-computer.com>
-Subject: how to turn down cpu usage of raid ?
-Date: Mon, 2 Feb 2004 17:18:19 -0600
+From: Louis Erickson <wwonko@rdwarf.com>
+Subject: Bringing broken raid 5 back on-line.
+Date: Mon, 2 Feb 2004 15:44:57 -0800 (PST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <021c01c3e9e2$d80b3640$0100a8c0@KARI>
+Message-ID: <Pine.LNX.4.33.0402021518100.15302-100000@holly.rdwarf.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Help!  I am having complaints from users about CPU spikes when writing to my
-RAID 1 array.  Is there a way I can tune software RAID so that writing
-updates doesn't interfere with other applications?  [can I nice the raid1d
-process?]
 
-Specifically I experience giant slowdowns in a hosted application whenever
-someone unpacks a tar file or the like.  Load averages are 1.10 - 2.00
-during writes, but 0.00 to 0.05 otherwise.
+Hello, all.
 
-root@ns2:~# cat /proc/mdstat
-Personalities : [linear] [raid0] [raid1] [raid5]
-read_ahead 1024 sectors
-md0 : active raid1 hdc1[1] hda1[0]
-      78979200 blocks [2/2] [UU]
+This is probably a very common question, but I didn't see a clear answer
+while looking at the list archives, so I'm going to ask for your
+assistance.
 
-unused devices: <none>
+We've got a raid 5 with three drives.  I'll spare you the comedy of errors
+and/or sob story that you've all probably heard before, but the upshot is
+that we have two failed drives and no current backup.
 
-root@ns2:~# cat /etc/raidtab
-raiddev /dev/md0
-        raid-level      1
-        nr-raid-disks   2
-        nr-spare-disks  0
-        chunk-size      4
-        persistent-superblock   1
-        device  /dev/hda1
-        raid-disk       0
-        device  /dev/hdc1
-        raid-disk       1
+When the second drive failed, the raid went offline right away.  The
+second failure was apparently due to a write fail on the disk.  I presume
+that the data on the second failed drive and the main drive is mostly in
+synch, except for the last change made.  My conclusion is that other than
+the file being written, the rest of the data should be okay.  Please tell
+me if I'm wrong there.
 
-This is a pentium IV 2.5GHz system with 1GB of RAM.
-    IDE interface: PCI device 8086:24cb (Intel Corp.) (rev 1). -- 82820
-Camino 2 chipset
+We got identical drives to the one good drive and the second failure, and
+have used dd to copy the data on to those volumes, so we can attempt to
+recover and not hurt our only copies of this data.  I've seen another
+message on this list which suggests this should work.  Copies were made
+with no errors.
 
+At the moment, my system is a little old and does not have mdadm on it.
+Is it worth getting and installing this, or am I best to stick with the
+original raidtools?
+
+The question of the hour is: How do I get the two drives to come back
+on-line in degraded mode?  They have different event counters and will not
+come up.
+
+Any advice or direction you can provide will be very much appreciated.
+
+-- 
+Louis Erickson - wwonko@rdwarf.com - http://www.rdwarf.com/~wwonko/
+
+No matter what other nations may say about the United States,
+immigration is still the sincerest form of flattery.
 
