@@ -1,8 +1,8 @@
 From: =?ISO-8859-1?Q?Lo=EFc?= Paillotin <loic.paillotin@qualimucho.com>
-Subject: inserting a new disk in a raid 1
-Date: 14 Jun 2002 10:49:00 +0200
+Subject: i just read in the archive.........
+Date: 14 Jun 2002 10:53:43 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1024044540.2246.12.camel@Asterix>
+Message-ID: <1024044823.2250.15.camel@Asterix>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-15
 Content-Transfer-Encoding: QUOTED-PRINTABLE
@@ -10,16 +10,8 @@ Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello there.
-
-I recently set  up a linux system. I had only one hard drive by that
-time, so I tought that I would configure it for software raid and see
-later when I had my second drive.=20
-I now have my second drive, and I don't have a clue on how to include i=
-t
-in my raid array. I tried to follow the tutorials ( that is, the raid
-HOWTO, but I'm probalby missing someting......=20
-thank you in advance,=20
+I justy read in the archive that software raid would'nt work with ext3
+file system. Is that true ? ( i mean is that still true? )=20
 
 --=20
 Lo=EFc Paillotin
