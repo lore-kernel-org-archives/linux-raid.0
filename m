@@ -1,64 +1,122 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: Re: SuSE Linux cluster using MC/ServiceGuard --- shared storage
-Date: Mon, 20 Sep 2004 15:55:51 +0200
+From: Martin Josefsson <gandalf@wlug.westbo.se>
+Subject: Problem with raid1 read error patch
+Date: Mon, 20 Sep 2004 17:16:19 +0200 (CEST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040920135549.GA8201@percy.comedia.it>
-References: <20040920132846.29970.qmail@web61108.mail.yahoo.com>
+Message-ID: <Pine.LNX.4.58.0409201700460.12286@tux.rsn.bth.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20040920132846.29970.qmail@web61108.mail.yahoo.com>
-To: linux-raid@vger.kernel.org
+To: neilb@cse.unsw.edu.au
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Sep 20, 2004 at 06:28:46AM -0700, Biju A wrote:
->Hi,
->
->In a Linux cluster setup, I have some issues.
->
->I am trying to use 'md' driver in Linux for multipath
->to shared storage with Enterprise Virtual Array 3000
->(EVA 3000)
+Hi Neil
 
-i believe someone from HP already stated in this list that md driver
-(multipath) does not work with EVA, i guess do to issues with
-preferred path.
+I'm having some trouble with your patch that "fixes" raid1 read error
+handling that went into Linus tree. Backing it out fixes it again.
+The latest kernel I've tried is 2.6.9-rc2-bk6
 
->Do I still need to use the Driver Patch for EVA
->Controller Failover? 
-i believe using the qlogic driver failover is a viable solutio, another
-is purchasing securepath from HP. but i believe there were issues using
-securepath and lvm together.
+ChangeSet 1.1926, 2004/06/24 09:36:53-07:00, akpm@osdl.org
 
->The MC/SG spec says that 'md' driver should not be
->active at the same time on both the cluster nodes. So,
->I am not using the 'fd' type of partition which starts
->the arrays at boot time. I just use the default 83
->type.
->
->Is there any specific need to update to 2.6 kernel in
->order to support LVM 2?
+        [PATCH] md: Fix up handling for read error in raid1.
 
-i don't know if that is supported by either hp or suse.
+        From: NeilBrown <neilb@cse.unsw.edu.au>
 
->The kernel version of the O/S in the cluster nodes is
->2.4.19 which contains lvm 1.0.5-51. It does not
->support 'pvremove' and probably the tool 'mkraid' does
->have some bugs. No idea if there are fixes for the
->same. Is it better to use 'mdadm'? 
+        There is severe bit-rot in this code, which is to say that it doesn't work
+        at all: an io error during read will do bad things.  It should work better
+        with this patch.
 
-i do personallu prefer mdadm to mkraid.
+diff -Nru a/drivers/md/raid1.c b/drivers/md/raid1.c
+--- a/drivers/md/raid1.c	2004-06-24 10:35:44 -07:00
++++ b/drivers/md/raid1.c	2004-06-24 10:35:44 -07:00
+@@ -206,7 +206,7 @@
+ 			*rdevp = rdev;
+ 			atomic_inc(&rdev->nr_pending);
+ 			spin_unlock_irq(&conf->device_lock);
+-			return 0;
++			return i;
+ 		}
+ 	}
+ 	spin_unlock_irq(&conf->device_lock);
+@@ -919,18 +919,22 @@
 
->Any hints/suggestions would be appreciated.
-also try asking in the hp itrc forums.
+ 		mddev = r1_bio->mddev;
+ 		conf = mddev_to_conf(mddev);
+-		bio = r1_bio->master_bio;
+ 		if (test_bit(R1BIO_IsSync, &r1_bio->state)) {
+ 			sync_request_write(mddev, r1_bio);
+ 			unplug = 1;
+ 		} else {
+-			if (map(mddev, &rdev) == -1) {
++			int disk;
++			bio = r1_bio->bios[r1_bio->read_disk];
++			if ((disk=map(mddev, &rdev)) == -1) {
+ 				printk(KERN_ALERT "raid1: %s: unrecoverable I/O"
+ 				       " read error for block %llu\n",
+ 				       bdevname(bio->bi_bdev,b),
+ 				       (unsigned long long)r1_bio->sector);
+ 				raid_end_bio_io(r1_bio);
+ 			} else {
++				r1_bio->bios[r1_bio->read_disk] = NULL;
++				r1_bio->read_disk = disk;
++				r1_bio->bios[r1_bio->read_disk] = bio;
+ 				printk(KERN_ERR "raid1: %s: redirecting sector %llu to"
+ 				       " another mirror\n",
+ 				       bdevname(rdev->bdev,b),
 
-L.
+After this patch I get infinite loops in sector rescheduling when one disk
+fails (I physically remove it). I have two disks (sda, sdb) with 4
+partitions each. They make up 4 raid1 arrays. I'm removing sda from the
+scsi-chain.
 
--- 
-Luca Berra -- bluca@comedia.it
-        Communication Media & Services S.r.l.
- /"\
- \ /     ASCII RIBBON CAMPAIGN
-  X        AGAINST HTML MAIL
- / \
+Example:
+
+Sep 17 16:23:45 faioffer kernel: SCSI error : <0 0 1 0> return code = 0x10000
+Sep 17 16:23:45 faioffer kernel: end_request: I/O error, dev sda, sector 4208897
+Sep 17 16:23:45 faioffer kernel: md: write_disk_sb failed for device sda1
+Sep 17 16:23:45 faioffer kernel: md: errors occurred during superblock update, repeating
+Sep 17 16:23:46 faioffer kernel: SCSI error : <0 0 1 0> return code = 0x10000
+Sep 17 16:23:46 faioffer kernel: end_request: I/O error, dev sda, sector 4208897
+Sep 17 16:23:46 faioffer kernel: md: write_disk_sb failed for device sda1
+Sep 17 16:23:46 faioffer kernel: md: errors occurred during superblock update, repeating
+Sep 17 16:23:46 faioffer kernel: SCSI error : <0 0 1 0> return code = 0x10000
+Sep 17 16:23:46 faioffer kernel: end_request: I/O error, dev sda, sector 4208897
+Sep 17 16:23:46 faioffer kernel: md: write_disk_sb failed for device sda1
+Sep 17 16:23:46 faioffer kernel: md: errors occurred during superblock update, repeating
+Sep 17 16:23:46 faioffer kernel: SCSI error : <0 0 1 0> return code = 0x10000
+Sep 17 16:23:46 faioffer kernel: end_request: I/O error, dev sda, sector 2887473
+Sep 17 16:23:46 faioffer kernel: raid1: Disk failure on sda1, disabling device.
+Sep 17 16:23:46 faioffer kernel: ^IOperation continuing on 1 devices
+Sep 17 16:23:46 faioffer kernel: raid1: sda1: rescheduling sector 2887472
+Sep 17 16:23:46 faioffer kernel: raid1: sdb1: redirecting sector 2887472 to another mirror
+Sep 17 16:23:46 faioffer kernel: raid1: sdb1: rescheduling sector 2887472
+Sep 17 16:23:46 faioffer kernel: SCSI error : <0 0 1 0> return code = 0x10000
+Sep 17 16:23:46 faioffer kernel: end_request: I/O error, dev sda, sector 33
+Sep 17 16:23:46 faioffer kernel: RAID1 conf printout:
+Sep 17 16:23:46 faioffer kernel:  --- wd:1 rd:2
+Sep 17 16:23:46 faioffer kernel:  disk 0, wo:1, o:0, dev:sda1
+Sep 17 16:23:46 faioffer kernel:  disk 1, wo:0, o:1, dev:sdb1
+Sep 17 16:23:46 faioffer kernel: RAID1 conf printout:
+Sep 17 16:23:46 faioffer kernel:  --- wd:1 rd:2
+Sep 17 16:23:46 faioffer kernel:  disk 1, wo:0, o:1, dev:sdb1
+Sep 17 16:23:46 faioffer kernel: raid1: sdb1: redirecting sector 2887472 to another mirror
+Sep 17 16:23:47 faioffer kernel: raid1: sdb1: rescheduling sector 2887472
+Sep 17 16:23:47 faioffer kernel: raid1: sdb1: redirecting sector 2887472 to another mirror
+Sep 17 16:23:47 faioffer kernel: raid1: sdb1: rescheduling sector 2887472
+Sep 17 16:23:47 faioffer kernel: raid1: sdb1: redirecting sector 2887472 to another mirror
+Sep 17 16:23:47 faioffer kernel: raid1: sdb1: rescheduling sector 2887472
+Sep 17 16:23:47 faioffer kernel: raid1: sdb1: redirecting sector 2887472 to another mirror
+Sep 17 16:23:47 faioffer kernel: raid1: sdb1: rescheduling sector 2887472
+Sep 17 16:23:47 faioffer kernel: raid1: sdb1: redirecting sector 2887472 to another mirror
+Sep 17 16:23:47 faioffer kernel: raid1: sdb1: rescheduling sector 2887472
+
+It continues like that forever.
+
+After backing that patch out, with some minor modifications because the
+code has changed a little bit, I get a number of scsi-errors and after a
+while the drive gets disabled like above but life continues like before
+the patch went in. That is, no infinite loop and everything works :)
+
+Any ideas to what went wrong?
+
+/Martin
