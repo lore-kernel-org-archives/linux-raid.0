@@ -1,68 +1,54 @@
-From: "bmoon" <bo@anthologysolutions.com>
-Subject: Really need RESYNC at the time of RAID1&5 creation?
-Date: Mon, 30 Jun 2003 14:34:51 -0700
+From: Lars Marowsky-Bree <lmb@suse.de>
+Subject: Re: Really need RESYNC at the time of RAID1&5 creation?
+Date: Tue, 1 Jul 2003 00:03:08 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <00b901c33f4f$715be540$6401a8c0@bmoon>
+Message-ID: <20030630220308.GQ12240@marowsky-bree.de>
+References: <00b901c33f4f$715be540$6401a8c0@bmoon>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Neil Brown <neilb@cse.unsw.edu.au>
+Content-Disposition: inline
+In-Reply-To: <00b901c33f4f$715be540$6401a8c0@bmoon>
+To: bmoon <bo@anthologysolutions.com>, Neil Brown <neilb@cse.unsw.edu.au>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Neil & Raiders,
+On 2003-06-30T14:34:51,
+   bmoon <bo@anthologysolutions.com> said:
 
-I am not quite sure if we really need to resync the array at the time of
-RAID 1 or RAID 5 array creation. I tried and tested without RESYNC by
-modifying "case1" and "case2" from MDADM source below, I could not notice
-any problems or issues.
+> Hi Neil & Raiders,
+>=20
+> I am not quite sure if we really need to resync the array at the time=
+ of
+> RAID 1 or RAID 5 array creation. I tried and tested without RESYNC by
+> modifying "case1" and "case2" from MDADM source below, I could not no=
+tice
+> any problems or issues.
 
-At the time of RAID creation and mke2fs, there is no valid data on the
-array. It must be a file system's job to know about it.
+It's necessary to ensure consistency of the RAID, so that later, you ca=
+n
+detect whether the RAID has scrambled some of your disk.
 
-So I want to know what is the reason for these codes(, and
-what you experieced from without RESYNC.
+Otherwise, you'd never know whether it wouldn't still be an artifact
+leftover from the creation of the array.
 
-Thanks,
+Another option would be a bitmap of used chunks so you could tell one
+from the other, but that wouldn't make as much sense on a heavily used
+array. So just initialize it once.
 
-Bo
 
+Sincerely,
+    Lars Marowsky-Br=E9e <lmb@suse.de>
 
-
-------------------------------------------------------------------
-The following code is from Create.c in mdadm tool.
-
-/* If this is raid5, we want to configure the last active slot
-* as missing, so that a reconstruct happens (faster than re-parity)
-*/
-
-if (force == 0 && level == 5 && first_missing >= raiddisks) {
-insert_point = raiddisks-1;
-sparedisks++;
-array.active_disks--;
-missing_disks++;                                    <----------------case1
-}
-
-/* Ok, lets try some ioctls */
-
-array.level = level;
-array.size = size;
-array.raid_disks = raiddisks;
-
-/* The kernel should *know* what md_minor we are dealing
-* with, but it chooses to trust me instead. Sigh
-*/
-
-array.md_minor = 0;
-
-if (fstat(mdfd, &stb)==0)
-array.md_minor = MINOR(stb.st_rdev);
-array.not_persistent = 0;
-
-if (level == 5 && (insert_point < raiddisks || first_missing < raiddisks))
-array.state = 1; /* clean, but one drive will be missing */
-else
-array.state = 0; /* not clean, but no errors */    <------------------case2
-
+--=20
+SuSE Labs - Research & Development, SuSE Linux AG
+ =20
+"If anything can go wrong, it will." "Chance favors the prepared (mind)=
+=2E"
+  -- Capt. Edward A. Murphy            -- Louis Pasteur
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
