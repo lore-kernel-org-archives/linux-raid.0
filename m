@@ -1,60 +1,39 @@
-From: David Nedved <david_nedved@yahoo.com>
-Subject: raid1 devices not autostarting
-Date: Tue, 30 Mar 2004 22:25:07 -0800 (PST)
+From: Ninti Systems <office@ninti.com.au>
+Subject: Add device doesn't stick
+Date: 31 Mar 2004 17:56:45 +0930
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040331062507.76253.qmail@web40704.mail.yahoo.com>
+Message-ID: <1080721605.10119.57.camel@localhost>
+Reply-To: office@ninti.com.au
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+To: RAID Linux <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi All,
+Back again ... :-)
 
-I'm trying to move my system off a failing disk onto a raid1 device. 
-I've got the device built, but when passing root=/dev/md0 to the kernel
-it can't find it.  When I boot my raid devices are NOT autostarting, so
-I believe that to be my problem.  I'm running RH9 fully updated with
-their latest kernel (2.4.20-30.9SMP), all the partitions are type fd,
-and I *think* I have the persistant superblock option on.  I even
-recreated md1 to make sure, but still when I boot I have to start the
-raids manually.  raidstart --all DOES work.
+So far so good with building RAID1 arrays using the 'missing' device
+method on an already installed Slackware 9.1 system.
 
-When init is going through rc.sysinit, it says md0(skipped),
-md1(skipped), but they should have been started by the kernel before
-that point anyway, shouldn't they?
+I've set up the RAID devices, they are autodetected on boot, everything
+looks good. 
 
-Any ideas?  I'm including my raidtab below.
+I hotadd the 'missing' device and the two devices sync.
 
-Thanks in advance.  I'm not on the list, so if you can help me please
-copy me back directly.  Thanks a ton in advance!
+I run 'mdadm --detail /dev/md5' and yep, the full array is now running
+with both disks. I can 'ls' the contents etc.
 
-David
+I reboot and ... back to degraded mode with one failed device. The
+hotadded device doesn't stick to the RAID device.
 
-raiddev /dev/md0
-        raid-level              1
-        nr-raid-disks           2
-        persistent-superblock   1
-        chunk-size              8
-        device                  /dev/sda1
-        raid-disk               0
-        device                  /dev/sdb1
-        raid-disk               1
-raiddev /dev/md1
-        raid-level              1
-        nr-raid-disks           2
-        persistent-superblock   1
-        chunk-size              8
-        device                  /dev/sda2
-        raid-disk               0
-        device                  /dev/sdb2
-        raid-disk               1
+I'm sure there is a simple explanation. One system complaint is that the
+expected superblock info couldn't be found (something like "expecting
+a2hgf64jdk found 00000000").
+
+I'm not sure how to rectify this?
+
+Thanks
+Mick
 
 
-=====
-david_nedved@yahoo.com
-
-__________________________________
-Do you Yahoo!?
-Yahoo! Finance Tax Center - File online. File on time.
-http://taxes.yahoo.com/filing.html
