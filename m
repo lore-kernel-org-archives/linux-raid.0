@@ -1,52 +1,28 @@
-From: Torsten Landschoff <torsten@debian.org>
-Subject: Re: OOPS with raid1
-Date: Sun, 11 May 2003 13:45:05 +0200
+From: "jeff millar" <wa1hco@adelphia.net>
+Subject: Fw: fsck on raidvolumes at boot
+Date: Sun, 11 May 2003 09:18:55 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20030511114505.GA8087@stargate.galaxy>
-References: <20030508152237.GB26189@stargate.galaxy>
+Message-ID: <019e01c317bf$e07237c0$6a01a8c0@wa1hco>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="liOOAslEiF7prFVr"
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20030508152237.GB26189@stargate.galaxy>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
---liOOAslEiF7prFVr
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-Hi,=20
-
-On Thu, May 08, 2003 at 05:22:37PM +0200, Torsten Landschoff wrote:
-> pulsar:~# uname -a
-> Linux pulsar 2.4.20-686-smp #1 SMP Mon Jan 13 23:06:41 EST 2003 i686
->=20
-> (that's the kernel as shipped in Debian unstable's
-> kernel-image-2.4.20-686-smp)
-
-Additional info: I tried to reproduce this problem in user-mode-linux
-for easier debugging. Funny enough I did not get it to break there. Both
-systems I used to test this where running an SMP kernel so I'll try to=20
-reproduce this without SMP on a real system now.
-
-Greetings
-
-	Torsten
-
---liOOAslEiF7prFVr
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.1 (GNU/Linux)
-
-iD8DBQE+vjfBdQgHtVUb5EcRAjvIAJ4kSLwxdejU5rlENziKpI5c3e+1kQCfZqfe
-OOCi3r+K+I4oZJ3O4DzvLQY=
-=+lxg
------END PGP SIGNATURE-----
-
---liOOAslEiF7prFVr--
+> ----- Original Message -----
+> From: "Neil Brown" <neilb@cse.unsw.edu.au>
+> To: "Mikael Johansson" <mpjohans@pcu.helsinki.fi>
+> Cc: <linux-raid@vger.kernel.org>
+> Sent: Sunday, May 11, 2003 2:39 AM
+> Subject: Re: fsck on raidvolumes at boot
+> 
+> 
+> > What number do you have in column 6 of /etc/fstab for these
+> > filesystems?
+> > If 0, make it non-zero.
+> 
+> Ok...what if the raid volumes get automounted? I didn't see any place for
+> the check?
+> 
