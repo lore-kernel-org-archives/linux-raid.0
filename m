@@ -1,73 +1,144 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: No swap can be dangerous (was Re: swap on RAID (was Re: swp - Re: ext3 journal on software raid))
-Date: Mon, 28 Feb 2005 15:07:15 -0500
-Message-ID: <200502282007.j1SK7L505841@www.watkins-home.com>
-References: <200501070928.13307.andrew@walrond.org>
+From: Heinz Mauelshagen <mauelshagen@redhat.com>
+Subject: *** Announcement: dmraid 1.0.0.rc6 ***
+Date: Tue, 1 Mar 2005 20:11:27 +0100
+Message-ID: <20050301191127.GA13490@redhat.com>
+Reply-To: mauelshagen@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-In-Reply-To: <200501070928.13307.andrew@walrond.org>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Andrew Walrond' <andrew@walrond.org>, linux-kernel@vger.kernel.org
-Cc: 'Mike Hardy' <mhardy@h3c.com>, 'Jesper Juhl' <juhl-lkml@dif.dk>, linux-raid@vger.kernel.org, alan@lxorguk.ukuu.org.uk
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I was just kidding about the RAM disk!
 
-I think swapping to a RAM disk can't work.
-Let's assume a page is swapped out.  Now the first page of swap space is
-used, and memory is now allocated for it.  Now assume the process frees the
-memory, the page in swap can now be freed, but the RAM disk still has the
-memory allocated, just not used.  Now if the Kernel were to swap the first
-page of that RAM disk, it may be swapped to the first page of swap, which
-would change the data in the RAM disk which is being swapped out.  So, I
-guess it can't be swapped, or must be re-swapped, or new memory is
-allocated.  In any event, that 1 block will never be un-swapped, since it
-will never be needed.  Each time the Kernel attempts to swap some of the RAM
-disk the RAM disk's memory usage will increase.  This will continue until
-all of the RAM disk is used and there is no available swap space left.  Swap
-will be full of swap.  :)
+               *** Announcement: dmraid 1.0.0.rc6 ***
 
-I hope that is clear!  It makes my head hurt!
+dmraid 1.0.0.rc6 is available at
+http://people.redhat.com:/heinzm/sw/dmraid/ in source tarball,
+source rpm and i386 rpms (shared, static and dietlibc).
 
-I don't know about lomem or DMAable memory.  But if special memory does
-exists....
-It seems like if the Kernel can move memory to disk, it would be easier to
-move memory to memory.  So, if special memory is needed, the Kernel should
-be able to relocate as needed.  Maybe no code exists to do that, but I think
-it would be easier to do than to swap to disk (assuming you have enough free
-memory).
+This release introduces support for VIA Software RAID.
 
-Guy
+dmraid (Device-Mapper Raid tool) discovers, [de]activates and displays
+properties of software RAID sets (i.e. ATARAID) and contained DOS
+partitions using the device-mapper runtime of the 2.6 kernel.
 
------Original Message-----
-From: Andrew Walrond [mailto:andrew@walrond.org] 
-Sent: Friday, January 07, 2005 4:28 AM
-To: linux-kernel@vger.kernel.org
-Cc: Guy; 'Mike Hardy'; 'Jesper Juhl'; linux-raid@vger.kernel.org;
-alan@lxorguk.ukuu.org.uk
-Subject: Re: No swap can be dangerous (was Re: swap on RAID (was Re: swp -
-Re: ext3 journal on software raid))
+The following ATARAID types are supported on Linux 2.6:
 
-On Thursday 06 January 2005 23:15, Guy wrote:
-> If I MUST/SHOULD have swap space....
-> Maybe I will create a RAM disk and use it for swap!  :)  :)  :)
+Highpoint HPT37X
+Highpoint HPT45X
+Intel Software RAID
+LSI Logic MegaRAID
+NVidia NForce
+Promise FastTrack
+Silicon Image Medley
+VIA Software RAID	*** NEW ***
 
-Well, indeed, I had the same thought. As long as you could guarantee that
-the 
-ram was of the highmem/non-dmaable type...
+Please provide insight to support those metadata formats completely.
 
-But we're getting ahead of ourselves. I think we need an authoritive answer
-to 
-the original premise. Perhaps Alan (cc-ed) might spare us a moment?
+Thanks.
 
-Did I dream this up, or is it correct?
 
-"I think the gist was this: the kernel can sometimes needs to move bits of 
-memory in order to free up dma-able ram, or lowmem. If I recall correctly, 
-the kernel can only do this move via swap, even if there is stacks of free 
-(non-dmaable or highmem) memory."
+See files README and CHANGELOG, which come with the source tarball for
+prerequisites to run this software, further instructions on installing
+and using dmraid!
 
-Andrew
+CHANGELOG is contained below for your convenience as well.
 
+
+Call for testers:
+-----------------
+
+I need testers with the above ATARAID types, to check that the mapping
+created by this tool is correct (see options "-t -ay") and access to the
+ATARAID data is proper.
+
+In case you have a different ATARAID solution from those listed above,
+please feel free to contact me about supporting it in dmraid.
+
+You can activate your ATARAID sets without danger of overwriting
+your metadata, because dmraid accesses it read-only unless you use
+option -E together with -r in order to erase ATARAID metadata
+(see 'man dmraid')!
+
+This is a release candidate version so you want to have backups of your valuable
+data *and* you want to test accessing your data read-only first in order to
+make sure that the mapping is correct before you go for read-write access.
+
+
+Contacts:
+---------
+
+The author is reachable at <Mauelshagen@RedHat.com>.
+
+For test results, mapping information, discussions, questions, patches,
+enhancement requests and the like, please subscribe and mail to
+<ataraid-list@redhat.com>.
+
+--
+
+Regards,
+Heinz    -- The LVM Guy --
+
+
+CHANGELOG:
+---------
+
+Changelog from dmraid 1.0.0-rc5f to 1.0.0.rc6		2005.02.28
+
+FIXES:
+------
+o sil status()
+o _sil_read() used LOG_NOTICE rather than LOG_INFO in order to
+  avoid messages about valid metadata areas being displayed
+  during "dmraid -vay".
+o isw, sil filed metadata offset on "-r -D" in sectors rather than in bytes.
+o isw needed dev_sort() to sort RAID devices in sets correctly.
+o pdc metadata format handler name creation. Lead to
+  wrong RAID set grouping logic in some configurations. 
+o dos.c: partition table code fixes by Paul Moore
+o _free_dev_pointers(): fixed potential OOB error
+o hpt37x_check: deal with raid_disks = 1 in mirror sets
+o pdc_check: status & 0x80 doesn't always show a failed device;
+  removed that check for now. Status definitions needed.
+o sil addition of RAID sets to global list of sets
+o sil spare device memory leak
+o group_set(): removal of RAID set in case of error
+o hpt37x: handle total_secs > device size
+o allow -p with -f
+o enhanced error message by checking target type against list of
+  registered target types
+
+
+FEATURES:
+---------
+o VIA metadata format handler
+o added RAID10 to lsi metadata format handler
+o "dmraid -rD": file device size into {devicename}_{formatname}.size
+o "dmraid -tay": pretty print multi-line tables ala "dmsetup table"
+o "dmraid -l": display supported RAID levels + manual update
+
+
+MISCELANIOUS:
+------------
+
+o more inline comments
+o libdmraid_init() now returns lib context
+o check_set() enhanced to do RAID set stack unrolling and
+  to check correct number of devices in sets; saves code in
+  metadata format handlers
+o introduced read_raid_dev() to further reduce metadata format handler code
+o optimized parse_table()
+o updated dmraid manual
+o devmapper.c: check target type registered before trying to load table record
+o misc.c: avoid find_percent().
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+Heinz Mauelshagen                                 Red Hat GmbH
+Consulting Development Engineer                   Am Sonnenhang 11
+                                                  56242 Marienrachdorf
+                                                  Germany
+Mauelshagen@RedHat.com                            +49 2626 141200
+                                                       FAX 924446
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
