@@ -1,44 +1,67 @@
-From: Linus Torvalds <torvalds@transmeta.com>
-Subject: Re: PATCH - change to blkdev->queue calling triggers BUG in md.c
-Date: Mon, 2 Sep 2002 21:06:04 -0700 (PDT)
+From: Bruno Kropp <bruno.kropp@denken.it>
+Subject: nbd and raid devices problems
+Date: Tue, 3 Sep 2002 16:57:00 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0209022100250.1047-100000@home.transmeta.com>
-References: <Pine.LNX.4.44.0209022051540.1332-100000@home.transmeta.com>
+Message-ID: <200209031657.00991.bruno.kropp@denken.it>
+Reply-To: bruno.kropp@denken.it
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44.0209022051540.1332-100000@home.transmeta.com>
-To: Andries.Brouwer@cwi.nl
-Cc: aebr@win.tue.nl, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, neilb@cse.unsw.edu.au
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Good evening,
 
-On Mon, 2 Sep 2002, Linus Torvalds wrote:
-> 
-> However, that has nothing to do with whether it is in user space or kernel 
-> space. In many ways it is _easier_ to do on demand in kernel space: when 
-> somebody opens /dev/sda1 and it isn't partitioned yet, you know it needs 
-> to be. 
+I have problems using RAID5 (md) over nbd. 
 
-Note that this actually allows you to do your own user-space partitioning 
-if you want to - simply by making sure that you do your partitioning 
-_before_ somebody tries to open a partition on the device.
+my setup is:
 
-And if you look at how fs/block_dev.c looks right now, you'll notice that
-we already handle the "main device" vs "sub-partition" cases differently,
-so it should be fairly straightforward to eventually do the partitioning
-on demand.
+host 1 (front end):
+Kernel 2.4.18 
+nbd-client  (nbd 2.0 from nbd-2.0.tar.gz)
+RAID5 (md0) over 3 /dev/nd(x)  
+|	|	|
+|	|	|
+|	|	host 4 (node1):
+|	|	Kernel 2.4.18 
+|	|	nbd-server  (nbd 2.0 from nbd-2.0.tar.gz)
+|	|
+|	|
+|	|
+|	host 3 (node1):
+|	Kernel 2.4.18 
+|	nbd-server  (nbd 2.0 from nbd-2.0.tar.gz)
+|
+host 2 (node0):
+Kernel 2.4.18 
+nbd-server  (nbd 2.0 from nbd-2.0.tar.gz)
 
-We're not there yet, no.  But doing it in the open() path of
-fs/block_dev.c sure looks like it's the easiest way to maintain sanity wrt 
-partitioning, _and_ maintain 100% backwards compatibility.
 
-[ Well, the "100% backwards compatibility" is not strictly true. Doing
-  partition handling on demand will mean that things like /proc/partitions
-  will obviously also end up being populated on demand, which may break
-  various sysadmin tools. But at least then it's fairly well localized, 
-  and it's reasonably easy to grep for /proc/partitions in tools to see if 
-  they may care ]
+Everything seems to be ok, I can startup the nbd-client/server, I can build 
+the RAID5, I can create Filesystem on the md, I can mount, I can Write/Read 
+on it...
 
-		Linus
+But, when disconnecting a network link from nbd server (is not relevant if 
+host 2,3 or 4) all process on host 1 in I/O over md0 remain hang in D state 
+for 15 minutes...
+
+After this timeout, the host 1 declare the raidset degraded and all is ok 
+again...
+
+I have already tried to modify /proc/sys/net/ipv4/tcp_keepalive_xxxxx 
+(thinking the problem to be related to socket or TCP keepalive) but all 
+remain the same: 15 minutes in D state...
+
+The same problems on a single block device mounted as simple file system 
+(without RAID).
+
+Is there any workaround?
+
+Thanks in advance for your help
+
+Best Regards
+
+Bruno Kropp
 
