@@ -1,67 +1,53 @@
-From: Nick Lindsell <nick@nexnix.co.uk>
-Subject: Re: Am I dead?  NO!  (yaay!)
-Date: Mon, 02 Dec 2002 13:42:45 +0000
+From: "Martin Bene" <martin.bene@icomedias.com>
+Subject: AW: Am I dead?
+Date: Mon, 2 Dec 2002 14:53:44 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <5.1.1.6.0.20021202133235.069a5c98@core>
-References: <20021202125611.GD6155@unthought.net>
- <5.1.1.6.0.20021202124116.0699afe8@core>
- <5.1.1.6.0.20021202114409.06af4530@core>
- <5.1.1.6.0.20021202114409.06af4530@core>
- <5.1.1.6.0.20021202124116.0699afe8@core>
+Message-ID: <4D618F6493CE064A844A5D496733D667031549@freedom.icomedias.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; format=flowed
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5.1.1.6.0.20021202131942.0697d690@core>
-To: linux-raid@vger.kernel.org
+content-class: urn:content-classes:message
+To: Jakob Oestergaard <jakob@unthought.net>, Nick Lindsell <nick@nexnix.co.uk>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Thanks to Jakob I have my data back.  <phew>.
-Just for the record I made a raidtab with the following:-
+Hi Jakob / Nick
 
-raiddev /dev/md5
-	raid-level 5
-	nr-raid-disks 3
-	chunk-size 64k
-	persistent-superblock 1
-	nr-spare-disks 0
-	device /dev/sda2
-	raid-disk 0
-	device /dev/sdb2
-	raid-disk 1
-	device /dev/sdc2
-	raid-disk 2
+> > Am I dead or can I "freshen" sda2 so I can at least have 2 
+> > devices in my  array and therefore
+> > have a chance of either backing off the data or rebulding 
+> > with a new sdc ?
+> 
+> http://unthought.net/Software-RAID.HOWTO/Software-RAID.HOWTO.html
+> 
+> Section 6.1 "Recovery from Multiple Disk Failure"
 
-and ran "raidstart /dev/md5". Looking in the syslog
-showed that the raiddev was wrong - needed to be /dev/md2.
-So I corrected that and ran "mkraid --really-force /dev/md2"
-The array now corrected I was able to mount the root filesystem
-and copy the original raidtab to my repair disk and run mkraid
-on the other partitions. I now have my data.
+I think a pointer to neils mdadm should be included in the howto: Neils tool
+allows much easier recovery from this situation, as it'll just override the
+event counter and reuse all the other information. This means that you can't
+mess up because of incorrect raidtab etc.
 
-Finally, what could have caused this? I'm pretty confident about the
-hardware (I've not replaced anything yet) - could a power outage have
-broken my arrays?
+As Neil wrote recently: 
 
-many thanks
-nick.
+mdadm -A /dev/md0 --force /dev/sda1 /dev/sdb1 /dev/sdc2
 
+will only 'force' into the array enough drives to make it work.  For
+a 3 drive raid5 array, it ony needs to force in 2 drives, so it
+takes the two most recent drives and uses them.  They will have all
+the data on them, but no redundancy.
 
+I suggest that after assembling the array, you 'fsck' the filesystem
+on md0 just to make sure that the data is fine and then simply hot-add
+the third device:
+  mdadm /dev/md0 -a /dev/sdc
 
+If fsck reports lots of error..... maybe try force the assmbly from a
+different pair of drives. e.g.
+   mdadm -A --force /dev/sda1 /dev/sdc2
 
+and then do the fsck.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+When doing these fscks to see if recovery worked, make sure you only check
+but don't write/change anything to the disks. (e2fsck -n for example). 
 
