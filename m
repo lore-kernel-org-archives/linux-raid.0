@@ -1,80 +1,66 @@
-From: Mircea Ciocan <mirceac@interplus.ro>
-Subject: Re: Please help with a special RAID 1 setup
-Date: Wed, 07 Jan 2004 22:17:13 +0200
+From: mru@kth.se (=?iso-8859-1?q?M=E5ns_Rullg=E5rd?=)
+Subject: Re: RAID1 over RAID0 misbehavior
+Date: Wed, 07 Jan 2004 21:22:49 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3FFC6949.1060101@interplus.ro>
-References: <8075D5C3061B9441944E137377645118012F02@cinshrexc03.shermfin.com>
+Message-ID: <yw1xvfnntso6.fsf@ford.guide>
+References: <yw1xbrpgwq4f.fsf@ford.guide> <20040107200951.GB5143@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <8075D5C3061B9441944E137377645118012F02@cinshrexc03.shermfin.com>
-To: "Rechenberg, Andrew" <ARechenberg@shermanfinancialgroup.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Rechenberg, Andrew wrote:
+Jose Luis Domingo Lopez <linux-raid@24x7linux.com> writes:
 
-> 
+> On Wednesday, 07 January 2004, at 01:37:20 +0100,
+> M=E5ns Rullg=E5rd wrote:
 >
->  
->
->>-----Original Message-----
->>From: linux-raid-owner@vger.kernel.org 
->>[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Cress, Andrew R
->>Sent: Wednesday, January 07, 2004 9:48 AM
->>To: Catalin BOIE; Mircea Ciocan
->>Cc: linux-raid@vger.kernel.org
->>Subject: RE: Please help with a special RAID 1 setup
+>> I recently created a RAID1 mirror from two identical RAID0 arrays
+>> under Linux 2.6.0.  I was surprised when /proc/mdstat reported a
+>> resync speed of 1 MB/s, even though the system was otherwise idle.  =
+I
 >>
->>
->>Note that RAID-1 will only ever have a maximum of 2 active disks.
->>    
->>
+> Anyways, it seems wiser to make two RAID1 arrays and then a RAID0 fro=
+m
+> them two. Apart from (maybe) preventing the problem you are
+> experiencing, this should give you better results in the case of a dr=
+ive
+> failure, when it happens.
 >
->I don't believe that the above is a correct statement.  Linux software
->RAID1 will allow mirroring across more than 2 devices:
+> Think for a moment about the event of a single hard drive failure: wi=
+th
+> two RAID1 arrays, one of then will go to degraded mode, but as far as=
+ I
+> know the upper RAID0 will not notice a thing, so will continue workin=
+g
+> as usual, maybe with a little performance decrease.
 >
->[root@cinshrlnxlap01 ~]# cat /proc/mdstat
->Personalities : [raid1]
->read_ahead 1024 sectors
->md2 : active raid1 [dev 01:02][2] [dev 01:01][1] [dev 01:00][0]
->      4032 blocks [3/3] [UUU]
+> On the other hand, if you have two RAID0 arrays and one of the hard
+> drives fail, the RAID0 where it happens will fail, the upper RAID1 wi=
+ll
+> run degraded, and when a new disk replaces the failed one you will ha=
+ve
+> to start the failed RADI0 again, and let the upper RAID1 reconstruct
+> itself. I think this situation is worse than the one depicted before.
 >
->  
->
-    This is a refershing info, depressing is the fact that a slice can't 
-be added unobrtusively ( sp ?), I'll try Luca's solution first than 
-scratch & rebuild if this will be a resounding failure  ;).
+> Am I missing something ?
 
-[SNIP]
+I had a few reasons:
 
->We had a "triple" mirror sofware RAID setup on a box as a "poor man's
->snapshot" before we started using LVM.  We triple mirrored and then
->broke one mirror to backup and then added the removed disk back into the
->array and re-synched.  LVM snapshots are much more elegant and LVM
->provides more functionality such as extended volumes when you want to
->add more space.  You have to be careful using LVM because as of 2.4.18
->there was a Linux VM bug that would not allow snapshotting with greater
->than about 6GB of system RAM.
->
->However, I would recommend recreating the filesystem on top of LVM and
->using snapshots to accomplish what you want.  We use LVM on top of SW
->RAID with great success.
->
->  
->
-    Ha, so I'm not the only one crazy enough to propose such a solution, 
-I'm happy that I'm not alone :),  did it worked ??
-I belive that was designed and initialised from the first time as a 3 
-slice raid, the 3rd slice wasn't aded as an aftertought ??
+- I read somewhere that RAID0 over RAID1 didn't work.  Maybe this
+information was outdated.
+- I was short on spare disks, so I had to build an initially degraded
+array and then add the other half of the mirror.
+- Performance after a disk failure isn't a big issue with this
+machine.  Resyncing takes only an hour or two anyway.
 
-The raid boxes have 4GiB RAM so is not a problem, BTW to you have a 
-pointer for starting the RTFM about that LVM and especially those 
-snapshots, is there a posibility to to save the inital setup with 2 
-slices or everything has to be destroyed and recreated again???
+--=20
+M=E5ns Rullg=E5rd
+mru@kth.se
 
-    Best regards,
-
-    Mircea
-
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
