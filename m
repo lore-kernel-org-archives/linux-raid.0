@@ -1,39 +1,74 @@
-From: Jakob Oestergaard <jakob@unthought.net>
-Subject: Re: Not-fresh + failure
-Date: Wed, 19 Jun 2002 18:39:47 +0200
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: PATCH - md 1 of 3 - Don't lock array for START_ARRAY
+Date: Thu, 20 Jun 2002 10:04:32 +1000 (EST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20020619163947.GB15351@unthought.net>
-References: <20020618162813.A2366@cs.hmc.edu> <20020618233748.GA13086@unthought.net> <20020619092435.A6189@cs.hmc.edu>
+Message-ID: <15633.7184.23273.128208@notabene.cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20020619092435.A6189@cs.hmc.edu>
-To: Titus Winters <twinters@odin.ac.hmc.edu>
+To: Linus Torvalds <torvalds@transmeta.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Jun 19, 2002 at 09:24:35AM -0700, Titus Winters wrote:
-> My apologies for asking a question that was in the FAQ.  I thought th=
-e
-> not-fresh attribute was perhaps recoverable with something less scary
-> than mkraid --force.  Turns out this was the correct solution, and
-> my data is recovered, safe and sound.  Thank you very much.
 
-Great !
+Well, it looks like that bit patch bomb wasn't quite perfect..
 
-And no problem, now it's in the archives too  ;)
+Here are three more, against 2.5.23, that address:
+ - "raidstart" would hang
+ - compiler warning
+ - compile failure when not SMP.
 
---=20
-=2E...............................................................
-:   jakob@unthought.net   : And I see the elder races,         :
-:.........................: putrid forms of man                :
-:   Jakob =D8stergaard      : See him rise and claim the earth,  :
-:        OZ9ABN           : his downfall is at hand.           :
-:.........................:............{Konkhra}...............:
+NeilBrown
+
+###Comments for ChangeSet
+
+... as autostart_array does it's own locking.
+
+
+ ----------- Diffstat output ------------
+ ./drivers/md/md.c |   26 ++++++++++++++------------
+ 1 files changed, 14 insertions(+), 12 deletions(-)
+
+--- ./drivers/md/md.c	2002/06/19 04:28:22	1.1
++++ ./drivers/md/md.c	2002/06/19 23:20:56	1.2
+@@ -2546,6 +2546,20 @@
+ 		goto abort;
+ 	}
+ 
++
++	if (cmd == START_ARRAY) {
++		/* START_ARRAY doesn't need to lock the array as autostart_array
++		 * does the locking, and it could even be a different array
++		 */
++		err = autostart_array(val_to_kdev(arg));
++		if (err) {
++			printk(KERN_WARNING "md: autostart %s failed!\n",
++			       partition_name(val_to_kdev(arg)));
++			goto abort;
++		}
++		goto done;
++	}
++
+ 	err = mddev_lock(mddev);
+ 	if (err) {
+ 		printk(KERN_INFO "md: ioctl lock interrupted, reason %d, cmd %d\n",
+@@ -2580,18 +2594,6 @@
+ 					printk(KERN_WARNING "md: couldnt set array info. %d\n", err);
+ 					goto abort_unlock;
+ 				}
+-			}
+-			goto done_unlock;
 -
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-		case START_ARRAY:
+-			/*
+-			 * possibly make it lock the array ...
+-			 */
+-			err = autostart_array(val_to_kdev(arg));
+-			if (err) {
+-				printk(KERN_WARNING "md: autostart %s failed!\n",
+-					partition_name(val_to_kdev(arg)));
+-				goto abort_unlock;
+ 			}
+ 			goto done_unlock;
+ 
