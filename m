@@ -1,65 +1,43 @@
-From: "pg" <pg@newhonest.com>
-Subject: Re: raid0 to raid1
-Date: Fri, 5 Sep 2003 09:33:29 +0800
-Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <008701c3734d$b6937920$2101a8c0@newhonest.com>
-References: <005f01c371dd$12f0fc00$2101a8c0@newhonest.com> <1062708304.25969.93.camel@persist.az.mvista.com>
+From: Catalin BOIE <util@deuroconsult.ro>
+Subject: 2.4.22 + RAID 1 + SATA + 2 disks => no maximum speed
+Date: Fri, 5 Sep 2003 08:01:31 +0300 (EEST)
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <Pine.LNX.4.56.0309050757360.18124@hosting.rdsbv.ro>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="big5"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-To: sdake@mvista.com
-Cc: linux-raid@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+To: linux-raid@vger.kernel.org
+Cc: linux-admin@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-raid.ids
 
-Oh, thanks for killing my dream.
-OK I'll do the backup, relayout and restore.
+Hi!
 
-Thanks anyway.
+I have a machine with 2 SATA disks on 2 separate buses.
+hdparm -t /dev/hda reports 50MB/s
+hdparm -t /dev/hdb reports 50MB/s
 
--Jason
+I created a raid1 array with hda3 and hdc3, same partition sizes.
 
------ Original Message ----- 
-From: "Steven Dake" <sdake@mvista.com>
-To: "pg" <pg@newhonest.com>
-Cc: <linux-raid@vger.kernel.org>
-Sent: Friday, September 05, 2003 4:45 AM
-Subject: Re: raid0 to raid1
+If I do hdparm -t /dev/md0 it reports 50MB/s
+
+If I do cat /dev/md0 > /dev/null, vmstat reports 50MB/s
+If I start another cat /dev/md0 > /dev/null, in another console, I get
+100MB/s from vmstat.
+
+Why I don't get 100MB/s on a single cat command?
 
 
-> reload the server
-> or backup and restore after changing disk layout
-> there is no online way to fix this problem
-> thanks
-> -steve
-> On Tue, 2003-09-02 at 22:34, pg wrote:
-> > Excuse me for asking the question again, because my last question has
-not
-> > been answered.
-> >
-> > I have two scsi hd of same geometry : 36G
-> > I want to have
-> > sda1 sdb1 map to /boot by raid1
-> > sda2 sdb2 map to /     by raid1
-> >
-> > Unfortunately, I wrongly formated sda2+sdb2 to raid0, and the error was
-> > discovered a few weeks after the server has been put into production.
-> >
-> > So my problem is how can I use minimum time to convert the raid0 back to
-> > radi1 safely?
-> >
-> >
-> >
-> > -Jason
-> >
-> > ps The usage of sda2+sdb2 is less than 10G at the present moment
-> >
-> > -
-> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >
-> >
->
+Some other test:
+cat /dev/hda3 > /dev/null&
+cat /dev/hdc3 > /dev/null&
+vmstat shows 100MB/s.
 
+Also, seems that writing is very slow (8MB/s).
+
+Any ideas?
+
+Thank you very much!
+
+---
+Catalin(ux) BOIE
+catab@deuroconsult.ro
