@@ -1,53 +1,49 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: booting from a HW RAID volume
-Date: Wed, 26 Jan 2005 20:15:27 -0500
-Message-ID: <200501270113.j0R1DU908227@www.watkins-home.com>
-References: <41F7D75B.1040806@mail.fsix.com>
+From: "J. Ryan Earl" <ryan@dynaconnections.com>
+Subject: RE: Software RAID 0+1 with mdadm.
+Date: Wed, 26 Jan 2005 16:14:48 -0600
+Message-ID: <OMEKLMBKKEOEENCKLEIDAECMCBAA.ryan@dynaconnections.com>
+References: <20050126151703.GA2040@percy.comedia.it>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="us-ascii"
+	charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <41F7D75B.1040806@mail.fsix.com>
+In-Reply-To: <20050126151703.GA2040@percy.comedia.it>
 Sender: linux-raid-owner@vger.kernel.org
-To: cknowlton@science.edu, linux-raid@vger.kernel.org
+To: Luca Berra <bluca@comedia.it>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Many hardware based RAID systems allow you to create more that 1 virtual
-disk.  This is done with luns.  If your hardware supports it, you could
-split your monster disk (2.75TB) into 2 or more virtual disks.  The first
-would be very small, just for boot, or maybe the OS.
+This bug that's fixed in 1.9.0, is in a bug when you create the array?  ie
+do we need to use 1.9.0 to create the array.  I'm looking to do the same but
+my bootdisk currently only has 1.7.soemthing on it.  Do I need to make a
+custom bootcd with 1.9.0 on it?
 
-Or you could split the 2.75TB into virtual disks that are all smaller than
-2TB.
-
-Just some ideas.
-
-Guy
+Thanks,
+-ryan
 
 -----Original Message-----
 From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Carlos Knowlton
-Sent: Wednesday, January 26, 2005 12:46 PM
+[mailto:linux-raid-owner@vger.kernel.org]On Behalf Of Luca Berra
+Sent: Wednesday, January 26, 2005 9:17 AM
 To: linux-raid@vger.kernel.org
-Subject: booting from a HW RAID volume
-
-Hello,
+Subject: Re: Software RAID 0+1 with mdadm.
 
 
-I'm using a 3Ware 9500 12 Hardware RAID controller that has 12 of 250GB 
-S-ATA drives (total storage = 2.75TB).  To my 64bit FC3 box, this looks 
-like a single huge SCSI disk (/dev/sda).  I used parted to create GPT 
-partitions on it, (because nothing else would work on a volume that 
-big).  This seems to work fine, except that grub doesn't seem to 
-recognize GPT partitions.
-So here's my question:  Does anyone know a way to boot from huge volumes 
-(where "huge" =  >2TB)?   even if it doesn't involve grub, or GPT, I'm 
-open to suggestions.  Any clues?
+On Tue, Jan 25, 2005 at 02:28:21PM -0800, Brad Dameron wrote:
+>Everything seems ok after boot. But again no /dev/md0 in /proc/mdstat.
+>But then if I do a mdadm --assemble --scan it will then load /dev/md0.
+there is a bug in mdadm, see my mail "patches for mdadm 1.8.0" or wait
+for 1.9.0
 
+L.
 
-Thanks!
--Carlos Knowlton
+--
+Luca Berra -- bluca@comedia.it
+        Communication Media & Services S.r.l.
+ /"\
+ \ /     ASCII RIBBON CAMPAIGN
+  X        AGAINST HTML MAIL
+ / \
 -
 To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 the body of a message to majordomo@vger.kernel.org
