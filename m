@@ -1,54 +1,48 @@
-From: Gordon Henderson <gordon@drogon.net>
-Subject: RE: Good news / bad news - The joys of RAID
-Date: Mon, 22 Nov 2004 14:34:49 +0000 (GMT)
-Message-ID: <Pine.LNX.4.56.0411221429380.4195@lion.drogon.net>
-References: <200411210433.iAL4XIN19967@www.watkins-home.com>
- <Pine.LNX.4.61.0411220909180.5652@treant.hhmi.umbc.edu>
+From: Alvin Oga <aoga@ns.Linux-Consulting.com>
+Subject: RE: Good news / bad news - The joys of RAID - backups
+Date: Mon, 22 Nov 2004 07:52:33 -0800 (PST)
+Message-ID: <Pine.LNX.3.96.1041122074726.18494A-100000@Maggie.Linux-Consulting.com>
+References: <Pine.LNX.4.56.0411221429380.4195@lion.drogon.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.61.0411220909180.5652@treant.hhmi.umbc.edu>
+In-Reply-To: <Pine.LNX.4.56.0411221429380.4195@lion.drogon.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Gordon Henderson <gordon@drogon.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 22 Nov 2004, Yu Chen wrote:
 
-> > Now if someone made an affordable tape drive and tapes that could b=
-ackup
-> > 200G per tape, that would be cool!
->
-> You don't know? they have that already, AIT-4, LTO as I know.
+hi ya gordon
 
-I think the key-word here was "affordable"
+On Mon, 22 Nov 2004, Gordon Henderson wrote:
 
-I use DLT drives, which I think go up to 220GB native right now, ('m on=
-ly
-currently using 160GB native drives), but right now the cost of media a=
-t
-about =A360 each is about the same as a 160GB IDE drive.. Easier to man=
-age
-though, and the cost of the tape drive is still round about =A33500.
+> But how valuable is your data? (As I keep telling my clients!!!)
 
-But how valuable is your data? (As I keep telling my clients!!!)
+that's why all my data is stored on 3 or 5 servers :-)
 
-I've tried to build servers that have a max. capacity of 200GB per
-partition, but I have clients chomping at the bit for bigger partitions=
-,
-thn it becomes a PITA to backup to tape.
+personally, i trust disks more than i trust tapes 
+and i want the "backup" to be live, just in case,
+and most likely, there is not time to restore from tapes
+and/or worst, lost/misplaced tapes because someone forgot 
+to rotate it
 
-I don't think the requirement for tape backup is going to go away in th=
-e
-near future, anyway. I just wish tape technology would keep up with dis=
-k
-technology.
+tapes are great for offsite archive, where no one will look at
+again for years ... until the lawyers want to see it
 
-RAID is great, but it's not for archive and backup.
+> RAID is great, but it's not for archive and backup.
 
-Gordon
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+raid is great for archives and backup ..
+
+- give disk1 to the CEO
+- give disk2 to the CFO
+- give disk3 to the CTO
+- give disk4 to the COO
+- give disk5 to the local disk jockey
+
+no one person can reconstruct sensitive data :-)
+
+c ya
+alvin
+http://ITX-Blades.net ..... 15TB per 4U chassis ...
+
