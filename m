@@ -1,119 +1,70 @@
-From: jshankar <jshankar@CS.ColoState.EDU>
-Subject: RE: raid0 and iscsi
-Date: Tue, 14 Oct 2003 15:07:46 -0600
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: possible to use 1 drive as hot failover for 2 raid1's?
+Date: Thu, 16 Oct 2003 13:42:48 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3FAEEF4E@webmail.colostate.edu>
+Message-ID: <16270.5048.970101.522470@notabene.cse.unsw.edu.au>
+References: <20031007105437.GF28158@marowsky-bree.de>
+	<Pine.LNX.4.44.0310071235060.12097-100000@praktifix.dwd.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Jayshankar Nair <jshankar@CS.ColoState.EDU>, Neil Brown <neilb@cse.unsw.edu.au>
+In-Reply-To: message from Holger Kiehl on Tuesday October 7
+To: Holger Kiehl <Holger.Kiehl@dwd.de>
 Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hello Neil,
+On Tuesday October 7, Holger.Kiehl@dwd.de wrote:
+> On Tue, 7 Oct 2003, Lars Marowsky-Bree wrote:
+> 
+> > On 2003-10-06T16:27:59,
+> >    Dan Hollis <goemon@anime.net> said:
+> > 
+> > > is it possible to use the single drive as hot-failover for both md0 and 
+> > > md1?
+> > 
+> > In theory yes, in practice not.
+> > 
+> > One could imagine (rather easily) a global hot-spare pool for all mds,
+> > but it's not implemented right now.
+> > 
+> Not sure about this but I thought this would be possible by using mdadm
+> in monitor mode? In the manpage of mdadm it says:
+> 
+>    As  well  as  reporting  events,  mdadm may move a spare drive from one
+>    array to another if they are in the same spare-group and if the  desti-
+>    nation array has a failed drive but not spares.
+> 
+> But I don't know how to create a spare-groupi or what is meant by it?
+
+ From  "man mdadm"
+
+       For  mdadm  to  move  spares  from  one array to another, the different
+       arrays need to be labelled with the same spare-group in the  configura-
+       tion  file.   The spare-group name can be any string. It is only neces-
+       sary that different spare groups use different names.
+
+ from "man mdadm.conf"
+
+           spare-group=
+                  The  value  is  a  textual  name for a group of arrays.  All
+                  arrays with the same spare-group name are considered  to  be
+                  part  of  the  same  group.   The significance of a group of
+                  arrays is that mdadm will, when monitoring the arrays,  move
+                  a  spare drive from one array in a group to another array in
+                  that group if the first array had a failed or missing  drive
+                  but no spare.
 
 
-Thanks for the reply.
+does that help?
 
-I was working on the internet scsi(iscsi drivers provided by intel) and 
-software
-raid configuration for my thesis in Storage Area Network.
+NeilBrown
 
-The problems right now i am facing is
-1> For a local disk write  for 512 mb in DELL 1.2 Ghz it takes me 1 min.
-2> For a single iscsi device write, the transfer of data takes place at
-4000 bytes/sec.
-2> For raid configuration, the rate is pretty slow ( 40 bytes/sec).
-One thing i have observe is that write to one of the device( from a total of 2 
-device)  takes for few minutes and then stop.
-
-
-I was trying to figure what routines in the operating system code, I might 
-need
-to look into to understand a problem if there is one.
-
- Some more problems.
-If one of the network comes down, the mkfs for the raid , hangs.
-
-
->A raid0 array can be made of a number of drives of differing sizes.
->To accomodate this we divide the address space into several blocks.
->The first block is striped across all drives to the size of the
->smallest.  The next block is striped across the remaining drives to
->the size of the next smallest, etc.
-
-Is there a relation between chunk size and block size of raid. Is this similar 
-to buffer size( write(fd,&buffer,buffer_size) and block size of filesystem.
-
--Jay
-
-
-
-
->===== Original Message From Neil Brown <neilb@cse.unsw.edu.au> =====
->On Sunday October 12, jshankar@CS.ColoState.EDU wrote:
->> Hello,
->>
->>
->> I was testing the raid0 configuration for the iscsi device ( /dev/sdb and
->> /dev/sdc).
->>
->> For writing a 512MB in a LAN environment it was taking 24 hrs. i was going
->> through the source code of raid0.c and certain things doesn't made sense to 
-me.
->>
->> 1> what role does the Hash bit play.
->
->A raid0 array can be made of a number of drives of differing sizes.
->To accomodate this we divide the address space into several blocks.
->The first block is striped across all drives to the size of the
->smallest.  The next block is striped across the remaining drives to
->the size of the next smallest, etc.
->
->Mapping from a virtual device address to block and thence a drive and
->offset is not straight forward.  It requires a table search.  The hash
->table helps accelerate this search.
->
->
->> 2>If my chunk size is 8 byte. Does that mean it will write 8 byte into 
-device 0
->> and then into device 1. Is the write request to the disk in synchronous or
->> asynchronous mode.
->>
->You cannot have an 8byte chunk size.  4K is the minimum.
->With an 8K chunk size and 2 devices,
-> sectors between 0 and 8K, 16k and 24K, 32K and 40K, 48K and 56K etc
->    are written to the first device.
-> sectors between 8K and 16K, 28K and 32K, 40K and 48K etc
->    are written to the second device.
->
->raid0 does not impose any synchronisation.  Writes are only
->synchronous if the filesystem waits for them.  raid0 never waits.
->
->>
->> 3> Is wite_disk_sb in md.c responsible for writing into disk??. Is 
-fsync_dev
->> responsible for synhronous write ??. If so can i change to asynchronous 
-write.I
->> will really appreciate if somebody can tell me what all routines I need to 
-go
->> through to figure out the functionality of raid0 behaviour.
->
->write_disk_sb is for writing the raid superblock to disk.  It doesn't
->happen often.
->fsync_dev is fairly irrelevant. You can safely ignore it.
->
->I hope that helps.
->
->NeilBrown
->
->>
->> Thanks
->> Jayshankar
->>
->> -
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+> 
+> Regards,
+> Holger
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
