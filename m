@@ -1,43 +1,70 @@
-From: Matthias Julius <jnews@julius-net.net>
-Subject: Re: Raid5 with 2 bad drives
-Date: Wed, 23 Feb 2005 08:35:13 -0500
-Message-ID: <877jkzbdri.fsf@julius-net.net>
-References: <u650k4kbd.fsf@julius-net.net> <Pine.LNX.4.56.0502221656160.4157@lion.drogon.net>
- <87fyzoaz31.fsf@julius-net.net> <421C216B.8050209@h3c.com>
+From: Michael Tokarev <mjt@tls.msk.ru>
+Subject: Re: *terrible* direct-write performance with raid5
+Date: Wed, 23 Feb 2005 20:38:05 +0300
+Message-ID: <421CBF7D.20801@tls.msk.ru>
+References: <421B6E5D.6030004@tls.msk.ru> <Pine.LNX.4.62.0502221507160.25248@twinlark.arctic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+In-Reply-To: <Pine.LNX.4.62.0502221507160.25248@twinlark.arctic.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Mike Hardy <mhardy@h3c.com> writes:
+dean gaudet wrote:
+> On Tue, 22 Feb 2005, Michael Tokarev wrote:
+> 
+> 
+>>When debugging some other problem, I noticied that
+>>direct-io (O_DIRECT) write speed on a software raid5
+>>is terrible slow.  Here's a small table just to show
+>>the idea (not numbers by itself as they vary from system
+>>to system but how they relate to each other).  I measured
+>>"plain" single-drive performance (sdX below), performance
+>>of a raid5 array composed from 5 sdX drives, and ext3
+>>filesystem (the file on the filesystem was pre-created
+>>during tests).  Speed measurements performed with 8Kbyte
+>>buffer aka write(fd, buf, 8192*1024), units a Mb/sec.
+> 
+> with O_DIRECT you told the kernel it couldn't cache anything... you're 
+> managing the cache.  you should either be writing 64KiB or you should 
+> change your chunksize to 8KiB (if it goes that low).
 
-> I posted a raid5 parity calculator implemented in perl a while back (a
-> couple weeks?) that is capable of taking your disk geometry, the RAID
-> LBA you're interested in, and finding the disk sector it belongs to.
->
-> I honestly don't remember if it can go the other way, but I'm not sure
-> why it couldn't? Its possible that bad blocks may simply be in the
-> parity chunk of the stripe too. Once you've got the RAID LBA you can
-> use the methods in the BadBlockHowto to find the file
+The picture does not change at all when changing raid chunk size.
+With 8kb chunk speed is exactly the same as with 64kb or 256kb chunk.
 
-That helps.  Although there is a typo in line 139.  See diff below.
+Yes, increasing write buffer size helps alot.  Here's the write
+performance in mb/sec for direct-write into an md device which
+is a raid5 array built from 5 drives depending on the write
+buffer size (in kb):
 
-When I know the RAID LBA how do I find out to which LV it belongs and
-which sector it is in there?  But, I guess I better ask that on a LVM
-list.
+  buffer  md raid5    sdX
+            speed    speed
+      1      0.2       14
+      2      0.4       26
+      4      0.9       41
+      8      1.7       44
+     16      3.9       44
+     32     72.6       44
+     64     84.6       ..
+    128     97.1
+    256     53.7
+    512     64.1
+   1024     74.5
 
-Matthias
+I've no idea why there's a drop in speed after 128kb blocksize,
+but the more important is a huge drop with 32->16 kb blocksize.
 
---- raid5calc.orig      2005-02-23 08:26:43.721332354 -0500
-+++ raid5calc   2005-02-23 08:30:12.673100526 -0500
-@@ -136,7 +136,7 @@
- # Testing only -
- # Check to see if the result I got is the same as what is in the block
- open (DEVICE, "<" . $component{"device"})
--    || die "Unable to open device " . $compoent{"device"} . ": " . $! . "\n";
-+    || die "Unable to open device " . $component{"device"} . ": " . $! . "\n";
- seek(DEVICE, $device_offset, 0)
-     || die "Unable to seek to " . $device_offset . " device " . $xor_devices{$i} . ": " . $! . "\n";
- read(DEVICE, $data, ($sectors_per_chunk * 512))
+The numbers are almost exactly the same with several chunksizes --
+256kb, 64kb (default), 8kb and 4kb.
+
+(note raid5 performs faster than a single drive, it's expectable
+as it is possible to write to several drives in parallel).
+
+The numbers also does not depend much on seeking -- obviously the
+speed with seeking is worse than the above for sequential write,
+but not much worse (about 10..20%, not >20 times as with 72 vs 4
+mb/sec).
+
+/mjt
 
