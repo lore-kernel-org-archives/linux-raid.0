@@ -1,63 +1,43 @@
-From: maarten van den Berg <maarten@vbvb.nl>
-Subject: new problem has developed
-Date: Sun, 26 Oct 2003 21:08:50 +0100
+From: spam@streefland.xs4all.nl (Dick Streefland)
+Subject: Re: RAID1 recovery fails with 2.6 kernel
+Date: Sun, 26 Oct 2003 20:36:37 -0000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200310262108.50632.maarten@vbvb.nl>
+Message-ID: <71df.3f9c3055.1a3cb@altium.nl>
+References: <297d.3f93a033.85d8f@altium.nl> <7da.3f929f6e.d36f3@altium.nl> <16275.32127.862408.701013@notabene.cse.unsw.edu.au> <297d.3f93a033.85d8f@altium.nl> <1066844591.1260.31.camel@star2>
+Reply-To: dick.streefland@xs4all.nl (Dick Streefland)
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Mike Tran <mhtran@us.ibm.com> wrote:
+| I have been experiencing the same problem on my test machine.  I found
+| out that the resync terminated early because of MD_RECOVERY_ER R bit set
+| by raid1's sync_write_request().  I don't understand why it fails the
+| sync when all the writes already completed successfully and quickly.  If
+| there is a need to check for "nowhere to write this to" as in 2.4.x
+| kernel, I think we need a different check.
+| 
+| The following patch for 2.6.0-test8 kernel seems to fix it.
+| 
+| --- a/raid1.c   2003-10-17 16:43:14.000000000 -0500
+| +++ b/raid1.c   2003-10-22 11:57:59.350900256 -0500
+| @@ -841,7 +841,7 @@
+|         }
+|  
+|         if (atomic_dec_and_test(&r1_bio->remaining)) {
+| -               md_done_sync(mddev, r1_bio->master_bio->bi_size >> 9, 0);
+| +               md_done_sync(mddev, r1_bio->master_bio->bi_size >> 9, 1);
+|                 put_buf(r1_bio);
+|         }
+|  }
 
-Hi list,
-
-Last week I asked about restoring a raid5 array with multiple failed disks. 
-Thanks for your help, I've got it back online in degraded mode and was able 
-to burn 10 DVD+RWs as a backup measure.  Now I have a new problem though.
-
-I added a spare new disk to the degraded array after making said backups and 
-it started resyncing. I went to sleep, only to find out next morning that the 
-resync was only at 5.3% and speed was 5K/sec (!).  The system was still 
-responsive, no runaway processes and no sign of any hardware trouble in 
-/var/log/messages.  I killed the machine and retried... with the same result: 
-at exactly 5.3% the speed starts dropping until it is near zero.
-
-For various reasons I decided to decommission the old hardware (AMD K6) and I 
-built a newer (and 100% known-good) board in it earlier today. That makes a 
-BIG difference in initial speed, I now get 14000K/sec instead of the dead 
-slow AMD K6 did. However, at 5.2% the speed drops significantly. We're now 
-back at 5.3% and speed has dropped from 13000K to 170K and continues to drop.
-
-I investigated already on the old machine with several tools, of course mdadm, 
-but also iostat and keeping an eye on /var/log/messages.  All seems proper.
-Also, immediately after "rescueing" the array from the miltiple disk failure I 
-ran a long reiserfsck --check on the volume which found no problems at all.
-
-I'm now at a loss...  Does anyone know what to monitor or check first ??
-
-I'm unsure if this could be due to a disk hardware fault but then it would 
-surely show up in syslog, right ? Could disk corruption be the culprit ? My 
-guess would be "no", not only the reiserfs on top of the md0 tests fine, but 
-these are on different layers anyhow, correct ?
-
-One last remark; once this state occurs (near the 5.3% mark) any command that 
-tries to query the array hangs indefinitely. (umount, mount, mdadm, even df).
-Those commands are unkillable, what also entails that there is no way to 
-reboot the machine except by resetswitch (shutdown hangs forever).
-Apart from those commands the machine is still totally responsive (on another 
-terminal).  Needless to say this bugs me enormously...  :-(
-
-Some info:
-The machine has a boot disk which provides "/" and a full linux system. Apart 
-from that it has seven (7) 80GB disks connected to 2 promise adapters(100TX2)
-Those disks should be a raid5 array with one spare (but they are obviously 
-kinda inbetween states right now).  The kernel was 2.4.10 and is now 2.4.18.
-
-If anyone can help, that would be greatly appreciated...
-Maarten
+Has this patch been forwarded to Linus already? It would be nice to
+have this fixed before the final 2.6.0 is released.
 
 -- 
-Yes of course I'm sure it's the red cable. I guarante[^%!/+)F#0c|'NO CARRIER
+Dick Streefland                    ////               De Bilt
+dick.streefland@xs4all.nl         (@ @)       The Netherlands
+------------------------------oOO--(_)--OOo------------------
+
