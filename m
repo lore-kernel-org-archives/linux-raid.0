@@ -1,31 +1,49 @@
-From: Stephan van Hienen <raid@a2000.nu>
-Subject: Re: maximum disk capacity?
-Date: Fri, 13 Jun 2003 09:51:31 +0200 (CEST)
+From: "Ionut Nistor" <ionut@modulo.ro>
+Subject: Re: Multipath problem in a SAN enviromnent
+Date: Fri, 13 Jun 2003 11:12:15 +0300
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.53.0306130949210.30359@ddx.a2000.nu>
-References: <007201c330b9$c316f310$3001a8c0@melkor> <16104.22361.508001.916567@gargle.gargle.HOWL>
- <00db01c330ca$5ae72290$3001a8c0@melkor> <200306121814.32072.bernd-schubert@web.de>
- <009001c3313d$54027880$df01010a@moon>
+Message-ID: <00e801c33183$8072cd70$0cc7e7c1@EEL>
+References: <02d201c33023$13fd45a0$3351960a@EEL> <3EE7585E.45D851CE@SteelEye.com> <20030612100423.GA14106@marowsky-bree.de> <007c01c330d0$86dda7b0$0cc7e7c1@EEL> <3EE893A4.E0518632@SteelEye.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <009001c3313d$54027880$df01010a@moon>
-To: Donghui Wen <dhwen@protegonetworks.com>
-Cc: linux-raid@vger.kernel.org
+To: Paul Clements <Paul.Clements@SteelEye.com>
+Cc: Lars Marowsky-Bree <lmb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 12 Jun 2003, Donghui Wen wrote:
+Agreed, but Lars mentioned 'the patch in 2.4 went even further' -  hence I
+assume what's at the link you posted is obsolete - am I correct?
+While I'm patching it, I want to make sure it's the latest one.
 
-> Hi, I am setting up hardware raid with 7 harddrives on redhat linux.
-> I use 3ware + hardware raid 5, each harddrive is 200G. For
-> linux, this raid sould act as a 1.2TB scsi hard drive. But it seems
-> redhat could not reconize it. I am wondering may be a 1.2TB hard drive
-> is too large to linux. So my question is: what't
-> the maxium disk capacity Linux can support?
+Ionut
 
-no problem till 2TB
-if you need to go above to 2TB, you need the largedisk patch
-which doesn't work with sw raid5 (so no 2TB+ with sw raid5)
+----- Original Message ----- 
+From: "Paul Clements" <Paul.Clements@SteelEye.com>
+To: "Ionut Nistor" <ionut@modulo.ro>
+Cc: "Lars Marowsky-Bree" <lmb@suse.de>; <linux-raid@vger.kernel.org>
+Sent: Thursday, June 12, 2003 5:52 PM
+Subject: Re: Multipath problem in a SAN enviromnent
 
-i'm running with 13*180GB (+1 Hotspare) in sw raid5 (hd's
-connected to 2*3ware 7850)
+
+> Ionut Nistor wrote:
+>
+> > In which official kernel has the patch been merged?
+>
+> It's been in the SuSE kernel for a while (2.4.19 and higher). It does
+> not appear to be in mainline yet (I checked 2.4.21-rc4).
+>
+>
+> > Is there a separate patch I can apply to 2.4.18 vanilla?
+>
+> The patch is at the URL I posted in the other message yesterday:
+>
+> http://lwn.net/Articles/8485/
+>
+> or you can surely get it from SuSE's website.
+>
+> --
+> Paul
+>
+
