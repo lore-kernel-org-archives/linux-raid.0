@@ -1,53 +1,77 @@
-From: Matti Aarnio <matti.aarnio@zmailer.org>
-Subject: Re: Mirroring swap
-Date: Thu, 26 Jun 2003 10:30:03 +0300
+From: noriok <noriok@kitakami.hss.iwate-u.ac.jp>
+Subject: Software RAID 1 Prpblem: "raid_autorun failed" booting from /dev/md0
+Date: Thu, 26 Jun 2003 17:01:50 +0900
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20030626073003.GJ28900@mea-ext.zmailer.org>
-References: <Pine.LNX.4.44.0306251535120.16603-100000@gpu.utcc> <BKEGKPICNAKILKJKMHCAEEFPEHAA.Riley@Williams.Name>
+Message-ID: <200306260801.AA01558@ran.kitakami.hss.iwate-u.ac.jp>
+References: <200306260750.AA01552@ran.kitakami.hss.iwate-u.ac.jp>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <BKEGKPICNAKILKJKMHCAEEFPEHAA.Riley@Williams.Name>
-To: Riley Williams <Riley@Williams.Name>
-Cc: Derek Yeung <dky@utcc.utoronto.ca>, linux-raid@vger.kernel.org
+In-Reply-To: <200306260750.AA01552@ran.kitakami.hss.iwate-u.ac.jp>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Jun 26, 2003 at 08:07:47AM +0100, Riley Williams wrote:
-> Hi Derek.
->  > I'm running Red Hat 9 on stock kernel 2.4.20 with software
->  > RAID 1.
->  >
->  > I was wondering if it's a good idea to also mirror the swap
->  > partition? I was reading old posts in the newsgroups that
->  > suggest this may not be a good idea but I can't seem to find
->  > an answer as to why. I think mirroring swap would be a good
->  > idea as it would increase redundancy. Any thoughts?  
-> 
-> Personally, I can't see the point. the contents of swap are by
-> definition short term temporary data with copies held either in
-> memory or elsewhere on the hard disk subsystem.
+Hi, everyone,
 
-I do that mirroring routinely.
+I have a problem with the following System-2 on booting from /dev/md0.
+Whould anyone kindly give me an advise?
 
-What Linux sends to swap has _no_ origin in anywhere else in
-the system, e.g. shared library loading makes runtime modifications
-into loaded program, modifications to RW DATA segment, and
-of course the BSS segment, and all of heap, and stack...
+Thank you from Japan.
 
-Most of the executable will usually stay unmodified, and be
-backed by its on-disk version, but never everything.
+--
+1) System 1; Red Hat Linux 7.1  : succeeded
+   Kernel 2.4.20-18.7 on an i686
+2) System 2; Vine Linux 2.6 : failed  
+   with the booting message  "raid_autorun failed" 
+   Kernel 2.4.20-0vl29.1 on an i686
+   (Japanese local destribution based upon Red Hat 6.2)
 
-...
-> Remember that using a raided swap partition means that the swap
-> code has no idea which drive any particular part of that swap
-> partition is on, so could result in the swap copy being on the
-> same failed drive as the original copy.
+There were no problems with the System-1. 
+The system could be booted by /dev/md0 [/deb/hdb1] by bootable FD.
 
-Nope.  swap-code does not see it at all.  All of that is hidden with
-under the mirroring code, and it does disconnect faulted drive from
-the mirror set.
+I have not completed the setting yet, so I booted the machine from 
+the bootable floppy disk.
 
-> Best wishes from Riley.
+--
+$ pwd
+/mnt/etc
+$ cat lilo.conf
+disk=/dev/md0
+boot=/dev/fd0
+map=/boot/map-fd
+install=/boot/boot.b
+lba32
+image=/boot/vmlinuz
+        label=linuxRaid
+        root=/dev/md0
+        read-only
+        initrd=/boot/initrd_raid
 
-/Matti Aarnio
+$ cat raidtab
+# md0 is the root array
+raiddev                 /dev/md0
+raid-level              1
+nr-raid-disks           2
+nr-spare-disks          0
+chunk-size              4
+persistent-superblock   1
+device                  /dev/hdb1
+raid-disk               0
+device                  /dev/hda1
+failed-disk             1
+
+# md1 is the swap array
+raiddev                 /dev/md1
+raid-level              1
+nr-raid-disks           2
+nr-spare-disks          0
+chunk-size              4
+persistent-superblock   1
+device                  /dev/hdb2
+raid-disk               0
+device                  /dev/hda2
+failed-disk             1
+
+$ cat fstab
+/dev/md0               /                       ext2    defaults        1 1
+/dev/md1               swap                    swap    defaults        0 0
