@@ -1,43 +1,30 @@
 From: Brad Campbell <brad@wasp.net.au>
-Subject: Re: Moving controllers
-Date: Tue, 23 Mar 2004 15:20:43 +0400
+Subject: Raidreconf and raid-6
+Date: Tue, 23 Mar 2004 17:25:59 +0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <40601D8B.6050906@wasp.net.au>
-References: <24101.194.60.85.4.1079965526.squirrel@194.60.85.4>    <Pine.LNX.4.44.0403221748490.13036-100000@coffee.psychology.mcmaster.ca> <39776.194.60.85.4.1080037377.squirrel@194.60.85.4>
+Message-ID: <40603AE7.4050301@wasp.net.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <39776.194.60.85.4.1080037377.squirrel@194.60.85.4>
-To: Robin Bowes <robin-lists@robinbowes.com>
-Cc: Mark Hahn <hahn@physics.mcmaster.ca>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Robin Bowes wrote:
+G'day all,
 
->>why not just experiment and find out?  put two disks on a single channel,
->>make the raid, power down, move the slave to another channel, and see if
->>the raid assembles.
-> 
-> 
-> One word: time; I was hoping someone could tell me if it would work to
-> save me messing around. Of course, if I plan to do this I will perform
-> some sort of test first.
-> 
+I'm in the middle of adding journaling to raidreconf to try and make it resilient to any failures
+except hard disk failures (Power fails, reboots and that kind of thing). It's not pretty, and it
+slows the process down something chronic but hopefully it will make the process bulletproof.
 
-The answer is yes it will work fine.
-I had 5 200gb WD disks set as autodetect raid-5
-My internal VIA IDE interfaces were hda/b/c/d
-My external CMD680 IDE interfaces were hde/f/g/h
+While I'm here I'm looking at trying to add raid-6 support also. I have had a pretty good trawl
+through the raid-6 kernel code and given raidreconf does not do anything with parity blocks it looks
+pretty similar to raid-5 from that respect.
+Are there any gotchas that anyone can think of I should look out for that may trip me up with the
+difference between raid5 & 6 ?
 
-I had raid disks on c/d/e/f/g.
-I created the raid and ran it for months, then I shuffled the disks and master/slave jumpers.
-No problems.
-I then purchased a couple of Highpoint 1540 SATA cards and a bundle of addonics SATA-> IDE adaptors.
-Using the in-kernel hpt ata driver, no problem.
-I then moved across to a pair of Promise SATA150-TX4 cards with the libata driver, no problem.
+I figure if you could do an easy conversion between raid-5 and raid-6 it might speed up testing and
+adoption of raid-6.
 
-So as you can see, these disks have been "everywhere man" and I never had a problem with the kernel 
-or appropriate tools picking them up in any order.
-
+Regards,
 Brad
+
