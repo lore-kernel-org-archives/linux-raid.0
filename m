@@ -1,30 +1,27 @@
 From: Mark Hahn <hahn@physics.mcmaster.ca>
-Subject: Re: mdadm - comments on command layout
-Date: Sat, 14 Aug 2004 10:13:57 -0400 (EDT)
+Subject: Re: raid10 ... (was: Re: ANNOUNCE: mdadm 1.7.0)
+Date: Sat, 14 Aug 2004 10:18:09 -0400 (EDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0408141010420.14853-100000@coffee.psychology.mcmaster.ca>
-References: <16669.9163.392465.637229@gargle.gargle.HOWL>
+Message-ID: <Pine.LNX.4.44.0408141014260.14853-100000@coffee.psychology.mcmaster.ca>
+References: <20040814041814.56d1e6c9.pegasus@nerv.eu.org>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <16669.9163.392465.637229@gargle.gargle.HOWL>
-To: John Stoffel <stoffel@lucent.com>
-Cc: linux-raid@vger.kernel.org
+In-Reply-To: <20040814041814.56d1e6c9.pegasus@nerv.eu.org>
+To: Jure =?UTF-8?Q?Pe=C3=A8ar?= <pegasus@nerv.eu.org>
+Cc: linux-raid@vger.kernel.org, dm-devel@redhat.com
 List-Id: linux-raid.ids
 
-> mapping out how I think the commands should work, do people agree with
-> my observation?  
+> Am i dreaming (it's well over 4am here :) ? Or is something like this
+> possible? Maybe not with a md personality, but by some daemon that would be
+> taking care of a dm map?
 
-no.  I find mdadm commandlines reasonably intuitive and consistent;
-having a shell-like mode would not hurt, but then again, the 
-interactive commands would necessarily look almost the same as 
-normal, discrete mdadm commands (and you do have a shell with 
-history and editing, no?)
-
-forgive me if this sounds insulting, but is the problem that you're 
-not comfortable with the unixy emphasis on commandline arguments 
-and switches?
+such things are available commercially; I can't say how well they work.
+personally, I doubt that this kind of thing can be done well at a purely
+block level - I think that some file-level information would be beneficial,
+perhaps essential.  but this is a layering-violating idea, and seems to 
+rub a lot of people the wrong way.  on the other hand, there is a seperate
+movement towards "object storage" systems, which is certainly a related idea.
 
 regards, mark hahn.
-
 
