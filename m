@@ -1,39 +1,77 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: RE: A few mdadm questions
-Date: Sat, 13 Nov 2004 18:32:19 +1100
-Message-ID: <16789.47235.818038.175157@cse.unsw.edu.au>
-References: <419580D8.1020900@osiel.org>
-	<200411130421.iAD4LwN03759@www.watkins-home.com>
+From: David Greaves <david@dgreaves.com>
+Subject: Re: RAID5 - 2nd drive died whilst waiting for RMA
+Date: Sat, 13 Nov 2004 19:48:36 +0000
+Message-ID: <41966514.8000301@dgreaves.com>
+References: <200411121847.iACIlNN01272@www.watkins-home.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Guy on Friday November 12
+In-Reply-To: <200411121847.iACIlNN01272@www.watkins-home.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Guy <bugzilla@watkins-home.com>
-Cc: 'Robert Osiel' <bob@osiel.org>, linux-raid@vger.kernel.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Friday November 12, bugzilla@watkins-home.com wrote:
-> First, stop using the old raid tools.  Use mdadm only!  mdadm would not have
-> allowed your error to occur.
+OK, not great, but nothing has broken either.
 
-I'm afraid this isn't correct, though the rest of Guy's advice is very
-good (thanks Guy!).
+So the reboot happened, the disks went in and got moved around:
+new drive->/dev/sdd1
+the machine hung complaining 'ata4 timed out' during dd if=sda of=sdd :(
+reboot, did it again and it worked fine ( - no errors? maybe it was 
+transient? anway...)
 
-  mdadm --remove
-does exactly the same thing as
-  raidhotremove
+powerdown
+move sickly drive (sda) to new controller (new:sde)
+move new copy (sdd) to position 1 (new:sda)
+insert new spare disk (new:sdd)
 
-It is the kernel that should (and does) stop you from hot-removing a
-device that is working and active.  So I'm not quite sure what
-happened to Robert...
+of course, the partitions are 'fd' so boot produces:
+md: Autodetecting RAID arrays.
+md: invalid raid superblock magic on sdd1
+md: sdd1 has invalid sb, not importing!
+# that's fair, I just made a partition, never used, no sb
+md: autorun ...
+md: considering sde1 ...
+# hmm, ok, it's fd and has a superblock but should be marked faulty
+md: adding sde1 ...
+md: adding sdc1 ...
+md: adding sdb1 ...
+md: adding sda1 ...
+md: adding hdb1 ...
+md: created md0
+md: bind<hdb1>
+md: bind<sda1>
+md: bind<sdb1>
+md: bind<sdc1>
+md: export_rdev(sde1)
+# what does this mean? does it mean 'sb is marked faulty'?
+md: running: <sdc1><sdb1><sda1><hdb1>
+md: kicking non-fresh sda1 from array!
+# OK, so you recognise it as an md device but think it's dirty - good
+md: unbind<sda1>
+md: export_rdev(sda1)
+raid5: device sdc1 operational as raid disk 1
+raid5: device sdb1 operational as raid disk 2
+raid5: device hdb1 operational as raid disk 4
+raid5: not enough operational devices for md0 (2/5 failed)
+# as expected
 
-Robert: it is always useful to provide specific with the output of 
-    cat /proc/mdstat
-and
-    mdadm -D /dev/mdX
 
-This avoids possible confusion over terminology.
+Now, Guy, your next step:
+# mdadm --assemble --force /dev/sda1 /dev/sdb1 /dev/sdc1 /dev/hdb1
+mdadm: /dev/sda1 does not appear to be an md device
 
-NeilBrown
+Oh.
+
+So the first thing I'm doing is to cleanly redo the dd_rescue from (now) 
+sde to sda
+
+Comments?
+
+David
+
+PS Guy, my ISP has blocked comcast.net due to excessive spam - he's 
+reconsidered and will unblock them 'soon' but for now I can only 
+apologise :(
+
