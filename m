@@ -1,58 +1,74 @@
-From: Brad Campbell <brad@wasp.net.au>
-Subject: Re: ext3 journal on software raid (was Re: PROBLEM: Kernel 2.6.10
- crashing repeatedly and hard)
-Date: Wed, 05 Jan 2005 17:33:32 +0400
-Message-ID: <41DBECAC.7040408@wasp.net.au>
-References: <Pine.LNX.3.96.1050105051955.9045B-100000@Maggie.Linux-Consulting.com>
+From: Michael Tokarev <mjt@tls.msk.ru>
+Subject: Re: Debian Sarge mdadm raid 10 assembling at boot problem
+Date: Wed, 05 Jan 2005 16:41:04 +0300
+Message-ID: <41DBEE70.3080505@tls.msk.ru>
+References: <m3is6k4oeu.fsf@reason.gnu-hamburg>	 <m38y7fn4ay.fsf@reason.gnu-hamburg> <v3rda2-hjn.ln1@news.it.uc3m.es>	 <41D45C1F.5030307@tls.msk.ru> <u59ea2-4qr.ln1@news.it.uc3m.es>	 <20050102194240.GE99565@caffreys.strugglers.net>	 <5h1ma2-asq.ln1@news.it.uc3m.es>	 <20050103003005.GG99565@caffreys.strugglers.net>	 <2rana2-0if.ln1@news.it.uc3m.es> <41D93657.7090908@tls.msk.ru>	 <a41oa2-fr7.ln1@news.it.uc3m.es> <1104904239.1613.26.camel@rae.home>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=KOI8-R; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.3.96.1050105051955.9045B-100000@Maggie.Linux-Consulting.com>
+In-Reply-To: <1104904239.1613.26.camel@rae.home>
 Sender: linux-raid-owner@vger.kernel.org
-To: Alvin Oga <aoga@ns.Linux-Consulting.com>
+To: Roger Ellison <raennnn@adelphia.net>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Alvin Oga wrote:
-> 
-> On Wed, 5 Jan 2005, Brad Campbell wrote:
-> 
-> 
->>Picture lpd gets swapped out on a friday night. Over the weekend it is not used and the drive 
->>develops a bad sector in the middle of the file. Monday morning I want to print and the system tries 
->>to page lpd back in again. *boom*.
-> 
-> 
-> admin issue ... user related services like printers should NOT be on
-> critical servers and take down what everybody will notice due to unrelated
-> printer problems
+[Please don't start new thread by replying to another message.]
 
-Ok, perhaps bad example. Pick any service that may get swapped out. Hell.. any bad block in any swap 
-space that develops while that block is in use is going to cause a problem.
+Roger Ellison wrote:
+> I've been having an enjoyable time tinkering with software raid with
+> Sarge and the RC2 installer.  The system boots fine with Raid 1 for
+> /boot and Raid 5 for /.  I decided to experiment with Raid 10 for /opt
+> since there's nothing there to destroy :).  Using mdadm to create a Raid
+> 0 array from two Raid 1 arrays was simple enough, but getting the Raid
 
-> swap ...  swap partitions is by default checked for bad blocks during
-> formatting as swap ...
-> 	- it is highly unlikely that you'd get a bad sector in swap space
+Note there's special raid10 module in recent kernels (and supported by
+recent mdadm).  I don't think it's very stable yet, but.. JFYI ;)
 
-Yeah? I have 3 hard disks sitting on my desk that say you are wrong..
+> 10 array activated at boot isn't working well.  I used update-rc.d to
+> add the symlinks to mdadm-raid using the defaults, but the Raid 10 array
 
-> 
-> - any normal bad things happening to user area of the disks will also
->   happen to swap space
+Shouldn't the links be made automatically when installing mdadm?
+Also, make sure you're using recent debian package of mdadm --
+earlier versions was.. with issues concerning assembling the
+arrays (a problem specific to debian mdadm-raid scripts).
+Make sure AUTOSTART is set to true in /etc/default/mdadm
+(I'm not sure if that's really `AUTOSTART' and `true',
+you can look at the file and/or use dpkg-reconfigure mdadm
+to set that).
 
-I agree.
+> isn't assembled at boot time.  After getting kicked to a root shell, if
+> I check /proc/mdstat only md1 (/) is started.  After running mdadm-raid
+> start, md0 (/boot), md2, and md3 start.  If I run mdadm-raid start again
+> md4 (/opt) starts.  Fsck'ing the newly assembled arrays before
+> successfully issuing 'mount -a' shows no filesystem errors.  I'm at a
+> loss and haven't found any similar issue mentions on this list or the
+> debian-users list.  Here's mdadm.conf:
 
->  	- but its unlikely that swap will have bad blocks, while its 
-> 	more likely that users did nto do a badblock check during
-> 	formatting across the 100GB or 300GB disks ... and even more
-> 	time twiddling your thumbs on raid'd disks
+You have two problems.
+First of all, mdadm-raid should be started at very early in the
+boot process, and mdadm package post-install scripts ensures this
+(you added mdadm-raid links at default order which is 20; but
+it should run before filesystem mounts etc, nearly 01 or something).
+Ditto for stop scripts -- at the very end, after umounting the
+filesystems.  Take a look at /var/lib/dpkg/info/mdadm.postinst --
+it sets up the links properly.  When you correct this, your system
+will go further in boot process... ;)
 
-I strongly disagree.
-I have a 250GB drive I just swapped out that was "growing" bad sectors at the rate of 3 per day that 
-did a clean badblocks 5 months ago when it was installed.
+And second problem is the order of lines in mdadm.conf.
 
-I refuse to argue this any more. If you want to tell the world that there is no benefit to swap on 
-raid, go ahead.
+[edited a bit]
+> DEVICE partitions
+> DEVICE /dev/md*
+> ARRAY /dev/md4 level=raid0 num-devices=2  devices=/dev/md2,/dev/md3
+> ARRAY /dev/md3 level=raid1 num-devices=2  devices=/dev/sdb5,/dev/sde5
+> ARRAY /dev/md2 level=raid1 num-devices=2  devices=/dev/sda5,/dev/sdc5
 
-Brad
+Re-order the lines so that md4 will be listed AFTER all it's
+components.  Mdadm tries to assemble them in turn as they're
+listed in mdadm.conf. But at the time when it tries to start
+md4, it's components aren't here yet so it fails.
+
+HTH.
+
+/mjt
