@@ -1,39 +1,41 @@
-From: Daniel Pittman <daniel@rimspace.net>
-Subject: Re: Looking for some help with device options
-Date: Wed, 26 May 2004 22:12:09 +1000
+From: david@hpcf.upr.edu
+Subject: RAID5 bug on SuSE 8.2->9.1
+Date: Wed, 26 May 2004 09:21:37 -0400 (AST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <878yffcrqe.fsf@enki.rimspace.net>
-References: <AF4CBD49C827BA4F9BDD00E297CD804802624917@adsms01.dyn.datasys.swri.edu>
+Message-ID: <1803.136.145.126.5.1085577697.squirrel@136.145.126.5>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
+Cc: suse-linux@suse.com
 List-Id: linux-raid.ids
 
-On 26 May 2004, Ewan R. Grantham wrote:
-> Am setting up a test machine for some writing I am doing, and the idea
-> is to do some RAID things without messing up my main machine and array
->
-> For the test machine I have three external firewire drives. The
-> "opportunity" here is that two of them are 200 Gigs, and the other one
-> is 80 Gigs.
+Hi,
 
-[...]
+I am having problems with the RAID 5 option on SuSE 8.2, 9.0, 9.1.
 
-> I thought about mixing RAID types on the drives so that I would have a
-> RAID-5 of 80 Gig partitions, and then RAID-1 the remaining 120 Gig on
-> the two 200 Gig drives. But that strikes me as going particularly far
-> out on the limb.
+On each of the version the are diferent issues,
 
-Actually, that is the setup I would chose for this. It provides the
-greatest degree of protection against drive failure possible for each
-chunk of space, and provides the largest effective storage space for
-each MD device.
+SuSE 9.1: First notice during the setup, the systems stops responding
+after a few MB have been copied, during this time I executed the command
+"cat /proc/mdstat" which will make the Raid volumen usefull again, ones
+the system is instaled the problem persisted.
 
-The many 40GB partitions idea seems ... more complex, and less useful.
+SuSE 9.0 & 8.2: Kernel panics, the parity disc 4/4 is never done.
+Reconstruct has to be issue with Knoppix bootcd.
 
-    Daniel
--- 
-We live in a hallucination of our own devising.
-        -- Alan Kay
+Loading the same volumen with any other Linux distro will make the volumen
+usefull without issues.
 
+My config:
+
+AMD64 3200
+1.5GB ram
+Asus k8v Deluxe
+Nvidia 5900
+2 Adaptec 29160 with 2 IBM 36GB each
+
+Thanks
+
+David
