@@ -1,53 +1,40 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: RAID5 resync blocking on 2.6.0-test11
-Date: Wed, 17 Mar 2004 10:23:03 +1100
+From: Holger Kiehl <Holger.Kiehl@dwd.de>
+Subject: mdadm and raid10 question
+Date: Wed, 17 Mar 2004 10:37:05 +0000 (GMT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16471.35927.112459.636557@notabene.cse.unsw.edu.au>
-References: <3FD90B15.8050905@campogeral.com.br>
-	<3FDF691D.9090405@campogeral.com.br>
+Message-ID: <Pine.LNX.4.58.0403171026040.907@praktifix.dwd.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Fernando Serboncini on Tuesday December 16
-To: Fernando Serboncini <fserb@campogeral.com.br>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tuesday December 16, fserb@campogeral.com.br wrote:
-> Fernando Serboncini wrote:
-> > --- linux-2.6.0-test11/drivers/md/md.c  2003-11-26 18:43:29.000000000 -0200
-> > +++ linux/drivers/md/md.c       2003-12-10 23:29:33.000000000 -0200
-> > @@ -3290,6 +3290,8 @@
-> >                 currspeed =
-> > (j-mddev->resync_mark_cnt)/2/((jiffies-mddev->resync_mark)/HZ +1) +1;
-> > 
-> >                 if (currspeed > sysctl_speed_limit_min) {
-> > +                       set_user_nice(current,19);
-> > +
-> >                         if ((currspeed > sysctl_speed_limit_max) ||
-> >                                         !is_mddev_idle(mddev)) {
-> >                                 current->state = TASK_INTERRUPTIBLE;
-> > @@ -3297,6 +3299,8 @@
-> >                                 goto repeat;
-> >                         }
-> >                 }
-> > +               else
-> > +                       set_user_nice(current,-20);
-> >         }
-> >         printk(KERN_INFO "md: md%d: sync done.\n",mdidx(mddev));
-> >         /*
-> > 
-> 
-> For what've seen, this causes no harm at all.
-> Can anyone confirm that this is the right thing to do with the 
-> "blocking" issue?
+Hello
 
-Sorry for not replying earlier.  I was on leave in December and never
-got  back to this.
+I have a problem with setting up a raid10 array with mdadm. With raidtools
+it runs fine, but this might be because I have been using it for a very
+long time.
 
-This shouldn't be needed any longer.  Have you tried a recent kernel
-without this patch?
+The array consists of 6 SCSI disk /dev/sd[abcdef]1 and creating and
+starting the raid1 is no proplem. Creating the raid0 is also no problem
+but starting it after it is stopped does not work.
 
-Thanks,
-NeilBrown
+Here my /etc/mdadm.conf:
+
+DEVICE /dev/hda[2356] /dev/hde[2356]
+DEVICE /dev/sd[abcdef]1
+ARRAY /dev/md0 level=raid1 num-devices=2 UUID=758b2a4e:74f182df:282c9a7e:0246977b
+ARRAY /dev/md1 level=raid1 num-devices=2 UUID=728311df:5491265a:29de2fa5:a1042914
+ARRAY /dev/md2 level=raid1 num-devices=2 UUID=37bd8c5a:9e7efc91:e7537d56:b56c8eef devices=/dev/hda6,/dev/hda5,/dev/hde6,/dev/hde5,/dev/sdd1,/dev/sda1 spare-group=group1
+ARRAY /dev/md3 level=raid1 num-devices=2 UUID=01bc8c7b:c3eb887e:79eb423d:bd46305f devices=/dev/sde1,/dev/sdb1 spare-group=group1
+ARRAY /dev/md4 level=raid1 num-devices=2 UUID=72fe4455:cc7965b5:4fe2f4d0:2a5523ce devices=/dev/sdf1,/dev/sdc1 spare-group=group1
+ARRAY /dev/md5 level=raid0 num-devices=3 UUID=c1565e2b:12c85143:d2fcffa2:12791897 devices=/dev/md2,/dev/md3,/dev/md4
+
+Doing a "mdadm -A /dev/md5" I get:
+
+   mdadm: no devices found for /dev/md5
+
+md5 should be the raid0 consisting of the three raid1's (md2, md3, md4).
+What am I doing wrong?
+
+Holger
