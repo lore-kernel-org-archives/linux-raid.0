@@ -1,70 +1,35 @@
-From: Seth Hall <seth@speech.mit.edu>
-Subject: Promise SX6000 problems.
-Date: Mon, 03 Feb 2003 18:10:27 -0500
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: Promise SX6000 problems.
+Date: Tue, 4 Feb 2003 18:30:14 +0100 (CET)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3E3EF6E3.CBA898DC@speech.mit.edu>
+Message-ID: <Pine.LNX.4.44.0302041827130.4208-100000@uplift.swm.pp.se>
+References: <3E3EF6E3.CBA898DC@speech.mit.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <3E3EF6E3.CBA898DC@speech.mit.edu>
 To: Linux Raid List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi,
+On Mon, 3 Feb 2003, Seth Hall wrote:
 
-Has anyone had better success with this card than we have? To wit:
+> Hi,
+> 
+> Has anyone had better success with this card than we have? To wit:
 
-------------------------------------------------------------------------
-I am still struggling with trying to get our new SuperTrac SX6000 to work
-properly with any version of Linux. I have not had any success since we received
-the card in late December. 
+Yes. I have received Redhat 7.3 and 8.0 beta drivers from Promise for the
+SX6000 that works properly (been running them since october).
 
-Most recently I have been trying to get the Promise Driver V1.02.0.22
-[06/27/2002] driver to work on a fresh distribution of RedHat v7.3, kernel
-2.4.18-3 installation described in the Readme seemed to succeed, but the ft.o
-driver refuses to load, with insmod giving the following error message:
+I have absolutely NO IDEA why Promise doesnt release these or even 
+acknowledge that they exists. I have emailed them to 6-7 people so far and 
+nobody has reported back stating that they have any problems with them. 
+They all expressed frustration from dealing with Promise on the issue. 
+Promise needs to get their act together and release supported 
+updated Redhat drivers, or even better, work with redhat so that redhat 
+can include the latest drivers with their newer kernels directly.
 
-#root_> insmod /lib/modules/2.4.18-3/kernel/drivers/scsi/ft.o
-Warning: loading /lib/modules/2.4.18-3/kernel/drivers/scsi/ft.o
-will taint the kernel: no license
+Seems I got lucky and caught the right person at Promise when I emailed.
 
-/lib/modules/2.4.18-3/kernel/drivers/scsi/ft.o: init_module: operation not
-permitted
-Hint: insmod errors can be caused by incorrect module parameters, including
-invalid IO or IRQ parameters
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
 
-
-No SCSI devices are created and lsmod confirms that the ft.o module was not
-loaded.
-
-
-The system in question is a brand new:
-
-Dell Optiplex GX260, 1GB RAM, Gigabit ethernet (Intel e1000), 60GB Ultra ATA
-drive, Radeon graphics controller.
-
-The Promise RAID is configuer as follows:
-
-Promise SX6000 with 5 Seagate 120GB drives installed and configured as a 480GB
-RAID-5 device (BIOS state reported: Functional.)
-
-
-FastTrak Series Linux Driver 
-Version 1.02.0.22 [06/27/2002]
-For RedHat Linux 7.3 (kernel 2.4.18-3)
-
-The SX6000 works perfectly under W2K. I then deleted this test RAID-5 set. A new
-RAID-5 set was created and initialized for Linux following verification of the
-hardware using W2K.
-
-Incidentally, I also tried to use the new Open Linux driver you offer, using a
-driver Makefile Jordan Rhody sent me on December 18, 2002, with no success. The
-Makefile supplied built correctly under Slackware v8.1 (kernel v2.4.20) After
-booting, the sca device could not be found. I reverted to RH 7.3 since this is
-the release you claim to support.
-
-Help!?
-
-Seth Hall
-Speech Comm. Group
-MIT - Cambridge
