@@ -1,39 +1,64 @@
-From: Per Andreas Buer <perbu@linpro.no>
-Subject: Re: poor performance with raid1 / raid0
-Date: 18 Jun 2003 16:00:43 +0200
+From: Alexander Belov <alexb@arctel.ru>
+Subject: problems with mounting root fs in latest 2.4 kernels
+Date: Wed, 18 Jun 2003 18:46:20 +0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <PERBUMSGID-ul63ci7trhw.fsf@ipchains.linpro.no>
-References: <PERBUMSGID-ul6fzm7tvl3.fsf@ipchains.linpro.no>
-	<1055943743.31927.20.camel@cinshrlnxws01.shermfin.com>
+Message-ID: <16112.31548.626037.658852@darkside.no.dom>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1055943743.31927.20.camel@cinshrlnxws01.shermfin.com>
-To: Andrew Rechenberg <arechenberg@shermfin.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Andrew Rechenberg <arechenberg@shermfin.com> writes:
+Hello!
 
-> Check /proc/sys/dev/raid/speed_limit_[min|max].  If they are set too low
-> then your re-mirror will behave as such.  To change just echo a new
-> value:
-> 
-> echo 30000 > /proc/sys/dev/raid/speed_limit_min
-> echo 50000 > /proc/sys/dev/raid/speed_limit_max
-> 
+I have Linux box with Promise FastTrak TX2000 Ultra ATA/133 RAID PCI Card
+and RAID1 configured. And I have no problems with booting Linux from
+RAID1 array under kernel-2.4.18. My kernel config is:
 
-I did so - and now:
+-------------------- Begin ---------------------
+                [*]   Generic PCI IDE chipset support
+                [*]     Sharing PCI IDE interrupts support
+                [*]     Generic PCI bus-master DMA support
+                [*]       Use PCI DMA by default when available
+                [*]     Intel PIIXn chipsets support
+                [*]       PIIXn Tuning support
+                <*> Support for IDE Raid controllers
+                <*>    Support Promise software RAID (Fasttrak(tm))
+                < >    Highpoint 370 software RAID
+-------------------- End ---------------------
 
-md6 : active raid1 md16[2] sdd6[0]
-      117185984 blocks [2/1] [U_]
-      [>....................]  recovery =  0.1% (229120/117185984)
-finish=59.5min speed=32731K/sec
 
-:D
+And my /etc/lilo.conf:
 
-Thanks.
+-------------------- Begin ---------------------
+# Start LILO global section
+append="ide2=0xdc00,0xd882,10 ide3=0xd800,0xd482,10"
+boot=/dev/ataraid/d0
+lba32 # Allow booting past 1024th cylinder with a recent BIOS
+disk = /dev/ataraid/d0
+  bios = 0x80
+prompt
+timeout = 50
+vga = normal
 
+# Linux bootable partition config begins
+image = /boot/vmlinuz
+root = /dev/ataraid/d0p1
+label = linux
+read-only # Non-UMSDOS filesystems should be mounted read-only for checking
+-------------------- End ---------------------
+
+But when I try to do this config under 2.4.19/20/21 kernel, the boot process
+fails with:
+
+Kernel panic: VFS: Unable to mount root fs on 72:01
+
+I tried to enable/disable the kernel options related to Promise
+FastTrak, PDC202xx but result was the same: Kernel panic.
+
+Am I misunderstand something?
+
+Thanks for any help.
 -- 
-There are only 10 different kinds of people in the world, 
-those who understand binary, and those who don't.
+Alexander Belov
