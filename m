@@ -1,74 +1,160 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: combining two raid systems
-Date: Fri, 14 Jan 2005 13:18:32 +1100
-Message-ID: <16871.11256.955469.266210@cse.unsw.edu.au>
-References: <200501132017.16910.maarten@ultratux.net>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: Spares and partitioning huge disks
+Date: Thu, 13 Jan 2005 21:43:29 -0500
+Message-ID: <200501140241.j0E2fX907217@www.watkins-home.com>
+References: <u1djb2-d2j.ln1@news.it.uc3m.es>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from maarten on Thursday January 13
+In-Reply-To: <u1djb2-d2j.ln1@news.it.uc3m.es>
 Sender: linux-raid-owner@vger.kernel.org
-To: maarten <maarten@ultratux.net>
-Cc: linux-raid@vger.kernel.org
+To: "'Peter T. Breuer'" <ptb@lab.it.uc3m.es>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday January 13, maarten@ultratux.net wrote:
-> 
-> Hi,
-> 
-> I'm currently combing two servers into one, and I'm trying to figure out the 
-> safest way to do that.
-....
-> 
-> All md arrays are self-booting 0xFD partitions.
-...
-> 
-> Now when I boot I get a lilo prompt, so I know the right disk is booted by the 
-> BIOS.  When logged in, I see only the md devices from system two, and thus 
-> the current md0 "/" drive is from system two.  Now what options do I have ?
+Well, I give up!  It seems we don't talk the same language.
+That is ok with me.  Bye!
 
-This is exactly why I despise auto-detect (0xFD partitions). When it
-works, it works well, but when it doesn't it causes real problems.
 
-You seem to have solved a lot of your problems based on subsequent
-emails, but the simplest approach would be to remove the 0xFD setting
-on all partitions except those for the root filesystem. 
-Once you have done that, you should be able to boot fine, though only
-the root array will be assembled of course.
+-----Original Message-----
+=46rom: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Peter T. Breuer
+Sent: Thursday, January 13, 2005 6:33 PM
+To: linux-raid@vger.kernel.org
+Subject: Re: Spares and partitioning huge disks
 
-Then something  like
-  mdadm -E -s -c partitions
+Guy <bugzilla@watkins-home.com> wrote:
+> Maybe you missed my post from yesterday.
 
-will cause mdadm to find all your arrays and report information about
-them.
-(mdadm -Ds, as you were trying, only reports assembled arrays. You
-want '-E' to find arrays make of devices that aren't currently
-assembled).
+Possibly I did - I certainly don't read everything and not everything
+gets to me. Or maye I saw it and could not decipher it. I don't know!
 
-Put this information into mdadm.conf and edit out the bits you don't
-want leaving something like:
+> http://marc.theaimsgroup.com/?l=3Dlinux-raid&m=3D110559211400459&w=3D=
+2
 
-  DEVICES partitions
-  ARRAY /dev/md1 UUID=....
-  ARRAY /dev/md2 UUID=.....
-  etc
+> No superblock was to prevent overwriting data on the failing componen=
+t of
 
-i.e. each ARRAY entry only lists a device name and a UUID.
-The output of "mdadm -Es.." will list some device names
-twice. Naturally you will need to change this.
+You say that no superblock in one of the raid1 subarray's disks stops
+overwriting data on a top raid5 array?  This really sounds like double
+dutch!  And if it does (What?  How?  Why?), so what?
 
-Then
-   mdadm -As
+> the top RAID5 array.  If you build the top array with degraded RAID1
+arrays,
+> then use a super block for the RAID1 arrays.
 
-will assemble the rest of your arrays.
+There possibly a missing verb in that sentence.  Or maybe not.  It is
+hard to tell. Hmmmmmmmm .......... nope, I really can't see where that
+sentence is trying to go.
 
-You also wondered about "personality" numbers.
-A "personality" corresponds to a module that handles 1 or more raid
-levels.
-Personality 3 handles raid1
-Personality 4 handles raid5 and raid4
+Let's suppose it really does have the form of a computer language IF
+THEN, so the conditional test would be "you build the top array with
+degraded RAID1 arrays".
 
-see include/linux/raid/md_k.h
+Well, I can interpret that to say that I build the top array (which is
+RAID5) OF degraded RAID1 arrays, and then that would match what I
+suggested.
 
-NeilBrown
+OK.  So that would mean "IF you do what you suggest THEN ...".  Then
+what?  Then "an imperative".  An imperative?  Why should I obey an
+imperative?  Well, what does this imperative say anyway?=20
+
+It says "use a super block for the RAID1 arrays".
+
+OK, that could be "use RAID1 arrays with superblocks".  That is "do the
+normal thing with RAID1".  So the whole sentence says "IF you do what
+you suggest THEN do the normal thing with RAID1".  OK - I agree.  You
+are trying to say "IF I do things my way THEN I don't have to do
+anything strange at the RAID1 level".
+
+OK?
+
+Whew! I can see why I skipped whatever you said before if that is what
+it takes to decipher it!
+
+Bt then the entire sentence says nothing strange or exciting.
+
+> Also, so all of the RAID1 arrays don't seem degraded, configure them =
+with
+> only 1 device.=20
+
+Whaaaaaaat? Oh no, I give up - I really can't parse this.=20
+
+Hang on - maybe the tenses are wrong.  Maybe you are trying to say "you
+don't have to configure the RAID1 arrays as having 1 good disk and 1
+failed disk".
+
+Well, I disagree. Correct me if I am wrong but as far as I know you
+cannot change the number of disks in a raid array. I'd be happy to
+learn you can, but for all I know if you start with n disks comprised
+of m good and p failed disks, then n =3D m + p and the total can never
+change. In my 2.6.3 codebase for raid there is only one point where=20
+conf->raid_disks is changed, and it is in the "run" routine, where=20
+it is set once and for all and never changed.
+
+
+> Grow them to 2 devices when needed.  Then shrink them back
+> to 1 when done.
+
+If it were possible I'd be happy to hear of it. Maybe it is possible -
+but it would be in a newer codebase than the 2.6.3 code I have running
+here.
+
+If so, why this convoluted way of saying that?
+
+> The RAID1 idea will not work since a bad block will take out the RAID=
+1.
+But
+
+Uh - yes it will work, no a bad block will not "take out the RAID1",
+whatever you mean by that.=20
+
+I presume you mean that a bad block in the disk being read will mess up
+the raid1 subarray. No it won't - it will just prevent a block being
+copied. I see nothing terrible in that. The result will be that
+everything else but that block will be copied. If you like we can even
+arrange that the missing block be corrected THEN at that moment from
+data available in the superarray, but I don't see that as necessary.
+
+Why?
+
+Well,=20
+
+1) because now that you have told me that the disk you want to swap out
+is bad, then the top level array has morally lost its redundancy
+already!  So just take the disk out and replace it - you won't be
+degrading the top array any more than it already is while you do this.
+
+2) oh - but you say that yes we are losing redundancy on the good
+sectors of the disk. Oh? And which are those? Well let's just go ahead
+with the RAID1 sync and whenever we hit an unreadable sector then
+launch a request to the top level array for a read from the rest of the
+RAID5 for that sector only.
+
+3) oh, but you don't like to do that during resync? Shrug .. then mar
+the place on a bitmap and after the resync has finished as best you are
+able then launch an extra cleanup phase from the RAID5  to cover the
+blocks marked bad in the bitmap (one can do this periodically anyway).
+
+I don't see that one really needs to do 3 in place of 2, but I am
+experimenting.
+
+Anyway, the point is that =FFour "it will not work" is wrong.
+
+> there are more issues, see the above URL.
+
+Does it contain more of the same?
+
+Peter
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
