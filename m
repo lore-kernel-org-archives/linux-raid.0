@@ -1,43 +1,56 @@
-From: "Stephan Kessler" <root@warpy.yomeganet.biz>
-Subject: Badblocks with RAID-1 on Root device - Will this work?
-Date: Sun, 15 Feb 2004 12:30:30 +0100
+From: Matt Thrailkill <xwred1@modestolan.com>
+Subject: Re: mkraid, busted raid0 superblock
+Date: Sun, 15 Feb 2004 03:09:19 -0800
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <004601c3f3b7$1ebd8f10$4db0fea9@kessler.local>
+Message-ID: <1076843359.28006.10.camel@stoneburner.xwredwing.net>
+References: <1076817569.7354.8.camel@tallgeese.xwredwing.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1076817569.7354.8.camel@tallgeese.xwredwing.net>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi List,
+After mulling over it for 10 hours, I decided to bite the bullet and do
+it.
 
-I got the following problem:
+It worked fine.
 
-My Discs in my Web-Server with an RAID-1 SW Array starting to get
-BadBlocks. I got 2 Raid devices /dev/md0 and /dev/md1.
+Just for reference, I ran this:
+`lsraid -R -a /dev/md2 -d /dev/hdN` where hdN was on of the constituents
+of my stripe.  That tells it to print the array info in raidtab format
+by reading the superblock off that drive.  I checked that to make sure
+it matched my real raidtab, which it did.  I did it on both constituents
+also.
 
-/dev/md0 -> /dev/hda1 and /dev/hdc1 mounted as /
-/dev/md1 -> /dev/hda2 and /dev/hdc2 mounted as swap
+After that, I rean `mkraid --force /dev/md2` and let it overwrite my
+superblocks.  Same idea as overwriting a corrupt partition table with
+one you know is valid.  Worked fine, syslog said xfs recovery started
+and ended, didn't mention it having to fix anything.
 
-I aint got physical access to my machine because it is far away in a
-computer center, or whatever it is called.... ;)
+Thats a rock off my chest :)
 
-Now i want to mark the badblocks. I searched the Archives and found
-that:
-http://marc.theaimsgroup.com/?l=linux-raid&m=103505358006012&w=2
-
-My Question is now:
-Will this work with an "all the time" mounted /dev/md0 Partition. Ok i
-think the removing of the Disc will work, and the badblock check too.
-But can i add the Blocks which should be marked with e2fsck to a mounted
-device?
-
-If not, how can i fix the BadBlock Problem with just having ssh?
-
-Thank you in advance for the help! And a nice Sunday of course ;)
-
-Greetings from "Good old Germany",
-Stephan
+On Sat, 2004-02-14 at 19:59, Matt Thrailkill wrote:
+> Last night I triggered a bug in the driver for my ide controller, the
+> controller that the drives for my raid0 were hanging off of, and the
+> superblocks got out of sync.  After some googling and reading
+> (especially this:
+> http://marc.theaimsgroup.com/?l=linux-raid&m=107282085211211&w=2) it
+> looks like I should do an mkraid -R on my array.  My raidtab is the same
+> as when I created it, so I assume it is consistent.  
+> 
+> Only thing is, is there something I should examine with lsraid?  mkraid
+> mentions an lsraid howto which I can't find.  I did a few things with
+> lsraid, it reported the constituent drives of my array as being good. 
+> Whatever I do, I obviously want to keep the filesystem intact.  Any
+> tips?
+> 
+> Thanks.
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
