@@ -1,42 +1,25 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: ANNOUNCE: mdadm 1.9.0 - A tool for managing Soft RAID under Linux
-Date: Fri, 4 Feb 2005 16:03:00 +1100
-Message-ID: <16899.516.611143.990559@cse.unsw.edu.au>
-References: <16898.52171.979070.715369@cse.unsw.edu.au>
-	<4202FFFB.6060604@fastmail.co.uk>
+From: "Emory Gore" <mhvoxmjzgo@mindspring.com>
+Subject: Finally the door yielded
+Date: Fri, 04 Feb 2005 11:16:31 +0600
+Message-ID: <TvWE78VXVORhxv.S08ZuJkw__23103.7294179716$1107499116$gmane$org@QHIIZ>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="iso-8859-2";
 Content-Transfer-Encoding: 7bit
-In-Reply-To: message from Max Waterman on Friday February 4
+Content-Class: urn:content-classes:message
 Sender: linux-raid-owner@vger.kernel.org
-To: mwaterman@jingmei.org
-Cc: linux-raid@vger.kernel.org
+To: Hope <linux-scsi-owner@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Friday February 4, davidmaxwaterman@fastmail.co.uk wrote:
-> Neil Brown wrote:
-> >
-> > Release 1.9.0 adds:
-> ...
-> >     -   --assemble --auto recognises 'standard' name and insists on using
-> >         the appropriate major/minor number for them.
-> 
-> Is this the problem I encountered when I added auto=md to my mdadm.conf 
-> file?
+How have you been? I have very exciting news!
+We FINALLY were able to save an extra $450 a month
+We refinatnced our mortgeage with a 3.75
+and closing was fast and we got several low offers within
+day. You can apply also at
+http://www.ldrim.com/
 
-Probably.
+Hope you do good with money over the coming year
 
-> 
-> It caused all sorts of problems - which were recoverable, fortunately.
-> 
-> I ended up putting a '/sbin/MAKEDEV md' into /etc/rc.sysinit just before 
-> the call to mdadm, but that creates all the md devices, not just those 
-> that are needed.
-> 
-> Will this new version allow me to remove this line in rc.sysinit again 
-> and put the 'auto=md' back into mdadm.conf?
 
-I think so, yes.  It is certainly worth a try and I would appreciate
-success of failure reports.
+Emory Gore
 
-NeilBrown
