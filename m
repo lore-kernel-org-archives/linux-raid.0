@@ -1,88 +1,94 @@
-From: Gordon Henderson <gordon@drogon.net>
-Subject: Re: 4 questions. Chieftec chassis case CA-01B, resync times, selecting
- ide driver module loading,  raid5 :2 drives on same ide channel
-Date: Sun, 16 Jan 2005 17:53:15 +0000 (GMT)
-Message-ID: <Pine.LNX.4.56.0501161739170.21510@lion.drogon.net>
-References: <crmt7e$8d6$1@sea.gmane.org> <Pine.LNX.4.56.0501101634250.17714@lion.drogon.net>
- <200501101810.49798.maarten@ultratux.net> <200501161119.41349.mlaks@verizon.net>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+From: Gerd Knops <gerti@bitart.com>
+Subject: RAID5 drive failure, please verify my commands
+Date: Sun, 16 Jan 2005 12:14:39 -0600
+Message-ID: <7C8198B3-67EA-11D9-9A87-00039363AEBE@bitart.com>
+Mime-Version: 1.0 (Apple Message framework v619)
+Content-Type: text/plain; charset=US-ASCII; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200501161119.41349.mlaks@verizon.net>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, 16 Jan 2005, Mitchell Laks wrote:
+Hello all,
 
-> 3) Also, i have a module driver question.
-> I use a asus K8V-X motherboard. It has sata and parallel ide channels. I use
-> the sata for my system and use the  parallel for data storage on ide raid.
-> I am using  combining the 2 motherboard IDE cable channels with highpoint
-> rocket133 cards to provide 2 more ide ata channels.
->
-> I installed debian and it defaulted to using the hpt366 modules for the
-> rocket133 controllers.
+One of the dreaded Maxtor SATA drives in my RAID5 failed, after just 3 
+months of light use. Anyhow I neither have the disk capacity nor the 
+money to buy it to make a backup. To make sure I do it correctly, could 
+you folks please double-check my intended course of action? I would 
+really appreciate that.
 
-I've just been down this road myself... Debian Woody, kernels 2.4 and 2.6
-and a Highpoint rocket133 controller...
+Current state:
 
-> I suspect (correct me if I am wrong) that the hpt302 on the highpoint website
-> is the RIGHT module to use (I notice for instance that when I compare the
-> hdparm settings on the western digital drives on the motherboard ide channels
-> are set with more advanced dma settings "turned on" than   on the rocket133
-> controllers. Perhaps this is because it is using the 'incorrect hpt366'
-> module?
+xanadu:~# uname -a
+Linux xanadu 2.6.8-1-386 #1 Mon Sep 13 23:29:55 EDT 2004 i686 GNU/Linux
+xanadu:~# mdadm --detail /dev/md0
+/dev/md0:
+         Version : 00.90.01
+   Creation Time : Fri Oct  8 13:01:49 2004
+      Raid Level : raid5
+      Array Size : 490223104 (467.51 GiB 501.99 GB)
+     Device Size : 245111552 (233.76 GiB 250.99 GB)
+    Raid Devices : 3
+   Total Devices : 3
+Preferred Minor : 0
+     Persistence : Superblock is persistent
 
-Using the module off their web site worked for me with kernel 2.4.28 - but
-it turned my IDE drives into SCSI drives! No real issue, but the smart
-drive termperature program stopped working...
+     Update Time : Sun Jan 16 06:25:31 2005
+           State : clean, degraded
+  Active Devices : 2
+Working Devices : 2
+  Failed Devices : 1
+   Spare Devices : 0
 
-The driver wouldn't compile with 2.6.10, but the hpt366 driver did work
-under 2.6.10 and seems to work very well - and the drives still look like
-IDE drives and hddtemp still works.
+          Layout : left-symmetric
+      Chunk Size : 256K
 
-> Of course I would prefer to use the hpt302 module (after i compile
-> it...). So
+            UUID : 0c758197:f3af8f3b:d68050c0:04ea429e
+          Events : 0.221727
 
-Would you? The 366 driver in 2.6.10 recognises that it's a 302 card and
-seems to work well... dmesg output:
+     Number   Major   Minor   RaidDevice State
+        0       0        0        -      removed
+        1       8       17        1      active sync   /dev/sdb1
+        2       8       33        2      active sync   /dev/sdc1
 
-HPT302: IDE controller at PCI slot 0000:00:0a.0
-HPT302: chipset revision 1
-HPT37X: using 33MHz PCI clock
-HPT302: 100% native mode on irq 18
-    ide2: BM-DMA at 0x9800-0x9807, BIOS settings: hde:DMA, hdf:pio
-    ide3: BM-DMA at 0x9808-0x980f, BIOS settings: hdg:DMA, hdh:pio
-Probing IDE interface ide2...
-hde: Maxtor 6Y080L0, ATA DISK drive
-ide2 at 0xb000-0xb007,0xa802 on irq 18
-Probing IDE interface ide3...
-hdg: Maxtor 6Y080L0, ATA DISK drive
-ide3 at 0xa400-0xa407,0xa002 on irq 18
-
-I have it compiled into the kernel here too - not a module. (personal
-choice, I never have modules unless I can avoid it)
+        3       8        1        -      faulty   /dev/sda1
 
 
-> how do I get to insure that the system will use the hpt302 over the hpt366
-> that it seems to be chosing. If I
-> 1) compile the module hpt302 from source
-> 2) dump it in the /lib/modules/2.6.9-1-386/kernel/drivers/ide/pci directory
-> 3) put a line hpt302 in the /etc/modules file (maybe at the top?)
-> 4) put a line hpt302 at  the top of the file /etc/mkinitd/modules.
-> 5) run mkinitrd to generate the new initrd.img
+Here is what I think I should be doing:
 
-The easiest way would be to compile a custom kernel yourself. Just leave
-out the Highpoint drivers and then compile and load the hpt302 module at
-boot time by listing it in the /etc/modules file.
+- Remove failed disk from array:
 
-> 4) Maarten mentioned that he had a problem with 2 different drives on
-> the same channel for raid5. What was the problem exactly with that.
+	mdadm /dev/md0 --remove /dev/sda1
 
-It's possible that a failing IDE drive will crowbar the bus and take out
-the other drive with it - not neccessarily damage any data on the drive,
-but prevent it being seen by the OS. I've experienced this myself. In a
-RIAD-5 situation, you'd lose 2 drives which would not be a good thing..
+- Physically remove disk from system
+- Add new disk to system, partition
+- Add to array:
 
-Gordon
+	mdadm /dev/md0 --add /dev/sda1
+
+Anything else to trigger rebuilding of the disk?
+
+That should be it, correct? Also since I lost all confidence in the 
+Maxtor drives (had a long history of problems with that brand, I don't 
+think any Maxtor drive I ever owned made it to retirement) I probably 
+will buy a new drive immediately and replace the broken one. Then when 
+the broken one is repaired/exchanged, I would like to add it as spare. 
+To do so, would the sequence be
+
+	mdadm /dev/md0 --add /dev/sdd1
+
+Is that it?
+
+Also one last question: Foolishly I allocated all available space in 
+the Maxtors for the RAID. Now, should the replacement drive have a 
+slightly smaller capacity, is there some way to deal with that? I think 
+i can use resize2fs to reduce the size of the filesystem (does this 
+work with ext3 file systems?). Assuming that works, is there some way 
+to convince the RAID to accept a smaller partition and adjust it's size 
+accordingly?
+
+Thanks all
+
+Gerd
+
