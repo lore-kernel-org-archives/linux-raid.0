@@ -1,27 +1,29 @@
 From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
-Subject: Re: RAID-6 support in kernel?
-Date: Tue, 4 Jun 2002 14:49:54 +0200
+Subject: Re: SV: RAID-6 support in kernel?
+Date: Tue, 4 Jun 2002 14:59:55 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200206041249.g54CntV07616@mail.pronto.tv>
-References: <Pine.LNX.4.33.0206031020290.30424-100000@mail.pronto.tv> <20020603113128.C13204@ucw.cz> <3CFB82A0.EB2062AE@daimi.au.dk>
+Message-ID: <adidsu$k6r$2@main.gmane.org>
+References: <2D0AFEFEE711D611923E009027D39F2B02F17E@nasexs1.meridian-data.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3CFB82A0.EB2062AE@daimi.au.dk>
-To: Kasper Dupont <kasperd@daimi.au.dk>, Vojtech Pavlik <vojtech@suse.cz>
-Cc: Derek Vadala <derek@cynicism.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, Tedd Hansen <tedd@konge.net>, Christian Vik <christian@konge.net>, Lars Christian Nygaard <lars@snart.com>
+In-Reply-To: <2D0AFEFEE711D611923E009027D39F2B02F17E@nasexs1.meridian-data.com>
+To: Dale Stephenson <dale.stephenson@quantum.com>, 'Kasper Dupont' <kasperd@daimi.au.dk>
+Cc: Christian Vik <cvik@vanadis.no>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday 03 June 2002 16:52, Kasper Dupont wrote:
-> Vojtech Pavlik wrote:
-> > He was thinking "mirror", not "stripe". Mirror of 2 RAID-5 arrays (would
-> > be probably called RAID-15 (when there is a RAID-10 for mirrored stripe
-> > arrays)), can withstand any two disks failing anytime.
->
-> It can actually withstand any *three* disks failing anytime.
+> Of course, for a 4 drive setup there's no reason to use RAID 6 at all (RAID
+> 10 will withstand any two drive failure if you only use 4 drives), but
+> that's the reasoning.  I think the best way to deal with the read-modify
+> write problem for RAID 6 is to use a small chunk size and deal with NxN
+> chunks as a unit.  But YMMV.
 
-still - I don't want to waste that money
+RAID10 will _not_ withstand any two-drive fail in a 4-drive scenario. If D1 
+and D3 fail, you're fscked
+
+D1 D2
+D3 D4
 
 -- 
 Roy Sigurd Karlsbakk, Datavaktmester
