@@ -1,16 +1,28 @@
-From: Lars Marowsky-Bree <lmb@suse.de>
-Subject: Re: [PATCH 1/2] md bitmap bug fixes
-Date: Sat, 19 Mar 2005 18:54:17 +0100
-Message-ID: <20050319175417.GU18819@marowsky-bree.de>
-References: <20050319162443.GR18819@marowsky-bree.de> <200503191744.j2JHiKT25357@www.watkins-home.com>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: [PATCH 1/2] md bitmap bug fixes
+Date: Sat, 19 Mar 2005 13:05:43 -0500
+Message-ID: <200503191805.j2JI5mT25426@www.watkins-home.com>
+References: <20050319175417.GU18819@marowsky-bree.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Content-Disposition: inline
-In-Reply-To: <200503191744.j2JHiKT25357@www.watkins-home.com>
+In-Reply-To: <20050319175417.GU18819@marowsky-bree.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Guy <bugzilla@watkins-home.com>, "'Peter T. Breuer'" <ptb@lab.it.uc3m.es>, linux-raid@vger.kernel.org
+To: 'Lars Marowsky-Bree' <lmb@suse.de>, "'Peter T. Breuer'" <ptb@lab.it.uc3m.es>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+Oh!  I never read it like you just said.  I have been reading it like c=
+opy
+in both directions based on both bitmaps!  What you said below, seems
+reasonable.
+
+Guy
+
+-----Original Message-----
+=46rom: Lars Marowsky-Bree [mailto:lmb@suse.de]=20
+Sent: Saturday, March 19, 2005 12:54 PM
+To: Guy; 'Peter T. Breuer'; linux-raid@vger.kernel.org
+Subject: Re: [PATCH 1/2] md bitmap bug fixes
 
 On 2005-03-19T12:44:14, Guy <bugzilla@watkins-home.com> wrote:
 
