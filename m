@@ -1,14 +1,31 @@
-From: Mike Baynton <mikeb414@earthlink.net>
-Subject: Re: Raid5 Construction Question
-Date: Fri, 20 Aug 2004 00:17:30 -0500
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: Raid5 Construction Question
+Date: Fri, 20 Aug 2004 02:52:17 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <4125896A.8040800@earthlink.net>
+Message-ID: <200408200652.i7K6qH315986@watkins-home.com>
+References: <4125896A.8040800@earthlink.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <4125896A.8040800@earthlink.net>
+To: 'Mike Baynton' <mikeb414@earthlink.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+From what I have read on this list, raidtools is no longer supported.
+This includes raidstart, raidstop, raidhotadd and raidhotremove, maybe more.
+
+mdadm is the preferred tool to maintain your arrays.
+
+Guy
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Mike Baynton
+Sent: Friday, August 20, 2004 1:18 AM
+To: linux-raid@vger.kernel.org
+Subject: Re: Raid5 Construction Question
 
 Paul Nowoczynski wrote:
 
@@ -33,4 +50,9 @@ though I should have caught it with raid\tab\tab :)
  > Thanks.
  > Pul
  >
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
