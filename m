@@ -1,47 +1,26 @@
-From: "Holly Stanton" <zinziva@kdowo20pdwld.ne.net>
-Subject: =?ISO-8859-1?Q?=20=BB=FD=C1=D9?=  =?ISO-8859-1?Q?=20=B2=F7=B1=E4=B1=D7=B3=E0...=C1=D7=C0?=
-	=?ISO-8859-1?Q?=BB=B6=F3=C7=CF=B3=D7..?= d hzc pypl
-Date: Wed, 10 Mar 04 00:16:54 GMT
-Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <289-2-7-0p70k@3kvdes6n>
-Reply-To: "Holly Stanton" <zinziva@kdowo20pdwld.ne.net>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] 2.4.x Linux Medley RAID Version 7
+Date: Wed, 10 Mar 2004 15:56:56 -0500
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <404F8118.1060203@pobox.com>
+References: <200403101707.38595.bzolnier@elka.pw.edu.pl> <Pine.LNX.4.40.0403101917170.2582-100000@jehova.dsm.dk> <c2nv0b$j5$1@news.cistron.nl>
 Mime-Version: 1.0
-Content-Type: multipart/alternative;
-	boundary="EE8A04B6._80"
-Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-net@vger.kernel.org
-Cc: linux-ppp@vger.kernel.org, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, linux-smp@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <c2nv0b$j5$1@news.cistron.nl>
+To: Miquel van Smoorenburg <miquels@cistron.nl>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Miquel van Smoorenburg wrote:
+> MD already has support for more than one type of superblock. I think
+> if you just add medley (or intel, or ..) support to MD you're all set.
 
---EE8A04B6._80
-Content-Type: text/plain;
-Content-Transfer-Encoding: quoted-printable
+Indeed.  Further, we have the new vendor-neutral RAID metadata format, 
+"DDF", looming on the very near horizon.
 
-<htm> 
-<head>
-<x-META HTTP-EQUIV=3D"Content-Type" CONTENT=3D"text/html;charset=3Deuc-kr"=
-> 
-<title></title>
-<x-meta name=3D"generator" content=3D"Namo WebEditor v5.0">
-</head> 
-<table width=3D100% bgcolor=3D"#333333" link=3D"#FF0000" vlink=3D"#FF0000"=
- alink=3D"#FF0000">
-<td valign=3Dtop> 
-<table width=3D"500" border=3D"1" align=3D"center" cellpadding=3D"0" cells=
-pacing=3D"0" bordercolor=3D"#000000"> 
-<form name=3Dform action=3D"http://588madam.com/partner/code.asp?partner_i=
-d=3Dsex1004" method=3Dpost target=3D'blank'> <button type=3D'submit' style=
-=3D"width: 710px; height: 494px; background-color: #ffffff; background-ima=
-ge: url('http://588madam.com/partner/email/email4/1.jpg'); background-repe=
-at: no-repeat; background-position: 0px 50%" ? href=3D"http://588madam.com=
-/partner/code.asp?partner_id=3Dsex1004"></button> 
-</form> 
-</td> 
-</tr> 
-<tr> 
-</table>
-</htm>ruv ekvjy hefisflv vsfctkzb
+I want to avoid having NN duplicated RAID0/1/5 engines, like ataraid in 
+2.4 was threatening to be.
 
---EE8A04B6._80--
-
+	Jeff
