@@ -1,40 +1,45 @@
 From: Joshua Baker-LePain <jlb17@duke.edu>
 Subject: Re: building a large/fast server
-Date: Wed, 29 Jan 2003 15:31:54 -0500 (EST)
+Date: Wed, 29 Jan 2003 15:44:39 -0500 (EST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0301291529530.12434-100000@chaos.egr.duke.edu>
-References: <Pine.LNX.4.44.0301292117410.24750-100000@uplift.swm.pp.se>
+Message-ID: <Pine.LNX.4.44.0301291534250.12434-100000@chaos.egr.duke.edu>
+References: <Pine.LNX.4.44.0301292122570.24750-100000@uplift.swm.pp.se>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44.0301292117410.24750-100000@uplift.swm.pp.se>
+In-Reply-To: <Pine.LNX.4.44.0301292122570.24750-100000@uplift.swm.pp.se>
 To: Mikael Abrahamsson <swmike@swm.pp.se>
-Cc: Andy Arvai <arvai@scripps.edu>, linux-raid@vger.kernel.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 29 Jan 2003 at 9:22pm, Mikael Abrahamsson wrote
+On Wed, 29 Jan 2003 at 9:23pm, Mikael Abrahamsson wrote
 
-> On Wed, 29 Jan 2003, Andy Arvai wrote:
+> On Wed, 29 Jan 2003, Joshua Baker-LePain wrote:
 > 
-> > I'm in the process of designing a large server system. The primary
-> > consideration will be i/o performance (block read and write of large
-> > files and maximum i/o's per second) and a filesystem size of 2TB. I'm
-> > planning to go with 2 3ware 7500-8's, 16 Maxtor 4G160J8's (160GB) and
-> > do software raid0 between the 7500-8's (raid5). The filesystem will
-> > either be Reiser or Ext3. Any suggestions for fast dual cpu
-> > motherboards or comments are welcome. Thanks for any information.
+> > As for comments, in my testing on a single 3ware board (in hardware 
+> > RAID5), ext3's write speeds sucked.  I'd suggest including XFS in your 
+> > testing.
 > 
-> 1:st up if you want high write speeds:
-> 
-> Don't use the internal RAID5 of the 3wares, use software RAID5. Hmm, if 
-> you really want high write speeds, skip RAID5 altogether and go for 
-> mirroring.
+> Will xfs help write speeds with 3ware hardware raid5? You have tested 
+> this? Just as you have experienced, my 3ware raid5 write speeds are lousy, 
+> approx 5-15 megs/s.
 
-That depends on your definition of high, and the application.  Using XFS, 
-I can get 55MB/s writing to a single 3ware in hardware RAID5 (bonnie++).  
-Stripe across two of those, and you're over 100MB/s (I've tested this, 
-seen it, but don't have the data handy), which is more than enough to fill 
-a gigabit pipe.
+Here's the output of a bonnie++ run on a single 3ware hardware RAID5 
+array.  The system is dual 2.2GHz Xeons on a SuperMicro P4DPE-G2 with 
+2GB of RAM.  I'm using the 160GB Maxtors, and I've setup a hot spare (so 
+it's a 7 drive array).  I'm running Red Hat 7.3 with kernel 2.4.18-17 
+patched with XFS 1.2pre3 from SGI:
+
+Version 1.02c       ------Sequential Output------ --Sequential Input- --Random-
+                    -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- --Seeks--
+Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP  /sec %CP
+$BOX             4G 24222  99 56221  16 31373  13 24478  95 204587  39 394.6   2
+                    ------Sequential Create------ --------Random Create--------
+                    -Create-- --Read--- -Delete-- -Create-- --Read--- -Delete--
+              files  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP
+                 16  1901  15 +++++ +++  1099   8   979   8 +++++ +++   960   7
+$BOX,4G,24222,99,56221,16,31373,13,24478,95,204587,39,394.6,2,16,1901,15,+++++,+++,1099,8,979,8,+++++,+++,960,7
+
 
 -- 
 Joshua Baker-LePain
