@@ -1,56 +1,36 @@
-From: Illtud Daniel <illtud.daniel@llgc.org.uk>
-Subject: Re: building a large/fast server
-Date: Thu, 30 Jan 2003 18:14:39 +0000
+From: Eric Drew Hollins <gte275e@mail.gatech.edu>
+Subject: RE: RAID1 (drive isn't detecting on boot)
+Date: Thu, 30 Jan 2003 13:26:45 -0500 (EST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3E396B8F.65C18AC@llgc.org.uk>
-References: <200301292012.MAA07478@astra.scripps.edu>
+Message-ID: <Pine.SOL.4.33.0301301326010.12729-100000@acmey.gatech.edu>
+References: <A5974D8E5F98D511BB910002A50A66470580D5B7@hdsmsx103.hd.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <A5974D8E5F98D511BB910002A50A66470580D5B7@hdsmsx103.hd.intel.com>
+To: "Cress, Andrew R" <andrew.r.cress@intel.com>
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Andy,
+On Thu, 30 Jan 2003, Cress, Andrew R wrote:
 
-> I'm in the process of designing a large server system. The primary
-> consideration will be i/o performance (block read and write of large
-> files and maximum i/o's per second) and a filesystem size of 2TB. I'm
-> planning to go with 2 3ware 7500-8's, 16 Maxtor 4G160J8's (160GB) and
-> do software raid0 between the 7500-8's (raid5).
+> You need to include your kernel version.
 
-I did this with dual Chaparral controllers on Fortra enclosures
-with U160 disks. (h/w RAID 5 on the disks, dual U160 scsi 66/64
-on the server, stripe both with md RAID 0). Two points:
+Sorry.  Kernel 2.4.20.
 
-1. It screamed. I've got all the iozone results here
-somewhere for XFS, Reiser, Ext3 & Ext2. Reading is 400-500MB/s
-(sometimes more, but that must be cache, since the bus can't
-be much faster), writing is 150-250MB/s. IIRC, the filesystems
-made little difference. I was going to publish these results,
-but had a problem on production testing (ext3, if you're asking):
+> Apparently you are running ok on hdg1 in degraded mode, but hde1 has an
+> invalid superblock magic.
+> You should be able to reconstruct the superblock on hde1 by using mdadm,
+> then resync.
 
-2. It crashed and burned badly. A disk problem became a controller
-problem and one of the RAID 5 arrays went down, the other became
-degraded (this is one of 5 similar Chaparral/Fortra setups we've
-got, no problem with the others - 24x7x52. But don't touch IBM
-ultrastars with a bargepole) which didn't do the md RAID 0 array
-any favours. Eventually, we got the RAID 5 arrays up & running
-again, and could mount the RAID 0. Everything seemed to be OK, but
-accessing files would give i/o errors all over the shop. The
-whole caboodle got powered down and I'm waiting for a free couple
-of days to attempt a thorough post-mortem. It's been like that
-for months now...
+Ok, I will try that after I go and fail my Spanish test.  Thanks.
 
-My tip - don't stripe two RAID5s on RAID0, cos when things go
-wrong, they do so in style, and it's very hard to debug. Nice
-and fast if you've got the (SCSI) kit, though.
 
-Anybody interested in an autopsy and get to Aberystwyth would be
-very welcome...
 
--- 
-Illtud Daniel                                 illtud.daniel@llgc.org.uk
-Uwch Ddadansoddwr Systemau                       Senior Systems Analyst
-Llyfrgell Genedlaethol Cymru                  National Library of Wales
-Yn siarad drosof fy hun, nid LlGC   -  Speaking personally, not for NLW
+**** Eric Drew Hollins ****
+**** Georgia Institute of Technology ****
+**** 336198 GT Station, Atlanta, GA  30332 ****
+**** W: http://jastermereel.org ****
+**** C: 404.312.0685 ****
+
+
