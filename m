@@ -1,31 +1,38 @@
-From: info@qsv19.com
-Subject: =?ISO-8859-1?Q?=20=1B$B!z%j%K%e!<%=22%?= =?ISO-8859-1?Q?k!&%*!<%W%s$7$^$?=
-	=?ISO-8859-1?Q?7$=3F!z=1B(B?=
-Date: 13 Mar 2005 15:52:12 +0900
-Message-ID: <20050313065212.24566.qmail@mail.qsv19.com>
+From: Erik Wasser <erik.wasser@iquer.net>
+Subject: 'Segmentation fault' after running 'mdadm --examine --brief --scan --config=partitions'
+Date: Sun, 13 Mar 2005 13:22:29 +0100
+Message-ID: <200503131322.29987.erik.wasser@iquer.net>
+Mime-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hello list,
 
+I've got a problem here with the mdadm tools. I'm using on my system[1] 
+the mdadm tools[2] and I just tried one of the examples of the manpage:
 
-東京限定でオープンして好評だった無料掲示板サイト”東京ラブストーリー”が全国
+% mdadm --examine --brief --scan --config=partitions
+Segmentation fault
 
-版にてリニューアルオープンしました。相手のアドレス見放題で完全な無料。今まで
+I started up the ddd: in the routine 'load_conffile' the string "DEV 
+partitions" will be passed to the routine 'devline'. And this routine 
+pass this parameter to the macro 'dl_next' and I think (after seeing 
+the definition of 'dl_next') this is brocken.
 
-楽しめなかった方、怪しいサイトやさくらばかりでお嘆きのあなたに・・・。芸能人
+Can somebody confirm this bug? I don't know how to fix this so there is 
+no patch in this mail sorry. B-(
 
-やＡＶ女優など関連の業界から広告宣伝しています。みんなで捜してみてね。あっと
+[1] uname -a
 
-ビックリ玉手箱！男性・女性も完全無料です。
+Linux fuzz 2.6.10-gentoo-r6 #1 Sat Feb 5 09:56:14 CET 2005 i686 AMD 
+Athlon(tm) XP 2800+ AuthenticAMD GNU/Linux
 
+[2] Gentoo: sys-fs/mdadm-1.9.0-r1
 
-
-東京ラブストーリー（ＰＣ・携帯両対応）
-
-http://loves.qsv20.com/
-
-
-
-《ご注意》18歳未満の方や援助交際などの利用や投稿は一切出来ません。
-
+-- 
+So long... Fuzz
