@@ -1,62 +1,67 @@
-From: ptb@lab.it.uc3m.es (Peter T. Breuer)
-Subject: Re: Spares and partitioning huge disks
-Date: Thu, 13 Jan 2005 18:16:46 +0100
-Message-ID: <u0nib2-4i2.ln1@news.it.uc3m.es>
-References: <uhrhb2-gku.ln1@news.it.uc3m.es> <200501131551.j0DFpW904826@www.watkins-home.com>
+From: maarten <maarten@ultratux.net>
+Subject: combining two raid systems
+Date: Thu, 13 Jan 2005 20:17:16 +0100
+Message-ID: <200501132017.16910.maarten@ultratux.net>
+Mime-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Guy <bugzilla@watkins-home.com> wrote:
-> Peter said:
-> "Well, I don't see where there's any window in which its degraded."
-> 
-> These are the steps that cause the window (see "Original Message" for full
-> details):
-> 
-> 1. fail out the chosen drive. (array is now degraded)
 
-I would suggest "don't do that then".  Start with an array of degraded
-RAID1s, as I suggested, and add in an extra disk to one of the raid1s,
-wait till it syncs, then remove the original component.  Instant new
-(degraded) RAID1 in the place of the old, and the array above none the
-wiser.
+Hi,
 
-> 2. combine it with the spare in a raid1 with no superblock (re-synce starts)
+I'm currently combing two servers into one, and I'm trying to figure out the 
+safest way to do that.
 
-Why "no superblock"? Oh well - let's leave it as a mystery.
+System one had two md arrays: one raid-1 with the OS and a second one with 
+data (raid-5)  It is bootable through lilo
 
-> 3. add this raid1 back into the main array. (The main array is now in-sync
-> other than any changes that occurred since you failed the disk in step 1)
+System two had 9 arrays, one with the OS (raid-1) two raid-1's for swap, and 6 
+md devices that belong in an LVM volume. This system has grub.
 
-Well, if you have an array of arrays it seems that the main array must
-have been degraded too, but I don't see where you took the subarray out
-of it in the sequence above (in order to add it back in now).
+All md arrays are self-booting 0xFD partitions.
 
-The problem pointed out is that if the disk you are going to swap out is
-faulty, there's no way of copying from it perfectly. The read patch I
-posted a few days ago will help, but it won't paper over real sector
-errors - it may allow the copy to processd, however (I'll have to check 
-what happens during a sync).
+I want to boot off system one.  I verified that that boots fine if I 
+disconnect all the [system-2] drives, so that's working okay. 
 
-So one has to substitute using data from the redundant parts of the
-array above (in the array-of-arrays solution). But there's no
-communication at present :(.
+Now when I boot I get a lilo prompt, so I know the right disk is booted by the 
+BIOS.  When logged in, I see only the md devices from system two, and thus 
+the current md0 "/" drive is from system two.  Now what options do I have ?
 
-Well, 
+If I zero the superblock(s) (or even the whole partitions) from md0 of system 
+2, it will not boot off of that obviously, but what will now get to be md0 ? 
+It could be the second array from system 2 equally well as the first array 
+from system one, right ?
 
-  1) if one were to use bitmaps, I would suggest that in the case of an
-     array of arrays that the bitmap be shared between an array and its
-     subarrays - do we really care in which disk a problem is? No - we
-     know we just have to try and find some good data and correct a
-     problem in that block and we can go searching for the details if  
-     and when we need.
+I could experiment with finding the right array by using different kernel 
+root= commandlines, but only grub gives me that possibility, lilo has no 
+boot-time shell (well, it has a commandline...)
 
-  2) I don't see any problem in, even without a bitmap, simply augmenting
-     the repair strategy (which you people don't have yet, heh) for
-     read errors to including getting the data from the array above if
-     we are in a subarray, not just using our own redundancy.
+Another thing that strikes me is that running 'mdadm --detail --scan' also 
+only finds the arrays from system 2. Is that expected since it just reads 
+its /etc/mdadm.conf file, or should it disregard that and show all arrays ?
 
-Peter
+Upon first glance 'fdisk -l' does show all devices fine (there are 10 of them)
+
+I think (er, hope, actually) that with mdadm.conf one could probably force the 
+machine to recognize the right drives as md0 as opposed to them being 
+numbered mdX, but is that a right assumption ?  At the time the kernel md 
+code reads / assembles the various 0xFD partitions, the root-partition is not 
+mounted (obviously) so reading /etc/mdadm.conf will not be possible.
+
+I'll start to try out some things but I _really_ want to avoid having an 
+unbootable system: for one, this system has no CDrom nor floppy, and even 
+more importantly I don't think my rescue media have all neccessary drivers 
+for the ATA & SATA cards.
+
+Anyone have some good advice for me ?
+
+Maarten
+
+-- 
 
