@@ -1,91 +1,45 @@
-From: "Guy" <bugzilla@watkins-home.com>
+From: Alvin Oga <aoga@ns.Linux-Consulting.com>
 Subject: RE: Busted disks caused healthy ones to fail
-Date: Tue, 14 Dec 2004 20:03:04 -0500
-Message-ID: <200412150103.iBF13A911583@www.watkins-home.com>
-References: <Pine.LNX.3.96.1041214154622.17352A-100000@Maggie.Linux-Consulting.com>
+Date: Tue, 14 Dec 2004 17:23:14 -0800 (PST)
+Message-ID: <Pine.LNX.3.96.1041214171947.21597B-100000@Maggie.Linux-Consulting.com>
+References: <200412150103.iBF13A911583@www.watkins-home.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.3.96.1041214154622.17352A-100000@Maggie.Linux-Consulting.com>
+In-Reply-To: <200412150103.iBF13A911583@www.watkins-home.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Alvin Oga' <aoga@ns.Linux-Consulting.com>
-Cc: 'Brad Campbell' <brad@wasp.net.au>, comsatcat@earthlink.net, linux-raid@vger.kernel.org
+To: Guy <bugzilla@watkins-home.com>
+Cc: 'Alvin Oga' <aoga@ns.Linux-Consulting.com>, 'Brad Campbell' <brad@wasp.net.au>, comsatcat@earthlink.net, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
-
-Just an FYI...
-My disks take 2.5 amps on the 12V line (30 watts) to start.
-Someone else said his require 2.9 amps (34.8 watts).
-The above does not include the 5V line.
-
-2 X startup wattage or amperage seems excessive.
-Power supply delivers 50% during startup, and 25% while the system is in
-use.  Seems wrong to me.
-
-Guy
-
------Original Message-----
-From: Alvin Oga [mailto:aoga@ns.Linux-Consulting.com] 
-Sent: Tuesday, December 14, 2004 6:55 PM
-To: Guy
-Cc: 'Brad Campbell'; comsatcat@earthlink.net; linux-raid@vger.kernel.org
-Subject: RE: Busted disks caused healthy ones to fail
 
 
 
 On Tue, 14 Dec 2004, Guy wrote:
 
-> My disk drives are rated to use 19.1 watts while active.
-> My disk drives also get very hot without forced air movement.
-> 14 such disks use 267.4 watts.  That would give you 152.6 watts for
-> everything else.  I bet your disks use less power than mine.  I agree with
-> Michael, you may be exceeding the power rating of your power supply.
+> Just an FYI...
+> My disks take 2.5 amps on the 12V line (30 watts) to start.
+> Someone else said his require 2.9 amps (34.8 watts).
 
-an overworked power supply will fail "faster"
+the max rated startup current is NOT necessarily the real
+current
+	- use a storage digital scope to get "REAL" numbers
 
-for "wattage" ... using a sharp needle, "pop" ... that is NOT how "wattage
-works"
+> The above does not include the 5V line.
+> 
+> 2 X startup wattage or amperage seems excessive.
 
-	- for a given voltage, you should be operating at 1/2 of its rated
-	amperage
+comes from the last 50 years of "rule of thumb" 
+when things was not as reliable  
 
-	- at 12v ... what are the disks rated at for power up ( spinup )
-	vs ambeint normal operation
-		- typically 1A to power up and 0.5A for normal spinning
-		operation
+another rule of thumb ...
 
-	for a powersupply rated at 12V for 10A .. you can run 5 disks
+	- things will die 2x as fast if the average sustained operating
+	temp goes up by 10C
 
-	if you run more disks ... your power supply will die faster
-	and/or your data gets corrupted during power ups when the
-	system and the drives think you're in "normal operation"
-	and enables write  while in fact, its is still in its bootup
-
-> Also, I would not want to push a power supply to the max rating.  It
-should
-> be sized 50 watts or more beyond what you need.
-
-make that 2x the total wattage needed by the system .. NOT 50W 
-	- add up the amps needed on the 3.3V, 5V, 12V 
-	- use the MAX needed for operation, which is the power up sequence
-	to get a "random number" of operating current ..
-
-	Total watts == 12 * 12v(maxcurrent) + 5v * 5v(maxcurrent)
-			3.3V * 3.3v(maxcurrent)
-
-	- normal operation usually does NOT need as much current
-
-- switched power supplies can output higher current than it is rated
-  at, but it will not be able to sustain that "extra current load"
-  for more than a few seconds before its over-current circuitry kicks
-  in to shut itself down
-
-	- you will be bouncing up and down in current on each power
-	line till the system is all booted
-
-	- put a digital storage scope on the 12V and 5V and 3.3V line
-	and an ampmeter on each power line and watch it go bonkers
+	- it works out just about right .. when you take the
+	1,000,000 hour MTBF and factor in all the temps and
+	24x7 operation and you find out that the little disk
+	dies 1 month after the warranty expired :-)
 
 c ya
 alvin
