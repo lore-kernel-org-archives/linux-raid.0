@@ -1,25 +1,42 @@
-From: Danilo Godec <danci@agenda.si>
-Subject: Re: Bad block on IDE drive causes it to be kicked out of the array
-Date: Mon, 8 Jul 2002 12:26:36 +0200 (CEST)
+From: "bo" <bo@sosnetwork.net>
+Subject: Invalid argument error on raid5 create
+Date: Mon, 8 Jul 2002 16:57:15 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.30.0207081224340.22860-100000@duplo.agenda.si>
-References: <001f01c22632$ad349580$0200a8c0@gandalf>
+Message-ID: <00cd01c226db$2f71ddc0$5701a8c0@bomoon>
+References: <001f01c22632$ad349580$0200a8c0@gandalf> <15657.19046.986108.967800@notabene.cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <001f01c22632$ad349580$0200a8c0@gandalf>
-To: Chris Chabot <chabotc@xs4all.nl>
+To: Neil Brown <neilb@cse.unsw.edu.au>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 8 Jul 2002, Chris Chabot wrote:
+Neil,
 
-> is there any way to create the array, and just mark these blocks bad in the
-> file system, as you would with a 'normal' drive?
+I am trying to create the RAID 5 array with
 
-Not on RAID5. At least no easy way... You could possibly find out which
-filesystem blocks lay on the physically bad blocks and you could probably
-mark them as bad on the filesystem level.
+>mdadm -C /dev/md0 -l5 -n6 -x1 -prs /dev/hd[bcdefgh]
 
-   D.
+However, I am getting the following error message;
+
+>mdadm: RUN_ARRAY failed: Invalid argument
+
+Because I used these devices as raid1, I ran ">mdadm --zero-superblock
+/dev/hdx" on all of these
+devices. But no help. Even I tried with "mkraid & raidtab" it still has the
+same error.
+Also, I tried with -f option, and with or without space between option and
+its value on mdadm -C.
+
+All of these devices are used as the whole disk without partition.
+
+I had no problem with RAID 0 or 1.
+
+Any clue?
+
+Thanks,
+
+Bo
 
