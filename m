@@ -1,63 +1,45 @@
 From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: mdadm mail option configuration
-Date: Thu, 30 May 2002 09:10:41 +1000 (EST)
+Subject: RE: Software RAID Stopped Working With Aurora Kernel
+Date: Thu, 30 May 2002 09:16:26 +1000 (EST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <15605.24561.501893.319158@notabene.cse.unsw.edu.au>
-References: <15604.45423.781175.499314@notabene.cse.unsw.edu.au>
-	<Pine.LNX.4.30.0205291602130.23219-100000@duplo.agenda.si>
+Message-ID: <15605.24906.442772.449984@notabene.cse.unsw.edu.au>
+References: <15601.48418.82978.28645@notabene.cse.unsw.edu.au>
+	<CPEAKNIMKMJOCFPEOBGAMEDNCFAA.cwebster@ec.rr.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Danilo Godec on Wednesday May 29
-To: Danilo Godec <danci@agenda.si>
-Cc: Jeff Hill <jhill@hronline.com>, linux-raid@vger.kernel.org
+In-Reply-To: message from Calvin Webster on Wednesday May 29
+To: cwebster@ec.rr.com
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wednesday May 29, danci@agenda.si wrote:
-> On Wed, 29 May 2002, Neil Brown wrote:
-> 
-> > > Then, I just have an init script that runs:
+On Wednesday May 29, cwebster@ec.rr.com wrote:
+> > > "mdadm --examine /dev/sda1" shows "State : dirty, no-errors". All other
+> > > RAID drives show the same.
 > > >
-> > > 	/sbin/mdadm -Fs --delay=600 &
+> > > "lsraid -D -a /dev/md0" shows "state		= good".
+> > All other RAID devices
+> > > show the same.
 > >
-> > Why 600 (10 minutes)?? I would suggest 60seconds for normal operation
-> > and 1 second for testing.
+> > I have never looked at "lsraid".  My guess is that "good" is
+> > equivalent to "no-errors" and that lsraid doesn't bother to report
+> > "dirty".  This shouldn't relate to the filesystem superblock though...
+> >  still, a fsck every few months is a good idea.
 > 
-> I've tried this and maybe I'm missing something. I've set a 5 second
-> interval for checking and I only got one mail - notifiyng me about
-> a failure.
+> What made this observation noteworthy, however, was that it persisted even
+> _after_ e2fsck was run on /dev/md0.
 
-Yes, that's right.  One failure, one email.  I'm not in the business
-of spam.
+The raid "dirty" or "error" flags are completely separate from any
+filesystem "dirty" or "error" flags.  So fsck will not affect the raid
+flags.
 
-> 
-> Now I'm not sure whether mdadm is supposed to send mail on every check? Or
-> is it sending mail just when a BAD thing happens?
+The raid "dirty" flag simply means that the array has been started and
+not yet stopped.  Either it is active or you had an unclean shutdown
+and will need to regenerate redundancy.
 
-Exactly.
-
-It has occurred to me that it could be useful to send mail at startup
-if there appear to be any abnormalities, but I think I would prefer
-that sort of functionality to be external.  A sysdamin might want that
-mail are reboot, or every night, or every week, or never.  A simple:
-  grep -s > /dev/nu $magic_pattern /proc/mdstat && 
-       mail -s "Raid problem on `hostname`" root << END
-	    Possible RAID problem, please check.
-	    `hostname`
-	    `cat /proc/mdstat
-	    END
-
-is all that is needed.
-> 
->   D.
-> 
-> PS: The PROGRAM was started more often (I think three times).
-
-That's quite possible. 
-   Once for  Fail
-   Once for  RebuildStarted
-   maybe some RebuildNN
-   Once for  SpareActive
+The raid "error" flag is meaningless.  It is never set by anything,
+and I cannot think of any use that it might be put to.  But it is
+there is the definition of the superblock, or mdadm reports it.
 
 NeilBrown
