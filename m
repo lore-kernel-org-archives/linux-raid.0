@@ -1,20 +1,19 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: How safe is software RAID compared to how safe hardware RAID is!?
-Date: Wed, 19 Nov 2003 10:34:25 +1100
+From: Kourosh <linux-raid@mindwaresystems.com>
+Subject: Re: How safe is software RAID compared to how safe hardware RAID
+	is!?
+Date: Tue, 18 Nov 2003 15:39:35 -0800
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16314.44161.438158.27514@notabene.cse.unsw.edu.au>
-References: <16314.40792.616508.878124@notabene.cse.unsw.edu.au>
-	<PPEOJEIEFLAONFNHJPOOAEICGOAA.jim@jimtreats.com>
+Message-ID: <1069198775.24097.6.camel@onizuka.mindwaresystems.com>
+References: <PPEOJEIEFLAONFNHJPOOAEICGOAA.jim@jimtreats.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from James R Bamford on Tuesday November 18
-To: James R Bamford <jim@jimtreats.com>
-Cc: linux-raid@vger.kernel.org
+In-Reply-To: <PPEOJEIEFLAONFNHJPOOAEICGOAA.jim@jimtreats.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday November 18, jim@jimtreats.com wrote:
+On Tue, 2003-11-18 at 15:12, James R Bamford wrote:
 > Hi folks..
 > 
 > hopefully everything will be working soon and i can get on with trying to
@@ -31,55 +30,28 @@ On Tuesday November 18, jim@jimtreats.com wrote:
 > reliable RAID solution..
 > 
 > Just curious..
+> 
+> Thanks for everyones help
+> 
+> Jim
 
-Not an easy question to answer.
-RAID is all about surviving failures, and there are alots of possible
-failure modes, some more predictable than others.
+Really depends on what you're doing and what you want out of it.  For
+higher end systems with lots of I/O and very large storage needs it may
+be necessary to go with a high quality hardware RAID card with a large
+battery backed cache.  For smaller systems Linux does software RAID very
+well, especially in these days of fast, inexpensive processors and
+inexpensive memory (compared to several years ago).
 
-The obvious failure modes are handled perfectly well by all solutions.
+One thing to consider is what happens a few years down the line and your
+hardware RAID card dies.  Can you replace it?  What happens to your
+data?  At least with software RAID you can replace the controller and
+everything can be brought back up.
 
-The less obvious failure modes are probably handled as best as
-possible by all solutions, but with these, the question is usually
-"how can I recover", and the answer there depends on how much support
-you can get, and how much you can work out yourself.
+I've been using soft RAID on my own and several client servers for a few
+years with no real problems.
 
-For support: linux-raid is an adequate support community, but there is
-no guarantee of instant support.  I don't know what support there
-might be around various hardware raid solution.  Again, someone on
-linux-raid might be able to help, or they might not.
+Hope this helps.
 
-For "how much you can work out yourself", that depends partly on you.
-Your hardware raid might come with good doco, or it might not.
-Software RAID somes with assorted bits of doco, and complete source.
+-- 
+Kourosh <linux-raid@mindwaresystems.com>
 
-You are part of your system, and system reliability depends in-part of
-how much you know.  With software raid you can learn as much as you
-want to, but it might require more work that you care to put it.
-
-Software raid can be affected by lots of parts of the system.
-Reliability of hardware raid is more tightly connected to the
-controller and drives.
-
-As examples of "less obvious failure modes":
-
- I had a mirrored pair that kept getting data corruption.  It turned
- out that one of the drives had a bad bit in an internal buffer, and
- would occasionally return 1 for the 12th bit (or similar) of each
- sector even when it should be zero.   Neither software raid or
- hardware raid would cope with that.
-
- Some people find that their IDE controller works fine until they try
- to use RAID1.  RAID1 hits multiple discs concurrently a lot, and some
- (few, specific) ide controllers don't appear to cope.  You probably
- would not get that with hardware raid.  You can with software raid
- because it is a "whole-system" thing.
-
-
-I prefer software raid because I like the fact that I can see inside
-and understand it completely.  Some people like hardware raid because
-"it just works".
-Both are valid perspectives and as you, the sys-admin, are part of
-the system, your prespective and opinion is a significant part of what
-makes the system "reliable".
-
-NeilBrown
