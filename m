@@ -1,16 +1,18 @@
 From: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Subject: EMD Architecture Discussion
-Date: Thu, 25 Mar 2004 07:29:55 -0700
+Subject: Re: EMD Architecture Discussion
+Date: Thu, 25 Mar 2004 07:32:23 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <884890000.1080224995@aslan.btc.adaptec.com>
+Message-ID: <889520000.1080225143@aslan.btc.adaptec.com>
+References: <884890000.1080224995@aslan.btc.adaptec.com>
 Reply-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <884890000.1080224995@aslan.btc.adaptec.com>
 Content-Disposition: inline
 To: linux-raid@vger.kernel.org
-Cc: linux-kernel@vger.kerenl.org
+Cc: linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
 It has been mentioned on the lists that the best way to get the EMD
@@ -192,7 +194,7 @@ instance, a read operation is allowed on any optimal or degraded
 member that is not a rebuild target or needs initialization before
 access:
 
-#define MDU_MSTATE_READABLE(state)                                      \
+># define MDU_MSTATE_READABLE(state)                                      \
     (((state) & ~(MDU_MSTATE_OPTIMAL|MDU_MSTATE_DEGRADED)) == 0)
 
 (RAID1's version of this macro also allows reads to rebuild targets when
@@ -200,7 +202,7 @@ access:
 
 A writable member is readable or a rebuild target:
 
-#define MDU_MSTATE_WRITABLE(state)                                      \
+># define MDU_MSTATE_WRITABLE(state)                                      \
     (((state) &                                                         \
      ~(MDU_MSTATE_OPTIMAL|MDU_MSTATE_DEGRADED|MDU_MSTATE_REBUILD_TARGET)) == 0)
 
