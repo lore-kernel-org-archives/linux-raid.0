@@ -1,62 +1,89 @@
-From: Gregory Leblanc <gleblanc@linuxweasel.com>
-Subject: Re: 3ware 7500-8 confusion
-Date: 24 Feb 2003 09:58:16 -0800
+From: "Peter T. Breuer" <ptb@it.uc3m.es>
+Subject: Questions answered by Neil Brown
+Date: Mon, 24 Feb 2003 21:15:43 +0100 (MET)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1046109496.2019.5.camel@gregdell>
-References: <Pine.LNX.4.44.0302240937520.2586-100000@chaos.egr.duke.edu>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-rxAjjCyCOdxKU7xGNoTy"
+Message-ID: <200302242015.h1OKFhA04699@oboe.it.uc3m.es>
+Reply-To: ptb@it.uc3m.es
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44.0302240937520.2586-100000@chaos.egr.duke.edu>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
---=-rxAjjCyCOdxKU7xGNoTy
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Mon, 2003-02-24 at 06:41, Joshua Baker-LePain wrote:
-> On 23 Feb 2003 at 12:53am, Maurice Hilarius wrote
->=20
-> > Actually it makes tons of sense.
-> *snip*
-> > 2) If you lose a disk at a later date, you don;t have to worry about=20
-> > getting the same exact drive to replace it with.
->=20
-> Don't most hardware RAIDs (including the 3ware) deal just fine with=20
-> dissimilar new disks, as long as their block count is >=3D that of the=20
-> original disks?  My external IDE-SCSI unit does this, and I know my 3ware=
-s=20
-
-Yes, generally.  This isn't the only potential problem, though.=20
-Sometimes if a drive fails and you receive a warranty replacement form
-the manufacturer, it may be rated at the same capacity, but may actually
-have less blocks available.  The 3ware cards work around this by making
-RAID array pieces slightly smaller than the size of the smallest drive,
-I believe.  However, it appears that they aren't capable of using all of
-the available capacity when you try to use different size drives.
-
-> deal with disks with different rotation speeds.
-
-Rotation speeds don't come in to play here.  I doubt that the 3ware card
-does anything "intelligent" about drives with markedly different
-transfer rates.  I'm not sure I'd care to figure out the logic of how to
-do that, either.
-	Greg
+Here's part of offline conversation with Neil Brown. The answers should
+go to the list to be archived, so I'm passing them on ...
 
 
---=-rxAjjCyCOdxKU7xGNoTy
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+----- Forwarded message from Neil Brown -----
+On Monday February 24, ptb@it.uc3m.es wrote:
+> 1) when is the events count written to the component disks
+>    superblocks, and how can I force an update (at intervals)?
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.1 (GNU/Linux)
+Whenever md_update_sb is called, which is normally:
+   When the array starts
+   When it stops
+   When a drive fails
+   When a drive is added
+   When a drive is removed.
 
-iD8DBQA+Wl03nAkVXO6fw4sRAvU8AJsHI57QlP8rojr7m2XJuuBH9rwP3ACfZPRi
-gfEpr8TWM9PZ5iYZk68eLoM=
-=H8dz
------END PGP SIGNATURE-----
+Just set mddev->sb_dirty and maybe kick the raid thread.
 
---=-rxAjjCyCOdxKU7xGNoTy--
+> 
+>    I ask because I have seen a case when a disk that I know
+>    had been taken out properly was rejected on reinsert as
+>    a replacement candidate (bitmapped resync) because its
+>    event count was too old compared to the one on the bitmap
+>    that supposedly was set up when it was marked faulty,
+>    and stamped on first attempted write afterwards.
 
+I would have to look at the code.
+
+> 
+> 2) how can I know how many faulty or removed disks there
+>    currently are in the array? I need to mark the bitmap on
+>    write as soon as there are any. At the moment I search
+>    in a certain range in the array for disks marked nonoperational.
+
+The write fork for raid1_make_request iterrates through all devices
+and ignores the non-operational ones.  When you come to the end of the
+list, and before you actually submit the write request, you should
+know if there are any faulty devices, so you should know what to do
+with the bitmap.
+
+Is that a suitable answer?
+
+> 
+> 3) it is not clear to me that I am doing accounting right on
+>    async writes (or indeed when resyncing and skipping blocks).
+> 
+>    The last end_io always did
+>    io_request_done(bh->b_rsector, conf,
+>                           test_bit(R1BH_SyncPhase, &r1_bh->state));
+>    and now this can be done on the first end_io (along with the
+>    bh->b_end_io(bh, uptodate);) in  an async write. Is that right?
+
+It's not enough.
+Once you have called bh->b_end_io, you cannot touch that bh every
+again, as it might not even exist.
+
+Also, io_request_done is used to synchronise io request with resync
+requests so they don't tread on each other's feet.  io_request_done
+must come after all the io is complete, even if you find some way of
+calling bh->b_end_io sooner.
+
+> 
+>    in resync I simulate having done n sectors by
+> 
+>                    md_sync_acct(mirror->dev, n);
+>                    sync_request_done(sector_nr, conf);
+>                    md_done_sync(mddev, n, 1);
+> 
+>                     wake_up(&conf->wait_ready);
+> 
+>    is that right?
+
+It looks good.  I would have to spend a little while staring at the
+code to be sure, but it is close enough that if it seems to work, then
+it is probably right.
+
+NeilBrown
+
+----- End of forwarded message from Neil Brown -----
