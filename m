@@ -1,73 +1,71 @@
-From: Paul Clements <paul.clements@steeleye.com>
-Subject: Re: [ANNOUNCE][PATCH 2.6] md: persistent (file-backed) bitmap and
- async writes
-Date: Tue, 12 Oct 2004 10:06:18 -0400
+From: Dave Olien <dmo@osdl.org>
+Subject: Re: [ANNOUNCE] multipath-tools-0.3.1
+Date: Tue, 12 Oct 2004 11:35:29 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <416BE4DA.1040408@steeleye.com>
-References: <40198E85.29EBC8E0@SteelEye.com>	<16422.62911.755570.855200@notabene.cse.unsw.edu.au>	<4027E342.D02202F1@SteelEye.com>	<16424.8182.876520.280031@notabene.cse.unsw.edu.au>	<402D3A86.97CF894F@SteelEye.com>	<16456.2775.641721.204171@notabene.cse.unsw.edu.au>	<4048F9AA.1BBD67F@SteelEye.com>	<406B1024.7BF88C@SteelEye.com>	<16528.49083.998593.199805@cse.unsw.edu.au>	<40C6273B.2060200@steeleye.com>	<16590.38597.170409.499394@cse.unsw.edu.au>	<40D9FA9E.9010003@steeleye.com>	<40F7E50F.2040308@steeleye.com>	<16649.61212.310271.36561@cse.unsw.edu.au>	<4119400A.40307@steeleye.com>	<16668.12228.187383.596856@cse.unsw.edu.au>	<414F9FD4.4070308@steeleye.com>	<41507EA7.1000905@steeleye.com> <16747.15933.68499.915859@cse.unsw.edu.au>
+Message-ID: <20041012183529.GA27921@osdl.org>
+References: <1096071849.4466.31.camel@zezette> <1097054573.4163b96d1262c@imp5-q.free.fr> <1097495416.416a73787e0ae@imp1-q.free.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <16747.15933.68499.915859@cse.unsw.edu.au>
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: jejb@steeleye.com, linux-raid@vger.kernel.org
+Content-Disposition: inline
+In-Reply-To: <1097495416.416a73787e0ae@imp1-q.free.fr>
+To: christophe.varoqui@free.frf
+Cc: device-mapper development <dm-devel@redhat.com>, linux-raid@vger.kernel.org, linux-hotplug-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
->>Paul Clements wrote:
 
->>itself. Check out the new patch here:
->>
->>http://parisc-linux.org/~jejb/md_bitmap/md_bitmap_2_37_2_6_9_rc2.diff
->>
+Christophe,
 
-> Further comments.
+I compiled and installed your new tarball.  It looks good so far on i386.
+Thanks for the update!
+
+Dave
+
+On Mon, Oct 11, 2004 at 01:50:16PM +0200, christophe.varoqui@free.fr wrote:
+> Hello,
 > 
-> bitmap_events
->   1/  You have inserted bitmap_event_hi/lo *before* recovery_cp, thus
->       moving recovery_cp, and thus breaking backwards comparability.
-
-Yes. I guess when recovery_cp came along I failed to notice that...
-
->   2/ The test in hot_add_disk:
-> +		if (refsb && sb && uuid_equal(sb, refsb) &&
-> +		    sb->events_hi >= refsb->bitmap_events_hi &&
-> +		    sb->events_lo >= refsb->bitmap_events_lo) {
-> +			bitmap_invalidate = 0;
->    is wrong.  The events count must be compared as a 64bit
->   number. e.g. it is only meaningful to compare events_lo if both
->   events_hi are equal.
-
-Yes, that is broken.
-
-> pending_bio_list
->   1/ Do you really need a separate pending_bio_lock, or would
->      the current device_lock be adequate to the task.
-
-Probably so...especially with the following change...
-
->   2/  I think there can be a race with new requests being added to
->      this list while bitmap_unplug is running in unplug_slaves.
->      I think you should "bio_get_list" before calling bitmap_unplug,
->      So that you only then submit requests that were made definitely
->      *before* the call the bitmap_unplug.  This would have the added
->      advantage that you don't need to keep claiming and dropping
->      pending_bio_lock. 
-
-Yes, that would make sense.
-
-> collection.  I would really appreciate it if any further changes could
-> be sent as incremental patches, as reading through a large patch like
-> that takes a fair bit of effort.
-
-Yes, I certainly understand that. I appreciate all the effort you've put 
-into reviewing and giving suggestions. Further patches will be on top of 
-the current bitmap patch.
-
-I will send out an incremental patch to fix the issues above, probably 
-in a couple of days.
-
-Thanks,
-Paul
-
+> here goes multipath-tools-0.3.1
+> 
+> Early release, to fix a important i386 breakage due to regparm switch in klibc.
+> Release focuses on undusting kpartx.
+> ia64 and woody testers, please redo your thing : I may have got it right this
+> time.
+> 
+> Full ChangeLog for the release :
+> 
+>         * [kpartx] move back to getopt, originaly removed from the
+>           original partx because of lack of implementation in klibc
+>         * [kpartx] don't map extended partitions
+>         * [kpartx] add a -p command flag to allow admin to force a
+>           delimiting string between disk name and part number. When
+>           specified always use it, when unspecified use 'p' as a delim
+>           when last char of disk name is a digit, NUL otherwise.
+>         * [kpartx] clean up
+>         * bump klibc to 0.182
+>         * one step further : use klibc MCONFIG for all klibc specific
+>           FLAGS definitions, ie massive Makefile.inc cleanup
+>         * follow the klibc compilation rules by appending its OPTFLAGS
+>           to multipath-tools' CFLAGS. This corrects the segfaults seen
+>           on i386 where klibc is built with regparm=3 and tools are not
+>         * [multipathd] fall back to fork when clone not available
+>           like in Debian Woody
+>         * [kpartx] move .start and .size from uint to ulong (Ake)
+>         * briefly document system-disk-on-multipath in the FAQ file
+> 
+> As usual, doc and download at :
+> http://christophe.varoqui.free.fr/
+> 
+> regards,
+> --
+> christophe varoqui <christophe.varoqui@free.fr>
+> 
+> 
+> -------------------------------------------------------
+> This SF.net email is sponsored by: IT Product Guide on ITManagersJournal
+> Use IT products in your business? Tell us what you think of them. Give us
+> Your Opinions, Get Free ThinkGeek Gift Certificates! Click to find out more
+> http://productguide.itmanagersjournal.com/guidepromo.tmpl
+> _______________________________________________
+> Linux-hotplug-devel mailing list  http://linux-hotplug.sourceforge.net
+> Linux-hotplug-devel@lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel
