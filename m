@@ -1,22 +1,47 @@
-From: Tom Oehser <tom@toms.net>
-Subject: Re: superblock, kicking non-fresh, ide slaves, problems, ideas
-Date: Wed, 30 Jun 2004 12:54:31 -0400 (EDT)
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: Should I Start Over?
+Date: Wed, 30 Jun 2004 18:55:41 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.58.0406301253320.324@jupiter.toms.net>
-References: <Pine.LNX.4.58.0406301240560.324@jupiter.toms.net>
+Message-ID: <20040630165540.GA1099@percy.comedia.it>
+References: <1147.66.230.1.97.1088603162.squirrel@exitwound.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.58.0406301240560.324@jupiter.toms.net>
+Content-Disposition: inline
+In-Reply-To: <1147.66.230.1.97.1088603162.squirrel@exitwound.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Wed, Jun 30, 2004 at 08:46:02AM -0500, Stephen Hargrove wrote:
+># cat /proc/mdstat:
+>
+>Personalities : [raid5]
+>read_ahead not set
+>unused devices: <none>
+>
+># cat /etc/mdadm/mdadm.conf
+>DEVICE /dev/hd*
+>ARRAY /dev/md0 level=raid5 num-devices=3
+>UUID=fef44719:ddd66a49:0a337b48:b53e14c0
+>   devices=/dev/hdg1,/dev/hdd1,/dev/hdc1
+>
+># mdadmin --assemble --scan
+>mdadm: no devices found for /dev/md0
+>
+can you try ?
+cat /proc/partitions
 
-> So, the motherboard having 2 connectors, and not caring so much
-> about the speed issue, I put the IDE drives 2 per cable into the MB.
+and
 
-P.S., I have ordered 4 SATA drives and a 4-port SATA controller, so as
-never to have to ever think about using master/slave ever again period...
+mdadm --examine /dev/hdX1
+replacing X with each of your drives
 
--Tom
+L.
 
+-- 
+Luca Berra -- bluca@comedia.it
+        Communication Media & Services S.r.l.
+ /"\
+ \ /     ASCII RIBBON CAMPAIGN
+  X        AGAINST HTML MAIL
+ / \
