@@ -1,93 +1,55 @@
-From: "E. Gryaznova" <grev@namesys.com>
-Subject: linear raid device problem: I/O error on reading block
-Date: Fri, 16 Jan 2004 23:07:24 +0300
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: error during raid config
+Date: Fri, 16 Jan 2004 15:31:03 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <4008447C.35574AA3@namesys.com>
+Message-ID: <200401162031.i0GKV8i14933@dns1.watkins-home.com>
+References: <011620042013.18826.45cf@comcast.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=koi8-r
+Content-Type: text/plain;
+	charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Ingo Molnar <mingo@redhat.com>, Neil Brown <neilb@cse.unsw.edu.au>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+In-Reply-To: <011620042013.18826.45cf@comcast.net>
+To: gannan10@comcast.net, 'Steven Ihde' <sihde@cs.stanford.edu>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
+Give output of df command.  If hda1 is listed, then unmount it!
 
-I have the following problem with raid device (linear).
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of gannan10@comcast.net
+Sent: Friday, January 16, 2004 3:14 PM
+To: Steven Ihde
+Cc: linux-raid@vger.kernel.org
+Subject: Re: error during raid config
 
-I can successfully create the linear device /dev/md0 this way
+so what do I do now???
+> On Fri, Jan 16, 2004 at 06:18:07PM +0000, gannan10@comcast.net wrote:
+> > Hello,
+> > 
+> > I get the following error when I tried to setup my raid:
+> > 
+> > # mkraid /dev/md0
+> > handling MD device /dev/md0
+> > analyzing super-block
+> > disk 0: /dev/hda1, 489951kB, raid superblock at 489856kB
+> > /dev/hda1 is mounted
+> > mkraid: aborted, see the syslog and /proc/mdstat for potential clues.
+> 
+> I use mdadm, not mkraid, but it appears the problem is right there:
+> "/dev/hda1 is mounted".  Probably if you have a mounted filesystem on
+> /dev/hda1, you cannot add it to the raid array.  Once you've created
+> the raid array you can mount /dev/md0 instead of /dev/hda1.
+> 
+> -Steve
+> 
+> 
+> 
 
-# mkraid  --configfile ./rd.conf --really-force /dev/md0
-disk 0: /dev/hda11, 4972086kB, raid superblock at 4971968kB
-disk 1: /dev/hdc11, 3020188kB, raid superblock at 3020096kB
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-when the configfile is:
-raiddev /dev/md0
-        raid-level      linear
-        nr-raid-disks   2
-        persistent-superblock 1
-        chunk-size              8
-        device          /dev/hda11
-        raid-disk       0
-        device          /dev/hdc11
-        raid-disk       1
-
-Then I try to do the two dd commands:
-
-# dd if=/dev/md0 of=/dev/null bs=512 count=1 skip=9944158
-1+0 records in
-1+0 records out
-
-# dd if=/dev/md0 of=/dev/null bs=512 count=1 skip=9944159
-dd: reading `/dev/md0': Input/output error
-0+0 records in
-0+0 records out
-
-Why does the second dd command fail? The size of /dev/md0 is about
-7.9Gb, so why does dd fail on reading block with offset about ~5Gb?
-In kernel logs I see the following:
-
-Jan 16 21:59:39 flint kernel: hda;: bad access: block=9944152, count=24
-Jan 16 21:59:39 flint kernel: end_request: I/O error, dev 03:0b (hda),
-sector 9944152
-Jan 16 21:59:39 flint kernel: hda;: bad access: block=9944154, count=22
-Jan 16 21:59:39 flint kernel: end_request: I/O error, dev 03:0b (hda),
-sector 9944154
-Jan 16 21:59:39 flint kernel: hda;: bad access: block=9944156, count=20
-Jan 16 21:59:39 flint kernel: end_request: I/O error, dev 03:0b (hda),
-sector 9944156
-Jan 16 21:59:39 flint kernel: hda;: bad access: block=9944158, count=18
-Jan 16 21:59:39 flint kernel: end_request: I/O error, dev 03:0b (hda),
-sector 9944158
-Jan 16 21:59:39 flint kernel: hda;: bad access: block=9944160, count=16
-Jan 16 21:59:39 flint kernel: end_request: I/O error, dev 03:0b (hda),
-sector 9944160
-Jan 16 21:59:39 flint kernel: hda;: bad access: block=9944162, count=14
-Jan 16 21:59:39 flint kernel: end_request: I/O error, dev 03:0b (hda),
-sector 9944162
-Jan 16 21:59:39 flint kernel: hda;: bad access: block=9944164, count=12
-Jan 16 21:59:39 flint kernel: end_request: I/O error, dev 03:0b (hda),
-sector 9944164
-Jan 16 21:59:39 flint kernel: hda;: bad access: block=9944166, count=10
-Jan 16 21:59:39 flint kernel: end_request: I/O error, dev 03:0b (hda),
-sector 9944166
-Jan 16 21:59:39 flint kernel: hda;: bad access: block=9944168, count=8
-Jan 16 21:59:39 flint kernel: end_request: I/O error, dev 03:0b (hda),
-sector 9944168
-Jan 16 21:59:39 flint kernel: hda;: bad access: block=9944170, count=6
-Jan 16 21:59:39 flint kernel: end_request: I/O error, dev 03:0b (hda),
-sector 9944170
-Jan 16 21:59:39 flint kernel: hda;: bad access: block=9944172, count=4
-Jan 16 21:59:39 flint kernel: end_request: I/O error, dev 03:0b (hda),
-sector 9944172
-Jan 16 21:59:39 flint kernel: hda;: bad access: block=9944174, count=2
-Jan 16 21:59:39 flint kernel: end_request: I/O error, dev 03:0b (hda),
-sector 9944174
-
-I use kernel 2.4.24 and raidtools-1.00.3.
-I checked /dev/hda11 and /dev/hdc11 by badblocks, and no bad blocks were
-found on these devices.
-
-Thank you very much for helping me.
-Lena
 
