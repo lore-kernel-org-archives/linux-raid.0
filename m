@@ -1,46 +1,75 @@
-From: Carl-Daniel Hailfinger <c-d.hailfinger.kernel.2004@gmx.net>
-Subject: mdadm problems with partitioned md devices
-Date: Tue, 23 Nov 2004 21:06:30 +0100
-Message-ID: <41A39846.9070002@gmx.net>
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: Multipath problem
+Date: Tue, 23 Nov 2004 21:16:51 +0100
+Message-ID: <20041123201650.GA8972@percy.comedia.it>
+References: <41A32AE7.2080502@fbihome.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="k+w/mQv8wyuph6w0"
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <41A32AE7.2080502@fbihome.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
 
-[please CC: me]
-while trying to use md to overcome limitations of dm, I
-stumbled upon the following problem: It is impossible to
-have more than 4 partitioned md devices since mdadm will
-create the 5th device with major:minor 255:0, which is
-bogus.
+--k+w/mQv8wyuph6w0
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Disposition: inline
 
-Way to reproduce the problem:
+On Tue, Nov 23, 2004 at 01:19:51PM +0100, Oliver Heinz wrote:
+>Mixing mdadm-1.6 and 1.8.1 for creating/managing the device doesn't 
+>work, it gives me an segfault.
 
-linux:~ # mdadm --stop --scan
-linux:~ # rm /dev/md_d*
-linux:~ # sync
-linux:~ # mdadm -B /dev/md_d0 -f -l linear -n 1 -ap63 /dev/hdb5
-mdadm: array /dev/md_d0 built and started.
-linux:~ # mdadm -B /dev/md_d1 -f -l linear -n 1 -ap63 /dev/hdb6
-mdadm: array /dev/md_d1 built and started.
-linux:~ # mdadm -B /dev/md_d2 -f -l linear -n 1 -ap63 /dev/hdb7
-mdadm: array /dev/md_d2 built and started.
-linux:~ # mdadm -B /dev/md_d3 -f -l linear -n 1 -ap63 /dev/hdb8
-mdadm: array /dev/md_d3 built and started.
-linux:~ # mdadm -B /dev/md_d4 -f -l linear -n 1 -ap63 /dev/hdb9
-mdadm: error opening /dev/md_d4: No such device or address
-linux:~ # mdadm --version
-mdadm - v1.8.1 - 05 November 2004
-linux:~ # uname -a
-Linux linux 2.6.10-rc2suseconfig #5 Tue Nov 23 14:12:13 CET 2004 i686 i686 i386 GNU/Linux
-linux:~ #
+try patching mdadm-1.8.1 with this patch, it might help with the
+segfault.
 
-Regards,
-Carl-Daniel
+
 -- 
-http://www.hailfinger.org/
+Luca Berra -- bluca@comedia.it
+        Communication Media & Services S.r.l.
+ /"\
+ \ /     ASCII RIBBON CAMPAIGN
+  X        AGAINST HTML MAIL
+ / \
+
+--k+w/mQv8wyuph6w0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="mdadm-1.8.1-memset.patch"
+
+--- mdadm-1.8.1/mdadm.c.bluca	2004-11-14 19:44:26.000000000 +0100
++++ mdadm-1.8.1/mdadm.c	2004-11-14 19:44:31.747309097 +0100
+@@ -80,11 +80,10 @@
+ 
+ 	int mdfd = -1;
+ 
+-	ident.uuid_set=0;
++	memset(&ident,0,sizeof(struct mddev_ident_s));
+ 	ident.level = UnSet;
+ 	ident.raid_disks = UnSet;
+ 	ident.super_minor= UnSet;
+-	ident.devices=0;
+ 
+ 	while ((option_index = -1) ,
+ 	       (opt=getopt_long(argc, argv,
+--- mdadm-1.8.1/config.c.bluca	2004-11-02 06:11:06.000000000 +0100
++++ mdadm-1.8.1/config.c	2004-11-14 19:44:35.693660204 +0100
+@@ -266,15 +266,11 @@
+ 	struct mddev_ident_s mis;
+ 	mddev_ident_t mi;
+ 
+-	mis.uuid_set = 0;
++	memset(&mis,0,sizeof(struct mddev_ident_s));
+ 	mis.super_minor = UnSet;
+ 	mis.level = UnSet;
+ 	mis.raid_disks = UnSet;
+ 	mis.spare_disks = UnSet;
+-	mis.devices = NULL;
+-	mis.devname = NULL;
+-	mis.spare_group = NULL;
+-	mis.autof = 0;
+ 
+ 	for (w=dl_next(line); w!=line; w=dl_next(w)) {
+ 		if (w[0] == '/') {
+
+--k+w/mQv8wyuph6w0--
