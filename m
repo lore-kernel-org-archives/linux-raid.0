@@ -1,28 +1,29 @@
 From: Juri Haberland <list-linux.raid@spoiled.org>
 Subject: Re: RAID1: Disks alternating on reads
-Date: Wed, 24 Sep 2003 12:06:28 +0000 (UTC)
+Date: Wed, 24 Sep 2003 12:15:25 +0000 (UTC)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <news2mail-bks1c4$n4k$1@cartman.spoiled.org>
-References: <014b01c38053$0358ad90$0180a8c0@what> <news2mail-bkmfvp$a7u$1@cartman.spoiled.org> <20030923110928.GK8670@marowsky-bree.de>
+Message-ID: <news2mail-bks1st$n4k$2@cartman.spoiled.org>
+References: <014b01c38053$0358ad90$0180a8c0@what> <news2mail-bkmfvp$a7u$1@cartman.spoiled.org> <01ca01c38125$cab15c20$0180a8c0@what>
 Reply-To: Juri Haberland <juri@koschikode.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Lars Marowsky-Bree <lmb@suse.de> wrote:
-> On 2003-09-22T09:39:05,
->    Juri Haberland <list-linux.raid@spoiled.org> said:
-> 
->> As far as I could observe, the RAID1 code reads one file from one disk
->> and never changes disks during this read - so you get the performance
->> of one disk.
->> *But* the code distributes different writes to different disks.
-> 
-> Reads of course, not writes ;-)
+"Andrew Herdman" <andrew@whine.com> wrote:
+> From: "Juri Haberland" <list-linux.raid@spoiled.org>
 
-Yes, of course :)
+>> This way one disk can seek for a file while the other one is transfering
+>> one. A single read won't be faster but concurrent access to the same
+>> filesystem will be much faster than on a non-RAID filesystem.
+> 
+> Does this mean that the md driver is filesystem aware?  Or is it just
+> because i'm using EXT3?  How does md know how many file accesses i'm doing?
 
-Thanks,
+No, AFAIK it's not filesystem aware and it shouldn't be. For a better
+explanation please look at the mail from Scott Bailey. He obviously
+looked at the code which I didn't...
+
+Cheers,
 Juri
 
 -- 
