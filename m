@@ -1,61 +1,85 @@
-From: "Yuval Yeret" <yuval@exanet.com>
-Subject: RE: RAID detection and activation w/o auto detection
-Date: Wed, 1 May 2002 08:20:45 +0200
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: raid5: switching cache buffer size log spam
+Date: Wed, 1 May 2002 15:33:53 +1000 (EST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <4913AB320D31DC4798D6FEF5F557351F18240F@hawk.exanet-il.co.il>
+Message-ID: <15567.32321.669421.949103@notabene.cse.unsw.edu.au>
+References: <15525.35945.411587.185565@notabene.cse.unsw.edu.au>
+	<Pine.LNX.4.44.0204281733550.9254-100000@twinlark.arctic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-content-class: urn:content-classes:message
-To: linux-raid maillist <linux-raid@vger.kernel.org>, neilb@cse.unsw.edu.au
+In-Reply-To: message from dean gaudet on Sunday April 28
+To: dean gaudet <dean@arctic.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
-
-Should we consider mdadm as a replacement to raidstart/raidstop ? 
-
-I ask because we are seeing strange behaviour in starting a raid when
-one of the paths is not available.
-
-Thank,
-Yuval Yeret
-
-
------Original Message-----
-From: Neil Brown [mailto:neilb@cse.unsw.edu.au]
-Sent: Wednesday, May 01, 2002 7:21 AM
-To: Mr. James W. Laferriere
-Cc: linux-raid maillist
-Subject: Re: RAID detection and activation w/o auto detection 
-
-
-On Tuesday April 30, babydr@baby-dragons.com wrote:
+On Sunday April 28, dean@arctic.org wrote:
+> > >
+> > > Mar 29 10:47:45 debian kernel: raid5: switching cache buffer size, 0 --> 512
+> > > Mar 29 10:47:45 debian kernel: raid5: switching cache buffer size, 0 --> 4096
+> > > Mar 29 10:47:45 debian kernel: raid5: switching cache buffer size, 4096 --> 512
+> >
 > 
-> 	Hello Neil ,  OK mia culpa .  But I don't see what good the echo
-> 	below does for us then ,  as in ...
+> this is an operational concern to me now -- because even the act of
+> creating an LVM snapshot results in the log spam... and this makes my
+> machine grind to a halt if i attempt to do backups with snapshots.
 > 
-> ~# more ./mdadm.conf
-> /dev/hd* /dev/sd*
-> ARRAY /dev/md0 level=raid5 num-devices=3
-UUID=b285b144:ae0b561b:b5b55686:ed216a4c
+> i could pursue "fixing" LVM, mke2fs/etc. to all use 4096-byte buffer_heads
+> if possible.  but i thought i'd also look into fixing md itself... is
+> anyone working on this already?
 > 
-> 	Without the DEVICE in front of '/dev/hd* /dev/sd*' they are
-> 	meaningless .  Right ?  Tia ,  JimL
+> i've thought of two solutions, let me know what you think.
+> 
+> (1) in raid5_make_request, do something like:
+> 
+> 	if (bh->b_size <= conf->buffer_size || conf->buffer_size == 0) {
+> 		do what's in the code currently;
+> 	}
+> 	else {
+> 		break up the request into
+> 			(bh->b_size / conf->buffer_size) pieces;
+> 	}
+> 
+>     this would mean i'd eventually end up with conf->buffer_size == 512
+>     and my regular 4096 byte fs operations would end up being broken
+>     into 8 pieces... as long as LVM is doing the smaller block size
+>     requests.
+> 
+>     and if i see things right, eventually a sync would cause the
+>     cache to 0, and at that point it would be possible to get back to
+>     a 4096-byte cache.
+> 
+>     how hard is it to break up bh things like this?  i'm a newbie in
+>     this area of the kernel :)
 
-Yep.  My mistake.  It should have been:
+Look at
+ http://www.cse.unsw.edu.au/~neilb/patches/linux-stable/2.4.19-pre3/patch-j-RaidSplit
 
-   echo 'DEVICE /dev/hd* /dev/sd*' > /etc/mdadm.conf
+It allows each raid module to say "split this for me" and md.c will
+split the request and re-submit.
+It should then be fairly easy to get raid5 to say 'split' if the
+request is bigger than the current size.
+However doing raid5 with 512 by blocks seems to be a lot slower than
+with 4K blocks..  Try it and see.
 
-As I think you realised, --config is pointless with -Dsb, as it
-doesn't read the config file, it reads /proc/mdstat.
-However --config would be meaningful with -Esb, and the next release
-will allow it.
 
-Thanks,
+> 
+> (2) the differing size accesses are typically in disjoint regions of
+>     the array.  for example, when creating an LVM snapshot there is LVM
+>     metadata, there is a live filesystem, and there is the LVM snapshot
+>     volume itself.  all of these are disjoint.
+> 
+>     instead of draining the entire cache in get_active_stripe(), we only
+>     need to drain entries which overlap the sector we're interested
+>     in.
+
+and you need to make sure that new requests don't then conflict with
+other new requests...  I suspect this approach would be quite hard.
+
+
+I think the "right" way is to fix the cache size at 4K and handle
+reads and writes from partial buffers.  It's probably end up like this
+in 2.5.. eventually.
 
 NeilBrown
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
