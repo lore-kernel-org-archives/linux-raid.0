@@ -1,32 +1,26 @@
-From: Monda.Laszlo@stud.u-szeged.hu
-Subject: ITE IT 8212 problem
-Date: Sun,  9 Nov 2003 14:57:54 +0100
+From: Ruth Ivimey-Cook <Ruth.Ivimey-Cook@ivimey.org>
+Subject: Re: ITE IT 8212 problem
+Date: Sun, 09 Nov 2003 18:28:43 +0000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1068386274.3fae47e2ca3c3@www.stud.u-szeged.hu>
+Message-ID: <5.2.0.9.0.20031109182651.0669be90@mailhost.ivimey.org>
+References: <1068386274.3fae47e2ca3c3@www.stud.u-szeged.hu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset="us-ascii"; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <1068386274.3fae47e2ca3c3@www.stud.u-szeged.hu>
+To: Monda.Laszlo@stud.u-szeged.hu, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi All,
+At 13:57 09/11/2003, Monda.Laszlo@stud.u-szeged.hu wrote:
+>./iteraid:o: unresolved symbol prefetch
 
-I'd like to use my integrated ITE IT 8212 IDE RAID controller with an arbitrary 
-2.4 kernel.
+The ITE driver was written for a kernel that differs in some way from the 
+kernel you are using it with. You must either (a) change kernel version (b) 
+change the ITE source or (c) change the kernel source. Which you do depends 
+on the version you are using, your skills, etc
 
-There are various precompiled binary drivers for Mandrake, SuSE and Redhat for 
-several specific kernels, but there is also a source which I downloaded from:
-http://www.ite.com.tw/productInfo/Download.html#IT8212F
-and compiled it successfully, but when I want to load it to the kernel I get the 
-following error:
-./iteraid:o: unresolved symbol prefetch
+HTH
 
-How could I solve this problem?
-
-Thanks in advance,
-    Laci
+Ruth
 
 
--------------------------------------------------
-This mail sent through IMP: http://horde.org/imp/
