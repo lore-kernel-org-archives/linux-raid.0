@@ -1,57 +1,42 @@
-From: Jakob Oestergaard <jakob@unthought.net>
-Subject: Re: Is Read speed faster when 1 disk is failed on raid5 ?
-Date: Tue, 22 Oct 2002 13:24:01 +0200
+From: Jonas Nickel <jonas.nickel@tu-berlin.de>
+Subject: Filesystem did not grow with my RAID 5 array
+Date: Tue, 22 Oct 2002 16:32:09 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20021022112401.GA26549@unthought.net>
-References: <20021022104522.GC24075@unthought.net> <Pine.LNX.4.44.0210221248540.26127-100000@ddx.a2000.nu>
+Message-ID: <200210221632.09276.jonas.nickel@tu-berlin.de>
+Reply-To: jonas.nickel@tu-berlin.de
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44.0210221248540.26127-100000@ddx.a2000.nu>
-To: raid@ddx.a2000.nu
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Oct 22, 2002 at 12:49:41PM +0200, raid@ddx.a2000.nu wrote:
->=20
-> On Tue, 22 Oct 2002, Jakob Oestergaard wrote:
->=20
-> > I didn't follow the beginning of this thread, sorry.  Is this SCSI?
->=20
-> Ide disks on 3ware 7850 using software raid5
+Hello,
 
-Ok.  Odd.
+I used raidreconf to expand a RAID 5 array with three disks (no spares) to one 
+with four disks (no spares). The tool seemed to work fine, a check with 
 
-My first guess would be that it's some master/slave IDE issue - but you
-are probably running all your disks as masters (one disk per channel),
-right?
+e2fsck -f /dev/md0 
 
-Other than that... Well, if the parity information is intact, the disks
-would need to skip the parity blocks when the array is read from
-sequentially.  With a degraded array, the reads are all contiguous on
-the disks - this could be a difference perhaps??  =20
+showed no errors. However, a 
 
-What chunk size are you using?  And can you try a chunk size that is an
-order of magnitude bigger or smaller?   (might take some time to test
-this out).
+df  .
 
-=46or example, if you use a 4k chunksize (I don't think you do, if my l=
-ast
-guess holds), then try 128k.  If you are using 64k or above (which,
-again, if I am guessing correctly, is probably more like what you're
-using), then try 4k.
+in the directory of the array still shows the old size. Did I miss anything 
+obvious and how do I expand the filesystem to the whole array?
 
---=20
-=2E...............................................................
-:   jakob@unthought.net   : And I see the elder races,         :
-:.........................: putrid forms of man                :
-:   Jakob =D8stergaard      : See him rise and claim the earth,  :
-:        OZ9ABN           : his downfall is at hand.           :
-:.........................:............{Konkhra}...............:
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks in  advance,
+
+Jonas Nickel
+
+---------------------------------------------------
+TU Berlin
+Fachgebiet Verbrennungskraftmaschinen
+Carnotstr. 1A
+10587 Berlin
+
+Tel.: +49 (0) 30 314-22607
+Fax.: +49 (0) 30 314-26105
+Web: http://www.vkm.tu-berlin.de
+---------------------------------------------------
