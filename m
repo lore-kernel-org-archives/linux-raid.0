@@ -1,54 +1,53 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: Software RAID-5 attempt to access beyond end of device...
-Date: Mon, 30 Aug 2004 16:27:06 +1000
+From: Louis-David Mitterrand <vindex@apartia.org>
+Subject: Re: lilo boot problems
+Date: Mon, 30 Aug 2004 10:26:25 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16690.51386.426771.284290@cse.unsw.edu.au>
-References: <1093621033.13979.49.camel@slurp>
+Message-ID: <20040830082625.GA9916@apartia.fr>
+References: <200408251458.46575.maarten@ultratux.net> <412F3175.1@apartia.fr> <200408280044.55286.maarten@ultratux.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Sebastian Utz on Friday August 27
-To: Sebastian Utz <su@rotamente.com>
+Content-Disposition: inline
+In-Reply-To: <200408280044.55286.maarten@ultratux.net>
+To: maarten <maarten@ultratux.net>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Friday August 27, su@rotamente.com wrote:
-> Hello,
+On Sat, Aug 28, 2004 at 12:44:55AM +0200, maarten wrote:
+> On Friday 27 August 2004 15:04, Laurent CARON wrote:
+> > maarten wrote:
+> > >Hi list,
+> > >
+> > >I've got bitten by the recent bug(?) that lilo seems to have with 2.6.x
+> > >kernels where, upon install, it prints:
+> > >
+> > >Fatal: Trying to map files from unnamed device 0x0000
+> > >
+> > >I've tried everything I could think of in lilo.conf to no avail.  Using
+> > > google there are several (but not many) threads about this specific error
+> > > but I've not seen a solution anywhere yet.
+> > >
+> > >A "raid-extra-boot" line doesn't help any, neither do any other options.
+> > >
+> > >At this point, I'm not even sure where the error comes from as even trying
+> > > to install a normal non-raid lilo.conf now fails.
+> >
+> > you have to reconstruct your array first.
 > 
-> I have a problem with an Software RAID-5 at the top of 4 IDE-Drives
-> connected via 2 Promise UltraTX2 (20268) IDE controller.
-
-This is not a raid problem.  It is a problem with your filesystem or
-your hardware.
-I think you have reported this for both reiserfs and ext3, in which
-can it is unlikely to be the filesystem.  I guess it could be in the
-generic block layer...
-
+> Eeh...  You're joking, right ?  
+> The array holds no data as yet so it is possible, but several things seem too 
+> odd about this advice.  First, there is nothing wrong with this array, it was 
+> created by mdadm with all the right options. Second, this being linux (not 
+> windows) I can hardly believe one has to solve problems by no other means 
+> than starting all over ("reinstall windows") if the only error is due to the 
+> bootmanager interacting with the kernel (remember, this error doesn't occur 
+> with other, earlier, kernels).
 > 
-> FS is EXT3.
-> Kernel 2.6.8.1	(problem occured with 2.6.7, update didn't helped)
-> CPU: Pentium II 400
-> Mainboard: Asus P2B-S
-> 
-> After 29% usage, I've got an Kernel oops and system stalls:
-> -------- snip start -------------
-> Aug 27 16:30:18 gharb kernel: attempt to access beyond end of device
-> Aug 27 16:30:18 gharb kernel: md0: rw=1, want=6917529027856096120,
-> limit=241215360
+> Anyway, I chose to work around it by installing grub (and it works fine).
 
-6917529027856096120 is 600000000CD0DB78 in hex.
-0xCD0DB78 is 215014264 which is not beyond the end of the device.
-It looks like  2 extra bits have been set at the top of the address.
-This could be due to bad memory (though that is more commonly a
-single-bit error, not a double bit error), or it could be the
-filesystem send a bad request, possibly due to bad indexing
-information that has previously been stored on disk.
+By "reconstruct" I think Laurent meant "synchronize". In effect,
+degraded arrays would produce that error with lilo with certain versions
+of kernel 2.6.x
 
-I recommend running memtest for a while and confirming that it isn't a
-hardware error, and then possibly following up on
-linux-kernel@vger.kernel.org.
-
-
-NeilBrown
-
+-- 
+        "You're cute when you're stupid"
