@@ -1,59 +1,269 @@
-From: Duncan Hill <dhill+linuxraid@cricalix.net>
-Subject: Re: Gigabyte GA-7N400 Pro2 and raid
-Date: Thu, 29 Apr 2004 07:18:27 +0100
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: [ANNOUNCE][PATCH 2.6] md: persistent (file-backed) bitmap and async
+ writes
+Date: Thu, 29 Apr 2004 18:41:31 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200404290718.27213.dhill+linuxraid@cricalix.net>
-References: <000901c42da1$bdbc8610$6705a8c0@a30> <200404290638.44608.dhill@cricalix.net> <000d01c42dad$a2073530$6705a8c0@a30>
+Message-ID: <16528.49083.998593.199805@cse.unsw.edu.au>
+References: <40198E85.29EBC8E0@SteelEye.com>
+	<16422.62911.755570.855200@notabene.cse.unsw.edu.au>
+	<4027E342.D02202F1@SteelEye.com>
+	<16424.8182.876520.280031@notabene.cse.unsw.edu.au>
+	<402D3A86.97CF894F@SteelEye.com>
+	<16456.2775.641721.204171@notabene.cse.unsw.edu.au>
+	<4048F9AA.1BBD67F@SteelEye.com>
+	<406B1024.7BF88C@SteelEye.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <000d01c42dad$a2073530$6705a8c0@a30>
-Content-Disposition: inline
-To: linux-raid@vger.kernel.org
+In-Reply-To: message from Paul Clements on Wednesday March 31
+To: Paul Clements <Paul.Clements@SteelEye.com>
+Cc: linux-raid@vger.kernel.org, ptb@it.uc3m.es, mingo@redhat.com, "james.bottomley" <james.bottomley@SteelEye.com>
 List-Id: linux-raid.ids
 
-On Thursday 29 April 2004 06:48, me@heyjay.com wrote:
-> Duncan,
->
-> It is ITE 8212 (I'm not sure if it is an "F" though).  The driver for
-> RedHat and Mandrake are available on giga-byte.com.  When you say I'm out
-> of luck, what exactly does that mean?
+On Wednesday March 31, Paul.Clements@SteelEye.com wrote:
+  and less that a month later I replied .... I've been busy and had
+  two weeks leave in there.  Sorry.
 
-Well, let me spin my tale of woe :)
+> 
+> Create a bitmap file:
+> --------------------
+> 
+> # mdadm --create-bitmap=65536,3,580480 /tmp/bitmap --force
+> 
 
-I have a GA K8N-Pro board, with the ITE 8212F RAID chipset.  Combined with the 
-SATA connectors and the regular IDE, I can use 10 drives - in theory.  I did 
-a 32 bit FC1 install using the regular IDE drives, and then hooked up a pair 
-of 120 GB drives to the RAID controller.  Loaded the driver from ite.com.tw, 
-and watched it do all sorts of funny things.  Shrugged, powered down and 
-removed the 120s.
+Maybe:
+mdadm --create-bitmap --chunksize=64 --delay=3 --size==580480
+???
+while more verbose, it is also easier to remember and more in-keeping
+with the rest of mdadm's syntax.
 
-Fast forward a month or so, and I have the machine in the UK now (bought it in 
-the US).  Running Gentoo64, runs like a charm.  Decide to poke the ITE driver 
-again, this time under the 2.6 kernel.  Had even worse results (search the 
-Gentoo AMD 64 forum and you'll see other people having issues).  Have tossed 
-several logs at ITE, once I managed to convince them that they wrote the 
-driver (!), seeing as it had their copyright on it.
 
-For a 2.4 series kernel, under 32 bit, you may have more luck than I have had.  
-If I had more of a clue about drivers for kernels (and C in general), I'd 
-tackle this and make the driver work.  I don't, so I can't, unless I can 
-convince someone other than ITE to scratch the itch.
+> 1) an is_create flag was added to do_md_run to tell bitmap_create
+> whether we are creating or just assembling the array -- this is
+> necessary since 0.90 superblocks do not have a UUID until one is
+> generated randomly at array creation time, therefore, we must set the
+> bitmap UUID equal to this newly generated array UUID when the array is
+> created
 
-References:
-http://www.cricalix.net/ite.log  - my most recent debug log of trying the 
-driver.  Note the 0 byte sector size and and lack of cache info.  This was 
-one of my better days with the driver.
+I think this is the wrong approach.  You are justifying a design error
+by reference to a previous design error.
+I think user-space should be completely responsible for creating the
+bitmap file including setting the UUID.
+Either
+  1/ add the bitmap after the array has been created.
+or
+  2/ Create the array in user-space and just get the kernel to
+    assemble it (this is what I will almost certainly do in mdadm
+    once I get around to supporting version 1 superblocks).
 
-http://forums.gentoo.org/viewtopic.php?t=165932  - someone claiming that AMD's 
-porting notes helped.  I love his -1 sector size.
 
-http://forums.gentoo.org/viewtopic.php?t=155095  - other people (including 
-self) having issues.
+> 
+> 3) code was added to mdadm to allow creation of arrays with
+> non-persistent superblocks (also, device size calculation with
+> non-persistent superblocks was fixed)
+> 
+> 4) a fix was made to the hot_remove code to allow a faulty device to be
+> removed
+> 
+> 5) various typo and minor bug fixes were also included in the patches
 
-http://www.uwsg.iu.edu/hypermail/linux/kernel/0310.3/1187.html  - someone on 
-lkml who doesn't think much of the driver.  And that spinlock is still there 
-in the latest release - not knowing much about kernel module designs, I don't 
-know if he's right or wrong.
+
+please, Please, PLEASE, keep separate patches separate.  It makes them
+much easier to review, and hence makes acceptance much more likely.
+
+In particular, your fix in 4 is, I think, wrong.  I agree that there
+is a problem here. I don't think your fix is correct.
+
+But, onto the patch.
+
+
+1/ Why bitmap_alloc_page instead of just kmalloc?
+   If every kernel subsystem kept it's own private cache of memory
+   in case of desperate need, then there would be a lot of memory
+   wastage.   Unless you have evidence that times when you need to
+   allocate a bitmap are frequently times when there is excessive
+   memory pressure, I think you should just trust kmalloc.
+   On the other hand, if you have reason to believe that the services
+   of kmalloc are substantially suboptimal for your needs, you should
+   explain why in a comment.
+
+ 2/There is a race in bitmap_checkpage.
+   I assume that the required postcondition is that (if the arguments
+   are valid) either bitmap->bp[page].hijacked or bitmap->bp[page].map
+   but not both.  If this is the case, then
+
++	if ((mappage = bitmap_alloc_page(bitmap)) == NULL) {
++		PRINTK("%s: bitmap map page allocation failed, hijacking\n", 
++			bmname(bitmap));
++		/* failed - set the hijacked flag so that we can use the
++		 * pointer as a counter */
++		spin_lock_irqsave(&bitmap->lock, flags);
++		bitmap->bp[page].hijacked = 1;
++		goto out_unlock;
++	}
+
+   should become:
+
++	if ((mappage = bitmap_alloc_page(bitmap)) == NULL) {
++		PRINTK("%s: bitmap map page allocation failed, hijacking\n", 
++			bmname(bitmap));
++		/* failed - set the hijacked flag so that we can use the
++		 * pointer as a counter */
++		spin_lock_irqsave(&bitmap->lock, flags);
++		if (!bitmap->bp[page].map) bitmap->bp[page].hijacked = 1;
++		goto out_unlock;
++	}
+
+   as someone else could have allocated a bitmap while we were trying
+   and failing.
+
+
+ 3/ Your bmap_page / sync_page is very filesystem-specific.
+
+   bmap_page sets page->private to a linked-list of buffers.
+   However page->private "belongs" to the address-space that the page
+   is in, which means the filesystem.
+   I don't know if any filesystems use page->private for anything
+   other than a list of buffers, but they certainly could if they
+   wanted to, and if they did, this code would suddenly break.
+
+   I think that if you have your heart set on being able to store the
+   bitmap in a file, that using a loop-back mount would be easiest.
+   But if you don't want to do that, at least use the correct
+   interface.  Referring to the code in loop.c would help.
+
+   Another alternative would be to use the approach that swapfile uses.
+   i.e. create a list of extents using bmap information, and then do
+   direct IO to the device using this extent information.
+   swapfile chooses to ignore any extent that is less that a page.
+   You might not want to do that, but you wouldn't have to.
+
+
+  4/ I would avoid extending the file in the kernel.  It is too easy
+     to do that in user space.  Just require that the file is the
+     correct size.
+
+  5/ I find it very confusing that you kmap a page, and then leave it
+     to some function that you call to kunmap the page (unmap_put_page
+     or sync_put_page).  It looks very unbalanced.  I would much
+     rather see the kunmap in the same function as the kmap.
+
+  6/ It seems odd that bitmap_set_state calls unmap_put_page instead
+     of sync_put_page.  Surely you want to sync the superblock at this
+     point.  
+  7/ The existence of bitmap_get_state confuses me.  Why not store the
+     state in the bitmap structure in bitmap_read_sb??
+
+  8/ calling md_force_spare(.., 1) to force a sync is definitely
+     wrong.  You appear to be assuming a raid1 array with exactly two
+     devices.  Can't you just set recovery_cp to 0, or maybe just set
+     a flag somewhere and test it in md_check_recovery??
+
+  9/ why don't you just pass "%s_bitmap" as the thread name to
+     md_register_thread ?  As far as I can tell, it would have exactly
+     the same effect as the current code without requiring a kmalloc.
+
+  10/
++static void bitmap_stop_daemon(struct bitmap *bitmap)
++{
++	mdk_thread_t *daemon;
++	unsigned long flags;
++
++	spin_lock_irqsave(&bitmap->lock, flags);
++	if (!bitmap->daemon) {
++		spin_unlock_irqrestore(&bitmap->lock, flags);
++		return;
++	}
++	daemon = bitmap->daemon;
++	bitmap->daemon = NULL;
++	spin_unlock_irqrestore(&bitmap->lock, flags);
++	md_unregister_thread(daemon); /* destroy the thread */
++}
+
+would look better as:
+
++static void bitmap_stop_daemon(struct bitmap *bitmap)
++{
++	mdk_thread_t *daemon;
++	unsigned long flags;
++
++	spin_lock_irqsave(&bitmap->lock, flags);
++	daemon = bitmap->daemon;
++	bitmap->daemon = NULL;
++	spin_unlock_irqrestore(&bitmap->lock, flags);
++	if (bitmap->daemon)
++		md_unregister_thread(daemon); /* destroy the thread */
++}
+
+   
+   11/  md_update_sb needs to be called with the mddev locked, and I
+        think there are times when you call it without the lock.
+        I would prefer it if you left it 'static' and just set the
+        sb_dirty flag.  raid[156]d will the update date it soon
+        enough.
+
+   12/ The tests in hot_add_disk to see if the newly added device is
+       sufficiently up-to-date that the bitmap can be used to get it
+       the rest of the way up-to-date must be wrong as they don't
+       contain any reference to 'events'.
+       You presumably want to be able to fail/remove a drive and then
+       re-add it and not require a full resync.
+       For this to work, you need to record an event number when the
+       bitmap switches from "which blocks on active drives are not
+       in-sync" to "which blocks active drives have changed since a
+       drive failed", and when you incorporate a new device, only
+       allow it to be synced based on the bitmap if the event counter
+       is at least as new as the saved one (plus the checks you
+       currently have).
+
+    13/ The test
++	} else if (atomic_read(&mddev->bitmap_file->f_count) > 2) {
+        in set_bitmap_file is half-hearted at best.
+        What you probably want is "deny_write_access".
+        Or just check that the file is owned by root and isn't world
+	writable. 
+
+        The check against the uuid in the header should be enough to
+        ensure that operator error doesn't result in the one file
+        being used for two arrays.
+
+    14/ In md_do_sync, I think you should move "cond_reshed()" above 
+
+@@ -3312,6 +3506,10 @@ static void md_do_sync(mddev_t *mddev)
+ 			goto out;
+ 		}
+ 
++		/* don't worry about speed limits unless we do I/O */
++		if (!need_sync)
++			continue;
++
+ 		/*
+ 		 * this loop exits only if either when we are slower than
+ 		 * the 'hard' speed limit, or the system was IO-idle for
+
+        to make sure that mdX_sync doesn't steal too much time before
+        allowing a reschedule.
+
+
+
+and the worst part about it is that the code doesn't support what I
+would think would be the most widely used and hence most useful case,
+and that is to store the bitmap in the 60K of space after the
+superblock.
+
+If you had implemented that first, then you could have avoided all the
+mucking about with files, which seems to be a problematic area, and
+probably had working and accepted code by now.  Then adding support
+for separate files could have been layered on top.
+That would have meant that each piece of submitted code was
+substantially smaller and hence easier to review.
+
+
+Anyway, enough for now.  I'll try to review your next patch with a
+little less delay, but it is a substantial effort, and that makes it
+easy to put off.
+
+
+
+NeilBrown
