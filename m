@@ -1,37 +1,125 @@
 From: NeilBrown <neilb@cse.unsw.edu.au>
-Subject: [PATCH] md - 0 of 8 - Introduction
+Subject: [PATCH] md - 1 of 8 - Rationalise device selection in md/multipath.
 Date: Fri, 28 May 2004 16:45:25 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040528163700.9426.patches@notabene>
+Message-ID: <E1BTb7N-0002TU-AC@notabene.cse.unsw.edu.au>
+References: <20040528163700.9426.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: Andrew Morton <akpm@osdl.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Following are 8 patches for md in 2.6.7-rc1-mm1
 
-The first 6 a ready to go to Linus.
-The last two are sufficiently new that maybe they should wait a while,
-but I don't have any serious concerns about them and have tested them quite a bit.
+md/multipath has two separate pieces of code for choosing a device
+to use, one when a request is first made and the other when a
+request is being re-tried after failure.
+This patch discards multipath_read_balance and uses multipath_map
+in both situations.
 
-1 - tidy up some multipath code
-2 - fix a bug which stopped failed drives from being removable
-    in some cases.
-3 - rationalise use of ->hot_remove_disk method.
-4 - double check that size in a multiple of chunksize of raid5/6
-    (needed for a subsequent patch)
-5 - Fix problem with hot-adding to array with non-persistant superblocks.
-6 - Get raid1 to cope sensible with a device failure during rebuild.
+Signed-off-by: Neil Brown <neilb@cse.unsw.edu.au>
 
-and the new functionality.
+ ----------- Diffstat output ------------
+ ./drivers/md/multipath.c |   45 ++++++++++++---------------------------------
+ 1 files changed, 12 insertions(+), 33 deletions(-)
 
-7 - support resizing of devices in raid1/4/5/6.  If the devices are replaced
-    with larger ones, the array can grow while online to use the extra space
-8 - support adding and removing active drives for raid1.  i.e change a raid1 
-    array that used 2 drives so that it uses 3 drives, or vice-versa.
-
-I will release a new mdadm in a few days that provide "--grow" for using
-this functionality.
-
-NeilBrown
-
+diff ./drivers/md/multipath.c~current~ ./drivers/md/multipath.c
+--- ./drivers/md/multipath.c~current~	2004-05-28 15:47:47.000000000 +1000
++++ ./drivers/md/multipath.c	2004-05-28 15:47:47.000000000 +1000
+@@ -54,9 +54,8 @@ static void mp_pool_free(void *mpb, void
+ 	kfree(mpb);
+ }
+ 
+-static int multipath_map (mddev_t *mddev, mdk_rdev_t **rdevp)
++static int multipath_map (multipath_conf_t *conf)
+ {
+-	multipath_conf_t *conf = mddev_to_conf(mddev);
+ 	int i, disks = conf->raid_disks;
+ 
+ 	/*
+@@ -68,10 +67,9 @@ static int multipath_map (mddev_t *mddev
+ 	for (i = 0; i < disks; i++) {
+ 		mdk_rdev_t *rdev = conf->multipaths[i].rdev;
+ 		if (rdev && rdev->in_sync) {
+-			*rdevp = rdev;
+ 			atomic_inc(&rdev->nr_pending);
+ 			spin_unlock_irq(&conf->device_lock);
+-			return 0;
++			return i;
+ 		}
+ 	}
+ 	spin_unlock_irq(&conf->device_lock);
+@@ -137,24 +135,6 @@ int multipath_end_request(struct bio *bi
+ 	return 0;
+ }
+ 
+-/*
+- * This routine returns the disk from which the requested read should
+- * be done.
+- */
+-
+-static int multipath_read_balance (multipath_conf_t *conf)
+-{
+-	int disk;
+-
+-	for (disk = 0; disk < conf->raid_disks; disk++) {
+-		mdk_rdev_t *rdev = conf->multipaths[disk].rdev;
+-		if (rdev && rdev->in_sync)
+-			return disk;
+-	}
+-	BUG();
+-	return 0;
+-}
+-
+ static void unplug_slaves(mddev_t *mddev)
+ {
+ 	multipath_conf_t *conf = mddev_to_conf(mddev);
+@@ -204,14 +184,14 @@ static int multipath_make_request (reque
+ 		disk_stat_inc(mddev->gendisk, reads);
+ 		disk_stat_add(mddev->gendisk, read_sectors, bio_sectors(bio));
+ 	}
+-	/*
+-	 * read balancing logic:
+-	 */
+-	spin_lock_irq(&conf->device_lock);
+-	mp_bh->path = multipath_read_balance(conf);
++
++	mp_bh->path = multipath_map(conf);
++	if (mp_bh->path < 0) {
++		bio_endio(bio, bio->bi_size, -EIO);
++		mempool_free(mp_bh, conf->pool);
++		return 0;
++	}
+ 	multipath = conf->multipaths + mp_bh->path;
+-	atomic_inc(&multipath->rdev->nr_pending);
+-	spin_unlock_irq(&conf->device_lock);
+ 
+ 	mp_bh->bio = *bio;
+ 	mp_bh->bio.bi_bdev = multipath->rdev->bdev;
+@@ -400,7 +380,7 @@ static void multipathd (mddev_t *mddev)
+ 	struct multipath_bh *mp_bh;
+ 	struct bio *bio;
+ 	unsigned long flags;
+-	mdk_rdev_t *rdev;
++	multipath_conf_t *conf = mddev_to_conf(mddev);
+ 
+ 	md_check_recovery(mddev);
+ 	for (;;) {
+@@ -416,8 +396,7 @@ static void multipathd (mddev_t *mddev)
+ 		bio = &mp_bh->bio;
+ 		bio->bi_sector = mp_bh->master_bio->bi_sector;
+ 		
+-		rdev = NULL;
+-		if (multipath_map (mddev, &rdev)<0) {
++		if ((mp_bh->path = multipath_map (conf))<0) {
+ 			printk(KERN_ALERT "multipath: %s: unrecoverable IO read"
+ 				" error for block %llu\n",
+ 				bdevname(bio->bi_bdev,b),
+@@ -428,7 +407,7 @@ static void multipathd (mddev_t *mddev)
+ 				" to another IO path\n",
+ 				bdevname(bio->bi_bdev,b),
+ 				(unsigned long long)bio->bi_sector);
+-			bio->bi_bdev = rdev->bdev;
++			bio->bi_bdev = conf->multipaths[mp_bh->path].rdev->bdev;
+ 			generic_make_request(bio);
+ 		}
+ 	}
