@@ -1,47 +1,65 @@
-From: Chris Hirsch <chris@base2technology.com>
-Subject: Re: 15% used but "No space left on Device"
-Date: Wed, 19 Nov 2003 07:23:23 -0700
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: Is my raid setup speed ok?!
+Date: Wed, 19 Nov 2003 11:49:23 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3FBB7CDB.4050505@base2technology.com>
-References: <Pine.LNX.4.56.0311161309010.12003@nemesis.cs.yorku.ca> <3FB7CE28.6090100@eglifamily.dnsalias.net> <Pine.LNX.4.56.0311161816320.12003@nemesis.cs.yorku.ca>
+Message-ID: <200311191649.hAJGnTE25045@www.watkins-home.com>
+References: <PPEOJEIEFLAONFNHJPOOMEILGOAA.jim@jimtreats.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+	charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.56.0311161816320.12003@nemesis.cs.yorku.ca>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <PPEOJEIEFLAONFNHJPOOMEILGOAA.jim@jimtreats.com>
+To: 'James R Bamford' <jim@jimtreats.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Each time you re-boot.
 
->attempt to access beyond end of device
->09:00: rw=0, want=707399196, limit=488396800
+It's not a fix.  It's just changing a default.  If your system ran too slow
+during a re-build, you would want to lower the number.
+
+As I understand it, this limits the data rate to each disk.  Since you had 2
+disks, you were getting 20000K per second of disk i/o.
+
+It would be nice if /proc/mdstat would display the current min and max speed
+limits.  It would also be nice if there was a place you could set them just
+once.  Maybe /etc/raidtab.  Maybe a new file /etc/md.conf.  I would prefer
+to have an overall throughput speed limit, and a per array group speed
+limit.  The overall throughput speed limit would not be per disk, but total
+disk i/o.
+
+Guy
+
+-----Original Message-----
+From: James R Bamford [mailto:jim@jimtreats.com] 
+Sent: Wednesday, November 19, 2003 8:57 AM
+To: Guy; 'James R Bamford'; linux-raid@vger.kernel.org
+Subject: RE: Is my raid setup speed ok?!
+
+> -----Original Message-----
+> From: Guy [mailto:bugzilla@watkins-home.com]
+> Sent: 19 November 2003 04:10
+> To: 'James R Bamford'; linux-raid@vger.kernel.org
+> Subject: RE: Is my raid setup speed ok?!
 >
->Weird.  I try using display on that file and sometimes it dies and
->sometimes it doesn't.  Very unpredictable.
 >
->Why would the system 'think' that I'm trying to access outside of my disk
->when the file exists and is the correct size?
->  
+> It may be too late for this re-sync, but in the future do this:
+> echo 100000 > /proc/sys/dev/raid/speed_limit_max
 >
-Just to warn you I saw this exact error message...I'm running a RAID-1 
-on a RH 8 box. Eventually the entire partition corrupted itself and I 
-lost it all...so you may want to make sure you have a good backup of 
-that partition. I haven't had the time to figure out exactly what went 
-wrong. I was doing a RAID-1,LVM,ReiesrFS.
+> The default speed limit is 10000, that's what you are getting.
+> So you have reached a software imposed limit, not a hardware limit.
+>
+>
 
-On that same note I have like 4 other partitions on that same RAID-1 and 
-I haven't seen any other problems...so I was thinking it was was either 
-LVM or ReiserFS or me :-)
+Thanks.. I wondered about this.. it could really do with being added into
+the HOWTO..
 
-Chris
+Is this fix a do once.. fix everytime.. or something that i have to do each
+time i plan to rebuild an array.. (isn't proc deleted every boot!? so
+someone has asked me...)
 
--- 
-A:      To be or not to be.                                               
-Q:      What is the square root of 4b^2?
+Thanks tho
 
-
-http://ccicolorado.org
-Exceptional Dogs for Exceptional People - Help Out Today!
-
+Jim
 
 
