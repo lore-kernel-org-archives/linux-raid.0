@@ -1,37 +1,39 @@
-From: Thomas Horsten <thomas@horsten.com>
-Subject: Re: ATARAID userspace configuration tool
-Date: Tue, 10 Feb 2004 17:47:44 +0000 (GMT)
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.40.0402101743020.28534-100000@jehova.dsm.dk>
-References: <402916F8.8050008@pobox.com>
+From: "Rechenberg, Andrew" <ARechenberg@shermanfinancialgroup.com>
+Subject: RE: Adaptec 39160 RAID ?!
+Date: Tue, 10 Feb 2004 13:24:33 -0500
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <8075D5C3061B9441944E137377645118322A54@cinshrexc03.shermfin.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <402916F8.8050008@pobox.com>
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-raid-owner@vger.kernel.org>
+content-class: urn:content-classes:message
+To: Thomas Graham <lkthomas@sml.dyndns.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 10 Feb 2004, Jeff Garzik wrote:
+The Adaptec 39160 is just a plain SCSI card - the card does not have any
+RAID capabilities.
 
-> > On top of this it would be useful to make the underlying devices
-> > inaccessible after the mapped device is created (to prevent people from
-> > doing things like fdisk /dev/hda, when what they really wanted was
-> > something like fdisk /dev/ataraid/disc).
->
-> This would be something to talk with the md maintainer about, I think.
-> I'm not sure we want to do this, since the user may have a valid reason
-> to access the underlying disk.
+You can use Linux software RAID to create a RAID array with disks
+attached to the 39160 (we have 4 our these cards in one of our servers),
+but the card does not have any RAID capabilities native.
 
-That's true of course, one example would be to remove the RAID superblock
-with dd. The problem is if this is done by mistake, it could be
-catastrophic. It might be enough to remove the wrong partitions (with
-BLKPG_DEL_PARTITION, thanks to Matt Domsch for pointing me in the right
-direction), it will at least prevent mkfs /dev/hda1 etc, which would have
-unforeseeable consequences.
 
-But when the RAID/DM device is up, would it not be possible to generate an
-EACCESS or EINUSE error if someone tries to open the underlying device? If
-he really wants to do it, he can just stop the DM device first.
 
-// Thomas
+> -----Original Message-----
+> From: linux-raid-owner@vger.kernel.org 
+> [mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Thomas Graham
+> Sent: Tuesday, February 10, 2004 8:13 AM
+> To: linux-raid@vger.kernel.org
+> Subject: Adaptec 39160 RAID ?!
+> 
+> Adaptec 39160 support RAID feature, but how could I config it 
+> on linux ?
+> Thanks. ( by the way, 39160 is a software or hardware RAID ? )
+> -
+> To unsubscribe from this list: send the line "unsubscribe 
+> linux-raid" in the body of a message to 
+> majordomo@vger.kernel.org More majordomo info at  
+> http://vger.kernel.org/majordomo-info.html
+> 
