@@ -1,28 +1,54 @@
-From: Jose Luis Domingo Lopez <linux-raid@24x7linux.com>
-Subject: Re: Veritas Volume Manager
-Date: Wed, 14 May 2003 21:46:44 +0200
+From: "Duncan, Mike" <Mike.Duncan@Sonopress.com>
+Subject: RE: MD/RAID1 Large File Support
+Date: Wed, 14 May 2003 15:55:41 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20030514194644.GB6949@localhost>
-References: <B0E6075E55C7D6119DDE0002A53F8BCEFFDD2D@blpfroclab01.bausch.com> <3EC27A9D.2070501@moeraki.com>
+Message-ID: <EC803175C921D411BCE2000000006429081C3645@ash-exch_lg>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <3EC27A9D.2070501@moeraki.com>
-To: linux-raid@vger.kernel.org
+To: 'Bernd Schubert' <bernd-schubert@web.de>
+Cc: "'linux-raid@vger.kernel.org'" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wednesday, 14 May 2003, at 10:19:25 -0700,
-John Finlay wrote:
+This makes sense, because I upgraded (not reinstalled) my SuSE 7.3 -> 8.0
+when running tests. 7.3 comes with the old driver and formatted the drive
+with 3.5.x format. On my other box, the one that the tests worked out
+correctly on, I am running ReiserFS v3.6.25 format.
 
-> Thanks for the info. My impression is that the Veritas VM has a lot more 
-> features than MD/LVM including management tools, on-line 
-> reconfiguration, etc. These seem like valuable features. What's the cost 
-> of VVM?
-> 
-You can (and should) always go to the vendor's website and look there,
-because this list is not about Veritas products and/or marketing/sales.
+Thanks for pointing that out to me. It been really helpful.
 
--- 
-Jose Luis Domingo Lopez
-Linux Registered User #189436     Debian Linux Sid (Linux 2.5.69)
+------------------------------------ 
+Mike Duncan
+Web Master/Developer
+Sonopress LLC
+
+mike.duncan@sonopress.com
+828.658.6082 (desk)
+828.423.3310 (cell)
+------------------------------------
+
+
+-----Original Message-----
+From: Bernd Schubert [mailto:bernd-schubert@web.de] 
+Sent: Wednesday, May 14, 2003 1:46 PM
+To: Duncan, Mike; 'linux-raid@vger.kernel.org'
+Subject: Re: MD/RAID1 Large File Support
+
+
+> trans len 1024, max batch 900, max commit age 30, max trans age 30
+> reiserfs: checking transaction log (md0) for (md0)
+> Using r5 hash to sort names
+> reiserfs: using 3.5.x disk format
+                 ^^^^^^^^^^^^^^^^^^^^
+
+Hi,
+
+there is no 2GB support with reiserfs-3.5. You have used Suses default 
+reiserfs-utils, didn't you ? Well, the tools from namesys.com have 3.6 as 
+default since ages, the tools by patched by Suse do have 3.5 .
+
+Try to convert with '-o conv' on mounting. If you plan to export this 
+partition by nfs, you should consider to reformat, since the old files are 
+not updated by -oconv, only new files will be in 3.6 format.
+
+Bernd
