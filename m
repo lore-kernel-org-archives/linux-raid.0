@@ -1,58 +1,30 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: Raid5 Construction Question
-Date: Fri, 20 Aug 2004 02:52:17 -0400
+From: "Vladimir I. Umnov" <uvi@ezmail.ru>
+Subject: Re: Low perfomance of RAID0,RAID5, RAID+LVM on 2.6
+Date: Fri, 20 Aug 2004 20:11:37 +0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200408200652.i7K6qH315986@watkins-home.com>
-References: <4125896A.8040800@earthlink.net>
+Message-ID: <20040820201137.2ee99a14@vovapc.kpml.int>
+References: <8075D5C3061B9441944E1373776451186488C7@cinshrexc03.shermfin.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4125896A.8040800@earthlink.net>
-To: 'Mike Baynton' <mikeb414@earthlink.net>, linux-raid@vger.kernel.org
+In-Reply-To: <8075D5C3061B9441944E1373776451186488C7@cinshrexc03.shermfin.com>
+To: "Rechenberg, Andrew" <ARechenberg@sfg.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-From what I have read on this list, raidtools is no longer supported.
-This includes raidstart, raidstop, raidhotadd and raidhotremove, maybe more.
+On Thu, 19 Aug 2004 14:12:07 -0400
+"Rechenberg, Andrew" <ARechenberg@sfg.com> wrote:
 
-mdadm is the preferred tool to maintain your arrays.
+> In the part of the message that was quoted to the linux-raid list the
+> performance of the RAID devices isn't specified.  All I see is you
+> testing /dev/sda1 and mentioning kernel modules, but no mention of
+> /dev/mdX or /dev/YourVG/YourLV.
+It was my reply to answer, tests with md and lvm was in first message
+to this linux-raid lisst.
 
-Guy
+And setting readahead on lvm volumes helpes. Now I get about 80 Mb/s
+read on raid5 and about 100Mb/s on raid0, but the cpu overhead was very
+high, but acceptable  for me. But it helps only in 2.6.6! 2.6.7 and
+2.6.8.1 much slower than 2.6.6.
 
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Mike Baynton
-Sent: Friday, August 20, 2004 1:18 AM
-To: linux-raid@vger.kernel.org
-Subject: Re: Raid5 Construction Question
-
-Paul Nowoczynski wrote:
-
- > Neil,
- > Thanks for the info - I tried something along these lines
- > but didn't know how to set the faulty disk.  I didn't see it in
- > a man page
-
-
-How bout that. Does somebody know if there is ANY man page detailing all 
-of those little raidtools utilities? How are man pages maintained, 
-anyway? Even though you can #raid\tab\tab it seems like they should at 
-least be mentioned by name in the man pages somewhere, mkraid maybe. Or 
-am i just missing it?
-
-though I should have caught it with raid\tab\tab :)
-
- >
- > Ironically, the performance did end up hovering around 30MB/sec
- > for most of the rebuild.
- >
- > Thanks.
- > Pul
- >
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
