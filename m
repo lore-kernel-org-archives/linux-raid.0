@@ -1,54 +1,59 @@
-From: Alvin Oga <aoga@Maggie.Linux-Consulting.com>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
 Subject: Re: Fw: DriveReady SeekComplete problems
-Date: Fri, 10 May 2002 23:36:09 -0700 (PDT)
+Date: Sun, 12 May 2002 10:27:39 +0200 (CEST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.3.96.1020510233206.17988A-100000@Maggie.Linux-Consulting.com>
-References: <Pine.LNX.4.30.0205110758030.17857-100000@duplo.agenda.si>
+Message-ID: <Pine.LNX.4.44.0205121022520.2333-100000@uplift.swm.pp.se>
+References: <001701c1f79e$50349000$c264a8c0@hoytpub.com>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.30.0205110758030.17857-100000@duplo.agenda.si>
-To: Danilo Godec <danci@agenda.si>
-Cc: Artur Jasowicz <arturj@mousebusiness.com>, linux-raid@vger.kernel.org
+In-Reply-To: <001701c1f79e$50349000$c264a8c0@hoytpub.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Thu, 9 May 2002, Artur Jasowicz wrote:
 
-hi ya artur
+> I am building a file server with 5 drive software RAID5 array. I am
+> using three IWill SIDE-100 (Highpoint 370A) controllers as my IDE
+> interfaces, not using their RAID functionality. One Maxtor 160GB drive
+> per channel, two channels per controller. I plan on adding hot spare as
+> the sixth drive in the future. There's one 160GB partition on each
+> drive. Linux version 2.4.19-pre7smp-020502b (root@production) (gcc
+> version 2.96 20000731 (Red Hat Linux 7.1 2.96-98)) #6 SMP Thu May 2
+> 12:15:34 CDT 2002 This is a dual Athlon 2000+ MP on Tyan Tiger S2466N-4
+> with 1GB RAM. OS and swap runs on separate drives and controllers. This
+> array will be just for data once it is configured.
 
-On Sat, 11 May 2002, Danilo Godec wrote:
+I get the exact same errors you get with my VP-6 SMP board when using its 
+onboard HPT370 controller.
 
-> On Fri, 10 May 2002, Artur Jasowicz wrote:
-> 
-> > The more I think about it the more it seems like the system not
-> > keeping up with the drives though. Isn't it strange that both my 2000+
+cat /proc/interrupts 
+           CPU0       CPU1       
+  0:    6197040    6197246    IO-APIC-edge  timer
+  1:        440        380    IO-APIC-edge  keyboard
+  2:          0          0          XT-PIC  cascade
+  8:          0          1    IO-APIC-edge  rtc
+ 14:      63320      61241    IO-APIC-edge  ide0
+ 15:    3548204    3537369    IO-APIC-edge  ide1
+ 16:     429475     430742   IO-APIC-level  aic7xxx
+ 18:    4602335    4601175   IO-APIC-level  ide2, ide3, aic7xxx
+ 19:   30045123   30046213   IO-APIC-level  eth0
 
-make sure that all your disks on the same ide cable is of the same
-speed...  and its options defined similarly...
-	ata33 on one cable...
-	ata66 on a 80-pin ide cable - no other disk speeds
-	ata100 on a different ide cable
-	ata133 on a different ide cable..
-	-- do NOT mix drives of different ata speeds..
+My theory is that it's the interrupt sharing that is causing some of the 
+problems, or some kind of DMA channel mixup. I have no problem with any of 
+the other drives connected to the primary IDE controller (ide0 and ide1).
 
-	hdparam -iv /dev/hdxx  will tell you what speed it is
+Anyone know if I can force the kernel to not share interrupts.
 
-make sure that your cables are good/clean and not bent out of shape..
+I am using the Red Hat supplied 2.4.18 kernel that comes with redhat 7.3. 
+When I used the 2.4.9-31 kernel with redhat 7.2 before I got no errors but 
+instead data corruption on the ide2 and ide3 drives (which are two 120 gig 
+maxtors in a raid0 config). This could be due to a faulty cable though, I 
+swapped that one too.
 
-http://www.linux-1u.net/Disks
+Currently I have stability problems with the box, if I use the ide2 and 
+ide3 drives a lot the machine freezes.
 
-c ya
-alvin
-
-> It's a wild guess, but you might want to try disabling one of the
-> processors using 'nosmp' kernel parameter. Maybe Athlons have some issues
-> with SMP configuration.
-> 
-> Next would be testing a single drive. If the problem exists using a single
-> drive, you should try some other controller (I never used a HPT, but a
-> friend of mine has a problem with it - dunno what exactly though).
-> 
-> OR, having three IDE controllers sharing one IRQ just might be a problem.
-> I remember that on my SMP motherboards I had a lot more available IRQs
-> (over 25), available through APIC (whatever that is).
-> 
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
 
