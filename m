@@ -1,90 +1,38 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: Spares and partitioning huge disks
-Date: Thu, 6 Jan 2005 12:31:37 -0500
-Message-ID: <200501061731.j06HVi932064@www.watkins-home.com>
-References: <200501061516.47376.maarten@ultratux.net>
+From: Mike Hardy <mhardy@h3c.com>
+Subject: Re: swap on RAID (was Re: swp - Re: ext3 journal on software raid)
+Date: Thu, 06 Jan 2005 09:46:55 -0800
+Message-ID: <41DD798F.8030902@h3c.com>
+References: <41DC9420.5030701@h3c.com> <Pine.LNX.3.96.1050105210224.11158B-100000@Maggie.Linux-Consulting.com> <20050106093811.GB99565@caffreys.strugglers.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200501061516.47376.maarten@ultratux.net>
+In-Reply-To: <20050106093811.GB99565@caffreys.strugglers.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'maarten' <maarten@ultratux.net>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This idea of splitting larger disks into smaller partitions, then
-re-assembling them seems odd.  But it should help with the "bad block kicks
-out a disk" problem.
-
-I have never used RAID0.
-I have never used more than 1 pv with LVM on Linux.
-
-However, if you are going to use LVM anyway, why not allow LVM to assemble
-the disks?  I do that sort of thing all the time with HP-UX.  I create
-stripped mirrors using 4 or more disks.  With HP-UX, use the -D option with
-lvcreate.  No idea if Linux and LVM can strip.
-
-You are making me think!  I hate that!  :)  Since your 6 RAID5 arrays are on
-the same 4 disks, striping them will kill performance.  The poor heads will
-be going from 1 end to the other, all the time.  You should use LINEAR is
-you combine them with md.  If you use LVM, make sure it does not stripe
-them.  With LVM on HP-UX, the default behavior is to not stripe.
-
-Guy
-
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of maarten
-Sent: Thursday, January 06, 2005 9:17 AM
-To: linux-raid@vger.kernel.org
-Subject: Spares and partitioning huge disks
 
 
-Hi
+Andy Smith wrote:
 
-I just got my 4 new 250GB disks.  I have read someone on this list
-advocating 
-that it is better to build arrays with smaller volumes, as that decreases
-the 
-chance of failure, especially failures of two disks in a raid5
-configuration. 
+> I interpret your views as (a) but I interpret Mike's as "there are
+> people who are saying that a correctly sized machine can have zero
+> swap configured."
+> 
+> Having no swap configured and merely using no swap in normal
+> circumstances are very very different situations.
 
-The idea behind it was that since a drive gets kicked when a read-error 
-occurs, the chance is lower that a 40 GB part develops a read error than for
+You are correct that I was getting at the zero swap argument - and I 
+agree that it is vastly different from simply not expecting it. It is 
+important to know that there is no inherent need for swap in the kernel 
+though - it is simply used as more "memory" (albeit slower, and with 
+some optimizations to work better with real memory) and if you don't 
+need it, you don't need it.
 
-the full size 250 GB.  Thus, if you have 24 40GB parts, there is no fatal
-two 
-disk failure when part sda6 and part sdc4 develop a bad sector at the same 
-time. On the other hand, if the (full-size) disk sda1 and sdc1 do fail at
-the 
-same time, you're in deep shit. 
-I thought it was real insightful, so I would like to try that now.
+That said, I mentioned my servers run with swap for the same reason I 
+run with raid. I don't plan on having a disk very often (if at all), and 
+I don't plan on needing swap very often (if at all), but when it 
+happens, I expect my machine to keep running. (or at least I hope it does)
 
-(Thanks to the original poster, I don't recall your name, sorry)
-
-Now my two questions regarding this.
-
-1) What is better, make 6 raid5 arrays consisting of all 40GB partitions and
-
-group them in a LVM set, or group them in a raid-0 set (if the latter is
-even 
-possible that is) ?
-
-2) Seen as the 'physical' volumes are now 40 GB, I could add an older 80GB 
-disk partitioned in two 40GB halves, and use those two as hot-spares. 
-However, for that to work you'd have to be able to add the spares to _all_ 
-raid sets, not specific ones, if you understand what I mean.  So they would 
-act as 'roaming' spares, and they would get used by the first array that 
-needs a spare (when a failure occurs of course).  But... is this possible ? 
-
-Thanks for any insights!
-Maarten
-
--- 
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+-Mike
