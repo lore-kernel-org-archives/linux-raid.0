@@ -1,179 +1,49 @@
-From: David Greaves <david@dgreaves.com>
+From: Philip Molter <philip@corp.texas.net>
 Subject: Re: Force parity resync on raid5?
-Date: Thu, 12 Aug 2004 17:26:20 +0100
+Date: Thu, 12 Aug 2004 12:07:36 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <411B9A2C.6090108@dgreaves.com>
-References: <200408121522.i7CFM7311834@watkins-home.com>
+Message-ID: <411BA3D8.5030901@corp.texas.net>
+References: <200408121522.i7CFM7311834@watkins-home.com> <411B9A2C.6090108@dgreaves.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200408121522.i7CFM7311834@watkins-home.com>
-To: Guy <bugzilla@watkins-home.com>
-Cc: 'Gordon Henderson' <gordon@drogon.net>, 'Philip Molter' <philip@corp.texas.net>, linux-raid@vger.kernel.org
+In-Reply-To: <411B9A2C.6090108@dgreaves.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Guy wrote:
+> Anyway - the question remains - would this be the right approach?
+> 
+> Hmm - I wonder what would be needed to make the resync code do this...
 
->You were using skip/seek wrong.
->  
->
-typo - thanks.
+No, it wouldn't.  In RAID5 implementations, parity isn't recalculated 
+when you write to a RAID,  It's updated.  My understanding is that 
+typical implementations are, *VERY* basically:
 
->This is just pseudo code?  I use bash or ksh, you can't do "n=n+1".
->You don't ever end, again pseudo code I assume.
->  
->
-Indeed - should have said - I wouldn't want anyone to cut'n'paste :)
-(and that typo shows why!)
+read the old data
+xor with the new data
+read the parity data
+xor with the parity data
+write the new data
+write the new parity data
 
->I would only do this if the filesystem on md0 is not mounted.
->  
->
-Yes - I thought it would be safe for / in single user and realised it 
-wouldn't.
-I was also thinking
+Thus a RAID5 write is really two disk reads and two disk writes, which 
+is why RAID5 is expensive for writing.  Under this scheme, if the parity 
+is bad, and you write data to "update" it, it's still bad because you 
+haven't recalculated anything.  If the parity is good, everything stays 
+in sync.
 
-n=0
-while
-  dd if=/dev/md0 of=/tmp/block count=x_for_efficiency skip=n
-  dd of=/dev/md0 if=/dev/zero count=x_for_efficiency seek=n
-  dd of=/dev/md0 if=/tmp/block count=x_for_efficiency seek=n
-  n= n + 1
-loop
+If you were to truly recalculate parity every time you wrote to a block, 
+it'd be something like:
 
-in case something in a block/md layer was smart enough to see no changes 
-and not write it for real - I really don't know but it's more paranoid.
+write the new data
+read the corresponding data blocks from the other drives
+recalculate parity based on all blocks
+write the new parity data
 
-Anyway - the question remains - would this be the right approach?
+That would be n-1 reads and 2 writes for every write, which would get 
+expensive as your number of drives increased.  It's something like this 
+that the update=resync option in mdadm does, that is it reads every 
+drive's data and actually recalculates the parity based on that.
 
-Hmm - I wonder what would be needed to make the resync code do this...
-
-David
-
->Guy
->
->n=0
->while
->  dd if=/dev/md0 of=/tmp/block count=x_for_efficiency skip=n
->  dd of=/dev/md0 if=/tmp/block count=x_for_efficiency seek=n
->  n=n+1
->loop
->
->-----Original Message-----
->From: linux-raid-owner@vger.kernel.org
->[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of David Greaves
->Sent: Thursday, August 12, 2004 8:31 AM
->To: Guy
->Cc: 'Gordon Henderson'; 'Philip Molter'; linux-raid@vger.kernel.org
->Subject: Re: Force parity resync on raid5?
->
->what about
->n=0
->while
->  dd if=/dev/md0 of=/tmp/block count=x_for_efficiency seek=n
->  dd of=/dev/md0 if=/tmp/block count=x_for_efficiency seek=n
->  n=n+1
->loop
->
->?
->
->This would read the good data and force a rewrite - would you need to 
->stop any optimisers?
->
->David
->
->Guy wrote:
->
->  
->
->>Ouch!  No!!
->>
->>This would re-build data from parity!!!
->>He thinks his parity is bad.
->>He wants to re-build the parity from the data!
->>I don't know if this can even be done!
->>Recovering from a power failure does force a re-build (2.4), but from what
->>    
->>
->I
->  
->
->>remember the system looks like it is re-building a failed disk, which is
->>    
->>
->not
->  
->
->>what he wants to do.  If the parity was good, re-building any 1 disk would
->>be fine.
->>
->>Guy
->>
->>-----Original Message-----
->>From: linux-raid-owner@vger.kernel.org
->>[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Gordon Henderson
->>Sent: Tuesday, August 10, 2004 5:04 AM
->>To: Philip Molter
->>Cc: linux-raid@vger.kernel.org
->>Subject: Re: Force parity resync on raid5?
->>
->>On Mon, 9 Aug 2004, Philip Molter wrote:
->>
->> 
->>
->>    
->>
->>>How do I force a parity resync on a raid5 array?  Under 2.4, I would do
->>>this by hard cycling the box and when it came back up, it would
->>>automatically resync the array.  Under 2.6, this appears to have gone
->>>   
->>>
->>>      
->>>
->>away.
->>
->>I don't know about 2.6, (still living with 2.4) but can't you simply do:
->>
->> raidhotremove /dev/mdX /dev/hdYZ
->>
->>followed by
->>
->> raidhotadd /dev/mdX /dev/hdYZ
->>
->>or /dev/sdYZ if SCSI disks...
->>
->>However, picking the right disk to remove might be tricky... And if you
->>were at all unsure about data on the disks, maybe rebooting and doing a
->>hard fsck of the partition(s) in maintenance mode might be a good thing
->>too...
->>
->>Good luck!
->>-
->>To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->>the body of a message to majordomo@vger.kernel.org
->>More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->>-
->>To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->>the body of a message to majordomo@vger.kernel.org
->>More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->> 
->>
->>    
->>
->
->-
->To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->-
->To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->  
->
-
+Philip
