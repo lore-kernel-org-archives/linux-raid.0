@@ -1,98 +1,63 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: always dirty RAID5 arrays
-Date: Tue, 9 Nov 2004 17:27:10 -0500
-Message-ID: <200411092227.iA9MREN18155@www.watkins-home.com>
-References: <200411091603.24933.sransom@cv.nrao.edu>
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re:  md: persistent (file-backed) bitmap
+Date: Wed, 10 Nov 2004 11:37:46 +1100
+Message-ID: <16785.25306.475922.200700@cse.unsw.edu.au>
+References: <40198E85.29EBC8E0@SteelEye.com>
+	<16422.62911.755570.855200@notabene.cse.unsw.edu.au>
+	<4027E342.D02202F1@SteelEye.com>
+	<16424.8182.876520.280031@notabene.cse.unsw.edu.au>
+	<402D3A86.97CF894F@SteelEye.com>
+	<16456.2775.641721.204171@notabene.cse.unsw.edu.au>
+	<4048F9AA.1BBD67F@SteelEye.com>
+	<406B1024.7BF88C@SteelEye.com>
+	<16528.49083.998593.199805@cse.unsw.edu.au>
+	<40C6273B.2060200@steeleye.com>
+	<16590.38597.170409.499394@cse.unsw.edu.au>
+	<40D9FA9E.9010003@steeleye.com>
+	<40F7E50F.2040308@steeleye.com>
+	<16649.61212.310271.36561@cse.unsw.edu.au>
+	<4119400A.40307@steeleye.com>
+	<16668.12228.187383.596856@cse.unsw.edu.au>
+	<414F9FD4.4070308@steeleye.com>
+	<41507EA7.1000905@steeleye.com>
+	<16747.15933.68499.915859@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200411091603.24933.sransom@cv.nrao.edu>
+In-Reply-To: message from Neil Brown on Tuesday October 12
 Sender: linux-raid-owner@vger.kernel.org
-To: sransom@nrao.edu, linux-raid@vger.kernel.org
+To: Paul Clements <paul.clements@steeleye.com>, jejb@steeleye.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Dirty does not indicate a re-sync is needed, just that changes have
-occurred.  If the array were shutdown incorrectly (like a crash) then on
-re-start a re-build of parity would be done.
 
-For more details:
-    man md
+Hi Paul,
+ I've been looking through the bitmap code again and found the
+ handling of resync a bit hard to wrap my brain around.  The handling
+ of the counter here seems a bit non-obvious and possibly fragile.
 
-Guy
+ I would like to make a change, but thought I should bounce it off you
+ first.
 
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Scott Ransom
-Sent: Tuesday, November 09, 2004 4:03 PM
-To: linux-raid@vger.kernel.org
-Cc: sransom@nrao.edu
-Subject: always dirty RAID5 arrays
+ I would like to change the "RESYNC_MASK" bit to mean:
+   At least one block in this chunk is out-of-sync.
 
-Hi All,
+ Then:
+  - When we read the bitmap from disk we set this bit and the
+    SHADOW_MASK, but leave the counter at zero.
+  - When we get a failed write, we set this bit, but still decrement
+    the counter. 
+  - When we are performing a resync, we periodically clear the bit on
+    recently completed chunks.
+  - We only clear the SHADOW_MASK and on-disk bit when the counter
+    hits zero *and* this bit is clear.
 
-On one of our servers we have 4 6-disk RAID5 arrays running.  Each of the 
-arrays was created using the following command:
+ I would find this approach a lot easier to understand.  Are you OK
+ with it?
 
-mdadm --create /dev/md3 --level=5 --verbose --force --chunk=128 \ 
---raid-devices=6 /dev/sd[ijklmn]1
+ Also, I would like to move the bitmap_testbit in md_do_sync down into
+ the personality.  This should make life easier for other
+ personalities like raid10 which use a very different approach for
+ resync than for recovery.
 
-After building and a resync (and a reboot and a resync...), the array looks 
-like this:
-
---------------------------------------------
-spigot2  sransom 84: mdadm --detail /dev/md3
-/dev/md3:
-        Version : 00.90.00
-  Creation Time : Tue Sep 21 15:54:31 2004
-     Raid Level : raid5
-     Array Size : 1220979200 (1164.42 GiB 1250.28 GB)
-    Device Size : 244195840 (232.88 GiB 250.06 GB)
-   Raid Devices : 6
-  Total Devices : 6
-Preferred Minor : 3
-    Persistence : Superblock is persistent
-
-    Update Time : Sat Nov  6 10:58:12 2004
-          State : dirty
- Active Devices : 6
-Working Devices : 6
- Failed Devices : 0
-  Spare Devices : 0
-
-         Layout : left-symmetric
-     Chunk Size : 128K
-
-           UUID : 264b9069:96d7a1a6:d3b17be5:23fa47ce
-         Events : 0.30
-
-    Number   Major   Minor   RaidDevice State
-       0       8      129        0      active sync   /dev/sdi1
-       1       8      145        1      active sync   /dev/sdj1
-       2       8      161        2      active sync   /dev/sdk1
-       3       8      177        3      active sync   /dev/sdl1
-       4       8      193        4      active sync   /dev/sdm1
-       5       8      209        5      active sync   /dev/sdn1
------------------------------------------------------------------
-
-
-Notice that the State is "dirty".  If we reboot, the arrays are in a dirty 
-status and always need to resync.  Any idea why would this be?  (I'm 
-running XFS on the RAIDs and am using a slightly modified RH9.0 kernel:  
-2.4.24aa1-xfs)
-
-Thanks for the help,
-
-Scott
-
--- 
-Scott M. Ransom            Address:  NRAO
-Phone:  (434) 296-0320               520 Edgemont Rd.
-email:  sransom@nrao.edu             Charlottesville, VA 22903 USA
-GPG Fingerprint: 06A9 9553 78BE 16DB 407B  FFCA 9BFA B6FF FFD3 2989
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+NeilBrown
