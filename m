@@ -1,103 +1,49 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: Please help- raid1 recovery after disk failure
-Date: Mon, 18 Oct 2004 19:31:00 -0400
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: Force raid5 assemble at boot kernel
+Date: Tue, 19 Oct 2004 11:33:14 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200410182331.i9INV5N18831@www.watkins-home.com>
-References: <200410182328.i9INSIN18816@www.watkins-home.com>
+Message-ID: <16756.28378.936295.221580@cse.unsw.edu.au>
+References: <20041018083744.48600.qmail@web51708.mail.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-2022-jp
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200410182328.i9INSIN18816@www.watkins-home.com>
-To: 'Guy' <bugzilla@watkins-home.com>, 'Konstantin Olchanski' <olchansk@sam.triumf.ca>, linux-raid@vger.kernel.org
+In-Reply-To: message from Mario Mendeni on Monday October 18
+To: Mario Mendeni <htrafmb@yahoo.it>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Oops!   hdc2!
+On Monday October 18, htrafmb@yahoo.it wrote:
+> Hi all,
+>   i've got a / over a failed raid5. i mean, three
+> disks: one broken (a), one good (b), one failed (c).
+> the last one was kicked out of the array because a
+> read error. anyway, no trouble because i've got backup
+> and so on. Well, if I boot from another disk and force
+> assembly it restarts, but I would like to know if I
+> can force the assembly of md0 for device (b) and (c)
+> from kernel command line (grub/lilo).
 
-Hopefully you know which disk was replaced!  :)
+No, you cannot.  In this situation the kernel simply will not trust
+the data.  You need mdadm to modify the superblocks before it will
+assemble it.=20
 
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Guy
-Sent: Monday, October 18, 2004 7:28 PM
-To: 'Konstantin Olchanski'; linux-raid@vger.kernel.org
-Subject: RE: Please help- raid1 recovery after disk failure
-
-You must remove the bad disk first.
-mdadm -r /dev/md2 /dev/hda2
-
-Then add the new disk:
-mdadm -a /dev/md2 /dev/hda2
-
-Why are you using the obsolete raidtools which includes hot-add?
-Is red hat still using the old stuff?
-
-Guy
-
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Konstantin Olchanski
-Sent: Monday, October 18, 2004 6:57 PM
-To: linux-raid@vger.kernel.org
-Subject: Please help- raid1 recovery after disk failure
+NeilBrown
 
 
-Dear Linux raiders- I ran into a problem with raid1 recovery after
-a disk failure (running Fedora2, kernel 2.6.8-1.521smp).
 
-1) I had a raid1 filesystem mirrored across /dev/hda2 and /dev/hdc2.
-2) Disk hda died (unreadable sectors, fails SMART tests)
-3) A new blank hda was installed and partitionned exactly like hdc.
-4) I cannot restart and rebuild the raid1 volume because hdc2 is
-   in a funny "spare" state (see below)
-
-How do I mark hdc2 as "active"?
-Once "active", I assume then I will be able to restart md0,
-hot-add /dev/hda2 as usual. (And the mirror will resync and rebuild itself?
-Hopefully?)
-
-[root@tw04 root]# mdadm -E /dev/hdc2
-/dev/hdc2:
-          Magic : a92b4efc
-        Version : 00.90.00
-           UUID : aade8782:20122089:4f496788:228d85b9
-  Creation Time : Fri Oct  8 17:12:56 2004
-     Raid Level : raid1
-    Device Size : 124158208 (118.41 GiB 127.14 GB)
-   Raid Devices : 2
-  Total Devices : 2
-Preferred Minor : 0
-
-    Update Time : Mon Oct 18 06:04:35 2004
-          State : clean, no-errors
- Active Devices : 1
-Working Devices : 2
- Failed Devices : 1
-  Spare Devices : 1
-       Checksum : 7041db42 - correct
-         Events : 0.312429
-
-
-      Number   Major   Minor   RaidDevice State
-this     2      22        2        2      spare   /dev/hdc2
-   0     0       3        2        0      active sync   /dev/hda2
-   1     1       0        0        1      faulty removed
-   2     2      22        2        2      spare   /dev/hdc2
-[root@tw04 root]# 
-
--- 
-Konstantin Olchanski
-Data Acquisition Systems: The Bytes Must Flow!
-Email: olchansk-at-triumf-dot-ca
-Snail mail: 4004 Wesbrook Mall, TRIUMF, Vancouver, B.C., V6T 2A3, Canada
+>=20
+> Thanks a lot for your time and your work,
+> andrea (a happy software raid user)
+>=20
+>=20
+> 	=09
+> ___________________________________=20
+> Nuovo Yahoo! Messenger: E' molto pi=1B,Ay=1B(B divertente: Audibles, =
+Avatar, Webcam, Giochi, Rubrica=85 Scaricalo ora!=20
+> http://it.messenger.yahoo.it
 -
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
 the body of a message to majordomo@vger.kernel.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
