@@ -1,41 +1,60 @@
-From: Daniel Pittman <daniel@rimspace.net>
-Subject: Re: /boot RAID1
-Date: Wed, 31 Mar 2004 13:42:37 +1000
+From: David Nedved <david_nedved@yahoo.com>
+Subject: raid1 devices not autostarting
+Date: Tue, 30 Mar 2004 22:25:07 -0800 (PST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <87zn9xy95e.fsf@enki.rimspace.net>
-References: <1080700439.10119.10.camel@localhost>
+Message-ID: <20040331062507.76253.qmail@web40704.mail.yahoo.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 31 Mar 2004, Ninti Systems wrote:
-> I've set up everything to switch my fresh Slackware 9.1 install on
-> /dev/hda over to RAID1 devices set up on /dev/hda (currently
-> 'missing') and /dev/hdc.
-> 
-> Before I switch, I need to check one thing which isn't clear to me
-> from the Software RAID HowTo:
-> 
-> I currently have a separate partition (/dev/hda1) for /boot. Can this
-> partition also be switched over to RAID1 (on /dev/md1) or must the
-> /boot partition always be on a non-RAID device?
+Hi All,
 
-It can be RAID1, yes, with some limits.  Specifically, it can be RAID1
-because each disk in a RAID1 looks like a stand-alone disk if your
-bootloader is unaware of the "RAID" nature of it.
+I'm trying to move my system off a failing disk onto a raid1 device. 
+I've got the device built, but when passing root=/dev/md0 to the kernel
+it can't find it.  When I boot my raid devices are NOT autostarting, so
+I believe that to be my problem.  I'm running RH9 fully updated with
+their latest kernel (2.4.20-30.9SMP), all the partitions are type fd,
+and I *think* I have the persistant superblock option on.  I even
+recreated md1 to make sure, but still when I boot I have to start the
+raids manually.  raidstart --all DOES work.
 
-So, old versions of lilo, and grub, can boot off the component of the
-RAID1 just fine.  RAID5, though, would stump them.
+When init is going through rc.sysinit, it says md0(skipped),
+md1(skipped), but they should have been started by the kernel before
+that point anyway, shouldn't they?
 
-Modern versions of lilo have some in-built support for RAID1, I hear,
-though I have not used that support myself.
+Any ideas?  I'm including my raidtab below.
 
-       Daniel
+Thanks in advance.  I'm not on the list, so if you can help me please
+copy me back directly.  Thanks a ton in advance!
 
--- 
-Let the credulous and the vulgar continue to believe that all mental woes can
-be cured by a daily application of old Greek myths to their private parts.
-        -- Vladimir Nabokov
+David
 
+raiddev /dev/md0
+        raid-level              1
+        nr-raid-disks           2
+        persistent-superblock   1
+        chunk-size              8
+        device                  /dev/sda1
+        raid-disk               0
+        device                  /dev/sdb1
+        raid-disk               1
+raiddev /dev/md1
+        raid-level              1
+        nr-raid-disks           2
+        persistent-superblock   1
+        chunk-size              8
+        device                  /dev/sda2
+        raid-disk               0
+        device                  /dev/sdb2
+        raid-disk               1
+
+
+=====
+david_nedved@yahoo.com
+
+__________________________________
+Do you Yahoo!?
+Yahoo! Finance Tax Center - File online. File on time.
+http://taxes.yahoo.com/filing.html
