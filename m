@@ -1,69 +1,29 @@
-From: Alvin Oga <aoga@Maggie.Linux-Consulting.com>
-Subject: Re: Raid1 fast resync
-Date: Thu, 2 Jan 2003 01:44:33 -0800 (PST)
+From: Stephan van Hienen <raid@a2000.nu>
+Subject: Re: mdadm -D shows incorrect working devices ?
+Date: Thu, 2 Jan 2003 16:12:28 +0100 (CET)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.3.96.1030102013608.31808A-100000@Maggie.Linux-Consulting.com>
-References: <3E130F39.3000706@attbi.com>
+Message-ID: <Pine.LNX.4.51.0301021611450.11876@ddx.a2000.nu>
+References: <Pine.LNX.4.50.0212172214130.25725-100000@ddx.a2000.nu>
+ <Pine.LNX.4.50.0212182153120.4838-100000@ddx.a2000.nu>
+ <Pine.LNX.4.50.0212221112050.24883-100000@ddx.a2000.nu>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3E130F39.3000706@attbi.com>
-To: Philip Cameron <pecameron@attbi.com>
-Cc: linux-raid@vger.kernel.org
+In-Reply-To: <Pine.LNX.4.50.0212221112050.24883-100000@ddx.a2000.nu>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+There is no one that can tell me what is going wrong ?
 
-hi ya philip
+On Sun, 22 Dec 2002, Stephan van Hienen wrote:
 
-On Wed, 1 Jan 2003, Philip Cameron wrote:
-
-> Do any of you know of work that is going on to improve the raid 1 resync 
-> speed? I am starting to evaluate approaches to reducing the time to 
-> resync the disks.
-> 
-> I am involved in a project on a fault tolerant x86 based server that has 
-> hot plugable scsi disks and PCI busses. There are two PCI busses and 3 
-> mirrrored sets of two disks. When a PCI bus is pulled all of the mirrors 
-> are broken so when the PCI bus is again inserted, all of the disks 
-> resync which takes hours. Also, during development the resync after 
-> crash really slows down debug.
-
-without knowing more details ... here's some comments
-
-- when a pci card is pulled out, you stand a good chance that the cpu bios
-  will need to be reset ( re-saved )
-	- the machine goes into bios mode, whether you like it or not
-
-- since you are using scsi disks..
-	- when you pull out a scsi disk, the next time you reboot,
-	the scsi drives will be in different order if you lost sda
-	or lost sdb and you had sdc  which is now your new sdb
-
-- if you have 2 pci buses...
-	- put sda  on pci #1
-	and put sdb ( mirrored ) onto pci #2
-
-	- if any pci buss dies, your system can still function properly
-	since its mirror is on the other pci buss which is working
-
-- to avoid resyncing the raid data...
-	- use a 3rd (spare) disk local to the 2 disks
-	when one disk dies, the spare supposed to kick-in 
-
-	- have a spare system, that mirror's the "main" data,
-	and rebuild a spare disk on a constant basis so that
-	the "spare" can be plugged into the "main" data asap
-	whenver a disk dies that didnt have a spare previously
-
-	- when resyncing... you only need to "resync changed data"
-	( changed/new files for today ) and NOT the whole array
-	which might have a year's worth of data..
-
-	- yesterday's hot swap ( spare ) is ready to go anytime
-
-- if you want more raid interactivity and keyboard/ssh control,
-  renice the apps and raid parameters
-
-have fun
-alvin
-
+> On Wed, 18 Dec 2002 raid@ddx.a2000.nu wrote:
+>
+> > Today rebuiled raid5 (8/8 disks)
+> > mdadm -D is still showing incorrect info
+> > (9 devices total/8 active/7 working/2 failed)
+> > can someone explain this ?
+>
+> Hi again, still have this 'incorrect' information here
+> I'm a bit worried that maybe my raid config is 'a bit corrupted'
+> or is this just a bug in mdadm ?
