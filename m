@@ -1,62 +1,33 @@
-From: Mario Vodisek <vodisek@upb.de>
-Subject: Setting a buffer_heads 'real_device'
-Date: Wed, 10 Jul 2002 13:25:07 +0200
+From: Danilo Godec <danci@agenda.si>
+Subject: Multiple disk failure - recover?
+Date: Wed, 10 Jul 2002 15:10:22 +0200 (CEST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3D2C1993.ABA5EEA0@upb.de>
+Message-ID: <Pine.LNX.4.30.0207101505480.25329-100000@duplo.agenda.si>
+References: <3D2C1993.ABA5EEA0@upb.de>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------9CAF818A292EB84D2B3564EF"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <3D2C1993.ABA5EEA0@upb.de>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Dies ist eine mehrteilige Nachricht im MIME-Format.
---------------9CAF818A292EB84D2B3564EF
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Hi!
 
-Hi,
+I have (had) a three disk RAID5 array. One of the disks (sdb2) has failed,
+however, under circumstances, two of the diskes were kicked out of the
+array.
 
-I'm writing a virtual disk driver consisting of serveral real disks.
-Hence I've to map read/write requests for my virtual device to
-underlying
-real devices, like md does so for RAID-Arrays.
+I tried re-assembling the array using 'mdadm --assemble --force /dev/md1
+/dev/sda2 /dev/sdc2 /dev/sdb2', but it always takes the sdc2 & sdb2 as OK
+disks and sda2 as failed.
 
-So my question is how a virtual device driver (like 'md') manages the
-read/write
-request associated with a virtual (md-) device to get data from a
-specific real
-device within a 'block_read/block/write()' invokation !
-I know that the buffer head-structure contains an entry for a virtual
-and a real
-device, but i don't know when and in which proper way to set these
-components.
+Of course, when the reconstruction hits the bad area on sdb2, it all fails
+again.
 
-Somebody to help me ??
+How can I tell mdadm that /dev/sda2 and /dev/sdc2 are the disks I want as
+'good'!?
 
-Mario Vodisek
---------------9CAF818A292EB84D2B3564EF
-Content-Type: text/x-vcard; charset=us-ascii;
- name="vodisek.vcf"
-Content-Transfer-Encoding: 7bit
-Content-Description: Visitenkarte für Mario Vodisek
-Content-Disposition: attachment;
- filename="vodisek.vcf"
+Thanks, D.
 
-begin:vcard 
-n:Vodisek;Mario
-tel;fax:---
-tel;home:0160/632 96 92
-tel;work:---
-x-mozilla-html:FALSE
-org:University of Paderborn;AG Meyer auf der Heide - Theoretical computing -
-version:2.1
-email;internet:vodisek@upb.de
-title:research assistant
-adr;quoted-printable:;;Liebfrauenweg 9=0D=0A	;33334 Gütersloh;;;Germany
-x-mozilla-cpt:;-9984
-fn:Mario Vodisek
-end:vcard
 
---------------9CAF818A292EB84D2B3564EF--
 
