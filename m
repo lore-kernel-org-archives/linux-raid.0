@@ -1,38 +1,42 @@
-From: Bernd Schubert <Bernd.Schubert@tc.pci.uni-heidelberg.de>
-Subject: Re: Double failure on RAID-5 array
-Date: Wed, 18 Jun 2003 18:50:10 +0200
+From: Marcelo Tosatti <marcelo@conectiva.com.br>
+Subject: Re: [PATCH] md - 2 of 3 - Add BLKSSZGET ioctl for md driver
+Date: Wed, 18 Jun 2003 20:23:45 -0300 (BRT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20030618165010.GA31334@tc.pci.uni-heidelberg.de>
-References: <20030616161848.M47561@liquid-nexus.net> <20030618071323.M50246@liquid-nexus.net>
+Message-ID: <Pine.LNX.4.55L.0306182023150.25830@freak.distro.conectiva>
+References: <E19SQog-0000Vl-00@notabene>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20030618071323.M50246@liquid-nexus.net>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <E19SQog-0000Vl-00@notabene>
+To: NeilBrown <neilb@cse.unsw.edu.au>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
 
-> I'm hoping my move to 2.4 series wasn't a mistake - I have a lot of data on 
-> this array!
-> 
+Neil,
 
-Unless you have created 2.4 and above filesystem specific things (e.g.
-reiserfs 3.6, etc), downgrading to 2.2 shouldn't be that difficult,
-should it ?
+This one doesnt apply cleanly against my tree.
 
-> Appreciate any help. 
-> 
-> Jun 16 19:26:22 xerces kernel: hde: timeout waiting for DMA
-> Jun 16 19:26:22 xerces kernel: ide_dmaproc: chipset supported ide_dma_timeout 
-> func only: 14
-> Jun 16 19:26:22 xerces kernel: hde: status error: status=0x50 { DriveReady 
-[...]
+On Wed, 18 Jun 2003, NeilBrown wrote:
 
-Looks like a drive hardware problem. You could try to run some drive
-tests using smartctl.
-On the other hand it could be one of the ide-kernel bugs as well, I
-would upgrade to 2.4.21 in any case.
-
-Bernd
+> ### Comments for ChangeSet
+>
+> From: Nathan Scott <nathans@sgi.com>
+>
+>
+>  ----------- Diffstat output ------------
+>  ./drivers/md/md.c |    1 +
+>  1 files changed, 1 insertion(+)
+>
+> diff ./drivers/md/md.c~current~ ./drivers/md/md.c
+> --- ./drivers/md/md.c~current~	2003-06-18 10:02:57.000000000 +1000
+> +++ ./drivers/md/md.c	2003-06-18 10:03:43.000000000 +1000
+> @@ -2623,6 +2623,7 @@ static int md_ioctl(struct inode *inode,
+>  		case BLKRAGET:
+>  		case BLKRASET:
+>  		case BLKFLSBUF:
+> +		case BLKSSZGET:
+>  		case BLKBSZGET:
+>  		case BLKBSZSET:
+>  			err = blk_ioctl (dev, cmd, arg);
+>
