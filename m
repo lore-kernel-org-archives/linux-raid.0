@@ -1,73 +1,51 @@
-From: Arjan van de Ven <arjanv@redhat.com>
-Subject: Re: "Enhanced" MD code avaible for review
-Date: Sat, 20 Mar 2004 14:07:07 +0100
-Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1079788027.5225.4.camel@laptop.fenrus.com>
-References: <459805408.1079547261@aslan.scsiguy.com>
-	 <4058A481.3020505@pobox.com> <4058C089.9060603@adaptec.com>
-	 <200403172245.31842.bzolnier@elka.pw.edu.pl> <4058EBEC.8070309@adaptec.com>
-Reply-To: arjanv@redhat.com
+From: "Lars Michael Jogback" <lm@swip.net>
+Subject: How does PE-size,
+	RAID chunk-size and FS block-size affect eachother?
+Date: Sat, 20 Mar 2004 18:48:17 +0100
+Sender: linux-lvm-bounces@redhat.com
+Message-ID: <a87711be70ff4540a7d61c051308528b@mail.jogback.se>
+Reply-To: "lm@swip.net" <lm@swip.net>,
+	LVM general discussion and development <linux-lvm@redhat.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-NWjSvf2bI86hvNyNtwmL"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4058EBEC.8070309@adaptec.com>
-To: Scott Long <scott_long@adaptec.com>
-Cc: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, Jeff Garzik <jgarzik@pobox.com>, "Justin T. Gibbs" <gibbs@scsiguy.com>, linux-raid@vger.kernel.org, "Gibbs, Justin" <justin_gibbs@adaptec.com>, Linux Kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-lvm-bounces@redhat.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/linux-lvm>,
+	<mailto:linux-lvm-request@redhat.com?subject=unsubscribe>
+List-Archive: </archives/linux-lvm>
+List-Post: <mailto:linux-lvm@redhat.com>
+List-Help: <mailto:linux-lvm-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/linux-lvm>,
+	<mailto:linux-lvm-request@redhat.com?subject=subscribe>
+Errors-To: linux-lvm-bounces@redhat.com
+To: "linux-lvm@redhat.com" <linux-lvm@redhat.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Hello,
 
---=-NWjSvf2bI86hvNyNtwmL
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I intend to run LVM on top on a software RAID5 on top of
+8 IDE-disks (with 2MB cache) on 4 IDE-controllers (yes, I
+know it's not a reliable...)
 
+Kernel 2.4.25 is used.
 
-> With DM, what happens when your initrd gets accidentally corrupted?
+I'm going to use ReiserFS as filesystem, which uses a block
+size of 4k.
 
-What happens if your vmlinuz accidentally gets corrupted? If your initrd
-is toast the module for your root fs doesn't load either. Duh.
+If I've understand this correctly I'll need to use a PE-size of
+at least 32MB to be able to support LVs up to 2TB.
 
-> What happens when the kernel and userland pieces get out of sync?
-> Maybe you are booting off of a single drive and only using DM arrays
-> for secondary storage, but maybe you're not.  If something goes wrong
-> with DM, how do you boot?
+How do I calculate the most optimal chunk-size on this system?
 
-If you loose 10 disks out of your raid array, how do you boot ?
-
->=20
-> Secondly, our target here is to interoperate with hardware components
-> that run outside the scope of Linux.  The HostRAID or DDF BIOS is
-> going to create an array using it's own format.  It's not going to
-> have any knowledge of DM config files,=20
-
-DM doesn't need/use config files.
-> initrd, ramfs, etc.  However,
-> the end user is still going to expect to be able to seamlessly install
-> onto that newly created array, maybe move that array to another system,
-> whatever, and have it all Just Work.  Has anyone heard of a hardware
-> RAID card that requires you to run OS-specific commands in order to
-> access the arrays on it?  Of course not.  The point here is to make
-> software raid just as easy to the end user.
-
-And that is an easy task for distribution makers (or actually the people
-who make the initrd creation software).
-
-I'm sorry, I'm not buying your arguments and consider 100% the wrong
-direction. I'm hoping that someone with a bit more time than me will
-write the DDF device mapper target so that I can use it for my
-kernels... ;)
+Thanks in advance,
+/LM
 
 
---=-NWjSvf2bI86hvNyNtwmL
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.3 (GNU/Linux)
 
-iD8DBQBAXEH7xULwo51rQBIRAuo0AJ42KhIBPDMtwLHQ+pJBxZ6pl3Ok7wCaA0gW
-IBgPNKV0WFO8y+nkXtMqKJc=
-=9ZZ5
------END PGP SIGNATURE-----
-
---=-NWjSvf2bI86hvNyNtwmL--
-
+_______________________________________________
+linux-lvm mailing list
+linux-lvm@redhat.com
+https://www.redhat.com/mailman/listinfo/linux-lvm
+read the LVM HOW-TO at http://tldp.org/HOWTO/LVM-HOWTO/
