@@ -1,98 +1,82 @@
-From: "Peter T. Breuer" <ptb@it.uc3m.es>
-Subject: Re: Fast (intelligent) raid1
-Date: Fri, 24 Jan 2003 10:34:08 +0100 (MET)
+From: Friedrich Lobenstock <fl@fl.priv.at>
+Subject: question regarding the output of "mdadm --examine /dev/hdxx"
+Date: Fri, 24 Jan 2003 14:16:07 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200301240934.h0O9Y8E23813@oboe.it.uc3m.es>
-References: <Pine.LNX.4.44.0301240354520.3568-100000@devserv.devel.redhat.com>
-Reply-To: ptb@it.uc3m.es
+Message-ID: <3E313C97.1090100@fl.priv.at>
+Reply-To: Linux RAID Mailing Liste <linux-raid@vger.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UNKNOWN-8BIT
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44.0301240354520.3568-100000@devserv.devel.redhat.com>
- from Ingo Molnar at "Jan 24, 2003 04:03:40 am"
-To: Ingo Molnar <mingo@redhat.com>
-Cc: "Peter T. Breuer" <ptb@it.uc3m.es>, neilb@cse.unsw.edu.au, linux-raid@vger.kernel.org
+To: Linux RAID Mailing Liste <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-"A month of sundays ago Ingo Molnar wrote:"
-> your patch looks really interesting.
+Hi!
 
-Thanks - I had a look at changing it to depend on the md.c module last
-night on the train home, but I need some architectural information. I
-see the personality struct and its methods, but I need to knwo the
-semantics that's expected in the methods. There are underlying
-assumptions - whatis nb_disk (total? Actual?). Whatshoudl the run
-method do. Does it run through a lits of disk components? It looks like
-it does. Etc.
+Can someone enlight me why "mdadm --examine" prints out the
+current examined disk as "this". I see no real sense behind this.
+Mdadm already states at the top of the output which device it
+examined.
 
-I may try for raid4 first.
+# mdadm --examine /dev/hda1
+/dev/hda1:
+           Magic : a92b4efc
+         Version : 00.90.00
+            UUID : c8756d0c:a668883a:6751424c:5fddb03d
+   Creation Time : Tue Jan 21 01:05:23 2003
+      Raid Level : raid1
+     Device Size : 40209024 (38.35 GiB 41.22 GB)
+    Raid Devices : 2
+   Total Devices : 2
+Preferred Minor : 0
 
-> > The driver keeps a bitmap of pending writes in memory, and writes t=
-hem
-> > to the mirror component that's just been repaired when it comes bac=
-k on
-> > line.  The bitmap is two-level and created pagewise on demand, so i=
-t's
-> > not too expensive. [...]
->=20
-> how do you ensure that the 'repaired' drive indeed only differs in th=
-e
-> dirty-bitmap portions of the data disk? It's perfectly valid to add a
-
-If the disk has been hotremoved and then hotadded, it is completely
-resynced. If, OTOH, it has only been setfaulty=E9d and then hotadded, i=
-t
-is repaired according to the bitmap.
-
-I would really prefer that there were a raidhotrepair utility and ioctl
-(to repair setfaulty), but in the meantime I use the idea that fixing
-a disk "only" in the setfaulty state is always done from the bitmap.
-If the disk has been hotremoved, then the repair is made complete.
-
-I would like to use the suberblock information to identify and
-differentiate between replacement disks, but unfortunately I need
-instruction there too. I could tell from the uuid if the same disk were
-being put back or not. If it's the same disk, then the repair can be
-done using the bitmap.
-
-> completely new (and unsynced) disk to the system when one disk fails.=
- Or
-> is this the responsibility of the administrator?
-
-The admin can always override.
-
-> also, your resyncing method does not attempt to address the resync
-> necessary to be done after an unclear shutdown (eg. power failure),
-> correct?
-
-Possibly, but I only say that because I'm not sure what that is. It has
-been my experience that the current softraid is itself not very clear
-on the issue! If the array is somehow taken down badly, then there is
-no very easy way of deternining who has the best copy of the data the
-nexttime it is restarted.
-
-I suspect that you mean the "sync on startup" that should in principle
-be done, but which can be avoided if there is sufficient "good
-indicators" in the various superblocks.  Since I need to be taught
-about the superblock from zero, yes, I have not used it! The
-current code does no sync at start up _at all_, nor does it
-deal with persistent superblocks. I need documentation - or instruction=
-=2E
-
-Yes, the admin will have to identify the correct component and resync f=
-rom
-that, if necessary.
-
-I was thinking of maintaining an mmap'ed copy of the bitmap on disk, by
-the way. But that's for later. I could try it. At startup I can read
-in the bitmap(s).
+     Update Time : Fri Jan 24 14:07:39 2003
+           State : clean, no-errors
+  Active Devices : 2
+Working Devices : 2
+  Failed Devices : 0
+   Spare Devices : 0
+        Checksum : 5dfc8bc1 - correct
+          Events : 0.17
 
 
-Peter
+       Number   Major   Minor   RaidDevice State
+this     0       3        1        0      active sync   /dev/hda1
+    0     0       3        1        0      active sync   /dev/hda1
+    1     1      22        1        1      active sync   /dev/hdc1
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+# mdadm --examine /dev/hdc1
+/dev/hdc1:
+           Magic : a92b4efc
+         Version : 00.90.00
+            UUID : c8756d0c:a668883a:6751424c:5fddb03d
+   Creation Time : Tue Jan 21 01:05:23 2003
+      Raid Level : raid1
+     Device Size : 40209024 (38.35 GiB 41.22 GB)
+    Raid Devices : 2
+   Total Devices : 2
+Preferred Minor : 0
+
+     Update Time : Fri Jan 24 14:07:39 2003
+           State : clean, no-errors
+  Active Devices : 2
+Working Devices : 2
+  Failed Devices : 0
+   Spare Devices : 0
+        Checksum : 5dfc8bd6 - correct
+          Events : 0.17
+
+
+       Number   Major   Minor   RaidDevice State
+this     1      22        1        1      active sync   /dev/hdc1
+    0     0       3        1        0      active sync   /dev/hda1
+    1     1      22        1        1      active sync   /dev/hdc1
+
+-- 
+MfG / Regards
+Friedrich Lobenstock
+____________________________________________________________________
+Friedrich Lobenstock         FL226-RIPE             Internetservices
+URL: http://www.fl.priv.at/                     Email: fl@fl.priv.at
+____________________________________________________________________
+
