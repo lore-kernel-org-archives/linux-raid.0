@@ -1,45 +1,45 @@
-From: ptb@lab.it.uc3m.es (Peter T. Breuer)
-Subject: Re: [PATCH 1/2] md bitmap bug fixes
-Date: Tue, 22 Mar 2005 11:02:16 +0100
-Message-ID: <8275h2-sn4.ln1@news.it.uc3m.es>
-References: <6ivqg2-qsn.ln1@news.it.uc3m.es> <20050318134255.GS18819@marowsky-bree.de> <7e6rg2-pj1.ln1@news.it.uc3m.es> <423B09EF.8070708@steeleye.com> <23krg2-4rr.ln1@news.it.uc3m.es> <423B2F7C.3030907@steeleye.com> <qehtg2-6c1.ln1@news.it.uc3m.es> <423EF12A.4030207@steeleye.com> <20050321185606.GA27541@percy.comedia.it> <423F2780.5000601@steeleye.com> <20050322093525.GL7040@percy.comedia.it>
+From: Ruth Ivimey-Cook <Ruth.Ivimey-Cook@ivimey.org>
+Subject: Re: Strangeness when booting raid1: md5 already running?
+Date: Tue, 22 Mar 2005 11:24:27 +0000 (GMT)
+Message-ID: <Pine.LNX.4.61.0503221119150.26421@gatemaster.ivimey.org>
+References: <1111407978.757.7.camel@filestore.ivimey.org>
+ <16959.19685.520138.180516@cse.unsw.edu.au>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+In-Reply-To: <16959.19685.520138.180516@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@cse.unsw.edu.au>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Luca Berra <bluca@comedia.it> wrote:
-> If we want to do data-replication, access to the data-replicated device
-> should be controlled by the data replication process (*), md does not
-> guarantee this.
+On Tue, 22 Mar 2005, Neil Brown wrote:
 
-Well, if one writes to the md device, then md does guarantee this - but
-I find it hard to parse the statement. Can you elaborate a little in
-order to reduce my possible confusion?
+> On Monday March 21, Ruth.Ivimey-Cook@ivimey.org wrote:
+> ...repeated several times....
+>> md: export_rdev(hda9)
+>> md: ... autorun DONE.
+>> EXT3-fs: INFO: recovery required on readonly filesystem.
+>> EXT3-fs: write access will be enabled during recovery.
+>> EXT3-fs: recovery complete.
+>>
+>> Now this was the first time the string "md5" appears in the log. And
+>> indeed, it appears that hda9 has been kicked out of the array:
+>
+> So was md5 actually running (what did /proc/mdstat show? What about
+> mdadm -D /dev/md5?).
 
+mdstat and mdadm both report that md5 is running degraded - with hdc9 and hda9 
+removed.
 
-> (*) i.e. my requirements could be that having a replicated transaction
-> is more important that completing the transaction itself, so i might
-> want to return a disk error in case replica fails.
+> which wasn't part of an array but couldn't be added to one.  Nothing
+> particularly interesting.
 
-Oh - I see. "We did half off all the replications possible". That's an
-interesting idea and it is trivial to modify md to return error if not
-all the replications succeeded. The bitmap knows right now. No reason
-not to call end_io(...,0) instead of end_io(...,1) if you want it that
-way.
+Ok. I'll just re-add the drive and see what happens.
 
-> or to the contrary i might want data availability above all else, maybe
-> data does not change much.
-> or something in between, data availability above replication, but
-> data validity over availability. this is probably the most common
-> scenario, and the more difficult to implement correctly.
-> 
-> In any case it must be possible to control exactly which steps should be
-> automatically done in case of failure. and in case of rollback, with the
-> sane default would be "die rather than modify any data, in case of
-> doubt".
+Thanks
 
-Well, if you want to be more exact about it, I am sure your wishes can
-be accomodated. It's not a bad idea to be able to tailor the policy.
+Ruth
 
-Peter
-
+-- 
+Ruth Ivimey-Cook
+Software engineer and technical writer.
