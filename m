@@ -1,14 +1,59 @@
-From: Jon Lewis <jlewis@lewis.org>
-Subject: raid5 won't resync
-Date: Mon, 30 Aug 2004 23:08:31 -0400 (EDT)
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: raid5 won't resync
+Date: Tue, 31 Aug 2004 00:08:46 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.58.0408302237580.1949@web1.mmaero.com>
+Message-ID: <200408310408.i7V48p307444@watkins-home.com>
+References: <Pine.LNX.4.58.0408302237580.1949@web1.mmaero.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <Pine.LNX.4.58.0408302237580.1949@web1.mmaero.com>
+To: 'Jon Lewis' <jlewis@lewis.org>, linux-raid@vger.kernel.org
 Cc: aaron@america.com
 List-Id: linux-raid.ids
+
+I have read where someone else had a similar problem.
+The slowdown was caused by a bad hard disk.
+
+Do a dd read test of each disk in the array.
+
+Example:
+time dd if=/dev/sdj of=/dev/null bs=64k
+
+Open different windows and test all of the disks at the same time, 1 per
+window.  If you test them all from the same window using "&" the output will
+get mixed.
+
+The time command is to compare the performance of each disk.
+The time command is optional.
+
+Someone else has said:
+Performance can be bad if the disk controller is sharing an interrupt with
+another device.
+It is ok for 2 of the same model cards to share 1 interrupt.
+
+Use this to determine which interrupts are being used:
+cat /proc/interrupts
+
+Moving the card may change the interrupt.
+You may also change the interrupts from the BIOS.
+
+I don't think an interrupt problem would cause a slow down over time.
+I bet you have a problem with a disk drive.
+
+I hope this helps!
+
+Guy
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Jon Lewis
+Sent: Monday, August 30, 2004 11:09 PM
+To: linux-raid@vger.kernel.org
+Cc: aaron@america.com
+Subject: raid5 won't resync
 
 We had a large mail server lose a drive today (not the first time), but
 we've been having alot of trouble with the resync this time.
@@ -71,3 +116,8 @@ for getting this RAID5 back in sync and in service?
  Senior Network Engineer     |  therefore you are
  Atlantic Net                |
 _________ http://www.lewis.org/~jlewis/pgp for PGP public key_________
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
