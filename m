@@ -1,61 +1,67 @@
-From: Turbo Fredriksson <turbo@bayour.com>
-Subject: Re: RAID-6 ...
-Date: Mon, 17 Jan 2005 09:04:07 +0100
-Message-ID: <877jmcwkg8.fsf@pumba.bayour.com>
-References: <200501101713.j0AHDx922062@www.watkins-home.com>
-	<Pine.LNX.4.56.0501121020490.21510@lion.drogon.net>
-	<16869.55531.489452.193862@cse.unsw.edu.au>
-	<Pine.LNX.4.56.0501130941190.21510@lion.drogon.net>
+From: Gordon Henderson <gordon@drogon.net>
+Subject: RE: 4 questions. Chieftec chassis case CA-01B, resync times, selecting
+ ide driver module loading,  raid5 :2 drives on same ide channel
+Date: Mon, 17 Jan 2005 11:41:36 +0000 (GMT)
+Message-ID: <Pine.LNX.4.56.0501171057160.21510@lion.drogon.net>
+References: <200501161628.23034.mlaks@verizon.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.56.0501130941190.21510@lion.drogon.net> (Gordon
- Henderson's message of "Sat, 15 Jan 2005 16:12:12 +0000 (GMT)")
+In-Reply-To: <200501161628.23034.mlaks@verizon.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Mitchell Laks <mlaks@verizon.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->>>>> "Gordon" == Gordon Henderson <gordon@drogon.net> writes:
+On Sun, 16 Jan 2005, Mitchell Laks wrote:
 
-    Gordon> On Thu, 13 Jan 2005, Neil Brown wrote:
-    >> There is no current support for raid6 in any 2.4 kernel and I
-    >> am not aware of anyone planning such support.  Assume it is 2.6
-    >> only.
+> Thank you to Gordon, Maarten and Guy for your helpful responses. I learned
+> much from each of  your comments.
+>
+> Gordon: I get the same output on 2.6.8 sarge kernel for hpt366 driver. I
+> notice that running hdparm /dev/hde that the IO_support is set at
+> default 16 bit while on the other hard drive on the natice ide bus
+> /dev/hdb has IO_support at 32bit.  I wondered if I get the other driver
+> whether that will improve things...
 
-    Gordon> How "real-life" tested is RAID-6 so-far? Anyone using it
-    Gordon> in anger on a production server?
+I get the same - 16-bit, however on that particular box, I also get 16-bit
+for the on-board controller too (it is 6 years old though with a single
+32-bit, 33MHz PCI bus!)
 
-I've been using it for a couple of months (3 or 4 if I'm not mistaken)
-on my SPARC64 (Sun Blade 1000 - 2xSPARC III/750) with (four+two)*9Gb
-disks which gives me 16Gb disks pace.
+On other servers with a much more modern modo (dual Athlon systems) I see
+32-bit for the on-board controller and 16-bit for the PCI Promise
+controllers they have (I don't have anything else with a Highpoint card)
 
-With this setup (I had a few 9Gb disks that I couldn't/wouldn't use for
-anything else) four (4!) disks can fail without it matter...
+I'm not really up on PCI bus, etc. arcitecture, but I suspect the only
+impact will be a doubling of the number of transactions going over the PCI
+bus - probably not really an issue unless you have lots of PCI devices on
+the same bus which all need to talk to each other, or to something
+external (eg. Ethernet)
 
-Have worked flawlessly even though the disks are OLD - 'smartctl' shows
-that almost all of the disks have had more than 28000 hours 'uptime'
-(i.e. 'powered on'). That's more than 3 years (POWERED ON mind you!).
+FWIW: I got a reply back from HighPoint about my question to run it under
+2.6.10...
+
+  Thanks for your contacting us!
+  Our current OpenSource driver doesn't support kernel 2.6.10.
+
+And that was all they had to say. Ho hum.
 
 
-Granted, I've been 'fortunate' (?!) to have had NO disk crashes etc, but
-I did simulate a few when I sat the system up and it worked just fine...
+> I notice that according to the man page the settings you describe are the
+> defaults. Why did you have to adjust them?
+> Moreover When I cat
+>  /proc/sys/dev/raid/speed_limit_max  -> i get ->200000
+> /proc/sys/dev/raid/speed_limit_min  -> i get -> 1000.
+>
+> interesting is i didnt adjust them up myself.... Should I adjust the
+> speed+limit_max down to 100000???
+> I wonder where in debian it got adjusted up?
 
-Kernel 2.6.8.1 (with a couple of patches to get it to boot/work on SPARC64).
+I don't think this is a distribution issue at all - certianly Debian
+doesn't do anything with it at all and nothing appears to be inserted into
+/etc/sysctl.conf
 
-If it works this great on a SPARC64 (with which the kernel have problems
-with), then it should work just FINE on a ia32...
+100000 seems to have been the default since at least 2.4.22 (the oldest
+kernel I have running s/w RAID)
 
-    Gordon> Can it be considered more or less stable than RAID-5?
-
-For me (NOTE!!) I'd say "just as stable". But naturally this (should/could)
-depend on the exact kernel version in use... If a kernel version works
-this/that good, stick with it...
-
-    Gordon> Should I stick to my RAID-5 on-top of RAID-1 pairs?
-
-In theory, that would be "more secure/safe" since both RAID5 and RAID1 is
-better tested, but...
--- 
-Soviet genetic SEAL Team 6 FSF nitrate Honduras $400 million in gold
-bullion Albanian Kennedy Ft. Meade DES fissionable Uzi quiche kibo
-[See http://www.aclu.org/echelonwatch/index.html for more about this]
+Gordon
