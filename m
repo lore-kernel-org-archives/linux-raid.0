@@ -1,67 +1,87 @@
-From: Danilo Godec <danci@agenda.si>
-Subject: Re: some question in SoftRaid
-Date: Thu, 23 May 2002 15:48:45 +0200 (CEST)
+From: lilha@legend.com.cn
+Subject: about delete raid
+Date: Thu, 23 May 2002 21:58:12 +0800
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.30.0205231534110.11465-100000@duplo.agenda.si>
-References: <OF3F6026D2.567B40AF-ON48256BC2.00308831@legend.com.cn>
+Message-ID: <OF46EF560E.DDE1731B-ON48256BC2.00497654@legend.com.cn>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <OF3F6026D2.567B40AF-ON48256BC2.00308831@legend.com.cn>
-To: lilha@legend.com.cn
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 23 May 2002 lilha@legend.com.cn wrote:
+i have setup raid0 and linear in my computer.
+now i want to remove it and release my disk.
+i use raidstop to stop all of md,and remove the file of /etc/raidtab
+then i use fdisk to delete all of raid disk partitions.
+at last , i reboot machine.
 
-> 1.Raid 0,1,5 must install in differ disk?right?
+then i want to setup raid again, but it can't work now.
 
-Not really, you can make Linux SW RAID on any kind of partition - even on
-the same disk. It really makes no sense, thouhg.
+Following is my configure and the error output.
 
-> RAID-0 and RAID-1 need at lest 2 disk
-> RAID-5 need at lest 3 disk,is it right?
+Disk /dev/hda: 255 heads, 63 sectors, 2434 cylinders
+Units = cylinders of 16065 * 512 bytes
 
-Right.
+   Device Boot    Start       End    Blocks   Id  System
+/dev/hda1             1       383   3076416   83  Linux
+/dev/hda3           767      2434  13398210    5  Extended
+/dev/hda4           448       511    514080   8e  Linux LVM
+/dev/hda5           767       783    136521   82  Linux swap
+/dev/hda6           784       800    136521   83  Linux
+/dev/hda7           801       864    514048+  fd  Linux raid autodetect
+/dev/hda8           865       928    514048+  fd  Linux raid autodetect
 
-> then is there any requrement about the partition Type(such as
-> primary,logical or extend partition )?
+Disk /dev/hdc: 255 heads, 63 sectors, 392 cylinders
+Units = cylinders of 16065 * 512 bytes
 
-I think not. I'm not sure about the extended partitions, but primary and
-logical should work.
-
-> 2.can i setup raid0,1,5 in the partition which has different size?
-> such as:
-> /dev/hda1 500M
-> /dev/hdc1 600M
-> can i setup raid-0 or raid-1?i try it,but failed.
-
-For RAID0, partitions should be approx. the same size, but it should work
-in any case, however the striping will only be performed for the size of
-the smaller partition. Maybe there is a treshold when the difference gets
-to big...
-
-You should also be able to create a RAID1 array with two different
-partition sizes, however the resultin array will be the size of the
-smaller partition. I'm not certain, but maybe the order is important - if
-the smaller partition is listed first, the bigger will be partially used.
-If the bigger is listed first, the smaller will end up being 'too
-small'...
-
-I'm not sure about RAID5, but I think the partitions should be the same
-size (at least very close). At least that's how I do it.
-
-> 3.how can I remove raid from disk? such as,i have md0(RAID 0),it use
-> /dev/hda2 and /dev/hdc2 now i want to these partitions don't use
-> raid,i want to release these partition then how can I do?
-
-You can use 'the old' raidsetfaulty - raidhotremove combination, or you
-can use the new mdadm. Both do the job.
-
-If you use autodetection, you can also change the partition type from
-'0xfd' to something else.
-
-  D.
+   Device Boot    Start       End    Blocks   Id  System
+/dev/hdc1             1        64    514048+  83  Linux
+/dev/hdc4           193       392   1606500    5  Extended
+/dev/hdc5           193       256    514048+  fd  Linux raid autodetect
+/dev/hdc6           257       358    819283+  fd  Linux raid autodetect
 
 
+[root@snap /root]# cat /proc/mdstat
+Personalities : [linear] [raid0] [raid1] [raid5] [multipath]
+read_ahead not set
+unused devices: <none>
+
+[root@snap /root]# vi /etc/raidtab
+raiddev /dev/md8
+        raid-level              0
+        nr-raid-disks           2
+        persistent-superblock   1
+        chunk-size              32
+        device                  /dev/hda7
+        raid-disk               0
+        device                  /dev/hdc5
+        raid-disk               1
+raiddev /dev/md9
+        raid-level              0
+        nr-raid-disks           2
+        persistent-superblock   1
+        chunk-size              32
+        device                  /dev/hda8
+        raid-disk               0
+        device                  /dev/hdc6
+        raid-disk               1
+
+
+[root@snap /root]# mkraid /dev/md8
+handling MD device /dev/md8
+analyzing super-block
+/dev/hda7: device too small (0kB)
+mkraid: aborted, see the syslog and /proc/mdstat for potential clues.
+[root@snap /root]# mkraid /dev/md9
+handling MD device /dev/md9
+analyzing super-block
+/dev/hda8: device too small (0kB)
+mkraid: aborted, see the syslog and /proc/mdstat for potential clues.
+
+
+Can you tell me where is wrong?
+thanks a lot.
+
+
+With our best regards, echo
 
