@@ -1,31 +1,29 @@
-From: Marc Bevand <bevand_m@epita.fr>
-Subject: Re: SATA chipset recomendations
-Date: Wed, 09 Jun 2004 17:37:24 +0200
+From: "Robin Bowes" <robin-lists@robinbowes.com>
+Subject: Re: AW: Raid 1 vs 5 ?
+Date: Wed, 9 Jun 2004 16:50:41 +0100 (BST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <ca7b0u$ngr$1@sea.gmane.org>
-References: <200406082012.58968.linux_mail@rozpooh.com> <yw1xise1tdif.fsf@kth.se> <1086777225.40c6e789ade9f@www.tastycake.net> <40C6ECEE.8090706@dgreaves.com>
+Message-ID: <55951.194.60.85.4.1086796241.squirrel@194.60.85.4>
+References: <FA095C015271B64E99B197937712FD0227A85D@freedom.grz.icomedias.com>   
+    <a06002007bcecbfe09c54@[10.0.0.10]>
+    <27453.194.60.85.4.1086793052.squirrel@194.60.85.4>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <40C6ECEE.8090706@dgreaves.com>
+In-Reply-To: <27453.194.60.85.4.1086793052.squirrel@194.60.85.4>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-David Greaves wrote:
-> I have wondered whether I'd have been better off with 2x Promise TX2s?
-> I don't know where the bottleneck is with 4xSATA disks on a single 
-> Promise/PCI slot
+On Wed, June 9, 2004 15:57, Robin Bowes said:
+>
+> One esoteric variation I may play around with (just because I can!) is to create Array 1
+> from just two disks and create Array 2 as Raid0+1 from four parititions to give better
+> performance for swap. I'm not sure if this is even possible.
 
-I have 4 x Seagate 160GB SATA connected on a Promise SATA150 TX4. The
-bottleneck is always the PCI bus:
+Of course, I could always just do what Martin suggested initially, i.e. create a couple
+of RAID1 arrays and stripe the swap across them.
 
-  o 66 MHz PCI bus (266 MB/s): I reach 209 MB/s (79% of theoretical bandwidth)
-  o 33 MHz PCI bus (133 MB/s): I reach 100 MB/s (75% of theoretical bandwidth)
-
-Note: each disk is able to generate a datas rate of about 57 MB/s.
-
+R.
 -- 
-Marc Bevand                          http://www.epita.fr/~bevand_m
-Computer Science School EPITA - System, Network and Security Dept.
+http://robinbowes.com
 
