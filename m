@@ -1,83 +1,54 @@
-From: Markus Gehring <markus.gehring@infinia.de>
-Subject: Re: RAID1 Corruption
-Date: Mon, 17 Jan 2005 20:42:10 +0100
-Message-ID: <41EC1512.10907@infinia.de>
-References: <41EBD827.80701@pipi.ma.cx> <200501171624.47645.andrew@walrond.org> <20050117165133.GC99565@caffreys.strugglers.net> <200501171704.10374.andrew@walrond.org> <41EC0371.9060106@infinia.de> <41EC0E7F.5090303@steeleye.com>
+From: Janusz Zamecki <janusz@pipi.ma.cx>
+Subject: Re: RAID1 & 2.6.9 performance problem
+Date: Mon, 17 Jan 2005 21:49:09 +0100
+Message-ID: <1105994949.14134.236.camel@pipi.ma.cx>
+References: <41EBD827.80701@pipi.ma.cx>
+	 <Pine.LNX.4.56.0501171528010.21510@lion.drogon.net>
+	 <1105977081.15184.12.camel@linux.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-2
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <41EC0E7F.5090303@steeleye.com>
+In-Reply-To: <1105977081.15184.12.camel@linux.local>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: Paul Clements <paul.clements@steeleye.com>
 List-Id: linux-raid.ids
 
-Paul Clements wrote:
-> Hi,
-> 
-> Markus Gehring wrote:
-> 
->> I have a reproducable problem with corrupted data read from a 
->> RAID1-array.
->>
->> Setup:
->>  HW:
->>   2 S-ATA-Disks (160GB each) -> /dev/md4 RAID1
->>   Promise S150 TX4 - Controller
->>   AMD Sempron 2200+
->>
->>  SW:
->>   Fedora Core 3
->>   Kernel 2.6.10 unpatched
->>   Samba (for read/write-accesses)
->>   SW-Raid
->>
->> Everything works fine with only one drive in the array. If the second is
->> synced up read accesses return corrupted data.
->>
->> Interesting: If you remove again the second disk. The same files will be
->>  read correctly again (no matter if written while only one disk is in
->> the array or two are synced!)!
-> 
-> 
-> This makes it sound like bad data is getting written to the second disk 
-> during resync. Could you give more details about your test procedure (a 
-> script or list of steps that reproduces the problem would be great)?
-1. Setup Array (mdadm -C /dev/md4 -l 1 -n 2 /dev/sdc1 /dev/sdd1)
-2. ... resync running (as i can see with cat /proc/mdstat)
-3. mke2fs /dev/md4
-4. mount /dev/md4 /home2
-5. Copy ~100M JPGs (~800k each) via samba to array (/home2/test1/)
-6. See the JPGs all okay
-7. after resync has finished: Copy same ~100M JPGs to array (/home2/test2)
-8. See the JPGs (at least in /home2/test2... i didn't check them in 
-..test1) damaged
-9. remove one disk again (mdadm /dev/md4 -f /dev/sdd1
-mdadm /dev/md4 -r /dev/sdd1 ... or ../dev/sdc1!!!)
-10. see (from the Win Client) the JPGs in /home2/test2 okay again!
+W li=B6cie z pon, 17-01-2005, godz. 16:51, Hans Kristian Rosbach pisze:=
+=20
 
+[...]
 
-> I don't think samba is the culprit, but just to be sure, is there any 
-> chance you could reproduce the problem without samba in the equation? 
-> (From what you say above, I assume all reads and writes are coming from 
-> a samba client of some sort?)
-I did a quick test:
-Copyied my test-JPG-dir from /home/test (where i can see the pics okay) 
-to /home2/test9 and see the pics damaged. After i copied them back to 
-/home/test9 the stay damaged.
+> Actually I have managed to get about 30-40% higher throughput with ju=
+st
+> a little hacking on the code that selects what disk to use.
+>=20
+> Problem is
+> -It selects the disk that is closest to the wanted sector by remember=
+ing
+>  what sector was last requested and what disk was used for it.
+> -For sequential reads (sucha as hdparm) it will override and use the
+>  same disk anyways. (sector =3D lastsector+1)
+>=20
+> I gained a lot of throughput by alternating disk, but seek time was
+> roughly doubled. I also tried to get smart and played some with the
+> code in order to avoid seeking both disks back and forth wildly when
+> there were two sequential reads. I didn't find a good way to do it
+> unfortunately.
 
-Remarks:
-I also saw here that the pics on the syncing /dev/md4 = /home2 are 
-damaged (read?) while the drive is syncing (new compared to point 6 
-above) but this happens definitly not so often as if the drive has 
-finished syncing (saw this the first time while dealing with the problem 
-for over 2 weeks now).
-I have all mounts on SW-Raid1 arrays, but i have never seen problems 
-with md0 (/boot), md1 (/), md2 (swap), md3 (/var).
-I have seen ext3-fs errors also (see also Sven Andras's posting from 
-today and 5.1.2005).
+What about the special case where whole disks are mirrored?=20
+Then there is no need for selecting disks other than round-robin,
+because the heads should be in similar positions (except for rebuild
+situation).
 
-Many Thanks,
-  Markus
+I will be more than happy to give up partitions to get better
+performance instead. I have two disks, so raid 1+0 is not an option.
 
+Could you please reconsider releasing your patch?
+
+Best regards, Janusz
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
