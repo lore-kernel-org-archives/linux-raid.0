@@ -1,59 +1,30 @@
-From: rob <rob@fantinibakery.com>
-Subject: Re: RAID1-Device won't survive reboot
-Date: Thu, 09 Oct 2003 08:16:02 -0400
+From: Steven Dake <sdake@mvista.com>
+Subject: raid1 critical sections not protected in 2.4.x?
+Date: Thu, 09 Oct 2003 10:41:59 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3F855182.80804@fantinibakery.com>
-References: <OFBE4F4C3A.AD55E9B4-ONC1256DB9.0052F11A@pta.de> <3F8483CE.2070309@fantinibakery.com> <3F854DDC.6060200@steudten.com>
+Message-ID: <1065721318.4761.138.camel@persist.az.mvista.com>
+Reply-To: sdake@mvista.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3F854DDC.6060200@steudten.com>
-To: alpha@steudten.com
-Cc: alexander.weber@pta.de, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-so  /dev/sdb1  is not  partition type  'fd' ?
+Folks,
 
-if you want hints at solving, please post your
+I have been looking at the raid1.c code.  There is a kernel thread
+raid1d that could be scheduled on processor A.  Then on processor B,
+other raid code could be scheduled as per each block I/O request.
 
-/etc/fstab
-/etc/raidtab 
-/etc/lilo.conf or /boot/grub/grub.conf
+The particular critical section is the usage of the conf variable, and
+specifically conf->mirrors.  raid1d reads conf->mirrors[x] while other
+parts of the md code alter it simulatenously.
 
+Is this a bug?  It might explain how people see counts get out of wack
+on the media...
 
-Thomas Steudten wrote:
-
->
-> I think the partition is not marked with type fd: like
-> mime: It must be type "fd"
->
-> [1021] (1) #  fdisk -l /dev/sda
->
-> Disk /dev/sda: 64 heads, 32 sectors, 35003 cylinders
-> Units = cylinders of 2048 * 512 bytes
->
->    Device Boot    Start       End    Blocks   Id  System
-> /dev/sda1             1      8676   8884208   fd  Linux raid autodetect
-> /dev/sda2          8677     35003  26958848   83  Linux
->
->
->
-> rob wrote:
->
->> I'm not familiar with SuSE 8.2,   but here are some hints:
->>
->> -is it possible that  either the mount of md0 is getting done before  
->> md0 is assembled, or hdb1  is getting mounted directly?  check  df 
->> -v  right after boot.
->>
->
->>>
->
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks
+-steve
 
 
