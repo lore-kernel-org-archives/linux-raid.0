@@ -1,38 +1,92 @@
-From: "Michael S. Peek" <peek@tiem.utk.edu>
-Subject: Questions about LARGE, RAID storage under Linux
-Date: Tue, 20 May 2003 12:15:39 -0400
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: raid5, 2 drives dead at same time,kernel will Oops?
+Date: Wed, 21 May 2003 12:42:36 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <S263850AbTETQCk/20030520160240Z+12789@vger.kernel.org>
+Message-ID: <16074.59292.944191.452983@notabene.cse.unsw.edu.au>
+References: <3EB8441F.8070606@fugmann.dhs.org>
+	<16056.19633.400369.451156@notabene.cse.unsw.edu.au>
+	<021301c31e67$804eab90$7b07a8c0@pluto>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
-Cc: peek@vger.kernel.org
+In-Reply-To: message from 3tcdgwg3 on Monday May 19
+To: 3tcdgwg3 <3tcdgwg3@prodigy.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Monday May 19, 3tcdgwg3@prodigy.net wrote:
+> Hi,
+> 
+> I am trying to simulate a case that two drives
+> in an array fail ad same time.
+> I use two ide drives, I try to create a 
+> raid 5 array with 4 arms, created as following:
+> 
+> /dev/hdc1
+> /dev/hde1
+> /dev/hdc2
+> /dev/hde2
+> 
+> This is just for test, I know create two arms on
+> one hard drive doesn't make much sense.
+> 
+> 
+> Anyway, when I run this array, if I power off one
+> of hard drive (/dev/hde) to simulate two arms failing 
+> at same  time in an array, I got system Oops. I am using
+> 2.4-18 kernel.
+> 
+> Anyone can tell me if this is normal? or if there is a fix for this?
+> 
 
-Hello all,
+Congratulations and thanks.  You have managed to trigger a bug that
+no-one else has found.
 
-I am looking at using a hardware RAID device that appears to it's SCSI host as
-a single large drive.  I am well aware that I can break this device down into
-multiple LUNS, but if possible I need to keep it as one big drive.  I
-understand from the Linux Info Sheet, last updated in 1998 according to it's
-text, that Linux is able to handle partitions up to 4TB in size.
+The following patch (against 2.4.20) should fix it.  If you can test
+and confirm I would really appreciate it.
 
-What I want to know is:
+NeilBrown
 
-(a) Is 4TB still the maximum limitation on a single partition size?  If not,
-what is the current maximum?
 
-(b) Would this maximum partition size still apply when using the software RAID
-tools to combine two or more of these devices together?
+------------------------------------------------------------
+Handle concurrent failure of two drives in raid5
 
-What I am looking for is the ability to mount and format an external SCSI
-device that's 3.5TB in size.  (It's a Promise UltraTrak RM1500 w/ 15 x 250GB
-drives).  I want to be able to upgrade the hard drives at a later date and
-know that the Linux box to which it is attached will still be able to handle
-them.  Ideally, I would like to purchase a second (or even a third) device
-later down the road and use software RAID to concatenate them together.
+If two drives both fail during a write request, raid5 doesn't
+cope properly and will eventually oops.
 
-Thanks for any help you can give,
+With this patch, blocks that have already been 'written'
+are failed when double drive failure is noticed, as well as
+blocks that are about to be written.
 
-Michael
+ ----------- Diffstat output ------------
+ ./drivers/md/raid5.c |   10 +++++++++-
+ 1 files changed, 9 insertions(+), 1 deletion(-)
 
+diff ./drivers/md/raid5.c~current~ ./drivers/md/raid5.c
+--- ./drivers/md/raid5.c~current~	2003-05-21 12:42:07.000000000 +1000
++++ ./drivers/md/raid5.c	2003-05-21 12:37:37.000000000 +1000
+@@ -882,7 +882,7 @@ static void handle_stripe(struct stripe_
+ 	/* check if the array has lost two devices and, if so, some requests might
+ 	 * need to be failed
+ 	 */
+-	if (failed > 1 && to_read+to_write) {
++	if (failed > 1 && to_read+to_write+written) {
+ 		for (i=disks; i--; ) {
+ 			/* fail all writes first */
+ 			if (sh->bh_write[i]) to_write--;
+@@ -891,6 +891,14 @@ static void handle_stripe(struct stripe_
+ 				bh->b_reqnext = return_fail;
+ 				return_fail = bh;
+ 			}
++			/* and fail all 'written' */
++			if (sh->bh_written[i]) written--;
++			while ((bh = sh->bh_written[i])) {
++				sh->bh_written[i] = bh->b_reqnext;
++				bh->b_reqnext = return_fail;
++				return_fail = bh;
++			}
++
+ 			/* fail any reads if this device is non-operational */
+ 			if (!conf->disks[i].operational) {
+ 				spin_lock_irq(&conf->device_lock);
