@@ -1,34 +1,35 @@
-From: jgotts@manray.sgi.com
-Subject: new soft
-Date: Sun, 05 Sep 2004 04:07:30 +0000
+From: Terje Kvernes <terjekv@math.uio.no>
+Subject: Re: filesystem corruption with RAID6.
+Date: Sun, 05 Sep 2004 14:32:35 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <FD48DD3FLLC40392@manray.sgi.com>
-References: <2CIL526668C0LD0G@vger.kernel.org>
+Message-ID: <wxxr7pguc9o.fsf@nommo.uio.no>
+References: <wxx7jrbo87d.fsf@nommo.uio.no> <20040903170627.GA11021@jim.sh>
+	<4138B5A6.7070304@zytor.com> <wxxr7pjumhh.fsf@nommo.uio.no>
+	<4138DF2D.5040505@zytor.com> <wxx7jr9veoa.fsf@nommo.uio.no>
+	<413A8198.8060805@zytor.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <2CIL526668C0LD0G@vger.kernel.org>
-To: Linux-raid <linux-raid@vger.kernel.org>
+In-Reply-To: <413A8198.8060805@zytor.com> (H. Peter Anvin's message of "Sat,
+ 04 Sep 2004 20:01:44 -0700")
+To: "H. Peter Anvin" <hpa@zytor.com>
+Cc: Jim Paris <jim@jtan.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Fresh Windows, Apple, Linux soft
-Corel KnockOut 2 - 50
-Adobe Atmosphere 1.0 - 60
-Bryce 5 - 50
-Macromedia Studio MX 2004 - 180
-and
-Borland Delphi 7 Professional - 70
-RedHat Linux 9.0 - 60
-Adobe PageMaker 7.0 - 60
-DVD Copy Plus - 30
-and
-Red Hat Enterprise Linux AS Premium Edition - 150
-Goldmine Business Contact Manager 6.5 - 59
-and
-DVD Copy Plus - 30
-DVD X Maker - 25
-Adobe PageMaker 7.0 - 60
-and
-and a lot more http://www.araholka.biz/
+"H. Peter Anvin" <hpa@zytor.com> writes:
 
+  [ ... ]
+
+> Dig into the code and try to figure out what is happening.  My best
+> guess at this point is that a block which is dirty isn't getting
+> marked as such, and therefore isn't getting correctly written back,
+> but it could also be that it tries to reconstruct a block before it
+> actually has all the blocks that it needs to do the reconstruction
+> correctly.
+
+  ho-hum.  good idea, but with my current knowledge of the RAID-code,
+  I'm somewhat doubtful of what I can accomplish.  I'll try to have a
+  look though.  again, thanks for all the work on the MD layer.  ;-)
+
+-- 
+Terje
