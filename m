@@ -1,40 +1,33 @@
-From: Robin Bowes <robin-gmane@robinbowes.com>
-Subject: error opening /dev/md2: No such file or directory
-Date: Thu, 02 Dec 2004 18:03:45 +0000
-Message-ID: <conlcb$14p$1@sea.gmane.org>
+From: "Kevin P. Fleming" <kpfleming@starnetworks.us>
+Subject: Re: error opening /dev/md2: No such file or directory
+Date: Thu, 02 Dec 2004 11:30:50 -0700
+Message-ID: <41AF5F5A.4090709@starnetworks.us>
+References: <conlcb$14p$1@sea.gmane.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <conlcb$14p$1@sea.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+Robin Bowes wrote:
 
-I suspect this is not an mdadm problem but I am hoping someone can point 
-me in the right direction...
+> # mdadm --create /dev/md2 --level=1 --raid-devices=2 /dev/sdc1 missing
+> mdadm: error opening /dev/md2: No such file or directory
 
-I was running Fedora Core 2 and upgraded to Fedora Core 3 but am having 
-problems following the upgrade (it won't boot due to some kernel 
-issues). So, I thought I'd try a fresh install.
+This is a side-effect of the way that the MD driver operates in a 
+dynamic /dev environment. mdadm needs the /dev/mdX node to be available 
+to be able to manipulate the array, but it doesn't exist until the array 
+has been created. Catch-22.
 
-I'm tring to create a RAID1 array from a couple of spare 1.5GB 
-partitions onto which I can put the fresh O/S install.
+At some point mdadm and the MD driver need a new communication method 
+that uses a common device node for all arrays, but that won't happen soon.
 
-I used this command:
-
-# mdadm --create /dev/md2 --level=1 --raid-devices=2 /dev/sdc1 missing
-mdadm: error opening /dev/md2: No such file or directory
-
-I've used "missing" since the other spare partition is on /dev/sdf which 
-is being RMA'd at the moment - guess what make it is :)
-
-The new FC3 system is running udev with which I'm not familiar.
-
-How can I create the /dev/md2 device?
-
-Thanks,
-
-R.
-
+In the meantime, you can manually create /dev/mdX nodes with mknod, just 
+as you would have done before. Once the array is created, if you have it 
+set to auto-start (using 0xfd partition types), it the device node will 
+automatically appear when you boot your system. If you don't have it set 
+to auto-start, you'll have to add the "mknod" command to your system 
+startup scripts before trying to start the array directly.
