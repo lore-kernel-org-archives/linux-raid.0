@@ -1,23 +1,55 @@
-From: "Jason C. Leach" <jleach@ocis.net>
-Subject: I/O Blocking
-Date: Thu, 22 Jul 2004 09:29:09 -0700
+From: <robin-lists@robinbowes.com>
+Subject: RE: mount-by-label finds drive not array ????
+Date: Thu, 22 Jul 2004 17:33:13 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <40FFEB55.2000905@ocis.net>
+Message-ID: <S266708AbUGVQdP/20040722163315Z+2366@vger.kernel.org>
+References: <Pine.LNX.4.58.0407010736180.15444@jupiter.toms.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <Pine.LNX.4.58.0407010736180.15444@jupiter.toms.net>
+To: 'Tom Oehser' <tom@toms.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+> -----Original Message-----
+> From: linux-raid-owner@vger.kernel.org 
+> [mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Tom Oehser
+> Sent: 01 July 2004 11:41
+> To: linux-raid@vger.kernel.org
+> Subject: mount-by-label finds drive not array ????
+> 
+> 
+> Hi,
+> 
+> I'm accustomed to doing something like:
+> 
+> LABEL=tomsvol2  /mnt/foo   ext3      defaults        0 2
+> 
+> But if I do that on my raid-5 md arrays, it tries to mount 
+> disk 1 of the 4 disks that make up the array!  Apparently, 
+> the first stripe has enough of the filesystem that it must be 
+> thinking that is what to mount!  Even with type "FD"!!!
+> 
+> So, with an array /dev/md0 made of hda1 hdb1 hdc1 hdd1, I am 
+> having to do a literal:
+> 
+> /dev/md0        /mnt/bar      ext3      defaults        0 4
+> 
+> Since if I do it by "LABEL=", it tries to mount hda1, not md0!
+> 
+> Is this just a known/accepted brain-deadness of the mount code?
 
-Both the RAID (Promise SuperTrak 6000) or the USB subsystems really 
-drive the system load up. I'm using a AMD 3200+ system that is only a 
-few months old with the 2.4.25 kernel.  When the I/O systems are 
-blocking the system is very unresponsive. Some times samba will timeout, 
-or I'll wait several seconds for commands like df, top, w and so on.
+Tom,
 
-I am wondering if I were to use a dual CPU system, would this solve my 
-I/O blocking problem?  Would one CPU tend to the I/O subsystem and the 
-second would deal with other system requests I (samba, DB, LDAP, ...)?
+I'm just considering doing something like this.
+
+Did you ever get any resolution to this issue?
+
+Thanks,
+
+R.
+--
+http://robinbowes.com  
+
