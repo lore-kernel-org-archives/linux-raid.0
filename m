@@ -1,40 +1,45 @@
 From: ptb@lab.it.uc3m.es (Peter T. Breuer)
-Subject: Re: [PATCH 1/2] md bitmap bug fixes
-Date: Fri, 18 Mar 2005 13:52:54 +0100
-Message-ID: <6ivqg2-qsn.ln1@news.it.uc3m.es>
-References: <422F7621.8090602@steeleye.com> <16949.5768.392061.95882@cse.unsw.edu.au> <20050314094454.GK3858@marowsky-bree.de> <16949.26113.68948.938529@cse.unsw.edu.au> <20050314112403.GT3858@marowsky-bree.de> <16950.5692.594941.130741@cse.unsw.edu.au> <20050318103326.GA18819@marowsky-bree.de>
+Subject: Re: [patch] md superblock update failures
+Date: Fri, 18 Mar 2005 13:57:59 +0100
+Message-ID: <nrvqg2-qsn.ln1@news.it.uc3m.es>
+References: <20050316130512.GK5305@marowsky-bree.de> <16952.45067.418093.353791@cse.unsw.edu.au> <20050318103922.GB18819@marowsky-bree.de>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 Lars Marowsky-Bree <lmb@suse.de> wrote:
-> On 2005-03-15T09:54:52, Neil Brown <neilb@cse.unsw.edu.au> wrote:
-> > I think any scheme that involved multiple bitmaps would be introducing
-> > too much complexity.  Certainly your examples sound very far fetched
-> > (as I think you admitted yourself).  But I always try to be open to
-> > new ideas.
+> Minor cleanup:
 > 
-> For single node operations, yes. But disks appearing and reappearing is
-> _mostly_ a cluster issue, and there it makes sense, because of the
-> potentially diverging data in case both sides activate the mirrors.
+> > @@ -1325,24 +1336,24 @@ repeat:
+> >  
+> >               dprintk("%s ", bdevname(rdev->bdev,b));
+> >               if (!rdev->faulty) {
+> > -                     err += write_disk_sb(rdev);
+> > +                     md_super_write(mddev,rdev,
+> > +                                    rdev->sb_offset<<1, MD_SB_BYTES,
+> > +                                    rdev->sb_page);
+> > +                     dprintk(KERN_INFO "(write) %s's sb offset: %llu\n",
+> > +                             bdevname(rdev->bdev,b),
+> > +                             (unsigned long long)rdev->sb_offset);
+> > +
+> >               } else
+> >                       dprintk(")\n");
+> >               if (!err && mddev->level == LEVEL_MULTIPATH)
+> >                       /* only need to write one superblock... */
+> >                       break;
+> >       }
 
-Didn't we go through this once before, Lars :-). The bitmap is always
-pesimistic, so splitting it would only be aimed at making it less so,
-by dint of giving it a sharper focus on what's really what.
+Maintenance-wise, I'd prefer if (write_disk_sb(rdev) != 0) err++, since
+seeing things which are of signed type tested ultimately only for
+difference from zero makes me nervous. Who says somebody won't forget
+the way it's tested here and let write_disk_sb one day return negative
+for error, and zero for success?
 
-The question is how much one gains and how much one loses. When I
-originally did FR1 0.1, I had multiple bitmaps, and one of the first
-things Neil suggested was combining them - and magically, all the code
-simplified away into nice little understandable trivialities.  So I
-think it's a good idea from the maintenance point of view!
+> The "!err &&" part can probably go away, right?
 
-What would one lose? Does it matter if we resync more than needed, when
-that is already 100 times less than we would have resynced without a
-bitmap?
-
-(proviso - I didn't read the post where you set out the error
-situations, but surely, on theoretical grounds, all that can happen is
-that the bitmap causes more to be synced than need be synced).
+As to your observation, morally I'm with you on that, since we oughtn't
+need to write more superblocks if there has been an error than if there
+hasn't.
 
 Peter
 
