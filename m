@@ -1,19 +1,33 @@
-From: "Stephen Hargrove" <stephen@exitwound.org>
+From: "Guy" <bugzilla@watkins-home.com>
 Subject: RE: Should I Start Over?
-Date: Wed, 7 Jul 2004 14:40:46 -0500 (CDT)
+Date: Wed, 7 Jul 2004 16:16:29 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <2354.66.230.1.97.1089229246.squirrel@exitwound.org>
-References: <2128.66.230.1.97.1089224667.squirrel@exitwound.org>
-    <200407071907.i67J7b309004@watkins-home.com>
-Reply-To: stephen@exitwound.org
+Message-ID: <200407072016.i67KGT309307@watkins-home.com>
+References: <2354.66.230.1.97.1089229246.squirrel@exitwound.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200407071907.i67J7b309004@watkins-home.com>
-To: Guy <bugzilla@watkins-home.com>
+In-Reply-To: <2354.66.230.1.97.1089229246.squirrel@exitwound.org>
+To: stephen@exitwound.org
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+Humm.  I would guess it would re-build to the last disk on the command line.
+Maybe just enter the command again.  Can't do any more damage!  Then do the
+2 commands and send the output.
+
+Did the original array have 3 disks and 1 spare?  If so, ignore the spare
+until things are working again.
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Stephen Hargrove
+Sent: Wednesday, July 07, 2004 3:41 PM
+To: Guy
+Cc: linux-raid@vger.kernel.org
+Subject: RE: Should I Start Over?
 
 Guy said:
 >
@@ -57,3 +71,8 @@ Thanks, Guy!  I sure do appreciate your assistance.
 
 --
 Steve
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
