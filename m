@@ -1,86 +1,34 @@
-From: "Jay Strauss" <me@heyjay.com>
-Subject: Re: re mdadm  raid1 creation problems
-Date: Sat, 12 Jun 2004 07:58:30 -0500
+From: steve@gracenote.com
+Subject: Auslaendergewalt: Herr Rau, wo waren Sie?
+Date: Sat, 12 Jun 2004 14:24:16 GMT
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <006401c4507c$f7e62b40$6705a8c0@a30>
-References: <40CAD765.7040307@prairie.lakes.com>
-Reply-To: "Jay Strauss" <me@heyjay.com>
+Message-ID: <5e4a41bbbf83c0.aa899.qmail@gracenote.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: rrk <rrk@prairie.lakes.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-rrk,
+Mordversuch wegen 'falschem' Hemdaufdruck! Wo waren Sie, Herr Rau?
+Wo blieben die Schlagzeilen der Massenmedien und der Tagesschau?
 
-You say make filesystem on hda, do you really mean you created
-filesystems hda[123]?
+SIEGBURG - Ein naechtlicher Stadtbummel dreier junger Deutscher in der Nacht vom 15.-16. Juni waere fuer einen der Jugendlichen fast toedlich ausgegangen. Die drei jungen Leute, 17, 18 und 21 Jahre alt, schlenderten ruhig und gut gelaunt nach Mitternacht von McDonalds kommend durch die Siegburger Innenstadt.
 
-After you edited /etc/boot/grub/menu.lst did you run grub?
+Sie trugen die bei Jugendlichen beliebten Hemden mit Aufschriften (engldeutsch 'T-Shirt' genannt). Bei einem prangte 'Lieber Currywurst als Doener' auf der Brust, womit er wohl zeigen wollte, dass er als offenbar umerzogener Amideutscher in der multikulturellen Gesellschaft McDonald statt Doener bevorzugte.
 
-You don't need to reboot so often
+Doch diese Vorliebe haette er besser nicht so offen gezeigt. In der Fussgaengerzone kamen den Jugendlichen sieben bis acht auslaendische Mitbuerger der zweiten Generation - nach Polizeibericht mit 'suedlaendischem Aussehen, vermutlich tuerkischer Herkunft' - entgegen, denen diese Parole offenbar nicht gefiel und die sich wohl an den Aufruf des Herrn Bundeskanzlers Schroeder zum 'Aufstand der Anstaendigen' erinnerten.
 
-take a look at:
-http://marc.theaimsgroup.com/?l=linux-raid&m=108571782912454&w=2
+Mit lauten Rufen wie 'Heil Hitler' und 'Nazi-Deutsche' stuerzten sie sich auf die drei, laut Zeugenaussagen 'ohne erkennbaren Grund'.
 
-Jay
------ Original Message ----- 
-From: "rrk" <rrk@prairie.lakes.com>
-To: <linux-raid@vger.kernel.org>
-Sent: Saturday, June 12, 2004 5:13 AM
-Subject: re mdadm raid1 creation problems
+Waehrend die zwei Juengeren fliehen konnten, schaffte es der 21-jaehrige nicht. Weil ihm ein Bein gestellt wurde, stuerzte er, und die Gruppe schlug und trat auf ihn ein. Einer der Angreifer riss aus einer seitlichen Baumpflanzung einen zwei Meter langen Pflanzpfahl heraus und schlug ihn dem Opfer mehrfach auf den Kopf. Danach flohen die Angreifer, bevor die alarmierte Polizei eintraf.
+
+Der ueberfallene schwebte tagelang in Lebensgefahr, von den Taetern fehlt bislang jede Spur, obwohl die Polizei das Umfeld des Tatortes nach Spuren absuchte und die Bonner Mordkommission den Fall uebernommen hat.
+
+'Ich bin erschrocken ueber das Ausmass an Brutalitaet, mit der da vorgegangen wurde', erklaerte Robert Scholten, Sprecher der Polizei in Bonn. Es sei zwar richtig, dass die drei Angegriffenen zur rechten Szene gehoerten, das koenne jedoch das Vorgehen der Angreifer in keiner Weise rechtfertigen.
 
 
-> sorry my reply's are not making it to the list
->
-> the error msg i get is
->
-> /dev/md1 file system size ( according to the superblock) is 2560351
-> the pyhical size of the device is 2560320 either the superblock or
-> the partion table is corrupt
->
-> /dev/md1: UNEXPECTED INCONSISTENCY; RUN fsck MANUALLY
->
-> i get this msg on the first boot with md1 as the primary boot partion
->
-> i thought i was being pretty careful about rebooting after all partion
-> changes
->
-> the build order/process is
->
-> build and test hda  debian 2.4.26 with raid compiled in
-> sfdisk to transfer partions   sfdisk -d /dev/hda | sfdisk /dev/hdc
-> set hdc partion type  to fd
-> reboot
-> mk file system on hdc and copy hda to hdc
-> reboot
-> test hdc as primary boot
-> reboot
-> create md1   mdadm --create /dev/md1 --level=1 --raid-devices=2 missing
-> /dev/hdc1
-> there are 3 md devices / home & var
-> reboot
-> mount md device for test
-> change hda partion type to fd
-> reboot
-> edit fstab and grub on md devices
-> shutdown
-> boot from mepis rescue disk
-> mdadm --add /dev/md1 /dev/hda1
-> wait for resync
-> shutdown
-> reboot from md1
->
-> thanks
-> rob
->
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->
+>Zitat<: WIR sind ueberhaupt nicht erschrocken, denn seit mehr als 20 Jahren wissen und warnen wir vor all solchen Folgen der 'multikulturellen Gesellschaft'. Dass weder der Herr Bundespraesident ans Bett des fast Erschlagenen eilte, noch die Massenmedien ueber diesen brutalen Mordversuch berichteten, entlarvt die Geisteshaltung des Herrn Rau und die Heuchelei der sogenannten 'Anstaendigen' bei den Massenmedien.
 
+
+Kommentar des Sober Autors:
+Wenn drei leicht angetrunkene Bundeswehr Soldaten mit A. H. Gruss durch die Stadt laufen, ist die Presse mit groesstem Eifer dabei, unsere eigenen Leute nieder zu machen!!!
