@@ -1,80 +1,54 @@
 From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: BSD disklabel and autodetection
-Date: Mon, 29 Jul 2002 20:13:18 +1000 (EST)
+Subject: Re: RAID0 - one drive's superblock is corrupt
+Date: Mon, 29 Jul 2002 20:35:48 +1000 (EST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <15685.5438.362051.450805@notabene.cse.unsw.edu.au>
-References: <Pine.LNX.4.32.0207261708230.1091-100000@dope.pingdynasty.com>
-	<3D450296.9B9D9961@tls.msk.ru>
+Message-ID: <15685.6788.430632.934955@notabene.cse.unsw.edu.au>
+References: <3D3DD9D2.7030501@moley.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Michael Tokarev on Monday July 29
-To: Michael Tokarev <mjt@tls.msk.ru>
+In-Reply-To: message from Neil Sedger on Tuesday July 23
+To: Neil Sedger <linux-raid@moley.org.uk>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday July 29, mjt@tls.msk.ru wrote:
-> martin@hack.org wrote:
-> > 
-> []
-> > following some hints i've seen elsewhere on the list i tried to pass md
-> > parameters to the kernel ->
-> > 
-> > Booting on Nautilus using machine vector Nautilus from SRM
-> > Command line: ro root=/dev/md1 md=1,/dev/sdb5,/dev/sdc2,/dev/sdd2 raid=noautodetect
-> > md: Will configure md1 (super-block) from /dev/sdb5,/dev/sdc2,/dev/sdd2, below.
-> > 
-> > with the raid=noautodetect option it works.
-> > 
-> > what other raid/md options can be passed this way? and how do i configure
-> > more than one device? geez, hope there's not a 256 char limit to the
-> > command line...
+On Tuesday July 23, linux-raid@moley.org.uk wrote:
 > 
-> You may use md=N,dev1,dev2,... option as many times as you want, i.e.
-> 
->  linux root=... md,1=/dev/sda1,.. md=2,/dev/sda2,...
-> 
-> I think that it's sufficient to tell it about only ONE member of
-> an array this way if your raid device has persistent superblock
-> (kernel will read superblock from first disk (or second for that
-> matter - if you choose to tell it about second disk) and read
-> other devices from there).
+> Any suggestions?
 
-Nope.  You have to list all component devices.  (Storing device
-identification in the superblock is a bad idea that doesn't work in
-general, but does in enough specific cases that people still seem to
-like it).
+0/ restore from backups.  You do have backups don't you?
 
-> 
-> About other options - there are only two, raid= (e.g. noautodetect)
-> and md= (above) that are raid-related.
-> 
-> > are these options documented somewhere??
-> 
-> I personally looked at sources in drivers/md/ directory and got the
-> above line by reading initialization functions.  Maybe it's documented
-> somewhere in Documentation/... ;)
+1/ Get a replacement disc the same size, copy all the data from one to
+   the other
+     dd if=/dev/olddisk of=/dev/newdisk bs=100M
+   then change your raidtab to refer to the new drive instead of the
+   old run the "mkraid" command to re-create the superblocks.
 
-  Documentation/md.txt
+2/ The reason the "persistant=0" trick didn't work is that the
+   effective size of the disk is smaller when you have a superblock.
+   so: work out the effecitive size of each partition ... kernel log
+   messages might tell you. mkraid will tell you (hde1 has an
+   effective size of 45030080kB).
+   Then change your partition tables with fdisk so that these
+   partitions appear to breally the size that raid0 effecitvely make
+   them, and then to the persistant=0 trick.
+   To calculate the effective size, take the real size, round down to
+   a multiple of 64K and subtract 64K.
+   e.g. for hde1, real size is 45030163Kb
+     45030163/64 == 703596
+     703596 * 64 == 45030144  (this is rounded down)
+     45030144 - 64 == 45030080  which is the correct number.
 
-Personally, I am not a big fan of autodetection at all.
+   To might have to use export mode to convince fdisk to ignore
+   "cylinder boundries".
 
-I see two reasonable ways to start up the RAID array that
-stores the root filesystem.
+3/ Hack the md code to not actually write out superblocks,
+   or to read them in.  And then try the mkraid command to create
+   a new array.
 
-  1/ kernel parameters like:
-                md=0,/dev/sda1,/dev/sdb1
+4/ Sue IBM for selling such dodgy hard drives.
 
-  2/ use an initrd filesystem and a user-mode program that
-    finds and assembles arrays based on a simple config file.
-
-All non-root raid arrays should be assembled after boot by
-a user-mode program.
-I use and recommend mdadm
-   http://www.cse.unsw.edu.au/~neilb/source/mdadm/
-
-You can tell it how to recongnise parts of an array and 
-it goes hunting, finds them, and assembles the array.
+Good luck.
 
 NeilBrown
