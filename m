@@ -1,58 +1,44 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
+From: Maarten J H van den Berg <maarten@vbvb.nl>
 Subject: Re: md: can not impport hdb1, has active inodes!
-Date: Wed, 3 Mar 2004 12:24:18 +1100
+Date: Wed, 3 Mar 2004 03:36:51 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16453.13250.331087.281490@notabene.cse.unsw.edu.au>
-References: <40453152.462.2FC95FD@localhost>
+Message-ID: <200403030336.51772.maarten@vbvb.nl>
+References: <4045288B.27321.2DA4EF3@localhost> <404532F6.8743.303008B@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Chris Evans on Wednesday March 3
-To: Chris Evans <chris1@psyctc.org>
-Cc: debian-user@lists.debian.org, linux-raid@vger.kernel.org
+In-Reply-To: <404532F6.8743.303008B@localhost>
+Content-Disposition: inline
+To: debian-user@lists.debian.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday March 3, chris1@psyctc.org wrote:
-> Aha, didn't know that wrinkle: lovely.  Mount says:
-> /dev/md0 on / type ext3 (rw,errors=remount-ro)
-> proc on /proc type proc (rw)
-> devpts on /dev/pts type devpts (rw,gid=5,mode=620)
-> 
-> and cat /proc/mounts says:
-> rootfs / rootfs rw 0 0
-> /dev/root / ext2 rw 0 0
-> proc /proc proc rw 0 0
-> devpts /dev/pts devpts rw 0 0
-> 
-> Does that "/dev/root" bit indicate anything useful?
+On Wednesday 03 March 2004 02:20, Chris Evans wrote:
+> On 3 Mar 2004 at 2:11, Maarten J H van den Berg wrote:
 
-No, but the fact that root is actually 'ext2' even though mount (and
-presumably fstab) thinks it is ext3 is a bit suspicious. 
+Neil had some interesting points, but in the meantime here's my working 
+lilo.conf (which was written by the SuSE installer) in case it helps you:
 
-> > Exactly how did you tell lilo to use /dev/md0?
-> > With
-> >    root=/dev/md0
-> > as an option in lilo.conf, or with
-> >    append= "root=/dev/md0"
-> 
-> I think I've only tried the former (with and without an earlier line, 
-> before the image stanzas, saying root=/dev/hdb1)
+boot = /dev/hda
+change-rules
+    reset
+default = linux
+disk=/dev/hda
+    bios=0x80
+    disk=/dev/hdc
+    bios=0x81
+lba32
+prompt
+read-only
+timeout = 80
 
-If there are any "root=/dev/hdb1" lines in lilo.conf, I suggest taking
-them out.
-I think you currently have /dev/hdb1 as your root filesystem still.
-You can easily check this:
+image = /boot/vmlinuz
+    label = linux
+    initrd = /boot/initrd
+    root = /dev/md0
 
-   mkdir /a /b
-   mount /dev/hdb1 /a
-   mount /dev/md0 /b
-   > /a-file
-   ls -l /?/a-file
 
-If the ls finds "/a/a-file", then /dev/hdb1 is root.
-If it finds /b/a-file, then /dev/md0 is root.
+Greetings,
+Maarten
 
-If it still doesn't work, post your lilo.conf
-
-NeilBrown
