@@ -1,71 +1,38 @@
-From: "Duncan, Mike" <Mike.Duncan@Sonopress.com>
-Subject: RE: MD/RAID1 Large File Support
-Date: Mon, 12 May 2003 22:32:44 -0400
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: [PATCH][RFC] Fix "two RAID1 mirrors are faster than three"
+Date: Tue, 13 May 2003 13:53:45 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <EC803175C921D411BCE2000000006429081C3642@ash-exch_lg>
+Message-ID: <16064.27721.125256.295803@notabene.cse.unsw.edu.au>
+References: <200305121322_MC3-1-3884-D0AC@compuserve.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: 'Matti Aarnio ' <matti.aarnio@zmailer.org>, "Duncan, Mike" <Mike.Duncan@Sonopress.com>
-Cc: "''linux-raid@vger.kernel.org' '" <linux-raid@vger.kernel.org>
+In-Reply-To: message from Chuck Ebbert on Monday May 12
+To: Chuck Ebbert <76306.1226@compuserve.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
-BTW, ulimit did return "unlimited". 
-
-
------Original Message-----
-From: Matti Aarnio
-To: Duncan, Mike
-Cc: 'linux-raid@vger.kernel.org'
-Sent: 5/12/2003 6:10 PM
-Subject: Re: MD/RAID1 Large File Support
-
-On Mon, May 12, 2003 at 04:42:41PM -0400, Duncan, Mike wrote:
-...
-> Basically, we are trying to transfer (via FTP and SSH) files larger
-than 2G.
-> I have read that SuSE has LFS in all of its distros from 7.1 and up
-(kernels
-> 2.4.1 and up) and that kernel-wise and glibc-wise everything is ok. So
-after
-> re-compiling kernels, textutils, gcc, binutils, and glibc in an effort
-to
-> figure out which one is not compiled with LFS support in ... and ...
-> restarting from scratch once I found out it was not them ... I am left
-with
-> md.o or raid1.o as being the culprit. 
+On Monday May 12, 76306.1226@compuserve.com wrote:
 > 
-> So --- is there LFS support in md.o and raid1.o modules? If not, is
-this
-> expected in 2.6 kernels? If so, do I need to apply a patch to get this
-> working or just maybe more kernel parameters?
-
-Wrong layer.  MD/RAID does not see FILES, just bunches of diskblocks.
-
-What is the problem you are encountering, to be exact ?
-You have two machines in between which you try to transfer files.
-Can you do following at both ?
-
-  dd if=/dev/zero bs=1024k count=3 seek=3000 of=test.file
-
-That should create about 3 GB size file at both machines.
-(It does SKIP over 3G, and writes 3 MB, thus it does not
-need that much diskspace..)
-
-If it doesn't, check that:
-$ ulimit -f
-unlimited
-
-If it does not give that, there is your problem.
-
-> TIA for any and all help.
+>   This patch is only lightly tested on 2.4.21-rc2-ac1.
 > 
-> ------------------------------------ 
-> Mike Duncan
-> Web Master/Developer
-> Sonopress LLC
+>   It attempts to speed up single sequential streaming reads as well as
+> fixing the problem with multiple streams not working on 3+ disk
+> mirrors.  With this patch applied I get full speed form all three
+> disks when reading three streams at once.
 > 
-> mike.duncan@sonopress.com
-> 828.658.6082 (desk)
-> 828.423.3310 (cell)
+>   A version of this on 2.4.20aa1 gives about 60% performance gains on single
+> sequential streams but it yields effectively no gain on stock kernels (?)
+> I've given up trying to figure out why...
+> 
+>   How much of this is worth merging?  (One line has already been
+>   rejected.)
+
+Hard to say.  As you mentioned in another email, it changes too much
+stuff.
+
+Either split it into logic bits, or explain in detail what it is
+trying to achieve, or both, and I will tell you what I think.
+
+NeilBrown
