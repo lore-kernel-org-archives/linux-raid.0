@@ -1,40 +1,30 @@
 From: NeilBrown <neilb@cse.unsw.edu.au>
-Subject: [PATCH] md - 1 of 7 - Print "deprecated" warning when START_ARRAY is used.
+Subject: [PATCH] md - 0 of 7 - Introduction
 Date: Fri, 06 Feb 2004 16:35:51 +1100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <E1Aoyed-00083F-00@notabene>
-References: <20040206162532.30220.patches@notabene>
+Message-ID: <20040206162532.30220.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: Andrew Morton <akpm@osdl.org>
-Cc: linux-raid@vger.kernel.org
+Cc: linux-raid@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Al Viro <viro@parcelfarce.linux.theplanet.co.uk>
 List-Id: linux-raid.ids
 
+Hi again.
 
-The "START_ARRAY" ioctl depends on major/minor numbers (as stored
-in the raid superblock) are stable over reboots, which is increasingly
-untrue.
-There are better ways to start an array (e.g. with mdadm) so we 
-mark the ioctl as deprecated for 2.6, and will remove it in 2.7.
+Here are 7 patches for md in 2.4.3-pre-current
 
- ----------- Diffstat output ------------
- ./drivers/md/md.c |    8 ++++++++
- 1 files changed, 8 insertions(+)
+The first flags the START_ARRAY as deprecated - I plan to remove it in 2.7.
+The comment with that patch explains why.
 
-diff ./drivers/md/md.c~current~ ./drivers/md/md.c
---- ./drivers/md/md.c~current~	2004-02-06 16:17:55.000000000 +1100
-+++ ./drivers/md/md.c	2004-02-06 16:17:55.000000000 +1100
-@@ -2419,6 +2419,14 @@ static int md_ioctl(struct inode *inode,
- 		/* START_ARRAY doesn't need to lock the array as autostart_array
- 		 * does the locking, and it could even be a different array
- 		 */
-+		static int cnt = 3;
-+		if (cnt > 0 ) {
-+			printk(KERN_WARNING 
-+			       "md: %s(pid %d) used deprecated START_ARRAY ioctl. "
-+			       "This will not be supported beyond 2.6\n",
-+			       current->comm, current->pid);
-+			cnt--;
-+		}
- 		err = autostart_array(new_decode_dev(arg));
- 		if (err) {
- 			printk(KERN_WARNING "md: autostart %s failed!\n",
+The next 5 provide some cleanup of raid1 code leading to a patch which 
+enabled raid1 to safely use large requests when resyncing (it uses 
+bio_add_page to make sure each page is allowed).  This substantially increases
+resync speed in atleast one test.
+
+The final patch in a new version of the partitioning patch.
+It removes the rather ugly code for forcing the partitions to be 
+re-evaluated and instead makes simple arranges for them to be reread 
+on the next open.  This fixes the one bug that was reported against the
+patch.
+I have also taken onboard some of the feedback I got about the patch.
+
+NeilBrown
