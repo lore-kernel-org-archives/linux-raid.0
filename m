@@ -1,19 +1,19 @@
-From: Derek Vadala <derek@cynicism.com>
+From: Neil Brown <neilb@cse.unsw.edu.au>
 Subject: Re: Raidstop /dev/md0 won't work
-Date: Thu, 2 May 2002 14:52:05 -0700 (PDT)
+Date: Fri, 3 May 2002 15:00:58 +1000 (EST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.GSO.4.21.0205021450480.18460-100000@gecko.roadtoad.net>
+Message-ID: <15570.6538.877456.348186@notabene.cse.unsw.edu.au>
 References: <3CD1AF20.45E85EC8@cognigencorp.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3CD1AF20.45E85EC8@cognigencorp.com>
-To: linux-raid@vger.kernel.org
-Cc: Scott Walter <walter@cognigencorp.com>
+In-Reply-To: message from Scott Walter on Thursday May 2
+To: Scott Walter <walter@cognigencorp.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 2 May 2002, Scott Walter wrote:
-
+On Thursday May 2, walter@cognigencorp.com wrote:
 > this is probably a very dumb question.. however I am not able to
 > raidstop my raid-array using, which i need to do before running
 > raidreconf.
@@ -21,13 +21,34 @@ On Thu, 2 May 2002, Scott Walter wrote:
 > %> raidstop /dev/md0
 > /dev/md0: Device or resource busy.
 > %>
+> 
+> any suggestions... i have already tried unmounting the device.
 
-try doing fuser -m on /dev/md0 to see which processes are using it... 
+This is a bug in raidstop.  If you strace you will notice that it
+opens it twice and before trying to ioctl(STOP...) it.
 
-# fuser -m /dev/md0
-/dev/md0:             8685c
+Upgrade raidtools or use mdadm.
 
-then us ps to figure out what's up
----
-Derek Vadala, derek@cynicism.com, http://www.cynicism.com/~derek
+And a quick and dirty:
 
+   mv /dev/md0 /dev/mdx
+   mv /dev/md1 /dev/md0
+   mv /dev/mdx /dev/md0
+   raidstop /dev/md1
+   mv /dev/md0 /dev/mdx
+   mv /dev/md1 /dev/md0
+   mv /dev/mdx /dev/md0
+
+should work.
+
+NeilBrown
+
+> 
+> thanks.
+> 
+> 
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
