@@ -1,17 +1,51 @@
-From: Scott Long <scott_long@adaptec.com>
-Subject: Re: Adaptec 39160 RAID ?!
-Date: Tue, 10 Feb 2004 19:33:15 -0700
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: Adaptec 39160 RAID ?!
+Date: Tue, 10 Feb 2004 23:18:24 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <4029946B.7040003@adaptec.com>
-References: <Pine.LNX.4.44.0402111215260.21666-100000@gw.luko.org>
+Message-ID: <200402110418.i1B4IWi00730@dns1.watkins-home.com>
+References: <4029946B.7040003@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44.0402111215260.21666-100000@gw.luko.org>
-To: Luke Rosenthal <lists@luko.org>
+In-Reply-To: <4029946B.7040003@adaptec.com>
+To: 'Scott Long' <scott_long@adaptec.com>, 'Luke Rosenthal' <lists@luko.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+I have 2 types of 68-80 pin SCA adapters.
+1 has AT on the end on the model number.  These also have resister packs.
+This is a single ended adapter.  It would not support LVD.
+
+The others have LS at the end of the model number.  No resister packs, and
+are LVD.
+
+SE can do 40 MB/s.
+LVD can do 80/160/320 MB/s depending on your hardware.
+I don't think my SCA adapters were designed for 160, since my hardware can
+only do 80 I don't care.
+
+So, check your 68-80 adapters.
+
+Also, most LVD SCSI disks have a "force SE" jumper.  Be sure you don't have
+this set.  If you do, your disks would be in single ended mode, and limited
+to 40 MB/s.  If the URL below is correct, you disk also has this jumper.
+
+Maxtor bought Quantum, or part of it.
+
+http://www.maxtor.com/en/documentation/pdf_jumper_settings/atlas_10k_jumpers
+.pdf
+
+Guy
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Scott Long
+Sent: Tuesday, February 10, 2004 9:33 PM
+To: Luke Rosenthal
+Cc: linux-raid@vger.kernel.org
+Subject: Re: Adaptec 39160 RAID ?!
 
 Luke Rosenthal wrote:
 >>>Yes, but doesn't the card ship with "fake RAID"?
@@ -79,4 +113,10 @@ Curr is what we are actually running at
 This is just a cummulative count since the system booted.
 
 Scott
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 
