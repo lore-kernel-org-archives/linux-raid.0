@@ -1,44 +1,23 @@
 From: NeilBrown <neilb@cse.unsw.edu.au>
-Subject: [PATCH] md - 1 of 2 - Use "shedule_timeout(2)" instead of yield() as it seems to wait for less time.
+Subject: [PATCH] md - 0 of 2 - Introduction
 Date: Fri, 05 Mar 2004 16:45:37 +1100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <E1Az89R-0001su-00@notabene>
-References: <20040305164342.7205.patches@notabene>
+Message-ID: <20040305164342.7205.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: Andrew Morton <akpm@osdl.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
- ----------- Diffstat output ------------
- ./drivers/md/raid5.c     |    3 ++-
- ./drivers/md/raid6main.c |    3 ++-
- 2 files changed, 4 insertions(+), 2 deletions(-)
+Here are two patches for md that I believe are suitable
+for 2.6.4.
 
-diff ./drivers/md/raid5.c~current~ ./drivers/md/raid5.c
---- ./drivers/md/raid5.c~current~	2004-03-05 16:43:07.000000000 +1100
-+++ ./drivers/md/raid5.c	2004-03-05 16:43:07.000000000 +1100
-@@ -1409,7 +1409,8 @@ static int sync_request (mddev_t *mddev,
- 		/* make sure we don't swamp the stripe cache if someone else
- 		 * is trying to get access 
- 		 */
--		yield();
-+		set_current_state(TASK_UNINTERRUPTIBLE);
-+		schedule_timeout(2);
- 	}
- 	spin_lock(&sh->lock);	
- 	set_bit(STRIPE_SYNCING, &sh->state);
+1/ change yield() to schedule_timeout(2) as promised a while back.
 
-diff ./drivers/md/raid6main.c~current~ ./drivers/md/raid6main.c
---- ./drivers/md/raid6main.c~current~	2004-03-05 16:43:07.000000000 +1100
-+++ ./drivers/md/raid6main.c	2004-03-05 16:43:07.000000000 +1100
-@@ -1571,7 +1571,8 @@ static int sync_request (mddev_t *mddev,
- 		/* make sure we don't swamp the stripe cache if someone else
- 		 * is trying to get access
- 		 */
--		yield();
-+		set_current_state(TASK_UNINTERRUPTIBLE);
-+		schedule_timeout(2);
- 	}
- 	spin_lock(&sh->lock);
- 	set_bit(STRIPE_SYNCING, &sh->state);
+2/ Support assembling partitionable raid at boot-time so that it is
+   possible to boot from a partition of a raid array without needing
+   an initramfs.
+
+Thanks,
+NeilBrown
+
