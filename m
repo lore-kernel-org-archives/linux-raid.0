@@ -1,30 +1,76 @@
-From: a_preziosi2@netscape.net
-Subject: easy-to-use
-Date: Sat, 9 Aug 2003 12:40:33 -0400
+From: =?ISO-8859-2?B?VmxhZGlt7XIgVPhlYmlja/0=?= <trebicky@xhost.cz>
+Subject: Spammers
+Date: Sat, 9 Aug 2003 18:52:59 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <S272445AbTHIQka/20030809164031Z+12041@vger.kernel.org>
+Message-ID: <6734256000.20030809185259@xhost.cz>
+Reply-To: =?ISO-8859-2?B?VmxhZGlt7XIgVPhlYmlja/0=?= <trebicky@xhost.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
+Content-Type: multipart/signed; protocol="application/pgp-signature"; micalg="pgp-md5";
+  boundary="----------45C3210852CE30"
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-DONT BECOME ANOTHER STATISTIC - INSTALL VIRUS PROTECTION NOW
-the next email you receive could contain a virus. are you protected?
-A downloadable copy of Norton Antivirus will terminate viruses before they can infect your system!
+------------45C3210852CE30
+Content-Type: multipart/mixed;
+ boundary="----------FF15416D128B8354"
 
-btw, you look great today.
+------------FF15416D128B8354
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: base64
 
-For the BEST Anti-virus package, Click here NOW.
-http://fpp39@profitableproducts.com/default.asp?id=3000
+SGVsbG8sDQoNCiAgICAgIEhhdmUgeW91IGFsc28gbm90aWNlZCBzcGFtbWVycyBhdHRhY2tp
+bmcgdGhpcyBtYWlsaW5nIGxpc3RzPyBJDQogICAgICBkb24ndCBrbm93IHdoZXRoZXIgYXJl
+IHRoZXkgcmVnaXN0ZXJlZCBzdWJzY3JpYmVycyBvciB3aGV0aGVyIGl0DQogICAgICBpcyBy
+ZXF1aXJlZCBmb3IgcGVvcGxlIHRvIGJlIHJlZ2lzdGVyZWQgYXMgYSBzdWJjcmliZXJzIHNv
+IHRoYXQNCiAgICAgIHRoZXkgY291bGQgcG9zdCB0byB0aGUgbWFpbGxpbmcgbGlzdC4NCg0K
+ICAgICAgSW4gYXR0YWNobWVudCB0aGVyZSBpcyBvbmUgb2YgdGhlIG1vc3QgcmVjZW50IHNw
+YW1zIEkgcmVjZWl2ZWQuDQoNCi0tIA0KUmVnYXJkcywNCiBWbGFkaW1pciBUcmViaWNreSAg
+ICAgICAgICAgICAgICAgICAgICAgICAgbWFpbHRvOnRyZWJpY2t5QHhob3N0LmN6DQo=
+------------FF15416D128B8354
+Content-Type: text/plain; name="easy-to-use.TXT"
+Content-transfer-encoding: base64
+Content-Disposition: attachment; filename="easy-to-use.TXT"
 
+PS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0t
+PS09LT0tPS09LT0tPS09LT0tPS09LT0tPQ0KT2Q6ICAgICAgYV9wcmV6aW9zaTJAbmV0c2Nh
+cGUubmV0IDxhX3ByZXppb3NpMkBuZXRzY2FwZS5uZXQ+DQpLb211OiAgICBsaW51eC1yYWlk
+QHZnZXIua2VybmVsLm9yZyA8bGludXgtcmFpZEB2Z2VyLmtlcm5lbC5vcmc+DQpEYXR1bTog
+ICBTYXR1cmRheSwgQXVndXN0IDksIDIwMDMsIDY6NDA6MzMgUE0NClD4ZWRt7HQ6IGVhc3kt
+dG8tdXNlDQpQ+O1sb2h5OiA8bm9uZT4NCi0tPT09PS0tLS09PT09LS0tLT09PT0tLS0tPT09
+PS0tLS09PT09LS0tLT09PT0tLS0tPT09PS0tLS09PT09LS0tLT09PT0tLS0tPT09LS0NCkRP
+TlQgQkVDT01FIEFOT1RIRVIgU1RBVElTVElDIC0gSU5TVEFMTCBWSVJVUyBQUk9URUNUSU9O
+IE5PVw0KdGhlIG5leHQgZW1haWwgeW91IHJlY2VpdmUgY291bGQgY29udGFpbiBhIHZpcnVz
+LiBhcmUgeW91IHByb3RlY3RlZD8NCkEgZG93bmxvYWRhYmxlIGNvcHkgb2YgTm9ydG9uIEFu
+dGl2aXJ1cyB3aWxsIHRlcm1pbmF0ZSB2aXJ1c2VzIGJlZm9yZSB0aGV5IGNhbiBpbmZlY3Qg
+eW91ciBzeXN0ZW0hDQoNCmJ0dywgeW91IGxvb2sgZ3JlYXQgdG9kYXkuDQoNCkZvciB0aGUg
+QkVTVCBBbnRpLXZpcnVzIHBhY2thZ2UsIENsaWNrIGhlcmUgTk9XLg0KaHR0cDovL2ZwcDM5
+QHByb2ZpdGFibGVwcm9kdWN0cy5jb20vZGVmYXVsdC5hc3A/aWQ9MzAwMA0KDQoNCg0KDQoN
+Cg0KDQoNCg0KcHMuIGRvbnQgd2FudCBhbnkgbW9yZSBvZiB0aGlzIHNoaXQ/DQpodHRwOi8v
+ZjFwcDM5QHByb2ZpdGFibGVwcm9kdWN0cy5jb20vcmVtb3ZlL3JlbW92ZS5odG1sDQotDQpU
+byB1bnN1YnNjcmliZSBmcm9tIHRoaXMgbGlzdDogc2VuZCB0aGUgbGluZSAidW5zdWJzY3Jp
+YmUgbGludXgtcmFpZCIgaW4NCnRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBtYWpvcmRvbW9A
+dmdlci5rZXJuZWwub3JnDQpNb3JlIG1ham9yZG9tbyBpbmZvIGF0ICBodHRwOi8vdmdlci5r
+ZXJuZWwub3JnL21ham9yZG9tby1pbmZvLmh0bWwNCj0tPS09LT0tPS09LT0tPS09LT0tPS09
+LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09
+LT0NCg0K
 
+------------FF15416D128B8354--
 
+------------45C3210852CE30
+Content-Type: application/pgp-signature
 
+-----BEGIN PGP MESSAGE-----
+Version: 2.6
 
+iQEVAwUAPzUm61I+R59cY0V1AQFV/Af+It0fJfFCd+lRUfop97N4hdyZzuLzMwXI
+WPq10M9W1QBNA7D03B+g67bYS6hIcpPNsUQjH1OhE3Fh/jyzQYvAcqGULwMbX3GY
+9esGCnM7H5Nzmv1qrSzbvHPBybRSBrOFHU+T5XHHpUdx0LjDFK/hdvx0doK7wdIQ
+thmNZauefmp1LtMFA8YTYX0Oa/FhsZHa2Jz5R/I89dFePJDzSXd/9Qd3czCJuU7M
+jXUb/QLig3ZEzAKdEOJjJoXVVYTpkqeB21Welhvr9sTc/wHtyGz+RAQVLimMHX0o
+5MUdyjTSZxGL+HKCtt7R597p2FT0GUvmfuFUnX3K25HU9QJ1n1Y9cQ==
+=hamg
+-----END PGP MESSAGE-----
 
+------------45C3210852CE30--
 
-
-
-ps. dont want any more of this shit?
-http://f1pp39@profitableproducts.com/remove/remove.html
