@@ -1,71 +1,132 @@
-From: maarten <maarten@ultratux.net>
+From: ptb@lab.it.uc3m.es (Peter T. Breuer)
 Subject: Re: Spares and partitioning huge disks
-Date: Mon, 10 Jan 2005 22:21:46 +0100
-Message-ID: <200501102221.46018.maarten@ultratux.net>
-References: <200501102009.j0AK9C922554@www.watkins-home.com>
-Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Date: Mon, 10 Jan 2005 19:37:44 +0100
+Message-ID: <okuab2-u4c.ln1@news.it.uc3m.es>
+References: <41E17117.2090500@tls.msk.ru> <200501092028.j09KSr918180@www.watkins-home.com> <jsh8b2-5g6.ln1@news.it.uc3m.es> <jsm9b2-iqp.ln1@news.it.uc3m.es> <i69ab2-onm.ln1@news.it.uc3m.es> <p0cab2-s27.ln1@news.it.uc3m.es>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200501102009.j0AK9C922554@www.watkins-home.com>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday 10 January 2005 21:09, Guy wrote:
+Peter T. Breuer <ptb@lab.it.uc3m.es> wrote:
+> Peter T. Breuer <ptb@lab.it.uc3m.es> wrote:
+> > Hmm ...  I must be crackers at 7.39 in the morning.  Surely if the bio
+> 
+> Perhaps this is more obviously correct (or less obviously incorrect).
 
-> I use ext3 filesystems.  No problems with performance (that I know of).
-> I have never tried any others.
+So I'll do the commentary for it now. The last hunk of this three hunk
+patch is the easiest to explain:
 
-Reportedly, deleting a big (>2GB) file under XFS is way faster than under 
-ext3, but I never verified this myself.  I barely ever ran ext3, I went with 
-my distros' default, which was Reiserfs.
-Deleting huge files is a special case though, so it does not make much sense 
-to benchmark or tune for that. But in this special case it matters.
 
-> Do you think the performance difference of the various filesystems would
-> affect your PVR?
+> --- linux-2.6.3/drivers/md/raid1.c.orig Tue Dec 28 00:39:01 2004
+> +++ linux-2.6.3/drivers/md/raid1.c      Mon Jan 10 14:05:46 2005
+> @@ -708,6 +720,18 @@
+>                 read_bio->bi_end_io = raid1_end_request;
+>                 read_bio->bi_rw = r1_bio->cmd;
+>                 read_bio->bi_private = r1_bio;
+> +#ifndef DO_NOT_ADD_ROBUST_READ_SUPPORT
+> +               atomic_set(&r1_bio->remaining, 0);
+> +               /* count source devices under spinlock */
+> +               spin_lock_irq(&conf->device_lock);
+> +               for (i = 0;  i < disks; i++) {
+> +                       if (conf->mirrors[i].rdev &&
+> +                       !conf->mirrors[i].rdev->faulty) {
+> +                               atomic_inc(&r1_bio->remaining);
+> +                       } 
+> +               }
+> +               spin_unlock_irq(&conf->device_lock);
+> +#endif /* DO_NOT_ADD_ROBUST_READ_SUPPORT */
+>  
+>                 generic_make_request(read_bio);
+>                 return 0;
+>
 
-Ehm, no.  Well, not the raid-5 overhead at least.  The FS helps the GUI being 
-more 'snappy'. It has been reported that ext3 takes a real long time to 
-delete huge files (up to several seconds or more) (unconfirmed by me).
+That simply adds to the raid1 make_request code in the READ branch
+the same stanza that appears in the WRITE branch already, namely a
+calculation of how many working disks there are in the array, which
+is put into the "remaining" field of the raid1 master bio being
+set up.
 
-This is what a copy of a 5GB file and subsequent delete does on my system:
+So we put the count of valid disks in the "remaining" field during
+construction of a raid1 read bio.
 
--rw-r--r--    1 root     root     4909077650 Jan 10 04:43 file
-dozer:/mnt/store # time cp file away
-real    3m15.778s
-user    0m0.640s
-sys     0m45.230s
+If I am off by one, I apologize.  The write size code starts the count
+at 1 instead of 0, and I don't know why. 
 
-dozer:/mnt/store # time rm away
-real    0m0.237s
-user    0m0.000s
-sys     0m0.020s
+If anyone wants to see the WRITE side equivalent, it goes:
 
-(This was while the machine was idle, no recordings going on)
 
-But the machine IS starved for CPU and bus bandwidth; the cpu should be almost 
-fully pegged with recording up to two simultaneous channels, compressing 
-realtime(!) in mpeg4 from two cheap bttv cards (at 480x480 rez, 2600 Kbps).
-Therefore it is the fastest CPU I could afford back in last spring, an Athlon 
-XP 2600. The machine is also overclocked from 200 FSB to 233, yielding a 38 
-MHz PCI bus. Strangely enough, despite there being 5 PCI cards, amongst which 
-two disk I/O controllers, this seems to work just fine. It's been tested 
-in-depth by recording shows daily for months and it crashes rarely ( meaning 
-< once a month which is not too bad, considering ). Maybe the bigass Zalman 
-copper CPU cooler and the 12cm fan hovering above it help there, too ;-)
-At the beginning it ran off a single 160GB disk, so when I switched to raid-5 
-I was very afraid that either the extra CPU load, the extra IRQ load or the 
-bus bandwidth would saturate, thus killing performance. You see, the PCI bus 
-is fairly loaded too, since not only does it have to handle the various ATA 
-controllers, but two uncompressed videostreams from the TV cards as well.
+        for (i = 0;  i < disks; i++) {
+                if (conf->mirrors[i].rdev &&
+                    !conf->mirrors[i].rdev->faulty) {
+                        ...
+                        r1_bio->write_bios[i] = bio;
+                } else
+                        r1_bio->write_bios[i] = NULL;
+        }
 
-So all in all, the overhead of raid seems insignificant to me, or the code is 
-very well optimized indeed :-)
+        atomic_set(&r1_bio->remaining, 1);
 
-Maarten
+        for (i = 0; i < disks; i++) {
+                if (!r1_bio->write_bios[i])
+                        continue;
+                ...
+                atomic_inc(&r1_bio->remaining);
+                generic_make_request(mbio);
+        }
 
+so I reckon that's equivalent, apart from the off-by-one. Explain me
+somebody.
+
+
+In the end_request code, simply, instead of erroring
+the current disk out of the array whenever an error happens, do it
+only if a WRITE is being handled. We still won't mark the request
+uptodate as that's in the else part of the if !uptodate, where we don't
+touch. That's the first hunk here.
+
+The second hunk is in the same routine, but down in the READ side of
+the code split, further on.  We finish the request not only if we are
+utodate (success), but also if we are not uptodate but we are plain out
+of disks to try and read from (so the request will be errored since it
+is not marked yuptodate still).  We decrement the "remaining" count in
+the test.
+
+
+> @@ -354,9 +354,15 @@
+>         /*
+>          * this branch is our 'one mirror IO has finished' event handler:
+>          */
+> -       if (!uptodate)
+> -               md_error(r1_bio->mddev, conf->mirrors[mirror].rdev);
+> -       else
+> +       if (!uptodate) {
+> +#ifndef DO_NOT_ADD_ROBUST_READ_SUPPORT
+> +                /*
+> +                 * Only fault disk out of array on write error, not read.
+> +                 */
+> +                if (r1_bio->cmd == WRITE)
+> +#endif /* DO_NOT_ADD_ROBUST_READ_SUPPORT */
+> +                       md_error(r1_bio->mddev, conf->mirrors[mirror].rdev);
+> +        } else
+>                 /*
+>                  * Set R1BIO_Uptodate in our master bio, so that
+>                  * we will return a good error code for to the higher
+> @@ -375,7 +381,12 @@
+>                 /*
+>                  * we have only one bio on the read side
+>                  */
+> -               if (uptodate)
+> +               if (uptodate
+> +#ifndef DO_NOT_ADD_ROBUST_READ_SUPPORT
+> +                        /* Give up and error if we're last */
+> +                        || atomic_dec_and_test(&r1_bio->remaining)
+> +#endif /* DO_NOT_ADD_ROBUST_READ_SUPPORT */
+> +                        )
+>                         raid_end_bio_io(r1_bio);
+>                 else {
+>                         /*
+ 
+
+Peter
 
