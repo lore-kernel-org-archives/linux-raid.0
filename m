@@ -1,39 +1,51 @@
-From: "dr_snafu" <dr_snafu@earthlink.net>
-Subject: musical chairs
-Date: Wed, 22 Sep 2004 15:00:46 -0400
+From: Anu Matthew <anu.matthew@bms.com>
+Subject: multipath md devices
+Date: Wed, 22 Sep 2004 16:41:31 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <001501c4a0d6$7818e740$7000a8c0@gordo>
+Message-ID: <4151E37B.8040207@bms.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; format=flowed; charset=ISO-8859-1
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-hello, 
+Hi,
 
-i have a disk with data on it /dev/hdc, 
-    and a brand new empty disk /dev/hdb. 
+We have multipath devices created on SAN Luns. Say md0 is created on 
+/dev/sdj and /dev/sde, the latter being the alternate path for /dev/sdj.
 
-want to set up raid 1 without moving data off hdc. 
-    it very large and i have no where to put it
+I've noticed the following:
 
-will this work?: (notice # of devices)
+1) Without much IO to the md device, and  I pull out the cable to say 
+/dev/sdj, the /proc/mdstat still shows both devices.  /proc/mdstat won't 
+get updated unless I start some considerable IO to the md device. Even 
+mdadm scan/query o/p shows both the paths, which is not true. As we 
+start IO, /proc/mdstat reflects that one of the devices, /dev/sdj in 
+this case, has failed. Thereafter mdadm outputs would be correct too.
 
-mdadm --create --verbose /dev/md0 --level=1 
-        --raid-devices=1  /dev/hdb
+The entries (link down) in syslog and dmesg are almost instantaneous 
+when the cable is pulled out. This makes it very difficult to monitor 
+multipath devices, as we cannot rely on /proc/mdstat to read.  
 
-will this create an unmirrored raid 1 setup? 
-    can i start and mount md0?
-    then copy the data from hdb to md0?
+2) Another situation: Device md0 is active, with healthy multipaths 
+/dev/sdj and /dev/sde, under reasonable IO activity. If the cable to 
+/dev/sdj is yanked out, md0 remains still active, thanks to the 
+alternate path, sde. However, it fails to go back and re-construct the 
+spare path allocation even after the fibre link is restored. Here, if I 
+pull the cable out for sde even after 30 minutes, the machine ends up 
+failing to write to /dev/md0 as it does not care whether /dev/sdj is 
+back online, unless I failed, removed and add /dev/sdj  manually from 
+the mdadm command line. If something is hard mounted on /dev/md0, it may 
+end up in a system crash.
 
-then?:
+To conclude, if one path goes off, and comes back after a while, and 
+then the second path goes off, md0 cannot be read, unless someone 
+manually did fail, remove and add the first device which came back 
+online, before the second path goes off.
 
-mdadm /dev/md0 --add /dev/hdc
+Any help towards this will be much appreciated.
 
+Thanks,
 
-seems too good to be true, 
-    maybe you know another way?
-
-jd
+--AM.
