@@ -1,33 +1,43 @@
-From: Philip Molter <philip@corp.texas.net>
-Subject: raid1 disk failure problem
-Date: Fri, 17 Sep 2004 15:41:38 -0500
+From: AndyLiebman@aol.com
+Subject: Software RAID-0 striping over Hardware RAID-5
+Date: Fri, 17 Sep 2004 18:03:27 EDT
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <414B4C02.5050902@corp.texas.net>
+Message-ID: <7e.58df669c.2e7cb92f@aol.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I had a drive fall off my SCSI external array.  It was part of a raid1 
-mirror, and when it failed off, the md device went into a redirection 
-loop.  Here are some example syslog lines:
+Hi everyone, 
 
-Sep 17 15:19:17 db1 kernel: raid1: sdf1: rescheduling sector 129550352
-Sep 17 15:19:17 db1 kernel: r sdf1: redirecting sector 129550352 to 
-another mirror
-Sep 17 15:19:17 db1 kernel: raid1: sdf1: rescheduling sector 129550352
-Sep 17 15:19:17 db1 kernel: rai sdf1: redirecting sector 129550352 to 
-another mirror
+I have a Xeon machine (3.06 Ghz single processor, 2 GB RAM, SuperMicro 
+motherboard) with two 3ware 9500S-8 cards. I'm getting good performance with 3ware's 
+Hardware RAID-5 (I have reasons why I don't want to use Software RAID-5 on 
+this machine). 
 
-The drive was sdf1's mirror (sdl1).  As far as I can tell, sdf didn't 
-fail at all.  This loop lasted for 5 days before detected, so it wasn't 
-a simple pause.  The thing was stuck in a hard loop, and the filesystem 
-on the RAID was not accessible.  A reboot was required to fix.
+My question is, what kind of problems, if any, might I run into if I use 
+Linux Software RAID to stripe the two RAID-5's together into a single RAID-0? The 
+reason I'm thinking about doing this is to squeeze more performance out of the 
+storage system for working with huge video files. 
 
-Is this a known bug?  The kernel being used is Fedora Core 2's 
-2.6.8-1.521 SMP kernel, which is basically 2.6.8-rc4-bk3.
+(BTW, this is what Apple does with its XSeve RAID in order to work with high 
+definition video. The XServe has two 7-drive RAID-5 arrays, each connected to 
+a fiber channel port. The data from both arrays goes into a single dual 
+channel fiber channel card on a G5 workstation, which then uses software RAID-0 to 
+stripe the two RAIDS together. )
 
-Thanks in advance for any information,
-Philip
+With the 2.6 kernel (versions 2.6.6 and above), should I expect any trouble 
+if a drive goes down on ONE of the RAID-5s and I have to replace the disk and 
+rebuild? Will the much lower performance on one of the RAID 5s during rebuild 
+cause problems for the RAID-0? 
+
+I guess it would be like making a RAID-0 with two drives of equal size, but 
+very mismatched in terms of speed (i.e., a 4200 rpm drive and a 7200 rpm 
+drive). 
+
+Words of wisdom would be appreciated. 
+
+Regards, 
+Andy Liebman
