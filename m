@@ -1,45 +1,32 @@
-From: Robert Heinzmann <Robert.Heinzmann@gmx.net>
-Subject: Re: Migrating from SINGLE DISK to RAID1
-Date: Tue, 01 Feb 2005 22:40:56 +0100
-Message-ID: <41FFF768.9000706@gmx.net>
-References: <41FFD1F8.3010101@gmx.net> <41FFD9C7.2090208@h3c.com>
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: Broken harddisk
+Date: Tue, 1 Feb 2005 23:57:42 +0100
+Message-ID: <20050201225742.GB22647@percy.comedia.it>
+References: <200501291617.j0TGHG918839@www.watkins-home.com> <41FBD68C.4040701@h3c.com> <cto5m9$5k9$1@sea.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-In-Reply-To: <41FFD9C7.2090208@h3c.com>
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Disposition: inline
+In-Reply-To: <cto5m9$5k9$1@sea.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mike Hardy <mhardy@h3c.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello Mike,
+On Tue, Feb 01, 2005 at 03:02:54PM +0000, Robin Bowes wrote:
+>Mike Hardy wrote:
+>>If you're drives don't talk SMART (older ones don't, it doesn't work 
+>>through all interfaces either) then by all means take Guy's advice. A 
+>>'dd' test is certainly valuable. But if they do talk SMART, I think its 
+>>better
+>
+>True enough. However, until SMART support makes it into linux SATA 
+>drivers I'm pretty much stuck with dd!
+>
+http://www.kernel.org/pub/linux/kernel/people/jgarzik/libata/
 
-Mike Hardy wrote:
-> 
-> Robert Heinzmann wrote:
-> 
->> Hello,
->>
->> can someone verify if the following statements are true ?
->>
->> - It's not possible to simply  convert a existing partition with a 
->> filesystem on it to a raid1 mirror set.
-> 
-> 
-> I believe you're right, but I'm not totally sure on this one. I'd take 
-> the second disk, create a new RAID1 with the first drive "missing" on 
-> the mdadm --create commandline, copy everything over to it, put grub on 
-> it, then test that it boots correctly by pulling the first drive out.
-> 
-> Only once the RAID1 is working (in degraded mode) add the original first 
-> drive back in, but booting off the RAID1, then add it to the RAID set to 
-> complete the pair. With that process, the question is somewhat moot, 
-> although I'm interested in the real answer too
-
-Thats how I'm going to do it althought the version Paul Celemens is 
-mentioning sound very elegant (resizing the fs 128 KB prior to creating 
-the array).
-
-Bye,
-Robert
-
+-- 
+Luca Berra -- bluca@comedia.it
+        Communication Media & Services S.r.l.
+ /"\
+ \ /     ASCII RIBBON CAMPAIGN
+  X        AGAINST HTML MAIL
+ / \
