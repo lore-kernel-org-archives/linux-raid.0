@@ -1,64 +1,51 @@
-From: ptb@lab.it.uc3m.es (Peter T. Breuer)
+From: Lars Marowsky-Bree <lmb@suse.de>
 Subject: Re: [PATCH 1/2] md bitmap bug fixes
-Date: Sat, 19 Mar 2005 13:10:34 +0100
-Message-ID: <qehtg2-6c1.ln1@news.it.uc3m.es>
-References: <422F7621.8090602@steeleye.com> <16949.5768.392061.95882@cse.unsw.edu.au> <20050314094454.GK3858@marowsky-bree.de> <16949.26113.68948.938529@cse.unsw.edu.au> <20050314112403.GT3858@marowsky-bree.de> <16950.5692.594941.130741@cse.unsw.edu.au> <20050318103326.GA18819@marowsky-bree.de> <6ivqg2-qsn.ln1@news.it.uc3m.es> <20050318134255.GS18819@marowsky-bree.de> <7e6rg2-pj1.ln1@news.it.uc3m.es> <423B09EF.8070708@steeleye.com> <23krg2-4rr.ln1@news.it.uc3m.es> <423B2F7C.3030907@steeleye.com>
+Date: Sat, 19 Mar 2005 10:05:56 +0100
+Message-ID: <20050319090556.GK18819@marowsky-bree.de>
+References: <16949.5768.392061.95882@cse.unsw.edu.au> <20050314094454.GK3858@marowsky-bree.de> <16949.26113.68948.938529@cse.unsw.edu.au> <20050314112403.GT3858@marowsky-bree.de> <16950.5692.594941.130741@cse.unsw.edu.au> <20050318103326.GA18819@marowsky-bree.de> <6ivqg2-qsn.ln1@news.it.uc3m.es> <20050318134255.GS18819@marowsky-bree.de> <20050318171608.GA28494@percy.comedia.it> <423B4C4B.7070404@tls.msk.ru>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Disposition: inline
+In-Reply-To: <423B4C4B.7070404@tls.msk.ru>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Michael Tokarev <mjt@tls.msk.ru>, Luca Berra <bluca@comedia.it>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Paul Clements <paul.clements@steeleye.com> wrote:
-> Peter T. Breuer wrote:
-> > I don't see that this solves anything. If you had both sides going at
-> > once, receiving different writes, then you are sc&**ed, and no
-> > resolution of bitmaps will help you, since both sides have received
-> > different (legitimate) data. It doesn't seem relevant to me to consider 
-> 
-> You're forgetting that journalling filesystems and databases have to 
-> replay their journals or transaction logs when they start up.
+On 2005-03-19T00:46:51, Michael Tokarev <mjt@tls.msk.ru> wrote:
 
-Where are the journals located?  Offhand I don't see that it makes a
-difference _how_ the data gets to the disks (i.e., via journal or not
-via journal) but it may do - I reserve judgement :-) -, and it may
-certainly affect the timings.
+> o DRBD allows local drive to be a bit ahead compared to remote one
+>  (configurable), while md will wait for all drives to complete a writ=
+e.
 
-Can you also pin this down for me in the same excellent way you did
-with the diagrams of the failover situation?
+The async writes have been added to md recently my Paul too.
 
-> > What about when A comes back up? We then get a 
-> > 
-> >                  .--------------.
-> >         system A |    system B  |
-> >           nbd ---'    [raid1]   |
-> >           |           /     \   |
-> >        [disk]     [disk]  [nbd]-'
-> > 
-> > situation, and a resync is done (skipping clean sectors). 
-> 
-> You're forgetting that there may be some data (uncommitted data) that 
-> didn't reach B that is on A's disk (or even vice versa).
+> There's a case which is questionable in the first place: what to
+> do if local part of the mirror fails?  Md will happily run on
+> single remote component in degraded mode, while DRBD will probably
+> fail...=20
 
-You are saying that the journal on A (presumably not raided itself?) is
-waiting to play some data into its own disk as soon as we have finished
-resyncing it from B? I don't think that would be a good idea at all.
+drbd will continue correctly; it'll detach the local drive and run all
+IO over the network. Also, the direction of the sync has been decoupled
+from the primary/secondary status for a while, and the drbd-0.8
+(development branch) is almost 90% there to allow both nodes IO access
+to the device.
 
-I'm just not clear on what the setup is, but in the abstract I can't
-see that having a data journal is at all good - having a metadata
-journal is probably helpful, until the time that we remove a file on one
-FS and add it on another, and get to wondering which of the two ops to
-roll forward ..
+(I think; maybe it's also already done. It's been a while since I tried
+playing with that particular version.)
 
-> That is why 
-> you've got to retrieve the bitmap that was in use on A and combine it 
-> with B's bitmap before you resync from B to A (or do a full resync).
 
-The logic still eludes me. This operation finds the set of blocks that
-_may be different_ atthis time between the two disks.  THat enables one
-to efficiently copy A to B (or v.v.) because we know we only have to
-write the blocks marked.  But whether that is a good idea or not is an
-orthogonal question, and to me it doesn't look necesarily better than
-some of the alternatives (doing nothing, for example). What makes it a
-good idea?
+Sincerely,
+    Lars Marowsky-Br=E9e <lmb@suse.de>
 
-Peter
+--=20
+High Availability & Clustering
+SUSE Labs, Research and Development
+SUSE LINUX Products GmbH - A Novell Business
 
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
