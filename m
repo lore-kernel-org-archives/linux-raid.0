@@ -1,34 +1,42 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: Re: MD uses wrong disks to assemble an array?
-Date: Mon, 14 Jun 2004 10:40:59 +0200
-Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040614084058.GA18682@percy.comedia.it>
-References: <40C92569.8070808@tls.msk.ru>
+From: christophe.varoqui@free.fr
+Subject: [ANNOUNCE] multipath-tools-0.2.3
+Date: Mon, 14 Jun 2004 12:30:11 +0200
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <1087209011.40cd7e338ca44@imp5-q.free.fr>
+References: <1084519750.40a47546dd0e6@imp1-q.free.fr> <1086256342.40bef4d61b3e9@imp3-q.free.fr> <1086619426.40c47f220de01@imp5-q.free.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <40C92569.8070808@tls.msk.ru>
-To: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <1086619426.40c47f220de01@imp5-q.free.fr>
+To: christophe.varoqui@free.fr
+Cc: dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-hotplug-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Jun 11, 2004 at 07:22:17AM +0400, Michael Tokarev wrote:
->Yes, START_ARRAY (used by raidtools) is deprecated,
->but I understand also that mdadm in such a situation
->will refuse to bring the array up, because the
->GUUIDs will be different.
-it depends on what you tell mdadm to do.
-i created mdassemble for this very purpose, it scans a configuration
-file where you should put the uids for your root md component,
-in this case mdassemble will bring your root array up, even if degraded.
+Hello,
+
+here goes multipath-tools-0.2.3
+
+Changelog for this release :
+ 
+2004-06-14 multipath-tools-0.2.3
+        * [multipath] group_by_serial try to be smart with LUN
+	  balancing across controlers (for STK / LSI) :
+	  1st multipath : 1st pg made of paths through 1st controler
+	  2nd multipath : 1st pg made of paths through 2nd controler
+	  3rd multipath : 1st pg made of paths through 1st controler
+	  ...
+	* [multipath] drop .pindex[] in struct multipath in favor
+	  of a *paths vector : much cleaner
+	* [multipath] fix group_by_serial pgpolicy broken by
+	  vectorisation in 0.2.2
+	* add a StorageTek and 2 SUN arrays in the sample multipath.conf
+	* [multipathd] strcmp fix from 
+	* [multipathd] convert to vector api
+	* [multipathd] add a configfile option for path checking
+	  interval. See sample configfile for synthax.
+
+Downloads and docs at http://christophe.varoqui.free.fr
 
 regards,
-L.
-
--- 
-Luca Berra -- bluca@comedia.it
-        Communication Media & Services S.r.l.
- /"\
- \ /     ASCII RIBBON CAMPAIGN
-  X        AGAINST HTML MAIL
- / \
+cvaroqui
