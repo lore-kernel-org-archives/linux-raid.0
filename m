@@ -1,27 +1,75 @@
-From: "Kevin P. Fleming" <kpfleming@backtobasicsmgmt.com>
+From: Christophe Saout <christophe@saout.de>
 Subject: Re: ATARAID userspace configuration tool
-Date: Tue, 10 Feb 2004 12:24:32 -0700
+Date: Tue, 10 Feb 2004 20:18:34 +0100
 Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <40292FF0.3030504@backtobasicsmgmt.com>
-References: <Pine.LNX.4.40.0402101405190.25784-100000@jehova.dsm.dk>	 <1076425115.23946.18.camel@leto.cs.pocnet.net>	 <40292246.2030902@backtobasicsmgmt.com> <1076440714.27328.8.camel@leto.cs.pocnet.net>
+Message-ID: <1076440714.27328.8.camel@leto.cs.pocnet.net>
+References: <Pine.LNX.4.40.0402101405190.25784-100000@jehova.dsm.dk>
+	 <1076425115.23946.18.camel@leto.cs.pocnet.net>
+	 <40292246.2030902@backtobasicsmgmt.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <1076440714.27328.8.camel@leto.cs.pocnet.net>
+In-Reply-To: <40292246.2030902@backtobasicsmgmt.com>
+To: "Kevin P. Fleming" <kpfleming@backtobasicsmgmt.com>
 Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Christophe Saout wrote:
+Am Di, den 10.02.2004 schrieb Kevin P. Fleming um 19:26:
 
-> Right. dmpartx should run on dm-[0-9]* and md[0-9]* events (but not
-> recursively of course ;)).
+> > I have a really bad idea :)
+> > 
+> > Try to combine it with udev. udev calls the ide script, the ide script
+> > then calls the ataraid detector. If the device is non-ataraid, go on as
+> > usual. If it is, build the device-mapper device and symlink (if it
+> > doesn't already exist) and tell udev to not create anything.
+> 
+> This is not a bad idea, it's the future.
 
-Oh I don't know, people have been asking for the ability to have 
-partitioned MD devices for so long, I can see where someone may very 
-well want to be able to have an MD device composed of three disks, 
-broken up into LVM2 volumes, one of which contains an image of a Sun 
-disk with a Solaris disklabel on it :-) For the little bit of extra time 
-that dmpartx would spend looking for partition tables I don't think the 
-recursion would be painful (unless dmpartx is unnecessarily noisy or 
-something).
+I was just joking. I said that because it's not complete.
+
+> The hotplug mechanism is 
+> exactly what should be used here. When a block-device hotplug ADD event 
+> occurs, you look at that device to see if it's something you care about. 
+> If not, just exit and leave it alone.
+
+udev maintains a database of already created devices. And sysfs is some
+sort of database of really existing devices. The "telling udev to not
+create the device and instead create it ourself" is bad. We should be
+able to tell udev that it should register and create another device
+instead. Perhaps udev should know about compound devices.
+
+I'm not sure but if udev knows about compound devices things get a bit
+more complicated. A raid 1 setup would continue to work if one of the
+devices is unplugged, a raid 0 setup fails to work if one device is
+missing. Probably the device should be deleted only when both hard disks
+are removed. Also it should be created if only one hard disk gets
+plugged in. But on bootup if some script tells udev that one hard disk
+is there and some seconds later that the second is also there the tool
+shouldn't assume the raid has failed after seeing the first event.
+
+Should we Cc an udev developer for an opinion?
+
+> Now in the ATARAID case, where you need to see multiple devices before 
+> you can do anything with them, this means you'd need to keep some 
+> "state" somewhere about the devices you've seen so far, and the partial 
+> ATARAID devices they represent. When you get the hotplug event for the 
+> last piece of a particular ATARAID device, you use DM/MD to set up the 
+> device and make it available.
+
+As I said I think it is more complicated.
+
+> The wonderful part of this is, when you do that last step, _another_ 
+> block-device hotplug ADD event occurs for the new device you just 
+> created, and if the hotplug scripts are set up to run dmpartx or its 
+> equivalent for new block-devices, you are done.
+
+Right. dmpartx should run on dm-[0-9]* and md[0-9]* events (but not
+recursively of course ;)).
+
+>  The partition tables 
+> _inside_ the ATARAID device will be read, more DM calls will be made to 
+> make those sub-devices available to userspace and everyone is thrilled 
+> about the elegance of the solution :-)
+
+Yes, sounds cool.
