@@ -1,51 +1,31 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: Bug in RAID1 in 2.4
-Date: Sun, 21 Dec 2003 20:44:51 +1100
+From: "Foster Chung" <pcw9dirf@email.com>
+Subject: 2 FREE Worldwide Airline Tickets Worth $1600 for just $189!
+Date: Tue, 23 Dec 03 00:18:06 GMT
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16357.27539.548714.836688@notabene.cse.unsw.edu.au>
-References: <20031220082547.GB18118@devserv.devel.redhat.com>
+Message-ID: <h-ag2-$nrph65$5-5669$$8rh$-$qno@azy.u3vc>
+Reply-To: "Foster Chung" <pcw9dirf@email.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/alternative;
+	boundary="A90__7CC4."
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Pete Zaitcev on Saturday December 20
-To: Pete Zaitcev <zaitcev@redhat.com>
-Cc: Marcelo Tosatti <marcelo.tosatti@cyclades.com>, linux-raid@vger.kernel.org, Ingo Molnar <mingo@redhat.com>
+To: honey+1041667706@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Saturday December 20, zaitcev@redhat.com wrote:
-> In drivers/md/raid1.c, raid1_sync_request contains the following:
->   
->         block_nr = sector_nr;
->         bsize = 512;
->         while (!(block_nr & 1) && bsize < PAGE_SIZE
->                         && (block_nr+2)*(bsize>>9) < (mddev->sb->size *2)) {
->                 block_nr >>= 1;
->                 bsize <<= 1;
->         }
-> 
-> Suppose that a mirror is 4K in size. The code above produces
-> reads (and writes) of the following offsets and sizes:
->  0K[2K], 2K[1K], 3K[0.5K], 3.5K[0.5K]
-> 
-> The above is correct, but it makes the RAID1 completely unuseable
-> on s390, because I/O with sizes less than 4K is not supported.
-> I would like the attached patch applied to correct the issue.
 
-Yes, I agree.  Marcelo, could you please apply this patch.
-The '<' test is just to make sure a request of 2*bsize at block_nr
-will still fit within the size of the device, so a <= is appropriate.
+--A90__7CC4.
+Content-Type: text/plain;
+Content-Transfer-Encoding: quoted-printable
 
-NeilBrown
+Join 123FreeTravel Club by paying just $189 and get 2 FREE Roundtrip Airli=
+ne Tickets for worldwide travel worth $1600, a FREE Caribbean Cruise worth=
+ $1400 and a FREE 3 day / 2 night Hotel stay!
 
---- linux-2.4.23/drivers/md/raid1.c	2003-06-13 07:51:34.000000000 -0700
-+++ linux-2.4.23-nip/drivers/md/raid1.c	2003-12-19 23:57:57.000000000 -0800
-@@ -1436,7 +1436,7 @@
- 	block_nr = sector_nr;
- 	bsize = 512;
- 	while (!(block_nr & 1) && bsize < PAGE_SIZE
--			&& (block_nr+2)*(bsize>>9) < (mddev->sb->size *2)) {
-+			&& (block_nr+2)*(bsize>>9) <= (mddev->sb->size *2)) {
- 		block_nr >>= 1;
- 		bsize <<= 1;
- 	}
+Visit our website at http://www.247cashgenerator.com/5.htm or call 1-800-8=
+56-3040.
+j h w tuxvcjrofhe
+u
+c qs
+lgzazdxm
+
+--A90__7CC4.--
+
