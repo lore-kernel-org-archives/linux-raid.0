@@ -1,46 +1,38 @@
-From: Paul Clements <Paul.Clements@SteelEye.com>
-Subject: Re: Zero Superblock... any ways to recover?
-Date: Mon, 01 Mar 2004 14:31:07 -0500
+From: hpa@zytor.com (H. Peter Anvin)
+Subject: Re: Partitioned raid and major number
+Date: Tue, 2 Mar 2004 00:36:15 +0000 (UTC)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <40438F7B.2CAE0B21@SteelEye.com>
-References: <E1AxoKd-0004GZ-00@intern.SerNet.DE> <20040301181240.GC4340@percy.comedia.it>
+Message-ID: <c20ktv$37o$1@terminus.zytor.com>
+References: <20040225145624.GA1513@cistron.nl> <20040228010916.GC13404@drinkel.cistron.nl> <16450.35269.770163.948225@notabene.cse.unsw.edu.au> <20040301010419.GK14194@drinkel.cistron.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Luca Berra wrote:
+Followup to:  <20040301010419.GK14194@drinkel.cistron.nl>
+By author:    Miquel van Smoorenburg <miquels@cistron.nl>
+In newsgroup: linux.dev.raid
 > 
-> On Mon, Mar 01, 2004 at 03:23:43PM +0100, Timo.Bolse@SerNet.DE wrote:
+> POSIX allows different semantics for / and //, I mentioned before that
+> perhaps we should make "cd //" chdir to rootfs instead of /. Then
+> you can also have //proc and //sys without explicitly mounting them.
+> But I don't think the time has come for that yet (besides it needs
+> more thought wrt namespaces, chroot etc).
+> 
 
-> >pentium-test:/proc/ide # mdadm -E /dev/hdc
-> >mdadm: No super block found on /dev/hdc (Expected magic a92b4efc, got 00000000)
-> >
-> >There must be a way to find the superblock on the new device... is there anyone
-> >who has a solution for this problem?
-> >
-> >I thougt about searching for a92b4efc on the device...
+It's allowed, but definitely not recommended.
 
-If you know how the array was configured, you could just re-create it,
-which will create a new superblock in the correct location. But if you
-aren't sure, and you want to search for the superblock, you can do:
+I do like the idea of making rootfs remountable, though.
 
-dd if=/dev/hdc bs=512 | od -A d -h | grep "4efc a92b"
+> > Another is to add "rootdev" to /proc/*, as in appended patch. Then
+> >   ln -s /proc/self/roodev /dev/root
+> > 
+> > and providing /proc is mounted, /dev/root will work.
+> 
+> I like that approach.
 
-That will give you the offset of the superblock.
+.. assuming the rootfs isn't a nodev filesystem.
 
-
-> if you know the size of the old device you can find it starting at
-> (sector aligned) DEVICE_SIZE - 64k
-
-Actually, the superblock is going to be at:
-
-sb_offset = size - (size % 64k) - 64k
-
-So the superblock is actually somewhere between 64k and 128k from the
-end of the (old) device.
-
---
-Paul
+	-hpa
