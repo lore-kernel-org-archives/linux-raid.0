@@ -1,92 +1,110 @@
-From: Bruce Lowekamp <brucelowekamp@gmail.com>
-Subject: Re: raid5, media scans and stripe-wise resync
-Date: Mon, 25 Oct 2004 15:39:24 -0400
+From: David Mansfield <md@dm.cobite.com>
+Subject: RE: raid5, media scans and stripe-wise resync
+Date: Mon, 25 Oct 2004 16:35:32 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <e9132f82041025123926140ece@mail.gmail.com>
-References: <1098718593.5399.29.camel@duxeon.cobite.com>
-Reply-To: Bruce Lowekamp <lowekamp@cs.wm.edu>
+Message-ID: <1098736532.5399.52.camel@duxeon.cobite.com>
+References: <200410252029.i9PKTEN26833@www.watkins-home.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1098718593.5399.29.camel@duxeon.cobite.com>
-To: David Mansfield <md@dm.cobite.com>
-Cc: linux-raid@vger.kernel.org
+In-Reply-To: <200410252029.i9PKTEN26833@www.watkins-home.com>
+To: Guy <bugzilla@watkins-home.com>
+Cc: 'Jure Pe_ar' <pegasus@nerv.eu.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-There was a recent conversation on this mailing list about
-transparently recovering from read errors (essentially just rewriting
-the bad stripe and letting the disk handle it), but I think it focused
-on Raid 1.  It would be a natural for Raid 5 or 6, but I haven't seen
-an experimental patch to do that.
+On Mon, 2004-10-25 at 16:29, Guy wrote:
+> Someone said:
+> "In a hardware raid solution, you would only die if both bad sectors were in
+> the same stripe, because when it encounters the bad sector, it doesn't eject
+> the disk from the array.  It reassigns the bad block, and resyncs just that
+> stripe."
+> 
+> Is a hardware solution, if 1 disk has a bad sector and another disk fails,
+> game over.  The only way I know to avoid this is RAID6.  I hope RAID6
+> becomes stable some day.
+> 
 
-If you just want to monitor, look at http://smartmontools.sourceforge.net
-each of the drives in my array has a montoring config:
-/dev/hda -a -o on -S on -R 194 -s (S/../.././02|L/../../6/07) -m
-lowekamp@cs.wm.edu
+This is true, but has nothing to do with what I'm talking about. 
+Everyone is missing my point.
 
-two weeks ago I got email that one disk had a bad read on a sector
-during its weekly long scan (an entire surface scan).  I failed that
-drive manually, waited until it resynced on the spare, overwrote the
-entire drive to let the drive clear the sector (and make sure there
-weren't any other problems), then reran the test and set that drive as
-the spare.
+The point is that NEITHER DRIVE 'FAILS'.  They just have unrecoverable
+read errors, or bad sectors.  As long as the two bad sectors are not in
+the same stripe, you have not lost any data (theoretically, for s/w and
+realistically for h/w).
 
-I'd still feel safer if it automatically overwrote only the sector
-with the read error, but at least this way I knew that the other 9
-drives had passed a surface scan just before, so I wasn't likely to
-run into a second read failure on rebuild.
+It is a FACT that if a h/w raid controller encounters a bad sector, it
+will *immediately* reassign it a reconstruct the stripe before moving
+on.  If there are no other bad sectors in that stripe, you are FINE. 
+Think about it.  If later, (say 5 seconds later) another unrecoverable
+error is encountered on a different disk, different stripe, it will be
+handled fine, just as above.
 
-Bruce
+Compare this to the S/W raid where the entire disk is ejected from the
+array when the first bad sector is encountered.  It cannot recover from
+the 'two bad sectors on two disks in two different stripes' failure
+scenario.  H/W raid can.
+
+David
 
 
-On Mon, 25 Oct 2004 11:36:33 -0400, David Mansfield <md@dm.cobite.com> wrote:
-> Hi everyone,
+> Guy
 > 
-> After a few recent severe raid failures (one linux md, one 3ware), my
-> understanding and fear about linux md is greatly increased.  Single
-> sector unrecoverable errors are doing us in!
+> -----Original Message-----
+> From: linux-raid-owner@vger.kernel.org
+> [mailto:linux-raid-owner@vger.kernel.org] On Behalf Of David Mansfield
+> Sent: Monday, October 25, 2004 3:43 PM
+> To: Jure Pe_ar
+> Cc: linux-raid@vger.kernel.org
+> Subject: Re: raid5, media scans and stripe-wise resync
 > 
-> To alleviate these fears, we (my coworkers and I) believe we need to
-> start a policy of conducting a 'background media scan' of the actual
-> underlying physical devices in a raid 5.  This is easily accomplished on
-> the 3ware (it's built in), but we are struggling with linux md.
+> On Mon, 2004-10-25 at 13:19, Jure Pe_ar wrote:
+> > On Mon, 25 Oct 2004 11:36:33 -0400
+> > David Mansfield <md@dm.cobite.com> wrote:
+> > 
+> > > 2) how can we force (or manually perform) a stripe-wise resync? is it
+> > > possible to take the raid offline completely, read the data with dd,
+> > > compute the parity manually, reassign the bad block using SCU and
+> > > rewrite the parity block with dd then put the raid online again?
+> > 
+> > In raid5 there's no real need for that. When you add disk back into array,
+> > it should get fully resynced anyway.
+> > 
 > 
-> A utility called SCU, http://www.bit-net.com/%7Ermiller/scu.html, will
-> allow us to scan the media, and, if necessary, reassign the bad blocks.
-> We have used this on scsi disks before, it seems to work, as a lowlevel
-> tool.
+> Not quite.  If disk 0 has a bad sector in stripe 0, and disk 1 has a bad
+> sector in stripe 1, you will totally kill your array.  It happens.  It
+> happened to us.  Two bad sectors on two separate disks, but not on the
+> same stripes.
 > 
-> However! If two bad blocks are discovered on two different disks in the
-> raid 5 (even if the bad blocks are in different stripes), we will be
-> screwed, because the raid system will kick out the disk immediately when
-> the first bad sector is found, and then reconstruction will fail when
-> the second bad sector is found.  screwed.
+> In a hardware raid solution, you would only die if both bad sectors were
+> in the same stripe, because when it encounters the bad sector, it
+> doesn't eject the disk from the array.  It reassigns the bad block, and
+> resyncs just that stripe.
 > 
-> Which brings me (finally) to my questions:
+> In the software situation, the entire disk will be ejected from the
+> array after the first bad sector is detected.  During resync, you will
+> encounter the second bad sector (other drive), but because the
+> information on the old disk 0 has been destroyed (the disk has been
+> ejected from the array) your array is now dead.  
 > 
-> 1) does linux md have a plan for integrating background media scanning
-> and automatic sector reassignment like hardware solutions have?
+> Does this make sense?
 > 
-> 2) how can we force (or manually perform) a stripe-wise resync? is it
-> possible to take the raid offline completely, read the data with dd,
-> compute the parity manually, reassign the bad block using SCU and
-> rewrite the parity block with dd then put the raid online again?
 > 
-> If #2 is possible, I'm sure a quick-and-dirty perl script could be
-> created to do the work, which I'd be happy to do, if it's theoretically
-> doable.
+> > I've written a short blurb in my blog about a rather rude method to handle
+> > misbehaving disks. Basically take it out of the array, run badblocks -w on
+> > it for a week and if it's ok, put it back :)
+> > 
 > 
-> Thanks,
+> Won't work if there are any bad sectors on any of the other disks.  Even
+> one other bad sector and your array is toast.
+> 
 > David
+> 
 > 
 > -
 > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
+> 
 
-
--- 
-Bruce Lowekamp  (lowekamp@cs.wm.edu)
-Computer Science Dept, College of William and Mary
