@@ -1,48 +1,40 @@
-From: berk walker <berk.walker@verizon.net>
+From: =?iso-8859-1?q?M=E5ns_Rullg=E5rd?= <mru@inprovide.com>
 Subject: Re: Good news / bad news - The joys of RAID
-Date: Mon, 22 Nov 2004 19:17:49 -0500
-Message-ID: <41A281AD.8050404@verizon.net>
-References: <200411210433.iAL4XIN19967@www.watkins-home.com> <Pine.LNX.4.61.0411220909180.5652@treant.hhmi.umbc.edu>
+Date: Tue, 23 Nov 2004 01:09:57 +0100
+Message-ID: <yw1xbrdpwhm2.fsf@ford.inprovide.com>
+References: <Pine.LNX.4.56.0411221754520.4195@lion.drogon.net> <200411222348.iAMNmJN01404@www.watkins-home.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.61.0411220909180.5652@treant.hhmi.umbc.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Yu Chen <chen@hhmi.umbc.edu>
-Cc: Guy <bugzilla@watkins-home.com>, 'Mark Klarzynski' <mark.k@computer-design.co.uk>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-you must be NUTS!  hehe.. I don't know what these cost on the street, 
-but earlier, Computerworld forcast the price @ $3500, and $79 for the 
-media.  If one does the traditional multi-level backup routine, the 
-drive and fodder would buy a heck of a lot of alternative storage.
-My idea of affordable is..$179 + 9.99.
-Yu Chen wrote:
+"Guy" <bugzilla@watkins-home.com> writes:
 
->> Now if someone made an affordable tape drive and tapes that could backup
->> 200G per tape, that would be cool!
->>
->
-> You don't know? they have that already, AIT-4, LTO as I know.
->
->
-> ===========================================
-> Yu Chen
-> Howard Hughes Medical Institute
-> Chemistry Building, Rm 182
-> University of Maryland at Baltimore County
-> 1000 Hilltop Circle
-> Baltimore, MD 21250
->
-> phone:     (410)455-6347 (primary)
->     (410)455-2718 (secondary)
-> fax:     (410)455-1174
-> email:     chen@hhmi.umbc.edu
-> ===========================================
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+> Amanda...
+> I looked into this about 2 years ago.  From what I found, each daily =
+backup
+> used a different tape.  This is crazy!  I can put 10-20 days on 1 tap=
+e.
+> Maybe more, not really sure.  Of course it is based on how much data =
+changes
+> each day.  So, my full backups are only needed about once every 2-3 w=
+eeks. =20
+
+Using several tapes, switching every day (or however often you make
+backups), is a good idea.  If the tapes can hold more than one backup,
+just keep adding to the oldest tape when all have been used once.
+That way, if the system explodes during a backup, it won't take the
+most recent backup with it.
+
+--=20
+M=E5ns Rullg=E5rd
+mru@inprovide.com
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
