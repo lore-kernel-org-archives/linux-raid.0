@@ -1,15 +1,52 @@
-From: "Jonathan Baker-Bates" <jonathan@bakerbates.com>
-Subject: The right way to recover from md partition failure?
-Date: Mon, 30 Aug 2004 20:38:36 +0100
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: The right way to recover from md partition failure?
+Date: Mon, 30 Aug 2004 16:14:25 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <NDBBJAGHALMCJCFDHBILAEPBENAA.jonathan@bakerbates.com>
+Message-ID: <200408302014.i7UKEU306097@watkins-home.com>
+References: <NDBBJAGHALMCJCFDHBILAEPBENAA.jonathan@bakerbates.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="iso-8859-15"
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <NDBBJAGHALMCJCFDHBILAEPBENAA.jonathan@bakerbates.com>
+To: 'Jonathan Baker-Bates' <jonathan@bakerbates.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+No need to copy, that's what md does.
+
+Verify that the disk is not part of the array:
+mdadm -D /dev/md1
+
+I bet you will find the disk is there, but failed.
+So, raidhotremove it, then raidhotadd it.
+
+mdadm is the preferred tool.  The old raidtools are not supported.
+For details:
+man mdadm
+
+You may need to install mdadm.
+
+mdadm manage /dev/md1 -r /dev/hde3
+mdadm manage /dev/md1 -a /dev/hde3
+
+or short form:
+mdadm /dev/md1 -r /dev/hde3
+mdadm /dev/md1 -a /dev/hde3
+
+It should start to re-sync.  Monitor the status with:
+cat /proc/mdstat
+and/or
+mdadm -D /dev/md1
+
+Guy
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Jonathan Baker-Bates
+Sent: Monday, August 30, 2004 3:39 PM
+To: linux-raid@vger.kernel.org
+Subject: The right way to recover from md partition failure?
 
 I've been reading various FAQs and HOWTOs, but for some reason can't really
 get an answer to what I assume is a simple question about how best to get a
@@ -53,4 +90,9 @@ Jonathan
 
 
 
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
