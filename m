@@ -1,29 +1,28 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
+From: "Mark N." <mark@nellemann.nu>
 Subject: Re: i just read in the archive.........
-Date: Fri, 14 Jun 2002 20:00:23 +1000 (EST)
+Date: Fri, 14 Jun 2002 12:56:06 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <15625.48823.906206.332483@notabene.cse.unsw.edu.au>
+Message-ID: <200206141256.06450.mark@nellemann.nu>
 References: <1024044823.2250.15.camel@Asterix>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-15
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from =?ISO-8859-1?Q?Lo=EFc?= Paillotin on  June 14
-To: =?ISO-8859-1?Q?Lo=EFc?= Paillotin <loic.paillotin@qualimucho.com>
+In-Reply-To: <1024044823.2250.15.camel@Asterix>
+To: =?iso-8859-15?q?Lo=EFc?= Paillotin <loic.paillotin@qualimucho.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Friday 14 June 2002 10:53, Lo=EFc Paillotin wrote:
+> I justy read in the archive that software raid would'nt work with
+> ext3 file system. Is that true ? ( i mean is that still true? )
 
-> I justy read in the archive that software raid would'nt work with ext3
-> file system. Is that true ? ( i mean is that still true? )
+If you ask me, yes. I would have saved myself alot of trouble had i=20
+known that fact. It works, but it have messed things up on more that=20
+one machine for me, so i'm back to ext2.
 
-This sounds like a 2.2 kernel comment.  There were issues in 2.2.  The
-same issues now longer exist in 2.4.
-
-There have been some ext3 issues (that are only related to raid by
-coincidence) lately.  I'm not sure if they have all been fixed in an
-official release yet.  I know I can get file corruption with 0.9.18 if
-I am using data=journal.  With other data modes 0.9.18 should be fine
-(in www.{country}.kernel.org/pub/linux/kernel/people/sct/....)
-
-NeilBrown
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
