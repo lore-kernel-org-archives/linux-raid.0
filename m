@@ -1,27 +1,47 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: Problem with UUID on mdadm v1.8.1
-Date: Mon, 10 Jan 2005 17:47:57 +0000
-Message-ID: <41E2BFCD.6040109@dgreaves.com>
-References: <Pine.LNX.4.61.0501101041410.4124@bizon.gios.gov.pl>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: hard disk re-locates bad block on read.
+Date: Mon, 10 Jan 2005 12:35:10 -0500
+Message-ID: <200501101735.j0AHZI922122@www.watkins-home.com>
+References: <200501101713.j0AHDx922062@www.watkins-home.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.61.0501101041410.4124@bizon.gios.gov.pl>
+In-Reply-To: <200501101713.j0AHDx922062@www.watkins-home.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Krzysztof Oledzki <ole+md@ans.pl>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> I have just upgraded mdadm from v1.8.0 to v1.8.1
+My disks have the option to relocate bad blocks on read error.
+I was concerned that bogus data would be returned to the OS.
 
- >From 1.8.1 release notes:
-This is a "development" release of mdadm. It should *not* be
-considered stable and should be used primarily for testing.
-The current "stable" version is 1.8.0.
+They say CRC errors return corrupt data to the OS!  I hope not!
+So it seems CRC errors and unreadable blocks both are corrupt or lost.
+But the OS does not know.
+So, I will leave this option turned off.
 
-> Od version (v1.8.0) works just fine.
+Guy
 
-So why did you change it? :)
+I sent this to Seagate:
+With ARRE (Automatic Read Reallocation Enable) turned on.  Does it  relocate
+blocks that can't be read, or blocks that had correctable read  problems?
+Or both?
 
-David
+ If it re-locates un-readable blocks, then what data does it return to the
+OS?
+
+ Thanks,
+ Guy
+
+==================================================================
+
+Guy,
+ If the block is bad at a hardware level then it is reallocated and a spare
+is used in it's place. In a bad block the data is lost, the sparing of the
+block is transparent to the operating system. Blocks with correctable read
+problems are one's with corrupt data at the OS level.
+
+ Jimmie P.
+ Seagate Technical Support
+
