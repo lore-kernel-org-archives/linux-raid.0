@@ -1,296 +1,122 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: disaster. raid1 drive failure rsync=DELAYED why?? please help
-Date: Sun, 13 Mar 2005 15:49:02 +0000
-Message-ID: <423460EE.9070602@dgreaves.com>
-References: <200503122351.23430.mlaks@verizon.net>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: 'Segmentation fault' after running 'mdadm --examine --brief --scan --config=partitions'
+Date: Sun, 13 Mar 2005 12:48:07 -0500
+Message-ID: <200503131748.j2DHmC505107@www.watkins-home.com>
+References: <200503131322.29987.erik.wasser@iquer.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-In-Reply-To: <200503122351.23430.mlaks@verizon.net>
+In-Reply-To: <200503131322.29987.erik.wasser@iquer.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mitchell Laks <mlaks@verizon.net>
-Cc: linux-raid@vger.kernel.org
+To: 'Erik Wasser' <erik.wasser@iquer.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Mitchell Laks wrote:
+In the past, I have read:
+--scan will cause mdadm to crash if there is no config file.
+Don't use --scan, or create the mdadm.conf config file.
 
->Hi,
->I have a remote system with a raid1 of a data disk. I got a call from  the 
->person using the system that the application that writes to the data disk was 
->not working.
->
->system drive is /dev/hda with separte partitions / , /var, /home, /tmp.
->data drive is linux software raid1 /dev/md0 with /dev/hdc1,  /dev/hde1. 
->
->I logged in remotely and discovered that the /var partition was full because 
->many write errors from /dev/hde1 in /var/log/syslog.
->
->When I looked into cat /proc/mdstat i discovered that /dev/md0 was degraded  
->because /dev/hdc1 had failed (there was an f there) and /dev/hde1 was 
->carrying the load.
->
->I shut down the applications in background. I emptied out /var/log/syslog. I 
->then removed /dev/hdc1 from the array /dev/md0. 
->
->I had another pair of drives on the system that was part of another mirrored 
->array /dev/md1 with no useful information stored on them. 
->
->/dev/md1  /dev/hdf1 /dev/hdh1 
->
->I thought ok, let me detach /dev/hdf1 from the  other array /dev/md1  and try 
->attach it to /dev/md0 and rebuild the array /dev/md0. That way i would rescue 
->the data on the threatening drive /dev/hde1 which is spewing out error 
->messages to my /var/log/syslog and threatening to die! 
->
->So stupidly (probably), I did
->
->mdadm /dev/md1  --fail /dev/hdf1 --remove /dev/hdf1
->  
->
-OK
-what does mdadm --detail /dev/md1 show?
+But you are using a much newer mdadm.  I don't know if this has been fixed
+or not, I guess not.
 
->then i did 
->mdadm /dev/md0 --add /dev/hdf1
->  
->
-hmm - I don't know. I would have zeroed it :)
+The man page for mdadm has the details for the config file.
 
->Now when i did 
->cat /proc/mdstat I see:
->
->md0 : active raid1 hdf1[2] hde1[0]
->      244195904 blocks [2/1] [U_]
->        resync=DELAYED
->
->I don't see any rebuilding action going on.
->  
->
-I see the full /proc/mdstat appears later...
+Guy
 
- From the source (md.c)
-    /* we overload curr_resync somewhat here.
-     * 0 == not engaged in resync at all
-     * 2 == checking that there is no conflict with another sync
-     * 1 == like 2, but have yielded to allow conflicting resync to
-     *        commense
-     * other == active in resync - this many blocks
-     *
-     * Before starting a resync we must have set curr_resync to
-     * 2, and then checked that every "conflicting" array has curr_resync
-     * less than ours.  When we find one that is the same or higher
-     * we wait on resync_wait.  To avoid deadlock, we reduce curr_resync
-     * to 1 if we choose to yield (based arbitrarily on address of mddev 
-structure).
-     * This will mean we have to start checking from the beginning again.
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Erik Wasser
+Sent: Sunday, March 13, 2005 7:22 AM
+To: linux-raid@vger.kernel.org
+Subject: 'Segmentation fault' after running 'mdadm --examine --brief --scan
+--config=partitions'
 
-you are in state 1 or 2.
-hmmm
+Hello list,
 
+I've got a problem here with the mdadm tools. I'm using on my system[1] 
+the mdadm tools[2] and I just tried one of the examples of the manpage:
 
-next email:
+% mdadm --examine --brief --scan --config=partitions
+Segmentation fault
 
-Mitchell Laks wrote:
+I started up the ddd: in the routine 'load_conffile' the string "DEV 
+partitions" will be passed to the routine 'devline'. And this routine 
+pass this parameter to the macro 'dl_next' and I think (after seeing 
+the definition of 'dl_next') this is brocken.
 
->1) I tried to add the new spare device to /dev/md0 on friday afternoon.  It
->still has not rebuilt.
->
-problem 1.
+Can somebody confirm this bug? I don't know how to fix this so there is 
+no patch in this mail sorry. B-(
 
-> I am also unable to do "ls" of the directory of the 
->drive.
->
-problem 2 - this shouldn't be happening
+[1] uname -a
 
->2) I had another idea. Why not umount the drive and then run fsck.ext3 on the 
->drive. Maybe it needs fsck? When I tried that I got the message:
->  
->
-nope - rebuilding happens deep underneath the filesystem.
+Linux fuzz 2.6.10-gentoo-r6 #1 Sat Feb 5 09:56:14 CET 2005 i686 AMD 
+Athlon(tm) XP 2800+ AuthenticAMD GNU/Linux
 
->A1:~# umount /home/big0
->umount: /home/big0: device is busy
->umount: /home/big0: device is busy
->
->(/dev/md0 is mounted on /home/big0).
->  
->
-This just means that some process has a filehandle open on /home/big0
-lsof + grep can help to find candidate processes
+[2] Gentoo: sys-fs/mdadm-1.9.0-r1
 
->A1:~# cat /proc/mdstat
->Personalities : [raid1]
->md0 : active raid1 hdi1[2] hdg1[0]
->      244195904 blocks [2/1] [U_]
->        resync=DELAYED
->md1 : active raid1 hdc1[1]
->      244195904 blocks [2/1] [_U]
->
->md2 : active raid1 hde1[1]
->      244195904 blocks [2/1] [_U]
->
->unused devices: 
->-
->To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->  
->
+-- 
+So long... Fuzz
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-next email:
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
->I had some more bright ideas and here is what happened:
->
->I am unable to even do ls on the directory mounted on this raid device.
->
->So, I said, maybe the problem is that I need to run fsck.ext3 on the drive 
->first. So I tried to umount it and i got the error message:
->
->A1:~# umount /home/big0
->umount: /home/big0: device is busy
->umount: /home/big0: device is busy
->
->So I said maybe the problem is the rsyncing. So maybe an idea is to fail the 
->new added device /dev/hdi1  and then remove /dev/hdi1, move back to degraded 
->mode. Do an umount of the drive, then do an fsck.ext3 on the drive and then I 
->can do a reboot and then add the drive back in.
->
->Hey why not?
->  
->
-'cos I can't figure out what's going on!
+edesktop.xorg:373
 
->Ok. So I tried: Here is the transcipt of the session:
->
->A1:~# cat /proc/mdstat
->Personalities : [raid1]
->md0 : active raid1 hdi1[2] hdg1[0]
->      244195904 blocks [2/1] [U_]
->        resync=DELAYED
->md1 : active raid1 hdc1[1]
->      244195904 blocks [2/1] [_U]
->
->md2 : active raid1 hde1[1]
->      244195904 blocks [2/1] [_U]
->
->unused devices: <none>
->A1:~# umount /home/big0
->umount: /home/big0: device is busy
->umount: /home/big0: device is busy
->A1:~# whoami
->root
->A1:~# mdadm /dev/md0 -fail /dev/hdi1 --remove /dev/hdi1
->mdadm: hot add failed for /dev/hdi1: Invalid argument
->
->A1:~# cat /proc/mdstat
->Personalities : [raid1]
->md0 : active raid1 hdi1[2] hdg1[0]
->      244195904 blocks [2/1] [U_]
->        resync=DELAYED
->md1 : active raid1 hdc1[1]
->      244195904 blocks [2/1] [_U]
->
->md2 : active raid1 hde1[1]
->      244195904 blocks [2/1] [_U]
->
->unused devices: <none>
->A1:~# mdadm --manage --set-faulty /dev/md0  /dev/hdi1
->mdadm: set /dev/hdi1 faulty in /dev/md0
->A1:~# mdadm --detail /dev/md0
->/dev/md0:
->        Version : 00.90.01
->  Creation Time : Wed Jan 12 14:19:21 2005
->     Raid Level : raid1
->     Array Size : 244195904 (232.88 GiB 250.06 GB)
->    Device Size : 244195904 (232.88 GiB 250.06 GB)
->   Raid Devices : 2
->  Total Devices : 2
->Preferred Minor : 0
->    Persistence : Superblock is persistent
->
->    Update Time : Sun Mar 13 01:28:06 2005
->          State : clean, degraded
-> Active Devices : 1
->Working Devices : 1
-> Failed Devices : 1
->  Spare Devices : 0
->
->           UUID : 6b8b4567:327b23c6:643c9869:66334873
->         Events : 0.343413
->
->    Number   Major   Minor   RaidDevice State
->       0      34        1        0      active sync   /dev/hdg1
->       1       0        0        -      removed
->
->       2      56        1        1      faulty   /dev/hdi1
->A1:~# mdadm /dev/md0 -r /dev/hdi1
->mdadm: hot remove failed for /dev/hdi1: Device or resource busy
->  
->
-could this be mdadm 1.8.1 issue?? it seemed like the right thing to do.
+On Sun, Mar 13, 2005 at 11:19:35AM -0500, Jon Smirl wrote:
+> On Sun, 13 Mar 2005 23:04:59 +1100, Benjamin Herrenschmidt
+> <benh@kernel.crashing.org> wrote:
+> >=20
+> > > AGP as it's currently used is pretty much pointless for software fa=
+llbacks
+> > > since reading from AGP memory is nearly as slow as reading from vid=
+eo
+> > > memory.
+> >=20
+> > Hrm.. I wouldn't expect _that_ slow. It's uncacheable, right, but sti=
+ll
+> > on a faster bus. Especially if we use it the way we do on ppc where w=
+e
+> > actually map the RAM pages directly instead of having processes go
+> > through the GART.
+>=20
+> I asked at the Xdev conference if there were page table tricks that
+> would work for accessing GART memory.  Everybody said no but I'm still
+> wondering if there are any.
+>=20
+> For example the ppc has an instruction for flushing specific pages
+> from cache, unlike the x86 where you can only flush everything.
+>=20
+> So on the ppc you could leave the GART memory mapped normally and
+> cached. Do all of your fallback calculations, then flush the address
+> range from cache. Now tell the GPU to go use it.
+>=20
+> Can't GART memory be normally cached RAM as long as we flush the cache
+> before telling the GPU to use it?
+>=20
+> If you are doing fallback calculations in a 6MB buffer that is 1,500
+> pages. Accessing all of this effectively flushes the data cache. Once
+> you are done with it you probably don't want those pages in the cache
+> anyway.
 
->A1:~# cat /proc/mdstat
->Personalities : [raid1]
->md0 : active raid1 hdi1[2](F) hdg1[0]
->      244195904 blocks [2/1] [U_]
->        resync=DELAYED
->md1 : active raid1 hdc1[1]
->      244195904 blocks [2/1] [_U]
->
->md2 : active raid1 hde1[1]
->      244195904 blocks [2/1] [_U]
->
->unused devices: <none>
->A1:~# mdadm /dev/md0 -r /dev/hdi1
->mdadm: hot remove failed for /dev/hdi1: Device or resource busy
->A1:~#                                                                 
->
->Any ideas on what I can do now?
->  
->
-upgrade mdadm and try the remove again.
+I don't understand why we have "GART memory" anyway. It's just main memor=
+y=20
+and I don't see any point going through the GART to access it with the=20
+CPU. Only the graphics card needs to use the GART.
 
-next email:
-
->One more bit of information:
->
->this was a bit of info from 
->
->tail /var/log/kern.log
->
->Mar 11 04:42:11 A1 kernel:
->Mar 11 04:42:11 A1 kernel: hdg: drive not ready for command
->Mar 11 04:42:11 A1 kernel: raid1: hdg1: rescheduling sector 215908496
->Mar 11 04:42:11 A1 kernel: raid1: hdg1: redirecting sector 215908496 to 
->anotherr
->Mar 11 04:42:11 A1 kernel: hdg: status error: status=0x58 { DriveReady 
->SeekComp}
->Mar 11 04:42:11 A1 kernel:
->Mar 11 04:42:11 A1 kernel: hdg: drive not ready for command
->Mar 11 04:42:11 A1 kernel: raid1: hdg1: rescheduling sector 215908496
->Mar 11 04:42:11 A1 kernel: raid1: hdg1: redirecting sector 215908496 to 
->
->but that all was from Mar11 and today is Mar13....
->  
->
-well, it may explain why things went bad.
+--=20
+Ville Syrj=E4l=E4
+syrjala@sci.fi
+http://www.sci.fi/~syrjala/
 
 
-I think you need to:
-* upgrade mdadm.
-* Then cat /proc/mdstat
-* then mdadm --detail on all md devices
-
-Then note what md devices are 'important'
-
-Also:
-what does mount say?
-is the filessytem on /dev/md0 useable (it should be fine)
-
-Is the box safe to reboot?
-
-when you reply to my inline questions, remove all the context to trim 
-the mail right down :)
-
-David
+-------------------------------------------------------
+SF email is sponsored by - The IT Product Guide
+Read honest & candid reviews on hundreds of IT Products from real users.
+Discover which products truly live up to the hype. Start reading now.
+http://ads.osdn.com/?ad_id=6595&alloc_id=14396&op=click
