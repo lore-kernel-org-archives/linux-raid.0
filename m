@@ -1,34 +1,50 @@
-From: Huntress Gary B NPRI <HuntressGB@Npt.NUWC.Navy.Mil>
-Subject: Growing an Array?
-Date: Wed, 06 Nov 2002 09:46:11 -0500
+From: Stephen Lee <splee@plexio.com>
+Subject: Typo in mdadm man page?
+Date: 06 Nov 2002 07:22:55 -0800
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <A506359028CAD21191C10008C75D895C040B8841@NPRI54EXC14.NPT.NUWC.NAVY.MIL>
+Message-ID: <1036596176.15341.16.camel@ralph.plexio.private>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: "'linux-raid@vger.kernel.org'" <linux-raid@vger.kernel.org>
+To: Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Hi,
 
-I know exactly what I would like to do, but I'm not RAID-Smart enough to know if this is an existing capability or completely impossible.
+I was trying to figure out how to add a hot spare to a 3 drive raid5
+array and came across the following in the mdadm man page:
 
-Speaking in very generic terms, I have a RAID 5 array that is reaching it's capacity.  Drives are cheap and I want to grow the array.  Backing up the array to DLT is "hard" and I don't want to take my production system offline.   I want to buy a stack of new (hot swappable) drives and do the following to my array:
+MANAGE MODE
+       Usage: mdadm device options... devices...
 
-1)  pop out drive 1
-2)  Insert new drive
-3)  "initialize" the new drive
-4)  Some magic happens and the larger drive becomes part of the array
+       This usage will allow individual devices in an array to be
+       failed,  removed or added.  It is possible to perform mul=AD
+       tiple operations with on command. For example:
+         mdadm /dev/md0 -f /dev/hda1 -r /dev/hda1 /a /dev/hda1
+       will firstly mark /dev/hda1 as faulty in /dev/md0 and will
+       then  remove  it from the array and finally add it back in
+       as a spare.  However only one md array can be affected  by
+       a single command.
 
-lather, rinse, repeat for the remaining replacement drives and *poof* I have a larger array.
+I presume the "/a" in the mdadm command should be "-a"? Would it be
+possible to add a few more words to be more explicit about adding hot
+spares to an existing active array? For example, it would be more
+comforting to know that "mdadm /dev/md0 -a /dev/sdd1" to a fully
+operational array (no failed devices) generates a hot spare for /dev/md=
+0
+but does not increase the capacity of /dev/md0.
 
-This capability would save me an incredible amount of labor and hand wringing.  Our "technology refresh" upgrades happen quite regularly because our data never stops growing.   Is this a pipe dream or an eventual reality?
+While I have your attention, does adding the hot spare need to be
+repeated after a reboot? Would I need to add the command to my rc.local
+file?
 
-TIA
+Thanks!
+Stephen
 
-Regards,
 
-Gary Huntress
-Code 4113
-Naval Undersea Warfare Center
-Newport, RI  02841
-1-800-669-6892 x28990
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
