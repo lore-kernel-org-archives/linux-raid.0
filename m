@@ -1,56 +1,74 @@
-From: hpa@zytor.com (H. Peter Anvin)
-Subject: Re: Raidreconf and raid-6
-Date: Tue, 30 Mar 2004 22:24:25 +0000 (UTC)
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: "Enhanced" MD code avaible for review
+Date: Tue, 30 Mar 2004 17:34:51 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <c4cs2p$p29$1@terminus.zytor.com>
-References: <40603AE7.4050301@wasp.net.au>
+Message-ID: <4069F60B.6000102@pobox.com>
+References: <760890000.1079727553@aslan.btc.adaptec.com> <200403261315.20213.kevcorry@us.ibm.com> <1644340000.1080333901@aslan.btc.adaptec.com> <200403270939.29164.kevcorry@us.ibm.com> <842610000.1080666235@aslan.btc.adaptec.com> <4069AB1B.90108@pobox.com> <854630000.1080668158@aslan.btc.adaptec.com> <4069B289.9030807@pobox.com> <866290000.1080669880@aslan.btc.adaptec.com> <4069EB03.9000202@pobox.com> <1001500000.1080684755@aslan.btc.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <1001500000.1080684755@aslan.btc.adaptec.com>
+To: "Justin T. Gibbs" <gibbs@scsiguy.com>
+Cc: Kevin Corry <kevcorry@us.ibm.com>, linux-kernel@vger.kernel.org, Neil Brown <neilb@cse.unsw.edu.au>, linux-raid@vger.kernel.org, dm-devel@redhat.com
 List-Id: linux-raid.ids
 
-Followup to:  <40603AE7.4050301@wasp.net.au>
-By author:    Brad Campbell <brad@wasp.net.au>
-In newsgroup: linux.dev.raid
->
-> G'day all,
+Justin T. Gibbs wrote:
+>>>So you are saying that this presents an unrecoverable situation?
+>>
+>>No, I'm saying that the data phase need not have a bunch of in-kernel
+>>checks, it should be generated correctly from the source.
 > 
-> I'm in the middle of adding journaling to raidreconf to try and make it resilient to any failures
-> except hard disk failures (Power fails, reboots and that kind of thing). It's not pretty, and it
-> slows the process down something chronic but hopefully it will make the process bulletproof.
 > 
-> While I'm here I'm looking at trying to add raid-6 support also. I have had a pretty good trawl
-> through the raid-6 kernel code and given raidreconf does not do anything with parity blocks it looks
-> pretty similar to raid-5 from that respect.
-> Are there any gotchas that anyone can think of I should look out for that may trip me up with the
-> difference between raid5 & 6 ?
+> The SCSI drivers validate the controller's data phase based on the
+> expected phase presented to them from an upper layer.  I never talked
+> about adding checks that make little sense or are overly expensive.  You
+> seem to equate validation with huge expense.  That is just not the
+> general case.
 > 
-> I figure if you could do an easy conversion between raid-5 and raid-6 it might speed up testing and
-> adoption of raid-6.
 > 
+>>>Hmm.  I've never had someone tell me that my SCSI drivers are slow.
+>>
+>>This would be noticed in the CPU utilization area.  Your drivers are
+>>probably a long way from being CPU-bound.
+> 
+> 
+> I very much doubt that.  There are perhaps four or five tests in the
+> I/O path where some value already in a cache line that has to be accessed
+> anyway is compared against a constant.  We're talking about something
+> down in the noise of any type of profiling you could perform.  As I said,
+> validation makes sense where there is basically no-cost to do it.
+> 
+> 
+>>>I don't think that your statement is true in the general case.  My
+>>>belief is that validation should occur where it is cheap and efficient
+>>>to do so.  More expensive checks should be pushed into diagnostic code
+>>>that is disabled by default, but the code *should be there*.  In any event,
+>>>for RAID meta-data, we're talking about code that is *not* in the common
+>>>or time critical path of the kernel.  A few dozen lines of validation code
+>>>there has almost no impact on the size of the kernel and yields huge
+>>>benefits for debugging and maintaining the code.  This is even more
+>>>the case in Linux the end user is often your test lab.
+>>
+>>It doesn't scale terribly well, because the checks themselves become a
+>>source of bugs.
+> 
+> 
+> So now the complaint is that validation code is somehow harder to write
+> and maintain than the rest of the code?
 
-Indeed it would, and I would very much appreciate if you'd take this
-on, since I'm personally in the middle of moving and not really having
-a whole lot of time.
+Actually, yes.  Validation of random user input has always been a source 
+of bugs (usually in edge cases), in Linux and in other operating 
+systems.  It is often the area where security bugs are found.
 
-I presume the way raidreconf works is that it reads all the data off a
-stripe in format-1 and than writes all the data back to the stripe in
-format-2.  Since the disk format is inherently unstable during the
-conversion it's pretty much the best you can do.
+Basically you want to avoid add checks for conditions that don't occur 
+in properly written software, and make sure that the kernel always 
+generates correct requests.  Obviously that excludes anything on the 
+target side, but other than that...  in userland, a priveleged user is 
+free to do anything they wish, including violate protocols, cook their 
+disk, etc.
 
-At that point all you need is to have the layout of the blocks, which
-is similar to the way they are layed out in RAID-5, and an algorithm
-to compute the Q syndromes.  There are two ways to accomplish the
-latter: one way is to grab the portable C implementation (raid6int.uc)
-from the kernel, and the other one is to use the fact that the
-full-blown raid-6 implementation in the kernel can be compiled for
-userspace testing as well, which would give you top performance.
+	Jeff
 
-Please keep me posted; I may not read this mailing list that often for
-the next month or so since my Internet connectivity is kind of limited
-at the moment.
 
-	-hpa
 
