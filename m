@@ -1,46 +1,40 @@
 From: Clemens Schwaighofer <cs@tequila.co.jp>
-Subject: Re: Kicking Non-Fresh From Array
-Date: Fri, 21 May 2004 17:48:41 +0900
+Subject: Re: Raid Failed What to to
+Date: Fri, 21 May 2004 17:45:26 +0900
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <40ADC269.4080902@tequila.co.jp>
-References: <40AD17C1.8010708@atella.com>
+Message-ID: <40ADC1A6.9020108@tequila.co.jp>
+References: <40AD2C0D.10709@gmx.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <40AD17C1.8010708@atella.com>
-To: Sevatio <sevatio@atella.com>
+In-Reply-To: <40AD2C0D.10709@gmx.de>
+To: Dominik Sennfelder <sennfelder@gmx.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 -----BEGIN PGP SIGNED MESSAGE-----
 Hash: SHA1
 
-Sevatio wrote:
-| I can't figure out how to get a partition into a Raid1 array.  Syslog
-| tells me "kicking non-fresh hdc6 from array".  Raidtab is set to assign
-| /dev/hda6 & /dev/hdc6 to /dev/md1:
+Dominik Sennfelder wrote:
+| Hello
 |
-| raiddev       /dev/md1
-| raid-level    1
-| chunk-size    64k
-| persistent-superblock 1
-| nr-raid-disks 2
-|     device    /dev/hda6
-|     raid-disk 0
-|     device    /dev/hdc6
-|     raid-disk 1
-|
-| But mdstat only shows hda6 for md1.  Also, I tried raidhotadd but it
-| doesn't show hdc6 as being active:
-|
-| md1 : active raid1 hdc6[1] hda6[0]
-|       6144704 blocks [1/1] [U]
-|
-| How do I fix this to get hdc6 to join md1?
+| I have got a Raid 5 with 4 160 GB Disk,
+| On of the Disks Failed because. But I know its OK I had this for some
+| times.
+| A Restart solved The Problem.
+| But now  Tried to raidhotremove the Drive and removed the wrong drive.
+| I just recongized the Problem after i raidhotadded itagain.
+| No the Raid tries to sync again.
 
-check what kind of partition is hdc6. I always use 'fd' [Linux raid
-auto] and it works fine for me.
+well if you removed two drives from your Raid5 array, it might got
+competly out of sync and then there is no way to recover. I have never
+tried this with my raid, but if you add another disk it well be
+re-synced, ergo it tries to rebuild the array out of the CRCs on the
+other drives, if you remove two, you don't have enough redudant data to
+do this (raid 6 can recover from a 2 drive failure).
+
+I hope you have a backup.
 
 - --
 Clemens Schwaighofer - IT Engineer & System Administration
@@ -52,7 +46,7 @@ http://www.tequila.co.jp
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.2.4 (GNU/Linux)
 
-iD8DBQFArcJpjBz/yQjBxz8RAlYwAKDsj9l/HH7jBNCkpTrQCvhjWbKbIQCfak9C
-Ej7gv8Czwc/AxK3vguatffE=
-=9Jec
+iD8DBQFArcGmjBz/yQjBxz8RAkYKAJ9TAc03OnmIth/M03xBmopKerZLOQCcCiiG
+wk/lAjdcrd1jPWSoLyOGLAE=
+=5uyj
 -----END PGP SIGNATURE-----
