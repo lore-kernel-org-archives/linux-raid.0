@@ -1,64 +1,69 @@
-From: Corey McGuire <coreyfro@coreyfro.com>
-Subject: Re: Bizarre RAID "failure"
-Date: Tue, 2 Mar 2004 08:56:53 -0800
+From: "Chris Evans" <chris1@psyctc.org>
+Subject: md: can not impport hdb1, has active inodes!
+Date: Tue, 02 Mar 2004 22:17:08 -0000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200403020856.53518.coreyfro@coreyfro.com>
-References: <1077230692.28817.485.camel@s8n-1.thereinc.com>
-Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Message-ID: <404507E4.8552.25AC3E6@localhost>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1077230692.28817.485.camel@s8n-1.thereinc.com>
-Content-Disposition: inline
-To: Tom Maddox <tmaddox@thereinc.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Debian stable 2.4.19 kernel with RAID1 compiled in, VIA EPIA CL1000 
+motherboard, 2 Maxtor DiamondMax 9 7200rpm 80Gb drives as /dev/hdb 
+and /dev/hdc from onboard controller.
 
-I don't know if this till help, but I was having lots of trouble with my promise controllers until 2.4.23... before that, they were locking up drives all the time.  I had one drop out entirely, with two drives.  I had to rebuild a raid5 with two dead drives.
+I've followed the guide at:
+http://www.cs.montana.edu/faq/faqw.admin.py?query=Convert+Root+System+
+to+Software+Raid&querytype=simple&casefold=yes&req=search
 
-Once I upgraded, I stopped having such trouble.
+which had turned up on a debian list search to try to set up the 
+RAID1 mirror of the boot/root drive.  I installed to /dev/hdb1 
+(/dev/hda is the CDROM and perhaps I should have changed that first). 
 
-One more thing I might add, I too had 3 promise controllers and that was hard to manage as well.  I moved two drives to my onboard controller which not only made things a bit less flaky (I am assuming 33% less flaky) but also seemed to speed things up (later VIA chipsets take the HDD controller off of the PCI bus, and three PCI HDD controllers can easily saturate that.)
+Loaded 2.2.20, got 2.4.19 sources, compiled RAID1 support into the 
+kernel (still can't get rid of one complaint about a missing 
+character set module but don't think that's causing any real 
+problems), made the identical /dev/hdc1 into a somewhat smaller linux 
 
-On Thursday 19 February 2004 02:44 pm, Tom Maddox wrote:
-> Hi, all,
-> 
-> I'm encountering a bizarre problem with software RAID 5 under Linux that
-> I'm hoping someone on this list can help me solve or at least
-> understand.
-> 
-> I've got a box running Red Hat 7.3 with SGI's 2.4.18 XFS 1.1 kernel. 
-> It's using three FastTrak TX 2000 (PDC20271) cards in non-RAID mode with
-> three Western Digital 200 GB drives.  I'm using those controllers
-> because they were handy and they support large drives.  The drives are
-> in an XFS-formatted RAID 5 array using md, which has never given me
-> problems before.  In this case, however, I'm running into some seriously
-> anomalous behavior.
-> 
-> If the system goes down unexpectedly (e.g., because of a power failure),
-> the RAID array comes back up dirty and begins to rebuild itself, which
-> is odd enough on its own.  What's worse is that, whenever this happens,
-> the rebuild hangs at about 2.4%.  When it reaches that point, the array
-> becomes totally nonresponsive--I can't even query its status with mdadm
-> or any other tool, although I can use "cat /proc/mdstat" to see the
-> status of the rebuild.  Any command that attempts to access the RAID
-> drive hangs.
-> 
-> My assumption would normally be that there's a hardware failure
-> somewhere, but I've swapped out each component individually (including
-> cables!) and the same problem keeps happening.
-> 
-> Has anyone seen this behavior before, and can you recommend a solution?
-> 
-> Thanks,
-> 
-> Tom
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
+autodetect RAID format partition, mounted it as 2nd drive in a RAID1 
+drive using:
+  mdadm --create /dev/md0 --level=1 --raid-disks=2 missing /dev/hdc1
+which worked fine, mkfs -t ext3 /dev/hdc1, mount it to /mnt1, 
+cp -ax / /mnt, tweak /etc/fstab ... /dev/md0 mounts fine, tweak lilo 
+conf to boot from /dev/md0, reboot -- fine, finally come to add 
+/dev/hdb1 into the array after resetting the partition type to 
+autodetect RAID ... 
+
+.. no go, system complains that /dev/hdb1 is mounted or that an inode 
+
+is active:
+md: can not impport hdb1, has active inodes!
+md: error, md_import_device() returned -16
+
+I assume that's because the boot is still from /dev/hdb but if so, 
+how come the howto says this should work.  Seems that nothing I do 
+can shift this and if I set the partition back to linux I find I 
+can't mount the drive despite rebooting as I get:
+
+mount: /dev/hdb1 already mounted or /mnt1 busy
+
+/mnt1 isn't busy (I can create a completely new mount point: no 
+difference) and mount shows that /dev/hdb1 isn't mounted.
+
+I've tried all sorts of tweaking with lilo.conf to remove any calls 
+to /dev/hdb but either these don't change anything, or else lilo 
+complains that it can't install to the target (e.g. /dev/md0).
+
+I've read through the docs and man pages and done some 
+searching around but can't find any explanations.
+
+Help of any sort, including direct pointers to what I've missed or 
+misread, desperately needed!
+
+Chris
+
+PSYCTC: Psychotherapy, Psychology, Psychiatry, Counselling
+   and Therapeutic Communities; practice, research, 
+   teaching and consultancy.
+Chris Evans & Jo-anne Carlyle
+http://psyctc.org/ Email: chris@psyctc.org
+
