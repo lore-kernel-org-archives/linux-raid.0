@@ -1,50 +1,42 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: Re: Should I Start Over?
-Date: Tue, 6 Jul 2004 23:06:55 +0200
+From: blh0001@advalvas.be
+Subject: Hello
+Date: Wed, 7 Jul 2004 04:55:55 +0200 (CEST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040706210654.GB17694@percy.comedia.it>
-References: <1147.66.230.1.97.1088603162.squirrel@exitwound.org> <20040630165540.GA1099@percy.comedia.it> <1775.66.230.1.97.1088620939.squirrel@exitwound.org>
+Message-ID: <4835.195.219.176.7.1089168955.squirrel__20403.7843192511$1089172981$gmane$org@wmail.advalvas.be>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1775.66.230.1.97.1088620939.squirrel@exitwound.org>
-To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Jun 30, 2004 at 01:42:19PM -0500, Stephen Hargrove wrote:
->$ mdadm --examine /dev/hd[dceg]1
->mdadm: No super block found on /dev/hdc1 (Expected magic a92b4efc, got
->00000000)
->mdadm: No super block found on /dev/hdd1 (Expected magic a92b4efc, got
->00000000)
->mdadm: No super block found on /dev/hde1 (Expected magic a92b4efc, got
->00000000)
->mdadm: No super block found on /dev/hdg1 (Expected magic a92b4efc, got
->00000000)
->
-urgh,
-no superblock
-you can try to see if you can read your data by recreating the array in
-degraded mode, so it does not rebuild.
 
-like:
-mdadm --create /dev/md0 --level=5 /dev/hdc1 /dev/hdd1 missing
-try substituting the word missing for each of the drives
-and see if you can mount the filesystem
-if you do find your data use:
-mdadm /dev/md0 -a <the device you replaced with missing>
-to have it added to the array again
+Greetings,
 
-good luck!
+I am Benedicta Lindiwe Hendricks (Mrs) of RSA. I am writing
+this letter  to you with the hope that you will be kind enough to assist
+my family.
 
-L.
+If this means of communication is not acceptable to you
+please accept my apologies as it is the only available and
+resourceful means for me right now.
+
+ My children and I are in need of your assistance and we incerely  pray
+and hope that you will
+
+be able to attend to our request.  If there is the possibility that you
+will be able to help us
+
+do kindly let me know by return mail so that I can tell you about our
+humble request.
+
+Thank for your understanding.
+
+Benedicta Lindiwe Hendricks (Mrs).
+
+Alternative email address hen0001@katamail.com
 
 
--- 
-Luca Berra -- bluca@comedia.it
-        Communication Media & Services S.r.l.
- /"\
- \ /     ASCII RIBBON CAMPAIGN
-  X        AGAINST HTML MAIL
- / \
+----------------------------------------------------------------------------------
+Plaats je zoekertjes GRATIS op AdValvas
+Placez votre petite annonce GRATUITEMENT sur AdValvas
+http://www.advalvas.be
