@@ -1,55 +1,46 @@
-From: Robert Osiel <bob@osiel.org>
-Subject: Re: A few mdadm questions
-Date: Mon, 15 Nov 2004 09:50:25 -0600
-Message-ID: <4198D041.70302@osiel.org>
-References: <200411140203.iAE23rN08652@www.watkins-home.com>	<419783F7.5030807@osiel.org> <16791.60777.951575.384927@cse.unsw.edu.au>
+From: David Greaves <david@dgreaves.com>
+Subject: Re: RAID5 - 2nd drive died whilst waiting for RMA
+Date: Mon, 15 Nov 2004 16:55:21 +0000
+Message-ID: <4198DF79.8080809@dgreaves.com>
+References: <200411132039.iADKdDN07474@www.watkins-home.com> <41968282.6060306@dgreaves.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <16791.60777.951575.384927@cse.unsw.edu.au>
+In-Reply-To: <41968282.6060306@dgreaves.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: Guy <bugzilla@watkins-home.com>, linux-raid@vger.kernel.org
+To: Guy <bugzilla@watkins-home.com>, =?UTF-8?B?TcOlbnMgUnVsbGfDpXJk?= <mru@inprovide.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Thanks for your help guys.
 
-Neil:
-The machine is/was running plain Mandrake 8.0 (Debian wouldn't install 
-on that box); I built the box more than a year ago and haven't had to 
-mess with it after the first week or so -- no reboots until this drive 
-failed.  Methinks Mandrake 8 is 2.4.3 (the box won't boot on its own merits
-now -- so I'm afraid I can't be more specific); currently I'm booting 
-via a live CD with a gentoo 2.6 kernel.
+I'm back up with a full complement of disks and data.
 
-Guy:
-The array is a five-disk array -- hde1, hdi1, hdk1, hdm1, hdo1.  That's 
-how I created it.  When I do mdadm -E on any of the drives, it also 
-shows a device 1 as "faulty removed", but that device never existed and 
-I don't know why it is listed (and it doesn't seem to matter to the 
-array, since I've run degraded on 4 disks before).  I created the array 
-with the old tools and a raidtab.
+It turns out that despite the 'auto reallocate failed' in this message:
 
-hde1, hdm1, and hdo1 are the "good" drives.
-hdk1 is the drive which initially failed (and is listed as faulty)
-hdi1 (device 5) is the disk I raidhotremoved (and now is spare)
+Nov 12 09:45:40 cu kernel: Current sda: sense key Medium Error
+Nov 12 09:45:40 cu kernel: Additional sense: Unrecovered read error - 
+auto reallocate failed
+Nov 12 09:45:40 cu kernel: end_request: I/O error, dev sda, sector 221992599
 
-It has been a while since this happened, but as I remember it was a 
-Saturday when I checked on the array and noticed that there was a bad 
-disk.  What doesn't make sense is that it would have been in the 
-afternoon -- is the time stamp in the superblock GMT?  If so, that might 
-make sense.  However, I certainly did not notice a drive was out and do 
-the remove within 2 seconds -- at a minimum it would have been several 
-minutes, and could have been as long as weeks.
+The disk is actually good according to 'badblocks -w -v -s -c 1024 
+/dev/sde 222000000 221800000'
+(I did a full scan too).
 
-Continued thanks!
+Checking for bad blocks in read-write mode
+ From block 221800000 to 222000000
+Testing with pattern 0xaa: done
+Reading and comparing: done
+Testing with pattern 0x55: done
+Reading and comparing: done
+Testing with pattern 0xff: done
+Reading and comparing: done
+Testing with pattern 0x00: done
+Reading and comparing: done
+Pass completed, 0 bad blocks found.
 
-Bob.
+Now all I need is SMART through libata.
 
->I'm still very surprised that you managed to "raidhotremove" without
->"raidsetfaulty" first... What kernel (exactly) are you running?
->
->NeilBrown
->  
->
+David
 
