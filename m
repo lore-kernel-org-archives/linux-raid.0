@@ -1,8 +1,8 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: RFC - new raid superblock layout for md driver
-Date: 21 Nov 2002 00:30:53 +0000
+Date: 21 Nov 2002 00:30:52 +0000
 Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <1037838656.3702.109.camel@irongate.swansea.linux.org.uk>
+Message-ID: <1037838652.3241.108.camel@irongate.swansea.linux.org.uk>
 References: <15835.2798.613940.614361@notabene.cse.unsw.edu.au>
 	<1037801381.3267.17.camel@irongate.swansea.linux.org.uk>
 	<15836.5807.792124.255167@notabene.cse.unsw.edu.au>
