@@ -1,69 +1,160 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: How safe is software RAID compared to how safe hardware RAID
-     is!?
-Date: Fri, 21 Nov 2003 10:38:05 +1100
+From: NeilBrown <neilb@cse.unsw.edu.au>
+Subject: [PATCH] md - 1 of 2 - Limit max_sectors on md when merge_bvec_fn defined on underlying device.
+Date: Fri, 21 Nov 2003 14:21:12 +1100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16317.20573.33929.67942@notabene.cse.unsw.edu.au>
-References: <16314.40792.616508.878124@notabene.cse.unsw.edu.au>
-	<PPEOJEIEFLAONFNHJPOOAEICGOAA.jim@jimtreats.com>
-	<16314.44161.438158.27514@notabene.cse.unsw.edu.au>
-	<48898.192.168.9.10.1069361618.squirrel@ncircle.nullnet.fi>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Message-ID: <E1AN1r6-0007lT-00@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Tomi Orava on Thursday November 20
-To: Tomi Orava <tomimo+linux-raid@ncircle.nullnet.fi>
+To: Linus Torvalds <torvalds@osdl.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday November 20, tomimo+linux-raid@ncircle.nullnet.fi wrote:
-> 
-> >  I had a mirrored pair that kept getting data corruption.  It turned
-> >  out that one of the drives had a bad bit in an internal buffer, and
-> >  would occasionally return 1 for the 12th bit (or similar) of each
-> >  sector even when it should be zero.   Neither software raid or
-> >  hardware raid would cope with that.
-> 
-> How did you manage to figure out what was the reason for this
-> corruption ? I mean, does there exist a some sort of "generic"
-> way how to solve such errors, or was it just hard work in comparing
-> what got written to the different disks ...
+Hi Linus,
+ I believe these to md patches are suitable for inclusion before 2.6.0,
+ though neither fixes oops or data corruption.
 
-I think the generic solution is "Tear your hair out and wander around
-muttering to everyone how this couldn't possibly be happening and
-seeking sympathy".
+ This first limits the maximum size of requests to raid devices if the 
+ underlying device has some possible request alignment issues.
 
-Like lots of problem solving, it is a case of gathering as much
-information as possible, staring at it for a while, and then
-explaining to someone who has absolutely no expertise in the field
-exactly why this collection of evidence is internally inconsistent and
-it just isn't possible.  Usually that brings the answer out very
-quickly.  (Some people say a brick wall will do, but I find a person
-works much better).
-
-One interesting aspect was that the drive with the problems was the
-one that it would preferentially rebuild the raid from.  That tended
-to make transient errors more permanent as they would get written onto
-the second driver.  I'm not sure if that helpped or hindered though.
-
-> 
-> >  Some people find that their IDE controller works fine until they try
-> >  to use RAID1.  RAID1 hits multiple discs concurrently a lot, and some
-> >  (few, specific) ide controllers don't appear to cope.  You probably
-> >  would not get that with hardware raid.  You can with software raid
-> >  because it is a "whole-system" thing.
-> 
-> Can you name the controllers which have had problems in this area ?
-> I'm having big problems in Linux 2.4 kernels IDE-stability with
-> heavy I/O (all disks are RAID1), perhaps either the Sil680 or
-> HPT374 are just problematic controllers ... ? (it would be just great
-> to solve all of these problems by buying new IDE-cards :)
-
-I'm afraid I haven't collected names.  I avoid IDE raid like the
-plague, and just stick with SCSI - too many bad experiences.
-NOTE: This is not advice on my part to not use IDE.  My experience is
-not sufficient to base a recommendation on.  But for me, my budget
-allows SCSI, and it just makes me feel a lot safer.
+ The second increases max read_ahead on raid0 and raid5 to patch the 
+ stripe size so that large sequential reads are more efficient.
 
 NeilBrown
+### Comments for ChangeSet
+
+As no md personalities honour the merge_bvec_fn of underlying devices,
+we must make sure never to submit a bio larger than 1 page when a 
+merge_bvec_fn is defined.
+raid5 already does this (it never submits bios larger than one page).
+With this patch, all other raid personalities limit their 
+max_sectors when a merge_bvec_fn is present.
+
+ ----------- Diffstat output ------------
+ ./drivers/md/linear.c    |    9 +++++++++
+ ./drivers/md/multipath.c |   19 +++++++++++++++++++
+ ./drivers/md/raid0.c     |   10 ++++++++++
+ ./drivers/md/raid1.c     |   18 ++++++++++++++++++
+ 4 files changed, 56 insertions(+)
+
+diff ./drivers/md/linear.c~current~ ./drivers/md/linear.c
+--- ./drivers/md/linear.c~current~	2003-11-21 13:59:16.000000000 +1100
++++ ./drivers/md/linear.c	2003-11-21 14:10:24.000000000 +1100
+@@ -113,8 +113,17 @@ static int linear_run (mddev_t *mddev)
+ 		}
+ 
+ 		disk->rdev = rdev;
++
+ 		blk_queue_stack_limits(mddev->queue,
+ 				       rdev->bdev->bd_disk->queue);
++		/* as we don't honour merge_bvec_fn, we must never risk
++		 * violating it, so limit ->max_sector to one PAGE, as
++		 * a one page request is never in violation.
++		 */
++		if (rdev->bdev->bd_disk->queue->merge_bvec_fn &&
++		    mddev->queue->max_sectors > (PAGE_SIZE>>9))
++			mddev->queue->max_sectors = (PAGE_SIZE>>9);
++
+ 		disk->size = rdev->size;
+ 		mddev->array_size += rdev->size;
+ 
+
+diff ./drivers/md/multipath.c~current~ ./drivers/md/multipath.c
+--- ./drivers/md/multipath.c~current~	2003-11-21 13:59:16.000000000 +1100
++++ ./drivers/md/multipath.c	2003-11-21 14:10:24.000000000 +1100
+@@ -273,6 +273,17 @@ static int multipath_add_disk(mddev_t *m
+ 			p->rdev = rdev;
+ 			blk_queue_stack_limits(mddev->queue,
+ 					       rdev->bdev->bd_disk->queue);
++
++		/* as we don't honour merge_bvec_fn, we must never risk
++		 * violating it, so limit ->max_sector to one PAGE, as
++		 * a one page request is never in violation.
++		 * (Note: it is very unlikely that a device with 
++		 * merge_bvec_fn will be involved in multipath.)
++		 */ 
++			if (rdev->bdev->bd_disk->queue->merge_bvec_fn &&
++			    mddev->queue->max_sectors > (PAGE_SIZE>>9))
++				mddev->queue->max_sectors = (PAGE_SIZE>>9);
++
+ 			conf->working_disks++;
+ 			rdev->raid_disk = path;
+ 			rdev->in_sync = 1;
+@@ -410,8 +421,16 @@ static int multipath_run (mddev_t *mddev
+ 
+ 		disk = conf->multipaths + disk_idx;
+ 		disk->rdev = rdev;
++
+ 		blk_queue_stack_limits(mddev->queue,
+ 				       rdev->bdev->bd_disk->queue);
++		/* as we don't honour merge_bvec_fn, we must never risk
++		 * violating it, not that we ever expect a device with
++		 * a merge_bvec_fn to be involved in multipath */
++		if (rdev->bdev->bd_disk->queue->merge_bvec_fn &&
++		    mddev->queue->max_sectors > (PAGE_SIZE>>9))
++			mddev->queue->max_sectors = (PAGE_SIZE>>9);
++
+ 		if (!rdev->faulty) 
+ 			conf->working_disks++;
+ 	}
+
+diff ./drivers/md/raid0.c~current~ ./drivers/md/raid0.c
+--- ./drivers/md/raid0.c~current~	2003-11-21 13:59:18.000000000 +1100
++++ ./drivers/md/raid0.c	2003-11-21 14:10:24.000000000 +1100
+@@ -112,8 +112,18 @@ static int create_strip_zones (mddev_t *
+ 			goto abort;
+ 		}
+ 		zone->dev[j] = rdev1;
++
+ 		blk_queue_stack_limits(mddev->queue,
+ 				       rdev1->bdev->bd_disk->queue);
++		/* as we don't honour merge_bvec_fn, we must never risk
++		 * violating it, so limit ->max_sector to one PAGE, as
++		 * a one page request is never in violation.
++		 */
++
++		if (rdev1->bdev->bd_disk->queue->merge_bvec_fn &&
++		    mddev->queue->max_sectors > (PAGE_SIZE>>9))
++			mddev->queue->max_sectors = (PAGE_SIZE>>9);
++
+ 		if (!smallest || (rdev1->size <smallest->size))
+ 			smallest = rdev1;
+ 		cnt++;
+
+diff ./drivers/md/raid1.c~current~ ./drivers/md/raid1.c
+--- ./drivers/md/raid1.c~current~	2003-11-21 13:59:33.000000000 +1100
++++ ./drivers/md/raid1.c	2003-11-21 14:10:24.000000000 +1100
+@@ -677,8 +677,17 @@ static int raid1_add_disk(mddev_t *mddev
+ 	for (mirror=0; mirror < mddev->raid_disks; mirror++)
+ 		if ( !(p=conf->mirrors+mirror)->rdev) {
+ 			p->rdev = rdev;
++
+ 			blk_queue_stack_limits(mddev->queue,
+ 					       rdev->bdev->bd_disk->queue);
++			/* as we don't honour merge_bvec_fn, we must never risk
++			 * violating it, so limit ->max_sector to one PAGE, as
++			 * a one page request is never in violation.
++			 */
++			if (rdev->bdev->bd_disk->queue->merge_bvec_fn &&
++			    mddev->queue->max_sectors > (PAGE_SIZE>>9))
++				mddev->queue->max_sectors = (PAGE_SIZE>>9);
++
+ 			p->head_position = 0;
+ 			rdev->raid_disk = mirror;
+ 			found = 1;
+@@ -1077,8 +1086,17 @@ static int run(mddev_t *mddev)
+ 		disk = conf->mirrors + disk_idx;
+ 
+ 		disk->rdev = rdev;
++
+ 		blk_queue_stack_limits(mddev->queue,
+ 				       rdev->bdev->bd_disk->queue);
++		/* as we don't honour merge_bvec_fn, we must never risk
++		 * violating it, so limit ->max_sector to one PAGE, as
++		 * a one page request is never in violation.
++		 */
++		if (rdev->bdev->bd_disk->queue->merge_bvec_fn &&
++		    mddev->queue->max_sectors > (PAGE_SIZE>>9))
++			mddev->queue->max_sectors = (PAGE_SIZE>>9);
++
+ 		disk->head_position = 0;
+ 		if (!rdev->faulty && rdev->in_sync)
+ 			conf->working_disks++;
