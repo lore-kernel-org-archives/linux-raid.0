@@ -1,61 +1,31 @@
-From: Mike Perry <mikepery@fscked.org>
+From: Neil Brown <neilb@cse.unsw.edu.au>
 Subject: Re: Hot adding active disk to RAID1?
-Date: Tue, 10 Feb 2004 01:54:06 -0600
+Date: Tue, 10 Feb 2004 19:22:19 +1100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040210075406.GB15112@fscked.org>
-References: <20040207152948.GA17368@fscked.org> <20040207173716.GA10996@fscked.org> <1076178191.3328.32.camel@picard.intra.techwiz.ca>
+Message-ID: <16424.38075.333116.361351@notabene.cse.unsw.edu.au>
+References: <20040207152948.GA17368@fscked.org>
+	<20040207173716.GA10996@fscked.org>
+	<1076178191.3328.32.camel@picard.intra.techwiz.ca>
+	<20040210075406.GB15112@fscked.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1076178191.3328.32.camel@picard.intra.techwiz.ca>
-To: linux-raid@vger.kernel.org
+In-Reply-To: message from Mike Perry on Tuesday February 10
+To: Mike Perry <mikepery@fscked.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Tuesday February 10, mikepery@fscked.org wrote:
+> 
+> I concur. The manpages really should clear up that raidhotadd (and mdadm
+> -a) only add spares. And they should further clarify that spares are
+> essentially useless and lie dormant.. The names of these
+> commands/options are very deceptive to the new user...
 
-Thus spake Peter Sj?berg (peters@techwiz.ca):
+Patches are more that welcome.
+It is very hard for someone how knows the system "inside-out" to see
+which areas aren't explained well.
 
-> On Sat, 2004-02-07 at 12:37, Mike Perry wrote:
-> > Thus spake Mike Perry (mikepery@fscked.org):
-> > Anyways, sorry for the spam, but I imagine at least one other poor sap
-> > out there will find this useful ;)
-> I'm that one.
-> I ended up at the same place but for another reason. I was in a hurry to
-> build my system and knew that converting a ext3 to raid would cause some
-> problem because of some extra raid info, so I defined a raid1 with only
-> one disk. Later I bought the other disk and tried to add it by changing
-> /etc/raidtab but that did of course not work and it was at this point I
-> started to actually read the doc...
+NeilBrown
 
-Yeah, this sounds like my exact scenario, give or take a few details.
-
-> I saw reference to an old version of mkraid that would reinitialize the
-> superblock only (--superblock-only) and keep the data, but newer
-> raidtools doesn't do that. If that been there or some manpage in the
-> later version describing it a bit clearer I could dear to do mkraid -f
-> but with all incarnations of the raid software I no longer know what is
-> safe in my version
-
-I concur. The manpages really should clear up that raidhotadd (and mdadm
--a) only add spares. And they should further clarify that spares are
-essentially useless and lie dormant.. The names of these
-commands/options are very deceptive to the new user...
-
-> My current state is that I have root mounted as /dev/md0 created with
-> one disk (/dev/hda5) as disk 0. I have since then added another disk and
-> partitioned it equal. I now want to add /dev/hdc5 to md0 (was never
-> mentioned before). If I add that to raidtab as failed-disk and do
-> "mkraid -f", will I loose anything?
-
-I would put your data on both just in case. But yes, this should work
-just fine. The sync should start as soon as you raidhotadd a failed
-disk.
-
-
-Sorry for the late reply.. Was away for the weekend (which was the cause
-of my original impatience and need to quickly find a solution..) 
-
--- 
-Mike Perry
-Mad Computer Scientist
-fscked.org evil labs
