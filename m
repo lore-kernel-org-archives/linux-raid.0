@@ -1,69 +1,85 @@
-From: Mike Dresser <mdresser_l@windsormachine.com>
+From: Jim Ramsey <jwramsey@pobox.com>
 Subject: Re: where to buy very very large cases
-Date: Mon, 28 Jul 2003 10:34:17 -0400 (EDT)
+Date: Mon, 28 Jul 2003 10:21:45 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.56.0307281024000.15708@router.windsormachine.com>
-References: <bWpzdHVtcGY=.14a9e78b52177716d8df11d88fc1d02c@1059398282.cotse.net>
+Message-ID: <200307281021.45794.jwramsey@pobox.com>
+References: <bWpzdHVtcGY=.14a9e78b52177716d8df11d88fc1d02c@1059398282.cotse.net> <Pine.LNX.4.55.0307281006480.22915@datavibe.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: Text/Plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <bWpzdHVtcGY=.14a9e78b52177716d8df11d88fc1d02c@1059398282.cotse.net>
-To: mjstumpf@pobox.com
-Cc: linux-raid@vger.kernel.org
+In-Reply-To: <Pine.LNX.4.55.0307281006480.22915@datavibe.net>
+Content-Description: clearsigned data
+Content-Disposition: inline
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 28 Jul 2003, mjstumpf wrote:
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-> Perhaps off topic or FAQ.  My apologies, seemed like best forum.
+A verry big AMEN about cooling.
+
+Servers are up all the time.  If you want your drives to last as long as
+possible, cool the enclosure well.  Keeping the drives cool can help
+them last longer, but almost more important is keeping the drives at
+a STABLE temperature.  You also want to invest good money in a high
+quality power supply -- not just big (in terms of watts), but good.
+Again supplying high quality, stable DC power will help make the
+entire system generally more stable and reliable.
+
+On Monday 28 July 2003 10:11, Rev. Jeffrey Paul wrote:
+> On Mon, 28 Jul 2003, mjstumpf wrote:
+> > I need to expand an x86-based fileserver that's already stacked with 11
+> > drives.  Where have you folks found reasonably-priced very very large ATX
+> > cases?  I need to go to 20 or so drives, but I'd like to hear the upper
+> > limit you have all found..
+> >
+> > Are there other means of packing more drives into a small space -- IE,
+> > has anyone actually fabricated a bracket that would take multiple
+> > vertical 5.25" form factor spaces, and let you mount 3.5" drives sideways
+> > [vertically] to pack 4 drives into the space of 3.. etc..
+> >
+> > May have to resort to home depot PVC + jigsaw + zipties.. !!
 >
-> I need to expand an x86-based fileserver that's already stacked with 11
-> drives.  Where have you folks found reasonably-priced very very large ATX
-> cases?  I need to go to 20 or so drives, but I'd like to hear the upper
-> limit you have all found..
+> While I'm all for the home depot engineering (i just made ten sets of rack
+> rails for $11 each whereas OEM ones for our ibm servers were >$200 each),
+> i don't think that's your best bet in this case.
 >
-> Are there other means of packing more drives into a small space -- IE, has
-> anyone actually fabricated a bracket that would take multiple vertical
-> 5.25" form factor spaces, and let you mount 3.5" drives sideways
-> [vertically] to pack 4 drives into the space of 3.. etc..
+> What type of interface do the drives have?  If they're LVD SCSI, you might
+> be better off with an external drive enclosure (they're designed to fit
+> many drives in small spaces, with proper cooling and power to boot)
+> connected to a VHDCI external connector on your scsi or raid card.
+>
+> Someone (3ware?) should make an IDE drive cage with a custom backplane and
+> an integrated IDE RAID card... and a VHDCI plug for an uplink to the host.
+> That would be cool.
+>
+> -j
+>
+> --
+> --------------------------------------------------------
+>  Rev. Jeffrey Paul    -datavibe-     sneak@datavibe.net
+>    aim:x736e65616b   pgp:0x15FA257E   phone:8777483467
+>     70E0 B896 D5F3 8BF4 4BEE 2CCF EF2F BA28 15FA 257E
+> --------------------------------------------------------
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Yes, there's carriers to let you do this, I've seen 3 3.5 in 2
-5.25(normal orientation), and 4-5 3.5" in 3 5.25"(on their side).
+- -- 
+Regards,
 
-Try googling for 3in2 ide.
+Jim Ramsey
 
-Most of these are very expensive if they're hotswappable and all that, I
-found a very cheap(30 dollar) bracket about two years ago, but don't
-recall the url.
+  There's that that's worth living for.
+  There's that that's worth dying for.
+  The rest is c**p.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.1 (GNU/Linux)
 
-You do have to really watch your cooling though, because you're taking
-away any space around the drives.
+iD8DBQE/JTF5DGYt4MQyo3IRAgP0AKCsbXNz9okedu0f80Asbt1uFygJHwCfUqWG
+wxMK6ktRGFylu6aegpwr02U=
+=8ANn
+-----END PGP SIGNATURE-----
 
-Most of these carriers are designed for SCSI.
-
-You should set your scsi drives to power on by scsi id.(drive 0 powers up
-immediately, id 1 powers up 7(12) seconds later, scsi id 15 powers up
-7(12) * 15 seconds later.
-
-Else the spinup current may overwhelm your power supply even if the PS can
-normally handle that many drives.
-
-If you need something to plug IDE drives into, the 3ware 7500-12 works
-quite nicely in Linux, along with it's 7500-8 8 port brother.  This will
-also let you hotswap drives.  These cards do raid0,1,10,5,etc, or
-alternatively let you just use the drives normally.
-
-Something like a 12 5.25" bay case, such as the high end Antec 1500(can't
-remember exact model) could theorectically hold 20 scsi drives.  Cabling
-and power will become fun at that point though.
-
-Don't bother with IDE in the antec case unless you want to drill a hole
-through the motherboard plate, as 18" ide cables are not long enough to
-reach around except for the very bottom or top 5.25" bays.  The Antec 1500
-is a nice case otherwise though.  I have a system with 4 15krpm cheetah's,
-a jaz drive, cdrom, and a dds-3 mounted without having to actively cool
-the cheetahs.  There's enough airflow to keep them at barely warm.  Then
-again, with 1 80mm + 9 92mm fans, (4 front, 6 back) I'd hope so!
-
-Yes, it's loud.
-
-Mike
