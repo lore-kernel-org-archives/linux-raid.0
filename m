@@ -1,69 +1,39 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: syncing RAID1 with more than 10MB/sec
-Date: Wed, 30 Mar 2005 04:40:43 -0500
-Message-ID: <200503300940.j2U9enm06046@www.watkins-home.com>
-References: <424A6D99.6070501@netuse.de>
+From: "Marvin Solomon" <HYCCGAJDRPAJ@hotmail.com>
+Subject: Description: Offer job pert time. Big money.
+Date: Wed, 30 Mar 2005 19:32:31 -0700
+Message-ID: <PJRZWNAPGOXKBZFEVZWQSOHNW@hotmail.com>
+Reply-To: "Marvin Solomon" <HYCCGAJDRPAJ@hotmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <424A6D99.6070501@netuse.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Nils-Henner Krueger' <nhk@netuse.de>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> owner@vger.kernel.org] On Behalf Of Nils-Henner Krueger
-> Sent: Wednesday, March 30, 2005 4:13 AM
-> To: linux-raid@vger.kernel.org
-> Subject: syncing RAID1 with more than 10MB/sec
-> 
-> Syncing a raid1 takes long time for large disks because of
-> the 10MB/sec limit:
-> 
-> Mar 30 10:58:31 imap1 kernel: raid1: raid set md2 not clean;
-> reconstructing mirrors
-> Mar 30 10:58:31 imap1 kernel: raid1: raid set md2 active with 2 out of 2
-> mirrors
-> Mar 30 10:58:31 imap1 kernel: md: syncing RAID array md2
-> Mar 30 10:58:31 imap1 kernel: md: minimum _guaranteed_ reconstruction
-> speed: 100 KB/sec/disc.
-> Mar 30 10:58:31 imap1 kernel: md: using maximum available idle IO
-> bandwith (but not more than 10000 KB/sec) for reconstruction.
-> 
-> Is it possible to raise this value (without recompiling)?
-> I know about possible performance tradeoffs with other
-> processes, I'm just generally interested.
-> 
-> Thanks.
-> 
-> nils-henner
+Are you really looking for job?
 
-Yes.  For details:
-man md
+One of the biggest Finance Company of the East Europe glad to offered excellent work guaranteeing real money for you!!
 
-The default of 10,000 has been increased to 100,000 in newer kernels.
-I don't know which kernels.
+No need to invest or buy products in order to work with us.
+No money to start.
 
-If you want to override the defaults you could add these 3 lines to
-/etc/sysctl.conf:
-# RAID rebuild min/max speed K/Sec per device
-dev.raid.speed_limit_min = 1000
-dev.raid.speed_limit_max = 100000
+About us
 
-Adjust above as required.  The above will take effect after a reboot.
+Latvia Web Finance Company, Latvia was founded in 1993 by a team of antiquities experts. By now our company has grown from a small company with 7 employees to an international group with several representative offices in different countries of the world. Nowadays we are not just selling and buying antiques, but are also dealing with organization of international exhibitions, seminars, tours and many other things. 
 
-To see current values type these 2 lines:
-cat /proc/sys/dev/raid/speed_limit_min
-cat /proc/sys/dev/raid/speed_limit_max
+For more information:  http://www.realfinance-worldwide.com   
 
-To temporarily change the defaults use these 2 commands:
-echo 1000 > /proc/sys/dev/raid/speed_limit_min
-echo 100000 > /proc/sys/dev/raid/speed_limit_max
+Our vacancies:   
 
-Adjust above as required.  The above will take effect now.
+http://www.realfinance-worldwide.com
 
-Guy
+Now clients of our company conduct financial operations all over the world including UK, but due to sufficient perfection Banking service we have some difficulties in translations and the organizations of our business, therefore we planning opening branches in which we require UK . Now we are looking for financial assistants that will be responsible to accept payments from our clients. At this moment we are provide and offered work at home, after opening offices in UK you will have an opportunity for working in our offices as well.
 
+Today we are looking for financial assistants that will be responsible to accept payments from clients through bank transfer, because of imperfection of bank system UKs partners our clients have some difficulties with sending of bank translations and checks to the East Europe. You can make 10 % commission from every transfer you will receive through your in relation to our business. The rest needs to be transferred to our company's representative by Western Union, all Western Union fees are paid by us. On average you will be making 2,000 USD per week.
+
+We are believe that you can get good future and achievements in our business. If our offer is interesting to you, please feel free and sending a mail to our HR office. For more information our crew of Human Resources is ready to answer all your questions.
+
+Sincerely yours,   
+Rrealfinance-worldwide Company, Latvia. 
+contact@realfinance-worldwide.com   
