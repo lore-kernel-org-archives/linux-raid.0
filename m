@@ -1,67 +1,143 @@
-From: IPSI-2005 Conferences <pescara2005@vreme.yubc.net>
-Subject: Invitation to Italy, Holland, and Montenegro 2005; c/bb
-Date: Tue, 5 Apr 2005 15:24:48 +0200
-Message-ID: <200504051324.j35DOmaB010740@vreme.yubc.net>
+From: Dave Jiang <djiang@mvista.com>
+Subject: multi-hosting support for carrier grade Linux
+Date: Tue, 5 Apr 2005 13:41:55 -0700
+Message-ID: <20050405204155.GA32724@blade.az.mvista.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Dear potential Speaker:
+I'm attempting to implement multihost support of the MD for environments
+such as carrier grade Linux. Multihost support allows the RAID array to
+be claimed by a particular host via a unique ID (unique SCSI host ID,
+FibreChannel WWN, or geographical address of a chassis blade. That way
+another host that can access the disks do not claim the same disks that
+are used by the RAID array. 
 
-On behalf of the organizing committee, I would like to extend a cordial invitation for you to attend one of the upcoming IPSI BgD multidisciplinary, interdisciplinary, and transdisciplinary conferences.
+I would like to store a 64bit unique ID on the
+superblock of the device. The least intrusive way IMHO to do this is
+implementing the feature via the management app such as mdadm in
+userland. However, it seems that after I instruct the kernel to create the MD array via mdadm, the kernel starts out with a blank superblock and clobbers the
+data I have stored on the superblock via mdadm. Would it be acceptable
+to modify the kernel such that the unique ID info is preserved during
+the creation of the superblock by the kernel? Example patch follows:
 
-The first one will take place in Loreto Aprutino, Italy:
+Index: linux-2.6.10/drivers/md/md.c
+===================================================================
+--- linux-2.6.10.orig/drivers/md/md.c
++++ linux-2.6.10/drivers/md/md.c
+@@ -640,6 +640,10 @@
+ 	struct list_head *tmp;
+ 	mdk_rdev_t *rdev2;
+ 	int next_spare = mddev->raid_disks;
++#ifdef CONFIG_MD_MULTIHOST	
++	u32 host_id_type;
++	u64 host_identifier;
++#endif	
+ 
+ 	/* make rdev->sb match mddev data..
+ 	 *
+@@ -656,6 +660,13 @@
+ 
+ 	sb = (mdp_super_t*)page_address(rdev->sb_page);
+ 
++#ifdef CONFIG_MD_MULTIHOST
++	/* saving MULTIHOST entries */
++	read_disk_sb(rdev);
++	host_id_type = sb->this_disk.host_id_type;
++	host_identifier = sb->this_disk.host_identifier;
++#endif	
++
+ 	memset(sb, 0, sizeof(*sb));
+ 
+ 	sb->md_magic = MD_SB_MAGIC;
+@@ -741,6 +752,13 @@
+ 	sb->spare_disks = spare;
+ 
+ 	sb->this_disk = sb->disks[rdev->desc_nr];
++
++#ifdef CONFIG_MD_MULTIHOST
++	/* MULTIHOST */
++	sb->this_disk.host_id_type = host_id_type;
++	sb->this_disk.host_identifier = host_identifier;
++#endif	
++
+ 	sb->sb_csum = calc_sb_csum(sb);
+ }
+ 
+@@ -3103,7 +3121,23 @@
+ 				seq_printf(seq, "	resync=DELAYED");
+ 		}
+ 
++#ifdef CONFIG_MD_MULTIHOST
++		ITERATE_RDEV(mddev,rdev,tmp2) {
++			char b[BDEVNAME_SIZE];
++			mdp_super_t *sb = (mdp_super_t*)page_address(rdev->sb_page);
++			if(sb->this_disk.host_id_type == 0)
++				break;
++			seq_printf(seq, "\n      %s[%d] : ", 
++					bdevname(rdev->bdev,b), rdev->desc_nr);
++			seq_printf(seq, "\n          MultiHost ID type : %d",
++					sb->this_disk.host_id_type);
++			seq_printf(seq, "\n          MultiHost ID : %llu",
++					sb->this_disk.host_identifier);
++		}
++		seq_printf(seq, "\n\n");
++#else		
+ 		seq_printf(seq, "\n");
++#endif /* CONFIG_MD_MULTIHOST */
+ 	}
+ 	mddev_unlock(mddev);
+ 	
+Index: linux-2.6.10/include/linux/raid/md_p.h
+===================================================================
+--- linux-2.6.10.orig/include/linux/raid/md_p.h
++++ linux-2.6.10/include/linux/raid/md_p.h
+@@ -85,7 +85,13 @@
+ 	__u32 minor;		/* 2 Device minor number		      */
+ 	__u32 raid_disk;	/* 3 The role of the device in the raid set   */
+ 	__u32 state;		/* 4 Operational state			      */
++#if CONFIG_MD_MULTIHOST
++	__u32 reserved[MD_SB_DESCRIPTOR_WORDS - 8];
++	__u32 host_id_type;
++	__u64 host_identifier;
++#else
+ 	__u32 reserved[MD_SB_DESCRIPTOR_WORDS - 5];
++#endif	/* CONFIG_MD_MULTIHOST */
+ } mdp_disk_t;
+ 
+ #define MD_SB_MAGIC		0xa92b4efc
+Index: linux-2.6.10/drivers/md/Kconfig
+===================================================================
+--- linux-2.6.10.orig/drivers/md/Kconfig
++++ linux-2.6.10/drivers/md/Kconfig
+@@ -164,6 +164,17 @@
+ 
+ 	  If unsure, say N.
+ 
++config MD_MULTIHOST
++	bool "Multi-Host support"
++	depends on BLK_DEV_MD
++	help
++	  Multi-Host is the ability to bind an MD volume to a particular host via
++	  a unique identifier. The choices of identifiers can be used are: unique
++	  SCSI host ID, Fibre Channel IEEE unique identifier (WWN), or telecom
++	  blade geographical address (IPMB address). 
++
++	  If unsure, say N
++	  
+ config MD_FAULTY
+ 	tristate "Faulty test module for MD"
+ 	depends on BLK_DEV_MD
 
-IPSI-2005 ITALY
-Hotel Castello Chiola (arrival: 27 July 05 / departure: 1 August 05)
-New deadlines: 10 April 05 (abstract) / 10 May 05 (full paper)
 
-The second one will take place in Amsterdam, Holland:
+------------------------------------------------------
+Dave Jiang
+Software Engineer                               
+MontaVista Software, Inc.                       
+mailto:djiang@mvista.com
+------------------------------------------------------
 
-IPSI-2005 HOLLAND
-Hotel Okura (arrival: 1 September 05 / departure: 4 September 05)
-deadlines: 15 April 05 (abstract) / 1 June 05 (full paper)
-
-The third one will take place in Sveti Stefan, Montenegro:
-
-IPSI-2005 MONTENEGRO
-Hotel Sveti Stefan (arrival: 1 October 05 / departure: 8 October 05)
-Deadlines: 1 May 05 (abstract) / 1 July 05 (full paper)
-
-All IPSI BgD conferences are non-profit. They bring together the elite of the world science; so far, we have had seven Nobel Laureates speaking at the opening ceremonies. The conferences always take place in some of the most attractive places of the world. All those who come to IPSI conferences once, always love to come back (because of the unique professional quality and the extremely creative atmosphere); lists of past participants are on the web, as well as details of future conferences.
-
-These conferences are in line with the newest recommendations of the US National Science Foundation and of the EU research sponsoring agencies, to stress multidisciplinary, interdisciplinary, and transdisciplinary research (M+I+T++ research). The speakers and activities at the conferences truly support this type of scientific interaction.
-
-One of the main topics of this conference is "E-education and E-business with Special Emphasis on Semantic Web and Web Datamining"
-
-Other topics of interest include, but are not limited to:
-
-* Internet
-* Computer Science and Engineering
-* Mobile Communications/Computing for Science and Business
-* Management and Business Administration
-* Education
-* e-Medicine
-* e-Oriented Bio Engineering/Science and Molecular Engineering/Science
-* Environmental Protection
-* e-Economy
-* e-Law
-* Technology Based Art and Art to Inspire Technology Developments
-* Internet Psychology
-
-If you would like more information on either conference, please reply to this e-mail message.
-
-If you plan to submit an abstract and paper, please let us know immediately for planning purposes. Note that you can submit your paper also to the IPSI Transactions journal.
-
-Sincerely Yours,
-
-Prof. V. Milutinovic, Chairman,
-IPSI BgD Conferences
-
-
-* * * CONTROLLING OUR E-MAILS TO YOU * * *
-
-If you would like to continue to be informed about future IPSI BgD conferences, please reply to this e-mail message with a subject line of SUBSCRIBE.
-
-If you would like to be removed from our mailing list, please reply to this e-mail message with a subject line of REMOVE.
