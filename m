@@ -1,38 +1,97 @@
-From: Florian Schanda <ma1flfs@bath.ac.uk>
-Subject: 2.6.0-test{1,2,3} kernels + software raid 0 + xfs broken?
-Date: Sat, 23 Aug 2003 19:16:00 +0000
+From: "Mikael Chambon" <raid-ml@cronos.org>
+Subject: raid partition crash
+Date: Fri, 22 Aug 2003 16:30:52 -1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200308231916.00588.ma1flfs@bath.ac.uk>
-Reply-To: ma1flfs@bath.ac.uk
+Message-ID: <000201c36aac$37729080$1902a8c0@magnus>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="us-ascii"
+	charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi all,
+Dear RAID users,
 
-I am running a 2.4.21 kernel + xfs + raid0 (software) on 2 scsi disks. It 
-works without flaws.
+I  have a root raid 1 fileserver using 2 120 IDE disk and a standard Redhat
+2.4.20 kernel
+Two days ago I discovered that one of my raid partition failed:
 
-Trying the same setup in 2.6.0-test{1,2,3} (haven't tested 4 yet) _will_ give 
-data corruption if I write to the array.
+====== From my logs ============
+Aug 15 23:00:05 mekare kernel: hdc: dma_intr: status=0x51 { DriveReady
+SeekComplete Error }
+Aug 15 23:00:05 mekare kernel: hdc: dma_intr: error=0x40
+ UncorrectableError }, LBAsect=73785359, sector=64487504
+Aug 15 23:00:05 mekare kernel: end_request: I/O error, dev 16:06 (hdc),
+sector 64487504
+Aug 15 23:00:05 mekare kernel: raid1: Disk failure on hdc6, disabling
+device.
+Aug 15 23:00:05 mekare kernel: ^IOperation continuing on 1 devices
+Aug 15 23:00:05 mekare kernel: raid1: hdc6: rescheduling block 64487504
+Aug 15 23:00:05 mekare kernel: md: updating md0 RAID superblock on device
+Aug 15 23:00:05 mekare kernel: md: hda6 [events: 0000001d]<6>(write) hda6's
+sb offset: 115411840
+Aug 15 23:00:05 mekare kernel: md: recovery thread got woken up ...
+Aug 15 23:00:05 mekare kernel: md0: no spare disk to reconstruct array! --
+continuing in degraded mode
+Aug 15 23:00:05 mekare kernel: md: recovery thread finished ...
+Aug 15 23:00:05 mekare kernel: md: (skipping faulty hdc6 )
+Aug 15 23:00:05 mekare kernel: raid1: hda6: redirecting sector 64487504 to
+another mirror
+============================
 
-2 Things that happen are:
-* Creating a directory and then being unable to remove it: (rm -r foo says foo 
-is not directory, rmdir foo says foo is not a directory, rm foo says foo is a 
-directory, ls -l foo says it is a directory)
-* writing files to the array, unmount array (works fine up here), mounting 
-again utterly fails. (bad superblock, etc, etc) Doing an "xfs_repair -L" will 
-kill a lot of data (the files modifies / written) but fix it. Rebooting into 
-2.4 will fix it too (It doesn't even complain when mounting the thing.)
+hda6 and hdc6 are my fileserver partition using RAID1 as md0.
+Others partitions on hdc seem to work fine.
 
-Anybody has an idea?
+====== From /etc/raidtab ==========
+[.....skip....]
 
-Thanks,
+raiddev             /dev/md0
+raid-level                  1
+nr-raid-disks               2
+chunk-size                  64k
+persistent-superblock       1
+nr-spare-disks              0
+    device          /dev/hda6
+    raid-disk     0
+    device          /dev/hdc6
+    raid-disk     1
+[....skip.....]
+=============================
 
-	- Florian
+========From /proc/mdstat=========
+Personalities : [raid1]
+read_ahead 1024 sectors
+md0 : active raid1 hda6[0] hdc6[1](F)
+      115411840 blocks [2/1] [U_]
+md2 : active raid1 hda5[0] hdc5[1]
+      532608 blocks [2/2] [UU]
+md1 : active raid1 hda3[0] hdc3[1]
+      2047680 blocks [2/2] [UU]
+md3 : active raid1 hda2[0] hdc2[1]
+      2047680 blocks [2/2] [UU]
+md4 : active raid1 hda1[0] hdc1[1]
+      20544 blocks [2/2] [UU]
+unused devices: <none>
+=============================
+
+
+
+As others hdc partitions seem to work fine, I assume there is not hardware
+problem with hdc.
+So I tried to reinsert hdc6 to md0 with: raidhotadd -a /dev/md0 /dev/hdc6
+but I get the following error:
+
+/dev/md0: can not hot-add disk: disk busy!
+
+
+What do you thing of this problem ? Is this an hardware problem ?
+How can I reinsert hdc6 without stopping the raid array (the fileserver is
+currently in production).
+
+Thanks a lot for your answer and sorry for this long email.
+
+--
+Mikael Chambon
+
 
