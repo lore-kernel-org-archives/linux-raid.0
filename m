@@ -1,38 +1,42 @@
-From: "Kevin P. Fleming" <kpfleming@backtobasicsmgmt.com>
-Subject: Re: raid0 + raid1 question
-Date: Thu, 09 Oct 2003 19:37:52 -0700
+From: Lars Marowsky-Bree <lmb@suse.de>
+Subject: Re: raid1 critical sections not protected in 2.4.x?
+Date: Fri, 10 Oct 2003 10:14:46 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3F861B80.706@backtobasicsmgmt.com>
-References: <3F84793F.6060400@siue.edu> <1065729282.10027.127.camel@localhost.localdomain> <3F85CC5B.5020107@siue.edu>
+Message-ID: <20031010081445.GC29059@marowsky-bree.de>
+References: <1065721318.4761.138.camel@persist.az.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3F85CC5B.5020107@siue.edu>
-To: linux-raid@vger.kernel.org
+Content-Disposition: inline
+In-Reply-To: <1065721318.4761.138.camel@persist.az.mvista.com>
+To: Steven Dake <sdake@mvista.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-anthony mayes wrote:
+On 2003-10-09T10:41:59,
+   Steven Dake <sdake@mvista.com> said:
 
-> I'm assuming the snapshot it the same size as the FS to backup.  What if 
-> you don't have enough disk space to do this?
-> 
+> I have been looking at the raid1.c code.  There is a kernel thread
+> raid1d that could be scheduled on processor A.  Then on processor B,
+> other raid code could be scheduled as per each block I/O request.
 
-Nope, otherwise it would take a lot longer than 1 minute to make a 
-snapshot of a 360GB filesystem :-)
+Did you follow the recent locking fixes to md I discussed with Neil? I
+think this fixes some of these; at least we have a confirmation from IB=
+M
+that some raid1 races (not resyncing after a hotadd, no progress during
+resync etc) went away with it.
 
-The snapshot is just a "holding area" to record the original disk 
-blocks for anything that gets changed after the snapshot is created. 
-It only needs to be big enough to hold the amount of data that you 
-expect to change while it exists. In the case of using this do to 
-backups, if you can copy the snapshot to another disk array in an 
-hour, then the snapshot only needs to be big enough to hold an hour's 
-worth of changes; if that hour is 3-4AM, when your system is otherwise 
-idle, the snapshot can be pretty small.
 
-If you make the snapshot and then backup the snapshot to tape, and it 
-takes 6 hours to make the tape backup, obviously the snapshot would 
-have to be bigger. It's not unheard of for people to make 10GB 
-snapshots of 1TB filesystems and never even use all 10GB before they 
-throw the snapshot away.
+Sincerely,
+    Lars Marowsky-Br=E9e <lmb@suse.de>
 
+--=20
+High Availability & Clustering		ever tried. ever failed. no matter.
+SuSE Labs				try again. fail again. fail better.
+Research & Development, SUSE LINUX AG		-- Samuel Beckett
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
