@@ -1,50 +1,40 @@
-From: bfowler@ewitness.co.uk (ewitness - Ben Fowler)
-Subject: RAID 5 disk format for Promise SuperTrak Sx6000 (Linux)
-Date: Sun, 26 May 2002 03:35:09 +0100
+From: "Martin Bene" <martin.bene@icomedias.com>
+Subject: AW: RAID 5 disk format for Promise SuperTrak Sx6000 (Linux)
+Date: Sun, 26 May 2002 10:01:57 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <f04330107b915ec475e78@[192.168.254.56]>
+Message-ID: <A1A5A3BBFEB3D24E8D84F91AFC8452E3046A68@freedom.icomedias.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+content-class: urn:content-classes:message
+To: ewitness - Ben Fowler <bfowler@ewitness.co.uk>, linux-raid@vger.kernel.org
 Cc: ewitness - David Pearce <dp@ewitness.co.uk>
 List-Id: linux-raid.ids
 
-Just as a standard disk has a standard format with MBR, partition
-table, superblock, root directory et cetera; I assume that the disks
-making up a RAID 5 array have a defined format covering the 'superblock',
-striping, parity and so forth.
+Hi Ben,
 
-Is this standard for all RAID compliant/certified systems? Is it
-defined by each vendor? Is the format/system used by Promise
-published anywhere?
+> I know that I need help because of the five disks making up the array
+> no fewer than three are recognised as 'free', that is, not part
+> of the array. I suspect that the data on these disks is fine, and
+> that the problem was a transient failure on one of the disks, followed
+> by a catastrophe. If I knew how, I would 'force' the controller to
+> use and resync those disks.
 
-Owing to the the sequential ocurrence of a number of circumstances
-each of which was distinctly unlikely. I have the job of trying to 
-read 120 GB of data from a 240 GB RAID 5 Array attached to
-a Supertrak Sx6000 controller card. The software that handles
-the raid is on the card's BIOS and so far as I know is proprietary.
+Welcome to the club - I went through EXACTLY the same scenario only last weekend, with my Promise SX6000. the actual solution is very simple:
 
-I know that I need help because of the five disks making up the array
-no fewer than three are recognised as 'free', that is, not part
-of the array. I suspect that the data on these disks is fine, and
-that the problem was a transient failure on one of the disks, followed
-by a catastrophe. If I knew how, I would 'force' the controller to
-use and resync those disks.
+you can tell the promise controller to recreate the raid - meta information without touching the data on the disks. BTW, this will only work if you didn't change the sequence of disks on the controller since creating the array (swapping disk1 and disk2 for example).
 
-I suspect my job would be measurably easier and greatly eased if I could
-use the standard Linux tools such as mkraid. See 
-<URL: http://www.mail-archive.com/linux-raid@vger.rutgers.edu/msg07932.html >
-which contains the highly optimistic suggestion:
+reboot the system, go into the SX6000 Bios Setup.
 
-	The problem was how to read using the Linux RAID 5 software, 
-	the data written by Mylex controller. I wrote a few test 
-	programs, and found that the Mylex AcceleRaid controller is 
-	using what Linux software RAID calls right-asymmetric parity 
-	algorithm (you will find the part of /etc/raidtab file I use, 
-	at the end of this mail), so I could read the data using Linux 
-	software RAID (mkraid --force --dangerous-no-resync /dev/md2). 
+* Check the parameters of the existing array (stripe size, GB boundry)
+* Delete the existing array
+* create a new array using all disks and set the "INIT ARRAY" parameter to OFF!!
+* Save changes, reboot.
 
-Is there something similar for the Sx6000? How can I find out?
+If the sequence of disks is OK, the data will still be completely there and you can backup/save the data off the array. Since parity data is probably incorrect at this satate, you'll need to rebuild the parity information to get back to a redundant system that can continue working if a disk fails. I've used the (Windows) remote management utility to do this, don't know if there'S something similar available for linux.
 
-Ben.
+Bye, Martin.
+
+PS: Being afraid to loose data, I an image copy of all the disks on the promise controller before trying this.. of cours this is only possible if you've got enogh spare harddsiks available; just hook them up to onboard IDE and copy using dd if=/dev/hda of=/dev/hdc ...
+
