@@ -1,9 +1,9 @@
 From: Paul Clements <Paul.Clements@SteelEye.com>
 Subject: Re: raid1 bitmap code [Was: Re: Questions answered by Neil Brown]
-Date: Thu, 27 Feb 2003 10:47:29 -0500
+Date: Thu, 27 Feb 2003 11:51:10 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3E5E3311.C202A939@SteelEye.com>
-References: <200302270848.h1R8mmN14809@oboe.it.uc3m.es>
+Message-ID: <3E5E41FE.B3E434D3@SteelEye.com>
+References: <200302271035.h1RAZ9A26165@oboe.it.uc3m.es>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
@@ -13,27 +13,24 @@ Cc: Neil Brown <neilb@cse.unsw.edu.au>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 "Peter T. Breuer" wrote:
-> 
+ 
 > "Paul Clements wrote:"
-> > "Peter T. Breuer" wrote:
-> > > Curiously enough, I'm slightly more nonplussed by the problem of
-> > > kfreeing the bitmap pages when their dirty count drops to zero.
-> 
-> > > What should I do? Maintain a how-many-times-we-have-wanted-to-free-this
-> > > page count and only free it on the 10th attempt?
-> >
-> > hmm...perhaps an LRU approach? you could store a timestamp (jiffies?),
-> > so that you never deallocate a page unless it hasn't been used in X
-> > amount of time...might be too heavyweight for what you're trying to do
-> 
-> This is not silly, but is too heavyweight to do each time a bit is set.
+> > > 3/ Internally, you need to store a counter for each 'chunk' (need a
+> > mechanism for tracking multiple pending writes to the same 'chunk'. One
 
-Yeah, I was thinking of things like an ext3 journal, where you really do
-not want to _ever_ free the pages. With a simple counter, I don't think
-there's any way to get that type of behavior.
+> We cannot account for how many bits are really dirty in this chunk. 
 
-Of course, if you keep a pool of pre-allocated pages, the penalty for
-deallocation/reallocation becomes a lot lower.
+That's OK, we don't need to know. We really just want to know if there
+are any outstanding writes for that chunk. We increment the chunk
+counter for every write and decrement it when the write finishes. Now,
+if the backup device fails, we'll bring it back online at some point and
+do a (partial) resync, using the bitmap as a guide. For every chunk, if
+the counter is non-zero, we have to do a full resync of every block in
+that chunk. We then set the counter back to 0 only after we're done
+resyncing the last block in that chunk.
+
+So we really don't care how many blocks are dirty, just that there are
+or are not dirty blocks in the chunk. Does that make sense?
 
 --
 Paul
