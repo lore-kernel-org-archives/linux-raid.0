@@ -1,74 +1,65 @@
-From: "J. Ryan Earl" <ryan@dynaconnections.com>
+From: Janusz Zamecki <janusz@pipi.ma.cx>
 Subject: RE: RAID1 & 2.6.9 performance problem
-Date: Tue, 18 Jan 2005 13:18:47 -0600
-Message-ID: <OMEKLMBKKEOEENCKLEIDOEFICAAA.ryan@dynaconnections.com>
-References: <1106073663.14134.249.camel@pipi.ma.cx>
+Date: Tue, 18 Jan 2005 20:34:59 +0100
+Message-ID: <1106076899.14134.286.camel@pipi.ma.cx>
+References: <OMEKLMBKKEOEENCKLEIDOEFICAAA.ryan@dynaconnections.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-2
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1106073663.14134.249.camel@pipi.ma.cx>
+In-Reply-To: <OMEKLMBKKEOEENCKLEIDOEFICAAA.ryan@dynaconnections.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Janusz Zamecki <janusz@pipi.ma.cx>
+To: "J. Ryan Earl" <ryan@dynaconnections.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I missed that, sounds like you got an IDE concurrency problem.  Perhaps=
- you
-can't read from both ports for some reason.  Don't think it's a raid pr=
-oblem
-though.
-
--ryan
-
------Original Message-----
-=46rom: Janusz Zamecki [mailto:janusz@pipi.ma.cx]
-Sent: Tuesday, January 18, 2005 12:41 PM
-To: J. Ryan Earl
-Cc: linux-raid@vger.kernel.org
-Subject: RE: RAID1 & 2.6.9 performance problem
+W li=B6cie z wto, 18-01-2005, godz. 20:18, J. Ryan Earl pisze:=20
+> I missed that, sounds like you got an IDE concurrency problem.  Perha=
+ps you
+> can't read from both ports for some reason.  Don't think it's a raid =
+problem
+> though.
 
 
-W li=B6cie z wto, 18-01-2005, godz. 18:34, J. Ryan Earl pisze:
-> "You will get 2 parallel sequential reads at around 120MB/sec
-> assuming you're not bus limited."
->
-> To clarify because this looks ambiguous to me now, you should be able=
- to
-> perform 2 parallel sequential reads both at 60MB/sec =3D 120MB/sec to=
-tal.
->
-> -ryan
->
+well, it is a raid problem. Check it out. I've ran the following script=
+:
 
-Hi,
+hdparm -t /dev/hdg &
+hdparm -t /dev/hde
 
-Unfortunatelly it is not the case. Please go to my original e-mail. I'v=
-e
-ran two simultaneous tests and I get:
+(hde and hdg creates my md6 array from previous message)
 
-
-hdparm -t /dev/md6 &
-hdparm -t /dev/md6
-
-This is the result:
+And there are results:
 
 --disk/hdg----disk/hde-
 _read write _read write
-    0     0 :   0     0
-    0     0 :   0     0
-  124k    0 :26.0M    0
-  368k    0 :45.5M    0
-    0     0 :   0     0
-    0     0 : 896k    0
-  124k    0 :1568k    0
-    0     0 :   0     0
+   0     0 :   0     0
+40.2M    0 :39.9M    0
+53.5M    0 :53.5M    0
+51.5M    0 :51.5M    0
+13.2M    0 :13.5M    0
+   0     0 :   0     0
 
-One disk works with 75% of its full speed, the second one works with
-0,6% of its full speed or even less.
+Even if I increase number of reading threads
 
-Best regards, Janusz
+hdparm -t /dev/hdg &
+hdparm -t /dev/hde &
+hdparm -t /dev/hdg &
+hdparm -t /dev/hde
 
+the workload is more or less evenly distributed.
+
+--disk/hdg----disk/hde-
+_read write _read write
+   0     0 :   0     0
+40.2M    0 :38.9M    0
+7732k    0 :8440k    0
+3780k    0 : 928k    0
+1280k    0 :2400k    0
+2076k    0 :   0     0
+   0     0 :   0     0
+
+Janusz
 -
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
