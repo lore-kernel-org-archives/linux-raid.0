@@ -1,34 +1,32 @@
-From: Mario Giammarco <mgiammarco@virgilio.it>
-Subject: RAID1 VS RAID5
-Date: Sun, 26 Oct 2003 15:45:19 +0100
+From: maarten van den Berg <maarten@vbvb.nl>
+Subject: Re: RAID1 VS RAID5
+Date: Sun, 26 Oct 2003 17:16:16 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1067179519.1222.107.camel@cala>
+Message-ID: <200310261716.17030.maarten@vbvb.nl>
+References: <1067179519.1222.107.camel@cala>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <1067179519.1222.107.camel@cala>
+To: Mario Giammarco <mgiammarco@virgilio.it>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
-I would like to buy new SCSI hard disk to be used with lsi 160
-controller in 32 bit pci.
+On Sunday 26 October 2003 15:45, Mario Giammarco wrote:
+> Hello,
 
-I can choose:
 
-- RAID5 of three Maxtor Atlas 10K II 9gb
-- RAID1 of two   Maxtro Atlas 10K III 18gb
+> My problem is: I have seen that RAID1 code does not interleave reads so
+> it does not improve performance very much putting two hard disks.
 
-My problem is: I have seen that RAID1 code does not interleave reads so
-it does not improve performance very much putting two hard disks.
+After thinking about your question for a minute, I think I found the obvious 
+reason for that.  Raid1 being a mirror set it does not make sense to 
+interleave anything. Either disk1 reads it first or disk2 reads it first. 
+Once you get the data from either disk, then you're done; no need to wait for 
+the second disk (giving you the identical datablock).  
+Interleaving only makes sense with other raid levels, but not with level 1.
 
-Is there a patch to change raid1 behaviour?
-
-In linux 2.6.0 is it better?
-
-Thanks in advance for any reply.
+Maarten
 
 -- 
-Mario Giammarco
-
-
+Yes of course I'm sure it's the red cable. I guarante[^%!/+)F#0c|'NO CARRIER
