@@ -1,23 +1,28 @@
-From: "Eric Wood" <eric@interplas.com>
-Subject: Re: Booting from a raid1 device ?
-Date: Fri, 31 Oct 2003 09:41:06 -0500
+From: AndyLiebman@aol.com
+Subject: RAID 10 and Persistent Superblock
+Date: Fri, 31 Oct 2003 10:23:08 EST
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <07cb01c39fbd$043dcc20$9100000a@intgrp.com>
-References: <E5DA6395B8F9614EB7A784D628184B200E33E3@hdsmsx402.hd.intel.com>
+Message-ID: <c6.2446066e.2cd3d85c@aol.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Cress, Andrew R wrote:
-> Does anybody know if/when the grub project will add raid support?
+A "simple" question regarding RAID 10. When I make a RAID 0 on top of three 
+RAID 1 arrays, should I use "persistent superblock = 1" in that top level 
+array? Won't that confuse the RAID software by putting two different UUIDs on the 
+drives -- one for the RAID 1 arrays and one for the RAID 0 array? 
 
-I personally ask Yoshinori K. Okuji (grub maintainer) and he hinted at
-nothing - so don't hold your breath.  Personally, I think it's going to have
-to take some assistance (push?) from the RH brains to help them out (IMHO).
+As long as I have UUIDs for the three lower level RAID 1 arrays, I should be 
+able to start those arrays with mdadm even if my device ids change. 
 
--Eric Wood
+Then shouldn't I be able to start the top level array without a UUID -- just 
+by referring to the mdX numbers? In other words, if md0, md1, md2 start, there 
+shouldn't be any confusion about which are the correct devices to start up 
+md3. Or am I missing something?
 
+Appreciate your answers. 
+
+Andy Liebman
