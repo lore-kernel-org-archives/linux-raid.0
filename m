@@ -1,50 +1,43 @@
-From: Richard Scobie <richard@sauce.co.nz>
-Subject: Re: Which raid card to buy for Sarge
-Date: Sun, 04 Apr 2004 16:47:40 +1200
+From: Daniel Pittman <daniel@rimspace.net>
+Subject: Re: fd filesystem and RAID1
+Date: Mon, 05 Apr 2004 10:58:54 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <406F936C.2090605@sauce.co.nz>
-References: <Pine.LNX.4.44.0403311442520.31572-100000@coffee.psychology.mcmaster.ca> <406B27E4.1000106@sauce.co.nz> <20040401090731.GI6923@chihiro.cern.ch>
+Message-ID: <87oeq7me9d.fsf@enki.rimspace.net>
+References: <1080948756.999.10.camel@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20040401090731.GI6923@chihiro.cern.ch>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-KELEMEN Peter wrote:
-> * Richard Scobie (richard@sauce.co.nz) [20040401 08:19]:
+On 03 Apr 2004, Ninti Systems wrote:
+> I've been able to do everything involved in setting up a simple RAID1
+> with 2 IDE disks on Slackware 9.1 except get it to actually keep
+> working on reboot.
 > 
+> I installed on one disk, built 'degraded' RAID1 devices on the second
+> disk, copied data, etc. I can hot add devices from the original disk
+> to the RAID arrays. RAID devices in /etc/fstab come up (in degraded
+> mode) on boot.
 > 
->>3ware hardware RAID 10: Reads - 92.8MB/s    Writes - 88.9MB/s
->>Software RAID 10:  Reads - 53.7MB/s   Writes - 94.9 MB/s
+> The problem is that hot-added devices never stick, the RAID arrays are
+> always degraded again on reboot. 
 > 
+> mdadm complains of missing superblocks. I have read the man page but
+> can't see how to manage superblocks (create/delete) if this is even
+> possible.
 > 
->>If anyone is running similar hardware and is able to get better
->>software RAID performance, I would be very interested to hear
->>the parameters.
-> 
-> 
-> I've tested some configurations with 128 GiB streams (iozone) on a
-> dual Xeon 2.4GHz 2G RAM machine (running XFS).
-> 
-> 3ware HW-RAID1, Linux SW-RAID0:	read 263 MiB/s, write 157 MiB/s
-> 3ware HW-RAID5, Linux SW-RAID0:	read 243 MiB/s, write 135 MiB/s
-> Linux SW-RAID5:			read 225 MiB/s, write 135 MiB/s
-> 3ware HW-RAID10:		read 119 MiB/s, write  91 MiB/s
-> 
-> Peter
-> 
+> I'm wondering if have to make the original install partitions type
+> 'fd' as well as those on the second disk?
 
+The kernel auto-discovery will only probe a partition that has type
+'fd', so if you want both parts of the mirror to work, both need to be
+type 'fd'.
 
-Thanks Peter,
+     Daniel
 
-This array is obviously larger than the 4 disc one I have. Unfortunately 
-you do not have the one result I would really like - SW-RAID10.
-
-It would be interesting to see how it compares to 3ware HW-RAID10.
-
-Regards,
-
-Richard Scobie
+-- 
+Democracy is ever eager for rapid progress, and the only
+progress which can be rapid is progress made down hill.
+        -- Sir James Jeans
 
