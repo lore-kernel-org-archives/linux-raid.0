@@ -1,33 +1,38 @@
-From: Maurice Hilarius <maurice@harddata.com>
-Subject: interesting md problem
-Date: Thu, 09 Oct 2003 17:45:42 -0600
+From: "Kevin P. Fleming" <kpfleming@backtobasicsmgmt.com>
+Subject: Re: raid0 + raid1 question
+Date: Thu, 09 Oct 2003 19:37:52 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <5.1.1.6.2.20031009170729.0718b5a0@mail.harddata.com>
+Message-ID: <3F861B80.706@backtobasicsmgmt.com>
+References: <3F84793F.6060400@siue.edu> <1065729282.10027.127.camel@localhost.localdomain> <3F85CC5B.5020107@siue.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <3F85CC5B.5020107@siue.edu>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I ran into an interesting problem:
+anthony mayes wrote:
 
-Machine is built around a Tyan S2880 dual Opteron motherboard.
-Memory installed is 6GB.
+> I'm assuming the snapshot it the same size as the FS to backup.  What if 
+> you don't have enough disk space to do this?
+> 
 
-Install is Red Hat Taroon, version 2
-64 bit environment.
+Nope, otherwise it would take a lot longer than 1 minute to make a 
+snapshot of a 360GB filesystem :-)
 
-2 IDE disk running on the motherboard, set up as RAID1
+The snapshot is just a "holding area" to record the original disk 
+blocks for anything that gets changed after the snapshot is created. 
+It only needs to be big enough to hold the amount of data that you 
+expect to change while it exists. In the case of using this do to 
+backups, if you can copy the snapshot to another disk array in an 
+hour, then the snapshot only needs to be big enough to hold an hour's 
+worth of changes; if that hour is 3-4AM, when your system is otherwise 
+idle, the snapshot can be pretty small.
 
-We can load the system, fdisk the drives, do all manner of things in a 
-normal fashion.
-
-The moment we load the md driver the system locks up hard.
-
-IF we set the kernel boot line to tell it to use under 4GB, no problems.
-
-So as to avoid re-inventing any wheels I thought to post this here in hope 
-somebody would know something..
-
-Thanks!
+If you make the snapshot and then backup the snapshot to tape, and it 
+takes 6 hours to make the tape backup, obviously the snapshot would 
+have to be bigger. It's not unheard of for people to make 10GB 
+snapshots of 1TB filesystems and never even use all 10GB before they 
+throw the snapshot away.
 
