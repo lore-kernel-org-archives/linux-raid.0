@@ -1,48 +1,47 @@
-From: Clemens Schwaighofer <cs@tequila.co.jp>
+From: Sandro Dentella <sandro.dentella@tin.it>
 Subject: Re: Which raid card to buy for Sarge
-Date: Thu, 01 Apr 2004 15:39:43 +0900
+Date: Thu, 1 Apr 2004 09:49:21 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <406BB92F.1080200@tequila.co.jp>
-References: <008f01c41737$8b57be40$6405a8c0@a30> <006401c417a1$36a45790$6405a8c0@a30> <406BA12A.6020300@tequila.co.jp> <406BA9F8.9010709@pobox.com>
+Message-ID: <20040401074921.GA27234@bluff>
+References: <Pine.LNX.4.44.0403311442520.31572-100000@coffee.psychology.mcmaster.ca> <406B9F3E.4020701@wasp.net.au> <406BAC2F.8090407@pobox.com> <406BAF18.8010005@wasp.net.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <406BA9F8.9010709@pobox.com>
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: me@heyjay.com, linux-raid@vger.kernel.org
+Content-Disposition: inline
+In-Reply-To: <406BAF18.8010005@wasp.net.au>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+On Thu, Apr 01, 2004 at 09:56:40AM +0400, Brad Campbell wrote:
+> Jeff Garzik wrote:
+> 
+> > >it out and insert the new drive in the array. The array starts 
+> > >rebuilding - no effect on the uptime and only a slight loss in 
+> > >throughput. Plus it's seamless.
+> >
+> >Yeah, md+mdadm can do all this right now, provided the hardware and 
+> >driver support is there...
+> >
+> 
+> Yes, my point however is for low budget stuff with software raid the driver 
+> support is not yet there in a vanilla kernel.
+> I can't just whack a sata drive off one of my promise SATA150-TX4 
+> controllers, pop another one in and have the kernel rescan the partition 
+> table and realise a new drive was present. (YET!)
 
-Jeff Garzik wrote:
-| Clemens Schwaighofer wrote:
-|
-|> The only thing that comes to my mind is hot swapping. If you go with IDE
-|> drives it is highlu possible it is not going to work. which means, you
-|> don't have data loss if a drive fails, but downtime (depends on the
-|> server if this is critical).
+I'm sort of confused... which are the combinations that allow me to hotswap a
+disk w/ software raid. I don't mind doing some mdadm operations, I'm just
+interested in how I can avoid rebooting. 
 
-| It works in SATA just fine.
-|
-| (for Linux, it will work when I release the code...)
+I thought I couldn't, now I learn you can "provided the hardware and driver
+support is there"... can you detail a little more?
 
-well, I was not 100% clear. I am sorry, SATA of course (depends on the
-chipset thought) can do hotswap. I was more referring to the old IDE
-(simple ATA drives).
+thanks
+sandro
+*:-)
 
-- --
-Clemens Schwaighofer - IT Engineer & System Administration
-==========================================================
-TEQUILA\Japan, 6-17-2 Ginza Chuo-ku, Tokyo 104-8167, JAPAN
-Tel: +81-(0)3-3545-7703            Fax: +81-(0)3-3545-7343
-http://www.tequila.co.jp
-==========================================================
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.4 (GNU/Linux)
 
-iD8DBQFAa7kvjBz/yQjBxz8RAlBBAKCzMIik9EM3ClXh3yoc+VQr7RTsTwCgkOPA
-/RpQ3UNDF4azD4pTO4iD/Ls=
-=tPeb
------END PGP SIGNATURE-----
+-- 
+Sandro Dentella  *:-)
+e-mail: sandro.dentella@tin.it 
+http://www.tksql.org                    TkSQL Home page - My GPL work
