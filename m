@@ -1,42 +1,64 @@
-From: "Timothy C. McGrath" <misty-@charter.net>
-Subject: sw raid+ext3 in linux kernel 2.4/2.6 series
-Date: Sat, 24 Jul 2004 04:12:59 -0400
-Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <41021A0B.20807@charter.net>
+From: christophe.varoqui@free.fr
+Subject: [ANNOUNCE] multipath-tools-0.2.7
+Date: Mon, 26 Jul 2004 12:02:48 +0200
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <1090836168.4104d6c8a2b22@imp6-q.free.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+To: device-mapper development <dm-devel@redhat.com>
+Cc: linux-raid@vger.kernel.org, linux-hotplug-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, Jan Kunigk <jan.kunigk@de.ibm.com>
 List-Id: linux-raid.ids
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+Hello,
 
-I have been using vanilla linux kernel 2.4.26 with no problems
-whatsoever, however I've heard rumors of filesystem corruption with
-software raid5 and ext3 in the 2.6 series. This is the largest problem
-in the 2.6 series that is holding me back from trying it out; I'd have a
-really bad day if I lost all the data on my disks.
+here goes multipath-tools version 0.2.7
 
-I'd like to know if in fact the vanilla 2.6 kernels have any known
-problems with software raid5 and ext3, and while I'm at it, if there are
-any known problems with the usage of sw raid5 and ext3 in the
-2.4.26/2.4.27-rc kernels. (Though I have yet to see any problems
-whatsoever.)
+Jan,
+the ULUA framework I got implemented is rather simple :
+1) the path struct gets a new ->priority member
+2) before path grouping, sort the path list by priority
 
-I'm not afraid to do patches to my kernel to achieve the desired effects :)
+The missing link is the priority fetcher.
+Does that framework fit your needs ?
 
-Also, is there any URL which shows the known or fixed bugs in software
-raid in the various kernels? I haven't been able to find any so... Just
-asking.
+2004-07-24 multipath-tools-0.2.7
+        * [multipath] args parser moved to getopt
+          <genanr@emsphone.com>
+        * [multipath] zero conf->hotplugdev at allocation
+          <genanr@emsphone.com>
+        * [multipath] clean up failed devmap creation attempt
+        * [libs] update to libdevmapper 1.00.19
+        * [multipath] framework for claimed device skipping
+          still lacks a reliable way to know if the device is
+          claimed and by who (fs, swap, md, dm, ...). If you
+          think it is valid to let libdevmapper hit the wall,
+          please speak up and tell so.
+        * [multipath] shut down stderr when calling into libdm
+        * [multipath] reformat the verbose output
+        * [multipath] framework for path priority handling (ULUA)
+        * [multipath] kill all reference to group_by_tur
+        * [multipath] integrate path state logic into multibus &
+          failover pgpolicies. This obsoletes the group_by_tur one
+          which is now the same as multibus.
+        * [multipath] zalloc mp structs to avoid garbage in ->size
+        * bump version requisite for scsi_id to 0.6 to support the new
+          '-u' flag (s/ /_/ for proper JBOD device map naming)
+        * [multipath] correct the for(;;) limits to accept 1-slot
+          pathvecs
+        * [multipath] push WWID_SIZE to 64 char (scsi_id w/ JBODs)
+        * [multipath] add a exit_tool() wrapper fn for runfile unlink
+        * [multipath] add a "default_path_grouping_policy" keyword in the
+        * "defaults" block.
+        * [multipath] add a "default_getuid_callout" keyword in the
+          "defaults" block. Now multipath is going to work with JBODs
+        * [multipath] fix segfault when pathvec is empty after
+          get_pathvec()
+        * move to template based specfile to avoid regular version skew
 
-Timothy C. McGrath
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.4 (GNU/Linux)
-Comment: Using GnuPG with Thunderbird - http://enigmail.mozdev.org
+Downloads and docs at http://christophe.varoqui.free.fr
 
-iD8DBQFBAhoL4pPTiiJCEYkRAv43AJ9/AZp/Q4tc2evE/YR09RrbINfLugCfTXOx
-vqzr+/Zi0Cz0RB6Np6j2/qM=
-=pmrM
------END PGP SIGNATURE-----
+regards,
+cvaroqui
+--
