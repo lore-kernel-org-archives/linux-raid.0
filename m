@@ -1,48 +1,71 @@
-From: maarten <maarten@ultratux.net>
-Subject: Re: more mdadm questions
-Date: Wed, 1 Sep 2004 02:33:40 +0200
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: BUG: mdadm --fail makes the kernel lose count (was Re: raid5 won't
+ resync)
+Date: Wed, 1 Sep 2004 10:36:35 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200409010233.40062.maarten@ultratux.net>
-References: <1093997605.3399.34.camel@rich>
+Message-ID: <16693.6547.499464.908456@cse.unsw.edu.au>
+References: <200408310408.i7V48p307444@watkins-home.com>
+	<Pine.LNX.4.58.0408310401070.1949@web1.mmaero.com>
+	<41344360.8060206@dgreaves.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1093997605.3399.34.camel@rich>
-Content-Disposition: inline
-To: linux-raid@vger.kernel.org
+In-Reply-To: message from David Greaves on Tuesday August 31
+To: David Greaves <david@dgreaves.com>
+Cc: Jon Lewis <jlewis@lewis.org>, Guy <bugzilla@watkins-home.com>, linux-raid@vger.kernel.org, aaron@america.com
 List-Id: linux-raid.ids
 
-On Wednesday 01 September 2004 02:13, rich turner wrote:
+On Tuesday August 31, david@dgreaves.com wrote:
+> Neil
+> copied you as I think there's a bug in resync behaviour (kernel.org
+2.6.6)
 
-Hi Rich,
+Yes, thanks.
+It's just a small bug.  It only affect the content of /proc/mdstat
+and the "continuing on ... drives" message.
+Here is that patch which will be submitted shortly.
 
-Not wanting to be blunt an all...   but wouldn't most of these questions be 
-answered by just running mdadm yourself...?
+Thanks again,
+NeilBrown
 
-> when mdadm queries information about the raid devices, does it simply
-> get the imformation from /proc/mdstat and format it accordingly?
+=============================================
+Correct "working_disk" counts for raid5 and raid6
 
-My guess would be no, since /proc/mdstat gives less info than mdadm does.
+This error only affects two message (and sysadmin heart-rate).
+It does not risk data.
 
-> how does mdadm know what devices to query if they are not defined in
-> /etc/mdadm/mdamd.conf with DEVICES?
+Signed-off-by: Neil Brown <neilb@cse.unsw.edu.au>
 
-Don't know how, but since 'mdadm --detail --scan' provides the info you can 
-use to create the mdadm.conf file when missing, mdadm obviously does not rely 
-on getting its info from that file at all. 
+### Diffstat output
+ ./drivers/md/raid5.c     |    2 +-
+ ./drivers/md/raid6main.c |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-> if devices are missing from the raid device, is there a way of knowing
-> the name of the missing device without the configuration file?
+diff ./drivers/md/raid5.c~current~ ./drivers/md/raid5.c
+--- ./drivers/md/raid5.c~current~	2004-08-30 14:43:27.000000000 +1000
++++ ./drivers/md/raid5.c	2004-09-01 10:17:19.000000000 +1000
+@@ -477,8 +477,8 @@ static void error(mddev_t *mddev, mdk_rd
+ 
+ 	if (!rdev->faulty) {
+ 		mddev->sb_dirty = 1;
+-		conf->working_disks--;
+ 		if (rdev->in_sync) {
++			conf->working_disks--;
+ 			mddev->degraded++;
+ 			conf->failed_disks++;
+ 			rdev->in_sync = 0;
 
-Yes.  Well, it depends on what you call "missing".  It will report a failed 
-etc device, but if the array was created with a 'missing' drive it obviously 
-cannot know what device will get added before you actually add it.
-
-greetings,
-Maarten
-
--- 
-
-
+diff ./drivers/md/raid6main.c~current~ ./drivers/md/raid6main.c
+--- ./drivers/md/raid6main.c~current~	2004-08-30 14:43:27.000000000 +1000
++++ ./drivers/md/raid6main.c	2004-09-01 10:17:46.000000000 +1000
+@@ -498,8 +498,8 @@ static void error(mddev_t *mddev, mdk_rd
+ 
+ 	if (!rdev->faulty) {
+ 		mddev->sb_dirty = 1;
+-		conf->working_disks--;
+ 		if (rdev->in_sync) {
++			conf->working_disks--;
+ 			mddev->degraded++;
+ 			conf->failed_disks++;
+ 			rdev->in_sync = 0;
