@@ -1,30 +1,45 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: Re: Q: RAID-1 w/2x160GB, ReiserFS, Debian "woody", homebrew 2.4.25
- kernel
-Date: Wed, 4 Aug 2004 11:00:09 +0200 (CEST)
+From: "abel" <speedo21front242@hotmail.com>
+Subject: Anonymous Drug Delivery, no prescription!!
+Date: Wed, 04 Aug 2004 09:25:11 GMT
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0408041058470.7382-100000@uplift.swm.pp.se>
-References: <ceq7ij$vj7$1@sea.gmane.org>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Message-ID: <1091611511-31366__42727.7805204087$1091611600$gmane$org@excite.com>
+Content-Type: text/plain;
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <ceq7ij$vj7$1@sea.gmane.org>
-To: Jens Benecke <jens@spamfreemail.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 4 Aug 2004, Jens Benecke wrote:
 
-> The goal is to have as "stress free" a system as possible - i.e. with as
-> little manual configuration, and in event of emergencies, as little work to
-> do, as possible.
+What do you pay now?
 
-You probably should go for hardware RAID1 instead, this will present the
-drive as a single drive to the OS and will handle all failure scenarios, 
-you will not be hindered by fixing LILO to boot etc. Yes, it'll cost a bit 
-more but if your goal is simplicity and carefree running, this is probably 
-the best way.
+If you pay more than these prices, maybe you should click this link....
+http://www.dfjndfv.com/_85924943b9db73ac62baa654773c6a8e/7
 
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+VALIUM - $2 a pill! (Anti-Depressant)
+SOMA - $3 a pill! (Pain Relief)
+XANAX - $1.70 a pill! (Anti-Depressant)
+LIPITOR - $3.50 a pill! (Cholesterol Control)
+ZYBAN - $3 a pill! (Stop Smoking)
+ZOLOFT - $2 a pill! (Anti-Depressant)
+PAXIL - $3 a pill! (Anti-Depressant)
+PROZAC - $2 a pill! (Anti-Depressant)
+GLUCOPHAGE - 70 cents a pill! (Diabetes)
+MERIDIA - $2.50 a pill! (Weight Loss)
+VIOXX - $1 a pill! (Pain Relief)
+CELEBREX - $2 a pill! (Pain Relief)
+XENICAL - $2.50 a pill! (Weight Loss)  
 
+http://www.dfjndfv.com/_85924943b9db73ac62baa654773c6a8e/7
+
+
+
+
+
+
+
+
+
+
+
+light abcdefactive camping ruby scuba1 dodgers zhongguo 
+public guessmeow cynthia valentin
+fiona racoon tarzan 
