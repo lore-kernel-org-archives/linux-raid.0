@@ -1,34 +1,35 @@
-From: Eli Cantu <eli@then7.com>
-Subject: Re: resync (what is it doing when making a new array?)
-Date: Sun,  8 Aug 2004 09:49:48 -0500
+From: Andrew Walrond <andrew@walrond.org>
+Subject: IDE performance question
+Date: Sun, 8 Aug 2004 16:49:03 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1091976588.bd41b51b14707@www.then7.com>
-References: <1091924709.209ea25bc637f@www.then7.com>
-	<87n016gvnm.fsf@enki.rimspace.net>
+Message-ID: <200408081649.03249.andrew@walrond.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87n016gvnm.fsf@enki.rimspace.net>
 Content-Disposition: inline
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> Usually, this is handled by either doing the sync in the background
-> quietly, or by keeping an NVRAM bitmap of "unclean" blocks that starts
-> with all the bits set.
->
-> Regards,
->         Daniel
-> --
+I've got two 120Gb ide drives which I want to raid0 for performance, and my 
+m/b has two IDE buses built in.
 
-Thanks Daniel & Gordon,
+The linux-raid howto suggests putting one drive on each bus, because slave 
+disks spoil performance.
 
-I suspected as much. Well, it's a new day and my array finished resyncing. Yea!
+Thats fine, I've got the usual two buses, but my question is: 
 
-~e
+	Where should I put the CDROM drive?
 
+Is the very existence of a slave device the source of the performance 
+degredation, or just that the bandwidth has to be shared between the devices 
+(so not a problem unless the cdrom is being accessed)?
 
--------------------------------------------------
-This mail sent through IMP: http://horde.org/imp/
+Also, I remember from years ago that the cdrom could pull the whole bus down 
+to some lower performance level (even if still using and 80wire cable?). Is 
+this still the case? (The hardware in question is recent).
 
+Knowledgeable advice sought :)
+
+Andrew Walrond
