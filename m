@@ -1,50 +1,89 @@
-From: "Nikolay Kuznetsov" <rised@mail.rin.ru>
-Subject: You knows
-Date: Thu, 22 Jan 2004 01:52:37 -0800
+From: AndyLiebman@aol.com
+Subject: What does "kicking non-fresh partition from array" mean?
+Date: Fri, 23 Jan 2004 12:56:51 EST
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040114388.32009.qmail@symantec.com>
+Message-ID: <4a.26fcff87.2d42ba63@aol.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Good day,dear Vincent! One more time,I ask You to excuse my 
-bad English))) A few days ago I almost lost Your e-
-mail,cause my computer was breaked,but now all OK,as You 
-can see.I am OK,the money from Your Baltic partners are 
-received by me.Of course,in that time I shall not a bank 
-transfer,becauce I dont want to excite Your fiscal 
-administration))) I put all money at credit card 
-account «VISA”.And now I can send this card to You or to 
-that man,whose name and adress You inform me.I shall send 
-card by Fedex or DHL or others of Your choice.Already I ve 
-get my unassuming per cents,but I think Your 87500$ make 
-glad ever You))) (By the way,it is more than You 
-awaited,isnt it?)))        
-I hope I shall not teach You to use credit card VISA)))  
-Moneys recipient (You or Your man) will be absolutely 
-anonymous for US goverment,because this 
-card was opened for fiction person in Russia.Its a nice 
-scheme,isnt it?Of course,it will be a some expensive,than a 
-bank transfer,just a little,but I think its a better for me 
-and You. So,during this week,I am waiting an information 
-from You about name and adress of man,who I shall send the 
-card.                                                       
+Hi all, 
 
-Now lets about a rest.Vincent! I 
-ask You to inform Your Partners from Estonia,they must 
-prepare a new contracts about road-building,but not about 
-marketing or audit,becauce it will be more convenient for 
-me.(the Russian Laws is always changing).However,i am not 
-sure You understand what I say 
-about)))                                         
-How is the weather where You lives? Our weather is bad now,its very 
-cold.I hope it will better after our President elections))) 
-I shall always very glad to talk with You not about 
-business,but You are always busy.Write me at this e-mail at 
-any time,as You wants.Best reggards!  Always 
-Yours,Nicolai.             
+Can somebody tell me if some log warnings I'm seeing are worrisome?   Does 
+"kicking non-fresh scsi/host4/bus0/target1/lun0/part1 from array!" refer to md4 
+or md6? 
 
-P.S.  Pin-code from card I send You at this e-mail or send with 
+As you can see from cat /proc/mdstat, I have a failed removed drive in md6 -- 
+which I am about to replace. Does this "kicking out" from the Kernel Warnings 
+log refer to md4 or md6? 
 
+FROM KERNEL WARNINGS LOG:
+I see this every time I reboot
+
+Jan 20 09:04:50 localhost kernel: md: device name has changed from 
+scsi/host2/bus0/target1/lun0/part1 to scsi/host2/bus0/target0/lun0/part1 since last 
+import!
+Jan 20 09:04:50 localhost kernel:    8regs     :  1828.800 MB/sec
+Jan 20 09:04:50 localhost kernel:    32regs    :  1248.000 MB/sec
+Jan 20 09:04:50 localhost kernel:    pII_mmx   :  2568.000 MB/sec
+Jan 20 09:04:50 localhost kernel:    p5_mmx    :  2561.600 MB/sec
+Jan 20 09:04:50 localhost kernel: raid5: using function: pII_mmx (2568.000 
+MB/sec)
+Jan 20 09:04:50 localhost kernel: raid5: raid level 5 set md4 active with 5 
+out of 5 devices, algorithm 2
+Jan 20 09:04:50 localhost kernel: RAID5 conf printout:
+Jan 20 09:04:50 localhost kernel:  --- rd:5 wd:5 fd:0
+Jan 20 09:04:50 localhost kernel:  disk 0, s:0, o:1, n:0 rd:0 us:1 
+dev:scsi/host1/bus0/target0/lun0/part1
+Jan 20 09:04:50 localhost kernel:  disk 1, s:0, o:1, n:1 rd:1 us:1 
+dev:scsi/host2/bus0/target0/lun0/part1
+Jan 20 09:04:50 localhost kernel:  disk 2, s:0, o:1, n:2 rd:2 us:1 
+dev:scsi/host5/bus0/target0/lun0/part1
+Jan 20 09:04:50 localhost kernel:  disk 3, s:0, o:1, n:3 rd:3 us:1 
+dev:scsi/host3/bus0/target0/lun0/part1
+Jan 20 09:04:50 localhost kernel:  disk 4, s:0, o:1, n:4 rd:4 us:1 
+dev:scsi/host4/bus0/target0/lun0/part1
+Jan 20 09:04:50 localhost kernel: RAID5 conf printout:
+Jan 20 09:04:50 localhost kernel:  --- rd:5 wd:5 fd:0
+Jan 20 09:04:50 localhost kernel:  disk 0, s:0, o:1, n:0 rd:0 us:1 
+dev:scsi/host1/bus0/target0/lun0/part1
+Jan 20 09:04:50 localhost kernel:  disk 1, s:0, o:1, n:1 rd:1 us:1 
+dev:scsi/host2/bus0/target0/lun0/part1
+Jan 20 09:04:50 localhost kernel:  disk 2, s:0, o:1, n:2 rd:2 us:1 
+dev:scsi/host5/bus0/target0/lun0/part1
+Jan 20 09:04:50 localhost kernel:  disk 3, s:0, o:1, n:3 rd:3 us:1 
+dev:scsi/host3/bus0/target0/lun0/part1
+Jan 20 09:04:50 localhost kernel:  disk 4, s:0, o:1, n:4 rd:4 us:1 
+dev:scsi/host4/bus0/target0/lun0/part1
+Jan 20 09:04:51 localhost kernel: md: kicking non-fresh 
+scsi/host4/bus0/target1/lun0/part1 from array!
+Jan 20 09:04:51 localhost kernel: md: device name has changed from 
+scsi/host2/bus0/target0/lun0/part1 to scsi/host2/bus0/target1/lun0/part1 since last 
+import!
+Jan 20 09:04:51 localhost kernel: RAID5 conf printout:
+Jan 20 09:04:51 localhost kernel:  --- rd:5 wd:4 fd:1
+Jan 20 09:04:51 localhost kernel:  disk 0, s:0, o:1, n:0 rd:0 us:1 
+dev:scsi/host1/bus0/target1/lun0/part1
+Jan 20 09:04:51 localhost kernel:  disk 1, s:0, o:1, n:1 rd:1 us:1 
+dev:scsi/host2/bus0/target1/lun0/part1
+Jan 20 09:04:51 localhost kernel:  disk 2, s:0, o:1, n:2 rd:2 us:1 
+dev:scsi/host3/bus0/target1/lun0/part1
+Jan 20 09:04:51 localhost kernel:  disk 3, s:0, o:0, n:3 rd:3 us:1 dev:[dev 
+00:00]
+Jan 20 09:04:51 localhost kernel:  disk 4, s:0, o:1, n:4 rd:4 us:1 
+dev:scsi/host5/bus0/target1/lun0/part1
+Jan 20 09:04:51 localhost kernel: RAID5 conf printout:
+Jan 20 09:04:51 localhost kernel:  --- rd:5 wd:4 fd:1
+Jan 20 09:04:51 localhost kernel:  disk 0, s:0, o:1, n:0 rd:0 us:1 
+dev:scsi/host1/bus0/target1/lun0/part1
+Jan 20 09:04:51 localhost kernel:  disk 1, s:0, o:1, n:1 rd:1 us:1 
+dev:scsi/host2/bus0/target1/lun0/part1
+Jan 20 09:04:51 localhost kernel:  disk 2, s:0, o:1, n:2 rd:2 us:1 
+dev:scsi/host3/bus0/target1/lun0/part1
+Jan 20 09:04:51 localhost kernel:  disk 3, s:0, o:0, n:3 rd:3 us:1 dev:[dev 
+00:00]
+Jan 20 09:04:51 localhost kernel:  disk 4, s:0, o:1, n:4 rd:4 us:1 
+dev:scsi/host5/bus0/target1/lun0/part1
