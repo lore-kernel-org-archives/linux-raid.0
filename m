@@ -1,15 +1,33 @@
-From: Michael Hardy <mhardy@h3c.com>
-Subject: raid5 + smartctl + uncorrectable read error + single-block-resync
- ?
-Date: Thu, 03 Jun 2004 12:34:29 -0700
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: raid5 + smartctl + uncorrectable read error + single-block-resync ?
+Date: Thu, 3 Jun 2004 15:56:01 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <40BF7D45.3020403@h3c.com>
+Message-ID: <200406031956.i53Ju5315341@watkins-home.com>
+References: <40BF7D45.3020403@h3c.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <40BF7D45.3020403@h3c.com>
+To: 'Michael Hardy' <mhardy@h3c.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+You got it!  A write to the bad sector should cause the drive to re-map the
+bad sector.  Not all drives do this.  My drives (ST118202LC with EMC
+firmware B801) required me to change an option in the firmware to allow this
+to occur.
+
+I wish md could do this automatically!  It would save a lot of down time.
+
+Guy
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Michael Hardy
+Sent: Thursday, June 03, 2004 3:34 PM
+To: linux-raid@vger.kernel.org
+Subject: raid5 + smartctl + uncorrectable read error + single-block-resync ?
 
 
 I've got smartd running (great tool: http://smartmontools.sf.net) and it 
@@ -44,3 +62,9 @@ In the meantime, I guess logically failing the drive and re-adding it is
 the only way to remap the sectors, right?
 
 -Mike
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
