@@ -1,31 +1,44 @@
-From: "Peter T. Breuer" <ptb@it.uc3m.es>
-Subject: Re: raid1 bitmap code [Was: Re: Questions answered by Neil Brown]
-Date: Fri, 28 Feb 2003 17:23:00 +0100 (MET)
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: RAID SCSI binding
+Date: Sat, 1 Mar 2003 07:49:58 +1100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200302281623.h1SGN0u05056@oboe.it.uc3m.es>
-References: <3E5F8AED.82D3B484@SteelEye.com>
-Reply-To: ptb@it.uc3m.es
+Message-ID: <15967.52086.864201.674739@notabene.cse.unsw.edu.au>
+References: <015d01c2df23$9c22f020$f6de11cc@black>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3E5F8AED.82D3B484@SteelEye.com> from Paul Clements at "Feb 28,
- 2003 11:14:37 am"
-To: Paul Clements <Paul.Clements@SteelEye.com>
-Cc: ptb@it.uc3m.es, Neil Brown <neilb@cse.unsw.edu.au>, linux-raid@vger.kernel.org
+In-Reply-To: message from Mike Black on Friday February 28
+To: Mike Black <mblack@csi-inc.com>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-"Paul Clements wrote:"
-> That sounds good. I'll have to merge up to 2.6...ugh...now I really need
-> to put this all in CVS...I'm making some progress with the mmap stuff
-> and I've got the code done for duplicating the buffers for the async
-> writes to the backup devices.
-> I'll need a pool of memory for that too, since I can't just fail in the
-> middle of I/O...
+On Friday February 28, mblack@csi-inc.com wrote:
+> Linux 2.4.20 (but not unique to this kernel -- been this way for over a year):
+> I have a RAID5 array that doesn't startup properly during boot (I have to stop it and restart after the system is up).  I've had
+> this problem forever and have been trying to fix it.
+> Here's what it looks like when it's up and running:
+> md4 : active raid5 sdn1[0] sdt1[6] sds1[5] sdr1[4] sdq1[3] sdp1[2] sdo1[1]
+>      216490752 blocks level 5, 128k chunk, algorithm 0 [7/7] [UUUUUUU]
+> The partitions types are set to 0x83 and the array is being manually
+> started in rc.local instead of doing auto-start.
 
-Well, you can. Failing to complete will leave the map marked and
-we could fault the device offline too. That will stop any more memory
-being wasted because nothing will go to it! We could then make periodic
-attempts to bring it online again using the "hotrepair" trick and it'll 
-resync itself in the background.
+What tool are you using to start the array? raidstart or mdadm?
+There doesn't seem to be enough noise in the logs for it to be
+raidstart (no "md: autorun ...") so I assume mdadm.
 
-Just an idea. Maybe not a good one, but an idea.
+What do you get if you add "-v" to the mdadm running from rc.local?
+Can you show me
+  mdadm -E /dev/sda1 /dev/sdo1
 
-Peter
+NeilBrown
+
+> 
+> So it looks to me like the md driver doesn't like the raid system crossing the major device boundary for some odd reason.
+> Although I'm not sure why I can stop and restart after the system is totally up but not start it in rc.local using the same
+> commands:
+
+I suspect this is just a co-incidence.  I cannot imagine how the major
+device number could affect things at all.
+
+NeilBrown
