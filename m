@@ -1,152 +1,127 @@
-From: "Peter T. Breuer" <ptb@it.uc3m.es>
-Subject: Re: [ANNOUNCE][PATCH 2.6] md: persistent (file-backed) bitmap and async
- writes
-Date: Wed, 28 Apr 2004 20:53:16 +0200 (MET DST)
+From: Paul Clements <paul.clements@steeleye.com>
+Subject: Re: [ANNOUNCE][PATCH 2.6] md: persistent (file-backed) bitmap and
+ async writes
+Date: Wed, 28 Apr 2004 14:10:35 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200404281853.i3SIrGw15815@oboe.it.uc3m.es>
-References: <408FF39B.6070907@steeleye.com>
-Reply-To: ptb@it.uc3m.es
+Message-ID: <408FF39B.6070907@steeleye.com>
+References: <40198E85.29EBC8E0@SteelEye.com>			<16422.62911.755570.855200@notabene.cse.unsw.edu.au>			<4027E342.D02202F1@SteelEye.com>			<16424.8182.876520.280031@notabene.cse.unsw.edu.au>			<402D3A86.97CF894F@SteelEye.com> <16456.2775.641721.204171@notabene.cse.unsw.edu.au> <4048F9AA.1BBD67F@SteelEye.com> <406B1024.7BF88C@SteelEye.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <408FF39B.6070907@steeleye.com> from Paul Clements at "Apr 28, 2004
- 02:10:35 pm"
-To: Paul Clements <paul.clements@steeleye.com>
-Cc: linux-raid@vger.kernel.org, Neil Brown <neilb@cse.unsw.edu.au>, ptb@it.uc3m.es, mingo@redhat.com, "james.bottomley" <james.bottomley@steeleye.com>
+In-Reply-To: <406B1024.7BF88C@SteelEye.com>
+To: linux-raid@vger.kernel.org
+Cc: Neil Brown <neilb@cse.unsw.edu.au>, ptb@it.uc3m.es, mingo@redhat.com, "james.bottomley" <james.bottomley@steeleye.com>
 List-Id: linux-raid.ids
 
-"Also sprach Paul Clements:"
-> Since there hasn't been any negative feedback, I assume that this 
-> version is acceptable for inclusion in mainline/-mm?
+Since there hasn't been any negative feedback, I assume that this 
+version is acceptable for inclusion in mainline/-mm?
 
-whew ... since I just got out of a %^&% grant appication spin, and can
-breathe now, you prompted me to take a look.
-
-First thing I notice is md.o is replaced with md-mod.o.  Why?  That's
-gratuitous breakage of every poor admin's scripts that up till now has
-been doing an insmod md, or has had a "md" in /etc/modules.
-
-Owwww ....
-
-Is the reason perhaps  that md.c is no longer the whole story? So that
-there is extra linking? I guess so. Why not put the extra stuff in a
-separate module and leave md.o be?
-
-I'll not comment on the bitmap.c file (I still need to figure out ow it
-can possibly work :-). But I like the comments in the file! Looks
-comprehensible and very neat. Perhaps a summary of what's in it could
-be put up top ... or is that likely to get out of step? Perhaps.
-
-The changes to md.c ... look very benign. I see you add a function,
-export a function previously static ... add bitmap sb update to the sb
-update fn and export it.
-
-I can't be sure from the diff alone, but it looks as though a
-bitmap is always created with bitmap_create, and there is no way to
-stop it? Is that right? I'd need to see more context in the diff
-to figure it out. Perhaps the calls to bintmmap_create and
-bitmap_destroy don't do anything unless the sb is marked as "wanting" 
+Thanks,
+Paul
 
 
-get_bitmap_file seems to be intended to talk to a user, but it's
-static! Are you going to use it in an ioctl? If so, surely the ioctl
-part should do the copy_to_user, and this function should not?
+Paul Clements wrote:
 
-It's also go a kmalloc of a buf inside, and I would have thought you
-had loadsa potential bufferspace lying around in the superblocks you
-have in memory ...  oh well, it's independent this way. 
+> OK, so here it is. The changes from the previous patch are, basically:
+> 
+> 1) The patch is a little less intrusive now. The diffs against md/raid1
+> are smaller as more of the bitmap handling code is now isolated in the
+> bitmap.c and bitmap.h files. Also, the diff against mdadm, while now a
+> little larger, is less intrusive as I've created a bitmap.c file in the
+> mdadm sources, as well.
+> 
+> 2) The bitmap file I/O routines have been totally rewritten and are now
+> much simpler. We now use read_cache_page, prepare_write/commit_write (to
+> extend the file at init time, if necessary), and bmap/submit_bh (to
+> "sync" the file pages). The use of bmap and submit_bh is due to a
+> limitation in jbd that allows only one ongoing transaction per process
+> (see comment in bitmap.c regarding current->journal_info).
+> 
+> 3) The bitmap file now has a superblock containing various configuration
+> information. The bitmap superblock is checked against the md superblock
+> when the array is assembled. 
+> 
+> Options have been added to mdadm to create and examine bitmap files, and
+> also to specify the bitmap file to be used with an array:
+> 
+> Create a bitmap file:
+> --------------------
+> 
+> # mdadm --create-bitmap=65536,3,580480 /tmp/bitmap --force
+> 
+> (this creates a bitmap file with a chunksize of 64KB, a 3 second bitmap
+> daemon sleep period, and a bitmap (initially dirtied) which is
+> appropriate for use with an array of 580480 blocks)
+> 
+> Examine a bitmap file:
+> ---------------------
+> 
+> # mdadm --examine-bitmap /tmp/bitmap (or just: mdadm -X /tmp/bitmap)
+>         Filename : /tmp/bitmap
+>            Magic : 6d746962
+>          Version : 2
+>             UUID : 997cb579.99d31d20.3014cae8.4bb4bf9d
+>           Events : 5
+>            State : OK
+>        Chunksize : 4 KB
+>           Daemon : 5s flush period
+>       Array Size : 580480 (566.88 MiB 594.41 MB)
+>           Bitmap : 145120 bits (chunks), 145120 dirty (100.0%)
+> 
+> (in addition, mdadm -D <array> gives the bitmap information if a bitmap
+> is attached to the array)
+> 
+> 
+> Create or Assemble array using a bitmap:
+> ---------------------------------------
+> 
+> # mdadm -C /dev/md2 -n 2 -l 1 --bitmap=/tmp/bitmap /dev/sda5 missing
+> 
+> # mdadm -A /dev/md2 --bitmap=/tmp/bitmap /dev/sda5 /dev/sdb5
+> 
+> 
+> 
+> Patch Location:
+> --------------
+> 
+> Patch vs. linux 2.6.5-rc2
+> =========================
+> http://parisc-linux.org/~jejb/md_bitmap/md_bitmap_2_31_2_6_5_RC2.diff
+> 
+> Patch vs. mdadm 1.5.0
+> =====================
+> http://parisc-linux.org/~jejb/md_bitmap/mdadm_1_5_0-bitmap.diff
+> 
+> (no async write patch has been generated, these patches contain only the
+> bitmap code)
+> 
+> 
+> Notes:
+> -----
+> 
+> 1) an is_create flag was added to do_md_run to tell bitmap_create
+> whether we are creating or just assembling the array -- this is
+> necessary since 0.90 superblocks do not have a UUID until one is
+> generated randomly at array creation time, therefore, we must set the
+> bitmap UUID equal to this newly generated array UUID when the array is
+> created
+> 
+> 2) bitmap.h was not included in the mdadm patch, but a link (or copy)
+> must be made to the kernel's include/linux/raid/bitmap.h file in order
+> to build mdadm now
+> 
+> 3) code was added to mdadm to allow creation of arrays with
+> non-persistent superblocks (also, device size calculation with
+> non-persistent superblocks was fixed)
+> 
+> 4) a fix was made to the hot_remove code to allow a faulty device to be
+> removed
+> 
+> 5) various typo and minor bug fixes were also included in the patches
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-There's a tiny change
-
-  -       if (rdev->raid_disk >= 0)
-  +       if (rdev->raid_disk >= 0 && !rdev->faulty)
-                  goto busy;
-
-
-which needs more context for me to judge! So we don't pretend we're
-busy if what we're busy with is faulty? Where are we? It must be a
-diskop of some kind.
-
-The code following ...
-
-   +
-   +       /* check the sb on the new disk to see whether the bitmap can be used
-   +        * to resync it (if not, we dirty the bitmap to cause a full resync) */
-   +       if (mddev->bitmap) {
-   +               int bitmap_invalidate = 1;
-   +               mdk_rdev_t *rdev0 = list_entry(mddev->disks.next,
-   +                       mdk_rdev_t, same_set);
-
-looks entirely opaque to me! Loads of if's.
-
-There's an addition of set_bitmap_file as an allowed diskop when we
-aren't initialised yet - entirely harmless and correct.
-
-Ah .. here I think we have the ioctl for get_bitmap_file. Yes, but I
-would have prefered the copy_to_user here, not in the cllaed routine.
-
-Maybe set_bitmap_file does the same "trick"?
-
-There's some status report output reformatting which is hard to figure.
-Maybe only a \n added? Probably because you follow with a bitmap status
-report when there is one. Shouldn't this bitmap report be a function in
-the bitmap.c file? Or would that be all cyclic in terms of
-dependencies?
-
-Here there is something I don't get:
-
-  -       if (test_bit(MD_RECOVERY_SYNC, &mddev->recovery))
-  +       /* we don't use the checkpoint if there's a bitmap */
-  +       if (test_bit(MD_RECOVERY_SYNC, &mddev->recovery) && !mddev->bitmap)
-
-Are you trying to avoid the speed throttling problem here?  I guess the
-checkpoints are where the speed is recalculated too.
-
-When I patched md.c here to get around the throttle (it doesn't know
-that some of the synced blocks are "virtual", thanks to the bitmap code),
-I did it by adding an extra array of "discounted blocks" that the
-sync code could increment every time it skipped something. Then I
-changed the throttle speed calculation in md.c to discount the
-discounted blocks each time, and only consider the remainder, which had
-been "really" written. So the throttle acted on the real i/o speed, not
-the virtual speed.
-
-But for printout, I used the virtual speed.
-
-
-Here's another bit that needs explanation:
-
-  -               blk_run_queues();
-  +               if (need_sync)
-  +                       blk_run_queues();
-
-
-And here ...
-
-  +               /* don't worry about speed limits unless we do I/O */
-  +               if (!need_sync)
-  +                       continue;
-
-
-Are you saying that in the corner case when the sync at since the
-previous checkpoint has been entirely "virtual", we just dive right
-back round again? What's this "need_sync" *exactly*? When do you think
-we "need" a sync?
-
-
-Hurrr .. I see changes to raid1.c next. I'll consider them after a
-stiff drink.
-
-
-In summary, the md.c changes look almost certainly benign to me,  with
-just a couple of one-liners that I would need tolook at harder. I would
-be grateful if you maybe comment on them here (or even in the code).
-
-Perhaps commenting the patch would be appropriate? Can one add text
-between hunks? One can do it before the diff starts. 
-
-
-
-
-
-
-
-Peter
