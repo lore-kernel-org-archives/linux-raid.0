@@ -1,49 +1,58 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: Force raid5 assemble at boot kernel
-Date: Tue, 19 Oct 2004 11:33:14 +1000
+From: "Martin Clauss" <clauss@neuro.informatik.uni-ulm.de>
+Subject: Problems with SCSI devices renaming...
+Date: Tue, 19 Oct 2004 16:47:40 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16756.28378.936295.221580@cse.unsw.edu.au>
-References: <20041018083744.48600.qmail@web51708.mail.yahoo.com>
+Message-ID: <001201c4b5ea$958f0790$30493c86@clever>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-2022-jp
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Mario Mendeni on Monday October 18
-To: Mario Mendeni <htrafmb@yahoo.it>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday October 18, htrafmb@yahoo.it wrote:
-> Hi all,
->   i've got a / over a failed raid5. i mean, three
-> disks: one broken (a), one good (b), one failed (c).
-> the last one was kicked out of the array because a
-> read error. anyway, no trouble because i've got backup
-> and so on. Well, if I boot from another disk and force
-> assembly it restarts, but I would like to know if I
-> can force the assembly of md0 for device (b) and (c)
-> from kernel command line (grub/lilo).
+Hi all,
 
-No, you cannot.  In this situation the kernel simply will not trust
-the data.  You need mdadm to modify the superblocks before it will
-assemble it.=20
+i got a problem with my raid. Current setup:
 
-NeilBrown
+        raiddev /dev/md/0
+                raid-level              5
+                nr-raid-disks           10
+                nr-spare-disks          0
+                persistent-superblock   1
+                parity-algorithm        left-symmetric
 
+                device /dev/scsi/host2/bus0/target0/lun0/part1
+                raid-disk               0
+                device /dev/scsi/host2/bus0/target1/lun0/part1
+                raid-disk               1
+                device /dev/scsi/host2/bus0/target2/lun0/part1
+                raid-disk               2
+                device /dev/scsi/host2/bus0/target3/lun0/part1
+                raid-disk               3
+                device /dev/scsi/host2/bus0/target4/lun0/part1
+                raid-disk               4
+                device /dev/scsi/host2/bus0/target8/lun0/part1
+                raid-disk               5
+                device /dev/scsi/host2/bus0/target9/lun0/part1
+                raid-disk               6
+                device /dev/scsi/host2/bus0/target10/lun0/part1
+                raid-disk               7
+                device /dev/scsi/host2/bus0/target11/lun0/part1
+                raid-disk               8
+                device /dev/scsi/host2/bus0/target12/lun0/part1
+                raid-disk               9
 
+This works very fine so far. But when I attach an additional device to this
+DEC Storage Device, I get an additional target on this SCSI bus. Now this
+doesn't matter for the devfs names, but the superblock of the RAID saves
+major/minor numbers that are wrong now. So the raid won't start anymore....
+Shouldn't autodetect handle exactly this problem? (Yes, partition type is
+linux raid autodetect for all raid disks...)
 
->=20
-> Thanks a lot for your time and your work,
-> andrea (a happy software raid user)
->=20
->=20
-> 	=09
-> ___________________________________=20
-> Nuovo Yahoo! Messenger: E' molto pi=1B,Ay=1B(B divertente: Audibles, =
-Avatar, Webcam, Giochi, Rubrica=85 Scaricalo ora!=20
-> http://it.messenger.yahoo.it
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I guess, this should be a quite common problem, so I hope to find some
+answers here.
+
+Greetz,
+Martin Clauss
+
