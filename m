@@ -1,67 +1,58 @@
-From: =?iso-8859-1?Q?Jakob_=D8stergaard?= <jakob@unthought.net>
-Subject: Re: RAID-6 support in kernel?
-Date: Tue, 4 Jun 2002 22:20:53 +0200
+From: klink@clouddancer.com (Colonel)
+Subject: (unknown)
+Date: Tue,  4 Jun 2002 08:47:12 -0700 (PDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20020604222053.C31741@unthought.net>
-References: <Pine.GSO.4.21.0206030213510.23709-100000@gecko.roadtoad.net> <1023125615.1051.1283.camel@peecee>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Message-ID: <20020604154712.AD48D8347@phoenix.clouddancer.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1023125615.1051.1283.camel@peecee>; from gleblanc@linuxweasel.com on Mon, Jun 03, 2002 at 10:33:24AM -0700
-To: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org, roy@karlsbakk.net
 List-Id: linux-raid.ids
 
-On Mon, Jun 03, 2002 at 10:33:24AM -0700, Gregory Leblanc wrote:
-> On Mon, 2002-06-03 at 02:25, Derek Vadala wrote:
->         On Mon, 3 Jun 2002, Roy Sigurd Karlsbakk wrote:
->        =20
->         > It'll waste 9 drives, giving me a total capacity of 7n inst=
-ead of 14n.=20
->         > And, by definition, RAID-6 _can_ withstand _any_ two-drive =
-failure.
->        =20
->         This is certainly not true.=20
->        =20
->         Combining N RAID-5 into a stripe wastes on N disks.=20
->=20
-> Hot spares are quite a nice way to increase the reliability of your
-> arrays, somewhat.  You can still be in trouble if a second disk fails
-> before the resync finishes, but at that point you're probably talking
-> about something of a more catastrophic failure, perhaps outside of th=
-e
-> machine itself. =20
+From: Colonel <klink@clouddancer.com>
+To: roy@karlsbakk.net
+CC: linux-raid@vger.kernel.org
+In-reply-to: <200206041259.g54CxuP07700@mail.pronto.tv> (message from Roy
+	Sigurd Karlsbakk on Tue, 4 Jun 2002 14:59:55 +0200)
+Subject: Re: SV: RAID-6 support in kernel?
+Reply-to: klink@clouddancer.com
+References: <2D0AFEFEE711D611923E009027D39F2B02F17E@nasexs1.meridian-data.com> <200206041259.g54CxuP07700@mail.pronto.tv>
 
-What often happens (in my experience) is, that a number of disks build =
-up bad
-blocks.  One day, you hit one of those bad blocks, and that one disk is=
- kicked
-from the array.
+   From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
+   Organization: Pronto TV AS
+   Date:	Tue, 4 Jun 2002 14:59:55 +0200
+   Cc: Christian Vik <cvik@vanadis.no>, linux-kernel@vger.kernel.org,
+	   linux-raid@vger.kernel.org
+   Sender: linux-raid-owner@vger.kernel.org
+   X-Mailing-List:	linux-raid@vger.kernel.org
+   News-Group: list.kernel
 
-When you re-sync, you *will* hit the remaining bad blocks on the other =
-disks,
-causing the array to fail completely.
+   > Of course, for a 4 drive setup there's no reason to use RAID 6 at all (RAID
+   > 10 will withstand any two drive failure if you only use 4 drives), but
+   > that's the reasoning.  I think the best way to deal with the read-modify
+   > write problem for RAID 6 is to use a small chunk size and deal with NxN
+   > chunks as a unit.  But YMMV.
 
-Using hot-spares will "automate" this failure - meaning that an adminis=
-trator
-may not be anywhere near the system when this total failure happens.
+   RAID10 will _not_ withstand any two-drive fail in a 4-drive scenario. If D1 
+   and D3 fail, you're fscked
 
-Not using hot-spares is less "automatic" in the lucky case where everyt=
-hing
-works, but it also assures that an administrator actually is near the s=
-ystem
-when the total failure is likely to occur.
+   D1 D2
+   D3 D4
 
---=20
-=2E...............................................................
-:   jakob@unthought.net   : And I see the elder races,         :
-:.........................: putrid forms of man                :
-:   Jakob =D8stergaard      : See him rise and claim the earth,  :
-:        OZ9ABN           : his downfall is at hand.           :
-:.........................:............{Konkhra}...............:
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+True, I think that the point is that of the 5 possible 2 disk
+failures, 2 of them (in striped mirrors, not mirrored stripes) kill
+the array.  For RAID5, all of them kill the array.  But the fancy RAID
+setups are for _large_ arrays, not 4 disks, unless you are after the
+small write speed improvement (as I am).
+
+Plus any raid metadevice made of metadevices cannot autostart, which
+means tinkering during startup, which is only worth it for those large
+drive arrays.
+
+
+r
+
+---
+Personalities : [raid0] [raid1] 
+read_ahead 1024 sectors
+md0 : active raid0 md4[3] md3[2] md2[1] md1[0]
+      34517312 blocks 64k chunks
