@@ -1,65 +1,52 @@
-From: Leandro =?ISO-8859-1?Q?Guimar=E3es?= Faria Corcete Dutra
-	<leandro@dutra.fastmail.fm>
-Subject: Re: 2.6.0: ext3 journal aborted with ext3/lvm/raid5
-Date: Thu, 19 Feb 2004 19:01:44 -0300
+From: Scott Long <scott_long@adaptec.com>
+Subject: Re: 3ware escalade vs software raid, from a different jeff
+Date: Thu, 19 Feb 2004 15:29:48 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1077228103.11696.548.camel@moacir.wlt.com.br>
-References: <20040107205326.GA14511@hamachi.dyndns.org>
-	 <pan.2004.02.18.14.55.50.11785@dutra.fastmail.fm>
-	 <20040219210805.GA576@hamachi.dyndns.org>
+Message-ID: <403538DC.5040004@adaptec.com>
+References: <Pine.LNX.4.58.0402190704420.25541@chaos.egr.duke.edu> <200402191958.i1JJwP225623@bzs.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20040219210805.GA576@hamachi.dyndns.org>
-To: Steven Ihde <sihde@cs.stanford.edu>
+In-Reply-To: <200402191958.i1JJwP225623@bzs.org>
+To: michael@insulin-pumpers.org
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Em Qui, 2004-02-19 =C3=A0s 18:08, Steven Ihde escreveu:
-> On Wed, Feb 18, 2004 at 11:55:50AM -0300, Leandro Guimar=C3=A3es Fari=
-a Corsetti Dutra wrote:
-> > On Wed, 07 Jan 2004 12:53:26 -0800, Steven Ihde wrote:
-> > > I get "Aborting journal on device dm-x" and associated errors abo=
-ut every
-> > > week or two.  This is on a 2.6.0 kernel, ext3 filesystem running =
-on lvm
-> > > over md raid5.
-> >=20
-> > 	I've found a similar situation, have any fix came forth?
->=20
-> Can anyone suggest what the next step is? =20
+Michael wrote:
+> 
+> Bear in mind that what you are calling "true hardware raid" is really
+> a microprocessor programmed to do the raid algorithims. Usually these
+> microprocessors are stretched to the limit to handle the throughput
+> of modern udam drives. I don't know but I suspect that the small
+> overhead use in the mmu for software raid has far more and faster
+> throughput than any of these dedicated microprocessors..... and, you
+> can see the code and know it is bug free or will be if you report the
+> bug.  I am the unhappy owner of several Adaptec raid cards that have
+> onboard processors to handle not only raid, but command processing
+> for the scsi bus.
 
-	I'd suggest a bug report... I was thinking about upgrading to 2.6.3 an=
-d
-following the procedures to generate a PROBLEM-format bug report.  Only
-I'm lazy and usually wait for the Debian packages to upgrade...
+What exactly are you talking about here?  Are you using a multi-channel
+RAID card to do RAID on one channel and SCSI-passthru on the other?
+Please explain.
 
-	But I guess we already have enough information and thus this would be
-unnecessary, and all we need now is a sufficient knowledgeable hacker t=
-o
-take an interest in our plight.
+> These turkeys have micro-code bugs that cause a
+> variety of problem for which there is no workaround or solution other
+> than trashing the cards.
 
+What 'micro-code' bugs are you talking about?  What problems are you
+talking about.  If you could provide some details to back up these 
+claims, there might be some recourse.
 
-> Here are the latest entries from my syslog (this is 2.6.2).  As it
-> usually does, this occurred early in the morning while the locatedb
-> was being updated.
+> Don't get me wrong, I thing the 3ware
+> product is exceptionally good, I just wouldn't use the raid code
+> given the choice of linux software raid.
+> 
+> Currently running 10 linux software raid boxes -- mix of raid 1 and
+> raid 5. Yes, I'm biased :-)
+> 
+> Michael
+> Michael@Insulin-Pumpers.org
 
-	I've Google'd around and at another lists (like the ext3-users and
-linux-kernel ones) people usually have this at the same hour, usually
-linked to some scheduled (implying I/O heavy) event.
+Scott
 
-	Mine occurred around 18h, same as one of the reporters I found.
-=20
-
---=20
-Leandro Guimar=C3=A3es Faria Corcete Dutra
-Maring=C3=A1, PR, BRASIL                 +55 (11) 5685 2219
-http://br.geocities.com./lgcdutra/  +55 (44) 3028 7467
-Soli Deo Gloria!                    +55 (44) 3028 8335
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
