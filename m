@@ -1,74 +1,35 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: mdadm --monitor
-Date: Fri, 17 May 2002 16:59:31 +1000 (EST)
+From: Rabeeh Khoury <rabeeh@galileo.co.il>
+Subject: How SW-RAID detects new disks
+Date: Sun, 19 May 2002 20:50:06 +0300
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <15588.43603.518843.477359@notabene.cse.unsw.edu.au>
-References: <15587.34271.342444.898591@notabene.cse.unsw.edu.au>
-	<Pine.LNX.4.30.0205170842220.22765-100000@duplo.agenda.si>
+Message-ID: <3CE7E5CE.5070702@galileo.co.il>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Danilo Godec on Friday May 17
-To: Danilo Godec <danci@agenda.si>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Friday May 17, danci@agenda.si wrote:
-> On Thu, 16 May 2002, Neil Brown wrote:
-> 
-> > > [root]# cat /usr/local/sbin/raidalert:
-> > >
-> > > #!/bin/bash
-> > > #
-> > > #
-> > >
-> > > logger -p kern.crit -t RAID
-> > >
-> >
-> >
-> > Try
-> >    logger -p kern.crit -t RAID $*
-> >
-> > the program doesn't get anything on stdin.  I just gets 2 or three
-> > command-line arguments.
-> 
-> Oh, I see! Yes, this way it does work... :)
-> 
-> Maybe you should explain this explicitly or even add the above example to
-> the docs.
-> 
->   D.
-> 
+Hi list,
 
-The documentation in mdadm.conf.5 seems suitably explicit:
+I have a question if Linux SW RAID stack can detect the presence of a 
+new disk (say new SCSI disk attached to the system in runtime) 
+automatically ?
 
-The
-.B program
-line gives the name of a program to be run when
-.B "mdadm --monitor"
-detects potentially interesting events on any of the arrays that it
-is monitoring.  This program gets run with two or three arguments, they
-being the Event, the md device, and possibly the related component
-device.
+If it can detect, how it does so ? Does a RAID daemon always scans SCSI 
+subsystem and for new disks attached ? (seems fantasy ?)
+
+Regards,
+Rabeeh
+
+-- 
+This message may contain confidential, proprietary or legally privileged
+information. The information is intended only for the use of the individual
+or entity named above. If the reader of this message is not the intended
+recipient, you are hereby notified that any dissemination, distribution
+or copying of this communication is strictly prohibited. If you have
+received this communication in error, please notify us immediately by
+telephone, or by e-mail and delete the message from your computer.
 
 
-mdadm.8 however doesn't seem explicit at all :-(
-I have added:
 
-When passing event to program, the program is run once for each event
-and is given 2 or 3 command-line arguements.  The first is the
-name of the event (see below).  The second is the name of the
-md device which is affected, and the third is the name of a related
-device if relevant, such as a componenet device that has failed.
-
-just after
-
-
-The result of monitoring the arrays is the generation of events.
-These events are passed to a separate program (if specified) and may
-be mailed to a given E-mail address.
-
-
-Thanks,
-NeilBrown
