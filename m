@@ -1,57 +1,45 @@
-From: "Peter L. Ashford" <ashford@sdsc.edu>
-Subject: Re: Disks keep disapearing
-Date: Sat, 10 May 2003 21:09:11 -0700 (PDT)
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: fsck on raidvolumes at boot
+Date: Sun, 11 May 2003 16:39:38 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.GSO.4.30.0305102055150.24253-100000@multivac.sdsc.edu>
-References: <3EBD2D2C.1050900@visiarc.com>
+Message-ID: <16061.61482.79132.824395@notabene.cse.unsw.edu.au>
+References: <871y0ejtdf.fsf@jumper.lonesom.pp.fi>
+	<Pine.OSF.4.51.0305102009550.135362@soul.helsinki.fi>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3EBD2D2C.1050900@visiarc.com>
-To: =?ISO-8859-1?Q?Johan_Sch=F6n?= <johan.schon@visiarc.com>
+In-Reply-To: message from Mikael Johansson on Saturday May 10
+To: Mikael Johansson <mpjohans@pcu.helsinki.fi>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Johan,
+On Saturday May 10, mpjohans@pcu.helsinki.fi wrote:
+> 
+> Hello All!
+> 
+> When making an unclean shutdown/reset of the system, Linux normally checks
+> the disk partitions at boot with fsck (e2fsck). For raided mounts this
+> does not happen however, instead only a warning message of "unclean
+> partition mounted" (or similar) appears, as fstab is read and, say,
+> /dev/md0 gets mounted to, say, /wrk.
+> 
+> Is there a way to make Linux automatically check the /dev/md*'s before
+> mounting them if they are dirty?
 
-> > WD has had problems similar to this with many of their drives.  It just
-> > decides to 'go away'.  There is a fix available on their web site for the
-> > 180GB and 200GB drives (and a better description of the problem), but the
-> > problem is NOT limited to those drives.
->
-> How do these problem appear in log files?
->
-> I have a machine with two Promise Ultra100 TX2 cards, and five
-> WD2000JB 200 GB drives in RAID-5. In a month, i've had a few disk "failures"
-> that typically looks like this in the logs:
+What number do you have in column 6 of /etc/fstab for these
+filesystems?
+If 0, make it non-zero.
 
-<SNIP LOG>
+NeilBrown
 
-> The disk itself doesn't appear to know about any failures
-> (using smartctl), and it works again when hotadded to the raidset. I've
-> also had a multiple drive "failure" twice, both times with two drives
-> using the same IDE channel.
->
-> I'm not sure if these problems are caused by buggy Promise ATA drivers
-> in my kernel (RH9, 2.4.20) or the WDC problem with 180/200 GB drives.
-> From WDC's description of the problem, I got the impression that it
-> only happened when the drives were connected to hardware RAID cards
-> like 3Ware IDE raid controllers.
-
-This appears to be the WD problem.  It is caused by some timing-related
-irregularities in their microcode.  It occurs in a 'RAID environment'.
-The article is not specific about only hardware RAID cards.
-
-There is a fix package for 3Ware cards and a fix package for non-3Ware
-cards.  Use the package for non-3Ware cards.
-
-If you need to have more than 4 drives in an array, with 2 Ultra100 cards,
-you might want to consider adding a Promise Ultra133 card.  You are
-normally limited to 2 of each, for a total of 4 cards (8 channels total).
-This would solve your double-failure problem.  FYI, I'm running the
-reverse of this (2 Ultra133 + 1 Ultra100) in one of my file servers with
-excellent results.
-
-Good luck.
-				Peter Ashford
-
+> 
+> I'm using Debian 3.0 and raidtools2.
+> 
+> Have a nice weekend,
+>     Mikael J.
+>     http://www.helsinki.fi/~mpjohans/
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
