@@ -1,48 +1,88 @@
-From: James Ralston <qralston+ml.linux-raid@andrew.cmu.edu>
-Subject: reproducible kernel Oops in mdrecoveryd (triggered by md raid1 re-syncs)
-Date: Tue, 28 Jan 2003 02:24:44 -0500
+From: Norman Schmidt <norman.schmidt@ratnet.stw.uni-erlangen.de>
+Subject: Re: Problems mounting root file system with software RAID-1
+Date: Tue, 28 Jan 2003 09:12:11 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1160000.1043738684@shieldbreaker.l33tskillz.org>
-References: <Pine.LNX.4.44.0301241529360.26021-100000@pcmy.sei.cmu.edu> <15922.5878.154835.39402@notabene.cse.unsw.edu.au>
+Message-ID: <3E363B5B.5000105@ratnet.stw.uni-erlangen.de>
+References: <20030128013036.GA22180@qk.com.au>
+Reply-To: schmidt@naa.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1;
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <15922.5878.154835.39402@notabene.cse.unsw.edu.au>
-Content-Disposition: inline
-To: linux-raid@vger.kernel.org
+To: Lucas Barbuto <lucas@qk.com.au>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2003-01-25 at 15:47:50+1100 Neil Brown <neilb@cse.unsw.edu.au> wrote:
+Hi Lucas!
 
-> Very odd.  What you do should have the desired result, but obviously
-> doesn't.
+Lucas Barbuto schrieb:
 
-Thanks for your response.
+> NET4: Unix domain sockets 1.0/SMP for Linux NET4.0.
+> EXT3-fs: unable to read superblock
+> EXT2-fs: unable to read superblock
+> iofs_read_super: bread failed, dev=3D09:01, iso_blknum=3D16, block=3D=
+32
+> XFS: bad magic number
+> XFS: SB validate failed
+> Kernel panic: VFS: Unable to mount root fs on 09:01
+> --
+>=20
+> When trying to mount the root file system.
+>=20
+> I don't get it.  I can mount the RAID partitions under /mnt no proble=
+ms,
+> I can boot off the RAID device /dev/md1, I just can't mount /dev/md2 =
+as
+> my root file system.  Can anyone shed some light on this for me?  Wha=
+t
+> do I need to do?  I have experimented with the LiLo setup and found t=
+hat
+> the system will boot up as expected with /dev/hde2 (or /dev/hdg2) as =
+the
+> root file system... why doesn't it like /dev/md2?  Thanks in advance.
 
-Alas, the problem isn't with mdadm.  :(  This is the problem:
+I think your problem is the following:
 
-https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=82815
+The kernel booting from a /boot md device doesn=B4t really boot off=20
+/dev/md1 but off one of the bootblocks of /dev/hde and /dev/hdg (which=20
+is perfectly good). The kernel doesn=B4t need /dev/md1 (=3D/boot) to bo=
+ot,=20
+but only one of the bootblocks to find the kernel image, which is=20
+possible on both hde and hdg. The kernel panic occurs as soon as the=20
+kernel wants to mount the / filesystem the first time. The reason for=20
+this is that at that point, the raid devices (i.e. at least /dev/md2,=20
+the others can be assembled later) are not assembled yet.
 
-(I wasn't noticing the Oops in the voluminous output from the md
-driver.)
+You have two options: The older one is to make the underlying partition=
+s=20
+of /dev/md1 (you didn=B4t give their name) autodetectable (change=20
+partition type to fd).
+The newer option is to tell the kernel at boot time how to assemble the=
+=20
+needed devices, which you do by inserting the following into the "image=
+"=20
+section of your booting kernel in /etc/lilo.conf:
+append =3D "md=3D2,/dev/hde3,/dev/hdg3"
+Change the partitions to those that build up /dev/md2.
+The kernel then can assemble its raid, since you compiled at least raid=
+1=20
+into it. You migth be able to use raid in a module at boot time if you=20
+load the module through an initial ramdisk (initrd), something Debian=20
+usually does not, but SuSE seems to (if yet very badly documented).
 
-> You didn't say which kernel you are running - 2.4 or 2.5.xx
+By the way: The most importatnt thing missing in your mail is=20
+/etc/raidtab or /etc/mdadm/mdadm.conf.
 
-Red Hat's latest errata kernel for 8.0 (2.4.18-19.8.0).
+HTH, Norman Schmidt.
+--=20
+--
 
-> I assume there aren't any other RAID arrays present.  Is this
-> correct (or did you edit the output of /proc/mdstat).
+Norman Schmidt          Institut f=FCr Physikal. u. Theoret. Chemie
+cand. chem.             Friedrich-Alexander-Universitaet
+schmidt@naa.net         Erlangen-Nuernberg
 
-Nope, no other arrays.
-
-I was looking at the notes for 2.4.21-pre3, and I see there are a
-couple of md fixes from you in there.  Unless you have a better idea,
-I'll try backporting drivers/md/md.c from 2.4.21-pre3 to Red Hat's
-2.4.18-19.8.0 and give that whirl...
-
--- 
-James Ralston, Information Technology
-Software Engineering Institute
-Carnegie Mellon University, Pittsburgh, PA, USA
-
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
