@@ -1,110 +1,39 @@
-From: Lars Marowsky-Bree <lmb@suse.de>
-Subject: Re: [Evms-devel] 2.6.10-ac10 + 2.6.10udm1 + latest evms => not nice
-Date: Fri, 21 Jan 2005 15:47:38 +0100
-Message-ID: <20050121144738.GM25714@marowsky-bree.de>
-References: <87brbinaey.87acr2naey@878y6mnaey.message.id>
+From: Matthew Bloch <matthew@bytemark.co.uk>
+Subject: Nearest mdadm equivalent of kernel RAID autostart code?
+Date: Fri, 21 Jan 2005 16:22:21 +0000
+Message-ID: <csra7t$21h$1@sea.gmane.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="82I3+IH0IqGh5yIs"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <87brbinaey.87acr2naey@878y6mnaey.message.id>
 Sender: linux-raid-owner@vger.kernel.org
-To: syrius.ml@no-log.org, evms-devel@lists.sourceforge.net
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi there,
 
---82I3+IH0IqGh5yIs
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
+After a lot of compiling static kernels, I'm building a generic one for our
+particular mix of servers, so the md code is now modular.  I didn't realise
+that I'd lose the automatic array assembly functionality, though I
+appreciate reasons for trying to deprecate it.
 
-On 2005-01-21T15:13:26, syrius.ml@no-log.org wrote:
+Can anyone suggest a better shell equivalent of the array assembly
+functionality that I can use with a modular md?  So far I've got:
 
-> Don't know if it's related to evms or to dm.
-> kernel is a 2.6.10-ac10 + 2.6.10-udm1 + evms kernel patches.
-> (bd_claims + dm bbr + dm multipath)
-> 
-> Here is the nice welcome message I've just got :)
+for DEV in 0 1 2 3 4 5 6 7 ; do
+  mdadm -Ac partitions -m $DEV /dev/md$DEV
+done
 
-This looks like md on DM breakage, which Jens has just fixed in our
-kernel. I'm not sure whether he has submitted it upstream yet, but you
-can give it a try.
+But this seems a bit slow as it tears through every device in /dev on each
+call (about 30 seconds per mdadm call).  I don't want to have RAID
+configuration files on each server if I can avoid it, as I know that all
+the info I need will be in the relevant discs' superblocks.
 
-Does the attached patch apply & fix the problem for you?
-
-
-Sincerely,
-    Lars Marowsky-Brée <lmb@suse.de>
+Any better ideas for doing the job?
 
 -- 
-High Availability & Clustering
-SUSE Labs, Research and Development
-SUSE LINUX Products GmbH - A Novell Business
+Matthew Bloch                             Bytemark Hosting
+                                http://www.bytemark.co.uk/
+                phone UK: 0845 004 3 004 US: 1-877 BYTEMAR
+          Dedicated Linux hosts from 15ukp ($26) per month
 
-
---82I3+IH0IqGh5yIs
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename=md-bio-on-stack
-
-From: Jens Axboe <axboe@suse.de>
-Subject: Fix md using bio on stack with bio clones
-Patch-mainline: 
-References: 49931
-
-If md resides on top of a driver using bio_clone() (such as dm), it will
-oops the kernel due to md submitting a botched bio that has a veclist but
-doesn't have bio->bi_max_vecs set.
-
-Acked-by: 
-Signed-off-by: Jens Axboe <axboe@suse.de>
-
-===== drivers/md/md.c 1.231 vs edited =====
---- 1.231/drivers/md/md.c	2004-12-01 09:13:51 +01:00
-+++ edited/drivers/md/md.c	2005-01-19 13:23:30 +01:00
-@@ -332,29 +332,26 @@
- static int sync_page_io(struct block_device *bdev, sector_t sector, int size,
- 		   struct page *page, int rw)
- {
--	struct bio bio;
--	struct bio_vec vec;
-+	struct bio *bio = bio_alloc(GFP_KERNEL, 1);
- 	struct completion event;
-+	int ret;
-+
-+	bio_get(bio);
- 
- 	rw |= (1 << BIO_RW_SYNC);
- 
--	bio_init(&bio);
--	bio.bi_io_vec = &vec;
--	vec.bv_page = page;
--	vec.bv_len = size;
--	vec.bv_offset = 0;
--	bio.bi_vcnt = 1;
--	bio.bi_idx = 0;
--	bio.bi_size = size;
--	bio.bi_bdev = bdev;
--	bio.bi_sector = sector;
-+	bio->bi_bdev = bdev;
-+	bio->bi_sector = sector;
-+	bio_add_page(bio, page, size, 0);
- 	init_completion(&event);
--	bio.bi_private = &event;
--	bio.bi_end_io = bi_complete;
--	submit_bio(rw, &bio);
-+	bio->bi_private = &event;
-+	bio->bi_end_io = bi_complete;
-+	submit_bio(rw, bio);
- 	wait_for_completion(&event);
- 
--	return test_bit(BIO_UPTODATE, &bio.bi_flags);
-+	ret = test_bit(BIO_UPTODATE, &bio->bi_flags);
-+	bio_put(bio);
-+	return ret;
- }
- 
- static int read_disk_sb(mdk_rdev_t * rdev)
-
---82I3+IH0IqGh5yIs--
