@@ -1,34 +1,34 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: ANNOUNCE: mdadm 1.5.0 - A tool for managing Soft RAID under Linux
-Date: Wed, 21 Jan 2004 19:09:22 -0800
+From: "aylin_333@yahoo.com" <aylin_331@yahoo.com>
+Subject: =?ISO-8859-1?Q?=20tan=FD=FEma?=  =?ISO-8859-1?Q?=20zaman=FD?= geldi
+Date: Thu, 22 Jan 2004 13:42:14 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <400F3EE2.5070504@zytor.com>
-References: <16399.13337.814097.625065@notabene.cse.unsw.edu.au>
+Message-ID: <200401221142.i0MBgdV16057@zeus.kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <16399.13337.814097.625065@notabene.cse.unsw.edu.au>
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: linux-raid@vger.kernel.org, Andrew Morton <akpm@osdl.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> 
-> I am pleased to announce the availability of 
->    mdadm version 1.5.0
-> It is available at
->    http://www.cse.unsw.edu.au/~neilb/source/mdadm/
-> and
->    http://www.{countrycode}.kernel.org/pub/utils/raid/mdadm/
-> 
+ABONE CINSEL SAGLIK ÜRÜNLERI LTD. STI.
+merhaba!
+bizler cinsel saglik ve fantazi ürünleri ithal eden 
+ve satisini yapan bir kurulusuz.
+-partnerinizin bay veya bayan cinsel soguklugumu var?
+azdirici ve uyarici ürünlerimizle bir kac damlada mükemmel sonuc kaçinilmaz
+-penisinizin kisa olmasi caninizimi sikiyor? 
+45 günde 3-6cm büyümesinin mutlak oldugunu söylesek
+-ereksiyon sorununuzmu var? erkenmi bosaliyorsunuz?
+daha uzun süreli bir birtelige ne dersiniz (1,5-2saat )
+-sertlesme ve güç sorunlarimi yasiyorsunuz 
+artik bu tür sorunlarinizi firmamiz güvencesinde tarihe magal edebilirsiniz.
+-ürünlerimiz arasinda sisme bayan ve bay bebekler
+erotik ic camasirlari ve daha yüzlerce cesit.
+-görsel fantazileriniz icin CD-DVD-DVX-VHS-BETA film cesitleri mevcuttur.
+NOT:TÜM ÜRÜNLERIMIZ ULUSLAR ARASI SAGLIK ÖRGÜTÜ WHO ONAYLIDIR
+mail'imiz sizi rahatsiz ettiyse özür diliyor ve 
+mutlu bir cinsel yasam diliyoruz.
+www.aboneshop.com   siparis@aboneshop.com   
 
-Make that:
 
-     ftp://ftp.kernel.org/pub/linux/utils/raid/mdadm/
-                              ^^^^^
-
-[or the equivalent http://www]
-
-	-hpa
 
