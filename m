@@ -1,50 +1,59 @@
-From: Gregory Leblanc <gleblanc@linuxweasel.com>
-Subject: Re: RAID-6 support in kernel?
-Date: 03 Jun 2002 10:33:24 -0700
+From: Dale Stephenson <dale.stephenson@quantum.com>
+Subject: RE: SV: RAID-6 support in kernel?
+Date: Mon, 3 Jun 2002 12:03:23 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1023125615.1051.1283.camel@peecee>
-References: <Pine.GSO.4.21.0206030213510.23709-100000@gecko.roadtoad.net>
+Message-ID: <2D0AFEFEE711D611923E009027D39F2B02F17E@nasexs1.meridian-data.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.GSO.4.21.0206030213510.23709-100000@gecko.roadtoad.net>
-To: linux-raid@vger.kernel.org
+To: 'Kasper Dupont' <kasperd@daimi.au.dk>, Roy Sigurd Karlsbakk <roy@karlsbakk.net>
+Cc: Christian Vik <cvik@vanadis.no>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 2002-06-03 at 02:25, Derek Vadala wrote:
-        On Mon, 3 Jun 2002, Roy Sigurd Karlsbakk wrote:
-        
-        > It'll waste 9 drives, giving me a total capacity of 7n instead of 14n. 
-        > And, by definition, RAID-6 _can_ withstand _any_ two-drive failure.
-        
-        This is certainly not true. 
-        
-        Combining N RAID-5 into a stripe wastes on N disks. 
+Kasper Dupont wrote:
+> Roy Sigurd Karlsbakk wrote:
+> > 
+> > Below is a (patented?)
+> 
+> No problem for me I live in Europe.
+> 
+> > version that works. This is from the linux-raid list
+> > 
+> > >  A1   A2  (P1) (PA)
+> > > (P2) (PB)  B2   B1
+> 
+> Nice, looks like it works.
+> 
+> > >  C4   C3  (PC) (P3)
+> > > (PD) (P4)  D3   D4
+> 
+> In this encoding the roles of disk one and two are
+> switched, and three and four are also switched. Are
+> there any reason for this?
+> 
+I liked spreading the row-based and column-based parity across all disks.
+Would that matter?  It could, depending on implementation.
 
-Hot spares are quite a nice way to increase the reliability of your
-arrays, somewhat.  You can still be in trouble if a second disk fails
-before the resync finishes, but at that point you're probably talking
-about something of a more catastrophic failure, perhaps outside of the
-machine itself.  
-        
+Consider an access pattern to the RAID which writes full stripes, and only
+the first two lines (repeating) are used as an access pattern.  This might
+go something like this:
 
-        > With a 1500MHz Athlon on a typical file server where there's not much 
-        > writes, the CPU is sitting there chrunching RC5-64 som 99,95 % of the 
-        > time. I don't think it'll make much differnce with today's CPUs
-        
-        It's up to you to decide if the performance trade-off is worthwhile. I
-        merely trying to point out that system with 2 RAID-5 is likely to incur
-        the same CPU hit as a single RAID-6, implemented in the kernel. 
+write A1 & A2 (Reads P1 & P2, calculates P1, PA, P2, writes A1, A2, P1, PA,
+P2)
+write B2 & B1 (Reads P1 & P2, calculates P1, P2, PB, writes P1, P2, PB, B2,
+B1)
 
-The issue isn't so much CPU load, but latency.  I'm too lazy to go read
-a summary on RAID 6, but with RAID 5, blocks to be written as part of a
-stripe often need to be read from the disk in order to generate the
-parity.  Parity calculations are pretty trivial on modern CPUs, but disk
-latency certainly isn't.  HTH,
-	Greg
+Repeat this a bunch of times, and you'll find you are writing twice as many
+blocks to Drives 1 & 3 as you are to Drives 2 & 4.  However, if you add the
+C and D rows to the scheme, the full-stripe writes spread the column parity
+writes evenly across all drives.
 
--- 
-Portland, Oregon, USA.
-Please don't copy me on replies to the list.
+Of course, for a 4 drive setup there's no reason to use RAID 6 at all (RAID
+10 will withstand any two drive failure if you only use 4 drives), but
+that's the reasoning.  I think the best way to deal with the read-modify
+write problem for RAID 6 is to use a small chunk size and deal with NxN
+chunks as a unit.  But YMMV.
 
+Dale Stephenson
+steph@snapserver.com
