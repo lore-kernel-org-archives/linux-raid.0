@@ -1,30 +1,41 @@
-From: "Jonathan Vardy" <jonathanv@explainerdc.com>
-Subject: Re: RAID 5 performance problems
-Date: Sat, 5 Apr 2003 02:10:02 +0200
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <036201c2fb07$b41b8340$2e77c23e@pentium4>
-References: <73300040777B0F44B8CE29C87A0782E101FA98FB@exchange.explainerdc.com>
+From: Stephan van Hienen <raid@a2000.nu>
+Subject: WD1800XX / WD2000XX raid
+Date: Sat, 5 Apr 2003 13:36:56 +0200 (CEST)
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <Pine.LNX.4.53.0304051335110.2985@ddx.a2000.nu>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-To: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-RE: RAID 5 performance problems> I've rebooted with the original Red Hat
-kernel (2.4.20) and it
-> recognizes the drives correctly now (UDMA100) but the performance is
-> still poor
+today found this article :
 
-Good news; I've finally got the performance up to a good level. Bonnie++ now
-gives 77MB/sec read and 25MB/sec write speeds.
+http://wdc.custhelp.com/cgi-bin/wdc.cfg/php/enduser/std_adp.php?p_admin=
+=3D1&p_faqid=3D913&p_created=3D1047068027
+(http://support.wdc.com/raid.asp)
 
-The problem was being caused by a setting in the mainbaord BIOS; "PCI
-latency timer" had a default value of 0, after changing this to 32 the drive
-speed (hdparm) doubled and the raid finally performed as it should.
+Problem:
+WD EIDE 180GB and 200GB drives are dropped from an IDE RAID configurati=
+on
+after several days or weeks of operation.
 
-I'd like to thank everybody who responded for giving me advice on the
-problem, I apreciate it greatly.
+Solution:
+The problem is a result of a feature that reduces idle acoustic noise i=
+n
+desktop drives. This feature can cause a timeout in a IDE RAID
+environment. To disable the feature, you can run a simple Western Digit=
+al
+utility to turn off a single bit in the drive=92s run-time configuratio=
+n.
+Disabling of this feature will NOT impact normal system operations in a
+RAID environment. No firmware or hardware changes are required.
 
-Yours sincerely, Jonathan Vardy
+
+can this 'single bit' also be set with an linux util ? (like hdparm?)
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
