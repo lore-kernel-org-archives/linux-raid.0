@@ -1,25 +1,37 @@
-From: Brad Campbell <brad@wasp.net.au>
-Subject: Re: Raid-0 speed
-Date: Thu, 26 Aug 2004 08:36:09 +0400
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: Raid1 auto-detection...
+Date: Thu, 26 Aug 2004 09:07:32 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <412D68B9.2080304@wasp.net.au>
-References: <412C1E23.1070104@wasp.net.au> <20040825211158.1242221a@vovapc.kpml.int>
+Message-ID: <20040826070732.GD23469@percy.comedia.it>
+References: <1093473322.2398.12.camel@south.rosestar.lan> <1093493854.2398.22.camel@south.rosestar.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20040825211158.1242221a@vovapc.kpml.int>
-To: "Vladimir I. Umnov" <uvi@ezmail.ru>
-Cc: linux-raid@vger.kernel.org
+Content-Disposition: inline
+In-Reply-To: <1093493854.2398.22.camel@south.rosestar.lan>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Vladimir I. Umnov wrote:
->>Also, doing a dd from 4 drives maxes out my read speed as per mdstat
->>at 160MB/s (How? PCI is 133MB/s and according to lspci all my
->>controllers are on the same bus). Does vmstat lie?
-> 
-> NO! PCI 2.3 can about 512 MB/s
+On Wed, Aug 25, 2004 at 11:17:34PM -0500, Bob Hillegas wrote:
+>I know it's bad form to reply to your own message, but I just resolved
+>my problem.
+>
+>The Fedora Core 2 kernel isn't the source of the problem. It's the
+>rc.sysinit script. It expects to use raidstart and so checks for the
+>presence of the /etc/raidtab file. Since I don't have one, no attempt
+>was made to start the raid.
+>
+>I'll hammer together changes to allow mdadm --assemble --scan to start
+>the raid and then post when it works.
+>
+check the archives, someone already did.
 
-Ok then. Umm so for a 32 bit bus at 33Mhz I'm maxing out my PCI bandwidth.
-An Asus A7V600 motherboard does not do PCI 2.3
+L.
 
+-- 
+Luca Berra -- bluca@comedia.it
+        Communication Media & Services S.r.l.
+ /"\
+ \ /     ASCII RIBBON CAMPAIGN
+  X        AGAINST HTML MAIL
+ / \
