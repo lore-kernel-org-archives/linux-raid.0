@@ -1,25 +1,27 @@
-From: "Michael Paul" <radius.mp@verizon.net>
-Subject: Uh oh....
-Date: Wed, 29 Jan 2003 21:03:33 -0800
+From: "Martin K. Petersen" <mkp@mkp.net>
+Subject: Re: Uh oh....
+Date: 30 Jan 2003 00:30:27 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <028201c2c81c$f05ab0b0$1400020a@mike>
+Message-ID: <yq1y953ryq4.fsf@austin.mkp.net>
+References: <028201c2c81c$f05ab0b0$1400020a@mike>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <028201c2c81c$f05ab0b0$1400020a@mike>
+To: Michael Paul <radius.mp@verizon.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+>>>>> "Michael" == Michael Paul <radius.mp@verizon.net> writes:
 
+Michael> The box in which some of my scsi drives were located did not
+Michael> get turned on when I booted. So, of course, all of my mirrors
+Michael> are now in degraded mode. Is there a quick and easy way to
+Michael> fix this?
 
-    Ok.. I screwed up...
+        mdadm /dev/mdM -a /dev/sdxN
 
- The box in which some of my scsi drives were located did not get turned on
-when I booted. So, of course, all of my mirrors are now in degraded mode. Is
-there a quick and easy way to fix this?
-
-Thanks,
-Michael
-
+-- 
+Martin K. Petersen	Wild Open Source, Inc.
+mkp@wildopensource.com	http://www.wildopensource.com/
 
