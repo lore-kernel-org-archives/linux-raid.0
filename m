@@ -1,155 +1,91 @@
-From: Andre Correa <andre.correa@pobox.com>
-Subject: Re: Trouble with a Adaptec 2010S RAID PCI adapter
-Date: Tue, 15 Jun 2004 16:05:49 -0300
+From: "Tim Harvey" <tharvey@alumni.calpoly.edu>
+Subject: Autodetection howto
+Date: Tue, 15 Jun 2004 13:42:54 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <40CF488D.6010904@pobox.com>
-References: <547AF3BD0F3F0B4CBDC379BAC7E4189FD23E52@otce2k03.adaptec.com>
+Message-ID: <000001c45319$55f03570$7001a8c0@darwin>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <547AF3BD0F3F0B4CBDC379BAC7E4189FD23E52@otce2k03.adaptec.com>
-To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Cc: linux-raid@vger.kernel.org, akpm@osdl.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Greetings,
 
-Salyzn tks for the info. Following it I found the thread:  [patch 1/1] 
-Get I2O working with Adaptec's zero channel controllers, 
-(http://groups.google.com/groups?q=2010s+group:mlist.linux.scsi&hl=en&lr=&ie=UTF-8&group=mlist.linux.scsi&selm=linux.scsi.200405290713.i4T7Dxr25622%40mail.osdl.org&rnum=1) 
-  where the patch is posted. The thread is really unanswered and the 
-patch is the same from  http://i2o.shadowconnect.com where it is called 
-i2o-adaptec-zerochannel-support.patch
+I've got a 4-disk RAID5 array that I'm able to manually assemble and
+mount, however I can't figure out how to get the autodetection to work.
+In reading the Linux Software RAID howto it seems like it should 'just
+work', but I'm running into a snag which doesn't seem to be described in
+the HOWTO/FAQ.
 
-I already had it applied to my kernel and couldn't make the adapter work.
+The commands that I use to manually assemble and run my XFS filesystem
+via LVM over RAID5 are:
 
-I'll have a look on dpt_i2o...
+# mdadm --assemble --run /dev/md0 /dev/hdb1 /dev/hdc1 /dev/hdd1
+mdadm: /dev/md0 has been started with 3 drives (out of 4).
+# mdadm --assemble --run /dev/md1 /dev/hdb3 /dev/hdc3 /dev/hdd3
+mdadm: /dev/md1 has been started with 3 drives (out of 4).
 
-Anyway, my results are that this patch is not working for a Adaptec 
-2010S card. I'm copying Mr Andrew Morton who first posted the patch so 
-he gets aware of it. (sorry if you get it doubled, I don't know if you 
-are at linux-raid).
+Then for LVM:
 
-tks for your attention...
+# vgscan
+# vgchange -a y
+# mount -t xfs -o logdev=/dev/logdev/storage1 /dev/vgroup00/storage1
+/mnt/data
 
-Andre
+Here are my log messages from bootup:
+
+Jun 15 11:31:24 localhost kernel: md: autorun ...
+Jun 15 11:31:24 localhost kernel: md: considering hdh1 ...
+Jun 15 11:31:24 localhost kernel: md:  adding hdh1 ...
+Jun 15 11:31:24 localhost kernel: md:  adding hdg1 ...
+Jun 15 11:31:24 localhost kernel: md:  adding hdf1 ...
+Jun 15 11:31:24 localhost kernel: md:  adding hde1 ...
+Jun 15 11:31:24 localhost kernel: md: created md0
+Jun 15 11:31:24 localhost kernel: md: bind<hde1,1>
+Jun 15 11:31:24 localhost kernel: md: bind<hdf1,2>
+Jun 15 11:31:24 localhost kernel: md: bind<hdg1,3>
+Jun 15 11:31:24 localhost kernel: md: bind<hdh1,4>
+Jun 15 11:31:25 localhost kernel: md: running: <hdh1><hdg1><hdf1><hde1>
+Jun 15 11:31:25 localhost kernel: md: hdh1's event counter: 00000028
+Jun 15 11:31:25 localhost kernel: md: hdg1's event counter: 00000028
+Jun 15 11:31:25 localhost kernel: md: hdf1's event counter: 00000028
+Jun 15 11:31:25 localhost kernel: md: hde1's event counter: 00000028
+Jun 15 11:31:25 localhost kernel: kmod: failed to exec /sbin/modprobe -s
+-k md-personality-4, errno = 2
+Jun 15 11:31:25 localhost kernel: md: personality 4 is not loaded!
+Jun 15 11:31:25 localhost kernel: md :do_md_run() returned -22
+Jun 15 11:31:25 localhost kernel: md: md0 stopped.
+Jun 15 11:31:25 localhost kernel: md: unbind<hdh1,3>
+Jun 15 11:31:25 localhost kernel: md: export_rdev(hdh1)
+Jun 15 11:31:25 localhost kernel: md: unbind<hdg1,2>
+Jun 15 11:31:25 localhost kernel: md: export_rdev(hdg1)
+Jun 15 11:31:25 localhost kernel: md: unbind<hdf1,1>
+Jun 15 11:31:25 localhost kernel: md: export_rdev(hdf1)
+Jun 15 11:31:25 localhost kernel: md: unbind<hde1,0>
+Jun 15 11:31:25 localhost kernel: md: export_rdev(hde1)
+Jun 15 11:31:25 localhost kernel: md: ... autorun DONE.
+
+I'm not sure why I'm getting 'md: personality 4 is not loaded!', would
+it be because RAID5 is loaded as a module instead of compiled into the
+kernel?  I googled this and have added the following to
+/etc/modules.conf and rebooted, but it did not change things:
+
+# RAID autoload modules
+alias md-personality-3 raid1
+alias md-personality-4 raid5
 
 
+Questions:
 
-Salyzyn, Mark wrote:
-> The 2010 Adapter is a Zero Channel RAID card that does *not* purely
-> follow the I2O standard. It separates out the message unit from the
-> message pool, each having its own Base Address register (BAR) rather
-> than a single unifying BAR.
-> 
-> There were recent patches to the I2O layer to support this adapter
-> posted to the linux-scsi list. Pick them up and check them out. I
-> believe that there are still problems with that code.
-> 
-> The dpt_i2o driver, which supports 64 bit operation, continues to
-> properly support this adapter in the 2.6 tree, and updates to this
-> driver were also posted to the linux-scsi list w/o feedback (so in, not
-> in, don't know).
-> 
-> Sincerely -- Mark Salyzyn
-> 
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org
-> [mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Andre Correa
-> Sent: Tuesday, June 15, 2004 1:01 PM
-> To: linux-raid@vger.kernel.org
-> Subject: Trouble with a Adaptec 2010S RAID PCI adapter
-> 
-> 
-> Hi list, I'm in trouble trying to use a Adaptec 2010S RAID PCI adapter
-> in a i386 linux box running kernel 2.6.6. I've enabled I2O in the kernel
-> 
-> and support for my SCSI adapter, that in fact works fine.
-> 
-> CONFIG_I2O=y
-> CONFIG_I2O_CONFIG=y
-> CONFIG_I2O_BLOCK=y
-> CONFIG_I2O_SCSI=y
-> CONFIG_I2O_PROC=y
-> 
-> My dmesg shows something like this:
-> 
-> ...<snip>...
-> scsi0 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.36
->          <Adaptec 2940 Ultra2 SCSI adapter>
->          aic7890/91: Ultra2 Wide Channel A, SCSI Id=7, 32/253 SCBs
-> ...<snip>...
-> Red Hat/Adaptec aacraid driver (1.1.2-lk1 Jun  4 2004)
-> ...<snip>...
-> I2O Core - (C) Copyright 1999 Red Hat Software
-> I2O: Event thread created as pid 20
-> i2o: Checking for PCI I2O controllers...
-> i2o: I2O controller on bus 4 at 16.
-> i2o: PCI I2O controller at FEBFC000 size=16384
-> i2o/iop0: Installed at IRQ0
-> i2o: 1 I2O controller found and installed.
-> Activating I2O controllers...
-> This may take a few minutes if there are many devices
-> Unable to obtain status of i2o/iop0, attempting a reset.
-> I2O configuration manager v 0.04.
->    (C) Copyright 1999 Red Hat Software
-> I2O Block Storage OSM v0.9
->     (c) Copyright 1999-2001 Red Hat Software.
-> i2o_block: Checking for Boot device...
-> i2o_block: Checking for I2O Block devices...
-> i2o_scsi.c: Version 0.1.2
->    chain_pool: 0 bytes @ f7d11f9c
->    (512 byte buffers X 4 can_queue X 0 i2o controllers)
-> 
-> 
-> It seens that the kernel has found the controoler. Then I headed to
-> http://i2o.shadowconnect.com/  - I2O on Linux Home and got their
-> raidutil package. But here starts the problem, even simple commands like
-> 
-> raidutil -L controller
-> 
-> gives me the error:
-> 
-> Engine connect failed: COMPATIBILITY number
-> osdIOrequest : File /dev/dpti17 Could Not Be Opened
-> 
-> 
-> Following the site info I have applied the following patchs to my
-> kernel:
-> 
-> i2o-64-bit-fix.patch
-> i2o-adaptec-zerochannel-support.patch
-> i2o-config-clean.patch
-> i2o-makefile-cleanup.patch
-> i2o-pae-support.patch
-> i2o-passthru.patch
-> i2o_block-cleanup.patch
-> i2o_cmd_passthru-reorder.patch
-> i2o_config-checking-bugfix.patch
-> i2o_proc-full-seq_file.patch
-> i2o_proc-lct-access-bugfix.patch
-> 
-> with no luck. I've tried Adaptec's asmbe_linux_v1.23.006.tgz tools, but
-> aaccli cannot find the controller as well.
-> 
-> Does anybody experienced a problem like this before? I've found some
-> messages on mailling lists with the same error message, but no
-> solutions. I'm new to I2O. Am I missing something?
-> 
-> tks in advance for any help.
-> 
-> Andre
-> 
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
+- How do I get around the 'personality 4 is not loaded'?  Did I need to
+run something after I modified /etc/modules.conf for it to take effect?
+- It would appear that the mounting of filesystems via /etc/fstab occurs
+before md autoscans.  How can I delay the mounting of the filesystem
+that exists on the RAID5 array?
+
+Thanks for any help!
+
+Tim
 
