@@ -1,63 +1,55 @@
-From: Peter Jonsson <dal01pjn@mds.mdh.se>
+From: seth vidal <skvidal@phy.duke.edu>
 Subject: Re: Invalid superblock on drives in array
-Date: Thu, 25 Dec 2003 18:27:00 +0100 (MET)
+Date: Thu, 25 Dec 2003 12:45:20 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.GSO.4.44L.0312251811450.3919-100000@legolas.mdh.se>
-References: <1072371527.3636.1.camel@binkley>
+Message-ID: <1072374319.3636.6.camel@binkley>
+References: <Pine.GSO.4.44L.0312251811450.3919-100000@legolas.mdh.se>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=iso-8859-1
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1072371527.3636.1.camel@binkley>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <Pine.GSO.4.44L.0312251811450.3919-100000@legolas.mdh.se>
+To: Peter Jonsson <dal01pjn@mds.mdh.se>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 25 Dec 2003, seth vidal wrote:
+On Thu, 2003-12-25 at 12:27, Peter Jonsson wrote:
+> On Thu, 25 Dec 2003, seth vidal wrote:
+>=20
+> > if this was running on a sparc then you might want to look at:
+> >
+> > mdadm --update=3Dsparc2.2
+>=20
+> I wasn't clear enough. I got into problems when I moved the array fro=
+m the
+> sparc to the PC so I backed up all the data and then I recreated the =
+array
+> and formatted the drive (ext3) before moving all the data back.
+>=20
+> But I tried it anyway with this result :
 
-> if this was running on a sparc then you might want to look at:
->
-> mdadm --update=3Dsparc2.2
+hmm. I bet the drive labels are screwed up. For fun, stop the array,
+load up fdisk on one of the disks and type 'o' - that should make new
+dos disk labels.
 
-I wasn't clear enough. I got into problems when I moved the array from =
+it's something I ran into, but this was a long time ago, so the above
+info might be out of date./
+
+so make new drive labels, repartition and recreate the array.
+
+see if that doesn't fix it.
+
+> It had been running for about 1=BD days before something happend. I a=
+ctually
+> don't have any idea what might have happend. Something is wrong with =
 the
-sparc to the PC so I backed up all the data and then I recreated the ar=
-ray
-and formatted the drive (ext3) before moving all the data back.
+> superblocks but I have idea how that happend. Act of God? ;)
 
-But I tried it anyway with this result :
+migration from sun to pc or possibly general system gremlins.
 
-[root@colossus mdadm-1.4.0]# ./mdadm --update=3Dsparc2.2 /dev/md0
---update does not set the mode, and so cannot be first.
+good luck
+-sv
 
-
-I just tried to use mkraid to upgrade the superblocks (if that was the
-problem) but it seems that something else is wrong.
-
-[root@colossus mdadm-1.4.0]# mkraid --upgrade /dev/md0
-handling MD device /dev/md0
-analyzing super-block
-cannot upgrade magic-less superblock on /dev/sda1 ...
-mkraid: aborted.
-(In addition to the above messages, see the syslog and /proc/mdstat as
-well
- for potential clues.)
-
-> Oh and I'm also the yum author and I assure you, yum doesn't touch
-> ANYTHING related to raid arrays, it just updates packages :)
->
-Well, I wasn't implying that yum would do anything to the array. It was
-just to explain that the machine was newly installed. :)
-
-It had been running for about 1=BD days before something happend. I act=
-ually
-don't have any idea what might have happend. Something is wrong with th=
-e
-superblocks but I have idea how that happend. Act of God? ;)
-
-// peter
---=20
-If God is real, s/he might be integer (e.g. 0). If God is complex, then=
- s/he might be imaginary.
 
 -
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
