@@ -1,49 +1,40 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: How are reads and writes kept in order in raid5.c?
-Date: Fri, 20 Feb 2004 15:49:38 +1100
+From: Joshua Baker-LePain <jlb17@duke.edu>
+Subject: Re: 3ware escalade vs software raid, from a different jeff
+Date: Fri, 20 Feb 2004 02:19:26 -0500 (EST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16437.37346.830231.698727@notabene.cse.unsw.edu.au>
-References: <6.0.1.1.2.20040219200054.028ffdb0@mail.athenet.net>
-	<16437.35927.736212.364976@notabene.cse.unsw.edu.au>
-	<6.0.1.1.2.20040219222725.0290dec0@a.cs.okstate.edu>
+Message-ID: <Pine.LNX.4.58.0402200217080.2393@chaos.egr.duke.edu>
+References: <Pine.LNX.4.44.0402191118090.10623-100000@praktifix.dwd.de>
+ <Pine.LNX.4.58.0402190704420.25541@chaos.egr.duke.edu> <20040219175630.GA20790@datavibe.net>
+ <4035571B.505@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Nathan Lewis on Thursday February 19
-To: Nathan Lewis <nathapl@cs.okstate.edu>
-Cc: linux-raid@vger.kernel.org
+In-Reply-To: <4035571B.505@pobox.com>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: "Rev. Jeffrey Paul" <sneak@datavibe.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday February 19, nathapl@cs.okstate.edu wrote:
-> Yes, I think that clears it up.
+On Thu, 19 Feb 2004 at 7:38pm, Jeff Garzik wrote
+
+> Rev. Jeffrey Paul wrote:
+
+> > I am looking at a four disk raid5 or raid10, and it seems like 
+> > the interrupt load from four drives on four channels might be a bit 
+> > excesive.  I'm going to be running critical services on the machine 
+> > that the drives are in (namely mysql and nfs) and don't want to worry 
+> > about performance.
 > 
-> So, a single stripe (or even a single chunk) could certainly have both 
-> outstanding read and write requests, but they are guaranteed to not be 
-> overlapping.
-> 
-> Is it also safe to assume that you'd never have outstanding, overlapping 
-> write requests either (since order is not maintained within the bio
-> list)?
+> Once your spindles can max out your PCI bus bandwidth, -then- you can 
+> start worrying about PCI bandwidth and interrupt load ;-)
 
-I think the code tries to keep writes in order - at least it used to.
-Maybe it doesn't in 2.6
-It would also warn if there were two concurrent writes.  This warning
-did trigger a couple of times, and it was always due to a bug in the
-filesystem.
+With some boards, it's actually pretty easy to do that.  ;)  Not with 4 
+disks, as the OP is doing, but 8 disks on one 64bit/33MHz bus (3ware 
+7500-8) can start to bump up against the PCI bandwidth.  I've got a couple 
+servers with 2 3wares and 16 disks, and I need to put the 3wares on 
+separate PCI busses to make sure I get the full speed out of the combined 
+array (hardware RAID5, software RAID0).
 
-
-> 
-> I always thought the drive/device driver was responsible for keeping 
-> requests in order.  But you're saying that's been delegated to the 
-> filesystem, correct?
-
-Device drivers are expected to re-order requests to make best use of
-the device, though re-ordering two requests for the same block doesn't
-make a lot of sense.
-
-But yes, the filesystem is expected not to do anything silly, and have
-two concurrent IO requests for the same block fits in the category of
-"silly".
-
-NeilBrown
+-- 
+Joshua Baker-LePain
+Department of Biomedical Engineering
+Duke University
