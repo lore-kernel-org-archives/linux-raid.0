@@ -1,55 +1,70 @@
-From: Jure =?UTF-8?Q?Pe=C3=A8ar?= <pegasus@nerv.eu.org>
-Subject: raid10 ... (was: Re: ANNOUNCE: mdadm 1.7.0)
-Date: Sat, 14 Aug 2004 04:18:14 +0200
+From: berk walker <berk.walker@verizon.net>
+Subject: Re: mdadm - comments on command layout
+Date: Fri, 13 Aug 2004 22:28:50 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040814041814.56d1e6c9.pegasus@nerv.eu.org>
-References: <16665.33913.505058.370245@cse.unsw.edu.au>
-	<20040811155507.307d91d0.pegasus@nerv.eu.org>
-	<16666.42485.178856.530123@cse.unsw.edu.au>
+Message-ID: <411D78E2.8000805@verizon.net>
+References: <16669.9163.392465.637229@gargle.gargle.HOWL>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <16666.42485.178856.530123@cse.unsw.edu.au>
-To: linux-raid@vger.kernel.org
-Cc: dm-devel@redhat.com
+In-Reply-To: <16669.9163.392465.637229@gargle.gargle.HOWL>
+To: John Stoffel <stoffel@lucent.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 12 Aug 2004 09:04:21 +1000
-Neil Brown <neilb@cse.unsw.edu.au> wrote:
+hear hear (also, here here)
+b-
 
-> Data is laid out in a raid0 style, but multiple copies of each chunk
-> are possible.  There can be "near" copies, where copies of the one
-> block are at the same or similar offsets in different drives, and
-> "far" copies, where copies of the one block are at a substantial
-> offset from one drive to the next.
+John Stoffel wrote:
 
-=2E.. this really fuels my imagination.
+>Hi Neil,
+>
+>I've been using mdadm recently to work with some arrays and I really
+>have to say I dislike how the commands are laid out and used.  First
+>off, they're not consistent from one usage to another.  Of course, I'm
+>going to be jerk and not give good examples since my personal box at
+>home is down and I'm at work.  But the idea is that when you assemble
+>a RAID device, it should look similiar to how you manage that raid
+>device.
+>
+>I'd also love it if there was an mdadm shell, so I could just type
+>'mdadm' and get back a shell prompt like:
+>	
+>	mdadm>
+>
+>which I could then use to manage my arrays.  
+>
+>For example, I think all the commands should be of the format:
+>
+>    mdadm <comand> [options] <array> [devices...]
+>
+>as much as possible.  I'm basing my thoughts on both the Vertias VxVM
+>command set, as well as the ClearCase 'cleartool' command shell.  So
+>ideally I could do either:
+>
+>  > mdadm assemble md0 /dev/hda1 /dev/hda2 ...
+>
+>or
+>
+>  > mdadm
+>  madam> assemble md0 /dev/hda1 /dev/hda2 ...
+>
+>depending on my mood.  Currently, the mdadm commands use various
+>formats for their arguement layouts and it's a pain to figure out what
+>to use.  
+>
+>So before I get all worked up on this issue, and spend a bunch of time
+>mapping out how I think the commands should work, do people agree with
+>my observation?  
+>
+>Thanks,
+>John
+>-
+>To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>  
+>
 
-Imagine having a pool of drives, where chunks of data are distributed e=
-venly
-across all drives in a redundant manner. If one drive dies, the chunks =
-that
-are not redundant anymore get their copies on the remaining drives, pro=
-vided
-that there's enough space left; if one or more drives are added to the
-array, new chunks are written there until the balance is reached again.
-
-Disk space could be the first key for balancing across the drives, with
-transfer rate or seek time maybe added later. Maybe the pool could even
-adapt dinamically to the i/o patterns ...=20
-
-Am i dreaming (it's well over 4am here :) ? Or is something like this
-possible? Maybe not with a md personality, but by some daemon that woul=
-d be
-taking care of a dm map?
-
-
---=20
-
-Jure Pe=C4=8Dar
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
