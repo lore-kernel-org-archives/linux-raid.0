@@ -1,30 +1,41 @@
-From: Christian Feddern <rangerone@web.de>
-Subject: Problem with superblock magic
-Date: Fri, 11 Apr 2003 11:27:31 +0200
+From: Chuck Ebbert <76306.1226@compuserve.com>
+Subject: Re: raid bug in 2.4.20
+Date: Fri, 11 Apr 2003 06:10:27 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3E968A83.4040601@web.de>
+Message-ID: <200304110613_MC3-1-33F7-C4B9@compuserve.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+	 charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid <linux-raid@vger.kernel.org>
+Content-Disposition: inline
+To: Paul Clements <Paul.Clements@SteelEye.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hello,
+Paul Clements wrote:
 
-I've send an email two days ago but got no response, so I am trying 
-again, maybe the mail didn't make it through.
-After I updated from Suse 8.1 to 8.2 my software raid doesn't do autorun 
-anymore. I somehow got a bad magic number in the superblock of /dev/md0.
-The superblocks of all the partitions which form the raid are ok.
-Any idea how I can rewrite only the superblock on /dev/md0 ?
 
-Thx
+> Have you been able to reproduce this problem with any regularity? Or
+> have you tried? I have an idea what *might* be causing this, if you're
+> willing to try out a patch...
 
-Christian
 
-P.S The update from 8.0 to 8.1 worked fine. No trouble there.
+ Please post it even if he can't try it.
+
+ All I have found so far is two missing newlines in the status
+message code (symptom: lines containing "<6>" in the syslog.)
+
+ (later) just noticed that the raid1 status printout doesn't show the
+write_only flag.  This should probably be added...
+
+
+> BTW, the md "BUG" you originally reported is not really a bug -- that
+> always happens when you try to raidhotremove an active disk.
+
+
+ It calls MD_BUG() when that happens, though.
+
 --
-Christian Feddern
-rangerone@web.de
-
+ Chuck
+ I am not a number!
