@@ -1,49 +1,50 @@
-From: Paul Clements <Paul.Clements@SteelEye.com>
-Subject: Re: [PATCH] md: fix device size calculation with non-persistent
- superblock
-Date: Tue, 24 Feb 2004 10:27:55 -0500
+From: hpa@zytor.com (H. Peter Anvin)
+Subject: Re: Digging into raid5.c and raid6main.c...
+Date: Tue, 24 Feb 2004 22:25:09 +0000 (UTC)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <403B6D7B.29A4B2A0@SteelEye.com>
-References: <20040223024124.GA1590@psilocybus>
-		<16441.33071.218049.163976@notabene.cse.unsw.edu.au>
-		<403A30F9.D54AAC68@SteelEye.com> <16442.42303.445148.394516@notabene.cse.unsw.edu.au>
+Message-ID: <c1gj05$17g$1@terminus.zytor.com>
+References: <6.0.1.1.2.20040217232659.0211de48@mail.athenet.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
+Followup to:  <6.0.1.1.2.20040217232659.0211de48@mail.athenet.net>
+By author:    Nathan Lewis <nathapl@cs.okstate.edu>
+In newsgroup: linux.dev.raid
+>
+> I've decided to base my rs-raid work on 2.6, and thus raid5.c and 
+> raid6main.c.  I'm pretty sure I can utilize all the stripe buffer code 
+> pretty much verbatim, and most of the rework will need to be done to 
+> handle_stripe().  I've dug through most of it, updating things to 
+> correspond to m parity disks instead of 1 or 2.  However, I've encountered 
+> something strange.  From what I can tell, after a call to compute_block_1 
+> or compute_block_2, I assumed that all the data in the stripe (including 
+> parity) was valid.  However, around line 1270 in raid6main.c, 
+> compute_block_1 or 2 may be called, then immediately after the PRINTK, it 
+> calls compute_parity too.  Isn't this redundant somehow?  The logic that 
+> sets must_compute is also really complicated - can anyone explain this 
+> section to me?
 > 
-> On Monday February 23, Paul.Clements@SteelEye.com wrote:
-> > Neil,
-> >
-> > Currently, the device size calculation is not correct when hot-adding
-> > devices to arrays with non-persistent superblocks. Device size is always
-> > calculated as if there were a physical superblock on every device. The
-> > attached simple change to hot_add_disk() fixes the problem.
-> 
-> Hmm.. I had always assumed that non-persistent superblocks only worked
-> for linear and raid0.  I'm not sure I would trust any other
-> configuration.
-> 
-> Are you seriously using raid1 with non-persistent superblocks?  
 
-Yes, and this works fine in 2.4, as well. We opted for non-persistent
-superblocks in order to support creation of raid1 mirrors over
-partitions that already had filesystems or other data present (and yes,
-we calculate the size of the new md device to make sure the existing
-data will fit).
+must_compute counts the number of drives for which (a) we don't have
+data already in memory and (b) we can't perform I/O, and (c) we need
+data from.
+
+You're absolutely correct in that invoking compute_parity() there in
+the case ( must_compute > 0 ) is redundant.  In fact, so is using
+(failed) rather than (must_compute) in the switch statement
+(since must_compute <= failed.)  None of these are significant for
+performance, however, and it made the already complex bookkeeping
+slightly easier.  Once I'm more convinced the code is actually stable
+I will try to clean up stuff like this.
+
+	-hpa
 
 
-> How do you ensure reliable re-assembly after a device failure followed by
-> shutdown?
 
-There is a user-level clustering framework that sets up, monitors, and
-takes down the mirror. Disk failures and other events are handled by
-this framework.
 
---
-Paul
+
+
