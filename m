@@ -1,50 +1,40 @@
-From: Mark Hahn <hahn@physics.mcmaster.ca>
+From: Sevatio <sevatio@atella.com>
 Subject: Re: Hard drive Reliability?
-Date: Thu, 20 May 2004 10:20:39 -0400 (EDT)
+Date: Thu, 20 May 2004 08:51:25 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0405200937060.19972-100000@coffee.psychology.mcmaster.ca>
-References: <1085059864.16945.19.camel@localhost>
+Message-ID: <40ACD3FD.2090509@atella.com>
+References: <200405192218.i4JMI9B16930@www.watkins-home.com> <200405200140.26636.maarten@vbvb.nl>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1085059864.16945.19.camel@localhost>
-To: John Lange <john.lange@bighostbox.com>
-Cc: linux-raid@vger.kernel.org
+In-Reply-To: <200405200140.26636.maarten@vbvb.nl>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> > you imply that vendors are knowingly shipping half their product
-> > that will die within even a 1yr warranty period, and then have 
-> > to be replaced at significant cost to the vendor.  I really can't 
-> > see why you think they're so stupid!  the alternate explanation,
-> > which fits the data (such as it is) perfectly well is that the 
-> > supply chain damages the drives.
+> One thing I've come to believe over the years is that heat is a very important 
+> factor that's killing drives.  So I now take great care in ensuring good heat 
+> dissipation from the drives. This entails amongst others that you should 
+> never 'sandwich' drives in their 3,5" slots (I can't believe case 
+> manufacturers still have not woken up to this need!). Instead I often arrange 
+> for them to go in 5,25" slots so they have plenty of air around. If I need to 
+> put them in 3,5" slots I always leave 1 unit space around a drive.
+> In the servers I deploy I take bigger measures, like a bigass 120mm fan just 
+> in front of the drives (accomplished either by dremel or by case design)
 > 
-> This is certainly possible, however, you imply that the vendors are
-> knowingly shipping their drives through supply chains which damage the
-> drives and then have to be replaced at significant cost to the vendor.
+> Maarten
+> 
 
-no, just the opposite.  when vendors sell through "channel", it means 
-direct from the vendor to a large multinational like Avnet or Ingram.
-I would guess that that official channel is fine, since there are 
-adequate means of control, training, feedback.  perhaps even the 
-official retail channel is fine, since retail boxed disks are pretty 
-well protected.)  the problem I see is the grey-market "channel" - 
-J Random Corner Computer Shoppe where they have a stack of bare 
-drives sitting in the display case.
+I employ the same methods now by mounting harddrives in the 5.25" bays
+and placing fans in front of them.  HDs that are sandwiched together in
+the 3.5" bays get too hot to touch whereas fanned 5.25" HDs are barely
+above room temperature.  This seemed to have helped.  I haven't had a
+failure of a HD that's mounted in this manner yet (these have run 24x7
+for the last 1.5years).  I've even seen HD heatsink kits.  It all boils
+down to the extreme tight margins that hardware mfgs operate.  They're
+forced cut corners where possible.  We just need to be as informed as
+possible and intelligently vote with our wallets.
 
-such handling is clearly a huge risk.  that's about the only fact 
-that any of us has about this issue.  there's no data to support the 
-idea that drive vendors knowingly ship broken disks.  the fact that 
-there are not hordes of class-action lawsuits is a good indication that
-there's no ambulance to chase.
+Sevatio
 
-> that necessity. Only repeated drive failures has started to bring us to
-> the realization this is no longer optional.
-
-no, it's always been that way.  10 years ago, the drive market was more
-rarified, tended to be professionally pre-installed, and vastly smaller
-and lower-variance than now.  $5,000 scsi disks did fail back then,
-sometimes quite soon upon delivery.  of course, margins were much higher,
-and "materials margins" (relative to theoretical limits) were higher as
-well. 
 
