@@ -1,63 +1,101 @@
-From: Nick DeClario <nick@guardiandigital.com>
-Subject: RAID auto start issue
-Date: Fri, 12 Sep 2003 17:27:17 -0400
+From: linux-raid-owner@vger.kernel.org
+Subject: BURSLU  =?ISO-8859-1?Q?=20E=D0=DDT=DDM?=  =?ISO-8859-1?Q?=20OLANA=D0I?= 15
+Date: Sat, 13 Sep 2003 10:42:54 +0300
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3F623A35.1020808@guardiandigital.com>
+Message-ID: <200309130742.h8D7gs631644@zeus.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-9
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-It appears I am having a problem with RAID auto starting.  I have a RAID 
-1 array consisting of two disks that mounts on '/home' (/dev/md0).  It 
-was working fine for some time then after some package upgrades '/home' 
-stopped mounting at boot time and I would get fsck problems when it 
-tried to scan the drive and drop me to a prompt.
+                                =20
+LEFKE AVRUPA =DCN=DDVERS=DDTES=DD
+(KIBRIS B=DDL=DDM VAKFI)
+Y=D6K taraf=FDndan tan=FDnan, Avrupa ve Amerika'da ge=E7erli diplomaya =
+en kaliteli
+ve en uygun har=E7larla sahip olma olana=F0=FD ...
+=20
+=D6SS S=FDnav=FDndan 185 ve =FCzeri ham puan alm=FD=FE =F6=F0renciler 4=
+ y=FDll=FDk lisans
+programlar=FDna, 160 ve =FCzeri ham puan alan =F6=F0renciler ise 2 y=FD=
+ll=FDk meslek
+y=FCksek okullar=FDna kay=FDt yapabilirler.
 
-I noticed that at that point the RAID array was not being started and 
-issuing 'raidstart /dev/md0' would bring it up fine.  I came up with a 
-temporary solution by adding 'raidstart /dev/md0' to my 'checkfs' init 
-script.  However this is very temporary and I need to come up with a 
-permament solution.
+=20
+      L=DDSANS PROGRAMLARI :
 
-'md' is compiled into the kernel with raid1 as a module.  I have it 
-loading xor.o and raid.o from the initrd script.  After the raid1.o 
-module loads up I can see from the dmesg output that it auto detects the 
-array just fine.  I will attach that portion to this e-mail.  Does 
-anyone have any suggestions?
+=DDKT=DDSAD=DD VE =DDDAR=DD B=DDL=DDMLER FAK=DCLTES=DD
+* =DD=FEletme
+* Ekonomi
+* Pazarlama
+* Kamu Y=F6netimi
+* Uluslararas=FD =DDli=FEkiler
+* Bankac=FDl=FDk ve Finans
+* Bilgisayar ve Enformasyon Sistemleri
+=46EN-EDEB=DDYAT FAK=DCLTES=DD
+* =DDngilizce =D6=F0retmenli=F0i
+* T=FCrk Dili ve Edebiyat=FD
+* Tarih
+TARIM B=DDL=DDMLER=DD TEKNOLOJ=DDLER=DD FAK=DCLTES=DD
+* Bah=E7e Bitkileri =DCretimi ve Pazarlamas=FD
+* Tar=FDm =DD=FEletmecili=F0i
+M=DDMARLIK M=DCHEND=DDSL=DDK FAK=DCLTES=DD
+* Mimarl=FDk
+* =DD=E7 Mimarl=FDk
+* Elektrik ve Elektronik M=FChendisli=F0i
+* =DDn=FEaat M=FChendisli=F0i=20
+* Bilgisayar M=FChendisli=F0i
+=DDLET=DD=DE=DDM B=DDL=DDMLER=DD FAK=DCLTES=DD
+* Gazetecilik
+* Radyo, TV, Sinema
+* Halkla =DDli=FEkiler ve Reklam
+* G=F6rsel =DDleti=FEim Tasar=FDm=FD
 
-Thanks,
-	-Nick
+=20
+      MESLEK Y=DCKSEK OKULU:
 
+* =DD=FEletmecilik
+* Bilgisayar programc=FDl=FD=F0=FD                                     =
+           =20
+* =DDn=FEaat
+* Halkla ili=FEkiler ve Tan=FDt=FDm
+* G=F6rsel =DDleti=FEim
+* TV Yap=FDm=FD ve Y=F6netimi
+=20
+=20
+      Y=DCKSEK L=DDSANS:
 
-VFS: Mounted root (ext3 filesystem) readonly.
-Trying to free ramdisk memory ... okay
-Linux Intrusion Detection System 1.1.2rc4 *not* started
-Freeing unused kernel memory: 112k freed
-Adding Swap: 514068k swap-space (priority 0)
-EXT3 FS 2.4-0.9.19, 19 August 2002 on ide0(3,6), internal journal
-  [events: 00000030]
-  [events: 00000030]
-md: autorun ...
-md: considering hdb1 ...
-md:  adding hdb1 ...
-md:  adding hda5 ...
-md: created md0
-md: bind<hda5,1>
-md: bind<hdb1,2>
-md: running: <hdb1><hda5>
-md: hdb1's event counter: 00000030
-md: hda5's event counter: 00000030
-md: RAID level 1 does not need chunksize! Continuing anyway.
-md0: max total readahead window set to 124k
-md0: 1 data-disks, max readahead per data-disk: 124k
-raid1: device hdb1 operational as mirror 1
-raid1: device hda5 operational as mirror 0
-raid1: raid set md0 active with 2 out of 2 mirrors
-md: updating md0 RAID superblock on device
-md: hdb1 [events: 00000031]<6>(write) hdb1's sb offset: 20354240
-md: hda5 [events: 00000031]<6>(write) hda5's sb offset: 20354240
-md: ... autorun DONE.
+* =DD=FEletme (MBA)
+* Uluslararas=FD =DDli=FEkiler (MA)
+* =DDngilizce =D6=F0retmenli=F0i (MA)
+* Mimarl=FDk (MA)
+* =DDn=FEaat M=FChendisli=F0i (MSc)
+* Elektrik ve Elektronik M=FChendisli=F0i (MSc)
+* Bilgisayar Bilimleri (MSc)
+* Bilgisayar M=FChendisli=F0i (MSc)
 
+=20
+=20
+YURT DI=DEI =D6ZEL E=D0=DDT=DDM OLANAKLARI :
+SOAS =DCniversitesi, Luton =DCniversitesi, Westminister =DCniversitesi,
+Hudersfield =DCniversitesi (=DDngiltere), ESC Rouen =DCniversitesi (Fra=
+nsa).
+=20
+BURS OLANAKLARI :
+Emniyet mensubu, T=FCrk Silahl=FD Kuvvetleri mensubu ve =F6=F0retmen =E7=
+ocuklar=FDna  =20
+% 50, ikinci dereceden akrabalar=FDna % 33, karde=FElerden birine % 50 =
+ve
+ayr=FDca akademik ba=FEar=FD bursu, sporcu bursu ve  destek bursu.
+                                         =20
+                                                     =20
+=DDstanbul Kay=FDt Ofisi : =DE=DD=DEL=DD / =DDSTANBUL.
+Tel : 0212 219 83 50 (9 Hat)       E-Mail : bursluegitim1@superposta.co=
+m
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
