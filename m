@@ -1,55 +1,71 @@
-From: Paul Clements <paul.clements@steeleye.com>
-Subject: Re: Shrinking a RAID1 device mounted as root?
-Date: Wed, 14 Jul 2004 12:42:21 -0400
+From: "Matthew - RAID" <RAID@lists.elvey.com>
+Subject: Kluge Fails - Re: (Can I mark a RAID 1 drive as old?)
+Date: Wed, 14 Jul 2004 11:41:49 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <40F5626D.9000406@steeleye.com>
-References: <66EEBBD3485BB84C90CFA900A0A96E55013BEC82@sumail03.studentuniverse.com>
+Message-ID: <1089830509.12996.200366142@webmail.messagingengine.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <66EEBBD3485BB84C90CFA900A0A96E55013BEC82@sumail03.studentuniverse.com>
-To: "Marlier, Ian" <marlieri@studentuniverse.com>
-Cc: linux-raid@vger.kernel.org
+Content-Disposition: inline
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Marlier, Ian wrote:
+On 7/8/04 2:42 PM, Matthew (RAID) sent forth electrons to convey:
 
-> Because /dev/hd[ab]1 is larger than /dev/md0, and the starting block of
-> the partitions is the same, the filesystem should remain intact.
+>I'm wondering how handle a situation.  There are several issues, would
+>appreciate help w/ ANY ONE of 'em.
+>I'm most of the way there - I've been able to use RAID to create a
+>backup system, but it's far from quite right.
+>
+>I think I want to make the raid code consider a disk in a raid 1 array
+>older than another disk, and/or move arrays around, and/or resolve a
+>hang when I insert SCA drives into the system.
+>[...]
+>One system is an already live system serving users, the other is a warm
+>backup.  I call 'em LIVE and BK. 
+>I've been using raid to make BK a backup of LIVE..
+>[...]
+>If I add and remove drives with the sytem off, I hit a different set of
+>problems:
+>1)If the system comes up with half the drives removed, the drives get
+>relabled : they are always sda, sdb, and sdc.
+>  I could rearrange things so that it's sdd,sde,and sdf that get pulled,
+>  but I don't know how to do that. Hence the second question in this
+>  email's subject.
+>2)If I put back the pulled drives, when the system restarts, sometimes
+>these drives are chosen by the RAID code as being newer than the drives
+>that haven't been pulled. Hence the first question in this email's
+>subject.
+>
+I thought I found a kluge partial fix to this: run fdisk (actually I use
+sfdisk) and repartition the drive with partitions of size 0.
+The 'repartition' just writes to the partition table; the data on these
+drives seems to remain untouched when a system boots with 'em.
+I thought I'd be able to sfdisk back their normal partition tables and
+raidhotadd 'em.
 
-So you are saying that the filesystem was less than 16GB in size to 
-start with?
+I tried this: I powered off and removed the second drive from the raid1
+arrays, replacing them will 'filler drives' made with the kluge above.
+Well,  on startup, md0 fails, and so md2 (the raid0 on top of md0 and
+md1) fails too.
+Error messages:
+"Starting up raid devices : /dev/md0: Invalid argument"
+"/dev/md0 is not a RAID0 or LINEAR array!"
+"md0 raid1: md1, not all disks are  operational -- trying to recover
+array"
+"md1 /dev/md2: Invalid arcument"
+"/dev/md2 must be a nonpersistent RAID0 or LINEAR array!
+md2"
+***
 
-> However, upon rebooting, I ran into a problem.  /dev/md0 cannot be
-> mounted because of a problem with the superblocks.
+I tried marking sdb1 as failed and doing raidstart --all - no dice:
+Invalid argument on md0,2. 1 already running.
+raidstart /dev/md0 /dev/sdc1 gives
+"device /dev/sdc1 is not decribed in config file."???  It is!!!  I don't
+get this!
+ fdisk on sdc shows what I'd expect.
 
-Right, the superblocks would have been between 64KB and 128KB from the 
-end of the original md device, which presumably was ~33GB in size. Now 
-that the partitions are smaller, the superblocks are no longer located 
-inside of the partitions, so the new partitions effectively have no 
-superblocks.
+> <rest snipped>
 
-> I figure that something needs to be done with mdadm to get it to
-> recognize the "new" /dev/hda1 and /dev/hdb1 as /dev/md0 -- but I don't
-> want to do a mdadm --create because that will overwrite the filesystem
-> already on the disks (I think?). 
-
-Create will write new superblocks to /dev/hda1 and /dev/hdb1. Without 
-these, the array cannot be started. The superblocks are what tell the md 
-driver that /dev/md0 is composed of /dev/hda1 and /dev/hdb1.
-
-If the filesystem is at least 128KB smaller than the partitions, then 
-you'll have room for the superblocks at the end. Otherwise, go back with 
-fdisk and make the partitions just a little bit larger and then do your 
-mdadm --create.
-
-
-> Is this something that mdadm --assemble can do?  If so, what switches
-> need to be fed to the command?
-
-Assemble requires that the superblocks already be present, so until they 
-are re-created, you cannot assemble the array.
-
---
-Paul
+I'm about ready to give up and go with hardware raid. :(
