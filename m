@@ -1,62 +1,45 @@
-From: Jeff Garzik <jgarzik@pobox.com>
+From: KELEMEN Peter <Peter.Kelemen@cern.ch>
 Subject: Re: Which raid card to buy for Sarge
-Date: Thu, 01 Apr 2004 03:07:02 -0500
+Date: Thu, 1 Apr 2004 11:07:31 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <406BCDA6.1030902@pobox.com>
-References: <Pine.LNX.4.44.0403311442520.31572-100000@coffee.psychology.mcmaster.ca> <406B9F3E.4020701@wasp.net.au> <406BAC2F.8090407@pobox.com> <406BAF18.8010005@wasp.net.au> <20040401074921.GA27234@bluff>
+Message-ID: <20040401090731.GI6923@chihiro.cern.ch>
+References: <Pine.LNX.4.44.0403311442520.31572-100000@coffee.psychology.mcmaster.ca> <406B27E4.1000106@sauce.co.nz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20040401074921.GA27234@bluff>
-To: Sandro Dentella <sandro.dentella@tin.it>
-Cc: linux-raid@vger.kernel.org
+Content-Disposition: inline
+In-Reply-To: <406B27E4.1000106@sauce.co.nz>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Sandro Dentella wrote:
-> On Thu, Apr 01, 2004 at 09:56:40AM +0400, Brad Campbell wrote:
-> 
->>Jeff Garzik wrote:
->>
->>
->>>>it out and insert the new drive in the array. The array starts 
->>>>rebuilding - no effect on the uptime and only a slight loss in 
->>>>throughput. Plus it's seamless.
->>>
->>>Yeah, md+mdadm can do all this right now, provided the hardware and 
->>>driver support is there...
->>>
->>
->>Yes, my point however is for low budget stuff with software raid the driver 
->>support is not yet there in a vanilla kernel.
->>I can't just whack a sata drive off one of my promise SATA150-TX4 
->>controllers, pop another one in and have the kernel rescan the partition 
->>table and realise a new drive was present. (YET!)
-> 
-> 
-> I'm sort of confused... which are the combinations that allow me to hotswap a
-> disk w/ software raid. I don't mind doing some mdadm operations, I'm just
-> interested in how I can avoid rebooting. 
-> 
-> I thought I couldn't, now I learn you can "provided the hardware and driver
-> support is there"... can you detail a little more?
+* Richard Scobie (richard@sauce.co.nz) [20040401 08:19]:
 
-AFAICS, the steps should be:
+> 3ware hardware RAID 10: Reads - 92.8MB/s    Writes - 88.9MB/s
+> Software RAID 10:  Reads - 53.7MB/s   Writes - 94.9 MB/s
 
-1) (optional) be nice, and tell md you are about to yank a drive using 
-hot-remove
-2) (required on ICH5, optional on others) be nice, and tell SATA you are 
-about to yank a drive (not implemented yet in libata)
-3) unplug the SATA cable
-4) swap out drives
-5) plug in the SATA cable (kernel automatically notices the new device; 
-not implemented yet in libata)
-6) new device is probed by kernel SATA driver
-7) kernel executes /sbin/hotplug (normal for any hotplug event)
-8a) /sbin/hotplug magic issues the md ioctls to hot-add a new device. 
-This requires some knowledge in code, or in a config file, of how to 
-associate a new device on a random controller with a specific array.
-	or
-8b) sysadmin uses mdadm to hot-add the new device, to the specified array.
+> If anyone is running similar hardware and is able to get better
+> software RAID performance, I would be very interested to hear
+> the parameters.
 
+I've tested some configurations with 128 GiB streams (iozone) on a
+dual Xeon 2.4GHz 2G RAM machine (running XFS).
 
+3ware HW-RAID1, Linux SW-RAID0:	read 263 MiB/s, write 157 MiB/s
+3ware HW-RAID5, Linux SW-RAID0:	read 243 MiB/s, write 135 MiB/s
+Linux SW-RAID5:			read 225 MiB/s, write 135 MiB/s
+3ware HW-RAID10:		read 119 MiB/s, write  91 MiB/s
+
+Peter
+
+--=20
+    .+'''+.         .+'''+.         .+'''+.         .+'''+.         .+'=
+'
+ Kelemen P=E9ter     /       \       /       \     Peter.Kelemen@cern.c=
+h
+=2E+'         `+...+'         `+...+'         `+...+'         `+...+'
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
