@@ -1,15 +1,37 @@
-From: "Adam J Morand" <Adam.Morand@illuminatedtechnologies.com>
+From: "Adam J Morand" <Adam.Morand@midnightmoon.ca>
 Subject: Re: RAID 1 / Power Loss / No SuperBlock
-Date: Sun, 2 Feb 2003 19:36:11 -0800
+Date: Sun, 2 Feb 2003 19:54:22 -0800
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <025d01c2cb35$69630f00$6701a8c0@bc.hsia.telus.net>
-References: <Pine.LNX.4.33.0302021621110.17543-100000@router.windsormachine.com> <014f01c2cb00$375d5fe0$6701a8c0@bc.hsia.telus.net> <3E3D9695.7040900@ratnet.stw.uni-erlangen.de>
+Message-ID: <028701c2cb38$4cce70c0$6701a8c0@bc.hsia.telus.net>
+References: <Pine.LNX.4.33.0302021621110.17543-100000@router.windsormachine.com> <014f01c2cb00$375d5fe0$6701a8c0@bc.hsia.telus.net> <3E3D9695.7040900@ratnet.stw.uni-erlangen.de> <025d01c2cb35$69630f00$6701a8c0@bc.hsia.telus.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: schmidt@naa.net, linux-raid@vger.kernel.org
+To: Adam J Morand <Adam.Morand@illuminatedtechnologies.com>, schmidt@naa.net, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+Sorry,
+to add to the previous message, when I specify the filesystem type I ge=
+t:
+[root@r2d2 part1]# mount -t ext3 /dev/md2 /mnt/raid/part2
+mount: wrong fs type, bad option, bad superblock on /dev/md2,
+       or too many mounted file systems
+[root@r2d2 part1]#
+[root@r2d2 part1]# mount -t ext2 /dev/md2 /mnt/raid/part2
+mount: wrong fs type, bad option, bad superblock on /dev/md2,
+       or too many mounted file systems
+
+
+
+
+
+----- Original Message -----
+=46rom: "Adam J Morand" <Adam.Morand@illuminatedtechnologies.com>
+To: <schmidt@naa.net>; <linux-raid@vger.kernel.org>
+Sent: Sunday, February 02, 2003 7:36 PM
+Subject: Re: RAID 1 / Power Loss / No SuperBlock
+
 
 Hello again,
 
@@ -91,23 +113,6 @@ Units =3D cylinders of 16065 * 512 bytes
 
 
 
-
-
-
-
-
-Adam J. Morand
-Illuminated Technologies Inc.
-Direct Line: 604.488.0226
-Vancouver: 604.692.5716
-Calgary: 403.802.8581
-Edmonton: 780.401.5474
-aj@illuminatedtechnologies.com
-http://www.illuminatedtechnologies.com
-
-"Illuminated Technologies - developing information and communication sy=
-stems
-for revenue stream solutions."
 
 
 ----- Original Message -----
@@ -240,6 +245,12 @@ for
 Norman Schmidt             Universitaet Erlangen-Nuernberg            _
 cand.chem.                 Sysadmin Wohnheimnetzwerk RatNET        _ //
 mailto:schmidt@naa.net                                             \X/
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 -
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
