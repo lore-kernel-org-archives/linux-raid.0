@@ -1,90 +1,160 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: Spares and partitioning huge disks
-Date: Mon, 10 Jan 2005 15:09:04 -0500
-Message-ID: <200501102009.j0AK9C922554@www.watkins-home.com>
-References: <200501101924.57445.maarten@ultratux.net>
+From: Mitchell Laks <mlaks@verizon.net>
+Subject: raid5 initialization errors during boot not after boot. raid5 driver loaded both times.
+Date: Mon, 10 Jan 2005 16:11:27 -0500
+Message-ID: <200501101611.27350.mlaks@verizon.net>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="us-ascii"
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200501101924.57445.maarten@ultratux.net>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: 'maarten' <maarten@ultratux.net>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I know the log files are very annoying, but...
+Hi,
+I am running debian sarge linux kernel 2.6.8.  I boot from a sata 
+drive /dev/sda, and set up a raid5 on /dev/hda, /dev/hdc, /dev/hde, /dev/hdg.
 
-I wonder if all that switching is causing md to void its cache?
-It may be a performance problem for md to change the strip cache size so
-often.
+I turned off udev, and created /dev/md0 and I loaded raid5 module into 
+initrd.img.
+  
+I set up a raid5 to start up at boot by configuring raidtools2 debian package 
+which runs "raid2" script during /etc/rcS.d.
 
-I use ext3 filesystems.  No problems with performance (that I know of).
-I have never tried any others.
+Weird is, raid5 does not start on /dev/md0 during bootup 
+( i enclose the dmesg error log which says that there are errors trying) 
+but after bootup when I do 
+raidstart /dev/md0 
+after boot, it starts like a charm...
+Any ideas what causes the errors in the log????  
 
-Do you think the performance difference of the various filesystems would
-affect your PVR?
+Here is the output of dmesg during boot.
 
-Guy
+RAMDISK: Loading 4360 blocks [1 disk] into ram disk... done.
+VFS: Mounted root (cramfs filesystem) readonly.
+Freeing unused kernel memory: 204k freed
+raid5: automatically using best checksumming function: pIII_sse
+   pIII_sse  :  5512.000 MB/sec
+raid5: using function: pIII_sse (5512.000 MB/sec)
+md: md driver 0.90.0 MAX_MD_DEVS=256, MD_SB_DISKS=27
+md: raid5 personality registered as nr 4
+md: raid1 personality registered as nr 3
+vesafb: probe of vesafb0 failed with error -6
+NET: Registered protocol family 1
+SCSI subsystem initialized
+libata version 1.02 loaded.
+sata_via version 0.20
+ACPI: PCI interrupt 0000:00:0f.0[B] -> GSI 10 (level, low) -> IRQ 10
+sata_via(0000:00:0f.0): routed to hard irq line 10
+ata1: SATA max UDMA/133 cmd 0xE800 ctl 0xE402 bmdma 0xD400 irq 10
+ata2: SATA max UDMA/133 cmd 0xE000 ctl 0xD802 bmdma 0xD408 irq 10
+ata1: dev 0 cfg 49:2f00 82:346b 83:5b01 84:4003 85:3469 86:1801 87:4003 
+88:407f
+ata1: dev 0 ATA, max UDMA/133, 78165360 sectors:
+ata1: dev 0 configured for UDMA/133
+scsi0 : sata_via
+ata2: no device found (phy stat 00000000)
+...
+ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=xx
+hda: WDC WD2500JB-00GVA0, ATA DISK drive
+hdc: WDC WD2500JB-00GVA0, ATA DISK drive
+ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
+ide1 at 0x170-0x177,0x376 on irq 15
+Capability LSM initialized
+md: raidstart(pid 526) used deprecated START_ARRAY ioctl. This will not be 
+supported beyond 2.6
+hda: max request size: 1024KiB
+hda: 488397168 sectors (250059 MB) w/8192KiB Cache, CHS=30401/255/63
+ /dev/ide/host0/bus0/target0/lun0: p1
+hdc: max request size: 1024KiB
+hdc: 488397168 sectors (250059 MB) w/8192KiB Cache, CHS=30401/255/63
+ /dev/ide/host1/bus0/target0/lun0: p1
+md: could not lock unknown-block(33,1).
+md: could not import unknown-block(33,1), trying to run array nevertheless.
+md: could not lock unknown-block(34,1).
+md: could not import unknown-block(34,1), trying to run array nevertheless.
+md: autorun ...
+md: considering hdc1 ...
+md:  adding hdc1 ...
+md:  adding hda1 ...
+md: created md0
+md: bind<hda1>
+md: bind<hdc1>
+md: running: <hdc1><hda1>
+raid5: device hdc1 operational as raid disk 1
+raid5: device hda1 operational as raid disk 0
+raid5: not enough operational devices for md0 (2/4 failed)
+RAID5 conf printout:
+ --- rd:4 wd:2 fd:2
+ disk 0, o:1, dev:hda1
+ disk 1, o:1, dev:hdc1
+raid5: failed to run raid set md0
+md: pers->run() failed ...
+md :do_md_run() returned -22
+md: md0 stopped.
+md: unbind<hdc1>
+md: export_rdev(hdc1)
 
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of maarten
-Sent: Monday, January 10, 2005 1:25 PM
-To: linux-raid@vger.kernel.org
-Subject: Re: Spares and partitioning huge disks
+here is the /etc/raidtab
 
-On Monday 10 January 2005 18:13, Guy wrote:
-> In my log files, which go back to Dec 12
->
-> I have 4 of these:
-> raid5: switching cache buffer size, 4096 --> 1024
->
-> And 2 of these:
-> raid5: switching cache buffer size, 1024 --> 4096
+mlaks@A1:~$ cat /etc/raidtab
+raiddev /dev/md0
+        raid-level      5
+        nr-raid-disks   4
+        nr-spare-disks  0
+        persistent-superblock   1
+        parity-algorithm        left-symmetric
+        chunk-size      32
+        device  /dev/hda1
+        raid-disk       0
+        device  /dev/hdc1
+        raid-disk       1
+        device  /dev/hde1
+        raid-disk       2
+        device  /dev/hdg1
+        raid-disk       3
 
-Heh. Is that all...? :-))
+Notice the errors during attempt to start /dev/md0
+moreover,
+once i run
+raidstart /dev/md0 i get the following in dmesg:
 
-Now THIS is my log:
+md: raidstart(pid 3161) used deprecated START_ARRAY ioctl. This will not be 
+supported beyond 2.6
+md: autorun ...
+md: considering hdg1 ...
+md:  adding hdg1 ...
+md:  adding hde1 ...
+md:  adding hdc1 ...
+md:  adding hda1 ...
+md: created md0
+md: bind<hda1>
+md: bind<hdc1>
+md: bind<hde1>
+md: bind<hdg1>
+md: running: <hdg1><hde1><hdc1><hda1>
+raid5: device hdg1 operational as raid disk 3
+raid5: device hde1 operational as raid disk 2
+raid5: device hdc1 operational as raid disk 1
+raid5: device hda1 operational as raid disk 0
+raid5: allocated 4201kB for md0
+raid5: raid level 5 set md0 active with 4 out of 4 devices, algorithm 2
+RAID5 conf printout:
+ --- rd:4 wd:4 fd:0
+ disk 0, o:1, dev:hda1
+ disk 1, o:1, dev:hdc1
+ disk 2, o:1, dev:hde1
+ disk 3, o:1, dev:hdg1
+md: ... autorun DONE.
+kjournald starting.  Commit interval 5 seconds
+EXT3 FS on md0, internal journal
+EXT3-fs: mounted filesystem with ordered data mode.
 
-dozer:/var/log # cat  messages | grep "switching cache buffer size" | wc -l
-  55880
+Now it mounts normally.
 
-So that is why I'm a bit worried.  Usually when my computer tells me
-something 
-_every_second_ I tend to take it seriously.  But maybe it's just lonely and 
-looking for some attention. Heh. ;)
+Any idea what is wrong here???
 
-> I found this from Neil:
-> "You will probably also see a message in the kernel logs like:
->              raid5: switching cache buffer size, 4096 --> 1024
->
-> The raid5 stripe cache must match the request size used by any client.
-> It is PAGE_SIZE at start up, but changes whenever is sees a request of a
-> difference size.
-> Reading from /dev/mdX uses a request size of 1K.
-> Most filesystems use a request size of 4k.
->
-> So, when you do the 'dd', the cache size changes and you get a small
-> performance drop because of this.
-> If you make a filesystem on the array and then mount it, it will probably
-> switch back to 4k requests and resync should speed up.
-
-Okay.  So with as many switches as I see, it would be likely that something 
-either accesses the md device concurrently with the FS, or that the FS does 
-this constant switching by itself.  Now my FS is XFS, maybe that filesystem 
-has this behaviour ?  Anyone having a raid-5 with XFS on top can confirm 
-this ?  I usually use Reiserfs, but it seems that XFS is particularly good /
-
-fast with big files, whereas reiserfs excels with small files, that is why I
-
-use it here.  As far as I know there are no accesses that bypass the FS; no 
-Oracle, no cat, no dd.  Only LVM and XFS (but it did this before LVM too).
-
-Maarten
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks
+Mitchell Laks
 
