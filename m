@@ -1,8 +1,8 @@
 From: Duncan Laurie <duncan@sunbalt.net>
 Subject: Re: Problems with RAID1 on cobalt raq3
-Date: 17 Aug 2002 15:55:38 -0700
+Date: 17 Aug 2002 16:09:40 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1029624922.14769.119.camel@atherton>
+Message-ID: <1029625780.14769.134.camel@atherton>
 References: <200208172056.g7HKuHm05754@raq.iceblink.org>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -14,7 +14,6 @@ Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 On Fri, 16 Aug 2002 08:02:38 -0700, John P. Looney wrote:
-
 >  I've been battling with getting RAID1 working on the root filesystem of a
 > Cobalt raq3 (running RedHat 7.3) for about a week.
 > 
@@ -37,87 +36,28 @@ On Fri, 16 Aug 2002 08:02:38 -0700, John P. Looney wrote:
 > 
 >  Does anyone have any idea what could be happening, or how I could resolve
 > this ?
-> 
->  I think I'm using lilo to some degree, as when the cobalt boots, it loads
-> a 2.2.16 kernel from it's PROM, and spits out:
-> 
 
-Nope, no LILO used in the cobalt bootloader.  You have it mostly figured
-out though.  The variable written to with "set_boot_dev" is stored in
-CMOS, and it is passed to the linux zero-page on boot as ORIG_ROOT_DEV.
-(see linux-2.4/Documentation/i386/zero-page.txt)  However, this does not
-have the same effect as passing "root=/dev/md1" to the kernel.
+Oops, that got sent before I was finished writing it,
+I have a couple more questions..
 
- 
+1/ where did hdg come from?  Is there a 3rd party IDE controller
+in the PCI slot?  (some RaQ3s had only 1 IDE connector populated..)
+If it is, then you might run into problems because most likely the
+ROM kernel does not have a driver for it.
 
-On your box, what is this variable set to?
+2/ the ext3 filesystem might also be confusing the ROM kernel.
+If you want to try one that will recognize it look here:
 
-> VFS: Mounted root (ext2 filesystem) readonly.
-> Freeing unused kernel memory: 76k freed
-> Warning: unable to open an initial console.
-> BOOTLOADER: Mapping in physical locations
-> BOOTLOADER: load_addr=0xc1804000 ret_data=0xc1a050ac
-> BOOTLOADER: opening "/boot/vmlinux.gz"
-> BOOTLOADER: reading "/boot/vmlinux.gz"
-> BOOTLOADER: read 1254176bytes
-> BOOTLOADER: unmounting /
-> BOOTLOADER: calling reboot notifiers
-> stopping all md devices.
-> flushing ide devices: hdg 
-> disabling network interfaces.
-> resetting sym53c8xx scsi bus(es)
-> sym53c875-0: detaching ...
-> sym53c875-0: resetting chip
-> BOOTLOADER: mapping 16M-32M for ride home
-> BOOTLOADER: disabling interupts
-> BOOTLOADER: flushing cache
-> BOOTLOADER: Leap of faith!
-> Back in ramcode: done
-> Second stage kernel: Decompressing - done
->   extract_header_info:
->     ehead: 0x01500000
->     shead: 0x01747eb0
->     Machine: 0x00000003
->     Kernel Entry: 0xc0105000
->     Program header size: 0x00000020
->     Number of Program headers: 1
->     Section Header size: 0x00000028
->     Number of section headers: 23
->   relocate_and_zero:
->     Offset: 0x00001000
->     VAddr: 0xc0100000
->     PAddr: 0xc0100000
->     Filesize: 0x0023f6a0
->     Memsize: 0x0027aa58
->     Flags: 0x00000007
->     relocate: src = 0x01501000, dest = 0x00100000, size = 0x0023f6a0
->   Kernel cmd line: console=ttyS0,115200 ip=off 
->   Booting kernel...
-> Linux version 2.4.18-4jp (root@jlooney) (gcc version 2.96 20000731 (Red Hat Linux 7.3 2.2BIOS-provided physical RAM map:
-> 
->  But in case it is a problem with the lilo.conf:
-> 
->      disk=/dev/md1
->         bios=0x80
->         sectors=63
->         heads=16
->         cylinders=39560
-> 
->      boot=/dev/hda
->      map=/boot/map
->      install=/boot/boot.b
->      image=/boot/boot/vmlinuz-2.4.18-3
->          root=/dev/md1
->          read-only
->          label=LinuxRaid
-> 
->  Should that work ?
-> 
-> John
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
- 
+ftp://ftp-eng.cobalt.com/pub/users/duncan/kernel/rom/2.9.37-ext3.rom
+
+This will also give you better control over the boot process,
+adding a "set_lparams" function to the boot menu that specifies
+the parameters specific to the ROM kernel.  ("set_params' will
+pass parameters to the kernel that is loaded from disk)  This
+will let you set a different root device to grab a kernel from.
+
+It also has some more built-in PCI IDE drivers, so it might
+help with problem #1. (if it is a problem...)
+
+-duncan
 
