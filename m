@@ -1,13 +1,78 @@
 From: Novak David-DNOVAK1 <David.Novak@motorola.com>
 Subject: RE: Linear Raid Problems...
-Date: Fri, 2 Apr 2004 13:35:57 -0600
+Date: Fri, 2 Apr 2004 14:55:12 -0600
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <8E4E38BF6D087F4488E80ABAACA2F3F484D64D@il27exm02.cig.mot.com>
+Message-ID: <8E4E38BF6D087F4488E80ABAACA2F3F484D650@il27exm02.cig.mot.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+To: 'Guy' <bugzilla@watkins-home.com>, "'linux-raid@vger.kernel.org'" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
+
+Thanks Guy, that was the problem.
+
+Maybe I'm just a bit slow (today?), but I never saw anyplace in the FAQ or
+the howto's about the partition type needed.
+
+Just for mailing list postarity, (and for those trolling google looking 
+for things like:
+kernel: md: personality 1 is not loaded!
+mdadm: RUN_ARRAY failed: Invalid argument
+Linux-RAID mkraid: aborted, see the syslog and /proc/mdstat for potential clues
+)
+
+ALL RAID devices must have a partition type of FD BEFORE you run mkraid or
+mdadm.
+
+Now all that's left to do is format the bad boy, and off I go!
+
+  Thanks agian!
+  David
+
+-------
+David J.  Novak                           GSM Radio Firmware
+GSM Products Division                     CE/NSS
+Motorola                                  Life v7.0
+--------------------------------------------------------------------------
+"Not all who wander are lost." - J.R.R. Tolkien
+
+-----Original Message-----
+From: Guy [mailto:bugzilla@watkins-home.com]
+Sent: Friday, April 02, 2004 2:24 PM
+To: 'Novak David-DNOVAK1'
+Subject: RE: Linear Raid Problems...
+
+
+The partitions should be type FD.
+No formatting required for the partitions.
+However, once you create the array, it must be formatted.
+The array will be /dev/md0
+
+From "man mdadm":
+
+-n, --raid-devices=
+              number of active devices in array.
+
+My man page makes no reference to --raid-disks.
+However, I would have used "-n", so not sure which is correct.
+I guess mdadm or its man page needs some work!
+
+Try this:
+	modprobe -v raid0
+or this:
+	modprobe -v linear
+
+Depending on which you use.  Again, I have never needed to do this.
+
+Guy
+
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Novak David-DNOVAK1
+Sent: Friday, April 02, 2004 2:36 PM
+To: linux-raid@vger.kernel.org
+Subject: RE: Linear Raid Problems...
 
 Hmmm...Nope, mdadm didn't like --raid-devices.  It looks like it's finding
 all the drives OK, but when it actually puts the device into service with 
@@ -264,6 +329,11 @@ GSM Products Division                     CE/NSS
 Motorola                                  Life v7.0
 --------------------------------------------------------------------------
 "Not all who wander are lost." - J.R.R. Tolkien
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 -
 To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 the body of a message to majordomo@vger.kernel.org
