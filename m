@@ -1,50 +1,64 @@
 From: ptb@lab.it.uc3m.es (Peter T. Breuer)
 Subject: Re: [PATCH 1/2] md bitmap bug fixes
-Date: Sat, 19 Mar 2005 12:43:41 +0100
-Message-ID: <dsftg2-8cr.ln1@news.it.uc3m.es>
-References: <422F7621.8090602@steeleye.com> <16949.5768.392061.95882@cse.unsw.edu.au> <20050314094454.GK3858@marowsky-bree.de> <16949.26113.68948.938529@cse.unsw.edu.au> <20050314112403.GT3858@marowsky-bree.de> <16950.5692.594941.130741@cse.unsw.edu.au> <20050318103326.GA18819@marowsky-bree.de> <6ivqg2-qsn.ln1@news.it.uc3m.es> <20050318134255.GS18819@marowsky-bree.de> <7e6rg2-pj1.ln1@news.it.uc3m.es> <423B09EF.8070708@steeleye.com> <23krg2-4rr.ln1@news.it.uc3m.es> <d1f8fr$k8f$1@sea.gmane.org> <e1nrg2-os1.ln1@news.it.uc3m.es> <d1fd9v$7h6$1@sea.gmane.org>
+Date: Sat, 19 Mar 2005 13:10:34 +0100
+Message-ID: <qehtg2-6c1.ln1@news.it.uc3m.es>
+References: <422F7621.8090602@steeleye.com> <16949.5768.392061.95882@cse.unsw.edu.au> <20050314094454.GK3858@marowsky-bree.de> <16949.26113.68948.938529@cse.unsw.edu.au> <20050314112403.GT3858@marowsky-bree.de> <16950.5692.594941.130741@cse.unsw.edu.au> <20050318103326.GA18819@marowsky-bree.de> <6ivqg2-qsn.ln1@news.it.uc3m.es> <20050318134255.GS18819@marowsky-bree.de> <7e6rg2-pj1.ln1@news.it.uc3m.es> <423B09EF.8070708@steeleye.com> <23krg2-4rr.ln1@news.it.uc3m.es> <423B2F7C.3030907@steeleye.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Mario Holbe <Mario.Holbe@tu-ilmenau.de> wrote:
-> Peter T. Breuer <ptb@lab.it.uc3m.es> wrote:
-> > Yes, you can "sync" them by writing any one of the two mirrors to the
-> > other one, and need do so only on the union of the mapped data areas,
+Paul Clements <paul.clements@steeleye.com> wrote:
+> Peter T. Breuer wrote:
+> > I don't see that this solves anything. If you had both sides going at
+> > once, receiving different writes, then you are sc&**ed, and no
+> > resolution of bitmaps will help you, since both sides have received
+> > different (legitimate) data. It doesn't seem relevant to me to consider 
 > 
-> As far as I understand the issue, this is exactly what should be
-> possible.
+> You're forgetting that journalling filesystems and databases have to 
+> replay their journals or transaction logs when they start up.
+
+Where are the journals located?  Offhand I don't see that it makes a
+difference _how_ the data gets to the disks (i.e., via journal or not
+via journal) but it may do - I reserve judgement :-) -, and it may
+certainly affect the timings.
+
+Can you also pin this down for me in the same excellent way you did
+with the diagrams of the failover situation?
+
+> > What about when A comes back up? We then get a 
+> > 
+> >                  .--------------.
+> >         system A |    system B  |
+> >           nbd ---'    [raid1]   |
+> >           |           /     \   |
+> >        [disk]     [disk]  [nbd]-'
+> > 
+> > situation, and a resync is done (skipping clean sectors). 
 > 
-> > but it won't help you get the right data (i.e.  "yes").
-> 
-> There is no such thing like "the right data" from a block device's
-> point of view.
+> You're forgetting that there may be some data (uncommitted data) that 
+> didn't reach B that is on A's disk (or even vice versa).
 
-Well, there is the "right data" from our point of view, and it is what
-should by on (one/both?) device by now.  One doesn't get to recover that
-"right data" by copying one disk over another, however efficiently one
-does it.
+You are saying that the journal on A (presumably not raided itself?) is
+waiting to play some data into its own disk as soon as we have finished
+resyncing it from B? I don't think that would be a good idea at all.
 
-> Both mirrors have "right data", since both got written
+I'm just not clear on what the setup is, but in the abstract I can't
+see that having a data journal is at all good - having a metadata
+journal is probably helpful, until the time that we remove a file on one
+FS and add it on another, and get to wondering which of the two ops to
+roll forward ..
 
-Well, neither do, more accurately! Not in toto, nor necesarily block by
-block.
+> That is why 
+> you've got to retrieve the bitmap that was in use on A and combine it 
+> with B's bitmap before you resync from B to A (or do a full resync).
 
-> independently. Thus, somebody has to choose one mirror being the
-> "more right" one. This, of course, is in administrators hands.
-
-But neither mirror is necessarily right.  We are already in a bad
-situation.  There is no good way out.  You can merely choose which of
-the two data possibilities you want for each block.  They're not
-necesarily either of them "right", but one of them may be, but which one
-we don't know.
-
-> However, if somebody did so, exactly the sync you described above
-> (union of the mapped data areas) must happen.
-
-Why should one think that copying all of one disk to the other (morally)
-gets one data that is more right than copying some of it? Nothing one
-can do at this point will help.
+The logic still eludes me. This operation finds the set of blocks that
+_may be different_ atthis time between the two disks.  THat enables one
+to efficiently copy A to B (or v.v.) because we know we only have to
+write the blocks marked.  But whether that is a good idea or not is an
+orthogonal question, and to me it doesn't look necesarily better than
+some of the alternatives (doing nothing, for example). What makes it a
+good idea?
 
 Peter
 
