@@ -1,30 +1,64 @@
-From: "Kevin P. Fleming" <kpfleming@backtobasicsmgmt.com>
-Subject: Re: ATARAID userspace configuration tool
-Date: Tue, 10 Feb 2004 18:45:16 -0700
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <4029892C.2070009@backtobasicsmgmt.com>
-References: <Pine.LNX.4.40.0402101405190.25784-100000@jehova.dsm.dk> <1076425115.23946.18.camel@leto.cs.pocnet.net> <40292246.2030902@backtobasicsmgmt.com> <1076440714.27328.8.camel@leto.cs.pocnet.net> <20040211013551.GB2153@kroah.com>
+From: Mike Perry <mikepery@fscked.org>
+Subject: Re: Hot adding active disk to RAID1? [PATCH]
+Date: Tue, 10 Feb 2004 19:47:09 -0600
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <20040211014709.GA28357@fscked.org>
+References: <20040207152948.GA17368@fscked.org> <20040207173716.GA10996@fscked.org> <1076178191.3328.32.camel@picard.intra.techwiz.ca> <20040210075406.GB15112@fscked.org> <16424.38075.333116.361351@notabene.cse.unsw.edu.au> <20040210150041.GA4868@fscked.org> <16425.23445.174722.587863@notabene.cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <20040211013551.GB2153@kroah.com>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+Content-Type: multipart/mixed; boundary="C7zPtVaVf+AK4Oqc"
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <16425.23445.174722.587863@notabene.cse.unsw.edu.au>
+To: Neil Brown <neilb@cse.unsw.edu.au>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Greg KH wrote:
 
-> I really don't think udev in and of itself needs to know anything
-> special about these kinds of devices, as it will be glad to kick off
-> other programs for you if you want it to.
+--C7zPtVaVf+AK4Oqc
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Agreed (not that I'm implementing any of this stuff :-)
+Thus spake Neil Brown (neilb@cse.unsw.edu.au):
 
-The tricky part is for Thomas' ataraid-detect program to keep some 
-information around when it has seen the first component of a RAID-0 but 
-not the second (or vice-versa). It would be very inefficient to scan all 
-known block devices every time a new one is added, although that 
-brute-force method could be used just to get the program working at 
-first. Once the whole idea has been tested and works properly (the 
-ATARAID devices become available and function properly), the efficiency 
-problem(s) could be addressed.
+> > Is there a preferred version/cvs repository that I should diff against? The
+> > raidtools are kinda helter-skelter in their net presence, it seems..
+> 
+> Sorry, I should have been more specific.
+> Patches *against mdadm* are welcome.
+> I have no interest in "raid-tools" - it seems to be unmaintained.
+> Patches against the lastest source tar-ball are fine.
+
+Attached. Any plans to port that raidreconf tool into mdadm? Cause for
+now, the new manpage refers people to the deprecated raidtools.
+
+-- 
+Mike Perry
+Mad Computer Scientist
+fscked.org evil labs
+
+--C7zPtVaVf+AK4Oqc
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="man.diff"
+
+--- mdadm.8.old	Tue Feb 10 19:19:00 2004
++++ mdadm.8	Tue Feb 10 19:44:18 2004
+@@ -363,7 +363,16 @@
+ .TP
+ .BR -a ", " --add
+ '''add, or
+-hotadd listed devices.
++hotadd listed devices as spare disks. 
++
++To add active disks to an array, you will need to recreate the array. If it is
++RAID1, you can often get away with recreating the array using the same
++devices, plus one more, without destroying data (creating a RAID1 device only
++overwrites the superblock).  Note that backing up the array to a regular file
++system on your new disk first is strongly recommended, but if all goes well,
++you should not have to recopy any more data. For RAID0 and RAID5, adding
++active disks will require a raid-tools 1.0 utility called raidreconf. Please
++be aware that there are risks involved with these tools, and plan accordingly.
+ 
+ .TP
+ .BR -r ", " --remove
+
+--C7zPtVaVf+AK4Oqc--
