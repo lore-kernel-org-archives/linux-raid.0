@@ -1,35 +1,93 @@
-From: "wagner" <wagner@mail.webway.com.br>
-Subject: Raid-1 on fedora setup
-Date: Wed, 12 Jan 2005 12:38:43 GMT
-Message-ID: <20050112123843.4760.qmail@seguranca.intranet>
+From: Tom Coughlan <coughlan@redhat.com>
+Subject: RE: hard disk re-locates bad block on read.
+Date: Wed, 12 Jan 2005 08:51:30 -0500
+Message-ID: <1105537890.11357.143.camel@bianchi.boston.redhat.com>
+References: <200501112241.j0BMfa927640@www.watkins-home.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <200501112241.j0BMfa927640@www.watkins-home.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Guy <bugzilla@watkins-home.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Tue, 2005-01-11 at 17:43, Guy wrote:
+> Good, your description is what I had assumed at first.  But when I
+> re-read
+> the drive specs, it was vague, so I set ARRE back to 0.
+> 
+> So, it should be a good thing to set it to 1, correct?
 
-Hello,
+I would.
 
-I'm trying to set up a Raid-1 in my fedora core 2.
-I have an IDE HD with two partitions /boot and /.
-I bought another identical HD and set these partitions with the same size
-as the first HD.
+> Do you agree that Seagate's email is wrong?  Or am I just reading it
+> wrong?
 
-I follow the RAID-HOWTO 7.6 (Converting a non-RAID RedHat System to run on
-Software RAID).
+I can't figure out what he is saying in the last sentence. I do believe
+that Seagate engineers are aware of the correct way to implement ARRE. I
+can't vouch for whether their firmware always gets it right.  
 
-And almost everything worked fine. i set /dev/md0 for the boot partition
-and /dev/md1 for the / partition.
+> I did not realize ARRE was a standard.  I thought it was a Seagate
+> thing.
+> 
+> Thanks,
+> Guy
+> 
+> -----Original Message-----
+> From: linux-raid-owner@vger.kernel.org
+> [mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Tom Coughlan
+> Sent: Tuesday, January 11, 2005 9:35 AM
+> To: Guy
+> Cc: linux-raid@vger.kernel.org
+> Subject: Re: hard disk re-locates bad block on read.
+> 
+> On Mon, 2005-01-10 at 12:35, Guy wrote:
+> > My disks have the option to relocate bad blocks on read error.
+> > I was concerned that bogus data would be returned to the OS.
+> > 
+> > They say CRC errors return corrupt data to the OS!  I hope not!
+> > So it seems CRC errors and unreadable blocks both are corrupt or lost.
+> > But the OS does not know.
+> > So, I will leave this option turned off.
+> > 
+> > Guy
+> > 
+> > I sent this to Seagate:
+> > With ARRE (Automatic Read Reallocation Enable) turned on.  Does it
+> relocate
+> > blocks that can't be read, or blocks that had correctable read  problems?
+> > Or both?
+> 
+> FWIW, the SCSI standard has been clear on this point for many years:
+> 
+> "An ARRE bit of one indicates that the device server shall enable
+> automatic reallocation of defective data blocks during read operations.
+> ... The automatic reallocation shall then be performed only if the
+> device server successfully recovers the data. The recovered data shall
+> be placed in the reallocated block." (SBC-2)
+> 
+> Blocks that can not be read are not relocated. The read command simply
+> returns an error to the OS.
+> 
+> > 
+> >  If it re-locates un-readable blocks, then what data does it return to the
+> > OS?
+> > 
+> >  Thanks,
+> >  Guy
+> > 
+> > ==================================================================
+> > 
+> > Guy,
+> >  If the block is bad at a hardware level then it is reallocated and a
+> spare
+> > is used in it's place. In a bad block the data is lost, the sparing of the
+> > block is transparent to the operating system. Blocks with correctable read
+> > problems are one's with corrupt data at the OS level.
+> > 
+> >  Jimmie P.
+> >  Seagate Technical Support
+> > 
 
-The problem was when i tried the last command: resize2fs /dev/md1... it is
-telling that the device is mounted... and i can't umount it anyway.
-
-I didn't have this problem when doing it on the /dev/md0 device.
-
-Does anyone has faced it before and can help me?
-
-Thanks a lot in advance,
-Wagner.
