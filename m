@@ -1,48 +1,38 @@
-From: Joshua Baker-LePain <jlb17@duke.edu>
+From: Jon Lewis <jlewis@lewis.org>
 Subject: Re: 1x 3ware controllers vs. 2x 3ware controllers
-Date: Sat, 31 Jul 2004 09:11:46 -0400 (EDT)
+Date: Sat, 31 Jul 2004 10:24:13 -0400 (EDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.58.0407310908360.12414@chaos.egr.duke.edu>
-References: <b476569a04072920533b757574@mail.gmail.com>
- <200407300815.18296.mrwatts@fast24.co.uk> <cedoda$qn4$1@sea.gmane.org>
- <200407301717.36583.mrwatts@fast24.co.uk> <20040730234706.M12321@contactbda.com>
+Message-ID: <Pine.LNX.4.58.0407311020420.7852@web1.mmaero.com>
+References: <Pine.LNX.4.44.0407311045460.4528-100000@uplift.swm.pp.se>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20040730234706.M12321@contactbda.com>
-To: Jim Buttafuoco <jim@contactbda.com>
+In-Reply-To: <Pine.LNX.4.44.0407311045460.4528-100000@uplift.swm.pp.se>
+To: Mikael Abrahamsson <swmike@swm.pp.se>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 30 Jul 2004 at 7:53pm, Jim Buttafuoco wrote
+On Sat, 31 Jul 2004, Mikael Abrahamsson wrote:
 
-> I second Marks comment on NOT recommending the 3ware cards to anyone.  
-> 
-> I have a dual XEON 3.2 Ghz system 12 G of ram with a 3ware 8506-8 in it (8 250 G drives).  The hard raid performance 
-> was very bad.  with the load avg going over 40.  I then switched over to JBOD and software raid.  The IO wait times 
-> are really high and the performance sucks.  Very hard to explain to my boss where the $20k went. The system is a 
-> database server (postgres).  I tried both kernel 2.4 and 2.6 with the same problem.  I am now in the process of 
-> testing the adaptec raid controller.  
+> You should never ever ever use raid5 with something that is write
+> intensive, such as a database server. Raid5 is a cost compromise that is a
+> little of everything, if you want protection and speed at the same time,
+> you should use raid1 (and possible raid0 the raid1:s).
 
-3wares *can* work, and work well.  I've got two 7500-8s on a dual Xeon 
-board (Supermicro), each with 8 180GB WD drives (7200 RPM) and running 
-hardware RAID5.  Then I do a software RAID0 strips across the two arrays.  
-Performance is quite good:
+Hardware RAID5 or software RAID5?  My experience has been that even the
+higher end hardware RAID5 cards I've dealt with give nowhere near the
+performace you get with software RAID5.  HW RAID5 is a good way to make an
+IO intensive system turn into a slug.
 
-[jlb@buckbeak jlb]$ bonnie++ -s 8192
-Version 1.02c       ------Sequential Output------ --Sequential Input- --Random-
-                    -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- --Seeks--
-Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP  /sec %CP
-buckbeak         8G 25283  96 131142  39 83869  32 28038  99 342849  68 444.1   1
-                    ------Sequential Create------ --------Random Create--------
-                    -Create-- --Read--- -Delete-- -Create-- --Read--- -Delete--
-              files  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP
-                 16  2644  21 +++++ +++  2227  17  2548  20 +++++ +++  2118  21
-buckbeak,8G,25283,96,131142,39,83869,32,28038,99,342849,68,444.1,1,16,2644,21,+++++,+++,2227,17,2548,20,+++++,+++,2118,21
+> I learnt this the hard way running a nntp (news) server.
 
-That's with a 2.4 kernel and XFS.
+The only RAID I'd do / have done with nntp servers is RAID1 for the system
+and RAID0 for the spool...but with modern software you don't even need
+RAID0 for the spool...you just keep telling it to use more drives for
+spools.
 
--- 
-Joshua Baker-LePain
-Department of Biomedical Engineering
-Duke University
+----------------------------------------------------------------------
+ Jon Lewis                   |  I route
+ Senior Network Engineer     |  therefore you are
+ Atlantic Net                |
+_________ http://www.lewis.org/~jlewis/pgp for PGP public key_________
