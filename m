@@ -1,74 +1,42 @@
-From: Ninti Systems <office@ninti.com.au>
-Subject: RAID1 + rsync (2)
-Date: 13 Aug 2004 18:24:22 +0930
+From: "Peter T. Breuer" <ptb@it.uc3m.es>
+Subject: Re: patch for raid1 to make it choose the fastest device for READ (fwd)
+Date: Fri, 13 Aug 2004 12:23:51 +0200 (MET DST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1092387262.3113.10.camel@localhost>
-Reply-To: office@ninti.com.au
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Message-ID: <200408131023.i7DANph14303@oboe.it.uc3m.es>
+References: <16668.38023.148048.432858@cse.unsw.edu.au>
+Reply-To: ptb@it.uc3m.es
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: RAID Linux <linux-raid@vger.kernel.org>
+In-Reply-To: <16668.38023.148048.432858@cse.unsw.edu.au> from Neil Brown at "Aug
+ 13, 2004 08:14:31 pm"
+To: Neil Brown <neilb@cse.unsw.edu.au>
+Cc: linux raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Sory about having to re-post, but that last email wasn't too well laid out ...
+"Also sprach Neil Brown:"
+> On Friday August 13, ptb@it.uc3m.es wrote:
+> > "Also sprach Neil Brown:"
+> > > > The following message was posted on linux-raid earlier today. I
+> > > > forward it for comment.
+> > > 
+> > > Odd that I didn't see it, but no-matter.
+> > 
+> > OK - that's the second time that's been said to me. Perhaps I should
+> > resend it. I'll try reflecting this cnversation to the list and see if
+> > it turns up.
+> 
+>    Cc: linux-raid@vger.rutgers.edu
+> 
+> Maybe that is the reason - linux-raid@vger.kernel.org is the current
+> address.
 
-I'm looking at a method of creating maximum redundancy using software
-RAID with four equal disks. I know that the most common advice is to do
-RAID 5 if there are four disks and redundancy is required.
+Yes, sorry.  I wrote the cc from memory just now, sent it, then checked.
+When I noticed, I resent this mail to the correct list address.
 
-Still, redundancy really is more important to me than performance
-(within reason of course). I know that a four disk RAID1 array
-(including swap) built out of primary and secondary masters/slaves would
-not perform well.
+But indeed, I may have made the same mistake originally. So I resent the
+patch too.
 
-So I'm wondering if anyone has any comments on the following scenario,
-or has tried it. Let's assume partitioning is /boot, swap and /(root):
+> I'll think through the rest of your response early next week.
 
-1. Put /boot on a four disk RAID1 array across all disks (dev/md0).
-2. Put swap on a two disk RAID1 array (primary and secondary masters)
-(/dev/md1).
-3. Put /(root) on a two disk RAID1 array (primary and secondary masters)
-(/dev/md2).
+Thanks.
 
-So I end up with something like this (all RAID autodetect type):
-
-/dev/md0 - /dev/hda1, /dev/hdb1, /dev/hdc1, /dev/hdd1
-/dev/md2 - /dev/hda2, /dev/hdc2			
-/dev/md2 - /dev/hda3, /dev/hdc3	
-
-/dev/md0 - /boot
-/dev/md2 - swap	
-/dev/md2 - /
-	
-
-
-4. Configure the remaining /dev/hdb2 and /dev/hdd2 partitions as normal swap
-partitions.
-5. Configure and format the remaining /dev/hdb3 and /dev/hdd3 partitions as
-normal ext2 partitions.
-6. Run rsync daily to mirror /(root) on /dev/md2 to both /dev/hdb3 and
-/dev/hdd3.
-
-I'm hoping that this would create something like a four disk RAID1 array
-with the performance of a two disk RAID1 array, and that in theory up to
-3 of 4 disks could fail but a usable system would still be bootable
-(even if it may be the case that the system may only be as up to date as
-the last rsync process). I realise that depending on which disk(s)
-failed, I may have to fiddle lilo and/or fstab to boot a running system.
-
-Does this idea have wheels, or am I overlooking some fatal flaw?
-
-Thanks
-Mick
-
-
--- 
---------------------------------------
-Ninti Systems: Smart IT Solutions
-Michael Hall
-Mobile: 0429 095 392
-Ph/Fax: 08 8953 1442       
-Email:  office at ninti dot com dot au
-Web:    http://ninti.com.au
---------------------------------------
+Peter
