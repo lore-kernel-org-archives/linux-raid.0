@@ -1,32 +1,26 @@
-From: Kanoa Withington <kanoa@cfht.hawaii.edu>
+From: dean gaudet <dean-list-linux-raid@arctic.org>
 Subject: RE: Scrub?
-Date: Sat, 7 Aug 2004 10:04:52 -1000 (HST)
+Date: Sat, 7 Aug 2004 13:12:34 -0700 (PDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.55.0408070950250.13168@umi.cfht.hawaii.edu>
+Message-ID: <Pine.LNX.4.58.0408071310380.25286@twinlark.arctic.org>
 References: <547AF3BD0F3F0B4CBDC379BAC7E4189F01153199@otce2k03.adaptec.com>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <547AF3BD0F3F0B4CBDC379BAC7E4189F01153199@otce2k03.adaptec.com>
 To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Cc: dean gaudet <dean-list-linux-raid@arctic.org>, Derek Listmail Acct <listmail@oversimplified.com>, linux-raid@vger.kernel.org
+Cc: Kanoa Withington <kanoa@cfht.hawaii.edu>, Derek Listmail Acct <listmail@oversimplified.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Furthermore, drives (including those with SMART support) only
-reallocate bad blocks following write errors. A scrub/verify tool
-would be looking for read errors and would need to actively replace
-the unreadable block with rudundant data from a _different_ drive.
+no, that's not how it works.  i'm referring to the hard disk itself
+relocating a sector -- it's transparent to the host/raid.  the only thing
+the raid software might see is that the disk will be less snappy while
+it's running the SMART long test.  (mind you i do this on live busy
+systems and i don't really tend to notice it -- although on particularly
+busy weeks, some disks can take several days to complete their self test
+in the few spare cycles they find.)
 
-Actually, I guess it would be kind of complicated. A scan for
-unreadable blocks would need to occur outside of the md layer (to
-prevent the errors from triggering a degraded state), yet the block
-replacement would need to occur through the md layer, since only md
-knows how to recreate the block from parity. It would probably be a
-easier for a RAID 1 array where the disks are symetric and you could
-guess the location of the redundant block on the second volume. You
-would probably need to use md on a RAID 5 array.
-
--Kanoa
+-dean
 
 On Sat, 7 Aug 2004, Salyzyn, Mark wrote:
 
@@ -74,8 +68,4 @@ On Sat, 7 Aug 2004, Salyzyn, Mark wrote:
 > nights)... see /etc/smartd.conf.
 >
 > -dean
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >
