@@ -1,29 +1,36 @@
-From: Paul Clements <Paul.Clements@SteelEye.com>
-Subject: Re: RAID5 recovery after disk-change
-Date: Wed, 13 Aug 2003 14:04:42 -0400
+From: "Bo Moon" <bo@anthologysolutions.com>
+Subject: Help: any mdadm based cgi perl for webmin
+Date: Wed, 13 Aug 2003 14:49:03 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3F3A7DBA.ECEDB7D8@SteelEye.com>
-References: <Pine.LNX.4.44.0308131930450.13687-100000@aifbshark.aifb.uni-karlsruhe.de>
+Message-ID: <00bb01c361e4$b7a70540$6601a8c0@antholog2>
+References: <200308071250.18543.arekm@pld-linux.org><200308112320.49298.arekm@pld-linux.org> <16184.21961.117266.472665@gargle.gargle.HOWL>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Simon Frettloeh <sifr@aifb.uni-karlsruhe.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: Neil Brown <neilb@cse.unsw.edu.au>
 List-Id: linux-raid.ids
 
-Simon Frettloeh wrote:
+Hello,
 
-> So it seems, that hdg1 moved by itself from "4" to "2". What happened
-> (according to my previous email)?
-> 
-> Do I have to do any further things or is my RAID now working fine?
+I downloaded the latest WEBMIN, but its RAID tools are based
+on the RAIDTAB config and old tool.
 
-This is normal behavior. When a spare disk is added, it is placed into
-the array above the normal disk slots (in your case, slots 4 and up) and
-is then resynced. Once resync is complete, the disk is moved into the
-first open normal slot (in your case, slot 2) and is then used as part
-of the array.
+I want to use new MDADM tool, but I am not an expert on PERL.
 
---
-Paul
+If anyone already modified it or know where some references are,
+May I get some new cgi perl program(or prototype) which use MDADM for
+webmin?
+
+Those are under /usr/share/webmin/raid:
+               create_raid.cgi,  raid_form.cgi, raid-lib.pl, ......
+
+Thanks in advance,
+
+Bo
+
+
+
+
