@@ -1,64 +1,38 @@
-From: Gordon Henderson <gordon@drogon.net>
-Subject: Re: Stress testing system?
-Date: Mon, 11 Oct 2004 09:38:31 +0100 (BST)
+From: Brad Campbell <brad@wasp.net.au>
+Subject: Re: consistency detect
+Date: Mon, 11 Oct 2004 12:54:01 +0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.56.0410110919530.9395@lion.drogon.net>
-References: <4167078A.3030609@robinbowes.com> <Pine.LNX.4.56.0410082257450.26162@lion.drogon.net>
- <4167264B.8070507@robinbowes.com> <Pine.LNX.4.56.0410102122140.9395@lion.drogon.net>
- <4169AB0B.1040709@robinbowes.com>
+Message-ID: <416A4A29.9080906@wasp.net.au>
+References: <1097465522.3111.24.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4169AB0B.1040709@robinbowes.com>
-To: Robin Bowes <robin-lists@robinbowes.com>
+In-Reply-To: <1097465522.3111.24.camel@localhost.localdomain>
+To: mingz@ele.uri.edu
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, 10 Oct 2004, Robin Bowes wrote:
+Ming Zhang wrote:
+> I have a question on RAID error detect. hope somebody can help me to
+> find it out. thanks.
+> 
+> take raid1 as an example, if one disk fail, raid 1 can detect the data
+> on disk is compromised and then reconstruct it using a spare disk. this
+> is straight forward.
+> 
+> but if one request comes to raid1 and raid1 sends requests to both
+> disks, at this time, system reboots because power outage, system
+> crashes, or any other reason. then after system reboots, how raid 1
+> detects which disk has consistent data? since before reboot, anything
+> can happen, data may in disk1 but not in disk2, or in disk2 but not in
+> disk1, or not in both disks, or already on both disks.
+> 
+> how raid1 or other raid code deal with this?
 
-> This gave the following results:
->
-> Version  1.03       ------Sequential Output------ --Sequential Input- --Random-
->                      -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- --Seeks--
-> Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP  /sec %CP
-> dude.robinbow 3096M 13081  95 34159  75 12617  21 15311  92 40429  30 436.1   3
-> dude.robinbowes.com,3096M,13081,95,34159,75,12617,21,15311,92,40429,30,436.1,3,,,,,,,,,,,,,
->
-> I don't actually know what the figures mean - is this fast??
+In short, it does not deal with it at all. RAID will deal with a disk failure, it has no guarantees 
+about consistency on power failures, hard lockups or other catastrophic events.
 
-It's not brilliant, but reasonable for a RAID5 on IDE drives. Disk head
-bandwidth for comodity 7200 RPM drives is about 55MB/sec peak - although I
-haven't been able to get that with the SATA controllers I've used so-far,
-but I suspect thats because they are running in PATA mode.
+A UPS is cheap insurance against consistency issues in combination with a journalling filesystem.
 
-This is a Dell with 4 SCSI drivers split over 2 controllers:
-
-Version 1.02b       ------Sequential Output------ --Sequential Input- --Random-
-                    -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- --Seeks--
-Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP  /sec %CP
-pixel         2000M 20492  72 54865  12 28260   6 25413  86 108190  13 332.9   0
-
-
-This is a dual-Athlon with 5 IDE drives (4+hot spare)
-
-Version 1.02b       ------Sequential Output------ --Sequential Input- --Random-
-                    -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- --Seeks--
-Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP  /sec %CP
-red           1023M 14216  99 26663  25 17697  13 13767  95 72211  34 239.5   2
-
-This is anothe dual athlon with just 4 IDE drives:
-
-Version 1.02b       ------Sequential Output------ --Sequential Input- --Random-
-                    -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- --Seeks--
-Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP  /sec %CP
-blue          1023M 12003  99 40147  44 24048  19 12078  98 87887  46 232.6   2
-
-Your block input seems a shade low, but this is what I experienced on a
-server with SATA drives which look like /dev/hdX drives. I suspect the
-drivers have a bit more development to go through though.
-
-And in any-case, depending on what you are using it for, it's probably
-fast enough anyway... 100Mb Ethernet can only chuck files out at 10MB/sec
-anyway, but it's always nice to have bandwidth in-hand!
-
-Gordon
+Brad
