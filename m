@@ -1,84 +1,77 @@
-From: Jeff Schaller <schaller@freeshell.org>
-Subject: Re: Assertion failure, BUG at journal.c:1732
-Date: Mon, 2 Dec 2002 11:15:10 +0000 (UTC)
+From: Nick Lindsell <nick@nexnix.co.uk>
+Subject: Am I dead?
+Date: Mon, 02 Dec 2002 12:21:30 +0000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.NEB.4.44.0212021058460.21200-100000@iceland.freeshell.org>
-References: <20021124234220.GA17874@think.thunk.org>
+Message-ID: <5.1.1.6.0.20021202114409.06af4530@core>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="us-ascii"; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20021124234220.GA17874@think.thunk.org>
-To: Theodore Ts'o <tytso@mit.edu>
-Cc: sct@redhat.com, akpm@zip.com.au, adilger@clusterfs.com, mingo@redhat.com, neilb@cse.unsw.edu.au, ext3-users@redhat.com, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Ted & all,
+Greetings list,
+	My server died last night while copying 4Gb data over the network to
+it's IDE raid5 array. While trying to boot it cannot mount root as the 
+superblock
+is bad for that raid device.
+	I've moved the array to another machine with it's own disk so I may be
+able to effect a repair by running the raidtools.
+	I recreated /etc/raidtab and tried to start the arrays but I get this
+in the syslog:
 
-Here's the typescript; it showed no errors. I did not stop the
-raid device before running the fsck; let me know if that would
-make a difference.
+Dec 2 12:41:18 nexnix-192 kernel: [events: 00000018]
+Dec 2 12:41:18 nexnix-192 kernel: [events: 0000001d]
+Dec 2 12:41:18 nexnix-192 kernel: [events: 0000001c]
+Dec 2 12:41:18 nexnix-192 kernel: md: autorun ...
+Dec 2 12:41:18 nexnix-192 kernel: md: considering sdc2 ...
+Dec 2 12:41:18 nexnix-192 kernel: md: adding sdc2 ...
+Dec 2 12:41:18 nexnix-192 kernel: md: adding sdb2 ...
+Dec 2 12:41:18 nexnix-192 kernel: md: adding sda2 ...
+Dec 2 12:41:18 nexnix-192 kernel: md: created md2
+Dec 2 12:41:18 nexnix-192 kernel: md: bind<sda2,1>
+Dec 2 12:41:18 nexnix-192 kernel: md: bind<sdb2,2>
+Dec 2 12:41:18 nexnix-192 kernel: md: bind<sdc2,3>
+Dec 2 12:41:18 nexnix-192 kernel: md: running: <sdc2><sdb2><sda2>
+Dec 2 12:41:18 nexnix-192 kernel: md: sdc2's event counter: 0000001c
+Dec 2 12:41:18 nexnix-192 kernel: md: sdb2's event counter: 0000001d
+Dec 2 12:41:18 nexnix-192 kernel: md: sda2's event counter: 00000018
+Dec 2 12:41:18 nexnix-192 kernel: md: superblock update time inconsistency 
+-- using the most recent one
+Dec 2 12:41:18 nexnix-192 kernel: md: freshest: sdb2
+Dec 2 12:41:18 nexnix-192 kernel: md: kicking non-fresh sda2 from array!
+Dec 2 12:41:18 nexnix-192 kernel: md: unbind<sda2,2>
+Dec 2 12:41:18 nexnix-192 kernel: md: export_rdev(sda2)
+Dec 2 12:41:18 nexnix-192 kernel: md2: kicking faulty sdc2!
+Dec 2 12:41:18 nexnix-192 kernel: md: unbind<sdc2,1>
+Dec 2 12:41:18 nexnix-192 kernel: md: export_rdev(sdc2)
+Dec 2 12:41:18 nexnix-192 kernel: md: md2: raid array is not clean -- 
+starting background reconstruction
+Dec 2 12:41:18 nexnix-192 kernel: md2: max total readahead window set to 512k
+Dec 2 12:41:18 nexnix-192 kernel: md2: 2 data-disks, max readahead per 
+data-disk: 256k
+Dec 2 12:41:18 nexnix-192 kernel: raid5: device sdb2 operational as raid 
+disk 1
+Dec 2 12:41:18 nexnix-192 kernel: raid5: not enough operational devices for 
+md2 (2/3 failed)
+Dec 2 12:41:18 nexnix-192 kernel: RAID5 conf printout:
+Dec 2 12:41:18 nexnix-192 kernel: --- rd:3 wd:1 fd:2
+Dec 2 12:41:18 nexnix-192 kernel: disk 0, s:0, o:0, n:0 rd:0 us:1 dev:[dev 
+00:00]
+Dec 2 12:41:18 nexnix-192 kernel: disk 1, s:0, o:1, n:1 rd:1 us:1 dev:sdb2
+Dec 2 12:41:18 nexnix-192 kernel: disk 2, s:0, o:0, n:2 rd:2 us:1 dev:[dev 
+00:00]
+Dec 2 12:41:18 nexnix-192 kernel: raid5: failed to run raid set md2
+Dec 2 12:41:18 nexnix-192 kernel: md: pers->run() failed ...
+Dec 2 12:41:18 nexnix-192 kernel: md :do_md_run() returned -22
+Dec 2 12:41:18 nexnix-192 kernel: md: md2 stopped.
+Dec 2 12:41:18 nexnix-192 kernel: md: unbind<sdb2,0>
+Dec 2 12:41:18 nexnix-192 kernel: md: export_rdev(sdb2)
+Dec 2 12:41:18 nexnix-192 kernel: md: ... autorun DONE.
 
-schaller@debian:~$ sudo e2fsck /dev/hdc
-e2fsck 1.27 (8-Mar-2002)
-/dev/hdc: clean, 24724/4898816 files, 8018633/9780372 blocks
+Am I dead or can I "freshen" sda2 so I can at least have 2 devices in my 
+array and therefore
+have a chance of either backing off the data or rebulding with a new sdc ?
 
-schaller@debian:~$ sudo e2fsck /dev/hdd
-e2fsck 1.27 (8-Mar-2002)
-/dev/hdd: clean, 24724/4898816 files, 8018633/9780372 blocks
-
-
-I then ran "e2fsck -f" on each device:
-
-schaller@debian:~$ sudo e2fsck -f /dev/hdc
-e2fsck 1.27 (8-Mar-2002)
-Pass 1: Checking inodes, blocks, and sizes
-Pass 2: Checking directory structure
-Pass 3: Checking directory connectivity
-Pass 4: Checking reference counts
-Pass 5: Checking group summary information
-/dev/hdc: 24724/4898816 files (21.1% non-contiguous), 8018633/9780372 blocks
-
-schaller@debian:~$ sudo e2fsck -f /dev/hdd
-e2fsck 1.27 (8-Mar-2002)
-Pass 1: Checking inodes, blocks, and sizes
-Pass 2: Checking directory structure
-Pass 3: Checking directory connectivity
-Pass 4: Checking reference counts
-Pass 5: Checking group summary information
-/dev/hdd: 24724/4898816 files (21.1% non-contiguous), 8018633/9780372 blocks
-
--jeff
-
-
-On Sun, 24 Nov 2002, Theodore Ts'o wrote:
-
-> These messages tend to indicate that the filesystem is probably
-> corrupted.  For some reason the kernel is triggering a BUG
-> before marking the filesystem as containing an error, so fsck
-> isn't being run on the filesystem.  If you run e2fsck on the
-> filesystem manually, before it is mounted (or remounted
-> read-write, if it the root filesystem), it should correct the
-> problem.
->
-> I am curious what was the specific form of filesystem corruption
-> which was triggerring your problem.  If you could save a
-> transcript of the e2fsck run (say, by running it under the
-> script program, assuming you have a writeable filesystem
-> available to you when you rune2fsck), I would be much obliged.
->
-> 						- Ted
->
-> > Nov 20 18:35:39 debian kernel: attempt to access beyond end of device
-> > Nov 20 18:35:39 debian kernel: 09:00: rw=1, want=39121472, limit=39121408
-> > Nov 20 18:35:39 debian kernel: attempt to access beyond end of device
-> > Nov 20 18:35:39 debian kernel: 09:00: rw=1, want=39121476, limit=39121408
-> > Nov 20 18:35:39 debian kernel: attempt to access beyond end of device
-> > Nov 20 18:35:39 debian kernel: 09:00: rw=1, want=39121480, limit=39121408
-> > Nov 20 18:35:39 debian kernel: attempt to access beyond end of device
-> > Nov 20 18:35:39 debian kernel: 09:00: rw=1, want=39121484, limit=39121408
-> > Nov 20 18:35:39 debian kernel: attempt to access beyond end of device
-> > Nov 20 18:35:39 debian kernel: 09:00: rw=1, want=39121488, limit=39121408
-> > Nov 20 18:35:48 debian kernel: Assertion failure in __journal_remove_journal_head() at journal.c:1732: "buffer_jbd(bh)"
-> > Nov 20 18:35:48 debian kernel: kernel BUG at journal.c:1732!
-> > Nov 20 18:35:48 debian kernel: invalid operand: 0000
+tia
+nick
 
