@@ -1,41 +1,39 @@
-From: Hendrik Visage <hvisage@envisage.co.za>
-Subject: Re: Linux RAID metadata format docs?
-Date: Fri, 14 Nov 2003 23:48:37 +0200
+From: Matt Domsch <Matt_Domsch@dell.com>
+Subject: Re: [RFCI] How best to partition MD/raid devices in 2.6
+Date: Fri, 14 Nov 2003 15:44:23 -0600
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20031114214837.GW9681@hvs.envisage.co.za>
-References: <20031114185013.GA11930@gtf.org> <20031114193114.GB1080@mea-ext.zmailer.org>
+Message-ID: <20031114154423.A5587@lists.us.dell.com>
+References: <16308.18387.142415.469027@notabene.cse.unsw.edu.au> <1068787304.4157.8.camel@localhost> <16308.26754.867801.131463@notabene.cse.unsw.edu.au> <20031114101647.GJ32211@marowsky-bree.de> <20031114182927.GA8810@gtf.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20031114193114.GB1080@mea-ext.zmailer.org>
-To: Matti Aarnio <matti.aarnio@zmailer.org>
-Cc: Jeff Garzik <jgarzik@pobox.com>, neilb@cse.unsw.edu.au, linux-raid@vger.kernel.org
+In-Reply-To: <20031114182927.GA8810@gtf.org>; from jgarzik@pobox.com on Fri, Nov 14, 2003 at 01:29:27PM -0500
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Nov 14, 2003 at 09:31:14PM +0200, Matti Aarnio wrote:
-> Nevertheless I would love to be able to boot from _any_ of disks
-> in a bootable RAID1 diskset.  I have just experimented with Highpoint's
-> RocketRaid 1520, which almost can do that.  It fails if the primary
-<snip> 
-> After all, Sun has been able to do that for a very long time,
-> it should be possible in PC hardware, too.
+> This brings up a tangent point...  partitions on top of RAID are a new
+> thing, which means that one has the chance to define the partition
+> format.
+> 
+> And I kinda like EFI partition format, a lot better than the other
+> common ones...
 
-Nope, Sun's booting is achieved in the OBP (Open Boot Prom)
-which is arguably more advanced than the current PC BIOSes.
+Any reason why the current partition-mapping code couldn't be extended
+to handle partition detection on a generic block device (which is what
+MD presents I think) instead of a struct gendisk?  Then it wouldn't
+matter which scheme someone wanted to use - any scheme provided for in
+the kernel (or userspace if partx were extended) could be used.
 
-> (In Suns we have to define a set of boot devices into prom level,
+I'm partial to the EFI format too, but wouldn't want to write that
+code a second time, once for normal disks, and once for md.
 
-Which is specified based on the PCI/SBUS slot the controller is
-attached to. One Day(TM) we'll be able to see the PeeCee world 
-drop it's ISA slot independence but IRQ/IOport uniqueness, not to
-mention it's real mode DOS compatible 0x80, 0x81 harddisk ordering... :(
+Thanks,
+Matt
 
->  and there all devices are different, and retain their identity
->  forever independent of plugging new interface cards into system,
->  but that is another story...)
-
-That's only a function of the order of entries in /etc/path_to_inst, which is
-achievable (to an extend) in linux with modules.conf trickery.
-
-Hendrik
+-- 
+Matt Domsch
+Sr. Software Engineer, Lead Engineer
+Dell Linux Solutions www.dell.com/linux
+Linux on Dell mailing lists @ http://lists.us.dell.com
