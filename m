@@ -1,58 +1,42 @@
-From: support@speedpartner.de
-Subject: *****VIRUS***** von <eastergold@iname.com>
-Date: Sat, 26 Feb 2005 20:48:20 +0100
-Message-ID: <20050226194820.49833CBEC5@mail.speedpartner.de>
+From: Mark Hahn <hahn@physics.mcmaster.ca>
+Subject: Re: [OT] best tape backup system?
+Date: Sat, 26 Feb 2005 17:40:50 -0500 (EST)
+Message-ID: <Pine.LNX.4.44.0502261730450.14465-100000@coffee.psychology.mcmaster.ca>
+References: <Pine.LNX.4.58.0502221547370.18869@lewis.et.byu.edu>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+In-Reply-To: <Pine.LNX.4.58.0502221547370.18869@lewis.et.byu.edu>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Der Virenscanner hat beim Empfang einer Nachricht von
-<eastergold@iname.com>
-einen (potentiellen) Virenbefall in mindestens einem Teil der
-Email festgestellt.
+> Not sure if it is important to many people, but tapes take a lot less
+> electricity than online disks.
 
-Gemaess Ihren Einstellungen wurde diese eMail nicht regulaer in ihr
-Postfach ausgeliefert, sondern unter Quarantaene gestellt. Bitte
-wenden sie sich an 
-support@speedpartner.de sofern die Nachricht dennoch zugestellt werden soll.
+do you really care?  an active disk is about 15W, inactive 5W
+and asleep nearly zero.  even assuming idle-but-spinning, 
+I make that as about $2/year.
 
-Quarantaene-ID: 4220d284-2977
+tapes are wonderful in every way except one: they're finicky
+and difficult to care for properly.  for instance, do you have 
+a humidity and temperature-controlled place to store them?
+and have you actually logged the temp/hum for that to see 
+whether, for instance, it gets warm on weekends?
 
-NAI VirusScan:
- PWS-Banker.k.gen
-CLAM Anti Virus:
+if I were forced to use tapes, I would insist on making 2+ copies
+of everything.  note that this clearly hurt's tape's competitiveness
+WRT price, size, bandwidth, etc.
 
-------------------------------------------------------------------------
-Header der Original-Nachricht:
-Return-Path: <linux-raid-owner@vger.kernel.org>
-X-Original-To: linux-raid@stefan-neufeind.de
-Delivered-To: neufeind@speedpartner.de
-Received: from vger.kernel.org (vger.kernel.org [12.107.209.244])
-	by mail.speedpartner.de (Postfix) with ESMTP id EC52CCBD94
-	for <linux-raid@stefan-neufeind.de>; Sat, 26 Feb 2005 20:48:16 +0100 (CET)
-Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-	id S261270AbVBZTuW (ORCPT <rfc822;linux-raid@stefan-neufeind.de>);
-	Sat, 26 Feb 2005 14:50:22 -0500
-Received: (majordomo@vger.kernel.org) by vger.kernel.org id S261249AbVBZTuW
-	(ORCPT <rfc822;linux-raid-outgoing>);
-	Sat, 26 Feb 2005 14:50:22 -0500
-Received: from host46.ipowerweb.com ([66.235.216.140]:14829 "HELO
-	host46.ipowerweb.com") by vger.kernel.org with SMTP id S261270AbVBZTpk
-	(ORCPT <rfc822;linux-raid@vger.kernel.org>);
-	Sat, 26 Feb 2005 14:45:40 -0500
-Received: from dgexh (12.84.122.57)
-	by host46.ipowerweb.com; Sat, 26 Feb 2005 11:45:33 -0800
-Date:	Sat, 26 Feb 2005 11:45:33 -0800
-From: <eastergold@iname.com>
-X-Mailer: The Bat! (v2.01)
-Reply-To: <eastergold@earthlink.net>
-X-Priority: 3 (Normal)
-Message-ID: <008484578.20041203104023@iname.com>
-To: <linux-raid@vger.kernel.org>
-Subject: Payment confirmation
-MIME-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="----------C531263484B"
-Sender: linux-raid-owner@vger.kernel.org
-Precedence: bulk
-X-Mailing-List:	linux-raid@vger.kernel.org
+I don't see any new tape installations that are not driven by 
+secondary factors such as big piles of old data already on tape,
+or someone wanting to physically move the media into a vault.
+
+(on that topic, I don't buy the idea that tape's less vulnerable 
+to hacking, either.  just because your backup is on disk doesn't
+mean that it's online or accessible.  similarly, just because 
+your tape is in a separate cabinet doesn't mean that a sufficiently
+motivated badguy could not get the tape put into some drive...)
+
+regards, mark hahn.
+(buying many TB of disk this year and no tape)
+
