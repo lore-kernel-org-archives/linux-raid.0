@@ -1,52 +1,50 @@
-From: Matti Aarnio <matti.aarnio@zmailer.org>
+From: Mikael Johansson <mpjohans@pcu.helsinki.fi>
 Subject: Re: MD/RAID1 Large File Support
-Date: Tue, 13 May 2003 09:47:30 +0300
+Date: Tue, 13 May 2003 14:44:37 +0300 (EEST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20030513064730.GI24892@mea-ext.zmailer.org>
-References: <EC803175C921D411BCE2000000006429081C3641@ash-exch_lg>
+Message-ID: <Pine.OSF.4.51.0305131437100.147081@soul.helsinki.fi>
+References: <EC803175C921D411BCE2000000006429081C363F@ash-exch_lg>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <EC803175C921D411BCE2000000006429081C3641@ash-exch_lg>
+In-Reply-To: <EC803175C921D411BCE2000000006429081C363F@ash-exch_lg>
 To: "Duncan, Mike" <Mike.Duncan@Sonopress.com>
-Cc: Linux SW Raid <linux-raid@vger.kernel.org>
+Cc: "'linux-raid@vger.kernel.org'" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, May 12, 2003 at 10:31:24PM -0400, Duncan, Mike wrote:
-> Sorry for not giving the error. I was trying "cat /dev/zero > test" as a
-> test and receiving the error "File too large.". I have 2 machines setup
-> pretty much identically, except the one that I am receiving the error for is
-> software-raided with md and raid1. The other one (running SuSE 8.0 as well
-> with 2.4.20 kernel) does not give this error.
 
-In that test, it all depends upon what your shell is doing when it
-is opening the file 'test' in that IO redirection.
+Hello Mike and All!
 
-If it does not do  O_LARGEFILE  properly, (likely when using open(2) 
-directly,) then the file won't be opened allowing its size to exceed 2G.
+On Mon, 12 May 2003, Duncan, Mike wrote:
 
-From   man 2 open
+> md0 : active raid1 hdb2[1] hda2[0]
+>       38925376 blocks [2/2] [UU]
 
-       O_LARGEFILE
-              On 32-bit systems that support the Large Files System, allow 
-              files whose sizes cannot be represented in 31 bits  to  be
-              opened.
+As already pointed out, hda and hdb together are a bad idea. It will also
+slow things down.
 
-The world is still full of code that does not have  Large File Summit
-support in them:     http://www.sas.com/standards/large.file/
-(Heck, even I write code that does not support LFS -- its problem space
-does not include the need.)
 
-> I have tried recompiling the kernel (to several different versions, the last
-> 2.5.69) and recompiling gcc, glibc, and other packages...but no luck ...
-> still get the same error.
-> 
-> I don't think ulimit is used in newer glibc now...right? Anyways, you may be
-> right about the drivers not caring about the filesizes, but wouldn't there
-> be a 32bit limit on blocks if the LFS support was not there?
+> Basically, we are trying to transfer (via FTP and SSH) files larger than 2G.
+> I have read that SuSE has LFS in all of its distros from 7.1 and up (kernels
+> 2.4.1 and up) and that kernel-wise and glibc-wise everything is ok. So after
+> re-compiling kernels, textutils, gcc, binutils, and glibc in an effort to
+> figure out which one is not compiled with LFS support in ... and ...
+> restarting from scratch once I found out it was not them ... I am left with
+> md.o or raid1.o as being the culprit.
 
-The   ulimit (getrlimit / setrlimit) is implemented and eforced in the 
-kernel in conjunction with  O_LARGEFILE control flag.
+I'm not sure that this is a RAID problem at all. I've encountered the
+same problem when trying to scp files larger than 2GB. Never got around to
+try and fix it though. Being lazy, I just use 'split' and 'cat'. So maybe
+there's some other component/program to blame alltogether.
 
-/Matti Aarnio
+Anyway, you can always try the 2GB limit on your raid by cat'ting together
+a large file enough times (cat iamaonegbfile iamaonegbfile iamaonegbfile
+> iamathreegbfile).
+
+If that doesn't work, we don't have the same problem. If it _does_ work,
+I'll be just as eagerly waiting for some smart person to present us with
+the solution :-)
+
+Have a nice day,
+    Mikael J.
+    http://www.helsinki.fi/~mpjohans/
