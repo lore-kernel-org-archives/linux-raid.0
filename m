@@ -1,14 +1,31 @@
-From: Don Jessup <donj@asaca.com>
-Subject: MD Warnings on RAID5 linux 2.4.22
-Date: Fri, 26 Mar 2004 15:24:38 -0800 (PST)
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: MD Warnings on RAID5 linux 2.4.22
+Date: Fri, 26 Mar 2004 18:38:53 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040326232438.98003.qmail@web14526.mail.yahoo.com>
-Reply-To: donj@asaca.com
+Message-ID: <200403262338.i2QNcvW29494@dns1.watkins-home.com>
+References: <20040326232438.98003.qmail@web14526.mail.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <20040326232438.98003.qmail@web14526.mail.yahoo.com>
+To: donj@asaca.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+Are they on the same disk?
+I guess you added the "True".
+If 1 disk fails your RAID array will see 2 failures.
+You will lose data if this happens!
+
+This trick is to only use each disk once for any one array.
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Don Jessup
+Sent: Friday, March 26, 2004 6:25 PM
+To: linux-raid@vger.kernel.org
+Subject: MD Warnings on RAID5 linux 2.4.22
 
 
 
@@ -17,14 +34,16 @@ List-Id: linux-raid.ids
 
 
 
-Apr  5 15:19:57 DM200_791498 kernel: md14: WARNING: [dev e7:a4] appears to be
+Apr  5 15:19:57 DM200_791498 kernel: md14: WARNING: [dev e7:a4] appears to
+be
 on the same physical disk as [dev
 e7:a0]. True
 Apr  5 15:19:57 DM200_791498 kernel:      protection against single-disk
 failure might be compromised.
 Apr  5 15:19:57 DM200_791498 kernel: md: bind<[dev e7:a4],5>
 Apr  5 15:19:58 DM200_791498 kernel:  [events: 0000007f]
-Apr  5 15:19:58 DM200_791498 kernel: md14: WARNING: [dev e7:90] appears to be
+Apr  5 15:19:58 DM200_791498 kernel: md14: WARNING: [dev e7:90] appears to
+be
 on the same physical disk as [dev
 e7:a4]. True
 Apr  5 15:19:58 DM200_791498 kernel:      protection against single-disk
@@ -52,3 +71,9 @@ Golden, CO  80401
 303-278-1111 X232
 donj@asaca.com
 http://www.asaca.com
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
