@@ -1,49 +1,43 @@
 From: Luca Berra <bluca@comedia.it>
-Subject: Re: mdadm problem
-Date: Mon, 6 Dec 2004 12:23:57 +0100
-Message-ID: <20041206112356.GD4693@percy.comedia.it>
-References: <41B42870.7050207@skynet.be>
+Subject: Re: stacked raid devices not autodetected?
+Date: Mon, 6 Dec 2004 12:49:24 +0100
+Message-ID: <20041206114923.GF4693@percy.comedia.it>
+References: <912C966151E990A5186A8A78@pcmy.sei.cmu.edu> <51419.164.129.1.39.1102088099.squirrel@164.129.1.39> <20041206113752.GM3858@marowsky-bree.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <41B42870.7050207@skynet.be>
+In-Reply-To: <20041206113752.GM3858@marowsky-bree.de>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Dec 06, 2004 at 10:37:52AM +0100, Jean-Yves Mert=E8s wrote:
->Hello!
+On Mon, Dec 06, 2004 at 12:37:52PM +0100, Lars Marowsky-Bree wrote:
+>On 2004-12-03T16:34:59, Luca Berra <bluca@comedia.it> wrote:
 >
->I do not know if I may receive any support about mdadm through this=20
->e-mail address. If not, please, could you forward this message to the=20
->appropriate box if one exists.
+>> > On boot, the kernel automatically detects and starts md0 through md4.
+>> > However, md5 is *not* autodetected.  Using the RAID_AUTORUN ioctl also
+>> > has no effect.  The only way I've found to reliably start md5 is to
+>> > have rc.sysinit run "mdadm -assemble --scan".
+>> >
+>> > Is this a bug?  A design limitation?  Something else?
+>> this is one of the limitations of the in-kernel autodetection
 >
->I am currently trying to migrate a Linux partition (Mandrake 10) to RA=
-ID=20
->1. To this purpose I have installed mdadm V1.8.1. The first attempt wa=
-s=20
->to configure an equally-sized partition of my second disk (/dev/hdb) a=
-s=20
->part of a degraded RAID 1 device. Unfortunately, starting the array=20
->fails. The following shows pieces of information that should help =20
->understanding the case:
-there is no 1.8.1 mdadm in Mandrake 10, please use the mdadm shipped
-with the distro.
+>You can pull a fix for that one out of the SUSE kernel, where we add md
+>devices we just started to the auto detection. It worked pretty well in
+>2.4, but my memory is hazed when I try to recall whether it was all
+>ported to 2.6...
+>
+is it worth doing that in-kernel, i really believe that identifying
+and starting arrays is a job that is better done in user-space.
 
+regards,
 L.
 
---=20
+-- 
 Luca Berra -- bluca@comedia.it
         Communication Media & Services S.r.l.
  /"\
  \ /     ASCII RIBBON CAMPAIGN
   X        AGAINST HTML MAIL
  / \
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
