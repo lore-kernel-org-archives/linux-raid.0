@@ -1,34 +1,33 @@
-From: Angelo Piraino <angelo.piraino@siciliajus.com>
-Subject: [help] [I2O] Adaptec 2400A on FC3
-Date: Wed, 5 Jan 2005 15:02:15 +0100
-Message-ID: <200501051502.15924.angelo.piraino@siciliajus.com>
+From: Erik Mouw <erik@harddisk-recovery.com>
+Subject: Re: ext3 journal on software raid (was Re: PROBLEM: Kernel 2.6.10 crashing repeatedly and hard)
+Date: Wed, 5 Jan 2005 15:12:51 +0100
+Message-ID: <20050105141251.GE13684@harddisk-recovery.com>
+References: <Pine.LNX.3.96.1050105023623.27288A-100000@Maggie.Linux-Consulting.com> <41DBC7DE.509@wasp.net.au>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
+In-Reply-To: <41DBC7DE.509@wasp.net.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Brad Campbell <brad@wasp.net.au>
+Cc: Alvin Oga <aoga@ns.Linux-Consulting.com>, Andy Smith <andy@strugglers.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I'm having some troubles with an Adaptec 2400A ATA Raid controller on FC3.
-Everything worked fine during installation and Operating System recognized 
-automatically the RAID card.
-I also installed raidutils-0.0.4 from http://i2o.shadowconnect.com, but when I 
-try to use the command raidutil this is the result:
+On Wed, Jan 05, 2005 at 02:56:30PM +0400, Brad Campbell wrote:
+> I beg to differ on this one. Having spend several weeks tracking down 
+> random processes dying on a machine that turned out to be a bad sector in 
+> the swap partition, I have had great results by running swap on a RAID-1. 
+> If you develop a bad sector in a non-mirrored swap, bad things happen 
+> indeterminately and can be a royal PITA to chase down. It's just a little 
+> extra piece of mind.
 
-> [root@omissis ~]# raidutil -L
-> osdIOrequest : File /dev/dpti17 Could Not Be OpenedEngine connect 
-> failed: COMPATIBILITY number
-
-I need to manage the raid card at least for display the status of the RAID 
-array.
-Can anybody help me?
-Thanks
-
-Angelo Piraino
+If you have a  bad block in your swap partition and the device doesn't
+report an error about it, no amount of RAID is going to help you
+against it.
 
 
-Linux FC3 on PIII 450MHz - chipset Intel P2BF - 256Mb Ram - Ata Raid
-Adaptec 2400A
+Erik
+
+-- 
++-- Erik Mouw -- www.harddisk-recovery.com -- +31 70 370 12 90 --
+| Lab address: Delftechpark 26, 2628 XH, Delft, The Netherlands
