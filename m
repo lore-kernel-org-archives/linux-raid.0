@@ -1,26 +1,27 @@
-From: "tommy" <midori21a@hotmail.com>
-Subject: Cheap V1AGRA?
-Date: Tue, 17 Feb 2004 21:28:41 GMT
+From: "Jeff Gray" <jeffgray@hotmail.com>
+Subject: Re: which is better: promise fasttrak-lite 100 or linux softwareraid?
+Date: Tue, 17 Feb 2004 14:44:18 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1077053321-3352__7695.87364416129$1077046748@excite.com>
-Content-Type: text/plain;
+Message-ID: <LAW11-F21YS0qPzg9uV00057b3c@hotmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-kernel@vger.kernel.org
+To: xwred1@modestolan.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Here is an fantastic way to please your lady.
+>From: Matt Thrailkill <xwred1@modestolan.com>
+>Linux software raid could be faster in some cases.  The raid drivers for
+>most of those card's in Linux (and even Windows) are less than ideal, in
+>which case Linux software raid would be more reliable.  And its
+>certainly more flexible.
 
-You can be ready for up to thirty-six hours.
+Thank you for your reply Matt. Kevin Corry from the EVMS mailing list 
+cleared that up for me
+as well - I will definetly choose Linux software RAID and mdadm over the 
+Promise solution.
 
-The results are far greater than any other product.
+_________________________________________________________________
+Say “good-bye” to spam, viruses and pop-ups with MSN Premium -- free trial 
+offer! http://click.atdmt.com/AVE/go/onm00200359ave/direct/01/
 
-http://medsfactory.com/sv/index.php?pid=eph9106
-
-
-
-
-
-
-peggy metallicaorchid miles zhongguo whitney glenn metallica
-user1 smithspoiuyt nesbitt player 
-magnum doom2 soccer1 
