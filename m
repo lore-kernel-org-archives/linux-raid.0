@@ -1,96 +1,119 @@
 From: "Phantazm" <phantazm@phantazm.nu>
 Subject: Re: Bug in MDADM or just crappy computer?
-Date: Sun, 20 Feb 2005 10:41:26 +0100
-Message-ID: <cv9lk2$hf3$1@sea.gmane.org>
+Date: Sun, 20 Feb 2005 11:38:05 +0100
+Message-ID: <cv9ou8$onm$1@sea.gmane.org>
 References: <cv9gbc$84g$1@sea.gmane.org>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-haha now thi sis even more wierd.
+Really really wierd.
 
-Rebuild rate is at 1700K/s when my box is not loaded.
-When i change make flags to -j5 and compile something. The load ofcourse 
-rises but strange thing is that rebuild rate also rises.
+Compiling gcc and glibc and wrote a lil script in perl that does a loop=
+ and=20
+loads the cpu=B4s to aprox 95%.
 
-Seems like reverse fnction of what it should :)
+The resyncspeed is at 9000K/s
 
-Did 4 compiles at the same time and got the resync rate up to 6000K/s
+Think my computer is haunted.
 
-wierd. I better go buy a playstation instead ;)
-
-
-"Phantazm" <phantazm@phantazm.nu> skrev i meddelandet 
+"Phantazm" <phantazm@phantazm.nu> skrev i meddelandet=20
 news:cv9gbc$84g$1@sea.gmane.org...
 > My resync problem still goes on :-(
 >
-> When the resync is done on my raid5 with 8 disks just goes into a loop and 
+> When the resync is done on my raid5 with 8 disks just goes into a loo=
+p and=20
 > marks 2 disks as failed.
 >
-> Then i need to reboot and assemble them again with the force. (the 2 disks 
+> Then i need to reboot and assemble them again with the force. (the 2 =
+disks=20
 > thats failing isnt on same controller card)
 >
 > And the kernel log is filled up with this.
 >
 > Feb 20 08:43:13 [kernel] md: md0: sync done.
 > Feb 20 08:43:13 [kernel] md: syncing RAID array md0
-> Feb 20 08:43:13 [kernel] md: minimum _guaranteed_ reconstruction speed: 
+> Feb 20 08:43:13 [kernel] md: minimum _guaranteed_ reconstruction spee=
+d:=20
 > 5000 KB/sec/disc.
 > Feb 20 08:43:13 [kernel] md: md0: sync done.
 > Feb 20 08:43:13 [kernel] .<6>md: syncing RAID array md0
-> Feb 20 08:43:13 [kernel] md: minimum _guaranteed_ reconstruction speed: 
+> Feb 20 08:43:13 [kernel] md: minimum _guaranteed_ reconstruction spee=
+d:=20
 > 5000 KB/sec/disc.
 > Feb 20 08:43:13 [kernel] .<6>md: syncing RAID array md0
-> Feb 20 08:43:13 [kernel] md: minimum _guaranteed_ reconstruction speed: 
+> Feb 20 08:43:13 [kernel] md: minimum _guaranteed_ reconstruction spee=
+d:=20
 > 5000 KB/sec/disc.
 > Feb 20 08:43:13 [kernel] md: syncing RAID array md0
-> Feb 20 08:43:13 [kernel] md: minimum _guaranteed_ reconstruction speed: 
+> Feb 20 08:43:13 [kernel] md: minimum _guaranteed_ reconstruction spee=
+d:=20
 > 5000 KB/sec/disc.
-> Feb 20 08:43:13 [kernel] md: using maximum available idle IO bandwith (but 
+> Feb 20 08:43:13 [kernel] md: using maximum available idle IO bandwith=
+ (but=20
 > not more than 15000 KB/sec) for reconstruction.
-> Feb 20 08:43:13 [kernel] md: using 128k window, over a total of 199141632 
+> Feb 20 08:43:13 [kernel] md: using 128k window, over a total of 19914=
+1632=20
 > blocks.
 > Feb 20 08:43:13 [kernel] md: md0: sync done.
 > Feb 20 08:43:13 [kernel] .<6>md: syncing RAID array md0
-> Feb 20 08:43:13 [kernel] md: minimum _guaranteed_ reconstruction speed: 
+> Feb 20 08:43:13 [kernel] md: minimum _guaranteed_ reconstruction spee=
+d:=20
 > 5000 KB/sec/disc.
 > Feb 20 08:43:13 [kernel] .<6>md: syncing RAID array md0
-> Feb 20 08:43:13 [kernel] md: minimum _guaranteed_ reconstruction speed: 
+> Feb 20 08:43:13 [kernel] md: minimum _guaranteed_ reconstruction spee=
+d:=20
 > 5000 KB/sec/disc.
 > Feb 20 08:43:13 [kernel] .<6>md: syncing RAID array md0
-> Feb 20 08:43:13 [kernel] md: minimum _guaranteed_ reconstruction speed: 
+> Feb 20 08:43:13 [kernel] md: minimum _guaranteed_ reconstruction spee=
+d:=20
 > 5000 KB/sec/disc.
 > Feb 20 08:43:13 [kernel] .<6>md: syncing RAID array md0
-> Feb 20 08:43:13 [kernel] md: minimum _guaranteed_ reconstruction speed: 
+> Feb 20 08:43:13 [kernel] md: minimum _guaranteed_ reconstruction spee=
+d:=20
 > 5000 KB/sec/disc.
 > Feb 20 08:43:13 [kernel] .<6>md: syncing RAID array md0
-> Feb 20 08:43:13 [kernel] md: minimum _guaranteed_ reconstruction speed: 
+> Feb 20 08:43:13 [kernel] md: minimum _guaranteed_ reconstruction spee=
+d:=20
 > 5000 KB/sec/disc.
 > Feb 20 08:43:13 [kernel] .<6>md: syncing RAID array md0
-> Feb 20 08:43:13 [kernel] md: minimum _guaranteed_ reconstruction speed: 
+> Feb 20 08:43:13 [kernel] md: minimum _guaranteed_ reconstruction spee=
+d:=20
 > 5000 KB/sec/disc.
 > Feb 20 08:43:13 [kernel] md: syncing RAID array md0
-> Feb 20 08:43:13 [kernel] md: minimum _guaranteed_ reconstruction speed: 
+> Feb 20 08:43:13 [kernel] md: minimum _guaranteed_ reconstruction spee=
+d:=20
 > 5000 KB/sec/disc.
-> Feb 20 08:43:13 [kernel] md: using maximum available idle IO bandwith (but 
+> Feb 20 08:43:13 [kernel] md: using maximum available idle IO bandwith=
+ (but=20
 > not more than 15000 KB/sec) for reconstruction.
-> Feb 20 08:43:13 [kernel] md: using 128k window, over a total of 199141632 
+> Feb 20 08:43:13 [kernel] md: using 128k window, over a total of 19914=
+1632=20
 > blocks.
 > Feb 20 08:43:13 [kernel] md: md0: sync done.
 > Feb 20 08:43:13 [kernel] md: syncing RAID array md0
-> Feb 20 08:43:13 [kernel] md: minimum _guaranteed_ reconstruction speed: 
+> Feb 20 08:43:13 [kernel] md: minimum _guaranteed_ reconstruction spee=
+d:=20
 > 5000 KB/sec/disc.
-> Feb 20 08:43:13 [kernel] md: using maximum available idle IO bandwith (but 
+> Feb 20 08:43:13 [kernel] md: using maximum available idle IO bandwith=
+ (but=20
 > not more than 15000 KB/sec) for reconstruction.
-> Feb 20 08:43:13 [kernel] md: using 128k window, over a total of 199141632 
+> Feb 20 08:43:13 [kernel] md: using 128k window, over a total of 19914=
+1632=20
 > blocks.
 > Feb 20 08:43:13 [kernel] md: md0: sync done.
 > Feb 20 08:43:13 [kernel] md: syncing RAID array md0
-> Feb 20 08:43:13 [kernel] md: minimum _guaranteed_ reconstruction speed: 
+> Feb 20 08:43:13 [kernel] md: minimum _guaranteed_ reconstruction spee=
+d:=20
 > 5000 KB/sec/disc.
-> Feb 20 08:43:13 [kernel] md: using maximum available idle IO bandwith (but 
+> Feb 20 08:43:13 [kernel] md: using maximum available idle IO bandwith=
+ (but=20
 > not more than 15000 KB/sec) for reconstruction.
-> Feb 20 08:43:13 [kernel] md: using 128k window, over a total of 199141632 
+> Feb 20 08:43:13 [kernel] md: using 128k window, over a total of 19914=
+1632=20
 > blocks.
 >
 >
@@ -104,7 +127,7 @@ news:cv9gbc$84g$1@sea.gmane.org...
 >
 > Fix endless loop when syncing an array that doesn't need any resync.
 >
-> If the resync checkpoint for an array is at the end of the array, It 
+> If the resync checkpoint for an array is at the end of the array, It=20
 > doesn't get set to MAX_SECTOR, so resyncing will be retried.
 >
 > By updating curr_resync early, this problem is fixed.
@@ -127,7 +150,7 @@ news:cv9gbc$84g$1@sea.gmane.org...
 >
 > init_waitqueue_head(&mddev->recovery_wait);
 >
-> last_check = 0;
+> last_check =3D 0;
 >
 >
 > - if (j)
@@ -140,7 +163,7 @@ news:cv9gbc$84g$1@sea.gmane.org...
 >
 > mdname(mddev));
 >
-> + mddev->curr_resync = j;
+> + mddev->curr_resync =3D j;
 >
 > + }
 >
@@ -158,7 +181,7 @@ news:cv9gbc$84g$1@sea.gmane.org...
 >
 > - mddev->curr_resync > mddev->recovery_cp) {
 >
-> + mddev->curr_resync >= mddev->recovery_cp) {
+> + mddev->curr_resync >=3D mddev->recovery_cp) {
 >
 > if (test_bit(MD_RECOVERY_INTR, &mddev->recovery)) {
 >
@@ -169,10 +192,16 @@ news:cv9gbc$84g$1@sea.gmane.org...
 >
 >
 > -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+>=20
 
 
 
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
