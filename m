@@ -1,67 +1,107 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: DAC960 2.6.6 Question
-Date: Fri, 11 Jun 2004 23:19:12 -0400
+From: rrk <rrk@prairie.lakes.com>
+Subject: mdadm raid1 creation problem --data
+Date: Sat, 12 Jun 2004 02:04:47 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200406120319.i5C3JG329160@watkins-home.com>
-References: <1087005023.1765.22.camel@solaris.skunkware.org>
+Message-ID: <40CAAB0F.5040600@prairie.lakes.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1087005023.1765.22.camel@solaris.skunkware.org>
-To: 'Ben' <ben@easynews.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Just as a test, configure the 14 disks as JBOD and create a software RAID.
-See if it is faster.
+why does it show 3 devices --- 2 active and 1 failed in the superblock info
+this data was taken after i changed fstab & grub from /dev/md1 to /dev/hda1
+and rebooted fsck ran on auto and no problem found
 
-From what I have seen software RAID is very fast compared to hardware RAID.
-But my hardware RAID exposure is old, but so is my Linux box I guess.
 
-Guy
+here is a dump of mdstat
 
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Ben
-Sent: Friday, June 11, 2004 9:50 PM
-To: linux-raid@vger.kernel.org
-Subject: DAC960 2.6.6 Question
+Personalities : [raid1]
+read_ahead 1024 sectors
+md1 : active raid1 hdc1[1] hda1[0]
+      10241280 blocks [2/2] [UU]
 
-Hello,
+md5 : active raid1 hdc5[1] hda5[0]
+      3220928 blocks [2/2] [UU]
 
-I've been having some performance problems with hardware raid.  I've
-tired 4 different cards, two of them have been confirmed to have issues
-with either the hardware or the driver (a dell perc 3/qc was hardware
-and the other was using the aacraid driver which has performace
-issues).  I currently have a Mylex eXtremeRaid 2000 in the box I'm
-testing.  I have a total of 14 drives in a raid 5 configuration (1 of
-which is a hotspare) over all 4 channels.
+md6 : active raid1 hdc6[1] hda6[0]
+      5630656 blocks [2/2] [UU]
 
-I can not for the life of me get more then 60-70MB/s write and 70-80MB/s
-read.  Considering this is over 4 channels and in a 66MHz PCI slot I
-should be seeing a lot more.  I've been playing with the ioschedular in
-2.6.6 using all types of values in the /sys/block/rd*/queues/iosched/*
-files.  Tried going back to deadlock and playing with the AS scheduler,
-etc..  Nothing will get it up to par of where it should be.  Is this a
-problem with linux in general and hardware raid support or am I simply
-doing something wrong?  I've been fighting with this for a few weeks now
-and am completely out of ideas.  I find it hard to believe that linux
-doesn't do more then 100MB/s on hardware raid, otherwise no one would
-use the hardware raid :)
+md8 : active raid1 hdc8[1] hda8[0]
+      97795584 blocks [2/2] [UU]
+*******************************************
+fdisk data for hda & hdc
 
-Thanks,
-Ben
+Disk /dev/hda: 120.0 GB, 120000000000 bytes
+255 heads, 63 sectors/track, 14589 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
 
--- 
-Systems Administrator
-Easynews, Inc.
-Usenet Made Easy!
-http://www.easynews.com
+   Device Boot    Start       End    Blocks   Id  System
+/dev/hda1   *         1      1275  10241406   fd  Linux raid autodetect
+/dev/hda2          1276     14589 106944705    5  Extended
+/dev/hda5          1276      1676   3221001   fd  Linux raid autodetect
+/dev/hda6          1677      2377   5630751   fd  Linux raid autodetect
+/dev/hda7          2378      2414    297171   82  Linux swap
+/dev/hda8          2415     14589  97795656   fd  Linux raid autodetect
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+superblock dump
+
+root@stardoc_fs:/home/rob# mdadm -E /dev/hda1
+/dev/hda1:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : cdbefbc6:eae47c90:4bc54343:35b9dfcc
+  Creation Time : Fri Jun 11 06:29:17 2004
+     Raid Level : raid1
+    Device Size : 10241280 (9.77 GiB 10.49 GB)
+   Raid Devices : 2
+  Total Devices : 3
+Preferred Minor : 1
+
+    Update Time : Fri Jun 11 01:17:41 2004
+          State : dirty, no-errors
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 1
+  Spare Devices : 0
+       Checksum : 657d168b - correct
+         Events : 0.23
+
+
+      Number   Major   Minor   RaidDevice State
+this     0       3        1        0      active sync   /dev/hda1
+   0     0       3        1        0      active sync   /dev/hda1
+   1     1      22        1        1      active sync   /dev/hdc1
+
+
+root@stardoc_fs:/home/rob# mdadm -E /dev/hdc1
+/dev/hdc1:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : cdbefbc6:eae47c90:4bc54343:35b9dfcc
+  Creation Time : Fri Jun 11 06:29:17 2004
+     Raid Level : raid1
+    Device Size : 10241280 (9.77 GiB 10.49 GB)
+   Raid Devices : 2
+  Total Devices : 3
+Preferred Minor : 1
+
+    Update Time : Fri Jun 11 01:17:41 2004
+          State : dirty, no-errors
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 1
+  Spare Devices : 0
+       Checksum : 657d16a0 - correct
+         Events : 0.23
+
+
+      Number   Major   Minor   RaidDevice State
+this     1      22        1        1      active sync   /dev/hdc1
+   0     0       3        1        0      active sync   /dev/hda1
+   1     1      22        1        1      active sync   /dev/hdc1
 
 
