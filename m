@@ -1,16 +1,19 @@
-From: "Shaw, Marco" <marco.shaw@nbtel.nb.ca>
-Subject: Growing volumes
-Date: Tue, 24 Sep 2002 10:16:54 -0300
+From: "Cress, Andrew R" <andrew.r.cress@intel.com>
+Subject: How to set speed_limit_max for mdrecoveryd?
+Date: Tue, 24 Sep 2002 07:01:48 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <C65F89D1AC0BB54B865127151A24DA780BAD5BB6@nbexchm2.aliant.icn>
+Message-ID: <A5974D8E5F98D511BB910002A50A66470580D1FE@hdsmsx103.hd.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: "'linux-raid@vger.kernel.org'" <linux-raid@vger.kernel.org>
+To: 'Neil Brown' <neilb@cse.unsw.edu.au>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Is there some kind of doc/howto/faq on growing software raid "volumes"?  I'm planning for a system that may require additional storage down the road.
 
-For example, do both RAID0 and Linear allow for growing filesystems without having to backup & restore data?  Although this may not be the most reliable thing to do, if it just happens to work, then I get to go to sleep a lot earlier during maintenance windows.  :)
+I couldn't find this is a quick scan of the code, and thought it should be
+documented somewhere.  Maybe I just have a blind spot.  Can someone tell me
+how to set the speed_limit_max variable for mdrecoveryd?  
 
-Marco
+Andy Cress
+
