@@ -1,17 +1,132 @@
-From: Saurabh Barve <sa@atmos.colostate.edu>
-Subject: Re: Persistent superblock error
-Date: Thu, 21 Oct 2004 20:07:28 -0600
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: Persistent superblock error
+Date: Fri, 22 Oct 2004 00:47:30 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <202D4878-23CF-11D9-93D1-0050E4FA6218@atmos.colostate.edu>
-References: <200410220057.i9M0vPN03785@www.watkins-home.com>
-Mime-Version: 1.0 (Apple Message framework v619)
-Content-Type: text/plain; charset=US-ASCII; format=flowed
+Message-ID: <200410220447.i9M4lZN04601@www.watkins-home.com>
+References: <202D4878-23CF-11D9-93D1-0050E4FA6218@atmos.colostate.edu>
+Mime-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200410220057.i9M0vPN03785@www.watkins-home.com>
-To: Guy <bugzilla@watkins-home.com>
+In-Reply-To: <202D4878-23CF-11D9-93D1-0050E4FA6218@atmos.colostate.edu>
+To: 'Saurabh Barve' <sa@atmos.colostate.edu>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+Ok, to preserve the data, when you create a new array you must use the same
+parameters as before.  If you get the order of the disks, block size, or
+layout wrong then the creation of the parity will overwrite previous data.
+
+It would have been best to assemble the array with 1 disk missing.  Then the
+re-sync would not occur, and if the data was bad you could try again after
+correcting your mistake.  I think a create with 1 disk missing would also be
+safe, but that would change the super block.  I have never needed to create
+over a previous array where I wanted to retail the data.  Even with a
+create, if you did it wrong, you could just stop the array and create it
+again with the correct options, if you keep a disk missing each time.
+
+Since you did a create, I assume the re-sync started.  As I said, this would
+not damage your data if the parameters were the same as the previous array.
+If you had anything different the re-sync trashed some of your data, enough
+that I don't think you can recover.  Since the fsck could not recognize the
+filesystem I believe you are out of luck.
+
+I don't understand why "mdadm --detail" gives errors if you did a create.
+Even an assemble should look better than what you show.
+
+Now let's pretend your data is still there.  :)
+If this is the case you must have done the create with the parameters wrong.
+If this is the correct listing of your array when it was working:
+raiddev /dev/md0
+>          raid-level              5
+>          nr-raid-disks           4
+>          nr-spare-disks          0
+>          persistent-superblock   1
+>          parity-algorithm        left-symmetric
+>          chunk-size              64
+>          device                  /dev/hdc1
+>          raid-disk               0
+>          device                  /dev/hdd1
+>          raid-disk               1
+>          device                  /dev/hdg1
+>          raid-disk               2
+>          device                  /dev/hdh1
+>          raid-disk               3
+
+then try this mdadm command:
+
+mdadm /dev/md0 -C -c 64 -l raid5 -p left-symmetric -n 4 /dev/hdc1 /dev/hdd1
+/dev/hdg1 missing
+or
+mdadm /dev/md0 -C -l raid5 -n 4 /dev/hdc1 /dev/hdd1 /dev/hdg1 missing
+
+-c 64 is the default
+-p left-symmetric is the default
+
+We leave 1 disk missing so that a re-sync can't happen.  If for some reason
+you think you know which disk is least likely to have the correct data, then
+make that disk missing.  Example:  hdd1 maybe had the most bad spots when
+doing the ddrescue command.  This disk should be left "missing".
+
+mdadm /dev/md0 -C -c 64 -l raid5 -p left-symmetric -n 4 /dev/hdc1 missing
+/dev/hdg1 /dev/hdh1
+
+You must maintain the order and position of the disks.
+
+If this does not yield good data, stop the array and try again with a
+different missing disk.  Since you had 2 disks go bad, I think it is a safe
+bet that the 2 disks that did not fail have good data.  So no need to try
+them as missing.
+
+I am making some of this up as I go along!  But I have had to do something
+similar.  This part is confusing and not really worth reading unless you
+like scary stories!  I did not have a backup!  ---  I had a disk fail.  Just
+a read error I think.  The re-sync to the spare worked.  Since this happens
+when you get a read error, I did a remove and add of the failed disk, it was
+now the spare.  I then failed the previous spare so the data would be put
+back to the failed disk which is now the spare.  (This is a normal event for
+me.  I have a read error on 1 of my 14 disks 2 to 4 time per year.  The disk
+is not really bad, it just need to re-locate the bad sector.)  Then while
+the spare was re-syncing other disks on the same SCSI bus failed.  The disk
+had more than a bad sector, and I guess the bad disk affected the bus.  My
+array went down.  To verify that each disk was good or bad I used dd and it
+did effect the other disks.  I unplugged the bad disk and now the other
+disks were fine.  I replaced the disk and partitioned the disk.  So I did an
+assemble with the force option (since I had about 4 failed disks).  Then
+failed the old spare again.  The re-sync failed again.  The new disk seemed
+bad.  I need SCSI adapters to use my SCA-80 disks, so I determined the
+SCSI-68/SCA-80 adapter was bad.  I replaced it.  I did another assemble with
+the force option, the system decided the new disk was more current than
+another disk, so the other disk was being re-built based on the new disk.  I
+noticed this after the fsck did not work very well.  I stopped the array.  I
+did an assemble with the disk that was just trashed marked as missing and
+did not list the new disk, but I did list the old spare which is now good.
+Now the array worked just fine.  I did an add of the trashed disk, after the
+re-sync the array was in good shape.  I added the new disk as a spare, then
+failed the old spare.  The re-sync went fine.  I removed and added the old
+spare, it is now the spare again.  I did not need to keep the same disk as
+the spare, but by doing so I know the logical order of my 14 disks (plus
+spare).  I anyone understands the above mess, let me know!
+
+I don't know of any hardware RAID that would allow you to correct a problem
+like that.  The support group would just say your data is gone, sorry,
+restore from your backup.  Have a nice day!  And I have had an HP FC-60 that
+had a similar problem caused by a read error during a re-sync after another
+disk failed.  ddrescue could have helped, but no such access to the disks.
+Have a nice day!
+
+Anyway, I hope this helps!  Have a nice day!
+
+Guy
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Saurabh Barve
+Sent: Thursday, October 21, 2004 10:07 PM
+To: Guy
+Cc: linux-raid@vger.kernel.org
+Subject: Re: Persistent superblock error
 
 OK. Maybe I wasn't clear enough. This is from my earlier post 
 (http://marc.theaimsgroup.com/?l=linux-raid&m=109753064507208&w=2):
@@ -201,4 +316,9 @@ On Oct 21, 2004, at 6:57 PM, Guy wrote:
 > in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
