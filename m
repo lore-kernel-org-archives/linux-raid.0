@@ -1,64 +1,66 @@
-From: "kory" <nikitagod@bekloppt.com>
-Subject: Save a bundle on Windows XP!
-Date: Thu, 20 May 2004 22:12:45 GMT
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: reconf raid
+Date: Thu, 20 May 2004 21:09:50 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1085091165-14993__19652.8651206338$1085047943@excite.com>
-Content-Type: text/plain;
+Message-ID: <16556.37374.166298.3940@cse.unsw.edu.au>
+References: <1085044407.16167.5.camel@freya>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-kernel@vger.kernel.org
+In-Reply-To: message from Magnus  =?ISO-8859-1?Q?=20M=E5nsson?= on Thursday May 20
+To: Magnus =?ISO-8859-1?Q?M=E5nsson?= <ganja@0x63.nu>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Incredible DEALS on SOFTWARE you NEED!
+On Thursday May 20, ganja@0x63.nu wrote:
+> Hello, I have just joined this list and made some reading.
+> What I am looking for is a way to add new hard drives to my raid5 mad=
+e
+> with mdadm. If have got it right it's not supported, and it's taking
+> some time though people wants to do it in the kernel and not the way
+> raidtools-reconf does it, fully understandable (even though I would l=
+ike
+> to do it offline).
 
-Save 40% on Windows XP Professional!
-Save 40% on Microsoft Office 2003 Professional!
-Save $90 on Adobe Photoshop!
-Save 60% on Norton AntiVirus!!
+You can use raidreconfig (or whatever it is called) from raidtools to
+reconfigure an array built with mdadm.  The arrays built by mdadm are
+just the same as those built by mkraid - it is just a different tool
+with a different interface.
 
-Save your company thousands of dollars when it needs software!
+>=20
+> So my question is, is there any timeplan for this functionallity? Can=
+ I
+> expect to be able to resize my raid5 before winter?
 
-That promotion just got closer...
-
-Click here!!
-http://teddychoice.biz/index.php?s=7555
-
-
-Software packages you can save big on:
-
-Windows XP Professional
-Norton Antivirus 2004
-Adobe Photoshop 7.0
-Microsoft Office XP Professional
-Microsoft Office 2003 Professional
-Microsoft Money 2004
-Microsoft 2000 Professional
-Adobe Photoshop CS
-Adobe Pagemaker 7.0
-Adobe Illustrator 10
-Corel Draw Graphics Suite 11
-Adobe Acrobat 6.0 Professional
-Borland Delphi 7 Professional
-Visual Studio.Net Enterprise Architecht
-MS SQL Server 2000 Enterprise
-MS Windows Server 2003 Enterprise
-MS Windows 2000 Server
-Red Hat Linux 7.3
+There is no timeplan for anything.  It gets done when it gets done,
+depending entirely on who is motivated, how much, how clever they are,
+how busy they are, and things like that.
 
 
+NeilBrown
 
-Click here!!
-http://teddychoice.biz/index.php?s=7555
-
-
-
-
-
-
-
-
-
-image tacobellzhongguo eugene yoda malcolm goat excalibu 
-khan alisonuser1 gray aylmer
-aylmer kenneth monopoly 
-
-REMOV3: http://teddychoice.biz/soft/chair.php
+>=20
+> My idea was to build a lot of raid5 (like 5 of them) to match that my
+> hard drives have different sizes, and after that use lvm to get one b=
+ig
+> partition that I can add new drives to and just enlarge.
+>=20
+> This leads to that I also have to be able to convert raid1 to raid5, =
+if
+> I do not want to move the data on that little part to a temporary dis=
+k,
+> that would be possible today, it would be only 70G to move around.
+>=20
+> --=20
+> Magnus M=E5nsson <ganja@0x63.nu>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
