@@ -1,51 +1,29 @@
-From: Gordon Henderson <gordon@drogon.net>
+From: Luca Berra <bluca@comedia.it>
 Subject: Re: Software RAID crash > /dev/md0: Invalid argument
-Date: Thu, 16 Sep 2004 14:35:45 +0100 (BST)
+Date: Thu, 16 Sep 2004 16:57:38 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.56.0409161432180.32100@lion.drogon.net>
-References: <52074.10.0.0.151.1095334249.squirrel@10.0.0.151>
- <20040916130214.GA21249@percy.comedia.it>
+Message-ID: <20040916145738.GB21249@percy.comedia.it>
+References: <52074.10.0.0.151.1095334249.squirrel@10.0.0.151> <20040916130214.GA21249@percy.comedia.it> <Pine.LNX.4.56.0409161432180.32100@lion.drogon.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20040916130214.GA21249@percy.comedia.it>
-To: Luca Berra <bluca@comedia.it>
-Cc: linux-raid@vger.kernel.org
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.56.0409161432180.32100@lion.drogon.net>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 16 Sep 2004, Luca Berra wrote:
+On Thu, Sep 16, 2004 at 02:35:45PM +0100, Gordon Henderson wrote:
+>Er - Maybe I'm missing something (like the original message in this
+>thread), but I've successfully used raidtools to raidhotremove and
+i have not been using raidtools for a long time. but i clearly remember
+that it used the drive list in /etc/raidtab to start the array and i had
+issues starting an array with a missing first drive.
 
-> On Thu, Sep 16, 2004 at 07:30:49AM -0400, Scott Bolander wrote:
-> >I have a Mandrake 10 server with a 40gb boot drive and a three 200gb disk
-> >software raid 5 array using reiserfs.  A disk went bad; so i have replaced
-> >it.
-> >
-> >Doing the normal things to get it back up don't work:
-> >
-> >[root@server root]#raidhotadd /dev/md0 /dev/hdg
-> ....
-> ># cat /etc/raidtab
-> >raiddev       /dev/md0
-> >raid-level    5
-> >chunk-size    128k
-> >persistent-superblock 1
-> >nr-raid-disks 3
-> >    device    /dev/hdg1
-> >    raid-disk 0
-> >    device    /dev/hdi1
-> >    raid-disk 1
-> >    device    /dev/hdk1
-> >    raid-disk 2
-> >
-> so you replaced the first disk in the array?
-> raidtools are not capable of handling this.
-> switch to mdadm
-
-Er - Maybe I'm missing something (like the original message in this
-thread), but I've successfully used raidtools to raidhotremove and
-raidhotadd the first drive (and others) in a raid5 set.., Once on a real
-'hot' system, a server with SCSI drives which I didn't power cycle, and on
-IDE systems where I've done a sequence of raidhotremove, power down,
-change physical drive, boot up, cfdisk new drive, then raidhotadd...
-
-Gordon
+L.
+-- 
+Luca Berra -- bluca@comedia.it
+        Communication Media & Services S.r.l.
+ /"\
+ \ /     ASCII RIBBON CAMPAIGN
+  X        AGAINST HTML MAIL
+ / \
