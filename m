@@ -1,130 +1,51 @@
-From: ptb@lab.it.uc3m.es (Peter T. Breuer)
+From: Frank van Maarseveen <frankvm@frankvm.com>
 Subject: Re: Spares and partitioning huge disks
-Date: Sun, 9 Jan 2005 19:34:08 +0100
-Message-ID: <02a8b2-44r.ln1@news.it.uc3m.es>
-References: <200501091623.j09GNG917488@www.watkins-home.com> <41E15D73.9020203@tls.msk.ru> <qj78b2-jqk.ln1@news.it.uc3m.es> <41E17117.2090500@tls.msk.ru>
+Date: Sun, 9 Jan 2005 20:33:53 +0100
+Message-ID: <20050109193353.GB9524@janus>
+References: <crmt7e$8d6$1@sea.gmane.org> <200501072157.j07Lvg906301@www.watkins-home.com> <20050108145228.GB26475@janus> <200501081749.32816.maarten@ultratux.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <200501081749.32816.maarten@ultratux.net>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Michael Tokarev <mjt@tls.msk.ru> wrote:
-> There where some patches posted to this list some time ago that tries to
-> do just that (or a discussion.. i don't remember).  Yes, md code currently
-> doesn't do such things, and fails a drive after the first error -- it's
-> the simplest way to go ;)
+On Sat, Jan 08, 2005 at 05:49:32PM +0100, maarten wrote:
+> 
+> > For one second I thought it's a clever trick but gut feeling tells
+> > me the odds of losing the entire array won't change (simplified --
+> > because the increased complexity creates room for additional errors).
+> 
+> No.  It is somewhat more complex, true, but no different than making, for 
 
-There would be two things to do (for raid1):
+Got it.
 
-  1) make the raid1_end_request code notice a failure on READ, but not
-     panic, simply resubmit the i/o to another mirror (it has to count
-     "tries") and only give up after the last try has failed.
+> However, IF during that 
+> resync one other drive has a read error, it gets kicked too and the array 
+> dies.  The chances of that happening are not very small;
 
-  2) hmmm .. is there a 2)? Well, maybe. Perhasp check that read errors
-     per bio (as opposed to per request) don't fault the disk to the
-     upper layers ..  I don't think they can. And possible arrange for 
-     2 read bios to be prepared but only one to be sent, and discard
-     the second if the first succeeds, or try it if the first fails.
+Ouch! never considered this. So, RAID5 will actually decrease reliability
+in a significant number of cases because:
 
-Actually, looking at raid1_end_request, it looks as though it does try
-again:
+-	>1 read errors can cause a total break-down whereas it used
+	to cause only a few userland I/O errors, disruptive but not foobar.
+-	disk replacement is quite risky. This is totally unexpected to me
+	but it should have been obvious: there's no bad block list in MD
+	so if we would postpone I/O errors during reconstruction then
+	1:	it might cause silent data corruption when I/O error
+		unexpectedly disappears.
+	2:	we might silently loose redundancy in a number of places.
 
-       if ((r1_bio->cmd == READ) || (r1_bio->cmd == READA)) {
-                 ...
-                /*
-                 * we have only one bio on the read side
-                 */
-                if (uptodate)
-                        raid_end_bio_io(r1_bio);
-                else {
-                        /*
-                         * oops, read error:
-                         */
-                        char b[BDEVNAME_SIZE];
-                        printk(KERN_ERR "raid1: %s: rescheduling sector %llu\n",
-                                bdevname(conf->mirrors[mirror].rdev->bdev,b), (unsigned long long)r1_bio->sector);
-                        reschedule_retry(r1_bio);
-                }
-        } 
+I think RAID6 but especially RAID1 is safer.
 
-But does reschedule_retry try a different disk?  Anyway, there is maybe
-a mistake in this code because we decrement the number of outsanding
-reads in all cases:
+A small side note on disk behavior:
+If it becomes possible to do block remapping at any level (MD, DM/LVM,
+FS) then we might not want to write to sectors with read errors at all
+but just remap the corresponding blocks by software as long as we have
+free blocks: save disk-internal spare sectors so the disk firmware can
+pre-emptively remap degraded but ECC correctable sectors upon read.
 
-        atomic_dec(&conf->mirrors[mirror].rdev->nr_pending);
-        return 0;
-
-but if the read is retried it should not be unpended yet!  Well, that
-depends on your logic ..  I suppose that morally the request should be
-unpended, but not the read, which is still pending.  And I seem to
-remember that nr_pending is to tell the raid layers if we are in use or
-not, so I don't think we want to unpend here.
-
-Well, reschedule_retry does try the same read again:
-
- static void reschedule_retry(r1bio_t *r1_bio)
- {
-        unsigned long flags;
-        mddev_t *mddev = r1_bio->mddev;
-
-        spin_lock_irqsave(&retry_list_lock, flags);
-        list_add(&r1_bio->retry_list, &retry_list_head);
-        spin_unlock_irqrestore(&retry_list_lock, flags);
-
-        md_wakeup_thread(mddev->thread);
- }
-
-So it adds the whole read request (using the master, not the bio that
-failed) onto a retry list.  Maybe that list will be checked for
-nonemptiness, which solves the nr_pending problem.
-
-It looks like a separate kernel thread (raid1d) does the retries.
-
-And bless me but if it doesn't try and send the read elsewhere ...
-
-               case READ:
-               case READA:
-                        if (map(mddev, &rdev) == -1) {
-                                printk(KERN_ALERT "raid1: %s: unrecoverable I/O"
-                                " read error for block %llu\n",
-                                bdevname(bio->bi_bdev,b),
-                                (unsigned long long)r1_bio->sector);
-                                raid_end_bio_io(r1_bio);
-                                break;
-                        }
-
-Not sure what that is about (?? disk is not in array?), but the next
-bit is clear:
-
-                        printk(KERN_ERR "raid1: %s: redirecting sector %llu to"
-                                " another mirror\n",
-                                bdevname(rdev->bdev,b),
-                                (unsigned long long)r1_bio->sector);
-
-So it will try and redirect. It rewrites the target of the bio:
-
-                        bio->bi_bdev = rdev->bdev;
-                        ..
-                        bio->bi_sector = r1_bio->sector + rdev->data_offset;
-
-It resets the offset in case it is different for this disk.
-
-                        bio->bi_rw = r1_bio->cmd;
-
-Dunno why it needs to do that. It should be unchanged.
-
-                        generic_make_request(bio);
-
-And submit.
-
-                        break;
-
-
-So it looks to me as though reads ARE redirected. It would be trivial t
-do a write on the failed disk to.
-
-
-Peter
-
-
-
+-- 
+Frank
