@@ -1,40 +1,34 @@
-From: Louis-David Mitterrand <vindex@apartia.org>
-Subject: booting from a Promise Sata tx4
-Date: Thu, 1 Jul 2004 09:51:57 +0200
+From: Tom Oehser <tom@toms.net>
+Subject: mount-by-label finds drive not array ????
+Date: Thu, 1 Jul 2004 07:41:27 -0400 (EDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040701075157.GA20952@apartia.fr>
+Message-ID: <Pine.LNX.4.58.0407010736180.15444@jupiter.toms.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-Hello,
+Hi,
 
-I am planning to boot from a raid array of drives connected through a
-Promise Sata tx4.
+I'm accustomed to doing something like:
 
-Even though the drive (only one for testing) is bootable (lilo ran
-correctly) and the tx4 has been selected in the bios (Dell Dimension
-4100) as the first boot device, the boot process goes right through to
-the next bootable device on its list.
+LABEL=tomsvol2  /mnt/foo   ext3      defaults        0 2
 
-I went into the tx4 bios configuration and was offered the option of
-configuring that single drive as "1+0 stripe". That process wiped the
-data of course. After rebooting from a knoppix I fdisk'd and
-mkreiserfs'd and copied another system partition. The next boot attempt
-was successful but I wonder what that "1+0 stripe" mode means.
+But if I do that on my raid-5 md arrays, it tries to mount
+disk 1 of the 4 disks that make up the array!  Apparently,
+the first stripe has enough of the filesystem that it must
+be thinking that is what to mount!  Even with type "FD"!!!
 
-I only need my four disks configured as JBOD as I want to only rely on
-the kernel's raid5, and not on some (possibly buggy) card firmware for
-raid operation.
+So, with an array /dev/md0 made of hda1 hdb1 hdc1 hdd1, I
+am having to do a literal:
 
-Has someone already configured a tx4 as JBOD?
+/dev/md0        /mnt/bar      ext3      defaults        0 4
 
-Thanks in advance,
+Since if I do it by "LABEL=", it tries to mount hda1, not md0!
 
--- 
-A meeting is an event at which the minutes are kept and the hours are
-lost.
+Is this just a known/accepted brain-deadness of the mount code?
+
+-Tom
+
