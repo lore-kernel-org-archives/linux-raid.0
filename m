@@ -1,51 +1,76 @@
-From: David Nedved <dnedved@nuvox.net>
-Subject: Re: RAID-1 md comes up degraded every time
-Date: Sun, 9 Jun 2002 12:14:06 -0400
+From: Brock Nanson <brock@nanson.org>
+Subject: RAID5 almost failed - reorder drives?
+Date: Sun, 9 Jun 2002 11:20:21 -0700 (PDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20020609121406.B30774@nuvox.net>
-References: <Pine.LNX.4.33.0206081035540.23582-100000@pandora.is.bizsystems.com>
+Message-ID: <Pine.LNX.4.44.0206091054580.20768-100000@web-nanson>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.33.0206081035540.23582-100000@pandora.is.bizsystems.com>; from michael@bizsystems.com on Sat, Jun 08, 2002 at 10:37:42AM -0700
-To: Michael Robinton <michael@bizsystems.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Same thing here!  Changed it and it works fine now.
+Hi,
+
+I couldn't find this one in the FAQ, hopefully someone can offer some 
+suggestions before I make a big mistake!
+
+I have a RAID5 going based on a Mandrake 7.1 distro.  Three IDE drives on 
+a motherboard with 4 IDE channels (so will support 8 IDE devices).  All 
+three drives have been partitioned in the same way as I originally planned 
+to run RAID1 on the other partitions.  So:
+
+hda - contains operating system and is raid-disk 0 in raidtab
+hdc - the position of the cdrom drive
+hde - contains partitions for the operating system and is raid-disk 1 in 
+raidtab
+hdg - same as hde, but is raid-disk 2 in raidtab
+
+My problem is that hda is failing... the dreaded tic-tac noise and poor 
+response from the system.  A simple tape backup pushes the load average to 
+almost 2.  I'm 99% sure hda is the one making the noise.  So it has to be 
+replaced as smoothly as possible.
+
+My plan is to copy the os partitions to hdg, using the hard disk upgrade 
+mini how-to.  In theory, this disk could then be moved to the position of 
+hda and boot.  However, I'm concerned about how the RAID will handle this.
+
+1) If, before physically moving the drive around, I edited raidtab on hdg 
+to make raid-disk 2 refer to device /dev/hda4 instead of /dev/hdg4 and 
+show raid disk 0 as /dev/hdg4 marked 'failed disk', would RAID be happy to 
+run and show 2 of 3 disks up?  In other words, if a disk is moved to 
+another IDE channel, can one simply update the /dev/hdx info in the device 
+and raid-disk pair?  In my case, as long as raid-disk 2 is still the same 
+physical hard drive, just in another position?
+
+2) Is there another way to do this, or a URL to review?
+
+So what I want to do is take the portion of raidtab that looks like this:
+
+nr-raid-disks 3
+   device /dev/hda4
+   raid-disk 0
+   device /dev/hde4
+   raid-disk 1
+   device /dev/hdg4
+   raid-disk 2
+
+and, just before replacing hda with hdg and installing a new drive at hdg, 
+edit this part of the file to look like this (minus the comments!)
+
+nr-raid-disks 3
+   device /dev/hdg4 (new hard drive)
+   failed-disk 0
+   device /dev/hde4
+   raid-disk 1
+   device /dev/hda4 (was in hdg position before)
+   raid-disk 2
+
+I don't know if my subscription to the list is active yet, so (PLEASE!) cc 
+any responses to brock@nanson.org
 
 Thanks!
 
-David
-
-On Sat, Jun 08, 2002 at 10:37:42AM -0700, Michael Robinton wrote:
-> 
-> the one time this happened to me, I'd forgotten to marke the partition as
-> "FD"
-> 
-> Michael
-> 
-> I created a RAID-1 volume on Linux 2.4.18 by creating the volume in
-> degraded
-> mode, then hot-adding the second disk.  It syncs up fine, but every time I
-> reboot, it comes back in degraded mode.  Can someone help me figure out
-> what
-> I'm doing wrong?
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
 -- 
-   __   __   __ _ __ __      __  __ ____ __   __ _ ____ __
-  /  | /, | / / // //  |    /  |/ // __//  | / / // __//  |
- / / //   // / // // / /   / , ' // _/ / / // / // _/ / / /
-/___//_/_/ |__//_//___/   /_/|__//___//___/ |__//___//___/
+Brock Nanson
+Kamloops BC Canada
 
-Unix Systems Engineer              VOICE: +1 864 331 8181
-NuVox Communications, Inc.         FAX:   +1 864 331 7234
-301 North Main Street, Ste 5000    EMAIL: dnedved@nuvox.net
-Greenville, SC  29601   USA        PAGER: pagenedved@nuvox.net
