@@ -1,18 +1,37 @@
-From: Ming Zhang <mingz@ele.uri.edu>
+From: "Guy" <bugzilla@watkins-home.com>
 Subject: RE: md on partition
-Date: Sat, 23 Oct 2004 18:38:41 -0400
+Date: Sat, 23 Oct 2004 18:52:29 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1098571121.3119.13.camel@localhost.localdomain>
-References: <200410231612.i9NGCqN13160@www.watkins-home.com>
-Reply-To: mingz@ele.uri.edu
+Message-ID: <200410232252.i9NMqYN14571@www.watkins-home.com>
+References: <1098571121.3119.13.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200410231612.i9NGCqN13160@www.watkins-home.com>
-To: Guy <bugzilla@watkins-home.com>
+In-Reply-To: <1098571121.3119.13.camel@localhost.localdomain>
+To: mingz@ele.uri.edu
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+You said:
+"will raid by default choose different chunk size if device size is
+different, for example, sda is 400GB while sda1 is 50GB?"
+
+No, but the random seek test will give different results.  50GB will perform
+better, since less head travel.
+
+Why the difference?  I would want everything the same for both tests.
+
+Guy
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Ming Zhang
+Sent: Saturday, October 23, 2004 6:39 PM
+To: Guy
+Cc: linux-raid@vger.kernel.org
+Subject: RE: md on partition
 
 On Sat, 2004-10-23 at 12:12, Guy wrote:
 > I guess Neil was wrong, or I misunderstood something.
@@ -121,4 +140,9 @@ different, for example, sda is 400GB while sda1 is 50GB?
 | http://crab.ele.uri.edu/gallery/albums.php
  --------------------------------------------------
 
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
