@@ -1,35 +1,63 @@
-From: ptb@lab.it.uc3m.es (Peter T. Breuer)
-Subject: Re: [PATCH 0/3] md bitmap-based asynchronous writes
-Date: Tue, 22 Mar 2005 09:35:44 +0100
-Message-ID: <0025h2-rvq.ln1@news.it.uc3m.es>
-References: <422F7621.8090602@steeleye.com> <16949.5768.392061.95882@cse.unsw.edu.au> <4239EDCA.4030502@steeleye.com> <16958.19415.701152.371199@cse.unsw.edu.au> <423EF6F7.2040201@steeleye.com> <16959.17969.933940.657178@cse.unsw.edu.au>
+From: Molle Bestefich <molle.bestefich@gmail.com>
+Subject: Re: RAID1 and data safety?
+Date: Tue, 22 Mar 2005 09:48:57 +0100
+Message-ID: <62b0912f05032200484c21c265@mail.gmail.com>
+References: <62b0912f05031601131b8daf4a@mail.gmail.com>
+	 <16959.18991.327224.545186@cse.unsw.edu.au>
+Reply-To: Molle Bestefich <molle.bestefich@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+In-Reply-To: <16959.18991.327224.545186@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown <neilb@cse.unsw.edu.au> wrote:
-> However I want to do raid5 first.  I think it would be much easier
-> because of the stripe cache.  Any 'stripe' with a bad read would be
+Neil Brown wrote:
+>> Is there any way to tell MD to do verify-on-write and
+>> read-from-all-disks on a RAID1 array?
+>
+> No.
+> I would have thought that modern disk drives did some sort of
+> verify-on-write, else how would they detect write errors, and they are
+> certainly in the best place to do verify-on-write.
 
-There's the FR5 patch (fr5.sf.net) which adds a bitmap to raid5. It
-doesn't do "robust read" for raid5, however.
+Really?  My guess was that they wouldn't, because it would lead to
+less performance.
+And that's why read errors crop up at read time.
 
-> flagged, kept in the cache and just get processed a different way to
-> other stripes.  For raid1, you need some extra data structure to keep
-> track of which blocks have seen bad reads, so I would rather leave
+> Doing it at the md level would be problematic as you would have to
+> ensure that you really were reading from the media and not from some
+> cache somewhere in the data path.  I doubt it would be a mechanism
+> that would actually increase confidence in the safety of the data.
 
-One can simply count the untried disks using the "remaining" field,
-which is otherwise unused on the read side.  The count will be accurate
-unless one changes the number of disks _during_ the read retry, and then
-the worst that can happen is that one misses out on trying to retry the
-read from the new disk, which surely will not yet be up to date anyway.
+Hmm.  Could hack it by reading / writing blocks larger than the cache.  Ugly.
 
-Or one can always try to read "one more for luck".
+> Imagine a filesystem that could access multiple devices, and where it
+> kept index information it didn't just keep one block address, but
+> rather kept two block address, each on different devices, and a strong
+> checksum of the data block.  This would allow much the same robustness
+> as read-from-all-drives and much lower overhead.
 
-> that until I have familiarity with other issues through raid5.
+As in, "if the checksum fails, try loading the data blocks [again]
+from the other device"?
+Not sure why a checksum of X data blocks should be cheaper
+performance-wise than a comparison between X data blocks, but I can
+see the point in that you only have to load the data once and check
+the checksum.  Not quite the same security, but almost.
 
-I would love to know of _any_ starting point you see to doing it in
-raid5.  It was not clear to me how to.
+> In summary:
+>  - you cannot do it now.
+>  - I don't think md is at the right level to solve these sort of problems.
+>    I think a filesystem could do it much better. (I'm working on a
+>    filesystem .... slowly...)
+>  - read-from-all-disks might get implemented one day. verify-on-write
+>    is much less likely.
+> 
+>> Apologies if the answer is in the docs.
+> 
+> It isn't.  But it is in the list archives now....
 
-Peter
+Thanks! :-)
 
+(Guess I'll drop the idea for the time being...)
