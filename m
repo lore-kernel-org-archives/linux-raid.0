@@ -1,26 +1,31 @@
-From: Paul Clements <Paul.Clements@SteelEye.com>
-Subject: Re: Swap on RAID1?
-Date: Mon, 13 Oct 2003 19:25:55 -0400
+From: Victor <linux-raid@vitoni.de>
+Subject: Re: missing superblock on RAID5
+Date: Tue, 14 Oct 2003 01:44:41 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3F8B3483.728E75E3@SteelEye.com>
-References: <200310140012.33121.dusty@strike.wu-wien.ac.at>
+Message-ID: <3F8B38E9.6983E25A@vitoni.de>
+References: <3F8ACBD2.CA1B8CBD@vitoni.de> <3F8AD02C.8080606@fantinibakery.com> <3F8AE51C.3F0A9451@vitoni.de> <3F8B039F.2070403@fantinibakery.com> <3F8B1491.57BCF640@vitoni.de> <3F8B34FD.9000802@fantinibakery.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Hermann Himmelbauer <dusty@strike.wu-wien.ac.at>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: rob <rob@fantinibakery.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hermann Himmelbauer wrote:
+mdadm - v1.2.0 - 13 Mar 2003
+on Gentoo (something like v1.4 with lots of updates)
 
-> But what happens if a disk fails and the swap is on this disk? I assume Linux
-> would crash? Wouldn't a swap on a RAID prevent such a crash?
 
-Yes and yes. One other possible alternative would be to fork out the
-money for more RAM rather than a second disk for swap. And just don't
-use swap, if you're worried about swap crashing the system...and
-performance will be much better, too.
+rob wrote:
 
---
-Paul
+> which version of mdadm are you using?
+>
+> which distribution & release?
+>
+> Victor wrote:
+>
+> >Actually I have 2 arrays and both have a device more than they should.
+> >
+> >
+
+
