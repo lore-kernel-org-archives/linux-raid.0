@@ -1,102 +1,64 @@
-From: Brandon Evans <maillists@hosttuls.com>
-Subject: Kernal Panic when booting redhat.  Raid devices mount fine under
- Knoppix
-Date: Wed, 10 Dec 2003 15:03:31 -0800
+From: "James R Bamford" <jim@jimtreats.com>
+Subject: Raid array not clean (its barely used and a few weeks old.. how can i find out what went wrong?)
+Date: Thu, 11 Dec 2003 01:03:08 -0000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3FD7A643.7060602@hosttuls.com>
+Message-ID: <PPEOJEIEFLAONFNHJPOOKEHKGPAA.jim@jimtreats.com>
+References: <3FD7A643.7060602@hosttuls.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <3FD7A643.7060602@hosttuls.com>
 To: Linux-raid maillist <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Ok,
 
-Using rsync, I mirrored one server to some raid 1 partitions on  another 
-server running knoppix.  The Raid devices mount fine
-under knoppix 3.3, but when I try to boot Redhat 7.3, the servers can 
-not read the superblock on the root device (/dev/md1), so the system panics.
-   This has happened on 2 servers so far.
+I'm still trying to get this system actually setup and working and i noticed
+this on my dmesg today..
 
-The error I am getting is this:
-
-EXT3-fs: unable to read superblock
-mount:error 22 mounting ext3 flags
-
-There is also something like this:  pivotroot: pivot_root 
-(/sysroot,/sysroot/initrd) failed 2.  But I left my notes at home, so 
-I'm not sure
-  that is exactly what the error says.  The same migration process 
-worked fine in the test environment, but on the live servers,
-with more data (20 Gigs), the server produce the above errors.
-
-Why is Knoppix able to mount the root partition, but Redhat not?
-
-To rsync, I used these steps: 
-http://hosttuls.com/whitepapers/SyncServerMigration.txt
-
-Raidtab:
-
-raiddev             /dev/md0
-raid-level                  1
-nr-raid-disks               2
-chunk-size                  64k
-persistent-superblock       1
-nr-spare-disks              0
-     device          /dev/hda1
-     raid-disk     0
-     device          /dev/hdd1
-     raid-disk     1
-raiddev             /dev/md1
-raid-level                  1
-nr-raid-disks               2
-chunk-size                  64k
-persistent-superblock       1
-nr-spare-disks              0
-     device          /dev/hda3
-     raid-disk     0
-     device          /dev/hdd2
-     raid-disk     1
+md: autorun ...
+md: considering hdg1 ...
+md:  adding hdg1 ...
+md:  adding hde1 ...
+md: created md0
+md: bind<hde1,1>
+md: bind<hdg1,2>
+md: running: <hdg1><hde1>
+md: hdg1's event counter: 0000002d
+md: hde1's event counter: 0000002d
+md: md0: raid array is not clean -- starting background reconstruction
+md: raid1 personality registered as nr 3
+md0: max total readahead window set to 124k
+md0: 1 data-disks, max readahead per data-disk: 124k
+raid1: device hdg1 operational as mirror 1
+raid1: device hde1 operational as mirror 0
+raid1: raid set md0 not clean; reconstructing mirrors
+raid1: raid set md0 active with 2 out of 2 mirrors
+md: updating md0 RAID superblock on device
+md: hdg1 [events: 0000002e]<6>(write) hdg1's sb offset: 156288256
+md: syncing RAID array md0
+md: minimum _guaranteed_ reconstruction speed: 100 KB/sec/disc.
+md: using maximum available idle IO bandwith (but not more than 10000
+KB/sec) for reconstruction.
+md: using 124k window, over a total of 156288256 blocks.
+md: hde1 [events: 0000002e]<6>(write) hde1's sb offset: 156288256
+md: ... autorun DONE.
 
 
+What does it mean, is it anythign to worry about?!? i've been trying to get
+wake on lan to work and have been blindly powering off the machine, i am
+pretty certain that this was done before it has a chance to boot into linux
+(no monitor connected tho as its a backup server) .. anyways is this
+indicative of any hdd errors? how can you get more info on what caused the
+problems or can't you!?
 
-Fstab:
+With this reconstruction will i have all my files, some of them, none of
+them!? does it choose one disk and basically the sync the other one up to
+it!?
 
-/dev/md1        /       ext3    defaults,usrquota,grpquota      1       1
-/dev/md0             /boot                   ext3    defaults        1 2
-none                    /dev/pts                devpts  gid=5,mode=620  0 0
-none                    /proc                   proc    defaults        0 0
-none                    /dev/shm                tmpfs   defaults        0 0
-/dev/hda2               swap                    swap    defaults        0 0
-/dev/cdrom              /mnt/cdrom              iso9660 
-noauto,owner,kudzu,ro 0 0
-/dev/fd0                /mnt/floppy             auto 
-noauto,owner,kudzu 0 0
+Cheers
 
+Jim
 
-
-Lilo Entry:
-
-image=/boot/vmlinuz-2.4.20-20.7smp
-         label=rh-2.4.20-20r
-         initrd=/boot/initrd-2.4.20-20.7smp.raid.img
-         read-only
-         root=/dev/md1
-
-
-
-df:
-Filesystem            Size  Used Avail Use% Mounted on
-/dev/md1              112G   26G   80G  24% /
-none                  112G   26G   80G  24% /proc
-/dev/md0               99M   28M   65M  30% /boot
-none                  112G   26G   80G  24% /dev/pts
-none                  112G   26G   80G  24% /dev/shm
-/proc                 112G   26G   80G  24% /proc
-
-
-
-
-
--- 
-     Brandon E.
