@@ -1,42 +1,33 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: PATCH - md in 2.4.19-pre - Correctly abort recovery if raid personality indicates an error
-Date: Wed, 15 May 2002 15:42:53 +1000 (EST)
+From: "Gernot A. Weber" <gernot@tux-web.de>
+Subject: Re: Removing a Raid Partition? How-to?
+Date: Wed, 15 May 2002 10:54:16 +0200 (CEST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <15585.62814.687.214906@notabene.cse.unsw.edu.au>
+Message-ID: <Pine.LNX.4.33.0205151051560.23601-100000@kopernikus.tux-web.de>
+References: <5.1.0.14.0.20020514171826.01f64070@205.233.215.4>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Marcelo Tosatti <marcelo@conectiva.com.br>
+In-Reply-To: <5.1.0.14.0.20020514171826.01f64070@205.233.215.4>
+To: Jeff Hill <jhill@hronline.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi,
 
-When a raid personality reports an error we should make sure
-that recovery is aborted.
-Normally it would be anyway, as an IO error will cause
-md_error to be called which aborts recovery.
+try a "dd if=/dev/zero of=/dev/sda" if your disk is the first SCSI disk.
+Replace sda with the right devive name. Don't enter a partition number -
+just the device name. dd should overwrite the MBR and the partition table.
 
-However, in raid5, if two drives fail before recovery starts, then no
-error will actually happen during recovery, but the raid5 module
-will report each resync request as failing.  We really shouldn't
-ignore this...
+Good luck
 
+   Gernot Weber
 
- ----------- Diffstat output ------------
- ./drivers/md/md.c |    4 ++++
- 1 files changed, 4 insertions(+)
+-- 
+Gernot A. Weber
+http://www.tux-web.de
 
---- ./drivers/md/md.c	2002/05/15 05:36:13	1.1
-+++ ./drivers/md/md.c	2002/05/15 05:38:05	1.2
-@@ -3332,6 +3332,10 @@
- 	wake_up(&mddev->recovery_wait);
- 	if (!ok) {
- 		// stop recovery, signal do_sync ....
-+		if (mddev->pers->stop_resync)
-+			mddev->pers->stop_resync(mddev);
-+		if (mddev->recovery_running)
-+			md_interrupt_thread(md_recovery_thread);
- 	}
- }
- 
+Only wimps use tape backup: _real_ men just upload their important stuff
+on ftp, and let the rest of the world mirror it.
+
+                              Linus Torvalds, after a hard drive crash
+
