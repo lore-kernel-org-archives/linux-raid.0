@@ -1,46 +1,77 @@
-From: Andy Smith <andy@lug.org.uk>
-Subject: Re: PROBLEM: Kernel 2.6.10 crashing repeatedly and hard
-Date: Fri, 7 Jan 2005 09:39:36 +0000
-Message-ID: <20050107093936.GM99565@caffreys.strugglers.net>
-References: <m3is6k4oeu.fsf@reason.gnu-hamburg> <m38y7fn4ay.fsf@reason.gnu-hamburg> <v3rda2-hjn.ln1@news.it.uc3m.es> <41DE2A54.1010902@tequila.co.jp>
+From: Alvin Oga <aoga@ns.Linux-Consulting.com>
+Subject: Re: confused Re: swap on RAID (was Re: swp - Re: ext3 journal on software raid)
+Date: Fri, 7 Jan 2005 05:04:23 -0800 (PST)
+Message-ID: <Pine.LNX.3.96.1050107045827.15802A-100000@Maggie.Linux-Consulting.com>
+References: <20050107022842.GL99565@caffreys.strugglers.net>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="w/v2c/tRBe2qsJs0"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <41DE2A54.1010902@tequila.co.jp>
+In-Reply-To: <20050107022842.GL99565@caffreys.strugglers.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Andy Smith <andy@lug.org.uk>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
---w/v2c/tRBe2qsJs0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
 
-On Fri, Jan 07, 2005 at 03:21:08PM +0900, Clemens Schwaighofer wrote:
-> On 12/31/2004 02:39 AM, Peter T. Breuer wrote:
-> > Yes, well, don't put the journal on the raid partition. Put it
-> > elsewhere (anyway, journalling and raid do not mix, as write ordering
-> > is not - deliberately - preserved in raid, as far as I can tell).
->=20
-> Thats a very new claim. I never ever heard of that.
+On Fri, 7 Jan 2005, Andy Smith wrote:
 
-Yes, and neither have most people I talked to about this, which is
-why I think this deserves to be explored more and any gotchas
-documented somewhere.
+one last time ...
+	stop saying/mis-quoting that i said what you're misquoting
 
---w/v2c/tRBe2qsJs0
-Content-Type: application/pgp-signature
-Content-Disposition: inline
+> > since you're implying/saying i said those two statements 
+> > below ( a and b ):
+> 
+> No I was not implying that you said either of them. 
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.0 (FreeBSD)
+... note the above ..
 
-iD8DBQFB3ljYIJm2TL8VSQsRAlZ2AJ0VNwelWxN8eIwunE6RUTRcACxKxgCfVUKA
-xlIBgCi1kkAJwA7VhT6PT9g=
-=hPIX
------END PGP SIGNATURE-----
+> Why is this hard  to understand?
 
---w/v2c/tRBe2qsJs0--
+good question ... to ask yourself ..
+
+> *However* in an earlier mail in this thread you said that your
+
+i did NOT say what you're quoting .... 
+
+> > i never said either of those two statements ... that is yur words
+> > and you're understanding of some mixture of lots of comments
+> 
+> They were indeed my words and I never claimed otherwise.
+
+see below
+
+> > please refrain from making (re)quotes .. i didn't say so that
+> > i don't have to reply
+> 
+> I didn't attribute any words to you.  I quite clearly said
+> they were my interpretation.  A direct quote:
+
+stop this nonsense ...
+
+i never made the quotes you're re-citing incorrectly again 
+and still, even if i told you to STOP making comments on 
+my behalf as if i said that  ... which i never did
+
+>         There is a difference between these two statements:
+> 
+>                 a) I need some amount of swap configured but don't
+>                 expect a significant swap usage under normal load.
+> 
+>                 b) I expect my server to always be using a
+>                 significant amount of swap.
+> 
+>         I interpret your views 
+
+how many times do i have to tell you ... it is NOT my view
+.... it is your (mis)interpretation, nothing close to
+what i said ...
+
+end of story .. for the last time 
+
+do i need to send the lawyers to your doorstep to make you
+stop making incorrect statements and quotes that i never said
+
+c ya
+alvin
+
