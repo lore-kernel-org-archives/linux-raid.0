@@ -1,48 +1,29 @@
-From: Blurg <blurg@gluipzak.nl>
-Subject: Raid 1 visible as /dev/sda1 ?
-Date: Sun, 16 Jun 2002 23:15:47 +0200 (CEST)
+From: Maxwell Bottiger <sleepylight@jive-turkey.net>
+Subject: recovery of software raid0 - continued
+Date: 16 Jun 2002 20:47:33 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.40.0206162315160.15814-100000@megalosaurus.recast.nl>
+Message-ID: <1024274853.2688.13.camel@jive-turkey.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello, today I was busy investigating hardware RAID for my Dell poweredge
-2500. As far as I can see I want the RAID 0+1 configuration:
-( 4x 70GB)
-Logical device set RAID 0 (2 striped disks) : SCSI ID 2 and SCSI ID 3.
+The attempt to recover my missing raid arrays continues...
 
-this RAID 0 set will then be mirrored in a RAID 1 mirror set of 2 disks:
+I have 3 arrays.  md0 is composed of sdd1 and sde1, md1 is composed of
+sdd2 and sde2 and md2 is composed of sdd3 and sde3.  md0 is mounted
+under /usr, md1 _should_ be mounted under /home and md2 _should_ mounted
+/mnt/shared.
 
-SCSI ID 1 and SCSI ID 2
+The problem I have right now is that md1 says that it is composed of
+sdd2 and sde2, however it is not the right size.  The same is true of
+md2.  It looks like the data and size of the two arrays have been
+reversed, even though they say the are composed of the right physical
+partitions.  Everything on /home looks fine, but /mnt/shared is empty
+save the lost+found directory.
 
-   -------------------------	    ----------------------
-   |	______   _______   |  RAID 1|  _______   _______ |
-   |	| ID2 |  | ID3 |   |  ----> |  | ID0 |   | ID1 | |
-   |	-------  -------   |	    |  -------   ------- |
-   -------------------------	    ----------------------
-              ^^^
-	     RAID 0
-
-I configured the RAID 0 set as bootable in the PERC 3 Dell tool
-
-Then, I booted into the Debian setup, and checked with fdisk,
-
-I have /dev/sdb1 : 140GB
-
-but I also have a /dev/sda1 of 70GB, this is something I should not see, I
-presume? Is there something wrong then? I thought the only thing Linux
-should see is the RAID 0 striped set of 140GB?
-
-Hoping I made my problem clear enough,
-
-Jurgen
-
-      	        http://geographiczoom.com
-         -* Pictures from all over the world! *-
-
-
-
-
+My questions are, first, what is wrong with the RAID mapping, and
+second, is it possible that my data in /mnt/shared (aka md2) is still in
+place?
