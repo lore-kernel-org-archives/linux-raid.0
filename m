@@ -1,28 +1,36 @@
-From: John Lange <john.lange@bighostbox.com>
-Subject: Raid 1 vs 5 ?
-Date: Thu, 06 May 2004 15:51:44 -0500
+From: Don Jessup <donj@asaca.com>
+Subject: raidstop
+Date: Thu, 6 May 2004 16:48:10 -0700 (PDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1083876704.26703.188.camel@ws101.darkcore.net>
+Message-ID: <20040506234810.50569.qmail@web14524.mail.yahoo.com>
+Reply-To: donj@asaca.com
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: LinuxRaid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I have 4 identical Serial ATA drives.
 
-I'm thinking that I'll use drives hda and hdb as a RAID 1 set and drive
-hdc as a spare with hdd used for swap and archive storage.
 
-Another option would be to use hda, hdb, and hdc as RAID 5 with hdd as
-swap and archive.
 
-Which one is the better choice and what are the trade offs? Or is
-another configuration more sensible? I'm under the impression that you
-shouldn't (can't?) boot from RAID 5.
+  Has anyone seen when a time when there was no filesystems mounted on a
+  raid device and raidstop command failed.   That's information I have now.
+  If so, any idea what the cause was and the fix.   
 
-Thanks.
--- 
-John Lange
+  Is there a differnce between dowing a raidstop and using mdadm to stop
+  a raid?
 
+
+
+
+
+ 
+
+=====
+Don Jessup
+Asaca/Shibasoku Corp. of America
+400 Corporate Circle, Unit G
+Golden, CO  80401
+303-278-1111 X232
+donj@asaca.com
+http://www.asaca.com
