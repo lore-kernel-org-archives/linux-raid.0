@@ -1,30 +1,30 @@
-From: Alex <devel@qnet.ro>
-Subject: Re: AW: raid1 reconfig failed to work! help!
-Date: Wed, 2 Oct 2002 17:29:33 +0300
-Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200210021729.33599.devel@qnet.ro>
-References: <Pine.LNX.4.30.0210021005100.14300-100000@jaded.cynicism.com>
+From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
+Subject: Re: RAID backup
+Date: Thu, 3 Oct 2002 13:26:47 +0200
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <200210031326.47386.roy@karlsbakk.net>
+References: <200210031120.g93BKLqK000216@darkstar.example.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.30.0210021005100.14300-100000@jaded.cynicism.com>
-To: linux-raid@vger.kernel.org
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <200210031120.g93BKLqK000216@darkstar.example.net>
+To: jbradford@dial.pipex.com
+Cc: jakob@unthought.net, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Thanks, i will try.
+On Thursday 03 October 2002 13:20, jbradford@dial.pipex.com wrote:
+> Might it not be a good idea to DD the raw contents of each disk to a tape
+> drive, just incase you fubar the array?  It would be time consuming, but at
+> least you could restore your data in the event that it gets corrupted.
 
-Regards Alex
+er
 
-On Wednesday 02 October 2002 17:06, Derek Vadala wrote:
-> On Wed, 2 Oct 2002, Alex wrote:
-> > Another question: did you know a program for monitoring raid array
-> > and when a hdd is down(mark failed) to start some beeps?
->
-> Try mdadm (http://www.cse.unsw.edu.au/~neilb/source/mdadm/). It has a
-> monitor mode which can be customized to execute any program when an
-> array (or array member disk) fails. It can also send email alerts.
->
-> ---
-> Derek Vadala, derek@cynicism.com, http://www.cynicism.com/~derek
+16 120GB disks?
+-- 
+Roy Sigurd Karlsbakk, Datavaktmester
+ProntoTV AS - http://www.pronto.tv/
+Tel: +47 9801 3356
 
+Computers are like air conditioners.
+They stop working when you open Windows.
