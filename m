@@ -1,37 +1,41 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: Re: Raid1 auto-detection...
-Date: Thu, 26 Aug 2004 09:07:32 +0200
+From: Brad Campbell <brad@wasp.net.au>
+Subject: Re: Raid-0 speed
+Date: Thu, 26 Aug 2004 13:54:35 +0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040826070732.GD23469@percy.comedia.it>
-References: <1093473322.2398.12.camel@south.rosestar.lan> <1093493854.2398.22.camel@south.rosestar.lan>
+Message-ID: <412DB35B.7090802@wasp.net.au>
+References: <412C1E23.1070104@wasp.net.au> <87k6vneok0.fsf@enki.rimspace.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1093493854.2398.22.camel@south.rosestar.lan>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <87k6vneok0.fsf@enki.rimspace.net>
+To: Daniel Pittman <daniel@rimspace.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Aug 25, 2004 at 11:17:34PM -0500, Bob Hillegas wrote:
->I know it's bad form to reply to your own message, but I just resolved
->my problem.
->
->The Fedora Core 2 kernel isn't the source of the problem. It's the
->rc.sysinit script. It expects to use raidstart and so checks for the
->presence of the /etc/raidtab file. Since I don't have one, no attempt
->was made to start the raid.
->
->I'll hammer together changes to allow mdadm --assemble --scan to start
->the raid and then post when it works.
->
-check the archives, someone already did.
+Daniel Pittman wrote:
 
-L.
+>>With the raid-0 running, doing a dd if=/dev/md1 of=/dev/null I get about
+>>	55MB/s read speed.
+>>
+>>I can't quite figure out why the md is so slow. Given its using
+>>streaming reads with no seeking it should be over 100MB/s.
+> 
+> 
+> Your chunk size is way to low to give good streaming reads.  The kernel
+> needs to switch between devices every 128 kilobytes, while is rather
+> low.
+> 
+> Try slowly pushing the chunk size to 16384 and see when your performance
+> gets back up to your expected level.
 
--- 
-Luca Berra -- bluca@comedia.it
-        Communication Media & Services S.r.l.
- /"\
- \ /     ASCII RIBBON CAMPAIGN
-  X        AGAINST HTML MAIL
- / \
+Nope.. Any chunk size > 4096 gives me
+too big chunk_size: 8388608 > 4194303.
+
+And the performance difference between chunk=16 and chunk=4096 is less than 5MB/s
+
+--chunk=16 gives me   48.43 MB/s
+--chunk=4096 gives me 51.52 MB/s
+
+Regards,
+Brad
