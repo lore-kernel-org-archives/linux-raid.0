@@ -1,93 +1,64 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: Scrub?
-Date: Sat, 7 Aug 2004 17:03:14 -0400
+From: "MediaHost \(TM\)" <webmaster@startcom.org>
+Subject: Difference between faulty and non-fresh
+Date: Sun, 8 Aug 2004 01:41:41 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189F011531AB@otce2k03.adaptec.com>
+Message-ID: <0d4901c47cd8$1a46e350$0200a8c0@internal.startcom.org>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-content-class: urn:content-classes:message
-To: dean gaudet <dean-list-linux-raid@arctic.org>
-Cc: Kanoa Withington <kanoa@cfht.hawaii.edu>, Derek Listmail Acct <listmail@oversimplified.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-As long as the relocation contains the original information; which is
-only the case if the relocation is done on a write to the disk.
+Hi,
 
-A RAID-5 generated relocation allows the data to be reconstructed on a
-media failure on erad, and the relocation (triggered by a re-write)
-would contain the correct information preventing corruption.
+I had a multiple disk failure (so it seams) on raid 5 Kernel 4.20 RedHat 9.
 
-Sincerely -- Mark Salyzyn
+When booting it shows:
 
------Original Message-----
-From: dean gaudet [mailto:dean-list-linux-raid@arctic.org] 
-Sent: Saturday, August 07, 2004 4:13 PM
-To: Salyzyn, Mark
-Cc: Kanoa Withington; Derek Listmail Acct; linux-raid@vger.kernel.org
-Subject: RE: Scrub?
+Aug  7 21:32:20 apache-7 kernel: md: running: <hda2><hde1><hdg1>
+Aug  7 21:32:20 apache-7 kernel: md: hda2's event counter: 0000009a
+Aug  7 21:32:20 apache-7 kernel: md: hde1's event counter: 00000099
+Aug  7 21:32:20 apache-7 kernel: md: hdg1's event counter: 00000096
+Aug  7 21:32:20 apache-7 kernel: md: superblock update time inconsistency -- 
+using the most recent one
+Aug  7 21:32:20 apache-7 kernel: md: freshest: hda2
+Aug  7 21:32:20 apache-7 kernel: md: kicking non-fresh hdg1 from array!
+Aug  7 21:32:20 apache-7 kernel: md: unbind<hdg1,2>
+Aug  7 21:32:20 apache-7 kernel: md: export_rdev(hdg1)
+Aug  7 21:32:20 apache-7 kernel: md3: kicking faulty hde1!
+Aug  7 21:32:20 apache-7 kernel: md: unbind<hde1,1>
+Aug  7 21:32:20 apache-7 kernel: md: export_rdev(hde1)
+Aug  7 21:32:20 apache-7 kernel: md: md3: raid array is not clean -- 
+starting background reconstruction
+Aug  7 21:32:20 apache-7 kernel: md3: max total readahead window set to 512k
+Aug  7 21:32:20 apache-7 kernel: md3: 2 data-disks, max readahead per
+data-disk: 256k
+Aug  7 21:32:20 apache-7 kernel: raid5: device hda2 operational as raid disk
+0
+Aug  7 21:32:20 apache-7 kernel: raid5: not enough operational devices for
+md3 (2/3 failed)
+Aug  7 21:32:20 apache-7 kernel: RAID5 conf printout:
+Aug  7 21:32:20 apache-7 kernel:  --- rd:3 wd:1 fd:2
+Aug  7 21:32:20 apache-7 kernel:  disk 0, s:0, o:1, n:0 rd:0 us:1 dev:hda2
+Aug  7 21:32:20 apache-7 kernel:  disk 1, s:0, o:0, n:1 rd:1 us:1 dev:[dev
+00:00]
+Aug  7 21:32:20 apache-7 kernel:  disk 2, s:0, o:0, n:2 rd:2 us:1 dev:[dev
+00:00]
 
-no, that's not how it works.  i'm referring to the hard disk itself
-relocating a sector -- it's transparent to the host/raid.  the only
-thing
-the raid software might see is that the disk will be less snappy while
-it's running the SMART long test.  (mind you i do this on live busy
-systems and i don't really tend to notice it -- although on particularly
-busy weeks, some disks can take several days to complete their self test
-in the few spare cycles they find.)
+What is the difference between non-fresh and faulty? Also when I run lsraid,
+it shows /dev/hdg1 as /dev/null...
 
--dean
+How do I recover the raid, which one should I mark failed-disk? Very
+unclear, after googeling for a few hours now...
 
-On Sat, 7 Aug 2004, Salyzyn, Mark wrote:
+Thanks!
 
-> Problem with running the relocation is that the RAID-5 will now be
-> corrupt. The RAID-5 algorithm needs to be in-touch with disk block
-> relocation so that it can correct the parity and the data.
->
-> Sincerely -- Mark Salyzyn
->
-> -----Original Message-----
-> From: dean gaudet [mailto:dean-list-linux-raid@arctic.org]
-> Sent: Friday, August 06, 2004 5:59 PM
-> To: Kanoa Withington
-> Cc: Salyzyn, Mark; Derek Listmail Acct; linux-raid@vger.kernel.org
-> Subject: RE: Scrub?
->
-> On Fri, 6 Aug 2004, Kanoa Withington wrote:
->
-> > On Fri, 6 Aug 2004, Salyzyn, Mark wrote:
-> > > Just reading the entire array should correct the bad blocks, so
-> reverse
-> > > the sense of the dd:
-> > >
-> > > 	dd if=/dev/md0 of=/dev/null bs=200b
-> > >
-> > > to find and replace the bad blocks (making the assumption that md
-> works
-> > > like the H/W RAID cards).
-> >
-> > In this case software RAID does not work like the H/W cards. Finding
-> > an unreadable block that way in a software array would cause it to
-go
-> > into a degraded state.
->
-> if the disks support SMART (i.e. they're less than a few years old)
-then
-> try running the smart long selftest... it can be done online and on
-many
-> disks it will force sector reallocation (and produce a SMART log event
-> so
-> you know it happenned).
->
-> get smartmontools and run "smartctl -a" to see info on your drive, and
-> "smartctl -t long" to launch the long test.  man page has more
-examples.
->
-> i run smart long tests on each my disks once a week (staggerred over
-> many
-> nights)... see /etc/smartd.conf.
->
-> -dean
->
+Regards
+
+Signer:      Eddy Nigg
+Company: StartCom Linux at http://www.startcom.org
+                MediaHostT at http://www.mediahost.org
+
+
