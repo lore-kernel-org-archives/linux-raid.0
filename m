@@ -1,52 +1,39 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: Re: Should I Start Over?
-Date: Wed, 7 Jul 2004 16:51:05 +0200
+From: christophe.varoqui@free.fr
+Subject: [dm-devel] [ANNOUNCE] multipath-tools-0.2.5
+Date: Wed,  7 Jul 2004 17:12:19 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040707145105.GA30207@percy.comedia.it>
-References: <1147.66.230.1.97.1088603162.squirrel@exitwound.org> <20040630165540.GA1099@percy.comedia.it> <1775.66.230.1.97.1088620939.squirrel@exitwound.org> <20040706210654.GB17694@percy.comedia.it> <1165.66.230.1.97.1089206618.squirrel@exitwound.org>
+Message-ID: <1089213139.40ec12d3a447b@imp2-q.free.fr>
+References: <1084519750.40a47546dd0e6@imp1-q.free.fr> <1086256342.40bef4d61b3e9@imp3-q.free.fr> <1086619426.40c47f220de01@imp5-q.free.fr> <1087209011.40cd7e338ca44@imp5-q.free.fr> <1088441934.40e04e4ebe7e8@imp1-q.free.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1165.66.230.1.97.1089206618.squirrel@exitwound.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <1088441934.40e04e4ebe7e8@imp1-q.free.fr>
+To: device-mapper development <dm-devel@redhat.com>, christophe.varoqui@free.fr
+Cc: linux-raid@vger.kernel.org, linux-hotplug-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Jul 07, 2004 at 08:23:38AM -0500, Stephen Hargrove wrote:
->Luca Berra said:
->>
->> you can try to see if you can read your data by recreating the array in
->> degraded mode, so it does not rebuild.
->>
->> like:
->> mdadm --create /dev/md0 --level=5 /dev/hdc1 /dev/hdd1 missing
->> try substituting the word missing for each of the drives
->> and see if you can mount the filesystem
->> if you do find your data use:
->> mdadm /dev/md0 -a <the device you replaced with missing>
->> to have it added to the array again
->>
->
->
->Ok, I did the following:
->
-># mdadm --create /dev/md0 --level=5 --raid-devices=3 /dev/hdg1 /dev/hdd1
->/dev/hdc1
-you were supposed to replace one of the disks with the word "missing", so
-you could test it before resyncing and try different disc combination to
-see if you could get your data back.
+Hello,
 
->So is this good or bad?  Is my data gone forever (I gave up on it a while
->back, so if it's gone, it's gone)?
->
-yes, your data is gone.
+here goes multipath-tools-0.2.5
 
-L.
+includes quite important bugfixes noted by Andy "genanr" on multipathd and
+strict EVPD parser from Hannes Reinecke.
 
--- 
-Luca Berra -- bluca@comedia.it
-        Communication Media & Services S.r.l.
- /"\
- \ /     ASCII RIBBON CAMPAIGN
-  X        AGAINST HTML MAIL
- / \
+Changelog for this release :
+ 
+        * [multipathd] fix misbehaviour noted by genanr @ emsphone . com
+	  improper tar directive in Makefile on some systems
+	* [multipathd] fix bug noted by genanr @ emsphone . com
+	  get_devmaps fills a private vector and forget to pass its
+	  address to caller
+	* [multipath] extend EVPD 0x83 id fetching logic.
+	  Code borrowed from scsi_id (thanks goes to Patrick
+	  Mansfield @IBM) and merged by Hannes Reinecke @SUSE
+	* [multipathd] fix regression noted by genanr @ emsphone.com
+	  (segfault when no config file)
+
+Downloads and docs at http://christophe.varoqui.free.fr
+
+regards,
+cvaroqui
