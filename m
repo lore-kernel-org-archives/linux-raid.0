@@ -1,60 +1,49 @@
-From: Michael Tokarev <mjt@tls.msk.ru>
-Subject: announce: tiny raidtools-alike for use e.g. in initrd
-Date: Thu, 30 Oct 2003 10:25:05 +0300
+From: Lars Marowsky-Bree <lmb@suse.de>
+Subject: Re: Booting from a raid1 device ?
+Date: Thu, 30 Oct 2003 11:00:19 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3FA0BCD1.1060003@tls.msk.ru>
+Message-ID: <20031030100019.GD13874@marowsky-bree.de>
+References: <E5DA6395B8F9614EB7A784D628184B200E33DE@hdsmsx402.hd.intel.com> <3FA06158.9040007@tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid <linux-raid@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <3FA06158.9040007@tls.msk.ru>
+To: Michael Tokarev <mjt@tls.msk.ru>, "Cress, Andrew R" <andrew.r.cress@intel.com>
+Cc: donj@asaca.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-http://www.corpit.ru/mjt/mdctl.c - a very small utility similar
-to raidtools suite.  I wrote this program to use it inside an
-initrd to bring raid arrays up at boot time - where the size of
-executable and simplicity is at premium.  Differences between this
-implementation and raidtools are:
+On 2003-10-30T03:54:48,
+   Michael Tokarev <mjt@tls.msk.ru> said:
 
-  - size.  When compiled with dietlibc, executable is about
-    7kb on i386.
+> Ugh-blah.  Excuse me folks, but.. maybe someone will be able to
+> answer this one:
+>=20
+>  why the hell a boot loader should "mirror" anything to the second di=
+sk? :)
 
-  - it does not have mkraid utility and other fun stuff.
-    Supported are
-    - raidstart
-    - raidstop
-    - raidhot{add,remove,generateerror)
-    - raidsetfaulty
-   i.e., only "simple" commands - just ioctls in fact.
+It shouldn't, but it should eventually be smart enough to figure out
+which of the two mirrors has the 'most recent' data.
 
-  - it uses NO config file like all the raidtools suite.
-    I.e., it is more like mdadm in this respect.  All
-    parameters are accepted in the command line.  This
-    makes the utility handy inside read-only boot-time
-    environment (you may e.g. parse md=... kernel
-    parameter and convert it into mdctl commandline)
+And it should try to load a kernel via multiple drives until it finds a
+kernel+initrd combination with a good checksum.=20
 
-  - `mdctl start' tries to bring an array using ALL components
-    of the array given in the command line, until successeful
-    (raidstart tries only first component, and if that is missing
-    but other component(s) are available, operation will fail).
+This would also help raid1 + multipath boot scenarios, as long as the
+boot loader itself got started "somehow".
 
-Usage:
 
-  mdctl start /dev/mdN /dev/hda1 /dev/hdb1 /dev/hdc1
-    equivalent to md=N,/dev/hda1,/dev/hdb1,/dev/hdc1 boot
-    parameter, but you can't specify raid level (it will
-    be read from the superblock), and kernel may choose to
-    bring up another mdN (as indicated by super-minor)
+Sincerely,
+    Lars Marowsky-Br=E9e <lmb@suse.de>
 
-  mdctl {stop,readonly,ro,readwrite,rw} /dev/mdN
+--=20
+High Availability & Clustering	      \ ever tried. ever failed. no matt=
+er.
+SUSE Labs			      | try again. fail again. fail better.
+Research & Development, SUSE LINUX AG \ 	-- Samuel Beckett
 
-  mdctl {add,remove,setfaulty,generaterror} /dev/mdN /dev/hda1
-
-This tiny code released under GPL licence... in a hope it will
-be useful to someone else too, not only to me ;)
-
-Enjoy.
-
-/mjt
-
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
