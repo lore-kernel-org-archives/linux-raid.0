@@ -1,86 +1,54 @@
-From: NeilBrown <neilb@cse.unsw.edu.au>
-Subject: [PATCH md ] XOR template selection redo
-Date: Thu, 24 Jun 2004 14:58:34 +1000
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: Raid-5 freezes with large writes... Continues after a more /proc/mdstat???
+Date: Thu, 24 Jun 2004 15:27:08 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <E1BdMJm-0002Uv-Mt@notabene.cse.unsw.edu.au>
-References: <20040624145809.9583.patches@notabene>
+Message-ID: <16602.26156.690023.29084@cse.unsw.edu.au>
+References: <20040618130243.21C742074@nw-smtp-05.wineasy.se>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Andrew Morton <akpm@osdl.org>
+In-Reply-To: message from Alwin Bakkenes on Friday June 18
+To: Alwin Bakkenes <alwin.bakkenes@consat.se>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Friday June 18, alwin.bakkenes@consat.se wrote:
+> Hej, 
+> 
+> I am using Suse 9.1 and have build (finally) my Raid-5 volume using the
+> raidtools. 
 
-From: Josh Litherland <josh@emperorlinux.com>
+Can you tell me what kernel you are running?
+Ideally try to reproducing it on a kernel.org kernel, but if that
+isn't possible, I at least need to know what kernel.org kernel it is
+closest to.
 
-The XOR routine selection process is often confusing as it
-often doesn't choose the routine that measures the fastest,
-as sometime one routine is known to have better cache
-performance.
+NeilBrown
 
-This patch avoids the comparison when there is a known best choice,
-and makes the report more meaningful.
-
-Signed-off-by: Neil Brown <neilb@cse.unsw.edu.au>
-
-### Diffstat output
- ./drivers/md/xor.c |   39 +++++++++++++++++++++++++--------------
- 1 files changed, 25 insertions(+), 14 deletions(-)
-
-diff ./drivers/md/xor.c~current~ ./drivers/md/xor.c
---- ./drivers/md/xor.c~current~	2004-06-24 14:53:51.000000000 +1000
-+++ ./drivers/md/xor.c	2004-06-24 14:53:51.000000000 +1000
-@@ -108,29 +108,40 @@ calibrate_xor_block(void)
- 	}
- 	b2 = b1 + 2*PAGE_SIZE + BENCH_SIZE;
- 
--	printk(KERN_INFO "raid5: measuring checksumming speed\n");
-+	/*
-+	 * If this arch/cpu has a short-circuited selection, don't loop through all
-+	 * the possible functions, just test the best one
-+	 */
- 
-+	fastest = NULL;
-+
-+#ifdef XOR_SELECT_TEMPLATE
-+		fastest = XOR_SELECT_TEMPLATE(fastest);
-+#endif
-+	
- #define xor_speed(templ)	do_xor_speed((templ), b1, b2)
- 
--	XOR_TRY_TEMPLATES;
-+	if (fastest) {
-+		printk(KERN_INFO "raid5: automatically using best checksumming function: %s\n",
-+			fastest->name);
-+		xor_speed(fastest);
-+	} else {
-+		printk(KERN_INFO "raid5: measuring checksumming speed\n");
-+		XOR_TRY_TEMPLATES;
-+		fastest = template_list;
-+		for (f = fastest; f; f = f->next) 
-+			if (f->speed > fastest->speed)
-+				fastest = f;
-+	}
-+
-+	printk("raid5: using function: %s (%d.%03d MB/sec)\n",
-+	       fastest->name, fastest->speed / 1000, fastest->speed % 1000);
- 
- #undef xor_speed
- 
- 	free_pages((unsigned long)b1, 2);
- 
--	fastest = template_list;
--	for (f = fastest; f; f = f->next)
--		if (f->speed > fastest->speed)
--			fastest = f;
--
--#ifdef XOR_SELECT_TEMPLATE
--	fastest = XOR_SELECT_TEMPLATE(fastest);
--#endif
--
- 	active_template = fastest;
--	printk("raid5: using function: %s (%d.%03d MB/sec)\n",
--	       fastest->name, fastest->speed / 1000, fastest->speed % 1000);
--
- 	return 0;
- }
- 
+> 
+> When I write large amounts of data to the array (i.e. 50 GB) in a cp or mv
+> operation, it always stops in the middle of the copy. It waits. There are no
+> kernel messages, no errors, it just waits. 
+> 
+> The strange part is that after I do a "more /proc/mdstat" my cp/mv operation
+> continues. 
+> 
+> Performance is descent with approx. 20-30MB/s writes and 80MB/s reads. 
+> 
+> You can see the rest of my setup in a previous post:
+> http://marc.theaimsgroup.com/?l=linux-raid&m=108738559332187&w=2
+> 
+> Has anybody seen this before? 
+> 
+> Alwin
+> 
+> P.S. I am using two Maxtor 200GB IDE disks and two identical disks but with
+> SATA interface. My box is a Dell 400SC and I run Suse 9.1 with the default
+> kernel.
+> 
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
