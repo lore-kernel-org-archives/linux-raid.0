@@ -1,61 +1,39 @@
-From: Hermann Himmelbauer <dusty@strike.wu-wien.ac.at>
-Subject: Re: scsi card recommendations
-Date: Tue, 21 Oct 2003 08:37:42 +0200
+From: "Ruth Ivimey-Cook" <Ruth.Ivimey-Cook@ivimey.org>
+Subject: Help resyncing/remounting raid5 array please
+Date: Tue, 21 Oct 2003 19:18:51 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200310210837.43091.dusty@strike.wu-wien.ac.at>
-References: <200310210040.h9L0eR202908@bzs.org>
+Message-ID: <000d01c397ff$ca6de440$0600a8c0@Robinton>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+	charset="US-ASCII"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200310210040.h9L0eR202908@bzs.org>
-Content-Disposition: inline
-To: michael@insulin-pumpers.org, linux-raid@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tuesday 21 October 2003 03:40, Michael wrote:
-> I've just inherited a couple of rack servers that have the buggy dpt
-> scsi controllers and I need to replace them with something solid.
+Folks,
 
-Well, I use a dpt SCSI-Controller for some time now and luckily found no bugs 
-at all. I always thought they were quite good quality.
+I have a 3-disk raid5 array that was working ok earlier and has quite a lot of
+data on it. I have just built it into a new computer and, sadly, messed up the
+event counter while trying to get it working. The new computer was having
+problems driving one of the controllers and I'd also failed to set the
+partition type to 0xfd (it was 0x83). Having now set the partition type
+properly, the raid system does consider the disks as possible RAID drives.
 
-> Recommendations for a pci scsi-3 controller would be appreciated.
+The current state is that I have 2  disks with an event count of 0x11 and one
+with an event counter of 0x77 ! (how it got that high compared to the others I
+don't understand). Now, if I could persuade the system to believe the disks
+with a 0x11 count are ok and create a raid drive with them, I'd be fine as I
+could hot-add the last, but it wants to start with the 0x77 drive, fails
+because there aren't enough disks, and gives up.
 
-I used a Mylex DAC960 and was never really fond of it. Maybe the AcceleRAID 
-product line is better, but I don't know.
+I really don't want to kill the data and start again as I don't have a
+(recent) backup of the 90GB of data :-(  I'm using Linux 2.4.20 &/or 2.4.21 on
+an Athlon system with 3 seagate 120GB drives; I have a fourth SATA drive
+connected that I hope to get running when I can get a new kernel installed.
 
-The RAID-company that produces to my mind the best Hardware RAID solutions is 
-ICP Vortex. (Maybe they changed names now as they are bought by some bigger 
-company). Anyway, they provide excellent quality hardware and write their 
-Linux drivers themselves and contribute the code open to the Linux source 
-tree.
+Is there any way forward?
 
-The downside of ICP Vortex is that they are quite expensive.
+Ruth
 
-Another thing that I would consider is software RAID. Although software RAID 
-consumes far more CPU and is probably slower, to my mind the reliability is 
-higher. The Linux RAID-code is thouroughly tested and proved to work.
-
-Moreover there is always one thing to consider: If one of your disks fail - no 
-problem, you simply replace it with a new one. If the same model isn't 
-available anymore, well you just use a better one.
-But what happens if your  HW-RAID controller dies? After 2 years, will there 
-still be a replacement available? If not, can you reconstruct your data with 
-a different controller? Are there any good Linux drivers for this replacement 
-controller?
-What happens if there is a firmware bug? With Linux SW-RAID you can post to 
-this list and the problem will probably be solved. 
-
-I think if the real issue is data security and availability and not speed, 
-SW-RAID is at least something to be considered.
-
-		Best Regards,
-		Hermann
-
--- 
-x1@aon.at
-GPG key ID: 299893C7 (on keyservers)
-FP: 0124 2584 8809 EF2A DBF9  4902 64B4 D16B 2998 93C7
 
