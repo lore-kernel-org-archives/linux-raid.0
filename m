@@ -1,11 +1,12 @@
-From: Timo Boettcher <spida@gmx.net>
-Subject: raid5: Operation Continuing on 0 devices?
-Date: Fri, 28 Nov 2003 16:16:04 +0100
+From: "Mehrdad Ziaei" <subscriber@ziaei.com>
+Subject: How to change RAID1 to NON_RAID (lilo problem)
+Date: Fri, 28 Nov 2003 10:18:50 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1843705337.20031128161604@gmx.net>
-Reply-To: Timo Boettcher <spida@gmx.net>
+Message-ID: <011501c3b5c5$49d6bb20$b4d3cc8e@ziaei.com>
+References: <Pine.LNX.4.44.0311280110270.1140-100000@redhat1.mmaero.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
@@ -13,111 +14,68 @@ List-Id: linux-raid.ids
 
 Hi,
 
-I am having problems with a software-raid5 device in my system.
-Because of some hardware-issues all 3 disks of that array fail after
-each other, the kernel/raid-module does notice it, but does not act
-upon this. 
+I have Linux Redhat 7.3 configured with software raid1.
+I removed second disk from all mirror raids.
+Now, lilo quits without showing any error messaes.
+If I add second disk to raid for /boot, then lilo will start working fine
+again.
 
-raid5: Disk failure on sde1, disabling device. Operation continuing on 2 devices
-raid5: Disk failure on sdd1, disabling device. Operation continuing on 1 devices
-raid5: Disk failure on sdf1, disabling device. Operation continuing on 0 devices
+My questions are:
+1. How can I change my raid1 configuration to have only 1 disk and working
+without any problem?
+2. How can I change raid1 to non-raid?
 
-Why does the kernel/raid-module not make the array read-only or take
-it offline?
+Thank you for your help
+Mehrdad.
 
-This is from linux-2.6.0-test11, but I have had the same problem with
-linux-2.4.22.
+==========================
+[root@linux ]# strace lilo -t
+execve("/sbin/lilo", ["lilo", "-t"], [/* 27 vars */]) = 0
+uname({sys="Linux", node="linux", ...}) = 0
+brk(0)                                  = 0x8058b04
+....
+....
+open("/dev/md0", 0x4)                   = 4
+fstat64(4, {st_mode=S_IFBLK|0660, st_rdev=makedev(9, 0), ...}) = 0
+ioctl(4, 0x80480911, 0xbfffea40)        = 0
+ioctl(4, 0x80140912, 0xbfffea20)        = 0
+_exit(0)                                = ?
+=====================
+[root@linux ]# cat /proc/mdstat
+Personalities : [raid1]
+read_ahead 1024 sectors
+md0 : active raid1 sda1[1]
+      513984 blocks [2/1] [_U]
 
-Here is a part from my kernel-log, as all events occurred in the same
-second, I have cut all timestamps out for better readability.
+md1 : active raid1 sda2[1]
+      34828800 blocks [2/1] [_U]
 
-Thanks for any help.
-
-================== BEGIN Paste from kern.log ==================
-SCSI error : <2 0 12 0> return code = 0x8000002
-Current sde: sense = 70  b
-ASC=47 ASCQ= 0
-Raw sense data:0x70 0x00 0x0b 0x00 0x00 0x00 0x00 0x18 0x00 0x00 0x00
-               0x00 0x47 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00
-               0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 
-end_request: I/O error, dev sde, sector 11557887
-raid5: Disk failure on sde1, disabling device. Operation continuing on 2 devices
-SCSI error : <2 0 12 0> return code = 0x8000002
-Info fld=0x0, Current sde: sense = f0  b
-Raw sense data:0xf0 0x00 0x0b 0x00 0x00 0x00 0x00 0x00
-end_request: I/O error, dev sde, sector 11557895
-SCSI error : <2 0 12 0> return code = 0x8000002
-Info fld=0x0, Current sde: sense = f0  b
-Raw sense data:0xf0 0x00 0x0b 0x00 0x00 0x00 0x00 0x00
-end_request: I/O error, dev sde, sector 11557903
-SCSI error : <2 0 12 0> return code = 0x8000002
-Info fld=0x0, Current sde: sense = f0  b
-Raw sense data:0xf0 0x00 0x0b 0x00 0x00 0x00 0x00 0x00
-end_request: I/O error, dev sde, sector 11557911
-SCSI error : <2 0 12 0> return code = 0x8000002
-Current sde: sense = 70  b
-ASC=47 ASCQ= 0
-Raw sense data:0x70 0x00 0x0b 0x00 0x00 0x00 0x00 0x18 0x00 0x00 0x00
-               0x00 0x47 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00
-               0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 
-end_request: I/O error, dev sde, sector 11558911
-SCSI error : <2 0 12 0> return code = 0x8000002
-Current sde: sense = 70  b
-ASC=47 ASCQ= 0
-Raw sense data:0x70 0x00 0x0b 0x00 0x00 0x00 0x00 0x18 0x00 0x00 0x00
-               0x00 0x47 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00
-               0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 
-end_request: I/O error, dev sde, sector 11555871
-SCSI error : <2 0 12 0> return code = 0x8000002
-Info fld=0x0, Current sde: sense = f0  b
-Raw sense data:0xf0 0x00 0x0b 0x00 0x00 0x00 0x00 0x00
-end_request: I/O error, dev sde, sector 11555879
-SCSI error : <2 0 11 0> return code = 0x8000002
-Current sdd: sense = 70  b
-ASC=47 ASCQ= 0
-Raw sense data:0x70 0x00 0x0b 0x00 0x00 0x00 0x00 0x18 0x00 0x00 0x00
-               0x00 0x47 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00
-               0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 
-end_request: I/O error, dev sdd, sector 11556919
-raid5: Disk failure on sdd1, disabling device. Operation continuing on 1 devices
-SCSI error : <2 0 12 0> return code = 0x8000002
-Current sde: sense = 70  b
-ASC=47 ASCQ= 0
-Raw sense data:0x70 0x00 0x0b 0x00 0x00 0x00 0x00 0x18 0x00 0x00 0x00
-               0x00 0x47 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00
-               0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 
-end_request: I/O error, dev sde, sector 11558919
-SCSI error : <2 0 12 0> return code = 0x8000002
-Info fld=0x0, Current sde: sense = f0  b
-Raw sense data:0xf0 0x00 0x0b 0x00 0x00 0x00 0x00 0x00
-end_request: I/O error, dev sde, sector 11555887
-SCSI error : <2 0 12 0> return code = 0x8000002
-Info fld=0x0, Current sde: sense = f0  b
-Raw sense data:0xf0 0x00 0x0b 0x00 0x00 0x00 0x00 0x00
-end_request: I/O error, dev sde, sector 11558927
-SCSI error : <2 0 13 0> return code = 0x8000002
-Current sdf: sense = 70  b
-ASC=47 ASCQ= 0
-Raw sense data:0x70 0x00 0x0b 0x00 0x00 0x00 0x00 0x18 0x00 0x00 0x00
-               0x00 0x47 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00
-               0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 
-end_request: I/O error, dev sdf, sector 11559871
-raid5: Disk failure on sdf1, disabling device. Operation continuing on 0 devices
-SCSI error : <2 0 12 0> return code = 0x8000002
-Current sde: sense = 70  b
-ASC=47 ASCQ= 0
-Raw sense data:0x70 0x00 0x0b 0x00 0x00 0x00 0x00 0x18 0x00 0x00 0x00
-               0x00 0x47 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00
-               0x00 0x00 0x00
-0x00 0x00 0x00 0x00 0x00 0x00 0x00  
-end_request: I/O error, dev sde, sector 11557919
-SCSI error : <2 0 13 0> return code = 0x8000002
-Info fld=0x0, Current sdf: sense = f0  b
-Raw sense data:0xf0 0x00 0x0b 0x00 0x00 0x00 0x00 0x00
-=================== END Paste from kern.log ===================
-
-
- Timo
-
-
-
+md2 : active raid1 sda3[1]
+      570240 blocks [2/1] [_U]
+=====================
+[root@linux ]# cat /etc/raidtab
+raiddev             /dev/md1
+raid-level                  1
+nr-raid-disks               1
+chunk-size                  64k
+persistent-superblock       1
+nr-spare-disks              0
+    device          /dev/sda2
+    raid-disk     0
+raiddev             /dev/md0
+raid-level                  1
+nr-raid-disks               1
+chunk-size                  64k
+persistent-superblock       1
+nr-spare-disks              0
+    device          /dev/sda1
+    raid-disk     0
+raiddev             /dev/md2
+raid-level                  0
+nr-raid-disks               1
+chunk-size                  64k
+persistent-superblock       1
+nr-spare-disks              0
+    device          /dev/sda3
+    raid-disk     0
+====================
