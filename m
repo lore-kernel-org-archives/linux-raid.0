@@ -1,59 +1,31 @@
-From: Mike Mestnik <cheako911@yahoo.com>
-Subject: RAID1: Performance.
-Date: Tue, 20 Apr 2004 22:57:29 -0700 (PDT)
+From: Andrew Pam <xanni@glasswings.com.au>
+Subject: md.c patch for root on RAID-10
+Date: Wed, 21 Apr 2004 18:19:36 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040421055729.90574.qmail@web11901.mail.yahoo.com>
+Message-ID: <20040421081936.GS1352@glasswings.com.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Linux-RAID@vger.kernel.org
+Content-Disposition: inline
+To: Ingo Molnar <mingo@redhat.com>, Neil Brown <neilb@cse.unsw.edu.au>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I have looked extensively at the code in raid1.c and found that it has a
-fue bugs that cause it not to do what it was intended.
-The Biggest problem is that it seams to not consider that a Write will
-move the heads into the same spot.  In the case of multi-process IO idle
-drives may stay idle if there heads are not CLOSEST.  The other problems I
-see were already discussed in a thread of a similar name.  The solution I
-have come up with I think will satisfy every ones concerns.
+I have a server that is configured with the root partition on a RAID-10
+array (/dev/md5 is RAID-1 /dev/md[34], /dev/md3 is RAID-0 /dev/sd[ab]2,
+/dev/md4 is RAID-0 /dev/sd[cd]2).
 
-The idea of ordering the blocks ACEBDF is vary close to the right
-solution.  When drives are idle is there no point in not having them read
-ahead?
-If the heads are in the same place, having just finished a write, they are
-both just as close.  Lets use this to our advantage, after selecting what
-drive we will use.  Use that drives read-ahead plus the start of the read
-and use an idle disks and read that the length of it's read-ahead value. 
-This means the md device will have "N * read-ahead" read-ahead or the sum
-of all read-ahead, this should be then documented.
+This server boots Linux kernel 2.6.3 off /dev/md0 RAID-1 /dev/sd[abcd]1
+(about to upgrade to 2.6.5) but unfortunately requires a complicated
+custom initrd to boot correctly since the RAID autorun code does not
+appear to autostart multilayer RAID arrays.  Can you offer me any
+assistance in patching md.c to make it check if any autostarted RAID
+arrays are themselves components of other RAID arrays that should also
+be autostarted?
 
-In the case of multi-io using idle disks, thought they may not be as
-close, will be better than talking a disk that is working and asking it to
-move the the end of the drive only to have it move back less than 1/4 of
-the disk.  Here is how...
-
-20 <-- write.
-80 <-- read(1)
-96 <-- read(1) NOT 2 or 3 as they are still on 20
-81 <-- read(1)
-97 <-- read(1)
-73 <-- read(1)
-
-Taking non-sequential read requests and handing them ought round-robin
-might look better for the example above.  IMHO the only thing saving the
-current code is that it some what randomly round-robins the disks.  If you
-take that ought you will see that only one drive takes the brunt of more
-than %70 of the load.
-
-I don't think the oldest used disk is a good way to go this only works if
-we know that the read-ahead is full of unused data.  This would mean that
-the drive is idle and it can be counted in the search for the closest
-drive of a new read.  Keeping in mind any wright erases all of our book keeping.
-
-
-	
-		
-__________________________________
-Do you Yahoo!?
-Yahoo! Photos: High-quality 4x6 digital prints for 25¢
-http://photos.yahoo.com/ph/print_splash
+Thanks,
+	Andrew Pam
+-- 
+mailto:xanni@xanadu.net                         Andrew Pam
+http://www.xanadu.com.au/                       Chief Scientist, Xanadu
+http://www.glasswings.com.au/                   Technology Manager, Glass Wings
+http://www.sericyb.com.au/                      Manager, Serious Cybernetics
