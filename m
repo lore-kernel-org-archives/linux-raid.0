@@ -1,89 +1,79 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: "Rebuild" speed on a forced resync
-Date: Tue, 11 Jan 2005 19:48:57 -0500
-Message-ID: <200501120047.j0C0l1928164@www.watkins-home.com>
-References: <41E3A0B5.209@wasp.net.au>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+From: ptb@lab.it.uc3m.es (Peter T. Breuer)
+Subject: Re: extremely tiny race window in raid1
+Date: Wed, 12 Jan 2005 01:57:24 +0100
+Message-ID: <k89eb2-rnt.ln1@news.it.uc3m.es>
+References: <mcndb2-6m8.ln1@news.it.uc3m.es> <16868.28347.248250.674152@cse.unsw.edu.au>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <41E3A0B5.209@wasp.net.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Brad Campbell' <brad@wasp.net.au>, 'RAID Linux' <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On my system, iostat only reports since re-boot.  Not since last run of
-iostat.  I use "sar -d" for current speeds.  In the past, sar has agreed
-with /dev/mdstat.
+Neil Brown <neilb@cse.unsw.edu.au> wrote:
+> On Tuesday January 11, ptb@lab.it.uc3m.es wrote:
+> >  From raid1.c in 2.6.8.1:
+> > 
+> >          * inc refcount on their rdev.  Record them by setting
+> >          * bios[x] to bio
+> >          */
+> > -       disks = conf->raid_disks;
+> >         spin_lock_irq(&conf->device_lock);
+> > +       disks = conf->raid_disks;
+> >         for (i = 0;  i < disks; i++) {
+> >                 if (conf->mirrors[i].rdev &&
+> >                     !conf->mirrors[i].rdev->faulty) {
+> > 
+> > (there are plenty of other places where small things like that happen,
+> > and normally I say "shucks, he'll spot it and correct it, and it's no
+> > biggie anyway", but my conscience is getting at me to report at least
+> > some of them).
+> 
+> Patches are always welcome (preferably against the most recent kernel,
+> and with headers that make it easy to apply) -- I'm sure I miss plenty
+> of stuff.
+> 
+> This one, however, is not needed.  raid_disks simply cannot change at
+> this point.
 
-Note, with sar -d, sectors/s are 512 bytes.
+It's changed in "run"
 
-Guy
+         conf->raid_disks = mddev->raid_disks;
 
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Brad Campbell
-Sent: Tuesday, January 11, 2005 4:48 AM
-To: RAID Linux
-Subject: "Rebuild" speed on a forced resync
+and I don't see anywhere else.  But that's not quite the whole point -
+the device lock guards against changes in the device configuration, and
+whether or not raid_disks is currently ever changed or not, the lock
+ought to guard it with the rest of the configuration, as it is part of
+the device configuration. It means one does not have to study the rest
+of the code in order to discover if it is right or not - it would be
+right by inspection.
 
-G'day all,
+I was going to suggest you add a "valid disk count" anyway, as that
+would avoid all those points where one goes counting the number of valid
+disks (under spinlock :).  The above code block is one such point (but
+from the point of code transparancy and robustness I actually prefer
+that you recount every time, even every request, as you do - the extra
+count field would only be for efficiency).
 
-Just started my big raid using mdadm --update resync to ensure the parity
-blocks are A-OK after a 
-kernel panic, and I have been monitoring my Disk IO with
-iostat -k 5
-
-Now this is an average for a 5 second period.
-I note I'm seeing about 12,456 Kilobytes/sec from each drive, but a cat
-/proc mdstat is giving me 
-6716 Kilobytes/sec. Given I'm doing a read consistency check I would expect
-an mdstat speed 9/10ths 
-of my bulk per-drive read speed. (This array is sda -> sdj)
-Am I missing something really obvious?
-
-Kernel 2.6.10-bk10
-
-Regards,
-Brad
-
-avg-cpu:  %user   %nice    %sys %iowait   %idle
-           39.18    0.00   60.82    0.00    0.00
-
-Device:            tps    kB_read/s    kB_wrtn/s    kB_read    kB_wrtn
-hda               0.00         0.00         0.00          0          0
-sda              97.76     12465.67         0.00      33408          0
-sdb              97.76     12465.67         0.00      33408          0
-sdc              97.76     12465.67         0.00      33408          0
-sdd              97.76     12465.67         0.00      33408          0
-sde              97.76     12465.67         0.00      33408          0
-sdf              98.51     12465.67         0.00      33408          0
-sdg              98.51     12465.67         0.00      33408          0
-sdh              98.88     12465.67         0.00      33408          0
-sdi             107.09     12465.67         0.00      33408          0
-sdj             104.85     12465.67         0.00      33408          0
-sdk               3.73         5.97        10.45         16         28
-sdl               4.10        11.94         5.97         32         16
-sdm               5.22        14.93         7.46         40         20
-md0               0.00         0.00         0.00          0          0
-md2               8.58        26.87         7.46         72         20
+Anyway, you are right that raid_disks is set essentially once, just
+before i/o ever starts, so its not semantically possible to see it
+change here, which is during i/o. 
 
 
-srv:/home/brad# cat /proc/mdstat
-Personalities : [raid0] [raid5] [raid6]
-md2 : active raid5 sdl[0] sdm[2] sdk[1]
-       488396800 blocks level 5, 128k chunk, algorithm 2 [3/3] [UUU]
+> It is only changed by raid1_reshape,
 
-md0 : active raid5 sda1[0] sdj1[9] sdi1[8] sdh1[7] sdg1[6] sdf1[5] sde1[4]
-sdd1[3] sdc1[2] sdb1[1]
-       2206003968 blocks level 5, 128k chunk, algorithm 0 [10/10]
-[UUUUUUUUUU]
-       [===>.................]  resync = 17.4% (42765824/245111552)
-finish=501.9min speed=6716K/sec
-unused devices: <none>
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Oh, I didn't see that, but it makes sense.  It would logically be
+changed by anything that changes the device configuration, which is why
+morally I feel it ought to be guarded by the device lock that protects
+the device configuration.
+
+> and that raises a barrier to
+> new requests and then waits for all current requests to complete
+> before changing raid_disks.
+
+Let me put it another way - is there a good reason for leaving that
+line outside the lock that immediately follows it?
+
+Can you really guarrantee that there are no requests in flight when you
+do a reshape? (I don't know, I just ask ...).
+
+Peter
 
