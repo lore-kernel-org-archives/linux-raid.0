@@ -1,75 +1,89 @@
-From: "Stephen Hargrove" <stephen@exitwound.org>
-Subject: RE: Should I Start Over?
-Date: Wed, 7 Jul 2004 16:36:53 -0500 (CDT)
+From: FRLinux <frlinux@frlinux.net>
+Subject: raid device gone
+Date: Wed, 07 Jul 2004 23:49:41 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <2910.66.230.1.97.1089236213.squirrel@exitwound.org>
-References: <2128.66.230.1.97.1089224667.squirrel@exitwound.org>
-    <200407071907.i67J7b309004@watkins-home.com>
-Reply-To: stephen@exitwound.org
+Message-ID: <1089240581.8641.4.camel@tux.power.users>
+Reply-To: frlinux@frlinux.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-M26lPsEfMsNleF/KCbrq"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200407071907.i67J7b309004@watkins-home.com>
-To: Guy <bugzilla@watkins-home.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Ok, here we go.  See below for the information you requested earlier.
 
-# mdadm --create /dev/md0 --level=5 --raid-devices=3 /dev/hdg1 /dev/hdd1
-missing
-mdadm: /dev/hdg1 appears to be part of a raid array:
-    level=5 devices=3 ctime=Wed Jul  7 08:11:18 2004
-mdadm: /dev/hdd1 appears to be part of a raid array:
-    level=5 devices=3 ctime=Wed Jul  7 08:11:18 2004
-Continue creating array? y
-mdadm: array /dev/md0 started.
+--=-M26lPsEfMsNleF/KCbrq
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Guy said:
->
-> Send me the output from these 2 commands:
-> Cat /proc/mdstat
+Hello,
 
-# cat /proc/mdstat
-Personalities : [raid5]
-read_ahead 1024 sectors
-md0 : active raid5 hdd1[1] hdg1[0]
-      240121472 blocks level 5, 64k chunk, algorithm 2 [3/2] [UU_]
+I've posted a couple of days ago about a problem i have on my raid1
+array. I used a Fedora Core 2 system to create a raid array using mkraid
+at the time, and created /dev/md0 and /dev/md1. While /dev/md1 has been
+nice to me, /dev/md0 keeps loosing a disk from the array and i don't
+know why.
+
+It is sitting on a silicon image (sil3112) raid card with two maxtor
+s-ata 160GB drives. Here is the output of mdstat and mdadm -D /dev/md0
+
+Personalities : [linear] [raid0] [raid1]
+md1 : active raid1 sdb3[1]
+      19542976 blocks [2/1] [_U]
+
+md0 : active raid1 sdb2[1]
+      97667072 blocks [2/1] [_U]
 
 unused devices: <none>
 
->
-> mdadm -D /dev/md0
-
-# mdadm -D /dev/md0
 /dev/md0:
-        Version : 00.90.00
-  Creation Time : Wed Jul  7 16:32:44 2004
-     Raid Level : raid5
-     Array Size : 240121472 (229.00 GiB 245.88 GB)
-    Device Size : 120060736 (114.50 GiB 122.94 GB)
-   Raid Devices : 3
-  Total Devices : 3
+        Version : 00.90.01
+  Creation Time : Tue Jun  8 18:20:49 2004
+     Raid Level : raid1
+     Array Size : 97667072 (93.14 GiB 100.01 GB)
+    Device Size : 97667072 (93.14 GiB 100.01 GB)
+   Raid Devices : 2
+  Total Devices : 1
 Preferred Minor : 0
     Persistence : Superblock is persistent
 
-    Update Time : Wed Jul  7 16:32:44 2004
-          State : dirty, no-errors
- Active Devices : 2
-Working Devices : 2
- Failed Devices : 1
+    Update Time : Wed Jul  7 23:44:42 2004
+          State : clean, degraded
+ Active Devices : 1
+Working Devices : 1
+ Failed Devices : 0
   Spare Devices : 0
 
-         Layout : left-symmetric
-     Chunk Size : 64K
 
     Number   Major   Minor   RaidDevice State
-       0      34        1        0      active sync   /dev/hdg1
-       1      22       65        1      active sync   /dev/hdd1
-       2       0        0        2      faulty
-           UUID : 4120b6d1:f484d7f2:2372ca69:3c1063cd
-         Events : 0.1
+       0       0        0       -1      removed
+       1       8       18        1      active sync =20
+/dev/scsi/host1/bus0/target0/lun0/part2
+           UUID : 65cb7868:653cf39d:816ca1ba:6fd40f35
+         Events : 0.163183
 
---
-Steve
+I've kept on reattaching /dev/sda2 to /dev/md0, it then works for a
+couple of days, freezes again and detaches itself. Has anyone
+experienced this or could tell me how i could investigate this ? I'm
+running a 2.6.7 kernel.
+
+Thanks in advance,
+Steph
+--=20
+This mail was sent under Gentoo 2004.1 - Gnome & Kernel 2.6nptl
+http://frlinux.net - Site d'aide aux Debutants sous Linux
+Public key : http://frlinux.net/files/frlinux_public_key.asc
+
+--=-M26lPsEfMsNleF/KCbrq
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.4 (GNU/Linux)
+
+iD8DBQBA7H4EplbM2wjOZgMRAtt5AJ0XCVqEHAzzpZv6FLHesNhrqnIRQACeM3ET
+B5Eeyo1LQDYdHKtf398s3cI=
+=ZA5O
+-----END PGP SIGNATURE-----
+
+--=-M26lPsEfMsNleF/KCbrq--
+
