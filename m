@@ -1,55 +1,55 @@
 From: "John Stoffel" <stoffel@lucent.com>
-Subject: Re: degraded raid5 at bootup
-Date: Fri, 13 Aug 2004 16:19:29 -0400
+Subject: mdadm - comments on command layout
+Date: Fri, 13 Aug 2004 16:25:47 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16669.8785.592904.686201@gargle.gargle.HOWL>
-References: <411D1B3E.9050306@tupshin.com>
+Message-ID: <16669.9163.392465.637229@gargle.gargle.HOWL>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <411D1B3E.9050306@tupshin.com>
-To: Tupshin Harper <tupshin@tupshin.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-Tupshin> I have a 5 disk raid5 using autodetect partitions. If I have
-Tupshin> a clean array when I shut down, I always have a degraded
-Tupshin> array with one disk removed when I boot back up. Below I
-Tupshin> include the relevant dmesg output.  hdi1 is always the
-Tupshin> problem. If I do a "mdadm -a /dev/md0 /dev/hdi1", then the
-Tupshin> array rebuilds without a problem, and runs clean until I
-Tupshin> reboot again. Any suggestions?
+Hi Neil,
 
-Are all your disks setup with partition 1 setup as 'Linux Raid'
-properly?  Check /dev/hdi using 'cfdisk' and see what partition 1 has
-for a type. 
+I've been using mdadm recently to work with some arrays and I really
+have to say I dislike how the commands are laid out and used.  First
+off, they're not consistent from one usage to another.  Of course, I'm
+going to be jerk and not give good examples since my personal box at
+home is down and I'm at work.  But the idea is that when you assemble
+a RAID device, it should look similiar to how you manage that raid
+device.
 
-Tupshin> Kernel is 2.6.8-rc2-mm2, but I've tried it with a few other
-Tupshin> recent kernels (mm and not) and all have the same
-Tupshin> problem. Distro is Debian Sid.
+I'd also love it if there was an mdadm shell, so I could just type
+'mdadm' and get back a shell prompt like:
+	
+	mdadm>
 
-Tupshin> -Tupshin
+which I could then use to manage my arrays.  
 
-Tupshin> md: considering hdl1 ...
-Tupshin> md:  adding hdl1 ...
-Tupshin> md:  adding hdj1 ...
-Tupshin> md: hdi1 has different UUID to hdl1
+For example, I think all the commands should be of the format:
 
-This is a key line here!  You need to update the superblocks on the
-raid elements to have the proper stuff.  My personal system is down,
-so I can't tell you the exactl command, but make sure you've got the
-same setup on all five disks.
+    mdadm <comand> [options] <array> [devices...]
 
-I assume they're all the same size, right?  If so, just make sure
-they're all the same partition stuff, etc.  
+as much as possible.  I'm basing my thoughts on both the Vertias VxVM
+command set, as well as the ClearCase 'cleartool' command shell.  So
+ideally I could do either:
 
-If need be, reboot your system and zero out the first few blocks on
-/dev/hdi (say 32 or 64 blocks) and then re-partition the disk, and
-then make sure partition 1 is set to Linux Raid.  
+  > mdadm assemble md0 /dev/hda1 /dev/hda2 ...
 
-Then use the mdadm command to update the superblocks.
+or
 
+  > mdadm
+  madam> assemble md0 /dev/hda1 /dev/hda2 ...
+
+depending on my mood.  Currently, the mdadm commands use various
+formats for their arguement layouts and it's a pain to figure out what
+to use.  
+
+So before I get all worked up on this issue, and spend a bunch of time
+mapping out how I think the commands should work, do people agree with
+my observation?  
+
+Thanks,
 John
-
