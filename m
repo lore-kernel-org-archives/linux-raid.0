@@ -1,104 +1,134 @@
-From: <me@heyjay.com>
-Subject: Can't mount raid 1 partitions other than /
-Date: Sun, 23 May 2004 11:34:17 -0500
+From: Dominik Sennfelder <sennfelder@gmx.de>
+Subject: Re: Raid Failed What to to
+Date: Sun, 23 May 2004 20:31:51 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <000b01c440e3$cd10f150$6705a8c0@a30>
-Reply-To: <me@heyjay.com>
+Message-ID: <40B0EE17.3060708@gmx.de>
+References: <200405211459.i4LExPB24054@www.watkins-home.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <200405211459.i4LExPB24054@www.watkins-home.com>
+To: Guy <bugzilla@watkins-home.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+Looks Bad :(
 
-I've done this in the past and it's always worked, but for some reason this
-time it's not, can't seem to figure it out.  I'm building 4 raid 1
-partitions
-/dev/md0   /
-/dev/md1   swap
-/dev/md2   /opt
-/dev/md3   /home
+with mkraid i get the following output in /var/log/syslog
 
-I doing it by building my raid sets in degraded mode.  I'm using a drive
-that I've used for raid in the past.  I'm running raid as a module, 2.6.5
-kernel, and grub.  My /dev/md0 which is "/" mounts fine at boot, but on
-/dev/md2,3 I get the error:
+May 23 19:13:47 utgard kernel: md: bind<hde1>
+May 23 19:13:47 utgard kernel: md: bind<hdi1>
+May 23 19:13:47 utgard kernel: md: bind<hdk1>
+May 23 19:13:47 utgard kernel: raid5: device hdk1 operational as raid disk 3
+May 23 19:13:47 utgard kernel: raid5: device hdi1 operational as raid disk 2
+May 23 19:13:47 utgard kernel: raid5: device hde1 operational as raid disk 0
+May 23 19:13:47 utgard kernel: raid5: cannot start dirty degraded array 
+for md0
+May 23 19:13:47 utgard kernel: RAID5 conf printout:
+May 23 19:13:47 utgard kernel:  --- rd:4 wd:3 fd:1
+May 23 19:13:47 utgard kernel:  disk 0, o:1, dev:hde1
+May 23 19:13:47 utgard kernel:  disk 2, o:1, dev:hdi1
+May 23 19:13:47 utgard kernel:  disk 3, o:1, dev:hdk1
+May 23 19:13:47 utgard kernel: raid5: failed to run raid set md0
+May 23 19:13:47 utgard kernel: md: pers->run() failed ...
 
-The superblock could not be read or does not describe a correct ext2
-filesystem.  If the device is valid and it really contains an ext2
-filesystem (and not swap or ufs or something else), then the superblock
-is corrupt, and you might try running e2fsck with an alternate superblock:
-    e2fsck -b 8193 <device>
+so i tried mdadm with the options from raidtab
 
-My procedure I followed is:
+mdadm -C /dev/md0 -l 5 -c 32 -p left-symmetric -n 4 /dev/hde1 /dev/hdi1 
+/dev/hdk1 missing /dev/hdg1
 
-# partition hdc
+this seems to work, the raid startet without any error
+but when i try to mount the array i geht
 
-mdadm -C /dev/md0 --level raid1 --raid-disks 2 missing /dev/hdc1  # I did
-this for hdc2,3,4
-mke2fs -j -b 4096 -R stride=8 /dev/md0 # I also did this for md2 and md3
-mkswap /dev/md1
-swapon /dev/md1
-mkinitrd -r /dev/md0 -o /boot/initrd.img-2.6.5raid
-cd boot
-ln -s initrd.img-2.6.5raid /initrd.img
-# added the following to /boot/grub/menu.lst
-title           Debian GNU/Linux, kernel 2.6.5-1-k7raid
-root            (hd1,0)
-kernel          /boot/vmlinuz-2.6.5-1-k7 root=/dev/md0 ro
-initrd          /boot/initrd.img-2.6.5raid
-savedefault
-boot
-#then mounted my /dev/md(s) and copied my system onto the new partitions
+utgard:~# mount /dev/md0 /mnt/hdd1/
+mount: wrong fs type, bad option, bad superblock on /dev/md0,
+       or too many mounted file systems
 
-#then updated my MBR via:
-grub
-root (hd0,0)
-setup (hd0)
-root (hd1,0)
-setup (hd1)
+a cfdisk tries to start with with a zero table.
 
-#then editted my /mnt/etc/fstab to point at my new /dev/md(s)
+any ideas ?
 
-# /etc/fstab: static file system information.
-#
-# <file system> <mount point>   <type>  <options>       <dump>  <pass>
-proc            /proc           proc    defaults        0       0
-/dev/md1        none            swap    sw              0       0
-/dev/md0        /               ext3    defaults,errors=remount-ro 0       1
-/dev/md2        /opt            ext3    defaultS        0       2
-/dev/md3        /home           ext3    defaults        0       2
-/dev/hdb        /media/cdrom    iso9660 ro,user,noauto  0       0
-/dev/fd0        /media/floppy   auto    rw,user,noauto  0       0
-/dev/hdb        /cdrom          iso9660 ro,user,noauto  0       0
-192.168.5.102:/mnt/hda3 /share nfs
-soft,exec,intr,rsize=16384,wsize=16384,timeo=5
+Dominik
 
 
-When I reboot, I'm running on /dev/md0, but my swap doesn't mount nor do
-either of my other /dev/md2 or 3
+Guy wrote:
 
-platinum:~# df
-Filesystem           1K-blocks      Used Available Use% Mounted on
-/dev/md0              34446012    820716  31875424   3% /
-tmpfs                   517672         0    517672   0% /dev/shm
-192.168.5.102:/mnt/hda3
-                       7842996   3858780   3585804  52% /share
-platinum:~# swapon -a
-swapon: /dev/md1: Invalid argument
-
-platinum:~# cat /proc/mdstat
-Personalities : [raid1]
-md0 : active raid1 hdc1[1]
-      34997504 blocks [2/1] [_U]
-
-unused devices: <none>
-
-Can someone point me in the right direction?
-
-Thanks
-Jay
+>This is an example for using mdadm where the second of three disks is bad.
+>But you must use the same chunk size and other RAID5 parameters or the array
+>will have bogus data.  It would be nice if you still have the original
+>command you used to create the array.
+>
+>mdadm -C /dev/md0 -l 5 -n 3 /dev/hda3 missing /dev/hdc3
+>
+>Guy
+>
+>-----Original Message-----
+>From: Guy [mailto:bugzilla@watkins-home.com] 
+>Sent: Friday, May 21, 2004 10:00 AM
+>To: 'Clemens Schwaighofer'; 'Dominik Sennfelder'
+>Cc: 'linux-raid@vger.kernel.org'
+>Subject: RE: Raid Failed What to to
+>
+>If you re-make the array with the same parameters as it has now the data
+>will not be lost (assuming it is still there now).  If 1 disk is really bad
+>then leave it out.
+>
+>The procedures depend on which program you use to create the array.  Do you
+>use mkraid or mdadm?
+>
+>Guy
+>
+>-----Original Message-----
+>From: linux-raid-owner@vger.kernel.org
+>[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Clemens Schwaighofer
+>Sent: Friday, May 21, 2004 4:45 AM
+>To: Dominik Sennfelder
+>Cc: linux-raid@vger.kernel.org
+>Subject: Re: Raid Failed What to to
+>
+>-----BEGIN PGP SIGNED MESSAGE-----
+>Hash: SHA1
+>
+>Dominik Sennfelder wrote:
+>| Hello
+>|
+>| I have got a Raid 5 with 4 160 GB Disk,
+>| On of the Disks Failed because. But I know its OK I had this for some
+>| times.
+>| A Restart solved The Problem.
+>| But now  Tried to raidhotremove the Drive and removed the wrong drive.
+>| I just recongized the Problem after i raidhotadded itagain.
+>| No the Raid tries to sync again.
+>
+>well if you removed two drives from your Raid5 array, it might got
+>competly out of sync and then there is no way to recover. I have never
+>tried this with my raid, but if you add another disk it well be
+>re-synced, ergo it tries to rebuild the array out of the CRCs on the
+>other drives, if you remove two, you don't have enough redudant data to
+>do this (raid 6 can recover from a 2 drive failure).
+>
+>I hope you have a backup.
+>
+>- --
+>Clemens Schwaighofer - IT Engineer & System Administration
+>==========================================================
+>TEQUILA\Japan, 6-17-2 Ginza Chuo-ku, Tokyo 104-8167, JAPAN
+>Tel: +81-(0)3-3545-7703            Fax: +81-(0)3-3545-7343
+>http://www.tequila.co.jp
+>==========================================================
+>-----BEGIN PGP SIGNATURE-----
+>Version: GnuPG v1.2.4 (GNU/Linux)
+>
+>iD8DBQFArcGmjBz/yQjBxz8RAkYKAJ9TAc03OnmIth/M03xBmopKerZLOQCcCiiG
+>wk/lAjdcrd1jPWSoLyOGLAE=
+>=5uyj
+>-----END PGP SIGNATURE-----
+>-
+>To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
+>  
+>
 
