@@ -1,42 +1,67 @@
-From: Pavel Machek <pavel@suse.cz>
+From: =?iso-8859-1?Q?Jakob_=D8stergaard?= <jakob@unthought.net>
 Subject: Re: RAID-6 support in kernel?
-Date: Tue, 4 Jun 2002 15:49:05 +0000
+Date: Tue, 4 Jun 2002 22:20:53 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <adj71l$eo6$2@main.gmane.org>
-References: <Pine.LNX.4.33.0206031020290.30424-100000@mail.pronto.tv> <Pine.GSO.4.21.0206030213510.23709-100000@gecko.roadtoad.net> <20020603113128.C13204@ucw.cz>
+Message-ID: <20020604222053.C31741@unthought.net>
+References: <Pine.GSO.4.21.0206030213510.23709-100000@gecko.roadtoad.net> <1023125615.1051.1283.camel@peecee>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20020603113128.C13204@ucw.cz>; from vojtech@suse.cz on Mon, Jun 03, 2002 at 11:31:28AM +0200
-To: Vojtech Pavlik <vojtech@suse.cz>
-Cc: Derek Vadala <derek@cynicism.com>, Roy Sigurd Karlsbakk <roy@karlsbakk.net>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, Tedd Hansen <tedd@konge.net>, Christian Vik <christian@konge.net>, Lars Christian Nygaard <lars@snart.com>
+Content-Disposition: inline
+In-Reply-To: <1023125615.1051.1283.camel@peecee>; from gleblanc@linuxweasel.com on Mon, Jun 03, 2002 at 10:33:24AM -0700
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi!
+On Mon, Jun 03, 2002 at 10:33:24AM -0700, Gregory Leblanc wrote:
+> On Mon, 2002-06-03 at 02:25, Derek Vadala wrote:
+>         On Mon, 3 Jun 2002, Roy Sigurd Karlsbakk wrote:
+>        =20
+>         > It'll waste 9 drives, giving me a total capacity of 7n inst=
+ead of 14n.=20
+>         > And, by definition, RAID-6 _can_ withstand _any_ two-drive =
+failure.
+>        =20
+>         This is certainly not true.=20
+>        =20
+>         Combining N RAID-5 into a stripe wastes on N disks.=20
+>=20
+> Hot spares are quite a nice way to increase the reliability of your
+> arrays, somewhat.  You can still be in trouble if a second disk fails
+> before the resync finishes, but at that point you're probably talking
+> about something of a more catastrophic failure, perhaps outside of th=
+e
+> machine itself. =20
 
-> > > It'll waste 9 drives, giving me a total capacity of 7n instead of 14n. 
-> > > And, by definition, RAID-6 _can_ withstand _any_ two-drive failure.
-> > 
-> > This is certainly not true. 
-> > 
-> > Combining N RAID-5 into a stripe wastes on N disks. 
-> > 
-> > If you combine two it wastes 2 disks, etc.
-> > 
-> > That is, for each RAID-5 you waste a single disk worth of storage for
-> > partiy. I don't know what equation you're using where you get 9 drives
-> > from.
-> 
-> He was thinking "mirror", not "stripe". Mirror of 2 RAID-5 arrays (would
-> be probably called RAID-15 (when there is a RAID-10 for mirrored stripe
-> arrays)), can withstand any two disks failing anytime. Even more for
+What often happens (in my experience) is, that a number of disks build =
+up bad
+blocks.  One day, you hit one of those bad blocks, and that one disk is=
+ kicked
+from the array.
 
-RAID-1 over two RAID-5s should withstand any three failures, AFAICS.
+When you re-sync, you *will* hit the remaining bad blocks on the other =
+disks,
+causing the array to fail completely.
 
-You could do RAID-5 over RAID-5. That should survive any 2 failures and
-still be reasonably efficient.
-								Pavel
--- 
-Philips Velo 1: 1"x4"x8", 300gram, 60, 12MB, 40bogomips, linux, mutt,
-details at http://atrey.karlin.mff.cuni.cz/~pavel/velo/index.html.
+Using hot-spares will "automate" this failure - meaning that an adminis=
+trator
+may not be anywhere near the system when this total failure happens.
 
+Not using hot-spares is less "automatic" in the lucky case where everyt=
+hing
+works, but it also assures that an administrator actually is near the s=
+ystem
+when the total failure is likely to occur.
+
+--=20
+=2E...............................................................
+:   jakob@unthought.net   : And I see the elder races,         :
+:.........................: putrid forms of man                :
+:   Jakob =D8stergaard      : See him rise and claim the earth,  :
+:        OZ9ABN           : his downfall is at hand.           :
+:.........................:............{Konkhra}...............:
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
