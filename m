@@ -1,92 +1,139 @@
-From: Kanoa Withington <kanoa@cfht.hawaii.edu>
+From: Mark Bellon <mbellon@mvista.com>
 Subject: Re: No response?
-Date: Thu, 20 Jan 2005 09:34:34 -1000 (HST)
-Message-ID: <Pine.LNX.4.55.0501200927000.31637@umi.cfht.hawaii.edu>
-References: <Pine.LNX.4.58.0501201052240.19586@lewis.et.byu.edu>
- <csotcs$oma$1@sea.gmane.org> <Pine.LNX.4.58.0501201142140.19586@lewis.et.byu.edu>
- <Pine.LNX.4.55.0501200909440.31637@umi.cfht.hawaii.edu>
- <Pine.LNX.4.58.0501201215420.19586@lewis.et.byu.edu>
+Date: Thu, 20 Jan 2005 12:35:29 -0700
+Message-ID: <41F00801.2050807@mvista.com>
+References: <Pine.LNX.4.58.0501201052240.19586@lewis.et.byu.edu> <Pine.LNX.4.56.0501201805070.12589@lion.drogon.net> <41EFFA53.3030809@mvista.com> <Pine.LNX.4.58.0501201205490.19586@lewis.et.byu.edu>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.58.0501201215420.19586@lewis.et.byu.edu>
+In-Reply-To: <Pine.LNX.4.58.0501201205490.19586@lewis.et.byu.edu>
 Sender: linux-raid-owner@vger.kernel.org
 To: David Dougall <davidd@et.byu.edu>
-Cc: Mario Holbe <Mario.Holbe@TU-Ilmenau.DE>, linux-raid@vger.kernel.org
+Cc: Gordon Henderson <gordon@drogon.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+David Dougall wrote:
 
+>Oooh, that ~3 second patch sounds very interesting.  I actually think that
+>the theory about timeouts causing the problem is correct.  I didn't
+>realize that applications/fs calls could stall for that long.  My NFS
+>servers have a timeout themselves of about 10 seconds before they start to
+>try to shut things down.
+>  
+>
+I could generate one for 2.4.26 for you but I need a bit of time - I'm 
+running a 2.4.20 with a great many enhancements and there are a few 
+differences. If there is interested I can post it to linux-raid too.
 
-Ideally a different HBA altogether, but a different channel on a
-multichannel HBA at a minimum. If your SCSI card is not a multichannel
-card, think about getting one or think about a completely different
-arrangement.
+mark
 
-It may be possible to tune the HBA reset behavior or the XFS timeout
-threshold but as a matter of principle when constructing disk mirrors
-you should try to keep the disks as separate as possible. You should
-only need to tune, tweak or patch if you are trying to do something
-unusual - which you are not.
-
-In the short term, unplug the failing disk:
-
-Jan 10 11:56:06 linux-sg2 kernel: SCSI disk error : host 0 channel 0 id 0 lun 47
-
-You are better off without it if your system is crashing.
-
--Kanoa
-
-
-
-On Thu, 20 Jan 2005, David Dougall wrote:
-
-> By "different controller" do you mean HBA controller or disk controller?
-> The disk devices are on completely different jbods.  They are both through
-> the same HBA(the server only has 1 PCI slot)
-> --David Dougall
+>--David Dougall
 >
 >
-> On Thu, 20 Jan 2005, Kanoa Withington wrote:
+>On Thu, 20 Jan 2005, Mark Bellon wrote:
 >
-> >
-> > Yes, that's a standard XFS timeout and shutdown. If your second disk
-> > is on the sme SCSI channel try moving it to a different one,
-> > preferably a different controller alotgether.
-> >
-> > Your disk 08:10 does have real problems, but they are separate from
-> > the XFS shutdown which should be prevented by the MD layer.
-> >
-> > -Kanoa
-> >
-> > On Thu, 20 Jan 2005, David Dougall wrote:
-> >
-> >
-> > >  return code = 8000002
-> > > Jan 10 11:56:08 linux-sg2 kernel: Info fld=0xc7c0181, Current sd08:10:
-> > > sense key
-> > >  Hardware Error
-> > > Jan 10 11:56:08 linux-sg2 kernel:  I/O error: dev 08:10, sector 209453441
-> > > Jan 10 11:56:08 linux-sg2 kernel: I/O error in filesystem
-> > > ("device-mapper(254,1)
-> > > ") meta-data dev device-mapper(254,1) block 0x18fa318f
-> > > ("xlog_iodone") err
-> > > or 5 buf count 2048
-> > > Jan 10 11:56:08 linux-sg2 kernel:
-> > > xfs_force_shutdown(device-mapper(254,1),0x2) c
-> > > alled from line 966 of file xfs_log.c.  Return address = 0xc0246d9b
-> > > Jan 10 11:56:08 linux-sg2 kernel: Filesystem "device-mapper(254,1)": Log
-> > > I/O Err
-> > > or Detected.  Shutting down filesystem: device-mapper(254,1)
-> > > Jan 10 11:56:08 linux-sg2 kernel: Please umount the filesystem, and
-> > > rectify the
-> > > problem(s)
-> > >
-> > >
-> > > I don't see any error messages from md in any of these logs.
-> > > --David Dougall
-> > >
-> > >
-> >
-> >
-> >
+>  
 >
+>>Gordon Henderson wrote:
+>>
+>>    
+>>
+>>>On Thu, 20 Jan 2005, David Dougall wrote:
+>>>
+>>>
+>>>
+>>>      
+>>>
+>>>>Perhaps I was asking a stupid question or an obvious one, but I have
+>>>>received not response.
+>>>>Maybe if I simplify the question...
+>>>>
+>>>>If I am running software raid1 and a disk device starts throwing I/O
+>>>>errors, Is the filesystem supposed to see any indication of this?
+>>>>
+>>>>
+>>>>        
+>>>>
+>>>No..
+>>>
+>>>
+>>>
+>>>      
+>>>
+>>>>I
+>>>>thought software raid would mask all of this and just fail the drive.
+>>>>
+>>>>
+>>>>        
+>>>>
+>>>It should.
+>>>
+>>>
+>>>
+>>>      
+>>>
+>>>>I have servers with xfs as the filesystem and xfs will start to throw I/O
+>>>>errors when a disk starts acting up even with software raid in between.
+>>>>Please advise on how I can confirm my setup or if this is possibly a bug
+>>>>how to diagnose further.
+>>>>
+>>>>
+>>>>        
+>>>>
+>>>I've experienced long delays (30 seconds? It seemed longer) in a system
+>>>when a disk fails for a genuine reason - (I've deliberately run badblocks
+>>>on an md device when I knew one of the underlying devices had genuine bad
+>>>blocks) maybe the md code really tries hard to read the block, maybe the
+>>>underlying device driver tries really hard), but in these cases, I've seen
+>>>the system more or less freeze (all processes accessing that device
+>>>anyway) until the raid code decided to kick the device out of the array.
+>>>
+>>>
+>>>      
+>>>
+>>I've seen this too. The worst case can actually last for over 2 minutes.
+>>
+>>We've been running with a patch to the RAID 1 driver that handles this
+>>so critical applications do not hang for too long. Basically it uses
+>>timers in the RAID 1 driver to force the disk to be treated as actually
+>>having failed if it doesn't respond within a reasonable time (tunable
+>>but usually ~3 seconds). It then handles the I/O requests coming back
+>>async. and does the clean up.
+>>
+>>    
+>>
+>>>Maybe XFS has a timer and doesn't like devices to "go away" for a long period of time?
+>>>
+>>>
+>>>      
+>>>
+>>Not that I know of but I would need to look. Any XFS wizard's comments?
+>>
+>>mark
+>>
+>>    
+>>
+>>>      
+>>>
+>>>>If it makes a difference, I am running linux-2.4.26
+>>>>
+>>>>
+>>>>        
+>>>>
+>>>I've used 2.4.x for a long time - I did try xfs about a year ago, but
+>>>wasn't happy with it all (for various reasons).
+>>>
+>>>Gordon
+>>>-
+>>>To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>>>the body of a message to majordomo@vger.kernel.org
+>>>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>
+>>>
+>>>      
+>>>
+>>
+>>    
+>>
+
