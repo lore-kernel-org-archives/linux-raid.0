@@ -1,33 +1,22 @@
 From: NeilBrown <neilb@cse.unsw.edu.au>
-Subject: [PATCH md 1 of 4] Fix typo in super_1_sync
+Subject: [PATCH md 0 of 4] Introduction
 Date: Tue, 08 Mar 2005 16:50:59 +1100
-Message-ID: <E1D8XcR-0000z8-Mk@notabene.cse.unsw.edu.au>
-References: <20050308165021.3745.patches@notabene>
+Message-ID: <20050308165021.3745.patches@notabene>
 Sender: linux-raid-owner@vger.kernel.org
 To: Andrew Morton <akpm@osdl.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-Instead of setting one value lots of times, let's
-set lots of values once each, as we should..
+4 patches for md/raid in 2.6.11-mm1
 
-From: Paul Clements <paul.clements@steeleye.com>
-Signed-off-by: Neil Brown <neilb@cse.unsw.edu.au>
+The first two are trivial and should apply equally to 2.6.11
 
-### Diffstat output
- ./drivers/md/md.c |    2 +-
- 1 files changed, 1 insertion(+), 1 deletion(-)
+The second two fix bugs that were introduced by the recent 
+bitmap-based-intent-logging patches and so are not relevant
+to 2.6.11 yet. 
 
-diff ./drivers/md/md.c~current~ ./drivers/md/md.c
---- ./drivers/md/md.c~current~	2005-03-07 11:32:41.000000000 +1100
-+++ ./drivers/md/md.c	2005-03-07 11:32:41.000000000 +1100
-@@ -1010,7 +1010,7 @@ static void super_1_sync(mddev_t *mddev,
- 	
- 	sb->max_dev = cpu_to_le32(max_dev);
- 	for (i=0; i<max_dev;i++)
--		sb->dev_roles[max_dev] = cpu_to_le16(0xfffe);
-+		sb->dev_roles[i] = cpu_to_le16(0xfffe);
- 	
- 	ITERATE_RDEV(mddev,rdev2,tmp) {
- 		i = rdev2->desc_nr;
+[PATCH md 1 of 4] Fix typo in super_1_sync
+[PATCH md 2 of 4] Erroneous sizeof use in raid1
+[PATCH md 3 of 4] Initialise sync_blocks in raid1 resync
+[PATCH md 4 of 4] Fix md deadlock due to md thread processing delayed requests.
