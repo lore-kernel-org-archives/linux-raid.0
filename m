@@ -1,16 +1,33 @@
-From: "David Wasylciw" <mailinglists-david@wasylciw.com>
-Subject: Problem with RAID5 + ext3 expansion
-Date: Sat, 23 Oct 2004 02:25:07 -0300
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: Problem with RAID5 + ext3 expansion
+Date: Sat, 23 Oct 2004 01:42:22 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <0MKz1m-1CLEOr1JV2-0003x7@mrelay.perfora.net>
-Reply-To: <mailinglists-david@wasylciw.com>
+Message-ID: <200410230542.i9N5gRN10583@www.watkins-home.com>
+References: <0MKz1m-1CLEOr1JV2-0003x7@mrelay.perfora.net>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <0MKz1m-1CLEOr1JV2-0003x7@mrelay.perfora.net>
+To: mailinglists-david@wasylciw.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+You should test each disk with a command similar to this:
+dd if=/dev/<disk> of=/dev/null bs=1024k
+for <disk> use the full disk, not just a partition.
+This is just a read test.
+You can test all at the same time if you use different windows (xterms, or
+whatever).
+
+Guy
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of David Wasylciw
+Sent: Saturday, October 23, 2004 1:25 AM
+To: linux-raid@vger.kernel.org
+Subject: Problem with RAID5 + ext3 expansion
 
 Alright, so, I'm not sure if this is the right place to come to about this
 problem but here's a overview of my setup:
@@ -30,4 +47,9 @@ perhaps anyone has any ideas on what might have gone wrong/how to fix it?
 Thanks,
 David
 
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
