@@ -1,81 +1,63 @@
-From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
-Subject: Re: Can't boot from /dev/md0 (RAID-1) (more info)
-Date: Sun, 30 Jun 2002 19:22:44 +0200
+From: Jakob Oestergaard <jakob@unthought.net>
+Subject: Re: Can't boot from /dev/md0 (RAID-1)
+Date: Sun, 30 Jun 2002 20:04:19 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200206301922.44157.roy@karlsbakk.net>
+Message-ID: <20020630180419.GE8557@unthought.net>
+References: <200206301537.44139.roy@karlsbakk.net> <20020630162225.GB2335@colombina.comedia.it>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20020630162225.GB2335@colombina.comedia.it>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-see below for my original post
+On Sun, Jun 30, 2002 at 06:22:25PM +0200, Luca Berra wrote:
+> On Sun, Jun 30, 2002 at 03:37:44PM +0200, Roy Sigurd Karlsbakk wrote:
+> > I hope this is not OT - didn't find any LILO mailing list. after tr=
+ying=20
+> > virtually everything - can anyone help me with a tip?
+> >=20
+> >=20
+> > Running 2.4.19-pre10-ac2, RedHat 7.3 (LILO version 21.4-4), I have =
+root on=20
+> > /dev/md0 on RAID-1 on /dev/hda1 and /dev/hdb1. I've tried the howto=
+ at=20
+> > http://www.tldp.org/HOWTO/mini/Boot+Root+Raid+LILO-3.html#ss3.1, bu=
+t it still=20
+> please someone update that blasted howto, lilo has been supporting bo=
+ot from md
+> for ages.
 
-I've uploaded some files to http://karlsbakk.net/bugs/ that may help to
-explain the problem. Still - I can't boot from nothing but floppy.
+This has been in the Software-RAID HOWTO since january 2000.
 
-thanks
+>=20
+> use:
+> boot=3D/dev/md0
+> map=3D/boot/map
+> install=3D/boot/boot.b
 
-roy
+This is indeed the correct way to do things.
 
-On Sunday 30 June 2002 14:19, Roy Sigurd Karlsbakk wrote:
-> hi
->
-> I hope this is not OT - didn't find any LILO mailing list. after trying
-> virtually everything - can anyone help me with a tip?
->
-> Running 2.4.19-pre10-ac2, RedHat 7.3 (LILO version 21.4-4), I have root on
-> /dev/md0 on RAID-1 on /dev/hda1 and /dev/hdb1. I've tried the howto at
-> http://www.tldp.org/HOWTO/mini/Boot+Root+Raid+LILO-3.html#ss3.1, but it
-> still doesn't help me. lilo just tells me "L 99 99 99 99 ..." some half a
-> page, and then stops.I'm trying. All the time it prints this, it seems to
-> be searching the floppy for some reason.
->
-> The lilo.conf suggested by the above HOWTO, is this
->
-> # lilo.conf.hda - primary ide master
-> disk=/dev/md0
-> bios=0x80
-> sectors=63
-> heads=16
-> cylinders=39770
-> partition=/dev/md1
-> start=63
-> boot=/dev/hda
-> map=/boot/map
-> install=/boot/boot.b
->
-> image=/boot/bzImage
->         root=/dev/md0
->         read-only
->         label=LinuxRaid
->
-> sector/head/cylinder is corrected to the actual data reported from 'fdisk
-> -ul'.
->
-> When trying to set. boot=/dev/hdm (which is the first drive on the on-board
-> chipset), lilo installs, and I get LI instead of L 99 99 ... Same result
-> with LBA32.
->
-> I also have another box with Linux, running SuSE 7.2 (LILO version 21.7-5)
-> with RAID-1 on two drives. Here everything works fine
->
-> thanks for all help
->
-> roy
+Actually, on a Debian box I set up recently I needed to do the
+following:
 
---
-Roy Sigurd Karlsbakk, Datavaktmester
+  boot=3D/dev/md0
+  raid-extra-boot=3D/dev/sda,/dev/sdb
 
-Computers are like air conditioners.
-They stop working when you open Windows.
+This tells LILO exactly where to write the MBRs - this is not usually
+needed though.
 
--------------------------------------------------------
-
--- 
-Roy Sigurd Karlsbakk, Datavaktmester
-
-Computers are like air conditioners.
-They stop working when you open Windows.
-
+--=20
+=2E...............................................................
+:   jakob@unthought.net   : And I see the elder races,         :
+:.........................: putrid forms of man                :
+:   Jakob =D8stergaard      : See him rise and claim the earth,  :
+:        OZ9ABN           : his downfall is at hand.           :
+:.........................:............{Konkhra}...............:
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
