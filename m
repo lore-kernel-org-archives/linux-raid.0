@@ -1,50 +1,34 @@
-From: Brad Campbell <brad@wasp.net.au>
-Subject: Re: Something is broken with SATA RAID ?
-Date: Thu, 03 Mar 2005 09:03:42 +0400
-Message-ID: <42269AAE.7080106@wasp.net.au>
-References: <1109810381l.5754l.0l@werewolf.able.es>
+From: Gordon Henderson <gordon@drogon.net>
+Subject: Re: Severe, huge data corruption with softraid
+Date: Thu, 3 Mar 2005 09:00:10 +0000 (GMT)
+Message-ID: <Pine.LNX.4.56.0503030854330.20284@lion.drogon.net>
+References: <42264AF4.4000600@tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-In-Reply-To: <1109810381l.5754l.0l@werewolf.able.es>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "J.A. Magallon" <jamagallon@able.es>
-Cc: Lista Linux-Kernel <linux-kernel@vger.kernel.org>, RAID Linux <linux-raid@vger.kernel.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+In-Reply-To: <42264AF4.4000600@tls.msk.ru>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-J.A. Magallon wrote:
-> Hi...
-> 
-> I posted this in other mail, but now I can confirm this.
-> 
-> I have a box with a SATA RAID-5, and with 2.6.11-rc3-mm2+libata-dev1
-> works like a charm as a samba server, I dropped it 12Gb from an
-> osx client, and people does backups from W2k boxes and everything was fine.
-> With 2.6.11-rc4-mm1, it hangs shortly after the mac starts copying
-> files. No oops, no messages... It even hanged on a local copy (wget),
-> so I will discard samba as the buggy piece in the puzzle.
-> 
-> I'm going to make a definitive test with rc5-mm1 vs rc5-mm1+libata-dev1.
-> I already know that plain rc5-mm1 hangs. I have to wait the md reconstruction
-> of the 1.2 TB to check rc5-mm1+libata (and no user putting things there...)
-> 
-> But, anyone has a clue about what is happening ? I have seen other
-> reports of RAID related hangs... Any important change after rc3 ?
-> Any important bugfix in libata-dev1 ? Something broken in -mm ?
 
-There was (is) a bug in -rc4-mm1 that may still be there in -rc5-mm1 related to the way RAID-5 and 
-RAID-6 writes out blocks that can cause a deadlock in the raid code. Do you processes just hang in 
-the D state and any access to /proc/mdstat do the same thing?
+When I was building a server recently, I ran into a file-system corruption
+issue with ext3, although I didn't have the time to do anything about it
+(or even verify that it wasn't me doing something stupid)
 
-Can you try with just 2.6.11+libata+libata-dev?
+However, I only saw it when I used the  stride=8 parameter to mk2efs, and
+the -j (ext3) option. Without those everything seemed fine.
 
-I moved to 2.6.11+libata+libata-dev+netdev and all my problems went away.
+The symptoms I saw were the filesystem having a size of -64Z after I'd
+closed and deleted all files on it. An fsck of the filesystem owuld sfix
+it (after correcting many errors) I didn't notice an actual file
+corruption, but it seemed the filesystem was croaked.
 
-CC'd to linux-raid
+I was able to verify that this happened without any RAID code (just a
+plain old partition), so I'm not sure this has any bearing on the issues
+in this thread, however..
 
-Regards,
-Brad
--- 
-"Human beings, who are almost unique in having the ability
-to learn from the experience of others, are also remarkable
-for their apparent disinclination to do so." -- Douglas Adams
+Alas I've not had the time to go back and do some real tests. (and it's
+not entirely possible its something to do with the old version of the
+older e2fsutils in Debian woody)
+
+Gordon
