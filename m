@@ -1,36 +1,40 @@
-From: Tim Moore <linux-raid@nsr500.net>
-Subject: Re: raid5 performance - 2.4.28
-Date: Tue, 11 Jan 2005 21:18:44 -0800
-Message-ID: <41E4B334.2020104@nsr500.net>
-References: <Pine.LNX.4.44.0501101600250.28809-100000@coffee.psychology.mcmaster.ca>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: raid5 performance after upgrade to 2.4.28
+Date: Wed, 12 Jan 2005 01:17:13 -0500
+Message-ID: <200501120615.j0C6FG929329@www.watkins-home.com>
+References: <41E4B334.2020104@nsr500.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44.0501101600250.28809-100000@coffee.psychology.mcmaster.ca>
+In-Reply-To: <41E4B334.2020104@nsr500.net>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Mark Hahn wrote:
-...
->>I'm also experimenting with this patch to see if the xor hardwire for 
->>modern intel/AMD architectures is still valid.  With the old processor 
->>p5_mmx was always picked and always within a few MB/s.  The new XP is all 
->>over the map.
-> 
-> 
-> this choice (using pIII_sse even if there's a faster alternative)
-> is made because it doesn't dirty the cache.  are you suggesting that 
-> whole-system performance is better with p5_mmx, even though or *because*
-> the blocks are then in cache?  seems unlikley to me, since the checksum
-> is only used on writes or degraded mode.  having written blocks in cache
-> seems worthless, almost...
+About 1 month ago I upgraded from Kernel 2.4.20-8 to 2.4.28.
+Today I noticed my sequential read speed is up by about 12%.
 
-I'm an experimentor, not a theorist.  I am running a series of experiments 
-to determine if, and by how much, the xor algorithm in 
-include/asm-<arch>/xor.h influences RAID5 write performance and reconstruction.
+I don't recall making any other changes that would affect speed.
+So, I guess the Kernel upgrade made the difference.
 
-I'll post results.
+An old bonnie output:
+Version  1.03 ------Sequential Output------ --Sequential Input- --Random-
+              -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- --Seeks--
+Machine  Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP  /sec %CP
+watkins-ho 1G  3293  97 34587  89 22306  53  3549  99 67492  63 500.1   9
 
--- 
+Today:
+watkins-ho 1G  4944  99 31719  65 18538  43  5184  98 75440  71 602.5   8
+               ^^^^                          ^^^^     ^^^^^     ^^^^^
+
+Some things improved, others decreased.
+
+Of course, no change I can notice on my own.
+I needed to measure performance to notice.
+
+I guess I should try Kernel 2.6 some day.
+
+Guy
+
