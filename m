@@ -1,37 +1,23 @@
-From: Jon Lewis <jlewis@lewis.org>
-Subject: Re: resync (what is it doing when making a new array?)
-Date: Mon, 9 Aug 2004 16:55:45 -0400 (EDT)
+From: Philip Molter <philip@corp.texas.net>
+Subject: Force parity resync on raid5?
+Date: Mon, 09 Aug 2004 18:10:34 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.58.0408091650490.1853@web1.mmaero.com>
-References: <1091924709.209ea25bc637f@www.then7.com>
- <Pine.LNX.4.56.0408080821010.805@lion.drogon.net>
+Message-ID: <4118046A.1070002@corp.texas.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.56.0408080821010.805@lion.drogon.net>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, 8 Aug 2004, Gordon Henderson wrote:
+How do I force a parity resync on a raid5 array?  Under 2.4, I would do 
+this by hard cycling the box and when it came back up, it would 
+automatically resync the array.  Under 2.6, this appears to have gone away.
 
-> On Sat, 7 Aug 2004, Eli Cantu wrote:
->
-> > (watching a raid 5 array, composed of five 250gb disks, resyncing...to
-> > be completed 16 hours from now...)
->
-> One thing to check (if it's IDE drives) is that they are working in DMA
-> mode - use hdparm /dev/hda, etc. to check and force DMA if necessary
-> (although you might need to re-compile your kernel to include the correct
-> drivers for your IDE hardware)
->
-> It'll still take a long time with 250GB drives, though.
+I suspect I have parity corruption on several boxes (they run fine 
+normally, but when they lose a drive, they then get corrupted) related 
+to the raid5 resync bug from an older kernel.  I want to force the 
+parity to reinitialize since all the data is definitely good.
 
-16 hours seems kind of long.  I've recently been dealing with a 6 200gb
-drive (SATA) sw RAID5, and resyncs took around 3 hours on an otherwise
-totally idle P4 2.4ghz.
-
-----------------------------------------------------------------------
- Jon Lewis                   |  I route
- Senior Network Engineer     |  therefore you are
- Atlantic Net                |
-_________ http://www.lewis.org/~jlewis/pgp for PGP public key_________
+Thank you for any advice.
+Philip
