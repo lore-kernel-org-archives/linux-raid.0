@@ -1,46 +1,55 @@
-From: Mike Dresser <mdresser_l@windsormachine.com>
+From: Alvin Oga <aoga@Maggie.Linux-Consulting.com>
 Subject: Re: anybody using the maxtor 320GB
-Date: Tue, 28 Jan 2003 23:55:50 -0500 (EST)
+Date: Tue, 28 Jan 2003 21:06:39 -0800 (PST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.33.0301282347090.9692-100000@router.windsormachine.com>
-References: <Pine.LNX.3.96.1030128183057.10813A-100000@Maggie.Linux-Consulting.com>
+Message-ID: <Pine.LNX.3.96.1030128210243.16622A-100000@Maggie.Linux-Consulting.com>
+References: <Pine.LNX.4.33.0301282347090.9692-100000@router.windsormachine.com>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.3.96.1030128183057.10813A-100000@Maggie.Linux-Consulting.com>
-To: Alvin Oga <aoga@Maggie.Linux-Consulting.com>
+In-Reply-To: <Pine.LNX.4.33.0301282347090.9692-100000@router.windsormachine.com>
+To: Mike Dresser <mdresser_l@windsormachine.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 28 Jan 2003, Alvin Oga wrote:
 
->
-> hi ya
->
-> i was surprised to find these drives.. was curious if you
-> folks have played with it
->
-> http://www.streetprices.com/Electronics/Computer_Hardware_PC/Disks/IDE/320GB/
->
-> i was drooling at 80GB laptop drives...when i found the above...
+hi ya mike
 
-And not in stock, of course, for the simple reason Maxtor hasn't started
-making the high capacity MaxLine's yet.  Was supposed to be out by the end
-of October according to the reply to the email I sent last year.
+On Tue, 28 Jan 2003, Mike Dresser wrote:
 
-That, and I heard they would be 300 gb, instead of 320 gb, and even
-Maxtor's website says the same.  There's also a 7200 rpm version of 250 gb
-coming out someday as well.
+> On Tue, 28 Jan 2003, Alvin Oga wrote:
 
-PCNation claims to have them as well, at $517, and available in 2+ weeks.
-They're calling it the TomCat for some reason.
+...
+ 
+> > http://www.streetprices.com/Electronics/Computer_Hardware_PC/Disks/IDE/320GB/
+> >
+> > i was drooling at 80GB laptop drives...when i found the above...
+> 
+> And not in stock, of course, for the simple reason Maxtor hasn't started
+> making the high capacity MaxLine's yet.  Was supposed to be out by the end
+> of October according to the reply to the email I sent last year.
 
-I suspect both these companies were told to expect these drives around
-now, and they just haven't been told they're not ready yet.
+thnx for the update... and yeah... i suspected that the production
+run would be delayed... 
 
-I've been waiting for these for about 3-4 months, as I have a backup
-server that needs 3 or 4 of these in raid5, that is currently up to 6 IDE
-drives in it now, and can't add any more safely.
+> PCNation claims to have them as well, at $517, and available in 2+ weeks.
+> They're calling it the TomCat for some reason.
 
-Mike
+gotta have their own name to it?? 
+( seems like dell, compaq, hp, gateway disks are running $100 more or so )
+( must be super expensive to make those "labels"
+
+> I've been waiting for these for about 3-4 months, as I have a backup
+> server that needs 3 or 4 of these in raid5, that is currently up to 6 IDE
+> drives in it now, and can't add any more safely.
+
+guess "safely" is the key ...
+
+i'd setup a second raid box... and start moving to the new one ???
+( not work risking the current data ??
+	- besides i like data to be spread out between 2 or more servers
+	so that if one crashes, i can recover from the others
+
+c ya
+alvin
 
