@@ -1,38 +1,38 @@
-From: "Cress, Andrew R" <andrew.r.cress@intel.com>
-Subject: RE: RAID backup
-Date: Fri, 4 Oct 2002 10:04:05 -0700
+From: "Dr. David Alan Gilbert" <gilbertd@treblig.org>
+Subject: Re: RAID backup
+Date: Fri, 4 Oct 2002 18:15:55 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <A5974D8E5F98D511BB910002A50A66470580D268@hdsmsx103.hd.intel.com>
+Message-ID: <20021004171555.GH710@gallifrey>
+References: <Pine.LNX.3.96.1021004041421.5688A-100000@Maggie.Linux-Consulting.com> <1033735943.31839.12.camel@irongate.swansea.linux.org.uk> <20021004132419.GF710@gallifrey> <20021004150752.B16727@flint.arm.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: 'Illtud Daniel' <illtud.daniel@llgc.org.uk>, Effrem Norwood <enorwood@effrem.com>
-Cc: Kanoalani Withington <kanoa@cfht.hawaii.edu>, Roy Sigurd Karlsbakk <roy@karlsbakk.net>, jbradford@dial.pipex.com, jakob@unthought.net, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+Content-Disposition: inline
+In-Reply-To: <20021004150752.B16727@flint.arm.linux.org.uk>
+To: Russell King <rmk@arm.linux.org.uk>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Not that IDE disks would be more reliable, just that you couldn't see the
-disk errors until it was too late.  :-)  
+* Russell King (rmk@arm.linux.org.uk) wrote:
 
-However, given the IDE disk prices, you can afford to replace them more
-often.  
+> However, drive in caddy or no caddy, the accidental drop test would
+> probably be more favourable to the DLT tape surviving over the drive.
+> Physical accidents do happen.
 
-Also, with SCSI drives, some people see sense errors, and correctable media
-defects, and mistakenly assume it is a 'disk failure'.  
+While I guess a good caddy might put a lump of rubber in to help. But
+there again I'm not sure if I have that much confidence in the DLT tapes
+either; the instructions in the insert for HP DLT tapes tell you to
+rattle them and listen to hear if you can hear anything loose
+before putting them into your drive!
 
-Andy
+Anyway, from the side of data integrity the drop test doesn't worry me -
+for critical data I have a lot more than one backup; and users perform
+an important part of the backup test system by regularly deleting files
+to be restored.
 
------Original Message-----
-From: Illtud Daniel [mailto:illtud.daniel@llgc.org.uk] 
-Sent: Friday, October 04, 2002 6:25 AM
+Dave
 
-[snip]
-
-Oh, and having spent much of last night and this morning dealing
-with multiple SCSI disk failures, and having seen about 5% of
-ours fail in a year, I'm rapidly seeing the light on IDE.
-
--- 
-Illtud Daniel                                 illtud.daniel@llgc.org.uk
-Uwch Ddadansoddwr Systemau                       Senior Systems Analyst
-Llyfrgell Genedlaethol Cymru                  National Library of Wales
-Yn siarad drosof fy hun, nid LlGC   -  Speaking personally, not for NLW
+ ---------------- Have a happy GNU millennium! ----------------------   
+/ Dr. David Alan Gilbert    | Running GNU/Linux on Alpha,68K| Happy  \ 
+\ gro.gilbert @ treblig.org | MIPS,x86,ARM, SPARC and HP-PA | In Hex /
+ \ _________________________|_____ http://www.treblig.org   |_______/
