@@ -1,35 +1,48 @@
-From: Jean Jordaan <jean@upfrontsystems.co.za>
+From: Maarten v d Berg <maarten@vbvb.nl>
 Subject: Re: Recovering RAID5 array
-Date: Tue, 20 Jan 2004 12:44:09 +0200
+Date: Tue, 20 Jan 2004 13:10:48 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <400D0679.2040603@upfrontsystems.co.za>
-References: <400CD0BF.2010808@upfrontsystems.co.za>	<16396.53737.911347.812076@notabene.cse.unsw.edu.au>	<400CE215.2050502@upfrontsystems.co.za> <16396.64514.820157.677722@notabene.cse.unsw.edu.au>
+Message-ID: <200401201310.48900.maarten@vbvb.nl>
+References: <400CD0BF.2010808@upfrontsystems.co.za> <16396.64514.820157.677722@notabene.cse.unsw.edu.au> <400D05AC.4030409@upfrontsystems.co.za>
+Reply-To: maarten@nebula.vbvb.nl
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <16396.64514.820157.677722@notabene.cse.unsw.edu.au>
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: linux-raid@vger.kernel.org
+In-Reply-To: <400D05AC.4030409@upfrontsystems.co.za>
+Content-Disposition: inline
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->>cdimage root # mdadm --verbose --assemble /dev/md0 --force /dev/hda3 /dev/hdb3 
->>/dev/hdc3
->>mdadm: looking for devices for /dev/md0
->>mdadm: /dev/hda3 is identified as a member of /dev/md0, slot 3.
->>mdadm: /dev/hdb3 is identified as a member of /dev/md0, slot 4.
->>mdadm: /dev/hdc3 is identified as a member of /dev/md0, slot 2.
->>mdadm: no uptodate device for slot 0 of /dev/md0
->>mdadm: no uptodate device for slot 1 of /dev/md0
-> 
-> Looks like you must have done a hot-add in the mean time....
+On Tuesday 20 January 2004 11:40, Jean Jordaan wrote:
+> Neil,
+>
+> thank you very much for your help ..
+>
+> >  mdadm -C /dev/md0 -l 5 -n 3 /dev/hda3 missing /dev/hdc3
+>
+> Did that, once with 'missing' in each place. All I get:
+>
+> cdimage root # mdadm --create /dev/md0 --raid-devices=3 --level=5
+> --spare-devices=0 --chunk=64 missing /dev/hdb3 /dev/hdc3
+> mdadm: /dev/hdb3 appears to be part of a raid array:
+>      level=5 devices=3 ctime=Tue Jan 20 10:35:45 2004
+> mdadm: /dev/hdc3 appears to be part of a raid array:
+>      level=5 devices=3 ctime=Tue Jan 20 10:09:43 2004
+> Continue creating array? y
+> mdadm: array /dev/md0 started.
+> cdimage root # mount -r -t reiserfs /dev/md0 /mnt/gentoo/raid/
+> mount: Not a directory
 
-What I did: first --set-faulty /dev/hda3. After that I tried to
-add it back, but got an error reporting that the array isn't
-running because there aren't enough components of it available,
-and that the device could therefor not be added.
+Note that it says "Not a directory".  Not something like "can't read 
+superblock" or "is not a valid block device" or similar errors which would 
+indicate an error with the md array. 
+So, maybe mount is right and /mnt/gentoo/raid/ IS actually wrong...?
 
--- 
-Jean Jordaan
-http://www.upfrontsystems.co.za
+Furthermore, you're not realizing that reiserfs will try to replay its 
+transactions when you attempt a mount, even if mounting RO afaik.
+So maybe more prudent would be a reiserfsck --check...
+
+Maarten
 
