@@ -1,28 +1,24 @@
-From: Andy Arvai <arvai@scripps.edu>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: RAID 5 performance problems
-Date: Thu, 3 Apr 2003 11:49:42 -0800 (PST)
+Date: 03 Apr 2003 20:28:04 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200304031949.LAA28555@astra.scripps.edu>
+Message-ID: <1049398084.11742.88.camel@dhcp22.swansea.linux.org.uk>
+References: <Pine.GSO.4.30.0304030858080.20118-100000@multivac.sdsc.edu>
+	 <Pine.LNX.4.53.0304032104070.3085@ddx.a2000.nu>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+In-Reply-To: <Pine.LNX.4.53.0304032104070.3085@ddx.a2000.nu>
+To: Stephan van Hienen <raid@a2000.nu>
+Cc: "Peter L. Ashford" <ashford@sdsc.edu>, Jonathan Vardy <jonathan@explainerdc.com>, linux-raid@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
+On Iau, 2003-04-03 at 20:20, Stephan van Hienen wrote:
+> > 2.  I/O bandwidth (multiple PCI buses)
+> sure this helps, but he is not even getting near the pci bus
+> limitations...
 
-Shouldn't /proc/mdstat have [UUUUU] instead of [_UUUU]? Perhaps
-this is running in degraded mode. Also, you have 'algorithm 0',
-whereas my raid5 has 'algorithm 2', which is the left-symmetric
-parity algorithm.
-
-Andy 
-
-> cat /proc/mdstat gives: 
-> 
-> Personalities : [raid0] [raid5] 
-> read_ahead 1024 sectors
-> md0 : active raid5 hdk1[4] hdi1[3] hdg1[2] hde1[1] hdc1[0]
-> 	468872704 blocks level 5, 128k chunk, algorithm 0 [5/5] [_UUUU]
-> unused devices: <none>
-
-
+With mirrored software raid you are writing twice the data over
+the PCI bus.
 
