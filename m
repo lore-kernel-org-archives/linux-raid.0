@@ -1,16 +1,20 @@
-From: <sideroff@harddata.com>
-Subject: (unknown)
-Date: Tue, 3 Jun 2003 20:38:46 -0600 (MDT)
+From: Compte centre de calcul UCP <cdc@cdc.u-cergy.fr>
+Subject: (no subject)
+Date: Wed, 04 Jun 2003 07:14:42 +0000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <2290.24.86.161.58.1054694326.squirrel@www.harddata.com>
+Message-ID: <3EDD9C62.3B9C9459@cdc.u-cergy.fr>
+Reply-To: cdc@cdc.u-cergy.fr
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Subject: 
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 subscribe
 
-
+-- 
+Cordialement,
+L'equipe du Service Informatique Recherche
+Universite de Cergy-Pontoise
+http://www.cdc.u-cergy.fr
