@@ -1,73 +1,53 @@
-From: "Cress, Andrew R" <andrew.r.cress@intel.com>
-Subject: RE: Odd linux raid problems with debian testing.
-Date: Tue, 18 Mar 2003 12:56:35 -0800
+From: Lars Marowsky-Bree <lmb@suse.de>
+Subject: multipath bug in 2.5
+Date: Wed, 19 Mar 2003 13:47:02 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <A5974D8E5F98D511BB910002A50A66470580D6DD@hdsmsx103.hd.intel.com>
+Message-ID: <20030319124702.GB18650@marowsky-bree.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: 'Paul Downs' <paul@positive-internet.com>, linux-raid@vger.kernel.org
+Content-Disposition: inline
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Paul,
-
-3 partitions need to be mirrored for a root disk to be truly redundant:
-   root (your /dev/md0)
-   boot (presumably /dev/md1, mounted as /boot)
-   swap (perhaps /dev/md2)
-
-The lilo.conf for these (once they boot ok), would have:
-boot=/dev/md1
-...
-root=/dev/md0
-
-Of course the partition types should be set to fd (Linux Raid) also.
-
-See the Software-RAID-HOWTO from http://www.tldp.org/docs.html#howto
-or http://scsirastools.sourceforge.net/docs/UserGuide section 4.0 
-for more information.
-
-Andy
-
------Original Message-----
-From: Paul Downs [mailto:paul@positive-internet.com] 
-Sent: Tuesday, March 18, 2003 1:19 PM
-To: linux-raid@vger.kernel.org
-Subject: Odd linux raid problems with debian testing.
-
-
-
 Hi,
-  Sorry if this subject is already done to death on the group but I have
-read the archives through google and couldn't find anything similar.  Also
-apologies for the rather long winded post, just be thankful I didn't include
-all the straces... ;-P
 
-  I have an easily repeatable problem with software raid and kernel
-2.4.18/19 + raidtools2 under debian.
+I've just casually glanced over 2.5 code to see how much work it would =
+be to
+port forward, and I think I noticed a bug in multipath_add_disk:
 
-  The root device (/dev/md0) has /dev/hda1 and /dev/hdc1. Here is a chunk of
-the lilo.conf:
+        for (path=3D0; path<mddev->raid_disks; path++)
+                if ((p=3Dconf->multipaths+path)->rdev =3D=3D NULL) {
+                        p->rdev =3D rdev;
+                        conf->working_disks++;
+                        rdev->raid_disk =3D path;
+                        rdev->in_sync =3D 1;
+                        found =3D 1;
+                }
 
-[----- lilo.conf -----]
-# Specifies the boot device.  This is where Lilo installs its boot
-# block.  It can be either a partition, or the raw device, in which
-# case it installs in the MBR, and will overwrite the current MBR.
-#
-boot=/dev/hda
+Is it just me or will that fill in every empty path? Might make sense t=
+o add
+a break in there.
 
-# Specifies the device that should be mounted as root. (`/')
-#
-root=/dev/hda1
-[---------------------]
+But otherwise, wow, the code is looking so much nicer, finally no longe=
+r all
+thos replicated datastructures, bit fields, ordered lists etc to keep i=
+n
+sync... This is going to be a big step forward.
 
-  You cannot do the following:
 
-raidhotadd /dev/md0 /dev/hda1
+Sincerely,
+    Lars Marowsky-Br=E9e <lmb@suse.de>
 
-  as it returns this:
-
-/dev/md0: can not hot-add disk: invalid argument.
-
-  an strace indicates:
-[...]
+--=20
+SuSE Labs - Research & Development, SuSE Linux AG
+ =20
+"If anything can go wrong, it will." "Chance favors the prepared (mind)=
+=2E"
+  -- Capt. Edward A. Murphy            -- Louis Pasteur
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
