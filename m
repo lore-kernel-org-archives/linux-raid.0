@@ -1,37 +1,40 @@
 From: "Justin T. Gibbs" <gibbs@scsiguy.com>
 Subject: Re: "Enhanced" MD code avaible for review
-Date: Thu, 25 Mar 2004 16:46:51 -0700
+Date: Thu, 25 Mar 2004 17:10:24 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1035780000.1080258411@aslan.btc.adaptec.com>
-References: <760890000.1079727553@aslan.btc.adaptec.com> <16480.61927.863086.637055@notabene.cse.unsw.edu.au> <40624235.30108@pobox.com> <200403251200.35199.kevcorry@us.ibm.com> <40632804.1020101@pobox.com> <40632994.7080504@pobox.com>
+Message-ID: <1048370000.1080259823@aslan.btc.adaptec.com>
+References: <760890000.1079727553@aslan.btc.adaptec.com> <16480.61927.863086.637055@notabene.cse.unsw.edu.au> <40624235.30108@pobox.com> <200403251200.35199.kevcorry@us.ibm.com> <40632804.1020101@pobox.com> <40632994.7080504@pobox.com> <1035780000.1080258411@aslan.btc.adaptec.com> <406372C5.600@pobox.com>
 Reply-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <40632994.7080504@pobox.com>
+In-Reply-To: <406372C5.600@pobox.com>
 Content-Disposition: inline
-To: Jeff Garzik <jgarzik@pobox.com>, linux-kernel@vger.kernel.org
-Cc: Kevin Corry <kevcorry@us.ibm.com>, Neil Brown <neilb@cse.unsw.edu.au>, linux-raid@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-kernel@vger.kernel.org, Kevin Corry <kevcorry@us.ibm.com>, Neil Brown <neilb@cse.unsw.edu.au>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> Jeff Garzik wrote:
+>> None of the solutions being talked about perform "failing over" in
+>> userland.  The RAID transforms which perform this operation are kernel
+>> resident in DM, MD, and EMD.  Perhaps you are talking about spare
+>> activation and rebuild?
 > 
-> Just so there is no confusion...  the "failing over...in userland" thing I
-> mention is _only_ during discovery of the root disk.
+> This is precisely why I sent the second email, and made the qualification
+> I did :)
+> 
+> For a "do it in userland" solution, an initrd or initramfs piece examines
+> the system configuration, and assembles physical disks into RAID arrays
+> based on the information it finds.  I was mainly implying that an initrd
+> solution would have to provide some primitive failover initially, before
+> the kernel is bootstrapped...  much like a bootloader that supports booting
+> off a RAID1 array would need to do.
 
-None of the solutions being talked about perform "failing over" in
-userland.  The RAID transforms which perform this operation are kernel
-resident in DM, MD, and EMD.  Perhaps you are talking about spare
-activation and rebuild?
-
-> Similar code would need to go into the bootloader, for controllers that do
-> not present the entire RAID array as a faked BIOS INT drive.
-
-None of the solutions presented here are attempting to make RAID
-transforms operate from the boot loader environment without BIOS
-support.  I see this as a completely tangental problem to what is
-being discussed.
+"Failover" (i.e. redirecting a read to a viable member) will not occur
+via userland at all.  The initrd solution just has to present all available
+members to the kernel interface performing the RAID transform.  There
+is no need for "special failover handling" during bootstrap in either
+case.
 
 --
 Justin
