@@ -1,57 +1,35 @@
-From: Kanoa Withington <kanoa@cfht.hawaii.edu>
+From: ptb@lab.it.uc3m.es (Peter T. Breuer)
 Subject: Re: No response?
-Date: Thu, 20 Jan 2005 08:49:53 -1000 (HST)
-Message-ID: <Pine.LNX.4.55.0501200841070.31637@umi.cfht.hawaii.edu>
+Date: Thu, 20 Jan 2005 19:12:40 +0100
+Message-ID: <ot85c2-es9.ln1@news.it.uc3m.es>
 References: <Pine.LNX.4.58.0501201052240.19586@lewis.et.byu.edu>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.58.0501201052240.19586@lewis.et.byu.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Dougall <davidd@et.byu.edu>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
-Hi David,
-
-I have several systems with similar kernels, raid1 mirrors and XFS
-filesystems and I don't have the problem you are talking about so
-there is no inherent incompatibility.
-
-XFS will, however, shut down a filesystem if an I/O timeout is
-reached. I have seen this on a system with SCSI drives where the host
-controller keeps resetting itself to try to get a failing disk
-back. If both disks are on the same SCSI channel, the card resets can
-sometimes be long enough to trip the XFS timeout. The solution is to
-make sure your mirror elements are on different host controllers, no
-matter what type of interface (SCSI/IDE/ETC) they are using.
-
-After an XFS timeout you can unmount and remount the filesystem,
-unless of course it is the root filesystem.
-
--Kanoa
-
-On Thu, 20 Jan 2005, David Dougall wrote:
-
-> Perhaps I was asking a stupid question or an obvious one, but I have
-> received not response.
-> Maybe if I simplify the question...
->
+David Dougall <davidd@et.byu.edu> wrote:
 > If I am running software raid1 and a disk device starts throwing I/O
 > errors, Is the filesystem supposed to see any indication of this?  I
+
+No - not if the error is on only one disk. The first error will fault
+the disk from the array and the driver will retry the read, and must
+retry from another disk (the first is no longer there).
+
+The actual i/o to the disks does not form part of the i/o to the raid
+array itself, so there is little chance of contamination between the
+two. The raid i/o is only acked back to the user when one of the disk 
+i/o's (on read) has succeeded.
+
 > thought software raid would mask all of this and just fail the drive.
->
+> 
 > I have servers with xfs as the filesystem and xfs will start to throw I/O
 > errors when a disk starts acting up even with software raid in between.
-> Please advise on how I can confirm my setup or if this is possibly a bug
-> how to diagnose further.
+
+That's strange. But not impossible - coding for error situations is
+always difficult, and more difficult to test.
+
 > If it makes a difference, I am running linux-2.4.26
-> Thanks
-> --David Dougall
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+
+Peter
+
