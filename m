@@ -1,105 +1,53 @@
-From: Daniel McNeil <daniel@osdl.org>
-Subject: Re: [PATCH 2.5.68] eliminate deprecated
-	MOD_INC_USE_COUNT/MOD_DEC_USE_COUNT in md.c
-Date: 09 May 2003 14:19:41 -0700
+From: "Peter L. Ashford" <ashford@sdsc.edu>
+Subject: Re: Disks keep disapearing
+Date: Fri, 9 May 2003 17:03:29 -0700 (PDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1052515181.2492.67.camel@ibm-c.pdx.osdl.net>
-References: <3EA595D9.E4CBB684@SteelEye.com>
-	 <16037.55226.267006.507998@notabene.cse.unsw.edu.au>
-	 <3EA6BA35.3A5F25CF@SteelEye.com>
-	 <16049.64476.440042.635337@notabene.cse.unsw.edu.au>
-	 <3EB2EA71.BA0DC039@SteelEye.com>
+Message-ID: <Pine.GSO.4.30.0305091654350.23888-100000@multivac.sdsc.edu>
+References: <002f01c3165c$3a4e2cf0$21dd7e42@admin>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3EB2EA71.BA0DC039@SteelEye.com>
-To: Paul Clements <Paul.Clements@SteelEye.com>
-Cc: Neil Brown <neilb@cse.unsw.edu.au>, linux-raid <linux-raid@vger.kernel.org>
+In-Reply-To: <002f01c3165c$3a4e2cf0$21dd7e42@admin>
+To: brandon <maillists@hosttuls.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-When we attach drives to an array, don't we already have a module
-reference to the md module through the md_fops->owner?
-The try_module_get() should be a __module_get() since we better already
-have a module reference -- doing a try_module_get(THIS_MODULE)
-better not add the 1st reference.
+Brandon,
 
-Wouldn't another choice be for md_exit() to loop through and drop
-all drives that are attached?
+> 3 servers I work with are having issues I am so far unable to track
+> down.  All 3 are setup like this:
+>
+> 2x WD 120GB drives RAID1, ext3
 
-Daniel
 
-On Fri, 2003-05-02 at 15:00, Paul Clements wrote:
-> Neil Brown wrote:
-> > 
-> > On Wednesday April 23, Paul.Clements@SteelEye.com wrote:
-> > > Neil Brown wrote:
-> 
-> > It is possible for an array to be half-assembled.  To have some drives
-> > attached, but not to have been started.
-> > This can happen (for example) if you use mdadm to assemble a raid5
-> > array without given all of the drives, and without giving --run.
-> > 
-> > In this case you don't want 'md' to be unloaded, but you haven't
-> > loaded a personality module yet.  So you need to take a reference to
-> > the md module whenever you start putting an md array together.
-> 
-> Ah...I had missed that...appears that was an existing problem, even with
-> the MOD_INC_USE_COUNT in place. 
-> 
-> So we need to do the ref counting at bind/unbind time, rather than
-> activation/deactivation time.
-> 
-> So here's the patch...compiled and tested briefly against
-> 2.5.68-bklatest, the ref counting looks correct
-> 
-> --
-> Paul
-> 
-> ______________________________________________________________________
-> 
-> --- linux-2.5/drivers/md/md.c.2.5.68-bklatest	2003-05-02 11:56:18.000000000 -0400
-> +++ linux-2.5/drivers/md/md.c	2003-05-02 13:11:57.000000000 -0400
-> @@ -181,7 +181,6 @@ static void mddev_put(mddev_t *mddev)
->  		list_del(&mddev->all_mddevs);
->  		mddev_map[mdidx(mddev)] = NULL;
->  		kfree(mddev);
-> -		MOD_DEC_USE_COUNT;
->  	}
->  	spin_unlock(&all_mddevs_lock);
->  }
-> @@ -203,7 +202,6 @@ static mddev_t * mddev_find(int unit)
->  		mddev_map[unit] = new;
->  		list_add(&new->all_mddevs, &all_mddevs);
->  		spin_unlock(&all_mddevs_lock);
-> -		MOD_INC_USE_COUNT;
->  		return new;
->  	}
->  	spin_unlock(&all_mddevs_lock);
-> @@ -1016,7 +1014,12 @@ static int bind_rdev_to_array(mdk_rdev_t
->  		if (find_rdev_nr(mddev, rdev->desc_nr))
->  			return -EBUSY;
->  	}
-> -			
-> +
-> +	/* get a module ref if this is the first disk in the array */
-> +	if (list_empty(&mddev->disks))
-> +		if (!try_module_get(THIS_MODULE))
-> +			return -EBUSY;
-> +
->  	list_add(&rdev->same_set, &mddev->disks);
->  	rdev->mddev = mddev;
->  	printk(KERN_INFO "md: bind<%s>\n", bdev_partition_name(rdev->bdev));
-> @@ -1031,6 +1034,11 @@ static void unbind_rdev_from_array(mdk_r
->  	}
->  	list_del_init(&rdev->same_set);
->  	printk(KERN_INFO "md: unbind<%s>\n", bdev_partition_name(rdev->bdev));
-> +
-> +	/* drop module ref if this array has no more disks */
-> +	if (list_empty(&rdev->mddev->disks))
-> +		module_put(THIS_MODULE);
-> +
->  	rdev->mddev = NULL;
->  }
->  
+> All 3 of the servers run fine for about a week, then they crash.  When
+> they come back up, one of the drives is missing from the array.  Nothing
+> in the messsages log that I can find is helpful.  Using sar, I can see
+> that the load average isnt too high before they crash.
+>
+> When the first server crashed, I thought perhaps the "Win95 Ext'd (LBA)"
+> partition type might have been causing some problems.  I replaced the
+> failed drive, just in case it was hardware, partitioned the drive to be
+> the same, except made the extended part. "5  Extended".  Rebuilt the
+> array, but still had these crashes.
+>
+> Any suggestions on how I should go about troubleshooting this? Anyone
+> know what might be causing this?
+
+WD has had problems similar to this with many of their drives.  It just
+decides to 'go away'.  There is a fix available on their web site for the
+180GB and 200GB drives (and a better description of the problem), but the
+problem is NOT limited to those drives.
+
+If the description looks like it matches your problem, you should contact
+the WD tech support people, and get the fix for your drives from them.
+You'll have to go to level 2 support, and maybe even to a product manager,
+to get the fix.
+
+I don't know if this particular problem could cause the crashed you're
+seeing, but it could cause the drives to disappear.  Perhaps the drives
+are disappearing, and causing the crash.
+
+Good luck.
+				Peter Ashford
 
