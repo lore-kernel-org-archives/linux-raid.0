@@ -1,58 +1,43 @@
-From: Jim Paris <jim@jtan.com>
+From: "H. Peter Anvin" <hpa@zytor.com>
 Subject: Re: RAID-6: help wanted
-Date: Sun, 24 Oct 2004 02:46:51 -0400
+Date: Sun, 24 Oct 2004 00:09:29 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20041024064651.GA5343@jim.sh>
-References: <cleqh6$ps4$1@terminus.zytor.com> <417B3CF9.7090107@wasp.net.au>
+Message-ID: <417B5529.2070709@zytor.com>
+References: <cleqh6$ps4$1@terminus.zytor.com> <417B3CF9.7090107@wasp.net.au> <417B546C.3050706@zytor.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <417B3CF9.7090107@wasp.net.au>
+In-Reply-To: <417B546C.3050706@zytor.com>
 To: Brad Campbell <brad@wasp.net.au>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> >There is currently a data-corruption bug in the RAID-6 md layer
-> >(raid6main.c).  I have so far not been successful in locating it,
-> >although it is easily reproducible, thanks to a set of scripts by Jim
-> >Paris.  I suspect it is a race condition between raid6d and the rest
-> >of the kernel.
+H. Peter Anvin wrote:
+> Brad Campbell wrote:
+>>
+>> Great, can we get a copy of the scripts to try and assist?
+>>
+>> Brad
 > 
-> Great, can we get a copy of the scripts to try and assist?
+> In the process of being uploaded to:
+> 
+> http://www.zytor.com/~hpa/raid6-bug/
+> 
+> It'll be about 40 minutes until it's uploaded, because of the 80 MB data 
+> file.
+> 
+> This will create a RAID-6 volume on a loopback device, fail a unit, and 
+> then write a bunch of stuff, which will corrupt the filesystem.  The 
+> corruption only happens when writing to a volume that is running in 
+> degraded mode; it seems to happen both with 1 and 2 disks missing.
+> 
 
-Sure:
+Changed to:
 
----
+http://userweb.kernel.org/~hpa/raid6-bug/
 
-Date: Fri, 6 Aug 2004 00:04:39 -0400
-From: Jim Paris <jim@jtan.com>
-To: "H. Peter Anvin" <hpa@zytor.com>
-Cc: linux-raid@vger.kernel.org
-Subject: Re: Kernel panic, FS corruption  Was: Re: Call for RAID-6 users
+(It's a faster server, but it'll still take about 40 minutes from now 
+until it's uploaded, but then it can at least be a quicker download.)
 
-> If you can reproduce it with ext2/3 it would make debugging simpler, 
-> because I understand the ext code and data structures a lot better.
-
-This demonstrates it on ext2.  I can't seem to reproduce it with just
-simple use of 'dd', but it shows up if I untar a ton of data.
-
-This script:
-- creates five 100MB "disks" through loopback
-- puts them in a six-disk RAID-6 array (resulting size=400MB, degraded)
-- untars about 350MB of data to the array
-- runs e2fsck, which shows filesystem errors
-
-Usage: 
-- put r6ext.sh and big.tar.bz2 in a directory
-- run r6ext.sh as root
-
-Sorry for the huge files, but e2fsck didn't show any problems when I
-scaled everything down by a factor of 10.  You could probably make
-your own big.tar.bz2 and see the same problem, as there's nothing
-special about this data.
-
-  http://stonewall.mit.edu/~jim/r6ext.sh
-  http://stonewall.mit.edu/~jim/big.tar.bz2 (77MB)
-
--jim
+	-hpa
