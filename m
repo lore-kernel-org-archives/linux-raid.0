@@ -1,45 +1,50 @@
-From: Norman Schmidt <Norman.Schmidt@chemie.uni-erlangen.de>
-Subject: Bootable software raid and SuSE 9.1
-Date: Wed, 7 Jul 2004 22:37:01 +0200 (CEST)
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: Should I Start Over?
+Date: Wed, 7 Jul 2004 16:55:44 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.58.0407072225080.16359@pcmail.chemie.uni-erlangen.de>
+Message-ID: <200407072055.i67Kti309497@watkins-home.com>
+References: <2446.66.230.1.97.1089232643.squirrel@exitwound.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <2446.66.230.1.97.1089232643.squirrel@exitwound.org>
+To: stephen@exitwound.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello out there!
+That would be fine.  But we don't yet know which disk was trashed by the
+re-build.  But as long as you have 1 missing disk it will not rebuild over
+any more data.
+If your command does not work try again with a different missing disk.
 
-Since I have a broken leg :-[ I have lots of time to play around wirh 
-"subject". With Debian, everything works really well now.
+-----Original Message-----
+From: Stephen Hargrove [mailto:stephen@exitwound.org] 
+Sent: Wednesday, July 07, 2004 4:37 PM
+To: Guy
+Cc: linux-raid@vger.kernel.org
+Subject: RE: Should I Start Over?
 
-But: I use a kernel with compiled-in software raid. SuSe does everything 
-with an initrd.
+Guy said:
+> Humm.  I would guess it would re-build to the last disk on the command
+> line.
+> Maybe just enter the command again.  Can't do any more damage!  Then do
+> the
+> 2 commands and send the output.
 
-At the moment, I am experimenting with an unpatched SuSE 9.1 release 
-installation (there were issues with a faulty mkinitrd-patch...).
-I am trying to get the system to boot from a /dev/md6 (which is 
-/dev/hda6,/dev/hdc6) and I want to be the partition types 83, not fd.
-I tried to use the way I use in debian (boot=/dev/md6, raid-extra-boot 
-..., append md=6,/... in lilo.conf), but it refuses to assemble the raid.
+Ok, I want to be perfectly clear on this.  I'm going to enter the
+following command, right?
 
-To be more precise, I get output concerning software raid from the kernel 
-at two places in the boot process:
+# mdadm --create /dev/md0 --level=5 --raid-devices=3 /dev/hdg1 /dev/hdd1
+missing
 
-First, it tries to assemble the raid array /dev/md6 from /dev/hda6 and 
-/dev/hdc6, but fails, since personality 3 is not (yet) registered. I 
-guess this must be some kind of code in the kernel concerning software 
-raid which works without any registered modules (at least, it is hit, but 
-does not work).
+> Did the original array have 3 disks and 1 spare?  If so, ignore the spare
+> until things are working again.
 
-Later on, the module raid1 is loaded, and then a "raidautorun" is called, 
-which tries to assemble a /dev/md0 (which does not exist, but seems to be 
-hardcoded inside the SuSE linuxrc which is inside the initrd.
+Yes.  /dev/hde1 was the spare.  The array was comprised of /dev/hdg1,
+/dev/hdd1, and /dev/hdc1.
 
-Am I abot right abot the mechanisms and the reason for their failure?
-Can anyone suggest any solution?
+--
+Steve
 
-Help would be appreciated.
-
-Thanks a lot, Norman.
