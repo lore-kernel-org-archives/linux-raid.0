@@ -1,128 +1,81 @@
 From: maarten <maarten@ultratux.net>
 Subject: Re: Spares and partitioning huge disks
-Date: Sat, 8 Jan 2005 20:01:09 +0100
-Message-ID: <200501082001.09317.maarten@ultratux.net>
-References: <crmt7e$8d6$1@sea.gmane.org> <20050108145228.GB26475@janus> <200501081749.32816.maarten@ultratux.net>
+Date: Sat, 8 Jan 2005 20:25:20 +0100
+Message-ID: <200501082025.20463.maarten@ultratux.net>
+References: <200501081855.j08It8910389@www.watkins-home.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200501081749.32816.maarten@ultratux.net>
+In-Reply-To: <200501081855.j08It8910389@www.watkins-home.com>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Saturday 08 January 2005 17:49, maarten wrote:
-> On Saturday 08 January 2005 15:52, Frank van Maarseveen wrote:
-> > On Fri, Jan 07, 2005 at 04:57:35PM -0500, Guy wrote:
-> > > His plan is to split the disks into 6 partitions.
-> > > Each of his six RAID5 arrays will only use 1 partition of each physical
-> > > disk.
-> > > If he were to lose a disk, all 6 RAID5 arrays would only see 1 failed
-> > > disk. If he gets 2 read errors, on different disks, at the same time,
-> > > he has a 1/6 chance they would be in the same array (which would be
-> > > bad). His plan is to combine the 6 arrays with LVM or a linear array.
-> >
-> > Intriguing setup. Do you think this actually improves the reliability
-> > with respect to disk failure compared to creating just one large RAID5
-> > array?
+On Saturday 08 January 2005 19:55, you wrote:
+> My warning about user error was not targeted at you!  :)
+> Sorry if it seemed so.
 
-As the system is now online again, busy copying, I can show the exact config:
+:-)
 
-dozer:~ # fdisk -l /dev/hde
+> And the order does not matter!
 
-Disk /dev/hde: 250.0 GB, 250059350016 bytes
-255 heads, 63 sectors/track, 30401 cylinders
-Units = cylinders of 16065 * 512 = 8225280 bytes
+Hm... yes you're right. But adding the disk is more prudent (or is it?)
 
-   Device Boot    Start       End    Blocks   Id  System
-/dev/hde1             1       268   2152678+  fd  Linux raid autodetect
-/dev/hde2           269       331    506047+  fd  Linux raid autodetect
-/dev/hde3           332       575   1959930   fd  Linux raid autodetect
-/dev/hde4           576     30401 239577345    5  Extended
-/dev/hde5           576      5439  39070048+  fd  Linux raid autodetect
-/dev/hde6          5440     10303  39070048+  fd  Linux raid autodetect
-/dev/hde7         10304     15167  39070048+  fd  Linux raid autodetect
-/dev/hde8         15168     20031  39070048+  fd  Linux raid autodetect
-/dev/hde9         20032     24895  39070048+  fd  Linux raid autodetect
-/dev/hde10        24896     29759  39070048+  fd  Linux raid autodetect
-/dev/hde11        29760     30401   5156833+  83  Linux
+Grr. Now you've got ME thinking !  ;-)
 
-dozer:~ # cat /proc/mdstat
-Personalities : [linear] [raid0] [raid1] [raid5] [multipath]
-read_ahead 1024 sectors
-md1 : active raid1 hdg2[1] hde2[0]
-      505920 blocks [2/2] [UU]
+Normally, the minute a drive fails, it gets kicked and the spare would kick in 
+and md syncs this spare.  We now have a non-degraded array again.
+If I then fail the spare first, the array goes into degraded mode. Whereas if 
+I hotadd the disk, it becomes a spare. Presumably if I now fail the original 
+spare, the real disk will get synced again, to get the same setup as before.
+But yes, you're right; during this step it is degraded again. Oh well...
 
-md0 : active raid1 hdg1[1] hde1[0]
-      2152576 blocks [4/2] [UU__]
+> It would be cool if the rebuild to the repaired disk could be done before
+> the spare was failed or removed.  Then the array would not be degraded at
+> all.
 
-md2 : active raid1 sdb2[0] sda2[1]
-      505920 blocks [2/2] [UU]
+Yes, but this would be impossible to do, since md cannot anticipate _which_ 
+disk you're going to fail before it happens. ;)
 
-md3 : active raid5 sdb5[2] sda5[3] hdg5[1] hde5[0]
-      117209856 blocks level 5, 64k chunk, algorithm 2 [4/4] [UUUU]
+> If I ever re-build my system, or build a new system, I hope to use RAID6.
 
-md4 : active raid5 sdb6[2] sda6[3] hdg6[1] hde6[0]
-      117209856 blocks level 5, 64k chunk, algorithm 2 [4/4] [UUUU]
+I tried this in last fall, but it didn't work out then. See the list archives.
 
-md5 : active raid5 sdb7[2] sda7[3] hdg7[1] hde7[0]
-      117209856 blocks level 5, 64k chunk, algorithm 2 [4/4] [UUUU]
+> The Seagate test is on-line.  Before I started using the Seagate tool, I
+> used dd.
 
-md6 : active raid5 sdb8[2] sda8[3] hdg8[1] hde8[0]
-      117209856 blocks level 5, 64k chunk, algorithm 2 [4/4] [UUUU]
+I'm not as cautious as you are. I just pray the hot spare does what its 
+supposed to do.
 
-md7 : active raid5 sdb9[2] sda9[3] hdg9[1] hde9[0]
-      117209856 blocks level 5, 64k chunk, algorithm 2 [4/4] [UUUU]
+> My disks claim to be able to re-locate bad blocks on read error.  But I am
+> not sure if this is correctable errors or not.  If not correctable errors
+> are re-located, what data does the drive return?  Since I don't know, I
+> don't use this option.  I did use this option for awhile, but after
+> re-reading about it, I got concerned and turned it off.
 
-md8 : active raid5 sdb10[2] sda10[3] hdg10[1] hde10[0]
-      117209856 blocks level 5, 64k chunk, algorithm 2 [4/4] [UUUU]
+Afaik, if a drive senses it gets more 'difficult' than usual to read a sector, 
+it will automatically copy it to a spare sector and reassign it. However, I 
+doubt the OS gets any wiser this happens, so neither would md.
+In which cases the error gets noticed by md I don't precisely know, but I 
+reckon that may well be when the error is uncorrectible.
+Not _undetectable_, to quote from another thread... 8-)  
 
-# Where md0 is "/" (temporary degraded), and md1 and md2 are swap.  
-# The md3 through md8 are the big arrays that are part of LVM.
+> This is from the readme file:
+> Automatic Read Reallocation Enable (ARRE)
+>         -Marreon/off  enable/disable ARRE bit
+>            On, drive automatically relocates bad blocks detected
+>            during read operations.  Off, drive creates Check condition
+>            status with sense key of Medium Error if bad blocks are
+>            detected during read operations.
 
-dozer:~ # pvscan
-pvscan -- reading all physical volumes (this may take a while...)
-pvscan -- ACTIVE   PV "/dev/md3" of VG "lvm_video" [111.72 GB / 0 free]
-pvscan -- ACTIVE   PV "/dev/md4" of VG "lvm_video" [111.72 GB / 0 free]
-pvscan -- ACTIVE   PV "/dev/md5" of VG "lvm_video" [111.72 GB / 0 free]
-pvscan -- ACTIVE   PV "/dev/md6" of VG "lvm_video" [111.72 GB / 0 free]
-pvscan -- ACTIVE   PV "/dev/md7" of VG "lvm_video" [111.72 GB / 0 free]
-pvscan -- ACTIVE   PV "/dev/md8" of VG "lvm_video" [111.72 GB / 0 free]
-pvscan -- total: 6 [670.68 GB] / in use: 6 [670.68 GB] / in no VG: 0 [0]
+Hm. I would definitely ENable that option.  But what do I know.
 
-dozer:~ # vgdisplay
---- Volume group ---
-VG Name               lvm_video
-VG Access             read/write
-VG Status             available/resizable
-VG #                  0
-MAX LV                256
-Cur LV                1
-Open LV               1
-MAX LV Size           2 TB
-Max PV                256
-Cur PV                6
-Act PV                6
-VG Size               670.31 GB
-PE Size               32 MB
-Total PE              21450
-Alloc PE / Size       21450 / 670.31 GB
-Free  PE / Size       0 / 0
-VG UUID               F0EF61-uu4P-cnCq-6oQ6-CO5n-NE9g-5xjdTE
-
-dozer:~ # df
-Filesystem           1K-blocks      Used Available Use% Mounted on
-/dev/md0               1953344   1877604     75740  97% /
-/dev/lvm_video/mythtv
-                     702742528  42549352 660193176   7% /mnt/store
-
-# As of yet there are no spares.  This is a todo, the most important thing is 
-to get the app back in working state now.  I'll probably make a /usr md 
-device in future from hdX3, as "/" is completely full. This was because of 
-legacy constraints, migrating drives...
+It also depends I guess on how fatal reading bad data undetected is for you. 
+For me, if one of my mpegs or mp3s develops a bad sector I can probably live 
+with that. :-)
 
 Maarten
 
