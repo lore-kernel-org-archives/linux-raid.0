@@ -1,69 +1,97 @@
-From: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Subject: Re: "Enhanced" MD code avaible for review
-Date: Fri, 26 Mar 2004 10:43:09 -0700
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <1564440000.1080322989@aslan.btc.adaptec.com>
-References: <760890000.1079727553@aslan.btc.adaptec.com> <16480.61927.863086.637055@notabene.cse.unsw.edu.au> <40624235.30108@pobox.com> <200403251200.35199.kevcorry@us.ibm.com> <40632804.1020101@pobox.com> <1030470000.1080257746@aslan.btc.adaptec.com> <406375B0.5040406@pobox.com>
-Reply-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
+From: "Customer Service" <it4soho@it4soho.com>
+Subject: RE: Promise SuperSwap 1000 & linux software raid ?
+Date: Fri, 26 Mar 2004 13:06:08 -0500
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <IKEGIEMOLKKHNAHLOLIDCEONCAAA.it4soho@it4soho.com>
+References: <200403241117.i2OBHJv06429@mail.macqel.be>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <406375B0.5040406@pobox.com>
-Content-Disposition: inline
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Kevin Corry <kevcorry@us.ibm.com>, linux-kernel@vger.kernel.org, Neil Brown <neilb@cse.unsw.edu.au>, linux-raid@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <200403241117.i2OBHJv06429@mail.macqel.be>
+To: Philippe De Muyter <phdm@macqel.be>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->>> I respectfully disagree with the EMD folks that a userland approach is
->>> impossible, given all the failure scenarios.
->> 
->> 
->> I've never said that it was impossible, just unwise.  I believe
->> that a userland approach offers no benefit over allowing the kernel
->> to perform all meta-data operations.  The end result of such an
->> approach (given feature and robustness parity with the EMD solution)
->> is a larger resident side, code duplication, and more complicated
->> configuration/management interfaces.
-> 
-> There is some code duplication, yes.  But the right userspace solution
-> does not have a larger RSS, and has _less_ complicated management
-> interfaces.
->
-> A key benefit of "do it in userland" is a clear gain in flexibility,
-> simplicity, and debuggability (if that's a word).
+Phillipe (et. al)...
 
-This is just as much hand waving as, 'All that just screams "do it in
-userland".' <sigh>
+The Linux drivers for ATA-RAID do not support the hot-swap and hot-rebuild
+feature of the Promise SuperSwap line of ATA drive trays -- only the Promise
+provided drivers can do that (see
+http://www.promise.com/support/download/download2_eng.asp?productId=88&categ
+ory=driver&os=3 )
 
-I posted a rather detailed, technical, analysis of what I believe would
-be required to make this work correctly using a userland approach.  The
-only response I've received is from Neil Brown.  Please, point out, in
-a technical fashion, how you would address the feature set being proposed:
+The problem with these drivers is that they are generally tied to the
+original kernel release of the RHL kernels. However, there is a way to
+force-load the driver with later kernel releases (see the HOWTO here:
+http://www.tldp.org/HOWTO/Linux-Promise-RAID1-HOWTO/modinstall.html )
 
- o Rebuilds
- o Auto-array enumeration
- o Meta-data updates for topology changes (failed members, spare activation)
- o Meta-data updates for "safe mode"
- o Array creation/deletion
- o "Hot member addition"
+Also note that the Linux kernel raid cannot be mixed with the Promise
+drivers... so some care is necessary (I think it is nicely covered in the
+above howto)
 
-Only then can a true comparative analysis of which solution is "less
-complex", "more maintainable", and "smaller" be performed.
+I use the Promise driver over the kernel driver for precisely the reason you
+have inquired -- the hot rebuild capability. Good luck with your use of this
+information!!!
 
-> But it's hard.  It requires some deep thinking.  It's a whole lot easier
-> to do everything in the kernel -- but that doesn't offer you the
-> protections of userland, particularly separate address spaces from the
-> kernel, and having to try harder to crash the kernel.  :)
+Best Regards,
 
-A crash in any component of a RAID solution that prevents automatic
-failover and rebuilds without customer intervention is unacceptable.
-Whether it crashes your kernel or not is really not that important other
-than the customer will probably notice that their data is no longer
-protected *sooner* if the system crashes.  In other-words, the solution
-must be *correct* regardless of where it resides.  Saying that doing
-a portion of it in userland allows it to safely be buggier seems a very
-strange argument.
+Dan McAllister, President
+IT4SOHO, LLC
 
---
-Justin
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org]On Behalf Of Philippe De Muyter
+Sent: Wednesday, March 24, 2004 6:17 AM
+To: linux-raid@vger.kernel.org
+Subject: Promise SuperSwap 1000 & linux software raid ?
+
+
+Sorry to disturb you.
+
+I have found this mail address when searching for information on experience
+with the promise superswap 1000 ide hot swap enclosure on linux.
+
+We have superswap 1000 enclosure here with fasttrak tx 2000 pci card, and
+I would like to use that with the software raid system of linux.   My users
+request hot-swap capability, with no human intervention to initiate
+reconstruction.  We need raid1 (mirroring).
+
+How can that be achieved ?
+
+I already tried myself, but we have several problems :
+
+- if we power up the computer with only one disk, linux will not see the
+second disk when it is inserted.
+
+- if we power up with two disks, and then replace one disk, the replaced
+disk
+is not initialized correctly (slow transfer e.g.) and mdadm does not see
+that the disk is back.  We must manually issue the following script to
+initiate a reconstruction :
+
+	    mdadm -r /dev/md1 /dev/hdg2
+	    mdadm -r /dev/md0 /dev/hdg1
+	    sfdisk -d /dev/hde > /tmp/partitions.hdg
+	    hdparm -w /dev/hdg
+	    hdparm -d 1 /dev/hdg
+	    hdparm -m 16 /dev/hdg
+	    sfdisk /dev/hdg < /tmp/partitions.hdg
+	    mdadm -a /dev/md0 /dev/hdg1
+	    mdadm -a /dev/md1 /dev/hdg2
+
+- the leds are not handled the way they are with the proprietary promise
+driver.
+
+We currently use linux-2.4.21.
+
+Thanks in advance.
+
+Philippe De Muyter  phdm at macqel dot be  Tel +32 27029044
+Macq Electronique SA  rue de l'Aeronef 2  B-1140 Bruxelles  Fax +32 27029077
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
