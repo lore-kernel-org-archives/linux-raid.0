@@ -1,7 +1,7 @@
 From: "Mukesh S. Bafna" <bafna.mukesh@spsoftindia.com>
-Subject: RAID implentation interface for UNH target emulator ?
-Date: Mon, 20 Dec 2004 18:08:38 +0530
-Message-ID: <DPEJLNNHEHGKGHFBKCFKAEBECFAA.bafna.mukesh@spsoftindia.com>
+Subject: buffer cache for SCSI
+Date: Mon, 20 Dec 2004 18:20:12 +0530
+Message-ID: <DPEJLNNHEHGKGHFBKCFKAEBFCFAA.bafna.mukesh@spsoftindia.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="iso-8859-1"
@@ -15,10 +15,11 @@ List-Id: linux-raid.ids
 
 Hi All,
 
-I am working on RAID system to interface with UNH Target Emulator. I want
-know are there any open source RAID implementations available which
-interfaces with UNH target Emulator.
+	I want to pass SCSI commands to RAID. Current md driver doesn't support
+this. It uses buffer cache. I want to know how to create a cache on SCSI
+based system? Is there any open source implementation available which does
+this ?
 
-thanks,
-mukesh
+Thanks and Regards
+Mukesh
 
