@@ -1,61 +1,43 @@
-From: "Eff Norwood" <enorwood@effrem.com>
-Subject: RE: What are those changes  for fixing the RAID0 performance?
-Date: Mon, 19 Aug 2002 08:21:12 -0700
+From: "Rick Altherr" <kc8apf@kc8apf.net>
+Subject: RAID5 problems
+Date: Mon, 19 Aug 2002 12:39:27 -0400 (EDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <CFEAJJEGMGECBCJFLGDBMEHACCAA.enorwood@effrem.com>
-References: <010401c24791$5aeb3830$5701a8c0@bomoon>
+Message-ID: <4534.198.30.180.62.1029775167.squirrel@mail.kc8apf.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <010401c24791$5aeb3830$5701a8c0@bomoon>
-To: bo <bo@sosnetwork.net>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Greetings,
+I am brand new to software RAID on linux so please bear with me.
 
-I am guessing that this behavior is due to kernel virtual memeory management
-and as a result porting may be rough. Here are some overall server tuning
-suggestions that include VM suggestions I hope will help you and not require
-you to do a lot of porting:
+I have (4) 23GB SCSI drives on an Adaptec 2940UW controller in an
+alphastation 600.  I created BSD disklabels on all the drives and
+partitioned them as one partition per drive.  I made a raidtab containing
+all 4 partitions as members of a single RAID5 array.  I ran mkraid
+/dev/md0 and the raid array was created and functioned.
 
-http://people.redhat.com/alikins/system_tuning.html
+This is where the problem lies.  If I stop the RAID array using raidstop
+/dev/md0 and run fdisk on each drive, it reports that each drive has a BSD
+disklabel with a single partition.  However, if I format the RAID array
+using mke2fs -b 4096 -R stride=8, stop the array with raidstop, and check
+each drive with fdisk, the disklabel is removed on the second and third
+drives only.  The first and fourth are fine though.
 
-Regards,
+Trying to start the array again with raidstart fails and mkraid will not
+recreate the array until I create disklabels on the second and third
+drives.
 
-Effrem Norwood
+I have not tried any other filesystems as ext2 is the only one my kernel
+currently supports.
 
-> I have been looking for "what changes are made to fix/improve the parallel
-> access(?) to disks simultanously?".
-> I noticed as follow;
->
-> Up to Linux2.4.9  it got the same performance for RAID0(2-way
-> stripe) and a
-> single disk(JBOD),
-> about 15 MB/sec with DMA on(hdparm -tT /dev/mdx).
->
-> On Linux 2.4.10 it improves to about 25 MB/sec for RAID0, 15 MB/sec for
-> single disk.
-> On Linux 2.4.18 it got the right performance; about 31 MB/sec for RAID0.
->
-> I tried to port the difference on /driver/ide and /drivers/md, but it did
-> not help.
-> I think there were changes on other functions to fix the parallel
-> access(?)
-> to disks simultanously OR
-> to improve the RAID0 performance .
->
-> Why am I doing this kind of homework?
->
-> I can not migrate our linux to 2.4.18 so I want to port ONLY the fixes for
-> this performance
-> issue. I use Linux2.4.5.
->
-> Please help me if you know how I can work around.
->
-> Thanks in advance,
->
-> Bo
+Any ideas?
+-- 
+Rick Altherr
+KC8APF
+kc8apf@kc8apf.net
+
+
 
 
