@@ -1,21 +1,15 @@
-From: Catalin BOIE <util@deuroconsult.ro>
+From: Juri Haberland <list-linux.raid@spoiled.org>
 Subject: Re: RAID1: Disks alternating on reads
-Date: Mon, 22 Sep 2003 10:55:46 +0300 (EEST)
+Date: Mon, 22 Sep 2003 09:39:05 +0000 (UTC)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.58.0309221055290.27913@hosting.rdsbv.ro>
+Message-ID: <news2mail-bkmfvp$a7u$1@cartman.spoiled.org>
 References: <014b01c38053$0358ad90$0180a8c0@what>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Reply-To: Juri Haberland <juri@koschikode.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <014b01c38053$0358ad90$0180a8c0@what>
-To: Andrew Herdman <andrew@whine.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, 21 Sep 2003, Andrew Herdman wrote:
-
-I put the same question. I get no response.
-
+"Andrew Herdman" <andrew@whine.com> wrote:
 > Pardon me if my assumption was incorrect, but I was under the belief that
 > when using software RAID1, that when reads occurred on the RAID device that
 > it would read from both drives in a striped fashion similar to how RAID0
@@ -24,118 +18,32 @@ I put the same question. I get no response.
 > seconds before moving onto the next drive and then another 10-20 seconds and
 > back again.  This is not allowing for any performance increase, it just lets
 > the drives rest alternately.
->
+> 
 > This link http://www.whine.com/~andrew/alternating_disk.png is a gkrellm
 > snapshot of the activity, hda and hde are the two disks in the RAID array.
 > Each disk is the master on it's own channel.
->
-> I also included the mdadm --query --detail info below for each RAID
-> partition
->
-> how:~# mdadm --query --detail /dev/md/1
-> /dev/md/1:
->         Version : 00.90.00
->   Creation Time : Sat Jul 19 08:30:42 2003
->      Raid Level : raid1
->      Array Size : 62400 (60.94 MiB 63.90 MB)
->     Device Size : 62400 (60.94 MiB 63.90 MB)
->    Raid Devices : 2
->   Total Devices : 2
-> Preferred Minor : 1
->     Persistence : Superblock is persistent
->
->     Update Time : Mon Sep 15 08:41:38 2003
->           State : dirty, no-errors
->  Active Devices : 2
-> Working Devices : 2
->  Failed Devices : 0
->   Spare Devices : 0
->
->
->     Number   Major   Minor   RaidDevice State
->        0       3        1        0      active sync
-> /dev/ide/host0/bus0/target0/lun0/part1
->        1      33        1        1      active sync
-> /dev/ide/host2/bus0/target0/lun0/part1
->            UUID : faa4b7b2:4832fae8:ac2fa294:2fce1d85
->          Events : 0.38
->
-> how:~# mdadm --query --detail /dev/md/2
-> /dev/md/2:
->         Version : 00.90.00
->   Creation Time : Sat Jul 19 08:32:18 2003
->      Raid Level : raid1
->      Array Size : 119140544 (113.62 GiB 121.100 GB)
->     Device Size : 119140544 (113.62 GiB 121.100 GB)
->    Raid Devices : 2
->   Total Devices : 2
-> Preferred Minor : 2
->     Persistence : Superblock is persistent
->
->     Update Time : Mon Sep 15 08:41:38 2003
->           State : dirty, no-errors
->  Active Devices : 2
-> Working Devices : 2
->  Failed Devices : 0
->   Spare Devices : 0
->
->
->     Number   Major   Minor   RaidDevice State
->        0       3        2        0      active sync
-> /dev/ide/host0/bus0/target0/lun0/part2
->        1      33        2        1      active sync
-> /dev/ide/host2/bus0/target0/lun0/part2
->            UUID : 0ad35f02:56a32094:c8301e3e:45895c16
->          Events : 0.38
->
-> how:~# mdadm --query --detail /dev/md/3
-> /dev/md/3:
->         Version : 00.90.00
->   Creation Time : Sat Jul 19 08:31:37 2003
->      Raid Level : raid1
->      Array Size : 499904 (488.19 MiB 511.90 MB)
->     Device Size : 499904 (488.19 MiB 511.90 MB)
->    Raid Devices : 2
->   Total Devices : 2
-> Preferred Minor : 3
->     Persistence : Superblock is persistent
->
->     Update Time : Mon Sep 15 08:41:38 2003
->           State : dirty, no-errors
->  Active Devices : 2
-> Working Devices : 2
->  Failed Devices : 0
->   Spare Devices : 0
->
->
->     Number   Major   Minor   RaidDevice State
->        0       3        3        0      active sync
-> /dev/ide/host0/bus0/target0/lun0/part3
->        1      33        3        1      active sync
-> /dev/ide/host2/bus0/target0/lun0/part3
->            UUID : f8b2d95b:93055c43:d78427ac:197a610f
->          Events : 0.38
->
-> how:~# df -h
-> Filesystem            Size  Used Avail Use% Mounted on
-> /dev/md/2             112G   94G   16G  86% /
-> /dev/md/1              60M   16M   42M  28% /boot
->
-> Have I configured something incorrectly?  Or is this really the way RAID1
-> works?
->
-> Thanks
->  Andrew
-> --
-> Andrew Herdman
-> andrew@whine.com - Primary E-Mail
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
 
----
-Catalin(ux) BOIE
-catab@deuroconsult.ro
+Was that a single large file that you read or multiple files?
+
+As far as I could observe, the RAID1 code reads one file from one disk
+and never changes disks during this read - so you get the performance
+of one disk.
+*But* the code distributes different writes to different disks.
+
+Try the following:
+dd if=/dev/mdX of=/dev/null&
+
+Now watch gkrellm and see that it reads only from one disk.
+Then start another instance of dd. You will see that this instance reads
+from the other RAID disk.
+
+This way one disk can seek for a file while the other one is transfering
+one. A single read won't be faster but concurrent access to the same
+filesystem will be much faster than on a non-RAID filesystem.
+
+Cheers,
+Juri
+
+-- 
+Juri Haberland  <juri@koschikode.com> 
+
