@@ -1,58 +1,61 @@
-From: Mark Watts <mrwatts@fast24.co.uk>
+From: Gordon Henderson <gordon@drogon.net>
 Subject: Re: 1x 3ware controllers vs. 2x 3ware controllers
-Date: Sun, 1 Aug 2004 16:33:25 +0100
+Date: Sun, 1 Aug 2004 18:18:57 +0100 (BST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200408011633.25028.mrwatts@fast24.co.uk>
+Message-ID: <Pine.LNX.4.56.0408011806110.6442@lion.drogon.net>
 References: <Pine.LNX.4.44.0408011724460.7382-100000@uplift.swm.pp.se>
+ <200408011633.25028.mrwatts@fast24.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44.0408011724460.7382-100000@uplift.swm.pp.se>
-Content-Disposition: inline
-To: Mikael Abrahamsson <swmike@swm.pp.se>
+In-Reply-To: <200408011633.25028.mrwatts@fast24.co.uk>
+To: Mark Watts <mrwatts@fast24.co.uk>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Sun, 1 Aug 2004, Mark Watts wrote:
 
-> On Sun, 1 Aug 2004, Mark Watts wrote:
-> > RAID Configuration:
-> > 4-disk RAID-5 with 64K block size.
-> >
-> > /dev/sda1 = / = 20GB
-> > /dev/sda2 = swap = 2048MB
-> > /dev/sda5 = /home = 100GB
-> >
-> > All partitions (except swap) formatted as ext3.
->
-> It would be interesting to see difference if you put the system and swap
-> on another drive that is not part of the RAID5.
+> I'm going to try using xfs instead of ext3 on Monday too.
 
-With 2GB ram, I can disable swap entirely if you want, but I don't have 
-another drive to put it on.
+I doubt it's a filesystem issue.
 
->
-> > Kernel - 2.6.8rc1, SMP for x86_64
->
-> I use v2.4, haven't used 2.6 with 3ware and SMP at all, so the problem
-> might be there. Did you try the smp_affinity thing I emailed about 1-2
-> days ago?
+Try this - make the array work flat-out - dd into a fil eor something and
+look at the process state of 'dd'. See if it's stuck in "D".
 
-No - The system is at work - I'll try it on Monday.
+Now look at /proc/interrupts...
 
->
-> > Slow write speeds is one thing, practically locking the system up while
-> > the write occurs is another, unless I'm missing something obvious.
->
-> Well, if the system needs to page-in and this page-in takes seconds to
-> fulfil because the raid5 is full at work and has a large latency queue,
-> that might explain it. Does the system do anything else when you're
-> copying?
+Look for ERR and MIS counts of non-zero...
 
-No (thats the point!). Playing (or rather skipping) mp3's with xmms is about 
-the most it does.
+I've built some systems in the past that have exhibited similar
+performance and what it boiled down to was the motherboard interrupt
+controller is basically crap. I "solved" it with one system by
+re-arranging the PCI cards and used the on-board IDE controllers (and one
+primose plug-in card rather than 2; 4 IDE drives, one per cable) to make
+sure everything had it's own interrupt. Eg:
 
-I'm going to try using xfs instead of ext3 on Monday too.
+           CPU0       CPU1
+  0:  107450604  108441652    IO-APIC-edge  timer
+  1:        340        446    IO-APIC-edge  keyboard
+  2:          0          0          XT-PIC  cascade
+ 14:   19756978   19994219    IO-APIC-edge  ide0
+ 15:   20297959   20492514    IO-APIC-edge  ide1
+ 16:   21597138   21847832   IO-APIC-level  ide2
+ 17:   20928098   21157136   IO-APIC-level  ide4
+ 18:      72819      72311   IO-APIC-level  aic7xxx
+ 19:  404554707  404245858   IO-APIC-level  aic7xxx, eth0
+NMI:          0          0
+LOC:  215883196  215883194
+ERR:          4
+MIS:        395
 
+I still see the occasional MIS interrupt (it's accompanied by an APIC
+error - eg:
 
+Jul 14 17:59:25 blue kernel: APIC error on CPU0: 00(02)
+Jul 14 17:59:25 blue kernel: APIC error on CPU1: 00(02)
+
+This is a dual Athlon mobo.
+
+Good luck!
+
+Gordon
