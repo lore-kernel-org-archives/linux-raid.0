@@ -1,57 +1,59 @@
-From: Fabrice LORRAIN <Fabrice.Lorrain@univ-mlv.fr>
-Subject: Re: mdadm drives me crazy
-Date: Wed, 01 Dec 2004 13:53:26 +0100
-Message-ID: <41ADBEC6.8030701@univ-mlv.fr>
-References: <41ADA964.3030606@univ-mlv.fr>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: raidstart program device detect problem
+Date: Wed, 1 Dec 2004 12:23:35 -0500
+Message-ID: <200412011723.iB1HNf904973@www.watkins-home.com>
+References: <20041201201025B.kenji@miyake.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <41ADA964.3030606@univ-mlv.fr>
+In-Reply-To: <20041201201025B.kenji@miyake.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Fabrice.Lorrain@univ-mlv.fr
+To: 'Kenji Miyake' <kenji@miyake.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Fabrice LORRAIN wrote:
-> Hi all,
-> 
-...
-> $ sudo mdadm --create /dev/md0 --level=5 --raid-devices=6 /dev/loop[0-5]
+As far as I know raidtools is not supported anymore.
+But raidtools2 is new to me.  So, not sure.
+mdadm is the preferred tool.
 
+Guy
 
-$ sudo mdadm --create /dev/md0 --force --level=5 --raid-devices=6 
-/dev/loop[0-5]
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Kenji Miyake
+Sent: Wednesday, December 01, 2004 6:10 AM
+To: linux-raid@vger.kernel.org
+Subject: raidstart program device detect problem
 
-Seems to give what I expected (a raid5 pool with 6 devices, no spare).
+Hi,
+ I found some problem in raidtools2.
 
- From mdadm man page :
-"...When creating a RAID5 array, mdadm will automatically create a 
-degraded array with an extra spare drive.  This is because building the 
-spare into a  degraded  array  is in general faster than resyncing the 
-parity on a non-degraded, but not clean, array.  This feature can be 
-over-ridden with the -I --force option."
+raiddevice md1 cannot start if raiddevice md10 was setup and running.
 
-"-I" doesn't seems to be understood by mdadm. Leftover ?
+raidstart program check running device partially.
 
-I don't understand what the previous extract from the man page means. My 
-understanding is that the default behaviour of mdadm is to create a 
-raid5 pool in degraded mode aka with a missing drive ? Is this correct ?
+--- 1/raidtools2-0.90.20010914/raid_io.c	Wed Dec  1 19:30:26 2004
++++ raidtools2-0.90.20010914/raid_io.c	Wed Nov 24 19:41:42 2004
+@@ -528,12 +528,14 @@
+ 	if ((ch = strstr(p->md_name, "/md")) == NULL)
+ 		return 0;
+ 	strcpy(buffer, ch+1);
++	strcat(buffer, " : active");
+ 	if ((fp = fopen("/proc/mdstat", "r")) == NULL)
+ 		return 0;
+ 	while (1) {
+ 		if ((fgets(line, MAX_LINE_LENGTH, fp)) == NULL)
+ 			break;
+-		if (strstr(line, buffer) && !strstr(line, "inactive")) {
++		if (strstr(line, buffer))
++		{
+ 			fprintf(stderr, "%s: active -- run raidstop\n",
+p->md_name);
+ 			fclose(fp);
+ 			return 1;
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-after
-$ sudo mdadm --create /dev/md0 --force --level=5 --raid-devices=6 
-/dev/loop[0-5]
-
-the state of the array is dirty. Why ?
-
-$ sudo mdadm --stop /dev/md0 followed by
-$ sudo mdadm --examine /dev/loop[0-5]
-
-gives a clean state for each device but
-
-$ sudo mdadm --assemble /dev/md0 /dev/loop[0-5] keeps the dirty state of 
-the array.
-
-Thanks,
-
-	Fab
