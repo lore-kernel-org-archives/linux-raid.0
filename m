@@ -1,46 +1,46 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: Re: ANNOUNCE - mdadm 0.8 - candidate for 1.0
-Date: Sun, 7 Apr 2002 14:56:12 +0200
+From: Steven Rodenburg <steven.rodenburg@planet.nl>
+Subject: LVM / EXT3 production ready ?
+Date: 07 Apr 2002 15:22:18 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20020407125612.GC12349@colombina.comedia.it>
-References: <15531.46606.314167.19186@notabene.cse.unsw.edu.au> <Pine.GSO.4.21.0204032025070.9004-100000@gecko.roadtoad.net> <15531.56527.518603.63636@notabene.cse.unsw.edu.au>
-Reply-To: bluca@comedia.it
+Message-ID: <1018185738.5687.16.camel@adagio.adagio.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <15531.56527.518603.63636@notabene.cse.unsw.edu.au>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Apr 04, 2002 at 02:55:43PM +1000, Neil Brown wrote:
-> Yes... I sort of noticed that in passing...
-> 
-> I added:
->    %_sbindir /sbin
->    %_sysconfdir /etc
-> 
-> to my .rpcmacros and rebuild the rpms so they now put files in the
-> "right" places.
-> 
-> Any  RPM gurus want to suggest what I *should* do?
-i am no guru but an alterantive seems to be setting
-%define _exec_prefix %{nil}
-in the spec file
+Hi,
 
-> Is it wrong to use %_sbindir and $_sysconfdir ???
-i believe common practice is using /sbin literaly in the
-spec file, but i prefer the above thing
+I was wondering if the Logical Volume Manager (LVM) on for example SuSE
+7.3 is any good in a proffesional "24 x 7 x Forever" "many GB/TB's SAN"
+production enviroment.
 
-%_sysconfdir should be set to /etc in the per platform rpm macro file
-/usr/lib/rpm/%{_target_cpu}-%{_vendor}-%{_target_os}
-ie: /usr/lib/rpm/i386-redhat-linux
+In my/our company's case being able to logically expand hardware raid
+sets and partitions in a real production enviroment is important. We
+plan to use linux because Linux itself is stable and robust enough and a
+good alternative to say SUN Solaris.
 
-L.
+But downtime due to a problem with the Linux LVM is not an option.
+Normally, we would add an array within the SAN and then create a new
+(very big) filesystem on it and mount it. But when we could expand a
+partition on the fly that would be better.
 
--- 
-Luca Berra -- bluca@comedia.it
-        Communication Media & Services S.r.l.
- /"\
- \ /     ASCII RIBBON CAMPAIGN
-  X        AGAINST HTML MAIL
- / \
+And can the LVM be used with RedHat 7.2 as well (i can't find it on the
+distro) ?
+
+How does EXT3 (we need journaling) behave on very large filesystems
+(many GB/TB's) ?
+
+I like EXT3 because loss of the journal do not pose big problems because
+the partition can be mounted EXT2 and run until a time-window arrives to
+repair the journal and mount it back again with EXT3.
+
+It's all about MASSIVE fileserving.
+
+In short:  are LVM and EXT3 mature/stable enough ?
+
+
+Gr,
+Steve
+
+
