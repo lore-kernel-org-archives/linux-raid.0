@@ -1,50 +1,81 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: How to force raid to stop, cleanly? More info
-Date: Thu, 10 Apr 2003 09:12:01 +1000
+From: Andre Hedrick <andre@linux-ide.org>
+Subject: Translating /etc/raidtab to mdadm (Re: RAID help ...)
+Date: Thu, 10 Apr 2003 02:39:02 -0700 (PDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16020.43201.103642.149492@notabene.cse.unsw.edu.au>
-References: <16019.29496.215437.669497@notabene.cse.unsw.edu.au>
-	<200304091822.LAA16207@washington.seas.ucla.edu>
+Message-ID: <Pine.LNX.4.10.10304100055540.12558-100000@master.linux-ide.org>
+References: <16020.42223.970387.800192@notabene.cse.unsw.edu.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Stephen C Woods on Wednesday April 9
-To: Stephen C Woods <scw@seas.ucla.edu>
-Cc: Linux-raid maillist <linux-raid@vger.kernel.org>
+In-Reply-To: <16020.42223.970387.800192@notabene.cse.unsw.edu.au>
+To: Neil Brown <neilb@cse.unsw.edu.au>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday April 9, scw@seas.ucla.edu wrote:
-> Neil,
->    Thanks a lot, it raid did shutdown cleanly and restarted just fine,
-> looks like JFS isn't quite mature enough yet.
+
+Neil,
+
+Okay fair point so I will dump this back out for you!
+
+Thanks again for the example translation.
+
+
+Andre Hedrick
+LAD Storage Consulting Group
+
+
+On Thu, 10 Apr 2003, Neil Brown wrote:
+
+> On Wednesday April 9, andre@linux-ide.org wrote:
+> > 
+> > Neil,
+> > 
+> > I need some help with your raid management suite.
+> > I have verified that raidstart is a bust!  Then finding your emails about
+> > it being a bust!
+> > 
+> > Can you help?
+> > 
+> Probably, though I generally suggest people send questions like this
+> to linux-raid, partly because someone else might answer more quickly,
+> and partly so the Q and A gets archived.
 > 
->    With that in mind fiddling with fdisk implies that one can
-> subpartition a raid device, the FAQ doesn't seem to have any info, so
-> before we go and tear down what we already have.
 > 
->    Does the md driver support partitions in a meaningful/useful way?
+> > #
+> > # /etc/raidtab.dba
+> > #
+> > raiddev /dev/md0
+> >         raid-level              1
+> >         nr-raid-disks           2
+> >         persistent-superblock   1
+> >         chunk-size              32
+> > 
+> >         device                  /dev/sdb1
+> >         raid-disk               0
+> >         device                  /dev/sdc1
+> >         raid-disk               1
+> > 
+> > mkraid -c /etc/raidtab.dba /dev/md0
+> 
+> mdadm -C /dev/md0 --level 1 -n 2 -c 32 /dev/sdb1 /dev/sdc1
+> 
+> > raidstart -c /etc/raidtab.dba /dev/md0
+> 
+> Several options for this, depending on admin policies, but for a
+> one-off machine, I would:
+>    echo DEV partitions > /etc/mdadm.conf
+>    mdadm --describe --brief /dev/md0 > /etc/mdadm.conf
+> 
+> edit /etc/mdadm.conf and remove the "devices=" phrase.
+> 
+> and then whenever you want to start the array:
+>    mdadm --assemble --scan /dev/md0
+> 
+> 
+> > raidstop -c /etc/raidtab.dba /dev/md0
+> 
+>    mdadm --stop /dev/md0
+> 
+> NeilBrown
+> 
 
-Not without patches.
-
-If you look around
-   http://www.cse.unsw.edu.au/~neilb/patches/linux-stable/
-you should find a collection of patches.
-
-You particularly need MdPart and MdpMajor but they probably depend on
-most of the other Md or Raid patches in the set.
-With this, the first 16 md devices can each be partitioned into upto
-15 partitions.
-You use major device '60' and minor devices:
-  0-15 for md0
-  15-31 for md1
-etc.
-
-  60,0 is much the same as 9,0
-  60,1 is the first partition
-  etc.
-
-There are no matching patches for 2.5 yet.  I'm waiting to see what
-happens when the 32-bit device number stuff settles down.
-
-NeilBrown
