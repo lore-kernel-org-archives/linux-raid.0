@@ -1,45 +1,61 @@
-From: Fernando Serboncini <fserb@campogeral.com.br>
-Subject: Re: RAID5 resync blocking on 2.6.0-test11
-Date: Tue, 16 Dec 2003 18:20:45 -0200
+From: David Haring <david.haring@billboard.cz>
+Subject: Re: partitions on software-raid
+Date: Tue, 16 Dec 2003 22:29:56 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3FDF691D.9090405@campogeral.com.br>
-References: <3FD90B15.8050905@campogeral.com.br>
+Message-ID: <3FDF7954.9050805@billboard.cz>
+References: <3FDF285D.806@ratnet.stw.uni-erlangen.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3FD90B15.8050905@campogeral.com.br>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <3FDF285D.806@ratnet.stw.uni-erlangen.de>
+To: schmidt@naa.net
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Fernando Serboncini wrote:
-> --- linux-2.6.0-test11/drivers/md/md.c  2003-11-26 18:43:29.000000000 -0200
-> +++ linux/drivers/md/md.c       2003-12-10 23:29:33.000000000 -0200
-> @@ -3290,6 +3290,8 @@
->                 currspeed =
-> (j-mddev->resync_mark_cnt)/2/((jiffies-mddev->resync_mark)/HZ +1) +1;
-> 
->                 if (currspeed > sysctl_speed_limit_min) {
-> +                       set_user_nice(current,19);
-> +
->                         if ((currspeed > sysctl_speed_limit_max) ||
->                                         !is_mddev_idle(mddev)) {
->                                 current->state = TASK_INTERRUPTIBLE;
-> @@ -3297,6 +3299,8 @@
->                                 goto repeat;
->                         }
->                 }
-> +               else
-> +                       set_user_nice(current,-20);
->         }
->         printk(KERN_INFO "md: md%d: sync done.\n",mdidx(mddev));
->         /*
-> 
+Norman Schmidt wrote:
+> Hi!
+>=20
+> Since noone has answered my last question yet:
+>=20
+> Has anyone ever used partitions on a md device? It is possible to mak=
+e=20
+> them with fdisk, and fdisk shows their names as /dev/md0p1 (eg.). The=
+y=20
+> are also shown in the partition table. But there are no /dev entries.
 
-For what've seen, this causes no harm at all.
-Can anyone confirm that this is the right thing to do with the 
-"blocking" issue?
+I think it is possible, but it is nonstandard feature
+(Neil Brown maintains patches for 2.4)
 
-[]s
-Fernando
+> There are very few google hits, but no successful tries are documente=
+d.
+>=20
+> Is this functionality implemented yet? I do not understand much C, so=
+ I=20
+> gave up on understanding md.c in the kernel source tree. In the=20
+> up-to-date list of major and minor numbers, there are no entries=20
+> concerning partitions on md devices.
+>=20
+> I think Neil Brown stated somewhere on this list that there could be =
+up=20
+> to 15 partitions for up to 16 md devices, but I don=B4t remember, cou=
+ldn=B4t=20
+> find it, and I don=B4t know wether he told how to make the devices or=
+=20
+> mount those partitions.
 
+see Neil's patches at
+http://cgi.cse.unsw.edu.au/~neilb/patches/linux-stable/2.4.leading/2003=
+-01-06:00/016MdPart
+http://cgi.cse.unsw.edu.au/~neilb/patches/linux-stable/2.4.leading/2003=
+-01-06:00/017MdpMajor
+
+David Haring
+
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
