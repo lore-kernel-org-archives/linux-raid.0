@@ -1,45 +1,44 @@
 From: rob <rob@fantinibakery.com>
-Subject: Re: missing superblock on RAID5
-Date: Mon, 13 Oct 2003 20:18:59 -0400
+Subject: Re: raid0 and iscsi
+Date: Mon, 13 Oct 2003 20:45:38 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3F8B40F3.2080004@fantinibakery.com>
-References: <3F8ACBD2.CA1B8CBD@vitoni.de> <3F8AD02C.8080606@fantinibakery.com> <3F8AE51C.3F0A9451@vitoni.de> <3F8B039F.2070403@fantinibakery.com> <3F8B1491.57BCF640@vitoni.de> <3F8B34FD.9000802@fantinibakery.com> <3F8B38E9.6983E25A@vitoni.de>
+Message-ID: <3F8B4732.20609@fantinibakery.com>
+References: <200310130434.h9D4YU0n020486@bach.cs.colostate.edu> <3F8A9736.1020706@fantinibakery.com> <3F8B365F.9060509@fantinibakery.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3F8B38E9.6983E25A@vitoni.de>
-To: Victor <linux-raid@vitoni.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+In-Reply-To: <3F8B365F.9060509@fantinibakery.com>
+To: rob <rob@fantinibakery.com>
+Cc: Jayshankar Nair <jshankar@CS.ColoState.EDU>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-my info:
-mandrake 9.1
-mdadm 1.2.0
+here is result of writting 3-gb over lan :
 
- do you have  ARRAY or DEVICE entries in your /etc/mdadm.conf ?
- if so try commenting them out and run the mdadm command again.
+1- to h/w raid system:  8,384,582.41 bytes/sec
 
+2- to ide disk: 5,046,348.67 bytes/sec
 
- Did the GENTOO mdadm come with a  monitoring script for in /etc/init.d 
-?  Mandrake's rpm did not. 
-RedHats's mdadm rpm contains  /etc/init.d/mdmonitor  script which does a 
-great job running mdadm --monitor.
-I used RH's mdmonitor on the Mandrake computer. works great, with just 2 
-lines in /etc/mdadm.conf.
+3- to software raid system: 6,678,231.03 bytes/sec
 
- RedHat seems to have software raid implemented better than Mandrake.
+ the h/w system has fasrer disks than the s/w raid. 
 
 
-
-Victor wrote:
-
->mdadm - v1.2.0 - 13 Mar 2003
->on Gentoo (something like v1.4 with lots of updates)
+>
+> the test I did faulty.  I mistakenly sent data to a non-raid disk on 
+> the software raid computer.
+> for kicks I'll retest and post the results sometime soon.
+>
+>>
+>> the command used: rsync -e ssh -a --stats  /bkup3/  fbc5:/bkup3/
+>>
+>> here is the result of sending approx 3-gb of data to each:
 >
 >
->  
 >
->  
->
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 
