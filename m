@@ -1,45 +1,32 @@
-From: Eurijk <eurijk@zefga.net>
-Subject: Re: Raid 5 on 2.5.50/2.5.51, dirty array, kernel panic
-Date: Fri, 13 Dec 2002 12:22:39 -0800
+From: Gordon Henderson <gordon@drogon.net>
+Subject: Re: raid5: switching cache buffer size
+Date: Fri, 13 Dec 2002 22:29:05 +0000 (GMT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20021213122239.4241c4df.eurijk@zefga.net>
-References: <20021210233443.48053fe3.eurijk@zefga.net>
-	<3DF7847D.1050606@mvista.com>
+Message-ID: <Pine.LNX.4.43.0212132225230.14048-100000@unicorn.drogon.net>
+References: <3DFA2E2A.20601@comedia.it>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3DF7847D.1050606@mvista.com>
+In-Reply-To: <3DFA2E2A.20601@comedia.it>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->I set up an IDE raid array as such:
->  /dev/md1 hda1 hdc1 hde1 hdg1 RAID 1 (ext2)
->  /dev/md0 hda2 hdc2 hde2 hdg2 RAID 5 (reiserfs)
->... and physically remove a drive (hda) ...
-> <0>Kernel panic: Attempted to kill init!
 
-^^^ The above also applies if you put hda back in after
-it has been marked bad by it not being there after the
-goto abort (see below) has been removed.
+Thanks for the replies - I've also been searching the archives of both the
+raid and lvm lists and found some more on it. It seems OK until I take a
+snapshot, so need to look more into the lvm stuff if I'm going to continue
+using it, but I'm starting to think that lvm on raid5 might be more hassle
+than it's worth, and I managed to get it to crash too when using
+dump/restore and (s)tar to a SCSI tape system while running an lvm
+snapshot. I'm now thinking that as I have enough disk space, I'd be better
+off with 3 raid5 partitions and simply copy the data from the life
+partition onto the 'yesterday' partition every night rather than use the
+lvm snapshot facility...
 
-This appears to be stemming from a 3.5.33/34? patch that included:
+(I was using ext2 btw, was thinking about XFS, but maybe that'd just be
+too much for the system!!!)
 
-   if (mddev->degraded == 1 &&
-	    !(mddev->state & (1<<MD_SB_CLEAN))) {
-      printk(KERN_ERR "raid5: cannot start dirty degraded array for md%d\n", mdidx(mddev));
-      goto abort;
-   }
+Cheers,
 
-If you remove the goto abort; there this fixes the problem.
+Gordon
 
-I imagine this needs to check to see if only one device is bad,
-and if so, continue.
-
-I would have expected an "unable to mount root" error rather then a kernel
-panic so there must be something wrong (probably not very critical) elsewhere.
-
-Can someone more familiar with linux-2.5.51/drivers/md/raid5.c and kernel
-modules take a look at this please? Thanks!
-
--eurijk!
