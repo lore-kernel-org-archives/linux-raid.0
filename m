@@ -1,41 +1,84 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [RFC] Hardware RAID offload
-Date: Mon, 12 Jul 2004 13:09:07 +0100
+From: Maurilio Longo <maurilio.longo@libero.it>
+Subject: Re: [PATCH md ] Fix up handling for read error in raid1.
+Date: Mon, 12 Jul 2004 16:29:41 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1089634146.11248.6.camel@localhost.localdomain>
-References: <40F1A04E.8070105@pobox.com>
+Message-ID: <40F2A055.93DD9C4B@libero.it>
+References: <20040624143619.5067.patches@notabene> <E1BdLyz-0001Jy-Tq@notabene.cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <40F1A04E.8070105@pobox.com>
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-raid@vger.kernel.org, Device mapper devel list <dm-devel@redhat.com>, Jens Axboe <axboe@suse.de>
+To: linux raid mailing list <linux-raid@vger.kernel.org>
+Cc: NeilBrown <neilb@cse.unsw.edu.au>
 List-Id: linux-raid.ids
 
-On Sul, 2004-07-11 at 21:17, Jeff Garzik wrote:
-> 1) Transaction sequencing.  Consider that N disk transactions comprise a 
-> single RAID1 write.  The hardware can be set up to wait until all N 
-> transactions are complete, before sending an interrupt.  This is 
-> applicable to Marvell and Promise SATA, among others.
+Neil,
 
-So this is basically IRQ mitigation. Can you flip the "cause an IRQ"
-status on the fly ?
+do you have a similar patch for a 2.4.x (x == 20 in my case) kernel?
 
-> 2) Copy elimination.  All disk transactions on the Promise SX4 go 
-> through an on-board DIMM (128M - 2G), before being sent to the attached 
-> controllers.  I would love to use this to eliminate data duplication on 
-> RAID1 and RAID5 writes.
+I can't change kernel easily since I use it to run mars-nwe which is a novell emulator
+which is going to be removed from every distro I'm aware of :(
 
-Big win for PCI cards because it cuts PCI bandwidth way down. It
-doesn't seem like it should be that hard to add to the drivers either
-depending upon how the RAM is presented. Is it mapped into PCI space ?
+regards.
 
-> Or maybe, allow the user to set a flag that tells md to pass a request 
-> directly through to the low-level driver, in certain situations ("pass 
-> through all RAID1 writes, but handle everything else in software").  /me 
-> thinks out loud...
 
-As some kind of driver "md_ops" or as a separate raid1-promise plugin ?
+NeilBrown ha scritto:
+
+> There is severe bit-rot in this code, which is to say that it doesn't work
+> at all: an io error during read will do bad things.  It should work
+> better with this patch.
+>
+> Signed-off-by: Neil Brown <neilb@cse.unsw.edu.au>
+>
+> ### Diffstat output
+>  ./drivers/md/raid1.c |   10 +++++++---
+>  1 files changed, 7 insertions(+), 3 deletions(-)
+>
+> diff ./drivers/md/raid1.c~current~ ./drivers/md/raid1.c
+> --- ./drivers/md/raid1.c~current~       2004-06-23 14:37:05.000000000 +1000
+> +++ ./drivers/md/raid1.c        2004-06-23 14:37:13.000000000 +1000
+> @@ -206,7 +206,7 @@ static int map(mddev_t *mddev, mdk_rdev_
+>                         *rdevp = rdev;
+>                         atomic_inc(&rdev->nr_pending);
+>                         spin_unlock_irq(&conf->device_lock);
+> -                       return 0;
+> +                       return i;
+>                 }
+>         }
+>         spin_unlock_irq(&conf->device_lock);
+> @@ -945,18 +945,22 @@ static void raid1d(mddev_t *mddev)
+>
+>                 mddev = r1_bio->mddev;
+>                 conf = mddev_to_conf(mddev);
+> -               bio = r1_bio->master_bio;
+>                 if (test_bit(R1BIO_IsSync, &r1_bio->state)) {
+>                         sync_request_write(mddev, r1_bio);
+>                         unplug = 1;
+>                 } else {
+> -                       if (map(mddev, &rdev) == -1) {
+> +                       int disk;
+> +                       bio = r1_bio->bios[r1_bio->read_disk];
+> +                       if ((disk=map(mddev, &rdev)) == -1) {
+>                                 printk(KERN_ALERT "raid1: %s: unrecoverable I/O"
+>                                        " read error for block %llu\n",
+>                                        bdevname(bio->bi_bdev,b),
+>                                        (unsigned long long)r1_bio->sector);
+>                                 raid_end_bio_io(r1_bio);
+>                         } else {
+> +                               r1_bio->bios[r1_bio->read_disk] = NULL;
+> +                               r1_bio->read_disk = disk;
+> +                               r1_bio->bios[r1_bio->read_disk] = bio;
+>                                 printk(KERN_ERR "raid1: %s: redirecting sector %llu to"
+>                                        " another mirror\n",
+>                                        bdevname(rdev->bdev,b),
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+--
+ __________
+|  |  | |__| md2520@mclink.it
+|_|_|_|____|
 
 
