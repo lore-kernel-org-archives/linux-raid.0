@@ -1,9 +1,9 @@
 From: Jens Benecke <jens@spamfreemail.de>
-Subject: Re: Q: RAID-1 w/2x160GB, ReiserFS, Debian 'woody', homebrew 2.4.25 kernel
-Date: Thu, 05 Aug 2004 14:02:12 +0200
+Subject: RE: Q: RAID-1 w/2x160GB, ReiserFS, Debian 'woody', homebrew 2.4.25 kernel
+Date: Thu, 05 Aug 2004 14:08:12 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <cet7k4$lsn$1@sea.gmane.org>
-References: <ceq7ij$vj7$1@sea.gmane.org>	<27897.194.60.85.4.1091613610.squirrel@194.60.85.4>	<cesjcm$9da$1@sea.gmane.org> <87657ycaf9.fsf@enki.rimspace.net> <4111FBF5.8000806@buttersideup.com>
+Message-ID: <cet7vc$mt7$1@sea.gmane.org>
+References: <cesjcm$9da$1@sea.gmane.org> <S267610AbUHEJ5F/20040805095705Z+97@vger.kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-15
 Content-Transfer-Encoding: QUOTED-PRINTABLE
@@ -11,87 +11,86 @@ Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Tim Small wrote:
+robin-lists@robinbowes.com wrote:
 
-> Daniel Pittman wrote:
-=20
->>>see subject (Debian). I've looked at SuSE though, it seems with thei=
-r
->>>setup RAID and ReiserFS is much easier to handle.
+>> >> How about RAIDing the root partition? If one drive fails will the
+>> >> other be able to boot via LILO? How about GRUB? Which do
+>> >=20
+>> > I have my root partition on a RAID1 mirror. I use grub and have
+>> > "installed" grub to both mirrored drives so I can boot off either,
+>> > e.g. if one fails. That reminds me, I must test this.
+>>=20
+>> That's exactly what I want.
+>=20
+> I've got some rough notes I made. I may tidy them up and publish them=
+ on
+> my web site.
 
->>The upcoming release of Debian will feature MD and LVM device creatio=
-n
->>at install time, but is not yet stable; the current stable release do=
-es
->>not support either of them.
- =20
-> Sarge is pretty good at the moment (at least I am running production
-> systems on it, and have been for the last few months) - the disadvant=
-age
-> of installing a new Woody system now is that security updates for it
-> will probably stop before it's reached the end of it's useful life.  =
-Of
+Hi Robin,
 
-Hi Tim,
-
-Are you sure? I thought woody will be supported for quite some time. I'=
-ve
-been running an updated Debian with a couple self-compiled packages sin=
-ce
-1999, upgraded a couple times but woody has been quite pain-less so far=
-=2E
-Only the current set up has been messed up a bit so far.
-
-I'm planning to use SysCP (www.syscp.de) as a webhosting management
-interface, which requires woody - for now. It'll probably switch to Sar=
-ge
-when it becomes stable, which is why I don't plan on doing this right n=
-ow.
-
-I was faovouring SuSE because they have more up to date packages (Postf=
-ix
-2.1, Apache 2.0.49, PHP 4.3.4, MySQL 4.0), and because I wouldn't have =
-to
-bake my own kernel (I need a couple patches that Debian doesn't supply,
-most importantly the GRsecurity patch set, and ReiserFS quota and
-data-logging).
-But I found that I can get most of the packages via backports.org and
-dotdeb.net, and that my homebrew 2.4.25 kernel with those patches just =
-runs
-far too painlessly to give up right now.
-
-> course, as it's Debian, you should be able to upgrade to Sarge
-> relatively painlessly, but I'd probably rather avoid the hassle, and =
-go
-> straight to Sarge now.  I think Debian Installer currently includes
-> support for installing Sarge directly onto md mirrors (including
-> handling the boot-loader stuff), but I haven't tried it yet...  Might=
- be
-> worth trying one of the daily builds from:
-> http://www.debian.org/devel/debian-installer/
-
-The problem here is that I won't ever see the box. It's a rented dedica=
-ted
-server. And the company, they let you choose hardware and distribution =
+I'm still a bit torn between buying a 3ware hardware RAID for =A4140.- =
 and
-partitioning but then just install the default with enabled "ssh" and l=
-et
-you do the rest.
-=20
-> The disadvantage of installing Sarge yet is that it won't go through =
-the
-> official security updates until it is released, but in the mean time,
-> you can pull security-fixes in from unstable (using apt-pinning if yo=
-u
-> like) - sounds nasty but it seems to work quite well in practice.  So=
-rry
-> for getting distribution-centric on the list!
-
-This sounds like too much manual intervention to me. I just want the da=
-mn
-thing to run. I'm past the experimenting stage where I compiled half th=
+just using 'md'. The box is an Athlon64 3GHz, so it'll have enough CPU
+power to do the RAID in software, but with partitioning etc, I think th=
 e
-system myself. :-)
+hardware raid will be easier to handle because you can just ignore it. =
+As
+long as the 3ware BIOS will handle failing drives, read/write errors, e=
+tc
+etc. properly.
+
+Right?
+   =20
+>> > keep /var/tmp and /tmp on the root partition.
+>>=20
+>> No. I don't want a rogue script to fill up my root partition.
+>=20
+> That, of course, is the reason you would want to keep /var/tmp and/or=
+ /tmp
+> on separate partitions (or on the same partition - just symlink so
+> /var/tmp and /tmp are the same.)
+
+I would probably not symlink but I'd put them both on the same partitio=
+n.=20
+ =20
+>> What I mean is, will md resync automatically or would I have
+>> to initiate this manually?
+>=20
+> Md should re-sync automatically.
+
+=2E.. even onto a new blank disk? Or would you have to tell md manually=
+ "this
+is the new spare, please sync"? Is this easy to do? Something like
+
+        - copy partition table
+        - for FOO in 1 2 3 4 5 ; do tell md "sync hda$FOO to hdc$FOO"
+
+or is it more complicated?
+=20
+>> This setup seems quite complicated. Did you test the setup,
+>> ie. removed one of the MD disks and looked what happened?
+> I deliberated long and hard about how to implement my new system and =
+this
+> was about the least complicated route!
+
+Oh. ;)
+=20
+
+>> >> The goal is to have as "stress free" a system as possible
+>> >> as little manual configuration, and in event of emergencies, as
+>> >> little work to do, as possible.
+>> > If you want stress free, buy a Netapps storage appliance ;o)
+>> If they do all the rest that I need (smtp, web, file server,
+> I was being slightly slippant - Netapps just do big storage arrays wi=
+th
+> very high availability. For example, if they detect that a drive is
+> failing they send an email to Netapps and an engineer comes round wit=
+h a
+> replacement disk all without any user intervention! I guess they're t=
+he
+> Rolls Royce of storage solutions. Expensive though.
+
+Ah. Well I don't think this'll fit in our budget. :)
 
 
 --=20
