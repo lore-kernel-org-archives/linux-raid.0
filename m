@@ -1,48 +1,47 @@
-From: Lars Marowsky-Bree <lmb@suse.de>
-Subject: Re: md: bug in file md.c, line 1440 (2.4.22)
-Date: Wed, 3 Sep 2003 10:57:35 +0200
+From: "John Doe" <public_address_911@hotmail.com>
+Subject: Re: Problem converting raid-5 array from 2.2.17 into 2.4.22
+Date: Wed, 03 Sep 2003 16:47:14 +0300
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20030903085735.GB5762@marowsky-bree.de>
-References: <3F5017CA.4080700@tomt.net> <16213.14893.955734.797630@gargle.gargle.HOWL>
+Message-ID: <Law12-F108KH6ddsaTf0002401d@hotmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <16213.14893.955734.797630@gargle.gargle.HOWL>
-To: Neil Brown <neilb@cse.unsw.edu.au>, Andre Tomt <andre@tomt.net>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, mingo@redhat.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2003-09-03T10:47:41,
-   Neil Brown <neilb@cse.unsw.edu.au> said:
+># mdtab entry for /dev/md0
+>/dev/md0        raid5,128k,0,93fa4522   /dev/hda3 /dev/hdb1 /dev/hdc1 
+>/dev/hdd1
+>
+># /etc/raidtab:
+>raiddev /dev/md0
+>        raid-level      5
+>        nr-raid-disks   4
+>        nr-spare-disks  0
+>        persistent-superblock   1
+>        parity-algorithm        left-symmetric
+>        chunk-size      32
+[...]
+>This one was copied straight from Software-RAID HOWTO, unfortunately I 
+>noticed only afterwards that the chunk-size was different than it was 
+>before.
 
-> I have not idea how it got the failed flag.
+I also reproduced the situation on a different machine and different disks,
+with this time the right chunk-size (128 kb). And it didn't work either!
 
-What's proven very helpful to figure out these things is to run a
-test script against md, and just trying all the various possible action=
-s
-via mdadm or raidtools randomly.
+So it seems that "mkraid --upgrade" will *always* break a raid5 setup, at 
+least
+if it's me doing the conversion :)
 
-I've done that for m-p, and while it's not pretty, it is _really_
-helpful and has found all sorts of weird accounting bugs in the md code
-(2.4 has many): ftp://ftp.suse.com/pub/people/lmb/md-mp/mp-test.sh - if
-anyone feels like extending it to include raid5/raid1 etc, that would b=
-e
-cool ;-)
+This sounds pretty alarming.
 
+I hope there is some way to reconstruct the superblocks or change their
+checksums or something. Next I'm going to spend a few hours investigating if
+mdadm and newer raidtools have options for doing this.
 
+-J
 
-Sincerely,
-    Lars Marowsky-Br=E9e <lmb@suse.de>
+_________________________________________________________________
+Get MSN 8 and help protect your children with advanced parental controls.  
+http://join.msn.com/?page=features/parental
 
---=20
-High Availability & Clustering		ever tried. ever failed. no matter.
-SuSE Labs				try again. fail again. fail better.
-Research & Development, SuSE Linux AG		-- Samuel Beckett
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
