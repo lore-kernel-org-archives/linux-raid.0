@@ -1,24 +1,39 @@
-From: z_q_c_x@diamond.com
-Subject: PCD&PCBN tools
-Date: Wed, 18 Sep 2002 03:56:04 +0800
+From: "Martin Eriksson" <nitrax@giron.wox.org>
+Subject: Re: Enable HTT with dual xeon fileserver ?
+Date: Wed, 18 Sep 2002 11:53:04 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20020917195059Z264555-685+49797@vger.kernel.org>
-Reply-To: master@ct-diamond.com
-Content-Type: text/plain;charset="GB2312"
+Message-ID: <001d01c25ef9$6bc25240$900d0d93@M02WS17219>
+References: <Pine.LNX.4.44.0209162301200.24650-100000@ddx.a2000.nu>
+Mime-Version: 1.0
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+To: raid@ddx.a2000.nu, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Dear Sir or Madam:
+----- Original Message -----
+From: <raid@ddx.a2000.nu>
+To: <linux-raid@vger.kernel.org>
+Sent: Monday, September 16, 2002 11:02 PM
+Subject: Enable HTT with dual xeon fileserver ?
 
-We are very glad to inform you that now you have a better choice when you grinding the PCD&PCBN tools, we can supply the grinding wheels (vitrified/metal/resin bond) with low cost and high quality, have a try and you will know how better we are.
 
-We supply one sample without charge, don't lose it.
+> I'm building a Dual Xeon Fileserver
+> i can enable HTT in the bios (so i have 4 logical processors)
 
-More information, please visit: www.ct-diamond.com
+I'm very sceptical that a fileserver would gain any performance from HT.
 
-Sorry to disturb you.   
+In fact, I don't really realize why you even need two CPU's? If you are
+doing database lookups it's another thing though, also HT could give a
+performance gain in that case (if it's supported by the linux kernel?).
 
-CHN-TOP S&T Co., Ltd.
-Tel: +86-10-62710436,62710437
-Fax: +86-10-62710402
+> what is the advise for a fileserver ?
+> (both running hardware raid5 (3ware) and software raid5 (on promise
+> controllers)
+
+A follow-up question: Does sw-raid5 checksumming use multiple CPUs in any
+way?
+
+/Martin
+
