@@ -1,17 +1,33 @@
-From: Michael Stumpf <mjstumpf@pobox.com>
-Subject: Re: 2 drive dropout (and raid 5), simultaneous, after 3 years
-Date: Thu, 09 Dec 2004 08:44:43 -0600
-Message-ID: <41B864DB.3070105@pobox.com>
-References: <200412090457.iB94vD916489@www.watkins-home.com>
-Reply-To: mjstumpf@pobox.com
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: 2 drive dropout (and raid 5), simultaneous, after 3 years
+Date: Thu, 9 Dec 2004 11:42:52 -0500
+Message-ID: <200412091642.iB9Ggv918601@www.watkins-home.com>
+References: <41B864DB.3070105@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200412090457.iB94vD916489@www.watkins-home.com>
+In-Reply-To: <41B864DB.3070105@pobox.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Guy <bugzilla@watkins-home.com>, linux-raid@vger.kernel.org
+To: mjstumpf@pobox.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+Since they both went off line at the same time, check the power cables.  Do
+they share a common power cable, or doe each have a unique cable directly
+from the power supply.
+
+Switch power connections with another drive to see if the problem stays with
+the power connection.
+
+Guy
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Michael Stumpf
+Sent: Thursday, December 09, 2004 9:45 AM
+To: Guy; linux-raid@vger.kernel.org
+Subject: Re: 2 drive dropout (and raid 5), simultaneous, after 3 years
 
 All I see is this:
 
@@ -72,7 +88,8 @@ Guy wrote:
 >
 >  
 >
->>What failure are you getting?  I assume a read error.  md will fail a drive
+>>What failure are you getting?  I assume a read error.  md will fail a
+drive
 >>when it gets a read error from the drive.  It is "normal" to have a read
 >>error once in a while, but more than 1 a year may indicate a drive going
 >>bad.
@@ -170,5 +187,12 @@ Guy wrote:
 
 
 --------------------------------------------
-My mailbox is spam-free with ChoiceMail, the leader in personal and corporate anti-spam solutions. Download your free copy of ChoiceMail from www.choicemailfree.com
+My mailbox is spam-free with ChoiceMail, the leader in personal and
+corporate anti-spam solutions. Download your free copy of ChoiceMail from
+www.choicemailfree.com
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
