@@ -1,28 +1,42 @@
-From: "santiago" <dmcalish@hotmail.com>
-Subject: CAS1N0: New Deal!! 50% Sign Up Bonus! groovy catfish!
-Date: Sun, 02 May 2004 09:23:09 GMT
+From: <me@heyjay.com>
+Subject: Re: Software raid on extended partitions
+Date: Sun, 2 May 2004 12:18:19 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1083489789-14505__49466.9912070551$1083514624@excite.com>
+Message-ID: <007901c43069$78099610$6705a8c0@a30>
+References: <000601c43011$2e3be130$6705a8c0@a30>
+Reply-To: <me@heyjay.com>
+Mime-Version: 1.0
 Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-kernel@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-PREMI|ERE ONLIN'E CAS`INO!
-50% BONU}S for YOUR FIRST DEPO:SIT as a New Player.
+Nevermind, it seems to work if you partition, then reboot, then build raid
 
-SI!GN UP now! Don't wait!
-
-http://www.bettingcasinoes.com/_e4faa55afa1972493c43ac8a3f66f869/
-
-Once you're a Mem`ber, there are near WEEK|LY 2-T`O-1, and 3-T{O-1 depo!sit offers!
-
-Imagine, put in $25, GET $50 CRE}DIT BE|FORE YOU PL{ACE YO{UR FI{RST BET!!
-
-CLIC`K HER{E!
-
-http://www.bettingcasinoes.com/_e4faa55afa1972493c43ac8a3f66f869/
+Jay
+----- Original Message ----- 
+From: <me@heyjay.com>
+To: <linux-raid@vger.kernel.org>
+Sent: Sunday, May 02, 2004 1:46 AM
+Subject: Software raid on extended partitions
 
 
+> Hi,
+>
+> I'm googling the list but I can't find the answer.
+>
+> Can you build software raid upon extended partitions?  If so could someone
+> point me at some instructions how to do it?
+>
+> Thanks
+> Jay
+>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
 
-oranges tina money1 irene theatre passion naomi pookie1 goblue tanya chance energy safety kleenex roxy trident ladybug dirk politics nautica sally republic law dragonfl law irene
