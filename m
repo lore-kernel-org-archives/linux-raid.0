@@ -1,37 +1,26 @@
-From: Zeno Davatz <zdavatz@generika.cc>
+From: Paul Clements <Paul.Clements@SteelEye.com>
 Subject: Re: Fatal: map file must be on the boot RAID partition
-Date: 07 May 2003 19:09:41 +0200
+Date: Wed, 07 May 2003 13:15:57 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1052327381.649.140.camel@zrr>
-References: <1052325714.1551.137.camel@zrr> <3EB93BF5.4E3912EE@SteelEye.com>
-Reply-To: zdavatz@generika.cc
+Message-ID: <3EB93F4D.501B2106@SteelEye.com>
+References: <1052325714.1551.137.camel@zrr> <3EB93BF5.4E3912EE@SteelEye.com> <1052327381.649.140.camel@zrr>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3EB93BF5.4E3912EE@SteelEye.com>
-To: Linux-Raid <linux-raid@vger.kernel.org>
+To: zdavatz@generika.cc
+Cc: Linux-Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, 2003-05-07 at 19:01, Paul Clements wrote:
-> Zeno Davatz wrote:
+Zeno Davatz wrote:
+
+> Yes, ok. I did that but after a reboot 'df' gives me:
 > 
-> > When I run lilo I get:
-> > 
-> > Fatal: map file must be on the boot RAID partition.
-> > 
-> > Why would that be?
+> /dev/hdc2 instead of /dev/md0
 > 
-> you need to tell lilo the real (physical) disk for your boot partition:
-> 
-> boot=/dev/hda
-Yes, ok. I did that but after a reboot 'df' gives me:
+> Why would that be?
 
-/dev/hdc2 instead of /dev/md0
+did you change your /etc/fstab? what does /proc/mdstat say?
 
-Why would that be?
-
-Thanks for your time and help.
-
-Zeno
-
+--
+Paul
