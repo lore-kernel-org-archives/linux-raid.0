@@ -1,93 +1,41 @@
-From: "Doug Griswold" <griswld@cio.sc.gov>
+From: Anu Matthew <anu.matthew@bms.com>
 Subject: Re: multipath md devices
-Date: Wed, 22 Sep 2004 17:55:03 -0400
+Date: Wed, 22 Sep 2004 18:20:54 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <s151bc7a.011@gw.state.sc.us>
+Message-ID: <4151FAC6.8090204@bms.com>
+References: <4151E37B.8040207@bms.com>
+ <1095888922.4196.1548.camel@compaq.xsintricity.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; format=flowed; charset=us-ascii
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-reply-to: <1095888922.4196.1548.camel@compaq.xsintricity.com>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->>> Doug Ledford <dledford@redhat.com> 09/22/04 5:35 PM >>>
-On Wed, 2004-09-22 at 16:41, Anu Matthew wrote:
-> Hi,
-> 
-> We have multipath devices created on SAN Luns. Say md0 is created on 
-> /dev/sdj and /dev/sde, the latter being the alternate path for
-/dev/sdj.
-> 
-> I've noticed the following:
-> 
-> 1) Without much IO to the md device, and  I pull out the cable to say 
-> /dev/sdj, the /proc/mdstat still shows both devices.  /proc/mdstat
-won't 
-> get updated unless I start some considerable IO to the md device. Even
-
-> mdadm scan/query o/p shows both the paths, which is not true. As we 
-> start IO, /proc/mdstat reflects that one of the devices, /dev/sdj in 
-> this case, has failed. Thereafter mdadm outputs would be correct too.
-> 
-> The entries (link down) in syslog and dmesg are almost instantaneous 
-> when the cable is pulled out. This makes it very difficult to monitor 
-> multipath devices, as we cannot rely on /proc/mdstat to read.  
-
-> /proc/mdstat will be correct once the first physical read/write on the
-> yanked path fails.
-
-Is this true even if the lightpath is not dead?  
-
-> 2) Another situation: Device md0 is active, with healthy multipaths 
-> /dev/sdj and /dev/sde, under reasonable IO activity. If the cable to 
-> /dev/sdj is yanked out, md0 remains still active, thanks to the 
-> alternate path, sde. However, it fails to go back and re-construct the
-
-> spare path allocation even after the fibre link is restored. Here, if
-I 
-> pull the cable out for sde even after 30 minutes, the machine ends up 
-> failing to write to /dev/md0 as it does not care whether /dev/sdj is 
-> back online, unless I failed, removed and add /dev/sdj  manually from 
-> the mdadm command line. If something is hard mounted on /dev/md0, it
-may 
-> end up in a system crash.
-> 
-> To conclude, if one path goes off, and comes back after a while, and 
-> then the second path goes off, md0 cannot be read, unless someone 
-> manually did fail, remove and add the first device which came back 
-> online, before the second path goes off.
-
-> Yeah, IBM wrote a little app to help with that.  We stuffed it into
-the
-> mdadm package we ship since that seemed the most appropriate place for
-> it.  It's called mdmpd and that's it's job basically.  Very simple
-app,
-> but doesn't run on upstream kernels at the moment (it wants the md
-event
-> interface which hasn't yet been submitted upstream by Neil).
-
-> Any help towards this will be much appreciated.
-> 
-> Thanks,
-> 
-> --AM.
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"
-in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
--- 
-  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
-         Red Hat, Inc.
-         1801 Varsity Dr.
-         Raleigh, NC 27606
+// 
+Yeah, IBM wrote a little app to help with that.  We stuffed it into the
+mdadm package we ship since that seemed the most appropriate place for
+it.  It's called mdmpd and that's it's job basically.  Very simple app,
+but doesn't run on upstream kernels at the moment (it wants the md event
+interface which hasn't yet been submitted upstream by Neil). 
+//
 
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Doug, thanks a lot, we appreciate your response.
 
+One of our boxes with the multipath problem (sic) runs on RHEL ES3.0 
+with active RHN subscription and is at 2.4.21-15.ELsmp, and has 
+mdadm-1.5.0-3, with mdmpd running. Yet it crashed last week as the paths 
+went away from a SAN switch f/w upgrade, as they took off the paths one 
+4 hours after another, but never both the paths at the same time.
 
+I saw your post on Bugzilla, dated 2004-06-07 about the md Event 
+Interface Patch. Do we still have to throw that patch in, manually? Or 
+does 2.4.21-20.ELsmp have it already? I tried to read up the Change Log 
+and File lists, could gather nothing much.
+
+Thanks,
+
+--Anu Matthew
 
