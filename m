@@ -1,17 +1,59 @@
-From: "Guy" <bugzilla@watkins-home.com>
+From: Novak David-DNOVAK1 <David.Novak@motorola.com>
 Subject: RE: Linear Raid Problems...
-Date: Fri, 2 Apr 2004 14:13:48 -0500
+Date: Fri, 2 Apr 2004 13:35:57 -0600
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200404021913.i32JDrW28540@dns1.watkins-home.com>
-References: <8E4E38BF6D087F4488E80ABAACA2F3F484D649@il27exm02.cig.mot.com>
+Message-ID: <8E4E38BF6D087F4488E80ABAACA2F3F484D64D@il27exm02.cig.mot.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <8E4E38BF6D087F4488E80ABAACA2F3F484D649@il27exm02.cig.mot.com>
-To: 'Novak David-DNOVAK1' <David.Novak@motorola.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+Hmmm...Nope, mdadm didn't like --raid-devices.  It looks like it's finding
+all the drives OK, but when it actually puts the device into service with 
+the run command, that's when it's puking.
+
+Should I not have fdisk'ed the drives?  I assumed that they needed SOME 
+sort of formating.
+
+I just noticed this in my syslog:
+Apr  2 12:57:13 Homer kernel: md: bind<sdb1,1>
+Apr  2 12:57:13 Homer kernel: md: bind<sdc1,2>
+Apr  2 12:57:13 Homer kernel: md: bind<sdd1,3>
+Apr  2 12:57:13 Homer kernel: md: sdd1's event counter: 00000000
+Apr  2 12:57:13 Homer kernel: md: sdc1's event counter: 00000000
+Apr  2 12:57:13 Homer kernel: md: sdb1's event counter: 00000000
+Apr  2 12:57:13 Homer kernel: md: personality 1 is not loaded!
+Apr  2 12:57:13 Homer kernel: md: md0 stopped.
+Apr  2 12:57:13 Homer kernel: md: unbind<sdd1,2>
+Apr  2 12:57:13 Homer kernel: md: export_rdev(sdd1)
+Apr  2 12:57:13 Homer kernel: md: unbind<sdc1,1>
+Apr  2 12:57:13 Homer kernel: md: export_rdev(sdc1)
+Apr  2 12:57:13 Homer kernel: md: unbind<sdb1,0>
+Apr  2 12:57:13 Homer kernel: md: export_rdev(sdb1)
+
+OK.  So I'm 99.99% sure that the personality (linear) is not loaded.
+Question:
+Where is this personality located?
+Where do I get this personality from?
+How do I load this personality?
+
+  Thanks again!
+  David
+
+-------
+David J.  Novak                           GSM Radio Firmware
+GSM Products Division                     CE/NSS
+Motorola                                  Life v7.0
+--------------------------------------------------------------------------
+"Not all who wander are lost." - J.R.R. Tolkien
+
+-----Original Message-----
+From: Guy [mailto:bugzilla@watkins-home.com]
+Sent: Friday, April 02, 2004 1:14 PM
+To: Novak David-DNOVAK1; linux-raid@vger.kernel.org
+Subject: RE: Linear Raid Problems...
+
 
 Personality...
 I have never needed to talk any steps to install personalities.
@@ -231,5 +273,4 @@ More majordomo info at  http://vger.kernel.org/majordomo-info.html
 To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 the body of a message to majordomo@vger.kernel.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
 
