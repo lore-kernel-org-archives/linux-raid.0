@@ -1,35 +1,32 @@
-From: mru@kth.se (=?iso-8859-1?q?M=E5ns_Rullg=E5rd?=)
-Subject: Re: Highpoint RocketRaid 133
-Date: Wed, 28 Jan 2004 11:13:48 +0100
+From: Wayde Milas <wmilas@rarcoa.com>
+Subject: Promise 378 tx2(plus) serial ata w/ 2.6.1
+Date: Wed, 28 Jan 2004 08:56:03 -0600
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <yw1xsmi0e5yb.fsf@kth.se>
-References: <798DD0DBF172864C8CC752175CF42BA3385F76@pat.aberdeen.paradigmgeo.com>
+Message-ID: <1075301763.18600.105.camel@wayde.rarcoa.com>
+Reply-To: wmilas@rarcoa.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Bruce Collie <brucec@paradigmgeo.com> writes:
+Thought I'd try here before I went to the kernel mailing list.
 
-> Highpoint provide open source drivers (with a binary library) for the=
- 2.4
-> kernel, but they are not forthcoming with information about an update=
- for
-> the 2.6 kernel. Is there any direct support for the Highpoint 372A ch=
-ipset
-> within the 2.6 kernel series?
+I'm tying to get my promise 378 tx(plus2) chip thats built into my msi
+865pe neo2 working. I'm aiming for a 4 drive sata raid 5 array, and I've
+got the 2 sata ports on the intel chip working flawlessly.
 
-Yes.  Look for Highpoint in the IDE/ATA menu.  There two drivers for
-highpoint chips, one for old models and one for newer ones.
+The promise is another mater. The driver loads no problem. I can fsck
+the drives and even install (non raid) reiserfs or ext2 no problem on
+them. Mounting a reiserfs partition causes the box to hard lock.
+Mounting an ext2 partition is ok, but as soon as I try to read or write
+to it it hardlocks the box within 15 seconds.
 
---=20
-M=E5ns Rullg=E5rd
-mru@kth.se
+I can't be the only one experiencing this :)
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I've tried emailing Jeff Grazik (author of the 2.6 sata_promise driver I
+think... hes the only name I could find in the source) to no avail.
+
+Anyone have any experience related to this? :)
+
