@@ -1,32 +1,25 @@
-From: Joshua Baker-LePain <jlb17@duke.edu>
-Subject: Re: Debian: how do I determine if RAID is working?
-Date: Fri, 30 Apr 2004 07:37:25 -0400 (EDT)
+From: "Frollen" <frollen@gmx.de>
+Subject: Hpt370 Raid hdd Shutdown
+Date: Sat, 1 May 2004 00:27:10 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.58.0404300736240.26077@chaos.egr.duke.edu>
-References: <JIEJLHEJOHJGIPFPDNJKEEHFDGAA.s@dondley.com>
+Message-ID: <005001c42f02$48518a80$0200a8c0@frl1>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <JIEJLHEJOHJGIPFPDNJKEEHFDGAA.s@dondley.com>
-To: Steve Dondley <s@dondley.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 30 Apr 2004 at 1:47am, Steve Dondley wrote
+I have ab Hpt 379 RAID Controller with two WD1200jb disks attached to it
+on Redhat 9 (Kernel 2.4.20-8)
+It actually works adorably well, but one Problem remains: how do I make the
+Disks power down when they are not used ? Or how do I make them power
+down at all ? (while the system is running, of course. for power saving
+purposes)
 
-> According to dmesg, the driver that I configured into my kernel for my 3ware
-> 7000 series controller card gets installed at boot time with no errors.
-> That's nice, but aside from disconnecting one of the hard drives, how can I
-> verify my RAID configuration is working?
-> 
-> I'm running Debian (woody) kernel 2.4.18, raid 1 configuration on two
-> ATA/IDE hard drives.
+thanks in advance
 
-Are you using software or hardware RAID?  If software, the commands were 
-already posted.  If hardware, you can install either 3dm or the CLI 
-utilities from 3ware to monitor the array.
+Frollen
 
--- 
-Joshua Baker-LePain
-Department of Biomedical Engineering
-Duke University
+
