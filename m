@@ -1,63 +1,179 @@
-From: Bob Glamm <glamm@a-s-i.com>
-Subject: RAID migration from 2.4 -> 2.6
-Date: Thu, 12 Aug 2004 10:29:39 -0500
+From: David Greaves <david@dgreaves.com>
+Subject: Re: Force parity resync on raid5?
+Date: Thu, 12 Aug 2004 17:26:20 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040812152939.GD5326@romulus.a-s-i.com>
+Message-ID: <411B9A2C.6090108@dgreaves.com>
+References: <200408121522.i7CFM7311834@watkins-home.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-To: linux-raid@vger.kernel.org
+In-Reply-To: <200408121522.i7CFM7311834@watkins-home.com>
+To: Guy <bugzilla@watkins-home.com>
+Cc: 'Gordon Henderson' <gordon@drogon.net>, 'Philip Molter' <philip@corp.texas.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-At the moment I'm stumped, so I wonder if someone might be able
-to give me a hand.
+Guy wrote:
 
-First, my RAID setup: I have a pair of Adaptec 7899 controllers
-with five 9GB SCSI disks on each.  The first disks on each controller
-are allocated in a RAID 1 configuration for boot, swap, /usr, etc.,
-while the next three disks on each controller are allocated in
-a RAID 5 configuration to our running services and data.  The last
-disk on each controller is designated as a spare disk for each RAID.
+>You were using skip/seek wrong.
+>  
+>
+typo - thanks.
 
-These RAIDs work well with 2.4.  I've got them configured
-for autodetect, so the system brings them up at startup in 2.4.
+>This is just pseudo code?  I use bash or ksh, you can't do "n=n+1".
+>You don't ever end, again pseudo code I assume.
+>  
+>
+Indeed - should have said - I wouldn't want anyone to cut'n'paste :)
+(and that typo shows why!)
 
-Now I'm trying to migrate to 2.6.7, and autodetection basically
-ignores all my SCSI disks.  I get three lines:
+>I would only do this if the filesystem on md0 is not mounted.
+>  
+>
+Yes - I thought it would be safe for / in single user and realised it 
+wouldn't.
+I was also thinking
 
-  Autodetecting RAID arrays:
-    ..  autodetecting
-  Done.
+n=0
+while
+  dd if=/dev/md0 of=/tmp/block count=x_for_efficiency skip=n
+  dd of=/dev/md0 if=/dev/zero count=x_for_efficiency seek=n
+  dd of=/dev/md0 if=/tmp/block count=x_for_efficiency seek=n
+  n= n + 1
+loop
 
-when I try to boot 2.6.7.  (Additional note: all SCSI controllers
-and disks are discovered just fine, although I am using the new
-Adaptec driver in 2.6.)
+in case something in a block/md layer was smart enough to see no changes 
+and not write it for real - I really don't know but it's more paranoid.
 
-In the course of googling/reading to fix this problem, I've
-come up with several possibilities:
+Anyway - the question remains - would this be the right approach?
 
-  1) My 2.4 setup uses devfs.  (Don't ask why, it just does.)
-     Naturally, I'm ok moving to udev in 2.6; I had a brief thought
-     that perhaps the long devfs pathnames were somehow encoded
-     into the persistent superblock of each RAID array, but I
-     don't think that's the case - I think the major/minor numbers
-     of the disk partitions are stored directly.  (Someone
-     correct me if I'm wrong?)
+Hmm - I wonder what would be needed to make the resync code do this...
 
-  2) After taking a look at
-       http://cgi.cse.unsw.edu.au/~neilb/SoftRaid/01084411399
-     I'm not even sure if 2.6 will do autodetection of my 2.4 RAID
-     arrays?  Or is this only for RAID arrays created under 2.6?
+David
 
-  3) (related to 2) my 2.4 setup does not uses initrd at all.  The boot
-     process basically consists of the boot loader loading the kernel
-     and the kernel running /sbin/init.  I rely on the kernel autodetection
-     assembling the RAID arrays before init is ever run (as / is on
-     /dev/md10).
+>Guy
+>
+>n=0
+>while
+>  dd if=/dev/md0 of=/tmp/block count=x_for_efficiency skip=n
+>  dd of=/dev/md0 if=/tmp/block count=x_for_efficiency seek=n
+>  n=n+1
+>loop
+>
+>-----Original Message-----
+>From: linux-raid-owner@vger.kernel.org
+>[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of David Greaves
+>Sent: Thursday, August 12, 2004 8:31 AM
+>To: Guy
+>Cc: 'Gordon Henderson'; 'Philip Molter'; linux-raid@vger.kernel.org
+>Subject: Re: Force parity resync on raid5?
+>
+>what about
+>n=0
+>while
+>  dd if=/dev/md0 of=/tmp/block count=x_for_efficiency seek=n
+>  dd of=/dev/md0 if=/tmp/block count=x_for_efficiency seek=n
+>  n=n+1
+>loop
+>
+>?
+>
+>This would read the good data and force a rewrite - would you need to 
+>stop any optimisers?
+>
+>David
+>
+>Guy wrote:
+>
+>  
+>
+>>Ouch!  No!!
+>>
+>>This would re-build data from parity!!!
+>>He thinks his parity is bad.
+>>He wants to re-build the parity from the data!
+>>I don't know if this can even be done!
+>>Recovering from a power failure does force a re-build (2.4), but from what
+>>    
+>>
+>I
+>  
+>
+>>remember the system looks like it is re-building a failed disk, which is
+>>    
+>>
+>not
+>  
+>
+>>what he wants to do.  If the parity was good, re-building any 1 disk would
+>>be fine.
+>>
+>>Guy
+>>
+>>-----Original Message-----
+>>From: linux-raid-owner@vger.kernel.org
+>>[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Gordon Henderson
+>>Sent: Tuesday, August 10, 2004 5:04 AM
+>>To: Philip Molter
+>>Cc: linux-raid@vger.kernel.org
+>>Subject: Re: Force parity resync on raid5?
+>>
+>>On Mon, 9 Aug 2004, Philip Molter wrote:
+>>
+>> 
+>>
+>>    
+>>
+>>>How do I force a parity resync on a raid5 array?  Under 2.4, I would do
+>>>this by hard cycling the box and when it came back up, it would
+>>>automatically resync the array.  Under 2.6, this appears to have gone
+>>>   
+>>>
+>>>      
+>>>
+>>away.
+>>
+>>I don't know about 2.6, (still living with 2.4) but can't you simply do:
+>>
+>> raidhotremove /dev/mdX /dev/hdYZ
+>>
+>>followed by
+>>
+>> raidhotadd /dev/mdX /dev/hdYZ
+>>
+>>or /dev/sdYZ if SCSI disks...
+>>
+>>However, picking the right disk to remove might be tricky... And if you
+>>were at all unsure about data on the disks, maybe rebooting and doing a
+>>hard fsck of the partition(s) in maintenance mode might be a good thing
+>>too...
+>>
+>>Good luck!
+>>-
+>>To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>>the body of a message to majordomo@vger.kernel.org
+>>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>>-
+>>To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>>the body of a message to majordomo@vger.kernel.org
+>>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>> 
+>>
+>>    
+>>
+>
+>-
+>To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>-
+>To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>  
+>
 
-Any suggestions here?  I'd rather not have to backup filesystems and
-start from scratch to get my RAID arrays going.
-
-Thanks,
--Bob
