@@ -1,51 +1,83 @@
-From: 240260@mail.com
-Subject: The 30 Hour Wonder!                1791165494
-Date: Sat, 01 Nov 2003 15:24:29 -0500
-Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <S263836AbTKAMYL/20031101122411Z+25415@vger.kernel.org>
-Reply-To: 240260@msn.com
+From: Florian Reitmeir <squat@riot.org>
+Subject: many ide drives, raid0/raid5
+Date: Sun, 2 Nov 2003 04:17:13 +0100
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20031102031713.GA3464@squat.noreply.org>
+Reply-To: Florian Reitmeir <squat@riot.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+Content-Disposition: inline
+To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Cyalus comes in smaller doses and produces fewer side effects. 
-Cyalus also works much faster than Sildenafil-based medications. 
-In clinical trials, the majority of men who took the drug were able to 
-engage in sexual intercourse within 30 minutes or less. 
-The studies also indicated that Cyalus stays in the system 
-for up to 30 hours. That's 26 hours longer than the traditional 
-Sildenafil-based medications treatment. 
+Hi,
 
-Test results showed that out of 700 participants at least 88 percent of men experienced improvement with their erections. 
+i'm using on the machine kernel 2.6.0-test6-mm1 and 15 IDE Drives. Everything worked fine (uptime about 30 days)
+I used, some raid5's, below some raid0's and on top evms.
 
-More info http://www.hostvy.com/
+heres "cat /proc/mdstat" so its more clear
 
+============ cut 
+Personalities : [raid0] [raid5]
+md4 : active raid5 hdp[2] hdo[1] hdn[0]
+      120627072 blocks level 5, 32k chunk, algorithm 2 [4/3] [UUU_]
 
+md3 : active raid0 hdm[1] hdl[0]
+			49956352 blocks 32k chunks
 
+md0 : inactive hdc[0]
+			80418176 blocks
+unused devices: <none>
+============ cut 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-77CEBC25-6DCC795D-5CA56DE0-964E8-22336C7F
-  
-585513A-43F06AB0-5B36B9F1-66677879-4154E521
-     
-5663D083-6CA0CCF-DB1E936-215A100A-202C757E
-            
+here are some drives missig, 
+	md0, is one drive missing
+	md1, complete
+	md2, also
+									
+when i make a "evms_activate" i get
 
 
+========= CUT
+MDRaid5RegMgr: Region md/md4 object index 3 is faulty. Array may be degraded.
+MDRaid5RegMgr: Region md/md4 disks array not zeroed
+MDRaid5RegMgr: Region md/md4 has disk counts that are not correct.
+MDRaid5RegMgr: RAID5 array md/md4 is missing the member md/md3 with RAID index 3.  The array is running in degrade mode.
+LvmRegMgr: Container lvm/rubbish has incorrect number of objects!
+LvmRegMgr: Looking for 3 objects, found 2 objects.
+LvmRegMgr: A UUID is recorded for PV 3, but PV 3 was not found.
+LvmRegMgr:      UUID: vWAf1j-veQx-IDk7-SaJ0-dhga-Lase-rQ9ydR
+LvmRegMgr: Container lvm/rubbish has a UUID recorded for PV 3, but PV 3 was not found. Would you like to remove PV 3 from container lvm/rubbish *PERMANENTLY*?
+
+You should only remove this PV if you know the PV will *NEVER* be available again. If you think it is just temporarily missing, do not remove it from the container.evms_activate: Responding with default selection "Don't Remove".
+LvmRegMgr: Would you like to fix the metadata for container lvm/rubbish?
+evms_activate: Responding with default selection "Don't Fix".
+LvmRegMgr: Region lvm/rubbish/basket has an incomplete LE map.
+Missing 7327 out of 14359 LEs.
+MDRaid5RegMgr: RAID5 array md/md2 is missing the member  with RAID index 3.  The array is running in degrade mode.
+MDRaid0RegMgr: Region md/md1 object index incorrect: is 0, should be 1
+MDRaid0RegMgr: Region md/md1 object index 1 is greater than nr_disks.
+MDRaid0RegMgr: Region md/md1 object index 1 is in invalid state.
+MDRaid0RegMgr: Region md/md1 disk counts incorrect
+Engine: Error code 5 (Input/output error) when reading the primary copy of feature header on object lvm/rubbish/basket.
+Engine: Error code 5 (Input/output error) when reading the secondary copy of feature header on object lvm/rubbish/basket.
+MDRaid0RegMgr: Region md/md1 object index incorrect: is 0, should be 1
+MDRaid0RegMgr: Region md/md1 object index 1 is greater than nr_disks.
+MDRaid0RegMgr: Region md/md1 object index 1 is in invalid state.
+MDRaid0RegMgr: Region md/md1 disk counts incorrect
+MDRaid0RegMgr: Region md/md1 object index incorrect: is 0, should be 1
+MDRaid0RegMgr: Region md/md1 object index 1 is greater than nr_disks.
+MDRaid0RegMgr: Region md/md1 object index 1 is in invalid state.
+MDRaid0RegMgr: Region md/md1 disk counts incorrect
+========= CUT
+
+
+or in other words, its a mess. I verfied, all drives are found and work correct, so its "only" the meta information which is broken, i uses evmsgui to configure the whole thing, so there is no raidtab file, which i could use to force the configuration.
+
+I also tried newer Kernel versions, but there is a timing problem i think, i use promise ide-pci controllers, and the new test9 always tries to reset those with UDMA(i think so), which won't work with that many drives.
+
+So, is there someone who can help me ? 
+
+--
+mfG Florian Reitmeir
