@@ -1,48 +1,81 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: raid5 two disk temp failure
-Date: Sat, 14 Aug 2004 12:54:37 +1000
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: raid10 ... (was: Re: ANNOUNCE: mdadm 1.7.0)
+Date: Sat, 14 Aug 2004 00:28:29 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16669.32493.775346.885436@cse.unsw.edu.au>
-References: <20040813134051.B3328@tictactoe.unixboxen.net>
+Message-ID: <200408140428.i7E4ST318129@watkins-home.com>
+References: <20040814041814.56d1e6c9.pegasus@nerv.eu.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Richard Massa on Friday August 13
-To: Richard Massa <ramassa@ucdavis.edu>
-Cc: linux-raid@vger.kernel.org
+In-Reply-To: <20040814041814.56d1e6c9.pegasus@nerv.eu.org>
+To: =?utf-8?Q?'Jure_Pe=C3=A8ar'?= <pegasus@nerv.eu.org>, linux-raid@vger.kernel.org
+Cc: dm-devel@redhat.com
 List-Id: linux-raid.ids
 
-On Friday August 13, ramassa@ucdavis.edu wrote:
-> Hi all,
-> 
-> I've got a 6 disk raid5 array that just failed because some little elf loosened the cable going 
-> to two of the disks in a scsi enclosure.  Both of them got kicked.
-> 
-> Using mdadm -a /dev/md2 gives a segfault in both versions 1.6.0 and
-> 1.7.0.
+Many years ago HP had a product called an AutoRAID (12 and 12H).  It wa=
+s similar to what you describe.  If you added a disk it used it as need=
+ed.  Even the "spare" was used for live data.  It used a combination of=
+ RAID1 and RAID5.  Writes were to the RAID1 area, during low usage time=
+s it would move the RAID1 data to the RAID5 area.  It would also balanc=
+e the disks during low usage times.  When you added a disk, it would be=
+ out of balance, later it would start to balance the disks.  Any unallo=
+cated space (not used for LUNs) was used as extra RAID1 space to improv=
+e performance, as was the spare.
 
-Odd.  I doesn't when I try it.
-If you can get it to drop a core (ulimit -c unlimited), and then get a
-stack trace:
-    gdb `which mdadm` core
-    where
+It was a real good idea!  The performance sucked....
 
-That might help.
-However "mdadm -a /dev/md2" is a no-op.  Is there a typo?
+Guy
 
-> 
-> I can query the array using mdadm just fine, the output is attached. 
-> 
-> Anyone know what is going on?  I can attach a strace if that
-> helps...
+-----Original Message-----
+=46rom: linux-raid-owner@vger.kernel.org [mailto:linux-raid-owner@vger.=
+kernel.org] On Behalf Of Jure Pe=C3=A8ar
+Sent: Friday, August 13, 2004 10:18 PM
+To: linux-raid@vger.kernel.org
+Cc: dm-devel@redhat.com
+Subject: raid10 ... (was: Re: ANNOUNCE: mdadm 1.7.0)
 
-If you loose two drives, raid5 cannot cope. However if you are sure
-that the data on the drives is still good (as seems likely in this
-case) you can re-assemble the array with
-   mdadm --assemble /dev/md2 --force /dev/sd[abcdef]1
+On Thu, 12 Aug 2004 09:04:21 +1000
+Neil Brown <neilb@cse.unsw.edu.au> wrote:
 
-and it will be assembled with one missing drive which you then might
-need to add in.
+> Data is laid out in a raid0 style, but multiple copies of each chunk
+> are possible.  There can be "near" copies, where copies of the one
+> block are at the same or similar offsets in different drives, and
+> "far" copies, where copies of the one block are at a substantial
+> offset from one drive to the next.
 
-NeilBrown
+=2E.. this really fuels my imagination.
+
+Imagine having a pool of drives, where chunks of data are distributed e=
+venly
+across all drives in a redundant manner. If one drive dies, the chunks =
+that
+are not redundant anymore get their copies on the remaining drives, pro=
+vided
+that there's enough space left; if one or more drives are added to the
+array, new chunks are written there until the balance is reached again.
+
+Disk space could be the first key for balancing across the drives, with
+transfer rate or seek time maybe added later. Maybe the pool could even
+adapt dinamically to the i/o patterns ...=20
+
+Am i dreaming (it's well over 4am here :) ? Or is something like this
+possible? Maybe not with a md personality, but by some daemon that woul=
+d be
+taking care of a dm map?
+
+
+--=20
+
+Jure Pe=C4=8Dar
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
