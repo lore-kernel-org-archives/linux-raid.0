@@ -1,45 +1,105 @@
-From: Micah Anderson <micah@riseup.net>
-Subject: Re: Unable to read superblock
-Date: Tue, 23 Jul 2002 14:01:37 -0700
+From: Neil Sedger <linux-raid@moley.org.uk>
+Subject: RAID0 - one drive's superblock is corrupt
+Date: Tue, 23 Jul 2002 23:33:54 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20020723210137.GD27638@riseup.net>
-References: <20020718033404.GR17829@riseup.net> <20020722234502.GP12736@riseup.net> <20020723025205.GB14359@willow.seitz.com>
+Message-ID: <3D3DD9D2.7030501@moley.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20020723025205.GB14359@willow.seitz.com>
-To: Ross Vandegrift <ross@willow.seitz.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 22 Jul 2002, Ross Vandegrift wrote:
+Hi all.
 
-> On Mon, Jul 22, 2002 at 04:45:03PM -0700, Micah Anderson wrote:
-> > > I had lilo set for:
-> > > 
-> > > boot=/dev/md0
-> > > root=/dev/md5
-> > > image=/boot/vmlinuz-2.2.20RAID
-> > >         label=RAID
-> > >         read-only
-> > >         alias=4
-> 
-> Are you using the raid-extra-boot option?  If you aren't you probably
-> want to be - it'll allow the system to boot if one of the boot drives is
-> dead.
+I've had a 140gb RAID0 consisting of various drive makes/sizes for a 
+year or so - running on a Red Hat 7.1, Kernel 2.4.2, raidtools-0.90-20. 
+All drives have been on a Promise ATA-100 controller.
 
-Actually, I switched to grub, I wasn't aware of the raid-extra-boot
-option, wonder if there is something similar in grub.
+The RAID0 was originally created with 'persistant-superblock 1' and has 
+auto-started itself fine every time until now.
+
+But now I get kernel messages:
+
+kernel: autodetecting RAID arrays
+kernel: (read) hde1's sb offset: 45030080hde: dma_intr: status=0x51 { 
+DriveReady SeekComplete Error }
+kernel: hde: dma_intr: error=0x40 { UncorrectableError }, 
+LBAsect=90060223, sector=90060160
+kernel: end_request: I/O error, dev 21:01 (hde), sector 90060160
+kernel: md: disabled device hde1, could not read superblock.
+kernel: md: could not read hde1's sb, not importing!
+kernel: could not import hde1!
+
+Am I correct that hde1 - the first partition in RAID0 - has had its 
+superblock corrupted?
+
+'badblocks' reports that that sector, and a few others around it, are 
+damaged.
+
+ From reading the HOWTO it seems that the superblock is not actually 
+required - its just a convenience thing so the kernel can start the raid 
+without needing /etc/raidtab. Is that right?
+
+So, I've tried bypassing the superblocks by editing /etc/raidtab, 
+setting persistant-superblock to 0, then doing 'raid0run'.
+This says its started the RAID OK, I can mount its filesystem (ext2, 
+readonly at this time), some files are OK but if I delve too far into 
+the filesystem I get errors and kernel messages:
+
+kernel: attempt to access beyond end of device
+kernel: 09:00: rw=0, want=326333420, limit=143733920
 
 
-> This may sound dumb, but are you sure you didn't compile RAID1 as a
-> module?  If you did, you'll need to use an initrd to load the module
-> before you mount root.  Otherwise, you'll need to rebuild the kernel
-> with the driver included in the kernel.
+running e2fsck on it (in read-only mode) produces loads of inode errors, 
+eventually exiting with
 
-Yes, I did *not* build them as modules. Modules are too much of a
-pain. :)
+Error while iterating over blocks in inode 2932821: Illegal indirect 
+block found
 
-Micah
+
+
+
+...so I thought I could try replacing the superblock. From reading the 
+HOWTO and man page I think I should be able to do that with 'mkraid':
+
+
+[root@giles /]# mkraid /dev/md0
+handling MD device /dev/md0
+analyzing super-block
+disk 0: /dev/hde1, 45030163kB, raid superblock at 45030080kB
+mkraid: aborted, see the syslog and /proc/mdstat for potential clues.
+
+
+syslog said:
+kernel: hde: read_intr: status=0x59 { DriveReady SeekComplete 
+DataRequest Error }
+kernel: hde: read_intr: error=0x40 { UncorrectableError }, 
+LBAsect=90060223, sector=90060160
+kernel: end_request: I/O error, dev 21:01 (hde), sector 90060160
+
+
+
+
+
+Its an IBM Deskstar 40gb. IBM provide a test program which also includes 
+a 'sector repair' option, so I tried that (you have to put it on a 
+floppy boot with it). Its scan results agreed with 'badblocks' - it then 
+offered to try sector repair. At this point I accepted - but after a 
+good go it said sector repair failed.
+
+
+
+
+I accept that my RAID is on its last legs and needs rebuilding after a 
+low-level format or drive replacement. I also accept that the few 
+corrupted sectors mean I'll lose a few files. But I'd like to access the 
+  rest of the 140gb RAID0 to salvage data off elsewhere.
+
+
+Any suggestions?
+
+
+Thanks
+Neil
 
