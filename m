@@ -1,26 +1,30 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] 2.4.x Linux Medley RAID Version 7
-Date: Wed, 10 Mar 2004 15:56:56 -0500
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <404F8118.1060203@pobox.com>
-References: <200403101707.38595.bzolnier@elka.pw.edu.pl> <Pine.LNX.4.40.0403101917170.2582-100000@jehova.dsm.dk> <c2nv0b$j5$1@news.cistron.nl>
+From: Dalboy59 <dalboy59@hotmail.com>
+Subject: (gK) (c-heap) (vi)-(agra)
+Date: Thu, 11 Mar 2004 02:59:06 +0000
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <79C24B315HCEGJKJ@hotmail.com>
+References: <5332GGJAE3EH8ADE@vger.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <c2nv0b$j5$1@news.cistron.nl>
-To: Miquel van Smoorenburg <miquels@cistron.nl>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <5332GGJAE3EH8ADE@vger.kernel.org>
+To: Linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Miquel van Smoorenburg wrote:
-> MD already has support for more than one type of superblock. I think
-> if you just add medley (or intel, or ..) support to MD you're all set.
+l Cia-lis Is A New ImpotenceDrug. X.
+M 
+k Cia-lis is in a class of medications known as PDE5-IInhibittors, which are used to treat MaleImp-otence.
+O Up to 86% of patients WhoTakeCialis experience an improvement in their e-rections.p. Cia-lisActs in the SameWay As Vi-agra.v.
+R 
+b YouGain E-rections faster and easier with Cialis.B
+F 
+J WhyWe??? Y.
+j - NoPrescriptionRequired Z.
+K - FreeConsultations a.
+T - WorldwideShipping D.
+d - SatisfactionGuaranteed t.
+z - MoneyBackGuarantee A.
 
-Indeed.  Further, we have the new vendor-neutral RAID metadata format, 
-"DDF", looming on the very near horizon.
+http://15.smart-pharmacy.com/15/
 
-I want to avoid having NN duplicated RAID0/1/5 engines, like ataraid in 
-2.4 was threatening to be.
-
-	Jeff
