@@ -1,63 +1,44 @@
-From: Huntress Gary B NPRI <HuntressGB@Npt.NUWC.Navy.Mil>
+From: Derek Vadala <derek@cynicism.com>
 Subject: RE: Growing an Array?
-Date: Wed, 06 Nov 2002 10:26:54 -0500
+Date: Wed, 6 Nov 2002 11:56:17 -0500 (EST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <A506359028CAD21191C10008C75D895C040B8844@NPRI54EXC14.NPT.NUWC.NAVY.MIL>
+Message-ID: <20021106165617.656343B811@jaded.cynicism.com>
+References: <A506359028CAD21191C10008C75D895C040B8844@NPRI54EXC14.NPT.NUWC.NAVY.MIL>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: 'Alistair Riddell' <ali@gwc.org.uk>
-Cc: "'linux-raid@vger.kernel.org'" <linux-raid@vger.kernel.org>
+In-Reply-To: <A506359028CAD21191C10008C75D895C040B8844@NPRI54EXC14.NPT.NUWC.NAVY.MIL>
+To: Huntress Gary B NPRI <HuntressGB@Npt.NUWC.Navy.Mil>
+Cc: 'Alistair Riddell' <ali@gwc.org.uk>, "'linux-raid@vger.kernel.org'" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
-
-
-My array is currently 6 X 73GB.
-
-I think you are saying that I can do this now using resize2fs?   I think I pessimistically assumed that tool was destructive.
-
-
-Regards,
-
-Gary Huntress
-Code 4113
-Naval Undersea Warfare Center
-Newport, RI  02841
-1-800-669-6892 x28990
-
------Original Message-----
-From: Alistair Riddell [mailto:ali@gwc.org.uk]
-Sent: Wednesday, November 06, 2002 10:13 AM
-Cc: 'linux-raid@vger.kernel.org'
-Subject: Re: Growing an Array?
-
 
 On Wed, 6 Nov 2002, Huntress Gary B NPRI wrote:
 
-> 1)  pop out drive 1
-> 2)  Insert new drive
-> 3)  "initialize" the new drive
-> 4)  Some magic happens and the larger drive becomes part of the array
+> My array is currently 6 X 73GB.
 >
-> lather, rinse, repeat for the remaining replacement drives and *poof* I have a larger array.
+> I think you are saying that I can do this now using resize2fs?  I think
+> I pessimistically assumed that tool was destructive.
 
-In theory you could do this now...
+Sort of...
 
-> This capability would save me an incredible amount of labor and hand wringing.  Our "technology refresh" upgrades happen quite regularly because our data never stops growing.   Is this a pipe dream or an eventual reality?
+Alistair's point was that growing an array takes a long time, so the
+backup and restore process might not be as slow as you think. I suspect it
+will take the better part of a day to do what you have proposed (add a
+disk to a 6x73GB RAID-5).
 
-How much data are you talking about? It took me 16 hours to resize to a
-10x73GB array. If you were to do that in stages then it could end up
-taking days or weeks in which case backing up to DLT might become more
-attractive.
+The first step is to use raidreconf to grow the array (add a disk). This
+is the slow part of the process.
 
-Note that the raid array will be offline while the resize takes place.
+Get raidreconf here http://unthought.net/raidreconf/
 
--- 
-Alistair Riddell - BOFH
-IT Manager, George Watson's College, Edinburgh
-Tel: +44 131 446 6070    Fax: +44 131 452 8594
-Microsoft - because god hates us
+It also ships with RedHat 8.0 (raidtools-1.00.2, anyone know why this
+version of raidtools still hasn't shown up in the usual spots???)
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Once the array is resized, you then need to resize the filesystem. This
+typically takes very little time and is done using the utility
+appropriate for your FS. So for ext2 you us resize2fs.
+
+--
+Derek Vadala, derek@cynicism.com, http://www.cynicism.com/~derek
+
+
