@@ -1,43 +1,43 @@
-From: Gordon Henderson <gordon@drogon.net>
-Subject: Re: 4*300GB SW-RAID5 - bad idea?
-Date: Tue, 14 Oct 2003 09:51:48 +0100 (BST)
+From: alexander.weber@pta.de
+Subject: Antwort: Re: Swap on RAID1?
+Date: Tue, 14 Oct 2003 10:50:06 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.56.0310140948410.29390@unicorn.drogon.net>
-References: <200310140017.41042.dusty@strike.wu-wien.ac.at>
+Message-ID: <OFE364D22E.C14CB4FA-ONC1256DBF.00302B9C@pta.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200310140017.41042.dusty@strike.wu-wien.ac.at>
-To: Hermann Himmelbauer <dusty@strike.wu-wien.ac.at>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 14 Oct 2003, Hermann Himmelbauer wrote:
 
-> Hi,
-> I am considering putting up a slow but huge storage area. For cost reasons I
-> am considering 4* 300GB Maxtor 5400 drives with Linux Software RAID5.
->
-> The CPU of this machine would be a P4-2.4Ghz.
->
-> Some people told me that this configuration would be a bad idea as accessing
-> the RAID would produce a very high load and the RAID would be very slow.
->
-> Is this true? Are there any performance/CPU Load stats with Linux SW-RAID that
-> I can have a look at?
 
-It'll be no slower than a single drive.
 
-Do make sure you use additional controllers though - you'll want to have 4
-disks set to master (I'm presuming these are IDE disks) So you'll need to
-use the on-board controllers for 2 disks, and a separate dual channel PCI
-controller for the other 2 disks.
+Hermann Himmelbauer wrote:
 
-I'm having bad experiences with the Promise controllers though, but from
-what I gather they are the best of a bad bunch. (Promise Technology, Inc.
-20269) They _seem_ to work, but sometimes miss an interrupt or something
-and you get a process hanging in a "D" state for 10-30 seconds. On one
-occasion I've had the raid software detect this as a missing disk and
-knocked out that drive...
+> But what happens if a disk fails and the swap is on this disk? I assume
+Linux
+> would crash? Wouldn't a swap on a RAID prevent such a crash?
 
-Gordon
+Yes and yes. One other possible alternative would be to fork out the
+money for more RAM rather than a second disk for swap. And just don't
+use swap, if you're worried about swap crashing the system...and
+performance will be much better, too.
+
+<snip>
+
+And how about swap-partitions on both disks? So on disk crash, one swap
+partition would survive.
+This works, won't it?
+
+(Don't make me worried ;-)
+
+Alexander
+
+
+
+
+**********************************************************************
+http://www.pta.de
+Mit 792 Erfahrungsberichten aus 34 Jahren erfolgreicher Projektarbeit!
+**********************************************************************
+
