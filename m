@@ -1,33 +1,59 @@
-From: Jeremy Fitzhardinge <jeremy@goop.org>
+From: Joe Thornber <joe@fib011235813.fsnet.co.uk>
 Subject: Re: RFC - new raid superblock layout for md driver
-Date: 21 Nov 2002 23:11:28 -0800
+Date: Fri, 22 Nov 2002 10:13:01 +0000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1037949088.29451.20.camel@ixodes.goop.org>
-References: <15835.2798.613940.614361@notabene.cse.unsw.edu.au>
+Message-ID: <20021122101301.GB1508@reti>
+References: <15835.2798.613940.614361@notabene.cse.unsw.edu.au> <20021120160259.GW806@nic1-pc.us.oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <15835.2798.613940.614361@notabene.cse.unsw.edu.au>
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: Linux Kernel List <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org
+Content-Disposition: inline
+In-Reply-To: <20021120160259.GW806@nic1-pc.us.oracle.com>
+To: Joel Becker <Joel.Becker@oracle.com>
+Cc: Neil Brown <neilb@cse.unsw.edu.au>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 2002-11-19 at 20:09, Neil Brown wrote:
-> My current design looks like:
-> 	/* constant array information - 128 bytes */
->     u32  md_magic
->     u32  major_version == 1
->     u32  feature_map     /* bit map of extra features in superblock */
->     u32  set_uuid[4]
->     u32  ctime
->     u32  level
->     u32  layout
->     u64  size		/* size of component devices, if they are all
-> 			 * required to be the same (Raid 1/5 */
-Can you make 64 bit fields 64 bit aligned?  I think PPC will lay this
-structure out with padding before size, which may well cause confusion. 
-If your routines to load and save the header don't depend on structure
-layout, then it doesn't matter.
-        J
+On Wed, Nov 20, 2002 at 08:03:00AM -0800, Joel Becker wrote:
+> 	Hmm, what is the intended future interaction of DM and MD?  Two
+> ways at the same problem?  Just curious.
+
+
+There are a couple of good arguments for moving the _mapping_ code
+from md into dm targets:
+
+1) Building a mirror is essentially just copying large amounts of data
+   around, exactly what is needed to implement move functionality for
+   arbitrarily remapping volumes.  (see
+   http://people.sistina.com/~thornber/pvmove_outline.txt).
+
+   So I've always had every intention of implementing a mirror target
+   for dm.
+
+2) Extending raid 5 volumes becomes very simple if they are dm targets
+   since you just add another segment, this new segment could even
+   have different numbers of stripes.  eg,
+
+
+       old volume                             new volume
+   +--------------------+      +--------------------+--------------------+
+   | raid5 across 3 LVs |   => | raid5 across 3 LVs | raid5 across 5 LVs |
+   +--------------------+      +--------------------+--------------------+
+
+   Of course this could be done ATM by stacking 'bottom LVs' -> mds ->
+   'top LV', but that does create more intermediate devices and
+   sacrifices space to the md metadata (eg, LVM has its own metadata
+   and doesn't need md to duplicate it).
+
+MD would continue to exist as a seperate driver, it needs to read and
+write the md metadata at the beginning of the physical volumes, and
+implement all the nice recovery/hot spare features.  ie. dm does the
+mapping, md implements the policies by driving dm appropriately.  If
+other volume managers such as EVMS or LVM want to implement features
+not provided by md, they are free to drive dm directly.
+
+I don't think it's a huge amount of work to refactor the md code, and
+now might be the right time if Neil is already changing things.  I
+would be more than happy to work on this if Neil agrees.
+
+- Joe
 
