@@ -1,78 +1,150 @@
-From: Miquel van Smoorenburg <miquels@cistron.nl>
+From: Neil Brown <neilb@cse.unsw.edu.au>
 Subject: Re: Partitioned raid and major number
-Date: Mon, 1 Mar 2004 01:42:56 +0100
+Date: Mon, 1 Mar 2004 11:54:29 +1100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040301004256.GI14194@drinkel.cistron.nl>
-References: <20040225145624.GA1513@cistron.nl> <16445.12026.812778.621025@notabene.cse.unsw.edu.au> <20040226215144.GC11831@drinkel.cistron.nl> <16446.36226.591283.495194@notabene.cse.unsw.edu.au> <16446.39583.968782.41221@notabene.cse.unsw.edu.au> <20040227165614.GO23988@traveler.cistron.net> <16450.32963.829675.526061@notabene.cse.unsw.edu.au>
+Message-ID: <16450.35269.770163.948225@notabene.cse.unsw.edu.au>
+References: <20040225145624.GA1513@cistron.nl>
+	<16445.12026.812778.621025@notabene.cse.unsw.edu.au>
+	<20040226215144.GC11831@drinkel.cistron.nl>
+	<16446.36226.591283.495194@notabene.cse.unsw.edu.au>
+	<16446.39583.968782.41221@notabene.cse.unsw.edu.au>
+	<20040227165614.GO23988@traveler.cistron.net>
+	<20040228010916.GC13404@drinkel.cistron.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <16450.32963.829675.526061@notabene.cse.unsw.edu.au> (from neilb@cse.unsw.edu.au on Mon, Mar 01, 2004 at 01:16:03 +0100)
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: Miquel van Smoorenburg <miquels@cistron.nl>, linux-raid@vger.kernel.org
+In-Reply-To: message from Miquel van Smoorenburg on Saturday February 28
+To: Miquel van Smoorenburg <miquels@cistron.nl>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 01 Mar 2004 01:16:03, Neil Brown wrote:
-> On Friday February 27, miquels@cistron.nl wrote:
-> > Now how to enable RAID1 on an existing disk... I hoped that I could create
-> > an array with /dev/sda and /dev/sdb, with /dev/sdb marked as failed-disk.
-> > Because initializing a RAID1 array with just one working disk doesn't
-> > destroy the existing contents of the disk, right ? (I kept the last few
-> > MB of the disk as free space for the raid superblock).
-> > 
-> > Unfortunately the current tools (or the kernel) doesn't let me do that
-> > (/dev/sda is busy).
+On Saturday February 28, miquels@cistron.nl wrote:
 > 
-> Yep.  Currently it isn't really possible while sda is mounted.  
-> You need to boot off some other media and create the array there.
-
-I hacked on it this weekend. I added a SET_ARRAY_INFO_CONFONLY ioctl
-that creates an mddev, but markes it "confonly" internally. Meaning you
-can configure it and add disks to it, but it can't be started/run.
-The confonly array doesn't lock the disks when you add_new_disk().
-I also patched raidtools2 to accept --confonly to mkraid, which uses
-this new functionality. And that allows me to create a new raid array
-on a disk that is currently in-use (you still have to use --really-force,
-ofcourse).
-
-What do you think of that approach ? Converting from a 1 disk setup
-to a 2-disk RAID1 setup on an existing system is something that lots
-of people want to do, seeing that the software raid howto even has
-a few paragraphs dedicated to it.
-
-Though it works, and I can boot from it, lilo doesn't understand it yet
-so I'll have to hack on that next.
-
-But if it works it would probably eventually be possible to add ICH5-R
-etc raid1 superblock support to it. Or just write a valid ICH5-R
-raid1 superblock to the disk (hopefully at another offset) so that the
-BIOS knows this is a RAID1 setup and can boot when sda/hda is dead.
-
-> > Two more minor issues - one, if partitioned MD is on (/dev/md/d0 etc)
-> > the standard /dev/md0 device doesn't work anymore. For accessing the whole
-> > device (management purposes / tools) shouldn't both /dev/md0 and
-> > /dev/md/d0 open the same device ?
+> Hmm. With a dynamic major, the system might fail at checking the root
+> file system at boot. At that time, /dev is still read-only, and
+> /dev/md/d0p1 might not be the correct device yet.
 > 
-> No - they are completely different devices.  Making them appear as one
-> device has all sorts of problems relating to confusing bits of code
-> that think they have exclusive access.  The idea as appealing but
-> wasn't worth the effort.
+> So either mdp needs its own partition number, or we need a /dev/root
+> device that's an alias for the current root (like /dev/console).
+> 
 
-Hmm yes, I understand. Thanks for explaining all that.
+Yes, I think this is a real problem.
+There are a number of avenues that could be followed to fix it.
+One it your suggestion.
 
-BTW, if you want to boot from a partitionable raid, you need the /dev/root
-patch I posted before or you can't check the root filesystem. That patch
-I think will not be accepted since stat(/dev/root) and
-fd=open(/dev/root);fstat(fd) will return different things which is
-inconsequent. How do you feel about applying for a static device number
-for partitioned raid ? Hpa is also on this list, I noticed, and from his
-reaction I think it wouldn't be a problem. Also it would be easier for
-bootloaders like LILO to detect and deal with this.
+Another is to make "rootfs" remountable like this:
 
-Besides, if you check the current devices.txt you'll see that although
-we've almost run out of majors that's only true for character devices.
-There's plenty, plenty of block majors left.
+--- ./fs/ramfs/inode.c~current~	2004-03-01 11:20:58.000000000 +1100
++++ ./fs/ramfs/inode.c	2004-03-01 11:21:15.000000000 +1100
+@@ -207,7 +207,7 @@ static struct super_block *ramfs_get_sb(
+ static struct super_block *rootfs_get_sb(struct file_system_type *fs_type,
+ 	int flags, const char *dev_name, void *data)
+ {
+-	return get_sb_nodev(fs_type, flags|MS_NOUSER, data, ramfs_fill_super);
++	return get_sb_single(fs_type, flags, data, ramfs_fill_super);
+ }
+ 
+ static struct file_system_type ramfs_fs_type = {
 
-Mike.
+
+
+And then:
+
+  mount -t rootfs rootfs /mnt/root
+  fsck /mnt/root/dev/root
+
+Another is to add "rootdev" to /proc/*, as in appended patch. Then
+  ln -s /proc/self/roodev /dev/root
+
+and providing /proc is mounted, /dev/root will work.
+
+I think I prefer the /proc/self/rootdev approach despite it being the
+bigger patch.
+
+I might try to push it on linux-kernel.
+
+NeilBrown
+
+
+
+diff ./fs/proc/base.c~current~ ./fs/proc/base.c
+--- ./fs/proc/base.c~current~	2004-03-01 11:28:24.000000000 +1100
++++ ./fs/proc/base.c	2004-03-01 11:48:07.000000000 +1100
+@@ -50,6 +50,7 @@ enum pid_directory_inos {
+ 	PROC_TGID_MEM,
+ 	PROC_TGID_CWD,
+ 	PROC_TGID_ROOT,
++	PROC_TGID_ROOTDEV,
+ 	PROC_TGID_EXE,
+ 	PROC_TGID_FD,
+ 	PROC_TGID_ENVIRON,
+@@ -73,6 +74,7 @@ enum pid_directory_inos {
+ 	PROC_TID_MEM,
+ 	PROC_TID_CWD,
+ 	PROC_TID_ROOT,
++	PROC_TID_ROOTDEV,
+ 	PROC_TID_EXE,
+ 	PROC_TID_FD,
+ 	PROC_TID_ENVIRON,
+@@ -115,6 +117,7 @@ static struct pid_entry tgid_base_stuff[
+ 	E(PROC_TGID_MEM,       "mem",     S_IFREG|S_IRUSR|S_IWUSR),
+ 	E(PROC_TGID_CWD,       "cwd",     S_IFLNK|S_IRWXUGO),
+ 	E(PROC_TGID_ROOT,      "root",    S_IFLNK|S_IRWXUGO),
++	E(PROC_TGID_ROOTDEV,   "rootdev", S_IFBLK|S_IRUSR|S_IWUSR),
+ 	E(PROC_TGID_EXE,       "exe",     S_IFLNK|S_IRWXUGO),
+ 	E(PROC_TGID_MOUNTS,    "mounts",  S_IFREG|S_IRUGO),
+ #ifdef CONFIG_SECURITY
+@@ -137,6 +140,7 @@ static struct pid_entry tid_base_stuff[]
+ 	E(PROC_TID_MEM,        "mem",     S_IFREG|S_IRUSR|S_IWUSR),
+ 	E(PROC_TID_CWD,        "cwd",     S_IFLNK|S_IRWXUGO),
+ 	E(PROC_TID_ROOT,       "root",    S_IFLNK|S_IRWXUGO),
++	E(PROC_TID_ROOTDEV,    "rootdev", S_IFBLK|S_IRUSR|S_IWUSR),
+ 	E(PROC_TID_EXE,        "exe",     S_IFLNK|S_IRWXUGO),
+ 	E(PROC_TID_MOUNTS,     "mounts",  S_IFREG|S_IRUGO),
+ #ifdef CONFIG_SECURITY
+@@ -771,6 +775,32 @@ static struct inode_operations proc_pid_
+ 	.follow_link	= proc_pid_follow_link
+ };
+ 
++int proc_pid_get_attr(struct vfsmount *mnt, struct dentry *dentry, struct kstat *stat)
++{
++	struct inode *inode = dentry->d_inode;
++	struct fs_struct *fs;
++	int result = -ENOENT;
++	generic_fillattr(inode, stat);
++	task_lock(proc_task(inode));
++	fs = proc_task(inode)->fs;
++	if(fs)
++		atomic_inc(&fs->count);
++	task_unlock(proc_task(inode));
++	if (fs) {
++		read_lock(&fs->lock);
++		stat->rdev = fs->pwdmnt->mnt_sb->s_dev;
++		read_unlock(&fs->lock);
++		result = 0;
++		put_fs_struct(fs);
++	}
++
++	return result;
++}
++
++static struct inode_operations proc_pid_dev_inode_operations = {
++	.getattr	= proc_pid_get_attr,
++};
++
+ static int pid_alive(struct task_struct *p)
+ {
+ 	BUG_ON(p->pids[PIDTYPE_PID].pidptr != &p->pids[PIDTYPE_PID].pid);
+@@ -1319,6 +1349,10 @@ static struct dentry *proc_pident_lookup
+ 			inode->i_op = &proc_pid_link_inode_operations;
+ 			ei->op.proc_get_link = proc_root_link;
+ 			break;
++		case PROC_TID_ROOTDEV:
++		case PROC_TGID_ROOTDEV:
++			inode->i_op = &proc_pid_dev_inode_operations;
++			break;
+ 		case PROC_TID_ENVIRON:
+ 		case PROC_TGID_ENVIRON:
+ 			inode->i_fop = &proc_info_file_operations;
+
