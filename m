@@ -1,33 +1,104 @@
-From: "chang" <aeh21dgj@hotmail.com>
-Subject: Buy prescriptions in bulk, SAVE THOUSANDS!
-Date: Sun, 08 Aug 2004 00:45:20 GMT
+From: dean gaudet <dean-list-linux-raid@arctic.org>
+Subject: RE: Scrub?
+Date: Sat, 7 Aug 2004 17:51:01 -0700 (PDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1091925920-3571__37981.8234047436$1091926072$gmane$org@excite.com>
-Content-Type: text/plain;
+Message-ID: <Pine.LNX.4.58.0408071749550.25286@twinlark.arctic.org>
+References: <547AF3BD0F3F0B4CBDC379BAC7E4189F011531AB@otce2k03.adaptec.com>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-kernel@vger.kernel.org
+In-Reply-To: <547AF3BD0F3F0B4CBDC379BAC7E4189F011531AB@otce2k03.adaptec.com>
+To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Cc: Kanoa Withington <kanoa@cfht.hawaii.edu>, Derek Listmail Acct <listmail@oversimplified.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Buy your meds through our Canadian Pharmacy,
+aha, now i see what you're saying -- yeah i have no evidence either way as
+to what happens in a long self-test in that regard.
 
-Save up to 80% on EXACTLY THE SAME DRUGS!
+-dean
 
-Click here: http://www.we49fm.com/_85924943b9db73ac62baa654773c6a8e/7
+On Sat, 7 Aug 2004, Salyzyn, Mark wrote:
 
-On medication long term?
-Buy bulk through us and LITERALLY SAVE THOUSANDS!
-
-Click here: http://www.we49fm.com/_85924943b9db73ac62baa654773c6a8e/7
-
-
-
-
-
-
-
-
-
-
-benoit bachdon future mantra trident petunia ssssss 
-button fletchirene dragonfl gordon
-jazz nugget t-bone 
+> As long as the relocation contains the original information; which is
+> only the case if the relocation is done on a write to the disk.
+>
+> A RAID-5 generated relocation allows the data to be reconstructed on a
+> media failure on erad, and the relocation (triggered by a re-write)
+> would contain the correct information preventing corruption.
+>
+> Sincerely -- Mark Salyzyn
+>
+> -----Original Message-----
+> From: dean gaudet [mailto:dean-list-linux-raid@arctic.org]
+> Sent: Saturday, August 07, 2004 4:13 PM
+> To: Salyzyn, Mark
+> Cc: Kanoa Withington; Derek Listmail Acct; linux-raid@vger.kernel.org
+> Subject: RE: Scrub?
+>
+> no, that's not how it works.  i'm referring to the hard disk itself
+> relocating a sector -- it's transparent to the host/raid.  the only
+> thing
+> the raid software might see is that the disk will be less snappy while
+> it's running the SMART long test.  (mind you i do this on live busy
+> systems and i don't really tend to notice it -- although on particularly
+> busy weeks, some disks can take several days to complete their self test
+> in the few spare cycles they find.)
+>
+> -dean
+>
+> On Sat, 7 Aug 2004, Salyzyn, Mark wrote:
+>
+> > Problem with running the relocation is that the RAID-5 will now be
+> > corrupt. The RAID-5 algorithm needs to be in-touch with disk block
+> > relocation so that it can correct the parity and the data.
+> >
+> > Sincerely -- Mark Salyzyn
+> >
+> > -----Original Message-----
+> > From: dean gaudet [mailto:dean-list-linux-raid@arctic.org]
+> > Sent: Friday, August 06, 2004 5:59 PM
+> > To: Kanoa Withington
+> > Cc: Salyzyn, Mark; Derek Listmail Acct; linux-raid@vger.kernel.org
+> > Subject: RE: Scrub?
+> >
+> > On Fri, 6 Aug 2004, Kanoa Withington wrote:
+> >
+> > > On Fri, 6 Aug 2004, Salyzyn, Mark wrote:
+> > > > Just reading the entire array should correct the bad blocks, so
+> > reverse
+> > > > the sense of the dd:
+> > > >
+> > > > 	dd if=/dev/md0 of=/dev/null bs=200b
+> > > >
+> > > > to find and replace the bad blocks (making the assumption that md
+> > works
+> > > > like the H/W RAID cards).
+> > >
+> > > In this case software RAID does not work like the H/W cards. Finding
+> > > an unreadable block that way in a software array would cause it to
+> go
+> > > into a degraded state.
+> >
+> > if the disks support SMART (i.e. they're less than a few years old)
+> then
+> > try running the smart long selftest... it can be done online and on
+> many
+> > disks it will force sector reallocation (and produce a SMART log event
+> > so
+> > you know it happenned).
+> >
+> > get smartmontools and run "smartctl -a" to see info on your drive, and
+> > "smartctl -t long" to launch the long test.  man page has more
+> examples.
+> >
+> > i run smart long tests on each my disks once a week (staggerred over
+> > many
+> > nights)... see /etc/smartd.conf.
+> >
+> > -dean
+> >
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
