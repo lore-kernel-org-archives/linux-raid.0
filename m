@@ -1,47 +1,71 @@
-From: "Riley Williams" <Riley@Williams.Name>
-Subject: RE: Invalid argument when creating a RAID-0 array
-Date: Sun, 15 Jun 2003 09:14:17 +0100
+From: Alfred Isele <Alfred.Isele@fujitsu-siemens.com>
+Subject: Re: RAID 1 cannot boot (using grub)
+Date: Mon, 16 Jun 2003 10:19:50 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <BKEGKPICNAKILKJKMHCAEEGEEFAA.Riley@Williams.Name>
-References: <3EEBA9F2.7060902@debian.org>
+Message-ID: <3.0.6.32.20030616101950.00ac9cd0@athen>
+References: <Pine.LNX.4.44.0306122342440.4181-100000@gpu.utcc>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3EEBA9F2.7060902@debian.org>
-To: Ari Pollak <ari@debian.org>
-Cc: linux-raid@vger.kernel.org
+In-Reply-To: <Pine.LNX.4.44.0306122342440.4181-100000@gpu.utcc>
+To: Derek Yeung <dky@utcc.utoronto.ca>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Ari.
 
- >>> too small chunk_size: 4096 < 8192
+Hello!
+Maybe you forgot to setup grub anew on hda: 
+After adding /dev/hda1 to /dev/md1 (/boot)
+you have to setup grub for hda1 again, because
+the boot files to be anchored within the MBR are now
+located at positions different from /dev/sda1.
+To save your system try this:
+Boot from CDROM, 
+wait for /dev/md1 to be mirrored
+and stup grub for /dev/hda (i.e. the first disk):  
 
- >> Maybe use a bigger chunk size, 4K is rather small. However I
- >> thought 4k would work.  Maybe you aren't using an i386, as
- >> the minimum chunk size is currently connected with the system
- >> page size. What architecture are you using?
+mount /dev/md1 /boot
+grub
+root (hd0,0)
+setup (hd0)
+quit
 
- > Oops, I forgot to specify. I'm using an UltraSPARC on a Sun
- > Enterprise 450, using kernel 2.4.19 (I haven't had a chance to
- > try .21 yet). I was just following the Software-RAID HOWTO,
- > which said that for striping, chunk size didn't really matter.
+and reboot from disk 1.
+Regards
+Alfred
 
-As you've discovered, the chunk size can't be less than the system
-page size, and on the UltraSPARC platform, that's 8k - and the same
-is true of most platforms other than ix86.
 
-Providing you meet the above requirement, the RAID chunk size for
-striping probably is irrelevant, but the page size requirement is
-one that applies irrespective of any other requirements.
-
-Best wishes from Riley.
----
- * Nothing as pretty as a smile, nothing as ugly as a frown.
-
----
-Outgoing mail is certified Virus Free.
-Checked by AVG anti-virus system (http://www.grisoft.com).
-Version: 6.0.489 / Virus Database: 288 - Release Date: 10-Jun-2003
+At 15:52 13.06.03 -0400, Derek Yeung wrote:
+>
+>Hello everyone,
+>
+>I would very much appreciate insight onto this problem:
+>
+>System: IBM xSeries 335 / IDE Mirroring / RedHat 8 / Grub
+>
+>I'm working on setting up mirroring on 2 IDE disks in RedHat 8.  I 
+>followed  Neil Brown's email to Stephen Lee (dated 20 Apr 2002).  
+>
+>I created a degraded RAID 1 using /dev/hdc1, created a filesystem on 
+>it, copied everything from the existing boot to the new md device, 
+>modified the fstab accordingly.  Without the primary device added to 
+>the md set (meaning still working in degraded mode), the machine boots 
+>(with a few hitches -- something about a bad superblock and ext3 
+>mounting, which i will post more detail later)  -- but, it boots.  
+>The problem is after I add the /boot partition to the md set (i.e.: add 
+>hda1 to md1, which md1 already has hdc1), and then reboot, the machine 
+>fails to boot.  It stops after printing "GRUB".  Does anyone have any idea 
+>why?  
+>
+>I'd very much appreciate any ideas/solutions.  
+>
+>Thank you very, very much
+>
+>/dky
+>
+>
+>-
+>To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
