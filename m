@@ -1,18 +1,34 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: RAID detection and activation w/o auto detection
-Date: Wed, 1 May 2002 15:21:23 +1000 (EST)
+From: "Yuval Yeret" <yuval@exanet.com>
+Subject: RE: RAID detection and activation w/o auto detection
+Date: Wed, 1 May 2002 08:20:45 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <15567.31571.62644.485302@notabene.cse.unsw.edu.au>
-References: <Pine.LNX.4.44.0204302130320.14713-100000@filesrv1.baby-dragons.com>
-	<Pine.LNX.4.44.0204302142570.14713-100000@filesrv1.baby-dragons.com>
+Message-ID: <4913AB320D31DC4798D6FEF5F557351F18240F@hawk.exanet-il.co.il>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Mr. James W. Laferriere on Tuesday April 30
-To: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
-Cc: linux-raid maillist <linux-raid@vger.kernel.org>
+content-class: urn:content-classes:message
+To: linux-raid maillist <linux-raid@vger.kernel.org>, neilb@cse.unsw.edu.au
 List-Id: linux-raid.ids
+
+
+
+Should we consider mdadm as a replacement to raidstart/raidstop ? 
+
+I ask because we are seeing strange behaviour in starting a raid when
+one of the paths is not available.
+
+Thank,
+Yuval Yeret
+
+
+-----Original Message-----
+From: Neil Brown [mailto:neilb@cse.unsw.edu.au]
+Sent: Wednesday, May 01, 2002 7:21 AM
+To: Mr. James W. Laferriere
+Cc: linux-raid maillist
+Subject: Re: RAID detection and activation w/o auto detection 
+
 
 On Tuesday April 30, babydr@baby-dragons.com wrote:
 > 
@@ -21,7 +37,8 @@ On Tuesday April 30, babydr@baby-dragons.com wrote:
 > 
 > ~# more ./mdadm.conf
 > /dev/hd* /dev/sd*
-> ARRAY /dev/md0 level=raid5 num-devices=3 UUID=b285b144:ae0b561b:b5b55686:ed216a4c
+> ARRAY /dev/md0 level=raid5 num-devices=3
+UUID=b285b144:ae0b561b:b5b55686:ed216a4c
 > 
 > 	Without the DEVICE in front of '/dev/hd* /dev/sd*' they are
 > 	meaningless .  Right ?  Tia ,  JimL
@@ -38,3 +55,7 @@ will allow it.
 Thanks,
 
 NeilBrown
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
