@@ -1,82 +1,66 @@
-From: "Alex V. Verbitsky" <alexver5@mail.ru>
-Subject: poor raid5 performance of 3ware 7500 under Linux
-Date: Sat, 14 Jun 2003 00:15:59 +0300
-Sender: ataraid-list-admin@redhat.com
-Message-ID: <5038410962.20030614001559@mail.ru>
-Reply-To: ataraid-list@redhat.com
+From: "bmoon" <bo@anthologysolutions.com>
+Subject: Re: maximum disk capacity?
+Date: Fri, 13 Jun 2003 14:33:46 -0700
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <018701c331f3$79ab76c0$6b01a8c0@bmoon>
+References: <Pine.GSO.4.30.0306131032590.1148-100000@multivac.sdsc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=Windows-1251
-Content-Transfer-Encoding: 8bit
-Return-path: <ataraid-list-admin@redhat.com>
-Errors-To: ataraid-list-admin@redhat.com
-List-Help: <mailto:ataraid-list-request@redhat.com?subject=help>
-List-Post: <mailto:ataraid-list@redhat.com>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/ataraid-list>,
-	<mailto:ataraid-list-request@redhat.com?subject=subscribe>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/ataraid-list>,
-	<mailto:ataraid-list-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/ataraid-list/>
-To: ataraid-list@redhat.com
-Cc: linux@3ware.com, linux-raid@vger.kernel.org
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+To: "Peter L. Ashford" <ashford@sdsc.edu>
+Cc: Stephan van Hienen <raid@a2000.nu>, Donghui Wen <dhwen@protegonetworks.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi people,
+My question is from  Stephan van Hienen's email;
 
-I am experiencing a poor sequental write performance with 3-disk RAID5
-array on 3Ware 7500-8 - it is only 11-12 MB/s. Under Win2000 i get 30-35 MB/s
-from the same array.
+"
+         if you need to go above to 2TB, you need the largedisk patch
+         which doesn't work with sw raid5 (so no 2TB+ with sw raid5)
 
-I have used different methods: dd, iometer and "copy /dev/zero tstfile"
-- they all give me the same low figures (11-12 MB/s).
+          i'm running with 13*180GB (+1 Hotspare) in sw raid5 (hd's
+         connected to 2*3ware 7850)
+"
 
-Has anybody managed to get good (> 30 MB/s) raid 5 write performance
-from 3ware 7500 on Linux and desktop (non-server) hardware - 32-bit
-33MHz PCI ?
-And why does Linux give much worse performance than Win2k?
-It was disapointing for me to see this after i recommended 3ware cards for
-our NAS solution.
-
-3ware use server motherboards and Windows 2k and for their benchmarks.
-I found several Linux benchmarks that showed good results but they used server motherboards:
-http://home.fnal.gov/~yocum/storageServerTechnicalNote.html
-http://pcbunn.cacr.caltech.edu/gae/3ware_raid_tests.htm
-
-I also found that another Russian guy had the same problem a year ago:
-http://bioinformatics.org/pipermail/bioclusters/2002-August/000364.html
-
-I run RedHat 9 with unchanged kernel and have updated firmware and
-drivers to 7.6 version 3Ware software. Write cache is enabled.
-Disks used are 80 GB ibm 120gxp (IC35L080AVVA07-0).
-
-I used 2 hardware configurations:
-1) Via Epia-M motherboard with C3-933 Mhz, 256MB RAM
-2) Asus A7V133 with Athlon 1Ghz, 512 MB RAM
-- they showed the same results except for CPU utilization:
-on Epia i get high numbers (50-70% for read, 90-100% for write) and
-on Athlon numbers are much lower(22-36% read, 7% for write).
-
-I also tested RAID0 3-disk array on Epia (just trying to understand what's
-wrong - i need RAID5 for my solution) and get the strange results:
-iometer:
-   seq. read (64-1024KB blocks,  1-64 outst. I/O) - 34 ÌB/s, CPU total 65-70%
-   seq. write (64-1024KB blocks,  1-64 outst. I/O) - 48 ÌB/s, CPU total 100%
-file copy (ext2 file system)
-   seq. read (cp testfile /dev/null) - 54 ÌB/s, CPU total 45 %
-   seq. write (cp /dev/zero testfile) - 60 ÌB/s, CPU total 93 %
-hdparm
-      [root@RH9 3w]# hdparm -tT /dev/sda
-      /dev/sda:
-        Timing buffer-cache reads:   128 MB in  1.94 seconds = 65.98 MB/sec
-        Timing buffered disk reads:  64 MB in  2.00 seconds = 32.00 MB/sec
-
-Under Win2k i get from this array 100 MB/s (66 MB/s at disk end) read and 61 MB/s
-write with much lower CPU usage.
-   
+What is the reason why it can not work with SW raid5 even with the largedisk
+patch???
 
 
-Thanks in advance for any help,
-sorry for my poor English.
 
--- 
-Best regards,
- Alex                          mailto:alexver5@mail.ru
+----- Original Message -----
+From: "Peter L. Ashford" <ashford@sdsc.edu>
+To: "bmoon" <bo@anthologysolutions.com>
+Cc: "Stephan van Hienen" <raid@a2000.nu>; "Donghui Wen"
+<dhwen@protegonetworks.com>; <linux-raid@vger.kernel.org>
+Sent: Friday, June 13, 2003 10:39 AM
+Subject: Re: maximum disk capacity?
+
+
+> > What is the reason that it can not cover more than 2TB?
+>
+> A 32-bit block number with 512-byte blocks.  This multiplies out to 2TB.
+>
+> > By the way you are able to use more than 2TB, ~2.3TB???
+> > Why?
+>
+> 2TB binary is 2.2TB decimal (2,199,023,255,552).  You shouldn't be able to
+> get 2.3TB without the patch.
+>
+> > > > Hi, I am setting up hardware raid with 7 harddrives on redhat linux.
+> > > > I use 3ware + hardware raid 5, each harddrive is 200G. For
+> > > > linux, this raid sould act as a 1.2TB scsi hard drive. But it seems
+> > > > redhat could not reconize it. I am wondering may be a 1.2TB hard
+drive
+> > > > is too large to linux. So my question is: what't
+> > > > the maxium disk capacity Linux can support?
+>
+> There is a problem with the RedHat installation scripts.  When performing
+> a Kickstart install, and using the Grub boot loader, disks are limited to
+> 1TB (binary).  Is this the problem you encountered?
+>
+> Good luck.
+> Peter Ashford
+>
+>
+
