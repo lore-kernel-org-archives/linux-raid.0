@@ -1,32 +1,36 @@
 From: Joel Becker <Joel.Becker@oracle.com>
 Subject: Re: RFC - new raid superblock layout for md driver
-Date: Thu, 21 Nov 2002 11:36:54 -0800
-Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20021121193653.GC770@nic1-pc.us.oracle.com>
-References: <15835.2798.613940.614361@notabene.cse.unsw.edu.au> <3DDBC0D9.5030904@mvista.com>
+Date: Thu, 21 Nov 2002 11:39:51 -0800
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20021121193950.GD770@nic1-pc.us.oracle.com>
+References: <20021120234743.GF29881@marowsky-bree.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <3DDBC0D9.5030904@mvista.com>
-To: Steven Dake <sdake@mvista.com>
+In-Reply-To: <20021120234743.GF29881@marowsky-bree.de>
+To: Lars Marowsky-Bree <lmb@suse.de>
 Cc: Neil Brown <neilb@cse.unsw.edu.au>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Nov 20, 2002 at 10:05:29AM -0700, Steven Dake wrote:
-> per-device structure.  This would allow a RAID volume to be locked to a 
-> specific host, allowing the ability for true multihost operation.
+On Thu, Nov 21, 2002 at 12:47:43AM +0100, Lars Marowsky-Bree wrote:
+> However, for none-RAID devices like multipathing I believe that activating a
+> drive on multiple hosts should be possible; ie, for these it might not be
+> necessary to scribble to the superblock every time.
 
-	Locking to a specific host isn't the only thing to do though.
-Allowing multiple hosts to share the disk is quite interesting as well.
+	Again, if you don't use persistent superblock and merely run the
+mkraid from your initscripts (or initrd), raid0 and multipath work just
+fine today.
 
 Joel
 
 
 -- 
 
- The zen have a saying:
- "When you learn how to listen, ANYONE can be your teacher."
+"We will have to repent in this generation not merely for the
+ vitriolic words and actions of the bad people, but for the 
+ appalling silence of the good people."
+	- Rev. Dr. Martin Luther King, Jr.
 
 Joel Becker
 Senior Member of Technical Staff
