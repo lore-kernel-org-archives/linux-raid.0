@@ -1,53 +1,53 @@
 From: "Ionut Nistor" <ionut@modulo.ro>
 Subject: Re: Multipath problem in a SAN enviromnent
-Date: Thu, 12 Jun 2003 09:35:32 +0300
+Date: Thu, 12 Jun 2003 09:37:23 +0300
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <00df01c330ac$d3784a90$3351960a@EEL>
-References: <02d201c33023$13fd45a0$3351960a@EEL> <3EE781E0.1020707@comedia.it>
+Message-ID: <00e901c330ad$158f1580$3351960a@EEL>
+References: <02d201c33023$13fd45a0$3351960a@EEL> <3EE78458.4411C4B5@SteelEye.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Luca Berra <bluca@comedia.it>
+To: Paul Clements <Paul.Clements@SteelEye.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+Great,
 
-What do you mean by autodetection?
+Do you happen to know if this patch was included in the kernel? If so, at
+what version?
 
+I need to know how reliable it is.
+
+Thanks a lot,
 Ionut
+
 ----- Original Message ----- 
-From: "Luca Berra" <bluca@comedia.it>
+From: "Paul Clements" <Paul.Clements@SteelEye.com>
 To: "Ionut Nistor" <ionut@modulo.ro>
 Cc: <linux-raid@vger.kernel.org>
-Sent: Wednesday, June 11, 2003 10:24 PM
+Sent: Wednesday, June 11, 2003 10:34 PM
 Subject: Re: Multipath problem in a SAN enviromnent
 
 
 > Ionut Nistor wrote:
-> > Hello,
-> >
-> > I'm using a 2.4.18-ac3 kernel and the multipath module in order to
-ensure
-> > automatic IO path failover. The systems connect to a FC SAN environment.
-> > New logical disks are added/removed from the SAN periodically.
-> >
-> > Unfortunatelly, linux's raid subsystem uses major and minor numbers in
-the
-> > superblock in order to identify members for all raid types - including
-> > multipath. This causes the multipath module to fail when attempting to
-> > identify the members. When the scsi driver is loaded, the bus is scanned
-and
-> > all the available devices/targets/luns are added to the scsi subsystem
-and
-> > are allocated a major and minor number.
-> >
-> you mean autodetection fails? don't use autodetection.
 >
-> regards,
-> Luca.
+> > I'm using a 2.4.18-ac3 kernel
 >
+> It just dawned on me that this kernel probably does not have the
+> following patch applied:
+>
+> http://lwn.net/Articles/8485/
+>
+> If that's the case, you may want to move to a later kernel or apply that
+> patch. I believe the patch will fix your issues with the shifting minor
+> numbers causing problems.
+>
+> I did a brief test on SuSE's 2.4.19 kernel, which has this patch
+> applied, and everything worked, even after shifting devices around.
+>
+> --
+> Paul
 >
 
