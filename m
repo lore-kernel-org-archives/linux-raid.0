@@ -1,28 +1,27 @@
-From: Ian Pilcher <pilchman@attbi.com>
-Subject: Reasonable chunk-size for RAID-5
-Date: Fri, 10 Jan 2003 15:17:37 -0600
+From: Mira Jung <mira@seas.ucla.edu>
+Subject: raid 5 parity check
+Date: Fri, 10 Jan 2003 17:21:53 -0800 (PST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3E1F3871.3010601@attbi.com>
+Message-ID: <200301110121.RAA37770@kinross.seas.ucla.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
+Cc: mira@seas.ucla.edu
 List-Id: linux-raid.ids
 
-Can someone suggest a reasonable chunk-size for a RAID-5 array that
-spans 3 120GB IDE disks?
+Hi,
 
-Everything I read says that I should spend a day benchmarking things to
-find the absolute best value, but I don't need the best value (the array
-will be storing a bunch of read-only music files), and I don't feel like
-wasting a day on this.
+I want to set up a software raid 5 system on Red Hat 8. 
+Although I believe the parity data is computed correctly initially,
+I wonder how one can make sure the parity data will be always correct. 
 
-So what values are other folks using for similar arrays?
+1) Is there a utility to allow me to check parity routinley?
 
-Thanks!
--- 
-========================================================================
-Ian Pilcher                                           pilchman@attbi.com
-========================================================================
+2) How are the parity block redistributed 
+   when you add another disk to raid 5 system?
 
+Thank you in advance for any advice,
+
+Mira
