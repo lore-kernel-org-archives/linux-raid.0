@@ -1,106 +1,71 @@
-From: Victor <linux-raid@vitoni.de>
-Subject: Re: missing superblock on RAID5
-Date: Mon, 13 Oct 2003 19:47:08 +0200
+From: Thomas Horsten <thomas@horsten.com>
+Subject: Driver for BIOS-based software RAIDs
+Date: Mon, 13 Oct 2003 19:21:45 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3F8AE51C.3F0A9451@vitoni.de>
-References: <3F8ACBD2.CA1B8CBD@vitoni.de> <3F8AD02C.8080606@fantinibakery.com>
+Message-ID: <200310131921.45824.thomas@horsten.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid <linux-raid@vger.kernel.org>
+Content-Disposition: inline
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Now that you mention it I remember to have read somewhere that suberblocks
-are written at the end of _partitions_ and not arrays.
+Hi,
 
-Thanks for enlighten me :)
+I've written a driver for the Medley software RAID using the ATARAID framework 
+in 2.4 kernels (http://www.infowares.com/linux).
 
-Maybe another stupid question:
-# mdadm --detail /dev/md0
-/dev/md0:
-        Version : 00.90.00
-  Creation Time : Sun May 18 14:19:37 2003
-     Raid Level : raid5
-     Array Size : 241254336 (230.08 GiB 247.04 GB)
-    Device Size : 80418112 (76.69 GiB 82.35 GB)
-   Raid Devices : 4
-  Total Devices : 5
-Preferred Minor : 0
-    Persistence : Superblock is persistent
+Now, I'm looking into writing a better driver that can also be used with 2.6. 
+My thoughts are along the lines of using the MD driver infrastructure and 
+adding support for "foreign" RAID superblocks (and possibly personalities).
 
-    Update Time : Wed Oct  8 23:53:50 2003
-          State : dirty, no-errors
- Active Devices : 4
-Working Devices : 4
- Failed Devices : 1
-  Spare Devices : 0
+For the Medley RAID this could be quite an elegant solution, as the Medley 
+modes are identical to MD's RAID0 and RAID1 and modes (and the RAID10 mode 
+identical to a RAID0 embedded in a RAID1 array).
 
-         Layout : left-symmetric
-     Chunk Size : 64K
+Now, the problem is that these BIOS based software RAID's all use whole disks 
+as opposed to individual partitions like the Linux MD driver.
 
-    Number   Major   Minor   RaidDevice State
-       0       3       65        0      active sync
-/dev/ide/host0/bus0/target1/lun0/part1
-       1      22        1        1      active sync
-/dev/ide/host0/bus1/target0/lun0/part1
-       2      33        1        2      active sync
-/dev/ide/host2/bus0/target0/lun0/part1
-       3      34        1        3      active sync
-/dev/ide/host2/bus1/target0/lun0/part1
-           UUID : d8e2995c:dac28dbb:042eb748:bad0f5d6
-         Events : 0.52
+My idea was to either reserve a new major for "md_wholedisk" mode and split it 
+into drive,partition blocks of 16/32 inodes each, like the gendisk driver 
+supports, or alternatively split the existing major with, say, the first 64 
+minors for normal style MD devs and the upper part split like I suggested 
+above (I'm not sure if this would work with gendisk though).
 
+Another way of doing it would be to create a separate native MD RAID for each 
+partition on the BIOS RAID, but this has the major drawback that the user 
+wouldn't be able to repartition the device.
 
-It says (or at least I think it says) that this array has 5 devices of which
-one is faulty. That's not true, it consists only out of 4 devices.
+Brief outline of how this would work:
 
-Victor
+1) User selects CONFIG_MD_FOREIGN_SUPERBLOCKS and CONFIG_MD_WHOLEDISK_RAID, 
+along with one oif the BIOS specific drivers like CONFIG_MD_FOREIGN_MEDLEY. 
+Each BIOS driver has its own superblock type.
 
+2a) If compiled into the kernel, a hook in the partition parser will first 
+pass each drive to the RAID handler, before attempting to parse the partition 
+table. RAID handler will call each FOREIGN_driver in turn to see if there is 
+a matching RAID superblock. If there is, it will be added as a partial RAID 
+and the partition checker will not try to parse the partition table (which 
+will be invalid if the drive is part of a RAID).
 
+2b) If the foreign RAID drivers are compiled as modules, upon loading they 
+will walk all genhds (or devices they will support), and detect any custom 
+superblocks. The drivers will then use a new hook in the genhd code to zero 
+out any partitions on that device.
 
-rob wrote:
+3) The foreign RAID driver creates mddev_s based on its detection. If 
+necessary, the foreign RAID driver can also create its own personalities 
+(like the special type of RAID0 that Highpoint devices use, that supports 
+having a RAID0 where all disks are not of equal size, without wasting space).
 
-> from my sys:
-> root@fbc5:/etc # mdadm --query /dev/md3
-> /dev/md3: 4.67GiB raid1 2 devices, 0 spares. Use mdadm --detail for more
-> detail.
-> /dev/md3: No md super block found, not an md component.
->
-> root@fbc5:/etc # mdadm --query /dev/sdd5
-> /dev/sdd5: is not an md array
-> /dev/sdd5: device 1 in 2 device active raid1 md3.  Use mdadm --examine
-> for more detail.
->
-> so the superblock is not on the /dev/md3 .
->
-> query the disk partition to get the superblock
->
-> Victor wrote:
->
-> >At the time I created the RAID array I thought it had superblocks,
-> >however if I use mdadm I get these results:
-> >
-> ># mdadm --query /dev/md0
-> >/dev/md0: 230.08GiB raid5 4 devices, 0 spares. Use mdadm --detail for
-> >more detail.
-> >/dev/md0: No md super block found, not an md component.
-> >
-> >If  the array really shouldn't have a superblock, is it possible to add
-> >one (maybe marking a device faulty and readding it and repeating this
-> >for each device)?
-> >
-> >
-> >Thanks in advance,
-> >
-> >Victor
-> >
-> >
-> >-
-> >To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> >the body of a message to majordomo@vger.kernel.org
-> >More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >
-> >
+Any comments and ideas so far? Is this approach viable?
 
+Thanks :)
+
+Regards,
+
+Thomas
 
