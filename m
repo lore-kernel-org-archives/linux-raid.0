@@ -1,52 +1,36 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: recover short-time-power-failure of raid 5?
-Date: Mon, 25 Nov 2002 20:59:47 +1100
+From: "Martin Bene" <martin.bene@icomedias.com>
+Subject: AW: recover short-time-power-failure of raid 5?
+Date: Mon, 25 Nov 2002 11:07:48 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <15841.62611.118178.276815@notabene.cse.unsw.edu.au>
-References: <15841.25746.94261.22043@notabene.cse.unsw.edu.au>
-	<E18GFks-0001XZ-00@config8.kundenserver.de>
+Message-ID: <4D618F6493CE064A844A5D496733D6670314F3@freedom.icomedias.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from krause@mogli-soft.de on Monday November 25
-To: krause@mogli-soft.de
+content-class: urn:content-classes:message
+To: Neil Brown <neilb@cse.unsw.edu.au>, krause@mogli-soft.de
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday November 25, krause@mogli-soft.de wrote:
+Hi markus,
+
+> I suggest that after assembling the array, you 'fsck' the filesystem
+> on md0 just to make sure that the data is fine and then simply hot-add
+> the third device:
+>   mdadm /dev/md0 -a /dev/sdc
 > 
-> hello neilbrown, 
+> If fsck reports lots of error..... maybe try force the assmbly from a
+> different pair of drives. e.g.
+>    mdadm -A --force /dev/sda1 /dev/sdc2
 > 
-> thanks a lot for your fast response!
-> i tried the command as you suggested but i am not sure if it really
-> worked, it seems that /dev/sdc2 is not yet used (but of course i may be
-> wrong! ;-) )
-.....
-> 
-> what about disk /dev/sdc2 ? i have tried to access /dev/sdc1 (a small
-> ext2 partition) and the data there was correct, so it seems that the
-> disk is accessable and did not got damaged by the shot power failure.
-> 
-> how can i get the third disk back into the raid system? or do i have to
-> backup all reconstructed data from the two disks and reinit the raid
-> from the start?
+> and then do the fsck.
 
-mdadm -A --force
-will only 'force' into the array enough drives to make it work.  For
-your 3 drive raid5 array, it ony needs to force in 2 drives, so it
-takes the two most recent drives and uses them.  They will have all
-the data on them, but no redundancy.
+Oh, and if you try this: DON'T allow fsck to change/fix anything on the disks
+if you want to later try a different combination - data corruption is pretty
+much guaranteed if you allow any writes and then change to a different set of
+disks.
 
-I suggest that after assembling the array, you 'fsck' the filesystem
-on md0 just to make sure that the data is fine and then simply hot-add
-the third device:
-  mdadm /dev/md0 -a /dev/sdc
-
-If fsck reports lots of error..... maybe try force the assmbly from a
-different pair of drives. e.g.
-   mdadm -A --force /dev/sda1 /dev/sdc2
-
-and then do the fsck.
-
-NeilBrown
+Bye, Martin
+PS: not sure what happens if you're using a journaling fs on the raid - I
+think fsck replays the journal before checking, so trying out different
+combinations of disk doesn't look like a viable option in that case?
