@@ -1,45 +1,33 @@
-From: John Finlay <finlay@moeraki.com>
-Subject: Re: Veritas Volume Manager
-Date: Wed, 14 May 2003 10:19:25 -0700
+From: Bernd Schubert <bernd-schubert@web.de>
+Subject: Re: MD/RAID1 Large File Support
+Date: Wed, 14 May 2003 19:45:46 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3EC27A9D.2070501@moeraki.com>
-References: <B0E6075E55C7D6119DDE0002A53F8BCEFFDD2D@blpfroclab01.bausch.com>
+Message-ID: <200305141945.46988.bernd-schubert@web.de>
+References: <EC803175C921D411BCE2000000006429081C363F@ash-exch_lg>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: "Buechler, Mark R" <Mark_R_Buechler@bausch.com>
-Cc: "'linux-raid@vger.kernel.org'" <linux-raid@vger.kernel.org>
+In-Reply-To: <EC803175C921D411BCE2000000006429081C363F@ash-exch_lg>
+Content-Disposition: inline
+To: "Duncan, Mike" <Mike.Duncan@sonopress.com>, "'linux-raid@vger.kernel.org'" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi Mark,
+> trans len 1024, max batch 900, max commit age 30, max trans age 30
+> reiserfs: checking transaction log (md0) for (md0)
+> Using r5 hash to sort names
+> reiserfs: using 3.5.x disk format
+                 ^^^^^^^^^^^^^^^^^^^^
 
-Thanks for the info. My impression is that the Veritas VM has a lot more 
-features than MD/LVM including management tools, on-line 
-reconfiguration, etc. These seem like valuable features. What's the cost 
-of VVM?
+Hi,
 
-Thanks
+there is no 2GB support with reiserfs-3.5. You have used Suses default 
+reiserfs-utils, didn't you ? Well, the tools from namesys.com have 3.6 as 
+default since ages, the tools by patched by Suse do have 3.5 .
 
-John
+Try to convert with '-o conv' on mounting. If you plan to export this 
+partition by nfs, you should consider to reformat, since the old files are 
+not updated by -oconv, only new files will be in 3.6 format.
 
-Buechler, Mark R wrote:
-
->Yes, it is. However, it is very kernel version specific and really provides
->very little benefit compared to Linux LVM/MD for the price.
->
->-----Original Message-----
->From: linux-raid-owner@vger.kernel.org
->[mailto:linux-raid-owner@vger.kernel.org]On Behalf Of John Finlay
->Sent: Wednesday, May 14, 2003 4:53 AM
->To: linux-raid@vger.kernel.org
->Subject: Veritas Volume Manager
->
->
->Is the Veritas volume manager available for linux? If so has anyone 
->tried it and have some comments about it?
->
->  
->
-
-
+Bernd
