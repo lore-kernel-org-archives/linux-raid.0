@@ -1,38 +1,32 @@
-From: Derek Vadala <derek@cynicism.com>
-Subject: Re: Manually fail a disk?
-Date: Sun, 19 Jan 2003 09:43:21 -0500 (EST)
+From: "Sandu Mihai" <mihai.sandu@kpnqwest.ro>
+Subject: Raid Persistent Superblock Question..
+Date: Sun, 19 Jan 2003 22:50:58 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20030119144321.D9B7E3B808@jaded.cynicism.com>
-References: <20030119132953.GA18651@rdlg.net>
+Message-ID: <006301c2bffc$77e2c7d0$c7e60c0a@mihaisandu2>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20030119132953.GA18651@rdlg.net>
-To: Linux-Raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->   I've got a disk that's starting to fail hard.  It's generating alot of
-> errors in dmesg and /var/log/messages.  If the raid disk gets any usage
-> it'll lock up the box it's spewing errors so fast.  I can't get out to
-> physically yank the disk until Tues but need it off-lined now.  Is there
-> a way to tell mdtools (version 0.42-33) to mark a disk faulty and not
-> use it?
 
-I'll assume this is a RAID-1 or RAID-5 and that you're not trying this on
-a non-redundant array...
+Is there any tool that can help someone edit the persistent superblock of a
+partition/device that is a member of an RAID array?
 
+Problem:
+    I have md0 - raid1 - /dev/sda1 + /dev/sdb1 + persistent-superblock 1
+md0 happens to be my / partition.
+    If I will insert another two disks in that box (/dev/sdd, /dev/sdc  with
+/dev/sdc1, /dev/sdd1 being members of md0 RAID1 array, the disks are from
+another box..) the kernel will mess-up the things, by 'autodetecting' the
+newly added disks as md0, and not _my_ disks.
+    If I could alter the superblock info on the newly added disks, well,
+that will be good.
+So far, no HOWTO, and no docs mention the existence of a tool like this (you
+can only query the superblock, and that is all..)
 
-# mdadm /dev/md0 --fail /dev/sda1
-# mdadm /dev/md0 --remove /dev/sda1
-
-The first command fails /dev/sda1 (a member of /dev/md0) and the second
-command removes it from /dev/md0.
-
-If you are using raidtools try:
-
-# raidsetfaulty /dev/md0 /dev/sda1
-# raidhotremove /dev/md0 /dev/sda1
-
---
-Derek Vadala, derek@cynicism.com, http://www.cynicism.com/~derek
+Best regards,
+    Sandu Mihai - KPNQwest Romania Network Engineer
 
