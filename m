@@ -1,57 +1,35 @@
-From: Massimiliano Masserelli <negro@interim.it>
-Subject: RAID1 root - troubles booting in degraded mode
-Date: Wed, 30 Oct 2002 00:07:51 +0100
+From: "Sleight of Mind" <sleight@xs4all.nl>
+Subject: Promise TX2000 causing 'lost interrupt' messages
+Date: Wed, 30 Oct 2002 02:12:44 +0100 (CET)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20021029230751.GP1472@sgabanaz.interim.it>
+Message-ID: <17888.80.56.177.209.1035940364.squirrel@webmail.xs4all.nl>
+Reply-To: sleight@xs4all.nl
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;charset=iso-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi folks! 
+Hello,
 
-I've taken a look at the ML archives, and found an old thread (06/2002) 
-on this subject, but found no solution.
+I'm new to this list. I subscribed today hoping it's members could help me
+with my problem.
+I got a Promise TX2000 Software RAID controller. I want to use ataraid for it,
+but i can't get it to work. I compiled a 2.4.19 kernel with support for the
+promise card, ataraid and some extra features (as described in many howto's).
+I also used an append line in lilo to set ide0 and ide1 (i use the swap IDE
+channels kernel option as well).
+During boottime, ide0 and ide1 are detected with the options i specified. My
+HDDs are also detected as hda and hdc. After this, i get messages like:
 
-I've a working setup with a two disks RAID1 root, which boots
-flawlessly. Troubles arise when simulating hw failure. RAID setup is as
-follows:
+hda: lost interrupt
 
-raiddev                 /dev/md0
-raid-level              1
-nr-raid-disks           2
-nr-spare-disks          0
-chunk-size              4
+Same for hdc. The boot process continues though, but very slowly. Can someone
+help me with this problem?
 
-device                  /dev/hda1
-raid-disk               0
+Tia
 
-device                  /dev/hdc1
-raid-disk               1
-
-If I disconnect /dev/hda before booting, the kernel tries to initialize
-the array, can't access /dev/hda1 (no wonder), marks it as faulty, then
-refuses to initialize the array, dieing with a kernel panic, unable to
-mount root.
-
-If I disconnect /dev/hdc before booting, the array gets started in
-degraded mode, and the startup goes on without a glitch.
-
-If I disconnect /dev/hda and move /dev/hdc to its place (so it's now
-/dev/hda), the array gets started in degraded mode and the startup goes
-on.
-
-Actually, this is already a workable solution (if the first disk dies, I
-just "promote" the second to hda and go looking for a replacement of the
-broken disk), but I think this is not _elegant_. 8)
-
-Could anyone help me shedding some light on the subject?
-
-Tnx in advance.
 -- 
-Massimiliano Masserelli
--------------------------------------------------------------------------------
-Mayor: "Uh... try to have her home by eleven."
-	--Buffy the Vampire Slayer: Enemies
+Sleight of Mind
+
+<your ad here, if not extending 2 colors>
