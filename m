@@ -1,187 +1,291 @@
 From: Mike Hardy <mhardy@h3c.com>
-Subject: raid5 test array creator (was Re: the dreaded double disk failure)
-Date: Sat, 15 Jan 2005 14:52:39 -0800
-Message-ID: <41E99EB7.5090302@h3c.com>
-References: <200501130835.j0D8Z5902816@www.watkins-home.com> <41E89530.4000707@h3c.com>
+Subject: raid5 chunk calculator (was Re: the dreaded double disk failure)
+Date: Sun, 16 Jan 2005 01:29:44 -0800
+Message-ID: <41EA3408.9030105@h3c.com>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="------------070404000106070808080101"
+ boundary="------------060709090204050209070306"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <41E89530.4000707@h3c.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 This is a multi-part message in MIME format.
---------------070404000106070808080101
+--------------060709090204050209070306
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 
 
 Mike Hardy wrote:
+> 
+> Mike Hardy wrote:
+> 
+>> What I'm thinking of doing is writing a small (or, as small as 
+>> possible, anyway) perl program that can take a few command line 
+>> arguments (like the array construction information) and know how to 
+>> read the data blocks on the array, and calculate parity, as a 
+>> baseline. If perl offends you, sorry, I'm quicker at it than C by a 
+>> long-shot, and I don't really care about speed here, just speed of 
+>> development.
+> 
+> 
+> Here's the shell script I'm using as a test harness. It creates a 
+> loopback raid5 system, fills it up with random data, and then takes the 
+> md5sum. It has a few modes of operation (to initialize or not as it 
+> starts or stops the array).
 
-> What I'm thinking of doing is writing a small (or, as small as possible, 
-> anyway) perl program that can take a few command line arguments (like 
-> the array construction information) and know how to read the data blocks 
-> on the array, and calculate parity, as a baseline. If perl offends you, 
-> sorry, I'm quicker at it than C by a long-shot, and I don't really care 
-> about speed here, just speed of development.
+Probably bad form to keep replying to myself, but what the heck.
 
-Here's the shell script I'm using as a test harness. It creates a 
-loopback raid5 system, fills it up with random data, and then takes the 
-md5sum. It has a few modes of operation (to initialize or not as it 
-starts or stops the array).
+Ok, I've got a basic perl program together where you specify an
+arbitrary raid5 array layout, an array component, and a sector address
+in that component, and it can tell you:
+      a) what the computed value of the sector's chunk should be
+      b) if the real data in the chunk matches the computed value
+
+It still needs more structure and cleaning to be useful (it needs a loop
+to be a general parity checker, or some write logic to be a
+bad-sector-clearance script). However, the basic raid math seems to work
+   with the test-array creation script I posted earlier in the testing I
+threw at it, and it might already be useful to others.
+
+If anyone checks it out and finds bugs I need to fix or can think of a
+use for it other than what I'm thinking, let me know, and that'll save
+me time or show me where I'm missing useful abstractions so I can clean
+it up properly.
+
+Otherwise I'm going to do a lot more testing, wrap this up tomorrow, and
+(hopefully!) fix the unreadable sectors on the second bad drive in my
+array with it.
 
 -Mike
 
---------------070404000106070808080101
-Content-Type: application/x-sh;
- name="raid5_test_array.sh"
+--------------060709090204050209070306
+Content-Type: text/plain;
+ name="raid5.pl"
 Content-Transfer-Encoding: 7bit
 Content-Disposition: inline;
- filename="raid5_test_array.sh"
+ filename="raid5.pl"
 
-#!/bin/bash
+#!/usr/bin/perl -w
 
-# There are 4 ways to call this script
 #
-# 1) "start clean"
-#    - makes new disk files
-#    - binds them to loop devices
-#    - creates a new raid device
-#    - makes a file system on the device
-#    - mounts the file system
-#    - copies random data to the device
-#    - takes the md5sum of the data
-# 2) "stop clean"
-#    - unmounts the file system
-#    - stops the raid device
-#    - unbinds the loop devices
-#    - removes the disk files
-# 3) "start"
-#    - starts the raid device
-#    - mounts the filesystem
-#    - takes the md5sum of the data
-# 4) "stop"
-#    - unmounts the file system
-#    - stops the raid device
+# raid5 perl utility
+#   Copyright (C) 2005 Mike Hardy <mike@mikehardy.net>
+#
+# This script understands the default linux raid5 disk layout,
+# and can be used to check parity in an array stripe, or to calculate
+# the data that should be present in a chunk with a read error.
+#
+# Constructive criticism, detailed bug reports, patches, etc gladly accepted!
+#
+# Thanks to Ashford Computer Consulting Service for their handy RAID information:
+#    http://www.accs.com/p_and_p/RAID/index.html
+#
+# Thanks also to the various linux kernel hackers that have worked on 'md',
+# the header files and source code were quite informative when writing this.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2, or (at your option)
+# any later version.
+#
+# You should have received a copy of the GNU General Public License
+# (for example /usr/src/linux/COPYING); if not, write to the Free
+# Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+#
+
+my @array_components = (
+			"/dev/loop0",
+			"/dev/loop1",
+			"/dev/loop2",
+			"/dev/loop3",
+			"/dev/loop4",
+			"/dev/loop5",
+			"/dev/loop6",
+			"/dev/loop7"
+			);
+
+my $chunk_size = 64 * 1024; # chunk size is 64K
+my $sectors_per_chunk = $chunk_size / 512;
 
 
-# These things are variable
-export TESTDIR=/tmp/raid_test_drives;
-export COMPONENTS_COUNT=8;
-export COMPONENT_SIZE=5M;
-export ARRAY_NAME=/dev/md0;
-
-# Make sure we got an argument
-if [ "$1" == "" ]; then
-    echo "You must use either 'stop' or 'start' as an argument";
-    exit;
-fi
-
-# See if we are stopping
-if [ "$1" == "stop" ]; then
-    echo "Stopping...";
-    export STARTING=0;
-
-else
-    echo "Starting...";
-    export STARTING=1;
-fi
-
-# See if we are supposed to do things cleanly
-if [ "$2" == "clean" ]; then
-    echo "    Cleaning on shutdown...";
-    export CLEANING=1;
-else
-    export CLEANING=0;
-fi
+# Problem - I have a bad sector on one disk in an array
+my %component = (
+    "sector" => 2032,
+    "device" => "/dev/loop3"
+);
 
 
-# If we're stopping, we need to stop the array first
-if [ $STARTING == 0 ]; then
+# 1) Get the array-related info for that sector
+# 2) See if it was the parity disk or not
+# 2a) If it was the parity disk, calculate the parity
+# 2b) If it was not the parity disk, calculate its value from parity
+# 3) Write the data back into the sector
 
-    echo "    Unmounting array...";
-    umount "$TESTDIR/array";
-    rmdir "$TESTDIR/array";
+(
+ $component{"array_chunk"},
+ $component{"chunk_offset"}, 
+ $component{"stripe"},
+ $component{"parity_device"}
+ ) = &getInfoForComponentAddress($component{"sector"}, $component{"device"});
 
-    echo "    Stopping kernel md device...";
+foreach my $KEY (keys(%component)) {
+    print $KEY . " => " . $component{$KEY} . "\n";
+}
 
-    # Stop the raid array so we can deconstruct the components
-    /sbin/mdadm --manage --stop $ARRAY_NAME;
+# We started with the information on the bad sector, and now we know how it fits into the array
+# Lets see if we can fix the bad sector with the information at hand
 
-else
+# Build up the list of devices to xor in order to derive our value
+my $xor_count = -1;
+for (my $i = 0; $i <= $#array_components; $i++) {
 
-    # Start building the component list
-    export COMPONENT_LIST="";
-fi
+    # skip ourselves as we roll through
+    next if ($component{"device"} eq $array_components[$i]);
 
+    # skip the parity chunk as we roll through
+    next if ($component{"parity_device"} eq $array_components[$i]);
 
+    $xor_devices{++$xor_count} = $array_components[$i];
 
-# For each component that's supposed to be in the array
-for ((DRIVE=0; $DRIVE < $COMPONENTS_COUNT; DRIVE = $DRIVE+1)); do
+    print 
+	"Adding xor device " . 
+	$array_components[$i] . " as xor device " . 
+	$xor_count . "\n";
+}
 
-    COMPONENT="$TESTDIR/disk$DRIVE";
+# If we are not the parity device, put the parity device at the end
+if (!($component{"device"} eq $component{"parity_device"})) {
 
-    if [ $STARTING == 1 ]; then
+    $xor_devices{++$xor_count} = $component{"parity_device"};
 
-	if [ $CLEANING == 1 ]; then
-	    echo "    Creating disk component file $COMPONENT.img...";
-	    echo "dd if=/dev/zero of=$COMPONENT.img bs=$COMPONENT_SIZE count=1";
-	    dd if=/dev/zero of="$COMPONENT.img" bs="$COMPONENT_SIZE" count=1;
-
-	    echo "    Creating loop device for disk component $COMPONENT.img...";
-	    echo "losetup /dev/loop$DRIVE $COMPONENT.img";
-	    losetup "/dev/loop$DRIVE" "$COMPONENT.img";
-	fi
-
-	export COMPONENT_LIST="$COMPONENT_LIST /dev/loop$DRIVE";
-	
-    else
-	
-	if [ $CLEANING == 1 ]; then
-	    echo "    Removing loop device for disk component $COMPONENT.img ...";
-	    echo "losetup -d /dev/loop$DRIVE";
-	    losetup -d "/dev/loop$DRIVE";
-
-	    echo "    Removing disk compoment $COMPONENT.img ...";
-	    rm -f "$COMPONENT.img";
-	fi
-
-    fi
-
-done
+    print 
+	"Adding parity device " . 
+	$component{"parity_device"} . " as xor device " . 
+	$xor_count . "\n";
+}
 
 
-# If we're starting, create the kernel array, make a file system, and put data in it
-if [ $STARTING == 1 ]; then
+# pre-calculate the device offset, and initialize the xor buffer
+my $device_offset = $component{"stripe"} * $sectors_per_chunk;
+my $xor_result = "0" x ($sectors_per_chunk * 512);
 
-    if [ $CLEANING == 1 ]; then
-	echo "    Creating kernel-level array...";
-	/sbin/mdadm --create -l5 -n$COMPONENTS_COUNT $ARRAY_NAME $COMPONENT_LIST;
+# Read in the chunks and feed them into the xor buffer
+for (my $i = 0; $i <= $xor_count; $i++) {
 
-	echo "    Making file system...";
-	/sbin/mke2fs -j -m1 $ARRAY_NAME;
-    else
-	echo "    Starting kernel-level array...";
-	/sbin/mdadm --assemble $ARRAY_NAME $COMPONENT_LIST;
-    fi
+    print 
+	"Reading in chunk on stripe " . 
+	$component{"stripe"} . " (sectors " .
+	$device_offset . " - " .
+	($device_offset + $sectors_per_chunk) . ") of device " .
+	$xor_devices{$i} . "\n";
+    
+    # Open the device and read this chunk in
+    open(DEVICE, "<" . $xor_devices{$i})
+	|| die "Unable to open device " . $xor_devices{$i} . ": " . $! . "\n";
+    seek(DEVICE, $device_offset, 0)
+	|| die "Unable to seek to " . $device_offset . " device " . $xor_devices{$i} . ": " . $! . "\n";
+    read(DEVICE, $data, ($sectors_per_chunk * 512))
+	|| die "Unable to read device " . $xor_devices{$1} . ": " . $! . "\n";
+    close(DEVICE);
+    
+    # Convert binary to hex for printing
+    my $hexdata = unpack("H*", pack ("B*", $data));
+    #print "Got data '" . $hexdata . "' from device " . $xor_devices{$i} . "\n";
 
-    echo "    Mounting file system...";
-    mkdir "$TESTDIR/array"
-    mount -t ext3 $ARRAY_NAME "$TESTDIR/array"
+    # xor the data in there
+    $xor_result ^= $data;
+}
 
-    if [ $CLEANING == 1 ]; then
-	echo "    Copying random data to the array..."
-	dd if=/dev/urandom of=$TESTDIR/array/testdata.dat
-    fi
+my $hex_xor_result = unpack("H*", pack ("B*", $xor_result));
+#print "got hex xor result '" . $hex_xor_result . "'\n";
 
-    echo "    Calculating checksum of random data..."
-    md5sum $TESTDIR/array/testdata.dat > $TESTDIR/`date +%s`.md5sum
+#########################################################################################
+# Testing only -
+# Check to see if the result I got is the same as what is in the block
+open (DEVICE, "<" . $component{"device"})
+    || die "Unable to open device " . $compoent{"device"} . ": " . $! . "\n";
+seek(DEVICE, $device_offset, 0)
+    || die "Unable to seek to " . $device_offset . " device " . $xor_devices{$i} . ": " . $! . "\n";
+read(DEVICE, $data, ($sectors_per_chunk * 512))
+    || die "Unable to read device " . $xor_devices{$1} . ": " . $! . "\n";
+close(DEVICE);
 
-fi
+# Convert binary to hex for printing
+my $hexdata = unpack("H*", pack ("B*", $data));
+#print "Got data '" . $hexdata . "' from device " . $component{"device"} . "\n";
 
 
-echo "done.";
+# Do the comparison, and report what we've got
+if (!($hexdata eq $hex_xor_result)) {
+    print "The value from the device, and the computed value from parity are inequal for some reason...\n";
+}
+else {
+    print "Device value matches what we computed from other devices. Score!\n";
+}
+#########################################################################################
 
---------------070404000106070808080101--
+
+
+# Given an array component, a sector address in that component, we want
+# 1) the disk/sector combination for the start of its stripe
+# 2) the disk/sector combination for the start of its parity
+sub getInfoForComponentAddress() {
+
+    # Get our arguments into (hopefully) well-named variables
+    my $sector = shift();
+    my $device = shift();
+
+    print "determining info for sector " 
+	. $sector . " on " 
+	. $device . "\n";
+    
+    # Get the stripe number
+    my $stripe = int($sector / $sectors_per_chunk);
+    print "stripe number is " . $stripe . "\n";
+    
+    # Get the offset in the stripe
+    my $chunk_offset = $sector % $sectors_per_chunk;
+    print "chunk offset is " . $chunk_offset . "\n";
+   
+    # See what device index our device is
+    my $device_index = 0;
+    for ($i = 0; $i <= $#array_components; $i++) {
+	if ($device eq $array_components[$i]) {
+	    $device_index = $i;
+	    print "This disk is device " . $device_index . " in the array\n";
+	}
+    }
+ 
+    # Figure out which disk holds parity for this stripe
+    # FIXME only handling the default left-asymmetric style right now
+    my $parity_device_index = ($#array_components) - ($stripe % ($#array_components + 1));
+    print "parity device index for stripe " . $stripe . " is " . $parity_device_index . "\n";
+    my $parity_device = $array_components[$parity_device_index];
+    
+    # Figure out which chunk of the array this is
+    # FIXME only handling the default left-asymmetric style right now
+    my $array_chunk = $stripe * ($#array_components + 1) + $device_index;
+    if ($device_index > $parity_device_index) {
+	$array_chunk -= ($#array_components + 1);
+    }
+
+    # Check for the special case where this device *is* the parity device and return special
+    if ($device_index == $parity_device_index) {
+	$array_chunk = -1;
+    }
+    
+    return (
+	    $array_chunk,
+	    $chunk_offset,
+	    $stripe,
+	    $parity_device
+	    );
+}
+
+
+
+
+
+
+--------------060709090204050209070306--
