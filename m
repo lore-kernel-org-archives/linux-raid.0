@@ -1,43 +1,52 @@
-From: Sandro Dentella <sandro.dentella@tin.it>
-Subject: Re: New RAID array syncs very slow
-Date: Wed, 24 Mar 2004 09:18:33 +0100
+From: "Philippe De Muyter" <phdm@macqel.be>
+Subject: Promise SuperSwap 1000 & linux software raid ?
+Date: Wed, 24 Mar 2004 12:17:19 +0100 (CET)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040324081832.GA14512@bluff>
-References: <40602BE7.8080705@oddpost.com> <Pine.LNX.4.56.0403232235270.13470@lion.drogon.net>
+Message-ID: <200403241117.i2OBHJv06429@mail.macqel.be>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.56.0403232235270.13470@lion.drogon.net>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->   hdparm -Tt /dev/hde
-> 
-> too. You ought to get at least 45MB/sec on a modern IDE drive.
+Sorry to disturb you.
 
-On my pc I get:
-/dev/hda:
- Timing buffer-cache reads:   128 MB in  1.73 seconds = 73.99 MB/sec
- Timing buffered disk reads:  64 MB in  2.98 seconds = 21.48 MB/sec
+I have found this mail address when searching for information on experience
+with the promise superswap 1000 ide hot swap enclosure on linux.
 
-On my laptop I get
-/dev/hda:
- Timing buffer-cache reads:   596 MB in  2.01 seconds = 296.52 MB/sec
- Timing buffered disk reads:   54 MB in  3.05 seconds =  17.70 MB/sec
+We have superswap 1000 enclosure here with fasttrak tx 2000 pci card, and
+I would like to use that with the software raid system of linux.   My users
+request hot-swap capability, with no human intervention to initiate
+reconstruction.  We need raid1 (mirroring).
 
-On other raid server I have on production I get
-/dev/hda:
- Timing buffer-cache reads:   128 MB in  0.24 seconds =533.33 MB/sec
- Timing buffered disk reads:  64 MB in  1.29 seconds = 49.61 MB/sec
+How can that be achieved ?
 
-Which "line" should be "at least 45MB/sec"? I read the man page for -tT opt
-but I know too little of how it works to really understand it.
+I already tried myself, but we have several problems :
 
-sandro
-*:-)
+- if we power up the computer with only one disk, linux will not see the
+second disk when it is inserted.
 
--- 
-Sandro Dentella  *:-)
-e-mail: sandro.dentella@tin.it 
-http://www.tksql.org                    TkSQL Home page - My GPL work
+- if we power up with two disks, and then replace one disk, the replaced disk
+is not initialized correctly (slow transfer e.g.) and mdadm does not see
+that the disk is back.  We must manually issue the following script to
+initiate a reconstruction :
+
+	    mdadm -r /dev/md1 /dev/hdg2
+	    mdadm -r /dev/md0 /dev/hdg1
+	    sfdisk -d /dev/hde > /tmp/partitions.hdg
+	    hdparm -w /dev/hdg
+	    hdparm -d 1 /dev/hdg
+	    hdparm -m 16 /dev/hdg
+	    sfdisk /dev/hdg < /tmp/partitions.hdg
+	    mdadm -a /dev/md0 /dev/hdg1
+	    mdadm -a /dev/md1 /dev/hdg2
+
+- the leds are not handled the way they are with the proprietary promise driver.
+
+We currently use linux-2.4.21.
+
+Thanks in advance.
+
+Philippe De Muyter  phdm at macqel dot be  Tel +32 27029044
+Macq Electronique SA  rue de l'Aeronef 2  B-1140 Bruxelles  Fax +32 27029077
