@@ -1,37 +1,48 @@
-From: Dieter Stueken <stueken@conterra.de>
-Subject: Re: Partition or whole disk ?
-Date: Wed, 30 Jun 2004 18:40:50 +0200
+From: Tom Oehser <tom@toms.net>
+Subject: superblock, kicking non-fresh, ide slaves, problems, ideas
+Date: Wed, 30 Jun 2004 12:50:06 -0400 (EDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <40E2ED12.9020703@conterra.de>
-References: <1088604941.2840.1.camel@JubJub>
+Message-ID: <Pine.LNX.4.58.0406301240560.324@jupiter.toms.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1088604941.2840.1.camel@JubJub>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Josh Litherland wrote:
-> Couldn't find an authoritative answer to this in the faq or elsewhere...
-> Is it preferred to build md sets out of whole disks or of partitions ? 
-> Is there any functional reason why either one is better ?
 
-If you make partitions, about one track is is "wasted" to store
-the useless partition table. Thus I used whole disks for a long time.
+Hi,
 
-The problem might be, that "fdisk -l" won't show up if this
-disk is an MD device. It shows an empty partition table which
-may look like an unused/empty disk. If you create the partition
-table, you may waste some data, but fdisk may show this is a
-disk with a partition containing some MD data on it.
+I have 2 raid 5 arrays-
 
-Meanwhile I turned back to make partition tables again,
-just to "tag" the disk as "in use". If I put a new disk
-into my system, it has no partition table. Thus I can verify
-this condition, before I initialize the disk. This may prevent
-me from accidentally initialize/destroying some disk in use,
-which already has an partition table.
+ - one is 4 hardware/scsi disks with the system and speed-sensitive stuff.
 
-Dieter.
+ - one is 4 software/ide disks with large files, not-speed-critical stuff.
+
+So, the motherboard having 2 connectors, and not caring so much
+about the speed issue, I put the IDE drives 2 per cable into the MB.
+
+So, an IDE drive failed (hda).
+
+- It hosed the DMA on that channel, so that hdb wouldn't work either.
+
+- When the system shut down, it wrote new superblocks to hdc and hdd.
+
+- So, now I can't bring up the array, as hdb is "kicking non-fresh"
+  (even though, in fact, there was no activity when hda failed, the
+  filesystems were not even mounted).
+
+One question, and one comment:
+
+- Is this something where:
+
+	mdadm -A -f /dev/md0 /dev/hdb1 /dev/hdc1 /dev/hdd1
+
+  will fix it?  Is this command safe?
+
+- Is there some smartness that the raid driver could be given such
+  that it would detect this kind of situation, especially with ide
+  channels failing this way, and not put the superblocks of the 3
+  good drives out of sync when the 1 drive goes down?
+
+-Help, -Tom
 
