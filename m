@@ -1,31 +1,37 @@
-From: Norman Schmidt <Norman.Schmidt@chemie.uni-erlangen.de>
-Subject: Re: ANNOUNCE: mdadm 1.6.0 - A tool for managing Soft RAID under
- Linux
-Date: Mon, 7 Jun 2004 00:58:09 +0200 (CEST)
+From: NeilBrown <neilb@cse.unsw.edu.au>
+Subject: [PATCH md ] Fix BUG in raid6 resync code.
+Date: Mon, 07 Jun 2004 13:39:52 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.58.0406070056480.17664@pcmail.chemie.uni-erlangen.de>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Message-ID: <E1BXAzI-0006I7-Oc@notabene.cse.unsw.edu.au>
+References: <20040607133613.19974.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+This condtion on this loop is primarily to avoid the loop
+if it doesn't appear to be needed.  However it optimises
+a little too much and there is a case where it skips the
+loop when it is really needed.  This patch fixes it.
 
-Neil Brown schrieb:
+This is the raid6 version of the recent raid5 resync bugfix.
 
-> The simplest way to access this functionality is with
-> 
->     mdadm --create /dev/md/XX --auto=partition --level= ....
 
-I finally got it. After mkdir /dev/md, that works.
+Signed-off-by: Neil Brown <neilb@cse.unsw.edu.au>
 
-One more thing: It would be helpful to have a reference between the device 
-name (which is user for mounting, partitionimg etc) and the /proc/mdstat 
-entry. In my case that would be /dev/md/mdp1 and md_d0.
+### Diffstat output
+ ./drivers/md/raid6main.c |    2 +-
+ 1 files changed, 1 insertion(+), 1 deletion(-)
 
-For unpartitionable raid this is no problem, since the device name occurs 
-in /proc/mdstat directly.
-
-Thanks for the great work so far.
-
-Norman Schmidt.
+diff ./drivers/md/raid6main.c~current~ ./drivers/md/raid6main.c
+--- ./drivers/md/raid6main.c~current~	2004-06-04 16:36:24.000000000 +1000
++++ ./drivers/md/raid6main.c	2004-06-07 13:35:02.000000000 +1000
+@@ -1157,7 +1157,7 @@ static void handle_stripe(struct stripe_
+ 	 * parity, or to satisfy requests
+ 	 * or to load a block that is being partially written.
+ 	 */
+-	if (to_read || non_overwrite || (syncing && (uptodate+failed < disks))) {
++	if (to_read || non_overwrite || (syncing && (uptodate < disks))) {
+ 		for (i=disks; i--;) {
+ 			dev = &sh->dev[i];
+ 			if (!test_bit(R5_LOCKED, &dev->flags) && !test_bit(R5_UPTODATE, &dev->flags) &&
