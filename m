@@ -1,38 +1,23 @@
-From: "Scott T. Smith" <scott@gelatinous.com>
-Subject: Re: 1x 3ware controllers vs. 2x 3ware controllers
-Date: Sun, 01 Aug 2004 10:57:02 -0700
+From: Jim Paris <jim@jtan.com>
+Subject: Re: Kernel panic, FS corruption  Was: Re: Call for RAID-6 users
+Date: Sun, 1 Aug 2004 14:05:36 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1091383022.11789.17.camel@tinny.home.foo>
-References: <Pine.LNX.4.44.0408011723330.7382-100000@uplift.swm.pp.se>
+Message-ID: <20040801180536.GA3897@jim.sh>
+References: <cds76e$ee7$1@terminus.zytor.com> <200407302338.33823.maarten@ultratux.net> <200407310228.27969.maarten@ultratux.net> <200408011503.20452.maarten@ultratux.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44.0408011723330.7382-100000@uplift.swm.pp.se>
-To: Mikael Abrahamsson <swmike@swm.pp.se>
-Cc: Jim Buttafuoco <jim@contactbda.com>, linux-raid@vger.kernel.org
+Content-Disposition: inline
+In-Reply-To: <200408011503.20452.maarten@ultratux.net>
+To: maarten van den Berg <maarten@ultratux.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, 2004-08-01 at 08:24, Mikael Abrahamsson wrote:
-> On Sun, 1 Aug 2004, Jim Buttafuoco wrote:
-> 
-> > I am switching all of my 3ware controllers over to Adaptec SATA raid
-> > controllers.  I am getting better performance with them.  Jim
-> 
-> I am quite curious about the 16port SATA controller Adaptec has now. Do 
-> you have any filesystem write figures for this controller under linux and 
-> ext3?
+> I eventually got a kernel panic when copying large amounts of data to a 
+> [degraded] raid6 array, which this time was the full 600 GB size.
+> Don't know if it is helpful to anyone but info below:
 
-One main problem with the 16port controller, at least in JBOD mode, is
-that there is not enough PCI bandwidth to fill the disks if you do large
-writes.  Thus two separate 8port controllers, on separate PCI busses,
-should yield higher performance.
+The panic is from reiserfs, and it's occuring because the FS is
+getting corrupted due to the raid6 problems.
 
-OTOH, if you're doing small ops, or RAID1, it will probably be fine.
-
-(disclaimer -- I haven't tried the Adaptec boards yet, but they're on my
-list, along with Highpoint's)
-
-	Scott
-
-
+-jim
