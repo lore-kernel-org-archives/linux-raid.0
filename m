@@ -1,69 +1,39 @@
-From: Stephan van Hienen <raid@a2000.nu>
-Subject: Re: raid5 slow (test on another system)
-Date: Thu, 2 Dec 2004 23:01:25 +0100 (CET)
-Message-ID: <Pine.LNX.4.61.0412022258270.27676@adsl.a2000.nu>
-References: <200411290449.iAT4nsN02715@www.watkins-home.com>
- <Pine.LNX.4.61.0411290928430.13437@adsl.a2000.nu>
- <Pine.LNX.4.61.0411290948230.13437@adsl.a2000.nu> <16811.48945.141392.294625@cse.unsw.edu.au>
- <Pine.LNX.4.61.0411300146360.32052@adsl.a2000.nu>
- <Pine.LNX.4.61.0411302034160.24563@adsl.a2000.nu> <16813.418.770001.453039@cse.unsw.edu.au>
- <Pine.LNX.4.61.0412010050500.31657@adsl.a2000.nu>
- <Pine.LNX.4.61.0412012021350.12257@adsl.a2000.nu>
- <Pine.LNX.4.61.0412012319250.29724@adsl.a2000.nu>
+From: James Ralston <qralston+ml.linux-raid@andrew.cmu.edu>
+Subject: stacked raid devices not autodetected?
+Date: Thu, 02 Dec 2004 17:32:24 -0500
+Message-ID: <912C966151E990A5186A8A78@pcmy.sei.cmu.edu>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.61.0412012319250.29724@adsl.a2000.nu>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-and another system
-p4 2.8Ghz with 2*300gb (normal ide ports)
+I have several raid devices that I created with the following
+commands:
 
-i created a degraded raid5
+    mdadm --create /dev/md0 --level=mirror --raid-devices=2 /dev/sd{b,h}1
+    mdadm --create /dev/md1 --level=mirror --raid-devices=2 /dev/sd{c,i}1
+    mdadm --create /dev/md2 --level=mirror --raid-devices=2 /dev/sd{d,j}1
+    mdadm --create /dev/md3 --level=mirror --raid-devices=2 /dev/sd{e,k}1
+    mdadm --create /dev/md4 --level=mirror --raid-devices=2 /dev/sd{f,l}1
+    mdadm --create /dev/md5 --chunk=256 --level=stripe --raid-devices=5 /dev/md{0,1,2,3,4}
 
-25% difference in read performance :
+On boot, the kernel automatically detects and starts md0 through md4.
+However, md5 is *not* autodetected.  Using the RAID_AUTORUN ioctl also
+has no effect.  The only way I've found to reliably start md5 is to
+have rc.sysinit run "mdadm -assemble --scan".
 
-2.4.20 :
+Is this a bug?  A design limitation?  Something else?
 
-Version  1.03       ------Sequential Output------ --Sequential Input- 
---Random-
-                     -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- 
---Seeks--
-Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP 
-/sec %CP
-gx270.a2000.nu   1G 29724  79 41447  15 17575   6 33146  80 55494  12 
-267.6   0
-                     ------Sequential Create------ --------Random 
-Create--------
-                     -Create-- --Read--- -Delete-- -Create-- --Read--- 
--Delete--
-               files  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP 
-/sec %CP
-                  16  2539  98 +++++ +++ +++++ +++  2523  98 +++++ +++ 
-6307  96
-gx270.a2000.nu,1G,29724,79,41447,15,17575,6,33146,80,55494,12,267.6,0,16,2539,98
-,+++++,+++,+++++,+++,2523,98,+++++,+++,6307,96
+(I am currently using kernel-2.6.9-1.675_EL on the RHEL 4AS beta.  But
+I've never been able to get autodetection of stacked raid devices to
+work using any kernel.)
 
-2.6.9-ac11 :
+-- 
+James Ralston, Information Technology
+Software Engineering Institute
+Carnegie Mellon University, Pittsburgh, PA, USA
 
-Version  1.03       ------Sequential Output------ --Sequential Input- 
---Random-
-                     -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- 
---Seeks--
-Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP 
-/sec %CP
-gx270.a2000.nu   1G 21190  52 37804   8 10092   2 34726  80 68587   9 
-263.1   0
-                     ------Sequential Create------ --------Random 
-Create--------
-                     -Create-- --Read--- -Delete-- -Create-- --Read--- 
--Delete--
-               files  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP 
-/sec %CP
-                  16  3305  99 +++++ +++ +++++ +++  3372 100 +++++ +++ 
-10428  98
-gx270.a2000.nu,1G,21190,52,37804,8,10092,2,34726,80,68587,9,263.1,0,16,3305,99,+
-++++,+++,+++++,+++,3372,100,+++++,+++,10428,98
