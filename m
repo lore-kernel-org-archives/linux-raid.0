@@ -1,32 +1,34 @@
-From: Junfeng Yang <yjf@stanford.edu>
-Subject: mdadm command to trigger Raid Recovery?
-Date: Sat, 19 Mar 2005 18:11:00 -0800 (PST)
-Message-ID: <Pine.GSO.4.44.0503191805340.792-100000@elaine24.Stanford.EDU>
+From: rrk <rrk@prairie.lakes.com>
+Subject: bd_claim error
+Date: Sun, 20 Mar 2005 02:05:35 -0600
+Message-ID: <423D2ECF.6040103@prairie.lakes.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+i was building a simple raid 1 array and when i went to add hda1 i got a
+mdadm could not bd_claim hda1  error the mdstat shows md0 up and running
+this is the first time i have seen this error kernel is 2.6.10 
+debian/kanotix with raid built in
+what does it mean?
 
-What exactly is the command to recover a raid array after system crash? I
-created a raid5 array with 3 disks.  After system crash, one disk is out
-of sync, so I tried the command
+this is what i did
+mdadm --create /dev/md0 --level=1 --raid-devices=2 missing /dev/hdc1
+set partition type to fd for both drives
+mkfs.ext3 /dev/md0
+cp -R /  /mnt/hdc1
 
-mdadm --assemble --run --force --update=resync /dev/md2 /dev/sbd3  /dev/sbd4 /dev/sbd5
+edited grub to boot from hdc1
+rebooted
+chked mdstat
+and checked superblocks with mdadm -E /dev/md0 /dev/hdc
+all looked good
+mdadm --add /dev/md0 /dev/hda1 
+failed with mdadm could not bd_claim hda1
+md error  md_import_device() returned -16
 
-However, I still saw that raid array was started with 2 disks:
-mdadm: /dev/md/2 has been started with 2 drives (out of 3).
-
-cat /proc/mdstat still shows that /dev/sbd5 is inactive.
-Personalities : [raid5]
-md2 : active raid5 sbd3[0] sbd4[1]
-      3968 blocks level 5, 64k chunk, algorithm 2 [3/2] [UU_]
-
-If --update=resync isn't the right option to sync a raid array, what
-command am I supposed to use?
-
-Thanks a lot,
--Junfeng
-
+thanks
+rob
