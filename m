@@ -1,42 +1,44 @@
-From: Lars Marowsky-Bree <lmb@suse.de>
-Subject: Re: raid1 critical sections not protected in 2.4.x?
-Date: Fri, 10 Oct 2003 10:14:46 +0200
+From: Jason Lunz <lunz@falooley.org>
+Subject: recovery of hosed raid5 array
+Date: Sat, 11 Oct 2003 15:52:40 +0000 (UTC)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20031010081445.GC29059@marowsky-bree.de>
-References: <1065721318.4761.138.camel@persist.az.mvista.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Message-ID: <slrnbog9og.t0c.lunz@orr.homenet>
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1065721318.4761.138.camel@persist.az.mvista.com>
-To: Steven Dake <sdake@mvista.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2003-10-09T10:41:59,
-   Steven Dake <sdake@mvista.com> said:
+So I have a small raid5 array of 5 25G ide disks for a home server. It
+was built entirely on 2.4.22 with mdadm in debian unstable a couple of
+months ago.  One of the disks died last night and was removed from the
+array, which went on in degraded mode.  The dead disk, /dev/hdg, stopped
+responding and was deactivated by the promise ide driver.
 
-> I have been looking at the raid1.c code.  There is a kernel thread
-> raid1d that could be scheduled on processor A.  Then on processor B,
-> other raid code could be scheduled as per each block I/O request.
+After rebooting, the raid continued to work in degraded mode, and
+/dev/hdg seemed to check out ok. After checking it with smartctl and
+doing some successful reads from it, I added it back to the array with
+"mdadm -a".
 
-Did you follow the recent locking fixes to md I discussed with Neil? I
-think this fixes some of these; at least we have a confirmation from IB=
-M
-that some raid1 races (not resyncing after a hotadd, no progress during
-resync etc) went away with it.
+Once the rebuild started, I noticed an email from smartd, saying that
+the _other_ drive on the Promise controller (/dev/hde) had had errors.
+So I foolishly checked it out with smartctl, at which point everything
+went to hell. /dev/hde now clicks repeatedly and refuses to work for
+more than a minute or so, while /dev/hdg is partially destroyed from
+being re-added. The rebuild was 3-4% complete when hde died.
 
+So I realize I'm probably fucked, but I really want to get the 80G or so
+of data back. Three of the drives are fine, /dev/hde is dead, but if I
+can use even some of /dev/hdg, I should be able to at least recover part
+of the data if I can get the ext3 fs to mount. How would I go about
+this?
 
-Sincerely,
-    Lars Marowsky-Br=E9e <lmb@suse.de>
+I know if I just wanted to use the four good disks, I could do
+"mdadm -Af". But how do I go about getting at the pre-rebuild data on
+/dev/hdg? Is there any way to restore its superblock data to the
+pre-rebuild state?
 
---=20
-High Availability & Clustering		ever tried. ever failed. no matter.
-SuSE Labs				try again. fail again. fail better.
-Research & Development, SUSE LINUX AG		-- Samuel Beckett
+I will be eternally indebted to anyone that can help.
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+thanks,
+
+Jason
+
