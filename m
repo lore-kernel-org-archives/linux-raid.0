@@ -1,9 +1,9 @@
 From: "Matthew (RAID)" <RAID@lists.elvey.com>
 Subject: (Can I mark a RAID 1 drive as old? Move it? SCA hangs)  Troubles
-   creating a reliable backup system. (1/n)
-Date: Thu, 08 Jul 2004 12:32:53 -0700
+   creating a reliable backup system.
+Date: Thu, 08 Jul 2004 14:42:13 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1089315173.20973.199985973@webmail.messagingengine.com>
+Message-ID: <1089322933.5207.200004165@webmail.messagingengine.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
@@ -30,7 +30,7 @@ md0 and md1 make up md2 (RAID0), where all the (postgres) database files
 are.
 sda and sdf are RAID1 (well, they're going to be, anyway; for now I've
 used dd to make a nightly copy, which is not good, for reasons I'm aware
-of.)  
+of - see appendix.)  
 (Yes, to be accurate, it's partitions on the drives that make up the md
 devices).
 
@@ -90,7 +90,9 @@ RAID.
 
 
 
-Here's my (buggy) recipe for the swap.
+Here's my (buggy) recipe for the swap. (It didn't work; I managed to
+move/ insert drives into LIVE and made other ad hoc changes to get it to
+do what I wanted.) 
 (Below it is my (buggy, non-working) recipe for making sda raid1 with
 sdf):
 
@@ -204,3 +206,6 @@ lilo -v
 cp /etc/raidtabToBe /mnt/raidroot/etc/raidtab
 cp /etc/fstabToBe /mnt/raidroot/etc/fstab
 Undo the original edits to /etc/fstab and /etc/raidtab!
+Dunno what's wrong; can't boot the raid configuration; only works if I
+make root=/dev/sda1, not md2.  Booting to raid with a grub floppy
+doesn't work either.
