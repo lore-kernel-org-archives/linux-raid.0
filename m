@@ -1,59 +1,129 @@
 From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: md on partition
-Date: Sat, 23 Oct 2004 02:07:02 -0400
+Subject: RE: Resizing raid-1 on replacing failed disk
+Date: Sat, 23 Oct 2004 02:12:51 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200410230607.i9N677N10676@www.watkins-home.com>
-References: <1098466068.3179.41.camel@localhost.localdomain>
+Message-ID: <200410230612.i9N6CuN10729@www.watkins-home.com>
+References: <200410230541.i9N5fuN10579@www.watkins-home.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1098466068.3179.41.camel@localhost.localdomain>
-To: mingz@ele.uri.edu, linux-raid@vger.kernel.org
+In-Reply-To: <200410230541.i9N5fuN10579@www.watkins-home.com>
+To: 'matt brennan' <raid@classforge.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I found this old message:
-"On Tuesday June 1, maheshext3@yahoo.com wrote:
-> 
-> --- Neil Brown <neilb@cse.unsw.edu.au> wrote:
-> > 
-> > What does
-> >    ls -l /dev/hd[eg]5
-> > show? How about
-> >    cat /proc/partitions
-> >    dd if=/dev/hde5 of=/dev/null bs=1024k
-> 
-> Thanks a lot, Neil, turns out those nodes were not present. After I 
-> mknod'd them, all's fine in RAIDland...
->   Quick question: does using extended partitions for RAID affect 
-> performance?
+I found the warning!
+"You must resize the partition now. The device that the partition on is now
+about 500Gb, but the partition is still 250Gb. If you're partition is ext2
+or ext3, you can use resize2fs. A word of caution for you. I've used this
+utility many times, and it is necessary to do a e2fsck -f on the partition
+to be resized BOTH before and after. The program itself will require you to
+do it before. If you skip doing it after resize2fs completes, you will
+almost assuredly ruin your filesystem. I've skipped the fsck after the
+resize2fs myself 2-3 times, and it killed the filesystem every time.
 
-The fact that the partitions are "extended" is invisible to most of the
-kernel, and it could not have any affect of performance.
-
-NeilBrown"
+TJ Harrell"
 
 Guy
 
 -----Original Message-----
 From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Ming Zhang
-Sent: Friday, October 22, 2004 1:28 PM
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Guy
+Sent: Saturday, October 23, 2004 1:42 AM
+To: 'matt brennan'; linux-raid@vger.kernel.org
+Subject: RE: Resizing raid-1 on replacing failed disk
+
+You will be replacing your boot disk (I think).  This will be a grub or lilo
+issue.  Please wait for someone to help with this!  But not me!  I don't
+trust my advice!  Other than my advice to wait for help. :)
+
+I don't recall if the size will just grow when you replace with a larger
+disk.  But if you know it will, then this should work (other than booting).
+Oops, I recall some issue resizing a file system, don't recall the issue, or
+how to deal with it.  Will search and send another message if I find it.
+
+But I do have other notes:
+- backup
+* logically remove the failed disk - "mdadm /dev/md0 -r /dev/hdc1"
+- physically remove the failed disk
+- physically replace the failed disk with a larger disk
+- add the new disk to the array and allow to resync
+- fail and remove the active smaller disk
+* fail the smaller disk - "mdadm /dev/md0 -f /dev/hda1"
+* wait a few seconds (was some issue with failing and removing too quickly)
+* remove the smaller disk - "mdadm /dev/md0 -r /dev/hda1"
+- physically replace the active smaller disk with a larger disk
+- resize the ext3 partition
+
+Guy
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of matt brennan
+Sent: Saturday, October 23, 2004 12:11 AM
 To: linux-raid@vger.kernel.org
-Subject: md on partition
+Subject: Resizing raid-1 on replacing failed disk
 
-Hi folks.
+I would like replace a failed disk in a raid-1 with a larger disk - and 
+ultimately increase the size of the array (and ext3 partition) by 
+subsequently adding a second larger disk in lieu of the currently active 
+one.
 
-I remembered that there was a discussion on the list about some abnormal
-performance penalty if u use a partition instead of a whole disk for MD.
-But I could not find this discussion via archival or google.
+I am hoping someone will scan the following and briefly reply: "this 
+looks ok" or "you forgot step(s) X" before I commence.
 
-Could somebody be kindly enough to point me to the right spot? Thanks a
-lot.
+<disclaimer>
+I have read the software-raid-howto, list faq, mdadm man pages and 
+trawled this mailing list to try to ensure I am not posting a question 
+that has been answered before. If you believe that this topic is well 
+covered elsewhere, please smack me up and post a link.
+</disclaimer>
 
-Ming
+Currently:
 
+kernel: 2.4.18
+mdadm: 0.7.2-2 (version reported by dpkg)
+
+> # mdadm --detail /dev/md0
+> /dev/md0:
+>         Version : 00.90.00
+>   Creation Time : Sun Dec 23 05:46:51 2001
+>      Raid Level : raid1
+>      Array Size : 39078016 (37.26 GiB 40.01 GB)
+>     Device Size : 39078016 (37.26 GiB 40.01 GB)
+>      Raid Disks : 2
+>     Total Disks : 2
+> Preferred Minor : 0
+>     Persistance : Superblock is persistant
+<snip>
+>     Number   Major   Minor   RaidDisk   State
+>        0       3        1        0      active sync   /dev/hda1
+>        1      22        1        1      faulty   /dev/hdc1
+>            UUID : 3e9f6b0c:e3c4d3cc:761130b2:d4f74686
+
+Plan:
+
+- backup
+- physcially remove the failed disk
+- physcially replace the failed disk with a larger disk
+- add the new disk to the array and allow to resync
+- fail and remove the active smaller disk
+- physcially replace the active smaller disk with a larger disk
+- resize the ext3 partition
+
+Help:
+
+Could you indicate whether this is possible with the listed kernel and 
+mdadm version before I kick off?
+
+Thanks and regards,
+
+   matt
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 -
 To unsubscribe from this list: send the line "unsubscribe linux-raid" in
