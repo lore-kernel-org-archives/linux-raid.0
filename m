@@ -1,17 +1,57 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+From: "Guy" <bugzilla@watkins-home.com>
 Subject: RE: Hardware versus Software
-Date: Fri, 21 May 2004 13:44:59 -0400
+Date: Fri, 21 May 2004 14:52:05 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189FAD4BE1@otce2k03.adaptec.com>
+Message-ID: <200405211852.i4LIqBB24688@www.watkins-home.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Class: urn:content-classes:message
-To: Ricky Beam <jfbeam@bluetronic.net>, Ben Edwards <ben@serverone.co.uk>
-Cc: Linux RAID List <linux-raid@vger.kernel.org>
+In-Reply-To: 
+To: "'Salyzyn, Mark'" <mark_salyzyn@adaptec.com>, 'Ricky Beam' <jfbeam@bluetronic.net>, 'Ben Edwards' <ben@serverone.co.uk>
+Cc: 'Linux RAID List' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
+
+I should have added...
+
+There are other reasons for going to hardware raid.
+Easy hot swap.  Some even indicate the bad drive with an LED.
+Disk surface testing.
+Bad block relocation.
+Parity verification.
+Mirror verification.
+Able to create logical disks that seem like physical disks to the OS.
+50% less IO bandwidth usage on a RAID1 system.
+I am sure there are others.  But CPU load would not be a factor.
+
+Not all hardware systems do all of the above.
+
+Anyone else know how much CPU load you have during a rebuild?
+
+Guy
+
+-----Original Message-----
+From: Guy [mailto:bugzilla@watkins-home.com] 
+Sent: Friday, May 21, 2004 2:39 PM
+To: 'Salyzyn, Mark'; 'Ricky Beam'; 'Ben Edwards'
+Cc: 'Linux RAID List'
+Subject: RE: Hardware versus Software
+
+From what I have seen, the XOR logic does not use much CPU.  Less than 5% on
+my 500Mhz P3 system during a rebuild of a 14 disk RAID5 array.  Rebuild rate
+of about 5000K/sec per disk, or 70MB/sec total.  It would be hard to say
+that a 5% load requires a CPU upgrade!
+
+Guy
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Salyzyn, Mark
+Sent: Friday, May 21, 2004 1:45 PM
+To: Ricky Beam; Ben Edwards
+Cc: Linux RAID List
+Subject: RE: Hardware versus Software
 
 CPU utilization is certainly one of the metrics we try our best to
 optimize for. When one drops CPU utilization on a server, one can opt
@@ -79,3 +119,9 @@ computational work which is one reason to use hw raids.
 To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 the body of a message to majordomo@vger.kernel.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
