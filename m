@@ -1,95 +1,67 @@
-From: "Rechenberg, Andrew" <ARechenberg@shermanfinancialgroup.com>
-Subject: Re: Firewire RAID bootparameters?
-Date: Fri, 12 Dec 2003 14:19:52 -0500
+From: Steven Dake <sdake@mvista.com>
+Subject: Patch to fix defect in raid 1 spinlocks
+Date: Fri, 12 Dec 2003 16:04:53 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1071256791.13023.3009.camel@localhost.localdomain>
-References: <3FD9B878.3070002@chemist.com>
+Message-ID: <1071270293.31245.47.camel@persist.az.mvista.com>
+Reply-To: sdake@mvista.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/mixed; boundary="=-C77/X8WV+uF5ir/QHAzw"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3FD9B878.3070002@chemist.com>
-To: Christer =?ISO-8859-1?Q?B=E4ckstr=F6m?= <cbackstrom@chemist.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I'm not sure which distro you're running, but we needed a module to loa=
-d
-before another one and I modified the linuxrc script in our initrd imag=
-e
-to change the load order.
 
-Red Hat (and probably other distros) initrd images have a script in the
-initrd image to load drivers.  You can loop mount the current image, ad=
-d
-the modules you need, modify the script, and then copy it back into
-/boot.
+--=-C77/X8WV+uF5ir/QHAzw
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 
-The initrd image in Red Hat is gzipped so this is the procedure that I
-follow:
+Folks,
 
-=2E *** MAKE A BACKUP COPY OF YOUR CURRENT INITRD AND BOOTLOADER CONF *=
-**
-=2E cp /boot/initrd.img /tmp
-=2E cd /tmp
-=2E mv initrd.img initrd.img.gz
-=2E gunzip initrd.img=20
-=2E mount -o loop initrd.img /mnt/cdrom
-=2E Copy any necessary modules to /mnt/cdrom/lib
-=2E Edit /mnt/cdrom/linuxrc and add a couple of lines to load your
-firewire module in the proper order.
-=2E umount /mnt/cdrom
-=2E gzip /tmp/initrd.img
-=2E cp /tmp/initrd.img.gz /boot/mynewinitrd.img
+I've audited the RAID 1 locking code in 2.4.23, and found a few
+problems.
 
-Then what I would do is make a new bootloader (LILO/GRUB) entry with al=
-l
-the same options except use your edited initrd image instead of the
-stock one.  That way you can test it, but still be able to boot with yo=
-u
-known-good initrd image.
+The first problem is that in one instance of locking,
+spin_lock_irq/spin_unlock_irq are called, without knowing the prior
+state of the irq flags.  The result is that irqs could be reenabled when
+they were disabled before the spin lock was taken.
 
-This is probably a big hack, but it worked for me :)
+The spinlock is located in the function raid1_alloc_bh.  This function
+is called by raid1_make_request (spin_lock_irq is safe in this call
+path).  It is also called by raid1d (spin_lock_irq is unsafe in this
+call path, and spin_lock_irqsave should be used instead).
 
-Hope this helps,
-Andy.
+Thanks
+-steve
 
+--=-C77/X8WV+uF5ir/QHAzw
+Content-Disposition: attachment; filename=raid-spinlock-fix1.patch
+Content-Type: text/plain; name=raid-spinlock-fix1.patch; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Fri, 2003-12-12 at 07:45, Christer B=C3=A4ckstr=C3=B6m wrote:
-> Hi,
->=20
-> I've recently bought a 160Gb firewire drive and RAID1:ed it to mirror=
- my=20
-> main harddrive. Unfortunately, the md subsystem seems to load before =
-the=20
-> firewire in the kernel bootsequence, which mean I have to do some wei=
-rd=20
-> stuff to make it work. Basically, I compiled the md system as modules=
-=20
-> (with the SCSI patch to make it work a bit better), and hid the modul=
-es=20
-> in a different directory, so they wouldn't load. I later load them in=
-=20
-> manually rc.sysinit. This work, but is a little clumsy. Is there a wa=
-y=20
-> to use append any boot-parameters to lilo to make the RAID subsystem=20
-> load the firewire system? Or is there another solution? Thanks,
->=20
->=20
-> /Chris
->=20
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
---=20
+--- linux-2.4.23/drivers/md/raid1.c	2003-06-13 07:51:34.000000000 -0700
++++ linux-2.4.23.raidfix/drivers/md/raid1.c	2003-12-12 15:53:13.000000000 -0700
+@@ -62,10 +62,11 @@
+ 	 * get all we need, otherwise we could deadlock
+ 	 */
+ 	struct buffer_head *bh=NULL;
++	unsigned long flags;
+ 
+ 	while(cnt) {
+ 		struct buffer_head *t;
+-		md_spin_lock_irq(&conf->device_lock);
++		md_spin_lock_irqsave(&conf->device_lock, flags);
+ 		if (!conf->freebh_blocked && conf->freebh_cnt >= cnt)
+ 			while (cnt) {
+ 				t = conf->freebh;
+@@ -76,7 +77,7 @@
+ 				conf->freebh_cnt--;
+ 				cnt--;
+ 			}
+-		md_spin_unlock_irq(&conf->device_lock);
++		md_spin_unlock_irqrestore(&conf->device_lock, flags);
+ 		if (cnt == 0)
+ 			break;
+ 		t = kmem_cache_alloc(bh_cachep, SLAB_NOIO);
 
-Regards,
-Andrew Rechenberg
-Infrastructure Team, Sherman Financial Group
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--=-C77/X8WV+uF5ir/QHAzw--
+
