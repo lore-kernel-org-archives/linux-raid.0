@@ -1,82 +1,60 @@
-From: Saurabh Barve <sa@atmos.colostate.edu>
-Subject: RAID5 creation problems
-Date: Thu, 28 Oct 2004 16:04:51 -0600
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: RAID-6: help wanted
+Date: Fri, 29 Oct 2004 10:43:50 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <41816D03.9060706@atmos.colostate.edu>
+Message-ID: <16769.37446.970293.945527@cse.unsw.edu.au>
+References: <cleqh6$ps4$1@terminus.zytor.com>
+	<16764.37392.910080.718564@cse.unsw.edu.au>
+	<20041025062026.GA17502@jim.sh>
+	<16767.6168.695527.234379@cse.unsw.edu.au>
+	<417F30C7.9050308@zytor.com>
+	<20041027060018.GA17085@jim.sh>
+	<418048C1.8030404@zytor.com>
+	<20041028160003.GA3502@jim.sh>
+	<4181313D.5050905@zytor.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------080909080405000802060102"
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
-Cc: Saurabh Barve <sa@atmos.colostate.edu>
+In-Reply-To: message from H. Peter Anvin on Thursday October 28
+To: "H. Peter Anvin" <hpa@zytor.com>
+Cc: Jim Paris <jim@jtan.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This is a multi-part message in MIME format.
---------------080909080405000802060102
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+On Thursday October 28, hpa@zytor.com wrote:
+> Jim Paris wrote:
+> > 
+> > Another issue:  If I create a 6-disk RAID-6 array ...
+> > 
+> > ... with 2 missing, no resync happens.
+> > ... with 1 missing, no resync happens.  (???)
+> > ... with 0 missing, resync happens.
+> > ... with 2 missing, then add 1, recovery happens.
+> > ... with 0 missing, then fail 1, resync continues.
+> > 
+> > Shouldn't resync happen in the created-with-1-disk-missing case?
+> > 
+> 
+> Nevermind, I guess it probably should, since there is still redundancy 
+> and therefore it can be inconsistent.
+> 
+> 	-hpa
 
-Hi,
+I have a patch to mdadm to make it resync when there is one failure,
+but I'm no longer convinced that it is needed.
+In fact, the initial resync isn't really needed for raid6 (or raid1)
+at all.  The first write to any stripe will make the redundancy for
+that stripe correct regardless of what it was, and before the first
+write, the content of the array is meaningless anyway.
 
-I created a new software RAID 5 array with fresh hard disks. I used 
-mkraid to generate the RAID array with four devices /dev/hdc1, 
-/dev/hdd1, /dev/hdg1, and /dev/hdh1. I formatted the drives clean, usd 
-mkfs to create ext3 filesystems on each, then used 'mkraid /dev/md0' to 
-create the RAID. I then used the command 'mke2fs -j -b 4096 -R stride=16 
-/dev/md0' to create the filesystem on /dev/md0. I read somewhere that 
-the chunk-size parameter in the /etc/raidtab file match the value of the 
-block size multiplied by the stride value in the command above. The 
-chunk-size in my /etc/raidtab file is 64. I then started the RAID using 
-'raidstart /dev/md0'. I was able to mount the partition correctly. 
-However, when I tried to examine the status of the RAID array using 
-mdadm, it showed /dev/hdg1 as being 'faulty removed'. I then hot added 
-/dev/hdg1 to the array, and it started the rebuild process.
+Note that this is different to raid5 which, if using a
+read-modify-write cycle, depends on the parity block being correct.
 
-Today the array finished rebuilding, and all the hard drives seemed to 
-be included in the RAID array. fsck also reported /dev/md0 to be clean. 
-However, 'mdadm --detail --scan /dev/md0' shows the status as "Dirty".
+There would be an issue once we start doing background scans of the
+arrays as the first scan could find lots of errors.  But maybe that
+isn't a problem....
 
-Since, this didn't work as I had expected, I formatted my disks again, 
-and tried using the following command to create the RAID array:
-"mdadm -C /dev/md0 -c 64 -l raid5 -p left-symmetric -n 4 /dev/hdc1 
-/dev/hdd1 /dev/hdg1 /dev/hdh1".
+I'll probably include the patch in the next mdadm release, and revisit
+the whole idea when (if) I implement background array scans.
 
-This created the RAID array, but when I went to examine the array (mdamd 
--E /dev/md0), I still got an error:
-"mdadm: No super block found on /dev/md0 (Expected magic a92b4efc, got 
-00000000)"
-
-And 'mdadm --detail --scan /dev/md0' still returns the state of the 
-array as 'dirty, degraded, recovering', and this time it is spare 
-rebuilding /dev/hdh1.
-
-What do the error messages mean?
-
-Saurabh.
-
-
-
-
-
---------------080909080405000802060102
-Content-Type: text/x-vcard; charset=utf-8;
- name="sa.vcf"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="sa.vcf"
-
-begin:vcard
-fn:Saurabh Barve
-n:Barve;Saurabh
-org:Colorado State University;Department of Atmospheric Science
-adr:;;4100 West Laporte Avenue;Fort Collins;CO;80523;USA
-email;internet:sa@atmos.colostate.edu
-title:Systems Administrator
-tel;work:(970) 491-7714
-tel;home:(970) 416-7512
-x-mozilla-html:TRUE
-version:2.1
-end:vcard
-
-
---------------080909080405000802060102--
+NeilBrown
