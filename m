@@ -1,34 +1,54 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: mdadm --assemble --scan hassles....
-Date: Wed, 29 Oct 2003 11:04:13 +1100
+From: Maurice Hilarius <maurice@harddata.com>
+Subject: Re: I'm about ready to do SW-Raid5 - pointers needed
+Date: Tue, 28 Oct 2003 21:33:16 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16287.1021.187640.232407@notabene.cse.unsw.edu.au>
-References: <20031008111709.GV1277@hvs.envisage.co.za>
-	<16270.5184.302596.951547@notabene.cse.unsw.edu.au>
-	<20031025212433.GE23767@hvs.envisage.co.za>
-	<16285.38655.754527.236684@notabene.cse.unsw.edu.au>
-	<20031028062445.GD3236@hvs.envisage.co.za>
-	<3F9E5369.6050203@fantinibakery.com>
+Message-ID: <5.1.1.6.2.20031028213128.03ac8370@mail.harddata.com>
+References: <Pine.LNX.4.44.0310281327090.8137-100000@redhat1.mmaero.com>
+ <Pine.LNX.4.44.0310281327090.8137-100000@redhat1.mmaero.com> <Pine.LNX.4.56.0310281910090.25548@unicorn.drogon.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from rob on Tuesday October 28
-To: rob <rob@fantinibakery.com>
-Cc: Hendrik Visage <hvisage@envisage.co.za>, linux-raid@vger.kernel.org
+In-Reply-To: <Pine.LNX.4.56.0310281910090.25548@unicorn.drogon.net>
+References: <Pine.LNX.4.44.0310281327090.8137-100000@redhat1.mmaero.com>
+ <Pine.LNX.4.44.0310281327090.8137-100000@redhat1.mmaero.com>
+To: Gordon Henderson <gordon@drogon.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday October 28, rob@fantinibakery.com wrote:
-> AFAIK you don't need DEVICE and ARRAY entries in mdadm.conf
-> 
-> I only use MAILADDR    PROGRAM    entries to monitor the array.
-> 
+With regards to your message at 12:14 PM 10/28/03, Gordon Henderson. Where 
+you stated:
+>Who knows. I've just tried to swap the 2 promise cards for 2 highpoint
+>cards - with fairly disastrous results )-: It booted, recognised the 4
+>disks (hde,g,i,k) but then started to whinge about DMA errors and general
+>badness, so put the promise cards back in and it's now hapilly rebuilding
+>the raid arrays.
+>
+>Maybe it's having 2 promise (or highpoint) cards? I had one highpoint card
+>in another PC for a few days and it was performing well...
+>
+>It's very annoying, whatever it is, and unfortunately I don't have the
+>resources or time to try to really get to the bottom of this )-:
+>
+>Gordon
 
-It depends on what you want mdadm to do for you.
 
-If you want it to assemble your arrays, then DEVICE and ARRAY help
-alot.
-If you only want it to monitor your arrays, then MAILADDR and PROGRAM
-are all you need.
+3Ware.
+They work.
+Reliable
+Decent Open Source drivers.
+Decent support
+Fast.
+Do either hardware RAID ( real hardware RAID, not Promise so-called version)
+Make lovely 2, 4 8, or 12 port devices for MD RAID.
+12 channels, 12 disks, ummm, tasty.
 
-NeilBrown
+
+
+With our best regards,
+
+Maurice W. Hilarius       Telephone: 01-780-456-9771
+Hard Data Ltd.               FAX:       01-780-456-9772
+11060 - 166 Avenue        mailto:maurice@harddata.com
+Edmonton, AB, Canada      http://www.harddata.com/
+    T5X 1Y3
+
