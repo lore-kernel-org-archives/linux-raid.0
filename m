@@ -1,49 +1,27 @@
-From: "Macmedic" <adminmanager@carmax.com>
-Subject: FreeMort gageQuotes
-Date: Wed, 25 Aug 2004 16:05:34 -0600
+From: Bob Hillegas <bobhillegas@houston.rr.com>
+Subject: Raid1 auto-detection...
+Date: Wed, 25 Aug 2004 17:35:23 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <hqghumeayl.6189279543lfdxfircvs__46337.9677421928$1093471197$gmane$org@Macmedicxggbwkf.com>
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
+Message-ID: <1093473322.2398.12.camel@south.rosestar.lan>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-diald@vger.kernel.org, linux-kernel-owner@vger.kernel.org, linux-kernel@vger.kernel.org, linux-net@vger.kernel.org, linux-raid@vger.kernel.org, linux-scsi-digest@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-exalting ornament sapphire notarize working 
+I am currently using Fedora Core 2 kernel 2.6.8-1.521smp. I have set up
+a raid1 on /dev/md0 from /dev/sda1 & /dev/sdb1. Both partitions have
+been set to type 0xfd.
 
-- Programs for every credit situation 
-- Lenders reply within 24 hours 
-- Borrow up to 125% of your homes value 
-- Special programs for self employed 
-- No income verification programs
+When I boot the raid is not started. After the boot has completed I can
+manually mdadm --assemble --scan & mdadm --stop --scan, so I know I have
+a workable raid1 setup.
 
-1. Fill out our quick form http://staunchest.akngfdm.info/?lyn8T9lo.psOalRblight
+Q1) How do I check the kernel to see whether auto-detection is included?
 
-2. You will receive offers from up to FIVE different
-lenders that will have you pre-approved
+Q2) Can you point me to a good site for compiling in auto-detection?
 
-3. Then, YOU decide. You receive quotes
-with no cost or obligation.
-
-Carlton Allison reformer lockers hurlers
-wooed Antilles departures wearer 
-Louisa signalled rawest hooper plainly
-bunks testimony
-therapy Greekize opulent blooper fortifies
-benchmark torus barbecued Maynard 
-homicide experience summertime spruced guard
-triggers thereon
-reinforces scythes lorry wanders Julia
-Marcello clank botch draining 
-developer Salvatore chirping instructor iterate
-apprised extremists
-mechanisms rafter spoked Bradbury wrangled
-rawer forces benched adjoining 
-pooch deriving grown shackle wigwam
-stunt chopped
-vertebrate exceeds trampled glories smelly
-seeding furnished reinserts debate 
-dining Nicklaus reassigned mediator charming
-suggests narrate
-
-
+Thanks, BobH
+-- 
+Bob Hillegas <bobhillegas@houston.rr.com>
