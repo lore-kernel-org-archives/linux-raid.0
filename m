@@ -1,57 +1,42 @@
-From: "James R Bamford" <jim@jimtreats.com>
-Subject: RE: Software Raid 1 data corruptions..
-Date: Sat, 15 Nov 2003 23:19:37 -0000
+From: Farkas Levente <lfarkas@bnap.hu>
+Subject: how to which to bigger disk (md can do it?)
+Date: Sun, 16 Nov 2003 12:03:46 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <PPEOJEIEFLAONFNHJPOOCEEOGOAA.jim@jimtreats.com>
-References: <Pine.LNX.4.44.0311151155150.28018-100000@coffee.psychology.mcmaster.ca>
+Message-ID: <3FB75992.3020608@bnap.hu>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44.0311151155150.28018-100000@coffee.psychology.mcmaster.ca>
-To: Mark Hahn <hahn@physics.mcmaster.ca>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> > I just got it mounted and copied a file into it.. a 450meg
-> image file... I
-> > started running some md5 tests on the file (paranoid from other machines
-> > recently having hdd corruptions) sadly i started to get this
-> kind of result
-> >
-> > [jim@backup test]$ md5sum image.nrg
-> >  3b5da2f7ad0e174421306b62a636fa12  image.nrg
-> >
-> > [jim@backup test]$ md5sum image.nrg
-> >  4e815cd2c3ab565315ef47f53665f6ba  image.nrg
-> >
-> > [jim@backup test]$ md5sum image.nrg
-> >  a14990ebfd5c502a68c29e2f789a34dd  image.nrg
->
-> this isn't a via motherboard, is it?  have you run memtest86 overnight?
->
+hi,
+we've got a server with 3ware 7500-8 and 8 pieces of 120 GB maxtor hd 
+and software raid-5. the 1TB disk is running out of the space so we 
+decided to switch to 200 GB hard disks. unfortunately there is only one 
+day (saturday) when we can turn off the machine. how we can do it in the 
+fastest way?:
+- put the 8 disk to another server and run rsync through two gigabit 
+ethernet card. but it can takes more than a day to sync about 800GB.
+- switch the disks one-by-one in the current server and leave linux's 
+software raid to sync the data. in this case we only have to stop the 
+system a few mintues per day and takes 8 days, but continous operation. 
+does it possible? after I put all new hard disk the totel capacity will 
+be (8-1)*200 GB or it will remain (8-1)*120 GB? since during the disk 
+switch the total space is the smallest hd's*(n-1), but what happens when 
+I put the last 200GB disk?
+- dd (or somehow imageing) the one 120GB disk content to one 200 GB 
+disk. if they are on the same ide bus (or better on the same 3ware 
+controller) the cloning is much faster. can I do a
+dd if=/dev/sda1 of=/dev/sdb1
+if they are different size and after the dd the second will be 200 GB 
+raid component?
+- rsync between two local disk?
+any other or better solution?
+thanks in advance.
+yours.
 
-Ok well i have been doing a memtest on the machine since last replying..
-coming up to 5 and a half hours now with no errors.. when i get back into
-linux i think i will try mounting the hdds seperately and running md5sum
-simultaneously on each drives copy of the file.. i guess this is quite a
-good approximation of simultaneous reading that is done with RAID.. you'd
-think the majority of the task will be this simultaneous reading, perhaps
-that will cause problems which may indicate my hardware card is at fault..
+-- 
+   Levente                               "Si vis pacem para bellum!"
 
-ANy other tips, pointers.. you guys are my only help on this really, I don't
-know where else to ask about this.. most linux irc channels etc have no RAID
-experience..
-
-Cheers
-
-Jim
-
-> > patches i can try.. should i abandon linux for raid and try
-> using windows...
->
-> egads.  there are billions and billions of ide-based linux servers
-> out there, and most of them work fine.  your task is to find out what's
-> wrong with your hardware.
->
 
