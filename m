@@ -1,18 +1,17 @@
-From: Joshua Baker-LePain <jlb17@duke.edu>
+From: mru@kth.se (=?iso-8859-1?q?M=E5ns_Rullg=E5rd?=)
 Subject: Re: 3ware escalade vs software raid, from a different jeff
-Date: Thu, 19 Feb 2004 07:06:32 -0500 (EST)
+Date: Thu, 19 Feb 2004 13:11:30 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.58.0402190704420.25541@chaos.egr.duke.edu>
-References: <Pine.LNX.4.44.0402191118090.10623-100000@praktifix.dwd.de>
+Message-ID: <yw1xd68b5kwd.fsf@ford.guide>
+References: <20040218214840.GS20790@datavibe.net> <Pine.LNX.4.44.0402191118090.10623-100000@praktifix.dwd.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44.0402191118090.10623-100000@praktifix.dwd.de>
-To: Holger Kiehl <Holger.Kiehl@dwd.de>
-Cc: "Rev. Jeffrey Paul" <sneak@datavibe.net>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 19 Feb 2004 at 11:49am, Holger Kiehl wrote
+Holger Kiehl <Holger.Kiehl@dwd.de> writes:
 
 > In my opinion no. Most of the cheaper hardware raids are really just
 > software raid solutions. For the more expansive once always remember
@@ -20,12 +19,15 @@ On Thu, 19 Feb 2004 at 11:49am, Holger Kiehl wrote
 > will get them in two or three years. Some vendors do no longer exist
 > or no longer support that product.
 
-I fully agree on avoiding cheap "hardware" RAID cards.  Regarding drivers 
-going away, though, the 3ware drivers are open source and have been in the 
-kernel for a long time.  If 3ware were to disappear (unlikely), I'd be 
-willing to bet that the drivers stay supported by the community.
+Wasn't there some talk recently about standardizing the on-disk
+format for both hardware and software RAID?
 
--- 
-Joshua Baker-LePain
-Department of Biomedical Engineering
-Duke University
+--=20
+M=E5ns Rullg=E5rd
+mru@kth.se
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
