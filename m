@@ -1,48 +1,45 @@
-From: Mario Giammarco <mgiammarco@virgilio.it>
-Subject: Re: RAID1 VS RAID5
-Date: Tue, 28 Oct 2003 11:46:57 +0100
+From: "Martin Bene" <martin.bene@icomedias.com>
+Subject: AW: RAID1 VS RAID5
+Date: Tue, 28 Oct 2003 11:51:21 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1067338017.1282.8.camel@cala>
-References: <1067179519.1222.107.camel@cala>
-	 <20031026165537.GW26480@mea-ext.zmailer.org>
+Message-ID: <4D618F6493CE064A844A5D496733D667031D77@freedom.icomedias.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20031026165537.GW26480@mea-ext.zmailer.org>
-To: Matti Aarnio <matti.aarnio@zmailer.org>
+Content-class: urn:content-classes:message
+To: Mario Giammarco <mgiammarco@virgilio.it>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Il dom, 2003-10-26 alle 17:55, Matti Aarnio ha scritto:
+>> OTOH, you have access to the source code if you really want 
+>> to try it 
+>> another way.
+>
+>So again my first question thats seems to go ignored: does someone have
+>made a patch? Is there some line to put in raidtab to change raid1
+>behavior?
 
->  Performance boosting isn't primary goal in RAID schemes involving
->  data replication.
-> 
-RAID5 offers a nice performance boosts.
+There used to be a patch for that, from the readme:
 
+> Operation:
 
+> In normal raid1 code (raidtools 0.90), reads are distributed
+> in a very fine grained fashion, new read will get new disk.
+> Only exception are sequential reads, which are never distributed.
 
->  For RAID1 a suitably chosen read-interleave could be used to improve
->  _large_ file reads, of course.  Another strategy is to distribute read
->  operations to all online disks forming up the RAID1 set with elevators
->  of their own.
-> 
-> > Is there a patch to change raid1 behaviour?
-> 
->  If it feels important, such can be made.
-> 
+> This patch records a logical linear position of head in every
+> disk in array. Then when read requests is made it tries to
+> find a disk which head is closest to the requested block and
+> uses that disk. Initial measurements show performance gain
+> in reading and in seeking with many readers.
 
-Who will make it?
+> Flames, comments, improvements, benchmarks greatly 
+> appreciated. Send them to miku@iki.fi
 
+No idea if this is still applicable to current raid code or still maintained;
+the old stuff used to be at 
 
-> > In linux 2.6.0 is it better?
-> 
->  It can be made, if it isn't.
+http://www.icon.fi/~mak8/raid1/
 
-So? 2.6.0 have different raid1 code?
-
-
--- 
-Mario Giammarco.it
-
+Yours, martin
