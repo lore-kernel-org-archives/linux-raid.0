@@ -1,23 +1,44 @@
-From: ptb@lab.it.uc3m.es (Peter T. Breuer)
+From: Andy Smith <andy@lug.org.uk>
 Subject: Re: ext3 journal on software raid (was Re: PROBLEM: Kernel 2.6.10 crashing repeatedly and hard)
-Date: Wed, 5 Jan 2005 16:48:00 +0100
-Message-ID: <gqeta2-td3.ln1@news.it.uc3m.es>
-References: <41DBC7DE.509@wasp.net.au> <200501051517.j05FHv925754@www.watkins-home.com>
+Date: Wed, 5 Jan 2005 16:30:34 +0000
+Message-ID: <20050105163034.GM99565@caffreys.strugglers.net>
+References: <200501051517.j05FHv925754@www.watkins-home.com> <Pine.LNX.3.96.1050105072829.9415A-100000@Maggie.Linux-Consulting.com> <20050105162337.GL99565@caffreys.strugglers.net>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="mJozIRmlDRkE95ph"
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20050105162337.GL99565@caffreys.strugglers.net>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Guy <bugzilla@watkins-home.com> wrote:
-> I agree, but for a different reason.  Your reason is new to me.
-> I don't want a down system due to a single disk failure.
-> Loosing the swap disk would kill the system.
-> 
-> Maybe this is Peter's cause of frequent corruption?
 
-I wouldn't have aid there were frequent failures!  There are relatively
-frequent disk errors, at the rate of probably 10 bits per hundred
-machines per week. I do not think that is very frequent.
+--mJozIRmlDRkE95ph
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Peter
+On Wed, Jan 05, 2005 at 04:23:37PM +0000, Andy Smith wrote:
+> ometimes) or those of us in the real world where swap is desirable
+> and may (sometimes) be used, a swap device failure *will* *take*
+> *the* *machine* *down*.
 
+Something strange happened with vim there.  That was meant to read:
+
+"For those of us in the real world where swap is (sometimes)
+desirable and may (sometimes) be used, a swap device failure *will*
+*take* *the* *machine* *down*."
+
+--mJozIRmlDRkE95ph
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.0 (FreeBSD)
+
+iD8DBQFB3BYqIJm2TL8VSQsRAlbvAKCeFYOaW6noWfvpU36b+k9TMPwkSwCfT2Na
+mn8v4qxsrF5EBgjdZlHH/Fk=
+=kCBt
+-----END PGP SIGNATURE-----
+
+--mJozIRmlDRkE95ph--
