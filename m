@@ -1,9 +1,9 @@
 From: hpa@zytor.com (H. Peter Anvin)
-Subject: Re: Call for RAID-6 users
-Date: Thu, 5 Aug 2004 23:51:16 +0000 (UTC)
+Subject: Re: Kernel panic, FS corruption  Was: Re: Call for RAID-6 users
+Date: Thu, 5 Aug 2004 23:54:30 +0000 (UTC)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <ceuh5k$reo$1@terminus.zytor.com>
-References: <cds76e$ee7$1@terminus.zytor.com> <200407302311.04942.maarten@ultratux.net> <200407302338.33823.maarten@ultratux.net>
+Message-ID: <ceuhbm$rgs$1@terminus.zytor.com>
+References: <cds76e$ee7$1@terminus.zytor.com> <200407310228.27969.maarten@ultratux.net> <200408011503.20452.maarten@ultratux.net> <20040801180536.GA3897@jim.sh>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
@@ -11,36 +11,21 @@ Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Followup to:  <200407302338.33823.maarten@ultratux.net>
-By author:    maarten van den Berg <maarten@ultratux.net>
+Followup to:  <20040801180536.GA3897@jim.sh>
+By author:    Jim Paris <jim@jtan.com>
 In newsgroup: linux.dev.raid
 >
-> On Friday 30 July 2004 23:11, maarten van den Berg wrote:
-> > On Saturday 24 July 2004 01:32, H. Peter Anvin wrote:
+> > I eventually got a kernel panic when copying large amounts of data to a 
+> > [degraded] raid6 array, which this time was the full 600 GB size.
+> > Don't know if it is helpful to anyone but info below:
 > 
-> > I'm still early in the testing phase, so nothing to report as yet.
-> > But I have a question:  I tried to reproduce a reported issue when creating
-> > a degraded raid6 array.  But when I created a raid6 array with one disk
-> > missing, /proc/mdstat reported no resync going on.  Am I not correct in
-> > assuming that raid6 with 1 missing drive should at least start resyncing
-> > the other drive(s) ?  It would only be really degraded with two missing
-> > drives...
-> >
-> > So instead, I defined a full raid6 array which it is now resyncing...
-> > My resync speed is rather slow (6000K/sec). I'll have to compare it to
-> > resyncing a raid5 array though before concluding anything from that.  Cause
-> > this system is somewhat CPU challenged indeed: a lowly celeron 500.
-> 
-> To confirm, after stopping the raid6 array (didn't want to wait this long) I 
-> created a raid5 array on the same machine and it resyncs at 14000K/sec.
-> Is this expected behaviour, the 6M/sec for raid6 vs 14M/sec for raid5 ?
-> I suppose raid6 has to sync two drives, which would maybe explain the speed 
-> difference(?)   In any case, hdparm -tT report 50M/sec on each single drive. 
-> Is this discrepancy in speed normal ?
-> (yes yes, I played with the /proc/sys/dev/raid/ speed settings (to no avail))
+> The panic is from reiserfs, and it's occuring because the FS is
+> getting corrupted due to the raid6 problems.
 > 
 
-A newly created RAID-5 array uses a special trick to do the initial
-sync faster.  Unfortunately that trick is not possible for RAID-6.
+It's still very odd to me that so far the only thing that triggers
+this kind of problems is reiserfs.  Either reiserfs just has a really
+odd series of access patterns, or it is relying on behaviour which
+isn't actually guaranteed.  I suspect the former, but it's still odd.
 
 	-hpa
