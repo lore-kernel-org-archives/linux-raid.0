@@ -1,15 +1,35 @@
-From: "Rolf Schatzmann" <rolf@mactherapy.com>
-Subject: Adding more disks to existing Raid5 Array
-Date: Sat, 15 May 2004 01:03:37 +0800
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: Adding more disks to existing Raid5 Array
+Date: Fri, 14 May 2004 13:28:58 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <030f01c439d5$69099730$bc6a9aca@scorp>
+Message-ID: <200405141729.i4EHT3B25545@www.watkins-home.com>
+References: <030f01c439d5$69099730$bc6a9aca@scorp>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <030f01c439d5$69099730$bc6a9aca@scorp>
+To: 'Rolf Schatzmann' <rolf@mactherapy.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+A tool called Raidreconf can do what you want.
+I have never used it.
+I don't know how much risk there is in data loss.
+I would backup my data first!
+
+Find it, read about it, understand it.
+
+Maybe someone else can comment on the risks?
+
+Guy
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Rolf Schatzmann
+Sent: Friday, May 14, 2004 1:04 PM
+To: linux-raid@vger.kernel.org
+Subject: Adding more disks to existing Raid5 Array
 
 
 
@@ -60,5 +80,11 @@ to copy everything off, make a new array and then copy it all back?
 Help appreciated as always.
 
 Rolf
+
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
