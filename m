@@ -1,87 +1,70 @@
-From: Paul Clements <Paul.Clements@SteelEye.com>
-Subject: Re: 3ware and scsi ids
-Date: Tue, 10 Jun 2003 12:21:12 -0400
+From: Steven Dake <sdake@mvista.com>
+Subject: Re: PDC202xx with 130GB+ disk
+Date: Tue, 10 Jun 2003 12:26:37 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3EE60578.15B28E20@SteelEye.com>
-References: <12F8DBE91382164-01@MMS__ad.corp.aoltw.net_>
+Message-ID: <3EE630ED.2080708@mvista.com>
+References: <Pine.LNX.4.53.0306101349300.4820@duplo.agenda.si>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: "Deas, Jim" <James.Deas@warnerbros.com>
-Cc: Linux RAID Mailing Liste <linux-raid@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.53.0306101349300.4820@duplo.agenda.si>
+To: danci@agenda.si
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-"Deas, Jim" wrote:
-> 
-> Have you tried this on the 3ware product? They do not
-> return scsi data as a normal drive would. As far as I
-> can tell, without making a 3ware specific system call
-> you can not get a unique serial number from the drives.
+I could be wrong, but I think extended bios support for large disks was 
+only added in 2.4.19. And it is a kernel config option.
 
-The UUID referenced below is gotten from the md device superblock (data
-written to the end of the disk) so there shouldn't be any issues with
-devices that do not return a valid SCSI serial number or device ID.
+Try google, you may find more accurate information
 
---
-Paul 
+Thanks
+-steve
 
+danci@agenda.si wrote:
 
- 
-> -----Original Message-----
-> From: Friedrich Lobenstock [mailto:fl@fl.priv.at]
-> Sent: Friday, June 06, 2003 4:51 PM
-> To: Linux RAID Mailing Liste
-> Cc: linux-scsi@vger.kernel.org
-> Subject: Re: 3ware and scsi ids
-> 
-> Deas, Jim wrote:
-> > I am currently using 3wares products to create 2T raids.
-> > To increase performance on my NAS type boxes I am
-> > using software raids.
-> >  My problem relates to a falure of a IDE drive.
-> > Once a drive fails the next boot of the machine remaps all scsi ids.
-> > so /dev/sda-adi becomes /dev/sda-sdh.
-> > In short, if /dev/sdb dies, all raids become bad as all scsi ids
-> > shift down making my raidtab file now point at the wrong drives.
-> > (I assume this will also be a possible problem when I use
-> > my USB dongle to update software.)
-> >
-> >  Is there a way to hard assign logical /dev/sd(x) in the driver
-> > so they will always map the same ide port on the 3ware controllers?
-> > 3ware is no help on this. They say it is the bios/system and they
-> > have no control over this.
-> 
-> You'd better use mdadm instead of the raidtools.
-> 
-> The config file for mdadm looks like this:
-> # cat /etc/mdadm.conf
-> DEVICE /dev/hd* /dev/sd*
-> ARRAY /dev/md0 level=raid1 num-devices=2 UUID=52094036:b2e9cf8b:4267c923:750757da
-> 
-> So you do not have to worry about which drive gets assigned which
-> scsi id.
-> 
-> A
->     /sbin/mdadm --assemble --scan
-> will do the trick.
-> 
-> Get it at http://www.cse.unsw.edu.au/~neilb/source/mdadm/
-> 
+>Hello!
+>
+>I have a problem with PDC202xx controller and WDC WD1800JB hard drives.
+>The PDC202xx shows only 130GB for this disks, while they should be 180GB.
+>
+>Since I have no physical access to the system (I'm administering it
+>remotly), I've instructed the local sysadmin to update the controller BIOS
+>to the lates revision which is supposed to support 42 bit LBA.
+>
+>That had no effect, fdisk still shows only 130GB available:
+>
+>Command (m for help): p
+>
+>Disk /dev/hde: 16 heads, 63 sectors, 266305 cylinders
+>Units = cylinders of 1008 * 512 bytes
+>
+>   Device Boot    Start       End    Blocks   Id  System
+>/dev/hde1             1    266305 134217719+  83  Linux
+>
+>Right now I have 2.4.18 kernel with (I think) no extra IDE or Promise
+>related patches.
+>
+>Is the PDC202xx driver in 2.4.18 too old to recognize more than 130GB???
+>Would kernel upgrade help?
+>
+> Thanks, D.
+>
+>
 > --
-> MfG / Regards
-> Friedrich Lobenstock
-> ____________________________________________________________________
-> Friedrich Lobenstock                       Linux Services Lobenstock
-> URL: http://www.lsl.at/                         Email: fl@fl.priv.at
-> ____________________________________________________________________
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>___________________________________________________________________
+>|    Danilo Godec    |     Agenda d.o.o.    |   ISP for business  |
+>|  jr. Syst. Admin   |    Gosposvetska 84   |     WAN networks    |
+>|  danci@agenda.si   |    si-2000 Maribor   |  Internet/Intranet  |
+>| tel:+386.2.2340860 |       Slovenija      | Application servers |
+>| fax:+386.2.2340854 | http://www.agenda.si |  Caldera OpenLinux  |
+>-
+>To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
+>
+>  
+>
+
