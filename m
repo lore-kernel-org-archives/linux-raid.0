@@ -1,15 +1,38 @@
-From: Michael Stumpf <mjstumpf@pobox.com>
-Subject: 2 drive dropout (and raid 5), simultaneous, after 3 years
-Date: Wed, 08 Dec 2004 15:02:50 -0600
-Message-ID: <41B76BFA.4030000@pobox.com>
-Reply-To: mjstumpf@pobox.com
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: 2 drive dropout (and raid 5), simultaneous, after 3 years
+Date: Wed, 8 Dec 2004 17:07:41 -0500
+Message-ID: <200412082207.iB8M7k915369@www.watkins-home.com>
+References: <41B76BFA.4030000@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <41B76BFA.4030000@pobox.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: mjstumpf@pobox.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+What failure are you getting?  I assume a read error.  md will fail a drive
+when it gets a read error from the drive.  It is "normal" to have a read
+error once in a while, but more than 1 a year may indicate a drive going
+bad.
+
+I test my drives with this command:
+dd if=/dev/hdi of=/dev/null bs=64k
+
+You may look into using "smartd".  It monitors and tests disks for problems.
+However, my dd test finds them first.  smartd has never told me anything
+useful, but my drives are old, and are not smart enough for smartd.
+
+Guy
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Michael Stumpf
+Sent: Wednesday, December 08, 2004 4:03 PM
+To: linux-raid@vger.kernel.org
+Subject: 2 drive dropout (and raid 5), simultaneous, after 3 years
 
 
 I've got a an LVM cobbled together of 2 RAID-5 md's.  For the longest 
@@ -37,5 +60,12 @@ Is this a known bug in 2.4.22 or mdadm 1.2.0?  Suggestions?
 
 
 --------------------------------------------
-My mailbox is spam-free with ChoiceMail, the leader in personal and corporate anti-spam solutions. Download your free copy of ChoiceMail from www.choicemailfree.com
+My mailbox is spam-free with ChoiceMail, the leader in personal and
+corporate anti-spam solutions. Download your free copy of ChoiceMail from
+www.choicemailfree.com
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
