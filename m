@@ -1,40 +1,35 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: Re: Half of RAID1 array missing on 2.6.7-rc3
-Date: Thu, 5 Aug 2004 22:34:25 +0200
+From: jef <jefv@factorylabs.com>
+Subject: adding a device to existing RAID 0
+Date: Thu, 05 Aug 2004 15:38:06 -0600
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040805203425.GE7030@percy.comedia.it>
-References: <16658.16220.904470.117836@gargle.gargle.HOWL> <16658.35999.308999.766527@gargle.gargle.HOWL> <20040805195229.GD7030@percy.comedia.it> <16658.37628.400095.731330@gargle.gargle.HOWL>
+Message-ID: <1091741886.5260.12.camel@HT.petrafex>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <16658.37628.400095.731330@gargle.gargle.HOWL>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Aug 05, 2004 at 04:05:16PM -0400, John Stoffel wrote:
->Luca> recent versions of lvm2 ignore md components by default or you
->Luca> can specify a filter in the configuration file.
->
->Which file is that?  There's nothing in /etc/dm/... that I can see.
->There's some stuff in /etc/lvm/lvm.conf, but I haven't touched that at
->all.
+after reading & googling all over the place I'm still uncertain that
+what I want to do will work. basically I have a 2 device RAID-0 with
+existing data on it.
 
-/etc/lvm/lvm.conf
+trogdor:# cat /proc/mdstat
+Personalities : [raid0]
+md0 : active raid0 sdc1[1] sdb1[0]
+      1809352448 blocks 8k chunks
+       
+unused devices: <none>
 
-if you have a recent version you will find a 
-md_component_detection = 1
-line,
-if not you can change the
-filter = [ "a/.*/" ]
-to
-filter = [ "a|/dev/md*|" ]
+What I'd like to do is add a third device to increase the capacity.
+According to the man page and numerous examples I've found, you can do
+this with:
 
+mdadm --add /dev/md0 /dev/sdd
 
--- 
-Luca Berra -- bluca@comedia.it
-        Communication Media & Services S.r.l.
- /"\
- \ /     ASCII RIBBON CAMPAIGN
-  X        AGAINST HTML MAIL
- / \
+the catch is that all the examples I've seen were for recovering a
+RAID-5 (removing a failed device then adding one). Does anyone know if
+this will work without destroying the existing data on a RAID-0? 
+
+Thanks in advance!
+
