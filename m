@@ -1,30 +1,39 @@
-From: Marcelo Tosatti <marcelo.tosatti@cyclades.com>
-Subject: Re: RAID-0 read perf. decrease after 2.4.20
-Date: Mon, 8 Dec 2003 11:21:37 -0200 (BRST)
+From: Stefan Myankov <kotak@poco-loco.org>
+Subject: Re: Software RAID-5 attempt to access beyond end of device...
+Date: Mon, 8 Dec 2003 19:55:31 +0200 (EET)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0312081121310.1289-100000@logos.cnet>
-References: <200312081411.04057.m.c.p@wolk-project.de>
+Message-ID: <Pine.LNX.4.53.0312081954550.2502@poco-loco.org>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200312081411.04057.m.c.p@wolk-project.de>
-To: Marc-Christian Petersen <m.c.p@wolk-project.de>
-Cc: Marcelo Tosatti <marcelo.tosatti@cyclades.com>, Mikael Johansson <mpjohans@pcu.helsinki.fi>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, riel@redhat.com, knobi@knobisoft.de, Jens Axboe <axboe@suse.de>, mason@suse.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
+On Mon, 8 Dec 2003, Mark Hahn wrote:
 
-On Mon, 8 Dec 2003, Marc-Christian Petersen wrote:
+> do they even work correctly as non-raid controllers?
 
-> On Monday 08 December 2003 13:47, Marcelo Tosatti wrote:
-> 
-> Hi Marcelo,
-> 
-> > 2.4.20-aa included rmap and some VM modifications most notably
-> > "drop_behind()" logic which I believe should be the reason for the huge
-> > read speedups. Can you please try it? Against 2.4.23.
-> 
-> -aa tree never had -rmap :)
+Yes.. They are intended to. I had my linux installed on a single drive on
+one of these controllers.
 
--ac I mean, sorry. 
 
+> I'm guessing these are 80G, right?
+
+Nope 160G all of them, sorry for not mentioning it.
+
+>
+> I belive there have been bugs like this in reiserfs.  of course,
+> you failed to give any hint about which kernel you might be using...
+>
+> if I were you, I'd immediately upgrade to the latest kernel.org kernel
+> (2.4.23), and do some serious testing...
+>
+
+The kernel version I use is 2.4.22. Since I'm using slackware linux distro
+I suppose it is a kenrel.org kernel. As for the filesystem, this would be
+the cause of the problem. I've ran multiple tests with bonnie++,
+performance is outstanding - 75mb/s sequential read 60mb/s write, just
+until drives fill up with data up to the mentioned point of 30-35%.
+As for the 2.4.23 stuff I could do it but I hoped that someone could give
+me a hint where might be the problem.
