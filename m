@@ -1,34 +1,37 @@
-From: Mario Giammarco <mgiammarco@virgilio.it>
-Subject: Re: AW: RAID1 VS RAID5
-Date: Tue, 28 Oct 2003 16:42:13 +0100
+From: "Michael" <michael@insulin-pumpers.org>
+Subject: Re: Booting from a raid1 device ?
+Date: Tue, 28 Oct 2003 08:23:21 -0800
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1067355733.1283.11.camel@cala>
-References: <4D618F6493CE064A844A5D496733D667031D77@freedom.icomedias.com>
+Message-ID: <200310281623.h9SGNG229162@bzs.org>
+References: <200310272311.19232.dusty@strike.wu-wien.ac.at>
+Reply-To: michael@insulin-pumpers.org
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D618F6493CE064A844A5D496733D667031D77@freedom.icomedias.com>
-To: Martin Bene <martin.bene@icomedias.com>
-Cc: linux-raid@vger.kernel.org
+In-reply-to: <20031028105644.GF30725@marowsky-bree.de>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Il mar, 2003-10-28 alle 11:51, Martin Bene ha scritto:
-
-> >So again my first question thats seems to go ignored: does someone have
-> >made a patch? Is there some line to put in raidtab to change raid1
-> >behavior?
+> On 2003-10-27T23:11:19,
+>    Hermann Himmelbauer <dusty@strike.wu-wien.ac.at> said:
 > 
-> There used to be a patch for that, from the readme:
-
-
-> No idea if this is still applicable to current raid code or still maintained;
-> the old stuff used to be at 
+> > BTW, assuming I have md.o not as module but statically in the kernel, which 
+> > bootloader would support RAID1? I heard LlLO does this job but does also grub 
+> > - which I prefer - support Linux SW-RAID1?
 > 
-> http://www.icon.fi/~mak8/raid1/
+> grub doesn't yet afaik.
+> 
+> > What about RAID5? Is there any bootloader that supports it?
+> 
+> No.
+> 
 
-Thank you, I remember about a patch. This seems very old I will try to
-email the maintainer.
--- 
-Mario Giammarco
+The appropriate solution is to put an 8-16 meg partition as the first 
+partition on the first two drives (all the drives) in the system. Set 
+those up as raid one and mount them on /boot. Use these as the boot 
+boot partitions in a mostly raid 5 system. Likewise, segment swap 
+partitions into pairs on the raid5 disk set and create raid 1 arrays 
+for swap
 
+Michael
