@@ -1,30 +1,33 @@
-From: Adam Luter <luterac@bellsouth.net>
-Subject: Re: RAID backup
-Date: Thu, 3 Oct 2002 08:40:34 -0500
+From: Jani Averbach <jaa@cc.jyu.fi>
+Subject: Re: BUG: 2.5.41 left raid array to unclean mode (Kernel bug at
+ raid1.c:667)
+Date: Tue, 8 Oct 2002 18:09:25 +0300 (EEST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20021003134034.GC15338@smeagol>
-References: <200210031120.g93BKLqK000216@darkstar.example.net>
+Message-ID: <Pine.GSO.4.33.0210081807180.20489-100000@tukki.cc.jyu.fi>
+References: <15778.27247.271665.487076@notabene.cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <200210031120.g93BKLqK000216@darkstar.example.net>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <15778.27247.271665.487076@notabene.cse.unsw.edu.au>
+To: Neil Brown <neilb@cse.unsw.edu.au>
+Cc: mingo@redhat.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-You would still have to mount -o remount,ro while doing this...
+On Tue, 8 Oct 2002, Neil Brown wrote:
 
-I'd just tape backup the actual files.  Then you can use that backup
-on something other than the same raid cluster/disks.  Also, you don't
-have to backup everything (such as /usr), unless you want to/can
-afford to.
+> Just remove the first instance of:
+>
+>   return NOTIFY_DONE;
+>
+> from drivers/md/md.c
+>
 
--Gryn (Adam Luter)
+Done that, and so far it seems to work ok.
 
-On Thu, Oct 03, 2002 at 12:20:21PM +0100, jbradford@dial.pipex.com wrote:
-> Might it not be a good idea to DD the raw contents of each disk to a
-tape drive, just incase you fubar the array?  It would be time
-consuming, but at least you could restore your data in the event that
-it gets corrupted.
-> 
-> John.
+Thanks,
+
+Jani
+
+--
+Jani Averbach
+
