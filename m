@@ -1,57 +1,89 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: md.c Kernel BUG(?) and reboot segfault
-Date: Mon, 28 Oct 2002 09:56:22 +1100
+From: "Vlad Milovanovic" <vlad@webmail.co.za>
+Subject: Re: promise sx6000 success / raid options
+Date: Mon, 28 Oct 2002 10:06:23 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <15804.28438.676002.891659@notabene.cse.unsw.edu.au>
-References: <200210241315.g9ODFKGV028540@pcrz175.hrz.uni-marburg.de>
+Message-ID: <200210280806.g9S86L220650@mailgate.mailbox.co.za>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Thomas Gebhardt on Thursday October 24
-To: Thomas Gebhardt <gebhardt@HRZ.Uni-Marburg.DE>
+To: Mikael Abrahamsson <swmike@swm.pp.se>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday October 24, gebhardt@HRZ.Uni-Marburg.DE wrote:
-> Hi,
-> 
-> just tried to configure rootfs Software-RAID1 on a Debian Woody
-> (SMP-Kernel 2.4.19 with some of the jp Patches applied). When I reboot
-> the machine, the final reboot command in /etc/init.d/reboot
-> segfaults after the following error messages:
-> 
-> md: stopping all md devices
-> invalidate; busy buffer
-> ...
-> md: marking sb clean
-> kernel BUG at md.c:1251!
+Hi,
 
-Line 1251 of md.c in 2.4.19 doesn't have a 'BUG' sop the 'jp Patches'
-must have moved things around.  Maybe if you could send me a copy of
-you md.c.....
+The stride option will, or should, inform the MD driver of the number
+of blocks that will fit in the single RAID stripe. To be useful, you
+have to fdisk the partition as Linux raid (I am sure that you have
+done this already, as it is the only way to autodetect). I am not sure
+how you have set up your filesystem, since you mention ext3 slowing
+things down and then using mke2fs???
 
-NeilBrown
+ext3 will not slow things down noticeably. I also don't know what type
+of disks and how many disks you are using, but 15 MB/s seems very
+slow. You have also not specified what RAID level you are using, so it
+is difficult to say what your performance should be (ballpark figure).
 
-> invalid operand: 0000
-> CPU:  1
-> EIP:  0010: [<c02080a2>]   Not tainted
-> EFLAGS:  00010202
-> ...
-> Segmentation fault
-> 
-> A second reboot command succeeds. So, as a workaround, I duplicated
-> the reboot command in /etc/init.d/reboot in order to shut the
-> system down without manual interaction.
-> 
-> Any hints what to do?
-> 
-> Thank you for your advice!
-> Cheers, Thomas
-> 
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Maybe you can post some more detailed specs, and then we can look into
+it more closely.
+
+But to answer your question, I have found stride option to make a huge
+impact in RAID 5 setups. Also, depending on what kind of system you
+are running, you may want to look into using the -T largefile (or some
+other) option, to let the filesystem reduce (or increase) the number
+of inodes that you have created. You should pay attention to the way
+that the RAID will be accessed most frequently, as you can use the
+many available options in mkfs and raidtab to your advantage to
+optimize your RAID for its particular purpose.
+
+Hope this helps,
+Cheers,
+
+Vlad.
+
+
+On Sat, 26 Oct 2002 14:35:58 +0200 (CEST) Mikael Abrahamsson
+(swmike@swm.pp.se) wrote:
+
+>
+>I had initial problems with a Promise SX6000 controller with the i2o
+block
+>driver and I also tried their source pti_st.o code but never got it
+to
+>compile. I emailed promise and got a response back quite quickly
+which
+>provided me with a new version of the source code version, plus beta
+>drivers they themselves compiled for redhat 7.3 and redhat 8.0
+kernels.
+>
+>I have today started using the redhat 8.0 kernel driver and it seems
+to
+>work very well. Write performance is approx 15 meg/s to a 5 times
+120gig
+>drive stripe (seems a bit on the low side if you ask me but that's ok
+>anyway, perhaps ext3 is slowing things down). I recommend anyone who
+have
+>problems with their SX6000 to do the same.
+>
+>I made the filesystem with just mke2fs -j and no raid options, is the
+>"stride" options anything I should use? Does it provide better
+>performance? (I tried finding some information on this, but the
+mke2fs man
+>page is so spread that all the search engines give me are copies of
+the
+>man page).
+>
+>--
+>Mikael Abrahamsson    email: swmike@swm.pp.se
+>
+>-
+>To unsubscribe from this list: send the line "unsubscribe linux-raid"
+in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+//--------------------------------------
+Vlad Milovanovic
+vlad@webmail.co.za
+_______________________________________________________________
+ http://www.webmail.co.za the South-African free email service
