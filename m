@@ -1,30 +1,60 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: max_sectors in libata when using md
-Date: Thu, 26 Aug 2004 13:26:22 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <412E1D3E.2050307@pobox.com>
-References: <412DFFA9.8030504@wasp.net.au> <8746466a0408260852205a7842@mail.gmail.com> <412E1039.7030508@pobox.com> <412E135B.1030605@wasp.net.au>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: Raid-0 speed
+Date: Thu, 26 Aug 2004 12:41:48 -0400
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <200408261641.i7QGfr317326@watkins-home.com>
+References: <412DB35B.7090802@wasp.net.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <412E135B.1030605@wasp.net.au>
-To: Brad Campbell <brad@wasp.net.au>
-Cc: Dave <dave.jiang@gmail.com>, linux-ide@vger.kernel.org, SCSI Mailing List <linux-scsi@vger.kernel.org>, RAID Linux <linux-raid@vger.kernel.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <412DB35B.7090802@wasp.net.au>
+To: 'Brad Campbell' <brad@wasp.net.au>, 'Daniel Pittman' <daniel@rimspace.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Brad Campbell wrote:
-> In which case, these drives need to be knocked back to UDMA66 to 
-> function properly on anything later than 2.6.6. Don't know why.
-> I have tried multiple drives (I have 5 of them), multiple cables (lots 
-> of those) and multiple bridge boards (I have 6 of those). There is no 
-> combination that is reliable on the VIA controller with any transfer 
-> larger than about 0x80 sectors *OR* speeds greater than UDMA66 *OR* 
-> Kernel 2.6.6 or prior.
+Based on the error message, 4096 should also fail.
 
+Guy
 
-We could always eliminate lba48 max-sectors increase on VIA controllers...
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Brad Campbell
+Sent: Thursday, August 26, 2004 5:55 AM
+To: Daniel Pittman
+Cc: linux-raid@vger.kernel.org
+Subject: Re: Raid-0 speed
 
-	Jeff
+Daniel Pittman wrote:
 
+>>With the raid-0 running, doing a dd if=/dev/md1 of=/dev/null I get about
+>>	55MB/s read speed.
+>>
+>>I can't quite figure out why the md is so slow. Given its using
+>>streaming reads with no seeking it should be over 100MB/s.
+> 
+> 
+> Your chunk size is way to low to give good streaming reads.  The kernel
+> needs to switch between devices every 128 kilobytes, while is rather
+> low.
+> 
+> Try slowly pushing the chunk size to 16384 and see when your performance
+> gets back up to your expected level.
+
+Nope.. Any chunk size > 4096 gives me
+too big chunk_size: 8388608 > 4194303.
+
+And the performance difference between chunk=16 and chunk=4096 is less than
+5MB/s
+
+--chunk=16 gives me   48.43 MB/s
+--chunk=4096 gives me 51.52 MB/s
+
+Regards,
+Brad
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
