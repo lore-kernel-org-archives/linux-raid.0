@@ -1,42 +1,33 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: mdadm problems with partitioned md devices
-Date: Wed, 24 Nov 2004 10:17:57 +1100
-Message-ID: <16803.50469.836305.127571@cse.unsw.edu.au>
-References: <41A39846.9070002@gmx.net>
+From: Robin Bowes <robin-lists@robinbowes.com>
+Subject: Re: Good news / bad news - The joys of RAID
+Date: Tue, 23 Nov 2004 23:02:55 +0000
+Message-ID: <41A3C19F.3000104@robinbowes.com>
+References: <Pine.LNX.4.44.0411231618160.20606-100000@coffee.psychology.mcmaster.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Carl-Daniel Hailfinger on Tuesday November 23
+In-Reply-To: <Pine.LNX.4.44.0411231618160.20606-100000@coffee.psychology.mcmaster.ca>
 Sender: linux-raid-owner@vger.kernel.org
-To: Carl-Daniel Hailfinger <c-d.hailfinger.kernel.2004@gmx.net>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday November 23, c-d.hailfinger.kernel.2004@gmx.net wrote:
-> Hi,
+Mark Hahn wrote:
+>>When will you learn?  :)
 > 
-> [please CC: me]
-> while trying to use md to overcome limitations of dm, I
-> stumbled upon the following problem: It is impossible to
-> have more than 4 partitioned md devices since mdadm will
-> create the 5th device with major:minor 255:0, which is
-> bogus.
+> 
+> exactly - you can conclude absolutely nothing from two samples.
+> 
 
-You need user-space (libc in particular) that supports the new 32bit
-device numbers in 2.6.  I don't know which version of glibc that would
-be, or which distributions support it.  debian/unstable (which I use)
-doesn't support it yet :-(
+I read that mail as "I stopped buying Maxtor (for whatever reason) then 
+tried them again and had an 100% failure rate (albeit with a small 
+sample size) so have stopped buying them again" rather than "I bought 
+two Maxtor drives that failed so Maxtor drives are shit".
 
-You could test your distribution with
-   mknod /tmp/test b 253 1024
-   ls -l /tmp/test
-   rm /tmp/test
+My own personal experience (I'm the OP in this thread) is that the 250GB 
+SATA Maxtor Maxline II drives I have purchased have an unacceptable 
+failure rate (something like 40% in 5 months)
 
-and see if the major/minor is reported as "253, 1024" or "253, 0".
-If the later, you need new glibc.
-If the former, your userspace is up-to-date but there must be a bug in
-mdadm.
-If this is the case, let me know and I will look into it.
-
-NeilBrown
+R.
+-- 
+http://robinbowes.com
