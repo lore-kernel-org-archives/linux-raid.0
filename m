@@ -1,49 +1,62 @@
-From: Alvin Oga <aoga@Maggie.Linux-Consulting.com>
-Subject: Re: RAID backup
-Date: Fri, 4 Oct 2002 04:20:40 -0700 (PDT)
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <Pine.LNX.3.96.1021004041421.5688A-100000@Maggie.Linux-Consulting.com>
-References: <3D9D6C84.F1736E15@llgc.org.uk>
+From: Jeff Byrkit <jbyrkit@pcpao.org>
+Subject: Re: mdadm and --program
+Date: Fri, 4 Oct 2002 07:45:53 -0400
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <200210040745.53281.jbyrkit@pcpao.org>
+References: <20021003205948.EC0F43B828@jaded.cynicism.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <3D9D6C84.F1736E15@llgc.org.uk>
-To: Illtud Daniel <illtud.daniel@llgc.org.uk>
-Cc: Effrem Norwood <enorwood@effrem.com>, Kanoalani Withington <kanoa@cfht.hawaii.edu>, Roy Sigurd Karlsbakk <roy@karlsbakk.net>, jbradford@dial.pipex.com, jakob@unthought.net, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20021003205948.EC0F43B828@jaded.cynicism.com>
+To: Derek Vadala <derek@cynicism.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Excellent. I'm new to scripting...guess it's time for this old vms hack to 
+learn shell programming....
+Thanks again.
 
-hi ya
+On Thursday, October 03 2002 04:59 pm, Derek Vadala wrote:
+> On Thu, 3 Oct 2002, Jeff Byrkit wrote:
+> > # mdadm --follow --program /etc/handle-mdadm-events  --delay 1 /dev/md0
+> >
+> > where handle-mdadm-events is (culled from previous posts):
+> >
+> > echo $*
+> > logger -p kern.crit -t RAID $*
+>
+> Does your script have a #! line at the top, for example:
+>
+> #!/bin/bash
+>
+> You could alternatively use:
+>
+> # mdadm --follow --program='/bin/bash /etc/handle-mdadm-events' --delay=1
+> /dev/md0
+>
+> > but I never get anything at my terminal or in the log. If I don't use the
+> > --program, it gives me:
+>
+> Don't forget to make sure /etc/syslog.conf has an appropriate entry too.
+>
+> > anyone have any ideas? can I do --program "echo $*" ? just to get it to
+> > do something?
+>
+> Yeah, but you don't need $* and you should use the full path to echo.
+>
+> # mdadm -F /dev/md0 -p/bin/echo -d1
+>
+> ---
+> Derek Vadala, derek@cynicism.com, http://www.cynicism.com/~derek
+>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-we can build an 8-drive ( 120GB at $200ea )  or ( 160GB at $300>? each =
-)
-1U box...about 0.960 - 1.28 TB each backup server ( 1U ) for under $2,5=
-00 in parts
-+  cost of raid setup/testing is up to the user
-	- am thinking the 1.6TB of storage for 10K lira(?) is too much
+-- 
+Jeff Byrkit
+Assistant Deputy for Information Systems
+Pinellas County Property Appraiser
 
-i prefer disks to backup data.. so that its always a semi-warm backup
-( tapes have always been way tooo slow to find a file and to restore=20
-
-have fun
-alvin
-http://www.Linux-1U.net
-
-On Fri, 4 Oct 2002, Illtud Daniel wrote:
-
-> Effrem Norwood wrote:
->=20
-> > In addition, HSM software costs
-> > something (even if you write it yourself) on top of the tape infras=
-tructure.
-> > One customer of ours was quoted 40K per TB of HSM *software* alone.
->=20
-> I've got 25TB uncompressed of HSM here, and it's cost us (ex VAT)
-> roughly:
->=20
-> =A310k for the first 1.6TB (on NT, DLT library)
-> =A318k for the next  6.0TB (on NT, LTO library)
-> =A345k for the next 18.0TB (on Solaris, LTO Library)
->=20
->=20
