@@ -1,61 +1,30 @@
-From: David Mansfield <md@dm.cobite.com>
+From: Konstantin Olchanski <olchansk@sam.triumf.ca>
 Subject: Re: raid5, media scans and stripe-wise resync
-Date: Mon, 25 Oct 2004 17:09:49 -0400
+Date: Mon, 25 Oct 2004 15:02:12 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1098738589.5399.58.camel@duxeon.cobite.com>
-References: <200410252029.i9PKTEN26833@www.watkins-home.com>
-	 <1098736532.5399.52.camel@duxeon.cobite.com>
-	 <20041025224838.04c51a0b.pegasus@nerv.eu.org>
+Message-ID: <20041025220212.GA30613@sam.triumf.ca>
+References: <1098733380.5399.39.camel@duxeon.cobite.com> <200410252029.i9PKTEN26833@www.watkins-home.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20041025224838.04c51a0b.pegasus@nerv.eu.org>
-To: Jure Pe_ar <pegasus@nerv.eu.org>
-Cc: bugzilla@watkins-home.com, linux-raid@vger.kernel.org
+Content-Disposition: inline
+In-Reply-To: <200410252029.i9PKTEN26833@www.watkins-home.com>
+To: Guy <bugzilla@watkins-home.com>
+Cc: 'David Mansfield' <md@dm.cobite.com>, 'Jure Pe_ar' <pegasus@nerv.eu.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 2004-10-25 at 16:48, Jure Pe_ar wrote:
-> On Mon, 25 Oct 2004 16:35:32 -0400
-> David Mansfield <md@dm.cobite.com> wrote:
-> 
-> > The point is that NEITHER DRIVE 'FAILS'.  They just have unrecoverable
-> > read errors, or bad sectors.  As long as the two bad sectors are not in
-> > the same stripe, you have not lost any data (theoretically, for s/w and
-> > realistically for h/w).
-> 
-> As I see the problem, the definition of what is a "failed drive" is
-> different from sysadmin's point of view and from md's point of view.
-> 
+On Mon, Oct 25, 2004 at 04:29:09PM -0400, anybody wrote:
+> 1 disk has a bad sector and another disk fails, game over.
 
-Exactly.  md always kicks the entire drive out.  Hardware raid doesn't
-take these extreme measures if a sector reassignment can take care of
-the problem immediately.  
+On a single-disk, 1 bad sector kills just the one unlucky file.
+On a degraded RAID0 or RAID5, 1 bad sector kills the filesystem.
+On a healthy RAID0 or RAID5, 2 bad sectors on different disks kill the filesystem.
 
-In the md case, we are stuck with having to resync an entire disk, which
-is terrible if there is another sector on a different disk that is bad.
+Does this make sense?
+RAID is less fault tolerant than a single disk?
 
-
-> Md freaks out on every single unrecoverable read error, but these usualy do
-> not indicate a completely failed and dead drive. 
-> 
-
-In fact, very often an unrecoverable read error is an isolated defect.
-
-> What needs to be done is to give md some more knowledge about disk errors,
-> disk behaviour at dying and possibly integrate it in some way with smartd.
-> This has been requested every now and then at least for the last three
-> years, however nobody started to work on something like this, at least I'm
-> not aware of any such activity.
-> 
-
-Ok.  Thanks for the info.  I tried googling and came up with nothing.
-
-> How exactly this could / should be acomplished is an interesting topic too.
-> 
-
-If only I had an extra few months...
-
-David
-
-
+-- 
+Konstantin Olchanski
+Data Acquisition Systems: The Bytes Must Flow!
+Email: olchansk-at-triumf-dot-ca
+Snail mail: 4004 Wesbrook Mall, TRIUMF, Vancouver, B.C., V6T 2A3, Canada
