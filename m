@@ -1,24 +1,37 @@
-From: Helge Hafting <helgehaf@aitel.hist.no>
-Subject: raid-0 oddity in 2.5.30 - can mount but not fsck
-Date: Tue, 06 Aug 2002 09:09:42 +0200
+From: Louis-David Mitterrand <ldm@apartia.org>
+Subject: Re: recovering after a /dev/sda failure on raid1
+Date: Tue, 6 Aug 2002 10:36:16 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3D4F7636.679E27D0@aitel.hist.no>
+Message-ID: <20020806083616.GA2989@apartia.org>
+References: <20020801144922.GA5284@apartia.org> <15690.63749.164322.929689@notabene.cse.unsw.edu.au> <20020805092641.GA577@apartia.org> <5.1.0.14.2.20020805123619.03eee0a0@mail.harddata.com> <15690.63749.164322.929689@notabene.cse.unsw.edu.au> <20020801144922.GA5284@apartia.org> <15690.63749.164322.929689@notabene.cse.unsw.edu.au> <5.1.0.14.2.20020805123301.03eecec0@mail.harddata.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-kernel@vger.kernel.org, neilb@cse.unsw.edu.au, mingo@redhat.com, linux-raid@vger.kernel.org
+Content-Disposition: inline
+In-Reply-To: <5.1.0.14.2.20020805123619.03eee0a0@mail.harddata.com> <5.1.0.14.2.20020805123301.03eecec0@mail.harddata.com>
+To: Maurice Hilarius <maurice@harddata.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I tried to run 2.5.30 on a smp machine that use raid-1 and raid-0.
-The RAIDs are autodetected.  The bootup fsck complained
-that it couldn't find a valid superblock on /dev/md/1, which scared me
-a bit.  But there is no problem with the device - mount
-does not complain and mounts the fs (ext2) just fine.
+On Mon, Aug 05, 2002 at 12:35:47PM -0600, Maurice Hilarius wrote:
+> The Fujitsu disks have a track record of good reliability.
+> The IDE disk you mention were discontinued a year ago.
+> In our experiences Fujitsu disks have as low a failure rate as can be found.
+> Drives we have used with higher failure rates (SCSI) came from IBM and 
+> Seagate.
+> The best failure rate we have seen is from Hitachi.
+> In the case of Fujitsu, Hitachi, and Seagate the rates are very close.
+> Quantum/Maxtor SCSI are a bit worse.
+> IBM are substantially worse.
+> This is based on our DOA and in service SCSI disk failures over the past 
+> year.
 
-The 2.5.30-kernel is patched for a max BIO size of 4k, so there
-won't be trouble with BIOs crossing stripe boundaries.
+Thanks for sharing your experience with these brands. It confirms that
+Fujitsu remains a good choice. I am in the process of returning the
+failed disk and will ask for a full audit of the failure, which I will
+summarize to this list when I get it.
 
-2.5.7 have no problem with the RAIDs.
+Cheers,
 
-Helge Hafting
+-- 
+ldm@apartia.org 
