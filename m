@@ -1,28 +1,18 @@
-From: Mike Dresser <mdresser_l@windsormachine.com>
-Subject: Re: where to buy very very large cases
-Date: Mon, 28 Jul 2003 10:37:29 -0400 (EDT)
+From: bsteiber@erols.com
+Subject: 2 seconds
+Date: Mon, 28 Jul 2003 23:50:09 +0900
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.56.0307281036140.15708@router.windsormachine.com>
-References: <bWpzdHVtcGY=.14a9e78b52177716d8df11d88fc1d02c@1059398282.cotse.net>
- <Pine.LNX.4.55.0307281006480.22915@datavibe.net>
+Message-ID: <S270327AbTG1Oer/20030728143447Z+580@vger.kernel.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="iso-8859-1"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.55.0307281006480.22915@datavibe.net>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 28 Jul 2003, Rev. Jeffrey Paul wrote:
+holy pork bun! - you have to see this crazy site, I saved $3000...
 
-> Someone (3ware?) should make an IDE drive cage with a custom backplane and
-> an integrated IDE RAID card... and a VHDCI plug for an uplink to the host.
-> That would be cool.
+it's very special.only the banks know about it..
 
-Promise does this, with their SX6000, (if i remember the model number
-right)
+I personally couldnt have got out of the mess I was in without this site
 
-IDE inside the external case, externally it's a SCSI connector.
-
-Horribly expensive.
-
-Mike
+http://r.aol.com/cgi/redir-complex?url=http://homeloans@cheapermortgage.cn/4/index.asp?RefID=198478
