@@ -1,51 +1,58 @@
-From: "Chris Evans" <chris1@psyctc.org>
+From: Neil Brown <neilb@cse.unsw.edu.au>
 Subject: Re: md: can not impport hdb1, has active inodes!
-Date: Wed, 03 Mar 2004 01:20:54 -0000
+Date: Wed, 3 Mar 2004 12:24:18 +1100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <404532F6.8743.303008B@localhost>
-References: <4045288B.27321.2DA4EF3@localhost>
+Message-ID: <16453.13250.331087.281490@notabene.cse.unsw.edu.au>
+References: <40453152.462.2FC95FD@localhost>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: <200403030211.35753.maarten@vbvb.nl>
-To: debian-user@lists.debian.org, linux-raid@vger.kernel.org
+In-Reply-To: message from Chris Evans on Wednesday March 3
+To: Chris Evans <chris1@psyctc.org>
+Cc: debian-user@lists.debian.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 3 Mar 2004 at 2:11, Maarten J H van den Berg wrote:
+On Wednesday March 3, chris1@psyctc.org wrote:
+> Aha, didn't know that wrinkle: lovely.  Mount says:
+> /dev/md0 on / type ext3 (rw,errors=remount-ro)
+> proc on /proc type proc (rw)
+> devpts on /dev/pts type devpts (rw,gid=5,mode=620)
+> 
+> and cat /proc/mounts says:
+> rootfs / rootfs rw 0 0
+> /dev/root / ext2 rw 0 0
+> proc /proc proc rw 0 0
+> devpts /dev/pts devpts rw 0 0
+> 
+> Does that "/dev/root" bit indicate anything useful?
 
-> Hope it's not too obvious, but...
-> Did you also actually _run_ lilo ?  
-> Is fstab on /dev/md0 edited to reflect the new mountpoints ?
-No it's not too obvious and maybe I need to work through all the 
-options again and document what went wrong each time but I did try to 
-run lilo on each: some ran without complaint but didn't solve the 
-problem, and some resulted in lilo complaining something along the 
-lines that it was using the current boot device and that device x (a 
-numeric representatiion, sorry, didn't note it) wasn't a device in 
-which it could write its stuff.
+No, but the fact that root is actually 'ext2' even though mount (and
+presumably fstab) thinks it is ext3 is a bit suspicious. 
 
-> Not that it helps you here, but I followed the procedure -albeit not
-> from the same howto[1]- multiple times with many machines. It _should_
-> work...
-Well, it encourages me!
- 
->   [1] I used a howto by the name of Boot+root+raid+llilo. Maybe see if
-> there are any obvious differences between the two procedures /
-> howtos...? 
-Yes, found that.  Mostly the differences are that the one I worked 
-from uses mdadm and that one uses raidtools2 but I thought they said 
-the same things really and I couldn't get either approach: mdadm or 
-raidtools/raidtab, to work for me.
+> > Exactly how did you tell lilo to use /dev/md0?
+> > With
+> >    root=/dev/md0
+> > as an option in lilo.conf, or with
+> >    append= "root=/dev/md0"
+> 
+> I think I've only tried the former (with and without an earlier line, 
+> before the image stanzas, saying root=/dev/hdb1)
 
-One thing: I asssume that mdrecoveryd isn't holding an inode active?  
-I _think_ I've failed just as totally after killing mdrecoveryd but 
-can't vouch for having done that every time.
+If there are any "root=/dev/hdb1" lines in lilo.conf, I suggest taking
+them out.
+I think you currently have /dev/hdb1 as your root filesystem still.
+You can easily check this:
 
-Thanks Maarten,
+   mkdir /a /b
+   mount /dev/hdb1 /a
+   mount /dev/md0 /b
+   > /a-file
+   ls -l /?/a-file
 
-C
+If the ls finds "/a/a-file", then /dev/hdb1 is root.
+If it finds /b/a-file, then /dev/md0 is root.
 
-PSYCTC: Psychotherapy, Psychology, Psychiatry, Counselling
-   and Therapeutic Communities; practice, research, 
-   teaching and consultancy.
-Chris Evans & Jo-anne Carlyle
-http://psyctc.org/ Email: chris@psyctc.org
+If it still doesn't work, post your lilo.conf
 
+NeilBrown
