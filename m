@@ -1,56 +1,129 @@
-From: christophe.varoqui@free.fr
-Subject: [ANNOUNCE] multipath-tools-0.2.1
-Date: Thu,  3 Jun 2004 11:52:22 +0200
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1086256342.40bef4d61b3e9@imp3-q.free.fr>
-References: <1084519750.40a47546dd0e6@imp1-q.free.fr>
+From: David Greaves <david@dgreaves.com>
+Subject: Raid 5 questions
+Date: Thu, 03 Jun 2004 15:29:43 +0100
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <40BF35D7.9050902@dgreaves.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1084519750.40a47546dd0e6@imp1-q.free.fr>
-To: christophe.varoqui@free.fr
-Cc: linux-hotplug-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
+Hi
 
-here goes multipath-tools-0.2.1
+I've perused the archives and read the docs but I'm not sure on this 
+point :)
 
-This is a fairly big update which address all the problems reported so far and
-includes patchs from a greater number of testers. I'm quite happy to see it
-mostly works for a wide variety of hardware (server arch and storage).
-Anyway, it still needs more beating. Specificaly on EMC hardware, to which I
-don't have access.
+If I create an array with 3 250Gb disks and use the 'missing' option I 
+should get a degraded raid5 array with 750Gb
+Now, when another 250Gb disk arrives I want to add that as the missing 
+disk - will that work?
 
-Changelog for this release :
+Now, since I actually have the 3 disks and I'm waiting for the 4th, lets 
+try it with 2 and add a third...
 
-        * [multipath] add a flag to inihibit the final SIGHUP to
-          multipathd. Needed to avoid recursion with the correction
-          below
-        * [multipathd] devmap event now triggers a multipath exec
-          in addition to the usual updatepaths()
-        * [multipathd] move checkers from sg_io on BLK onto CHR
-          readsector0 goes from read to sg_read
-        * [multipathd] rely on sysfs for failedpaths enum and no
-          longer on the device mapper
-        * [multipathd] convert get_lun_strings from ioctl to sysfs
-          so we can benefit from strings persistency for failed
-          paths
-        * [multipath] readconfig() to take only 8 char from vendor
-          string (ake)
-        * [multipath] remove unecessery and wrong getuid == NULL
-          check from devinfo() (ake)
-        * [multipathd] make readsector0 open path O_DIRECT
-        * [multipathd] sizeof(path) -> sizeof(struct path) (MikeC)
-        * [Makefile] don't try to install and uninstall libs
-        * [devmap_name] kill the wrong trailing '\n'
-          (Mike Christie)
-        * [kpartx] works with device nodes outside /dev
-        * [kpartx] correctly display the delimiter in partition
-          name outputs
+Clear out the superblocks so we're starting from scratch
+cu:~# mdadm --stop /dev/md0
+cu:~# mdadm --zero-superblock /dev/sda
+cu:~# mdadm --zero-superblock /dev/sdb
+cu:~# mdadm --zero-superblock /dev/sdc
 
-Downloads and docs at http://christophe.varoqui.free.fr
+Make the array.
+cu:~# mdadm -v -C /dev/md0 --chunk=128 --level=5 --raid-devices=3 
+/dev/sda /dev/sdb missing
+mdadm: layout defaults to left-symmetric
+mdadm: size set to 245117312K
+mdadm: array /dev/md0 started.
 
-regards,
-cvaroqui
+What have we got?
+cu:~# mdadm --detail /dev/md0
+/dev/md0:
+        Version : 00.90.01
+  Creation Time : Thu Jun  3 16:19:26 2004
+     Raid Level : raid5
+     Array Size : 490234624 (467.52 GiB 502.00 GB)
+    Device Size : 245117312 (233.76 GiB 251.00 GB)
+   Raid Devices : 3
+  Total Devices : 2
+Preferred Minor : 0
+    Persistence : Superblock is persistent
+
+    Update Time : Thu Jun  3 16:19:26 2004
+          State : clean, no-errors
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 0
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+    Number   Major   Minor   RaidDevice State
+       0       8        0        0      active sync   /dev/sda
+       1       8       16        1      active sync   /dev/sdb
+       2       0        0       -1      removed
+           UUID : 8acbe990:b31287f7:32888f7d:f0edcf0c
+         Events : 0.3887
+
+Thats 2x 251Gb giving a 502Gb array - good
+
+Add this to the config
+cu:~# echo 'DEVICE /dev/sd[abcd]' >/etc/mdadm/mdadm.conf
+cu:~# mdadm --detail --scan >>/etc/mdadm/mdadm.conf
+cu:~# cat /etc/mdadm/mdadm.conf
+DEVICE /dev/sd[abcd]
+ARRAY /dev/md0 level=raid5 num-devices=3 
+UUID=8acbe990:b31287f7:32888f7d:f0edcf0c
+   devices=/dev/sda,/dev/sdb
+
+Now, the new disk arrives...
+cu:~# mdadm  /dev/md0 -a /dev/sdc
+mdadm: hot added /dev/sdc
+
+So it should be working fine...
+cu:~# mdadm --detail /dev/md0
+/dev/md0:
+        Version : 00.90.01
+  Creation Time : Thu Jun  3 16:19:26 2004
+     Raid Level : raid5
+     Array Size : 490234624 (467.52 GiB 502.00 GB)
+    Device Size : 245117312 (233.76 GiB 251.00 GB)
+   Raid Devices : 3
+  Total Devices : 3
+Preferred Minor : 0
+    Persistence : Superblock is persistent
+
+    Update Time : Thu Jun  3 16:23:21 2004
+          State : clean, no-errors
+ Active Devices : 2
+Working Devices : 3
+ Failed Devices : 0
+  Spare Devices : 1
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+ Rebuild Status : 0% complete
+
+    Number   Major   Minor   RaidDevice State
+       0       8        0        0      active sync   /dev/sda
+       1       8       16        1      active sync   /dev/sdb
+       2       0        0       -1      removed
+       3       8       32        2      spare   /dev/sdc
+           UUID : 8acbe990:b31287f7:32888f7d:f0edcf0c
+         Events : 0.3888
+
+
+Nope it's a spare?
+Help - how do I make my array resilient?
+
+
+Environment:
+Debian testing
+Linux cu.dgreaves.com 2.6.6 #1 Thu Jun 3 14:12:01 BST 2004 i686 GNU/Linux
+mdadm - v1.5.0 - 22 Jan 2004
+
+Thanks
+
+David
