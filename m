@@ -1,45 +1,52 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: 2.2.17 -> 2.4.19-rc3: bub in file md.c, line 1311
-Date: Wed, 24 Jul 2002 17:45:18 +1000 (EST)
+From: <martin@hack.org>
+Subject: Re: BSD disklabel and autodetection
+Date: Wed, 24 Jul 2002 09:09:32 +0000 (UTC)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <15678.23310.273599.821682@notabene.cse.unsw.edu.au>
-References: <87r8huqy5t.fsf@qaip3.ins.cwi.nl>
+Message-ID: <12115.5969136909$1027501772@news.gmane.org>
+References: <87y9c2r2vn.fsf@qaip3.ins.cwi.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Hein Roehrig on  July 23
+In-Reply-To: <87y9c2r2vn.fsf@qaip3.ins.cwi.nl>
 To: Hein Roehrig <hpr@eml.cc>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On  July 23, hpr@eml.cc wrote:
-> I am trying to (remotely) upgrade a kernel 2.2.17 with raid-2.2.17-A0
-> patch to 2.4.19-rc3 with the little attached patch to get autodetect
-> to work (sparc64 architecture.) Here is a partial manual transcript
-> from what appears on the console; the system still boots 2.2.17
-> without problem. I would be grateful for any advice on getting things
-> right...
 
-The 2.2 patches got the superblock layout wrong for sparc64, so raid
-array made on those systems are not directly compatable with 2.4.
+On 23 Jul 2002, Hein Roehrig wrote:
+>
+> <martin at hack.org> writes:
+>
+> > i'm trying to get autodetection to work on a RAID 5 raiddevice made up
+> > from three devices. two of them reside on disks with DOS-style partition
+> > tables, the third is on a disk with a BSD disklabel. all of them have the
+> > partition type set to 0xfd, but only the first two devices are configured
+> > at boot time.
+>
+> See message <1019846049.1670.76.camel@peecee> on this mailing list. I
+> am in the process of patching my personal 2.4.19-rc3 to do
+> autodetection -- in the long run initrd is the way to go.
 
-You can convert the arrays using mdadm 1.0.1 which can be found at
-  http://www.cse.unsw.edu.au/~neilb/source/mdadm/
+Hein, i don't quite understand how initrd will solve my problem? i'm
+quite happy with my handrolled kernel, it's just that some of the
+partitions of the raid device are not detected.
 
-For each component device:
- mdadm -E /dev/devicename
-should show rubbish in the device table at the bottom as the
-superblock layout is wrong
- mdadm -E --sparc2.2 /dev/devicename
-should show correct information in the device table.
-If it does then:
- mdadm -E --sparc2.2update /dev/devicename
-should correct the superblock for 2.4. After this
- mdadm -E /dev/devicename
-will show correct devices and
- mdadm -A /dev/mdX /dev/sd.....
+following some hints i've seen elsewhere on the list i tried to pass md
+parameters to the kernel ->
 
-should assemble the devices successfully.
+Booting on Nautilus using machine vector Nautilus from SRM
+Command line: ro root=/dev/md1 md=1,/dev/sdb5,/dev/sdc2,/dev/sdd2 raid=noautodetect
+md: Will configure md1 (super-block) from /dev/sdb5,/dev/sdc2,/dev/sdd2, below.
 
-NeilBrown
+with the raid=noautodetect option it works.
+
+what other raid/md options can be passed this way? and how do i configure
+more than one device? geez, hope there's not a 256 char limit to the
+command line...
+are these options documented somewhere??
+
+
+with regards,
+
+/m
+
