@@ -1,59 +1,45 @@
 From: Janusz Zamecki <janusz@pipi.ma.cx>
 Subject: RE: RAID1 & 2.6.9 performance problem
-Date: Tue, 18 Jan 2005 19:41:03 +0100
-Message-ID: <1106073663.14134.249.camel@pipi.ma.cx>
-References: <OMEKLMBKKEOEENCKLEIDGEFGCAAA.ryan@dynaconnections.com>
+Date: Tue, 18 Jan 2005 20:12:06 +0100
+Message-ID: <1106075525.14134.277.camel@pipi.ma.cx>
+References: <OMEKLMBKKEOEENCKLEIDAEFGCAAA.ryan@dynaconnections.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-2
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <OMEKLMBKKEOEENCKLEIDGEFGCAAA.ryan@dynaconnections.com>
+In-Reply-To: <OMEKLMBKKEOEENCKLEIDAEFGCAAA.ryan@dynaconnections.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "J. Ryan Earl" <ryan@dynaconnections.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-W li=B6cie z wto, 18-01-2005, godz. 18:34, J. Ryan Earl pisze:=20
-> "You will get 2 parallel sequential reads at around 120MB/sec
-> assuming you're not bus limited."
->=20
-> To clarify because this looks ambiguous to me now, you should be able=
- to
-> perform 2 parallel sequential reads both at 60MB/sec =3D 120MB/sec to=
-tal.
->=20
-> -ryan
->=20
 
-Hi,
+> Think about it and it should make sense.  You have two discs with identical
+> layouts.  How could you possibly increase the speed of a single sequential
+> read?  You can't just read half from one drive, half from the other, you'd
+> always have heads seeking and it would no longer be a sequential read.
+> 
 
-Unfortunatelly it is not the case. Please go to my original e-mail. I'v=
-e
-ran two simultaneous tests and I get:
+I'm thinking about something like this (of course this is
+simplification):
 
+1. Application reads big chunk of data. 
+2. File system layer splits this requests into fs block size requests
+(let say 4k each).
+3. Each block read request is divided into sector size requests. As far
+as I understand modern drives can do read ahead up to 16 (32??) sectors.
 
-hdparm -t /dev/md6 &
-hdparm -t /dev/md6
+Now, the first read request for sector X should go to the first disk,
+while the next request for the sector (X+disk_read_ahead) should go to
+the second disk, third request for the (X+2*disk_read_ahead) sector to
+the first disk, and so on.
 
-This is the result:
+If we use whole disks for RAID1, the heads should always be in similar
+position, so latency should be similar to 1 disk, because the drives
+should seek in track to track manner (in ideal world).
 
---disk/hdg----disk/hde-
-_read write _read write
-    0     0 :   0     0
-    0     0 :   0     0
-  124k    0 :26.0M    0
-  368k    0 :45.5M    0
-    0     0 :   0     0
-    0     0 : 896k    0
-  124k    0 :1568k    0
-    0     0 :   0     0
+I agree that it is not pure sequential operation, but I think it is
+close enough to get some performance boost at virtually no cost.
 
-One disk works with 75% of its full speed, the second one works with
-0,6% of its full speed or even less.
+Do you agree?
 
-Best regards, Janusz
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Janusz
