@@ -1,98 +1,66 @@
-From: =?iso-8859-1?Q?M=E5rten_Berggren?= <berg@enea.se>
-Subject: Device naming problem(?)
-Date: Sun, 15 Aug 2004 20:19:41 +0200
+From: "Rechenberg, Andrew" <ARechenberg@sfg.com>
+Subject: Forcing raid1 resync
+Date: Mon, 16 Aug 2004 11:24:12 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <000401c482f4$70de1450$820113ac@enea.se>
+Message-ID: <8075D5C3061B9441944E1373776451186488C0@cinshrexc03.shermfin.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-class: urn:content-classes:message
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+Hello,
 
-I have troubles running RAID on my PC under Linux. The short version of
-it
-is that I some time ago bought an Asus A7V333 (VIA-KT333-based)
-motherboard which
-featured a Promise PDC20276 RAID controller. (It seems to be software
-RAID
-only, but anyway.) I have happily been running the machine with RAID
-disabled
-as a dual-boot between Suse 8.2 and Win XP Pro. Recently I bought a pai=
-r
-of
-Seagate 160 Mb drives with the purpose of having a shared drive between
-Windows and Linux, but Linux will not boot with the RAID controller
-enabled;
-it panics during booting, unable to mount the system drive.
+Is there anyway to force a resync of RAID1 arrays that need to be
+resynced?  I have 26 RAID1 arrays and when the system shuts down
+uncleanly, or the machine crashes hard, sometimes I need to hotadd
+devices back into the array.  For example if I have the following in
+/etc/raidtab:
 
-Two questions:
+raiddev /dev/md23
+        raid-level              1
+        nr-raid-disks           2
+        persistent-superblock   1
+        chunk-size              64
+ 
+        device                  /dev/sdao1
+        raid-disk               0
+        device                  /dev/sdbc1
+        raid-disk               1
 
-* How do I make Linux boot with the RAID controller enabled?
+/proc/mdstat for md23 will show:
 
-* Is it possible to share it between Linux and Windows?
-  (ataraid seems to have some pdc subsystem, but I got no idea what tha=
-t
-means.)
+md23 : active raid1 sdbc1[1]
+      17783808 blocks [2/2] [U_]
 
-Things that might be relevant:
+And I will need to use mdadm or raidhotadd to add /dev/sdao1 back into
+the array.  When I add a device back into the array the reconstruction
+doesn't start immediately and/or if another reconstruction is underway,
+the new recontruction will not occur until the first one has completed.
 
-* The BIOS seems to play tricks (with int13?) to make it possible to
-boot from
-  the array, but I got no desire to do so (unless neccessary).
+Is this behavior expected/by design?  Waiting for 26 arrays to
+reconstruct one at a time is painfully slow.  When I created the arrays
+they all started to sync at the same time so I know the RAID code will
+sync more than one at a time, and when my box came up yesterday after a
+hard power cycle, about 5 arrays started syncing, but the rest waited
+until those were finished and then synced one at a time.
 
-* Suse is configured to boot using lilo and an initrd containing the
-reiserfs
-  module needed for the root partition.
+I looked through md.c and raid1.c and I see that hot_add_disk() calls
+md_recover_arrays() which wakes up the md recovery thread, but does the
+thread only allow one synchronization to occur at a time?
 
-* Without reconfiguring lilo, the booting stops with the message
+Here are some of my system details:
 
-  "Kernel panic: VFS: Unable to mount root fs on 03:02"
+Red Hat 7.3 with updates
+kernel-bigmem-2.4.20-30 with megaraid2 patch
 
-* Booting the Suse CD in rescue mode, I can find the system drive under
-/dev/hda2.
+If someone could point me in the direction in the code to understand the
+way this process works I would appreciate it.  Let me know if you need
+any more information.
 
-* Trying to boot from a floppy with grub installed, I get the same erro=
-r
-as for lilo with
-
-  root (hd0,1)                          # i e boot from first drive,
-second partition
-  kernel /boot/vmlinuz root=3D/boot/hda2  # i e boot using vmlinuz,
-telling it root is /dev/hda2
-  initrd /boot/initrd                   # i e use this initrd
-  boot
-
-* Changing the kernel line above to
-
-  kernel /boot/vmlinuz root=3D/boot/hde2  # i e boot using vmlinuz,
-telling it root is /dev/hde2
-
-  gets me much further, in fact it seems like even modules are loaded,
-but it ends with
-  a suggestion that I should run fsck on /dev/hda2. This happens even i=
-f
-I change /etc/fstab
-  to point root to /dev/hde2 instead of /dev/hda2. (Where does the
-/dev/hda2 come from then?)
-  "mount" tells me /dev/hda2 is mounted in rw mode. (How can it mount
-/dev/hda2 when I have to
-  boot it as /dev/hde2?)
-
-* Kernel version is 2.4.20 from Suse (2.4.20-4GB)
-
-It seems to me that there is some inconsistencies in naming (/dev/hda2
-vs /dev/hde2)?
-Suggestions, anyone? Should I send this to linux-ide?
-
-Regards
-
-M=E5rten Berggren
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Regards,
+Andrew Rechenberg
+Infrastructure Team, Sherman Financial Group
