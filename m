@@ -1,8 +1,8 @@
 From: NeilBrown <neilb@cse.unsw.edu.au>
-Subject: [PATCH] md - 3 of 14 - Handle concurrent failure of two drives in raid5
-Date: Tue, 27 May 2003 13:01:12 +1000
+Subject: [PATCH] md - 10 of 14 - Remove dependancy on MD_SB_DISKS from raid5
+Date: Tue, 27 May 2003 13:01:14 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <E19KUi8-0003Gi-00@notabene.cse.unsw.edu.au>
+Message-ID: <E19KUiA-0003HO-00@notabene.cse.unsw.edu.au>
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: Linus Torvalds <torvalds@transmeta.com>
 Cc: linux-raid@vger.kernel.org
@@ -10,47 +10,45 @@ List-Id: linux-raid.ids
 
 ### Comments for ChangeSet
 
-If two drives both fail during a write request, raid5 doesn't
-cope properly and will eventually oops.
-
-With this patch, blocks that have already been 'written'
-are failed when double drive failure is noticed, as well as
-blocks that are about to be written.
+One embeded array gets moved to end of structure and
+sized dynamically.
 
  ----------- Diffstat output ------------
- ./drivers/md/raid5.c |   16 +++++++++++++++-
- 1 files changed, 15 insertions(+), 1 deletion(-)
+ ./drivers/md/raid5.c         |    4 +++-
+ ./include/linux/raid/raid5.h |    2 +-
+ 2 files changed, 4 insertions(+), 2 deletions(-)
 
 diff ./drivers/md/raid5.c~current~ ./drivers/md/raid5.c
---- ./drivers/md/raid5.c~current~	2003-05-27 11:58:20.000000000 +1000
-+++ ./drivers/md/raid5.c	2003-05-27 11:58:21.000000000 +1000
-@@ -918,7 +918,7 @@ static void handle_stripe(struct stripe_
- 	/* check if the array has lost two devices and, if so, some requests might
- 	 * need to be failed
- 	 */
--	if (failed > 1 && to_read+to_write) {
-+	if (failed > 1 && to_read+to_write+written) {
- 		spin_lock_irq(&conf->device_lock);
- 		for (i=disks; i--; ) {
- 			/* fail all writes first */
-@@ -936,6 +936,20 @@ static void handle_stripe(struct stripe_
- 				}
- 				bi = nextbi;
- 			}
-+			/* and fail all 'written' */
-+			bi = sh->dev[i].written;
-+			sh->dev[i].written = NULL;
-+			while (bi && bi->bi_sector < dev->sector + STRIPE_SECTORS) {
-+				struct bio *bi2 = bi->bi_next;
-+				clear_bit(BIO_UPTODATE, &bi->bi_flags);
-+				if (--bi->bi_phys_segments == 0) {
-+					md_write_end(conf->mddev);
-+					bi->bi_next = return_bi;
-+					return_bi = bi;
-+				}
-+				bi = bi2;
-+			}
-+
- 			/* fail any reads if this device is non-operational */
- 			if (!test_bit(R5_Insync, &sh->dev[i].flags)) {
- 				bi = sh->dev[i].toread;
+--- ./drivers/md/raid5.c~current~	2003-05-27 11:58:25.000000000 +1000
++++ ./drivers/md/raid5.c	2003-05-27 11:58:27.000000000 +1000
+@@ -1452,7 +1452,9 @@ static int run (mddev_t *mddev)
+ 		return -EIO;
+ 	}
+ 
+-	mddev->private = kmalloc (sizeof (raid5_conf_t), GFP_KERNEL);
++	mddev->private = kmalloc (sizeof (raid5_conf_t)
++				  + mddev->raid_disks * sizeof(struct disk_info),
++				  GFP_KERNEL);
+ 	if ((conf = mddev->private) == NULL)
+ 		goto abort;
+ 	memset (conf, 0, sizeof (*conf));
+
+diff ./include/linux/raid/raid5.h~current~ ./include/linux/raid/raid5.h
+--- ./include/linux/raid/raid5.h~current~	2003-05-27 11:58:25.000000000 +1000
++++ ./include/linux/raid/raid5.h	2003-05-27 11:58:27.000000000 +1000
+@@ -202,7 +202,6 @@ struct disk_info {
+ struct raid5_private_data {
+ 	struct stripe_head	**stripe_hashtbl;
+ 	mddev_t			*mddev;
+-	struct disk_info	disks[MD_SB_DISKS];
+ 	struct disk_info	*spare;
+ 	int			chunk_size, level, algorithm;
+ 	int			raid_disks, working_disks, failed_disks;
+@@ -224,6 +223,7 @@ struct raid5_private_data {
+ 							 * waiting for 25% to be free
+ 							 */        
+ 	spinlock_t		device_lock;
++	struct disk_info	disks[0];
+ };
+ 
+ typedef struct raid5_private_data raid5_conf_t;
