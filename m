@@ -1,44 +1,57 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: Multiple disk failure - recover?
-Date: Thu, 11 Jul 2002 00:30:53 +1000 (EST)
+From: "bo" <bo@sosnetwork.net>
+Subject: Re: Invalid argument error on raid5 create
+Date: Wed, 10 Jul 2002 16:07:29 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <15660.17693.461131.39650@notabene.cse.unsw.edu.au>
-References: <15660.15549.501687.976304@notabene.cse.unsw.edu.au>
-	<Pine.LNX.4.30.0207101604520.25329-300000@duplo.agenda.si>
+Message-ID: <001d01c22866$90c1cb30$5701a8c0@bomoon>
+References: <001f01c22632$ad349580$0200a8c0@gandalf><15657.19046.986108.967800@notabene.cse.unsw.edu.au><00cd01c226db$2f71ddc0$5701a8c0@bomoon> <15658.28183.219550.723620@notabene.cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Danilo Godec on Wednesday July 10
-To: Danilo Godec <danci@agenda.si>
+To: Neil Brown <neilb@cse.unsw.edu.au>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday July 10, danci@agenda.si wrote:
-> OK, it's all attached. One file contains results of mdadm --examine, the
-> other is what I get on the screen with mdadm --assemble (w/wo
---run)...
+Neil,
 
-Hmmm.  Yes --force isn't doing all that it should do. I'll have to
-look into that.
+You are right.
+I found my kernel image did not configure the RAID 5.
 
-You should be able to use create successfully.
+Thanks a lot,
 
-If the original order was b2,c2,a2, which is what the --examine
-suggests, and you want to not use b2, then
+Bo
+----- Original Message ----- 
+From: "Neil Brown" <neilb@cse.unsw.edu.au>
+To: "bo" <bo@sosnetwork.net>
+Cc: <linux-raid@vger.kernel.org>
+Sent: Monday, July 08, 2002 10:01 PM
+Subject: Re: Invalid argument error on raid5 create
 
- mdadm --create /dev/md1 -l5 -c32 -n3 missing /dev/sdc2 /dev/sda2
 
-should work.  It will not start a rebuild so you can mount it
-read-only and if something was wrong, you can "mdadm --stop" and try
-again with a different arrangement of drives.
+> On Monday July 8, bo@sosnetwork.net wrote:
+> > Neil,
+> > 
+> > I am trying to create the RAID 5 array with
+> > 
+> > >mdadm -C /dev/md0 -l5 -n6 -x1 -prs /dev/hd[bcdefgh]
+> > 
+> > However, I am getting the following error message;
+> > 
+> > >mdadm: RUN_ARRAY failed: Invalid argument
+> > 
+> ..
+> > 
+> > Any clue?
+> 
+> Maybe the raid5 personality isn't loaded into the kernel...
+> What does 
+>   cat /proc/mdstat
+> say?
+> Are there any message in
+>    dmesg
+> after the failure?
+> 
+> NeilBrown
+> 
 
-If b2 and c2 are really the most recent, as it appears, then you might
-want to use those:
-
-  mdadm --create /dev/md1 -l5 -c32 -n3 /dev/sdb2 /dev/sdc2 missing
-
-Again, this wont do a resync and as long as you don't touch the bad
-block on b2, you should be able to access data.
-
-NeilBrown
