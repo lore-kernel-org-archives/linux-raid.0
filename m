@@ -1,78 +1,35 @@
-From: Sebastian Sobolewski <linux@thirdmartini.com>
-Subject: Re: Write and verify correct data to read-failed sectors before degrading
- array?
-Date: Thu, 16 Sep 2004 20:13:05 -0600
+From: "harry" <hfranklin97@excite.com>
+Subject: Re: disk testing
+Date: Thu, 16 Sep 2004 22:50:05 -0400 (EDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <414A4831.1040407@thirdmartini.com>
-References: <41420D07.4060001@steeleye.com>	<16709.12517.514905.627708@cse.unsw.edu.au>	<41487D18.1050000@steeleye.com>	<4149700F.6060509@buttersideup.com>	<16714.12891.987589.769643@cse.unsw.edu.au>	<414A40DB.6070309@thirdmartini.com> <16714.17729.576621.347771@cse.unsw.edu.au>
+Message-ID: <20040917025005.DC7F1395B@xprdmailfe9.nwk.excite.com>
+Reply-To: hfranklin97@excite.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <16714.17729.576621.347771@cse.unsw.edu.au>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
+Tim and Neil have suggested (apparently correctly) that the disk had a bad sector and the firmware remapped it when I wrote to it. My question is, how many spare sectors does the typical disk have? More importantly, since the sector has been remapped, recreating the raid5 array worked fine, but is a failure right out of the box normal? I was going to return it but since its working now I'm not sure if I should or not.
 
-Neil Brown wrote:
+Thanks
 
->On Thursday September 16, linux@thirdmartini.com wrote:
->  
->
->>    I have some experimental code that does the read-recovery piece for 
->>raid1 devices against kernel 2.4.26.  If an error is encountered on a 
->>read, the failure is delayed until the read is retried to the other 
->>mirror.  If the retried read succeeds it then writes the recovered block 
->>back over the previously failed block. 
->>    If the write fails then the drive is marked faulty otherwise we 
->>continue without setting the drive faulty.  ( The idea here is that 
->>modern disk drives have spare sectors, and will be automatically 
->>reallocate a bad sector to one of the spares on the next write ). 
->>    The caveat is that if the drive is generating lots of bad/failed 
->>reads it's most likely going south.. but that's what smart log 
->>monitoring is for.  If anyone is interested I can post the patch.
->>    
->>
->
->Certainly interested.
->
->Do you have any interlocking to ensure that if a real WRITE is
->submitted immediately after (or even during !!!) the READ, it does not
->get destroyed by the over-write.
->e.g.
->
->application     drive0          drive1
->READ request
->                READ from drive 0
->		fails
->				READ from drive 1
->				success. Schedule over-write on drive0
->READ completes
->WRITE block
->		WRITE to drive0 WRITE to drive1
->
->                overwrite happens.
->
->
->It is conceivable that the WRITE could be sent even *before* the READ
->completes though I'm not sure if it is possible in practice.
->
->NeilBrown
->
->  
->
-    No, there is no interlocking at this time. I solve the above problem 
-by  not replying to the read until after the recovery write attempt 
-either fails or completes.  This works great when the application above 
-us ( like a FS ) is using the buffer cache or guarantees no R-W 
-conflicts.  ( I believe this is the case with buffered block devices at 
-this time ).  Using /dev/raw and an application that can cause R-W 
-conflicts WILL result in corruption.  This is why the patch is 
-experimental. :)
 
-    I've tested the code on a fault injector and I have not been able to 
-cause a corruption using ext3 or xfs. 
 
--Sebastian
 
+ --- On Tue 09/14, Tim Small < tim@buttersideup.com > wrote:
+From: Tim Small [mailto: tim@buttersideup.com]
+To: linux-raid@vger.kernel.org
+Date: Tue, 14 Sep 2004 10:15:43 +0100
+Subject: Re: disk testing
+
+<br>If there is an unreadable sector on the disk, then reading it will fail,<br>but if you write to it, the drive firmware will reallocate the sector,<br>and then allow reading (actually the sector it is reading is now<br>somewhere else on the disk, but the firmware hides this).  If the raid5<br>sync was trying to read such a sector, but your other tests have written<br>it, then it will now appear to be fine (and the raid5 should now work).<br><br>If I were you I would use smartmontools to check out the drive (you can<br>then see if it has reallocated any sectors, and read errors should show<br>up in the SMART error log).<br><br>Tim.<br><br><br>p.s. Prelim SMART support for libata:<br><br>http://www.ussg.iu.edu/hypermail/linux/kernel/0408.3/2304.html<br><br><br><br><br>harry wrote:<br><br>>I just bought 3 sata drives and set them up in a raid5 array. About 45% into syncing them, the firs
+ t disk gets an error and goes offline. I figure I did something wrong, so I retrace my ste
+ ps and try again, and again, I get an error about 45% of the way through, the first disk errors and goes offline. <br>><br>>So, I think I have a bad disk. But wait! I created a raid 1 array on the remaining two to see if there are any other errors later on those two (there weren't), and I create a normal partition/fs on the failing disk. I begin writing various bitpatterns across the entire disk and reading them back, trying to find the problem. So far, I've done about 5 passes over the entire disk without error! <br>><br>>So, any idea why raid would be getting errors from the disk, but I don't seem to be able to? (or, what I should tell the store I bought it from when I try to get it replaced?)<br>><br>>  <br>><br><br>-<br>To unsubscribe from this list: send the line "unsubscribe linux-raid" in<br>the body of a message to majordomo@vger.kernel.org<br>More majordomo info at  http://vger
+ .kernel.org/majordomo-info.html<br>
+
+_______________________________________________
+Join Excite! - http://www.excite.com
+The most personalized portal on the Web!
