@@ -1,60 +1,94 @@
-From: "Peter L. Ashford" <ashford@sdsc.edu>
+From: Neil Brown <neilb@cse.unsw.edu.au>
 Subject: Re: RAID-6
-Date: Wed, 13 Nov 2002 10:42:30 -0800 (PST)
+Date: Thu, 14 Nov 2002 09:48:50 +1100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.GSO.4.30.0211131012460.3877-100000@multivac.sdsc.edu>
-References: <20021113122957.GE22407@unthought.net>
+Message-ID: <15826.54994.799433.855579@notabene.cse.unsw.edu.au>
+References: <aqou9k$ou5$1@cesium.transmeta.com>
+	<20021112162205.GB22407@unthought.net>
+	<15825.22660.685310.237185@notabene.cse.unsw.edu.au>
+	<20021113021343.GC22407@unthought.net>
+	<15825.51226.122496.604304@notabene.cse.unsw.edu.au>
+	<20021113122957.GE22407@unthought.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20021113122957.GE22407@unthought.net>
+In-Reply-To: message from Jakob Oestergaard on Wednesday November 13
 To: Jakob Oestergaard <jakob@unthought.net>
-Cc: linux-raid@vger.kernel.org
+Cc: "H. Peter Anvin" <hpa@zytor.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Jakob,
+On Wednesday November 13, jakob@unthought.net wrote:
+> On Wed, Nov 13, 2002 at 02:33:46PM +1100, Neil Brown wrote:
+> ...
+> > > The benchmark goes:
+> > > 
+> > > | some tests on raid5 with 4k and 128k chunk size. The results are as follows:
+> > > | Access Spec     4K(MBps)        4K-deg(MBps)    128K(MBps) 128K-deg(MBps)
+> > > | 2K Seq Read     23.015089       33.293993       25.415035  32.669278
+> > > | 2K Seq Write    27.363041       30.555328       14.185889  16.087862
+> > > | 64K Seq Read    22.952559       44.414774       26.02711   44.036993
+> > > | 64K Seq Write   25.171833       32.67759        13.97861   15.618126
+> > > 
 
-SNIP
+These numbers look ... interesting.  I might try to reproduce them
+myself.
 
+> > > So down from 27MB/sec to 14MB/sec running 2k-block sequential writes on
+> > > a 128k chunk array versus a 4k chunk array (non-degraded).
+> > 
+> > When doing sequential writes, a small chunk size means you are more
+> > likely to fill up a whole stripe before data is flushed to disk, so it
+> > is very possible that you wont need to pre-read parity at all.  With a
+> > larger chunksize, it is more likely that you will have to write, and
+> > possibly read, the parity block several times.
+> 
+> Except if one worked on 4k sub-chunks - right  ?   :)
+
+I still don't understand.... We *do* work with 4k subchunks.
+
+> 
+> > 
+> > So if you are doing single threaded sequential accesses, a smaller
+> > chunk size is definately better.
+> 
+> Definitely not so for reads - the seeking past the parity blocks ruin
+> sequential read performance when we do many such seeks (eg. when we have
+> small chunks) - as witnessed by the benchmark data above.
+
+Parity blocks aren't big enough to have to seek past.  I would imagine
+that a modern drive would read a whole track into cache on the first
+read request, and then find the required data, just past the parity
+block, in the cache on the second request.  By maybe I'm wrong.
+
+Or there could be some factor in the device driver where lots of
+little read request, even though they are almost consecutive, are
+handled more poorly than a few large read requests.
+I wonder if it would be worth reading those parity blocks anyway if a
+sequential read were detected....
+
+> 
+> > If you are doing lots of parallel accesses (typical multi-user work
+> > load), small chunk sizes tends to mean that every access goes to all
+> > drives so there is lots of contention.  In theory a larger chunk size
+> > means that more accesses will be entirely satisfied from just one disk,
+> > so there it more opportunity for concurrency between the different
+> > users.
+> > 
+> > As always, the best way to choose a chunk size is develop a realistic
+> > work load and test it against several different chunk sizes.   There
+> > is no rule like "bigger is better" or "smaller is better".
+> 
 > For a single reader/writer, it was pretty obvious from the above that
 > "big is good" for reads (because of the fewer parity block skip seeks),
 > and "small is good" for writes.
->
+> 
 > So, by making a big chunk-sized array, and having it work on 4k
 > sub-chunks for writes, was some idea I had which I felt would just give
 > the best scenario in both cases.
 
-Actually, the problem is worse than you describe.
+The issue isn't so much the IO size as the layout of disk.  You cannot
+use one layout for read and a different layout for write.  That
+obviously doesn't make sense.
 
-Let's assume that we have a RAID-5 array of 5 disks, with a segment size
-of 64KB.  In this instance, the optimum I/O size will be 256KB.
-Furthermore, that will only be the optimum I/O when it is on a 256KB
-boundary.
-
-I have, in the past, performed I/O benchmarks on raw arrays (both using
-the MD driver, and using 3Ware cards).  My results show that read speed
-drops off when the segment size passes 128KB, but write speed stays stable
-up to 2MB (the largest I/O size I tested).
-
-This information, combined with the benchmarks you posted earlier, shows
-that the write slowdown when writing large I/O sizes is caused by the
-file-system structure.
-
-Current Linux file-systems don't support block sizes larger than 4KB.
-This means that even if you perform the optimum sized I/O, there is no
-guarantee that the I/O will occur on the optimum boundary (it's actually
-quite unlikely).  To make matters worse, there is no guarantee that when
-you perform a large write, all the data will be placed in contiguous
-blocks.
-
-In order to maximize I/O throughput, it will be necessary to create a
-Linux file-system that can effectively deal with large blocks (not
-necessarily power of two in size).  The alternative would be to work with
-the raw file-system, as many DBMS' do.
-
-I have worked with a file-system structure that deals well with large
-blocks, but it is not in the public domain, and I doubt that CRAY is
-interested in porting the NC1FS structure to Linux.
-
-				Peter Ashford
-
+NeilBrown
