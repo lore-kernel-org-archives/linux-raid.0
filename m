@@ -1,25 +1,24 @@
-From: Mike Dresser <mdresser_l@windsormachine.com>
-Subject: RE: Questions about VERY large software raid config
-Date: Fri, 21 Feb 2003 12:39:20 -0500 (EST)
+From: SoulBlazer <soul@lamp-post.net>
+Subject: Software Raid Cache
+Date: Fri, 21 Feb 2003 15:50:23 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.33.0302211237240.8171-100000@router.windsormachine.com>
-References: <8075D5C3061B9441944E137377645118012E66@cinshrexc03.shermfin.com>
+Message-ID: <3E56910F.6050509@lamp-post.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <8075D5C3061B9441944E137377645118012E66@cinshrexc03.shermfin.com>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 21 Feb 2003, Rechenberg, Andrew wrote:
+I was wondering if it would be possible to set aside a large (larger) 
+amount of system memory to act as cache for software raid.
+I have a few xeon systems here with 4-8gb of memory in them and based on 
+watching the performance of some mylex raid cards
+jump up when we did a memory upgrade from 64mb -> 128mb I was wondering 
+if the same would occur in linux.
 
-> Isn't it 2TB per RAID device (i.e. Linux block device) or 2TB in total?
->
->
-> I have 28 36GB 15K drives and 28 18GB 15K drives.
+If this is even something doable (tweakable) Im wondering what the perf 
+gain from allocating say 2 or 4gb just to raid cache would be.
 
-Sorry, I got the impression you were making one device of 56/2 = 28
-drives in raid0
-It should be per raid device, yes.
-
+Comments ?
 
