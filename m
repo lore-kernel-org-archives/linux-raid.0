@@ -1,44 +1,37 @@
-From: Daniel Brahneborg <daniel.com@wtnord.net>
-Subject: Re: BUG: Data corruption on Raid5 in Linux 2.6.0
-Date: Mon, 29 Dec 2003 13:19:12 +0100
+From: "H. Peter Anvin" <hpa@zytor.com>
+Subject: New RAID-6 snapshot
+Date: 30 Dec 2003 03:34:28 -0800
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20031229131912.C9872@nettis.grimsta>
-References: <20031228000008.B2433@nettis.grimsta> <16366.28299.160756.494452@notabene.cse.unsw.edu.au> <20031228091722.B4400@nettis.grimsta> <20031229000227.GC1882@matchmail.com>
+Message-ID: <bsrns4$uaa$1@cesium.transmeta.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20031229000227.GC1882@matchmail.com>; from mfedyk@matchmail.com on Sun, Dec 28, 2003 at 04:02:27PM -0800
-To: Daniel Brahneborg <daniel.com@wtnord.net>, Neil Brown <neilb@cse.unsw.edu.au>, mingo@redhat.com, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, Dec 28, 2003 at 04:02:27PM -0800, Mike Fedyk wrote:
-> On Sun, Dec 28, 2003 at 09:17:22AM +0100, Daniel Brahneborg wrote:
-> > I get the same problem without it, just a few more "dma_intr:
-> > DriveReady SeekComplete Error" in the syslog.
-> 
-> You are having hard drive problems.
+Well, I implemented read-modify-write for RAID-6, and at least on my
+6-disk system it was a small but measurable performance *loss*.
+Therefore, I have cleaned up the patches slightly, but basically
+RAID-6 seems to work and it now needs people to test it out and let me
+know what bugs is there.
 
-Perhaps... But it doesn't explain my raid5 problems.
+Additionally, the previously mentioned generic md bug relating to
+recovery onto multiple disks should be fixed in the main md code (it's
+also needed for RAID-1.)
 
->  o check your cables
->  o check your drives with smartmontools
+The new snapshot is at:
 
-I've run the "short" test on all four disks now, and got no
-errors.
+    http://www.kernel.org/pub/linux/kernel/people/hpa/raid6-20031230.tar.gz
 
-I've also done my "cp /tmp/a b ; md5sum /tmp/a b" where /tmp/a
-is a 500Mb file with random data on filesystems on the individual
-partitions on the four drives.  That works fine every time.
-Doing the same on the raid5 device on the same drives fails every
-time if the file is large enough (more than say 100 MB).  I also
-don't get any kind of warnings in the syslog when accessing the
-raid5 device.
+... although I reserve the right to upload newer snapshots on an
+ongoing basis :)
 
-Just to make sure, I used the same 5GB partitions for both tests,
-and when a partition is used by itself it works fine. When the
-same partition is used in a raid5 setup, I get corrupted files.
-I've tested all four drives.
+	-hpa
 
-/Basic
 
+-- 
+<hpa@transmeta.com> at work, <hpa@zytor.com> in private!
+If you send me mail in HTML format I will assume it's spam.
+"Unix gives you enough rope to shoot yourself in the foot."
+Architectures needed: ia64 m68k mips64 ppc ppc64 s390 s390x sh v850 x86-64
