@@ -1,32 +1,66 @@
-From: Hendrik Visage <hvisage@envisage.co.za>
-Subject: Re: Support for PATA in Promise 378 driver
-Date: Mon, 23 Feb 2004 15:35:39 +0200
+From: Pavol Luptak <P.Luptak@sh.cvut.cz>
+Subject: Re: SW RAID5 + high memory support freezes 2.6.3 kernel
+Date: Mon, 23 Feb 2004 14:35:04 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040223133539.GO6255@hvs.envisage.co.za>
-References: <20040223141636.20fed6ba@hantst.kabel.utwente.nl>
+Message-ID: <20040223133503.GA1671@psilocybus>
+References: <20040223024124.GA1590@psilocybus> <16441.33071.218049.163976@notabene.cse.unsw.edu.au> <20040222213011.7e1b8bbf.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="a8Wt8u1KmwUX3Y2C"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20040223141636.20fed6ba@hantst.kabel.utwente.nl>
-To: Anton Starikov <A.Starikov@utwente.nl>
-Cc: linux-raid@vger.kernel.org
+In-Reply-To: <20040222213011.7e1b8bbf.akpm@osdl.org>
+To: Andrew Morton <akpm@osdl.org>
+Cc: Neil Brown <neilb@cse.unsw.edu.au>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Feb 23, 2004 at 02:16:36PM +0100, Anton Starikov wrote:
-> Hi!
-> 
-> As I can see, there is no support for PATA port on promise 378 chip
-> currently.
 
-Correct.
+--a8Wt8u1KmwUX3Y2C
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> Is this support planned?
+On Sun, Feb 22, 2004 at 09:30:11PM -0800, Andrew Morton wrote:
+> Neil Brown <neilb@cse.unsw.edu.au> wrote:
+> >
+> > > Hello,
+> >  > issue http://www.spinics.net/lists/lvm/msg10322.html could be still =
+present
+> >  > in the current 2.6.3 kernel. I am able to repeat the conditions to h=
+alt the=20
+> >  > 2.6.3 kernel (using mkfs.ext3 on RAID device):
+> >=20
+> >  To be fair, your subject should say that=20
+> >     SW RAID5 + high memory + loop device freezes 2.6.3 kernel
+> >                            ^^^^^^^^^^^^^^
+>=20
+> hm, yes.  And the loop code which was involved here was removed from the
+> kernel last week, so it's a bit academic.
+>=20
+> Retest on current 2.6.3-bk or 2.6.3-mm3 please.
 
-You have all the correct informatin to program/write the driver??
+I tried 2.6.3-bk4 and seems it works without problems :)
+I'm going to copy about 300 GB data to this cryptoloop/RAID5 and report the
+eventual bugs....
 
-> If now, why? Is there some religious reasons?  ;) 
+Pavol
+--=20
+___________________________________________________________________________=
+__
+[wilder@hq.sk] [http://trip.sk/wilder/] [talker: ttt.sk 5678] [ICQ: 1334035=
+56]
 
-Elsewhere the answer is: Promise haven't provided the needed information yet.
+--a8Wt8u1KmwUX3Y2C
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
 
-Hendir
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.4 (GNU/Linux)
+
+iD8DBQFAOgGHhL+8XxdK5TIRAqQXAJ9DPHUaP5W1f1p3B3Ga0O4JF0lhWwCeJtw9
+vOre8PRuJVzkmt5pN10zX64=
+=7zcd
+-----END PGP SIGNATURE-----
+
+--a8Wt8u1KmwUX3Y2C--
