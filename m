@@ -1,55 +1,34 @@
-From: Maurice Hilarius <maurice@harddata.com>
-Subject: Re: experiences with 3Ware 6400 3W-6400?
-Date: Fri, 27 Jun 2003 10:12:38 -0600
+From: Ricky Beam <jfbeam@bluetronic.net>
+Subject: Re: Mirroring swap
+Date: Fri, 27 Jun 2003 12:17:39 -0400 (EDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <5.1.1.6.2.20030627100826.037d0e70@mail.harddata.com>
-References: <5.1.1.6.2.20030627094920.03e33780@mail.harddata.com>
- <Pine.LNX.4.43.0306271429480.32150-100000@unicorn.drogon.net>
- <Pine.LNX.4.55.0306270920010.6883@datavibe.net>
- <Pine.LNX.4.43.0306271429480.32150-100000@unicorn.drogon.net>
- <5.1.1.6.2.20030627094920.03e33780@mail.harddata.com>
+Message-ID: <Pine.GSO.4.33.0306271209220.7750-100000@sweetums.bluetronic.net>
+References: <200306262022190167.0592257E@ilneval.coreyfro.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; format=flowed
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20030627155324.GS7800@marowsky-bree.de>
-To: Lars Marowsky-Bree <lmb@suse.de>
+In-Reply-To: <200306262022190167.0592257E@ilneval.coreyfro.com>
+To: Corey McGuire <coreyfro@coreyfro.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-With regards to your message at 09:53 AM 6/27/03, Lars Marowsky-Bree. Where 
-you stated:
->On 2003-06-27T09:50:44,
->    Maurice Hilarius <maurice@harddata.com> said:
->
-> > If you look at 3Wares site, you will find that they have their CLI 
-> utility,
-> > which supports hot-swap capability.
->
->Uhm, yes, exactly.
->
->I'm a 3ware user myself. ;-) I was saying that a strict software-raid
->solution was missing this.
+On Thu, 26 Jun 2003, Corey McGuire wrote:
+>And its not like gobs of free RAM is useless in the Linux world.  Unlike
+>windows, Linux keeps it RAM filled with cache until free RAM is needed (I
+>have disk intensive windows apps that run far faster under WINE than
+>Windows.  I love bragging about them ;-)
 
+"Unlike windows"?  Do you even *use* windows?  Windows has had the same
+filesystem caching capability as linux for many years now.  Linux is a lot
+more lax about what it'll keep in memory -- basically, cache pages will
+not be pushed out until something needs the memory (application or another
+cache page.)  Windows limits the ammount of cached space and tends to dump
+things a great deal faster...
 
-Pardon?
+Everyone loves to poopoo on windows without even looking.  Both do caching.
+Linux tends to do it much better -- esp. under load; copy a file 2x the
+size of RAM on both and you'll see what I mean.
 
-If you run software RAID and use their CLI you have hot-swap.
-If you run their BIOS controlled RAID and use their 3DM you get similar 
-functions.
+--Ricky
 
-About the only difference I see is that 3DM has a pretty interface GUI in 
-your web browser.
-
-If that is important one could make a similar thing using tools like Python 
-or Zope pretty easily..
-
-
-
-With our best regards,
-
-Maurice W. Hilarius       Telephone: 01-780-456-9771
-Hard Data Ltd.               FAX:       01-780-456-9772
-11060 - 166 Avenue        mailto:maurice@harddata.com
-Edmonton, AB, Canada      http://www.harddata.com/
-    T5X 1Y3
 
