@@ -1,74 +1,35 @@
-From: "Doug Griswold" <griswld@cio.sc.gov>
-Subject: Re: md multipath and failover
-Date: Thu, 11 Sep 2003 07:07:16 -0400
+From: "Eric Wood" <eric@interplas.com>
+Subject: Re: Converting a non-RAID RedHat System to run on Software RAID
+Date: Thu, 11 Sep 2003 08:21:06 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <sf601f2f.086@gw.state.sc.us>
+Message-ID: <022d01c3785f$2d39e120$9100000a@intgrp.com>
+References: <E5DA6395B8F9614EB7A784D628184B200D9A56@hdsmsx402.hd.intel.com> <20030910131849.GA5267@ti19>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-To: Doug Griswold <griswld@cio.sc.gov>, lmb@suse.de, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Thanks for the info.  My next question is I have set the link down
-timeout in the emulex driver to be 15 seconds but the paths are still
-not failing over for 5 minutes.  Is there a way to get the scsi timeout=
-s
-down
-to 30 seconds?  Can I pass anything to the scsi module at boot?  If I
-applied your patch that provides load balancing then I would not have t=
-o
-worry about this issue since they are both working already we wouldn't
-have the timeout issue.  Does your patch pick up on the path once it
-becomes available after losing it? =20
+I may be wrong but simply 'e'diting the boot menu at boot time doesn't write
+back anything to the filesystem.  I edit my boot string all the time to try
+out all sorts of kernel arguments like "ide=nodma" and upon the next reboot
+that modification is gone.  Until you actually put it in
+/boot/grub/grub.conf is won't stick or do an "install" from within grub,
+then I can't see why grub is altering your /boot filesystem to get the
+mirror out of sync.  Sounds like a bug!
+-eric wood
 
+Bill Rugolsky Jr. wrote:
+> desynchronizes the RAID1 set. [It seems that simply using 'e' to edit
+> the kernel args has this effect, though I haven't verified it
+> myself.]  We see this corruption in MD5 variation in our nightly
+> integrity-verification cron job.
+>
+> Trivial workaround is to resync the second drive in the rc scripts;
+> for the typical 50-100MB /boot partition, this takes only a few
+> seconds.
+>
+> Bill Rugolsky
 
-Thanks for the info.
-Doug=20
-
-
->>> Lars Marowsky-Bree <lmb@suse.de> 09/11/03 03:45 AM >>>
-On 2003-09-10T18:55:41,
-   Doug Griswold <griswld@cio.sc.gov> said:
-
-> Alright I got md/multipath to failover with 2 emulex hba's on red hat
-> advanced server 2.1 kernel version 2.4.9-27enterprise.  My next new
-> problem is that it took five minutes to fail over from when I yanked
-one
-> of the fibre channel cables.   Where could this timeout come from?  I
-> have tried several times but each time it takes 5 minutes to failover=
-=2E
-
-> Also it won't failback.  Any ideas out there. =20
-
-The plain md multipath can't do failback automatically. People's opinio=
-n
-on whether that is a good idea do differ ;-)
-
-The timeout is the time needed until the damn (sorry) Linux Kernel SCSI
-layers give up retrying and then pass the error code up to md for
-handling. You can maybe try tuning some emulex parameters to fix that.
-
-If you want load balancing for the md multipath, you could try checking
-out my patch at ftp://ftp.suse.com/pub/people/lmb/md-mp/ vs 2.4, it add=
-s
-some features to md and also makes it quite a bit more robust.
-
-
-Sincerely,
-    Lars Marowsky-Br=E9e <lmb@suse.de>
-
---=20
-High Availability & Clustering		ever tried. ever failed. no
-matter.
-SuSE Labs				try again. fail again. fail
-better.
-Research & Development, SuSE Linux AG		-- Samuel Beckett
-
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
