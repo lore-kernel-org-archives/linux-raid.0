@@ -1,67 +1,55 @@
-From: "Ionut Nistor" <ionut@modulo.ro>
-Subject: Re: Multipath problem in a SAN enviromnent
-Date: Thu, 12 Jun 2003 13:51:06 +0300
+From: "Nicolas Meaux" <nicolas.meaux@artabel.net>
+Subject: Re: Crashing a software raid 5 partition ( disk trouble )
+Date: Thu, 12 Jun 2003 12:06:55 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <007c01c330d0$86dda7b0$0cc7e7c1@EEL>
-References: <02d201c33023$13fd45a0$3351960a@EEL> <3EE7585E.45D851CE@SteelEye.com> <20030612100423.GA14106@marowsky-bree.de>
+Message-ID: <00db01c330ca$5ae72290$3001a8c0@melkor>
+References: <007201c330b9$c316f310$3001a8c0@melkor><16104.22045.492729.835610@gargle.gargle.HOWL> <16104.22361.508001.916567@gargle.gargle.HOWL>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Lars Marowsky-Bree <lmb@suse.de>, Paul Clements <Paul.Clements@SteelEye.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello Lars,
+Thanks for you quick respond Neil  ;)
 
-Are these changes documented?
-Is there a changelog?
-In which official kernel has the patch been merged?
-Is there a separate patch I can apply to 2.4.18 vanilla?
+>    mdadm -A --force /dev/md2 /dev/sd[a-f]
 
-Thanks a lot,
-Ionut
+So, i type this command :
 
------ Original Message -----=20
-=46rom: "Lars Marowsky-Bree" <lmb@suse.de>
-To: "Paul Clements" <Paul.Clements@SteelEye.com>; "Ionut Nistor"
-<ionut@modulo.ro>
-Cc: <linux-raid@vger.kernel.org>
-Sent: Thursday, June 12, 2003 1:04 PM
-Subject: Re: Multipath problem in a SAN enviromnent
+# mdadm -A --force /dev/md2 /dev/sd[a-h]
+mdadm: /dev/md2 has been started with 7 drives.
+
+( i do a [a-h] , because i have 8 scsi disk )
+
+I try too mount md2, it work fine, but :
+# ls -al
+ls: nohup.out: Input/output error
+ls: tape.sh: Input/output error
+ls: .viminfo: Input/output error
+ls: .bash_history: Input/output error
+ls: .bashrc~: Input/output error
+ls: .xauth: Input/output error
+
+It seem that there is many errors on the partition.
+So, in good newbie, i decided too reboot the machine, but now and since one
+hour, he is blocking on these lines :
+
+[...]
+md: updating md2 RAID superblock device
+md: sdg [events: 000005a]<6>write sdg's sb offset 35843584
+md: sdh [events: 000005a]<6>write sdh's sb offset 35843584
+md: sde [events: 000005a]<6>write sde's sb offset 35843584
+md: sdd [events: 000005a]<6>write sdd's sb offset 35843584
 
 
-> On 2003-06-11T12:27:10,
->    Paul Clements <Paul.Clements@SteelEye.com> said:
->
-> > One way to get around this problem is to use non-persistent superbl=
-ocks
-> > for your arrays and just re-create them at bootup time by calling m=
-kraid
-> > (or mdadm) after you've correctly identified (using WWID or similar=
-)
-> > which devices belong to each particular raid set.
->
-> The patches I did to multipath in 2.4 went even further: As the md
-> superblock - this_disk etc - has little meaning for multipath, as the=
-y
-> are all identical, I made the assembly based entirely on the UUID,
-> ignoring the device nodes completely.
->
->
-> Sincerely,
->     Lars Marowsky-Br=E9e <lmb@suse.de>
->
-> --=20
-> SuSE Labs - Research & Development, SuSE Linux AG
->
-> "If anything can go wrong, it will." "Chance favors the prepared (min=
-d)."
->   -- Capt. Edward A. Murphy            -- Louis Pasteur
->
+But, there is disk activity on the first one.
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+It's normal ? does RAID reconsctruct itsef ? if so , why did not he say that
+he is doing it ?
+
+
+    Nicolas
+
+
