@@ -1,34 +1,49 @@
 From: NeilBrown <neilb@cse.unsw.edu.au>
-Subject: [PATCH md 0 of 2] Introduction
+Subject: [PATCH md 2 of 2] Correct "working_disk" counts for raid5 and raid6
 Date: Fri, 03 Sep 2004 12:27:31 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040903122034.15346.patches@notabene>
+Message-ID: <E1C33nX-00040m-Fl@notabene.cse.unsw.edu.au>
+References: <20040903122034.15346.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: Andrew Morton <akpm@osdl.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Two patches for md in 2.6.9-rc1-mm2
 
-The first adds support for notifying user-space of events in md.
+This error only affects two message (and sysadmin heart-rate).
+It does not risk data.
 
-The mechanism is very simple.  A reader of /proc/mdstat can select for
-"exceptional" events.  When select/poll indicates one of these, the 
-reader should re-read /proc/mdstat from the top looking for changes, and then
-select again.
+Signed-off-by: Neil Brown <neilb@cse.unsw.edu.au>
 
-If the reader opens for write as well (O_RDWR) (only root can do
-this), then it indicates that it is prepared to take remedial action.
-This is currently only relevant for multipath.  On last-drive-failure,
-if there is a reader of /proc/mdstat that has an open for write, then
-multipath will wait for that reader to add a new drive or take other
-action before resubmitting the failed requests.
+### Diffstat output
+ ./drivers/md/raid5.c     |    2 +-
+ ./drivers/md/raid6main.c |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-The second patch just fixes a counter in raid5/6 which could get out-by-one, and so
-produce confusing messages.
+diff ./drivers/md/raid5.c~current~ ./drivers/md/raid5.c
+--- ./drivers/md/raid5.c~current~	2004-09-03 11:34:26.000000000 +1000
++++ ./drivers/md/raid5.c	2004-09-03 11:37:56.000000000 +1000
+@@ -477,8 +477,8 @@ static void error(mddev_t *mddev, mdk_rd
+ 
+ 	if (!rdev->faulty) {
+ 		mddev->sb_dirty = 1;
+-		conf->working_disks--;
+ 		if (rdev->in_sync) {
++			conf->working_disks--;
+ 			mddev->degraded++;
+ 			conf->failed_disks++;
+ 			rdev->in_sync = 0;
 
-(I think I sent a single item of junk just before this, sorry about that.  Please
-ignore it).
-
-NeilBrown
-
+diff ./drivers/md/raid6main.c~current~ ./drivers/md/raid6main.c
+--- ./drivers/md/raid6main.c~current~	2004-09-03 11:34:26.000000000 +1000
++++ ./drivers/md/raid6main.c	2004-09-03 11:37:56.000000000 +1000
+@@ -498,8 +498,8 @@ static void error(mddev_t *mddev, mdk_rd
+ 
+ 	if (!rdev->faulty) {
+ 		mddev->sb_dirty = 1;
+-		conf->working_disks--;
+ 		if (rdev->in_sync) {
++			conf->working_disks--;
+ 			mddev->degraded++;
+ 			conf->failed_disks++;
+ 			rdev->in_sync = 0;
