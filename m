@@ -1,50 +1,67 @@
-From: Lars Marowsky-Bree <lmb@suse.de>
-Subject: Re: monitoring multipath arrays plus inconsistent /proc/mdstat?
-Date: Fri, 22 Oct 2004 23:25:31 +0200
+From: matt brennan <raid@classforge.com>
+Subject: Resizing raid-1 on replacing failed disk
+Date: Sat, 23 Oct 2004 13:41:07 +0930
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20041022212531.GE7205@marowsky-bree.de>
-References: <20041021165119.GU3911@marowsky-bree.de> <Pine.LNX.4.44.0410220739480.13142-100000@lajli.gau.hu> <20041022091719.GF3911@marowsky-bree.de> <41797136.2050209@bms.com>
+Message-ID: <4179D9DB.2070709@classforge.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <41797136.2050209@bms.com>
-To: Anu Matthew <anu.matthew@bms.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2004-10-22T16:44:38, Anu Matthew <anu.matthew@bms.com> wrote:
+I would like replace a failed disk in a raid-1 with a larger disk - and 
+ultimately increase the size of the array (and ext3 partition) by 
+subsequently adding a second larger disk in lieu of the currently active 
+one.
 
-> May I ask, why? We are to evaluate Power Path also for 2.4, and am ju=
-st=20
-> curious why it is not going to run on 2.6? That could be a very impor=
-tant=20
-> factor in decision making if it won't make it on 2.6.x
+I am hoping someone will scan the following and briefly reply: "this 
+looks ok" or "you forgot step(s) X" before I commence.
 
-Because EMC is very forthcoming about supporting the proper way of doin=
-g
-multipathing on Linux in 2.6 (based on the Open Source Device-Mapper
-multipath functionality + the multipath-tools package) and actively
-supporting me developing that feature by providing technical specs and
-hardware, I don't really see a need for using Power Path any longer on
-2.6 platforms.
+<disclaimer>
+I have read the software-raid-howto, list faq, mdadm man pages and 
+trawled this mailing list to try to ensure I am not posting a question 
+that has been answered before. If you believe that this topic is well 
+covered elsewhere, please smack me up and post a link.
+</disclaimer>
 
-I could understand that they may want to provide it for legacy
-installations who want to slowly transition though, but they've not
-mentioned it yet; personally I'd think it would be kind of pointless
-;-)
+Currently:
 
+kernel: 2.4.18
+mdadm: 0.7.2-2 (version reported by dpkg)
 
-Sincerely,
-    Lars Marowsky-Br=E9e <lmb@suse.de>
+> # mdadm --detail /dev/md0
+> /dev/md0:
+>         Version : 00.90.00
+>   Creation Time : Sun Dec 23 05:46:51 2001
+>      Raid Level : raid1
+>      Array Size : 39078016 (37.26 GiB 40.01 GB)
+>     Device Size : 39078016 (37.26 GiB 40.01 GB)
+>      Raid Disks : 2
+>     Total Disks : 2
+> Preferred Minor : 0
+>     Persistance : Superblock is persistant
+<snip>
+>     Number   Major   Minor   RaidDisk   State
+>        0       3        1        0      active sync   /dev/hda1
+>        1      22        1        1      faulty   /dev/hdc1
+>            UUID : 3e9f6b0c:e3c4d3cc:761130b2:d4f74686
 
---=20
-High Availability & Clustering
-SUSE Labs, Research and Development
-SUSE LINUX AG - A Novell company
+Plan:
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+- backup
+- physcially remove the failed disk
+- physcially replace the failed disk with a larger disk
+- add the new disk to the array and allow to resync
+- fail and remove the active smaller disk
+- physcially replace the active smaller disk with a larger disk
+- resize the ext3 partition
+
+Help:
+
+Could you indicate whether this is possible with the listed kernel and 
+mdadm version before I kick off?
+
+Thanks and regards,
+
+   matt
