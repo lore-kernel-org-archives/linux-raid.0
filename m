@@ -1,49 +1,22 @@
-From: christophe.varoqui@free.fr
-Subject: [ANNOUNCE] multipath-tools-0.2.2
-Date: Mon,  7 Jun 2004 16:43:46 +0200
+From: Joe Pruett <joey@clean.q7.com>
+Subject: Re: ANNOUNCE: mdadm 1.6.0 - A tool for managing Soft RAID under   
+   Linux
+Date: Mon, 7 Jun 2004 08:54:49 -0700 (PDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1086619426.40c47f220de01@imp5-q.free.fr>
-References: <1084519750.40a47546dd0e6@imp1-q.free.fr> <1086256342.40bef4d61b3e9@imp3-q.free.fr>
+Message-ID: <Pine.LNX.4.44.0406070853140.25203-100000@q7.q7.com>
+References: <ca16n8$k3p$1@sea.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1086256342.40bef4d61b3e9@imp3-q.free.fr>
-To: dm-devel@redhat.com
-Cc: linux-hotplug-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, linux-raid@vger.kernel.org
+In-Reply-To: <ca16n8$k3p$1@sea.gmane.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
+> You don't need LVM and thus you have one less layer
+> with potential failures and errors.
 
-here goes multipath-tools-0.2.2
+using lvm for just partitioning would be silly.  but lvm gives you much
+more than that.  the ability to span partitions over multiple raid arrays.  
+and the main reason i use it is to be able to grow/shrink storage if
+something changes in the future.
 
-Major changes are :
-1) get a real parser. so update the config file with provided sample
-2) get rid of most fixed-size arrays in favor of resizable vectors
-
-All in all, the code base now seems pretty sane.
-
-Changelog for this release :
-
-2004-06-07 multipath-tools-0.2.2
-        * [multipath] leave out 2.4 compat code. Is there
-          interest anyway ?
-        * [multipath] convert all_paths table to vector api.
-          Rename to pathvec. Get rid of max_devs
-        * [multipath] convert mp table to vector api
-        * convert blacklist to vector api
-        * 2.6.7-rc? adds _user annotations to scsi/sg.h, causing
-          compilation breakage. Add a "#define _user" in all
-          sg_include.h (and remove cruft)
-        * merge a real parser (from keepalived) courtesy of 
-          Alexandre Cassen. Now multipath and multipathd share a
-          config file. This comes with a nice vector lib.
-        * devnode blacklist moved from hardcoded to config file
-        * Guy Coates noted -O2 CFLAGS lead to multipathd crashes
-          on IA64. Remove the needless optimisation for now.
-
-Downloads and docs at http://christophe.varoqui.free.fr
-
-regards,
-cvaroqui
--- 
