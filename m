@@ -1,50 +1,50 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: RAID-10 with odd number of disks (was Re: Software RAID 0+1 with mdadm.)
-Date: Thu, 27 Jan 2005 12:16:31 -0500
-Message-ID: <200501271714.j0RHEa911050@www.watkins-home.com>
-References: <20050127161927.GK82728@caffreys.strugglers.net>
+From: Andy Smith <andy@lug.org.uk>
+Subject: Re: RAID-10 with odd number of disks (was Re: Software RAID 0+1 with mdadm.)
+Date: Thu, 27 Jan 2005 17:27:00 +0000
+Message-ID: <20050127172700.GN82728@caffreys.strugglers.net>
+References: <20050127161927.GK82728@caffreys.strugglers.net> <200501271714.j0RHEa911050@www.watkins-home.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="qjGvC0f9mZqYBGXn"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20050127161927.GK82728@caffreys.strugglers.net>
+Content-Disposition: inline
+In-Reply-To: <200501271714.j0RHEa911050@www.watkins-home.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Andy Smith' <andy@lug.org.uk>, 'linux-raid' <linux-raid@vger.kernel.org>
+To: 'linux-raid' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-It rotates the pairs!
-Assume 3 disks, A, B and C.
-Each stripe would be on these disks:
-A+B
-C+A
-B+C
-A+B
-C+A
-B+C
-...
 
-Maybe not exactly as above, but if not, something similar.
+--qjGvC0f9mZqYBGXn
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Andy Smith
-Sent: Thursday, January 27, 2005 11:19 AM
-To: 'linux-raid'
-Subject: RAID-10 with odd number of disks (was Re: Software RAID 0+1 with
-mdadm.)
+On Thu, Jan 27, 2005 at 12:16:31PM -0500, Guy wrote:
+> It rotates the pairs!
+> Assume 3 disks, A, B and C.
+> Each stripe would be on these disks:
+> A+B
+> C+A
+> B+C
+> A+B
+> C+A
+> B+C
+> ...
 
-On Thu, Jan 27, 2005 at 10:50:43AM -0500, Guy wrote:
-> RAID10 will work with an odd number of disks!  If really is cool!
+Hmm, difficult to visualise and comprehend if there are any
+differences as opposed to "normal" RAID-10.
 
-It will?  How?  Does it just make the last mirror "pair" have 3
-disks or what?
+Is this anything like how RAID-1E works on IBM ServeRAID?
 
-If so then wouldn't it be better just to not have that disk under
-md and use it for someting else?
+--qjGvC0f9mZqYBGXn
+Content-Type: application/pgp-signature
+Content-Disposition: inline
 
--- 
-> > > The optimum programming team size is 1.
-Has Jurassic Park taught us nothing?
- -- pfilandr
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.0 (FreeBSD)
 
+iD8DBQFB+SRkIJm2TL8VSQsRArDLAKDjc3QAYi1e27yxLrviAkkkr40FSACfVFG0
+cXlPY+toFlcBu8zFrJGnEJI=
+=Uekp
+-----END PGP SIGNATURE-----
+
+--qjGvC0f9mZqYBGXn--
