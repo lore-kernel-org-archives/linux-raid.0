@@ -1,45 +1,23 @@
-From: mattyml@bellsouth.net
-Subject: Persisting hotspare configuration
-Date: Sun, 28 Dec 2003 14:13:11 -0500 (EST)
+From: Mike Fedyk <mfedyk@matchmail.com>
+Subject: Re: BUG: Data corruption on Raid5 in Linux 2.6.0
+Date: Sun, 28 Dec 2003 16:02:27 -0800
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.GSO.4.58.0312281358001.20976@winnie.matty.com>
-Reply-To: mattyml@bellsouth.net
+Message-ID: <20031229000227.GC1882@matchmail.com>
+References: <20031228000008.B2433@nettis.grimsta> <16366.28299.160756.494452@notabene.cse.unsw.edu.au> <20031228091722.B4400@nettis.grimsta>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Linux Software RAID Mailing List <linux-raid@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20031228091722.B4400@nettis.grimsta>
+To: Daniel Brahneborg <daniel.com@wtnord.net>
+Cc: Neil Brown <neilb@cse.unsw.edu.au>, mingo@redhat.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Howdy,
+On Sun, Dec 28, 2003 at 09:17:22AM +0100, Daniel Brahneborg wrote:
+> I get the same problem without it, just a few more "dma_intr:
+> DriveReady SeekComplete Error" in the syslog.
 
-I followed the directions in the FAQ, and mirrored "/" and swap on one
-of my machines. I am attempting to add a hotspare drive for these raid
-devices, and did the following:
+You are having hard drive problems.
 
-1) Update /etc/raidtab
-
-raiddev             /dev/md1
-raid-level                  1
-nr-raid-disks               2
-persistent-superblock       1
-nr-spare-disks              1
-    device          /dev/hda2
-    raid-disk     0
-    device          /dev/hdc2
-    raid-disk     1
-    device          /dev/hde1
-    spare-disk    0
-
-2) Add the hotspare to the device
-$ raidhotadd /dev/md1 /dev/hde1
-
-This works fine, but the configuration (from "cat /proc/mdstat")
-disappears after a reboot. I suspect that the configuration isn't
-getting written to the persistent-superblock? I looked through
-the "man -k raid" manpages, the FAQ, and various messages in the archives,
-but can't seem to figure out why the hotspare isn't visible when the box
-reboots? Is there an easy way to print the configuration that resides
-within the persistent-superblock?
-
-Thanks,
-- Ryan
+ o check your cables
+ o check your drives with smartmontools
