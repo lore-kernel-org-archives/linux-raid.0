@@ -1,59 +1,30 @@
-From: Paul Clements <paul.clements@steeleye.com>
-Subject: Re: [PATCH md 0 of 4] Introduction
-Date: Tue, 08 Mar 2005 12:02:17 -0500
-Message-ID: <422DDA99.60608@steeleye.com>
-References: <20050308165021.3745.patches@notabene> <6jj0g2-c27.ln1@news.it.uc3m.es>
+From: "Ruth Ivimey-Cook" <Ruth.Ivimey-Cook@ivimey.org>
+Subject: Strange shift to readonly mode on raid5
+Date: Tue, 8 Mar 2005 17:05:46 -0000 (GMT)
+Message-ID: <13151.81.102.15.210.1110301546.squirrel@ivimey.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-In-Reply-To: <6jj0g2-c27.ln1@news.it.uc3m.es>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Sender: linux-raid-owner@vger.kernel.org
-To: "Peter T. Breuer" <ptb@lab.it.uc3m.es>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Peter T. Breuer wrote:
+Hi,
 
-> Neil - can you describe for me (us all?) what is meant by
-> intent=ADlogging here.
+I've just spent a couple of hours sorting out my server after it, for an
+unknown reason, threw a wobbly and froze.
 
-Since I wrote a lot of the code, I guess I'll try...
+One of the stranger aspects of this is that once I got it more-or-less
+working, I found that the raid5 array on the server was being switched to
+readonly mode very early on in the init process (about when RedHat nash
+starts): "md: md2 switched to readonly mode" or something similar.
 
-> Well, I can guess - I suppose the driver marks the bitmap before a wr=
-ite
-> (or group of writes) and unmarks it when they have completed
-> successfully.  Is that it?
+dmesg output shows that all 3 arrays (2xraid1, 1xraid5) were constructed
+properly, and the only other strangeness is that between the completion of
+array assembly and the above-mentioned readonly switch I got an error from
+Ext3 indicating it couldn't recover a filesystem on a readonly device.
 
-Yes. It marks the bitmap before writing (actually queues up the bitmap=20
-and normal writes in bunches for the sake of performance). The code is=20
-actually (loosely) based on your original bitmap (fr1) code.
+I couldn't see any reason for the EXT3 error, nor for the md: output. Has
+anyone any ideas?
 
-> If so, how does it manage to mark what it is _going_ to do (without
-> psychic powers) on the disk bitmap? =20
-
-That's actually fairly easy. The pages for the bitmap are locked in=20
-memory, so you just dirty the bits you want (which doesn't actually=20
-incur any I/O) and then when you're about to perform the normal writes,=
-=20
-you flush the dirty bitmap pages to disk.
-
-Once the writes are complete, a thread (we have the raid1d thread doing=
-=20
-this) comes back along and flushes the (now clean) bitmap pages back to=
-=20
-disk. If the pages get dirty again in the meantime (because of more=20
-I/O), we just leave them dirty and don't touch the disk.
-
-> Then resync would only deal with the marked blocks.
-
-Right. It clears the bitmap once things are back in sync.
-
---
-Paul
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Ruth
