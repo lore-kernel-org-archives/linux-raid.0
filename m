@@ -1,57 +1,72 @@
-From: Daniel Brahneborg <daniel.com@wtnord.net>
-Subject: Re: Status of Promise drivers?
-Date: Tue, 3 Feb 2004 19:23:36 +0100
+From: Steven Ihde <sihde@cs.stanford.edu>
+Subject: Re: Bringing broken raid 5 back on-line.
+Date: Tue, 3 Feb 2004 17:00:47 -0800
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040203192336.A5570@nettis.grimsta>
-References: <20031230200012.C14399@nettis.grimsta> <3FF1CCC1.3050304@pobox.com>
+Message-ID: <20040204010047.GA26264@hamachi.dyndns.org>
+References: <Pine.LNX.4.33.0402021518100.15302-100000@holly.rdwarf.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <3FF1CCC1.3050304@pobox.com>; from jgarzik@pobox.com on Tue, Dec 30, 2003 at 02:06:41PM -0500
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Daniel Brahneborg <daniel.com@wtnord.net>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <Pine.LNX.4.33.0402021518100.15302-100000@holly.rdwarf.com>
+To: Louis Erickson <wwonko@rdwarf.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-(Continued from an earlier discussion on the linux-raid list.)
 
-I made the mistake of getting a Highpoint Rocket 1540 instead
-of a Promise SATA card, and I simply can't get it to work
-with the hpt366 driver in the kernel.  The driver from Highpoint
-works better, but only works for the RedHat 2.4.20-8 kernel,
-so I won't bother anybody with the problems with that one.
+I didn't see any other answers, so I'll take a shot...
 
-A major factor seems to be the KT600 chipset on the Abit KV7
-motherboard. Is this a known issue?
-
-On Tue, Dec 30, 2003 at 02:06:41PM -0500, Jeff Garzik wrote:
-> Daniel Brahneborg wrote:
-> > I'm having serious problems with my Silicon Image SATA card,
-> > and am considering replacing with a (more expensive) Promise
-> > SATA TX2 Plus card.
-> > 
-> > First I have some questions, to avoid getting into the same
-> > mess as I'm in now.
-> > 
-> >  1. What is the status of the Promise driver?  Stable for
-> >     everybody? (The SI3112 has problems for some people when
-> >     using the IDE driver, and for some with the SCSI driver.)
-> >     A binary module is ok, a binary bzImage definately is not.
+On Mon, Feb 02, 2004 at 03:44:57PM -0800, Louis Erickson wrote:
+[snip]
+> We've got a raid 5 with three drives.  I'll spare you the comedy of errors
+> and/or sob story that you've all probably heard before, but the upshot is
+> that we have two failed drives and no current backup.
 > 
-> It's beta, and stable.
+> When the second drive failed, the raid went offline right away.  The
+> second failure was apparently due to a write fail on the disk.  I presume
+> that the data on the second failed drive and the main drive is mostly in
+> synch, except for the last change made.  My conclusion is that other than
+> the file being written, the rest of the data should be okay.  Please tell
+> me if I'm wrong there.
 
-Since I'm paranoid: What motherboards has it been tested and
-verified with?
+That's a reasonable guess, I think.  It depends to some extent what
+went bad... once I had a drive that developed a few bad sectors, but
+the bad sectors were in the middle of the inodes for my /home
+partition, so it did some pretty serious damage.
 
-> >  3. Has anybody used it with *2* network cards?  Bonus
-> >     points for the builtin Via Rhine and an 8139 card.
-> >     (The SCSI driver for the SI3112 kills the machine when a
-> >     second card is activated.)
+> We got identical drives to the one good drive and the second
+> failure, and have used dd to copy the data on to those volumes, so
+> we can attempt to recover and not hurt our only copies of this data.
+> I've seen another message on this list which suggests this should
+> work.  Copies were made with no errors.
+>
+> At the moment, my system is a little old and does not have mdadm on it.
+> Is it worth getting and installing this, or am I best to stick with the
+> original raidtools?
+> 
 
-Interestingly enough, the Highpoint card has the same effect
-when activating the first network card (it doesn't matter which
-one), but only with the 2.4 kernel. The 2.6 kernel works fine.
-Again, could this be a motherboard issue?
+I advise you to get and install mdadm -- it has worked fine for me and
+mdadm seems to be the overwhelming preference of the posters to this
+list and thus easier to get support for.
 
-/Basic
+> The question of the hour is: How do I get the two drives to come back
+> on-line in degraded mode?  They have different event counters and will not
+> come up.
+> 
+> Any advice or direction you can provide will be very much appreciated.
+
+Once you have mdadm, 
+
+mdadm --assemble /dev/md<whatever> --force <good drive #1> <good drive
+#2> missing
+
+should work for you.  Note that "missing" is a literal string which
+you supply instead of a third device name, indicating that you want to
+assemble a three-drive array in degraded mode without one of its
+drives.  You should see some message in the logs about forcing the
+event count of some drive or another.  "--force" is necessary because
+the remaining drives' event counts are different.
+
+-Steve
+
 
