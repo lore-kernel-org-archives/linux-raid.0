@@ -1,47 +1,50 @@
-From: Mauricio <raub@afn.org>
-Subject: Re: raid is read-only? (debian/sarge)
-Date: Fri, 26 Mar 2004 08:15:18 -0500
+From: Thomas Andrews <tandrews@grok.co.za>
+Subject: One partition degraded after every reboot
+Date: Fri, 26 Mar 2004 17:41:25 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <a06002007bc89dae1b559@[10.0.0.10]>
-References: <a06002005bc89ce38bb27@[10.0.0.10]>
- <Pine.LNX.4.56.0403261224250.14553@lion.drogon.net>
+Message-ID: <20040326154125.GN1950@gaspode.nextlink.co.za>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii" ; format="flowed"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.56.0403261224250.14553@lion.drogon.net>
-To: Gordon Henderson <gordon@drogon.net>
-Cc: linux-raid@vger.kernel.org
+Content-Disposition: inline
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-At 12:32 +0000 3/26/04, Gordon Henderson wrote:
->On Fri, 26 Mar 2004, Mauricio wrote:
->
->>	I have 2 120GB IDE drives in the second IDE controller of a
->>  P4 debian/sarge box that I would like to set up as a raid1 array.
->>  Using info from the following links,
->
->Are you aware that using 2 disks on the same controller is generally
->regarded as a "bad thing"[tm]?
->
->I had personally lost access to a 2nd drive when one drive on the same bit
->of cable failed. Fortunately in my case, I didn't lose data on the good
->drive, but I wasunable to access it until I powered the PC down and
->removed the failed drive.
->
->Read the paragraph under "Fault Survival" at:
->
->   http://en.tldp.org/HOWTO/Software-RAID-HOWTO-4.html
->
->I'm sure you know this... Just checking....
+Hi All,
 
-	Actually, I was not aware of that.  Thanks for scaring me! =)
+I've set up RAID-1 on a pair of disks recently. When I reboot I get this
+in syslog, even though the partition was perfect & not degraded before:
 
-That said, hopefully this setup will not stay long like that; it is 
-almost a validation/test setup.
+kernel:  /dev/ide/host2/bus0/target0/lun0: p1 < p5 p6 p7 p8 > p2 p3
+kernel:  /dev/ide/host2/bus1/target0/lun0: p1 < p5 p6 p7 p8 > p2 p3
+kernel:  [events: 0000001c]
+kernel: md: bind<ide/host2/bus1/target0/lun0/part5,1>
+kernel: md: ide/host2/bus1/target0/lun0/part5's event counter: 0000001c
+kernel: md1: former device ide/host2/bus0/target0/lun0/part5 is unavailable, removing from array!
 
->  > <after rebooting...>
->>  laurel:/# mount -o rw /dev/md0 /mnt
->
->Looks like you forgot to mkfs the new md0 device..
+More specifically, of the 4 RAID-1 partitions, md1 (my root partition)
+is in degraded mode. Here's a snippet of /proc/mdstat:
 
-	I did forget that indeed!  Thanks!  Now all is well. =)
+md1 : active raid1 ide/host2/bus1/target0/lun0/part5[0]
+      38957440 blocks [2/1] [U_]
+
+All the RAID partitions are of type FD on both disks, and the disks are
+brand new. I swapped out the 'offending' disk with another brand new
+disk, but it made no difference.
+
+This is a stock Debian/testing pc running a stock 2.4.24-1-686 kernel.
+I use mdadm. Initially I thought that it was grub messing things up, but
+I'm booting from a floppy now, and I haven't bothered to intall grub on
+the newer disk.
+
+To recommission partition on the previous disk, I used 
+mdadm --zero-superblock /dev/hde5
+mdadm /dev/md1 -a /dev/hde5
+This set things right, and there were no problems until the next reboot.
+The process is totally repeatable.
+
+What am I missing here ?
+
+Why does it say "device ide/host2/bus0/target0/lun0/part5 is unavailable"
+in the log ??
+
