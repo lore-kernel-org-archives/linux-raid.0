@@ -1,38 +1,22 @@
-From: NeilBrown <neilb@cse.unsw.edu.au>
-Subject: [PATCH md 1 of 2] Fix multipath assembly bug
-Date: Thu, 10 Feb 2005 09:22:47 +1100
-Message-ID: <E1Cz0ER-0000QW-TP@notabene.cse.unsw.edu.au>
-References: <20050210091909.1612.patches@notabene>
+From: Michael Tokarev <mjt@tls.msk.ru>
+Subject: Re: [PATCH md 1 of 2] Fix multipath assembly bug
+Date: Thu, 10 Feb 2005 13:47:04 +0300
+Message-ID: <420B3BA8.2050907@tls.msk.ru>
+References: <20050210091909.1612.patches@notabene> <E1Cz0ER-0000QW-TP@notabene.cse.unsw.edu.au>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=KOI8-R; format=flowed
+Content-Transfer-Encoding: 7bit
+In-Reply-To: <E1Cz0ER-0000QW-TP@notabene.cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+NeilBrown wrote:
+> In md, there are "level" number and "personality" numbers.
+> LEVEL_MULTIPATH is the level number for multipath.
+> MULTIPATH is the personality number for multipath.
 
-In md, there are "level" number and "personality" numbers.
-LEVEL_MULTIPATH is the level number for multipath.
-MULTIPATH is the personality number for multipath.
+BTW, why the two in the first place?  Isn't it nice to
+eliminate one of them?
 
-In one place, we compare the level with a personality
-... bad
-
-This makes it impossible to assemble multipath arrays.
-
-Signed-off-by: Neil Brown <neilb@cse.unsw.edu.au>
-
-### Diffstat output
- ./drivers/md/md.c |    2 +-
- 1 files changed, 1 insertion(+), 1 deletion(-)
-
-diff ./drivers/md/md.c~current~ ./drivers/md/md.c
---- ./drivers/md/md.c~current~	2005-02-09 11:27:25.000000000 +1100
-+++ ./drivers/md/md.c	2005-02-09 14:22:16.000000000 +1100
-@@ -572,7 +572,7 @@ static int super_90_load(mdk_rdev_t *rde
- 	rdev->preferred_minor = sb->md_minor;
- 	rdev->data_offset = 0;
- 
--	if (sb->level == MULTIPATH)
-+	if (sb->level == LEVEL_MULTIPATH)
- 		rdev->desc_nr = -1;
- 	else
- 		rdev->desc_nr = sb->this_disk.number;
+/mjt
