@@ -1,103 +1,93 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: Spares and partitioning huge disks
-Date: Thu, 13 Jan 2005 10:53:28 -0500
-Message-ID: <200501131551.j0DFpW904826@www.watkins-home.com>
-References: <uhrhb2-gku.ln1@news.it.uc3m.es>
+From: Tim Moore <linux-raid@nsr500.net>
+Subject: Re: raid5 performance after upgrade to 2.4.28
+Date: Thu, 13 Jan 2005 08:25:40 -0800
+Message-ID: <41E6A104.4080608@nsr500.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <uhrhb2-gku.ln1@news.it.uc3m.es>
 Sender: linux-raid-owner@vger.kernel.org
-To: "'Peter T. Breuer'" <ptb@lab.it.uc3m.es>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Peter said:
-"Well, I don't see where there's any window in which its degraded."
 
-These are the steps that cause the window (see "Original Message" for full
-details):
+Did values change in /proc/sys/vm/{min,max}-readahead?
 
-1. fail out the chosen drive. (array is now degraded)
-
-2. combine it with the spare in a raid1 with no superblock (re-synce starts)
-
-3. add this raid1 back into the main array. (The main array is now in-sync
-other than any changes that occurred since you failed the disk in step 1)
-
-Guy
+http://lists.us.dell.com/pipermail/linux-poweredge/2004-February/036166.html
 
 
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Peter T. Breuer
-Sent: Thursday, January 13, 2005 4:28 AM
-To: linux-raid@vger.kernel.org
-Subject: Re: Spares and partitioning huge disks
-
-Neil Brown <neilb@cse.unsw.edu.au> wrote:
-> On Saturday January 8, bugzilla@watkins-home.com wrote:
-> > 
-> > Guy says:
-> > But, I could tell md which disk I want to spare.  After all, I know
-which
-> > disk I am going to fail.  Maybe even an option to mark a disk as "to be
-> > failed", which would cause it to be spared before it goes off-line.
-Then md
-> > could fail the disk after it has been spared.  Neil, add this to the
-wish
-> > list!  :)
+Guy wrote:
+> Now the bad news...
 > 
-> Once the "bitmap of potentially dirty blocks" is working, this could
-> be done in user space (though there would be a small window).
+> I have 2 CPUs  P3-500Mhz, 512Meg ram.  So I ran 2 bonnies at the same time.
 > 
-> - fail out the chosen drive.
-> - combine it with the spare in a raid1 with no superblock
-> - add this raid1 back into the main array.
-> - md will notice that it has recently been removed and will only
->   rebuild those blocks which need to be rebuilt
-> - raid for the raid1 to fully sync
-> - fail out the drive you want to remove.
+> Kernel 2.4.20-8 with 2 Bonnies at the same time:
+> Version  1.03 ------Sequential Output------ --Sequential Input- --Random-
+>               -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- --Seeks--
+> Machine  Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP  /sec %CP
+> watkins-ho 1G  3091  85 18593  44  9733  24  3443  97 59895  60 249.6   6
+> watkins-ho 1G  2980  87 21176  54 10167  23  3478  99 44525  44 384.2   9
+>                ----     -----     -----      ----    ------     -----
+> Total          6071     39769     19900      6921    104420     633.8
+> 
+> Kernel 2.4.28 with 2 Bonnies at the same time:
+> watkins-ho 1G  4456  92 17922  52  6489  17  4961  96 26571  32 320.4  12
+> watkins-ho 1G  4343  89 17987  52  6197  17  4946  96 25646  31 363.7   7
+>                ----     -----     -----      ----    ------     -----
+> Total          8799     35909     12686      9907     52217     684.1
+> 
+> Very odd, the sequential read speed is almost exactly 1/2 now.
+> 
+> Oh well, I still can't tell without a tool to measure the speed.
+> But I still don't like it!
+> 
+> My network is only 100BaseT, so it is still well beyond that!
+> 
+> Guy
+> 
+> -----Original Message-----
+> From: linux-raid-owner@vger.kernel.org
+> [mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Guy
+> Sent: Wednesday, January 12, 2005 1:17 AM
+> To: linux-raid@vger.kernel.org
+> Subject: raid5 performance after upgrade to 2.4.28
+> 
+> About 1 month ago I upgraded from Kernel 2.4.20-8 to 2.4.28.
+> Today I noticed my sequential read speed is up by about 12%.
+> 
+> I don't recall making any other changes that would affect speed.
+> So, I guess the Kernel upgrade made the difference.
+> 
+> An old bonnie output:
+> Version  1.03 ------Sequential Output------ --Sequential Input- --Random-
+>               -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- --Seeks--
+> Machine  Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP  /sec %CP
+> watkins-ho 1G  3293  97 34587  89 22306  53  3549  99 67492  63 500.1   9
+> 
+> Today:
+> watkins-ho 1G  4944  99 31719  65 18538  43  5184  98 75440  71 602.5   8
+>                ^^^^                          ^^^^     ^^^^^     ^^^^^
+> 
+> Some things improved, others decreased.
+> 
+> Of course, no change I can notice on my own.
+> I needed to measure performance to notice.
+> 
+> I guess I should try Kernel 2.6 some day.
+> 
+> Guy
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-I don't really understand what this is all about, but I recall that when
-I was writing FR5 one of the things I wanted as an objective was to be
-able to REPLACE one of the disks in the array efficiently because
-currently there's no real way that doesn't take you through a degraded
-array, since you have to add the replacement as a spare, then fail one
-of the existing disks.
 
-What I wanted was to allow the replacement to be added in and synced up
-in the background.
-
-Is that what you are talking about? I don't recall if I actually did it
-or merely planned to do it, but I recall considering it (and that
-should logically imply that I probably did something about it).
-
-> You only have a tiny window where the array is degraded, and it we
-> were to allow an md array to block all IO requests for a time, you
-> could make that window irrelevant.
-
-Well, I don't see where there's any window in which its degraded. If
-one triggers a sync after adding in the spare and marking it as failed
-then the spare will get a copy from the rest and new writes will also go
-to it, no?
-
-Ahh ..  I now recall that maybe I did this in practice for RAID5 simply
-by running RAID5 over individual RAID1s already in degraded mode.  To
-"replace" any of the disks one adds a mirror component to one of the
-degraded RAID1s, waits till it syncs up, then fails and removes the
-original component.  Hey presto - replacement without degradation.
-
-Presumably that also works for RAID1. I.e. you run RAID1 over several
-RAID1s already in degraded mode. To replace one of the disks you simply
-add in the replacement to one of the "degraded" RAID1s. When it's
-synced you fail out the original component.
-
-Peter
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+-- 
+  | for direct mail add "private_" in front of user name
