@@ -1,34 +1,25 @@
-From: Ninti Systems <office@ninti.com.au>
-Subject: fd filesystem and RAID1
-Date: 03 Apr 2004 09:02:37 +0930
+From: Adam Hunt <adam.r.hunt@gmx.net>
+Subject: Dual booting a RAID array (yeah, I'm crazy)
+Date: Sat, 03 Apr 2004 00:01:57 -0800
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1080948756.999.10.camel@localhost>
-Reply-To: office@ninti.com.au
+Message-ID: <c4lr1n$b7c$1@sea.gmane.org>
+Reply-To: adam.r.hunt@gmx.net
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: RAID Linux <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I've been able to do everything involved in setting up a simple RAID1
-with 2 IDE disks on Slackware 9.1 except get it to actually keep working
-on reboot. 
+With a 3ware Escalade 8506-4LP RAID controller would it be possible to 
+dual boot Linux 2.6 and Windows 2000?  I am plainning on building a 
+workstation class machine for myself.  One of the programs that I use, 
+Autodesk's Inventor is unfortunatly availible for Windows exclusivly.  I 
+would be running Windows on an NTFS partition (unless I can get good 
+performance with FAT32 thus allowing read-write access to the partition 
+while running Linux) and Linux would be on ReiserFS on a RAID10 or 
+RAID5 set.  Is there any reason to think that at least on the Linux side 
+  I would not be able to acomplish this?
 
-I installed on one disk, built 'degraded' RAID1 devices on the second
-disk, copied data, etc. I can hot add devices from the original disk to
-the RAID arrays. RAID devices in /etc/fstab come up (in degraded mode)
-on boot.
-
-The problem is that hot-added devices never stick, the RAID arrays are
-always degraded again on reboot. 
-
-mdadm complains of missing superblocks. I have read the man page but
-can't see how to manage superblocks (create/delete) if this is even
-possible.
-
-I'm wondering if have to make the original install partitions type 'fd'
-as well as those on the second disk? 
-
-
+--adam
 
