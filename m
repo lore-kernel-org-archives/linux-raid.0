@@ -1,142 +1,80 @@
-From: "James R Bamford" <jim@jimtreats.com>
-Subject: RE: Raid array not clean (its barely used and a few weeks old.. how can i find out what went wrong?)
-Date: Fri, 12 Dec 2003 00:07:30 -0000
+From: Fernando Serboncini <fserb@campogeral.com.br>
+Subject: RAID5 resync blocking on 2.6.0-test11
+Date: Thu, 11 Dec 2003 22:25:57 -0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <PPEOJEIEFLAONFNHJPOOMEIIGPAA.jim@jimtreats.com>
-References: <200312110149.hBB1nZW27762@dns1.watkins-home.com>
+Message-ID: <3FD90B15.8050905@campogeral.com.br>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200312110149.hBB1nZW27762@dns1.watkins-home.com>
-To: Guy <bugzilla@watkins-home.com>, 'Linux-raid maillist' <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Thanks Guy..
+Hi, I sent this e-mail to the LKML yesterday, that's when I found the 
+linux-raid list. ;)
 
-I'll keep an eye on it.. its a shame there is no log kept of all raid
-errors, warnings, successes so you could look back and see.. another thing
-is its a shame its not more visible that there is a problem.. obviously i
-could get it so consoles show info on startup but this being hidden probably
-meant i rebooted many a time whilst it was resyncing without finishing..
+So hi, LinuxRaid
 
-WHat is the scheme for a resync will it just make one drive equal the
-other.. my data all looks intact
+I've just installed a software-RAID 5 on my Alpha (miata) Workstation
+500au with Kernel 2.6.0-test11. The RAID is made of 4 Western Digital
+250Gb HDs on a promise-ata-133tx2.
 
-Cheers
+The initial raidstart and mke2fs worked fine. After the initial sync, a
+clean boot and a new raidstart, the /proc/mdstat reported that the drive
+was at "resync" (/var/log/messages says that "raid array is not clean").
 
-Jim
+The problem is, the resync was blocking the /dev/md0. So, when I did a
+'mount /dev/md0', it blocked until the resync was done (and it was a
+looong time for a nearly 1TB RAID).
+
+Looking through driver/md code I've realized that md_do_sync() was the
+real devil. After a few diffs with 2.4.23 code I've realized that at the
+speed limiter part of the function, the old "current->nice = " lines
+were deleted.
+
+After a few more search (and looking through LXR) at
+/fs/jffs2/background.c and /net/bluetooth/bnep/core.c I've realized that
+some people have changed "current->nice =" statements to
+"set_user_nice(current,...)" ones.
+
+Done that. The RAID worked just fine (still resyncing at boot, not fully
+tested yet) but don't block mounts anymore (btw, mount returns a lot
+faster than with 2.4.23).
+
+Since I'm no kernel (nor RAID) expert (first post here, btw), just
+wandering if I did something really stupid or not.
+
+Also, is this an Alpha-only issue? Or a 2.6.0 issue?
+
+Anyway, here follows the patch for what I've done.
+
+thanks for the attention.
+
+Fernando Serboncini
 
 
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org
-> [mailto:linux-raid-owner@vger.kernel.org]On Behalf Of Guy
-> Sent: 11 December 2003 01:50
-> To: 'James R Bamford'; 'Linux-raid maillist'
-> Subject: RE: Raid array not clean (its barely used and a few weeks old..
-> how can i find out what went wrong?)
->
->
-> This is normal, if...  Your system crashed.
-> The system is syncing the mirror.
-> Try this command to see the status:
-> cat /proc/mdstat
->
-> If your system resyncs each time you re-boot then some is wrong.
-> If you re-boot before it is done, it will start over from the beginning.
->
-> The default max speed if 10000K per second.
->
-> Issue this command to change the speed now.
-> echo 100000 > /proc/sys/dev/raid/speed_limit_max
->
-> If you want the change to be permanent, add these 2 lines to
-> /etc/sysctl.conf
-> # RAID rebuild max speed per device
-> dev.raid.speed_limit_max = 100000
->
-> The speed can be whatever you want.  I use 100000, which is much
-> faster than
-> possible for my system.  Oh!  100000 is 100000K bytes per second
-> per device.
-> So if you have 2 disks, they will attempt 100Meg per second each!
->
-> Based you the size of your disks, the resync will take just over
-> 2 hours, at
-> 10000K per second.  Your disks should be much faster.
->
-> Guy
->
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org
-> [mailto:linux-raid-owner@vger.kernel.org] On Behalf Of James R Bamford
-> Sent: Wednesday, December 10, 2003 8:03 PM
-> To: Linux-raid maillist
-> Subject: Raid array not clean (its barely used and a few weeks
-> old.. how can
-> i find out what went wrong?)
->
-> Ok,
->
-> I'm still trying to get this system actually setup and working
-> and i noticed
-> this on my dmesg today..
->
-> md: autorun ...
-> md: considering hdg1 ...
-> md:  adding hdg1 ...
-> md:  adding hde1 ...
-> md: created md0
-> md: bind<hde1,1>
-> md: bind<hdg1,2>
-> md: running: <hdg1><hde1>
-> md: hdg1's event counter: 0000002d
-> md: hde1's event counter: 0000002d
-> md: md0: raid array is not clean -- starting background reconstruction
-> md: raid1 personality registered as nr 3
-> md0: max total readahead window set to 124k
-> md0: 1 data-disks, max readahead per data-disk: 124k
-> raid1: device hdg1 operational as mirror 1
-> raid1: device hde1 operational as mirror 0
-> raid1: raid set md0 not clean; reconstructing mirrors
-> raid1: raid set md0 active with 2 out of 2 mirrors
-> md: updating md0 RAID superblock on device
-> md: hdg1 [events: 0000002e]<6>(write) hdg1's sb offset: 156288256
-> md: syncing RAID array md0
-> md: minimum _guaranteed_ reconstruction speed: 100 KB/sec/disc.
-> md: using maximum available idle IO bandwith (but not more than 10000
-> KB/sec) for reconstruction.
-> md: using 124k window, over a total of 156288256 blocks.
-> md: hde1 [events: 0000002e]<6>(write) hde1's sb offset: 156288256
-> md: ... autorun DONE.
->
->
-> What does it mean, is it anythign to worry about?!? i've been
-> trying to get
-> wake on lan to work and have been blindly powering off the machine, i am
-> pretty certain that this was done before it has a chance to boot
-> into linux
-> (no monitor connected tho as its a backup server) .. anyways is this
-> indicative of any hdd errors? how can you get more info on what caused the
-> problems or can't you!?
->
-> With this reconstruction will i have all my files, some of them, none of
-> them!? does it choose one disk and basically the sync the other one up to
-> it!?
->
-> Cheers
->
-> Jim
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+--- linux-2.6.0-test11/drivers/md/md.c  2003-11-26 18:43:29.000000000 -0200
++++ linux/drivers/md/md.c       2003-12-10 23:29:33.000000000 -0200
+@@ -3290,6 +3290,8 @@
+                 currspeed =
+(j-mddev->resync_mark_cnt)/2/((jiffies-mddev->resync_mark)/HZ +1) +1;
+
+                 if (currspeed > sysctl_speed_limit_min) {
++                       set_user_nice(current,19);
++
+                         if ((currspeed > sysctl_speed_limit_max) ||
+                                         !is_mddev_idle(mddev)) {
+                                 current->state = TASK_INTERRUPTIBLE;
+@@ -3297,6 +3299,8 @@
+                                 goto repeat;
+                         }
+                 }
++               else
++                       set_user_nice(current,-20);
+         }
+         printk(KERN_INFO "md: md%d: sync done.\n",mdidx(mddev));
+         /*
+
+
 
