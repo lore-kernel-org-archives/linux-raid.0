@@ -1,71 +1,72 @@
-From: Kanoalani Withington <kanoa@cfht.hawaii.edu>
+From: Herman Oosthuysen <Herman@WirelessNetworksInc.com>
 Subject: Re: RAID backup
-Date: Fri, 04 Oct 2002 08:58:46 -1000
+Date: Fri, 04 Oct 2002 12:51:17 -0600
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3D9DE4E6.7070800@cfht.hawaii.edu>
-References: <CFEAJJEGMGECBCJFLGDBCENHCEAA.enorwood@effrem.com> <3D9D6C84.F1736E15@llgc.org.uk>
+Message-ID: <3D9DE325.8070504@WirelessNetworksInc.com>
+References: <Pine.LNX.3.96.1021004041421.5688A-100000@Maggie.Linux-Consulting.com> <1033735943.31839.12.camel@irongate.swansea.linux.org.uk> <20021004132419.GF710@gallifrey> <3D9DA67A.8050608@comedia.it> <3D9DB44E.4090609@WirelessNetworksInc.com> <20021004171116.C31015@flint.arm.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Illtud Daniel <illtud.daniel@llgc.org.uk>
-Cc: Effrem Norwood <enorwood@effrem.com>, Roy Sigurd Karlsbakk <roy@karlsbakk.net>, jbradford@dial.pipex.com, jakob@unthought.net, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Yep, a constant lowish temperature will also help a little, but I 
+honestly think that in storage, a disk drive bearing will seize due to 
+corrosion and lack of movement, before the electronics will fail.  You 
+can prevent bearing (and capacitor) problems by starting the drive up 
+every 6 months for a while though.
+
+The effects of long term storage is experienced with military equipment, 
+which frequently have to stay in storage for 40 or 50 years without ever 
+really being used.  The stuff in storage has to be cycled through the 
+workshops to keep them operational, which is part of the high cost of peace.
+
+If disk drives are used for backup purposes, then I would suggest that 
+they are rotated, so that they all remain in occational use, which 
+should help to keep them alive.  Of course, the first thing to fail, 
+would be the connector of the removable drive bay and there is nothing 
+you can do about that, except to make sure that the connectors are gold 
+plated to begin with.
+
+I don't think that people have to worry too much about transportation 
+vibration and shock to/from an off-site storage facility.  These things 
+are quite rugged when not spinning, so if you transport them in 
+styrofoam boxes and don't drop them on the floor, they should be OK.
+
+BTW, putting a drive in storage for 40 or 50 years is not recommended 
+for another reason: Obsolecense.  In 40 or 50 years, you probably won't 
+have a computer that can use these drives anymore!  So, the only way to 
+keep data long term, is to rotate the media continuously and upgrade as 
+new technology is introduced.
+
+Cheers,
+
+Herman
+http://www.AerospaceSoftware.com
+
+Russell King wrote:
+> On Fri, Oct 04, 2002 at 09:31:26AM -0600, Herman Oosthuysen wrote:
+> 
+>>Self demagnetization used to be a problem of magnetic media and some 
+>>components such as capacitors used to deteriorate with age, but I think 
+>>that those problems have been solved decades ago, so equipment in clean 
+>>and dry storage should last almost forever.
+> 
+> 
+> You missed "stable temperature" as well.  Some capacitors still
+> "dry out" with age and heat, even with todays technology.
+> 
+
+-- 
+
+------------------------------------------------------------------------
+Herman Oosthuysen
+B.Eng.(E), Member of IEEE
+Wireless Networks Inc.
+http://www.WirelessNetworksInc.com
+E-mail: Herman@WirelessNetworksInc.com
+Phone: 1.403.569-5687, Fax: 1.403.235-3964
+------------------------------------------------------------------------
 
 
-Illtud Daniel wrote:
-
->Effrem Norwood wrote:
->
->>In addition, HSM software costs
->>something (even if you write it yourself) on top of the tape infrastr=
-ucture.
->>One customer of ours was quoted 40K per TB of HSM *software* alone.
->>
->
->I've got 25TB uncompressed of HSM here, and it's cost us (ex VAT)
->roughly:
->
->=A310k for the first 1.6TB (on NT, DLT library)
->=A318k for the next  6.0TB (on NT, LTO library)
->=A345k for the next 18.0TB (on Solaris, LTO Library)
->
->...for the software licencing alone. Plus about 10% pa. in support
->costs.
->You're looking at about 50-60% of the library cost for the HSM softwar=
-e
->to manage it (tapes are another thing). Is HSM really that difficult?
->
->It really is a racket, but it's not so much compared with the
->cost of re-producing the data (mainly digitized collections).
->I'd be happier about it if they were more reliable (libs and s/w).
->Disk arrays, on the other hand, would cost us a fortune in
->upgrading the cooling - we've had to do this once just because of
->the 3-4 TB of online storage we've got, and adding huge exchangers
->(and associated pipes) isn't something I want to do much of.
->
-I agree it's a total racket. I've spent an appalling amount of money on=
-=20
-this stuff over the years considering how simple it is. Last year I=20
-finally built mtx, the open source tape library driver, and wrote my ow=
-n=20
-software in tcl scripts for a new archiving system. It really is that=20
-simple, I don't know how they can charge so much for thier software,=20
-especially when some it is junk to begin with.
-
--Kanoa
-
->
->
->Oh, and having spent much of last night and this morning dealing
->with multiple SCSI disk failures, and having seen about 5% of
->ours fail in a year, I'm rapidly seeing the light on IDE.
->
-
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
