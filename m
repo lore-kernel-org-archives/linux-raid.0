@@ -1,87 +1,44 @@
-From: "Robert Seviour" <r.seviour@virgin.net>
-Subject: You are too expensive - I want a discount
-Date: Tue, 7 Oct 2003 21:15:08 +0100
+From: Hendrik Visage <hvisage@envisage.co.za>
+Subject: mdadm --assemble --scan hassles....
+Date: Wed, 8 Oct 2003 13:17:09 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <S262680AbTJGUMi/20031007201238Z+9903@vger.kernel.org>
-Reply-To: "Robert Seviour" <SFESeminarsLtd@totalise.co.uk>
+Message-ID: <20031008111709.GV1277@hvs.envisage.co.za>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-=91You are too expensive =96 I want a discount=92
+Right, now if md would do auto detecting on mds then my
+problem would have disappeared, but alas....
 
-Have you got a good answer to this predictable sales problem?
+Anycase, I'm trying to make use of mdadm (I've tried different options etc.
+inside mdadm.conf from what I could see on the mailing list), but I'm still
+stuck with the following issue:
+(right after boot):
 
-What about some of the other classics: =91We=92re happy with our existi=
-ng
-supplier=92 or =91We=92ve had problems with your company=92.
+root@hvstress ~ # mdadm --assemble --scan
+mdadm: no devices found for /dev/md/1
+root@hvstress ~ # mdadm --examine --scan   
+ARRAY /dev/md1 level=linear num-devices=2 UUID=8eb3a6c0:02e58fd9:a662938a:56f87147
+   devices=/dev/md/0,/dev/md/0
+root@hvstress ~ # mdadm --examine --scan --config=partitions
+ARRAY /dev/md0 level=raid0 num-devices=2 UUID=832ab839:9920da12:97991965:f9af96e2
+   devices=/dev/scsi/host0/bus0/target1/lun0/part1,/dev/scsi/host0/bus0/target2/lun0/part1
+ARRAY /dev/md1 level=linear num-devices=2 UUID=8eb3a6c0:02e58fd9:a662938a:56f87147
+   devices=/dev/md/0,/dev/scsi/host0/bus0/target1/lun0/part2
 
-How much does it cost you every year to not know good answers?
+root@hvstress ~ # mdadm --assemble --scan   
+mdadm: no devices found for /dev/md/1
+root@hvstress ~ # cat /etc/mdadm.conf 
+DEVICE /dev/md/* /dev/sd*
+DEVICE /dev/sd[ab]
+DEVICE /dev/md0 
+DEVICE /dev/md/0
 
-If you missed the Closing Techniques Workshop, perhaps you would like t=
-o
-see the manual of the event. It covers the entire seminar in an
-easy-to-read, interesting style. Here=92s just a selection of the 49 se=
-ctions:
-
-=20
-=B7        Good sales questions to find out your customer=92s buying cr=
-iteria
-and motivation
-
-=B7        Advanced questioning
-
-=B7        Three important understandings, which few salespeople are aw=
-are of
-
-=B7        This is what makes your presentation convincing
-
-=B7        How to ask for the order =96 and get it.=20
-
-=B7        All the common objections and the most effective answers.
-
-=B7        10 Answers to =91It=92s too expensive=92
-
-=B7        22 ways to resist discount requests
-
-=20
-
-If you just one idea from the course wins you a order you would otherwi=
-se
-have lost, the manual will have paid for itself.=20
-
-=20
-
-The manual is available in a PDF format for =A330. Just call us or emai=
-l us
-with your credit card details and we will email the book to you by retu=
-rn.
-If you would prefer a printed copy we can supply that for =A327.00 + =A3=
-4.60
-overnight courier delivery. (UK mainland only)
-
-To order:       Tel:  +44 (0)1481 720 294    Fax: +44 (0)1481 720 317  =
-=20
-
-Best regards,
-
-Robert Seviour
-
-PS I will deduct the price of the manual from the fee for the Closing
-Techniques Workshop if you choose to attend in the next 12 months. Plea=
-se
-email us with "Send details" in the subject line if you want informatio=
-n on
-our next seminar dates
-
-=20
+ARRAY /dev/md/0 level=raid0 num-devices=2 UUID=832ab839:9920da12:97991965:f9af96e2
+   devices=/dev/scsi/host0/bus0/target1/lun0/part1,/dev/scsi/host0/bus0/target2/lun0/part1
+ARRAY /dev/md/1 level=linear num-devices=2 UUID=c2a91233:5ffd5398:eac27773:e12945dd
 
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
