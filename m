@@ -1,36 +1,80 @@
-From: Alasdair G Kergon <agk@redhat.com>
-Subject: Re: device-mapper library
-Date: Mon, 8 Nov 2004 23:25:41 +0000
-Message-ID: <20041108232541.GA2965@agk.surrey.redhat.com>
-References: <20040826174830.GA27929@romulus.a-s-i.com>
+From: David Wuertele <dave-gnus@bfnet.com>
+Subject: mdadm: Invalid Argument ("cannot start dirty degraded array")
+Date: Tue, 09 Nov 2004 08:15:57 -0800
+Message-ID: <m3ekj3f16q.fsf@bfnet.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20040826174830.GA27929@romulus.a-s-i.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: dm-devel@redhat.com
 List-Id: linux-raid.ids
 
-On Thu, Aug 26, 2004 at 12:48:30PM -0500, Bob Glamm wrote:
-> Is there an issue building device-mapper.1.00.1[89] against
-> 2.6 kernels?  struct dm_target_msg does not appear in the
-> kernel headers for 2.6.5 or 2.6.7 (include/linux/dm-ioctl.h)
-> but does appear in kernel/ioctl/dm-ioctl.h in the device-mapper
-> sources.  Is there a set of 2.6.x patches somewhere I missed?
- 
-A late reply, but for the record the userspace device-mapper 
-library should cope fine: you compile it using its local copy of 
-that header.  If your kernel was compiled with an older version of
-it, the library code is designed to fallback at runtime to using
-a correspondingly older version whenever it reasonably can, or else
-return errors for features that can't be approximated using the 
-old API.
+I have a gentoo system (kernel 2.6.8-gentoo-r3) with a 7 drive RAID5
+array.  Recently that array went down, and I was advised by the list
+to try mdadm.  I was unsuccessful, but perhaps someone here can advise
+me where I went wrong.
 
-So far, dm_target_msg is only used by multipath code in the 
-unstable device-mapper trees at http://sources.redhat.com/dm/
+When I boot, I see the "Starting up RAID devices: ... * Trying
+md0... [ !!FAILED ]" and the system drops me to the shell.  I type:
 
-Alasdair
--- 
-agk@redhat.com
+  # cat /proc/mdstat
+  Personalities : [raid1] [raid5]
+  md0 : inactive hdm4[0] hde2[6] hdo2[5] hdh2[4] hdf2[3] hdg2[2]
+        1464789888 blocks
+  unused devices: <none>
+
+OK, the array is missing partition hdp2.  dmesg says it has an invalid
+superblock:
+
+  # dmesg | grep hdp
+      ide7: BM-DMA at 0xd808-0xd80f, BIOS settings: hdo:DMA, hdp:DMA
+  hdp: WDC WD2500JB-00GVA0, ATA DISK drive
+  hdp: max request size: 1024KiB
+  hdp: 488397168 sectors (250059 MB) w/8192KiB Cache, CHS=30401/255/63, UDMA (100)
+  md: invalid raid superblock magic on hdp2
+  md: hdp2 has invalid sb, not importing!
+  Adding 64220k swap on /dev/hdp1.  Priority:-2 extents:1
+
+I didn't see any indication that there is anything wrong with the hdp
+drive.  Here is my /etc/mdadm.conf file:
+
+  # cat /etc/mdadm.conf
+  DEVICE partitions
+  ARRAY /dev/md0 level=raid5 num-devices=7 UUID=d312c423:e2eeeff5:3401806f:ab10e3c
+     devices=/dev/ide/host2/bus0/target0/lun0/part2,/dev/ide/host2/bus0/target1/lun0/part2,/dev/ide/host2/bus1/target0/lun0/part2,/dev/ide/host2/bus1/target1/lun0/part2,/dev/ide/host6/bus0/target0/lun0/part4,/dev/ide/host6/bus1/target0/lun0/part2
+
+Since /proc/mdstat reports that six of the seven drives are already
+assembled, I tried running as-is:
+
+  # mdadm --run /dev/md0
+  mdadm: failed to run array /dev/md0: Invalid argument
+  # mdadm -v --run --force /dev/md0
+  mdadm: failed to run array /dev/md0: Invalid argument
+
+Hmm... not very descriptive.  I looked at the end of dmesg again for
+more hints:
+
+  # dmesg | tail -18
+  md: pers->run() failed ...
+  raid5: device hdm4 operational as raid disk 0
+  raid5: device hde2 operational as raid disk 6
+  raid5: device hdo2 operational as raid disk 5
+  raid5: device hdh2 operational as raid disk 4
+  raid5: device hdf2 operational as raid disk 3
+  raid5: device hdg2 operational as raid disk 2
+  raid5: cannot start dirty degraded array for md0
+  RAID5 conf printout:
+   --- rd:7 wd:6 fd:1
+   disk 0, o:1, dev:hdm4
+   disk 2, o:1, dev:hdg2
+   disk 3, o:1, dev:hdf2
+   disk 4, o:1, dev:hdh2
+   disk 5, o:1, dev:hdo2
+   disk 6, o:1, dev:hde2
+  raid5: failed to run raid set md0
+  md: pers->run() failed ...
+
+Any suggestions?
+Thanks,
+Dave
+
