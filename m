@@ -1,51 +1,44 @@
-From: Paul Downs <paul@positive-internet.com>
-Subject: Booting with raided root, debian system
-Date: Thu, 10 Apr 2003 13:37:46 +0100
+From: Mads Peter Bach <mpb@hum.auc.dk>
+Subject: Re: Booting with raided root, debian system
+Date: Thu, 10 Apr 2003 14:46:36 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20030410123746.GA11470@u4ia>
+Message-ID: <3E9567AC.9060104@hum.auc.dk>
+References: <20030410123746.GA11470@u4ia>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1;
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <20030410123746.GA11470@u4ia>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Paul Downs wrote:
 
-Hi,
-  I have been trying for a good few days now to try and boot a fully raided
-debian system with Lilo and a custom compiled kernel.  The file system does
-not have a separate /boot partion.  Lilo's configuration file has boot= and
-root= specified as /dev/md0.
+>   No errors appear and the system appears to boot normally until it
+> attempts to mount the root.  At which point it errors and stops with =
+an
+> "attempt to kill init" message.
+>=20
+>   Can anyone give me any pointers?  I have tried not to include too m=
+uch
+> detail here so if you want pastes of any configuration files etc. jus=
+t
+> shout.
 
-  The custom compiled kernel has md and raid1 modules statically built,
-along with ext3, cramfs and associated modules.  There is also an initrd.
+A copy of the errormessages before "attempt to kill init" would be quit=
+e=20
+helpful :-)
 
-  I have experienced various issues but now I have a system where , if I
-boot off /dev/hdb1 (hda and hdc are in the raid) I can succesfully install
-lilo with:
+Also, a copy of lilo's output when you install it might help.
 
-mount -text3 /dev/md0 /mnt
-lilo -r /mnt
+--=20
+Mads Peter Bach
+Systemadministrator,  Det Humanistiske Fakultet, Aalborg Universitet
+Kroghstr=E6de 3 - 5.111, DK-9220 Aalborg =D8st
+# whois MPB1-DK@whois.dk-hostmaster.dk
 
-  No errors appear and the system appears to boot normally until it
-attempts to mount the root.  At which point it errors and stops with an
-"attempt to kill init" message.
-
-  Can anyone give me any pointers?  I have tried not to include too much
-detail here so if you want pastes of any configuration files etc. just
-shout.
-
-  Using grub I can get a system to boot fine however when issuing this style
-of command sequence:
-
-root(hd0,0)
-kernel /boot/vmlinuz-2.4.20 root=/dev/md0
-initrd /boot/initrd.img-2.4.20
-boot
-
-  I get an identical error message to lilo.  Have I missed something in
-initrd, I have done nothing fancy with it.
-
-Your's banging head against wall and giving up on raided root.
-
-Paul
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
