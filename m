@@ -1,73 +1,40 @@
-From: Robin Bowes <robin-gmane@robinbowes.com>
+From: Luca Berra <bluca@comedia.it>
 Subject: Re: error opening /dev/md2: No such file or directory
-Date: Thu, 02 Dec 2004 18:37:28 +0000
-Message-ID: <41AF60E8.30703@robinbowes.com>
-References: <conlcb$14p$1@sea.gmane.org> <41AF5F5A.4090709@starnetworks.us>
+Date: Thu, 2 Dec 2004 21:43:52 +0100
+Message-ID: <20041202204351.GF28157@percy.comedia.it>
+References: <conlcb$14p$1@sea.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <41AF5F5A.4090709@starnetworks.us>
+Content-Disposition: inline
+In-Reply-To: <conlcb$14p$1@sea.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Kevin P. Fleming wrote:
-> Robin Bowes wrote:
-> 
->> # mdadm --create /dev/md2 --level=1 --raid-devices=2 /dev/sdc1 missing
->> mdadm: error opening /dev/md2: No such file or directory
-> 
-> In the meantime, you can manually create /dev/mdX nodes with mknod, just 
-> as you would have done before. Once the array is created, if you have it 
-> set to auto-start (using 0xfd partition types), it the device node will 
-> automatically appear when you boot your system. If you don't have it set 
-> to auto-start, you'll have to add the "mknod" command to your system 
-> startup scripts before trying to start the array directly.
+On Thu, Dec 02, 2004 at 06:03:45PM +0000, Robin Bowes wrote:
+># mdadm --create /dev/md2 --level=1 --raid-devices=2 /dev/sdc1 missing
+>mdadm: error opening /dev/md2: No such file or directory
+>
+>I've used "missing" since the other spare partition is on /dev/sdf which 
+>is being RMA'd at the moment - guess what make it is :)
+>
+>The new FC3 system is running udev with which I'm not familiar.
+>
+>How can I create the /dev/md2 device?
 
-OK, they are set to auto-start.
+ah, udev, what a great pile of shit it is.
 
-I wasn't sure how to use mknod. So here's what I did:
+you could use the --auto= option of mdadm to have it create the device
+for you, the only issue with that is that mdadm will use the first free
+minor numbr it finds instead of using the minor implied by the device
+name. (i was planning on changing that behaviour sooner or later).
 
-[root@dude dev]# mknod --help
-Usage: mknod [OPTION]... NAME TYPE [MAJOR MINOR]
-Create the special file NAME of the given TYPE.
 
-   -Z, --context=CONTEXT   set security context (quoted string)
-Mandatory arguments to long options are mandatory for short options too.
-   -m, --mode=MODE   set permission mode (as in chmod), not a=rw - umask
-       --help     display this help and exit
-       --version  output version information and exit
-
-Both MAJOR and MINOR must be specified when TYPE is b, c, or u, and they
-must be omitted when TYPE is p.  If MAJOR or MINOR begins with 0x or 0X,
-it is interpreted as hexadecimal; otherwise, if it begins with 0, as octal;
-otherwise, as decimal.  TYPE may be:
-
-   b      create a block (buffered) special file
-   c, u   create a character (unbuffered) special file
-   p      create a FIFO
-
-Report bugs to <bug-coreutils@gnu.org>.
-[root@dude dev]# mknod /dev/md2 b
-mknod: when creating special files, major and minor device
-numbers must be specified
-Try `mknod --help' for more information.
-[root@dude dev]# ls /dev/md1
-/dev/md1
-[root@dude dev]# file /dev/md1
-/dev/md1: block special (9/1)
-[root@dude dev]# file /dev/md0
-/dev/md0: block special (9/0)
-[root@dude dev]# file /dev/md5
-/dev/md5: block special (9/5)
-[root@dude dev]# mknod /dev/md2 b 9 2
-[root@dude dev]# ls /dev/md2
-/dev/md2
-
-Done!
-
-Thanks,
-
-R.
-
+-- 
+Luca Berra -- bluca@comedia.it
+        Communication Media & Services S.r.l.
+ /"\
+ \ /     ASCII RIBBON CAMPAIGN
+  X        AGAINST HTML MAIL
+ / \
