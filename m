@@ -1,13 +1,15 @@
-From: "Robin Bowes" <robin-lists@robinbowes.com>
+From: "Robin Bowes" <robin@robinbowes.com>
 Subject: Re: ANNOUNCE: mdadm 1.6.0 - A tool for managing Soft RAID under
      Linux
-Date: Fri, 4 Jun 2004 11:12:33 +0100 (BST)
+Date: Fri, 4 Jun 2004 11:12:31 +0100 (BST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <40498.194.60.85.4.1086343953.squirrel@194.60.85.4>
+Message-ID: <40287.194.60.85.4.1086343951.squirrel@194.60.85.4>
+References: <16576.5818.189830.563396@cse.unsw.edu.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <16576.5818.189830.563396@cse.unsw.edu.au>
 To: Neil Brown <neilb@cse.unsw.edu.au>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
