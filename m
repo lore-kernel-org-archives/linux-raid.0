@@ -1,78 +1,85 @@
-From: tc lewis <tcl@bunzy.net>
-Subject: Re: how do I change md1 to md2?
-Date: Mon, 10 Jun 2002 12:27:49 -0400 (EDT)
+From: momoh abdul <abd_momoh@lycos.co.uk>
+Subject: confidential business proposal
+Date: Mon, 10 Jun 2002 21:27:42 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.33L2.0206101136020.19487-100000@magician.bunzy.net>
-References: <20020610100900.T2266@nuvox.net>
+Message-ID: <1023758500007341@lycos.co.uk>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: multipart/mixed; boundary="=_NextPart_Caramail_0073411023758500_ID"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20020610100900.T2266@nuvox.net>
-To: David Nedved <dnedved@nuvox.net>
-Cc: linux-raid@vger.kernel.org
+To: events@johnlocke.org
 List-Id: linux-raid.ids
 
+This message is in MIME format. Since your mail reader does not understand
+this format, some or all of this message may not be legible.
 
-i believe you can use neil brown's mdadm utility to update superblock
-data:
-http://www.cse.unsw.edu.au/~neilb/source/mdadm/
+--=_NextPart_Caramail_0073411023758500_ID
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 
-according to a recent mail in the archive, version 1.0.0 is recommended
-and 1.0.1 is experimental.  i've never used the utility myself.
+You may be surprised to receive this letter from me, since you do
+ot know me personally. I am ABDUL MOMOH, the son of NDIATA MOMOH,
+the most popular black farmer in Zimbabwe. He was recently murdered
+in the land dispute in my country. I got your contact through network
+online hence decided to write you.
 
-i think there was also an old trick to adjust your raidtab, but change one
-of your "raid-disk"s to a "failed-disk", in the config for the proper md
-device entry, and run mkraid --force /dev/md?, and that would write a new
-superblock yet not erase all the data (as long as it thought there was a
-failed disk)...but you should probably get confirmation / more details on
-that first if you're going to try that method, to prevent losing data.
+Before the death of my father, he had taken me to Johannesburg to
+deposit the sum of US8.5 million (Eight million, Five Hundred United
+States dollars), in one of the private security company, as he foresaw the looming 
+danger in Zimbabwe. This money was deposited in a box as gemstones to avoid much 
+demurrage from Security Company. This
+amount was meant for the purchase of new machines and chemicals
+for the farms and establishment of new farms in Swaziland.
 
-you may also be able to add arguments to your kernel loader, re: with lilo
-or whatever.  Documentation/md.txt in the linux source has info on that.
-that may work to override a device # for that boot, but it won't fix the
-superblock permanently.
+This land problem came when Zimbabwean President Mr. Robert Mugabe
+introduced a new land Act Reform wholly affecting the rich white
+farmers and some few black farmers, and this resulted to the killing
+and mob action by Zimbabwean war veterans and some lunatics in the
+society. In fact a lot of people were killed because of this Land
+reform Act for which my father was one of the victims.
 
-i'm sure there are other methods too.  i'm not sure what the most
-recommended option is these days -- mdadm, perhaps.
+It is against this background that, my family and I fled Zimbabwe
+for fear of our lives and are currently staying in the Netherlands
+where we are seeking political asylum and more so, have decided
+to transfer my father's money to a more reliable foreign account.
+Since the law of Netherlands prohibits a refugee (asylum seeker)
+to have such amount of money in any bank account or to be involved
+in any financial transaction of such magnitude throughout the territorial zone of 
+Netherlands.
 
-search a linux-raid archive for more info on mdadm, or its previous name,
-mdctl.
+As the first son, I am saddled with the responsibility of seeking
+a genuine foreign account where this money could be transferred
+without the knowledge of my government who are bent on taking everything we have 
+got. The South African government seems to be playing along with them. I am faced with 
+the dilemma of moving this amount of money out of South Africa for fear of going 
+through the same experience in future, both countries have similar political history.
 
--tcl.
+As a businessman, I am seeking for a partner, who I have to entrust my
+future and that of my family in his hands. I must let you know that
+this transaction is risk free. If you accept to assist my family,
+and me all I want you to do for me, is to make an arrangement with
+the security company to clear the consignment (funds) from their
+affiliate office here in the Netherlands. I have already given directives for the 
+consignment to be brought from South Africa to The Netherlands. But before then all 
+modalities will have to be put in place like change of ownership of the consignment and 
+more importantly this money I intend to use for investment.
 
+I have two options for you. Firstly I can give you certain percentage
+of the money for for agreeing to assist in this transaction. Or you can go into partnership 
+with me for the proper profitable investment
+in your country. Whichever option you want, feel free to notify
+me. I have also mapped out 533744606434f this money for all kinds of expenses
+incurred in the process of this transaction. Contact me with this
+E-mail while I implore you to maintain the absolute secrecy required in this transaction.
 
-On Mon, 10 Jun 2002, David Nedved wrote:
+Thanks, GOD BLESS YOU
 
-> Hi All,
->
-> Thanks for everyone who helped me get my md1 data volume brought up
-> correctly.  Now I have another issue.  I've rebuilt my host OS using
-> RedHat 7.3, and I loaded it on RAID1 also.  I built my data volume as
-> md1 so that I could load the OS on md0, but I forgot about swap.
->
-> Now I have md0 as /, md1 as swap, and another md1 data volume that
-> won't activate since there is already an md1 in use as swap.
->
-> Can anyone help me get my data volume brought up as md2?  I have it in
-> the raidtab as md2, but during boot it reads the superblock and knows it's
-> md1, but won't bring it up since there's already an md1.  I've gone back
-> to the old OS disk, so I don't have logs handy, but if they're critical it
-> won't be a problem to post them.  I looked byt coulnd't find any pointer
-> in the FAQ or Howto's...
->
-> I know I could probably turn swap off, so that the data volume activates
-> correctly, but I'm considering putting software RAID1 onto production
-> servers, and now that I've found this issue, I really feel I need to
-> understand how to manage it rather than work around it.
->
-> Thanks in advance,
->
-> David
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Yours Faithfully,
+Abdul Momoh.
+______________________________________________________
+Make your opinions heard with IPSOS - http://www.iap-interactive.com/lycosu6	
+Elvis vs JXL  - out June 10: http://www.lycos.co.uk/elvis
+Free domain names - http://webcentre.lycos.co.uk
 
 
+--=_NextPart_Caramail_0073411023758500_ID--
 
