@@ -1,24 +1,29 @@
-From: tk Voice <tkVoice@netscape.net>
-Subject: Re: EIO AP-1680 ATA133 RAID PCI Controller
-Date: Mon, 10 Feb 2003 23:16:10 -0600
+From: Andy Arvai <arvai@scripps.edu>
+Subject: filesystems for large arrays
+Date: Tue, 11 Feb 2003 01:25:56 -0800 (PST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3E48871A.3010709@netscape.net>
-References: <3E4329CE.5020706@netscape.net> <3E47E248.3080006@mvista.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Message-ID: <200302110925.BAA08326@astra.scripps.edu>
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: sdake@mvista.com, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Thanks for the reply.
+Hi,
 
-I thought that $19 delivered was too good to be true!!!
+Does anyone have comments about the various filesystems typically used
+with large (terabyte) arrays, regarding performance and reliability?
 
-Are HP and Promise cards ture "HARDWARE" cards with there own I/O processor?
+The three most common filesystems seem to be ext3, reiser and xfs. Ext3
+and reiser are part of the standard linux kernel (not sure about xfs),
+implying that they are fairly robust. I've been using reiser and
+haven't had any problems, but I've heard that when the filesystem gets
+full there may be problems and it's also optimized for many small files
+instead of larger files. Ext3 sounds like it is very robust (since it
+is based on ext2), although I've heard the performance is worse than
+reiser. I've heard some good things about xfs, but have never used it.
 
-Peter
+If anyone has any real-world experiences or benchmarks I would be
+interested.
 
->
+Andy
 
 
