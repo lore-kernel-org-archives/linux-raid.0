@@ -1,42 +1,28 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: Software RAID-0 striping over Hardware RAID-5
-Date: Thu, 23 Sep 2004 08:34:10 -0400
+From: rich turner <rich@storix.com>
+Subject: mdadm create error
+Date: Thu, 23 Sep 2004 10:42:26 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1095942849.4196.1585.camel@compaq.xsintricity.com>
-References: <200409201713.i8KHDxj01473@www.watkins-home.com>
-	 <41521782.7030908@nsr500.net>  <1095899244.29081.641.camel@tinny.home.foo>
+Message-ID: <1095961346.3465.29.camel@rich>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1095899244.29081.641.camel@tinny.home.foo>
-To: "Scott T. Smith" <scott@gelatinous.com>
-Cc: Tim Moore <linux-raid@nsr500.net>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 2004-09-22 at 20:27, Scott T. Smith wrote:
-> On Wed, 2004-09-22 at 17:23, Tim Moore wrote:
-> > >>From what I have read, RAID0 will just go as fast as your slowest disk.
-> > 
-> > Almost 2X faster.
-> 
-> writes will be as fast as the slowest disk; reads will be faster.
+i cant figure out what is wrong with the following command. when i
+remove the "parity=right-asymmetric" command option it does not fail.
+but i need to be able to create the raid device with different parity
+algorithms. it also fails on --level=5 and using the short forms of the
+flags.
 
-Eh?  I think the more correct way to phrase RAID0 characteristics over
-*any* selection of disks is that the minimum theoretical speed for the
-overall array when it comes to sequential reads *and* writes is
-n*speed_slowest_disk, where n is the number of drives in the array.
+mdadm --create /dev/md2 --chunk=64 --level=6 --raid-devices=4 
+--parity=right-asymmetric --spare-devices=2 /dev/vg0/turnerlv1
+/dev/vg0/turnerlv2 /dev/vg0/turnerlv3 /dev/vg0/turnerlv4
+/dev/vg0/turnerlv5 /dev/vg0/turnerlv6
 
-> 	Scott
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
--- 
-  Doug Ledford <dledford@redhat.com>     919-754-3700 x44233
-         Red Hat, Inc.
-         1801 Varsity Dr.
-         Raleigh, NC 27606
+mdadm: layout may only be sent once.  Second value was right-asymmetric
 
+rich:/tmp # mdadm --version
+mdadm - v1.5.0 - 22 Jan 2004
 
