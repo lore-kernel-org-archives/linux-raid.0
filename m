@@ -1,48 +1,39 @@
-From: mike_rothon <mfr@supanet.com>
-Subject: Re: hostRAID, AIC-7901, disable? - FIXED
-Date: Sun, 20 Mar 2005 12:29:31 +0000
-Message-ID: <d1jq8n$p62$1@sea.gmane.org>
-References: <cpkem3$70s$1@sea.gmane.org>      <bbfa52890412131309234b2d09@mail.gmail.com>       <cpl0tm$4sp$1@sea.gmane.org>      <1103132961.3629.41.camel@compaq-rhel4.xsintricity.com> <32897.194.153.181.92.1103661695.squirrel@mail.valli.org> <d1bh6i$vfk$1@sea.gmane.org>
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: [PATCH 0/3] md bitmap-based asynchronous writes
+Date: Mon, 21 Mar 2005 15:21:43 +1100
+Message-ID: <16958.19415.701152.371199@cse.unsw.edu.au>
+References: <422F7621.8090602@steeleye.com>
+	<16949.5768.392061.95882@cse.unsw.edu.au>
+	<4239EDCA.4030502@steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-In-Reply-To: <d1bh6i$vfk$1@sea.gmane.org>
+In-Reply-To: message from Paul Clements on Thursday March 17
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Paul Clements <paul.clements@steeleye.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I will prefix this message by stating that I am not a Linux expert in any way! 
-This is especially true of Kernel and module matters.
+On Thursday March 17, paul.clements@steeleye.com wrote:
+> These three patches provide the ability to perform asynchronous writes 
+> with raid1. The asynchronous write capability is primarily useful when 
+> raid1 is employed in network replication (i.e., with one or more of the 
+> disks located on a remote system). It allows us to acknowledge writes 
+> before they reach the remote system, thus making much more efficient use 
+> of the network.
 
-Finally, however and after many hours of trying I believe I have found a good 
-fix to run u320raid on a SuSE linux box!
+Thanks for these.
 
-Tucked away on the Adaptec web site is an IBM download for SLES9, which is 
-claims to be "released". What isn't mentioned is that this driver **seems to 
-be** compatible with SuSE Linux 9.1.
+However I would like to leave them until I'm completely happy with the
+bitmap resync, including
+  - storing bitmap near superblock  (I have this working)
+  - hot-add bitmap                  (I've started on this)
+  - support for raid5/6 and hopefully raid10.  (still to come)
 
-You can find an image of the driver update disk here:
+and I would really like
+   only-kick-drives-on-write-errors-not-read-errors
 
-http://www.adaptec.com/ibm/downloads/released_serveRAID7e_index.html
+to be the next priority.  After that, I will definitely look at async
+writes.
 
-Instructions to make the disk are in the adaptec user guide.
-
-If you haven't had experience of driver update disks before (as I hadn't) there 
-is a good article here:
-
-http://portal.suse.com/sdb/en/2001/12/hmeyer_driver_update.html
-
-Importantly however for SuSE to find the driver you need to rename the directory 
-from i386-SLES3 to i386-9.1 and the subdirectories in the update.tar.gz file to 
-match your kernel version. CAVEAT - this is slightly risky - as it leads to a 
-"tainted" kernel.
-
-With the stock kernel on the 9.1 CD's it appears the driver is compatible 
-although there is a tainted message during boot.
-
-Feedback is welcomed, particular about the advisability of this solution.
-
-Mike Rothon.
-Certisa Ltd.
-www.certisa.com
-
+NeilBrown
