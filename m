@@ -1,51 +1,65 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: RAID-6: help wanted
-Date: Fri, 29 Oct 2004 13:32:16 -0700
+From: Miquel van Smoorenburg <miquels@cistron.net>
+Subject: Software raid5 inefficiencies
+Date: Fri, 29 Oct 2004 22:24:38 +0000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <4182A8D0.6050000@zytor.com>
-References: <200410292028.i9TKS6N14580@www.watkins-home.com>
+Message-ID: <1099088678l.12509l.1l@stargazer.cistron.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII;
+	Format=Flowed
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200410292028.i9TKS6N14580@www.watkins-home.com>
-To: Guy <bugzilla@watkins-home.com>
-Cc: 'Jim Paris' <jim@jtan.com>, 'Neil Brown' <neilb@cse.unsw.edu.au>, linux-raid@vger.kernel.org
+Content-Disposition: inline
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Guy wrote:
-> Could you translate this into English?
-> P' = P + D_n + D_n'
-> Q' = Q + g^n * D_n + g^n * D_n'
-> 
-> I understand this much:
-> P    =old parity
-> D_n  =old data block(s)
-> P'   =new parity
-> D_n' =new data block(s)
-> 
-> But is "+" = xor?
-> 
-> I am lost on this one:
-> Q' = Q + g^n * D_n + g^n * D_n'
-> 
-> With the parity (xor) it can be done by the bit, so an example is easy.
-> Can Q be done by the bit, and if so, could you give an example?
-> 
-> If it takes more than 10 minutes, just tell me it is magic! :)
+I've been playing with software raid5 on a heavily loaded newsserver.
 
-See my paper on the subject:
+This machine is part of a diablo setup, and basically it's a
+database server for usenet articles.
 
-http://www.kernel.org/pub/linux/kernel/people/hpa/raid6.pdf
+All articles are stored in multiple multi-megabyte sized files on
+the filesystem. When a client asks for data (an article, average
+300 KB) the location is looked up in a (fast, cached in memory)
+database, the file is opened, the server seeks to the offset of
+the article and the 300KB is served to the client.
 
-> Also, on a related subject....
-> I have a 14 disk RAID5 with 1 spare.
-> Once RAID6 seems safe and stable I had hoped to convert to a 15 disk RAID6.
-> Is 15 disks too much for RAID6?
-> Any idea what a reasonable limit would be?
-> 
+Because many clients are connecting to the server simultaneously,
+it's better to use a large stripe size - a stripe size smaller
+than 600 KB means that to serve one request, multiple disks need
+to seek, and since the clients are higly parallel and the data
+is spread randomly over the disks, that is bad. You want to serve
+each read request from one disk.
 
-The limit is 27 disks total, it's imposed by the md system rather than RAID-6; 
-RAID-6's inherent limit is 254+2 (see, again, the paper.)
+So I'm using a stripe size of 4 MB.
 
-	-hpa
+Now it works fine but I'm hitting a few bottlenecks:
+
+1. In this case, for every 4K read I need a stripe_head. So the
+   standard NR_STRIPES = 256 is way to low. I increased
+   NR_STRIPES to 1024 and that helps, but with 7 disks it
+   uses 29 MB of unswappable kernel memory (and 2048 is even
+   better but uses 58 MB). With 2 RAID5 devices this adds up.
+
+2. With a heavy read load, on this PIV/3Ghz system time used
+   reaches 95% just reading from the raid5 device, and I can't
+   read faster than about 50-60 MB/sec. From oprofile, the
+   bottleneck appears to be raid5.c::copy_data()
+
+The solution, I think, is:
+
+1. Do not allocate sh->dev[ALL].page when requesting a stripe_head-
+   just allocate them for the devices we actually need to read/write.
+   Keep the pages on a seperate LRU.
+
+2. Do not copy read data into the stripe_head at all when just
+   reading data - just remap the BIOs like dm does. You only need
+   to copy the data from/to the stripe_head when the same part of
+   the device is being written to, or is in degraded mode.
+
+This should boost performance in normal circumstances a lot, I
+think. Is anyone working on this yet ? Comments, flames ?
+
+[please keep the cc, I'm not on the list]
+
+Mike.
+
