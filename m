@@ -1,52 +1,53 @@
-From: Sebastian Utz <su@rotamente.com>
-Subject: Re: Software RAID-5 attempt to access beyond end of device...
-Date: Fri, 27 Aug 2004 20:20:42 +0200
+From: maarten <maarten@ultratux.net>
+Subject: Re: lilo boot problems
+Date: Sat, 28 Aug 2004 00:44:55 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1093630841.13975.146.camel@slurp>
-References: <1093621033.13979.49.camel@slurp>
-	 <Pine.LNX.4.56.0408271739470.23465@lion.drogon.net>
+Message-ID: <200408280044.55286.maarten@ultratux.net>
+References: <200408251458.46575.maarten@ultratux.net> <412F3175.1@apartia.fr>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.56.0408271739470.23465@lion.drogon.net>
-To: Gordon Henderson <gordon@drogon.net>
-Cc: linux-raid@vger.kernel.org
+In-Reply-To: <412F3175.1@apartia.fr>
+Content-Disposition: inline
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 2004-08-27 at 18:41, Gordon Henderson wrote:
-> On Fri, 27 Aug 2004, Sebastian Utz wrote:
-> 
-> > Hello,
+On Friday 27 August 2004 15:04, Laurent CARON wrote:
+> maarten wrote:
+> >Hi list,
 > >
-> > I have a problem with an Software RAID-5 at the top of 4 IDE-Drives
-> > connected via 2 Promise UltraTX2 (20268) IDE controller.
+> >I've got bitten by the recent bug(?) that lilo seems to have with 2.6.x
+> >kernels where, upon install, it prints:
 > >
-> > FS is EXT3.
-> > Kernel 2.6.8.1	(problem occured with 2.6.7, update didn't helped)
-> > CPU: Pentium II 400
-> > Mainboard: Asus P2B-S
+> >Fatal: Trying to map files from unnamed device 0x0000
 > >
-> > After 29% usage, I've got an Kernel oops and system stalls:
-> > -------- snip start -------------
-> > Aug 27 16:30:18 gharb kernel: attempt to access beyond end of device
-> > Aug 27 16:30:18 gharb kernel: md0: rw=1, want=6917529027856096120,
-> > limit=241215360
-> 
-> I've seen something like this with a corrupt ext2 filesystem. Not had it
-> panic the box though, but a reboot into maintanance mode, and manual fsck
-> might be wise...
-> 
-> Gordon
+> >I've tried everything I could think of in lilo.conf to no avail.  Using
+> > google there are several (but not many) threads about this specific error
+> > but I've not seen a solution anywhere yet.
+> >
+> >A "raid-extra-boot" line doesn't help any, neither do any other options.
+> >
+> >At this point, I'm not even sure where the error comes from as even trying
+> > to install a normal non-raid lilo.conf now fails.
+>
+> you have to reconstruct your array first.
 
-As I write I using an ext3 FS and I also tried doing an manually fsck,
-but than the kernel hangs with an different oops..
-sorry I didn't mentioned this..
-I also read at the inet, somebody have had the same problem a few times
-ago:
-http://marc.theaimsgroup.com/?l=linux-raid&m=107087900802777&w=2
-http://marc.theaimsgroup.com/?l=linux-raid&m=107134150812889&w=2
+Eeh...  You're joking, right ?  
+The array holds no data as yet so it is possible, but several things seem too 
+odd about this advice.  First, there is nothing wrong with this array, it was 
+created by mdadm with all the right options. Second, this being linux (not 
+windows) I can hardly believe one has to solve problems by no other means 
+than starting all over ("reinstall windows") if the only error is due to the 
+bootmanager interacting with the kernel (remember, this error doesn't occur 
+with other, earlier, kernels).
 
-but thanks for the hint!
-sebastian
+Anyway, I chose to work around it by installing grub (and it works fine).
+
+Thanks,
+Maarten
+
+-- 
+When I answered where I wanted to go today, they just hung up -- Unknown
 
