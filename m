@@ -1,67 +1,27 @@
-From: "Dambacher, Ulf" <Ulf.Dambacher@mach.uni-karlsruhe.de>
-Subject: AW: Automatic notification of failure in softRAID array?
-Date: Tue, 9 Jul 2002 09:51:54 +0200
+From: Martin Hermanowski <martin@martin.mh57.net>
+Subject: Re: raid1 over lvm and nbd => recovery thread fails
+Date: Tue, 9 Jul 2002 19:25:55 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <6F5F11DC834C7F47958471A2B71DEB9F576D24@wbke2k.wbk.uni-karlsruhe.de>
+Message-ID: <20020709172555.GJ15958@martin.mh57.net>
+References: <20020705105215.GK26595@martin.mh57.net> <Pine.LNX.4.10.10207071427540.7165-100000@clements.sc.steeleye.com> <20020707210745.GF15958@martin.mh57.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-content-class: urn:content-classes:message
-To: Peter Daniel <pdaniel@cardaccess.com.au>
+Content-Disposition: inline
+In-Reply-To: <20020707210745.GF15958@martin.mh57.net>
+To: Paul Clements <clemep@steeleye.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Peter
-Look for the new admin tool mdadm. It has the Option --monitor wich is =
-able to do this job.
+On Sun, Jul 07, 2002 at 11:07:45PM +0200, Martin Hermanowski wrote:
+[...]
+>> I can give you some patches that will most likely fix these problems, if
+>> you are willing/able to patch your kernel. Or, as I said, you can wait until
+>> 2.4.19 is available.
+> 
+> I surely would like to try this.
+> 
+> Thanks for your explanation.
+> I will post the results with your patches/with 2.4.19 when available.
 
-Gretings
-	Ulf
-
------Urspr=FCngliche Nachricht-----
-Von: Peter Daniel [mailto:pdaniel@cardaccess.com.au]
-Gesendet: Dienstag, 9. Juli 2002 09:19
-An: 'linux-raid@vger.kernel.org'
-Betreff: Automatic notification of failure in softRAID array?
-
-
-Hello,
-
-I am running a server here with Red Hat 7.1, 2.4.18 kernel, and softRAI=
-D set
-up on all but the root filesystem.  This server is meant to sit on a re=
-mote
-site where we won't be able to monitor it all the time, So I would like=
- it
-to notify me if one of the disks in the RAID-1 array fails.  Is there a=
-ny
-integrated way of doing this, or will I need to hack together a script =
-to
-periodically parse the contents of /proc/mdstat and act accordingly?
-
-Please reply to this address, as I am not a member of the mailing list =
-and I
-can not regularly check the archives.
-
-Thanks for any assistance you may be able to render.
-
-
---
-Peter Daniel
-
-peter@cardaccess.com.au
-Card Access Services Pty Ltd
-http://www.cardaccess.com.au
-
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I installed the patch for md, and now it seems to work stable. Thanks!
