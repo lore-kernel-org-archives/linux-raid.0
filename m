@@ -1,40 +1,42 @@
-From: Lars Marowsky-Bree <lmb@suse.de>
-Subject: Re: RAID1: Disks alternating on reads
-Date: Tue, 23 Sep 2003 13:09:28 +0200
+From: "Bailey, Scott" <scott.bailey@eds.com>
+Subject: RE: RAID1: Disks alternating on reads
+Date: Tue, 23 Sep 2003 11:12:29 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20030923110928.GK8670@marowsky-bree.de>
-References: <014b01c38053$0358ad90$0180a8c0@what> <news2mail-bkmfvp$a7u$1@cartman.spoiled.org>
+Message-ID: <7FD257BF8564D4119DA800508BDF07AA0B0AAC3B@usahm012.exmi01.exch.eds.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <news2mail-bkmfvp$a7u$1@cartman.spoiled.org>
-To: linux-raid@vger.kernel.org
+To: 'Andrew Herdman' <andrew@whine.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2003-09-22T09:39:05,
-   Juri Haberland <list-linux.raid@spoiled.org> said:
+> Pardon me if my assumption was incorrect, but I was under the belief that
+> when using software RAID1, that when reads occurred on the RAID device
+that
+> it would read from both drives in a striped fashion similar to how RAID0
+> works to improve the speed of the md devices.   I am actually seeing this,
+> but it appears that the reads on each drive are continuing for 10 to 20
+> seconds before moving onto the next drive and then another 10-20 seconds
+and
+> back again.  This is not allowing for any performance increase, it just
+lets
+> the drives rest alternately.
 
-> As far as I could observe, the RAID1 code reads one file from one dis=
-k
-> and never changes disks during this read - so you get the performance
-> of one disk.
-> *But* the code distributes different writes to different disks.
+My impression from crawling through the code a few months back was that this
+behavior was a design feature. On a read request, the request is sent to the
+device with heads "closest" to the target sector, EXCEPT that for sequential
+reads, the device gets reused on the assumption that the disk can be kept
+streaming, EXCEPT that after some maximum number of reads, another drive
+gets chosen to give the previous device a rest.
 
-Reads of course, not writes ;-)
+I speculate your files are contiguous (or nearly so) with the result that
+the initially closest drive gets hammered until its 'work quota' gets
+exceeded, and then the next drive will get pounded. And so on. To test this,
+I think you could reduce MAX_WORK_PER_DISK in raid1.c from the default 128
+(in 2.4.21) to something smaller (perhaps 8 sectors for a filesystem with 4K
+block size?) and see if the load evens out.
 
+Good luck,
 
-Sincerely,
-    Lars Marowsky-Br=E9e <lmb@suse.de>
-
---=20
-High Availability & Clustering		ever tried. ever failed. no matter.
-SuSE Labs				try again. fail again. fail better.
-Research & Development, SUSE LINUX AG		-- Samuel Beckett
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+	Scott Bailey
+	scott.bailey at eds.com
