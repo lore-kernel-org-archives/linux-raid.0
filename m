@@ -1,49 +1,48 @@
-From: Matti Aarnio <matti.aarnio@zmailer.org>
+From: Mario Giammarco <mgiammarco@virgilio.it>
 Subject: Re: RAID1 VS RAID5
-Date: Sun, 26 Oct 2003 18:55:37 +0200
+Date: Sun, 26 Oct 2003 19:22:48 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20031026165537.GW26480@mea-ext.zmailer.org>
+Message-ID: <1067192568.1280.6.camel@cala>
 References: <1067179519.1222.107.camel@cala>
+	 <200310261716.17030.maarten@vbvb.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1067179519.1222.107.camel@cala>
-To: Mario Giammarco <mgiammarco@virgilio.it>
+In-Reply-To: <200310261716.17030.maarten@vbvb.nl>
+To: maarten van den Berg <maarten@vbvb.nl>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, Oct 26, 2003 at 03:45:19PM +0100, Mario Giammarco wrote:
-> Hello,
-> I would like to buy new SCSI hard disk to be used with lsi 160
-> controller in 32 bit pci.
-> 
-> I can choose:
-> 
-> - RAID5 of three Maxtor Atlas 10K II 9gb
-> - RAID1 of two   Maxtro Atlas 10K III 18gb
-> 
-> My problem is: I have seen that RAID1 code does not interleave reads so
-> it does not improve performance very much putting two hard disks.
+Il dom, 2003-10-26 alle 17:16, maarten van den Berg ha scritto:
+>   Raid1 being a mirror set it does not make sense to 
+> interleave anything. Either disk1 reads it first or disk2 reads it first. 
+> Once you get the data from either disk, then you're done; no need to wait for 
+> the second disk (giving you the identical datablock).  
 
- Performance boosting isn't primary goal in RAID schemes involving
- data replication.
+OK I have some difficulties to explain it, I will try again: usually
+linux do read prefetch so when you read block "n" after it linux reads
+block "n+1". So the "n+1" block can be read at the same time on the
+other disk.
 
- For RAID1 a suitably chosen read-interleave could be used to improve
- _large_ file reads, of course.  Another strategy is to distribute read
- operations to all online disks forming up the RAID1 set with elevators
- of their own.
+Reading past mailing lists posts it seems that raid1 behaviour is this:
 
-> Is there a patch to change raid1 behaviour?
+1) disk idle
+2) request for block "n"
+3) request is passed to hard disk with head nearer to block "n" (is it
+true? I am not sure)
+4) request to block "n+1" "n+2" etc. are on the same disk so THE OTHER
+DISK IS READY FOR A READ REQUEST FROM OTHER PROCESSES
+5) if sequential reading continue after some minutes the other disk is
+chosen to not stress too much only one disk (is it true?)
 
- If it feels important, such can be made.
+Obviously this behaviour (point 4) helps servers with a lot of
+multitasking and processes.
 
-> In linux 2.6.0 is it better?
+I prefer a "sequential" optimization.
 
- It can be made, if it isn't.
+Can it be done?
 
-> Thanks in advance for any reply.
-> -- 
-> Mario Giammarco
+Thanks again!
 
-/Matti Aarnio
+
