@@ -1,83 +1,120 @@
 From: "Cress, Andrew R" <andrew.r.cress@intel.com>
-Subject: RE: root filesystem copy ro raid
-Date: Mon, 17 Feb 2003 07:47:09 -0800
+Subject: RE: Question about recovery via mdadm
+Date: Mon, 17 Feb 2003 07:59:33 -0800
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <A5974D8E5F98D511BB910002A50A66470580D636@hdsmsx103.hd.intel.com>
+Message-ID: <A5974D8E5F98D511BB910002A50A66470580D637@hdsmsx103.hd.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: 'Lewis Shobbrook' <lshobbrook@fasttrack.net.au>, linux-raid@vger.kernel.org
+To: 'Neil Brown' <neilb@cse.unsw.edu.au>, James Ralston <qralston+ml.linux-raid@andrew.cmu.edu>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Lewis,
+The bug I'm experiencing does not produce a kernel oops, just a dump of the
+RAID state output.
+I'm guessing that it would not happen with the 2.5.x changes to md that
+consolidated the superblock counters in one place.  
 
-Here's what I use for that.
+The system does start a recovery if it is rebooted, but my use case is to
+avoid reboots at all cost.
+Anyway, I'll go back and get the kernel messages for this problem to pursue
+it.
 
 Andy
 
-   # Script 8 to copy Linux files to mounted tree
-   todir=/mnt/b
-   notf=/tmp/dirnot.tmp
-   cat - <<%%% >$notf
-tmp
-proc
-mnt
-boot
-lost+found
-%%%
-   dirs=`ls / |grep -vf $notf`
-   cd /
-   # Copy each directory in the list
-   # could use "find . -print | cpio -pdumv" if grep -v extra stuff. 
-   for d in $dirs
-   do
-       echo "Copying $d to $todir/$d..."
-       cp -a $d $todir
-   done
-   # Do /tmp, /proc, /mnt, and /boot specially
-   echo "Creating $todir/tmp, mnt, proc..."
-   mkdir -p $todir/tmp  
-   chmod 777 $todir/tmp
-   chmod +t $todir/tmp
-   mkdir -p $todir/proc
-   # makes /mnt directories like cdrom and floppy
-   for i in `ls -l /mnt |grep "^dr" |cut -c57-80`
-   do
-       mkdir -p $todir/mnt/$i
-   done
-   echo "Copying boot to $todir/boot..."
-   cp -f /boot/* $todir/boot 2>/dev/null
-   # This will usually give an "omitting lost+found" stderr message.   
-   # end script 8
-
-
 -----Original Message-----
-From: Lewis Shobbrook [mailto:lshobbrook@fasttrack.net.au] 
-Sent: Monday, February 17, 2003 12:39 AM
-To: linux-raid@vger.kernel.org
-Subject: root filesystem copy ro raid
+From: Neil Brown [mailto:neilb@cse.unsw.edu.au] 
+Sent: Sunday, February 16, 2003 5:10 PM
+To: James Ralston
+Cc: Cress, Andrew R; linux-raid@vger.kernel.org
+Subject: Re: Question about recovery via mdadm
 
 
-I'm surprised to find such little info on copying an existing filesystem
-onto a new raid partition.  
-The howto's use cp -a or pipe to cpio -pm .
-I've tried both methods, but here we have the problem of symbolic links
-and hardlinks not being copied, which when you have an elaborate system
-that you'd like to migrate across to raid, doesn't cut the mustard. 
-Has anyone tried or succeeded with any alternate methods?  Are there any
-utilities such as parted to copy the whole lot.  
-I'm not sure how apps such as parted work, but as /dev/mdX is formatted
-with mke2fs, as is most root filesystem, I'd like to hope that with a
-raid aware kernel and the root filesystem unmounted it could be copied
-directly eg.  /dev/hda1 => /dev/mdX.
+On Sunday February 16, qralston+ml.linux-raid@andrew.cmu.edu wrote:
+> On 2003-02-14 at 10:15:07+1100 Neil Brown <neilb@cse.unsw.edu.au> wrote:
+> 
+> > On Thursday February 13, andrew.r.cress@intel.com wrote:
+> > 
+> > > Solving why I got into this is another issue, but: Is there any
+> > > way, once I'm in this predicament, to force a recovery to the
+> > > spare, from userland (via mdadm)?
+> > 
+> > No.  Reconstrution should start automatically.  There is no
+> > mechanism to start it from user-space.  You could try to hot-remove
+> > and hot-add again, but if it didn't work the first time it is
+> > unlikely to work the second time.
+> > 
+> > It would appear to be a kernel bug.  Are there any kernel messages?
+> > An Oops or something?
+> 
+> I'll bet that if Andrew checks his syslog carefully, he'll find that
+> the mdrecovery process generated a kernel Oops:
+> 
+> https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=82815
 
-Apologies if this topic has been visited before, I couldn't find any
-reference to it in the archives...
+Thanks...
+I think that bug should be fixed by the follow patch which has been
+submitted and accepted and should be in 2.4.21.
+
+NeilBrown
 
 
-Lewis
+-----------------------------------------
+Avoid races by never  releasing rdev->sb for faulty devices.
 
+There are races relating to the superblocks being written out
+just as a device has failed, and the rdev->sb getting freeing while
+it is being written out.  This patch tries to avoid one of the
+races by testing the faulty bit in the superblock (which gets set
+early) as well as rdev->faulty (which gets set late), and does not
+free rdev->sb until the rdev is fully removed, thus making the races
+less critical.
+
+
+
+
+ ----------- Diffstat output ------------
+ ./drivers/md/md.c |   10 +++++-----
+ 1 files changed, 5 insertions(+), 5 deletions(-)
+
+diff ./drivers/md/md.c~current~ ./drivers/md/md.c
+--- ./drivers/md/md.c~current~	2003-01-03 10:25:44.000000000 +1100
++++ ./drivers/md/md.c	2003-01-03 10:25:43.000000000 +1100
+@@ -1048,7 +1048,11 @@ repeat:
+ 			printk("(skipping faulty ");
+ 		if (rdev->alias_device)
+ 			printk("(skipping alias ");
 -
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
++		if (disk_faulty(&rdev->sb->this_disk)) {
++			printk("(skipping new-faulty %s )\n",
++			       partition_name(rdev->dev));
++			continue;
++		}
+ 		printk("%s ", partition_name(rdev->dev));
+ 		if (!rdev->faulty && !rdev->alias_device) {
+ 			printk("[events: %08lx]",
+@@ -1075,7 +1079,6 @@ repeat:
+  *   - the device is nonexistent (zero size)
+  *   - the device has no valid superblock
+  *
+- * a faulty rdev _never_ has rdev->sb set.
+  */
+ static int md_import_device(kdev_t newdev, int on_disk)
+ {
+@@ -1147,8 +1150,6 @@ static int md_import_device(kdev_t newde
+ 	md_list_add(&rdev->all, &all_raid_disks);
+ 	MD_INIT_LIST_HEAD(&rdev->pending);
+ 
+-	if (rdev->faulty && rdev->sb)
+-		free_disk_sb(rdev);
+ 	return 0;
+ 
+ abort_free:
+@@ -3062,7 +3063,6 @@ int md_error(mddev_t *mddev, kdev_t rdev
+ 		return 0;
+ 	if (!mddev->pers->error_handler
+ 			|| mddev->pers->error_handler(mddev,rdev) <= 0) {
+-		free_disk_sb(rrdev);
+ 		rrdev->faulty = 1;
+ 	} else
+ 		return 1;
