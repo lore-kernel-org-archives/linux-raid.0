@@ -1,67 +1,61 @@
-From: Norbert Preining <preining@logic.at>
-Subject: Is data on a `failed-disk' secure after a reboot? (raid1)
-Date: Thu, 11 Mar 2004 12:10:57 +0100
+From: Matt Domsch <Matt_Domsch@dell.com>
+Subject: DDF Trial Use draft specification now publicly available
+Date: Thu, 11 Mar 2004 09:45:42 -0600
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040311111057.GG16350@gamma.logic.tuwien.ac.at>
+Message-ID: <20040311154542.GA6173@lists.us.dell.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="nFreZHaLTZJo0R7j"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi!
 
-I have set up a raid1 on our server with hda and hdc, but the partition=
-s
-of hda are marked as failed-disk in /etc/raidtab.
-Then I did mkraid all the devices, mke2fs (-j) and copied all the files=
-=2E
-This worked all very well.
+--nFreZHaLTZJo0R7j
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Now: What will happen when I reboot?
+The Disk Data Format (DDF) trial use draft spec has now been published
+by SNIA.  This is the common on-disk metadata format that
+RAID vendors have been driving towards, which should allow one to move
+disks from one vendor's RAID controller to another vendor's RAID
+controller without the backup-rebuild-restore that's currently needed.
 
-Using the persistent superblock option will linux (2.4.25) start syncin=
-g
-hdc onto hda or will it treat hda still as failed-disk?
+http://www.snia.org/tech_activities/ddftwg
 
-I will/would reboot with lilo options
-        root=3D/dev/md0
-but the kernel is on hda1 (for now, until hda is added to the raid)
+=46rom the doc:
+Revision 00.45.00
+Publication of this Trial-Use Draft Specification for trial use and
+comment has been approved by the SNIA Technical Council and the Common
+RAID Disk Data Format Technical Working Group. Distribution of this
+draft specification for comment shall not continue beyond (2) months
+from the date of publication. It is expected, but not certain that
+following this (2) month period, this draft specification, revised as
+necessary will be submitted to the SNIA Membership and/or Technical
+Council for final approval. Suggestions for revision should be directed
+to the Disk Data Format TWG at ddftwg@snia.org.
 
-Reason for the question: I want to run several tests before completely
-switching and want to be able to go back to normal hda behaviour.
+Thanks,
+Matt
 
-In case you need these data:
-linux-2.4.25 (self compiled)
-debian/woody
-raidtools2 0.90.20010914-15
-(no I am not using mdadm ATM, because all the howtos were written for
-raidtools. I will switch to mdadm, lateron)
+--=20
+Matt Domsch
+Sr. Software Engineer, Lead Engineer
+Dell Linux Solutions linux.dell.com & www.dell.com/linux
+Linux on Dell mailing lists @ http://lists.us.dell.com
 
-Please Cc: me any answer, thanks a lot.
+--nFreZHaLTZJo0R7j
+Content-Type: application/pgp-signature
+Content-Disposition: inline
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.1 (GNU/Linux)
 
-Best wishes
+iD8DBQFAUImmIavu95Lw/AkRAqEXAJ9CTmmYzaO0zf/0C4AOFqUqzFtGeACfYlai
+wSB6x8u5y5896qAN5BWaWsA=
+=qCsp
+-----END PGP SIGNATURE-----
 
-Norbert
-
------------------------------------------------------------------------=
---------
-Norbert Preining <preining AT logic DOT at>         Technische Universi=
-t=E4t Wien
-gpg DSA: 0x09C5B094      fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 0=
-9C5 B094
------------------------------------------------------------------------=
---------
-KIRBY MISPERTON (n.)
-One who kindly attempts to wipe an apparent kirby (q.v.) off another's
-face with a napkin, and then discovers it to be a wart or other
-permanent fixture, is said to have committed a 'kirby misperton'.
-			--- Douglas Adams, The Meaning of Liff
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--nFreZHaLTZJo0R7j--
