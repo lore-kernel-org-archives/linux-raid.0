@@ -1,44 +1,29 @@
-From: Paul Clements <paul.clements@steeleye.com>
-Subject: [PATCH] max_dev bug in super_1_sync
-Date: Mon, 21 Feb 2005 14:31:39 -0500
-Message-ID: <421A371B.7040802@steeleye.com>
+From: Mike Hardy <mhardy@h3c.com>
+Subject: Re: Tyan, RAID-6, and other recent hassles... (long, a bit OT)
+Date: Mon, 21 Feb 2005 14:00:55 -0800
+Message-ID: <421A5A17.5060902@h3c.com>
+References: <Pine.LNX.4.56.0502170923200.819@lion.drogon.net> <42172E56.3040007@panix.com> <Pine.LNX.4.56.0502191220130.819@lion.drogon.net> <421749F1.3040503@panix.com> <Pine.LNX.4.56.0502211146120.17307@lion.drogon.net>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------080408080002040802030603"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+In-Reply-To: <Pine.LNX.4.56.0502211146120.17307@lion.drogon.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@cse.unsw.edu.au, linux-raid@vger.kernel.org
+To: Gordon Henderson <gordon@drogon.net>
+Cc: berk walker <berk@panix.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This is a multi-part message in MIME format.
---------------080408080002040802030603
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
 
-Neil,
+Gordon Henderson wrote:
 
-I don't know if you've seen this one yet, but it looks like there's a 
-small bug in super_1_sync. Patch attached.
+> to/from another server to thrash the networking, then will do stuff via
+> NFS, transfer big files, checksum them, etc. as well as lots of little
+> files. Anyone have a good solid testsuite then like to run?
 
---
-Paul
+Very off-topic at this point, but apart from transfers with checksums, I 
+use a pair of ttcp processes to pack the network pipe solid, and the 
+linux kernel source is a great CPU/RAM test if you unpack/untar, copy, 
+diff, delete repeat
 
---------------080408080002040802030603
-Content-Type: text/plain;
- name="md_max_dev_bug.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="md_max_dev_bug.diff"
+Just be sure to watch the temparature ;-)
 
---- linux-2.6.11-rc3-mm2-patch-all-write-mostly/drivers/md/md.c	Mon Feb 21 12:23:32 2005
-+++ linux-2.6.11-rc3-mm2-patch-all-write-mostly-max-dev-bug/drivers/md/md.c	Mon Feb 21 14:22:21 2005
-@@ -1018,7 +1018,7 @@ static void super_1_sync(mddev_t *mddev,
- 	
- 	sb->max_dev = cpu_to_le32(max_dev);
- 	for (i=0; i<max_dev;i++)
--		sb->dev_roles[max_dev] = cpu_to_le16(0xfffe);
-+		sb->dev_roles[i] = cpu_to_le16(0xfffe);
- 	
- 	ITERATE_RDEV(mddev,rdev2,tmp) {
- 		i = rdev2->desc_nr;
-
---------------080408080002040802030603--
+-Mike
