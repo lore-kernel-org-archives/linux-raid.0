@@ -1,37 +1,33 @@
-From: Eli Cantu <eli@then7.com>
-Subject: resync (what is it doing when making a new array?)
-Date: Sat,  7 Aug 2004 19:25:09 -0500
+From: "chang" <aeh21dgj@hotmail.com>
+Subject: Buy prescriptions in bulk, SAVE THOUSANDS!
+Date: Sun, 08 Aug 2004 00:45:20 GMT
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1091924709.209ea25bc637f@www.then7.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
+Message-ID: <1091925920-3571__37981.8234047436$1091926072$gmane$org@excite.com>
+Content-Type: text/plain;
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-To: linux-raid@vger.kernel.org
+To: linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello All,
+Buy your meds through our Canadian Pharmacy,
 
-I've gone through the faq, archives, newsgroups, google etc.
+Save up to 80% on EXACTLY THE SAME DRUGS!
 
-I cannot find an answer to my question: After creating a new array, why is the
-time consuming resync required?
+Click here: http://www.we49fm.com/_85924943b9db73ac62baa654773c6a8e/7
+
+On medication long term?
+Buy bulk through us and LITERALLY SAVE THOUSANDS!
+
+Click here: http://www.we49fm.com/_85924943b9db73ac62baa654773c6a8e/7
 
 
-I've built a few hardware RAID 5 arrays in my time using Mylex, Adaptec, AMI
-etc. I don't recall this hours long, sometimes days long initial resync using
-hardware raid.
 
-What's written to the disks using linux raid, and why isn't it used in hardware
-raids?
 
-Thanks,
-~e
 
-(watching a raid 5 array, composed of five 250gb disks, resyncing...to be
-completed 16 hours from now...)
 
--------------------------------------------------
-This mail sent through IMP: http://horde.org/imp/
 
+
+
+
+benoit bachdon future mantra trident petunia ssssss 
+button fletchirene dragonfl gordon
+jazz nugget t-bone 
