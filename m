@@ -1,29 +1,43 @@
-From: Joshua Baker-LePain <jlb17@duke.edu>
-Subject: Re: experiences with 3Ware 6400 3W-6400?
-Date: Thu, 26 Jun 2003 17:01:20 -0400 (EDT)
+From: Gregory Leblanc <gleblanc@linuxweasel.com>
+Subject: RE: Mirroring swap
+Date: 26 Jun 2003 14:23:17 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0306261700260.12147-100000@chaos.egr.duke.edu>
-References: <Pine.LNX.4.55.0306261656520.6883@datavibe.net>
+Message-ID: <1056662597.10690.6.camel@gregdell.example.com>
+References: <Pine.LNX.4.43.0306260916190.5551-100000@unicorn.drogon.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-BfZerInjHkpiJdHDzEV+"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.55.0306261656520.6883@datavibe.net>
-To: "Rev. Jeffrey Paul" <sneak@datavibe.net>
-Cc: linux-raid@vger.kernel.org
+In-Reply-To: <Pine.LNX.4.43.0306260916190.5551-100000@unicorn.drogon.net>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 26 Jun 2003 at 4:57pm, Rev. Jeffrey Paul wrote
 
-> I'm thinking of buying one of these for a production server that I'm
-> setting up.  Has anyone had any experiences with these on linux, good or
-> bad?
+--=-BfZerInjHkpiJdHDzEV+
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-As an IDE controller, it'll work great.  The hardware RAID performance 
-(especially RAID 5) ain't gonna' be hot, though.  The 7500 series performs 
-much better in hardware RAID.
+On Thu, 2003-06-26 at 01:30, Gordon Henderson wrote:
+[snip]
+> So now with important machines which had mirrored or RAIDed disk systems,
+> I always put swap on a mirrored or RAID5d device.
 
--- 
-Joshua Baker-LePain
-Department of Biomedical Engineering
-Duke University
+Swap on RAID 5 is going to have pretty poor performance, in general.=20
+Swap needs to be both high bandwidth and low latency, both for reading
+and writing.  RAID 5 just isn't that.
+	Greg.
+
+
+--=-BfZerInjHkpiJdHDzEV+
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.2 (GNU/Linux)
+
+iD8DBQA++2RFnAkVXO6fw4sRAq6bAJ98V3qMWbYJk4s3Egit7xNkyJcupQCeKfs8
+UZGp7qgvgBZSZQ00xs4mD68=
+=QT/q
+-----END PGP SIGNATURE-----
+
+--=-BfZerInjHkpiJdHDzEV+--
 
