@@ -1,259 +1,144 @@
-From: <me@heyjay.com>
-Subject: How to build bootable RAID 1 as a module with Grub on Debian Sarge
-Date: Thu, 27 May 2004 23:15:07 -0500
+From: "Tim Harvey" <tharvey@alumni.calpoly.edu>
+Subject: RE: Moving a RAID5 array
+Date: Thu, 27 May 2004 22:18:59 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <001101c4446a$837f80d0$6705a8c0@a30>
-Reply-To: <me@heyjay.com>
+Message-ID: <000001c44473$48f06b60$7001a8c0@darwin>
+References: <200405280120.05296.maarten@ultratux.net>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="iso-8859-1"
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <200405280120.05296.maarten@ultratux.net>
 To: linux-raid@vger.kernel.org
-Cc: jakob@unthought.net, bueso@vives.org
 List-Id: linux-raid.ids
 
-Since its not described in the software Raid HOWTO, maybe it will prevent
-someone
-else from struggling like I did
+> -----Original Message-----
+> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+> owner@vger.kernel.org] On Behalf Of maarten van den Berg
+> Sent: Thursday, May 27, 2004 4:20 PM
+> To: linux-raid@vger.kernel.org
+> Subject: Re: Moving a RAID5 array
+> 
+> On Friday 28 May 2004 00:04, Tim Harvey wrote:
+> 
+> Disclaimer: I'm not a real expert, but have had my share of raid5
+> experiences.
+> 
+> > My question is that, not being very familiar with Linux raid or
+mdadm,
+> > I'm wondering if I can mount the array on my Linux system when the
+> > devices are other than described above (they would likely be
+/dev/hdc1,
+> > /dev/hdd1, etc as my boot/root drives use hda/hdb).  Additionally,
+how
+> 
+> I did shuffle my disks at several points in time, and it figures that
+out
+> by
+> itself somehow (there must be something in the superblock identifying
+> which
+> drive it is).
+> 
+> > should I go about mounting this array in a way that if anything
+doesn't
+> > work right, it doesn't trash the array.  I'm a little paranoid that
+I
+> > may do something wrong and the raidutils will start reconstructing
+or
+> > otherwise altering the information on the array.
+> 
+> There are several things to note. You want to disallow the raid to
+start
+> any
+> reconstruction, and you need to skip any fsck at mount, as well as
+> replaying
+> of journals if they are journaling filesystems.
 
-Build a IDE RAID-1 on Debian Sarge (currently "testing"), using GRUB as the
-bootloader, RAID as a module (as opposed to built into the kernel), putting
-the swap on a RAID-1 device, via mdadm, with 2 disks, by "method 2" of
-the Software Raid HowTo (i.e. installing on one disk (hda), building the
-raid
-with a "missing" disk, copying contents of hda to raid, and then
-incorporating
-hda to the raid set), and making the whole thing bootable.
+It looks like I need to do an 'mdadm --assemble' to assemble the
+previously created array into an active array.  But I'm not clear how to
+examine the /dev/md0 device to see what partitions are available (fdisk
+didn't work in a test... I guess its not compatible with /dev/md0).
+ 
+> 
+> Issue #1 Can be assured (AFAIK) by just attaching one disk less. Then
+the
+> array will be in degraded mode and cannot / will not attempt a resync.
+> In addition, this will enable you to choose another set of disks,
+should
+> the
+> outlook on the first three be less than favourable...
+> 
 
-The basic overview how to do this is:
+Does disallowing the raid to start any reconstruction mean that the
+array is not 'started' and that I cannot mount the filesystem?  I guess
+I'm not clear if there is a difference between the array being 'started'
+and 'allowing reconstruction'.  Is leaving a disk out of the RAID5 array
+the only way to force this to occur?  I noticed mdadm has a --readonly
+option but I'm not sure if it affects the assemble mode.
 
-1. Install your system on hda.
-2. Partition the second drive
-3. Install mdadm
-4. Create the RAID devices
-5. Create filesystems on each of the RAID partitions
-6. Create a new initial ram disk contain the RAID partitions
-7. Add an entry to GRUB to use the new partitions
-8. Copy your system to the new RAID devices
-9. Edit your new fstab at /mnt/etc/fstab to point at the new partitions
-10. reboot and hope for the best :)
-11. repartition your old system disk
-14. add new partitions to raid sets
-15. Create a new initial ram disk that knows about your mirrored drives
-16. Reboot and check /proc/mdstat see if you are mirroring
+> Issue #2 Should be assured by mounting read-only, without prior fsck.
+> 
 
-I did this on a stock Debian Sarge install
-platinum:~# uname -a
-Linux platinum 2.4.25-1-386 #2 Wed Apr 14 19:38:08 EST 2004 i686 GNU/Linux
+Sounds like a safe bet to mount the partition read-only.  How can I
+examine /dev/md0 to see what partitions are available?  I'm fairly
+certain XFS is used.  The RAID HOWTO doesn't seem to go into detail
+regarding how to examine filesystems on an array.
 
-====================================================================
-1. Install your system on hda.
+> Issue #3 I'm not sure about. Consult the manualpage detailing your
+> specific
+> filesystem...  Maybe instead of mounting you could run an fsck with an
+> option
+> to do only a test-run / dry-run i.e. allow no writes whatsoever during
+> fsck.
+> If that fsck succeeds, chances are very good that all is in order.
 
- When I finished installing my disk looked like:
+Is this to ensure no writing occurs in case something didn't work
+correctly?  If everything looks ok in a dry-run I'll want to mount and
+allow fsck and journaling to complete I assume.  Again, can the
+--readonly option be used to keep the device from being written at the
+device level for a dry-run?
 
-platinum:~# fdisk -l /dev/hda
+> 
+> Anyway, my guess is, you'll have no trouble at all.  A power-loss is
+not
+> the
+> very worst that can happen to an array. In my humble opinion...
+> 
+> > Thanks for any help.  I've read over the Linux RAID FAQ and looked
+> > through the man pages for mdadm, but I'm pretty paranoid about
+loosing
+> > the data and want to consult the experts here.
+> 
+> <Grin> No backups huh ?  Been there,  done that,  still got my data
+back.
+> :)
 
-Disk /dev/hda: 120.0 GB, 120033041920 bytes
-255 heads, 63 sectors/track, 14593 cylinders
-Units = cylinders of 16065 * 512 = 8225280 bytes
+I guess I've been educated :)  Ironically the power outages occurred due
+to my own blunders while hooking up a 2nd device to use as a backup.
 
-   Device Boot      Start         End      Blocks   Id  System
-/dev/hda1               1        1216     9767488+  83  Linux
-/dev/hda2            1217        1338      979965   83  Linux
+Thanks for your help!
 
-platinum:~# df
-Filesystem           1K-blocks      Used Available Use% Mounted on
-/dev/hda1              9614116    367000   8758744   5% /
-tmpfs                   452696         0    452696   0% /dev/shm
+Tim
 
-2. Partition the second drive (in my case hdc).  Its important in this step
-   to make sure the partition types are "fd" often referred to in other
- how-tos as, 0xFD.  Be careful of the partition sizes.  When it comes time
- to incorporate the current system disk into the raid you must be able to
- build equal size, or larger, partitions on the system disk.  I partitioned
- my drive with sfdisk, you can use cfdisk, fdisk... (or any other method
- you prefer).
-
- I made my hdc look like:
-
-platinum:~# fdisk -l /dev/hdc
-
-Disk /dev/hdc: 120.0 GB, 120033041920 bytes
-255 heads, 63 sectors/track, 14593 cylinders
-Units = cylinders of 16065 * 512 = 8225280 bytes
-
-   Device Boot      Start         End      Blocks   Id  System
-/dev/hdc1               1        4357    34997571   fd  Linux raid
-autodetect
-/dev/hdc2            4358        4606     2000092+  fd  Linux raid
-autodetect
-/dev/hdc3            4607        9586    40001850   fd  Linux raid
-autodetect
-/dev/hdc4            9587       14593    40218727+  fd  Linux raid
-autodetect
-
-3. Install mdadm
-
- apt-get install mdadm
- OK
- YES - To: Do you want to start the RAID devices automatically?
- YES - To: Do you want to start the RAID monitor daemon?
- <*> = Which user should get the email notification?
-
-4. Create the RAID devices. Now you create your raid devices with a
-   missing disk, like:
-
-platinum:~# mdadm -C /dev/md0 --level raid1 --raid-disks 2 missing /dev/hdc1
-platinum:~# mdadm -C /dev/md1 --level raid1 --raid-disks 2 missing /dev/hdc2
-platinum:~# mdadm -C /dev/md2 --level raid1 --raid-disks 2 missing /dev/hdc3
-platinum:~# mdadm -C /dev/md3 --level raid1 --raid-disks 2 missing /dev/hdc4
-
- NOTE: the "missing" is a place holder for a device.  This builds a
- RAID device that is degraded (i.e. its supposed to be two partitions but
- only is operating upon one).
-
- # You may see messages like:
- mdadm: /dev/hdc1 appears to contain an ext2fs file system
-    size=104320K  mtime=Sat Apr 10 05:36:15 2004
- Continue creating array? y
- mdadm: array /dev/md0 started.
-
- mdadm: array /dev/md1 started.
- mdadm: array /dev/md2 started.
- mdadm: array /dev/md3 started.
-
-5. Create filesystems on each of the RAID partitions.  In my case I'm
-   making ext3 filesystems, hence the -j
-
-mke2fs -j -b 4096 -R stride=8 /dev/md0
-mke2fs -j -b 4096 -R stride=8 /dev/md2
-mke2fs -j -b 4096 -R stride=8 /dev/md3
-
- # and I'm creating my swap partition on md1
-
-platinum:/# mkswap /dev/md1
-Setting up swapspace version 1, size = 2047995 kB
-platinum:/# swapon /dev/md1
- # Check that you swap partition is online
-platinum:/# swapon -s
-Filename                        Type            Size    Used    Priority
-/dev/hda2                       partition       979956  0       -1
-/dev/md1                        partition       1999992 0       -2
-
-6. Create a new boot thingy to contain the RAID modules
-
-platinum:/# cd /boot
-platinum:/boot# mkinitrd -r /dev/md0 -o /boot/initrd.img-2.4.25-1-386raid
-
-7. Add an entry to GRUB to use the new partition
-
-platinum:/boot# vi /boot/grub/menu.lst
-
- # and add the something similar to:
-
-title           Debian GNU/Linux, kernel 2.4.25-1-386 w/Raid
-root            (hd0,0)
-kernel          /boot/vmlinuz-2.4.25-1-386 root=/dev/md0 ro
-initrd          /boot/initrd.img-2.4.25-1-386raid
-savedefault
-boot
-
-8. Mount the "/" partition of the raid device and copy the system "/"
-
-platinum:~# cd /
-platinum:/# mount /dev/md0 /mnt
-platinum:/# find . -xdev | cpio -pm /mnt
-
-# cp other partitions and rearrange things as desired
-
-9. Edit your new fstab at /mnt/etc/fstab to point at the new partitions
-platinum:~# cat /mnt/etc/fstab
-# /etc/fstab: static file system information.
-#
-# <file system> <mount point>   <type>  <options>       <dump>  <pass>
-proc            /proc           proc    defaults        0       0
-#/dev/hda2       none            swap    sw              0       0
-/dev/md1        none            swap    sw              0       0
-#/dev/hda1       /               ext3    defaults,errors=remount-ro 0
-1
-/dev/md0        /               ext3    defaults,errors=remount-ro 0       1
-/dev/md2        /opt            ext3    defaults        0       1
-/dev/md3        /home           ext3    defaults        0       1
-/dev/hdd        /media/cdrom    iso9660 ro,user,noauto  0       0
-/dev/fd0        /media/floppy   auto    rw,user,noauto  0       0
-/dev/hdd        /cdrom          iso9660 ro,user,noauto  0       0
-
-10. reboot and hope for the best :)
-
-# all down hill from here
-
-11. repartition your old system disk (hda)
-
-platinum:/# sfdisk -d /dev/hdc > part.out
-platinum:/# sfdisk /dev/hda < part.out
-
-14. add new partitions to raid
-
-platinum:/# mdadm /dev/md0 -a /dev/hda1
-mdadm: hot added /dev/hda1
-platinum:/# mdadm /dev/md2 -a /dev/hda3
-mdadm: hot added /dev/hda3
-platinum:/# mdadm /dev/md3 -a /dev/hda4
-mdadm: hot added /dev/hda4
-
-# NOTE: while these commands return immediately, they run in the
-# background and take a while. For example it took me 30 mins to add
-# all the partitions
-
-You can check the progress by:
-$ cat /proc/mdstat
-
-# and looking at the "recovery =  X.X%"
-
-15. Create a new initial ram disk that knows about your mirrored drives
-
-platinum:/boot# mkinitrd -r /dev/md0 -o /boot/initrd.img-2.4.25-1-386raid
-
-16. Reboot and check /proc/mdstat see if you are mirroring
-
-====================================================================
-Other things to know
-
-mdadm --stop /dev/md0
-mdadm --zero-superblock /dev/hda1
-
-## You may want to write a new MBR to the /dev/hdc
-## Create an MBR on the new disk
-
-$ grub
-Probing devices to guess BIOS drives. This may take a long time.
-
-grub> root (hd1,0)
- Filesystem type is ext2fs, partition type 0xfd
-
-grub> setup (hd1)
- Checking if "/boot/grub/stage1" exists... yes
- Checking if "/boot/grub/stage2" exists... yes
- Checking if "/boot/grub/e2fs_stage1_5" exists... yes
- Running "embed /boot/grub/e2fs_stage1_5 (hd1)"... failed (this is not
-fatal)
- Running "embed /boot/grub/e2fs_stage1_5 (hd1,0)"... failed (this is not
-fatal)
- Running "install /boot/grub/stage1 (hd1) /boot/grub/stage2 p
-/boot/grub/menu.l
-st "... succeeded
-Done.
-
-# then do the same for hd0
-grub> root (hd0,0)
-grub> setup (hd0)
-
-#  You may need to edit this file if you install a new kernel-image to
-#  tell it where your /dev/md0 is
-platinum:/# cat /boot/grub/device.map
-(hd0)   /dev/hda
-(hd1)   /dev/md0
-
-
+> 
+> Well, good luck with your endeavors !
+> 
+> Maarten
+> 
+> > -
+> > To unsubscribe from this list: send the line "unsubscribe
+linux-raid" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> --
+> When I answered where I wanted to go today, they just hung up --
+Unknown
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"
+in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
