@@ -1,45 +1,43 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: "Enhanced" MD code avaible for review
-Date: Wed, 24 Mar 2004 21:21:41 -0500
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: sbp2 logging out causing raid1 to fail
+Date: Thu, 25 Mar 2004 13:36:24 +1100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <40624235.30108@pobox.com>
-References: <760890000.1079727553@aslan.btc.adaptec.com>	<16479.50592.944904.708098@notabene.cse.unsw.edu.au>	<2128160000.1080023015@aslan.btc.adaptec.com> <16480.61927.863086.637055@notabene.cse.unsw.edu.au>
+Message-ID: <16482.17832.115638.995092@notabene.cse.unsw.edu.au>
+References: <s061fb8d.089@med-gwia-02a.med.umich.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <16480.61927.863086.637055@notabene.cse.unsw.edu.au>
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: "Justin T. Gibbs" <gibbs@scsiguy.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: message from Robert Welsh on Wednesday March 24
+To: Robert Welsh <rcwelsh@med.umich.edu>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> Choice is good.  Competition is good.  I would not try to interfere
-> with you creating a new "emd" driver that didn't interfere with "md". 
-> What Linus would think of it I really don't know.  It is certainly not
-> impossible that he would accept it.
+On Wednesday March 24, rcwelsh@med.umich.edu wrote:
+> Neil,
+> 
+> I am running kernel 2.4.25 which has the latest (1193) release of
+> ieee1394 as far as I can tell by comparing kernel source to ieee1394
+> branch.
+> 
+> Anyway I have built a raid1 array with two 200 gig lacie fw800  drives
+> using a lacie fw pci card (ohci compliant chip). The build went fine as
+> did the resync. But then I started copying alot over and it died. 
+> 
+> >From what I can gather in the log files it looks like sbp2 is logging
+> out of one of the drives when then manifests as a drive failure - which
+> it in a way is. 
+> 
+> I did see that you had made change in 1016 of sbp2 to allow a second to
+> log back in after a bus reset. But what is causing this to actually log
+> out and is there a way to prevent?
 
-Agreed.
+I'm afraid I cannot help you.  I have never dealt with firewire.
 
-Independent DM efforts have already started supporting MD raid0/1 
-metadata from what I understand, though these efforts don't seem to post 
-to linux-kernel or linux-raid much at all.  :/
+This looks like a firewire problem.  It is returning an error so raid
+is failing the drive. I don't know what is causing the error, whether
+it should be fixed, and if so, how.
 
+Maybe you should ask on a fire-wire related list, or on linux-kernel.
 
-> However I'm not sure that having three separate device-array systems
-> (dm, md, emd) is actually a good idea.  It would probably be really
-> good to unite md and dm somehow, but no-one seems really keen on
-> actually doing the work.
-
-I would be disappointed if all the work that has gone into the MD driver 
-is simply obsoleted by new DM targets.  Particularly RAID 1/5/6.
-
-You pretty much echoed my sentiments exactly...  ideally md and dm can 
-be bound much more tightly to each other.  For example, convert md's 
-raid[0156].c into device mapper targets...  but indeed, nobody has 
-stepped up to do that so far.
-
-	Jeff
-
-
-
+NeilBrown
