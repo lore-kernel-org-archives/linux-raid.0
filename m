@@ -1,46 +1,37 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: ANNOUNCE: mdadm 2.0-devel-1 DEVELOPMENT RELEASE - A tool for managing Soft RAID under Linux
-Date: Fri, 18 Feb 2005 11:41:17 +1100
-Message-ID: <16917.14765.284045.508864@cse.unsw.edu.au>
+From: Mike Hardy <mhardy@h3c.com>
+Subject: Re: [PATCH md 9 of 9] Optimise reconstruction when re-adding a recently
+ failed drive.
+Date: Thu, 17 Feb 2005 16:51:27 -0800
+Message-ID: <42153C0F.1030904@h3c.com>
+References: <20050218111131.790.patches@notabene> <E1D1wCK-0000Xe-Qm@notabene.cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
+In-Reply-To: <E1D1wCK-0000Xe-Qm@notabene.cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
+NeilBrown wrote:
+> When an array is degraded, bit in the intent-bitmap are
+> never cleared. So if a recently failed drive is re-added, we only need
+> to reconstruct the block that are still reflected in the
+> bitmap.
+> This patch adds support for this re-adding.
 
+Hi there -
 
-I am pleased to announce the availability of 
-   mdadm version 2.0-devel-1
-It is available at
-   http://www.cse.unsw.edu.au/~neilb/source/mdadm/
-and
-   http://www.{countrycode}.kernel.org/pub/linux/utils/raid/mdadm/
+If I understand this correctly, this means that:
 
-as a source tar-ball and (at the first site) as an SRPM, and as an RPM for i386.
+1) if I had a raid1 mirror (for example) that has no writes to it since 
+a resync
+2) a drive fails out, and some writes occur
+3) when I re-add the drive, only the areas where the writes occurred 
+would be re-synced?
 
-mdadm is a tool for creating, managing and monitoring
-device arrays using the "md" driver in Linux, also
-known as Software RAID arrays.
+I can think of a bunch of peripheral questions around this scenario, and 
+bad sectors / bad sector clearing, but I may not be understanding the 
+basic idea, so I wanted to ask first.
 
-Release 2.0-devel-1 is a development release that quit possible has
-  bugs.  It released in the hope of getting wider testing.
-  It adds support for version-1 superblock which allow more that 28 devices
-  in an array (among other things) and for bitmap-based-write-intent-logging
-  which can improve resync speed after an unclean shutdown.
-
-  The bitmap logging requires patches which should be in the next -mm release
-  after 2.6.11-rc4 and can be downloaded from
-    http://neilb.web.cse.unsw.edu.au/patches/linux-devel/2.6/2005-02-18-00/
-  which contains patches against 2.6.11-rc3-mm2.
-
-
-Development of mdadm is sponsored by CSE@UNSW: 
-  The School of Computer Science and Engineering
-at
-  The University of New South Wales
-
-NeilBrown  18 February 2005
-
+-Mike
