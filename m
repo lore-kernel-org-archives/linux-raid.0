@@ -1,28 +1,43 @@
-From: Paul Clements <Paul.Clements@SteelEye.com>
-Subject: Re: Raid Q
-Date: Mon, 11 Aug 2003 21:43:27 -0400
+From: bnfwatxsyepj@msn.com
+Subject: Debt stopping you from getting ahead? Read NOW              poiopsda
+Date: Tue, 12 Aug 2003 15:21:59 +0900
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3F38463F.9C849738@SteelEye.com>
-References: <MPEEJJCBBFOCGLEOCJNAGENKDKAA.admin@sscrmnl.edu.ph>
+Message-ID: <S275077AbTHLGUI/20030812062008Z+13650@vger.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: "Jose Nathaniel G. Nengasca" <admin@sscrmnl.edu.ph>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-"Jose Nathaniel G. Nengasca" wrote:
-> 
-> I just created RAID1, and now its running smoothly... Now how can I add raid
-> device to fstab? coz i always type 'mkraid' during restart and to solve this
-> i added it on /etc/rc.d/rc.local.. so i guess fstab is the answer, so that i
-> dont use /etc/rc.d/rc.local or run mkraid manually everytime it start...
+Check this out, this is helpful..
 
-It probably depends on which distribution you're running, but on Red Hat
-or SuSE you just need to add an entry to /etc/raidtab for your raid1
-device (man raidtab for details) and if you also want to mount the
-device at boot time, add an entry to /etc/fstab too.
+Debt sucks. So does lining your bank managers pockets!
+We tear up your debt and give you and your family a fresh start ..
 
---
-Paul
+- Save you a lot of money by eliminating late fees
+- Settle your accounts for a substantially reduced amount
+- Stop creditors calling you on the phone
+- Avoid bankruptcy
+
+... and more!
+
+Why keep dealing with the stress, and headaches?
+
+Combine your debt into a low interest repayment and
+get on with your life today!!
+
+Come here and take a look at how we can help.
+
+http://srd.yahoo.com/drst/432890/*http://www.slashmonthlypayments.com/index.php?N=g
+
+
+
+
+
+
+
+
+
+
+for no more
+http://srd.yahoo.com/drst/11/*http://www.slashmonthlypayments.com/r.php
