@@ -1,55 +1,51 @@
-From: Gordon Henderson <gordon@drogon.net>
-Subject: RE: Spares and partitioning huge disks
-Date: Mon, 10 Jan 2005 07:42:06 +0000 (GMT)
-Message-ID: <Pine.LNX.4.56.0501100728391.17714@lion.drogon.net>
-References: <200501092320.j09NKQ918671@www.watkins-home.com>
+From: Frank van Maarseveen <frankvm@frankvm.com>
+Subject: Re: Spares and partitioning huge disks
+Date: Mon, 10 Jan 2005 09:15:26 +0100
+Message-ID: <20050110081526.GA15920@janus>
+References: <crmt7e$8d6$1@sea.gmane.org> <200501092226.25910.maarten@ultratux.net> <20050109222900.GA12793@janus> <200501100016.58847.maarten@ultratux.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200501092320.j09NKQ918671@www.watkins-home.com>
+Content-Disposition: inline
+In-Reply-To: <200501100016.58847.maarten@ultratux.net>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, 9 Jan 2005, Guy wrote:
+On Mon, Jan 10, 2005 at 12:16:58AM +0100, maarten wrote:
+> On Sunday 09 January 2005 23:29, Frank van Maarseveen wrote:
+> 
+> I either don't understand this, or I don't agree. Assemble --force effectively 
+> disables all sanitychecks,
 
-> Why is RAID1 preferred over RAID5?
-> RAID1 is considered faster than RAID5.  Most systems tend to read much more
-> than they write.
+ok, wasn't sure about that. but then:
 
-You'd think that, wouldn't you?
+> The result is 
+> therefore an array that either (A) holds a good FS with a couple of corrupted 
+> files (silent corruption)
 
-However, - I've recently been doing work to graph disk IO by reading
-/proc/partitions and feeding it into MRTG - what I saw surprised me,
-although it really shouldn't. Most of the systems I've been graphing over
-the past few weeks write all the time and rarely read -I'm putting this
-down to things like log files being written more or less all the time, and
-the active data set residing in the filesystem/buffer cache more or less
-all the time. (also ext3 which wants to write all the time too)
+> So I certainly would opt for the "possibility of silent corruption" choice. 
+> And if I ever find the corrupted file I delete it and mark it for 'new 
+> retrieval" or some such followup.  Or restore from tape where applicable.
+> 
+> > so, we can't ignore errors during RAID5 reconstruction and we're toast
+> > if it happens, even more toast than we would have been with a normal
+> > disk (barring the case of an entirely dead disk). If you look at the
+> > lower level then of course RAID5 has an advantage but to me it seems to
+> > vaporize when exposed to the _complexity_ of handling secondary errors
+> > during the reconstruction.
+> 
+> You cut out my entire idea about leaving the 'failed' disk around to 
+> eventually being able to compensate a further block error on another media.  
+> Why ?  It would _solve_ your problem, wouldn't it ?
 
-However, I guess it all depends on what the server is doing - for a
-workstion it may well be the case that it does more reads.
+I did not intend to cut it out but simplified the situation a bit: if
+you have all the RAID5 disks even with a bunch of errors spread out over
+all of them then yes, you basically still have the data.  Nothing is
+lost provided there's no double fault and disks are not dead yet. But
+there are not many technical people I would trust for recovering from
+this situation. And I wouldn't trust myself without a significant
+coffee intake either :)
 
-Have a quick look at
-
-  http://lion.drogon.net/mrtg/diskIO.html
-
-This is a moderately busy web server with a couple of dozen virtual web
-sites and runs a MUD and several majordomo lists.
-
-Blue is writes, Green reads. Note periods of heavy read activity just
-after midnight when it does a backup (over the 'net to another server and
-it also sucks another server onto the 'archive' partition), and 2am is
-when it analyses the web log-files.
-
-Also note that it's swapping - this has 256MB of RAM and is due for an
-upgrade, but swap is keeping it all ticking away nicely.
-
-The var partition seems to sustain writes at approx. 200-300
-sectors/second... Not a fantastic amount, but I found it rather
-surprising.
-
-(I'll put the MRTG code online for anyone who wants it in a few days and
-let you know)
-
-Gordon
+-- 
+Frank
