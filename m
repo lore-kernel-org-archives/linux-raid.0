@@ -1,227 +1,239 @@
 From: Paul Clements <paul.clements@steeleye.com>
-Subject: [PATCH 1/3] md bitmap async write enabling
-Date: Thu, 17 Mar 2005 15:53:41 -0500
-Message-ID: <4239EE55.7040804@steeleye.com>
-References: <422F7621.8090602@steeleye.com> <16949.5768.392061.95882@cse.unsw.edu.au> <4239EDCA.4030502@steeleye.com>
+Subject: [PATCH 2/3] md bitmap async writes for raid1
+Date: Thu, 17 Mar 2005 15:55:17 -0500
+Message-ID: <4239EEB5.7020901@steeleye.com>
+References: <422F7621.8090602@steeleye.com> <16949.5768.392061.95882@cse.unsw.edu.au> <4239EDCA.4030502@steeleye.com> <4239EE55.7040804@steeleye.com>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="------------000205040203070206040304"
-In-Reply-To: <4239EDCA.4030502@steeleye.com>
+ boundary="------------040105060509000204040704"
+In-Reply-To: <4239EE55.7040804@steeleye.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Neil Brown <neilb@cse.unsw.edu.au>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 This is a multi-part message in MIME format.
---------------000205040203070206040304
+--------------040105060509000204040704
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 
-This patch enables the async write capability in md. It requires the md 
-bitmap patches and the 117-WriteMostly-update patch.
+This patch implements async writes in raid1.
 
---------------000205040203070206040304
+--------------040105060509000204040704
 Content-Type: text/plain;
- name="md_async_4_0_enabling.diff"
+ name="md_async_4_0_raid1.diff"
 Content-Transfer-Encoding: 7bit
 Content-Disposition: inline;
- filename="md_async_4_0_enabling.diff"
+ filename="md_async_4_0_raid1.diff"
 
 
 Signed-Off-By: Paul Clements <paul.clements@steeleye.com>
 
- drivers/md/bitmap.c         |   26 ++++++++++++++++++++++----
- drivers/md/md.c             |   13 +++++++++++++
- include/linux/raid/bitmap.h |   17 +++++++++++------
- include/linux/raid/md_k.h   |    3 +++
- 4 files changed, 49 insertions(+), 10 deletions(-)
-diff -purN --exclude core --exclude-from /export/public/clemep/tmp/dontdiff linux-2.6.11-rc3-mm2-patch-all-write-mostly-max-dev-bug-bitmap-bug-fix/drivers/md/bitmap.c linux-2.6.11-rc3-mm2-patch-all-write-mostly-async-write-bitmap-bug-fix/drivers/md/bitmap.c
---- linux-2.6.11-rc3-mm2-patch-all-write-mostly-max-dev-bug-bitmap-bug-fix/drivers/md/bitmap.c	Thu Mar 10 10:05:35 2005
-+++ linux-2.6.11-rc3-mm2-patch-all-write-mostly-async-write-bitmap-bug-fix/drivers/md/bitmap.c	Thu Mar 10 10:13:15 2005
-@@ -379,6 +379,7 @@ void bitmap_print_sb(struct bitmap *bitm
- 	printk(KERN_DEBUG "  daemon sleep: %ds\n", le32_to_cpu(sb->daemon_sleep));
- 	printk(KERN_DEBUG "     sync size: %llu KB\n", (unsigned long long)
- 						le64_to_cpu(sb->sync_size) / 2);
-+	printk(KERN_DEBUG "  async writes: %d\n", le32_to_cpu(sb->async_writes));
- 	kunmap(bitmap->sb_page);
- }
+ drivers/md/raid1.c         |  107 ++++++++++++++++++++++++++++++++++++++++++---
+ include/linux/raid/raid1.h |    2 
+ 2 files changed, 102 insertions(+), 7 deletions(-)
+diff -purN --exclude core --exclude-from /export/public/clemep/tmp/dontdiff linux-2.6.11-rc3-mm2-patch-all-write-mostly-max-dev-bug-bitmap-bug-fix/drivers/md/raid1.c linux-2.6.11-rc3-mm2-patch-all-write-mostly-async-write-bitmap-bug-fix/drivers/md/raid1.c
+--- linux-2.6.11-rc3-mm2-patch-all-write-mostly-max-dev-bug-bitmap-bug-fix/drivers/md/raid1.c	Thu Mar 10 10:05:35 2005
++++ linux-2.6.11-rc3-mm2-patch-all-write-mostly-async-write-bitmap-bug-fix/drivers/md/raid1.c	Sat Mar 12 08:38:20 2005
+@@ -35,7 +35,7 @@
+ #include <linux/raid/raid1.h>
+ #include <linux/raid/bitmap.h>
  
-@@ -387,7 +388,7 @@ static int bitmap_read_sb(struct bitmap 
+-#define DEBUG 0
++#define DEBUG 0
+ #if DEBUG
+ #define PRINTK(x...) printk(x)
+ #else
+@@ -222,8 +222,17 @@ static void raid_end_bio_io(r1bio_t *r1_
  {
- 	char *reason = NULL;
- 	bitmap_super_t *sb;
--	unsigned long chunksize, daemon_sleep;
-+	unsigned long chunksize, daemon_sleep, async_writes;
- 	unsigned long bytes_read;
- 	unsigned long long events;
- 	int err = -EINVAL;
-@@ -411,6 +412,7 @@ static int bitmap_read_sb(struct bitmap 
+ 	struct bio *bio = r1_bio->master_bio;
  
- 	chunksize = le32_to_cpu(sb->chunksize);
- 	daemon_sleep = le32_to_cpu(sb->daemon_sleep);
-+	async_writes = le32_to_cpu(sb->async_writes);
- 
- 	/* verify that the bitmap-specific fields are valid */
- 	if (sb->magic != cpu_to_le32(BITMAP_MAGIC))
-@@ -422,7 +424,9 @@ static int bitmap_read_sb(struct bitmap 
- 	else if ((1 << ffz(~chunksize)) != chunksize)
- 		reason = "bitmap chunksize not a power of 2";
- 	else if (daemon_sleep < 1 || daemon_sleep > 15)
--		reason = "daemon sleep period out of range";
-+		reason = "daemon sleep period out of range (1-15s)";
-+	else if (async_writes > COUNTER_MAX)
-+		reason = "async write limit of range (0 - 16383)";
- 	if (reason) {
- 		printk(KERN_INFO "%s: invalid bitmap file superblock: %s\n",
- 			bmname(bitmap), reason);
-@@ -455,6 +459,7 @@ success:
- 	/* assign fields using values from superblock */
- 	bitmap->chunksize = chunksize;
- 	bitmap->daemon_sleep = daemon_sleep;
-+	bitmap->async_max_writes = async_writes;
- 	bitmap->flags |= sb->state;
- 	bitmap->events_cleared = le64_to_cpu(sb->events_cleared);
- 	err = 0;
-@@ -1196,9 +1201,16 @@ static bitmap_counter_t *bitmap_get_coun
- 	}
- }
- 
--int bitmap_startwrite(struct bitmap *bitmap, sector_t offset, unsigned long sectors)
-+int bitmap_startwrite(struct bitmap *bitmap, sector_t offset, unsigned long sectors, int async)
- {
- 	if (!bitmap) return 0;
-+
-+	if (async) {
-+		atomic_inc(&bitmap->async_writes);
-+		PRINTK(KERN_DEBUG "inc async write count %d/%d\n",
-+		  atomic_read(&bitmap->async_writes), bitmap->async_max_writes);
+-	bio_endio(bio, bio->bi_size,
+-		test_bit(R1BIO_Uptodate, &r1_bio->state) ? 0 : -EIO);
++	/* if nobody has done the final endio yet, do it now */
++	if (!test_and_set_bit(R1BIO_AsyncPhase, &r1_bio->state)) {
++		PRINTK(KERN_DEBUG "raid1: sync end %s on sectors %llu-%llu\n",
++			(bio_data_dir(bio) == WRITE) ? "write" : "read",
++			(unsigned long long) bio->bi_sector,
++			(unsigned long long) bio->bi_sector +
++				(bio->bi_size >> 9) - 1);
++	
++		bio_endio(bio, bio->bi_size,
++			test_bit(R1BIO_Uptodate, &r1_bio->state) ? 0 : -EIO);
 +	}
-+
- 	while (sectors) {
- 		int blocks;
- 		bitmap_counter_t *bmc;
-@@ -1233,9 +1245,15 @@ int bitmap_startwrite(struct bitmap *bit
+ 	free_r1bio(r1_bio);
  }
  
- void bitmap_endwrite(struct bitmap *bitmap, sector_t offset, unsigned long sectors,
--		     int success)
-+		     int success, int async)
+@@ -292,7 +301,7 @@ static int raid1_end_write_request(struc
  {
- 	if (!bitmap) return;
-+	if (async) {
-+		atomic_dec(&bitmap->async_writes);
-+		PRINTK(KERN_DEBUG "dec async write count %d/%d\n",
-+		  atomic_read(&bitmap->async_writes), bitmap->async_max_writes);
+ 	int uptodate = test_bit(BIO_UPTODATE, &bio->bi_flags);
+ 	r1bio_t * r1_bio = (r1bio_t *)(bio->bi_private);
+-	int mirror;
++	int mirror, async, wonly = 1; /* assume write only if rdev missing */
+ 	conf_t *conf = mddev_to_conf(r1_bio->mddev);
+ 
+ 	if (bio->bi_size)
+@@ -323,16 +332,39 @@ static int raid1_end_write_request(struc
+ 
+ 	update_head_pos(mirror, r1_bio);
+ 
++	async = test_bit(R1BIO_AsyncIO, &r1_bio->state);
++	if (conf->mirrors[mirror].rdev)
++		wonly = test_bit(WriteMostly, &conf->mirrors[mirror].rdev->flags);
++	/* In async mode, we ACK the master bio once the I/O has safely
++	 * reached the non-writeonly disk. Setting the AsyncPhase bit
++	 * ensures that this gets done only once -- we don't ever want to
++	 * return -EIO here, instead we'll wait */
++	if (async && !wonly && test_bit(R1BIO_Uptodate, &r1_bio->state) &&
++	    !test_and_set_bit(R1BIO_AsyncPhase, &r1_bio->state)) {
++		struct bio *mbio = r1_bio->master_bio;
++		PRINTK(KERN_DEBUG "raid1: async end write sectors %llu-%llu\n",
++			(unsigned long long) mbio->bi_sector,
++			(unsigned long long) mbio->bi_sector +
++			(mbio->bi_size >> 9) - 1);
++		bio_endio(mbio, mbio->bi_size, 0);
 +	}
-+
- 	while (sectors) {
- 		int blocks;
- 		unsigned long flags;
-diff -purN --exclude core --exclude-from /export/public/clemep/tmp/dontdiff linux-2.6.11-rc3-mm2-patch-all-write-mostly-max-dev-bug-bitmap-bug-fix/drivers/md/md.c linux-2.6.11-rc3-mm2-patch-all-write-mostly-async-write-bitmap-bug-fix/drivers/md/md.c
---- linux-2.6.11-rc3-mm2-patch-all-write-mostly-max-dev-bug-bitmap-bug-fix/drivers/md/md.c	Mon Feb 21 14:22:21 2005
-+++ linux-2.6.11-rc3-mm2-patch-all-write-mostly-async-write-bitmap-bug-fix/drivers/md/md.c	Fri Mar  4 13:37:57 2005
-@@ -2166,6 +2166,8 @@ static int get_disk_info(mddev_t * mddev
- 			info.state |= (1<<MD_DISK_ACTIVE);
- 			info.state |= (1<<MD_DISK_SYNC);
- 		}
-+		if (test_bit(WriteMostly, &rdev->flags))
-+			info.state |= (1<<MD_DISK_WRITEONLY);
- 	} else {
- 		info.major = info.minor = 0;
- 		info.raid_disk = -1;
-@@ -2411,6 +2413,10 @@ static int hot_add_disk(mddev_t * mddev,
- 		goto abort_unbind_export;
- 	}
- 
-+	if (mddev->bitmap && mddev->bitmap->async_max_writes)
-+		/* array is async, hotadd = write only */
-+		set_bit(WriteMostly, &rdev->flags);
-+
- 	rdev->raid_disk = -1;
- 
- 	md_update_sb(mddev);
-@@ -3290,6 +3296,8 @@ static int md_seq_show(struct seq_file *
- 			char b[BDEVNAME_SIZE];
- 			seq_printf(seq, " %s[%d]",
- 				bdevname(rdev->bdev,b), rdev->desc_nr);
-+			if (test_bit(WriteMostly, &rdev->flags))
-+				seq_printf(seq, "(W)");
- 			if (rdev->faulty) {
- 				seq_printf(seq, "(F)");
- 				continue;
-@@ -3339,6 +3347,11 @@ static int md_seq_show(struct seq_file *
- 			seq_printf(seq, "\n");
- 			spin_unlock_irqrestore(&bitmap->lock, flags);
- 			kfree(buf);
-+			if (bitmap->async_max_writes)
-+				seq_printf(seq,
-+				    "       async: %d/%ld outstanding writes\n",
-+				    atomic_read(&bitmap->async_writes),
-+				    bitmap->async_max_writes);
- 		}
- 
- 		seq_printf(seq, "\n");
-diff -purN --exclude core --exclude-from /export/public/clemep/tmp/dontdiff linux-2.6.11-rc3-mm2-patch-all-write-mostly-max-dev-bug-bitmap-bug-fix/include/linux/raid/bitmap.h linux-2.6.11-rc3-mm2-patch-all-write-mostly-async-write-bitmap-bug-fix/include/linux/raid/bitmap.h
---- linux-2.6.11-rc3-mm2-patch-all-write-mostly-max-dev-bug-bitmap-bug-fix/include/linux/raid/bitmap.h	Fri Feb 18 14:45:25 2005
-+++ linux-2.6.11-rc3-mm2-patch-all-write-mostly-async-write-bitmap-bug-fix/include/linux/raid/bitmap.h	Thu Mar 10 11:39:37 2005
-@@ -6,8 +6,8 @@
- #ifndef BITMAP_H
- #define BITMAP_H 1
- 
--#define BITMAP_MAJOR 3
--#define BITMAP_MINOR 38
-+#define BITMAP_MAJOR 4
-+#define BITMAP_MINOR 0
- 
- /*
-  * in-memory bitmap:
-@@ -147,8 +147,9 @@ typedef struct bitmap_super_s {
- 	__u32 state;        /* 48  bitmap state information */
- 	__u32 chunksize;    /* 52  the bitmap chunk size in bytes */
- 	__u32 daemon_sleep; /* 56  seconds between disk flushes */
-+	__u32 async_writes; /* 60  number of outstanding async writes */
- 
--	__u8  pad[256 - 60]; /* set to zero */
-+	__u8  pad[256 - 64]; /* set to zero */
- } bitmap_super_t;
- 
- /* notes:
-@@ -225,6 +226,9 @@ struct bitmap {
- 
- 	unsigned long flags;
- 
-+	unsigned long async_max_writes; /* asynchronous write mode */
-+	atomic_t async_writes;
-+
  	/*
- 	 * the bitmap daemon - periodically wakes up and sweeps the bitmap
- 	 * file, cleaning up bits and flushing out pages to disk as necessary
-@@ -266,9 +270,10 @@ int bitmap_update_sb(struct bitmap *bitm
- int  bitmap_setallbits(struct bitmap *bitmap);
+ 	 *
+ 	 * Let's see if all mirrored write operations have finished
+ 	 * already.
+ 	 */
+ 	if (atomic_dec_and_test(&r1_bio->remaining)) {
++		if (async) {
++			int i = bio->bi_vcnt;
++			/* free extra copy of the data pages */
++			while (i--)
++				__free_page(bio->bi_io_vec[i].bv_page);
++		}
+ 		/* clear the bitmap if all writes complete successfully */
+ 		bitmap_endwrite(r1_bio->mddev->bitmap, r1_bio->sector,
+ 				r1_bio->sectors,
+-				!test_bit(R1BIO_Degraded, &r1_bio->state));
++				!test_bit(R1BIO_Degraded, &r1_bio->state),
++				async);
+ 		md_write_end(r1_bio->mddev);
+ 		raid_end_bio_io(r1_bio);
+ 	}
+@@ -553,6 +585,38 @@ static void device_barrier(conf_t *conf,
+ 	spin_unlock_irq(&conf->resync_lock);
+ }
  
- /* these are exported */
--int bitmap_startwrite(struct bitmap *bitmap, sector_t offset, unsigned long sectors);
--void bitmap_endwrite(struct bitmap *bitmap, sector_t offset, unsigned long sectors,
--		     int success);
-+int bitmap_startwrite(struct bitmap *bitmap, sector_t offset,
-+			unsigned long sectors, int async);
-+void bitmap_endwrite(struct bitmap *bitmap, sector_t offset,
-+			unsigned long sectors, int success, int async);
- int bitmap_start_sync(struct bitmap *bitmap, sector_t offset, int *blocks);
- void bitmap_end_sync(struct bitmap *bitmap, sector_t offset, int *blocks, int aborted);
- void bitmap_close_sync(struct bitmap *bitmap);
-diff -purN --exclude core --exclude-from /export/public/clemep/tmp/dontdiff linux-2.6.11-rc3-mm2-patch-all-write-mostly-max-dev-bug-bitmap-bug-fix/include/linux/raid/md_k.h linux-2.6.11-rc3-mm2-patch-all-write-mostly-async-write-bitmap-bug-fix/include/linux/raid/md_k.h
---- linux-2.6.11-rc3-mm2-patch-all-write-mostly-max-dev-bug-bitmap-bug-fix/include/linux/raid/md_k.h	Fri Feb 18 14:45:47 2005
-+++ linux-2.6.11-rc3-mm2-patch-all-write-mostly-async-write-bitmap-bug-fix/include/linux/raid/md_k.h	Wed Feb 23 15:47:30 2005
-@@ -274,6 +274,9 @@ struct mddev_s
- 	atomic_t			writes_pending; 
- 	request_queue_t			*queue;	/* for plugging ... */
- 
-+	atomic_t                        async_writes; /* outstanding async IO */
-+	unsigned int                    async_max_writes; /* 0 = sync */
++/* duplicate the data pages for async I/O */
++static struct page **alloc_async_pages(struct bio *bio)
++{
++	int i;
++	struct bio_vec *bvec;
++	struct page **pages = kmalloc(bio->bi_vcnt * sizeof(struct page *),
++					GFP_NOIO);
++	if (unlikely(!pages))
++		goto do_sync_io;
 +
- 	struct bitmap                   *bitmap; /* the bitmap for the device */
- 	struct file			*bitmap_file; /* the bitmap file */
++	BUG_ON(bio->bi_idx != 0);
++	bio_for_each_segment(bvec, bio, i) {
++		pages[i] = alloc_page(GFP_NOIO);
++		if (unlikely(!pages[i]))
++			goto do_sync_io;
++		memcpy(kmap(pages[i]) + bvec->bv_offset,
++			kmap(bvec->bv_page) + bvec->bv_offset, bvec->bv_len);
++		kunmap(pages[i]);
++		kunmap(bvec->bv_page);
++	}
++
++	return pages;
++
++do_sync_io:
++	if (pages)
++		for (i = 0; i < bio->bi_vcnt && pages[i]; i++)
++			__free_page(pages[i]);
++	kfree(pages);
++	PRINTK("%dB async alloc failed, doing sync I/O\n", bio->bi_size);
++	return NULL;
++}
++
+ static int make_request(request_queue_t *q, struct bio * bio)
+ {
+ 	mddev_t *mddev = q->queuedata;
+@@ -565,6 +629,7 @@ static int make_request(request_queue_t 
+ 	struct bitmap *bitmap = mddev->bitmap;
+ 	unsigned long flags;
+ 	struct bio_list bl;
++	struct page **async_pages = NULL;
  
+ 
+ 	/*
+@@ -668,6 +733,12 @@ static int make_request(request_queue_t 
+ 		set_bit(R1BIO_Degraded, &r1_bio->state);
+ 	}
+ 
++	/* do async I/O ? */
++	if (bitmap &&
++	    atomic_read(&bitmap->async_writes) < bitmap->async_max_writes &&
++	    (async_pages = alloc_async_pages(bio)))
++		set_bit(R1BIO_AsyncIO, &r1_bio->state);
++
+ 	atomic_set(&r1_bio->remaining, 0);
+ 
+ 	bio_list_init(&bl);
+@@ -685,19 +756,30 @@ static int make_request(request_queue_t 
+ 		mbio->bi_rw = WRITE;
+ 		mbio->bi_private = r1_bio;
+ 
++		if (test_bit(R1BIO_AsyncIO, &r1_bio->state)) {
++			struct bio_vec *bvec;
++			int j;
++
++			BUG_ON(!async_pages);
++			bio_for_each_segment(bvec, mbio, j)
++				bvec->bv_page = async_pages[j];
++		}
++
+ 		atomic_inc(&r1_bio->remaining);
+ 
+ 		bio_list_add(&bl, mbio);
+ 	}
++	kfree(async_pages); /* the async pages are attached to the bios now */
+ 
+-	bitmap_startwrite(bitmap, bio->bi_sector, r1_bio->sectors);
++	bitmap_startwrite(bitmap, bio->bi_sector, r1_bio->sectors,
++				test_bit(R1BIO_AsyncIO, &r1_bio->state));
+ 	spin_lock_irqsave(&conf->device_lock, flags);
+ 	bio_list_merge(&conf->pending_bio_list, &bl);
+ 	bio_list_init(&bl);
+ 
+ 	blk_plug_device(mddev->queue);
+ 	spin_unlock_irqrestore(&conf->device_lock, flags);
+-	
++
+ #if 0
+ 	while ((bio = bio_list_pop(&bl)) != NULL) 
+ 		generic_make_request(bio);
+@@ -1458,6 +1540,17 @@ out:
+ static int stop(mddev_t *mddev)
+ {
+ 	conf_t *conf = mddev_to_conf(mddev);
++	struct bitmap *bitmap = mddev->bitmap;
++	int async_wait = 0;
++
++	/* wait for async writes to complete */
++	while (bitmap && atomic_read(&bitmap->async_writes) > 0) {
++		async_wait++;
++		printk(KERN_INFO "raid1: async writes in progress on device %s, waiting to stop (%d)\n", mdname(mddev), async_wait);
++		set_current_state(TASK_UNINTERRUPTIBLE);
++		schedule_timeout(HZ); /* wait a second */
++		/* need to kick something here to make sure I/O goes? */
++	}
+ 
+ 	md_unregister_thread(mddev->thread);
+ 	mddev->thread = NULL;
+diff -purN --exclude core --exclude-from /export/public/clemep/tmp/dontdiff linux-2.6.11-rc3-mm2-patch-all-write-mostly-max-dev-bug-bitmap-bug-fix/include/linux/raid/raid1.h linux-2.6.11-rc3-mm2-patch-all-write-mostly-async-write-bitmap-bug-fix/include/linux/raid/raid1.h
+--- linux-2.6.11-rc3-mm2-patch-all-write-mostly-max-dev-bug-bitmap-bug-fix/include/linux/raid/raid1.h	Fri Feb 18 14:45:25 2005
++++ linux-2.6.11-rc3-mm2-patch-all-write-mostly-async-write-bitmap-bug-fix/include/linux/raid/raid1.h	Mon Feb 21 16:48:38 2005
+@@ -107,4 +107,6 @@ struct r1bio_s {
+ #define	R1BIO_Uptodate	0
+ #define	R1BIO_IsSync	1
+ #define	R1BIO_Degraded	2
++#define R1BIO_AsyncPhase 3
++#define R1BIO_AsyncIO   4
+ #endif
 
---------------000205040203070206040304--
+--------------040105060509000204040704--
