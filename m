@@ -1,23 +1,46 @@
-From: Mike Dresser <mdresser_l@windsormachine.com>
+From: Maurice Hilarius <maurice@harddata.com>
 Subject: Re: large devices (3ware)
-Date: Wed, 21 Aug 2002 15:25:39 -0400 (EDT)
+Date: Wed, 21 Aug 2002 13:34:53 -0600
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.33.0208211521090.31769-100000@router.windsormachine.com>
-References: <Pine.LNX.4.33.0208211514040.31769-100000@router.windsormachine.com>
+Message-ID: <5.1.0.14.2.20020821133327.03b47680@mail.harddata.com>
+References: <200208211522.g7LFMrZ59772@cynaptic.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="us-ascii"; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.33.0208211514040.31769-100000@router.windsormachine.com>
+In-Reply-To: <Pine.LNX.4.44.0208211506030.20657-100000@redhat1.mmaero.co
+ m>
 To: jlewis@lewis.org
-Cc: effrem.norwood@exstor.com, linux-raid@vger.kernel.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Gah, I can't count/read.  There is a case that holds 15 SCA or 14 IDE in
-3U (5.75") though, and one that holds 15 IDE in 4U (7")
+With regards to your message at 01:07 PM 8/21/02, jlewis@lewis.org. Where 
+you stated:
 
-On Wed, 21 Aug 2002, Mike Dresser wrote:
+> > Yes, it will work just fine. We have several of the 3ware 7500-12's 
+> here with
+> > exactly the setup you're looking at, save for we use Debian. 3ware makes a
+> > driver for Redhat and the kernel if recompiled with the option has one 
+> built
+> > in. It's a solid setup.
+>
+>What sorts of cases are you using that allow for mounting 12 drives close
+>enough to the controller for all the cables to reach?
 
-> I was looking at a rack mount case today, that would let me put 23 drives
-> in a 7" high case.  All those cables should reach with standard 18"
-> cables.
+
+We have 3U cases with 8 or 12 hot-swap IDE trays, 4U cases with 16 IDE trays.
+Also towers with support for up to 16 IDE trays.
+3Ware can support a 36" IDE cable using the right cables.
+In our 3U the cables are only 18" long, and in the 4U they are 24" long.
+
+
+
+With our best regards,
+
+Maurice W. Hilarius       Telephone: 01-780-456-9771
+Hard Data Ltd.               FAX:       01-780-456-9772
+11060 - 166 Avenue        mailto:maurice@harddata.com
+Edmonton, AB, Canada      http://www.harddata.com/
+    T5X 1Y3
+
+2.3TB RAID5 NAS server - dual AthlonMP CPU, Linux, $10,995 CAD / $6850 USD
 
