@@ -1,39 +1,30 @@
-From: Scott Kopel <skopel@english.fsu.edu>
-Subject: recovery question?
-Date: Mon, 13 Oct 2003 11:21:51 -0400
+From: Victor <linux-raid@vitoni.de>
+Subject: missing superblock on RAID5
+Date: Mon, 13 Oct 2003 17:59:14 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <6.0.0.22.2.20031013111015.032c1a58@englishmail.fsu.edu>
+Message-ID: <3F8ACBD2.CA1B8CBD@vitoni.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; format=flowed
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-I have a raid1 with two disks /dev/hda and /dev/hdc ... three md devices
-/dev/md0 made up of hda1 and hdc1
-/dev/md1 made up of hda2 and hdc2
-/dev/md2 made up of hda3 and hdc3
+At the time I created the RAID array I thought it had superblocks,
+however if I use mdadm I get these results:
 
---I accidently formatted hda1 using #mke2fs -vj /dev/hda1 ... bonehead move 
-number 1
---then I booted from a backup drive and resynced the raid
---when I tried to boot from the /dev/md0 I couldn't boot because of 
-filesystem errors
---so then I ran e2fsck /dev/md0 and several errors were noted and fixed.. I 
-didn't write down the error messages because I was too harried, bonehead 
-move number 2, however I think the errors were files without inodes... the 
-errors were fixed and a bunch of files and directories were put in 
-lost&found ... mostly they were a recently installed phpmyadmin directory 
-in /var/www/html/phpmyadmin and the only other file I've found missing so 
-far is /usr/bin/info..
---I am curious what happened.. did the format remove the superblock and 
-resyncing rewrote the superblock using the inodes for  these files?
-any info would be appreciated
+# mdadm --query /dev/md0
+/dev/md0: 230.08GiB raid5 4 devices, 0 spares. Use mdadm --detail for
+more detail.
+/dev/md0: No md super block found, not an md component.
+
+If  the array really shouldn't have a superblock, is it possible to add
+one (maybe marking a device faulty and readding it and repeating this
+for each device)?
 
 
+Thanks in advance,
 
-Scott Kopel
-English Department, FSU
-Mail Code 1580
-850 644 6177 
+Victor
+
 
