@@ -1,72 +1,81 @@
-From: Felix Bellaby <member@bellaby.freeserve.co.uk>
-Subject: RAID10 overwrites partition tables
-Date: Fri, 26 Nov 2004 18:28:20 +0100 (CET)
-Message-ID: <10578812.1101490100216.JavaMail.www@wwinf3001>
-Reply-To: member@bellaby.freeserve.co.uk
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: [Fwd: Re: Multipath problem [zero Block multipath device creation with mdadm 1.8.1]]
+Date: Thu, 25 Nov 2004 19:53:37 +0100
+Message-ID: <20041125185336.GB16618@percy.comedia.it>
+References: <41A5E9C0.9050000@fbihome.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <41A5E9C0.9050000@fbihome.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: neilb@cse.unsw.edu.au
+To: Oliver Heinz <oheinz@fbihome.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-   	 mdadm --level 10 does not seem to respect disk partition boundaries.
+On Thu, Nov 25, 2004 at 03:18:40PM +0100, Oliver Heinz wrote:
+>As  the linux-raid list seems to have some problems at the moment, I 
+>take the chance to thank you personally an send you a copy of the reply 
+>I submitted some hours ago.
+>
+>Thanks again + Bye,
+>Oliver
 
-Whilst trying to construct a small RAID10 array on a workstation, I naturally attempted
-to set the array up over partitions to leave somewhere for grub to access the kernel.
-Using partitions also assists with booting Fedora 3 as it relies on RAID autodetection
-and partition labels in its standard initial ram disk.
+>Date: Thu, 25 Nov 2004 10:43:53 +0100
+>From: Oliver Heinz <oheinz@fbihome.de>
+>User-Agent: Mozilla/5.0 (X11; U; Linux i686; de-AT; rv:1.7.3) Gecko/20041007 Debian/1.7.3-5
+>CC:  linux-raid@vger.kernel.org
+>Subject: Re: Multipath problem [zero Block multipath device creation with
+> mdadm 1.8.1]
+>In-Reply-To: <20041123201650.GA8972@percy.comedia.it>
+>
+>Luca Berra schrieb:
+>
+>>On Tue, Nov 23, 2004 at 01:19:51PM +0100, Oliver Heinz wrote:
+>>
+>>>Mixing mdadm-1.6 and 1.8.1 for creating/managing the device doesn't 
+>>>work, it gives me an segfault.
+>>
+>>
+>>try patching mdadm-1.8.1 with this patch, it might help with the
+>>segfault.
+>
+>This works! Thanks a lot!
 
-However, the RAID10 seems to overwrite some of the partition tables.
+great.
 
-For example, configuring a RAID10 array over 3 partitions as follows:
+>
+>Now creating the md-device with versions prior 1.8.1 works (I tested 
+>1.60 and 1.8.0) - restarting the array with them fails.
+>With 1.8.1 (with patch applied) I get an 0 Block device created bit I 
+>can restart the (correct) device I created with 1.60.
 
-       mdadm --create /dev/md0 --level 10 --raid-devices 3 \
-               /dev/sda1 /dev/sdb1 /dev/sdc1
+1.8.1 changed the way devices get created, i did not have any chance to
+test it with multipath yet.
+see the changelog for more information.
 
-seems to overwrite the partition tables for the disks in the
-same way as configuring RAID10 over the complete disks:
+>Now of course it would be great to get the device created and restarted 
+>with the same utility. We'd like to use it in production environment 
+>here, can more experienced mdadm users recommend that, these problems  
+>did not really strengthen our confidence in mdadm (at least when it 
+>comes to multipath, we have (of course) been using mdadm successfully 
+>for raid on severall systems).
+>
+>Are the code changes in 1.8.1 so drastic that you would recommend to 
+>stick with prior versions and fix the issue with starting the array or 
+1.8.1 is considered a development version, not ready for production.
 
-       mdadm --create /dev/md0 --level 10 --raid-devices 3 \
-               /dev/sda /dev/sdb /dev/sdc
+>would you suggest to get 1.8.1 to get MD creation in 1.8.1 fixed (well 
+>it need's to be fixed anyway ;-).
 
-A more detailed example:
+it needs to be fixed.
 
-       echo ',,fd' | sfdisk /dev/sda
-       echo ',,fd' | sfdisk /dev/sdb
-       echo ',,fd' | sfdisk /dev/sdc
-
-       mdadm --create /dev/md0 --level 10 --raid-devices 3 \
-               /dev/sda1 /dev/sdb1 /dev/sdc1
-
-       mke2fs /dev/md0
-
-       sfdisk -d /dev/sda
-       sfdisk -d /dev/sdb
-       sfdisk -d /dev/sdc
-
-One of the partition tables in the above example will be replaced with
-the start of the second chunk of the ext2 fs, just as one would expect
-with an array configured over /dev/sda, dev/sdb and /dev/sdc.
-
-The problem appears consistently on my test system (minimal Fedora 3 on
-an NForce3 system using the sata_nv.ko device driver). I have had the
-same results with a separate, identical system, and when using various
-custom 2.6.9 kernels. However, the problems do not appear with RAID5.
-
-The code in raid10.c is probably to blame. A cursory examination suggests
-that raid10.c accesses the configured devices using very similar code to
-raid1.c (where the problem might go unnoticed) but rather differently from
-raid5.c.
-
-Felix
-
+L.
 
 -- 
-
-Whatever you Wanadoo:
-http://www.wanadoo.co.uk/time/
-
-This email has been checked for most known viruses - find out more at: http://www.wanadoo.co.uk/help/id/7098.htm
+Luca Berra -- bluca@comedia.it
+        Communication Media & Services S.r.l.
+ /"\
+ \ /     ASCII RIBBON CAMPAIGN
+  X        AGAINST HTML MAIL
+ / \
