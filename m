@@ -1,35 +1,56 @@
-From: viro@parcelfarce.linux.theplanet.co.uk
-Subject: Re: Proposed enhancements to MD
-Date: Tue, 13 Jan 2004 22:56:46 +0000
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20040113225646.GC21151@parcelfarce.linux.theplanet.co.uk>
-References: <40043C75.6040100@pobox.com> <400457E3.5030602@adaptec.com> <20040113233320.23e4cfef.pegasus@nerv.eu.org>
+From: linuxraid@valli.org
+Subject: Re: Can't boot from Adaptec 2010s
+Date: Wed, 14 Jan 2004 00:50:18 +0100 (CET)
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <14863.194.153.176.133.1074037818.squirrel@mail.valli.org>
+References: <34861.194.153.178.110.1073979704.squirrel@mail.valli.org>
+     <1074016834.4776.342.camel@persist.az.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20040113233320.23e4cfef.pegasus@nerv.eu.org>
-To: Jure Pe??ar <pegasus@nerv.eu.org>
-Cc: Scott Long <scott_long@adaptec.com>, jgarzik@pobox.com, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, neilb@cse.unsw.edu.au
+Content-Type: text/plain;charset=iso-8859-1
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1074016834.4776.342.camel@persist.az.mvista.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Jan 13, 2004 at 11:33:20PM +0100, Jure Pe??ar wrote:
-> Looking at this chicken-and-egg problem of booting from an array from
-> administrator's point of view ...
-> 
-> What do you guys think about Intel's EFI? I think it would be the most
-> apropriate place to put a piece of code that would scan the disks, assemble
-> any arrays and present them to the OS as bootable devices ... If we're going
-> to get a common metadata layout, that would be even easier.
-> 
-> Thoughts?
+Sorry, I don't have installed redhat. It is a debian woody 3.0
+with kernel 2.4.24 (self-compiled). It is not a problem of the kernel.
+I think it is a problem of the bootloader (lilo version 22.2)
+or something...
+The bootflag is set to the /boot partition and the MBR is written
+by lilo (/sbin/lilo -v)
+At the time we boot via bootdisk. this works fine for the moment.
+(The kernel on the bootdisk is the same; it works great!)
+Thanks valli
 
-Why bother?  We can have userland code running before any device drivers
-are initialized.  And have access to
-	* all normal system calls
-	* normal writable filesystem already present (ramfs)
-	* normal multitasking
-All of that - within the heavily tested codebase; regular kernel codepaths
-that are used all the time by everything.  Oh, and it's portable.
-
-What's the benefit of doing that from EFI?  Pure masochism?
+> It could be that your root disk doesn't have an MBR record or that your
+> RAID adaptor doesn't have the boot loader on it.  Have you tried a
+> different distro such as redhat?
+>
+> Thanks
+> -steve
+>
+> On Tue, 2004-01-13 at 00:41, linuxraid@valli.org wrote:
+>> Hello all,
+>> I successfully installed my linux (Debian with a 2.4.24 vanilla kernel)
+>> on my Fujitsu Siemens Primergy TX200 server containing a 2010s (Raid 1).
+>>
+>> The only problem i have is that I can't boot from my raid. When I boot
+>> from bootdisks the raid works fine!
+>> My bootloader is lilo. The bootpartition on my disks has a ext3
+>> filesystem.
+>> When I boot the machine I can't see nothing from lilo, the machine just
+>> hangs.
+>> (The PhoenixBios recognizes 'I2O OSM' as a HardDrive)
+>>
+>> What could be the problem?
+>>
+>> Thanx for answering
+>> valli
+>> -
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>>
+>
+>
