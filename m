@@ -1,44 +1,74 @@
-From: rob <rob@fantinibakery.com>
+From: Neil Brown <neilb@cse.unsw.edu.au>
 Subject: Re: raid0 and iscsi
-Date: Mon, 13 Oct 2003 20:45:38 -0400
+Date: Tue, 14 Oct 2003 16:23:40 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3F8B4732.20609@fantinibakery.com>
-References: <200310130434.h9D4YU0n020486@bach.cs.colostate.edu> <3F8A9736.1020706@fantinibakery.com> <3F8B365F.9060509@fantinibakery.com>
+Message-ID: <16267.38508.484427.47316@notabene.cse.unsw.edu.au>
+References: <200310130434.h9D4YU0n020486@bach.cs.colostate.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3F8B365F.9060509@fantinibakery.com>
-To: rob <rob@fantinibakery.com>
-Cc: Jayshankar Nair <jshankar@CS.ColoState.EDU>, linux-raid@vger.kernel.org
+In-Reply-To: message from Jayshankar Nair on Sunday October 12
+To: Jayshankar Nair <jshankar@CS.ColoState.EDU>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-here is result of writting 3-gb over lan :
+On Sunday October 12, jshankar@CS.ColoState.EDU wrote:
+> Hello,
+> 
+> 
+> I was testing the raid0 configuration for the iscsi device ( /dev/sdb and 
+> /dev/sdc).
+> 
+> For writing a 512MB in a LAN environment it was taking 24 hrs. i was going
+> through the source code of raid0.c and certain things doesn't made sense to me.
+> 
+> 1> what role does the Hash bit play.
 
-1- to h/w raid system:  8,384,582.41 bytes/sec
+A raid0 array can be made of a number of drives of differing sizes.
+To accomodate this we divide the address space into several blocks.
+The first block is striped across all drives to the size of the
+smallest.  The next block is striped across the remaining drives to
+the size of the next smallest, etc.
 
-2- to ide disk: 5,046,348.67 bytes/sec
-
-3- to software raid system: 6,678,231.03 bytes/sec
-
- the h/w system has fasrer disks than the s/w raid. 
+Mapping from a virtual device address to block and thence a drive and
+offset is not straight forward.  It requires a table search.  The hash
+table helps accelerate this search.
 
 
->
-> the test I did faulty.  I mistakenly sent data to a non-raid disk on 
-> the software raid computer.
-> for kicks I'll retest and post the results sometime soon.
->
->>
->> the command used: rsync -e ssh -a --stats  /bkup3/  fbc5:/bkup3/
->>
->> here is the result of sending approx 3-gb of data to each:
->
->
->
+> 2>If my chunk size is 8 byte. Does that mean it will write 8 byte into device 0 
+> and then into device 1. Is the write request to the disk in synchronous or
+> asynchronous mode. 
+> 
+You cannot have an 8byte chunk size.  4K is the minimum.
+With an 8K chunk size and 2 devices,
+ sectors between 0 and 8K, 16k and 24K, 32K and 40K, 48K and 56K etc
+    are written to the first device.
+ sectors between 8K and 16K, 28K and 32K, 40K and 48K etc
+    are written to the second device.
+
+raid0 does not impose any synchronisation.  Writes are only
+synchronous if the filesystem waits for them.  raid0 never waits.
+
+> 
+> 3> Is wite_disk_sb in md.c responsible for writing into disk??. Is fsync_dev 
+> responsible for synhronous write ??. If so can i change to asynchronous write.I 
+> will really appreciate if somebody can tell me what all routines I need to go 
+> through to figure out the functionality of raid0 behaviour.
+
+write_disk_sb is for writing the raid superblock to disk.  It doesn't
+happen often.
+fsync_dev is fairly irrelevant. You can safely ignore it.
+
+I hope that helps.
+
+NeilBrown
+
+> 
+> Thanks
+> Jayshankar
+> 
 > -
 > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
