@@ -1,38 +1,46 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: Re: patches for mdadm 1.8.0 (auto=dev and stacking of devices)
-Date: Mon, 24 Jan 2005 10:38:21 +0100
-Message-ID: <20050124093821.GA28126@percy.comedia.it>
-References: <20050123151305.GB15317@percy.comedia.it> <16884.33389.497365.282119@cse.unsw.edu.au>
+From: rfu@kaneda.iguw.tuwien.ac.at
+Subject: migrating raid-1 to different drive geometry ?
+Date: Mon, 24 Jan 2005 15:59:10 +0100
+Message-ID: <20050124145910.GC29766@kaneda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <16884.33389.497365.282119@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: Neil Brown <neilb@cse.unsw.edu.au>
 List-Id: linux-raid.ids
 
-On Mon, Jan 24, 2005 at 04:06:53PM +1100, Neil Brown wrote:
->On Sunday January 23, bluca@comedia.it wrote:
->> hello,
->> i attach two patches for mdadm 1.8.0
->
->Thanks. These look quite reasonable.  Hopefully you will see them in a
->1.9.0 in a couple of weeks (I'm not completely back from summer
->holidays yet...)
->
-ok, i nearly forgot it is summer there,
-btw if 1.9.0 will be based on 1.8.1 also review the patches i sent for
-1.8.1 some time ago.
+Hi,
 
-regards,
-L.
+I'm running Fedora Core 1 on a server with 2 identical
+60 GB ATA drives. These drives are organized in a RAID1
+with 4 partitions.
 
--- 
-Luca Berra -- bluca@comedia.it
-        Communication Media & Services S.r.l.
- /"\
- \ /     ASCII RIBBON CAMPAIGN
-  X        AGAINST HTML MAIL
- / \
+I now want to replace both drives with two different
+(but also identical) ATA drives with about 80 to 120 GB
+capacity each.
+
+how can the existing raid setup be moved to the new disks 
+without data loss ?
+
+I guess it must be something like this:
+
+1) physically remove first old drive
+2) physically add first new drive
+3) re-create partitions on new drive
+4) run raidhotadd for each partition
+5) wait until all partitions synced
+6) repeat with second drive
+
+the big question is: since the drive geometry will definitely different
+between old 60GB and new 80GB drive(s), how do the new partitions 
+have to be created on the new drive ?
+- do they have to have exactly the same amount of blocks ?
+- may they be bigger ?
+
+are there better strategies for such a migration ?
+
+tnx in advance.
+
+rainer. 
+
