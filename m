@@ -1,54 +1,37 @@
-From: Steven Dake <sdake@mvista.com>
-Subject: Re: Help!About MD on shared storage.
-Date: 04 Aug 2003 10:40:28 -0700
+From: Paul Clements <Paul.Clements@SteelEye.com>
+Subject: Re: RAID-1 does not rebuild after hot-add
+Date: Mon, 04 Aug 2003 13:46:47 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1060018828.5102.78.camel@persist.az.mvista.com>
-References: <OF24C833E9.81D2D2DC-ON48256D78.001F7244@legend.com.cn>
-Reply-To: sdake@mvista.com
+Message-ID: <3F2E9C07.81A10C54@SteelEye.com>
+References: <3F2D1FAC.9030905@shaolinmicro.com> <1059929757.6751.60.camel@ralph.plexio.private> <3F2E8B0E.6060007@shaolinmicro.com> <20030804170620.GA3159@willow.seitz.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <OF24C833E9.81D2D2DC-ON48256D78.001F7244@legend.com.cn>
-To: hufh@Lenovo.com, linux-raid@vger.kernel.org
+To: David Chow <davidchow@shaolinmicro.com>
+Cc: Ross Vandegrift <ross@willow.seitz.com>, Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hufh,
+Ross Vandegrift wrote:
+ 
+> I wonder - have you accidently created a mirror and then added a
+> hot-spare?  I've run into this problem before when switching to mdadm,
+> and it confused me pretty well.
 
-Unfortunately I don't have the patch anymore, but it should be in the
-archives (search for multihost RAID).
+Hmm, good thought, but I don't think that would be it, since his mdstat
+is showing 2 raid-disks for each array.
 
-Basically it locks a RAID volume on shared storage to a specific node in
-the cluster.  This allows you to use RAID autostart on each node and
-during startup, the superblock will be checked to determine if the RAID
-volume specified in the superblock has the same SCSI host ID as the
-current host.  Then you can specify different host adaptors for each
-host, which locks the RAID superblock to a specific host.
+David, could you send the rest of your log from the time you create the
+array until after the hot add? I'm wondering what's in the log when the
+hot add is done. Are there errors?
 
-This does not allow using multiple hosts to the SAME RAID volume, and
-only provides exclusive access.
+Also, would it be possible to run "mdadm --examine /dev/sd[ab]3" and/or
+run this:
 
-Note that the same thing can be done using a configuration file per node
-and using mdadm to only start the RAID volumes needed.  This is the
-methodology recommended by RAID maintainer, Neil Brown, however, I find
-it difficult to setup which is why I proposed the patch.  He could
-probably provide more info on that methodology or there is a discussion
-in the archives.
+perl -e '$io_num = 0x0913; open (FD, "/dev/md2") or die "open: $!";
+ioctl(FD, $io_num, $null) or die "ioctl: $!";'
 
-If I ever get some time, I plan to implement shared access to the same
-RAID volume for usage in a clustered filesystem application such as GFS.
+and send the log output, so we can see what's in the superblocks?
 
-On Tue, 2004-08-03 at 22:48, hufh@Lenovo.com wrote:
-> Mr Dake:
-> I am very sorry to bother you. I encountered some troubles.
-> MD device is used in my 3 node cluster, and each node need
-> access. I know you contribute a patch, but i cannot find it
-> in LKML, could you mail me and tell me it's main idea?
-> Thank you very much.
-> Best Regards!
-> 
-> Yours Sincerely
-> Hu Fenghua
-> 
-> 
-
+--
+Paul
