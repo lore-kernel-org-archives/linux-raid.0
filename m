@@ -1,59 +1,47 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: Hardware vs Software and Bad Block Relocation
-Date: Sat, 22 May 2004 12:27:11 -0400
+From: Juri Haberland <list-linux.raid@spoiled.org>
+Subject: Re: Kernel 2.4.x / RAID1 / RAID5 and swap partition?
+Date: Sat, 22 May 2004 21:45:26 +0000 (UTC)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200405221627.i4MGRGB28232@www.watkins-home.com>
-References: <1085239424.7133.5.camel@galadriel.nofida.ch>
+Message-ID: <news2mail-c8ohlm$jpk$1@cartman.spoiled.org>
+References: <Pine.LNX.4.33.0405211416350.5629-100000@lw2.cc-computer.de>
+Reply-To: Juri Haberland <juri@koschikode.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1085239424.7133.5.camel@galadriel.nofida.ch>
-To: 'Marcel de Riedmatten' <mdr@dotforge.ch>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-It would be smarter, but it does not cover RAID.  The logic to determin=
-e
-which file is bad does not work.  And if you correct your disk this way=
- you
-may corrupt your array.  Until the RAID software has support for bad bl=
-ocks,
-just remove the disk from the array, then correct the bad block.  The w=
-eb
-site mentioned does have some good info.  But not all drives support th=
-e
-smartctl options needed.  My disks do not.
+Martin K=F6hling <mk423@lw1.cc-computer.de> wrote:
 
-Guy
-
------Original Message-----
-=46rom: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Marcel de Riedma=
-tten
-Sent: Saturday, May 22, 2004 11:24 AM
-To: linux-raid@vger.kernel.org
-Subject: RE: Hardware vs Software and Bad Block Relocation
-
-Le ven 21/05/2004 =E0 16:38, Guy a =E9crit :
-
+> Now I want to convert the rest of the system to RAID1, which should b=
+e no
+> problem either, except perhaps swap space?
 >=20
-> If a disk has a bad block in 1 partition you could just dd zero to th=
-at
-> partition, but still verify 100% of the disk.
+> I found several RAID docs/HowTos that warn of possible problems, in
+> particular this German page:
+>=20
+> http://www.resultings.de/linux/de-software-raid-howto/de-software-rai=
+d-howto.html
+>=20
+> which claims that resync/hotadd on an active swap device can cause
+> an internally inconsistent array (because the resync process uses the
+> buffer cache, and the swap code doesn't).
+> Bad news if, e.g., an automatic resync happens after a power failure.
+>=20
+> However, that HowTo is over two years old.
+>=20
+> Perhaps this problem has long been fixed?
 
-Hi
+It was true for 2.2 kernels but was resolved with the 2.4 series. I'm
+running three systems with swap on RAID1 and never experienced any
+problem.
 
-for the record a somewhat smarter way to do that manualy is discribed a=
-t
-
-http://smartmontools.sourceforge.net/BadBlockHowTo.txt
-
-Cheers
+Cheers,
+Juri
 
 --=20
-Marcel de Riedmatten
-
-
+Juri Haberland  <juri@koschikode.com>=20
 
 -
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
