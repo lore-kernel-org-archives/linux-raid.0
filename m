@@ -1,57 +1,73 @@
-From: Wolfram Schlich <lists@schlich.org>
-Subject: Re: I just trashed my RAID5 array - recovery possible?
-Date: Thu, 20 Mar 2003 18:56:07 +0100
+From: "Robert L. Harris" <Robert.L.Harris@rdlg.net>
+Subject: "failed-disk" ?
+Date: Thu, 20 Mar 2003 16:22:50 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20030320175607.ALLYOURBASEAREBELONGTOUS.U4264@bla.fasel.org>
-References: <20030320000358.ALLYOURBASEAREBELONGTOUS.A6336@bla.fasel.org> <15993.2378.97234.342504@notabene.cse.unsw.edu.au> <20030320075133.ALLYOURBASEAREBELONGTOUS.B4264@bla.fasel.org> <15993.36889.254497.789214@notabene.cse.unsw.edu.au>
+Message-ID: <20030320212250.GO13201@rdlg.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="w6U88vdWm8UqIXvc"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <15993.36889.254497.789214@notabene.cse.unsw.edu.au>
-To: Linux-RAID mailinglist <linux-raid@vger.kernel.org>
+To: Linux-Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-* Neil Brown <neilb@cse.unsw.edu.au> [2003-03-20 10:58]:
-> On Thursday March 20, lists@schlich.org wrote:
-> > 
-> > And when I try to mount the array:
-> > --8<--
-> > EXT3-fs error (device md(9,1)): ext3_check_descriptors: Block bitmap for group 509 not in group (block 4294967295)!
-> > EXT3-fs: group descriptors corrupted !
-> > --8<--
-> > 
-> > What should I do now? Raidhotadd the 4th device? Run e2fsck prior to
-> > that or afterwards?
-> 
-> I would 
->    fsck -n /dev/md1
-> to non-distructively see how much damage there is.
-> 
-> If that shows an uncomfortable large amount of damage, you could
-> assembling the array from a different triple of devices.
-> It is currently assemble from
->    /dev/hd[gki]1
-> 
-> If you want to try g, k and e for example, use
->   mdadm -Af /dev/md1 /dev/hd[gke]1
-> 
-> and then try "fsck -n" on that.
 
-I've run fsck on all 4 different combos now:
+--w6U88vdWm8UqIXvc
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-http://wolfram.schlich.org/tmp/fsck.log.1
-http://wolfram.schlich.org/tmp/fsck.log.1.README
 
-http://wolfram.schlich.org/tmp/fsck.log.2
-http://wolfram.schlich.org/tmp/fsck.log.2.README
 
-http://wolfram.schlich.org/tmp/fsck.log.3
-http://wolfram.schlich.org/tmp/fsck.log.3.README
+I'm trying to "mkraid /dev/md1" with the following:
 
-http://wolfram.schlich.org/tmp/fsck.log.4
-http://wolfram.schlich.org/tmp/fsck.log.4.README
+raiddev /dev/md1
+  raid-level 1
+  nr-raid-disks 2
+  nr-spare-disks 0
+  chunk-size 16
+  persistent-superblock 1
+  device failed-disk
+  raid-disk 0
+  device /dev/sdb1
+  raid-disk 1
 
-Which one should I actually give a *real* try?
--- 
-Wolfram Schlich; Friedhofstr. 8, D-88069 Tettnang; +49-(0)178-SCHLICH
+I'm trying to convert this machine to raid1 on root.  Don't ask about
+the md1, long story.  At any rate when I do the mkraid I get this:
+
+root@rharris-build2:~# mkraid /dev/md1
+handling MD device /dev/md1
+analyzing super-block
+couldn't call stat() on device failed-disk -- No such file or directory
+mkraid: aborted, see the syslog and /proc/mdstat for potential clues.
+
+root@rharris-build2.acs:~# mkraid -V
+mkraid version 0.90.0
+
+Thoughts?
+
+:wq!
+---------------------------------------------------------------------------
+Robert L. Harris                     | PGP Key ID: E344DA3B
+                                         @ x-hkp://pgp.mit.edu=20
+DISCLAIMER:
+      These are MY OPINIONS ALONE.  I speak for no-one else.
+
+Diagnosis: witzelsucht  =09
+
+IPv6 =3D robert@ipv6.rdlg.net	http://ipv6.rdlg.net
+IPv4 =3D robert@mail.rdlg.net	http://www.rdlg.net
+
+--w6U88vdWm8UqIXvc
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.1 (GNU/Linux)
+
+iD8DBQE+ejEq8+1vMONE2jsRAnglAJ9l87WKXUxkqVtwdOrfOw7bIH7uggCeKyXk
+BN6f0l2wlDRh4MZohO3bC5U=
+=GMhV
+-----END PGP SIGNATURE-----
+
+--w6U88vdWm8UqIXvc--
