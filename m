@@ -1,31 +1,59 @@
-From: Stephan van Hienen <raid@a2000.nu>
-Subject: Re: raid5 code ok with 2TB + ?
-Date: Mon, 29 Nov 2004 00:34:43 +0100 (CET)
-Message-ID: <Pine.LNX.4.61.0411290033010.28142@adsl.a2000.nu>
-References: <200411281819.iASIJmN00402@www.watkins-home.com>
- <41AA24EC.5020206@wasp.net.au> <Pine.LNX.4.61.0411282110300.19614@adsl.a2000.nu>
- <Pine.LNX.4.61.0411282127220.19614@adsl.a2000.nu>
- <Pine.LNX.4.61.0411282144460.19614@adsl.a2000.nu>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: Preparation advice?
+Date: Sun, 28 Nov 2004 23:44:11 -0500
+Message-ID: <200411290445.iAT4iGN02697@www.watkins-home.com>
+References: <6d5bedd804112815333c3c38e5@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.61.0411282144460.19614@adsl.a2000.nu>
+In-Reply-To: <6d5bedd804112815333c3c38e5@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: 'Ewan Grantham' <ewan.grantham@gmail.com>
+Cc: 'David Greaves' <david@dgreaves.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, 28 Nov 2004, Stephan van Hienen wrote:
+I have not had any corruption or any other problems, other than when a disk
+fails.  Even then, never had data loss.  I just ignore the bogus numbers.
 
-> now running a resync
-> after that i'll run badblocks on it to test if i can read/write to the 
-> complete array
+Guy
 
-resync finished without any problems
-i wanted to run badblocks on the /dev/md0 to check
-but it looks like badblocks doesn't support 2TB + :
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Ewan Grantham
+Sent: Sunday, November 28, 2004 6:33 PM
+To: Guy
+Cc: David Greaves; linux-raid@vger.kernel.org
+Subject: Re: Preparation advice?
 
-]# badblocks -sw -p99 -c8192 /dev/md0
-Writing pattern 0xaaaaaaaa:                    126464/-2009266944
+On Sun, 28 Nov 2004 13:00:54 -0500, Guy <bugzilla@watkins-home.com> wrote:
+> This is normal (IMO) for a 2.4 kernel.
+> I think it has been fixed in the 2.6 kernel.  But I have never used the
+> newer kernel, so I can't confirm that.  It may have been a newer version
+of
+> mdadm, not the kernel, not sure.
 
-any other hints for testing the raid ?
+A rather different definition of normal - but for a computer system I
+guess I shouldn't be that surprised :-)
+
+I'm not overly inclined to move to the 2.6 kernel at the moment as my
+experience with IEEE1394 under 2.6 has been very mixed. I think it's
+because it's easier to see what's happening "under the hood" with the
+2.4 code.
+
+Since I gather you haven't seen any lost data from this, then I'm
+going to start filling up. Did a couple test captures today without
+any dropped frames, so I'm feeling a bit more comfortable that this is
+going to work.
+
+Assuming I bought some more drives in the future, would I be better
+off getting another firewire card or two, or going with USB 2?
+
+Thanks again for all the help and advice,
+Ewan
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
