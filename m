@@ -1,50 +1,47 @@
-From: Maurice Hilarius <maurice@harddata.com>
-Subject: Re: 3ware 7500-12, bad write speed
-Date: Wed, 25 Sep 2002 22:23:38 -0600
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: RE: 3ware 7500-12, bad write speed
+Date: Thu, 26 Sep 2002 07:25:45 +0200 (CEST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <5.1.0.14.2.20020925222027.03eb9710@mail.harddata.com>
-References: <Pine.LNX.4.44.0209252237100.23239-100000@uplift.swm.pp.se>
+Message-ID: <Pine.LNX.4.44.0209260706470.23239-100000@uplift.swm.pp.se>
+References: <A1964EDB64C8094DA12D2271C04B812672C6FC@tabby>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; format=flowed
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44.0209252237100.23239-100000@uplift.swm.pp.se>
-To: Mikael Abrahamsson <swmike@swm.pp.se>
-Cc: linux-raid@vger.kernel.org
+In-Reply-To: <A1964EDB64C8094DA12D2271C04B812672C6FC@tabby>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-With regards to your message at 02:43 PM 9/25/02, Mikael Abrahamsson. Where 
-you stated:
+On Wed, 25 Sep 2002, Adam Radford wrote:
 
->I have a 6 drive (120 gig drives) RAID5 using a 3ware 7500-12. I have the
->latest firmware (7.5.1), latest driver etc, everything looks up to spec. I
->get great read speeds (60-80 megabyte/s), but I get very erratic write
->speeds (average 15 megabyte/s or so).
-Not so surprising.
+> This is because of the vmlayer and your bdflush settings and the fact
+> that you are running a journalling filesystem.  Our raid 5 caching
+> strategy gives the best results when given sequential writes.  Doing
+> journaling fs and caching writes in the vmlayer causes the firmware
+> caching strategy to perform 'sub optimal' since the lba's accessed
+> aren't actually sequential.  Thus your 15 MB/s.  We do do elevator seek
+> in the FW, but this can only help you so much.
 
->Anyone seen this and solved it? I currently get better write speeds to a
->single IBM 7200rpm 75 gig drive (~25-30 meg/s) than to the 6 drive RAID5
->volume (I use the 3ware card to create the volume, no software raid).
-Yes, don't use the 3Ware BIOS RAID.
-Run it in JBOD mode, and use Linux RAID.
-Neil's md tools make this very nice, and if you go to the 3Ware site and 
-look in the downloads they have CLI tools to support hotswap and other 
-useful things.
-On a set of 16 Maxtor 160GB disk, and a pair of 3Ware 8 port cards we 
-regularly get RAID5 writes (using a 4GB block/file size measured by 
-bonnie++) of over 75MB/sec and reads over 160MB/sec.
+Any specifics in the bdflush settings I should be aiming for? I have 
+fiddeled some with the settings and I cannot seem to make much of a 
+difference.
 
-I do think you should be seeing better results with the card and it's 
-native BIOS RAID, but I still think that software Linux RAID is a lot 
-faster and more flexible.
+Would it help to mount that particular partition in with "sync" mount
+option? I have already changed the mount option to data=writeback in order
+to have less journaling data being thrown around.
 
+What I also do not understand is that in some 5 second intervals I get 
+iostat claiming there was only 500 kilobyte/s written when doing my test 
+with dd if=/dev/zero of=testfile bs=1024000 count=2000. What in the world 
+could cause the vm layer to have that big of an impact that it would only 
+be able to write just 500 kilobytes in a second?
 
-With our best regards,
+I have this bdflush setting at the moment:
 
-Maurice W. Hilarius       Telephone: 01-780-456-9771
-Hard Data Ltd.               FAX:       01-780-456-9772
-11060 - 166 Avenue        mailto:maurice@harddata.com
-Edmonton, AB, Canada      http://www.harddata.com/
-    T5X 1Y3
+echo 100 5000 640 2560 150 30000 5000 1884 2 > /proc/sys/vm/bdflush
 
-2.3TB RAID5 NAS server - dual AthlonMP CPU, Linux, $10,995 CAD / $6850 USD
+I have made several radical changes to the bdflush settings and if any, it
+made things worse.
+ 
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
 
