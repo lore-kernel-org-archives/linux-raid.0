@@ -1,62 +1,80 @@
-From: "A.J.Dawson" <A.J.Dawson@Bradford.ac.uk>
-Subject: Re: RAID5 over Serial-ATA success stories?
-Date: Thu, 8 Jan 2004 11:48:43 +0000 (GMT Standard Time)
-Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <Pine.WNT.4.44.0401081137060.2020-100000@ender>
-References: <20040108085711.A2500@nettis.grimsta>
+From: Heiko Carstens <heiko.carstens@de.ibm.com>
+Subject: [BUG] raidtools-1.00.3 - BLKGETSIZE ioctl call wrong
+Date: Thu, 8 Jan 2004 14:42:14 +0100
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <200401081442.14339.heiko.carstens@de.ibm.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20040108085711.A2500@nettis.grimsta>
-To: Daniel Brahneborg <basic@wtnord.net>
-Cc: =?iso-8859-1?Q?M=E5ns_Rullg=E5rd?= <mru@kth.se>, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: Multipart/Mixed;
+  boundary="------------Boundary-00=_EEB6VCM0M8BZX5MZGQUK"
+Return-path: <linux-raid-owner@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 8 Jan 2004, Daniel Brahneborg wrote:
 
-> > Which Adaptec card?  The 12xx cards are fakeraid, but are supported as
-> > normal cards.  The 24xx cards are true hardware RAID cards.  Linux
-> > drivers exist for these, too.
+--------------Boundary-00=_EEB6VCM0M8BZX5MZGQUK
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-I've used a couple of the 2400A cards for a while under Linux (SuSE 8.2)
-with mixed results - one works fine in RAID 5 mode (4x 120Gb disks),
-though it is very slow (typical sustained transfer on about 10Mb/s).  The
-other is a completely different story.  It keeps dropping disks from the
-array that subsequently test out to be perfectly okay.  It also has a
-nasty habit of not letting me rebuild the array even after putting a new
-disk in.  I get a 'missing component' error that even Adaptec seem to know
-nothing about (well, they've not bothered answering any of my e-mails
-about it*).  This means that I have to rebuild the array again from
-scratch (build + verify = a complete day) and then restore the data from
-backup.  Out of four disks that have been dropped from the array recently,
-three tested fine.  On more than one occasion it has also given me a
-double disk failure within a couple of hours, not enough time to complete
-the rebuild for the first drive before the second one 'fails'.  Again,
-drives subsequently tested out fine.
+Hi,
 
-The end result is that I got so fed up with it happening that I took the
-card out and dropped it into a drawer.  I've replaced it with a couple of
-software mirroed 250Gb drives which (so far) seem to be working fine and
-give me a lot fewer headaches!
+there is a bug in raidtools 1.00.3:
+when issueing the BLKGETSIZE ioctl, the raidtools expect the return value
+in a __u32 bit variable called nr_blocks. Since the BLKGETSIZE ioctl writ=
+es
+the result into an unsigned long, this doesn't fit on 64 bit architecture=
+s and
+therefore has some strange effects (at least on big endian machines). Ple=
+ase
+apply the attached patch.
 
-I'd not recommend this card to *anyone* any more.
+Thanks,
+Heiko
 
-* I'm pretty annoyed with Adaptec about this one - I've not even had a 'we
-don't know the answer' e-mail from them.  I've tried eveything that I
-could think of including replacing all of the cables, updating the
-firmware on the drives (WD), hard resetting the 2400A, updating the
-firmware and SMOR (twice) and replacing the cache memory.  I've
-told Adaptec about everything that I have tried and they have not
-even had the courtesy to reply to me.
+--------------Boundary-00=_EEB6VCM0M8BZX5MZGQUK
+Content-Type: text/x-diff;
+  charset="us-ascii";
+  name="raid1.00.3.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="raid1.00.3.diff"
 
-Anyone at Adaptec care to comment?
+--- raidtools-1.00.3/raid_io.c	2003-01-15 09:58:25.000000000 +0100
++++ raidtools-1.00.3-fix/raid_io.c	2004-01-08 14:34:20.136485704 +0100
+@@ -363,7 +363,7 @@
+ 	md_raid_info_t *array;
+ 	mdu_disk_info_t *disk;
+ 	struct stat stat_buf;
+-	__u32 nr_blocks;
++	unsigned long nr_blocks;
+ 
+ 	if (!cfg)
+ 		return 1;
+@@ -454,14 +454,14 @@
+ 			}
+ 			nr_blocks >>= 1;
+ 			if (nr_blocks < MD_RESERVED_BLOCKS * 2) {
+-				fprintf(stderr, "%s: device too small (%dkB)\n", cfg->device_name[i], nr_blocks);
++				fprintf(stderr, "%s: device too small (%ldkB)\n", cfg->device_name[i], nr_blocks);
+ 				close(fd);
+ 				return 1;
+ 			}
+ 
+                 	cfg->sb_block_offset[i] = MD_NEW_SIZE_BLOCKS(nr_blocks);
+ 			if (!cfg->array.param.not_persistent) {
+-                		printf("disk %d: %s, %ukB, raid superblock at %dkB\n", i, cfg->device_name[i], nr_blocks, cfg->sb_block_offset[i]);
++                		printf("disk %d: %s, %lukB, raid superblock at %dkB\n", i, cfg->device_name[i], nr_blocks, cfg->sb_block_offset[i]);
+ 	                	if (sanity_checks(cfg->device_name[i], fd,
+ 					 	cfg->sb_block_offset[i], forceSanity,
+ 					 	upgradeArray, cfg, 0)) {
+@@ -495,7 +495,7 @@
+ 			}
+ 			nr_blocks >>= 1;
+ 			if (nr_blocks < MD_RESERVED_BLOCKS * 2) {
+-				fprintf(stderr, "%s: device too small (%dkB)\n", cfg->device_name[i], nr_blocks);
++				fprintf(stderr, "%s: device too small (%ldkB)\n", cfg->device_name[i], nr_blocks);
+ 				close(fd);
+ 				return 1;
+ 			}
 
-Regards
-
-Dr. Andy Dawson
-A.J.Dawson@Bradford.ac.uk
-http://www.mossie.org
-http://www.museum-explorer.org.uk
-
- Never attribute to malice that which is adequately explained by stupidity.
+--------------Boundary-00=_EEB6VCM0M8BZX5MZGQUK--
 
