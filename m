@@ -1,36 +1,37 @@
-From: NeilBrown <neilb@cse.unsw.edu.au>
-Subject: [PATCH md ] Fix raid1 read_balancing code.
-Date: Tue, 15 Jun 2004 09:50:05 +1000
+From: James Bottomley <James.Bottomley@steeleye.com>
+Subject: Re: [ANNOUNCE][PATCH 2.6] md: persistent (file-backed) bitmap and
+	async writes
+Date: 14 Jun 2004 19:59:43 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <E1Ba1DJ-0002Bi-4v@notabene.cse.unsw.edu.au>
-References: <20040615094915.8393.patches@notabene>
+Message-ID: <1087257585.2118.109.camel@mulgrave>
+References: <40198E85.29EBC8E0@SteelEye.com>
+	<16422.62911.755570.855200@notabene.cse.unsw.edu.au>
+	<4027E342.D02202F1@SteelEye.com>
+	<16424.8182.876520.280031@notabene.cse.unsw.edu.au>
+	<402D3A86.97CF894F@SteelEye.com>
+	<16456.2775.641721.204171@notabene.cse.unsw.edu.au>
+	<4048F9AA.1BBD67F@SteelEye.com> <406B1024.7BF88C@SteelEye.com>
+	<16528.49083.998593.199805@cse.unsw.edu.au> <40C6273B.2060200@steeleye.com>
+	 <16590.14149.960504.534126@cse.unsw.edu.au>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-raid@vger.kernel.org
+In-Reply-To: <16590.14149.960504.534126@cse.unsw.edu.au>
+To: Neil Brown <neilb@cse.unsw.edu.au>
+Cc: Paul Clements <Paul.Clements@SteelEye.com>, linux-raid@vger.kernel.org, ptb@it.uc3m.es, mingo@redhat.com
 List-Id: linux-raid.ids
 
+On Mon, 2004-06-14 at 19:39, Neil Brown wrote:
+> Unfortunately, these dsl2 URLs aren't working today - I should have
+> grabbed the patches earlier.  I'll check again later in the day.
 
-The meaning of mddev->in_sync changed subtly a while ago, and raid1
-wasn't changed to match.  This results in raid1 read_balancing
-not working properly.
-This patch corrects the relevant test.
+I'm sorry, that's my fault.  dsl2 is being decomissioned ... it was a
+crappy x86 box, we're replacing it with a parisc one.
 
-Signed-off-by: Neil Brown <neilb@cse.unsw.edu.au>
+The correct URL should have www.parisc-linux.org in place of
+dsl2.external.hp.com
 
-### Diffstat output
- ./drivers/md/raid1.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletion(-)
+James
 
-diff ./drivers/md/raid1.c~current~ ./drivers/md/raid1.c
---- ./drivers/md/raid1.c~current~	2004-06-15 09:49:00.000000000 +1000
-+++ ./drivers/md/raid1.c	2004-06-15 09:49:08.000000000 +1000
-@@ -376,7 +376,8 @@ static int read_balance(conf_t *conf, st
- 	 * device if no resync is going on, or below the resync window.
- 	 * We take the first readable disk when above the resync window.
- 	 */
--	if (!conf->mddev->in_sync && (this_sector + sectors >= conf->next_resync)) {
-+	if (conf->mddev->recovery_cp < MaxSector &&
-+	    (this_sector + sectors >= conf->next_resync)) {
- 		/* make sure that disk is operational */
- 		new_disk = 0;
- 
+
