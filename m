@@ -1,40 +1,42 @@
-From: Gordon Henderson <gordon@drogon.net>
+From: Mike Hardy <mhardy@h3c.com>
 Subject: Re: [PATCH md 2 of 4] Fix raid6 problem
-Date: Sun, 13 Feb 2005 21:19:35 +0000 (GMT)
-Message-ID: <Pine.LNX.4.56.0502132113430.29594@lion.drogon.net>
+Date: Sun, 13 Feb 2005 14:58:50 -0800
+Message-ID: <420FDBAA.4010005@h3c.com>
 References: <Pine.LNX.4.44.0502131602470.16537-100000@coffee.psychology.mcmaster.ca>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII; format=flowed
+Content-Transfer-Encoding: 7bit
 In-Reply-To: <Pine.LNX.4.44.0502131602470.16537-100000@coffee.psychology.mcmaster.ca>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, 13 Feb 2005, Mark Hahn wrote:
 
-> > Interesting - the private mail was from me, and I've got two dual
-> > Opterons in service. The one with significantly more PCI activity has
-> > significantly more problems then the one with less PCI activity.
->
-> that's pretty odd, since the most intense IO devices I know of
+
+Mark Hahn wrote:
+>>Interesting - the private mail was from me, and I've got two dual 
+>>Opterons in service. The one with significantly more PCI activity has 
+>>significantly more problems then the one with less PCI activity.
+> 
+> 
+> that's pretty odd, since the most intense IO devices I know of 
 > are cluster interconnect (quadrics, myrinet, infiniband),
 > and those vendors *love* opterons.  I've never heard any of them
 > say other than that Opteron IO handling is noticably better than
 > Intel's.
->
-> otoh, I could easily believe that if you're running the Opteron
+
+Sure, but which variables are changed between the rigs the vendors 
+loved, and the rig we're having problems with?
+
+> otoh, I could easily believe that if you're running the Opteron 
 > systems in acts-like-a-faster-xeon mode (ie, not x86_64),
 > you might be exercising some less-tested paths.
 
-I was about to post that I've solved my problems with that Tyan dual
-opteron motherboard, but it's still crap. I upgraded the BIOS to the 2.02
-beta and it seemed to work a lot better.  Still couldn't boot off it with
-all 8 drives in, but solved that with the use of a 32MB flash IDE unit
-holding /boot... However, it dropped a drive during initial sync of the
-raid6 arrays with lots of SCSI errors, and had given lots of DMA interrupt
-missing, etc. thorugh the day when I've run soaktests on it, so I'm going
-to conclude that that Tyan motherboard is utterly useless and deserves
-nothing more than being driven over. Slowly. With a steam roller.  Then
-jumped on. Just to make me feel better.
+Its running x86_64 (Fedora Core 3) and the problem is rooted in the 
+chipset I believe. I don't think its Opterons per se, I think its just 
+the Athlon take two - which is to say that its a wonderful chip, but 
+some of the chipsets its saddled with are horrible, and careful 
+selection (as well as heavy testing prior to putting a machine in 
+service) is essential.
 
-Gordon
+-Mike
