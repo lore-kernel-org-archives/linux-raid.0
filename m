@@ -1,50 +1,75 @@
-From: "Guy" <bugzilla@watkins-home.com>
+From: "Stephen Hargrove" <stephen@exitwound.org>
 Subject: RE: Should I Start Over?
-Date: Wed, 7 Jul 2004 16:55:44 -0400
+Date: Wed, 7 Jul 2004 16:36:53 -0500 (CDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200407072055.i67Kti309497@watkins-home.com>
-References: <2446.66.230.1.97.1089232643.squirrel@exitwound.org>
+Message-ID: <2910.66.230.1.97.1089236213.squirrel@exitwound.org>
+References: <2128.66.230.1.97.1089224667.squirrel@exitwound.org>
+    <200407071907.i67J7b309004@watkins-home.com>
+Reply-To: stephen@exitwound.org
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <2446.66.230.1.97.1089232643.squirrel@exitwound.org>
-To: stephen@exitwound.org
+In-Reply-To: <200407071907.i67J7b309004@watkins-home.com>
+To: Guy <bugzilla@watkins-home.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-That would be fine.  But we don't yet know which disk was trashed by the
-re-build.  But as long as you have 1 missing disk it will not rebuild over
-any more data.
-If your command does not work try again with a different missing disk.
-
------Original Message-----
-From: Stephen Hargrove [mailto:stephen@exitwound.org] 
-Sent: Wednesday, July 07, 2004 4:37 PM
-To: Guy
-Cc: linux-raid@vger.kernel.org
-Subject: RE: Should I Start Over?
-
-Guy said:
-> Humm.  I would guess it would re-build to the last disk on the command
-> line.
-> Maybe just enter the command again.  Can't do any more damage!  Then do
-> the
-> 2 commands and send the output.
-
-Ok, I want to be perfectly clear on this.  I'm going to enter the
-following command, right?
+Ok, here we go.  See below for the information you requested earlier.
 
 # mdadm --create /dev/md0 --level=5 --raid-devices=3 /dev/hdg1 /dev/hdd1
 missing
+mdadm: /dev/hdg1 appears to be part of a raid array:
+    level=5 devices=3 ctime=Wed Jul  7 08:11:18 2004
+mdadm: /dev/hdd1 appears to be part of a raid array:
+    level=5 devices=3 ctime=Wed Jul  7 08:11:18 2004
+Continue creating array? y
+mdadm: array /dev/md0 started.
 
-> Did the original array have 3 disks and 1 spare?  If so, ignore the spare
-> until things are working again.
+Guy said:
+>
+> Send me the output from these 2 commands:
+> Cat /proc/mdstat
 
-Yes.  /dev/hde1 was the spare.  The array was comprised of /dev/hdg1,
-/dev/hdd1, and /dev/hdc1.
+# cat /proc/mdstat
+Personalities : [raid5]
+read_ahead 1024 sectors
+md0 : active raid5 hdd1[1] hdg1[0]
+      240121472 blocks level 5, 64k chunk, algorithm 2 [3/2] [UU_]
+
+unused devices: <none>
+
+>
+> mdadm -D /dev/md0
+
+# mdadm -D /dev/md0
+/dev/md0:
+        Version : 00.90.00
+  Creation Time : Wed Jul  7 16:32:44 2004
+     Raid Level : raid5
+     Array Size : 240121472 (229.00 GiB 245.88 GB)
+    Device Size : 120060736 (114.50 GiB 122.94 GB)
+   Raid Devices : 3
+  Total Devices : 3
+Preferred Minor : 0
+    Persistence : Superblock is persistent
+
+    Update Time : Wed Jul  7 16:32:44 2004
+          State : dirty, no-errors
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 1
+  Spare Devices : 0
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+    Number   Major   Minor   RaidDevice State
+       0      34        1        0      active sync   /dev/hdg1
+       1      22       65        1      active sync   /dev/hdd1
+       2       0        0        2      faulty
+           UUID : 4120b6d1:f484d7f2:2372ca69:3c1063cd
+         Events : 0.1
 
 --
 Steve
-
