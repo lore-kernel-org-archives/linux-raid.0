@@ -1,84 +1,34 @@
-From: Paul Clements <Paul.Clements@SteelEye.com>
-Subject: Re: Software RAID level 1 issue
-Date: Mon, 02 Jun 2003 14:16:28 -0400
+From: Ross Vandegrift <ross@willow.seitz.com>
+Subject: Root RAID with Debian supplied kernels?
+Date: Mon, 2 Jun 2003 15:17:46 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3EDB947C.1E73CDCB@SteelEye.com>
-References: <C587FF391BCAD411B8120008C7864670057DA5B8@mtvxch07.veritas.com> <1054403067.14818.280.camel@testlin.hades> <3ED7B898.4409555F@SteelEye.com> <01f101c326e7$c9084890$7b07a8c0@pluto> <3ED7BF97.BAB11B12@SteelEye.com> <011501c32932$41f191c0$7b07a8c0@pluto>
+Message-ID: <20030602191746.GA23028@willow.seitz.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: 3tcdgwg3 <3tcdgwg3@prodigy.net>
-Cc: Stef Telford <stef@chronozon.artofdns.com>, 'Greg Rasberry' <rgreg-r@pacbell.net>, 'Linux raid mailing list' <linux-raid@vger.kernel.org>
+Content-Disposition: inline
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-3tcdgwg3 wrote:
-> 
-> This feature works only for raid1, or both raid1 and raid5?
+Hello,
 
-These sysctls work for all md devices, and indeed, they apply to _all_
-md devices in the system, they're not per-device.
+	Has anyone succeeded in making Debian boot a root RAID array
+with a stock kernel?  I've gone through this twice now and cannot figure
+out how why the initrd I'm making isn't working.  For now I've punted
+and gone back to compiling custom kernels, but I was surprised to see
+that google doesn't really turn up any links on the subject.
 
-(of course, by all md devices I mean all md devices that need to do
-recovery...which is the raid1 and raid5 ones)
+	So if anyone has a setup like this working, I'd greatly
+appreciate a description of how you managed it.
 
---
-Paul
+-- 
+Ross Vandegrift
+ross@willow.seitz.com
 
-
-> ----- Original Message -----
-> From: "Paul Clements" <Paul.Clements@SteelEye.com>
-> To: "3tcdgwg3" <3tcdgwg3@prodigy.net>
-> Cc: "Stef Telford" <stef@chronozon.artofdns.com>; "'Greg Rasberry'"
-> <rgreg-r@pacbell.net>; "'Linux raid mailing list'"
-> <linux-raid@vger.kernel.org>
-> Sent: Friday, May 30, 2003 1:31 PM
-> Subject: Re: Software RAID level 1 issue
-> 
-> > 3tcdgwg3 wrote:
-> >
-> > > If there is a plan to do a "intelligent resync", like some of the raid
-> > > controller
-> > > vendors offer?  The resync process will be hold on, if there are IO
-> requests
-> > > from upper level, and resumed when there is no IO.  By doing that, the
-> > > system
-> > > performance always be on the top.  I am very interested in  having
-> something
-> > > like that.
-> >
-> > This wasn't exactly what I meant by intelligent resync, but...I think
-> > what you're asking about is something that the md driver already does to
-> > some extent. It will slow down a resync if there is active I/O on the
-> > device. This can even be tuned by the user by manipulating a couple of
-> > kernel sysctls:
-> >
-> > apache:~# cat /proc/sys/dev/raid/speed_limit_min
-> > 100
-> >
-> > apache:~# cat /proc/sys/dev/raid/speed_limit_max
-> > 10000
-> >
-> > apache:~# echo 1000000 > /proc/sys/dev/raid/speed_limit_max
-> >
-> > apache:~# cat /proc/sys/dev/raid/speed_limit_max
-> > 1000000
-> >
-> >
-> > These are in KB/s.
-> >
-> > The "min" refers to the maximum I/O bandwidth that will be consumed by
-> > resyncs before the resyncs get throttled, when there is other I/O
-> > activity on the device.
-> >
-> > The "max" refers to the maximum I/O bandwidth that will be consumed by
-> > resyncs before the resyncs get throttled, even if there is no other I/O
-> > activity on the device.
-> >
-> > --
-> > Paul
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+A Pope has a Water Cannon.                               It is a Water Cannon.
+He fires Holy-Water from it.                        It is a Holy-Water Cannon.
+He Blesses it.                                 It is a Holy Holy-Water Cannon.
+He Blesses the Hell out of it.          It is a Wholly Holy Holy-Water Cannon.
+He has it pierced.                It is a Holey Wholly Holy Holy-Water Cannon.
+He makes it official.       It is a Canon Holey Wholly Holy Holy-Water Cannon.
+Batman and Robin arrive.                                       He shoots them.
