@@ -1,123 +1,56 @@
-From: Marcelo Tosatti <marcelo.tosatti@cyclades.com>
-Subject: Re: Raid 1 - md "Total Disks" question
-Date: Fri, 17 Sep 2004 10:28:01 -0300
+From: Sebastien Koechlin <seb.kernel@koocotte.org>
+Subject: Re: disk testing
+Date: Fri, 17 Sep 2004 17:08:08 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040917132801.GB3181@logos.cnet>
-References: <019801c499ab$405f20d0$6800a8c0@Agus> <16710.16837.832998.503557@cse.unsw.edu.au> <1095374065.4196.22.camel@compaq.xsintricity.com>
+Message-ID: <20040917150808.GK17204@koocotte.org>
+References: <20040917025005.DC7F1395B@xprdmailfe9.nwk.excite.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-15
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1095374065.4196.22.camel@compaq.xsintricity.com>
-To: Doug Ledford <dledford@redhat.com>
-Cc: Neil Brown <neilb@cse.unsw.edu.au>, =?iso-8859-1?Q?Agust=EDn?= Ciciliani <agustin@maderonet.net.ar>, linux-raid@vger.kernel.org
+In-Reply-To: <20040917025005.DC7F1395B@xprdmailfe9.nwk.excite.com>
+To: harry <hfranklin97@excite.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Thu, Sep 16, 2004 at 10:50:05PM -0400, harry wrote:
+> 
+> Tim and Neil have suggested (apparently correctly) that the disk had a bad
+> sector and the firmware remapped it when I wrote to it. My question is,
+> how many spare sectors does the typical disk have? More importantly, since
+> the sector has been remapped, recreating the raid5 array worked fine, but
+> is a failure right out of the box normal? I was going to return it but
+> since its working now I'm not sure if I should or not.
 
-Neil,
+Can you read SMART Attributes under any OS?
 
-Doug's patch looks good to me. I'll apply it to v2.4 mainline.
+Every disk I use, have a SMART Reallocated_Sector_Ct Attribute:
 
-On Thu, Sep 16, 2004 at 06:34:26PM -0400, Doug Ledford wrote:
-> On Mon, 2004-09-13 at 20:56, Neil Brown wrote:
-> > On Monday September 13, agustin@maderonet.net.ar wrote:
-> > > Hi Everybody,
-> > > 
-> > > I was wondering if you could take a look to the following and give some advice... I just
-> > > have TWO SATA WD800 disks and "mdadm" says I have "three" and one of
-> > > them has "failed"!!!
-> > 
-> > It's just some odd accounting in the kernel.  Don't worry about it.
-> 
-> It is just some odd accounting stuff, but it's hardly something I would
-> say "don't worry about it".  I had to chase a similar looking problem
-> down in our RHEL3 product line.  In fact, it was raid1 where I was
-> seeing this problem.  I've attached the email I sent about the problem
-> to the internal kernel people, the patch I originally sent in for it,
-> and the update patch that catches a couple spots I originally missed in
-> my first patch (apologies if my mailer horks this up, haven't tried to
-> send sent mail in exactly the way I'm trying it now).
-> 
->            From: 
-> Doug Ledford
-> <dledford@redhat.com>
->              To: 
-> 
->         Subject: 
-> [Taroon patch]
-> RAID1 oops fix
->            Date: 
-> Mon, 21 Jun 2004
-> 10:14:09 -0400
-> 
-> Relevant bz121616
-> 
-> OK, basic problem is that if you use mdadm to fail a device in a raid1
-> array and then immediately remove that device, you can end up triggering
-> a race condition in the raid1 code.  This only shows up on SMP systems
-> (and the one I have here which is a 2 physical, 4 logical processor
-> system shows it very easily, but for some reason nmi_watchdog didn't
-> ever help and the system always just locked hard and refused to do
-> anything, so I didn't have an oops to work from, just a hardlock).
-> 
-> In the raid1 code, we keep an array of devices that are part of the
-> raid1 array.  Each of these devices can have multiple states, but for
-> the most part we check the operational bit of a device before deciding
-> to use it.  If we decide to use that device, then we grab the device
-> number from the array (kdev_t, aka this is the device's major/minor and
-> is what we are going to pass to generic_make_request in order to pass
-> the buffer head on to the underlying device).
-> 
-> When we fail a device, we set that operational bit to 0.  When we remove
-> a device, we also set the dev item in the struct to MKDEV(0,0).
-> 
-> There is no locking whatsoever between the failing of a device (setting
-> the operational bit to 0) and the make_request functions in the raid1
-> code.  So, even though it's safe to fail a device without this locking,
-> before we can safely remove the device we need to know that every
-> possible context that might be checking that operational bit has in fact
-> seen the failed operational bit.  If not, then we can end up setting the
-> dev to 0, then the other context grabs it and tries to pass that off to
-> generic_make_request, unnice things ensue.
-> 
-> So, this patch does these things:
-> 
->      1. Whenever we are calling mark_disk_bad(), hold the
->         conf->device_lock
->      2. Whenever we are walking the device array looking for an
->         operational device, always grab the conf->device_lock first and
->         hold it until after we have gotten not only the operational bit
->         but also the dev number for the device
->      3. Correct an accounting problem in the superblock.  If we fail a
->         device and it's currently counted as a spare device instead of
->         an active device, then we failed to decrement the superblocks
->         spare disk count.  This accounting error is preserved across
->         shutdown and restart of the array, and although it doesn't oops
->         the kernel (the kernel will refuse to try and read beyond disk
->         26 even if the spare count indicates it should, although I'm not
->         sure it doesn't try and write past 26 so this could be a disk
->         corruptor when the spare count + active counts exceeds the
->         amount of space available in the on disk superblock format) it
->         does in fact cause mdadm to segfault on trying to read the
->         superblock.
-> 
-> So, that's the description.  Testing.  Well, without this patch, my test
-> machine dies on the following command *very* quickly:
-> 
-> while true; do mdadm /dev/md0 -f /dev/sdc1 -r /dev/sdc1 -a /dev/sdc1;
-> sleep 1; done
-> 
-> In addition, without the patch you can watch the superblock's spare
-> count go up with every single invocation of that command.
-> 
-> With my patch, the same machine survived the above command running over
-> the weekend, and in addition I mounted the raid1 array and ran a
-> continuous loop of bonnie++ sessions to generate as much load as
-> possible.  I've verified that the spare count stays consistent when
-> failing a spare device, and I've verfied that once a device is synced up
-> then the spare count is also decremented as the device is switched to
-> being accounted as an active device.
-> 
-> -- 
-> Doug Ledford <dledford@redhat.com>
+------
 
+# smartctl -A /dev/hde
+smartctl version 5.32 Copyright (C) 2002-4 Bruce Allen
+Home page is http://smartmontools.sourceforge.net/
+
+=== START OF READ SMART DATA SECTION ===
+SMART Attributes Data Structure revision number: 10
+Vendor Specific SMART Attributes with Thresholds:
+ID ATTRIBUTE_NAME        FLAG   VALUE WORST THRESH TYPE     UPDATED RAW_VALUE
+ 1 Raw_Read_Error_Rate   0x000f 065   063   006    Pre-fail Always  147852401
+ 3 Spin_Up_Time          0x0003 100   100   000    Pre-fail Always  0
+ 4 Start_Stop_Count      0x0032 100   100   020    Old_age  Always  0
+ 5 Reallocated_Sector_Ct 0x0033 100   100   036    Pre-fail Always  0
+(...)
+
+------
+
+You should search for your hard-drive datasheet, but RAW_VALUE is probably a
+counter of remapped sectors.
+
+If RAW_VALUE is high, if VALUE is low and going near THRESH, it means you're
+going to have troubles with this disk.
+
+You can read http://www.linuxjournal.com/article.php?sid=6983
+
+-- 
+Seb, autocuiseur
