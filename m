@@ -1,48 +1,52 @@
-From: Arjan van de Ven <arjanv@redhat.com>
-Subject: Re: "Enhanced" MD code avaible for review
-Date: Mon, 22 Mar 2004 10:05:44 +0100
+From: Miquel van Smoorenburg <miquels@cistron.nl>
+Subject: [PATCH] md=d0,/dev/hda,/dev/hdb fails if hda is missing
+Date: Mon, 22 Mar 2004 14:34:45 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1079946343.5296.5.camel@laptop.fenrus.com>
-References: <459805408.1079547261@aslan.scsiguy.com>
-	 <4058A481.3020505@pobox.com> <4058C089.9060603@adaptec.com>
-	 <200403172245.31842.bzolnier@elka.pw.edu.pl> <4058EBEC.8070309@adaptec.com>
-	 <1079788027.5225.4.camel@laptop.fenrus.com>  <405E287E.3080706@adaptec.com>
-Reply-To: arjanv@redhat.com
+Message-ID: <20040322133444.GA15384@cistron.nl>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-tvaD8nUU38SJNEehb8hz"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <405E287E.3080706@adaptec.com>
-To: Scott Long <scott_long@adaptec.com>
-Cc: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, Jeff Garzik <jgarzik@pobox.com>, "Justin T. Gibbs" <gibbs@scsiguy.com>, linux-raid@vger.kernel.org, "Gibbs, Justin" <justin_gibbs@adaptec.com>, Linux Kernel <linux-kernel@vger.kernel.org>
+Content-Disposition: inline
+To: Neil Brown <neilb@cse.unsw.edu.au>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+If you assemble disks with md=d0,/dev/hda,/dev/hdb it fails
+if /dev/hda is missing (for example because it's dead).
 
---=-tvaD8nUU38SJNEehb8hz
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This patch fixes it:
 
-On Mon, 2004-03-22 at 00:42, Scott Long wrote:
+--- linux-2.6.5-rc1/init/do_mounts_md.c.ORIG	2004-03-16 15:14:48.000000000 +0100
++++ linux-2.6.5-rc1/init/do_mounts_md.c	2004-03-20 14:30:33.000000000 +0100
+@@ -142,7 +142,7 @@
+ 		else
+ 			dev = MKDEV(MD_MAJOR, minor);
+ 		create_dev(name, dev, devfs_name);
+-		for (i = 0; i < MD_SB_DISKS && devname != 0; i++) {
++		for (i = 0; i < MD_SB_DISKS && devname != 0;) {
+ 			char *p;
+ 			char comp_name[64];
+ 			u32 rdev;
+@@ -158,12 +158,11 @@
+ 			rdev = bstat(comp_name);
+ 			if (rdev)
+ 				dev = new_decode_dev(rdev);
+-			if (!dev) {
+-				printk(KERN_WARNING "md: Unknown device name: %s\n", devname);
+-				break;
+-			}
+-
+-			devices[i] = dev;
++			if (dev)
++				devices[i++] = dev;
++			else
++				printk(KERN_WARNING "md: Unknown device name: "
++						    "%s\n", devname);
+ 
+ 			devname = p;
+ 		}
 
-> Well, code speaks louder than words, as this group loves to say.  I=20
-> eagerly await your code.  Barring that, I eagerly await a technical
-> argument, rather than an emotional "you're wrong because I'm right"
-> argument.
 
-I think that all the arguments for using DM are techinical arguments not
-emotional ones. oh well.. you're free to write your code I'm free to not
-use it in my kernels ;)
-
---=-tvaD8nUU38SJNEehb8hz
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.3 (GNU/Linux)
-
-iD8DBQBAXqxnxULwo51rQBIRAsjOAJ9vsqFK8NTP7V2qqqho2JzY6fM/7ACbBlYh
-JffOv1Up7bhL82XkNr70EAM=
-=O/GZ
------END PGP SIGNATURE-----
-
---=-tvaD8nUU38SJNEehb8hz--
-
+Mike.
+-- 
+Netu, v qba'g yvxr gur cynvagrkg :)
