@@ -1,73 +1,37 @@
-From: "3tcdgwg3" <3tcdgwg3@prodigy.net>
-Subject: raid5, 2 drives dead at same time,kernel will Oops?
-Date: Mon, 19 May 2003 17:33:57 -0700
-Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <021301c31e67$804eab90$7b07a8c0@pluto>
-References: <3EB8441F.8070606@fugmann.dhs.org> <16056.19633.400369.451156@notabene.cse.unsw.edu.au>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+From: "Michael S. Peek" <peek@tiem.utk.edu>
+Subject: Questions about LARGE, RAID storage under Linux
+Date: Tue, 20 May 2003 12:15:39 -0400
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <S263852AbTETQCk/20030520160240Z+2889@vger.kernel.org>
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+Cc: peek@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
 
-I am trying to simulate a case that two drives
-in an array fail ad same time.
-I use two ide drives, I try to create a 
-raid 5 array with 4 arms, created as following:
+Hello all,
 
-/dev/hdc1
-/dev/hde1
-/dev/hdc2
-/dev/hde2
+I am looking at using a hardware RAID device that appears to it's SCSI host as
+a single large drive.  I am well aware that I can break this device down into
+multiple LUNS, but if possible I need to keep it as one big drive.  I
+understand from the Linux Info Sheet, last updated in 1998 according to it's
+text, that Linux is able to handle partitions up to 4TB in size.
 
-This is just for test, I know create two arms on
-one hard drive doesn't make much sense.
+What I want to know is:
 
+(a) Is 4TB still the maximum limitation on a single partition size?  If not,
+what is the current maximum?
 
-Anyway, when I run this array, if I power off one
-of hard drive (/dev/hde) to simulate two arms failing 
-at same  time in an array, I got system Oops. I am using
-2.4-18 kernel.
+(b) Would this maximum partition size still apply when using the software RAID
+tools to combine two or more of these devices together?
 
-Anyone can tell me if this is normal? or if there is a fix for this?
+What I am looking for is the ability to mount and format an external SCSI
+device that's 3.5TB in size.  (It's a Promise UltraTrak RM1500 w/ 15 x 250GB
+drives).  I want to be able to upgrade the hard drives at a later date and
+know that the Linux box to which it is attached will still be able to handle
+them.  Ideally, I would like to purchase a second (or even a third) device
+later down the road and use software RAID to concatenate them together.
 
-Thanks in advance.
+Thanks for any help you can give,
 
-Here are the output:
-
-=================================
-hde: drive not ready for command
-
-md: updating md0 RAID superblock on device
-
-md: (skipping faulty hde2 )
-
-md: hdc2 [events: 00000002]<6>(write) hdc2's sb offset: 3469952
-
-md: (skipping faulty hde1 )
-
-md: hdc1 [events: 00000002]<6>(write) hdc1's sb offset: 16064896
-
-md0: no spare disk to reconstruct array! -- continuing in degraded mode
-
-md: recovery thread finished ...
-
-md: recovery thread got woken up ...
-
-md0: no spare disk to reconstruct array! -- continuing in degraded mode
-
-md: recovery thread finished ...
-
-sector=561a8 i=0 00000000 00000000 8132e840 0
-
-kernel BUG at raid5.c:309!
-
-kupdated(7): Oops
-
-================================================
-
-
+Michael
