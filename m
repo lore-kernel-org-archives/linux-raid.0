@@ -1,84 +1,116 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: I/O Blocking
-Date: Thu, 22 Jul 2004 14:37:30 -0400
+From: <robin-lists@robinbowes.com>
+Subject: RE: mount-by-label finds drive not array ????
+Date: Thu, 22 Jul 2004 19:46:26 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200407221837.i6MIbU328251@watkins-home.com>
-References: <410002F1.3050703@ocis.net>
+Message-ID: <S266910AbUGVSq2/20040722184628Z+2509@vger.kernel.org>
+References: <20040722175424.GF26291@percy.comedia.it>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="us-ascii"
+	charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <410002F1.3050703@ocis.net>
-To: "'Jason C. Leach'" <jleach@ocis.net>
-Cc: linux-raid@vger.kernel.org
+In-Reply-To: <20040722175424.GF26291@percy.comedia.it>
+To: 'Luca Berra' <bluca@comedia.it>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-If your 1 CPU is 95% idle, it can do other "user requests".  But not if the
-other "user requests" require disk I/O, they will also block regardless of
-which CPU they are using.  I think there is a performance problem with your
-disks.  But just a guess.
+> -----Original Message-----
+> From: linux-raid-owner@vger.kernel.org 
+> [mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Luca Berra
+> Sent: 22 July 2004 17:54
+> To: linux-raid@vger.kernel.org
+> Subject: Re: mount-by-label finds drive not array ????
+> 
+> On Thu, Jul 22, 2004 at 05:33:13PM +0100, 
+> robin-lists@robinbowes.com wrote:
+> >> 
+> >> /dev/md0        /mnt/bar      ext3      defaults        0 4
+> >> 
+> >> Since if I do it by "LABEL=", it tries to mount hda1, not md0!
+> >> 
+> >> Is this just a known/accepted brain-deadness of the mount code?
+> >
+> >Tom,
+> >
+> >I'm just considering doing something like this.
+> >
+> >Did you ever get any resolution to this issue?
+> is there any need to mount a md device by label, since you 
+> can already identify the md components by uuid when you 
+> assemble the raid.
 
-Guy
+Probably not. It's just something I'm trying.
 
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Jason C. Leach
-Sent: Thursday, July 22, 2004 2:10 PM
-To: Guy
-Cc: linux-raid@vger.kernel.org
-Subject: Re: I/O Blocking
+Incidentally, it seems to work OK for me.
 
-Guy:
+I'm using Fedora Core 2. Here's my /etc/fstab (only labelled partitions
+listed):
 
-CPU load is very low (95-96% idle), load avg is 2. The system has 512MB 
-RAM, some free and only a few megs swapped out.  If I was really working 
-the RAID card I would get load avgs more like 2.5-3.  Right now just 
-light USB and system usage and I am at 2.
+LABEL=dude_root         /                       ext3    defaults        1 1
+LABEL=hda_music         /home/slimserver/music  ext3    defaults        0 0
+LABEL=/                 /mnt/hda                ext3    defaults        1 1
+LABEL=/boot             /mnt/hda/boot           ext3    defaults        1 2
+LABEL=/home             /mnt/hda/home           ext3    defaults        1 2
+LABEL=/opt              /mnt/hda/opt            ext3    defaults        1 2
+LABEL=/tmp              /mnt/hda/tmp            ext3    defaults        1 2
+LABEL=/usr              /mnt/hda/usr            ext3    defaults        1 2
+LABEL=/usr/local        /mnt/hda/usr/local      ext3    defaults        1 2
+LABEL=/var              /mnt/hda/var            ext3    defaults        1 2
 
-I though if one CPU was tied up with the process that is blocking (using 
-the RAID card), then the second would be free to deal with user 
-requests. Or am I misunderstanding SMP and blocking I/O?
+And here's what get's mounted:
 
-J.
+/dev/md0 on / type ext3 (rw)
+/dev/hda11 on /home/slimserver/music type ext3 (rw)
+/dev/hda7 on /mnt/hda type ext3 (rw)
+/dev/hda1 on /mnt/hda/boot type ext3 (rw)
+/dev/hda3 on /mnt/hda/home type ext3 (rw)
+/dev/hda5 on /mnt/hda/opt type ext3 (rw)
+/dev/hda10 on /mnt/hda/tmp type ext3 (rw)
+/dev/hda2 on /mnt/hda/usr type ext3 (rw)
+/dev/hda6 on /mnt/hda/usr/local type ext3 (rw)
+/dev/hda9 on /mnt/hda/var type ext3 (rw)
 
-Guy wrote:
+The reason I decided I'd like to use labels is because I found I was
+spending far too much time trying to find file systems on old disks to copy
+data across in a new system.
 
->What is the CPU load like?  Are you at 100%?  If so a second CPU may help.
->If you are blocked on i/o it should not use much CPU, so my guess is your
->CPU load is very low, and a second CPU won't do much.  How much RAM do you
->have?  Are you swapping?
->
->Guy
->
->-----Original Message-----
->From: linux-raid-owner@vger.kernel.org
->[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Jason C. Leach
->Sent: Thursday, July 22, 2004 12:29 PM
->To: linux-raid@vger.kernel.org
->Subject: I/O Blocking
->
->Hi,
->
->Both the RAID (Promise SuperTrak 6000) or the USB subsystems really 
->drive the system load up. I'm using a AMD 3200+ system that is only a 
->few months old with the 2.4.25 kernel.  When the I/O systems are 
->blocking the system is very unresponsive. Some times samba will timeout, 
->or I'll wait several seconds for commands like df, top, w and so on.
->
->I am wondering if I were to use a dual CPU system, would this solve my 
->I/O blocking problem?  Would one CPU tend to the I/O subsystem and the 
->second would deal with other system requests I (samba, DB, LDAP, ...)?
->-
->To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->  
->
+Take the example above: /dev/hda is from another system and I wanted to
+mount all partitions to check some config settings. I found I was doing
+stuff like:
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+# cat /proc/partitions
+major minor  #blocks  name
+
+   3     0  120060864 hda
+   3     1     104391 hda1
+   3     2    3068415 hda2
+   3     3    2048287 hda3
+   3     4          1 hda4
+etc.
+
+# mkdir /mnt/hda1 ; mount /dev/hda1 /mnt/hda1
+# ls /mnt/hda1
+(ah, /dev/hda1 must me the old /boot partition)
+# umount /dev/hda1
+etc.
+
+Eventually I'd find the root filesystem, mount it, then mount all the other
+filesystems on the old root fs.
+
+With labels I can just do this:
+
+# findfs LABEL=hostname_root
+/dev/hda7
+
+# mount /dev/hda7 /mnt/hda
+
+Or even:
+
+# mount `findfs LABEL=hostname_root` /mnt/hda
+
+Or even;
+
+# for d in usr usr/local tmp home var ; do mount `findfs LABEL=hostname_$d`
+/dev/hda/$d ; done
+
+R.
 
