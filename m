@@ -1,24 +1,38 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: [PATCH][2.5] new list macros for md (7 occ)
-Date: Thu, 13 Jun 2002 13:47:56 +1000 (EST)
+From: =?ISO-8859-1?Q?Lo=EFc?= Paillotin <loic.paillotin@qualimucho.com>
+Subject: inserting a new disk in a raid 1
+Date: 14 Jun 2002 10:49:00 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <15624.5612.286223.593221@notabene.cse.unsw.edu.au>
-References: <Pine.LNX.4.44.0206090837000.26112-100000@hawkeye.luckynet.adm>
+Message-ID: <1024044540.2246.12.camel@Asterix>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Lightweight patch manager on Sunday June 9
-To: Lightweight patch manager <patch@luckynet.dynu.com>
-Cc: Ingo Molnar <mingo@redhat.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sunday June 9, patch@luckynet.dynu.com wrote:
-> This uses the new list macros (list_move*, list_del_init) for the multiple 
-> devices driver
+Hello there.
 
-Thanks.  I have all of the (the md ones, not the lvm ones) in a patch
-that fixes assorted other list.h related uglinesses in the code.  I
-will be sending it to Linus shortly.
+I recently set  up a linux system. I had only one hard drive by that
+time, so I tought that I would configure it for software raid and see
+later when I had my second drive.=20
+I now have my second drive, and I don't have a clue on how to include i=
+t
+in my raid array. I tried to follow the tutorials ( that is, the raid
+HOWTO, but I'm probalby missing someting......=20
+thank you in advance,=20
 
-NeilBrown
+--=20
+Lo=EFc Paillotin
+D=E9veloppeur stagiaire
+Qualimucho M=E9dia
+10, rue de la fontaine au roi, 75011 Paris.
+------------------------------------------
+Corporate: http://www.qualimucho.com
+Perso: http://www.solo-net.fr.st
+
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
