@@ -1,56 +1,48 @@
-From: Rusty Lynch <rusty@linux.co.intel.com>
-Subject: Re: Re: ANNOUNCE: User-space System Device Enumation
-	(uSDE)
-Date: Wed, 29 Oct 2003 16:37:20 -0800
-Sender: cgl_discussion-bounces@lists.osdl.org
-Message-ID: <20031030003720.GA6000@penguin.co.intel.com>
-References: <3ACA40606221794F80A5670F0AF15F840215DC2F@pdsmsx403.ccr.corp.intel.com>
-	<20031029190421.GA4173@kroah.com>
+From: Michael Tokarev <mjt@tls.msk.ru>
+Subject: Re: Booting from a raid1 device ?
+Date: Thu, 30 Oct 2003 03:54:48 +0300
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <3FA06158.9040007@tls.msk.ru>
+References: <E5DA6395B8F9614EB7A784D628184B200E33DE@hdsmsx402.hd.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <cgl_discussion-bounces@lists.osdl.org>
-Content-Disposition: inline
-In-Reply-To: <20031029190421.GA4173@kroah.com>
-List-Unsubscribe: <http://lists.osdl.org/mailman/listinfo/cgl_discussion>,
-	<mailto:cgl_discussion-request@lists.osdl.org?subject=unsubscribe>
-List-Archive: <http://lists.osdl.org/pipermail/cgl_discussion>
-List-Post: <mailto:cgl_discussion@lists.osdl.org>
-List-Help: <mailto:cgl_discussion-request@lists.osdl.org?subject=help>
-List-Subscribe: <http://lists.osdl.org/mailman/listinfo/cgl_discussion>,
-	<mailto:cgl_discussion-request@lists.osdl.org?subject=subscribe>
-Errors-To: cgl_discussion-bounces@lists.osdl.org
-To: Greg KH <greg@kroah.com>
-Cc: linux-raid@vger.kernel.org, linux-hotplug-devel@lists.sourceforge.net, Lars Marowsky-Bree <lmb@suse.de>, "Ling,
-	Xiaofeng" <xiaofeng.ling@intel.com>, "Guo,
-	Min" <min.guo@intel.com>, Mark Bellon <mbellon@mvista.com>, linux-kernel@vger.kernel.org, cgl_discussion@osdl.org, Steven Dake <sdake@mvista.com>
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <E5DA6395B8F9614EB7A784D628184B200E33DE@hdsmsx402.hd.intel.com>
+To: "Cress, Andrew R" <andrew.r.cress@intel.com>
+Cc: donj@asaca.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Oct 29, 2003 at 11:04:21AM -0800, Greg KH wrote:
-<huge snip>
-> In the interest of full disclosure, Min is one of the SDE authors, and I
-> am one of the udev authors.
-
-man... I saw this thread and thought there is no way in hell I am jumping in
-this bloody mess.  oh well...
- 
-...and I told Min to help out on usde. 
-
+Cress, Andrew R wrote:
+> Don,
 > 
-> Min, maybe you can answer why Intel has spent effort on this project
-> instead of offering to help udev, which has been public for a long time
-> now?
+> Yes, it certainly can be done.  I do it all the time.
 > 
+> It's not hard with lilo, but grub doesn't support raid/md boot devices
+> yet.  This means that the grub boot record doesn't automatically get
+> written to the second disk.  In short, choose lilo for root mirroring if
+> possible.
 
-I have never believed that any one implementation of (in CGL speak) "persistent
-device naming" would be palatable by everyone, and have no problem in donating
-some resources toward udev.  
+Ugh-blah.  Excuse me folks, but.. maybe someone will be able to
+answer this one:
 
-In the past we experimented with udev, and even did a little work on
-sysfsutils (which I though udev was using, but looking at udev-005 I still
-see the libsysfs directory.)
+  why the hell a boot loader should "mirror" anything to the second disk? :)
 
-I see the the TODO list in udev-005.  Are all these items wide open, or have
-people already spoken for some parts?  Maybe you have a couple of items you 
-consider higher priority?
+That is.  Place standard MBR into the boot sector.  An MBR that will boot
+from active partition.  Be it e.g. /dev/hda and /dev/hdb.  Create raid1
+device from /dev/hda1 and /dev/hdb1.  Mark both partitions as active.
+And install whatever boot loader you want into /dev/md1 - it will be
+mirrored automatically to /dev/hda1 and /dev/hdb1 (and to whatever else
+disks you'll use).
 
-    --rustyl
+Should your first disk fail, the system will either not boot because
+of bios limitations, or bios may "remap" /dev/hdb into /dev/hda (to
+be 0x80), and in this case boot procedure will work.
+
+Well, ok, a boot loader should be able to determine real offsets from
+the start of the disk, not from the start of raid device.  I don't
+know whenever grub can do that - lilo apparently does, as all our
+systems are set up exactly this way...
+
+/mjt
+
