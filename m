@@ -1,46 +1,52 @@
-From: "Eric Wood" <eric@interplas.com>
-Subject: Re: How safe is software RAID compared to how safe hardware RAID is!?
-Date: Fri, 21 Nov 2003 09:59:30 -0500
-Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <00a901c3b040$10e451e0$9100000a@intgrp.com>
-References: <16314.40792.616508.878124@notabene.cse.unsw.edu.au><PPEOJEIEFLAONFNHJPOOAEICGOAA.jim@jimtreats.com> <16314.44161.438158.27514@notabene.cse.unsw.edu.au> <012e01c3ae33$6cde29d0$cc07a8c0@neptune>
+From: Mikael Johansson <mpjohans@pcu.helsinki.fi>
+Subject: Re: RAID-0 read perf. decrease after 2.4.20
+Date: Fri, 21 Nov 2003 21:56:42 +0200 (EET)
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <Pine.OSF.4.58.0311212139530.519259@soul.helsinki.fi>
+References: <Pine.LNX.4.44.0311211144130.15440-100000@logos.cnet>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.44.0311211144130.15440-100000@logos.cnet>
+To: Marcelo Tosatti <marcelo.tosatti@cyclades.com>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-3tcdgwg3 wrote:
-> Did I do anything wrong?
+
+Hello Marcelo and All!
+
+On Fri, 21 Nov 2003, Marcelo Tosatti wrote:
+
+> There have been no significant changes in the RAID driver in 2.4.21, so I
+> suspect the cause for the slowdowns might the changes to the IO scheduler
+> (ll_rw_blk.c) or VM changes.
 >
-> I didn't see RAID 1 hits multiple drives concurrently, specially for
-> reading.
->
-> I set up RAID 5, RAID 1 and single disk partitions on x86 machine,
-> kernel 2.4-18.
->
-> For 800 MB breading, RAID 5 take 2/3 of time used by single disk,
-> but RAID 1 take 1.1 of time used by single disk.
+> Isolating the -pre which the slowdown starts helps a lot.
 
-Doing anything (reading or writing) with RAID 1 set will always be slower
-than with a single drive.  Because even with reading, you're still updating
-the atime on both drives.  As a test, mount that partition with noatime and
-see if RAID-1 reading test nears to 1.
+I tested a few kernels to pin point the where tha changes occured. It
+turned out that both 2.4.20 and 2.4.21-pre1 have bad read performance. The
+2.4.20-ac's show good read speed. I tested it on two machines (different
+from yesterday). I also checked the VIA chipset drivers version; that's
+not the reason for the differences.
 
-Here's a nice message from while back:
+Athlon XP 2400+, 2.09 GHz, 1.5 GB RAM, 2*160 GB Maxtor Maxtor 6Y080L0
+		VIA	write	read
+2.4.19		none	10,000	  9,000 K/sec (chipset not supported)
+2.4.20		3.35	73,000	 88,000
+2.4.20-ac1	3.35-ac	70,000	135,000
+2.4.20-ac2	3.35-ac	71,000	140,000
+2.4.21-pre1	3.35-ac 71,000	 79,000
+2.4.21-pre3	3.35-ac 71,000   79,000
 
-http://www.cs.helsinki.fi/linux/linux-kernel/2002-17/0313.html
-<snip> Jaime Medrano wrote:
-> I have taken a look at the read balancing code at raid1.c and I have found
-> that when a sequential read happens no balancing is done, and so all the
-> reading is done from only one of the mirrors while the others are iddle
-<snip>
+Athlon 1.4 GHz, 1.5 GB RAM, 2*80 GB IC35L040AVER07-0 (IBM, I think)
+2.4.13-ac8	?	49,000	 44,000 K/sec
+2.4.19		3.34	53,000	 41,000
+2.4.20-ac2	3.35-ac	50,000	 69,000
+2.4.21-pre1	3.35-ac	53,000	 46,000
 
-So RAID-1 sets don't stripe read.  RAID 5 is forced to stripe seek because
-of its very nature of having XORed data across the drives.
+So there was apparently something very right with the 2.4.20-ac's. It
+would be nice to get it back :-)
 
--eric wood
-
-
+Have a nice weekend,
+    Mikael J.
+    http://www.helsinki.fi/~mpjohans/
