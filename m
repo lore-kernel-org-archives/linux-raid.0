@@ -1,41 +1,95 @@
-From: Jim Paris <jim@jtan.com>
-Subject: Re: RAID-6: help wanted
-Date: Fri, 29 Oct 2004 07:48:23 -0400
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: RAID-6: help wanted
+Date: Fri, 29 Oct 2004 08:29:01 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20041029114823.GA6431@jim.sh>
-References: <cleqh6$ps4$1@terminus.zytor.com> <16764.37392.910080.718564@cse.unsw.edu.au> <20041025062026.GA17502@jim.sh> <16767.6168.695527.234379@cse.unsw.edu.au> <417F30C7.9050308@zytor.com> <20041027060018.GA17085@jim.sh> <418048C1.8030404@zytor.com> <20041028160003.GA3502@jim.sh> <4181313D.5050905@zytor.com> <16769.37446.970293.945527@cse.unsw.edu.au>
+Message-ID: <200410291229.i9TCT6N13193@www.watkins-home.com>
+References: <16769.37446.970293.945527@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 In-Reply-To: <16769.37446.970293.945527@cse.unsw.edu.au>
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: "H. Peter Anvin" <hpa@zytor.com>, linux-raid@vger.kernel.org
+To: 'Neil Brown' <neilb@cse.unsw.edu.au>, "'H. Peter Anvin'" <hpa@zytor.com>
+Cc: 'Jim Paris' <jim@jtan.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> I have a patch to mdadm to make it resync when there is one failure,
-> but I'm no longer convinced that it is needed.
-> In fact, the initial resync isn't really needed for raid6 (or raid1)
-> at all.
+Neil,
+You said:
+"the initial resync isn't really needed for raid6 (or raid1)
+at all"
 
-I see.  I figured raid6 should just behave the same as raid5, but
-didn't realize that raid5 only did it because of the read-modify-write.
+I understand your logic, but, I would prefer the data to be synced.  I can't
+think of any examples of how it could make a difference, but if I read block
+x, then ten minutes later I read the same block again, I want it to be the
+same unless I changed it.  With RAID1 you never know which disk will be
+read, RAID6 would only change if a disk failed.  If you insist to add this
+feature, please make it an option that defaults to sync everything.  This
+way someone that knows what they are doing can use the option, others will
+get the safer (IMHO) default.
 
-However, I do still think that the data should always be synchronized.
-Just because it's holding completely meaningless values at the moment
-doesn't mean it should change each time you read it (which can easily
-happen if the data gets read from different disks).  Other things
-might eventually depend on the "meaningless" value.
+I also want an integrity checker that does not require the array to be
+stopped. :)
 
-Consider running raid5 on top of unsynced raid1 devices /dev/md[012]:
+I know you did not write the RAID6 code, but:
+You say RAID6 requires 100% of the stripe to be read to modify the strip.
+Is this due to the math of RAID6, or was it done this way because it was
+easier?  When doing random disk writes, any idea how this effects the
+performance of RAID6 compared to RAID5?  Does the performance of RAID6 get
+worse as the number of disks is increased?  Until now, I assumed a disk
+write would require read, read, read, modify, write, write, write.  Compared
+to RAID5 with read, read, modify, write, write (for small updates).
 
-1. Do an initial resync of the raid5 so that D1 + D2 = P.
+Thanks for your time,
+Guy
 
-2. Write a real value to D1, and update P.
-   At this point, D1 and P are synced between disks of their raid1s,
-   since they have been written.
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Neil Brown
+Sent: Thursday, October 28, 2004 8:44 PM
+To: H. Peter Anvin
+Cc: Jim Paris; linux-raid@vger.kernel.org
+Subject: Re: RAID-6: help wanted
 
-3. Now lose the disk holding D1, so you need to reconstruct it from D2 and P.
-   But you can't do that, because D2's value changes every time you read it!
+On Thursday October 28, hpa@zytor.com wrote:
+> Jim Paris wrote:
+> > 
+> > Another issue:  If I create a 6-disk RAID-6 array ...
+> > 
+> > ... with 2 missing, no resync happens.
+> > ... with 1 missing, no resync happens.  (???)
+> > ... with 0 missing, resync happens.
+> > ... with 2 missing, then add 1, recovery happens.
+> > ... with 0 missing, then fail 1, resync continues.
+> > 
+> > Shouldn't resync happen in the created-with-1-disk-missing case?
+> > 
+> 
+> Nevermind, I guess it probably should, since there is still redundancy 
+> and therefore it can be inconsistent.
+> 
+> 	-hpa
 
--jim
+I have a patch to mdadm to make it resync when there is one failure,
+but I'm no longer convinced that it is needed.
+In fact, the initial resync isn't really needed for raid6 (or raid1)
+at all.  The first write to any stripe will make the redundancy for
+that stripe correct regardless of what it was, and before the first
+write, the content of the array is meaningless anyway.
+
+Note that this is different to raid5 which, if using a
+read-modify-write cycle, depends on the parity block being correct.
+
+There would be an issue once we start doing background scans of the
+arrays as the first scan could find lots of errors.  But maybe that
+isn't a problem....
+
+I'll probably include the patch in the next mdadm release, and revisit
+the whole idea when (if) I implement background array scans.
+
+NeilBrown
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
