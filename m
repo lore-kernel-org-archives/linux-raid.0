@@ -1,66 +1,49 @@
-From: "bmoon" <bo@anthologysolutions.com>
-Subject: Re: How do we handle the same but uptodated data to disk cache?
-Date: Tue, 27 May 2003 13:47:59 -0700
+From: Matt <matt@lpbproductions.com>
+Subject: Raid chunksize...
+Date: Wed, 28 May 2003 03:34:49 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <007c01c32491$43cf41e0$6b01a8c0@bmoon>
-References: <Pine.LNX.4.44.0305261738440.19678-100000@q7.q7.com><004301c323f9$71916a10$6b01a8c0@bmoon> <16082.53674.340479.177651@notabene.cse.unsw.edu.au>
+Message-ID: <200305280334.52979.matt@lpbproductions.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: linux-raid@vger.kernel.org
+Content-Description: clearsigned data
+Content-Disposition: inline
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil,
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-It improved a lot for the sync I/O.
-However, I am looking for a solution to handle
-the regular async I/O with a page data on the
-same sector repeatedly like writing the MD SB
-data to disk without flushing.
+Hello, 
+	I currently have a software raid0 setup with this configuration
+raiddev                 /dev/md0
+raid-level              0
+nr-raid-disks           2
+nr-spare-disks          0
+persistent-superblock   1
+chunk-size              4
 
-The follwing is my simple algorithm for it;
+device                  /dev/hda2
+raid-disk               0
 
-        bh=getblk(dev, block, size);
-        if (buffer_uptodate(bh)) { /* still in cache, not flushed yet */
-              bh->b_data = "updated data";
-              brelse(bh);
-        }
-        else { /* all were flushed or new  */
-            .
-            .
-             mark_buffer_uptodate(bh,1);
-             mark_buffer_dirty(bh);
-            generic_make_request(rw, &bh);
-       }
+device                  /dev/hdc2
+raid-disk               1
 
- Please give me your suggestion or comment.
+Both drives are 80 gig .. so the total comes out to 160 gig w/ raid0 .. Now is 
+a chunksize of 4k to small (??), or is it optimal (??). Also I'am curios is 
+there anyway to change the chunksize w/o lossing the raid array and the 
+contents inside that array ? 
 
+Thanks, 
+Matt
 
-Bo
------ Original Message -----
-From: "Neil Brown" <neilb@cse.unsw.edu.au>
-To: "bmoon" <bo@anthologysolutions.com>
-Cc: <linux-raid@vger.kernel.org>
-Sent: Monday, May 26, 2003 7:47 PM
-Subject: Re: How do we handle the same but uptodated data to disk cache?
+- - Also Iam not on the list , so any replies please CC to me .. Thanks
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.2 (GNU/Linux)
 
-
-> On Monday May 26, bo@anthologysolutions.com wrote:
-> > Hello,
-> >
-> > I want to write the data to the fixed sector with the same size
-frequently
-> > just like MD super block, but I do not want to sync and flush the dev
-> > on each write.
-> >
-> > For example, to write md super block in /drivers/md/md.c
->
-> I suggest you look at a newer md.c.  With 2.4.21pre or 2.5.* have
-> "sync_page_io" which does what you want more effectively.
->
-> NeilBrown
->
-
+iD8DBQE+1JDLleY/n9G/oZ8RAsXCAJ47PYJi6oMWyNHx4ZRRd42XivRacgCfToF/
+KV4H0rAQ3kJpSbiofVFxh0E=
+=UGvD
+-----END PGP SIGNATURE-----
