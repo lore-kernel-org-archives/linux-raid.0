@@ -1,33 +1,25 @@
-From: Hendrik Visage <hvisage@envisage.co.za>
-Subject: Re: mdadm --assemble --scan hassles....
-Date: Tue, 28 Oct 2003 08:24:45 +0200
+From: Gordon Henderson <gordon@drogon.net>
+Subject: Spinning down disks [Re: I'm about ready to do SW-Raid5 - pointers
+ needed]
+Date: Tue, 28 Oct 2003 08:20:35 +0000 (GMT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20031028062445.GD3236@hvs.envisage.co.za>
-References: <20031008111709.GV1277@hvs.envisage.co.za> <16270.5184.302596.951547@notabene.cse.unsw.edu.au> <20031025212433.GE23767@hvs.envisage.co.za> <16285.38655.754527.236684@notabene.cse.unsw.edu.au>
+Message-ID: <Pine.LNX.4.56.0310280818170.23689@unicorn.drogon.net>
+References: <Pine.LNX.4.44.0310281610290.11061-100000@gw.luko.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <16285.38655.754527.236684@notabene.cse.unsw.edu.au>
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: Hendrik Visage <hvisage@envisage.co.za>, linux-raid@vger.kernel.org
+In-Reply-To: <Pine.LNX.4.44.0310281610290.11061-100000@gw.luko.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Oct 28, 2003 at 09:06:55AM +1100, Neil Brown wrote:
-> On Saturday October 25, hvisage@envisage.co.za wrote:
-> > > That would be because mdadm.conf describes /dev/md/1 as:
-> > >     UUID=c2a91233:5ffd5398:eac27773:e12945dd
-> > > but mdadm --examine doesn't show any arrays with that uuid.
-> > > 
-> > > NeilBrown
-> > 
-> > Then how do I fix it??
-> > 
-> 
-> Edit /etc/mdadm.conf
+On Tue, 28 Oct 2003, Luke Rosenthal wrote:
 
-I've tried without any succes as yet :(
+> I know there's the appropriate commands to do it, but are they risky?  If
+> a drive's not mounted, but powered off, it should present no problems or
+> lock up the OS, correct?
 
-so what would the correct mdadm.conf look like in my case?
+Have a look at noflushd. I've been using it for years with good results in
+PCs that don't need their disks on all the time (eg. laptops). (and even
+recently in my home servers with RAID1 sets)
 
-
+Gordon
