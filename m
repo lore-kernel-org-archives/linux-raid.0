@@ -1,37 +1,26 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: DDF Trial Use draft specification now publicly available
-Date: Thu, 11 Mar 2004 15:43:18 -0500
+From: Jeff Hoffmann <jhoffman@microelectronics.com>
+Subject: RAID 0 -> 1 possible?
+Date: Thu, 11 Mar 2004 15:44:12 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <4050CF66.8090409@pobox.com>
-References: <20040311154542.GA6173@lists.us.dell.com>
+Message-ID: <4050CF9C.6000704@microcenter.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20040311154542.GA6173@lists.us.dell.com>
-To: Matt Domsch <Matt_Domsch@dell.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Matt Domsch wrote:
-> The Disk Data Format (DDF) trial use draft spec has now been published
-> by SNIA.  This is the common on-disk metadata format that
-> RAID vendors have been driving towards, which should allow one to move
-> disks from one vendor's RAID controller to another vendor's RAID
-> controller without the backup-rebuild-restore that's currently needed.
-> 
-> http://www.snia.org/tech_activities/ddftwg
+Hello list,
 
-Thanks for posting this.
+Is it possible to convert from RAID 0 to 1 without data loss?
 
-I haven't even read past "locality" section to find brokenness.  DDF 
-RAID groups (a.k.a. each RAID array) must store information about other 
-RAID groups "on the controller."  There is also apparently 
-per-controller state information one must care about.  While I 
-understand why they would want this, this also means the format is quite 
-a bit less flexible than md, and in some respects, more difficult to 
-work with.
+Given a system with two disks, three partitions on each: boot, /, and swap.
 
-/me continues reading...
+Convert / from RAID 0 to 1 without requiring a backup/reinstall/restore scenario
+
+Any RAID-mojo-masters with the answer?
 
 
+TIA,
+
+Jeff Hoffmann
