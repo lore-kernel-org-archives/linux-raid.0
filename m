@@ -1,39 +1,50 @@
-From: Juri Haberland <list-linux.raid@spoiled.org>
-Subject: Re: MD drivers problems on 2.4.x
-Date: Mon, 26 May 2003 00:24:44 +0000 (UTC)
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: RE: cluster RAID
+Date: Mon, 26 May 2003 16:10:05 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <news2mail-barmsb$tl4$1@cartman.spoiled.org>
-References: <200305231535.17808.ebenard@free.fr>
-Reply-To: Juri Haberland <juri@koschikode.com>
+Message-ID: <16081.44989.20972.940840@notabene.cse.unsw.edu.au>
+References: <16080.41341.194808.277607@notabene.cse.unsw.edu.au>
+	<000d01c322b3$f6c853c0$3200a8c0@nimiak>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: message from Kai-Min Sung on Sunday May 25
+To: Kai-Min Sung <k@kaisung.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Eric BENARD / Free <ebenard@free.fr> wrote:
-> Hi,
+On Sunday May 25, k@kaisung.com wrote:
+> Hi Neil,
+> 	I should probably elaborate a little more on my envisioned
+> setup. I'd like to setup a RAID array using shared disks, then run LVM
+> on top of the RAID array to carve out logical volumes. The logical
+> volumes would be used by one node at a time (no data sharing). For both
+> nodes to access the same LVM metadata, they must both activate the RAID
+> array. It seemed like someone had done something similar here:
 > 
-> I would like to know what is the md driver status on 2.4.19 and 2.4.20 kernels 
-> ?
-> I ve got many problems with RAID 0 (/tmp), 1 (/, /usr/var) and 5 (/home) using 
-> these kernels and 4 IDE drives with ext3 partitions. In the end each time I 
-> lose all the data :-( 
-> After many tests (RAM is OK, HD don't have badblocks), I think the problems 
-> comes from the md layer.
+> http://marc.theaimsgroup.com/?l=linux-raid&m=98834623209225&w=2
 > 
-> May a switch to 2.4.21-rc3 solve my problems ?
-> 
-> Did anyone here already meet this problem ?
-> 
-> Many thanks and best regards
+> Concerning the checksums, I was referring to the checksum output when I
+> run mdadm --examine on a RAID disk. I thought that was a checksum of all
+> the data blocks of the disk, but I guess not? So, basically the only
+> time you can guarantee a RAID array is consistent is once it's been
+> deactivated and the dirty flag cleared in the superblock?
 
-Sorry, no problems here. /, /home, swap and the other stuff all on RAID1
-and humming along.
-We need more data from you. What is failing in which way? Any error
-messages, kernel oopses?
+It isn't clear what the auther of the refered mail is really doing,
+but I stand by my position that this cannot work.
 
-Cheers,
-Juri
+A raid array is not just a bunch of discs.  It is also a controller.
+With Linux Soft raid, that controller is a computer running Linux.  
+In the case of hardware raid, it might be an embeded system on a board
+somewhere.  But there is still a single controller.
 
--- 
-Juri Haberland  <juri@koschikode.com> 
+It probably would not be impossible to arrange a soft RAID system
+where separate controller (Linux systems) could co-operate and manage
+separate parts of the array, but it would be a lot of work.
 
+
+The checksum is the checksum of the superblock, not the whole array.
+Yes.  Yoo can only guarantee consustency if the dirty flag is clear.
+
+NeilBrown
