@@ -1,72 +1,118 @@
 From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: Some raid1 questions
-Date: Mon, 2 Feb 2004 15:43:46 +1100
+Subject: Re: Recovered disk error caused disk to go offline.
+Date: Mon, 2 Feb 2004 16:00:50 +1100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16413.54658.442268.733528@notabene.cse.unsw.edu.au>
-References: <200402011438.01880.yg@mind.lu>
+Message-ID: <16413.55682.95798.663667@notabene.cse.unsw.edu.au>
+References: <200401301902.i0UJ2Ai30922@dns1.watkins-home.com>
+	<yqujk739dvml.fsf@chaapala-lnx2.cisco.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Yves Glodt on Sunday February 1
-To: Yves Glodt <yg@mind.lu>
-Cc: linux-raid@vger.kernel.org
+In-Reply-To: message from Clay Haapala on Friday January 30
+To: Clay Haapala <chaapala@cisco.com>
+Cc: Guy <bugzilla@watkins-home.com>, linux-scsi@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sunday February 1, yg@mind.lu wrote:
-> Hello,
+On Friday January 30, chaapala@cisco.com wrote:
+> iSCSI acts as another HBA, and conveys status up from the [Fibre
+> Channel] devices to the scsi layer.  SCSI reported that event, and the
+> raid system rolled over the disk to another, more reliable, one.
+> Wouldn't that be correct behavior for Raid?  Cc-ing linux-raid...
 > 
-> I have my home partition on a raid1 device, and there is an ext3 
-> filesystem on it. Some more information:
-...
-> 
-> Recently I had some freezes (due to nvidia...?), and everytime I had to 
-> make a hard reset.
-> 
-> Everytime then the raid resynced completely which took about 1.5 hours.
-> One time I lost some kde settings when this happened.
-> The filesystem did not complain about an unclean shutdown, it seems it 
-> did not see on bootup that the last shutdown was unclean.
-> 
-> Now to my questions:
-> Is this the normal behaviour?
-Which behaviour?
 
-  1.5 hour resync -- maybe. It depends on the speed and size of the
-    drives.
-  lost kde settings -- maybe. It depends on how well kde copes with
-    sudden system failure.
-  The filesystem didn't complain -- Yes.  ext3 doesn't complain about
-    an unclean shutdown.  It just replays the journal and keeps
-    working. 
+The only events the raid can see coming from scsi are:
+  successful read/write
+  unsuccessful read/write
 
-> Shouldn't the filesystem take care of that?
+There is now way in the Linux block layer to report "write was
+successful, but I had to retry".
 
-  Take care of what?  I suspect it did take care of everything it
-  could. 
-
-> What is the point of having a journaling filesystem on a mirror?
-  Lots.  A journaling filesystem guards against unclean shutdown.  A
-  mirror guards against drive failure.  These are compliementary.
-
-> Is there anything I can change to have the filesystem handle unclean 
-> shutdowns?
-
- I think it did handle the unclean shutdown just fine.
- The loss of kde settings is probably dud to KDE note being careful
- enough when updating it's settings file.
+It appears that an 'unsuccessful write' was reported when the write
+was actually successful.  This seems wrong.
 
 NeilBrown
 
-> 
-> TIA,
-> Yves
-> 
+
+> On Fri, 30 Jan 2004, Guy verbalised:
+> > Sorry about the re-post, but no comments after almost 2 days.
+> > 
+> > -----Original Message-----
+> > From: linux-scsi-owner@vger.kernel.org
+> > [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Guy
+> > Sent: Thursday, January 29, 2004 12:21 AM
+> > To: linux-scsi@vger.kernel.org
+> > Subject: Recovered disk error caused disk to go offline.
+> > 
+> > Neil Brown said to send this message to linux-scsi, so here it is.
+> > 
+> > Please help.
+> > Thanks,
+> > Guy
+> > 
+> > On Thursday January 29, bugzilla@watkins-home.com wrote:
+> >> As you can see in the log, the write error recovered with auto
+> > reallocation!
+> >> As I understand it, this is a normal event with today's disks.
+> >> I don't think the disk should have been considered failed.
+> >> 
+> >> Comments please?
+> > 
+> > You need to talk to linux-scsi about this.  The scsi subsystem told
+> > the raid subsystem that there was an error, so the raid subsystem
+> > stopped using the device.
+> > 
+> > If the write error was recovered, scsi shouldn't have reported an
+> > error to raid.
+> > 
+> > NeilBrown
+> > 
+> >> 
+> >> Thanks,
+> >> Guy
+> >> 
+> >> The spare disk resynced just fine..,A I never knew for over 24
+> >> hours!  This is cool stuff!
+> >> 
+> >> Jan 27 12:44:06 watkins kernel: SCSI disk error : host 2 channel 0
+> >> id 4
+> > lun
+> >> 0 return code = 8000002 Jan 27 12:44:06 watkins kernel: Info
+> >> fld=0x7e5c81, Deferred sd08:71: sense key Recovered Error Jan 27
+> >> 12:44:06 watkins kernel: Additional sense indicates Write error -
+> >> recovered with auto reallocation Jan 27 12:44:06 watkins kernel:.,A
+> >> I/O error: dev 08:71, sector 8280704 Jan 27 12:44:06 watkins
+> >> kernel: raid5: Disk failure on sdh1, disabling device. Operation
+> >> continuing on 13 devices Jan 27 12:44:06 watkins kernel: md:
+> >> updating md2 RAID superblock on device Jan 27 12:44:06 watkins
+> >> kernel: md: sdc1 [events: 00000009]<6>(write)
+> > sdc1's
+> >> sb offset: 17767744 Jan 27 12:44:06 watkins kernel: md: recovery
+> >> thread got woken up ...  Jan 27 12:44:06 watkins kernel: md2:
+> >> resyncing spare disk sdc1 to replace failed disk Jan 27 12:44:06
+> >> watkins kernel: RAID5 conf printout: Jan 27 12:44:06 watkins
+> >> kernel:.,A --- rd:14 wd:13 fd:1
+> >> 
+> >> - To unsubscribe from this list: send the line "unsubscribe
+> >> linux-raid" in the body of a message to majordomo@vger.kernel.org
+> >> More majordomo info at http://vger.kernel.org/majordomo-info.html
+> > - To unsubscribe from this list: send the line "unsubscribe
+> > linux-raid" in the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at http://vger.kernel.org/majordomo-info.html
+> > 
+> > - To unsubscribe from this list: send the line "unsubscribe
+> > linux-scsi" in the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at http://vger.kernel.org/majordomo-info.html
+> > 
+> > - To unsubscribe from this list: send the line "unsubscribe
+> > linux-scsi" in the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at http://vger.kernel.org/majordomo-info.html
 > 
 > -- 
-> Linux 2.4.24 #5 Mon Jan 5 19:38:06 CET 2004 i686
->  14:25:55 up  4:14,  1 user,  load average: 0.43, 0.40, 0.32
-> 
+> Clay Haapala (chaapala@cisco.com) Cisco Systems SRBU +1 763-398-1056
+>    6450 Wedgwood Rd, Suite 130 Maple Grove MN 55311 PGP: C89240AD
+>              Minnesota, a quite agreeable state.  Lately,
+>              Celsius and Fahrenheit have tended to agree.
 > -
 > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 > the body of a message to majordomo@vger.kernel.org
