@@ -1,39 +1,26 @@
-From: "Cuenta de la lista de linux" <user_linux@citma.cu>
-Subject: Promise SX6000 RAID problems
-Date: Thu, 30 Jan 2003 16:31:13 -0500
+From: Stephan van Hienen <stephan@a2000.nu>
+Subject: powersupply for 16disks +dual xeon
+Date: Sat, 1 Feb 2003 18:32:16 +0100 (CET)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20030130213113.M55931@webmail.citma.cu>
+Message-ID: <Pine.LNX.4.53.0302011823430.6789@ddx.a2000.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid lists <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+today tried to put 16 disks (15*ide7200 +1*scsi7200) in a intel sc5200
+case
+(which has an 450W powersupply)
 
-Hi,
+when i try to powerup the system, the powersupply goes off after 3 seconds
+i think this is because off the spinupp for the disks
 
-I have installed Red Hat 7.2 (kernel 2.4.7-10) in a dual PII server.I want to
-install a Promise SX600 card on it.I have  made a 5 drive RAID 5
+any tips how to fix this ?
+(as far as i know there is no spinup delay for ide disks)
+maximum powersupply i found is 550W, not much more than i have in my
+system
 
-I have let the card initialize by it's BIOs and i have choose OS=other in the
-card setup, compiled the kernel with i20 support on it(as module), but when i
-tried to format de array with fdisk /dev/i2o/hda i got a unable to open messages.
+(i need an 24pin xeon powersupply)
 
-I have the system in another hard drive in /dev/hda.
-
-Is ther any problems with i20 and Red Hat 7.2 kernel 2.4.7-10?
-
-Should I upgrade the kernel ? but Which  kernel version is the best for
-Promise SX6000? 
-
-Has any one got this card to work with and  distro/kernel version???
-
-is this card able to use the i20 kernel module?
-
-
-Thanks for any help 
-
-David
-
-
-
+(disks are WD180GB (which asks 15W for spinup)
