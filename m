@@ -1,30 +1,42 @@
-From: Derek Vadala <derek@cynicism.com>
-Subject: Re: Growing volumes
-Date: Tue, 24 Sep 2002 10:26:18 -0700 (PDT)
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: How to set speed_limit_max for mdrecoveryd?
+Date: Wed, 25 Sep 2002 08:49:23 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.30.0209241024590.18094-100000@jaded.cynicism.com>
-References: <C65F89D1AC0BB54B865127151A24DA780BAD5BB6@nbexchm2.aliant.icn>
+Message-ID: <15760.60403.398011.52618@notabene.cse.unsw.edu.au>
+References: <A5974D8E5F98D511BB910002A50A66470580D1FE@hdsmsx103.hd.intel.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <C65F89D1AC0BB54B865127151A24DA780BAD5BB6@nbexchm2.aliant.icn>
-To: "Shaw, Marco" <marco.shaw@nbtel.nb.ca>
-Cc: "'linux-raid@vger.kernel.org'" <linux-raid@vger.kernel.org>
+In-Reply-To: message from Cress, Andrew R on Tuesday September 24
+To: "Cress, Andrew R" <andrew.r.cress@intel.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 24 Sep 2002, Shaw, Marco wrote:
+On Tuesday September 24, andrew.r.cress@intel.com wrote:
+> 
+> I couldn't find this is a quick scan of the code, and thought it should be
+> documented somewhere.  Maybe I just have a blind spot.  Can someone tell me
+> how to set the speed_limit_max variable for mdrecoveryd?  
+> 
+> Andy Cress
 
-> Is there some kind of doc/howto/faq on growing software raid
-> "volumes"?  I'm planning for a system that may require additional
-> storage down the road.
+Get and install mdadm, and
+   man 4 md
 
-As far as I'm aware, this is the only choice you have:
-
-http://unthought.net/raidreconf/
-
-Please note all the caveats.
+It says in the Files section:
 
 
----
-Derek Vadala, derek@cynicism.com, http://www.cynicism.com/~derek
+       /proc/sys/dev/raid/speed_limit_max
+              A readable and writable file that reflects the cur-
+              rent goal rebuild speed  for  times  when  no  non-
+              rebuild  activity  is  current  on  an  array.  The
+              default is 100,000.
 
+
+so
+  echo 1000000 >  /proc/sys/dev/raid/speed_limit_max
+
+Does that answer your question?
+
+NeilBrown
