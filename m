@@ -1,18 +1,34 @@
-From: "Jason" <bind@swift-web.com>
+From: Adam Radford <aradford@3WARE.com>
 Subject: RE: 3ware 7500-12, bad write speed
-Date: Thu, 26 Sep 2002 00:43:13 -0600
+Date: Thu, 26 Sep 2002 10:50:31 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <NDBBKCFAMJCHKHNEKLMAOEKLELAA.bind@swift-web.com>
-References: <5.1.0.14.2.20020925222027.03eb9710@mail.harddata.com>
+Message-ID: <A1964EDB64C8094DA12D2271C04B812672C703@tabby>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
+	charset="iso-8859-1"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5.1.0.14.2.20020925222027.03eb9710@mail.harddata.com>
-To: Mikael Abrahamsson <swmike@swm.pp.se>
+To: 'Jason' <bind@swift-web.com>, Mikael Abrahamsson <swmike@swm.pp.se>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+Jason,
+
+If you're using the 7.5.1 codeset, you can add a jbod with the following
+command:
+
+tw_cli maint add c0 p0 jbod
+
+By default, you get a cbod, so you must specify jbod's and spare's.
+
+-Adam
+
+-----Original Message-----
+From: Jason [mailto:bind@swift-web.com]
+Sent: Wednesday, September 25, 2002 11:43 PM
+To: Mikael Abrahamsson
+Cc: linux-raid@vger.kernel.org
+Subject: RE: 3ware 7500-12, bad write speed
+
 
 > Yes, don't use the 3Ware BIOS RAID.
 > Run it in JBOD mode, and use Linux RAID.
@@ -47,3 +63,7 @@ Jay
 >
 
 
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
