@@ -1,66 +1,62 @@
-From: jan@weitan.org
-Subject: Software RAID 1 boot procedure hangs after reset
-Date: Sat, 1 Jan 2005 17:31:54 +0100 (CET)
-Message-ID: <33268.85.72.22.63.1104597114.squirrel@weitan.org>
+From: Axel Christiansen <axel@zedx.org>
+Subject: raid5 resync 2.6.10 freez
+Date: Sun, 02 Jan 2005 19:03:43 +0100
+Message-ID: <41D8377F.2040809@zedx.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi there,
-i have a debian sarge system with kernel 2.6.6. After a hard reset the
-boot process hangs at recognising/ mounting the root file system, but s=
-ays
-he can start /dev/mdX with 2 out of 2 disks.
-The error message is:
- pivot_root: No such file or directory
-    /sbin/init: 424: cannot open dev/console: no such file
-Exactly the same as
-http://lists.debian.org/debian-kernel/2004/08/msg01301.html.
-I am using a initrd with sata and raid1 modules.
-The filesystem is fd (linux raid autodetect) and autofs is compiled int=
-o
-the kernel.
-I tried the debian default kernel (2.6.3) and he detects a corrupted ra=
-id
-(starting with 1 out of 2 devices) and gives another error message.
-I repaired it by using dd and an old image of the root filesystem. But =
-i
-do not understand the big picture here. Why does one kernel detect a fu=
-lly
-synchronised raid and the other kernel doesn=B4t?
-Actually it happened twice and the first time there was some message th=
-at
-some filesystem has been mounted too many times and needs a check, afte=
-r
-that the system started normally. But before this messages he couldn=B4=
-t
-find the root fs. A friend of mine pointed to me that the wait time of =
-the
-kernel to autodetect the fs is/ was probably too short.
-In general i googled for some information about the problem but couldn=B4=
-t
-find a good resource. Every howto explains how to set up software raid,
-but no one explains how to repair a corrupted root fs.
+Hello,
 
+i recently upgraded to a 4-IDE-RAID5. Since than the array
+is not able to resync itself.
 
+linux 2.6.10 with software-raid
+mdadm - v1.5.0 - 22 Jan 2004
+4 X IDE DISK WDC WD1600JB-00FUA0 (160 GB)
+2 X HPT374 (rev 07) IDE Conroller
+Epox 8K5-A3+
+Duron 1500 MHz CPU
 
+After 5 to 10 minutes the os freez. The system console does
+not show anything.
 
-jan@         _ __
- _    _____ (_) /____ ____   ___  _______ _
-| |/|/ / -_) / __/ _ `/ _ \_/ _ \/ __/ _ `/
-|__,__/\__/_/\__/\_,_/_//_(_)___/_/  \_, /
-                                    /___/
---
-"Dancing is the vertical expression of a horizontal desire" --Robert Fr=
-ost
+#
+# Kernel hacking
+#
+CONFIG_DEBUG_KERNEL=y
+CONFIG_MAGIC_SYSRQ=y
+CONFIG_SCHEDSTATS=y
+# CONFIG_DEBUG_SLAB is not set
+# CONFIG_DEBUG_SPINLOCK is not set
+# CONFIG_DEBUG_SPINLOCK_SLEEP is not set
+CONFIG_DEBUG_KOBJECT=y
+# CONFIG_DEBUG_HIGHMEM is not set
+# CONFIG_DEBUG_INFO is not set
+CONFIG_FRAME_POINTER=y
+CONFIG_EARLY_PRINTK=y
+# CONFIG_DEBUG_STACKOVERFLOW is not set
+# CONFIG_KPROBES is not set
+# CONFIG_DEBUG_STACK_USAGE is not set
+# CONFIG_DEBUG_PAGEALLOC is not set
+# CONFIG_4KSTACKS is not set
+CONFIG_X86_FIND_SMP_CONFIG=y
+CONFIG_X86_MPPARSE=y
 
+I tried some 20 Kernels with no success.
+Regardless of the resync speed the system freezes
+sooner ar later.
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+10000 Kb/s after some 10 minutes.
+1000  Kb/s after 1 to 2 hours.
+
+There is no filesystem involved. The degraded arry without
+resyncing works fine.
+
+How do i fugure out whats going on.
+
+Thanks, Axel
