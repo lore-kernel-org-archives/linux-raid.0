@@ -1,37 +1,54 @@
-From: Stephan van Hienen <raid@a2000.nu>
-Subject: what is the exact raid5 limit (2TB (can i use 12 or 13*180GB?))
-Date: Thu, 20 Feb 2003 17:17:49 +0100 (CET)
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.53.0302201717020.4479@ddx.a2000.nu>
-References: <Pine.LNX.4.53.0302060059210.6169@ddx.a2000.nu>
- <Pine.LNX.4.53.0302060123150.6169@ddx.a2000.nu> <Pine.LNX.4.53.0302060211030.6169@ddx.a2000.nu>
- <15937.50001.367258.485512@wombat.chubb.wattle.id.au>
- <Pine.LNX.4.53.0302061915390.17629@ddx.a2000.nu>
- <15945.31516.492846.870265@wombat.chubb.wattle.id.au>
- <Pine.LNX.4.53.0302121129480.13462@ddx.a2000.nu> <044101c2d2a9$4fcdf980$f6de11cc@black>
- <Pine.LNX.4.53.0302141120230.19336@ddx.a2000.nu> <Pine.LNX.4.53.0302171123480.2464@ddx.a2000.nu>
+From: "Robert L. Harris" <Robert.L.Harris@rdlg.net>
+Subject: Why is a "init 0" halt not bringing my raid5 up clean?
+Date: Thu, 20 Feb 2003 11:25:47 -0500
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <20030220162547.GE19609@rdlg.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.53.0302171123480.2464@ddx.a2000.nu>
-To: kernel@ddx.a2000.nu
-Cc: Mike Black <mblack@csi-inc.com>, Peter Chubb <peter@chubb.wattle.id.au>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, bernard@biesterbos.nl, ext2-devel@lists.sourceforge.net
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="Y5rl02BVI9TCfPar"
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+To: Linux-Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, 17 Feb 2003, Stephan van Hienen wrote:
 
-> On Fri, 14 Feb 2003 kernel@ddx.a2000.nu wrote:
->
-> > On Wed, 12 Feb 2003, Mike Black wrote:
-> >
-> > > I did a 12x180G and as I recall was unable to do 13x180G as it overflowed during mke2fs.  This was a year ago though so I don't know
-> > > if that's been improved since then.
-> > >
-> >
-> > does anyone know for sure what is the limit for md raid5 ?
-> >
-> > can i use 13*180GB in raid5 ?
-> > or should i go for 12*180GB in raid5 ?
+--Y5rl02BVI9TCfPar
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-I really want to create this raid this week
-so is there anyone with info what will be the limit ?
+
+
+I have a server with 4 RAID5 arrays.  I just went in and did an init0 on
+the box to remove the fourth array and replace all 4 disks to create a
+new RAID5 array (long story).  When I brought the box back up md0 and
+md1 were both showing their 1st disk as faulty.  They were both clean
+and error free before the init 0.
+
+This happens a good bit.  Any reason why?
+
+
+:wq!
+---------------------------------------------------------------------------
+Robert L. Harris                     | PGP Key ID: E344DA3B
+                                         @ x-hkp://pgp.mit.edu=20
+DISCLAIMER:
+      These are MY OPINIONS ALONE.  I speak for no-one else.
+FYI:
+ perl -e 'print $i=3Dpack(c5,(41*2),sqrt(7056),(unpack(c,H)-2),oct(115),10)=
+;'
+
+
+--Y5rl02BVI9TCfPar
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.1 (GNU/Linux)
+
+iD8DBQE+VQGL8+1vMONE2jsRAng4AKDYzNUwBud+Jvl3mKOVMIig2JifhgCgojF5
+I7q4tvxWsmcjglDsLBKKvOs=
+=PIwY
+-----END PGP SIGNATURE-----
+
+--Y5rl02BVI9TCfPar--
