@@ -1,51 +1,108 @@
 From: Michael Tokarev <mjt@tls.msk.ru>
 Subject: Re: Best Practice for Raid1 Root
-Date: Thu, 15 Jan 2004 03:32:12 +0300
+Date: Thu, 15 Jan 2004 03:26:10 +0300
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <4005DF8C.7080206@tls.msk.ru>
-References: <NMEHJKFGFEGJPIPOLFFECEMHDEAA.valo@valo.at>
+Message-ID: <4005DE22.30604@tls.msk.ru>
+References: <4005D408.8060002@physics.ucsd.edu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <NMEHJKFGFEGJPIPOLFFECEMHDEAA.valo@valo.at>
-To: Christian Kivalo <valo@valo.at>
+In-Reply-To: <4005D408.8060002@physics.ucsd.edu>
+To: Terrence Martin <tmartin@physics.ucsd.edu>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Christian Kivalo wrote:
->>Hi,
->>
+Terrence Martin wrote:
+> Hi,
 > 
-> [snip]
+> I wanted to post this question for a while.
 > 
->>The boot loader is grub and I want both /boot and / raided.
->>
->>In the event of a failure of hda I would like the system to switch to
->>hdc. This works fine. However what I have had problems with is if the
->>system reboots. If /dev/hda is unavailable I no longer have a disk with
->>a boot sector set up correctly. Unless I have a floppy or CDROM with a
->>boot loader the system will not come up.
-[]
-> one possible solution would be to use lilo. lilo is capable of booting
-> from md raid1 arrays. look at lilo.conf(5) manpage for 'raid-extra-boot'
-> in 'GLOBAL OPTIONS'. i use it on most of my maschines. AFAIK grub is not
-> able to boot from /dev/mdX.
+> On several systems I have configured a root software raid setup with two 
+> IDE hard drives. The systems are always some version of redhat. Each 
+> disk has its own controller and is partitioned similar to the following, 
+> maybe with more partitions, but this is the minimum.
+> 
+> hda1 fd   100M
+> hda2 swap 1024M
+> hda3 fd   10G
+> 
+> hdc1 fd   100M
+> hdc2 swap 1024M
+> hdc3 fd   10G
+> 
+> The Raid devices would be
+> 
+> /dev/md0 mounted under /boot made of /dev/hda1 and /dev/hdc1
+> /dev/md1 mounted under / made of /dev/hda3 and /dev/hdc3
 
-When using raid-extra-boot, lilo treats second disk as bios #0x81,
-3rd disk as bios #0x82 and so on.  That to say - if your first disk
-fails and BIOS will substitute second disk in place of first, making
-it 0x80 instead of 0x81, lilo will not boot too, exactly in a way
-why grub installed into /dev/hdb (that was e.g. temporarily plugged
-into another machine just to make it bootable etc) does not want to
-boot from it when it will be /dev/hda again (when returned back into
-it's own machine).
+You aren't using raid1 for swap, yes?
+Using two (or more) swap partitions in equivalent of raid0 array
+(listing all them in fstab with the same priority) looks like a
+rather common case, and indeed it works good (you're getting
+stripe speed this way)... until one disk crashes.  And in case
+of disk failure, your running system goes complete havoc,
+including possible filesystem corruption and very probable data
+corruption due to bad ("missing") parts of virtual memory.
+It happened to us recently - we where using 2-disk systems,
+mirroring everything but swap... it was not a nice lesson... ;)
+ From now on, I'm using raid1 for swap too.  Yes it is much
+slower than using several plain swap partitions, and less
+efficient too, but it is much more safe.
 
-Instead of using raid-extra-boot, IMHO, it is more safe to install
-lilo into the raid array instead of the MBR, and use standard MBR
-to boot from active partition.  But granted, lilo's raid-extra-boot
-will work around different disk layouts, while lilo on raid with
-standard MBR will not.
+> The boot loader is grub and I want both /boot and / raided.
+> 
+> In the event of a failure of hda I would like the system to switch to 
+> hdc. This works fine. However what I have had problems with is if the 
+> system reboots. If /dev/hda is unavailable I no longer have a disk with 
+> a boot sector set up correctly. Unless I have a floppy or CDROM with a 
+> boot loader the system will not come up.
+> 
+> So my main question is what is the best practice to get a workable boot 
+> sector on /dev/hdc? How are other people making sure that their system 
+> remains bootable after a disk failure of the boot disk? Is it even 
+> possible with software raid and PC BIOS? Also when you replace /dev/hda 
+> how are you getting a valid boot sector on that disk?
+
+The answer really depends.  There's no boot program set out there (where
+boot program set is everything from BIOS to the OS boot loader) that is
+able to deal with every kind of first (boot) disk failure.  There are 2
+scenarios of disk failure: when your failed /dev/hda is dead completely,
+just like as it just unplugged, so BIOS and OS boot loader does not even
+see/recognize it (from my expirience this is the most common scenario,
+YMMV).  And second choice is when your boot disk is alive but have some
+bad/unreadable/whatever sectors that belongs to data used during boot
+sequence, so the disk is recognized but boot fails due to read errors.
+
+It's easy to deal with first case (first disk dead completely).  I wasn't
+able to use grub in that case, but lilo works just fine.  For that, I
+use standard MBR on both /dev/hda and /dev/hdc (your case), and install
+lilo into /dev/md0 (install=/dev/md0 in lilo.conf), making corresponding
+/dev/hd[ac]1 bootable ("active") partitions.  This way, boot sector gets
+"mirrored" manually when installing the MBR, and lilo maps are mirrored
+by raid code.  Lilo uses 0x80 BIOS disk number for the boot map for all
+the disks that forms /dev/md0 (regardless of actual number of them) - it
+treats /dev/md0 array like a single disk.  This way, you may remove/fail
+first (or second or 3rd in multidisk config) disk and your system will
+boot from first disk available, provided your bios will skip missing
+disks and assign 0x80 number to first disk really present.  There's one
+limitation of this method: disk layout should be exactly the same on all
+disks (at least /dev/hd[ac]1 partition placement), or else lilo map will
+be invalid on some disks and valid on others.
+
+But there's no good way to deal with second scenario.  Especially since
+the problem (failed read) may happen when reading partition table or MBR
+by BIOS - a piece of code you usually can't modify/control.  Provided MBR
+read correctly by BIOS, loaded into memory and first stage of lilo/whatever
+is executing, next steps depends on the OS boot loader (lilo, grub, ...).
+It *may* recognize/know about raid1 array it is booting from, and try other
+disks in case read from first disk fails.  But none of currently existing
+linux boot loaders does that as far as I know.
+
+So to summarize: it seems like using lilo, installing it into raid array
+instead of MBR, and using standard MBR to boot the machine allows you to deal
+with at least one disk failure scenario, while other scenario is problematic
+in all cases....
 
 /mjt
 
