@@ -1,61 +1,33 @@
 From: "Stephen Hargrove" <stephen@exitwound.org>
-Subject: RE: Should I Start Over?
-Date: Wed, 7 Jul 2004 13:24:27 -0500 (CDT)
+Subject: Re: Should I Start Over?
+Date: Wed, 7 Jul 2004 13:27:11 -0500 (CDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <2128.66.230.1.97.1089224667.squirrel@exitwound.org>
-References: <1165.66.230.1.97.1089206618.squirrel@exitwound.org>
-    <200407071340.i67DeJ307800@watkins-home.com>
+Message-ID: <2129.66.230.1.97.1089224831.squirrel@exitwound.org>
+References: <1147.66.230.1.97.1088603162.squirrel@exitwound.org>
+    <20040630165540.GA1099@percy.comedia.it>
+    <1775.66.230.1.97.1088620939.squirrel@exitwound.org>
+    <20040706210654.GB17694@percy.comedia.it>
+    <1165.66.230.1.97.1089206618.squirrel@exitwound.org>
+    <20040707145105.GA30207@percy.comedia.it>
 Reply-To: stephen@exitwound.org
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200407071340.i67DeJ307800@watkins-home.com>
-To: Guy <bugzilla@watkins-home.com>
+In-Reply-To: <20040707145105.GA30207@percy.comedia.it>
+To: Luca Berra <bluca@comedia.it>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Guy said:
-> You did not use the "missing" keyword.  You just created a 3 disk array.
-> If
-> your array had 3 disks, you should have listed 2 of them and the "missing"
-> keyword for the third.
+Luca Berra said:
+>
+> you were supposed to replace one of the disks with the word "missing", so
+> you could test it before resyncing and try different disc combination to
+> see if you could get your data back.
 
-Hrm.  Ok.  I should have read the man page before proceeding.  Well, it's
-official.  I am an idiot.
+Luca, I completely mis-read what you wrote and didn't check the
+documentation for the "missing" keyword.  Sorry about that.  I do
+appreciate all your assistance, though.  You've been most helpful.
 
-> Why did you add a spare(hde1)?
-
-See above.
-
-> You should have done something like this:
-> mdadm --create /dev/md0 --level=5 --raid-devices=4 /dev/hdg1 /dev/hdd1
-> /dev/hdc1 missing
-
-# mdadm --create /dev/md0 --level=5 --raid-devices=4 /dev/hdg1 /dev/hdd1
-/dev/hdc1 missing
-mdadm: /dev/hdg1 appears to be part of a raid array:
-    level=5 devices=3 ctime=Wed Jul  7 08:11:18 2004
-mdadm: /dev/hdd1 appears to be part of a raid array:
-    level=5 devices=3 ctime=Wed Jul  7 08:11:18 2004
-mdadm: /dev/hdc1 appears to be part of a raid array:
-    level=5 devices=3 ctime=Wed Jul  7 08:11:18 2004
-Continue creating array? n
-
-Yeah, it looks like I screwed the pooch on this one.  The array was
-composed of hd[gdc] with hde as the spare.  I managed to stop the rebuild
-at 1.1% complete.  I guess at this point I don't have anything to lose by
-letting it rebuild.  Would there be any benefit to omitting hdg and
-letting it rebuild from hd[cde]?  Like this:
-
-# mdadm --create /dev/md0 --level=5 --raid-devices=4 /dev/hdd1 /dev/hdc1
-/dev/hde1 missing
-
-> Do this command to determine which disk is being re-built:
-> cat /proc/mdadm
-
-I do not have a /proc/mdadm.  All I have is /proc/mdstat.
-
-Thanks!
 --
 Steve
