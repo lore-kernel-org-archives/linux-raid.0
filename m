@@ -1,65 +1,112 @@
-From: TrendVirusWall23@nuwc.navy.mil
-Subject: Content mail warning notification!
-Date: Mon, 14 Jun 2004 17:02:10 -0400
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: [ANNOUNCE][PATCH 2.6] md: persistent (file-backed) bitmap and
+ async writes
+Date: Tue, 15 Jun 2004 09:39:49 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <N6J508P931EGEJ00XO@npri54mai01.npt.nuwc.navy.mil>
+Message-ID: <16590.14149.960504.534126@cse.unsw.edu.au>
+References: <40198E85.29EBC8E0@SteelEye.com>
+	<16422.62911.755570.855200@notabene.cse.unsw.edu.au>
+	<4027E342.D02202F1@SteelEye.com>
+	<16424.8182.876520.280031@notabene.cse.unsw.edu.au>
+	<402D3A86.97CF894F@SteelEye.com>
+	<16456.2775.641721.204171@notabene.cse.unsw.edu.au>
+	<4048F9AA.1BBD67F@SteelEye.com>
+	<406B1024.7BF88C@SteelEye.com>
+	<16528.49083.998593.199805@cse.unsw.edu.au>
+	<40C6273B.2060200@steeleye.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="----=_NextPart_000_1087246930_B78506032.R82506026"
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@VGER.KERNEL.ORG
+In-Reply-To: message from Paul Clements on Tuesday June 8
+To: Paul Clements <paul.clements@steeleye.com>
+Cc: linux-raid@vger.kernel.org, ptb@it.uc3m.es, mingo@redhat.com, "james.bottomley" <james.bottomley@steeleye.com>
 List-Id: linux-raid.ids
 
-This is a multi-part message in MIME format.
+On Tuesday June 8, paul.clements@steeleye.com wrote:
+> Neil,
+> 
+> Here's the latest patch...it supports bitmaps in files as well as block 
+> devices (disks or partitions), contrary to what I had stated in my 
+> previous e-mail. I've tried to address all the issues you've pointed 
+> out, and generally cleaned up and fixed the patch some more...details 
+> below...
+> 
+> Patches available at:
+> 
+> bitmap patch for 2.6.6:
+>    http://dsl2.external.hp.com/~jejb/md_bitmap/md_bitmap_2_32_2_6_6.diff
+> 
+> mdadm patch against v1.6.0:
+>    http://dsl2.external.hp.com/~jejb/md_bitmap/mdadm_1_6_0-bitmap.diff
+> 
+> (the normal parisc-linux.org URLs are not working right now, for some 
+> reason...)
 
-------=_NextPart_000_1087246930_B78506032.R82506026
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Unfortunately, these dsl2 URLs aren't working today - I should have
+grabbed the patches earlier.  I'll check again later in the day.
 
-************* eManager Notification **************
+> 
+> >>1) an is_create flag was added to do_md_run to tell bitmap_create
+> >>whether we are creating or just assembling the array -- this is
+> >>necessary since 0.90 superblocks do not have a UUID until one is
+> >>generated randomly at array creation time, therefore, we must set the
+> >>bitmap UUID equal to this newly generated array UUID when the array is
+> >>created
+> > 
+> > 
+> > I think this is the wrong approach.  You are justifying a design error
+> > by reference to a previous design error.
+> > I think user-space should be completely responsible for creating the
+> > bitmap file including setting the UUID.
+> > Either
+> >   1/ add the bitmap after the array has been created.
+> > or
+> >   2/ Create the array in user-space and just get the kernel to
+> >     assemble it (this is what I will almost certainly do in mdadm
+> >     once I get around to supporting version 1 superblocks).
+> 
+> I could not find another way to make this work with the existing code, 
+> so this remains as is.
 
-Due to a restricted file type, Trend Virus Detector [23] has replaced the attachment with e-mail header information.
+I guess that means you (or someone) needs to write some code.
+Creating the array, including allocating the UUID, in userspace is
+trivial.  Just make some superblocks and write them into the right
+location in each device.   Then assemble the array as you would any
+pre-existing array.
 
-Source mailbox: "linux-raid-owner@vger.kernel.org"
-Destination mailbox(es): "linux-raid@VGER.KERNEL.ORG"
+> 
+> > and the worst part about it is that the code doesn't support what I
+> > would think would be the most widely used and hence most useful case,
+> > and that is to store the bitmap in the 60K of space after the
+> > superblock.
+> 
+> Unfortunately, this type of setup performs rather abysmally (generally, 
+> about a 5-10x slowdown in write performance). If you think about what is 
+> happening to the disk head, it becomes clear why. In fact, having the 
+> intent log anywhere on the same physical media as the array components 
+> gives very bad performance. For this reason, I have not taken extra 
+> steps to support this configuration. If anyone is curious, this type of 
+> setup can be tested using device mapper (but not loop, because loop does 
+> not have the correct sync semantics) to map that area of the disk as a 
+> separate device and use it as a bitmap.
 
-******************* End of message *******************
+Ahhh... this explains a comment you made some time ago where I thought
+performance would be pretty poor and you said it wasn't.  I was
+imagining the bitmap in the same device as the array and you weren't.
 
-------=_NextPart_000_1087246930_B78506032.R82506026
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+I think I mentioned at the time that this could be addressed by using
+"plugging".
 
-Received: from 164.223.1.100 by npri54exc23.npt.nuwc.navy.mil (InterScan E-Mail VirusWall NT); Mon, 14 Jun 2004 17:02:10 -0400
-Received: from vger.kernel.org (vger.kernel.org [12.107.209.244])
- by npri54mai01.npt.nuwc.navy.mil (PMDF V6.2-X17 #30632)
- with ESMTP id <N5ST08P8QAYKEJ01N8@npri54mai01.npt.nuwc.navy.mil> for
- HuntressGB@npt.nuwc.navy.mil; Mon,
- 14 Jun 2004 17:02:05 -0400 (Eastern Daylight Time)
-Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand	id
- S264349AbUFNVBv (ORCPT <rfc822;HuntressGB@npt.nuwc.navy.mil>); Mon,
- 14 Jun 2004 17:01:51 -0400
-Received: (majordomo@vger.kernel.org) by vger.kernel.org id S264307AbUFNVBv
-	(ORCPT <rfc822;linux-raid-outgoing>); Mon, 14 Jun 2004 17:01:51 -0400
-Received: from imap.gmx.net ([213.165.64.20]:45802 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S264349AbUFNVBn
- (ORCPT	<rfc822;linux-raid@VGER.KERNEL.ORG>); Mon, 14 Jun 2004 17:01:43 -0400
-Received: (qmail 32081 invoked by uid 65534); Mon, 14 Jun 2004 21:01:41 +0000
-Received: from p508C3A3C.dip.t-dialin.net (EHLO natis) (80.140.58.60)
-  by mail.gmx.net (mp004) with SMTP; Mon, 14 Jun 2004 23:01:41 +0200
-Date: Mon, 14 Jun 2004 23:00:54 +0200
-From: Stefan Heinrichsen <gelbemauer@gmx.de>
-Subject: Devices numbers changed
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@VGER.KERNEL.ORG
-Message-id: <S264349AbUFNVBn/20040614210143Z+1616@vger.kernel.org>
-MIME-version: 1.0
-X-Mailer: Sylpheed version 0.9.10claws (GTK+ 1.2.10; i686-pc-linux-gnu)
-Content-type: text/plain; charset=US-ASCII
-Content-transfer-encoding: 7bit
-Precedence: bulk
-X-Authenticated: #710522
-X-Mailing-List: linux-raid@vger.kernel.org
+When a write request arrives for a block that isn't flagged as
+"dirty", we flag it 'dirty' and put the request on a queue.  When an
+"unplug" request is made, we flush all updates to the "dirty" bitmap,
+and then release the queued write requests.  There could still be a
+noticeable performance hit, but it should be substantially less than
+with the current code.
 
-------=_NextPart_000_1087246930_B78506032.R82506026--
+
+Everything else you mentioned sounds good.  When I manage to get a
+copy of the patch I'll comment further.
+
+NeilBrown
