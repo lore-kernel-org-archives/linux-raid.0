@@ -1,35 +1,84 @@
-From: Paul Clements <Paul.Clements@SteelEye.com>
-Subject: Re: Redhat8 software RAID0 and kernel upgrade, won't boot
-Date: Tue, 18 Mar 2003 10:43:54 -0500
+From: Paul Downs <paul@positive-internet.com>
+Subject: Odd linux raid problems with debian testing.
+Date: Tue, 18 Mar 2003 18:18:59 +0000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3E773EBA.7B1D9868@SteelEye.com>
-References: <20030318152750.95214.qmail@web14402.mail.yahoo.com>
+Message-ID: <20030318181859.GD18556@u4ia>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Brennahn Chesteine <ven_ficken@yahoo.com>
-Cc: linux-raid@vger.kernel.org
+Content-Disposition: inline
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Brennahn Chesteine wrote:
- 
-> Well, 2.4.20 built without error and installed clean.
-> I said yes to RAID support and built everything under
-> that as a module. 
 
-Red Hat compiles md into the kernel, not as a module. Could that be what
-the problem is?
+Hi,
+  Sorry if this subject is already done to death on the group but I have
+read the archives through google and couldn't find anything similar.  Also
+apologies for the rather long winded post, just be thankful I didn't include
+all the straces... ;-P
 
+  I have an easily repeatable problem with software raid and kernel
+2.4.18/19 + raidtools2 under debian.
 
-> Rebooted and whola there 2.4.20 was as an option.
-> Selected it and thins went to churning..... PANIC
-> cannot find root. I have read and read about have to
-> voodoo the lilo.conf file to make it work but have
-> found zilch on grub.
+  The root device (/dev/md0) has /dev/hda1 and /dev/hdc1. Here is a chunk of
+the lilo.conf:
 
-If your /boot is not on software RAID, I don't think anything special
-needs to be done with the boot loader...
+[----- lilo.conf -----]
+# Specifies the boot device.  This is where Lilo installs its boot
+# block.  It can be either a partition, or the raw device, in which
+# case it installs in the MBR, and will overwrite the current MBR.
+#
+boot=/dev/hda
 
---
+# Specifies the device that should be mounted as root. (`/')
+#
+root=/dev/hda1
+[---------------------]
+
+  You cannot do the following:
+
+raidhotadd /dev/md0 /dev/hda1
+
+  as it returns this:
+
+/dev/md0: can not hot-add disk: invalid argument.
+
+  an strace indicates:
+
+open("/dev/md0", O_RDWR)                = 4
+fstat64(4, {st_mode=S_IFBLK|0660, st_rdev=makedev(9, 0), ...}) = 0
+stat64("/dev/hda1", {st_mode=S_IFBLK|0660, st_rdev=makedev(3, 1), ...}) = 0
+ioctl(4, 0x928, 0x301)                  = -1 EINVAL (Invalid argument)
+write(2, "/dev/md0: can not hot-add disk: ", 32/dev/md0: can not hot-add
+disk: ) = 32
+write(2, "invalid argument.\n", 18invalid argument.
+)     = 18
+exit_group(1)                           = ?
+
+  the ioctl call should succeed.  Similar things occur with other raid
+management tools, e.g. lsraid -A -a /dev/md0:
+
+[dev   9,   0] /dev/md0         BC38988B.7A6BC5D2.5084B74A.88CE39EF online
+[dev   ?,   ?] (unknown)        00000000.00000000.00000000.00000000 missing
+[dev  22,   1] /dev/hdc1        BC38988B.7A6BC5D2.5084B74A.88CE39EF good
+
+  and strace indicates that it isn't even attempting to acknowledge the
+existence of /dev/hda1!! Which is valid, correctly partitioned and should be
+in the raid.
+
+  Attempting other operations on the disk shows that inodes are held open.
+
+  Can anyone elighten me?  It appears to affect whatever root= device is
+specified, however I thought i'd change it to /dev/hdc1 and boot but the
+machine died and I had to use grub.
+
+  So in summary:
+
+1) am I being stupid?
+2) is something wrong?
+3) is this perhaps normal behaviour?
+
+Thanks, any replies gratefully received at this point in time as I have
+another 3 machines to set up in a similar fashion.
+
 Paul
