@@ -1,61 +1,49 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: making new device names with mknod
-Date: Wed, 11 Sep 2002 09:00:15 +1000
+From: NeilBrown <neilb@cse.unsw.edu.au>
+Subject: [PATCH] md - 2 of 3 - Fix bug in raid5 AGAIN
+Date: Wed, 11 Sep 2002 11:02:07 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <15742.31103.899153.146439@notabene.cse.unsw.edu.au>
-References: <3D7E6020.8030402@ratnet.stw.uni-erlangen.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Message-ID: <1020911010207.4477@cse.unsw.edu.au>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Norman Schmidt on Tuesday September 10
-To: schmidt@naa.net
+To: Linus Torvalds <torvalds@transmeta.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday September 10, norman.schmidt@ratnet.stw.uni-erlangen.de wrote:
-> Hi!
-> 
-> Can somebody tell me how to make new device names in /dev?
-> I have installed two additional ide controllers and want to make md
-> devices out of partitions on devices /dev/hde, /dev/hdg, /dev/hdi and
-> /dev/hdk. In /dev, there are only devices up to hdh. In addition to
-> that, I would need to make the /dev entries for the partitions.
-> 
-> Is it possible to use more than 16 md devices, how can I make /dev/md16
-> and so on?
-> 
-> I am using Debian Woody, so no makedev, only mknod is available.
 
-/dev/MAKEDEV ide4 ide5
+### Comments for ChangeSet
 
-should make hd[ijkl]....
+That recent bug fix in raid5 just changed the bug, it didn't fix it.
+I think that the original code was actually wrong, which didn't
+help.
+This time, the code actually matches the nearby comment, that has been expanded 
+a bit, so I feel somewhat more confident that it is actually right.
 
-MAKEDEV doesn't seem to know about md devices > 15.
-If you changed
 
-        md)
-                major=`Major md 9` || continue
-                for part in 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15
-                do
-                        makedev md$part b $major $part $disk
-                done
-                ;;
 
-to
 
-        md)
-                major=`Major md 9` || continue
-                for part in 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 \
-                       17 18 19 20 21 22 23 24 25 26 27 28 29 30 31
-                do
-                        makedev md$part b $major $part $disk
-                done
-                ;;
+ ----------- Diffstat output ------------
+ ./drivers/md/raid5.c |   11 +++++++----
+ 1 files changed, 7 insertions(+), 4 deletions(-)
 
-then 
-  /dev/MAKEDEV md
-
-should make you 31 md devices.
-
-NeilBrown
+--- ./drivers/md/raid5.c	2002/09/11 00:37:46	1.1
++++ ./drivers/md/raid5.c	2002/09/11 00:38:33	1.2
+@@ -933,13 +933,16 @@ static void handle_stripe(struct stripe_
+ 		test_bit(R5_UPTODATE, &dev->flags))
+ 	       || (failed == 1 && failed_num == sh->pd_idx))
+ 	    ) {
+-	    /* any written block on an uptodate or failed drive can be returned */
++	    /* any written block on an uptodate or failed drive can be returned.
++	     * Note that if we 'wrote' to a failed drive, it will be UPTODATE, but 
++	     * never LOCKED, so we don't need to test 'failed' directly.
++	     */
+ 	    for (i=disks; i--; )
+ 		if (sh->dev[i].written) {
+ 		    dev = &sh->dev[i];
+-		    if (!test_bit(R5_Insync, &sh->dev[sh->pd_idx].flags) &&
+-			(!test_bit(R5_LOCKED, &dev->flags) && test_bit(R5_UPTODATE, &dev->flags)) ) {
+-			/* maybe we can return some write requests */
++		    if (!test_bit(R5_LOCKED, &dev->flags) &&
++			 test_bit(R5_UPTODATE, &dev->flags) ) {
++			/* We can return any write requests */
+ 			    struct bio *wbi, *wbi2;
+ 			    PRINTK("Return write for disc %d\n", i);
+ 			    wbi = dev->written;
