@@ -1,31 +1,46 @@
-From: John Peel <jrp@thepeel.org>
-Subject: Moving Raid 0+1 to new machine
-Date: Wed, 31 Jul 2002 16:52:06 -0500 (CDT)
+From: Louis-David Mitterrand <vindex@apartia.org>
+Subject: recovering after a /dev/sda failure on raid1
+Date: Thu, 1 Aug 2002 16:49:22 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.33.0207311642580.3949-100000@thepeel.org>
+Message-ID: <20020801144922.GA5284@apartia.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-So I have this nice array set up using software raid under redhat 7.2, in 
-this nice server and all was working well until something started 
-bringing the whole thing to it's knees. Now anytime there is any 
-significant i/o the server dies. I would like to move the raid 0+1 to a 
-different working box to retreive the data until I can repair the server. 
-My question is, is there anything I need to look out for in moving the 
-drives other than the obvious. Do the drive letters matter or anthinglike 
-that or if I set the raidtab file up correctly pointing to the drives in 
-their new places should it all reconstruct fine and should I be able to 
-get the data. In addition should the drives have to resync for 30 minutes  
-everytime the server dies or is there a larger problem going on?
 
-fyi I am running RedHat Linux 7.2 with kernel 2.4.18 smp on an ext3 
-filesystem with a software raid of 4 disks raid 0+1. If you need any 
-additional info please let me know. Thanks in advance -John
 
-john peel
-jrp@thepeel.org
-www.thepeel.org
+Hi,
 
+I have a root raid1 partition on /dev/sda1 & /dev/sdb1 (swap on
+/dev/sda2 & /dev/sdb2). The server boots directly from the raid
+partition. 
+
+Now /dev/sda1 and /dev/sda2 have both failed and been removed from the
+array and I am getting ready to replace the disk tonight.
+
+What is the best way to proceed to minimize downtime?
+
+My concern is that if I power down and replace /dev/sda the machine
+won't be able to reboot without a rescue CD (lilo.conf has root=/dev/md0
+and boot=/dev/md0) or will it? 
+
+When the bios (Dell Poweredge 1500) will try /dev/sda's mbr and fail,
+will it then automatically try /dev/sdb?
+
+Or should I swap /dev/sdb on the scsi ribbon to have it take the first
+place and thus become /dev/sda or will this just confuse the kernel
+raid driver? (the letter on scsi drives is dependent on their place on
+the ribbon cable, isn't it?)
+
+Alternatively I was thinking of booting with a rescue CD (after
+replacing /dev/sda) with the "root=/dev/md0", creating my partitions,
+running lilo and rebooting into production for final reconstruction.
+Would that be the safest bet?
+
+Thanks in advance for your insight, cheers,
+
+-- 
+vindex@apartia.org 
