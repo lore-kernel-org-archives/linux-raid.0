@@ -1,80 +1,85 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: how to turn down cpu usage of raid ?
-Date: Mon, 2 Feb 2004 20:39:16 -0500
+From: Mark Hahn <hahn@physics.mcmaster.ca>
+Subject: Re: how to turn down cpu usage of raid ?
+Date: Mon, 2 Feb 2004 20:37:42 -0500 (EST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200402030139.i131dGi19663@dns1.watkins-home.com>
+Message-ID: <Pine.LNX.4.44.0402022000380.5536-100000@coffee.psychology.mcmaster.ca>
 References: <021c01c3e9e2$d80b3640$0100a8c0@KARI>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <021c01c3e9e2$d80b3640$0100a8c0@KARI>
-To: 'Matthew Simpson' <matthew@symatec-computer.com>, linux-raid@vger.kernel.org
+To: Matthew Simpson <matthew@symatec-computer.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Load and CPU usage are 2 different things, but somehow related.  What is the
-CPU load during this time?
+> Help!  I am having complaints from users about CPU spikes when writing to my
+> RAID 1 array.
 
-From what I have seen, the RAID software md, whatever, uses almost no CPU.
-So, I don't think it is a CPU issue.  Even with RAID5, the CPU load is very
-low.  Even during a rebuild!
+I can think of two answers: first, are you sure your drives are configured
+sanely?  that is, using dma?  with any reasonable kernel, they should be,
+but its possible to compile in the wrong driver or make some other mistake.
+hdparm -iv /dev/hda and hdc should show using_dma=1.  you can also look
+at /proc/ide/hda/settings.
 
-Use top to see cpu usage.
-Use sar (man sar) for keeping a log of cpu load and a lot of other stuff.
+second, perhaps you should simply make the kernel less lazy at starting
+writes.  here's some basic settings from 2.4:
 
-"sar -d" to see disk usage.
+[hahn@hahn hahn]$ cat /proc/sys/vm/bdflush 
+30      500     0       0       500     3000    60      20      0
 
-Maybe you are swapping, this would be bad.  Add RAM if so.
-
-I bet your 2 disks are the bottle neck.
-
-If the RAID1 can be tuned, I don't know how.  But the first step is to
-determine what the bottle neck is.
-
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Matthew Simpson
-Sent: Monday, February 02, 2004 6:18 PM
-To: linux-raid@vger.kernel.org
-Subject: how to turn down cpu usage of raid ?
-
-Help!  I am having complaints from users about CPU spikes when writing to my
-RAID 1 array.  Is there a way I can tune software RAID so that writing
-updates doesn't interfere with other applications?  [can I nice the raid1d
-process?]
-
-Specifically I experience giant slowdowns in a hosted application whenever
-someone unpacks a tar file or the like.  Load averages are 1.10 - 2.00
-during writes, but 0.00 to 0.05 otherwise.
-
-root@ns2:~# cat /proc/mdstat
-Personalities : [linear] [raid0] [raid1] [raid5]
-read_ahead 1024 sectors
-md0 : active raid1 hdc1[1] hda1[0]
-      78979200 blocks [2/2] [UU]
-
-unused devices: <none>
-
-root@ns2:~# cat /etc/raidtab
-raiddev /dev/md0
-        raid-level      1
-        nr-raid-disks   2
-        nr-spare-disks  0
-        chunk-size      4
-        persistent-superblock   1
-        device  /dev/hda1
-        raid-disk       0
-        device  /dev/hdc1
-        raid-disk       1
-
-This is a pentium IV 2.5GHz system with 1GB of RAM.
-    IDE interface: PCI device 8086:24cb (Intel Corp.) (rev 1). -- 82820
-Camino 2 chipset
+ Value      Meaning                                                            
+ nfract     Percentage of buffer cache dirty to activate bdflush              
+ ndirty     Maximum number of dirty blocks to  write out per wake-cycle        
+ dummy      Unused                                                             
+ dummy      Unused                                                             
+ interval   jiffies delay between kupdate flushes
+ age_buffer Time for normal buffer to age before we flush it                   
+ nfract_sync Percentage of buffer cache dirty to activate bdflush
+ synchronously
+ nfract_stop_bdflush Percetange of buffer cache dirty to stop bdflush
+ dummy      Unused                                                
 
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+in theory, this means:
+	- wake up bdflush when 30% of buffers are dirty.
+	- write up to 500 blocks per wakeup.
+	- 5 seconds between wakeups.
+	- let a buffer age for 30 seconds before flushing it.
+	- if 60% of buffers are dirty, start throttling dirtiers.
+	- stop bdflush when < 20% of buffers are dirty.
+
+of course, the code doesn't exactly do this, and 2.6 is very different.
+still, I'm guessing that:
+	- 500 buffers (pages, right?) is too little
+	- 5 seconds is to infrequent
+	- 30 seconds is probably too long
+
+I have the fileserver for one of my clusters running much smoother with
+ndirty=1000, interval=200 and age_buffer=1000.  my logic is that the disk
+system can sustain around 200 MB/s, so flushing 4MB per wakeup is pretty 
+minimal.  I also hate to see the typical burstiness of bdflush - no IO
+between bursts at 5 second intervals.  I'd rather see a smoother stream of 
+write-outs - perhaps even a 1-second interval.  finally, Unix's traditional
+30-second laziness is mainly done in the hopes that a temporary file will be 
+deleted before ever hitting the disk (and/or writes will be combined).  I 
+think 30 seconds is an eternity nowadays, and 10 seconds is more reasonable.
+
+in short:
+echo '30 1000 0 0 200 1000 60 20 0' > /proc/sys/vm/bdflush
+
+perhaps:
+echo '30 1000 0 0 100 1000 60 20 0' > /proc/sys/vm/bdflush
+
+for extra credit, investigate whether nfract=30 is too high (I think so, on
+today's big-memory systems).  whether higher ndirty improves balance (these
+writes would compete with application IO, so might hurt, albeit less with 
+2.6's smarter IO scheduler.)  whether the sync/stop parameters make a
+difference, too - throttling dirtiers should probably kick in earlier,
+but if you lower nfract, also lower nfract_stop_bdflush...
+
+> Is there a way I can tune software RAID so that writing
+> updates doesn't interfere with other applications? 
+
+remember also that many servers don't need atime updates; this can make a big 
+difference in some cases.
 
