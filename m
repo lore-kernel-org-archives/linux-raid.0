@@ -1,50 +1,86 @@
-From: =?iso-8859-1?q?M=E5ns_Rullg=E5rd?= <mru@kth.se>
-Subject: Re: HighPoint Rocket 1540 hang driver load
-Date: Wed, 21 Apr 2004 14:03:58 +0200
+From: Robert Washburne <rcwash3@comcast.net>
+Subject: Re: new raid system for home use
+Date: Wed, 21 Apr 2004 09:24:14 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <yw1x4qrd5yhd.fsf@kth.se>
-References: <40865AEC.8040604@online.no> <40865EA2.80504@wasp.net.au>
+Message-ID: <6.0.3.0.1.20040421090309.01ad88b0@mail.comcast.net>
+References: <Pine.LNX.4.44.0404181411130.21013-100000@coffee.psychology.mcmaster.ca>
+ <Pine.LNX.4.58.0404181253470.24065@spoon.loc>
+ <4083F865.7070803@chemie.uni-erlangen.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=iso-8859-1;
+	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4083F865.7070803@chemie.uni-erlangen.de>
+References: <Pine.LNX.4.44.0404181411130.21013-100000@coffee.psychology.mcmaster.ca>
+ <Pine.LNX.4.58.0404181253470.24065@spoon.loc>
+ <4083F865.7070803@chemie.uni-erlangen.de>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Brad Campbell <brad@wasp.net.au> writes:
+Grettengs!  This is my first post to the list.
 
-> Lars Gaarden wrote:
+On my system (a dedicated fileserver running gentoo Linux) I partition =
+all=20
+of my drives the same way:
+P1 - 1 cyl - /boot
+P2 - swap
+P3 - 2G/RAID 5 - /
+L5 - 4G/ext2 - / alternate
+L* - 35G/RAID 5 - Storage partitions
+
+I use lilo with a duel boot.
+Default boot uses the RAID 5 root.
+Secondary boot uses the ext2 root.  This partition is copied onto every=
+ drive.
+
+This way, I have all of the advantages of RAID 5 for my OS, but I can b=
+oot=20
+to a mundane partition if the RAID should break or needs maintanence (l=
+ike=20
+adding another drive).
+If the boot drive dies, I can boot from CD and chroot to any of the=20
+remaining drive's L5 partition.
+I have tested both boots and it works quite well.  The cost in space is=
+ 4G=20
+from a 250G drive.  About a 2% overhead.
+
+It could be argued that this layout would be more efficient if root wer=
+e=20
+placed closer to the center of the cylinders.  But this is not a very=20
+active machine.  It basicly holds my large multimedia files while they =
+wait=20
+their turn for processing (takes 100G to filter and process 1 hour of=20
+video).  No data streaming applications.  So I took the mental shortcut=
+=2E
+
+Hope this is useful.
+
+Bob W.
+
+At 12:03 PM 4/19/2004, you wrote:
+>Hi Paul!
 >
->> IANA driver programmer, so I can't comment on the quality. But using
->> that v111 from above compiled with NON_RAID=3D1 and some boot tricke=
-ry
->> (boot with no drives connected to the controller, so the BIOS on the
->> card isn't loaded. Then connect drives before loading driver) seems =
-to
->> be the only way for me to make the card work properly.
->> Using the same trick with the hpt366 driver cause slow data rates
->> and drive_cmd: status=3D0x58 { DriveReady SeekComplete DataRequest }
->> status error: status=3D0x58 { DriveReady SeekComplete DataRequest }
->> errors,
+>Paul Phillips schrieb:
 >
-> Just my .02c worth. I was using 7 Maxtor SATA drives with 2
-> RocketRaid 1540's.  I tried all the available in-kernel drivers with
-> many 2.4 and 2.6 kernels and resorted to using the hpt supplied
-> drivers compiled from source with NON_RAID=3D1. I was using md raid-5
-> and with this combo and it was rock solid for months (Before I
-> upgraded to Promise TX4 controllers). With the in-kernel hpt drivers
-> I never managed more than 15mb/s to or from the disks. Slow as a wet
-> week in may (In the southern hemisphere anyway).
+>>I was under the impression that I can't boot off raid-5, but if that
+>>information is dated then all the better.
+>>Thanks again.
+>
+>Afaik, that=B4s still true. The reason is that the two (or more) drive=
+s of a=20
+>raid 1 essentially hold the same data, and if you do everything right,=
+ the=20
+>complete boot mechanism is on all disks, so that you can boot with any=
+ of=20
+>them. On raid 5 disks, you would never have the complete data on any o=
+f=20
+>the disks.
+>
+>Norman.
+>
+>--
 
-I have been told that the hpt366 driver attempts to probe for an
-80-wire cable and fails, falling back to UDMA2.  Obviously, this cable
-probe is nonsensical with SATA, and removing it from the driver fixed
-things.  This happened to a friend using Maxtor disks.  I have not had
-the same problem with my Seagate disks.
-
---=20
-M=E5ns Rullg=E5rd
-mru@kth.se
 
 -
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
