@@ -1,77 +1,102 @@
-From: Michel Wilson <michel@crondor.net>
-Subject: RAID1 won't run in degraded mode?
-Date: Tue, 4 May 2004 18:41:36 +0200
+From: AndyLiebman@aol.com
+Subject: Serial ATA cards
+Date: Tue, 4 May 2004 15:17:16 EDT
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040504164136.GA2159@aeon.hgd.net>
+Message-ID: <d7.99d8d9d.2dc9463c@aol.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="NzB8fVQJ5HfG6fxh"
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Does anyone have any experience with an 8-port (or higher) Serial ATA Host 
+Adapter card? I'm looking for something that will JUST give me access to the 
+SATA disks, and NOT give me hardware (or pseudo-hardware) RAID. Can anybody 
+suggest a card that can be used for Linux Software RAID? 
 
---NzB8fVQJ5HfG6fxh
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+I had great luck with the on-board Silicon Image-based SATA ports that came 
+on a SuperMicro motherboard. But I need up to 16-ports so I'm going to need 
+ports on a PCI-X card. 
 
-Hello,
+I have just tried two cards with little success. A 3ware Escolade 8506 and a 
+new Promise SATA II 150 SX8 card (I got a pre-production sample). I can't get 
+the 3ware card to show up the individual drives within Linux. I'm now making a 
+hardware RAID before booting up; hopefully Linux will see that.  
 
-I have the following problem with one of my raid1-arrays. One of the
-drives has failed, but it isn't being marked as failed. The
-reconstruction starts, and at 5% it borks out on the bad sectors. And
-then it happily begins reconstructing again...
-When I try to mark the drive as faulty, nothing happens. When I try to
-hot-remove the drive, it complains about the drive being in use, because
-it is reconstructing the array. When I try to start the array with only
-one of the drives, it fails:
+I have a similar problem with the Promise card. The Promise card uses a new 
+"block device" driver called Carmel. The drives show up in my Kernel log -- see 
+below -- but because they are just seen as generic devices, I'm told I may 
+have to create devices with 'mknod' in order to access them. I have no idea how 
+to do that. Can someone explain the process. I know the "major" number has to 
+be 160. But how about the minor numbers? And what exactly do I have to enter 
+for each device? 
 
-aeon root # mdadm --assemble /dev/md3 /dev/hde1
-mdadm: /dev/md3 assembled from 0 drives - not enough to start it (use --run=
- to insist).
-aeon root # mdadm --assemble --run /dev/md3 /dev/hde1
-mdadm: failed to RUN_ARRAY /dev/md3: Invalid argument
+I think the Promise card has great promise (no pun intended) for software 
+RAID. It's relatively cheap (US $250) and doesn't contain any on-board 
+processing. It's just a host adapter meant for software RAID. But I'm stumped as to how 
+to get access to the drives. 
 
-And in the syslog, it says
+By the way, I'm using the 2.6.6 kernel with Mandrake 10. 
 
-May  4 18:26:02 [kernel] md: bind<hde1>
-May  4 18:26:02 [kernel] raid1: no operational mirrors for md3
+Here are my kernel logs: 
 
-After the last command, in /proc/mdstat, it says
+May  5 01:00:54 localhost kernel: carmel version 0.8
+May  5 01:00:54 localhost kernel: carmel(0000:05:01.0): found 8
+interesting devices
+May  5 01:00:54 localhost kernel: carmel(0000:05:01.0): port 0 device
+490234752 sectors
+May  5 01:00:54 localhost kernel: carmel(0000:05:01.0): port 0 device
+"Maxtor 7Y250M0"
+May  5 01:00:54 localhost kernel: carmel(0000:05:01.0): port 1 device
+490234752 sectors
+May  5 01:00:54 localhost kernel: carmel(0000:05:01.0): port 1 device
+"Maxtor 7Y250M0"
+May  5 01:00:54 localhost kernel: carmel(0000:05:01.0): port 2 device
+490234752 sectors
+May  5 01:00:54 localhost kernel: carmel(0000:05:01.0): port 2 device
+"Maxtor 7Y250M0"
+May  5 01:00:54 localhost kernel: carmel(0000:05:01.0): port 3 device
+490234752 sectors
+May  5 01:00:54 localhost kernel: carmel(0000:05:01.0): port 3 device
+"Maxtor 7Y250M0"
+May  5 01:00:54 localhost kernel: carmel(0000:05:01.0): port 4 device
+490234752 sectors
+May  5 01:00:54 localhost kernel: carmel(0000:05:01.0): port 4 device
+"Maxtor 7Y250M0"
+May  5 01:00:54 localhost kernel: carmel(0000:05:01.0): port 5 device
+490234752 sectors
+May  5 01:00:54 localhost kernel: carmel(0000:05:01.0): port 5 device
+"Maxtor 7Y250M0"
+May  5 01:00:54 localhost kernel: carmel(0000:05:01.0): port 6 device
+490234752 sectors
+May  5 01:00:54 localhost kernel: carmel(0000:05:01.0): port 6 device
+"Maxtor 7Y250M0"
+May  5 01:00:54 localhost kernel: carmel(0000:05:01.0): port 7 device
+490234752 sectors
+May  5 01:00:54 localhost kernel: carmel(0000:05:01.0): port 7 device
+"Maxtor 7Y250M0"
+May  5 01:00:55 localhost kernel:  /dev/carmel/0_0: unknown partition
+table
+May  5 01:00:55 localhost kernel:  /dev/carmel/0_1: unknown partition
+table
+May  5 01:00:55 localhost kernel:  /dev/carmel/0_2: unknown partition
+table
+May  5 01:00:55 localhost kernel:  /dev/carmel/0_3: unknown partition
+table
+May  5 01:00:55 localhost kernel:  /dev/carmel/0_4: unknown partition
+table
+May  5 01:00:55 localhost kernel:  /dev/carmel/0_5: unknown partition
+table
+May  5 01:00:55 localhost kernel:  /dev/carmel/0_6: unknown partition
+table
+May  5 01:00:55 localhost kernel:  /dev/carmel/0_7: unknown partition
+table
+May  5 01:00:55 localhost kernel: carmel(0000:05:01.0): 8 ports
+activated
+May  5 01:00:55 localhost kernel: carmel0: pci 0000:05:01.0, ports 8, io
+fc400000, irq 96, major 160
+May  5 01:00:55 localhost kernel: SCSI subsystem initialized
 
-md3 : inactive hde1[2]
-      120060736 blocks
-
-and I can't do anything with it. When I do
-
-aeon root # mdadm --manage --run /dev/md3
-mdadm: failed to run array /dev/md3: Invalid argument
-May  4 18:35:23 [kernel] md: bug in file drivers/md/md.c, line 1512
-
-So, how do I tell the stupid thing to just run it in degraded mode, and
-be happy with just one drive?
-
-Any help would be greatly appreciated.
-
-Regards,
-
-Michel Wilson.
---=20
-Michel Wilson     michel@crondor.net
-PGP key ID        0xD2CB4B7E
-
---NzB8fVQJ5HfG6fxh
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.4 (GNU/Linux)
-
-iD8DBQFAl8fAL2ru+9LLS34RAr2uAJ9vIdCe/RWyr/exiemSt+gRkq1AtwCgiIkc
-6j9wY8ztsGYH6R4nk1/5UiQ=
-=iZEU
------END PGP SIGNATURE-----
-
---NzB8fVQJ5HfG6fxh--
+Regards, 
+Andy Liebman
