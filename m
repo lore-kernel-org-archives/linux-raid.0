@@ -1,37 +1,42 @@
-From: Trevor Morrison <trevor@hailix.com>
-Subject: removing RAID 1 from a RH 7.1 box
-Date: Mon, 19 May 2003 11:18:46 -0600
+From: Mads Peter Bach <mpb@hum.auc.dk>
+Subject: Re: removing RAID 1 from a RH 7.1 box
+Date: Mon, 19 May 2003 19:26:10 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3EC911F6.B1797953@hailix.com>
-Reply-To: trevor@hailix.com
+Message-ID: <3EC913B2.8050403@hum.auc.dk>
+References: <3EC911F6.B1797953@hailix.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1;
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <3EC911F6.B1797953@hailix.com>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-HI,
+Trevor Morrison wrote:
 
-I have a RH 7.1 box with a Software RAID 1 setup.  I am trying to
-upgrade the box to RH 9 using RH upgrade feature.  When
-I boot the system off the CD-ROM all works well until I try to upgrade.
-The system tells me that it "cannot find a valid RH
-installation."  It does not see the /dev/md/0 structure.  I have tried
-various boot prompt command, but to no avail.  Does
-anyone know a way around this?
+> Or, does any one know how to remove the RAID 1 setup from my system. =
+ I
+> followed the example for the the "Software RAID HOWTO" and it worked
+> fine the first time.  Now, it looks like I may have to reverse it, bu=
+t
+> I don't know how.
 
-Or, does any one know how to remove the RAID 1 setup from my system.  I
-followed the example for the the "Software RAID HOWTO" and it worked
-fine the first time.  Now, it looks like I may have to reverse it, but
-I don't know how.
+You should be able to do that, by just doing this:
 
-TIA
+- Change your partition types from fd back to 83
+- Move /etc/raidtab to some other name
+- Change lilo back to not using /dev/md/*
+- Change /etc/fstab back to not using /dev/md/*
+- Reboot
 
---
-Trevor Morrison
-Hailix, LLC
-trevor@hailix.com
+--=20
+Mads Peter Bach
+Systemadministrator,  Det Humanistiske Fakultet, Aalborg Universitet
+Kroghstr=E6de 3 - 5.111, DK-9220 Aalborg =D8st - (+45) 96358062
+# whois MPB1-DK@whois.dk-hostmaster.dk
 
-
-
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
