@@ -1,44 +1,60 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: ATARAID userspace configuration tool
-Date: Tue, 10 Feb 2004 17:35:51 -0800
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20040211013551.GB2153@kroah.com>
-References: <Pine.LNX.4.40.0402101405190.25784-100000@jehova.dsm.dk> <1076425115.23946.18.camel@leto.cs.pocnet.net> <40292246.2030902@backtobasicsmgmt.com> <1076440714.27328.8.camel@leto.cs.pocnet.net>
+From: Luke Rosenthal <lists@luko.org>
+Subject: Re: Adaptec 39160 RAID ?!
+Date: Wed, 11 Feb 2004 12:36:58 +1100 (EST)
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <Pine.LNX.4.44.0402111215260.21666-100000@gw.luko.org>
+References: <S263491AbUBKAtC/20040211004902Z+28@vger.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1076440714.27328.8.camel@leto.cs.pocnet.net>
-To: Christophe Saout <christophe@saout.de>
-Cc: "Kevin P. Fleming" <kpfleming@backtobasicsmgmt.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <S263491AbUBKAtC/20040211004902Z+28@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Feb 10, 2004 at 08:18:34PM +0100, Christophe Saout wrote:
-> 
-> udev maintains a database of already created devices. And sysfs is some
-> sort of database of really existing devices. The "telling udev to not
-> create the device and instead create it ourself" is bad. We should be
-> able to tell udev that it should register and create another device
-> instead. Perhaps udev should know about compound devices.
-> 
-> I'm not sure but if udev knows about compound devices things get a bit
-> more complicated. A raid 1 setup would continue to work if one of the
-> devices is unplugged, a raid 0 setup fails to work if one device is
-> missing. Probably the device should be deleted only when both hard disks
-> are removed. Also it should be created if only one hard disk gets
-> plugged in. But on bootup if some script tells udev that one hard disk
-> is there and some seconds later that the second is also there the tool
-> shouldn't assume the raid has failed after seeing the first event.
-> 
-> Should we Cc an udev developer for an opinion?
+> > Yes, but doesn't the card ship with "fake RAID"?
+>
+> No, it's just a plain old Ultra160 Dual Channel SCSI Host Adapter.
 
-udev can either ignore compound devices with a rule that matches the
-dm-* block devices, or it can do something about them.
+I just purchased one actually, have hooked it up to a Quantum Atlas 10K2 
+and can't seem to get them talking in Ultra160 mode.  Here's the proc 
+output:
 
-I really don't think udev in and of itself needs to know anything
-special about these kinds of devices, as it will be glad to kick off
-other programs for you if you want it to.
 
-thanks,
+Adaptec AIC7xxx driver version: 6.2.8
+aic7899: Ultra160 Wide Channel B, SCSI Id=0, 32/253 SCBs
 
-greg k-h
+Serial EEPROM:
+0xc33a 0xc33a 0xc33a 0xc33a 0xc33a 0xc33a 0xc33a 0xc33a 
+0xc33a 0xc33a 0xc33a 0xc33a 0xc33a 0xc33a 0xc33a 0x43bb 
+0xb8f4 0x5d5c 0x2800 0x0010 0xffff 0xffff 0xffff 0xffff 
+0xffff 0xffff 0xffff 0xffff 0xffff 0xffff 0x0250 0xf4c7 
+
+Channel A Target 0 Negotiation Settings
+        User: 160.000MB/s transfers (80.000MHz DT, offset 255, 16bit)
+[snip snip Targets 1-14, nothing hooked up]
+Channel A Target 15 Negotiation Settings
+        User: 160.000MB/s transfers (80.000MHz DT, offset 255, 16bit)
+        Goal: 40.000MB/s transfers (20.000MHz, offset 127, 16bit)
+        Curr: 40.000MB/s transfers (20.000MHz, offset 127, 16bit)
+        Channel A Target 15 Lun 0 Settings
+                Commands Queued 438859
+                Commands Active 0
+                Command Openings 32
+                Max Tagged Openings 32
+                Device Queue Frozen Count 0
+
+
+The drive has a SCA connector on the back, with a sticker on the connector 
+stating "Ultra160/LVD/SE".  To connect this drive I've used an adapter 
+which converts the SCA connection into a regular 68-pin internal one, then 
+used a terminated cable with Ultra160/LVD/SE marked on both the connectors 
+(there's 4 of them) AND the terminator.  I've tried turning the internal 
+terminator in the Adaptec BIOS on and off with no change.  There's no 
+other devices on this bus other than the drive & the host adapter.
+
+Is this normal?  What do "User", "goal" and "curr" mean?  Why are there so 
+many commands queued?
+
+Luke.
+
+
