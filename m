@@ -1,81 +1,19 @@
-From: Alvin Oga <aoga@Maggie.Linux-Consulting.com>
+From: Neil Brown <neilb@cse.unsw.edu.au>
 Subject: Re: (no subject)
-Date: Wed, 11 Sep 2002 12:50:13 -0700 (PDT)
+Date: Thu, 12 Sep 2002 06:42:01 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.3.96.1020911123839.30810A-100000@Maggie.Linux-Consulting.com>
+Message-ID: <15743.43673.143567.404573@notabene.cse.unsw.edu.au>
 References: <3D7F8B2E.14D49808@milleraa.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3D7F8B2E.14D49808@milleraa.com>
+In-Reply-To: message from Eddie Johnson on Wednesday September 11
 To: Eddie Johnson <ejohnson@milleraa.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
-hiya eddie
-
-i think you want raid5 w/ 3 disks instead of 3 copies of the same
-data on 3 disks w/ raid1
-
-watch our for old raid commands (mkraid ) vs new raid commands (raidstart)
-
-More raid commands
-       http://www.1U-Raid5.net/HowTo/Commands.uhow2.txt
-
-have fun raiding
-alvin
-
-#
-#
-# sample /etc/raidtab
-#
-# To start it up
-# --------------
-#	fdsisk /dev/sda
-#	--> use FD raid partion ( 1 partition - the whole disk ?)
-#
-#	raidstart /dev/md0
-#	cat /proc/mdstat	--> see if all 3 disks is listed
-#	mke2fs -j /dev/md0
-#	mount /dev/md0 /RAID
-#
-#	dd if=/dev/random of=/RAID/test.big count=1000000
-#
-#
-#
-raiddev /dev/md0
-raid-level 5
-#
-nr-raid-disks 3
-#  note the above
-#
-nr-spare-disks 0
-persistent superblock 1
-parity-algorithm left-symmetric
-#
-#
-# That's a huge chunk .... units are 1024 block * chunk-size 
-# chunk-size 2048
-chunk-size	8
-#
-#
-# use the "partition" on the disk and define the raiddev device /dev/md0
-#
-device /dev/sda1
-raid-disk 0
-#
-device /dev/sdb1
-raid-disk 1
-# 
-device /dev/sdc1
-raid-disk 2
-#
-# end of raidtab file
-
-
-On Wed, 11 Sep 2002, Eddie Johnson wrote:
-
+On Wednesday September 11, ejohnson@milleraa.com wrote:
 > I installed Suse Linux Professional 8 on a HP Netserver LC3 PII/450.  An
 > AHA-2940 UW Scsi host adapter with a AIC-78XX Scsi Protocol Chip/50 pin
 > high density scsi-2 control.  I have a raid (3 drives) off the host
@@ -84,6 +22,19 @@ On Wed, 11 Sep 2002, Eddie Johnson wrote:
 > device_name /dev/sda, vendor megaraid.  Disk two (80 gig drive) has LD1
 > raid 0 70006R: device name /dev/sdb vendor the same as above.  There was
 > no raidtab file so I created one with the following:
+
+It sounds like you have hardware raid (megaraid) that presents the two
+raid devices as /dev/sda and /dev/sdb so they look like scsi devices,
+but are really raid arrays.
+In this case, you don't need raidtab or mkraid at all.  These are for
+'software' raid which is quite separate from hardware raid.
+
+software raid:  Linux kernel does all raid management.
+hardware raid: special card knows about raid and does lots of the work
+		rest of work done in the driver for the card.
+
+NeilBrown
+
 > 
 > raiddev /dev/md0
 > raid-level 5
@@ -141,5 +92,3 @@ On Wed, 11 Sep 2002, Eddie Johnson wrote:
 > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
