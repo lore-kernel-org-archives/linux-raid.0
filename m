@@ -1,24 +1,29 @@
-From: Mike Dresser <mdresser_l@windsormachine.com>
-Subject: Re: 3ware 7500 performance, was: experiences with 3Ware 6400 3W-6400?
-Date: Sat, 28 Jun 2003 11:00:05 -0400 (EDT)
+From: "Brad Brad" <braddeicide@hotmail.com>
+Subject: Moving Raid
+Date: Mon, 30 Jun 2003 11:44:05 +0000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.33.0306281058060.16597-100000@router.windsormachine.com>
-References: <Pine.LNX.4.44.0306281539510.24992-100000@uplift.swm.pp.se>
+Message-ID: <Law8-F46etVoMDrxxnS000544b0@hotmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44.0306281539510.24992-100000@uplift.swm.pp.se>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, 28 Jun 2003, Mikael Abrahamsson wrote:
+Hi, i need to move software raid5 hdds from sda, sdb, sdc (emulated scsi) to 
+hda, hdb, hdc.  I'm using debian 3.0 and my software doesn't support the 
+solutions i've found and the solutions on the software raid howto don't 
+exist either.
 
-> Since I use my raid5 mainly for long time cheap storage I don't have a big
-> problem with all this, stability and ease of management is what I'm
-> looking for, so I choose hardware raid5 on 3w7500.
+mkraid version 0.90.0
+mdadm v0.7.2 - 21 March 2002
 
-Exactly, that's what I'm using this machine for.  And the ones that are
-raid1 don't show this behaviour.
+(mdadm --update, mkraid --only-superblock, mkraid --force-resync)
 
-Mike
+any ideas?
+
+Thanks,
+Brad.
+
+_________________________________________________________________
+Hold kontakten med dine venner med MSN Messenger http://messenger.msn.dk
 
