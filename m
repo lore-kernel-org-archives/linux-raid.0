@@ -1,36 +1,29 @@
-From: "Eric Wood" <eric@interplas.com>
-Subject: Put harddrives in standby mode to prevent raid rebuilds
-Date: Fri, 16 Apr 2004 10:42:42 -0400
+From: Nick Maynard <nick.maynard@alumni.doc.ic.ac.uk>
+Subject: Re: Which raid card to buy for Sarge
+Date: Fri, 16 Apr 2004 15:25:42 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <009a01c423c1$12ca88e0$b100000a@M145Primary>
+Message-ID: <1082125542.407fece65df29@www.tastycake.net>
+References: <Pine.LNX.4.44.0403311442520.31572-100000@coffee.psychology.mcmaster.ca> <406B9F3E.4020701@wasp.net.au>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <406B9F3E.4020701@wasp.net.au>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-After getting a raid-1 setup going (hda, hdc), I was dismayed that the raid
-kept rebuilding each member after a reboot or shutdown.  It's as though the
-Shuttle system would power off prematurely before md had a chance to flush
-it's data.
+> I used a pair of Highpoint Rocketraid 1540 cards with the Highpoint driver
+> (as it presented all 8
+> drives as 8 units on a scsi chain) with linux md raid-5, and I have now moved
+> onto 3 Promise SATA150-TX4 units in an md raid-5.
+This is probably slightly off-topic, but has anyone heard of successful use of
+the Rocket 1540 (non-RAID, HPT374 based) card on Linux 2.6.x yet?
+Highpoint provides binary drivers for Redhat and SuSE, but no other distros and
+no source - anyone any idea where to get hold of functional drivers?
 
-So, looking at the Fedora shutdown script /etc/rc.d/init.d/halt, I noticed I
-could put halt parameters in there.  Looking at the man page for halt:
+Cheers all,
 
-# man halt
-....
-      -h     Put all harddrives on the system in  standby  mode  just
-before halt or poweroff.
-....
+--
 
-So, I added a -h to the halt arguments and the system now flushes the md
-data just before poweroff or reboot.  No more raid rebuilds so I'm happy.
-
-The side effect is that the drives quickly spin down, spin up, flush data,
-go into standby, then power off.  Reminds of Han Solo's Millenium Falcon
-trying to fire up.  Anyway, this workaround may help some people.
-
--Eric Wood
-
+Nick Maynard
+nick.maynard@alumni.doc.ic.ac.uk
