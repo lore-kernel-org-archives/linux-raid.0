@@ -1,151 +1,73 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: Linear Raid Problems...
-Date: Fri, 2 Apr 2004 09:55:13 -0500
+From: Terry <td3201@yahoo.com>
+Subject: Re: raid 5 catastrophy
+Date: Fri, 2 Apr 2004 07:13:39 -0800 (PST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200404021455.i32EtIW27558@dns1.watkins-home.com>
-References: <8E4E38BF6D087F4488E80ABAACA2F3F484D646@il27exm02.cig.mot.com>
+Message-ID: <20040402151339.5498.qmail@web60306.mail.yahoo.com>
+References: <20040401044231.92394.qmail@web60309.mail.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <8E4E38BF6D087F4488E80ABAACA2F3F484D646@il27exm02.cig.mot.com>
-To: 'Novak David-DNOVAK1' <David.Novak@motorola.com>, linux-raid@vger.kernel.org
+In-Reply-To: <20040401044231.92394.qmail@web60309.mail.yahoo.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Looks like you have a bad disk!
-Apr  2 07:47:39 Homer kernel:  I/O error: dev 08:21, sector 23758976
+Hello,
 
-I test my disks with the dd command.
-Examples:
-To test the whole disk:
-	dd if=/dev/sdb of=/dev/null bs=64k
-To test one partition:
-	dd if=/dev/sdb1 of=/dev/null bs=64k
+I haven't received a response on this.  Does it not
+make sense or is the answer so obvious that it doesn't
+deserve an answer. :)   I appreciate any light someone
+can shed on this problem.
 
-I would test the whole disk.
+Thanks!
 
-It looks like your array is assembled, but not started.
-Try:
-raidstop /dev/md0
-mkraid /dev/md0
-
-You should consider switching from mkraid to mdadm.
-Most people here will YELL at you for using mkraid! :)
-For details:
-man mdadm
-
-In a related issue, you should consider using RAID5.  You will lose the
-space of one disk.  However, if a disk fails no data loss and the data is
-accessible.
-
-Oops... I see your disks have very different sizes.  Don't use RAID5!
-
-Guy
-
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Novak David-DNOVAK1
-Sent: Friday, April 02, 2004 9:27 AM
-To: 'linux-raid@vger.kernel.org'
-Subject: Linear Raid Problems...
-
-Hi all,
-
-  Sorry, but this message might be a tad long.  But I'm running an 
-UltraSparc Debian Linux (with SMP!).  Anyway, I've got a few extra disks I 
-want to span into one Uber-partion, and figured Software RAID (linear) was 
-the way to go.  I've read the howto's and the faq's, and thought I was 
-doing everything right...but alas something is amiss, and I implore for the 
-Linux community's help.  Here's my setup:
-
-/etc/raidtab:
-raiddev /dev/md0
-        raid-level      linear
-        nr-raid-disks   3
-        chunk-size      32
-        persistent-superblock 1
-        device          /dev/sdb1
-        raid-disk       0
-        device          /dev/sdc1
-        raid-disk       1
-        device          /dev/sdd1
-        raid-disk       2
-
-mkraid command:
-
-Homer:/etc# mkraid /dev/md0
-handling MD device /dev/md0
-analyzing super-block
-disk 0: /dev/sdb1, 8841042kB, raid superblock at 8840960kB
-disk 1: /dev/sdc1, 11879560kB, raid superblock at 11879488kB
-mkraid: aborted, see the syslog and /proc/mdstat for potential clues.
-
-mkraid version:
-Homer:/etc# mkraid --version
-mkraid version 0.90.0
-
-Kernel version:
-Homer:/etc# cat /proc/version
-Linux version 2.4.19 (root@hopper) (gcc version egcs-2.92.11 19980921 (gcc2
-ss-9
-80609 experimental)) #1 SMP Fri Oct 4 19:11:01 EDT 2002
-
-After running mkraid they syslog says:
-Apr  2 07:47:39 Homer kernel:  I/O error: dev 08:21, sector 23758976
-
-In desperation tried:
-mkraid --really-force /dev/md0
-DESTROYING the contents of /dev/md0 in 5 seconds, Ctrl-C if unsure!
-handling MD device /dev/md0
-analyzing super-block
-disk 0: /dev/sdb1, 8841042kB, raid superblock at 8840960kB
-disk 1: /dev/sdc1, 11879560kB, raid superblock at 11879488kB
-disk 2: /dev/sdd1, 2076320kB, raid superblock at 2076224kB
-mkraid: aborted, see the syslog and /proc/mdstat for potential clues.
-
-Then syslog says:
-Apr  2 07:50:18 Homer kernel: md: array md0 already exists!
-
-Which is weird because that exact command didn't work last night...
-but now mdstat says:
-
-Homer:/etc# cat /proc/mdstat
-Personalities :
-read_ahead not set9L, 906C                                    1,1
-All
-md0 : inactive sdd1[2] sdc1[1] sdb1[0]
-      0 blocks
-unused devices: <none>
-
-Which is weird, because last night it didn't say that...
-
-So I think the kernel thinks it's there right, but when I do an fdisk:
-Homer:/# fdisk /dev/md0
-Unable to read /dev/md0
-
-Or if I try to create a fs:
-Homer:/# mkfs.ext3 /dev/md0
-mke2fs 1.27 (8-Mar-2002)
-mkfs.ext3: Device size reported to be zero.  Invalid partition specified, or
-        partition table wasn't reread after running fdisk, due to
-        a modified partition being busy and in use.  You may need to reboot
-        to re-read your partition table.
-
-I think that's all the data somebody really smart might need to diagnose my 
-problem.  Thanks in advance for any info!
-
-  David
-
--------
-David J.  Novak                           GSM Radio Firmware
-GSM Products Division                     CE/NSS
-Motorola                                  Life v7.0
---------------------------------------------------------------------------
-"Not all who wander are lost." - J.R.R. Tolkien
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--- Terry <td3201@yahoo.com> wrote:
+> I made a mistake on a raid 5 array.  I accidentally
+> tried to “raidhotadd” 2 of the 3 drives from the
+> raid
+> 5 array into another array.  Now the two partitions
+> FROM the raid 5 think they are part of the other
+> array.  The raidtab for the array is:
+> 
+> raiddev			/dev/md4
+> raid-level		5
+> nr-raid-disks		3
+> chuck-size		64k
+> oersustebt-superblock	1
+> nr-spare-disks		0
+> device			/dev/hda2
+> raid-disk		0
+> device			/dev/hdb2
+> raid-disk		1
+> device			/dev/hdc2
+> raid-disk		2
+> 
+> Ultimately, the raid5 array is broken.  It won't
+> start
+> because it only has one good disk to its name right
+> now.  How can I fix this?  I assume the data on the
+> other two drives is still intact (bad assumption?)
+> 
+> Thanks for the help!
+> 
+> =====
+> Terry
+> 
+> __________________________________
+> Do you Yahoo!?
+> Yahoo! Small Business $15K Web Design Giveaway 
+> http://promotions.yahoo.com/design_giveaway/
+> -
+> To unsubscribe from this list: send the line
+> "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at 
+http://vger.kernel.org/majordomo-info.html
 
 
+=====
+Terry
+
+__________________________________
+Do you Yahoo!?
+Yahoo! Small Business $15K Web Design Giveaway 
+http://promotions.yahoo.com/design_giveaway/
