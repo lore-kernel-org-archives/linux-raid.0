@@ -1,73 +1,51 @@
-From: <me@heyjay.com>
+From: Neil Brown <neilb@cse.unsw.edu.au>
 Subject: Re: ANNOUNCE: mdadm 1.6.0 - A tool for managing Soft RAID under      Linux
-Date: Fri, 4 Jun 2004 21:51:29 -0500
+Date: Sat, 5 Jun 2004 16:08:44 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <006301c44aab$c02cc8c0$6705a8c0@a30>
+Message-ID: <16577.25452.82324.146669@cse.unsw.edu.au>
 References: <200406041421.i54EL7319045@watkins-home.com>
-Reply-To: <me@heyjay.com>
+	<006301c44aab$c02cc8c0$6705a8c0@a30>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Guy <bugzilla@watkins-home.com>, linux-raid@vger.kernel.org
+In-Reply-To: message from me@heyjay.com on Friday June 4
+To: me@heyjay.com
+Cc: Guy <bugzilla@watkins-home.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I did finish, but the example seemed to show that the --auto would build the
-partitions.  I know at the end of the message Neil said then you use cfdisk
-but it seemed unnecessary at that point
+On Friday June 4, me@heyjay.com wrote:
+> I did finish, but the example seemed to show that the --auto would build the
+> partitions.  I know at the end of the message Neil said then you use cfdisk
+> but it seemed unnecessary at that point
 
-Jay
------ Original Message ----- 
-From: "Guy" <bugzilla@watkins-home.com>
-To: <me@heyjay.com>; <linux-raid@vger.kernel.org>
-Sent: Friday, June 04, 2004 9:21 AM
-Subject: RE: ANNOUNCE: mdadm 1.6.0 - A tool for managing Soft RAID under
-Linux
+Hmmm.... 
+I said:
 
+: If you do this, it will create device files:
+:  
+:     /dev/md/XX   the whole array
+:     /dev/md/XX1  the first partition
+:     /dev/md/XX2  the second partition
+:     /dev/md/XX3  the third partition
+:     /dev/md/XX4  the fourth partition
 
-> You must finish reading what Neil said!
->
-> < Then
-> <    cfdisk /dev/md/XX
-> < will allow you to partition the array.
->
-> He has more info you somehow skipped!
-> Re-read the email from Neil.
->
->
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org
-> [mailto:linux-raid-owner@vger.kernel.org] On Behalf Of me@heyjay.com
-> Sent: Friday, June 04, 2004 9:31 AM
-> To: Neil Brown; linux-raid@vger.kernel.org
-> Subject: Re: ANNOUNCE: mdadm 1.6.0 - A tool for managing Soft RAID under
-> Linux
->
-> > The simplest way to access this functionality is with
-> >
-> >     mdadm --create /dev/md/XX --auto=partition --level= ....
-> >
->
-> How does in know how big to build the partitions?
-> How does it know how many partitions?
->
-> Can you do it with out building the partitions automatically
-> and instead it will just build /dev/mdXX and then I can use
-> fdisk, sdisk, cfdisk... to build my partitions?
->
-> Thanks
-> Jay
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->
+Meaning that it will create "device files" for the partitions, which
+is what I said.
+However I then said:
+
+: More (or less) partitions can be created using e.g. --auto=partition8
+: to create 8 partition device files.
+
+Which first says that "partitions" can be created, and then that
+"partition device files" will be created.  
+
+So I clearly wasn't being precise as would be good, though I was
+trying :-)
+
+mdadm created device files (just like mknod does).  It does not create
+partitions - that is a job for *fdisk.
+
+NeilBrown
+
 
