@@ -1,58 +1,49 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: Spares and partitioning huge disks
-Date: Sun, 9 Jan 2005 15:28:45 -0500
-Message-ID: <200501092028.j09KSr918180@www.watkins-home.com>
-References: <41E17117.2090500@tls.msk.ru>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+From: ptb@lab.it.uc3m.es (Peter T. Breuer)
+Subject: Re: Spares and partitioning huge disks
+Date: Sun, 9 Jan 2005 21:47:47 +0100
+Message-ID: <jsh8b2-5g6.ln1@news.it.uc3m.es>
+References: <41E17117.2090500@tls.msk.ru> <200501092028.j09KSr918180@www.watkins-home.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <41E17117.2090500@tls.msk.ru>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Michael Tokarev' <mjt@tls.msk.ru>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-It is on Neil's wish list (or to do list)!  Mine too!
+Guy <bugzilla@watkins-home.com> wrote:
+> It is on Neil's wish list (or to do list)!  Mine too!
 
-From Neil Brown:
+What is? Can you please be specific?
 
-http://marc.theaimsgroup.com/?l=linux-raid&m=110055742813074&w=2
-
-Guy
-
-
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Michael Tokarev
-Sent: Sunday, January 09, 2005 1:00 PM
-To: linux-raid@vger.kernel.org
-Subject: Re: Spares and partitioning huge disks
-
-Peter T. Breuer wrote:
-> Michael Tokarev <mjt@tls.msk.ru> wrote:
+> From Neil Brown:
 > 
->>I think all modern drives support bad block remapping on both read and
-write.
->>But think about it: if there's a read error, it means the drive CAN NOT
-read
->>the "right" data for some reason (for some definition of "right" anyway)
---
->>ie, the drive "knows" there's some problem with the data and it can't
-> 
-> I really don't want RAID to fault the disk offline in this case.  I want
-> RAID to read from the other disk(s) instead, and rewrite the data on the
-> disk that gave the fail notice on that sector, and if that gives no error,
-> then just carry on and be happy ...
+> http://marc.theaimsgroup.com/?l=linux-raid&m=110055742813074&w=2
 
-There where some patches posted to this list some time ago that tries to
-do just that (or a discussion.. i don't remember).  Yes, md code currently
-doesn't do such things, and fails a drive after the first error -- it's
-the simplest way to go ;)
+If you are talking about (and I am guessing, thanks to the uniform
+sensation of opaque experientiality that passes over me when I see the
+format of your posts, or the lacl of it) reading from the other disk
+when one sector read fails on the first, that appears to be in 2.6.3 at
+least, as my reading of the code goes.  What neil says in your reference
 
-/mjt
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+   you can let the kernel kick out a drive that has a read error, let
+   user-space have a quick look at the drive and see if it might be a
+   recoverable error, and then give the drive back to the kernel
+
+is true.  As far as I can see from a quick scan of the (raid1) code, he
+DOES kick a disk out on read error, but also DOES RETRY the read from
+another disk for that sector.  Currently he does that in the resync
+thread. 
+
+He needs a list of failed reads and only needs to kick the disk when
+recovery fails.
+
+At the present time it is trivial to add a write as well as a read on a
+retry.
+
+I can add the read accounting.
+
+Neil's comments indicate that he is interested in doing this in a
+generic way. 
+
+So am I, but I'll settle for "non-generic" first.
+
+Peter
 
