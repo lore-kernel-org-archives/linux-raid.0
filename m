@@ -1,45 +1,46 @@
-From: "Martin Bene" <martin.bene@icomedias.com>
-Subject: AW: RAID1 VS RAID5
-Date: Tue, 28 Oct 2003 11:51:21 +0100
+From: Lars Marowsky-Bree <lmb@suse.de>
+Subject: Re: Booting from a raid1 device ?
+Date: Tue, 28 Oct 2003 11:56:44 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <4D618F6493CE064A844A5D496733D667031D77@freedom.icomedias.com>
+Message-ID: <20031028105644.GF30725@marowsky-bree.de>
+References: <20031027152554.7738.qmail@web14507.mail.yahoo.com> <3F9D412A.F68B1461@SteelEye.com> <200310272311.19232.dusty@strike.wu-wien.ac.at>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-To: Mario Giammarco <mgiammarco@virgilio.it>
+Content-Disposition: inline
+In-Reply-To: <200310272311.19232.dusty@strike.wu-wien.ac.at>
+To: Hermann Himmelbauer <dusty@strike.wu-wien.ac.at>, Paul Clements <Paul.Clements@SteelEye.com>, donj@asaca.com
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->> OTOH, you have access to the source code if you really want 
->> to try it 
->> another way.
->
->So again my first question thats seems to go ignored: does someone have
->made a patch? Is there some line to put in raidtab to change raid1
->behavior?
+On 2003-10-27T23:11:19,
+   Hermann Himmelbauer <dusty@strike.wu-wien.ac.at> said:
 
-There used to be a patch for that, from the readme:
+> BTW, assuming I have md.o not as module but statically in the kernel,=
+ which=20
+> bootloader would support RAID1? I heard LlLO does this job but does a=
+lso grub=20
+> - which I prefer - support Linux SW-RAID1?
 
-> Operation:
+grub doesn't yet afaik.
 
-> In normal raid1 code (raidtools 0.90), reads are distributed
-> in a very fine grained fashion, new read will get new disk.
-> Only exception are sequential reads, which are never distributed.
+> What about RAID5? Is there any bootloader that supports it?
 
-> This patch records a logical linear position of head in every
-> disk in array. Then when read requests is made it tries to
-> find a disk which head is closest to the requested block and
-> uses that disk. Initial measurements show performance gain
-> in reading and in seeking with many readers.
+No.
 
-> Flames, comments, improvements, benchmarks greatly 
-> appreciated. Send them to miku@iki.fi
 
-No idea if this is still applicable to current raid code or still maintained;
-the old stuff used to be at 
+Sincerely,
+    Lars Marowsky-Br=E9e <lmb@suse.de>
 
-http://www.icon.fi/~mak8/raid1/
+--=20
+High Availability & Clustering	      \ ever tried. ever failed. no matt=
+er.
+SUSE Labs			      | try again. fail again. fail better.
+Research & Development, SUSE LINUX AG \ 	-- Samuel Beckett
 
-Yours, martin
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
