@@ -1,8 +1,8 @@
 From: "Martin K. Petersen" <mkp@mkp.net>
 Subject: Re: Uh oh....
-Date: 30 Jan 2003 00:30:27 -0500
+Date: 30 Jan 2003 00:48:08 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <yq1y953ryq4.fsf@austin.mkp.net>
+Message-ID: <yq1ptqfrxwn.fsf@austin.mkp.net>
 References: <028201c2c81c$f05ab0b0$1400020a@mike>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
@@ -19,7 +19,9 @@ Michael> get turned on when I booted. So, of course, all of my mirrors
 Michael> are now in degraded mode. Is there a quick and easy way to
 Michael> fix this?
 
-        mdadm /dev/mdM -a /dev/sdxN
+Btw.  Are you sure your drives haven't resynced automagically?
+
+What does /proc/mdstat say?
 
 -- 
 Martin K. Petersen	Wild Open Source, Inc.
