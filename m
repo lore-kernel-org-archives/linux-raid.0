@@ -1,39 +1,69 @@
 From: NeilBrown <neilb@cse.unsw.edu.au>
-Subject: [PATCH] md - 2 of 10 - Don't allow raid5 rebuild to swamp raid5 stripe cache
-Date: Fri, 16 Jan 2004 12:19:37 +1100
+Subject: [PATCH] md - 10 of 10 - Use bd_disk->private data instead of bd_inode->u.generic_ip
+Date: Fri, 16 Jan 2004 12:19:41 +1100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <E1AhIe9-0002U2-00@notabene>
+Message-ID: <E1AhIeD-0002VC-00@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: Andrew Morton <akpm@osdl.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+### Comments for ChangeSet
 
-raid5 rebuild takes stripes so agressively that other
-access cannot get a look-in.
-With this patch, the rebuild pauses slightly if there is a 
-shortage of stripes to let other processes have a chance.
+..to access 'mddev' from the inode pointer.  This is already
+set up for us.
 
  ----------- Diffstat output ------------
- ./drivers/md/raid5.c |    9 ++++++++-
- 1 files changed, 8 insertions(+), 1 deletion(-)
+ ./drivers/md/md.c |   21 +++++++++------------
+ 1 files changed, 9 insertions(+), 12 deletions(-)
 
-diff ./drivers/md/raid5.c~current~ ./drivers/md/raid5.c
---- ./drivers/md/raid5.c~current~	2004-01-16 11:58:51.000000000 +1100
-+++ ./drivers/md/raid5.c	2004-01-16 11:59:17.000000000 +1100
-@@ -1395,7 +1395,14 @@ static int sync_request (mddev_t *mddev,
+diff ./drivers/md/md.c~current~ ./drivers/md/md.c
+--- ./drivers/md/md.c~current~	2004-01-16 12:08:10.000000000 +1100
++++ ./drivers/md/md.c	2004-01-16 12:08:45.000000000 +1100
+@@ -2406,7 +2406,7 @@ static int md_ioctl(struct inode *inode,
+ 	 * Commands creating/starting a new array:
+ 	 */
  
- 	first_sector = raid5_compute_sector(stripe*data_disks*sectors_per_chunk
- 		+ chunk_offset, raid_disks, data_disks, &dd_idx, &pd_idx, conf);
--	sh = get_active_stripe(conf, sector_nr, pd_idx, 0);
-+	sh = get_active_stripe(conf, sector_nr, pd_idx, 1);
-+	if (sh == NULL) {
-+		sh = get_active_stripe(conf, sector_nr, pd_idx, 0);
-+		/* make sure we don't swamp the stripe cache if someone else
-+		 * is trying to get access 
-+		 */
-+		yield();
-+	}
- 	spin_lock(&sh->lock);	
- 	set_bit(STRIPE_SYNCING, &sh->state);
- 	clear_bit(STRIPE_INSYNC, &sh->state);
+-	mddev = inode->i_bdev->bd_inode->u.generic_ip;
++	mddev = inode->i_bdev->bd_disk->private_data;
+ 
+ 	if (!mddev) {
+ 		BUG();
+@@ -2598,29 +2598,26 @@ abort:
+ static int md_open(struct inode *inode, struct file *file)
+ {
+ 	/*
+-	 * Succeed if we can find or allocate a mddev structure.
++	 * Succeed if we can lock the mddev, which confirms that
++	 * it isn't being stopped right now.
+ 	 */
+-	mddev_t *mddev = mddev_find(iminor(inode));
+-	int err = -ENOMEM;
+-
+-	if (!mddev)
+-		goto out;
++	mddev_t *mddev = inode->i_bdev->bd_disk->private_data;
++	int err;
+ 
+ 	if ((err = mddev_lock(mddev)))
+-		goto put;
++		goto out;
+ 
+ 	err = 0;
++	mddev_get(mddev);
+ 	mddev_unlock(mddev);
+-	inode->i_bdev->bd_inode->u.generic_ip = mddev_get(mddev);
+- put:
+-	mddev_put(mddev);
++
+  out:
+ 	return err;
+ }
+ 
+ static int md_release(struct inode *inode, struct file * file)
+ {
+- 	mddev_t *mddev = inode->i_bdev->bd_inode->u.generic_ip;
++ 	mddev_t *mddev = inode->i_bdev->bd_disk->private_data;
+ 
+ 	if (!mddev)
+ 		BUG();
