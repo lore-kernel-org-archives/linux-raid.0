@@ -1,63 +1,33 @@
-From: "Rechenberg, Andrew" <ARechenberg@shermanfinancialgroup.com>
-Subject: RE: Scsi adapters and software raid...
-Date: Thu, 19 Feb 2004 19:49:58 -0500
+From: Tom Maddox <tmaddox@thereinc.com>
+Subject: Re: Bizarre RAID "failure"
+Date: Thu, 19 Feb 2004 16:44:42 -0800
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <8075D5C3061B9441944E137377645118322AB5@cinshrexc03.shermfin.com>
+Message-ID: <1077237882.9970.4.camel@s8n-1.thereinc.com>
+References: <1077230692.28817.485.camel@s8n-1.thereinc.com>
+	 <Pine.LNX.4.55.0402191434590.6370@umi.cfht.hawaii.edu>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-content-class: urn:content-classes:message
-To: Bob Hillegas <bobhillegas@houston.rr.com>
+In-Reply-To: <Pine.LNX.4.55.0402191434590.6370@umi.cfht.hawaii.edu>
+To: Kanoa Withington <kanoa@cfht.hawaii.edu>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
-I would agree.  We have a 56-disk Linux software RAID array running with
-4 Adaptec 39160 (they use the aic7xxx module) and we have had great
-performance and reliability.
-
-Regards,
-Andrew Rechenberg
-Infrastructure Team, Sherman Financial Group
-
-
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org 
-> [mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Kanoa 
-> Withington
-> Sent: Thursday, February 19, 2004 7:34 PM
-> To: Bob Hillegas
-> Cc: linux-raid@vger.kernel.org
-> Subject: Re: Scsi adapters and software raid...
+On Thu, 2004-02-19 at 16:39, Kanoa Withington wrote:
+> It might not be related but I've seen odd behaviour with that kernel
+> and XFS family when xfs_repair/XFS Recovery is run while the array is
+> resyncing.
 > 
-> 
-> Bob,
-> 
-> All the Adaptec non-RAID SCSI controllers work nicely. The 
-> ones based on the 79xx and newer chips require the newer 
-> kernel module. The 78xx and older ones are all supported by 
-> the old module. They are generally stable, compatible and 
-> offer good performance.
-> 
-> Their SCSI _hardware_ RAID controllers are a different story. 
-> Steer clear of those.
-> 
+> If you have the opportunity to try some tests, you might try booting
+> the system without the volume mounted to avoid the automatic XFS
+> checking. When the resync is complete, then try mounting the volume.
 > 
 > -Kanoa
-> 
-> 
-> On Thu, 19 Feb 2004, Bob Hillegas wrote:
-> 
-> > It's been interesting reading these comments about adapters 
-> to avoid.
-> >
-> > My question is... what SCSI adapter works WELL with software raid
-> > (mdadm) and doesn't get in the way?
-> -
-> To unsubscribe from this list: send the line "unsubscribe 
-> linux-raid" in the body of a message to 
-> majordomo@vger.kernel.org More majordomo info at  
-> http://vger.kernel.org/majordomo-info.html
-> 
+
+Yep, tried that.  I got identical results, unfortunately.
+
+Thanks,
+
+Tom
+
