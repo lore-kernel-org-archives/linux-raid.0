@@ -1,57 +1,72 @@
-From: Nicola Fankhauser <nicola.fankhauser@variant.ch>
-Subject: Re: dd version I used is 5.2.1, but...
-Date: Wed, 02 Mar 2005 10:43:05 +0100
-Message-ID: <42258AA9.9090000@variant.ch>
-References: <4224C871.2000802@variant.ch> <20050302074533.GA5347@middle.of.nowhere>
+From: Molle Bestefich <molle.bestefich@gmail.com>
+Subject: Re: Joys of spare disks!
+Date: Wed, 2 Mar 2005 13:05:04 +0100
+Message-ID: <62b0912f05030204054b1ab8ae@mail.gmail.com>
+References: <62b0912f050301195062c3afbe@mail.gmail.com>
+	 <200503020552.j225qD513637@www.watkins-home.com>
+Reply-To: Molle Bestefich <molle.bestefich@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-In-Reply-To: <20050302074533.GA5347@middle.of.nowhere>
+In-Reply-To: <200503020552.j225qD513637@www.watkins-home.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Guy <bugzilla@watkins-home.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-hi
+Hm..  I said partial resync, because a full resync would be a waste of
+time if it's just a thousand sectors or so that needs to be relocated.
+ Anyhow.
 
-Jurriaan wrote:
-> - please group messages in the same thread, thank you.
+There's no overhead to the application with the (theoretically
+"partial") degraded mode, since it happens in parallel.
 
-sorry for that.
+The latency of doing it while the read operation is ongoing would be,
+say, 3 seconds or so per bad sector on a standard disk?  Imagine a
+thousand bad sectors, and any sane person would quickly pull the plug
+from the dead box and have it resync when it boots instead of staring
+at a hung system.  When that happens there's even the risk that the
+resync fails completely, if md decides to pull one of the disks other
+than the one with bad blocks on it from the array before it resyncs.
 
-> - if there is no answer within a day, wait some more - not everybody is
->   constantly reading this list, you know.
+I prefer the first scenario (the system keeps running, the array isn't
+potentially destroyed), even if it means a slightly lower I/O rate and
+thus a minor overhead if and only if running applications utilize the
+I/O subsystem 100%..
 
-thanks for the tip.
+Am I wrong?
 
-> - wrt your question: how are those raid-controllers on your motherboard?
-
-actually, I could not find very much info about this. all I know is:
-
-1. the SiI 3114 chip is (by specification of the chip, found at SiI's 
-site) connected by a PCI bus, 32bit wide, at 66mhz. however, I don't 
-know whether Asus chose to connect it at 33mhz. lspci says it's 66mhz, 
-but is this information trustworthy? nvidia tech specs of nforce4 sli 
-(the chipset I have) says its PCI bridges are 33mhz only [1].
-
-2. the nforce4 sata ports are (to my knowledge) directly connected to 
-the nforce4 chipset.
-
->   If they are all connected through a single pci-bus, the speed is
->   reasonable. The best way to test if it's your motherboard or your
->   raid, is to start multiple dd processes on different disks, or
->   multiple bonnie++ processes on different disks, all concurrently, of
->   course.
-
-good idea (thought about it too). results of concurrent reads on all 
-eight drives show that the nforce4 sata ports perform quite well at 
-211MiB/s (52MiB/s per drive), however the SiI 3114 seemed to saturate at 
-129MiB/s (32MiB/s per drive). added, this gives at total throughput of 
-340MB/s.
-
-non-concurrent dd gives for both controllers values seemingly bound by 
-drive performance of 60MiB/s.
-
-thanks & regards
-nicola
-
-[1]: http://nvidia.com/page/pg_20041015917263.html
+Guy wrote:
+> I think the overhead related to fixing the bad blocks would be insignificant
+> compared to the overhead of degraded mode.
+> 
+> Guy
+> 
+> -----Original Message-----
+> From: linux-raid-owner@vger.kernel.org
+> [mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Molle Bestefich
+> Sent: Tuesday, March 01, 2005 10:51 PM
+> To: linux-raid@vger.kernel.org
+> Subject: Re: Joys of spare disks!
+> 
+> Robin Bowes wrote:
+> > I envisage something like:
+> >
+> > md attempts read
+> > one disk/partition fails with a bad block
+> > md re-calculates correct data from other disks
+> > md writes correct data to "bad" disk
+> >   - disk will re-locate the bad block
+> 
+> Probably not that simple, since some times multiple blocks will go
+> bad, and you wouldn't want the entire system to come to a screeching
+> halt whenever that happens.
+> 
+> A more consistent and risk-free way of doing it would probably be to
+> do the above partial resync in a background thread or so?..
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+>
