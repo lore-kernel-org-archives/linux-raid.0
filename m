@@ -1,39 +1,28 @@
-From: Mario Holbe <Mario.Holbe@TU-Ilmenau.DE>
-Subject: RAID1: no resync after crash?
-Date: Fri, 18 Mar 2005 14:08:14 +0100
-Message-ID: <d1ejor$9j7$1@sea.gmane.org>
+From: Nils-Henner Krueger <nhk@netuse.de>
+Subject: raid on shared storage
+Date: Fri, 18 Mar 2005 14:52:02 +0100
+Message-ID: <423ADD02.4020008@netuse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
+I'm going to run some kind of cluster using shared
+fiber channel disks with linux sw raid on top.
 
-I'm running several 3-mirror-RAID1s in degraded mode (2 out of 3
-mirrors operational) on a 2.4.27 (Debian's kernel-source-2.4.27).
+Is it possible to start a raid device on more than one
+machine? Is there any write access for example to the
+superblock structure when or after starting a raid
+device that might crash with a second instance doing
+the same?
 
-The machine crashed sometimes in the past and I was always
-wondering why the mirrors got not resynched after startup.
-I always did compare the mirrors and they had only 4 different
-octets near the end of the devices which I consider as normal
-superblock differences. Therefore, I assumed the resync not
-happening intentional.
-However, I had a crash yesterday with no resync happenig again
-but comparing the mirrors showed up some more differences than
-just the 4 at the end. So I'm wondering if the missing resync
-is *really* intentional.
+I'm not talking about mounting file systems in parallel
+(btw, how do I detect that a filesystem is already
+mounted at a different node, does reiserfs indicate that
+somehow?) but simply about starting the md.
 
-Is there perhaps some bug that denies a resync on a degraded
-RAID1 even if there is more than one mirror operational?
+Thanks!
 
-As I said - I'm running 2.4.27, so I have none of the new 2.6
-features like superblocks marked clean while runtime and things
-like that.
-
-
-regards
-   Mario
--- 
-[mod_nessus for iauth]
-<delta> "scanning your system...found depreciated OS...found
-        hole...installing new OS...please reboot and reconnect now"
-
+nils-henner
