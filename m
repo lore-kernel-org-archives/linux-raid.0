@@ -1,43 +1,29 @@
-From: "Rick Altherr" <kc8apf@kc8apf.net>
-Subject: RAID5 problems
-Date: Mon, 19 Aug 2002 12:39:27 -0400 (EDT)
+From: "Rechenberg, Andrew" <ARechenberg@shermanfinancialgroup.com>
+Subject: Single md physical device limit
+Date: Mon, 19 Aug 2002 14:46:37 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <4534.198.30.180.62.1029775167.squirrel@mail.kc8apf.net>
+Message-ID: <CDF05CB9FCA0C845B9778F9E463C476101FC5F@cinshrexc01.shermfin.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Class: urn:content-classes:message
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I am brand new to software RAID on linux so please bear with me.
 
-I have (4) 23GB SCSI drives on an Adaptec 2940UW controller in an
-alphastation 600.  I created BSD disklabels on all the drives and
-partitioned them as one partition per drive.  I made a raidtab containing
-all 4 partitions as members of a single RAID5 array.  I ran mkraid
-/dev/md0 and the raid array was created and functioned.
+Without drastically modifying the kernel code, is there any way to
+increase the physical device limit when building a single md device?  I
+believe that the currently limit is 12 physical disks (?)
 
-This is where the problem lies.  If I stop the RAID array using raidstop
-/dev/md0 and run fdisk on each drive, it reports that each drive has a BSD
-disklabel with a single partition.  However, if I format the RAID array
-using mke2fs -b 4096 -R stride=8, stop the array with raidstop, and check
-each drive with fdisk, the disklabel is removed on the second and third
-drives only.  The first and fourth are fine though.
+For reference, I would like to stripe across an entire Dell PowerVault
+220S, which has 14 drives in it.
 
-Trying to start the array again with raidstart fails and mkraid will not
-recreate the array until I create disklabels on the second and third
-drives.
+Thanks in advance,
+Andy.
 
-I have not tried any other filesystems as ext2 is the only one my kernel
-currently supports.
-
-Any ideas?
--- 
-Rick Altherr
-KC8APF
-kc8apf@kc8apf.net
-
-
-
+Andrew Rechenberg
+Infrastructure Team, Sherman Financial Group
+arechenberg (at) shermanfinancialgroup.com
 
