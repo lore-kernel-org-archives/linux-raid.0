@@ -1,110 +1,34 @@
-From: Wim Vinckier <wim-raid@tisnix.be>
-Subject: Re: FSCK and it crashes...
-Date: Tue, 10 Dec 2002 11:22:26 +0100 (CET)
+From: Joe Pruett <joey@q7.com>
+Subject: Re: large await discrepancies
+Date: Tue, 10 Dec 2002 07:59:54 -0800 (PST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.33.0212101115320.23960-100000@nooks.wimpunk.com>
-References: <Pine.LNX.4.43.0212091504450.30636-100000@unicorn.drogon.net>
+Message-ID: <Pine.LNX.4.44.0212100758160.29301-100000@q7.q7.com>
+References: <Pine.LNX.4.44.0212091539330.1479-100000@q7.q7.com>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.43.0212091504450.30636-100000@unicorn.drogon.net>
-To: Gordon Henderson <gordon@drogon.net>
-Cc: linux-raid@vger.kernel.org
+In-Reply-To: <Pine.LNX.4.44.0212091539330.1479-100000@q7.q7.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 10 Dec 2002, Gordon Henderson wrote:
+and here is the global iostat info after 3 days of uptime.  notice how the 
+hde drive has await and svctm values that are 10x of hda.  is iostat bogus
+and just leading me down a wild goose chase?
 
->
-> I've been using Linux RAID for a few years now with good success, but have
-> recently had a problem common to some systems I look after with kernel
-> version 2.4.x.
->
-> When I try to FSCK a RAID partition (and I've seen this happen on RAID 1
-> and 5) the machine locks up needing a reset to get it going again. On past
-> occasions I reverted to a 2.2 kernel with the patches and it went just
-> fine, however this time I need to access hardware (New Promise IDE
-> controllers) and LVM that only seem to be supported by very recent 2.4
-> kernels. (ie 2.4.19 for the hardware)
->
-> I've had a quick search of the archives and didn't really find anything -
-> does anyone have any clues - maybe I'm missing something obvious?
->
-> The box is running Debian3 and is a dual (AMD Athlon(tm) MP 1600+)
-> processor box with 4 IDE drives on 2 promise dual 133 controllers (only
-> the cd-rom on the on-board controllers) The kernels are stock ones off
-> ftp.kernel.org. (Debian 3 comes with 2.4.18 which doesn't have the Promise
-> drivers - I had to do the inital build by connecting one drive to the
-> on-board controller, then migrate it over)
->
-> The 4 drives are partitiond identically with 4 primary partitions, 256M,
-> 1024M, 2048M and the rest of the disk (~120M) the 4 big partitions being
-> combined together into a raid 5 which I then turn into one big physical
-> volume using LVM, then create a 150GB logical volume out of that (so I can
-> take LVM snapshots using the remaining ~200GB avalable). I'm wondering if
-> this is now a bit too ambitious. I'll do some test later without LVM, but
-> I have had this problem on 2 other boxes that don't use LVM.
->
-> The other partitions are also raid5 except for the root partition which is
-> raid1 so it can boot.
->
-> It's nice and fast, and seems stable when running, and can withstand the
-> loss of any 1 disk, but when there's the nagging fear that you might never
-> be able to fsck it, it's a bit worrying... (Although moving to XFS is
-> something planned anyway, but I feel we're right on the edge here with new
-> hardware and software and don't want to push ourselves over!)
->
-> So any insight or clues would be appreciated,
->
-> Thanks,
->
-> Gordon
->
->
-> Ps. Output of /proc/mdstat if it helps:
->
-> md0 : active raid1 hdg1[1] hde1[0]
->       248896 blocks [2/2] [UU]
->
-> md4 : active raid1 hdk1[1] hdi1[0]
->       248896 blocks [2/2] [UU]
->
-> md1 : active raid5 hdk2[3] hdi2[2] hdg2[1] hde2[0]
->       1493760 blocks level 5, 32k chunk, algorithm 0 [4/4] [UUUU]
->
-> md2 : active raid5 hdk3[3] hdi3[2] hdg3[1] hde3[0]
->       6000000 blocks level 5, 32k chunk, algorithm 0 [4/4] [UUUU]
->
-> md3 : active raid5 hdk4[3] hdi4[2] hdg4[1] hde4[0]
->       353630592 blocks level 5, 32k chunk, algorithm 0 [4/4] [UUUU]
->
-> unused devices: <none>
->
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Linux 2.4.18-18.7.x.spirebigmem (atlas.spiretech.com)   12/10/2002
 
-I'm had a problem with was very simular.  One disk in my raid1 system
-failed and needed to be replaced.  After i installed a new disk but when
-it was syncing for a while, my system crashed.  I didn't need a fdisk
-because i was using a reiserfs.  When I started my system again, raid
-needed a sync so I got the crash again.  I tried it with a 2.4.18, 2.4.19
-and a 2.4.20 kernel.  2.4.18 was able to sync my disks and after a little
-search I found a different value in /proc/sys/dev/raid/speed_limit_max.
-When I changed it in my 2.4.20 I mostly could sync.  I wasn't able to
-trace the exact problem.  I thought it was a thermal problem since I had
-some thermal problems with my system but it seems there are more people
-out there with almost the same problem.
+avg-cpu:  %user   %nice    %sys   %idle
+           2.96    0.01    2.21   94.82
 
-Greetings,
-
-Wim.
-------------------------------------------------------------------------
-Wim VINCKIER
-Wasstraat 38                                          Wim-Raid@tisnix.be
-B-9000  Gent                                               ICQ 100545109
-------------------------------------------------------------------------
-'Windows 98 or better required' said the box... so I installed linux
+Device:  rrqm/s wrqm/s   r/s   w/s  rsec/s  wsec/s avgrq-sz avgqu-sz   await  svctm  %util
+hde       29.13  16.34  8.04 29.97  296.93  373.03    17.63     0.04    4.24   3.05   1.16
+hde1       0.08   0.00  0.00  0.00    0.17    0.00    55.79     0.00 1106.35 509.88   0.02
+hde2       4.32   4.86  2.10 16.94   51.30  175.10    11.89     0.18    9.11   6.84   1.30
+hde3       0.00   0.01  0.01  0.00    0.04    0.07    19.02     0.02 3027.18 2023.47   0.12
+hde5      24.73  11.48  5.94 13.02  245.42  197.86    23.38     0.10   12.50  11.55   2.19
+hda       32.67  15.74  8.53 30.66  329.11  373.03    17.92     0.08    6.69   4.26   1.67
+hda1       0.09   0.00  0.00  0.00    0.18    0.00    59.04     0.00  135.04  68.32   0.00
+hda2       4.98   4.64  2.31 17.17   58.34  175.10    11.98     0.12   19.81   6.10   1.19
+hda3       0.00   0.01  0.00  0.00    0.04    0.07    19.44     0.00  210.14 147.84   0.01
+hda5      27.60  11.09  6.22 13.49  270.56  197.86    23.78     0.22    7.38   2.45   0.48
 
