@@ -1,96 +1,77 @@
-From: =?ISO-8859-1?Q?Markus_M=FCller?= <mm@pRiV.de>
-Subject: Alternative to RAID... No change to Data HDDs, only one simple "modulo"-Disk
-Date: Fri, 18 Jun 2004 18:12:38 +0200
+From: "Christoph Zimmerli" <zeratul@gmx.ch>
+Subject: RE: Raid-5 freezes with large writes... Continues after a more      /proc/mdstat???
+Date: Fri, 18 Jun 2004 21:12:47 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <40D31476.8020002@pRiV.de>
+Message-ID: <S266712AbUFRTMy/20040618191704Z+103@vger.kernel.org>
+References: <43407.134.202.1.127.1087573980.squirrel@134.202.1.127>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <43407.134.202.1.127.1087573980.squirrel@134.202.1.127>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Linux RAID,
+I had a very similar problem (posted here:
+http://www.spinics.net/lists/raid/msg05320.html).
+After trying loads of combinations/configurations, I'm back to SuSE 8.2,
+which works flawless.
+I don't know what causes the problem, but I would be glad to know... 
 
-I don't want Linux Software RAID, because RAID 5 itself and/or the Linu=
-x=20
-Software RAID has unflexibility I don=B4t want to accept. These are esp=
-ecialy:
+Greets
+Christoph
 
-Implementation independet, logical restrictions:
-- With only one working disk of a raid 5 I can=B4t do anything, not to=20
-mention to mount it alone
-- I must trust the RAID algorithmus, because it needs and does do=20
-writing to handle the data itself
-- All hdd must be have the same size, ok, you can put langer in it, but=
-=20
-you=B4ll waste space
-Linux Software RAID restrictions:
-- Putting new Disk in the RAID is BETA and forces to dataloss
-<http://dict.leo.org/?p=3D2Ib6..&search=3Dmention>
-The only real advantage is the increased read- and writespeed as well a=
-s=20
-a single partition.
 
-And now the clou: I don=B4t care about this advantages! So I prefer the=
-=20
-following solution:
-<http://dict.leo.org/?p=3D2Ib6..&search=3Dadvantage>
-You use your hdds as you wouldn=B4t want to use anything like RAID. The=
-n=20
-you insert a new hdd, which have at least the size of the bigest hdd in=
-=20
-computer. Then you make over all hdds for each byte, starting on every=20
-disk at byte 0, a modulo 255, and write it to this new disk. Each read=20
-access can be done as it would be done before, on every write to one of=
-=20
-these involved hdds you update over all disks the modulo and write it t=
-o=20
-this new disk. If the disks size differs of the different involved hdds=
-,=20
-you simply have on the higher bytes a modulo of the remaining disks. Fo=
-r=20
-example, you have a 60 GB, a 80 GB and a 120 GB disk. The new disk with=
-=20
-the modulo data is also 120 GBs. Then from 0 byte to 60 GBs you have a=20
-modulo over 3 disks, from 60 to 80 you have a modulo over 2 disks and=20
-the rest is a 1:1 copy of the 120 GB drive on this new 120 GB disk.
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of david@hpcf.upr.edu
+Sent: Freitag, 18. Juni 2004 17:53
+To: linux-raid@vger.kernel.org
+Subject: Re: Raid-5 freezes with large writes... Continues after a more
+/proc/mdstat???
 
--> If a disk dies, you can restore it using the safed modulo data on=20
-this new 120 GB disk.
+I have the same problem.
 
-The benefit? See the restrictions above. None of this applys on this=20
-solution! But you have the same security benefit from RAID 5! The littl=
-e=20
-price for this solution: You loos is speed, and you do not a single=20
-partition. I have a data dump, not a high performance raid, so I don=B4=
-t=20
-care about the speed. (Current hdds are fast enought, also for this=20
-solution!) And I see multiple partition as a benefit. (personal opinion=
-!)
+David
 
-Special Benefits:
-- REAL SECURITY: You can resize your hdd selection without having the=20
-fear of dataloss! This mechanismus don=B4t change your source hdds! It=20
-only does need read access! It CAN=B4T do anything wrong with your data=
-!
-- REAL SECURITY: You can recover with normal rescue programs!
-- FLEXIBILITY:: You can take any disk out of your system and simply=20
-mount it!
-- FLEXIBILITY: The size of the involved hdds doesn=B4t matter; the disk=
-=20
-with the modulo just must have the same size than the bigest hdd or mor=
-e=20
-of your hdd colletion.
+> Hej,
+>
+> I am using Suse 9.1 and have build (finally) my Raid-5 volume using 
+> the raidtools.
+>
+> When I write large amounts of data to the array (i.e. 50 GB) in a cp 
+> or mv operation, it always stops in the middle of the copy. It waits. 
+> There are no kernel messages, no errors, it just waits.
+>
+> The strange part is that after I do a "more /proc/mdstat" my cp/mv 
+> operation continues.
+>
+> Performance is descent with approx. 20-30MB/s writes and 80MB/s reads.
+>
+> You can see the rest of my setup in a previous post:
+> http://marc.theaimsgroup.com/?l=linux-raid&m=108738559332187&w=2
+>
+> Has anybody seen this before?
+>
+> Alwin
+>
+> P.S. I am using two Maxtor 200GB IDE disks and two identical disks but 
+> with SATA interface. My box is a Dell 400SC and I run Suse 9.1 with 
+> the default kernel.
+>
+>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" 
+> in the body of a message to majordomo@vger.kernel.org More majordomo 
+> info at  http://vger.kernel.org/majordomo-info.html
+>
 
-And now the matter of price: Does anybody  have an idear how to=20
-implement this? I am appreciate for any hint or comment.
-
-Thanks,
-Markus Mueller
 -
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in the
+body of a message to majordomo@vger.kernel.org More majordomo info at
+http://vger.kernel.org/majordomo-info.html
+
+
+
+
