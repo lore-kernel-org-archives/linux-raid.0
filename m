@@ -1,57 +1,58 @@
-From: Nathan Lewis <nathapl@cs.okstate.edu>
-Subject: Adding Reed-Solomon Personality to MD, need help/advice
-Date: Sat, 31 Jan 2004 00:59:25 -0600
+From: hpa@zytor.com (H. Peter Anvin)
+Subject: Re: Adding Reed-Solomon Personality to MD, need help/advice
+Date: Sat, 31 Jan 2004 07:20:05 +0000 (UTC)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <6.0.1.1.2.20040130235924.03f39710@mail.athenet.net>
+Message-ID: <bvfkv5$bfm$1@terminus.zytor.com>
+References: <6.0.1.1.2.20040130235924.03f39710@mail.athenet.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; format=flowed
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-As part of my Master's thesis, I am working on adding a Reed-Solomon 
-personality to the existing linux RAID structure and I would like some 
-assistance.  I'll try to keep this as brief as possible, but I apologize if 
-it gets long-winded.
+=46ollowup to:  <6.0.1.1.2.20040130235924.03f39710@mail.athenet.net>
+By author:    Nathan Lewis <nathapl@cs.okstate.edu>
+In newsgroup: linux.dev.raid
+>
+> As part of my Master's thesis, I am working on adding a Reed-Solomon=20
+> personality to the existing linux RAID structure and I would like som=
+e=20
+> assistance.  I'll try to keep this as brief as possible, but I apolog=
+ize if=20
+> it gets long-winded.
+>=20
 
-So far, I've managed to add and register a personality with md, which 
-involved a few minor changes to md.c and related header files, a few 
-changes to mdadm to allow me to access things from userland.  I've 
-discovered the 9 functions I need to implement (make_request, run, stop, 
-etc), and managed to "successfully" create an md device using only stub 
-functions.  So far so good.  Just for reference, I'm using kernel 2.4.22.
+I'm curious what... what is the intended mode of operation of your R-S
+personality?
 
-However, I can't really find concise documentation on exactly what those 9 
-functions are supposed to do, and under what restrictions they must do them 
-in.  I've been studying Rubini and Corbet's _Linux Device Drivers_ book, 
-which goes into great detail on the responsibilities of a block device 
-driver, and even covers the make_request function.  For now, that's what 
-I'm focusing on anyway.
+>
+> So far, I've managed to add and register a personality with md, which=
+=20
+> involved a few minor changes to md.c and related header files, a few=20
+> changes to mdadm to allow me to access things from userland.  I've=20
+> discovered the 9 functions I need to implement (make_request, run, st=
+op,=20
+> etc), and managed to "successfully" create an md device using only st=
+ub=20
+> functions.  So far so good.  Just for reference, I'm using kernel 2.4=
+=2E22.
+>=20
 
-Anyway, here's my first real question:  the buffer_head bh passed into 
-make_request obviously contains a request for that particular 
-device.  However, this buffer_head could be the head of a linked list, with 
-the next element located at b_reqnext.  However, all of the code I can find 
-that uses make_request ignores bh->b_reqnext.  Is it guaranteed to be the 
-only request when bypassing __make_request?  Also, the request_queue_t q is 
-also ignored.  I assume this is there for use by __make_request (since it 
-isn't even passed to <personality>_make_request).
+I would advice you to try a 2.6 kernel instead.  You might find it
+useful to compare raid5.c to raid6main.c in those kernels.
 
-Second question:  Since <personality>_make_request doesn't alter the 
-request_queue_t q, it need not worry about the io_request_lock that is 
-stressed in the Rubini book, correct?  I think I only have to worry about 
-locks for any internal structures/buffers I use/create.
-
-Third question:  The raid5 thread is registered with the md 
-driver.  Besides the code in raid5.c, what else can wake up this 
-thread?  Anything?
-
-That's probably enough for now.  I'm sure I'll have more questions down the 
-line, but I need a thorough understanding of what is there before I can add 
-anything to it.
-
-Thanks,
---Nathan Lewis
-
-nathapl@cs.okstate.edu
-
+	-hpa
+--=20
+PGP public key available - finger hpa@zytor.com
+Key fingerprint: 2047/2A960705 BA 03 D3 2C 14 A8 A8 BD  1E DF FE 69 EE =
+35 BD 74
+"The earth is but one country, and mankind its citizens."  --  Bah=E1'u=
+'ll=E1h
+Just Say No to Morden * The Shadows were defeated -- Babylon 5 is renew=
+ed!!
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
