@@ -1,76 +1,65 @@
 From: David Greaves <david@dgreaves.com>
-Subject: Re: EVMS or md?
-Date: Mon, 04 Apr 2005 08:57:50 +0100
-Message-ID: <4250F37E.5050201@dgreaves.com>
-References: <200504040708.j3478bm03863@www.watkins-home.com>
+Subject: [Fwd: Re: [Evms-devel] md raid5 expand possible yet?]
+Date: Mon, 04 Apr 2005 09:07:12 +0100
+Message-ID: <4250F5B0.9040700@dgreaves.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=iso-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200504040708.j3478bm03863@www.watkins-home.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Guy <bugzilla@watkins-home.com>
-Cc: 'Mike Hardy' <mhardy@h3c.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Guy wrote:
-
->I am top posting since I am starting a new topic.
->  
->
-excuses not needed - I prefer it ;)
-
->Don't get me wrong, I like and trust md, at least with kernel 2.4.
->
->This is the first I knew about EVMS, the website makes it sound wonderfull!
->http://evms.sourceforge.net/
->
->Is EVMS "better" than md?
->  
->
-It uses md
-
-A more appropriate question is : Is EVMS "better" than _mdadm_?
-
-Probably - if you're doing more than simple stuff - it doesn't (seem to) offer all the control that mdadm offers but the same gui manages everything from partitioning to bad block management (remember all the raid5 bad block discussions...) to logical volume management and snapshots etc to filesystem creation/expansion/reduction and more including boundary checking (which prevents you from saying "I know what I'm doing" - which is usually a good thing!!!)
-
-So "does it do more than mdadm?" "Yes!"
-
-It's closer (from memory) to Sun's or Veritas' volume management guis
-
-It also introduces a consistent (self-consistent!) set of terminology and a 'way of doing things'.
-Eg lvm layers over md layers over bbr layers over partitions
-
-It's also quite intimidating at first sight.
-
-see http://evms.sourceforge.net/architecture/evms-data-example.png
-
->Is EVMS replacing md?
->  
->
-so no - although there are evms md-patches which appear to be in 
-mainline now.
-
->One bad point for EVMS, no RAID6.  :(
->  
->
-I think, more correctly: no raid6 config support in the gui...
-
->One good point for EVMS, bad Block Relocation (but only on writes).
->  
->
-again, this uses the dm bbr kernel feature.
-
->Not sure how EVMS handles read errors.
->
->I am getting on the mailing list(s).  I must know more about this!!!
->
->Guy
->  
->
-I don't understand why there is so little cross conversation...
-You sometimes need to dip into md stuff to fix/diagnose evms issues.
-
-HTH
+This is just a potentially interesting forwarded mail from the EVMS 
+mailing list to illustrate the kind of issues/responses to the raid5 
+resize questions...
 
 David
+
+>
+> osni@kiruna.se wrote on 03/01/2005 09:16:51 AM:
+>
+>> I read in the evms user guide that it should be possible but I can't
+>> seem
+>> to find where to "add one object to the region". I'm using evms 2.5.2
+>> gui...
+>>
+>> /Oscar
+>
+> Hi, Oscar.
+>
+> If you are using evmsn or evmsgui you have to start the expand on the top
+> level volume, object, or container that consumes the raid5 region.  For
+> example, if raid5 region md/md1 is made into EVMS volume /dev/evms/mydata,
+> then you would start by expanding /dev/evms/mydata.  The UI will ask you
+> for an "expansion point" which is the object in the volume's stack that
+> you
+> want to expand.  You should see md/md1 in the list of possible expansion
+> points provided there is a free object with enough space that can be added
+> to the array.  Select the md/md1 regino to exapnd.  You should then get a
+> prompt for the object to be added to md/md1.
+>
+> Similarly, if md/md1 is consumed by an LVM container you would start by
+> expanding the LVM container.  That operation, too, should give you a list
+> of possible expansion points.  In this case you will usually see two
+> expansion points -- one for the container (you can expand a container by
+> adding another object to it) and one for the raid5 region.
+>
+> If you are using the "evms" command line interface (CLI) you can use a
+> command like "expand:md/md1,sdc5".  (I haven't tested that command.  I
+> wrote it based on the help.)
+>
+> Steve D.
+>
+>
+Hi again and thanks for the answer.
+
+It's resizeing now so I hope it works :) But someone should change in the
+user guide where it says
+"Like RAID-0, RAID-4/5 regions must be deactivated before they are resized."
+That was the reason to why I couln't get it to work at first, if it's not
+active it can't be resized.
+
+/Oscar
+
+
