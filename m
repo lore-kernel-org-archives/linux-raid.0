@@ -1,35 +1,45 @@
-From: "Robin Bowes" <robin@robinbowes.com>
-Subject: Re: ANNOUNCE: mdadm 1.6.0 - A tool for managing Soft RAID under
-     Linux
-Date: Fri, 4 Jun 2004 11:12:31 +0100 (BST)
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: [PATCH md ] Fix BUG in raid5 resync code.
+Date: Fri, 4 Jun 2004 22:04:53 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <40287.194.60.85.4.1086343951.squirrel@194.60.85.4>
-References: <16576.5818.189830.563396@cse.unsw.edu.au>
+Message-ID: <16576.25957.792182.211940@cse.unsw.edu.au>
+References: <20040604165208.8646.patches@notabene>
+	<E1BW8c2-0002Fs-EL@notabene.cse.unsw.edu.au>
+	<40C02083.9050202@dgreaves.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <16576.5818.189830.563396@cse.unsw.edu.au>
-To: Neil Brown <neilb@cse.unsw.edu.au>
+In-Reply-To: message from David Greaves on Friday June 4
+To: David Greaves <david@dgreaves.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, June 4, 2004 7:29, Neil Brown said:
->   - Further support for partitionable arrays included "--auto=" option
->     and "auto=" config file entry which instructs mdadm to create the necessary
->     device files after allocating an unused array number.
+On Friday June 4, david@dgreaves.com wrote:
+> Hi Neil
+> 
+> Given I'm about to resync about 400Gb of data I'd like to check this 
+> before blindly storming ahead... :)
+> 
+> Would the following be the correct patch against 2.6.6?
 
-Neil,
+Yes. Remove the "+failed".
 
-I am interpreting this to mean that I can create, for example, a large (e.g. 1TB) RAID5
-array and create smaller partitions (/home, /usr, etc) on top of the RAID5 array? Is
-this correct?
+NeilBrown
 
-Where can I read more about this?
-
-Thanks,
-
-R.
--- 
-http://robinbowes.com
-
+> 
+> --- drivers/md/raid5.c~ 2004-05-30 18:38:49.000000000 +0100
+> +++ drivers/md/raid5.c  2004-06-04 09:06:12.000000000 +0100
+> @@ -1037,7 +1037,7 @@
+>          * parity, or to satisfy requests
+>          * or to load a block that is being partially written.
+>          */
+> -       if (to_read || non_overwrite || (syncing && (uptodate+failed < 
+> disks))) {
+> +       if (to_read || non_overwrite || (syncing && (uptodate < disks))) {
+>                 for (i=disks; i--;) {
+>                         dev = &sh->dev[i];
+>                         if (!test_bit(R5_LOCKED, &dev->flags) && 
+> !test_bit(R5_UPTODATE, &dev->flags) &&
+> c
+> 
