@@ -1,64 +1,41 @@
-From: Louis-David Mitterrand <vindex@apartia.org>
+From: Neil Brown <neilb@cse.unsw.edu.au>
 Subject: Re: recovering after a /dev/sda failure on raid1
-Date: Mon, 5 Aug 2002 11:34:40 +0200
+Date: Mon, 5 Aug 2002 22:15:54 +1000 (EST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20020805093440.GB577@apartia.org>
-References: <15690.63749.164322.929689@notabene.cse.unsw.edu.au> <Pine.LNX.4.30.0208030058480.26520-100000@duplo.agenda.si>
+Message-ID: <15694.27770.60339.958313@notabene.cse.unsw.edu.au>
+References: <20020801144922.GA5284@apartia.org>
+	<15690.63749.164322.929689@notabene.cse.unsw.edu.au>
+	<20020805092641.GA577@apartia.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.30.0208030058480.26520-100000@duplo.agenda.si>
-To: linux-raid@vger.kernel.org
+In-Reply-To: message from Louis-David Mitterrand on Monday August 5
+To: Louis-David Mitterrand <vindex@apartia.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, Aug 03, 2002 at 01:03:34AM +0200, Danilo Godec wrote:
-> On Sat, 3 Aug 2002, Neil Brown wrote:
+On Monday August 5, vindex@apartia.org wrote:
 > 
-> > > My concern is that if I power down and replace /dev/sda the machine
-> > > won't be able to reboot without a rescue CD (lilo.conf has root=/dev/md0
-> > > and boot=/dev/md0) or will it?
+> FWIW the disk that is malfunctioning is a 3-month-old Fujitsu 15k 36G
+> (MAM3367MP) which is an expensive server-grade disk. The reason I
+> selected Fujitsu was because of reported quality problems on IBM disks
+> and Fujitsu's good reputation on SCSI (their IDE line is bad however).
+> I am looking for informed opinions on these disks and recommendations
+> for future purchases. What are the most reliable SCSI disks out there?
 > 
-> A recent enough lilo knows raid partition and will install it self on both
-> disks. So, in theory both disk should be able to boot you system.
+> It must be: fast, affordable, reliable, (select any two ;-)
 
-In theory, because I was unable to boot this debian sid system with
-lilo-22.2 and these settings:
+Somehow, I wish you hadn't said that.....
 
-	boot=/dev/md0
-	root=/dev/md0
-	install=/boot/boot-menu.b
-	delay=20
-	map=/boot/map
-	read-only
+I just recently commissioned a fileserver with 14 Fujitsu MAM3367MC drives.
+I wander what the difference between P and C is...
 
-	image=/vmlinuz
-		label=Linux
+Previously we have used Seagates which have seemed quite reliable.
+The only real problems that we have had is with the IBM IDE DeathStars
+(oops, I meant DeskStars.  Naughty keyboard).
 
-After altering the SCSI bios setting to boot from /dev/sdb the screen
-filled with 01010101010.
+As far as SCSI drives, I have no significant experiences of
+unreliability, and I hope to keep it that way.
 
-However this is not specific to booting on degraded mode. I have the
-same problem when both disks are fine. The machine will only boot after
-I changed "boot=/dev/sda" and run lilo. I can then revert to
-"boot=/dev/md0" and re-run lilo and from there booting will work fine.
-
-> > > When the bios (Dell Poweredge 1500) will try /dev/sda's mbr and fail,
-> > > will it then automatically try /dev/sdb?
-> 
-> It might not even try /dev/sdb if /dev/sda exists...
-> But with some recent bioses you can choose which drive you want to boot,
-> sou you could just choose your 2nd SCSI drive and it should work.
-
-Yes, I found that out, sorry for the basic questions but I was a bit
-stressed changing a disk on a production server and having it not
-restart. But all went well in the end.
-
-Thanks again to kernel-raid developers, on another server I replaced a
-Mylex card with a kernel raid5 partition and the speed gain is
-tremendous!
-
-Cheers,
-
--- 
-ldm@apartia.org 
+NeilBrown
