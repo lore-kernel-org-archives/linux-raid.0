@@ -1,45 +1,33 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: Raid Array with 3.5Tb
-Date: Fri, 16 Jan 2004 22:18:15 +1100
-Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16391.51319.698137.120756@notabene.cse.unsw.edu.au>
-References: <1074196167.1382.8.camel@e-linux>
+From: Matt Domsch <Matt_Domsch@dell.com>
+Subject: Re: Proposed enhancements to MD
+Date: Fri, 16 Jan 2004 07:43:36 -0600
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20040116074336.A12893@lists.us.dell.com>
+References: <40033D02.8000207@adaptec.com> <16389.52150.148792.875315@notabene.cse.unsw.edu.au> <20040115155221.A31378@lists.us.dell.com> <20040116092447.GF22417@marowsky-bree.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Evan Felix on Thursday January 15
-To: Evan Felix <evan.felix@pnl.gov>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20040116092447.GF22417@marowsky-bree.de>; from lmb@suse.de on Fri, Jan 16, 2004 at 10:24:47AM +0100
+To: Lars Marowsky-Bree <lmb@suse.de>
+Cc: Neil Brown <neilb@cse.unsw.edu.au>, Scott Long <scott_long@adaptec.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday January 15, evan.felix@pnl.gov wrote:
-> I've been attempting to create a large raid 5 device using the linux
-> 2.6.1 kernel, with the Large Block Device configured on.  I have in the
-> system 16 250G disks.  I built an array with mdadm -C -n 15 -x 1
-> /dev/md2 /dev/sd[a-p]
-> 
-> The resync/recovery seemed to be going fine, but at some point i started
-> seeing:
-> 
-> kernel: compute_blocknr: map not correct
-> kernel: compute_blocknr: map not correct
-...
-> 
-> Has anyone else made an array this large? and does anybody have any
-> pointers on where i can start looking at code to fix this?
+On Fri, Jan 16, 2004 at 10:24:47AM +0100, Lars Marowsky-Bree wrote:
+> Do you know whether DDF can also support simple multipathing?
 
-I would look in  drivers/md/raid5.c and compute_blocknr() in that file.
+Yes, the structure info for each physical disk allows for two (and
+only 2) paths to be represented.  But it's pretty limited, describing
+only SCSI-like paths with bus/id/lun only described in the current
+draft.  At the same time, there's a per-physical-disk GUID, such
+that if you find the same disk by multiple paths you can tell.
+There's room for enhancment/feedback in this space for certain.  
 
-I would change "chunk_number" to a sector_t and change:
-	chunk_number = stripe * data_disks + i;
-to read
-	chunk_number = (sector_t)stripe * data_disks + i;
+Thanks,
+Matt
 
-Possibly "stripe" and "chunk_number" should both be "sector_t", but
-I'm not at all sure.
-
-Please let me know if it helps.
-
-NeilBrown
-
+-- 
+Matt Domsch
+Sr. Software Engineer, Lead Engineer
+Dell Linux Solutions www.dell.com/linux
+Linux on Dell mailing lists @ http://lists.us.dell.com
