@@ -1,49 +1,58 @@
-From: Jani Averbach <jaa@cc.jyu.fi>
-Subject: BUG: 2.5.41 left raid array to unclean mode (Kernel bug at raid1.c:667)
-Date: Tue, 8 Oct 2002 02:49:35 +0300 (EEST)
+From: Wes Armour <wes.armour@physics.org>
+Subject: Rebuilding a RAID 5 array
+Date: Tue, 8 Oct 2002 11:14:11 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.GSO.4.33.0210080229560.5342-100000@tukki.cc.jyu.fi>
+Message-ID: <200210081114.11952.wes.armour@physics.org>
+Reply-To: wes.armour@physics.org
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: mingo@redhat.com, neilb@cse.unsw.edu.au
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
-
 
 Hello,
 
-(Resending this, orig was 2002-03-10)
+We are having some problems with our RAID 5 array.
+We have a PC using the Promise ATA133 controller running a 4 x 160Gb disk RAID 
+5 array. The promise bios is set to striping and our raidtab file looks like:
 
-[1.] One line summary of the problem:
+# raiddev configuration file
+raiddev /dev/md0
+        raid-level              5
+        nr-raid-disks           4
+        nr-spare-disks          0
+        persistent-superblock   1
+        chunk-size              16K             
+        parity-algorithm        left-symmetric
+         
+        device                  /dev/sda
+        raid-disk               0
+        device                  /dev/sdb
+        raid-disk               1
+        device                  /dev/sdc
+        raid-disk               2
+        device                  /dev/sdd
+        raid-disk               3
 
-Shutdown left (always) software raid array in unclean mode, next shutdown
-(during reconstructing) will cause kernel bug.
+Before we use the system to store real data we would like to test it and 
+ensure that we can rebuild the array if a disk fails.
+To simulate disk failure we shut the machine down and then unplug one of the 
+160 Gb drives, we then reboot the machine and the array come back up with 3 
+out of the four disks working, great!, but we cannot add a new disk into the 
+array (This is the unplugged disk re-formated with an fd file system). We 
+have tried using 
 
-[2.] Full description of the problem/report:
+mkraid --upgrade --configfile raid.promise /dev/md0 
 
-With 2.5.6 (and 2.5.6-pre1 at least) shutdown procedure left raid
-array in unclean state. Next time when machine is going down (during
-reconstruction) there will be kernel bug in the raid1.c:656. This is
-completely reproductable.
+and then,
 
-If you run shutdown after reconstruction has been finished, there is no
-problem. However raid array is again left in unclean mode.
-...
+raidhotadd --configfile raid.promise /dev/md0 /dev/sda,
 
-This is still the case with kernel 2.5.41.
+but it does not work. Could we be having problems because we are using 
+striping in the promise bios?
 
-Please see details from here:
+Thanks,
 
-http://marc.theaimsgroup.com/?l=linux-raid&m=101576857227286&w=2
-
-It would be really nice if this one get nailed down. I would like to test
-2.5.x again, but at the moment it is a bit no go.
-
-Thanks for the hacking kernel!
-
-BR, Jani
-
---
-Jani Averbach
-
+Wes.
