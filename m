@@ -1,28 +1,49 @@
-From: "Peter T. Breuer" <ptb@it.uc3m.es>
-Subject: One more question about the linux md driver
-Date: Thu, 10 Apr 2003 16:46:47 +0200 (MET DST)
+From: Paul Downs <paul@positive-internet.com>
+Subject: Re: Booting with raided root, debian system
+Date: Thu, 10 Apr 2003 16:41:01 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200304101446.h3AEklj30240@oboe.it.uc3m.es>
-Reply-To: ptb@it.uc3m.es
+Message-ID: <20030410154101.GB11470@u4ia>
+References: <20030410123746.GA11470@u4ia> <3E9567AC.9060104@hum.auc.dk>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: From "(env:" "ptb)" at "Mar 13, 2003 07:49:40 pm"
+Content-Disposition: inline
+In-Reply-To: <3E9567AC.9060104@hum.auc.dk>
 To: linux-raid@vger.kernel.org
-Cc: Paul Clements <Paul.Clements@SteelEye.com>, Neil Brown <neilb@cse.unsw.edu.au>
 List-Id: linux-raid.ids
 
-Can someone tell me about the difference between (when they are called)
+* Mads Peter Bach (mpb@hum.auc.dk) wrote :
 
-    bind_rdev_to_array
-    unbind_rdev_from_array
+Hi,
 
-and
+> A copy of the errormessages before "attempt to kill init" would be quite 
+> helpful :-)
 
-   import_rdev
-   export_rdev
+  I had to do another run on a different server so the results were slightly
+different from my memory, the results where the same:
 
-?? I want to detect when a device is first inducted into an (any) array
-and when it is expelled (from the last array in which it figures). I am
-currently using the first two functions, and counting. I suspect I
-should be using the second two?
+Ext3-fs: unable to read superblock
+mount: wrong fs type /dev2/root xxxxxxxxxxxxxxxxxxxxx
+cramfs: wrong magic
+mount: wrong fs type /dev2/root xxxxxxxxxxxxxxxxxxxxx
+warning: can't open mtab
+pivot_root: no such file or directory
+/sbin/init: 107: cannot open /dev/console no such file
+kernel panic: attempt to kill init!
 
-Peter
+> Also, a copy of lilo's output when you install it might help.
+
+dev3:~$ mount -text3 /dev/md0 /mnt
+dev3:~$ lilo -r /mnt
+
+  With boot and root set to /dev/md0.  Output line was as you expect (e.g.
+installing to /dev/md0 etc. etc.  said it installed ok) however this was the
+penultimate line:
+
+Unexpected dirty buffer encountered at do_get_write_access:613 (09:00
+blocknr 0)
+
+
+Any help appreciated.
+
+Paul
