@@ -1,66 +1,32 @@
-From: Ben Edwards <ben@serverone.co.uk>
-Subject: Re: Hardware versus Software
-Date: Wed, 19 May 2004 23:30:04 +0100
+From: jim@rubylane.com
+Subject: Re: Hard drive Reliability?
+Date: Wed, 19 May 2004 15:42:08 -0700 (PDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <40ABDFEC.9080802@serverone.co.uk>
-References: <ac.5847806b.2ddc5d88@aol.com>
+Message-ID: <20040519224208.28155.qmail@paris.rubylane.com>
+References: <1085004124.8670.3.camel@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <ac.5847806b.2ddc5d88@aol.com>
-To: AndyLiebman@aol.com, Linux RAID List <linux-raid@vger.kernel.org>
+In-Reply-To: <1085004124.8670.3.camel@localhost> from "John Lange" at May 19, 2004 05:02:05 PM
+To: John Lange <john.lange@bighostbox.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-AndyLiebman@aol.com wrote:
+> 
+> > WD junk.  So, lesson learned to stay away form WD drives; correct or
+> > not.
+> 
+> I'd agree with the one addition that, unfortunately they _ALL_ seem to
+> be junk. Unfortunately, in my discussions with various associates we
+> can't seem to come to any consensus on any particular brands being
+> better or worse than others.
 
->I'm sure this has been discussed many times on the list but I was asked this 
->question today and I'm not sure how to respond: 
->
->Under Linux (i.e., a distribution such as Mandrake 10 -- with an up-to-date 
->2.6 kernel), is a "true hardware RAID-5" created through a SATA card such as 
->the 3ware 8506 or the new 3ware 9500 series any SAFER or MORE RELIABLE than a 
->software RAID created with the same card? 
->
->In my benchmark comparisons between software and hardware RAID, I get 
->significantly better performance using "software RAID". With eight 250 GB disks, I 
->get about 175 MB/sec reading and about 150 MB/sec writing when my system is 
->configured as software RAID. With hardware RAID the figures drop to about 125/100 
->MB/sec. 
->
->I'm only using my machines as file servers, so they aren't busy doing any 
->other tasks besides sending data packets through Gigabit Ethernet and running 
->disk I/O. 
->
->But the question still remains, is there any other safety and reliability 
->advantage to using Hardware? Is the data on a Hardware RAID more likely to remain 
->intact in the event of a computer crash or freeze? 
->
->Or in the event of an abrupt power failure (I have a UPS on the system, but 
->that could fail, or the power cables could be pulled out of the computer or 
->somebody could accidently shut it down). All of these power failure scenarios are 
->very unlikely, but they COULD occur. 
->
->Would Hardware RAID survive better than Software? I can't see why, but maybe 
->I'm missing something. 
->
->In my situation where the server isn't running any other software, the only 
->advantage I can see to hardware RAID is that rebuilding in the event of a disk 
->failure is a little easier for non-experts. But I'm writing a program to 
->automate the software RAID rebuilding process so that non-experts can do it 
->themselves. 
->
->Your informed comments would be appreciated. 
->  
->
-This is VERY interesting. Douse the doumentation for software raid say
-it is doing true Raid 5? I would be very suprised if software raid was
-faster and if it is I wold think the card is either broke or rubish
-(stop me at any time if me english gets too profesional). If what you
-say is the case you should circulate this in other palces (slashdot,
-debian-user etc.) as I am sure other would be very interested. This list
-douse not seem to be that active so not sure if you will get mutch
-response here. If you find anything out be sure to let the list know.
-
-Ben
-
+Our experience with Maxtor 60GB, 80GB, 120GB, various models, confirms
+it isn't just WD.  In my opinion, all of the disk manufacturers have
+become so price competitive that they cannot produce an excellent
+product at the current price points.  If big PC manufacturers don't
+care whose drive they use as long as it lasts at least 1 year (the PC
+warranty period) in a home computer that is mostly idle or off, and
+they only care about cost, there is little motivation for drive
+manufacturers to produce a reliable drive - only a cheap one.
