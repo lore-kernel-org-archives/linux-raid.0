@@ -1,78 +1,21 @@
-From: it <itech@kfa.org>
-Subject: Re: block level vs. file level
-Date: Sun, 12 Feb 2006 17:16:39 -0800
-Message-ID: <43EFDDF7.6090405@kfa.org>
-References: <43EF8CFB.5080403@kfa.org> <20060212213157.GX32687@strugglers.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: "Eldon Cooley" <PVKVBZZQSLC@yahoo.com>
+Subject: Biggest Pharmacy KRl4Vt
+Date: Tue, 20 Apr 2004 14:12:15 +0400
+Message-ID: <111.18e558d5.2a9WVF44__8671.70602218739$1139799753$gmane$org@sol.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20060212213157.GX32687@strugglers.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux-net@vger.kernel.org
 List-Id: linux-raid.ids
 
->
->
->Yes, and it's a pain, but if you have to deal with it I think the
->wealth of options in md leaves you better able to handle it than
->with hardware RAID.  Here's something that happened to me:
->
->http://strugglers.net/wiki/becks.strugglers.net
->
 
-Ouch.
+The most complete Phar macy Online
+We carry all major medds at bargain price
+Viggra, Ci ialis, VaIium, Xa naax
+Phantermiine, Ulltraam and etc...
+SatiisfactIon Gua ranteeed
 
-How does hardware raid deal with this? Does it?
-
-Thanks,
-A.
+http://greatadvance.com/track.php?h=MjZ8cm9ubg%3D%3D&cg=1&c=one
 
 
-Andy Smith wrote:
-
->On Sun, Feb 12, 2006 at 11:31:07AM -0800, it wrote:
->  
->
->>The hardware raid does the mirroring on the block level, so it's 
->>actually /dev/sda mirroring /dev/sdb - the whole drive, and not 
->>partitions. There is a way to set this up on software raid. It takes 
->>more configuration tweaking, but the mirroring then includes the 
->>partition table as well. This way, if a drive fails, one can replace it 
->>without pre-partitioning it.
->>    
->>
->
->That can be less flexible though.  If I have say 4 drives then I
->quite often want small /boot, / and swap under RAID-1 then the rest
->as a single large partition in RAID-5, -6 or -10 as an LVM PV.
->
->  
->
->>This also raises another point, which is relevant for both cases - same 
->>exact models of hard disks have different number of cylinders, so if a 
->>RAID partition is created on a larger drive it cannot be mirrored to a 
->>smaller drive.
->>    
->>
->
->Same exact models don't usually have different block counts, but
->certainly if you replace a dead drive with a different one of the
->same advertised capacity you can end up getting one slightly
->smaller.
->
->  
->
->>Does anyone have any experience with this?
->>    
->>
->
->Yes, and it's a pain, but if you have to deal with it I think the
->wealth of options in md leaves you better able to handle it than
->with hardware RAID.  Here's something that happened to me:
->
->http://strugglers.net/wiki/becks.strugglers.net
->
->  
->
+nhGoVg
 
