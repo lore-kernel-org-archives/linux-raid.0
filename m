@@ -1,281 +1,133 @@
-From: "Sean Kormilo" <skormilo@nortelnetworks.com>
-Subject: RE: Ways to query RAID status
-Date: 14 Apr 2003 14:49:51 -0400
+From: "Peter T. Breuer" <ptb@it.uc3m.es>
+Subject: Re: async writes in raid1
+Date: Mon, 14 Apr 2003 21:24:03 +0200 (MET DST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1050346191.13718.63.camel@pcary03q.ca.nortel.com>
-References: <05331901808F5A4CAEEAD68170C528282DF2D0@molokai.stoneflynetworks.com>
-Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="=-iwkhAv5sOoKxcCNV1ASJ"
+Message-ID: <200304141924.h3EJO4x07957@oboe.it.uc3m.es>
+References: <3E9B00F6.6C46EBBC@SteelEye.com>
+Reply-To: ptb@it.uc3m.es
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <05331901808F5A4CAEEAD68170C528282DF2D0@molokai.stoneflynetworks.com>
-To: Vicky Gonzalez <vgonzalez@stoneflynetworks.com>
-Cc: Linux-RAID mailinglist <linux-raid@vger.kernel.org>
+In-Reply-To: <3E9B00F6.6C46EBBC@SteelEye.com> from Paul Clements at "Apr 14,
+ 2003 02:41:58 pm"
+To: Paul Clements <Paul.Clements@SteelEye.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
---=-iwkhAv5sOoKxcCNV1ASJ
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-
-Vicky,
-
+"A month of sundays ago Paul Clements wrote:"
+> coding (the design is complete) on some stuff for md/raid1. I'm hoping
+> to use your code as a starting point. On top of that, I'll be adding:
 > 
-> I am currently monitoring the /proc/mdstat file for the current status, i.e. if there was a Failure detected, if it is currently in the rebuild stage and if there is only one disk currently active, as well as if it is in a good state. This is being done from a perl daemon that is a System V startup process, but it can easily be moved to a C program. 
+> * disk storage for the bitmap
+
+Sounds good.
+
+Coincidently I just had to add an ondisk hashmap for ENBD (another project)
+in order to cache request IDs for transport protocols that don't handle
+repeats and retries on their own. I used a zone allocator to dispense
+items of memory.
+
+You have to be careful never to leave the map in an incoherent state
+(even if somebody pulls the plug). That's much easier with a bitmap!
+
+> * changing bits in the bitmaps to 16-bit counters (so that a bit won't
+> be cleared prematurely when there are other outstanding I/Os to a block,
+> which could result in data loss on the backup, if a failure coincides)
+
+The current bitmap implementation already has 16-bit counters for each 
+"page" (4096 bytes, i.e. mapping 32K ondisk blocks), to which it falls
+back to in case it can't get the bitmap page itself. Actually, it
+has one 16bit counter for every 2K ondisk blocks (256B of bitmap)
+
+That was the most extra capital cost I was willing to invest at startup.
+It's about one one-hundredth of the maximum size of the bitmap,
+invested in counters that are "just in case".
+
+So the bitmap can always be relied on to be accurate in lumps of 2MB or
+so, even when there is no memory.
+
+> * allowing the bitmap to be rescaled -- i.e., changing the amount of
+> data that each bit represents
+
+I really don't agree with that :-).  But maybe it can be done!  It's
+just I personally see no way anyone can count in anything except 1K
+blocks with the current raid code the way it is.
+
+Originally I wrote the patch with more generality, but realized that the
+generality could never be made use of - there are too many assumptions
+in the extant raid code that one block = 1KB.
+
+> * modifying the code so that it can be more easily leveraged by the
+> other raid drivers, as Neil has indicated that that would be better
+
+It is my intention also - I don't know of anything that stops it being
+extended. I'll have a look at raid5 if you like.
+
+> Some comments below on your newest additions...
+
+Ta.
+
+
+> >  1) in make_request:
+> >     duplicating the bh->b_data from the original request into a local
+> >     buffer obtained via kmalloc (if kmalloc fails, don't set the flag
+> >     in the rh1_bh for async writes). 
 > 
-> What some initial testing has found is that during the query of the mdstat file, it was preventing some of our other processes from running. The initial theory is that the opening/closing of the mdstat file to read it is the culprit. So I am looking into moving it to C and monitoring it via an ioctl call with the hopes of streamlining the status checking process. 
+> You might want a pool of these...otherwise, under memory pressure, the
+> whole thing degrades to synchronous mode...which may be OK for some
+> applications, but probably not all...
+
+Yes. My intention is only to do testing at the moment. I don't see
+anything wrong with degrading to sync mode, since I actually don't
+believe there is any advantage to async writes in normal use :-).
+
+> >  2) in the mirrored bh's end_request:
+> >     if we're the first mbh and async flag is set, ack the original bh.
 > 
-> Where would I find the appropriate ioctl calls to make in my program? 
+> Actually, I think you want to make sure, in the async case, that the
+> write to the _primary_ disk completes, as opposed to just the first
+> write...I think you could get the I/O completing out of order, right?
+
+Hmm .. that's a point. It's not a question of out of order, so much as
+we want to give the maximum chance of getting one successful write and
+reporting success. This way we may be unlucky and hit a device that has
+just failed, and report failure to the user, when we should have gone on
+to try another device and report success back when we write to it.
+It's just a case of adding "&& uptodate" to the below conditional
+in raid1_end_bh_io (the end_req for a mirrored i/o)...
+
+
+        /* if nobody has done the final end_io yet, do it now */
+        if (!test_and_set_bit(R1BH_AsyncPhase, &r1_bh->state)) {
+
+                PRINTK(KERN_DEBUG "raid1: sync end i/o on sectors %lu-%lu\n",
+                        bh->b_rsector, bh->b_rsector + (bh->b_size >> 9) - 1);
+
+                io_request_done(bh->b_rsector, conf,
+                        test_bit(R1BH_SyncPhase, &r1_bh->state));
+                bh->b_end_io(bh, uptodate);
+        }
+
+Should I add "&& uptodate" to the condition? I'm inclined to!
+
+
+I don't see that there's any particular attempt to enforce write order
+in raid.  Correct me if I'm wrong!  I think that requests are submitted
+asynchronously to the various devices, and we just wait for the i/o to
+complete (in sync mode, for all writes to complete). That can in
+principle lead to arbitrary reordering all by itself.
+
+Adding something to preserve write order might be sensible.
+
+
+> > Doubts: do I have to point mbh->b_page at something new too? There are
+> > occasional tests scattered in the code (on read, as far as I can see)
+> > to make sure it corresponds correctly to the b_data field.
 > 
-> Thanks again Sean for the quick response.
+> I don't believe this is necessary, since you already have logic to make
+> sure that the page gets freed after the last I/O is complete.
 
-Just in case you want it, I've attached my rebuild ioctl patch to this
-email.
+OK - it's not my logic, I believe, but rather whatever naturally
+happens in the existing raid and generic block device code. This
+needs study, but the memory management in the raid code is not
+completely transparant.
 
-The md user interface ioctls are defined in the
-include/linux/raid/md_u.h file in the kernel source directory.
-
-That being said, I'd still recommend looking at mdadm since it has the
-ability to monitor raid arrays. It may already do what you want to do
-and save you the hassel of building your own.
-
-Sean.
-
-
--- 
-
-Sean C. Kormilo, STORM Software Architect, Nortel Networks
-              email: skormilo@nortelnetworks.com
-  
-
---=-iwkhAv5sOoKxcCNV1ASJ
-Content-Disposition: attachment; filename=md_get_rebuild_info.patch
-Content-Type: text/x-patch; name=md_get_rebuild_info.patch; charset=ANSI_X3.4-1968
-Content-Transfer-Encoding: 7bit
-
-diff -Naur patch/linux/drivers/md/md.c patch/kernel_patch_source/drivers/md/md.c
---- patch/linux/drivers/md/md.c	Mon Jul  8 15:27:32 2002
-+++ patch/kernel_patch_source/drivers/md/md.c	Mon Jul  8 15:25:02 2002
-@@ -2148,6 +2148,64 @@
- }
- #undef SET_FROM_SB
- 
-+static int get_array_rebuild_info(mddev_t * mddev, void * arg)
-+{
-+	/* state values: 0=no rebuild, 1=rebuilding, 2=delayed */
-+
-+	mdu_array_rebuild_info_t info;
-+	unsigned long  dt, db;
-+
-+	memset(&info, 0, sizeof(mdu_array_rebuild_info_t));
-+	
-+	if (mddev->curr_resync) {
-+		info.state = 1; /* rebuilding now */
-+		
-+	} else {
-+		if (md_atomic_read(&mddev->resync_sem.count) != 1)
-+			info.state = 2; /* delayed sync */
-+	}
-+
-+	if( info.state != 1 )
-+		goto get_array_rebuild_done;
-+	
-+	info.resync_blocks = 
-+		(mddev->curr_resync - atomic_read(&mddev->recovery_active))/2;
-+
-+	info.max_blocks = mddev->sb->size;	
-+
-+	/*
-+	 * Should not happen.
-+	 */
-+	if (!info.max_blocks) {
-+		MD_BUG();
-+		return 0;
-+	}
-+
-+	/*
-+	 * We do not want to overflow, so the order of operands and
-+	 * the * 100 / 100 trick are important. We do a +1 to be
-+	 * safe against division by zero. We only estimate anyway.
-+	 *
-+	 * dt: time from mark until now
-+	 * db: blocks written from mark until now
-+	 * rt: remaining time
-+	 */
-+	dt = ((jiffies - mddev->resync_mark) / HZ);
-+	if (!dt) dt++;
-+	db = info.resync_blocks - (mddev->resync_mark_cnt/2);
-+	info.time_remaining = 
-+		(dt * ((info.max_blocks-info.resync_blocks) / (db/100+1)))/100;
-+	
-+	info.speed = db/dt;
-+
-+ get_array_rebuild_done:
-+
-+	if (md_copy_to_user(arg, &info, sizeof(info)))
-+		return -EFAULT;
-+
-+	return 0;
-+}
-+
- #define SET_FROM_SB(x) info.x = mddev->sb->disks[nr].x
- static int get_disk_info(mddev_t * mddev, void * arg)
- {
-@@ -2736,6 +2794,10 @@
- 		case GET_ARRAY_INFO:
- 			err = get_array_info(mddev, (void *)arg);
- 			goto done_unlock;
-+
-+	case GET_ARRAY_REBUILD_INFO:
-+		err = get_array_rebuild_info(mddev, (void *) arg);
-+		goto done_unlock;
- 
- 		case GET_DISK_INFO:
- 			err = get_disk_info(mddev, (void *)arg);
-diff -Naur patch/linux/include/linux/raid/md_u.h patch/kernel_patch_source/include/linux/raid/md_u.h
---- patch/linux/include/linux/raid/md_u.h	Mon Jul  8 15:27:32 2002
-+++ patch/kernel_patch_source/include/linux/raid/md_u.h	Mon Jul  8 14:54:55 2002
-@@ -23,6 +23,7 @@
- #define GET_DISK_INFO		_IOR (MD_MAJOR, 0x12, mdu_disk_info_t)
- #define PRINT_RAID_DEBUG	_IO (MD_MAJOR, 0x13)
- #define RAID_AUTORUN		_IO (MD_MAJOR, 0x14)
-+#define GET_ARRAY_REBUILD_INFO  _IOR (MD_MAJOR, 0x15, mdu_array_rebuild_info_t)
- 
- /* configuration */
- #define CLEAR_ARRAY		_IO (MD_MAJOR, 0x20)
-@@ -82,6 +83,19 @@
- 	int chunk_size;	/*  1 chunk size in bytes		      */
- 
- } mdu_array_info_t;
-+
-+typedef struct mdu_array_rebuild_info_s {
-+	/*
-+	 *  rebuild status of one particular array
-+	 */
-+	int state; /* 0=no rebuild, 1=rebuilding, 2=delayed */
-+	unsigned long resync_blocks;
-+	unsigned long max_blocks;
-+	unsigned long time_remaining;
-+	unsigned long speed;
-+	
-+} mdu_array_rebuild_info_t;
-+
- 
- typedef struct mdu_disk_info_s {
- 	/*
-diff -Naur patch/linux/md_get_rebuild_info.patch patch/kernel_patch_source/md_get_rebuild_info.patch
---- patch/linux/md_get_rebuild_info.patch	Wed Dec 31 19:00:00 1969
-+++ patch/kernel_patch_source/md_get_rebuild_info.patch	Mon Jul  8 15:27:32 2002
-@@ -0,0 +1,110 @@
-+diff -Naur patch/linux/drivers/md/md.c patch/kernel_patch_source/drivers/md/md.c
-+--- patch/linux/drivers/md/md.c	Mon Jul  8 15:27:32 2002
-++++ patch/kernel_patch_source/drivers/md/md.c	Mon Jul  8 15:25:02 2002
-+@@ -2148,6 +2148,64 @@
-+ }
-+ #undef SET_FROM_SB
-+ 
-++static int get_array_rebuild_info(mddev_t * mddev, void * arg)
-++{
-++	/* state values: 0=no rebuild, 1=rebuilding, 2=delayed */
-++
-++	mdu_array_rebuild_info_t info;
-++	unsigned long  dt, db;
-++
-++	memset(&info, 0, sizeof(mdu_array_rebuild_info_t));
-++	
-++	if (mddev->curr_resync) {
-++		info.state = 1; /* rebuilding now */
-++		
-++	} else {
-++		if (md_atomic_read(&mddev->resync_sem.count) != 1)
-++			info.state = 2; /* delayed sync */
-++	}
-++
-++	if( info.state != 1 )
-++		goto get_array_rebuild_done;
-++	
-++	info.resync_blocks = 
-++		(mddev->curr_resync - atomic_read(&mddev->recovery_active))/2;
-++
-++	info.max_blocks = mddev->sb->size;	
-++
-++	/*
-++	 * Should not happen.
-++	 */
-++	if (!info.max_blocks) {
-++		MD_BUG();
-++		return 0;
-++	}
-++
-++	/*
-++	 * We do not want to overflow, so the order of operands and
-++	 * the * 100 / 100 trick are important. We do a +1 to be
-++	 * safe against division by zero. We only estimate anyway.
-++	 *
-++	 * dt: time from mark until now
-++	 * db: blocks written from mark until now
-++	 * rt: remaining time
-++	 */
-++	dt = ((jiffies - mddev->resync_mark) / HZ);
-++	if (!dt) dt++;
-++	db = info.resync_blocks - (mddev->resync_mark_cnt/2);
-++	info.time_remaining = 
-++		(dt * ((info.max_blocks-info.resync_blocks) / (db/100+1)))/100;
-++	
-++	info.speed = db/dt;
-++
-++ get_array_rebuild_done:
-++
-++	if (md_copy_to_user(arg, &info, sizeof(info)))
-++		return -EFAULT;
-++
-++	return 0;
-++}
-++
-+ #define SET_FROM_SB(x) info.x = mddev->sb->disks[nr].x
-+ static int get_disk_info(mddev_t * mddev, void * arg)
-+ {
-+@@ -2736,6 +2794,10 @@
-+ 		case GET_ARRAY_INFO:
-+ 			err = get_array_info(mddev, (void *)arg);
-+ 			goto done_unlock;
-++
-++	case GET_ARRAY_REBUILD_INFO:
-++		err = get_array_rebuild_info(mddev, (void *) arg);
-++		goto done_unlock;
-+ 
-+ 		case GET_DISK_INFO:
-+ 			err = get_disk_info(mddev, (void *)arg);
-+diff -Naur patch/linux/include/linux/raid/md_u.h patch/kernel_patch_source/include/linux/raid/md_u.h
-+--- patch/linux/include/linux/raid/md_u.h	Mon Jul  8 15:27:32 2002
-++++ patch/kernel_patch_source/include/linux/raid/md_u.h	Mon Jul  8 14:54:55 2002
-+@@ -23,6 +23,7 @@
-+ #define GET_DISK_INFO		_IOR (MD_MAJOR, 0x12, mdu_disk_info_t)
-+ #define PRINT_RAID_DEBUG	_IO (MD_MAJOR, 0x13)
-+ #define RAID_AUTORUN		_IO (MD_MAJOR, 0x14)
-++#define GET_ARRAY_REBUILD_INFO  _IOR (MD_MAJOR, 0x15, mdu_array_rebuild_info_t)
-+ 
-+ /* configuration */
-+ #define CLEAR_ARRAY		_IO (MD_MAJOR, 0x20)
-+@@ -82,6 +83,19 @@
-+ 	int chunk_size;	/*  1 chunk size in bytes		      */
-+ 
-+ } mdu_array_info_t;
-++
-++typedef struct mdu_array_rebuild_info_s {
-++	/*
-++	 *  rebuild status of one particular array
-++	 */
-++	int state; /* 0=no rebuild, 1=rebuilding, 2=delayed */
-++	unsigned long resync_blocks;
-++	unsigned long max_blocks;
-++	unsigned long time_remaining;
-++	unsigned long speed;
-++	
-++} mdu_array_rebuild_info_t;
-++
-+ 
-+ typedef struct mdu_disk_info_s {
-+ 	/*
-
---=-iwkhAv5sOoKxcCNV1ASJ--
-
+Peter
