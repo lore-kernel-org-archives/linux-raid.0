@@ -1,60 +1,47 @@
-From: Brad Campbell <brad@wasp.net.au>
-Subject: "Rebuild" speed on a forced resync
-Date: Tue, 11 Jan 2005 13:47:33 +0400
-Message-ID: <41E3A0B5.209@wasp.net.au>
+From: KELEMEN Peter <Peter.Kelemen@cern.ch>
+Subject: Re: Spares and partitioning huge disks
+Date: Tue, 11 Jan 2005 11:09:01 +0100
+Message-ID: <20050111100901.GE32199@chihiro.cern.ch>
+References: <crmt7e$8d6$1@sea.gmane.org> <200501081749.32816.maarten@ultratux.net> <200501082001.09317.maarten@ultratux.net> <200501101734.24851.maarten@ultratux.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <200501101734.24851.maarten@ultratux.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: RAID Linux <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-G'day all,
+* Maarten (maarten@ultratux.net) [20050110 17:34]:
 
-Just started my big raid using mdadm --update resync to ensure the parity blocks are A-OK after a 
-kernel panic, and I have been monitoring my Disk IO with
-iostat -k 5
+> P.S.:  I get this filling up my logs. Should I be worried about that =
+?
+> Jan 10 11:30:32 dozer kernel: raid5: switching cache buffer size, 512=
+ --> 4096
+> Jan 10 11:30:33 dozer kernel: raid5: switching cache buffer size, 409=
+6 --> 512
+> Jan 10 11:30:33 dozer kernel: raid5: switching cache buffer size, 512=
+ --> 4096
+> Jan 10 11:30:36 dozer kernel: raid5: switching cache buffer size, 409=
+6 --> 512
 
-Now this is an average for a 5 second period.
-I note I'm seeing about 12,456 Kilobytes/sec from each drive, but a cat /proc mdstat is giving me 
-6716 Kilobytes/sec. Given I'm doing a read consistency check I would expect an mdstat speed 9/10ths 
-of my bulk per-drive read speed. (This array is sda -> sdj)
-Am I missing something really obvious?
+You have an internal XFS log on the RAID device and it is
+accessed in sector units by default, md is reporting the changes
+(harmless).  Best workaround is to instruct your filesystem to use
+4K sectors: mkfs.xfs -s size=3D4k
 
-Kernel 2.6.10-bk10
+HTH,
+Peter
 
-Regards,
-Brad
-
-avg-cpu:  %user   %nice    %sys %iowait   %idle
-           39.18    0.00   60.82    0.00    0.00
-
-Device:            tps    kB_read/s    kB_wrtn/s    kB_read    kB_wrtn
-hda               0.00         0.00         0.00          0          0
-sda              97.76     12465.67         0.00      33408          0
-sdb              97.76     12465.67         0.00      33408          0
-sdc              97.76     12465.67         0.00      33408          0
-sdd              97.76     12465.67         0.00      33408          0
-sde              97.76     12465.67         0.00      33408          0
-sdf              98.51     12465.67         0.00      33408          0
-sdg              98.51     12465.67         0.00      33408          0
-sdh              98.88     12465.67         0.00      33408          0
-sdi             107.09     12465.67         0.00      33408          0
-sdj             104.85     12465.67         0.00      33408          0
-sdk               3.73         5.97        10.45         16         28
-sdl               4.10        11.94         5.97         32         16
-sdm               5.22        14.93         7.46         40         20
-md0               0.00         0.00         0.00          0          0
-md2               8.58        26.87         7.46         72         20
-
-
-srv:/home/brad# cat /proc/mdstat
-Personalities : [raid0] [raid5] [raid6]
-md2 : active raid5 sdl[0] sdm[2] sdk[1]
-       488396800 blocks level 5, 128k chunk, algorithm 2 [3/3] [UUU]
-
-md0 : active raid5 sda1[0] sdj1[9] sdi1[8] sdh1[7] sdg1[6] sdf1[5] sde1[4] sdd1[3] sdc1[2] sdb1[1]
-       2206003968 blocks level 5, 128k chunk, algorithm 0 [10/10] [UUUUUUUUUU]
-       [===>.................]  resync = 17.4% (42765824/245111552) finish=501.9min speed=6716K/sec
-unused devices: <none>
+--=20
+    .+'''+.         .+'''+.         .+'''+.         .+'''+.         .+'=
+'
+ Kelemen P=C3=A9ter     /       \       /       \     Peter.Kelemen@cer=
+n.ch
+=2E+'         `+...+'         `+...+'         `+...+'         `+...+'
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
