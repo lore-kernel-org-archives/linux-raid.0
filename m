@@ -1,57 +1,63 @@
-From: "berk walker" <berk@panix.com>
-Subject: Re: RAID-10 with odd number of disks (was Re: Software RAID 0+1 with mdadm.)
-Date: Thu, 27 Jan 2005 17:31:47 -0500
-Message-ID: <opsk98u9bbv40d6c@berk.site>
-References: <200501271714.j0RHEa911050@www.watkins-home.com>
+From: Simon Valiquette <v.simon@ieee.org>
+Subject: growing a RAID-5 array live
+Date: Fri, 28 Jan 2005 18:15:02 -0500
+Message-ID: <41FAC776.6010202@ieee.org>
 Mime-Version: 1.0
-Content-Type: text/plain; format=flowed; delsp=yes; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200501271714.j0RHEa911050@www.watkins-home.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Guy <bugzilla@watkins-home.com>, 'Andy Smith' <andy@lug.org.uk>, 'linux-raid' <linux-raid@vger.kernel.org>
+To: LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-In the past, I have found the quite often, too often, the disk errors  
-happened in the 1st sectors of the disk (and I still have to reboot  
-often).  It does not look good when losing a whole disk, eh?
-b-
+
+Hello,
+
+   I would like to add code to be able to grow a RAID-5 array while 
+keeping the filesystem in read/write mode.  Also, I want the data to be 
+able to survive over a power failure and a disk failure.  Actually, as far 
+as I know, there is no tools for doing that with Linux.  The closest tools 
+I know for that is raidreconf, but I want more than what it can give me 
+and I certainly want something safer.  And doing it while the FS is mounted.
+
+   I am willing to do the work, but I still don't have a deep enought 
+understanding of the software raid internal implementation.  Do there is 
+any documentation about that?  I did'nt find much except what is in the 
+./Documentation directory, so I might have to write it myself.
 
 
-On Thu, 27 Jan 2005 12:16:31 -0500, Guy <bugzilla@watkins-home.com> wrote:
+   My intent would be to play at the bio and biovec level, so that the 
+filesystem can be kept online while we do the restriping.  The basic trick 
+is to be able to use 2 superblocks for the same array at the same time. 
+When we access data that have not yet been converted to the new format, we 
+use the old superblock because the data are still there (obviously).  When 
+we use data that have already been converted, we use the new superblock 
+(because we now have them on the new location).  And between is the fun if 
+we want to minimise the risk of data lost in case of power failure or crash.
 
-> It rotates the pairs!
-> Assume 3 disks, A, B and C.
-> Each stripe would be on these disks:
-> A+B
-> C+A
-> B+C
-> A+B
-> C+A
-> B+C
-> ...
->
-> Maybe not exactly as above, but if not, something similar.
->
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org
-> [mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Andy Smith
-> Sent: Thursday, January 27, 2005 11:19 AM
-> To: 'linux-raid'
-> Subject: RAID-10 with odd number of disks (was Re: Software RAID 0+1 with
-> mdadm.)
->
-> On Thu, Jan 27, 2005 at 10:50:43AM -0500, Guy wrote:
->> RAID10 will work with an odd number of disks!  If really is cool!
->
-> It will?  How?  Does it just make the last mirror "pair" have 3
-> disks or what?
->
-> If so then wouldn't it be better just to not have that disk under
-> md and use it for someting else?
->
+   It would makes me save a lot of time if people comments on which parts 
+of the kernel software RAID code I should put my modifications.  Note that 
+I will require the stripe size not to change, as it would otherwise be 
+very innefficient, and a real nightmare to maintain (use raidreconf instead).
 
 
+   Eventually, I hope this code could also be used to convert between 
+differents kinds of RAID (ie. conversion from RAID-5 to RAID-6, or RAID-0 
+to RAID-5).  As long the stripe size does'nt change, that should be 
+possible since I already need the RAID array to support two different 
+superblocks.
 
--- 
-Using Opera's revolutionary e-mail client: http://www.opera.com/m2/
+
+   So, I need documentation about the internal implementation of the 
+software RAID array and the interactions between the different parts in 
+the kernel, or at least a mentor to guide me.  I already have an 
+algorithm, I just need help to know how and where to makes the changes to 
+have a working prototype.
+
+   Thank you,
+
+Simon Valiquette
+http://gulus.USherbrooke.ca
+
+
+
