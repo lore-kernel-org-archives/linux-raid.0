@@ -1,114 +1,174 @@
 From: Jim Paris <jim@jtan.com>
 Subject: Re: Call for RAID-6 users
-Date: Tue, 27 Jul 2004 14:19:38 -0400
+Date: Tue, 27 Jul 2004 14:48:36 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040727181938.GA28181@jim.sh>
-References: <20040727021209.GA19205@jim.sh> <Pine.GSO.4.33.0407271238490.25702-100000@sweetums.bluetronic.net> <20040727172028.GA27240@jim.sh>
+Message-ID: <20040727184836.GA28494@jim.sh>
+References: <20040727021209.GA19205@jim.sh> <Pine.GSO.4.33.0407271238490.25702-100000@sweetums.bluetronic.net> <20040727172028.GA27240@jim.sh> <20040727181938.GA28181@jim.sh>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="VbJkn9YxBvnuCH5J"
+Content-Type: multipart/mixed; boundary="6c2NcOVqGQ03X4Wi"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20040727172028.GA27240@jim.sh>
+In-Reply-To: <20040727181938.GA28181@jim.sh>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
---VbJkn9YxBvnuCH5J
+--6c2NcOVqGQ03X4Wi
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 
-> > >tar handles special files in /dev properly.
-> > 
-> > Don't bet your life on it.  GNU Tar (tm) will work most of the time on
-> > most systems (read: non-linux), but NEVER assume tar will read device
-> > entries correctly. (cpio is the "correct" tool.  dump is the Correct
-> > Tool (tm).)
+> Attached is another trace that shows this corruption on a single
+> regular file copied with "cp" onto a fresh filesystem.
 
-Attached is another trace that shows this corruption on a single
-regular file copied with "cp" onto a fresh filesystem.
+And here's a trace showing problems even without a filesystem.
+Writing data near the end is fatal.  This does not happen if I write
+to the first 1G of the array.
 
 -jim
 
-
---VbJkn9YxBvnuCH5J
+--6c2NcOVqGQ03X4Wi
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: attachment; filename=typescript
 
-Script started on Tue Jul 27 14:11:19 2004
-bucket:/# mdadm --stop /dev/md1
-bucket:/# mdadm --zero-superblock /dev/hd[gikmo]2
-mdadm: /dev/hdg2 does not appear to have an MD superblock.
-mdadm: /dev/hdi2 does not appear to have an MD superblock.
-mdadm: /dev/hdk2 does not appear to have an MD superblock.
-mdadm: /dev/hdm2 does not appear to have an MD superblock.
-mdadm: /dev/hdo2 does not appear to have an MD superblock.
-bucket:/# for i in /dev/hd[gikmo]2; do dd if=/dev/zero of=$i bs=1M count=100 ; done
-100+0 records in
-100+0 records out
-104857600 bytes transferred in 2.967763 seconds (35332202 bytes/sec)
-100+0 records in
-100+0 records out
-104857600 bytes transferred in 2.969712 seconds (35309012 bytes/sec)
-100+0 records in
-100+0 records out
-104857600 bytes transferred in 2.973760 seconds (35260950 bytes/sec)
-100+0 records in
-100+0 records out
-104857600 bytes transferred in 2.965225 seconds (35362443 bytes/sec)
-100+0 records in
-100+0 records out
-104857600 bytes transferred in 2.976899 seconds (35223769 bytes/sec)
-bucket:/# mdadm --create /dev/md1 --level=6 --chunk=128 --raid-devices=6 missing  /dev/hd[gikmo]2
+Script started on Tue Jul 27 14:44:26 2004
+bucket:~# mdadm --stop /dev/md1
+bucket:~# mdadm --zero-superblock /dev/hd[gikmo]2
+bucket:~# for i in /dev/hd[gikmo]2 ; do dd if=/dev/zero of=$i bs=1M count=1 ; done
+1+0 records in
+1+0 records out
+1048576 bytes transferred in 0.032001 seconds (32766876 bytes/sec)
+1+0 records in
+1+0 records out
+1048576 bytes transferred in 0.032197 seconds (32567587 bytes/sec)
+1+0 records in
+1+0 records out
+1048576 bytes transferred in 0.032125 seconds (32640483 bytes/sec)
+1+0 records in
+1+0 records out
+1048576 bytes transferred in 0.032064 seconds (32702568 bytes/sec)
+1+0 records in
+1+0 records out
+1048576 bytes transferred in 0.032315 seconds (32448665 bytes/sec)
+bucket:~# mdadm --create /dev/md1 --level=6 --chunk=128 --raid-devices=6 missing /dev/hd[gikmo]2
 mdadm: array /dev/md1 started.
-bucket:/# mkreiserfs /dev/md1
-mkreiserfs 3.6.17 (2003 www.namesys.com)
-
-A pair of credits:
-Continuing core development of ReiserFS is  mostly paid for by Hans Reiser from
-money made selling licenses  in addition to the GPL to companies who don't want
-it known that they use ReiserFS  as a foundation for their proprietary product.
-And my lawyer asked 'People pay you money for this?'. Yup. Life is good. If you
-buy ReiserFS, you can focus on your value add rather than reinventing an entire
-FS.
-
-Vitaly Fertman wrote  fsck for V3 and  maintains the reiserfsprogs package now.
-He wrote librepair,  userspace plugins repair code, fsck for V4,  and worked on
-developing libreiser4 and userspace plugins with Umka.
-
-
-Guessing about desired format.. Kernel 2.6.7 is running.
-Format 3.6 with standard journal
-Count of blocks on the device: 244067328
-Number of blocks consumed by mkreiserfs formatting process: 15660
-Blocksize: 4096
-Hash function used to sort names: "r5"
-Journal Size 8193 blocks (first block 18)
-Journal Max transaction length 1024
-inode generation number: 0
-UUID: 7fbea519-7d20-40dd-916c-d99136e6e347
-ATTENTION: YOU SHOULD REBOOT AFTER FDISK!
-	ALL DATA WILL BE LOST ON '/dev/md1'!
-Continue (y/n):y
-Initializing journal - 0%....20%....40%....60%....80%....100%
-Syncing..ok
-
-Tell your friends to use a kernel based on 2.4.18 or later, and especially not a
-kernel based on 2.4.9, when you use reiserFS. Have fun.
-
-ReiserFS is successfully created on /dev/md1.
-bucket:/# dd if=/dev/urandom of=testfile bs=1M count=100
+bucket:~# cat /proc/mdstat
+Personalities : [linear] [raid0] [raid1] [raid5] [multipath] [raid6] 
+md1 : active raid6 hdo2[5] hdm2[4] hdk2[3] hdi2[2] hdg2[1]
+      976269312 blocks level 6, 128k chunk, algorithm 2 [6/5] [_UUUUU]
+      
+md0 : active raid1 hdo1[5] hdm1[4] hdk1[3] hdi1[2] hdg1[1]
+      128384 blocks [6/5] [_UUUUU]
+      
+unused devices: <none>
+bucket:~# dd if=/dev/urandom of=/dev/md1 bs=1M count=100 seek=900000
 100+0 records in
 100+0 records out
-104857600 bytes transferred in 17.675100 seconds (5932504 bytes/sec)
-bucket:/# mount /dev/md1 /mnt/root
-bucket:/# cp testfile /mnt/root
-bucket:/# umount /mnt/root
-bucket:/# mount /dev/md1 /mnt/root
-bucket:/# md5sum testfile /mnt/root/testfile
-95454f5f81b58f89cdd2f6954d721302  testfile
-3b9c4173f3c1c0b315938b5a864f411b  /mnt/root/testfile
-bucket:/# exit
+104857600 bytes transferred in 19.095634 seconds (5491182 bytes/sec)
+bucket:~# mdadm --stop /dev/md1
+bucket:~# mdadm --run /dev/md1
+mdadm: failed to run array /dev/md1: Invalid argument
+bucket:~# dmesg
+md: bind<hdg2>
+md: bind<hdi2>
+md: bind<hdk2>
+md: bind<hdm2>
+md: bind<hdo2>
+raid6: device hdo2 operational as raid disk 5
+raid6: device hdm2 operational as raid disk 4
+raid6: device hdk2 operational as raid disk 3
+raid6: device hdi2 operational as raid disk 2
+raid6: device hdg2 operational as raid disk 1
+raid6: allocated 6269kB for md1
+raid6: raid level 6 set md1 active with 5 out of 6 devices, algorithm 2
+RAID6 conf printout:
+ --- rd:6 wd:5 fd:1
+ disk 1, o:1, dev:hdg2
+ disk 2, o:1, dev:hdi2
+ disk 3, o:1, dev:hdk2
+ disk 4, o:1, dev:hdm2
+ disk 5, o:1, dev:hdo2
+md: md1 stopped.
+md: unbind<hdo2>
+md: export_rdev(hdo2)
+md: unbind<hdm2>
+md: export_rdev(hdm2)
+md: unbind<hdk2>
+md: export_rdev(hdk2)
+md: unbind<hdi2>
+md: export_rdev(hdi2)
+md: unbind<hdg2>
+md: export_rdev(hdg2)
+md: bug in file drivers/md/md.c, line 1513
 
-Script done on Tue Jul 27 14:15:21 2004
+md:	**********************************
+md:	* <COMPLETE RAID STATE PRINTOUT> *
+md:	**********************************
+md1: 
+md0: <hdo1><hdm1><hdk1><hdi1><hdg1>
+md: rdev hdo1, SZ:00128384 F:0 S:1 DN:5
+md: rdev superblock:
+md:  SB: (V:0.90.0) ID:<65daa413.7da47b48.1e1593ff.5a0a11c8> CT:410564ab
+md:     L1 S00128384 ND:5 RD:6 md0 LO:0 CS:0
+md:     UT:410567ad ST:1 AD:5 WD:5 FD:0 SD:0 CSUM:86d6d898 E:0000001c
+     D  0:  DISK<N:0,unknown-block(0,0)(0,0),R:0,S:8>
+     D  1:  DISK<N:1,hdg1(34,1),R:1,S:6>
+     D  2:  DISK<N:2,hdi1(56,1),R:2,S:6>
+     D  3:  DISK<N:3,hdk1(57,1),R:3,S:6>
+     D  4:  DISK<N:4,hdm1(88,1),R:4,S:6>
+     D  5:  DISK<N:5,hdo1(89,1),R:5,S:6>
+md:     THIS:  DISK<N:5,hdo1(89,1),R:5,S:6>
+md: rdev hdm1, SZ:00128384 F:0 S:1 DN:4
+md: rdev superblock:
+md:  SB: (V:0.90.0) ID:<65daa413.7da47b48.1e1593ff.5a0a11c8> CT:410564ab
+md:     L1 S00128384 ND:5 RD:6 md0 LO:0 CS:0
+md:     UT:410567ad ST:1 AD:5 WD:5 FD:0 SD:0 CSUM:86d6d895 E:0000001c
+     D  0:  DISK<N:0,unknown-block(0,0)(0,0),R:0,S:8>
+     D  1:  DISK<N:1,hdg1(34,1),R:1,S:6>
+     D  2:  DISK<N:2,hdi1(56,1),R:2,S:6>
+     D  3:  DISK<N:3,hdk1(57,1),R:3,S:6>
+     D  4:  DISK<N:4,hdm1(88,1),R:4,S:6>
+     D  5:  DISK<N:5,hdo1(89,1),R:5,S:6>
+md:     THIS:  DISK<N:4,hdm1(88,1),R:4,S:6>
+md: rdev hdk1, SZ:00128384 F:0 S:1 DN:3
+md: rdev superblock:
+md:  SB: (V:0.90.0) ID:<65daa413.7da47b48.1e1593ff.5a0a11c8> CT:410564ab
+md:     L1 S00128384 ND:5 RD:6 md0 LO:0 CS:0
+md:     UT:410567ad ST:1 AD:5 WD:5 FD:0 SD:0 CSUM:86d6d874 E:0000001c
+     D  0:  DISK<N:0,unknown-block(0,0)(0,0),R:0,S:8>
+     D  1:  DISK<N:1,hdg1(34,1),R:1,S:6>
+     D  2:  DISK<N:2,hdi1(56,1),R:2,S:6>
+     D  3:  DISK<N:3,hdk1(57,1),R:3,S:6>
+     D  4:  DISK<N:4,hdm1(88,1),R:4,S:6>
+     D  5:  DISK<N:5,hdo1(89,1),R:5,S:6>
+md:     THIS:  DISK<N:3,hdk1(57,1),R:3,S:6>
+md: rdev hdi1, SZ:00128384 F:0 S:1 DN:2
+md: rdev superblock:
+md:  SB: (V:0.90.0) ID:<65daa413.7da47b48.1e1593ff.5a0a11c8> CT:410564ab
+md:     L1 S00128384 ND:5 RD:6 md0 LO:0 CS:0
+md:     UT:410567ad ST:1 AD:5 WD:5 FD:0 SD:0 CSUM:86d6d871 E:0000001c
+     D  0:  DISK<N:0,unknown-block(0,0)(0,0),R:0,S:8>
+     D  1:  DISK<N:1,hdg1(34,1),R:1,S:6>
+     D  2:  DISK<N:2,hdi1(56,1),R:2,S:6>
+     D  3:  DISK<N:3,hdk1(57,1),R:3,S:6>
+     D  4:  DISK<N:4,hdm1(88,1),R:4,S:6>
+     D  5:  DISK<N:5,hdo1(89,1),R:5,S:6>
+md:     THIS:  DISK<N:2,hdi1(56,1),R:2,S:6>
+md: rdev hdg1, SZ:00128384 F:0 S:1 DN:1
+md: rdev superblock:
+md:  SB: (V:0.90.0) ID:<65daa413.7da47b48.1e1593ff.5a0a11c8> CT:410564ab
+md:     L1 S00128384 ND:5 RD:6 md0 LO:0 CS:0
+md:     UT:410567ad ST:1 AD:5 WD:5 FD:0 SD:0 CSUM:86d6d859 E:0000001c
+     D  0:  DISK<N:0,unknown-block(0,0)(0,0),R:0,S:8>
+     D  1:  DISK<N:1,hdg1(34,1),R:1,S:6>
+     D  2:  DISK<N:2,hdi1(56,1),R:2,S:6>
+     D  3:  DISK<N:3,hdk1(57,1),R:3,S:6>
+     D  4:  DISK<N:4,hdm1(88,1),R:4,S:6>
+     D  5:  DISK<N:5,hdo1(89,1),R:5,S:6>
+md:     THIS:  DISK<N:1,hdg1(34,1),R:1,S:6>
+md:	**********************************
 
---VbJkn9YxBvnuCH5J--
+bucket:~# exit
+
+Script done on Tue Jul 27 14:44:51 2004
+
+--6c2NcOVqGQ03X4Wi--
