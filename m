@@ -1,141 +1,71 @@
-From: comsatcat <comsatcat@earthlink.net>
-Subject: Re: Busted disks caused healthy ones to fail
-Date: Tue, 14 Dec 2004 15:34:12 -0700
-Message-ID: <1103063653.8740.0.camel@solaris.skunkware.org>
-References: <200412140655.iBE6tv908270@www.watkins-home.com>
-	 <1103012937.8162.23.camel@solaris.skunkware.org>
-	 <41BEF49F.5010907@pobox.com>
-Reply-To: comsatcat@earthlink.net
+From: Alvin Oga <aoga@ns.Linux-Consulting.com>
+Subject: RE: Busted disks caused healthy ones to fail
+Date: Tue, 14 Dec 2004 15:54:40 -0800 (PST)
+Message-ID: <Pine.LNX.3.96.1041214154622.17352A-100000@Maggie.Linux-Consulting.com>
+References: <200412142147.iBELlv911030@www.watkins-home.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <41BEF49F.5010907@pobox.com>
+In-Reply-To: <200412142147.iBELlv911030@www.watkins-home.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: mjstumpf@pobox.com
-Cc: linux-raid@vger.kernel.org
+To: Guy <bugzilla@watkins-home.com>
+Cc: 'Brad Campbell' <brad@wasp.net.au>, comsatcat@earthlink.net, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Not 1, 3 power supplys.
 
-On Tue, 2004-12-14 at 08:11 -0600, Michael Stumpf wrote:
-> 14 Internal drives on a single power supply plus the mb/cpu/etc?  Oy; 
-> I've got 15 + a p2-400 spinning between 2 550w power supplies, and I'm 
-> worried it is getting overloaded.  I might be paranoid, but I had some 
-> flakiness that was pretty much impossible to debug, so I took broad 
-> steps and overestimated.  Figured that maybe a heavily loaded supply 
-> could hiccup under an unusual condition if too many were attached to 
-> one..  and, while anecdotal, my once-a-month drive hiccup (require 
-> re-add to array, nothing else) problem did go away when I added a power 
-> supply.
-> 
-> comsatcat wrote:
-> 
-> >The two disks that were actually dead were both on a different bus.  The
-> >OS disk that died was on scsi0.
-> >
-> >Is there a way around this behavior (ie: kernel params that can be
-> >adjusted such as timeout values and queuing)?  It never really recovered
-> >correctly after the disks died, a manual reboot as required.
-> >Applications which were using the failed devices would hang forever (I'm
-> >assuming they were waiting for queued commands to complete).
-> >
-> >IDE: not in use
-> >Power: 14 internal drives, no external
-> >Temp: fust fine
-> >Kids: Upstairs taking tech calls.
-> >
-> >
-> >Thanks,
-> >Ben
-> >
-> >
-> >On Tue, 2004-12-14 at 01:55 -0500, Guy wrote:
-> >  
-> >
-> >>Did the disks that failed have anything in common?
-> >>
-> >>SCSI:
-> >>If you have disks on 1 SCSI bus, a single failed disk can affect other
-> >>disks.  By removing the bad disk you correct the problems with the others.
-> >>
-> >>IDE:  (or what ever they call it today)
-> >>2 disks on 1 bus, 1 drive failure will cause the other to fail most of the
-> >>time.
-> >>
-> >>Power supply:
-> >>If you have external disks, they will have another power supply.  If you
-> >>have problems with this power supply, they all could be affected.  Even a
-> >>common power cable can cause multi drive failures.
-> >>
-> >>Temperature:
-> >>Disks getting too hot can cause failures.
-> >>
-> >>Kids:
-> >>Someone turned the disk cabinet off?
-> >>
-> >>I am sure this list is not complete.  But it may help.
-> >>
-> >>Guy
-> >>
-> >>-----Original Message-----
-> >>From: linux-raid-owner@vger.kernel.org
-> >>[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of comsatcat
-> >>Sent: Tuesday, December 14, 2004 1:42 AM
-> >>To: linux-raid@vger.kernel.org
-> >>Subject: Busted disks caused healthy ones to fail
-> >>
-> >>An odd thing happened this weekend.  We were doing some heavy I/O when
-> >>one of our servers had two drives in two seperate raid1 mirrors pop.
-> >>This was not odd as these drives are old and the batch they are from
-> >>have been failing on other boxen as well.  What is odd is that our brand
-> >>new disks which the OS resides on (2 drives in raid 1) half busted.
-> >>
-> >>There are 4 md devices
-> >>
-> >>md/0  
-> >>md/1
-> >>md/2
-> >>md/3
-> >>
-> >>md3, md2, and md1 all lost the 2nd drive in the array (sdh3, sdh6, and
-> >>sdh5).  md0 however was fine with sdh1 being fine.  Why would losing
-> >>disks cause a seemingly healthy disk to go astray?
-> >>
-> >>P.S. I have pull out tons of syslogs showing the two bad disks failing
-> >>if that would help.
-> >>
-> >>
-> >>Thanks,
-> >>Ben
-> >>
-> >>-
-> >>To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> >>the body of a message to majordomo@vger.kernel.org
-> >>More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >>
-> >>-
-> >>To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> >>the body of a message to majordomo@vger.kernel.org
-> >>More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >>    
-> >>
-> >
-> >-
-> >To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> >the body of a message to majordomo@vger.kernel.org
-> >More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >
-> >
-> >  
-> >
-> 
-> 
-> --------------------------------------------
-> My mailbox is spam-free with ChoiceMail, the leader in personal and corporate anti-spam solutions. Download your free copy of ChoiceMail from www.choicemailfree.com
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+On Tue, 14 Dec 2004, Guy wrote:
+
+> My disk drives are rated to use 19.1 watts while active.
+> My disk drives also get very hot without forced air movement.
+> 14 such disks use 267.4 watts.  That would give you 152.6 watts for
+> everything else.  I bet your disks use less power than mine.  I agree with
+> Michael, you may be exceeding the power rating of your power supply.
+
+an overworked power supply will fail "faster"
+
+for "wattage" ... using a sharp needle, "pop" ... that is NOT how "wattage
+works"
+
+	- for a given voltage, you should be operating at 1/2 of its rated
+	amperage
+
+	- at 12v ... what are the disks rated at for power up ( spinup )
+	vs ambeint normal operation
+		- typically 1A to power up and 0.5A for normal spinning
+		operation
+
+	for a powersupply rated at 12V for 10A .. you can run 5 disks
+
+	if you run more disks ... your power supply will die faster
+	and/or your data gets corrupted during power ups when the
+	system and the drives think you're in "normal operation"
+	and enables write  while in fact, its is still in its bootup
+
+> Also, I would not want to push a power supply to the max rating.  It should
+> be sized 50 watts or more beyond what you need.
+
+make that 2x the total wattage needed by the system .. NOT 50W 
+	- add up the amps needed on the 3.3V, 5V, 12V 
+	- use the MAX needed for operation, which is the power up sequence
+	to get a "random number" of operating current ..
+
+	Total watts == 12 * 12v(maxcurrent) + 5v * 5v(maxcurrent)
+			3.3V * 3.3v(maxcurrent)
+
+	- normal operation usually does NOT need as much current
+
+- switched power supplies can output higher current than it is rated
+  at, but it will not be able to sustain that "extra current load"
+  for more than a few seconds before its over-current circuitry kicks
+  in to shut itself down
+
+	- you will be bouncing up and down in current on each power
+	line till the system is all booted
+
+	- put a digital storage scope on the 12V and 5V and 3.3V line
+	and an ampmeter on each power line and watch it go bonkers
+
+c ya
+alvin
 
