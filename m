@@ -1,78 +1,71 @@
-From: Luca Berra <bluca@comedia.it>
+From: Neil Brown <neilb@cse.unsw.edu.au>
 Subject: Re: how to which to bigger disk (md can do it?)
-Date: Mon, 17 Nov 2003 21:24:58 +0100
+Date: Tue, 18 Nov 2003 09:29:30 +1100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20031117202457.GC11443@percy.comedia.it>
-References: <3FB75992.3020608@bnap.hu> <20031117092922.GD30745@percy.comedia.it> <16312.39435.330127.598268@notabene.cse.unsw.edu.au> <3FB8D5A6.4040909@bnap.hu>
+Message-ID: <16313.19402.432049.249742@notabene.cse.unsw.edu.au>
+References: <3FB75992.3020608@bnap.hu>
+	<20031117092922.GD30745@percy.comedia.it>
+	<16312.39435.330127.598268@notabene.cse.unsw.edu.au>
+	<3FB8D5A6.4040909@bnap.hu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <3FB8D5A6.4040909@bnap.hu>
-To: linux-raid@vger.kernel.org
+In-Reply-To: message from Farkas Levente on Monday November 17
+To: Farkas Levente <lfarkas@bnap.hu>
+Cc: Luca Berra <bluca@comedia.it>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Nov 17, 2003 at 03:05:26PM +0100, Farkas Levente wrote:
->>Not so weird - it is exactly what I was going to suggest.
->>Providing you get the chunk size, parity algoithm and device order
->>right, and use "--force" to make sure mdadm doesn't re-arrange the
->>devices on on it should work perfectly.
->
->this's one of our production server, so I'd like to be sure. so:
-this is the reason i said it is a weird idea, it is not easy to
-understand and if you fuck up you fuck up badly!
+On Monday November 17, lfarkas@bnap.hu wrote:
+> this's one of our production server, so I'd like to be sure. so:
+> - switch the disk one by one (do these steps 8 times):
+>    - put out one 120 hd (mdadm /dev/md0 -f /dev/sda1 -r /dev/sda1)
 
->- switch the disk one by one (do these steps 8 times):
->   - put out one 120 hd (mdadm /dev/md0 -f /dev/sda1 -r /dev/sda1)
->   - put the new 200 GB one and create a 200 GB partition (Linux raid
->     autodetect)
->   - add to md0 (mdadm -a /dev/hda1) this step do not change the device
->     order???
-at this point you will find yourself with a 120GBx8 raid 5 array
-now you would have to (but i would be very careful in doing this)
+I would do this as two separate steps
+   mdadm /dev/md0 -f /dev/sda1
+   mdadm /dev/md0 -r /dev/sda1
 
-check the exact device order (/proc/mdstat ???)
-write it down
-check the chunk size
-write it down
-check the parity algorithm
-write it down
+as there are some possibly race problems when removing a device the
+instant that it failes.
 
-umount the fs
-stop the damned array
+>    - put the new 200 GB one and create a 200 GB partition (Linux raid
+>      autodetect)
+>    - add to md0 (mdadm -a /dev/hda1) this step do not change the device
+>      order???
 
-mdadm -C /dev/md<whatever> -c <your chink size> -p <your parity> -n 8 -f <list of all
-devices in the same exact order>
+No, it shouldnt' but it shouldn't matter.
 
-THIS WILL REWRITE THE PARITY ON ALL DRIVES, SO IF YOU GET IT WRONG YOU
-WILL DESTROY YOUR DATA
+> - resize2fs
+> 
+> when should I use --force??
 
-(would using missing as the last drive prevent the parity rebuild and
-allow to check the expected result ?????)
+When you have the array full of 200GB drives, use
+  mdadm -D /dev/md0
+to find out what it looks like.  This will include algorithm, chunk
+size, etc.  Keep a copy of the output.
+Then 
+   mdadm -S /dev/md0
 
-cross you fingers,
-mount your fs back and see what happened
-umount it again
->- resize2fs
-mount it for the last time
+It probably would be to use the "missing" directive as Luca
+suggested.  This will create a degraded array and so will not
+automatically regenerate any data.  
 
+Something like:
+mdadm -C /dev/md0 --level 5 -n 8 --chunk=64 /dev/sda1 /dev/sdb1 /dev/sdc1
+    .... /dev/sdf1 /dev/sdg1 missing
 
->when should I use --force??
-only when you are really sure of what you are doing.
+If you do this, it will only over-write the raid superblocks and will
+not touch the data.
 
-please test it on a test system before doing it on real data
+You can then
+   fsck -n /dev/md0
+just to make sure it looks right (you don't have to let this run to
+completion. Just let it run for a new minutes to make sure nothing
+obvious is wrong) Then mount the filesystem and have a look around.
+If everything is OK, unmount and try resize2fs.
 
-you might well find that a slower way might be better for you
+When you are happy the the array looks good, add the last drive back
+in with
+   mdadm /dev/md0 -a /dev/sdh1
 
-(i don't want to sound catastrophic, but i am not going to be held
-responsible if someone reads these instruction and fucks-up badly)
-
-L.
-
--- 
-Luca Berra -- bluca@comedia.it
-        Communication Media & Services S.r.l.
- /"\
- \ /     ASCII RIBBON CAMPAIGN
-  X        AGAINST HTML MAIL
- / \
+NeilBrown
