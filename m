@@ -1,9 +1,9 @@
 From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: raidtools vs mdadm
-Date: Wed, 1 Sep 2004 10:50:46 +1000
+Subject: Re: more mdadm questions
+Date: Wed, 1 Sep 2004 11:00:27 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16693.7398.241968.278044@cse.unsw.edu.au>
-References: <1093978543.3399.20.camel@rich>
+Message-ID: <16693.7979.802560.41021@cse.unsw.edu.au>
+References: <1093997605.3399.34.camel@rich>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
@@ -14,33 +14,49 @@ Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 On Tuesday August 31, rich@storix.com wrote:
-> i work for a software company that develops backup and disaster recovery
-> software for linux. our product supports software raid, but i must say
-> that we currently only support it when devices are created with
-> raidtools. i only recently heard about mdadm and am very impressed with
-> its flexibility and funtionality.
+> when mdadm queries information about the raid devices, does it simply
+> get the imformation from /proc/mdstat and format it accordingly?
 
-Thanks.
+It also used the GET_ARRAY_INFO and GET_DISK_INFO ioctls.
+It also reads the super-block for more information.
 
 > 
-> my question is how popular is mdadm in production environments as this
-> compares to raidtools?
+> when mdadm displays information about the block devices raid devices are
+> built on how does it display the name the devices? does it show the
+> devfs name? does it show the mapper name if built on a logical volume?
+> are these names consistent?
 
-It's hard to say.  Quite a few people on this list use it.  There are
-regularly people appearing who don't know about it.  I'd say it's
-popularity is steadily growing.  I suspect you could help there....
+It hunts through /dev for a special file with the name major/minor
+numbers, and uses the name of the file.
+
+> 
+> what about raid devices that were built with raidtools? does it look in
+> /proc/mdstat for information?
+
+arrays built with raidtools are indistinguishable from arrays built
+with mdadm.
+
+> 
+> how does mdadm know what devices to query if they are not defined in
+> /etc/mdadm/mdamd.conf with DEVICES?
+
+You must be using debian.  The conf file should be /etc/mdadm.conf,
+and is most places.
+
+I'm not sure what the question means.  "query" in what sense?
+The only devices mdadm queries are those that it has been told to
+query, possibly by /etc/mdadm.conf, possible by command line args.
 
 
 > 
-> is mdadm used to configure software raid on any distribution
-> installations?
+> if devices are missing from the raid device, is there a way of knowing
+> the name of the missing device without the configuration file?
 
-I don't know.
+I'm not sure that question means anything.  If device is missing, then
+it doesn't exist.  You can add a spare that will be rebuilt.  It can
+be any un-used device of the right size.
 
-> 
-> is mdadm trending to become the defacto standard for software raid on
-> linux?
-
-It is on this list.  But the world is much bigger than this list.
+Supposing there was a way of "knowing the name of the missing device",
+how would you use that information?
 
 NeilBrown
