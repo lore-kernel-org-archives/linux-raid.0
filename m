@@ -1,55 +1,62 @@
 From: <robin-lists@robinbowes.com>
-Subject: RE: mount-by-label finds drive not array ????
-Date: Thu, 22 Jul 2004 17:33:13 +0100
+Subject: Add disks to RAID5 array
+Date: Thu, 22 Jul 2004 17:20:04 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <S266708AbUGVQdP/20040722163315Z+2366@vger.kernel.org>
-References: <Pine.LNX.4.58.0407010736180.15444@jupiter.toms.net>
+Message-ID: <S266727AbUGVQUG/20040722162006Z+461@vger.kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.58.0407010736180.15444@jupiter.toms.net>
-To: 'Tom Oehser' <tom@toms.net>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org 
-> [mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Tom Oehser
-> Sent: 01 July 2004 11:41
-> To: linux-raid@vger.kernel.org
-> Subject: mount-by-label finds drive not array ????
-> 
-> 
-> Hi,
-> 
-> I'm accustomed to doing something like:
-> 
-> LABEL=tomsvol2  /mnt/foo   ext3      defaults        0 2
-> 
-> But if I do that on my raid-5 md arrays, it tries to mount 
-> disk 1 of the 4 disks that make up the array!  Apparently, 
-> the first stripe has enough of the filesystem that it must be 
-> thinking that is what to mount!  Even with type "FD"!!!
-> 
-> So, with an array /dev/md0 made of hda1 hdb1 hdc1 hdd1, I am 
-> having to do a literal:
-> 
-> /dev/md0        /mnt/bar      ext3      defaults        0 4
-> 
-> Since if I do it by "LABEL=", it tries to mount hda1, not md0!
-> 
-> Is this just a known/accepted brain-deadness of the mount code?
+Hi,
 
-Tom,
+I had intended to build a RAID5 array using 6 x 250GB drives. However, 3 of
+6 drives have proven to be faulty and have been RMA'd.
 
-I'm just considering doing something like this.
+I've successfully built the array using the remaining 3 x 250GB drives
+(details below)
 
-Did you ever get any resolution to this issue?
+Now, when I get the other three disks back, how do I add them to this array
+and increase the size of the array? Is this possible?
 
 Thanks,
 
 R.
+
+
+
+[root@dude root]# mdadm --detail /dev/md5
+/dev/md5:
+        Version : 00.90.01
+  Creation Time : Thu Jul 22 14:13:50 2004
+     Raid Level : raid5
+     Array Size : 487283200 (464.71 GiB 498.98 GB)
+    Device Size : 243641600 (232.35 GiB 249.49 GB)
+   Raid Devices : 3
+  Total Devices : 3
+Preferred Minor : 5
+    Persistence : Superblock is persistent
+
+    Update Time : Thu Jul 22 17:00:18 2004
+          State : clean
+ Active Devices : 3
+Working Devices : 3
+ Failed Devices : 0
+  Spare Devices : 0
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+    Number   Major   Minor   RaidDevice State
+       0       8        2        0      active sync   /dev/sda2
+       1       8       18        1      active sync   /dev/sdb2
+       2       8       34        2      active sync   /dev/sdc2
+           UUID : dde32a88:4b9bf7c1:1a634922:efbac4b0
+         Events : 0.448136
+
 --
-http://robinbowes.com  
+http://robinbowes.com 
 
