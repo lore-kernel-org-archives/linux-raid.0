@@ -1,42 +1,53 @@
-From: Maarten <maarten@ultratux.net>
-Subject: Re: 4 questions. Chieftec chassis case CA-01B, resync times, selecting ide driver module loading,  raid5 :2 drives on same ide channel
-Date: Sun, 16 Jan 2005 23:49:36 +0100
-Message-ID: <200501162349.36456.maarten@ultratux.net>
-References: <200501161628.23034.mlaks@verizon.net>
+From: Mike Hardy <mhardy@h3c.com>
+Subject: Re: RAID5 drive failure, please verify my commands
+Date: Sun, 16 Jan 2005 15:13:42 -0800
+Message-ID: <41EAF526.2000707@h3c.com>
+References: <7C8198B3-67EA-11D9-9A87-00039363AEBE@bitart.com> <41EADBAE.6070400@h3c.com> <F856C764-680B-11D9-9A87-00039363AEBE@bitart.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200501161628.23034.mlaks@verizon.net>
-Content-Disposition: inline
+In-Reply-To: <F856C764-680B-11D9-9A87-00039363AEBE@bitart.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sunday 16 January 2005 22:28, Mitchell Laks wrote:
-> Thank you to Gordon, Maarten and Guy for your helpful responses. I learned
-> much from each of  your comments.
->
-> Maarten: I paid $70 for an antec sl450 power supply. seems better price
-> than you are saying ( is your power supply better?). 
 
-Heh.  At double that price, I would sure as hell hope so...!!  ;-)
 
-If the Tagan is comparable to anything from Antec, it would be to the True480, 
-not the SL450.  The Tagan is inaudible, if there were no case- and cpu fans 
-whirring and mainboard-LEDs lit, you couldn't say if the unit was on or off. 
-Add to that the fact that this psu has SO many connectors I could connect all 
-10 harddrives without using a single splitter(!), that all connectors are 
-gold plated, that it weighs more than the average complete case, and that it 
-is very efficient...
 
-But judge for yourself:
-http://www.3dvelocity.com/reviews/tagan/tg480.htm
+Gerd Knops wrote:
 
-I really don't buy such extreme hardware usually.  But since I put the life of 
-1.4TB raid-5 data (or 2 TB raw disk capacity) in its hands, it seemed like a 
-good idea at the time.  Actually, it still does. :-)
+> Seems to be a whole slew of bad sectors, here is what the log says:
 
-Maarten
+I typically get bad sectors in little mini-batches. Under a hundred - 
+typically 40 or so in one chunk. There are 8 sectors per block, and I 
+guess when a block goes, whatever took it out (some dust or something? a 
+bad alignment of metal in the media?) gets the blocks near it too.
 
+Anyway, it still looks to me like its semi-normal. Definitely check out 
+the bad block howto and (after removing the drive from the array) try 
+doing a dd if=/dev/sda of=/dev/null bs=4096 skip=(whatever the sector is 
+divided by 8) count=1
+
+You should see the read errors in the log then, that verifies that 
+you've got the right offset in the disk.
+
+At that point, do a dd if=/dev/zero of=/dev/sda bs=4096 skip=(sector 
+address divided by 8) count=1
+
+If you repeat the read after that block write, the read should succeed - 
+you've told the drive you don't need that data any more (you wrote into 
+the block) so it shouuld be able to reallocate
+
+If you take that single-block idea, and expand it to the first block 
+address and a count= number that includes all the bad blocks, you should 
+clear them all
+
+??
+
+Or the drive is shot :-). Without a SMART self-test and a check of the 
+results where you can really interrogate the drive, its hard to say
+
+Glad this helps though
+
+-Mike
