@@ -1,157 +1,42 @@
-From: Ken Causey <ken@ineffable.com>
-Subject: Initrd and persistent-superblock
-Date: 21 Jun 2002 10:11:30 -0500
+From: Jeff Meininger <jeffm@boxybutgood.com>
+Subject: RUN_ARRAY vs. START_ARRAY ioctls
+Date: Fri, 21 Jun 2002 20:42:32 -0500 (CDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1024672290.517.37.camel@temp>
+Message-ID: <Pine.LNX.4.44.0206211847480.2157-100000@spaz.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
 
-I'm trying to setup a system with all filesystem, including boot and
-root, on software raid.  I'm installing Debian testing and am using
-http://www.1u-raid5.net/HowTo/raid_debian.txt as a guide.  I've setup
-boot and swap as raid1 and root, home, and var as raid5.  My hope is to
-be able to use stock debian kernels (currently 2.4.18-686) and simply
-build my own initrd as necessary.  The hope is that I can let apt
-happily upgrade my kernel as necessary and at worst use mkinitrd to
-build a custom initrd image, in fact I shouldn't even have to worry
-about this since if I get mkinitrd properly configured an appropriate
-image should be built whenever a new kernel is installed.
+I'm looking at the kernel/user interface md_u.h and trying to figure out
+how to start a linear raid, not persistant, no superblock, from my little
+test program.
 
-At any rate, I'm running in to trouble.  My problem seems to be that
-autostart is not working.  I have persistent-superblock set to 1, but
-I've found that if I move raidtab out of /etc and reboot, then the raid
-is not autostarted.  Shouldn't persistent-superblock take care of that? 
-Or am I misunderstanding?
+My current plan of attack is to do 3 steps...
 
-Here's some info, let me know if you need anything more:
+#1. do ioctl SET_ARRAY_INFO.  Which fields of mdu_array_info_t should I 
+fill out before passing it into ioctl? 
 
-temp:~# cat ~/raidtab 
-#
-# Boot /boot RAID1
-#
+#2. Add disks with ADD_NEW_DISK... one mdu_disk_info_t per disk for 
+nr_disks (or raid_disks??) in mdu_array_info_t.
 
-raiddev /dev/md0
-	raid-level		1
-	nr-raid-disks		3
-	nr-spare-disks		0
-	persistent-superblock	1
-	chunk-size		4
-	
-	device			/dev/sda1
-	raid-disk		0
-	device			/dev/sdb1
-	raid-disk		1
-	device			/dev/sdc1
-	failed-disk		2
+#3. RUN_ARRAY or START_ARRAY ioctl.  I can't figure out which to use.  It 
+seems that RUN_ARRAY requires a mdu_param_t arg.
 
-#
-# Swap RAID1
-#
+Are personality and 'level' the same thing?  Is "linear" mode represented 
+as 1?
 
-raiddev /dev/md1
-	raid-level		1
-	nr-raid-disks		3
-	nr-spare-disks		0
-	persistent-superblock	1
-	chunk-size		4
+So many variables here... I want to give this a shot, but I also don't 
+want to trash my system doing something stupid!
 
-	device			/dev/sda2
-	raid-disk		0
-	device			/dev/sdb2
-	raid-disk		1
-	device			/dev/sdc2
-	failed-disk		2
+One more question... I seem to remember that you can only have something 
+like 12 or 27 devices per set a while back.  Does this limitation still 
+stand for non-superblock linear raids?  If so, will I be able to 
+effectively use more devices by creating multiple raids of 12 devices, and 
+then making a raid of the raids?
 
-#
-# Root / RAID5
-#
-
-raiddev /dev/md2
-	raid-level		5
-	nr-raid-disks		3
-	nr-spare-disks		0
-	persistent-superblock	1
-	chunk-size		32
-
-	device			/dev/sda3
-	raid-disk		0
-	device			/dev/sdb3
-	raid-disk		1
-	device			/dev/sdc3
-	failed-disk		2
-
-#
-# Home /home RAID5
-#
-
-raiddev /dev/md3
-	raid-level		5
-	nr-raid-disks		3
-	nr-spare-disks		0
-	persistent-superblock	1
-	chunk-size		32
-
-	device			/dev/sda5
-	raid-disk		0
-	device			/dev/sdb5
-	raid-disk		1
-	device			/dev/sdc5
-	failed-disk		2
-
-#
-# Var /var RAID5
-
-raiddev /dev/md4
-	raid-level		5
-	nr-raid-disks		3
-	nr-spare-disks		0
-	persistent-superblock	1
-	chunk-size		32
-
-	device			/dev/sda6
-	raid-disk		0
-	device			/dev/sdb6
-	raid-disk		1
-	device			/dev/sdc6
-	failed-disk		2
-
-temp:~# fdisk -ul /dev/sda
-
-Disk /dev/sda: 255 heads, 63 sectors, 2233 cylinders
-Units = sectors of 1 * 512 bytes
-
-   Device Boot    Start       End    Blocks   Id  System
-/dev/sda1            63     32129     16033+  fd  Linux raid autodetect
-/dev/sda2         32130   2024189    996030   82  Linux swap
-/dev/sda3       2024190  10024559   4000185   fd  Linux raid autodetect
-/dev/sda4      10024560  35873144  12924292+   5  Extended
-/dev/sda5      10024623  26025299   8000338+  fd  Linux raid autodetect
-/dev/sda6      26025363  35873144   4923891   fd  Linux raid autodetect
-temp:~# fdisk -ul /dev/sdb
-
-Disk /dev/sdb: 255 heads, 63 sectors, 2233 cylinders
-Units = sectors of 1 * 512 bytes
-
-   Device Boot    Start       End    Blocks   Id  System
-/dev/sdb1            63     32129     16033+  fd  Linux raid autodetect
-/dev/sdb2         32130   2024189    996030   82  Linux swap
-/dev/sdb3       2024190  10024559   4000185   fd  Linux raid autodetect
-/dev/sdb4      10024560  35873144  12924292+   5  Extended
-/dev/sdb5      10024623  26025299   8000338+  fd  Linux raid autodetect
-/dev/sdb6      26025363  35873144   4923891   fd  Linux raid autodetect
-
-My initrd.img includes the raid modules and raid1 and raid5 do indeed
-start during the initrd stage.
-
-All help is appreciated,
-
-Ken Causey
-
-
+Thanks for your help!
+-Jeff
 
