@@ -1,28 +1,51 @@
-From: Jose Luis Domingo Lopez <linux-raid@24x7linux.com>
-Subject: Re: Bug in kernel 2.2.14
-Date: Sun, 9 Nov 2003 23:13:21 +0100
+From: Jean-Rene Cormier <jrc@vgmidi.com>
+Subject: Moving RAID 1 array to new server
+Date: Mon, 10 Nov 2003 20:03:31 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20031109221321.GA16199@localhost>
-References: <002801c3a6ff$6981ee60$0100a8c0@trosc>
+Message-ID: <1068509010.907.4.camel@forbidden.jrc.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <002801c3a6ff$6981ee60$0100a8c0@trosc>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sunday, 09 November 2003, at 21:24:00 +0100,
-Tomas Vondra wrote:
+I just moved my RAID 1 array to a new server and I did the mistake of
+moving only one disk at first to make sure that I would still have a
+copy on the other server in case the new one couldn't read the array for
+some reason. When I added the second disk it mark it as faulty or
+something so I tried to remove it from the array and re-add it but it
+added a spare drive instead. So now my array is running in degraded
+mode, what can I do to so the second drive resync with the other one?
 
-> I think I've just found a bug in Kernel 2.2.14 found in RedHat distribution.
->
-Linux kernel 2.2.14 dates back to january 2000, that is nearly four
-years ago. Although 2.2.x is actively maintained, current version is
-2.2.25, so your first step should be try to reproduce the problem with
-this version before reporting the bug.
--rw-r--r--   1 korg     korg 15918652   ene  4  2000   linux-2.2.14.tar.gz
+Here's the output of mdadm --detail /dev/md0:
 
--- 
-Jose Luis Domingo Lopez
-Linux Registered User #189436     Debian Linux Sid (Linux 2.6.0-test9-mm2)
+/dev/md0:
+        Version : 00.90.00
+  Creation Time : Sat Mar  1 22:55:38 2003
+     Raid Level : raid1
+     Array Size : 60051456 (57.27 GiB 61.49 GB)
+    Device Size : 60051456 (57.27 GiB 61.49 GB)
+   Raid Devices : 2
+  Total Devices : 1
+Preferred Minor : 0
+    Persistence : Superblock is persistent
+
+    Update Time : Mon Nov 10 16:50:06 2003
+          State : dirty, no-errors
+ Active Devices : 1
+Working Devices : 1
+ Failed Devices : 0
+  Spare Devices : 1
+
+
+    Number   Major   Minor   RaidDevice State
+       0      33        1        0      active sync   /dev/hde1
+       1       0        0        1      faulty removed
+           UUID : 97cdd679:0b676ca4:3d889120:566d5967
+         Events : 0.27
+
+
+Jean-Rene Cormier
+
+
