@@ -1,42 +1,33 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: Can't add missing member back in???
-Date: Thu, 27 Jun 2002 04:09:27 +1000 (EST)
+From: Jason Shelton <jason@storix.com>
+Subject: Re: Simple question, maybe
+Date: 26 Jun 2002 11:05:38 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <15642.855.558011.545081@notabene.cse.unsw.edu.au>
-References: <1025111457.596.13.camel@temp>
+Message-ID: <1025114738.1794.19.camel@jason.storix.com>
+References: <1025113529.1793.8.camel@jason.storix.com>
+	<15642.421.825234.16918@notabene.cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Ken Causey on  June 26
-To: Ken Causey <ken@ineffable.com>
-Cc: linux-raid@vger.kernel.org
+In-Reply-To: <15642.421.825234.16918@notabene.cse.unsw.edu.au>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On  June 26, ken@ineffable.com wrote:
-> Hi,
+
+That was exactly what I needed, thank you very much. Now, if I may,
+where did you find that? I've been looking all over the place and kept
+hitting dead ends.
+
+Thanks again
+
+Jason Shelton
+Storix Software
+
+
+
+On Wed, 2002-06-26 at 11:02, Neil Brown wrote:
+ 
+>  append="raid=noautodetect"
 > 
-> Interesting problem.  I'm setting up an all software RAID system and
-> after a few fits and starts have reached some success.  I started to do
-> some testing and have run into a problem.  What I was doing is I was one
-> by one unplugging one of the SCSI drives and then powering up the system
-> to make sure it would power up properly.  The first time I did this
-> everything worked great.  I plugged the drive back up and used
-> raidhotadd to recover and got everything to UUU.  I then powered off and
-> unplugged another drive, system boots up great with only two drives. 
-> Now its time to plug the drive back in and rebuild the array to be ready
-> to unplug the last of the three drives for a thorough test.  Only, now I
-> can ONLY boot up if I DO NOT have the missing drive plugged in.  This is
-> really weird.  If I have all three devices attached then it claims that
-> 2/3 of the devices that make up md2 (my root) are unavailable and well
-> then we are screwed.  WTF?
-
-Let me guess... you are using "raidstart" to start the arrays?
- If so, that is your problem.  It is broken.
- Either change the partition type to use auto-detect, or use
- mdadm:
-   http://www.cse.unsw.edu.au/~neilb/source/mdadm/
-
-If you aren't using raidstart, tell me and I try harder.
-
-NeilBrown
+> NeilBrown
+>
