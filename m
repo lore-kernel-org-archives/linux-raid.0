@@ -1,55 +1,34 @@
-From: Stephen Lee <splee@plexio.com>
-Subject: Re: RAID startup problem
-Date: 14 May 2003 20:12:15 -0700
+From: Herta Van den Eynde <herta.vandeneynde@cc.kuleuven.ac.be>
+Subject: mdadm.conf questions
+Date: Thu, 15 May 2003 12:13:50 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1052968335.1906.108.camel@ralph.plexio.private>
-References: <3EC2A232.8070308@moeraki.com>
-	 <B0E6075E55C7D6119DDE0002A53F8BCEFFDD2D@blpfroclab01.bausch.com>
-	 <20030514194644.GB6949@localhost> <3EC2A232.8070308@moeraki.com>
-	 <5.1.1.6.2.20030514165613.03b11db0@mail.harddata.com>
+Message-ID: <3EC3685E.3010202@cc.kuleuven.ac.be>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5.1.1.6.2.20030514165613.03b11db0@mail.harddata.com>
-To: Raid <linux-raid@vger.kernel.org>
-Cc: maurice@harddata.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 2003-05-14 at 19:47, Maurice Hilarius wrote:
-> Hi There!
-> 
-> I just set up a server with 2 x 3Ware cards, 16 IDE disks, and am building 
-> a number of software md raids using mdadm.
-> 
-> Everything built and synched OK, but the raid1 devices don't seem to come 
-> up upon reboot.
-> 
-> Any suggestions are appreciated!
-> 
-> Here is some fairly detailed info:
-> 
-> 
-> Status upon reboot:
-> 
-> md2 : active raid5 sdl1[2] sde1[1] sdd1[0]
->        19550848 blocks level 5, 64k chunk, algorithm 2 [3/3] [UUU]
-> 
-> md6 : active raid5 sdl2[2] sde2[1] sdd2[0]
->        136745088 blocks level 5, 64k chunk, algorithm 2 [3/3] [UUU]
-> 
-> md7 : active raid5 sdn2[2] sdm2[1] sdf2[0]
->        136745088 blocks level 5, 64k chunk, algorithm 2 [3/3] [UUU]
-> 
-> md8 : active raid5 sdo2[2] sdh2[1] sdg2[0]
->        136745088 blocks level 5, 64k chunk, algorithm 2 [3/3] [UUU]
-> 
-> unused devices: <none>
+When I run "mdadm --detail --scan", the command outputs information about the devices in the array on a separate line:
 
-Was your raid1 module loaded prior to calling the raid1 devices during
-bootup? What personalities does /proc/mdstat show?
+# mdadm --detail --scan
+ARRAY /dev/md3 level=raid0 num-devices=3 UUID=fc5d996b:15107473:e3e819c9:6829a450
+   devices=/dev/md0,/dev/md1,/dev/md2
+ARRAY /dev/md2 level=raid1 num-devices=2 UUID=32d034b8:e93cc8c7:f6335e14:829aefee
+   devices=/dev/sde,/dev/sdh
+ARRAY /dev/md1 level=raid1 num-devices=2 UUID=4efa3017:9dc3fa9b:6f4acac4:e1944bec
+   devices=/dev/sdd,/dev/sdg
+ARRAY /dev/md0 level=raid1 num-devices=2 UUID=1d078c62:2b90a2c3:1ec1d0af:75600395
+   devices=/dev/sdc,/dev/sdf
 
-Stephen
+1. When I redirect this output to '/etc/mdadm.conf, should I then edit the file to join the line listing the devices to the one defining the ARRAY?
+2. Should the devices tag be there at all?  sd[c-e] are on a separate bus from sd[f-h].  If I add more devices to the first bus, sd[f-h] will be renamed.  Won't that confuse the md driver? 
+3. should I add /dev/md[0-2] as DEVICE in /etc/mdstat.conf?
+
+Kind regards,
+
+Herta
 
 
 
