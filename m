@@ -1,55 +1,53 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: RAID-6
-Date: Mon, 11 Nov 2002 15:05:21 -0800
+From: Bernd Schubert <bernd-schubert@web.de>
+Subject: Re: messages after server crash
+Date: Tue, 12 Nov 2002 17:02:26 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3DD037B1.8050603@zytor.com>
-References: <Pine.LNX.4.44.0211111740060.11681-100000@filesrv1.baby-dragons.com>
+Message-ID: <200211121702.27034.bernd-schubert@web.de>
+References: <200211111526.37325.bernd-schubert@web.de> <15824.3059.420677.958049@notabene.cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
+In-Reply-To: <15824.3059.420677.958049@notabene.cse.unsw.edu.au>
+To: Neil Brown <neilb@cse.unsw.edu.au>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Mr. James W. Laferriere wrote:
-> 	Hello Peter ,
-> 
-> On 11 Nov 2002, H. Peter Anvin wrote:
-> 
->>Hi all,
->>I'm playing around with RAID-6 algorithms lately.  With RAID-6 I mean
->>a setup which needs N+2 disks for N disks worth of storage and can
->>handle any two disks failing -- this seems to be the contemporary
->>definition of RAID-6 (the originally proposed "two-dimensional parity"
->>which required N+2*sqrt(N) drives never took off for obvious reasons.)
-> 
-> 	Was there a discussion of the 'two-dimensional parity' on the
-> 	list ?  I don't remember any (of course) .  But what other than
-> 	98+2+10 ,  What was the main difficulty ?  I don't (personally)
-> 	see any difficulty (other than managability/power/space) to the
-> 	ammount of disks required .  Tia ,  JimL
+Hello Neil,
+
+thanks for your answer.
+
+> > Well, the 'delaying resync ...' messages are easy to understand, but are
+> > they related to the 'resync aborted' messages ? At least the /proc/mdstat
+> > looks fine.
+>
+> It looks fine ... but the arrays probably aren't in sync.
+
+How can we force the syncing ?
+
+> The 'resync aborted' is caused either by IO errors, which should show
+> up in dmesg, or the resync threads being signaled, or by the array
+> being switched into readonly mode.
+
+Hmm, I think the dmesg-output doesn't show IO-errors and since we write to the 
+disks (our home-partition is on it), it shouldn't be readonly, either.
+
+>
+> I'm curious about this raidautorun which said:
+> md: raidautorun(pid 89) used obsolete MD ioctl, upgrade your software to
+> use new ictls
+>
+> That appears to be part of mkinitrd.  What distribution are you
+> running? What version?  What version of mkinitrd?
 >
 
-No discussion of two-dimensional parity, but that was the originally
-proposed RAID-6.  Noone ever productized a solution like that to the
-best of my knowledge.  I don't know what you mean with "98+2+10", but
-the basic problem is that with 2D parity, for N data drives you need
-2*sqrt(N) redundancy drives, which for any moderate-sized RAID is a lot
-(with 9 data drives you need 6 redundancy drives, so you have 67%
-overhead.)  You also have the same kind of performance problems as
-RAID-4 does, because the "rotating parity" trick of RAID-5 does not work
-in two dimensions.  And for all of this, you're not *guaranteed* more
-than dual failure recovery (although you might, probabilistically, luck
-out and have more than that.)
+This is a Suse-7.3 system, but with vanilla kernel and without initrd-support. 
+I guess it comes from the Suse-start-up-scripts, that try to enable the raid, 
+though it was already enabled by the kernel.
+The raidautorun-binary comes from the Suse-raidtools package (version 0.9), is 
+there an upgraded version available (I found only patched debian packages, 
+but no general tgz-files) ?
 
-P+Q redundancy, the current meaning of RAID-6, instead uses two
-orthogonal redundancy functions so you only need two redundancy drives
-regardless of how much data you have, and you can apply the RAID-5 trick
-of rotating the parity around.  So from your 15 drives in the example
-above, you get 13 drives worth of data instead of 9.
+So thanks again,
 
-	-hpa
-
-
-
+Bernd
