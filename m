@@ -1,54 +1,58 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: [PATCH]: HotSwap SCSI in Soft RAID1 (scsi_rescan)
-Date: Fri, 20 Sep 2002 12:35:47 -0700
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <20020920193547.GA3237@beaverton.ibm.com>
-References: <A5974D8E5F98D511BB910002A50A66470580D1EC@hdsmsx103.hd.intel.com>
+From: Alvin Oga <aoga@Maggie.Linux-Consulting.com>
+Subject: Re: RAID as backup ...
+Date: Fri, 20 Sep 2002 14:01:51 -0700 (PDT)
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <Pine.LNX.3.96.1020920135652.11583A-100000@Maggie.Linux-Consulting.com>
+References: <3D8B201B.1040602@leenx.co.za>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <A5974D8E5F98D511BB910002A50A66470580D1EC@hdsmsx103.hd.intel.com>
-To: "Cress, Andrew R" <andrew.r.cress@intel.com>
-Cc: linux-raid@vger.kernel.org, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <3D8B201B.1040602@leenx.co.za>
+To: "C.Lee Taylor" <leet@leenx.co.za>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Cress, Andrew R [andrew.r.cress@intel.com] wrote:
-> --- linux-2.4.18-orig/drivers/scsi/scsi.c	Wed Aug 28 20:38:13 2002
-> +++ linux-2.4.18/drivers/scsi/scsi.c	Thu Aug 29 08:08:57 2002
-> @@ -1999,6 +1999,9 @@
->  				(*sdtpnt->finish) ();
->  			}
->  		}
-> +		for (shpnt = scsi_hostlist; shpnt; shpnt = shpnt->next) {
-> +			shpnt->init_done = 1;
-> +		}
->  	}
 
-This could probably be done in a upper loop (maybe not to avoid unit
-attentions)  or at least only on the adapter template that is being
-registered.
+hi ya lee
 
-> +
-> +			if (!in_interrupt()) {
-> +			   /* Check if we need to rescan after a reset.
-> ARC*/
-> +			   if (SDpnt->host->need_scan == 1) {
-> +				SDpnt->host->need_scan = 2;
-> +				spin_unlock_irq(&io_request_lock);
-> +				scsi_rescan(SDpnt->host,SDpnt->channel);
-> +				spin_lock_irq(&io_request_lock);
-> +				SDpnt->host->need_scan = 0;
-> +			   }
-> +			}
->  		}
+- like the idea of using ide disks to backup other ide disks..
 
-I do not have a suggestion on where to move this, but you could be
-called under memory pressure which is probably not the best
-time to be allocating chunks of memory.
+- i would NOT use raid1 ( mirroring ) for backup data
+	- i would rather have 2 backup servers with 2 sets of backup disks
+	than one backup server w/ mirror disks
 
--andmike
--- 
-Michael Anderson
-andmike@us.ibm.com
+- backup disks should be offline and unmountable except during the backup
+ process
+
+- if you use raid1, and take one disk and hide it, your backup is
+  basically rendered dead(no longer raid) till you put that disk back in
+  again to backup more data to the "raid1" backup system
+	- just use the one disk in that same removable tray and
+	you are more likely to have a suitable/usable backup system
+
+- always have different backup disks for daily backup, weekly backups
+  monthly backups and full backups... never use the same disks for it all
+	( lose that disk, and you lose everything )
+
+http://www.Linux-Backup.net
+	- free backup scripts
+	- 8x 120GB ide disks in one 1U chassis --> lots of fun(pain)
+
+c ya
+alvin
+
+> 	I intend to use RAID IDE to replace old, slow and problematic tape backup.
+> 
+> 	This is just theory at the moment, and I would like you to help punch wholes 
+> in my idea ...
+> 
+> 	Using normal IDE drives (3), USB 2.0 and an external housing and 5.25" 
+> mobile racks (2), I am playing with creating a RAID 1 setup.
+> 
+> 	If I remove one of the IDE drives from my RAID system.  Could I put it way 
+> in a safe and use it as a backup?
+> 
+> Mailed
+> Lee
+> 
 
