@@ -1,66 +1,74 @@
 From: Lars Marowsky-Bree <lmb@suse.de>
-Subject: Re: Proposed enhancements to MD
-Date: Fri, 16 Jan 2004 10:24:47 +0100
+Subject: Re: MD driver development effort.
+Date: Fri, 16 Jan 2004 10:42:48 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040116092447.GF22417@marowsky-bree.de>
-References: <40033D02.8000207@adaptec.com> <16389.52150.148792.875315@notabene.cse.unsw.edu.au> <20040115155221.A31378@lists.us.dell.com>
+Message-ID: <20040116094248.GI22417@marowsky-bree.de>
+References: <7A371016E109114EA47C89370296278B01F305BF@xrose01.rose.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20040115155221.A31378@lists.us.dell.com>
-To: Matt Domsch <Matt_Domsch@dell.com>, Neil Brown <neilb@cse.unsw.edu.au>
-Cc: Scott Long <scott_long@adaptec.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+In-Reply-To: <7A371016E109114EA47C89370296278B01F305BF@xrose01.rose.hp.com>
+To: "DIARE,ABOUBACAR (HP-Roseville,ex1)" <aboubacar.diare@hp.com>, "'linux-raid@vger.kernel.org'" <linux-raid@vger.kernel.org>
+Cc: mauelshagen@sistina.com
 List-Id: linux-raid.ids
 
-On 2004-01-15T15:52:21,
-   Matt Domsch <Matt_Domsch@dell.com> said:
+On 2004-01-14T23:05:15,
+   "DIARE,ABOUBACAR (HP-Roseville,ex1)" <aboubacar.diare@hp.com> said:
 
-> * Solution works in both 2.4 and 2.6 kernels
->   - less ideal of two different solutions are needed
+> Does anyone know if there are any ongoing development work on the md =
+driver
+> multipathing capabilities?
 
-Sure, this is important.
+Jens Axboe and I have done work on the 2.4 multipathing module for md t=
+o
+the point where it was useable for our needs. But this is not the way
+for 2.6.
 
-> * RAID 0,1 DDF format
-> * Bootable from degraded R1
+=46or 2.6, the way to go was decided at KS/OLS 2003 - a Device Mapper
+module would be used. Heinz Mauelshagen keeps telling me he has already
+written it a long time ago and just needs to release it, but maybe you
+can bug him so that it indeed gets committed to the kernel tree ;-)
 
-We were looking at extending the boot loader (grub/lilo) to have
-additional support for R1 & multipath. (ie, booting from the first
-drive/path in the set where a consistent image can be read.) If the BIO=
-S
-supports DDF too, this would get even better.
+> Because there isn't any industry standard path failover product for L=
+inux MD
+> seems to be what many turn too especially since it is readily availab=
+le in
+> all distros.  So I am wondering if future enhancements work to md tha=
+t are
+> going could help position md as maybe a potential industry standard p=
+ath
+> failover product and not only a raid enabler.
 
-=46or the boot drive, this is highly desireable!
+BINGO! Uhm, I meant to say:
 
-Do you know whether DDF can also support simple multipathing?
+At the leading technical steering conference for the Linux kernel produ=
+ct
+development group in the year 2003 a.d. in Ottawa, the lead system
+architects have met with critically important industry representatives
+and highly valued customers. During the in-depth technical discussions,
+which were entirely market-demand-driven, we pushed forward towards an
+industry standard solution for the next generation Linux kernel
+2.6-based enterprise products. We have successfully converged on a
+solution taking the synergetic effects between the enhanced
+Device-Mapper framework, the hotplug core functionality and the next
+millenia volume manager products (EVMS2 and LVM2) to the extreme. The
+industry stakeholders were highly pleased with the proposed modular
+architecture, which will enable them to build value-add load-balancing
+and advanced IO scheduling modules directly on top of the core
+technology without risking to be tainted by the GPL issues of the
+mainstream vanilla kernel.
 
-> * Boot from degraded RAID1 requires setup method early in boot
->   process, either initrd or kernel code.
+> Thanks for you time.
 
-This is needed with DDF too; we need to parse the DDF data somewhere
-afterall.
-
-> From what I see about md:
-> * RAID 0,1 there today, no DDF
-
-Supporting additional metadata is desireable. For 2.6, this is already
-in the code, and I am looking forward to having this feature.
-
-> Am I way off base here? :-)
-
-I don't think so. But for 2.6, the functionality should go either into
-DM or MD, not into emd. I don't care which, really, both sides have goo=
-d
-arguments, none of which _really_ matter from a user-perspective ;-)
-
-(If, in 2.7 time, we rip out MD and fully integrate it all into DM, the=
-n
-we can see further.)
+It was my pleasure!
 
 
 Sincerely,
     Lars Marowsky-Br=E9e <lmb@suse.de>
+
+PS: Sorry. I couldn't resist. I tried. For a second.
 
 --=20
 High Availability & Clustering	      \ ever tried. ever failed. no matt=
