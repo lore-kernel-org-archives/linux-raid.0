@@ -1,55 +1,39 @@
 From: NeilBrown <neilb@cse.unsw.edu.au>
-Subject: [PATCH] md - 6 of 10 - Don't do_md_stop and array when do_md_run fails.
-Date: Fri, 16 Jan 2004 12:19:39 +1100
+Subject: [PATCH] md - 2 of 10 - Don't allow raid5 rebuild to swamp raid5 stripe cache
+Date: Fri, 16 Jan 2004 12:19:37 +1100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <E1AhIeB-0002Uc-00@notabene>
+Message-ID: <E1AhIe9-0002U2-00@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: Andrew Morton <akpm@osdl.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-Current code calls do_md_stop to clean up if do_md_run
-fails, but this is 
-  a/ not needed as do_md_run cleans up itself
-  b/ bad as it could try to clean up after an -EBUSY error !!!
+raid5 rebuild takes stripes so agressively that other
+access cannot get a look-in.
+With this patch, the rebuild pauses slightly if there is a 
+shortage of stripes to let other processes have a chance.
 
  ----------- Diffstat output ------------
- ./drivers/md/md.c |   15 +--------------
- 1 files changed, 1 insertion(+), 14 deletions(-)
+ ./drivers/md/raid5.c |    9 ++++++++-
+ 1 files changed, 8 insertions(+), 1 deletion(-)
 
-diff ./drivers/md/md.c~current~ ./drivers/md/md.c
---- ./drivers/md/md.c~current~	2004-01-16 12:05:40.000000000 +1100
-+++ ./drivers/md/md.c	2004-01-16 12:06:25.000000000 +1100
-@@ -1764,10 +1764,8 @@ static void autorun_array(mddev_t *mddev
- 	printk("\n");
+diff ./drivers/md/raid5.c~current~ ./drivers/md/raid5.c
+--- ./drivers/md/raid5.c~current~	2004-01-16 11:58:51.000000000 +1100
++++ ./drivers/md/raid5.c	2004-01-16 11:59:17.000000000 +1100
+@@ -1395,7 +1395,14 @@ static int sync_request (mddev_t *mddev,
  
- 	err = do_md_run (mddev);
--	if (err) {
-+	if (err)
- 		printk(KERN_WARNING "md :do_md_run() returned %d\n", err);
--		do_md_stop (mddev, 0);
--	}
- }
- 
- /*
-@@ -2569,19 +2567,8 @@ static int md_ioctl(struct inode *inode,
- 			goto done_unlock;
- 
- 		case RUN_ARRAY:
--		{
- 			err = do_md_run (mddev);
--			/*
--			 * we have to clean up the mess if
--			 * the array cannot be run for some
--			 * reason ...
--			 * ->pers will not be set, to superblock will
--			 * not be updated.
--			 */
--			if (err)
--				do_md_stop (mddev, 0);
- 			goto done_unlock;
--		}
- 
- 		default:
- 			if (_IOC_TYPE(cmd) == MD_MAJOR)
+ 	first_sector = raid5_compute_sector(stripe*data_disks*sectors_per_chunk
+ 		+ chunk_offset, raid_disks, data_disks, &dd_idx, &pd_idx, conf);
+-	sh = get_active_stripe(conf, sector_nr, pd_idx, 0);
++	sh = get_active_stripe(conf, sector_nr, pd_idx, 1);
++	if (sh == NULL) {
++		sh = get_active_stripe(conf, sector_nr, pd_idx, 0);
++		/* make sure we don't swamp the stripe cache if someone else
++		 * is trying to get access 
++		 */
++		yield();
++	}
+ 	spin_lock(&sh->lock);	
+ 	set_bit(STRIPE_SYNCING, &sh->state);
+ 	clear_bit(STRIPE_INSYNC, &sh->state);
