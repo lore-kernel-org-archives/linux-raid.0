@@ -1,36 +1,40 @@
 From: "David Rees" <dbr@greenhydrant.com>
 Subject: Re: experiences with 3Ware 6400 3W-6400?
-Date: Fri, 27 Jun 2003 11:23:40 -0700 (PDT)
+Date: Fri, 27 Jun 2003 11:21:10 -0700 (PDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3841.208.48.139.163.1056738220.squirrel@www.greenhydrant.com>
-References: <Pine.LNX.4.55.0306270920010.6883@datavibe.net>
-     <Pine.LNX.4.43.0306271429480.32150-100000@unicorn.drogon.net>
+Message-ID: <3835.208.48.139.163.1056738070.squirrel@www.greenhydrant.com>
+References: <Pine.LNX.4.55.0306261656520.6883@datavibe.net><Pine.LNX.4.55.03062616
+         56520.6883@datavibe.net>      
+     <5.1.1.6.2.20030626174603.03bacec0@mail.harddata.com><1908.66.75.244.6
+     9.1056697569.squirrel@www.greenhydrant.com>
+     <Pine.LNX.4.55.0306270920010.6883@datavibe.net>
 Mime-Version: 1.0
 Content-Type: text/plain;charset=iso-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.43.0306271429480.32150-100000@unicorn.drogon.net>
+In-Reply-To: <Pine.LNX.4.55.0306270920010.6883@datavibe.net>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Gordon Henderson said:
+Rev. Jeffrey Paul said:
 >
-> Eg. the PC I'm currently typing this email on is 100 miles away and I
-> don't particularly want to drive to it to fix it if a disk fails...
+> I'd done some quick searches for "3ware" on ebay, having heard good things
+> about their ide-raid cards.  The 7xxx series are too expensive for the
+> project I'm working on at the moment.  It's either an older card, or
+> software RAID1 (and, with all due respect, I don't want to use linux
+> software raid in -this sort- of production environment).
 >
-> gordon @ unicorn: df -h /
-> Filesystem            Size  Used Avail Use% Mounted on
-> /dev/md0              236M   20M  204M   9% /
+> Are the 6xxx series really that bad?  I don't care about 'nearly'
+> unsupported, just as long as it works.  My budget for this whole project
+> is likely less than $500.
 >
-> gordon @ unicorn: cat /proc/mdstat
-> ...
-> md0 : active raid1 hdc1[1] hda1[0]
->       249856 blocks [2/2] [UU]
-> ...
+> We're currently looking at raid1 across two 80-120GB disks for a samba
+> file server in an office that does a lot of graphic design.
 
-So what do you do when /dev/hda fails and the computer won't reboot?  Have
-you managed to get it to boot off /dev/hdc when /dev/hda isn't available?
+For that type of usage, the 6xxx series will work out just fine.  There's
+nothing wrong with them in RAID 1, 0 or 10.  Just their RAID 5 performance
+is a bit lacking.
 
-Not having to worry about these sorts of things is one reason it's nice to
-have hardware RAID for at least the boot device.
+Looks like you can find them for about $60 these days so they're a good
+deal.  Although you can find a 72xx card for about $15-20 more as well.
 
 -Dave
