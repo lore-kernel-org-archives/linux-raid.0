@@ -1,35 +1,48 @@
-From: AndyLiebman@aol.com
-Subject: RE: Serial ATA Cards
-Date: Tue, 4 May 2004 18:23:08 EDT
+From: "Kent Wang" <kwang@kwang.org>
+Subject: Bootable RAID-5 array dead!
+Date: Tue, 4 May 2004 22:45:51 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <98.9f31412.2dc971cc@aol.com>
+Message-ID: <003801c43253$78fc1fc0$6500a8c0@eclipse>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Got the 3ware card working. Simple as running 'modprobe 3w-xxxx' and then all 
-the drives show up as SCSI devices. Works about the same as the Silicon Image 
-ports on my motherboard. Getting around 175 MB/sec Software RAID 5 on 8 
-drives according to Bonnie++.  Around 2x the speed of the 3ware "Hardware RAID 5" 
-(also measured with Bonnie ++). 
+The heart of my system is an Abit KT7A-RAID motherboard, it has 2
+additional IDE headers. I have 4 PCI RocketRaid 100 IDE controllers
+attached. Each of those controllers has 2 IDE headers. Attached to all
+those IDE headers are the following:
 
-But... I'd sure like to use that new Promise card instead. Half the price. 
-133 Mhz instead of 66. No extra RAID hardware that I don't need. 
+2x 60GB Maxtor
+4x 120GB WD
+5x 120GB Seagate
 
-So, does anybody know how to use 'mknod' to create a home for the SATA 
-drives? Apparently the drives won't show up as either SCSI or IDE drives under the 
-new Promise driver that's included in the 2.6.5+ kernel. They need to have 
-devices created for them. I know that the "major number" is supposed to be 160. 
-But I have no idea how to find out what the "minor numbers" are supposed to be. 
-I'm kind of in the dark here. 
+For almost a year, I've had RedHat 7.2 running a RAID-5 array of 9x
+120GB drives. "/" is located on the RAID array and /boot is on one of
+the 60GB Maxtors.
 
-Hopefully Promise will send me an installation script that will reveal what 
-to do. But just in case, if anyone knows how to proceed I would appreciate some 
-hints. 
+One day, after about 25 days uptime, the system stopped responding to
+network requests and though I could still move the mouse around, the
+whole system was essentially frozen. So, I rebooted. When I did, it
+spewed some stuff indicating that the RAID array was damaged and that
+it would attempt a recovery. HDD indicator LEDs flashed for half a
+day. When I came back, the screen was blank and the HDD activity LED
+was stuck on. I waited a whole day before I decided to reboot it
+again. Similar results: attempt recovery, disk activity, then freeze.
+After the third or fourth attempt at this, it now boots up with a
+kernel panic. I can't read all the error messages, but right after
+loading the IDE controller drivers and right before it kernel panics,
+it spews out a listing of all the drives and then says that the md0
+array cannot be loaded.
 
-Thanks 
+What should I do at this point? I have most of my data backed up, but
+I hate to have to reconfigure a new server from scratch.
 
-Andy Liebman
+Thanks,
+Kent Wang
+IC2 Institute
+
+
