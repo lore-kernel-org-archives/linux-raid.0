@@ -1,63 +1,70 @@
-From: "Ryan B. Lynch" <rlynch@strozllc.com>
-Subject: Re: two-disk-failure question
-Date: Wed, 22 Oct 2003 12:55:12 -0400
+From: Mike Tran <mhtran@us.ibm.com>
+Subject: Re: RAID1 recovery fails with 2.6 kernel
+Date: 22 Oct 2003 12:43:11 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3F96B670.2020802@strozllc.com>
-References: <200310172315.56815.maarten@vbvb.nl>
+Message-ID: <1066844591.1260.31.camel@star2>
+References: <7da.3f929f6e.d36f3@altium.nl>
+	 <16275.32127.862408.701013@notabene.cse.unsw.edu.au>
+	 <297d.3f93a033.85d8f@altium.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200310172315.56815.maarten@vbvb.nl>
-To: maarten van den Berg <maarten@vbvb.nl>
+In-Reply-To: <297d.3f93a033.85d8f@altium.nl>
+To: Dick Streefland <dick.streefland@altium.nl>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hey Maarten,
+On Mon, 2003-10-20 at 03:43, Dick Streefland wrote:
+> Neil Brown <neilb@cse.unsw.edu.au> wrote:
+> | Thanks for providing a script...
+> | It works fine for me (2.6.0-test8).
+> | 
+> | I don't suppose there is anything in the kernel logs about write
+> | errors on loop2 ???
+> 
+> No, there was nothing unusual in the log files. I have no access to
+> the test machine at the moment, but there is a message when the
+> recovery starts, and a few seconds later the message "sync done".
+> 
+> | Does it fail consistently for you, or only occasionally?
+> 
+> It fails every time. This test was on an dual PIII 450 system, but it
+> also fails on a VIA C6 system with the 2.6.0-test5 kernel. Both
+> kernels are compiled without CONFIG_PREEMPT, because I had other
+> problems that might be related to this option:
+> 
+>   http://www.spinics.net/lists/raid/msg03507.html
+> 
+> Could this be related to CONFIG_DM_IOCTL_V4? I was not sure about this
+> option, and have not enabled it. Otherwise, I think it is time to put
+> in some printk's. Do you have suggestions where to start looking?
 
-Maarten van den Berg wrote:
+I have been experiencing the same problem on my test machine.  I found
+out that the resync terminated early because of MD_RECOVERY_ER R bit set
+by raid1's sync_write_request().  I don't understand why it fails the
+sync when all the writes already completed successfully and quickly.  If
+there is a need to check for "nowhere to write this to" as in 2.4.x
+kernel, I think we need a different check.
 
->cables and such. So my obvious question is:  Is this step (mkraid --force 
->with one of the offline disks defined as failed-disk) destructive, or could I 
->(theoretically) experiment endlessly with the order in which the disks are 
->defined in /etc/raidtab before I decide to mount it read-write and raidhotadd 
->a fresh disk ?
->
-I had to do this about a year ago, on account of a bad IDE controller, 
-and was successful on the first try.  I recall from the HOWTO that the 
-'mkraid --force' command IS destructive, and it WILL lose the array if 
-you get it wrong.
+The following patch for 2.6.0-test8 kernel seems to fix it.
 
-My incident involved data which would have been a bear to restore from 
-backup, so I didn't take any chances.  Prior to the 'mkraid --force' 
-step, I labelled each physical disk with it's number in the array, and 
-then copied each disk to an identical disk using the 'dd' command 
-[somthing like 'dd if=/dev/sda of=/dev/sdb bs=8192' where /dev/sda is 
-the original and /dev/sdb is a handy blank disk, repeated for each 
-original disk in the array].  Of course, this required five extra hard 
-disks, but I had them lying around anyway.  And that's the foolproof 
-method.  If you're really paranoid (you don't have a backup of the 
-failed array), you might want to also do an 'md5sum /dev/sdb; md5sum 
-/dev/sda' and compare the two hash values to ensure that each copy is 
-faithful--re-do the copy that doesn't pass the hash check.  Since you're 
-juggling so many hard drives, make sure you label all the 
-disks--scotch-taped sticky notes on the cover, with the array #s written 
-in felt pen worked for me.
+--- a/raid1.c   2003-10-17 16:43:14.000000000 -0500
++++ b/raid1.c   2003-10-22 11:57:59.350900256 -0500
+@@ -841,7 +841,7 @@
+        }
+ 
+        if (atomic_dec_and_test(&r1_bio->remaining)) {
+-               md_done_sync(mddev, r1_bio->master_bio->bi_size >> 9,
+0);
++               md_done_sync(mddev, r1_bio->master_bio->bi_size >> 9,
+1);
+                put_buf(r1_bio);
+        }
+ }
 
-Then, you can run off and do whatever with the originals, and you'll 
-always have something to go back to if you utterly wipe out your array 
-while trying to restore it.  If that happens, you just take the 
-clobbered disks, and re-do the 'dd' command to write the copy back to 
-the originals.  Hash if necessary, and go to town again.  Repeat until 
-you either successfully restore the array, or you swear off computers 
-and enroll in florists' school.
 
-Keep in mind that this can add a LOT of time to a restore operation.  
-With Western Digital WD200 IDE disks (7200 RPM, 18.6 GB), I can move 
-about 30-22 MB/sec (beginning-end) on direct disk-to-disk copies like 
-this, with an average around 25 MB/sec.  That's ~1.5 GB/min, so you can 
-estimate your own ETAs.  Hashing will take a similar amount of time if 
-you use 'md5sum' on a reasonably fast machine (P4 1.8+).
 
--R
+
+
 
