@@ -1,48 +1,49 @@
-From: Hendrik Visage <hvisage@envisage.co.za>
-Subject: Re: how to which to bigger disk (md can do it?)
-Date: Sun, 16 Nov 2003 15:31:37 +0200
+From: "James R Bamford" <jim@jimtreats.com>
+Subject: RE: Software Raid 1 data corruptions..
+Date: Sun, 16 Nov 2003 16:23:55 -0000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20031116133137.GF25876@hvs.envisage.co.za>
-References: <3FB75992.3020608@bnap.hu>
+Message-ID: <PPEOJEIEFLAONFNHJPOOAEFFGOAA.jim@jimtreats.com>
+References: <Pine.LNX.4.44.0311151155150.28018-100000@coffee.psychology.mcmaster.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <3FB75992.3020608@bnap.hu>
-To: Farkas Levente <lfarkas@bnap.hu>
-Cc: linux-raid@vger.kernel.org
+In-Reply-To: <Pine.LNX.4.44.0311151155150.28018-100000@coffee.psychology.mcmaster.ca>
+To: Mark Hahn <hahn@physics.mcmaster.ca>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, Nov 16, 2003 at 12:03:46PM +0100, Farkas Levente wrote:
-> hi,
-> we've got a server with 3ware 7500-8 and 8 pieces of 120 GB maxtor hd 
-> and software raid-5. the 1TB disk is running out of the space so we 
+> > I just got it mounted and copied a file into it.. a 450meg
+> image file... I
+> > started running some md5 tests on the file (paranoid from other machines
+> > recently having hdd corruptions) sadly i started to get this
+> kind of result
+> >
+> > [jim@backup test]$ md5sum image.nrg
+> >  3b5da2f7ad0e174421306b62a636fa12  image.nrg
+> >
+> > [jim@backup test]$ md5sum image.nrg
+> >  4e815cd2c3ab565315ef47f53665f6ba  image.nrg
+> >
+> > [jim@backup test]$ md5sum image.nrg
+> >  a14990ebfd5c502a68c29e2f789a34dd  image.nrg
+>
+> this isn't a via motherboard, is it?  have you run memtest86 overnight?
+>
 
-Are you sure about the Software RAID on this 3ware adapater?? I was
-under the impression it's a HW Raid adapter?
-(I have a preference to HW RAID if available...)
+Ok an update.. I've been running memtest over night, and all day, up to
+nearly 22 hours now, its a slow computer (p3 450 with nearly 512meg memory)
+so i've only gotten up to 12 tests in that time.. everyone has passed.. no
+errors reported yet.. surely this makes memory errors fairly unlikely as the
+cause of this problem... when i hit 24 hours i will be stopping the test and
+trying to stress the 2 drives on the controller simultaneously to see if it
+holds up (to possibly identify if the ata controller is at fault..
 
-> - put the 8 disk to another server and run rsync through two gigabit 
-> ethernet card. but it can takes more than a day to sync about 800GB.
+> > patches i can try.. should i abandon linux for raid and try
+> using windows...
+>
+> egads.  there are billions and billions of ide-based linux servers
+> out there, and most of them work fine.  your task is to find out what's
+> wrong with your hardware.
+>
 
-You could do this initially during the week before the swapout, and then
-just update it  before the swap out. Something te note, if it's lots of files,
-I'd advise to run multiple rsyncs over smaller directories, as it speeds
-up the rsync processing alot.
-
-> - switch the disks one-by-one in the current server and leave linux's 
-> software raid to sync the data. in this case we only have to stop the 
-> system a few mintues per day and takes 8 days, but continous operation. 
-> does it possible? after I put all new hard disk the totel capacity will 
-> be (8-1)*200 GB or it will remain (8-1)*120 GB? since during the disk 
-> switch the total space is the smallest hd's*(n-1), but what happens when 
-> I put the last 200GB disk?
-
-If it's SW raid, it'll be based on the partitions, so you'll have to create the
-partitions bigger than the current 120GB partitions. Then after the last disk,
-the size would be the bigger size, however you'll then need to run a growfs
-(or similar) for your filesystem to expand it to the bigger size.
-
-Fr HW Raid, it'll depend on the controller.
-
-Hendrik
