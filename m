@@ -1,31 +1,39 @@
-From: rrk <rrk@prairie.lakes.com>
-Subject: raid1 creation problems
-Date: Fri, 11 Jun 2004 07:50:44 -0500
+From: John Lange <john.lange@bighostbox.com>
+Subject: is raid compatible between 2.4.22 & 2.6.5 ?
+Date: Fri, 11 Jun 2004 12:21:39 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <40C9AAA4.4020603@prairie.lakes.com>
+Message-ID: <1086974499.5186.12.camel@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-why would mdadm be creating a md device (raid1) that was larger than the 
-partition table?
-these are two identical seagate 120's --debian 2.4.26 with raid compiled in.
-i have built the partition tables with fdisk cfdisk and parted same 
-problem everytime . everything is fine
-up until i boot at which time it say's the superblock is larger than the 
-partition by about 20 or 30 blocks
-I have built several other raid1 system's  over the last year and have 
-not seen this problem before.
-to add the drives to the array i boot under a recuse disk and sync under 
-the rescue disk. same mdadm
-version as they were built with. The partition tables match in all cases 
--- with fdisk i kept everything on cyl
-boundaries.
+Is there some reason why a RAID 1 set built under 2.6.5 would not work
+under 2.4.22?
 
-where and how does mdadm check partition size?
-thanks
-rob 
+I build a machine (Slackware) with two RAID 1 mirrored drives under a
+2.6.5 kernel.
+
+I later discovered that I needed to drop back to a 2.4.22 kernel in
+order to do some clustering under openMosix and TKCluster so I
+downloaded the recommended TKCluster 2.4.22 kernel. This kernel is a
+standard kernel with patches for libata and openMosix.
+
+I rebuilt the kernel including support for RAID and serial ATA (ICH5).
+
+When I boot the 2.4.22 kernel it goes along nicely until it tries to
+mount the root partition. It then throws up a "modprobe" error.
+Something about char-major 9 I think? (I'm sorry but I am not near the
+console at the moment).
+
+Is there some reason why a RAID 1 set built under 2.6.5 would not work
+under 2.4.22? Is there something I've forgot to include in my 2.4.22
+kernel that is preventing it from mounting?
+
+Thanks,
+
+John Lange
+
 
