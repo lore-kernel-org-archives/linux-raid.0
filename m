@@ -1,55 +1,53 @@
-From: Mike Hardy <mhardy@h3c.com>
-Subject: Question about how the raid code is  tested / idea for automated
- testing
-Date: Thu, 06 Jan 2005 09:56:59 -0800
-Message-ID: <41DD7BEB.5040502@h3c.com>
+From: maarten <maarten@ultratux.net>
+Subject: Re: Spares and partitioning huge disks
+Date: Thu, 6 Jan 2005 20:42:40 +0100
+Message-ID: <200501062042.40165.maarten@ultratux.net>
+References: <200501061731.j06HVi932064@www.watkins-home.com> <200501061918.16088.maarten@ultratux.net> <41DD83DA.9040609@h3c.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <41DD83DA.9040609@h3c.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Mike Hardy <mhardy@h3c.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Thursday 06 January 2005 19:30, Mike Hardy wrote:
+> maarten wrote:
+> > I was planning to do this quickly tonight, but I've overlooked one
+> > essential thing ;-|  The old server has already 220 GB of data built of 4
+> > 80GB disks in raid-5.  But I cannot connect all 8 disks at the same time,
+> > so I'll have to 'free up' another system to define the arrays and copy
+> > the data over Gbit LAN.  I definitely don't want to lose the data!
+> > What complicates this a bit is that I wanted to copy the OS verbatim (it
+> > is not part of that raid-5 set, just raid-1). But I suppose booting a
+> > rescue CD would enable me to somehow netcat the OS over to the new
+> > disks... We'll see.
+>
+> You could degrade the current raid5 set by plugging one of the new
+> drives in and copying the 220GB to it directly, then you could build the
+> new raid5 sets with one drive "missing" and then finally dump the data
+> on the new raid5's and then hotadd the missing drive
 
-Something that struck me while wading through the whole ext3 journaling 
-errors thread was a tongue-in-cheek suggestion to Peter that he picture 
-the kernel as a state machine and start verifying it, to which Peter 
-replied with a static analysis tool link.
+Hey.  I knew that trick of course, but only now that you mention it I realize 
+that indeed one single new disk is big enough to hold all of the old data.
+Stupid :)  I never though of that.  Go figure.  Those disks get BIG indeed...!
+:-))
 
-I also recall a test script that someone cooked up to reproduce a raid6 
-bug that involved loopback devices etc
+Right now I took my main(*) fileserver offline, unplugged all the disks from 
+it and connected the new disks.  Using a RIP CDrom I partitioned them and 
+'mkraid'ed (mdadm not yet being on RIP) the first md device which will hold 
+the OS.  As we speak the netcat session is running, so if I didn't make any 
+typos or thinkos soon I will hopefully reboot to a full-fledged system.
 
-Finally, I recall a couple of vague mentions that it was possible to 
-exercise the code by putting faulty virtual block devices under it and 
-simulating faults, and that there was someone, or a group of someone 
-that does a fair amount of reliability testing (maybe it was RedHat?)
+(*) These new disks are not for my _fileserver_, but for my MythTV PVR, the 
+machine they will eventually end up in, which holds the 220 GB TV & movies.
 
-For no really good reason, that made me wonder how the code is tested, 
-and if there were any automated test suites.
+So far, so good...
 
-Assuming there aren't, I pictured a modular system that includes three 
-parts.
+Maarten
 
-1) a raid testing engine that takes some sort of raid command language 
-and uses it to build a specified raid out of loop devices and faulty 
-block devices and then exercise it using a specified set of tasks (load, 
-failures, resysncs, etc) all the while posting results back to an URL 
-where a CGI just logs them or something simple
-2) a script generator that can crank out command files for the testing 
-engine that cover all the various permutations.
-3) an image-building system that produces a bootable ISO based on 
-knoppix with a kernel from a kernel source tree you specify that will 
-hit a configurable URL for a script to run
+-- 
 
-Then I'm picturing a cycle where new code can be built into an ISO, the 
-script can generate all the test permutations, and set VMWare (or 
-similar) going in a loop, harvesting results in a crash-proof way.
-
-I'm not that skilled at C code anymore, but this kind of system is 
-mostly just duct-tape (imho), and I can do that. It might be fun to play 
-around with if there's value to it. I've been meaning to learn how to 
-customize knoppix and automate vmware tasks anyway, and we already have 
-the raid6 test as an example script.
-
--Mike
