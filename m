@@ -1,33 +1,36 @@
-From: Nick Maynard <nick.maynard@alumni.doc.ic.ac.uk>
-Subject: Re: raidreconf
-Date: Tue,  3 Aug 2004 13:55:57 +0100
+From: Ricky Beam <jfbeam@bluetronic.net>
+Subject: Re: Software vs. Hardware RAID
+Date: Tue, 3 Aug 2004 11:58:45 -0400 (EDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1091537757.410f8b5da3dee@www.tastycake.net>
-References: <1091196159.410a54ff91240@www.tastycake.net> <410CC5BF.4050600@wasp.net.au> <1091363336.410ce208494b0@www.tastycake.net> <410CE664.2070705@wasp.net.au>
+Message-ID: <Pine.GSO.4.33.0408031152380.25702-100000@sweetums.bluetronic.net>
+References: <410F7B65.3090407@buttersideup.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <410CE664.2070705@wasp.net.au>
-To: Brad Campbell <brad@wasp.net.au>
-Cc: RAID Linux <linux-raid@vger.kernel.org>
+In-Reply-To: <410F7B65.3090407@buttersideup.com>
+To: Tim Small <tim@buttersideup.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> I certainly have played with various mods to that code but not managed to
-> turn up anything reliable yet. I did have it converting raid-0 and raid-5 to
-> raid-6 at one stage
-That was what I read about...
+On Tue, 3 Aug 2004, Tim Small wrote:
+>This may catch blocks which are going bad before they become unreadable
+>(i.e. when the hardware and/or firmware ECC algorithms are still able to
+>reconstruct the data), and cause the drive to silently remap these
+>blocks - so these may well save you an array degradation...
+...
+>>- no bad block relocation (7/2004)
+>Most drives will do this automatically, except in the event of data loss
+...
 
-> and I got all excited about that, but when I slightly altered the
-configuration
-> it all came crashing down. Then I dropped the disk and I really just chucked
-> all my toys out of the pram and went back to doing anything other than playing
-> with hard disks. I have yet to pick up another disk and get back into it.
-*chuckle* Right - I can understand that ;-)
+Don't bet the farm on IDE drives remapping bad sectors.  There are two
+Seagate drives on my desk that claim to have remapped the bad sectors
+but still return errors for those sectors. (both via the seatools DOS
+thing and Linux zeroing the entire (200G) drive.)
 
-Righty - raidtools-1.00.3.tar.gz it is.  Thanks for the assitance.
+Remember: You get what you pay for.
 
---
+Maybe we should start a class action suit to get SCSI prices down :-)
 
-Nick Maynard
-nick.maynard@alumni.doc.ic.ac.uk
+--Ricky
+
+
