@@ -1,118 +1,81 @@
-From: christophe varoqui <christophe.varoqui@free.fr>
-Subject: [ANNOUNCE] multipath-tools-0.4.2
-Date: Mon, 24 Jan 2005 00:03:16 +0100
-Message-ID: <1106521396.10990.13.camel@zezette>
-References: <1096071849.4466.31.camel@zezette>
-	<1097054573.4163b96d1262c@imp5-q.free.fr>
-	<1097495416.416a73787e0ae@imp1-q.free.fr>
-	<1098021787.5433.8.camel@zezette>
-	<1098269169.417641f18a234@imp1-q.free.fr>
-	<1098656088.9350.88.camel@zezette>
-	<1098785191.417e21a7a7c28@imp1-q.free.fr>
-	<1099328918.5525.10.camel@zezette> <1100214617.10251.92.camel@zezette>
-	<1101394541.5820.71.camel@zezette> <1102261392.29843.2.camel@zezette>
-	<1103558483.11345.17.camel@zezette>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: [PATCH] Version 1 super block
+Date: Mon, 24 Jan 2005 12:38:01 +1100
+Message-ID: <16884.20857.878835.1376@cse.unsw.edu.au>
+References: <41E9D66E.9080100@us.ibm.com>
+	<1106323194.8425.4.camel@dyn95390186.austin.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <1103558483.11345.17.camel@zezette>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: device-mapper development <dm-devel@redhat.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-hotplug-devel@lists.sourceforge.net" <linux-hotplug-devel@lists.sourceforge.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from Mike Tran on Friday January 21
+Sender: linux-raid-owner@vger.kernel.org
+To: Mike Tran <mhtran@us.ibm.com>
+Cc: linux-raid@vger.kernel.org, kevcorry@us.ibm.com
 List-Id: linux-raid.ids
 
-Hello,
+On Friday January 21, mhtran@us.ibm.com wrote:
+> Hello Neil,
+> 
+> I've been wondering if you had a chance to look at this patch.  Please
+> let me know.
 
-here goes multipath-tools-0.4.2
+No I hadn't, but I have now.
+> 
+> On Sat, 2005-01-15 at 20:50, Mike Tran wrote:
+> > Hello Neil,
+> > 
+> > I found 2 problems in the kernel MD driver:
+> > 1) if disk index 0 is used, counting of max_dev is wrong
 
-The focuses of this release are :
-1) bugfixing and stabilization after the DM synthax change
-2) code factorizing between the configurator and the daemon
+Yes, but I think that the correct fix is simply to add 1 to max_dev,
+rather than setting it to max(max_dev, i).
+It should really be renamed to "max_devs" (i.e. the maximum number of
+devices) rather than "max_dev" (i.e. the maximum device number).
+Possibly "num_slots" wold be an even better name...
 
-Full ChangeLog for the release :
 
-        * [libmultipath] add symmetrix controler family to the
-          hwtable. Edward Goggin, EMC
-        * [libmultipath] factorize core structs (path, ...)
-          and defaults (pidfile, configfile, ...). Convert
-          callers.
-        * [multipath] fix dmparser to properly fetch non-default
-          hwhandler. Edward Goggin, EMC
-        * [multipath] fix devt2devname matching 8:1 with 8:10
-          for example. Edward Goggin, EMC
-        * [multipath] switch_pg upon devmap create or reload
-          Noticed by Ake.
-        * [libmultipath] move find_hw() the library. Convert
-          users. Now multipathd understand '*' as a product
-          string
-        * [multipath] dissaemble_map() fix to avoid to
-          interpret 'D' as a disable PG (not 'F'). Edward
-          Goggin, EMC
-        * [multipath] find_path() fix to avoid matching 8:1
-          with 8:10 for example. Edward Goggin, EMC
-        * [libmultipath] move some sysfs fetching routines
-          to library, under sysfs_devinfo.[ch]. Convert
-          callers.
-        * [multipath] fix -v0 : avoids the daemon waiting
-          for the initial multipath run to complete, which
-          will never happen because of a flooded pipe
-        * [multipathd] add scsi_id to default binvec
-        * [libmultipath] move hwtable related logic to the
-          library. Convert multipath and multipathd
-        * [multipath] move first blacklist call down after
-          setup_default_blist()
-        * [libmultipath] move basename() to the lib. Convert
-          multipath and multipathd.
-        * [libmultipath] move blacklist related logic to the
-          library. Convert multipath and multipathd
-        * [multipath] fix bug in the default hardware table
-          matching logic (Lars M-B, Suse)
-        * [multipath] allow "*" as scsi model string wildcard
-          (Lars M-B, Suse)
-        * [multipath] provide a macro to fill all hwe fields,
-          use it to declare Clariion models (Lars M-B, Suse)
-        * [multipath] use DEFAULT_GETUID instead of hardcoded
-          *and* incorrect "/bin/scsi_id -g -s" (Lars M-B, Suse)
-        * [multipath] kill superfluous suspend before table
-          reload. The code was unsafe, as spotted by Edward
-          Goggin (EMC)
-        * [multipath] exit early if device parameter is
-          blacklisted
-        * [multipath] don't check for prefix in initrd's
-          multipath.dev : this is the tool responsability to
-          exit early based on its blacklist.
-        * [multipath] don't signal the daemon in initrd
-          (Guido Guenther, Debian tracker)
-        * [multipath] better fail to run kpartx in initrd
-          than crashing the whole system. So don't sleep
-          waiting for udev to create the DM node. Maybe udev
-          has made progress I this regard ... (noticed by
-          Paul Wagland, Debian tracker)
-        * [multipath] don't reinstate when listing, ie list
-          implies dry_run
-        * [checkers] fix the emc checker (Hergen Lange)
-        * [multipath] node_name fetching shouldn't exit on
-          error. FC SAN are not the only multipathed context
-          (noticed by Ramesh Caushik)
+> > 2) missing checksum calculation
 
-As usual, doc and download at :
-http://christophe.varoqui.free.fr/
+Yes .... how did I miss that :-(
 
-regards,
--- 
-christophe varoqui <christophe.varoqui@free.fr>
 
---
-dm-devel mailing list
-dm-devel@redhat.com
-https://www.redhat.com/mailman/listinfo/dm-devel
+> > 
+> > Please consider the attached patch for 2.6.10 kernel.
+
+
+How about the following?
+I'll add a changelog entry and forward it to Andrew shortly.
+
+thanks,
+NeilBrown
+
+
+
+ ----------- Diffstat output ------------
+ ./drivers/md/md.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
+
+diff ./drivers/md/md.c~current~ ./drivers/md/md.c
+--- ./drivers/md/md.c~current~	2005-01-24 12:34:47.000000000 +1100
++++ ./drivers/md/md.c	2005-01-24 12:36:30.000000000 +1100
+@@ -983,8 +983,8 @@ static void super_1_sync(mddev_t *mddev,
+ 
+ 	max_dev = 0;
+ 	ITERATE_RDEV(mddev,rdev2,tmp)
+-		if (rdev2->desc_nr > max_dev)
+-			max_dev = rdev2->desc_nr;
++		if (rdev2->desc_nr+1 > max_dev)
++			max_dev = rdev2->desc_nr+1;
+ 	
+ 	sb->max_dev = cpu_to_le32(max_dev);
+ 	for (i=0; i<max_dev;i++)
+@@ -1001,6 +1001,7 @@ static void super_1_sync(mddev_t *mddev,
+ 	}
+ 
+ 	sb->recovery_offset = cpu_to_le64(0); /* not supported yet */
++	sb->sb_csum = calc_sb_1_csum(sb);
+ }
+ 
+ 
+
