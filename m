@@ -1,45 +1,36 @@
-From: Bob Glamm <glamm@a-s-i.com>
-Subject: Re: RAID migration from 2.4 -> 2.6
-Date: Mon, 16 Aug 2004 22:23:08 -0500
+From: Mark Hahn <hahn@physics.mcmaster.ca>
+Subject: RE: Forcing raid1 resync
+Date: Tue, 17 Aug 2004 11:43:19 -0400 (EDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040817032308.GA31824@romulus.a-s-i.com>
-References: <20040812152939.GD5326@romulus.a-s-i.com> <20040816223541.GA1197@romulus.a-s-i.com> <41213B52.60903@tls.msk.ru>
+Message-ID: <Pine.LNX.4.44.0408171136370.18428-100000@coffee.psychology.mcmaster.ca>
+References: <8075D5C3061B9441944E1373776451186488C2@cinshrexc03.shermfin.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <41213B52.60903@tls.msk.ru>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <8075D5C3061B9441944E1373776451186488C2@cinshrexc03.shermfin.com>
+To: "Rechenberg, Andrew" <ARechenberg@sfg.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> >I'm not sure why the devices can't be found: the Adaptec driver appears
-> >to go through its initialization routines just fine and find all the
-> >disks.
-> 
-> How about sd_mod (scsi disk module)?  Is it loaded (or compiled into the
-> kernel) together with the adaptec driver?  Does the kernel prints a line
-> like
->  sda: sda1 sda2 sda3 sda4 < sda5 sda6 sda7 sda8 sda9 >
-> (partition layout) for all your disks?
+> The box in question is a quad Xeon 1.4GHz with HT enabled.  I don't
+> believe it was CPU bound.
 
-I cannot (at the moment) say anything about the partition line
-being printed out, but:
+quad xeons are *normally* memory-bound, since their design is really
+quite poor, with all four CPUs sharing a relatively slow bus.  they'll
+be OK for purely cache-bound workloads, but are pretty much a huge mistake
+for anything out-of-cache (as, indeed, md raid5 is carefully designed to be!)
 
-  * legacy /proc/scsi/ support
-  * SCSI disk support
-  * SCSI tape support
-  * SCSI CDROM support
-  * SCSI generic support
-  * Verbose SCSI error reporting
-  * SCSI logging facility
-  SCSI Transport Attributes --> * SPI
-  SCSI low-level drivers --> AIC7xxx Fast -> U160 support (new driver)
-                         --> Adaptec AIC79xx U320 support
+> > Is this behavior expected/by design?  Waiting for 26 arrays 
+> > to reconstruct one at a time is painfully slow.  When I 
 
-are all compiled into the kernel.
+I wonder whether your configuration might have something to do with this - 
+iirc the kernel tries to be smart about sequencing the md's that it resyncs,
+since it would be very bad to resync 10 arrays which share the same spindles.
+perhaps it doesn't understand which block devices correspond with separate
+spindles.
 
-I wonder if it's possible there's a collision between the AIC79xx
-and AIC7xxx driver.  I suppose I could try eliminating the AIC79xx driver
-(as I have a pair of 7899's and a 7892 in these systems, no 79xx..)
+> > about 5 arrays started syncing, but the rest waited until 
+> > those were finished and then synced one at a time.
 
--Bob
+that sounds like a (good, in principle) designed behavior.
+
