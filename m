@@ -1,109 +1,151 @@
-From: Torrey Hoffman <thoffman@arnor.net>
-Subject: Oops, panic with RAID5, 2.6.0-test5-mm4
-Date: Thu, 25 Sep 2003 17:09:02 -0700
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <1064534941.18499.59.camel@torrey.et.myrio.com>
+From: "Tomi Orava" <tomimo+linux-raid@ncircle.nullnet.fi>
+Subject: Raid1 recovery problem - need help!
+Date: Fri, 26 Sep 2003 08:57:31 +0300 (EEST)
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <40408.194.237.142.24.1064555851.squirrel@ncircle.nullnet.fi>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-To: Linux RAID <linux-raid@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-raid-owner@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This is almost identical to my earlier report, but it happened under
-slightly different circumstances.  I've trimmed the dmesg log this
-time.  I'm happy to provide more information if required, or test
-different kernels or patches...  (I'm about to try the latest bk
-snapshot, in fact...)
 
-My /dev/md0 is a RAID5 with 5 devices: 4 drives on a Promise controller
-plus a partition on /dev/hda.
+Hi everybody,
 
-I booted test5-mm4 with the Promise controller temporarily removed from
-the machine.  I expected the RAID startup to fail of course, but I
-didn't expect a kernel oops & panic.
+I have a slight problem here with my RAID 1+0 setup.
+One of the discs just failed and I'm unable to figure
+out why (for example) mdadm is unable to start the
+particular RAID1 (/dev/md4-submirror, failed disc is /dev/sdd).
 
-The built-in RAID code autodetected the one remaining RAID partition on
-hda, and attempted to start reconstruction... kaboom!
+The setup is this:
+------- /etc/raidtab -----------------------------------
 
-- - - - - - - -
+##
+## Data-Disk - Part 1
+##
+raiddev /dev/md3
+        raid-level              1
+        nr-raid-disks           2
+        nr-spare-disks          0
+        persistent-superblock   1
 
-md: raid0 personality registered as nr 2
-md: raid1 personality registered as nr 3
-md: raid5 personality registered as nr 4
-raid5: measuring checksumming speed
-   8regs     :  1172.000 MB/sec
-   8regs_prefetch:   952.000 MB/sec
-   32regs    :   532.000 MB/sec
-   32regs_prefetch:   524.000 MB/sec
-   pIII_sse  :  1240.000 MB/sec
-   pII_mmx   :  1632.000 MB/sec
-   p5_mmx    :  1736.000 MB/sec
-raid5: using function: pIII_sse (1240.000 MB/sec)
-md: md driver 0.90.0 MAX_MD_DEVS=256, MD_SB_DISKS=27
-NET: Registered protocol family 2
-IP: routing cache hash table of 4096 buckets, 32Kbytes
-TCP: Hash tables configured (established 32768 bind 32768)
-NET: Registered protocol family 1
-NET: Registered protocol family 17
-md: Autodetecting RAID arrays.
-md: autorun ...
-md: considering hda3 ...
-md:  adding hda3 ...
-md: created md0
-md: bind<hda3>
-md: running: <hda3>
-md: md0: raid array is not clean -- starting background reconstruction
-Unable to handle kernel NULL pointer dereference at virtual address
-00000000
- printing eip:
-c0283f02
-*pde = 00000000
-Oops: 0000 [#1]
-SMP
-CPU:    0
-EIP:    0060:[<c0283f02>]    Not tainted VLI
-EFLAGS: 00010286
-EIP is at md_probe+0x12/0xf0
-eax: 00000000   ebx: dfd7b9a0   ecx: dfd68960   edx: 00000000
-esi: dfd6896c   edi: dfd6896c   ebp: c152fd8c   esp: c152fd74
-ds: 007b   es: 007b   ss: 0068
-Process swapper (pid: 1, threadinfo=c152e000 task=c152d900)
-Stack: dfd6896c c152fd8c c0149661 dfd7b9a0 dfd6896c dfd6896c c152fddc
-c0284192
-       00000000 00000000 00000000 c152fdb8 00000282 00000400 00000004
-c03e0fe1
-       00000246 c152fddc c0124d93 0000000a 00000400 c0300fe1 c152fde8
-dfd7b9a0
-Call Trace:
- [<c0149661>] invalidate_inode_pages+0x21/0x30
- [<c0284192>] do_md_run+0x192/0x470
- [<c0124d93>] printk+0x143/0x1c0
- [<c02847af>] autorun_array+0x9f/0xd0
- [<c0124d93>] printk+0x143/0x1c0
- [<c0284a0a>] autorun_devices+0x22a/0x270
- [<c0124d93>] printk+0x143/0x1c0
- [<c028791a>] autostart_arrays+0x2a/0xc6
- [<c0164384>] do_open+0x114/0x3f0
- [<c0163cf0>] bdev_test+0x0/0x20
- [<c0163d10>] bdev_set+0x0/0x20
- [<c0285dfc>] md_ioctl+0x74c/0x790
- [<c015afbc>] dentry_open+0x13c/0x1f0
- [<c015ae76>] filp_open+0x66/0x70
- [<c011fe40>] schedule+0x60/0x690
- [<c023a127>] blkdev_ioctl+0xa7/0x447
- [<c016e295>] sys_ioctl+0xf5/0x271
- [<c03ae9d1>] md_run_setup+0x71/0xa0
- [<c03ad1d1>] prepare_namespace+0x11/0x110
- [<c01349d2>] init_workqueues+0x12/0x29
- [<c01070f1>] init+0x51/0x150
- [<c01070a0>] init+0x0/0x150
- [<c010b27d>] kernel_thread_helper+0x5/0x18
-                                                                                                                                        
-Code: 0d ea ff 89 34 24 e8 7e f5 ff ff e9 34 ff ff ff 89 75 cc e9 c4 fe
-ff ff 90 55 89 e5 83 ec 18 89 75 f8 8b 45 0c 89 5d f4 89 7d fc
- <0>Kernel panic: Attempted to kill init!
+        ## device               /dev/hdk2
+        device                  /dev/hde2
+        raid-disk               0
+
+        ## device               /dev/hdm2
+        device                  /dev/hdg2
+        raid-disk               1
+        ## failed-disk          1
 
 
--- 
-Torrey Hoffman <thoffman@arnor.net>
+##
+## Data-Disk - Part 2
+##
+raiddev /dev/md4
+        raid-level              1
+        nr-raid-disks           2
+        nr-spare-disks          0
+        persistent-superblock   1
+
+        ## device               /dev/hdi2
+        device                  /dev/sdd2
+        raid-disk               0
+        ## failed-disk          1
+
+        ## device               /dev/hdg2
+        device                  /dev/sdc2
+        raid-disk               1
+        ## failed-disk          1
+
+##
+## Data-Disk - Raid 1+0
+##
+raiddev /dev/md5
+        raid-level              0
+        nr-raid-disks           2
+        nr-spare-disks          0
+        persistent-superblock   1
+        chunk-size              32
+
+        device                  /dev/md3
+        raid-disk               0
+
+        device                  /dev/md4
+        raid-disk               1
+--------------------------------------------------------------
+
+mdadm --detail /dev/md3
+/dev/md3:
+        Version : 00.90.00
+  Creation Time : Mon Sep 16 23:33:02 2002
+     Raid Level : raid1
+     Array Size : 58616640 (55.90 GiB 60.02 GB)
+    Device Size : 58616640 (55.90 GiB 60.02 GB)
+   Raid Devices : 2
+  Total Devices : 2
+Preferred Minor : 3
+    Persistence : Superblock is persistent
+
+    Update Time : Fri Sep 26 08:06:35 2003
+          State : dirty, no-errors
+ Active Devices : 1
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 1
+
+
+    Number   Major   Minor   RaidDevice State
+       0       0        0        0      faulty removed   /dev/swap
+       1      33        2        1      active sync   /dev/hde2
+       2      34        2        2      spare   /dev/hdg2
+           UUID : fb702fa9:a4c55dcf:87cccecb:31f1e9ba
+         Events : 0.465
+
+mdadm --examine /dev/sdc2
+/dev/sdc2:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : d5c2d1f7:cf7cb245:2d9e7057:097ec133
+  Creation Time : Mon Sep 16 22:05:35 2002
+     Raid Level : raid1
+    Device Size : 60034880 (57.25 GiB 61.48 GB)
+   Raid Devices : 2
+  Total Devices : 2
+Preferred Minor : 4
+
+    Update Time : Thu Mar 13 05:03:45 2003
+          State : dirty, no-errors
+ Active Devices : 1
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 1
+       Checksum : 512475a - correct
+         Events : 0.423
+
+
+      Number   Major   Minor   RaidDevice State
+this     2       8       50        2      spare   /dev/sdd2
+   0     0       0        0        0      faulty removed   /dev/swap
+   1     1       8       34        1      active sync   /dev/sdc2
+   2     2       8       50        2      spare   /dev/sdd2
+
+-------------------------------------------------------
+>mdadm -v -R /dev/md4
+mdadm: failed to run array /dev/md4: No such device
+
+The problem occurred while resynccing the /dev/md4 RAID1-mirror
+and of course the "master" device was the faulty one.
+The question now is, is someone capable of describing how to get
+this /dev/md4-mirror started so that I can continue copying data
+out of RAID1+0 (dev/md5) mirror ?
+
+Regards,
+Tomi Orava
+
+
+
+
+
+
