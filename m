@@ -1,81 +1,39 @@
-From: "Jim Buttafuoco" <jim@contactbda.com>
-Subject: Re: SATA Controller
-Date: Tue, 10 Aug 2004 09:09:52 -0400
+From: David Greaves <david@dgreaves.com>
+Subject: Re: Software RAID-1: step-by-step help needed...
+Date: Tue, 10 Aug 2004 14:18:01 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040810130824.M49720@contactbda.com>
-References: <20040809145342.M63373@contactbda.com> <40381.212.251.31.59.1092124213.squirrel@mail.gnet.gr>
-Reply-To: jim@contactbda.com
+Message-ID: <4118CB09.80607@dgreaves.com>
+References: <41188A95.5000608@provincia.verbania.it>	<Pine.LNX.4.56.0408100948230.1665@lion.drogon.net>	<411892D0.8050701@provincia.verbania.it> <87y8knxk1m.fsf@enki.rimspace.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <40381.212.251.31.59.1092124213.squirrel@mail.gnet.gr>
-To: Alexander Economou <aecon@gnet.gr>, linux-raid@vger.kernel.org
+In-Reply-To: <87y8knxk1m.fsf@enki.rimspace.net>
+To: Daniel Pittman <daniel@rimspace.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I got the 3ware card to do hardware raid at first.  The performance we really bad, so I switched to software raid and 
-while the performance was alot better, it still didn't match other systems I have here that were doing software raid 
-with older IDT (parallel) disks.
 
-Jim
+>>I see, but I *have to* install Debian on it.
+>>I already installed it (as a test) following the instructions found at:
+>>http://www.inittab.de/manuals/debootstrap.html
+>>I guess the hardest task will be configuring RAID, as the system works 
+>>with the above procedure...
+>>    
+>>
+>
+>The easiest way to get a RAID array in Debian is to install the testing
+>or unstable branch; the installer there supports creating the devices as
+>part of the boot sequence.
+>  
+>
+Just to reinforce that http://www.debian.org/devel/debian-installer/
+is just a couple of days old (7 Aug) and you may not have noticed this.
 
+Since you've selected Debian (good) it'd be nice to try the new 
+installer and see if it offers the features you need.
 
+let us know...
 
----------- Original Message -----------
-From: "Alexander Economou" <aecon@gnet.gr>
-To: linux-raid@vger.kernel.org
-Sent: Tue, 10 Aug 2004 10:50:13 +0300 (EEST)
-Subject: Re: SATA Controller
-
-> 0
-> 
->  If you plan on using software raid it would be a nice idea to use a 2.6.x
-> kernel in case you are using a 2.4.x kernel.There is a huge speed diff in
-> data transfer between those 2 kernel versions.
->  I have installed a couple of s150 tx4 and i can say that they work fine.I
-> also noticed that there is support for this controller in the low level
-> driver section(scsi) in 2.4.27 kernel.If this doesnt work out (wich i
-> doubt it)try downloading the driver from promise.com.
->  One thing i dont understand is why buy raid controllers and do software
-> raid(if that is what you ment)
-> 
-> > All,
-> >
-> > I am thinking of going with the following SATA PCI controller (non raid)
-> > to replace my 3ware SATA controller (only
-> > using JBOD but thats another story).  Any comments on linux support /
-> > issues / other controllers you have luck with.
-> > I am planning on using software raid with 3 of these cards and 10 250G WD
-> > SATA disks.
-> >
-> > Thanks
-> > Jim
-> >
-> > PROMISE PCI to SATA Controller Card, Model "SATA150 TX4" -OEM
-> >
-> > Model# Sata150 TX4
-> > Item # N82E16816102013
-> >
-> > Specifications:
-> > Ports: 4x Serial ATA/150
-> > OS Support: Windows 98/Me/NT4/2000/XP; RedHat 7.3/8.0; SuSE 7.3/8.0
-> > Feature: Bus mastering offloads data I/O handling from host CPU; CRC
-> > error-checking of Serial ATA and Ultra ATA drives for data reliability
-> > during transfers; Data Transfer Rate:150MB/sec with Serial ATA/150 drives,
-> > 133MB/sec with Ultra ATA/133 drives, 100MB/sec with Ultra ATA/100 drives;
-> > 32-bit 33/66MHz PCI bus; PCI 2.3 compliant
-> > -
-> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >
-> 
-> -- 
-> Alexander Economou
-> GNET NOC
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-------- End of Original Message -------
+David
 
