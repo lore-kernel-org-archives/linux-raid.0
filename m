@@ -1,29 +1,59 @@
-From: Bernd Fischer <bernd@begu.net>
-Subject: Re: Linux RAID setup
-Date: Sun, 10 Oct 2004 00:25:49 +0200
+From: "Nathanial A. Byrnes" <nate@qabal.org>
+Subject: RAID 5 on four IDE channels doesn't work
+Date: Sun, 10 Oct 2004 14:14:53 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <4168656D.3030502@begu.net>
-References: <20041009122106.650.qmail@web60410.mail.yahoo.com>
+Message-ID: <1097432092.1294.8.camel@qabal.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20041009122106.650.qmail@web60410.mail.yahoo.com>
-To: poonamsbox@yahoo.com
-Cc: RAID Linux <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Poonam Dalya wrote:
+Hello,
+	I am having trouble getting my RAID 5 array to work on four channels.
+It works fine on two channels, but when I configure the system to use
+the second controller it will not find the disks on the second
+controller.
 
->  3. Then I worrked with the following command.
+	My working configuration is:
 
->  bash2-2.05b# mdadm --create /dev/md0 --level=0
->  --chunk=128 --raid-disks=2 /dev/hda5 /dev/hda4
+		/dev/hde
+		/dev/hdf
+		/dev/hdg
+		/dev/hdh
 
-Are you sure about that? You are trying to create a RAID0 array using 
-two partitions on the same physical device. This will result in abysmal 
-performance, which is exactly what you don't want.
+	My non-working config is:
+		/dev/hde
+		/dev/hdg
+		/dev/hdi
+		/dev/hdk
 
+	Where hde-hdh are on my PCI promise controller, and hdi-hdl are on my
+onboard HighPoint 366 controller. (The same array worked on just the
+Highpoint 366 controller as well)
 
-Bernd Fischer
+	System info Linux-2.6.8.1 non-SMP. 
 
+	The following is my /etc/raidtab (which is set up for the non-working
+config, but works with the working config...)
+
+raiddev /dev/md0
+        raid-level              5
+        nr-raid-disks           4
+        persistent-superblock   1
+        parity-algorithm        left-symmetric
+        chunk-size              128
+
+        device          /dev/hde
+        raid-disk       0
+        device          /dev/hdg
+        raid-disk       1
+        device          /dev/hdi
+        raid-disk       2
+        device          /dev/hdk
+        raid-disk       3
+
+	Any ideas?
+	Thanks,
+	Nate
