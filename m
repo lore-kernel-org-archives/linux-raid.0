@@ -1,53 +1,60 @@
-From: Hendrik Visage <hvisage@envisage.co.za>
-Subject: Re: mdadm --assemble --scan hassles....
-Date: Thu, 30 Oct 2003 07:56:25 +0200
+From: Michael Tokarev <mjt@tls.msk.ru>
+Subject: announce: tiny raidtools-alike for use e.g. in initrd
+Date: Thu, 30 Oct 2003 10:25:05 +0300
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20031030055625.GE3236@hvs.envisage.co.za>
-References: <20031008111709.GV1277@hvs.envisage.co.za> <16270.5184.302596.951547@notabene.cse.unsw.edu.au> <20031025212433.GE23767@hvs.envisage.co.za> <16285.38655.754527.236684@notabene.cse.unsw.edu.au> <20031028062445.GD3236@hvs.envisage.co.za> <16288.26356.482079.504183@notabene.cse.unsw.edu.au>
+Message-ID: <3FA0BCD1.1060003@tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <16288.26356.482079.504183@notabene.cse.unsw.edu.au>
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: Hendrik Visage <hvisage@envisage.co.za>, linux-raid@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, Oct 30, 2003 at 12:18:44PM +1100, Neil Brown wrote:
-> 
-> Show me:
->  -  your current mdadm.conf
->  - the output of mdadm -Es -c partitions
->  - the output of mdadm -Ds
->  - the output of mdadm -Asv
-> 
-> And I'll try to tell you.
+http://www.corpit.ru/mjt/mdctl.c - a very small utility similar
+to raidtools suite.  I wrote this program to use it inside an
+initrd to bring raid arrays up at boot time - where the size of
+executable and simplicity is at premium.  Differences between this
+implementation and raidtools are:
 
-root@hvstress ~ # mdadm -Es -c partitions
-ARRAY /dev/md0 level=raid0 num-devices=2 UUID=832ab839:9920da12:97991965:f9af96e
-2
-   devices=/dev/scsi/host0/bus0/target1/lun0/part1,/dev/scsi/host0/bus0/target2/
-lun0/part1
-ARRAY /dev/md1 level=linear num-devices=2 UUID=4478ef04:f7b90666:6a122182:c6b44c
-f4
-   devices=/dev/md/0,/dev/scsi/host0/bus0/target1/lun0/part2
-root@hvstress ~ # mdadm -Ds
-ARRAY /dev/md1 level=linear num-devices=2 UUID=4478ef04:f7b90666:6a122182:c6b44c
-f4
-   devices=/dev/md/0,/dev/scsi/host0/bus0/target1/lun0/part2
-ARRAY /dev/md0 level=raid0 num-devices=2 UUID=832ab839:9920da12:97991965:f9af96e
-2
-   devices=/dev/scsi/host0/bus0/target2/lun0/part1,/dev/scsi/host0/bus0/target1/
-lun0/part1
-root@hvstress ~ # mdadm -Asv
-root@hvstress ~ # cat /etc/mdadm.conf 
-DEVICE /dev/md/* /dev/sd[a-z] partitions /dev/md*
+  - size.  When compiled with dietlibc, executable is about
+    7kb on i386.
 
-ARRAY /dev/md/0 level=raid0 num-devices=2 UUID=832ab839:9920da12:97991965:f9af96
-e2
-   devices=/dev/scsi/host0/bus0/target1/lun0/part1,/dev/scsi/host0/bus0/target2/
-lun0/part1
-ARRAY /dev/md/1 level=linear num-devices=2 UUID=c2a91233:5ffd5398:eac27773:e1294
-5dd
- devices=/dev/md/0,/dev/scsi/host0/bus0/target1/lun0/part2
+  - it does not have mkraid utility and other fun stuff.
+    Supported are
+    - raidstart
+    - raidstop
+    - raidhot{add,remove,generateerror)
+    - raidsetfaulty
+   i.e., only "simple" commands - just ioctls in fact.
+
+  - it uses NO config file like all the raidtools suite.
+    I.e., it is more like mdadm in this respect.  All
+    parameters are accepted in the command line.  This
+    makes the utility handy inside read-only boot-time
+    environment (you may e.g. parse md=... kernel
+    parameter and convert it into mdctl commandline)
+
+  - `mdctl start' tries to bring an array using ALL components
+    of the array given in the command line, until successeful
+    (raidstart tries only first component, and if that is missing
+    but other component(s) are available, operation will fail).
+
+Usage:
+
+  mdctl start /dev/mdN /dev/hda1 /dev/hdb1 /dev/hdc1
+    equivalent to md=N,/dev/hda1,/dev/hdb1,/dev/hdc1 boot
+    parameter, but you can't specify raid level (it will
+    be read from the superblock), and kernel may choose to
+    bring up another mdN (as indicated by super-minor)
+
+  mdctl {stop,readonly,ro,readwrite,rw} /dev/mdN
+
+  mdctl {add,remove,setfaulty,generaterror} /dev/mdN /dev/hda1
+
+This tiny code released under GPL licence... in a hope it will
+be useful to someone else too, not only to me ;)
+
+Enjoy.
+
+/mjt
 
