@@ -1,127 +1,87 @@
-From: Paul Clements <paul.clements@steeleye.com>
-Subject: Re: [ANNOUNCE][PATCH 2.6] md: persistent (file-backed) bitmap and
- async writes
-Date: Wed, 28 Apr 2004 14:10:35 -0400
+From: Sharif Islam <mislam@uiuc.edu>
+Subject: Linear RAID Failure
+Date: Wed, 28 Apr 2004 15:58:33 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <408FF39B.6070907@steeleye.com>
-References: <40198E85.29EBC8E0@SteelEye.com>			<16422.62911.755570.855200@notabene.cse.unsw.edu.au>			<4027E342.D02202F1@SteelEye.com>			<16424.8182.876520.280031@notabene.cse.unsw.edu.au>			<402D3A86.97CF894F@SteelEye.com> <16456.2775.641721.204171@notabene.cse.unsw.edu.au> <4048F9AA.1BBD67F@SteelEye.com> <406B1024.7BF88C@SteelEye.com>
+Message-ID: <40901AF9.90406@uiuc.edu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <406B1024.7BF88C@SteelEye.com>
 To: linux-raid@vger.kernel.org
-Cc: Neil Brown <neilb@cse.unsw.edu.au>, ptb@it.uc3m.es, mingo@redhat.com, "james.bottomley" <james.bottomley@steeleye.com>
 List-Id: linux-raid.ids
 
-Since there hasn't been any negative feedback, I assume that this 
-version is acceptable for inclusion in mainline/-mm?
+I have a linear RAID setup with 6 drives(~120GB) on RH advanced server 
+with 2.4.21-4.ELsmp.
 
-Thanks,
-Paul
+DEVICE /dev/hde4 /dev/hdf4 /dev/hdg2 /dev/hdh2 /dev/hdk2 /dev/hdl2
+ARRAY /dev/md0 level=linear num-devices=6
 
+I noticed the following errors on syslog:
 
-Paul Clements wrote:
+Apr 27 14:51:43 hdl: set_geometry_intr: status=0x51 { DriveReady 
+SeekComplete Error }
+Apr 27 14:52:18 hdl: recal_intr: error=0x00 { }
+Apr 27 14:52:38 hdl: dma_timer_expiry: dma status == 0x41
+Apr 27 14:52:48 hdl: error waiting for DMA
+Apr 27 14:52:48 hdl: dma timeout retry: status=0x58 { DriveReady 
+SeekComplete DataRequest }
+Apr 27 14:52:53 hdl: status timeout: status=0xd1 { Busy }
+[....]
+Apr 27 14:54:26 set_rtc_mmss: can't update from 1 to 54
+Apr 27 14:55:27 set_rtc_mmss: can't update from 2 to 55
+Apr 27 14:56:28 set_rtc_mmss: can't update from 3 to 56
+[.....]
+Apr 28 04:06:33 end_request: I/O error, dev 39:02 (hdk), sector 145151511
+Apr 28 04:06:33 end_request: I/O error, dev 39:42 (hdl), sector 101026704
+Apr 28 04:06:33 end_request: I/O error, dev 39:02 (hdk), sector 145675792
+Apr 28 04:06:37 end_reqc: unable to read inode block - inode=78561309, 
+block=157122562
+Apr 28 04:06:37 end_request: I/O error, dev 39:02 (hdk), sector 2807312
+Apr 28 04:06:37 EXT3-fs error (device md(9,0)): ext
+[....]
 
-> OK, so here it is. The changes from the previous patch are, basically:
-> 
-> 1) The patch is a little less intrusive now. The diffs against md/raid1
-> are smaller as more of the bitmap handling code is now isolated in the
-> bitmap.c and bitmap.h files. Also, the diff against mdadm, while now a
-> little larger, is less intrusive as I've created a bitmap.c file in the
-> mdadm sources, as well.
-> 
-> 2) The bitmap file I/O routines have been totally rewritten and are now
-> much simpler. We now use read_cache_page, prepare_write/commit_write (to
-> extend the file at init time, if necessary), and bmap/submit_bh (to
-> "sync" the file pages). The use of bmap and submit_bh is due to a
-> limitation in jbd that allows only one ongoing transaction per process
-> (see comment in bitmap.c regarding current->journal_info).
-> 
-> 3) The bitmap file now has a superblock containing various configuration
-> information. The bitmap superblock is checked against the md superblock
-> when the array is assembled. 
-> 
-> Options have been added to mdadm to create and examine bitmap files, and
-> also to specify the bitmap file to be used with an array:
-> 
-> Create a bitmap file:
-> --------------------
-> 
-> # mdadm --create-bitmap=65536,3,580480 /tmp/bitmap --force
-> 
-> (this creates a bitmap file with a chunksize of 64KB, a 3 second bitmap
-> daemon sleep period, and a bitmap (initially dirtied) which is
-> appropriate for use with an array of 580480 blocks)
-> 
-> Examine a bitmap file:
-> ---------------------
-> 
-> # mdadm --examine-bitmap /tmp/bitmap (or just: mdadm -X /tmp/bitmap)
->         Filename : /tmp/bitmap
->            Magic : 6d746962
->          Version : 2
->             UUID : 997cb579.99d31d20.3014cae8.4bb4bf9d
->           Events : 5
->            State : OK
->        Chunksize : 4 KB
->           Daemon : 5s flush period
->       Array Size : 580480 (566.88 MiB 594.41 MB)
->           Bitmap : 145120 bits (chunks), 145120 dirty (100.0%)
-> 
-> (in addition, mdadm -D <array> gives the bitmap information if a bitmap
-> is attached to the array)
-> 
-> 
-> Create or Assemble array using a bitmap:
-> ---------------------------------------
-> 
-> # mdadm -C /dev/md2 -n 2 -l 1 --bitmap=/tmp/bitmap /dev/sda5 missing
-> 
-> # mdadm -A /dev/md2 --bitmap=/tmp/bitmap /dev/sda5 /dev/sdb5
-> 
-> 
-> 
-> Patch Location:
-> --------------
-> 
-> Patch vs. linux 2.6.5-rc2
-> =========================
-> http://parisc-linux.org/~jejb/md_bitmap/md_bitmap_2_31_2_6_5_RC2.diff
-> 
-> Patch vs. mdadm 1.5.0
-> =====================
-> http://parisc-linux.org/~jejb/md_bitmap/mdadm_1_5_0-bitmap.diff
-> 
-> (no async write patch has been generated, these patches contain only the
-> bitmap code)
-> 
-> 
-> Notes:
-> -----
-> 
-> 1) an is_create flag was added to do_md_run to tell bitmap_create
-> whether we are creating or just assembling the array -- this is
-> necessary since 0.90 superblocks do not have a UUID until one is
-> generated randomly at array creation time, therefore, we must set the
-> bitmap UUID equal to this newly generated array UUID when the array is
-> created
-> 
-> 2) bitmap.h was not included in the mdadm patch, but a link (or copy)
-> must be made to the kernel's include/linux/raid/bitmap.h file in order
-> to build mdadm now
-> 
-> 3) code was added to mdadm to allow creation of arrays with
-> non-persistent superblocks (also, device size calculation with
-> non-persistent superblocks was fixed)
-> 
-> 4) a fix was made to the hot_remove code to allow a faulty device to be
-> removed
-> 
-> 5) various typo and minor bug fixes were also included in the patches
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+I did a reboot this morning. The array didn't get started. I saw the 
+following error:
+md0: former device hdk2 is unavailable, removing from array!
+md0: former device hdl2 is unavailable, removing from array!
+md0: max total readahead window set to 124k
+md0: 1 data-disks, max readahead per data-disk: 124k
+md: md0, array needs 6 disks, has 4, aborting.
+linear: disks are not ordered, aborting!
 
+I did a force start with :
+mdadm -Afs /dev/md0 then a mount. The array came up fine. I am not sure 
+if there were any data loss. I am currently doing a e2fsck -ycc 
+/dev/md0. It will probably take another couple hours to get it done. I 
+did notice several of these during the e2fsck.
+
+Error reading block 175767553 (Attempt to read block from filesystem 
+resulted in short read) while reading inode and block bitmaps.  Ignore 
+error? yes
+
+Force rewrite? yes
+[....]
+
+This is my DMA settings:
+hdparm -d /dev/hd{e,f,g,h,k,l}
+
+/dev/hde:
+  using_dma    =  1 (on)
+/dev/hdf:
+  using_dma    =  1 (on)
+/dev/hdg:
+  using_dma    =  1 (on)
+/dev/hdh:
+  using_dma    =  1 (on)
+/dev/hdk:
+  using_dma    =  0 (off)
+/dev/hdl:
+  using_dma    =  0 (off)
+
+What should I do at this point?
+
+I have the data backed up from yesterday. Should I replace the hdk and 
+hdl? Can I just do a remove from the linear raid and add the new disks? 
+Or I need to recreate the array.
+
+Thanks .
