@@ -1,27 +1,20 @@
-From: Patrick Scharrenberg <pittipatti@web.de>
-Subject: how to determine lost raid-parameters
-Date: Thu, 8 Aug 2002 19:41:10 +0200
+From: Michael <mike@oclinux.net>
+Subject: Magic SysRq key and RAID
+Date: Thu, 08 Aug 2002 22:16:53 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200208081741.g78HfAX14312@mailgate5.cinetic.de>
+Message-ID: <3D52DFC5.5030103@oclinux.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi!
+Is there an easy way to kill the RAID processes using the magic SysRq 
+key so that the there is not a resync when the machine has to be 
+rebooted using it. The RAID processes seem to be unkillable which you 
+would think at least think root would be able to do that even though it 
+would freeze the machine.
 
-I have to write a new superblock to my raid 5 because of a two-disk failure.
-One of the disks now runs again, but the raid set ist out of sync.
-
-the stupid thing is, that I lost my raidtab too.
-
-Is it possible to determine the raid-parameters from the not running raid?
-
-thanks..
-..patrick
-______________________________________________________________________________
-WEB.DE MyPage - Ultimatives Kommunikationstool! Ihre Message sofort
-online! Domain aenderbar! http://www.das.ist.aber.ne.lustige.sache.ms/
+Michael.
 
