@@ -1,37 +1,30 @@
-From: Joseph Curran <jacurran@uwm.edu>
-Subject: turning off persistent superblocks in raidtab
-Date: Fri, 13 Feb 2004 16:57:42 -0600
+From: Ken Schneider <kschneider@bout-tyme.net>
+Subject: LSI Logic ata raid sources
+Date: Fri, 13 Feb 2004 19:36:50 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <402D5666.7070202@uwm.edu>
+Message-ID: <1076719010.1170.7.camel@pc1.bout-tyme.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org, admins@gravity.phys.uwm.edu
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-  We have a raid0 striped across 4 devices.  It was created with 
-persistent superblocks.  If in /etc/raidtab I then turn off persistent 
-superblocks, should/will the md device use the superblocks on the 
-partitions if it finds them, even though /etc/raidtab says non 
-persistent superblocks?
+I was sent the sources by tech support at LSI Logic for the megaide raid
+controller that is embedded on a HP proliant ML330 computer. I would
+like to forward the sources to kernel.org but am new on this list and
+don't know who to contact.
 
-Hoping for a quick response, I will be looking at raid0run source for an 
-answer in the meantime.
+I have been able to create the module so that I could install SuSE 9.0
+and have also been able to create the module for the SMP kernel as well.
+It would be great to have this incorporated into the kernel tree so that
+other people that have this controller would not have to jump through
+all of the hoops I did to get this to work. LSI has sent me an email
+stating that the sources are open and can be included in the kernel
+tree.
 
-Thanks in advance.
-Joe
+Any help would be appreciated.
 
 -- 
-====================================================
-Joseph A. Curran
-NetWork Administrator
-University of Wisconsin - Milwaukee
-Office:  414.229.4519
-Cell: 414.333.1279
-
-Career Development Center -  http://www.cdc.uwm.edu
-UWM LSC Group - http://www.lsc-group.phys.uwm.edu
-==================================================== 
-
+Ken Schneider <kschneider@bout-tyme.net>
 
