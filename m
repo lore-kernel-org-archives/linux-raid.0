@@ -1,76 +1,95 @@
-From: Steven Ihde <x-linux-raid@hamachi.dyndns.org>
-Subject: Re: Looking for the cause of poor I/O performance
-Date: Sat, 4 Dec 2004 17:00:08 -0800
-Message-ID: <20041205010008.GA8091@hamachi.dyndns.org>
-References: <200412041759.iB4HxG922078@www.watkins-home.com> <Pine.LNX.4.44.0412041809530.21262-100000@coffee.psychology.mcmaster.ca>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: Looking for the cause of poor I/O performance
+Date: Sat, 4 Dec 2004 21:16:41 -0500
+Message-ID: <200412050216.iB52Gk923982@www.watkins-home.com>
+References: <Pine.LNX.4.44.0412041809530.21262-100000@coffee.psychology.mcmaster.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 In-Reply-To: <Pine.LNX.4.44.0412041809530.21262-100000@coffee.psychology.mcmaster.ca>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mark Hahn <hahn@physics.mcmaster.ca>
-Cc: Guy <bugzilla@watkins-home.com>, linux-raid@vger.kernel.org
+To: 'Mark Hahn' <hahn@physics.mcmaster.ca>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Ok, now I am confused.
+I have a second Dell Precision Workstation 410:
 
-Well while we're on the subject ;-)
+System A:
+CPUs	2 X 500 MHz
+RAM	4 X 128 Meg SDRAM
+Bus	100 MHz
+Timing buffer-cache reads:   128 MB in  0.87 seconds =147.13 MB/sec
 
-I have a three-disk raid5 array.  In summary, the raid5 performs
-slightly worse than any of the three disks alone.  Memory bandwidth
-tested by hdparm seems more than adequate (1.6GB/sec).  Shouldn't
-read-balancing give me some benefit here?  Kernel is 2.6.8.
+System B:
+CPUs	2 X 1000 MHz
+RAM	4 X 256 Meg Registered SDRAM
+Bus	100 MHz
+Timing buffer-cache reads:   524 MB in  2.00 seconds =262.00 MB/sec
 
-The system is an i865PE (I think) chipset with a 2.4GHz P4.  I believe
-the memory bandwidth is more than adequate and that the disks are
-performing up to spec when tested alone (Seagate Barracudas, hda & hdc
-are 80GB PATA, sda is 120GB SATA):
+Why is system B almost twice as fast?
+Is registered RAM faster?
+I know the CPU speed is twice as fast, but the system bus is still 100 MHz.
 
-/dev/hda:
- Timing cached reads:   3356 MB in  2.00 seconds = 1676.58 MB/sec
- Timing buffered disk reads:  122 MB in  3.03 seconds =  40.24 MB/sec
-/dev/hdc:
- Timing cached reads:   3316 MB in  2.00 seconds = 1657.42 MB/sec
- Timing buffered disk reads:  122 MB in  3.02 seconds =  40.34 MB/sec
-/dev/sda:
- Timing cached reads:   3344 MB in  2.00 seconds = 1673.09 MB/sec
- Timing buffered disk reads:  122 MB in  3.04 seconds =  40.19 MB/sec
+There are other differences I don't think would have an effect.  Video
+cards, modem, SCSI cards, HW RAID card, USB mouse.
 
-Now, the raid5 array:
+Guy
 
-/dev/md1:
- Timing cached reads:   3408 MB in  2.00 seconds = 1704.26 MB/sec
- Timing buffered disk reads:  114 MB in  3.01 seconds =  37.83 MB/sec
 
-Slightly worse!  Bonnie++ gives me an even lower number, about 30.9
-MB/sec for sequential input from the raid5.
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Mark Hahn
+Sent: Saturday, December 04, 2004 6:51 PM
+To: Guy
+Cc: linux-raid@vger.kernel.org
+Subject: RE: Looking for the cause of poor I/O performance
 
-hda and hdc are attached to the on-board PATA interfaces (one per
-channel, no slaves on either channel).  sda is attached to the
-on-board SATA interface (the other on-board SATA is empty).  
+> Timing buffer-cache reads:
+> 128 MB in 11.18 seconds = 11.45 MB/sec
+...
+> 
+> Timing buffered disk reads:
+> 64 MB in  9.42 seconds =  6.79 MB/sec
+...
+> 
+> This is from a single disk:
+> Timing buffer-cache reads:   128 MB in  0.87 seconds =147.13 MB/sec
+> Timing buffered disk reads:  64 MB in  3.51 seconds = 18.23 MB/sec
 
-A possible clue is that when tested individually but in parallel, hda
-and hdc both halve their bandwidth:
+excellent!  this is really a great example of how a machine's limited
+internal bandwidth infringes on your raid performance.
 
-/dev/hda:
- Timing cached reads:   1552 MB in  2.00 seconds = 774.57 MB/sec
- Timing buffered disk reads:   68 MB in  3.07 seconds =  22.15 MB/sec
-/dev/hdc:
- Timing cached reads:   784 MB in  2.00 seconds = 391.86 MB/sec
- Timing buffered disk reads:   68 MB in  3.02 seconds =  22.54 MB/sec
-/dev/sda:
- Timing cached reads:   836 MB in  2.00 seconds = 417.65 MB/sec
- Timing buffered disk reads:  120 MB in  3.00 seconds =  39.94 MB/sec
+running hdparm -T shows that your machine can manage about 150 MB/s
+when simply doing a syscall, copying bytes to userspace, and returning.
+no involvement of any IO device.  this number is typically about half
+the user-visible dram bandwidth as reported by the stream benchmark.
 
-Could there be contention for some shared resource in the on-board
-PATA chipset between hda and hdc?  Would moving one of them to a
-separate IDE controller on a PCI card help?
+when you try to do parallel IO (either with a bunch of hdparm -t's 
+or with raid), each disk is desperately trying to write to dram
+at about 18 MB/s, ignoring other bottlenecks.  alas, we already know 
+that your available dram bandwidth is much lower than 14*18.
 
-Am I unreasonable to think that I should be getting better than 37
-MB/sec on raid5 read performance, given that each disk alone seems
-capable of 40 MB/sec?
+for comparison, a fairly crappy SiS 735-based k7 system with 
+64b-wide PC2100 can deliver maybe 1.2 GB/s dram bandwidth.
+hdparm -T is about 500 MB/s, and would probably have trouble
+breaking 200 MB/s with raid0 even if it had enough buses.
 
-Thanks,
+an older server of mine is e7500-based, dual xeon/2.4's, with 
+2xPC1600 ram.  it sustains about 1.6 GB/s on Stream, and about 
+500 MB/s hdparm -T, and can sustain 250 MB/s through it's 6-disk
+raid without any problem.
 
-Steve
+a newish server (dual-opteron, 2xPC2700) gives 1.4 GB/s under 
+hdparm -T, and I expect it could hit 600 MB/s without much trouble,
+if given 10-12 disks and pcix (or better) controllers...
+
+regards, mark hahn.
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
