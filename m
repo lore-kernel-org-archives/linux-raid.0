@@ -1,23 +1,37 @@
-From: Tom Oehser <tom@toms.net>
-Subject: Re: is automount affecting root device? huh?
-Date: Thu, 1 Jul 2004 08:50:03 -0400 (EDT)
+From: Mike Tran <mhtran@us.ibm.com>
+Subject: Re: mkraid -f error
+Date: 01 Jul 2004 10:11:13 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.58.0407010848260.471@jupiter.toms.net>
-References: <Pine.LNX.4.58.0407010801300.471@jupiter.toms.net>
- <40E405EA.8040803@wasp.net.au>
+Message-ID: <1088694673.5376.320.camel@star2.austin.ibm.com>
+References: <Pine.LNX.4.44.0406302128570.9507-100000@westhost38.westhost.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <40E405EA.8040803@wasp.net.au>
-To: Brad Campbell <brad@wasp.net.au>
-Cc: linux-raid@vger.kernel.org
+In-Reply-To: <Pine.LNX.4.44.0406302128570.9507-100000@westhost38.westhost.net>
+To: 'linux-raid' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+On Wed, 2004-06-30 at 21:40, linux-lists@artelesys.com wrote:
+> Hello.
+> I am trying to  use mkraid "really forced" to rewrite the raid superblocks 
+> on an existing raid1 set. MKraid exits reporting an error and suggesting 
+> to look in the log for more information (dont see any listed in the log). 
+> I've tried with the raid device unmounted and stopped when I do the mkraid 
+> but still get this unspecific error message. 
+> 
+> Can anyone tell me what is causing this error message ?   
+> 
+> Regards,
+> Arturo
+> 
 
-But, the other drive is a scsi controller- and lilo does the right thing-
-and surely it isn't confusing 'root = /dev/rd/c0d0p1' with '/dev/md1'...
+Instead of mdtools, I suggest that you use mdadm.  The latest stable
+release is 1.6.0 .  mdadm -C will ask you before overwriting existing
+superblock.
 
-Anyway, it seems to do the right thing *if* I have an fstab entry, *or*
-I force it with "raid=noautomount" from lilo.conf.
+http://www.cse.unsw.edu.au/~neilb/source/mdadm/
 
--Tom
+Regards,
+Mike T.
+
