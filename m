@@ -1,84 +1,46 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: Md cache?
-Date: Thu, 3 Jun 2004 15:22:23 -0400
+From: Michael Hardy <mhardy@h3c.com>
+Subject: raid5 + smartctl + uncorrectable read error + single-block-resync
+ ?
+Date: Thu, 03 Jun 2004 12:34:29 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200406031922.i53JMS315198@watkins-home.com>
-References: <27086862.1086286428997.JavaMail.root@wamui09.slb.atl.earthlink.net>
+Message-ID: <40BF7D45.3020403@h3c.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <27086862.1086286428997.JavaMail.root@wamui09.slb.atl.earthlink.net>
-To: 'Brian Pontius' <linuxboy123@mindspring.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-With hardware RAID the write cache has battery backup.  So, the RAID system
-will not lose data when the power fails.  It will finish the writes when the
-power returns.
 
-I don't think the hardware RAID cards have a battery.  The external self
-contained RAID systems that I have worked with do have batteries.
+I've got smartd running (great tool: http://smartmontools.sf.net) and it 
+just alerted me to an unreadable sector in one drive on a software raid5 
+array I have (linux kernel 2.4.18, I believe, I know its old)
 
-Anyone know?  Do any RAID cards have batteries?
+smartctl is capable of telling me exactly what LBA on the drive is 
+unreadable, and I was reading this, which indicates it would be possible 
+to remap that single block:
 
-Guy
+http://cgi.cse.unsw.edu.au/~neilb/me/SoftRaid/01084418693
 
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Brian Pontius
-Sent: Thursday, June 03, 2004 2:14 PM
-To: Neil Brown
-Cc: linux-raid@vger.kernel.org
-Subject: Re: Md cache?
+...but I'm guessing that's just an idea, since its from May 13th 2004 
+and there a couple of indications of kernel hacking in it ("maintain a 
+list of bad blocks", check thresholds, work on the recovery thread, etc)
 
-I apologze for being unclear.
+Is there any motion to get raid to implement this?
 
-As I did comparisons between software and hardware raid,  one of the
-advantage
-s that I noticed with hardware raid was cache (both read and write). With
-hard
-ware it is usually larger giving some increase in performance.  I was
-looking
-for a way to allocate more system memory specifically to be the md cache
-area
-to give that extra feature of that hardware raid. This would especially be
-ben
-efitial for a NAS that has a dedicated purpose to fast reliable storage.
+If there is, I guess my only input (I'm a sysadmin level hacker, not a 
+kernel hacker) would be to say - there should be some interface for 
+external utilities to "educate" the linux raid module that a specific 
+disk has a specific sector going bad.
 
+That way you could script smartd to take the results of a failed offline 
+SMART test and send the bad LBAs to the raid module for read tests and 
+resync
 
-Thanks for your time.
-Brian Pontius
+Oh, and I want a pony. ;-) I couldn't resist asking that, since this is 
+basically a gigantic feature request
 
+In the meantime, I guess logically failing the drive and re-adding it is 
+the only way to remap the sectors, right?
 
------Original Message-----
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Sent: Jun 2, 2004 10:10 PM
-To: Brian Pontius <linuxboy123@mindspring.com>
-Cc: linux-raid@vger.kernel.org
-Subject: Re: Md cache?
-
-On Wednesday June 2, linuxboy123@mindspring.com wrote:
-> to all,
-> 
-> Is anyone aware of a way to cause the md devices to use some system memory
-as a write cache? (maybe through mdadm?).  I have looked everywhere and
-cannot seem to find anything about such a feature.
-> 
-> If not, anyone  know if this is a possibility for the future, Neil?
-
-What is it exactly that you want.
-
-All device IO is cached in memory before being written to the device.
-The only real value of a cache with a RAID array is if it we a
-non-volatile cache.  Is that what you were thinking of.
-
-NeilBrown
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
+-Mike
