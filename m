@@ -1,74 +1,34 @@
-From: valo lindstroem <valo@valo.at>
-Subject: Re: strange nr. of devices in array
-Date: Sun, 22 Feb 2004 03:06:59 +0100
+From: peter.zeipelt@arcor.de
+Subject: raidreconf "disk too small"
+Date: Sun, 22 Feb 2004 08:15:30 +0100 (CET)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040222030659.000036ec@valo.lan.valo.at>
-References: <20040220214811.0000192c@valo.lan.valo.at>
-	<40372285.7060002@web.de>
+Message-ID: <349425.1077434131016.JavaMail.ngmail@webmail01.arcor-online.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <40372285.7060002@web.de>
-To: Norman Schmidt <norman.schmidt@web.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, 21 Feb 2004 10:19:01 +0100, Norman Schmidt
-<norman.schmidt@web.de> wrote:
+Hello List
 
-> Hi Christian!
-> 
-> Christian Kivalo schrieb:
-> > hi everybody!
-> > 
-> > i found out, that the superblock of my raid5 array says it's built
-> > out of 7 disks, but i created it with only 6 disk. the mdadm call
-> > used to create the array was:
-> >
-> 
-> > i'm using mdadm version 0.7.2, i think that is pretty old. i will
-> > upgrade to a more recent version and recreate the array.
-> > 
-> > still i would like to know if i encountered a bug or if thats some
-> > other problem. this mdadm version is the one from debian woody
-> > (stable).
-> > 
-> > 
-> > thanks in advance
-> > christian
-> 
-> Yes, that is a bug in the (very old) 0.7.2 of Debian. Additionally, 
-> these old versions cannot handle spare devices (after each assemble,
-> you hae to add them manually). Use at least mdadm 1.4.0, better the
-> newest (I believe 1.5.0). You do not need to recreate the array,
-> simply stop it and (re-)assemble it after you have the new mdadm in
-> place - and the bug and the wrong output is gone.
-> 
-> Had the same problem (that with the spare device) with SuSE 8.2 and 
-> Debian Woody...
-> 
-hi norman!
+Experimenting with Software-Raid 5, I tried to expand an array with 3 partions.
+I wanted to add one more partittion with raidreconf.
+I took the /etc/raidtab, copied it and made a newraidtab, as subcribed in the Howto.
+But when I ran raidreconf --test -o ... -n .. -m /dev/md0, I get the message
+/dev/hdx too small (0kB).
+I wrote hdx, because it seems that it is the first partition in mentioned in the
+raidtabfiles .
+I changed the configuration with different disks and different partitons.
+Every time the messages prints out the first partition in raidtab.
+The partitions are 9.3GB.
+The disks I tried are 3X 120 GB mator, 1X 20GB IBM and 1X 20 GB IBM.
 
-downloaded and compiled mdadm 1.5.0, reassembled the array with
+Any idea?
+Thanks
 
-mdadm -A /dev/md6 --update=summaries
+Peter
 
-and everything looks like expected now.
 
-thanks
-christian
 
-> Bye, Norman.
-> 
-> -- 
-> 
-> Norman Schmidt          Institut fuer Physikal. u. Theoret. Chemie
-> Dipl.-Chem.             Friedrich-Alexander-Universitaet
-> schmidt@naa.net         Erlangen-Nuernberg
->                          IT-Systembetreuer Physikalische Chemie
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"
-> in the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+
