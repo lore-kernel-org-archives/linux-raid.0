@@ -1,55 +1,159 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: md: bug in file md.c, line 1440 (2.4.22)
-Date: Wed, 3 Sep 2003 10:47:41 +1000
+From: Paul Clements <Paul.Clements@SteelEye.com>
+Subject: Re: [PATCH 2.6] md: persistent (file-backed) bitmap and asyncwrites
+Date: Tue, 02 Sep 2003 21:04:24 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16213.14893.955734.797630@gargle.gargle.HOWL>
-References: <3F5017CA.4080700@tomt.net>
+Message-ID: <3F553E18.F4361630@SteelEye.com>
+References: <3F4F7411.52ADA929@SteelEye.com> <1062182369.4680.124.camel@persist.az.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Andre Tomt on Saturday August 30
-To: Andre Tomt <andre@tomt.net>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, mingo@redhat.com
+To: sdake@mvista.com
+Cc: linux-raid@vger.kernel.org, ptb@it.uc3m.es, Neil Brown <neilb@cse.unsw.edu.au>
 List-Id: linux-raid.ids
 
-On Saturday August 30, andre@tomt.net wrote:
-> Heya :-)
+Steven Dake wrote:
 > 
-> Having a funny showstopper problem here with md, the autostart fails 
-> miserably with "md: bug in file md.c, line 1440"
+> looks good
+> i'd like to see the 2.4 kernel patches as well
 > 
-> Here's the story;
-and a sad one it is...
+> Could you post them at parisc-linux.org ?
 
-> md:	**********************************
-> md:	* <COMPLETE RAID STATE PRINTOUT> *
-> md:	**********************************
-> md5: <hda9> array superblock:
-> md:  SB: (V:0.90.0) ID:<80012e77.b449af86.6bccffae.ddda9474> CT:3e4caa02
-> md:     L1 S24394560 ND:-22 RD:2 md5 LO:0 CS:32768
-> md:     UT:3f50117d ST:1 AD:2 WD:2 FD:-24 SD:0 CSUM:a62f39ca E:0000006d
->      D  0:  DISK<N:0,hdc9(22,9),R:0,S:6>
->      D  1:  DISK<N:1,hda9(3,9),R:1,S:6>
->      D  2:  DISK<N:2,[dev 00:00](0,0),R:2,S:9>
->      D  3:  DISK<N:0,[dev 00:00](0,0),R:0,S:9>
->      D  4:  DISK<N:0,[dev 00:00](0,0),R:0,S:9>
+Sure, here's my latest bitmap patch (v2.24) for 2.4.19-340 (SuSE):
 
-Your problem is that these extra slots (N:0) are flagged as failed
-(S:9) and this confuses md.c.
 
-If you get mdadm 1.3.0 and apply the three patches that can be found
-in
-   http://cgi.cse.unsw.edu.au/~neilb/source/mdadm/patch/applied/
+http://parisc-linux.org/~jejb/md_bitmap/md_bitmap_2_24_2_4_19_SUSE_340.diff
 
-and then stop the array and use:
-   mdadm --assemble --update=summaries /dev/md5 /dev/sda9 /dev/sdc9
+It should apply with minimal difficulties to any recent 2.4 kernel.
 
-then it should fix things up for you.
-You will need to do a similar thing for all of the arrays.
-This will be difficult for md2 as it is 'root'.  You will need to boot
-a rescue disc to fix this one.
+--
+Paul 
 
-I have not idea how it got the failed flag.
 
-NeilBrown
+> On Fri, 2003-08-29 at 08:41, Paul Clements wrote:
+> > At long last... I've finally got my additions to Peter T. Breuer's raid1
+> > bitmap code (fr1 v2.14, ftp://oboe.it.uc3m.es/pub/Programs/fr1-2.14.tgz)
+> > in decent shape and fairly well tested.
+> >
+> > The bitmap and asynchronous write capability are primarily useful when
+> > raid1 is employed in data replication (e.g., with a remote disk served
+> > over nbd as the secondary device). However, the bitmap is also useful
+> > for reducing resync times with ordinary (local) raid1 and raid5 arrays.
+> >
+> > The additions, above and beyond the original fr1 code, are basically:
+> >
+> > * disk storage for the bitmap (makes the bitmap persistent, so that a
+> > full resync is never needed, even after a failure or reboot of the
+> > primary server)
+> >
+> > * a kernel daemon to periodically (lazily) clear bits in the bitmap file
+> > (this reduces the number and frequency of disk writes to the bitmap
+> > file)
+> >
+> > * changing bits in the bitmap to 16-bit counters (this ensures that a
+> > bit won't be cleared prematurely when there are multiple outstanding
+> > I/Os to a block, which could result in data loss on the backup system if
+> > a failure coincided)
+> >
+> > * allowing the bitmap to be rescaled -- i.e., changing the amount of
+> > data that each bit represents (currently, the 2.6 code can handle a
+> > chunk size up to 64k)
+> >
+> > * modifying the code so that it can be more easily leveraged by other
+> > raid drivers (namely raid5)
+> >
+> > I originally wrote this code for 2.4 (I have a patch vs. 2.4.19 SuSE
+> > kernel, if anyone is interested) and recently ported it to 2.6. The code
+> > currently allows the use of a bitmap with raid1 arrays (this could also
+> > be extended to raid5, but I haven't put the bitmap calls into raid5.c --
+> > if anyone would like to do that, I'd love to see it happen -- it
+> > shouldn't be hard if you're familiar with raid5 (...I'm not :/).
+> >
+> >
+> > I have also modified Neil's mdadm tool to allow it to configure the
+> > additional bitmap and async parameters. The attached patch is against
+> > the 1.2 mdadm release. Briefly, the new options are:
+> >
+> > Creation:
+> >
+> > mdadm -C /dev/md0 -l 1 --persistent
+> > --bitmap=/tmp/bitmap_md0_file,65536,15 --async=512 -n 2 /dev/xxx
+> > /dev/yyy
+> >
+> > This creates a raid1 array with:
+> >
+> > two disks
+> > a persistent superblock
+> > asynchronous writes enabled (maximum of 512 outstanding writes)
+> > bitmap enabled (using the file /tmp/bitmap_md0_file)
+> > a bitmap chunksize of 64k (bitmap chunksize determines how much data
+> > each bitmap bit represents)
+> > the bitmap daemon set to wake up every 15 seconds to clear bits in the
+> > bitmap file (if needed)
+> > /dev/xxx as the primary disk
+> > /dev/yyy as the backup disk (when asynchronous writes are enabled, the
+> > second disk in the array is labelled as a "backup", indicating that it
+> > is remote, and thus no reads will be issued to the device)
+> >
+> >
+> > Assembling:
+> >
+> > mdadm -A /dev/md0 --bitmap=/tmp/bitmap_md0_file /dev/xxx /dev/yyy
+> >
+> > This assembles an existing array and configures it to use a bitmap file.
+> > The bitmap file pathname is not stored in the array superblock, and so
+> > must be specified every time the array is assembled.
+> >
+> >
+> > Details:
+> >
+> > mdadm -D /dev/md0
+> >
+> > This will display information about /dev/md0, including some additional
+> > information about the bitmap and async parameters.
+> >
+> >
+> > I've also added some information to the /proc/mdstat file:
+> >
+> > # cat /proc/mdstat
+> > Personalities : [raid1]
+> > md1 : active raid1 loop0[0] loop1[1](B)
+> >       39936 blocks [2/2] [UU]
+> >       async: 0/256 outstanding writes
+> >       bitmap: 1/1 pages (15 cached) [64KB], 64KB chunk, file:
+> > /tmp/bitmap_md1
+> >
+> > unused devices: <none>
+> >
+> >
+> > Finally, the patches are available here:
+> >
+> > kernel patch vs. 2.6.0-test3:
+> >
+> >       http://parisc-linux.org/~jejb/md_bitmap/md_bitmap_2_28_2_6_0_TEST3.diff
+> >
+> > mdadm patch vs. 1.2.0:
+> >
+> >       http://parisc-linux.org/~jejb/md_bitmap/mdadm_1_2_0.diff
+> >
+> >
+> > So if you have any interest, please review, test, ask questions, etc.
+> >
+> > (And if you're really a glutton, the gory details of the design and
+> > implementation can be found in Section 3 of my OLS Paper:
+> > http://archive.linuxsymposium.org/ols2003/Proceedings/All-Reprints/Reprint-Clements-OLS2003.pdf)
+> >
+> >
+> > Thanks,
+> > Paul
+> > -
+> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >
+> >
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
