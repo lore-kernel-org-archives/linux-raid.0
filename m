@@ -1,100 +1,52 @@
-From: Johnny Wezel <j@netfeed.ch>
-Subject: BUG? lockf () on RAID5
-Date: Sun, 02 Mar 2003 23:56:53 +0100
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: ANNOUNCE: mdadm 1.1.0 - A tool for managing Soft RAID under Linux
+Date: Mon, 3 Mar 2003 10:23:05 +1100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3E628C35.8090601@netfeed.ch>
+Message-ID: <15970.37465.869711.682093@notabene.cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi
-
-I moved my home directories onto a software RAID5 array, and from this 
-time on, Mozilla refused to start.
-
-Since I had some similar problems with pgp and StarOffice which turned 
-out to be lock problems on NFS, I also suspected a lock problem here.
-
-First, I tried to move to home directory onto a "normal" (ie. non-RAID 
-hosted) directory, and Mozilla worked.
-
-Then I wrote a short program, which tests the lockf () function:
-
-#include <sys/types.h>                                                                                                                                               
-#include <sys/stat.h>                                                                                                                                                
-#include <fcntl.h>                                                                                                                                                   
-#include <sys/file.h>                                                                                                                                                
-#include <errno.h>                                                                                                                                                   
-#include <stdio.h>                                                                                                                                                   
-                                                                                                                                                                     
-int main (int argc, char * argv [])                                                                                                                                  
-{                                                                                                                                                                    
-        int f, st;                                                                                                                                                   
-        if (argc < 2) exit (1);                                                                                                                                      
-        f = open (argv[1], O_RDWR);                                                                                                                                  
-        st = lockf (f, F_LOCK, 1);                                                                                                                                   
-        if (st) {                                                                                                                                                    
-                fprintf (stderr, "Error %d: ", errno);                                                                                                               
-                perror ("flock");                                                                                                                                    
-                exit (1);                                                                                                                                            
-        }                                                                                                                                                            
-        exit (0);                                                                                                                                                    
-}                                                                                                                                                                    
-
-Executed on a file in a RAID directory, it returned
-
-Error 37: flock: No locks available
-
-On files in non-RAID-directories it worked without error.
-
-So, I come to the conclusion, that the RAID system does not support 
-locks, or the lock support is buggy.
-
-The RAID hosts a ReiserFS. The kernel info is as follows:
-
-Linux jellyfish 2.4.20 #3 Tue Feb 18 17:35:43 CET 2003 i686 unknown
- 
-Gnu C                  2.95.3
-Gnu make               3.79.1
-binutils               2.11.90.0.29
-util-linux             2.11i
-mount                  2.11i
-modutils               2.4.8
-e2fsprogs              1.24a
-reiserfsprogs          3.x.0k-pre9
-Linux C Library        x    1 root     root      1384072 Oct  1 18:10 /lib/libc.so.6
-Dynamic linker (ldd)   2.2.4
-Procps                 2.0.7
-Net-tools              1.60
-Kbd                    1.04
-Sh-utils               2.0
-Modules Loaded         isofs zlib_inflate vfat fat sr_mod cdrom sg ide-scsi reiserfs serial parport_pc lp parport nfsd lockd sunrpc uhci usbcore 8139too mii dummy0 nls_iso8859-1
 
 
-The client kernl info is:
+I am pleased to announce the availability of 
+   mdadm version 1.1.0
+It is available at
+   http://www.cse.unsw.edu.au/~neilb/source/mdadm/
+and
+   http://www.{countrycode}.kernel.org/pub/utils/raid/mdadm/
 
-Linux beluga 2.4.20 #8 SMP Tue Feb 18 15:45:24 CET 2003 i686 Pentium III (Coppermine) GenuineIntel GNU/Linux
- 
-Gnu C                  3.2.1
-Gnu make               3.80
-util-linux             2.11y
-mount                  2.11y
-modutils               2.4.22
-e2fsprogs              1.32
-reiserfsprogs          3.6.4
-Linux C Library        2.3.1
-Dynamic linker (ldd)   2.3.1
-Procps                 2.0.10
-Net-tools              1.60
-Kbd                    1.06
-Sh-utils               2.0.15
-Modules Loaded         snd-pcm-oss snd-mixer-oss parport_pc lp parport usb-uhci usbcore 8139too mii snd-intel8x0 snd-pcm snd-timer snd-ac97-codec snd-mpu401-uart snd-rawmidi snd-seq-device snd
+as a source tar-ball and (at the first site) as an SRPM, and as an RPM for i386.
+
+mdadm is a tool for creating, managing and monitoring
+device arrays using the "md" driver in Linux, also
+known as Software RAID arrays.
+
+Release 1.1.0 contains a number of spell corrections, and bug fixes.
+It has improved support for MULTIPATH arrays.
+It has some new features including:
+  --daemonise   	for use with --monitor
+  --config=partitions   to find devices by examining /proc/partitions
+  --update=super-minor  to change the recorded minor-number for an array
+
+Much of the improvements are due to user feed-back.  Thanks are due to all who 
+gave suggestions and reported problems.
+
+I expect the next major release to be 2.0.0 which will include support for 
+a new super-block format soon to be supported by 2.5 series kernels.
 
 
-Cheers
-Johnny Wezel
+Development of mdadm is sponsored by CSE@UNSW: 
+  The School of Computer Science and Engineering
+at
+  The University of New South Wales
 
+NeilBrown  03/03/03
+   The third day 
+of the third month
+of the third year
+of the third millenium
 
