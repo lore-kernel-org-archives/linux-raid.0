@@ -1,66 +1,37 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: Partition or whole disk ?
-Date: Wed, 30 Jun 2004 12:11:59 -0400
+From: Dieter Stueken <stueken@conterra.de>
+Subject: Re: Partition or whole disk ?
+Date: Wed, 30 Jun 2004 18:40:50 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200406301611.i5UGBx330434@watkins-home.com>
-References: <20040630145547.GV29086@lug-owl.de>
+Message-ID: <40E2ED12.9020703@conterra.de>
+References: <1088604941.2840.1.camel@JubJub>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20040630145547.GV29086@lug-owl.de>
-To: 'Jan-Benedict Glaw' <jbglaw@lug-owl.de>, linux-raid@vger.kernel.org
+In-Reply-To: <1088604941.2840.1.camel@JubJub>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-A partition of type FD is required to autodetect the array(s).
-
-Guy
-
------Original Message-----
-=46rom: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Jan-Benedict Gla=
-w
-Sent: Wednesday, June 30, 2004 10:56 AM
-To: linux-raid@vger.kernel.org
-Subject: Re: Partition or whole disk ?
-
-On Wed, 2004-06-30 10:15:41 -0400, Josh Litherland <josh@emperorlinux.c=
-om>
-wrote in message <1088604941.2840.1.camel@JubJub>:
->=20
-> Couldn't find an authoritative answer to this in the faq or elsewhere=
-=2E..
-
-Use either one of those.
-
-> Is it preferred to build md sets out of whole disks or of partitions =
-?=20
-
-I can't remember any recommendation being spoken out ever. Personally, =
-I
-prefer having a number of partitions, but that's not a general guide fo=
-r
-everybody else:)
-
+Josh Litherland wrote:
+> Couldn't find an authoritative answer to this in the faq or elsewhere...
+> Is it preferred to build md sets out of whole disks or of partitions ? 
 > Is there any functional reason why either one is better ?
 
-Not really... You loose a few KBs or MBs if you use partitions, but
-that's it...
+If you make partitions, about one track is is "wasted" to store
+the useless partition table. Thus I used whole disks for a long time.
 
-MfG, JBG
+The problem might be, that "fdisk -l" won't show up if this
+disk is an MD device. It shows an empty partition table which
+may look like an unused/empty disk. If you create the partition
+table, you may waste some data, but fdisk may show this is a
+disk with a partition containing some MD data on it.
 
---=20
-   Jan-Benedict Glaw       jbglaw@lug-owl.de    . +49-172-7608481
-   "Eine Freie Meinung in  einem Freien Kopf    | Gegen Zensur | Gegen =
-Krieg
-    fuer einen Freien Staat voll Freier B=FCrger" | im Internet! |   im=
- Irak!
-   ret =3D do_actions((curr | FREE_SPEECH) & ~(NEW_COPYRIGHT_LAW | DRM =
-|
-TCPA));
+Meanwhile I turned back to make partition tables again,
+just to "tag" the disk as "in use". If I put a new disk
+into my system, it has no partition table. Thus I can verify
+this condition, before I initialize the disk. This may prevent
+me from accidentally initialize/destroying some disk in use,
+which already has an partition table.
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Dieter.
+
