@@ -1,45 +1,43 @@
-From: Aaron Gee <cluge1669@netscape.net>
-Subject: Re: changing MD device
-Date: Thu, 15 Jan 2004 14:36:45 -0500
+From: Evan Felix <evan.felix@pnl.gov>
+Subject: Raid Array with 3.5Tb
+Date: Thu, 15 Jan 2004 11:49:27 -0800
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <4006EBCD.50907@netscape.net>
-References: <4005B847.5090306@netscape.net> <20040114220159.GM26406@percy.comedia.it>
+Message-ID: <1074196167.1382.8.camel@e-linux>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20040114220159.GM26406@percy.comedia.it>
-To: linux-raid@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Thanks for the advice, worked like a charm. I'm including the full 
-procedure below for those that may need it in the future.
+I've been attempting to create a large raid 5 device using the linux
+2.6.1 kernel, with the Large Block Device configured on.  I have in the
+system 16 250G disks.  I built an array with mdadm -C -n 15 -x 1
+/dev/md2 /dev/sd[a-p]
 
- > bluca@comedia.it wrote:
- > if your rescue disk contains mdadm you can use the
- > mdadm -A -U super-minor /dev/md1 /dev/hd?? once
- > and the array will be started and the minor updated
+The resync/recovery seemed to be going fine, but at some point i started
+seeing:
 
-How to change software raid minor number with RH installs.
+kernel: compute_blocknr: map not correct
+kernel: compute_blocknr: map not correct
 
-1. On your running system get and install mdadm
-2. mount a blank floppy, copy /sbin/mdadm to floppy
-3. On your running system tar up /dev/md*  (tar -cvf /mnt/floppy/dev.tar 
-/dev/md*)
-4. Boot from rescue disk - do NOT mount your linux install
-5. At sh prompt, switch disks, mount the floppy that contains the tar 
-file and mdadm
-6. untar the devices (RH rescue disks only create /dev entries for 
-arrays that it finds)
-you should now have several /dev/md* entries. 
-7. Copy mdadm to /sbin annd run it using the command line above
-example: mdadm -A -U super-minor /dev/md[new number here] /dev/1stdev 
-/dev/2nd /dev/etc
-8. cat /proc/mdstat - is the array running and synched now?  Should be.
-9. Mount your system useing the new device number where appropriate and 
-modify /etc/fstab, /etc/raidtab and /etc/grub.conf to match your new 
-raid settings
-10.unmount all your system partitions and reboot
+thousands of time in my logs.
 
-cluge
+I had hoped this message was not bad, so i tried a mkfs on the system, 
+the mkfs just seemed to hang(no output at all), i left it for 15 hours
+or so but it never output anything.
 
+I rebooted and restarted the array, and am running a simple dd of the
+entire block now, but it will take sometime.
+
+Has anyone else made an array this large? and does anybody have any
+pointers on where i can start looking at code to fix this?
+
+Evan
+-- 
+-------------------------
+Evan Felix
+Administrator of Supercomputer #5 in Top 500, Nov 2003
+Environmental Molecular Sciences Laboratory
+Pacific Northwest National Laboratory
+Operated for the U.S. DOE by Battelle
