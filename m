@@ -1,108 +1,71 @@
-From: Matt Domsch <Matt_Domsch@dell.com>
-Subject: Re: Proposed enhancements to MD
-Date: Thu, 15 Jan 2004 15:52:21 -0600
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: Raid Array with 3.5Tb
+Date: Thu, 15 Jan 2004 17:25:43 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040115155221.A31378@lists.us.dell.com>
-References: <40033D02.8000207@adaptec.com> <16389.52150.148792.875315@notabene.cse.unsw.edu.au>
+Message-ID: <200401152225.i0FMPli09930@dns1.watkins-home.com>
+References: <1074196167.1382.8.camel@e-linux>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <16389.52150.148792.875315@notabene.cse.unsw.edu.au>; from neilb@cse.unsw.edu.au on Thu, Jan 15, 2004 at 10:07:34AM +1100
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: Scott Long <scott_long@adaptec.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+In-Reply-To: <1074196167.1382.8.camel@e-linux>
+To: 'Evan Felix' <evan.felix@pnl.gov>, 'linux-raid' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, Jan 15, 2004 at 10:07:34AM +1100, Neil Brown wrote:
-> On Monday January 12, scott_long@adaptec.com wrote:
-> > All,
-> > 
-> > Adaptec has been looking at the MD driver for a foundation for their
-> > Open-Source software RAID stack.  This will help us provide full
-> > and open support for current and future Adaptec RAID products (as
-> > opposed to the limited support through closed drivers that we have
-> > now).
-> 
-> Sounds like a great idea.
->
-> > - Metadata abstraction:  We intend to support multiple on-disk metadata
-> >    formats, along with the 'native MD' format.  To do this, specific
-> >    knowledge of MD on-disk structures must be abstracted out of the core
-> >    and personalities modules.
-> 
-> In 2.4, this would be a massive amount of work and I don't recommend
-> it.
+3.5Tb cool!
+I bet there is a 2Tb limit.  Or 2^31-1 blocks.  But just a guess!
 
-Scott has a decent stab at doing so already in 2.4, and I've encouraged him
-to post the code he's got now.  Since it's too intrusive for 2.4,
-perhaps it could be added in parallel, an "emd" driver, and one could
-choose to use emd to get the DDF functionality, or continue to use md
-without DDF.
+If you have time, create an array with 8 disks.  I think this will work.
+The size will be just under 2T.  If it does work, then create an array with
+9 disks.  This will be just over 2T.  I think this will fail.
 
-Here are some of the features I know I'm looking for, and I've
-compared solutions suggested. Comments/corrections welcome.
-
-* Solution works in both 2.4 and 2.6 kernels
-  - less ideal of two different solutions are needed
-* RAID 0,1 DDF format
-* Bootable from degraded R1
-* Online Rebuild
-* Mgmt tools/hooks
-  - online create, delete, modify
-* Event notification/logging
-* Error Handling
-* Installation - simple i.e. without modifying distro installers
-  significantly or at all; driver disk only is ideal
+Even if there were not a 2T limit with md, I bet the filesystem has a limit.
+You may need to create 2 arrays of 8 disks each, and create 1 filesystem on
+each array.
 
 
-From what I see about DM at present:
-* RAID 0,1 possible, dm-raid1 module in Sistina CVS needs to get merged
-* Boot drive - requires setup method early in boot process, either
-  initrd or kernel code
-* Boot from degraded RAID1 requires setup method early in boot
-  process, either initrd or kernel code.
-* Online Rebuild - dm-raid1 has this capability
-* mgmt tools/hooks - DM has today way to communicate to kernel the
-  changes desired. What remains is userspace tools that read, modify DDF
-  metadata and calls into these hooks.
-* Event notification / logging - doesn't appear to exist in DM
-* Error handling - unclear if/how DM handles this.  For instance, how
-  is a disk failure on a dm-raid1 array handled?
-* Installation - RHEL3 doesn't include DM yet, significant installer
-  work necessary for several distros.
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Evan Felix
+Sent: Thursday, January 15, 2004 2:49 PM
+To: linux-raid
+Subject: Raid Array with 3.5Tb
 
+I've been attempting to create a large raid 5 device using the linux
+2.6.1 kernel, with the Large Block Device configured on.  I have in the
+system 16 250G disks.  I built an array with mdadm -C -n 15 -x 1
+/dev/md2 /dev/sd[a-p]
 
-From what I see about md:
-* RAID 0,1 there today, no DDF
-* Boot drive - yes
-* Boot from degraded RAID1 - possible but may require manual
-  intervention depending on BIOS capabilities
-* Online Rebuild - there today
-* mgmt tools/hooks - mdadm there today
-* Event notification / logging - mdadm there today
-* Error handling - there today
-* Installation - disto installer capable of this today
+The resync/recovery seemed to be going fine, but at some point i started
+seeing:
 
+kernel: compute_blocknr: map not correct
+kernel: compute_blocknr: map not correct
 
-From what I see about emd:
-* RAID 0,1 - code being developed by Adaptec today, DDF capable
-* Boot drive - yes
-* Boot from degraded RAID1 - possible without intervention due to
-  Adaptec BIOS
-* Online Rebuild - there today
-* mgmt tools/hooks - mdadm there today, expect Adaptec to enhance mdam to support DDF
-* Event notification / logging - mdadm there today
-* Error handling - there today
-* Installation - could be done with only a driver disk which adds the
-  emd module.
+thousands of time in my logs.
 
-Am I way off base here? :-)
+I had hoped this message was not bad, so i tried a mkfs on the system, 
+the mkfs just seemed to hang(no output at all), i left it for 15 hours
+or so but it never output anything.
 
-Thanks,
-Matt
+I rebooted and restarted the array, and am running a simple dd of the
+entire block now, but it will take sometime.
 
+Has anyone else made an array this large? and does anybody have any
+pointers on where i can start looking at code to fix this?
+
+Evan
 -- 
-Matt Domsch
-Sr. Software Engineer, Lead Engineer
-Dell Linux Solutions www.dell.com/linux
-Linux on Dell mailing lists @ http://lists.us.dell.com
+-------------------------
+Evan Felix
+Administrator of Supercomputer #5 in Top 500, Nov 2003
+Environmental Molecular Sciences Laboratory
+Pacific Northwest National Laboratory
+Operated for the U.S. DOE by Battelle
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
