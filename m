@@ -1,48 +1,57 @@
-From: Carlos Knowlton <cknowlton@mail.fsix.com>
-Subject: Re: irq timeout: status=0xd0 { Busy }
-Date: Thu, 27 Jan 2005 14:53:19 -0600
-Message-ID: <41F954BF.8050407@mail.fsix.com>
-References: <200501270512.j0R5C1908897@www.watkins-home.com>
-Reply-To: cknowlton@science.edu
+From: "berk walker" <berk@panix.com>
+Subject: Re: RAID-10 with odd number of disks (was Re: Software RAID 0+1 with mdadm.)
+Date: Thu, 27 Jan 2005 17:31:47 -0500
+Message-ID: <opsk98u9bbv40d6c@berk.site>
+References: <200501271714.j0RHEa911050@www.watkins-home.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; format=flowed; delsp=yes; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200501270512.j0R5C1908897@www.watkins-home.com>
+In-Reply-To: <200501271714.j0RHEa911050@www.watkins-home.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Guy <bugzilla@watkins-home.com>
-Cc: linux-raid@vger.kernel.org
+To: Guy <bugzilla@watkins-home.com>, 'Andy Smith' <andy@lug.org.uk>, 'linux-raid' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi,
+In the past, I have found the quite often, too often, the disk errors  
+happened in the 1st sectors of the disk (and I still have to reboot  
+often).  It does not look good when losing a whole disk, eh?
+b-
 
-Thanks for the quick response!
 
-Guy wrote:
+On Thu, 27 Jan 2005 12:16:31 -0500, Guy <bugzilla@watkins-home.com> wrote:
 
->Why would you fsck the failed member of a RAID5?
->You said "format", please elaborate!
+> It rotates the pairs!
+> Assume 3 disks, A, B and C.
+> Each stripe would be on these disks:
+> A+B
+> C+A
+> B+C
+> A+B
+> C+A
+> B+C
+> ...
 >
->You should verify the disk is readable.
->  
+> Maybe not exactly as above, but if not, something similar.
 >
-Verify readable?  That is why I formatted the failed member, and did the 
-fsck.  I couldn't think of a better way to do it.  However..
+> -----Original Message-----
+> From: linux-raid-owner@vger.kernel.org
+> [mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Andy Smith
+> Sent: Thursday, January 27, 2005 11:19 AM
+> To: 'linux-raid'
+> Subject: RAID-10 with odd number of disks (was Re: Software RAID 0+1 with
+> mdadm.)
+>
+> On Thu, Jan 27, 2005 at 10:50:43AM -0500, Guy wrote:
+>> RAID10 will work with an odd number of disks!  If really is cool!
+>
+> It will?  How?  Does it just make the last mirror "pair" have 3
+> disks or what?
+>
+> If so then wouldn't it be better just to not have that disk under
+> md and use it for someting else?
+>
 
->It looks like your disk is bad.  But a read test would be reasonable.
->
->Try this:
->dd if=/dev/had of=/dev/null bs=64k
->
->It should complete without errors.  It will do a full read test.
->I expect it will fail.
->
->  
->
-I didn't think of trying 'dd', that's a good point.  However, a moot 
-point right now, the drive died last night.  *Sigh* 
 
-Anyway, thanks for the help!
 
--CK
-
+-- 
+Using Opera's revolutionary e-mail client: http://www.opera.com/m2/
