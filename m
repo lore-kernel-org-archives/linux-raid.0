@@ -1,47 +1,62 @@
-From: Luca Berra <bluca@comedia.it>
+From: "Stephen Hargrove" <stephen@exitwound.org>
 Subject: Re: Should I Start Over?
-Date: Wed, 30 Jun 2004 18:55:41 +0200
+Date: Wed, 30 Jun 2004 13:42:19 -0500 (CDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040630165540.GA1099@percy.comedia.it>
+Message-ID: <1775.66.230.1.97.1088620939.squirrel@exitwound.org>
 References: <1147.66.230.1.97.1088603162.squirrel@exitwound.org>
+    <20040630165540.GA1099@percy.comedia.it>
+Reply-To: stephen@exitwound.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1147.66.230.1.97.1088603162.squirrel@exitwound.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <20040630165540.GA1099@percy.comedia.it>
+To: Luca Berra <bluca@comedia.it>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Jun 30, 2004 at 08:46:02AM -0500, Stephen Hargrove wrote:
-># cat /proc/mdstat:
->
->Personalities : [raid5]
->read_ahead not set
->unused devices: <none>
->
-># cat /etc/mdadm/mdadm.conf
->DEVICE /dev/hd*
->ARRAY /dev/md0 level=raid5 num-devices=3
->UUID=fef44719:ddd66a49:0a337b48:b53e14c0
->   devices=/dev/hdg1,/dev/hdd1,/dev/hdc1
->
-># mdadmin --assemble --scan
->mdadm: no devices found for /dev/md0
->
-can you try ?
-cat /proc/partitions
+Hi Luca.  Thanks for getting back with me.  Following is the information
+you asked for.  Please let me know if I need to provide anything else.
 
-and
+Luca Berra said:
+> can you try ?
+> cat /proc/partitions
 
-mdadm --examine /dev/hdX1
-replacing X with each of your drives
+$ cat /proc/partitions
+major minor  #blocks  name
 
-L.
+  34     0  120060864 hdg
+  34     1  120060832 hdg1
+  33     0  120060864 hde
+  33     1  120060832 hde1
+  22     0  120060864 hdc
+  22     1  120060832 hdc1
+  22    64  120060864 hdd
+  22    65  120060832 hdd1
+   3     0   39062500 hda
+   3     1      40131 hda1
+   3     2     996030 hda2
+   3     3    4883760 hda3
+   3     4          1 hda4
+   3     5    9767488 hda5
+   3     6    1461883 hda6
+   3     7   21912628 hda7
 
--- 
-Luca Berra -- bluca@comedia.it
-        Communication Media & Services S.r.l.
- /"\
- \ /     ASCII RIBBON CAMPAIGN
-  X        AGAINST HTML MAIL
- / \
+> and
+>
+> mdadm --examine /dev/hdX1
+> replacing X with each of your drives
+
+
+$ mdadm --examine /dev/hd[dceg]1
+mdadm: No super block found on /dev/hdc1 (Expected magic a92b4efc, got
+00000000)
+mdadm: No super block found on /dev/hdd1 (Expected magic a92b4efc, got
+00000000)
+mdadm: No super block found on /dev/hde1 (Expected magic a92b4efc, got
+00000000)
+mdadm: No super block found on /dev/hdg1 (Expected magic a92b4efc, got
+00000000)
+
+--
+Steve
