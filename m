@@ -1,20 +1,22 @@
 From: "Guy" <bugzilla@watkins-home.com>
 Subject: RE: Forcing raid1 resync
-Date: Mon, 16 Aug 2004 12:38:28 -0400
+Date: Mon, 16 Aug 2004 12:49:14 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200408161638.i7GGcS331755@watkins-home.com>
-References: <8075D5C3061B9441944E1373776451186488C0@cinshrexc03.shermfin.com>
+Message-ID: <200408161649.i7GGnE331790@watkins-home.com>
+References: <200408161638.i7GGcS331755@watkins-home.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <8075D5C3061B9441944E1373776451186488C0@cinshrexc03.shermfin.com>
-To: "'Rechenberg, Andrew'" <ARechenberg@sfg.com>, linux-raid@vger.kernel.org
+In-Reply-To: <200408161638.i7GGcS331755@watkins-home.com>
+To: 'Guy' <bugzilla@watkins-home.com>, "'Rechenberg, Andrew'" <ARechenberg@sfg.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Spelling/typo error....
+
 From what I understand...
-If the arrays don't share physical disks, that can re-sync at the same time.
+If the arrays don't share physical disks, they can re-sync at the same time.
 Maybe some throttling system is limiting it to just 5 at a time.  Maybe CPU
 load?  I don't know if md does things based on how busy the CPU is.  Is your
 CPU maxed out?
@@ -99,6 +101,11 @@ any more information.
 Regards,
 Andrew Rechenberg
 Infrastructure Team, Sherman Financial Group
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 -
 To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 the body of a message to majordomo@vger.kernel.org
