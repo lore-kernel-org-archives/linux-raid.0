@@ -1,33 +1,35 @@
-From: Jani Averbach <jaa@cc.jyu.fi>
-Subject: Re: BUG: 2.5.41 left raid array to unclean mode (Kernel bug at
- raid1.c:667)
-Date: Tue, 8 Oct 2002 18:09:25 +0300 (EEST)
+From: "David U." <davidu@everydns.net>
+Subject: 5400 vs 7200 RPM IDE drives
+Date: Tue, 8 Oct 2002 17:27:56 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.GSO.4.33.0210081807180.20489-100000@tukki.cc.jyu.fi>
-References: <15778.27247.271665.487076@notabene.cse.unsw.edu.au>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Message-ID: <anvm48$l42$1@main.gmane.org>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <15778.27247.271665.487076@notabene.cse.unsw.edu.au>
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: mingo@redhat.com, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 8 Oct 2002, Neil Brown wrote:
+Hi friends,
 
-> Just remove the first instance of:
->
->   return NOTIFY_DONE;
->
-> from drivers/md/md.c
->
+I was just wondering what the most current opinions were with regard to 5400
+vs 7200 RPM drives.
 
-Done that, and so far it seems to work ok.
+Also, have people been happy with the Western Digital 100gig Special Edition
+drives?
+
+What are other people using?
+
+fwiw, I'm planning on running three WD1000JB's. Two of them mirrored and the
+third as a backup until needed as a spare.  This is for a remote colo so in
+the event a drive dies I need lots of time to be able to get a new drive in,
+so raid5 is out. (I can't only fit in three drives)
 
 Thanks,
-
-Jani
+David U.
 
 --
-Jani Averbach
+"Never doubt that a small group of thoughtful citizens can change the
+world. Indeed, it is the only thing that ever has." --Margaret Mead
+
+
+
+
 
