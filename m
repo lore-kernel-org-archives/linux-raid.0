@@ -1,50 +1,61 @@
-From: Philip Molter <philip@corp.texas.net>
-Subject: Re: Force parity resync on raid5?
-Date: Tue, 10 Aug 2004 07:03:52 -0500
+From: Nick Maynard <nick.maynard@alumni.doc.ic.ac.uk>
+Subject: RAID1 sync() slowness
+Date: Tue, 10 Aug 2004 13:46:22 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <4118B9A8.2040102@corp.texas.net>
+Message-ID: <1092141982.4118c39ee37e5@www.tastycake.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Gordon Henderson wrote:
+Hello - hoping someone can give some insight into a RAID1 performance problem
+that's been affecting us for a while now...
 
-> On Mon, 9 Aug 2004, Philip Molter wrote:
-> 
-> 
->>How do I force a parity resync on a raid5 array?  Under 2.4, I would do
->>this by hard cycling the box and when it came back up, it would
->>automatically resync the array.  Under 2.6, this appears to have gone away.
-> 
-> 
-> I don't know about 2.6, (still living with 2.4) but can't you simply do:
-> 
->   raidhotremove /dev/mdX /dev/hdYZ
-> 
-> followed by
-> 
->   raidhotadd /dev/mdX /dev/hdYZ
-> 
-> or /dev/sdYZ if SCSI disks...
-> 
-> However, picking the right disk to remove might be tricky... And if you
-> were at all unsure about data on the disks, maybe rebooting and doing a
-> hard fsck of the partition(s) in maintenance mode might be a good thing
-> too...
+Our current setup:
 
-Nope, I want something that will specifically resync the parity from the
-known good data on the disks.  Thanks to the raid5 resync bug from
-earlier 2.6 kernels, I have hundreds of systems with terabytes of data
-that have perfectly good data sitting on raid5 arrays with corrupt
-parity.  If I remove a drive to force a resync, the data is immediately
-corrupted.
+$ cat /proc/mdstat
+Personalities : [raid1] [multipath]
+read_ahead 1024 sectors
+md4 : active raid1 hdg6[1] hde6[0]
+      102494592 blocks [2/2] [UU]
 
-Linux RAID *has* to have sort of way to force a parity resync.  If it
-doesn't have one, it needs one.  That's a glaring omission to make.
+md3 : active raid1 hdg5[1] hde5[0]
+      2104384 blocks [2/2] [UU]
 
-Philip
+md2 : active raid1 hdg3[1] hde3[0]
+      2104448 blocks [2/2] [UU]
 
+md0 : active raid1 hdg1[1] hde1[0]
+      24000 blocks [2/2] [UU]
 
+md1 : active raid1 hdg2[1] hde2[0]
+      10490368 blocks [2/2] [UU]
+
+unused devices: <none>
+
+/dev/md2 is swap space, the other arrays are ext2/3 filesystems.
+
+We're finding calls to sync() take a much longer time than we would expect.
+In particular, sometimes it can take over a second (in extreme cases, several)
+to run "sync".  As our mail server runs sync() often, we're getting some fairly
+noticeable performance degradation, mostly showing itself in terminal delays,
+but sometimes in database accesses etc.
+
+We originally thought it might be something to do with atime inode records, and
+tried remounting our filesystems with noatime, but to no avail.
+
+The hardware's all fairly recent - two 120GB drives on their own channels, DMA,
+2.4Ghz P4, 1GB RAM - so we shouldn't be having trouble of this sort.
+
+The system is currently running 2.4.26.
+
+Does anyone have any ideas on how to fix our problems?
+
+Thanks,
+
+--
+
+Nick Maynard
+nick.maynard@alumni.doc.ic.ac.uk
