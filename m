@@ -1,53 +1,66 @@
-From: "Martin Bene" <martin.bene@icomedias.com>
-Subject: AW: Raid 1 vs 5 ?
-Date: Fri, 7 May 2004 08:14:16 +0200
+From: Maarten van den Berg <maarten@vbvb.nl>
+Subject: Re: AW: Raid 1 vs 5 ?
+Date: Fri, 7 May 2004 16:29:31 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <FA095C015271B64E99B197937712FD02262E66@freedom.grz.icomedias.com>
+Message-ID: <200405071629.31420.maarten@vbvb.nl>
+References: <FA095C015271B64E99B197937712FD0227A85D@freedom.grz.icomedias.com> <1083909121.4287.19.camel@localhost>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-To: John Lange <john.lange@bighostbox.com>
-Cc: LinuxRaid <linux-raid@vger.kernel.org>
+In-Reply-To: <1083909121.4287.19.camel@localhost>
+Content-Disposition: inline
+To: LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-> First, why do we skip sdx3 and sdx4 on each disk and go 
-> directly to sdx5
+On Friday 07 May 2004 07:52, John Lange wrote:
+> Thank you Martin. You have some really great insights there.
+>
+> A couple of things about the raid sets confused me:
+> > Each disk partitioned alike:
+> > 	1	30MB
+> > 	2	1/2 size_of_swap_
+> > 	5	rest_of_disk
+> >
+> > Now you can create mds on the disk:
+> > 	md0	raid1 sda1 sda2 sda3 sda4
+> > 	md1	raid1 sda1 sdb1
+> > 	md2	raid1 sdc1 sdd1
+> > 	md3	raid5 sda5 sdb5 sdc5 sdd5
+>
+> First, why do we skip sdx3 and sdx4 on each disk and go directly to sdx5
 > for partition numbers?
 
-Just habit I guess; usually I've got a couple of data partitions, so I
-will have to have some extended partitions; to make things more similar
-between systems I tend to put "special" stuff (boot, swap, possibly a
-rescue system) on primary partitions and have / as the first extended
-partition.
+That is the first number a logical partition gets, as opposed to primary.
 
 > Second, I'm very confused by the way you divided up the raid sets....
 > I'm thinking you erred? I'm such a newb its possible I really don't
 > understand whats going on so hopefully you can verify.
-> 
+
+I concur, there are errors. This is probably what he meant
+
 > md0: did you mean sda1 sdb1 sdc1 sdd1 ?
+
+Yes. It was obviously a typo.
+
 > md1: did you mean sda2 sdb2 ?
 > md2: did you mean sdc2 sdd2 ?
+
+If it were me, why not do entire swap (not 1/2 size_of_swap) on a four-way 
+raid 1, just as with /boot ?  Is way simpler.
+
 > md3: did you mean sda5 sdb5 sdc5 sdd5 ?
-
-ARGH - never write to mailinglists without adequate amounts of coffee.
-You're of course right, I messed up.
-
-> And last, is it possible to build the system from the 
-> beginning on RAID?
-
-Yes :-)
-
+>
+> And last, is it possible to build the system from the beginning on RAID?
 > I'm using slackware. I see there is a section in the how-to for
 > converting a red hat system after the fact but obviously it would be
 > easier if I didn't have to do that.
 
-Problem is, it depends on the installer / installation process. I know
-that redhat installer supports setup of raid, I've often st up gentoo
-using raid but it's too long since I installed slackware so I don't know
-if/how to go about installing right onto raid.
+What proved the easiest for me is installing the OS on a temporary scrap 
+harddisk, build your raid sets from there on the real target disks and copy.
+There is a more complicated way too, it involves setting failed-disk status on 
+the drive holding your original data. 
 
-Bye, Martin
+Maarten
 
