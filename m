@@ -1,22 +1,30 @@
 From: NeilBrown <neilb@cse.unsw.edu.au>
 Subject: [PATCH md ] Fix BUG in raid5 resync code.
-Date: Fri, 04 Jun 2004 16:38:32 +1000
+Date: Fri, 04 Jun 2004 16:55:34 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <E1BW8LY-00024X-F7@notabene.cse.unsw.edu.au>
-References: <20040604163651.7946.patches@notabene>
+Message-ID: <E1BW8c2-0002Fs-EL@notabene.cse.unsw.edu.au>
+References: <20040604165208.8646.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Andrew Morton <akpm@osdl.org>
+To: Marcelo Tosatti <marcelo.tosatti@cyclades.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Today I lucked upon a bug in raid5 that appears to have been there
-since 2.4.0 and earlier.   I guess it doesn't trigger very often.
+Hi Marcelo,
+ This patch fixes a long standing bug in raid5, that is fairly hard to hit.
 
-2.4 will need a similar fix.
+ As the comment below says, the if() condition on the for loop is there to 
+optimised out the loop if it is known that it isn't needed, so making the test 
+broader (as this patch does) cannot possibly hurt in correctness.
+Please include this in an upcoming release.
+Thanks,
+NeilBrown
+
+(patch against 2.4.27-pre5)
 
 ### Comments for Changeset
 
-This condtion on this loop is primarily to avoid the loop
+
+This condition on this loop is primarily to avoid the loop
 if it doesn't appear to be needed.  However it optimises
 a little too much and there is a case where it skips the
 loop when it is really needed.  This patch fixes it.
@@ -29,14 +37,14 @@ Signed-off-by: Neil Brown <neilb@cse.unsw.edu.au>
  1 files changed, 1 insertion(+), 1 deletion(-)
 
 diff ./drivers/md/raid5.c~current~ ./drivers/md/raid5.c
---- ./drivers/md/raid5.c~current~	2004-06-04 16:36:19.000000000 +1000
-+++ ./drivers/md/raid5.c	2004-06-04 16:36:28.000000000 +1000
-@@ -1037,7 +1037,7 @@ static void handle_stripe(struct stripe_
+--- ./drivers/md/raid5.c~current~	2004-06-04 16:50:34.000000000 +1000
++++ ./drivers/md/raid5.c	2004-06-04 16:51:06.000000000 +1000
+@@ -950,7 +950,7 @@ static void handle_stripe(struct stripe_
+ 	/* Now we might consider reading some blocks, either to check/generate
  	 * parity, or to satisfy requests
- 	 * or to load a block that is being partially written.
  	 */
--	if (to_read || non_overwrite || (syncing && (uptodate+failed < disks))) {
-+	if (to_read || non_overwrite || (syncing && (uptodate < disks))) {
+-	if (to_read || (syncing && (uptodate+failed < disks))) {
++	if (to_read || (syncing && (uptodate < disks))) {
  		for (i=disks; i--;) {
- 			dev = &sh->dev[i];
- 			if (!test_bit(R5_LOCKED, &dev->flags) && !test_bit(R5_UPTODATE, &dev->flags) &&
+ 			bh = sh->bh_cache[i];
+ 			if (!buffer_locked(bh) && !buffer_uptodate(bh) &&
