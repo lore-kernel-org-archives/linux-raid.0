@@ -1,35 +1,54 @@
-From: Yu Chen <chen@hhmi.umbc.edu>
+From: Gordon Henderson <gordon@drogon.net>
 Subject: RE: Good news / bad news - The joys of RAID
-Date: Mon, 22 Nov 2004 09:13:41 -0500 (EST)
-Message-ID: <Pine.LNX.4.61.0411220909180.5652@treant.hhmi.umbc.edu>
+Date: Mon, 22 Nov 2004 14:34:49 +0000 (GMT)
+Message-ID: <Pine.LNX.4.56.0411221429380.4195@lion.drogon.net>
 References: <200411210433.iAL4XIN19967@www.watkins-home.com>
+ <Pine.LNX.4.61.0411220909180.5652@treant.hhmi.umbc.edu>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200411210433.iAL4XIN19967@www.watkins-home.com>
+In-Reply-To: <Pine.LNX.4.61.0411220909180.5652@treant.hhmi.umbc.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Guy <bugzilla@watkins-home.com>
-Cc: 'Mark Klarzynski' <mark.k@computer-design.co.uk>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> Now if someone made an affordable tape drive and tapes that could backup
-> 200G per tape, that would be cool!
+On Mon, 22 Nov 2004, Yu Chen wrote:
+
+> > Now if someone made an affordable tape drive and tapes that could b=
+ackup
+> > 200G per tape, that would be cool!
 >
+> You don't know? they have that already, AIT-4, LTO as I know.
 
-You don't know? they have that already, AIT-4, LTO as I know.
+I think the key-word here was "affordable"
 
+I use DLT drives, which I think go up to 220GB native right now, ('m on=
+ly
+currently using 160GB native drives), but right now the cost of media a=
+t
+about =A360 each is about the same as a 160GB IDE drive.. Easier to man=
+age
+though, and the cost of the tape drive is still round about =A33500.
 
-===========================================
-Yu Chen
-Howard Hughes Medical Institute
-Chemistry Building, Rm 182
-University of Maryland at Baltimore County
-1000 Hilltop Circle
-Baltimore, MD 21250
+But how valuable is your data? (As I keep telling my clients!!!)
 
-phone: 	(410)455-6347 (primary)
- 	(410)455-2718 (secondary)
-fax: 	(410)455-1174
-email: 	chen@hhmi.umbc.edu
-===========================================
+I've tried to build servers that have a max. capacity of 200GB per
+partition, but I have clients chomping at the bit for bigger partitions=
+,
+thn it becomes a PITA to backup to tape.
 
+I don't think the requirement for tape backup is going to go away in th=
+e
+near future, anyway. I just wish tape technology would keep up with dis=
+k
+technology.
+
+RAID is great, but it's not for archive and backup.
+
+Gordon
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
