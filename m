@@ -1,8 +1,8 @@
 From: NeilBrown <neilb@cse.unsw.edu.au>
-Subject: [PATCH] md - 5 of 12 - Tidy up recovery_running flags in md
-Date: Wed, 12 Mar 2003 14:59:37 +1100
+Subject: [PATCH] md - 2 of 12 - Convert /proc/mdstat to use seq_file
+Date: Wed, 12 Mar 2003 14:59:36 +1100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <E18sxOz-0004pw-00@notabene.cse.unsw.edu.au>
+Message-ID: <E18sxOy-0004pi-00@notabene.cse.unsw.edu.au>
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: Linus Torvalds <torvalds@transmeta.com>
 Cc: linux-raid@vger.kernel.org
@@ -11,307 +11,534 @@ List-Id: linux-raid.ids
 
 ### Comments for ChangeSet
 
-Md uses ->recovery_running and ->recovery_err to keep track of the 
-status or recovery.  This is rather ad hoc and race prone.
+From: Angus Sawyer <angus.sawyer@dsl.pipex.com>
 
-This patch changes it to ->recovery which has bit flags for various
-states.
+Mainly straightforward convert of sprintf -> seq_printf.  seq_start and 
+seq_next modelled on /proc/partitions.  locking/ref counting as for 
+ITERATE_MDDEV.
+
+pos == 0 -> header
+pos == n -> nth mddev
+pos == 0x10000 -> tail
+
+
 
  ----------- Diffstat output ------------
- ./drivers/md/md.c           |   88 ++++++++++++++++++++++----------------------
- ./drivers/md/raid1.c        |    5 +-
- ./drivers/md/raid5.c        |    5 +-
- ./include/linux/raid/md_k.h |   22 +++++++----
- 4 files changed, 63 insertions(+), 57 deletions(-)
+ ./drivers/md/linear.c       |   16 +--
+ ./drivers/md/md.c           |  191 +++++++++++++++++++++++++++++++-------------
+ ./drivers/md/multipath.c    |   11 +-
+ ./drivers/md/raid0.c        |   25 ++---
+ ./drivers/md/raid1.c        |   11 +-
+ ./drivers/md/raid5.c        |   15 +--
+ ./include/linux/raid/md.h   |    1 
+ ./include/linux/raid/md_k.h |    2 
+ 8 files changed, 176 insertions(+), 96 deletions(-)
+
+diff ./drivers/md/linear.c~current~ ./drivers/md/linear.c
+--- ./drivers/md/linear.c~current~	2003-03-12 09:37:44.000000000 +1100
++++ ./drivers/md/linear.c	2003-03-12 09:37:45.000000000 +1100
+@@ -208,31 +208,29 @@ static int linear_make_request (request_
+ 	return 1;
+ }
+ 
+-static int linear_status (char *page, mddev_t *mddev)
++static void linear_status (struct seq_file *seq, mddev_t *mddev)
+ {
+-	int sz = 0;
+ 
+ #undef MD_DEBUG
+ #ifdef MD_DEBUG
+ 	int j;
+ 	linear_conf_t *conf = mddev_to_conf(mddev);
+   
+-	sz += sprintf(page+sz, "      ");
++	seq_printf(seq, "      ");
+ 	for (j = 0; j < conf->nr_zones; j++)
+ 	{
+-		sz += sprintf(page+sz, "[%s",
++		seq_printf(seq, "[%s",
+ 			bdev_partition_name(conf->hash_table[j].dev0->rdev->bdev));
+ 
+ 		if (conf->hash_table[j].dev1)
+-			sz += sprintf(page+sz, "/%s] ",
++			seq_printf(seq, "/%s] ",
+ 			  bdev_partition_name(conf->hash_table[j].dev1->rdev->bdev));
+ 		else
+-			sz += sprintf(page+sz, "] ");
++			seq_printf(seq, "] ");
+ 	}
+-	sz += sprintf(page+sz, "\n");
++	seq_printf(seq, "\n");
+ #endif
+-	sz += sprintf(page+sz, " %dk rounding", mddev->chunk_size/1024);
+-	return sz;
++	seq_printf(seq, " %dk rounding", mddev->chunk_size/1024);
+ }
+ 
+ 
 
 diff ./drivers/md/md.c~current~ ./drivers/md/md.c
---- ./drivers/md/md.c~current~	2003-03-12 13:12:22.000000000 +1100
-+++ ./drivers/md/md.c	2003-03-12 13:12:34.000000000 +1100
-@@ -1593,8 +1593,7 @@ static int do_md_stop(mddev_t * mddev, i
- 
- 	if (mddev->pers) {
- 		if (mddev->sync_thread) {
--			if (mddev->recovery_running > 0)
--				mddev->recovery_running = -1;
-+			set_bit(MD_RECOVERY_INTR, &mddev->recovery);
- 			md_unregister_thread(mddev->sync_thread);
- 			mddev->sync_thread = NULL;
- 		}
-@@ -2663,7 +2662,8 @@ static void status_resync(struct seq_fil
- 		seq_printf(seq, "] ");
- 	}
- 	seq_printf(seq, " %s =%3lu.%lu%% (%lu/%lu)",
--		      (mddev->spares ? "recovery" : "resync"),
-+		      (test_bit(MD_RECOVERY_SYNC, &mddev->recovery) ?
-+		       "resync" : "recovery"),
- 		      res/10, res % 10, resync, max_blocks);
- 
- 	/*
-@@ -2896,8 +2896,7 @@ void md_done_sync(mddev_t *mddev, int bl
- 	atomic_sub(blocks, &mddev->recovery_active);
- 	wake_up(&mddev->recovery_wait);
- 	if (!ok) {
--		mddev->recovery_error = -EIO;
--		mddev->recovery_running = -1;
-+		set_bit(MD_RECOVERY_ERR, &mddev->recovery);
- 		md_recover_arrays();
- 		// stop recovery, signal do_sync ....
- 	}
-@@ -2927,7 +2926,8 @@ static inline void md_enter_safemode(mdd
- {
- 
- 	mddev_lock_uninterruptible(mddev);
--	if (mddev->safemode && !atomic_read(&mddev->writes_pending) && !mddev->in_sync && !mddev->recovery_running) {
-+	if (mddev->safemode && !atomic_read(&mddev->writes_pending) &&
-+	    !mddev->in_sync && mddev->recovery_cp == MaxSector) {
- 		mddev->in_sync = 1;
- 		md_update_sb(mddev);
- 	}
-@@ -2963,7 +2963,7 @@ static void md_do_sync(void *data)
- 	unsigned long last_check;
- 
- 	/* just incase thread restarts... */
--	if (mddev->recovery_running <= 0)
-+	if (test_bit(MD_RECOVERY_DONE, &mddev->recovery))
- 		return;
- 
- 	/* we overload curr_resync somewhat here.
-@@ -3031,8 +3031,6 @@ static void md_do_sync(void *data)
- 	init_waitqueue_head(&mddev->recovery_wait);
- 	last_check = 0;
- 
--	mddev->recovery_error = 0;
--
- 	if (mddev->recovery_cp)
- 		printk(KERN_INFO "md: resuming recovery of md%d from checkpoint.\n", mdidx(mddev));
- 
-@@ -3053,6 +3051,10 @@ static void md_do_sync(void *data)
- 
- 		last_check = j;
- 
-+		if (test_bit(MD_RECOVERY_INTR, &mddev->recovery) ||
-+		    test_bit(MD_RECOVERY_ERR, &mddev->recovery))
-+			break;
-+
- 		blk_run_queues();
- 
- 	repeat:
-@@ -3107,26 +3109,26 @@ static void md_do_sync(void *data)
-  out:
- 	wait_event(mddev->recovery_wait, !atomic_read(&mddev->recovery_active));
- 
--	if (mddev->recovery_running < 0 && 
--		!mddev->recovery_error && mddev->curr_resync > 2)
--	{
--		/* interrupted but no write errors */
--		printk(KERN_INFO "md: checkpointing recovery of md%d.\n", mdidx(mddev));
--		mddev->recovery_cp = mddev->curr_resync;
--	}
--
- 	/* tell personality that we are finished */
- 	mddev->pers->sync_request(mddev, max_sectors, 1);
-- skip:
--	mddev->curr_resync = 0;
-+
- 	if (err)
--		mddev->recovery_running = -1;
--	if (mddev->recovery_running > 0)
--		mddev->recovery_running = 0;
--	if (mddev->recovery_running == 0)
--		mddev->recovery_cp = MaxSector;
-+		set_bit(MD_RECOVERY_ERR, &mddev->recovery);
-+	if (!test_bit(MD_RECOVERY_ERR, &mddev->recovery) &&
-+	    mddev->curr_resync > 2 &&
-+	    mddev->curr_resync > mddev->recovery_cp) {
-+		if (test_bit(MD_RECOVERY_INTR, &mddev->recovery)) {
-+			printk(KERN_INFO "md: checkpointing recovery of md%d.\n", mdidx(mddev));
-+			mddev->recovery_cp = mddev->curr_resync;
-+		} else
-+			mddev->recovery_cp = MaxSector;
-+	}
-+
- 	if (mddev->safemode)
- 		md_enter_safemode(mddev);
-+ skip:
-+	mddev->curr_resync = 0;
-+	set_bit(MD_RECOVERY_DONE, &mddev->recovery);
+--- ./drivers/md/md.c~current~	2003-03-12 09:31:38.000000000 +1100
++++ ./drivers/md/md.c	2003-03-12 09:46:00.000000000 +1100
+@@ -2621,30 +2621,30 @@ void md_error(mddev_t *mddev, mdk_rdev_t
  	md_recover_arrays();
  }
  
-@@ -3136,10 +3138,10 @@ static void md_do_sync(void *data)
-  * action that might be needed.
-  * It does not do any resync itself, but rather "forks" off other threads
-  * to do that as needed.
-- * When it is determined that resync is needed, we set "->recovery_running" and
-- * create a thread at ->sync_thread.
-- * When the thread finishes it clears recovery_running (or sets an error)
-- * and wakeup up this thread which will reap the thread and finish up.
-+ * When it is determined that resync is needed, we set MD_RECOVERY_RUNNING in
-+ * "->recovery" and create a thread at ->sync_thread.
-+ * When the thread finishes it sets MD_RECOVERY_DONE (and might set MD_RECOVERY_ERR)
-+ * and wakeups up this thread which will reap the thread and finish up.
-  * This thread also removes any faulty devices (with nr_pending == 0).
-  *
-  * The overall approach is:
-@@ -3160,31 +3162,32 @@ void md_do_recovery(void *data)
- 	dprintk(KERN_INFO "md: recovery thread got woken up ...\n");
+-static int status_unused(char * page)
++/* seq_file implementation /proc/mdstat */
++
++static void status_unused(struct seq_file *seq)
+ {
+-	int sz = 0, i = 0;
++	int i = 0;
+ 	mdk_rdev_t *rdev;
+ 	struct list_head *tmp;
  
- 	ITERATE_MDDEV(mddev,tmp) if (mddev_lock(mddev)==0) {
-+		int spares =0;
- 		if (!mddev->raid_disks || !mddev->pers || mddev->ro)
- 			goto unlock;
- 		if (mddev->sb_dirty)
- 			md_update_sb(mddev);
--		if (mddev->recovery_running > 0)
-+		if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery) &&
-+		    !test_bit(MD_RECOVERY_DONE, &mddev->recovery))
- 			/* resync/recovery still happening */
- 			goto unlock;
- 		if (mddev->sync_thread) {
- 			/* resync has finished, collect result */
- 			md_unregister_thread(mddev->sync_thread);
- 			mddev->sync_thread = NULL;
--			if (mddev->recovery_running == 0) {
-+			if (!test_bit(MD_RECOVERY_ERR, &mddev->recovery)) {
- 				/* success...*/
- 				/* activate any spares */
- 				mddev->pers->spare_active(mddev);
--				mddev->spares = 0;
- 			}
- 			md_update_sb(mddev);
--			mddev->recovery_running = 0;
-+			mddev->recovery = 0;
- 			wake_up(&resync_wait);
- 			goto unlock;
- 		}
--		if (mddev->recovery_running) {
-+		if (mddev->recovery) {
- 			/* that's odd.. */
--			mddev->recovery_running = 0;
-+			mddev->recovery = 0;
- 			wake_up(&resync_wait);
+-	sz += sprintf(page + sz, "unused devices: ");
++	seq_printf(seq, "unused devices: ");
+ 
+ 	ITERATE_RDEV_PENDING(rdev,tmp) {
+ 		i++;
+-		sz += sprintf(page + sz, "%s ",
++		seq_printf(seq, "%s ",
+ 			      bdev_partition_name(rdev->bdev));
+ 	}
+ 	if (!i)
+-		sz += sprintf(page + sz, "<none>");
++		seq_printf(seq, "<none>");
+ 
+-	sz += sprintf(page + sz, "\n");
+-	return sz;
++	seq_printf(seq, "\n");
+ }
+ 
+ 
+-static int status_resync(char * page, mddev_t * mddev)
++static void status_resync(struct seq_file *seq, mddev_t * mddev)
+ {
+-	int sz = 0;
+ 	unsigned long max_blocks, resync, res, dt, db, rt;
+ 
+ 	resync = (mddev->curr_resync - atomic_read(&mddev->recovery_active))/2;
+@@ -2655,20 +2655,20 @@ static int status_resync(char * page, md
+ 	 */
+ 	if (!max_blocks) {
+ 		MD_BUG();
+-		return 0;
++		return;
+ 	}
+ 	res = (resync/1024)*1000/(max_blocks/1024 + 1);
+ 	{
+ 		int i, x = res/50, y = 20-x;
+-		sz += sprintf(page + sz, "[");
++		seq_printf(seq, "[");
+ 		for (i = 0; i < x; i++)
+-			sz += sprintf(page + sz, "=");
+-		sz += sprintf(page + sz, ">");
++			seq_printf(seq, "=");
++		seq_printf(seq, ">");
+ 		for (i = 0; i < y; i++)
+-			sz += sprintf(page + sz, ".");
+-		sz += sprintf(page + sz, "] ");
++			seq_printf(seq, ".");
++		seq_printf(seq, "] ");
+ 	}
+-	sz += sprintf(page + sz, " %s =%3lu.%lu%% (%lu/%lu)",
++	seq_printf(seq, " %s =%3lu.%lu%% (%lu/%lu)",
+ 		      (mddev->spares ? "recovery" : "resync"),
+ 		      res/10, res % 10, resync, max_blocks);
+ 
+@@ -2686,44 +2686,110 @@ static int status_resync(char * page, md
+ 	db = resync - (mddev->resync_mark_cnt/2);
+ 	rt = (dt * ((max_blocks-resync) / (db/100+1)))/100;
+ 
+-	sz += sprintf(page + sz, " finish=%lu.%lumin", rt / 60, (rt % 60)/6);
++	seq_printf(seq, " finish=%lu.%lumin", rt / 60, (rt % 60)/6);
++
++	seq_printf(seq, " speed=%ldK/sec", db/dt);
++}
++
++static void *md_seq_start(struct seq_file *seq, loff_t *pos)
++{
++	struct list_head *tmp;
++	loff_t l = *pos;
++	mddev_t *mddev;
++
++	if (l > 0x10000)
++		return NULL;
++	if (!l--)
++		/* header */
++		return (void*)1;
++
++	spin_lock(&all_mddevs_lock);
++	list_for_each(tmp,&all_mddevs)
++		if (!l--) {
++			mddev = list_entry(tmp, mddev_t, all_mddevs);
++			mddev_get(mddev);
++			spin_unlock(&all_mddevs_lock);
++			return mddev;
++		}
++	spin_unlock(&all_mddevs_lock);
++	return (void*)2;/* tail */
++}
++
++static void *md_seq_next(struct seq_file *seq, void *v, loff_t *pos)
++{
++	struct list_head *tmp;
++	mddev_t *next_mddev, *mddev = v;
++	
++	++*pos;
++	if (v == (void*)2)
++		return NULL;
++
++	spin_lock(&all_mddevs_lock);
++	if (v == (void*)1)
++		tmp = all_mddevs.next;
++	else
++		tmp = mddev->all_mddevs.next;
++	if (tmp != &all_mddevs)
++		next_mddev = mddev_get(list_entry(tmp,mddev_t,all_mddevs));
++	else {
++		next_mddev = (void*)2;
++		*pos = 0x10000;
++	}		
++	spin_unlock(&all_mddevs_lock);
+ 
+-	sz += sprintf(page + sz, " speed=%ldK/sec", db/dt);
++	if (v != (void*)1)
++		mddev_put(mddev);
++	return next_mddev;
++
++}
++
++static void md_seq_stop(struct seq_file *seq, void *v)
++{
++	mddev_t *mddev = v;
+ 
+-	return sz;
++	if (mddev && v != (void*)1 && v != (void*)2)
++		mddev_put(mddev);
+ }
+ 
+-static int md_status_read_proc(char *page, char **start, off_t off,
+-			int count, int *eof, void *data)
++static int md_seq_show(struct seq_file *seq, void *v)
+ {
+-	int sz = 0, j;
++	mddev_t *mddev = v;
+ 	sector_t size;
+-	struct list_head *tmp, *tmp2;
++	struct list_head *tmp2;
+ 	mdk_rdev_t *rdev;
+-	mddev_t *mddev;
++	int i;
+ 
+-	sz += sprintf(page + sz, "Personalities : ");
+-	for (j = 0; j < MAX_PERSONALITY; j++)
+-	if (pers[j])
+-		sz += sprintf(page+sz, "[%s] ", pers[j]->name);
++	if (v == (void*)1) {
++		seq_printf(seq, "Personalities : ");
++		for (i = 0; i < MAX_PERSONALITY; i++)
++			if (pers[i])
++				seq_printf(seq, "[%s] ", pers[i]->name);
+ 
+-	sz += sprintf(page+sz, "\n");
++		seq_printf(seq, "\n");
++		return 0;
++	}
++	if (v == (void*)2) {
++		status_unused(seq);
++		return 0;
++	}
+ 
+-	ITERATE_MDDEV(mddev,tmp) if (mddev_lock(mddev)==0) {
+-		sz += sprintf(page + sz, "md%d : %sactive", mdidx(mddev),
++	if (mddev_lock(mddev)!=0) 
++		return -EINTR;
++	if (mddev->pers || mddev->raid_disks || !list_empty(&mddev->disks)) {
++		seq_printf(seq, "md%d : %sactive", mdidx(mddev),
+ 						mddev->pers ? "" : "in");
+ 		if (mddev->pers) {
+ 			if (mddev->ro)
+-				sz += sprintf(page + sz, " (read-only)");
+-			sz += sprintf(page + sz, " %s", mddev->pers->name);
++				seq_printf(seq, " (read-only)");
++			seq_printf(seq, " %s", mddev->pers->name);
  		}
  
-@@ -3192,7 +3195,6 @@ void md_do_recovery(void *data)
- 		 * remove any failed drives, then
- 		 * add spares if possible
- 		 */
--		mddev->spares = 0;
- 		ITERATE_RDEV(mddev,rdev,rtmp) {
- 			if (rdev->raid_disk >= 0 &&
- 			    rdev->faulty &&
-@@ -3201,35 +3203,35 @@ void md_do_recovery(void *data)
- 				rdev->raid_disk = -1;
+ 		size = 0;
+ 		ITERATE_RDEV(mddev,rdev,tmp2) {
+-			sz += sprintf(page + sz, " %s[%d]",
++			seq_printf(seq, " %s[%d]",
+ 				bdev_partition_name(rdev->bdev), rdev->desc_nr);
+ 			if (rdev->faulty) {
+-				sz += sprintf(page + sz, "(F)");
++				seq_printf(seq, "(F)");
+ 				continue;
  			}
- 			if (!rdev->faulty && rdev->raid_disk >= 0 && !rdev->in_sync)
--				mddev->spares++;
-+				spares++;
- 		}
- 		if (mddev->degraded) {
- 			ITERATE_RDEV(mddev,rdev,rtmp)
- 				if (rdev->raid_disk < 0
- 				    && !rdev->faulty) {
--					if (mddev->pers->hot_add_disk(mddev,rdev)) {
--						mddev->spares++;
--						mddev->recovery_cp = 0;
--					}
-+					if (mddev->pers->hot_add_disk(mddev,rdev))
-+						spares++;
- 					else
- 						break;
- 				}
+ 			size += rdev->size;
+@@ -2731,34 +2797,50 @@ static int md_status_read_proc(char *pag
+ 
+ 		if (!list_empty(&mddev->disks)) {
+ 			if (mddev->pers)
+-				sz += sprintf(page + sz, "\n      %llu blocks",
++				seq_printf(seq, "\n      %llu blocks",
+ 						 (unsigned long long)md_size[mdidx(mddev)]);
+ 			else
+-				sz += sprintf(page + sz, "\n      %llu blocks", (unsigned long long)size);
++				seq_printf(seq, "\n      %llu blocks", (unsigned long long)size);
  		}
  
--		if (!mddev->spares && (mddev->recovery_cp == MaxSector )) {
-+		if (!spares && (mddev->recovery_cp == MaxSector )) {
- 			/* nothing we can do ... */
- 			goto unlock;
+-		if (!mddev->pers) {
+-			sz += sprintf(page+sz, "\n");
+-			mddev_unlock(mddev);
+-			continue;
++		if (mddev->pers) {
++			mddev->pers->status (seq, mddev);
++	 		seq_printf(seq, "\n      ");
++			if (mddev->curr_resync > 2)
++				status_resync (seq, mddev);
++			else if (mddev->curr_resync == 1 || mddev->curr_resync == 2)
++				seq_printf(seq, "	resync=DELAYED");
  		}
- 		if (mddev->pers->sync_request) {
-+			set_bit(MD_RECOVERY_RUNNING, &mddev->recovery);
-+			if (!spares)
-+				set_bit(MD_RECOVERY_SYNC, &mddev->recovery);
- 			mddev->sync_thread = md_register_thread(md_do_sync,
- 								mddev,
- 								"md_resync");
- 			if (!mddev->sync_thread) {
- 				printk(KERN_ERR "md%d: could not start resync thread...\n", mdidx(mddev));
- 				/* leave the spares where they are, it shouldn't hurt */
--				mddev->recovery_running = 0;
-+				mddev->recovery = 0;
- 			} else {
--				mddev->recovery_running = 1;
- 				md_wakeup_thread(mddev->sync_thread);
- 			}
- 		}
+ 
+-		sz += mddev->pers->status (page+sz, mddev);
++		seq_printf(seq, "\n");
++	}
++	mddev_unlock(mddev);
++	
++	return 0;
++}
+ 
+-		sz += sprintf(page+sz, "\n      ");
+-		if (mddev->curr_resync > 2)
+-			sz += status_resync (page+sz, mddev);
+-		else if (mddev->curr_resync == 1 || mddev->curr_resync == 2)
+-				sz += sprintf(page + sz, "	resync=DELAYED");
++static struct seq_operations md_seq_ops = {
++	.start  = md_seq_start,
++	.next   = md_seq_next,
++	.stop   = md_seq_stop,
++	.show   = md_seq_show,
++};
+ 
+-		sz += sprintf(page + sz, "\n");
+-		mddev_unlock(mddev);
+-	}
+-	sz += status_unused(page + sz);
++static int md_seq_open(struct inode *inode, struct file *file)
++{
++	int error;
+ 
+-	return sz;
++	error = seq_open(file, &md_seq_ops);
++	return error;
+ }
+ 
++static struct file_operations md_seq_fops = {
++	.open           = md_seq_open,
++	.read           = seq_read,
++	.llseek         = seq_lseek,
++	.release	= seq_release,
++};
++
+ int register_md_personality(int pnum, mdk_personality_t *p)
+ {
+ 	if (pnum >= MAX_PERSONALITY) {
+@@ -3196,6 +3278,7 @@ struct notifier_block md_notifier = {
+ 
+ static void md_geninit(void)
+ {
++	struct proc_dir_entry *p;
+ 	int i;
+ 
+ 	for(i = 0; i < MAX_MD_DEVS; i++) {
+@@ -3205,7 +3288,9 @@ static void md_geninit(void)
+ 	dprintk("md: sizeof(mdp_super_t) = %d\n", (int)sizeof(mdp_super_t));
+ 
+ #ifdef CONFIG_PROC_FS
+-	create_proc_read_entry("mdstat", 0, NULL, md_status_read_proc, NULL);
++	p = create_proc_entry("mdstat", S_IRUGO, NULL);
++	if (p)
++		p->proc_fops = &md_seq_fops;
+ #endif
+ }
+ 
+
+diff ./drivers/md/multipath.c~current~ ./drivers/md/multipath.c
+--- ./drivers/md/multipath.c~current~	2003-03-12 09:37:45.000000000 +1100
++++ ./drivers/md/multipath.c	2003-03-12 09:37:45.000000000 +1100
+@@ -185,19 +185,18 @@ static int multipath_make_request (reque
+ 	return 0;
+ }
+ 
+-static int multipath_status (char *page, mddev_t *mddev)
++static void multipath_status (struct seq_file *seq, mddev_t *mddev)
+ {
+ 	multipath_conf_t *conf = mddev_to_conf(mddev);
+-	int sz = 0, i;
++	int i;
+ 	
+-	sz += sprintf (page+sz, " [%d/%d] [", conf->raid_disks,
++	seq_printf (seq, " [%d/%d] [", conf->raid_disks,
+ 						 conf->working_disks);
+ 	for (i = 0; i < conf->raid_disks; i++)
+-		sz += sprintf (page+sz, "%s",
++		seq_printf (seq, "%s",
+ 			       conf->multipaths[i].rdev && 
+ 			       conf->multipaths[i].rdev->in_sync ? "U" : "_");
+-	sz += sprintf (page+sz, "]");
+-	return sz;
++	seq_printf (seq, "]");
+ }
+ 
+ #define LAST_DISK KERN_ALERT \
+
+diff ./drivers/md/raid0.c~current~ ./drivers/md/raid0.c
+--- ./drivers/md/raid0.c~current~	2003-03-12 09:37:45.000000000 +1100
++++ ./drivers/md/raid0.c	2003-03-12 09:37:45.000000000 +1100
+@@ -372,41 +372,40 @@ bad_zone1:
+ 	return 0;
+ }
+ 			   
+-static int raid0_status (char *page, mddev_t *mddev)
++static void raid0_status (struct seq_file *seq, mddev_t *mddev)
+ {
+-	int sz = 0;
+ #undef MD_DEBUG
+ #ifdef MD_DEBUG
+ 	int j, k;
+ 	raid0_conf_t *conf = mddev_to_conf(mddev);
+   
+-	sz += sprintf(page + sz, "      ");
++	seq_printf(seq, "      ");
+ 	for (j = 0; j < conf->nr_zones; j++) {
+-		sz += sprintf(page + sz, "[z%d",
++		seq_printf(seq, "[z%d",
+ 				conf->hash_table[j].zone0 - conf->strip_zone);
+ 		if (conf->hash_table[j].zone1)
+-			sz += sprintf(page+sz, "/z%d] ",
++			seq_printf(seq, "/z%d] ",
+ 				conf->hash_table[j].zone1 - conf->strip_zone);
+ 		else
+-			sz += sprintf(page+sz, "] ");
++			seq_printf(seq, "] ");
+ 	}
+   
+-	sz += sprintf(page + sz, "\n");
++	seq_printf(seq, "\n");
+   
+ 	for (j = 0; j < conf->nr_strip_zones; j++) {
+-		sz += sprintf(page + sz, "      z%d=[", j);
++		seq_printf(seq, "      z%d=[", j);
+ 		for (k = 0; k < conf->strip_zone[j].nb_dev; k++)
+-			sz += sprintf (page+sz, "%s/", bdev_partition_name(
++			seq_printf (seq, "%s/", bdev_partition_name(
+ 				conf->strip_zone[j].dev[k]->bdev));
+-		sz--;
+-		sz += sprintf (page+sz, "] zo=%d do=%d s=%d\n",
++
++		seq_printf (seq, "] zo=%d do=%d s=%d\n",
+ 				conf->strip_zone[j].zone_offset,
+ 				conf->strip_zone[j].dev_offset,
+ 				conf->strip_zone[j].size);
+ 	}
+ #endif
+-	sz += sprintf(page + sz, " %dk chunks", mddev->chunk_size/1024);
+-	return sz;
++	seq_printf(seq, " %dk chunks", mddev->chunk_size/1024);
++	return;
+ }
+ 
+ static mdk_personality_t raid0_personality=
 
 diff ./drivers/md/raid1.c~current~ ./drivers/md/raid1.c
---- ./drivers/md/raid1.c~current~	2003-03-12 13:12:22.000000000 +1100
-+++ ./drivers/md/raid1.c	2003-03-12 13:12:18.000000000 +1100
-@@ -623,10 +623,9 @@ static void error(mddev_t *mddev, mdk_rd
- 		mddev->degraded++;
- 		conf->working_disks--;
- 		/*
--		 * if recovery was running, stop it now.
-+		 * if recovery is running, make sure it aborts.
- 		 */
--		if (mddev->recovery_running) 
--			mddev->recovery_running = -EIO;
-+		set_bit(MD_RECOVERY_ERR, &mddev->recovery);
- 	}
- 	rdev->in_sync = 0;
- 	rdev->faulty = 1;
+--- ./drivers/md/raid1.c~current~	2003-03-12 09:37:45.000000000 +1100
++++ ./drivers/md/raid1.c	2003-03-12 09:37:45.000000000 +1100
+@@ -571,19 +571,18 @@ static int make_request(request_queue_t 
+ 	return 0;
+ }
+ 
+-static int status(char *page, mddev_t *mddev)
++static void status(struct seq_file *seq, mddev_t *mddev)
+ {
+ 	conf_t *conf = mddev_to_conf(mddev);
+-	int sz = 0, i;
++	int i;
+ 
+-	sz += sprintf(page+sz, " [%d/%d] [", conf->raid_disks,
++	seq_printf(seq, " [%d/%d] [", conf->raid_disks,
+ 						conf->working_disks);
+ 	for (i = 0; i < conf->raid_disks; i++)
+-		sz += sprintf(page+sz, "%s",
++		seq_printf(seq, "%s",
+ 			      conf->mirrors[i].rdev &&
+ 			      conf->mirrors[i].rdev->in_sync ? "U" : "_");
+-	sz += sprintf (page+sz, "]");
+-	return sz;
++	seq_printf(seq, "]");
+ }
+ 
+ #define LAST_DISK KERN_ALERT \
 
 diff ./drivers/md/raid5.c~current~ ./drivers/md/raid5.c
---- ./drivers/md/raid5.c~current~	2003-03-12 13:12:22.000000000 +1100
-+++ ./drivers/md/raid5.c	2003-03-12 13:12:18.000000000 +1100
-@@ -463,10 +463,9 @@ static void error(mddev_t *mddev, mdk_rd
- 			conf->failed_disks++;
- 			rdev->in_sync = 0;
- 			/*
--			 * if recovery was running, stop it now.
-+			 * if recovery was running, make sure it aborts.
- 			 */
--			if (mddev->recovery_running) 
--				mddev->recovery_running = -EIO;
-+			set_bit(MD_RECOVERY_ERR, &mddev->recovery);
- 		}
- 		rdev->faulty = 1;
- 		printk (KERN_ALERT
+--- ./drivers/md/raid5.c~current~	2003-03-12 09:37:45.000000000 +1100
++++ ./drivers/md/raid5.c	2003-03-12 09:37:45.000000000 +1100
+@@ -1579,24 +1579,23 @@ static void printall (raid5_conf_t *conf
+ }
+ #endif
+ 
+-static int status (char *page, mddev_t *mddev)
++static void status (struct seq_file *seq, mddev_t *mddev)
+ {
+ 	raid5_conf_t *conf = (raid5_conf_t *) mddev->private;
+-	int sz = 0, i;
++	int i;
+ 
+-	sz += sprintf (page+sz, " level %d, %dk chunk, algorithm %d", mddev->level, mddev->chunk_size >> 10, mddev->layout);
+-	sz += sprintf (page+sz, " [%d/%d] [", conf->raid_disks, conf->working_disks);
++	seq_printf (seq, " level %d, %dk chunk, algorithm %d", mddev->level, mddev->chunk_size >> 10, mddev->layout);
++	seq_printf (seq, " [%d/%d] [", conf->raid_disks, conf->working_disks);
+ 	for (i = 0; i < conf->raid_disks; i++)
+-		sz += sprintf (page+sz, "%s",
++		seq_printf (seq, "%s",
+ 			       conf->disks[i].rdev &&
+ 			       conf->disks[i].rdev->in_sync ? "U" : "_");
+-	sz += sprintf (page+sz, "]");
++	seq_printf (seq, "]");
+ #if RAID5_DEBUG
+ #define D(x) \
+-	sz += sprintf (page+sz, "<"#x":%d>", atomic_read(&conf->x))
++	seq_printf (seq, "<"#x":%d>", atomic_read(&conf->x))
+ 	printall(conf);
+ #endif
+-	return sz;
+ }
+ 
+ static void print_raid5_conf (raid5_conf_t *conf)
+
+diff ./include/linux/raid/md.h~current~ ./include/linux/raid/md.h
+--- ./include/linux/raid/md.h~current~	2003-03-12 09:37:45.000000000 +1100
++++ ./include/linux/raid/md.h	2003-03-12 09:37:45.000000000 +1100
+@@ -27,6 +27,7 @@
+ #include <linux/module.h>
+ #include <linux/hdreg.h>
+ #include <linux/proc_fs.h>
++#include <linux/seq_file.h>
+ #include <linux/smp_lock.h>
+ #include <linux/delay.h>
+ #include <net/checksum.h>
 
 diff ./include/linux/raid/md_k.h~current~ ./include/linux/raid/md_k.h
---- ./include/linux/raid/md_k.h~current~	2003-03-12 13:12:22.000000000 +1100
-+++ ./include/linux/raid/md_k.h	2003-03-12 13:12:18.000000000 +1100
-@@ -210,18 +210,24 @@ struct mddev_s
- 	unsigned long			curr_resync;	/* blocks scheduled */
- 	unsigned long			resync_mark;	/* a recent timestamp */
- 	unsigned long			resync_mark_cnt;/* blocks written at resync_mark */
--	/* recovery_running is 0 for no recovery/resync,
--	 * 1 for active recovery
--	 * 2 for active resync
--	 * -error for an error (e.g. -EINTR)
--	 * it can only be set > 0 under reconfig_sem
-+
-+	/* recovery/resync flags 
-+	 * RUNNING:  a thread is running, or about to be started
-+	 * SYNC:     actually doing a resync, not a recovery
-+	 * ERR:      and IO error was detected - abort the resync/recovery
-+	 * INTR:     someone requested a (clean) early abort.
-+	 * DONE:     thread is done and is waiting to be reaped
+--- ./include/linux/raid/md_k.h~current~	2003-03-12 09:37:45.000000000 +1100
++++ ./include/linux/raid/md_k.h	2003-03-12 09:37:45.000000000 +1100
+@@ -245,7 +245,7 @@ struct mdk_personality_s
+ 	int (*make_request)(request_queue_t *q, struct bio *bio);
+ 	int (*run)(mddev_t *mddev);
+ 	int (*stop)(mddev_t *mddev);
+-	int (*status)(char *page, mddev_t *mddev);
++	void (*status)(struct seq_file *seq, mddev_t *mddev);
+ 	/* error_handler must set ->faulty and clear ->in_sync
+ 	 * if appropriate, and should abort recovery if needed 
  	 */
--	int				recovery_running;
--	int				recovery_error;	/* error from recovery write */
-+#define	MD_RECOVERY_RUNNING	0
-+#define	MD_RECOVERY_SYNC	1
-+#define	MD_RECOVERY_ERR		2
-+#define	MD_RECOVERY_INTR	3
-+#define	MD_RECOVERY_DONE	4
-+	unsigned long			recovery;
-+
- 	int				in_sync;	/* know to not need resync */
- 	struct semaphore		reconfig_sem;
- 	atomic_t			active;
--	int				spares;
- 
- 	int				degraded;	/* whether md should consider
- 							 * adding a spare
