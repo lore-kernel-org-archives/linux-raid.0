@@ -1,36 +1,46 @@
-From: dean gaudet <dean-list-linux-raid@arctic.org>
-Subject: Re: powersupply for 16disks +dual xeon
-Date: Sun, 2 Feb 2003 12:48:27 -0800 (PST)
+From: "Adam J Morand" <Adam.Morand@illuminatedtechnologies.com>
+Subject: RAID 1 / Power Loss / No SuperBlock
+Date: Sun, 2 Feb 2003 12:50:30 -0800
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.53.0302021243030.26466@twinlark.arctic.org>
-References: <Pine.LNX.4.53.0302011823430.6789@ddx.a2000.nu>
- <3E3D3E6C.1060602@msaukkor.cjb.net>
+Message-ID: <00c301c2cafc$b9df8c80$6701a8c0@bc.hsia.telus.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3E3D3E6C.1060602@msaukkor.cjb.net>
-To: Mikko Saukkoriipi <msaukkor@msaukkor.cjb.net>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, 2 Feb 2003, Mikko Saukkoriipi wrote:
+Hello,
 
-> powersupplies for the harddrives, but this is not a good solution. My
-> friend recently bought a 465W Enermax that can provide 33A in the 12V
-> rail. What I've seen, Enermax PSUs provide most power to the 12V rail.
-> Fortron-Source top-end models would be another possibility, like
-> FSP550-60PLG.
+I apologize if this is the wrong place to talk about this.
+I run a RH7.2 with software RAID 1, recently the power went out, and drained
+the UPS before I got home.
+I am unable to restart my RAID because fsck can not run without finding the
+superblock
 
-zippy p/s also seem to be in the ballpark of enermax... i.e.
-<http://www.zippy.com.tw/2_power/2_product/2u/ac_input/P2G-6460P.htm> has
-32A on 12V.
+The error I get
+[aj@r2d2 aj]$ fsck /dev/hdd1
+Parallelizing fsck version 1.23 (15-Aug-2001)
+e2fsck 1.23, 15-Aug-2001 for EXT2 FS 0.5b, 95/08/09
+Couldn't find ext2 superblock, trying backup blocks...
+fsck.ext2: Bad magic number in super-block while trying to open /dev/hdd1
 
-that's what i've got in a box with 9 ide disks.
+The superblock could not be read or does not describe a correct ext2
+filesystem.  If the device is valid and it really contains an ext2
+filesystem (and not swap or ufs or something else), then the superblock
+is corrupt, and you might try running e2fsck with an alternate superblock:
+    e2fsck -b 8193 <device>
 
-i'm really happy with the 3U chassis i've got too --
-<http://www.rackmountpro.com/8productpage.cfm?prodid=558&u=RM3U3Q-IDE-P300W>.
-since the p/s is to the left of the mobo, my 3ware card is more in the
-center of the box and that lets me use 18" cables to reach all drives (i
-might have got away with 12" for some drives, didn't try though).
+Exit 8
 
--dean
+Is there RAID tools available for a situation like this that can recreate
+the superblocks?
+I have tried the backup blocks, I do not know how else or where to look for
+more information on reconstructed my dead RAID.
+
+Thank you for any information or hints possible,
+
+aj
+
+
