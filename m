@@ -1,51 +1,59 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: Forcing raid1 resync
-Date: Tue, 17 Aug 2004 07:46:01 +1000
+From: Bob Glamm <glamm@a-s-i.com>
+Subject: Re: RAID migration from 2.4 -> 2.6
+Date: Mon, 16 Aug 2004 17:35:41 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16673.11033.677046.5702@cse.unsw.edu.au>
-References: <8075D5C3061B9441944E1373776451186488C0@cinshrexc03.shermfin.com>
+Message-ID: <20040816223541.GA1197@romulus.a-s-i.com>
+References: <20040812152939.GD5326@romulus.a-s-i.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Rechenberg, Andrew on Monday August 16
-To: "Rechenberg, Andrew" <ARechenberg@sfg.com>
-Cc: linux-raid@vger.kernel.org
+Content-Disposition: inline
+In-Reply-To: <20040812152939.GD5326@romulus.a-s-i.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday August 16, ARechenberg@sfg.com wrote:
+As a follow-up, I tried using md=10,/dev/sda1,/dev/sdf1 as a kernel
+parameter.  Still no luck:
+
+Loading md10: /dev/sda1
+could not lock sda1
+md_import_device returned -6
+could not lock sdf1
+md_import_device returned -6
+bug in file drivers/md/md.c, line 1513.
+
+But apparently this error is misleading (-6 == ENXIO, no such device).
+I traced the code all the way back to do_open in fs/block_dev.c
+which is where it appears to be coming from.
+
+I'm not sure why the devices can't be found: the Adaptec driver appears
+to go through its initialization routines just fine and find all the
+disks.
+
+Anyone have any ideas here?
+
+-Bob
+
+> At the moment I'm stumped, so I wonder if someone might be able
+> to give me a hand.
 > 
-> And I will need to use mdadm or raidhotadd to add /dev/sdao1 back into
-> the array.  When I add a device back into the array the reconstruction
-> doesn't start immediately and/or if another reconstruction is underway,
-> the new recontruction will not occur until the first one has completed.
+> First, my RAID setup: I have a pair of Adaptec 7899 controllers
+> with five 9GB SCSI disks on each.  The first disks on each controller
+> are allocated in a RAID 1 configuration for boot, swap, /usr, etc.,
+> while the next three disks on each controller are allocated in
+> a RAID 5 configuration to our running services and data.  The last
+> disk on each controller is designated as a spare disk for each RAID.
 > 
-> Is this behavior expected/by design?  Waiting for 26 arrays to
-> reconstruct one at a time is painfully slow.  When I created the arrays
-> they all started to sync at the same time so I know the RAID code will
-> sync more than one at a time, and when my box came up yesterday after a
-> hard power cycle, about 5 arrays started syncing, but the rest waited
-> until those were finished and then synced one at a time.
-
-In 2.4, resyncing of multiple arrays can happen in parallel, providing
-they don't share physical drives, but reconstruction (i.e. after
-hot-add) does not.  I believe that this is accidental rather than
-deliberate.  
-In 2.6, both resync and reconstruction can happen in parallel (again,
-providing there is no sharing of drives).
-
-However after a crash, you should not need to hot add any drives.  All
-arrays should still be intact, but will need to be resynced (though in
-2.6, this is sometimes avoided).
-
-Maybe there is something wrong with your configuration that means that
-some arrays are never assembled correctly.
-
-If you are using "raidstart" to start your arrays, my advice is:
-Don't.
-
-If you are using in-kernel autodetect, then make sure that every
-partition has the correct partition type (0xFD I think), otherwise you
-will certainly get exactly the results you see.
-
-NeilBrown
+> These RAIDs work well with 2.4.  I've got them configured
+> for autodetect, so the system brings them up at startup in 2.4.
+> 
+> Now I'm trying to migrate to 2.6.7, and autodetection basically
+> ignores all my SCSI disks.  I get three lines:
+> 
+>   Autodetecting RAID arrays:
+>     ..  autodetecting
+>   Done.
+> 
+> when I try to boot 2.6.7.  (Additional note: all SCSI controllers
+> and disks are discovered just fine, although I am using the new
+> Adaptec driver in 2.6.)
