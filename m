@@ -1,24 +1,36 @@
-From: Andries Brouwer <aebr@win.tue.nl>
+From: Linus Torvalds <torvalds@transmeta.com>
 Subject: Re: PATCH - change to blkdev->queue calling triggers BUG in md.c
-Date: Mon, 2 Sep 2002 23:58:03 +0200
+Date: Mon, 2 Sep 2002 15:06:27 -0700 (PDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20020902215803.GA9359@win.tue.nl>
-References: <UTC200209022127.g82LR3g12738.aeb@smtp.cwi.nl> <Pine.LNX.4.44.0209021542590.3270-100000@hawkeye.luckynet.adm>
+Message-ID: <Pine.LNX.4.44.0209021501080.1401-100000@home.transmeta.com>
+References: <Pine.LNX.4.44.0209021542590.3270-100000@hawkeye.luckynet.adm>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 In-Reply-To: <Pine.LNX.4.44.0209021542590.3270-100000@hawkeye.luckynet.adm>
 To: Thunder from the hill <thunder@lightweight.ods.org>
-Cc: Andries.Brouwer@cwi.nl, torvalds@transmeta.com, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, neilb@cse.unsw.edu.au
+Cc: Andries.Brouwer@cwi.nl, aebr@win.tue.nl, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, neilb@cse.unsw.edu.au
 List-Id: linux-raid.ids
 
-On Mon, Sep 02, 2002 at 03:43:56PM -0600, Thunder from the hill wrote:
 
-> > The faraway goal is: no partition table reading in the kernel.
+On Mon, 2 Sep 2002, Thunder from the hill wrote:
 > 
 > Why not the faraway goal: no partition tables any more? They're annoying.
 
-As soon as the kernel stops reading partition tables, user space
-is entirely free in what it does. One of the possibilities is
-then of course: no partition tables.
+Yeah, users and real life is annoying.
+
+Guys, Linux is not a research project. Never was, never will be. If you
+want to have a research project that does things the way people think they
+should be done (as opposed to real life and being practical), look at Hurd
+and look at a lot of other projects. But don't look at Linux.
+
+Partition tables are a fact of life. And they are a fundamental part to 
+being able to parse what the disk contains. 
+
+Sure, you can do it in user space too. And you can do TCP in user space.  
+But some things are just fairly fundamental to the working of the system.  
+The disk and filesystem layout is one such thing. It had better "just
+work".
+
+		Linus
+
