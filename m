@@ -1,8 +1,8 @@
 From: Brennahn Chesteine <ven_ficken@yahoo.com>
-Subject: Re: initrd showing root at 1,9 when it's at 0,0 new kernel wont boot
-Date: Wed, 19 Mar 2003 09:22:08 -0800 (PST)
+Subject: initrd showing root at 19 when it's at 00 new kernel wont boot
+Date: Wed, 19 Mar 2003 09:31:39 -0800 (PST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20030319172208.78278.qmail@web14408.mail.yahoo.com>
+Message-ID: <20030319173139.46634.qmail@web14405.mail.yahoo.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
@@ -10,7 +10,7 @@ To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-> this is odd. I ususally use "make install" when
+this is odd. I ususally use "make install" when
 > building a kernwel to take care of initrd but I
 > noted
 > it said this 
@@ -50,14 +50,6 @@ List-Id: linux-raid.ids
 > root dev @ 9,1.
 > 
 > Ahh, help
-> 
-> __________________________________________________
-> Do you Yahoo!?
-> Yahoo! Platinum - Watch CBS' NCAA March Madness,
-> live on your desktop!
-> http://platinum.yahoo.com
-> 
-
 
 __________________________________________________
 Do you Yahoo!?
