@@ -1,39 +1,40 @@
-From: Alasdair G Kergon <agk@redhat.com>
-Subject: Re: device-mapper: : dm-linear: Device lookup failed
-Date: Wed, 2 Feb 2005 14:54:14 +0000
-Message-ID: <20050202145414.GA14105@agk.surrey.redhat.com>
-References: <41FE832D.6000600@knoepfle.de>
+From: hpa@zytor.com (H. Peter Anvin)
+Subject: Re: [PATCH md 2 of 4] Fix raid6 problem
+Date: Thu, 3 Feb 2005 02:12:38 +0000 (UTC)
+Message-ID: <cts1am$6c8$1@terminus.zytor.com>
+References: <38038.212.158.231.74.1099526180.squirrel@mail.fsck.co.uk> <200412090021.iB90L4MK014200@terminus.zytor.com> <33023.212.158.231.74.1106488921.squirrel@mail.fsck.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Content-Disposition: inline
-In-Reply-To: <41FE832D.6000600@knoepfle.de>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Sender: linux-raid-owner@vger.kernel.org
-To: Rudolf =?iso-8859-1?Q?B=F6rner?= <rb@knoepfle.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Jan 31, 2005 at 08:12:45PM +0100, Rudolf B=F6rner wrote:
-> since my Update 9.1. --> 9.2 SUSE I've get a lot of Error/Information=
- in=20
+Followup to:  <33023.212.158.231.74.1106488921.squirrel@mail.fsck.co.uk>
+By author:    "A. James Lewis" <james@fsck.co.uk>
+In newsgroup: linux.dev.raid
+>
+> 
+> Sorry for the delay in replying, I've been using RAID6 in a real life
+> situation with 2.6.9 + patch, for 2 months now, with 1.15Tb of storage,
+> and I have had more than 1 drive failure... as well as some rather
+> embarasing hardware corruption which I traced to a faulty IDE controller.
+> 
+> Dispite some random DMA corrupion, and loosing a total of 3 disks, I have
+> not had any problems with it RAID6 itself, and really it has litereally
+> saved my data from being lost.
+> 
+> I ran a diff against the 2.6.9 patch and what is in 2.6.10... and they are
+> not the same, presumably a more elegant fix has been implimented for the
+> production kernel??
+> 
 
-> <6>device-mapper: 4.1.0-ioctl (2003-12-10) initialised: dm@uk.sistina=
-=2Ecom
-> <3>device-mapper: : dm-linear: Device lookup failed
-> <4>device-mapper: error adding target to table
-> <3>device-mapper: : dm-linear: Device lookup failed
-=20
-What version of LVM2 ('lvm version') ?
+I think there are some other (generic) fixes in there too.
 
-Combining md and dm can be problematic prior to 2.00.32 - you may
-need to fiddle with filters and md_component_detection settings
-in lvm.conf.
-=20
-Alasdair
---=20
-agk@redhat.com
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Anyway... I'm thinking of sending in a patch to take out the
+"experimental" status of RAID-6.  I have been running a 1 TB
+production server in 1-disk degraded mode for about a month now
+without incident.
+
+	-hpa
+
