@@ -1,35 +1,40 @@
-From: Rainer Fuegenstein <rfu@kaneda.iguw.tuwien.ac.at>
-Subject: not again - raid corrupts data
-Date: Thu, 24 Oct 2002 20:27:05 +0200 (CEST)
+From: "Cameron, Steve" <Steve.Cameron@hp.com>
+Subject: RE: multipath weirdness
+Date: Thu, 24 Oct 2002 15:51:06 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200210241827.UAA04947@kaneda.iguw.tuwien.ac.at>
+Message-ID: <45B36A38D959B44CB032DA427A6E1064012814FE@cceexc18.americas.cpqcorp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+content-class: urn:content-classes:message
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+I wrote: 
+> 2 questions:
+> 
+> 1.  How do I get multipath.o to be insmod'ed at boot time
+> so that my multipath "raid" devices will start?
 
-I've been here some time ago with this strange problem:
+Someone told me to add "alias md-personality-7 multipath" to 
+/etc/modules.conf.  Thanks.
+[...]
+> 2.  If I don't get multipath.o to insmod at boot time, then
+> raid startup fails, and I get the (Raid repair) prompt.
+> 
+> "No problem," I think, "I'll just do this:"
+> 
+> 	insmod multipath (works fine)
+> 	raidstart /dev/md0 (fails with "Invalid argument".
+> 
+> So how do i get /dev/md0 working again?
 
-intel dual pentium server running redhat 7.1, 2 scsi disks
-mirrored as software raid. when copying large files from
-one partition to another, the file gets corrupted:
+Well, it helps a lot if "persistent-superblock" is 1, not 0.  Duh.
+(which reminds me I should have posted my raidtab in the first place.)
 
-[vor@server tmp]$ cp /opt/java/jdk-1.3.1_02.i386.rpm .
-[vor@server tmp]$ diff /opt/java/jdk-1.3.1_02.i386.rpm jdk-1.3.1_02.i386.rpm 
-Binary files /opt/java/jdk-1.3.1_02.i386.rpm and jdk-1.3.1_02.i386.rpm differ
+Thanks.
 
-solution then was to upgrade the firmware of the two IBM scsi disks.
+-- steve
 
-but, what a nightmare, after a (forced) reboot the whole problem is
-here again. and, worst of all, the reboot caused a resync of the 
-raid and a file system check which obviously corrupted some other
-larger files.
-
-I'm at the end of my sanity - any ideas, hints ?
-
-tnx in advance.
-
+ 
