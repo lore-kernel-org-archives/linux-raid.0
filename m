@@ -1,66 +1,57 @@
-From: raid@ddx.a2000.nu
-Subject: mdadm -D shows incorrect working devices ?
-Date: Tue, 17 Dec 2002 22:22:11 +0100 (CET)
+From: Claudio Fleiner <raid@fleiner.com>
+Subject: problems with raidhotgenerateerror
+Date: Wed, 18 Dec 2002 02:22:30 GMT
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.50.0212172214130.25725-100000@ddx.a2000.nu>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Message-ID: <200212180222.gBI2MUD23542@ars.net>
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-after a failure i recovered using mdadm -A :
+I was playing around with raid1 using two loopback devices of 4M each.
+The config file I'm using looks like this:
 
-mdadm -A /dev/md0  --force /dev/sdb1 /dev/sdc1 /dev/sdd1 /dev/sde1
-/dev/sdf1 /dev/sdg1 /dev/sdh1
+raiddev /dev/md0
+          raid-level      1
+          nr-raid-disks   2
+          nr-spare-disks  0
+          chunk-size     4
+          persistent-superblock 1
+          device          /dev/loop0
+          raid-disk       0
+          device          /dev/loop1
+          raid-disk       1
 
-i still miss one device in my raid5 (will be there tomorrow)
 
-/proc/mdstat show me :
+Everything works as expected, except that I cannot simulate an error using
+raidhotgenerateerror. The command runs just fine (as confirmed by the following strace,
+(all unnecessary stuff removed):
 
-md0 : active raid5 sdh1[6] sdg1[5] sdf1[4] sde1[3] sdd1[2] sdc1[1] sdb1[0]
-      820527232 blocks level 5, 64k chunk, algorithm 0 [8/7] [UUUUUUU_]
+execve("/home/cfl/prog/raidtools-20010914/raidhotgenerateerror", ["/home/cfl/prog/raidtools-20010914/raidhotgenerateerror", "-c", "c", "/dev/md0", "/dev/loop0"], [/* 58 vars */]) = 0
+open("/dev/md0", O_RDONLY)              = 4
+ioctl(4, 0x800c0910, 0x804f948)         = 0
+open("/dev/md0", O_RDWR)                = 5
+fstat64(5, {st_mode=S_IFBLK|0660, st_rdev=makedev(9, 0), ...}) = 0
+stat64("/dev/loop0", {st_mode=S_IFBLK|0660, st_rdev=makedev(7, 0), ...}) = 0
+ioctl(5, 0x92a, 0x700)                  = 0
+_exit(0)                                = ?
 
-but mdadm -D /dev/md0 show me incorrect info
-look at the ammount of working devices/failed devices
+but /proc/mdstat shows that loop0 is still OK (writing to the md0 device
+does not make a difference) and removing the drive using raidhotremove
+fails):
 
-/dev/md0:
-        Version : 00.90.00
-  Creation Time : Fri Oct 18 23:11:09 2002
-     Raid Level : raid5
-     Array Size : 820527232 (782.51 GiB 840.21 GB)
-    Device Size : 117218176 (111.78 GiB 120.03 GB)
-   Raid Devices : 8
-  Total Devices : 8
-Preferred Minor : 0
-    Persistence : Superblock is persistent
+Personalities : [raid0] [raid1] [raid5] 
+read_ahead 1024 sectors
+md0 : active raid1 [dev 07:01][1] [dev 07:00][0]
+      4032 blocks [2/2] [UU]
+      
 
-    Update Time : Tue Dec 17 22:12:24 2002
-          State : dirty, no-errors
- Active Devices : 7
-Working Devices : 6
- Failed Devices : 2
-  Spare Devices : 0
+I'm using Redhat 7.2 with a 2.4.19 kernel.
 
-         Layout : left-asymmetric
-     Chunk Size : 64K
+Any idea why this is not working?
 
-    Number   Major   Minor   RaidDevice State
-       0       8       17        0      active sync   /dev/sdb1
-       1       8       33        1      active sync   /dev/sdc1
-       2       8       49        2      active sync   /dev/sdd1
-       3       8       65        3      active sync   /dev/sde1
-       4       8       81        4      active sync   /dev/sdf1
-       5       8       97        5      active sync   /dev/sdg1
-       6       8      113        6      active sync   /dev/sdh1
-       7       0        0        7      faulty
-           UUID : 316793d2:5e51db22:3607b944:6aeb5e01
+Thanks, Claudio
 
-7 devices active/6 working/2 failed ??
-but only 1 is failed ?
 
-i restarted about 5 times after recoveringing using mdadm -A
-(reboot, so this info should be updated already...)
 
-kernel 2.4.20
-mdadm v1.0.1
