@@ -1,17 +1,35 @@
-From: BERNARD JOHN ZOLP <bjzolp@students.wisc.edu>
-Subject: Re: RE: RAID5 Not coming back up after crash
-Date: Mon, 29 Nov 2004 14:56:58 -0600
-Message-ID: <30b0335be6.35be630b03@wiscmail.wisc.edu>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: RE: RAID5 Not coming back up after crash
+Date: Mon, 29 Nov 2004 17:29:45 -0500
+Message-ID: <200411292229.iATMTpN06996@www.watkins-home.com>
+References: <30b0335be6.35be630b03@wiscmail.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-language: en
-Content-Disposition: inline
+In-Reply-To: <30b0335be6.35be630b03@wiscmail.wisc.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Guy <bugzilla@watkins-home.com>
+To: 'BERNARD JOHN ZOLP' <bjzolp@students.wisc.edu>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+If you are sure you can overwrite the correct bad sectors, then do it.
+
+mdadm is much better than raidtools.  From what I have read, yes it is
+compatible.
+
+The below info is not required.
+Who makes your 6 disk drives?  And how old are they?  Any bets anyone?
+
+Guy
+
+-----Original Message-----
+From: BERNARD JOHN ZOLP [mailto:bjzolp@students.wisc.edu] 
+Sent: Monday, November 29, 2004 3:57 PM
+To: Guy
+Cc: linux-raid@vger.kernel.org
+Subject: Re: RE: RAID5 Not coming back up after crash
 
 Just a few follow up questions before I dive into this.  Will mdadm work
 with a RAID setup created with the older raidtools package that came
@@ -214,3 +232,4 @@ Subject: RE: RAID5 Not coming back up after crash
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
+
