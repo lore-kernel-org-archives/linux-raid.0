@@ -1,52 +1,51 @@
-From: Gordon Henderson <gordon@drogon.net>
+From: Mark Hahn <hahn@physics.mcmaster.ca>
 Subject: Re: So what is the bios doing, if anything ?
-Date: Sat, 18 Sep 2004 14:22:29 +0100 (BST)
+Date: Sat, 18 Sep 2004 09:53:03 -0400 (EDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.56.0409181413470.32100@lion.drogon.net>
-References: <6F9171BE257CA742BFBCFA87B8F20F8D030E3C9B@NZURC900PEX1.ubsgs.ubsgroup.net>
+Message-ID: <Pine.LNX.4.44.0409180940500.12827-100000@coffee.psychology.mcmaster.ca>
+References: <Pine.LNX.4.56.0409181413470.32100@lion.drogon.net>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <6F9171BE257CA742BFBCFA87B8F20F8D030E3C9B@NZURC900PEX1.ubsgs.ubsgroup.net>
-To: peter.greis@ubs.com
-Cc: linux-raid@vger.kernel.org
+In-Reply-To: <Pine.LNX.4.56.0409181413470.32100@lion.drogon.net>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 17 Sep 2004 peter.greis@ubs.com wrote:
+> > My mobo has "bios" support for the nVidia nForce3 250Gb and SI 3114. In
+> > the case of linux, is this doing anything for me ? Do I just ignore it ?
+> > At present (80GB mirror), the two SATA drives show up as ide3 and ide4.
 
-> Greetings,
->
-> Still attempting to get a new system built.... which raises a question:
-> My mobo has "bios" support for the nVidia nForce3 250Gb and SI 3114. In
-> the case of linux, is this doing anything for me ? Do I just ignore it ?
-> At present (80GB mirror), the two SATA drives show up as ide3 and ide4.
+if the disks show up as separate disks, then the bios is not doing any raid
+for you.  chances are that all it *could* do is concat, raid0 or raid1;
+the issue is that these require the kernel to understand the organization
+(as recorded in a superblock of some sort) that the bios is using.
 
-I did an install on a server which had a plug-in PCI card with a 2-port SI
-3112 controller on it with a SATA drives connected. (Is the 311 a 4-port
-version of the 3112, I wonder?) The BIOS was no help at all, but I was
-able to use the BIOS (on the card) to turn off the on-board mirror
-function. I had to do the install to another drive connected to the
-on-board standard IDE controller, then put a new kernel on which supports
-the SI 3112. (2.4.27 in this case) after that, they appeared as hde and
-hdg (ide3 and 4 like yours, I guess)
+theoretically, you might notice some performance advantage to using even
+plain old raid1 provided by a controller, since it could avoid passing 
+every write over the PCI twice.  I don't know whether low-end controllers
+can actually do this, or whether they really do nothing but software raid1.
+personally, my worry would be failure modes.
 
-I used Linux s/w RAID1 on them once I had a kernel and persuaded the BIOS
-to boot from them and remove the ordinary IDE drive. Bit dissapointed with
-the performance - I could only get ~40MB/sec out of each drive when I'd
-expect ~50-55MB/sec out of an ordinary IDE drive these days. MAybe it's
-still early days for the driver though.
+> expect ~50-55MB/sec out of an ordinary IDE drive these days. MAybe it's
+> still early days for the driver though.
 
-I haven't spent much time looking into the SATA stuff yet - but it seems
-theres 2 camps - one which makes the drives look like IDE drives and one
-which makes the look like SCSI.. I did an install on a Dell last week
-which I patched in addditional drivers which made the on-board controllers
-suddenly switch from a generic IDE interface to SCSI...
+sata drivers are a pretty fast-moving target.
 
-> Also, does anyone know what Yast2 (with SuSE 9.1, kernel 2.6.4) is doing
-> under the hood during the setup ? Are we really running the md tools or
-> not ? Ideas ?
+> I haven't spent much time looking into the SATA stuff yet - but it seems
+> theres 2 camps - one which makes the drives look like IDE drives and one
+> which makes the look like SCSI.. I did an install on a Dell last week
 
-Can't help there I'm afraid - I'm Debian only and haven't even looked at
-2.6 yet...
+sort of but not really.  sata hardware can be shoehorned into the older
+pata-oriented infrastructure by ignoring some features.  the real problem
+is that the traditional ide driver framework is not exactly beautiful
+on the inside, and some of those ignored features are pretty important.
+I believe that the general consensus is to move towards the scsi stack,
+though this doesn't mean the ide stack will disappear any time soon,
+if ever.  I wouldn't expect 3Gb sata to ever appear in the ide stack,
+or for hotplug to work right, or command queueing or device multiplexing.
+this is not so much a criticism of the ide stack, but rather an evaluation
+that it's easier to build onto the scsi framework.
 
-Gordon
+regards, mark hahn.
+
+
