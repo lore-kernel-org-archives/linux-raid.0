@@ -1,31 +1,21 @@
-From: "Emery Hogue" <john_Burns062@yahoo.com>
-Subject: sugper viagrga prostitute duckling
-Date: Mon, 16 Feb 2004 06:39:40 -0700
+From: Stephan van Hienen <raid@a2000.nu>
+Subject: mdadm monitor keeps device locked ?
+Date: Tue, 17 Feb 2004 13:59:53 +0100 (CET)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <PBTOAKKZPGRBJSVPSCGGR__32590.9520769075$1076942027@msn.com>
-Reply-To: "Emery Hogue" <john_Burns062@yahoo.com>
+Message-ID: <Pine.LNX.4.58.0402171353040.7525@ddx.a2000.nu>
 Mime-Version: 1.0
-Content-Type: multipart/alternative;
-	boundary="--88779224605165526019"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-net@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-----88779224605165526019
-Content-Type: text/plain;
-Content-Transfer-Encoding: quoted-printable
+]# raidstart /dev/md0
+]# mdadm --monitor --scan --daemonise > /var/run/mdadm
+]# raidstop /dev/md0
+/dev/md0: Device or resource busy
 
-ONLY REAL SUPER VIAGDRA CALLED CIADLIS IS EFFECTIVE!
-Annual Sale: ONLY 
-$3 per dose
-Check out our website with disscounts and 
-get your fdree bonus pillls
-Shipped world wide!
+I first have to kill the mdadm monitor process befor i can stop the md0
+(if i don't stop the raid has to resync after reboot?)
 
-http://fastactingpills.com/sv/?pid=3Devaph6163
-
-
-ghostlike coddington
-
-----88779224605165526019--
-
+is there a better way of stopping the raid, without doing killing the
+mdadm (i use killall mdadm now) ?
