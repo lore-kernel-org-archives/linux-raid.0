@@ -1,76 +1,89 @@
 From: ptb@lab.it.uc3m.es (Peter T. Breuer)
 Subject: Re: ext3 journal on software raid (was Re: PROBLEM: Kernel 2.6.10 crashing repeatedly and hard)
-Date: Tue, 4 Jan 2005 16:20:43 +0100
-Message-ID: <broqa2-ana.ln1@news.it.uc3m.es>
-References: <l1nna2-e9i.ln1@news.it.uc3m.es> <200501031846.42950.maarten@ultratux.net> <200501032052.21459.maarten@ultratux.net> <a9noa2-o12.ln1@news.it.uc3m.es> <fh0pa2-kvp.ln1@news.it.uc3m.es> <16857.55609.534526.297577@cse.unsw.edu.au> <jh4pa2-pi.ln1@news.it.uc3m.es> <16857.64086.362458.177296@cse.unsw.edu.au> <6d5bedd80501031816eb8f296@mail.gmail.com> <16857.65024.745883.752981@cse.unsw.edu.au> <20050104024108.GK99565@caffreys.strugglers.net> <16858.4291.816499.371678@cse.unsw.edu.au> <0h5qa2-0qa.ln1@news.it.uc3m.es> <41DAA510.4060202@dgreaves.com>
+Date: Tue, 4 Jan 2005 16:12:20 +0100
+Message-ID: <kboqa2-ana.ln1@news.it.uc3m.es>
+References: <200501030916.j039Gqe23568@inv.it.uc3m.es> <l1nna2-e9i.ln1@news.it.uc3m.es> <200501031846.42950.maarten@ultratux.net> <200501032052.21459.maarten@ultratux.net> <a9noa2-o12.ln1@news.it.uc3m.es> <fh0pa2-kvp.ln1@news.it.uc3m.es> <16857.55609.534526.297577@cse.unsw.edu.au> <jh4pa2-pi.ln1@news.it.uc3m.es> <16857.64086.362458.177296@cse.unsw.edu.au> <ms4qa2-0qa.ln1@news.it.uc3m.es> <41DAA243.3060202@dgreaves.com> <qikqa2-4m2.ln1@news.it.uc3m.es> <41DAAB7D.2030400@dgreaves.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 David Greaves <david@dgreaves.com> wrote:
-> Peter T. Breuer wrote:
-> 
-> >>ext3 journals are much safer on mirrored devices than on non-mirrored
-> >That's irrelevant - you don't care what's in the journal, because if
-> >your system crashes before committal you WANT the data in the journal
-> >to be lost, rolled back, whatever, and you don't want your machine to
-> >have acked the write until it actually has gone to disk.
-> >
-> >Or at least that's what *I* want. But then everyone has different
-> >wants and needs. What is obvious, however, are the issues involved.
-> 
-> If the journal is safely written to the journal device and the machine 
+> Disks suffer from random *detectable* corruption events on (or after) 
+> write (eg media or transient cache being hit by a cosmic ray, cpu 
+> fluctuations during write, e/m or thermal variations).
 
-You don't know it has been. Raid can't tell.
+Well, and also people hitting the off switch (or the power going off)
+during a write sequence to a mirror, but after one of a pair of mirror
+writes has gone to disk, but before the other of the pair has.
 
-> crashes whilst updating the main filesystem you want the journal to be 
-> replayed, not erased. The journal entries are designed to be replayable 
-> to a partially updated filesystem.
+(If you want to say "but the fs is journalled", then consider what if 
+the write is to the journal ...).
 
-It doesn't work. You can easily get a block  written to the journal on
-disk A, but not on disk B (supposing raid 1 with disks A and B).
-According to you "this" should be replayed. Well, which result do you
-want? Raid has no way of telling.
+> Disks suffer from random *undetectable* corruption events on (or after) 
+> write (eg media or transient cache being hit by a cosmic ray, cpu 
+> fluctuations during write, e/m or thermal variations)
 
-Suppose that A contains the last block to be written to a file, and
-does not. Yet B is chosen by raid as the "reliable" source.
+Yes. This is not different from what I have said. I didn't have any
+particular scenario in mind.
 
-Then what happens? 
+But I see that you are correct in pointing out that some error
+posibilities arer _created_ by the presence of raid that would not
+ordinarily be present. So there is some scaling with the
+number of disks that needs clarification.
 
-Is the transaction declared "completed" with incomplete data? With
-incorrect data?
+> Raid disks have more 'corruption-susceptible' data capacity per useable 
+> data capacity and so the probability of a corruption event is higher. 
 
-Myself I'd hope it were rolled back, whichever of A or B were chosen,
-because some final annotation was missing from the journal, saying
-"finished and ready to send" (alternating bit protocol :-). But you
-can't win ... what if the "final" annotation were written to journal on
-A but not on B.
+Well, the probability is larger no matter what the nature of the event.
+In principle, and vry apprximately, there are simply more places (and
+times!) for it to happen TO.
 
-Then what would happen?
+Yes, you may say but those errors that are produced by the cpu don't
+scale, nor do those that are produced by software. I'd demur. If you
+think about each kind you have in mind you'll see that they do scale:
+for example, the cpu has to work twice as often to write to two raid
+disks as it does to have to write to one disk, so the opportunities for
+IT to get something wrong are doubled.  Ditto software.  And of course,
+since it is writing twice as often , the chance of being interrupted at
+an inopportune time by a power failure are also doubled.
 
-Well, then whichever of A or B the raid chose, you'd either get the
-data rolled forward or backward.
+See?
 
 
-Which would you prefer? 
+> Since a detectable error is detected it can be retried and dealt with.
 
-I'd just prefer that it was all rolled back. 
+No. I made no such assumption. I don't know or care what you do with a
+detectable error. I only say that whatever your test is, it detects it!
+IF it looks at the right spot, of course. And on raid the chances of
+doing that are halved, because it has to choose which disk to read.
 
 
+> This leaves the fact that essentially, raid disks are less reliable than 
+> non-raid disks wrt undetectable corruption events.
 
-> That's the whole point of journalling filesystems, write the deltas to 
-> the journal, make the changes to the fs, delete the deltas from the journal.
+Well, that too. There is more real estate.
 
-Consider the above. There is no magic.
+But this "corruption"  word seems to me to imply that you think I was
+imagining errors produced by cosmic rays. I made no such restriction.
 
-> If the machine crashes whilst the deltas are being written then you 
-> won't play them back - but your fs will be consistent.
+> However, we need to carry out risk analysis to decide if the increase in 
+> susceptibility to certain kinds of corruption (cosmic rays) is 
 
-What if the delta is written to one journal, but not to the other, when
-the machine crashes?
 
-I outlined the problem above. You can't win this game.
+Ahh. Yes you do. No I don't! This is your own invention, and I said no
+such thing. By "errors", I meant anything at all that you consider to be
+an error. It's up to you.  And I see no reason to restrict the term to
+what is produced by something like "cosmic rays". "People hitting the
+off switch at the wrong time" counts just as much, as far as I know.
+
+I would guess that you are trying to classify errors by the way their
+probabilities scale with number of disks. I made no such distinction,
+in principle.  I simply classified errors according to whether you could
+(in principle, also) detect them or not, whatever your test is.
+
+> acceptable given the reduction in susceptibility to other kinds (bearing 
+> or head failure).
 
 Peter
 
