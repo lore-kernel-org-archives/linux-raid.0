@@ -1,55 +1,87 @@
-From: Farkas Levente <lfarkas@bnap.hu>
-Subject: Re: mdadm never notify, grub cause fault
-Date: Wed, 21 May 2003 11:05:50 +0200
+From: Ragnar =?iso-8859-15?Q?Kj=F8rstad?= <kernel@ragnark.vestdata.no>
+Subject: Re: Questions about LARGE, RAID storage under Linux
+Date: Wed, 21 May 2003 15:41:20 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3ECB416E.2030903@bnap.hu>
-References: <3EC4AD9A.6090104@bnap.hu>	<news2mail-ba382u$uop$1@cartman.spoiled.org>	<3EC52695.318811F7@SteelEye.com>	<16072.17850.938484.250446@notabene.cse.unsw.edu.au>	<3EC8745B.9010106@bnap.hu> <16074.55430.183148.939335@notabene.cse.unsw.edu.au>
+Message-ID: <20030521134120.GQ7706@vestdata.no>
+References: <S263852AbTETQCk/20030520160240Z+2889@vger.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-15
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <16074.55430.183148.939335@notabene.cse.unsw.edu.au>
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: linux-raid@vger.kernel.org
+Content-Disposition: inline
+In-Reply-To: <S263852AbTETQCk/20030520160240Z+2889@vger.kernel.org>
+To: "Michael S. Peek" <peek@tiem.utk.edu>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, peek@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> On Monday May 19, lfarkas@bnap.hu wrote:
-> 
->>>I'm thinking of causing the "NewArray" alert to 
->>> - be generate for all arrays at start time
->>> - contain an indication of whether the array is degraded
->>> - cause email to be sent if the array is degraded.
->>>
->>>Thus you will get an alert of a failed drive when the mdadm --monitor
->>>is started.
->>
->>the above are generated every every time when --monitor started? that 
->>would be nice!
-> 
-> 
-> Yep, and it's done.
-> 
-> There is a patch under 
-> 
-> http://www.cse.unsw.edu.au/~neilb/source/mdadm/
-> 
-> (see 'patch' and the 'applied')
-> 
-> that
->   1/ When mdadm --monitor first notices an array, it will check if it
->   is degraded and will issue a "DegradedArray" event if it is.
->   2/ mdadm --monitor has a --oneshot option which causes it to check
->   once and exit. This can be used in a cron script to generate
->   DegradedArray  events on a regular basis for any degraded arrays. 
+On Tue, May 20, 2003 at 12:15:39PM -0400, Michael S. Peek wrote:
+> I am looking at using a hardware RAID device that appears to it's SCS=
+I host as
+> a single large drive.  I am well aware that I can break this device d=
+own into
+> multiple LUNS, but if possible I need to keep it as one big drive.  I
+> understand from the Linux Info Sheet, last updated in 1998 according =
+to it's
+> text, that Linux is able to handle partitions up to 4TB in size.
 
-thanks. what does the applied means? I'm just check both the tgz and 
-rpms but it seems to me that are older. I always prefere the release 
-like 1.2.1 what's more if an rpm would be supplied:-))
-thnaks.
+What is the Linux Info Sheet?
+
+AFAIK linux has never had a partition-limit of 4 TB.
+There is a limit in any block-device of 2^32 sectors, typically 2 TB.
+Some drivers may have sign-issues, leaving you with only 2^31 sectors (=
+1
+TB).
 
 
--- 
-   Levente                               "Si vis pacem para bellum!"
+> What I want to know is:
+>=20
+> (a) Is 4TB still the maximum limitation on a single partition size?  =
+If not,
+> what is the current maximum?
+>=20
+> (b) Would this maximum partition size still apply when using the soft=
+ware RAID
+> tools to combine two or more of these devices together?
+
+I believe the 2.4 kernel is still limited to 2 TB for both scsi-devices
+and virtual block-devices such as md or lvm.
+
+I think 2.5 has an option added for large block devices. This should
+allow you to use both scsi-devices and md virtual devices larger than
+2TB. It may depend on changes in the actual scsi-drivers, so possible i=
+t
+only works for a subset of scsi-adapters. Last time I checked it didn't
+enable larger LVM-volumes, so you're limited to md for virtual devices.
+
+> What I am looking for is the ability to mount and format an external =
+SCSI
+> device that's 3.5TB in size.  (It's a Promise UltraTrak RM1500 w/ 15 =
+x 250GB
+> drives).  I want to be able to upgrade the hard drives at a later dat=
+e and
+> know that the Linux box to which it is attached will still be able to=
+ handle
+> them.  Ideally, I would like to purchase a second (or even a third) d=
+evice
+> later down the road and use software RAID to concatenate them togethe=
+r.
+
+I think you would want to use LVM to concatenate them together, and
+AFAIK that is not yet possible. There is work in progress though.
+
+I think your best chances of making this work in the future without
+having to reformat your system is to use LVM2 with a large physical
+extentsize from the start.
 
 
+My information may be out of date, so take this with a grain of salt.
+
+
+--=20
+Ragnar Kj=F8rstad
+Zet.no
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
