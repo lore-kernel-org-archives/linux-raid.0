@@ -1,90 +1,139 @@
-From: "Diamon" <diamon@io.com>
-Subject: Re: Fw: DriveReady SeekComplete problems
-Date: Fri, 10 May 2002 01:36:06 -0500
+From: Maxim Frolov <wrungel@web.de>
+Subject: RAID1 failure recovery
+Date: Fri, 10 May 2002 13:33:46 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <000f01c1f7ec$f84b1fe0$a859aac7@cust.io.com>
-References: <5.1.0.14.2.20020509152331.03accca0@mail.harddata.com> <003401c1f7d9$97c7c460$050010ac@niunia.org>
+Message-ID: <200205101133.g4ABXjX28795@mailgate5.cinetic.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Artur Jasowicz <arturj@mousebusiness.com>, linux-raid@vger.kernel.org
-Cc: Maurice Hilarius <maurice@harddata.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
------ Original Message -----
-From: "Artur Jasowicz" <arturj@mousebusiness.com>
-To: <linux-raid@vger.kernel.org>
-Cc: "Maurice Hilarius" <maurice@harddata.com>
-Sent: Thursday, May 09, 2002 11:16 PM
-Subject: Re: Fw: DriveReady SeekComplete problems
+
+I have the following RAID1 configuration:
+
+raiddev /dev/md0
+   raid-level        1
+   nr-raid-disks     2
+   nr-spare-disks    0
+   persistent-superblock 1
+   chunk-size        4
+   device   /dev/hda1
+   raid-disk 0
+   device   /dev/hdc1
+   raid-disk 1
+
+The only one partition on my system is "root"-Partition.
+It's mounted on /dev/md0.
+
+Linux-Kernel: 2.4.18
+Linux-Distribution: S.U.S.E 8 Prof.
 
 
-> From: Maurice Hilarius
-> > With regards to your message at 03:13 PM 5/9/02, Artur Jasowicz. Where
-you
-> > stated:
-> > >I am building a file server with 5 drive software RAID5 array. I am
-using
-> > >three IWill SIDE-100 (Highpoint 370A) controllers as my IDE interfaces,
-> > >not using their RAID functionality. One Maxtor 160GB drive per channel,
-> > >two channels per controller. I plan on adding hot spare as the sixth
-> drive
-> > >in the future. There's one 160GB partition on each drive. Linux version
-> > >2.4.19-pre7smp-020502b (root@production) (gcc version 2.96 20000731
-(Red
-> > >Hat Linux 7.1 2.96-98)) #6 SMP Thu May 2 12:15:34 CDT 2002
-> > >This is a dual Athlon 2000+ MP on Tyan Tiger S2466N-4 with 1GB RAM. OS
-> and
-> > >swap runs on separate drives and controllers. This array will be just
-for
-> > >data once it is configured.
-> > >
-> > >Below are the most relevant parts of my logs. I will post further
-details
-> > >if anyone is willing to help, just let me know what info you need. Any
-> > >suggestions greatly appreciated.
-> >
-> > Probably cable problem..
-> May be, although I've used original, 18in cables, changed the config to
-use
-> diferent controllers, the errors came from all drives, randomly. Isn't it
-> unlikely, that all cables are bad?
->
 
-    Unless those aren't ATA-100 cables and it's still using ATA-100 mode...
-I think ATA-66 or higher you need those 80-wire cables...  Just a thought.
-And the solid-core 80 pin cables don't handle folding well at all, maybe
-something's gone flaky in them?
+Everything works fine beside of error recovery of hda1:
+After hda1 has failed I tried to install a new disk instead of hda1 in the following way:
 
-> >
-> > Maybe cards not getting a clean IRQ status.
-> >
-> I'm not sure what you mean by that, here's my IRQs is that ok?
-> [root@production root]# cat /proc/interrupts
->            CPU0       CPU1
->   0:    1060111     900968    IO-APIC-edge  timer
->   1:       2223       1623    IO-APIC-edge  keyboard
->   2:          0          0          XT-PIC  cascade
->   5:     475613     476603   IO-APIC-level  ide2, ide3, eth1
->   8:          1          0    IO-APIC-edge  rtc
->   9:     464960     465255   IO-APIC-level  ide4, ide5, eth2
->  10:      12405      11231   IO-APIC-level  eth0
->  11:      69567      67494   IO-APIC-level  ide6
->  12:        159       1172    IO-APIC-edge  PS/2 Mouse
->  14:      48388      44855    IO-APIC-edge  ide0
->  15:      48907      47090    IO-APIC-edge  ide1
-> NMI:          0          0
-> LOC:    1961162    1961161
-> ERR:          0
-> MIS:          0
->
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+1. plug in a new disk on the place of hda1.
+2. raidhotadd /dev/md0 /dev/hda1
+3. install LILO
+
+After the data on /dev/hda1 was synced with the data on /dev/hdc1 the /proc/mdstat contained:
+
+Personalities : [raid1] 
+read_ahead 1024 sectors
+md0 : active raid1 hda1[1] hdc1[0]
+      614784 blocks [2/2] [UU]
+      
+unused devices: <none>
+
+
+!!! After system reboot, RAID didn't found hda1 !!!
+
+Here is the output of dmesg while rebooting:
+//////////////// DMESG OUTPUT BEGIN ////////////////
+md: md driver 0.90.0 MAX_MD_DEVS=256, MD_SB_DISKS=27
+md: Autodetecting RAID arrays.
+ [events: 00000015]
+md: autorun ...
+md: considering hdc1 ...
+md:  adding hdc1 ...
+md: created md0
+md: bind<hdc1,1>
+md: running: <hdc1>
+md: hdc1's event counter: 00000015
+md0: former device hda1 is unavailable, removing from array!
+md: RAID level 1 does not need chunksize! Continuing anyway.
+request_module[md-personality-3]: Root fs not mounted
+md: personality 3 is not loaded!
+md :do_md_run() returned -22
+md: md0 stopped.
+md: unbind<hdc1,0>
+md: export_rdev(hdc1)
+md: ... autorun DONE.
+
+....
+
+md: raid1 personality registered as nr 3
+md: Autodetecting RAID arrays.
+ [events: 00000015]
+md: autorun ...
+md: considering hdc1 ...
+md:  adding hdc1 ...
+md: created md0
+md: bind<hdc1,1>
+md: running: <hdc1>
+md: hdc1's event counter: 00000015
+md0: former device hda1 is unavailable, removing from array!
+md: RAID level 1 does not need chunksize! Continuing anyway.
+md0: max total readahead window set to 124k
+md0: 1 data-disks, max readahead per data-disk: 124k
+raid1: device hdc1 operational as mirror 0
+raid1: md0, not all disks are operational -- trying to recover array
+raid1: raid set md0 active with 1 out of 2 mirrors
+md: updating md0 RAID superblock on device
+md: hdc1 [events: 00000016]<6>(write) hdc1's sb offset: 614784
+md: recovery thread got woken up ...
+md0: no spare disk to reconstruct array! -- continuing in degraded mode
+md: recovery thread finished ...
+md: ... autorun DONE.
+md: swapper(pid 1) used obsolete MD ioctl, upgrade your software to use new ictls.
+reiserfs: checking transaction log (device 09:00) ...
+Using r5 hash to sort names
+ReiserFS version 3.6.25
+VFS: Mounted root (reiserfs filesystem) readonly.
+change_root: old root has d_count=2
+Trying to unmount old root ... okay
+Freeing unused kernel memory: 120k freed
+md: Autodetecting RAID arrays.
+md: autorun ...
+md: ... autorun DONE.
+//////////////// DMESG OUTPUT END ////////////////
+
+
+
+/proc/mdstat contained after reboot:
+
+Personalities : [raid1] 
+read_ahead 1024 sectors
+md0 : active raid1 hdc1[0]
+      614784 blocks [2/1] [U_]
+      
+unused devices: <none>
+
+
+
+My questions is: How do I recover the failed RAID1 disk (dev/hda1)?
+What I did wrong?
+
+
+------------
+Max Frolov.
+e-mail: wrungel@web.de
+________________________________________________________________
+Keine verlorenen Lotto-Quittungen, keine vergessenen Gewinne mehr! 
+Beim WEB.DE Lottoservice: http://tippen2.web.de/?x=13
+
 
