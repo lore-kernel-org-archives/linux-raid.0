@@ -1,37 +1,50 @@
-From: Ewan Grantham <ewan.grantham@gmail.com>
-Subject: Re: USB raid5?
-Date: Tue, 30 Nov 2004 07:51:54 -0600
-Message-ID: <6d5bedd8041130055139423510@mail.gmail.com>
-References: <41AC11CF.2050102@pobox.com>
-Reply-To: Ewan Grantham <ewan.grantham@gmail.com>
+From: Stephan van Hienen <raid@a2000.nu>
+Subject: Re: raid5 slow
+Date: Tue, 30 Nov 2004 20:37:10 +0100 (CET)
+Message-ID: <Pine.LNX.4.61.0411302034160.24563@adsl.a2000.nu>
+References: <200411290449.iAT4nsN02715@www.watkins-home.com>
+ <Pine.LNX.4.61.0411290928430.13437@adsl.a2000.nu>
+ <Pine.LNX.4.61.0411290948230.13437@adsl.a2000.nu> <16811.48945.141392.294625@cse.unsw.edu.au>
+ <Pine.LNX.4.61.0411300146360.32052@adsl.a2000.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <41AC11CF.2050102@pobox.com>
+In-Reply-To: <Pine.LNX.4.61.0411300146360.32052@adsl.a2000.nu>
 Sender: linux-raid-owner@vger.kernel.org
-To: mjstumpf@pobox.com
-Cc: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@cse.unsw.edu.au>
+Cc: Guy <bugzilla@watkins-home.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 30 Nov 2004 00:23:11 -0600, Michael Stumpf <mjstumpf@pobox.com> wrote:
-> In the interminable battle with physical arrangement & rack space, has
-> anyone tried arrays of "external" usb 2.0 or firewire connected drives?
-> 
-> Are there limitations to size, or to bandwidth that aren't obvious, that
-> make this a non desirable solution?
+today also runned a test with 500gb size :
 
-Am currently running a RAID-5 array that has two internal drives and
-two external firewire drives. Bandwidth is good enough for doing hour
-long plus video captures with no dropped frames, and to playback video
-and audio with no drops or stutters.
+Version  1.03       ------Sequential Output------ --Sequential Input- 
+--Random-
+                     -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- 
+--Seeks--
+Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP 
+/sec %CP
+storage.a2000. 500G 23385  97 79328  69 59189  58 25015  91 122493  58 
+67.7  11
+                     ------Sequential Create------ --------Random 
+Create--------
+                     -Create-- --Read--- -Delete-- -Create-- --Read--- 
+-Delete--
+               files  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP 
+/sec %CP
+                  16  1404  76 +++++ +++ +++++ +++  1347  75 +++++ +++ 
+4868  97
+storage.a2000.nu,500G,23385,97,79328,69,59189,58,25015,91,122493,58,67.7,11,16,1404,76,+++++,+++,+++++,+++,1347,75,+++++,+++,4868,97
 
-USB 2 appears to offer similar bandwidth, but at the expense of more
-CPU overhead - which may or may not be an issue depending on your
-configuration.
+it's really slow... :(
+is there anything i can do ?
+i want to fill the raid asap
 
-In either case, you're more likely going to have a problem getting
-your Linux system to recognize the external drive than in using it as
-part of an array.
+for now i have 2 options :
 
-YMMV, IANAL, etc.
+-use the 2.6 and hope someone is going to fix this ?
+
+-use the 2.4 kernel but max 13 devices (there is no LBD support in 2.4?)
+or is there a LBD patch so i can create a 2TB+ raid5 array ?
+
+
+
