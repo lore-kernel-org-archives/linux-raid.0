@@ -1,173 +1,527 @@
-From: Oren Held <mar_garina@held.org.il>
-Subject: [LAME_PATCH] Three non-urgent issues
-Date: Tue, 18 Feb 2003 23:24:40 +0200 (IST)
+From: "Peter T. Breuer" <ptb@it.uc3m.es>
+Subject: Re: Fast (intelligent) raid1
+Date: Tue, 18 Feb 2003 23:13:25 +0100 (MET)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.53.0302182313380.13255@linbox.held.org.il>
-Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-1463811840-881383387-1045603480=:13255"
+Message-ID: <200302182213.h1IMDPw26887@oboe.it.uc3m.es>
+References: <15952.20989.131713.951636@notabene.cse.unsw.edu.au>
+Reply-To: ptb@it.uc3m.es
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <15952.20989.131713.951636@notabene.cse.unsw.edu.au> from Neil Brown
+ at "Feb 17, 2003 02:07:41 pm"
+To: Neil Brown <neilb@cse.unsw.edu.au>
+Cc: ptb@it.uc3m.es, Ross Vandegrift <ross@willow.seitz.com>, Ingo Molnar <mingo@redhat.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
-  Send mail to mime@docserver.cac.washington.edu for more info.
+I've now completed the preliminary patch which conforms to Neil's
+ideas, and I've put it up at
 
----1463811840-881383387-1045603480=:13255
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+ ftp://oboe.it.uc3m.es/pub/Programs/fr1-2.2.tgz
 
-Hi,
+I'll follow roughly the same procedure as before, and publish the main
+part of the patch here, with my comments. Then later I'll abstract
+one further time.
 
-I've just began using raidtools and I'm really impressed..
-Anyway there were three not-really-important, but still annoying issues
-which disturbed me, and attached are patches which fix them
-(The patches are against v1.00.3):
+First let me go through Neils' ideas and comment on what changes I made
+to accomodate them ...
 
-1. raidtools-raidstart.patch: Adds some stuff to the --help screen
-   a. Shows the different usage line for raidhotadd and friends
-   b. Gives nicer help screen (also explains each flag, just like gnu ls)
+            ======================================
 
-I know it's not THAT important, but I think it makes raidtools looks
-more professional, with the patch.
+"Neil Brown wrote:"
+> Rather than having several bitmaps, have just one.  Normally it is
 
-I hope my texts are correct. I wasn't sure why there's an asterisk
-in the end of the usage line, so I left it there.
+This was easy, and welcome. I did it at once and several things became
+simpler. The bitmap is stuck in the raid1 private data, but it can go 
+one layer up (down?) into the general raid info at any time.
 
-2. raidtools-Makefile.patch: renames the 'clean' target to 'distclean' and
-adds a standard 'clean' target, which only cleans the binaries and not the
-config.h and the others. First time I see that 'make clean' also cleans
-config.h.
+> full of zero and isn't touched.
 
-3. raid-mkraid: gcc 3.2.3 complains about multi-line function arguments
-(in our case the warning message in printf()) being a deprecated feature,
-so I've made it the way gcc wants it, so this warning will be gone.
+At the moment, normally it's not there. It's brought into existence
+when needed. I agree that that's wrong and I'll alter it in a
+subsequent patch.
 
-If you have comments please reply..
+> When a write fails, or when a write is sent to some-but-not-all
+> devices, set the relevant bit in the bitmap.
 
-- Oren
----1463811840-881383387-1045603480=:13255
-Content-Type: TEXT/PLAIN; charset=US-ASCII; name="raidtools-mkraid.patch"
-Content-Transfer-Encoding: BASE64
-Content-ID: <Pine.LNX.4.53.0302182324390.13255@linbox.held.org.il>
-Content-Description: 
-Content-Disposition: attachment; filename="raidtools-mkraid.patch"
+Well, I think that was already so.
 
-LS0tIHJhaWR0b29scy0xLjAwLjMvbWtyYWlkLmMJMjAwMy0wMS0xNSAxMDo1
-ODoyNS4wMDAwMDAwMDAgKzAyMDANCisrKyByYWlkdG9vbHMtMS4wMC4zL21r
-cmFpZC5jLm5ldwkyMDAzLTAyLTE4IDIzOjEwOjMyLjAwMDAwMDAwMCArMDIw
-MA0KQEAgLTE3MSwzMSArMTcxLDMxIEBADQogICAgIGlmIChvbGRfZm9yY2Vf
-ZmxhZyAmJiAoZnVuYyA9PSBta3JhaWQpKSB7DQogCWZwcmludGYoc3RkZXJy
-LCANCiANCi0iDQotIFdBUk5JTkchDQotDQotIE5PVEU6IGlmIHlvdSBhcmUg
-cmVjb3ZlcmluZyBhIGRvdWJsZS1kaXNrIGVycm9yIG9yIHNvbWUgb3RoZXIg
-ZmFpbHVyZSBtb2RlDQotIHRoYXQgbWFkZSB5b3VyIGFycmF5IHVucnVubmFi
-bGUgYnV0IGRhdGEgaXMgc3RpbGwgaW50YWN0IHRoZW4gaXQncyBzdHJvbmds
-eQ0KLSByZWNvbW1lbmRlZCB0byB1c2UgdGhlIGxzcmFpZCB1dGlsaXR5IGFu
-ZCB0byByZWFkIHRoZSBsc3JhaWQgSE9XVE8uDQotDQotIElmIHlvdXIgUkFJ
-RCBhcnJheSBob2xkcyB1c2VmdWwgYW5kIG5vdCB5ZXQgYmFja2VkIHVwIGRh
-dGEgdGhlbiAtLWZvcmNlDQotIGFuZCB0aGUgaG90LWFkZC9ob3QtcmVtb3Zl
-IGZ1bmN0aW9uYWxpdHkgc2hvdWxkIGJlIHVzZWQgd2l0aCBleHRyZW1lIGNh
-cmUhDQotIElmIHlvdXIgL2V0Yy9yYWlkdGFiIGZpbGUgaXMgbm90IGluIHN5
-bmMgd2l0aCB0aGUgcmVhbCBhcnJheSBjb25maWd1cmF0aW9uLA0KLSB0aGVu
-IC0tZm9yY2UgbWlnaHQgREVTVFJPWSBBTEwgWU9VUiBEQVRBLiBJdCdzIGVz
-cGVjaWFsbHkgZGFuZ2Vyb3VzIHRvIHVzZQ0KLSAtZiBpZiB0aGUgYXJyYXkg
-aXMgaW4gZGVncmFkZWQgbW9kZS4NCi0NCi0gSWYgeW91ciAvZXRjL3JhaWR0
-YWIgZmlsZSBtYXRjaGVzIHRoZSByZWFsIGxheW91dCBvZiBvbi1kaXNrIGRh
-dGEgdGhlbg0KLSByZWNyZWF0aW5nIHRoZSBhcnJheSB3aWxsIG5vdCBodXJ0
-IHlvdXIgZGF0YSwgYnV0IGJlIGF3YXJlIG9mIHRoZSByaXNrcw0KLSBvZiBk
-b2luZyB0aGlzIGFueXdheTogZnJlc2hseSBjcmVhdGVkIFJBSUQxIGFuZCBS
-QUlENSBhcnJheXMgZG8gYSBmdWxsDQotIHJlc3luYyBvZiB0aGVpciBtaXJy
-b3IvcGFyaXR5IGJsb2Nrcywgd2hpY2gsIGlmIHRoZSByYWlkdGFiIGlzIGlu
-Y29ycmVjdCwNCi0gdGhlIHJlc3luYyB3aWxsIHdpcGUgb3V0IGRhdGEgaXJy
-ZWNvdmVyYWJseS4gQWxzbywgaWYgeW91ciBhcnJheSBpcyBpbg0KLSBkZWdy
-YWRlZCBtb2RlIHRoZW4gdGhlIHJhaWR0YWIgbXVzdCBtYXRjaCB0aGUgZGVn
-cmFkZWQgY29uZmlnIGV4YWN0bHksDQotIG90aGVyd2lzZSB5b3UnbGwgZ2V0
-IHRoZSBzYW1lIGtpbmQgb2YgZGF0YSBkZXN0cnVjdGlvbiBkdXJpbmcgcmVz
-eW5jLg0KLSAoc2VlIHRoZSBmYWlsZWQtZGlzayByYWlkdGFiIG9wdGlvbi4p
-IFlvdSBoYXZlIGJlZW4gd2FybmVkIQ0KLQ0KLSBbIElmIHlvdXIgYXJyYXkg
-aG9sZHMgbm8gZGF0YSwgb3IgeW91IGhhdmUgaXQgYWxsIGJhY2tlZCB1cCwg
-b3IgaWYgeW91DQotIGtub3cgcHJlY2lzZWx5IHdoYXQgeW91IGFyZSBkb2lu
-ZyBhbmQgeW91IHN0aWxsIHdhbnQgdG8gcHJvY2VlZCB0aGVuIHVzZQ0KLSB0
-aGUgLS1yZWFsbHktZm9yY2UgKG9yIC1SKSBmbGFnLiBdDQorIlxuXA0KKyBX
-QVJOSU5HIVxuXA0KK1xuXA0KKyBOT1RFOiBpZiB5b3UgYXJlIHJlY292ZXJp
-bmcgYSBkb3VibGUtZGlzayBlcnJvciBvciBzb21lIG90aGVyIGZhaWx1cmUg
-bW9kZVxuXA0KKyB0aGF0IG1hZGUgeW91ciBhcnJheSB1bnJ1bm5hYmxlIGJ1
-dCBkYXRhIGlzIHN0aWxsIGludGFjdCB0aGVuIGl0J3Mgc3Ryb25nbHlcblwN
-CisgcmVjb21tZW5kZWQgdG8gdXNlIHRoZSBsc3JhaWQgdXRpbGl0eSBhbmQg
-dG8gcmVhZCB0aGUgbHNyYWlkIEhPV1RPLlxuXA0KK1xuXA0KKyBJZiB5b3Vy
-IFJBSUQgYXJyYXkgaG9sZHMgdXNlZnVsIGFuZCBub3QgeWV0IGJhY2tlZCB1
-cCBkYXRhIHRoZW4gLS1mb3JjZVxuXA0KKyBhbmQgdGhlIGhvdC1hZGQvaG90
-LXJlbW92ZSBmdW5jdGlvbmFsaXR5IHNob3VsZCBiZSB1c2VkIHdpdGggZXh0
-cmVtZSBjYXJlIVxuXA0KKyBJZiB5b3VyIC9ldGMvcmFpZHRhYiBmaWxlIGlz
-IG5vdCBpbiBzeW5jIHdpdGggdGhlIHJlYWwgYXJyYXkgY29uZmlndXJhdGlv
-bixcblwNCisgdGhlbiAtLWZvcmNlIG1pZ2h0IERFU1RST1kgQUxMIFlPVVIg
-REFUQS4gSXQncyBlc3BlY2lhbGx5IGRhbmdlcm91cyB0byB1c2VcblwNCisg
-LWYgaWYgdGhlIGFycmF5IGlzIGluIGRlZ3JhZGVkIG1vZGUuXG5cDQorXG5c
-DQorIElmIHlvdXIgL2V0Yy9yYWlkdGFiIGZpbGUgbWF0Y2hlcyB0aGUgcmVh
-bCBsYXlvdXQgb2Ygb24tZGlzayBkYXRhIHRoZW5cblwNCisgcmVjcmVhdGlu
-ZyB0aGUgYXJyYXkgd2lsbCBub3QgaHVydCB5b3VyIGRhdGEsIGJ1dCBiZSBh
-d2FyZSBvZiB0aGUgcmlza3NcblwNCisgb2YgZG9pbmcgdGhpcyBhbnl3YXk6
-IGZyZXNobHkgY3JlYXRlZCBSQUlEMSBhbmQgUkFJRDUgYXJyYXlzIGRvIGEg
-ZnVsbFxuXA0KKyByZXN5bmMgb2YgdGhlaXIgbWlycm9yL3Bhcml0eSBibG9j
-a3MsIHdoaWNoLCBpZiB0aGUgcmFpZHRhYiBpcyBpbmNvcnJlY3QsXG5cDQor
-IHRoZSByZXN5bmMgd2lsbCB3aXBlIG91dCBkYXRhIGlycmVjb3ZlcmFibHku
-IEFsc28sIGlmIHlvdXIgYXJyYXkgaXMgaW5cblwNCisgZGVncmFkZWQgbW9k
-ZSB0aGVuIHRoZSByYWlkdGFiIG11c3QgbWF0Y2ggdGhlIGRlZ3JhZGVkIGNv
-bmZpZyBleGFjdGx5LFxuXA0KKyBvdGhlcndpc2UgeW91J2xsIGdldCB0aGUg
-c2FtZSBraW5kIG9mIGRhdGEgZGVzdHJ1Y3Rpb24gZHVyaW5nIHJlc3luYy5c
-blwNCisgKHNlZSB0aGUgZmFpbGVkLWRpc2sgcmFpZHRhYiBvcHRpb24uKSBZ
-b3UgaGF2ZSBiZWVuIHdhcm5lZCFcblwNCitcblwNCisgWyBJZiB5b3VyIGFy
-cmF5IGhvbGRzIG5vIGRhdGEsIG9yIHlvdSBoYXZlIGl0IGFsbCBiYWNrZWQg
-dXAsIG9yIGlmIHlvdVxuXA0KKyBrbm93IHByZWNpc2VseSB3aGF0IHlvdSBh
-cmUgZG9pbmcgYW5kIHlvdSBzdGlsbCB3YW50IHRvIHByb2NlZWQgdGhlbiB1
-c2VcblwNCisgdGhlIC0tcmVhbGx5LWZvcmNlIChvciAtUikgZmxhZy4gXVxu
-XA0KICIpOw0KIAlyZXR1cm4gRVhJVF9GQUlMVVJFOw0KICAgICB9DQo=
+> The first time you set a bit, record the current 'event' number with
+> the bitmap.
 
----1463811840-881383387-1045603480=:13255
-Content-Type: TEXT/PLAIN; charset=US-ASCII; name="raidtools-Makefile.patch"
-Content-Transfer-Encoding: BASE64
-Content-ID: <Pine.LNX.4.53.0302182324400.13255@linbox.held.org.il>
-Content-Description: 
-Content-Disposition: attachment; filename="raidtools-Makefile.patch"
+OK - now you got me there for a while, because I didn't realize you
+were talking about the "events" counter in the current code. At
+least I think you are. I saved it into the "reserved" area of the
+md device superblock, because it has to be in the md layer in order
+to avoid a layering violation. This is another indicator that the
+bitmap should be there too.
 
-LS0tIHJhaWR0b29scy0xLjAwLjMvTWFrZWZpbGUuaW4JMjAwMy0wMS0xNSAx
-MDo1ODoyNS4wMDAwMDAwMDAgKzAyMDANCisrKyByYWlkdG9vbHMtMS4wMC4z
-L01ha2VmaWxlLmluLm5ldwkyMDAzLTAyLTE4IDIzOjEwOjI4LjAwMDAwMDAw
-MCArMDIwMA0KQEAgLTcwLDYgKzcwLDkgQEANCiAJJChDQykgLW8gJEAgJDwg
-JChJTlRFUk5BTF9MSUJTKSAkKExERkxBR1MpDQogDQogY2xlYW46DQorCXJt
-IC1mICQoQklOQVJJRVMpICQoTElOS1MpICoubyBjb3JlICp+DQorDQorZGlz
-dGNsZWFuOg0KIAlybSAtZiAkKEJJTkFSSUVTKSAkKExJTktTKSAqLm8gY29y
-ZSAqfiBjb25maWcuc3RhdHVzIGNvbmZpZy5jYWNoZSBNYWtlZmlsZSBjb25m
-aWcuaCBjb25maWcubG9nDQogDQogcmVhbGNsZWFuOiBjbGVhbg0K
+> The interpretation of this bit map is 'only the blocks that are
+> flagged in this bitmap have changed since event X'.
+> 
+> On hot-add, read the old superblock.  If it looks valid and matches
 
----1463811840-881383387-1045603480=:13255
-Content-Type: TEXT/PLAIN; charset=US-ASCII; name="raidtools-raidstart.patch"
-Content-Transfer-Encoding: BASE64
-Content-ID: <Pine.LNX.4.53.0302182324401.13255@linbox.held.org.il>
-Content-Description: 
-Content-Disposition: attachment; filename="raidtools-raidstart.patch"
+I managed that. It seems to more or less work, though I'm a bit wary of
+this event counter thing. I've only seen the case 1 <= 1 so far.
 
-LS0tIHJhaWR0b29scy0xLjAwLjMvcmFpZHN0YXJ0LmMJMjAwMy0wMS0xNSAx
-MDo1ODoyNS4wMDAwMDAwMDAgKzAyMDANCisrKyByYWlkdG9vbHMtMS4wMC4z
-L3JhaWRzdGFydC5jLm5ldwkyMDAzLTAyLTE4IDIzOjEwOjQzLjAwMDAwMDAw
-MCArMDIwMA0KQEAgLTMxLDcgKzMxLDE5IEBADQogDQogDQogdm9pZCB1c2Fn
-ZSh1bnNpZ25lZCBjaGFyICphcmcpIHsNCi0gICAgcHJpbnRmKCJ1c2FnZTog
-JXMgWy0tYWxsXSBbLS1jb25maWdmaWxlXSBbLS1oZWxwXSBbLS12ZXJzaW9u
-XSBbLWFjaHZdIDwvZGV2L21kPz4qXG4iLCBhcmcpOw0KKyAgICBpZiAoc3Ry
-Y21wKGFyZywgInJhaWRzZXRmYXVsdHkiKSA9PSAwIHx8IA0KKyAgICAgICAg
-c3RyY21wKGFyZywgInJhaWRob3RnZW5lcmF0ZWVycm9yIikgPT0gMCB8fCAN
-CisgICAgICAgIHN0cmNtcChhcmcsICJyYWlkaG90YWRkIikgPT0gMCB8fA0K
-KyAgICAgICAgc3RyY21wKGFyZywgInJhaWRob3RyZW1vdmUiKSA9PSAwKQ0K
-KyAgICAgICAgcHJpbnRmKCJ1c2FnZTogJXMgW09QVElPTlNdIDxtZC1kZXZp
-Y2U+IDxoZC1kZXZpY2U+XG4iLCBhcmcpOw0KKyAgICBlbHNlDQorICAgICAg
-ICBwcmludGYoInVzYWdlOiAlcyBbT1BUSU9OU10gPG1kLWRldmljZT4qXG4i
-LCBhcmcpOw0KKyANCisgICAgcHJpbnRmKCJcbk9QVElPTlMgbWF5IGJlOlxu
-XA0KKy1hLCAtLWFsbCAgICAgICAgICAgICAgICAgIGFwcGx5IHRvIGFsbCBk
-ZXZpY2VzIHNwZWNpZmllZCBpbiBjb25maWcgZmlsZVxuXA0KKy1jLCAtLWNv
-bmZpZ2ZpbGUgZmlsZW5hbWUgIHVzZSBmaWxlbmFtZSBhcyBjb25maWcgZmls
-ZSAoL2V0Yy9yYWlkdGFiIGlzIGRlZmF1bHQpXG5cDQorLWgsIC0taGVscCAg
-ICAgICAgICAgICAgICAgdGhpcyBoZWxwIHNjcmVlblxuXA0KKy12LCAtLXZl
-cnNpb24gICAgICAgICAgICAgIGRpc3BsYXkgYSBzaG9ydCB2ZXJzaW9uIG1l
-c3NhZ2UsIHRoZW4gZXhpdFxuIik7DQogfQ0KIA0KIGludCBtYWluIChpbnQg
-YXJnYywgY2hhciAqYXJndltdKSB7DQo=
+> the current array, and has an event counter of X or more, then ignore
 
----1463811840-881383387-1045603480=:13255--
+I signal this desire via another entry in the reserved area of the
+md device superblock. In the resync, the write to the first sector
+examines this flag and decides whether to observe or disregard the
+bitmap. If the bitmap is to be disregarded (because the disk that's been
+added is too old or does not match), then it is removed. It can't
+presently be removed in the md code which set the flag, because it's
+currently a raid1 thing only. This is the first opportunity.
+
+> blocks that have their bits set in the bitmap which reconstructing,
+> otherwise do a full reconstruction.
+> 
+> When we have a full compliment of devices again, clear the bitmap and
+> the event record.
+
+Well, that was done in one of the diskops already. Spare active, I
+think.
+
+> As for ths other bits about a block device 'fixing itself' - I think
+> that belongs in user-space.  Have some program monitoring things and
+
+I've mentioned that I disagree, but I haven't had time to do anything
+about it yet.
+
+> re-adding the device to the array when it appears to be working again.
+
+            ======================================
+
+Now I'll select the main parts of the current patch and go through them ...
+
+We start with raid1.h. It gets a few extra fields in the private data
+structure for raid1.
+
+
+--- linux-2.4.20-xfs/include/linux/raid/raid1.h.orig	Sun Jan 26 20:03:48 2003
++++ linux-2.4.20-xfs/include/linux/raid/raid1.h	Tue Feb 18 17:48:10 2003
+@@ -59,6 +59,11 @@
+ 	md_wait_queue_head_t	wait_done;
+ 	md_wait_queue_head_t	wait_ready;
+ 	md_spinlock_t		segment_lock;
++        long last_clean_sector;                 /* helps debugging printout */
++        long last_dirty_sector;
++        int sync_mode;                          /* clean or dirty in sync ? */
++        struct bitmap * bitmap;                 /* the array bitmap */
++        int    bitmap_dirty;                    /* flag */
+ };
+ 
+ typedef struct raid1_private_data raid1_conf_t;
+
+
+Now for the changes to md.c. Start with the flag that indicates we have
+detected a "hotrepair" situation in hot_add(). It's either a previously
+removed disk being readded and we've been maintaining a bitmap of
+pending writes for it, or we can force it (in the case of no persistent
+superblock) by doing a hotadd of the same disk immediately after setfaulty
+without an intervening  hotremove.
+
+
+--- linux-2.4.20-xfs/drivers/md/md.c.orig	Sun Jan 26 18:57:20 2003
++++ linux-2.4.20-xfs/drivers/md/md.c	Tue Feb 18 22:07:58 2003
+@@ -2374,6 +2382,7 @@
+ 	unsigned int size;
+ 	mdk_rdev_t *rdev;
+ 	mdp_disk_t *disk;
++        int hotrepair = 0;
+ 
+ 	if (!mddev->pers)
+ 		return -ENODEV;
+
+
+
+Here is where we detect the case of no persistent superblock, and
+hotadd after setfaulty. Neil won't want this. We force an extra 
+hotremove and restart the hotadd.
+
+But near the end of this hunk there is an important change, of a "0" to
+a "persistent" in the md_import_device() call. This is for the case
+when there IS a persistent superblock. The value 1 to the call means
+that the new disk superblock is tested. And read in to be tested. That's 
+the key.
+
+
+@@ -2396,11 +2405,38 @@
+ 		return -ENOSPC;
+ 	}
+ 
+-	rdev = find_rdev(mddev, dev);
+-	if (rdev)
+-		return -EBUSY;
++        /*
++         * This is a do at most once loop because the remove in the loop will
++         * cause the test to fail the next time round. And if that
++         * doesn't break us out, then the hotrepair count will.
++         */
++        while ((rdev = find_rdev(mddev, dev)) != NULL) {
++
++	        if (hotrepair || persistent || rdev->dev != dev || !rdev->faulty) {
++	                printk(KERN_WARNING "md%d: cannot add existing component %x\n",
++                                mdidx(mddev), dev);
++	                return -EBUSY;
++                }
++        /*
++         * Allow "hotrepair" of merely faulty device too if no superblock to
++         * go by. We assume a hotadd after setfaulty of the same device is a
++         * hotrepair, if there's no persistent superblock to say otherwise.
++         */
++	        printk(KERN_WARNING "md%d: repair of faulty disk %x!\n",
++	                mdidx(mddev), dev);
++
++         /* Remove will cause find_rdev to fail next time */
++	        err = hot_remove_disk(mddev, dev);
++                if (err < 0) {
++	                printk(KERN_WARNING "md%d: remove disk %x errored\n",
++                                mdidx(mddev), dev);
++	                return err;       
++                }
++        /* This will inevitably error us out of the loop interior next time */
++                hotrepair = 1;
++        }
+ 
+-	err = md_import_device (dev, 0);
++	err = md_import_device (dev, persistent);
+ 	if (err) {
+ 		printk(KERN_WARNING "md: error, md_import_device() returned %d\n", err);
+ 		return -EINVAL;
+
+
+
+Here's where we test the uuid of the disk superblock just read in. We're
+still in hotadd.
+
+I also test the event counter. That's kept in fields 2 and 3 of the
+"reserved" array on the disk superblock.  I'm not at all sure right now
+how I got it there ...  the counter seems to have the value 1 in the
+tests I've done!
+
+The idea is that a counter that is old (low) represents a disk that
+separated from our lineage way before the point at which our bitmap was
+created, which is recored in the corresponding reserved fields of the md
+device superblock in memory.  I know that I write those fields when I
+dirty the bitmap for the first time.
+
+I've tested by doing a setfaulty, then writing to the device, then
+doing hotremove and hotadd, and things work. But I am uneasy about the 
+semantics here.
+
+The end result of this bit in hotadd is merely to set the local
+hotrepair flag. We use it nearer the end of the function.
+
+
+
+@@ -2416,6 +2452,52 @@
+ 		err = -EINVAL;
+ 		goto abort_export;
+ 	}
++        /* let's check the new disk sb at this poimt */
++        if (persistent && rdev->sb 
++                && rdev->sb->set_uuid0 == mddev->sb->set_uuid0
++                && rdev->sb->set_uuid1 == mddev->sb->set_uuid1
++                && rdev->sb->set_uuid2 == mddev->sb->set_uuid2
++                && rdev->sb->set_uuid3 == mddev->sb->set_uuid3) {
++                unsigned long long disk_events, bitmap_events;
++                disk_events = rdev->sb->reserved[3];
++                disk_events <<= 32;
++                disk_events |= rdev->sb->reserved[2];
++
++                bitmap_events = mddev->sb->reserved[3];
++                bitmap_events <<= 32;
++                bitmap_events |= mddev->sb->reserved[2];
++
++                if (disk_events < bitmap_events) {
++                        /* new disk is too old! */
++                        hotrepair = 0;
++                        printk(KERN_INFO "md%d: new disk %x too old for repair %Lu < %Lu\n",
++                                mdidx(mddev), dev, disk_events, bitmap_events);
++                } else {
++                        hotrepair = 1;
++                        printk(KERN_INFO "md%d: repairing old mirror component %x (%Lu >= %Lu)\n",
++                                mdidx(mddev), dev, disk_events, bitmap_events);
++                }
++        } else if (!persistent && hotrepair) {
++                hotrepair = 1;
++                printk(KERN_INFO "md: forced repair of mirror component %x\n",
++                        dev);
++        } else {
++                /* failed match */
++                hotrepair = 0;
++                printk(KERN_INFO "md: adding new mirror component %x\n",
++                        dev);
++                printk(KERN_DEBUG "md: old uuid %x %x %x %x\n",
++                        mddev->sb->set_uuid0,
++                        mddev->sb->set_uuid1,
++                        mddev->sb->set_uuid2,
++                        mddev->sb->set_uuid3);
++                printk(KERN_DEBUG "md: new uuid %x %x %x %x\n",
++                        rdev->sb->set_uuid0,
++                        rdev->sb->set_uuid1,
++                        rdev->sb->set_uuid2,
++                        rdev->sb->set_uuid3);
++        }
++
+ 	bind_rdev_to_array(rdev, mddev);
+ 
+ 	/*
+
+At the end of the hotadd function, I set the flag (the 0th reserved
+field of the md device superblock) to indicate that we are doing a
+hotrepair - intelligent resync if possible. It'll be seen in the raid1
+resync.
+
+@@ -2470,6 +2554,19 @@
+ 	mddev->sb->spare_disks++;
+ 	mddev->sb->working_disks++;
+ 
++        if (hotrepair) {
++                /* maybe say something nice - this means we want to respect
++                 * the bitmap in raid1 resync if teher is one
++                 */
++                printk(KERN_DEBUG "md%d: set repair bit on superblock\n",
++                               mdidx(mddev));
++                mddev->sb->reserved[0] = 1;
++        } else {
++                /* this means we need to kill any bitmap that we have been
++                 * saving but we'll do it in the raid1 resync instead of here
++                 */
++                mddev->sb->reserved[0] = 0;
++        }
+ 	mddev->sb_dirty = 1;
+ 	md_update_sb(mddev);
+ 
+
+
+That was the end of changes to md.c. Now changes to raid1.c.
+
+First of all, in the make request function, mark the bitmaps of every
+nonoperational component of the mirror. This is as it was last time,
+except I decided to take the device spinlock while  looking at the
+metadata. I see lots of potential races in the current code, and I
+don't want to be responsible for any more. Let's try and avoid things
+moving around underneath while we waffle around in here ...
+
+
+--- linux-2.4.20-xfs/drivers/md/raid1.c.orig	Sun Jan 26 18:57:20 2003
++++ linux-2.4.20-xfs/drivers/md/raid1.c	Tue Feb 18 18:28:12 2003
+@@ -645,8 +658,38 @@
+ 	bhl = raid1_alloc_bh(conf, conf->raid_disks);
+ 	for (i = 0; i < disks; i++) {
+ 		struct buffer_head *mbh;
+-		if (!conf->mirrors[i].operational) 
++                /*
++                 * Mark the bitmap of each mirror we can't write to
++                 * (i.e. is not operational).
++                 */
++
++	        spin_lock_irq(&conf->segment_lock);
++		if (!conf->mirrors[i].operational) {
++
++                        struct bitmap * bitmap = conf->bitmap;
++
++                        if (!conf->mirrors[i].used_slot) {
++	                        spin_unlock_irq(&conf->segment_lock);
++                                continue; 
++                        }
++
++                        if (bitmap) {
++                                bitmap->setbits(bitmap, bh->b_rsector >> 1, bh->b_size >> 10);
++                                if (!conf->bitmap_dirty) {
++                                        conf->bitmap_dirty = 1;
++                                        mddev->sb->reserved[2] =
++                                            mddev->sb->events_lo;
++                                        mddev->sb->reserved[3] =
++                                            mddev->sb->events_hi;
++                                }
++                                PRINTK(KERN_DEBUG "raid1: mark mirror %d blk %lu-%lu\n",
++                                 i, bh->b_rsector >> 1,
++                                 (bh->b_rsector >> 1) + (bh->b_size >> 10) - 1);
++                        }
++	                spin_unlock_irq(&conf->segment_lock);
+ 			continue;
++                }
++	        spin_unlock_irq(&conf->segment_lock);
+  
+ 	/*
+ 	 * We should use a private pool (size depending on NR_REQUEST),
+
+As before, in the mark disk bad function, we make a bitmap and attach
+it to the device. Mmmph .. should take the device spinlock. Well, I
+probably do. In the functions called.
+
+@@ -757,6 +869,18 @@
+ 
+ 	mirror->operational = 0;
+ 	mark_disk_faulty(sb->disks+mirror->number);
++        /*
++         * Put the bitmap on a mirror just marked faulty (and
++         * nonoperational).
++         */
++        if (conf->bitmap == NULL) {
++	        int err = raid1_create_bitmap(mddev);
++                printk(KERN_DEBUG "raid1: make bitmap %x on mirror %d (%d)\n",
++                    (unsigned) conf->bitmap, mirror->number, err);
++        } else {
++                printk(KERN_WARNING "raid1: bitmap %x already on mirror %d\n",
++                    (unsigned) conf->bitmap, mirror->number );
++        }
+ 	mark_disk_nonsync(sb->disks+mirror->number);
+ 	mark_disk_inactive(sb->disks+mirror->number);
+ 	if (!mirror->write_only)
+
+
+In the diskop that activates a spare device, we reomve the bitmap. All
+is well again.
+
+
+@@ -1082,9 +1223,17 @@
+ 
+ 		conf->working_disks++;
+ 
++                /*
++                 * We need to vamoosh the bitmap.
++                 */
++                raid1_remove_bitmap(mddev);
++
+ 		break;
+ 
+ 	case DISKOP_HOT_REMOVE_DISK:
++
++                PRINTK(KERN_DEBUG "raid1: diskop HOT REMOVE\n");
++
+ 		rdisk = conf->mirrors + removed_disk;
+ 
+ 		if (rdisk->spare && (removed_disk < conf->raid_disks)) {
+
+Now we get to the resync function. A few local variables added.
+"targets" is the set of faulted (writeonly) disks. "Count" is how many of
+them there are. 
+
+
+@@ -1363,6 +1515,15 @@
+ 	int disk;
+ 	int block_nr;
+ 	int buffs;
++        /*
++         * Will need to count mirror components currently with a bitmap
++         * which have been marked faulty and nonoperational at some
++         * point beforehand, and have been accumulating marks on the
++         * bitmap to indicate dirty blocks that need syncing.
++         */
++        struct bitmap * bitmap;
++        int count;
++        int targets[MD_SB_DISKS];
+ 
+ 	if (!sector_nr) {
+ 		/* we want enough buffers to hold twice the window of 128*/
+
+When looking at the first sector, we check the "hotrepair" flag  that's
+been passed down in the md device superblock. If it says 1, ok,
+we leave any bitmap in place and later in the resync use it. If the
+flag says 0, we remove any bitmap, so the resync will be the ordinary
+full resync.
+
+
+@@ -1371,9 +1532,25 @@
+ 		if (buffs < 2)
+ 			goto nomem;
+ 		conf->window = buffs*(PAGE_SIZE>>9)/2;
++                /* also remove bitmap if not indicated */
++                if (! mddev->sb->reserved[0]) {
++                        /* has to be outside spinlock as it takes it */
++                        printk(KERN_WARNING "md%d: removed bitmap\n",
++                                mdidx(mddev));
++                        raid1_remove_bitmap (mddev);
++                } else {
++                        printk(KERN_WARNING "md%d: retained bitmap %x\n",
++                                mdidx(mddev), (unsigned)conf->bitmap);
++                }
++                /* reset the bitmap indicator always */
++                mddev->sb->reserved[0] = 0;
+ 	}
+ 	spin_lock_irq(&conf->segment_lock);
+ 	if (!sector_nr) {
++                /* setup extra report counters for skipped/synced blocks */
++                conf->sync_mode = -1;
++                conf->last_clean_sector = -1;
++                conf->last_dirty_sector = -1;
+ 		/* initialize ...*/
+ 		conf->start_active = 0;
+ 		conf->start_ready = 0;
+
+This is where we find our targets. And skip them if we have a clean
+bitmap for our current block. I need to fix this. This can now be more 
+efficient.
+
+
+@@ -1427,7 +1604,63 @@
+ 	conf->last_used = disk;
+ 	
+ 	mirror = conf->mirrors+conf->last_used;
++
++        /* go looking for the faulted (nonoperational) mirrors */
++        count = 0;
++	while (1) {
++                const int maxdisk = 2 * conf->raid_disks - conf->working_disks;
++		if (disk <= 0)
++                        disk = maxdisk > MD_SB_DISKS ? MD_SB_DISKS : maxdisk;
++		disk--;
++		if (disk == conf->last_used)
++			break;
++                if (!conf->mirrors[disk].operational)
++                        continue;
++                /* We need them to be writable */
++                if (conf->mirrors[disk].write_only) {
++                        targets[count++] = disk;
++                }
++	}
++
++        if (count > 0) {
++                int i;
++                int dirty = 0;
++                for (i = 0; i < count; i++) {
++                        disk = targets[i];
++                        bitmap = conf->bitmap;
++
++                        if (!bitmap
++                        || bitmap->testbit(bitmap, sector_nr >> 1)) {
++                                dirty++;
++                                break;
++                        }
++                }
++                if (dirty <= 0) {
++                        const int done = 2 - (sector_nr & 1);
++	                md_sync_acct(mirror->dev, done);
++                        sync_request_done(sector_nr, conf);
++		        md_done_sync(mddev, done, 1);
++                        if (conf->sync_mode != 0) {
++                                if (conf->sync_mode == 1) {
++                                        printk(KERN_INFO "raid1: synced dirty sectors %lu-%lu\n",
++                                        conf->last_clean_sector+1,
++                                        conf->last_dirty_sector);
++                                }
++                                conf->sync_mode = 0;
++                        }
++                        conf->last_clean_sector = sector_nr + done - 1;
++			wake_up(&conf->wait_ready);
++                        if (mddev->sb && sector_nr + done >= mddev->sb->size<<1) {
++                                printk(KERN_INFO "raid1: skipped clean sectors %lu-%lu\n",
++                                conf->last_dirty_sector+1,
++                                conf->last_clean_sector);
++                        }
++                        /* skip remainder of block */
++                        return done;
++                }
++        }
+ 	
++        /* read */
+ 	r1_bh = raid1_alloc_buf (conf);
+ 	r1_bh->master_bh = NULL;
+ 	r1_bh->mddev = mddev;
+
+And that's that. I'll summarise later.
+
+Peter
