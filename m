@@ -1,38 +1,40 @@
-From: hpa@zytor.com (H. Peter Anvin)
-Subject: Re: Partitioned raid and major number
-Date: Tue, 2 Mar 2004 00:36:15 +0000 (UTC)
+From: "Jeff Gray" <jeffgray@hotmail.com>
+Subject: RAID 1 strategy
+Date: Mon, 01 Mar 2004 22:29:45 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <c20ktv$37o$1@terminus.zytor.com>
-References: <20040225145624.GA1513@cistron.nl> <20040228010916.GC13404@drinkel.cistron.nl> <16450.35269.770163.948225@notabene.cse.unsw.edu.au> <20040301010419.GK14194@drinkel.cistron.nl>
+Message-ID: <Law11-F90gS86aRZlz800019605@hotmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Followup to:  <20040301010419.GK14194@drinkel.cistron.nl>
-By author:    Miquel van Smoorenburg <miquels@cistron.nl>
-In newsgroup: linux.dev.raid
-> 
-> POSIX allows different semantics for / and //, I mentioned before that
-> perhaps we should make "cd //" chdir to rootfs instead of /. Then
-> you can also have //proc and //sys without explicitly mounting them.
-> But I don't think the time has come for that yet (besides it needs
-> more thought wrt namespaces, chroot etc).
-> 
+Hi everyone. From reading this mailing list's archives I've seen a number of 
+individuals
+implement Linux software RAID 1 arrays on pairs of several partitions. I 
+would like to
+know if it's feasible to create one single RAID 1 array which spans the 
+entire size of
+the drives but have smaller partitions within the array for /, swap and a 
+big LVM
+container for /var, /tmp, /usr and /home. Currently I'm considering having 
+separate
+RAID1 arrays for /, swap and a huge array for the LVM section. I've seen 
+this
+configuration being mentioned before but I think it would be simpler to have 
+one
+big RAID1 array container instead.
 
-It's allowed, but definitely not recommended.
+Are there any advantages to having separate arrays instead of one big one? 
+Obviously
+the smaller ones would sync faster but what about actual performance once 
+the OS
+has booted? Thank you all in advance.
 
-I do like the idea of making rootfs remountable, though.
+Kind Regards,
+Jeff Gray.
 
-> > Another is to add "rootdev" to /proc/*, as in appended patch. Then
-> >   ln -s /proc/self/roodev /dev/root
-> > 
-> > and providing /proc is mounted, /dev/root will work.
-> 
-> I like that approach.
+_________________________________________________________________
+FREE pop-up blocking with the new MSN Toolbar – get it now! 
+http://clk.atdmt.com/AVE/go/onm00200415ave/direct/01/
 
-.. assuming the rootfs isn't a nodev filesystem.
-
-	-hpa
