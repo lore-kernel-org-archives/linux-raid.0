@@ -1,45 +1,53 @@
 From: Vladimir Milovanovic <vlad@webmail.co.za>
-Subject: RAID 4 and RAID 5
-Date: Tue, 15 Oct 2002 10:05:30 +0200
+Subject: Tiobench results LOWER with more threads
+Date: Tue, 15 Oct 2002 10:20:55 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3DABCC4A.9070206@webmail.co.za>
+Message-ID: <3DABCFE7.9070701@webmail.co.za>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi all,
+OK, just joined the list and rad the faq, and something caught my eye. 
+Tiobench results are apparently supposed to INCREASE when there are more 
+threads.
 
-I am thrilled that I have found this list, as I didn't know about it.
-I have been playing with RAID for a while, and I am enjoying what it can 
-do. The one problem I have is differentiating between RAID 4 and RAID 5.
+What I have is Tiobench results decreasing with more threads. This is my 
+setup:
 
-Both are documented in the HOWTO and I have tried to set them up both. 
-The /etc/raidtab file does not complain when I define RAID 4 as the 
-raid-level argument, but after creating an array with RAID 4 and doing 
-cat /proc/mdstat , I see active RAID5, and all the disks. The parity 
-algorithm is stated as 0, and at the bottom it states the space 
-available on the array and the "level 4".
+Celeron 633
+196 MB PC 133
+Adaptec 29160 SCSI controller (PCI)
+5 IBM Ultrastar 18XP (18gig, SCSI-3) disks hanging off the Adaptec 
+controller
+Red Hat 7.3 Linux (2.4.18-3)
 
-Setting up RAID 5 is very much the same thing, except it says that the 
-parity-algorithm is 2, (I am using left-symmetric) and then, next to the 
-space available, it says level 5.
+Experimenting with different RAID configurations, I have found that I 
+can not get more than 32 MB/s from this array with 4 disks, one spare. I 
+have actually found out that the disks set the SCSI bus at 40 MB/s 
+(since the disks are old) and that in RAID 0 it scales well, the speed 
+doubles for two disks, and then the third disk brings in a little more 
+performance, and then things topp off at 32 MB/s with four disks. Adding 
+the fifth disk gains no extra performance.
 
-Now here is the crunch : both RAID 4 and RAID 5 give me EXACTLY the same 
-results, both in read write performance. I am using many programs for 
-benching, hdparm, bonnie, iozone, tiobench and the results are 
-consistent and repeatable.
+Apparently VIA chipsets have problems with PCI bursting, so that is why 
+I can't see the full 40 MB/s. That's fine.
 
-Does anyone know with any degree of certainity whether RAID 4 is 
-supported in Linux? What exactly is the status of that? I know that 
-there is no point in using RAID 4 over RAID 5 but I want to know so that 
-I am able to document it.
+But, my tests with tiobench also show that performance decreases as 
+extra threads are added. I am testing with a file of 800 MB (approx. 4x 
+size of RAM, to get meaningful results) and the decrease with threads, 
+while READING only, is consistent in all RAID levels. The write 
+performance will sometimes increase, sometimes stay the same.
 
-Thanks, and nice to see so much discussion about RAID!!! I think I am 
-gonna like this place.
+WHY is this happening? Is it something I have not set up right , or 
+what? I am not so much interested in getting more speed out of these old 
+disks, they are gonna be replaced soon anyway, but I REALLY want to know 
+WHY is this??
 
+Can anyone give me any pointers?
+Thanks,
 Vlad.
 
 
