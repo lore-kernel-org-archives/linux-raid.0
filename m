@@ -1,37 +1,34 @@
-From: <benjamin@hot-shot.com>
-Subject: 2 messages 0621DbFD0--9
-Date: Wed, 12 Jun 0102 15:56:20 +0400
+From: David Nedved <dnedved@nuvox.net>
+Subject: how to change sector size on fibrechannel drives
+Date: Wed, 12 Jun 2002 17:17:24 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <ae89rq$due$2@main.gmane.org>
-Reply-To: <benjamin@hot-shot.com>
+Message-ID: <20020612171724.A25071@nuvox.net>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_NextPart_000_00D1_58A83C8B.A1657E81"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: benjamin@hot-shot.com
+Content-Disposition: inline
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-------=_NextPart_000_00D1_58A83C8B.A1657E81
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: base64
+Hi All,
 
+I've salvaged some drives from a MTI fibre channel RAID device, and I'm
+trying to use them in linux 2.4.18.  When the scsi module loads, it sees
+the drives, but reports them all as having the dreaded
+"unsupported sector size 528" message.  All the searches I've done seem
+to indicate a low-level format of the drives.   The FC card I'm using,
+however (Emulex LP8000), doesn't seem to have an option for low-level
+formatting.
 
-c2FsdXQNCmhpDQoNCkonYWkgcmVncm91cGUgc3VyIHVuIHNpdGUgbGVzIG1l
-aWxsZXVycyBzaXRlcyB4IGdyYXR1aXRzIHF1ZSBqJ2FpIHB1IHRyb3V2ZXIN
-CmVuIDUgYW5zIGRlIHN1cmYhDQoNCkkndmUgcmVncm91cCBoZXJlIHRoZSBi
-ZXN0IGZyZWUgYWR1bHQgc2l0ZXMgaSd2ZSBmaW5kIG9uIHRoZSB3ZWIgZHVy
-aW5nIDUgeWVhcnMgb2Ygc3VyZiENCg0KbCdhZHJlc3NlICh0aGUgYWRkcmVz
-cykgOg0KDQpodHRwOi8vd3d3LnRoZXpzLmNvbS8wMDMwDQoNCnZpc2l0ZXog
-bW9uIHNwb25zb3IgcG91ciBtJ2FpZGVyIQ0KUGxlYXNlIHZpc2l0IG15IHNw
-b25zb3IgdG8gaGVscCBtZSENCg0KUG91ciBuZSBwbHVzIHJlY2V2b2lyIGQn
-ZW1haWwgZWNyaXZleiBtb2kg4CByZW1vdmVAcmVtb3ZlLXRvcC5jb20gYXZl
-YyBjb21tZSBzdWpldCByZW1vdmUNCklmIHlvdSB3YW50IHRvIHN0b3AgdG8g
-cmVjZWl2ZSBtYWlscyBlbWFpbCBtZSBhdCAgcmVtb3ZlQHJlbW92ZS10b3Au
-Y29tIHdpdGggdGhlIHN1YmplY3QgcmVtb3ZlDQoNCjINCg0KIA0KMzEwNE1p
-YUY2LTMwNktUR2UwMTg3dE1wTDYtNzE2Skx2bjQ5MzhDb2ZLOS05OTBobHVU
-OTE5M2FaekUyLTg2OWV1THAwMTMxS2w2OQ==
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-------=_NextPart_000_00D1_58A83C8B.A1657E81--
+My fibre channel toys are rather limited, in other words, I don't have
+any other controllers with which to low-level these drives.
+
+Am I out of luck?  I wouldn't mind the inefficiency of only using 512
+of the 528 bytes in each block if there's some way to override the
+default setting... although I would much rather reformat them...
+
+Oh, the drives are all ST136403FC drives if that matters.
+
+Thanks in advance for any clues...
+
+David
