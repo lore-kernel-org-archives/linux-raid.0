@@ -1,34 +1,35 @@
-From: Jeff Hoffmann <jhoffman@microelectronics.com>
+From: Paul Clements <Paul.Clements@SteelEye.com>
 Subject: Re: RAID 0 -> 1 possible?
-Date: Fri, 12 Mar 2004 09:44:15 -0500
+Date: Fri, 12 Mar 2004 10:28:56 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <4051CCBF.2020108@microcenter.com>
-References: <4050CF9C.6000704@microcenter.com> <4051503E.6090703@tequila.co.jp>
+Message-ID: <4051D738.309CB8FE@SteelEye.com>
+References: <4050CF9C.6000704@microcenter.com> <4051503E.6090703@tequila.co.jp> <4051CCBF.2020108@microcenter.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4051503E.6090703@tequila.co.jp>
-To: Clemens Schwaighofer <cs@tequila.co.jp>
+To: Jeff Hoffmann <jhoffman@microelectronics.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Jeff Hoffmann wrote:
 
+> > | Convert / from RAID 0 to 1 without requiring a backup/reinstall/restore
+> > | scenario
 
-On 03/12/04 00:53, Clemens Schwaighofer wrote:
+> Indeed.  In my case, the data actually on the partition is < 25%. 
 
-> | Convert / from RAID 0 to 1 without requiring a backup/reinstall/restore
-> | scenario
-> |
-> | Any RAID-mojo-masters with the answer?
-> 
-> I think that can't work unless you add two more disks. Raid 0 is strip
-> where 1 is mirroring.
+Well, in that case you just might be able to do it. You'll need to
+shrink your filesystem (if you have one) ala resize2fs or similar. Then
+raidreconf the raid0. Then edit the partition table (there are tools to
+help with this, or just use fdisk very carefully) to shrink the
+partition. Then you can create a new partition and dump the data there.
+Create another similarly sized partition and raid1 them together...
 
-Indeed.  In my case, the data actually on the partition is < 25%.  Perhaps 
-there's a way to shrink the RAID 0 set?  That would allow a new partition (not 
-striped) to be created to store the data.
+It's certainly possible...but it's starting to sound like a
+backup/restore might be easier than all that (you probably want to
+backup before doing these types of things anyway, if you care about the
+data).
 
-Thanks for your input,
-
-Jeff Hoffmann
+--
+Paul
