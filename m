@@ -1,29 +1,37 @@
-From: Mike Hardy <mhardy@h3c.com>
-Subject: Re: Tyan, RAID-6, and other recent hassles... (long, a bit OT)
-Date: Mon, 21 Feb 2005 14:00:55 -0800
-Message-ID: <421A5A17.5060902@h3c.com>
-References: <Pine.LNX.4.56.0502170923200.819@lion.drogon.net> <42172E56.3040007@panix.com> <Pine.LNX.4.56.0502191220130.819@lion.drogon.net> <421749F1.3040503@panix.com> <Pine.LNX.4.56.0502211146120.17307@lion.drogon.net>
+From: Louis-David Mitterrand <vindex@apartia.org>
+Subject: [OT] best tape backup system?
+Date: Tue, 22 Feb 2005 11:28:27 +0100
+Message-ID: <20050222102827.GA25255@apartia.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-In-Reply-To: <Pine.LNX.4.56.0502211146120.17307@lion.drogon.net>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Gordon Henderson <gordon@drogon.net>
-Cc: berk walker <berk@panix.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hello and sorry for the OT post, but I felt linux raid administrators
+can be also very knowledgable about best-of-breed tape backup systems
+for their linux servers.
 
-Gordon Henderson wrote:
+I admin serveral linux servers with software root raid1/5 and am very
+happy about their performance and reliability. Up to now our backup
+strategy has consisted in daily offsite incremental rsync backups to
+other raid5 linux servers. But I feel a bit nervous about not having
+offline backups such as tapes that can be restored in the event our
+servers AND their mirrors suffer catastrophic failure or exploitation.
 
-> to/from another server to thrash the networking, then will do stuff via
-> NFS, transfer big files, checksum them, etc. as well as lots of little
-> files. Anyone have a good solid testsuite then like to run?
+I am considering getting a Sony SAIT 3 with 500G/1TB tapes, which seems
+like a nice solution for backuping a whole server on a single tape.
 
-Very off-topic at this point, but apart from transfers with checksums, I 
-use a pair of ttcp processes to pack the network pipe solid, and the 
-linux kernel source is a great CPU/RAM test if you unpack/untar, copy, 
-diff, delete repeat
+Has anyone used that hardware and can comment on its performance,
+linux-compatibility or otherwise?
 
-Just be sure to watch the temparature ;-)
+Is there a better solution out there?
 
--Mike
+Is it worth waiting a short while for some new upcoming technology?
+
+
+Thanks for reading and have a nice day!
+
+-- 
+I feel naked outside of Vim. -- Ted Knab
