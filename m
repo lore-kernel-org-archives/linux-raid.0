@@ -1,60 +1,62 @@
-From: Maurice Hilarius <maurice@harddata.com>
+From: Gregory Leblanc <gleblanc@linuxweasel.com>
 Subject: Re: EIO AP-1680 ATA133 RAID PCI Controller
-Date: Wed, 12 Feb 2003 08:36:51 -0700
+Date: 12 Feb 2003 15:00:26 -0800
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <5.1.1.6.2.20030212083307.039a1dd0@mail.harddata.com>
-References: <3E493005.4030702@mvista.com>
- <3E4329CE.5020706@netscape.net>
- <3E47E248.3080006@mvista.com>
- <3E48871A.3010709@netscape.net>
- <3E493005.4030702@mvista.com>
+Message-ID: <1045090825.12695.34.camel@gregdell>
+References: <3E493005.4030702@mvista.com> <3E4329CE.5020706@netscape.net>
+	 <3E47E248.3080006@mvista.com> <3E48871A.3010709@netscape.net>
+	 <3E493005.4030702@mvista.com>
+	 <5.1.1.6.2.20030212083307.039a1dd0@mail.harddata.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; format=flowed
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-mJL3Atx6JQLmYqiB36M4"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1044998190.12695.3.camel@gregdell>
-To: Gregory Leblanc <gleblanc@linuxweasel.com>
-Cc: linux-raid@vger.kernel.org
+In-Reply-To: <5.1.1.6.2.20030212083307.039a1dd0@mail.harddata.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
------BEGIN PGP MESSAGE-----
-Version: PGPfreeware 7.0.3 for non-commercial use <http://www.pgp.com>
 
-qANQR1DBwE4DpUAjANw7zLUQA/4ywsdT3nN/LPnpWKA4DXIrRXJXf34yW0CXLdKu
-MOZZTn5YxZgZWnKwP35j6kQS8kZM7RuwvCAYrkIt2BE3v9tNTdVM3/BZ9H+Im5XB
-eqcekJsx0Hv48EIOBIf+VKvvoIitaGUAn7alj/Gr1On6dfLkJlHLxeEYMd6nETsL
-EaVCqgQAo/EPu+aWJBTvOWMPnZ69HzfhWOoQzzh7QWi7MAWkfdPQtzhh1CYB2bUW
-CmauosibyUkRLXAFUR/zkVqM9oQz7ANHYG00qlVsH2+H+C/vsDylmzkKIr/V2crZ
-kS6wm4zcXlnm8oYNO+5mpvdnTa6SVXCDK8plPs1dmQzkLP76xFXBwU4DmGQ29uee
-dsAQB/4si6HCYAbKBG39H4sZ8/qrADvhJVtAZntzSJBJlvHLDTDG5K6Uk+O0ei9h
-S34wSKIXlqNPUTlE7s8z2b8o4Tgzgj9pP6cTj3wixIAH+DqW+l+sZukRDCkWlOH9
-7e+yYhyv4Lw4+vuPHqQa2S0pYy5TFO4kYrWWrAI/IVLVTk4g0YpmWSY/TtoqsLvc
-IJAWSi/3M9LeG8jEnvQ6adUKZBt1usZlZcP8vPaZFLFWz0OXCNkOefIMKt8zEn0w
-g+JPOieCpqvthtOKsCFqmwBujD5IESpK6DSTRLWKF5gwnpdMDBQbIjLq8g37D5WJ
-Per6MGb+TqWEuIKRHRwbSyHppdKPB/9Bke1byB3LLr367Mn3aMYTBUYbCY+1vSJy
-ED20c09ERBuW+jE+ZHxaUNdQv+Er/77YXEyvMdnlMyeUDOojDvporW8ohTNOWWw+
-ZPSWG//i07UvU7e3zBlO4oEo+CIJtwBuKQb3oyL1/7dX6tjUDlNEQURgo/QZYZg4
-SMM/re7BHH1YOgzQklignCMbaTYmlSjNDi6nAFsTFtH0OxepJNV5W4QgaTz75JJ+
-W9eWITaZ8QZUILtTsFbJVZEeElOA5J0RMQ8ljvZEtick6xwaNOQn6hiRXkHO9pqU
-1ydw4FgChnCB6h2F1KndYgKPPeYsgowXAHmyIz6Bakt572Suml/dycFO4kzuzGV9
-3kdEMPIqdiegNbGMqY94gVwwp2BtuvxNsl+Dasdk6uFeiQtQSvRQ2ra2tfCUiwgN
-D5zaUEuTjFa54BNs8hZ3OugpC1+xTjFNj4vUzT1rYE+A9qkRKXb/STvmyvoNh8yq
-1g857geLE+ycTkqR9A59hnpm25CZWGiOUN6ph3YvfpSxNMrk/vBYTHep/B8iD3io
-3ow5E0vCCwwbpjhDuKFa5Xbi9PrHzouzC1LR+4m1eMRUtQv4Xd8JGmA7sNR+UINO
-2pG/1N7drzzGe5N8Sq/6jdxgh+/SNUKI0gIXQVvogMZuQcIgi0gnIPtNJyrCSmGY
-zBi2CmXXEvup0g/1Ty1rWs8cpDUJan9JJnXCLVXVu1hwULTmrMFEiC+zH4ZnDEq7
-tPRZalLpanGE+5AOX9X/0yIjQpEee80p46mzNgQAyb+YNSC2NQzCM0OhMTLsc5Bv
-6zAlX1B1lltnlrs6AEtcGgg5J1jJ3vovo2FKn2uLoFoqz3Ai4e0nCeV/7lJHB3tu
-BxqObuuYQ8pvWLRBMOKrMMCPPW7jACmeM8RL2AzFgFKmizKZwW+g0u41oR1Sbjx9
-34mlS7UyjSnc7fD36kNtwN6Y3TOEtsBd6r5yoiDEKtp23FiDUd27/1HuaMLJ0z8j
-ICzYJkRbZ5BZMojkJUL6MTWKInVSo07KZetlh5q5YCntXPDrGYAARQ==
-=2bn1
------END PGP MESSAGE-----
+--=-mJL3Atx6JQLmYqiB36M4
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-With our best regards,
+It's really impolite to send encrypted mail to the list.  Anyone to whom
+the message is encrypted won't be able to read it
 
-Maurice W. Hilarius       Telephone: 01-780-456-9771
-Hard Data Ltd.               FAX:       01-780-456-9772
-11060 - 166 Avenue        mailto:maurice@harddata.com
-Edmonton, AB, Canada      http://www.harddata.com/
-    T5X 1Y3
+On Wed, 2003-02-12 at 07:36, Maurice Hilarius wrote:
+> -----BEGIN PGP MESSAGE-----
+[snip]
+
+> With regards to your message at 02:16 PM 2/11/03, Gregory Leblanc.
+> Where you stated:
+> While the performance of RAID 5 using software RAID is generally far
+> superior to that provided by hardware RAID, host CPU usage can be
+> -quite- high in high-load situations.  The benchmarks recently posted
+> had cpu usage numbers at over 90% on most sequeential writes and
+> reads.
+> 	Greg
+>=20
+> Naturally. There is no such thing as a free lunch.
+> Look at it this way:
+> If you have X amount of data to write, and it takes half as long, but
+> uses 30% more CPU, you are ahead of the game..
+
+The formatting of this message is all wonky, sorry about it being
+confusing.  Anyway, I agree, except that I have no numbers to back up
+the CPU use differences, or the MB/sec differences.  Without them, any
+claims are pretty silly to try to make.
+	Greg
+
+--=-mJL3Atx6JQLmYqiB36M4
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.1 (GNU/Linux)
+
+iD8DBQA+StIJnAkVXO6fw4sRAu1bAJ0VPAn8dn33YVSo4zjST/H75n+P2ACaA0HZ
+g2zfJfm+O06VZx0eOijtKkE=
+=Cb1S
+-----END PGP SIGNATURE-----
+
+--=-mJL3Atx6JQLmYqiB36M4--
 
