@@ -1,67 +1,27 @@
-From: Janusz Zamecki <janusz@pipi.ma.cx>
-Subject: RE: RAID1 & 2.6.9 performance problem
-Date: Tue, 18 Jan 2005 20:34:59 +0100
-Message-ID: <1106076899.14134.286.camel@pipi.ma.cx>
-References: <OMEKLMBKKEOEENCKLEIDOEFICAAA.ryan@dynaconnections.com>
+From: "Gilbert" <ocvjkwjmtro@wanadoo.fr>
+Subject: And then, when the
+Date: Tue, 18 Jan 2005 16:26:41 -0600
+Message-ID: <314083320757186-38647__8845.19331525571$1106092060$gmane$org@81.249.92.120>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-2
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="ISO-8859-16"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <OMEKLMBKKEOEENCKLEIDOEFICAAA.ryan@dynaconnections.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "J. Ryan Earl" <ryan@dynaconnections.com>
-Cc: linux-raid@vger.kernel.org
+To: Felecia Linux-scsi-owner <linux-scsi-owner@vger.kernel.org>
 List-Id: linux-raid.ids
 
-W li=B6cie z wto, 18-01-2005, godz. 20:18, J. Ryan Earl pisze:=20
-> I missed that, sounds like you got an IDE concurrency problem.  Perha=
-ps you
-> can't read from both ports for some reason.  Don't think it's a raid =
-problem
-> though.
+Hello,
 
+our bank has approovved your mrtgage request. You can
+r e finance, buy a new house or maybe get some cash.
+Do not worry about bad creddit: we got you covered.
 
-well, it is a raid problem. Check it out. I've ran the following script=
-:
+The soonest you apply, the better deal you get. It is
+possible to get $300,000 for $250 per month.
 
-hdparm -t /dev/hdg &
-hdparm -t /dev/hde
+Thank you and apply here:
+http://www.latne.com/
 
-(hde and hdg creates my md6 array from previous message)
+Gilbert
 
-And there are results:
-
---disk/hdg----disk/hde-
-_read write _read write
-   0     0 :   0     0
-40.2M    0 :39.9M    0
-53.5M    0 :53.5M    0
-51.5M    0 :51.5M    0
-13.2M    0 :13.5M    0
-   0     0 :   0     0
-
-Even if I increase number of reading threads
-
-hdparm -t /dev/hdg &
-hdparm -t /dev/hde &
-hdparm -t /dev/hdg &
-hdparm -t /dev/hde
-
-the workload is more or less evenly distributed.
-
---disk/hdg----disk/hde-
-_read write _read write
-   0     0 :   0     0
-40.2M    0 :38.9M    0
-7732k    0 :8440k    0
-3780k    0 : 928k    0
-1280k    0 :2400k    0
-2076k    0 :   0     0
-   0     0 :   0     0
-
-Janusz
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
