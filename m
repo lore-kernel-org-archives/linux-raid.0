@@ -1,35 +1,45 @@
 From: Mark Hahn <hahn@physics.mcmaster.ca>
 Subject: Re: Looking for the cause of poor I/O performance
-Date: Mon, 6 Dec 2004 16:34:45 -0500 (EST)
-Message-ID: <Pine.LNX.4.44.0412061631250.4484-100000@coffee.psychology.mcmaster.ca>
-References: <200412051017.13228.systemloc@earthlink.net>
+Date: Mon, 6 Dec 2004 16:39:21 -0500 (EST)
+Message-ID: <Pine.LNX.4.44.0412061635200.4484-100000@coffee.psychology.mcmaster.ca>
+References: <200412051014.30762.systemloc@earthlink.net>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200412051017.13228.systemloc@earthlink.net>
+In-Reply-To: <200412051014.30762.systemloc@earthlink.net>
 Sender: linux-raid-owner@vger.kernel.org
 To: TJ <systemloc@earthlink.net>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> > for comparison, a fairly crappy SiS 735-based k7 system with
-> > 64b-wide PC2100 can deliver maybe 1.2 GB/s dram bandwidth.
-> > hdparm -T is about 500 MB/s, and would probably have trouble
-> > breaking 200 MB/s with raid0 even if it had enough buses.
+> > System A:
+> > CPUs	2 X 500 MHz
+> > RAM	4 X 128 Meg SDRAM
+> > Bus	100 MHz
+> > Timing buffer-cache reads:   128 MB in  0.87 seconds =147.13 MB/sec
 > >
-> > an older server of mine is e7500-based, dual xeon/2.4's, with
-> > 2xPC1600 ram.  it sustains about 1.6 GB/s on Stream, and about
-> > 500 MB/s hdparm -T, and can sustain 250 MB/s through it's 6-disk
-> > raid without any problem.
-> 
-> hmmm.. In these cases, how does the throughput exceed the PCI bandwidth? Do 
-> these boards have multiple busses? PCI-X?
+> > System B:
+> > CPUs	2 X 1000 MHz
+> > RAM	4 X 256 Meg Registered SDRAM
+> > Bus	100 MHz
+> > Timing buffer-cache reads:   524 MB in  2.00 seconds =262.00 MB/sec
+> >
+> > Why is system B almost twice as fast?
 
-I didn't say they exceeded bus bandwidth ("if it had enough").
-the latter does actually have multiple buses, some of which are pcix;
-that's pretty common among server boards.
+the buffer-cache is measuring systemcall overhead as well as speed of 
+pagecache-to-user-buffer copying.  both those are certainly influenced
+by the CPU speed - even by things like mmx.
 
-interestingly, even non-server desktop parts can exceed PCI bandwidth - 
-I did a disk server a few years ago that used two chipset ATA ports
-and an add-in 4-port card to hit about 150 MB/s total (sustained).
+> > Is registered RAM faster?
+
+no, it's inherently slower (mostly latency, but since bursts are short,
+also in bandwidth.)
+
+> Memory interleaving, perhaps? Registered ram has higher latency. It's possible 
+> that the machine is made to do memory interleaving with ECC ram to boost 
+> performance.. 
+
+sdram means that interleaving is basically irrelevant.  interleaving was
+important when a single bank of ram couldn't sustain one transaction per
+cycle (EDO, FPM, etc).
 
