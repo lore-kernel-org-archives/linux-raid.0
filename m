@@ -1,12 +1,12 @@
-From: Florian Reitmeir <squat@riot.org>
-Subject: many ide drives, raid0/raid5
-Date: Sun, 2 Nov 2003 04:17:13 +0100
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <20031102031713.GA3464@squat.noreply.org>
-Reply-To: Florian Reitmeir <squat@riot.org>
+From: Florian Reitmeir <fr@3node.com>
+Subject: 15 ide driver, raid0 / raid5
+Date: Sun, 2 Nov 2003 04:22:06 +0100
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <20031102032206.GB3464@squat.noreply.org>
+Reply-To: Florian Reitmeir <fr@3node.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
 To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
@@ -79,5 +79,6 @@ I also tried newer Kernel versions, but there is a timing problem i think, i use
 
 So, is there someone who can help me ? 
 
+PS: sorry, if you get this mail duplicated, its my fault.
 --
 mfG Florian Reitmeir
