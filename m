@@ -1,22 +1,42 @@
-From: Alvin Oga <aoga@ns.Linux-Consulting.com>
+From: "Guy" <bugzilla@watkins-home.com>
 Subject: RE: Good news / bad news - The joys of RAID - backups
-Date: Mon, 22 Nov 2004 10:29:04 -0800 (PST)
-Message-ID: <Pine.LNX.3.96.1041122102643.24540A-100000@Maggie.Linux-Consulting.com>
-References: <200411221756.iAMHuHN32424@www.watkins-home.com>
+Date: Mon, 22 Nov 2004 14:48:39 -0500
+Message-ID: <200411221948.iAMJmiN00439@www.watkins-home.com>
+References: <Pine.LNX.3.96.1041122102643.24540A-100000@Maggie.Linux-Consulting.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200411221756.iAMHuHN32424@www.watkins-home.com>
+In-Reply-To: <Pine.LNX.3.96.1041122102643.24540A-100000@Maggie.Linux-Consulting.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Guy <bugzilla@watkins-home.com>
-Cc: 'Alvin Oga' <aoga@ns.Linux-Consulting.com>, 'Gordon Henderson' <gordon@drogon.net>, linux-raid@vger.kernel.org
+To: 'Alvin Oga' <aoga@ns.Linux-Consulting.com>
+Cc: 'Gordon Henderson' <gordon@drogon.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+Young?
+
+My mom is 70 something.  But I would never tell her that!
+
+I am 45, but act like 12.
+
+Guy
+
+"Growing up is the first sign of old age." - Guy Watkins
+
+-----Original Message-----
+From: Alvin Oga [mailto:aoga@ns.Linux-Consulting.com] 
+Sent: Monday, November 22, 2004 1:29 PM
+To: Guy
+Cc: 'Alvin Oga'; 'Gordon Henderson'; linux-raid@vger.kernel.org
+Subject: RE: Good news / bad news - The joys of RAID - backups
 
 
 
 On Mon, 22 Nov 2004, Guy wrote:
 
-> If this is a business, in case of a fire (or other disaster) you should have
+> If this is a business, in case of a fire (or other disaster) you should
+have
 > off-site storage of your data.  And often, daily is good, weekly is ok.
 
 "disks" is offsite nowdays ... remember them colo's ??  
