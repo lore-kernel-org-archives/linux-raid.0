@@ -1,45 +1,114 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: RE: Software RAID Stopped Working With Aurora Kernel
-Date: Thu, 30 May 2002 09:16:26 +1000 (EST)
+From: <lilha@legend.com.cn>
+Subject: md and lvm
+Date: Thu, 30 May 2002 09:44:27 +0800
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <15605.24906.442772.449984@notabene.cse.unsw.edu.au>
-References: <15601.48418.82978.28645@notabene.cse.unsw.edu.au>
-	<CPEAKNIMKMJOCFPEOBGAMEDNCFAA.cwebster@ec.rr.com>
+Message-ID: <OF5BD3342B.53CED801-ON48256BC9.00097D87@legend.com.cn>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Calvin Webster on Wednesday May 29
-To: cwebster@ec.rr.com
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday May 29, cwebster@ec.rr.com wrote:
-> > > "mdadm --examine /dev/sda1" shows "State : dirty, no-errors". All other
-> > > RAID drives show the same.
-> > >
-> > > "lsraid -D -a /dev/md0" shows "state		= good".
-> > All other RAID devices
-> > > show the same.
-> >
-> > I have never looked at "lsraid".  My guess is that "good" is
-> > equivalent to "no-errors" and that lsraid doesn't bother to report
-> > "dirty".  This shouldn't relate to the filesystem superblock though...
-> >  still, a fsck every few months is a good idea.
-> 
-> What made this observation noteworthy, however, was that it persisted even
-> _after_ e2fsck was run on /dev/md0.
+i try extend a LV with md, but failed,why?
+Can a LV of md extend ?
+follow is my VG information.
 
-The raid "dirty" or "error" flags are completely separate from any
-filesystem "dirty" or "error" flags.  So fsck will not affect the raid
-flags.
+[root@snap /root]# vgdisplay -v
+--- Volume group ---
+VG Name               raid-lvm
+VG Access             read/write
+VG Status             available/resizable
+VG #                  0
+MAX LV                256
+Cur LV                1
+Open LV               0
+MAX LV Size           255.99 GB
+Max PV                256
+Cur PV                2
+Act PV                2
+VG Size               2.52 GB
+PE Size               4 MB
+Total PE              646
+Alloc PE / Size       231 / 924 MB
+Free  PE / Size       415 / 1.62 GB
+VG UUID               eiP2xh-pesL-Rbo0-EUL5-tOsM-eEma-yVd3qZ
 
-The raid "dirty" flag simply means that the array has been started and
-not yet stopped.  Either it is active or you had an unclean shutdown
-and will need to regenerate redundancy.
+--- Logical volume ---
+LV Name                /dev/raid-lvm/lv_raid
+VG Name                raid-lvm
+LV Write Access        read/write
+LV Status              available
+LV #                   1
+# open                 0
+LV Size                924 MB
+Current LE             231
+Allocated LE           231
+Allocation             next free
+Read ahead sectors     120
+Block device           58:0
 
-The raid "error" flag is meaningless.  It is never set by anything,
-and I cannot think of any use that it might be put to.  But it is
-there is the definition of the superblock, or mdadm reports it.
 
-NeilBrown
+--- Physical volumes ---
+PV Name (#)           /dev/md2 (1)
+PV Status             available / allocatable
+Total PE / Free PE    398 / 167
+
+PV Name (#)           /dev/md4 (2)
+PV Status             available / allocatable
+Total PE / Free PE    248 / 248
+
+[root@snap /root]# cat /proc/mdstat
+Personalities : [linear] [raid0] [raid1] [raid5] [multipath]
+read_ahead 1024 sectors
+md1 : active raid1 hda9[1]
+      272960 blocks [2/1] [_U]
+
+md2 : active raid5 hda12[2] hda11[1] hda10[0]
+      1638400 blocks level 5, 32k chunk, algorithm 0 [3/3] [UUU]
+
+md4 : active raid5 hdc7[2] hdc6[1] hdc5[0]
+      1023872 blocks level 5, 32k chunk, algorithm 0 [3/3] [UUU]
+
+unused devices: <none>
+
+and now is the error information(i didn't use lvextend before):
+
+[root@snap /root]# e2fsadm -L+1G /dev/raid-lvm/lv_raid
+e2fsck 1.18, 11-Nov-1999 for EXT2 FS 0.5b, 95/08/09
+The filesystem size (according to the superblock) is 338944 blocks
+The physical size of the device is 236544 blocks
+Either the superblock or the partition table is likely to be corrupt!
+Abort<y>? yes
+
+[root@snap /root]# e2fsadm -L+1G /dev/raid-lvm/lv_raid
+e2fsck 1.18, 11-Nov-1999 for EXT2 FS 0.5b, 95/08/09
+The filesystem size (according to the superblock) is 338944 blocks
+The physical size of the device is 236544 blocks
+Either the superblock or the partition table is likely to be corrupt!
+Abort<y>? no
+
+Pass 1: Checking inodes, blocks, and sizes
+Error reading block 262148 (Invalid argument) while doing inode scan.
+Ignore error<y>? yes
+Error reading block 262149 (Invalid argument) while doing inode scan.
+Ignore error<y>?  no
+Error while scanning inodes (135680): Can't read next inode
+
+and last is the error information of useing lvextend before:
+[root@snap /root]# lvextend -L+1G /dev/raid-lvm/lv_raid
+lvextend -- extending logical volume "/dev/raid-lvm/lv_raid" to 1.90 GB
+lvextend -- doing automatic backup of volume group "raid-lvm"
+lvextend -- logical volume "/dev/raid-lvm/lv_raid" successfully extended
+[root@snap /root]# e2fsadm -L+1G /dev/raid-lvm/lv_raid
+e2fsadm -- new size too large for "raid-lvm"
+e2fsadm -- size of "/dev/raid-lvm/lv_raid" would  be invalid
+
+
+
+TIA for your help and sorry for my poor English.
+
+Echo
+
+
+
+
