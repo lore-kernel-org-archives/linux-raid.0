@@ -1,15 +1,43 @@
-From: "TJ Harrell" <systemloc@earthlink.net>
-Subject: raidreconf won't resize a RAID 5 array. Can it be done with mkraid -f ?
-Date: Mon, 17 May 2004 11:08:53 -0400
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: raidreconf won't resize a RAID 5 array. Can it be done with mkraid -f ?
+Date: Mon, 17 May 2004 16:28:42 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <000901c43c20$df38fb10$0201a8c0@windows>
+Message-ID: <200405172028.i4HKSkB08658@www.watkins-home.com>
+References: <000901c43c20$df38fb10$0201a8c0@windows>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="iso-8859-1"
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <000901c43c20$df38fb10$0201a8c0@windows>
+To: 'TJ Harrell' <systemloc@earthlink.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+I don't understand the size of your array!
+If you have 3 disks about 200G each, your RAID5 array should be about 400G.
+But your array is 1171815940 blocks!  That's 1171G, about 3 times larger
+than it should be.
+
+Just to verify the size of the disks and the array, do these commands:
+fdisk -l /dev/hdg
+fdisk -l /dev/hdc
+fdisk -l /dev/hdk
+fdisk -l /dev/hdi
+fdisk -l /dev/hda
+cat /proc/mdstat
+mdadm -D /dev/md0
+mdadm -D /dev/md1
+
+Guy
+
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of TJ Harrell
+Sent: Monday, May 17, 2004 11:09 AM
+To: linux-raid@vger.kernel.org
+Subject: raidreconf won't resize a RAID 5 array. Can it be done with mkraid
+-f ?
 
 I have a raid 5 array consisting of 3 disks. The smallest disk is 195191168
 blocks. The array only uses 172551296 blocks from each device. Numbers ar
@@ -69,5 +97,11 @@ I will convert your old device /dev/md1 of 6102335 blocks
 to a new device /dev/md1 of same size
 using a block-size of 64 KB
 Is this what you want? (yes/no): no
+
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
