@@ -1,86 +1,75 @@
-From: "Cress, Andrew R" <andrew.r.cress@intel.com>
-Subject: RE: RAID1 problem, newbie to RAID
-Date: Tue, 21 Jan 2003 13:57:14 -0800
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: [BUG?] count of "Spare Devices" wrong after fail/remove/add
+Date: Wed, 22 Jan 2003 15:23:14 +1100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <A5974D8E5F98D511BB910002A50A66470580D578@hdsmsx103.hd.intel.com>
+Message-ID: <15918.7346.888218.690481@notabene.cse.unsw.edu.au>
+References: <3E2CA044.5030202@fl.priv.at>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: 'J Dalessandro' <joe@nan0.com>, linux-raid@vger.kernel.org
+In-Reply-To: message from Friedrich Lobenstock on Tuesday January 21
+To: Linux RAID Mailing Liste <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-The way to do this is to build the raid on the second disk, and mark the
-first one (where you are currently mounted) as the failed disk in raidtab.
-You have the raidtab set to use the first disk as the one to format for
-raid, so it is busy.
+On Tuesday January 21, fl@fl.priv.at wrote:
+> Hi!
+> 
+> While experimenting with fail/remove/add of mdadm
+> 
+> # mdadm --detail /dev/md0
+> /dev/md0:
+>          Version : 00.90.00
+>    Creation Time : Mon Jan 20 22:53:28 2003
+>       Raid Level : raid1
+>       Array Size : 40209024 (38.35 GiB 41.22 GB)
+>      Device Size : 40209024 (38.35 GiB 41.22 GB)
+>     Raid Devices : 2
+>    Total Devices : 2
+> Preferred Minor : 0
+>      Persistence : Superblock is persistent
+> 
+>      Update Time : Tue Jan 21 00:49:47 2003
+>            State : dirty, no-errors
+>   Active Devices : 2
+> Working Devices : 2
+>   Failed Devices : 0
+>    Spare Devices : 2
+> 
+> 
+>      Number   Major   Minor   RaidDevice State
+>         0       3        1        0      active sync   /dev/hda1
+>         1      22        1        1      active sync   /dev/hdc1
+>             UUID : d876333b:694e852b:e9a6f40f:0beb90f9
+> 
+> I do wounder why I've got 2 spare drives despite the fact that I
+> did not add any. I've just got two drives in this raid1 that's it.
 
-The steps to build a software RAID from an existing Linux install are
-outlined at 
-  http://www.ibiblio.org/pub/Linux/docs/HOWTO/Software-RAID-HOWTO (section
-4.12 & ff)
-or
-  http://scsirastools.sourceforge.net/docs/UserGuide (section 4.0)
+Yes, it's probably a bug in the kernel code. The counting in the 2.4 code is very
+clumsy.  I think it is benign so it wont be fixed.  The code in 2.5 is
+very different and shouldn't have this problem.
 
-Andy
+> 
+> Kernel is 2.4.19.
+> mdadm is 1.0.1
+> 
+> I tried to reproduce this by recreating the array and running
+> fail/remove/add on it but did not succeed. No reboot.
+> 
+> 
+> PS: Array Size : 40209024 (38.35 GiB 41.22 GB)
+> should IMHO be
+>      Array Size : 40209024 (38.35 GiB 40.21 GB)
 
------Original Message-----
-From: J Dalessandro [mailto:joe@nan0.com] 
-Sent: Monday, January 20, 2003 6:39 PM
-To: linux-raid@vger.kernel.org
-Subject: RAID1 problem, newbie to RAID
+I disgree. An array side of 40209024 means that many kibibytes.
+i.e. 40209024 * 1024 which is
+   41174040576  bytes.
 
+Hmm. It is still wrong,  It sholdbe 41.17 GB
 
-I am trying to get RAID1 working on a Debian machine with a 2.4.20 
-kernel. I hope I am close, but this is my first attempt at RAID on any 
-platform.
+The line:
+			(long)((((bytes/1000)%1000000)+50000)/10000)
+at the end of human_size in util.c should be
+			(long)((((bytes/1000)%1000000)+5000)/10000)
 
-I seem to get two out of three partitions. I think my problem is in that 
-my "/" partition is mounted, but I'm new to RAID and I'm not sure how to 
-fix this issue. Below is my: /proc/mdstat, raidtab, fdisk -l outputs. 
-What am I missing here to solve my bungled configuration?
-
-CM:~# cat /proc/mdstat
-Personalities : [raid1]
-read_ahead 1024 sectors
-md0 : active raid1 hda1[0]
-       96256 blocks [2/1] [U_]
-
-md1 : active raid1 hda2[0]
-       9767424 blocks [2/1] [U_]
-
-unused devices: <none>
-
-CM:~# cat /etc/raidtab
-raiddev /dev/md2
-         raid-level              1
-         nr-raid-disks           2
-         nr-spare-disks          0
-         chunk-size              32
-         persistent-superblock   1
-         device                  /dev/hda3
-         raid-disk               0
-         device                  /dev/hdc3
-         failed-disk             1
-
-raiddev /dev/md1
-         raid-level              1
-         nr-raid-disks           2
-         nr-spare-disks          0
-         chunk-size              32
-         persistent-superblock   1
-         device                  /dev/hda2
-         raid-disk               0
-         device                  /dev/hdc2
-         failed-disk             1
-
-raiddev /dev/md0
-         raid-level              1
-         nr-raid-disks           2
-         nr-spare-disks          0
-         chunk-size              32
-         persistent-superblock   1
-         device                  /dev/hda1
-         raid-disk               0
-         device                  /dev/hdc1
-         failed-disk             1
-[...]
+NeilBrown
