@@ -1,80 +1,49 @@
 From: Neil Brown <neilb@cse.unsw.edu.au>
 Subject: Re: RFC - new raid superblock layout for md driver
-Date: Thu, 21 Nov 2002 10:02:07 +1100
+Date: Thu, 21 Nov 2002 10:11:43 +1100
 Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <15836.5231.38079.474147@notabene.cse.unsw.edu.au>
+Message-ID: <15836.5807.792124.255167@notabene.cse.unsw.edu.au>
 References: <15835.2798.613940.614361@notabene.cse.unsw.edu.au>
-	<Pine.SOL.3.96.1021120095120.2764A-100000@libra.cus.cam.ac.uk>
+	<1037801381.3267.17.camel@irongate.swansea.linux.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: message from Anton Altaparmakov on Wednesday November 20
-To: Anton Altaparmakov <aia21@cantab.net>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+In-Reply-To: message from Alan Cox on  November 20
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday November 20, aia21@cantab.net wrote:
-> Hi,
+On  November 20, alan@lxorguk.ukuu.org.uk wrote:
+> On Wed, 2002-11-20 at 04:09, Neil Brown wrote:
+> >     u32  set_uuid[4]
 > 
-> On Wed, 20 Nov 2002, Neil Brown wrote:
-> > I (and others) would like to define a new (version 1) format that
-> > resolves the problems in the current (0.90.0) format.
-> > 
-> > The code in 2.5.lastest has all the superblock handling factored out so
-> > that defining a new format is very straight forward.
-> > 
-> > I would like to propose a new layout, and to receive comment on it..
-> 
-> If you are making a new layout anyway, I would suggest to actually add the
-> complete information about each disk which is in the array into the raid
-> superblock of each disk in the array. In that way if a disk blows up, you
-> can just replace the disk use some to be written (?) utility to write the
-> correct superblock to the new disk and add it to the array which then
-> reconstructs the disk. Preferably all of this happens without ever
-> rebooting given a hotplug ide/scsi controller. (-;
+> Wouldnt u8 for the uuid avoid a lot of endian mess
 
-What sort of 'complete information about each disk' are you thinking
-of?
+Probably....
+This makes it very similar to 'name'.  
+The difference if partly the intent for how user-space would use it,
+and partly that set_uuid must *never* change, while you would probably
+want name to be allowed to change.
 
-Hot-spares already work.
-Auto-detecting a new drive that has just been physically plugged in
-and adding it to a raid array is as issue that requires configuration
-well beyond the scope of the superblock I believe.  
-But if you could be more concrete, I might be convinced.
 
 > 
-> >From a quick read of the layout it doesn't seem to be possible to do the
-> above trivially (or certainly not without help of /etc/raidtab), but
-> perhaps I missed something...
+> >     u32  ctime
 > 
-> Also, autoassembly would be greatly helped if the superblock contained the
-> uuid for each of the devices contained in the array. It is then trivial to
-> unplug all raid devices and move them around on the controller and it
-> would still just work. Again I may be missing something and that is
-> already possible to do trivially.
+> Use some padding so you can go to 64bit times
+> 
+Before or after?  Or just make it 64bits of seconds now?
+This brings up endian-ness?  Should I assert 'little-endian' or should
+the code check the endianness of the magic number and convert if
+necessary?
+The former is less code which will be exercised more often, so it is
+probably safe.
 
-Well... it depends on whether you want a 'name' or an 'address' in the
-superblock.
-A 'name' is something you can use to recognise the device when you see
-it, an 'address' is some way to go and find the device if you don't
-have it.
+So:
+  All values shall be little-endian and times shall be stored in 64
+  bits with the top 20 bits representing microseconds (so we & with
+  (1<<44)-1  to get seconds.
 
-Each superblock already has the 'name' of every other device
-implicitly, as a devices 'name' is the set_uuid plus a device number.
-
-I think storing addresses in the superblock is a bad idea as they are
-in-general not stable, and if you did try to store some sort of
-stable address, you would need to allocate quite a lot of space which
-I don't think is justified.
-
-Just storing a name is enough for auto-assembly providing you can
-enumerate all devices.  I think at this stage we have to assume that
-userspace can enumerate all devices and so can find the device for
-each name.  i.e. find all devices with the correct set_uuid.
-
-Does that make sense?
-
-Thankyou for your feedback.
+Thanks.
 
 NeilBrown
