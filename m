@@ -1,60 +1,87 @@
-From: christophe.varoqui@free.fr
-Subject: [ANNOUNCE] multipath-tools-0.3.3
-Date: Wed, 20 Oct 2004 12:46:09 +0200
-Sender: linux-hotplug-devel-admin@lists.sourceforge.net
-Message-ID: <1098269169.417641f18a234@imp1-q.free.fr>
-References: <1096071849.4466.31.camel@zezette> <1097054573.4163b96d1262c@imp5-q.free.fr> <1097495416.416a73787e0ae@imp1-q.free.fr> <1098021787.5433.8.camel@zezette>
+From: "Vince W." <listacct1@lvwnet.com>
+Subject: Re: linux/raid problem, linux not recognizing bios raid
+Date: Wed, 20 Oct 2004 06:42:44 -0400
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <41764124.2080707@lvwnet.com>
+References: <000401c4b3f4$47bc9570$6101a8c0@renoir>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-hotplug-devel-admin@lists.sourceforge.net>
-In-Reply-To: <1098021787.5433.8.camel@zezette>
-Errors-To: linux-hotplug-devel-admin@lists.sourceforge.net
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel>,
-	<mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Post: <mailto:linux-hotplug-devel@lists.sourceforge.net>
-List-Help: <mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel>,
-	<mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=subscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-hotplug-devel>
-To: device-mapper development <dm-devel@redhat.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-hotplug-devel@lists.sourceforge.net" <linux-hotplug-devel@lists.sourceforge.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <000401c4b3f4$47bc9570$6101a8c0@renoir>
+To: Linux Raid List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hello,
+Robert E. Singer wrote:
 
-here goes multipath-tools-0.3.3
+>im building a system containing:
+>- abit ic7g motherboard
+>- 2 wd 160gb sata hard drives
+>- red hat linux workstation version 3
+>
+>  
+>
+>the drives have been physically installed and the bios configured to run the
+>disks as a raid (either raid0 or raid1). this is verified during the post.
+>
+>when i try to install linux, the disk partitioning program reports two disks
+>/dev/sda & /dev/sdb individually with 160gb capacities available for
+>partitioning, not one.  whether using bios raid0 or raid1, only 1 disk
+>should be available (with 160 or 320 gb available, depending on the raid
+>flavor).
+>
+>whats wrong?
+>  
+>
+We're seeing a lot of this lately.
 
-Suse and OSDL reviews continue, keeping the flow of changes high.
-Early release to keep interested people in sync.
+As has been basically mentioned by the other two, you do not have a real 
+hardware RAID controller built into your motherboard.
 
-Full ChangeLog for the release :
+You may find some humor, as well as some excellent technical advice, at 
+the following URL, and at other links on Jeff Garzik's site:
 
-	* [checkers] add the emc_clariion path checker (lmb at Suse)
-	* [multipath] introduce safe_snprintf macro to complement the
-	  safe_sprintf. Needed to cover the sizeof(pointer) cases
-	  pointed by Dave Olien at OSDL
-	* [multipath] move to the common libchecker framework and
-	  activate the selector
-	* [multipath] fix an iopolicy selector bug (initialized lun
-	  iopolicy overrode controler-wide iopolicy)
-	* [multipathd] cleanly separate out the checker selector, as
-	  done with iopolicy selector
-	* [multipathd] move out the checkers into a common libcheckers
-	* [multipath] fix the anti-parallel-exec logic : use a write
-	  lease for the task. From Dave Olien at osdl.
-	* [multipath] fix reinstate : pass a devt, not a devname
+http://linux.yyz.us/sata/faq-sata-raid.html
 
-As usual, doc and download at :
-http://christophe.varoqui.free.fr/
+(Jeff Garzik is doing most (or all) of the work on writing the libata 
+SATA drivers for the Linux kernel, and is, therefore, an authority on 
+the subject matter).
 
-regards,
---
-christophe varoqui <christophe.varoqui@free.fr>
+RHEL 3 Workstation is detecting your SATA controller, but ONLY as a SATA 
+controller, not as a SATA RAID controller, and therefore seeing both 
+physical drives connected to it.  Linux is not fooled as easily by mere 
+BIOS hacks as Win-Doze is.
+
+As the other person mentioned, you will be better off disabling the 
+"RAID" functions of your onboard SATA controller, enabling it only as a 
+SATA controller instead, and setting up a software RAID at install 
+time.  Three things to keep in mind:
+
+1) You should create a separate ~100MB /boot partition to put the Grub 
+files and kernels in, make it your first partition, and force it to be 
+primary.  /boot can be a software RAID1, but it cannot be a software 
+RAID0 or RAID5
+
+2) The root filesystem ( "/" ) can be a software RAID1, but not a 
+software RAID0 or RAID5 filesystem, as best I recall.
+
+3) The rest of your filesystems, any others you break out, like /usr, 
+/var, /tmp, etc. can be RAID0, RAID1, or anything else that races your 
+motor.
+
+If I am "off" on any of these details, I am sure someone will correct me. ;)
+
+If you find items 1 and 2 to be an unacceptable limitation, you should 
+look into a REAL hardware RAID solution. 
+
+As a general rule, at least right now, if it's a SATA controller, it 
+ain't REAL hardware RAID.  The one exception that comes to mind: 3Ware 
+makes real hardware RAID SATA controllers, but I would confirm that the 
+exact model number you are interested in has open-source kernel driver 
+support before plunking down the cash if I were you.
 
 
--------------------------------------------------------
-This SF.net email is sponsored by: IT Product Guide on ITManagersJournal
-Use IT products in your business? Tell us what you think of them. Give us
-Your Opinions, Get Free ThinkGeek Gift Certificates! Click to find out more
-http://productguide.itmanagersjournal.com/guidepromo.tmpl
+Good Luck,
+Vince
+RHCE, Linux Technical Engineer
+
