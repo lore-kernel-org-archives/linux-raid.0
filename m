@@ -1,60 +1,30 @@
-From: Luke Rosenthal <lists@luko.org>
-Subject: Re: Adaptec 39160 RAID ?!
-Date: Wed, 11 Feb 2004 12:36:58 +1100 (EST)
-Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0402111215260.21666-100000@gw.luko.org>
-References: <S263491AbUBKAtC/20040211004902Z+28@vger.kernel.org>
+From: "Kevin P. Fleming" <kpfleming@backtobasicsmgmt.com>
+Subject: Re: ATARAID userspace configuration tool
+Date: Tue, 10 Feb 2004 18:45:16 -0700
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <4029892C.2070009@backtobasicsmgmt.com>
+References: <Pine.LNX.4.40.0402101405190.25784-100000@jehova.dsm.dk> <1076425115.23946.18.camel@leto.cs.pocnet.net> <40292246.2030902@backtobasicsmgmt.com> <1076440714.27328.8.camel@leto.cs.pocnet.net> <20040211013551.GB2153@kroah.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <S263491AbUBKAtC/20040211004902Z+28@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <20040211013551.GB2153@kroah.com>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> > Yes, but doesn't the card ship with "fake RAID"?
->
-> No, it's just a plain old Ultra160 Dual Channel SCSI Host Adapter.
+Greg KH wrote:
 
-I just purchased one actually, have hooked it up to a Quantum Atlas 10K2 
-and can't seem to get them talking in Ultra160 mode.  Here's the proc 
-output:
+> I really don't think udev in and of itself needs to know anything
+> special about these kinds of devices, as it will be glad to kick off
+> other programs for you if you want it to.
 
+Agreed (not that I'm implementing any of this stuff :-)
 
-Adaptec AIC7xxx driver version: 6.2.8
-aic7899: Ultra160 Wide Channel B, SCSI Id=0, 32/253 SCBs
-
-Serial EEPROM:
-0xc33a 0xc33a 0xc33a 0xc33a 0xc33a 0xc33a 0xc33a 0xc33a 
-0xc33a 0xc33a 0xc33a 0xc33a 0xc33a 0xc33a 0xc33a 0x43bb 
-0xb8f4 0x5d5c 0x2800 0x0010 0xffff 0xffff 0xffff 0xffff 
-0xffff 0xffff 0xffff 0xffff 0xffff 0xffff 0x0250 0xf4c7 
-
-Channel A Target 0 Negotiation Settings
-        User: 160.000MB/s transfers (80.000MHz DT, offset 255, 16bit)
-[snip snip Targets 1-14, nothing hooked up]
-Channel A Target 15 Negotiation Settings
-        User: 160.000MB/s transfers (80.000MHz DT, offset 255, 16bit)
-        Goal: 40.000MB/s transfers (20.000MHz, offset 127, 16bit)
-        Curr: 40.000MB/s transfers (20.000MHz, offset 127, 16bit)
-        Channel A Target 15 Lun 0 Settings
-                Commands Queued 438859
-                Commands Active 0
-                Command Openings 32
-                Max Tagged Openings 32
-                Device Queue Frozen Count 0
-
-
-The drive has a SCA connector on the back, with a sticker on the connector 
-stating "Ultra160/LVD/SE".  To connect this drive I've used an adapter 
-which converts the SCA connection into a regular 68-pin internal one, then 
-used a terminated cable with Ultra160/LVD/SE marked on both the connectors 
-(there's 4 of them) AND the terminator.  I've tried turning the internal 
-terminator in the Adaptec BIOS on and off with no change.  There's no 
-other devices on this bus other than the drive & the host adapter.
-
-Is this normal?  What do "User", "goal" and "curr" mean?  Why are there so 
-many commands queued?
-
-Luke.
-
-
+The tricky part is for Thomas' ataraid-detect program to keep some 
+information around when it has seen the first component of a RAID-0 but 
+not the second (or vice-versa). It would be very inefficient to scan all 
+known block devices every time a new one is added, although that 
+brute-force method could be used just to get the program working at 
+first. Once the whole idea has been tested and works properly (the 
+ATARAID devices become available and function properly), the efficiency 
+problem(s) could be addressed.
