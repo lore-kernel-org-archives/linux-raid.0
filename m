@@ -1,222 +1,72 @@
-From: "Mike Black" <mblack@csi-inc.com>
-Subject: Re: RAID5 causing lockups
-Date: Thu, 26 Jun 2003 07:46:51 -0400
+From: Robin Whittle <rw@firstpr.com.au>
+Subject: Thanks for software RAID!
+Date: Thu, 26 Jun 2003 22:31:47 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <00d301c33bd8$a25bb640$c8de11cc@black>
-References: <200306252054340612.008AB828@ilneval.coreyfro.com>
+Message-ID: <3EFAE7B3.5010205@firstpr.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Corey McGuire <coreyfro@coreyfro.com>, linux-raid@vger.kernel.org
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Why don't you try creating a 3-disk RAID5, 4-disk, etc.
-Perhaps you have one bad disk which this should point out.
+A few days ago one of the two IBM 60 GXP drives (20 gig) in my RH 7.2
+server failed.  Two sectors were unreadable, generating these lines in
+/var/log/messages, all in the one second:
 
-Also...I don't think we ever heard what kind of power supply you have.
-You might be overloading your system.  If power is a problem this will also probably show good behavior with 3 disks instead of 6.
+ hda: dma_intr: status=0x51 { DriveReady SeekComplete Error }
+ hda: dma_intr: error=0x40 { UncorrectableError }, LBAsect=32778538,
+      sector=12810992
+ end_request: I/O error, dev 03:09 (hda), sector 12810992
+ raid1: Disk failure on hda9, disabling device.
+ ^IOperation continuing on 1 devices
+ raid1: hda9: rescheduling block 12810992
+ md: updating md5 RAID superblock on device
+ md: hdc9 [events: 000000c9]<6>(write) hdc9's sb offset: 10080384
+ md: recovery thread got woken up ...
+ md5: no spare disk to reconstruct array! -- continuing in degraded mode
+ md: recovery thread finished ...
+ hda: dma_intr: status=0x51 { DriveReady SeekComplete Error }
+ hda: dma_intr: error=0x40 { UncorrectableError }, LBAsect=32778538,
+      sector=12811000
+ end_request: I/O error, dev 03:09 (hda), sector 12811000
+ raid1: hda9: rescheduling block 12811000
+ md: (skipping faulty hda9 )
+ raid1: hdc9: redirecting sector 12810992 to another mirror
+ raid1: hdc9: redirecting sector 12811000 to another mirror
 
-So...if you find out that 3 is OK, 4 is OK, 5 causes problems -- then you try the 5-disk again with a different drive than the last
-one and if it still fails you probably have a power problem.
+There is an hourly cron job which uses "cat /proc/mdstat" to look for
+trouble and email me if there is any.  There are no-doubt other ways of
+doing this which are faster and more direct.
 
------ Original Message ----- 
-From: "Corey McGuire" <coreyfro@coreyfro.com>
-To: <linux-raid@vger.kernel.org>
-Sent: Wednesday, June 25, 2003 11:54 PM
-Subject: Re: RAID5 causing lockups
+The computer kept running like a charm and the next day I replaced the
+two 20 Gig IBM drives with 40 Gig Seagate Barracuda IV.  I used "cat
+/dev/hda > /dev/hdc" (after booting single user) to byte-for-byte clone
+the first half of the two new drives from the two old drives.  (This is
+possible since both drives have the same number of heads and sectors as
+far as Linux is concerned.  I could have used the second half of the 40
+gig drives for another partition, but I don't need it.)
+
+Then by recreating the md5 device (I first had to temporarily delete the
+md5 section of /etc/raidtab and reboot - probably there is a better
+way), which was the one which had a partition fail, and creating a file
+system there:
+
+  mkraid /dev/md5     (It took a while to synch the drives.)
+  mkfs -j /dev/md5
+
+I was nearly ready to roll.  I copied the data from the good 20 gig
+drive by mounting that raw partition (not as part of a RAID device) and
+then the system was ready to run.
+
+Software RAID-1 worked perfectly - the computer kept running and no data
+was lost.  There was no extra hardware and so no extra cost and no extra
+sources of unreliability.
+
+Thanks for Software RAID!
 
 
-> Well, two of my drives did have an older bios, but the upgrade changed nothing.
->
-> I noticed that even unmounted, as long as I didn't raidstop the device, the system still crashes.
->
-> I tried setting down my bios as much as possible, and I am looking to do the same with the kernel, 2.4.21.  I'll try the magic
-sysrq key, but I can't find my nulmodem cable to save my life, so I'll have to barrow one from work.
->
-> My server marches on, but without /dev/md2... I'll try just letting it sit, /dev/md2 intact, over night, but for now, I need it
-up, even if it is only for fits and spurts.
->
-> Thanks everyone, keep the ideas rolling in.
->
-> <sigh>
->
-> >Hey folks,
-> >
-> >I just upgraded my system from a ~200GB mirror to a ~1TB RAID5, but all has
-> >not transitioned well.
-> >
-> >I really don't know how to debug this issue, though I have tried.  I gave
-> >up this morning before work, but I was going to try the magickey next
-> >(something I don't really know how to use, but anything for a clue)
-> >followed by upgrading to 2.4.21.
-> >
-> >The lock up is typical to a system with a failing drive; the system is
-> >responsive to input, but nothing happens.  Keyboard works fine, but
-> >programs become idle (not really crashing.)  I tried keeping "top" up,
-> >hoping I would see something obvious, like raid5syncd doing something
-> >strange, but if it does, top doesn't update after the problem.
-> >
-> >The lockups happen even if the system is doing nothing (other than
-> >raid5syncd, which is awfully busy since my RAID won't stay up)
-> >
-> >If I unmount the RAID5 and RAIDSTOP it, my system will work fine, but I'm
-> >out 1TB of disk.  Right now, I have it running the bare essentials (all
-> >services on, but my /home directory has only public_html and mail stuff for
-> >each user.)
-> >
-> >Anything I can do to get more information out of this problem?  I don't
-> >really know where to look.
-> >
-> >
-> >System Infro
-> >=======================================================================
-> >
-> >My kernel is 2.4.20, my raid tools is raidtools-0.90, no patches on
-> >anything, home built distro (linux from scratch.)  Had been running on a
-> >mirror for nearly a year.
-> >
-> >Each drive on my system is connected to promise UltraATA 100 controllers.
-> >I have 6 drives and 3 controllers.  Each drive is a 200GB WD drive, set to
-> >"Single/Master" on their channel.
-> >
-> >No device has a slave.
-> >
-> >Drives are hda hdc hde hdg hdi hdk
-> >
-> >------- Each drive is configured exactly like the device below -------
-> >
-> >Disk /dev/hda: 255 heads, 63 sectors, 24321 cylinders
-> >Units = cylinders of 16065 * 512 bytes
-> >
-> >   Device Boot    Start       End    Blocks   Id  System
-> >/dev/hda1             1       319   2562336   fd  Linux raid autodetect
-> >/dev/hda2           320       352    265072+  82  Linux swap
-> >/dev/hda3           353     24321 192530992+  fd  Linux raid autodetect
-> >
-> >------------------------- Here is my raidtab -------------------------
-> >
-> >raiddev /dev/md0
-> >   raid-level            1
-> >   chunk-size           32
-> >   nr-raid-disks         2
-> >   nr-spare-disks        0
-> >   persistent-superblock 1
-> >   device        /dev/hda1
-> >   raid-disk             0
-> >   device        /dev/hdc1
-> >   raid-disk             1
-> >
-> >raiddev /dev/md1
-> >   raid-level            1
-> >   chunk-size           32
-> >   nr-raid-disks         2
-> >   nr-spare-disks        0
-> >   persistent-superblock 1
-> >   device        /dev/hde1
-> >   raid-disk             0
-> >   device        /dev/hdg1
-> >   raid-disk             1
-> >
-> >raiddev /dev/md2
-> >   raid-level            5
-> >   chunk-size           32
-> >   nr-raid-disks         6
-> >   nr-spare-disks        0
-> >   persistent-superblock 1
-> >   device        /dev/hda3
-> >   raid-disk             0
-> >   device        /dev/hdc3
-> >   raid-disk             1
-> >   device        /dev/hde3
-> >   raid-disk             2
-> >   device        /dev/hdg3
-> >   raid-disk             3
-> >   device        /dev/hdi3
-> >   raid-disk             4
-> >   device        /dev/hdk3
-> >   raid-disk             5
-> >
-> >raiddev /dev/md3
-> >   raid-level            1
-> >   chunk-size           32
-> >   nr-raid-disks         2
-> >   nr-spare-disks        0
-> >   persistent-superblock 1
-> >   device        /dev/hdi1
-> >   raid-disk             0
-> >   device        /dev/hdk1
-> >   raid-disk             1
-> >
-> >-------------------------- Here is my fstab --------------------------
-> >
-> ># Begin /etc/fstab
-> >
-> ># filesystem   mount-point     fs-type    options           dump fsck-order
-> >
-> >/dev/md0       /               reiserfs   defaults             1 1
-> >/dev/md1       /mnt/backup     reiserfs   noauto,defaults      1 3
-> >/dev/md2       /home           reiserfs   defaults             1 2
-> >/dev/hda2      swap            swap       pri=42               0 0
-> >/dev/hdc2      swap            swap       pri=42               0 0
-> >/dev/hde2      swap            swap       pri=42               0 0
-> >/dev/hdg2      swap            swap       pri=42               0 0
-> >/dev/hdi2      swap            swap       pri=42               0 0
-> >/dev/hdk2      swap            swap       pri=42               0 0
-> >proc           /proc           proc       defaults             0 0
-> >
-> ># End /etc/fstab
-> >
-> >=======================================================================
-> >
-> >Let me know if I missed anything (probably lots.)
-> >
-> >Thanks for your time.
-> >
-> >
-> >/\/\/\/\/\/\ Nothing is foolproof to a talented fool. /\/\/\/\/\/\
-> >
-> >coreyfro@coreyfro.com
-> >http://www.coreyfro.com/
-> >http://stats.distributed.net/rc5-64/psummary.php3?id=196879
-> >ICQ : 3168059
-> >
-> >-----BEGIN GEEK CODE BLOCK-----
-> >GCS d--(+) s: a-- C++++$ UBL++>++++ P+ L+ E W+++$ N+ o? K? w++++$>+++++$
-> >O---- !M--- V- PS+++ PE++(--) Y+ PGP- t--- 5(+) !X- R(+) !tv b-(+)
-> >Dl++(++++) D++ G+ e>+++ h++(---) r++>+$ y++*>$ H++++ n---(----) p? !au w+
-> >v- 3+>++ j- G'''' B--- u+++*** f* Quake++++>+++++$
-> >------END GEEK CODE BLOCK------
-> >
-> >Home of Geek Code - http://www.geekcode.com/
-> >The Geek Code Decoder Page - http://www.ebb.org/ungeek//
-> >
-> >-
-> >To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> >the body of a message to majordomo@vger.kernel.org
-> >More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >
->
->
-> /\/\/\/\/\/\ Nothing is foolproof to a talented fool. /\/\/\/\/\/\
->
-> coreyfro@coreyfro.com
-> http://www.coreyfro.com/
-> http://stats.distributed.net/rc5-64/psearch.php3?st=coreyfro
-> ICQ : 3168059
->
-> -----BEGIN GEEK CODE BLOCK-----
-> GCS !d--(+) s: a- C++++$ UL++>++++ P+ L++>++++ E- W+++$ N++ o? K? w++++$>+++++$ O---- !M--- V- PS+++ PE++(--) Y+ PGP- t--- 5(+)
-!X- R(+) !tv b-(+) Dl++(++++) D++ G++(-) e>+++ h++(---) r++>+$ y++**>$ H++++ n---(----) p? !au w+ v- 3+>++ j- G'''' B--- u+++*** f*
-Quake++++>+++++$
-> ------END GEEK CODE BLOCK------
->
-> Home of Geek Code - http://www.geekcode.com/
-> The Geek Code Decoder Page - http://www.ebb.org/ungeek//
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+  Cheers
+
+    - Robin
 
