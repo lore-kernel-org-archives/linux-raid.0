@@ -1,163 +1,113 @@
-From: Heinz Mauelshagen <mauelshagen@redhat.com>
-Subject: *** Announcement: dmraid 1.0.0-rc5f ***
-Date: Wed, 24 Nov 2004 15:26:33 +0100
-Message-ID: <20041124142633.GA16704@redhat.com>
-Reply-To: mauelshagen@redhat.com
+From: christophe varoqui <christophe.varoqui@free.fr>
+Subject: [ANNOUNCE] multipath-tools-0.3.8
+Date: Thu, 25 Nov 2004 15:55:41 +0100
+Message-ID: <1101394541.5820.71.camel@zezette>
+References: <1096071849.4466.31.camel@zezette>
+	 <1097054573.4163b96d1262c@imp5-q.free.fr>
+	 <1097495416.416a73787e0ae@imp1-q.free.fr> <1098021787.5433.8.camel@zezette>
+	 <1098269169.417641f18a234@imp1-q.free.fr>
+	 <1098656088.9350.88.camel@zezette>
+	 <1098785191.417e21a7a7c28@imp1-q.free.fr>
+	 <1099328918.5525.10.camel@zezette>  <1100214617.10251.92.camel@zezette>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-hotplug-devel-admin@lists.sourceforge.net>
+In-Reply-To: <1100214617.10251.92.camel@zezette>
+Sender: linux-hotplug-devel-admin@lists.sourceforge.net
+Errors-To: linux-hotplug-devel-admin@lists.sourceforge.net
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel>,
+	<mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Post: <mailto:linux-hotplug-devel@lists.sourceforge.net>
+List-Help: <mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel>,
+	<mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=subscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-hotplug-devel>
+To: device-mapper development <dm-devel@redhat.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-hotplug-devel@lists.sourceforge.net" <linux-hotplug-devel@lists.sourceforge.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Hello,
 
-               *** Announcement: dmraid 1.0.0-rc5f ***
+here goes multipath-tools-0.3.8
 
-dmraid 1.0.0-rc5f is available at
-http://people.redhat.com:/heinzm/sw/dmraid/ in source, source rpm and i386 rpm.
+This is just getting too big a ChangeLog.
+This release was lighly tested, expect some glitches. Let's call that a
+developer release.
 
-dmraid (Device-Mapper Raid tool) discovers, [de]activates and displays
-properties of software RAID sets (i.e. ATARAID) and contained DOS
-partitions using the device-mapper runtime of the 2.6 kernel.
+Warning, there are config file synthax changes :
+* in the callouts declarations (item 1)
+* new keyword : prio_callout in the device block
 
-The following ATARAID types are supported on Linux 2.6:
+The path_priority example is getting usable.
 
-Highpoint HPT37X
-Highpoint HPT45X
-Intel Software RAID
-NVidia NForce		*** NEW ***
-Promise FastTrack
-Silicon Image Medley
+A new "-F" command line flag, to flush all multipath maps.
 
-This ATARAID type is only basically supported in this version (I need
-better metadata format specs; please help):
+You will need 2.6.10-rc*-udm for this release : the map synthax is
+updated but still not the logic to avoid map reloads.
 
-LSI Logic MegaRAID
+Full ChangeLog for the release :
 
-Please provide insight to support those metadata formats completely.
+	* [priority] teach multipath to read callout keywords
+	  formatted as /sbin/scsi_id -g -u -s /block/%n
+	  Apply one substitutions out of :
+		* %n : blockdev basename (ie sdb)
+		* %d : blockdev major:minor string (ie 8:16)
+	  update sample config files
+	* [priority] fix find_controler(). Now works, verified
+	  on IBM T200 at OSDL (thanks again, Dave). Add to the
+	  main build process
+	* [multipath] add a controler specific "prio_callout"
+	  keyword. Noticed by Ake
+	* [multipath] normalize the debug ouput
+	* [multipath] add select_getuid(). De-spaghetti
+	  devinfo() thanks to that helper.
+	* [libmultipath] add VECTOR_LAST_SLOT macro.
+	  multipath/dict.h now use it heavily.
+	* [multipath] policies selectors speedup and cleanup
+	  (pgpolicy, features, hwhandler, selector)
+	* [multipath] new "flush" command flag
+	* [libmultipath] add dm_type() and dm_flush_maps()
+	* [multipath] move dm_get_map() to libmultipath
+	* [multipath] rename iopolicy to pgpolicy everywhere.
+	  Dual terminology was getting confusing.
+	* [multipath] assemble_map() to always set next_pg to 1
+	  for now.
+	* [multipath] update config file to show new keywords.
+	  Add an IBM array tested at OSDL.
+	* [multipath] fork select_iopolicy() from setup_map()
+	* [multipath] introduce select_features() and 
+	  select_hwhandler(). Should merge select_* one day ...
+	* [multipath] add features and hardware_handler keywords
+	  and use them in the map setup
+	* [build] make clean really clean. Noticed by Dave Olien,
+	  OSDL
+	* [multipath] group_by_serial bugfix
+	* [multipath] dm_addmap() return value fix. Now multipath
+	  really creates the maps
+	* [multipath] try dm_log_init_verbose() instead of dup()
+	  + close() to silence libdevmapper (Ake at umu)
+	* [libcheckers] remove checkpath() wrapper, obsoleted by
+	  the "fd in context" changes
+	* [multipathd] let pathcheckers allocate their context.
+	  No more over or unneeded allocation.  Suggested by Lars,
+	  Suse
+	* [multipathd] store the pathcheckers fd in their context.
+	  No more open / close on each check. Suggested by Lars,
+	  Suse
 
-Thanks.
+As usual, doc and download at :
+http://christophe.varoqui.free.fr/
 
-
-See files README and CHANGELOG, which come with the source tarball for
-prerequisites to run this software, further instructions on installing
-and using dmraid!
-
-CHANGELOG is contained below for your convenience as well.
-
-
-Call for testers:
------------------
-
-I need testers with the above ATARAID types, to check that the mapping
-created by this tool is correct (see options "-t -ay") and access to the
-ATARAID data is proper.
-
-In case you have a different ATARAID solution from those listed above,
-please feel free to contact me about supporting it in dmraid.
-
-You can activate your ATARAID sets without danger of overwriting
-your metadata, because dmraid accesses it read-only unless you use
-option -E together with -r in order to erase ATARAID metadata
-(see 'man dmraid')!
-
-This is a release candidate version so you want to have backups of your valuable
-data *and* you want to test accessing your data read-only first in order to
-make sure that the mapping is correct before you go for read-write access.
-
-
-Contacts:
----------
-
-The author is reachable at <Mauelshagen@RedHat.com>.
-
-For test results, mapping information, discussions, questions, patches,
-enhancement requests and the like, please subscribe and mail to
-<ataraid-list@redhat.com>.
-
---
-
-Regards,
-Heinz    -- The LVM Guy --
-
-
-CHANGELOG:
----------
-
-FIXES:
-------
-o make suffix in hpt45x set names numeric
-o HPT37x metadata format handler RAID10 grouping logic
-o HPT37x/HPT45x avoid devision by zero bug
-  in case ->raid_disks is zero for spares
-o avoid devision by zero bug in case of stride = 0
-o SIL device names / checksums
-o calc_total_sectors() on unsymmetric mirrors
-o Partition name suffix to make GRUB happy
-o perform() could return an error without releasing a lock
+regards,
+-- 
+christophe varoqui <christophe.varoqui@free.fr>
 
 
-FEATURES:
----------
-o added NVidia metadata format handler
-o quorate SIL metadata copies
-o sorting order of stacked subset enhanced
-  (RAID10; hpt37x, hpt45x, lsi, nvidia and sil)
-o started event methods implementation in metadata format handlers
-o output linefeed to .offset files for better readability (-r -D)
-o use /sys/block/*/removable to avoid acessing removable devices
-o display of spare devices with -r -c{0,2}
-o enhanced spare device handling
-o '-h' option doesn't need to stand alone any more
-o -s displays top level sets only. "-s -s" shows subsets as well.
-o -f allows partial qualification of format names now
-  (eg, "dmraid -f hpt -r" will search for hpt37x and hpt45x formats)
 
 
-MISCELANIOUS:
-------------
-o HPT37X shows subset name suffixes with -r
-o streamlined display.c
-o added lib_context* argument to alloc_disk_info() in order
-  to be able to display an error message on failure
-o factored basic RAID set allocation code out of
-  all metadata format handler into find_or_alloc_set()
-o factored RAID superset allocation code out of metadata format
-  handlers into join_superset()
-o streamlined endianess code using CVT* macros
-o streamlined free_set() code
-o check option enum valid
-o introduced various metadata extraction macros to streamline
-  related code (eg, RD(), RS())
-o optimized format handler pre-registration checks
-o avoid format handler type() method altogether by introducing
-  a RAID device type member
-o generalized list_add_sorted() which can be used to sort any
-  "struct list_head*" which voided list_add_dev_sorted()
-o find_set() modified to avoid global searches for stacked sets
-o converted get_scsi_serial to fallback using SG_IO,
-  SCSI_IOCTL_SEND_COMMAND and ATA identify
-o introduced p_fmt() for formated string pushs in order to
-  streamline activate.c; value return code of p_fmt()
-o moved some paths + filenames to lib_context
-o introduced RAID set flag for metadata format handlers 
-  which decide to maximize capacity in unsymetric RAID0 sets
-o factored out device information allocation of scan.c into metadata.c
-o introduced RAID device list to library context in order to remove
-  pointer from device info and be able to handle remaining RAID device
-  structures better on library cleanup
-o streamlined commands.c
-o changed column output delimiter to ':'
-o introduced various enums replacing integers
-
-
-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
-Heinz Mauelshagen                                 Red Hat GmbH
-Consulting Development Engineer                   Am Sonnenhang 11
-                                                  56242 Marienrachdorf
-                                                  Germany
-Mauelshagen@RedHat.com                            +49 2626 141200
-                                                       FAX 924446
-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+-------------------------------------------------------
+SF email is sponsored by - The IT Product Guide
+Read honest & candid reviews on hundreds of IT Products from real users.
+Discover which products truly live up to the hype. Start reading now. 
+http://productguide.itmanagersjournal.com/
