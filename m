@@ -1,46 +1,51 @@
-From: "Jonathan Vardy" <jonathanv@explainerdc.com>
+From: "Peter L. Ashford" <ashford@sdsc.edu>
 Subject: Re: RAID 5 performance problems
-Date: Fri, 4 Apr 2003 00:09:24 +0200
-Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <00bf01c2fa2d$afafedd0$2e77c23e@pentium4>
-References: <Pine.GSO.4.30.0304031334070.20118-100000@multivac.sdsc.edu>
+Date: Thu, 3 Apr 2003 14:13:14 -0800 (PST)
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <Pine.GSO.4.30.0304031405080.20118-100000@multivac.sdsc.edu>
+References: <009c01c2fa29$f7b2d290$2e77c23e@pentium4>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-To: "Peter L. Ashford" <ashford@sdsc.edu>, Stephan van Hienen <raid@a2000.nu>
-Cc: Jonathan Vardy <jonathan@explainerdc.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <009c01c2fa29$f7b2d290$2e77c23e@pentium4>
+To: Jonathan Vardy <jonathanv@explainerdc.com>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-> OK.  We've found a potential issue.  Are the disks being identified as
-> UDMA-33 or UDMA-66/100/133?  The performance numbers agree too closely for
-> this to be a coincidence.  Check the boot logs.
+Jonathan,
 
-I looked into /var/log/dmesg and found this:
+> > The ONLY reason that I can think of to use round cables would be for
+> > looks.  From a performance or reliability standpoint, they are a waste of
+> > money.  I routinely build systems with dual 8-channel IDE RAID cards
+> > (3Ware 7500-8) and 16 disks, and ONLY use flat cables.
+>
+> I use rounded cables in my case for a few reasons:
+> - The distance between my promise and my drives is small yet the promise
+> cables are long, the rounded cables I have are 12" long and fit very neatly
+> - The promise cables had two IDE connectors but I only wanted to put one
+> drive per channel; the rounded cables are single cables
+> - Air flow; because of my small casing the flat promise cables were
+> contricting the airflow quite a bit, the rounded less
+> - flexibility; I found the flat cables hard to bend in to place whereas the
+> round cables you could twist easily
+>
+> I've added a link which should make it clear that rounded cables in my case
+> are a benefit to me. What I was worried about was that they could be
+> inferior quality and thus be a factor in my raid performance.
+>
+> http://www.datzegik.com/DSC00056.JPG
 
-blk: queue c0393144, I/O limit 4095Mb (mask 0xffffffff)
-hda: 39062500 sectors (20000 MB) w/2048KiB Cache, CHS=2431/255/63, UDMA(33)
-blk: queue c03934a8, I/O limit 4095Mb (mask 0xffffffff)
-hdc: 234441648 sectors (120034 MB) w/2048KiB Cache, CHS=232581/16/63,
-UDMA(33)
-blk: queue c039380c, I/O limit 4095Mb (mask 0xffffffff)
-hde: 234441648 sectors (120034 MB) w/2048KiB Cache, CHS=232581/16/63,
-UDMA(33)
-blk: queue c0393b70, I/O limit 4095Mb (mask 0xffffffff)
-hdg: 234441648 sectors (120034 MB) w/2048KiB Cache, CHS=232581/16/63,
-UDMA(33)
-blk: queue c0393ed4, I/O limit 4095Mb (mask 0xffffffff)
-hdi: 234441648 sectors (120034 MB) w/2048KiB Cache, CHS=232581/16/63,
-UDMA(33)
-blk: queue c0394238, I/O limit 4095Mb (mask 0xffffffff)
-hdk: 234441648 sectors (120034 MB) w/2048KiB Cache, CHS=232581/16/63,
-UDMA(33)
+Check out 'http://www.accs.com/p_and_p/TeraByte/cables.html', to see why
+round cables are not needed.  Careful cable routing can easilly overcome
+the issues you have.  When you have a large number of cables, the flat
+cables can stack, but the round cables just make a big bundle.
 
-This is what you meant?
+Also, 3Ware sells 80-conductor/40-pin cables with two connectors in 18",
+24" and 36" lengths.
 
-but after the boot I set hdparm manually for each drive with the following
-settings:
+I've built systems in cases that are similar to yours (Antec or Chen-Ming)
+with similar numbers of drives, and had no problems with flat cables to
+five disks, a CDROM drive and a floppy drive.
 
-hdparm -a8 -A1 -c1 -d1 -m16 -u1 /dev/hdc.
-
+Good luck.
+				Peter Ashford
