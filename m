@@ -1,42 +1,29 @@
-From: Hermann Himmelbauer <dusty@strike.wu-wien.ac.at>
+From: Gordon Henderson <gordon@drogon.net>
 Subject: Re: RAID1 VS RAID5
-Date: Mon, 27 Oct 2003 09:33:37 +0100
+Date: Mon, 27 Oct 2003 09:19:49 +0000 (GMT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200310270933.37564.dusty@strike.wu-wien.ac.at>
-References: <1067179519.1222.107.camel@cala>
+Message-ID: <Pine.LNX.4.56.0310270916270.5277@unicorn.drogon.net>
+References: <1067179519.1222.107.camel@cala> <200310270933.37564.dusty@strike.wu-wien.ac.at>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1067179519.1222.107.camel@cala>
-Content-Disposition: inline
-To: Mario Giammarco <mgiammarco@virgilio.it>, linux-raid@vger.kernel.org
+In-Reply-To: <200310270933.37564.dusty@strike.wu-wien.ac.at>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sunday 26 October 2003 15:45, Mario Giammarco wrote:
-> Hello,
-> I would like to buy new SCSI hard disk to be used with lsi 160
-> controller in 32 bit pci.
->
-> I can choose:
->
-> - RAID5 of three Maxtor Atlas 10K II 9gb
-> - RAID1 of two   Maxtro Atlas 10K III 18gb
->
-> My problem is: I have seen that RAID1 code does not interleave reads so
-> it does not improve performance very much putting two hard disks.
+On Mon, 27 Oct 2003, Hermann Himmelbauer wrote:
 
-You only have to keep in mind that the RAID5 CPU overhead is larger than the 
-one of RAID1.
+> My experience is that software RAID5 is quite slow.
 
-My experience is that software RAID5 is quite slow.
+My experiences are the opposite to yours I'm afraid - I've not found it
+any slower than a single drive and in some cases a lot faster!
 
-		Best Regards,
-		Hermann
+A lot depends on exactly what you are doing with it though, but I'm
+willing to sacrifice some speed for data integrity.
 
--- 
-x1@aon.at
-GPG key ID: 299893C7 (on keyservers)
-FP: 0124 2584 8809 EF2A DBF9  4902 64B4 D16B 2998 93C7
+Most of my systems are network servers with 100Mb Network cards fitted -
+as long as my disk systems are faster than 12.5MB/sec I'm happy. In
+practice I can stream 50MB/sec+ out of some simple RAID5 IDE systems I
+have.
 
+Gordon
