@@ -1,131 +1,208 @@
 From: maarten <maarten@ultratux.net>
 Subject: Re: ext3 journal on software raid (was Re: PROBLEM: Kernel 2.6.10 crashing repeatedly and hard)
-Date: Mon, 3 Jan 2005 19:30:36 +0100
-Message-ID: <200501031930.36356.maarten@ultratux.net>
-References: <m3is6k4oeu.fsf@reason.gnu-hamburg> <41D93657.7090908@tls.msk.ru> <a41oa2-fr7.ln1@news.it.uc3m.es>
+Date: Mon, 3 Jan 2005 18:46:42 +0100
+Message-ID: <200501031846.42950.maarten@ultratux.net>
+References: <200501030916.j039Gqe23568@inv.it.uc3m.es> <200501031017.j03AHO912799@www.watkins-home.com> <l1nna2-e9i.ln1@news.it.uc3m.es>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <a41oa2-fr7.ln1@news.it.uc3m.es>
+In-Reply-To: <l1nna2-e9i.ln1@news.it.uc3m.es>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday 03 January 2005 15:23, Peter T. Breuer wrote:
-> Michael Tokarev <mjt@tls.msk.ru> wrote:
-> > Peter T. Breuer wrote:
+On Monday 03 January 2005 12:31, Peter T. Breuer wrote:
+> Guy <bugzilla@watkins-home.com> wrote:
+> > "Also sprach Guy:"
 
-> Therefore, I have learned not to build a system that is more complicated
-> than the most simple human being that may administer it. This always
-> works - if it breaks AND they cannot fix it, then THEY get the blame.
+
+>    1) lightning strikes rails, or a/c goes out and room full of servers
+>       overheats. All lights go off.
 >
-> So I "prefer" to not have a raided boot partition, but instead to rsync
-> the root partition every day to a spare on a differet disk, or/and at the
-> other end of the same disk. This also saves the system from sysadmin
-> gaffes - I don't WANT an instantaneous copy of every error made by the
-> humans.
-
-There certainly is something to be said for that...  
-However, I do expect an admin to know about the raid system that's being used, 
-else they would have no business being near that server in the first place. 
-
-> > disks are really 35Gb or 37Gb; in case they're differ, "extra" space
-> > on large disk isn't used); root and /boot are on small raid1 partition
-> > which is mirrored on *every* disk; swap is on raid1; the rest (/usr,
+>    2) when sysadmin arrives to sort out the smoking wrecks, he finds
+>       that 1 in 3 random disks are fried - they're simply the points
+>       of failure that died first, and they took down the hardware with
+>       them.
 >
-> I like this - except of course that I rsync them, not raid them. I
-> don't mind if I have to reboot a server. Nobody will notice the tcp
-> outage and the other one of the pair will failover for it, albeit in
-> readonly mode, for the maximum of the few minutes required.
-
-I tend to agree, but it varies widely with the circumstances.  I've had 
-servers in unattended colo facilties, and your approach will not work too 
-well there.
-
-> That's actually not so. Over new year I accidently booted my home
-> server (222 days uptime!) and discovered its boot sector had evaporated.
-
-We've all been there...  :-(
-
-> Well, maybe I moved the kernels ..  anyway, it has no floppy and the
-> nearest boot cd was an hour's journey away in the cold, on new year.  Uh
-> uh.  It took me about 8 hrs, but I booted it via PXE DHCP TFTP
-> wake-on-lan and the wireless network, from my laptop, without leaving
-> the warm.
-
-Congrats, but I do hope you did that for your home server...!  Cause I'd have 
-severe moral and practical difficulties selling that to a paying customer:  
-"So instead of billing me a cab fare and two hours, you spent eight hours to 
-fix this.  And you seriously expect me to pay for those extra hours ?" 
-
-> > to allocate that space on every of 2 or 3 or 4 or 5 disks).  So
-> > it isn't quite relevant how fast the filesystem will be on writes,
-> > and hence it's ok to place it on raid1 composed from 5 components.
+>    3) sysadmin buys or jury-rigs enough pieces of nonsmoking hardware
+>       to piece together the raid arrays from the surviving disks, and
+>       hastily does a copy to somewhere very safe and distant, while
+>       an assistant holds off howling hordes outside the door with
+>       a shutgun.
 >
-> That is, uh, paranoid.
+> In this scenario, a disk simply acts as the weakest link in a fuse
+> chain, and the whole chain goes down.  But despite my dramatisation it
+> is likely that a hardware failure will take out or damage your hardware!
+> Ide disks live on an electric bus conected to other hardware.  Try a
+> shortcircuit and see what happens.  You can't even yank them out while
+> the bus is operating if you want to keep your insurance policy.
 
-We also did use three-way raid-1 mirrors as a rule.
-(but I am indeed somewhat paranoid ;-)
+The chance of a PSU blowing up or lightning striking is, reasonably, much less 
+than an isolated disk failure.  If this simple fact is not true for you 
+personally, you really ought to reevaluate the quality of your PSU (et al) 
+and / or the buildings' defenses against a lightning strike...
 
+> However, I don't see how you can expect to replace a failed disk
+> without taking down the system. For that reason you are expected to be
+> running "spare disks" that you can virtually insert hot into the array
+> (caveat, it is possible with scsi, but you will need to rescan the bus,
+> which will take it out of commission for some seconds, which may
+> require you to take the bus offline first, and it MAY be possible with
+> recent IDE buses that purport to support hotswap - I don't know).
 
-> > In case of some problem
-> > (yes I dislike any additional layers for critical system components
-> > as any layer may fail to start during boot etc), you can easily
-> > bring the system up by booting off the underlying root-raid partiton
-> > to repair the system -- all the utilities are here.  More, you can
+I think the point is not what actions one has to take at time T+1 to replace 
+the disk, but rather whether at time T, when the failure first occurs, the 
+system survives the failure or not.
+
+> (1) how likely is it that a disk will fail without taking down the system
+> (2) how likely is it that a disk will fail
+> (3) how likely is it that a whole system will fail
 >
-> Well, you could, and I could, but I doubt if the standard tech could.
+> I would say that (2) is about 10% per year. I would say that (3) is
+> about 1200% per year. It is therefore difficult to calculate (1), which
+> is your protection scenario, since it doesn't show up very often in the
+> stats!
 
-I've said it before and I'll say it again:  An admin has to be competent. If 
-not, there is little you can do.  You can't have fresh MCSE people fix linux 
-problems, and you cannot have a carpenter selling stock on wall street.
+I don't understand your math.  For one, percentage is measured from 0 to 100, 
+not from 0 to 1200.  What is that, 12 twelve times 'absolute certainty' that 
+something will occur ?
+But besides that, I'd wager that from your list number (3) has, by far, the 
+smallest chance of occurring. Choosing between (1) and (2) is more difficult, 
+my experiences with IDE disks are definitely that it will take the system 
+down, but that is very biased since I always used non-mirrored swap.
+I sure can understand a system dying if it loses part of its memory...
 
-A "standard tech" as you say, has a skill level that enables him to swap a 
-drive of a hotswap server if so directed, but anything beyond that is 
-unrealistic, and he will need adequate help (be it remote by telephone, or 
-whatever means).  Or very extensive onsite step by step documentation.
+> > ** A disk failing is the most common failure a system can have (IMO).
 
-> But why bother? If you didn't have raid there on root you wouldn't
-> need to repair it. Nothing is quite as horrible as having a
-> fubarred root partition.  That's why I also always have two! But I
-> don't see that having the copy made by raid rather than rsync wins
-> you anything in the situaton where you have to  reboot - rather, it
-> puts off that moment to a moment of your choosing, which may be good,
-> but is not an unqualified bonus, given the cons.
+I fully agree.
 
-Both approaches have their merits.  In one case the danger lies in not having 
-updated the rsync mirror recently enough, in the other a rogue change will 
-affect all your mirrors.  Without further info on the specific circumstances 
-no choice can be made, it really depends on too many factors. 
+> Not in my experience. See above. I'd say each disk has about a 10%
+> failure expectation per year. Whereas I can guarantee that an
+> unexpected  system failure will occur about once a month, on every
+> important system.
 
-> > And yes I'm aware of mdp devices (partitions inside the raid
-> > arrays).. but that's just another layer "which may fail": if
-> > raid5 array won't start, I at least can reconstruct filesystem
-> > image by reading chunks of data from appropriate places from
-> > all drives and try to recover that image; with any additional
+Whoa !  What are you running, windows perhaps ?!? ;-)
+No but seriously, joking aside, you have 12 system failures per year ?
+I would not be alone in thinking that figure is VERY high.  My uptimes 
+generally are in the three-digit range, and most *certainly* not in the low 
+2-digit range. 
+
+> If you think about it that is quite likely, since a system is by
+> definition a complicated thing. And then it is subject to all kinds of
+> horrible outside influences, like people rewiring the server room in
+> order to reroute cables under the floor instead of through he ceiling,
+> and the maintenance people spraying the building with insecticide,
+> everywhere, or just "turning off the electricity in order to test it"
+> (that happens about four times a year here - hey, I remember when they
+> tested the giant UPS by turning off the electricity! Wrong switch.
+> Bummer).
+
+If you have building maintenance people and other random staff that can access 
+your server room unattended and unmonitored, you have far worse problems than 
+making decicions about raid lavels.  IMNSHO.   
+
+By your description you could almost be the guy the joke with the recurring 7 
+o'clock system crash is about (where the cleaning lady unplugs the server 
+every morning in order to plug in her vacuum cleaner) ;-) 
+
+> Yes, you can try and keep these systems out of harms way on a
+> colocation site, or something, but by then you are at professional
+> level paranoia. For "home systems", whole system failures are far more
+> common than disk failures.
+
+Don't agree.  Not only do disk failures occur more often than full system 
+failures, disk failures are also much more time-consuming to recover from. 
+Compare changing a system board or PSU with changing a drive and finding, 
+copying and verifying a backup (if you even have one that's 100% up to date)
+
+
+> > ** In a computer room with about 20 Unix systems, in 1 year I have seen
+> > 10 or so disk failures and no other failures.
 >
-> Now that is just perverse.
+> Well, let's see. If each system has 2 disks, then that would be 25% per
+> disk per year, which I would say indicates low quality IDE disks, but
+> is about the level I would agree with as experiential.
 
-Not neccessarily.  I've had to rely on using dd_rescue to get data back at 
-some point is time. In such scenarios, any additional layer can quickly 
-complicate things beyond reasonable recourse.
-As you noted yourself, keeping a backup stategy can be hard work. ;-|
+The point here was, disk failures being more common than other failures...
 
-> > Note above about swap: in all my
-> > systems, swap is also on raid (raid1 in this case).  At the first
-> > look, that can be a nonsense: having swap on raid.  But we had
-> > enouth cases when due to a failed drive swap becomes corrupt
-> > (unreadable really), and the system goes havoc, *damaging*
-> > other data which was unaffected by the disk failure!  With
+> No way! I hate tapes. I backup to other disks.
+
+Then for your sake, I hope they're kept offline, in a safe.
+
+> > ** My computer room is for development and testing, no customer access.
 >
-> Yes, this used to be quite common when swap had that size bug.
+> Unfortunately, the admins do most of the sabotage.
 
-When you have swap on a failed disk, often the safer way is to stop the 
-machine by using the reset button instead of attempting a shutdown.
-The shutdown would probably fail halfway through anyway...
+Change admins.  
+I could understand an admin making typing errors and such, but then again that 
+would not usually lead to a total system failure.  Some daemon not working, 
+sure.  Good admins review or test their changes, for one thing, and in most 
+cases any such mistake is rectified much simpler and faster than a failed 
+disk anyway. Except maybe for lilo errors with no boot media available. ;-\ 
+
+> Yes you did. You can see from the quoting that you did.
+
+Or the quoting got messed up.  That is known to happen in threads.
+
+> > but it may be more current than 1 or
+> > more of the other disks.  But this would be similar to what would happen
+> > to a non-RAID disk (some data not written).
+>
+> No, it would not be similar. You don't seem to understand the
+> mechanism. The mechanism for corruption is that there are two different
+> versions of the data available when the system comes back up, and you
+> and the raid system don't know which is more correct. Or even what it
+> means to be "correct". Maybe the earlier written data is "correct"!
+
+That is not the whole truth.  To be fair, the mechanism works like this:
+With raid, you have a 50% chance the wrong, corrupted, data is used.
+Without raid, thus only having a single disk, the chance of using the 
+corrupted data is 100% (obviously, since there is only one source)
+
+Or, much more elaborate:
+
+Let's assume the chance of a disk corruption occurring is 50%, ie. 0.5
+
+With raid, you always have a 50% chance of reading faultty data IF one of the 
+drives holds faulty data.  For the drives itself, the chance of both disks 
+being wrong is 0.5x0.5=0.25(scenario A).  Similarly, 25 % chance both disks 
+are good (scenario B). The chance of one of the disks being wrong is 50% 
+(scenarios C & D together).  In scenarios A & B the outcome is certain. In 
+scenarios C & D the chance of the raid choosing the false mirror is 50%.
+Accumulating those chances one can say that the chance of reading false data 
+is:
+in scenario A: 100%
+in scenario B: 0%
+scenario C: 50%
+scenario D: 50%
+
+Doing the math, the outcome is still (200% divided by four)= 50%.
+Ergo: the same as with a single disk.  No change.
+
+> > In contrast, on a single disk they have a 100% chance of detection (if
+> > you look!) and a 100% chance of occuring, wrt normal rate.
+> > ** Are you talking about the disk drive detecting the error?
+
+No, you have a zero chance of detection, since there is nothing to compare TO.
+Raid-1 at least gives you a 50/50 chance to choose the right data.  With a 
+single disk, the chance of reusing the corrupted data is 100% and there is no 
+mechanism to detect the odd 'tumbled bit' at all.
+
+> > How?
+> > ** Compare the 2 halves or the RAID1, or check the parity of RAID5.
+>
+> You wouldn't necesarily know  which of the two data sources was
+> "correct".
+
+No, but you have a theoretical choice, and a 50% chance of being right.
+Not so without raid, where you get no choice, and a 100% chance of getting the 
+wrong data, in the case of a corruption.
 
 Maarten
+
+-- 
+
 
