@@ -1,83 +1,84 @@
-From: Thomas -Balu- Walter <tw@itreff.de>
-Subject: Re: Woody, initrd, raid1, boot
-Date: Tue, 18 Jun 2002 11:25:49 +0200
+From: Monty Charlton <monty@fullmonty.org>
+Subject: raid 5 out of sync won't mount
+Date: Tue, 18 Jun 2002 08:45:45 -0600
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20020618112549.C14962@itreff.de>
-References: <20020617171511.B12084@itreff.de> <20020617185019.GB7974@unthought.net>
+Message-ID: <3D0F4799.5090403@fullmonty.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20020617185019.GB7974@unthought.net>; from jakob@unthought.net on Mon, Jun 17, 2002 at 08:50:19PM +0200
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Thanks for CCing, Jakob - I am not subscribed to the list and was
-thinking of checking the archives, but this way answering is easier (and
-might not shuffle threads too much)
+Hello all,
 
-+ Jakob Oestergaard <jakob@unthought.net> [17.06.02 21:05]:
-> On Mon, Jun 17, 2002 at 05:15:11PM +0200, Thomas -Balu- Walter wrote:
-[...]
-> >         md: md driver 0.90.0 MAX_MD...
-> >         cramfs: wrong magic
-> >         EXT3-FS: unable to read superblock
-> >         EXT2-FS: unable to read superblock
-> >         Kernel panic: VFS: Unable to mount root fs on 09:01
-> 
-> Since it's cramfs that complains, I suppose it's your initrd that is
-> bad.
+I've got a helluva problem and I'm hoping someone here can possibly help 
+out.
 
-Hm - thats the default woody initrd of that kernel, however I have added
-the raid module, created a new initrd and got the same message - but I
-can mount the initrd manually (-t cramfs -o loop) and look whats inside,
-and I can spawn the shell at boot and load the modules manually (they
-get loaded automatically too, but still can not find the superblocks)
+I've got raid5 (sdb1,sbc1,sdd1) on a partition, and one of the drives 
+(sdd1) went bad.  So I (stupidly) hit the reset button on the computer, 
+but now the partition won't mount.  Raid complains that one drive is bad 
+(which it is), and that the other is out of sync.  See part of dmesg 
+below...
 
-> Compile the RAID-1 into the kernel, forget about using modules.  That is
-> the simple solution that I use - I am no initrd expert, and I have no
-> intentions of becoming one  :)
+Am I hosed?  Can I fake out raid by commenting out some of the code that 
+tries to determine whether or not the drive is fresh?
 
-No, that would be "the easy way" - I am not supposed to give up on this
-8). 
+Thanks,
+Monty
 
-If I am able to get it running this way, I don't have to bother with
-updates or other things. I could just get a new default debian
-kernel-image and the initrd would be built with the new modules, ...
 
-+ Scott Bisker <scott@bisker.com> wrote:
-> What you need to do is recreate your initrd to include the modules you
-> need during boot.  The default mkinitrd /boot/initrd-2.4.18-686-raid1
-> 2.4.18-686-raid1 will not suffice.
-> 
-> Try this.
-> 
-> mkinitrd --preload=raid1 --preload=xor /boot/initrd-2.4.18-686-raid1
-> 2.4.18-686-raid1
+part of dmesg:
 
-The debian mkinitrd does not have --preload, the modules that should be
-included go into /etc/mkinitrd/modules. I've added raid1 already, but
-not xor? Perhaps this is the one to go for?
-> 
-> Not sure about on debian, but raidtools should have at least the
-> following tools.
-> 
-> /sbin/arytst
-> /sbin/detect_multipath
-> /sbin/lsraid
-> /sbin/raidreconf
+md: md driver 0.90.0 MAX_MD_DEVS=256, MD_SB_DISKS=27
+md: md driver 0.90.0 MAX_MD_DEVS=256, MD_SB_DISKS=27
+raid5: measuring checksumming speed
+    8regs     :   247.600 MB/sec
+    32regs    :   248.000 MB/sec
+    pII_mmx   :   337.200 MB/sec
+    p5_mmx    :   409.200 MB/sec
+raid5: using function: p5_mmx (409.200 MB/sec)
+md: raid5 personality registered as nr 4
+  [events: 00000003]
+  [events: 00000004]
+  [events: 00000002]
+md: autorun ...
+md: considering sdd1 ...
+md:  adding sdd1 ...
+md:  adding sdc1 ...
+md:  adding sdb1 ...
+md: created md0
+md: bind<sdb1,1>
+md: bind<sdc1,2>
+md: bind<sdd1,3>
+md: running: <sdd1><sdc1><sdb1>
+md: sdd1's event counter: 00000002
+md: sdc1's event counter: 00000004
+md: sdb1's event counter: 00000003
+md: superblock update time inconsistency -- using the most recent one
+md: freshest: sdc1
+md: kicking non-fresh sdd1 from array!
+md: unbind<sdd1,2>
+md: export_rdev(sdd1)
+md0: kicking faulty sdb1!
+md: unbind<sdb1,1>
+md: export_rdev(sdb1)
+md0: removing former faulty sdd1!
+md: md0: raid array is not clean -- starting background reconstruction
+md0: max total readahead window set to 496k
+md0: 2 data-disks, max readahead per data-disk: 248k
+raid5: device sdc1 operational as raid disk 1
+raid5: not enough operational devices for md0 (2/3 failed)
+RAID5 conf printout:
+  --- rd:3 wd:1 fd:2
+  disk 0, s:0, o:0, n:0 rd:0 us:1 dev:[dev 00:00]
+  disk 1, s:0, o:1, n:1 rd:1 us:1 dev:sdc1
+  disk 2, s:0, o:0, n:2 rd:2 us:1 dev:[dev 00:00]
+raid5: failed to run raid set md0
+md: pers->run() failed ...
+md :do_md_run() returned -22
+md: md0 stopped.
+md: unbind<sdc1,0>
+md: export_rdev(sdc1)
+md: ... autorun DONE.
 
-The ones above do not exist. Woody's raidtools2 are 0.90.20010914-15
-
-> /sbin/mkraid
-> /sbin/raid0run
-> /sbin/raidhotadd
-> /sbin/raidhotgenerateerror
-> /sbin/raidhotremove
-> /sbin/raidsetfaulty
-> /sbin/raidstart
-> /sbin/raidstop
-
-I have those. Do they have to be on the initrd too?
-
-     Balu
