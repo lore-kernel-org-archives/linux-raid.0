@@ -1,17 +1,40 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: Force parity resync on raid5?
-Date: Thu, 12 Aug 2004 13:31:12 +0100
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: Force parity resync on raid5?
+Date: Thu, 12 Aug 2004 11:22:07 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <411B6310.9000406@dgreaves.com>
-References: <200408120406.i7C46s309087@watkins-home.com>
+Message-ID: <200408121522.i7CFM7311834@watkins-home.com>
+References: <411B6310.9000406@dgreaves.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200408120406.i7C46s309087@watkins-home.com>
-To: Guy <bugzilla@watkins-home.com>
+In-Reply-To: <411B6310.9000406@dgreaves.com>
+To: 'David Greaves' <david@dgreaves.com>
 Cc: 'Gordon Henderson' <gordon@drogon.net>, 'Philip Molter' <philip@corp.texas.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+You were using skip/seek wrong.
+This is just pseudo code?  I use bash or ksh, you can't do "n=n+1".
+You don't ever end, again pseudo code I assume.
+I would only do this if the filesystem on md0 is not mounted.
+
+Guy
+
+n=0
+while
+  dd if=/dev/md0 of=/tmp/block count=x_for_efficiency skip=n
+  dd of=/dev/md0 if=/tmp/block count=x_for_efficiency seek=n
+  n=n+1
+loop
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of David Greaves
+Sent: Thursday, August 12, 2004 8:31 AM
+To: Guy
+Cc: 'Gordon Henderson'; 'Philip Molter'; linux-raid@vger.kernel.org
+Subject: Re: Force parity resync on raid5?
 
 what about
 n=0
@@ -36,8 +59,10 @@ Guy wrote:
 >He thinks his parity is bad.
 >He wants to re-build the parity from the data!
 >I don't know if this can even be done!
->Recovering from a power failure does force a re-build (2.4), but from what I
->remember the system looks like it is re-building a failed disk, which is not
+>Recovering from a power failure does force a re-build (2.4), but from what
+I
+>remember the system looks like it is re-building a failed disk, which is
+not
 >what he wants to do.  If the parity was good, re-building any 1 disk would
 >be fine.
 >
@@ -90,4 +115,9 @@ Guy wrote:
 >
 >  
 >
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
