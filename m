@@ -1,83 +1,119 @@
-From: Mark Hahn <hahn@physics.mcmaster.ca>
-Subject: Re: Hard drive Reliability?
-Date: Thu, 20 May 2004 00:39:46 -0400 (EDT)
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: Please review: Slackware RAID How-To
+Date: Thu, 20 May 2004 01:02:48 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0405200018170.15906-100000@coffee.psychology.mcmaster.ca>
-References: <1084996693.4021.8.camel@ws101.darkcore.net>
+Message-ID: <200405200502.i4K52rB18138@www.watkins-home.com>
+References: <1085024014.6309.17.camel@ws101.darkcore.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1084996693.4021.8.camel@ws101.darkcore.net>
-To: John Lange <john.lange@bighostbox.com>
-Cc: linux-raid@vger.kernel.org
+In-Reply-To: <1085024014.6309.17.camel@ws101.darkcore.net>
+To: 'John Lange' <john.lange@bighostbox.com>, office@ninti.com.au
+Cc: 'LinuxRaid' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-> all come to the conclusion that Hard Drives are far less reliable than
-> they used to be.
+More info!
 
-margins are stretched, for sure.  I don't believe this is the main
-cause of people's frustration with disk failures, but instead the 
-fact that drives are treated with less care.  nowadays, those annoying
-randoms at the corner computer store keep a pile of disks under 
-the counter, with nothing but an anti-static bag to protect them.
-think nothing of clanking them together to shuffle the deck looking
-for the 80G one you're asking for.  and how did those disks arrive?
-some low-margin shipping service, packed 40 per box, from a fourth-line
-reseller that specializes in shifting objects at high speed.
+I found this comment in another group.  It would indicate "stripe size"
+should be used.  But it should not make a difference.
 
-the fact is that disks are dirt cheap now, so whining about their 
-robustness is kind of silly.  if you don't like trusting a single 
-disk, use raid: that's what it's for.  yes, it's less of a clean
-solution on small machines, but there is *no* reliability problem
-on servers, since raid5 is fast and cheap and you get to choose
-your comfort level of bomb-proof-ness.
+Guy
 
-> Case in point, I have a 120G Maxtor drive in a server that began to fail
-> less than 8 months into service. Major headache.
+=======================================================================
+The stride option places the inode and block bitmaps so that successive
+block groups' bitmaps are on a different RAID stripes.  I suppose this
+might improve disk I/O performance, as the bitmaps are the most heavily 
+used blocks on the disk.  However, the cache should prevent most of the
+I/O in the first place...
 
-there is no conspiracy: all the top-tier vendors have roughly the same 
-quality (and product lines, and prices, etc.)
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of John Lange
+Sent: Wednesday, May 19, 2004 11:34 PM
+To: office@ninti.com.au
+Cc: LinuxRaid
+Subject: RE: Please review: Slackware RAID How-To
 
-> fail so often this saves loads of headaches. After a their system has
-> died and they 'lost everything' people are more than willing to pay the
-> extra $150 for redundancy.
+No, stride is not needed for RAID 1 as stride is about striping and RAID
+1 does not do striping, it does mirroring.
 
-it's curious to reflect on the social aspects of the PC revolution.
-people just plain like the idea of having their stuff stored on a box
-that sits within reach.  the fact that this is becoming cheaper and 
-cheaper doesn't mean that it's the right solution, always, all ways.
-diskless PCs make HUGE amounts of sense; I suppose we can blame MSFT
-somewhat for fighting that.
+According to man raidtab, chunk-size "Sets the stripe size to size
+kilobytes.". So unless I'm completely off my rocker, chunk-size is also
+not needed for RAID 1 as it also only applies to striping.
 
-> I know drive manufactures were sued recently in a class action for
-> shipping drives which they knew were going to fail prematurely but that
-> was a few years back.
+Thanks for pointing that out. I have removed it from my HowTo.
 
-that is a somewhat deceptive way to put it.  IBM honestly produced 
-a product that they thought was good.  in fact, it was the darling
-of the geek industry, until people realized that there were some odd
-issues having to do with abrupt power-offs (do we even have the story
-straight yet?).  IBM is, like any other large organization, crippled
-by its legal types, and can't just forthrightly say "we screwed up 
-and didn't test this odd usage pattern properly".
+I believe this error is also in the Software RAID HowTo which is where I
+copied my examples from.
 
-as products mature, they tend to become more complex, and entertain 
-new failure modes.  can you reach under the hood and tweak the carb
-on your car?  similarly, features like auto-defect-sparing and 
-write-behind caches that flush on power-loss are tricky, and produce
-non-intuitive failure modes.  can they be tested better, sure.  is there
-any going back?  no.
+Regards,
 
-> So what are other peoples feelings about drive reliability and are some
-> brands better than others?
+-- 
+John Lange
 
-maxtor/seagate/hgst/wd are safe bets.  go for 3yr warranties.  
-use some form of raid and/or backup and/or replication.
 
-> Does anyone know of any web sites with statistics or test data?
+On Wed, 2004-05-19 at 21:06, Ninti Systems wrote:
+> But is the stride parameter required at all if I'm only building a RAID1
+> array with two disks?
+> 
+> Also, is the chunk size necessary in this case as I remember getting a
+> message on boot up to the effect that "Chunk size not necessary here,
+> but proceeding anyway!".
+> 
+> Thanks
+> 
+> Mick
+> 
+> 
+> On Thu, 2004-05-20 at 11:12, John Lange wrote:
+> > On Sun, 2004-05-16 at 23:51, Guy wrote:
+> > > md2 has 4 disks with a chunk size of 128K.  Since only 3 disks are
+used for
+> > > data, and the filesystem block size is 4K, the stride size should be
+> > > 128*3/4, or 96.
+> > > Change:
+> > > 	mke2fs -b 4096 -R stride=32 /dev/md2
+> > > To:
+> > > 	mke2fs -b 4096 -R stride=96 /dev/md2
+> > > 
+> > > My logic:
+> > > 	"Stripe size" is "chunk size" times "number of data disks".
+> > > 	From example:
+> > > 		"chunk size" = 128
+> > > 		"number of data disks" = "nr-raid-disks" - 1 (-2 if RAID6)
+> > 
+> > I think this is incorrect. At this point I defer to the
+> > Software-RAID-HOWTO.
+> > 
+> > http://www.tldp.org/HOWTO/Software-RAID-HOWTO-5.html#ss5.10
+> > 
+> > >From that document stride is chucksize/blocksize . Number of disks does
+> > not enter into it.
+> > 
+> > So with a chunksize of 128, and a block size of 4 it would be:
+> > 
+> > 128K/4K = 32 for stride.
+> > 
+> > If this is indeed correct I will be sure to expand that area of the
+> > How-To so it is more clear.
+> > 
+> > Thanks very much for your feedback.
+> > 
+> > Regards,
+> > 
+> > John Lange
+> > 
+> > -
+> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-storagereview.com tries, but its hard to collect serious data from
-random, noncompliant populations.  in particular, squeaky wheels lead
-to drastic biases.
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
