@@ -1,36 +1,26 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: [PATCH] Consider user space generated checksum
-Date: Fri, 6 Aug 2004 15:13:56 +1000
+From: Tim Small <tim@buttersideup.com>
+Subject: Flashing the drive activity light....  (was Re: solution and OT RAID
+ news-story.)
+Date: Fri, 06 Aug 2004 11:17:40 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16659.5012.707524.48026@cse.unsw.edu.au>
-References: <1089734056.3065.97.camel@star2.austin.ibm.com>
+Message-ID: <41135AC4.3060900@buttersideup.com>
+References: <1091741886.5260.12.camel@HT.petrafex> <4113063E.5040801@elvey.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Mike Tran on  July 13
-To: Mike Tran <mhtran@us.ibm.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+In-Reply-To: <4113063E.5040801@elvey.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On  July 13, mhtran@us.ibm.com wrote:
-> On alpha systems, the kernel computed checksum, csum_partial(), and user
-> space computed checksum are different.  As a consequence, the kernel MD
-> driver aborts detection of MD superblock.  This means running mdadm
-> --assemble -f or -U summaries will not always work.
+This reminds me, I did a short stint at a big computing centre, and I 
+seem to remember that one of the support staff there had a utility to 
+flash the activity light on a SCSI drive (e.g. as mentioned in the 
+linked article - to high-light the drive to be replaced), although I'm 
+not completely sure if this was on IRIX, or Linux - I searched around 
+the net a couple of months ago for a similar utility, but drew a blank.
 
-Weird... arch/alpha/checksum.c seem to do a 16 bit checksum rather
-than the 32bit csum that i386 does.  It's mostly used for network code
-and IP uses 16bit csum, but it is odd that it claims to return a 32
-bit  number, but really it will always be 16bit...
+Any ideas anyone?
 
-> 
-> I have been wondering... Should MD driver use csum_partial() at all?
+Tim.
 
-Well, as we seem to want a 32bit checksum, I guess we cannot.  But for
-historical reasons, we probably have to.
-
-I guess a patch much like yours is needed.  I'll add something to make
-sure version-1 superblock are a bit more predictable.
-
-NeilBrown
