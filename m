@@ -1,59 +1,64 @@
-From: Holger Kiehl <Holger.Kiehl@dwd.de>
-Subject: Re: mdadm spare-group not working for me
-Date: Wed, 7 Jul 2004 11:29:52 +0000 (GMT)
+From: "Stephen Hargrove" <stephen@exitwound.org>
+Subject: Re: Should I Start Over?
+Date: Wed, 7 Jul 2004 08:23:38 -0500 (CDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.58.0407071114270.20019@praktifix.dwd.de>
-References: <Pine.LNX.4.58.0407070745260.20019@praktifix.dwd.de>
- <16619.54193.685669.468567@cse.unsw.edu.au>
+Message-ID: <1165.66.230.1.97.1089206618.squirrel@exitwound.org>
+References: <1147.66.230.1.97.1088603162.squirrel@exitwound.org>
+    <20040630165540.GA1099@percy.comedia.it>
+    <1775.66.230.1.97.1088620939.squirrel@exitwound.org>
+    <20040706210654.GB17694@percy.comedia.it>
+Reply-To: stephen@exitwound.org
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <16619.54193.685669.468567@cse.unsw.edu.au>
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+In-Reply-To: <20040706210654.GB17694@percy.comedia.it>
+To: Luca Berra <bluca@comedia.it>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 7 Jul 2004, Neil Brown wrote:
+Luca Berra said:
+>
+> you can try to see if you can read your data by recreating the array in
+> degraded mode, so it does not rebuild.
+>
+> like:
+> mdadm --create /dev/md0 --level=5 /dev/hdc1 /dev/hdd1 missing
+> try substituting the word missing for each of the drives
+> and see if you can mount the filesystem
+> if you do find your data use:
+> mdadm /dev/md0 -a <the device you replaced with missing>
+> to have it added to the array again
+>
 
-> On Wednesday July 7, Holger.Kiehl@dwd.de wrote:
-> > Hello
-> > 
-> > I am using mdadm 1.5.0 (kernel is 2.6.7) and noticed that spare-groups do
-> > not work for me in a raid 10 setup. Here my mdadm.conf:
-> > 
-> > DEVICE /dev/hda[23567] /dev/hde[23567]
-> > DEVICE /dev/sd[abcdef]1
-> > DEVICE /dev/md[23456]
-> > ARRAY /dev/md0 level=raid1 num-devices=2 UUID=ae4df447:33c21025:00e04356:461073a0
-> > ARRAY /dev/md1 level=raid1 num-devices=2 UUID=3d426966:8a378a74:d73267fb:9ec0589c
-> > ARRAY /dev/md2 level=raid1 num-devices=2 UUID=4e592020:0cc3ca3a:b983668f:d1595d33
-> > ARRAY /dev/md3 level=raid1 num-devices=6 UUID=91e415e1:ab17103b:48d20b4a:1201303c spare-group=afdz
-> > ARRAY /dev/md4 level=raid1 num-devices=2 UUID=71a92656:a1ac42c3:34577f43:f85a26ff spare-group=afdz
-> > ARRAY /dev/md5 level=raid1 num-devices=2 UUID=7e51c839:aa48864b:b50bd5a5:267a1f1c spare-group=afdz
-> > ARRAY /dev/md6 level=raid0 num-devices=3 UUID=c404c58a:42aeef9c:36a67c8e:cd229e88
-> > MAILADDR root
-> > 
-> > Additionally mdadm is started in monitor mode with the following command:
-> > 
-> > mdadm --monitor /dev/md0 /dev/md1 /dev/md2 /dev/md3 /dev/md4 /dev/md5
-> 
-> Run mdadm as
->    mdadm --monitor --scan
-> instead.  Currently information in the config file is ignored if you
-> actually list arrays to monitor.  I acknowledge that that doesn't
-> really make sense and will look into changing it, but that is the
-> way it is at the moment.
-> 
-I tried this first but had a configuration error in mdadm.conf that
-for /dev/md3 num-devices was set to 2. But setting this to 6 and --scan
-this works. Thanks for the quick help!
 
-Is it possible to influence the order at which the spares are taken
-from the group? Reason is that I have four spare partitions on two
-ide disks (2 partitions on each disk). Removing a second disk I
-noticed it picked the second partition from the same disk. The spares
-where added in this order hde7 hda7 hde6 hda6, but mdadm picked hde7
-and then hde6. Better would be hde then hda.
+Ok, I did the following:
 
-Thanks,
-Holger
+# mdadm --create /dev/md0 --level=5 --raid-devices=3 /dev/hdg1 /dev/hdd1
+/dev/hdc1
+mdadm: array /dev/md0 started.
+# mdadm /dev/md0 -a /dev/hde1
+mdadm: hot added /dev/hde1
+# mount /data
+mount: wrong fs type, bad option, bad superblock on /dev/md0,
+       or too many mounted file systems
+# cat /proc/mdstat
+Personalities : [raid5]
+read_ahead 1024 sectors
+md0 : active raid5 hde1[4] hdc1[3] hdd1[1] hdg1[0]
+      240121472 blocks level 5, 64k chunk, algorithm 2 [3/2] [UU_]
+      [>....................]  recovery =  0.2% (282348/120060736)
+finish=2250.3min speed=884K/sec
+unused devices: <none>
+
+If I read your email correctly, I wasn't expecting this.  But I'm also
+inexperienced enough to not really know what to expect.  All I know is
+that I now have movement where, before, I had none.
+
+So is this good or bad?  Is my data gone forever (I gave up on it a while
+back, so if it's gone, it's gone)?
+
+Thanks again, Luca.  You rock!
+
+--
+Steve
