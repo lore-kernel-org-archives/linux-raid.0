@@ -1,8 +1,8 @@
 From: NeilBrown <neilb@cse.unsw.edu.au>
-Subject: [PATCH md 2 of 5] Discard calc_sb_csum_common in favour of csum_fold
+Subject: [PATCH md 1 of 5] Make read retry use a new bio in raid1 and raid10
 Date: Wed, 20 Oct 2004 13:26:21 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <E1CK77F-0008IO-54@notabene.cse.unsw.edu.au>
+Message-ID: <E1CK77F-0008IK-1I@notabene.cse.unsw.edu.au>
 References: <20041020132354.31830.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: Andrew Morton <akpm@osdl.org>
@@ -10,56 +10,74 @@ Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-csum_fold should always have been used on the result
-of csum_partial.  calc_sb_csum_common therefore isn't needed.
+When retrying a read request, we need to "Reset" the bio.
+It is easiest to get this right if we discard the bio we have
+and re-clone it.
 
 Signed-off-by: Neil Brown <neilb@cse.unsw.edu.au>
 
 ### Diffstat output
- ./drivers/md/md.c |   27 +--------------------------
- 1 files changed, 1 insertion(+), 26 deletions(-)
+ ./drivers/md/raid1.c  |    6 +++++-
+ ./drivers/md/raid10.c |   13 ++++++-------
+ 2 files changed, 11 insertions(+), 8 deletions(-)
 
-diff ./drivers/md/md.c~current~ ./drivers/md/md.c
---- ./drivers/md/md.c~current~	2004-10-20 13:21:25.000000000 +1000
-+++ ./drivers/md/md.c	2004-10-20 13:21:25.000000000 +1000
-@@ -483,30 +483,6 @@ static unsigned int calc_sb_csum(mdp_sup
- 	return csum;
- }
- 
--/* csum_partial is not consistent between different architectures.
-- * Some (i386) do a 32bit csum.  Some (alpha) do 16 bit.
-- * This makes it hard for user-space to know what to do.
-- * So we use calc_sb_csum to set the checksum to allow working
-- * with older kernels, but allow calc_sb_csum_common to
-- * be used when checking if a checksum is correct, to
-- * make life easier for user-space tools that might write
-- * a superblock.
-- */
--static unsigned int calc_sb_csum_common(mdp_super_t *super)
--{
--	unsigned int  disk_csum = super->sb_csum;
--	unsigned long long newcsum = 0;
--	unsigned int csum;
--	int i;
--	unsigned int *superc = (int*) super;
--	super->sb_csum = 0;
--
--	for (i=0; i<MD_SB_BYTES/4; i++)
--		newcsum+= superc[i];
--	csum = (newcsum& 0xffffffff) + (newcsum>>32);
--	super->sb_csum = disk_csum;
--	return csum;
--}
- 
- /*
-  * Handle superblock details.
-@@ -590,8 +566,7 @@ static int super_90_load(mdk_rdev_t *rde
- 	if (sb->raid_disks <= 0)
- 		goto abort;
- 
--	if (calc_sb_csum(sb) != sb->sb_csum &&
--		calc_sb_csum_common(sb) != sb->sb_csum) {
-+	if (csum_fold(calc_sb_csum(sb)) != csum_fold(sb->sb_csum)) {
- 		printk(KERN_WARNING "md: invalid superblock checksum on %s\n",
- 			b);
- 		goto abort;
+diff ./drivers/md/raid1.c~current~ ./drivers/md/raid1.c
+--- ./drivers/md/raid1.c~current~	2004-10-20 13:21:25.000000000 +1000
++++ ./drivers/md/raid1.c	2004-10-20 13:21:25.000000000 +1000
+@@ -943,6 +943,8 @@ static void raid1d(mddev_t *mddev)
+ 			} else {
+ 				r1_bio->bios[r1_bio->read_disk] = NULL;
+ 				r1_bio->read_disk = disk;
++				bio_put(bio);
++				bio = bio_clone(r1_bio->master_bio, GFP_NOIO);
+ 				r1_bio->bios[r1_bio->read_disk] = bio;
+ 				rdev = conf->mirrors[disk].rdev;
+ 				if (printk_ratelimit())
+@@ -950,9 +952,11 @@ static void raid1d(mddev_t *mddev)
+ 					       " another mirror\n",
+ 					       bdevname(rdev->bdev,b),
+ 					       (unsigned long long)r1_bio->sector);
+-				bio->bi_bdev = rdev->bdev;
+ 				bio->bi_sector = r1_bio->sector + rdev->data_offset;
++				bio->bi_bdev = rdev->bdev;
++				bio->bi_end_io = raid1_end_read_request;
+ 				bio->bi_rw = READ;
++				bio->bi_private = r1_bio;
+ 				unplug = 1;
+ 				generic_make_request(bio);
+ 			}
+
+diff ./drivers/md/raid10.c~current~ ./drivers/md/raid10.c
+--- ./drivers/md/raid10.c~current~	2004-10-20 13:21:25.000000000 +1000
++++ ./drivers/md/raid10.c	2004-10-20 13:21:25.000000000 +1000
+@@ -1237,8 +1237,8 @@ static void raid10d(mddev_t *mddev)
+ 			int mirror;
+ 			bio = r10_bio->devs[r10_bio->read_slot].bio;
+ 			r10_bio->devs[r10_bio->read_slot].bio = NULL;
++			bio_put(bio);
+ 			mirror = read_balance(conf, r10_bio);
+-			r10_bio->devs[r10_bio->read_slot].bio = bio;
+ 			if (mirror == -1) {
+ 				printk(KERN_ALERT "raid10: %s: unrecoverable I/O"
+ 				       " read error for block %llu\n",
+@@ -1252,15 +1252,14 @@ static void raid10d(mddev_t *mddev)
+ 					       " another mirror\n",
+ 					       bdevname(rdev->bdev,b),
+ 					       (unsigned long long)r10_bio->sector);
+-				bio->bi_bdev = rdev->bdev;
++				bio = bio_clone(r10_bio->master_bio, GFP_NOIO);
++				r10_bio->devs[r10_bio->read_slot].bio = bio;
+ 				bio->bi_sector = r10_bio->devs[r10_bio->read_slot].addr
+ 					+ rdev->data_offset;
+-				bio->bi_next = NULL;
+-				bio->bi_flags &= (1<<BIO_CLONED);
+-				bio->bi_flags |= 1 << BIO_UPTODATE;
+-				bio->bi_idx = 0;
+-				bio->bi_size = r10_bio->sectors << 9;
++				bio->bi_bdev = rdev->bdev;
+ 				bio->bi_rw = READ;
++				bio->bi_private = r10_bio;
++				bio->bi_end_io = raid10_end_read_request;
+ 				unplug = 1;
+ 				generic_make_request(bio);
+ 			}
