@@ -1,92 +1,101 @@
-From: Nils-Henner Krueger <nhk@netuse.de>
-Subject: md autodetection
-Date: Mon, 21 Mar 2005 09:06:44 +0100
-Message-ID: <423E8094.7050809@netuse.de>
+From: Ruth Ivimey-Cook <Ruth.Ivimey-Cook@ivimey.org>
+Subject: Strangeness when booting raid1: md5 already running?
+Date: Mon, 21 Mar 2005 12:26:18 +0000
+Message-ID: <1111407978.757.7.camel@filestore.ivimey.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I've got a few questions about raid autodetection at boot time.
+Folks,
 
-To use a mirrored boot device, I have to use raid autodetection
-to have the md devices running early enough?
+I had to pull the plug on my box today, and when it rebooted got this
+rather strange raid issue. The box has 5 raid1 arrays, consisting of 5
+partitions on each of 2 drives. When it rebooted, the md5 array came up
+like so:
 
-To have autodection recognise a disk device, it has to run after
-the appropriate device driver, right?
-
-In my current setup, running RHEL3 with kernel 2.4.21, I have
-the system installed on a scsi disk. The scsi driver ist loaded
-as module and added to the initrd.
-Currently raid autodection takes place long before the scsi
-device driver is loaded:
-
-[...]
-ICH5: IDE controller at PCI slot 00:1f.1
-ICH5: chipset revision 2
-ICH5: not 100% native mode: will probe irqs later
-    ide0: BM-DMA at 0x1460-0x1467, BIOS settings: hda:pio, hdb:pio
-    ide1: BM-DMA at 0x1468-0x146f, BIOS settings: hdc:pio, hdd:pio
-hdc: DV-28E-C, ATAPI CD/DVD-ROM drive
-ide1 at 0x170-0x177,0x376 on irq 15
-ide-floppy driver 0.99.newide
-ide-floppy driver 0.99.newide
-md: md driver 0.90.0 MAX_MD_DEVS=256, MD_SB_DISKS=27
+raid1: raid set md0 active with 2 out of 2 mirrors
+md: ... autorun DONE.
 md: Autodetecting RAID arrays.
 md: autorun ...
+md: considering hda9 ...
+md:  adding hda9 ...
+md: md5 already running, cannot run hda9
+md: export_rdev(hda9)
 md: ... autorun DONE.
-pci_hotplug: PCI Hot Plug PCI Core version: 0.5
-Initializing Cryptographic API
-NET4: Linux TCP/IP 1.0 for NET4.0
-IP: routing cache hash table of 65536 buckets, 512Kbytes
-TCP: Hash tables configured (established 524288 bind 65536)
-Linux IP multicast router 0.06 plus PIM-SM
-Initializing IPsec netlink socket
-NET4: Unix domain sockets 1.0/SMP for Linux NET4.0.
-RAMDISK: Compressed image found at block 0
-Freeing initrd memory: 610k freed
-VFS: Mounted root (ext2 filesystem).
-SCSI subsystem driver Revision: 1.00
-libata version 1.02 loaded.
-ata_piix version 1.02
-PCI: Setting latency timer of device 00:1f.2 to 64
-ata1: SATA max UDMA/133 cmd 0x1490 ctl 0x1486 bmdma 0x1470 irq 18
-ata2: SATA max UDMA/133 cmd 0x1488 ctl 0x1482 bmdma 0x1478 irq 18
-ata1: dev 0 cfg 49:2f00 82:74eb 83:7f63 84:4003 85:74e9 86:3c43 87:4003
-88:407f
-ata1: dev 0 ATA, max UDMA/133, 145226112 sectors: lba48
-ata1: dev 0 configured for UDMA/133
-ata2: dev 0 cfg 49:2f00 82:74eb 83:7f63 84:4003 85:74e9 86:3c43 87:4003
-88:407f
-ata2: dev 0 ATA, max UDMA/133, 145226112 sectors: lba48
-ata2: dev 0 configured for UDMA/133
-scsi0 : ata_piix
-scsi1 : ata_piix
-  Vendor: ATA       Model: WDC WD740GD-00FL  Rev: 27.0
-  Type:   Direct-Access                      ANSI SCSI revision: 05
-Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
-SCSI device sda: 145226112 512-byte hdwr sectors (74356 MB)
-Partition check:
- sda: sda1 sda2 sda3 sda4 < sda5 sda6 >
-  Vendor: ATA       Model: WDC WD740GD-00FL  Rev: 27.0
-  Type:   Direct-Access                      ANSI SCSI revision: 05
-Attached scsi disk sdb at scsi1, channel 0, id 0, lun 0
-SCSI device sdb: 145226112 512-byte hdwr sectors (74356 MB)
- sdb:
-[...]
+md: Autodetecting RAID arrays.
+md: autorun ...
+md: considering hda9 ...
+md:  adding hda9 ...
+md: md5 already running, cannot run hda9
+md: export_rdev(hda9)
+md: ... autorun DONE.
+md: Autodetecting RAID arrays.
+md: autorun ...
+md: considering hda9 ...
+md:  adding hda9 ...
+md: md5 already running, cannot run hda9
+md: export_rdev(hda9)
+md: ... autorun DONE.
+md: Autodetecting RAID arrays.
+md: autorun ...
+md: considering hda9 ...
+md:  adding hda9 ...
+md: md5 already running, cannot run hda9
+md: export_rdev(hda9)
+md: ... autorun DONE.
+md: Autodetecting RAID arrays.
+md: autorun ...
+md: considering hda9 ...
+md:  adding hda9 ...
+md: md5 already running, cannot run hda9
+md: export_rdev(hda9)
+md: ... autorun DONE.
+EXT3-fs: INFO: recovery required on readonly filesystem.
+EXT3-fs: write access will be enabled during recovery.
+EXT3-fs: recovery complete.
 
-Is there a way to run raid autodection (again?) later in the
-boot sequence to detect not only IDE devices but other things
-like scsi, too?
+Now this was the first time the string "md5" appears in the log. And
+indeed, it appears that hda9 has been kicked out of the array:
 
-Last question:  :-)
-Is it possible to make a distinction between some md-devices which
-should be detected and started by raid autodetection and others which
-should be left untouched?
+mdadm --examine /dev/hdc9
+/dev/hdc9:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : a3f13998:4c0f70df:ea732842:0133b262
+  Creation Time : Thu Nov 25 11:50:26 2004
+     Raid Level : raid1
+    Device Size : 3301248 (3.15 GiB 3.38 GB)
+   Raid Devices : 2
+  Total Devices : 1
+Preferred Minor : 5
+
+    Update Time : Mon Mar 21 12:23:24 2005
+          State : clean
+ Active Devices : 1
+Working Devices : 1
+ Failed Devices : 1
+  Spare Devices : 0
+       Checksum : 906511c - correct
+         Events : 0.937092
 
 
-Thanks for help!
+      Number   Major   Minor   RaidDevice State
+this     0      22        9        0      active sync   /dev/hdc9
+   0     0      22        9        0      active sync   /dev/hdc9
+   1     1       0        0        1      faulty removed
 
-nils-henner
+
+The equivalent command on hda9 produces the same info, barring the event
+count and that it says "active sync /dev/hda9" for itself.
+
+Any thoughts on why this happened?
+
+Ruth
+
+
+-- 
+Ruth Ivimey-Cook <ruth@ivimey.org>
+
