@@ -1,58 +1,55 @@
-From: hpa@zytor.com (H. Peter Anvin)
-Subject: Re: Adding Reed-Solomon Personality to MD, need help/advice
-Date: Sat, 31 Jan 2004 07:20:05 +0000 (UTC)
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: mdadm: hot add failed ... lun0/part6: No space left on device
+Date: Sat, 31 Jan 2004 21:41:27 +1100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <bvfkv5$bfm$1@terminus.zytor.com>
-References: <6.0.1.1.2.20040130235924.03f39710@mail.athenet.net>
+Message-ID: <16411.34391.455191.631246@notabene.cse.unsw.edu.au>
+References: <20040130123211.GA10754@e-den.it>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: message from Sandro Dentella on Friday January 30
+To: Sandro Dentella <sandro.dentella@tin.it>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-=46ollowup to:  <6.0.1.1.2.20040130235924.03f39710@mail.athenet.net>
-By author:    Nathan Lewis <nathapl@cs.okstate.edu>
-In newsgroup: linux.dev.raid
->
-> As part of my Master's thesis, I am working on adding a Reed-Solomon=20
-> personality to the existing linux RAID structure and I would like som=
-e=20
-> assistance.  I'll try to keep this as brief as possible, but I apolog=
-ize if=20
-> it gets long-winded.
->=20
+On Friday January 30, sandro.dentella@tin.it wrote:
+> Hi all,
+>   while trying to substitute a failed disk, I'm using the command:  
+> 
+>     # mdadm /dev/md1 --add /dev/ide/host0/bus1/target0/lun0/part6
+> 
+>   but I get:
+> 
+>   mdadm: hot add failed for /dev/ide/host0/bus1/target0/lun0/part6: No space left on device
+> 
+>   What does it mean?
 
-I'm curious what... what is the intended mode of operation of your R-S
-personality?
+It means, as you guess lower down, that the partition you have
+provided appears to be too small to be used in the given array.
 
->
-> So far, I've managed to add and register a personality with md, which=
-=20
-> involved a few minor changes to md.c and related header files, a few=20
-> changes to mdadm to allow me to access things from userland.  I've=20
-> discovered the 9 functions I need to implement (make_request, run, st=
-op,=20
-> etc), and managed to "successfully" create an md device using only st=
-ub=20
-> functions.  So far so good.  Just for reference, I'm using kernel 2.4=
-=2E22.
->=20
+This error should cause a message to appear in the kernel logs
+something like
 
-I would advice you to try a 2.6 kernel instead.  You might find it
-useful to compare raid5.c to raid6main.c in those kernels.
+   md1: disk size XXX blocks < array size YYY
 
-	-hpa
---=20
-PGP public key available - finger hpa@zytor.com
-Key fingerprint: 2047/2A960705 BA 03 D3 2C 14 A8 A8 BD  1E DF FE 69 EE =
-35 BD 74
-"The earth is but one country, and mankind its citizens."  --  Bah=E1'u=
-'ll=E1h
-Just Say No to Morden * The Shadows were defeated -- Babylon 5 is renew=
-ed!!
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+You might finding it by
+   dmesg | grep 'disk size'
+
+or looking in some file in /var/log (depending on which distribution
+you use.  Debian puts it in /var/log/kern.log).
+
+> 
+>   I don't know how to interpret it. I thought it was the partition that
+>   is not same dime as the other one (disks are different) but the partition
+>   I'm adding is bigger... as you can see further on.
+
+Indeed I can:  hda6 appears to be 2533.688 - 533.439 = 2000.249 Mb
+while hdc6 (the new one) is 2536.242 - 533.562 = 2002.680 Mb
+
+My only guess is that the kernel hasn't found out about some recent
+change in partition size.  What partition sizes are given in
+   cat /proc/partitions
+??
+
+NeilBrown
