@@ -1,18 +1,40 @@
-From: Ming Zhang <mingz@ele.uri.edu>
+From: "Guy" <bugzilla@watkins-home.com>
 Subject: RE: md on partition
-Date: Sat, 23 Oct 2004 11:52:29 -0400
+Date: Sat, 23 Oct 2004 12:12:47 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1098546749.3117.50.camel@localhost.localdomain>
-References: <200410230607.i9N677N10676@www.watkins-home.com>
-Reply-To: mingz@ele.uri.edu
+Message-ID: <200410231612.i9NGCqN13160@www.watkins-home.com>
+References: <1098546749.3117.50.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200410230607.i9N677N10676@www.watkins-home.com>
-To: Guy <bugzilla@watkins-home.com>
+In-Reply-To: <1098546749.3117.50.camel@localhost.localdomain>
+To: mingz@ele.uri.edu
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+I guess Neil was wrong, or I misunderstood something.
+Were both test with the same RAID and LVM config?  Or was 1 RAID0 and the
+other RAID5?
+
+If RAID5, are you sure the resync was done before you did your tests?
+"cat /proc/mdstat" to determine this.
+
+Yes, size does matter!  Chunk size that is.  Not sure about extent size.
+
+As long as the only difference was the whole disk vs partitions, then
+partitions make a big difference!  This sucks!
+
+Guy
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Ming Zhang
+Sent: Saturday, October 23, 2004 11:52 AM
+To: Guy
+Cc: linux-raid@vger.kernel.org
+Subject: RE: md on partition
 
 thx but i met this problem.
 
@@ -90,4 +112,9 @@ On Sat, 2004-10-23 at 02:07, Guy wrote:
 | http://crab.ele.uri.edu/gallery/albums.php
  --------------------------------------------------
 
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
