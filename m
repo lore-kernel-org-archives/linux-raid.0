@@ -1,30 +1,47 @@
-From: "Vladimir I. Umnov" <uvi@ezmail.ru>
-Subject: Re: Low perfomance of RAID0,RAID5, RAID+LVM on 2.6
-Date: Fri, 20 Aug 2004 20:11:37 +0400
+From: Andreas John <lists@aj.net-lab.net>
+Subject: mdadm question
+Date: Fri, 20 Aug 2004 18:18:13 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040820201137.2ee99a14@vovapc.kpml.int>
-References: <8075D5C3061B9441944E1373776451186488C7@cinshrexc03.shermfin.com>
+Message-ID: <41262445.8010509@aj.net-lab.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <8075D5C3061B9441944E1373776451186488C7@cinshrexc03.shermfin.com>
-To: "Rechenberg, Andrew" <ARechenberg@sfg.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: neilb@cse.unsw.edu.au
 List-Id: linux-raid.ids
 
-On Thu, 19 Aug 2004 14:12:07 -0400
-"Rechenberg, Andrew" <ARechenberg@sfg.com> wrote:
+Hello!
 
-> In the part of the message that was quoted to the linux-raid list the
-> performance of the RAID devices isn't specified.  All I see is you
-> testing /dev/sda1 and mentioning kernel modules, but no mention of
-> /dev/mdX or /dev/YourVG/YourLV.
-It was my reply to answer, tests with md and lvm was in first message
-to this linux-raid lisst.
+I have a question about mdadm usage. One of me customers killed a=20
+raid5+1 by accidently removing an ide bus with two disk on it (dont't=20
+ask, I know ;-))
 
-And setting readahead on lvm volumes helpes. Now I get about 80 Mb/s
-read on raid5 and about 100Mb/s on raid0, but the cpu overhead was very
-high, but acceptable  for me. But it helps only in 2.6.6! 2.6.7 and
-2.6.8.1 much slower than 2.6.6.
+Assuming that the data is on the disks I'm looking for a way to convinc=
+e=20
+  linux to mark the superblocks (of the missing disk only?) as "not=20
+failed" so that the raid comes up again. mdadm seems to have what I am=20
+looking for, like "madm --assemble --update=3D? --force" can write the=20
+superblocks freshly without destorying the data on it? Do I have to use=
+=20
+--update=3Dsuper=E2=80=90minor or --update=3Dsuper=E2=80=90minor on ia3=
+2?
+Or is there an recovery tool for such a case (i.e. mddump?)?
+
+If this does not work, can anyone point me out where I can find an=20
+overview about the structure of a superblock, so that I may fix the=20
+problem via hex-editor (my skills point back to C64 times ... :-))
+I've seen the source but some kind of overview/scheme would be nice.
+
+I'm scared. :)
+
+Rgds,
+Andreas
 
 
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
