@@ -1,127 +1,80 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: Md cache?
-Date: Thu, 3 Jun 2004 17:38:23 -0400
+From: David Greaves <david@dgreaves.com>
+Subject: Can't mount after mkfs -b 8192
+Date: Thu, 03 Jun 2004 23:31:57 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200406032138.i53LcR315744@watkins-home.com>
-References: <40BF8736.10101@nanson.org>
+Message-ID: <40BFA6DD.6000904@dgreaves.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <40BF8736.10101@nanson.org>
-To: 'Brock Nanson' <brock@nanson.org>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-A UPS does not protect from kernel crashes!
-Software RAID would lose any data not written to the disks when the kernel
-crashes.
-Hardware RAID does, at least to the point that data made it to the array.
-I have never had a Linux kernel crash myself.
+Hi
 
-I have seen a power failure caused when a UPS failed.
-To protect from UPS failure, you can have redundant UPSs.
-I don't.  :(
-APC has a product that allows 2 UPSs to power 1 power strip.  This gives you
-redundant UPSs.  I have never used it, just read about it years ago.
+First - thanks Guy - I've setup using 1 big partitions and I'll deal 
+with monitoring as you suggest.
 
-Guy
+(BTW, are patches to mdadm recvd well? If so I'll take a look - 
+especially at the state=spare message when rebuilding.)
 
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Brock Nanson
-Sent: Thursday, June 03, 2004 4:17 PM
-To: Guy
-Cc: 'Brian Pontius'; linux-raid@vger.kernel.org
-Subject: Re: Md cache?
+Anyway, I now have an lvm2 on top and wanted a reiserfs (actually, since 
+I'm ex-sgi I wanted xfs - but it doesn't shrink :( ) and I'm having odd 
+behaviour. (Also, I posted to the reiser list but thinking about it, 
+raid makes as much sense...)
 
-My IBM ServeRAID 3HB's do.  But as you say, many don't.  A UPS with a 
-communications cable and shutdown software is really the only solution.
+So, environment:
+Kernel 2.6.6
+progsreiserfs 0.3.0.4-3
 
-Brock
+Summary:
+I have a raid5 array in an LVM2 VG with a 600Gb LV defined.
+If I make a reiserfs with a block size of 8192 it won't mount.
 
-Guy wrote:
+The following commands were issued consecutively:
 
-> With hardware RAID the write cache has battery backup.  So, the RAID
-system
-> will not lose data when the power fails.  It will finish the writes when
-the
-> power returns.
-> 
-> I don't think the hardware RAID cards have a battery.  The external self
-> contained RAID systems that I have worked with do have batteries.
-> 
-> Anyone know?  Do any RAID cards have batteries?
-> 
-> Guy
-> 
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org
-> [mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Brian Pontius
-> Sent: Thursday, June 03, 2004 2:14 PM
-> To: Neil Brown
-> Cc: linux-raid@vger.kernel.org
-> Subject: Re: Md cache?
-> 
-> I apologze for being unclear.
-> 
-> As I did comparisons between software and hardware raid,  one of the
-> advantage
-> s that I noticed with hardware raid was cache (both read and write). With
-> hard
-> ware it is usually larger giving some increase in performance.  I was
-> looking
-> for a way to allocate more system memory specifically to be the md cache
-> area
-> to give that extra feature of that hardware raid. This would especially be
-> ben
-> efitial for a NAS that has a dedicated purpose to fast reliable storage.
-> 
-> 
-> Thanks for your time.
-> Brian Pontius
-> 
-> 
-> -----Original Message-----
-> From: Neil Brown <neilb@cse.unsw.edu.au>
-> Sent: Jun 2, 2004 10:10 PM
-> To: Brian Pontius <linuxboy123@mindspring.com>
-> Cc: linux-raid@vger.kernel.org
-> Subject: Re: Md cache?
-> 
-> On Wednesday June 2, linuxboy123@mindspring.com wrote:
-> 
->>to all,
->>
->>Is anyone aware of a way to cause the md devices to use some system memory
-> 
-> as a write cache? (maybe through mdadm?).  I have looked everywhere and
-> cannot seem to find anything about such a feature.
-> 
->>If not, anyone  know if this is a possibility for the future, Neil?
-> 
-> 
-> What is it exactly that you want.
-> 
-> All device IO is cached in memory before being written to the device.
-> The only real value of a cache with a RAID array is if it we a
-> non-volatile cache.  Is that what you were thinking of.
-> 
-> NeilBrown
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+cu:~# mkfs -treiserfs /dev/video_vg/video_lv
+All data on /dev/video_vg/video_lv will be lost. Do you really want to
+create reiser filesystem (v3.6) (y/n) y
+Creating reiser filesystem (v3.6) with standard journal on
+/dev/video_vg/video_lv
+initializing skiped area: done
+initializing journal: done
+syncing...done
+
+cu:~# mount /dev/video_vg/video_lv /huge
+
+cu:~# df -k
+Filesystem           1K-blocks      Used Available Use% Mounted on
+/dev/hda2             19283776    697988  18585788   4% /
+/dev/hda1                97826     13003     79604  15% /boot
+/dev/mapper/video_vg-video_lv
+                     629126396     32840 629093556   1% /huge
+
+cu:~# umount /huge
+
+cu:~# mkfs -treiserfs -b 8192 /dev/video_vg/video_lv
+All data on /dev/video_vg/video_lv will be lost. Do you really want to
+create reiser filesystem (v3.6) (y/n) y
+Creating reiser filesystem (v3.6) with standard journal on
+/dev/video_vg/video_lv
+initializing skiped area: done
+initializing journal: done
+syncing...done
+
+cu:~# mount /dev/video_vg/video_lv /huge
+mount: wrong fs type, bad option, bad superblock on /dev/video_vg/video_lv,
+       or too many mounted file systems
+
+dmesg now shows:
+sh-2011: read_super_block: can't find a reiserfs filesystem on (dev
+dm-0, block 16, size 4096)
+sh-2021: reiserfs_fill_super: can not find reiserfs on dm-0
+
+any suggestions.
+
+Nb I'll be storing 2-5Gb video files - hence the large blocksize.
+
+David
 
 
