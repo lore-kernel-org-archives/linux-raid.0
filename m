@@ -1,30 +1,24 @@
-From: Anders Nielsen <anielsen@diku.dk>
-Subject: How to change the preferred minor
-Date: 10 Apr 2002 11:39:38 +0200
+From: "Anders K. Pedersen" <akp@cohaesio.com>
+Subject: Re: adding disk to raid5 array
+Date: Wed, 10 Apr 2002 21:11:06 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1018431578.10844.32.camel@anders>
+Message-ID: <3CB48E4A.A1513ACB@cohaesio.com>
+References: <20020409111408.A11555@pida.in.idoox.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-When I try to boot my box with disks which previously was configured in
-other machines md tries to autodetect which array should have a given
-minor number.
+David Hajek wrote:
+> is it possible to adding disks to existing software
+> RAID 5 array without backup/restore cycle?
 
-I use the wonderful :-) mdadm -E and I can see a preferred minor value
-which is very nice, but since more than one array is competing for the
-same minor number it is kind of difficult for me to figure out what to
-put in my /etc/fstab.
+Take a look at raidreconf available from
+http://unthought.net/raidreconf/index.shtml. No matter what, you should
+make sure a good backup exists, but this might save you from doing the
+restore.
 
-Therefore my question is: how do I change the preferred minor value on a
-array so I can prevent conflicts? I would of course like to be able to
-use mdadm for this job :-)
-
-Thanks,
-  Anders Nielsen
-
-
-
+Regards,
+Anders K. Pedersen
