@@ -1,61 +1,63 @@
 From: Alvin Oga <aoga@mail.Linux-Consulting.com>
 Subject: Re: raid5 - failed disks
-Date: Fri, 1 Apr 2005 02:56:39 -0800 (PST)
-Message-ID: <Pine.LNX.3.96.1050401025007.30913A-100000@Maggie.Linux-Consulting.com>
-References: <424D238A.8030305@weisshuhn.de>
+Date: Fri, 1 Apr 2005 03:04:21 -0800 (PST)
+Message-ID: <Pine.LNX.3.96.1050401025816.30940A-100000@Maggie.Linux-Consulting.com>
+References: <20050401105538.GI82728@caffreys.strugglers.net>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <424D238A.8030305@weisshuhn.de>
+In-Reply-To: <20050401105538.GI82728@caffreys.strugglers.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Andy Smith <andy@lug.org.uk>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-hi ya frank
+On Fri, 1 Apr 2005, Andy Smith wrote:
 
-On Fri, 1 Apr 2005, Frank Wittig wrote:
+> This seems like an awful lot of disks to have in a raid 5 with no
+> hot spares, to me, but then I am fairly new to RAID issues so maybe
+> I am wrong.. but I would much rather have raid 10.
 
-> > - my dumb question is,
-> >       - if 2 disks dies at the same time, i
->
-> if 2 disks fail at the same time you data is lost.
-> if you have raid5 with 5 hot spares and a second disk dies, befor a hot
-> spare is synced into the array (will be listed as spare until sync hast
-> finished) the same - data gone.
+i'd say its an over kill .. but thats what they have ..
+ 
+> Technically it's screwed but it could be possible to recover it with
+> some losses.. I've fortunately never yet had to do that, maybe
+> someone who has could answer more fully.
 
-yup about failure before the resync completes..
+unfortunately for me, i'm always inheriting broken systems
+and told to "fix it" with no budget, etc, etc..
 
 > > - i think 4x 300GB ide disks is better ( less likely to fail ?? )
 > 
-> it's a simple calculation.
-> if one disk fails with a risk of 1 to 100000, then 10 disks fail with 10
-> to 100000. which means that having 10 disks is two times as dangerous as
-> having 5 disks.
+> Hard to say.. the typical IDE disk is usually regarded as less
+> reliable than the typical SCSI disk, and also there are then less
+> spindles per array so the performance may be worse.
 
-thanx ... that's also a good reaffirmation too ( that i'm not the only
-one to use n * MTBF )  or 1/n .. etc depending on point of view
+i alwyas try to have 2 live copies of the same data on 
+different servers... different cities if possible ...
+	- the bigger the data, 1TB, 10TB, 50TB, the more
+	copies i would have locally 
 
-> if i had an array with as much disks as you have i would chose raid
-> level 6 (not sure if dm supports this by now).
-> raid level 6 survives two disks failing at once.
+for me, i've had good luch with ide disks
 
-ah .. but its not my choices yet ...  stuff on inherits including
-the finger for somebody elses decisions to buy xx vs yy for nn reasons
+for me, all my failed disk subsystems has all ( say 75% ) been scsi
+... and i kept all the dead disks to show it
+	- and for fairness, we'll have to ignore the superbad
+	ibm deathstars
 
-> btw: what reason is there to switch off air conditioning of your it
-> equipment. temperature changes are poison to this fragile things.
+> If you're running the disks in an environment that is too hot for
+> them then I think you are wasting money by just throwing more disks
+> (of any sort) at it.
 
-out here.. some building owners are greedy with their nickels, and
-its NOT uncommong to have air conditioning turned off on nights and
-weekends
-	- and for those thinking colo, the colo's too turn aircondition
-	off till people complain its to hot ( temp inching upward till
-	people complain )
-  
-	- ambient temp should be 65F or less
-	and disk operating temp ( hddtemp ) should be 35 or less
+well ... yup.. but some people like "name brand" and live with their
+"bad" rules given out by "name brand"  vs using something that is better
+from not-so-big-of-a-name-brand including office/colo spaces
+that is better
+	- it's a bad office bldg in terms of computer's livelyhood
+
+- give it time ... 
 
 c ya
-alvin
+alvin 
 
