@@ -1,58 +1,53 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: Re: Changing MD device partition type
-Date: Fri, 6 Jun 2003 08:57:04 +0200
-Sender: linux-lvm-admin@sistina.com
-Message-ID: <20030606065703.GB19765@percy.comedia.it>
-References: <3EDFBB67.5030504@india.hp.com>
-Reply-To: linux-lvm@sistina.com
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: report on RAID tools bug/patch
+Date: Fri, 6 Jun 2003 17:03:09 +1000
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <16096.15533.937109.357788@notabene.cse.unsw.edu.au>
+References: <3EE03841.1030306@shaolinmicro.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Return-path: <linux-lvm-admin@sistina.com>
-Content-Disposition: inline
-In-Reply-To: <3EDFBB67.5030504@india.hp.com>
-Errors-To: linux-lvm-admin@sistina.com
-List-Help: <mailto:linux-lvm-request@sistina.com?subject=help>
-List-Post: <mailto:linux-lvm@sistina.com>
-List-Subscribe: <http://lists.sistina.com/mailman/listinfo/linux-lvm>,
-	<mailto:linux-lvm-request@sistina.com?subject=subscribe>
-List-Unsubscribe: <http://lists.sistina.com/mailman/listinfo/linux-lvm>,
-	<mailto:linux-lvm-request@sistina.com?subject=unsubscribe>
-List-Archive: <http://lists.sistina.com/pipermail/linux-lvm/>
-To: prakasha@india.hp.com
-Cc: linux-raid@vger.kernel.org, linux-lvm@sistina.com
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from David Chow on Friday June 6
+To: David Chow <davidchow@shaolinmicro.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Jun 05, 2003 at 02:51:35PM -0700, Prakash Achuthan wrote:
->I have a software RAID volume (of four 160 GB harddisk) which is to be 
->added to a separate volume group. Now, when I do a pvcreate (pvcreate 
->/dev/md3), it fails saying "Invalid phyiscal volume". All the disks in 
->the RAID volume have their partition type set to "linux auto detect". 
->One of the mails in a mailing list says that the partition type of the 
->md0 should be "8e".
+On Friday June 6, davidchow@shaolinmicro.com wrote:
+> Hi Neil,
+> 
+> Referring to the earlier patches you post to fix a problem in mkraid.c 
+> which saids "array is active -- run raidstop first" . I've try it on 
+> 1.003 from the redhat website and tested it on my system which seems 
+> alright.  I think this problem has existed in almost all Linux 
+> distribution as it has been hanging around for a long time. Would you 
+> please fix it and it will make a lot of people happy :D Thanks.
 
-nope, you cant' change the partition type and you don't need to,
-the problem lies somewhere else.
-lvm1 is very picky (serverely broken) about device file names,
-do a lvmdiskscan and or cat /proc/partitions and check which device name
-you find.
-if you have devfs compiled in the kernel and not mounted lvm user tools
-will NOT work.
+I did "fix" it by writing mdadm :-)
 
-i cc-ed lvm list which is a better place to ask elp on lvm...
-regards,
-L.
+I don't maintain raidtools so I'm afraid I cannot help you.
 
+NeilBrown
 
--- 
-Luca Berra -- bluca@comedia.it
-        Communication Media & Services S.r.l.
- /"\
- \ /     ASCII RIBBON CAMPAIGN
-  X        AGAINST HTML MAIL
- / \
-
-_______________________________________________
-linux-lvm mailing list
-linux-lvm@sistina.com
-http://lists.sistina.com/mailman/listinfo/linux-lvm
-read the LVM HOW-TO at http://tldp.org/HOWTO/LVM-HOWTO/
+> 
+> --- mkraid.c 2002/11/05 19:34:57 1.1
+> +++ mkraid.c 2002/11/05 19:35:29
+> @@ -244,7 +244,7 @@ int main (int argc, char *argv[])
+>      while (*args) {
+>          for (p = cfg_head; p; p = p->next) {
+>              if (strcmp(p->md_name, *args)) continue;
+> - if (check_active(cfg))
+> + if (check_active(p))
+>                  goto abort;
+>              if (force_flag) {
+>                  fprintf(stderr, "DESTROYING the contents of %s in 5 
+> seconds, Ctrl-C if unsure!\n", *args);
+> 
+> regards,
+> David Chow
+> 
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
