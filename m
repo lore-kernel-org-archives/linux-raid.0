@@ -1,58 +1,44 @@
 From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: Dual disk RAID 5 failure!
-Date: Tue, 30 Nov 2004 13:33:27 +1100
-Message-ID: <16811.56311.863221.129431@cse.unsw.edu.au>
-References: <A6264114-3F0D-11D9-8034-000A959A30DC@postbox.org.uk>
-	<41A63328.40907@dgreaves.com>
-	<C40728DE-3F1F-11D9-8034-000A959A30DC@postbox.org.uk>
+Subject: Re: Multipath problem
+Date: Tue, 30 Nov 2004 13:44:01 +1100
+Message-ID: <16811.56945.96477.985675@cse.unsw.edu.au>
+References: <41A32AE7.2080502@fbihome.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <evms-devel-admin@lists.sourceforge.net>
-In-Reply-To: message from Chris Birkinshaw on Thursday November 25
-Sender: evms-devel-admin@lists.sourceforge.net
-Errors-To: evms-devel-admin@lists.sourceforge.net
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/evms-devel>,
-	<mailto:evms-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Post: <mailto:evms-devel@lists.sourceforge.net>
-List-Help: <mailto:evms-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/evms-devel>,
-	<mailto:evms-devel-request@lists.sourceforge.net?subject=subscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=evms-devel>
-To: Chris Birkinshaw <chris@postbox.org.uk>
-Cc: David Greaves <david@dgreaves.com>, linux-raid@vger.kernel.org, evms-devel@lists.sourceforge.net
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from Oliver Heinz on Tuesday November 23
+Sender: linux-raid-owner@vger.kernel.org
+To: Oliver Heinz <oheinz@fbihome.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday November 25, chris@postbox.org.uk wrote:
-> >> Hi,
-> >>
-> >> Last night one of my drives got corrupted during a crash, but also 
-> >> corrupted the other drive on that controller (I know I should only 
-> >> have one drive per controller but you know how it is.... stable door 
-> >> and all that).
-> >>
-> >> So I now have 2 disks missing from my RAID 5 with corrupt 
-> >> superblocks. Is there any way to get back from this, there was around 
-> >> 400Gb of data on there....
-> >>
-> >> If anyone has any idea at all that may help I would be very happy to 
-> >> hear it,
+On Tuesday November 23, oheinz@fbihome.de wrote:
+> Hi,
+> 
+> I'm trying to setup a HP packaged cluster (2xDL380G4 Servers +MA500G2 
+> Storage) both Servers  are connected via 2 SCSI-Links one for each of 
+> the storages's redundancy controllers.
+> The Storage shows as /dev/cciss/c0d1 and /dev/cciss/c1d0. When I create 
+> an multipath md device with version 1.6 of mdadm I can create it but 
+> restarting the array after I stopped it fails. With version 1.8.2 the 
+> size of the generated Array is 0 Blocks but I can restart it (which buys 
+> me nothing with that size ;-)
+> 
+> Mixing mdadm-1.6 and 1.8.1 for creating/managing the device doesn't 
+> work, it gives me an segfault.
 
-Have you tried:
-   mdadm --assemble --force /dev/mdWHATEVER /dev/list-of-devices-that-contain-the-array
+mdadm 1.8.0 is the version I would recommend.  1.8.1 is a development
+release.
 
-??
+> server-b:/usr/src/packages# mdadm -A /dev/md0 -f /dev/cciss/c1d0 
+> /dev/cciss/c0d1
+> mdadm: failed to RUN_ARRAY /dev/md0: Invalid argument
+> 
 
+If this still happens with 1.8.0, could you see if there are any
+messages in the kernel log (e.g. output of 'dmesg'), and send them to
+me.
+
+Thanks,
 NeilBrown
-
-
--------------------------------------------------------
-SF email is sponsored by - The IT Product Guide
-Read honest & candid reviews on hundreds of IT Products from real users.
-Discover which products truly live up to the hype. Start reading now. 
-http://productguide.itmanagersjournal.com/
-_______________________________________________
-Evms-devel mailing list
-Evms-devel@lists.sourceforge.net
-To subscribe/unsubscribe, please visit:
-https://lists.sourceforge.net/lists/listinfo/evms-devel
