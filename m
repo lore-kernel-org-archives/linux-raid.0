@@ -1,34 +1,45 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: HighPoint 1820 (8pt sata pcix, $170)
-Date: Fri, 28 Nov 2003 14:47:38 -0500
+From: Song Pan <pansong@ookyy.com>
+Subject: Howto recover 2 SoftRaid 5 device fail
+Date: Fri, 28 Nov 2003 20:21:11 +0000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20031128194738.GB21310@gtf.org>
-References: <20031119165519.GB14191@ti19.telemetry-investments.com> <Pine.LNX.4.44.0311280100150.27273-100000@coffee.psychology.mcmaster.ca>
+Message-ID: <3FC7AE37.2060305@ookyy.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44.0311280100150.27273-100000@coffee.psychology.mcmaster.ca>
-To: Mark Hahn <hahn@physics.mcmaster.ca>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Nov 28, 2003 at 01:04:24AM -0500, Mark Hahn wrote:
-> 
-> do you have any comment on the HighPoint 1820 card?  it's an 8-port SATA
-> controller with PCI-X, and appears to list for about $US 170 (pricewatch).
-> there's a driver (apparently binary-only, therefore of unknown quality)
-> available from the vendor, but I suspect no real (kerne.org or libata)
-> driver support...
+Help:
 
-HighPoint is just about the only manufacturer that hasn't contacted me
-about getting a SATA driver for their hardware into the kernel :)
+I got power fail on my server(I was stupid enough to unplug the wrong 
+cable). After reboot, my SoftRAID 5, /dev/md4 device is no longer 
+working. It got 6 device in total and two of them /dev/sda2 and 
+/dev/sdb2 is out of sync.
 
-I would go for Promise or ServerWorks 4-port and 8-port SATA cards, if
-you don't wanna spend the extra bucks for a real RAID card (and I
-personally trust software RAID over hardware RAID any day).
+The kernel message shows following:
 
-	Jeff
+kernel: md: superblock update time inconsistency -- using the most 
+recent one
+Nov 28 18:33:59 kernel: md: freshest: hda7
 
+The raidtab configure is following:
 
+riaddev /dev/md4
+raid-level 5
+nr-raid-disks 6
+chunk-size 64k
+persistent-superblock 1
+nr-spare-disks 0
+/dev/hda7
+/dev/hdc7
+/dev/hde2
+/dev/hdg2
+/dev/sda2
+/dev/sdb2
+
+I read the Softraid howto, and it seems I can use "mkraid --force" to 
+get my data back. Is this ok with my situation?
+
+thanks
 
