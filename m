@@ -1,44 +1,91 @@
-From: =?iso-8859-1?q?M=E5ns_Rullg=E5rd?= <mru@inprovide.com>
-Subject: Re: RAID5 - 2nd drive died whilst waiting for RMA
-Date: Sat, 13 Nov 2004 21:32:48 +0100
-Message-ID: <yw1xoei1jxqn.fsf@ford.inprovide.com>
-References: <200411121847.iACIlNN01272@www.watkins-home.com>
-	<41966514.8000301@dgreaves.com> <yw1xwtwpjz6e.fsf@ford.inprovide.com>
-	<41966E5A.8070308@dgreaves.com>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: RAID5 - 2nd drive died whilst waiting for RMA
+Date: Sat, 13 Nov 2004 15:39:07 -0500
+Message-ID: <200411132039.iADKdDN07474@www.watkins-home.com>
+References: <41966514.8000301@dgreaves.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <41966E5A.8070308@dgreaves.com> (David Greaves's message of
- "Sat, 13 Nov 2004 20:28:10 +0000")
+In-Reply-To: <41966514.8000301@dgreaves.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Greaves <david@dgreaves.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-David Greaves <david@dgreaves.com> writes:
+Sorry, the command should be:
+mdadm --assemble --force /dev/md0 /dev/sda1 /dev/sdb1 /dev/sdc1 /dev/hdb1
 
->> but that command should, assuming the components are
->>correct, read as
->>
->>mdadm --assemble <raiddevice> --force /dev/sda1 /dev/sdb1 /dev/sdc1 /=
-dev/hdb1
->>
->>with <raiddevice> replaced by something like /dev/md0.
->>
-> indeed it should.
-> I don't know if that's why mdadm gave that message.
+Hope that helps.
 
-That's what caused the message.  The message means that the first
-device mentioned on the command line wasn't an md device.  This has
-nothing to do with the contents of the device, mdadm needs an md
-device to operate on.
+Guy
 
---=20
-M=E5ns Rullg=E5rd
-mru@inprovide.com
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-----Original Message-----
+From: David Greaves [mailto:david@dgreaves.com] 
+Sent: Saturday, November 13, 2004 2:49 PM
+To: Guy
+Cc: linux-raid@vger.kernel.org
+Subject: Re: RAID5 - 2nd drive died whilst waiting for RMA
+
+OK, not great, but nothing has broken either.
+
+So the reboot happened, the disks went in and got moved around:
+new drive->/dev/sdd1
+the machine hung complaining 'ata4 timed out' during dd if=sda of=sdd :(
+reboot, did it again and it worked fine ( - no errors? maybe it was 
+transient? anway...)
+
+powerdown
+move sickly drive (sda) to new controller (new:sde)
+move new copy (sdd) to position 1 (new:sda)
+insert new spare disk (new:sdd)
+
+of course, the partitions are 'fd' so boot produces:
+md: Autodetecting RAID arrays.
+md: invalid raid superblock magic on sdd1
+md: sdd1 has invalid sb, not importing!
+# that's fair, I just made a partition, never used, no sb
+md: autorun ...
+md: considering sde1 ...
+# hmm, ok, it's fd and has a superblock but should be marked faulty
+md: adding sde1 ...
+md: adding sdc1 ...
+md: adding sdb1 ...
+md: adding sda1 ...
+md: adding hdb1 ...
+md: created md0
+md: bind<hdb1>
+md: bind<sda1>
+md: bind<sdb1>
+md: bind<sdc1>
+md: export_rdev(sde1)
+# what does this mean? does it mean 'sb is marked faulty'?
+md: running: <sdc1><sdb1><sda1><hdb1>
+md: kicking non-fresh sda1 from array!
+# OK, so you recognise it as an md device but think it's dirty - good
+md: unbind<sda1>
+md: export_rdev(sda1)
+raid5: device sdc1 operational as raid disk 1
+raid5: device sdb1 operational as raid disk 2
+raid5: device hdb1 operational as raid disk 4
+raid5: not enough operational devices for md0 (2/5 failed)
+# as expected
+
+
+Now, Guy, your next step:
+# mdadm --assemble --force /dev/sda1 /dev/sdb1 /dev/sdc1 /dev/hdb1
+mdadm: /dev/sda1 does not appear to be an md device
+
+Oh.
+
+So the first thing I'm doing is to cleanly redo the dd_rescue from (now) 
+sde to sda
+
+Comments?
+
+David
+
+PS Guy, my ISP has blocked comcast.net due to excessive spam - he's 
+reconsidered and will unblock them 'soon' but for now I can only 
+apologise :(
+
