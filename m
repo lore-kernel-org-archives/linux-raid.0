@@ -1,37 +1,30 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: messages after server crash
-Date: Tue, 12 Nov 2002 06:58:43 +1100
+From: Derek Vadala <derek@cynicism.com>
+Subject: Re: RAID-6
+Date: Mon, 11 Nov 2002 16:06:06 -0500 (EST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <15824.3059.420677.958049@notabene.cse.unsw.edu.au>
-References: <200211111526.37325.bernd-schubert@web.de>
+Message-ID: <20021111210606.C59DE3B807@jaded.cynicism.com>
+References: <aqou9k$ou5$1@cesium.transmeta.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Bernd Schubert on Monday November 11
-To: Bernd Schubert <bernd-schubert@web.de>
+In-Reply-To: <aqou9k$ou5$1@cesium.transmeta.com>
+To: "H. Peter Anvin" <hpa@zytor.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday November 11, bernd-schubert@web.de wrote:
-> Hi,
-> 
-> after our server crashed on Friday and Sunday, we can see some strange raid 
-> related messages in the logs (please see the messages below).
-> 
-> Well, the 'delaying resync ...' messages are easy to understand, but are they 
-> related to the 'resync aborted' messages ? At least the /proc/mdstat looks 
-> fine.
+On 11 Nov 2002, H. Peter Anvin wrote:
 
-It looks fine ... but the arrays probably aren't in sync.
-The 'resync aborted' is caused either by IO errors, which should show
-up in dmesg, or the resync threads being signaled, or by the array
-being switched into readonly mode.
+> I'm curious how much interest there would be in this, since I
+> certainly have enough projects without it, and I'm probably going to
+> need some of Neil's time to integrate it into the md driver and the
+> tools.
 
-I'm curious about this raidautorun which said:
-md: raidautorun(pid 89) used obsolete MD ioctl, upgrade your software to use new ictls
+There was quite a long thread about this last June ( it starts here
+http://marc.theaimsgroup.com/?l=linux-raid&m=102305890732421&w=2). I've
+seen lack of RAID-6 support cited as one of the shortcoming of Linux SW
+RAID quite a few times, by quite a few sources. That seems like one reason
+to implement it.
 
-That appears to be part of mkinitrd.  What distribution are you
-running? What version?  What version of mkinitrd?
+--
+Derek Vadala, derek@cynicism.com, http://www.cynicism.com/~derek
 
-NeilBrown
