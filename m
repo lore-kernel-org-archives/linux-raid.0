@@ -1,42 +1,42 @@
-From: Lucas Barbuto <lucas@qk.com.au>
-Subject: Order of RAID creation in boot process
-Date: Wed, 29 Jan 2003 18:49:54 +1100
+From: danci@agenda.si
+Subject: mdadm --monitor
+Date: Wed, 29 Jan 2003 15:59:58 +0100 (CET)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20030129074954.GA30915@qk.com.au>
-Reply-To: Lucas Barbuto <lucas@qk.com.au>
+Message-ID: <Pine.LNX.4.44.0301291541270.10474-100000@duplo.agenda.si>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi All,
+Hi!
 
-I'm still struggling with mounting my root file system as a software
-RAID-1.  As Norman Schmidt has suggested, the problem occurs because the
-RAID is not created when the kernel is ready to mount it's root
-partition.
+I'm trying to use mdadm to monitor my Linux RAID stuff, but it fails to
+send an email and/or run the program:
 
-I have checked the boot logs using 'dmesg' on a server that I have
-installed a boot+root software RAID-1 on previously.  I noticed in that
-configuration that all the RAID devices are created before the root
-partition is mounted.  On my new server, the messages indicating the
-RAID construction are after the root partition is mounted.  The
-difference?  Well the new machine has a Promise PDC 20276 controller
-(which I've disabled for the time being) and the drivers required for
-this controller compiled into the kernel.  Messages about the ataraid
-devices appear before the mounting of the root file system, but the md
-software device messages come after that point.
+/etc/mdadm.conf
 
-Can anyone explain the timing of the software RAID construction?  How
-can I get it to happen _before_ the root partition needs to be mounted?
-I can't see any other differences between the two setups.  It must have
-something to do with the code for the Promise ATA RAID controller,
-right?
+DEVICE /dev/hd*
+ARRAY /dev/md0 uuid=9338f6b6:ccadf20b:0fd08433:8285e108
+ARRAY /dev/md1 uuid=91bdf2b7:f6e83922:49437c5e:da5d7930
+ARRAY /dev/md2 uuid=5f7f8c33:a492a6a3:4129ff63:ac152b4b
+MAILADDR raidalert
+PROGRAM /usr/local/sbin/raidalert
 
-Thanks in advance.
+'raidalert' is an alias for my account. If I do 'ls | mail raidalert', I
+get a mail containin the directory listing...
 
-Regards,
+/usr/local/sbin/raidalert is very simple (for now) and it works:
 
-Lucas
+#!/bin/bash
+/usr/bin/logger -p user.crit -t raidalert $@
+
+So I guess I'm all set. I try 'mdadm --fail /dev/md0 /dev/hdg1' and wait.
+On the console, where 'mdadm --monitor' is running, I get this:
+
+Jan 29 15:48:25: FailSpare on /dev/md0 /dev/hdg1
+
+But why doesn't it send the mail and/or run the program??
+
+Thanks, D.
+
