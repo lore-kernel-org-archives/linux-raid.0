@@ -1,61 +1,59 @@
-From: Alvin Oga <aoga@ns.Linux-Consulting.com>
-Subject: Re: Migrating from SINGLE DISK to RAID1
-Date: Tue, 1 Feb 2005 15:52:33 -0800 (PST)
-Message-ID: <Pine.LNX.3.96.1050201154531.3365A-100000@Maggie.Linux-Consulting.com>
-References: <41FFD9C7.2090208@h3c.com>
+From: Niccolo Rigacci <niccolo@texnet.it>
+Subject: Re: Forcing a more random uuid (random seed bug)
+Date: Wed, 2 Feb 2005 14:33:41 +0100
+Message-ID: <200502021433.42108.niccolo@texnet.it>
+References: <200502011847.39444.niccolo@texnet.it>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-In-Reply-To: <41FFD9C7.2090208@h3c.com>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+In-Reply-To: <200502011847.39444.niccolo@texnet.it>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Mike Hardy <mhardy@h3c.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+> I get /dev/md5, /dev/md6, /dev/md7
+> and /dev/md8 all with the same UUID!
+
+It seems that there is a bug in mdadm: when generating the UUID for a 
+volume, the random() function is called, but the random sequence is never 
+initialized.
+
+The result is that every volume created with mdadm has an uuid of:
+6b8b4567:327b23c6:643c9869:66334873
+
+See also Debian bug 292784 at
+http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=292784
+
+I fixed the problem adding the following patch to mdadm.c, but please bear 
+in mind that I'm totally unaware of mdadm code and quite naive in C 
+programming:
+
+$ diff -u mdadm.c.orig mdadm.c
+--- mdadm.c.orig        2004-11-02 06:11:06.000000000 +0100
++++ mdadm.c     2005-02-02 14:27:55.000000000 +0100
+@@ -86,6 +86,15 @@
+        ident.super_minor= UnSet;
+        ident.devices=0;
+
++        int my_fd;
++        unsigned int my_seed;
++        if ((my_fd = open("/dev/random", O_RDONLY)) != -1) {
++            if (read(my_fd, &my_seed, sizeof(my_seed)) == sizeof(my_seed)) 
+{
++                srandom(my_seed);
++            }
++            close(my_fd);
++        }
++
+        while ((option_index = -1) ,
+               (opt=getopt_long(argc, argv,
+                                short_options, long_options,
 
 
-On Tue, 1 Feb 2005, Mike Hardy wrote:
- 
-> Robert Heinzmann wrote:
-> > Hello,
-> > 
-> > can someone verify if the following statements are true ?
-> > 
-> > - It's not possible to simply  convert a existing partition with a 
-> > filesystem on it to a raid1 mirror set.
 
-i say you cannot have it 100% working as raid1 because:
 
-fdisk partitions on the orig drive and new disk is NOT "FD" type,
-which means you cannot boot from the mirror if the current one dies
-and you'd have to go to standalone rescue mode and it might boot
-
-and more importantly ( in my view ), it was not mke2fs'd so its not
-treated as one /dev/md0 device ... (ie. it will probably show as
-misleading grub/lilo problems that it wont boot )
-
-but if it works (boots) .. good .. :-)
-
-> I believe you're right, but I'm not totally sure on this one. I'd take 
-> the second disk, create a new RAID1 with the first drive "missing" on 
-> the mdadm --create commandline, copy everything over to it, put grub on 
-> it, then test that it boots correctly by pulling the first drive out.
-
-a good test :-) my favorite non-techie 1 minute test for those that
-say they have raid config'd, test'd and working .. ( usually it doesn't
-boot in degraded, simulated failed disk mode )
-  
-> Only once the RAID1 is working (in degraded mode) add the original first 
-> drive back in, but booting off the RAID1, then add it to the RAID set to 
-> complete the pair. With that process, the question is somewhat moot, 
-> although I'm interested in the real answer too
-
-ditto
-
-i think it matters, to what level people expect raid1 to be working,
-	- just copying data or being able to boot off either disk
-	with the other one unplugged  and that data resync itself
-	onto the new disk
-
-c ya
-alvin
-
+-- 
+Niccolo Rigacci
+http://www.texnet.it/
