@@ -1,39 +1,43 @@
-From: M K <maheshext3@yahoo.com>
-Subject: Re: raid on extended partitions
-Date: Tue, 1 Jun 2004 08:13:12 -0700 (PDT)
+From: Sandro Dentella <sandro.dentella@tin.it>
+Subject: Autodetect problem w/ SCSI
+Date: Tue, 1 Jun 2004 20:39:51 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040601151312.72047.qmail@web61003.mail.yahoo.com>
-References: <16571.56114.265798.791241@cse.unsw.edu.au>
+Message-ID: <20040601183951.GA22078@bluff>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <16571.56114.265798.791241@cse.unsw.edu.au>
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: linux-raid@vger.kernel.org
+Content-Disposition: inline
+To: Linux Raid List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
 
---- Neil Brown <neilb@cse.unsw.edu.au> wrote:
-> 
-> What does
->    ls -l /dev/hd[eg]5
-> show? How about
->    cat /proc/partitions
->    dd if=/dev/hde5 of=/dev/null bs=1024k
 
-Thanks a lot, Neil, turns out those nodes were not
-present. After I mknod'd them, all's fine in
-RAIDland... 
-  Quick question: does using extended partitions for
-RAID affect performance?
-Cheers,
-Mahesh
+I made plenty of RAID1 systems w/ ide disk: OK.
+Now I tried a SCSI system and I can't make the kernel recognize the partition
+to make into an array. Of course partitions are 'fd': raid autodetect.
+
+Kernel recognizes the scsi hw (aic7xxx compiled in), then starts  
+"md: Autodetecting RAID arrays"  that will just fail to find the arrays.
+
+If I start from a live CD, I can "mdadm -A /dev/md0 /dev/sda6 /dev/sdb6" and
+the array starts and I can mount it.
+
+Is there something peculiar of SCSI systems I'm just ignoring?
 
 
 
-	
-		
-__________________________________
-Do you Yahoo!?
-Friends.  Fun.  Try the all-new Yahoo! Messenger.
-http://messenger.yahoo.com/ 
+TYA
+
+sandro
+*:-)
+
+
+I'm sorry to admit it's quite URGENT to me to get to a solution... this is a
+replacement for a customer after 4 ide disks failure in 5 months...
+
+
+
+-- 
+Sandro Dentella  *:-)
+e-mail: sandro.dentella@tin.it 
+http://www.tksql.org                    TkSQL Home page - My GPL work
