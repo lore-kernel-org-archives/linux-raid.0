@@ -1,65 +1,66 @@
-From: "Guy" <bugzilla@watkins-home.com>
+From: Alvin Oga <aoga@ns.Linux-Consulting.com>
 Subject: RE: Good news / bad news - The joys of RAID
-Date: Thu, 2 Dec 2004 23:16:45 -0500
-Message-ID: <200412030416.iB34Go913239@www.watkins-home.com>
-References: <Pine.LNX.4.44.0412022229420.23412-100000@coffee.psychology.mcmaster.ca>
+Date: Thu, 2 Dec 2004 20:46:53 -0800 (PST)
+Message-ID: <Pine.LNX.3.96.1041202203604.4325A-100000@Maggie.Linux-Consulting.com>
+References: <200412030416.iB34Go913239@www.watkins-home.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44.0412022229420.23412-100000@coffee.psychology.mcmaster.ca>
+In-Reply-To: <200412030416.iB34Go913239@www.watkins-home.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Mark Hahn' <hahn@physics.mcmaster.ca>, 'TJ' <systemloc@earthlink.net>
+To: Guy <bugzilla@watkins-home.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-The ECC is not the low level data.  The servo tracks are.  I bet there are
-start of track/sector header marks also.  I believe a low level format will
-not re-write the servo tracks.  Some drives reserve 1 side of 1 platter for
-servo data.  Others mix the servo data with user data.  I don't know the
-full details, just tidbit I have read over the years.
 
-If your drives were cooled better than most, that may explain why you did
-not have the "substrate had heat expansion issues".  Just a guess.
+On Thu, 2 Dec 2004, Guy wrote:
 
-If the problem was a firmware issue, why didn't IBM release a firmware
-update?
+> The ECC is not the low level data.  The servo tracks are.  I bet there are
+> start of track/sector header marks also.  I believe a low level format will
+> not re-write the servo tracks.  Some drives reserve 1 side of 1 platter for
+> servo data.  Others mix the servo data with user data.  I don't know the
+> full details, just tidbit I have read over the years.
 
-You said:
-"the firmware theory is supported by the fact that many deathstars 
-performed perfectly well for many years"
+ecc is in the disk controller with the phaselock loop and other analog
+circuit to convert the analog signal from the head back into 1's and 0's
+for the ecc code in firmware to correct any obvious head read errors
 
-Are you saying some drives had good firmware, while others had bad firmware?
-Otherwise, I don't understand your logic, since a drive not failing does not
-prove a firmware bug.
+track/sector info is written to the disk with low level format
+	( usually at the manufacturer
+	- you can also do lowlevel format with superformat
+ 
+	- it contains sector and track info and other header info
+	along with gaps and timing/spacing between each field
 
-Guy
+	- disks are now soft sectored .. ( no servo info )
+	( 512bytes or 1K or 2K or 4K(?) bytes per sector )
 
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Mark Hahn
-Sent: Thursday, December 02, 2004 10:37 PM
-To: TJ
-Cc: linux-raid@vger.kernel.org
-Subject: Re: Good news / bad news - The joys of RAID
+	- there is just one "index" mark to indicate one full
+	platter rotation
 
-> not. It is my belief that formatting was inneffective at fixing the drive 
-> because the cross writing probably hit some of the low level data, which
-the 
-> drive cannot repair on a format.
+- you can change any/all of the data ... as long as the apps can
+  read the data its lower-level drivers did to the disk
+	- firmware level is the lowest changes ( on the disk controller )
 
-the ecc *is* the low-level data.  without performing a controlled experiment
-that recreates the power-off scenario, there's no way to distinguish a block
-whose media is actually bad from one whose ecc fails because the ecc is bad.
+	- some brave soles put "raid" in firmware .. 
+	( risky in my book )
 
-the firmware theory is supported by the fact that many deathstars 
-performed perfectly well for many years.  I have at least one that lasted
-for 4+ years, and was powered off only a few times, and all of those
-cleanly.
+we use mke2fs, mkreiserfs etc to write file system data to make the
+platter useful
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+we use software and other utilities to do more ecc checking on the 
+data we expect to get back
+
+- if the system memory is bad .. 
+	we overwrite good disk data with bad data from bad memory
+
+- if the disk read/write is bad ...
+	we can sometimes compensate for it by keeping the disk
+	cooler ( <= 30C for disk temp is good )
+
+	if ecc on the disk controller cannot fix it ..  the disk
+	is basically worthless
+
+c ya
+alvin
 
