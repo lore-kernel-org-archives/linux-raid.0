@@ -1,33 +1,32 @@
-From: Derek Vadala <derek@cynicism.com>
-Subject: Re: raidtab -> mdadm conf file?
-Date: Wed, 19 Feb 2003 16:07:38 -0500 (EST)
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: Soft-/Hardware RAID Performance
+Date: Thu, 20 Feb 2003 11:03:58 +1100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20030219210738.A074E3B82A@jaded.cynicism.com>
-References: <20030219205621.GE13439@rdlg.net>
+Message-ID: <15956.7022.920091.62020@notabene.cse.unsw.edu.au>
+References: <5.1.0.14.0.20030219202741.027d3ec0@195.90.31.33>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20030219205621.GE13439@rdlg.net>
-To: "Robert L. Harris" <Robert.L.Harris@rdlg.net>
-Cc: Linux-Raid <linux-raid@vger.kernel.org>
+In-Reply-To: message from Daniel Brockhaus on Wednesday February 19
+To: Daniel Brockhaus <joker@astonia.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 19 Feb 2003, Robert L. Harris wrote:
+On Wednesday February 19, joker@astonia.com wrote:
+> 
+> Performance issues aside. If I go for the software RAID10: How can I 
+> configure the system to use the fifth drive as hot spare for both RAID1 
+> arrays? Is it save to add the same drive to both arrays (haven't tried it 
+> yet)? And would you say that software RAID is stable enough to use in a 
+> production system?
 
-> What should the output of "mdadm --detail --scan" look like?
->
-> root@disk2:~# mdadm --detail --scan
-> mdadm: option s not valid in mode D
->
+This can be done using mdadm in --monitor mode.
+If the manual page doesn't make it sufficiently clear, ask and I will
+improve the manual page.
 
-A series of array entries like such (one for each array that's running):
 
-ARRAY /dev/md0 level=raid1 num-devices=2 UUID=8b9bafc6:ed98bbd6:83d1c10f:d388a65f
-ARRAY /dev/md6 level=raid1 num-devices=2 UUID=98079ef1:26a71e58:a91327d9:ada25de7
-etc....
+mdadm is available from
+   http://www.kernel.org/pub/linux/utils/raid/mdadm/
 
-Which version of mdadm are you working with?
-
---
-Derek Vadala, derek@cynicism.com, http://www.cynicism.com/~derek
-
+NeilBrown
