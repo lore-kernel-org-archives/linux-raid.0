@@ -1,35 +1,35 @@
-From: Andrew Walrond <andrew@walrond.org>
-Subject: Re: Software RAID5, promise IDE and system freeze...
-Date: Mon, 30 Aug 2004 10:49:20 +0100
+From: Sebastian Utz <su@rotamente.com>
+Subject: Re: Software RAID-5 attempt to access beyond end of device...
+Date: Mon, 30 Aug 2004 11:49:41 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200408301049.20960.andrew@walrond.org>
-References: <4132E76F.7090209@cg.cs.tu-bs.de>
+Message-ID: <1093859380.13971.166.camel@slurp>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4132E76F.7090209@cg.cs.tu-bs.de>
-Content-Disposition: inline
-To: linux-raid@vger.kernel.org
+To: Tim Moore <linux-raid@nsr500.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday 30 Aug 2004 09:38, Lars Schimmer wrote:
-> System used: Debian sarge, fresh install from friday, raidtools2 and
-> kerne 2.4.27
+Thanks for that!
+I haven't have enough time to consider this..
+
+greetings,
+sebastian
+
+> Two performance suggestions.
 >
-> Does ANYONE have any hints?
+> 1. Consider two RAID-1 arrays: hde+hdg (41MB) and hdi+hdk (80MB) which 
+> would give much better performance over RAID-5 and lower failure 
+> probability without giving up any storage capacity.
+>
+> 2. Set the P2B BIOS to have both promise controllers on IRQ 14 which is 
+> unused in your system (remember to disable the primary motherboard IDE and 
+> you may have to rearrange PCI slot positions).  This will give much better 
+> interrupt performance than having the controllers sharing USB and mouse 
+> interrupt cycles.
+>
+> Rgds,
+> tim
 
-I had a very similar problem, solved by disabling ACPI. It was interrupt 
-routing related.
 
-So, is ACPI compiled into your kernel?
-If so, try booting with acpi=nopci or acpi=off
-(I think thats correct; check in Documentation/kernel-parameters.txt)
-
-(Most ACPI problems are due to old/buggy bios. If you enable ACPI, always 
-flash latest bios from your mobo's website.)
-
-Or it might be something completely different :)
-
-Andrew Walrond
