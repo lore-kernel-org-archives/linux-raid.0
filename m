@@ -1,41 +1,44 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: Raid-6 hang on write.
-Date: Tue, 1 Mar 2005 20:18:03 +1100
-Message-ID: <16932.13131.973765.36917@cse.unsw.edu.au>
-References: <421DE9A9.4090902@wasp.net.au>
-	<421F4629.5080309@wasp.net.au>
-	<16930.45319.682534.351648@cse.unsw.edu.au>
-	<422412AB.8080907@wasp.net.au>
+From: Nicola Fankhauser <nicola.fankhauser@variant.ch>
+Subject: non-optimal RAID 5 performance with 8 drive array
+Date: Tue, 01 Mar 2005 14:24:47 +0100
+Message-ID: <42246D1F.3070407@variant.ch>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-In-Reply-To: message from Brad Campbell on Tuesday March 1
 Sender: linux-raid-owner@vger.kernel.org
-To: Brad Campbell <brad@wasp.net.au>
-Cc: lkml <linux-kernel@vger.kernel.org>, RAID Linux <linux-raid@vger.kernel.org>
+To: RAID Linux <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tuesday March 1, brad@wasp.net.au wrote:
-> Neil Brown wrote:
-> > 
-> > Could you please confirm if there is a problem with
-> >     2.6.11-rc4-bk4->bk10
-> > 
-> > as reported, and whether it seems to be the same problem.
-> 
-> Ok.. are we all ready? I had applied your development patches to all my vanilla 2.6.11-rc4-* 
-> kernels. Thus they all exhibited the same problem in the same way as -mm1. <Smacks forehead against 
-> wall repeatedly>
+Hi all
 
-Thanks for following through with this so we know exactly where the
-problem is ... and isn't.  And admitting your careless mistake in
-public is a great example to all the rest of us who are too shy to do
-so - thanks :-)
+I have a RAID 5 array consisting of 8 300GB Maxtor SATA drives 
+(6B300S0), hooked up to a Asus A8N-SLI deluxe motherboard with 4 NForce4 
+SATA ports and 4 SiI 3114 ports.
 
-> 
-> Oh well, at least we now know about a bug in the -mm patches.
-> 
+see [3] for a description of what I did and more details.
 
-Yes, and very helpful to know it is.  Thanks again.
+each single disk in the array gives a read performance (tested with dd) 
+of about 62MB/s (when reading the first 4GiB of a disk).
 
-NeilBrown
+the array (reading the first 8GiB from /dev/md0 with dd, bs=1024K) 
+performs at about 174MiB/s, accessing the array through LVM2 (still with 
+bs=1024K) only 86MiB/s.
+
+my first conclusion was to leave out the LVM2 of the loop and directly 
+put a file system on /dev/md0.
+
+however, when reading Neil Brown's article [1], I got the impression 
+that my system should perform better, given the fact that each disk has 
+a transfer rate of minimally 37MiB/s, maximally 65MiB/s [2].
+
+or is there a flaw in my argumentation and the current performance is 
+normal? are at last the controllers saturating?
+
+any suggestions are welcome.
+
+regards
+nicola
+
+[1]: http://cgi.cse.unsw.edu.au/~neilb/01102979338
+[2]: http://www.storagereview.com/articles/200410/200410087B300S0-2_2.html
+[3]: http://variant.ch/phpwiki/WikiBlog/2005-02-27
