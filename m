@@ -1,62 +1,33 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: Re: md autodetection
-Date: Mon, 21 Mar 2005 20:01:29 +0100
-Message-ID: <20050321190129.GB27541@percy.comedia.it>
-References: <423E8094.7050809@netuse.de>
+From: Paul Clements <paul.clements@steeleye.com>
+Subject: Re: [PATCH 1/2] md bitmap bug fixes
+Date: Mon, 21 Mar 2005 14:58:56 -0500
+Message-ID: <423F2780.5000601@steeleye.com>
+References: <16950.5692.594941.130741@cse.unsw.edu.au> <20050318103326.GA18819@marowsky-bree.de> <6ivqg2-qsn.ln1@news.it.uc3m.es> <20050318134255.GS18819@marowsky-bree.de> <7e6rg2-pj1.ln1@news.it.uc3m.es> <423B09EF.8070708@steeleye.com> <23krg2-4rr.ln1@news.it.uc3m.es> <423B2F7C.3030907@steeleye.com> <qehtg2-6c1.ln1@news.it.uc3m.es> <423EF12A.4030207@steeleye.com> <20050321185606.GA27541@percy.comedia.it>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Disposition: inline
-In-Reply-To: <423E8094.7050809@netuse.de>
+Content-Transfer-Encoding: 7bit
+In-Reply-To: <20050321185606.GA27541@percy.comedia.it>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Mar 21, 2005 at 09:06:44AM +0100, Nils-Henner Krueger wrote:
->I've got a few questions about raid autodetection at boot time.
+Luca Berra wrote:
+> On Mon, Mar 21, 2005 at 11:07:06AM -0500, Paul Clements wrote:
+> 
+>> All I'm saying is that in a split-brain scenario, typical cluster 
+>> frameworks will make two (or more) systems active at the same time. This 
+> 
+> I sincerely hope not.
 
-i usually have a single answer, don't use it.
-but i see you are struck with rh, so...
+Perhaps my choice of wording was not the best? I probably should have 
+said, "there is no foolproof way to guarantee that two systems are not 
+active." Software fails, human beings make mistakes, and surely even 
+STONITH devices can be misconfigured or can fail (or cannot be used for 
+one reason or another).
 
+At any rate, this is all irrelevant given the second part of that email 
+reply that I gave. You still have to do the bitmap combining, regardless 
+of whether two systems were active at the same time or not.
 
->To use a mirrored boot device, I have to use raid autodetection
->to have the md devices running early enough?
-yes
-
->To have autodection recognise a disk device, it has to run after
->the appropriate device driver, right?
-yes
-
->In my current setup, running RHEL3 with kernel 2.4.21, I have
->the system installed on a scsi disk. The scsi driver ist loaded
-was that an _is_ or an _isn't_ ???
-
->as module and added to the initrd.
->Currently raid autodection takes place long before the scsi
->device driver is loaded:
-redhats' mkinitrd reruns autodetection after module loading.
-....
-
->Is there a way to run raid autodection (again?) later in the
->boot sequence to detect not only IDE devices but other things
->like scsi, too?
-
-you better use mdadm instead.
-i even wrote a tool, mdassemble which is shipped with mdadm and is
-suited for replacing autodetection in initrds.
-
->Last question:  :-)
->Is it possible to make a distinction between some md-devices which
->should be detected and started by raid autodetection and others which
->should be left untouched?
-autodetection only considers type fd partition, mdadm and raidstart
-don't actually care.
-
-
-
--- 
-Luca Berra -- bluca@comedia.it
-        Communication Media & Services S.r.l.
- /"\
- \ /     ASCII RIBBON CAMPAIGN
-  X        AGAINST HTML MAIL
- / \
+--
+Paul
