@@ -1,55 +1,28 @@
-From: Brendan Conoboy <blc@redhat.com>
-Subject: Spare-group drive affinity with mdadm?
-Date: Wed, 11 Aug 2004 17:20:53 -0600
+From: "aboster" <aboster@at-sd.com>
+Subject: Setting up a RAID 10 under RedHat 9
+Date: Wed, 11 Aug 2004 16:33:25 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <411AA9D5.7090508@redhat.com>
+Message-ID: <000201c47ffb$9cd59b60$cd03a8c0@archnet2.atgsd.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+	charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
+I have a functional RAID 10 on a Red Hat 9 server.  It's very basic:
+(A with RAID 1 mirror A') concatenated in RAID 0 with (B with RAID 1 mirror
+B'))
 
-I've just setup a raid 10 array (6 mirrors striped together) and have 
-two extra drives available as hot spares.  The mirrors themselves are 
-composed of two drives on separate scsi controllers to keep the SCSI bus 
-from saturating.  The performance of this setup is just phenomenal, but 
-the hot spares are not yet setup.
+During boot, the system finds the RAID1 mirrors but not the RAID0 concat of
+them.
+I can have the system start the RAID 0 with a line in the rc.local script
+easily enough, but it seems to me that there should be a more graceful way
+of doing this.  What am I missing?  In the conf files, I have the RAID1
+mirrors listed first already - that alone doesn't do it.  It's as if there
+really needs to be a second auto-discovery pass.
 
-It appears that when using mdadm that one can use the spare-group 
-feature to share a single hot-spare amongst multiple raid groups. 
-AFAICT, this is done by placing the hot spare or spares in a single 
-mirror, then designating it as part of the same spare group as a number 
-of other mirrors using the same spare-group name.  For instance, if 
-/dev/md0 has two spare drives, but /dev/md1 does not, I can do this to 
-share the spares:
+Alex
 
-ARRAY /dev/md0 level=raid1 num-devices=2 
-devices=/dev/sda1,/dev/sde1,/dev/sdc1,/dev/sdd1 spare-group=g1
-ARRAY /dev/md1 level=raid1 num-devices=2 devices=/dev/sdb1,/dev/sdf1 
-spare-group=g1
-ARRAY /dev/md2 level=raid0 num-devices=2 devices=/dev/md0,/dev/md1
 
-This is very handy, but performance-wise it's suboptimal.  When a drive 
-fails the system might activate a spare that's on a different scsi chain 
-than the drive that just failed, reducing overall redundancy and 
-throughput.   It'd be nice if when a drive fails, a hot spare on the 
-same chain would be preferred over a drive on a different chain.  Of 
-course this is a pretty arbitrary distinction and something that would 
-need configuration, but it doesn't seem like too much of a stretch over 
-what mdadm can do already.  Maybe some sort of extended mdadm.conf 
-syntax like:
-
-AFFINITY /dev/sda,/dev/sdb spares=/dev/sdc
-AFFINITY /dev/sde,/dev/sdf spares=/dev/sdd
-
-(Assuming sda, sdb and sdc are on one chain and sde, sdf, and sdd are on 
-another).
-
-Is an enhancement like this feasible?
-
-Thanks,
-
--Brendan (blc@redhat.com)
