@@ -1,134 +1,63 @@
-From: Dominik Sennfelder <sennfelder@gmx.de>
-Subject: Re: Raid Failed What to to
-Date: Sun, 23 May 2004 20:31:51 +0200
+From: Ben Edwards <ben@serverone.co.uk>
+Subject: Trying to work out how to mount Highpoint RAID
+Date: Sun, 23 May 2004 19:56:57 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <40B0EE17.3060708@gmx.de>
-References: <200405211459.i4LExPB24054@www.watkins-home.com>
+Message-ID: <40B0F3F9.7000601@serverone.co.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200405211459.i4LExPB24054@www.watkins-home.com>
-To: Guy <bugzilla@watkins-home.com>, linux-raid@vger.kernel.org
+To: Linux RAID List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Looks Bad :(
+Trying to work out how to mount highpoint RAID array.  It was set up 
+under Windows 2000 and has an NT file system, so I know it should be 
+mounted read only.  I enclose output from dmesg below whitch is kind of 
+odd because it seems hde is recognised OK but hdf has an 'unknown 
+partision table'.
 
-with mkraid i get the following output in /var/log/syslog
+I also get a 'No raid array found' in messages (also included below.  So 
+has anyone got any ideas what I do next, please bear in mond this is my 
+first adventure into Linux RAID so I am a newbee as far as this is 
+conserved.
 
-May 23 19:13:47 utgard kernel: md: bind<hde1>
-May 23 19:13:47 utgard kernel: md: bind<hdi1>
-May 23 19:13:47 utgard kernel: md: bind<hdk1>
-May 23 19:13:47 utgard kernel: raid5: device hdk1 operational as raid disk 3
-May 23 19:13:47 utgard kernel: raid5: device hdi1 operational as raid disk 2
-May 23 19:13:47 utgard kernel: raid5: device hde1 operational as raid disk 0
-May 23 19:13:47 utgard kernel: raid5: cannot start dirty degraded array 
-for md0
-May 23 19:13:47 utgard kernel: RAID5 conf printout:
-May 23 19:13:47 utgard kernel:  --- rd:4 wd:3 fd:1
-May 23 19:13:47 utgard kernel:  disk 0, o:1, dev:hde1
-May 23 19:13:47 utgard kernel:  disk 2, o:1, dev:hdi1
-May 23 19:13:47 utgard kernel:  disk 3, o:1, dev:hdk1
-May 23 19:13:47 utgard kernel: raid5: failed to run raid set md0
-May 23 19:13:47 utgard kernel: md: pers->run() failed ...
+Regards,
+Ben
 
-so i tried mdadm with the options from raidtab
+dmesg output:
 
-mdadm -C /dev/md0 -l 5 -c 32 -p left-symmetric -n 4 /dev/hde1 /dev/hdi1 
-/dev/hdk1 missing /dev/hdg1
+...
+HPT370A: 100% native mode on irq 11
+    ide2: BM-DMA at 0xa400-0xa407, BIOS settings: hde:DMA, hdf:DMA
+    ide3: BM-DMA at 0xa408-0xa40f, BIOS settings: hdg:pio, hdh:pio
+hda: ST320410A, ATA DISK drive
+hdb: TOSHIBA ODD-DVD SD-M1802, ATAPI CD/DVD-ROM drive
+hdd: LITE-ON DVDRW SOHW-812S, ATAPI CD/DVD-ROM drive
+hde: IC35L090AVV207-0, ATA DISK drive
+hdf: IC35L090AVV207-0, ATA DISK drive
+ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
+ide1 at 0x170-0x177,0x376 on irq 15
+ide2 at 0x9400-0x9407,0x9802 on irq 11
+hda: max request size: 128KiB
+hda: 39102336 sectors (20020 MB) w/2048KiB Cache, CHS=38792/16/63
+ hda: hda1 hda2
+hde: max request size: 1024KiB
+hde: 160836480 sectors (82348 MB) w/1821KiB Cache, CHS=16383/255/63
+ hde: hde1
+hdf: max request size: 1024KiB
+hdf: 160836480 sectors (82348 MB) w/1821KiB Cache, CHS=16383/255/63
+ hdf: unknown partition table
+...
 
-this seems to work, the raid startet without any error
-but when i try to mount the array i geht
+/var/log/messages:
+...
+May  6 18:54:41 blue kernel: Highpoint HPT370 Softwareraid driver for 
+linux version 0.01
+May  6 18:54:41 blue kernel: No raid array found
+...
 
-utgard:~# mount /dev/md0 /mnt/hdd1/
-mount: wrong fs type, bad option, bad superblock on /dev/md0,
-       or too many mounted file systems
-
-a cfdisk tries to start with with a zero table.
-
-any ideas ?
-
-Dominik
-
-
-Guy wrote:
-
->This is an example for using mdadm where the second of three disks is bad.
->But you must use the same chunk size and other RAID5 parameters or the array
->will have bogus data.  It would be nice if you still have the original
->command you used to create the array.
->
->mdadm -C /dev/md0 -l 5 -n 3 /dev/hda3 missing /dev/hdc3
->
->Guy
->
->-----Original Message-----
->From: Guy [mailto:bugzilla@watkins-home.com] 
->Sent: Friday, May 21, 2004 10:00 AM
->To: 'Clemens Schwaighofer'; 'Dominik Sennfelder'
->Cc: 'linux-raid@vger.kernel.org'
->Subject: RE: Raid Failed What to to
->
->If you re-make the array with the same parameters as it has now the data
->will not be lost (assuming it is still there now).  If 1 disk is really bad
->then leave it out.
->
->The procedures depend on which program you use to create the array.  Do you
->use mkraid or mdadm?
->
->Guy
->
->-----Original Message-----
->From: linux-raid-owner@vger.kernel.org
->[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Clemens Schwaighofer
->Sent: Friday, May 21, 2004 4:45 AM
->To: Dominik Sennfelder
->Cc: linux-raid@vger.kernel.org
->Subject: Re: Raid Failed What to to
->
->-----BEGIN PGP SIGNED MESSAGE-----
->Hash: SHA1
->
->Dominik Sennfelder wrote:
->| Hello
->|
->| I have got a Raid 5 with 4 160 GB Disk,
->| On of the Disks Failed because. But I know its OK I had this for some
->| times.
->| A Restart solved The Problem.
->| But now  Tried to raidhotremove the Drive and removed the wrong drive.
->| I just recongized the Problem after i raidhotadded itagain.
->| No the Raid tries to sync again.
->
->well if you removed two drives from your Raid5 array, it might got
->competly out of sync and then there is no way to recover. I have never
->tried this with my raid, but if you add another disk it well be
->re-synced, ergo it tries to rebuild the array out of the CRCs on the
->other drives, if you remove two, you don't have enough redudant data to
->do this (raid 6 can recover from a 2 drive failure).
->
->I hope you have a backup.
->
->- --
->Clemens Schwaighofer - IT Engineer & System Administration
->==========================================================
->TEQUILA\Japan, 6-17-2 Ginza Chuo-ku, Tokyo 104-8167, JAPAN
->Tel: +81-(0)3-3545-7703            Fax: +81-(0)3-3545-7343
->http://www.tequila.co.jp
->==========================================================
->-----BEGIN PGP SIGNATURE-----
->Version: GnuPG v1.2.4 (GNU/Linux)
->
->iD8DBQFArcGmjBz/yQjBxz8RAkYKAJ9TAc03OnmIth/M03xBmopKerZLOQCcCiiG
->wk/lAjdcrd1jPWSoLyOGLAE=
->=5uyj
->-----END PGP SIGNATURE-----
->-
->To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->
->  
->
+-- 
+Ben Edwards - currently in Bournemouth
+http://www.gurtlush.org.uk - weblog
+http://www.cultureshop.org - buy alternative video
 
