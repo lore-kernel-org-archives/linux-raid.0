@@ -1,122 +1,93 @@
-From: Lukas Kubin <kubin@opf.slu.cz>
-Subject: Array of disks attached to multiple controllers
-Date: Tue, 14 Sep 2004 15:21:32 +0200
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: Array of disks attached to multiple controllers
+Date: Tue, 14 Sep 2004 11:22:27 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <4146F05C.9090206@opf.slu.cz>
+Message-ID: <200409141522.i8EFMW332429@watkins-home.com>
+References: <20040914144624.GB1703@koocotte.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/x-pkcs7-signature"; micalg=sha1; boundary="------------ms080907000806060001040709"
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <20040914144624.GB1703@koocotte.org>
+To: 'Sebastien Koechlin' <seb.kernel@koocotte.org>, 'Lukas Kubin' <kubin@opf.slu.cz>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This is a cryptographically signed message in MIME format.
+I know this one!  Got to go from memory since I can't find Neil's answer.
 
---------------ms080907000806060001040709
-Content-Type: multipart/mixed;
- boundary="------------030403080500050301030603"
+md will do 4K disk I/O.  I am not sure about the size, but much smaller than
+normal stripe size.
+If you were to change 1 sector, md would read the 4K that contains the
+sector, and read the 4K of parity.  Factor out the old data, factor in the
+new data.  Then write the new 4K data and 4K parity.
 
-This is a multi-part message in MIME format.
---------------030403080500050301030603
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+- Get old data: 1 read (4K)
+- Get current/old parity: 1 read (4K)
+- factor out old data (XOR)
+- compute new parity (XOR)
+- Write data: 1 write (4k)
+- Write parity: 1 write (4k)
 
-I'm having troubles creating Raid-5 array consisted of 16 (+1 spare) 
-disks attached to two 3ware (not same version) SATA controllers.
+There is some read-ahead, but I don't know what layer does that.
+My array is over 3 times as fast as a single disk.  Using dd I get 19M/sec
+on any 1 disk, but 61M/sec on the array.  My write speed is 30M/sec creating
+a file on a filesystem.
+Multi-threaded random read speed is much faster than 1 disk.  Maybe 14 times
+faster, but not sure.
 
-Mkraid creates the array without problems, however the array's total 
-size only equals the sum of space on drives attached to the first of 2 
-controllers. Ie, sd{b..f} are on scsi0 and sd{g..r} on scsi1. The space 
-of created array is close to the sum of drives attechted to scsi0 only.
+Guy
 
-Is it possible to combine drives on 2 controllers into one array? If 
-not, what solution should I use to have one filesystem containing whole 
-the drivespace on Raid-5?
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Sebastien Koechlin
+Sent: Tuesday, September 14, 2004 10:46 AM
+To: Lukas Kubin
+Cc: Guy; linux-raid@vger.kernel.org
+Subject: Re: Array of disks attached to multiple controllers
 
-Thank you.
+On Tue, Sep 14, 2004 at 04:07:43PM +0200, Lukas Kubin wrote:
+>      Chunk Size : 128K
+(...)
+>     Number   Major   Minor   RaidDevice State
+>        0       8       16        0      active sync   /dev/sdb
+>        1       8       32        1      active sync   /dev/sdc
+>        2       8       48        2      active sync   /dev/sdd
+>        3       8       64        3      active sync   /dev/sde
+>        4       8       80        4      active sync   /dev/sdf
+>        5       8       96        5      active sync   /dev/sdg
+>        6       8      112        6      active sync   /dev/sdh
+>        7       8      128        7      active sync   /dev/sdi
+>        8       8      144        8      active sync   /dev/sdj
+>        9       8      160        9      active sync   /dev/sdk
+>       10       8      176       10      active sync   /dev/sdl
+>       11       8      192       11      active sync   /dev/sdm
+>       12       8      208       12      active sync   /dev/sdn
+>       13       8      224       13      active sync   /dev/sdo
+>       14       8      240       14      active sync   /dev/sdp
+>       15      65        0       15      active sync   /dev/sdq
+>       16      65       16       16      spare   /dev/sdr
 
-lukas
+I have a question about performance: What is the cost of writing a
+'data-unit' in such an array?
+
+- Write data: 1 write
+- Calculate new checksum: 14 reads
+- Write checksum: 1 write
+
+Right or wrong?
+
+What is the granularity of thoses ckecksum updates? 512 bytes (sector size)?
+4k (page size on i386)? chunk-size?
+
+Does Linux do read-ahead on thoses 14 disks reads?
+
+Thanks
 
 -- 
-Lukas Kubin
+Seb, autocuiseur
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-phone: +420596398275
-email: kubin@opf.slu.cz
-
-Information centre
-The School of Business Administration in Karvina
-Silesian University in Opava
-Czech Republic
-http://www.opf.slu.cz
-
---------------030403080500050301030603
-Content-Type: text/x-vcard; charset=utf-8;
- name="kubin.vcf"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="kubin.vcf"
-
-begin:vcard
-fn:Lukas Kubin
-n:Kubin;Lukas
-org:The School of Business Administration in Karvina;Information centre
-adr:;;Univerzitni namesti 1934/3;Karvina;;73340;Czech Republic
-email;internet:kubin@opf.slu.cz
-title:Network administrator
-tel;work:+420596398275
-x-mozilla-html:FALSE
-url:http://www.opf.slu.cz
-version:2.1
-end:vcard
-
-
---------------030403080500050301030603--
-
---------------ms080907000806060001040709
-Content-Type: application/x-pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
-
-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
---------------ms080907000806060001040709--
