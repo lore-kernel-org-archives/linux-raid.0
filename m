@@ -1,53 +1,76 @@
-From: Johannes Puschmann <puschl@puschl.at>
-Subject: RE: building network software raid
-Date: Tue, 21 May 2002 21:31:16 +0200
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: RE: Software RAID Stopped Working With Aurora Kernel
+Date: Wed, 22 May 2002 06:46:42 +1000 (EST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <210BDEC895C9D511A18D0000B493CEB4BD42@EXCHANGE>
+Message-ID: <15594.45618.113616.670740@notabene.cse.unsw.edu.au>
+References: <15594.14625.624567.495812@notabene.cse.unsw.edu.au>
+	<NDBBIAKEEKGGEIKCBKNAEENACPAA.kc130iseo@coastalnet.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: 'lylai' <lylai@csie.nctu.edu.tw>
-Cc: 'linux-raid' <linux-raid@vger.kernel.org>
+In-Reply-To: message from Cal Webster on Tuesday May 21
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi!
-Take a look at
-http://www.complang.tuwien.ac.at/reisner/drbd/
+On Tuesday May 21, kc130iseo@coastalnet.com wrote:
+> 
+> 1. Is there anything I need to change in "/etc/raidtab"?
+> 	- Should it match the actual configuration?
 
-It may help you.
+raidtab is only really used by mkraid.
+raidstart uses it to find one drive in the array, and ignores the rest
+of raidtab.  Given that one drive, it reads the superblock to find
+other drives.  You shouldn't need to change raidtab.
 
-Best regards
-Puschl
+> 	- Differences between raidtools 0.90-6 and 1.00.2-1.3
 
+Don't know.  Not much I think.
 
-> -----Original Message-----
-> From: lylai [mailto:lylai@csie.nctu.edu.tw]
-> Sent: Tuesday, May 21, 2002 6:52 PM
-> To: unlisted-recipients
-> Cc: linux-raid
-> Subject: building network software raid
 > 
-> I'm a student doing an OS project: build a software raid over the
-> network.
+> 2. Will the "Version" number in the superblock automatically be updated when
+> I start the RAID?
+
+No, the version of the superblock is still 0.90.0.  This number
+describes the format.
+
+> ==================
+> Things to do next:
+> ==================
 > 
-> I intend to use existing software RAID program. The plan is that build
-> the raid on a device that is not a real physical device, but a device I
-> made up. I'll handle the I/O request through the network.
+> ## Update the superblock:
 > 
-> I already wrote a simple device driver with all the required functions,
-> and try to "mkraid" on the created new devices. But it failed with
-> error:
+> mdadm --examine --sparc2.2update /dev/sda1
 > 
-> 	/dev/md0: Invalid arguments
+> ## Re-check after updating:
 > 
-> I want to know what information is needed to make mkraid, ... etc. run
-> properly that they see it as a true hard disk. And what operations are
-> needed to pass these information out.
+> mdadm --examine --sparc2.2 /dev/sda1
+
+This should show (different) garbage.
+After you have updated, your superblock no longer has the
+sparc-on-2.2 breakage, and
+   mdadm --examine /dev/sda1
+should show the correct superblock.
+
 > 
-> Thank you for your advices.
+> ## Assemble the array (use raid device order):
+> ## Only assemble active devices, not spare.
 > 
+> mdadm --assemble /dev/md0 /dev/sda1 /dev/sdb1 /dev/sdf1 /dev/sdd1 /dev/sde1
 > 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> ## Start the RAID
+> 
+> raidstart /dev/md0
+
+No, you don't need to do this. "mdadm --assemble" assembles the raid
+and starts it..  
+
+> 
+> ## Verify that raid is running
+> 
+> cat /proc/mdstat
+> 
+> ## Verify that data is intact
+> 
+
+NeilBrown
