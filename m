@@ -1,54 +1,117 @@
-From: Paul Clements <Paul.Clements@SteelEye.com>
-Subject: [PATCH] md: fix device size calculation with non-persistent superblock
-Date: Mon, 23 Feb 2004 11:57:29 -0500
+From: Jeff Kadonoff <jeffk@quotemedia.com>
+Subject: md multipath, sun t3 partner group, multinode cluster
+Date: 23 Feb 2004 11:31:35 -0800
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <403A30F9.D54AAC68@SteelEye.com>
-References: <20040223024124.GA1590@psilocybus> <16441.33071.218049.163976@notabene.cse.unsw.edu.au>
+Message-ID: <1077564695.28587.141.camel@apogee>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------0F7B22E4CB6C4C1E76FD28F5"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This is a multi-part message in MIME format.
---------------0F7B22E4CB6C4C1E76FD28F5
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Hi,
 
-Neil,
+I am trying to set up a 2 node cluster using linux 2.4.21 and a sun t3
+partner group.
 
-Currently, the device size calculation is not correct when hot-adding
-devices to arrays with non-persistent superblocks. Device size is always
-calculated as if there were a physical superblock on every device. The
-attached simple change to hot_add_disk() fixes the problem.
+I have set up the multipath md like so:
 
-Thanks,
-Paul
---------------0F7B22E4CB6C4C1E76FD28F5
-Content-Type: text/x-patch; charset=us-ascii;
- name="md_nonpersistent_sb_fix.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="md_nonpersistent_sb_fix.diff"
+raiddev                 /dev/md0
+raid-level              multipath
+nr-raid-disks           1
+nr-spare-disks          1
+chunk-size              4
+device                  /dev/sdf1
+raid-disk               0
+device                  /dev/sdb1
+spare-disk              1
 
---- 2_6_3_rc2/drivers/md/md.c.PRISTINE	Mon Feb 23 11:01:57 2004
-+++ 2_6_3_rc2/drivers/md/md.c	Mon Feb 23 11:29:10 2004
-@@ -2365,7 +2365,12 @@ static int hot_add_disk(mddev_t * mddev,
- 		return -EINVAL;
- 	}
+The mkraid wouldn't work until I poke the second device with an fdisk,
+wait for the t3 to switch paths and then write the partition map.
+
+# /sbin/mkraid -R /dev/md0
+DESTROYING the contents of /dev/md0 in 5 seconds, Ctrl-C if unsure!
+handling MD device /dev/md0
+analyzing super-block
+disk 0: /dev/sdf1, 69930913kB, raid superblock at 69930816kB
+couldn't open device /dev/sdb1 -- No such device or address
+mkraid: aborted.
+(In addition to the above messages, see the syslog and /proc/mdstat as
+well for potential clues.)
+
+# /sbin/fdisk /dev/sdb
  
--	rdev->sb_offset = calc_dev_sboffset(rdev->bdev);
-+	if (mddev->persistent)
-+		rdev->sb_offset = calc_dev_sboffset(rdev->bdev);
-+	else
-+		rdev->sb_offset = rdev->bdev->bd_inode->i_size
-+							>> BLOCK_SIZE_BITS;
-+
- 	size = calc_dev_size(rdev, mddev->chunk_size);
- 	rdev->size = size;
- 
+Unable to read /dev/sdb
 
---------------0F7B22E4CB6C4C1E76FD28F5--
+---- wait a bit for the failover to occur -----
+
+# /sbin/fdisk /dev/sdb
+ 
+The number of cylinders for this disk is set to 8706.
+There is nothing wrong with that, but this is larger than 1024,
+and could in certain setups cause problems with:
+1) software that runs at boot time (e.g., old versions of LILO)
+2) booting and partitioning software from other OSs
+   (e.g., DOS FDISK, OS/2 FDISK)
+ 
+Command (m for help): w
+The partition table has been altered!
+ 
+Calling ioctl() to re-read partition table.
+Syncing disks.
+
+# /sbin/mkraid -R /dev/md0
+DESTROYING the contents of /dev/md0 in 5 seconds, Ctrl-C if unsure!
+handling MD device /dev/md0
+analyzing super-block
+disk 0: /dev/sdf1, 69930913kB, raid superblock at 69930816kB
+disk 1: /dev/sdb1, 69930913kB, raid superblock at 69930816kB
+
+# cat /proc/mdstat
+Personalities : [multipath]
+read_ahead 1024 sectors
+Event: 1
+md0 : active multipath sdb1[1] sdf1[0]
+      69930816 blocks [1/1] [U]
+       
+unused devices: <none>
+
+# /sbin/raidstop /dev/md0
+# /sbin/raidstart /dev/md0
+# cat /proc/mdstat
+Personalities : [multipath]
+read_ahead 1024 sectors
+Event: 2
+md0 : active multipath sdf1[0]
+      69930816 blocks [1/1] [U]
+       
+unused devices: <none>
+
+The t3 arrays like to talk through one line or the other, this behavior
+seems to lead the md driver to think that one of the lines is always
+down. Then, in an actual failover the entire system hangs, disallowing
+login etc. even if the failure is restored (I was running the mdmpd too
+btw). /proc/mdstat shows two device files after the mkraid but after a
+raidstop and a raidstart, it only ever sees 1 device per md group.
+Sometimes a raidhotadd can be used to re-add the device, but if the t3
+isn't actively using that particular line you get something like this:
+
+# /sbin/raidhotadd /dev/md1 /dev/sdg1
+/dev/md1: can not hot-add disk: invalid argument.
+
+
+It then occurred to me that the md driver stores state on the disks and
+so it might be unsuitable for a clustered setup anyway. It is quite
+possible that the device ordering or failure states could be different
+for different nodes. In addition, it might not be safe for the different
+nodes to write their state to the same disk locations without
+coordination.
+
+Am I off base with this setup? Is md suitable for what I am trying to
+achieve?
+
+regards,
+
+Jeff
 
