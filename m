@@ -1,54 +1,40 @@
-From: NeilBrown <neilb@cse.unsw.edu.au>
-Subject: [PATCH] md -  Resolve problem with refcounting of md arrays.
-Date: Mon, 28 Jul 2003 16:56:43 +1000
+From: mjstumpf <mjstumpf@cotse.net>
+Subject: bug with resync in specific config
+Date: Mon, 28 Jul 2003 09:12:19 -0400 (EDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <E19h1w3-0002rB-00@notabene>
+Message-ID: <bWpzdHVtcGY=.f9ad4b23e7168dc967940347ea06ba08@1059397939.cotse.net>
+Reply-To: mjstumpf@pobox.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Marcelo Tosatti <marcelo@conectiva.com.br>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi,
 
-Because an md array may not exist yet when the device it opened, the ->active
-count, which is incremented on opening if the array exists, is not 100% reliable.
-This patch changes md to test inode->i_bdev->bd_openers rather than mddev->active
-to test if an array is still in used before stopping it.
+I have a production server that I can't really experiment with, but I
+thought I'd warn / ask if this has been seen before.  (Running stock
+2.4.20 kernel, 2 raid-5 IDE (via external promise card) arrays LVM'd
+together).
 
-(patch against 2.4.22-pre9)
+I had issues before where multiple drives kicked out simultaneously, so I
+added a hot spare that was large enough to contain a hot spare volume for
+each of my raid-5 arrays.  Everything seemed great until I had a lockup
+that required an unclean poweroff/reboot, at which time I witnessed this:
 
-diff ./drivers/md/md.c~current~ ./drivers/md/md.c
---- ./drivers/md/md.c~current~	2003-07-28 16:24:11.000000000 +1000
-+++ ./drivers/md/md.c	2003-07-28 16:26:48.000000000 +1000
-@@ -1805,10 +1805,12 @@ static int do_md_stop(mddev_t * mddev, i
- 	int err = 0, resync_interrupted = 0;
- 	kdev_t dev = mddev_to_kdev(mddev);
- 
-+#if 0 /* ->active is not currently reliable */
- 	if (atomic_read(&mddev->active)>1) {
- 		printk(STILL_IN_USE, mdidx(mddev));
- 		OUT(-EBUSY);
- 	}
-+#endif
- 
- 	if (mddev->pers) {
- 		/*
-@@ -2742,12 +2744,17 @@ static int md_ioctl(struct inode *inode,
- 			goto done_unlock;
- 
- 		case STOP_ARRAY:
--			if (!(err = do_md_stop (mddev, 0)))
-+			if (inode->i_bdev->bd_openers > 1)
-+				err = -EBUSY;
-+			else if (!(err = do_md_stop (mddev, 0)))
- 				mddev = NULL;
- 			goto done_unlock;
- 
- 		case STOP_ARRAY_RO:
--			err = do_md_stop (mddev, 1);
-+			if (inode->i_bdev->bd_openers > 1)
-+				err = -EBUSY;
-+			else 
-+				err = do_md_stop (mddev, 1);
- 			goto done_unlock;
- 
- 	/*
+Both raid-5s needed to be resynced.  Because a volume was shared between
+RAID-5s, the resync on one was delayed.  However, after the first RAID
+resynced, one time the machine locked up... the other, the second resync
+froze at 4% for about 8-12 hours.  In both cases I had to hard-power-off.
+
+I disconnected the hot spare drive, fired it up, and everything resynced
+nicely.
+
+Has this been seen?  Is there a fix?  I can't really provide much more
+info because I'm not willing to risk the data by experimenting..
+
+Regards,
+Michael Stumpf
+
+
