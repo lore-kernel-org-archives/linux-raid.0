@@ -1,45 +1,61 @@
-From: Maurice Hilarius <maurice@harddata.com>
-Subject: RE: Single md physical device limit
-Date: Mon, 19 Aug 2002 18:53:15 -0600
+From: Duncan Laurie <duncan@sunbalt.net>
+Subject: Re: Problems with RAID1 on cobalt raq3
+Date: 19 Aug 2002 20:56:41 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <5.1.0.14.2.20020819185116.04655a70@mail.harddata.com>
-References: <message from Rechenberg, Andrew on Monday August 19>
- <CDF05CB9FCA0C845B9778F9E463C476101FC63@cinshrexc01.shermfin.com>
+Message-ID: <1029815801.7736.13.camel@atherton>
+References: <200208172056.g7HKuHm05754@raq.iceblink.org>
+	<1029625780.14769.134.camel@atherton>  <20020819083834.GM26818@jinny.ie>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; format=flowed
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <15713.23702.808856.809290@notabene.cse.unsw.edu.au>
-To: linux-raid@vger.kernel.org
-Cc: "Rechenberg, Andrew" <ARechenberg@shermanfinancialgroup.com>
+In-Reply-To: <20020819083834.GM26818@jinny.ie>
+To: valen@tuatha.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-With regards to your message at 03:01 PM 8/19/02, Neil Brown. Where you stated:
->On Monday August 19, ARechenberg@shermanfinancialgroup.com wrote:
-> > Interesting, when I initially built my array (with RedHat raidtools-0.90
-> > not mdctl/mdadm, on kernel 2.4.17) it stated that I could only stripe
-> > across 12 devices.  Do you have any idea from which this number comes?
-> > Is it an old limit?
+On Mon, 2002-08-19 at 01:38, John P. Looney wrote: 
 >
->Yes, some old limit.  I don't remember the exact details, they were
->never important to me, but I think it involved some miscalculation
->about how many entries would actually fit in the 4096 byte superblock.
+>  First off set_boot_dev was used to set the boot device to hda2 (I 
+> tryed hda1, and as you pointed out, you can't move the root device
+> easily to hda2 later).
+> 
+>  I had originally planned that hda1 was /boot and hda2 was / - in the end,
+> to get *anything* booting, I'd to copy the /boot files into a /boot
+> directory on the / filesystem, and write off hda1 as a waste of disk
+> space.
 
+I think you want this to be md1, but to do that and have the kernel on
+a separate device (not a member of the raid set) will require you to 
+override the root device for the ROM kernel with set_lparams. 
 
-As shipped in Red Hat 7.2 and earlier that limit existed.
-It was fixed in 7.3
-If you need a copy of the srpm or rpm with the patches applied let me know.
-If you are using Disk Druid from 7.2 or earlier, you will need to update 
-that as well, as it does not recognize the fix.
+I was incorrect in saying that "set_boot_dev md1" does not have the same 
+effect as "set_params root=/dev/md1", what I was seeing is actually a bug 
+in the ROM.  When you run "set_boot_dev md1" it updates the major/minor 
+bytes in CMOS, but it does not set the variable that is used to create 
+the zero-page.  This means it will have the stale value until it is 
+rebooted. (this is with a 2.9.x ROM, I am not sure about 2.3.40) 
 
+>  Woo-hoo. Exactly what I wanted. I think.
+> 
+>  So, do I do 
+> 
+>      set_boot_dev hda1                      (/boot)
+>      set_params "root=/dev/md0 ro"         
+> 
+>  And that should do what I've been trying to do ? Or do I have to change
+> the paramters to the ROM kernel also ?
 
+I would try this:
 
-With our best regards,
+	set_boot_dev md1
+	[reboot here - bug workaround]
+	set_lparams root=/dev/hda1
 
-Maurice W. Hilarius       Telephone: 01-780-456-9771
-Hard Data Ltd.               FAX:       01-780-456-9772
-11060 - 166 Avenue        mailto:maurice@harddata.com
-Edmonton, AB, Canada      http://www.harddata.com/
-    T5X 1Y3
+(this is assuming hda1 is /boot, and hda2+hdg1=md1 is /)
 
-2.3TB RAID5 NAS server - dual AthlonMP CPU, Linux, $10,995 CAD / $6850 USD
+The problem with this solution is you no longer get the ability to boot
+autonomously.  The different root device is not saved in CMOS so has to
+be re-entered each time.
 
+-duncan
