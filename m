@@ -1,116 +1,97 @@
-From: Gerd Knops <gerti@bitart.com>
-Subject: md confused by changing device names?
-Date: Thu, 7 Oct 2004 14:35:47 -0500
+From: Dave Olien <dmo@osdl.org>
+Subject: Re: [dm-devel] [ANNOUNCE] multipath-tools-0.3.0
+Date: Thu, 7 Oct 2004 13:01:43 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16ADEDFA-1898-11D9-B27F-00039363AEBE@bitart.com>
-Reply-To: gerti-raid@bitart.com
-Mime-Version: 1.0 (Apple Message framework v619)
-Content-Type: text/plain; charset=US-ASCII; format=flowed
-Content-Transfer-Encoding: 7bit
+Message-ID: <20041007200143.GA9667@osdl.org>
+References: <1096071849.4466.31.camel@zezette> <1097054573.4163b96d1262c@imp5-q.free.fr>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+Content-Disposition: inline
+In-Reply-To: <1097054573.4163b96d1262c@imp5-q.free.fr>
+To: device-mapper development <dm-devel@redhat.com>
+Cc: linux-raid@vger.kernel.org, linux-hotplug-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
 
-I am testing failures in an md RAID5 scenario, and I am stuck.
+Christophe,
 
-Situation: 3 SATA disks with 1 partition, sda1, sdb1 and sdc1 are used 
-to create a RAID5 array.
+I downloaded your new multipath tools, and they seem to have solved a problem
+I was having with the previous version.
 
-Now I restart the system with the 'middle' disk powered down. md starts 
-the RAID in degraded mode and works fine, but the system now renamed 
-the partition previously known as sdc1 to sdb1.
+The only difficulty I had was with the new klibc version (klibc-0.181).
+For i386 architecture, it compiles by default with -mregparm=3, to
+pass arguments in registers.
 
-I restart, with power to the 'middle' drive restored. The 'middle' 
-drive re-asumes its original name sdb1, and the other disk moves back 
-to sdc1.
+But with my version of compiler (gcc 3.2.2), the rest of the multipath
+libraries and utilities were compiled to pass arguments on the stack.
+So the resulting binaries segfault the first time they call a klibc library.
 
-Now when md starts it accepts sda1, kicks off sdb1 as outdated, and 
-never seems to even look at sdc1. Hence it will not start the array.
+I modified the klibc/klibc/arch/i386/MCONFIG file to compile with
+stack argument passing, and everything works great.
 
-Looking at the superblocks with lsraid sda1 and sdb1 show a state of 
-'good', sdc1's state is unknown. However the 'last updated' dates on 
-sda1 and sdc1 match, so at least in theory the RAID should be able to 
-start up with those 2 partitions. (see below for superblock listing, it 
-uses aliased device names which did not help though).
+Is there a compiler version now that by default passes arguments
+in registers?
 
-Am I correct to assume that md stored the fact that it ran in degraded 
-mode using sda1 and sdb1 (whiich really was sdc1), and hence it never 
-looks at sdc1 again (other than to apparently set the state to 
-'unknown')?
+Thanks!
+Dave Olien
 
-I attempted to work around the renaming issues using scsidev and 
-'fixed' device names, but apparently somehow md discovers the original 
-names and works with those at some levels.
-
-Any suggestions? And is there a way to mark the superblock of the 3rd 
-drive as 'good' so that md considers it and will start up?
-
-BTW: Linux xanadu2 2.6.8-1-386 #1 Mon Sep 13 23:29:55 EDT 2004 i686 
-GNU/Linux
-
-Thanks much
-
-Gerd
-
-
-xanadu2:~# lsraid -D -d /dev/scsi/cd_1_3-p1 -d /dev/scsi/cd_2_3-p1 -d 
-/dev/scsi/cd_3_3-p1 -l
-[dev 8, 1] /dev/scsi/cd_1_3-p1:
-         md version              = 0.90.0
-         superblock uuid         = 0F4274E7.6F390D6E.6521DD63.654D0072
-         md minor number         = 0
-         created                 = 1097103636 (Wed Oct  6 18:00:36 2004)
-         last updated            = 1097103991 (Wed Oct  6 18:06:31 2004)
-         raid level              = 5
-         chunk size              = 256 KB
-         apparent disk size      = 47872 KB
-         disks in array          = 2
-         required disks          = 3
-         active disks            = 2
-         working disks           = 2
-         failed disks            = 1
-         spare disks             = 0
-         position in disk list   = 0
-         position in md device   = 0
-         state                   = good
-
-[dev 8, 17] /dev/scsi/cd_2_3-p1:
-         md version              = 0.90.0
-         superblock uuid         = 0F4274E7.6F390D6E.6521DD63.654D0072
-         md minor number         = 0
-         created                 = 1097103636 (Wed Oct  6 18:00:36 2004)
-         last updated            = 1097103744 (Wed Oct  6 18:02:24 2004)
-         raid level              = 5
-         chunk size              = 256 KB
-         apparent disk size      = 47872 KB
-         disks in array          = 3
-         required disks          = 3
-         active disks            = 3
-         working disks           = 3
-         failed disks            = 0
-         spare disks             = 0
-         position in disk list   = 2
-         position in md device   = 2
-         state                   = good
-
-[dev 8, 33] /dev/scsi/cd_3_3-p1:
-         md version              = 0.90.0
-         superblock uuid         = 0F4274E7.6F390D6E.6521DD63.654D0072
-         md minor number         = 0
-         created                 = 1097103636 (Wed Oct  6 18:00:36 2004)
-         last updated            = 1097103991 (Wed Oct  6 18:06:31 2004)
-         raid level              = 5
-         chunk size              = 256 KB
-         apparent disk size      = 47872 KB
-         disks in array          = 2
-         required disks          = 3
-         active disks            = 2
-         working disks           = 2
-         failed disks            = 1
-         spare disks             = 0
-         position in disk list   = 2
-         position in md device   = 2
-         state                   = unknown
-
+On Wed, Oct 06, 2004 at 11:22:53AM +0200, christophe.varoqui@free.fr wrote:
+> Hello,
+> 
+> here goes multipath-tools-0.3.0
+> 
+> Faster release cycle.
+> Big things for some people out there.
+> Upgrade will need you to manualy remove your /etc/udev/rules.d/multipath.rules
+> and kill your devmap_name rule in udev.rules (we use a separate rules.d file
+> now)
+> 
+> In short :
+> 
+> 
+> * easy multipath-aware initrds on Debian SID
+> 	* fully fonctionnal with direct-attached SCSI disks (single-path)
+> 
+> Full ChangeLog for the release :
+> 
+>         * first cut at making scripts to create multipath-aware initrds
+> 	  those scripts are tested on Debian SID, and must be copied into
+> 	  /etc/mkinitrd/scripts. it works here.
+> 	* [multipath] verify presence of the /sys/block/... node before
+> 	  reading sysfs attributes. Avoids libsysfs and scsi_id stderr
+> 	  garbage
+> 	* [multipath] move down the stderr close (Ake Sandgren at umu.se)
+> 	* [multipath] don't care about 0-sized mp (Ake Sandgren at umu.se)
+> 	* [multipath] bump mp size field to ulong (Ake Sandgren at umu.se)
+> 	* [multipath] replace quiet/verbose flags by a verbosity one.
+> 	  introduce a new verbosity level : 1 == print only devmap names
+> 	  thus we can feed kpartx with that output
+> 	* [multipath] update man page to reflect the hotplug.d -> dev.d
+> 	  transition and replace the obsolete group_by_tur policy by the
+> 	  forgotten group_by_prio
+> 	* [multipath] provide a /etc/udev/rules.d/multipath.rules for
+> 	  multipath devices naming. Cleaner than the previously suggested
+> 	  rule addition in the main udev.rules
+> 	* [multipath] move out of hotplug.d to dev.d : kill synchronisation
+> 	  problems between device node creation and multipath execution.
+> 	  Incidentally the unfriendly $DEVPATH param become a friendly
+> 	  $DEVNAME (simply /dev/sdb)
+> 	* [multipath] rework the iopolicies name-to-id & id-to-name
+> 	  translations. kills the last compilation warning here too
+> 	* [kpartx] kill last compilation warnings
+> 	* bump klibc to 0.181
+> 	* add the debian/ packaging dir (make deb)
+> 	* prototype __clone & __clone2 (kills compilation warning)
+> 
+> As usual, doc and download at :
+> http://christophe.varoqui.free.fr/
+> 
+> regards,
+> --
+> christophe varoqui <christophe.varoqui@free.fr>
+> 
+> --
+> dm-devel mailing list
+> dm-devel@redhat.com
+> https://www.redhat.com/mailman/listinfo/dm-devel
