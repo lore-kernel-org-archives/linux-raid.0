@@ -1,32 +1,48 @@
-From: Joshua Baker-LePain <jlb17@duke.edu>
-Subject: Re: 3ware 7500-8 confusion
-Date: Mon, 24 Feb 2003 09:41:44 -0500 (EST)
+From: Derek Vadala <derek@cynicism.com>
+Subject: Re: ADD_NEW_DISK failed
+Date: Mon, 24 Feb 2003 10:52:55 -0500 (EST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0302240937520.2586-100000@chaos.egr.duke.edu>
-References: <5.1.1.6.2.20030222232508.039dbda0@mail.harddata.com>
+Message-ID: <20030224155255.BA98C3B808@jaded.cynicism.com>
+References: <15961.12440.64252.132242@notabene.cse.unsw.edu.au>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5.1.1.6.2.20030222232508.039dbda0@mail.harddata.com>
-To: Maurice Hilarius <maurice@harddata.com>
-Cc: Gregory Leblanc <gleblanc@linuxweasel.com>, linux-raid@vger.kernel.org
+In-Reply-To: <15961.12440.64252.132242@notabene.cse.unsw.edu.au>
+To: Neil Brown <neilb@cse.unsw.edu.au>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 23 Feb 2003 at 12:53am, Maurice Hilarius wrote
+On Mon, 24 Feb 2003, Neil Brown wrote:
 
-> Actually it makes tons of sense.
-*snip*
-> 2) If you lose a disk at a later date, you don;t have to worry about 
-> getting the same exact drive to replace it with.
+> Fourth paragraph of the "CREATE MODE" section:
+>
+>        To create a "degraded" array in which some devices are missing,  simply
+>        give the word missing in place of a device name.  This will cause mdadm
+>        to leave the corresponding slot in the array empty.   For  a  RAID4  or
+>        RAID5  array  at most one slot can be missing.  For a RAID1 array, only
+>        one real device needs to be given.  All of the others can be missing.
 
-Don't most hardware RAIDs (including the 3ware) deal just fine with 
-dissimilar new disks, as long as their block count is >= that of the 
-original disks?  My external IDE-SCSI unit does this, and I know my 3wares 
-deal with disks with different rotation speeds.
+Perhaps an example immediately following this one or in the examples
+section at the end of the manual page.
 
--- 
-Joshua Baker-LePain
-Department of Biomedical Engineering
-Duke University
+I hate to advocate something that rewards people for not RTFMing, but
+since this is probably the single most asked question about mdadm, perhaps
+some extra interactive logic would be helpful for this case.
+
+The obvious,
+
+	if --raid-devices > # of devices listed on the command line
+		then ask if the user is trying to create a degraded array
+
+seems like it might create more havoc for special cases though. I'm not
+sure it's really a good alternative. Maybe it's just a good idea to refer
+people to the section in the man page. Example:
+
+	n.b.: For help with degraded arrays, see the corresponding entry
+	in the manual page.
+
+
+--
+Derek Vadala, derek@cynicism.com, http://www.cynicism.com/~derek
 
 
