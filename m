@@ -1,54 +1,72 @@
-From: "Mark Klarzynski" <mark.k@computer-design.co.uk>
-Subject: good drive / bad drive  (maxtor topic)
-Date: Thu, 25 Nov 2004 11:46:06 -0000
-Message-ID: <005301c4d2e4$5a0bb670$4500a8c0@MarkK>
+From: Felix Bellaby <member@bellaby.freeserve.co.uk>
+Subject: RAID10 overwrites partition tables
+Date: Fri, 26 Nov 2004 18:28:20 +0100 (CET)
+Message-ID: <10578812.1101490100216.JavaMail.www@wwinf3001>
+Reply-To: member@bellaby.freeserve.co.uk
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
+Cc: neilb@cse.unsw.edu.au
 List-Id: linux-raid.ids
 
+   	 mdadm --level 10 does not seem to respect disk partition boundaries.
 
-In the world of hardware raid we decide that a drive has failed based on
-various criteria, one of which is the obvious 'has the drive responded'
-within a set time.  This set time various depending on the drive, the
-application, the load etc.  This 'timeout' value is realistically
-between 6 and 10 seconds.  There is no real formula, just lots of
-experience. Set it too short and drives will look failed too often, set
-it too long and you risk allowing a suspect drive to continue.
+Whilst trying to construct a small RAID10 array on a workstation, I naturally attempted
+to set the array up over partitions to leave somewhere for grub to access the kernel.
+Using partitions also assists with booting Fedora 3 as it relies on RAID autodetection
+and partition labels in its standard initial ram disk.
 
-Once we detect a timeout we have to decide what to with it. in SCSI we
-issue a scsi bus rest (hardware reset on the bus).. the reason we do
-this (and all hardware raid manufactures) is because life is just that
-way. drives do lock up.   We issue up to 3 resets, and then fail.  This
-is extremely effective and does exactly what it is supposed to do.
-Often the drive will never cause an issue again. if it is faulty then it
-will escalate and fail.
+However, the RAID10 seems to overwrite some of the partition tables.
 
-We have utilised countless sata drives, and timeouts are by far the most
-significant failure we see and as sata (although its hard to tell much
-else on sata).. but it is therefore imperative that the timeout values
-are correct for the drive and the application.
+For example, configuring a RAID10 array over 3 partitions as follows:
 
-But the point is that we do not see anywhere near the failure rates on
-the Maxtor's that you guys are mentioning.  Also, if we trial sata's on
-different hardware RAID's we see differing failure rates... (i.e. ICP
-come in higher then 3ware, which are higher than the host independent
-raids we have tested and so on)
+       mdadm --create /dev/md0 --level 10 --raid-devices 3 \
+               /dev/sda1 /dev/sdb1 /dev/sdc1
 
-So I am wondering if it is worth thinking about the timeout values?  And
-what do you do once the drive has timed out?
+seems to overwrite the partition tables for the disks in the
+same way as configuring RAID10 over the complete disks:
 
-I am seeing some tremendous work going on in this group and without a
-doubt this community is going to propel MD to enterprise level raid one
-day. so this is honestly meant as constructive and is based on way too
-many years designing raid solutions. i.e. I'm not looking to start an
-argument simply offering some information.
+       mdadm --create /dev/md0 --level 10 --raid-devices 3 \
+               /dev/sda /dev/sdb /dev/sdc
+
+A more detailed example:
+
+       echo ',,fd' | sfdisk /dev/sda
+       echo ',,fd' | sfdisk /dev/sdb
+       echo ',,fd' | sfdisk /dev/sdc
+
+       mdadm --create /dev/md0 --level 10 --raid-devices 3 \
+               /dev/sda1 /dev/sdb1 /dev/sdc1
+
+       mke2fs /dev/md0
+
+       sfdisk -d /dev/sda
+       sfdisk -d /dev/sdb
+       sfdisk -d /dev/sdc
+
+One of the partition tables in the above example will be replaced with
+the start of the second chunk of the ext2 fs, just as one would expect
+with an array configured over /dev/sda, dev/sdb and /dev/sdc.
+
+The problem appears consistently on my test system (minimal Fedora 3 on
+an NForce3 system using the sata_nv.ko device driver). I have had the
+same results with a separate, identical system, and when using various
+custom 2.6.9 kernels. However, the problems do not appear with RAID5.
+
+The code in raid10.c is probably to blame. A cursory examination suggests
+that raid10.c accesses the configured devices using very similar code to
+raid1.c (where the problem might go unnoticed) but rather differently from
+raid5.c.
+
+Felix
 
 
+-- 
 
+Whatever you Wanadoo:
+http://www.wanadoo.co.uk/time/
 
-
+This email has been checked for most known viruses - find out more at: http://www.wanadoo.co.uk/help/id/7098.htm
