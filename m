@@ -1,86 +1,137 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
+From: ptb@lab.it.uc3m.es (Peter T. Breuer)
 Subject: Re: ext3 journal on software raid (was Re: PROBLEM: Kernel 2.6.10 crashing repeatedly and hard)
-Date: Mon, 3 Jan 2005 17:41:16 +1100
-Message-ID: <16856.59660.57838.440787@cse.unsw.edu.au>
-References: <m3is6k4oeu.fsf@reason.gnu-hamburg>
-	<m38y7fn4ay.fsf@reason.gnu-hamburg>
-	<v3rda2-hjn.ln1@news.it.uc3m.es>
-	<41D45C1F.5030307@tls.msk.ru>
-	<u59ea2-4qr.ln1@news.it.uc3m.es>
-	<20050102194240.GE99565@caffreys.strugglers.net>
-	<5h1ma2-asq.ln1@news.it.uc3m.es>
-	<20050103003005.GG99565@caffreys.strugglers.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Date: Mon, 3 Jan 2005 09:03:14 +0100
+Message-ID: <2rana2-0if.ln1@news.it.uc3m.es>
+References: <m3is6k4oeu.fsf@reason.gnu-hamburg> <m38y7fn4ay.fsf@reason.gnu-hamburg> <v3rda2-hjn.ln1@news.it.uc3m.es> <41D45C1F.5030307@tls.msk.ru> <u59ea2-4qr.ln1@news.it.uc3m.es> <20050102194240.GE99565@caffreys.strugglers.net> <5h1ma2-asq.ln1@news.it.uc3m.es> <20050103003005.GG99565@caffreys.strugglers.net>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Andy Smith on Monday January 3
 Sender: linux-raid-owner@vger.kernel.org
-To: Andy Smith <andy@strugglers.net>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday January 3, andy@strugglers.net wrote:
+Andy Smith <andy@strugglers.net> wrote:
+> [-- text/plain, encoding quoted-printable, charset: us-ascii, 45 lines --]
+> 
+> On Sun, Jan 02, 2005 at 09:18:13PM +0100, Peter T. Breuer wrote:
+> > Stephen Tweedie wrote:
+> > > Umm, if soft raid is expected to have silent invisible corruptions in
+> > > normal use,
+> > 
+> > It is, just as is all types of RAID.  This is a very strange thing for
+> > Stephen to say - I cannot believe that he is as naive as he makes
+> > himself out to be about RAID here and I don't know why he should say
+> > that (presuming that he really knows better).
+> > 
+> > > then you shouldn't be using it, period.  That's got zero to
+> > > do with journaling.
+> > 
+> > It implies that one should not be doing journalling on top of it.
+> > 
+> > (The logic for why RAID corrupts silently is that errors accumulate at
+> > n times the normal rate per sector, but none of them are detected by
+> > RAID (no crc), and when a disk drops out then you get a good chance of
+> > picking up a corrupted copy instead of a good copy, because nobody
+> > has checked the copy meanwhiles to see if it matches the original).
 > 
 > I have no idea which of you to believe now. :(
 
-Well, how about I wade in.....
+Both of us. We have not disagreed fundamentally. Read closely! Stephen
+says "IF (my caps) soft raid is expected to have ...". Well, it is,
+just like any RAID.
 
-(almost*) No block storage device will guarantee that write ordering
-is maintained.  Neither will read requests necessarily be ordered.
+Similarly he didn't disagree that journal data is written twice, if you
+read closely, he merely pointed out that the DEFAULT (my caps) setting
+in ext3 is not to write data (as opposed to metadata) into the journal
+at all.
 
-Any SCSI, IDE, or similar disc drive in Linux (or any other non-toy
-OS) will have requests managed by an "elevator algorithm" which
-coalesces adjacent blocks and  tries to re-order requests to make
-optimal use of the device.
+So he avoided issues of substance there (and/but gave a strange spin to
+them).
 
-A RAID controller, whether software, firmware, or hardware, will also
-re-order requests to make best use of the devices.
+What he did claim that is factually interesting and new is that ext3
+works if acks from the media are merely received after the fact. That's
+a far weaker requirement than for reiserfs, for example. It seems to me
+to imply that the implementation is single-threaded and highly
+synchronous.
 
-Any filesystem that assumes that requests will not be re-ordered is
-broken, as the assumption is wrong.
-I would be *very* surprised if Reiserfs makes this assumption.
+> I currently only have one system using software raid, and several of
+> my employer's machines using hardware raid, all of which have
+> various raid-1, -5 and -10 setups and all use only ext3.
 
-Until relatively recently, the only assumption that could be made is
-that a write request will be handled sometime between when it is made,
-and when the request completes (i.e. the end_io callback is called).
-If several requests are concurrent they could commit in any order.
+All fine - as I said, the only thing I'd do is make sure that the
+journal is not kept on the raid partition(s), and possibly turn off
+data journalling in favour of metadata journalling only.
 
-With only this guarantee, the simplest approach for a journalling
-filesystem is to write the content of a journal entry, wait for the
-writes to complete, and then write a single block "header" which
-describes and hence commits that journal entry.  The journal entry is
-not "safe" until this second write completes.
+> Let's focus on the personal machine of mine for now since it uses
+> Linux software RAID and therefore on-topic here.  It has /boot on a
+> small RAID-1,
 
-This is equally applicable for IDE drives, SCSI drives, software
-RAID1, software RAID5, hardware RAID etc.
+This is always a VERY bad idea. /boot and /root want to be on as simple
+and uncomplicated a system as possible. Moreover, they never change, so
+what is the point of having a real time mirror for them? It would be
+sufficient to copy them every day (which is what I do) at file system
+level to another partition, if you want a spare copy for emergencies.
 
-More recently (2.6 only) Linux has had support for "write barriers".
-The idea here is that you submit a number of write requests, then a
-"barrier", then some more write requests. (The "barrier" might be a
-flag on the last request of a list, I'm not sure of that detail).  The
-meaning is that no write request submitted after the barrier will be
-attempted until all requests submitted before the barrier are
-complete.  Some drives support this concept natively so Linux simply
-does not re-order requests across a barrier, and sends the barrier at
-the appropriate time.  Drives can do their own re-ordering but will
-not reorder across a barrier (if they support the barrier concept).
+> and the rest of the system is on RAID-5 with an
+> additional RAID-0 just for temporary things.
 
-If Linux needs to write a barrier to a device that doesn't support
-barriers (as the md/raid currently doesn't) it will (should) submit
-all requests before the barrier, flush them out, wait for them to
-complete, then allow other requests to be forwarded.
+That's fine.
 
-In short, md/raid provides the same guarantees as normal drives, and
-any filesystem that expects more is broken.
+> There is nowhere that is not software RAID to put the journals, so
 
-Definitely put your journal on RAID  with at least as much redundancy
-as your main filesystem (I put my filesystem on raid5 and my journal
-on raid1).
+Well, you can make somewhere. You only require an 8MB (one cylinder)
+partition.
 
-NeilBrown
+> would you be recommending that I turn off journalling and basically
+> use it as ext2?
 
+No, I'd be recommending that you make an 8MB partition for a journal.
 
-* I happen to know that the "umem" NVRAM driver will never re-order
-  requests, as there is no value in re-ordering requests to RAM.  But
-  it is the exception, not the rule.
+This is also handy in case you "wear through" the disk under the
+journal because of the high i/o there. Well, it's happened to me on two
+disks, but doubtless people will cntest that! IF it happens, all you
+have to do is use a cylinder somewhere else.
+
+> What I do know is that none of what you say is in the software raid
+> howto,
+
+But nothing said is other than obvious, and is a matter of probabilities
+and risk management, so I don't see why it should be in a howto!  That's
+your business, not the howto's.
+
+> and if you are right, it really should be.  Neither is it in
+
+I don't think it should be. It should be somewhere in ext3 docs (there
+was a time when ext3 wouldn't work on raid1 at all, butthat got fixed
+somehow), but then documenting how your FS works on some particular
+media is not really part of the documentation scope for the FS!
+
+> any ext3 documentation and there is no warning on any distribution
+> installer I have ever used (those that understand RAID and LVM and
+> are happy to set that up at install time with ext3).  Also everyone
+> that I have spoken to about this knows nothing about it, so what you
+
+Everyone knows about it, because none of us is saying anything that is
+not obvious. Yes, data is written through the journal twice. EVERYTHING
+is written through the journal twice if the journal is on RAID1,
+because everything on RAID1 is written twice. That is obvious, no?
+
+And then you get i/o storms through the journal  in any case on
+journalled raid, whenever you do data journalling. It is just doubled if
+you do that on a raid system.
+
+And there is a risk of silent corruption on all raid systems - that is
+well known. DIfferent raid systems do different thigs to compensate,
+such as periodically recalculating the parity on everything. But when
+you have redundant data and a corruption occurs, which of the two
+datasets do you believe? You have to choose one of them! You guess
+wrong half the time, if you guess ("you" is a raid system). Hence
+"silent corruption".
+
+> are saying, if correct, would seem to have far-reaching
+> implications.
+
+I don't think so! Why? RAID protects you against certain sorts of risk.
+It also exposes you to other sorts of risk. Where is the far-reaching
+implication in that? It is for you to balance the risks and benefits.
+
+Peter
+
