@@ -1,61 +1,92 @@
-From: maarten <maarten@ultratux.net>
-Subject: Re: Spares and partitioning huge disks
-Date: Sun, 9 Jan 2005 01:56:18 +0100
-Message-ID: <200501090156.18658.maarten@ultratux.net>
-References: <200501082309.j08N9t911087@www.watkins-home.com>
+From: Tim Moore <linux-raid@nsr500.net>
+Subject: raid5 performance - 2.4.28
+Date: Sat, 08 Jan 2005 21:28:35 -0800
+Message-ID: <41E0C103.4060600@nsr500.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200501082309.j08N9t911087@www.watkins-home.com>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sunday 09 January 2005 00:09, Guy wrote:
-> Maarten said:
-> "Normally, the minute a drive fails, it gets kicked and the spare would
-> kick in and md syncs this spare.  We now have a non-degraded array again."
->
-> Guy says:
-> But, you make it seem instantaneously!  The array will be degraded until
-> the re-sync is done.  In my case, that takes about 60 minutes, so 1 extra
-> minute is insignificant.
+Here's a data point in favor of raw horsepower when considering
+software raid performance.  I recently upgraded an Athlon Slot-A/SDRAM
+system to an Athlon XP/DDR system without changing OS, disks,
+disk controller or filesystems.
 
-No, sure it is not instantaneous, far from it. Sorry if I made that 
-impression.  On my system it takes a whole lot longer than 60 minutes, more 
-like 360 minutes.  (in my other array where I use whole-disk 160 GB volumes).
+Athlon K7 (18u) @ 840MHz, 1GB PC133, Abit KA7
+---------------------------------------------
+abit,1500M:4k,,,12862,36,11132,18,,,44953,32,284.0,1,,,,,,,,,,,,,
+abit,1500M:4k,,,13132,36,10231,17,,,57147,40,278.2,1,,,,,,,,,,,,,
+abit,1500M:4k,,,12595,36,11039,18,,,51269,36,281.6,1,,,,,,,,,,,,,
 
-> Marrten said:
-> "Yes, but this would be impossible to do, since md cannot anticipate
-> _which_
-> disk you're going to fail before it happens. ;)"
->
-> Guy says:
-> But, I could tell md which disk I want to spare.  After all, I know which
-> disk I am going to fail.  Maybe even an option to mark a disk as "to be
-> failed", which would cause it to be spared before it goes off-line.  Then
-> md could fail the disk after it has been spared.  Neil, add this to the
-> wish list!  :)
+Athlon XP 2800 @ 2075MHz, 1GB PC2700, Asus A7V400-MX
+----------------------------------------------------
+abit,1500M:4k,,,41065,52,14636,15,,,49355,23,429.3,1,,,,,,,,,,,,,
+abit,1500M:4k,,,41330,58,15932,16,,,47045,22,415.7,2,,,,,,,,,,,,,
+abit,1500M:4k,,,43364,73,15395,17,,,52025,25,418.0,1,,,,,,,,,,,,,
 
-Yes, that would be a smart option indeed :)  It gets rid of the window where 
-any failure would be fatal.  But I suppose Neil is overworked as it is.
+test: bonnie++ v1.03 (-q -s 1500:4k -r 0 -n 0 -f -u root -x 3)
+array: RAID 5 (2xIBM-DTLA-307020, 1xMAXTOR 6L020J1)
+md partition: 3x10GB (last 1/2 of each 20GB disk)
+controller: 3ware 6400, PATA, 66MHz (JBOD)
+filesystem: ext3, 4k block size, stride=16, noatime,data=ordered
+OS: RedHat 7.3, stock 2.4.28, raidtools 1.00.2, glibc 2.2.5, gcc 2.96
 
-> EMC does this on their big iron.  If the system determines a disk is having
-> too many issues (bad blocks or whatever), the system predicts a failure,
-> the system copies the disk to a spare.  That way a second failure during
-> the re-sync would not be fatal.  And a direct disk to disk copy is much
-> faster (or easier) than a re-build from parity.  This is how it was
-> explained to me about 5 years ago.  No idea if it was marketing lies or
-> truth.  But I liked the fact that my data stayed redundant while the spare
-> was being re-built. This would not work if a drive failed, only if a drive
-> failure was predicted.  Another cool feature... the disk array then makes a
-> support call.  The disk is replaced quickly, normally before any redundancy
-> was lost.
+# cat /proc/mdstat
+Personalities : [raid0] [raid1] [raid5]
+read_ahead 1024 sectors
+md0 : active raid5 sdc5[2] sdb5[0] sda5[1]
+       4192768 blocks level 5, 64k chunk, algorithm 2 [3/3] [UUU]
 
-Hehe.  Cool.  Big iron -> You indeed get what ya pay for :-))
+md1 : active raid5 sdc6[2] sdb6[0] sda6[1]
+       2425600 blocks level 5, 32k chunk, algorithm 2 [3/3] [UUU]
 
+md2 : active raid5 sdc7[2] sdb7[0] sda7[1]
+       12707200 blocks level 5, 64k chunk, algorithm 2 [3/3] [UUU]
 
+md3 : active raid5 sdc8[2] sdb8[0] sda8[1]
+       20113152 blocks level 5, 64k chunk, algorithm 2 [3/3] [UUU]
+
+# fdisk -l
+
+Disk /dev/sda: 255 heads, 63 sectors, 2501 cylinders
+Units = cylinders of 16065 * 512 bytes
+
+    Device Boot    Start       End    Blocks   Id  System
+/dev/sda1   *         1        13    104391   83  Linux
+/dev/sda2            14        45    257040   82  Linux swap
+/dev/sda3            46      2500  19719787+   5  Extended
+/dev/sda5            46       306   2096451   fd  Linux raid autodetect
+/dev/sda6           307       457   1212876   fd  Linux raid autodetect
+/dev/sda7           458      1248   6353676   fd  Linux raid autodetect
+/dev/sda8          1249      2500  10056658+  fd  Linux raid autodetect
+
+Disk /dev/sdb: 255 heads, 63 sectors, 2501 cylinders
+Units = cylinders of 16065 * 512 bytes
+
+    Device Boot    Start       End    Blocks   Id  System
+/dev/sdb1   *         1        13    104391   83  Linux
+/dev/sdb2            14        45    257040   82  Linux swap
+/dev/sdb3            46      2500  19719787+   5  Extended
+/dev/sdb5            46       306   2096451   fd  Linux raid autodetect
+/dev/sdb6           307       457   1212876   fd  Linux raid autodetect
+/dev/sdb7           458      1248   6353676   fd  Linux raid autodetect
+/dev/sdb8          1249      2500  10056658+  fd  Linux raid autodetect
+
+Disk /dev/sdc: 255 heads, 63 sectors, 2498 cylinders
+Units = cylinders of 16065 * 512 bytes
+
+    Device Boot    Start       End    Blocks   Id  System
+/dev/sdc1   *         1        13    104391   83  Linux
+/dev/sdc2            14        43    240975   82  Linux swap
+/dev/sdc3            44      2498  19719787+   5  Extended
+/dev/sdc5            44       304   2096451   fd  Linux raid autodetect
+/dev/sdc6           305       455   1212876   fd  Linux raid autodetect
+/dev/sdc7           456      1246   6353676   fd  Linux raid autodetect
+/dev/sdc8          1247      2498  10056658+  fd  Linux raid autodetect
+
+Cheers,
+-- 
 
