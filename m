@@ -1,63 +1,29 @@
-From: Goetz Bock <bock@blacknet.de>
-Subject: mdadm 1.0.1 on uClibc 0.9.15
-Date: Mon, 9 Sep 2002 16:45:23 +0200
-Sender: uclibc-admin@uclibc.org
-Message-ID: <20020909164523.A28586@zealot.blacknet.de>
+From: Norman Schmidt <norman.schmidt@ratnet.stw.uni-erlangen.de>
+Subject: making new device names with mknod
+Date: Tue, 10 Sep 2002 23:12:00 +0200
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <3D7E6020.8030402@ratnet.stw.uni-erlangen.de>
+Reply-To: schmidt@naa.net, schmidt@naa.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <uclibc-admin@uclibc.org>
-Content-Disposition: inline
-Errors-To: uclibc-admin@uclibc.org
-List-Help: <mailto:uclibc-request@uclibc.org?subject=help>
-List-Post: <mailto:uclibc@uclibc.org>
-List-Subscribe: <http://codepoet.org/mailman/listinfo/uclibc>,
-	<mailto:uclibc-request@uclibc.org?subject=subscribe>
-List-Unsubscribe: <http://codepoet.org/mailman/listinfo/uclibc>,
-	<mailto:uclibc-request@uclibc.org?subject=unsubscribe>
-List-Archive: <http://codepoet.org/lists/uclibc/>
-To: uclibc <uclibc@uclibc.org>, linux-raid <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi!
 
-Hi all,
+Can somebody tell me how to make new device names in /dev?
+I have installed two additional ide controllers and want to make md
+devices out of partitions on devices /dev/hde, /dev/hdg, /dev/hdi and
+/dev/hdk. In /dev, there are only devices up to hdh. In addition to
+that, I would need to make the /dev entries for the partitions.
 
-sorry for crosspositng this to the uClibc and the linux-raid mailing
-list, but I don't know whom to ask (first). OTOH I'm subscribed to both
-lists, so there is no need for massive crossposting and once a
-colclusion is reached I'll post a summary (unless told otherwise).
+Is it possible to use more than 16 md devices, how can I make /dev/md16
+and so on?
 
-I've sucessfully uses uClibc on i386 and arm for quite some time (mostly
-with busybox), and I'm using mdadm on multiple x86 boxes with glibc. For
-my install and rescue sustem, I'd like to compile mdadm it with uClibc
-(busybox, lvm-utils, e2fs-tools, fdisk work flawless), but building
-mdadm 1.0.1 with uClibc results in:
+I am using Debian Woody, so no makedev, only mknod is available.
 
-...
-util.c:379:17: ftw.h: No such file or directory
-cc1: warnings being treated as errors
-util.c:382: warning: `struct FTW' declared inside parameter list
-util.c:382: warning: its scope is only this definition or declaration,
-which is probably not what you want
-util.c: In function `map_dev':
-util.c:402: warning: implicit declaration of function `nftw'
-util.c:402: `FTW_PHYS' undeclared (first use in this function)
-util.c:402: (Each undeclared identifier is reported only once
-util.c:402: for each function it appears in.)
-make: *** [util.o] Error 1
-
-(n)ftw is apparently used to scan the devices in /dev for useable
-devices.
-
-My knowledge of C is somewhat limited and I don't know wether adding ftw
-to uClib or making it a patch to mdadm (or perhapes removing the need
-for ftw from mdadm) ...
-you got it, I'm stuck and appriciate any pointers.
-
-Thanks,
-    Goetz.
+I hope, I am not too off-topic, thanks, Norman.
 
 
-BTW: you can get mdadm from 
-       http://www.cse.unsw.edu.au/~neilb/source/mdadm/
-     and uclibc from
-       http://www.uclibc.org/
