@@ -1,75 +1,64 @@
-From: Paul Phillips <paulp@improving.org>
-Subject: new raid system for home use
-Date: Sat, 17 Apr 2004 20:34:19 -0700 (PDT)
+From: Andreas Jung <lists@zopyx.com>
+Subject: mdadm: created raid has one disc more than configured
+Date: Sun, 18 Apr 2004 12:33:56 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.58.0404171926100.3103@spoon.loc>
+Message-ID: <2147483647.1082291636@[192.168.0.105]>
+Reply-To: Andreas Jung <lists@zopyx.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I'm building a new system to be my home media server (as well as web,
-mail, etc.) I already have a terabyte of data so I'm aiming at about a
-three terabyte capacity.  My tentative plan is to use 8 of the new Hitachi
-Deskstar 7K400 400 GB SATA drives in a RAID-5 configuration, and 2
-additional drives in a RAID-1 configuration as the boot device and higher
-priority data storage.  I'd like to use debian unstable and kernel v2.6.
+I created a raid devices using:
 
-I've never built anything like this before though so I'm a bit nervous
-I'll make unwise hardware choices.  So I appeal to the locals for any
-specific or general advice you may care to offer.  Once it's running I'll
-document my setup for fellow degenerate home multi-terabyte data amassers.
-I did not find the web overflowing with instances of people building such
-large linux RAID servers in non-business settings.
+mdadm --create /dev/md0 --level 5 -3 /dev/hdc1 /dev/hde1 /dev/hdf1
 
-Important:
+mdadm --detail /dev/md0 gives me:
 
-  * top-notch linux support for { RAID card, gigabit ethernet chipset, ??? }
-  * components with proven linux functionality/reliability
-  * easy expandability
-  * no bottlenecks if I want to stream video to up to four locations
-  * doesn't demand rack-mount
+/dev/md0:
+        Version : 00.90.00
+  Creation Time : Sun Apr 18 11:36:04 2004
+     Raid Level : raid5
+     Array Size : 117231104 (111.80 GiB 120.04 GB)
+    Device Size : 58615552 (55.90 GiB 60.02 GB)
+   Raid Devices : 3
+  Total Devices : 4
+Preferred Minor : 0
+    Persistence : Superblock is persistent
 
-Would be nice:
+    Update Time : Sun Apr 18 11:36:04 2004
+          State : dirty, no-errors
+ Active Devices : 2
+Working Devices : 3
+ Failed Devices : 1
+  Spare Devices : 1
 
-  * open source drivers for all components if possible, or most if not
-  * all things being equal, the quieter and cooler-running version
+         Layout : left-symmetric
+     Chunk Size : 64K
 
-Not particularly important:
+ Rebuild Status : 80% complete
 
-  * endless oodles of CPU (I'd think 2x3GHz would be megaplenty)
-  * hot swap
-  * uptime > 99.9%
-  * drive reliability (willing to keep spares handy and drop them
-      in as the occasion warrants)
-  * price (not cost-unconscious, but not spend-averse)
+    Number   Major   Minor   RaidDevice State
+       0      22        1        0      active sync   /dev/hdc1
+       1      33        1        1      active sync   /dev/hde1
+       2       0        0        2      faulty
+       3      33       65        3      spare   /dev/hdf1
+           UUID : 84cf502e:9d757c6a:1855fa04:5c4e9bcd
+         Events : 0.1
 
-Other matters of interest:
+The output say that I have four devices although only three were
+specified at creation time.
 
-  * Would RAID-6 be overkill? I doubt I'll be backing up the big array,
-      ever.  Losing it would suck a lot but not end my existence.
-  * Is EVMS mature enough to use if I'm bleeding edge averse in that
-      area? I'd never heard of it before reading this list.
-  * Software vs. Hardware RAID? I imagine this is a good place for
-      Hardware if I buy the right card, but maybe Software would require
-      less expertise and fiddling to get running in peak form.
-  * Would I be smarter to settle for kernel 2.4 at this time?
-  * I'm probably failing to consider the five most important factors...
+Any ideas? (using mdadm 1.5, RH 9,latest Kernel).
 
-Examples of the items I might land on if I had to buy this today without
-wise feedback:
+-aj
 
-  *  Chassis: http://www.baber.com/cases/mpe_ft2_black.htm
-  *     RAID: http://www.3ware.com/products/serial_ata9000.asp
-  * 10 Disks: http://www.hitachigst.com/hdd/desk/7k400.html
-  *     MoBo: ???
-  * CPU, RAM: TBD based on MoBo
-
-Many many thanks for all replies.
 
 -- 
-Paul Phillips      | All zork and no slay makes Jack a troll boy.
-Analgesic          |
-Empiricist         |
-pull his pi pal!   |----------* http://www.improving.org/paulp/ *----------
+
+Andreas Jung
+--------------------------------
+www.zopyx.com Software-Entwicklung und Consulting Andreas Jung
