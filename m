@@ -1,70 +1,97 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: raid5 + smartctl + uncorrectable read error + single-block-resync ?
-Date: Thu, 3 Jun 2004 15:56:01 -0400
+From: Brock Nanson <brock@nanson.org>
+Subject: Re: Md cache?
+Date: Thu, 03 Jun 2004 13:16:54 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200406031956.i53Ju5315341@watkins-home.com>
-References: <40BF7D45.3020403@h3c.com>
+Message-ID: <40BF8736.10101@nanson.org>
+References: <200406031922.i53JMS315198@watkins-home.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <40BF7D45.3020403@h3c.com>
-To: 'Michael Hardy' <mhardy@h3c.com>, linux-raid@vger.kernel.org
+In-Reply-To: <200406031922.i53JMS315198@watkins-home.com>
+To: Guy <bugzilla@watkins-home.com>
+Cc: 'Brian Pontius' <linuxboy123@mindspring.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-You got it!  A write to the bad sector should cause the drive to re-map the
-bad sector.  Not all drives do this.  My drives (ST118202LC with EMC
-firmware B801) required me to change an option in the firmware to allow this
-to occur.
+My IBM ServeRAID 3HB's do.  But as you say, many don't.  A UPS with a 
+communications cable and shutdown software is really the only solution.
 
-I wish md could do this automatically!  It would save a lot of down time.
+Brock
 
-Guy
+Guy wrote:
 
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Michael Hardy
-Sent: Thursday, June 03, 2004 3:34 PM
-To: linux-raid@vger.kernel.org
-Subject: raid5 + smartctl + uncorrectable read error + single-block-resync ?
-
-
-I've got smartd running (great tool: http://smartmontools.sf.net) and it 
-just alerted me to an unreadable sector in one drive on a software raid5 
-array I have (linux kernel 2.4.18, I believe, I know its old)
-
-smartctl is capable of telling me exactly what LBA on the drive is 
-unreadable, and I was reading this, which indicates it would be possible 
-to remap that single block:
-
-http://cgi.cse.unsw.edu.au/~neilb/me/SoftRaid/01084418693
-
-...but I'm guessing that's just an idea, since its from May 13th 2004 
-and there a couple of indications of kernel hacking in it ("maintain a 
-list of bad blocks", check thresholds, work on the recovery thread, etc)
-
-Is there any motion to get raid to implement this?
-
-If there is, I guess my only input (I'm a sysadmin level hacker, not a 
-kernel hacker) would be to say - there should be some interface for 
-external utilities to "educate" the linux raid module that a specific 
-disk has a specific sector going bad.
-
-That way you could script smartd to take the results of a failed offline 
-SMART test and send the bad LBAs to the raid module for read tests and 
-resync
-
-Oh, and I want a pony. ;-) I couldn't resist asking that, since this is 
-basically a gigantic feature request
-
-In the meantime, I guess logically failing the drive and re-adding it is 
-the only way to remap the sectors, right?
-
--Mike
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
+> With hardware RAID the write cache has battery backup.  So, the RAID system
+> will not lose data when the power fails.  It will finish the writes when the
+> power returns.
+> 
+> I don't think the hardware RAID cards have a battery.  The external self
+> contained RAID systems that I have worked with do have batteries.
+> 
+> Anyone know?  Do any RAID cards have batteries?
+> 
+> Guy
+> 
+> -----Original Message-----
+> From: linux-raid-owner@vger.kernel.org
+> [mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Brian Pontius
+> Sent: Thursday, June 03, 2004 2:14 PM
+> To: Neil Brown
+> Cc: linux-raid@vger.kernel.org
+> Subject: Re: Md cache?
+> 
+> I apologze for being unclear.
+> 
+> As I did comparisons between software and hardware raid,  one of the
+> advantage
+> s that I noticed with hardware raid was cache (both read and write). With
+> hard
+> ware it is usually larger giving some increase in performance.  I was
+> looking
+> for a way to allocate more system memory specifically to be the md cache
+> area
+> to give that extra feature of that hardware raid. This would especially be
+> ben
+> efitial for a NAS that has a dedicated purpose to fast reliable storage.
+> 
+> 
+> Thanks for your time.
+> Brian Pontius
+> 
+> 
+> -----Original Message-----
+> From: Neil Brown <neilb@cse.unsw.edu.au>
+> Sent: Jun 2, 2004 10:10 PM
+> To: Brian Pontius <linuxboy123@mindspring.com>
+> Cc: linux-raid@vger.kernel.org
+> Subject: Re: Md cache?
+> 
+> On Wednesday June 2, linuxboy123@mindspring.com wrote:
+> 
+>>to all,
+>>
+>>Is anyone aware of a way to cause the md devices to use some system memory
+> 
+> as a write cache? (maybe through mdadm?).  I have looked everywhere and
+> cannot seem to find anything about such a feature.
+> 
+>>If not, anyone  know if this is a possibility for the future, Neil?
+> 
+> 
+> What is it exactly that you want.
+> 
+> All device IO is cached in memory before being written to the device.
+> The only real value of a cache with a RAID array is if it we a
+> non-volatile cache.  Is that what you were thinking of.
+> 
+> NeilBrown
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
