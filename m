@@ -1,34 +1,32 @@
-From: Daniel Pittman <daniel@rimspace.net>
-Subject: Re: RAID5 temperorary loss two disk
-Date: Thu, 29 Apr 2004 12:46:08 +1000
+From: <me@heyjay.com>
+Subject: Gigabyte GA-7N400 Pro2 and raid
+Date: Wed, 28 Apr 2004 23:19:51 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <87u0z3h573.fsf@enki.rimspace.net>
-References: <408D0FF0.5000608@uni-mainz.de>
-	<20040428142849.68073.qmail@web14525.mail.yahoo.com>
+Message-ID: <000901c42da1$bdbc8610$6705a8c0@a30>
+Reply-To: <me@heyjay.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 28 Apr 2004, Don Jessup wrote:
-> I have RAID5 volume that has two disk that have been marked as failed. 
-> I believe this happen do to loss of communication with the disk. NOT
-> because of a total disk failure. I assume if I can get the superblocks
-> back into a good state I can reassemble the RAID5 and try to read what
-> data I can off the volume. Does anyone know how to force RAID5
-> superblocks into a state so I can do reads from the volume? I really
-> need help on this. By the way the kernel version is 2.4.22.
+This is sorta a pre-software-raid question.
 
-mdadm has a --force option to the assemble command which I have used to
-recover from a similar situation.  Don't forget to fsck the volume
-afterwards, though, since it will have bad data on it.
+I just bought and built a box around the Gigabyte GA-7N400 Pro2 Mobo.  It
+has 4 IDE ports, 2 normal, and 2 upon a raid controller.  I figured I could
+avoid using Gigabyte's raid, and do software raid upon the 2 extra ports.
 
-            Daniel
+The problem I have is that the raid card seems to see the 2 drives plugged
+into the raid-ide ports, but linux does not.
 
--- 
-The Believer had better face himself and ask squarely: Do I literally
-believe "God" has a penis? If the answer is no, then it seems only
-logical to drop the ridiculous practice of referring to "God" as "he."
-        -- Robert Anton Wilson
+I was just testing/playing installing Debian Sarge.  I have 2 ide drives
+total, and they are plugged into the raid-ide ports.  When I get to the part
+about partitioning the hard drives, no hard drives are available
+
+Any thoughts?
+
+Thanks
+Jay
 
