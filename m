@@ -1,78 +1,38 @@
-From: klink@clouddancer.com (Colonel)
-Subject: (unknown)
-Date: Sun,  2 Jun 2002 15:08:47 -0700 (PDT)
+From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
+Subject: RAID-6 support in kernel?
+Date: Mon, 3 Jun 2002 01:01:23 +0200 (CEST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20020602220847.5EC548347@phoenix.clouddancer.com>
+Message-ID: <Pine.LNX.4.33.0206030044270.27651-100000@mail.pronto.tv>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-raid@vger.kernel.org, Tedd Hansen <tedd@konge.net>, Christian Vik <christian@konge.net>, Lars Christian Nygaard <lars@snart.com>
 List-Id: linux-raid.ids
 
-From: Colonel <klink@clouddancer.com>
-To: linux-raid@vger.kernel.org
-In-reply-to: <023701c20a2d$9f8fc240$6401a8c0@cfl.rr.com> (mblack@csihq.com)
-Subject: OOPS on raidtools-20010914
-Reply-to: klink@clouddancer.com
-References: <20020602112056.2FEB38347@phoenix.clouddancer.com> <023701c20a2d$9f8fc240$6401a8c0@cfl.rr.com>
+hi all
 
+I'n working on server setup with some 16 disks in RAID-5; one of them a 
+spare. After a little reading, I find myself longing for support for 
+RAID-6 support in kernel, giving the opportunity to allow for two failed 
+drives without a chrash (see links about RAID-6 below if interested).
 
-   From: "Mike Black" <mblack@csihq.com>
-   Date: Sun, 2 Jun 2002 08:04:17 -0400
+I am aware of that not all kernel hackers like such configurations, and
+that some will rather see small RAID-configurations connected with VLM.  
+I beleive there is a reason for using RAID-6, and RAID-controller vendors
+(such as Compaq) are already using them, so why shouldn't linux do so
+also? With a high number of cheap IDE drives, the chance of one failing is 
+quite high, so why not RAID-6? At least for a system doing most reads...
 
-Thanks for the reply.
+thanks
 
-   Either copy /usr/lib/libpopt* to /lib or add a -static switch to the Makefile to compile the utilities.
-   One of the problems of shared libraries....
+roy
 
-Well, actually I'm wondering why -static is not already present.
-These tools reside in /sbin after all.
+RAID-6 layout: http://www.acnc.com/04_01_06.html
 
-   And...as long as you have stripes compiled into the kernel and partition type 0xfd it should autostart (I'm pretty sure stripes
-   should do that too -- I don't use them).  That would also solve
-   your problem.
+-- 
+Roy Sigurd Karlsbakk, Datavaktmester
 
-Ah, no.  Striped mirrors have stripes made from meta-devices.  The
-mirrors autostart fine.
-
-
-   And while you're upgrading why don't you use the latest (it's called mdadm now)?
-   http://www.cse.unsw.edu.au/~neilb/source/mdadm/
-
-I know raidtools has worked in the past, this is a production system
-and I have nothing to experiment upon.  So I looked in mingos
-directory...will look at this site.
-
-
-   ----- Original Message -----
-   From: "Colonel" <klink@clouddancer.com>
-   To: <linux-raid@vger.kernel.org>
-   Sent: Sunday, June 02, 2002 7:20 AM
-
-
-   > To: linux-raid@vger.kernel.org
-   > Subject: OOPS on raidtools-20010914
-   > Reply-to: klink@clouddancer.com
-   > From: Colonel <klink@clouddancer.com>
-   >
-   >
-   > I recently switched to these tools, I'd been using the 1999 ones
-   > previously.  I run striped mirrors for /usr, I must (apparently)
-   > manually start that meta-device as part of the startup scripts.  So
-   > having raidstart and all it's pieces on the / partition is pretty
-   > important.  Imagine my fun after a reboot told me that lilpopt was
-   > unavailable for raidstart, thus I had no /usr and no way to do
-   > anything about it within this machine (because libpopt is stored in
-   > /usr/lib).  Fortunately, I had not upgraded all the other machines to
-   > these newer tools.
-   >
-   > Perhaps libpopt is misplaced on my system, or perhaps the raidtool
-   > makefile doesn't expect a manual start raid array....
-   >
-   > Any solutions?
-   >
-   > Ron
-   > -
-   > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-   > the body of a message to majordomo@vger.kernel.org
-   > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-   >
+Computers are like air conditioners.
+They stop working when you open Windows.
 
