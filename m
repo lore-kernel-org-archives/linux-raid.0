@@ -1,42 +1,49 @@
-From: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Subject: Re: "Enhanced" MD code avaible for review
-Date: Tue, 30 Mar 2004 11:04:40 -0700
+From: "Derek Vadala" <derek@cynicism.com>
+Subject: Re: O'Reilly RAID Book
+Date: Tue, 30 Mar 2004 13:35:02 -0500 (EST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <866290000.1080669880@aslan.btc.adaptec.com>
-References: <760890000.1079727553@aslan.btc.adaptec.com> <200403261315.20213.kevcorry@us.ibm.com> <1644340000.1080333901@aslan.btc.adaptec.com> <200403270939.29164.kevcorry@us.ibm.com> <842610000.1080666235@aslan.btc.adaptec.com> <4069AB1B.90108@pobox.com> <854630000.1080668158@aslan.btc.adaptec.com> <4069B289.9030807@pobox.com>
-Reply-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
+Message-ID: <11188.129.44.35.24.1080671702.squirrel@cynicism.com>
+References: <1080605251.1695.14.camel@localhost>
+Reply-To: derek@cynicism.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4069B289.9030807@pobox.com>
-Content-Disposition: inline
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Kevin Corry <kevcorry@us.ibm.com>, linux-kernel@vger.kernel.org, Neil Brown <neilb@cse.unsw.edu.au>, linux-raid@vger.kernel.org, dm-devel@redhat.com
+In-Reply-To: <1080605251.1695.14.camel@localhost>
+To: office@ninti.com.au
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->> That's unfortunate for those using ATA.  A command submitted from userland
-> 
-> Required, since one cannot know the data phase of vendor-specific commands.
+> I'm wondering how up to date the book remains, and if a new edition is
+> perhaps just around the corner (I hate buying a book two weeks before an
+> updated edition is released!).
 
-So you are saying that this presents an unrecoverable situation?
+The book was released in December of 2002. It's relevance really depends
+on what you're looking for. It covers RAID-1, obviously, but the book is
+RedHat-centric, especially on this topic (installation to RAID), and so
+your Slackware 9.1 question isn't addressed in it.
 
-> Particularly, checking whether the kernel is doing something wrong, or wrong,
-> just wastes cycles.  That's not a scalable way to code...  if every driver
-> and Linux subsystem did that, things would be unbearable slow.
+I'm surprised to learn that Slackware 9.1 doesn't have decent install-time
+support for RAID-1.
 
-Hmm.  I've never had someone tell me that my SCSI drivers are slow.
+As far as updated editions: Unfortunately it is extremely unlikely that
+O'Reilly will do a second edition of MROL. This is too bad as I personally
+feel there is a much room for updates, improvement and expanded material,
+possibily including LVM and EVMS coverage. However, sales figures just
+don't warrant a new edition, and I doubt very much that they will be
+compelled to move forward with this title.
 
-I don't think that your statement is true in the general case.  My
-belief is that validation should occur where it is cheap and efficient
-to do so.  More expensive checks should be pushed into diagnostic code
-that is disabled by default, but the code *should be there*.  In any event,
-for RAID meta-data, we're talking about code that is *not* in the common
-or time critical path of the kernel.  A few dozen lines of validation code
-there has almost no impact on the size of the kernel and yields huge
-benefits for debugging and maintaining the code.  This is even more
-the case in Linux the end user is often your test lab.
+At the end of this year (once the book has been out for two years), I'll
+ask them to consider licensing the material so that groups like LDP can
+create deriviate works. I've already pledged it to the Creative Commons,
+Founder's Copyright
+(http://creativecommons.org/projects/founderscopyright/oreilly), so it
+will eventually be available, regardless.
 
---
-Justin
+Derek
+
+
+
+
+
 
