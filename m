@@ -1,63 +1,76 @@
-From: Molle Bestefich <molle.bestefich@gmail.com>
-Subject: Re: interesting failure scenario
-Date: Mon, 4 Apr 2005 09:22:55 +0200
-Message-ID: <62b0912f05040400227dab7428@mail.gmail.com>
-References: <4250672D.6080403@tls.msk.ru>
-	 <62b0912f050404001813448d3d@mail.gmail.com>
-Reply-To: Molle Bestefich <molle.bestefich@gmail.com>
+From: David Greaves <david@dgreaves.com>
+Subject: Re: EVMS or md?
+Date: Mon, 04 Apr 2005 08:57:50 +0100
+Message-ID: <4250F37E.5050201@dgreaves.com>
+References: <200504040708.j3478bm03863@www.watkins-home.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <62b0912f050404001813448d3d@mail.gmail.com>
+In-Reply-To: <200504040708.j3478bm03863@www.watkins-home.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Guy <bugzilla@watkins-home.com>
+Cc: 'Mike Hardy' <mhardy@h3c.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Michael Tokarev wrote:
-> I just come across an interesting situation, here's the
-> scenario.
+Guy wrote:
 
- [snip] 
- 
-> Now we have an interesting situation.  Both superblocks in d1
-> and d2 are identical, event counts are the same, both are clean.
-> Things wich are different:
->    utime - on d1 it is "more recent" (provided we haven't touched
->      the system clock ofcourse)
->    on d1, d2 is marked as faulty
->    on d2, d1 is marked as faulty.
-> 
-> Neither of the conditions are checked by mdadm.
-> 
-> So, mdadm just starts a clean RAID1 array composed of two drives
-> with different data on them.  And noone noticies this fact (fsck
-> which is reading from one disk goes ok), until some time later when
-> some app reports data corruption (reading from another disk); you
-> go check what's going on, notice there's no data corruption (reading
-> from 1st disk), suspects memory and.. it's quite a long list of
-> possible bad stuff which can go on here... ;)
-> 
-> The above scenario is just a theory, but the theory with some quite
-> non-null probability.  Instead of hotplugging the disks, one can do
-> a reboot having flaky ide/scsi cables or whatnot, so that disks will
-> be detected on/off randomly...
-> 
-> Probably it is a good idea to test utime too, in additional to event
-> counters, in mdadm's Assemble.c (as comments says but code disagrees).
+>I am top posting since I am starting a new topic.
+>  
+>
+excuses not needed - I prefer it ;)
 
-Humn, please don't.
- 
-I rely on MD assembling arrays if their event counters match but the
-utimes don't all the time.  Happens quite often that a controller
-fails or something like that and you accidentally loose 2 disks in a
-raid5.
- 
-I still want to be able to force the array to be assembled in these cases.
-I'm still on 2.4 btw, don't know if there's a better way to do it in
-2.6 than manipulating the event counters.
- 
-(Thinking about it, it would be perfect if the array would instantly
-go into read-only mode whenever it is degraded to a non-redundant
-state.  That way there's a higher chance of assembling a working array
-afterwards?)
+>Don't get me wrong, I like and trust md, at least with kernel 2.4.
+>
+>This is the first I knew about EVMS, the website makes it sound wonderfull!
+>http://evms.sourceforge.net/
+>
+>Is EVMS "better" than md?
+>  
+>
+It uses md
+
+A more appropriate question is : Is EVMS "better" than _mdadm_?
+
+Probably - if you're doing more than simple stuff - it doesn't (seem to) offer all the control that mdadm offers but the same gui manages everything from partitioning to bad block management (remember all the raid5 bad block discussions...) to logical volume management and snapshots etc to filesystem creation/expansion/reduction and more including boundary checking (which prevents you from saying "I know what I'm doing" - which is usually a good thing!!!)
+
+So "does it do more than mdadm?" "Yes!"
+
+It's closer (from memory) to Sun's or Veritas' volume management guis
+
+It also introduces a consistent (self-consistent!) set of terminology and a 'way of doing things'.
+Eg lvm layers over md layers over bbr layers over partitions
+
+It's also quite intimidating at first sight.
+
+see http://evms.sourceforge.net/architecture/evms-data-example.png
+
+>Is EVMS replacing md?
+>  
+>
+so no - although there are evms md-patches which appear to be in 
+mainline now.
+
+>One bad point for EVMS, no RAID6.  :(
+>  
+>
+I think, more correctly: no raid6 config support in the gui...
+
+>One good point for EVMS, bad Block Relocation (but only on writes).
+>  
+>
+again, this uses the dm bbr kernel feature.
+
+>Not sure how EVMS handles read errors.
+>
+>I am getting on the mailing list(s).  I must know more about this!!!
+>
+>Guy
+>  
+>
+I don't understand why there is so little cross conversation...
+You sometimes need to dip into md stuff to fix/diagnose evms issues.
+
+HTH
+
+David
