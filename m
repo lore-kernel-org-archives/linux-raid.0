@@ -1,49 +1,41 @@
 From: "Corey McGuire" <coreyfro@coreyfro.com>
 Subject: Re: RAID5 causing lockups
-Date: Wed, 25 Jun 2003 13:56:33 -0700
+Date: Wed, 25 Jun 2003 14:16:31 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200306251356330437.4DA4F49C@shargaas.coreyfro.com>
+Message-ID: <200306251416310718.4DB73D65@shargaas.coreyfro.com>
 References: <200306251216300921.4D495D48@shargaas.coreyfro.com>
  <1056573394.24919.62.camel@mattswrk>
+ <200306251356330437.4DA4F49C@shargaas.coreyfro.com>
+ <1056575536.24919.101.camel@mattswrk>
 Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1056573394.24919.62.camel@mattswrk>
+In-Reply-To: <1056575536.24919.101.camel@mattswrk>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-drives are silent.  No activity at all.
 
-Maybe i'll give it a try tonight again.  I can give it a bunch more
-horsepower (have it underclocked because the system is basicly a big disk)
-maybe if I have more available CPU, the arrays will be a bit more busy if
-they really are rebuilding.
+I am very used to their noise ;-)
 
-still, the problem causes top to stop.  I wouldn't think that would be a
-problem if the array was just rebuilding...
+I can't do anything when the problem comes up.  I can change consoles, type
+at the prompt, etc, but nothing else...
+
+i can't even ctrl + alt + del
 
 *********** REPLY SEPARATOR  ***********
 
-On 6/25/2003 at 1:36 PM Matt Simonsen wrote:
+On 6/25/2003 at 2:12 PM Matt Simonsen wrote:
 
->On Wed, 2003-06-25 at 12:16, Corey McGuire wrote:
->> Hey folks,
+>On Wed, 2003-06-25 at 13:56, Corey McGuire wrote:
+>> drives are silent.  No activity at all.
 >> 
->> I just upgraded my system from a ~200GB mirror to a ~1TB RAID5, but all
->has
->> not transitioned well.
 >
+>Looses credibility for my guess, then... although you're sure they're
+>just not quiet disks? Still, I'd check /proc/mdstat to make sure it
+>isn't churning.... really, I was about to write in the exact email --
+>"my system is locked up, top doesn't work, etc" -- 30 minutes later, I'm
+>golden.
 >
->Did the RAID array every finish syncing? It may take a long time
->(1048576 megs / 10 mb/sec / 3600 seconds/hr = 29 hours!) ... 
->
->I have one (SCSI) system with a slower CPU, syncing the array I was sure
->something was wrong. Once the array was up, though, everything has
->worked great. I just have to be sure it shuts down clean or the rebuild
->is painful!
->
->Maybe I'm way off, but I'd just give it a day to see if it eventually
->syncs. If you can login, do a cat of /proc/mdstat every 15 minutes, if
->it's making progress I'd leave it.
+>Good luck, let us know what you find.
 >
 >Matt
 
