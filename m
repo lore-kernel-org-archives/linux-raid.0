@@ -1,60 +1,76 @@
-From: Gordon Henderson <gordon@drogon.net>
-Subject: Re: 8-port SATA PCI/PCIX adaptor
-Date: Sat, 2 Apr 2005 16:04:48 +0100 (BST)
-Message-ID: <Pine.LNX.4.56.0504021552250.30253@lion.drogon.net>
-References: <d2mae1$ii$1@sea.gmane.org>
+From: peter pilsl <pilsl@goldfisch.at>
+Subject: raid1-diseaster on reboot: old version overwrites new version
+Date: Sat, 02 Apr 2005 17:43:51 +0200
+Message-ID: <424EBDB7.2000106@goldfisch.at>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <d2mae1$ii$1@sea.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, 2 Apr 2005, Max Waterman wrote:
 
-> http://www.sonnettech.com/product/tempo-x_esata8.html
->
-> do you think this will work with Linux?
->
-> what about Linux on an Intel platform?
+Two days ago I had a severe servercrash due to raid-problems. The whole 
+thing started with a (homemade) DOS-attack on the server. The server 
+went to its knees and needed to be resetted. After the reboot the server 
+was working fine and background-reconstruction of the mirrors started.
+About 30 minutes later the first anomalies occured. Applications 
+reported missing libraries, fs-errors (reiserfs) and so on.
+It took a while until I reckognized what was going on:
 
-Hard to tell without knowing the actual chip-set on-board.
+the /-partition was on a raid1 - /dev/md2 - based on two disks : hda6+hdc6.
 
-> I wonder how it performs - esp. compared to the supermicro card
-> http://supermicro.com/products/accessories/addon/DAC-SATA-MV8.cfm which
-> which is a fair bit cheaper at ~$99 and presents the ports internally. I
-> know the Supermicro has a linux driver (they emailed it to me), but I
-> haven't tried it.
->
-> Anyone tried these cards?
+For some reason the raid seemed to be out of sync for over a year and 
+hdc6 holded a old copy that was now successively overwriting hda6 and 
+changing the content of / while the raid was running.
+I booted with a live-cd to discover the hdc6 was the exact copy of 
+spring 2004 (easily found out by content and timestamps of various files 
+over the system) and hda6 was not mountable. I ran reiserfsck and had 
+the tree rebuild on hda6, but it was too late. All current data was gone.
 
-What are you after? Card for internal drives, or external drives? If
-Internal drives, unless you can identify the chipset, I'd avoid this card
-and go for something else.
+I had a backup and server is up again and my head is on my shoulders, 
+but it leaves a lot of questions to me:
 
-If external drives, then it's worth trying to find-out what the underlying
-chip-set is.
+* how can the raid be out of sync. I monitor /proc/mdstat on a 
+5-minute-interval and log the content to files. The output was 
+definitely like:
 
-Personally, if you have 8 external drives, I'd consider SCSI, just to
-cut-down on the number of cables! (Although the cost of the drives might
-well be a factor for you, as it is offten for me )-:
+md2 : active raid1 hdc6[0] hda6[1]
+       5120000 blocks [2/2] [UU]
 
-If internally, I'd go for a board that has open-source drivers. I've just
-been trying the Highpoint 4-port card - no open source driver, and their
-own supplied Linux driver is some 10-15% slower than another SATA card
-(SII chipset) and didn't support SMART command pass-through.
+over the last year without a single exception. I just tested the entries 
+in my watchdog and checked functionality of the watchdog by removing one 
+disk. It definitely barks.
 
-If your motherboard has multiple PCI buses, you might want to look at 2 x
-4-port cards which will probably improve performance somewhat if you can
-get them on separate busses.
+* how can in case of a unsynced raid the old version overwrite the new 
+version. This is like a nightmare (and I remember having such thing before)
 
-The cheaper cards that I've used seem to have mostly the SII chipset - and
-that appears to be well supported by Linux. The 3112 is a dual-port card,
-the 3114, quad. There are RAID and non-RAID variants, and all the ones
-I've used seem to have a JBOD mode anyway (so you use s/w RAID rather than
-their supplied h/w RAID) (The exception would seem to be the Dell/Adaptec
-6-port SATA card I had recently - it has 3 x SII 3112 chips on it, and a
-big Adaptec/Dell chip which hides them from bus )-:
+* What did I do wrong?
 
-Gordon
+The only explantion to me is, that I had the wrong entry in my 
+lilo.conf. I had root=/dev/hda6 there instead of root=/dev/md2
+So maybe root was always mounted as /dev/hda6 and never as /dev/md2, 
+which was started, but never had any data written to it. Is this a 
+possible explanation?
+
+
+kernel 2.4.24
+raidtools-0.90
+
+thnx for any advice,
+peter
+
+
+
+
+
+
+
+-- 
+mag. peter pilsl
+goldfisch.at
+IT-management
+tel +43 699 1 3574035
+fax +43 699 4 3574035
+pilsl@goldfisch.at
