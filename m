@@ -1,34 +1,33 @@
-From: dean gaudet <dean-list-linux-raid@arctic.org>
-Subject: RE: Bad blocks are killing us!
-Date: Tue, 16 Nov 2004 15:29:16 -0800 (PST)
-Message-ID: <Pine.LNX.4.61.0411161519400.13681@twinlark.arctic.org>
-References: <16793.11589.337840.541169@cse.unsw.edu.au>
- <200411161818.iAGIIrN27121@www.watkins-home.com> <16794.34681.356891.746036@cse.unsw.edu.au>
+From: David Morton <skyman@mindspring.com>
+Subject: Perc 4e/DI on Poweredge 2850/LSI Logic MegaRaid SCSI 320-2x with
+ Fedora Core 3
+Date: Tue, 16 Nov 2004 18:54:32 -0500
+Message-ID: <419A9338.9000000@mindspring.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <16794.34681.356891.746036@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: Guy <bugzilla@watkins-home.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-i've been trying to puzzle out a related solution... suppose there were 
-"lock/unlock stripe" operations.  md delays all i/o to a locked stripe 
-indefinitely (or errors out after a timeout, both solutions work).
 
-a userland daemon could then walk through an array locking stripes 
-performing whatever corrective actions it desires (raid5/6 reconstruction, 
-raid1 reconstruction using "voting" for >2 ways).
+    I'm getting the error messages on startup:
+"Asking For Cache Data Failed"
+"assuming drive cache: write through"
 
-there are some deadlock scenarios which the daemon must avoid with 
-mlockall() and by having static memory allocation requirements.
+    I'm told this is bad.  Dell does not provide drivers that I've been 
+able to compile:
+http://support.dell.com/support/downloads/format.aspx?c=us&cs=04&l=en&s=bsd&SystemID=PWE_PNT_P3C_2850&os=LE30&osl=en&deviceid=6395&devlib=35&category=35&releaseid=R79751
 
-that gives us a proactive detect/repair solution... maybe it also gives us 
-a reactive solution:  when a read error occurs, md could lock the stripe, 
-wake the daemon, let it repair and unlock.
+    I haven't figured out how to compile this for fedora core 3 yet:
+http://www.lsilogic.com/files/support/rsa/Linux_2.10.8.2-1.zip
 
-there's good and bad aspects to this idea... i figured it's worth 
-mentioning though.
+or this:
+ftp://ftp.lsil.com/pub/linux-megaraid/drivers/version-2.20.3.1
 
--dean
+
+    Which one is correct for Fedora Core 3?  has anybody done it?
+
+Thanks
+Dave
