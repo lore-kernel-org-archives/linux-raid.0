@@ -1,38 +1,64 @@
-From: Magnus =?ISO-8859-1?Q?M=E5nsson?= <ganja@0x63.nu>
-Subject: reconf raid
-Date: Thu, 20 May 2004 11:13:27 +0200
+From: "kory" <nikitagod@bekloppt.com>
+Subject: Save a bundle on Windows XP!
+Date: Thu, 20 May 2004 22:12:45 GMT
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1085044407.16167.5.camel@freya>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Message-ID: <1085091165-14993__19652.8651206338$1085047943@excite.com>
+Content-Type: text/plain;
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+To: linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello, I have just joined this list and made some reading.
-What I am looking for is a way to add new hard drives to my raid5 made
-with mdadm. If have got it right it's not supported, and it's taking
-some time though people wants to do it in the kernel and not the way
-raidtools-reconf does it, fully understandable (even though I would lik=
-e
-to do it offline).
+Incredible DEALS on SOFTWARE you NEED!
 
-So my question is, is there any timeplan for this functionallity? Can I
-expect to be able to resize my raid5 before winter?
+Save 40% on Windows XP Professional!
+Save 40% on Microsoft Office 2003 Professional!
+Save $90 on Adobe Photoshop!
+Save 60% on Norton AntiVirus!!
 
-My idea was to build a lot of raid5 (like 5 of them) to match that my
-hard drives have different sizes, and after that use lvm to get one big
-partition that I can add new drives to and just enlarge.
+Save your company thousands of dollars when it needs software!
 
-This leads to that I also have to be able to convert raid1 to raid5, if
-I do not want to move the data on that little part to a temporary disk,
-that would be possible today, it would be only 70G to move around.
+That promotion just got closer...
 
---=20
-Magnus M=E5nsson <ganja@0x63.nu>
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Click here!!
+http://teddychoice.biz/index.php?s=7555
+
+
+Software packages you can save big on:
+
+Windows XP Professional
+Norton Antivirus 2004
+Adobe Photoshop 7.0
+Microsoft Office XP Professional
+Microsoft Office 2003 Professional
+Microsoft Money 2004
+Microsoft 2000 Professional
+Adobe Photoshop CS
+Adobe Pagemaker 7.0
+Adobe Illustrator 10
+Corel Draw Graphics Suite 11
+Adobe Acrobat 6.0 Professional
+Borland Delphi 7 Professional
+Visual Studio.Net Enterprise Architecht
+MS SQL Server 2000 Enterprise
+MS Windows Server 2003 Enterprise
+MS Windows 2000 Server
+Red Hat Linux 7.3
+
+
+
+Click here!!
+http://teddychoice.biz/index.php?s=7555
+
+
+
+
+
+
+
+
+
+image tacobellzhongguo eugene yoda malcolm goat excalibu 
+khan alisonuser1 gray aylmer
+aylmer kenneth monopoly 
+
+REMOV3: http://teddychoice.biz/soft/chair.php
