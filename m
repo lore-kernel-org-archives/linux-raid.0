@@ -1,79 +1,49 @@
-From: "Donghui Wen" <dhwen@protegonetworks.com>
-Subject: Re: 3ware bad write speed.
-Date: Mon, 24 Mar 2003 11:49:57 -0800
+From: Daniel McNeil <daniel@osdl.org>
+Subject: [PATCH 2.5.66] md/linear oops fix
+Date: 24 Mar 2003 17:14:11 -0800
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <004501c2f23e$8c2b5760$df01010a@moon>
-References: <Pine.LNX.4.44.0303240912080.2059-100000@chaos.egr.duke.edu>
+Message-ID: <1048554851.31398.7.camel@ibm-c.pdx.osdl.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="=-rPoZXeS65NOp4GXSO0ZG"
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Joshua Baker-LePain <jlb17@duke.edu>
-Cc: linux-raid@vger.kernel.org
+To: Linus Torvalds <torvalds@transmeta.com>
+Cc: NeilBrown <neilb@cse.unsw.edu.au>, linux-raid <linux-raid@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Ingo Molnar <mingo@redhat.com>
 List-Id: linux-raid.ids
 
-Thanks! Joshua:
-    We are runing oracle on rehat advanced server 2.1. Oracle only certified
-this version of redhat with ext2. That' why we could not switch to another
-linux
-or file system. :-(
 
-Donghui
+--=-rPoZXeS65NOp4GXSO0ZG
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 
-> The card is capable of much better than that.  Here are my numbers from a
-> 7 disk RAID5 array (8th is a hot spare) on a 7500-8 board:
->
-> Sequential Writes
->                               File  Blk   Num                   Avg
-> Maximum
->       Lat%     Lat%    CPU
-> Identifier                    Size  Size  Thr   Rate  (CPU%)  Latency
-> Latency
->       >2s      >10s    Eff
-> ---------------------------- ------ ----- ---  ------ ------ ---------
-> ---------
-> --  -------- -------- -----
-> 2.4.18-17SGI_XFS_1.2pre3smp   4096  4096    1   49.50 20.52%     0.068
-> 2915.
-> 71   0.00124  0.00000   241
-> 2.4.18-17SGI_XFS_1.2pre3smp   4096  4096    2   45.17 23.21%     0.141
-> 7873.
-> 45   0.00343  0.00000   195
-> 2.4.18-17SGI_XFS_1.2pre3smp   4096  4096    4   39.98 23.29%     0.335
-> 13338.
-> 23   0.00887  0.00010   172
-> 2.4.18-17SGI_XFS_1.2pre3smp   4096  4096    8   39.23 24.30%     0.631
-> 7887.
-> 96   0.01535  0.00000   161
->
-> Obviously I've got more spindles, but your speeds shouldn't be *that* bad.
-> Some things to check:
->
-> 1) You said latest drivers, but make sure that you upgraded everything --
-> a driver set from 3ware is driver+firmware+3dm.  Specifically, make sure
-> your firmware is up to date with your driver.
->
-> 2) Make sure that your kernel supports HIGHIO.  I don't know if that
-> enterprise kernel does (do you need to run it?), but it makes a *big*
-> difference.  The latest 3ware drivers support HIGHIO, but the kernel needs
-> to as well.
->
-> 3) Make sure your drives are listed as compatible.
->
-> 4) Try a different FS.  The numbers above are with XFS -- with ext3 I was
-> getting write speeds of only half that (at best).
->
-> Good luck.
->
-> --
-> Joshua Baker-LePain
-> Department of Biomedical Engineering
-> Duke University
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+This fixes an oops caused by incorrect usage of sector_div()
+in which_dev() in md/linear.c.  It was dereferencing an non-existent
+hash table entry.
+
+
+-- 
+Daniel McNeil <daniel@osdl.org>
+
+--=-rPoZXeS65NOp4GXSO0ZG
+Content-Disposition: attachment; filename=patch-2.5.66-linear
+Content-Type: text/x-patch; name=patch-2.5.66-linear; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+
+diff -urNp -X /home/daniel/dontdiff linux-2.5.66/drivers/md/linear.c linux-2.5.66-md/drivers/md/linear.c
+--- linux-2.5.66/drivers/md/linear.c	Mon Mar 24 14:00:20 2003
++++ linux-2.5.66-md/drivers/md/linear.c	Mon Mar 24 16:53:50 2003
+@@ -37,7 +37,11 @@ static inline dev_info_t *which_dev(mdde
+ 	linear_conf_t *conf = mddev_to_conf(mddev);
+ 	sector_t block = sector >> 1;
+ 
+-	hash = conf->hash_table + sector_div(block, conf->smallest->size);
++	/*
++	 * sector_div(a,b) returns the remainer and sets a to a/b
++	 */
++	(void)sector_div(block, conf->smallest->size);
++	hash = conf->hash_table + block;
+ 
+ 	if ((sector>>1) >= (hash->dev0->size + hash->dev0->offset))
+ 		return hash->dev1;
+
+--=-rPoZXeS65NOp4GXSO0ZG--
 
