@@ -1,120 +1,114 @@
-From: "Donghui Wen" <dhwen@protegonetworks.com>
-Subject: Re: RAID reconstruction problems
-Date: Tue, 2 Sep 2003 11:29:16 -0700
+From: "John Doe" <public_address_911@hotmail.com>
+Subject: Problem converting raid-5 array from 2.2.17 into 2.4.22
+Date: Wed, 03 Sep 2003 01:31:43 +0300
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <003d01c37180$1db2b730$df01010a@moon>
-References: <87wucrnb63.fsf@cs.cmu.edu>
+Message-ID: <Law12-F83aJ0j4YbmBs00031071@hotmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Michael Duggan <md5i@sei.cmu.edu>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Have you partitioned the new disk before you rebuild?
 
-Donghui
+Hi,
 
------ Original Message -----
-From: "Michael Welsh Duggan" <md5i@cs.cmu.edu>
-To: <linux-raid@vger.kernel.org>
-Sent: Monday, September 01, 2003 8:04 PM
-Subject: RAID reconstruction problems
+I used to have the following array:
 
+# mdtab entry for /dev/md0
+/dev/md0        raid5,128k,0,93fa4522   /dev/hda3 /dev/hdb1 /dev/hdc1 
+/dev/hdd1
 
-> I currently have two small Software RAIDs, a RAID 1 for my root
-> partition, and a RAID 5 for my usr partition.  One of the disks in the
-> arrays died, and I threw in a new disk in with the intention of
-> rebuilding the arrays.
->
-> The rebuilds failed, but in an extremely strange fashion.  Monitoring
-> /proc/mdstat, it seems that the rebuilds are going just fine.  When
-> they finish however, /proc/mdstat includes the new disk, but also
-> declares it invalid.  The system continues running in degraded mode.
->
-> When I run this from the root console, I get some messages from the
-> raid subsystem, including full debugging output.  I have not yet
-> figured out how to capture this output in order to include in this
-> message, but I did write down a part of one attempt (this was by hand,
-> so there may be small inconsistancies):
->
-> RAID5 conf printout
->  --- rd:3 wd:2 fd:1
->  disk 0, s:0, o:1, n:0 rd:0 us:1 dev:ide/host0/bus0/target1/lun0/part3
->  disk 1, s:0, o:0, n:0 rd:0 us:0 dev:[dev 00:00]
->  disk 2, s:0, o:1, n:2 rd:2 us:1 dev:ide/host2/bus1/target0/lun0/part3
-> md: bug in file raid5.c, line 1901
->
-> Here is some output from my system.  If any more information would be
-> useful, or anyone thinks I should try something else, please let me
-> know.  I would like to get out of my currently degraded state!
->
->
+This ran on linux 2.2.17 and raidtools 0.42. When upgrading the kernel to 
+2.4.22
+and raid-tools 0.90 I understood that it would be necessary to run mkraid 
+--upgrade
+on the device. So I run it on the following raidtab:
 
+/etc/raidtab:
+raiddev /dev/md0
+        raid-level      5
+        nr-raid-disks   4
+        nr-spare-disks  0
+        persistent-superblock   1
+        parity-algorithm        left-symmetric
+        chunk-size      32
+        device          /dev/hda3
+        raid-disk       0
+        device          /dev/hdb1
+        raid-disk       1
+        device          /dev/hdc1
+        raid-disk       2
+        device          /dev/hdd1
+        raid-disk       3
 
-----------------------------------------------------------------------------
-----
+This one was copied straight from Software-RAID HOWTO, unfortunately I 
+noticed
+only afterwards that the chunk-size was different than it was before. 
+Anyway,
+mkraid seemed to convert the array; it printed out many pages of information
+which I didn't analyze further, but apparently it left the raid in a somehow
+bad state, because:
 
+# raidstart /dev/md0
+/dev/md0: Invalid argument
 
->
-> --
-> Michael Welsh Duggan
-> (md5i@cs.cmu.edu)
->
+# cat /proc/mdstat
+Personalities : [raid5]
+read_ahead not set
+unused devices: <none>
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-Have you partitioned the new disk before you rebuild?
+I learned that mdadm would apparently be a good tool for analysing the 
+situation,
+but I had no success there:
 
-Donghui
+# mdadm --examine /dev/md0
+mdadm: /dev/md0 is too small for md
 
------ Original Message -----
-From: "Michael Welsh Duggan" <md5i@cs.cmu.edu>
-To: <linux-raid@vger.kernel.org>
-Sent: Monday, September 01, 2003 8:04 PM
-Subject: RAID reconstruction problems
+Trying to --upgrade with the correct chunk 128kb size set in /etc/raidtab 
+just prints:
 
+handling MD device /dev/md0
+analyzing super-block
+disk 0: /dev/hda3, 78935377kB, raid superblock at 78935296kB
+array needs no upgrade
+mkraid: aborted, see the syslog and /proc/mdstat for potential clues.
 
-> I currently have two small Software RAIDs, a RAID 1 for my root
-> partition, and a RAID 5 for my usr partition.  One of the disks in the
-> arrays died, and I threw in a new disk in with the intention of
-> rebuilding the arrays.
->
-> The rebuilds failed, but in an extremely strange fashion.  Monitoring
-> /proc/mdstat, it seems that the rebuilds are going just fine.  When
-> they finish however, /proc/mdstat includes the new disk, but also
-> declares it invalid.  The system continues running in degraded mode.
->
-> When I run this from the root console, I get some messages from the
-> raid subsystem, including full debugging output.  I have not yet
-> figured out how to capture this output in order to include in this
-> message, but I did write down a part of one attempt (this was by hand,
-> so there may be small inconsistancies):
->
-> RAID5 conf printout
->  --- rd:3 wd:2 fd:1
->  disk 0, s:0, o:1, n:0 rd:0 us:1 dev:ide/host0/bus0/target1/lun0/part3
->  disk 1, s:0, o:0, n:0 rd:0 us:0 dev:[dev 00:00]
->  disk 2, s:0, o:1, n:2 rd:2 us:1 dev:ide/host2/bus1/target0/lun0/part3
-> md: bug in file raid5.c, line 1901
->
-> Here is some output from my system.  If any more information would be
-> useful, or anyone thinks I should try something else, please let me
-> know.  I would like to get out of my currently degraded state!
->
->
+And trying to go back to kernel 2.2.17 and raidtools 0.42 causes the 
+following havoc in
+/etc/init.d/raid start:
 
+Adding md devices.
+/dev/md0: Invalid argument
+Some of the RAID devices have errors:
+  Checking "md0":
+ckraid: aborted
+ckraid version 0.36.4
+parsing configuration file
+handling MD device /dev/md0
+analyzing super-block
+disk 0: /dev/hda3, 78935377kB, raid superblock at 78935296kB
+disk 1: /dev/hdb1, 80035798kB, raid superblock at 80035712kB
+disk 2: /dev/hdc1, 80035798kB, raid superblock at 80035712kB
+disk 3: /dev/hdd1, 80035798kB, raid superblock at 80035712kB
+reading raid superblock
+unsupported raid array version 0.90.0
+/dev/md0: Invalid argument
+  WARNING: unrecovered RAID errors!
 
-----------------------------------------------------------------------------
-----
+So apparently the superblocks _are_ there but the kernel just cannot read 
+them.
 
+Is there any way to correct the situation without remaking the array?
 
->
-> --
-> Michael Welsh Duggan
-> (md5i@cs.cmu.edu)
->
+I'd just like to know if the data is definitely gone forever after 
+specifying
+the wrong chunk size, or is there still hope to recover it.
+
+Any help would be greatly appreciated!
+
+-J
+
+_________________________________________________________________
+Help STOP SPAM with the new MSN 8 and get 2 months FREE*  
+http://join.msn.com/?page=features/junkmail
 
