@@ -1,32 +1,34 @@
-From: "Hillary Bohon" <hillarybohonrh@london.com>
-Subject: inexpensive cialis available atlast just 5.75 per 20mg tablet
-Date: Mon, 26 Apr 2004 01:59:54 -1000
+From: Dominik Kubla <dominik.kubla@uni-mainz.de>
+Subject: Re: Bug in multipath code (Linux 2.6.x) ?
+Date: Mon, 26 Apr 2004 15:34:40 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <fc5701c42b85$fd064db0$4bfbbf26@wdgvasygh>
-Reply-To: "Hillary Bohon" <hillarybohonrh@london.com>
+Message-ID: <408D0FF0.5000608@uni-mainz.de>
+References: <1082930553.3158.18.camel@zezette>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid <linux-raid@vger.kernel.org>
+In-Reply-To: <1082930553.3158.18.camel@zezette>
+To: christophe.varoqui@free.fr
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Effectively, it is identical to Pfzier Viarga but much less in price.
+christophe varoqui wrote:
 
-More and more men are ordering from offshore pharmacies for convenience.
+>>Unfortunately very little effort seems to be spent on documenting the features of device-mapper and how to use them. I originally intended to use DM, but since i could not find any information on how to configure mirrored multipath devices i decided against it.
+>>
+>>What is the word on MD and DM? I miss some sort of road map and a general overview (preferrably with executive summary). (I am willing to write one if i can find/get the necessary information.)
+>>
+> 
+> I'm quite fond of my docs on multipath with the device-mapper subsystem.
+> You can find them at http://christophe.varoqui.free.fr
+> 
+> Hope it helps.
+> 
+> regards,
+> cvaroqui
+> 
 
-Use the link below to place your order online:
+Excellent! Thanks a lot!
 
-Rosalinda Nitti
-
-http://rd.yahoo.com/JmgyrNyil/*http://www.orderdiscountgeneric.com
-
-
-
-
-
-
-Go here if you do not want to receive any more promotion mailings for
-pharmacy related products:
-http://rd.yahoo.com/Tq/Ghwtoj/*http://orderdiscountgeneric.com
+Dominik
