@@ -1,72 +1,88 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: [PATCH 1/2] md bitmap bug fixes
-Date: Tue, 15 Mar 2005 09:54:52 +1100
-Message-ID: <16950.5692.594941.130741@cse.unsw.edu.au>
-References: <422F7621.8090602@steeleye.com>
-	<16949.5768.392061.95882@cse.unsw.edu.au>
-	<20050314094454.GK3858@marowsky-bree.de>
-	<16949.26113.68948.938529@cse.unsw.edu.au>
-	<20050314112403.GT3858@marowsky-bree.de>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: [PERFORM] Postgres on RAID5
+Date: Mon, 14 Mar 2005 18:49:11 -0500
+Message-ID: <200503142349.j2ENnG510033@www.watkins-home.com>
+References: <42361474.9060500@tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-In-Reply-To: message from Lars Marowsky-Bree on Monday March 14
+In-Reply-To: <42361474.9060500@tls.msk.ru>
 Sender: linux-raid-owner@vger.kernel.org
-To: Lars Marowsky-Bree <lmb@suse.de>
-Cc: Paul Clements <paul.clements@steeleye.com>, linux-raid@vger.kernel.org
+To: 'Michael Tokarev' <mjt@tls.msk.ru>, 'Arshavir Grigorian' <ag@m-cam.com>
+Cc: linux-raid@vger.kernel.org, pgsql-performance@postgresql.org
 List-Id: linux-raid.ids
 
-On Monday March 14, lmb@suse.de wrote:
-> On 2005-03-14T21:22:57, Neil Brown <neilb@cse.unsw.edu.au> wrote:
+You said:
+"If your write size is smaller than chunk_size*N (N = number of data blocks
+in a stripe), in order to calculate correct parity you have to read data
+from the remaining drives."
+
+Neil explained it in this message:
+http://marc.theaimsgroup.com/?l=linux-raid&m=108682190730593&w=2
+
+Guy
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Michael Tokarev
+Sent: Monday, March 14, 2005 5:47 PM
+To: Arshavir Grigorian
+Cc: linux-raid@vger.kernel.org; pgsql-performance@postgresql.org
+Subject: Re: [PERFORM] Postgres on RAID5
+
+Arshavir Grigorian wrote:
+> Alex Turner wrote:
 > 
-> > > Hi there, just a question about how the bitmap stuff works with
-> > > 1++-redundancy, say RAID1 with 2 mirrors, or RAID6.
-> > I assume you mean RAID1 with 3 drives (there isn't really one main
-> > drive and all the others are mirrors - all drives are nearly equal).
-> 
-> Yeah, that's what I meant.
-> 
-> (BTW, if they are all equal, how to you figure out where to sync
-> from?
+[]
+> Well, by putting the pg_xlog directory on a separate disk/partition, I 
+> was able to increase this rate to about 50 or so per second (still 
+> pretty far from your numbers). Next I am going to try putting the 
+> pg_xlog on a RAID1+0 array and see if that helps.
 
-It arbitrarily chooses one.  It doesn't matter which.  The code
-currently happens to choose the first, but this is not a significant choice.
+pg_xlog is written syncronously, right?  It should be, or else reliability
+of the database will be at a big question...
 
-> Isn't the "first" one also the first one to receive the writes, so
-> unless it's somehow identified as bad, it's the one which will have the
-> "best" data?)
+I posted a question on Feb-22 here in linux-raid, titled "*terrible*
+direct-write performance with raid5".  There's a problem with write
+performance of a raid4/5/6 array, which is due to the design.
 
-Data is written to all drives in parallel (the request to the first
-might be launched slightly before the second, but the difference is
-insignificant compared to the time it takes for the write to
-complete). 
+Consider raid5 array (raid4 will be exactly the same, and for raid6,
+just double the parity writes) with N data block and 1 parity block.
+At the time of writing a portion of data, parity block should be
+updated too, to be consistent and recoverable.  And here, the size of
+the write plays very significant role.  If your write size is smaller
+than chunk_size*N (N = number of data blocks in a stripe), in order
+to calculate correct parity you have to read data from the remaining
+drives.  The only case where you don't need to read data from other
+drives is when you're writing by the size of chunk_size*N, AND the
+write is block-aligned.  By default, chunk_size is 64Kb (min is 4Kb).
+So the only reasonable direct-write size of N drives will be 64Kb*N,
+or else raid code will have to read "missing" data to calculate the
+parity block.  Ofcourse, in 99% cases you're writing in much smaller
+sizes, say 4Kb or so.  And here, the more drives you have, the
+LESS write speed you will have.
 
-There is no such thing as "best" data.
-Consider the situation where you want to make a transactional update
-to a file that requires writing two block.
-If the system dies while writing the first, the "before" data is
-better.  If it dies while writing the second, the "after" data is
-better. 
+When using the O/S buffer and filesystem cache, the system has much
+more chances to re-order requests and sometimes even omit reading
+entirely (when you perform many sequentional writes for example,
+without sync in between), so buffered writes might be much fast.
+But not direct or syncronous writes, again especially when you're
+doing alot of sequential writes...
 
-> 
-> > We haven't put any significant work into bitmap intent logging for
-> > levels other than raid1, so some of the answer may be pure theory.
-> 
-> OK.
-> 
-> (Though in particular for raid5 with the expensive parity and raid6 with
-> the even more expensive parity this seems desireable.)
+So to me it looks like an inherent problem of raid5 architecture
+wrt database-like workload -- databases tends to use syncronous
+or direct writes to ensure good data consistency.
 
-Yes.  We will get there.  We just aren't there yet so I cannot say
-with confidence how it will work.
+For pgsql, which (i don't know for sure but reportedly) uses syncronous
+writs only for the transaction log, it is a good idea to put that log
+only to a raid1 or raid10 array, but NOT to raid5 array.
 
-> 
-> I think each disk needs to have it's own bitmap in the long run. On
-> start, we need to merge them.
+Just IMHO ofcourse.
 
-I think any scheme that involved multiple bitmaps would be introducing
-too much complexity.  Certainly your examples sound very far fetched
-(as I think you admitted yourself).  But I always try to be open to
-new ideas.
+/mjt
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-NeilBrown
