@@ -1,56 +1,53 @@
-From: Maurice Hilarius <maurice@harddata.com>
-Subject: Re: Definition of hotswap, was 1x 3ware controllers vs. 2x
-  3ware controllers
-Date: Sun, 22 Aug 2004 11:52:32 -0600
+From: NeilBrown <neilb@cse.unsw.edu.au>
+Subject: [PATCH md 0 of 4] Introduction
+Date: Mon, 23 Aug 2004 13:10:27 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <6.1.2.0.2.20040822115038.084c6760@mail.harddata.com>
-References: <Pine.LNX.4.44.0408010858370.7382-100000@uplift.swm.pp.se>
- <Pine.LNX.4.56.0408010804370.6442@lion.drogon.net>
- <Pine.LNX.4.58.0408021554070.7168@taurus.cesta.com>
- <1091498700.18467.286.camel@tinny.home.foo>
- <410F7D1F.90609@buttersideup.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; format=flowed
+Message-ID: <20040823130657.19914.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <410F7D1F.90609@buttersideup.com>
-References: <Pine.LNX.4.44.0408010858370.7382-100000@uplift.swm.pp.se>
- <Pine.LNX.4.56.0408010804370.6442@lion.drogon.net>
- <Pine.LNX.4.58.0408021554070.7168@taurus.cesta.com>
- <1091498700.18467.286.camel@tinny.home.foo>
- <410F7D1F.90609@buttersideup.com>
-To: Tim Small <tim@buttersideup.com>
+To: Andrew Morton <akpm@osdl.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-With regards to your message at 05:55 AM 8/3/04, Tim Small. Where you stated:
->Scott T. Smith wrote:
->
->>This link seems to indicate "hot swap" means telling the machine you're
->>going to remove the device, and then removing the device.  To me, that's
->>not really hot swapping; I would prefer to be able to just yank to drive
->>and let the OS figure it out itself.
->>
->>What is the common industry definition of hot swapping?
->>
->I'd say the most common definition is the ability to swap-out a failed 
->disk whilst power is connected to the system, and the OS remains up - 
->sometimes informing the controller, sometimes not..
 
+Following are 4 patches for md in 2.6.8.1-mm4
 
-I think one has to add to that:
+The first three are minor improvements and modifications either
+required by or inspired by the fourth.
 
-"While allowing the filesystem to remain available to the OS and 
-applications, and without the loss or corruption of data, preferably 
-without the requirement for manual intervention by a user or administrator."
+The fourth adds a new raid personality - raid10.  At 56K, I'm not 
+sure it will get through the mailing list, but interested parties
+can find it at:
 
+  http://neilb.web.cse.unsw.edu.au/patches/linux-devel/2.6/2004-08-23-03
 
+raid10 provides a combination of raid0 and raid1.
+It requires mdadm 1.7.0 or later to use.  
 
-With our best regards,
+The next release of mdadm should have better documention of raid10, but 
+from the comment in the .c file:
 
-Maurice W. Hilarius       Telephone: 01-780-456-9771
-Hard Data Ltd.               FAX:       01-780-456-9772
-11060 - 166 Avenue        mailto:maurice@harddata.com
-Edmonton, AB, Canada      http://www.harddata.com/
-    T5X 1Y3
+/*
+ * RAID10 provides a combination of RAID0 and RAID1 functionality.
+ * The layout of data is defined by 
+ *    chunk_size
+ *    raid_disks
+ *    near_copies (stored in low byte of layout)
+ *    far_copies (stored in second byte of layout)
+ *
+ * The data to be stored is divided into chunks using chunksize.
+ * Each device is divided into far_copies sections.
+ * In each section, chunks are layed out in a style similar to raid0, but
+ * near_copies copies of each chunk is stored (each on a different drive).
+ * The starting device for each section is offset near_copies from the starting
+ * device of the previous section.
+ * Thus there are (near_copies*far_copies) of each chunk, and each is on a different
+ * drive.
+ * near_copies and far_copies must be at least one, and there product is at most
+ * raid_disks.
+ */
 
+raid10 is currently marked EXPERIMENTAL, and this should be taken seriously.
+A reasonable amount of basic testing hasn't shown any bugs, and it seems to resync
+and rebuild correctly.  However wider testing would help.
 
+NeilBrown
