@@ -1,59 +1,73 @@
-From: Andrew McCready <ajmccready@yahoo.com>
-Subject: raid0 problem starting
-Date: Sat, 25 Sep 2004 11:40:19 -0700 (PDT)
+From: chris <linux_mail@rozpooh.com>
+Subject: raid1 reconstruction locks up system
+Date: Mon, 27 Sep 2004 23:30:42 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040925184019.12881.qmail@web50107.mail.yahoo.com>
+Message-ID: <200409272330.42915.linux_mail@rozpooh.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I have two sata disks in a raid0 array that show up on
-my system as hde and hdg. I tried adding an ide pata
-card, so I could add a few temporary disks to the
-system . That didn't go so well. However, I wasn't
-able to boot far enough to modify anything on the hard
-drives, so I pulled the pata card out and rebooted.
-Now, I'm getting the following error while starting
-the raid array:
+highpoint 370 ide controller (using kernel provided module)
+(2) 120 gb ide harddisks
 
-md: could not lock [dev 38:01], zero-size? Marking
-faulty.
-md: could not import [dev 38:01], trying to run array
-nevertheless.
-md: could not lock [dev 39:01], zero-size? Marking
-faulty.
-md: could not import [dev 39:01], trying to run array
-nevertheless.
+linux 2.6.8.1
+raidtools 1.00.3
+mdadm 1.6.0
 
-then a few lines later
+i am using linux md raid1
 
-md: device name has changed from [dev 38:01] to hde1
-since last import!
+i have a raid1 array that has been running fine through several kernel 
+upgrades including 2.6.8.1
 
-I'm assuing its getting the old device names from the
-persistent-superblock, but I thought I'd at least be
-able to raidstart with a correct /etc/raidtab (it
-hasn't changed since I built the array), but I get the
-same errors then.
+i recently had power outage that has left me in disarray (as if you have never 
+heard that pun)
 
-I checked /dev, and there are no devices with a major
-number of 38 or 39. hde is 33 and hdg is 34. I don't
-know enough about the device system to know what would
-make those numbers change (but I was under the
-impression that they were pretty much 100% static),
-but the big question is, how can I get my raid0 array
-back? (or is this all a red herring and the disks are
-actually toast?)
+when using raidstart to start the array, both discs are found and md0 is 
+created.    md says the raid is not clean and begins reconstruction.  i get a 
+new prompt so one might assume that the reconstruction starts in the 
+background.  md gives a few more messages about starting the sync, but, at 
+this point my system is already locked up.  no keyboard input, no ssh in from 
+another box.
 
+i don't know where to go from here.  normally, the reconstruction would run in 
+the background and i would go about my business.  i can't even tell if the 
+reconstruction is taking place.  i suspect it is not, but, that's just a 
+hunch.
 
-Thanks, Andrew
+btw, the same thing happens when i use mdadm to start the array...
 
+any advice is appreciated.
 
-ps. I just checked the smart data on the disks, and
-one has just one error and the other had 35, but the
-last errors occured after 390 hours, and the current
-power_on_hours is 4287. 
+here is an example of what the system is doing:
+
+root@mybox:~#raidstart /dev/md0
+md: raidstart (pid389) used deprecated START_ARRAY not supported past 2.6
+(it has been running fine in 2.6 until now)
+md: autorun
+md: considering hdg1
+adding hdg1
+adding hde1
+md: created md0
+md: bind <hde1>
+md: bind <hdg1>
+md: running <hdg1><hde1>
+md: md0: raid array is not clean
+starting background reconstruction
+raid1set md0 active 2 out of 2 mirrors
+md: autorun DONE
+root@mybox:~#md: syncing RAID array md0
+md: using 128k window over (120gb) blocks
+
+at this point the system is frozen, there is a blinking "-" but i cannot use 
+keyboard or ssh in
+
+i appreciate any advice.
+
+-chris
 
 
