@@ -1,137 +1,91 @@
-From: "Shaw, Marco" <Marco.Shaw@aliant.ca>
-Subject: RE: Heavy paging, but no swap being used.--MORE INFO
-Date: Thu, 29 May 2003 14:05:04 -0300
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: How do we handle the same but uptodated data to disk cache?
+Date: Fri, 30 May 2003 14:07:11 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <C65F89D1AC0BB54B865127151A24DA7810F74CAE@nbexchm2.aliant.icn>
+Message-ID: <16086.55535.905007.233783@notabene.cse.unsw.edu.au>
+References: <Pine.LNX.4.44.0305261738440.19678-100000@q7.q7.com>
+	<004301c323f9$71916a10$6b01a8c0@bmoon>
+	<16082.53674.340479.177651@notabene.cse.unsw.edu.au>
+	<007c01c32491$43cf41e0$6b01a8c0@bmoon>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: "'linux-raid@vger.kernel.org'" <linux-raid@vger.kernel.org>
+In-Reply-To: message from bmoon on Tuesday May 27
+To: bmoon <bo@anthologysolutions.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I was asked what I meant by "heavy page in/page out", and I'll do my best...
+On Tuesday May 27, bo@anthologysolutions.com wrote:
+> Neil,
+> 
+> It improved a lot for the sync I/O.
+> However, I am looking for a solution to handle
+> the regular async I/O with a page data on the
+> same sector repeatedly like writing the MD SB
+> data to disk without flushing.
 
-We have a monitoring system that believes anything over 10 for pages/second could be a problem, and
-20 is really bad.
+This is a filesystem question.  Not a raid question.
 
-I've gathered this from one of my systems, where:
-Pgs_in=pages_in (average for day)
-Pgs_in_max=pags_in_maximum (maximum value for day)
-Pgs_out=pages_out (average for day)
-Pgs_out_max=pags_out_maximum (maximum value for day)
+I would just:
+   getblk
+   copy new data in
+   mark update
+   mark dirty
+   release block
 
-Some output from one of our Linux systems:
-sample_date	pgs_in  pgs_in_max	pgs_out pgs_out_max
-5/16/2003	0.07	5.68	53.32	159.54
-5/17/2003	0.04	3.27	49.89	167.2
-5/18/2003	0.09	5.74	50.57	159.61
-5/19/2003	0.02	0.04	51.55	160.07
-5/20/2003	25.86	657.06	57.06	166.05
-5/21/2003	56.21	970.79	66.15	156.4
-5/22/2003	10.48	1371.75	58.27	168.07
-5/23/2003	0.33	39.9	56.77	148.58
-5/24/2003	0.03	0.26	56.2	162.94
-5/25/2003	0.02	0.49	56.45	166.74
-5/26/2003	0.05	1.13	65.62	173.82
-5/27/2003	36.8	754.51	64	203.06
+and it will eventually be flushed to disk.
+If you want to written sooner, call
+   submit_bh
 
-Hence that difficult question of what is the norm?  I'm trying to figure out if I have a problem
-Or this is 'normal' for the system: a dual-CPU 1.4GHz PIII with 4GB of RAM.  The OS is on a local
-Hardware RAID card, but other data/apps are on a SAN attached software RAID0 device.
 
-Marco
+NeilBrown
 
-> -----Original Message-----
-> From: Shaw, Marco 
-> Sent: Thursday, May 29, 2003 11:31 AM
-> To: 'linux-raid@vger.kernel.org'
-> Subject: Heavy paging, but no swap being used.
+> 
+> The follwing is my simple algorithm for it;
+> 
+>         bh=getblk(dev, block, size);
+>         if (buffer_uptodate(bh)) { /* still in cache, not flushed yet */
+>               bh->b_data = "updated data";
+>               brelse(bh);
+>         }
+>         else { /* all were flushed or new  */
+>             .
+>             .
+>              mark_buffer_uptodate(bh,1);
+>              mark_buffer_dirty(bh);
+>             generic_make_request(rw, &bh);
+>        }
+> 
+>  Please give me your suggestion or comment.
 > 
 > 
-> RedHat 7.2 with 2.4.18-18.7.xbigmem using RedHat's software 
-> RAID package.
-> 
-> I've been seeing quite a bit of page in/page out going on, 
-> and have been looking around.
-> 
-> With the 2.4 kernel, when would one expect to see swap usage? 
->  I'm assuming the 2.4 memory works a bit like Solaris where 
-> one should expect to see physical memory usage relatively 
-> high, and that's a good/normal thing, but I don't see any 
-> swap utilization at all, which concerns me.  I may have 
-> misconfigured something...
-> 
-> How can I pin-point, if possible, whether the paging is 
-> related to the use of software RAID?
-> 
-> Marco
-> 
-> # more raidtab
-> raiddev /dev/md0
->         raid-level              0
->         nr-raid-disks           2
->         persistent-superblock   1
->         chunk-size              32
->         device                  /dev/sdc1
->         raid-disk               0
->         device                  /dev/sdd1
->         raid-disk               1
-> 
-> # free
->             total       used       free     shared    buffers 
->     cached
-> Mem:       3874464    3843256      31208          0     
-> 381844    3084184
-> -/+ buffers/cache:     377228    3497236
-> Swap:      2048248          0    2048248
-> 
-> # sar -r
-> Linux 2.4.18-18.7.xbigmem 05/29/2003
-> 
-> 12:00:00 AM kbmemfree kbmemused  %memused kbmemshrd kbbuffers 
->  kbcached kbswpfree kbswpused  %swpused
-> 12:10:00 AM     33956   3840508     99.12         0    381020 
->   3085476   2048248         0      0.00
-> 
-> # swapon -s
-> Filename                        Type            Size    Used  
->   Priority
-> /dev/sda6                       partition       2048248 0       -1
-> 
-> # more /etc/fstab
-> LABEL=/                 /                       ext3    
-> defaults        1 1
-> LABEL=/boot             /boot                   ext3    
-> defaults        1 2
-> none                    /dev/pts                devpts  
-> gid=5,mode=620  0 0
-> LABEL=/home             /home                   ext3    
-> defaults        1 2
-> none                    /proc                   proc    
-> defaults        0 0
-> none                    /dev/shm                tmpfs   
-> defaults        0 0
-> LABEL=/tmp              /tmp                    ext3    
-> defaults        1 2
-> LABEL=/usr              /usr                    ext3    
-> defaults        1 2
-> LABEL=/var              /var                    ext3    
-> defaults        1 2
-> /dev/md0 /hosting ext3 defaults,usrquota 0 0
-> /dev/sda6               swap                    swap    
-> defaults        0 0
-> /dev/cdrom              /mnt/cdrom              iso9660 
-> noauto,owner,kudzu,ro 0
-> 0
-> /dev/fd0                /mnt/floppy             auto    
-> noauto,owner,kudzu 0 0
+> Bo
+> ----- Original Message -----
+> From: "Neil Brown" <neilb@cse.unsw.edu.au>
+> To: "bmoon" <bo@anthologysolutions.com>
+> Cc: <linux-raid@vger.kernel.org>
+> Sent: Monday, May 26, 2003 7:47 PM
+> Subject: Re: How do we handle the same but uptodated data to disk cache?
 > 
 > 
-> # sar -B
-> Linux 2.4.18-18.7.xbigmem 05/29/2003
+> > On Monday May 26, bo@anthologysolutions.com wrote:
+> > > Hello,
+> > >
+> > > I want to write the data to the fixed sector with the same size
+> frequently
+> > > just like MD super block, but I do not want to sync and flush the dev
+> > > on each write.
+> > >
+> > > For example, to write md super block in /drivers/md/md.c
+> >
+> > I suggest you look at a newer md.c.  With 2.4.21pre or 2.5.* have
+> > "sync_page_io" which does what you want more effectively.
+> >
+> > NeilBrown
+> >
 > 
-> 12:00:00 AM  pgpgin/s pgpgout/s  activepg  inadtypg  inaclnpg 
->  inatarpg ...
-> Average:         0.02     55.34    561672    225090    115799 
->    180512
-> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
