@@ -1,76 +1,68 @@
-From: Gordon Henderson <gordon@drogon.net>
-Subject: RE: raidstart program device detect problem
-Date: Wed, 1 Dec 2004 17:31:19 +0000 (GMT)
-Message-ID: <Pine.LNX.4.56.0412011726090.23768@lion.drogon.net>
-References: <200412011723.iB1HNf904973@www.watkins-home.com>
+From: Stephan van Hienen <raid@a2000.nu>
+Subject: Re: raid5 slow (test on another system)
+Date: Wed, 1 Dec 2004 20:23:21 +0100 (CET)
+Message-ID: <Pine.LNX.4.61.0412012021350.12257@adsl.a2000.nu>
+References: <200411290449.iAT4nsN02715@www.watkins-home.com>
+ <Pine.LNX.4.61.0411290928430.13437@adsl.a2000.nu>
+ <Pine.LNX.4.61.0411290948230.13437@adsl.a2000.nu> <16811.48945.141392.294625@cse.unsw.edu.au>
+ <Pine.LNX.4.61.0411300146360.32052@adsl.a2000.nu>
+ <Pine.LNX.4.61.0411302034160.24563@adsl.a2000.nu> <16813.418.770001.453039@cse.unsw.edu.au>
+ <Pine.LNX.4.61.0412010050500.31657@adsl.a2000.nu>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200412011723.iB1HNf904973@www.watkins-home.com>
+In-Reply-To: <Pine.LNX.4.61.0412010050500.31657@adsl.a2000.nu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Guy <bugzilla@watkins-home.com>
-Cc: 'Kenji Miyake' <kenji@miyake.org>, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@cse.unsw.edu.au>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 1 Dec 2004, Guy wrote:
+today runned a test on another machine
+(dual p3-733 with 4*9gb scsi)
 
-> As far as I know raidtools is not supported anymore.
-> But raidtools2 is new to me.  So, not sure.
+looks like on this system the difference is arround the 10%
+maybe you need more disks/faster disks to get a bigger difference
 
-raidtools2 is what Debian calls the current 'raidtools' programs.
+results :
 
-> mdadm is the preferred tool.
+2.6.10-rc2 4d r5 ext3
 
-Debian (woody) has mdadm too:
+Version  1.03       ------Sequential Output------ --Sequential Input- 
+--Random-
+                     -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- 
+--Seeks--
+Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP 
+/sec %CP
+linuxtest.expl 496M 10364  99 39689  55 22184  36 11485  96 52559  46 
+632.0   4
+                     ------Sequential Create------ --------Random 
+Create--------
+                     -Create-- --Read--- -Delete-- -Create-- --Read--- 
+-Delete--
+               files  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP 
+/sec %CP
+                  16   512  99 +++++ +++ 32502  99   528  99 +++++ +++ 
+1938  97
+linuxtest.explainerdc.local,496M,10364,99,39689,55,22184,36,11485,96,52559,46,632.0,4,16,512,99,+++++,+++,32502,99,528,99,+++++,+++,1938,97
 
-  mdadm - v0.7.2 - 21 March 2002
+2.4.20 4d r5 ext3
+
+Version  1.03       ------Sequential Output------ --Sequential Input- 
+--Random-
+                     -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- 
+--Seeks--
+Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP 
+/sec %CP
+linuxtest.expl 496M 10087 100 53021  63 20934  34 11746  98 58858  34 
+665.3   4
+                     ------Sequential Create------ --------Random 
+Create--------
+                     -Create-- --Read--- -Delete-- -Create-- --Read--- 
+-Delete--
+               files  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP 
+/sec %CP
+                  16   573  99 +++++ +++ 30886  99   592  99 +++++ +++ 
+2264  96
+linuxtest.explainerdc.local,496M,10087,100,53021,63,20934,34,11746,98,58858,34,665.3,4,16,573,99,+++++,+++,30886,99,592,99,+++++,+++,2264,96
 
 
-Gordon
-
->
-> Guy
->
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org
-> [mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Kenji Miyake
-> Sent: Wednesday, December 01, 2004 6:10 AM
-> To: linux-raid@vger.kernel.org
-> Subject: raidstart program device detect problem
->
-> Hi,
->  I found some problem in raidtools2.
->
-> raiddevice md1 cannot start if raiddevice md10 was setup and running.
->
-> raidstart program check running device partially.
->
-> --- 1/raidtools2-0.90.20010914/raid_io.c	Wed Dec  1 19:30:26 2004
-> +++ raidtools2-0.90.20010914/raid_io.c	Wed Nov 24 19:41:42 2004
-> @@ -528,12 +528,14 @@
->  	if ((ch = strstr(p->md_name, "/md")) == NULL)
->  		return 0;
->  	strcpy(buffer, ch+1);
-> +	strcat(buffer, " : active");
->  	if ((fp = fopen("/proc/mdstat", "r")) == NULL)
->  		return 0;
->  	while (1) {
->  		if ((fgets(line, MAX_LINE_LENGTH, fp)) == NULL)
->  			break;
-> -		if (strstr(line, buffer) && !strstr(line, "inactive")) {
-> +		if (strstr(line, buffer))
-> +		{
->  			fprintf(stderr, "%s: active -- run raidstop\n",
-> p->md_name);
->  			fclose(fp);
->  			return 1;
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
