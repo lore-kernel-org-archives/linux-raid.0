@@ -1,13 +1,28 @@
-From: Olivier Kaloudoff <kalou@kalou.net>
-Subject: lsraid reports wrong device list with online RAID5 array
-Date: Sun, 7 Nov 2004 12:45:39 +0100 (CET)
-Message-ID: <Pine.LNX.4.61.0411071240340.13212@ge.kalou.net>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: lsraid reports wrong device list with online RAID5 array
+Date: Sun, 7 Nov 2004 12:53:16 -0500
+Message-ID: <200411071753.iA7HrLN05327@www.watkins-home.com>
+References: <Pine.LNX.4.61.0411071240340.13212@ge.kalou.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.61.0411071240340.13212@ge.kalou.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: 'Olivier Kaloudoff' <kalou@kalou.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+Raidtools are not recommended.  You should learn and use mdadm.
+
+Guy
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Olivier Kaloudoff
+Sent: Sunday, November 07, 2004 6:46 AM
+To: linux-raid@vger.kernel.org
+Subject: lsraid reports wrong device list with online RAID5 array
 
 Hi,
 
@@ -86,3 +101,8 @@ md2 : active raid5 hdc3[2] hdb3[1] hda3[0]
 
 
 Olivier
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
