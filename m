@@ -1,44 +1,74 @@
-From: Alvin Oga <aoga@mail.Linux-Consulting.com>
-Subject: raid5 - failed disks
-Date: Fri, 1 Apr 2005 02:08:21 -0800 (PST)
-Message-ID: <Pine.LNX.3.96.1050401015858.14428C-100000@Maggie.Linux-Consulting.com>
+From: Frank Wittig <fw@weisshuhn.de>
+Subject: Re: raid5 - failed disks
+Date: Fri, 01 Apr 2005 12:33:46 +0200
+Message-ID: <424D238A.8030305@weisshuhn.de>
+References: <Pine.LNX.3.96.1050401015858.14428C-100000@Maggie.Linux-Consulting.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enigEA90574B936889FABCA40120"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.3.96.1050401015858.14428C-100000@Maggie.Linux-Consulting.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Alvin Oga <aoga@mail.Linux-Consulting.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enigEA90574B936889FABCA40120
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-hi ya raiders ..
+Alvin Oga wrote:
+> hi ya raiders ..
+> 
+> we(they) have 14x 72GB scsi disks config'd as raid5,
+> ( no hot spare .. )
+> 
+> - if 1 disk dies, no problem ... ez to recover
 
-we(they) have 14x 72GB scsi disks config'd as raid5,
-( no hot spare .. )
+right. if one dies raid does exactly what is's supposed to do...
 
-- if 1 disk dies, no problem ... ez to recover
 
-- my dumb question is,
-	- if 2 disks dies at the same time, i
-	assume the entire raid5 is basically hosed 
-	if it won't reassemble and resync from
-	the point where it last was before the crash ??
+> - my dumb question is,
+> 	- if 2 disks dies at the same time, i
 
-	- i assume that the similar 2 disk failure
-	also applies to hw raid controllrs, but it'd
-	be more dependent upon the raid controller's 
-	firmware for it's ability to recover from 
-	2 of 14 simultaneous disk failures
-	( lets say the dell powervault 2205 series )
+if 2 disks fail at the same time you data is lost.
+if you have raid5 with 5 hot spares and a second disk dies, befor a hot
+spare is synced into the array (will be listed as spare until sync hast
+finished) the same - data gone.
 
-- i think 4x 300GB ide disks is better ( less likely to fail ?? )
 
-	and yes it has already crashed twice with
-	2 different disks running at 78F at nights
-	and weekends when the air conditioning is off
+> - i think 4x 300GB ide disks is better ( less likely to fail ?? )
 
-- i wish i can just change things but... its
-  not yet my call :-)
+it's a simple calculation.
+if one disk fails with a risk of 1 to 100000, then 10 disks fail with 10
+to 100000. which means that having 10 disks is two times as dangerous as
+having 5 disks.
 
-c ya
-alvin
+if i had an array with as much disks as you have i would chose raid
+level 6 (not sure if dm supports this by now).
+raid level 6 survives two disks failing at once.
 
+btw: what reason is there to switch off air conditioning of your it
+equipment. temperature changes are poison to this fragile things.
+
+
+greetings,
+frank
+
+--------------enigEA90574B936889FABCA40120
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.6 (GNU/Linux)
+Comment: Using GnuPG with Fedora - http://enigmail.mozdev.org
+
+iD8DBQFCTSOQx6tzaD9P7mkRAk2wAJ9XeRJGo9xk/t6+VY01naCpnApU2QCfS9ci
+FLjap5JM2jdyRhO0FFPfgP8=
+=lo75
+-----END PGP SIGNATURE-----
+
+--------------enigEA90574B936889FABCA40120--
