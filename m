@@ -1,75 +1,68 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: Re: Linear RAID (was Re: bad /proc/mdstat message)
-Date: Mon, 12 Jan 2004 22:21:20 +0100
+From: Scott Long <scott_long@adaptec.com>
+Subject: Proposed Enhancements to MD
+Date: Mon, 12 Jan 2004 20:41:54 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040112212119.GA6697@percy.comedia.it>
-References: <20040112193805.GB1174@percy.comedia.it> <Pine.GSO.4.31.0401121348500.10347-100000@staff2.cso.uiuc.edu>
+Message-ID: <40036902.8080403@adaptec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <Pine.GSO.4.31.0401121348500.10347-100000@staff2.cso.uiuc.edu>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Jan 12, 2004 at 02:01:19PM -0600, Sharif Islam wrote:
->> ># cat /proc/mdstat
->> >Personalities : [linear] [raid0]
->> >read_ahead 1024 sectors
->> >Event: 1
->
->> where does this line come from?
->> are you running a vanilla or patched kernel? which version?
->
->No patching.
->
-># uname -r
->2.4.21-4.ELsmp
->Red Hat Enterprise Linux AS release 3
-heavily patched i would say.
-complain to redhat since they seem to patch kernels and not userland
-tools :)
+(I already posted this to LKML a few hours ago but forgot to post it
+over here)
 
->Few other things I noticed while playing with linear raid. I haven't
->seen much documentation online about it, so bare with me. It is a test
->machine so I am not worried about data loss or things like that.
->
->1. The raid creation process was very quick, unlike RAID 1 and RAID 5.
->2. Every time I reboot the raid partition doesn't get mounted. However,
->if I run
->mdadm -Cv  -llinear -n6 /dev/md0 /dev/hd{e,f,g,h,k,l}
->and
->mount /dev/md0 /raid
->it comes back again with all my data.
+All,
 
-redhat by default used raidtab and raidtools to start raid devices, i
-don't know if they changed this for AS3
+Adaptec has been looking at the MD driver for a foundation for their
+Open-Source software RAID stack.  This will help us provide full
+and open support for current and future Adaptec RAID products (as
+opposed to the limited support through closed drivers that we have now).
 
->I included the partition in /etc/fstab, but that gives error. Also my
->rc.local has mdadm -As + mount command. That doesn't have any effect
->either.
-i think you don't have a correct mdadm.conf file
-to create one from scratch use
-echo "DEVICE partitions" > /etc/mdadm.conf
-mdadm  --examine  --scan --config=partitions | grep "^ARRAY" >> /etc/mdadm.conf
+While MD is fairly functional and clean, there are a number of 
+enhancements to it that we have been working on for a while and would
+like to push out to the community for review and integration.  These
+include:
 
->3. I get the following warning message when I run
->the mdadm -Cv command, for all the disks.
->
->mdadm: /dev/hdi appears to contain an ext2fs file system
->    size=120103040K  mtime=Mon Jan 12 12:42:37 2004
->...
->Continue creating array?
->
->I hit yes, and my array is back. Here mtime is the last time my array
->was up.
-you should mdadm -A to start arrays, not mdadm -C
+- partition support for md devices:  MD does not support the concept of
+   fdisk partitions; the only way to approximate this right now is by
+   creating multiple arrays on the same media.  Fixing this is required
+   for not only feature-completeness, but to allow our BIOS to recognise
+   the partitions on an array and properly boot them as it would boot a
+   normal disk.
+
+- generic device arrival notification mechanism:  This is needed to
+   support device hot-plug, and allow arrays to be automatically
+   configured regardless of when the md module is loaded or initialized.
+   RedHat EL3 has a scaled down version of this already, but it is
+   specific to MD and only works if MD is statically compiled into the
+   kernel.  A general mechanism will benefit MD as well as any other
+   storage system that wants hot-arrival notices.
+
+- RAID-0 fixes:  The MD RAID-0 personality is unable to perform I/O
+   that spans a chunk boundary.  Modifications are needed so that it can
+   take a request and break it up into 1 or more per-disk requests.
+
+- Metadata abstraction:  We intend to support multiple on-disk metadata
+   formats, along with the 'native MD' format.  To do this, specific
+   knowledge of MD on-disk structures must be abstracted out of the core
+   and personalities modules.
+
+- DDF Metadata support: Future products will use the 'DDF' on-disk
+   metadata scheme.  These products will be bootable by the BIOS, but
+   must have DDF support in the OS.  This will plug into the abstraction
+   mentioned above.
+
+I'm going to push these changes out in phases in order to keep the risk
+and churn to a minimum.  The attached patch is for the partition
+support.  It was originally from Ingo Molnar, but has changed quite a
+bit due to the radical changes in the disk/block layer in 2.6.  The 2.4
+version works quite well, while the 2.6 version is fairly fresh.  One
+problem that I have with it is that the created partitions show up in
+/proc/partitions after running fdisk, but not after a reboot.
+
+Scott
 
 
--- 
-Luca Berra -- bluca@comedia.it
-        Communication Media & Services S.r.l.
- /"\
- \ /     ASCII RIBBON CAMPAIGN
-  X        AGAINST HTML MAIL
- / \
+
