@@ -1,34 +1,44 @@
-From: Mikael Johansson <mpjohans@pcu.helsinki.fi>
-Subject: RAID-0 read perf. decrease after 2.4.20
-Date: Thu, 20 Nov 2003 18:45:13 +0200 (EET)
+From: "Tomi Orava" <tomimo+linux-raid@ncircle.nullnet.fi>
+Subject: Re: How safe is software RAID compared to how safe hardware RAID
+     is!?
+Date: Thu, 20 Nov 2003 22:53:38 +0200 (EET)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.OSF.4.58.0311201827090.515286@soul.helsinki.fi>
+Message-ID: <48898.192.168.9.10.1069361618.squirrel@ncircle.nullnet.fi>
+References: <16314.40792.616508.878124@notabene.cse.unsw.edu.au><PPEOJEIEFLAONFNHJPOOAEICGOAA.jim@jimtreats.com>
+    <16314.44161.438158.27514@notabene.cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <16314.44161.438158.27514@notabene.cse.unsw.edu.au>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-Hello All!
+>  I had a mirrored pair that kept getting data corruption.  It turned
+>  out that one of the drives had a bad bit in an internal buffer, and
+>  would occasionally return 1 for the 12th bit (or similar) of each
+>  sector even when it should be zero.   Neither software raid or
+>  hardware raid would cope with that.
 
-Has anyone else experienced a drastic drop in read performance on software
-RAID-0 with post 2.4.20 kernels? We have a few Athlon XP's here at our
-lab with double IDE disks on different channels set up as RAID-0. Some
-bonnie++ benchmark results with various kernels, on the same machine
-(Athlon XP 2400+, 2 GHz, 1.5 GB RAM, VIA chipset, 2*Maxtor 120 GB
-6Y060L0):
-		write	read
-2.4.20-ac1:	88,000 	135,000 K/sec
-2.4.21-pre7:	93,000   75,000
-2.4.22-ac4:	94,000	 82,000
+How did you manage to figure out what was the reason for this
+corruption ? I mean, does there exist a some sort of "generic"
+way how to solve such errors, or was it just hard work in comparing
+what got written to the different disks ...
 
-So the write speed has gone up a bit, but the read speed performance has
-plunged. Any ideas on what happened between 2.4.20 and 2.4.21 and what to
-do about it? I'm eagerly awaiting suggestions, good read speed is quite
-critical for many of our calculations :-) I will of course provide more
-details if necessary.
+>  Some people find that their IDE controller works fine until they try
+>  to use RAID1.  RAID1 hits multiple discs concurrently a lot, and some
+>  (few, specific) ide controllers don't appear to cope.  You probably
+>  would not get that with hardware raid.  You can with software raid
+>  because it is a "whole-system" thing.
 
-Have a nice day,
-    Mikael J.
-    http://www.helsinki.fi/~mpjohans/
+Can you name the controllers which have had problems in this area ?
+I'm having big problems in Linux 2.4 kernels IDE-stability with
+heavy I/O (all disks are RAID1), perhaps either the Sil680 or
+HPT374 are just problematic controllers ... ? (it would be just great
+to solve all of these problems by buying new IDE-cards :)
+
+Regards,
+Tomi Orava
+
+
