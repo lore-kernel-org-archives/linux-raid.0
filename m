@@ -1,97 +1,42 @@
-From: Jakob Oestergaard <jakob@unthought.net>
-Subject: Re: raidreconf: Successful RAID5 Reconstruction (re-size)
-Date: Wed, 26 Jun 2002 20:06:40 +0200
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: Can't add missing member back in???
+Date: Thu, 27 Jun 2002 04:09:27 +1000 (EST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20020626180640.GC4914@unthought.net>
-References: <NDBBIAKEEKGGEIKCBKNAAEOGDAAA.kc130iseo@coastalnet.com> <NDBBIAKEEKGGEIKCBKNACEOIDAAA.kc130iseo@coastalnet.com>
+Message-ID: <15642.855.558011.545081@notabene.cse.unsw.edu.au>
+References: <1025111457.596.13.camel@temp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <NDBBIAKEEKGGEIKCBKNACEOIDAAA.kc130iseo@coastalnet.com>
-To: cwebster@ec.rr.com
+In-Reply-To: message from Ken Causey on  June 26
+To: Ken Causey <ken@ineffable.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Jun 26, 2002 at 11:35:06AM -0600, Cal Webster wrote:
->=20
-=2E.
-> Although there were no indications of errors and initial indications =
-were
-> promising, deeper investigation revealed that the data (or at least t=
-he
-> directories) have been corrupted.
+On  June 26, ken@ineffable.com wrote:
+> Hi,
+> 
+> Interesting problem.  I'm setting up an all software RAID system and
+> after a few fits and starts have reached some success.  I started to do
+> some testing and have run into a problem.  What I was doing is I was one
+> by one unplugging one of the SCSI drives and then powering up the system
+> to make sure it would power up properly.  The first time I did this
+> everything worked great.  I plugged the drive back up and used
+> raidhotadd to recover and got everything to UUU.  I then powered off and
+> unplugged another drive, system boots up great with only two drives. 
+> Now its time to plug the drive back in and rebuild the array to be ready
+> to unplug the last of the three drives for a thorough test.  Only, now I
+> can ONLY boot up if I DO NOT have the missing drive plugged in.  This is
+> really weird.  If I have all three devices attached then it claims that
+> 2/3 of the devices that make up md2 (my root) are unavailable and well
+> then we are screwed.  WTF?
 
-Did you fsck -f the array before re-sizing the filesystem ?
+Let me guess... you are using "raidstart" to start the arrays?
+ If so, that is your problem.  It is broken.
+ Either change the partition type to use auto-detect, or use
+ mdadm:
+   http://www.cse.unsw.edu.au/~neilb/source/mdadm/
 
-What does fsck -f show on (the unmounted) filesystem now ?
+If you aren't using raidstart, tell me and I try harder.
 
->=20
-> When attempting to re-mount iso images located on the RAID device, I =
-got
-> "Not a directory" errors.
->=20
-> A listing at the top level of the mounted RAID5 device shows a somewh=
-at
-> garbled directory:
->=20
-> [root@winggear archive]# df -k
-> Filesystem           1k-blocks      Used Available Use% Mounted on
-> /dev/hda5              1008952    149796    807904  16% /
-> /dev/hda2             25134948  11767212  12090936  50% /home
-> /dev/hda1             25134948   2299120  21559028  10% /usr
-> /dev/hda4             25136164  18782060   5077244  79% /var
-> /dev/md0              69616104  37240476  28839296  57% /usr/local/ar=
-chive
->=20
-> [root@winggear root]# cd /usr/local/archive/
->=20
-> [root@winggear archive]# ls -l
-> total 16
-> ?-wSrwxr-T  38216 843638119 136403541 3092718354 May 21  1957 backup
-> sr-x--S--t  62581 1917696496 1424539385 3344111388 Nov 13  1975 iso
-> drwxr-xr-x    2 root     root        16384 Apr 26  2001 lost+found
-> b--Sr-xrw-  24320 1593859840 1902061873  44,  49 Jul  8  2002 shares
->=20
-> There should be four normal directory entries here.
-
-Ough.  Bad bad.
-
->=20
-> Anyone know what could have caused this?
-
-Possibly raidreconf.   I am very suspicious about the spare-disk anomal=
-y
-that you saw - it is possible that raidreconf did "the bad thing" with
-your array.
-
-It is also possible that you have hardware errors, bad cabling, bad
-disk, etc.  Anything suspicious in dmesg ?
-
-It is really important to run fsck -f on arrays after running raidrecon=
-f
-and before re-sizing the filesystem.  For this reason - tracking of
-when/where errors occurred.  Of course, it is a little late for you to
-be told this now - sorry.  I should add this note to the raidreconf
-output after successful reconfiguration.
-
-
-I will try to see if I can dig out a SCSI crontroller from the crap-hea=
-p
-here at work, then I will see if I can reproduce the spare-disk error.
-
-It is entirely possible that that is the reason for the screwup.
-
---=20
-=2E...............................................................
-:   jakob@unthought.net   : And I see the elder races,         :
-:.........................: putrid forms of man                :
-:   Jakob =D8stergaard      : See him rise and claim the earth,  :
-:        OZ9ABN           : his downfall is at hand.           :
-:.........................:............{Konkhra}...............:
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+NeilBrown
