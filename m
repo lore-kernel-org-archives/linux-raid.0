@@ -1,110 +1,96 @@
-From: Gordon Henderson <gordon@drogon.net>
-Subject: Re: Weird RAID 1 performance
-Date: Sun, 19 Sep 2004 11:10:34 +0100 (BST)
+From: Dave Dmytriw - NetCetera <daved@netcetera-solutions.com>
+Subject: I have managed to pickle my RAID 1 install after a disk crash
+Date: Sun, 19 Sep 2004 08:08:10 -0600
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.56.0409191001390.30137@lion.drogon.net>
-References: <414CA490.9010205@movzx.net>
+Message-ID: <414D92CA.2060903@netcetera-solutions.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <414CA490.9010205@movzx.net>
-To: Andrei Badea <andrei.badea@movzx.net>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, 18 Sep 2004, Andrei Badea wrote:
+Hi,
 
-> Hello,
->
-> I have a RAID 1 whose write performance I tested by writing a 10 GB file
-> to it:
->
-> dd if=/dev/zero of=/mnt/data/zeros bs=1024 count=...
->
-> Looking at GKrellM I noticed the CPU usage is very jumpy, going from a
-> few to 99 percent (but usually is roughly rovers around 50 percent).
-> Moreover, the transfer regularly stops for a few seconds (the CPU usage
-> is then about 2 percent). The average data transfer rate was 16 MB/s,
-> while the disks alone can make almost 25 MB/s.
+I recently had the mis-fortune of a disk failure, luckily the disk was 
+part of a RAID1 setup, so nothing was lost - yet...I should mention that 
+I am mirroring /boot/, swap and / , and am using mdadm.
 
-Modern IDE drives with the correct cabling ought to be able to write at up
-to 55MB/sec.
+I had thought that I had setup grub correctlly to allow booting off of 
+either disk, but did not test it - my bad. So when I replaced the drive 
+- hda- I thought that the sytem would boot off of hdd and then go 
+through the process of rebuilding the array with the new drive. But the 
+system would not boot. I tried various things, BIOS settings, etc, but 
+the Grub splash screen would not appear when I tried to boot off of hdd.
 
-  gordon @ argus: time dd if=/dev/zero of=bigfile bs=1024 count=10485760
-  10485760+0 records in
-  10485760+0 records out
-  2.570u 77.210s 3:43.44 35.7%    0+0k 0+0io 101pf+0w
-  gordon @ argus: du -h bigfile
-  11G     bigfile
+I swapped cables - and drive jumpers - so that my previous hdd was now 
+hda and then sucessfully re-booted the system. So far so good. Not sure 
+why the disk would boot as hda and not hdd - maybe a BIOS issue with my 
+motherboard even though it does allow specifying IDE 0-4 as boot devices.
 
-Doing the math on elapsed time gives me about 45 MB/sec
+So I had the sytem up and running - in a RAID degraded state - and 
+started woking on bringing the RAID 1 scenario back. I partioned the 
+replacement drive, now hdd and all looked well. It didn't look like I 
+could simply add the drive to the array as cat /proc/mdstat implied to 
+me that the first disk in the array had failed and I was worried about 
+copying the contents of the second drive - which mdadm thought was good 
+- over the drive that actually had the good stuff on it. I tried various 
+other things with mdadm, like stoopping and re-creating the raid 
+devices, etc, but to no success - probably user eror.
 
-Thats to an Ext3, RAID1 mount with 2 IDE drives. (hda, hdc)
+So now I am not sure how to proceed.
+
+cat /proc/mdstat yeilds this:
+
+Code:
+lucky root # cat /proc/mdstat
+Personalities : [linear] [raid0] [raid1] [raid5] [multipath]
+read_ahead 1024 sectors
+md3 : active raid1 ide/host0/bus0/target0/lun0/part3[1]
+       12377984 blocks [2/1] [_U]
+
+md1 : active raid1 ide/host0/bus1/target1/lun0/part1[1]
+       64128 blocks [2/1] [_U]
+
+md2 : active raid1 ide/host0/bus1/target1/lun0/part2[1]
+       248896 blocks [2/1] [_U]
+
+unused devices: <none>
 
 
-So the first thing to check (as it's the easiest) is the drivers. Do you
-have the right drivers installed for the hardware you have?
+Which implies to me that things are very messed up. I think this because 
+of the following snippets:
 
-I'm guessing it's a PCI card (from /dev/hde1 and /dev/hdg1 in your
-raidtab) or maybe a 2nd on-board controller with a pseudo RAID function.
+Code:
+md3 : active raid1 ide/host0/bus0/target0/lun0/part3[1]
+       12377984 blocks [2/1] [_U]
 
-Run hdparm /dev/hde /dev/hdg and see what you get. You ought to have DMA
-turned on. If it's not, then you need to make sure you have the right
-driver compiled into the kernel (or the right module loaded)
+and
 
-The next thing to look for is interrupt sharing. I've found a lot of
-motherboards appear to have broken interrupt controllers. If it's running
-with an APIC, check /proc/interrupts for MIS or ERR numbers > 0. Try
-turning the APIC off (either by not compiling it into the kernel, or
-passing the noapic flag in the kernel boot line (append="noapic" in
-lilo.conf) The BIOS might also have a mode for either PIC or APIC.
+Code:
+md1 : active raid1 ide/host0/bus1/target1/lun0/part1[1]
+       64128 blocks [2/1] [_U]
 
-You also might want to check /proc/interrupts to try to make sure every
-device has its own interrupt anyway, but this might be impossible to do
-depending on your hardware. I'm guessing you have a 2-port PCI card and
-are using 2 cables off it (one drive per cable which is good) and if so
-it'll probably have just one interrpt for both devices. If you have a 2nd
-card, try that, then it's one drive per card which might be better.
 
-> Is this normal behavior? Can the write performance be tuned (to be less
-> "jumpy")?
+different busses and targets - so different disks are active....
 
-Interupts (and/or more likely the controllers) seem to me to be the
-biggest bug/feature of a modern motherboard )-: I've seen systems work
-fine - until you load up the Ethernet interface, or start to use the
-(scsi) tape drive. Maybe the video capture card is in the same interrupt
-and the hardware just can't cope with it? I have observed "jumpy"
-behaviour as you describe too.
+I spent some time seraching around and came to the conclusion that my 
+RAID config is definitely borked.
 
-> The reason I'm asking is that I'm encoutering hangs when video capturing
-> to this RAID using mencoder and huffyuv. I'm not experiencing the hangs
-> when capturing to another partition (not RAID). Neither did I experience
->   hangs during the dd copy.
+I am thinking that the best thing for me to do now is to deactivate RAID 
+completely, then come back and do a complete RAID re-config with my 
+disks the way they are. But, I can't find a way to stop/delete the meta 
+devices so that I can start from scratch. I am running on my /dev/hdax 
+config with no /dev/mdx devices mounted.
 
-Writing to a RADI1 is going to do double the IO that writing to a single
-devie will do. You might want to try to un-raid the devices and try to
-write to just one of teh disks, then the other, but my guess is that you
-won't see the problem until you load the bus/interrupt system by writing
-to both as the same time (which RAID1 will try to do)
+Any thoughts ?
 
-You might also want to see if theres some process stuffing data out to a
-log-file via syslog during the capture. Some log files will get flushed
-out on every write which might affect performance. See if anythings
-growing in /var/log during a capture and check its entry in
-/etc/syslog.conf. This might not be obviously a problem, but it could be
-causing writes to a different disk (I'm guessing you have a /dev/hda to
-boot from which is where the log-files go). So writing to that non-RAID
-disk is fine, but load the system up with writing to that drive and the 2
-RAID drives and ...
+Thanx.
+-- 
+Dave Dmytriw
+Principal, NetCetera Solutions Inc.
+Calgary, AB
+403-703-1399
+daved@netcetera-solutions.com
+http://www.netcetera-solutions.com
 
-> Maybe the RAID 1 is just not suited for video capture?
-
-I suspect the issues with your PC are more likely to be some hardware &
-software (interrupt)  problem rather than the RAID1 code. I've been using
-the Linux s/w RAID for many years now and not had a problem with the
-drivers at all - in all cases it's been the underlying hardware (or
-specific PCI/IDE hardware drivers) which has been the issue.
-
-Good luck!
-
-Gordon
