@@ -1,37 +1,35 @@
-From: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>
-Subject: Re: "Enhanced" MD code avaible for review
-Date: Wed, 17 Mar 2004 22:45:31 +0100
+From: Mike Tran <mhtran@us.ibm.com>
+Subject: [PATCH] 2.4.25 raid1 : correct nr of spares after I/O errors
+Date: 17 Mar 2004 16:44:04 -0600
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200403172245.31842.bzolnier@elka.pw.edu.pl>
-References: <459805408.1079547261@aslan.scsiguy.com> <4058A481.3020505@pobox.com> <4058C089.9060603@adaptec.com>
+Message-ID: <1079563444.9564.4.camel@star2.austin.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4058C089.9060603@adaptec.com>
-Content-Disposition: inline
-To: Scott Long <scott_long@adaptec.com>, Jeff Garzik <jgarzik@pobox.com>
-Cc: "Justin T. Gibbs" <gibbs@scsiguy.com>, linux-raid@vger.kernel.org, "Gibbs, Justin" <justin_gibbs@adaptec.com>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: linux-raid <linux-raid@vger.kernel.org>, evms-devel <evms-devel@lists.sourceforge.net>
+Cc: Neil Brown <neilb@cse.unsw.edu.au>, Marcelo Tosatti <marcelo.tosatti@cyclades.com>
 List-Id: linux-raid.ids
 
-On Wednesday 17 of March 2004 22:18, Scott Long wrote:
-> Jeff Garzik wrote:
-> > Justin T. Gibbs wrote:
-> >  > [ I tried sending this last night from my Adaptec email address and
-> >  > have yet to see it on the list.  Sorry if this is dup for any of you.
-> >  > ]
-> >
-> > Included linux-kernel in the CC (and also bounced this post there).
-> >
-> >  > For the past few months, Adaptec Inc, has been working to enhance MD.
-> >
-> > The FAQ from several corners is going to be "why not DM?", so I would
-> > humbly request that you (or Scott Long) re-post some of that rationale
-> > here...
-
-This is #1 question so... why not DM?  8)
+If the spare failed during a resync, the number of spares should be
+decremented.
 
 Regards,
-Bartlomiej
+Mike T.
+
+
+--- a/drivers/md/raid1.c        2004-03-17 14:26:51.000000000 -0600
++++ b/drivers/md/raid1.c        2004-03-17 14:28:11.000000000 -0600
+@@ -762,6 +762,10 @@
+                sb->active_disks--;
+        sb->working_disks--;
+        sb->failed_disks++;
++       if (mirror->spare) {
++               sb->spare_disks--;
++               mirror->spare = 0;
++       }
+        mddev->sb_dirty = 1;
+        md_wakeup_thread(conf->thread);
+        if (!mirror->write_only)
+
 
