@@ -1,105 +1,50 @@
-From: "Peter T. Breuer" <ptb@it.uc3m.es>
-Subject: Re: raid1 bitmap code [Was: Re: Questions answered by Neil Brown]
-Date: Thu, 13 Mar 2003 19:49:40 +0100 (MET)
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: [PATCH] md - 1 of 12 - Missing mddev_put in md resync code
+Date: Fri, 14 Mar 2003 13:42:11 +1100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200303131849.h2DIneX10112@oboe.it.uc3m.es>
-Reply-To: ptb@it.uc3m.es
+Message-ID: <15985.16771.885438.47395@notabene.cse.unsw.edu.au>
+References: <E18sxOy-0004pf-00@notabene.cse.unsw.edu.au>
+	<1047491327.30792.3.camel@wmery000.ca.nortel.com>
+	<15983.43970.946123.962678@notabene.cse.unsw.edu.au>
+	<1047563289.30797.13.camel@wmery000.ca.nortel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: From "(env:" "ptb)" at "Mar 1, 2003 01:36:30 pm"
-To: ptb@it.uc3m.es
-Cc: Paul Clements <Paul.Clements@SteelEye.com>, Neil Brown <neilb@cse.unsw.edu.au>, linux-raid@vger.kernel.org
+In-Reply-To: message from Sean Kormilo on  March 13
+To: Sean Kormilo <skormilo@nortelnetworks.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Latest news (fr1-2.8) is that
+On  March 13, skormilo@nortelnetworks.com wrote:
+> > Would this be when removing a recently-failed device?  That can still
+> > oops.  I should send in a patch for that...
+> 
+> Yes in fact, that is the one I was seeing.
+> 
 
-   1) all the fallback bitmap counting is in place, so that if it can't
-      get a page for the bitmap it falls back to counting the unbalance
-      between mark and clear attempts per zone and reporting a zone
-      dirty or clean according to the unbalance.
+That one *should* be fixed in 2.4.-current-bk, but probably not
+completely.  It is actually rather hard to get it just-right in 2.4.
+I substantially reworked the 2.5 code so that proper locking could be
+done so that this sort of problem could be avoided.  
+2.4 will porbably have to stay with "close-enough".
 
-      (the bitmap pages are 4KB which maps to 32K blocks each, or 32MB
-      with 1KB raid blocks.  There are 16 zones of 2MB in the region
-      mapped by each page, and so the precision becomes 2MB instead of
-      1KB in out-of-memory conditions.  The fallback counters are 16bit,
-      so there is 32B of overhead in this scheme per 4KB page, or less
-      than 0.1%.  If you have a 1TB device, it will need 32K pages, or
-      128MB of bitmap, if all gets dirty.  That's about 0.01% of the
-      mapped area.  But 1MB is preallocated for the fallback counters at
-      startup).
+> 
+> I have an odd problem where the first rebuild performs as expected
+> (about 40MB/s), but any subsequent rebuild plods along at about 6-7MB/s.
+> There is no IO activity on the system other than the rebuild during my
+> tests.
 
-      Incidentally, I don't know whether to get the counterspace in
-      one lump via kmalloc, or to do it a group of 16 counters (32B) at
-      a time.
+Does upping /proc/sys/dev/raid/speed_limit_min affect the speed?
 
-   2) I have added an ioctl which informs a component device when it 
-      is added to (or removed from) a raid device.
+Does increasing the magic "32" in is_mddev_idle help?
 
-      The idea is that the informed device should maintain a list of 
-      raid devices it is in, and when it changes to an enabled state
-      then it should tell us so by calling our hot_add ioctl (or some
-      other similar manouever of its choosing).
+> 
+> I tried putting in a couple of debug printk's here and there in the code
+> that backs off the resync, and the printk's themselves returned the
+> performance back to expected levels... some kind of a timing problem
+> perhaps?
 
-I'll add the patch for that below. The full thing is at
+Don't you  hate that!
 
-      ftp://oboe.it.uc3m.es/pub/Programs/fr1-2.8.tgz
-
-And here's the patch to md.c (apply with -b .. tabs probably expanded
-in mail):
-
-@@ -587,6 +597,33 @@
-        return 0;
- }
-
-+static void
-+notify_device (mddev_t * mddev, kdev_t dev)
-+{
-+#ifndef BLKMDNTFY
-+#define BLKMDNTFY _IOW(0x12,133,sizeof(int))
-+#endif
-+       struct block_device *bdev;
-+       printk (KERN_INFO "md%d: notifying dev %x\n", mdidx(mddev), dev);
-+        bdev = bdget (dev);
-+       if (!bdev)
-+                return;
-+        ioctl_by_bdev (bdev, BLKMDNTFY, MKDEV (MD_MAJOR, mddev->__minor));
-+}
-+static void
-+unnotify_device (mddev_t * mddev, kdev_t dev)
-+{
-+#ifndef BLKMDUNTFY
-+#define BLKMDUNTFY _IOW(0x12,134,sizeof(int))
-+#endif
-+       struct block_device *bdev;
-+       printk (KERN_INFO "md%d: unnotifying dev %x\n", mdidx(mddev), dev);
-+       bdev = bdget (dev);
-+       if (!bdev)
-+                return;
-+        ioctl_by_bdev(bdev, BLKMDUNTFY, MKDEV(MD_MAJOR, mddev->__minor));
-+}
-+
- static MD_LIST_HEAD(all_raid_disks);
- static MD_LIST_HEAD(pending_raid_disks);
-
-@@ -610,6 +647,7 @@
-        rdev->mddev = mddev;
-        mddev->nb_dev++;
-        printk(KERN_INFO "md: bind<%s,%d>\n", partition_name(rdev->dev), mddev->nb_dev);
-+       notify_device(mddev, rdev->dev);
- }
-
- static void unbind_rdev_from_array(mdk_rdev_t * rdev)
-@@ -618,6 +656,7 @@
-                MD_BUG();
-                return;
-        }
-+       unnotify_device(rdev->mddev, rdev->dev);
-        md_list_del(&rdev->same_set);
-        MD_INIT_LIST_HEAD(&rdev->same_set);
-        rdev->mddev->nb_dev--;
-
-
-The additions are in bind/unbind to/from the array.
-
-
-Peter
-
+NeilBrown
