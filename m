@@ -1,26 +1,23 @@
-From: Helge Hafting <helgehaf@aitel.hist.no>
-Subject: Re: Fw: [PATCH] md -  Zero out some kmalloced space in md driver
-Date: Wed, 11 Jun 2003 11:48:28 +0200
+From: danci@agenda.si
+Subject: Re: PDC202xx with 130GB+ disk
+Date: Wed, 11 Jun 2003 13:27:39 +0200 (CEST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3EE6FAEC.1000705@aitel.hist.no>
-References: <20030610213500.1fffb360.akpm@digeo.com>
+Message-ID: <Pine.LNX.4.53.0306111327110.1729@duplo.agenda.si>
+References: <Pine.LNX.4.53.0306101349300.4820@duplo.agenda.si>
+ <3EE630ED.2080708@mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Andrew Morton <akpm@digeo.com>, neilb@cse.unsw.edu.au
+In-Reply-To: <3EE630ED.2080708@mvista.com>
+To: Steven Dake <sdake@mvista.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> 
-> This should fix most (all??) of the recently reported problems with MD in
-> 2.5.70-bk and derivatives.
+On Tue, 10 Jun 2003, Steven Dake wrote:
 
-This worked!
-2.5.70-mm7 with raid-1 booted with no raid problems at all.
-Great work!
+> I could be wrong, but I think extended bios support for large disks was
+> only added in 2.4.19. And it is a kernel config option.
 
-Helge Hafting
+I guess you're right - I updated to 2.4.20 and it works now...
 
-
+Thanks, D:
