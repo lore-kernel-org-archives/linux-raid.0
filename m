@@ -1,49 +1,57 @@
-From: Trent Piepho <xyzzy@speakeasy.org>
-Subject: Re: raid 1 vs raid 0+1
-Date: Tue, 29 Oct 2002 13:08:35 -0800 (PST)
+From: Massimiliano Masserelli <negro@interim.it>
+Subject: RAID1 root - troubles booting in degraded mode
+Date: Wed, 30 Oct 2002 00:07:51 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0210291248490.1104-100000@grace.speakeasy.net>
-References: <20021029153930.GA21099@smeagol>
+Message-ID: <20021029230751.GP1472@sgabanaz.interim.it>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20021029153930.GA21099@smeagol>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Content-Disposition: inline
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> If everyone else is going to start squirting testosterone around, then
-> I'll add my share:
-> 
-> The above code, made an average time of about 3.7s .  This is with
-> raid-5 (soft) 2.4.20pre8 with 4 IDE drives (Ibm 120 gig 7200rpm)
-> running at/on a Promise ATA/100 card (so 2 drives per bus).  Also, the
-> filesystem is reiserfs, and running at medium-light load.
+Hi folks! 
 
-Oh me too!
+I've taken a look at the ML archives, and found an old thread (06/2002) 
+on this subject, but found no solution.
 
+I've a working setup with a two disks RAID1 root, which boots
+flawlessly. Troubles arise when simulating hw failure. RAID setup is as
+follows:
 
-dual P3 1Ghz, 1GB ram, 2.2.20RAID, ext2, Mylex extremeraid 2000 hardware
-RAID5, six IBM 36LZX 10k RPM 36GB U160 SCSI drives.
+raiddev                 /dev/md0
+raid-level              1
+nr-raid-disks           2
+nr-spare-disks          0
+chunk-size              4
 
-1.89 seconds
+device                  /dev/hda1
+raid-disk               0
 
-same system, but mylex hardware RAID0 instead of raid5, still 1.89 seconds.
+device                  /dev/hdc1
+raid-disk               1
 
-same system, but with a 3ware 7850 with six maxtor 160GB drives....  1.89
-seconds.
+If I disconnect /dev/hda before booting, the kernel tries to initialize
+the array, can't access /dev/hda1 (no wonder), marks it as faulty, then
+refuses to initialize the array, dieing with a kernel panic, unable to
+mount root.
 
-same system, but with two IBM 18LZX 18GB 10k RPM SCSI drives on an onboard
-adaptec U160 controller and linux software RAID0...  1.88 seconds.
+If I disconnect /dev/hdc before booting, the array gets started in
+degraded mode, and the startup goes on without a glitch.
 
-It seems disk+controller doesn't matter one bit for this test.
+If I disconnect /dev/hda and move /dev/hdc to its place (so it's now
+/dev/hda), the array gets started in degraded mode and the startup goes
+on.
 
-Now a new system:
+Actually, this is already a workable solution (if the first disk dies, I
+just "promote" the second to hda and go looking for a replacement of the
+broken disk), but I think this is not _elegant_. 8)
 
-dual AthlonXP1800, 1GB ram, 2.4.16, ext3, 3ware 7410 RAID0, two maxtor 160GB
-drives...  2.38 seconds
+Could anyone help me shedding some light on the subject?
 
-Conclusion:  either ext3 or the 2.4 kernel are slow, as the second machine as
-has PC2100 RAM vs PC133 and 1.5Ghz athlons vs 1Ghz pentiumIIIs.  It should
-be faster, not slower.
-
-
+Tnx in advance.
+-- 
+Massimiliano Masserelli
+-------------------------------------------------------------------------------
+Mayor: "Uh... try to have her home by eleven."
+	--Buffy the Vampire Slayer: Enemies
