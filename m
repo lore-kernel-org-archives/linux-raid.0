@@ -1,40 +1,53 @@
-From: ptb@lab.it.uc3m.es (Peter T. Breuer)
-Subject: [PATCH] md sleeps under spinlock on exit
-Date: Sun, 27 Mar 2005 14:22:04 +0200
-Message-ID: <c4lih2-1pv.ln1@news.it.uc3m.es>
+From: rrk <rrk@prairie.lakes.com>
+Subject: Raid1 problem can't add remove or mark faulty -- it did work
+Date: Sun, 27 Mar 2005 12:38:29 -0600
+Message-ID: <4246FDA5.70107@prairie.lakes.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-md_exit calls mddev_put on each mddev during module exit. mddev_put
-calls blk_put_queue under spinlock, although it can sleep (it clearly
-calls kblockd_flush). This patch lifts the spinlock to do the flush.
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+mdstat after reboot
 
---- md.c.orig	Fri Dec 24 22:34:29 2004
-+++ md.c	Sun Mar 27 14:14:22 2005
-@@ -173,7 +173,10 @@
- 		return;
- 	if (!mddev->raid_disks && list_empty(&mddev->disks)) {
- 		list_del(&mddev->all_mddevs);
-+	        spin_unlock(&all_mddevs_lock);
-+                /* blk_put_queue calls kblockd_flush, which sleeps */
- 		blk_put_queue(mddev->queue);
-+	        spin_lock(&all_mddevs_lock);
- 		kfree(mddev);
- 	}
- 	spin_unlock(&all_mddevs_lock);
+root@crm_svr:~# cat /proc/mdstat
+Personalities : [linear] [raid0] [raid1] [raid5] [multipath] [raid6] 
+[raid10]
+md0 : active raid1 hdc1[1]
+      155268096 blocks [2/1] [_U]
+
+unused devices: <none>
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+the below error shows after a boot when excuted in kde konsole
+
+root@crm_svr:/home/rob# mdadm /dev/md0 -a /dev/hda1
+mdadm: hot add failed for /dev/hda1: Invalid argument
+
+but this error is shown from a tty console
+ 
+md: could not bd_claim hda1
+md: error, md_import_device() returned -16
+mdadm: hot add failed for /dev/hda1 : invalid argument
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+this is what shows in dmesg
+
+md: could not bd_claim hda1.
+md: error, md_import_device() returned -16
+md: could not bd_claim hda1.
+md: error, md_import_device() returned -16
+md: could not bd_claim hda1.
+md: error, md_import_device() returned -16
+
+i had this bd_claim error when i first tried to build the array
+but it went away when i wiped every thing and started over
+this box is the only time i have seen this error and i
+tried using different drives -- but of the same type -- when
+the problem  showed up on the initial build
 
 
 
-Here's a trace
-
-  [__might_sleep+166/176]    __might_sleep+0xa6/0xb0
-  [flush_workqueue+21/144]   flush_workqueue+0x15/0x90
-  [kblockd_flush+10/12]      kblockd_flush+0xa/0xc
-  [blk_cleanup_queue+49/108] blk_cleanup_queue+0x31/0x6c
-  [pg0+273956980/1069723648] mddev_put+0x5c/0x8c [md]
-  [pg0+273983937/1069723648] md_exit+0x121/0x18d [md]
-
-
-Peter
-
+ 
