@@ -1,62 +1,72 @@
-From: harbiciyiz <harbiciyiz@hotmail.com>
-Subject: SORULMASI GEREKEN SORULAR
-Date: Tue, 01 Jun 2004 22:23:32 +0300
+From: M K <maheshext3@yahoo.com>
+Subject: Re: Autodetect problem w/ SCSI
+Date: Tue, 1 Jun 2004 13:45:16 -0700 (PDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200406011922.i51JMK9h025853@zeus.kernel.org>
-Reply-To: harbiciyiz@hotmail.com
+Message-ID: <20040601204516.24507.qmail@web61004.mail.yahoo.com>
+References: <20040601183951.GA22078@bluff>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="74648f49-62af-44e2-9a65-a473d8a496a3"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <20040601183951.GA22078@bluff>
+To: Sandro Dentella <sandro.dentella@tin.it>, Linux Raid List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Can you send the exact command used to create the
+array, the raidtabs or mdadm.conf file and the fdisk
+-l listing of each drive thats part of the raid?
+--- Sandro Dentella <sandro.dentella@tin.it> wrote:
+> 
+> 
+> I made plenty of RAID1 systems w/ ide disk: OK.
+> Now I tried a SCSI system and I can't make the
+> kernel recognize the partition
+> to make into an array. Of course partitions are
+> 'fd': raid autodetect.
+> 
+> Kernel recognizes the scsi hw (aic7xxx compiled in),
+> then starts  
+> "md: Autodetecting RAID arrays"  that will just fail
+> to find the arrays.
+> 
+> If I start from a live CD, I can "mdadm -A /dev/md0
+> /dev/sda6 /dev/sdb6" and
+> the array starts and I can mount it.
+> 
+> Is there something peculiar of SCSI systems I'm just
+> ignoring?
+> 
+> 
+> 
+> TYA
+> 
+> sandro
+> *:-)
+> 
+> 
+> I'm sorry to admit it's quite URGENT to me to get to
+> a solution... this is a
+> replacement for a customer after 4 ide disks failure
+> in 5 months...
+> 
+> 
+> 
+> -- 
+> Sandro Dentella  *:-)
+> e-mail: sandro.dentella@tin.it 
+> http://www.tksql.org                    TkSQL Home
+> page - My GPL work
+> -
+> To unsubscribe from this list: send the line
+> "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at 
+http://vger.kernel.org/majordomo-info.html
 
-This is a multi-part message in MIME format
---74648f49-62af-44e2-9a65-a473d8a496a3
-Content-Type: text/plain; charset=utf-7
-Content-Transfer-Encoding: quoted-printable
 
-Merhaba
 
-Mail ekinde g=F6nderdi=F0imiz belgeleri inceledi=F0inizde 09.07.2003 =
-tarihinde Veri Bili=FEim =DDleti=FEim ve G=FCvenlik Sistemleri Ltd. =DEti. =
-taraf=FDndan s=F6z konusu Ara=E7 Kiralama i=FEi i=E7in Adalet ve Kalk=FDnma =
-Partisine Teklif verilip 14.07.2003 tarihinde yap=FDlan S=F6zle=FEmenin ;
-
-1-) Ticaret Sicil Gazetesinde Veri Bili=FEim =DEirketinin , =DEirket i=FE=
-tigal konular=FDna Ara=E7 Kiralama (Rent a Car' =FDn) i=FEini ekledi=F0i =
-tarihi N=DD=C7=DDN  bu s=F6zle=FEmenin imzalad=FD=F0=FD tarihten sonra Sicil =
-Gazetesine Eklenmi=FEtir , =C7=DCNK=DC  bu i=FEin hak edene de=F0il de =
-istenilene yada kendilerinden olana verilmesini ispatlamaz m=FD?
-
-2-) 09.07.2003 tarihindeki AKP ye verilen  Teklif Mektubunun alt=FDndaki =
-Abdullah G=DCND=DCZ (Me=FEhur Aczimendi Lideri M=FCsl=FCm G=DCND=DCZ =FCn =
-ye=F0eni) imzas=FD bulunurken, Acaba bu =DEirketle hangi g=F6revdeydi? Hangi =
-yetki ile yada hangi s=FDfatla bu s=F6zle=FEmeyi de , 14.07.2003 tarihinde =
-imzalad=FD.
-
-3-) 23 EV 698 Plaka Nolu Araca 083 Nolu BA=DEBAKANLIK =D6ZEL ARA=C7 KARTI, =
-Kime? Ni=E7in? Hangi  ama=E7la verilmi=FEtir?
-
-4-) Bu Abdullah G=DCND=DCZ e REFARANS olanlar kimlerdir? Abdullah G=DCND=DCZ =
-bu i=FEi REFARANS KULLANIP AKP nin m=FCteahhidiyiz diyerek acaba ba=FEka i=FE=
-ler yapm=FD=FElar m=FDd=FDr?
-
-5-) Say=FDn Recep Tayip ERDO=D0AN  =FDn S=DD=DDRT se=E7imlerinden =F6nce =
-yapm=FD=FE oldu=F0u T=FCrki Cumhuriyetler gezisine kat=FDld=FD=F0=FD gezi =
-listesinde de sabit olundu=F0u bilinen ( TOBB ' dan gezi listesi temin =
-edilebilir) Abdullah G=DCND=DCZ acaba ne s=FDfatla bu =F6nemli geziye kat=FD=
-lm=FD=FEt=FDr. Kimler taraf=FDndan 
-REFARANS edilerek hangi =DEirket Temsilcisi s=FDfat=FD kullan=FDlm=FD=FEt=FD=
-r. 
-
-6-) ACABA bu ara=E7 kiralama i=FEinde kimler rant  (Getirim) sa=F0lad=FD? 
-
-Vaktiniz al=FDp, zaman y=F6netiminizi aralad=FD=F0=FDm=FDz i=E7in aff=FDn=FD=
-za s=FD=F0=FDn=FDyoruz.
-
-Sayg=FDlar=FDm=FDzla
-HARB=DDC=DDLER
-  
---74648f49-62af-44e2-9a65-a473d8a496a3--
-
+	
+		
+__________________________________
+Do you Yahoo!?
+Friends.  Fun.  Try the all-new Yahoo! Messenger.
+http://messenger.yahoo.com/ 
