@@ -1,45 +1,46 @@
-From: Peter Jonsson <dal01pjn@mds.mdh.se>
-Subject: Re: Invalid superblock on drives in array
-Date: Thu, 25 Dec 2003 19:22:10 +0100 (MET)
+From: "Para su impresora-Obtenga 10 cargas por el precio de un cartucho"
+	<balf@wanadoo.es>
+Subject: Jose Fernandez-Imprekits
+Date: Fri, 26 Dec 2003 22:13:49
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.GSO.4.44L.0312251859350.3919-100000@legolas.mdh.se>
-References: <1072374319.3636.6.camel@binkley>
+Message-ID: <S265228AbTLZVEq/20031226210446Z+16216@vger.kernel.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="iso-8859-1"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1072374319.3636.6.camel@binkley>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 25 Dec 2003, seth vidal wrote:
+IMPRIMA LO QUE QUIERA SIN IMPORTARLE EL GASTO
+IMPRESION CON CALIDAD FOTOGRAFICA.
+OBTENGA HASTA 10 CARGAS-POR EL PRECIO DE UN CARTUCHO
+No pida información al e/mail emisor balf@wanadoo.es
+Les informamos que disponemos de kits de tinta, para todas las 
+marcas de impresoras.
+Con un Kit tiene para recargar los cartuchos de 5 a 12 veces como
+minimo, dependiendo de la marca.
+Su coste es de 28 EUROS (iva incluido) para negro y 
+34 para el de color mas 3 euros de gastos de envio.
 
->
-> hmm. I bet the drive labels are screwed up. For fun, stop the array,
-> load up fdisk on one of the disks and type 'o' - that should make new
-> dos disk labels.
->
-> it's something I ran into, but this was a long time ago, so the above
-> info might be out of date./
->
-> so make new drive labels, repartition and recreate the array.
+Para toner tiene 2 a 4 veces veces. Su coste 40 euros negro y 30 euros cada color.
+HAGA SU PEDIDO INDICANDO: marca de la impresora y modelo al -
+http://www.imprekits.com o al Fax911412099.o al tel 645043838
+Hay tantas marcas y modelos que si lo desea para simplificar, 
+puede rellenar esta ficha y la envian al fax 911412099 ó al mail
+cialb@imprekits.com .
 
-Well, wouldn't that destroy the data on the array? Oh well I'll redo the
-array anyway. There wasn't that much data of value on the drive anyway.
-I'll just loose a couple of days work.
+Asesoramiento gratis, sobre impresoras.
+Enviamos las instrucciones de llenado sin necesidad de compra para
+que vean la sencillez del proceso de reciclado. 
+Nombre:___________________________________________________________
+Dirección:________________________________________________________
+C.P._____Población_______________________________ TEL_____________
+e/mail___________
 
-Strange. I re-paritioned the drives, started the array with a raidstart
-/dev/md0 (so it used the old raidtab) and the formatted the drive (ext3).
-I mounted the filesystem and it looked ok. Then I umounted the filesystem
-and stopped the array.
-When I tried to start the array again I got the same problem as before.
+Marca de la impresora, fax o fotocopiadora__________________
+Modelo___________
+Nos pondremos en contacto con Uds. a la mayor brevedad posible
 
-So I changed to using persistent superblocks and did the same things. Now
-it seems to work. Seems strange to me since I ran the array without
-persistent superblocks since the beginning of July. Now it works and I
-have once again learnt the lesson about frequent backups.
-
-
-// peter
--- 
-If God is real, s/he might be integer (e.g. 0). If God is complex, then s/he might be imaginary.
-
+Informe a un amigo
+Le enviamos este correo en la confianza de que pueda ser de su utilidad.
+No obstante, en cumplimiento de la Ley 34/2002(LSSI) y Ley Organiza 15/1999(PDCP) si no desea recibir mas
+comunicaciones envie un e-mail a cial@novel-art.com y le borraremos.
