@@ -1,56 +1,42 @@
-From: "Martin Bene" <martin.bene@icomedias.com>
-Subject: AW: two-disk-failure question
-Date: Sat, 18 Oct 2003 09:46:19 +0200
+From: "jeff millar" <wa1hco@adelphia.net>
+Subject: Which drives below to which controller?
+Date: Sat, 18 Oct 2003 10:31:01 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <4D618F6493CE064A844A5D496733D66704E241@freedom.icomedias.com>
+Message-ID: <007201c39584$747767f0$6401a8c0@wa1hco>
+References: <6.0.0.22.2.20031013111015.032c1a58@englishmail.fsu.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Class: urn:content-classes:message
-To: maarten van den Berg <maarten@vbvb.nl>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> "To get this to work, you'll need to have an up to date /etc/raidtab - if
-it 
-> doesn't EXACTLY match devices and ordering of the original disks this will 
-> not work as expected, but will most likely completely obliterate whatever 
-> data you used to have on your disks."
+This isn't strictly a raid question, but it comes up because the machine has
+several controllers and drives due to raid...
 
-While the procedure you're refering to will still work, it's been made pretty
-much obsolete by the new mdadm tool.
+The machine has three controllers and 6 drives has shown below.  But which
+drive letter belongs to which controller?  That information doesn't reside
+anywhere in /proc/ide/* that I can see.  Does it exist some where else?
 
-> Now I can't be completely absolutely sure I did not -at some point-
-re-order 
-> cables and such. So my obvious question is:  Is this step (mkraid --force 
-> with one of the offline disks defined as failed-disk) destructive, or could
-I 
-> (theoretically) experiment endlessly with the order in which the disks are 
-> defined in /etc/raidtab before I decide to mount it read-write and
-raidhotadd 
-> a fresh disk ?
+[jeff@maggie ide]$ ls -l /proc/ide
+total 0
+-r--r--r--    1 root     root            0 Oct 18 10:26 drivers
+lrwxrwxrwx    1 root     root            8 Oct 18 10:26 hda -> ide0/hda
+lrwxrwxrwx    1 root     root            8 Oct 18 10:26 hdc -> ide1/hdc
+lrwxrwxrwx    1 root     root            8 Oct 18 10:26 hde -> ide2/hde
+lrwxrwxrwx    1 root     root            8 Oct 18 10:26 hdg -> ide3/hdg
+lrwxrwxrwx    1 root     root            8 Oct 18 10:26 hdi -> ide4/hdi
+lrwxrwxrwx    1 root     root            8 Oct 18 10:26 hdk -> ide5/hdk
+-r--r--r--    1 root     root            0 Oct 18 10:26 hpt366
+dr-xr-xr-x    3 root     root            0 Oct 18 10:26 ide0
+dr-xr-xr-x    3 root     root            0 Oct 18 10:26 ide1
+dr-xr-xr-x    3 root     root            0 Oct 18 10:26 ide2
+dr-xr-xr-x    3 root     root            0 Oct 18 10:26 ide3
+dr-xr-xr-x    3 root     root            0 Oct 18 10:26 ide4
+dr-xr-xr-x    3 root     root            0 Oct 18 10:26 ide5
+-r--r--r--    1 root     root            0 Oct 18 10:26 pdc202xx
+-r--r--r--    1 root     root            0 Oct 18 10:26 via
 
-Urr, hard question there: IF 
-	- you've marked a disk as failed AND
-	- there's no spare disks in your configuration THEN
-yes, the mkraid -force is non - destructive. it'll only touch the raid
-superblocks and nothing else. 
+thanks...jeff
 
-Be careful when checking the results of the operation though: even mounting a
-filesystem readonly can result in write access to the device when using a
-journaling filesystem (ext3). Prior to mounting, it'll try to play back the
-jounal..
-
-> Second question, If one is sufficiently adept at looking at raw disk 
-> structures (notably the suberblocks), can a human find out which disk is 
-> which, ie. in which order they DO belong ?
-
-Yes :-)
-
-OK, that wasn't really helpful. What you really want to do is grab a copy of
-mdadm. It's got support for resolving just the problem you're experiencing:
-it can override the event counter when assembling an array but still use the
-rest of the raid superblock. In adition it can parse the information in the
-superblock and show you exactly what's in each of your superblocks.
-
-Bye, Martin
