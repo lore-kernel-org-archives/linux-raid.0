@@ -1,44 +1,28 @@
-From: Mads Peter Bach <mpb@hum.auc.dk>
-Subject: Re: Booting with raided root, debian system
-Date: Thu, 10 Apr 2003 14:46:36 +0200
+From: "Peter T. Breuer" <ptb@it.uc3m.es>
+Subject: One more question about the linux md driver
+Date: Thu, 10 Apr 2003 16:46:47 +0200 (MET DST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3E9567AC.9060104@hum.auc.dk>
-References: <20030410123746.GA11470@u4ia>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Message-ID: <200304101446.h3AEklj30240@oboe.it.uc3m.es>
+Reply-To: ptb@it.uc3m.es
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20030410123746.GA11470@u4ia>
+In-Reply-To: From "(env:" "ptb)" at "Mar 13, 2003 07:49:40 pm"
 To: linux-raid@vger.kernel.org
+Cc: Paul Clements <Paul.Clements@SteelEye.com>, Neil Brown <neilb@cse.unsw.edu.au>
 List-Id: linux-raid.ids
 
-Paul Downs wrote:
+Can someone tell me about the difference between (when they are called)
 
->   No errors appear and the system appears to boot normally until it
-> attempts to mount the root.  At which point it errors and stops with =
-an
-> "attempt to kill init" message.
->=20
->   Can anyone give me any pointers?  I have tried not to include too m=
-uch
-> detail here so if you want pastes of any configuration files etc. jus=
-t
-> shout.
+    bind_rdev_to_array
+    unbind_rdev_from_array
 
-A copy of the errormessages before "attempt to kill init" would be quit=
-e=20
-helpful :-)
+and
 
-Also, a copy of lilo's output when you install it might help.
+   import_rdev
+   export_rdev
 
---=20
-Mads Peter Bach
-Systemadministrator,  Det Humanistiske Fakultet, Aalborg Universitet
-Kroghstr=E6de 3 - 5.111, DK-9220 Aalborg =D8st
-# whois MPB1-DK@whois.dk-hostmaster.dk
+?? I want to detect when a device is first inducted into an (any) array
+and when it is expelled (from the last array in which it figures). I am
+currently using the first two functions, and counting. I suspect I
+should be using the second two?
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Peter
