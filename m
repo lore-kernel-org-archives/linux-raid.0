@@ -1,176 +1,66 @@
-From: david@hpcf.upr.edu
-Subject: Re: Problem with RAID-5 on SuSE 9.1 (cp hangs, high system load,
-      cpu waits)
-Date: Thu, 27 May 2004 11:26:20 -0400 (AST)
+From: Alvaro Figueroa <fede2@fuerzag.ulatina.ac.cr>
+Subject: raidreconf on linux sparc64
+Date: Thu, 27 May 2004 10:35:57 -0600
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <4433.136.145.94.17.1085671580.squirrel@136.145.94.17>
-References: <S265614AbUEZPjm/20040526153943Z+292@vger.kernel.org>
-    <20040526155142.M13344@liquid-nexus.net>
-    <005701c44365$8d89c230$0201a8c0@windows>
+Message-ID: <40B618ED.4020005@fuerzag.ulatina.ac.cr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <005701c44365$8d89c230$0201a8c0@windows>
-To: TJ Harrell <systemloc@earthlink.net>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I dont think the problem is related to the motherboard. I have a
-configuration similar but on 2 SCSI cards and the problems persistes!
+(Please keep me on the CC, as I'm not subscribed to this mailing list)
 
-David
+As I was testing software raids on linux sparc64 with 2.6 kernels[1] for 
+the Splack distribution[2] I noticed that raidreconf won't work. I did 
+try to look at the problem, but I'm afraid my skills won't go there.
 
->> Oh and your motherboard is using a KT266A chipset - I personally won't
-> touch > a VIA chipset since that whole PCI / Soundblaster fiasco (I still
-> have
->> nightmares). AFAIK the KT266A has PCI issues which have some kind of
->> workaround in the Linux kernel, however it might be a factor in your
-> situation.
->
-> I was about to say the same thing. Which Southbridge do you have?
-> Particular
-> VIA Southbridges have serious problems with transferring files. It was a
-> peculiar problem; most cases I've read about said that the problem
-> occurred
-> when transferring files between the onboard controller and on add-on
-> controller. You might try taking all drives off the built-in controllers
-> and
-> see if that helps the problem.
->
->
->
-> ---------- Original Message -----------
-> From: "Christoph Zimmerli" <zeratul@gmx.ch>
-> To: <linux-raid@vger.kernel.org>
-> Sent: Wed, 26 May 2004 17:39:43 +0200
-> Subject: Problem with RAID-5 on SuSE 9.1 (cp hangs, high system load, cpu
-> waits)
->
->> Hi there!
->>
->> I'm running SuSE 9.1 on my fileserver with 6 hds:
->> 1 40gb IBM system disk on the onboard ide0
->> 5 120gb Maxtor disks, 1 with the system disk on onboard ide0 and 4
->> on an Adaptec 1200A.
->>
->> I configured the 5 120gb disks as software RAID-5 array, using ext3
->> as fs. The system itself runs ok like that, but strange things
->> happen, when I start to copy files onto/from the RAID: - Copying
->> starts normally - Copying hangs, no more data is transferred - The
->> CPU is almost 100% in wait state - The system load increases
->> steadily - iowait is huge but the disks are idle
->>
->> If I react quick, I can kill the cp process, and everything returns
->> to normality. But if you wait too long, the process can't be killed
->> anymore. The problem is, you can't even shutdown the pc, because the
->> system seems to wait for something. I then pressed the reset button.
->> When booting, the system reports, it's recovering the journal of md0,
->>  and hangs there. I waited about 15h at max, but nothing happened.
->> When resetting again, the system came up flawlessly, and did about
->> 1.5h of RAID-resync. But when copying again, the same things would
->> happen.
->>
->> I was able to have the system running for half a week with all the
-> hardware
->> inside, all disks connected, but each disk mounted as /disk1 etc.
->> with ext3. I then copied around some gb, but there was no high load
->> or so, and every cp terminated. I read in the list, that there were
->> some problems with ext3 as fs, so I changed the fs to Reiser, but
->> that didn't help.
->>
->> After these tests I think, that it has to be something with the RAID
->> itself, or the simultaneous disk access in RAID-mode.
->>
->> Any ideas about how to solve this problem would be highly appreciated!
->>
->> Have a nice day!
->> Christoph
->>
->> -----------------------------------------------
->> System Information:
->>
->> AMD AthlonXP 1800+
->> 512mb RAM
->> Shuttle AK31
->> ASUS DVD-ROM
->> 1 IBM IC35L040AVER07-0 (40gb system disk)
->> 5 Maxtor 6Y120L0 (120gb storage disks)
->> Adaptec 1200A PCI IDE Controller
->>
->> -----------------------------------------------
->> /proc/version
->>
->> Linux version 2.6.4-54.5-default (geeko@buildhost) (gcc version
->> 3.3.3 (SuSE
->> Linux)) #1 Fri May 7 21:43:10 UTC 2004
->>
->> -----------------------------------------------
->> /proc/mdstat:
->>
->> md0 : active raid5 hdh1[4] hdg1[3] hdd1[2] hdc1[1] hda1[0]
->>       480242688 blocks level 5, 128k chunk, algorithm 2 [5/5] [UUUUU]
->>
->> unused devices: <none>
->>
->> -----------------------------------------------
->> /etc/fstab
->>
->> /dev/hde3            /                    ext3       acl,user_xattr
->>       1 1 /dev/hde1            /boot                ext3       acl,
->> user_xattr        1 2 /dev/hde4            /var                 ext3
->>       acl,user_xattr        1 2 /dev/hde2            swap
->>      swap       pri=42                0 0 devpts
->> /dev/pts             devpts     mode=0620,gid=5       0 0 proc
->>           /proc                proc       defaults              0 0
->> usbfs                /proc/bus/usb        usbfs      noauto
->>       0 0 sysfs                /sys                 sysfs
->> noauto                0 0 /dev/dvd             /media/dvd
->> subfs
->> fs=cdfss,ro,procuid,nosuid,nodev,exec,iocharset=utf8 0 0
->> /dev/fd0             /media/floppy        subfs
->> fs=floppyfss,procuid,nodev,nosuid,sync 0 0
->> /dev/md0             /storage             reiserfs   acl,user_xattr
->>
->> -----------------------------------------------
->> /proc/dma
->>
->>  4: cascade
->>
->> -----------------------------------------------
->> /proc/interrupts
->>
->>            CPU0
->>   0:   11052606          XT-PIC  timer
->>   1:         10          XT-PIC  i8042
->>   2:          0          XT-PIC  cascade
->>   5:      13236          XT-PIC  ide0, ide1, eth1, VIA8233
->>   8:          2          XT-PIC  rtc
->>   9:          0          XT-PIC  acpi
->>  11:      79755          XT-PIC  eth0, uhci_hcd, uhci_hcd, uhci_hcd
->>  12:         50          XT-PIC  i8042
->>  14:      43472          XT-PIC  ide2
->>  15:       7081          XT-PIC  ide3
->> NMI:          0
->> LOC:          0
->> ERR:          1
->> MIS:          0
->>
->> -
->> To unsubscribe from this list: send the line "unsubscribe linux-
->> raid" in the body of a message to majordomo@vger.kernel.org More
->> majordomo info at  http://vger.kernel.org/majordomo-info.html
-> ------- End of Original Message -------
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+My old raidtab[3], is a raid0 with only two drives, and I'm trying to 
+get it to that the new raidtab[4] has, wich is the same raid0 but I 
+added four more drives. When I run "raidreconf  -o oldraidtab -n 
+newraidtab -m /dev/md0", I get "Your on-disk array MUST be clean first". 
+I googled, but it had only happen to one guy, and it had been adviced to 
+stop the raid (mine is stopped).
 
+Any clues? Is it a sparc64 thing?
+
+Ohh, I did tried with a 2.4.26 kernel as well, with the same result.
+
+[1] The hardware is an Enterprise 250 with one processor, 256M or ram, 6 
+scsi drives splitted among two controllers running a kernel kernel 2.6.6 
+compiled with gcc 3.3.3 (from gentoo).
+[2] Slackware for sparc port.
+[3]
+raiddev /dev/md0
+           raid-level      0
+           nr-raid-disks   2
+           nr-spare-disks  0
+           persistent-superblock 1
+           chunk-size      32
+device /dev/sdc1
+raid-disk       0
+device /dev/sdd1
+raid-disk       1
+[4]
+raiddev /dev/md0
+           raid-level      0
+           nr-raid-disks   6
+           nr-spare-disks  0
+           persistent-superblock 1
+           chunk-size      32
+device /dev/sdc1
+raid-disk       0
+device /dev/sdd1
+raid-disk       1
+device /dev/sde1
+raid-disk       2
+device /dev/sdf1
+raid-disk       3
+device /dev/sdg1
+raid-disk       4
+device /dev/sdh1
+raid-disk       5
+
+-- 
+Alvaro Figueroa
