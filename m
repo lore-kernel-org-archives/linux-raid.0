@@ -1,27 +1,24 @@
-From: Rich Ramos <lists@RichRamos.com>
-Subject: multipath howto?
-Date: Mon, 28 Jul 2003 22:12:48 -0700
+From: "Zhai, Edwin" <edwin.zhai@intel.com>
+Subject: how to uninstall raid
+Date: Wed, 30 Jul 2003 15:29:27 +0800
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <2147483647.1059430368@[10.0.2.5]>
+Message-ID: <A12F5F3545A0654B97BFD863950C1E185FAD48@pdsmsx403.ccr.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+content-class: urn:content-classes:message
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+I have installed raid0 on /dev/md0 which is composed of /dev/hdc1 &
+dev/hdd1 but want to uninstall raid and get hdc1&hdd1 back now.
+Anybody knows how to do it?
 
-I've read through the FAQ 
-<http://www.tldp.org/FAQ/Linux-RAID-FAQ/x37.html> and the HOWTO 
-<http://en.tldp.org/HOWTO/Software-RAID-HOWTO.html>, but I can't find 
-anything that documents how multipathing works in md.  From searching 
-through the archives I see a lot of discussion on the topic of 
-multipathing and it looks like it's been there since back in 01, but 
-can't find anything that tells me how it works or how to use it.  Am 
-I missing something or does the information not exist?
+When using mdadm /dev/md0 --fail /dev/hdc1 --remove /dev/hdc1,I got a
+error msg "invalid argument". I also want to know how to erase the raid
+configuration data in the kernel (not in the conf file).
 
-Also, I see that there was a multipath BOF at Ottowa Linux Symposium. 
-Did anyone take some notes that they can share with the rest of us?
-
--Rich
+Thanks,
+Edwin
