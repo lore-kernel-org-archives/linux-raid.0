@@ -1,54 +1,49 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: RAID0 - one drive's superblock is corrupt
-Date: Mon, 29 Jul 2002 20:35:48 +1000 (EST)
+From: <martin@hack.org>
+Subject: md device stuck!
+Date: Mon, 29 Jul 2002 15:50:05 +0000 (GMT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <15685.6788.430632.934955@notabene.cse.unsw.edu.au>
-References: <3D3DD9D2.7030501@moley.org.uk>
+Message-ID: <Pine.LNX.4.32.0207291541380.4476-100000@dope.pingdynasty.com>
+References: <15685.5438.362051.450805@notabene.cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Neil Sedger on Tuesday July 23
-To: Neil Sedger <linux-raid@moley.org.uk>
-Cc: linux-raid@vger.kernel.org
+In-Reply-To: <15685.5438.362051.450805@notabene.cse.unsw.edu.au>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday July 23, linux-raid@moley.org.uk wrote:
-> 
-> Any suggestions?
 
-0/ restore from backups.  You do have backups don't you?
+hiya,
 
-1/ Get a replacement disc the same size, copy all the data from one to
-   the other
-     dd if=/dev/olddisk of=/dev/newdisk bs=100M
-   then change your raidtab to refer to the new drive instead of the
-   old run the "mkraid" command to re-create the superblocks.
+has anyone come across the problem of md devices getting 'stuck'?
+currently, if i try to mount/umount md2, or run either raidstop or
+mdadm --stop, the commands just hang and /proc/mdstat gives no indication
+of anything going on. (the only way to kill the command seems to be to
+SIGKILL its parent process...)
 
-2/ The reason the "persistant=0" trick didn't work is that the
-   effective size of the disk is smaller when you have a superblock.
-   so: work out the effecitive size of each partition ... kernel log
-   messages might tell you. mkraid will tell you (hde1 has an
-   effective size of 45030080kB).
-   Then change your partition tables with fdisk so that these
-   partitions appear to breally the size that raid0 effecitvely make
-   them, and then to the persistant=0 trick.
-   To calculate the effective size, take the real size, round down to
-   a multiple of 64K and subtract 64K.
-   e.g. for hde1, real size is 45030163Kb
-     45030163/64 == 703596
-     703596 * 64 == 45030144  (this is rounded down)
-     45030144 - 64 == 45030080  which is the correct number.
+any ideas?
 
-   To might have to use export mode to convince fdisk to ignore
-   "cylinder boundries".
+dope:~ # mount
+/dev/md1 on / type ext2 (rw)
+proc on /proc type proc (rw)
+devpts on /dev/pts type devpts (rw,mode=0620,gid=5)
 
-3/ Hack the md code to not actually write out superblocks,
-   or to read them in.  And then try the mkraid command to create
-   a new array.
+dope:~ # cat /proc/mdstat
+Personalities : [raid1] [raid5]
+read_ahead 1024 sectors
+md2 : active raid5 sdb6[6] sdf1[5] sde1[4] sdd1[3] sdc1[2] sdb4[1] sda5[0]
+      44220800 blocks level 5, 32k chunk, algorithm 2 [6/6] [UUUUUU]
+md1 : active raid5 sdd2[2] sdc2[1] sdb5[0]
+      17688448 blocks level 5, 32k chunk, algorithm 2 [3/3] [UUU]
+md0 : active raid1 sdb2[1] sda2[0]
+      2147264 blocks [2/2] [UU]
+unused devices: <none>
 
-4/ Sue IBM for selling such dodgy hard drives.
+dope:~ # ps -flw
+  F S UID        PID  PPID  C PRI  NI ADDR SZ WCHAN  STIME TTY          TIME CMD
+004 S root      4414  4413  0  72   0 -   506 norita 15:33 pts/4    00:00:00 -bash
+000 D root      4438  4414  0  72   0 -   220 ptrace 15:34 pts/4    00:00:00 mdadm --stop /dev/md2
 
-Good luck.
+many thanks,
 
-NeilBrown
+/m
+
