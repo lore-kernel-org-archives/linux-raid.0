@@ -1,101 +1,127 @@
-From: linux-raid-owner@vger.kernel.org
-Subject: BURSLU  =?ISO-8859-1?Q?=20E=D0=DDT=DDM?=  =?ISO-8859-1?Q?=20OLANA=D0I?= 24
-Date: Sun, 21 Sep 2003 01:30:20 +0300
+From: "Andrew Herdman" <andrew@whine.com>
+Subject: RAID1: Disks alternating on reads
+Date: Sun, 21 Sep 2003 11:14:11 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200309202230.h8KMUIJ06926@zeus.kernel.org>
+Message-ID: <014b01c38053$0358ad90$0180a8c0@what>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-9
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-                                =20
-LEFKE AVRUPA =DCN=DDVERS=DDTES=DD
-(KIBRIS B=DDL=DDM VAKFI)
-Y=D6K taraf=FDndan tan=FDnan, Avrupa ve Amerika'da ge=E7erli diplomaya =
-en kaliteli
-ve en uygun har=E7larla sahip olma olana=F0=FD ...
-=20
-=D6SS S=FDnav=FDndan 185 ve =FCzeri ham puan alm=FD=FE =F6=F0renciler 4=
- y=FDll=FDk lisans
-programlar=FDna, 160 ve =FCzeri ham puan alan =F6=F0renciler ise 2 y=FD=
-ll=FDk meslek
-y=FCksek okullar=FDna kay=FDt yapabilirler.
+Pardon me if my assumption was incorrect, but I was under the belief that
+when using software RAID1, that when reads occurred on the RAID device that
+it would read from both drives in a striped fashion similar to how RAID0
+works to improve the speed of the md devices.   I am actually seeing this,
+but it appears that the reads on each drive are continuing for 10 to 20
+seconds before moving onto the next drive and then another 10-20 seconds and
+back again.  This is not allowing for any performance increase, it just lets
+the drives rest alternately.
 
-=20
-      L=DDSANS PROGRAMLARI :
+This link http://www.whine.com/~andrew/alternating_disk.png is a gkrellm
+snapshot of the activity, hda and hde are the two disks in the RAID array.
+Each disk is the master on it's own channel.
 
-=DDKT=DDSAD=DD VE =DDDAR=DD B=DDL=DDMLER FAK=DCLTES=DD
-* =DD=FEletme
-* Ekonomi
-* Pazarlama
-* Kamu Y=F6netimi
-* Uluslararas=FD =DDli=FEkiler
-* Bankac=FDl=FDk ve Finans
-* Bilgisayar ve Enformasyon Sistemleri
-=46EN-EDEB=DDYAT FAK=DCLTES=DD
-* =DDngilizce =D6=F0retmenli=F0i
-* T=FCrk Dili ve Edebiyat=FD
-* Tarih
-TARIM B=DDL=DDMLER=DD TEKNOLOJ=DDLER=DD FAK=DCLTES=DD
-* Bah=E7e Bitkileri =DCretimi ve Pazarlamas=FD
-* Tar=FDm =DD=FEletmecili=F0i
-M=DDMARLIK M=DCHEND=DDSL=DDK FAK=DCLTES=DD
-* Mimarl=FDk
-* =DD=E7 Mimarl=FDk
-* Elektrik ve Elektronik M=FChendisli=F0i
-* =DDn=FEaat M=FChendisli=F0i=20
-* Bilgisayar M=FChendisli=F0i
-=DDLET=DD=DE=DDM B=DDL=DDMLER=DD FAK=DCLTES=DD
-* Gazetecilik
-* Radyo, TV, Sinema
-* Halkla =DDli=FEkiler ve Reklam
-* G=F6rsel =DDleti=FEim Tasar=FDm=FD
+I also included the mdadm --query --detail info below for each RAID
+partition
 
-=20
-      MESLEK Y=DCKSEK OKULU:
+how:~# mdadm --query --detail /dev/md/1
+/dev/md/1:
+        Version : 00.90.00
+  Creation Time : Sat Jul 19 08:30:42 2003
+     Raid Level : raid1
+     Array Size : 62400 (60.94 MiB 63.90 MB)
+    Device Size : 62400 (60.94 MiB 63.90 MB)
+   Raid Devices : 2
+  Total Devices : 2
+Preferred Minor : 1
+    Persistence : Superblock is persistent
 
-* =DD=FEletmecilik
-* Bilgisayar programc=FDl=FD=F0=FD                                     =
-           =20
-* =DDn=FEaat
-* Halkla ili=FEkiler ve Tan=FDt=FDm
-* G=F6rsel =DDleti=FEim
-* TV Yap=FDm=FD ve Y=F6netimi
-=20
-=20
-      Y=DCKSEK L=DDSANS:
+    Update Time : Mon Sep 15 08:41:38 2003
+          State : dirty, no-errors
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 0
 
-* =DD=FEletme (MBA)
-* Uluslararas=FD =DDli=FEkiler (MA)
-* =DDngilizce =D6=F0retmenli=F0i (MA)
-* Mimarl=FDk (MA)
-* =DDn=FEaat M=FChendisli=F0i (MSc)
-* Elektrik ve Elektronik M=FChendisli=F0i (MSc)
-* Bilgisayar Bilimleri (MSc)
-* Bilgisayar M=FChendisli=F0i (MSc)
 
-=20
-=20
-YURT DI=DEI =D6ZEL E=D0=DDT=DDM OLANAKLARI :
-SOAS =DCniversitesi, Luton =DCniversitesi, Westminister =DCniversitesi,
-Hudersfield =DCniversitesi (=DDngiltere), ESC Rouen =DCniversitesi (Fra=
-nsa).
-=20
-BURS OLANAKLARI :
-Emniyet mensubu, T=FCrk Silahl=FD Kuvvetleri mensubu ve =F6=F0retmen =E7=
-ocuklar=FDna  =20
-% 50, ikinci dereceden akrabalar=FDna % 33, karde=FElerden birine % 50 =
-ve
-ayr=FDca akademik ba=FEar=FD bursu, sporcu bursu ve  destek bursu.
-                                         =20
-                                                     =20
-=DDstanbul Kay=FDt Ofisi : =DE=DD=DEL=DD / =DDSTANBUL.
-Tel : 0212 219 83 50 (9 Hat)       E-Mail : bursluegitim1@superposta.co=
-m
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+    Number   Major   Minor   RaidDevice State
+       0       3        1        0      active sync
+/dev/ide/host0/bus0/target0/lun0/part1
+       1      33        1        1      active sync
+/dev/ide/host2/bus0/target0/lun0/part1
+           UUID : faa4b7b2:4832fae8:ac2fa294:2fce1d85
+         Events : 0.38
+
+how:~# mdadm --query --detail /dev/md/2
+/dev/md/2:
+        Version : 00.90.00
+  Creation Time : Sat Jul 19 08:32:18 2003
+     Raid Level : raid1
+     Array Size : 119140544 (113.62 GiB 121.100 GB)
+    Device Size : 119140544 (113.62 GiB 121.100 GB)
+   Raid Devices : 2
+  Total Devices : 2
+Preferred Minor : 2
+    Persistence : Superblock is persistent
+
+    Update Time : Mon Sep 15 08:41:38 2003
+          State : dirty, no-errors
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 0
+
+
+    Number   Major   Minor   RaidDevice State
+       0       3        2        0      active sync
+/dev/ide/host0/bus0/target0/lun0/part2
+       1      33        2        1      active sync
+/dev/ide/host2/bus0/target0/lun0/part2
+           UUID : 0ad35f02:56a32094:c8301e3e:45895c16
+         Events : 0.38
+
+how:~# mdadm --query --detail /dev/md/3
+/dev/md/3:
+        Version : 00.90.00
+  Creation Time : Sat Jul 19 08:31:37 2003
+     Raid Level : raid1
+     Array Size : 499904 (488.19 MiB 511.90 MB)
+    Device Size : 499904 (488.19 MiB 511.90 MB)
+   Raid Devices : 2
+  Total Devices : 2
+Preferred Minor : 3
+    Persistence : Superblock is persistent
+
+    Update Time : Mon Sep 15 08:41:38 2003
+          State : dirty, no-errors
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 0
+
+
+    Number   Major   Minor   RaidDevice State
+       0       3        3        0      active sync
+/dev/ide/host0/bus0/target0/lun0/part3
+       1      33        3        1      active sync
+/dev/ide/host2/bus0/target0/lun0/part3
+           UUID : f8b2d95b:93055c43:d78427ac:197a610f
+         Events : 0.38
+
+how:~# df -h
+Filesystem            Size  Used Avail Use% Mounted on
+/dev/md/2             112G   94G   16G  86% /
+/dev/md/1              60M   16M   42M  28% /boot
+
+Have I configured something incorrectly?  Or is this really the way RAID1
+works?
+
+Thanks
+ Andrew
+--
+Andrew Herdman
+andrew@whine.com - Primary E-Mail
+
