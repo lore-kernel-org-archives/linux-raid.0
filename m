@@ -1,54 +1,48 @@
-From: Arjan van de Ven <arjanv@redhat.com>
-Subject: Re: "Enhanced" MD code avaible for review
-Date: Tue, 23 Mar 2004 07:48:07 +0100
+From: Atro Tossavainen <atossava@cc.helsinki.fi>
+Subject: Re: Root Drive Mirroring and LVM.
+Date: Tue, 23 Mar 2004 09:27:30 +0200 (EET)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040323064807.GA6815@devserv.devel.redhat.com>
-References: <459805408.1079547261@aslan.scsiguy.com> <4058A481.3020505@pobox.com> <4058C089.9060603@adaptec.com> <200403172245.31842.bzolnier@elka.pw.edu.pl> <4058EBEC.8070309@adaptec.com> <1079788027.5225.4.camel@laptop.fenrus.com> <405E287E.3080706@adaptec.com> <1079946343.5296.5.camel@laptop.fenrus.com> <405F61C1.9090907@adaptec.com>
+Message-ID: <200403230727.i2N7RUFg013662@kruuna.Helsinki.FI>
+References: <20040204122317.K27780@forte.austin.ibm.com>
+Reply-To: Atro.Tossavainen@helsinki.fi
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="mYCpIKhGyMATD0i+"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <405F61C1.9090907@adaptec.com>
-To: Scott Long <scott_long@adaptec.com>
-Cc: Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, Jeff Garzik <jgarzik@pobox.com>, "Justin T. Gibbs" <gibbs@scsiguy.com>, linux-raid@vger.kernel.org, "Gibbs, Justin" <justin_gibbs@adaptec.com>, Linux Kernel <linux-kernel@vger.kernel.org>
+In-Reply-To: <20040204122317.K27780@forte.austin.ibm.com> from "linas@austin.ibm.com"
+ at "Feb 4, 2004 12:23:17 pm"
+To: linas@austin.ibm.com
+Cc: Neil Brown <neilb@cse.unsw.edu.au>, Atro.Tossavainen@helsinki.fi, linuxppc-dev@lists.linuxppc.org, linux-raid@vger.kernel.org, tas@mindspring.com
 List-Id: linux-raid.ids
 
+On Wed, 4 Feb 2004 12:23:17 -0600, linas@austin.ibm.com wrote:
 
---mYCpIKhGyMATD0i+
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-
-On Mon, Mar 22, 2004 at 02:59:29PM -0700, Scott Long wrote:
-> >I think that all the arguments for using DM are techinical arguments not
-> >emotional ones. oh well.. you're free to write your code I'm free to not
-> >use it in my kernels ;)
+> On Wed, Jan 28, 2004 at 12:42:18PM +1100, Neil Brown wrote:
+>
+> > I personally think auto-detect is the wrong approach and have no
+> > desire to extend it to other partition types (I cannot remove it from
+> > DOS partitions as that breaks back-compatability).
+> > Just use "md=..."
 > 
-> Ok, the technical arguments I've heard in favor of the DM approach is 
-> that it reduces kernel bloat.  That fair, and I certainly agree with not
-> putting the kitchen sink into the kernel.  Our position on EMD is that
-> it's a special case because you want to reduce the number of failure
-> modes, and that it doesn't contribute in a significant way to the kernel
-> size. 
+> What's wrong with autodetect?  Its saved my butt a number of times.
+> 
+> My recurring nightmare is involves a failed ide controller.  If the 
+> failed controller is on the motherboard, then plugging in a store-bought
+> ide controller causes the BIOS to "randomly" renumber to hard drives.
+> (yes, sorry this is a PC issue, but I would guess that similar issues 
+> lurk in open firmware, etc). 
 
-There are serveral dozen such formats as DDF, should those be put in too?
-And then the next step is built in multipathing or stacking or .. or .... 
-And pretty soon you're back at the EVMS 1.0 situation. I see the general 
-kernel direction be to move such autodetection to early userland (there's 
-a reason DM and not EVMS1.0 is in the kernel, afaics even the EVMS guys now 
-agree that this was the right move); EMD is a step in the opposite direction.
+Indeed.  Speaking for myself only, the whole issue has only come about
+because somewhere after 2.4.20, the handling of Promise add-on IDE
+controllers was changed so that where the Promise hard drives on the
+Apple Xserve were previously /dev/hde to /dev/hdh and the "mainboard"
+IDE (which only handles the CD-ROM) was /dev/hda to /dev/hdd, their
+internal order is now reversed, and for some reason I am unable to get
+the metadevice to work after the change (so am effectively unable to
+update my kernel as root is on md).
 
-
---mYCpIKhGyMATD0i+
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.1 (GNU/Linux)
-
-iD8DBQFAX92nxULwo51rQBIRAok0AJ0ePgdjLl3qdy2n6Q4MkKSFSfOu+QCdGthm
-I2smD2CyRHOwHpB9uZ0bkJA=
-=qLIW
------END PGP SIGNATURE-----
-
---mYCpIKhGyMATD0i+--
+-- 
+Atro Tossavainen (Mr.)               / The Institute of Biotechnology at
+Systems Analyst, Techno-Amish &     / the University of Helsinki, Finland,
++358-9-19158939  UNIX Dinosaur     / employs me, but my opinions are my own.
+< URL : http : / / www . helsinki . fi / %7E atossava / > NO FILE ATTACHMENTS
