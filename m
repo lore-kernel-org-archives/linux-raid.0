@@ -1,41 +1,35 @@
 From: Ricky Beam <jfbeam@bluetronic.net>
-Subject: Re: powersupply for 16disks +dual xeon
-Date: Tue, 18 Feb 2003 18:59:05 -0500 (EST)
+Subject: Re: anybody using the maxtor 320GB
+Date: Tue, 18 Feb 2003 19:19:10 -0500 (EST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.GSO.4.33.0302181851380.25817-100000@sweetums.bluetronic.net>
-References: <20030202004849.GA28521@willow.seitz.com>
+Message-ID: <Pine.GSO.4.33.0302181913040.25817-100000@sweetums.bluetronic.net>
+References: <Pine.LNX.4.33.0302082155200.7326-100000@router.windsormachine.com>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20030202004849.GA28521@willow.seitz.com>
-To: Ross Vandegrift <ross@willow.seitz.com>
-Cc: Jeffrey Paul <sneak@datavibe.net>, Stephan van Hienen <stephan@a2000.nu>, linux-raid@vger.kernel.org
+In-Reply-To: <Pine.LNX.4.33.0302082155200.7326-100000@router.windsormachine.com>
+To: Mike Dresser <mdresser_l@windsormachine.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, 1 Feb 2003, Ross Vandegrift wrote:
->I Am Not an Electrican Engineer, But My Boss Is.  I did this once, and
->he had a cow.  There was some problem he yelled at me, having to do with
->different PSUs pulling voltage up at a different rate.  There's someway
->he said that the differential in voltages would feed back through the
->IDE channels, for some reason....
+On Sat, 8 Feb 2003, Mike Dresser wrote:
+>> General speculation is running in two directions:
+>> 1) Their Enterprise division managed to get management to sack and delay
+>> the line so it will not compete with their SCSI offerings.
+>> 2) They seem to be having some large technical problems on these drives.
+>>
+>Last time I forwarded along one of the linux mailing list emails, I got an
+>answer back from the Marketing department.
 >
->The short of it was that someone qualified to judge said it was a really
->bad idea to use multiple seperate power supplies.
+>That should tell you just how bad of shape they are in.
 
-Ok, I'm gonna have to jump in here now.  People have been doing this for
-DECADES with SCSI hardware.  It's a load of BS.  As long as there's a
-common ground line, you won't release any smoke. (And I bet they have a
-common ground through the AC plug.)
+They made a batch of them and then recalled all of them.  A business partner
+called to find out where we could get a few cases of these things and was
+told, "no where."  They weren't very specific about what the problems were,
+but it was apparent there was some sort of technical "opps" in play.
 
-Can you say "external enclosure"?  I knew that you could.
-
-(Note: only HVD SCSI hardware has line isolation circuits -- required per
-       spec to avoid setting SE busses on fire if you plug the wrong thing
-       in.)
+I could rattle off a list of speculations, but there's no point...
 
 --Ricky
-
-PS: Yes, SCSI feeds power into the bus to power terminators. (usu. everything
-    feeds power to the bus... common factory default)
 
 
