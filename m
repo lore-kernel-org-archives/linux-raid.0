@@ -1,53 +1,41 @@
-From: maarten van den Berg <maarten@vbvb.nl>
-Subject: Re: Hard drive Reliability?
-Date: Thu, 20 May 2004 01:53:21 +0200
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: Hard drive Reliability?
+Date: Wed, 19 May 2004 20:34:47 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200405200153.21371.maarten@vbvb.nl>
-References: <200405192226.i4JMQLB16952@www.watkins-home.com>
+Message-ID: <200405200034.i4K0YpB17310@www.watkins-home.com>
+References: <200405200140.26636.maarten@vbvb.nl>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200405192226.i4JMQLB16952@www.watkins-home.com>
-Content-Disposition: inline
-To: linux-raid@vger.kernel.org
+In-Reply-To: <200405200140.26636.maarten@vbvb.nl>
+To: 'maarten van den Berg' <maarten@vbvb.nl>, 'LinuxRaid' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thursday 20 May 2004 00:26, Guy wrote:
-> >I would also concur.  I had a Western Digital that failed after 10
-> >months.  Western Digital sent me another one that failed in exactly 10
-> >months again.  I didn't want to send it in to get yet another piece of
-> >WD junk.  So, lesson learned to stay away form WD drives; correct or not.
-> >
-> >Sevatio
->
-> ==========================================================================
->
-> I had problems with Maxtor.  So, lesson learned to stay away form Maxtor
-> drives; correct or not.
->
-> My friend had problems with IBM.
->
-> Who's left?  I like Seagate, for now.
->
-> A few years ago HP and EMC were using Seagate drives in their big disk
-> arrays.  I am sure they have stats and know which drives are good.
+You said:
+<Well, It was more or less useless anyway. I can tell you just offhand that
+<you can lengthen the life expectancy of a drive maybe four-fold if you make
+<sure it stays below 35 degrees celsius its entire life, instead of ~45
+<degrees.
+<Don't hold me up on that, but you know what I mean, and it is true. :-)
 
-Hm, I somehow seriously doubt that, if and when you're talking about _brands_. 
-However, I strongly feel that certain _series_ are indeed better or worse 
-than others.  But that only helps big manufacturers; by the time we need to 
-buy a new drive the serie either doesn't exist anymore, is overhauled to 
-reduce cost, or has been transfered from plant Y in Taiwan to plant X in 
-China. (not that I imply anything by naming countries, they're examples) 
+========================================================================
+I agree with you, but!
 
-The tricky part, especially for manufacturers, is that they only know after 
-the fact if they chose their drive brand / model wisely.  Only after a year 
-or so they can see how many returns they've had, and by that time it's too 
-late to change anything about it.
+I have an old system with 2 18 Gig SCSI disks.  One IBM and one Seagate.
+Both run very hot!  I added extra cooling fans.  Both fans failed about 2
+years ago.  Only the CPU and power supply fans still work.   The disk drives
+are too hot to touch.  Much too hot to touch!  The system is running 99.99%
+of the time.  No disk problems.  The system is 4-5 years old as a guess.  To
+help date it, it is a P3-350Mhz.  My wife uses this computer.  :)
 
-Maarten
+I just dripped some drops of water on the drives, it did not boil.  But I
+can only keep my finger on them for less than 1 second.
 
--- 
-Yes of course I'm sure it's the red cable. I guarante[^%!/+)F#0c|'NO CARRIER
+Anyway I think I have been very lucky.  I don't recommend hot drives, just a
+funny example of "rules were made to be broken"!
+
+Guy
+
 
