@@ -1,61 +1,53 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: starting an array on Linux, advise needed
-Date: Fri, 16 Jan 2004 21:04:42 -0500
+From: Daniel Sievers <Daniel.Sievers@post.rwth-aachen.de>
+Subject: raid5 and bad blocks
+Date: Sat, 17 Jan 2004 10:48:29 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200401170204.i0H24mi16143@dns1.watkins-home.com>
-References: <200401170048.i0H0mO218903@bzs.org>
+Message-ID: <400904ED.8030303@post.rwth-aachen.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200401170048.i0H0mO218903@bzs.org>
-To: michael@insulin-pumpers.org, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-raidtab? 
-Your sad devotion to that ancient software has not helped you conjure up the
-superblocks.
+Hi,
 
-Read:
-	man mdadm
+recently i have been running in a lot of trouble with harddisks, that
+are developing bad blocks over time.
 
-I have this line in my mdadm.conf:
-	DEVICE /dev/sd[abcdefghijklmnopqrstuvwxyz][12]
-It handles the first 2 partitions of the first 26 SCSI disks!
-I only have 17 disks, most only have 1 partition, some have 2.
+example scenario:
+1 disk fails (for whatever reason) and gets kicked out of the array.
+then a resync fails because one of the other disk has developed bad
+blocks. the raid volume is not operational or resyncable anymore now.
 
+here are some naive thoughts i had:
 
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Michael
-Sent: Friday, January 16, 2004 7:48 PM
-To: linux-raid@vger.kernel.org
-Subject: Re: starting an array on Linux, advise needed
+1) an option to disable degraded mode (or turn array read-only when
+switching to degraded mode). i had disks fail once but (at least  for a
+while) work fine later again. i would like the opportunity to try assure
+data reconstruction before the kicked-out disk gets completely out-of-date.
 
-> Guy wrote:
-> > I found this old message, it may help.
-> > ======================================
-> > http://www.corpit.ru/mjt/mdctl.c - a very small utility similar to
-raidtools
-> 
-> Note it will not work correctly in the situation described.
-> Or at least it may not work.  For the same reason as original
-> code does not work: "renamed" devices in 2.4 vs 2.6.
+without really having studied the code, would some simple change like
+this work to disable degraded mode on disk fail?
+if (!rdev->faulty) {
+    stop(mddev);
+    printk(KERN_ALERT, "raid5: Disk failure on %s, stopping raid."
+    , bdevname(rdev->bdev,b));
+  }
 
-<snip>
+2) would it make sense to let resync finish even when encountering bad
+blocks? could the filesystem be reported bad blocks on the affected
+areas instead?
 
-I've been following this thread for a while and have now become a bit 
-confused. What are the implications for an autostart array marked 
-'FD' in 2.6 ?? Will it start correctly? hmmm.... I think I missed 
-something in the discussion..... How does one specify the raidtab 
-under this circumstance if the device names are not stable.
+3) even better... actually in most cases bad blocks on several disks but
+in different areas should still allow a complete reconstruction. correct?
+the driver being able to compute the correct sectors across different
+disks would be kick-ass :))
+but of course then some reserved space would be needed as a prerequisite.
 
-Michael
-Michael@Insulin-Pumpers.org
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+i would be glad to hear some opinions about this.
+
+thanks!
+Daniel Sievers
 
 
