@@ -1,238 +1,35 @@
-From: "ife ude" <udechamb@hotmail.com>
-Subject: urgent  assistance
-Date: Mon, 11 Aug 2003 14:05:10 +0100
+From: "Michael T. Babcock" <mbabcock@fibrespeed.net>
+Subject: Re: smart raid1 reads?
+Date: Mon, 11 Aug 2003 14:27:23 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <BAY7-F87yVk1G6yMImJ000256e7@hotmail.com>
+Message-ID: <3F37E00B.2000006@fibrespeed.net>
+References: <3F378CF3.7030809@fibrespeed.net> <200308111119.32344.nick@byu.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: udechamb@hotmail.com
+In-Reply-To: <200308111119.32344.nick@byu.edu>
+To: Nicholas Leippe <nick@byu.edu>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Bank of Africa
-Cotonou
-Republic du Benin
+Nicholas Leippe wrote:
 
-Dear Sir,
+>I don't know about the internals either, but it's already issuing block 
+>writes to both drives in parallel, I don't see why synchronization is an 
+>issue.  Block layers don't usually care about serialization--that is left  to the filesystem and higher os levels, no?  If so, I would think it shouldn't matter--md1 is in effect here the new block layer--merging two other block devices into one--nothing should be bypassing that layer for any blocks in the partition it's using.
+>  
+>
 
-I believe that this mail will come to you as a
-suprise, but as you read on, you will understand why I
-contacted you.
+Part of what bothers me is that even without parallelizing for one large 
+read, if there are multiple queued reads from one RAID1 device that 
+aren't nearby (see elevator code), then read the second set from the 
+second drive, the third set from the first drive, and so on to minimize 
+head movement.
 
-My name is Dr.Patrick, and I am the Manager of
-Bank of Africa,International office Cotonou,Republic-du-Benin. I came across 
-your name and coincidentally,it suits my purpose for a careful evacuation of 
-funds (USD$42,000,000,00.)fourty two million dollars discovered to be 
-abandoned by one of our numerous customers. On further investigation,I found 
-out with a great shock that the customer was one of the Kenyan airlines 
-plane crash victims. It was also revealed that he died in the company of his 
-wife and their only daughter therefore, leaving nobody as the next of kin.
+-- 
+Michael T. Babcock
+C.T.O., FibreSpeed Ltd.
+http://www.fibrespeed.net/~mbabcock
 
-Since we got the whole details about his death, we have been expecting his 
-next of kin to come over and claim this monies because we cannot release it 
-,unless somebody applies for the funds as the next of kin or relation of the 
-deceased as indicated in our banking guidelines but fortunately or 
-unfortunately,we learnt that the supposed next of kin, died along with him.
-
-It is therefore upon this discovery that I and two other senior officials in 
-my department now decided to make deal with you by releasing the money to 
-you as the next of kin for safe keeping and subsequent disbursment since 
-nobody is coming for the claims.However, the banking laws and guidelines 
-here stipulates that, if such monies remain unclaimed after a period of four 
-years, the funds will be transfered into the government treasury.
-
-The request for your co-operation is because, there are similiarities in 
-your names with that of the deceased.Also, the deceased is a foreigner,and 
-for that, there is no way an indigine will stand as a next of kin to a 
-foreigner. After a successful evacuation of the funds, I and my other 
-collegues will visit your country for disbursement as we agreed to share the 
-monies among ourselves. Please, let trust be our "WATCHWORD".
-
-Therefore, to enable the immidiate evacuation of the funds, you must apply 
-first to the bank as the next of kin to the deceased. Upon receipt of your 
-favourable reply, I will send to you a text of application, with the name of 
-the deceased, his country and other necessary informations about him. Please 
-note that this transaction is risk free, but please keep it in 
-capsule.please reply to my private email address:flpp20032002@yahoo.com.
-
-
-Awaiting to hear from you as soon as possible.
-
-Sincerely yours,
-Dr.Patrick Uche.
-
-Bank of Africa
-Cotonou
-Republic du Benin
-
-Dear Sir,
-
-I believe that this mail will come to you as a
-suprise, but as you read on, you will understand why I
-contacted you.
-
-My name is Dr.Patrick, and I am the Manager of
-Bank of Africa,International office Cotonou,Republic-du-Benin. I came across 
-your name and coincidentally,it suits my purpose for a careful
-evacuation of funds (USD$42,000,000,00.)fourty two million dollars 
-discovered to be abandoned by one of our numerous customers. On further 
-investigation,I found out with a great shock that the customer was one
-of the Kenyan airlines plane crash victims. It was also revealed that he 
-died in the company of his wife and their only daughter therefore, leaving 
-nobody as the next of kin.
-
-Since we got the whole details about his death, we have been expecting his 
-next of kin to come over and claim this monies because we cannot release it 
-,unless somebody applies for the funds as the next of
-kin or relation of the deceased as indicated in our banking guidelines but 
-fortunately or unfortunately,we learnt that the supposed next of kin, died 
-along with him.
-
-It is therefore upon this discovery that I and two other senior officials in 
-my department now decided to make deal with you by releasing the money to 
-you as the next of kin for safe keeping and subsequent disbursment since 
-nobody is coming for the claims.
-However, the banking laws and guidelines here stipulates that, if such 
-monies remain unclaimed after a period of four years, the funds will be 
-transfered into the government treasury.
-
-The request for your co-operation is because, there are similiarities in 
-your names with that of the deceased.Also, the deceased is a foreigner,and 
-for that, there is no way an indigine will stand as a next of kin to a 
-foreigner.
-After a successful evacuation of the funds, I and my other collegues will 
-visit your country for disbursement as we agreed to share the monies among 
-ourselves. Please, let trust be our "WATCHWORD".
-
-Therefore, to enable the immidiate evacuation of the funds, you must apply 
-first to the bank as the next of kin to the deceased.
-Upon receipt of your favourable reply, I will send to you a text of 
-application, with the name of the deceased, his country and other necessary 
-informations about him. Please note that this transaction is risk free, but 
-please keep it in capsule.please reply to my private email 
-address:flpp20032002@yahoo.com.
-
-
-Awaiting to hear from you as soon as possible.
-
-Sincerely yours,
-Dr.Patrick Uche.
-
-Bank of Africa
-Cotonou
-Republic du Benin
-
-Dear Sir,
-
-I believe that this mail will come to you as a
-suprise, but as you read on, you will understand why I
-contacted you.
-
-My name is Dr.Patrick, and I am the Manager of
-Bank of Africa,International office Cotonou,Republic-du-Benin. I came across 
-your name and coincidentally,it suits my purpose for a careful
-evacuation of funds (USD$42,000,000,00.)fourty two million dollars 
-discovered to be abandoned by one of our numerous customers. On further 
-investigation,I found out with a great shock that the customer was one
-of the Kenyan airlines plane crash victims. It was also revealed that he 
-died in the company of his wife and their only daughter therefore, leaving 
-nobody as the next of kin.
-
-Since we got the whole details about his death, we have been expecting his 
-next of kin to come over and claim this monies because we cannot release it 
-,unless somebody applies for the funds as the next of
-kin or relation of the deceased as indicated in our banking guidelines but 
-fortunately or unfortunately,we learnt that the supposed next of kin, died 
-along with him.
-
-It is therefore upon this discovery that I and two other senior officials in 
-my department now decided to make deal with you by releasing the money to 
-you as the next of kin for safe keeping and subsequent disbursment since 
-nobody is coming for the claims.
-However, the banking laws and guidelines here stipulates that, if such 
-monies remain unclaimed after a period of four years, the funds will be 
-transfered into the government treasury.
-
-The request for your co-operation is because, there are similiarities in 
-your names with that of the deceased.Also, the deceased is a foreigner,and 
-for that, there is no way an indigine will stand as a next of kin to a 
-foreigner.
-After a successful evacuation of the funds, I and my other collegues will 
-visit your country for disbursement as we agreed to share the monies among 
-ourselves. Please, let trust be our "WATCHWORD".
-
-Therefore, to enable the immidiate evacuation of the funds, you must apply 
-first to the bank as the next of kin to the deceased.
-Upon receipt of your favourable reply, I will send to you a text of 
-application, with the name of the deceased, his country and other necessary 
-informations about him. Please note that this transaction is risk free, but 
-please keep it in capsule.please reply to my private email 
-address:flpp20032002@yahoo.com.
-
-
-Awaiting to hear from you as soon as possible.
-
-Sincerely yours,
-Dr.Patrick Uche.
-
-Bank of Africa
-Cotonou
-Republic du Benin
-
-Dear Sir,
-
-I believe that this mail will come to you as a
-suprise, but as you read on, you will understand why I
-contacted you.
-
-My name is Dr.Patrick, and I am the Manager of
-Bank of Africa,International office Cotonou,Republic-du-Benin. I came across 
-your name and coincidentally,it suits my purpose for a careful
-evacuation of funds (USD$42,000,000,00.)fourty two million dollars 
-discovered to be abandoned by one of our numerous customers. On further 
-investigation,I found out with a great shock that the customer was one
-of the Kenyan airlines plane crash victims. It was also revealed that he 
-died in the company of his wife and their only daughter therefore, leaving 
-nobody as the next of kin.
-
-Since we got the whole details about his death, we have been expecting his 
-next of kin to come over and claim this monies because we cannot release it 
-,unless somebody applies for the funds as the next of
-kin or relation of the deceased as indicated in our banking guidelines but 
-fortunately or unfortunately,we learnt that the supposed next of kin, died 
-along with him.
-
-It is therefore upon this discovery that I and two other senior officials in 
-my department now decided to make deal with you by releasing the money to 
-you as the next of kin for safe keeping and subsequent disbursment since 
-nobody is coming for the claims.
-However, the banking laws and guidelines here stipulates that, if such 
-monies remain unclaimed after a period of four years, the funds will be 
-transfered into the government treasury.
-
-The request for your co-operation is because, there are similiarities in 
-your names with that of the deceased.Also, the deceased is a foreigner,and 
-for that, there is no way an indigine will stand as a next of kin to a 
-foreigner.
-After a successful evacuation of the funds, I and my other collegues will 
-visit your country for disbursement as we agreed to share the monies among 
-ourselves. Please, let trust be our "WATCHWORD".
-
-Therefore, to enable the immidiate evacuation of the funds, you must apply 
-first to the bank as the next of kin to the deceased.
-Upon receipt of your favourable reply, I will send to you a text of 
-application, with the name of the deceased, his country and other necessary 
-informations about him. Please note that this transaction is risk free, but 
-please keep it in capsule.please reply to my private email 
-address:flpp20032002@yahoo.com.
-
-
-Awaiting to hear from you as soon as possible.
-
-Sincerely yours,
-Dr.Patrick Uche.
-
-_________________________________________________________________
-The new MSN 8: smart spam protection and 2 months FREE*  
-http://join.msn.com/?page=features/junkmail
 
