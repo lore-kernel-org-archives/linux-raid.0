@@ -1,32 +1,56 @@
-From: Andreas Kahnt <aka@aka.coware.de>
-Subject: Re: 3ware 7500-8 controller, hardware or software raid, kernel crash
-Date: Sun, 4 May 2003 22:25:04 +0200 (CEST)
+From: Brice B <nesta@iceburg.net>
+Subject: Cheap NAS RAID device
+Date: Sun, 4 May 2003 16:45:19 +0000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0305042218040.19228-100000@aka.coware.de>
-References: <Pine.LNX.4.44.0305040947540.11386-100000@portal.bppiac.hu>
+Message-ID: <200305041645.19097.nesta@iceburg.net>
+References: <S261785AbTEDVYF/20030504212405Z+2713@vger.kernel.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44.0305040947540.11386-100000@portal.bppiac.hu>
-To: Farkas Levente <lfarkas@bnap.hu>
-Cc: linux-raid@vger.kernel.org, ataraid-list@redhat.com, Adam Radford <aradford@3WARE.com>
+In-Reply-To: <S261785AbTEDVYF/20030504212405Z+2713@vger.kernel.org>
+Content-Disposition: inline
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+I'm currently trying to build myself a *home* fileserver w/ the
+following requirements:
 
-> after we format it, start to copy back the data (about 250GB) from nfs.
-> after about 2 minutes the kernel crash with some kind of io error on the
-> 3ware controller. unfortunately we don't have time to write down the
-> kernel's error message since this is one of our production enviroment
-> server. what's more I wouldn't like to buy more such card to play with if
-> it's not  well functional. you can read the kernel log after that crash at
-> the end of this mail.
+1) Small, portable & durable
+2) At least 240GB (maintain scalability)
+3) Must be redundant (RAID 1 or 5)
+4) Cannot exceed $850
 
-We had the same problem using SuSE-8.0/2.4.18. We 'solved' the problem using
-6+1 - Raid-5 and removed the 8. disk. Now the last disk is a cold spare ;-).
-This work well for a couple of months uptime.
+ The basic application of the device will be to hold backed up data, and
+to serve ogg/mp3 files.
 
-aka
+ So far I haven't been able to find any 1U NAS turn-key raid solution for
+anything under $2000 for just the chasis! So this thing is going to have to
+be hacked together, and this is what I've come up with:
 
-Andreas.Kahnt@coware.de
+1 EPIA MB w/ VIA C3 800mhz Processor (mini ITX)
+A tailored case [ likely out of a tape deck ]
+3 120GB IDE drives
+[Possilbe Raid Controller]
+Linux [ 2.4 or 2.5 kernel ] w/ NFS, apache, samba
 
+ My ?'s are:
+
+ Will the performance of a linux software raid level 5 be sufficient w/
+the VIA C3 800mhz Processor?
+
+ Will the data be safe under LSR? ie. If a disk dies, will I be warned?
+When I shutdown & replace the disk, will data remain?
+
+ Am I better off using a 3Ware Escalade or a Promise FastTrax SX4000 to
+handle my array?
+
+ Will I have to have a 4th HD to boot off of.. or can I create a custom
+bootable CD that will bring up my system (kernel, raid, apache, nfs,
+samba) ? Or should I boot directly from RAID?
+
+Thanks,
+
+  Brice Burgess
+ 
