@@ -1,207 +1,39 @@
-From: "Phantazm" <phantazm@phantazm.nu>
-Subject: Re: Bug in MDADM or just crappy computer?
-Date: Sun, 20 Feb 2005 11:38:05 +0100
-Message-ID: <cv9ou8$onm$1@sea.gmane.org>
-References: <cv9gbc$84g$1@sea.gmane.org>
+From: "Delmar Walker" <pluton@casholasavings.com>
+Subject: Rates fixed at 3.25
+Date: Mon, 14 Feb 2005 06:36:10 -0700
+Message-ID: <200410031459.i93OayTw005284__36954.0196763866$1108937206$gmane$org@www6.warnerreprise.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux-msdos-owner@vger.kernel.org
+Cc: linux-net@vger.kernel.org, linux-net-owner@vger.kernel.org, linux-newbie@vger.kernel.org, linux-perf@vger.kernel.org, linux-ppp@vger.kernel.org, linux-raid@vger.kernel.org, linux-raid-owner@vger.kernel.org, linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org
 List-Id: linux-raid.ids
 
-Really really wierd.
+Hello,
 
-Compiling gcc and glibc and wrote a lil script in perl that does a loop=
- and=20
-loads the cpu=B4s to aprox 95%.
+ We tried contacting you awhile ago about your low interest morta(ge rate.
 
-The resyncspeed is at 9000K/s
+ You have qualified for the lowest rate in years...
 
-Think my computer is haunted.
+ You could get over $380,000 for as little as $500 a month!
 
-"Phantazm" <phantazm@phantazm.nu> skrev i meddelandet=20
-news:cv9gbc$84g$1@sea.gmane.org...
-> My resync problem still goes on :-(
->
-> When the resync is done on my raid5 with 8 disks just goes into a loo=
-p and=20
-> marks 2 disks as failed.
->
-> Then i need to reboot and assemble them again with the force. (the 2 =
-disks=20
-> thats failing isnt on same controller card)
->
-> And the kernel log is filled up with this.
->
-> Feb 20 08:43:13 [kernel] md: md0: sync done.
-> Feb 20 08:43:13 [kernel] md: syncing RAID array md0
-> Feb 20 08:43:13 [kernel] md: minimum _guaranteed_ reconstruction spee=
-d:=20
-> 5000 KB/sec/disc.
-> Feb 20 08:43:13 [kernel] md: md0: sync done.
-> Feb 20 08:43:13 [kernel] .<6>md: syncing RAID array md0
-> Feb 20 08:43:13 [kernel] md: minimum _guaranteed_ reconstruction spee=
-d:=20
-> 5000 KB/sec/disc.
-> Feb 20 08:43:13 [kernel] .<6>md: syncing RAID array md0
-> Feb 20 08:43:13 [kernel] md: minimum _guaranteed_ reconstruction spee=
-d:=20
-> 5000 KB/sec/disc.
-> Feb 20 08:43:13 [kernel] md: syncing RAID array md0
-> Feb 20 08:43:13 [kernel] md: minimum _guaranteed_ reconstruction spee=
-d:=20
-> 5000 KB/sec/disc.
-> Feb 20 08:43:13 [kernel] md: using maximum available idle IO bandwith=
- (but=20
-> not more than 15000 KB/sec) for reconstruction.
-> Feb 20 08:43:13 [kernel] md: using 128k window, over a total of 19914=
-1632=20
-> blocks.
-> Feb 20 08:43:13 [kernel] md: md0: sync done.
-> Feb 20 08:43:13 [kernel] .<6>md: syncing RAID array md0
-> Feb 20 08:43:13 [kernel] md: minimum _guaranteed_ reconstruction spee=
-d:=20
-> 5000 KB/sec/disc.
-> Feb 20 08:43:13 [kernel] .<6>md: syncing RAID array md0
-> Feb 20 08:43:13 [kernel] md: minimum _guaranteed_ reconstruction spee=
-d:=20
-> 5000 KB/sec/disc.
-> Feb 20 08:43:13 [kernel] .<6>md: syncing RAID array md0
-> Feb 20 08:43:13 [kernel] md: minimum _guaranteed_ reconstruction spee=
-d:=20
-> 5000 KB/sec/disc.
-> Feb 20 08:43:13 [kernel] .<6>md: syncing RAID array md0
-> Feb 20 08:43:13 [kernel] md: minimum _guaranteed_ reconstruction spee=
-d:=20
-> 5000 KB/sec/disc.
-> Feb 20 08:43:13 [kernel] .<6>md: syncing RAID array md0
-> Feb 20 08:43:13 [kernel] md: minimum _guaranteed_ reconstruction spee=
-d:=20
-> 5000 KB/sec/disc.
-> Feb 20 08:43:13 [kernel] .<6>md: syncing RAID array md0
-> Feb 20 08:43:13 [kernel] md: minimum _guaranteed_ reconstruction spee=
-d:=20
-> 5000 KB/sec/disc.
-> Feb 20 08:43:13 [kernel] md: syncing RAID array md0
-> Feb 20 08:43:13 [kernel] md: minimum _guaranteed_ reconstruction spee=
-d:=20
-> 5000 KB/sec/disc.
-> Feb 20 08:43:13 [kernel] md: using maximum available idle IO bandwith=
- (but=20
-> not more than 15000 KB/sec) for reconstruction.
-> Feb 20 08:43:13 [kernel] md: using 128k window, over a total of 19914=
-1632=20
-> blocks.
-> Feb 20 08:43:13 [kernel] md: md0: sync done.
-> Feb 20 08:43:13 [kernel] md: syncing RAID array md0
-> Feb 20 08:43:13 [kernel] md: minimum _guaranteed_ reconstruction spee=
-d:=20
-> 5000 KB/sec/disc.
-> Feb 20 08:43:13 [kernel] md: using maximum available idle IO bandwith=
- (but=20
-> not more than 15000 KB/sec) for reconstruction.
-> Feb 20 08:43:13 [kernel] md: using 128k window, over a total of 19914=
-1632=20
-> blocks.
-> Feb 20 08:43:13 [kernel] md: md0: sync done.
-> Feb 20 08:43:13 [kernel] md: syncing RAID array md0
-> Feb 20 08:43:13 [kernel] md: minimum _guaranteed_ reconstruction spee=
-d:=20
-> 5000 KB/sec/disc.
-> Feb 20 08:43:13 [kernel] md: using maximum available idle IO bandwith=
- (but=20
-> not more than 15000 KB/sec) for reconstruction.
-> Feb 20 08:43:13 [kernel] md: using 128k window, over a total of 19914=
-1632=20
-> blocks.
->
->
-> aint got a single clue what it could be.
->
-> I have tried this patch too..
->
-> (The disks are not broken, that i know for sure)
->
-> --------------------------------------------
->
-> Fix endless loop when syncing an array that doesn't need any resync.
->
-> If the resync checkpoint for an array is at the end of the array, It=20
-> doesn't get set to MAX_SECTOR, so resyncing will be retried.
->
-> By updating curr_resync early, this problem is fixed.
->
-> Signed-off-by: Neil Brown <neilb@cse.unsw.edu.au>
->
-> ### Diffstat output
->
-> ./drivers/md/md.c | 6 ++++--
->
-> 1 files changed, 4 insertions(+), 2 deletions(-)
->
-> diff ./drivers/md/md.c~current~ ./drivers/md/md.c
->
-> --- ./drivers/md/md.c~current~ 2005-02-02 12:08:42.000000000 +1100
->
-> +++ ./drivers/md/md.c 2005-02-02 12:08:53.000000000 +1100
->
-> @@ -3472,10 +3472,12 @@ static void md_do_sync(mddev_t *mddev)
->
-> init_waitqueue_head(&mddev->recovery_wait);
->
-> last_check =3D 0;
->
->
-> - if (j)
->
-> + if (j>2) {
->
-> printk(KERN_INFO
->
-> "md: resuming recovery of %s from checkpoint.\n",
->
-> mdname(mddev));
->
-> + mddev->curr_resync =3D j;
->
-> + }
->
->
-> while (j < max_sectors) {
->
-> int sectors;
->
-> @@ -3562,7 +3564,7 @@ static void md_do_sync(mddev_t *mddev)
->
->
-> if (!test_bit(MD_RECOVERY_ERR, &mddev->recovery) &&
->
-> mddev->curr_resync > 2 &&
->
-> - mddev->curr_resync > mddev->recovery_cp) {
->
-> + mddev->curr_resync >=3D mddev->recovery_cp) {
->
-> if (test_bit(MD_RECOVERY_INTR, &mddev->recovery)) {
->
-> printk(KERN_INFO
->
-> "md: checkpointing recovery of %s.\n",
->
->
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->=20
+ Ba(d credit? Doesn't matter, low rates are fixed no matter what!
+
+ 
+ To get a free, no obli,gation consultation click below:
+
+ http://www.bestlenderz.com/x/loan.php?id=nu
 
 
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ Best Regards,
+
+ Walter Novak
+ 
+ to be remov(ed:	http://www.bestlenderz.com/x/st.html
+
+ this process takes one week, so please be patient. we do our 
+ best to take your email/s off but you have to fill out a rem/ove
+ or else you will continue to recieve email/s.
+
+
