@@ -1,54 +1,48 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: RAID-10 with odd number of disks (was Re: Software RAID 0+1 with mdadm.)
-Date: Thu, 27 Jan 2005 13:30:27 -0500
-Message-ID: <200501271828.j0RISV911260@www.watkins-home.com>
-References: <20050127174200.GO82728@caffreys.strugglers.net>
+From: Carlos Knowlton <cknowlton@mail.fsix.com>
+Subject: Re: irq timeout: status=0xd0 { Busy }
+Date: Thu, 27 Jan 2005 14:53:19 -0600
+Message-ID: <41F954BF.8050407@mail.fsix.com>
+References: <200501270512.j0R5C1908897@www.watkins-home.com>
+Reply-To: cknowlton@science.edu
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20050127174200.GO82728@caffreys.strugglers.net>
+In-Reply-To: <200501270512.j0R5C1908897@www.watkins-home.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Andy Smith' <andy@lug.org.uk>, 'linux-raid' <linux-raid@vger.kernel.org>
+To: Guy <bugzilla@watkins-home.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-A normal RAID 10 requires an even number of disks.
+Hi,
 
-Neil gave a detailed description.  Maybe 6 months ago.  Do a search for
-RAID10 or raid10.
+Thanks for the quick response!
 
-I just looked at the link you gave.  RAID-1E does look like the RAID10 that
-md supports.  Until today, I had never seen RAID-1E.
+Guy wrote:
 
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Andy Smith
-Sent: Thursday, January 27, 2005 12:42 PM
-To: 'linux-raid'
-Subject: Re: RAID-10 with odd number of disks (was Re: Software RAID 0+1
-with mdadm.)
+>Why would you fsck the failed member of a RAID5?
+>You said "format", please elaborate!
+>
+>You should verify the disk is readable.
+>  
+>
+Verify readable?  That is why I formatted the failed member, and did the 
+fsck.  I couldn't think of a better way to do it.  However..
 
-On Thu, Jan 27, 2005 at 05:27:00PM +0000, Andy Smith wrote:
-> On Thu, Jan 27, 2005 at 12:16:31PM -0500, Guy wrote:
-> > It rotates the pairs!
-> > Assume 3 disks, A, B and C.
-> > Each stripe would be on these disks:
-> > A+B
-> > C+A
-> > B+C
-> > A+B
-> > C+A
-> > B+C
-> > ...
-> 
-> Hmm, difficult to visualise and comprehend if there are any
-> differences as opposed to "normal" RAID-10.
-> 
-> Is this anything like how RAID-1E works on IBM ServeRAID?
+>It looks like your disk is bad.  But a read test would be reasonable.
+>
+>Try this:
+>dd if=/dev/had of=/dev/null bs=64k
+>
+>It should complete without errors.  It will do a full read test.
+>I expect it will fail.
+>
+>  
+>
+I didn't think of trying 'dd', that's a good point.  However, a moot 
+point right now, the drive died last night.  *Sigh* 
 
-This seems relevant:
+Anyway, thanks for the help!
 
-http://www.adaptec.com/worldwide/product/markeditorial.html?sess=no&language
-=English+US&prodkey=raid_10_alternatives&type=White%20Papers
+-CK
 
