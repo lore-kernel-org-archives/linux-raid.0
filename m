@@ -1,46 +1,34 @@
-From: MShetty <mranalini.shetty@patni.com>
-Subject: Removable Hard Disk Drive
-Date: Wed, 06 Nov 2002 19:29:36 +0530
+From: Huntress Gary B NPRI <HuntressGB@Npt.NUWC.Navy.Mil>
+Subject: Growing an Array?
+Date: Wed, 06 Nov 2002 09:46:11 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3DC92048.423A58@patni.com>
+Message-ID: <A506359028CAD21191C10008C75D895C040B8841@NPRI54EXC14.NPT.NUWC.NAVY.MIL>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-scsi <linux-scsi@vger.kernel.org>, linux-raid <linux-raid@vger.kernel.org>
+To: "'linux-raid@vger.kernel.org'" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi,
 
-With respect to a "removable hard disk drive" what would B128, B96,
-B64 and B32 stand for ??
+I know exactly what I would like to do, but I'm not RAID-Smart enough to know if this is an existing capability or completely impossible.
 
-The piece of code I am reading doing a convertion between A and B
-where
-A =
-     unsigned long   num_Major;
-     unsigned long   num_Minor;
-     unsigned int    num_Disk;
-     unsigned int    num_Dkc;  // Disk Controller
-     unsigned int    num_Dport;
-     unsigned int    num_Hba;
-     unsigned int    num_Hport; // Host Port
-     unsigned int    num_Bus;
-     unsigned int    num_TId;
-     unsigned int    num_Hlu;  // Host Logical Unit
+Speaking in very generic terms, I have a RAID 5 array that is reaching it's capacity.  Drives are cheap and I want to grow the array.  Backing up the array to DLT is "hard" and I don't want to take my production system offline.   I want to buy a stack of new (hot swappable) drives and do the following to my array:
 
-B =
-struct B
-{
-    unsigned int B128;
-    unsigned int B96;
-    unsigned int B64;
-    unsigned int B32;
-};
+1)  pop out drive 1
+2)  Insert new drive
+3)  "initialize" the new drive
+4)  Some magic happens and the larger drive becomes part of the array
 
-Would help if I could get some clue on what they stand for.
+lather, rinse, repeat for the remaining replacement drives and *poof* I have a larger array.
 
-Thanks and Regards,
-M Shetty
+This capability would save me an incredible amount of labor and hand wringing.  Our "technology refresh" upgrades happen quite regularly because our data never stops growing.   Is this a pipe dream or an eventual reality?
 
+TIA
 
+Regards,
+
+Gary Huntress
+Code 4113
+Naval Undersea Warfare Center
+Newport, RI  02841
+1-800-669-6892 x28990
