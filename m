@@ -1,45 +1,44 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: To LVM, or not LVM ?
-Date: Mon, 15 Nov 2004 03:11:36 -0500
-Message-ID: <200411150811.iAF8BfN18879@www.watkins-home.com>
-References: <6F9171BE257CA742BFBCFA87B8F20F8D030E3EAB@NZURC900PEX1.ubsgs.ubsgroup.net>
+From: Lieven Van Acker <lieven.vanacker@ugent.be>
+Subject: modifying a running array
+Date: Mon, 15 Nov 2004 13:35:01 +0100
+Message-ID: <1100522100.31575.12.camel@xstar>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <6F9171BE257CA742BFBCFA87B8F20F8D030E3EAB@NZURC900PEX1.ubsgs.ubsgroup.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: peter.greis@ubs.com, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Are you going to create 1 big logical volume?
+Hey folks,
 
-If so, I see no need.
-But if you will be creating more than 1 logical volume, then go for it.  It
-would be less work to maintain 1 array, instead of many.
+I didn't find any direct pointers on this issue, so maybe you experts
+can advice me...
 
-Guy
+I was setting up a system, had only one disk at setup time but wanted to
+configure raid 1 in advance...
 
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of peter.greis@ubs.com
-Sent: Monday, November 15, 2004 3:04 AM
-To: linux-raid@vger.kernel.org
-Subject: To LVM, or not LVM ?
+so I used 
 
-Greetings All,
+mdadm --create /dev/md0 --force --run --level=1 --raid-devices=1
+/dev/sda1
 
-I have a SuSE 9.1 server which I am getting ready to stuff 4 SATA drives
-into for extra storage (SIL controller onboard). Using 300GB disks with
-RAID5, this should give me 900GB of usable space, yes ? Anyway, I appeal to
-the list - should I build the array with LVM or not ? Any disadvantages ?
+to create my array.
 
-regards,
+Now as I have the second disk available, after duplicating the partition
+table I wanted to add add /dev/sdb1 to the array. 
 
--Peter
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+But 
+
+mdadm /dev/md0 -a /dev/sdb1 
+
+adds this device as a spare one, so the number of active devices stays
+1. I could use the build command to reinitialise the array, but I wonder
+if there's a way to extend the raiddevice while it's running?
+
+Is there any way to arrange this?
+
+Regards,
+
+Lieven
 
