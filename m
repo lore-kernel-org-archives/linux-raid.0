@@ -1,75 +1,85 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: PATCH - raid0 and linear bvec_mergable fix
-Date: Wed, 13 Nov 2002 09:37:49 +1100
+From: Jakob Oestergaard <jakob@unthought.net>
+Subject: Re: RAID-6
+Date: Wed, 13 Nov 2002 03:13:43 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <15825.33469.482525.408713@notabene.cse.unsw.edu.au>
+Message-ID: <20021113021343.GC22407@unthought.net>
+References: <aqou9k$ou5$1@cesium.transmeta.com> <20021112162205.GB22407@unthought.net> <15825.22660.685310.237185@notabene.cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Linus Torvalds <torvalds@transmeta.com>
-Cc: linux-raid@vger.kernel.org
+Content-Disposition: inline
+In-Reply-To: <15825.22660.685310.237185@notabene.cse.unsw.edu.au>
+To: Neil Brown <neilb@cse.unsw.edu.au>
+Cc: "H. Peter Anvin" <hpa@zytor.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Wed, Nov 13, 2002 at 06:37:40AM +1100, Neil Brown wrote:
+> On Tuesday November 12, jakob@unthought.net wrote:
+> >=20
+> > You might want to consider using huge chunk-sizes when reading, but
+> > making sure that writes can be made on "sub-chunks" - so that one c=
+ould
+> > run a RAID-6 with a 128k chunk size, yet have writes performed on 4=
+k
+> > chunks.  This is important for performance on both read and write, =
+but
+> > it is an optimization the current RAID-5 code lacks.
+>=20
+> Either I misunderstand your point, or you misunderstand the code.
+>=20
+> A 4k write request will cause a 4k write to a data block and a 4k
+> write to a parity block, no matter what the chunk size is. (There may
+> also be pre-reading, and possibly several 4k writes will share a
+> parity block update).
 
-The mergable_bvec functions were mistakenly taking into account the
-length of the passed bvec.
+Writes on a 128k chunk array are significantly slower than writes on a
+4k chunk array, according to someone else on this list   -  I wanted to
+look into this myself, but now is just a bad time for me (nothing new
+on that front).
 
-Also raid0 version changed to work in sectors, not blocks.
+The benchmark goes:
+
+| some tests on raid5 with 4k and 128k chunk size. The results are as f=
+ollows:
+| Access Spec     4K(MBps)        4K-deg(MBps)    128K(MBps) 128K-deg(M=
+Bps)
+| 2K Seq Read     23.015089       33.293993       25.415035  32.669278
+| 2K Seq Write    27.363041       30.555328       14.185889  16.087862
+| 64K Seq Read    22.952559       44.414774       26.02711   44.036993
+| 64K Seq Write   25.171833       32.67759        13.97861   15.618126
+
+So down from 27MB/sec to 14MB/sec running 2k-block sequential writes on
+a 128k chunk array versus a 4k chunk array (non-degraded).
+
+In degraded mode, the writes degenerate from 30MB/sec to 16MB/sec as th=
+e
+chunk-size increases.
+
+Something's fishy.
+
+>=20
+> I see no lacking optimisation, but if you do, I would be keen to hear
+> a more detailed explanation.
+
+Well if a 4k write really only causes a 4k write to disk, even with a
+128k chunk-size array, then something else is happening...
+
+I didn't do the benchmark, and I didn't get to investigate it further
+here, so I can't really say much else productive  :)
 
 
+ / Jakob "linux-raid message multiplexer" =D8stergaard
 
- ----------- Diffstat output ------------
- drivers/md/linear.c |    7 ++-----
- drivers/md/raid0.c  |   16 ++++++++--------
- 2 files changed, 10 insertions(+), 13 deletions(-)
-
-diff drivers/md/linear.c~current~ drivers/md/linear.c
---- drivers/md/linear.c~current~	2002-11-12 15:41:59.000000000 +1100
-+++ drivers/md/linear.c	2002-11-12 15:41:59.000000000 +1100
-@@ -58,15 +58,12 @@ static int linear_mergeable_bvec(request
- {
- 	mddev_t *mddev = q->queuedata;
- 	dev_info_t *dev0;
--	int maxsectors, bio_sectors = (bio->bi_size + biovec->bv_len) >> 9;
-+	unsigned long maxsectors, bio_sectors = bio->bi_size >> 9;
- 
- 	dev0 = which_dev(mddev, bio->bi_sector);
- 	maxsectors = (dev0->size << 1) - (bio->bi_sector - (dev0->offset<<1));
- 
--	if (bio_sectors <= maxsectors)
--		return biovec->bv_len;
+--=20
+=2E...............................................................
+:   jakob@unthought.net   : And I see the elder races,         :
+:.........................: putrid forms of man                :
+:   Jakob =D8stergaard      : See him rise and claim the earth,  :
+:        OZ9ABN           : his downfall is at hand.           :
+:.........................:............{Konkhra}...............:
 -
--	return (maxsectors << 9) - bio->bi_size;
-+	return (maxsectors - bio_sectors) << 9;
- }
- 
- static int linear_run (mddev_t *mddev)
-
-diff drivers/md/raid0.c~current~ drivers/md/raid0.c
---- drivers/md/raid0.c~current~	2002-11-12 15:41:59.000000000 +1100
-+++ drivers/md/raid0.c	2002-11-12 15:41:59.000000000 +1100
-@@ -173,15 +173,15 @@ static int create_strip_zones (mddev_t *
- static int raid0_mergeable_bvec(request_queue_t *q, struct bio *bio, struct bio_vec *biovec)
- {
- 	mddev_t *mddev = q->queuedata;
--	sector_t block;
--	unsigned int chunk_size;
--	unsigned int bio_sz;
-+	sector_t sector;
-+	unsigned int chunk_sectors;
-+	unsigned int bio_sectors;
-+
-+	chunk_sectors = mddev->chunk_size >> 9;
-+	sector = bio->bi_sector;
-+	bio_sectors = bio->bi_size >> 9;
- 
--	chunk_size = mddev->chunk_size >> 10;
--	block = bio->bi_sector >> 1;
--	bio_sz = (bio->bi_size + biovec->bv_len) >> 10;
--
--	return (chunk_size - ((block & (chunk_size - 1)) + bio_sz)) << 10;
-+	return (chunk_sectors - ((sector & (chunk_sectors - 1)) + bio_sectors)) << 9;
- }
- 
- static int raid0_run (mddev_t *mddev)
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
