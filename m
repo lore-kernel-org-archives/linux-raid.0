@@ -1,39 +1,54 @@
-From: "Vicky Gonzalez" <vgonzalez@stoneflynetworks.com>
-Subject: RE: Ways to query RAID status
-Date: Mon, 14 Apr 2003 11:41:33 -0700
+From: "Peter T. Breuer" <ptb@it.uc3m.es>
+Subject: Re: async writes in raid1
+Date: Mon, 14 Apr 2003 21:32:18 +0200 (MET DST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <05331901808F5A4CAEEAD68170C528282DF2D0@molokai.stoneflynetworks.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Message-ID: <200304141932.h3EJWI909629@oboe.it.uc3m.es>
+Reply-To: ptb@it.uc3m.es
 Return-path: <linux-raid-owner@vger.kernel.org>
-content-class: urn:content-classes:message
-To: Sean Kormilo <skormilo@nortelnetworks.com>
-Cc: Linux-RAID mailinglist <linux-raid@vger.kernel.org>
+In-Reply-To: From "(env:" "ptb)" at "Apr 14, 2003 09:24:03 pm"
+To: ptb@it.uc3m.es
+Cc: Paul Clements <Paul.Clements@SteelEye.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Sean,
+"A month of sundays ago ptb wrote:"
+> > Actually, I think you want to make sure, in the async case, that the
+> > write to the _primary_ disk completes, as opposed to just the first
+> > write...I think you could get the I/O completing out of order, right?
+> 
+> Hmm .. that's a point. It's not a question of out of order, so much as
+> we want to give the maximum chance of getting one successful write and
 
-you wrote:
->>It depends upon what you are trying to monitor, and how you are trying
-to monitor it.>>
+Ooops .. I looked up the wrong bit of code in my reply. I looked at the
+final end_req, instead of the mirrored i/o end_req. Yes, don't worry,
+it's already done right. The ack happens early only if there is success
+to report ("uptodate" is set)..
 
->>You have the following basic options:>>
->>1) /proc/mdstat>>
->>2) mdadm (from Neil Brown - should be many references to it on the
-mailing list archives)>>
->>3) ioctl (if you want to query from a C program)>>
 
->>The ioctl interface is missing the ability to query raid rebuild status.
-If that is something  which interests you, let me know as I created a
-small patch to add a new ioctl to query raid rebuild information.>>
+        /*
+         * WRITE:
+         *
+         * Let's see if all mirrored write operations have finished 
+         * already.
+         *
+         * In any case, do the end io early on the master bh if we are
+         * uptodate, and AsyncIO is set on the bh. We set AsyncPhase
+         * when this happens, so we don't do it twice, inadvertently.
+         */
 
-I am currently monitoring the /proc/mdstat file for the current status, i.e. if there was a Failure detected, if it is currently in the rebuild stage and if there is only one disk currently active, as well as if it is in a good state. This is being done from a perl daemon that is a System V startup process, but it can easily be moved to a C program. 
+        if (uptodate
+        &&  test_bit(R1BH_AsyncIO, &r1_bh->state)
+        && !test_and_set_bit(R1BH_AsyncPhase, &r1_bh->state)) {
 
-What some initial testing has found is that during the query of the mdstat file, it was preventing some of our other processes from running. The initial theory is that the opening/closing of the mdstat file to read it is the culprit. So I am looking into moving it to C and monitoring it via an ioctl call with the hopes of streamlining the status checking process. 
+                struct buffer_head *mbh = r1_bh->master_bh;
 
-Where would I find the appropriate ioctl calls to make in my program? 
+                raid1_conf_t *conf = mddev_to_conf(r1_bh->mddev);
 
-Thanks again Sean for the quick response.
-~Vicky
+                PRINTK(KERN_DEBUG "raid1: async end i/o on sectors %lu-%lu\n",
+                        mbh->b_rsector, mbh->b_rsector + (mbh->b_size >> 9) - 1);
 
+                io_request_done(mbh->b_rsector, conf,
+                        test_bit(R1BH_SyncPhase, &r1_bh->state));
+                mbh->b_end_io(mbh, uptodate);
+        }
+
+Peter
