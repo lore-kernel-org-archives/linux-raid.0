@@ -1,35 +1,58 @@
-From: Danilo Godec <danci@agenda.si>
-Subject: Re: Fw: DriveReady SeekComplete problems
-Date: Mon, 13 May 2002 08:22:28 +0200 (CEST)
+From: Maxim Frolov <wrungel@web.de>
+Subject: Re: Re: RAID1 failure recovery
+Date: Tue, 14 May 2002 07:56:52 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.30.0205130817280.20245-100000@duplo.agenda.si>
-References: <003401c1fa38$6e3ba600$050010ac@niunia.org>
+Message-ID: <200205140556.g4E5upX09454@mailgate5.cinetic.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <003401c1fa38$6e3ba600$050010ac@niunia.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, 12 May 2002, Artur Jasowicz wrote:
+I checked the partition type of my  RAID1 disk. It was FreeBSD (not 0xFD  - Linux Raid Autodetect)!
 
-> As long as DMA was on, I couldn't complete syncing array after configuring
-> it. Contstant lockups. After I did hdparm -d 0 /dev/hd[e,g,i,k] the arrays
-> synced and seem to be working correctly now. I need to develop a way of
-> checking for data corruption. Of course the price is the speed. With DMA on
-> I was getting 2000K/s syncing speed. without DMA - 800K. I am running plain
+I changed it to 0xFD.
+I changed also boot=/dev/hda to boot=/dev/md0 in my lilo.conf and everything began working well!
 
-I'm used to sync speeds above 20000K/s these days. With DMA, of course.
-
-> Is your CPU usage also close to 100% when using RAID?
-
-Nope, not even close. But having the DMA turned off is certanly a way to
-put a lot of load on your CPU(s).
-
-It seems that either the HPTs have a design flaw or the driver is not
-fully supporting them.
+Thanks a lot to all people in this mailing list, who helped me with my problem!
 
 
-  D.
+---------------
+Maxim Frolov
+
+
+Neil Brown <neilb@cse.unsw.edu.au> schrieb am 10.05.02:
+> > My questions is: How do I recover the failed RAID1 disk (dev/hda1)?
+> > What I did wrong?
+> > 
+> You forgot to set the partition time of /dev/hda1 to "Linux RAID
+> autodetect" or whatever it is meant to be.
+
+
+Alvin Oga <aoga@Maggie.Linux-Consulting.com> schrieb am 11.05.02:
+> hi ya maxim
+> 
+> i'd also double check lilo.conf 
+> 	boot=/dev/md0
+> 	...
+> 	root=/dev/md0
+> 
+> i've seen people use 
+> 	boot=/dev/hda   
+> 
+> 	and make  different one on /dev/hdc w/ boot=/dev/hdc
+> 
+> what did suse-8 do to these lilo configs??
+> 
+> and as neil says...  check that its FD partition type ( not ext2 )
+
+michael@insulin-pumpers.org schrieb am 10.05.02:
+> change the partiton type to FD
+> > 
+
+________________________________________________________________
+Keine verlorenen Lotto-Quittungen, keine vergessenen Gewinne mehr! 
+Beim WEB.DE Lottoservice: http://tippen2.web.de/?x=13
 
 
