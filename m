@@ -1,236 +1,147 @@
 From: Paul Clements <paul.clements@steeleye.com>
-Subject: [PATCH 1/2] md bitmap bug fixes
-Date: Wed, 09 Mar 2005 17:18:09 -0500
-Message-ID: <422F7621.8090602@steeleye.com>
+Subject: [PATCH 2/2] md bitmap bug fixes
+Date: Wed, 09 Mar 2005 17:19:54 -0500
+Message-ID: <422F768A.8010109@steeleye.com>
+References: <422F7621.8090602@steeleye.com>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="------------050102080507000303080001"
+ boundary="------------060006010702010203070006"
+In-Reply-To: <422F7621.8090602@steeleye.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: neilb@cse.unsw.edu.au
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 This is a multi-part message in MIME format.
---------------050102080507000303080001
+--------------060006010702010203070006
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 
-Neil,
+Here's the mdadm patch...
 
-here are a couple of patches -- this one for the kernel, the next for 
-mdadm. They fix a few issues that I found while testing the new bitmap 
-intent logging code.
+Paul Clements wrote:
+> Neil,
+> 
+> here are a couple of patches -- this one for the kernel, the next for 
+> mdadm. They fix a few issues that I found while testing the new bitmap 
+> intent logging code.
+> 
+> Briefly, the issues were:
+> 
+> kernel:
+> 
+> added call to bitmap_daemon_work() from raid1d so that the bitmap would 
+> actually get cleared
+> 
+> fixed the marking of pages with BITMAP_CLEAN so that the bitmap would 
+> get cleared correctly after resync and normal write I/O
+> 
+> pass back errors from write_page() since it now does actual writes itself
+> 
+> sync_size changed to sectors (was array_size which was KB) -- some 
+> divisions by 2 were needed
+> 
+> mdadm:
+> 
+> avoid setting of sb->events_lo = 1 when creating a 0.90 superblock -- it 
+> doesn't seem to be necessary and it was causing the event counters to 
+> start at 4 billion+ (events_lo is actually the high part of the events 
+> counter, on little endian machines anyway)
+> 
+> some sync_size changes, as in the kernel
+> 
+> if'ed out super1 definition which is now in the kernel headers
+> 
+> included sys/time.h to avoid compile error
+> 
+> 
+> Thanks,
+> Paul
 
-Briefly, the issues were:
-
-kernel:
-
-added call to bitmap_daemon_work() from raid1d so that the bitmap would 
-actually get cleared
-
-fixed the marking of pages with BITMAP_CLEAN so that the bitmap would 
-get cleared correctly after resync and normal write I/O
-
-pass back errors from write_page() since it now does actual writes itself
-
-sync_size changed to sectors (was array_size which was KB) -- some 
-divisions by 2 were needed
-
-mdadm:
-
-avoid setting of sb->events_lo = 1 when creating a 0.90 superblock -- it 
-doesn't seem to be necessary and it was causing the event counters to 
-start at 4 billion+ (events_lo is actually the high part of the events 
-counter, on little endian machines anyway)
-
-some sync_size changes, as in the kernel
-
-if'ed out super1 definition which is now in the kernel headers
-
-included sys/time.h to avoid compile error
-
-
-Thanks,
-Paul
-
---------------050102080507000303080001
+--------------060006010702010203070006
 Content-Type: text/plain;
- name="md_bitmap_3_38_bug_fix.diff"
+ name="mdadm_2_0_devel_1_bitmap_bug_fix.diff"
 Content-Transfer-Encoding: 7bit
 Content-Disposition: inline;
- filename="md_bitmap_3_38_bug_fix.diff"
+ filename="mdadm_2_0_devel_1_bitmap_bug_fix.diff"
 
-
-Signed-Off-By: Paul Clements <paul.clements@steeleye.com>
-
- bitmap.c |   58 +++++++++++++++++++++++++++++++++-------------------------
- raid1.c  |    1 +
- 2 files changed, 34 insertions(+), 25 deletions(-)
-diff -purN --exclude-from /export/public/clemep/tmp/dontdiff linux-2.6.11-rc3-mm2-patch-all/drivers/md/bitmap.c linux-2.6.11-rc3-mm2-patch-all-bitmap-bug-fix/drivers/md/bitmap.c
---- linux-2.6.11-rc3-mm2-patch-all/drivers/md/bitmap.c	Fri Feb 18 15:44:03 2005
-+++ linux-2.6.11-rc3-mm2-patch-all-bitmap-bug-fix/drivers/md/bitmap.c	Wed Mar  9 14:55:03 2005
-@@ -265,6 +265,7 @@ static int write_page(struct page *page,
- {
- 	int ret = -ENOMEM;
+diff -purN --exclude makepkg --exclude rpm --exclude *.DIST --exclude md_u.h --exclude md_p.h --exclude bitmap.h --exclude mdadm.steeleye.spec --exclude-from /export/public/clemep/tmp/dontdiff mdadm-2.0-devel-1-PRISTINE/bitmap.c mdadm-2.0-devel-1-bitmap-bug-fix/bitmap.c
+--- mdadm-2.0-devel-1-PRISTINE/bitmap.c	Sun Feb 13 22:00:00 2005
++++ mdadm-2.0-devel-1-bitmap-bug-fix/bitmap.c	Mon Mar  7 12:15:38 2005
+@@ -168,7 +168,8 @@ bitmap_info_t *bitmap_fd_read(int fd, in
  
-+	PRINTK("bitmap write page %lu\n", page->index);
- 	lock_page(page);
- 
- 	if (page->mapping == NULL)
-@@ -350,8 +351,7 @@ int bitmap_update_sb(struct bitmap *bitm
- 	if (!bitmap->mddev->degraded)
- 		sb->events_cleared = cpu_to_le64(bitmap->mddev->events);
- 	kunmap(bitmap->sb_page);
--	write_page(bitmap->sb_page, 0);
--	return 0;
-+	return write_page(bitmap->sb_page, 0);
- }
- 
- /* print out the bitmap file superblock */
-@@ -363,21 +363,22 @@ void bitmap_print_sb(struct bitmap *bitm
- 		return;
- 	sb = (bitmap_super_t *)kmap(bitmap->sb_page);
- 	printk(KERN_DEBUG "%s: bitmap file superblock:\n", bmname(bitmap));
--	printk(KERN_DEBUG "       magic: %08x\n", le32_to_cpu(sb->magic));
--	printk(KERN_DEBUG "     version: %d\n", le32_to_cpu(sb->version));
--	printk(KERN_DEBUG "        uuid: %08x.%08x.%08x.%08x\n",
-+	printk(KERN_DEBUG "         magic: %08x\n", le32_to_cpu(sb->magic));
-+	printk(KERN_DEBUG "       version: %d\n", le32_to_cpu(sb->version));
-+	printk(KERN_DEBUG "          uuid: %08x.%08x.%08x.%08x\n",
- 					*(__u32 *)(sb->uuid+0),
+ 	if (read_bits < total_bits) { /* file truncated... */
+ 		fprintf(stderr, Name ": WARNING: bitmap file is not large "
+-			"enough for array size %llu!\n\n", info->sb.sync_size);
++			"enough for array size %lluKB (%llu/%llu)!\n\n",
++			info->sb.sync_size / 2, read_bits, total_bits);
+ 		total_bits = read_bits;
+ 	}
+ out:
+@@ -226,13 +227,16 @@ int ExamineBitmap(char *filename, int br
  					*(__u32 *)(sb->uuid+4),
  					*(__u32 *)(sb->uuid+8),
  					*(__u32 *)(sb->uuid+12));
--	printk(KERN_DEBUG "      events: %llu\n",
-+	printk(KERN_DEBUG "        events: %llu\n",
- 			(unsigned long long) le64_to_cpu(sb->events));
--	printk(KERN_DEBUG "events_clred: %llu\n",
-+	printk(KERN_DEBUG "events cleared: %llu\n",
- 			(unsigned long long) le64_to_cpu(sb->events_cleared));
--	printk(KERN_DEBUG "       state: %08x\n", le32_to_cpu(sb->state));
--	printk(KERN_DEBUG "   chunksize: %d B\n", le32_to_cpu(sb->chunksize));
--	printk(KERN_DEBUG "daemon sleep: %ds\n", le32_to_cpu(sb->daemon_sleep));
--	printk(KERN_DEBUG "   sync size: %llu KB\n", le64_to_cpu(sb->sync_size));
-+	printk(KERN_DEBUG "         state: %08x\n", le32_to_cpu(sb->state));
-+	printk(KERN_DEBUG "     chunksize: %d B\n", le32_to_cpu(sb->chunksize));
-+	printk(KERN_DEBUG "  daemon sleep: %ds\n", le32_to_cpu(sb->daemon_sleep));
-+	printk(KERN_DEBUG "     sync size: %llu KB\n", (unsigned long long)
-+						le64_to_cpu(sb->sync_size) / 2);
- 	kunmap(bitmap->sb_page);
- }
+-	printf("          Events : %llu\n", sb->events);
+-	printf("  Events Cleared : %llu\n", sb->events_cleared);
++	printf("          Events : %llu (%d.%llu)\n", sb->events,
++					(__u32)sb->events, sb->events >> 32);
++	printf("  Events Cleared : %llu (%d.%llu)\n", sb->events_cleared,
++					(__u32)sb->events_cleared,
++					sb->events_cleared >> 32);
+ 	printf("           State : %s\n", bitmap_state(sb->state));
+ 	printf("       Chunksize : %s\n", human_chunksize(sb->chunksize));
+ 	printf("          Daemon : %ds flush period\n", sb->daemon_sleep);
+-	printf("       Sync Size : %llu%s\n", sb->sync_size,
+-					human_size(sb->sync_size * 1024));
++	printf("       Sync Size : %lluKB%s\n", sb->sync_size / 2,
++					human_size(sb->sync_size * 512));
+ 	if (brief)
+ 		goto free_info;
+ 	printf("          Bitmap : %llu bits (chunks), %llu dirty (%2.1f%%)\n",
+diff -purN --exclude makepkg --exclude rpm --exclude *.DIST --exclude md_u.h --exclude md_p.h --exclude bitmap.h --exclude mdadm.steeleye.spec --exclude-from /export/public/clemep/tmp/dontdiff mdadm-2.0-devel-1-PRISTINE/mdstat.c mdadm-2.0-devel-1-bitmap-bug-fix/mdstat.c
+--- mdadm-2.0-devel-1-PRISTINE/mdstat.c	Tue Aug 10 21:28:50 2004
++++ mdadm-2.0-devel-1-bitmap-bug-fix/mdstat.c	Mon Mar  7 11:09:29 2005
+@@ -86,6 +86,7 @@
+ #include	"mdadm.h"
+ #include	"dlink.h"
+ #include	<sys/select.h>
++#include	<sys/time.h>
  
-@@ -734,7 +735,8 @@ int bitmap_unplug(struct bitmap *bitmap)
- 		spin_unlock_irqrestore(&bitmap->lock, flags);
+ void free_mdstat(struct mdstat_ent *ms)
+ {
+diff -purN --exclude makepkg --exclude rpm --exclude *.DIST --exclude md_u.h --exclude md_p.h --exclude bitmap.h --exclude mdadm.steeleye.spec --exclude-from /export/public/clemep/tmp/dontdiff mdadm-2.0-devel-1-PRISTINE/super0.c mdadm-2.0-devel-1-bitmap-bug-fix/super0.c
+--- mdadm-2.0-devel-1-PRISTINE/super0.c	Sun Feb 13 21:59:45 2005
++++ mdadm-2.0-devel-1-bitmap-bug-fix/super0.c	Mon Mar  7 13:27:38 2005
+@@ -364,7 +364,8 @@ static int init_super0(void **sbp, mdu_a
+ 	sb->failed_disks = info->failed_disks;
+ 	sb->spare_disks = info->spare_disks;
+ 	sb->events_hi = 0;
+-	sb->events_lo = 1;
++	// PRC: why? sb->events_lo = 1;
++	sb->events_lo = 0;
  
- 		if (attr & (BITMAP_PAGE_DIRTY | BITMAP_PAGE_NEEDWRITE))
--			write_page(page, 0);
-+			if (write_page(page, 0) != 0)
-+				return 1;
- 	}
- 	if (wait) { /* if any writes were performed, we need to wait on them */
- 		spin_lock_irq(&bitmap->write_lock);
-@@ -795,7 +797,7 @@ static int bitmap_init_from_disk(struct 
- 			bytes + sizeof(bitmap_super_t));
- 		goto out;
- 	}
--	num_pages++;
-+	// PRC: ???: num_pages++;
- 	bitmap->filemap = kmalloc(sizeof(struct page *) * num_pages, GFP_KERNEL);
- 	if (!bitmap->filemap) {
- 		ret = -ENOMEM;
-@@ -953,14 +958,18 @@ int bitmap_daemon_work(struct bitmap *bi
- 
- 		bit = file_page_offset(j);
- 
+ 	sb->layout = info->layout;
+ 	sb->chunk_size = info->chunk_size;
+diff -purN --exclude makepkg --exclude rpm --exclude *.DIST --exclude md_u.h --exclude md_p.h --exclude bitmap.h --exclude mdadm.steeleye.spec --exclude-from /export/public/clemep/tmp/dontdiff mdadm-2.0-devel-1-PRISTINE/super1.c mdadm-2.0-devel-1-bitmap-bug-fix/super1.c
+--- mdadm-2.0-devel-1-PRISTINE/super1.c	Sun Feb 13 22:00:44 2005
++++ mdadm-2.0-devel-1-bitmap-bug-fix/super1.c	Mon Mar  7 11:34:16 2005
+@@ -37,6 +37,7 @@
+  * total size: 256 bytes plus 2 per device.
+  *  1K allows 384 devices.
+  */
++#if 0 // already in kernel headers:
+ struct mdp_superblock_1 {
+ 	/* constant array information - 128 bytes */
+ 	__u32	magic;		/* MD_SB_MAGIC: 0xa92b4efc - little endian */
+@@ -82,6 +83,8 @@ struct mdp_superblock_1 {
+ 	 */
+ 	__u16	dev_roles[0];	/* role in array, or 0xffff for a spare, or 0xfffe for faulty */
+ };
 +
- 		if (page != lastpage) {
-+			PRINTK("bitmap clean at page %lu\n", j);
- 			/* grab the new page, sync and release the old */
- 			page_cache_get(page);
- 			if (lastpage != NULL) {
- 				if (get_page_attr(bitmap, lastpage) & BITMAP_PAGE_NEEDWRITE) {
- 					clear_page_attr(bitmap, lastpage, BITMAP_PAGE_NEEDWRITE);
- 					spin_unlock_irqrestore(&bitmap->lock, flags);
--					write_page(lastpage, 0);
-+					err = write_page(lastpage, 0);
-+					/* we're done cleaning */
-+					clear_page_attr(bitmap, lastpage, BITMAP_PAGE_CLEAN);
- 				} else {
- 					set_page_attr(bitmap, lastpage, BITMAP_PAGE_NEEDWRITE);
- 					spin_unlock_irqrestore(&bitmap->lock, flags);
-@@ -969,22 +978,21 @@ int bitmap_daemon_work(struct bitmap *bi
- 				page_cache_release(lastpage);
- 				if (err)
- 					bitmap_file_kick(bitmap);
-+				/* we're done cleaning this page */
-+				clear_page_attr(bitmap, lastpage, BITMAP_PAGE_CLEAN);
- 			} else
- 				spin_unlock_irqrestore(&bitmap->lock, flags);
- 			lastpage = page;
- 			kmap(page);
--/*
--			printk("bitmap clean at page %lu\n", j);
--*/
-+
- 			spin_lock_irqsave(&bitmap->lock, flags);
--			clear_page_attr(bitmap, page, BITMAP_PAGE_CLEAN);
- 		}
- 		bmc = bitmap_get_counter(bitmap, j << CHUNK_BLOCK_SHIFT(bitmap),
- 					&blocks, 0);
- 		if (bmc) {
--/*
--  if (j < 100) printk("bitmap: j=%lu, *bmc = 0x%x\n", j, *bmc);
--*/
-+
-+PRINTK("bitmap: j=%lu, *bmc = 0x%x\n", j, *bmc);
-+
- 			if (*bmc == 2) {
- 				*bmc=1; /* maybe clear the bit next time */
- 				set_page_attr(bitmap, page, BITMAP_PAGE_CLEAN);
-@@ -1005,10 +1013,12 @@ int bitmap_daemon_work(struct bitmap *bi
- 	if (lastpage != NULL) {
- 		kunmap(lastpage);
- 		spin_lock_irqsave(&bitmap->lock, flags);
--		if (get_page_attr(bitmap, lastpage) &BITMAP_PAGE_NEEDWRITE) {
-+		if (get_page_attr(bitmap, lastpage) & BITMAP_PAGE_NEEDWRITE) {
- 			clear_page_attr(bitmap, lastpage, BITMAP_PAGE_NEEDWRITE);
- 			spin_unlock_irqrestore(&bitmap->lock, flags);
--			write_page(lastpage, 0);
-+			err = write_page(lastpage, 0);
-+			/* we're done cleaning and we've written the page out */
-+			clear_page_attr(bitmap, lastpage, BITMAP_PAGE_CLEAN);
- 		} else {
- 			set_page_attr(bitmap, lastpage, BITMAP_PAGE_NEEDWRITE);
- 			spin_unlock_irqrestore(&bitmap->lock, flags);
-@@ -1118,7 +1128,7 @@ static int bitmap_start_daemon(struct bi
- 	md_wakeup_thread(daemon); /* start it running */
++#endif
  
- 	PRINTK("%s: %s daemon (pid %d) started...\n", 
--		bmname(bitmap), name, bitmap->daemon->tsk->pid);
-+		bmname(bitmap), name, daemon->tsk->pid);
- out_unlock:
- 	spin_unlock_irqrestore(&bitmap->lock, flags);
- 	return 0;
-@@ -1381,7 +1404,8 @@ int bitmap_setallbits(struct bitmap *bit
- 		spin_unlock_irqrestore(&bitmap->lock, flags);
- 		memset(kmap(page), 0xff, PAGE_SIZE);
- 		kunmap(page);
--		write_page(page, 0);
-+		if (write_page(page, 0) != 0)
-+			return 1;
- 	}
- 
- 	return 0;
-diff -purN --exclude-from /export/public/clemep/tmp/dontdiff linux-2.6.11-rc3-mm2-patch-all/drivers/md/raid1.c linux-2.6.11-rc3-mm2-patch-all-bitmap-bug-fix/drivers/md/raid1.c
---- linux-2.6.11-rc3-mm2-patch-all/drivers/md/raid1.c	Fri Feb 18 15:44:03 2005
-+++ linux-2.6.11-rc3-mm2-patch-all-bitmap-bug-fix/drivers/md/raid1.c	Mon Mar  7 15:25:52 2005
-@@ -1001,6 +1003,7 @@ static void raid1d(mddev_t *mddev)
- 	mdk_rdev_t *rdev;
- 
- 	md_check_recovery(mddev);
-+	bitmap_daemon_work(mddev->bitmap);
- 	
- 	for (;;) {
- 		char b[BDEVNAME_SIZE];
+ #ifndef offsetof
+ #define offsetof(t,f) ((int)&(((t*)0)->f))
 
---------------050102080507000303080001--
+--------------060006010702010203070006--
