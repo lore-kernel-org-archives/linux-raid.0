@@ -1,32 +1,28 @@
-From: Stephan van Hienen <raid@a2000.nu>
+From: Andy Arvai <arvai@scripps.edu>
 Subject: Re: RAID 5 performance problems
-Date: Thu, 3 Apr 2003 21:22:50 +0200 (CEST)
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.53.0304032120490.3085@ddx.a2000.nu>
-References: <73300040777B0F44B8CE29C87A0782E101FA97B2@exchange.explainerdc.com>
- <Pine.GSO.4.30.0304030858080.20118-100000@multivac.sdsc.edu>
- <20030403184756.GA7971@willow.seitz.com>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <20030403184756.GA7971@willow.seitz.com>
-To: Ross Vandegrift <ross@willow.seitz.com>
-Cc: "Peter L. Ashford" <ashford@sdsc.edu>, Jonathan Vardy <jonathan@explainerdc.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Thu, 3 Apr 2003 11:49:42 -0800 (PST)
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <200304031949.LAA28555@astra.scripps.edu>
+Return-path: <linux-raid-owner@vger.kernel.org>
+To: linux-raid@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 3 Apr 2003, Ross Vandegrift wrote:
 
-> > I've benchmarked RAW disk speeds with an Ultra-100 and
-> > WD1200JB drives, and gotten 50MB/S from each disk, as opposed to your
-> > 26MB/S (there should be almost no difference for the BB drives).
->
-> Makes perfect sense - he's getting 50M/s to each channel, but it's split
-> over two drives, so drive throughput is about halved.
-the fasttrak-tx4 is an 4 channel controller (it is an dual ultra-100 on 1
-pci board)
-Jonathans WD1200BB's should be a bit faster than 30MB/sec maybe, but the
-main problem is his /dev/md0...
+Shouldn't /proc/mdstat have [UUUUU] instead of [_UUUU]? Perhaps
+this is running in degraded mode. Also, you have 'algorithm 0',
+whereas my raid5 has 'algorithm 2', which is the left-symmetric
+parity algorithm.
 
-> Absolutely correct - you should *never* run IDE RAID on a channel that
-> has both a master and slave.  When one disk on an IDE channel has an
-Jonathan is only using master devices, no slaves...
+Andy 
+
+> cat /proc/mdstat gives: 
+> 
+> Personalities : [raid0] [raid5] 
+> read_ahead 1024 sectors
+> md0 : active raid5 hdk1[4] hdi1[3] hdg1[2] hde1[1] hdc1[0]
+> 	468872704 blocks level 5, 128k chunk, algorithm 0 [5/5] [_UUUU]
+> unused devices: <none>
+
+
+
