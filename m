@@ -1,68 +1,40 @@
-From: "N.knaul" <supportlivestock@quoteland.com>
-Subject: New O E M software
-Date: Fri, 06 Aug 2004 10:53:48 +0900
+From: Jim Paris <jim@jtan.com>
+Subject: Re: Kernel panic, FS corruption  Was: Re: Call for RAID-6 users
+Date: Fri, 6 Aug 2004 00:04:39 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <hqghumeayl.6189279543lfdxfircvs@N.knaulxggbwkf.com>
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
+Message-ID: <20040806040439.GA21258@jim.sh>
+References: <cds76e$ee7$1@terminus.zytor.com> <200407310228.27969.maarten@ultratux.net> <200408011503.20452.maarten@ultratux.net> <20040801180536.GA3897@jim.sh> <ceuhbm$rgs$1@terminus.zytor.com> <20040806001909.GA19760@jim.sh> <4112D2A1.9000001@zytor.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-diald@vger.kernel.org, linux-kernel-owner@vger.kernel.org, linux-kernel@vger.kernel.org, linux-net@vger.kernel.org, linux-raid@vger.kernel.org, linux-scsi-digest@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Disposition: inline
+In-Reply-To: <4112D2A1.9000001@zytor.com>
+To: "H. Peter Anvin" <hpa@zytor.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-O E M (Original Equipment Manufacturer) software includes all essential
-components of Microsoft Retail products excluding support from Microsoft.
-Retail version comes in a fancy box, O E M does not. You will receive
-installation CDs only (no original retail packing).
-Although O E M software does not come with a box or a manual, it is the
-typical and actual software, no trial or demo versions.
+> If you can reproduce it with ext2/3 it would make debugging simpler, 
+> because I understand the ext code and data structures a lot better.
 
-http://www.sunnynoon.com/
+This demonstrates it on ext2.  I can't seem to reproduce it with just
+simple use of 'dd', but it shows up if I untar a ton of data.
 
-RedHat Linux 9.0
-Retail price: $79.99
-Our low Price: $60.00
-You Save: $19.99
+This script:
+- creates five 100MB "disks" through loopback
+- puts them in a six-disk RAID-6 array (resulting size=400MB, degraded)
+- untars about 350MB of data to the array
+- runs e2fsck, which shows filesystem errors
 
-Adobe Photoshop CS V 8.0 PC
-Retail price: $609.99
-Our low Price: $80.00
-You Save: $529.99
+Usage: 
+- put r6ext.sh and big.tar.bz2 in a directory
+- run r6ext.sh as root
 
-Adobe Pagemaker V 7.0 PC
-Retail price: $599.95
-Our low Price: $80.00
-You Save: $519.95
-   
-Adobe Illustrator CS V 11.0 PC
-Retail price: $599.95
-Our low Price: $80.00
-You Save: $519.95
+Sorry for the huge files, but e2fsck didn't show any problems when I
+scaled everything down by a factor of 10.  You could probably make
+your own big.tar.bz2 and see the same problem, as there's nothing
+special about this data.
 
-CorelDraw Graphics Suite V 12 PC
-Retail price: $349.95
-Our low Price: $100.00
-You Save: $249.95
-   
-Microsoft SQL Server 2000
-Retail price: $1450.00
-Our low Price: $90.00
-You Save: $1360.00
+  http://stonewall.mit.edu/~jim/r6ext.sh
+  http://stonewall.mit.edu/~jim/big.tar.bz2 (77MB)
 
-Microsoft Office XP Professional
-Retail price: $499.95
-Our low Price: $100.00
-You Save: $399.95
-
-Microsoft Windows 2000 Professional
-Retail price: $320.00
-Our low Price: $50.00
-You Save: $270.00
- 
-Symantec Norton Antivirus 2004 Professional
-Retail price: $69.95
-Our low Price: $15.00
-You Save: $54.95
-
-or site is http://www.sunnynoon.com/
-
-
+-jim
