@@ -1,51 +1,27 @@
 From: Daniel Brahneborg <daniel.com@wtnord.net>
-Subject: Re: BUG: Data corruption on Raid5 in Linux 2.6.0
-Date: Sun, 28 Dec 2003 09:17:22 +0100
-Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20031228091722.B4400@nettis.grimsta>
-References: <20031228000008.B2433@nettis.grimsta> <16366.28299.160756.494452@notabene.cse.unsw.edu.au>
+Subject: Re: siimage and two nics
+Date: Sun, 28 Dec 2003 15:49:33 +0100
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <20031228154933.A5275@nettis.grimsta>
+References: <20031226085450.A4045@nettis.grimsta> <34449.209.163.161.49.1072444479.squirrel@mail.clanhk.org> <20031226195705.B4045@nettis.grimsta> <3FEBAFA5.8020604@clanhk.org> <20031226232826.A7057@nettis.grimsta> <3FEBCA3C.5000803@clanhk.org> <20031227083050.A8631@nettis.grimsta> <3FECD15B.1010004@clanhk.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <16366.28299.160756.494452@notabene.cse.unsw.edu.au>; from neilb@cse.unsw.edu.au on Sun, Dec 28, 2003 at 04:47:55PM +1100
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: Daniel Brahneborg <daniel.com@wtnord.net>, mingo@redhat.com, linux-raid@vger.kernel.org
+In-Reply-To: <3FECD15B.1010004@clanhk.org>; from heretic@clanhk.org on Sat, Dec 27, 2003 at 12:24:59AM +0000
+To: "J. Ryan Earl" <heretic@clanhk.org>
+Cc: Daniel Brahneborg <daniel.com@wtnord.net>, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, Dec 28, 2003 at 04:47:55PM +1100, Neil Brown wrote:
-> On Sunday December 28, daniel.com@wtnord.net wrote:
-> > I have a Raid5 system of four 160GB SATA disks. The drives
-> > themselves work fine, but when large files (a few hundred
-> > megs) are written to the raid disks they get corrupted after
-> > a random amount of data.  The kernel is Linus 2.6.0.
-> > 
-> > Any hints you can give me to get this working is highly
-> > appreciated.
-> 
-> What file system?
+On Sat, Dec 27, 2003 at 12:24:59AM +0000, J. Ryan Earl wrote:
+> I suggest the -mm tree, it includes all the patches for the siimage 
+> driver, plus many more.  It has been stable in my testing.
 
-XFS. I've tested a "cp a b; md5sum a b" on a 500MB file on both
-the Raid disk as well as a normal partition on one of the disks,
-and the latter works perfectly every time while the former fails
-every time.
+I just tried that, but with the same data corruption problem
+as with Linus tree: Writing large files on a raid5 disk causes
+random data corruption.
 
-> Are you using DeviceMapper over the raid5?
-
-Yes.
-
-> If you are using DeviceMapper, can you try without it?
-> (I don't think there is a proble with DeviceMapper, but it drives
-> raid5 slightly differently to e.g. direct ext3 and could trigger a bug
-> in raid5.)
-
-I get the same problem without it, just a few more "dma_intr:
-DriveReady SeekComplete Error" in the syslog.
-
-There seems to be various opinions on whether to use the siimage
-driver or the sata_sil driver with a Sil3112 SATA card.  For me
-there isn't much choice though, since the sata_sil driver makes
-my machine crash when I activate the second network card.
+I seem to get less DMA problems now though, which is very nice.
 
 /Basic
 
