@@ -1,161 +1,77 @@
-From: Mikko Saukkoriipi <Mikko.Saukkoriipi@mbnet.fi>
-Subject: Problems with raidreconf and RAID-5
-Date: Thu, 22 Aug 2002 14:18:21 +0300
+From: Chris Zimmerman <czimmer@mclaneco.com>
+Subject: Re: Perhaps this has been answered before...
+Date: 22 Aug 2002 09:47:20 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3D64C87D.5809A077@mbnet.fi>
+Message-ID: <1030027640.31114.83.camel@zimmerman>
+References: <Pine.OSF.4.30.0208212024340.15250-100000@soul.helsinki.fi>
+	<3D63D0BD.50005@hum.auc.dk>  <20020821235326.GE5617@unthought.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature";
+	boundary="=-It07cvd4atHefAkSli2e"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20020821235326.GE5617@unthought.net>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-  I have been testing raidreconf and I've been able to add a new disk to
-a RAID-0 array, but trying to convert RAID-0 to RAID-5 or add a new disk
-to RAID-5 have failed.
-  Just before the conversion has finished or some times even at
-beginning I get and error "raid5_map_global_to_local: disk 0 block out
-of range: 488098 (487840) gblock = 1464296" or similar and raidreconf
-aborts.
-  I'll add below script of the program running as well the used raidtabs
-and listings of partitiontables. The example is from adding a new disk
-to a 3 drive RAID-5 array. raidreconf version is "raidreconf 0.1.1 for
-mkraid version 0.90.0".
 
-Also, what file is gmon.out? It appears after running raidreconf, but
-the documentation didn't mention anything about it.
+--=-It07cvd4atHefAkSli2e
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-Thank you.
-Mikko Saukkoriipi
+Based on this, I have upgraded the system to 2.4.19.  Since this is a
+cluster, I will run this kernel on the secondary (and it seems to be
+working fine so far), then I will push this to the primary after about
+30-60 days of stable operation.  Thanks to all for the suggestions and
+help.=20
 
+Chris Zimmerman=20
 
-Script started on Wed Aug 21 11:19:42 2002
-battousai:~/temp/raid5-add-sda1_v3# raidstop /dev/md0
-battousai:~/temp/raid5-add-sda1_v3# raidreconf -o raidtab.old -n
-raidtab.new -m /dev/md0
-Working with device /dev/md0
-Parsing raidtab.old
-Parsing raidtab.new
-Size of old array: 11714787 blocks,  Size of new array: 15622339 blocks
-Old raid-disk 0 has 487840 chunks, 1951360 blocks
-Old raid-disk 1 has 488224 chunks, 1952896 blocks
-Old raid-disk 2 has 488224 chunks, 1952896 blocks
-New raid-disk 0 has 487840 chunks, 1951360 blocks
-New raid-disk 1 has 488224 chunks, 1952896 blocks
-New raid-disk 2 has 488224 chunks, 1952896 blocks
-New raid-disk 3 has 488416 chunks, 1953664 blocks
-Using 4 Kbyte blocks to move from 4 Kbyte chunks to 4 Kbyte chunks.
-Detected 254836 KB of physical memory in system
-A maximum of 2123 outstanding requests is allowed
----------------------------------------------------
-I will grow your old device /dev/md0 of 976448 blocks
-to a new device /dev/md0 of 1464864 blocks
-using a block-size of 4 KB
-Is this what you want? (yes/no): yes
-Converting 976448 block device to 1464864 block device
-Allocated free block map for 3 disks
-4 unique disks detected.
-Working (-) [00000000/00976448]
-[                                            ]
-...
-Working (-) [00974103/00976448]
-[########################################### ]
-raid5_map_global_to_local: disk 0 block out of range: 487840 (487840)
-gblock = 975681
-Aborted
-battousai:~/temp/raid5-add-sda1_v3# exit
+On Wed, 2002-08-21 at 18:53, Jakob Oestergaard wrote:
+    On Wed, Aug 21, 2002 at 07:41:17PM +0200, Mads Peter Bach wrote:
+    ...
+    > >I however do not see why this should freeze your machine.
+    >=20
+    >=20
+    > Me neither. Swap on RAID-1 works fine for me (though on 2.4).
+   =20
+    RAID in 2.2 is seriously broken unless the RAID patches are applied.
+   =20
+    With the patches, there are problems with stability in the case where
+    you actually swap on the RAID device.
+   =20
+    With a recent 2.4 kernel, the swap stability problem should be gone. At
+    least swapping on RAID-1 works for me as well, on several systems here.
+   =20
+    So just don't swap on RAID if you're on 2.2  :)   On 2.4 it should work=
+.
+   =20
+    --=20
+    ................................................................
+    :   jakob@unthought.net   : And I see the elder races,         :
+    :.........................: putrid forms of man                :
+    :   Jakob =D8stergaard      : See him rise and claim the earth,  :
+    :        OZ9ABN           : his downfall is at hand.           :
+    :.........................:............{Konkhra}...............:
+    -
+    To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+    the body of a message to majordomo@vger.kernel.org
+    More majordomo info at  http://vger.kernel.org/majordomo-info.html
+   =20
+   =20
+   =20
 
-Script done on Wed Aug 21 13:01:09 2002
+--=-It07cvd4atHefAkSli2e
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.0.6 (GNU/Linux)
+Comment: For info see http://www.gnupg.org
 
-Original raidtab:
+iD8DBQA9ZPl49u4GRRZAJ2YRAgVqAJ9gwxSqUOi5JCGOzjx16ByfMMrM8QCgr+Si
+0wUrw8wI3UytyAvRFghpcps=
+=LZJ+
+-----END PGP SIGNATURE-----
 
-raiddev /dev/md0
-        raid-level      5
-        nr-raid-disks   3
-        nr-spare-disks  0
-        persistent-superblock   1
-        parity-algorithm        left-symmetric
-        chunk-size      4
-        device          /dev/hdb1
-        raid-disk       0
-        device          /dev/hdc1
-        raid-disk       1
-        device          /dev/hdd1
-        raid-disk       2
-
-New raidtab:
-
-raiddev /dev/md0
-        raid-level      5
-        nr-raid-disks   4
-        nr-spare-disks  0
-        persistent-superblock   1
-        parity-algorithm        left-symmetric
-        chunk-size      4
-        device          /dev/hdb1
-        raid-disk       0
-        device          /dev/hdc1
-        raid-disk       1
-        device          /dev/hdd1
-        raid-disk       2
-        device          /dev/sda1
-        raid-disk       3
-
-Listing of partitions from fdisk -l:
-
-Partitiontable for /dev/hda
-
-Disk /dev/hda: 255 heads, 63 sectors, 523 cylinders
-Units = cylinders of 16065 * 512 bytes
-
-   Device Boot    Start       End    Blocks   Id  System
-/dev/hda1   *         1         4     32098+  83  Linux
-/dev/hda2             5       523   4168867+   5  Extended
-/dev/hda5             5        35    248976   82  Linux swap
-/dev/hda6            36       523   3919828+  83  Linux
----
-
-Partitiontable for /dev/hdb
-
-Disk /dev/hdb: 128 heads, 63 sectors, 621 cylinders
-Units = cylinders of 8064 * 512 bytes
-
-   Device Boot    Start       End    Blocks   Id  System
-/dev/hdb1             1       484   1951456+  fd  Linux raid autodetect
----
-
-Partitiontable for /dev/hdc
-
-Disk /dev/hdc: 16 heads, 63 sectors, 4200 cylinders
-Units = cylinders of 1008 * 512 bytes
-
-   Device Boot    Start       End    Blocks   Id  System
-/dev/hdc1             1      3875   1952968+  fd  Linux raid autodetect
----
-
-Partitiontable for /dev/hdd
-
-Disk /dev/hdd: 16 heads, 63 sectors, 4200 cylinders
-Units = cylinders of 1008 * 512 bytes
-
-   Device Boot    Start       End    Blocks   Id  System
-/dev/hdd1             1      3875   1952968+  fd  Linux raid autodetect
----
-Partitiontable for /dev/sda
-
-Disk /dev/sda: 64 heads, 32 sectors, 2006 cylinders
-Units = cylinders of 2048 * 512 bytes
-
-   Device Boot    Start       End    Blocks   Id  System
-/dev/sda1             1      1908   1953776   fd  Linux raid autodetect
----
-
-Partitiontable for /dev/sdb
-
-Disk /dev/sdb: 64 heads, 32 sectors, 2006 cylinders
-Units = cylinders of 2048 * 512 bytes
-
-   Device Boot    Start       End    Blocks   Id  System
-/dev/sdb1             1      2006   2054128   83  Linux
----
+--=-It07cvd4atHefAkSli2e--
