@@ -1,39 +1,41 @@
-From: Marc Bevand <bevand_m@epita.fr>
-Subject: Re: 1x 3ware controllers vs. 2x 3ware controllers
-Date: Fri, 30 Jul 2004 17:00:51 +0200
+From: hpa@zytor.com (H. Peter Anvin)
+Subject: Re: RAID-6 corruption
+Date: Fri, 30 Jul 2004 15:47:21 +0000 (UTC)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <cedoda$qn4$1@sea.gmane.org>
-References: <b476569a04072920533b757574@mail.gmail.com> <200407300815.18296.mrwatts@fast24.co.uk>
+Message-ID: <cedqi9$nh$1@terminus.zytor.com>
+References: <20040729212046.GA27332@jim.sh>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200407300815.18296.mrwatts@fast24.co.uk>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Mark Watts wrote:
-> With the performance issues I'm seeing with the 8506-4LP's I have, I wouldn't 
-> recommend them to anyone currently...
+Followup to:  <20040729212046.GA27332@jim.sh>
+By author:    Jim Paris <jim@jtan.com>
+In newsgroup: linux.dev.raid
 > 
-> The thread on LKML from a few days ago about mke2fs -j and 8506-4LP says it 
-> all, but basically and reasonable amount of I/O brings a Dual Opteron system 
-> to its knees.
-> And by reasonable I mean copying ISO images from a usb2 drive to a raid 5 (4 x 
-> 250GB maxtor) or even just formatting a 600MB partition.
+> Hello,
+> 
+> (I've posted some messages about this to linux-raid, but haven't
+> gotten much of a response; this time I'm cc'ing to linux-kernel)
+> 
 
-I would be interested to see the output of 'vmstat 1' while your system is
-so slow.
+I haven't seen any of those messages, so this is the first case happening.
 
-IMHO you shouldn't draw such conclusion ("reasonable amount of I/O brings a
-Dual Opteron system to its knees") from your particular case. The 3 HT links
-of the Opteron make this CPU particularly adapted to I/O operations.
+> I am seeing reproducible corruption with software RAID-6 on an array
+> that has been created with missing disks.  The attached script
+> demonstrates this easily through loopback devices, but I see the
+> problem just the same on real drives.
+> 
+> I do not see the problem with full RAID-6 arrays (no missing disks),
+> nor do I see it on RAID-5 arrays on the same system.  I haven't seen
+> the corruption when writing directly to the md device, but I haven't
+> tested that very much.
+> 
+> Tested on 2.6.6, 2.6.7, 2.6.8-rc2, with mdadm 1.5.0 and 1.6.0.
+> See attached.
 
-Personnaly, on a dual Opteron, I am able to read datas from 4 SATA disks at
-about 225 MB/s, with CPU time used at about 32%, awd with a system still
-reasonably responsive.
+I will look at it.
 
--- 
-Marc Bevand                          http://www.epita.fr/~bevand_m
-Computer Science School EPITA - System, Network and Security Dept.
-
+	-hpa
