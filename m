@@ -1,43 +1,25 @@
-From: "Artur Jasowicz" <arturj@mousebusiness.com>
-Subject: Re: Fw: DriveReady SeekComplete problems
-Date: Fri, 10 May 2002 15:07:11 -0500
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: RAID1 failure recovery
+Date: Sat, 11 May 2002 07:37:47 +1000 (EST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <001201c1f85e$468637a0$c264a8c0@hoytpub.com>
-References: <5.1.0.14.2.20020509152331.03accca0@mail.harddata.com> <003401c1f7d9$97c7c460$050010ac@niunia.org> <000f01c1f7ec$f84b1fe0$a859aac7@cust.io.com>
-Reply-To: "Artur Jasowicz" <arturj@mousebusiness.com>
+Message-ID: <15580.15787.708106.602378@notabene.cse.unsw.edu.au>
+References: <200205101133.g4ABXjX28795@mailgate5.cinetic.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Diamon <diamon@io.com>, linux-raid@vger.kernel.org
-Cc: Maurice Hilarius <maurice@harddata.com>
+In-Reply-To: message from Maxim Frolov on Friday May 10
+To: Maxim Frolov <wrungel@web.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-RnJvbTogRGlhbW9uIA0KPiANCj4gICAgIFVubGVzcyB0aG9zZSBhcmVuJ3QgQVRBLTEwMCBjYWJs
-ZXMgYW5kIGl0J3Mgc3RpbGwgdXNpbmcgQVRBLTEwMCBtb2RlLi4uDQo+IEkgdGhpbmsgQVRBLTY2
-IG9yIGhpZ2hlciB5b3UgbmVlZCB0aG9zZSA4MC13aXJlIGNhYmxlcy4uLiAgSnVzdCBhIHRob3Vn
-aHQuDQo+IEFuZCB0aGUgc29saWQtY29yZSA4MCBwaW4gY2FibGVzIGRvbid0IGhhbmRsZSBmb2xk
-aW5nIHdlbGwgYXQgYWxsLCBtYXliZQ0KPiBzb21ldGhpbmcncyBnb25lIGZsYWt5IGluIHRoZW0/
-DQo+IA0KVHJ1ZSwgYWx0aG91Z2ggYWxsIEFUQS02NiArIGRldmljZXMgSSd2ZSBzZWVuIGRldGVj
-dGVkIDQwIHdpcmUgY2FibGVzIGFuZCByZWZ1c2VkIHRvIHdvcmsgYXQgaGlnaCBzcGVlZC4gQnV0
-IHRoZXJlIG1pZ2h0IGJlIGFuIGV4Y2VwdGlvbiB0byB0aGF0LiBUaGF0J3Mgbm8gdGhlIGNhc2Ug
-aGVyZSB0aG91Z2guIFRoZXkncmUgYWxsIDgwIHBpbiwgaW5zdGFsbGVkIGNvcnJlY3RseSAtIG1h
-c3RlciBkcml2ZSBjb25uZWN0b3Igb24gbWFzdGVyIGRyaXZlLCBjb250cm9sbGVyIGNvbm5lY3Rv
-ciBvbiBjb250cm9sbGVyIGVuZC4gVGhlIG9ubHkgcG9zc2libGUgcGFydCBvZiB5b3VyIHRoZW9y
-eSBpbiBteSBjYXNlIG1heSBiZSBwcm9ibGVtcyB3aXRoIGJlbmRpbmcuIEkga2VwdCB0aGUgY2Fi
-bGVzIGZhaXJseSBmbGF0IGFuZCBzdHJhaWdodCwgYnV0IHRoZXkgY2FtZSB0aWdodGx5IGZvbGRl
-ZCBpbiB0aGUgYm94Lg0KDQpUaGUgbW9yZSBJIHRoaW5rIGFib3V0IGl0IHRoZSBtb3JlIGl0IHNl
-ZW1zIGxpa2UgdGhlIHN5c3RlbSBub3Qga2VlcGluZyB1cCB3aXRoIHRoZSBkcml2ZXMgdGhvdWdo
-LiBJc24ndCBpdCBzdHJhbmdlIHRoYXQgYm90aCBteSAyMDAwKyBBdGhsb25zIE1QIHJ1biBhdCA8
-IDIlIGlkbGUgd2hlbiBzeW5jaW5nIGFycmF5PyBFdmVuIGluIFBJTyBtb2RlLCBhdCA1MDBLIHJl
-c3luYyBzcGVlZCByZXBvcnRlZCBieSAvcHJvYy9tZHN0YXQuIEFuZCBub3RoaW5nIGVsc2UgcnVu
-cyBvbiB0aGUgbWFjaGluZSwgSnVzdCB0aHJlZSBjb25zb2xlcywgcmFpZHJ1biBvbiBvbmUsIHRv
-cCBvbiB0aGUgb3RoZXIgYW5kIG9jY2FzaW9uYWwgdGFpbCAvdmFyL2xvZy9tZXNzYWdlcyBvbiB0
-aGlyZCB0byBtb25pdG9yIGxvZyBmb3IgZXJyb3IgbXNncy4NCg0KV2hlbiBJIGxldCB0aGUgZHJp
-dmVzIHN1cHBseSBkYXRhIGZhc3RlciBieSBlbmFibGluZyBETUEgKDEwMCBieSBkZWZhdWx0LCBi
-dXQgSSd2ZSB0cmllZCBzd2l0Y2hpbmcgdG8gMzMgd2l0aCBzYW1lIHJlc3VsdHMpLCBpIHN0YXJ0
-IGdldHRpbmcgZXJyb3JzIGF0IDIwMDBLIHJlc3luYyBzcGVlZC4gSW4gc2xvd2VyIFBJTyBhciA1
-MDBLIHJlc3luYyB0aGluZ3Mgd29yayBvayB3aXRoIDQgZHJpdmVzLCBidXQgNSBpcyB0b28gbXVj
-aCAtIGVycm9ycy4NCg0KQXJ0dXINCg0K
+On Friday May 10, wrungel@web.de wrote:
+> 
+> 
+> My questions is: How do I recover the failed RAID1 disk (dev/hda1)?
+> What I did wrong?
+> 
+You forgot to set the partition time of /dev/hda1 to "Linux RAID
+autodetect" or whatever it is meant to be.
 
+NeilBrown
