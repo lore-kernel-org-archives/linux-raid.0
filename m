@@ -1,32 +1,25 @@
-From: blocked@spanservices.com
-Subject: Inflex scan report [04271221431]
-Date: Tue, 27 Apr 2004 12:21:10 +0530
+From: christophe.varoqui@free.fr
+Subject: Re: [dm-devel] [ANNOUNCE] multipath-tools-0.1.6
+Date: Tue, 27 Apr 2004 11:57:58 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200404270651.i3R6pAk00491@spanservices.com>
+Message-ID: <1083059878.408e2ea6eab69@imp1-q.free.fr>
+References: <1082930099.3158.13.camel@zezette> <20040426081842.GN8379@nimzo>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <20040426081842.GN8379@nimzo>
+To: thornber@redhat.com
+Cc: device-mapper development <dm-devel@redhat.com>, linux-raid@vger.kernel.org, linux-hotplug-devel@lists.sourceforge.net
 List-Id: linux-raid.ids
 
-Administrator Email Reply Address: blocked@spanservices.com
-Email sent to:  admin@spanservices.com
-Inflex ID: 04271221431
-                                   Report Details 
-##################################################################################
-This mail is temporarily held by the mail server  at SPAN because of the following reasons
+Selon thornber@redhat.com:
 
-1. It contains an attachment type not generaly allowed at SPAN by the mail server.
-2. Our scanners have reported potential virus or worms.
-Administrator will recieve the mail and forward it to the intended recipient only on request if it is an official mail.
-####################################################################################
-AntiVirus Results...
-
-File NAME/TYPE Scan Results
-/usr/local/inflex/tmp/inf_04271221431/unpacked/letter43.pif
-
-
-04271221431  from:linux-raid@vger.kernel.org  to: admin@spanservices.comType scanning off.
-
-END OF MESSAGE.
-
-End.
-.
+> On Sun, Apr 25, 2004 at 11:54:59PM +0200, christophe varoqui wrote:
+> > * add the dmadm WIP tool (read MD superblocks and create
+> >   corresponding devmaps when possible)
+> 
+> :)
+> 
+Any insight on where to put the log of the mirror target when mapping over a
+MD-created raid1 ?
