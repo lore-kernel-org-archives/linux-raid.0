@@ -1,33 +1,24 @@
-From: Ewan Grantham <ewan.grantham@gmail.com>
-Subject: Re: Preparation advice?
-Date: Sat, 27 Nov 2004 15:39:37 -0500
-Message-ID: <6d5bedd8041127123945b8db48@mail.gmail.com>
-References: <6d5bedd8041126205255c0fe7d@mail.gmail.com>
-	 <Pine.LNX.4.56.0411270837340.5805@lion.drogon.net>
-	 <6d5bedd8041127082528ce68ec@mail.gmail.com>
-	 <41A8C57A.1060803@dgreaves.com>
-Reply-To: Ewan Grantham <ewan.grantham@gmail.com>
+From: Stephan van Hienen <raid@a2000.nu>
+Subject: readahead (blockdev --setra) with sw raid(5)?
+Date: Sat, 27 Nov 2004 23:31:56 +0100 (CET)
+Message-ID: <Pine.LNX.4.61.0411272328270.16979@adsl.a2000.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <41A8C57A.1060803@dgreaves.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Greaves <david@dgreaves.com>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, 27 Nov 2004 18:20:42 +0000, David Greaves <david@dgreaves.com> wrote:
-> 
-> >Created a mount point /mnt/md0, but do I edit /etc/fstab or another
-> >file since fstab seems to be generated on boot?
-> >
-> >
-> edit /etc/fstab
+Hi,
 
-Well, I must be missing this at the FAQ sites, but when I edit
-/etc/fstab do I leave the entries in for the component devices, or do
-I remove those and just put in the /dev/md0 entry?
+just saw a 3ware document with some hints for hardware raid5
+they advice to use blockdev --setra 16384
 
-Thanks again,
-Ewan
+since i'm not using 3ware hardware raid
+(i'm using 2*7500 3ware's with sw raid5 over 14 disks)
+i'm wondering if --setra can still improve my raid performance
+
+any hints about this ?
+or some other hints, improvements on filesystem ?
+i'm currently using blocksize 128, maybe switching to 256 helps ? (with 
+large files)
