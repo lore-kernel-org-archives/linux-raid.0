@@ -1,46 +1,34 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: raid warning on 2.6.7
-Date: Tue, 3 Aug 2004 12:12:36 +1000
+From: misty-@charter.net
+Subject: Re: RAID 5 questions
+Date: Tue, 3 Aug 2004 01:19:46 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16654.62612.63068.887576@cse.unsw.edu.au>
-References: <20040802212538.626e51d7.a_bouter@ezrs.com>
+Message-ID: <20040803051946.GA8781@roll>
+References: <1091325475.2374.11.camel@localhost> <20040801102430.GC28625@janus>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Arjan Bouter on Monday August 2
-To: Arjan Bouter <a_bouter@ezrs.com>
-Cc: linux-raid@vger.kernel.org
+Content-Disposition: inline
+In-Reply-To: <20040801102430.GC28625@janus>
+To: Frank van Maarseveen <frankvm@xs4all.nl>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday August 2, a_bouter@ezrs.com wrote:
-> Hi,
+On Sun, Aug 01, 2004 at 12:24:30PM +0200, Frank van Maarseveen wrote:
+> On Sun, Aug 01, 2004 at 11:27:56AM +0930, Ninti Systems wrote:
+> > 
+> > Q1: Is it true that Linux can't/shouldn't boot off a RAID 5 array?
 > 
-> I wonder if you can tell me more about this warning I get during boot:
+> >From software RAID it can't.
 > 
-> md: raidstart(pid 475) used deprecated START_ARRAY ioctl. This will not be
-> supported beyond 2.6
+> USB storage devices (memory stick) are incredibly useful for this --
+> I've even booted a webserver from a digital camera ;-). The only catch
+> may be the latency of the USB code when you don't want to use initrd:
+> The kernel panics (no root dev) because it takes noticeable time before
+> the kernel sees an USB storage device. But there are several tiny patches
+> for this, it's merely a nuisance.
 
-The "START_ARRAY" ioctl is badly designed.  It makes assumptions about
-the stability of device number which are simply untrue.
-As a consequence, the "raidstart" program which uses START_ARRAY is
-potentially dangerous, in that it seems to work most of the time so
-you can get a false sense of security that your system is configured
-properly.  But if a drive dies, raidstart may not be able to restart
-your array.
+Personally I use sw raid5 as my /, and as I messed up and now can't fix it
+to work with a /boot, I instead use a lilo'ed 3.5 inch bootdisk, which loads
+the kernel and mounts root. *shrugs* it works fairly well, I can't complain
+much.
 
-> 
-> The warning was followed by one of my mirrors disks being kicked out, but that
-> can be a mere coincidence.
-
-Very likely a coincidence.
-
-> 
-> I was wondering if there's going to be a new version of raidtools anytime soon
-> for kernels 2.6 and later?
-
-I am not aware of any on-going development of raidtools.  All parts of
-it other than "raidstart" should continue to work however.
-I recommend using mdadm instead of raidtools.  It is maintained.
-
-NeilBrown
+Tim McGrath
