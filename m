@@ -1,66 +1,58 @@
-From: Adriana Rasberry <adrianar@pacbell.net>
-Subject: Software level 1 RAID issue
-Date: Sun, 08 Jun 2003 14:13:38 -0700
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: How to recover this RAID5?
+Date: Mon, 9 Jun 2003 07:38:18 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <01C32DC8.29C82EC0.adrianar@pacbell.net>
-Reply-To: "razcon@pacbell.net" <razcon@pacbell.net>
+Message-ID: <16099.44234.715573.577139@gargle.gargle.HOWL>
+References: <5.1.1.6.2.20030608061637.03bb34e0@mail.harddata.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: "'linux-raid@vger.kernel.org'" <linux-raid@vger.kernel.org>
+In-Reply-To: message from Maurice Hilarius on Sunday June 8
+To: Maurice Hilarius <maurice@harddata.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi All,
+On Sunday June 8, maurice@harddata.com wrote:
+> Hi there.
+> 
+> I am a bit stumped on this one, and hope somebody can suggest a way to 
+> recover it.
+> The user has no backup, and hopes to recover data from this array.
+> 
+> Assistance would be deeply appreciated.
 
-I am still fighting my RAID 1 issue, the system still down.  Here is the 
-status:
+Based on "Events", sda1, sdc1, sdd1 are most recent. sdb1 is much
+older.
+So assuming they were in order, I would:
+  mdadm -C /dev/md0 -l 5 -n 4 /dev/sda1 missing /dev/sdc1 /dev/sdd1
 
-On Startup I get a Segmentation Fault as shown below:
+and then see what the filesystem looks like.
+Doing this will not corrupt any data except the superblocks (which are
+already close to useless), so if it doesn't look right, you can stop
+the array and assemble difference devices in a difference order.
 
-"Setting default font      [OK]
-               Welcome to /etc/rc.d/rc.sysinit: Line 70      49
-segmentation fault LC_ALL=C grep -q Redhat ....etc
-               Press I for interactive startup"
+> 
+> System has 4 IDE disks on a 3Ware 4 port.
+> RAID5.
+> 
+> One of the disks  apparently went offline without the user noticing.
+> Now the array is in a read-only state.
+> Probable cause is that these are WD 1800GB drives, and they have not had 
+> the WD patch applied, so probably drives started going to "sleep".
+> 
+> I provide some (hopefully) useful information:
+> 
+> In mdadm --examine I see that somehow the devices 1,2,3, have now been 
+> renamed to devices 4,5,6
+> 
+> And that 2 devices have become designated as spares.
+> 
+> This really puzzles me.
 
+The simplest explanation would be that someone did:
+   mdadm -r /dev/md0 /dev/sda1 ; mdadm -a /dev/md0 /dev/sda1
+or something like that.
 
-I am running Redht 9.0 with a Software raid level 1 on two IDE drives.
-
-I can boot the system up in rescue mode and then have read only access to 
-the system via /mnt/sysimage.
-The raids seems to be synced and active but are now all in U_ mode.
-
-Here is some of the config data:
-
-/dev/hdb1 ext3 raid autodetect
-/dev/hdb2 ext3 raid autodetect
-/dev/hdb3 ext3 raid autodetect
-
-
-md0  (hdb1 & hda1)
-md1  (hda5 & hdb3)  (root)
-md2 (hda2 & hdb2)  /home
-
-
-I Attempted to follow the instructions in the Software-RIAD-HOWTO on 
-recovery process but had the following issues, their does not seem to be a 
-ckraid command on the system and when I go to run fsck the system reports a 
-warning that the volume is mounted and that it is dangerous to run ckdsk 
-while mounted (maybe it is ok, in that no services are running?).  If I 
-fully un-mount the volume will I get an error like fstab or raidtab not 
-found?
-
-So, I am not sure how to fully un-mount the volumes needed to run the ckdsk 
-(or even if ckdsk is what is needed). umount commands report that the 
-volume is in use, so I assume that I need to do a raidstop then un-mount, 
-or just have the system startup in rescue mode without mounting the 
-volumes, but I do so will I get cannot find fstab or raidtab errors?
-
-I believe that I need to run an fsck to resolve the Seg. fault issue, but 
-have yet been able to do so.
-
-Thanks in advance for any help that you can provide.
-
-R,
-Greg
-
+Good luck,
+NeilBrown
