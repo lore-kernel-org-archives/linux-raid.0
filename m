@@ -1,67 +1,72 @@
-From: "Lundy, Mike (HIS)" <MLundy@gbhs.on.ca>
-Subject: raidstop --all not working?
-Date: Sun, 1 Jun 2003 22:23:47 -0400
+From: "3tcdgwg3" <3tcdgwg3@prodigy.net>
+Subject: Re: Software RAID level 1 issue
+Date: Mon, 2 Jun 2003 11:10:31 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <73087A05DEEAD6118A65000476E3B9FF0443B6@ongbmail.gbrhc>
+Message-ID: <011501c32932$41f191c0$7b07a8c0@pluto>
+References: <C587FF391BCAD411B8120008C7864670057DA5B8@mtvxch07.veritas.com> <1054403067.14818.280.camel@testlin.hades> <3ED7B898.4409555F@SteelEye.com> <01f101c326e7$c9084890$7b07a8c0@pluto> <3ED7BF97.BAB11B12@SteelEye.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: "'linux-raid@vger.kernel.org'" <linux-raid@vger.kernel.org>
+To: Paul Clements <Paul.Clements@SteelEye.com>
+Cc: Stef Telford <stef@chronozon.artofdns.com>, 'Greg Rasberry' <rgreg-r@pacbell.net>, 'Linux raid mailing list' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Is this a feature, or a bug?  I noticed that on my gentoo system (Linux
-linux 2.4.20-gentoo-r5  i686 Pentium II (Deschutes) GenuineIntel GNU/Linux),
-raidstart -a works great, however raidstop -a (or -all) doesen't work, even
-though /etc/raidtab looks good...see:
+This feature works only for raid1, or both raid1 and raid5?
 
-linux root # cat /etc/raidtab
-raiddev /dev/md0
-        raid-level      0
-        persistent-superblock   1
-        chunk-size      64
-        nr-raid-disks   2
-        device  /dev/ide/host0/bus1/target0/lun0/part2
-                raid-disk       0
-        device  /dev/ide/host0/bus1/target1/lun0/part1
-                raid-disk       1
-linux root #
-
-I am trying to set up an init.d script to start and stop things.  I'll post
-the script so far, let me know if there's a better way.
-
-linux root # cat /etc/init.d/raid
-#!/sbin/runscript
-# Copyright 1999-2003 Gentoo Technologies, Inc.
-# Distributed under the terms of the GNU General Public License, v2 or
-# later
-# $Header:
-/home/cvsroot/gentoo-x86/net-firewall/iptables/files/iptables.init,v 1.2
-2003/05/04 18:19:03 aliz Exp $
-
-opts="start stop"
-
-depend() {
-        need logger
-}
+Thanls.
+W
+----- Original Message -----
+From: "Paul Clements" <Paul.Clements@SteelEye.com>
+To: "3tcdgwg3" <3tcdgwg3@prodigy.net>
+Cc: "Stef Telford" <stef@chronozon.artofdns.com>; "'Greg Rasberry'"
+<rgreg-r@pacbell.net>; "'Linux raid mailing list'"
+<linux-raid@vger.kernel.org>
+Sent: Friday, May 30, 2003 1:31 PM
+Subject: Re: Software RAID level 1 issue
 
 
-start() {
-        ebegin "Starting RAID Devices"
-                /sbin/raidstart --all
-        eend $?
-}
+> 3tcdgwg3 wrote:
+>
+> > If there is a plan to do a "intelligent resync", like some of the raid
+> > controller
+> > vendors offer?  The resync process will be hold on, if there are IO
+requests
+> > from upper level, and resumed when there is no IO.  By doing that, the
+> > system
+> > performance always be on the top.  I am very interested in  having
+something
+> > like that.
+>
+> This wasn't exactly what I meant by intelligent resync, but...I think
+> what you're asking about is something that the md driver already does to
+> some extent. It will slow down a resync if there is active I/O on the
+> device. This can even be tuned by the user by manipulating a couple of
+> kernel sysctls:
+>
+> apache:~# cat /proc/sys/dev/raid/speed_limit_min
+> 100
+>
+> apache:~# cat /proc/sys/dev/raid/speed_limit_max
+> 10000
+>
+> apache:~# echo 1000000 > /proc/sys/dev/raid/speed_limit_max
+>
+> apache:~# cat /proc/sys/dev/raid/speed_limit_max
+> 1000000
+>
+>
+> These are in KB/s.
+>
+> The "min" refers to the maximum I/O bandwidth that will be consumed by
+> resyncs before the resyncs get throttled, when there is other I/O
+> activity on the device.
+>
+> The "max" refers to the maximum I/O bandwidth that will be consumed by
+> resyncs before the resyncs get throttled, even if there is no other I/O
+> activity on the device.
+>
+> --
+> Paul
 
-stop() {
-        ebegin "Stopping RAID Devices"
-                /sbin/raidstart --all
-        eend $?
-}
-
-
-linux root #
-
-Oh, almost forgot version is:  raidstop v0.3d compiled for md
-raidtools-1.00.3
-
-Thanks,
-Mike
