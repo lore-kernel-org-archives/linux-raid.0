@@ -1,24 +1,32 @@
-From: "zqcx" <z_q_c_x@263.net>
-Subject: PCD&PCBN tools
-Date: Sun, 9 Nov 2003 20:25:22 +0800
+From: Monda.Laszlo@stud.u-szeged.hu
+Subject: ITE IT 8212 problem
+Date: Sun,  9 Nov 2003 14:57:54 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <S262410AbTKIMXk/20031109122340Z+1457@vger.kernel.org>
-Reply-To: z_q_c_x@263.net
-Content-Type: text/plain;charset="GB2312"
+Message-ID: <1068386274.3fae47e2ca3c3@www.stud.u-szeged.hu>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Dear Sir or Madam:
+Hi All,
 
-We are a Chinese manufacturer of diamond tools, and now we are very glad to inform you that now you have a better choice when you grinding the PCD&PCBN tools, we can supply the grinding wheels (vitrified/metal/resin bond) with the lowest cost and high quality. Almost all Chinese PCD&PCBN tools producer are our users.
+I'd like to use my integrated ITE IT 8212 IDE RAID controller with an arbitrary 
+2.4 kernel.
 
-Now we are looking for the distributors all over the world, if you have good ability in this area, we think it is a good choice for you, also we will supply the first sample free.
+There are various precompiled binary drivers for Mandrake, SuSE and Redhat for 
+several specific kernels, but there is also a source which I downloaded from:
+http://www.ite.com.tw/productInfo/Download.html#IT8212F
+and compiled it successfully, but when I want to load it to the kernel I get the 
+following error:
+./iteraid:o: unresolved symbol prefetch
 
-No hesitate to contact to us.
+How could I solve this problem?
 
-Sorry to disturb you.   
+Thanks in advance,
+    Laci
 
-Fax: +86-10-80725203
-E-mail: ctstc2003@sina.com
 
+-------------------------------------------------
+This mail sent through IMP: http://horde.org/imp/
