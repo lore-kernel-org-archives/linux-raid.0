@@ -1,44 +1,54 @@
-From: Ricky Beam <jfbeam@bluetronic.net>
-Subject: Re: Tyan, RAID-6, and other recent hassles... (long, a bit OT)
-Date: Sat, 19 Feb 2005 22:29:30 -0500 (EST)
-Message-ID: <Pine.GSO.4.33.0502192217280.5536-100000@sweetums.bluetronic.net>
-References: <20050219230258.GA21802@fubini.pci.uni-heidelberg.de>
+From: Tim Moore <linux-raid@nsr500.net>
+Subject: Re: quick help needed - smaller disk in raid5?
+Date: Sat, 19 Feb 2005 21:56:51 -0800
+Message-ID: <421826A3.30806@nsr500.net>
+References: <200502192028.17397.michael.hebenstreit@fh-joanneum.at>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-In-Reply-To: <20050219230258.GA21802@fubini.pci.uni-heidelberg.de>
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+In-Reply-To: <200502192028.17397.michael.hebenstreit@fh-joanneum.at>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bernd Schubert <Bernd.Schubert@tc.pci.uni-heidelberg.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, 20 Feb 2005, Bernd Schubert wrote:
->> Mobo was a Tyan Thunder K8W. (S2885)
->
->personally I'm very disappointed about Tyan, well I only know their
->opteron mainboards, but thats already sufficient to never buy their
->mainboards again.
+'fdisk -lu' shows in sectors of 512 bytes, useful in matching partition 
+sizes for slightly different disks.
 
-You're doing yurself a huge disservice based on very little experience.
-Using one or two of a manufacturer's MBs is not sufficient grounds to
-blacklist them.  Tyan sells a lot of these boards.  If there were serious
-stability problems with them, tyan wouldn't be shipping them.
+You will have to resize to the smallest (30401 cylinders).
 
-Tyan makes very good hardware.  I don't know what your problems are,
-but I've never had any such problems.  I've used Tyan hardware for
-a decade.  Yes, they've made a few mistakes over the years -- bad
-SIMM slots on the earily tomcat boards, using a VIA chipset for the
-tiger 133...
+Hebenstreit Michael wrote:
+> Hello everybody,
+> 
+> I've been using a Raid5 with 3 disks of exactly the same size, a little bit 
+> more than 250 GB (reported as 251)
+> 
+> Disk /dev/sdc: 251.0 GB, 251000193024 bytes
+> 255 heads, 63 sectors/track, 30515 cylinders
+> Units = cylinders of 16065 * 512 = 8225280 bytes
+> 
+>    Device Boot      Start         End      Blocks   Id  System
+> /dev/sdc1               1       30513   245095641   fd  Linux raid autodetect
+> 
+> Now I want to add a 4th disk - and got one slightly smaller:
+> 
+> sanjose:~ # fdisk -l /dev/sdd
+> Disk /dev/sdd: 250.0 GB, 250059350016 bytes
+> 255 heads, 63 sectors/track, 30401 cylinders
+> Units = cylinders of 16065 * 512 = 8225280 bytes
+> 
+> Disk /dev/sdd doesn't contain a valid partition table
+> 
+> 
+> 
+> Is it nevertheless possible (with some minimal losses in possible size) to add 
+> the new disk? The Funny thing - all disks are from Maxtor, and should have 
+> the same size.
+> 
+> Thanks a lot
+> 
+> Michael
+> 
+> 
 
->Server B (failover): S2880, as soon as a cable is plugged in into one of
->the onboard broadcom NICs, the system crashes. Broadcom driver doesn't
->need to be loaded, system may already crash during the pre-boot
->initialisation or later on during the kernel boot-procedure.
-
-I've seen a few systems do this.  It was due to bad memory and bad memory
-configuration (BIOS).  Those systems (i7501's) have been running fine
-(over a year now) since replacing the RAM with Tyan "ok'ed" memory and
-disabling "spread spectrum" in the chipset.
-
---Ricky
-
+-- 
 
