@@ -1,52 +1,53 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: libata
-Date: Sun, 15 Feb 2004 15:34:18 -0500
-Sender: linux-ide-owner@vger.kernel.org
-Message-ID: <402FD7CA.8080900@pobox.com>
-References: <402F2A22.8080204@wasp.net.au> <1076833840.28006.3.camel@stoneburner.xwredwing.net>
+From: Mark Hahn <hahn@physics.mcmaster.ca>
+Subject: Re: strange performance of raid0
+Date: Sun, 15 Feb 2004 15:35:32 -0500 (EST)
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <Pine.LNX.4.44.0402151523000.11668-100000@coffee.psychology.mcmaster.ca>
+References: <20040215120525.GA19434@rap.rap.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1076833840.28006.3.camel@stoneburner.xwredwing.net>
-To: Matt Thrailkill <xwred1@modestolan.com>, Brad Campbell <brad@wasp.net.au>
-Cc: linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20040215120525.GA19434@rap.rap.dk>
+To: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Matt Thrailkill wrote:
-> This is the same card I've got in my box, the one I happened to trip a
-> hpt366 driver bug with that I mention in my other mailing.
-> 
-> Does the Highpoint driver do hotswap and all that goodness?  My
-> understanding is that the 1540 card is just a hpt374 with pata->sata
-> converters soldered on, rather than a "true" sata controller.
+> > The you don't get as good performance because hdc1 is slow enough to
+> > really drag it down.
 
-If that's true, and it provides no SATA-specific features (there are 
-SATA-specific phy registers you need to talk to, to do hotplug and other 
-fun) then it would be better to do it under the auspices of the "old IDE 
-driver" a.k.a. CONFIG_IDE.
+right.
 
+> I would have thought the disks would have worked towards gaining
+> performance enhancements in some cumulative way, is that not so, in theory?
 
-> I think for a short time I tried doing some simple hotswapping in
-> Windows and it didn't work, does that (or any hotswapping) work for you?
-> 
-> The e.sata ports on the back of the card is just begging for hotswap
-> support.
-> 
-> Linux-ide.org is where the libsata work is at, I think.  Do they have a
-> dedicated list?
+raid0 stripes IO across devices, so more devices help, in general.
+but suppose your config stores 1k per disk.  a 3k write would 
+touch all three disks.  when would that write complete?  according
+to your numbers, hdc1 takes much longer than the other two.
+that means that a large upper-level IO request (all three disks)
+will complete at about 3x16 MB/s (ignoring overhead, etc).
 
-Nope, libata was independent of linux-ide.org.  (I am the author)
+> So why is 3 disks slower than 2?
 
-linux-ide@vger.kernel.org or linux-scsi@vger.kernel.org seem to host the 
-most libata discussions.
+because two of the disks are sometimes idle while the slow one completes.
+since striping is always parallel across all disks, the system can't 
+somehow find other IO to do on the fast disks while waiting for the slow one.
 
-Feel free to ask me questions about the API.  There are API docs 
-generated from the source code, posted here: 
-http://www.kernel.org/pub/linux/kernel/people/jgarzik/libata/
+> > You probably can't get 100mb/s with the two because that would be pretty
+> > efficient, and there's probably more overhead than that.
 
-	Jeff
+100 MB/s is a pretty agressive goal for a duron: the speed of the CPU and
+memory bandwidth *DO* have a significant effect on how well raid0 scales,
+and where it tops out.  hdparm -t is also quite cpu-inefficient, as
+benchmarks go.
 
+> > Shouldn't the 80gb drive be going faster than 16mb/s though?  Have you
+> > checked hdparm to make sure dma and all the goodies are turned on for
+> > it?
 
+16 MB/s is a clear config or measurement mistake.  16 MB/s is the speed of
+disks from 5+ years ago, and >= 80G didn't exist back then.
+
+regards, mark hahn.
 
 
