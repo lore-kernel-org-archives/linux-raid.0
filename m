@@ -1,31 +1,38 @@
-From: "Foster Chung" <pcw9dirf@email.com>
-Subject: 2 FREE Worldwide Airline Tickets Worth $1600 for just $189!
-Date: Tue, 23 Dec 03 00:18:06 GMT
+From: "H. Peter Anvin" <hpa@zytor.com>
+Subject: RAID-6 works!  (At least it seems to...)
+Date: 23 Dec 2003 00:43:27 -0800
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <h-ag2-$nrph65$5-5669$$8rh$-$qno@azy.u3vc>
-Reply-To: "Foster Chung" <pcw9dirf@email.com>
+Message-ID: <bs8v7f$klr$1@cesium.transmeta.com>
 Mime-Version: 1.0
-Content-Type: multipart/alternative;
-	boundary="A90__7CC4."
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: honey+1041667706@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Well, at least I have a piece of code that passes my relatively simple
+functionality tests.  Still, that's news, and this is the first RAID-6
+snapshot that isn't *known* to be broken :)
 
---A90__7CC4.
-Content-Type: text/plain;
-Content-Transfer-Encoding: quoted-printable
+I can at least mount filesystems, read and write data, reboot the
+system and have the data still there, with 1 or 2 disks lost, and do a
+reconstruction once the drives are added back in.
 
-Join 123FreeTravel Club by paying just $189 and get 2 FREE Roundtrip Airli=
-ne Tickets for worldwide travel worth $1600, a FREE Caribbean Cruise worth=
- $1400 and a FREE 3 day / 2 night Hotel stay!
+New development snapshot at:
 
-Visit our website at http://www.247cashgenerator.com/5.htm or call 1-800-8=
-56-3040.
-j h w tuxvcjrofhe
-u
-c qs
-lgzazdxm
+ftp://ftp.kernel.org/pub/linux/kernel/people/hpa/raid6-20031224-experimental.tar.gz
 
---A90__7CC4.--
+Please test it out and let me know how badly it sucks :)
 
+At some point I'll try to run some benchmarks.  There is also a lot of
+optimization still to be done.
+
+       -hpa
+
+[And again, thanks to Penguin Computing for donating a test system,
+without which this would never have happened.]
+-- 
+<hpa@transmeta.com> at work, <hpa@zytor.com> in private!
+If you send me mail in HTML format I will assume it's spam.
+"Unix gives you enough rope to shoot yourself in the foot."
+Architectures needed: ia64 m68k mips64 ppc ppc64 s390 s390x sh v850 x86-64
