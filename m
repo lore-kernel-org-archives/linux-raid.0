@@ -1,147 +1,30 @@
-From: Ming Zhang <mingz@ele.uri.edu>
-Subject: RE: md on partition
-Date: Sat, 23 Oct 2004 19:04:56 -0400
+From: hpa@zytor.com (H. Peter Anvin)
+Subject: RAID-6: help wanted
+Date: Sat, 23 Oct 2004 23:46:46 +0000 (UTC)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1098572696.3119.16.camel@localhost.localdomain>
-References: <200410232252.i9NMqYN14571@www.watkins-home.com>
-Reply-To: mingz@ele.uri.edu
+Message-ID: <cleqh6$ps4$1@terminus.zytor.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200410232252.i9NMqYN14571@www.watkins-home.com>
-To: Guy <bugzilla@watkins-home.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, 2004-10-23 at 18:52, Guy wrote:
-> You said:
-> "will raid by default choose different chunk size if device size is
-> different, for example, sda is 400GB while sda1 is 50GB?"
-> 
-> No, but the random seek test will give different results.  50GB will perform
-> better, since less head travel.
-> 
-> Why the difference?  I would want everything the same for both tests.
-> 
-so assume raid use same chunk size for both 50GB partition and 400GB
-disk, i can not understand why here a near half performance down grade.
+Okay, it's well overdue to do this...
 
-> Guy
-> 
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org
-> [mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Ming Zhang
-> Sent: Saturday, October 23, 2004 6:39 PM
-> To: Guy
-> Cc: linux-raid@vger.kernel.org
-> Subject: RE: md on partition
-> 
-> On Sat, 2004-10-23 at 12:12, Guy wrote:
-> > I guess Neil was wrong, or I misunderstood something.
-> > Were both test with the same RAID and LVM config?  Or was 1 RAID0 and the
-> > other RAID5?
-> yes, if i tested RAID0, then will use RAID0 for both partition or whole
-> disk scenarios.
-> 
-> > 
-> > If RAID5, are you sure the resync was done before you did your tests?
-> > "cat /proc/mdstat" to determine this.
-> > 
-> need to recheck. :)
-> 
-> > Yes, size does matter!  Chunk size that is.  Not sure about extent size.
-> > 
-> will raid by default choose different chunk size if device size is
-> different, for example, sda is 400GB while sda1 is 50GB?
-> 
-> > As long as the only difference was the whole disk vs partitions, then
-> > partitions make a big difference!  This sucks!
-> > 
-> > Guy
-> > 
-> > -----Original Message-----
-> > From: linux-raid-owner@vger.kernel.org
-> > [mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Ming Zhang
-> > Sent: Saturday, October 23, 2004 11:52 AM
-> > To: Guy
-> > Cc: linux-raid@vger.kernel.org
-> > Subject: RE: md on partition
-> > 
-> > thx but i met this problem.
-> > 
-> > i use 4 x 400GB SATA disks, i make a raid 0 or 5, and build a vg on top
-> > of md, then use bonnie++ to test read performance.
-> > 
-> > LVM (MD = sda+sdb+..) = 95MBsec, md is built on top of whole disk.
-> > 
-> > LVM (MD = sda1+sdb1+.) = 48MBsec, md is built on top of each partition.
-> > 
-> > so where is the problem? does md chunk size matter? or lvm extent size
-> > matters? thx.
-> > 
-> > 
-> > ming
-> > 
-> > On Sat, 2004-10-23 at 02:07, Guy wrote:
-> > > I found this old message:
-> > > "On Tuesday June 1, maheshext3@yahoo.com wrote:
-> > > > 
-> > > > --- Neil Brown <neilb@cse.unsw.edu.au> wrote:
-> > > > > 
-> > > > > What does
-> > > > >    ls -l /dev/hd[eg]5
-> > > > > show? How about
-> > > > >    cat /proc/partitions
-> > > > >    dd if=/dev/hde5 of=/dev/null bs=1024k
-> > > > 
-> > > > Thanks a lot, Neil, turns out those nodes were not present. After I 
-> > > > mknod'd them, all's fine in RAIDland...
-> > > >   Quick question: does using extended partitions for RAID affect 
-> > > > performance?
-> > > 
-> > > The fact that the partitions are "extended" is invisible to most of the
-> > > kernel, and it could not have any affect of performance.
-> > > 
-> > > NeilBrown"
-> > > 
-> > > Guy
-> > > 
-> > > -----Original Message-----
-> > > From: linux-raid-owner@vger.kernel.org
-> > > [mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Ming Zhang
-> > > Sent: Friday, October 22, 2004 1:28 PM
-> > > To: linux-raid@vger.kernel.org
-> > > Subject: md on partition
-> > > 
-> > > Hi folks.
-> > > 
-> > > I remembered that there was a discussion on the list about some abnormal
-> > > performance penalty if u use a partition instead of a whole disk for MD.
-> > > But I could not find this discussion via archival or google.
-> > > 
-> > > Could somebody be kindly enough to point me to the right spot? Thanks a
-> > > lot.
-> > > 
-> > > Ming
-> > > 
-> > > 
-> > > -
-> > > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
--- 
- --------------------------------------------------
-| Ming Zhang, PhD. Student
-| Dept. of Electrical & Computer Engineering
-| College of Engineering
-| University of Rhode Island
-| Kingston RI. 02881
-| e-mail: mingz at ele.uri.edu
-| Tel. (401) 874-2293 
-| Fax. (401) 782-6422
-| http://www.ele.uri.edu/~mingz/
-| http://crab.ele.uri.edu/gallery/albums.php
- --------------------------------------------------
+There is currently a data-corruption bug in the RAID-6 md layer
+(raid6main.c).  I have so far not been successful in locating it,
+although it is easily reproducible, thanks to a set of scripts by Jim
+Paris.  I suspect it is a race condition between raid6d and the rest
+of the kernel.
 
+The problem is that I already have way too many projects in flight,
+and I *really* would like to focus the time I have on getting
+klibc/early userspace integrated.  Thus, I don't expect to have any
+time at chasing the RAID-6 corruption bug any time soon.
 
+What can be ruled out is errors in the RAID-6 algorithm codes,
+however.  Those are easily testable in isolation and have a clean bill
+of health.
+
+	-hpa
