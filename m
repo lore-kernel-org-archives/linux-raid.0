@@ -1,150 +1,44 @@
-From: Danilo Godec <danci@agenda.si>
+From: Neil Brown <neilb@cse.unsw.edu.au>
 Subject: Re: Multiple disk failure - recover?
-Date: Wed, 10 Jul 2002 16:13:16 +0200 (CEST)
+Date: Thu, 11 Jul 2002 00:30:53 +1000 (EST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.30.0207101604520.25329-300000@duplo.agenda.si>
+Message-ID: <15660.17693.461131.39650@notabene.cse.unsw.edu.au>
 References: <15660.15549.501687.976304@notabene.cse.unsw.edu.au>
+	<Pine.LNX.4.30.0207101604520.25329-300000@duplo.agenda.si>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-154941680-1872484740-1026310360=:11055"
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <15660.15549.501687.976304@notabene.cse.unsw.edu.au>
-Content-ID: <Pine.LNX.4.30.0207101612490.11210@duplo.agenda.si>
-To: Neil Brown <neilb@cse.unsw.edu.au>
+In-Reply-To: message from Danilo Godec on Wednesday July 10
+To: Danilo Godec <danci@agenda.si>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
-  Send mail to mime@docserver.cac.washington.edu for more info.
+On Wednesday July 10, danci@agenda.si wrote:
+> OK, it's all attached. One file contains results of mdadm --examine, the
+> other is what I get on the screen with mdadm --assemble (w/wo
+--run)...
 
----154941680-1872484740-1026310360=:11055
-Content-Type: TEXT/PLAIN; CHARSET=US-ASCII
-Content-ID: <Pine.LNX.4.30.0207101612491.11210@duplo.agenda.si>
+Hmmm.  Yes --force isn't doing all that it should do. I'll have to
+look into that.
 
-On Wed, 10 Jul 2002, Neil Brown wrote:
+You should be able to use create successfully.
 
-> On Wednesday July 10, danci@agenda.si wrote:
-> > On Wed, 10 Jul 2002, Neil Brown wrote:
-> >
-> > >  mdadm --assemble --force /dev/md1 /dev/sda2 /dev/sdc2
-> > >
-> > > Then it will have to use a2 and c2.
-> >
-> > I tried that, but it refused to do it (something about 2/3 drives
-> > failed)!? Maybe my mdadm version is old (v1.0.0)?
->
-> Hmmm. Should work, but might need a "--run" as well...
->
-> Can you get me an exact error message, and maybe the output of
->  mdadm --examine /dev/sd[abc]2
->
-> NeilBrown
->
+If the original order was b2,c2,a2, which is what the --examine
+suggests, and you want to not use b2, then
 
-OK, it's all attached. One file contains results of mdadm --examine, the
-other is what I get on the screen with mdadm --assemble (w/wo --run)...
+ mdadm --create /dev/md1 -l5 -c32 -n3 missing /dev/sdc2 /dev/sda2
 
-  D.
+should work.  It will not start a rebuild so you can mount it
+read-only and if something was wrong, you can "mdadm --stop" and try
+again with a different arrangement of drives.
 
----154941680-1872484740-1026310360=:11055
-Content-Type: TEXT/PLAIN; CHARSET=US-ASCII; NAME=mdadm-assemble
-Content-Transfer-Encoding: BASE64
-Content-ID: <Pine.LNX.4.30.0207101612401.11055@duplo.agenda.si>
-Content-Description: 
-Content-Disposition: ATTACHMENT; FILENAME=mdadm-assemble
+If b2 and c2 are really the most recent, as it appears, then you might
+want to use those:
 
-W3Jvb3RAbG1xIE1EQURNXSMgbWRhZG0gLS1hc3NlbWJsZSAtLWZvcmNlIC9k
-ZXYvbWQxIC9kZXYvc2RhMiAvZGV2L3NkYzINCm1kOiBtZDEgc3RvcHBlZC4N
-Cm1kOiB1bmJpbmQ8c2RjMiwwPg0KbWQ6IGV4cG9ydF9yZGV2KHNkYzIpDQog
-W2V2ZW50czogMDAwMDAwNThdDQptZDogYmluZDxzZGMyLDE+DQptZGFkbTog
-L2Rldi9tZDEgYXNzZW1ibGVkIGZyb20gMSBkcml2ZSAtIG5vdCBlbm91Z2gg
-dG8gc3RhcnQgaXQgKHVzZSAtLXJ1bg0KdG8gaW5zaXN0KS4NCg0KW3Jvb3RA
-bG1xIE1EQURNXSMgbWRhZG0gLS1hc3NlbWJsZSAtLWZvcmNlIC9kZXYvbWQx
-IC0tcnVuIC9kZXYvc2RhMg0KL2Rldi9zZGMyDQptZDogbWQxIHN0b3BwZWQu
-DQptZDogdW5iaW5kPHNkYzIsMD4NCm1kOiBleHBvcnRfcmRldihzZGMyKQ0K
-IFtldmVudHM6IDAwMDAwMDU4XQ0KbWQ6IGJpbmQ8c2RjMiwxPg0KbWQ6IHNk
-YzIncyBldmVudCBjb3VudGVyOiAwMDAwMDA1OA0KbWQxOiByZW1vdmluZyBm
-b3JtZXIgZmF1bHR5IHNkYjIhDQptZDE6IG1heCB0b3RhbCByZWFkYWhlYWQg
-d2luZG93IHNldCB0byA0OTZrDQptZDE6IDIgZGF0YS1kaXNrcywgbWF4IHJl
-YWRhaGVhZCBwZXIgZGF0YS1kaXNrOiAyNDhrDQpyYWlkNTogZGV2aWNlIHNk
-YzIgb3BlcmF0aW9uYWwgYXMgcmFpZCBkaXNrIDENCnJhaWQ1OiBub3QgZW5v
-dWdoIG9wZXJhdGlvbmFsIGRldmljZXMgZm9yIG1kMSAoMi8zIGZhaWxlZCkN
-ClJBSUQ1IGNvbmYgcHJpbnRvdXQ6DQogLS0tIHJkOjMgd2Q6MSBmZDoyDQog
-ZGlzayAwLCBzOjAsIG86MCwgbjowIHJkOjAgdXM6MSBkZXY6W2RldiAwMDow
-MF0NCiBkaXNrIDEsIHM6MCwgbzoxLCBuOjEgcmQ6MSB1czoxIGRldjpzZGMy
-DQogZGlzayAyLCBzOjAsIG86MCwgbjoyIHJkOjIgdXM6MSBkZXY6W2RldiAw
-MDowMF0NCnJhaWQ1OiBmYWlsZWQgdG8gcnVuIHJhaWQgc2V0IG1kMQ0KbWQ6
-IHBlcnMtPnJ1bigpIGZhaWxlZCAuLi4NCm1kOiBtZDEgc3RvcHBlZC4NCm1k
-OiB1bmJpbmQ8c2RjMiwwPg0KbWQ6IGV4cG9ydF9yZGV2KHNkYzIpDQptZGFk
-bTogZmFpbGVkIHRvIFJVTl9BUlJBWSAvZGV2L21kMTogSW52YWxpZCBhcmd1
-bWVudA0K
----154941680-1872484740-1026310360=:11055
-Content-Type: TEXT/PLAIN; charset=US-ASCII; name=mdadm-examine
-Content-Transfer-Encoding: BASE64
-Content-ID: <Pine.LNX.4.30.0207101613160.11210@duplo.agenda.si>
-Content-Description: 
-Content-Disposition: attachment; filename=mdadm-examine
+  mdadm --create /dev/md1 -l5 -c32 -n3 /dev/sdb2 /dev/sdc2 missing
 
-L2Rldi9zZGEyOg0KICAgICAgICAgIE1hZ2ljIDogYTkyYjRlZmMNCiAgICAg
-ICAgVmVyc2lvbiA6IDAwLjkwLjAwDQogICAgICAgICAgIFVVSUQgOiBkMWI1
-MDE4NDo1MzVmZjczYzo0OGRiYTVjMTplOTRmYzcwZQ0KICBDcmVhdGlvbiBU
-aW1lIDogTW9uIEp1bCAxNiAxMzo1Mzo1MSAyMDAxDQogICAgIFJhaWQgTGV2
-ZWwgOiByYWlkNQ0KICAgIERldmljZSBTaXplIDogMTc2MjMyMzIgKDE2Ljgw
-IEdpQiAxOC4wNCBHQikNCiAgIFJhaWQgRGV2aWNlcyA6IDMNCiAgVG90YWwg
-RGV2aWNlcyA6IDQNClByZWZlcnJlZCBNaW5vciA6IDENCg0KICAgIFVwZGF0
-ZSBUaW1lIDogV2VkIEp1bCAxMCAxNToxODozNyAyMDAyDQogICAgICAgICAg
-U3RhdGUgOiBkaXJ0eSwgbm8tZXJyb3JzDQogQWN0aXZlIERldmljZXMgOiAy
-DQpXb3JraW5nIERldmljZXMgOiAzDQogRmFpbGVkIERldmljZXMgOiAxDQog
-IFNwYXJlIERldmljZXMgOiAxDQogICAgICAgQ2hlY2tzdW0gOiA3OWY4Mjhl
-NSAtIGNvcnJlY3QNCiAgICAgICAgIEV2ZW50cyA6IDAuODINCg0KICAgICAg
-ICAgTGF5b3V0IDogbGVmdC1hc3ltbWV0cmljDQogICAgIENodW5rIFNpemUg
-OiAzMksNCg0KICAgICAgTnVtYmVyICAgTWFqb3IgICBNaW5vciAgIFJhaWRE
-ZXZpY2UgU3RhdGUNCnRoaXMgICAgIDMgICAgICAgOCAgICAgICAgMiAgICAg
-ICAgMyAgICAgICAgL2Rldi9zZGEyDQogICAwICAgICAwICAgICAgIDggICAg
-ICAgMTggICAgICAgIDAgICAgICBhY3RpdmUgc3luYyAgIC9kZXYvc2RiMg0K
-ICAgMSAgICAgMSAgICAgICA4ICAgICAgIDM0ICAgICAgICAxICAgICAgYWN0
-aXZlIHN5bmMgICAvZGV2L3NkYzINCiAgIDIgICAgIDIgICAgICAgMCAgICAg
-ICAgMCAgICAgICAgMiAgICAgIGZhdWx0eSByZW1vdmVkDQogICAzICAgICAz
-ICAgICAgIDggICAgICAgIDIgICAgICAgIDMgICAgICAgIC9kZXYvc2RhMg0K
-DQovZGV2L3NkYjI6DQogICAgICAgICAgTWFnaWMgOiBhOTJiNGVmYw0KICAg
-ICAgICBWZXJzaW9uIDogMDAuOTAuMDANCiAgICAgICAgICAgVVVJRCA6IGQx
-YjUwMTg0OjUzNWZmNzNjOjQ4ZGJhNWMxOmU5NGZjNzBlDQogIENyZWF0aW9u
-IFRpbWUgOiBNb24gSnVsIDE2IDEzOjUzOjUxIDIwMDENCiAgICAgUmFpZCBM
-ZXZlbCA6IHJhaWQ1DQogICAgRGV2aWNlIFNpemUgOiAxNzYyMzIzMiAoMTYu
-ODAgR2lCIDE4LjA0IEdCKQ0KICAgUmFpZCBEZXZpY2VzIDogMw0KICBUb3Rh
-bCBEZXZpY2VzIDogMw0KUHJlZmVycmVkIE1pbm9yIDogMQ0KDQogICAgVXBk
-YXRlIFRpbWUgOiBXZWQgSnVsIDEwIDE1OjM2OjM5IDIwMDINCiAgICAgICAg
-ICBTdGF0ZSA6IGRpcnR5LCBuby1lcnJvcnMNCiBBY3RpdmUgRGV2aWNlcyA6
-IDINCldvcmtpbmcgRGV2aWNlcyA6IDINCiBGYWlsZWQgRGV2aWNlcyA6IDEN
-CiAgU3BhcmUgRGV2aWNlcyA6IDANCiAgICAgICBDaGVja3N1bSA6IDc5Zjgy
-ZDJmIC0gY29ycmVjdA0KICAgICAgICAgRXZlbnRzIDogMC44Ng0KDQogICAg
-ICAgICBMYXlvdXQgOiBsZWZ0LWFzeW1tZXRyaWMNCiAgICAgQ2h1bmsgU2l6
-ZSA6IDMySw0KDQogICAgICBOdW1iZXIgICBNYWpvciAgIE1pbm9yICAgUmFp
-ZERldmljZSBTdGF0ZQ0KdGhpcyAgICAgMCAgICAgICA4ICAgICAgIDE4ICAg
-ICAgICAwICAgICAgYWN0aXZlIHN5bmMgICAvZGV2L3NkYjINCiAgIDAgICAg
-IDAgICAgICAgOCAgICAgICAxOCAgICAgICAgMCAgICAgIGFjdGl2ZSBzeW5j
-ICAgL2Rldi9zZGIyDQogICAxICAgICAxICAgICAgIDggICAgICAgMzQgICAg
-ICAgIDEgICAgICBhY3RpdmUgc3luYyAgIC9kZXYvc2RjMg0KICAgMiAgICAg
-MiAgICAgICAwICAgICAgICAwICAgICAgICAyICAgICAgZmF1bHR5IHJlbW92
-ZWQNCg0KL2Rldi9zZGMyOg0KICAgICAgICAgIE1hZ2ljIDogYTkyYjRlZmMN
-CiAgICAgICAgVmVyc2lvbiA6IDAwLjkwLjAwDQogICAgICAgICAgIFVVSUQg
-OiBkMWI1MDE4NDo1MzVmZjczYzo0OGRiYTVjMTplOTRmYzcwZQ0KICBDcmVh
-dGlvbiBUaW1lIDogTW9uIEp1bCAxNiAxMzo1Mzo1MSAyMDAxDQogICAgIFJh
-aWQgTGV2ZWwgOiByYWlkNQ0KICAgIERldmljZSBTaXplIDogMTc2MjMyMzIg
-KDE2LjgwIEdpQiAxOC4wNCBHQikNCiAgIFJhaWQgRGV2aWNlcyA6IDMNCiAg
-VG90YWwgRGV2aWNlcyA6IDMNClByZWZlcnJlZCBNaW5vciA6IDENCg0KICAg
-IFVwZGF0ZSBUaW1lIDogV2VkIEp1bCAxMCAxNjowODozNSAyMDAyDQogICAg
-ICAgICAgU3RhdGUgOiBjbGVhbiwgbm8tZXJyb3JzDQogQWN0aXZlIERldmlj
-ZXMgOiAxDQpXb3JraW5nIERldmljZXMgOiAxDQogRmFpbGVkIERldmljZXMg
-OiAyDQogIFNwYXJlIERldmljZXMgOiAwDQogICAgICAgQ2hlY2tzdW0gOiA3
-OWY4MzRiYSAtIGNvcnJlY3QNCiAgICAgICAgIEV2ZW50cyA6IDAuODgNCg0K
-ICAgICAgICAgTGF5b3V0IDogbGVmdC1hc3ltbWV0cmljDQogICAgIENodW5r
-IFNpemUgOiAzMksNCg0KICAgICAgTnVtYmVyICAgTWFqb3IgICBNaW5vciAg
-IFJhaWREZXZpY2UgU3RhdGUNCnRoaXMgICAgIDEgICAgICAgOCAgICAgICAz
-NCAgICAgICAgMSAgICAgIGFjdGl2ZSBzeW5jICAgL2Rldi9zZGMyDQogICAw
-ICAgICAwICAgICAgIDggICAgICAgMTggICAgICAgIDAgICAgICBmYXVsdHkg
-ICAvZGV2L3NkYjINCiAgIDEgICAgIDEgICAgICAgOCAgICAgICAzNCAgICAg
-ICAgMSAgICAgIGFjdGl2ZSBzeW5jICAgL2Rldi9zZGMyDQogICAyICAgICAy
-ICAgICAgIDAgICAgICAgIDAgICAgICAgIDIgICAgICBmYXVsdHkgcmVtb3Zl
-ZA0K
----154941680-1872484740-1026310360=:11055--
+Again, this wont do a resync and as long as you don't touch the bad
+block on b2, you should be able to access data.
+
+NeilBrown
