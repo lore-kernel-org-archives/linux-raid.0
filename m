@@ -1,30 +1,27 @@
-From: Jeff Garzik <jgarzik@pobox.com>
+From: William Knop <wknop@andrew.cmu.edu>
 Subject: Re: libata badness
-Date: Mon, 04 Oct 2004 12:30:42 -0400
+Date: Mon, 4 Oct 2004 12:34:21 -0400 (EDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <41617AB2.4030702@pobox.com>
-References: <Pine.LNX.4.60-041.0410040656001.2350@unix48.andrew.cmu.edu> <Pine.LNX.4.58.0410040953160.26615@web1.mmaero.com> <Pine.LNX.4.60-041.0410041132070.9105@unix43.andrew.cmu.edu> <4161750A.6060200@rtr.ca>
+Message-ID: <Pine.LNX.4.60-041.0410041224420.9105@unix43.andrew.cmu.edu>
+References: <Pine.LNX.4.60-041.0410040656001.2350@unix48.andrew.cmu.edu>
+ <Pine.LNX.4.58.0410040953160.26615@web1.mmaero.com>
+ <Pine.LNX.4.60-041.0410041132070.9105@unix43.andrew.cmu.edu>
+ <Pine.LNX.4.58.0410041206060.26615@web1.mmaero.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4161750A.6060200@rtr.ca>
-To: Mark Lord <lkml@rtr.ca>
-Cc: William Knop <wknop@andrew.cmu.edu>, Jon Lewis <jlewis@lewis.org>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
+In-Reply-To: <Pine.LNX.4.58.0410041206060.26615@web1.mmaero.com>
+To: Jon Lewis <jlewis@lewis.org>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-raid.ids
 
-Mark Lord wrote:
-> I have used Maxtor "SATA" drives that require
-> the O/S to do a "SET FEATURES :: UDMA_MODE" command
-> on them before they will operate reliably.
-> This despite the SATA spec stating clearly that
-> such a command should/will have no effect.
-> 
-> I suppose libata does this already, but just in case not..
-> Something simple to check up on.
 
-libata always issues SET FEATURES - XFER MODE.
+> Maxtor's RMA form.  Another possibility that comes to mind is that your
+> power supply could be inadequate to run the system and all the drives.
 
-	Jeff
-
+The power supply on this box is something upwards of 450W. Right now I 
+only have four 7200rpm sata drives along with my athalon mb/cpu and a 
+couple fans. I had six 7200rpm drives connected w/o raid and a P4 before 
+and I had no problems. I'm pretty sure this isn't due to insufficient 
+power supply.
 
