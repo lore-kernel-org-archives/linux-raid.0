@@ -1,67 +1,39 @@
-From: Philipp Gortan <gortan@chello.at>
-Subject: Re: One partition degraded after every reboot
-Date: Thu, 01 Apr 2004 13:45:39 +0200
+From: <me@heyjay.com>
+Subject: Re: Which raid card to buy for Sarge
+Date: Thu, 1 Apr 2004 06:52:20 -0600
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <406C00E3.4030205@chello.at>
+Message-ID: <013101c417e8$fa7fd670$6405a8c0@a30>
+References: <008f01c41737$8b57be40$6405a8c0@a30> <006401c417a1$36a45790$6405a8c0@a30> <406BAF7F.2030307@pobox.com>
+Reply-To: <me@heyjay.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Thomas Andrews wrote:
 
-> I've set up RAID-1 on a pair of disks recently. When I reboot I get this
-> in syslog, even though the partition was perfect & not degraded before:
-> 
-...
-> kernel: md1: former device ide/host2/bus0/target0/lun0/part5 is unavailable, removing from array!
-> 
-> More specifically, of the 4 RAID-1 partitions, md1 (my root partition)
-> is in degraded mode. Here's a snippet of /proc/mdstat:
-> 
-> md1 : active raid1 ide/host2/bus1/target0/lun0/part5[0]
->       38957440 blocks [2/1] [U_]
-> 
-> All the RAID partitions are of type FD on both disks, and the disks are
-> brand new
-...
-> This is a stock Debian/testing pc running a stock 2.4.24-1-686 kernel.
-
-Hi Andrew,
-I had the same problem today, with debian/testing and both 2.4 and 2.6 
-kernels.
-My root filesystem, a raid 1 device would come up degraded at every 
-reboot, even if it was clean on shutdown.
-
-I solved the problem by creating a new initrd and fiddling with the lilo 
-configuration:
-for me,
-after re-adding the always-failing drive to the raid
-# mdadm -a /dev/md0 /dev/hda1
-i updated my lilo.conf to:
-
-...
-boot=/dev/md0
-raid-extra-boot=/dev/hda,/dev/hdc
-root=/dev/md0
-...
+----- Original Message ----- 
+From: "Jeff Garzik" <jgarzik@pobox.com>
+To: <me@heyjay.com>
+Cc: <linux-raid@vger.kernel.org>
+Sent: Wednesday, March 31, 2004 11:58 PM
+Subject: Re: Which raid card to buy for Sarge
 
 
-and created a new initrd
-# mkinitrd -k -r /dev/md0 -o /boot/initrd.img-2.6.3-1-k7
+>
+> 98% cpu doing just raid 1?  That sounds highly strange, even on an older
+> CPU.
+>
+> Typically RAID1 doesn't stress the cpu as much as PCI bus bandwidth and
+> the drives...
+>
 
-and ran lilo again
-# lilo
+Sorry, I was unclear.  Currently (without raid) my process maxes out my cpu.
+If I move to raid won't I have performance problems?  Maybe all the work
+happens at the PCI bus
 
-since that reboot, the raid comes up complete.
+Jay
 
-hope that helps,
-
-cu, philipp
-
--- 
-When in doubt, use brute force.
-
-                                -- Ken Thompson
