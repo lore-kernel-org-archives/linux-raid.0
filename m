@@ -1,30 +1,53 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: Using raidreconf to create raid0 from non-raid works, but df is wrong
-Date: Thu, 8 Jul 2004 13:23:32 +1000
+From: Ricky Beam <jfbeam@bluetronic.net>
+Subject: Re: Bootable software raid and SuSE 9.1
+Date: Thu, 8 Jul 2004 01:38:39 -0400 (EDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16620.48692.991526.480905@cse.unsw.edu.au>
-References: <07ec01c46498$240dd770$6401010a@stan>
+Message-ID: <Pine.GSO.4.33.0407080121210.25702-100000@sweetums.bluetronic.net>
+References: <Pine.LNX.4.58.0407072225080.16359@pcmail.chemie.uni-erlangen.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Mike Billings on Wednesday July 7
-To: Mike Billings <mike@carolina.rr.com>
+In-Reply-To: <Pine.LNX.4.58.0407072225080.16359@pcmail.chemie.uni-erlangen.de>
+To: Norman Schmidt <Norman.Schmidt@chemie.uni-erlangen.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday July 7, mike@carolina.rr.com wrote:
-> Hi,
-> 
-> I originally had a 250G ide drive on my system.  I added a second 250G and
-> used raidreconf to go from non-raid to raid using "raidreconf -i
-> /dev/hde1 -n /etc/raidtab -m /dev/md0".  The conversion suceeded, mdadm
-> reports that everything is ok, and the new raid0 works fine but df reports
-> the wrong size.  Is there any way to get df to report the correct size
-> without wiping the data?  Could I have done something with raidreconf
-> differently to avoid this?
+On Wed, 7 Jul 2004, Norman Schmidt wrote:
+>I tried to use the way I use in debian (boot=/dev/md6, raid-extra-boot
+>..., append md=6,/... in lilo.conf), but it refuses to assemble the raid.
+...
+>Later on, the module raid1 is loaded, and then a "raidautorun" is called,
 
-If it is an ext2 or ext3, then resize2fs is what you need now.
-If some other filesystem.... maybe some other tool.
+The md= syntax... (Documentation/md.txt)
+  for old raid arrays without persistent superblocks:
+    md=<md device no.>,<raid level>,<chunk size factor>,<fault level>,dev0...
+  for raid arrays with persistent superblocks
+    md=<md device no.>,dev0,dev1,...,devn
 
-NeilBrown
+The "md=" kernel cmdline needs the raid personality(s) to be compiled in,
+not as modules.  The setup function is basically a one-shot:
+
+init/do_mounts_md.c:
+/*
+ * When md (and any require personalities) are compiled into the kernel
+ * (not a module), arrays can be assembles are boot time using with AUTODETECT
+ * where specially marked partitions are registered with md_autodetect_dev(),
+ * and with MD_BOOT where devices to be collected are given on the boot line
+ * with md=.....
+ * The code for that is here.
+ */
+...
+				(yeah, the grammer police need to fix that)
+
+If the partitions aren't "fd", there's nothing to get them to autostart once
+the modules /are/ loaded.
+
+You'd probablly be better off using a partitioned raid array depending on
+what else may be using the drives.  This can be complicated.  And at any
+rate, it looks like you'll need to build your own kernel or fix the initrd
+to load the necessary modules and setup the array(s) via an appropriate
+configuration file (mdadm.conf, or whatever)
+
+--Ricky
+
+
