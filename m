@@ -1,32 +1,30 @@
-From: thornber@redhat.com
+From: christophe.varoqui@free.fr
 Subject: Re: [dm-devel] [ANNOUNCE] multipath-tools-0.1.6
-Date: Tue, 27 Apr 2004 11:09:31 +0100
+Date: Tue, 27 Apr 2004 14:37:10 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040427100930.GA24944@nimzo>
-References: <1082930099.3158.13.camel@zezette> <20040426081842.GN8379@nimzo> <1083059878.408e2ea6eab69@imp1-q.free.fr>
+Message-ID: <1083069430.408e53f639536@imp4-q.free.fr>
+References: <1082930099.3158.13.camel@zezette> <20040426081842.GN8379@nimzo> <1083059878.408e2ea6eab69@imp1-q.free.fr> <20040427100930.GA24944@nimzo>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1083059878.408e2ea6eab69@imp1-q.free.fr>
-To: christophe.varoqui@free.fr
-Cc: thornber@redhat.com, device-mapper development <dm-devel@redhat.com>, linux-raid@vger.kernel.org, linux-hotplug-devel@lists.sourceforge.net
+In-Reply-To: <20040427100930.GA24944@nimzo>
+To: thornber@redhat.com
+Cc: linux-raid@vger.kernel.org, device-mapper development <dm-devel@redhat.com>, linux-hotplug-devel@lists.sourceforge.net
 List-Id: linux-raid.ids
 
-On Tue, Apr 27, 2004 at 11:57:58AM +0200, christophe.varoqui@free.fr wrote:
-> Selon thornber@redhat.com:
+Selon thornber@redhat.com:
+
+> > Any insight on where to put the log of the mirror target when mapping over
+> a
+> > MD-created raid1 ?
 > 
-> > On Sun, Apr 25, 2004 at 11:54:59PM +0200, christophe varoqui wrote:
-> > > * add the dmadm WIP tool (read MD superblocks and create
-> > >   corresponding devmaps when possible)
-> > 
-> > :)
-> > 
-> Any insight on where to put the log of the mirror target when mapping over a
-> MD-created raid1 ?
-
-MD effectively uses a log with a single region in it.  So we only need
-3 sectors (2 for the header 1 for the bitset) for the log, is there
-any space in the MD metadata where this could be placed ?
-
-- Joe
+> MD effectively uses a log with a single region in it.  So we only need
+> 3 sectors (2 for the header 1 for the bitset) for the log, is there
+> any space in the MD metadata where this could be placed ?
+> 
+Nope : the sb is 4096 bytes long, and is full of holes. The biggest one is 128
+bytes long, at the tail. We could lower the maximum number of device in a raid
+from 27 to 21 to free 3 sectors, but it won't be appreciated and would leave us
+with the most fundamental problem : logging in the MD superblock would corrupt
+the checksum ... :(
