@@ -1,43 +1,31 @@
-From: Maurice Hilarius <maurice@harddata.com>
-Subject: 3Ware utilities
-Date: Wed, 31 Jul 2002 08:03:09 -0600
+From: John Peel <jrp@thepeel.org>
+Subject: Moving Raid 0+1 to new machine
+Date: Wed, 31 Jul 2002 16:52:06 -0500 (CDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <5.1.0.14.2.20020731075753.0398bec0@mail.harddata.com>
+Message-ID: <Pine.LNX.4.33.0207311642580.3949-100000@thepeel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; format=flowed
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I posted a while back asking if anyone knew of work being done to support 
-disk hot-swap on 3Ware IDE RAID cards.
-I received a couple of answers that misunderstood me, stating that is was 
-supported.
-Of course it is supported using their BIOS based RAID, but was not using 
-Linux software RAID.
+So I have this nice array set up using software raid under redhat 7.2, in 
+this nice server and all was working well until something started 
+bringing the whole thing to it's knees. Now anytime there is any 
+significant i/o the server dies. I would like to move the raid 0+1 to a 
+different working box to retreive the data until I can repair the server. 
+My question is, is there anything I need to look out for in moving the 
+drives other than the obvious. Do the drive letters matter or anthinglike 
+that or if I set the raidtab file up correctly pointing to the drives in 
+their new places should it all reconstruct fine and should I be able to 
+get the data. In addition should the drives have to resync for 30 minutes  
+everytime the server dies or is there a larger problem going on?
 
-I am happy to say that this matter has been successfully addressed by 
-3ware, in that I have used a beta set of command line utilities with their 
-cards and software RAID that does indeed work for supporting hot-swap of 
-disks in a RAID set, and a few other useful things as well.
+fyi I am running RedHat Linux 7.2 with kernel 2.4.18 smp on an ext3 
+filesystem with a software raid of 4 disks raid 0+1. If you need any 
+additional info please let me know. Thanks in advance -John
 
-The people at 3Ware now tell me that these CLI utils are going to be 
-officially released, in their non-beta version, in the next couple of weeks.
-Even better news is that they are releasing them under an Open Source license!
-
-Anyway, my original question was more than amply answered once again by the 
-people at 3Ware.
-
-Ta!
-
-
-With our best regards,
-
-Maurice W. Hilarius       Telephone: 01-780-456-9771
-Hard Data Ltd.               FAX:       01-780-456-9772
-11060 - 166 Avenue        mailto:maurice@harddata.com
-Edmonton, AB, Canada      http://www.harddata.com/
-    T5X 1Y3
-
-2.3TB RAID5 NAS server - dual AthlonMP CPU, Linux, $10,995 CAD / $6850 USD
+john peel
+jrp@thepeel.org
+www.thepeel.org
 
