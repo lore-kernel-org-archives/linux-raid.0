@@ -1,52 +1,63 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: RAID1 and data safety?
-Date: Mon, 04 Apr 2005 16:06:06 -0400
-Message-ID: <1112645166.29559.37.camel@compaq-rhel4.xsintricity.com>
-References: <76592C4D3DA1AC4FB8424084D10D31A80611527B@mchh2c4e.mchh.siemens.de>
-	 <16969.10547.894461.398225@cse.unsw.edu.au>
-	 <ipqnh2-o1n.ln1@news.it.uc3m.es>
+From: Mike Tran <mhtran@us.ibm.com>
+Subject: Re: EVMS or md?
+Date: Mon, 04 Apr 2005 14:28:48 -0500
+Message-ID: <1112642928.25469.28.camel@dyn95395156>
+References: <200504040708.j3478bm03863@www.watkins-home.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <ipqnh2-o1n.ln1@news.it.uc3m.es>
+In-Reply-To: <200504040708.j3478bm03863@www.watkins-home.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Peter T. Breuer" <ptb@lab.it.uc3m.es>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 2005-03-29 at 13:29 +0200, Peter T. Breuer wrote:
-> Neil Brown <neilb@cse.unsw.edu.au> wrote:
-> > Due to the system crash the data on hdb is completely ignored.  Data
+Hi Guy,
+
+On Mon, 2005-04-04 at 02:08, Guy wrote:
+> I am top posting since I am starting a new topic.
 > 
-> Neil - can you explain the algorithm that stamps the superblocks with
-> an event count, once and for all? (until further amendment :-).
+> Don't get me wrong, I like and trust md, at least with kernel 2.4.
+> 
+> This is the first I knew about EVMS, the website makes it sound wonderfull!
+> http://evms.sourceforge.net/
+> 
+> Is EVMS "better" than md?
+> Is EVMS replacing md?
+> Any performance data comparing the 2?
 
-I think the best explanation is this:  any change in array state that
-would necessitate kicking a drive out of the array if it didn't also
-make this change in state with the rest of the drives in the array
-results in an increment to the event counter and a flush of the
-superblocks.  For example, a transition of a raid array from ro to rw
-mode results in an event update and a flush of superblocks.  If the
-system then goes down and one drive has the superblock update and
-another doesn't, then you know that one was behind the other and to kick
-it.
+EVMS uses MD and Device Mapper (DM).  So, EVMS does not replace MD.  For
+RAID-1 & RAID-5, EVMS ioctl md driver to start the array.  For MD's
+RAID-0 and LINEAR arrays, EVMS uses DM stripe and linear targets to
+create device nodes.
 
-> It goes without saying that sb's are not stamped at every write, and the
-> event count is not incremented at every write, so when and when?
+You can say EVMS replaces mdadm (sorry, NeilB :))
 
-Transition from ro -> rw or from rw -> ro, transition from clean to
-dirty or dirty to clean, any change in the distribution of disks in the
-superblock (aka, change in number of working disks, active disks, spare
-disks, failed disks, etc.), or any ordering updates of disk devices in
-the rdisk array (for example, when a spare is done being rebuilt to
-replace a failed device, it gets moved from it's current position in the
-array to the position it was just rebuilt to replace as part of the
-final transition from being rebuilt to being an active, live component
-in the array).
+Regarding performance issue (raid1 & raid5), I/O requests from MD will
+appear on DM's queue.  So, it is probably slower.  How much slower, we
+never run any benchmark to find out.
 
--- 
-Doug Ledford <dledford@redhat.com>
-http://people.redhat.com/dledford
+> 
+> One bad point for EVMS, no RAID6.  :(
+
+We (EVMS team) intended to support RAID6 last year.  But as we all
+remember RAID6 was not stable then.  I may write a plugin to support
+RAID6 soon.
+
+> One good point for EVMS, bad Block Relocation (but only on writes).
+> Not sure how EVMS handles read errors.
+
+As I mentioned above, kernel MD driver handle I/O requests for raid1 and
+raid5.
+
+> 
+> I am getting on the mailing list(s).  I must know more about this!!!
+> 
+
+Welcome aboard :)
+
+--
+Regards,
+Mike T.
 
 
