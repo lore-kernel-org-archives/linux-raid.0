@@ -1,46 +1,90 @@
-From: Maurice Hilarius <maurice@harddata.com>
-Subject: Re: Tiobench results LOWER with more threads
-Date: Thu, 17 Oct 2002 20:52:35 -0600
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: raidsetfaulty (on raid5) gives kernel oops
+Date: Fri, 18 Oct 2002 10:13:46 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <5.1.1.6.2.20021017205027.06ac59a0@mail.harddata.com>
-References: <20021017215014.GA7875@unthought.net>
- <3DABCFE7.9070701@webmail.co.za>
- <20021017215014.GA7875@unthought.net>
+Message-ID: <15791.21050.696955.788062@notabene.cse.unsw.edu.au>
+References: <Pine.LNX.4.44.0210170937290.17673-100000@ddx.a2000.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; format=flowed
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20021018023137.GC18294@peeps.cable.rcn.com>
-To: Gregory Leblanc <gleblanc@linuxweasel.com>
-Cc: linux-raid@vger.kernel.org
+In-Reply-To: message from raid@ddx.a2000.nu on Thursday October 17
+To: raid@ddx.a2000.nu
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-With regards to your message at 08:31 PM 10/17/02, Gregory Leblanc. Where 
-you stated:
+On Thursday October 17, raid@ddx.a2000.nu wrote:
+> Hi,
+> 
+> tried to fail a disk on my raid5 array
+> so i did : 'raidsetfaulty  /dev/md0  /dev/sdf1'
+> 
+> and then i have this in my kernel log :
 
->Err, so are you saying that a single sequential I/O is slower on RAID
->1 when compared with a single disk?  That doesn't make a lot of
->sense.  There -are- instances where parallel I/O is required.  In
->these cases, any RAID-1 should be much faster than a single disk, as
->should RAID 10.  I'm not sure that RAID 5 should give a similar
->benefit, but given the cost of disks, I don't care about RAID 5.
+Can you decode the oops - with ksymoops?   It would make it  easier to
+interpret.
 
-Of course RAID1 should be slower.
-We are doing more WORK!
-We have to generate two writes, and manage them and the RAID.
-With a single disk we are doing much less, and there is _much_ less overhead.
-In an ideal world RAID10 will gain us back the loss because of the RAID0 
-element which DOES gain us some performance back.
-But even then the CPU load will be much more, as we are still writing more 
-data.
+It isn't really something that is safe to ignore.
 
+NeilBrown
 
-With our best regards,
-
-Maurice W. Hilarius       Telephone: 01-780-456-9771
-Hard Data Ltd.               FAX:       01-780-456-9772
-11060 - 166 Avenue        mailto:maurice@harddata.com
-Edmonton, AB, Canada      http://www.harddata.com/
-    T5X 1Y3
-
-Ask me about NAS and near-line storage
-
+> 
+> --
+> raid5: Disk failure on sdf1, disabling device. Operation continuing on 4
+> devices
+> md: updating md0 RAID superblock on device
+> md: sdf1 [events: 00000002]<6>(write) sdf1's sb offset: 117218176
+> md: recovery thread got woken up ...
+> md0: no spare disk to reconstruct array! -- continuing in degraded mode
+> Unable to handle kernel NULL pointer dereference at virtual address
+> 00000000
+>  printing eip:
+> c025a526
+> *pde = 00000000
+> md: recovery thread finished ...
+> Oops: 0000
+> CPU:    3
+> EIP:    0010:[<c025a526>]    Not tainted
+> EFLAGS: 00010206
+> eax: 00000000   ebx: 00000000   ecx: 00000400   edx: de718000
+> esi: 00000000   edi: de718000   ebp: 00001000   esp: de6e1f34
+> ds: 0018   es: 0018   ss: 0018
+> Process raid5d (pid: 575, stackpage=de6e1000)
+> Stack: dfb05780 dfb05780 de719000 c02557e2 de718000 00000000 00001000
+> 0000005d
+>        00000851 ce919200 dfb05780 df748500 dea14c94 dea14c80 c0255b57
+> dfb05780
+>        00000002 c166b72c 00000064 00000000 de6e0000 c166b400 dfb05700
+> dfb05708
+> Call Trace:    [<c02557e2>] [<c0255b57>] [<c0250816>] [<c0258e3f>]
+> [<c01058ce>]
+>   [<c0258d00>]
+> 
+> Code: f3 a5 e9 53 ff ff ff 8d 76 00 c1 e9 02 89 d7 f3 a5 a4 e9 43
+> --
+> 
+> 
+> i can still access my raid5 device (so i don't know if this is just
+> something i can ignore ?)
+> 
+> /proc/mdstat gives me :
+> 
+> --
+> Personalities : [raid0] [raid5]
+> read_ahead 1024 sectors
+> md0 : active raid5 sdf1[4](F) sde1[3] sdd1[2] sdc1[1] sdb1[0]
+>       468872704 blocks level 5, 64k chunk, algorithm 0 [5/4] [UUUU_]
+> 
+> unused devices: <none>
+> --
+> 
+> System is an Intel Dual Xeon 2 Ghz (with htt enabled)
+> 512mb memory
+> 3ware 7850 with 6*120gb 7200 2mb wdc ide
+> 
+> kernel 2.4.20-pre10
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
