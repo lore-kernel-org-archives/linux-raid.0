@@ -1,66 +1,41 @@
-From: NeilBrown <neilb@cse.unsw.edu.au>
-Subject: [PATCH] md - 3 of 3 - Avoid races by never no releasing rdev->sb for faulty devices.
-Date: Tue, 17 Dec 2002 13:00:50 +1100
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: PATCH - md - Make sure yielding thread actually yields cpu when waiting for turn at reconstruct.
+Date: Tue, 17 Dec 2002 13:07:56 +1100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <E18O72Q-0000pZ-00@notabene.cse.unsw.edu.au>
+Message-ID: <15870.34556.308506.746842@notabene.cse.unsw.edu.au>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Marcelo Tosatti <marcelo@conectiva.com.br>
+To: Linus Torvalds <torvalds@transmeta.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
 
-There are races relating to the superblocks being written out
-just as a device has failed, and the rdev->sb getting freeing while
-it is being written out.  This patch tries to avoid one of the
-races by testing the faulty bit in the superblock (which gets set
-early) as well as rdev->faulty (which gets set late), and does not
-free rdev->sb until the rdev is fully removed, thus making the races
-less critical.
+When two md arrays on the same physical devices want to resync, they
+must take turns, and currently the one that chooses to yield may end
+up stealing all the CPU (on a uni-processor) and not give the other a
+chance to get started.
+This patches adds an explicit 'yield()' to avoid the problem.
 
 
  ----------- Diffstat output ------------
- ./drivers/md/md.c |   10 +++++-----
- 1 files changed, 5 insertions(+), 5 deletions(-)
+ ./drivers/md/md.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletion(-)
 
 diff ./drivers/md/md.c~current~ ./drivers/md/md.c
---- ./drivers/md/md.c~current~	2002-12-16 16:29:52.000000000 +1100
-+++ ./drivers/md/md.c	2002-12-16 16:30:42.000000000 +1100
-@@ -1048,7 +1048,11 @@ repeat:
- 			printk("(skipping faulty ");
- 		if (rdev->alias_device)
- 			printk("(skipping alias ");
--
-+		if (disk_faulty(&rdev->sb->this_disk)) {
-+			printk("(skipping new-faulty %s )\n",
-+			       partition_name(rdev->dev));
-+			continue;
-+		}
- 		printk("%s ", partition_name(rdev->dev));
- 		if (!rdev->faulty && !rdev->alias_device) {
- 			printk("[events: %08lx]",
-@@ -1075,7 +1079,6 @@ repeat:
-  *   - the device is nonexistent (zero size)
-  *   - the device has no valid superblock
-  *
-- * a faulty rdev _never_ has rdev->sb set.
-  */
- static int md_import_device(kdev_t newdev, int on_disk)
- {
-@@ -1147,8 +1150,6 @@ static int md_import_device(kdev_t newde
- 	md_list_add(&rdev->all, &all_raid_disks);
- 	MD_INIT_LIST_HEAD(&rdev->pending);
- 
--	if (rdev->faulty && rdev->sb)
--		free_disk_sb(rdev);
- 	return 0;
- 
- abort_free:
-@@ -3062,7 +3063,6 @@ int md_error(mddev_t *mddev, kdev_t rdev
- 		return 0;
- 	if (!mddev->pers->error_handler
- 			|| mddev->pers->error_handler(mddev,rdev) <= 0) {
--		free_disk_sb(rrdev);
- 		rrdev->faulty = 1;
- 	} else
- 		return 1;
+--- ./drivers/md/md.c~current~	2002-12-09 15:47:05.000000000 +1100
++++ ./drivers/md/md.c	2002-12-09 15:47:05.000000000 +1100
+@@ -2815,8 +2815,10 @@ static void md_do_sync(void *data)
+ 				printk(KERN_INFO "md: delaying resync of md%d until md%d "
+ 				       "has finished resync (they share one or more physical units)\n",
+ 				       mdidx(mddev), mdidx(mddev2));
+-				if (mddev < mddev2) /* arbitrarily yield */
++				if (mddev < mddev2) {/* arbitrarily yield */
+ 					mddev->curr_resync = 1;
++					yield();
++				}
+ 				if (wait_event_interruptible(resync_wait,
+ 							     mddev2->curr_resync < 2)) {
+ 					flush_curr_signals();
