@@ -1,24 +1,132 @@
-From: "Kevin P. Fleming" <kpfleming@starnetworks.us>
-Subject: Re: [PATCH md 2 of 4] Fix raid6 problem
-Date: Sun, 23 Jan 2005 07:42:43 -0700
-Message-ID: <41F3B7E3.4030603@starnetworks.us>
-References: <38038.212.158.231.74.1099526180.squirrel@mail.fsck.co.uk>    <200412090021.iB90L4MK014200@terminus.zytor.com> <33023.212.158.231.74.1106488921.squirrel@mail.fsck.co.uk>
+From: Luca Berra <bluca@comedia.it>
+Subject: patches for mdadm 1.8.0 (auto=dev and stacking of devices)
+Date: Sun, 23 Jan 2005 16:13:05 +0100
+Message-ID: <20050123151305.GB15317@percy.comedia.it>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="dDRMvlgZJXvWKvBx"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <33023.212.158.231.74.1106488921.squirrel@mail.fsck.co.uk>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: Neil Brown <neilb@cse.unsw.edu.au>
 List-Id: linux-raid.ids
 
-A. James Lewis wrote:
 
-> At the moment, I am experimenting with RAID on top of USB Mass Storage
-> devices... it's interesting because the USB system takes a significant
-> time to identify and make each drive available, and I have to determine if
-> all the drives have become available before starting any arrays....
+--dDRMvlgZJXvWKvBx
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Disposition: inline
 
-You'd be best off to leverage the hotplug infrastructure (userspace 
-scripts) and just not try to start the array until you know all the 
-members are available.
+hello,
+i attach two patches for mdadm 1.8.0
+
+the first one adds an auto=dev parameter
+rationale: udev does not create /dev/md* device files, so we need a way
+to create them when assembling the md device.
+auto=yes allocates the first free minor number, so mdadm -A --auto=yes
+/dev/md2 .... yelds a weird result if /dev/md2 is the first device
+created (it would use 0 as minor)
+here comes auto=dev which would use the standard minor number for
+/dev/md2.
+
+the second one fixes creation of stacked devices.
+it adds a missing close(mdfd) in mdadm.c that caused 
+the BLKGETSIZE64 ioctl in load_super to fail if the device was created
+in the same mdadm run. (* This is very important to fix *)
+
+It also modifies load_conffile in config.c to recreate the device list
+at each run if "partition" is given as config file or appears in a
+DEVICE line. This allows "DEVICE partition" to consider md devices
+created during the same run of mdadm, removing the need to add
+"/dev/md??" to the DEVICE line to enable stacked devices.
+
+Regards,
+L.
+
+
+-- 
+Luca Berra -- bluca@comedia.it
+        Communication Media & Services S.r.l.
+ /"\
+ \ /     ASCII RIBBON CAMPAIGN
+  X        AGAINST HTML MAIL
+ / \
+
+--dDRMvlgZJXvWKvBx
+Content-Type: application/octet-stream
+Content-Disposition: attachment; filename="mdadm-1.8.0-autodev.patch.bz2"
+Content-Transfer-Encoding: base64
+
+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
+
+--dDRMvlgZJXvWKvBx
+Content-Type: application/octet-stream
+Content-Disposition: attachment; filename="mdadm-1.8.0-stacked.patch.bz2"
+Content-Transfer-Encoding: base64
+
+QlpoOTFBWSZTWUBM/8UAAcbfgHowcv//+2+n0y6//9/qUAR+4W3G5js66tY1qElFPKNTJ5Go
+fohPSaaBoAepoxDQAAaASRNEyU8JBMMoaaMj0mgAA0AAGgEp6Smkk09GoA9JoA0AADRoAAAA
+4yZNDEYmjAIwEwgDATTRpkaAYSKJomFTzE1TwkaYmnpAA9QB6jajRp6jQ9IkhUMGsCCQK1Ii
+NheiCTIQBuAxRFaWqqxiUsWWXVjV3VlkJUPMcBdgCINNVlBMS7QtCNW0Wktii0TkdJ3n+m5/
+tdly8zNXF6tmZKYYolshd6Gh3mpoGqzGUiK2lXWo0ZZA5pnYZswROeMYxYYAgqGEAHet/Osa
+s5zwbZA0up7/589ZjyZ3Oc6qVIgwFNM3BTxU30QQUfU886Zyg0aDBjCweUQ1/DoWYy29jadX
+go06YPNWoaiWXtl8OacdOmc+ixI4Jzitfz2uVm453UbGW4YdSmh5bxdOlWLMk7Jzk8XHe2hQ
+g1siRUdhtybyC9MCzsoX3UalInVzkJnhtp4tlmLMcU3PHy2JDNipxF7AZtDCebxtApEg1ASL
+oMGoGOfartJYKErqx/RZMLIYW7dtrLII4gZEP6EwXoz5J6QkamFnpKeofGC4bEGsdw2Z8UYi
+qhzXe8JEgZA5AwDhDmkE5SvgbokryYTKhrkHSukU3b5WVmenciCWbqzbQYIya54KNmFZ5aMJ
+mU7jOqzDDBrPaMh6YA+pTi5qUkPWs1ijRdiaThoQsS84U2bEE37KpyPx63pfJuKBdtbTIxzG
+szEDIHKTqbM2NytdKLRwThF0YbwrDMecRJGpGs6SIzoC+KNqtf0Du5vubg6D7VlKHuRMVrDo
+gjIM6SBuJzciRsCJo9q5bzbsUFwrLnMBRiHn4JOE3KmCJVvYzTjB8/tr5hRiLClVdax0IoRE
+MnWRQS2bRxhkN8sBTEiVf5numORT0L6kTwLj8SDaZY7s5w6YxoOzEG2AwLArmsOg4Mg7NEaw
+quK0oLgDuIGcEJ+KMS0yogwTYKVEALlDjsE1toUofYSdkOhjmzWqXDN0yGSVlzomQaVydMDV
+qisp8VRK4eLCR7LbUrCvEBEZOGzGm4VmL1vgyObST4EhGnnrvrIW3RLNSFbJhFRjVBgXiL7y
+SHy2Wxmc002c0CK22hwcE51QykuFmnXsoJnYaVxreXXCqxYqkw5BkMoRZWTdjDMZ96tgG+mh
+IRgRxCXmHNxmEROJS1pEqlnnx4rSFCIUVF8t/rYCeXXlq8SSdpMXHWE2ih11DK0ybskFoyzN
+isj4rhF2NErEzUr0NYljQVksQutTINxYp94L2DrK5jBGtaiDel/hlsDO8VV6mpLEgWApkWoo
+IlCng7UaZwi0jZDJpepxbuCxZTmIZWWWSdEAF17A4wj/i7kinChIICZ/4oA=
+
+--dDRMvlgZJXvWKvBx--
