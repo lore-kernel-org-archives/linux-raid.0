@@ -1,35 +1,46 @@
-From: Andrew Walrond <andrew@walrond.org>
-Subject: Re: No swap can be dangerous (was Re: swap on RAID (was Re: swp - Re: ext3 journal on software raid))
-Date: Fri, 7 Jan 2005 09:28:13 +0000
-Message-ID: <200501070928.13307.andrew@walrond.org>
-References: <200501062316.j06NFP900855@www.watkins-home.com>
+From: Andy Smith <andy@lug.org.uk>
+Subject: Re: PROBLEM: Kernel 2.6.10 crashing repeatedly and hard
+Date: Fri, 7 Jan 2005 09:39:36 +0000
+Message-ID: <20050107093936.GM99565@caffreys.strugglers.net>
+References: <m3is6k4oeu.fsf@reason.gnu-hamburg> <m38y7fn4ay.fsf@reason.gnu-hamburg> <v3rda2-hjn.ln1@news.it.uc3m.es> <41DE2A54.1010902@tequila.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="w/v2c/tRBe2qsJs0"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200501062316.j06NFP900855@www.watkins-home.com>
 Content-Disposition: inline
+In-Reply-To: <41DE2A54.1010902@tequila.co.jp>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Guy <bugzilla@watkins-home.com>, 'Mike Hardy' <mhardy@h3c.com>, 'Jesper Juhl' <juhl-lkml@dif.dk>, linux-raid@vger.kernel.org, alan@lxorguk.ukuu.org.uk
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday 06 January 2005 23:15, Guy wrote:
-> If I MUST/SHOULD have swap space....
-> Maybe I will create a RAM disk and use it for swap!  :)  :)  :)
 
-Well, indeed, I had the same thought. As long as you could guarantee that the 
-ram was of the highmem/non-dmaable type...
+--w/v2c/tRBe2qsJs0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-But we're getting ahead of ourselves. I think we need an authoritive answer to 
-the original premise. Perhaps Alan (cc-ed) might spare us a moment?
+On Fri, Jan 07, 2005 at 03:21:08PM +0900, Clemens Schwaighofer wrote:
+> On 12/31/2004 02:39 AM, Peter T. Breuer wrote:
+> > Yes, well, don't put the journal on the raid partition. Put it
+> > elsewhere (anyway, journalling and raid do not mix, as write ordering
+> > is not - deliberately - preserved in raid, as far as I can tell).
+>=20
+> Thats a very new claim. I never ever heard of that.
 
-Did I dream this up, or is it correct?
+Yes, and neither have most people I talked to about this, which is
+why I think this deserves to be explored more and any gotchas
+documented somewhere.
 
-"I think the gist was this: the kernel can sometimes needs to move bits of 
-memory in order to free up dma-able ram, or lowmem. If I recall correctly, 
-the kernel can only do this move via swap, even if there is stacks of free 
-(non-dmaable or highmem) memory."
+--w/v2c/tRBe2qsJs0
+Content-Type: application/pgp-signature
+Content-Disposition: inline
 
-Andrew
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.0 (FreeBSD)
+
+iD8DBQFB3ljYIJm2TL8VSQsRAlZ2AJ0VNwelWxN8eIwunE6RUTRcACxKxgCfVUKA
+xlIBgCi1kkAJwA7VhT6PT9g=
+=hPIX
+-----END PGP SIGNATURE-----
+
+--w/v2c/tRBe2qsJs0--
