@@ -1,45 +1,38 @@
-From: "Rev. Jeffrey Paul" <sneak@datavibe.net>
-Subject: 3ware escalade vs software raid, from a different jeff
-Date: Wed, 18 Feb 2004 16:48:40 -0500
+From: "dario" <sonia_16@hotmail.com>
+Subject: Next Generation V-I-A-G-R-A!  Not herbal!
+Date: Wed, 18 Feb 2004 17:31:38 GMT
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040218214840.GS20790@datavibe.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Message-ID: <1077125498-12587__6107.66860559142$1077162173@excite.com>
+Content-Type: text/plain;
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-To: linux-raid@vger.kernel.org
+To: linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-I'm building an nfs server to export home directories to a few login 
-servers used somewhat heavily by a few hundred people.  Additionally, on 
-the array will be a bunch of web content and mysql data files.
+"I went from about 6in. to over 7.5 in 90days!" - JL - Tulsa, OK
 
-I'm currently thinking of a few different configurations, all using four
-drives in the 180-250gb range.  I could get sata or udma drives, i could
-go raid5 or raid10, and i could do this in linux software raid (using,
-say, a pair of promise ultra100s to give me four udma ports, or with an
-SATA card), using 3ware's UDMA four-port escalade, or with 3ware's new
-sata escalade.
+http://drlaurent.com/mm/index.php?pid=eph9106
 
-What are the compelling reasons for using sata over udma?  I've had really 
-good experiences with linux software raid, but always in small workgroup 
-or personal file servers.  I'm wondering if this sort of big, random, 
-heavy load will drag down an otherwise speedy box.  Is it worth it to just 
-drop the extra $300 and go with hardware raid?  as quality as linux 
-software raid is, i'm somehow still more comfortable just leaving it to 
-hardware.
 
-what sort of ideas or experiences can you guys share?
+"NOT only the SIZE increased..but also the feeling!" - ER - Dallas, TX
 
-i'm going for cost first (i've got a $1k budget or so), reliability and 
-stability second, and speed third.
+http://drlaurent.com/mm/index.php?pid=eph9106
 
--j
 
---
---------------------------------------------------------
- Rev. Jeffrey Paul    -datavibe-     sneak@datavibe.net
-   aim:x736e65616b   pgp:0x15FA257E   phone:8777483467
-    70E0 B896 D5F3 8BF4 4BEE 2CCF EF2F BA28 15FA 257E
---------------------------------------------------------
+"I grew about 2in - and more so..remain rock-hard during love making. I owe it
+all to Maxaman! Not bad for a 56 year old."  MT - Pensacola, FL
+
+http://drlaurent.com/mm/index.php?pid=eph9106
+
+
+
+
+
+
+
+
+<P> stevenson Fisher steciak goldman dolotta Hotrod  lyanna canadian 
+avasaris tejachle padula  kithsiri  jonathan &nbsp; metallic merchant sanjuan Robbie kctachma ramdass  shepard winter shithead  koko weissman gwbahren student
+Cougar
+Get off this list by writing to getmeoff731@mail.com
+
