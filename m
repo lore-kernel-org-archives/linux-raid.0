@@ -1,14 +1,54 @@
-From: Novak David-DNOVAK1 <David.Novak@motorola.com>
-Subject: Linear Raid Problems...
-Date: Fri, 2 Apr 2004 08:27:16 -0600
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: Linear Raid Problems...
+Date: Fri, 2 Apr 2004 09:55:13 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <8E4E38BF6D087F4488E80ABAACA2F3F484D646@il27exm02.cig.mot.com>
+Message-ID: <200404021455.i32EtIW27558@dns1.watkins-home.com>
+References: <8E4E38BF6D087F4488E80ABAACA2F3F484D646@il27exm02.cig.mot.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="iso-8859-1"
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: "'linux-raid@vger.kernel.org'" <linux-raid@vger.kernel.org>
+In-Reply-To: <8E4E38BF6D087F4488E80ABAACA2F3F484D646@il27exm02.cig.mot.com>
+To: 'Novak David-DNOVAK1' <David.Novak@motorola.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+Looks like you have a bad disk!
+Apr  2 07:47:39 Homer kernel:  I/O error: dev 08:21, sector 23758976
+
+I test my disks with the dd command.
+Examples:
+To test the whole disk:
+	dd if=/dev/sdb of=/dev/null bs=64k
+To test one partition:
+	dd if=/dev/sdb1 of=/dev/null bs=64k
+
+I would test the whole disk.
+
+It looks like your array is assembled, but not started.
+Try:
+raidstop /dev/md0
+mkraid /dev/md0
+
+You should consider switching from mkraid to mdadm.
+Most people here will YELL at you for using mkraid! :)
+For details:
+man mdadm
+
+In a related issue, you should consider using RAID5.  You will lose the
+space of one disk.  However, if a disk fails no data loss and the data is
+accessible.
+
+Oops... I see your disks have very different sizes.  Don't use RAID5!
+
+Guy
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Novak David-DNOVAK1
+Sent: Friday, April 02, 2004 9:27 AM
+To: 'linux-raid@vger.kernel.org'
+Subject: Linear Raid Problems...
 
 Hi all,
 
@@ -47,7 +87,8 @@ mkraid version 0.90.0
 
 Kernel version:
 Homer:/etc# cat /proc/version
-Linux version 2.4.19 (root@hopper) (gcc version egcs-2.92.11 19980921 (gcc2 ss-9
+Linux version 2.4.19 (root@hopper) (gcc version egcs-2.92.11 19980921 (gcc2
+ss-9
 80609 experimental)) #1 SMP Fri Oct 4 19:11:01 EDT 2002
 
 After running mkraid they syslog says:
@@ -71,7 +112,8 @@ but now mdstat says:
 
 Homer:/etc# cat /proc/mdstat
 Personalities :
-read_ahead not set9L, 906C                                    1,1           All
+read_ahead not set9L, 906C                                    1,1
+All
 md0 : inactive sdd1[2] sdc1[1] sdb1[0]
       0 blocks
 unused devices: <none>
@@ -101,3 +143,9 @@ GSM Products Division                     CE/NSS
 Motorola                                  Life v7.0
 --------------------------------------------------------------------------
 "Not all who wander are lost." - J.R.R. Tolkien
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
