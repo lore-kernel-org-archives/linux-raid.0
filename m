@@ -1,48 +1,63 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: 3ware escalade vs software raid, from a different jeff
-Date: Thu, 19 Feb 2004 19:38:51 -0500
+From: "Rechenberg, Andrew" <ARechenberg@shermanfinancialgroup.com>
+Subject: RE: Scsi adapters and software raid...
+Date: Thu, 19 Feb 2004 19:49:58 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <4035571B.505@pobox.com>
-References: <Pine.LNX.4.44.0402191118090.10623-100000@praktifix.dwd.de> <Pine.LNX.4.58.0402190704420.25541@chaos.egr.duke.edu> <20040219175630.GA20790@datavibe.net>
+Message-ID: <8075D5C3061B9441944E137377645118322AB5@cinshrexc03.shermfin.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20040219175630.GA20790@datavibe.net>
-To: "Rev. Jeffrey Paul" <sneak@datavibe.net>
-Cc: Joshua Baker-LePain <jlb17@duke.edu>, linux-raid@vger.kernel.org
+content-class: urn:content-classes:message
+To: Bob Hillegas <bobhillegas@houston.rr.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Rev. Jeffrey Paul wrote:
-> I have always avoided the promise fasttrak cards for exactly that 
-> reason ("hardware" being in quotes).  It's my understanding that 
-> they're not much more than their udma cards with drivers that do most 
-> of the RAIDing.
 
-Actually, Promise is one of the very few companies that are doing 
-something innovative in RAID...  Their hardware is not 100% software 
-RAID nor 100% hardware RAID.  They instead follow the model of network 
-cards -- perform all key operations on the board, and let the host CPU 
-handle the rest.
+I would agree.  We have a 56-disk Linux software RAID array running with
+4 Adaptec 39160 (they use the aic7xxx module) and we have had great
+performance and reliability.
+
+Regards,
+Andrew Rechenberg
+Infrastructure Team, Sherman Financial Group
 
 
-> It was also my understanding that the 3ware cards are true hardware 
-> raid and are up to the task of something like this, which would also 
-> explain why they're 4x the cost.
-
-Correct.
-
-
-> I am looking at a four disk raid5 or raid10, and it seems like 
-> the interrupt load from four drives on four channels might be a bit 
-> excesive.  I'm going to be running critical services on the machine 
-> that the drives are in (namely mysql and nfs) and don't want to worry 
-> about performance.
-
-Once your spindles can max out your PCI bus bandwidth, -then- you can 
-start worrying about PCI bandwidth and interrupt load ;-)
-
-	Jeff
-
-
-
+> -----Original Message-----
+> From: linux-raid-owner@vger.kernel.org 
+> [mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Kanoa 
+> Withington
+> Sent: Thursday, February 19, 2004 7:34 PM
+> To: Bob Hillegas
+> Cc: linux-raid@vger.kernel.org
+> Subject: Re: Scsi adapters and software raid...
+> 
+> 
+> Bob,
+> 
+> All the Adaptec non-RAID SCSI controllers work nicely. The 
+> ones based on the 79xx and newer chips require the newer 
+> kernel module. The 78xx and older ones are all supported by 
+> the old module. They are generally stable, compatible and 
+> offer good performance.
+> 
+> Their SCSI _hardware_ RAID controllers are a different story. 
+> Steer clear of those.
+> 
+> 
+> -Kanoa
+> 
+> 
+> On Thu, 19 Feb 2004, Bob Hillegas wrote:
+> 
+> > It's been interesting reading these comments about adapters 
+> to avoid.
+> >
+> > My question is... what SCSI adapter works WELL with software raid
+> > (mdadm) and doesn't get in the way?
+> -
+> To unsubscribe from this list: send the line "unsubscribe 
+> linux-raid" in the body of a message to 
+> majordomo@vger.kernel.org More majordomo info at  
+> http://vger.kernel.org/majordomo-info.html
+> 
