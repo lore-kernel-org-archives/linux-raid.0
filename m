@@ -1,49 +1,47 @@
 From: Neil Brown <neilb@cse.unsw.edu.au>
 Subject: Re: RFC - new raid superblock layout for md driver
-Date: Thu, 21 Nov 2002 10:11:43 +1100
+Date: Thu, 21 Nov 2002 10:17:21 +1100
 Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <15836.5807.792124.255167@notabene.cse.unsw.edu.au>
+Message-ID: <15836.6145.203067.371300@notabene.cse.unsw.edu.au>
 References: <15835.2798.613940.614361@notabene.cse.unsw.edu.au>
-	<1037801381.3267.17.camel@irongate.swansea.linux.org.uk>
+	<20021120085838.A9206@ti19>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: message from Alan Cox on  November 20
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org
+In-Reply-To: message from Bill Rugolsky Jr. on Wednesday November 20
+To: "Bill Rugolsky Jr." <brugolsky@telemetry-investments.com>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On  November 20, alan@lxorguk.ukuu.org.uk wrote:
-> On Wed, 2002-11-20 at 04:09, Neil Brown wrote:
-> >     u32  set_uuid[4]
+On Wednesday November 20, brugolsky@telemetry-investments.com wrote:
+> On Wed, Nov 20, 2002 at 03:09:18PM +1100, Neil Brown wrote:
+> >     u32  feature_map     /* bit map of extra features in superblock */
 > 
-> Wouldnt u8 for the uuid avoid a lot of endian mess
+> Perhaps compat/incompat feature flags, like ext[23]?
 
-Probably....
-This makes it very similar to 'name'.  
-The difference if partly the intent for how user-space would use it,
-and partly that set_uuid must *never* change, while you would probably
-want name to be allowed to change.
-
+I thought about that, but am not sure that it makes sense as there is
+much less metadata in a raid array than there is in a filesystem.
+I think I am happier to have initial code require feature_map == 0 or
+it doesn't get loaded, and if it becomes an issue, get user-space to
+clear any 'compatible' flags before passing the device to an 'old'
+kernel.
 
 > 
-> >     u32  ctime
-> 
-> Use some padding so you can go to 64bit times
-> 
-Before or after?  Or just make it 64bits of seconds now?
-This brings up endian-ness?  Should I assert 'little-endian' or should
-the code check the endianness of the magic number and convert if
-necessary?
-The former is less code which will be exercised more often, so it is
-probably safe.
+> Also, journal information, such as a journal UUID?
 
-So:
-  All values shall be little-endian and times shall be stored in 64
-  bits with the top 20 bits representing microseconds (so we & with
-  (1<<44)-1  to get seconds.
+As there is no current code, or serious project that I know of, to add
+journalling to md (I have thought about it, but it isn't a priority) I
+wouldn't like to pre-empt it at all by defining fields now.  I would
+rather that presense-of-a-journal be indicated by a bit in the feature map,
+and that would imply uuid was stored in one of the current 'pad'
+fields.  I think there is plenty of space.
 
-Thanks.
-
+Thanks,
 NeilBrown
+
+
+> 
+> Regards,
+> 
+> 	Bill Rugolsky
