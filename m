@@ -1,35 +1,35 @@
-From: Mike Hardy <mhardy@h3c.com>
-Subject: Re: [PATCH md 2 of 4] Fix raid6 problem
-Date: Fri, 04 Feb 2005 10:31:31 -0800
-Message-ID: <4203BF83.4050408@h3c.com>
-References: <200502031743.j13Hha910546@www.watkins-home.com> <42026860.1000409@zytor.com> <Pine.LNX.4.56.0502031822160.9028@lion.drogon.net> <200502040904.38264.andrew@walrond.org> <Pine.LNX.4.56.0502041031470.29133@lion.drogon.net>
+From: Eloy Marino <fhshaida@tm.net.my>
+Subject: Alternative to V i a g r a
+Date: Sun, 06 Feb 2005 03:25:22 -0400
+Message-ID: <36AB89C5.10841@wenet.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-In-Reply-To: <Pine.LNX.4.56.0502041031470.29133@lion.drogon.net>
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7Bit
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi
+My name is Eloy Marino, Affiliate Manager 
+for "Gmgmedical Licenced Phar. Online"
 
+Let me first congratulate you.
+You have found the ONLY site on the Internet offering 
+L e v i t r a/C i a l i s for as low as $ 2.99
+No kidding, and No BS..
 
-Gordon Henderson wrote:
+- Less sideeffects than v i a g r a
+- Higher success rate
+- Over 70% cheaper
 
-> I have had a private email from someone who has experienced similar
-> lock-ups with twin Opteron systems and PCI cards, so from that point of
-> view it doesn't bode well.
-> 
-> I have some quad Opterons running too, and they seem fine, although they
-> are pure compute servers with just a local IDE drive. (and they are
-> running SuSE 64-bit which is what the application demands)
+Even if you dont have impotence problems,
+It will greatly increase power, pleasure and stamina.
 
-Interesting - the private mail was from me, and I've got two dual 
-Opterons in service. The one with significantly more PCI activity has 
-significantly more problems then the one with less PCI activity.
+http://ejrhxw322.com/?897
 
-There appears to be a trend here then, if 3 is a trend.
+thank you
+Eloy Marino
+Affiliate Sales Manager 
 
-We're moving to a single PCI card (8-port 3ware, iirc) for all 
-off-motherboard disk access, and I'll report back if that changes anything.
-
--Mike
+not interested in this campaign , go here
+http://ejrhxw322.com/rm.php?897
