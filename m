@@ -1,77 +1,55 @@
-From: maarten <maarten@ultratux.net>
-Subject: Re: Spares and partitioning huge disks
-Date: Thu, 6 Jan 2005 19:18:16 +0100
-Message-ID: <200501061918.16088.maarten@ultratux.net>
-References: <200501061731.j06HVi932064@www.watkins-home.com>
+From: Mike Hardy <mhardy@h3c.com>
+Subject: Question about how the raid code is  tested / idea for automated
+ testing
+Date: Thu, 06 Jan 2005 09:56:59 -0800
+Message-ID: <41DD7BEB.5040502@h3c.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200501061731.j06HVi932064@www.watkins-home.com>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday 06 January 2005 18:31, Guy wrote:
-> This idea of splitting larger disks into smaller partitions, then
-> re-assembling them seems odd.  But it should help with the "bad block kicks
-> out a disk" problem.
 
-Yes.  And I'm absolutely sure I read it on linux-raid.  Couple of months back.
+Something that struck me while wading through the whole ext3 journaling 
+errors thread was a tongue-in-cheek suggestion to Peter that he picture 
+the kernel as a state machine and start verifying it, to which Peter 
+replied with a static analysis tool link.
 
-> However, if you are going to use LVM anyway, why not allow LVM to assemble
-> the disks?  I do that sort of thing all the time with HP-UX.  I create
-> stripped mirrors using 4 or more disks.  With HP-UX, use the -D option with
-> lvcreate.  No idea if Linux and LVM can strip.
+I also recall a test script that someone cooked up to reproduce a raid6 
+bug that involved loopback devices etc
 
-I think so.  But I am more familiar with md, so I'll still use that.  In any 
-case LVM's striping is akin raid-0, whereas I will definitely use raid-5.
+Finally, I recall a couple of vague mentions that it was possible to 
+exercise the code by putting faulty virtual block devices under it and 
+simulating faults, and that there was someone, or a group of someone 
+that does a fair amount of reliability testing (maybe it was RedHat?)
 
-> You are making me think!  I hate that!  :)  Since your 6 RAID5 arrays are
+For no really good reason, that made me wonder how the code is tested, 
+and if there were any automated test suites.
 
-;-)  Terrible, isn't it.
+Assuming there aren't, I pictured a modular system that includes three 
+parts.
 
-> on the same 4 disks, striping them will kill performance.  The poor heads
-> will be going from 1 end to the other, all the time.  You should use LINEAR
-> is you combine them with md.  If you use LVM, make sure it does not stripe
-> them.  With LVM on HP-UX, the default behavior is to not stripe.
+1) a raid testing engine that takes some sort of raid command language 
+and uses it to build a specified raid out of loop devices and faulty 
+block devices and then exercise it using a specified set of tasks (load, 
+failures, resysncs, etc) all the while posting results back to an URL 
+where a CGI just logs them or something simple
+2) a script generator that can crank out command files for the testing 
+engine that cover all the various permutations.
+3) an image-building system that produces a bootable ISO based on 
+knoppix with a kernel from a kernel source tree you specify that will 
+hit a configurable URL for a script to run
 
-Exactly what I thought.  That they are on the same disks should not matter; 
-only when one full md set (6-1)*40GB=200GB is full (or used, or whatever) 
-will the "access" move on to the next set of drives.  It is indeed imperative 
-to NOT have LVM striping (nor use raid-0, thanks for observing that!), as 
-that would be totally counterproductive and may thus kill performance. 
-(r/w head thrashing)
+Then I'm picturing a cycle where new code can be built into an ISO, the 
+script can generate all the test permutations, and set VMWare (or 
+similar) going in a loop, harvesting results in a crash-proof way.
 
-For all clarity, this is how it would look:
+I'm not that skilled at C code anymore, but this kind of system is 
+mostly just duct-tape (imho), and I can do that. It might be fun to play 
+around with if there's value to it. I've been meaning to learn how to 
+customize knoppix and automate vmware tasks anyway, and we already have 
+the raid6 test as an example script.
 
-md0 : active raid5 sda1[0] sdb1[1] sdc1[2] sdd1[3]
-      40000000 blocks level 5, 64k chunk, algorithm 2 [4/4] [UUUU]
-...
-...
-...
-md5 : active raid5 sda6[0] sdb6[1] sdc6[2] sdd6[3]
-      40000000 blocks level 5, 64k chunk, algorithm 2 [4/4] [UUUU]
-
-The lvm part is still new to me, but the goal is simply to add all PVs /dev/
-md0 through /dev/md5 to one LV yielding... well, a very large volume. :-)
-
-I was planning to do this quickly tonight, but I've overlooked one essential 
-thing ;-|  The old server has already 220 GB of data built of 4 80GB disks in 
-raid-5.  But I cannot connect all 8 disks at the same time, so I'll have to 
-'free up' another system to define the arrays and copy the data over Gbit 
-LAN.  I definitely don't want to lose the data!
-What complicates this a bit is that I wanted to copy the OS verbatim (it is 
-not part of that raid-5 set, just raid-1). But I suppose booting a rescue CD 
-would enable me to somehow netcat the OS over to the new disks...
-We'll see.
-
-But for now I'm searching my home for a spare system with SATA onboard... :-)
-
-Maarten
-
--- 
-
-
+-Mike
