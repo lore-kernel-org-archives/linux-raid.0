@@ -1,89 +1,32 @@
-From: J Dalessandro <joe@nan0.com>
-Subject: RAID1 problem, newbie to RAID
-Date: Mon, 20 Jan 2003 16:38:44 -0700
+From: Scott Mcdermott <smcdermott@questra.com>
+Subject: Re: RAID1 problem, newbie to RAID
+Date: Mon, 20 Jan 2003 20:03:45 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3E2C8884.8040003@nan0.com>
+Message-ID: <20030121010345.GF10369@questra.com>
+References: <3E2C8884.8040003@nan0.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <3E2C8884.8040003@nan0.com>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I am trying to get RAID1 working on a Debian machine with a 2.4.20 
-kernel. I hope I am close, but this is my first attempt at RAID on any 
-platform.
+J Dalessandro on Mon 20/01 16:38 -0700:
+> I seem to get two out of three partitions. I think my problem is in
+> that my "/" partition is mounted, but I'm new to RAID and I'm not sure
+> how to fix this issue.
 
-I seem to get two out of three partitions. I think my problem is in that 
-my "/" partition is mounted, but I'm new to RAID and I'm not sure how to 
-fix this issue. Below is my: /proc/mdstat, raidtab, fdisk -l outputs. 
-What am I missing here to solve my bungled configuration?
+You can't have the filesystem mounted from the device you want to make
+RAID; you have to boot from something else to do it before mounting it.
 
-CM:~# cat /proc/mdstat
-Personalities : [raid1]
-read_ahead 1024 sectors
-md0 : active raid1 hda1[0]
-       96256 blocks [2/1] [U_]
+Also please realize that when you use persistent-superblock 1, mkraid
+will use the last 4k (I think that's how much) for MD information,
+overwriting filesystem data there, so you have to resize2fs if you have
+existing data, before doing the mkraid.  If you didn't do this, your FS
+is now hosed, but maybe you didn't have any data blocks there (after
+all, 4k is usually only one filesystem block) and e2fsck will repair it
+without data loss.  Using debugfs and dumpe2fs will tell you more
+information.
 
-md1 : active raid1 hda2[0]
-       9767424 blocks [2/1] [U_]
-
-unused devices: <none>
-
-CM:~# cat /etc/raidtab
-raiddev /dev/md2
-         raid-level              1
-         nr-raid-disks           2
-         nr-spare-disks          0
-         chunk-size              32
-         persistent-superblock   1
-         device                  /dev/hda3
-         raid-disk               0
-         device                  /dev/hdc3
-         failed-disk             1
-
-raiddev /dev/md1
-         raid-level              1
-         nr-raid-disks           2
-         nr-spare-disks          0
-         chunk-size              32
-         persistent-superblock   1
-         device                  /dev/hda2
-         raid-disk               0
-         device                  /dev/hdc2
-         failed-disk             1
-
-raiddev /dev/md0
-         raid-level              1
-         nr-raid-disks           2
-         nr-spare-disks          0
-         chunk-size              32
-         persistent-superblock   1
-         device                  /dev/hda1
-         raid-disk               0
-         device                  /dev/hdc1
-         failed-disk             1
-
-CM:~# df -k
-Filesystem           1k-blocks      Used Available Use% Mounted on
-/dev/hda3             86437648    480844  81565840   1% /
-
-CM:~# fdisk -l
-
-Disk /dev/hdc: 255 heads, 63 sectors, 12161 cylinders
-Units = cylinders of 16065 * 512 bytes
-
-    Device Boot    Start       End    Blocks   Id  System
-/dev/hdc1             1        12     96358+  fd  Linux raid autodetect
-/dev/hdc2            13      1228   9767520   fd  Linux raid autodetect
-/dev/hdc3          1229     12161  87819322+  fd  Linux raid autodetect
-
-Disk /dev/hda: 255 heads, 63 sectors, 12161 cylinders
-Units = cylinders of 16065 * 512 bytes
-
-    Device Boot    Start       End    Blocks   Id  System
-/dev/hda1   *         1        12     96358+  83  Linux
-/dev/hda2            13      1228   9767520   82  Linux swap
-/dev/hda3          1229     12161  87819322+  83  Linux
-CM:~#
-
+Also, I'm curious why you have the failed disks in your raidtab.
