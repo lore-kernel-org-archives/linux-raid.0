@@ -1,53 +1,74 @@
-From: Daniel Sievers <Daniel.Sievers@post.rwth-aachen.de>
-Subject: raid5 and bad blocks
-Date: Sat, 17 Jan 2004 10:48:29 +0100
+From: Heiko Carstens <heiko.carstens@de.ibm.com>
+Subject: [bug] 2.6.1 md multipathing
+Date: Sat, 17 Jan 2004 13:16:09 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <400904ED.8030303@post.rwth-aachen.de>
+Message-ID: <200401171316.09051.heiko.carstens@de.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 Hi,
 
-recently i have been running in a lot of trouble with harddisks, that
-are developing bad blocks over time.
+I tried to get multipathing failover running and failed. It seems to be that
+there are two bugs in multipath.c :
 
-example scenario:
-1 disk fails (for whatever reason) and gets kicked out of the array.
-then a resync fails because one of the other disk has developed bad
-blocks. the raid volume is not operational or resyncable anymore now.
+- If a path/request fails mp_bh->path doesn't get updated to the new path.
+  Thus multipath_end_request will access a NULL pointer if a redirected
+  request returns.
+- After fixing this I experienced several other errors. First of all in
+  bio->bi_flags the BIO_UPTODATE flag is not set when redirecting a request.
+  Causing the md driver to think that every redirected request failed when
+  it returns. Since that alone didn't fix the problems, I simply copied the
+  master_bio again and it looks like everything seems to work.
 
-here are some naive thoughts i had:
+See patch below. There are probably better ways to fix these things...
 
-1) an option to disable degraded mode (or turn array read-only when
-switching to degraded mode). i had disks fail once but (at least  for a
-while) work fine later again. i would like the opportunity to try assure
-data reconstruction before the kicked-out disk gets completely out-of-date.
+Heiko
 
-without really having studied the code, would some simple change like
-this work to disable degraded mode on disk fail?
-if (!rdev->faulty) {
-    stop(mddev);
-    printk(KERN_ALERT, "raid5: Disk failure on %s, stopping raid."
-    , bdevname(rdev->bdev,b));
-  }
-
-2) would it make sense to let resync finish even when encountering bad
-blocks? could the filesystem be reported bad blocks on the affected
-areas instead?
-
-3) even better... actually in most cases bad blocks on several disks but
-in different areas should still allow a complete reconstruction. correct?
-the driver being able to compute the correct sectors across different
-disks would be kick-ass :))
-but of course then some reserved space would be needed as a prerequisite.
-
-i would be glad to hear some opinions about this.
-
-thanks!
-Daniel Sievers
-
+diff -urN linux-2.6.1/drivers/md/multipath.c linux-2.6.1-md/drivers/md/multipath.c
+--- linux-2.6.1/drivers/md/multipath.c	Fri Jan  9 07:59:27 2004
++++ linux-2.6.1-md/drivers/md/multipath.c	Sat Jan 17 12:58:07 2004
+@@ -54,7 +54,7 @@
+ 	kfree(mpb);
+ }
+ 
+-static int multipath_map (mddev_t *mddev, mdk_rdev_t **rdevp)
++static int multipath_map (mddev_t *mddev, mdk_rdev_t **rdevp, int *path)
+ {
+ 	multipath_conf_t *conf = mddev_to_conf(mddev);
+ 	int i, disks = conf->raid_disks;
+@@ -68,6 +68,7 @@
+ 	for (i = 0; i < disks; i++) {
+ 		mdk_rdev_t *rdev = conf->multipaths[i].rdev;
+ 		if (rdev && rdev->in_sync) {
++			*path = i;
+ 			*rdevp = rdev;
+ 			atomic_inc(&rdev->nr_pending);
+ 			spin_unlock_irq(&conf->device_lock);
+@@ -355,7 +356,7 @@
+ 		bio->bi_sector = mp_bh->master_bio->bi_sector;
+ 		
+ 		rdev = NULL;
+-		if (multipath_map (mddev, &rdev)<0) {
++		if (multipath_map (mddev, &rdev, &mp_bh->path)<0) {
+ 			printk(KERN_ALERT "multipath: %s: unrecoverable IO read"
+ 				" error for block %llu\n",
+ 				bdevname(bio->bi_bdev,b),
+@@ -366,7 +367,12 @@
+ 				" to another IO path\n",
+ 				bdevname(bio->bi_bdev,b),
+ 				(unsigned long long)bio->bi_sector);
++
++			*bio = *(mp_bh->master_bio);
+ 			bio->bi_bdev = rdev->bdev;
++			bio->bi_rw |= (1 << BIO_RW_FAILFAST);
++			bio->bi_end_io = multipath_end_request;
++			bio->bi_private = mp_bh;
+ 			generic_make_request(bio);
+ 		}
+ 	}
 
