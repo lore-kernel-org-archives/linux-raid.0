@@ -1,41 +1,60 @@
-From: Mark Overmeer <Mark@Overmeer.net>
+From: Gordon Henderson <gordon@drogon.net>
 Subject: Re: 8-port SATA PCI/PCIX adaptor
-Date: Sat, 2 Apr 2005 17:02:49 +0200
-Message-ID: <20050402170249.I4352@speeltuin.ATComputing.nl>
+Date: Sat, 2 Apr 2005 16:04:48 +0100 (BST)
+Message-ID: <Pine.LNX.4.56.0504021552250.30253@lion.drogon.net>
 References: <d2mae1$ii$1@sea.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <d2mae1$ii$1@sea.gmane.org>; from davidmaxwaterman@fastmail.co.uk on Sat, Apr 02, 2005 at 10:33:59PM +0800
+In-Reply-To: <d2mae1$ii$1@sea.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Max Waterman <davidmaxwaterman@fastmail.co.uk>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-* Max Waterman (davidmaxwaterman@fastmail.co.uk) [050402 16:42]:
+On Sat, 2 Apr 2005, Max Waterman wrote:
+
 > http://www.sonnettech.com/product/tempo-x_esata8.html
+>
 > do you think this will work with Linux?
-> 
+>
 > what about Linux on an Intel platform?
-> 
-> I wonder how it performs - esp. compared to the supermicro card 
-> http://supermicro.com/products/accessories/addon/DAC-SATA-MV8.cfm which 
-> which is a fair bit cheaper at ~$99 and presents the ports internally. I 
-> know the Supermicro has a linux driver (they emailed it to me), but I 
+
+Hard to tell without knowing the actual chip-set on-board.
+
+> I wonder how it performs - esp. compared to the supermicro card
+> http://supermicro.com/products/accessories/addon/DAC-SATA-MV8.cfm which
+> which is a fair bit cheaper at ~$99 and presents the ports internally. I
+> know the Supermicro has a linux driver (they emailed it to me), but I
 > haven't tried it.
+>
+> Anyone tried these cards?
 
-You may also take a look at new motherboards from (for instance) 
-Asus which have already 8 SATA ports of their own.  I have one board
-with 4 SATA on board, 4x300GB disks striped reaching over 200MB/s.
+What are you after? Card for internal drives, or external drives? If
+Internal drives, unless you can identify the chipset, I'd avoid this card
+and go for something else.
 
-See http://usa.asus.com/prog/spec.asp?m=A8N-SLI%20Deluxe&langs=09
-Anyone tried to use all 8 ports at the same time?
-The less special hardware the better, IMO.
--- 
-               MarkOv
+If external drives, then it's worth trying to find-out what the underlying
+chip-set is.
 
-------------------------------------------------------------------------
-drs Mark A.C.J. Overmeer                                MARKOV Solutions
-       Mark@Overmeer.net                          solutions@overmeer.net
-http://Mark.Overmeer.net                   http://solutions.overmeer.net
+Personally, if you have 8 external drives, I'd consider SCSI, just to
+cut-down on the number of cables! (Although the cost of the drives might
+well be a factor for you, as it is offten for me )-:
+
+If internally, I'd go for a board that has open-source drivers. I've just
+been trying the Highpoint 4-port card - no open source driver, and their
+own supplied Linux driver is some 10-15% slower than another SATA card
+(SII chipset) and didn't support SMART command pass-through.
+
+If your motherboard has multiple PCI buses, you might want to look at 2 x
+4-port cards which will probably improve performance somewhat if you can
+get them on separate busses.
+
+The cheaper cards that I've used seem to have mostly the SII chipset - and
+that appears to be well supported by Linux. The 3112 is a dual-port card,
+the 3114, quad. There are RAID and non-RAID variants, and all the ones
+I've used seem to have a JBOD mode anyway (so you use s/w RAID rather than
+their supplied h/w RAID) (The exception would seem to be the Dell/Adaptec
+6-port SATA card I had recently - it has 3 x SII 3112 chips on it, and a
+big Adaptec/Dell chip which hides them from bus )-:
+
+Gordon
