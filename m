@@ -1,54 +1,44 @@
 From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: RAID-1 does not rebuild after hot-add
-Date: Tue, 5 Aug 2003 12:16:32 +1000
+Subject: Re: Faulty disk detection code: looking to tweak it for network devices
+Date: Tue, 5 Aug 2003 12:36:25 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16175.4992.765886.291774@gargle.gargle.HOWL>
-References: <3F2D1FAC.9030905@shaolinmicro.com>
-	<16173.43804.617586.906225@gargle.gargle.HOWL>
-	<3F2E8CAE.7090208@shaolinmicro.com>
+Message-ID: <16175.6185.517151.469809@gargle.gargle.HOWL>
+References: <Pine.LNX.4.44.0308041612440.965-100000@jaw.lanl.gov>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from David Chow on Tuesday August 5
-To: David Chow <davidchow@shaolinmicro.com>
+In-Reply-To: message from Ryan P. Joseph on Monday August 4
+To: rjoseph@kerr.lanl.gov
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday August 5, davidchow@shaolinmicro.com wrote:
-> >
-> >
-> >I'm afraid I've got no idea what would be causing this.  
-> >I can only suggest you try a plain 2.4.21 kernel and if the problem
-> >persists we can add some extra printk's to find out what is happening.
-> >
-> >NeilBrown
-> >
-> Actually, I will try to recompile a plain vanilla kernel 2.4.21 and see 
-> what happens. However, it seems the problem exists if the raid is 
-> created by mkraid with one of the disk set to failed-disk . Then hot 
-> adding other disks to the degraded array will cause this behaviour. I 
-> deduce it is something wrong in the superblock because I can only make a 
-> normal RAID with no failed-disk using "mkraid --force" or mdadm which 
-> will of course resync right after the raid starts. Is there any chance 
-> to record any failed disk information in RAID superblocks (I mean 
-> recording failed-disk on the good disk's superblock)? I thought it 
-> doesn't make sense but it did happen and is repeatable (you can try if 
-> you want). This it the only thing to deal with because we can never keep 
-> the already started "good" disk superblock which is previously created 
-> in a degraded mode with failed-disk. Also, I've make sure other hot add 
-> partitions have already dd'ed to zeros. Maybe, I can hexdump a copy of 
-> the superblock for you to look at. What is the offset and size of the 
-> superblock of a RAID-1 device? I am sure this can effectively solve the 
-> problem right away.
+On Monday August 4, rjoseph@jaw.lanl.gov wrote:
+> Hello,
 > 
-> regards,
-> David Chow
+> So, my real question is: where in the blazes does the MD/RAID system actually,
+> really, seriously detect a failed disk?!  And when it does this, what is the
+> path of function calls taken to say "hey, this disk is failed, don't use it!"?
 
-Rather than a hex dump, just use
+(talk 2.4 language here)
+When raid5 want to schedule I/O on a block, it (Among other things)
+sets  b_end_io to either raid5_end_read_request or
+raid5_end_write_request depending on type of request, and then calls
+generic_make_request to submit the request.
 
-  mdadm --examine /dev/XXX
+When the request completes, the b_end_io function will be called.  The
+second argument to the function ("uptodate") is '1' if the request was
+successful, and '0' if it failed (no further details of failure mode,
+sorry).
 
-That is the easiest way to view the superblock on the device.
+If uptodate== 0, md_error is called which marks the device as faulty
+and calls raid5_error which marks it faulty again....
+
+Eventually handle_stripe() gets called on the stripe again.  It
+notices that the data still needs to be read or written, but now that
+device is failed so it uses some other strategy to accomplish the
+desired gaol.
+
+Let me know if you need anything else clarified.
 
 NeilBrown
