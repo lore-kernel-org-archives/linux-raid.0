@@ -1,16 +1,33 @@
-From: Tim Moore <tim.moore@nsr500.net>
-Subject: Re: raid5 performance after upgrade to 2.4.28
-Date: Thu, 13 Jan 2005 08:24:36 -0800
-Message-ID: <41E6A0C4.1030405@nsr500.net>
-References: <200501120743.j0C7h2929495@www.watkins-home.com>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: raid5 performance after upgrade to 2.4.28
+Date: Thu, 13 Jan 2005 11:45:25 -0500
+Message-ID: <200501131643.j0DGhT905021@www.watkins-home.com>
+References: <41E6A104.4080608@nsr500.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200501120743.j0C7h2929495@www.watkins-home.com>
+In-Reply-To: <41E6A104.4080608@nsr500.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: 'Tim Moore' <linux-raid@nsr500.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+I did not change them.  I don't know if the kernel did.
+
+I will try to notice the next chance I get.
+
+With 2.4.28 I have 3 and 31.
+
+Guy
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Tim Moore
+Sent: Thursday, January 13, 2005 11:26 AM
+To: linux-raid@vger.kernel.org
+Subject: Re: raid5 performance after upgrade to 2.4.28
+
 
 Did values change in /proc/sys/vm/{min,max}-readahead?
 
@@ -20,7 +37,8 @@ http://lists.us.dell.com/pipermail/linux-poweredge/2004-February/036166.html
 Guy wrote:
 > Now the bad news...
 > 
-> I have 2 CPUs  P3-500Mhz, 512Meg ram.  So I ran 2 bonnies at the same time.
+> I have 2 CPUs  P3-500Mhz, 512Meg ram.  So I ran 2 bonnies at the same
+time.
 > 
 > Kernel 2.4.20-8 with 2 Bonnies at the same time:
 > Version  1.03 ------Sequential Output------ --Sequential Input- --Random-
@@ -88,3 +106,12 @@ Guy wrote:
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
+
+
+-- 
+  | for direct mail add "private_" in front of user name
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
