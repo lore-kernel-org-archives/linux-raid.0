@@ -1,101 +1,33 @@
-From: linux-raid-owner@vger.kernel.org
-Subject: BURSLU  =?ISO-8859-1?Q?=20E=D0=DDT=DDM?=  =?ISO-8859-1?Q?=20OLANA=D0I?= 15
-Date: Sat, 13 Sep 2003 10:42:54 +0300
+From: Darryl Barlow <darrylb@iprimus.com.au>
+Subject: Re: Software Raid Autodetection Problem
+Date: Wed, 17 Sep 2003 03:04:02 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200309130742.h8D7gs631644@zeus.kernel.org>
+Message-ID: <200309170304.03853.darrylb@iprimus.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-9
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+Content-Disposition: inline
+To: neilb@cse.unsw.edu.au
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-                                =20
-LEFKE AVRUPA =DCN=DDVERS=DDTES=DD
-(KIBRIS B=DDL=DDM VAKFI)
-Y=D6K taraf=FDndan tan=FDnan, Avrupa ve Amerika'da ge=E7erli diplomaya =
-en kaliteli
-ve en uygun har=E7larla sahip olma olana=F0=FD ...
-=20
-=D6SS S=FDnav=FDndan 185 ve =FCzeri ham puan alm=FD=FE =F6=F0renciler 4=
- y=FDll=FDk lisans
-programlar=FDna, 160 ve =FCzeri ham puan alan =F6=F0renciler ise 2 y=FD=
-ll=FDk meslek
-y=FCksek okullar=FDna kay=FDt yapabilirler.
+Neil,
 
-=20
-      L=DDSANS PROGRAMLARI :
+Thanks for your help.  I seem to have solved the problem, but can only 
+speculate both as to the problem and the solution.  I updated to kernel 
+2.4.22, but it still failed to autodetect properly.  I then dumped raidtools2 
+and went to mdadm as per your suggestion.  I then generated an mdadm.conf 
+file which I altered to refer to the partitions on the raid consistently by 
+their devfs names rather than hde2 and hdg2.  I suspect this may have been 
+the problem.  I am not sufficiently informed as to the boot process to tell 
+for sure, but suspect that autodetection may have been having problems with 
+devfs when the config files referred to the old device names.
 
-=DDKT=DDSAD=DD VE =DDDAR=DD B=DDL=DDMLER FAK=DCLTES=DD
-* =DD=FEletme
-* Ekonomi
-* Pazarlama
-* Kamu Y=F6netimi
-* Uluslararas=FD =DDli=FEkiler
-* Bankac=FDl=FDk ve Finans
-* Bilgisayar ve Enformasyon Sistemleri
-=46EN-EDEB=DDYAT FAK=DCLTES=DD
-* =DDngilizce =D6=F0retmenli=F0i
-* T=FCrk Dili ve Edebiyat=FD
-* Tarih
-TARIM B=DDL=DDMLER=DD TEKNOLOJ=DDLER=DD FAK=DCLTES=DD
-* Bah=E7e Bitkileri =DCretimi ve Pazarlamas=FD
-* Tar=FDm =DD=FEletmecili=F0i
-M=DDMARLIK M=DCHEND=DDSL=DDK FAK=DCLTES=DD
-* Mimarl=FDk
-* =DD=E7 Mimarl=FDk
-* Elektrik ve Elektronik M=FChendisli=F0i
-* =DDn=FEaat M=FChendisli=F0i=20
-* Bilgisayar M=FChendisli=F0i
-=DDLET=DD=DE=DDM B=DDL=DDMLER=DD FAK=DCLTES=DD
-* Gazetecilik
-* Radyo, TV, Sinema
-* Halkla =DDli=FEkiler ve Reklam
-* G=F6rsel =DDleti=FEim Tasar=FDm=FD
+Whatever the reason, it is now working.
 
-=20
-      MESLEK Y=DCKSEK OKULU:
+regards,
 
-* =DD=FEletmecilik
-* Bilgisayar programc=FDl=FD=F0=FD                                     =
-           =20
-* =DDn=FEaat
-* Halkla ili=FEkiler ve Tan=FDt=FDm
-* G=F6rsel =DDleti=FEim
-* TV Yap=FDm=FD ve Y=F6netimi
-=20
-=20
-      Y=DCKSEK L=DDSANS:
+Darryl
 
-* =DD=FEletme (MBA)
-* Uluslararas=FD =DDli=FEkiler (MA)
-* =DDngilizce =D6=F0retmenli=F0i (MA)
-* Mimarl=FDk (MA)
-* =DDn=FEaat M=FChendisli=F0i (MSc)
-* Elektrik ve Elektronik M=FChendisli=F0i (MSc)
-* Bilgisayar Bilimleri (MSc)
-* Bilgisayar M=FChendisli=F0i (MSc)
-
-=20
-=20
-YURT DI=DEI =D6ZEL E=D0=DDT=DDM OLANAKLARI :
-SOAS =DCniversitesi, Luton =DCniversitesi, Westminister =DCniversitesi,
-Hudersfield =DCniversitesi (=DDngiltere), ESC Rouen =DCniversitesi (Fra=
-nsa).
-=20
-BURS OLANAKLARI :
-Emniyet mensubu, T=FCrk Silahl=FD Kuvvetleri mensubu ve =F6=F0retmen =E7=
-ocuklar=FDna  =20
-% 50, ikinci dereceden akrabalar=FDna % 33, karde=FElerden birine % 50 =
-ve
-ayr=FDca akademik ba=FEar=FD bursu, sporcu bursu ve  destek bursu.
-                                         =20
-                                                     =20
-=DDstanbul Kay=FDt Ofisi : =DE=DD=DEL=DD / =DDSTANBUL.
-Tel : 0212 219 83 50 (9 Hat)       E-Mail : bursluegitim1@superposta.co=
-m
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
