@@ -1,8 +1,8 @@
 From: Agustinus Tedja <agustinus.tedja@infodesign-osd.de>
 Subject: RAID-0 Autodetection fails
-Date: Wed, 24 Jul 2002 14:22:03 +0200
+Date: Wed, 24 Jul 2002 14:28:54 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3D3E9BEB.41C0F8CC@infodesign-osd.de>
+Message-ID: <3D3E9D86.E75D15C7@infodesign-osd.de>
 Reply-To: agustinus.tedja@infodesign-osd.de
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
@@ -25,7 +25,11 @@ recognized at startup and all data in /dev/md0 was lost as well. I
 needed to mount it again afterwards, that made it a silly idea.
 What is wrong ? Any hints and helps are gladly welcomed.
 
-Here is the message on boot:
+Regards,
+Agustinus Tedja
+InfoDesign-OSD
+
+Here is the message on boot, it generates failure
 ...
 <6>md: md driver 0.90.0 MAX_MD_DEVS=256, MD_SB_DISKS=27
 <6>md: Autodetecting RAID arrays.
@@ -51,7 +55,8 @@ Here is the message on boot:
 <6>md: export_rdev(hdc1)
 <6>md: ... autorun DONE.
 
-...and after some lines below there is other messages:
+...and after some lines below there are other message lines as if it is
+working
 
 <3>md: invalid raid superblock magic on hdc
 <4>md: hdc has invalid sb, not importing!
@@ -83,44 +88,55 @@ Here is the message on boot:
 <4>raid0:   EQUAL
 <4>raid0: FINAL 1 zones
 <4>raid0: zone 0
-<4>raid0:
-<4>raid0:
-<4>raid0:
-<4>raid0:
-<4>raid0:
-<4>raid0:
-<4>raid0:
-<4>raid0:
-<4>raid0:
+<4>raid0: checking hdc1 ... contained as device 0
+<4>  (80418112) is smallest!
+<4>raid0: checking hdd1 ... contained as device 1
+<4>raid0: zone->nb_dev: 2, size: 160836224
+<4>raid0: current zone offset: 80418112
+<4>raid0: done.
+<4>raid0:  md_size is 160836224 blocks
+<4>raid0:  conf->smallest->size is 160836224 blocks.
+<4>raid0:  nb_zone is 1.
+<4>raid0:  Allocationg 8 bytes for hash.
+<6>md: updating md0 RAID superblock on device
+<6>md: hdc1 [events: 0000009b]<6>(write) hdc1's sb offset: 80418112
+<6>md: hdd1 [events: 0000009b]<6>(write) hdd1's sb offset: 80418112
+<6>md: ... autorun DONE.
+
+
+
 
 FYI here I give the content of some important files:
 /etc/fstab:
-	/dev/hdb3	/		reiserfs	defaults 1 2
-	/dev/hdb2	/boot		reiserfs	defaults 1 2
-	/dev/md0	/dataraid	auto		noauto, user 0 0
-	devpts		/dev/pts	devpts		defaults 0 0
-	/dev/cdrecorder	/media/cdrecorder auto		ro,noauto,user,exec 0 0
-	/dev/cdrom	/media/cdrom	auto		noauto,user,exec 0 0
-	/dev/fd0	/media/floppy	auto		noauto,user,sync 0 0
-	usbdevs		/proc/bus/usb	usbdevs		noauto 0 0
-	proc		/proc		proc		defaults 0 0
-	/dev/hdb1	swap		swap		pri=42 0 0	
+        /dev/hdb3       /               reiserfs        defaults 1 2
+        /dev/hdb2       /boot           reiserfs        defaults 1 2
+        /dev/md0        /dataraid       auto            noauto, user 0 0
+        devpts          /dev/pts        devpts          defaults 0 0
+        /dev/cdrecorder /media/cdrecorder auto         
+ro,noauto,user,exec 0 0
+        /dev/cdrom      /media/cdrom    auto            noauto,user,exec
+0 0
+        /dev/fd0        /media/floppy   auto            noauto,user,sync
+0 0
+        usbdevs         /proc/bus/usb   usbdevs         noauto 0 0
+        proc            /proc           proc            defaults 0 0
+        /dev/hdb1       swap            swap            pri=42 0 0      
 
 /etc/raidtab:
-	raiddev /dev/md0
-	raid-level 0
-	nr-raid-disks 2
-	persistent-superblock 1
-	chunk-size 32
-	device /dev/hdc
-	raid-disk 0
-	device /dev/hdd
-	raid-disk 1
+        raiddev /dev/md0
+        raid-level 0
+        nr-raid-disks 2
+        persistent-superblock 1
+        chunk-size 32
+        device /dev/hdc
+        raid-disk 0
+        device /dev/hdd
+        raid-disk 1
 
 /etc/mtab: (not mdtab, inside there is no md0 entry)
-	/dev/hdb3 	/	reiserfs	rw 0 0
-	proc		/proc	proc		rw 0 0
-	devpts		/dev/pts devpts		rw 0 0
-	/dev/hdb2	/boot	reiserfs	rw 0 0
-	shmfs		/dev/shm  shm		rw 0 0
-	usbdevfs 	/proc/bus/usb  usbdevs	rw 0 0
+        /dev/hdb3       /       reiserfs        rw 0 0
+        proc            /proc   proc            rw 0 0
+        devpts          /dev/pts devpts         rw 0 0
+        /dev/hdb2       /boot   reiserfs        rw 0 0
+        shmfs           /dev/shm  shm           rw 0 0
+        usbdevfs        /proc/bus/usb  usbdevs  rw 0 0
