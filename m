@@ -1,42 +1,50 @@
-From: "melvin" <doug21charity@hotmail.com>
-Subject: Really low rates for prescription drugs
-Date: Tue, 06 Jul 2004 20:31:15 GMT
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: Should I Start Over?
+Date: Tue, 6 Jul 2004 23:06:55 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1089145875-2652__24835.5938391343$1089146317$gmane$org@excite.com>
-Content-Type: text/plain;
+Message-ID: <20040706210654.GB17694@percy.comedia.it>
+References: <1147.66.230.1.97.1088603162.squirrel@exitwound.org> <20040630165540.GA1099@percy.comedia.it> <1775.66.230.1.97.1088620939.squirrel@exitwound.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-kernel@vger.kernel.org
+Content-Disposition: inline
+In-Reply-To: <1775.66.230.1.97.1088620939.squirrel@exitwound.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-What do you pay now?
+On Wed, Jun 30, 2004 at 01:42:19PM -0500, Stephen Hargrove wrote:
+>$ mdadm --examine /dev/hd[dceg]1
+>mdadm: No super block found on /dev/hdc1 (Expected magic a92b4efc, got
+>00000000)
+>mdadm: No super block found on /dev/hdd1 (Expected magic a92b4efc, got
+>00000000)
+>mdadm: No super block found on /dev/hde1 (Expected magic a92b4efc, got
+>00000000)
+>mdadm: No super block found on /dev/hdg1 (Expected magic a92b4efc, got
+>00000000)
+>
+urgh,
+no superblock
+you can try to see if you can read your data by recreating the array in
+degraded mode, so it does not rebuild.
 
-If you pay more than these prices, maybe you should click this link....
-http://www.cutpricerxpills.com/_85924943b9db73ac62baa654773c6a8e/
+like:
+mdadm --create /dev/md0 --level=5 /dev/hdc1 /dev/hdd1 missing
+try substituting the word missing for each of the drives
+and see if you can mount the filesystem
+if you do find your data use:
+mdadm /dev/md0 -a <the device you replaced with missing>
+to have it added to the array again
 
-VALIUM - $2 a pill! (Anti-Depressant)
-SOMA - $3 a pill! (Pain Relief)
-XANAX - $1.70 a pill! (Anti-Depressant)
-LIPITOR - $3.50 a pill! (Cholesterol Control)
-ZYBAN - $3 a pill! (Stop Smoking)
-ZOLOFT - $2 a pill! (Anti-Depressant)
-PAXIL - $3 a pill! (Anti-Depressant)
-PROZAC - $2 a pill! (Anti-Depressant)
-GLUCOPHAGE - 70 cents a pill! (Diabetes)
-MERIDIA - $2.50 a pill! (Weight Loss)
-VIOXX - $1 a pill! (Pain Relief)
-CELEBREX - $2 a pill! (Pain Relief)
-XENICAL - $2.50 a pill! (Weight Loss)  
+good luck!
 
-http://www.cutpricerxpills.com/_85924943b9db73ac62baa654773c6a8e/
+L.
 
 
-
-
-
-
-
-
-
-hazel charlie1larry lamer robinhoo marcus bridge chiquita 
-gray amelieguinness marvin minou
-cosmos wolverin butch 
+-- 
+Luca Berra -- bluca@comedia.it
+        Communication Media & Services S.r.l.
+ /"\
+ \ /     ASCII RIBBON CAMPAIGN
+  X        AGAINST HTML MAIL
+ / \
