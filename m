@@ -1,67 +1,61 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: Poor RAID5 performance on new SMP system
-Date: Mon, 18 Oct 2004 16:45:00 -0400
+From: Konstantin Olchanski <olchansk@sam.triumf.ca>
+Subject: Please help- raid1 recovery after disk failure
+Date: Mon, 18 Oct 2004 15:56:52 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200410182045.i9IKj5N18178@www.watkins-home.com>
-References: <41740E71.4090907@sauce.co.nz>
+Message-ID: <20041018225652.GC29864@sam.triumf.ca>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <41740E71.4090907@sauce.co.nz>
+Content-Disposition: inline
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I have never used AMD MBs, but until now I had plans to buy AMD the next
-time I build a system.  Stick with Intel, seems like a safe bet.  The real
-thing, not a generic equivalent! :)
 
-Seems like they should have recalled the south bridge chip set.  At least
-that would stop new boards from hitting the market.  And the MB companies
-that want to keep customers should offer a free replacement.  The lost time
-can easily cost more than the board!
+Dear Linux raiders- I ran into a problem with raid1 recovery after
+a disk failure (running Fedora2, kernel 2.6.8-1.521smp).
 
-Guy
+1) I had a raid1 filesystem mirrored across /dev/hda2 and /dev/hdc2.
+2) Disk hda died (unreadable sectors, fails SMART tests)
+3) A new blank hda was installed and partitionned exactly like hdc.
+4) I cannot restart and rebuild the raid1 volume because hdc2 is
+   in a funny "spare" state (see below)
 
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Richard Scobie
-Sent: Monday, October 18, 2004 2:42 PM
-To: linux-raid@vger.kernel.org
-Subject: Re: Poor RAID5 performance on new SMP system
+How do I mark hdc2 as "active"?
+Once "active", I assume then I will be able to restart md0,
+hot-add /dev/hda2 as usual. (And the mirror will resync and rebuild itself?
+Hopefully?)
 
-Marc Marais wrote:
-> I've moved one of the IDE cards to the 64 bit bus and thats improved
-things a
-> lot. The 2nd card isnt 3.3v capable and won't go into the 64 bit slot
-though
-> so I'm going to replace it. 
-> 
-> I noticed using vmstat that the average latency (await) is over 50ms for
-the
-> card on the secondary PCI bus and less than 20ms on the 64 bit bus... Very
-> interesting...
+[root@tw04 root]# mdadm -E /dev/hdc2
+/dev/hdc2:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : aade8782:20122089:4f496788:228d85b9
+  Creation Time : Fri Oct  8 17:12:56 2004
+     Raid Level : raid1
+    Device Size : 124158208 (118.41 GiB 127.14 GB)
+   Raid Devices : 2
+  Total Devices : 2
+Preferred Minor : 0
 
-Glad it's not going to be a total loss.
+    Update Time : Mon Oct 18 06:04:35 2004
+          State : clean, no-errors
+ Active Devices : 1
+Working Devices : 2
+ Failed Devices : 1
+  Spare Devices : 1
+       Checksum : 7041db42 - correct
+         Events : 0.312429
 
-I find AMD's behaviour over this bug to be very disappointing - 
-motherboards using this broken south bridge can still be purchased today 
-and the box does not state "Secondary PCI bus throughput limited to +- 
-25MB/s". You will not find this problem mentioned on their website either.
 
-The board I tested is only 9 months old and when I pulled the SCSI card 
-and discs and placed them on the 33MHz bus of an equivalent dual Xeon 
-board, the throughput went up to +-90MB/s.
+      Number   Major   Minor   RaidDevice State
+this     2      22        2        2      spare   /dev/hdc2
+   0     0       3        2        0      active sync   /dev/hda2
+   1     1       0        0        1      faulty removed
+   2     2      22        2        2      spare   /dev/hdc2
+[root@tw04 root]# 
 
-I was a big AMD fan prior to this, as the bang for the buck is way 
-better, but the time, money and effort wasted left a bad taste.
-
-Regards,
-
-Richard
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+-- 
+Konstantin Olchanski
+Data Acquisition Systems: The Bytes Must Flow!
+Email: olchansk-at-triumf-dot-ca
+Snail mail: 4004 Wesbrook Mall, TRIUMF, Vancouver, B.C., V6T 2A3, Canada
