@@ -1,40 +1,25 @@
-From: "Nagpure, Dinesh" <Dinesh.Nagpure@stratus.com>
-Subject: RAID1 robust read and read/write correct and EVMS-BBR
-Date: Wed, 23 Feb 2005 14:55:45 -0500
-Message-ID: <CAC3BCBB443DEC439198F230B4BCC7E9092C45CC@exna6-ftsaa.mis.stratus.com>
+From: "J. David Beutel" <jdb@getsu.com>
+Subject: Re: RAID1 robust read and read/write correct and EVMS-BBR
+Date: Wed, 23 Feb 2005 10:07:50 -1000
+Message-ID: <421CE296.7030805@getsu.com>
+References: <CAC3BCBB443DEC439198F230B4BCC7E9092C45CC@exna6-ftsaa.mis.stratus.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+In-Reply-To: <CAC3BCBB443DEC439198F230B4BCC7E9092C45CC@exna6-ftsaa.mis.stratus.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "'evms-devel@lists.sourceforge.net'" <evms-devel@lists.sourceforge.net>
+To: "Nagpure, Dinesh" <Dinesh.Nagpure@stratus.com>
 Cc: "'linux-raid@vger.kernel.org'" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi,
+Nagpure, Dinesh wrote, on 2005-Feb-23 9:55 AM:
 
-I noticed the discussion about robust read on the RAID list and similar one
-on the EVMS list so I am sending this mail to both the lists. Latent media
-faults which prevent data from being read from portions of a disk has always
-been a concern for us. Such faults will go undetected till the time that
-block is read. RAID 1 depends on error free mirrors for proper operation and
-undiscovered bad blocks would only give pseudo illusion of duplexity when in
-reality the array should be degraded. Over long run all the mirrors might
-develop latent media faults and none can be replaced with a new disk. Also
-it is a disaster if the same block goes bad on all the mirrors in a RAID 1
-volume. With this concern we developed what we call "disk-scrubber". The
-approach was to proactively seek for bad spots on the disk and when one is
-discovered, read the correct data from the other mirror and use it to repair
-the disk by way of a write. SCSI disks automatically repair bad spots on
-write by internally mapping the bad spots to spare sectors (Being SCSI
-centric might be one limitation of this solution).
-The implementation comprised of a thread that looks for bad spots by way of
-slow repeated continuous scan through all disks. The RAID error management
-was extended to attempt a repair on read error from a RAID 1 array to permit
-fixing of user discovered bad spots as well as those discovered by the
-scrubber. The work is lk2.4.26 based as of now.
+>I can go back and put together a patch over the weekend if anyone is
+>interested in using it. 
+>  
+>
 
-I can go back and put together a patch over the weekend if anyone is
-interested in using it. 
+Yes, please, I'm very interested in using it.
 
--dinesh
-dinesh.nagpure@stratus.com
+Cheers,
+11011011
