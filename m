@@ -1,27 +1,51 @@
-From: John Adams <johna@onevista.com>
+From: Steven Dake <sdake@mvista.com>
 Subject: Re: RFC - new raid superblock layout for md driver
-Date: Wed, 20 Nov 2002 19:10:17 -0500
-Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200211210010.TAA16071@onevista.com>
-References: <15835.2798.613940.614361@notabene.cse.unsw.edu.au> <15836.5807.792124.255167@notabene.cse.unsw.edu.au> <1037838652.3241.108.camel@irongate.swansea.linux.org.uk>
-Reply-To: johna@onevista.com
+Date: Wed, 20 Nov 2002 17:29:22 -0700
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <3DDC28E2.30404@mvista.com>
+References: <15835.2798.613940.614361@notabene.cse.unsw.edu.au>	<3DDBC0D9.5030904@mvista.com> <15836.8031.649441.843857@notabene.cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1037838652.3241.108.camel@irongate.swansea.linux.org.uk>
-To: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+To: Neil Brown <neilb@cse.unsw.edu.au>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday 20 November 2002 07:30 pm, Alan Cox wrote:
-> On Wed, 2002-11-20 at 23:11, Neil Brown wrote:
-> > This brings up endian-ness?  Should I assert 'little-endian' or should
-> > the code check the endianness of the magic number and convert if
-> > necessary?
-> > The former is less code which will be exercised more often, so it is
-> > probably safe.
+
+
+Neil Brown wrote:
+
+>On Wednesday November 20, sdake@mvista.com wrote:
+>  
 >
-> From my own experience pick a single endianness otherwise some tool will
-> always get one endian case wrong on one platform with one word size.
+>>Neil,
+>>
+>>I would suggest adding a 64 bit field called "unique_identifier" to the 
+>>per-device structure.  This would allow a RAID volume to be locked to a 
+>>specific host, allowing the ability for true multihost operation.
+>>    
+>>
 >
-Use network byte order. hton[sl] macros already exist.
+>You seem to want a uniq id in 'per device' which will identify the
+>'volume'.
+>That doesn't make sense to me so maybe I am missing something.
+>If you want to identify the 'volume', you put some sort of id in the
+>'per-volume' data structure.
+>
+>This is what the 'name' field is for.
+>  
+>
+This is useful, atleast in the current raid implementation, because 
+md_import can be changed to return an error if the device's unique 
+identifier doesn't match the host identifier.  In this way, each device 
+of a RAID volume is individually locked to the specific host, and 
+rejection occurs at import of the device time.
+
+Perhaps locking using the name field would work except that other 
+userspace applications may reuse that name field for some other purpose, 
+not providing any kind of uniqueness.
+
+Thanks for the explination of how the name field was intended to be used.
+
+-steve
