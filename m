@@ -1,14 +1,28 @@
-From: mru@kth.se (=?iso-8859-1?q?M=E5ns_Rullg=E5rd?=)
-Subject: RAID1 over RAID0 misbehavior
-Date: Wed, 07 Jan 2004 01:37:20 +0100
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: RAID1 over RAID0 misbehavior
+Date: Tue, 6 Jan 2004 23:51:09 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <yw1xbrpgwq4f.fsf@ford.guide>
+Message-ID: <200401070451.i074pDi24362@dns1.watkins-home.com>
+References: <yw1xbrpgwq4f.fsf@ford.guide>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <yw1xbrpgwq4f.fsf@ford.guide>
+To: =?iso-8859-1?Q?'M=E5ns_Rullg=E5rd'?= <mru@kth.se>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+You did not state your max speed setting.
+Did you try to increase the max speed?
+
+
+-----Original Message-----
+=46rom: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of M=E5ns Rullg=E5r=
+d
+Sent: Tuesday, January 06, 2004 7:37 PM
+To: linux-raid@vger.kernel.org
+Subject: RAID1 over RAID0 misbehavior
 
 
 I recently created a RAID1 mirror from two identical RAID0 arrays
@@ -26,6 +40,13 @@ though.
 --=20
 M=E5ns Rullg=E5rd
 mru@kth.se
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 
 -
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
