@@ -1,54 +1,29 @@
-From: NeilBrown <neilb@cse.unsw.edu.au>
-Subject: [PATCH md 4 of 5] Fix typos in md and raid10
-Date: Wed, 20 Oct 2004 13:26:21 +1000
+From: Srinivasa S <srinivasa.s@gmail.com>
+Subject: help
+Date: Wed, 20 Oct 2004 10:35:46 +0530
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <E1CK77F-0008IV-BE@notabene.cse.unsw.edu.au>
-References: <20041020132354.31830.patches@notabene>
+Message-ID: <8f8a5194041019220528e9d45@mail.gmail.com>
+Reply-To: Srinivasa S <srinivasa.s@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+i've a raid 5 setup with 3 disks each of 1 GB. i'm using it for some
+experimentation purpose. resync is n progress and is not ending at
+all. its almost 15 hrs since the resync started and the "cat
+/proc/mdstat" always shows something like this.
 
+Personalities : [raid5] 
+md0 : active raid5 sdj1[2] sdi1[1] sdh1[0]
+      2002688 blocks level 5, 8k chunk, algorithm 2 [3/3] [UUU]
+      [>....................]  resync =  0.0% (0/1001344)
+finish=442287.5min speed=0K/sec
 
-Signed-off-by: Neil Brown <neilb@cse.unsw.edu.au>
+is there anything wrong - can i possibly stop the resync. the problem
+i'm having is that whichever process tries to do IO with the array is
+hanging. please help. thanks.
 
-### Diffstat output
- ./drivers/md/md.c     |    4 ++--
- ./drivers/md/raid10.c |    2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
-
-diff ./drivers/md/md.c~current~ ./drivers/md/md.c
---- ./drivers/md/md.c~current~	2004-10-20 13:21:26.000000000 +1000
-+++ ./drivers/md/md.c	2004-10-20 13:21:27.000000000 +1000
-@@ -1833,7 +1833,7 @@ static void autorun_array(mddev_t *mddev
- 
- 	err = do_md_run (mddev);
- 	if (err) {
--		printk(KERN_WARNING "md :do_md_run() returned %d\n", err);
-+		printk(KERN_WARNING "md: do_md_run() returned %d\n", err);
- 		do_md_stop (mddev, 0);
- 	}
- }
-@@ -2424,7 +2424,7 @@ static int update_array_info(mddev_t *md
- 		/* The "size" is the amount of each device that is used.
- 		 * This can only make sense for arrays with redundancy.
- 		 * linear and raid0 always use whatever space is available
--		 * We can only consider changing the size of no resync
-+		 * We can only consider changing the size if no resync
- 		 * or reconstruction is happening, and if the new size
- 		 * is acceptable. It must fit before the sb_offset or,
- 		 * if that is <data_offset, it must fit before the
-
-diff ./drivers/md/raid10.c~current~ ./drivers/md/raid10.c
---- ./drivers/md/raid10.c~current~	2004-10-20 13:21:25.000000000 +1000
-+++ ./drivers/md/raid10.c	2004-10-20 13:21:27.000000000 +1000
-@@ -36,7 +36,7 @@
-  * device of the previous section.
-  * Thus there are (near_copies*far_copies) of each chunk, and each is on a different
-  * drive.
-- * near_copies and far_copies must be at least one, and there product is at most
-+ * near_copies and far_copies must be at least one, and their product is at most
-  * raid_disks.
-  */
- 
+srinivasa s
