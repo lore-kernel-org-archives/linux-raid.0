@@ -1,30 +1,29 @@
-From: Stephan van Hienen <raid@a2000.nu>
-Subject: Re: mdadm -D shows incorrect working devices ?
-Date: Fri, 3 Jan 2003 22:04:48 +0100 (CET)
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: RAID 1+0 makes BUG in raid1.c, but 0+1 works?
+Date: Sat, 4 Jan 2003 08:05:25 +1100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.51.0301032202420.18601@ddx.a2000.nu>
-References: <Pine.LNX.4.50.0212172214130.25725-100000@ddx.a2000.nu>
- <Pine.LNX.4.50.0212182153120.4838-100000@ddx.a2000.nu>
- <Pine.LNX.4.50.0212221112050.24883-100000@ddx.a2000.nu>
- <Pine.LNX.4.51.0301021611450.11876@ddx.a2000.nu> <002701c2b320$4da3c8e0$6401a8c0@cfl.rr.com>
+Message-ID: <15893.64277.245126.966529@notabene.cse.unsw.edu.au>
+References: <20021225172009.Z1089@questra.com>
+	<15891.33465.348466.886941@notabene.cse.unsw.edu.au>
+	<00b501c2b35e$33730970$6a01a8c0@bmoon>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <002701c2b320$4da3c8e0$6401a8c0@cfl.rr.com>
-To: Mike Black <mblack@csi-inc.com>
-Cc: linux-raid@vger.kernel.org
+In-Reply-To: message from bmoon on Friday January 3
+To: bmoon <bo@anthologysolutions.com>
+Cc: Scott Mcdermott <smcdermott@questra.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 3 Jan 2003, Mike Black wrote:
+On Friday January 3, bo@anthologysolutions.com wrote:
+> Neil,
+> 
+> I am using 2.4.x(2.4.5  and 2.4.20) but I do not have "sync_page_io(" on
+> /drivers/md/md.c.
+> I am using RAID10, too. If it is critical I need to fix it.
+> Should I try this patch?
 
-> You don't give any info...
-i did, look for full report on my emails 'Tue, 17 Dec 2002 22:22:11 +0100
-(CET)' and 'Wed, 18 Dec 2002 21:57:02 +0100 (CET)'
+No.  This patch is only relevant if you are using a 2.4.21-pre
+kernel. 2.4.5 and 2.4.20 don't need it.
 
-All things you ask below are in these 2 emails
-
-
-> What kernel?
-> What does /proc/mdstat show?
-> What is the output of mdadm -D ?
-> How did you build your array?
+NeilBrown
