@@ -1,35 +1,45 @@
-From: "Jim Buttafuoco" <jim@contactbda.com>
-Subject: SATA Controller
-Date: Mon, 9 Aug 2004 10:53:55 -0400
+From: "Lmackinnon" <adminOrtega@carmax.com>
+Subject: Pharmacy discounts
+Date: Mon, 09 Aug 2004 22:09:57 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040809145342.M63373@contactbda.com>
-Reply-To: "Jim Buttafuoco" <jim@contactbda.com>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset=none
+Message-ID: <chwhnjxgs.4799097ppbzxn@Lmackinnoncwvhvippgs.com>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-All,
+Men's health:
+Vlagra - 0.95 Per Dose
+Clalis - 2.00 Per Dose
 
-I am thinking of going with the following SATA PCI controller (non raid) to replace my 3ware SATA controller (only 
-using JBOD but thats another story).  Any comments on linux support / issues / other controllers you have luck with.  
-I am planning on using software raid with 3 of these cards and 10 250G WD SATA disks.
+Weight loss:
+Xenical - 1.31
+Generic Meridia- 82.50
 
-Thanks
-Jim
+Hair loss: 
+Generic Propecia - 19.51
 
-PROMISE PCI to SATA Controller Card, Model "SATA150 TX4" -OEM
+Diabebetes threat: 
+Generic Glucophage - 0.49
 
-Model# Sata150 TX4 	
-Item # N82E16816102013	
+Pain relief:
+Generic Vioxx - 1.45 
+Generic Celebrex - 0.80
 
-Specifications:
-Ports: 4x Serial ATA/150
-OS Support: Windows 98/Me/NT4/2000/XP; RedHat 7.3/8.0; SuSE 7.3/8.0
-Feature: Bus mastering offloads data I/O handling from host CPU; CRC
-error-checking of Serial ATA and Ultra ATA drives for data reliability
-during transfers; Data Transfer Rate:150MB/sec with Serial ATA/150 drives,
-133MB/sec with Ultra ATA/133 drives, 100MB/sec with Ultra ATA/100 drives;
-32-bit 33/66MHz PCI bus; PCI 2.3 compliant
+Anti depressants: 
+Generic Paxil - 1.16
+Generic Zoloft - 0.64
+
+Muscul relaxers: 
+Generic Soma - 1.33
+
+Stop smoking:
+Generic Zyban - 1.17
+
+Lower cholesterol:
+Lipitor - 0.48
+
+and a lot more http://first.hchcgem.info/?zPBb5IzCI7aWfzzdashes
+
+
