@@ -1,45 +1,123 @@
-From: "bo" <bo@sosnetwork.net>
-Subject: What are those changes for fixing the RAID0 performance?
-Date: Sat, 17 Aug 2002 11:08:44 -0700
+From: Duncan Laurie <duncan@sunbalt.net>
+Subject: Re: Problems with RAID1 on cobalt raq3
+Date: 17 Aug 2002 15:55:38 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <00d601c24619$2068c8e0$5701a8c0@bomoon>
+Message-ID: <1029624922.14769.119.camel@atherton>
+References: <200208172056.g7HKuHm05754@raq.iceblink.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <200208172056.g7HKuHm05754@raq.iceblink.org>
+To: valen@tuatha.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil And RAIDers,
+On Fri, 16 Aug 2002 08:02:38 -0700, John P. Looney wrote:
 
-I have been looking for "what changes are made to fix/improve the parallel
-access(?) to disks simultanously?".
-I noticed as follow;
+>  I've been battling with getting RAID1 working on the root filesystem of a
+> Cobalt raq3 (running RedHat 7.3) for about a week.
+> 
+>  The current problem is that the Raq3 PROM will not mount a root
+> filesystem different to the one that it loads the kernel from initially.
+> 
+>  The PROM seems to use a variable "set_boot_dev" to get a partition name.
+> It mounts this partition, gets a file /boot/vmlinux.gz from it, unzips it,
+> and runs.
+> 
+>  I have hda2 (my original root partition) and hdg1 parts of a mirror setup
+> as /dev/md1, which is to be mounted as /. I used the "failed-disk"
+> directive to create md1 as / - however, after booting, md1 is mounted on /
+> fine, but I cannot add hda2 to this with raidhotadd:
+> 
+> [root@midir root]# raidhotadd /dev/md1 /dev/hda2                   
+> md: can not import hda2, has active inodes!
+> md: error, md_import_device() returned -16
+> /dev/md1: can not hot-add disk: invalid argument.
+> 
+>  Does anyone have any idea what could be happening, or how I could resolve
+> this ?
+> 
+>  I think I'm using lilo to some degree, as when the cobalt boots, it loads
+> a 2.2.16 kernel from it's PROM, and spits out:
+> 
 
-Up to Linux2.4.9  it got the same performance for RAID0(2-way stripe) and a
-single disk(JBOD),
-about 15 MB/sec with DMA on(hdparm -tT /dev/mdx).
+Nope, no LILO used in the cobalt bootloader.  You have it mostly figured
+out though.  The variable written to with "set_boot_dev" is stored in
+CMOS, and it is passed to the linux zero-page on boot as ORIG_ROOT_DEV.
+(see linux-2.4/Documentation/i386/zero-page.txt)  However, this does not
+have the same effect as passing "root=/dev/md1" to the kernel.
 
-On Linux 2.4.10 it improves to about 25 MB/sec for RAID0, 15 MB/sec for
-single disk.
-On Linux 2.4.18 it got the right performance; about 31 MB/sec for RAID0.
+ 
 
-I tried to port the difference on /driver/ide and /drivers/md, but it did
-not help.
-I think there were changes on other functions to fix the parallel access(?)
-to disks simultanously OR
-to improve the RAID0 performance .
+On your box, what is this variable set to?
 
-Why am I doing this kind of homework?
-
-I can not migrate our linux to 2.4.18 so I want to port ONLY the fixes for
-this performance
-issue. I use Linux2.4.5.
-
-Please help me if you know how I can work around.
-
-Thanks in advance,
-
-Bo
+> VFS: Mounted root (ext2 filesystem) readonly.
+> Freeing unused kernel memory: 76k freed
+> Warning: unable to open an initial console.
+> BOOTLOADER: Mapping in physical locations
+> BOOTLOADER: load_addr=0xc1804000 ret_data=0xc1a050ac
+> BOOTLOADER: opening "/boot/vmlinux.gz"
+> BOOTLOADER: reading "/boot/vmlinux.gz"
+> BOOTLOADER: read 1254176bytes
+> BOOTLOADER: unmounting /
+> BOOTLOADER: calling reboot notifiers
+> stopping all md devices.
+> flushing ide devices: hdg 
+> disabling network interfaces.
+> resetting sym53c8xx scsi bus(es)
+> sym53c875-0: detaching ...
+> sym53c875-0: resetting chip
+> BOOTLOADER: mapping 16M-32M for ride home
+> BOOTLOADER: disabling interupts
+> BOOTLOADER: flushing cache
+> BOOTLOADER: Leap of faith!
+> Back in ramcode: done
+> Second stage kernel: Decompressing - done
+>   extract_header_info:
+>     ehead: 0x01500000
+>     shead: 0x01747eb0
+>     Machine: 0x00000003
+>     Kernel Entry: 0xc0105000
+>     Program header size: 0x00000020
+>     Number of Program headers: 1
+>     Section Header size: 0x00000028
+>     Number of section headers: 23
+>   relocate_and_zero:
+>     Offset: 0x00001000
+>     VAddr: 0xc0100000
+>     PAddr: 0xc0100000
+>     Filesize: 0x0023f6a0
+>     Memsize: 0x0027aa58
+>     Flags: 0x00000007
+>     relocate: src = 0x01501000, dest = 0x00100000, size = 0x0023f6a0
+>   Kernel cmd line: console=ttyS0,115200 ip=off 
+>   Booting kernel...
+> Linux version 2.4.18-4jp (root@jlooney) (gcc version 2.96 20000731 (Red Hat Linux 7.3 2.2BIOS-provided physical RAM map:
+> 
+>  But in case it is a problem with the lilo.conf:
+> 
+>      disk=/dev/md1
+>         bios=0x80
+>         sectors=63
+>         heads=16
+>         cylinders=39560
+> 
+>      boot=/dev/hda
+>      map=/boot/map
+>      install=/boot/boot.b
+>      image=/boot/boot/vmlinuz-2.4.18-3
+>          root=/dev/md1
+>          read-only
+>          label=LinuxRaid
+> 
+>  Should that work ?
+> 
+> John
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ 
 
