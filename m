@@ -1,50 +1,60 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: Using the md driver to look at a bad hardware RAID.
-Date: Tue, 1 Mar 2005 18:27:02 -0500
-Message-ID: <200503012327.j21NR7512050@www.watkins-home.com>
-References: <200503012308.j21N8oSh029058@mint-square.mit.edu>
+From: Omri Schwarz <ocschwar@MIT.EDU>
+Subject: Re: Using the md driver to look at a bad hardware RAID.
+Date: Tue, 01 Mar 2005 18:54:51 -0500
+Message-ID: <200503012354.j21Nspod001357@mint-square.mit.edu>
+References: <200503012327.j21NR7512050@www.watkins-home.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-In-Reply-To: <200503012308.j21N8oSh029058@mint-square.mit.edu>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: Your message of "Tue, 01 Mar 2005 18:27:02 EST."
+             <200503012327.j21NR7512050@www.watkins-home.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Omri Schwarz' <ocschwar@MIT.EDU>, linux-raid@vger.kernel.org
+To: Guy <bugzilla@watkins-home.com>
+Cc: 'Omri Schwarz' <ocschwar@MIT.EDU>, linux-raid@vger.kernel.orgocschwar@MIT.EDU
 List-Id: linux-raid.ids
 
-It is a 7 drive array.  If you use 6 of 7 drives, md will not try to
-re-sync.  But I have no idea if how to re-use the previous RAID data.
+> It is a 7 drive array.  If you use 6 of 7 drives, md will not try to
+> re-sync.  But I have no idea if how to re-use the previous RAID data.
+> 
 
-Guy
+If you mean the previous configuration, I have it on 
+a writing pad and will gladly type it into a raidtab or 
+mdadm incantation. 
 
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Omri Schwarz
-Sent: Tuesday, March 01, 2005 6:09 PM
-To: linux-raid@vger.kernel.org
-Subject: Using the md driver to look at a bad hardware RAID. 
+mdadm doesn't look like it will do it yet because --assemble 
+only works for devices with Linux RAID superblocks, --build
+won't do RAID 5, and --create, according to the manual page, 
+says "--readonly" is not supported, and will create superblocks.
+Otherwise I would do the command below:
 
-Hi, everyone.
+mdadm --create /dev/md0 --level=5 --raid-devices=7  \
+  /dev/sdg /dev/sdf /dev/sde /dev/sdd /dev/sdc /dev/sdb missing 
 
-I have a 7 drive dpt_i2o RAID 5 with which a drive going bad coincided with 
-the card going bad. The card (Adaptec mumblefrotz) is going elsewhere,
-while the drives are now on an aic7xxx SCSI chain set as JBOD. 
 
-If it were possible to configure an md device to have the same 
-arrangement as the hardware, so I could mount this degraded RAID
-as read only and rescue some data, it would make me a very happy man. 
+Instead, if I were to insert this raidtab, would it do the right thing?
 
-I would just like to make absolutely sure that just loading the
-drives into an mdadm incantation won't cause any write operations to 
-happen. Is there a way to tell the driver precisely which drive to 
-treat as bad, and not to engage in any write operations what-so-ever ?
+raiddev /dev/md0
+	raid-level	5
+	persistent-superblock	0
+	nr-raid-disks	7
+	parity-algorithm left-symmetric	
+	device /dev/sda
+	failed-disk 6
+	device /dev/sdb
+	raid-disk 5 
+	device /dev/sdc
+	raid-disk 4 
+	device /dev/sdd
+	raid-disk 3 
+	device /dev/sde
+	raid-disk 2 
+	device /dev/sdf
+	raid-disk 1 
+	device /dev/sdg
+	raid-disk 0 
 
-I'd be most gratefull for any help you might care to give.
 
---Omri Schwarz
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+> 
 
