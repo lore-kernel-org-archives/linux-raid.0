@@ -1,46 +1,27 @@
-From: "Jennifer" <xbfxyqs@verizon.net>
-Subject: Re: Re: Need assistance
-Date: Thu, 20 Jan 2005 02:10:24 -0600
-Message-ID: <000301c4fec7$9539b2b0$486f6483__41430.6901897818$1106213788$gmane$org@YRXG>
+From: David Dougall <davidd@et.byu.edu>
+Subject: No response?
+Date: Thu, 20 Jan 2005 10:55:56 -0700 (MST)
+Message-ID: <Pine.LNX.4.58.0501201052240.19586@lewis.et.byu.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-2";
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Casey Linux-kernel-owner <linux-kernel-owner@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Order Number: 940029
-Order Date:   Thu, 20 Jan 2005 14:10:02 +0600
+Perhaps I was asking a stupid question or an obvious one, but I have
+received not response.
+Maybe if I simplify the question...
 
-We appreciate your patience in the processing of your
-m o rrtgage   request.
+If I am running software raid1 and a disk device starts throwing I/O
+errors, Is the filesystem supposed to see any indication of this?  I
+thought software raid would mask all of this and just fail the drive.
 
-We have prepared 3.4% deal for you at this time. Verify
-your information so we can proceed as planned.
-
-http://www.xpojga.com/
-
-Thank you.
-
-Sincerely,
-Jennifer
-CustomerDepartment
-
-
-
-
-
-
-
-
-
-
-
-
-spoonful the at knifelike
-we our a anne sandy appellant
-a emulate and obverse bath purr
-via Vsofa elephantine beatific avertive
-medial the englander, cushing
+I have servers with xfs as the filesystem and xfs will start to throw I/O
+errors when a disk starts acting up even with software raid in between.
+Please advise on how I can confirm my setup or if this is possibly a bug
+how to diagnose further.
+If it makes a difference, I am running linux-2.4.26
+Thanks
+--David Dougall
 
