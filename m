@@ -1,40 +1,49 @@
-From: Steven Dake <sdake@mvista.com>
-Subject: Re: multipath - stable ?
-Date: Fri, 12 Dec 2003 10:35:19 -0700
+From: Brandon Evans <maillists@hosttuls.com>
+Subject: Re: Kernal Panic when booting redhat.  Raid devices mount fine underKnoppix
+Date: Fri, 12 Dec 2003 09:46:19 -0800
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1071250518.13240.32.camel@persist.az.mvista.com>
-References: <200312121552.02975.franc@tech.sirca.org.au>
-Reply-To: sdake@mvista.com
+Message-ID: <3FD9FEEB.7040006@hosttuls.com>
+References: <3FD7A643.7060602@hosttuls.com> <3FD822D4.2030501@ratnet.stw.uni-erlangen.de> <3FD8ECA9.9080209@hosttuls.com> <3FD99121.9000702@ratnet.stw.uni-erlangen.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200312121552.02975.franc@tech.sirca.org.au>
-To: Franc Carter <franc@tech.sirca.org.au>
-Cc: Linux-raid maillist <linux-raid@vger.kernel.org>
+In-Reply-To: <3FD99121.9000702@ratnet.stw.uni-erlangen.de>
+To: schmidt@naa.net, Linux-raid maillist <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-The multipath code is simple and seems pretty stable to me.
+Norman Schmidt wrote:
+> Brandon Evans schrieb:
 
-There is one issue, in that failover can sometimes take a long time
-because of the SCSI layer's insistence upon executing error recovery. 
-In the case of multipath I/O's, there is no need to error recover before
-processing the I/O.  Instead, once error is detected, failover, then
-start error recovery.
+For the record, the error I was getting was:
 
-The SCSI layer doesn't do this currently, so failover times are high.
+EXT3-fs: unable to read superblock
+mount:error 22 mounting ext3
 
-Thanks
--steve
+> Are you sure that the partition type is not set to fd?
+
+Yes, they are all set to fd.
 
 
-On Thu, 2003-12-11 at 21:52, Franc Carter wrote:
-> Hi,
+> Then the problem might be the older mechanism of RedHAT to start the raids.
 > 
-> I've been using linux sofwtare raid for years and had no problems.
-> We are about to install some disk systems that have dual contollers
-> and am wondering wether multipath is as stable as the rest of software
-> raid ?
-> 
-> thanks
+> Which bootloader do you use? I use lilo for my servers, that works with 
+> root on raid1.
 
+Thanks for all the info.  It will come in handy.
+
+I was finally able to get the / partition to boot by switching the fs 
+type from ext3 to ext2.
+
+I was able to boot in ext2, I switched the fs back to ext3, rebooted, 
+and now everything works fine.
+I'm curious as to what happened there, but that question is for another 
+list.
+
+
+
+
+
+-- 
+Thanks,
+     Brandon E.
