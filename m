@@ -1,48 +1,51 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: RAID-6 development snapshot (not quite working yet)
-Date: 21 Dec 2003 00:35:07 -0800
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: Bug in RAID1 in 2.4
+Date: Sun, 21 Dec 2003 20:44:51 +1100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <bs3lvr$8dt$1@cesium.transmeta.com>
+Message-ID: <16357.27539.548714.836688@notabene.cse.unsw.edu.au>
+References: <20031220082547.GB18118@devserv.devel.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: message from Pete Zaitcev on Saturday December 20
+To: Pete Zaitcev <zaitcev@redhat.com>
+Cc: Marcelo Tosatti <marcelo.tosatti@cyclades.com>, linux-raid@vger.kernel.org, Ingo Molnar <mingo@redhat.com>
 List-Id: linux-raid.ids
 
-Hi all,
+On Saturday December 20, zaitcev@redhat.com wrote:
+> In drivers/md/raid1.c, raid1_sync_request contains the following:
+>   
+>         block_nr = sector_nr;
+>         bsize = 512;
+>         while (!(block_nr & 1) && bsize < PAGE_SIZE
+>                         && (block_nr+2)*(bsize>>9) < (mddev->sb->size *2)) {
+>                 block_nr >>= 1;
+>                 bsize <<= 1;
+>         }
+> 
+> Suppose that a mirror is 4K in size. The code above produces
+> reads (and writes) of the following offsets and sizes:
+>  0K[2K], 2K[1K], 3K[0.5K], 3.5K[0.5K]
+> 
+> The above is correct, but it makes the RAID1 completely unuseable
+> on s390, because I/O with sizes less than 4K is not supported.
+> I would like the attached patch applied to correct the issue.
 
-I've finally been able to shake loose enough time (or more like it, I
-needed a project or I'd go insane) to get my RAID-6 project
-relaunched.  I now have a development snapshot against linux-2.6.0 and
-mdadm-1.4.0 available at:
+Yes, I agree.  Marcelo, could you please apply this patch.
+The '<' test is just to make sure a request of 2*bsize at block_nr
+will still fit within the size of the device, so a <= is appropriate.
 
-ftp://ftp.kernel.org/pub/linux/kernel/people/hpa/raid6-20031220-dontuse.tar.gz
+NeilBrown
 
-This release is "dontuse" because there is some kind of problem with
-I/O scheduling in degraded mode (both 1- and 2-degraded mode.)  As a
-result, raid6d eventually goes into an infinite loop.
-
-However, the data is definitely there -- I can create a filesystem on
-a raid, and it will still fsck clean after gunning two disks.  I
-suspect that there is some corner case in the RAID-5 code which I
-haven't understood properly and just blindly copied over, which just
-doesn't work quite right for RAID-6.
-
-Eyeballs on the code is of course appreciated.  Unfortunately I have
-to move house next month, so I'm not sure how much longer I'm going to
-be able to have a working test setup :) On the other hand, I think the
-code is getting pretty close to actually working :)
-
-Special thanks to Penguin Computing for donating a RAID test system
-with enough drives to make meaningful RAID-6 testing possible.
-
-	-hpa
-
-
-
--- 
-<hpa@transmeta.com> at work, <hpa@zytor.com> in private!
-If you send me mail in HTML format I will assume it's spam.
-"Unix gives you enough rope to shoot yourself in the foot."
-Architectures needed: ia64 m68k mips64 ppc ppc64 s390 s390x sh v850 x86-64
+--- linux-2.4.23/drivers/md/raid1.c	2003-06-13 07:51:34.000000000 -0700
++++ linux-2.4.23-nip/drivers/md/raid1.c	2003-12-19 23:57:57.000000000 -0800
+@@ -1436,7 +1436,7 @@
+ 	block_nr = sector_nr;
+ 	bsize = 512;
+ 	while (!(block_nr & 1) && bsize < PAGE_SIZE
+-			&& (block_nr+2)*(bsize>>9) < (mddev->sb->size *2)) {
++			&& (block_nr+2)*(bsize>>9) <= (mddev->sb->size *2)) {
+ 		block_nr >>= 1;
+ 		bsize <<= 1;
+ 	}
