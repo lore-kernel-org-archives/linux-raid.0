@@ -1,48 +1,56 @@
-From: "Cress, Andrew R" <andrew.r.cress@intel.com>
-Subject: RE: [PATCH] raid superblock sanity checking (validate_sb)
-Date: Fri, 16 Aug 2002 10:03:05 -0700
+From: Maurice Hilarius <maurice@harddata.com>
+Subject: Fwd: Maxtor announcement on its MaxAttach product line
+Date: Fri, 16 Aug 2002 13:08:07 -0600
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <A5974D8E5F98D511BB910002A50A664702CD66F8@hdsmsx103.hd.intel.com>
+Message-ID: <5.1.0.14.2.20020816124639.03c2dde0@mail.harddata.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: 'Neil Brown' <neilb@cse.unsw.edu.au>
-Cc: 'Troy Benjegerdes' <hozer@drgw.net>, linux-raid@vger.kernel.org
+To: maurice@harddata.com
 List-Id: linux-raid.ids
 
-Neil,
+Bye bye..
+(Hooray!)
 
-The problem is due to several md kernel bugs that corrupt the superblock.
-And, since my target environment is a raid1 root mirror, it's a bigger deal
-to reboot to a removable and manually fix it from userspace with mdadm.  
+Date: 16 Aug 2002 18:10:35 GMT
+From: Maxtor Announcement <vip@maxtorvip.com>
+Subject: Maxtor announcement on its MaxAttach product line
 
-It's a can of worms, but you are right, the right approach is to fix all of
-the locations where a blind increment or decrement of the values takes
-place, which I guess are the same locations where I put the validate_sb
-routine.  I'll drill down further to try to fix the root problems.
+Dear _______________
 
-Andy
+On Thursday afternoon, Maxtor announced that it has discontinued the 
+manufacturing and sales of its MaxAttach TM branded network attached 
+storage (NAS) products. Maxtor will continue to support its end-user 
+customers and channel partners who own MaxAttach products, as well as 
+current OEM NAS customers, providing hard drives and storage subsystem 
+solutions.
 
------Original Message-----
-From: Neil Brown [mailto:neilb@cse.unsw.edu.au] 
-Sent: Thursday, August 15, 2002 9:43 PM
-To: Cress, Andrew R
-Cc: 'Troy Benjegerdes'; linux-raid@vger.kernel.org
-Subject: Re: [PATCH] raid superblock sanity checking (validate_sb)
+Maxtor will continue to honor the warranty programs for customers who have 
+purchased MaxAttach products.  Service contracts that are currently in 
+place will also be supported for the length of the contract. If you have 
+additional questions regarding warranty or support issues please contact 
+Maxtor directly at 1-866-MAX-TACH.
 
-On Monday August 12, andrew.r.cress@intel.com wrote:
-> I've written a patch to help this problem.  [...]
-> Neil, 
-> 
-> You've seen a lot of these type problems corrected with mdadm.  Does this
-> cover most of the cases?
+Maxtor will better serve our partners by focusing our resources and 
+building on our core strengths; including developing and production of 
+best-in-class hard disk drives designed specifically for storage systems 
+solutions.  We will continue to deliver to our partners a broad line of 
+consumer, desktop and enterprise hard disk drives. As one of the world s 
+leading suppliers of information storage solutions, Maxtor is committed to 
+assisting our channel partners through this transition and appreciate your 
+continued support.
 
-If there is a kernel bug that corrupts the superblock, then we should
-fix the bug, not put in lots of validation to see if the bug has hit..
+For further information regarding the announcement, please review the press 
+release found on www.Maxtor.com .
 
-And if a superblock did get corrupted, then fixing it is a userspace
-(mdadm) issue, not kernel.
 
-Or maybe I'm not understanding what problem you are trying to solve.
+With our best regards,
 
-NeilBrown
+Maurice W. Hilarius       Telephone: 01-780-456-9771
+Hard Data Ltd.               FAX:       01-780-456-9772
+11060 - 166 Avenue        mailto:maurice@harddata.com
+Edmonton, AB, Canada      http://www.harddata.com/
+    T5X 1Y3
+
+2.3TB RAID5 NAS server - dual AthlonMP CPU, Linux, $10,995 CAD / $6850 USD
+
