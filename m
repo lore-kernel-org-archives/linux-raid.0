@@ -1,51 +1,50 @@
-From: Brad Campbell <brad@wasp.net.au>
-Subject: Re: consistency detect
-Date: Mon, 11 Oct 2004 14:58:59 +0400
-Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <416A6773.1080104@wasp.net.au>
-References: <1097465522.3111.24.camel@localhost.localdomain> <416A4A29.9080906@wasp.net.au> <416A63B2.7020004@tls.msk.ru>
+From: christophe.varoqui@free.fr
+Subject: [ANNOUNCE] multipath-tools-0.3.1
+Date: Mon, 11 Oct 2004 13:50:16 +0200
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <1097495416.416a73787e0ae@imp1-q.free.fr>
+References: <1096071849.4466.31.camel@zezette> <1097054573.4163b96d1262c@imp5-q.free.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <416A63B2.7020004@tls.msk.ru>
-To: Michael Tokarev <mjt@tls.msk.ru>
-Cc: mingz@ele.uri.edu, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <1097054573.4163b96d1262c@imp5-q.free.fr>
+Cc: linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-hotplug-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
 List-Id: linux-raid.ids
 
-Michael Tokarev wrote:
+Hello,
 
->> In short, it does not deal with it at all. RAID will deal with a disk 
->> failure, it has no guarantees about consistency on power failures, 
->> hard lockups or other catastrophic events.
-> 
-> 
-> This is incorrect.  In-kernel raid code keeps track of arrays and
-> underlying disk state during write operations.  On clean shutdown,
-> when everything has been written, raid superblocks on all disks
-> gets updated to indicate this.  In case of unclean shutdown, raid
-> code will reconstruct older copies of data using most recent ones
-> (ie, from a disk which has most recent "events" value in superblock).
-> The same is done for all other raid levels (4, 5, 6), but onot for
-> raid0 for obvious reasons (as there's no R in raid0 per se).
+here goes multipath-tools-0.3.1
 
+Early release, to fix a important i386 breakage due to regparm switch in klibc.
+Release focuses on undusting kpartx.
+ia64 and woody testers, please redo your thing : I may have got it right this
+time.
 
-When does the "events" value in the superblock actually get updated? I understood it only got 
-updated on an event, ie raid start, raid stop, disk add/remove/fail.
+Full ChangeLog for the release :
 
-I realise the system does an auto rebuild when started after an unclean shutdown, the question 
-really is how does it know which disk is the freshest in a raid-1? In a raid-4,5,6 it's pretty 
-obvious as there is really only one copy of the data, but then does the code actually ensure that 
-the data gets written before the updated parity? or does it just flush the lot to disk in what it 
-thinks is the most optimum fashion?
+        * [kpartx] move back to getopt, originaly removed from the
+          original partx because of lack of implementation in klibc
+        * [kpartx] don't map extended partitions
+        * [kpartx] add a -p command flag to allow admin to force a
+          delimiting string between disk name and part number. When
+          specified always use it, when unspecified use 'p' as a delim
+          when last char of disk name is a digit, NUL otherwise.
+        * [kpartx] clean up
+        * bump klibc to 0.182
+        * one step further : use klibc MCONFIG for all klibc specific
+          FLAGS definitions, ie massive Makefile.inc cleanup
+        * follow the klibc compilation rules by appending its OPTFLAGS
+          to multipath-tools' CFLAGS. This corrects the segfaults seen
+          on i386 where klibc is built with regparm=3 and tools are not
+        * [multipathd] fall back to fork when clone not available
+          like in Debian Woody
+        * [kpartx] move .start and .size from uint to ulong (Ake)
+        * briefly document system-disk-on-multipath in the FAQ file
 
-The In-kernel data becomes pretty moot when the kernel has just blasted a couple of large blocks out 
-to a couple of disks and the plug has been pulled. It's going to be pretty indeterminate as to which 
-disk has the most accurate image of what was actually sent to it. Thus my comment that there is 
-really no way of accurately dealing with a catastrophic failure, and RAID is not there to do that 
-anyway.
+As usual, doc and download at :
+http://christophe.varoqui.free.fr/
 
-I guess if you had a hardware RAID card that had a battery backed up RAM you have a much better 
-chance but then you really have a mini-ups :p)
-
-Brad
+regards,
+--
+christophe varoqui <christophe.varoqui@free.fr>
