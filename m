@@ -1,26 +1,30 @@
-From: "Kevin P. Fleming" <kpfleming@backtobasicsmgmt.com>
-Subject: Linux software RAID vs. udev
-Date: Fri, 30 Apr 2004 18:25:58 -0700
+From: Brad Campbell <brad@wasp.net.au>
+Subject: Re: [PATCH] Linux Raid5/6 abover 2 Terabytes
+Date: Sat, 01 May 2004 11:08:08 +0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <4092FCA6.2020103@backtobasicsmgmt.com>
-Reply-To: kpfleming@backtobasicsmgmt.com
+Message-ID: <40934CD8.3050108@wasp.net.au>
+References: <249C1CB246997C48BB74963CCD361C1B02376A60@pnlmse28.pnl.gov> <1081785234.22588.5.camel@e-linux>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <1081785234.22588.5.camel@e-linux>
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-I'm switching my boxes over to udev and fully hotplug-driven /dev 
-directories.
+Evan Felix wrote:
+> Niel, did you push this patch to the kernel guys for inclusion in the
+> next 2.6 kernel?
+> 
+> Also by way of status i've built a 5.7Tb SATA array (level 5/6) with
+> this change in the kernel.
+> 
+> so that pushes us to about 4 Arrays now..
+> 
+> Evan
+> 
 
-However, that means by default I only have /dev/md0 from the MD driver, 
-and if I want to "mdadm --assemble" any other array I have to manually 
-create the device node for it first.
+Has this patch been pushed forwards? It does not appear in 2.6.6-rc3.
 
-Is there any chance that mdadm is going to learn how to assemble an 
-array without having the device node for it already present? If so, then 
-the starting of the array would get the device node created (since it 
-would be a new block device) and everything would be happy...
-
-(Please keep my address in the CC list, I'm not subscribed)
+Regards,
+Brad
