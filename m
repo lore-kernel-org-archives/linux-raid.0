@@ -1,30 +1,51 @@
-From: AndyLiebman@aol.com
-Subject: Re: mdadm can't start RAID0 volume after power failure
-Date: Fri, 17 Dec 2004 13:06:56 EST
-Message-ID: <128.5252547e.2ef47a40@aol.com>
+From: "Richard F. Rebel" <rrebel@whenu.com>
+Subject: Multipath questions...
+Date: Fri, 17 Dec 2004 13:02:40 -0500
+Message-ID: <1103306560.18363.533.camel@rebel.corp.whenu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-mZGNTtN2oP0aI3LEJK6q"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: philippe.gramoulle@mmania.com
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-Phillipe
+--=-mZGNTtN2oP0aI3LEJK6q
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
->Still, this is the first time that such a thing happens to me. What could be 
-the reason that >UUID would be changed ?
 
-If I were a betting person, I would say that the mdadm.conf file was old, and 
-that you had created a new array since the time you made that conf file. And 
-you just didn't update the conf file. 
+Hello,
 
-As I'm sure you know, you don't need to use a conf file anyway to use mdadm. 
-That's what makes it so beautiful! All kinds of things -- like device ids -- 
-can change on your system and mdadm just figures it out (provided you give it a 
-minimal amount of info, like the correct uuid!). 
+I have 4 luns available on two controllers, similtaniously, thus making
+the 4 luns visible twice.  I have 4 FCAL connections to multiple
+switches, leaving me with 32 scsi devices, only 4 of which are unique.
 
-Glad to help :)
-Andy Liebman
+When I create md's with the multipath option, which one is 'active'??
+The first one created?  The first one probed by mdadm when it scans for
+them upon boot?
+
+When a path fails, which of the other paths is used?   If the original
+path is restored does the traffic fail back to the original path?
+
+Thanks!
+
+--=20
+Richard F. Rebel
+
+cat /dev/null > `tty`
+
+--=-mZGNTtN2oP0aI3LEJK6q
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.4 (GNU/Linux)
+
+iD8DBQBBwx9Ax1ZaISfnBu0RAmgZAJkBM8pmAdS2lHx1MbyH4yboIb7RBwCeKYXV
+s2tPi8frojw1HmHoHV1jYlk=
+=pUh8
+-----END PGP SIGNATURE-----
+
+--=-mZGNTtN2oP0aI3LEJK6q--
+
