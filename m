@@ -1,102 +1,45 @@
-From: Mircea Ciocan <mirceac@interplus.ro>
-Subject: Please help with a special RAID 1 setup
-Date: Wed, 07 Jan 2004 12:16:26 +0200
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: raid0_make_request bug: can't convert block across chunks or
+ bigger than
+Date: Wed, 7 Jan 2004 02:33:32 -0800
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3FFBDC7A.8020702@interplus.ro>
+Message-ID: <20040107023332.5ff0b9ff.akpm@osdl.org>
+References: <yw1xznd0ult1.fsf@ford.guide>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <yw1xznd0ult1.fsf@ford.guide>
+To: =?ISO-8859-1?B?TeVucyBSdWxsZ+VyZA==?= <mru@kth.se>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-    Hello all,
-    First excuse me for a looong message, but I've tryed to give as much 
-relevant details as possible.
+mru@kth.se (M=E5ns Rullg=E5rd) wrote:
+>
+> I'm using Linux 2.6.0 on an Alpha SX164 machine.  Using four ATA
+>  disks, hd[egik], on a Highpoint hpt374 controller, I created two rai=
+d0
+>  arrays from hd[eg]1 and hd[ik]1, md0 and md1.  From these, I created=
+ a
+>  raid1 mirror, md4, on which I created an XFS filesystem.  For variou=
+s
+>  reasons, I first ran md4 with only md0 as a member and filled it wit=
+h
+>  some files, all going well.  Then, I added md1, and it was synced
+>  properly.  Now, I can mount md4 without problems.  However, when I
+>  read things, I get this in the kernel log:
+>=20
+>  raid0_make_request bug: can't convert block across chunks or bigger =
+than 32k 439200 32
 
-    Please help me with this weird setup if it is possible and fesable:
+This was fixed post-2.6.0.  2.6.1-rc2 should be OK.
 
-    I have this raid1 device, composed of two fibre channel devices 
-mounted in RAID1, it works absolutely flawlessly.
-The resulted device is used for a lot of important data logging and the 
-ideea is to hotattach a 3-rd device ot the same size, wait for 
-syncronisation and after all of them are syncronised, stop the data 
-logging process, wait for a while, issue a sync command and hot detach 
-the 3-rd device restart de data logging and walk away with valid 
-filesytem backup of the main arry to be used as separate data analysys 
-source. I know that solution is somewhat cumberome but trust me this is 
-needed as is.
-     Now if you read untill here I managed to hot-attach, the attaching 
-was mentioned in the syslogfile, the data logging process continued 
-undisturbed, even the cat /proc/mdstat showed the new device added BUT 
-it only showed the same two   [2/2] [UU] and it didn't touch the 3-rd 
-disk at all, also hotremoving was sucessful.
+>  raid1: Disk failure on md1, disabling device.=20
+>  	Operation continuing on 1 devices
 
-    Here are some relevant data of the test setup that may be usefull:
-[root@test]# cat /etc/raidtab
-raiddev /dev/md0
-raid-level      1
-nr-raid-disks   2
-nr-spare-disks  0
-chunk-size     4
-persistent-superblock 1
-device          /dev/sda2
-raid-disk       0
-device          /dev/sdb2
-raid-disk       1
-
-/proc/mdstat BEFORE adding the 3-rd device:
-[root@test]# cat /proc/mdstat
-Personalities : [raid1]
-read_ahead 1024 sectors
-md0 : active raid1 scsi/host3/bus0/target0/lun0/part2[1] 
-scsi/host2/bus0/target0/lun0/part2[0]
-      710938560 blocks [2/2] [UU]
-
-unused devices: <none>
-
-Then I add the 3-rd device:
-[root@test]# raidhotadd /dev/md0 /dev/sdb3
-
-/proc/mdstat AFTER adding 3-rd device
-
-[root@nfs10 root]# cat /proc/mdstat
-Personalities : [raid1]
-read_ahead 1024 sectors
-md0 : active raid1 scsi/host3/bus0/target0/lun0/part3[2] 
-scsi/host3/bus0/target0/lun0/part2[1] scsi/host2/bus0/target0/lun0/part2[0]
-      710938560 blocks [2/2] [UU]
-
-unused devices: <none>
-
-Piece of the syslog showing the add results:
-.....
-Jan  7 12:09:01 nfs10 kernel: md: updating md0 RAID superblock on device
-Jan  7 12:09:01 nfs10 kernel: md: scsi/host3/bus0/target0/lun0/part3 
-[events: 00000012]<6>(write) scsi/host3/bus0/target0/lun0/part3's sb 
-offset: 725598144
-Jan  7 12:09:01 nfs10 kernel: md: scsi/host3/bus0/target0/lun0/part2 
-[events: 00000012]<6>(write) scsi/host3/bus0/target0/lun0/part2's sb 
-offset: 710938560
-Jan  7 12:09:01 nfs10 kernel: md: scsi/host2/bus0/target0/lun0/part2 
-[events: 00000012]<6>(write) scsi/host2/bus0/target0/lun0/part2's sb 
-offset: 710938560
-......
-
-    The problem is that no sync is done, as a matter of fact the 3rd 
-disk is not even scrached visibly ;(, did I miss someting obvious or 
-what I want is impossible ???
-
-    Thank you for reading such a long mail and for any help that will 
-lead me solving this,
-
-       Mircea Ciocan
-
-
-
-
-
-
-
-
-
+I assume this is due to the raid0 error above.
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
