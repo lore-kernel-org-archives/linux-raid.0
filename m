@@ -1,48 +1,55 @@
-From: Jurriaan <thunder7@xs4all.nl>
-Subject: 3 disk raid-5 without parity
-Date: Mon, 14 Jun 2004 13:19:20 +0200
+From: Miquel van Smoorenburg <miquels@cistron.nl>
+Subject: Re: Raid1 doesn't balance under high load [patch]
+Date: Mon, 14 Jun 2004 13:30:37 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040614111920.GA17785@middle.of.nowhere>
-Reply-To: Jurriaan <thunder7@xs4all.nl>
+Message-ID: <20040614113037.GC13422@traveler.cistron.net>
+References: <20040610113019.GA8660@cistron.nl> <16585.2632.321497.620210@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-To: linux-raid@vger.kernel.org
+In-Reply-To: <16585.2632.321497.620210@cse.unsw.edu.au> (from neilb@cse.unsw.edu.au on Fri, Jun 11, 2004 at 03:26:32 +0200)
+To: Neil Brown <neilb@cse.unsw.edu.au>
+Cc: Miquel van Smoorenburg <miquels@cistron.nl>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I am trying to convince my boss our new database-server wants raid-0+1,
-not raid-5, and I got an idea while reading endless articles about
-raid-5 being slow when writing and management not listening.
+On 2004.06.11 03:26, Neil Brown wrote:
+> On Thursday June 10, miquels@cistron.nl wrote:
+> > The problem is in raid1.c:read_balance().
+> > 
+> > Now if you write to the array, the array is marked not in sync by
+> > md.c:md_write_start(). conf->next_resync is initialized to zero, so
+> > that means read balancing doesn't work anymore.
+> 
+> Yes, you are right.  Thanks.
+> Your patch is close, but not quite right (though it would be hard to
+> cause it to actually fail).
+> I think it patch is more correct.  I would appreciate it if you could
+> confirm that it works for you.
 
-suppose you make a 3-disc raid-5 without parity:
+It doesn't because of a small typo:
 
-data    disc1 disc2 disc3
-A       A     A     B
-B       B     C     C
+> diff ./drivers/md/raid1.c~current~ ./drivers/md/raid1.c
+> --- ./drivers/md/raid1.c~current~	2004-06-11 11:20:34.000000000 +1000
+> +++ ./drivers/md/raid1.c	2004-06-11 11:21:57.000000000 +1000
+> @@ -375,7 +375,8 @@ static int read_balance(conf_t *conf, st
+>  	 * device if no resync is going on, or below the resync window.
+>  	 * We take the first readable disk when above the resync window.
+>  	 */
+> -	if (!conf->mddev->in_sync && (this_sector + sectors >= conf->next_resync)) {
+> +	if (!conf->mddev->recovery_cp < MaxSector &&
+> +	    (this_sector + sectors >= conf->next_resync)) {
+>  		/* make sure that disk is operational */
+>  		new_disk = 0;
 
-How would that perform compared to raid-5 and raid-0+1?
+I think that should read:
 
-As I understand, the performance problem with raid-5 when writing is
-that you may need to read old data to recompute the parity block, and
-the write the parity block and the data in parallel.
 
-So in this case, you can read straight away from all 3 disks (with
-raid-5 one of the disks will have parity information) and you can write
-without reading old data.
+-	if (!conf->mddev->in_sync && (this_sector + sectors >= conf->next_resync)) {
++	if (conf->mddev->recovery_cp < MaxSector &&
++	    this_sector + sectors >= conf->next_resync) {
 
-There is a problem with extending this: you need groups of 3 disks.
-Then again, compared to raid-0+1 you need fewer disks.
+and then it works.
 
-Has this ever been implemented? Even better, benchmarked?
-
-Just in case:
-[If this is a genuinly new idea, I hereby place it under the GPL.]
-
-Jurriaan
--- 
-"And in the future, if we come across any other water holes, I think
-we'll drop a grenade down it first, and check the quality of the
-water afterwards."
-	Simon R Green - Hellworld
-Debian (Unstable) GNU/Linux 2.6.7-rc2-mm2 2x6078 bogomips load 2.97
+Mike.
