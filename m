@@ -1,69 +1,37 @@
-From: Maurice Hilarius <maurice@harddata.com>
+From: "Duncan Laurie" <duncan@sunbalt.net>
 Subject: Re: ServerWorks chipset
-Date: Tue, 27 Aug 2002 12:41:24 -0600
+Date: Tue, 27 Aug 2002 12:09:51 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <5.1.0.14.2.20020827123902.03dcde80@mail.harddata.com>
+Message-ID: <pan.2002.08.27.19.09.48.254585@sunbalt.net>
+References: <Pine.LNX.4.30.0208261440170.10850-100000@duplo.agenda.si>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Danilo Godec <danci@agenda.si>
-Cc: bo <bo@sosnetwork.net>, Linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org, Danilo Godec <danci@agenda.si>
 List-Id: linux-raid.ids
 
-With regards to your message at 12:08 AM 8/27/02, Danilo Godec. Where you 
-stated:
->I'm not going to spend a ton of money for large SCSI drives. If I can't
->get ServerWorks to work well (and fast), I'll just get an add-on IDE
->controller.
+On Mon, 26 Aug 2002 14:45:27 +0200, Danilo Godec wrote:
+>
+> I'm using several Intel server boards with ServerWorks CSB5 chipset for
+> IDE. Even though this chipset is supposed to support ATA100 and it is
+> supposed to be supported in Linux and I do have CONFIG_BLK_DEV_SVWKS=y
+> in my .config, I can't set speeds higher than 'hdparm -X66 /dev/hda'!
+> 
 
+This is because the Serverworks CSB5 does not provide any way to detect
+80-conductor cable presence.  (see my notes at the top of
+drivers/ide/serverworks.c)  Some vendors have worked around this problem
+by having the BIOS encode it in the top 2 bits of the subsystem device ID.
+This includes Sun Cobalt and Dell boxes with the CSB5.
 
-So, buy a 3Ware. Works, fast, well supported.
+You should be able to override the cable detection by passing parameters:
 
-Here is what one of my customers said yesterday.
-He's running a Serverworks GC based dual XEON P4DL6 Supermicro board:
-2 x P4 XEON 2GHz
-2 - 3Ware 7500-8 boards
-12 - WD 1200JB 120GB disks with 8MB cache
-26" IDE TPE cables
-2GB DDR
+   ide0=ata66 ide1=ata66
 
+It is also possible the Intel BIOS is encoding it somewhere already, in
+which case it could be worked around in the driver.  Try examining the
+subsystem device ID with various combinations of drives plugged in and see
+if there is any discernable pattern.
 
-Here are the results I'm getting for software raid 0, 64-kByte chunks, all
-for using an ext2 file system (since my system will be the receiver I want
-to write as fast as possible, I've found that updating the journal file
-takes a fair bit of cpu).
-
-12 disks (sda1 through sdl1):
-        dd:  writing = 163.5 MBytes/sec
-             reading = 240.9 MBytes/sec
-  Bonnie++:  writing = 173.6 MBytes/sec
-             reading = 217.7 MBytes/sec
-
-  8 disks (sda1,sdb1,sdc1,sdd1,sde1,sdf1,sdg1,sdh1):
-        dd:  writing = 210.9 MBytes/sec
-             reading = 192.8 MBytes/sec
-
-  Bonnie++:  writing = 215.3 MBytes/sec
-             reading = 198.1 MBytes/sec
-
-Here is the disk layout per controller:
-         3ware Controller #1: sda,sdb,sdc,sdd
-         3ware Controller #2: sde,sdf,sdg,sdh,sdi,sdj,sdk,sdl
-
-Therefore the result for the 8-drive benchmark has 4 drives on each
-controller.
-
-FYI the sytax I used for Bonnie++ was:
-bonnie++ -d /raid -s 8000 -r 1024 -u root
-
-
-With our best regards,
-
-Maurice W. Hilarius       Telephone: 01-780-456-9771
-Hard Data Ltd.               FAX:       01-780-456-9772
-11060 - 166 Avenue        mailto:maurice@harddata.com
-Edmonton, AB, Canada      http://www.harddata.com/
-    T5X 1Y3
-
-2.3TB RAID5 NAS server - dual AthlonMP CPU, Linux, $10,995 CAD / $6850 USD
+-duncan
 
