@@ -1,39 +1,27 @@
-From: Franc Carter <franc@tech.sirca.org.au>
-Subject: multipath - stable ?
-Date: Fri, 12 Dec 2003 15:52:02 +1100
+From: =?UTF-8?B?Q2hyaXN0ZXIgQsOkY2tzdHLDtm0=?= <cbackstrom@chemist.com>
+Subject: Firewire RAID bootparameters?
+Date: Fri, 12 Dec 2003 13:45:44 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200312121552.02975.franc@tech.sirca.org.au>
-Reply-To: Franc Carter <franc@tech.sirca.org.au>
+Message-ID: <3FD9B878.3070002@chemist.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-To: Linux-raid maillist <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
-
 
 Hi,
 
-I've been using linux sofwtare raid for years and had no problems.
-We are about to install some disk systems that have dual contollers
-and am wondering wether multipath is as stable as the rest of software
-raid ?
+I've recently bought a 160Gb firewire drive and RAID1:ed it to mirror my 
+main harddrive. Unfortunately, the md subsystem seems to load before the 
+firewire in the kernel bootsequence, which mean I have to do some weird 
+stuff to make it work. Basically, I compiled the md system as modules 
+(with the SCSI patch to make it work a bit better), and hid the modules 
+in a different directory, so they wouldn't load. I later load them in 
+manually rc.sysinit. This work, but is a little clumsy. Is there a way 
+to use append any boot-parameters to lilo to make the RAID subsystem 
+load the firewire system? Or is there another solution? Thanks,
 
-thanks
 
--- 
-Franc Carter     Ph:61-2-8374-5071      Fax: 61-2-8374-5070
-Systems Manager, SIRCA Ltd              http://www.sirca.org.au/
-
-DISCLAIMER: The contents of this email, inclusive of attachments, may
-be legally privileged and confidential. Any unauthorised use of the
-contents is expressly prohibited. If you have received this message in
-error or are not the intended recipient, you should destroy the email
-message along with any attachment(s).  Unintended recipients of this
-email are prohibited from retaining, disclosing, distributing or using
-any information contained herein.  This email is also subject to
-copyright. No part of it should be reproduced, adapted or transmitted
-without the written consent of the copyright owner.
+/Chris
 
