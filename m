@@ -1,51 +1,75 @@
-From: Mark Hahn <hahn@physics.mcmaster.ca>
-Subject: Re: So what is the bios doing, if anything ?
-Date: Sat, 18 Sep 2004 09:53:03 -0400 (EDT)
+From: Andrei Badea <andrei.badea@movzx.net>
+Subject: Weird RAID 1 performance
+Date: Sat, 18 Sep 2004 23:11:44 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0409180940500.12827-100000@coffee.psychology.mcmaster.ca>
-References: <Pine.LNX.4.56.0409181413470.32100@lion.drogon.net>
+Message-ID: <414CA490.9010205@movzx.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enigF867FE762E416FD53B3C801A"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.56.0409181413470.32100@lion.drogon.net>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> > My mobo has "bios" support for the nVidia nForce3 250Gb and SI 3114. In
-> > the case of linux, is this doing anything for me ? Do I just ignore it ?
-> > At present (80GB mirror), the two SATA drives show up as ide3 and ide4.
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enigF867FE762E416FD53B3C801A
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
-if the disks show up as separate disks, then the bios is not doing any raid
-for you.  chances are that all it *could* do is concat, raid0 or raid1;
-the issue is that these require the kernel to understand the organization
-(as recorded in a superblock of some sort) that the bios is using.
+Hello,
 
-theoretically, you might notice some performance advantage to using even
-plain old raid1 provided by a controller, since it could avoid passing 
-every write over the PCI twice.  I don't know whether low-end controllers
-can actually do this, or whether they really do nothing but software raid1.
-personally, my worry would be failure modes.
+I have a RAID 1 whose write performance I tested by writing a 10 GB file 
+to it:
 
-> expect ~50-55MB/sec out of an ordinary IDE drive these days. MAybe it's
-> still early days for the driver though.
+dd if=/dev/zero of=/mnt/data/zeros bs=1024 count=...
 
-sata drivers are a pretty fast-moving target.
+Looking at GKrellM I noticed the CPU usage is very jumpy, going from a 
+few to 99 percent (but usually is roughly rovers around 50 percent). 
+Moreover, the transfer regularly stops for a few seconds (the CPU usage 
+is then about 2 percent). The average data transfer rate was 16 MB/s, 
+while the disks alone can make almost 25 MB/s.
 
-> I haven't spent much time looking into the SATA stuff yet - but it seems
-> theres 2 camps - one which makes the drives look like IDE drives and one
-> which makes the look like SCSI.. I did an install on a Dell last week
+Is this normal behavior? Can the write performance be tuned (to be less 
+"jumpy")?
 
-sort of but not really.  sata hardware can be shoehorned into the older
-pata-oriented infrastructure by ignoring some features.  the real problem
-is that the traditional ide driver framework is not exactly beautiful
-on the inside, and some of those ignored features are pretty important.
-I believe that the general consensus is to move towards the scsi stack,
-though this doesn't mean the ide stack will disappear any time soon,
-if ever.  I wouldn't expect 3Gb sata to ever appear in the ide stack,
-or for hotplug to work right, or command queueing or device multiplexing.
-this is not so much a criticism of the ide stack, but rather an evaluation
-that it's easier to build onto the scsi framework.
+The reason I'm asking is that I'm encoutering hangs when video capturing 
+to this RAID using mencoder and huffyuv. I'm not experiencing the hangs 
+when capturing to another partition (not RAID). Neither did I experience 
+  hangs during the dd copy.
 
-regards, mark hahn.
+Maybe the RAID 1 is just not suited for video capture?
 
+The filesystem is ext3 and /etc/raidtab is:
 
+raiddev /dev/md0
+         raid-level              1
+         nr-raid-disks           2
+         nr-spare-disks          0
+         persistent-superblock   1
+         device                  /dev/hde1
+         raid-disk               0
+         device                  /dev/hdg1
+         raid-disk               1
+
+Thank you for help.
+
+Andrei
+
+-- 
+andrei.badea@movzx.net # http://movzx.net # ICQ: 52641547
+
+--------------enigF867FE762E416FD53B3C801A
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.5 (GNU/Linux)
+Comment: Using GnuPG with Thunderbird - http://enigmail.mozdev.org
+
+iD8DBQFBTKSQpU04Z80csh8RAtwlAJ9vg1plclEYa3ZX8h+Jzwrtznat1wCgpxRO
+aQypHbplTkUtd16bs6Hb+kQ=
+=HHbB
+-----END PGP SIGNATURE-----
+
+--------------enigF867FE762E416FD53B3C801A--
