@@ -1,76 +1,50 @@
-From: Sebastian Henschel <shensche@xtops.de>
-Subject: Re: compile errors in 2.6.8.1 in drivers/md/*
-Date: Fri, 27 Aug 2004 14:59:34 +0200
+From: Laurent CARON <lcaron@apartia.fr>
+Subject: Re: lilo boot problems
+Date: Fri, 27 Aug 2004 15:04:53 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040827125934.GA5331@fuchi>
-References: <20040827093634.GA4853@fuchi> <200408270639.47900.kevcorry@us.ibm.com>
+Message-ID: <412F3175.1@apartia.fr>
+References: <200408251458.46575.maarten@ultratux.net>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="EeQfGwPcQSOJBaQU"
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <200408270639.47900.kevcorry@us.ibm.com>
-To: Kevin Corry <kevcorry@us.ibm.com>
-Cc: linux-raid@vger.kernel.org, dm-devel@redhat.com
+In-Reply-To: <200408251458.46575.maarten@ultratux.net>
+To: linux-raid@vger.kernel.org
+Cc: maarten <maarten@ultratux.net>
 List-Id: linux-raid.ids
 
+maarten wrote:
 
---EeQfGwPcQSOJBaQU
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-hello kevin...
-
-* Kevin Corry <kevcorry@us.ibm.com> [2004-08-27 14:51 +0200]:
-> On Friday 27 August 2004 04:36, Sebastian Henschel wrote:
-> >
-> > hopefully i am right here... i just compiled a kernel 2.6.8.1 and two
-> > similar errors occurred:
-> >
-> > drivers/md/dm-raid.c:1241 - the workqueue creation misses an argument. i
-> > have set the flag to 0.
-> > drivers/md/kcopyd.c:612 - the singlethread workqueue creation misses an
-> > argument. i have set the flag to 0.
-> >
-> > the kernel compiles now, but i do not if it really is a fix. since the
-> > machine this kernel was compiled on, does not make use of a software
-> > raid, i cannot test it.
->=20
-> Are you building a stock 2.6.8.1 kernel? Could it be -mm or one of the ot=
-her=20
-> common extra patchsets? I don't see any compile warnings or errors anywhe=
-re=20
-> in the drivers/md/ directory when I build my kernel, which is mostly a st=
-ock=20
-> 2.6.8.1 with a few extra DM patches.=20
-
-oops... you hit me here. when i read your post, a memory was crawling back
-into my mind. i already had this workqueue issue some months ago at
-another place. it happens due to SWSUSP2 modifying
-include/linux/workqueue.h so that the creation functions get one more
-argument. so SWSUSP2 should patch the two aforementioned files and not
-the linux-raid team.
-
-sorry for the fuzz,
- sebastian
---=20
-::: .O.
-::: ..O
-::: OOO
-::: lynx -source http://www.kodeaffe.de/shensche.pub | gpg --import
-
---EeQfGwPcQSOJBaQU
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.4 (GNU/Linux)
-
-iD8DBQFBLzA2reHfL3pi+bQRAsZJAJ9fISei8Nf9u3+WO34aZF+nv8yrYwCdHUFA
-QrHppNrtQEJM23AExyrXndk=
-=PKjn
------END PGP SIGNATURE-----
-
---EeQfGwPcQSOJBaQU--
+>Hi list,
+>
+>I've got bitten by the recent bug(?) that lilo seems to have with 2.6.x 
+>kernels where, upon install, it prints:
+>
+>Fatal: Trying to map files from unnamed device 0x0000
+>
+>I've tried everything I could think of in lilo.conf to no avail.  Using google 
+>there are several (but not many) threads about this specific error but I've 
+>not seen a solution anywhere yet.
+>
+>A "raid-extra-boot" line doesn't help any, neither do any other options.
+>
+>At this point, I'm not even sure where the error comes from as even trying to 
+>install a normal non-raid lilo.conf now fails.
+>
+>As an aside, this is what I'm trying to accomplish:
+>I have a SATA boot drive /dev/sda with the root fs being /dev/sda2.  I have a 
+>degraded raid1 device consisting of /dev/sdb1, /dev/sdc1, dev/sdd1.  
+>(I realize this is badly chosen; had the partition number been 2 instead of 1 
+>I probably would've been able to boot after changing the physical order of 
+>the drives without any changes...  But as it is, I can't.)
+>I'm trying to swap sdb and sda so it will boot off the raid1 device (or else 
+>just of any of the 3 simple partitions that form the raid1 device...) so I 
+>can then add the former /dev/sda to the array to complete it. 
+>
+>Any insights...?
+>
+>Maarten
+>
+>  
+>
+you have to reconstruct your array first.
