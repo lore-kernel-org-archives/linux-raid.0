@@ -1,17 +1,27 @@
-From: Joe Pruett <joey@clean.q7.com>
-Subject: Re: RAID 1 strategy
-Date: Mon, 1 Mar 2004 20:23:11 -0800 (PST)
+From: "erick" <adejo1keashaye@hotmail.com>
+Subject: Increase your metabolism!
+Date: Tue, 02 Mar 2004 05:37:26 GMT
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0403012022170.28730-100000@q7.q7.com>
-References: <Law11-F90gS86aRZlz800019605@hotmail.com>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Message-ID: <1078205846-10072__42718.3172120296$1078205887@excite.com>
+Content-Type: text/plain;
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Law11-F90gS86aRZlz800019605@hotmail.com>
-To: Jeff Gray <jeffgray@hotmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-/boot will need to be a separate array.  but after that i have lately just 
-been doing it all with lvm (/, swap, /home, etc).
 
+FATBLAST is an advanced fat-binding supplement
+that removes fat from the foods you eat!
+
+http://healthypolicy.com/fb/index.php?pid=eph9106
+
+
+
+
+
+
+
+
+
+
+syjun ahoffman   clreilly Morris  mjhwang cmacosta dirk rjthorpe roundhea Cheese hiroko  sree buzz mlsage Batman honey ppennie mgonchar hall  
+Get off this list by writing to getmeoff731@excitemail.com
