@@ -1,294 +1,143 @@
-From: "Andrey J. Melnikoff (TEMHOTA)" <temnota@kmv.ru>
-Subject: OOPS: software raid5 crashes on kernel 2.4.20 SMP
-Date: Tue, 24 Dec 2002 18:09:57 +0300
+From: Scott Mcdermott <smcdermott@questra.com>
+Subject: RAID 1+0 makes BUG in raid1.c, but 0+1 works?
+Date: Wed, 25 Dec 2002 17:20:09 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20021224180957.Y8793@kmv.ru>
+Message-ID: <20021225172009.Z1089@questra.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-To: mingo@redhat.com, linux-raid@vger.kernel.org
-Cc: linux-smp@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-ksymoops output:
+I have 10 disks.  Made 5 RAID1s.  Made a RAID0 over top.  Using the
+following Neil Brown patches on top of 2.4.20-ac2 (only some relevant
+here, but including in case there is some side effect)
 
-No modules in ksyms, skipping objects
-Warning (read_lsmod): no symbols in lsmod, is /proc/modules a valid lsmod file?
+        001NfsdRelease
+        004ReadlinkResponseLen
+        005MDSyncIo
+        006SvcsockWarningGone
+        008NfsdLocksExplock
+        009NfsdLocksCachelock
+        010NfsdLocksNfssvc
+        011NfsdLocksRename
+        012NfsdFhLock
+        013NfsdLocksRacache
+        014NfsdBKLgone
+        015NfsdMaxBlkSize
+        022NfsfhErrFix
+        023MdSbNoFree
 
-Unable to handle kernel paging request at virtual address 0000b2ed
-0000b2ed
-*pde = 00000000
-Oops: 0000
-CPU:    0
-EIP:    0010:[<0000b2ed>]    Not tainted
-EFLAGS: 00010002
-eax: cc6bddcc   ebx: 00011000   ecx: 0000b2ed   edx: 00000296
-esi: d1b5c556   edi: d1b5c55a   ebp: 00000004   esp: d1e41e68
-ds: 0018   es: 0018   ss: 0018
-Process raid5d (pid: 11, stackpage=d1e41000)
-Stack: c0112a08 00000296 d1b782e0 c02498da d1b782e0 00000aa6 00000000 d1b5c556
-       d1b5c55a 00000004 00000002 00000018 00000018 fffffffb c01e39a3 00000010
-       00000246 00000001 c0123d8d 00000001 d1e41ec0 00000000 0000000c d1e41ec0
-Call Trace:    [smp_call_function_interrupt+40/62] [handle_stripe+2979/3840] [timer_bh+77/1184] [update_wall_time+11/64] [raid5d+357/480]
-Call Trace:    [<c0112a08>] [<c01e39a3>] [<c0123d8d>] [<c0123aeb>] [<c01e42e5>]
-  [<c01ebbad>] [<c01057e6>] [<c01eb9b0>]
-Code:  Bad EIP value.
+also using Trond's NFS_ALL, and Justin Gibbs' latest AIC7xxx driver.
 
->>EIP; 0000b2ed Before first symbol   <=====
-Trace; c0112a08 <smp_call_function_interrupt+28/3e>
-Trace; c01e39a3 <handle_stripe+ba3/f00>
-Trace; c0123d8d <timer_bh+4d/4a0>
-Trace; c0123aeb <update_wall_time+b/40>
-Trace; c01e42e5 <raid5d+165/1e0>
-Trace; c01ebbad <md_thread+1fd/2b0>
-Trace; c01057e6 <kernel_thread+26/30>
-Trace; c01eb9b0 <md_thread+0/2b0>
+When I went to make the RAID0 over the RAID1s (after waiting for the
+RAID1s to sync, because I thought that might be the problem), I got
+this:
 
-Unable to handle kernel paging request at virtual address 0000238d
-0000238d
-*pde = 00000000
-Oops: 0000
-CPU:    1
-EIP:    0010:[<0000238d>]    Not tainted
-EFLAGS: 00010002
-eax: c2f39dcc   ebx: c027ba6c   ecx: 0000238d   edx: 00000296
-esi: d1b29c94   edi: d1b29c98   ebp: 00000004   esp: d1e41e68
-ds: 0018   es: 0018   ss: 0018
-Process raid5d (pid: 11, stackpage=d1e41000)
-Stack: c0112a08 00000296 d1b3b740 c02498da d1b3b740 00000368 00000000 d1b29c94
-       d1b29c98 00000004 00000002 00000018 00000018 fffffffb c01e39a3 00000010
-       00000246 c01b137c 00000006 00000000 d1e41ec8 c01bfd69 0000000c 00000286
-Call Trace:    [smp_call_function_interrupt+40/62] [handle_stripe+2979/3840] [scsi_done+12/288] [ahc_linux_isr+777/848] [raid5d+357/480]
-Call Trace:    [<c0112a08>] [<c01e39a3>] [<c01b137c>] [<c01bfd69>] [<c01e42e5>]
-  [<c01ebbad>] [<c01057e6>] [<c01eb9b0>]
-Code:  Bad EIP value.
+        Dec 25 14:22:06 lujuria kernel: kernel BUG at raid1.c:586!
+        Dec 25 14:22:06 lujuria kernel: invalid operand: 0000
+        Dec 25 14:22:06 lujuria kernel: CPU:    1
+        Dec 25 14:22:06 lujuria kernel: EIP:    0010:[<c02068c0>]    Not tainted
+        Using defaults from ksymoops -t elf32-i386 -a i386
+        Dec 25 14:22:06 lujuria kernel: EFLAGS: 00010246
+        Dec 25 14:22:06 lujuria kernel: eax: 00000001   ebx: ce77dda4   ecx: 00000908   edx: c02beac0
+        Dec 25 14:22:06 lujuria kernel: esi: cec40800   edi: ce77dda4   ebp: c138a8a0   esp: ce77dd08
+        Dec 25 14:22:06 lujuria kernel: ds: 0018   es: 0018   ss: 0018
+        Dec 25 14:22:06 lujuria kernel: Process mkraid (pid: 645, stackpage=ce77d000)
+        Dec 25 14:22:06 lujuria kernel: Stack: 4a494847 4e4d4c4b 5251504f 56555453 00000000 00000000 33323130 37363534 
+        Dec 25 14:22:06 lujuria kernel:        33323130 37363534 62613938 ce77dda4 00000008 0445c780 00000001 c0209032 
+        Dec 25 14:22:06 lujuria kernel:        c138a8a0 00000001 ce77dda4 ce77dda4 c01abdc1 c0372098 00000001 ce77dda4 
+        Dec 25 14:22:06 lujuria kernel: Call Trace:    [<c0209032>] [<c01abdc1>] [<c0209862>] [<c0250908>] [<c011c835>]
+        Dec 25 14:22:06 lujuria kernel:   [<c0209780>] [<c011caa0>] [<c020a714>] [<c020aa79>] [<c020bc52>] [<c011caa0>]
+        Dec 25 14:22:06 lujuria kernel:   [<c02099b5>] [<c020a8b7>] [<c020c9b6>] [<c020d6cc>] [<c015b619>] [<c014a898>]
+        Dec 25 14:22:06 lujuria kernel:   [<c014aec3>] [<c014b038>] [<c0142383>] [<c014b1de>] [<c0153d0f>] [<c01426d2>]
+        Dec 25 14:22:06 lujuria kernel:   [<c010760f>]
+        Dec 25 14:22:06 lujuria kernel: Code: 0f 0b 4a 02 b5 55 29 c0 83 7c 24 44 02 89 34 24 8b 44 24 10 
 
->>EIP; 0000238d Before first symbol   <=====
-Trace; c0112a08 <smp_call_function_interrupt+28/3e>
-Trace; c01e39a3 <handle_stripe+ba3/f00>
-Trace; c01b137c <scsi_done+c/120>
-Trace; c01bfd69 <ahc_linux_isr+309/350>
-Trace; c01e42e5 <raid5d+165/1e0>
-Trace; c01ebbad <md_thread+1fd/2b0>
-Trace; c01057e6 <kernel_thread+26/30>
-Trace; c01eb9b0 <md_thread+0/2b0>
+BUG at raid1.c:586 looks like this:
 
-Unable to handle kernel paging request at virtual address 0000c195
-0000c195
-*pde = 00000000
-Oops: 0000
-CPU:    0
-EIP:    0010:[<0000c195>]    Not tainted
-EFLAGS: 00010002
-eax: cd2e5dcc   ebx: 00011000   ecx: 0000c195   edx: 00000296
-esi: d1b28a0c   edi: d1b28a10   ebp: 00000004   esp: d1e3de68
-ds: 0018   es: 0018   ss: 0018
-Process raid5d (pid: 11, stackpage=d1e3d000)
-Stack: c0112a08 00000296 d1b442a0 c02498da d1b442a0 000005f0 00000000 d1b28a0c
-       d1b28a10 00000004 00000000 00000018 00000018 fffffffb c01e39a3 00000010
-       00000246 00000001 c0123d8d 00000001 d1e3dec0 00000000 0000000c d1e3dec0
-Call Trace:    [smp_call_function_interrupt+40/62] [handle_stripe+2979/3840] [timer_bh+77/1184] [raid5d+357/480] [md_thread+509/688]
-Call Trace:    [<c0112a08>] [<c01e39a3>] [<c0123d8d>] [<c01e42e5>] [<c01ebbad>]
-  [<c01057e6>] [<c01eb9b0>]
-Code:  Bad EIP value.
+        static int raid1_make_request (mddev_t *mddev, int rw,
+                                       struct buffer_head * bh)
+        {
+                        raid1_conf_t *conf = mddev_to_conf(mddev);
+                        struct buffer_head *bh_req, *bhl;
+                        struct raid1_bh * r1_bh;
+                        int disks = MD_SB_DISKS;
+                        int i, sum_bhs = 0;
+                        struct mirror_info *mirror;
 
->>EIP; 0000c195 Before first symbol   <=====
-Trace; c0112a08 <smp_call_function_interrupt+28/3e>
-Trace; c01e39a3 <handle_stripe+ba3/f00>
-Trace; c0123d8d <timer_bh+4d/4a0>
-Trace; c01e42e5 <raid5d+165/1e0>
-Trace; c01ebbad <md_thread+1fd/2b0>
-Trace; c01057e6 <kernel_thread+26/30>
-Trace; c01eb9b0 <md_thread+0/2b0>
+                        if (!buffer_locked(bh))
+--->                             BUG();
 
-Software version:
-Linux pyat.kmv.ru 2.4.20-smp #2 SMP Tue Dec 10 18:00:53 MSK 2002 i586 unknown
+here is the decode:
 
-Gnu C                  2.96
-Gnu make               3.79.1
-util-linux             2.11n
-mount                  2.11n
-modutils               2.4.18
-e2fsprogs              1.27
-reiserfsprogs          3.x.0j
-Linux C Library        2.2.5
-Dynamic linker (ldd)   2.2.5
-Procps                 2.0.7
-Net-tools              1.60
-Console-tools          0.3.3
-Sh-utils               2.0.11
-Modules Loaded
+        >>EIP; c02068c0 <raid1_make_request+20/320>   <=====
 
-/proc/cpuinfo:
-processor	: 0
-vendor_id	: GenuineIntel
-cpu family	: 5
-model		: 2
-model name	: Pentium 75 - 200
-stepping	: 5
-fdiv_bug	: no
-hlt_bug		: no
-f00f_bug	: yes
-coma_bug	: no
-fpu		: yes
-fpu_exception	: yes
-cpuid level	: 1
-wp		: yes
-flags		: fpu vme de pse msr mce cx8 apic
-bogomips	: 53.04
+        >>ebx; ce77dda4 <_end+e3e486c/1046eb28>
+        >>ecx; 00000908 Before first symbol
+        >>edx; c02beac0 <raid1_personality+0/40>
+        >>esi; cec40800 <_end+e8a72c8/1046eb28>
+        >>edi; ce77dda4 <_end+e3e486c/1046eb28>
+        >>ebp; c138a8a0 <_end+ff1368/1046eb28>
+        >>esp; ce77dd08 <_end+e3e47d0/1046eb28>
 
-processor	: 1
-vendor_id	: GenuineIntel
-cpu family	: 5
-model		: 2
-model name	: Pentium 75 - 200
-stepping	: 5
-fdiv_bug	: no
-hlt_bug		: no
-f00f_bug	: yes
-coma_bug	: no
-fpu		: yes
-fpu_exception	: yes
-cpuid level	: 1
-wp		: yes
-flags		: fpu vme de pse msr mce cx8 apic
-bogomips	: 53.24
+        Trace; c0209032 <md_make_request+82/90>
+        Trace; c01abdc1 <generic_make_request+e1/140>
+        Trace; c0209862 <sync_page_io+c2/100>
+        Trace; c0250908 <igmp_group_dropped+18/80>
+        Trace; c011c835 <call_console_drivers+65/120>
+        Trace; c0209780 <bh_complete+0/20>
+        Trace; c011caa0 <printk+140/180>
+        Trace; c020a714 <write_disk_sb+134/1a0>
+        Trace; c020aa79 <md_update_sb+199/220>
+        Trace; c020bc52 <do_md_run+212/3f0>
+        Trace; c011caa0 <printk+140/180>
+        Trace; c02099b5 <calc_sb_csum+35/50>
+        Trace; c020a8b7 <sync_sbs+77/a0>
+        Trace; c020c9b6 <add_new_disk+146/2d0>
+        Trace; c020d6cc <md_ioctl+36c/820>
+        Trace; c015b619 <get_empty_inode+99/b0>
+        Trace; c014a898 <bdget+128/190>
+        Trace; c014aec3 <do_open+103/1a0>
+        Trace; c014b038 <blkdev_open+38/50>
+        Trace; c0142383 <dentry_open+d3/1e0>
+        Trace; c014b1de <blkdev_ioctl+3e/40>
+        Trace; c0153d0f <sys_ioctl+ef/2a0>
+        Trace; c01426d2 <sys_open+a2/c0>
+        Trace; c010760f <system_call+33/38>
 
-/proc/ioports:
-0000-001f : dma1
-0020-003f : pic1
-0040-005f : timer
-0060-006f : keyboard
-0070-007f : rtc
-0080-008f : dma page reg
-00a0-00bf : pic2
-00c0-00df : dma2
-00f0-00ff : fpu
-02f8-02ff : serial(auto)
-03c0-03df : vga+
-03f8-03ff : serial(auto)
-0cf8-0cff : PCI conf1
-ef80-ef9f : Intel Corp. 82557/8/9 [Ethernet Pro 100]
-  ef80-ef9f : eepro100
-f800-f8ff : Adaptec AHA-294x / AIC-7870 (#2)
-fc00-fcff : Adaptec AHA-294x / AIC-7870
+        Code;  c02068c0 <raid1_make_request+20/320>
+        00000000 <_EIP>:
+        Code;  c02068c0 <raid1_make_request+20/320>   <=====
+           0:   0f 0b                     ud2a      <=====
+        Code;  c02068c2 <raid1_make_request+22/320>
+           2:   4a                        dec    %edx
+        Code;  c02068c3 <raid1_make_request+23/320>
+           3:   02 b5 55 29 c0 83         add    0x83c02955(%ebp),%dh
+        Code;  c02068c9 <raid1_make_request+29/320>
+           9:   7c 24                     jl     2f <_EIP+0x2f>
+        Code;  c02068cb <raid1_make_request+2b/320>
+           b:   44                        inc    %esp
+        Code;  c02068cc <raid1_make_request+2c/320>
+           c:   02 89 34 24 8b 44         add    0x448b2434(%ecx),%cl
+        Code;  c02068d2 <raid1_make_request+32/320>
+          12:   24 10                     and    $0x10,%al
 
-/proc/iomem:
-00000000-0009fbff : System RAM
-000a0000-000bffff : Video RAM area
-000c0000-000c7fff : Video ROM
-000c8000-000cc7ff : Extension ROM
-000cc800-000d0fff : Extension ROM
-000f0000-000fffff : System ROM
-00100000-11ffffff : System RAM
-  00100000-0023fda6 : Kernel code
-  0023fda7-002941bf : Kernel data
-12000000-120003ff : Intel Corp. Extended Express System Support Controller
-12000400-120007ff : Intel Corp. Extended Express System Support Controller
-12000800-12000bff : Intel Corp. Extended Express System Support Controller
-12000c00-12000fff : Intel Corp. Extended Express System Support Controller
-12001000-120013ff : Intel Corp. Extended Express System Support Controller
-fec00000-fec003ff : reserved
-fee00000-fee00fff : reserved
-ffa00000-ffafffff : Intel Corp. 82557/8/9 [Ethernet Pro 100]
-ffcfe000-ffcfefff : Adaptec AHA-294x / AIC-7870 (#2)
-  ffcfe000-ffcfefff : aic7xxx
-ffcff000-ffcfffff : Adaptec AHA-294x / AIC-7870
-  ffcff000-ffcfffff : aic7xxx
-ffe7ec00-ffe7efff : Intel Corp. Extended Express System Support Controller
-ffe7f000-ffe7ffff : Intel Corp. 82557/8/9 [Ethernet Pro 100]
-  ffe7f000-ffe7ffff : eepro100
-ffe80000-ffffffff : reserved
+Using persistent superblock on all RAID1s and RAID0.  Using 128k chunks.
+Using mkraid, not mdadm.  After this happens it *appears* that the RAID0
+exists and functions, however upon reboot I get a similar BUG in the
+reboot process, and then when booting again it BUGs in the swapper
+process, and it refuses to boot if I allow it to autodetect.
 
-lspci -vvv:
-00:00.0 Host bridge: Intel Corp. 82452KX/GX [Orion] (rev 02)
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
-	Status: Cap- 66Mhz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort+ >SERR- <PERR-
-	Latency: 6 (500ns min)
+is there something I'm doing wrong or is this a bug? Should I not be
+using RAID1+0 ? I just tried it with RAID0+1 instead and it seems to
+work fine (although it's somewhat slower than I expected, and initial
+sync goes 250K/s for some reason until I turn up the minimum).  This
+makes no sense to me as I thought that RAID devices were a block-level
+abstraction...so why would 0+1 work but not 1+0 ?? I really dislike the
+additional probability of second-disk failure in RAID0+1 over RAID1+0,
+and the ridiculous resync times, and I don't like the slow write speed
+of RAID5.
 
-00:0d.0 Ethernet controller: Intel Corp. 82557/8/9 [Ethernet Pro 100] (rev 01)
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B-
-	Status: Cap- 66Mhz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR+
-	Latency: 66 (2000ns min, 14000ns max)
-	Interrupt: pin A routed to IRQ 10
-	Region 0: Memory at ffe7f000 (32-bit, prefetchable) [size=4K]
-	Region 1: I/O ports at ef80 [size=32]
-	Region 2: Memory at ffa00000 (32-bit, non-prefetchable) [size=1M]
-	Expansion ROM at <unassigned> [disabled] [size=1M]
-
-00:0e.0 Non-VGA unclassified device: Intel Corp. 82375EB (rev 05)
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
-	Status: Cap- 66Mhz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Latency: 248
-
-00:0f.0 Class ff00: Intel Corp.: Unknown device 0008
-	Subsystem: Unknown device ec08:ffe7
-	Control: I/O+ Mem+ BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B-
-	Status: Cap- 66Mhz- UDF- FastB2B+ ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Region 0: Memory at ffe7ec00 (32-bit, prefetchable) [size=1K]
-	Region 1: Memory at 12000000 (32-bit, prefetchable) [size=1K]
-	Region 2: Memory at 12000400 (32-bit, prefetchable) [size=1K]
-	Region 3: Memory at 12000800 (32-bit, prefetchable) [size=1K]
-	Region 4: Memory at 12000c00 (32-bit, prefetchable) [size=1K]
-	Region 5: Memory at 12001000 (32-bit, prefetchable) [size=1K]
-	Expansion ROM at fffff800 [disabled] [size=2K]
-
-01:00.0 Host bridge: Intel Corp. 82452KX/GX [Orion] (rev 02)
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
-	Status: Cap- 66Mhz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort+ >SERR- <PERR-
-	Latency: 6 (500ns min)
-
-01:0d.0 SCSI storage controller: Adaptec AHA-294x / AIC-7870 (rev 03)
-	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr- Stepping- SERR+ FastB2B-
-	Status: Cap- 66Mhz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR+
-	Latency: 64 (2000ns min, 2000ns max), cache line size 08
-	Interrupt: pin A routed to IRQ 11
-	Region 0: I/O ports at fc00 [disabled] [size=256]
-	Region 1: Memory at ffcff000 (32-bit, non-prefetchable) [size=4K]
-	Expansion ROM at <unassigned> [disabled] [size=64K]
-
-01:0e.0 SCSI storage controller: Adaptec AHA-294x / AIC-7870 (rev 03)
-	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr- Stepping- SERR+ FastB2B-
-	Status: Cap- 66Mhz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR+
-	Latency: 64 (2000ns min, 2000ns max), cache line size 08
-	Interrupt: pin A routed to IRQ 9
-	Region 0: I/O ports at f800 [disabled] [size=256]
-	Region 1: Memory at ffcfe000 (32-bit, non-prefetchable) [size=4K]
-	Expansion ROM at <unassigned> [disabled] [size=64K]
-
-/proc/scsi/scsi:
-
-Attached devices: 
-Host: scsi0 Channel: 00 Id: 01 Lun: 00
-  Vendor: HP       Model: 4.26 GB 1ST      Rev: 1071
-  Type:   Direct-Access                    ANSI SCSI revision: 02
-Host: scsi0 Channel: 00 Id: 03 Lun: 00
-  Vendor: HP       Model: 4.26 GB 1ST      Rev: 1071
-  Type:   Direct-Access                    ANSI SCSI revision: 02
-Host: scsi0 Channel: 00 Id: 05 Lun: 00
-  Vendor: SONY     Model: CD-ROM CDU-76S   Rev: 1.1c
-  Type:   CD-ROM                           ANSI SCSI revision: 02
-Host: scsi1 Channel: 00 Id: 00 Lun: 00
-  Vendor: HP       Model: 4.26GB A 80-LXP0 Rev: LXP0
-  Type:   Direct-Access                    ANSI SCSI revision: 02
-Host: scsi1 Channel: 00 Id: 05 Lun: 00
-  Vendor: HP       Model: 4.26GB A 80-LXP0 Rev: LXP0
-  Type:   Direct-Access                    ANSI SCSI revision: 02
-Host: scsi1 Channel: 00 Id: 06 Lun: 00
-  Vendor: HP       Model: 4.26GB B 80-L918 Rev: L918
-  Type:   Direct-Access                    ANSI SCSI revision: 02
-
-/proc/mdstat:
-
-Personalities : [raid5] 
-read_ahead 1024 sectors
-md0 : active raid5 sde1[2] sdd1[1] sdc1[0] sdb1[3]
-      8328960 blocks level 5, 4k chunk, algorithm 2 [3/3] [UUU]
-      
-unused devices: <none>
-
--- 
- Best regards, TEMHOTA-RIPN aka MJA13-RIPE
- System Administrator. mailto:temnota@kmv.ru
-
+Thanks for any help.
