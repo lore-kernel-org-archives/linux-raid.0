@@ -1,72 +1,81 @@
-From: Daniel Pittman <daniel@rimspace.net>
-Subject: Re: Software RAID-1: step-by-step help needed...
-Date: Tue, 10 Aug 2004 22:19:17 +1000
+From: "Jim Buttafuoco" <jim@contactbda.com>
+Subject: Re: SATA Controller
+Date: Tue, 10 Aug 2004 09:09:52 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <87y8knxk1m.fsf@enki.rimspace.net>
-References: <41188A95.5000608@provincia.verbania.it>
-	<Pine.LNX.4.56.0408100948230.1665@lion.drogon.net>
-	<411892D0.8050701@provincia.verbania.it>
+Message-ID: <20040810130824.M49720@contactbda.com>
+References: <20040809145342.M63373@contactbda.com> <40381.212.251.31.59.1092124213.squirrel@mail.gnet.gr>
+Reply-To: jim@contactbda.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset=iso-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <40381.212.251.31.59.1092124213.squirrel@mail.gnet.gr>
+To: Alexander Economou <aecon@gnet.gr>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 10 Aug 2004, Boniforti Flavio wrote:
-> Gordon Henderson wrote:
->
->> You can do either. Personally, I create identical partitions on each drive
->> and then mirror them.
->
-> OK. What would be the difference (in terms of performance and/or ease of
-> configuration/maintenance) between the two methods?
+I got the 3ware card to do hardware raid at first.  The performance we really bad, so I switched to software raid and 
+while the performance was alot better, it still didn't match other systems I have here that were doing software raid 
+with older IDT (parallel) disks.
 
-Partitions are vastly easier than whole-disk mirrors. If you set the
-partition type to 'fd' and compile in the requisite RAID stuff the
-kernel will start the RAID devices for you automatically.
+Jim
 
-Doing whole-disk mirrors, or modular RAID, requires an initrd to be in
-place to create the root disk for you. This is harder, although some
-distributions automate the process for you.
 
->> Probably the easiest way to get started is to pick a distribution that
->> lets you build the disks as a mirror from install time - Eg. Red Hat (or
->> whatever it's called these days) If you have an existing server with one
->> disk and want to add a 2nd as a mirror, thats not too difficult. you need
->> to read the stuff in the Software RADI HowTo which has the information on
->> how to do it all.
->
-> I see, but I *have to* install Debian on it.
-> I already installed it (as a test) following the instructions found at:
-> http://www.inittab.de/manuals/debootstrap.html
-> I guess the hardest task will be configuring RAID, as the system works 
-> with the above procedure...
 
-The easiest way to get a RAID array in Debian is to install the testing
-or unstable branch; the installer there supports creating the devices as
-part of the boot sequence.
+---------- Original Message -----------
+From: "Alexander Economou" <aecon@gnet.gr>
+To: linux-raid@vger.kernel.org
+Sent: Tue, 10 Aug 2004 10:50:13 +0300 (EEST)
+Subject: Re: SATA Controller
 
-For Debian/stable, the process is also relatively easy but not
-automatic:
-
-1. Partition both disks the way you want.
-2. Install Debian to the first hard disk, with no RAID.
-3. Install mdadm.
-4. Create "degraded" RAID devices using only the second disk.
-5. Boot to a non-intrusive mode (init=/bin/sh, usually).
-6. Use 'tar' or whatever to transfer data from the hard disk to the RAID
-   device.
-7. Edit fstab, etc, in the RAID partition.
-8. Boot with the RAID device as your root device.
-9. Hot-add the other partitions to the running RAID devices.
-
-This is a pretty trivial process, but a bit time consuming. Degraded
-mirrors make it pretty easy, though, and I have done it many times while
-installing systems.
-
-Regards,
-        Daniel
--- 
-All television is children's television.
-        -- Richard P. Adler
+> 0
+> 
+>  If you plan on using software raid it would be a nice idea to use a 2.6.x
+> kernel in case you are using a 2.4.x kernel.There is a huge speed diff in
+> data transfer between those 2 kernel versions.
+>  I have installed a couple of s150 tx4 and i can say that they work fine.I
+> also noticed that there is support for this controller in the low level
+> driver section(scsi) in 2.4.27 kernel.If this doesnt work out (wich i
+> doubt it)try downloading the driver from promise.com.
+>  One thing i dont understand is why buy raid controllers and do software
+> raid(if that is what you ment)
+> 
+> > All,
+> >
+> > I am thinking of going with the following SATA PCI controller (non raid)
+> > to replace my 3ware SATA controller (only
+> > using JBOD but thats another story).  Any comments on linux support /
+> > issues / other controllers you have luck with.
+> > I am planning on using software raid with 3 of these cards and 10 250G WD
+> > SATA disks.
+> >
+> > Thanks
+> > Jim
+> >
+> > PROMISE PCI to SATA Controller Card, Model "SATA150 TX4" -OEM
+> >
+> > Model# Sata150 TX4
+> > Item # N82E16816102013
+> >
+> > Specifications:
+> > Ports: 4x Serial ATA/150
+> > OS Support: Windows 98/Me/NT4/2000/XP; RedHat 7.3/8.0; SuSE 7.3/8.0
+> > Feature: Bus mastering offloads data I/O handling from host CPU; CRC
+> > error-checking of Serial ATA and Ultra ATA drives for data reliability
+> > during transfers; Data Transfer Rate:150MB/sec with Serial ATA/150 drives,
+> > 133MB/sec with Ultra ATA/133 drives, 100MB/sec with Ultra ATA/100 drives;
+> > 32-bit 33/66MHz PCI bus; PCI 2.3 compliant
+> > -
+> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >
+> 
+> -- 
+> Alexander Economou
+> GNET NOC
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+------- End of Original Message -------
 
