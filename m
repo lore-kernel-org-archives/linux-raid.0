@@ -1,37 +1,23 @@
 From: Stephan van Hienen <raid@a2000.nu>
 Subject: Re: fsck out of memory
-Date: Fri, 7 Feb 2003 18:07:09 +0100 (CET)
+Date: Fri, 7 Feb 2003 18:08:07 +0100 (CET)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.53.0302071800200.1306@ddx.a2000.nu>
-References: <Pine.LNX.4.53.0302071555110.718@ddx.a2000.nu>
+Message-ID: <Pine.LNX.4.53.0302071807270.1306@ddx.a2000.nu>
+References: <Pine.LNX.4.33.0302071719520.13536-100000@nooks.wimpunk.com>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.53.0302071555110.718@ddx.a2000.nu>
-To: kernel@ddx.a2000.nu
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+In-Reply-To: <Pine.LNX.4.33.0302071719520.13536-100000@nooks.wimpunk.com>
+To: Wim Vinckier <wim-raid@tisnix.be>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-ok added some swap space (4 gigabyte)
+On Fri, 7 Feb 2003, Wim Vinckier wrote:
 
-usage was about 2.5GB
+> I would really use fsck.ext3...  I guess it will give a lot less errors...
 
-till aborted :
+fsck.ext3 = fsck.ext2
 
-d0:  64450554/dev/md0:  64450555/dev/md0:  64450556/dev/md0:
-64450557/dev/md0:  64450558/dev/md0:  64450559/dev/md0:  64450560/dev/md0:
-64450561/dev/md0:  64450562/dev/md0:  64450563/dev/md0:  64450564/dev/md0:
-64450565/dev/md0:  64450566/dev/md0:  64450567/dev/md0:  64450568/dev/md0:
-64450569/dev/md0:  64450570/dev/md0:  64450571/dev/md0:  64450572/dev/md0:
-64450573/dev/md0:  64450574/dev/md0:  64450575/dev/md0:  64450576/dev/md0:
-64450577/dev/md0:  64450578/dev/md0:  64450579/dev/md0:  64450580/dev/md0:
-64450581/dev/md0:  64450582/dev/md0:  64450583/dev/md0:  64450584/dev/md0:
-64450585/dev/md0:  64450586/dev/md0:  64450587/dev/md0:  64450588/dev/md0:
-64450589/dev/md0:  64450590e2fsck: Can't allocate block element
+]# fsck.ext3 /dev/md0
+e2fsck 1.32 (09-Nov-2002)
 
-e2fsck: aborted
-/dev/md0: 153834/76922880 files (9.3% non-contiguous), 181680730/615381536
-blocks
-
-any hints ?
-(i really would like to get back a clean fs (with ext3 journal))
