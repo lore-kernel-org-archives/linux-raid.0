@@ -1,37 +1,38 @@
 From: Alvin Oga <aoga@ns.Linux-Consulting.com>
-Subject: Re: ECC: RE: ext3 blah blah blah ...
-Date: Wed, 5 Jan 2005 10:33:59 -0800 (PST)
-Message-ID: <Pine.LNX.3.96.1050105103247.9914B-100000@Maggie.Linux-Consulting.com>
-References: <Pine.LNX.4.56.0501051729290.9117@lion.drogon.net>
+Subject: RE: ext3 journal on software raid (was Re: PROBLEM: Kernel 2.6.10 crashing repeatedly and hard)
+Date: Wed, 5 Jan 2005 10:37:00 -0800 (PST)
+Message-ID: <Pine.LNX.3.96.1050105103430.9914C-100000@Maggie.Linux-Consulting.com>
+References: <200501051732.j05HW6926345@www.watkins-home.com>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.56.0501051729290.9117@lion.drogon.net>
+In-Reply-To: <200501051732.j05HW6926345@www.watkins-home.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Gordon Henderson <gordon@drogon.net>
+To: Guy <bugzilla@watkins-home.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
 
-On Wed, 5 Jan 2005, Gordon Henderson wrote:
+On Wed, 5 Jan 2005, Guy wrote:
 
-> One thing thats been irritating me for a long time is that it's all very
-> well using (and paying for!) ECC memory, but there are parts of the system
-> that don't have ECC or parity - eg. the PCI bus, processor bus and
-> internal paths, and so on...
-
-bingo !!!
+> You said this:
+> "	- as everybody has pointed out .. bad data ( disk errors )
+> 	can occur for any number of gazillion reasons
+...
  
-> But where do you draw the line?
+> Bad data is not caused by disk errors.  This seemed like you were blaming
+> the hard disk.  I understand you now.  It seems we agree!
 
-because the silly motherboard will nto work at all without those
-expensive registered ecc memory
-	and you want that motherboard because it has the memory
-	capacity you want ot the support to the fastest cpu around
-	or blah features that no other mb has
+i should have said "wrong data", where i don;t care why 
+the data is not what one expects... due to failures, errors, problems,
+features, bugs ...  
+
+and the point is .. if the data is wrong ... find out precisely
+why its wrong ... and experiment to confirm the suspicions
+	- usually you will toss out one hardware item at a time
+	to isolate the problem
 
 c ya
 alvin
- 
 
