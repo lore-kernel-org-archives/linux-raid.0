@@ -1,40 +1,32 @@
 From: Lars Marowsky-Bree <lmb@suse.de>
-Subject: Re: [PATCH 1/2] md bitmap bug fixes
-Date: Fri, 18 Mar 2005 14:42:55 +0100
-Message-ID: <20050318134255.GS18819@marowsky-bree.de>
-References: <422F7621.8090602@steeleye.com> <16949.5768.392061.95882@cse.unsw.edu.au> <20050314094454.GK3858@marowsky-bree.de> <16949.26113.68948.938529@cse.unsw.edu.au> <20050314112403.GT3858@marowsky-bree.de> <16950.5692.594941.130741@cse.unsw.edu.au> <20050318103326.GA18819@marowsky-bree.de> <6ivqg2-qsn.ln1@news.it.uc3m.es>
+Subject: Re: raid on shared storage
+Date: Fri, 18 Mar 2005 14:56:37 +0100
+Message-ID: <20050318135637.GT18819@marowsky-bree.de>
+References: <423ADD02.4020008@netuse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Content-Disposition: inline
-In-Reply-To: <6ivqg2-qsn.ln1@news.it.uc3m.es>
+In-Reply-To: <423ADD02.4020008@netuse.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Peter T. Breuer" <ptb@lab.it.uc3m.es>, linux-raid@vger.kernel.org
+To: Nils-Henner Krueger <nhk@netuse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2005-03-18T13:52:54, "Peter T. Breuer" <ptb@lab.it.uc3m.es> wrote:
+On 2005-03-18T14:52:02, Nils-Henner Krueger <nhk@netuse.de> wrote:
 
-> (proviso - I didn't read the post where you set out the error
-> situations, but surely, on theoretical grounds, all that can happen i=
-s
-> that the bitmap causes more to be synced than need be synced).
+> I'm going to run some kind of cluster using shared
+> fiber channel disks with linux sw raid on top.
+>=20
+> Is it possible to start a raid device on more than one
+> machine?
 
-You missed the point.
+Not yet.
 
-The problem is for multi-nodes, both sides have their own bitmap. When =
-a
-split scenario occurs, and both sides begin modifying the data, that
-bitmap needs to be merged before resync, or else we risk 'forgetting'
-that one side dirtied a block.
+Activating the same md raid on more than one node will destroy your
+data, is the gist of it.
 
-This scenario _could_ occur for single nodes, but less likely so.
-
-That can either happen outside md (if one is careful in the wrappers
-around setting up network replication), or it could happen inside
-generic md (if each mirror had its own local bitmap).
-
-Which also has the advantage of providing inherent redundancy for the
-bitmap itself, BTW.
+RHAT is working on dm-raid1.c to support this, I think. Daniel Philipps
+should know more.
 
 
 Sincerely,
