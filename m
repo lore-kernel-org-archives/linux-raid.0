@@ -1,48 +1,47 @@
-From: Clemens Schwaighofer <cs@tequila.co.jp>
-Subject: Re: 800G RAID5 w/ what FS?
-Date: Tue, 06 Apr 2004 09:55:57 +0900
+From: Daniel Pittman <daniel@rimspace.net>
+Subject: Re: RAID1 Mirroring question.
+Date: Tue, 06 Apr 2004 11:29:16 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <4072001D.2030305@tequila.co.jp>
-References: <40719357.8050209@ocis.net>
+Message-ID: <87brm5nbbn.fsf@enki.rimspace.net>
+References: <E1BAVLe-0001EM-00@intern.SerNet.DE> <Pine.LNX.4.44.0404051242480.13902-100000@coffee.psychology.mcmaster.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <40719357.8050209@ocis.net>
-To: "Jason C. Leach" <jleach@ocis.net>
-Cc: RAID Linux <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+On Mon, 5 Apr 2004, Mark Hahn wrote:
+>> We have a Linux Software RAID1 (mirroring). If there is a little
+>> error on one of the disks (such a little error that the kernel dosn't
+>> recognize it). There is a read request on the raid for a specific
+>> file. The output of one of the disks differ from the output of the
+>> other disk. (But there are no errors recognized by the kernel / fs /
+>> raid-driver. Only one inverted bit for example) What is RAID/MD
+>> doing? Are there checksums for the original file?
 
-Jason C. Leach wrote:
-| hi,
-|
-| I was told reiserfs does not work too well with RAID. Is this true? If
-| so I'll go with ext3.  I am using a Promise SX6000 to create a 800G
-| RAID5 array.
+[...]
 
-well in my opinion an FS depends on what you want to do. ReiserFS is
-very good with a lot of small files (maildir eg), but I only use it on
-an Hardware Raid at the moment.
-I have very good experience with XFS. I run it on an LVM on an
-hardwareraid and on an raid5 software raid without any problems :)
-ext3 is of course a save route, thought from time to time you read about
-problems with ext3 and software raid. so before you gon into production
-I'd do some tests :)
+> then again, raid1 is a sort of ugly niche feature, IMO.  how many 
+> systems can afford two but not three disks?  raid5 is not scary!
 
-- --
-Clemens Schwaighofer - IT Engineer & System Administration
-==========================================================
-TEQUILA\Japan, 6-17-2 Ginza Chuo-ku, Tokyo 104-8167, JAPAN
-Tel: +81-(0)3-3545-7703            Fax: +81-(0)3-3545-7343
-http://www.tequila.co.jp
-==========================================================
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.4 (GNU/Linux)
+*blink*  Quite a few systems don't have the capacity for three-disk
+rather than two-disk RAID.  My laptop, for example, could not add a
+third disk at all.
 
-iD8DBQFAcgAcjBz/yQjBxz8RAhlyAJ4sLbndQQ1M36RFyV4AXkpMYEgd8ACfSELK
-ZyvcPzkKi9F1lIe+WSn+eZg=
-=SN0e
------END PGP SIGNATURE-----
+Also, RAID-5 does not have *any* improvement over RAID-1 in terms of
+detecting this sort of single-disk unreported error.
+
+RAID-5 also has a higher cost in terms of CPU use - enough that it
+presents problems in a number of embedded system scenarios where RAID-1
+is fine.
+
+Three disk RAID-1, on the other hand, does allow you to detect a single
+device failure by a "two to one vote" detection system...
+
+       Daniel
+
+-- 
+About the use of language: it is impossible to sharpen a pencil with a
+blunt ax. It is equally vain to try to do it with ten blunt axes instead.
+        -- Edsger Dijkstra
+
