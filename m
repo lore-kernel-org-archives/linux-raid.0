@@ -1,19 +1,45 @@
-From: "Doug Griswold" <griswld@cio.sc.gov>
-Subject: md multipath and failover
-Date: Wed, 10 Sep 2003 18:55:41 -0400
+From: Bill Welch <billw@ewaydirect.com>
+Subject: help! how do I mark spare drive as active without reconstruct?
+Date: Wed, 10 Sep 2003 22:32:18 -0400 (EDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <sf5f73bb.058@gw.state.sc.us>
+Message-ID: <Pine.GSO.4.33.0309102227050.4844-100000@usny54.ixs1.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Alright I got md/multipath to failover with 2 emulex hba's on red hat
-advanced server 2.1 kernel version 2.4.9-27enterprise.  My next new
-problem is that it took five minutes to fail over from when I yanked one
-of the fibre channel cables.   Where could this timeout come from?  I
-have tried several times but each time it takes 5 minutes to failover. 
-Also it won't failback.  Any ideas out there.  
+repost with different subject, previous subject line suggested this was an
+answer, not a question.
+
+I have a drive marked as spare that I know is a synced member of a raid5.
+I want to add it back into the array *without* a reconstruct, i.e. just
+mark it as active and change it's position.
+
+How do I do that? Force assembly seems to just change the update time and
+mark as active, but I don't know what it will do about the position. On
+the other hand, hot add would change the postion of the drive, but, I
+expect, launch a reconstruct I don't want.
+
+As a last resort, I have lde installed and I'm prepared to use it.
+
+Background:
+
+I had a 'soft' error on one drive of a four drive raid5. I know now that I
+could have forced the assembly, but at the time chose to raidhotadd the
+existing drive. At the end of the reconstruct, /proc/mdstat presented me
+with a two drive failure! One of the other drives now had an earlier
+update time and was marked dirty, no-errors, seemed to be fine otherwise.
+The drive that reconstructed was up to date, but was marked spare and
+therfore no longer in the array.
+
+The first step I took to recover was to force the assembly with three
+drives - all but the drive marked spare. That seemed to work fine and I
+can mount the array. Now, of course the spare is out of date, but also out
+of position.
+
+redhat 9, mdadm 1.3, a raidtab, and no mdadm.conf
+
+Bill.
+
+
