@@ -1,48 +1,33 @@
-From: Lars Marowsky-Bree <lmb@suse.de>
-Subject: Re: Checking consistency of Linux software RAID
-Date: Mon, 30 Jun 2003 15:36:47 +0200
+From: mjstumpf <mjstumpf@cotse.net>
+Subject: monitoring means for IBM ServeRAID driver?
+Date: Mon, 30 Jun 2003 12:15:08 -0400 (EDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20030630133647.GH12240@marowsky-bree.de>
-References: <20030630131655.GE12240@marowsky-bree.de> <Pine.LNX.4.43.0306301425030.31613-100000@unicorn.drogon.net>
+Message-ID: <bWpzdHVtcGY=.f03bfc26e5230960f5f182cfeb610c52@1056989708.cotse.net>
+Reply-To: mjstumpf@pobox.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.43.0306301425030.31613-100000@unicorn.drogon.net>
-To: Gordon Henderson <gordon@drogon.net>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2003-06-30T14:28:57,
-   Gordon Henderson <gordon@drogon.net> said:
 
-> You are pedantically correct, but in the absence of anything else, at
-> least it could form a partial solution and let him know that a proble=
-m
-> exists which could them be actioned in some way before it becomes dat=
-a
-> threatening.
+Didn't see anything in the archives.
 
-No. The problem is that if badblocks returns anything on a md device,
-the data _is_ already threatened beyond rescue.
+Is there some "trivial" means ("cat /proc/mdstat" or its equivalent in
+mdadm) of monitoring the health of a raid constructed via IBM ServeRAID? 
+The RAID appears to linux as a opaque, very large scsi device.
 
-A badblocks r/o test on the underlaying devices me be more sensible and
-help to diagnose it a little, but it also won't verify consistency
-between the drives.
+"cat /proc/scsi/ips/1" only shows me uninteresting info.. firmware level,
+etc.  Everything is working fine right now, but I have a bad feeling that
+a drive could die & I won't even know it.
+
+I've seen reference to some sort of RAS / device driver hardening on the
+IBM OSS website, but no details.. just patch files.
+
+Thanks in advance,
+Michael Stumpf
 
 
-Sincerely,
-    Lars Marowsky-Br=E9e <lmb@suse.de>
 
---=20
-SuSE Labs - Research & Development, SuSE Linux AG
- =20
-"If anything can go wrong, it will." "Chance favors the prepared (mind)=
-=2E"
-  -- Capt. Edward A. Murphy            -- Louis Pasteur
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
