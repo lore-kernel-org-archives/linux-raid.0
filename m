@@ -1,73 +1,28 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: "Enhanced" MD code avaible for review
-Date: Sat, 27 Mar 2004 19:30:31 -0500
+From: "faustino" <mmirtceli@hotmail.com>
+Subject: As Seen on CNN, the Winningest CAS1N0! wright strawbera
+Date: Sun, 28 Mar 2004 01:20:14 GMT
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <40661CA7.6030105@pobox.com>
-References: <760890000.1079727553@aslan.btc.adaptec.com> <16480.61927.863086.637055@notabene.cse.unsw.edu.au> <40624235.30108@pobox.com> <200403251200.35199.kevcorry@us.ibm.com> <40632804.1020101@pobox.com> <1030470000.1080257746@aslan.btc.adaptec.com> <406375B0.5040406@pobox.com> <1564440000.1080322989@aslan.btc.adaptec.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Message-ID: <1080436814-16123__35132.0824622691$1080461833@excite.com>
+Content-Type: text/plain;
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1564440000.1080322989@aslan.btc.adaptec.com>
-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Cc: Kevin Corry <kevcorry@us.ibm.com>, linux-kernel@vger.kernel.org, Neil Brown <neilb@cse.unsw.edu.au>, linux-raid@vger.kernel.org
+To: linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Justin T. Gibbs wrote:
->  o Rebuilds
+Come and play at the world's PREMIvERE ONLINzE CASvINO!
+We are happy to offer you, in an elegant atmosphere, a 50% BONUrS for YOUR FIRST DEPOiSIT as a New Player.
 
-	> 90% kernel, AFAICS, otherwise you have races with
-	requests that the driver is actively satisfying
+Sign up now! Don't wait!
 
-
->  o Auto-array enumeration
-
-	userspace
+http://www.virtualcasinoes.net/_e4faa55afa1972493c43ac8a3f66f869/
 
 
->  o Meta-data updates for "safe mode"
+We'll automatically CREDIaT your account with a 50% BONUzS of extra chips, to wager in our CASIwNO.
+Don't hesirtate and try your luck!
 
-	unsure of the definition of safe mode
+CLICiK HERnE!
 
-
->  o Array creation/deletion
-
-
-	of entire arrays?  can mostly be done in userspace, but deletion
-	also needs to update controller-wide metadata, which might be
-	stored on active arrays.
-
-
->  o "Hot member addition"
-
-	userspace prepares, kernel completes
-
-[moved this down in your list]
->  o Meta-data updates for topology changes (failed members, spare activation)
-
-[warning: this is a tangent from the userspace sub-thread/topic]
-
-	the kernel, of course, must manage topology, otherwise things
-	Don't Get Done, and requests don't do where they should.  :)
-
-	Part of the value of device mapper is that it provides container
-	objects for multi-disk groups, and a common method of messing
-	around with those container objects.  You clearly recognized the
-	same need in emd... but I don't think we want two different
-	pieces of code doing the same basic thing.
-
-
-	I do think that metadata management needs to be fairly cleanly
-	separately (I like what emd did, there) such that a user needs
-	three in-kernel pieces:
-	* device mapper
-	* generic raid1 engine
-	* personality module
-
-	"personality" would be where the specifics of the metadata
-	management lived, and it would be responsible for handling the
-	specifics of non-hot-path events that nonetheless still need
-	to be in the kernel.
+http://www.virtualcasinoes.net/_e4faa55afa1972493c43ac8a3f66f869/
 
 
 
+whitney reznor shawn volley slacker prof happyday orchid angels cccccc bmw gary charity mazda1 rux wolverin h2opolo bridges robinhoo naomi impala gambit alison james1 asdfghjk dickhead
