@@ -1,80 +1,126 @@
-From: Aaron Longfield <aaron@wire-head.org>
-Subject: RESOLVED Re: Partitioning on RAID (Ref: Mounting Promise RAID0 w/
- Linux software RAID)
-Date: Fri, 02 Jul 2004 04:04:50 -0400
+From: FRLinux <frlinux@frlinux.net>
+Subject: sil crash
+Date: Sat, 03 Jul 2004 12:11:33 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <40E51722.2040306@wire-head.org>
-References: <Pine.GSO.4.33.0407011230500.25702-100000@sweetums.bluetronic.net>
+Message-ID: <1088853093.3226.14.camel@power.users>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.GSO.4.33.0407011230500.25702-100000@sweetums.bluetronic.net>
-To: Ricky Beam <jfbeam@bluetronic.net>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Thanks a bunch, piecing together what you told me, a bit of a few 
-messages that I found from the mailing list a long while ago, and Neil's 
-old patches, I think I have it working!
+Hello,
 
-The trick seemed to be using mdadm to bring the array up:
+I am currently using a Silicon Image 3112 controller with 2 SATA Maxtor
+160GB drives named as sda and sdb by the lib_ata driver. This is on a
+Gentoo 2004.1 system running a 2.6.7 kernel.
 
-mdadm -B /dev/md/d0 /dev/hdc /dev/hdd --level=raid0 --raid-devices=2
+Since i have created the md0 and md1 arrays (both raid1), the md0 one
+crashes in average every 3 days and detaches sda2 from its array
+generating a lot of errors. I don't think it is related to the drives,
+they are brand new and smart status report no errors whatsoever. Also, i
+am running multiple linux on the first drive (fedora, mandrake,
+slackware, lfs, etc ...) but not using raid, and they never crash.
 
-The node for the d0p1 block device was not auto-created even though I 
-have devfs, but after creating one for "254,1", I was able to mount the 
-partition.
+Here is the error i'm getting once the crash occured (currently logged
+on under FC2) : 
 
-This is wonderful, and hopefully I can get small bit of info in the RAID 
-FAQ or HOWTO about it.  I didn't see anywhere a reference to being able 
-to start a Promise Fasttrak array with just the Linux RAID code. :)
+cat /proc/mdstat
+Personalities : [raid1]
+md1 : active raid1 hda3[0] hdc3[1]
+      19542976 blocks [2/2] [UU]
+       
+md0 : active raid1 hdc2[1]
+      97667072 blocks [2/1] [_U]
 
--Aaron Longfield
+hda: max request size: 64KiB
+hda: 320173056 sectors (163928 MB) w/7936KiB Cache, CHS=19929/255/63
+ hda: hda1 hda2 hda3 hda4 < hda5 hda6 hda7 hda8 hda9 hda10 hda11 >
+hdc: max request size: 64KiB
+hdc: 320173056 sectors (163928 MB) w/7936KiB Cache, CHS=19929/255/63
+ hdc: hdc1 hdc2 hdc3 hdc4 < hdc5 >
 
-Ricky Beam wrote:
-> On Thu, 1 Jul 2004, Aaron Longfield wrote:
-> 
->>properly.  Problem is that now I have an array that has a partition
->>table and a partition that I can't seem to mount.  Is there any way to
->>coax the system into letting me do this?  I couldn't find any
->>documentation on it, but there seems to be support in the kernel code
->>for the md driver.
-> 
-> 
-> It actually is documented... Documentation/md.txt.  The "magic" is the
-> raid device's major number:
-> 	[root:pts/8]spork:~/[12:36 PM]:cat /proc/devices |grep 'md\|Block'
-> 	Block devices:
->   	9 md
-> 	254 mdp
-> 
-> "mdp" is dynamically allocated, so booting to a partitioned soft-raid is
-> tricky, but certainly do able.
-> 
-> Simply change your raid device from /dev/md0 (which is major #9) to something
-> with a major number matching mdp.  In my case:
-> 	[root:pts/8]spork:~/[12:36 PM]:ls -l /dev/md0
-> 	brw-rw----  1 root disk 9, 0 Feb 23 16:04 /dev/md0
-> 	[root:pts/8]spork:~/[12:38 PM]:ls -l /dev/md
-> 	total 0
-> 	brw-r--r--  1 root root 254, 0 Jun  9 21:04 d0
-> 	brw-r--r--  1 root root 254, 1 Jun  9 21:04 d0p1
-> 	brw-r--r--  1 root root 254, 2 Jun  9 21:04 d0p2
-> 	brw-rw----  1 root disk 254, 3 Jun 17 15:09 d0p3
-> 
-> 	[root:pts/8]spork:~/[12:38 PM]:fdisk -l /dev/md/d0
-> 
-> 	Disk /dev/md/d0: 640.1 GB, 640167510016 bytes
-> 	255 heads, 63 sectors/track, 77829 cylinders
-> 	Units = cylinders of 16065 * 512 = 8225280 bytes
-> 
-> 	      Device Boot      Start         End      Blocks   Id  System
-> 	/dev/md/d0p1               1       72606   583207663+   7  HPFS/NTFS
-> 	/dev/md/d0p2   *       72607       77306    37752750   83  Linux
-> 	/dev/md/d0p3           77307       77828     4192965   82  Linux swap
-> 
-> --Ricky
-> 
-> PS: The above naming scheme requires a small patch to grub to make it name
-> the partitions correctly.  By default, it'll look for /dev/md/d01, etc.
+libata version 1.02 loaded.
+sata_promise version 1.00
+ata1: SATA max UDMA/133 cmd 0x2283D200 ctl 0x2283D238 bmdma 0x0 irq 10
+ata2: SATA max UDMA/133 cmd 0x2283D280 ctl 0x2283D2B8 bmdma 0x0 irq 10
+ata1: no device found (phy stat 00000000)
+scsi0 : sata_promise
+ata2: no device found (phy stat 00000000)
+scsi1 : sata_promise
+md: raid1 personality registered as nr 3
+md: Autodetecting RAID arrays.
+md: autorun ...
+md: considering hdc2 ...
+md:  adding hdc2 ...
+md:  adding hda2 ...
+md: hda3 has different UUID to hdc2
+md: hdc3 has different UUID to hdc2
+md: created md0
+md: bind<hda2>
+md: bind<hdc2>
+md: running: <hdc2><hda2>
+md: kicking non-fresh hda2 from array!
+md: unbind<hda2>
+md: export_rdev(hda2)
+raid1: raid set md0 active with 1 out of 2 mirrors
+md: considering hda3 ...
+md:  adding hda3 ...
+md:  adding hdc3 ...
+md: created md1
+md: bind<hdc3>
+md: bind<hda3>
+md: running: <hda3><hdc3>
+raid1: raid set md1 active with 2 out of 2 mirrors
+md: ... autorun DONE.
+md: Autodetecting RAID arrays.
+md: autorun ...
+md: considering hda2 ...
+md:  adding hda2 ...
+md: md0 already running, cannot run hda2
+md: export_rdev(hda2)
+md: ... autorun DONE.
+
+
+More importantly, i can't reboot under Gentoo right now, this is a
+transcript of what i got : 
+
+SCSI Error on Channel 0 id 0
+cdb: 0 x28 00 00 03 40 3d 00 08 00
+current sda sense 403
+end request I/0 error dev
+sda sector 213053
+raid1: disk failure on sda2 disabling device
+continuing on 1 devices
+raid1: sda2 rescheduling sector 4208
+--- wd:1 rd:2
+disk 0, wo:1, o:0, dev:sda2
+disk 1, wo:0, o:1, dev:sdb2
+RAID1 conf printout:
+--- wd:1 rd:2
+disk 1, wo:0 o:1, dev:sdb2
+raid1: sdb2: redirecting sector 4208
+ata2: DMA timeout, stat:0x0
+ATA: abnormal status 0x58 on port 0xE0D16
+scsi1: ERROR on channel 0, id 0, lun 0
+current sdb: sense = 70 3
+ASC=11 ASCQ= 4
+Raw sense data:0x70 0x00 0x03 0x00 0x00
+end_request: I/O error, dev sdb
+<snip>
+... etc ...
+
+Then it does not seem to reboot anymore. At one stage, it disconnects
+sdb2 from the array, i can boot back in the system again, then i usually
+do : raidhotadd /dev/md0 /dev/sdb2 then it reconstructs the array again,
+then works for a couple of days and dies again.
+
+Been using soft raid for a long time but never used the libata driver
+before, which seems to be having problems. I've been googling for this
+and posted on my local lug even without being able to fix this.
+
+I hope someone can enlighten me on this.
+Thanks,
+Steph
+
