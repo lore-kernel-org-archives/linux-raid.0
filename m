@@ -1,34 +1,39 @@
-From: Stephan van Hienen <raid@a2000.nu>
-Subject: Re: Promise SX6000 problems.
-Date: Tue, 4 Feb 2003 20:14:36 +0100 (CET)
+From: Drew Dowling <drewhead@drewhead.org>
+Subject: How to monitor Disk I/O using Promise Controler?
+Date: Wed, 5 Feb 2003 09:08:54 -0500 (EST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.53.0302042011510.22284@ddx.a2000.nu>
-References: <Pine.LNX.4.44.0302041827130.4208-100000@uplift.swm.pp.se>
+Message-ID: <200302051408.h15E8sDW027845@keep.drewhead.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44.0302041827130.4208-100000@uplift.swm.pp.se>
-To: Mikael Abrahamsson <swmike@swm.pp.se>
-Cc: Linux Raid List <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 4 Feb 2003, Mikael Abrahamsson wrote:
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-> I have absolutely NO IDEA why Promise doesnt release these or even
-> acknowledge that they exists.
-same thing with the FastTrak TX4
-no bios update on their website for lba48 support
 
-but 1 email to support (and quick response within 1 hour) and they sended
-the bios update
+	I've recently become interested in looking at disk io for my
+server.  While /proc/stat has the info for the onboard ide, it lacks
+mention of my Array.  Specfically I have Promise TX2 (20268R) with a pair
+of 60 gigers plugged in mirrored only on a 2.4.18 kernel.
+	A google search has led me to a lot of software raid software and
+benchmarking tools such as tiobench.  However what I'm more interested in
+is doing trending of useage over time.  If the info were in /proc/stat I'd
+simply sample that every x intervals.  
+	Is anyone with Promise controlers doing such a thing that could
+space me a clue please?
+- -- 
+     Drew Dowling               Drewhead          http://www.drewhead.org
+ drewhead@drewhead.org    |                    |    WWW      / \ Alpha Phi Omega
+Concord, North Carolina   |                    |  Nimat     /   \  Gamma Lambda
+CLEMSON UNIVERSITY ALUMNI |                    | Apatschin /_____\
+      TIGER BAND!         |      VGAP4 Hosting at http://vgap.drewhead.org
+-----BEGIN PGP SIGNATURE-----
+Comment: Public key available at http://www.drewhead.org
 
-with reaction :
-
---
-Our website is managed by Promise Technology International based in
-Taiwan.
-With this mail you receive the latest drivers and BIOS fot the TX4 which
-also supports LBA48
---
-
-So i think the .tw people are a bit slow... (bit=1 year)
+iD8DBQE+QRru8J7U7yHE638RAoqIAJ9khXvPgQIW+8jYFB7B7bCDcnSCewCfWnpn
+ezIhqSC1eBpgLrqyHZCLht8=
+=rwVh
+-----END PGP SIGNATURE-----
