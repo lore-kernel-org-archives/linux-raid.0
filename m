@@ -1,59 +1,45 @@
-From: <me@heyjay.com>
-Subject: Re: mdadm: SET_ARRAY_INFO failed for /dev/md0: File exists
-Date: Mon, 3 May 2004 21:38:35 -0500
+From: "Kevin P. Fleming" <kpfleming@backtobasicsmgmt.com>
+Subject: Re: Linux software RAID vs. udev
+Date: Mon, 03 May 2004 20:06:44 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <017401c43180$e7b01cb0$6705a8c0@a30>
-References: <012001c430c5$a3e12b70$6705a8c0@a30> <16534.64220.901221.482562@cse.unsw.edu.au> <014601c4317e$b083e250$6705a8c0@a30>
-Reply-To: <me@heyjay.com>
+Message-ID: <409708C4.6070905@backtobasicsmgmt.com>
+References: <4092FCA6.2020103@backtobasicsmgmt.com> <16534.64452.67783.81354@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <16534.64452.67783.81354@cse.unsw.edu.au>
+To: hotplug <linux-hotplug-devel@lists.sourceforge.net>
+Cc: neilb@cse.unsw.edu.au
 List-Id: linux-raid.ids
 
-Nevermind,  For the next newbie:
+Neil Brown wrote:
 
-mdadm --stop /dev/md0
-mdadm --zero-superblock /dev/hda1
-mdadm --zero-superblock /dev/hdb1
-...
+> catch-22.  mdadm needed the device to pre-exist.  That is how the md
+> driver works.
+> 
+> Maybe udev needs to be taught to be more open minded about these
+> things.
 
-Jay
+OK, it appears that the root cause of this problem is that udev only 
+creates device nodes for gendisks that have been created/registered, 
+because that's the only way it can learn about their existence. After 
+looking through the md driver, I don't even see how the first unit (md0) 
+is getting registered by default, unless for some reason the block layer 
+is calling md_probe for unit 0 without even being asked to.
 
------ Original Message ----- 
-From: <me@heyjay.com>
-To: "Neil Brown" <neilb@cse.unsw.edu.au>; <linux-raid@vger.kernel.org>
-Sent: Monday, May 03, 2004 9:22 PM
-Subject: Re: mdadm: SET_ARRAY_INFO failed for /dev/md0: File exists
+Regardless, this is a big issue in the hotplug world, although it's in 
+no way the md driver's fault :-) In the loop driver, it just allocates 
+all its gendisks at init() time, which is fine when it only supports 8 
+(or a smallish number) of devices. However, if the md driver did that it 
+would allocate 512 gendisks and all the attendant md structures which 
+would be extremely wasteful.
 
+Hypothetically speaking, how would you feel about a solution where the 
+md driver also exposed a single "control" device (character device 
+presumably) where mdadm could do all its machinations? Something like 
+the device-mapper control interface is what I'm envisioning here, 
+although this starts to get into the dm/md overlap area...
 
-> > What does
-> >   cat /proc/mdstat
-> > show?  I suspect /dev/md0 has already been assembled somehow.
->
-> platinum:~# cat /proc/mdstat
-> Personalities : [linear] [raid0] [raid1] [raid5]
-> md3 : active raid1 hdc1[1]
->       20000768 blocks [2/1] [_U]
->
-> md1 : active raid1 hdc2[1]
->       40001728 blocks [2/1] [_U]
->
-> md2 : active raid1 hdc3[1]
->       40001728 blocks [2/1] [_U]
->
-> unused devices: <none>
->
-> But how??? I didn't build it.  Is it possible to remain after installs?
-Can
-> I delete an md?  If so how?
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->
-
+I'll move this discussion to the linux-hotplug list; there has to be a 
+solution to this problem somewhere :-)
