@@ -1,40 +1,39 @@
-From: "cedric" <kisseugene@backtomyplace.com>
-Subject: Save a ton on Microsoft Office!
-Date: Mon, 07 Jun 2004 18:18:51 GMT
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: [PATCH md ] Fix BUG in raid5 resync code.
+Date: Tue, 8 Jun 2004 09:01:21 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1086632331-14647@excite.com>
-Content-Type: text/plain;
+Message-ID: <16580.62401.182339.62963@cse.unsw.edu.au>
+References: <20040604163651.7946.patches@notabene>
+	<E1BW8LY-00024X-F7@notabene.cse.unsw.edu.au>
+	<1086600795.40c4365bca98b@www.tastycake.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-kernel@vger.kernel.org
+In-Reply-To: message from Nick Maynard on Monday June 7
+To: Nick Maynard <nick.maynard@alumni.doc.ic.ac.uk>
+Cc: Andrew Morton <akpm@osdl.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Need software but not the price that comes with it?
-We sell OEM software at major discounts.
-Don't pay the department store markups, buy on the internet.
+On Monday June 7, nick.maynard@alumni.doc.ic.ac.uk wrote:
+> Hi Neil,
+> 
+> > Today I lucked upon a bug in raid5 that appears to have been there
+> > since 2.4.0 and earlier.   I guess it doesn't trigger very often.
+> >
+> > 2.4 will need a similar fix.
+> <snip>
+> 
+> Do you have any idea when we can expect this fix ported to 2.4?
 
-Free Delivery and Extra Discounts on orders over $200!
+It is in the linux-2.4 bk repository:
+http://linux.bkbits.com:8080/linux-2.4/cset@40c31f28n8OMv8RVMIjLPDkq3APFWA?nav=index.html|ChangeSet@-2d
 
-Save yourself or your company thousands of dollars, reap the rewards!
+so it will be in the next (pre)release.
 
-Q:  How can you sell this software as OEM ? It seems too good to be true - is there a catch?
+> Also, when the 2.6 kernel series will include it?
 
-A:  There is no catch - the software versions that we sell are OEM (Original Equipment Manufacturer) which means you will receive the installation CDs only (they do not come in their original retail packing and do not include the manual). We do guarantee that all programs are the 100% full working retail versions - no demos or academic versions! When you order, you will receive all materials required for a complete installation - or your money back! Why pay hundreds of dollars more when you can get exactly the same but OEM-CD? You don't have to pay that much for the fancy box and manuals. 
+It is in Linux 2.6.7-rc3
+http://linux.bkbits.com:8080/linux-2.5/cset@40c209c4CQWb5gFyz-f96tQ8QaBv-A?nav=index.html|ChangeSet@-3d
 
-
-
-Click here!!
-http://allpackages.com/index.php?s=7555
-
-
-
-
-
-
-
-
-
-bullet softballgenius shit politics bigmac horizon barry 
-gambit reznorscuba1 tequila gordon
-hanna warriors timber 
-
-REMOV3: http://mycomp.biz/soft/chair.php
+NeilBrown
