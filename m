@@ -1,59 +1,157 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
+From: drtebi@drtebi.com
 Subject: Re: RAID1 always resyncs at boot???
-Date: Fri, 28 Nov 2003 11:00:24 +1100
+Date: Thu, 27 Nov 2003 20:33:07 -0800
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16326.36888.900928.183987@notabene.cse.unsw.edu.au>
-References: <hp0nmt.3pm23q@mail.drtebi.com>
-	<16326.34106.78894.57151@notabene.cse.unsw.edu.au>
-	<hp1alh.rftuxt@mail.drtebi.com>
+Message-ID: <hp1on7.90c5en@mail.drtebi.com>
+References: <hp0nmt.3pm23q@mail.drtebi.com> <16326.34106.78894.57151@notabene.cse.unsw.edu.au> <hp1alh.rftuxt@mail.drtebi.com> <16326.36888.900928.183987@notabene.cse.unsw.edu.au>
+Reply-To: drtebi@drtebi.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from drtebi@drtebi.com on Thursday November 27
-To: drtebi@drtebi.com
+In-Reply-To: <16326.36888.900928.183987@notabene.cse.unsw.edu.au>
+To: Neil Brown <neilb@cse.unsw.edu.au>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday November 27, drtebi@drtebi.com wrote:
-> Well,
-> no, I do a regular shutdown with shutdown -h now, or reboot for rebooting.
-> I have it working now however.
-> I think what was wrong is that I had my /etc/fstab like this:
-> # <fs>               <mountpoint>   <type>      <opts>            <dump/pass>
-> /dev/sda1            /boot          ext2        noauto,noatime    1 1
-> /dev/sda5            /              xfs         noatime           0 0
-> /dev/dsa2            none           swap        sw                0 0
-> /dev/md0             /raid          xfs         noatime           0 0
-> /dev/cdroms/cdrom0   /mnt/cdrom     iso9660     noauto,ro         0 0
-> proc                 /proc          proc        defaults          0 0
-> tmpfs                /dev/shm       tmpfs       defaults          0 0
-> 
-> I did not have the fschk option (the last one) set to 1 on /dev/md0. At least
-> someone advised me to do so, so I set it to 1, tried to reboot and it works
-> just fine now ;)
-> (here is the thread of this help:
-> http://forums.devshed.com/t101414/sd5d6d3f616a474180753071f3ce364ef.html )
-> 
-> I still would like to understand WHY this helped, could you explain?
+Well,
+I thought it was fixed, but I suppose I was wrong... 
 
-There is no reason that this change would help.  I am quite sure it is
-pure coincidence that is seems to make a difference.
+OK, I admit I was a bit brutal, but anyway.
+The problem is that I have power outages here once in a while, it's something
+with the wiring in this appartment (yes, I am running this server at home,
+have an UPS, but it only lasts 40 min.).
+ 
+So I pulled the plug of the server to give it a test, to see if it comes back
+up fine and will reconstruct the array right.
 
-> 
-> Another question: How do I restart "from scratch", reformatting the drives
-> does not earase the persistent-superblock etc....
+Everything comes back up fine, the RAID array starts reconstructing. But after
+an hour or so I find this:
 
-Try the "--zero-superblock" option to mdadm (check the man page for
-correct spelling).
+/proc/mdstat:
+Nov 28 04:41:56 [kernel] md: md_do_sync() got signal ... exiting
+Nov 28 04:41:56 [kernel] raid1: mirror resync was not fully finished,
+restarting next time.
 
-> 
-> And last one: Now that the RAID is setup (which is not holding the OS, it's
-> purely used for storage), I would like to use another disk for the OS. So
-> after I install Linux on another disk, can I just mount the RAID
-> afterwards?
+.
+/bus1/target0/lun0/part1
 
-I suspect so, though without precise details I cannot be sure of
-exactly what you are asking.
 
-NeilBrown
+in my log:
+Nov 28 04:41:44 [kernel] hda: dma_intr: status=0x51 { DriveReady SeekComplete
+Error }
+Nov 28 04:41:44 [kernel] md: (skipping faulty
+ide/host0/bus0/target0/lun0/part1 )
+Nov 28 04:41:45 [kernel] hda: dma_intr: status=0x51 { DriveReady SeekComplete
+Error }
+                - Last output repeated 8 times -
+Nov 28 04:41:56 [kernel] md: md_do_sync() got signal ... exiting
+Nov 28 04:41:56 [kernel] raid1: mirror resync was not fully finished,
+restarting next time.
+
+Does this mean one of the drives is bad?
+
+Here is some more info from mdadm:
+bully@drtebi: mdadm --detail /dev/md0
+/dev/md0:
+        Version : 00.90.00
+  Creation Time : Thu Nov 27 01:46:27 2003
+     Raid Level : raid1
+     Array Size : 120053632 (114.49 GiB 122.93 GB)
+    Device Size : 120053632 (114.49 GiB 122.93 GB)
+   Raid Devices : 2
+  Total Devices : 2
+Preferred Minor : 0
+    Persistence : Superblock is persistent
+
+    Update Time : Fri Nov 28 04:41:44 2003
+          State : dirty, no-errors
+ Active Devices : 1
+Working Devices : 1
+ Failed Devices : 1
+  Spare Devices : 0
+
+
+    Number   Major   Minor   RaidDevice State
+       0       3        1        0      faulty  
+/dev/ide/host0/bus0/target0/lun0/part1
+       1      22        1        1      active sync  
+/dev/ide/host0/bus1/target0/lun0/part1
+           UUID : 96c32ab9:7f492b81:623580da:29d8a727
+         Events : 0.16
+
+------------
+bully@drtebi: mdadm --examine /dev/hda1
+/dev/hda1:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : 96c32ab9:7f492b81:623580da:29d8a727
+  Creation Time : Thu Nov 27 01:46:27 2003
+     Raid Level : raid1
+    Device Size : 120053632 (114.49 GiB 122.93 GB)
+   Raid Devices : 2
+  Total Devices : 2
+Preferred Minor : 0
+
+    Update Time : Fri Nov 28 04:32:17 2003
+          State : dirty, no-errors
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 0
+       Checksum : d1fbb8ef - correct
+         Events : 0.15
+
+
+      Number   Major   Minor   RaidDevice State
+this     0       3        1        0      active sync  
+/dev/ide/host0/bus0/target0/lun0/part1
+   0     0       3        1        0      active sync  
+/dev/ide/host0/bus0/target0/lun0/part1
+   1     1      22        1        1      active sync  
+/dev/ide/host0/bus1/target0/lun0/part1
+
+bully@drtebi: mdadm --examine /dev/hda1
+/dev/hda1:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : 96c32ab9:7f492b81:623580da:29d8a727
+  Creation Time : Thu Nov 27 01:46:27 2003
+     Raid Level : raid1
+    Device Size : 120053632 (114.49 GiB 122.93 GB)
+   Raid Devices : 2
+  Total Devices : 2
+Preferred Minor : 0
+
+    Update Time : Fri Nov 28 04:32:17 2003
+          State : dirty, no-errors
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 0
+       Checksum : d1fbb8ef - correct
+         Events : 0.15
+
+
+      Number   Major   Minor   RaidDevice State
+this     0       3        1        0      active sync  
+/dev/ide/host0/bus0/target0/lun0/part1
+   0     0       3        1        0      active sync  
+/dev/ide/host0/bus0/target0/lun0/part1
+   1     1      22        1        1      active sync  
+/dev/ide/host0/bus1/target0/lun0/part1
+
+-------------
+bully@drtebi: mdadm --query /dev/md0
+/dev/md0: 114.49GiB raid1 2 devices, 0 spares. Use mdadm --detail for more
+detail.
+/dev/md0: No md super block found, not an md component.
+
+The last message is weird... no md super block?
+
+Thanks,
+DrTebi
+
+P.S.: I don't really like IDE drives :(
+
+
