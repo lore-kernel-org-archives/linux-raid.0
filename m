@@ -1,25 +1,32 @@
-From: Daniel Pittman <daniel@rimspace.net>
-Subject: Re: RAID5 format 2.4 vs 2.6?
-Date: Mon, 26 Apr 2004 19:15:41 +1000
+From: "Hillary Bohon" <hillarybohonrh@london.com>
+Subject: inexpensive cialis available atlast just 5.75 per 20mg tablet
+Date: Mon, 26 Apr 2004 01:59:54 -1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <87isfndrr6.fsf@enki.rimspace.net>
-References: <20040426073455.GA2101@nettis.grimsta>
+Message-ID: <fc5701c42b85$fd064db0$4bfbbf26@wdgvasygh>
+Reply-To: "Hillary Bohon" <hillarybohonrh@london.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, 26 Apr 2004, Daniel Brahneborg wrote:
-> I have a raid5 array on a 2.4 machine, but I'd like to
-> upgrade it to the 2.6 kernel. In case I have to go back
-> to the 2.4 kernel, is the raid5 layout identical, 
+Effectively, it is identical to Pfzier Viarga but much less in price.
 
-Yes.
-        Daniel
+More and more men are ordering from offshore pharmacies for convenience.
+
+Use the link below to place your order online:
+
+Rosalinda Nitti
+
+http://rd.yahoo.com/JmgyrNyil/*http://www.orderdiscountgeneric.com
 
 
--- 
-Simplicity does not precede complexity, but follows it.
-        -- Alan J. Perlis, _Epigrams in Programming_ (September, 1982)
 
+
+
+
+Go here if you do not want to receive any more promotion mailings for
+pharmacy related products:
+http://rd.yahoo.com/Tq/Ghwtoj/*http://orderdiscountgeneric.com
