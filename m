@@ -1,43 +1,30 @@
-From: Catalin BOIE <util@deuroconsult.ro>
-Subject: 2.4.22 + RAID 1 + SATA + 2 disks => no maximum speed
-Date: Fri, 5 Sep 2003 08:01:31 +0300 (EEST)
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.56.0309050757360.18124@hosting.rdsbv.ro>
+From: Paul <ocran@gmx.net>
+Subject: promise reconstruction problem raid1
+Date: Fri, 05 Sep 2003 11:09:58 -0400
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <3F58A746.8010004@gmx.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
-Cc: linux-admin@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi!
+Hello,
+I have a raid 1 array, that has a fialed disk. I have repleaced the 
+disk, and duplicated it with the promise fasttrack program. But when i 
+boot my system, kernel 2.4.19 complains:
+During boot, when the kernel is listing the arrays, it states that only 
+one disk is in the array, when in fact there are two. Then it says code: 
+Bad EIP value, and the warning fsck.ext3 for device /dev/ataraid/d1p1 
+exited with signal 11. It then tells me to repair manually. Cuuld this 
+possibly be a bad superblock? I am quite confused, and have tried 
+several things. I have compiled different versions of the kernel, from 
+2.4.18 to 2.4.21 but i have the same problem with all of them. I have 
+even tried to compile them on another machine, still no luck. Has anyone 
+succesfully done this?
 
-I have a machine with 2 SATA disks on 2 separate buses.
-hdparm -t /dev/hda reports 50MB/s
-hdparm -t /dev/hdb reports 50MB/s
+Thanks,
 
-I created a raid1 array with hda3 and hdc3, same partition sizes.
+Paul
 
-If I do hdparm -t /dev/md0 it reports 50MB/s
-
-If I do cat /dev/md0 > /dev/null, vmstat reports 50MB/s
-If I start another cat /dev/md0 > /dev/null, in another console, I get
-100MB/s from vmstat.
-
-Why I don't get 100MB/s on a single cat command?
-
-
-Some other test:
-cat /dev/hda3 > /dev/null&
-cat /dev/hdc3 > /dev/null&
-vmstat shows 100MB/s.
-
-Also, seems that writing is very slow (8MB/s).
-
-Any ideas?
-
-Thank you very much!
-
----
-Catalin(ux) BOIE
-catab@deuroconsult.ro
