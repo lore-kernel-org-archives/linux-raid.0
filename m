@@ -1,29 +1,42 @@
-From: "Shaw, Marco" <marco.shaw@nbtel.nb.ca>
-Subject: RE: 3 questions...
-Date: Sun, 29 Sep 2002 19:57:41 -0300
+From: Michael Tokarev <mjt@tls.msk.ru>
+Subject: Re: 3 questions...
+Date: Mon, 30 Sep 2002 03:15:01 +0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <C65F89D1AC0BB54B865127151A24DA780BAD5C91@nbexchm2.aliant.icn>
+Message-ID: <3D978975.2010903@tls.msk.ru>
+References: <C65F89D1AC0BB54B865127151A24DA780BAD5C7B@nbexchm2.aliant.icn>	<3D977753.4010401@tls.msk.ru> <87k7l4zb8j.fsf@florent.hn.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=KOI8-R; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: "'linux-raid@vger.kernel.org'" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
-> > tell kernel which devices to use for your root filesystem (if your 
-> > root is on raid device), by using something like
-> >   append="md=2,/dev/hda1,/dev/hdb1"
-> 
-> I have some partitions with the fd type in raid arrays but 
-> would like to switch to the manual method you just described. 
-> These partitions hold data I care about. Is it safe to change 
-> the partition type:
+Florent Rougon wrote:
+[]
+> I have some partitions with the fd type in raid arrays but would like to
+> switch to the manual method you just described. These partitions hold
+> data I care about. Is it safe to change the partition type:
 >    - while the array is not active?
 >    - while the array is active?
 
-I would recommend to umount the array and stop it if you can.  The fd or default 83 (IIRC), is just a label on the disk, and won't destroy data.  I've more experience with labels on Solaris, and have done those "on-the-fly" with no affects though.
+Hmm, it's always a good idea to have a backup handy, just in
+case, right? ;)
 
-Remember (with RedHat Advanced Server anyway), you'd have to actually disable autodetection.  I'm still working on how it works because I'm still unclear whether this is a kernel feature, or just a result of init scripts.  An older RedHat reference:
-http://www.redhat.com/support/resources/tips/raid/RAID-4.html
+Kernel code does not care about partition table _at all_ while
+disk is in use - kernel reads partition table when disk usage
+goes from 0 to 1, and keeps that table in memory after that, so
+you may do with your partitions *anything* you like (incl. erasing
+the whole table) while it's in use (but do not forget to restore
+things before next reboot ;).  Concerning changing partition type,
+well - having an accurate tool for this, it shuld be safe (an
+operation is very simple, just changing one byte in disk's partition
+table (an area that isn't used for anything else)).  So, answer
+to both your question is yes, but see my first statement (in
+fact, it is NOT completely safe to do ANYTHING at all with your
+data - kernel may screw up and write random garbage to your
+disks just at any time, even if you told it to mount a filesystem
+read-only -- and disk may crash at random... ;).  Oh well... ;)
+(don't panic, however - that's quite normal!.. ;)
 
-Marco
+/mj
+
