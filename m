@@ -1,18 +1,42 @@
-From: Thomas Steudten <alpha@steudten.com>
-Subject: Re: RAID1-Device won't survive reboot
-Date: Thu, 09 Oct 2003 14:00:28 +0200
+From: alexander.weber@pta.de
+Subject: Antwort: Re: RAID1-Device won't survive reboot
+Date: Thu, 9 Oct 2003 14:12:50 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3F854DDC.6060200@steudten.com>
-References: <OFBE4F4C3A.AD55E9B4-ONC1256DB9.0052F11A@pta.de> <3F8483CE.2070309@fantinibakery.com>
-Reply-To: alpha@steudten.com
+Message-ID: <OF52E3583F.70A92C60-ONC1256DBA.00429AA3@pta.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3F8483CE.2070309@fantinibakery.com>
-To: rob <rob@fantinibakery.com>
-Cc: alexander.weber@pta.de, linux-raid@vger.kernel.org
+To: alpha@steudten.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+
+That's it! I didn't pay enough attention to the partition table. /dev/hda1
+indeed has type 83 (Linux).
+
+It is not as complicated as I thought. ;-)
+Thanks for your help!!
+
+Alexander
+
+
+
+
+                                                                                                                   
+                    Thomas                                                                                         
+                    Steudten            An:      rob <rob@fantinibakery.com>                                       
+                    <alpha@steudt       Kopie:   alexander.weber@pta.de, linux-raid@vger.kernel.org                
+                    en.com>             Thema:   Re: RAID1-Device won't survive reboot                             
+                                                                                                                   
+                    09.10.2003                                                                                     
+                    14:00                                                                                          
+                    Bitte                                                                                          
+                    antworten an                                                                                   
+                    alpha                                                                                          
+                                                                                                                   
+                                                                                                                   
+
+
+
 
 
 I think the partition is not marked with type fd: like
@@ -32,12 +56,22 @@ Units = cylinders of 2048 * 512 bytes
 rob wrote:
 
 > I'm not familiar with SuSE 8.2,   but here are some hints:
-> 
-> -is it possible that  either the mount of md0 is getting done before  
-> md0 is assembled, or hdb1  is getting mounted directly?  check  df -v  
+>
+> -is it possible that  either the mount of md0 is getting done before
+> md0 is assembled, or hdb1  is getting mounted directly?  check  df -v
 > right after boot.
-> 
+>
 
 >>
 
+
+
+
+
+
+
+**********************************************************************
+http://www.pta.de
+Mit 788 Erfahrungsberichten aus 34 Jahren erfolgreicher Projektarbeit!
+**********************************************************************
 
