@@ -1,92 +1,54 @@
-From: Franc Carter <franc@tech.sirca.org.au>
-Subject: Re: multipath - stable ?
-Date: Tue, 16 Dec 2003 09:13:15 +1100
+From: Norman Schmidt <norman.schmidt@ratnet.stw.uni-erlangen.de>
+Subject: partitions on software-raid
+Date: Tue, 16 Dec 2003 16:44:29 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200312160913.16193.franc@tech.sirca.org.au>
-References: <200312121552.02975.franc@tech.sirca.org.au> <200312131035.43175.franc@tech.sirca.org.au> <1071525632.4768.28.camel@persist.az.mvista.com>
-Reply-To: Franc Carter <franc@tech.sirca.org.au>
+Message-ID: <3FDF285D.806@ratnet.stw.uni-erlangen.de>
+Reply-To: schmidt@naa.net
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1071525632.4768.28.camel@persist.az.mvista.com>
-Content-Disposition: inline
-To: sdake@mvista.com
-Cc: Linux-raid maillist <linux-raid@vger.kernel.org>
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Hi!
 
-Thanks, for us 3 minutes is fine
+Since noone has answered my last question yet:
 
-regards
+Has anyone ever used partitions on a md device? It is possible to make=20
+them with fdisk, and fdisk shows their names as /dev/md0p1 (eg.). They=20
+are also shown in the partition table. But there are no /dev entries.
 
-On Tue, 16 Dec 2003 09:00 am, Steven Dake wrote:
-> The SCSI layer should retries a failed I/O 5 times, and have 30 second
-> timeouts per I/O.  The card itself my return the I/O as failed before
-> the 30 second timeout, which would improve your failover times.  That
-> gives 3 minutes as a maximum.
-> 
-> Thanks
-> -steve
-> 
-> On Fri, 2003-12-12 at 16:35, Franc Carter wrote:
-> > Thanks, 
-> > 
-> > can you give me a ballpark on 'high' >5 minutes ?
-> > 
-> > cheers
-> > 
-> > On Sat, 13 Dec 2003 04:35 am, Steven Dake wrote:
-> > > The multipath code is simple and seems pretty stable to me.
-> > > 
-> > > There is one issue, in that failover can sometimes take a long time
-> > > because of the SCSI layer's insistence upon executing error recovery. 
-> > > In the case of multipath I/O's, there is no need to error recover before
-> > > processing the I/O.  Instead, once error is detected, failover, then
-> > > start error recovery.
-> > > 
-> > > The SCSI layer doesn't do this currently, so failover times are high.
-> > > 
-> > > Thanks
-> > > -steve
-> > > 
-> > > 
-> > > On Thu, 2003-12-11 at 21:52, Franc Carter wrote:
-> > > > Hi,
-> > > > 
-> > > > I've been using linux sofwtare raid for years and had no problems.
-> > > > We are about to install some disk systems that have dual contollers
-> > > > and am wondering wether multipath is as stable as the rest of software
-> > > > raid ?
-> > > > 
-> > > > thanks
-> > > 
-> > > -
-> > > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > > 
-> > > 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
+There are very few google hits, but no successful tries are documented.
 
--- 
-Franc Carter     Ph:61-2-8374-5071      Fax: 61-2-8374-5070
-Systems Manager, SIRCA Ltd              http://www.sirca.org.au/
+Is this functionality implemented yet? I do not understand much C, so I=
+=20
+gave up on understanding md.c in the kernel source tree. In the=20
+up-to-date list of major and minor numbers, there are no entries=20
+concerning partitions on md devices.
 
-DISCLAIMER: The contents of this email, inclusive of attachments, may
-be legally privileged and confidential. Any unauthorised use of the
-contents is expressly prohibited. If you have received this message in
-error or are not the intended recipient, you should destroy the email
-message along with any attachment(s).  Unintended recipients of this
-email are prohibited from retaining, disclosing, distributing or using
-any information contained herein.  This email is also subject to
-copyright. No part of it should be reproduced, adapted or transmitted
-without the written consent of the copyright owner.
+I think Neil Brown stated somewhere on this list that there could be up=
+=20
+to 15 partitions for up to 16 md devices, but I don=B4t remember, could=
+n=B4t=20
+find it, and I don=B4t know wether he told how to make the devices or=20
+mount those partitions.
 
+I am willing to test if this functionality exists, if not, I am forced=20
+to partition the underlying drives.
+
+Thank you for the help, Norman Schmidt.
+
+--=20
+--
+
+Norman Schmidt          Institut fuer Physikal. u. Theoret. Chemie
+Dipl.-Chem.             Friedrich-Alexander-Universitaet
+schmidt@naa.net         Erlangen-Nuernberg
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
