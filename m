@@ -1,68 +1,69 @@
-From: Stephan van Hienen <raid@a2000.nu>
-Subject: Re: raid5 slow (test on another system)
-Date: Wed, 1 Dec 2004 20:23:21 +0100 (CET)
-Message-ID: <Pine.LNX.4.61.0412012021350.12257@adsl.a2000.nu>
-References: <200411290449.iAT4nsN02715@www.watkins-home.com>
- <Pine.LNX.4.61.0411290928430.13437@adsl.a2000.nu>
- <Pine.LNX.4.61.0411290948230.13437@adsl.a2000.nu> <16811.48945.141392.294625@cse.unsw.edu.au>
- <Pine.LNX.4.61.0411300146360.32052@adsl.a2000.nu>
- <Pine.LNX.4.61.0411302034160.24563@adsl.a2000.nu> <16813.418.770001.453039@cse.unsw.edu.au>
- <Pine.LNX.4.61.0412010050500.31657@adsl.a2000.nu>
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: mdadm drives me crazy
+Date: Thu, 2 Dec 2004 08:38:21 +1100
+Message-ID: <16814.14797.780410.83537@cse.unsw.edu.au>
+References: <41ADA964.3030606@univ-mlv.fr>
+	<41ADBEC6.8030701@univ-mlv.fr>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.61.0412010050500.31657@adsl.a2000.nu>
+In-Reply-To: message from Fabrice LORRAIN on Wednesday December 1
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@cse.unsw.edu.au>
+To: Fabrice LORRAIN <Fabrice.Lorrain@univ-mlv.fr>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-today runned a test on another machine
-(dual p3-733 with 4*9gb scsi)
+On Wednesday December 1, Fabrice.Lorrain@univ-mlv.fr wrote:
+> Fabrice LORRAIN wrote:
+> > Hi all,
+> > 
+> ...
+> > $ sudo mdadm --create /dev/md0 --level=5 --raid-devices=6 /dev/loop[0-5]
+> 
+> 
+> $ sudo mdadm --create /dev/md0 --force --level=5 --raid-devices=6 
+> /dev/loop[0-5]
+> 
+> Seems to give what I expected (a raid5 pool with 6 devices, no spare).
+> 
+>  From mdadm man page :
+> "...When creating a RAID5 array, mdadm will automatically create a 
+> degraded array with an extra spare drive.  This is because building the 
+> spare into a  degraded  array  is in general faster than resyncing the 
+> parity on a non-degraded, but not clean, array.  This feature can be 
+> over-ridden with the -I --force option."
+> 
+> "-I" doesn't seems to be understood by mdadm. Leftover ?
 
-looks like on this system the difference is arround the 10%
-maybe you need more disks/faster disks to get a bigger difference
+The "-I" is a typo in the man page.  It should be ".I", which would
+set the "--force" in italics.
 
-results :
+> 
+> I don't understand what the previous extract from the man page means. My 
+> understanding is that the default behaviour of mdadm is to create a 
+> raid5 pool in degraded mode aka with a missing drive ? Is this
+> correct ?
 
-2.6.10-rc2 4d r5 ext3
+Yes.  That is correct.  
+It does this because (as the man page says) you get a fully in-sync
+raid5 array - with all parity blocks correct - sooner.
+> 
+> after
+> $ sudo mdadm --create /dev/md0 --force --level=5 --raid-devices=6 
+> /dev/loop[0-5]
+> 
+> the state of the array is dirty. Why ?
+> 
+> $ sudo mdadm --stop /dev/md0 followed by
+> $ sudo mdadm --examine /dev/loop[0-5]
+> 
+> gives a clean state for each device but
+> 
+> $ sudo mdadm --assemble /dev/md0 /dev/loop[0-5] keeps the dirty state of 
+> the array.
 
-Version  1.03       ------Sequential Output------ --Sequential Input- 
---Random-
-                     -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- 
---Seeks--
-Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP 
-/sec %CP
-linuxtest.expl 496M 10364  99 39689  55 22184  36 11485  96 52559  46 
-632.0   4
-                     ------Sequential Create------ --------Random 
-Create--------
-                     -Create-- --Read--- -Delete-- -Create-- --Read--- 
--Delete--
-               files  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP 
-/sec %CP
-                  16   512  99 +++++ +++ 32502  99   528  99 +++++ +++ 
-1938  97
-linuxtest.explainerdc.local,496M,10364,99,39689,55,22184,36,11485,96,52559,46,632.0,4,16,512,99,+++++,+++,32502,99,528,99,+++++,+++,1938,97
+"dirty" should be changed to say "active", and probably will be in the
+next release of mdadm.
 
-2.4.20 4d r5 ext3
-
-Version  1.03       ------Sequential Output------ --Sequential Input- 
---Random-
-                     -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- 
---Seeks--
-Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP 
-/sec %CP
-linuxtest.expl 496M 10087 100 53021  63 20934  34 11746  98 58858  34 
-665.3   4
-                     ------Sequential Create------ --------Random 
-Create--------
-                     -Create-- --Read--- -Delete-- -Create-- --Read--- 
--Delete--
-               files  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP 
-/sec %CP
-                  16   573  99 +++++ +++ 30886  99   592  99 +++++ +++ 
-2264  96
-linuxtest.explainerdc.local,496M,10087,100,53021,63,20934,34,11746,98,58858,34,665.3,4,16,573,99,+++++,+++,30886,99,592,99,+++++,+++,2264,96
-
-
+NeilBrown
