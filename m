@@ -1,143 +1,143 @@
-From: Scott Mcdermott <smcdermott@questra.com>
-Subject: RAID 1+0 makes BUG in raid1.c, but 0+1 works?
-Date: Wed, 25 Dec 2002 17:20:09 -0500
+From: bruno waes <waesb@oxygenetic.com>
+Subject: raid boot problems
+Date: Fri, 27 Dec 2002 21:36:09 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20021225172009.Z1089@questra.com>
+Message-ID: <20021227203609.GD26188@oxygenetic.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+Content-Disposition: attachment; filename=scsiprobs
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I have 10 disks.  Made 5 RAID1s.  Made a RAID0 over top.  Using the
-following Neil Brown patches on top of 2.4.20-ac2 (only some relevant
-here, but including in case there is some side effect)
+I have debian installation on a asus nforce2 motherboard with two scsi disks (on a adaptec 29160N) and one
+IDE hd.
 
-        001NfsdRelease
-        004ReadlinkResponseLen
-        005MDSyncIo
-        006SvcsockWarningGone
-        008NfsdLocksExplock
-        009NfsdLocksCachelock
-        010NfsdLocksNfssvc
-        011NfsdLocksRename
-        012NfsdFhLock
-        013NfsdLocksRacache
-        014NfsdBKLgone
-        015NfsdMaxBlkSize
-        022NfsfhErrFix
-        023MdSbNoFree
+rainman:/proc# more /proc/scsi/scsi
+Attached devices:
+Host: scsi0 Channel: 00 Id: 00 Lun: 00
+  Vendor: IBM      Model: DNES-318350W     Rev: SA30
+  Type:   Direct-Access                    ANSI SCSI revision: 03
+Host: scsi0 Channel: 00 Id: 01 Lun: 00
+  Vendor: IBM      Model: DNES-318350W     Rev: SA30
+  Type:   Direct-Access                    ANSI SCSI revision: 03
+Host: scsi0 Channel: 00 Id: 03 Lun: 00
+  Vendor: PLEXTOR  Model: CD-ROM PX-40TS   Rev: 1.00
+  Type:   CD-ROM                           ANSI SCSI revision: 02
 
-also using Trond's NFS_ALL, and Justin Gibbs' latest AIC7xxx driver.
 
-When I went to make the RAID0 over the RAID1s (after waiting for the
-RAID1s to sync, because I thought that might be the problem), I got
-this:
+i installed a small system on the ide hd, and afterwards partitioned both scsi disks like this:
 
-        Dec 25 14:22:06 lujuria kernel: kernel BUG at raid1.c:586!
-        Dec 25 14:22:06 lujuria kernel: invalid operand: 0000
-        Dec 25 14:22:06 lujuria kernel: CPU:    1
-        Dec 25 14:22:06 lujuria kernel: EIP:    0010:[<c02068c0>]    Not tainted
-        Using defaults from ksymoops -t elf32-i386 -a i386
-        Dec 25 14:22:06 lujuria kernel: EFLAGS: 00010246
-        Dec 25 14:22:06 lujuria kernel: eax: 00000001   ebx: ce77dda4   ecx: 00000908   edx: c02beac0
-        Dec 25 14:22:06 lujuria kernel: esi: cec40800   edi: ce77dda4   ebp: c138a8a0   esp: ce77dd08
-        Dec 25 14:22:06 lujuria kernel: ds: 0018   es: 0018   ss: 0018
-        Dec 25 14:22:06 lujuria kernel: Process mkraid (pid: 645, stackpage=ce77d000)
-        Dec 25 14:22:06 lujuria kernel: Stack: 4a494847 4e4d4c4b 5251504f 56555453 00000000 00000000 33323130 37363534 
-        Dec 25 14:22:06 lujuria kernel:        33323130 37363534 62613938 ce77dda4 00000008 0445c780 00000001 c0209032 
-        Dec 25 14:22:06 lujuria kernel:        c138a8a0 00000001 ce77dda4 ce77dda4 c01abdc1 c0372098 00000001 ce77dda4 
-        Dec 25 14:22:06 lujuria kernel: Call Trace:    [<c0209032>] [<c01abdc1>] [<c0209862>] [<c0250908>] [<c011c835>]
-        Dec 25 14:22:06 lujuria kernel:   [<c0209780>] [<c011caa0>] [<c020a714>] [<c020aa79>] [<c020bc52>] [<c011caa0>]
-        Dec 25 14:22:06 lujuria kernel:   [<c02099b5>] [<c020a8b7>] [<c020c9b6>] [<c020d6cc>] [<c015b619>] [<c014a898>]
-        Dec 25 14:22:06 lujuria kernel:   [<c014aec3>] [<c014b038>] [<c0142383>] [<c014b1de>] [<c0153d0f>] [<c01426d2>]
-        Dec 25 14:22:06 lujuria kernel:   [<c010760f>]
-        Dec 25 14:22:06 lujuria kernel: Code: 0f 0b 4a 02 b5 55 29 c0 83 7c 24 44 02 89 34 24 8b 44 24 10 
+                                  cfdisk 2.11n
 
-BUG at raid1.c:586 looks like this:
+                              Disk Drive: /dev/sda
+                            Size: 18351959040 bytes
+              Heads: 64   Sectors per Track: 32   Cylinders: 17501
 
-        static int raid1_make_request (mddev_t *mddev, int rw,
-                                       struct buffer_head * bh)
-        {
-                        raid1_conf_t *conf = mddev_to_conf(mddev);
-                        struct buffer_head *bh_req, *bhl;
-                        struct raid1_bh * r1_bh;
-                        int disks = MD_SB_DISKS;
-                        int i, sum_bhs = 0;
-                        struct mirror_info *mirror;
+    Name        Flags      Part Type  FS Type          [Label]        Size (MB)
+ ------------------------------------------------------------------------------
+    sda1        Boot        Primary   Linux raid autodetect               50.34
+    sda2                    Primary   Linux swap                         511.71
+    sda4                    Primary   Linux raid autodetect            10788.80
+    sda3                    Primary   Linux raid autodetect             7000.30
 
-                        if (!buffer_locked(bh))
---->                             BUG();
 
-here is the decode:
 
-        >>EIP; c02068c0 <raid1_make_request+20/320>   <=====
+rainman:/mnt/root/etc# more raidtab
+# md0 is the boot array
+raiddev                 /dev/md0
+raid-level              1
+nr-raid-disks           2
+chunk-size              32
+nr-spare-disks          0
+persistent-superblock   1
+device                  /dev/sda1
+raid-disk               0
+device                  /dev/sdb1
+raid-disk               1
 
-        >>ebx; ce77dda4 <_end+e3e486c/1046eb28>
-        >>ecx; 00000908 Before first symbol
-        >>edx; c02beac0 <raid1_personality+0/40>
-        >>esi; cec40800 <_end+e8a72c8/1046eb28>
-        >>edi; ce77dda4 <_end+e3e486c/1046eb28>
-        >>ebp; c138a8a0 <_end+ff1368/1046eb28>
-        >>esp; ce77dd08 <_end+e3e47d0/1046eb28>
+# md1 is the root array
+raiddev                 /dev/md1
+raid-level              1
+nr-raid-disks           2
+chunk-size              32
+nr-spare-disks          0
+persistent-superblock   1
+device                  /dev/sda3
+raid-disk               0
+device                  /dev/sdb3
+raid-disk               1
 
-        Trace; c0209032 <md_make_request+82/90>
-        Trace; c01abdc1 <generic_make_request+e1/140>
-        Trace; c0209862 <sync_page_io+c2/100>
-        Trace; c0250908 <igmp_group_dropped+18/80>
-        Trace; c011c835 <call_console_drivers+65/120>
-        Trace; c0209780 <bh_complete+0/20>
-        Trace; c011caa0 <printk+140/180>
-        Trace; c020a714 <write_disk_sb+134/1a0>
-        Trace; c020aa79 <md_update_sb+199/220>
-        Trace; c020bc52 <do_md_run+212/3f0>
-        Trace; c011caa0 <printk+140/180>
-        Trace; c02099b5 <calc_sb_csum+35/50>
-        Trace; c020a8b7 <sync_sbs+77/a0>
-        Trace; c020c9b6 <add_new_disk+146/2d0>
-        Trace; c020d6cc <md_ioctl+36c/820>
-        Trace; c015b619 <get_empty_inode+99/b0>
-        Trace; c014a898 <bdget+128/190>
-        Trace; c014aec3 <do_open+103/1a0>
-        Trace; c014b038 <blkdev_open+38/50>
-        Trace; c0142383 <dentry_open+d3/1e0>
-        Trace; c014b1de <blkdev_ioctl+3e/40>
-        Trace; c0153d0f <sys_ioctl+ef/2a0>
-        Trace; c01426d2 <sys_open+a2/c0>
-        Trace; c010760f <system_call+33/38>
+# md2 is the web array
+raiddev                 /dev/md2
+raid-level              1
+nr-raid-disks           2
+chunk-size              32
+nr-spare-disks          0
+persistent-superblock   1
+device                  /dev/sda4
+raid-disk               0
+device                  /dev/sdb4
+raid-disk               1
 
-        Code;  c02068c0 <raid1_make_request+20/320>
-        00000000 <_EIP>:
-        Code;  c02068c0 <raid1_make_request+20/320>   <=====
-           0:   0f 0b                     ud2a      <=====
-        Code;  c02068c2 <raid1_make_request+22/320>
-           2:   4a                        dec    %edx
-        Code;  c02068c3 <raid1_make_request+23/320>
-           3:   02 b5 55 29 c0 83         add    0x83c02955(%ebp),%dh
-        Code;  c02068c9 <raid1_make_request+29/320>
-           9:   7c 24                     jl     2f <_EIP+0x2f>
-        Code;  c02068cb <raid1_make_request+2b/320>
-           b:   44                        inc    %esp
-        Code;  c02068cc <raid1_make_request+2c/320>
-           c:   02 89 34 24 8b 44         add    0x448b2434(%ecx),%cl
-        Code;  c02068d2 <raid1_make_request+32/320>
-          12:   24 10                     and    $0x10,%al
 
-Using persistent superblock on all RAID1s and RAID0.  Using 128k chunks.
-Using mkraid, not mdadm.  After this happens it *appears* that the RAID0
-exists and functions, however upon reboot I get a similar BUG in the
-reboot process, and then when booting again it BUGs in the swapper
-process, and it refuses to boot if I allow it to autodetect.
 
-is there something I'm doing wrong or is this a bug? Should I not be
-using RAID1+0 ? I just tried it with RAID0+1 instead and it seems to
-work fine (although it's somewhat slower than I expected, and initial
-sync goes 250K/s for some reason until I turn up the minimum).  This
-makes no sense to me as I thought that RAID devices were a block-level
-abstraction...so why would 0+1 work but not 1+0 ?? I really dislike the
-additional probability of second-disk failure in RAID0+1 over RAID1+0,
-and the ridiculous resync times, and I don't like the slow write speed
-of RAID5.
+it looks ok
 
-Thanks for any help.
+rainman:~# more /proc/mdstat
+Personalities : [linear] [raid1] [multipath]
+read_ahead 1024 sectors
+md0 : active raid1 sdb1[1] sda1[0]
+      49024 blocks [2/2] [UU]
+
+md1 : active raid1 sdb3[1] sda3[0]
+      6836160 blocks [2/2] [UU]
+
+md2 : active raid1 sdb4[1] sda4[0]
+      10535872 blocks [2/2] [UU]
+
+unused devices: <none>
+
+
+
+
+rainman:~# more /mnt/root/etc/fstab
+# /etc/fstab: static file system information.
+#
+# <file system> <mount point>   <type>  <options>               <dump>  <pass>
+/dev/md1        /               ext3    errors=remount-ro       0       1
+/dev/sda2       none            swap    sw                      0       0
+/dev/sdb2       none            swap    sw                      0       0
+proc            /proc           proc    defaults                0       0
+/dev/fd0        /floppy         auto    user,noauto             0       0
+/dev/cdrom      /cdrom          iso9660 ro,user,noauto          0       0
+/dev/md0        /boot           ext3    defaults                0       2
+/dev/md2        /web            ext3    defaults                0       2
+
+
+
+
+
+
+i installed the LILO in the mbr of /dev/sda
+
+rainman:~# more /mnt/root/etc/lilo.conf
+lba32
+disk=/dev/md1
+bios=0x80
+partition=/dev/md0
+boot=/dev/sda
+root=/dev/md1
+...
+
+
+
+mobo BIOS boot order is SCSI, scsi-bios boot device is 0 (/dev/sda) but it still hangs on 'LI'
+i had that problem too with a non raid install on the scsi disk, but adding a 'bios=0x80' helped that work
+out, but now it still does not boot from the scsi, and i dont feel like putting the MBR on the ide disk,
+would be nicer to have it on the scsi disks. anyone has an ide or need information ?
+
+thanks in advance
+
+
+bruno
