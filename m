@@ -1,57 +1,71 @@
-From: "Jean-Rene Cormier" <jean-rene.cormier@cipanb.ca>
-Subject: Re: Software RAID1 problems
-Date: Thu, 20 Feb 2003 23:12:26 -0400
+From: Norman Schmidt <norman.schmidt@ratnet.stw.uni-erlangen.de>
+Subject: Re: ADD_NEW_DISK failed
+Date: Sun, 23 Feb 2003 16:41:21 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <002801c2db4b$6cac0c40$8400a8c0@jrc>
-References: <1045747209.795.7.camel@localhost.localdomain> <15957.28314.314427.191061@notabene.cse.unsw.edu.au>
+Message-ID: <3E58EBA1.7010305@ratnet.stw.uni-erlangen.de>
+References: <5.1.0.14.0.20030223085025.00b08b30@psimail.spindrift.on.ca>
+Reply-To: schmidt@naa.net
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1;
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: linux-raid@vger.kernel.org
+To: Victor Geller <vgeller@spindrift.on.ca>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Hi Victor!
 
------ Original Message -----
-From: "Neil Brown" <neilb@cse.unsw.edu.au>
-To: "Jean-Rene Cormier" <jean-rene.cormier@cipanb.ca>
-Cc: <linux-raid@vger.kernel.org>
-Sent: Thursday, February 20, 2003 8:11 PM
-Subject: Re: Software RAID1 problems
+Victor Geller schrieb:
+> Hi,
+>=20
+> I have the following problem:
+>=20
+> [root@wti7 vic]# mdadm -Cv /dev/md0 -l1 -n2 /dev/hda1 /dev/hdc1
+> mdadm: chunk size defaults to 64K
+> mdadm: /dev/hda1 appears to contain an ext2fs file system
+>     size=3D5630748K  mtime=3DSun Feb 23 08:52:48 2003
+> mdadm: /dev/hdc1 appears to contain an ext2fs file system
+>     size=3D5630748K  mtime=3DSun Feb 23 08:52:54 2003
+> mdadm: size set to 5630656K
+> Continue creating array? y
+> mdadm: ADD_NEW_DISK for /dev/hda1 failed: Invalid argument
+>=20
+> [root@wti7 vic]# mount
+> /dev/hda1 on / type ext3 (rw)
+> /dev/hdc1 on /mnt/raid1_1 type ext3 (rw)
+>=20
+> I would appreciate your help
+>=20
+> Victor Geller , vgeller@spindrift.on.ca
 
+That is easy:
 
-> On  February 20, jean-rene.cormier@cipanb.ca wrote:
-> > Well since I had some trouble with raidtools giving me a Segfault when I
-> > tried to create an array, I decided to try mdadm, I can create an array
-> > and format it and mount it afterwards but after I unmount it I can't
-> > mount it again. I get an error saying unknown FS type or something like
-> > that. When I do an mdadm --detail /dev/md0 in the state it says dirty,
-> > no-error, shouldn't that be clean, no-error? How can I get that array to
-> > that state? I tried recreating that array like 5 times already and still
-> > the same thing. btw I'm running Linux 2.4.20 with glibc-2.3.1 if that
-> > changes anything.
->
-> It is always dirty when assembled and writable.  This is normal.
->
-> If you switch to read-only, it should should clean.
-> If you stop the array and use --examine on the devices, they should
-> show clean.
->
-> I cannot explain the mounting problem.  Maybe if you give more
-> specifics....
+You MUST unmount /dev/hda1 and /dev/hdc1 before using them as part of a=
+=20
+md device! Later, you will NEVER mount one of both but ONLY /dev/md0 on=
+ /.
+But this will not work with your current configuration, since you=20
+actually cannot unmount the root fs while it is running.
+Ask Neil or whoever how to use the failed disk way for circumventing th=
+e=20
+need to copy your rootfs twice to another place (forth and back) or=20
+newly install the system (I am preparing a modified Debian Woody=20
+bootable CD just for that).
 
-Well what I did was:
+By the way: This failed-disk approach is not so well documented for=20
+mdadm, or did I overlook something? Any documentation anywhere?
 
-mdadm -Cv -l2 -n2 /dev/hde1 /dev/hdg1 /dev/md0
-mke2fs -j /dev/md0
-mount /dev/md0 /home
+Hth, Norman.
 
-then I unmounted it and when I tried to mount it again right after
-unmounting it I got the Wrong FS type error and I get a bunch of error
-message on the console.
+--=20
+--
 
-Jean-Rene Cormier
+Norman Schmidt          Institut f=FCr Physikal. u. Theoret. Chemie
+cand. chem.             Friedrich-Alexander-Universitaet
+schmidt@naa.net         Erlangen-Nuernberg
 
-
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
