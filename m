@@ -1,181 +1,193 @@
-From: "Zoe May" <Zoe.May@Cartesian.co.uk>
-Subject: RE: Aacraid - terrible performance on RHES3 pedge 2450
-Date: Wed, 8 Dec 2004 14:58:52 -0000
-Message-ID: <7B3248565B589149B35D353FB966388E4DE47A@bunny.cartesian.co.uk>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: Looking for the cause of poor I/O performance
+Date: Wed, 8 Dec 2004 13:31:27 -0500
+Message-ID: <200412081831.iB8IVW914745@www.watkins-home.com>
+References: <41B6C846.7000702@dgreaves.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
+In-Reply-To: <41B6C846.7000702@dgreaves.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: 'David Greaves' <david@dgreaves.com>
+Cc: 'Steven Ihde' <x-linux-raid@hamachi.dyndns.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-After trying various Linux distros without success I decided to take the
-hardware RAID out of the equation.
-If I put the raid card into scsi mode and configure the disks (my system
-has 4) as volumes my problem goes away - except that I now can't boot
-into Linux. (install completes without issue).
+"read balancing" will help regardless of random or sequential disk access.
+It can double your performance (assuming 2 disks).
 
-I get as far as the controller picking up the volumes then at the point
-when it would normally go into grub I just get a blinking cursor. 
-I can see my install by using linux rescue and when I run my disk i/o
-tests the results are good -  virtually no CPU wait at all. 
-I've tried using one volume with no software RAID, 4 volumes with
-software RAID 5, 2 volumes with software RAID 1, all had the same
-result.
-Tried clearing nvram, flashing the BIOS, flashing the controller. In
-desperation removed the RAID rom and ram and set the main BIOS
-controller setting to SCSI. The system won't boot (stops just after
-processor detection) or let me into 
-BIOS when I have this option set. I had to put the RAID hardware back in
-just to access the BIOS!
+"read ahead" only helps sequential access, it hurts random access.
 
-Anyone any suggestions? I can't see any way out of this and it's held up
-an upgrade project for weeks now.
-At this stage I would be willing to suggest buying another controller if
-there is a better one that's 
-guaranteed to work with the 2450 and RHEL3. 
-Thing I'm worried about is that the next server in the upgrade chain has
-exactly the same hardware...
+Yes, I understand "read balancing" to be balancing the IO over 2 or more
+disks, when only 1 disk is really needed.  So, you need 2 or more copies of
+the data, as in RAID1.
 
-Cheers
+About read ahead...
+The physical disks read ahead.
+md does read ahead.
+Since the disks and md are doing read ahead, you should have more than 1
+disk reading at the same time.  The physical disks are not very smart about
+RAID5, when reading ahead, they will also read the parity data, which is
+wasted effort.
 
-Zoe
+With all of the above going on you should get more than 1 disk reading data
+at the same time.
+
+With RAID(0, 4, 5 and 6) no one can choose which disk(s) to read.  You can't
+balance anything.  You can only predict what data will be needed before it
+is requested.  Read ahead does this for large files (sequential reads).  I
+would not consider this to be "read balancing", just read ahead.
+
+Guy
 
 -----Original Message-----
-From: Zoe May 
-Sent: Wednesday, November 24, 2004 2:07 PM
-To: 'Salyzyn, Mark'
-Cc: 'Matt_Domsch@dell.com'
-Subject: RE: Aacraid - terrible performance on RHES3 pedge 2450
+From: David Greaves [mailto:david@dgreaves.com] 
+Sent: Wednesday, December 08, 2004 4:24 AM
+To: Guy
+Cc: 'Steven Ihde'; linux-raid@vger.kernel.org
+Subject: Re: Looking for the cause of poor I/O performance
 
-I tried this but unfortunately no improvement. 
-I really need to get this box in to production so I'm going to drag
-myself away from AS3 try some different distros. Tried Fedora C2 this
-morning but had the same issues. 
-Interestingly when I tried using Knoppix I didn't see much improvement
-in disk i/o but vmstat didn't output the same high CPU wait times that
-seem to be the cause of stopping everything else on the box running as
-soon as I start writing to disk.
+My understanding of 'readahead' is that when an application asks for 312 
+bytes of data, the buffering code will anticipate more data is required 
+and will fill a buffer (4096 bytes). If we know that apps are really 
+greedy and read *loads* of data then we set a large readahead which will 
+cause the buffer code (?) to fill a further n buffers/kb according to 
+the readahead setting. This will all be read sequentially and the 
+performance boost is because the read heads on the drive get all the 
+data in one 'hit' - no unneeded seeks, no rotational latency.
 
-Thanks for your help
+That's not the same as raid5 where when asked for 312 bytes of data, the 
+buffering code wil fill the 4k buffer and then will issue a readahead on 
+the next n kb of data - which is spread over multiple disks, which read 
+in parallel, not sequentially.
 
-Zoe
------Original Message-----
-From: Salyzyn, Mark [mailto:mark_salyzyn@adaptec.com]
-Sent: Thursday, November 18, 2004 4:06 PM
-To: Zoe May
-Cc: Matt_Domsch@dell.com
-Subject: RE: Aacraid - terrible performance on RHES3 pedge 2450
+Yes, the readahead triggers this behaviour - but you say "RAID5 can't do 
+read balancing." - which I thought it could through this mechanism.
 
-Yes on the directory. No need to rebuild the kernel (if a past build is
-sitting there), just do (2.4 kernel):
+It depends whether the original use of "read balancing" in this context 
+means "selecting a drive to obtain the data from according to the 
+drive's read queue" (no) or "distributing reads amongst the drives to 
+obtain a throughput greater than that of one individual drive" (yes)
+(OK, the terminology is not quite exact but...)
 
-# make SUBDIRS=drivers/scsi/aacraid modules
+do we agree? Or have I misunderstood something?
 
-and use the replacement module.
+David
 
-Sincerely -- Mark Salyzyn
+Guy wrote:
 
+>Yes.  I did say it reads ahead!
+>
+>Guy
+>
+>-----Original Message-----
+>From: linux-raid-owner@vger.kernel.org
+>[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of David Greaves
+>Sent: Monday, December 06, 2004 4:10 PM
+>To: Guy
+>Cc: 'Steven Ihde'; linux-raid@vger.kernel.org
+>Subject: Re: Looking for the cause of poor I/O performance
+>
+>but aren't the next 'n' blocks of data on (about) n drives that can be 
+>read concurrently (if the read is big enough)
+>
+>Guy wrote:
+>
+>  
+>
+>>RAID5 can't do read balancing.  Any 1 piece of data is only on 1 drive.
+>>However, RAID5 does do read ahead, my speed is about 3.5 times as fast as
+a
+>>single disk.  A single disk: 18 M/sec, my RAID5 array, 65 M/sec.
+>>
+>>Guy
+>>
+>>-----Original Message-----
+>>From: linux-raid-owner@vger.kernel.org
+>>[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Steven Ihde
+>>Sent: Monday, December 06, 2004 12:49 PM
+>>To: linux-raid@vger.kernel.org
+>>Subject: Re: Looking for the cause of poor I/O performance
+>>
+>>On Sat, 04 Dec 2004 17:00:08 -0800, Steven Ihde wrote:
+>>[snip]
+>> 
+>>
+>>    
+>>
+>>>A possible clue is that when tested individually but in parallel, hda
+>>>and hdc both halve their bandwidth:
+>>>
+>>>/dev/hda:
+>>>Timing cached reads:   1552 MB in  2.00 seconds = 774.57 MB/sec
+>>>Timing buffered disk reads:   68 MB in  3.07 seconds =  22.15 MB/sec
+>>>/dev/hdc:
+>>>Timing cached reads:   784 MB in  2.00 seconds = 391.86 MB/sec
+>>>Timing buffered disk reads:   68 MB in  3.02 seconds =  22.54 MB/sec
+>>>/dev/sda:
+>>>Timing cached reads:   836 MB in  2.00 seconds = 417.65 MB/sec
+>>>Timing buffered disk reads:  120 MB in  3.00 seconds =  39.94 MB/sec
+>>>
+>>>Could there be contention for some shared resource in the on-board
+>>>PATA chipset between hda and hdc?  Would moving one of them to a
+>>>separate IDE controller on a PCI card help?
+>>>
+>>>Am I unreasonable to think that I should be getting better than 37
+>>>MB/sec on raid5 read performance, given that each disk alone seems
+>>>capable of 40 MB/sec?
+>>>   
+>>>
+>>>      
+>>>
+>>To answer my own question... I moved one of the PATA drives to a PCI
+>>PATA controller.  This did enable me to move 40MB/sec simultaneously
+>>    
+>>
+>>from all three drives.  Guess there's some issue with the built-in
+>  
+>
+>>PATA on the ICH5R southbridge.
+>>
+>>However, this didn't help raid5 performance -- it was still about
+>>35-39MB/sec.  I also have a raid1 array on the same physical disks,
+>>and observed the same thing there (same read performance as a single
+>>disk with hdparm -tT, about 40 MB/sec).  So:
+>>
+>>2.6.8 includes the raid1 read balancing fix which was mentioned
+>>previously on this list -- should this show up as substantially better
+>>hdparm -tT numbers for raid1 or is it more complicated than that?
+>>
+>>Does raid5 do read-balancing at all or am I just fantasizing?
+>>
+>>Thanks,
+>>
+>>Steve
+>>-
+>>To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>>the body of a message to majordomo@vger.kernel.org
+>>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>>-
+>>To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>>the body of a message to majordomo@vger.kernel.org
+>>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>> 
+>>
+>>    
+>>
+>
+>-
+>To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>-
+>To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>  
+>
 
-
------Original Message-----
-From: Zoe May [mailto:Zoe.May@Cartesian.co.uk]
-Sent: Thursday, November 18, 2004 10:26 AM
-To: Salyzyn, Mark
-Cc: Matt_Domsch@dell.com
-Subject: RE: Aacraid - terrible performance on RHES3 pedge 2450
-
-Hi
-
-After saying I would try the driver attached I opened the attachment and
-realised I wasn't sure what to do with the files. Do I need to replace
-the files in /usr/src/linux-xxx/drivers/scsi/aacraid with these and
-rebuild the kernel?
-
-Thanks
-
-Zoe
-
------Original Message-----
-From: Salyzyn, Mark [mailto:mark_salyzyn@adaptec.com]
-Sent: Monday, November 01, 2004 4:08 PM
-To: Zoe May; Matt Domsch
-Cc: linux-raid@vger.kernel.org
-Subject: RE: Aacraid - terrible performance on RHES3 pedge 2450
-
-Vary_io was added in 1.1.5-2326 to the adaptec aacraid sources, so
-probably *none* of these. Adding a ".vary_io = 1," to the
-scsi_host_template in the linit.c file would have to be manually added.
-
-I have enclosed the sources of our latest driver that my comments were
-based on. This driver has several performance enhancements (depending on
-the adapter, between 15% and 45% improvement separate from the .vary_io
-RHEL3 enhancement).
-
-Sincerely -- Mark Salyzyn
-
------Original Message-----
-From: Zoe May [mailto:Zoe.May@Cartesian.co.uk]
-Sent: Monday, November 01, 2004 10:52 AM
-To: Matt Domsch; Salyzyn, Mark
-Cc: linux-raid@vger.kernel.org
-Subject: RE: Aacraid - terrible performance on RHES3 pedge 2450
-
-Thanks for the info
-
-I've upgraded the kernel to 2.4.21-20 and have a very slight increase in
-performance but unfortunately not much to write home about.
-I have limited experience with kernel compilation and I'm a little
-confused as to which aacraid.h I would have to add the #define
-SCSI_HAS_VARY_IO 1 to.
- 
-I have the following aacraid.h files
-
-/usr/src/aacraid-1.1.4-2302/aacraid.h
-/usr/src/linux-2.4.21-20.EL/drivers/addon/aacraid_10102/aacraid.h
-/usr/src/linux-2.4.21-20.EL/drivers/scsi/aacraid/aacraid.h
-
-Ordinarily I would modify the .h file in the scsi/aacraid dir and then
-go through the full kernel recompile but I have updated aacraid using
-the Dell rpm. I assume the version in this folder is the old version
-that shipped with the 2.4.21-20 source. If there is a way that I can
-recompile just the aacraid module without doing a full kernel recompile
-I would prefer to do this .
-
-
-Zoe
-
-
------Original Message-----
-From: Matt Domsch [mailto:Matt_Domsch@dell.com]
-Sent: Monday, October 25, 2004 2:02 PM
-To: Salyzyn, Mark
-Cc: Zoe May; linux-raid@vger.kernel.org
-Subject: Re: Aacraid - terrible performance on RHES3 pedge 2450
-
-On Mon, Oct 25, 2004 at 08:28:47AM -0400, Salyzyn, Mark wrote:
-> Vary_io may be the reason for this.
-> 
-> The driver needs to have .vary_io set to 1.
-> 
-> There are no kernel clues to its existence (that I know of), but the 
-> driver has an SCSI_HAS_VARY_IO to enable. Our build system will 
-> produce correct binaries, but the DKMS tool does not differentiate.
-> 
-> There is a need to ship a different driver source in the DKMS package 
-> for RHEL3 as a result (Add a #define SCSI_HAS_VARY_IO in the aacraid.h
-
-> file).
-
-We could do this easily in DKMS with its PATCH_MATCH mechanism, making
-it match RHEL kernel names and apply the patch only then which sets
-.vary_io=1.
-
---
-Matt Domsch
-Sr. Software Engineer, Lead Engineer
-Dell Linux Solutions linux.dell.com & www.dell.com/linux Linux on Dell
-mailing lists @ http://lists.us.dell.com
