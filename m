@@ -1,40 +1,141 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: Locking bugs in 2.4 md.c
-Date: Mon, 22 Sep 2003 15:54:46 +1000
+From: Catalin BOIE <util@deuroconsult.ro>
+Subject: Re: RAID1: Disks alternating on reads
+Date: Mon, 22 Sep 2003 10:55:46 +0300 (EEST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16238.36518.991915.293076@notabene.cse.unsw.edu.au>
-References: <20030918152310.GD30852@marowsky-bree.de>
-	<16234.25885.855209.372799@notabene.cse.unsw.edu.au>
-	<20030919072610.GB3143@marowsky-bree.de>
-	<20030919083639.GE3143@marowsky-bree.de>
+Message-ID: <Pine.LNX.4.58.0309221055290.27913@hosting.rdsbv.ro>
+References: <014b01c38053$0358ad90$0180a8c0@what>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Lars Marowsky-Bree on Friday September 19
-To: Lars Marowsky-Bree <lmb@suse.de>
-Cc: linux-raid@vger.kernel.org, axboe@suse.de
+In-Reply-To: <014b01c38053$0358ad90$0180a8c0@what>
+To: Andrew Herdman <andrew@whine.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Friday September 19, lmb@suse.de wrote:
-> On 2003-09-19T09:26:10,
->    Lars Marowsky-Bree <lmb@suse.de> said:
-> 
-> > > A patch against 2.4-current is below.  It probably works but I haven't
-> > > reviewed it in the context of other recent changes to md so I make no
-> > > promises.
-> > Thanks. I'll merge it against the current 2.4.
-> 
-> Hi Neil, turns out your patch did exactly what I did with lock_mddev(),
-> just with a bigger granularity (which I think is a good thing, but I was
-> too shy to introduce a new lock).
-> 
-> However, I can still reliably panic the kernel with the sequence I gave
-> on a SMP box, even though the panic now seems to occur in different
-> places...
+On Sun, 21 Sep 2003, Andrew Herdman wrote:
 
-I can't !!
-If you can show me a stack trace or some pointers to wher it panics, I
-can look further.
+I put the same question. I get no response.
 
-NeilBrown
+> Pardon me if my assumption was incorrect, but I was under the belief that
+> when using software RAID1, that when reads occurred on the RAID device that
+> it would read from both drives in a striped fashion similar to how RAID0
+> works to improve the speed of the md devices.   I am actually seeing this,
+> but it appears that the reads on each drive are continuing for 10 to 20
+> seconds before moving onto the next drive and then another 10-20 seconds and
+> back again.  This is not allowing for any performance increase, it just lets
+> the drives rest alternately.
+>
+> This link http://www.whine.com/~andrew/alternating_disk.png is a gkrellm
+> snapshot of the activity, hda and hde are the two disks in the RAID array.
+> Each disk is the master on it's own channel.
+>
+> I also included the mdadm --query --detail info below for each RAID
+> partition
+>
+> how:~# mdadm --query --detail /dev/md/1
+> /dev/md/1:
+>         Version : 00.90.00
+>   Creation Time : Sat Jul 19 08:30:42 2003
+>      Raid Level : raid1
+>      Array Size : 62400 (60.94 MiB 63.90 MB)
+>     Device Size : 62400 (60.94 MiB 63.90 MB)
+>    Raid Devices : 2
+>   Total Devices : 2
+> Preferred Minor : 1
+>     Persistence : Superblock is persistent
+>
+>     Update Time : Mon Sep 15 08:41:38 2003
+>           State : dirty, no-errors
+>  Active Devices : 2
+> Working Devices : 2
+>  Failed Devices : 0
+>   Spare Devices : 0
+>
+>
+>     Number   Major   Minor   RaidDevice State
+>        0       3        1        0      active sync
+> /dev/ide/host0/bus0/target0/lun0/part1
+>        1      33        1        1      active sync
+> /dev/ide/host2/bus0/target0/lun0/part1
+>            UUID : faa4b7b2:4832fae8:ac2fa294:2fce1d85
+>          Events : 0.38
+>
+> how:~# mdadm --query --detail /dev/md/2
+> /dev/md/2:
+>         Version : 00.90.00
+>   Creation Time : Sat Jul 19 08:32:18 2003
+>      Raid Level : raid1
+>      Array Size : 119140544 (113.62 GiB 121.100 GB)
+>     Device Size : 119140544 (113.62 GiB 121.100 GB)
+>    Raid Devices : 2
+>   Total Devices : 2
+> Preferred Minor : 2
+>     Persistence : Superblock is persistent
+>
+>     Update Time : Mon Sep 15 08:41:38 2003
+>           State : dirty, no-errors
+>  Active Devices : 2
+> Working Devices : 2
+>  Failed Devices : 0
+>   Spare Devices : 0
+>
+>
+>     Number   Major   Minor   RaidDevice State
+>        0       3        2        0      active sync
+> /dev/ide/host0/bus0/target0/lun0/part2
+>        1      33        2        1      active sync
+> /dev/ide/host2/bus0/target0/lun0/part2
+>            UUID : 0ad35f02:56a32094:c8301e3e:45895c16
+>          Events : 0.38
+>
+> how:~# mdadm --query --detail /dev/md/3
+> /dev/md/3:
+>         Version : 00.90.00
+>   Creation Time : Sat Jul 19 08:31:37 2003
+>      Raid Level : raid1
+>      Array Size : 499904 (488.19 MiB 511.90 MB)
+>     Device Size : 499904 (488.19 MiB 511.90 MB)
+>    Raid Devices : 2
+>   Total Devices : 2
+> Preferred Minor : 3
+>     Persistence : Superblock is persistent
+>
+>     Update Time : Mon Sep 15 08:41:38 2003
+>           State : dirty, no-errors
+>  Active Devices : 2
+> Working Devices : 2
+>  Failed Devices : 0
+>   Spare Devices : 0
+>
+>
+>     Number   Major   Minor   RaidDevice State
+>        0       3        3        0      active sync
+> /dev/ide/host0/bus0/target0/lun0/part3
+>        1      33        3        1      active sync
+> /dev/ide/host2/bus0/target0/lun0/part3
+>            UUID : f8b2d95b:93055c43:d78427ac:197a610f
+>          Events : 0.38
+>
+> how:~# df -h
+> Filesystem            Size  Used Avail Use% Mounted on
+> /dev/md/2             112G   94G   16G  86% /
+> /dev/md/1              60M   16M   42M  28% /boot
+>
+> Have I configured something incorrectly?  Or is this really the way RAID1
+> works?
+>
+> Thanks
+>  Andrew
+> --
+> Andrew Herdman
+> andrew@whine.com - Primary E-Mail
+>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
+---
+Catalin(ux) BOIE
+catab@deuroconsult.ro
