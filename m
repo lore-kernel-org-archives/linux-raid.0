@@ -1,99 +1,41 @@
-From: "Petriz, Pablo" <ppetriz@siscat.com.ar>
-Subject: RE: Promise SX6000 is a POS.
-Date: Wed, 7 Apr 2004 13:29:09 -0300
+From: "Dominik Kubla" <kubla@uni-mainz.de>
+Subject: Bug in multipath code (Linux 2.6.x) ?
+Date: Wed, 7 Apr 2004 20:33:31 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1CEC5A75042ED51180E300A024E99257AD8227@zeus.sc.com>
+Message-ID: <B7A4A15090CB1847A60B569AC92FB9B352D24A@EXSTORE2.zdv.uni-mainz.de>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="iso-8859-1"
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: "'Jason C. Leach'" <Jason.Leach@jsthrower.com>, linux-raid@vger.kernel.org
+content-class: urn:content-classes:message
+To: neilb@cse.unsw.edu.au
+Cc: linux-raid@vger.kernel.org, khoddam@netz.klinik.uni-mainz.de
 List-Id: linux-raid.ids
 
-We have a similar configuration (SX6000) and for the same purpose, store GIS
-files: shape files, tifs and jpg (not databases), it's like an image file
-repository. 
+Hi Neil,
 
-And we have seen an even lower perfomance than you.
+It appears to me as if there might be a bug in the multipath code since
+it is impossible to activate the multipath device properly. It doesn't
+matter if one uses raidtools or mdadm. Every time i try to activate the
+mp devices, the system complains about not being able to access the
+drive. The result is a mp device with just one path.
 
-I'll tell you an overview of our configuration, and for the fine tuning
-numbers (perf tests, fs conf, blocks, stripes, all the raid stuff) please
-wait till next week (my sysadmin is on vacation).
+Hardware configuration:
 
-MAIN SERVER
-Intel Xeon 2.4Ghz on a SE7501BR2 motherboard with 1GB RAM and a Seagate 40GB
-IDE for the RedHat Linux 8 Kernel 2.4.18-14 attached to a Promise SX8000
-tower with 8 Maxtor MaxLineII 300GB 5400RPM (6 on RAID5, 2 hotspare)
+Sun Fire v65x with two LSI Logic FC-HBA's connected to two disjunct
+switched fabrics.
+Fabric switches are four Brocade Silkwork 3600 and storage devices are
+two Adv. Unibyte JBODs.
 
-BACKUP SERVER
-Intel Xeon 2.4Ghz on a SE7501BR2 motherboard with 1GB RAM and a Seagate 40GB
-IDE for the RedHat Linux 9 Kernel 2.4.20-8 plus a Promise SX6000 with 5
-internal Maxtor MaxLineII 300GB 5400RPM (all on RAID5 on 1 EXT3 FS)
+Software configuration:
 
-The fact is that the main server isn't working yet (that's another story...)
-but we have the backup server working. We are looking for storage capacity
-over performance, that makes the decision between 300GB 5400RPM over 250GB
-7200RPM... but what about the SX6000 performance? We expect a little
-better...
+Debian GNU/Linux (unstable) with kernel 2.6.4.
+Two disks are setup up as individual mp devices with a RAID1 on top of
+the two mp devices.
 
-We are really newbies in RAID stuff, and our goal was to design a reliable
-near 2TB storage + bkup with a uSs15.000 budget and here, in Argentina where
-it's not easy to get specific products and support.
+I don't have the exact error message at the moment, but can supply it in
+case it is needed.
 
-That's an overview of our situation, and i'm really interested in share our
-experience to help others and to make this work the best we can. So, as i
-said, wait till next week for the specific information.
-
-Thanks,
-
-
-PABLO
-
-
-
-> -----Mensaje original-----
-> De: Jason C. Leach [mailto:Jason.Leach@jsthrower.com]
-> Enviado el: viernes 2 de abril de 2004 02:53
-> Para: linux-raid@vger.kernel.org
-> Asunto: Promise SX6000 is a POS.
-> 
-> 
-> Linux-Raid:
-> 
-> I have a Promise SX6000 RAID card and on it an 1Tb RAID-5 
-> array (6*200G 
-> WD2000 ATA disks 7500rmp).  I am using Debian Woody with the 2.4.19 
-> Kernel on a AMD AthelonXP +2500 system. I am using the Promise driver 
-> downloaded and compiled from there website.
-> 
-> I am getting about 3.3Meg/sec from the array to an EIDE disk (segate 
-> barracuda ATA). While from the Array to the Array I get about  
-> 4.1Meg/sec; copying 200G is an overnight plus job for sure. 
-> To me this 
-> is stupid slow, and I must be doing something wrong. Even if 
-> the Promise 
-> card is the slowest one available (3Ware, Promise, Adaptek) it can't 
-> really be *this* slow: this card should not even be on the market at 
-> this speed.  All the while my system load average is about 1.5-2.  Is 
-> this Linux? Does it really run this slow under Windows as 
-> well? Should I 
-> be using i2o or some other driver? Perhaps the array is just 
-> too large?
-> 
-> PS: I get no errors, and the card is on it's own interrupt 
-> with a full 
-> 128MB cache.
-> 
-> Thanks,
-> Jason.
-> 
-> 
-> -- 
-> Jason C. Leach
-> IT Manager
-> J.S. Thrower & Associates Ltd.
-> Phone: (250) 314-0875 Fax (250) 314-0871
-> email: jason.leach@jsthrower.com
-> http://www.jsthrower.com
-> 
-> 
+Regards,
+  Dominik Kubla
