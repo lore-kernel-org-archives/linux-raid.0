@@ -1,100 +1,56 @@
-From: rrk <rrk@prairie.lakes.com>
-Subject: Re: Raid1 problem can't add remove or mark faulty -- it did work
-Date: Sun, 27 Mar 2005 13:30:29 -0600
-Message-ID: <424709D5.5060105@prairie.lakes.com>
-References: <200503271903.j2RJ3cT03030@www.watkins-home.com>
+From: Schuett Thomas EXT <Thomas.Schuett.extern@mchh.siemens.de>
+Subject: AW: AW: RAID1 and data safety?
+Date: Tue, 29 Mar 2005 10:54:55 +0200
+Message-ID: <76592C4D3DA1AC4FB8424084D10D31A80611527B@mchh2c4e.mchh.siemens.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-In-Reply-To: <200503271903.j2RJ3cT03030@www.watkins-home.com>
+Content-Type: text/plain
+Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Guy wrote:
-
->I am not sure what bd_claim is, but it is somewhat like open().  My guess is
->your disk is in use, maybe nounted.  Run this command and send the output.
->
->df
->
->Guy
->
->  
->
- yep that was it -- there is a whizzing wizard somewhere it is not 
-fstab-- though i checked that
-sorry for the trouble and thanks
-rob
-
-
-
-
-
->  
->
->>-----Original Message-----
->>From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
->>owner@vger.kernel.org] On Behalf Of rrk
->>Sent: Sunday, March 27, 2005 1:38 PM
->>To: linux-raid@vger.kernel.org
->>Subject: Raid1 problem can't add remove or mark faulty -- it did work
->>
->>@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
->>mdstat after reboot
->>
->>root@crm_svr:~# cat /proc/mdstat
->>Personalities : [linear] [raid0] [raid1] [raid5] [multipath] [raid6]
->>[raid10]
->>md0 : active raid1 hdc1[1]
->>      155268096 blocks [2/1] [_U]
->>
->>unused devices: <none>
->>
->>@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
->>the below error shows after a boot when excuted in kde konsole
->>
->>root@crm_svr:/home/rob# mdadm /dev/md0 -a /dev/hda1
->>mdadm: hot add failed for /dev/hda1: Invalid argument
->>
->>but this error is shown from a tty console
->>
->>md: could not bd_claim hda1
->>md: error, md_import_device() returned -16
->>mdadm: hot add failed for /dev/hda1 : invalid argument
->>
->>@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
->>this is what shows in dmesg
->>
->>md: could not bd_claim hda1.
->>md: error, md_import_device() returned -16
->>md: could not bd_claim hda1.
->>md: error, md_import_device() returned -16
->>md: could not bd_claim hda1.
->>md: error, md_import_device() returned -16
->>
->>i had this bd_claim error when i first tried to build the array
->>but it went away when i wiped every thing and started over
->>this box is the only time i have seen this error and i
->>tried using different drives -- but of the same type -- when
->>the problem  showed up on the initial build
->>
->>
->>
->>
->>-
->>To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->>the body of a message to majordomo@vger.kernel.org
->>More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>    
->>
->
->-
->To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->
->  
+I wrote:
+>> 
+>> Still, if there is different data on the two disks due to a previous 
+>> power failure, the comparsion could really be the better choise, isn't it?
+>> 
 >
 
+Neil wrote:
+>What does a comparison of two blocks tell you?  That they are
+>different, not which one is "right".
+>
+>A filesystem designed to handle these sort of problems wouldn't suffer
+>from data inconsistencies due to power off.  It would "know" where it
+>was up to and would either re-write or ignore any data that it doesn't
+>know to certainly be safe.
+
+But:
+If you have a raid1 and a journaling fs, see the following:
+If the system chrashes at the end of a write transaction,
+then the end-of-transaction information may got written 
+to hda already, but not to hdb. On the next boot, the 
+journaling fs may see an overall unclean bit (*probably* a transaction
+is pending), so it reads the transaction log. 
+
+And here the fault happens:
+By chance, it reads the transaction log from hda, then sees, that the
+transaction was finished, and clears the overall unclean bit. 
+This cleaning is a write, so it goes to *both* HDs.
+
+Situation now: On hdb there is a pending transaction in the transaction 
+log, but the overall unclean bit is cleared. This may not be realised,
+until by chance a year later hda chrashes, and you finaly face the fact,
+that there is a corrupt situation on the left HD.
+
+Solution approach: if it would have read the transaction log from both HDs,
+it would have returned a read fault. A good journaling fs probably stores
+the end-of-transaction info in a different block, than the start-of-transaction 
+info. Then it can say: If I cannot properly read the end-of-transaction info,
+then I consider the transaction as not finished, so I do a rollback. 
+(Of course this requires a readable start-of-transaction info, therefore it 
+should be stored seperate from the end-of-transaction info.)
+
+Does this sound reasonable?
+
+Thomas
