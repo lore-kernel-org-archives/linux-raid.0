@@ -1,53 +1,33 @@
-From: Chuck Ebbert <76306.1226@compuserve.com>
-Subject: Re: Benefits from computing physical IDE disk geometry?
-Date: Tue, 15 Apr 2003 14:33:51 -0400
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <200304151436_MC3-1-3487-215F@compuserve.com>
+From: info@cbup.com
+Subject: Beat the Budget!
+Date: Tue, 15 Apr 2003 23:13:21 +0200
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <S264070AbTDOVB3/20030415210130Z+187@vger.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	 charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-Content-Disposition: inline
-To: Nick Piggin <piggin@cyberone.com.au>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-raid <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="iso-8859-1"
+Return-path: <linux-raid-owner@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Nick Piggin wrote:
 
+Dear Sir or Madam
 
-> OK right. As far as I can see, the algorithm in the RAID1 code
-> is used to select the best drive to read from? If that is the
-> case then I don't think it could make better decisions given
-> more knowledge.
+If you are a smoker in the UK, in the ROI, or in Scandinavia, then we have something for you.
 
+You are probably fed up with paying high prices for your cigarettes and tobacco.  Take a look at 
+what we can do for you at
+http://www.cbup.com/?S=33&E=2e8f87d39c7f8e24d9c971b5b7aca277
 
-  How about if it just asks the elevator whether or not a given read
-is a good fit with its current workload?  I saw in 2.5 where the balance
-code is looking at the number of pending requests and if it's zero then
-it sends it to that device.  Somehow I think something better than
-that could be done, anyway.
+We can send you, legally, by registered air mail, direct to your door, 4 cartons of cigarettes or 30 fifty 
+gram pouches of rolling tobacco (all brands are available) from only 170 Euros - about 115 British 
+pounds - fully inclusive of postage and packing.  Why pay more?  Especially with a UK budget rise 
+of 3.20p - which does not affect our prices!!!
 
+If you would rather not hear from us any more, this link will ensure that you are not bothered again.
+http://www.cbup.com/bs/off.php?S=33&E=2e8f87d39c7f8e24d9c971b5b7aca277
 
-> It seems to me that a better way to layer it would be to have
-> the complex (ie deadline/AS/CFQ/etc) scheduler handling all
-> requests into the raid block device, then having a raid
-> scheduler distributing to the disks, and having the disks
-> run no scheduler (fifo).
+Yours faithfully.
+British Smokers
 
+http://www.cbup.com/?S=33&E=2e8f87d39c7f8e24d9c971b5b7aca277
 
- That only works if RAID1 is working at the physical disk level (which
-it should be AFAIC but people want flexibility to mirror partitions.)
-
-
-> In practice the current scheme probably works OK, though I
-> wouldn't know due to lack of resources here :P
-
-
- I've been playing with the 2.4 read balance code and have some
-improvements, but real gains need a new approach.
-
-(cc'd to linux-raid)
-
---
- Chuck
