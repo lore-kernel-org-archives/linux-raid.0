@@ -1,46 +1,104 @@
-From: Gordon Henderson <gordon@drogon.net>
+From: Robin Bowes <robin-lists@robinbowes.com>
 Subject: Re: Stress testing system?
-Date: Fri, 8 Oct 2004 23:07:44 +0100 (BST)
+Date: Sat, 09 Oct 2004 00:44:11 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.56.0410082303330.26162@lion.drogon.net>
-References: <4167078A.3030609@robinbowes.com> <41670DF3.5040807@h3c.com>
+Message-ID: <4167264B.8070507@robinbowes.com>
+References: <4167078A.3030609@robinbowes.com> <Pine.LNX.4.56.0410082257450.26162@lion.drogon.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <41670DF3.5040807@h3c.com>
-To: Mike Hardy <mhardy@h3c.com>
-Cc: "'linux-raid@vger.kernel.org'" <linux-raid@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.56.0410082257450.26162@lion.drogon.net>
+To: Gordon Henderson <gordon@drogon.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 8 Oct 2004, Mike Hardy wrote:
+Gordon Henderson wrote:
+> On Fri, 8 Oct 2004, Robin Bowes wrote:
+> 
+> 
+>>What's the best way to do get all six drives working as hard as possible?
+> 
+> 
+> I always run 'bonnie' on each partition (sometimes 2 to a partition) when
+> soak-testing a new server. Try to leave it running for as long as
+> possible. (ie. days)
 
-> Slightly more on-topic, one thing that I have do to frequently is boot
-> with noapic or acpi=off due to interrupt handling problems with various
-> motherboards.
+Hi Gordon,
 
-I've seen this (and made mention of it here in the past) it basically
-boils down to cheap motherboards with buggy chipsets )-: Some BIOSes let
-you select PIC or APIC - on these buggy ones, I stick to PIC.
+I tried this - just a simple command to start with:
 
-> Additionally, I think there have been reports of problems with raid and
-> LVM, and there have also been problems with SATA and possibly with
-> Maxtor drives, so you have may have some tweaking to do. Mentioning
-> versions of things (distribution, kernel, hardware parts and part
-> numbers etc) would help
+# bonnie++ -d /home -s10 -r4 -u0
 
-I had problems some 2 years ago when I first dabbled with LVM. Quickly
-found problems with performance and random crashes and not having time to
-persue it further, left it alone and haven't ventured back since!
+This gave the following results:
 
-> I'm interested to hear what other people do to burn their machines in
-> though...
+Version  1.03       ------Sequential Output------ --Sequential Input- --Random-
+                     -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- --Seeks--
+Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP  /sec %CP
+dude.robinbowes 10M 11482  92 +++++ +++ +++++ +++ 15370 100 +++++ +++ 13406 124
+                     ------Sequential Create------ --------Random Create--------
+                     -Create-- --Read--- -Delete-- -Create-- --Read--- -Delete--
+               files  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP
+                  16   347  88 +++++ +++ 19794  91   332  86 +++++ +++  1106  93
+dude.robinbowes.com,10M,11482,92,+++++,+++,+++++,+++,15370,100,+++++,+++,13406.0
+,124,16,347,88,+++++,+++,19794,91,332,86,+++++,+++,1106,93
 
-Looks like we do someting similar... So that can't be bad! I'm sure there
-is plenty cpu left over for me to do stuff like compiles, etc.
 
-Many years ago I used to write diagnostics for compter systems - memory,
-cpu, IO, etc. there were cases where the systems would pass all the diags
-faultlessly for days on end, then crash 2 minutes into the application, so
-theres no substitute for real life testing...
+I then noticed that my raid array was using a lot of CPU:
 
-Gordon
+top - 00:41:28 up 33 min,  2 users,  load average: 1.80, 1.78, 1.57
+Tasks:  89 total,   1 running,  88 sleeping,   0 stopped,   0 zombie
+Cpu(s):  4.1% us, 32.9% sy,  0.0% ni, 59.8% id,  0.0% wa,  0.5% hi,  2.6% si
+Mem:   1554288k total,   368212k used,  1186076k free,    70520k buffers
+Swap:        0k total,        0k used,        0k free,   200140k cached
+
+   PID USER      PR  NI  VIRT  RES  SHR S %CPU %MEM    TIME+  COMMAND
+   239 root      15   0     0    0    0 S 61.0  0.0  20:08.37 md5_raid5
+  1414 slimserv  15   0 43644  38m 5772 S  9.0  2.5   2:38.99 slimserver.pl
+   241 root      15   0     0    0    0 D  6.3  0.0   2:05.45 md5_resync
+  1861 root      16   0  2888  908 1620 R  1.0  0.1   0:00.28 top
+  1826 root      16   0  9332 2180 4232 S  0.3  0.1   0:00.28 sshd
+
+So I checked the array:
+
+[root@dude root]# mdadm --detail /dev/md5
+/dev/md5:
+         Version : 00.90.01
+   Creation Time : Thu Jul 29 21:41:38 2004
+      Raid Level : raid5
+      Array Size : 974566400 (929.42 GiB 997.96 GB)
+     Device Size : 243641600 (232.35 GiB 249.49 GB)
+    Raid Devices : 5
+   Total Devices : 6
+Preferred Minor : 5
+     Persistence : Superblock is persistent
+
+     Update Time : Sat Oct  9 00:08:22 2004
+           State : dirty, resyncing
+  Active Devices : 5
+Working Devices : 6
+  Failed Devices : 0
+   Spare Devices : 1
+
+          Layout : left-symmetric
+      Chunk Size : 128K
+
+  Rebuild Status : 12% complete
+
+            UUID : a4bbcd09:5e178c5b:3bf8bd45:8c31d2a1
+          Events : 0.1410301
+
+     Number   Major   Minor   RaidDevice State
+        0       8        2        0      active sync   /dev/sda2
+        1       8       18        1      active sync   /dev/sdb2
+        2       8       34        2      active sync   /dev/sdc2
+        3       8       50        3      active sync   /dev/sdd2
+        4       8       66        4      active sync   /dev/sde2
+
+        5       8       82        -      spare   /dev/sdf2
+
+Is this normal? Should running bonnie++ result in the array being dirty and requiring resyncing?
+
+R.
+-- 
+http://robinbowes.com
