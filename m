@@ -1,30 +1,40 @@
-From: "Peter T. Breuer" <ptb@inv.it.uc3m.es>
-Subject: FR1 for kernel 2.6
-Date: Sun, 26 Dec 2004 07:09:15 +0100 (MET)
-Message-ID: <200412260609.iBQ69FQ31979@inv.it.uc3m.es>
-Reply-To: ptb@inv.it.uc3m.es
+From: Ferenc-Jan <ferenc@avz.xs4all.nl>
+Subject: Re: mdadm -D /dev/md3: 1  0  0  0  sync ???
+Date: Sun, 26 Dec 2004 10:01:18 +0100
+Message-ID: <41CE7DDE.6000008@avz.xs4all.nl>
+References: <41C9D08A.5080303@avz.xs4all.nl> <16841.64160.683580.423091@cse.unsw.edu.au>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <16841.64160.683580.423091@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
+Cc: Neil Brown <neilb@cse.unsw.edu.au>
 List-Id: linux-raid.ids
 
-I ported the FR1 (fast raid 1, bitmapped) driver to 2.6 kernels.  The
-patch is in the patches directory in the archive
+>>     Number   Major   Minor   RaidDevice State
+>>        0       3        6        0      active sync   /dev/hda6
+>>        1       0        0        0      sync
+>>
+>>        2      22        6        2      active sync   /dev/hdc6
+>>
+>>Please help. Which disk is '1  0  0  0  sync'? The array is currently 
+>>degraded. How do I remove number 1 and bring number 2 up?
+> 
+> This is a missing drive, that is marked as in-sync, which is bad.  
+> I don't know how it happened, but the best way to fix it is to remake
+> the array:
+> 
+>    umount ....
+>    mdadm -S /dev/md3
+>    mdadm -C /dev/md3 -R -l1 -n2 /dev/hda6 missing
+>    mdadm /dev/md3 -a /dev/hdc6
+> 
+> should make it work.  It won't destroy any data
 
-   ftp://oboe.it.uc3m.es/pub/Programs/fr1-2.15b.tgz
+Worked as you said. Thank you very very much!
 
-I left out async writes this time round. 
+cheers
 
-I actually developed and tested on 2.6.3, and then did a further
-(untested) port forward to 2.6.8.1, so reports welcome.  The kernel raid
-architecture seems to have continued changing somewhat through the 2.6
-series.
-
-I've only tested mirrors with two components, no spares.
-
-For reads, the 2.6 raid seems to have a new scheme (nearest head instead
-of swapping drives every 128 requests).  I modified it slightly so that
-"nearest" is weighted by measured the latency of the drives.
-
-Peter
-
+Ferenc
