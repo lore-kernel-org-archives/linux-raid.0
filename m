@@ -1,93 +1,64 @@
-From: John Lange <john.lange@bighostbox.com>
-Subject: Re: Problems with RAID1 using SATA disks.
-Date: Wed, 12 May 2004 21:31:22 -0500
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: mkraid hangs system
+Date: Wed, 12 May 2004 23:48:16 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1084415482.12530.33.camel@ws101.darkcore.net>
-References: <40A255D5.3090602@acm.org> <1084381339.26186.5.camel@localhost>
-	 <40A2B87B.7050306@acm.org>
+Message-ID: <200405130348.i4D3mLB17669@www.watkins-home.com>
+References: <200405122225.i4CMPK60008990@socrates.Berkeley.EDU>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <40A2B87B.7050306@acm.org>
-To: Gustavo Franco <stratus@acm.org>
-Cc: LinuxRaid <linux-raid@vger.kernel.org>
+In-Reply-To: <200405122225.i4CMPK60008990@socrates.Berkeley.EDU>
+To: 'Arnab Chowdry' <achowdry@socrates.Berkeley.EDU>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-My original hunch was that you have a hardware problem of some kind. You
-mentioned that you had a "crash" of some kind related to hardware before
-and this further reinforces my feeling that its a hardware failure.
+These dd commands may take an hour or more.  You sure your system was hung?
 
-Your recent tests with dd seem to confirm this. Now its a process of
-elimination. The easiest thing to try first is a memory test so put
-memtest on a bootable CD and try that. I don't think its a RAM problem
-because the times I've had bad RAM it causes a kernel panic, not a
-hard-lock.
+Anyway, try this dd command on your working disks:
+dd if=/dev/<good disk> of=/dev/null bs=64k
 
-If your RAM checks out I'd remove the RAID card and try the drives
-without the card. I don't suspect the drives themselves because you said
-it locked up on all drives.
+example:
+	dd if=/dev/hda of=/dev/null bs=64k
 
-If you still get hard locks during any of these tests then it could be
-the Motherboard or the CPU. Could the CPU overheating? The one other
-thing that comes to mind is perhaps your power supply is not strong
-enough to power everything? And finally, its a long shot but it could be
-a bad network or video card. Just keep swapping things until the problem
-goes away.
+or this if you want to know how long it takes:
+	time dd if=/dev/hda of=/dev/null bs=64k
 
-John
+The above is a read test.  It will not overwrite any data.
 
-On Wed, 2004-05-12 at 18:51, Gustavo Franco wrote:
-> John Lange wrote:
-> 
-> >On Wed, 2004-05-12 at 11:50, Gustavo Franco wrote:
-> >  
-> >
-> >>linears, but i haven't assembled it yet, i'm having problems when i put
-> >>heavy i/o on the linear array cited before.
-> >>    
-> >>
-> >
-> >You don't say what the problems are. Can you provide more details?
-> >
-> >Is it ONLY on the linear array?
-> >  
-> >
-> Hi,
-> 
-> Sorry i've not clarified it on my post to linux-raid, only to 
-> lkml[0].I've seen two oops
-> and the kernel BUG (posted to lkml), and already comented here by 
-> Christoph, only
-> when i run the rsync clients against the rsync server running on this 
-> machine storing
-> files on a linear array. I can try to reproduce it again to post the 
-> oops (one using xfs
-> and the later with ext3) here, but i was hoping that someone have 
-> already hit that.
-> 
-> By the way...Christoph can you give more details about that patch? Was 
-> it merged
-> on some kernel already released, i haven't checked it. Isn't strange 
-> that a similar
-> problem can be seen using ext3? FYI, at the moment i'm running on a 
-> partition without
-> raid linear, only xfs and in two days i'll report if the heavy i/o load 
-> breaks it again or not.
-> It seems that i've reached more than one bug through this process.
-> 
->  <http://marc.theaimsgroup.com/?l=linux-raid&m=108438093424360&w=2#-0>[0] = http://www.uwsg.iu.edu/hypermail/linux/kernel/0404.1/0706.html
-> 
-> Thanks again,
-> Gustavo Franco
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
--- 
-John Lange
-BigHostBox.com
-(204) 885 0872
+Once you know your good disks work, try a bad disk.  Maybe you will be able
+to determine a common hardware component, like a disk controller.
+
+Guy
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Arnab Chowdry
+Sent: Wednesday, May 12, 2004 6:27 PM
+To: linux-raid@vger.kernel.org
+Subject: RE: mkraid hangs system
+
+>you could dd if=/dev/zero of=/dev/your/disk,
+
+Oddly enough, dd hangs as well. I guess that means it's not a RAID problem.
+Very strange though, and I don't have a good intuition about why it's
+happening.
+
+dd if=/dev/zero of=/dev/hde 
+dd if=/dev/zero of=/dev/hdg
+dd if=/dev/zero of=/dev/hdi
+dd if=/dev/zero of=/dev/hdk
+
+All of the above hang the system after a few seconds. I'm sorry is this is
+now off-topic, but maybe some of you experts have some intuition about why
+this might happen? All four of the drives can't have "gone bad" or
+something.
+
+-Arnab
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 
