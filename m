@@ -2,7 +2,7 @@ From: Pavel Machek <pavel@suse.cz>
 Subject: Re: RAID-6 support in kernel?
 Date: Tue, 4 Jun 2002 15:49:05 +0000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <adj71k$enu$2@main.gmane.org>
+Message-ID: <adj71l$eo6$2@main.gmane.org>
 References: <Pine.LNX.4.33.0206031020290.30424-100000@mail.pronto.tv> <Pine.GSO.4.21.0206030213510.23709-100000@gecko.roadtoad.net> <20020603113128.C13204@ucw.cz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
