@@ -1,119 +1,69 @@
-From: Andy Smith <andy@lug.org.uk>
-Subject: Re: swp - Re: ext3 journal on software raid (was Re: PROBLEM: Kernel 2.6.10 crashing repeatedly and hard)
-Date: Wed, 5 Jan 2005 17:26:27 +0000
-Message-ID: <20050105172627.GQ99565@caffreys.strugglers.net>
-References: <20050105162337.GL99565@caffreys.strugglers.net> <Pine.LNX.3.96.1050105090049.9654A-100000@Maggie.Linux-Consulting.com>
+From: Sharif Islam <mislam@uiuc.edu>
+Subject: Confusing failed disk situation
+Date: Wed, 05 Jan 2005 11:50:41 -0600
+Message-ID: <41DC28F1.6030109@uiuc.edu>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="+U0EQ97FbU8QddnY"
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.3.96.1050105090049.9654A-100000@Maggie.Linux-Consulting.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+I am rebuilding a RAID-5 with 5 disk. Last night when it finished I saw
+the RAID is done with one failed disk. Not sure what happened. It gave 
+me inode
+error on mke2fs. Then I replaced the failed disk(hdi) with another old 
+disk. I am pretty
+sure both disks are fine. I noticed this.
 
---+U0EQ97FbU8QddnY
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Jan  5 11:12:50 kernel:  --- rd:5 wd:4 fd:1
+Jan  5 11:12:50  kernel:  disk 0, s:0, o:1, n:0 rd:0 us:1 dev:hdg1
+Jan  5 11:12:50  kernel:  disk 1, s:0, o:1, n:1 rd:1 us:1 dev:hdh1
+Jan  5 11:12:50  kernel:  disk 2, s:0, o:1, n:2 rd:2 us:1 dev:hdj1
+Jan  5 11:12:50  kernel:  disk 3, s:0, o:1, n:3 rd:3 us:1 dev:hdf1
+Jan  5 11:12:50  kernel:  disk 4, s:0, o:0, n:4 rd:4 us:1 dev:[dev 00:00]
+Jan  5 11:12:50  kernel: RAID5 conf printout:
+Jan  5 11:12:50  kernel:  --- rd:5 wd:4 fd:1
+Jan  5 11:12:50  kernel:  disk 0, s:0, o:1, n:0 rd:0 us:1 dev:hdg1
+Jan  5 11:12:50  kernel:  disk 1, s:0, o:1, n:1 rd:1 us:1 dev:hdh1
+Jan  5 11:12:50  kernel:  disk 2, s:0, o:1, n:2 rd:2 us:1 dev:hdj1
+Jan  5 11:12:50  kernel:  disk 3, s:0, o:1, n:3 rd:3 us:1 dev:hdf1
+Jan  5 11:12:50  kernel:  disk 4, s:0, o:0, n:4 rd:4 us:1 dev:[dev 00:00]
+Jan  5 11:12:50  kernel: md2: resyncing spare disk hdi1 to replace 
+failed disk
+Jan  5 11:12:50  kernel: RAID5 conf printout:
+Jan  5 11:12:50  kernel:  --- rd:5 wd:4 fd:1
+Jan  5 11:12:50  kernel:  disk 0, s:0, o:1, n:0 rd:0 us:1 dev:hdg1
+Jan  5 11:12:50  kernel:  disk 1, s:0, o:1, n:1 rd:1 us:1 dev:hdh1
+Jan  5 11:12:50  kernel:  disk 2, s:0, o:1, n:2 rd:2 us:1 dev:hdj1
+Jan  5 11:12:50  kernel:  disk 3, s:0, o:1, n:3 rd:3 us:1 dev:hdf1
+Jan  5 11:12:50  kernel:  disk 4, s:0, o:0, n:4 rd:4 us:1 dev:[dev 00:00]
+Jan  5 11:12:50  kernel: RAID5 conf printout:
+Jan  5 11:12:50  kernel:  --- rd:5 wd:4 fd:1
+Jan  5 11:12:50  kernel:  disk 0, s:0, o:1, n:0 rd:0 us:1 dev:hdg1
+Jan  5 11:12:50  kernel:  disk 1, s:0, o:1, n:1 rd:1 us:1 dev:hdh1
+Jan  5 11:12:50  kernel:  disk 2, s:0, o:1, n:2 rd:2 us:1 dev:hdj1
+Jan  5 11:12:50  kernel:  disk 3, s:0, o:1, n:3 rd:3 us:1 dev:hdf1
+Jan  5 11:12:50  kernel:  disk 4, s:0, o:0, n:4 rd:4 us:1 dev:[dev 00:00]
+Jan  5 11:12:50  kernel: md: syncing RAID array md2
+Jan  5 11:12:50  kernel: md: minimum _guaranteed_ reconstruction speed: 
+100 KB/sec/disc.
+Jan  5 11:12:50  kernel: md: using maximum available idle IO bandwith 
+(but not more than 10000 KB/sec) for reconstruction.
 
-On Wed, Jan 05, 2005 at 09:04:57AM -0800, Alvin Oga wrote:
-> On Wed, 5 Jan 2005, Andy Smith wrote:
->=20
-> > On Wed, Jan 05, 2005 at 07:33:55AM -0800, Alvin Oga wrote:
-> > >=20
-> > > if one is using swap space ... i'd add more memory .. before i'd use =
-raid
-> > > 	- swap is too slow and as you folks point out, it could die
-> > > 	due to (unlikely) bad disk sectors in swap area
-> ...
-> =20
-> > Your recommendations
->=20
-> that'd be your comment ... that is not whati said above
+cat /proc/mdstat
+Personalities : [linear] [raid5]
+read_ahead 1024 sectors
+Event: 2
+md2 : active raid5 hdi1[5] hdf1[3] hdj1[2] hdh1[1] hdg1[0]
+      468882432 blocks level 5, 128k chunk, algorithm 2 [5/4] [UUUU_]
+      [===>.................]  recovery = 17.7% (20796612/117220608) 
+finish=156.3min speed=10274K/sec
+unused devices: <none>
 
-Direct quote:
+Is hdi again failed? Or something wrong with the cable/raid card for 
+that drive?
 
-        i'd add more memory before i'd use raid
-       =20
-> and all i said, was use memory before you use swap on disks
 
-Which means what?  Who is there on this list who likes to use swap
-*before* physical memory?
 
-Do all your machines which you believe have adequate memory also
-have no swap configured?
-
-Fact is if your machine has swap configured then that swap is part
-of your virtual memory and if a device that is providing part of
-your virtual memory suddenly fails then your machine is going down.
-
-> and if you are at the 2GB lmit of your mb ... you obviously don't
-> have a choice
-> 	- if you are using 128MB of memory and using 2GB of swap
-> 	and bitching about a slow box or system crashing due to swap...
-> 	- that was the point ... add more memory
-
-No one here is bitching about a slow machine due to swap usage and
-if they were I'd wonder why they are doing it on linux-raid.
-
-I repeat, if "add more memory" is your answer to "swapping on a
-single device which then dies kills my machine" then does that mean
-that your machines are configured with no swap?
-
-All people are saying is that if you don't mirror swap then disk
-failures cause downtime.  You are replying to add more memory and
-don'trun things that can get swapped.  Those don't seem like very
-useful recommendations.
-
-> 	- and i don't think anybody is idiotic enough to add
-> 	more memory for the "spikes" in the workload
-
-OK so you must add swap to handle those spikes which means either
-you are happy that your machine will crash should the device that
-the swap is on die, or you use swap on a mirror to try to mitigate
-that.
-
-> > so far have been "don't run processes which
-> > might swap" and "don't let swap be used".  If you yourself are able
-> > to keep to both of these 100% of the time may I ask why you yourself
-> > have any swap at all?
->=20
-> you're twisting things again... but no problem.. have fun doing that
-
-=46rom previous email (not a direct quote):
-
-        Don't run lpd on user-accessible machine
-
-(after given an example of some lpd process which gets swapped
-out and back in again).
-
-> > ometimes) or those of us in the real world where swap is desirable
-> > and may (sometimes) be used, a swap device failure *will* *take*
-> > *the* *machine* *down*.
->=20
-> my real world is obviously better .... since we do NOT suffer
-> from these mysterious disks crashes
-
-If you do not suffer disk crashes then why do you use mirrors at
-all?  If you do suffer disk crashes then any disk that is providing
-swap may very well cause the machine to crash.
-
-I thought everyone suffered disk crashes and that was the point of
-RAID.
-
---+U0EQ97FbU8QddnY
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.0 (FreeBSD)
-
-iD8DBQFB3CNDIJm2TL8VSQsRAh2MAKC3ZimLZc38WwBYeTOt6Azpj2QEcgCg5RJZ
-RqNtYDHVSoKud1Irwpa1twQ=
-=e8yW
------END PGP SIGNATURE-----
-
---+U0EQ97FbU8QddnY--
