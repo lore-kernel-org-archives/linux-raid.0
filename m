@@ -1,82 +1,48 @@
-From: Eddy Ilg <eddyilg@gmx.de>
-Subject: RAID5 damaged without any reason
-Date: Fri, 28 Jun 2002 16:12:40 +0200 (MEST)
+From: Ken Causey <ken@ineffable.com>
+Subject: Can't figure out how to use mdadm in initrd
+Date: 28 Jun 2002 09:45:22 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <10391.1025273560@www34.gmx.net>
+Message-ID: <1025275522.600.10.camel@temp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
+Cc: Neil Brown <neilb@cse.unsw.edu.au>
 List-Id: linux-raid.ids
 
-Hi,
+I don't get it.  I cannot seem to get mdadm to handle a degraded array
+no matter what I do.  I'm setting up a system with all filesystems
+including boot and root on software RAID.  I initially tried to use
+raidstart in my initrd but ran into a bug that prevents reinstating
+missing array members in some circumstances, so I was directed to use
+mdadm instead.  Here's my current setup:
 
-I have posted this once already but did not get any reply, to be sure here
-it is again. 
-Any hints, thoughts, ideas would be great. 
+root is on /dev/md2 (RAID5)
 
-I have been successfully running a RAID5 for a long time now. It the last
-week the computer running the RAID crashed, probably because of too high
-temperature.
+The /etc/mdadm/mdadm.conf file in the initrd contains:
 
-The disk configuration is as follows:
+DEVICE /dev/sd*
+ARRAY /dev/md2 devices="/dev/sda3,/dev/sdb3,/dev/sdc3"
 
-/dev/hda1 - ext2 - /boot
-/dev/hda2 - swap
-/dev/hda3 - reiserfs - /
-/dev/hdc1 - linux raid auto
-/dev/hde1 - linux raid auto
-/dev/hdg1 - linux raid auto
+The modules loaded are
 
-The three RAID partitions run as a RAID5 (/dev/md0) with LVM on top
-(/dev/raid5storage/lvol1) and the ext2 filesystem.
+modprobe -k aic7xxx
+modprobe -k raid1
+modprobe -k raid5
+modprobe -k ext3
+modprobe -k ext2
 
-After the crash I could not boot linux. After some repairing I got the root
-partiotion boot (some shared library was damaged). The system booted
-up, the RAID reconstructed and I could successfully e2fsck
-/dev/raid5storage/lvol1.
+mdadm is run as
 
-The I decided to make a partiotion on the first disk to back some things
-that are on the RAID up. I did
+set "/dev/md2"
+[ -b "$1" ] || set "/dev/md/2"
+mdadm --assemble --run --scan "$1"
 
-# fdisk /dev/hda
-:n (new)
-... (/dev/hda4, 55GB)
-:w (write and exit)
-#
+I've tried every combination I can think of and if there is any member
+missing (say sdc3) then it complains that that member has a bad
+superblock.  Please tell me what I'm doing wrong here.  If you need more
+information, let me know.
 
-The partition did not show up under /dev/hda4 immediatly, so I rebooted the
-system.
-After that the RAID started running the reconstruction again and e2fsck told
-me:
-
-/dev/raid5storage/lvol1: UNEXPECTED INCONSISTENCY; run fsck MANUALLY
-/dev/raid4storage/lvol1: Block bitmap for group 141 is no in group (block
-32768)
-fsck.ext2 /dev/raid5storage/lvol1 failed (status 4)! run it manually!
-
-I did that:
-# e2fsck /dev/raid5storage/lvol1
-Group descriptors look bad... trying to backup blocks...
-e2fsck: Bad magic number in super-block whily trying to open
-/dev/raid5storage/lvol1
-
-The superblock could not be read or does not describe a correct ext2 file
-system.
-...
-
-I have no idea why the superbock is damaged, since I did not repartition any
-
-of the disks in the RAID.
-
-Can somebody please help me? I need to recover the data.
-
-Thanks in advance.
-
-Eddy 
-
--- 
-GMX - Die Kommunikationsplattform im Internet.
-http://www.gmx.net
+Ken Causey
 
