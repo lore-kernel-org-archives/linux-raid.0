@@ -1,58 +1,60 @@
 From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: create failed raid5 disk with mdadm
-Date: Sat, 29 May 2004 08:38:28 +1000
+Subject: Re: [PATCH] md - 8 of 8 - Support reshaping raid1 arrays - adding or removing drives.
+Date: Sat, 29 May 2004 08:47:10 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16567.48996.202819.382152@cse.unsw.edu.au>
-References: <Pine.LNX.4.44.0405281445550.25012-100000@signals10.bu.edu>
-	<1087.153.90.196.102.1085772526.squirrel@web1.cs.montana.edu>
+Message-ID: <16567.49518.235636.692548@cse.unsw.edu.au>
+References: <20040528163700.9426.patches@notabene>
+	<E1BTb7N-0002U9-H3@notabene.cse.unsw.edu.au>
+	<c97f1f$hmm$1@sea.gmane.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Lucas Albers on Friday May 28
-To: admin@cs.montana.edu
+In-Reply-To: message from Mario 'BitKoenig' Holbe on Friday May 28
+To: Mario 'BitKoenig' Holbe <Mario.Holbe@RZ.TU-Ilmenau.DE>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Friday May 28, admin@cs.montana.edu wrote:
-> I am trying to determine the syntax to create a raid5 volume with a single
-> failed disk.
-> I am converting the root parition of an existing system to raid5.
-> I need to exclude one disk from the software raid setup.
-> Then copy the data over.
-> Then add in the excluded disk.
+On Friday May 28, Mario.Holbe@RZ.TU-Ilmenau.DE wrote:
+> NeilBrown <neilb@cse.unsw.edu.au> wrote:
+> > This requires allocating a new pool of "r1bio" structures which a different
+> > number of bios, suspending IO, and swapping the new pool in place of the old.
+> > (and a few other related changes).
 > 
-> The synax to perform this operation on a raid 1 volume is:
-> mdadm --create /dev/md1 --level=1 --raid-disks=2 missing /dev/hdg1
+> Hmmm, I'm not really familiar with the md-code, but doesn't
+> do memory allocation at runtime re-introduce the 2.2. swap-
+> on-raid-problems?
+
+No.
+
+> Afair, they were due to swap out -> md driver allocates
+> something -> no ram -> swap out -> md driver allocates ...
 > 
-> The same syntax to create a raid volume, does not appear to work:
-> mdadm -v --create /dev/md2 --level=5 --raid-disks=4 -R  missing /dev/hdf2
-> /dev/hdg2 /dev/hdh2
 
-That certainly should work, and I just tried it and it did.
+This was not the problem.
+When the md driver allocated memory in the write-out path it always
+does it with a flag that say "don't trigger any write-out to while
+trying to satisfy this request".  It also manages memory in  such a
+way (using mempools) that if a memory request fails, it can just wait
+for some pending requests to complete and it is certain to get some
+memory soon.
 
-Could you describe the way in which it failed to work for you?  
+Further, the "allocation a new pool" mentioned above is not in the
+write-out path for raid1 so it has no bearing on these issues.
+
+It allocates a new pool quite separately for the normally running of
+raid1.  If all the needed allocations succeed, it blocks further
+requests, swaps the new pool in place of the old and makes other
+changes to reshape the array, and the allows further requests to
+proceed.
+
+The problem in 2.2 was only during resync.  Because of how buffers
+were managed, swap could write out to a block that we in the process
+of being re-synced, and the resync process would overwrite the new
+swap data.  The buffer management is now completely different and this
+is not a problem.
+
+I hope this makes it a tiny bit clearer.
 
 NeilBrown
 
-> 
-> 
-> Is their perhaps another way to perform the operation?
-> 
-> I can't find any additional documentation items on configure it.
-> 
-> 
-> I am the author of the debian root software raid doc at:
-> 
-> (Howto Convert system to software raid using mdadm.)
-> http://rootraiddoc.alioth.debian.org.
-> 
-> -- 
-> Luke Computer Science System Administrator
-> Security Administrator,College of Engineering
-> Montana State University-Bozeman,Montana
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
