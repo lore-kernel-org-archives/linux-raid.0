@@ -1,53 +1,40 @@
-From: Mark Bellon <mbellon@mvista.com>
-Subject: Re: 2.4.25 MD RAID 1 driver - syncing hung due to I/O error
-Date: Wed, 24 Mar 2004 09:09:28 -0700
+From: Matt Domsch <Matt_Domsch@dell.com>
+Subject: Re: "Enhanced" MD code avaible for review
+Date: Wed, 24 Mar 2004 13:09:35 -0600
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <4061B2B8.8030202@mvista.com>
-References: <4060C4DD.2070506@mvista.com>
+Message-ID: <20040324190935.GA18057@lists.us.dell.com>
+References: <760890000.1079727553@aslan.btc.adaptec.com> <16479.50592.944904.708098@notabene.cse.unsw.edu.au> <2128160000.1080023015@aslan.btc.adaptec.com> <16480.61927.863086.637055@notabene.cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------050802080304020007020201"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4060C4DD.2070506@mvista.com>
-Cc: linux-raid@vger.kernel.org
+Content-Disposition: inline
+In-Reply-To: <16480.61927.863086.637055@notabene.cse.unsw.edu.au>
+To: Neil Brown <neilb@cse.unsw.edu.au>
+Cc: "Justin T. Gibbs" <gibbs@scsiguy.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Wed, Mar 24, 2004 at 01:26:47PM +1100, Neil Brown wrote:
+> On Monday March 22, gibbs@scsiguy.com wrote:
+> > One suggestion that was recently raised was to present these changes
+> > in the form of an alternate "EMD" driver to avoid any potential
+> > breakage of the existing MD.  Do you have any opinion on this?
+> 
+> I seriously think the best long-term approach for your emd work is to
+> get it integrated into md.  I do listen to reason and I am not
+> completely head-strong, but I do have opinions, and you would need to
+> put in the effort to convincing me.
 
-This is a multi-part message in MIME format.
---------------050802080304020007020201
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+I completely agree that long-term, md and emd need to be the same.
+However, watching the pain that the IDE changes took in early 2.5, I'd
+like to see emd be merged alongside md for the short-term while the
+kinks get worked out, keeping in mind the desire to merge them
+together again soon as that happens. 
 
-One of my disks has a bad block and hung while syncing (as the source of 
-the sync) when it was read. A patch is attached for the fix.
+Thanks,
+Matt
 
-The sync_request_done function is called after each sync I/O request 
-completes regardless of the error outcome.
-See end_sync_write and the "!sum_bhs" case a few lines above the patch 
-location for references. If sync_request_done is not called the 
-accounting is not updated and sooner or later things will hang. The 
-R1BH_Uptodate not set case (read I/O error) does not do this and the 
-problem occurs.
-
-mark
-
---------------050802080304020007020201
-Content-Type: text/plain;
- name="raid1-patch-2"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="raid1-patch-2"
-
---- raid1.c.orig	2004-03-23 17:18:29.000000000 -0700
-+++ raid1.c	2004-03-23 17:18:48.000000000 -0700
-@@ -1251,6 +1251,7 @@
- 				 */
- 
- 				printk (IO_ERROR, partition_name(bh->b_dev), bh->b_blocknr);
-+				sync_request_done(bh->b_blocknr, conf);
- 				md_done_sync(mddev, bh->b_size>>9, 0);
- 				raid1_free_buf(r1_bh);
- 			}
-
---------------050802080304020007020201--
-
+-- 
+Matt Domsch
+Sr. Software Engineer, Lead Engineer
+Dell Linux Solutions linux.dell.com & www.dell.com/linux
+Linux on Dell mailing lists @ http://lists.us.dell.com
