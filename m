@@ -1,72 +1,136 @@
-From: Stefan Myankov <kotak@poco-loco.org>
-Subject: Software RAID-5 attempt to access beyond end of device...
-Date: Sat, 8 Feb 2003 01:03:04 +0200 (EET)
+From: Marcelo Tosatti <marcelo.tosatti@cyclades.com>
+Subject: Re: RAID-0 read perf. decrease after 2.4.20
+Date: Mon, 8 Dec 2003 10:47:42 -0200 (BRST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.53.0302080102440.8110@poco-loco.org>
+Message-ID: <Pine.LNX.4.44.0312080949520.889-100000@logos.cnet>
+References: <Pine.OSF.4.58.0311212139530.519259@soul.helsinki.fi>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <Pine.OSF.4.58.0311212139530.519259@soul.helsinki.fi>
+To: Mikael Johansson <mpjohans@pcu.helsinki.fi>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, riel@redhat.com, knobi@knobisoft.de, Jens Axboe <axboe@suse.de>, mason@suse.com
 List-Id: linux-raid.ids
 
 
 
-	Hello everyone,
+On Fri, 21 Nov 2003, Mikael Johansson wrote:
 
-Recently I had to set up a large file archive on-a x86 system. The setup
-included two HPT374 ATA-RAID controllers which after testing prooved to be
-inapropriate (poor performance, buggy drivers provided by the
-manufacturer). So I decided to use the controllers only for their IDE
-funcionality. After setting up the hard drives (10 Seagate Barracuda.7
-7200/2048k cache) and cfdisking them to partition type
-Linux-Raid-Autodetect I set-up a raidtab file containing the following:
- raiddev /dev/md0
-        raid-level 5
-                nr-raid-disks 5
-                nr-spare-disks 0
-                persistent-superblock 1
-                chunk-size 256k
-                parity-algorithm left-symmetric
-                        device /dev/hdm1
-                        raid-disk 0
-                        device /dev/hdp1
-                        raid-disk 1
-                        device /dev/hdq1
-                        raid-disk 2
-                        device /dev/hds1
-                        raid-disk 3
-                        device /dev/hdt1
-                        raid-disk 4
+> 
+> Hello Marcelo and All!
 
-raiddev /dev/md1
-        raid-level 5
-                nr-raid-disks 5
-                nr-spare-disks 0
-                persistent-superblock 1
-                chunk-size 256k
-                parity-algorithm left-symmetric
-                        device /dev/hde1
-                        raid-disk 0
-                        device /dev/hdf1
-                        raid-disk 1
-                        device /dev/hdg1
-                        raid-disk 2
-                        device /dev/hdi1
-                        raid-disk 3
-                        device /dev/hdk1
-                        raid-disk 4
---
-and created the arrays.
-After several days of usage of the archive and when one of the arrays
-reached 35% of its' capacity I noticed this error:
+Hi Mikael,
 
-attempt to access beyond end of device
-09:00: rw=0, want=1017335020, limit=625153024
+> 
+> On Fri, 21 Nov 2003, Marcelo Tosatti wrote:
+> 
+> > There have been no significant changes in the RAID driver in 2.4.21, so I
+> > suspect the cause for the slowdowns might the changes to the IO scheduler
+> > (ll_rw_blk.c) or VM changes.
+> >
+> > Isolating the -pre which the slowdown starts helps a lot.
+> 
+> I tested a few kernels to pin point the where tha changes occured. It
+> turned out that both 2.4.20 and 2.4.21-pre1 have bad read performance. The
+> 2.4.20-ac's show good read speed. I tested it on two machines (different
+> from yesterday). I also checked the VIA chipset drivers version; that's
+> not the reason for the differences.
+> 
+> Athlon XP 2400+, 2.09 GHz, 1.5 GB RAM, 2*160 GB Maxtor Maxtor 6Y080L0
+> 		VIA	write	read
+> 2.4.19		none	10,000	  9,000 K/sec (chipset not supported)
+> 2.4.20		3.35	73,000	 88,000
+> 2.4.20-ac1	3.35-ac	70,000	135,000
+> 2.4.20-ac2	3.35-ac	71,000	140,000
+> 2.4.21-pre1	3.35-ac 71,000	 79,000
+> 2.4.21-pre3	3.35-ac 71,000   79,000
+> 
+> Athlon 1.4 GHz, 1.5 GB RAM, 2*80 GB IC35L040AVER07-0 (IBM, I think)
+> 2.4.13-ac8	?	49,000	 44,000 K/sec
+> 2.4.19		3.34	53,000	 41,000
+> 2.4.20-ac2	3.35-ac	50,000	 69,000
+> 2.4.21-pre1	3.35-ac	53,000	 46,000
+> 
+> So there was apparently something very right with the 2.4.20-ac's. It
+> would be nice to get it back :-)
 
-This keeps showing up and I'm worried about data consistency. The
-filesystem I use is reiserfs.
+2.4.20-aa included rmap and some VM modifications most notably
+"drop_behind()" logic which I believe should be the reason for the huge
+read speedups. Can you please try it? Against 2.4.23.
 
-Please advise me where could be the problem.
-Thanks in advance,
-	Stefan Myankov
-	PocoLoco Networks
+--- mm/filemap.c	2003-12-08 10:26:58.000000000 -0200
++++ mm/filemap.c.orig	2003-12-08 10:24:57.000000000 -0200
+@@ -1055,56 +1055,6 @@
+ 	return page;	
+ }
+ 
+-
+- /* We combine this with read-ahead to deactivate pages when we
+- * think there's sequential IO going on. Note that this is
+- * harmless since we don't actually evict the pages from memory
+- * but just move them to the inactive list.
+- *
+- * TODO:
+- * - make the readahead code smarter
+- * - move readahead to the VMA level so we can do the same
+- *   trick with mmap()
+- *
+- * Rik van Riel, 2000
+- */
+-static void drop_behind(struct file * file, unsigned long index)
+-{
+-       struct inode *inode = file->f_dentry->d_inode;
+-       struct address_space *mapping = inode->i_mapping;
+-       struct page *page;
+-       unsigned long start;
+-
+-       /* Nothing to drop-behind if we're on the first page. */
+-       if (!index)
+-               return;
+-
+-       if (index > file->f_rawin)
+-               start = index - file->f_rawin;
+-       else
+-               start = 0;
+-
+-       /*
+-        * Go backwards from index-1 and drop all pages in the
+-        * readahead window. Since the readahead window may have
+-        * been increased since the last time we were called, we
+-        * stop when the page isn't there.
+-        */
+-       spin_lock(&pagemap_lru_lock);
+-       while (--index >= start) {
+-               struct page **hash = page_hash(mapping, index);
+-               spin_lock(&pagecache_lock);
+-               page = __find_page_nolock(mapping, index, *hash);
+-               spin_unlock(&pagecache_lock);
+-               if (!page || !PageActive(page))
+-                       break;
+-               drop_page(page);
+-       }
+-       spin_unlock(&pagemap_lru_lock);
+-}
+-
+-
+-
+ /*
+  * Same as grab_cache_page, but do not wait if the page is unavailable.
+  * This is intended for speculative data generators, where the data can
+@@ -1376,12 +1326,6 @@
+ 		if (filp->f_ramax > max_readahead)
+ 			filp->f_ramax = max_readahead;
+ 
+-               /*
+-                * Move the pages that have already been passed
+-                * to the inactive list.
+-                */
+-               drop_behind(filp, index);
+-
+ #ifdef PROFILE_READAHEAD
+ 		profile_readahead((reada_ok == 2), filp);
+ #endif
+
+
+
+
