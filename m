@@ -1,107 +1,88 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: Trashed Raid 5 software array
-Date: Sat, 6 Nov 2004 22:07:49 -0500
-Message-ID: <200411070307.iA737sN30882@www.watkins-home.com>
-References: <418D8D70.50905@ruthless.ws>
+From: Olivier Kaloudoff <kalou@kalou.net>
+Subject: lsraid reports wrong device list with online RAID5 array
+Date: Sun, 7 Nov 2004 12:45:39 +0100 (CET)
+Message-ID: <Pine.LNX.4.61.0411071240340.13212@ge.kalou.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <418D8D70.50905@ruthless.ws>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Mark Thompson' <mark@ruthless.ws>, 'Linux Raid' <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Based on the output of mdadm -D /dev/md1...  It looks like your array is
-working just fine, but missing 1 disk.  You should have access to your data
-now, without any extra effort.
-
-Since your array is running and working just fine (I hope).  Just add the
-missing disk with this command.
-mdadm /dev/md1 -a /dev/hdj1
-
-You may want to test the disk first with this command.
-dd if=/dev/hdj of=/dev/null bs=1024k
-Note: I said test the disk, not the partition.
-
-Any questions?  Email back before you do anything that may risk your data.
-
-Guy
-
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Mark Thompson
-Sent: Saturday, November 06, 2004 9:50 PM
-To: Linux Raid
-Subject: Trashed Raid 5 software array
-
-Hi there,
-
-I've search low and high and havn't been able to find a solution for my
-problem with a software raid that I have setup under linux.
-
-Kernel: 2.6.6
-Controller: PDC202XX (Promise TX2 ATA100 IDE Controller)
-
-Up until recently everything was fine, but recently the array has
-started playing up and dropping a disk and when I reboot the disk
-doesn't have the superblock for the md device and as a result can't
-start, I then explored the disk using cfdisk and the disk had no
-partition there.  So I reformated and this is what I get from mdadm now:
-
-* When I try to assemble the array manually:
-
-cold:~# mdadm -Af /dev/md1 /dev/hd[fjl]1
-mdadm: no RAID superblock on /dev/hdj1
-mdadm: /dev/hdj1 has no superblock - assembly aborted
+Hi,
 
 
-* When I assemble the array with the two disks I know work:
+ 	I noticed a weird behaviour for lsraid today, that I'm unable to 
+understand yet ... Are the raidtools still maintained, or at least bugs 
+corrected ?
 
-cold:~# mdadm -A /dev/md1 /dev/hd[fl]1
-mdadm: failed to RUN_ARRAY /dev/md1: Invalid argument
+ 	here is what happens, as you can see, my /dev/md2 is 
+composed of /dev/hda3, /dev/hdb3, /dev/hdc3, that are reported right while 
+offline, but /dev/hdc3 is shown as /dev/null while online :-(
 
 
-* And mdadm -D
+[root@ge raidtools-1.00.3]# raidstop /dev/md2
 
-cold:~# mdadm -D /dev/md1
-/dev/md1:
-         Version : 00.90.01
-   Creation Time : Tue May 25 14:19:54 2004
-      Raid Level : raid5
-     Device Size : 117218176 (111.79 GiB 120.03 GB)
-    Raid Devices : 3
-   Total Devices : 2
-Preferred Minor : 1
-     Persistence : Superblock is persistent
+[root@ge raidtools-1.00.3]# ./lsraid -R -p | grep md2 -A 13
+# md device [dev 9, 2] /dev/md2 queried offline
+# Authoritative device is [dev 22, 3] /dev/hdc3
+raiddev /dev/md2
+         raid-level              5
+         nr-raid-disks           3
+         nr-spare-disks          0
+         persistent-superblock   1
+         chunk-size              128
 
-     Update Time : Tue Nov  2 09:18:08 2004
-           State : dirty, degraded
-  Active Devices : 2
-Working Devices : 2
-  Failed Devices : 0
-   Spare Devices : 0
+         device          /dev/hda3
+         raid-disk               0
+         device          /dev/hdb3
+         raid-disk               1
+         device          /dev/hdc3
+         raid-disk               2
 
-          Layout : left-symmetric
-      Chunk Size : 32K
+[root@ge raidtools-1.00.3]# raidstart /dev/md2
 
-            UUID : 1acc6a85:ce7440d9:dfa74489:64bd5694
-          Events : 0.343086
+[root@ge raidtools-1.00.3]# ./lsraid -R -p | grep md2 -A 13
+#       /dev/md2
+#       /dev/sda
+#       /dev/sda1
+#       /dev/sda2
+#       /dev/sda3
+#       /dev/hdc
+#       /dev/hdc1
+#       /dev/hdc2
+#       /dev/hdc3
+#       /dev/hda
+#       /dev/hda1
+#       /dev/hda2
+#       /dev/hda3
+#       /dev/hdb
+--
+# md device [dev 9, 2] /dev/md2 queried online
+raiddev /dev/md2
+         raid-level              5
+         nr-raid-disks           3
+         nr-spare-disks          0
+         persistent-superblock   1
+         chunk-size              128
 
-     Number   Major   Minor   RaidDevice State
-        0       0        0        -      removed
-        1      57       65        1      active sync   /dev/hdl1
-        2      33       65        2      active sync   /dev/hdf1
+         device          /dev/hda3
+         raid-disk               0
+         device          /dev/hdb3
+         raid-disk               1
+         device          /dev/null
+         failed-disk             2
 
-It is usually a raid 5 array with 3 x 120 gig disks on it.
 
-What I'm wanting to know, is despite the fact that hdj1 doesn't have the 
-superblock is there a way I can add it to the array so that I can then 
-start it and hopefuly recover the 200 gig of data on there, which I can 
-then shift off to a hardware array?
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Additionnaly, you can see clearly that /dev/hdc3 is not in a failed state:
 
+
+kalou@ge cat /proc/mdstat  | grep -A1 md2
+md2 : active raid5 hdc3[2] hdb3[1] hda3[0]
+       120246272 blocks level 5, 128k chunk, algorithm 0 [3/3] [UUU]
+
+
+
+
+
+Olivier
