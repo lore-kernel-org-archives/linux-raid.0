@@ -1,60 +1,52 @@
 From: Gordon Henderson <gordon@drogon.net>
 Subject: Re: [PATCH md 2 of 4] Fix raid6 problem
-Date: Mon, 14 Feb 2005 08:05:51 +0000 (GMT)
-Message-ID: <Pine.LNX.4.56.0502140754340.29594@lion.drogon.net>
+Date: Mon, 14 Feb 2005 08:09:55 +0000 (GMT)
+Message-ID: <Pine.LNX.4.56.0502140806240.29594@lion.drogon.net>
 References: <200502031743.j13Hha910546@www.watkins-home.com> <42026860.1000409@zytor.com>
- <Pine.LNX.4.56.0502031822160.9028@lion.drogon.net> <421028BC.6040902@nsr500.net>
+ <Pine.LNX.4.56.0502031822160.9028@lion.drogon.net> <200502040904.38264.andrew@walrond.org>
+ <Pine.LNX.4.56.0502041031470.29133@lion.drogon.net> <42102DC2.3030004@nsr500.net>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
-In-Reply-To: <421028BC.6040902@nsr500.net>
+In-Reply-To: <42102DC2.3030004@nsr500.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Tim Moore <linux-raid@nsr500.net>
+To: Tim Moore <tim.moore@nsr500.net>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 On Sun, 13 Feb 2005, Tim Moore wrote:
 
 > Gordon Henderson wrote:
-> >
-> > Anyone using Tyan Thunder K8W motherboards???
-> >
-> > I now know, there is a K8S (server?) version of that mobo, but at the time
-> > it was all orderd, I wasn't aware of it - my thoughts are there there is
-> > some sort of PCI/PCI-X problem with either the motherboard or the chipset,
-> > and in all probability the K8S mobo will have the same chipsset and same
-> > problems anyway...
+> > What I wanted was an 8-way RAID-1 for the boot partition (all of /, in
+> > reality) and I've done this many times in the past on other 2-5 way
+> > systems without issue. So I do the stuff I've done in the past, and theres
+> > nothing really new to me in that respect. (I'm using LILO) So when I try
+> > to get it to boot off the md device, it boots and says LIL and then
+> > nothing more. (Lilo diagnostics interpret this as a media failure, or
+> > geometry mismatch) If I make it boot off /dev/sda1 then it would work.
 >
-> I'm using a K8W at work as a driver client for NAS testing.  Onboard
-> Broadcom GigE, Linksys Marvell GigE, 2xWD1200JD + 2xMaxtor Maxline Plus II
-> as RAID-0 and RAID-5 using the Sil_3114, 2.4.29, raidtools 1.0.  2+2x1GB
-> PC-2700 in first and third slots for each CPU.  All PCI-X/HT configs set to
->   Auto in BIOS and Jumpers, 2.02b BIOS.  No issues except for a bad SATA cable.
->
-> Striping yields ~90MB/s, RAID-5 about 65r, 55w on 8GB Bonnie++ runs, 2GB dd
-> reads on raw devices yields ~55MB/s
+> We put /boot on 100MB /dev/sda1 partition, rest of drive is md.  Lilo
+> script section does
+> dd if=/dev/sda of=/boot/boot446.sda bs=446 count=1 && \
+> fdisk -l /dev/sda > /boot/fdisk.sda && \
+> dd if=/dev/sda1 of=/dev/sdb1
+> every time a new kernel is built.  Recovery is much easier without RAID
+> involved (lilo 22.6).  I've considered manipulating the boot block/disk
+> label on copy so that it would boot off any off sda1 or sdb1 transparently.
 
-I've not had any issues with the on-board 3114 controller. It's not
-blindingly fast, but it's at the end of 2 PCI bridges and on a 33MHz
-32-bit bus, but it's fine. I've had over 270MB/sec reads out of an 8-way
-RAID-0 array. (300Mb/sec writes!) although I want raid-6 on all
-partitions, that drops down to ~130MB/sec read.
+It's now booting off a 32MB flash IDE drive thing which is mounted
+read-only under /boot. I have lilo remount it r/w the do its stuff, then
+remount it r/o again. I could boot it OK under raid-1 off the 4 drives on
+the on-board controller. As soon as I plugged in PCI disk contorllers it
+all goes pear-shaped. This motherboard & bios and serious issues with more
+than 4 SATA disks.
 
-The problems happen when I plug-in a PCI SATA card (3112 chipset based).
-I've tried 2 different types of cards and while one is better than the
-other (causes less or no lock-ups) it's still not perfect. I'm going to
-try a 4-port card this week. It's solid with only one PCI card in.
-Assitionally, if I plug a card into PCI slots 3 or 4, then the bios locks
-up at boot time (Checking NVRAM ... )
+> Flashing from 1.x to 2.02b, same problem.  Power off, pull plug, pull
+> both power connectors off mobo, wait 15 seconds, clear CMOS for 15
+> seconds, reboot, reset BIOS, no worries.
 
-Hm. According to the manual, your memory configuration isn't supported -
-you should be using slots 1 & 2 for each processor to get 128-bit
-access... I only have 2 x 512MB PC2700 modules in slots 1 & 2 of CPU0.
-
-If this box was just going to be a fileserver (NAS sort of thing) then I'd
-have gone with a single processor, but it's also going to be running some
-huge CVS and MySQL application (home built version control system) and
-they specified dual-processors. (The existing setup runs on a dual Xeon
-PII/700 Dull box which takes up too much rack space and doesn't have
-enough disks)
+I re-flashed one board to 2.02b - it helps in that the system doesn't
+lock-hard with one make of 3112 card, but the other make still can cause a
+hard lockup. I also seem to have lose the use of PCI slots 3 and 4 with
+this new BIOS. One board died during re-flashing, so it's gone back.
 
 Gordon
