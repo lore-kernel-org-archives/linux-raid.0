@@ -1,105 +1,102 @@
-From: David Greaves <david@dgreaves.com>
+From: Gordon Henderson <gordon@drogon.net>
 Subject: Re: Preparation advice?
-Date: Sun, 28 Nov 2004 11:04:51 +0000
-Message-ID: <41A9B0D3.4070701@dgreaves.com>
-References: <6d5bedd8041126205255c0fe7d@mail.gmail.com>	 <Pine.LNX.4.56.0411270837340.5805@lion.drogon.net>	 <6d5bedd8041127082528ce68ec@mail.gmail.com>	 <41A8C57A.1060803@dgreaves.com>	 <6d5bedd8041127123945b8db48@mail.gmail.com>	 <41A8EA54.6090708@dgreaves.com>	 <6d5bedd8041127135230b95202@mail.gmail.com>	 <41A91263.1010909@dgreaves.com> <6d5bedd804112716277c31207c@mail.gmail.com>
+Date: Sun, 28 Nov 2004 11:07:15 +0000 (GMT)
+Message-ID: <Pine.LNX.4.56.0411281052440.5805@lion.drogon.net>
+References: <6d5bedd8041126205255c0fe7d@mail.gmail.com>
+ <Pine.LNX.4.56.0411270837340.5805@lion.drogon.net> <6d5bedd8041127082528ce68ec@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <6d5bedd804112716277c31207c@mail.gmail.com>
+In-Reply-To: <6d5bedd8041127082528ce68ec@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Ewan Grantham <ewan.grantham@gmail.com>
-Cc: linux-raid@vger.kernel.org
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Well, there's nothing wrong with /etc/fstab etc but you do have an odd 
-report from mdadm.
-Back to the list... :)
+On Sat, 27 Nov 2004, Ewan Grantham wrote:
 
-Ewan's running 2.4.27 and may have an inconsistency with mdadm counting 
-the number of raid devices.
-
-
-
-Ewan Grantham wrote:
-
-> also send me the output from:
->  mdadm --detail /dev/md0
-
-/dev/md0:
-        Version : 00.90.00
-  Creation Time : Sat Nov 27 07:32:34 2004
-     Raid Level : raid5
-     Array Size : 735334656 (701.27 GiB 752.98 GB)
-    Device Size : 245111552 (233.76 GiB 250.99 GB)
-   Raid Devices : 4
-  Total Devices : 5
-Preferred Minor : 0
-    Persistence : Superblock is persistent
-
-    Update Time : Sat Nov 27 14:14:24 2004
-          State : dirty
- Active Devices : 4
-Working Devices : 4
- Failed Devices : 1
-  Spare Devices : 0
-
-         Layout : left-symmetric
-     Chunk Size : 128K
-
-           UUID : 525b6c6e:836b8598:b3778337:0be081e8
-         Events : 0.2
-
-    Number   Major   Minor   RaidDevice State
-       0       8       33        0      active sync   /dev/sdc1
-       1       8       49        1      active sync   /dev/sdd1
-       2       3       65        2      active sync   /dev/hdb1
-       3      22       65        3      active sync   /dev/hdd1
-
-
-
->>I wonder if you have an older version of mdadm?
->>mdadm -V
->>can you upgrade to 1.7 ?
->>    
->>
+> On Sat, 27 Nov 2004 08:46:37 +0000 (GMT), Gordon Henderson
+> <gordon@drogon.net> wrote:
+> > Sounds like a bit of a homebrew bits & pieces box... :)
 >
->mdadm - v1.7.0 - 11 August 2004
+> Well, it started out as a Compaq Presario, but as time has gone on...
 >
->  
+> > Read the Software RAID FAQ on
+> >
+> >   http://www.tldp.org/HOWTO/Software-RAID-HOWTO.html
+> >
+> > It's got basic instructions for both the older raidtools and the newer
+> > mdadm.
 >
->>What command did you use to create the array?
->>    
->>
->
->mdadm --create --verbose /dev/md0 --level=5 -c128 
->        --raid-devices=4  /dev/sdc1 /dev/sdd1 /dev/hdb1 /dev/hdd1
->
->  
->
->>What kernel version are you running?
->>    
->>
->
->2.4.27
->
->  
->
->>Have you put data on the array yet? (if not we may blat and rebuild it)
->>    
->>
->
->Yes, but nothing I can't live without at this point. More a matter of
->the time it takes - about 6 hours. But would rather take another 6
->hours than be likely to lose what I have on there...
->
->Let me know if there's something else I should look at/do...
->  
->
-what does
- cat /proc/mdstat
-say?
+> Is that going to ever be updated? I saw that site, as well as the
+> helpful chapter extract for using MDADM on O'Reilly, and noticed both
+> were from about 2002. I understand that the tools still work basically
+> the same way, but wonder if "our" understanding of RAID hasn't come
+> along a bit since then. And there are other topics that would be nice
+> to address - that I will be asking about shortly :-)
 
+Er, I'm sure if you want to volenteer to update it your thoughts will be
+taken on-board :)
 
-David
+> > And might you not want to make the bood drive mirrored also?
+>
+> My boot drive is OS only. Idea has been (from past experience) to not
+> have anything on the boot drive that I wouldn't mind wiping for a
+> reinstall.
+
+Fair-enough, but with 4 big disks, taking a GB to put the OS on, and have
+it RAID1'd over the 4 disks might just save you that half-days agony if
+the boot disk ever fails..
+
+> Currently building md0 as RAID 5 with chunk of 128 since all the
+> examples seem to indicate that is "better" than the 64 default.
+
+"Better" really depends on what you might be using it for - but it sounds
+like it might be OK if all you are doing is streaming large files... The
+only realy way to work out is to benchmark the array with something thats
+as close to your application as possible.
+
+Remember that you can reflect the chunk size in the ext2/3 strip size...
+(And maybe for other filesystems too)
+
+> Created a mount point /mnt/md0, but do I edit /etc/fstab or another
+> file since fstab seems to be generated on boot?
+
+I don't know any distros that denetate this at boot time, but I only
+really know Debian and a bit of deadrat these days. Traditionally you
+would edit this file to add in your array under some mount point of your
+choosing.
+
+> Also, once the build of md0 is complete, I assume I need to format my
+> new "drive". Any suggestions as to ext2 or ext3 or reiser or ...
+
+You can format is while it's building. However, in-light of the recent
+threads on drive failures, etc. it's well worth your time to run badblocks
+on it overnight with both read and write tests just to make sure that
+every block can be actually written and read back again, although just
+waiting for the raid5 to sync will do some of this, but not everything. If
+you have the time, I'd recomend you do it.
+
+Also make sure you have the right drivers loaded in the kernel - it's
+worth while doing a gross speed test on each device using hdparm to check
+this - eg. hdparm -Tt /dev/sad1 etc.
+
+I'd build the array, wait for it to sync, run badblocks -sw -p99 -c8192 on
+it overnight, then mkfs it with your favouring filesystem.
+
+Holy wars have been fought over lesser issues than filesystem choice, so
+you might as well toss a coin, or stick to something you know and like. A
+journalling filesystem (eg. ext3, xfs, reiser) may impose some latency on
+long streaming writes which is what you are after, but only benchmarking
+will tell you this.
+
+Personally, I'd stick to ext2 or 3, having used it for many years now, but
+I might have a look at XFS again, which I looked at some 12-18 months back
+but didn't really have good results with it.
+
+> Array will be used to capture and edit home videos - to the extent
+> that would influence folks suggestions.
+
+Enjoy!
+
+Gordon
