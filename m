@@ -1,32 +1,38 @@
-From: Ross Biro <rossb@google.com>
+From: Stephan van Hienen <raid@a2000.nu>
 Subject: Re: Promise FastTrak TX4 losing interrupts (with apic mode)
-Date: Thu, 06 Feb 2003 09:09:15 -0800
+Date: Thu, 6 Feb 2003 19:12:41 +0100 (CET)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3E4296BB.2000407@google.com>
-References: <F14meUdm8TihuWkpKyG0001ebd3@hotmail.com> <20011031162116.AF5A41018@shrek.lisa.de> <Pine.LNX.4.53.0302060313490.9702@ddx.a2000.nu>
+Message-ID: <Pine.LNX.4.53.0302061907550.17629@ddx.a2000.nu>
+References: <Pine.SGI.4.32.0302060924010.93623-100000@surfer.sbm.temple.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Stephan van Hienen <raid@a2000.nu>
-Cc: Hans-Peter Jansen <hp@lisa-gmbh.de>, Shawn Evans <shawnwe@hotmail.com>, linux-raid@vger.kernel.org, Andre Hedrick <andre@aslab.com>, linux-kernel@vger.kernel.org
+In-Reply-To: <Pine.SGI.4.32.0302060924010.93623-100000@surfer.sbm.temple.edu>
+To: AU <au@surfer.sbm.temple.edu>
+Cc: Hans-Peter Jansen <hp@lisa-gmbh.de>, Shawn Evans <shawnwe@hotmail.com>, linux-raid@vger.kernel.org, Andre Hedrick <andre@linux-ide.org>, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
->
->
->>>    ide7: BM-DMA at 0xb408-0xb40f, BIOS settings: hdo:pio, hdp:pio
->>>hda: WDC WD800BB-00BSA0, ATA DISK drive
->>>hdc: YAMAHA CRW2100E, ATAPI CD/DVD-ROM drive
->>>hdi: WDC WD800BB-00BSA0, ATA DISK drive
->>>hdk: WDC WD800BB-00BSA0, ATA DISK drive
->>>hdm: WDC WD800BB-00BSA0, ATA DISK drive
->>>hdo: WDC WD800BB-00BSA0, ATA DISK drive
->>>      
->>>
+On Thu, 6 Feb 2003, AU wrote:
 
-Don't know if it's related, but I believe these WD drives sometimes stop 
-sending interrupts.  WD is aware of the problem and tells me they are 
-working on a fix.
+> Try to boot with apic=no or acpi=oldboot
+like i do now with append noapic, it works ok
 
-    Ross
+did some more tests today :
+plugged the fasttrak tx4 into 3 different machines
+all smp (dual p3/dual p2/dual xeon)
+with all i get lost interrupts
 
+if i boot with noapic problem is solved
+
+(tried updating the bios for the promise, but doesn't help)
+
+looks like there is really something wrong with the (bios?) tx4
+
+i have 3 of these cards here
+putting 2 together in an mainbord also doesn't work (then the tx4 bios is
+complaining about no assigned irq)
+
+and if i use 1 card in a system, i always have to press 'esc' to continu
+after the bios tells me there is no array
+
+i really think i should have bought the highpoint 4 port cards :(
