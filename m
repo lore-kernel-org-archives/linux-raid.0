@@ -1,7 +1,7 @@
 From: NeilBrown <neilb@cse.unsw.edu.au>
-Subject: [PATCH md 2 of 4] Erroneous sizeof use in raid1
+Subject: [PATCH md 3 of 4] Initialise sync_blocks in raid1 resync
 Date: Tue, 08 Mar 2005 16:50:59 +1100
-Message-ID: <E1D8XcR-0000zC-No@notabene.cse.unsw.edu.au>
+Message-ID: <E1D8XcR-0000zG-PM@notabene.cse.unsw.edu.au>
 References: <20050308165021.3745.patches@notabene>
 Sender: linux-raid-owner@vger.kernel.org
 To: Andrew Morton <akpm@osdl.org>
@@ -9,27 +9,24 @@ Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-This isn't a real bug as the smallest slab-size is 32 bytes 
-but please apply for consistency.
+Otherwise it could have a random value and might BUG.
+This fixes a BUG during resync problem in raid1 introduced
+by the bitmap-based-intent-loggin patches.
 
-Found by the Coverity tool.
-
-Signed-off-by: Alexander Nyberg <alexn@dsv.su.se>
 Signed-off-by: Neil Brown <neilb@cse.unsw.edu.au>
 
 ### Diffstat output
- ./drivers/md/raid1.c |    2 +-
- 1 files changed, 1 insertion(+), 1 deletion(-)
+ ./drivers/md/raid1.c |    1 +
+ 1 files changed, 1 insertion(+)
 
 diff ./drivers/md/raid1.c~current~ ./drivers/md/raid1.c
---- ./drivers/md/raid1.c~current~	2005-03-07 15:49:25.000000000 +1100
-+++ ./drivers/md/raid1.c	2005-03-07 15:49:55.000000000 +1100
-@@ -1494,7 +1494,7 @@ static int raid1_reshape(mddev_t *mddev,
- 		if (conf->mirrors[d].rdev)
- 			return -EBUSY;
+--- ./drivers/md/raid1.c~current~	2005-03-07 15:49:55.000000000 +1100
++++ ./drivers/md/raid1.c	2005-03-07 15:53:55.000000000 +1100
+@@ -1235,6 +1235,7 @@ static sector_t sync_request(mddev_t *md
+ 	}
  
--	newpoolinfo = kmalloc(sizeof(newpoolinfo), GFP_KERNEL);
-+	newpoolinfo = kmalloc(sizeof(*newpoolinfo), GFP_KERNEL);
- 	if (!newpoolinfo)
- 		return -ENOMEM;
- 	newpoolinfo->mddev = mddev;
+ 	nr_sectors = 0;
++	sync_blocks = 0;
+ 	do {
+ 		struct page *page;
+ 		int len = PAGE_SIZE;
