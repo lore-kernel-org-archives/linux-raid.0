@@ -1,95 +1,51 @@
-From: dean gaudet <dean@arctic.org>
-Subject: Re: raid5: switching cache buffer size log spam
-Date: Sun, 28 Apr 2002 18:32:45 -0700 (PDT)
+From: =?iso-8859-1?Q?Jakob_=D8stergaard?= <jakob@unthought.net>
+Subject: Re: raid 5 question
+Date: Mon, 29 Apr 2002 04:13:35 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0204281733550.9254-100000@twinlark.arctic.org>
-References: <15525.35945.411587.185565@notabene.cse.unsw.edu.au>
+Message-ID: <20020429041335.A12337@unthought.net>
+References: <20020426084705.GA22119@comet.tr.rdts.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <15525.35945.411587.185565@notabene.cse.unsw.edu.au>
-To: Neil Brown <neilb@cse.unsw.edu.au>
+Content-Disposition: inline
+In-Reply-To: <20020426084705.GA22119@comet.tr.rdts.de>; from schommer@rdts.de on Fri, Apr 26, 2002 at 10:47:05AM +0200
+To: Marcus Schommer <schommer@rdts.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, 30 Mar 2002, Neil Brown wrote:
+On Fri, Apr 26, 2002 at 10:47:05AM +0200, Marcus Schommer wrote:
+> hello,
+> is an existing raid5 array expandable in the way lvm is,
+> so that i can add a disk, repartition and expand the file system on i=
+t?
 
-> On Friday March 29, dean-list-linux-kernel@arctic.org wrote:
-> > 2.4.19-pre3-ac1
-> >
-> > /dev/md1 is a raid5 of 4 disks
-> > [creating snapshot volumes] results in lots of log spam of the form:
-> >
-> > Mar 29 10:47:45 debian kernel: raid5: switching cache buffer size, 0 --> 512
-> > Mar 29 10:47:45 debian kernel: raid5: switching cache buffer size, 0 --> 4096
-> > Mar 29 10:47:45 debian kernel: raid5: switching cache buffer size, 4096 --> 512
->
-> The current raid5 requires all requests that is recieves to be the
-> same size.  If it gets requests of different sizes, it does cope but
-> it needs to flush its stripe cache and start again.  This effectively
-> serialises all requests around a request-size change.
-> So it is probably fair to say that what you are trying to do is
-> currently not a supported option.  It may be in 2.6 if we ever get
-> raid5 working again in 2.5 :-)
+Well, yes and no.
 
-this is an operational concern to me now -- because even the act of
-creating an LVM snapshot results in the log spam... and this makes my
-machine grind to a halt if i attempt to do backups with snapshots.
+raidreconf (http://unthought.net/raidreconf) will do what you are askin=
+g,
+so that makes it a "yes".  But the conversion can take considerable tim=
+e
+(a full day or more is not unheard of) - since you should take a full
+backup of your system anyway, maybe the fastest solution would be to
+simply get the backup done, re-create the array, and restore.
 
-i could pursue "fixing" LVM, mke2fs/etc. to all use 4096-byte buffer_heads
-if possible.  but i thought i'd also look into fixing md itself... is
-anyone working on this already?
+If your system has a lot of memory, it is possible that raidreconf is
+faster.
 
-i've thought of two solutions, let me know what you think.
+In any case, I would be interested in hearing your experiences if you
+decide to try out raidreconf.
 
-(1) in raid5_make_request, do something like:
 
-	if (bh->b_size <= conf->buffer_size || conf->buffer_size == 0) {
-		do what's in the code currently;
-	}
-	else {
-		break up the request into
-			(bh->b_size / conf->buffer_size) pieces;
-	}
-
-    this would mean i'd eventually end up with conf->buffer_size == 512
-    and my regular 4096 byte fs operations would end up being broken
-    into 8 pieces... as long as LVM is doing the smaller block size
-    requests.
-
-    and if i see things right, eventually a sync would cause the
-    cache to 0, and at that point it would be possible to get back to
-    a 4096-byte cache.
-
-    how hard is it to break up bh things like this?  i'm a newbie in
-    this area of the kernel :)
-
-(2) the differing size accesses are typically in disjoint regions of
-    the array.  for example, when creating an LVM snapshot there is LVM
-    metadata, there is a live filesystem, and there is the LVM snapshot
-    volume itself.  all of these are disjoint.
-
-    instead of draining the entire cache in get_active_stripe(), we only
-    need to drain entries which overlap the sector we're interested in.
-
-    i'm still puzzling out an efficient change to the hash which
-    accomplishes this...
-
-    one idea is to change conf->buffer_size to conf->max_buffer_size.
-    in this case we drain the entire cache any time max_buffer_size
-    changes, and allow entries in the cache which are any size
-    <= conf->max_buffer_size.
-
-    if max_buffer_size is 4096 (as i expect it to be) then 512-byte
-    accesses will potentially require hash chains 8x longer than
-    they would be today... but this could be a total non-issue.
-    i suspect it works for my situation, but may not work in
-    general when folks want to mix and match filesystem or
-    database block sizes on an array.
-
-    the cache could use a tree instead of a hash ... but that's not
-    so nice for n-way scaling :)
-
-thanks
--dean
-
+--=20
+=2E...............................................................
+:   jakob@unthought.net   : And I see the elder races,         :
+:.........................: putrid forms of man                :
+:   Jakob =D8stergaard      : See him rise and claim the earth,  :
+:        OZ9ABN           : his downfall is at hand.           :
+:.........................:............{Konkhra}...............:
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
