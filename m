@@ -1,34 +1,78 @@
-From: Derek Vadala <derek@cynicism.com>
-Subject: Re: ANNOUNCE: mdadm-1.0.9 - prelease for 1.1.0
-Date: Thu, 20 Feb 2003 12:55:23 -0500 (EST)
+From: "Robert L. Harris" <Robert.L.Harris@rdlg.net>
+Subject: Re: mdadm -c magic?
+Date: Thu, 20 Feb 2003 12:33:17 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20030220175523.30AF33B809@jaded.cynicism.com>
-References: <15945.38175.58593.681394@notabene.cse.unsw.edu.au>
+Message-ID: <20030220173317.GH19609@rdlg.net>
+References: <20030220164443.GG19609@rdlg.net> <20030220180014.2B2173B809@jaded.cynicism.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="qftxBdZWiueWNAVY"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <15945.38175.58593.681394@notabene.cse.unsw.edu.au>
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: linux-raid@vger.kernel.org
+Content-Disposition: inline
+In-Reply-To: <20030220180014.2B2173B809@jaded.cynicism.com>
+To: Derek Vadala <derek@vadala.com>
+Cc: Linux-Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, 12 Feb 2003, Neil Brown wrote:
 
->     -   If the config file is called 'partitions' then it will be treated
->         as though it contained exactly 'device partitions' so e.g.
-> 	  mdadm -Ebsc partitions
-> 	will fill all raid partitions easily.
+--qftxBdZWiueWNAVY
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-So the difference between this and mdadm -Dbs is that it generates config
-entries for arrays that are online, but -Ebcs partitions gets a list of
-all the block devices from /proc/partitions and generates array lines
-based on those.
 
-How come -Dbs lists only num-device, and UUID while -Ebsc lists both of
-those as well as the devices list?
 
-This -Ebsc partitions is a nice feature by the way.
+Bingo.  Thank you very much.
 
--- 
-Derek Vadala, derek@cynicism.com, http://www.cynicism.com/~derek
 
+Thus spake Derek Vadala (derek@vadala.com):
+
+> On Thu, 20 Feb 2003, Robert L. Harris wrote:
+>=20
+> > Is it possible to have mdadm make the array and just leave the one spot
+> > open anyway?  I tried a few options:
+> >
+> > root@legato-disk5.acs:~# mdadm -C -c 128  -l 5 -p left-asymmetric -n 4 =
+-x 0=3D
+> >  /dev/md3 /dev/sdm1 /dev/sdn1 /dev/sdo1 /dev/sdp1
+> > [snip]
+> > mdadm: create aborted
+> > root@legato-disk5.acs:~# mdadm -C -c 128  -l 5 -p left-asymmetric -n 4 =
+-x 0=3D
+> >  /dev/md3 /dev/sdm1 /dev/sdn1 /dev/sdo1
+> > mdadm: You haven't given enough devices (real or missing) to create thi=
+s ar=3D
+> > ray
+>=20
+> Try using the keyword 'missing' in place of a real disk or partition:
+>=20
+> # mdadm -C /dev/md3 -c 128 -l 5 -n 4 /dev/sdm1 /dev/sdn1 /dev/sdo1 missing
+>=20
+> That should give you a 3-disk RAID-5 in degraded mode. I think that's what
+> you want. Add the fourth disk when it shows up and the array will
+> resync.
+
+:wq!
+---------------------------------------------------------------------------
+Robert L. Harris                     | PGP Key ID: E344DA3B
+                                         @ x-hkp://pgp.mit.edu=20
+DISCLAIMER:
+      These are MY OPINIONS ALONE.  I speak for no-one else.
+FYI:
+ perl -e 'print $i=3Dpack(c5,(41*2),sqrt(7056),(unpack(c,H)-2),oct(115),10)=
+;'
+
+
+--qftxBdZWiueWNAVY
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.1 (GNU/Linux)
+
+iD8DBQE+VRFd8+1vMONE2jsRAv2tAKCOVShX0dUdGC0FJAG9HrBrqAaYuQCfeqSU
+XKrfOZF3beT5ovvwp2THQUc=
+=OxB7
+-----END PGP SIGNATURE-----
+
+--qftxBdZWiueWNAVY--
