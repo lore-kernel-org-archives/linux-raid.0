@@ -1,19 +1,31 @@
-From: Jeff Garzik <jgarzik@pobox.com>
+From: John Lange <john.lange@bighostbox.com>
 Subject: Re: SATA raid options..
-Date: Sat, 03 Jul 2004 13:05:05 -0400
+Date: Sat, 03 Jul 2004 12:36:07 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <40E6E741.9090800@pobox.com>
+Message-ID: <1088876167.22714.19.camel@ws101.darkcore.net>
 References: <1088865298.4974.67.camel@faetterbox.faetter.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1088865298.4974.67.camel@faetterbox.faetter.net>
 To: Daniel Kirkegaard Mouritsen <daniel@mouritsen.info>
-Cc: linux-raid@vger.kernel.org
+Cc: LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Daniel Kirkegaard Mouritsen wrote:
+First you should consult
+http://www.linuxmafia.com/faq/Hardware/sata.html to read up on your chip
+set a bit.
+
+The bottom line is, kernel support for bios "raid" is in the works but
+marginal at this time.
+
+As far as I'm aware there isn't any advantage to using these built in
+sudo-raid devices. Software raid should outperform it in most all cases.
+
+John
+
+On Sat, 2004-07-03 at 09:34, Daniel Kirkegaard Mouritsen wrote:
 > I own a Gigabyte GA-8KNXP motherboard, which has 4 serial-ata ports. Two
 > of which features RAID functionality.
 > 
@@ -38,12 +50,13 @@ Daniel Kirkegaard Mouritsen wrote:
 > not-yet-released(or is it? maybe its just me who cant find it :]) dmraid
 > is the way to go. Does these both use the device-mapper tool? And can
 > anybody tell me if dmraid is 2 or 20 months aways?
-
-dmraid will be required for use, and its 2-4 months away, I would guess.
-
-Why not just use md raid?  BIOS RAID is _always_ crap.
-
-	Jeff
-
-
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+John Lange
+BigHostBox.com
+(204) 885 0872
 
