@@ -1,42 +1,56 @@
-From: Morten Sylvest Olsen <mso@medical-insight.com>
-Subject: documentation of /sys/vm/max-readahead
-Date: Mon, 6 Dec 2004 22:42:06 +0100 (CET)
-Message-ID: <20041206222336.B61850@arsenium.medical-insight.com>
-References: <20041206174851.GA521@hamachi.dyndns.org>
- <200412061929.iB6JTj904159@www.watkins-home.com> <20041206211607.GA3037@hamachi.dyndns.org>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: Looking for the cause of poor I/O performance
+Date: Mon, 6 Dec 2004 18:06:55 -0500
+Message-ID: <200412062307.iB6N71905075@www.watkins-home.com>
+References: <Pine.LNX.4.44.0412061631250.4484-100000@coffee.psychology.mcmaster.ca>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20041206211607.GA3037@hamachi.dyndns.org>
+In-Reply-To: <Pine.LNX.4.44.0412061631250.4484-100000@coffee.psychology.mcmaster.ca>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: 'Mark Hahn' <hahn@physics.mcmaster.ca>, 'TJ' <systemloc@earthlink.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi list.
+Some systems may have 66 MHz PCI, or 64 bit.
+Or, just more than 1 PCI bus.  My desktop system has 3 PCI buses, I think.
 
-Am I the first to battle performance related issues from the setting of
-/proc/sys/vm/max-readahead? It seems there is quite a few threads floating
-around the net related to performance of the md driver with external disks
-connected over FC.
+Guy
 
-But I was pretty confused because /proc/mdstat reports the bogus old
-device read_ahead value, and the md driver silently (well, not really)
-uses /sys/vm/max-readahead to calculate a window size which makes quite a
-difference in my setup where I have some scsi disks on a relatively
-high-latency SAN. Possibly this issue only shows itself when running
-RAID-1 where the chunksize is not used (there seem to be a bug in Jacob's
-howto in section 5.10 on that point)
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Mark Hahn
+Sent: Monday, December 06, 2004 4:35 PM
+To: TJ
+Cc: linux-raid@vger.kernel.org
+Subject: Re: Looking for the cause of poor I/O performance
 
-Maybe the issue only arises on RedHat because they for some reason chose
-to make the 31 default value of /proc/sys/vm/max-readahead in their EL3
-release, where the older default of 127 is more resonable?
+> > for comparison, a fairly crappy SiS 735-based k7 system with
+> > 64b-wide PC2100 can deliver maybe 1.2 GB/s dram bandwidth.
+> > hdparm -T is about 500 MB/s, and would probably have trouble
+> > breaking 200 MB/s with raid0 even if it had enough buses.
+> >
+> > an older server of mine is e7500-based, dual xeon/2.4's, with
+> > 2xPC1600 ram.  it sustains about 1.6 GB/s on Stream, and about
+> > 500 MB/s hdparm -T, and can sustain 250 MB/s through it's 6-disk
+> > raid without any problem.
+> 
+> hmmm.. In these cases, how does the throughput exceed the PCI bandwidth?
+Do 
+> these boards have multiple busses? PCI-X?
 
-I don't mind writing the blurb myself, if I'm not totally off course in my
-error diagnostics.
+I didn't say they exceeded bus bandwidth ("if it had enough").
+the latter does actually have multiple buses, some of which are pcix;
+that's pretty common among server boards.
 
--- Morten
---
-Morten Sylvest Olsen, System Developer
-Medical Insight A/S, Hovedgaden 451 C,2640 Hedehusene, Denmark
-Phone:+4546550444, Mobile:+4551573092,Mail: mso@medical-insight.com
+interestingly, even non-server desktop parts can exceed PCI bandwidth - 
+I did a disk server a few years ago that used two chipset ATA ports
+and an add-in 4-port card to hit about 150 MB/s total (sustained).
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
