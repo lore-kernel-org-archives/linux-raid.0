@@ -1,39 +1,27 @@
-From: Alexander Kisselev <kisselev@mail.desy.de>
-Subject: Re: MD device id change
-Date: Mon, 7 Apr 2003 10:41:08 +0200 (MEST)
+From: Alfred Isele <Alfred.Isele@fujitsu-siemens.com>
+Subject: raid1 and swap
+Date: Mon, 07 Apr 2003 10:50:58 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.33.0304071040140.5745-100000@worf.desy.de>
-References: <16012.45741.447317.341813@notabene.cse.unsw.edu.au>
+Message-ID: <3.0.6.32.20030407105058.00b7ca30@athen>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <16012.45741.447317.341813@notabene.cse.unsw.edu.au>
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: raid-list <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-  Hi Neil,
 
-> On Thursday April 3, kisselev@mail.desy.de wrote:
-> >
-> >   Here is the question: is there an easy way to change RAID device ID?
-> > If not, is the following sequence correct in my case (1-disk RAID linear):
-> >
-> >   - stop device;
-> >   - 'dd' 4k RAID superblock from /dev/sda2 at offset 292021440;
-> >   - change 4-byte field at offset 11 (md_minor) to the desired number
-> >     (say '5' for md5);
-> >   - copy superblock back;
-> >   - reboot;
->
-> Sort of, but it is much easier to get mdadm to do this.
-> Get mdadm 1.2.0 and check out
->    --assemble --update=super-minor
->
-> in the documentation.
+Hello!
+I have a question concerning the use of raid1 (md) 
+together with swap. I use this /etc/fstab entry:
 
-  thank you, worked fine.
+/dev/md1   none  swap  pri=42  0 0
 
-  Cheers,
-    Alexander.
+Somebody told me swap could be damaged if 
+one of the mirrored devices used for swap fails and 
+a spare disk is resynched for it because the resync would 
+be done using the buffer cache whereas the swapping would
+be done by direct disk access. 
+Do you know if such a problem exists?
+Thank you
+Alfred
 
