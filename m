@@ -1,91 +1,62 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: raid5 slow
-Date: Mon, 29 Nov 2004 12:13:50 -0500
-Message-ID: <200411291713.iATHDtN05760@www.watkins-home.com>
-References: <Pine.LNX.4.61.0411290948230.13437@adsl.a2000.nu>
+From: Cyril Bouthors <cyril@bouthors.org>
+Subject: Unable to handle kernel NULL pointer dereference with 2.4.27
+Date: Mon, 29 Nov 2004 20:27:45 +0300
+Message-ID: <87653oimzy.fsf@wide.bouthors.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; boundary="=-=-=";
+	micalg=pgp-sha1; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.61.0411290948230.13437@adsl.a2000.nu>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Stephan van Hienen' <raid@a2000.nu>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Very odd, RAID5 reading should be about the same as RAID0.
-And your old array confirms that.
-My guess is RAID5 needs some help.  Neil?  Any ideas?
+--=-=-=
 
-Is your stripe size the same on both?
-Did you allow your array to re-sync before the tests?
+Hi,
 
-Guy
+I'm having this error several times a month on a heavy loaded production NFS server with RAID0:
 
------Original Message-----
-From: Stephan van Hienen [mailto:raid@a2000.nu] 
-Sent: Monday, November 29, 2004 3:52 AM
-To: Guy
-Cc: linux-raid@vger.kernel.org
-Subject: raid5 slow
+Unable to handle kernel NULL pointer dereference at virtual address 00000020
+ printing eip:
+f884488e
+*pde = 00000000
+Oops: 0002
+CPU:    0
+EIP:    0010:[raid0:__insmod_raid0_O/lib/modules/2.4.27-1-686/kernel/drivers/md+-235378/96]    Not tainted
+EFLAGS: 00010202
+eax: f884d6a0   ebx: efd32600   ecx: 00000000   edx: 00000020
+esi: efd32600   edi: c2825f5c   ebp: 00001ee2   esp: c2825f1c
+ds: 0018   es: 0018   ss: 0018
+Process kswapd (pid: 4, stackpage=c2825000)
+Stack: efd32600 efd32600 c0153734 efd32600 efd32608 c015379d efd32600 f421cc28
+       c0150018 c3581408 c35817c0 c35817c8 00000000 c0153a24 c2825f5c 00015d9c
+       efd32428 f50ebdc8 000001d0 0000003c 00000015 c025d478 c0153bb4 00015d9c
+Call Trace:    [clear_inode+196/224] [dispose_list+77/176] [__get_lease+488/608] [prune_icache+100/464] [shrink_icache_memory+36/64]
+  [try_to_free_pages_zone+143/256] [kswapd_balance_pgdat+102/176] [kswapd_balance+40/64] [kswapd+152/185] [_stext+0/64] [arch_kernel_thread+46/64]
+  [kswapd+0/185]
 
-> it's only a bit slow :
->
-> Version  1.03       ------Sequential Output------ --Sequential Input- 
-> --Random-
->                    -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- 
-> --Seeks--
-> Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP /sec
+Code: ff 0a 0f 94 c0 84 c0 75 44 ba ff ff ff ff 89 93 8c 01 00 00
+ <5>__alloc_pages: 0-order allocation failed (gfp=0xf0/0)
 
-> %CP
-> storage.a2000.nu 2G 26828  99 123983  73 58525  57 27336  99 171371  96
-583.9 
-> 4
->                    ------Sequential Create------ --------Random 
-> Create--------
->                    -Create-- --Read--- -Delete-- -Create-- --Read--- 
-> -Delete--
->              files  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP /sec 
-> %CP
->                 16  1023  12 +++++ +++   920  11  1004  14 +++++ +++ 722
-9
->
-storage.a2000.nu,2G,26828,99,123983,73,58525,57,27336,99,171371,96,583.9,4,1
-6,1023,12,+++++,+++,920,11,1004,14,+++++,+++,722,9
+I'm running 2.4.27 compiled with Debian Sid options from the
+kernel-image-2.4.27-1-686 package.
 
-created a raid0 with the same disks :
+Is this a bug in raid0.c ?
 
-Version  1.03       ------Sequential Output------ --Sequential Input- 
---Random-
-                     -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- 
---Seeks--
-Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP 
-/sec %CP
-storage.a2000.nu 2G 28435  99 219329  73 102949  51 29704  99 275323  62 
-639.5   2
-                     ------Sequential Create------ --------Random 
-Create--------
-                     -Create-- --Read--- -Delete-- -Create-- --Read--- 
--Delete--
-               files  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP 
-/sec %CP
-                  16 10108  84 +++++ +++  8825  69  9877  88 +++++ +++ 
-7546  66
-storage.a2000.nu,2G,28435,99,219329,73,102949,51,29704,99,275323,62,639.5,2,
-16,10108,84,+++++,+++,8825,69,9877,88,+++++,+++,7546,66
+Is there a way to fix this?
 
-
-shouldn't the raid be about the same ?
-
-now i get 275MB/sec with raid0 (14 disks)
-171MB/sec with raid5 (14 disks)
-
-while the old raid5 situation was 257MB/sec with raid5 (13 disks)
-
+Thanks.
 -- 
-No virus found in this incoming message.
-Checked by AVG Anti-Virus.
-Version: 7.0.289 / Virus Database: 265.4.3 - Release Date: 11/26/2004
- 
+Cyril Bouthors
 
+--=-=-=
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.5 (GNU/Linux)
+
+iD8DBQBBq1wRZ1SJHeqsYt8RAkeyAJ9E+xupohtzzSzKWfYMuQE6MI2QKwCgg5JJ
+ETNXtUC9ysbHs4NMtiUvPM0=
+=TXOc
+-----END PGP SIGNATURE-----
+--=-=-=--
