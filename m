@@ -1,50 +1,38 @@
-From: Lars Marowsky-Bree <lmb@suse.de>
-Subject: Re: mounting /dev/hdax and xfs problems
-Date: Tue, 7 Oct 2003 13:26:22 +0200
+From: Holger Kiehl <Holger.Kiehl@dwd.de>
+Subject: Re: possible to use 1 drive as hot failover for 2 raid1's?
+Date: Tue, 7 Oct 2003 12:40:26 +0000 (GMT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20031007112622.GI28158@marowsky-bree.de>
-References: <S262703AbTJDX0w/20031004232652Z+8001@vger.kernel.org>
+Message-ID: <Pine.LNX.4.44.0310071235060.12097-100000@praktifix.dwd.de>
+References: <20031007105437.GF28158@marowsky-bree.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <S262703AbTJDX0w/20031004232652Z+8001@vger.kernel.org>
-To: Nerijus Baliunas <nerijus@users.sourceforge.net>, linux-raid@vger.kernel.org
+In-Reply-To: <20031007105437.GF28158@marowsky-bree.de>
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 2003-10-05T02:26:02,
-   Nerijus Baliunas <nerijus@users.sourceforge.net> said:
+On Tue, 7 Oct 2003, Lars Marowsky-Bree wrote:
 
-> When mounting /dev/hda2 it succeeds. The question is -
-> does mounting part of raid1 mirror when raid is still running
-> do anything bad for a raid? How raid works in this situation -
-> is it still mirroring info from /dev/hda2 to /dev/hdb2?
-> If I raidstop and raidstart, can it damage filesystem?
+> On 2003-10-06T16:27:59,
+>    Dan Hollis <goemon@anime.net> said:
+> 
+> > is it possible to use the single drive as hot-failover for both md0 and 
+> > md1?
+> 
+> In theory yes, in practice not.
+> 
+> One could imagine (rather easily) a global hot-spare pool for all mds,
+> but it's not implemented right now.
+> 
+Not sure about this but I thought this would be possible by using mdadm
+in monitor mode? In the manpage of mdadm it says:
 
-Yes. Your data is toast.
+   As  well  as  reporting  events,  mdadm may move a spare drive from one
+   array to another if they are in the same spare-group and if the  desti-
+   nation array has a failed drive but not spares.
 
-You need to trigger a full resync from hda2 to hdb2 manually.
+But I don't know how to create a spare-groupi or what is meant by it?
 
-I think
-	mdadm /dev/md0 -f /dev/hdb2 -r /dev/hdb2 -a /dev/hdb2
+Regards,
+Holger
 
-should do it.
-
-You must NEVER modify an underlaying device of a raid set. This will
-cause problems.
-
-
-Sincerely,
-    Lars Marowsky-Br=E9e <lmb@suse.de>
-
---=20
-High Availability & Clustering		ever tried. ever failed. no matter.
-SuSE Labs				try again. fail again. fail better.
-Research & Development, SUSE LINUX AG		-- Samuel Beckett
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
