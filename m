@@ -1,50 +1,63 @@
-From: Derek Vadala <derek@cynicism.com>
-Subject: Re: raid 5 question
-Date: Tue, 30 Apr 2002 14:08:25 -0700 (PDT)
+From: "bo" <bo@sosnetwork.net>
+Subject: Re: Creating failed-mode RAID1 with mdadm
+Date: Tue, 30 Apr 2002 15:28:47 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.GSO.4.21.0204301346440.27156-100000@gecko.roadtoad.net>
-References: <20020430221936.E15847@unthought.net>
+Message-ID: <07de01c1f096$64e822a0$6501a8c0@bomoon>
+References: <20020430184832.GA381@willow.seitz.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=X-UNKNOWN
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20020430221936.E15847@unthought.net>
-To: =?iso-8859-1?Q?Jakob_=D8stergaard?= <jakob@unthought.net>
-Cc: linux-raid@vger.kernel.org
+To: Ross Vandegrift <ross@willow.seitz.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 30 Apr 2002, [iso-8859-1] Jakob =D8stergaard wrote:
+Try with
+# mdadm --create /dev/md0 --level 1 --raid-disks=2 /dev/hde1 missing
 
-> >I noticed that the raidreconf bundled with the raidtools-1.0 in
-> > skipjack is 0.1.2 and the one at unthought.net is 0.1.1-- but maybe=
- that's
-> > because someone else worked on it and didn't put their name in.
->=20
-> That is interesting - too bad RedHat didn't care to ask me about the =
-known
-> problems with the tool... Some of the known problems are easily fixab=
-le.
+It will work.
 
-There are indeed differences, but they all appear to be trivial. Looks
-like some stuff was moved from rrc_common.c and into raidreconf.c,
-specifcally the progress indicator, command line error-checking and use=
-r
-confirmation. Everything else appears to be simple compatibility change=
-s
-for parts of the raidtools that raidreconf relies on. For example,
-md-int.h is now md_p.h and md_u.h.
 
-I'm about half way through the tests I want to run, so I should have so=
-me
-data on how longs are expected to take tomorrow. So far it hasn't been =
-as
-slow as I expected.
+----- Original Message ----- 
+From: "Ross Vandegrift" <ross@willow.seitz.com>
+To: <linux-raid@vger.kernel.org>
+Sent: Tuesday, April 30, 2002 11:48 AM
+Subject: Creating failed-mode RAID1 with mdadm
 
----
-Derek Vadala, derek@cynicism.com, http://www.cynicism.com/~derek
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Hey everyone,
+> 
+> Creating a new array today, I decided I should probably start
+> using mdadm instead of the old tools.  I've been using it a bit at home
+> to do minor things, and it seemed nice.
+> I've got a box with two 20G ide drives installed.  One is
+> currently the root drive at /dev/hda1 and the other is one of the disks
+> for the mirrored pair at /dev/hde1.  I'm trying to create the array with
+> /dev/hdg1 as a failed disk, and then move /dev/hda to /dev/hde after I
+> start booting the machine off of /dev/md0.
+> When I do:
+> 
+> # mdadm --create /dev/md0 --level 1 --raid-disks=2 /dev/hde1 /dev/hdg1
+> 
+> I get:
+> 
+> mdadm: Cannot open /dev/hdg1: No such device or address
+> mdadm: create aborted
+> 
+> This makes sense, as /dev/hdg doesn't really exist yet.  I've tried
+> doing:
+> 
+> # mdadm --set-faulty /dev/md0 /dev/hdg1
+> 
+> but it doesn't seem to help.  How can I build an array like this via
+> mdadm?
+> 
+> Ross Vandegrift
+> ross@willow.seitz.com
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
