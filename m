@@ -1,33 +1,48 @@
 From: Lars Marowsky-Bree <lmb@suse.de>
-Subject: Re: Booting from a raid1 device ?
-Date: Tue, 28 Oct 2003 11:56:44 +0100
+Subject: Re: ANNOUNCE: User-space System Device Enumation (uSDE)
+Date: Tue, 28 Oct 2003 12:00:34 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20031028105644.GF30725@marowsky-bree.de>
-References: <20031027152554.7738.qmail@web14507.mail.yahoo.com> <3F9D412A.F68B1461@SteelEye.com> <200310272311.19232.dusty@strike.wu-wien.ac.at>
+Message-ID: <20031028110034.GG30725@marowsky-bree.de>
+References: <3F9D82F0.4000307@mvista.com> <20031027210054.GR24286@marowsky-bree.de> <3F9D8AAA.7010308@mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <200310272311.19232.dusty@strike.wu-wien.ac.at>
-To: Hermann Himmelbauer <dusty@strike.wu-wien.ac.at>, Paul Clements <Paul.Clements@SteelEye.com>, donj@asaca.com
-Cc: linux-raid@vger.kernel.org
+In-Reply-To: <3F9D8AAA.7010308@mvista.com>
+To: Mark Bellon <mbellon@mvista.com>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2003-10-27T23:11:19,
-   Hermann Himmelbauer <dusty@strike.wu-wien.ac.at> said:
+On 2003-10-27T14:14:18,
+   Mark Bellon <mbellon@mvista.com> said:
 
-> BTW, assuming I have md.o not as module but statically in the kernel,=
- which=20
-> bootloader would support RAID1? I heard LlLO does this job but does a=
-lso grub=20
-> - which I prefer - support Linux SW-RAID1?
+> The uSDE and udev are simlar in some respects. The uSDE allows for=20
+> complete control of the policy handling a device - not just its namin=
+g.=20
 
-grub doesn't yet afaik.
+Well, so could udev in theory, and I had this plan to enhance it to do
+so for the specific case of multipathing one day in the not too distant
+future (ie, before q1/04).
 
-> What about RAID5? Is there any bootloader that supports it?
+In as far as I can see, udev and uSDE really do not have too different
+goals. Competition is good, but only if they explore distinct approache=
+s
+;-)
 
-No.
+> >How does this integrate with DM, md, EVMS, LVM...?
+> As devices appear in sysfs the uSDE reacts to them via their hotplug=20
+> events. The policy for each device handles any device issues includin=
+g=20
+> dealing with any device nodes.  It is possible to track and maintain=20
+> multiported devices and automatically provide multipath devices nodes=
+=20
+> for instance.
+
+Yes, I know that, I was asking whether you had done any discussion with
+the EVMS2 folks for example to have a policy plugin to interact with
+EVMS2 accordingly and do the magic.
+
 
 
 Sincerely,
