@@ -1,31 +1,50 @@
-From: Michael Alan Dorman <mdorman@debian.org>
-Subject: Can you non-destructively add a new active device to an existing RAID1?
-Date: 18 Oct 2002 08:45:06 -0400
-Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <87elanvru5.fsf@viola.mallet-assembly.org>
+From: "Martin Peschke3" <MPESCHKE@de.ibm.com>
+Subject: Re: Lun 0
+Date: Fri, 18 Oct 2002 16:30:33 +0200
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <OF3C48C63F.93B91A7D-ONC1256C56.004F5840@de.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+To: MShetty <mranalini.shetty@patni.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-raid.ids
 
-During a bit of an emergency a couple of weeks ago---my laptop quit
-working unexpectedly---I found myself hurriedly building a new machine
-from parts I had lying around, and although I only had one hard drive
-on hand I decided to set things up so that I could pick up a second
-hard drive and mirror my data.
+Hi,
 
-Unfortunately, I appear to have done it incorrectly, in that I did not
-specify that there should be two devices in the mirror with one of the
-devices to be "missing", but instead specified one device in the
-mirror.
+yes.
+E.g., the REPORT LUNS command might be issued to LUN 0 according to SCSI-3
+in order to query information about the availability of other LUNs.
 
-Now, of course, I've had the time to pick up a second drive, and I'm
-wondering if there is anything I can do to get this second drive in
-active mirroring mode (as opposed to adding it as a hot spare) without
-having to copy everything to the new drive, recreate the mirror
-"correctly", copy everything back and then hot-add the drive?
+Regards,
+Martin Peschke
 
-I would just like to spare myself the downtime if at all possible.
 
-Mike.
+
+MShetty <mranalini.shetty@patni.com>@vger.kernel.org on 10/18/2002 08:49:42
+AM
+
+Sent by:    linux-scsi-owner@vger.kernel.org
+
+
+To:    linux-raid <linux-raid@vger.kernel.org>, linux-scsi
+       <linux-scsi@vger.kernel.org>
+cc:
+Subject:    Lun 0
+
+
+
+Hi,
+
+Does lun 0 have any special significance ??
+
+Thanks and Regards,
+M Shetty
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
