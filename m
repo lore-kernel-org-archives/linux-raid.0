@@ -1,124 +1,63 @@
-From: Mark Rustad <mrustad@mac.com>
-Subject: Re: PROBLEM: kernel crashes on RAID1 drive error
-Date: Tue, 16 Nov 2004 10:40:51 -0600
-Message-ID: <46C61533-37EE-11D9-A413-0003934F6348@mac.com>
-References: <8FA83ADB-22E4-11D9-AC9C-0003934F6348@aol.com> <20041021084514.GY10531@suse.de> <4177BF22.7060208@steeleye.com> <20041021135557.GN10531@suse.de> <4177C13C.10007@steeleye.com> <20041021140236.GO10531@suse.de> <88F77D21-2443-11D9-AAEE-0003934F6348@aol.com> <91146D2E-2918-11D9-B6DC-0003934F6348@aol.com> <2BF4BB83-2E93-11D9-804F-0003934F6348@mac.com> <20041116155141.GL3973@marowsky-bree.de>
-Mime-Version: 1.0 (Apple Message framework v619)
-Content-Type: text/plain; charset=US-ASCII; format=flowed
+From: Maurilio Longo <maurilio.longo@libero.it>
+Subject: Re: Bad blocks are killing us!
+Date: Tue, 16 Nov 2004 17:28:47 +0100
+Message-ID: <419A2ABF.623A126A@libero.it>
+References: <200411150522.iAF5MNN18341@www.watkins-home.com> <16793.11589.337840.541169@cse.unsw.edu.au>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20041116155141.GL3973@marowsky-bree.de>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Lars Marowsky-Bree <lmb@suse.de>
-Cc: linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Neil Brown <neilb@cse.unsw.edu.au>
+Cc: Guy Watkins <guy@watkins-home.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Lars,
+Neil Brown ha scritto:
 
-On Nov 16, 2004, at 9:51 AM, Lars Marowsky-Bree wrote:
-
-> On 2004-11-04T12:56:01, Mark Rustad <mrustad@mac.com> wrote:
+> On Monday November 15, guy@watkins-home.com wrote:
+> > Neil,
+> >       This is a private email.  You can post it if you want.
+> snip
+> >
+> >       Anyway, in the past there have been threads about correcting bad
+> > blocks automatically within md.  I think a RAID1 patch was created that will
+> > attempt to correct a bad block automatically.  Is it likely that you will
+> > pursue this for RAID5 and maybe RAID6?  I hope so.
 >
->> I came up with a patch that seems to fix the kernel crashing on a 
->> RAID1
->> device failure problem. I do not have confidence that it really is the
->> correct fix, but I'm pretty sure that it is touching the right area.
->> I'm sure someone more familiar with this area of the kernel will
->> recognize from this what the correct fix is, if this is not it.
->> Submitted for your consideration:
+> My current plans for md are:
+
+[...]
+
 >
-> Hi Mark, checking back whether any better fix has since been proposed?
+>  2/ Look at recovering from failed reads that can be fixed by a
+>     write.  I am considering leveraging the "bitmap resync" stuff for
+>     this.  With the bitmap stuff in place, you can let the kernel kick
+>     out a drive that has a read error, let user-space have a quick
+>     look at the drive and see if it might be a recoverable error, and
+>     then give the drive back to the kernel.  It will then do a partial
+>     resync based on the bitmap information, thus writing the bad
+>     blocks, and all should be fine.  This would mean re-writing
+>     several megabytes instead of a few sectors, but I don't think that
+>     is a big cost.  There are a few issues that make it a bit less
+>     trivial than that, but it will probably be my starting point.
+>     The new "faulty" personality will allow this to be tested easily.
+>
 
-My earlier attempt was clearly broken, though it did cure the kernel 
-crashes. Below is the patch I am currently applying against ll_rw_blk.c 
-in SuSE kernel 2.6.5-7.111. The last two hunks of the patch are 
-relevant to this problem (the remainder of the patch should look 
-familiar).
+I think 2/ should go unattended for at least a few retries, then, if they all
+fail, kick-out disk and/or call user-space program to see what's going on, I say
+this because an occasional read error should not kick-out a disk or require user
+intervention to fix it (as it is now).
 
-It looks to me like this problem was introduced in 2.6.2 by what was 
-thought to be a simple rearrangement of code. I believe that that 
-change did not take into account all of the ways that the loop could 
-exit.
+And it seems to me that new disks have a lot of badsectors regardless their brand.
 
-Unfortunately, the drive I had that would power up and work for 20 
-minutes and then return media errors has now totally died, so I am not 
-currently able to convince myself that this fix is really right. I am 
-continuing to try to reproduce a similar event.
+just my .02 euro cents :)
 
-My current patch is below:
+regards.
 
---- a/drivers/block/ll_rw_blk.c 2004-11-15 08:35:19.000000000 -0600
-+++ a/drivers/block/ll_rw_blk.c 2004-11-15 08:41:37.000000000 -0600
-@@ -2654,19 +2654,40 @@
 
-  void blk_recalc_rq_segments(struct request *rq)
-  {
--       struct bio *bio;
-+       struct bio *bio, *prevbio = NULL;
-         int nr_phys_segs, nr_hw_segs;
-+       unsigned int phys_size, hw_size;
-+       request_queue_t *q = rq->q;
+--
+ __________
+|  |  | |__| md2520@mclink.it
+|_|_|_|____| Team OS/2 Italia
 
-         if (!rq->bio)
-                 return;
-
--       nr_phys_segs = nr_hw_segs = 0;
-+       phys_size = hw_size = nr_phys_segs = nr_hw_segs = 0;
-         rq_for_each_bio(bio, rq) {
-                 /* Force bio hw/phys segs to be recalculated. */
-                 bio->bi_flags &= ~(1 << BIO_SEG_VALID);
-
--               nr_phys_segs += bio_phys_segments(rq->q, bio);
--               nr_hw_segs += bio_hw_segments(rq->q, bio);
-+               nr_phys_segs += bio_phys_segments(q, bio);
-+               nr_hw_segs += bio_hw_segments(q, bio);
-+               if (prevbio) {
-+                       int pseg = phys_size + prevbio->bi_size + 
-bio->bi_size;
-+                       int hseg = hw_size + prevbio->bi_size + 
-bio->bi_size;
-+
-+                       if (blk_phys_contig_segment(q, prevbio, bio) &&
-+                               pseg <= q->max_segment_size) {
-+                               nr_phys_segs--;
-+                               phys_size += prevbio->bi_size + 
-bio->bi_size;
-+                       } else
-+                               phys_size = 0;
-+
-+                       if (blk_hw_contig_segment(q, prevbio, bio) &&
-+                               hseg <= q->max_segment_size) {
-+                               nr_hw_segs--;
-+                               hw_size += prevbio->bi_size + 
-bio->bi_size;
-+                       } else
-+                               hw_size = 0;
-+               }
-+               prevbio = bio;
-         }
-
-         rq->nr_phys_segments = nr_phys_segs;
-@@ -2762,6 +2783,8 @@
-                          * not a complete bvec done
-                          */
-                         if (unlikely(nbytes > nr_bytes)) {
-+                               bio_iovec_idx(bio, idx)->bv_offset += 
-nr_bytes;
-+                               bio_iovec_idx(bio, idx)->bv_len -= 
-nr_bytes;
-                                 bio_nbytes += nr_bytes;
-                                 total_bytes += nr_bytes;
-                                 break;
-@@ -2798,8 +2821,6 @@
-         if (bio_nbytes) {
-                 bio_endio(bio, bio_nbytes, error);
-                 bio->bi_idx += next_idx;
--               bio_iovec(bio)->bv_offset += nr_bytes;
--               bio_iovec(bio)->bv_len -= nr_bytes;
-         }
-
-         blk_recalc_rq_sectors(req, total_bytes >> 9);
-
--- 
-Mark Rustad, MRustad@mac.com
 
