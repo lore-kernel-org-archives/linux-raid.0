@@ -1,17 +1,28 @@
 From: "Guy" <bugzilla@watkins-home.com>
 Subject: RE: Please help- raid1 recovery after disk failure
-Date: Mon, 18 Oct 2004 19:28:13 -0400
+Date: Mon, 18 Oct 2004 19:31:00 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200410182328.i9INSIN18816@www.watkins-home.com>
-References: <20041018225652.GC29864@sam.triumf.ca>
+Message-ID: <200410182331.i9INV5N18831@www.watkins-home.com>
+References: <200410182328.i9INSIN18816@www.watkins-home.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20041018225652.GC29864@sam.triumf.ca>
-To: 'Konstantin Olchanski' <olchansk@sam.triumf.ca>, linux-raid@vger.kernel.org
+In-Reply-To: <200410182328.i9INSIN18816@www.watkins-home.com>
+To: 'Guy' <bugzilla@watkins-home.com>, 'Konstantin Olchanski' <olchansk@sam.triumf.ca>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+Oops!   hdc2!
+
+Hopefully you know which disk was replaced!  :)
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Guy
+Sent: Monday, October 18, 2004 7:28 PM
+To: 'Konstantin Olchanski'; linux-raid@vger.kernel.org
+Subject: RE: Please help- raid1 recovery after disk failure
 
 You must remove the bad disk first.
 mdadm -r /dev/md2 /dev/hda2
@@ -80,6 +91,11 @@ Konstantin Olchanski
 Data Acquisition Systems: The Bytes Must Flow!
 Email: olchansk-at-triumf-dot-ca
 Snail mail: 4004 Wesbrook Mall, TRIUMF, Vancouver, B.C., V6T 2A3, Canada
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 -
 To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 the body of a message to majordomo@vger.kernel.org
