@@ -1,46 +1,33 @@
-From: "Cress, Andrew R" <andrew.r.cress@intel.com>
-Subject: RE: [PATCH]: HotSwap SCSI in Soft RAID1 (scsi_rescan)
-Date: Mon, 23 Sep 2002 07:40:47 -0700
+From: "Shaw, Marco" <marco.shaw@nbtel.nb.ca>
+Subject: RAID0 versus Linear
+Date: Mon, 23 Sep 2002 21:39:24 -0300
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <A5974D8E5F98D511BB910002A50A66470580D1F2@hdsmsx103.hd.intel.com>
+Message-ID: <C65F89D1AC0BB54B865127151A24DA780BAD5BA7@nbexchm2.aliant.icn>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: 'Anton Blanchard' <anton@samba.org>
-Cc: linux-raid@vger.kernel.org, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+To: "'linux-raid@vger.kernel.org'" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Anton,
+RedHat Advanced Server 2.1AS
+Raidtools-1.00.2-1.2
 
-Actually, I have written just such a user-space service (sgraidmon) to
-monitor the SCSI bus, and it does implement SAF-TE, but not SES yet.
-See http://scsirastools.sourceforge.net/ for more info and downloads.
+Couldn't seem to find anything relevant in the linux-raid archive...
 
-Andy
+Had an internal discussion regarding the choice of linear versus raid0.  We'd like to standardize on a usage within our company.
 
------Original Message-----
-From: Anton Blanchard [mailto:anton@samba.org] 
-Sent: Friday, September 20, 2002 7:57 PM
-To: Cress, Andrew R
-Cc: linux-raid@vger.kernel.org; 'linux-scsi@vger.kernel.org'; 'Mads Peter
-Bach'; Jens Arnfelt
-Subject: Re: [PATCH]: HotSwap SCSI in Soft RAID1 (scsi_rescan)
+(If this makes a difference: We have a SAN which will present a host with a disk using SCSI over fibre.  (That's the extent of my SAN-technical jargon/knowledge.).  The virtual disk presented to the host is a 0+1 RAID volume on the other end which is supposed to be transparent to the user/host system.)
 
+Disks will not necessarily always be of the same size, but we do want to concatenate them, so I guess linear would be the way to go.  Problem is I built a RAID0 array during testing, and was now trying to convert it to linear, by simply:
+*editing the /etc/raidtab file appropriately: raid-level 0-->raid-level linear
+*umount /raid_dir
+*raidstop /dev/md0
+*mkraid -R /dev/md0
 
-Hi,
+I would assume that this is the appropriate procedure, but I get a nasty kernel crash, of which I don't have anything able to capture it.
 
-> The premise I had was that this should take place automatically when a
-scsi
-> device is hot-inserted, rather than requiring intervention and knowledge
-> from the sys admin.  In short, it should work more like a hardware RAID
-> solution would.
+(Tried different combinations of enable/disabling the persistent-superblock.  I've not been able to reproduce it regularly, but was getting errors that "persistent-superblock was not supported by linear or RAID0" at various times during the boot process, but once I redid the md device with a mkraid, and built a new fs, it seemed to be OK.  The logs complained about an invalid superblock on the device 0 everytime.)
 
-It would be great if we could also have a SCSI Enclosure driver to
-handle insert and removals. This could all be in userspace (using the SG
-ioctl). In fact I played with some code from Matt Jacob a while ago and
-hacked it about to do scsi-add-single+raidhotadd and
-raidhotremove+scsi-remove-single.
+I'd also like to confirm that RAID0 can only be used for disks of aproximately the same size.  If they aren't, does the extra space become unusable?
 
-Do your drive cases support SES?
-
-Anton
+Marco
