@@ -1,46 +1,29 @@
-From: Tim Moore <linux-raid@nsr500.net>
-Subject: Re: [PATCH md 2 of 4] Fix raid6 problem
-Date: Sat, 05 Feb 2005 19:38:31 -0800
-Message-ID: <42059137.4040109@nsr500.net>
-References: <200502031743.j13Hha910546@www.watkins-home.com> <42026860.1000409@zytor.com> <Pine.LNX.4.56.0502031822160.9028@lion.drogon.net> <200502040904.38264.andrew@walrond.org> <Pine.LNX.4.56.0502041031470.29133@lion.drogon.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-In-Reply-To: <Pine.LNX.4.56.0502041031470.29133@lion.drogon.net>
+From: NeilBrown <neilb@cse.unsw.edu.au>
+Subject: [PATCH md 0 of 6] Introduction
+Date: Mon, 07 Feb 2005 13:44:19 +1100
+Message-ID: <20050207133555.17870.patches@notabene>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Gordon Henderson <gordon@drogon.net>
+To: Andrew Morton <akpm@osdl.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-Gordon Henderson wrote:
- > ...
-> It seemed more stable with just one PCI card in, so I have a 4-port card
-> on order as a last ditch attempt to make it work - I did try re-flashing
-> the BIOS on one board, (I have 2) as it seemed to be about a year old and
-> there are several updates on the Tyan web-site, however that resulted in
-> wiping out the BIOS - it seemed to be going just fine, then it went beep
-> and was silent forever more )-: Anyone in the SW have a flash
-> programmer/copier handy???
+Following are 6 patches for md in 2.6.11-rc2-mm2
 
-I had this happen when flashing 2.02b.  Reboot was an endless cycle of 15 
-short beeps.  Turns out the 2.02 memory configuration is so different than 
-the 1.?? it couldn't boot.  Swapped the 1GB PC2700 (ATP) memory with 512MB 
-modules, cleared CMOS, rebooted, reconfigured the BIOS, shut down, replaced 
-the 1GB production modules, rebooted.  Perfect ever since.
+I believe they are all suitable for inclusion in 2.6.11
 
-The sil 3114 onboard w software RAID5 has been flawless (RH 7.3 base, 
-2.4.29 kernel, SCSI/sil driver).  The only other problem was that two of 
-the 4 short black SATA cables that came with the board were intermittent. 
-Once replaced all is well.
+- Fix silly bugs in version-1 superblock code (which currently is 
+   not widely used)
+- Fix possible Oops in raid_set_faulty (which is hard to trigger in 
+   normal usage)
+- Make md work better with devfs when it is compiled in.
+- Fix a possible endless-resync-loop
+- Removing the for loop in "copy_data" (raid5 and raid6) which caused 
+  some copinging to be done multiple times (should be harmless, but is 
+  a waste)
+- Fix handling for overlapping requests to raid5 and raid6.  -mm currently
+  has a patch which is even more broken than the original code.  Adding
+  this patch fixes it up.
 
-I'd give 2.02 beta Bios a run and make sure PCI-X slot configuration is 
-matched to the controller card.  2.02 BIOS is very different than earlier 
-versions.
-
-Iwill quad opteron boards and are quite happy to never go back to intel 
-ever again.
-
-t.
--- 
-
+Thanks,
+NeilBrown
