@@ -1,42 +1,48 @@
-From: christophe.varoqui@free.fr
-Subject: [ANNOUNCE] multipath-tools-0.2.3
-Date: Mon, 14 Jun 2004 12:30:11 +0200
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1087209011.40cd7e338ca44@imp5-q.free.fr>
-References: <1084519750.40a47546dd0e6@imp1-q.free.fr> <1086256342.40bef4d61b3e9@imp3-q.free.fr> <1086619426.40c47f220de01@imp5-q.free.fr>
+From: Jurriaan <thunder7@xs4all.nl>
+Subject: 3 disk raid-5 without parity
+Date: Mon, 14 Jun 2004 13:19:20 +0200
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <20040614111920.GA17785@middle.of.nowhere>
+Reply-To: Jurriaan <thunder7@xs4all.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1086619426.40c47f220de01@imp5-q.free.fr>
-To: christophe.varoqui@free.fr
-Cc: dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-hotplug-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
+I am trying to convince my boss our new database-server wants raid-0+1,
+not raid-5, and I got an idea while reading endless articles about
+raid-5 being slow when writing and management not listening.
 
-here goes multipath-tools-0.2.3
+suppose you make a 3-disc raid-5 without parity:
 
-Changelog for this release :
- 
-2004-06-14 multipath-tools-0.2.3
-        * [multipath] group_by_serial try to be smart with LUN
-	  balancing across controlers (for STK / LSI) :
-	  1st multipath : 1st pg made of paths through 1st controler
-	  2nd multipath : 1st pg made of paths through 2nd controler
-	  3rd multipath : 1st pg made of paths through 1st controler
-	  ...
-	* [multipath] drop .pindex[] in struct multipath in favor
-	  of a *paths vector : much cleaner
-	* [multipath] fix group_by_serial pgpolicy broken by
-	  vectorisation in 0.2.2
-	* add a StorageTek and 2 SUN arrays in the sample multipath.conf
-	* [multipathd] strcmp fix from 
-	* [multipathd] convert to vector api
-	* [multipathd] add a configfile option for path checking
-	  interval. See sample configfile for synthax.
+data    disc1 disc2 disc3
+A       A     A     B
+B       B     C     C
 
-Downloads and docs at http://christophe.varoqui.free.fr
+How would that perform compared to raid-5 and raid-0+1?
 
-regards,
-cvaroqui
+As I understand, the performance problem with raid-5 when writing is
+that you may need to read old data to recompute the parity block, and
+the write the parity block and the data in parallel.
+
+So in this case, you can read straight away from all 3 disks (with
+raid-5 one of the disks will have parity information) and you can write
+without reading old data.
+
+There is a problem with extending this: you need groups of 3 disks.
+Then again, compared to raid-0+1 you need fewer disks.
+
+Has this ever been implemented? Even better, benchmarked?
+
+Just in case:
+[If this is a genuinly new idea, I hereby place it under the GPL.]
+
+Jurriaan
+-- 
+"And in the future, if we come across any other water holes, I think
+we'll drop a grenade down it first, and check the quality of the
+water afterwards."
+	Simon R Green - Hellworld
+Debian (Unstable) GNU/Linux 2.6.7-rc2-mm2 2x6078 bogomips load 2.97
