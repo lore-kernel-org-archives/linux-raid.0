@@ -1,33 +1,33 @@
-From: Steven Ihde <x-linux-raid@hamachi.dyndns.org>
-Subject: Re: LVM on top of software raid5
-Date: Sat, 4 Dec 2004 19:17:56 -0800
-Message-ID: <20041205031756.GA3784@hamachi.dyndns.org>
-References: <20041204215741.GA7828@hamachi.dyndns.org> <200412050309.iB539WJ5015009@ms-smtp-04.texas.rr.com>
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: stacked raid devices not autodetected?
+Date: Sun, 5 Dec 2004 08:26:53 +0100
+Message-ID: <20041205072652.GA30477@percy.comedia.it>
+References: <912C966151E990A5186A8A78@pcmy.sei.cmu.edu> <51419.164.129.1.39.1102088099.squirrel@164.129.1.39> <36652.212.158.231.74.1102208997.squirrel@mail.fsck.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <200412050309.iB539WJ5015009@ms-smtp-04.texas.rr.com>
+In-Reply-To: <36652.212.158.231.74.1102208997.squirrel@mail.fsck.co.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jeff Unruh <jeff@jdubya.org>
-Cc: 'Steven Joerger' <steven.joerger@gmail.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, 04 Dec 2004 21:10:01 -0600, Jeff Unruh wrote:
-> I should have mentioned I boot off a Raid-1 array with Grub and manually
-> update the 3rd disk's /boot ...
-> 
-> /dev/md0 (Raid 1) is 32 MB for /boot
-> /dev/md1 (Raid 5) is 4 GB for /
-> /dev/md2 (Raid 5 with LVM2 = /dev/vg0) is 366 GB for /home /usr /opt /var
-> and /tmp
-> 
-> I am sure that set-up is debatable, but it has worked well thus far. 
+On Sun, Dec 05, 2004 at 01:09:57AM -0000, A. James Lewis wrote:
+>
+>Was there not also a kernel command line option you could pass to assemble
+>a raid array?... I'm sure I've used this in the past, but I don't remember
+>the details...
+>
+>Anyone confirm or deny?
+  md=<md device no.>,dev0,dev1,...,devn
 
-You can make /dev/md0 a three-disk raid1 (instead of a two-disk).
-Then you can dispense with the step of manually updating when you
-change /boot.  Presumably writes to /boot are so rare that you don't
-mind the penalty of triple-writing everything -- I don't.
+L.
+(please could you reply to the list only and avoid top-posting)
 
--Steve
-
+-- 
+Luca Berra -- bluca@comedia.it
+        Communication Media & Services S.r.l.
+ /"\
+ \ /     ASCII RIBBON CAMPAIGN
+  X        AGAINST HTML MAIL
+ / \
