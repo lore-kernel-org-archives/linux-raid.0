@@ -1,30 +1,29 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: new IDE drive returning errors - is drive bad?
-Date: Thu, 01 Apr 2004 17:28:10 -0500
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: Problem with mdadm and raidstart
+Date: Fri, 2 Apr 2004 00:29:48 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <406C977A.1040209@pobox.com>
-References: <20040401222025.75979.qmail@web40712.mail.yahoo.com>
+Message-ID: <20040401222947.GB31662@percy.comedia.it>
+References: <20040401192015.40822.qmail@web14522.mail.yahoo.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20040401222025.75979.qmail@web40712.mail.yahoo.com>
-To: David Nedved <david_nedved@yahoo.com>
-Cc: linux-raid@vger.kernel.org
+Content-Disposition: inline
+In-Reply-To: <20040401192015.40822.qmail@web14522.mail.yahoo.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-David Nedved wrote:
-> <without DMA>
-> similar lines other than the following three:
-> 
-> Apr  1 13:23:53 celeri kernel: APIC error on CPU0: 08(02)
+On Thu, Apr 01, 2004 at 11:20:15AM -0800, Don Jessup wrote:
+>   I have been testing disk failures with RAID5.   I have problems that I
+>  have run into that happens with raidstart and mdadm. 
+use the --scan and --super-minor or --uuid parameters to mdadm.
+you will need to edit mdadm.conf
 
+L.
 
-If you're getting APIC errors, I wouldn't necessarily blame the drive. 
-That sounds more like motherboard/cpu.
-
-Another common area of annoyance is bad drive cables.
-
-	Jeff
-
-
+-- 
+Luca Berra -- bluca@comedia.it
+        Communication Media & Services S.r.l.
+ /"\
+ \ /     ASCII RIBBON CAMPAIGN
+  X        AGAINST HTML MAIL
+ / \
