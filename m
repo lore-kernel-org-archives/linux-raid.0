@@ -1,45 +1,40 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: Software Raid Autodetection Problem
-Date: Fri, 12 Sep 2003 16:51:09 +1000
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Supporting Promise RAID5?
+Date: Fri, 12 Sep 2003 13:18:19 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16225.27869.416690.372183@notabene.cse.unsw.edu.au>
-References: <200309121545.05799.darrylb@iprimus.com.au>
+Message-ID: <3F61FFDB.2010805@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Darryl Barlow on Friday September 12
-To: darrylb@iprimus.com.au
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: Arjan van de Ven <arjanv@redhat.com>, neilb@cse.unsw.edu.au
 List-Id: linux-raid.ids
 
-On Friday September 12, darrylb@iprimus.com.au wrote:
-> Neil,
-> 
-> Thanks for the reply.
-> 
-> Software Raid is linked directly into the kernel and not a module.  I notice 
-> using make menuconfig on 2.4.21 there is no specific autodetect option as 
-> with earlier kernels, and presume this is no longer necessary.  All options 
-> under Multi-Device support are linked in, as is Reiserfs which I am using on 
-> the array.  dmesg shows that autodetection is taking place but it does not 
-> appear to find anything.  raidstart --all seems to bring it up, as do the 
-> initscripts if I reconfigure raidtools2.
-> 
-> Any suggestions welcome.
+So, Promise is interested in working with the open source community to 
+support their metadata formats.  Their customers (and I) are pushing 
+them to support "Linux RAID" (i.e. md), but they want to be able to 
+support their existing customers as well.
 
-You are right that there is no longer a special config option for
-autodetect.
+This email is basically a two part question:  what's the best for 2.4? 
+and 2.6?
 
-Could I see a complete copy of dmesg output?
+For 2.4, it's basically a dead end branch, IMO.  Any 2.6 solution will 
+likely be different.  So my suggestion here is to use as much of md's 
+raid5 logic as possible.  Either share code -- where possible -- and 
+copy code where not.  The idea is to not reinvent a raid5 engine, and 
+also leave 2.4 md alone as much as possible.
 
-Is anything interesting in modules? ide driver? scsi driver?...
+For 2.6, there are several possibilities.  Arjan (ataraid maintainer) 
+has been pondering going through device mapper.  In another email, NeilB 
+pointed out to me that 2.6 md is well on its way to supporting pluggable 
+metadata formats.
 
-ByTheWay, I *strongly* recommend against using raidstart.  It is very
-fragile and will quite possibly fail miserable if you have a failed
-drive.
-I use and recommend (and wrote) mdadm which is much more reliable at
-starting arrays.
-  http://www.kernel.org/pub/linux/utils/raid/mdadm/  (I think)
+I'm interested in input mainly on 2.6, but welcome suggestions for 2.4 
+as well.  One key point that Arjan repeatedly points out to me is that 
+md doesn't support partitions (in 2.4 at least, if not 2.6).
 
-NeilBrown
+	Jeff
+
+
+
