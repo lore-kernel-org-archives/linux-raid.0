@@ -1,88 +1,73 @@
-From: <me@heyjay.com>
-Subject: Re: Which raid card to buy for Sarge
-Date: Thu, 1 Apr 2004 22:46:19 -0600
+From: "Lewis Shobbrook" <lshobbrook@fasttrack.net.au>
+Subject: RE: md raid oops on 2.4.25/alpha
+Date: Fri, 2 Apr 2004 17:28:10 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <00a401c4186f$ffd21110$6405a8c0@a30>
-References: <008f01c41737$8b57be40$6405a8c0@a30> <006401c417a1$36a45790$6405a8c0@a30> <406BAF7F.2030307@pobox.com> <013101c417e8$fa7fd670$6405a8c0@a30> <406C6E0F.2000607@physics.ucsd.edu>
-Reply-To: <me@heyjay.com>
+Message-ID: <0C8098CA7F09CE419F0C2B68EB8358761EB865@exchange.fasttrack.net.au>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+	charset="US-ASCII"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Terrence Martin <tmartin@physics.ucsd.edu>, linux-raid@vger.kernel.org
+Content-class: urn:content-classes:message
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I think I'll read the how-tos and see if I can't get the software raid up
-and running
+Hi All,
 
-thanks
-Jay
------ Original Message ----- 
-From: "Terrence Martin" <tmartin@physics.ucsd.edu>
-To: <me@heyjay.com>; <linux-raid@vger.kernel.org>
-Sent: Thursday, April 01, 2004 1:31 PM
-Subject: Re: Which raid card to buy for Sarge
+[Excerpt from linux-raid mailing list]
+> We have some problems with the md code on alpha. We get
+> regular oops when using the md raid1. Here we got another 
+> oops when fsck (at boot 
+> time) the raid:
+> This was after a fresh reboot. As long as only the raid is 
+> *not* mounted of fsck the machine works without any oops.
 
+I've found similar results with the unstable Debian 2.4.25.-1-686
+kernel.
+ 
+> I also can mount the hard disks *without* raid directly as
+> hda1 and hdc1, and do NOT get any errors here, so I suspect 
+> that only the md code is the culprit.
 
-> me@heyjay.com wrote:
->
-> >----- Original Message ----- 
-> >From: "Jeff Garzik" <jgarzik@pobox.com>
-> >To: <me@heyjay.com>
-> >Cc: <linux-raid@vger.kernel.org>
-> >Sent: Wednesday, March 31, 2004 11:58 PM
-> >Subject: Re: Which raid card to buy for Sarge
-> >
-> >
-> >
-> >
-> >>98% cpu doing just raid 1?  That sounds highly strange, even on an older
-> >>CPU.
-> >>
-> >>Typically RAID1 doesn't stress the cpu as much as PCI bus bandwidth and
-> >>the drives...
-> >>
-> >>
-> >>
-> >
-> >Sorry, I was unclear.  Currently (without raid) my process maxes out my
-cpu.
-> >If I move to raid won't I have performance problems?  Maybe all the work
-> >happens at the PCI bus
-> >
-> >Jay
-> >
-> >-
-> >To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> >the body of a message to majordomo@vger.kernel.org
-> >More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >
-> >
-> >
->
-> AFAIK there is no additional calculations on RAID1 so little or no CPU,
-> as long as you make sure your drivers are not in an IDE master/slave
-> relationship you will get equivalent performance to a single drive
-> system, but with redundancy.
->
-> This assumes that the RAID array is not recovering at the time of course
-> or doing an integrity check (after an unclean shutdown).
->
-> In general though I would not expect Linux software RAID1  to have any
-> additional CPU cost over a single drive.
->
-> As an aside alone the 99% CPU utilization is perhaps not a good measure
-> of your system load or capacity. You should also look at how much IO
-> your process produces and also the total load on the system (how much
-> processes are waiting to execute).  Most processes if they do any
-> significant IO are bound by that, not the CPU. If your process does
-> little or no IO I would not expect any RAID config to have any impact at
-> all, even RAID5.
->
-> see vmstat(8) and uptime(1)
->
-> Terrence
->
->
+Same again here.
 
+I have /dev/hda2 listed in raidtab as a failed disc, lilo points to hda
+as boot.  I get kernel panic when attemtpting to boot to it.
+
+I thought this strange as I have another system running the very same
+kernel (even used the same copied kernel deb) with a UU (no failed)raid
+1 running off a hpt372 onboard controller (as soft md, not hardware raid
+1).  The raid device was present prior to the kernel in this instance.
+I was impressed that the std initrd wokred with both md and hpt372
+without modification, where the process had been more involved in the
+past requiring a custom initrd or "compiled in" kernel.
+
+I thought that the devfs (compiled in with the std debain kernel) may
+have been an issue, but it has never been in the past and the same
+filesystem on the raidtab listed "failed" drive /dev/hda2 is happy.
+
+I can boot the the raid 1 as root filesystem when passing root=/dev/md0
+loading through a system rescue disc (http://www.sysresccd.org/) with a
+2.4.25 kernel. 
+
+Attempting to boot to /dev/md0  with the Debian 2.4.25-1-686 kernel
+panics after attempting to mount the device /dev2/root2 as ext2, minix &
+fat (possibly others that disappear before they can be read) and
+complains the std way when you attempt to mount with the wrong fs. 
+...
+pivot_root: no such file or directory
+/sbin/init: 347: cannot open dev/console : no such file
+Kernel panic: Attempted to kill init !
+
+I've attempted to pre-load the initrd modules, but didn't expect this to
+be a solution and it wasn't.
+
+I'm scratching the head and losing hair...
+
+Never had any trouble of this sort before.
+
+Any suggestions appreciated.
+
+Cheers,
+
+Lewis
