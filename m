@@ -1,88 +1,46 @@
-From: Daniel Pittman <daniel@rimspace.net>
-Subject: Re: Q: RAID-1 w/2x160GB, ReiserFS, Debian 'woody', homebrew 2.4.25 kernel
-Date: Thu, 05 Aug 2004 17:26:50 +1000
+From: Tim Small <tim@buttersideup.com>
+Subject: Re: Q: RAID-1 w/2x160GB, ReiserFS, Debian 'woody', homebrew 2.4.25
+ kernel
+Date: Thu, 05 Aug 2004 10:20:53 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <87657ycaf9.fsf@enki.rimspace.net>
-References: <ceq7ij$vj7$1@sea.gmane.org>
-	<27897.194.60.85.4.1091613610.squirrel@194.60.85.4>
-	<cesjcm$9da$1@sea.gmane.org>
+Message-ID: <4111FBF5.8000806@buttersideup.com>
+References: <ceq7ij$vj7$1@sea.gmane.org>	<27897.194.60.85.4.1091613610.squirrel@194.60.85.4>	<cesjcm$9da$1@sea.gmane.org> <87657ycaf9.fsf@enki.rimspace.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <87657ycaf9.fsf@enki.rimspace.net>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 5 Aug 2004, Jens Benecke wrote:
-> Robin Bowes wrote:
->
->> On Wed, August 4, 2004 9:42, Jens Benecke said:
+Daniel Pittman wrote:
 
-[...]
-
-> see subject (Debian). I've looked at SuSE though, it seems with their setup
-> RAID and ReiserFS is much easier to handle. 
-
-The upcoming release of Debian will feature MD and LVM device creation
-at install time, but is not yet stable; the current stable release does
-not support either of them.
-
-I usually do a minimal install on one "missing" disk in a RAID set, then
-copy that to the RAID, reboot and add back the missing disk. Painful,
-but possible.
-
-[...]
-
-> Hm... I thought LVM did mirroring and striping as well? I didn't think you
-> can or should use them together. Wouldn't that degrade performance as
-> well?
-
-It can, if you want it to, but it doesn't have to.  I usually just use
-MD devices created over partitions, because that is supported by
-in-kernel detection, and because it avoids the LVM ... instability of
-the last few years.
-
-I am told that LVM is much more stable these days, though. :)
-
->>> Does MD or LVM2 do hot sync, i.e. if one drive fails will I be able to
->>> stick in a replacement, and stop worrying? Or do I need to repartition
->>> the new disk exactly as the old one, before being able to sync?
+>>see subject (Debian). I've looked at SuSE though, it seems with their setup RAID and ReiserFS is much easier to handle. 
+>>    
 >>
->> I'm not sure about this. My understanding is that you will need to
->> shutdown the system to replace the bad disk and partition the new disk
->> manually before md will resync, but this could be wrong.
+>The upcoming release of Debian will feature MD and LVM device creation
+>at install time, but is not yet stable; the current stable release does
+>not support either of them.
+>  
 >
-> What I mean is, will md resync automatically or would I have to initiate
-> this manually?
+Sarge is pretty good at the moment (at least I am running production 
+systems on it, and have been for the last few months) - the disadvantage 
+of installing a new Woody system now is that security updates for it 
+will probably stop before it's reached the end of it's useful life.  Of 
+course, as it's Debian, you should be able to upgrade to Sarge 
+relatively painlessly, but I'd probably rather avoid the hassle, and go 
+straight to Sarge now.  I think Debian Installer currently includes 
+support for installing Sarge directly onto md mirrors (including 
+handling the boot-loader stuff), but I haven't tried it yet...  Might be 
+worth trying one of the daily builds from:
 
-MD will resync if there is a hot-spare available, but will not
-automatically suck a replacement disk into place. You need to partition
-(if you use them), then manually add the new disk to the RAID set.
+http://www.debian.org/devel/debian-installer/
 
-With mirroring, of course, I can't see the point in using a hot-spare
-over having additional devices in the mirror set, except for PCI and
-disk bus bandwidth.
+The disadvantage of installing Sarge yet is that it won't go through the 
+official security updates until it is released, but in the mean time, 
+you can pull security-fixes in from unstable (using apt-pinning if you 
+like) - sounds nasty but it seems to work quite well in practice.  Sorry 
+for getting distribution-centric on the list!
 
-For most servers they cost less than the risk that using hot-spare disks
-implies. :)
-
-[...]
-
->>> The goal is to have as "stress free" a system as possible - i.e. with as
->>> little manual configuration, and in event of emergencies, as little work
->>> to do, as possible.
->>
->> If you want stress free, buy a Netapps storage appliance ;o)
->
-> If they do all the rest that I need (smtp, web, file server, ftp server,
-> mysql, spamassassin, etc etc etc) fine. If not, I'd need to set up another
-> box anyway, so I wouldn't see the advantage.
-
-If you can afford them then they are one of the most stress free ways to
-get a lot of disk space. They are not a substitute for standard storage,
-though, and they do cost a bit...
-
-        Daniel
--- 
-To lie about a far country is easy.
-        -- Amharic proverb
+Tim.
 
