@@ -1,43 +1,36 @@
-From: spam@streefland.xs4all.nl (Dick Streefland)
-Subject: Re: RAID1 recovery fails with 2.6 kernel
-Date: Sun, 26 Oct 2003 20:36:37 -0000
+From: dean gaudet <dean-list-linux-raid@arctic.org>
+Subject: Re: recovery of hosed raid5 array
+Date: Sun, 26 Oct 2003 13:29:04 -0800 (PST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <71df.3f9c3055.1a3cb@altium.nl>
-References: <297d.3f93a033.85d8f@altium.nl> <7da.3f929f6e.d36f3@altium.nl> <16275.32127.862408.701013@notabene.cse.unsw.edu.au> <297d.3f93a033.85d8f@altium.nl> <1066844591.1260.31.camel@star2>
-Reply-To: dick.streefland@xs4all.nl (Dick Streefland)
+Message-ID: <Pine.LNX.4.58.0310261325410.20038@twinlark.arctic.org>
+References: <slrnbog9og.t0c.lunz@orr.homenet> <no.Yo.24973.N.nN.0310111457280@business.com>
+ <slrnboirt8.me8.lunz@orr.homenet> <Pine.LNX.4.58.0310121034090.7866@twinlark.arctic.org>
+ <20031026194051.GA4511@matchmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <20031026194051.GA4511@matchmail.com>
+To: Mike Fedyk <mfedyk@matchmail.com>
+Cc: Jason Lunz <lunz@falooley.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Mike Tran <mhtran@us.ibm.com> wrote:
-| I have been experiencing the same problem on my test machine.  I found
-| out that the resync terminated early because of MD_RECOVERY_ER R bit set
-| by raid1's sync_write_request().  I don't understand why it fails the
-| sync when all the writes already completed successfully and quickly.  If
-| there is a need to check for "nowhere to write this to" as in 2.4.x
-| kernel, I think we need a different check.
-| 
-| The following patch for 2.6.0-test8 kernel seems to fix it.
-| 
-| --- a/raid1.c   2003-10-17 16:43:14.000000000 -0500
-| +++ b/raid1.c   2003-10-22 11:57:59.350900256 -0500
-| @@ -841,7 +841,7 @@
-|         }
-|  
-|         if (atomic_dec_and_test(&r1_bio->remaining)) {
-| -               md_done_sync(mddev, r1_bio->master_bio->bi_size >> 9, 0);
-| +               md_done_sync(mddev, r1_bio->master_bio->bi_size >> 9, 1);
-|                 put_buf(r1_bio);
-|         }
-|  }
+On Sun, 26 Oct 2003, Mike Fedyk wrote:
 
-Has this patch been forwarded to Linus already? It would be nice to
-have this fixed before the final 2.6.0 is released.
+> On Sun, Oct 12, 2003 at 10:39:50AM -0700, dean gaudet wrote:
+> >
+> > querying SMART shouldn't cause this to happen -- but i've seen it occur
+> > with a promise controller and maxtor disks.  i used to query the SMART
+> > data once a night just to have a log.  then i switched it to once every 5
+> > minutes so i could graph the drive temperature... and when i went to once
+> > every 5 minutes the system became unstable.  the kernel would randomly
+> > lose the ability to talk to a disk.  the problem would go away after a
+> > reboot.  i assume it was some sort of race condition.
+>
+> 1.  Were they maxtor 160GB 8MB cache drives?
 
--- 
-Dick Streefland                    ////               De Bilt
-dick.streefland@xs4all.nl         (@ @)       The Netherlands
-------------------------------oOO--(_)--OOo------------------
+no they were 6L080J4 ... 80GB D740X.  attached to both ultra100tx2 and
+ultra133tx.  this was also long enough ago that the promise driver was
+still the single driver, not the newer driver.  who knows what the problem
+really was.
 
+-dean
