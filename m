@@ -1,95 +1,31 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: Confusing failed disk situation
-Date: Wed, 5 Jan 2005 13:12:49 -0500
-Message-ID: <200501051812.j05ICt926569@www.watkins-home.com>
-References: <41DC28F1.6030109@uiuc.edu>
+From: Gordon Henderson <gordon@drogon.net>
+Subject: ECC: RE: ext3 blah blah blah ...
+Date: Wed, 5 Jan 2005 17:34:16 +0000 (GMT)
+Message-ID: <Pine.LNX.4.56.0501051729290.9117@lion.drogon.net>
+References: <Pine.LNX.3.96.1050105091502.9709A-100000@Maggie.Linux-Consulting.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <41DC28F1.6030109@uiuc.edu>
+In-Reply-To: <Pine.LNX.3.96.1050105091502.9709A-100000@Maggie.Linux-Consulting.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Sharif Islam' <mislam@uiuc.edu>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-It is resyncing to hdi1.  It should be done around 2:00 your time.
-You could up the speed!
+On Wed, 5 Jan 2005, Alvin Oga wrote:
 
-Do this:
-echo 100000 > /proc/sys/dev/raid/speed_limit_max
+> even if one uses ecc... ecc can only fix certain errors,
+> and non-correctable errors are flagged and not fixed
+> ( burst errors are hard to fix )
+>
+> and people that use ecc memory ... usually have higher-end motherboards
+> and more memory in the system vs the $50 motherboard+cpu combo (disasters)
+> from fries ( a local pc store )
 
-Then note the speed increase with:
-cat /proc/mdstat
+One thing thats been irritating me for a long time is that it's all very
+well using (and paying for!) ECC memory, but there are parts of the system
+that don't have ECC or parity - eg. the PCI bus, processor bus and
+internal paths, and so on...
 
-Guy
+But where do you draw the line?
 
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Sharif Islam
-Sent: Wednesday, January 05, 2005 12:51 PM
-To: linux-raid@vger.kernel.org
-Subject: Confusing failed disk situation
-
-I am rebuilding a RAID-5 with 5 disk. Last night when it finished I saw
-the RAID is done with one failed disk. Not sure what happened. It gave 
-me inode
-error on mke2fs. Then I replaced the failed disk(hdi) with another old 
-disk. I am pretty
-sure both disks are fine. I noticed this.
-
-Jan  5 11:12:50 kernel:  --- rd:5 wd:4 fd:1
-Jan  5 11:12:50  kernel:  disk 0, s:0, o:1, n:0 rd:0 us:1 dev:hdg1
-Jan  5 11:12:50  kernel:  disk 1, s:0, o:1, n:1 rd:1 us:1 dev:hdh1
-Jan  5 11:12:50  kernel:  disk 2, s:0, o:1, n:2 rd:2 us:1 dev:hdj1
-Jan  5 11:12:50  kernel:  disk 3, s:0, o:1, n:3 rd:3 us:1 dev:hdf1
-Jan  5 11:12:50  kernel:  disk 4, s:0, o:0, n:4 rd:4 us:1 dev:[dev 00:00]
-Jan  5 11:12:50  kernel: RAID5 conf printout:
-Jan  5 11:12:50  kernel:  --- rd:5 wd:4 fd:1
-Jan  5 11:12:50  kernel:  disk 0, s:0, o:1, n:0 rd:0 us:1 dev:hdg1
-Jan  5 11:12:50  kernel:  disk 1, s:0, o:1, n:1 rd:1 us:1 dev:hdh1
-Jan  5 11:12:50  kernel:  disk 2, s:0, o:1, n:2 rd:2 us:1 dev:hdj1
-Jan  5 11:12:50  kernel:  disk 3, s:0, o:1, n:3 rd:3 us:1 dev:hdf1
-Jan  5 11:12:50  kernel:  disk 4, s:0, o:0, n:4 rd:4 us:1 dev:[dev 00:00]
-Jan  5 11:12:50  kernel: md2: resyncing spare disk hdi1 to replace 
-failed disk
-Jan  5 11:12:50  kernel: RAID5 conf printout:
-Jan  5 11:12:50  kernel:  --- rd:5 wd:4 fd:1
-Jan  5 11:12:50  kernel:  disk 0, s:0, o:1, n:0 rd:0 us:1 dev:hdg1
-Jan  5 11:12:50  kernel:  disk 1, s:0, o:1, n:1 rd:1 us:1 dev:hdh1
-Jan  5 11:12:50  kernel:  disk 2, s:0, o:1, n:2 rd:2 us:1 dev:hdj1
-Jan  5 11:12:50  kernel:  disk 3, s:0, o:1, n:3 rd:3 us:1 dev:hdf1
-Jan  5 11:12:50  kernel:  disk 4, s:0, o:0, n:4 rd:4 us:1 dev:[dev 00:00]
-Jan  5 11:12:50  kernel: RAID5 conf printout:
-Jan  5 11:12:50  kernel:  --- rd:5 wd:4 fd:1
-Jan  5 11:12:50  kernel:  disk 0, s:0, o:1, n:0 rd:0 us:1 dev:hdg1
-Jan  5 11:12:50  kernel:  disk 1, s:0, o:1, n:1 rd:1 us:1 dev:hdh1
-Jan  5 11:12:50  kernel:  disk 2, s:0, o:1, n:2 rd:2 us:1 dev:hdj1
-Jan  5 11:12:50  kernel:  disk 3, s:0, o:1, n:3 rd:3 us:1 dev:hdf1
-Jan  5 11:12:50  kernel:  disk 4, s:0, o:0, n:4 rd:4 us:1 dev:[dev 00:00]
-Jan  5 11:12:50  kernel: md: syncing RAID array md2
-Jan  5 11:12:50  kernel: md: minimum _guaranteed_ reconstruction speed: 
-100 KB/sec/disc.
-Jan  5 11:12:50  kernel: md: using maximum available idle IO bandwith 
-(but not more than 10000 KB/sec) for reconstruction.
-
-cat /proc/mdstat
-Personalities : [linear] [raid5]
-read_ahead 1024 sectors
-Event: 2
-md2 : active raid5 hdi1[5] hdf1[3] hdj1[2] hdh1[1] hdg1[0]
-      468882432 blocks level 5, 128k chunk, algorithm 2 [5/4] [UUUU_]
-      [===>.................]  recovery = 17.7% (20796612/117220608) 
-finish=156.3min speed=10274K/sec
-unused devices: <none>
-
-Is hdi again failed? Or something wrong with the cable/raid card for 
-that drive?
-
-
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+Gordon
