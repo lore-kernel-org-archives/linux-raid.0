@@ -1,29 +1,31 @@
-From: rich turner <rich@storix.com>
-Subject: raidtools vs mdadm
-Date: Tue, 31 Aug 2004 11:55:43 -0700
+From: "Augustine Ortiz, Jr." <aortizjr@lanl.gov>
+Subject: Getting HD Serial Numbers in RAID
+Date: Tue, 31 Aug 2004 13:45:23 -0600
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1093978543.3399.20.camel@rich>
+Message-ID: <1093981522.27891.20.camel@afgar.lanl.gov>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-raid.ids
 
-i work for a software company that develops backup and disaster recovery
-software for linux. our product supports software raid, but i must say
-that we currently only support it when devices are created with
-raidtools. i only recently heard about mdadm and am very impressed with
-its flexibility and funtionality.
+Hi...
 
-my question is how popular is mdadm in production environments as this
-compares to raidtools?
+I have been working on getting serial numbers electronically off of hard
+drives for various reasons.
 
-is mdadm used to configure software raid on any distribution
-installations?
+I have been successful with IDE and most SCSI drives (using hdparm and
+scsiinfo). However I am running into trouble with ones that are on
+AACRAID/PERC3 adaptors and actually in a RAID array.
 
-is mdadm trending to become the defacto standard for software raid on
-linux?
+The only serial number I can seem to grab is the one for the entire
+volume which is just assigned.
 
-rich turner
+Are there any tools available to get the serial number off the drives in
+the array? Or can I get some pointers on writing such a tool?
+
+Thank you.
+
+Augustine
 
