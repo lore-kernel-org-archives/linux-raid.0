@@ -1,24 +1,28 @@
-From: <me@heyjay.com>
-Subject: Software raid on extended partitions
-Date: Sun, 2 May 2004 01:46:19 -0500
+From: "santiago" <dmcalish@hotmail.com>
+Subject: CAS1N0: New Deal!! 50% Sign Up Bonus! groovy catfish!
+Date: Sun, 02 May 2004 09:23:09 GMT
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <000601c43011$2e3be130$6705a8c0@a30>
-Reply-To: <me@heyjay.com>
-Mime-Version: 1.0
+Message-ID: <1083489789-14505__49466.9912070551$1083514624@excite.com>
 Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+To: linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+PREMI|ERE ONLIN'E CAS`INO!
+50% BONU}S for YOUR FIRST DEPO:SIT as a New Player.
 
-I'm googling the list but I can't find the answer.
+SI!GN UP now! Don't wait!
 
-Can you build software raid upon extended partitions?  If so could someone
-point me at some instructions how to do it?
+http://www.bettingcasinoes.com/_e4faa55afa1972493c43ac8a3f66f869/
 
-Thanks
-Jay
+Once you're a Mem`ber, there are near WEEK|LY 2-T`O-1, and 3-T{O-1 depo!sit offers!
 
+Imagine, put in $25, GET $50 CRE}DIT BE|FORE YOU PL{ACE YO{UR FI{RST BET!!
+
+CLIC`K HER{E!
+
+http://www.bettingcasinoes.com/_e4faa55afa1972493c43ac8a3f66f869/
+
+
+
+oranges tina money1 irene theatre passion naomi pookie1 goblue tanya chance energy safety kleenex roxy trident ladybug dirk politics nautica sally republic law dragonfl law irene
