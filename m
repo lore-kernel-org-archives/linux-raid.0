@@ -1,50 +1,44 @@
-From: Gordon Henderson <gordon@drogon.net>
-Subject: Re: Tyan, RAID-6, and other recent hassles... (long, a bit OT)
-Date: Mon, 21 Feb 2005 14:32:39 +0000 (GMT)
-Message-ID: <Pine.LNX.4.56.0502211146120.17307@lion.drogon.net>
-References: <Pine.LNX.4.56.0502170923200.819@lion.drogon.net>
- <42172E56.3040007@panix.com> <Pine.LNX.4.56.0502191220130.819@lion.drogon.net>
- <421749F1.3040503@panix.com>
+From: Paul Clements <paul.clements@steeleye.com>
+Subject: [PATCH] max_dev bug in super_1_sync
+Date: Mon, 21 Feb 2005 14:31:39 -0500
+Message-ID: <421A371B.7040802@steeleye.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-In-Reply-To: <421749F1.3040503@panix.com>
+Content-Type: multipart/mixed;
+ boundary="------------080408080002040802030603"
 Sender: linux-raid-owner@vger.kernel.org
-To: berk walker <berk@panix.com>
-Cc: linux-raid@vger.kernel.org
+To: neilb@cse.unsw.edu.au, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, 19 Feb 2005, berk walker wrote:
+This is a multi-part message in MIME format.
+--------------080408080002040802030603
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
-> [I usually do not spend bandwidth in quoting big stuff, but your's might
-> be worth it]
-> Properly chastised.  One CAN do net raid, 4,000 [where's my pound key?]
-> is still a lot to me, [don't forget my name IS berk :)]
+Neil,
 
-Thats for 2 servers, remember. Worry not though! I didn't post the full
-background of this one, so it might have been easy to come to the wrong
-conclusions.
+I don't know if you've seen this one yet, but it looks like there's a 
+small bug in super_1_sync. Patch attached.
 
-> One doesn't always get what one pays for - but one usually pays for what
-> one gets.
+--
+Paul
 
-> Too bad that you're not stateside.  I really like your attitude
-> [email-wise], and would hunt you down for a job [mine sux].
+--------------080408080002040802030603
+Content-Type: text/plain;
+ name="md_max_dev_bug.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="md_max_dev_bug.diff"
 
-I spent 2 years working in the US once upon a time... Not sure I'd like to
-go back! I've spent a lot of time working with startup companies in the
-past (present and likely future!) it's a funny old business. Sometimes you
-get a group that seem to do well, but fail in some odd way, sometimes
-people fail, pick themselves up, fail, etc. (And some just deserve to die,
-be burried and totally forgotten about!!!)
+--- linux-2.6.11-rc3-mm2-patch-all-write-mostly/drivers/md/md.c	Mon Feb 21 12:23:32 2005
++++ linux-2.6.11-rc3-mm2-patch-all-write-mostly-max-dev-bug/drivers/md/md.c	Mon Feb 21 14:22:21 2005
+@@ -1018,7 +1018,7 @@ static void super_1_sync(mddev_t *mddev,
+ 	
+ 	sb->max_dev = cpu_to_le32(max_dev);
+ 	for (i=0; i<max_dev;i++)
+-		sb->dev_roles[max_dev] = cpu_to_le16(0xfffe);
++		sb->dev_roles[i] = cpu_to_le16(0xfffe);
+ 	
+ 	ITERATE_RDEV(mddev,rdev2,tmp) {
+ 		i = rdev2->desc_nr;
 
-The new box was installed yesterday and has been running disk & network
-tests for a while and so-far so good. I don't have Gb Ethernet in my home
-office, so hadn't had a chace to test it at full line speeds, bu right now
-it's going well. I typically run multiple copies of bonnie and wget
-to/from another server to thrash the networking, then will do stuff via
-NFS, transfer big files, checksum them, etc. as well as lots of little
-files. Anyone have a good solid testsuite then like to run?
-
-Cheers,
-
-Gordon
+--------------080408080002040802030603--
