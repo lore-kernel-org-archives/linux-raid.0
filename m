@@ -1,98 +1,104 @@
-From: Mark Thompson <mark@ruthless.ws>
-Subject: Re: mdadm: Invalid Argument ("cannot start dirty degraded array")
-Date: Wed, 10 Nov 2004 10:41:18 +1300
-Message-ID: <4191397E.6080005@ruthless.ws>
-References: <m3ekj3f16q.fsf@bfnet.com>
+From: Jesse Burkhardt <jesse@skybuilders.com>
+Subject: More: Fedora 2.0 - raid1 not working
+Date: Tue, 09 Nov 2004 17:14:25 -0500
+Message-ID: <41914141.6030108@skybuilders.com>
+References: <419115A5.4050905@skybuilders.com> <20041109192219.GA5822@middle.of.nowhere> <41911ACB.2070604@skybuilders.com> <20041109194127.GA17963@middle.of.nowhere>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <m3ekj3f16q.fsf@bfnet.com>
+In-Reply-To: <20041109194127.GA17963@middle.of.nowhere>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux Raid <linux-raid@vger.kernel.org>
+To: Jurriaan <thunder7@xs4all.nl>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-David Wuertele wrote:
-> I have a gentoo system (kernel 2.6.8-gentoo-r3) with a 7 drive RAID5
-> array.  Recently that array went down, and I was advised by the list
-> to try mdadm.  I was unsuccessful, but perhaps someone here can advise
-> me where I went wrong.
-> 
-> When I boot, I see the "Starting up RAID devices: ... * Trying
-> md0... [ !!FAILED ]" and the system drops me to the shell.  I type:
-> 
->   # cat /proc/mdstat
->   Personalities : [raid1] [raid5]
->   md0 : inactive hdm4[0] hde2[6] hdo2[5] hdh2[4] hdf2[3] hdg2[2]
->         1464789888 blocks
->   unused devices: <none>
-> 
-> OK, the array is missing partition hdp2.  dmesg says it has an invalid
-> superblock:
-> 
->   # dmesg | grep hdp
->       ide7: BM-DMA at 0xd808-0xd80f, BIOS settings: hdo:DMA, hdp:DMA
->   hdp: WDC WD2500JB-00GVA0, ATA DISK drive
->   hdp: max request size: 1024KiB
->   hdp: 488397168 sectors (250059 MB) w/8192KiB Cache, CHS=30401/255/63, UDMA (100)
->   md: invalid raid superblock magic on hdp2
->   md: hdp2 has invalid sb, not importing!
->   Adding 64220k swap on /dev/hdp1.  Priority:-2 extents:1
-> 
-> I didn't see any indication that there is anything wrong with the hdp
-> drive.  Here is my /etc/mdadm.conf file:
-> 
->   # cat /etc/mdadm.conf
->   DEVICE partitions
->   ARRAY /dev/md0 level=raid5 num-devices=7 UUID=d312c423:e2eeeff5:3401806f:ab10e3c
->      devices=/dev/ide/host2/bus0/target0/lun0/part2,/dev/ide/host2/bus0/target1/lun0/part2,/dev/ide/host2/bus1/target0/lun0/part2,/dev/ide/host2/bus1/target1/lun0/part2,/dev/ide/host6/bus0/target0/lun0/part4,/dev/ide/host6/bus1/target0/lun0/part2
-> 
-> Since /proc/mdstat reports that six of the seven drives are already
-> assembled, I tried running as-is:
-> 
->   # mdadm --run /dev/md0
->   mdadm: failed to run array /dev/md0: Invalid argument
->   # mdadm -v --run --force /dev/md0
->   mdadm: failed to run array /dev/md0: Invalid argument
-> 
-> Hmm... not very descriptive.  I looked at the end of dmesg again for
-> more hints:
-> 
->   # dmesg | tail -18
->   md: pers->run() failed ...
->   raid5: device hdm4 operational as raid disk 0
->   raid5: device hde2 operational as raid disk 6
->   raid5: device hdo2 operational as raid disk 5
->   raid5: device hdh2 operational as raid disk 4
->   raid5: device hdf2 operational as raid disk 3
->   raid5: device hdg2 operational as raid disk 2
->   raid5: cannot start dirty degraded array for md0
->   RAID5 conf printout:
->    --- rd:7 wd:6 fd:1
->    disk 0, o:1, dev:hdm4
->    disk 2, o:1, dev:hdg2
->    disk 3, o:1, dev:hdf2
->    disk 4, o:1, dev:hdh2
->    disk 5, o:1, dev:hdo2
->    disk 6, o:1, dev:hde2
->   raid5: failed to run raid set md0
->   md: pers->run() failed ...
-> 
-> Any suggestions?
-> Thanks,
-> Dave
+A little more info - this is excerpted from dmesg:
 
-Hey there,
+md: Autodetecting RAID arrays.
+md: autorun ...
+md: considering hdd3 ...
+md:  adding hdd3 ...
+md: hdd1 has different UUID to hdd3
+md:  adding hda3 ...
+md: hda1 has different UUID to hdd3
+md: created md1
+md: bind<hda3>
+md: bind<hdd3>
+md: running: <hdd3><hda3>
+md: kicking non-fresh hdd3 from array!
+md: unbind<hdd3>
+md: export_rdev(hdd3)
+md: personality 3 is not loaded!
+md :do_md_run() returned -22
+md: md1 stopped.
+md: unbind<hda3>
+md: export_rdev(hda3)
+md: considering hdd1 ...
+md:  adding hdd1 ...
+md:  adding hda1 ...
+md: created md0
+md: bind<hda1>
+md: bind<hdd1>
+md: running: <hdd1><hda1>
+md: kicking non-fresh hdd1 from array!
+md: unbind<hdd1>
+md: export_rdev(hdd1)
+md: personality 3 is not loaded!
+md :do_md_run() returned -22
+md: md0 stopped.
+md: unbind<hda1>
+md: export_rdev(hda1)
+md: ... autorun DONE.
+RAMDISK: Compressed image found at block 0
+VFS: Mounted root (ext2 filesystem).
+md: raid1 personality registered as nr 3
+md: Autodetecting RAID arrays.
+md: autorun ...
+md: considering hda1 ...
+md:  adding hda1 ...
+md:  adding hdd1 ...
+md: hda3 has different UUID to hda1
+md: hdd3 has different UUID to hda1
+md: created md0
+md: bind<hdd1>
+md: bind<hda1>
+md: running: <hda1><hdd1>
+md: kicking non-fresh hdd1 from array!
+md: unbind<hdd1>
+md: export_rdev(hdd1)
+raid1: raid set md0 active with 1 out of 2 mirrors
+md: considering hda3 ...
+md:  adding hda3 ...
+md:  adding hdd3 ...
+md: created md1
+md: bind<hdd3>
+md: bind<hda3>
+md: running: <hda3><hdd3>
+md: kicking non-fresh hdd3 from array!
+md: unbind<hdd3>
+md: export_rdev(hdd3)
+raid1: raid set md1 active with 1 out of 2 mirrors
+md: ... autorun DONE.
+md: Autodetecting RAID arrays.
+md: autorun ...
+md: considering hdd3 ...
+md:  adding hdd3 ...
+md: hdd1 has different UUID to hdd3
+md: md1 already running, cannot run hdd3
+md: export_rdev(hdd3)
+md: considering hdd1 ...
+md:  adding hdd1 ...
+md: md0 already running, cannot run hdd1
+md: export_rdev(hdd1)
+md: ... autorun DONE.
 
-I had the exact issue on the weekend this is how I fixed it:
-mdadm -S /dev/md0
-mdadm -Af /dev/md0 /dev/hdm4 /dev/hde2 /dev/hdo2 /dev/hdh2 /dev/hdf2 
-/dev/hdg2
+Thanks again.
 
-That -should- start the array without hdp2, once its started, add 
-/dev/hdp2 to the array and it should be all good.
 
-mdadm -a /dev/md0 /dev/hdp2
+-- 
 
-Cheers,
-Mark
+ Jesse Burkhardt, Cambridge MA
+ jesse@skybuilders.com  (w) 617-876-5680
+ aerogoose.com          (h) 617-354-5523
+
