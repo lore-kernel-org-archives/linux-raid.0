@@ -1,41 +1,30 @@
-From: Mark Hahn <hahn@physics.mcmaster.ca>
-Subject: Re: Raid0 or Raid1 READ performance
-Date: Thu, 16 Dec 2004 17:48:15 -0500 (EST)
-Message-ID: <Pine.LNX.4.44.0412161741200.19312-100000@coffee.psychology.mcmaster.ca>
-References: <000401c4e3b9$2cef1f20$040a10ac@asitest>
+From: AndyLiebman@aol.com
+Subject: Re: mdadm segfault
+Date: Thu, 16 Dec 2004 18:45:49 EST
+Message-ID: <a3.692fafd2.2ef3782d@aol.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <000401c4e3b9$2cef1f20$040a10ac@asitest>
 Sender: linux-raid-owner@vger.kernel.org
-To: BO MOON <bmoon@anthologysolutions.com>
-Cc: linux-raid@vger.kernel.org
+To: mjstumpf@pobox.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> I am expecting the faster performance on READ than WRITE because of
-> parallel read from disks more than 2(2 for RAID1, 3 for RAID0) at the
-> same time.
+I also found that 1.8.1 was segfaulting with Mandrake 10. I figured the 
+problem was that I had created the RAID 0 array with 1.5 or 1.6 (don't remember 
+which). I had all the drives from the array, but it didn't find them to Assemble 
+them. 
 
-if I understand your description, each of your tests involves either
-reading or writing from a single disk (and also writing/reading a raid.)
-such tests will always run at the speed of the slowest disk,
-presumably the single one.  for instance,
+From a cursory glance at the info about 1.8.1, quite a few things changed. 
+Maybe not just a "dot release" from 1.8.0. I sort of installed it by accident -- 
+I meant to install 1.8.0 -- which for me is working great. 
 
-    cp /some-2-disk-raid0/file /other-single-disk/
+Andy Liebman
 
-will be limited by the write speed of other-single-disk, 
-and not the raid.
-
-    cp /other-single-disk/file /some-2-disk-raid0/
-
-is similar, though now it's the reading from a single disk which 
-is the bottleneck.
-
-> Any suggestion or opinion?
-
-test bandwidth with something more reasonable than time cp.
-even "time dd if=/disk-to-read-from of=/dev/zero bs=64k"
-is more sensible.
-
-regards, mark hahn.
-
+>In a message dated 12/16/2004 5:36:21 PM Eastern Standard Time, 
+>mjstumpf@pobox.com writes:
+>mdadm 1.8.1 is segfaulting on red hat linux 7.3.  Kernel is 2.4.18smp5.  
+>Happened when I try to assemble a 3 drive array with only 2 drives.
+>
+>Not important to me; I just downgraded to 1.2.0 and it worked like a 
+>champ, but I figured I'd throw that out there as an FYI.
