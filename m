@@ -1,99 +1,53 @@
-From: Lars Marowsky-Bree <lmb@suse.de>
+From: Matt Domsch <Matt_Domsch@dell.com>
 Subject: Re: Proposed Enhancements to MD
-Date: Tue, 13 Jan 2004 11:24:33 +0100
+Date: Tue, 13 Jan 2004 08:19:32 -0600
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040113102433.GK8418@marowsky-bree.de>
+Message-ID: <20040113081932.A721@lists.us.dell.com>
 References: <40036902.8080403@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <40036902.8080403@adaptec.com>
-To: Scott Long <scott_long@adaptec.com>, linux-raid@vger.kernel.org
+In-Reply-To: <40036902.8080403@adaptec.com>; from scott_long@adaptec.com on Mon, Jan 12, 2004 at 08:41:54PM -0700
+To: Scott Long <scott_long@adaptec.com>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2004-01-12T20:41:54,
-   Scott Long <scott_long@adaptec.com> said:
-
-Hi Scott, this is good to see!
-
-> - partition support for md devices:  MD does not support the concept =
-of
->   fdisk partitions; the only way to approximate this right now is by
->   creating multiple arrays on the same media.  Fixing this is require=
-d
->   for not only feature-completeness, but to allow our BIOS to recogni=
-se
->   the partitions on an array and properly boot them as it would boot =
-a
->   normal disk.
-
-I'm not too excited about this, because Device Mapping on top of md is
-much more flexible, but I see that users want it, and it should be
-pretty easy to add.
-
-> - generic device arrival notification mechanism:  This is needed to
->   support device hot-plug, and allow arrays to be automatically
->   configured regardless of when the md module is loaded or initialize=
-d.
->   RedHat EL3 has a scaled down version of this already, but it is
->   specific to MD and only works if MD is statically compiled into the
->   kernel.  A general mechanism will benefit MD as well as any other
->   storage system that wants hot-arrival notices.
-
-Yes. Is anything missing from the 2.6 & hotplug & udev solution which
-you require?
-
-> - RAID-0 fixes:  The MD RAID-0 personality is unable to perform I/O
->   that spans a chunk boundary.  Modifications are needed so that it c=
-an
->   take a request and break it up into 1 or more per-disk requests.
-
-Agreed.
-
-> - Metadata abstraction:  We intend to support multiple on-disk metada=
-ta
->   formats, along with the 'native MD' format.  To do this, specific
->   knowledge of MD on-disk structures must be abstracted out of the co=
-re
->   and personalities modules.
-
-This can get difficult, of course, and needs to be implemented in a way
-which doesn't slow us down too much.
-
+On Mon, Jan 12, 2004 at 08:41:54PM -0700, Scott Long wrote:
 > - DDF Metadata support: Future products will use the 'DDF' on-disk
->   metadata scheme.  These products will be bootable by the BIOS, but
->   must have DDF support in the OS.  This will plug into the abstracti=
-on
->   mentioned above.
+>    metadata scheme.  These products will be bootable by the BIOS, but
+>    must have DDF support in the OS.  This will plug into the abstraction
+>    mentioned above.
 
-OK. How does the DDF metadata differ from the current md data? Is it
-merely the layout, or are there functional differences?
+For those unfamiliar with DDF (Disk Data Format), it is a Storage
+Networking Industry Association (SNIA) project ("Common RAID DDF
+TWG"), designed to provide a single metadata format to be used by all
+the RAID vendors (hardware and software alike).  It removes vendor
+lock-in by having a metadata format that all can use, thus in theory
+you could move disks from an Adaptec hardware RAID controller to an
+LSI software RAID solution without reformatting the disks or touching
+your file systems in any way.  Dell has been championing the DDF
+concept for quite a while, and is driving vendors from which we
+purchase RAID solutions to use DDF instead of their own individual
+metadata formats.
 
-In particular, I'm wondering whether partitions using the new activity
-logging features of md will still be bootable, or whether the boot
-partitions need to be 'md classic'.
+I haven't seen the spec yet myself, but I'm lead to believe that
+DDF allows for multiple logical drives to be created across a single
+set of disks (e.g. a 10GB RAID1 LD and a 140GB RAID0 LD together on
+two 80GB spindles), as well as whole disks be used.  It has a
+mechanism to support reconstruction checkpointing, so you don't have
+to restart a reconstruct from the beginning after a reboot, but from
+where you left off.  And other useful features too that you'd expect
+in a common RAID solution.  
 
-> bit due to the radical changes in the disk/block layer in 2.6.  The 2=
-=2E4
-> version works quite well, while the 2.6 version is fairly fresh.=20
+DDF is quickly becoming important to RAID and system vendors, and I
+welcome Adaptec's work to implement DDF support on Linux.
 
-I'd be reluctant doing any of the work for 2.4, but this is of course
-upto you.
+Thanks,
+Matt
 
-
-Sincerely,
-    Lars Marowsky-Br=E9e <lmb@suse.de>
-
---=20
-High Availability & Clustering	      \ ever tried. ever failed. no matt=
-er.
-SUSE Labs			      | try again. fail again. fail better.
-Research & Development, SUSE LINUX AG \ 	-- Samuel Beckett
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Matt Domsch
+Sr. Software Engineer, Lead Engineer
+Dell Linux Solutions www.dell.com/linux
+Linux on Dell mailing lists @ http://lists.us.dell.com
