@@ -1,93 +1,58 @@
-From: Gordon Henderson <gordon@drogon.net>
-Subject: RE: Raid5 Construction Question
-Date: Thu, 19 Aug 2004 19:35:06 +0100 (BST)
+From: Maarten van den Berg <maarten@ultratux.net>
+Subject: Re: Raid5 Construction Question
+Date: Thu, 19 Aug 2004 22:24:06 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.56.0408191923290.15484@lion.drogon.net>
-References: <200408191817.i7JIHg313827@watkins-home.com>
+Message-ID: <200408192224.06572.maarten@ultratux.net>
+References: <200408191730.i7JHUd313659@watkins-home.com> <4124E8F5.1010105@psc.edu>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200408191817.i7JIHg313827@watkins-home.com>
+In-Reply-To: <4124E8F5.1010105@psc.edu>
+Content-Disposition: inline
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 19 Aug 2004, Guy wrote:
-
-> You don't need to wait.  You can use the array now.
-
-Indeed - but maybe you are already using the array which is why the
-rebuild it taking so long?
-
-> But ouch 305K/sec!  If this a 386-33?  :)
+On Thursday 19 August 2004 19:52, PAulN wrote:
+> Guy,
+> thanks for the snappy reply!  I wish my disks were as fast :)
+> I failed to mention that I had been tweaking those proc values.  Currently
+> they are:
+> (root@lcn0:raid)# cat speed_limit_max
+> 200000
+> (root@lcn0:raid)# cat speed_limit_min
+> 10000
 >
-> Have you tried dd tests on each disk to verify each works well?
+> If I'm correct, this means that the min speed is 10MB/sec per device.
+> I've verified that each device has a seq write speed of about 38MB/sec so
+> each should be capable of handling 10,000Kbytes sec.  Right after I issue
+> a raidstart the speed is pretty good (~30MB/sec) but is just falls until
+> it hits
+> around 300K.
 >
-> Something like:
-> time dd if=/dev/sdc1 of=/dev/null bs=64k count=100000
-> This is just a read test.  My disks take about 340 seconds.  Yours should be
-> about twice as fast.
+> md0 : active raid5 sdh1[7] sdf1[6] sdg1[5] sde1[4] sdd1[3] sdc1[2]
+> sdb1[1] sda1[0]
+>       481949184 blocks level 5, 64k chunk, algorithm 2 [7/7] [UUUUUUU]
+>       [>....................]  resync =  2.4% (1936280/80324864)
+> finish=4261.4min speed=305K/sec
 
-You can also use hdparm - although really designed for IDE drives, it'll
-do the test on SCSI withou any problems:
+Something like this happened to me a while ago.  The speed is good at start, 
+then after a certain amount of time starts degrading until very very low, 
+like 5k/sec.  It keeps ever decreasing. Also, the decrease of speed occurred 
+at exactly the same point every time.  After a lot of searching, asking and 
+bitching the true reason was revealed; one of the disks had problems and 
+couldn't read/write a part of its surface.  Only when I ran dd on it (and saw 
+the read errors reported) did I realize that.
 
-Eg. on a reasonable PC with an IDE drive:
+So if what you are seeing is this ever-decreasing speed, starting at a 
+specific point, I'd strongly concur with Guy in saying: Test each disk 
+separately by reading /and or writing its _entire_ surface using the dd 
+commands suggested. Not using hdparm or benchmarks, but reading the entire 
+disk(s) as described.  The purpose of this is NOT that you get an idea of the 
+speed, but that you verify that the entire surface is still ok.
 
-/dev/hda:
- Timing buffer-cache reads:   1008 MB in  2.00 seconds = 504.00 MB/sec
- Timing buffered disk reads:  142 MB in  3.02 seconds =  47.02 MB/sec
+Beyond that, I have no suggestions to offer you.
 
+Maarten
 
-On a SCSI server (Dell 4xxxx something)
-
-/dev/sda:
- Timing buffer-cache reads:   128 MB in  0.18 seconds =711.11 MB/sec
- Timing buffered disk reads:  64 MB in  0.97 seconds = 65.98 MB/sec
-
-This is a RAID1 on the same server
-
-/dev/md0:
- Timing buffer-cache reads:   128 MB in  0.18 seconds =711.11 MB/sec
- Timing buffered disk reads:  64 MB in  1.03 seconds = 62.14 MB/sec
-
-This isa RAID5 on the same server.
-
-/dev/md4:
- Timing buffer-cache reads:   128 MB in  0.18 seconds =711.11 MB/sec
- Timing buffered disk reads:  64 MB in  0.34 seconds =188.24 MB/sec
-
-> Each disk should give about the same performance.
-> You may find 1 that has issues.
-
-I've seen this with IDE drives - one drive was very much slower than the
-other. No idea why.
-
-How is it configured? Are all 8 drives on the same cable? You might want
-to split them and put 4 on a cable with 2 controllers - There may still
-issues with PCI bus bandwidth then, but it might help things along. On
-that server above, I have 4 SCSI drives, 2 on each bus. sda & b on one
-bus, sdc and d on the 2nd. I haven't made tests to see if alternating the
-drives in the /etc/raditab makes a difference, but thats what I do anyway
-as it "feels" the right thing to do.
-
-Eg:
-
-raiddev /dev/md2
-  raid-level            5
-  nr-raid-disks         4
-  nr-spare-disks        0
-  persistent-superblock 1
-  chunk-size            32
-  device                /dev/sda3
-  raid-disk             0
-  device                /dev/sdc3
-  raid-disk             1
-  device                /dev/sdb3
-  raid-disk             2
-  device                /dev/sdd3
-  raid-disk             3
-
-Reading the follow-ups, performance will be slow with the raid-speed-min
-parameter set high... If you want performance, during a rebuild, then
-set this low.
-
-Gordon
