@@ -1,71 +1,59 @@
-From: "Torsten E." <linux-user@gmx.com>
-Subject: Re: Question regarding mdadm.conf
-Date: Thu, 17 Feb 2005 09:23:35 +0100
-Message-ID: <42145487.3090701@gmx.com>
-References: <421438E9.5020000@gmx.com> <Pine.LNX.4.58.0502170748160.15568@lajli.gau.hu> <42144458.4040306@tls.msk.ru>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: Bad blocks
+Date: Thu, 17 Feb 2005 03:30:45 -0500
+Message-ID: <200502170830.j1H8Up924518@www.watkins-home.com>
+References: <42144458.4040306@tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 In-Reply-To: <42144458.4040306@tls.msk.ru>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Michael,
-Hi Lajber,
+About 1 month ago the topic was bad blocks.  I have been monitoring the bad
+blocks on my disks and I find I have had 3 new bad blocks since Jan 18.
+Each on a different disk.  I have 17 disks, SEAGATE ST118202LC.
 
-Thanks for your hints!
+These bad blocks did not cause any problems with md.  I believe they were
+readable or write errors, but re-mapped since I have AWRE and ARRE turned
+on.
 
-Michael Tokarev scribbled on 17.02.2005 08:14:
-> Lajber Zoltan wrote:
-> 
->> Hi!
->>
->> On Thu, 17 Feb 2005, Torsten E. wrote:
->>
->>> How does I get those UUID information, to add them to the new
->>> /etc/mdadm.conf?
->>
->> Try this one: mdadm --detail /dev/md1 | grep UUID
-> 
-> I'd say
-> 
->   mdadm --detail --brief /dev/md1 | grep -v devices=
+I don't know what is a normal rate, but based on the last month, I would
+expect about 2.29 defects per disk per year.  I have had the disks in use
+for about 2.5 years.  I have 81 defects.  That comes to 1.905 per disk per
+year.  Not to far off the mark!  And I have replaced disks 2-3 times in 2.5
+years.  The failed disks failed due to a cable problem, the disks may have
+been just fine, but I took them apart for the magnets before I realized the
+power cable was at fault.  The cable is now repaired.
 
-Didn't work for me ... but as I (hopefully!) understood the basic usage 
-I run:
-   mdadm --detail --brief /dev/md* >> /tmp/mdtest
-After adding some more lines (DEVICE /dev/sda*, DEVICE /dev/sdb*, 
-MAILADDR admin) I simply renamed it to /etc/mdadm.conf ... its not a 
-good way, but for me its an useable (and so its good again ;)).
+Anyway, if these were read errors, md would have caused me lots of problems.
+So, we need md to deal with bad blocks without kicking out the disk.
 
-> -- this will give you all information necessary for mdadm.conf,
-> you can just redirect output into that file.
-> 
-> Note the grep usage.  Someone will disagree with me here, but
-> there is a reason why to remove devices= line.  Without it,
-> output from mdadm looks like (on my system anyway):
-> 
-> ARRAY /dev/md1 level=raid1 num-devices=4 
-> UUID=11e92e45:15fcc4a0:cf62e981:a79de494
->    devices=/dev/sda1,/dev/sdb1,/dev/sdc1,/dev/sdd1
-> 
-> Ie, it lists all the devices which are parts of the array.
-> The problem with this is: if, for any reason (dead drive,
-> adding/removing drives/controllers etc) the devices will
-> change, and some /dev/sdXY will point to another device wich
-> is a part of some other raid array, mdadm will refuse to
-> assemble this array, saying something in a line of "the
-> UUIDs does not match, aborting".  Without the "devices="
-> part but with --scan option, mdadm will search all devices
-> by its own (based on the DEVICE line in mdadm.conf) - this
-> is somewhat slower as it will try to open each device in
-> turn, but safer, as it will find all the present components
-> no matter what.
-> 
-> Someone correct me if I'm wrong... ;)
-> 
-> /mjt
+I have been using this command to monitor the disks:
+sginfo -G /dev/sda | grep "in grown table"
 
-Have a nice day!! :)
-Torsten
+My current bad block status (Defect list) for 17 disks:
+0 entries (0 bytes) in grown table.
+0 entries (0 bytes) in grown table.
+8 entries (64 bytes) in grown table.
+5 entries (40 bytes) in grown table.
+0 entries (0 bytes) in grown table.
+12 entries (96 bytes) in grown table.
+20 entries (160 bytes) in grown table.
+0 entries (0 bytes) in grown table.
+6 entries (48 bytes) in grown table.
+0 entries (0 bytes) in grown table.
+6 entries (48 bytes) in grown table.
+28 entries (224 bytes) in grown table.
+0 entries (0 bytes) in grown table.
+2 entries (16 bytes) in grown table.
+3 entries (24 bytes) in grown table.
+4 entries (32 bytes) in grown table.
+0 entries (0 bytes) in grown table.
+
+Does anyone know how many defects is considered too many?
+
+Guy
+
