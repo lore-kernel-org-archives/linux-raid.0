@@ -1,185 +1,109 @@
-From: =?iso-8859-1?Q?Jes=FAs_Rojo_Mart=EDnez?=
-	<jrojomartinez@mi.madritel.es>
-Subject: Problems with Linux RAID in kernel 2.6
-Date: Thu, 10 Mar 2005 19:12:37 +0100
-Message-ID: <20050310181237.GA2569@nerv.homelinux.net>
+From: Derek Piper <derek.piper@gmail.com>
+Subject: Re: now on to tuning....
+Date: Thu, 10 Mar 2005 14:13:40 -0500
+Message-ID: <eaa6dfe05031011135b430688@mail.gmail.com>
+References: <6F9171BE257CA742BFBCFA87B8F20F8D030E4355@NZURC900PEX1.ubsgs.ubsgroup.net>
+Reply-To: Derek Piper <derek.piper@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Content-Disposition: inline
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+In-Reply-To: <6F9171BE257CA742BFBCFA87B8F20F8D030E4355@NZURC900PEX1.ubsgs.ubsgroup.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ingo Molnar <mingo@elte.hu>, Jakob =?iso-8859-1?Q?=D8stergaard?= <jakob@ostenfeld.dk>, Neil Brown <neilb@cse.unsw.edu.au>, Miguel de Icaza <miguel@ximian.com>, Gadi Oxman <gadio@netvision.net.il>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+Hmm..  for me:
 
-  I have many problems with RAID in kernel 2.6.10.
+> smartctl -A -d ata /dev/sda
 
-  First of all, I have the md, raid1,... into the kernel, superblocks i=
-n
-the RAIDs and "Linux RAID autodetect" as the partition types. Moreover,
-I make an initrd. However, when the kernel boots, it doesn't recognize
-the RAID disks:
+On my work machine with Debian Sarge:
+----------------------------------------------------------------------------
+smartctl version 5.32 Copyright (C) 2002-4 Bruce Allen
+Home page is http://smartmontools.sourceforge.net/
 
-md: raid1 personality registered as nr 3
-md: md driver 0.90.1 MAX_MD_DEVS=3D256, MD_SB_DISKS=3D27
-[...]
-md: Autodetecting RAID arrays.
-md: autorun ...
-md: ... autorun DONE.
+Smartctl: Device Read Identity Failed (not an ATA/ATAPI device)
 
-  And I have four RAID disks (/dev/md[1-4]) bind on /dev/sdb[1-4] and
-/dev/sdc[1-4].
+A mandatory SMART command failed: exiting. To continue, add one or
+more '-T permissive' options.
+----------------------------------------------------------------------------
 
+Did you apply the libata patch? I saw that here:
 
-  Secondly, I try to get up the RAID disks manually and the most times
-it fails:
+http://smartmontools.sourceforge.net/#testinghelp
 
-centralmad:~# cat /proc/mdstat=20
-Personalities : [raid1]=20
-unused devices: <none>
-centralmad:~#=20
-centralmad:~# raidstart /dev/md2=20
-/dev/md2: Invalid argument                     <-- Why did it say it?
-centralmad:~# cat /proc/mdstat=20
-Personalities : [raid1]=20
-md2 : active raid1 sdc2[0] sdb2[1]	       <-- Although It seems to run =
-Ok
-      14651200 blocks [2/2] [UU]
-     =20
-unused devices: <none>
+I'm on kernel 2.6.10 and haven't applied any patches.. maybe it's
+included on 2.6.11 now or a difference between smartctl 5.32 and 5.33?
 
+The drives I have are on an Intel ICH5 SATA controller. I am doing a
+few RAIDed partitions between a couple of 120GB drives since I
+reinstalled my work machine a few weeks ago. I think I'm using libata
+(the option marked as 'conflicting' with it isn't enabled in my
+kernel). Any thoughts?
 
-  And dmesg says:
+Derek
 
-md: raidstart(pid 2944) used deprecated START_ARRAY ioctl. This will no=
-t	<-- !!!
-be supported beyond 2.6								<-- !!!
-md: could not bd_claim sda2.							<-- I have a =ABfailured disk=BB
-md: autostart failed!								<-- !!! Is it because the failured dik?
-md: raidstart(pid 2944) used deprecated START_ARRAY ioctl. This will no=
-t
-be supported beyond 2.6
-md: autorun ...
-md: considering sdc2 ...
-md:  adding sdc2 ...
-md:  adding sdb2 ...
-md: created md2
-md: bind<sdb2>
-md: bind<sdc2>
-md: running: <sdc2><sdb2>
-raid1: raid set md2 active with 2 out of 2 mirrors
-md: ... autorun DONE.
-
-  Maybe raidstart need to change the ioctl to use. I have raidtools2
-version 1.00.3-17 (Debian package in Sarge). A strace of that command
-shows:
-
-[...]
-open("/dev/md2", O_RDWR)                =3D 3
-fstat64(3, {st_mode=3DS_IFBLK|0660, st_rdev=3Dmakedev(9, 2), ...}) =3D =
-0
-ioctl(3, 0x800c0910, 0xbfffefb0)        =3D 0
-fstat64(3, {st_mode=3DS_IFBLK|0660, st_rdev=3Dmakedev(9, 2), ...}) =3D =
-0
-ioctl(3, 0x800c0910, 0xbffff070)        =3D 0
-ioctl(3, 0x400c0930, 0xbffff100)        =3D -1 EINVAL (Invalid argument=
-)
-write(2, "mdadm: failed to run array /dev/"..., 54mdadm: failed to run
-array /dev/md2: Invalid argument
-) =3D 54
-close(3)                                =3D 0
-exit_group(1)                           =3D ?
-
-
-  Raidstop seems not to have problems:
-
-md: md2 stopped.
-md: unbind<sdc2>
-md: export_rdev(sdc2)
-md: unbind<sdb2>
-md: export_rdev(sdb2)
-
-  And with mdadm also fails:
-
-centralmad:~# mdadm -R /dev/md2=20
-mdadm: failed to run array /dev/md2: Invalid argument
-centralmad:~# cat /proc/mdstat=20
-Personalities : [raid1]=20
-unused devices: <none>
-
-  Moreover, dmesg says the md driver fails:
-
-md: bug in file drivers/md/md.c, line 1514
-
-md:     **********************************
-md:     * <COMPLETE RAID STATE PRINTOUT> *
-md:     **********************************
-md2:=20
-md0:=20
-md:     **********************************
+On Wed, 9 Mar 2005 11:53:11 +0100, peter.greis@ubs.com
+<peter.greis@ubs.com> wrote:
+> Good point about maxing out the pci bus... - I already use the nForce for mirrored boot drives, so that's not an option. The IDE controllers are empty at the moment (save for a DVD drive); I will give this a thought.
+> 
+> Thanks for the feedback,
+> 
+> -P
+> 
+> -----Original Message-----
+> From: linux-raid-owner@vger.kernel.org
+> [mailto:linux-raid-owner@vger.kernel.org]On Behalf Of Nicola Fankhauser
+> Sent: Wednesday, March 09, 2005 10:48 AM
+> To: linux-raid@vger.kernel.org
+> Subject: Re: now on to tuning....
+> 
+> hi peter
+> 
+> peter.greis@ubs.com wrote:
+> > I have been lurking for a while.... I recently put together a raid 5
+> > system (Asus K8NE SIL 3114/2.6.8.1 kernel) with 4 300GB SATA Seagate
+> > drives (a lot smaller than the bulk of what seems to be on this
+> > list!). Currently this is used for video and mp3 storage, being
+> > Reiser on LVM2.
+> 
+> beware that LVM2 _can_ affect your performance. I too believed that the
+> concept of dynamic drives is good, but I experienced a performance hit
+> of about 50% (especially in sequential reads).
+> 
+> see my blog entry describing how I built my 2TB file-server at
+> http://variant.ch/phpwiki/WikiBlog/2005-02-27 for some numbers and more
+> explanation.
+> 
+> the K8NE has the same SiI 3114 controller as the board I used has; it is
+> connected by a 33mhz 32bit PCI bus and maxes out at 133MiB/s, so for
+> maxmimum performance you might want to connect only two drives to this
+> controller, the other two to the nforce3 chipset SATA ports.
+> 
+> > Bonnie++ to test, but with which parameters ?
+> 
+> normally it's enough to specify a test-file larger (e.g. twice) the
+> memory capacity of the machine you are testing. for a machine with 1GiB RAM:
+> 
+> # bonnie++ -s 2gb {other options}
+> 
+> you might as well want to specify the "fast" option which skips per-char
+> operations (which are quite useless to test IMHO):
+> 
+> # bonnie++ -f {other options}
+> 
+> HTH
+> nicola
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
 
-  That line is in the function =ABstatic int do_md_run(mddev_t * mddev)=
-=BB,
-and the code that produce the bug is:
-
-        if (list_empty(&mddev->disks)) {
-                MD_BUG();
-                return -EINVAL;
-        }
-
-
-  Again, with =ABmdadm -S /dev/md2=BB there are no problems to stop the
-RAID.
-
-
-  Here there are more information about my sistem. It is a Debian Sarge
-with kernel 2.6, RAID 1 and SATA disks.
-
-centralmad:~# mdadm -E /dev/sdb2=20
-/dev/sdb2:
-          Magic : a92b4efc
-        Version : 00.90.00
-           UUID : 8c51d044:cb84e69a:64968ecd:2e36133c
-  Creation Time : Sun Mar  6 16:11:00 2005
-     Raid Level : raid1
-   Raid Devices : 2
-  Total Devices : 2
-Preferred Minor : 2
-
-    Update Time : Mon Mar  7 17:59:30 2005
-          State : clean
- Active Devices : 2
-Working Devices : 2
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : 1906699c - correct
-         Events : 0.1491
-
-
-      Number   Major   Minor   RaidDevice State
-this     1       8       18        1      active sync   /dev/sdb2
-
-   0     0       8       34        0      active sync   /dev/sdc2
-   1     1       8       18        1      active sync   /dev/sdb2
-
-
-
-  Why do these problems occur? How can I/You solve them?
-
-  Thanks a lot. I will wait your response.
-
-
-  Regards,
-
---=20
-
-		--- Jes=FAs Rojo Mart=EDnez. ---
-
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Derek Piper - derek.piper@gmail.com
+http://doofer.org/
