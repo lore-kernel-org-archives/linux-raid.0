@@ -1,45 +1,67 @@
-From: KELEMEN Peter <Peter.Kelemen@cern.ch>
-Subject: Re: Which raid card to buy for Sarge
-Date: Thu, 1 Apr 2004 11:07:31 +0200
+From: Philipp Gortan <gortan@chello.at>
+Subject: Re: One partition degraded after every reboot
+Date: Thu, 01 Apr 2004 13:45:39 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040401090731.GI6923@chihiro.cern.ch>
-References: <Pine.LNX.4.44.0403311442520.31572-100000@coffee.psychology.mcmaster.ca> <406B27E4.1000106@sauce.co.nz>
+Message-ID: <406C00E3.4030205@chello.at>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <406B27E4.1000106@sauce.co.nz>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-* Richard Scobie (richard@sauce.co.nz) [20040401 08:19]:
+Thomas Andrews wrote:
 
-> 3ware hardware RAID 10: Reads - 92.8MB/s    Writes - 88.9MB/s
-> Software RAID 10:  Reads - 53.7MB/s   Writes - 94.9 MB/s
+> I've set up RAID-1 on a pair of disks recently. When I reboot I get this
+> in syslog, even though the partition was perfect & not degraded before:
+> 
+...
+> kernel: md1: former device ide/host2/bus0/target0/lun0/part5 is unavailable, removing from array!
+> 
+> More specifically, of the 4 RAID-1 partitions, md1 (my root partition)
+> is in degraded mode. Here's a snippet of /proc/mdstat:
+> 
+> md1 : active raid1 ide/host2/bus1/target0/lun0/part5[0]
+>       38957440 blocks [2/1] [U_]
+> 
+> All the RAID partitions are of type FD on both disks, and the disks are
+> brand new
+...
+> This is a stock Debian/testing pc running a stock 2.4.24-1-686 kernel.
 
-> If anyone is running similar hardware and is able to get better
-> software RAID performance, I would be very interested to hear
-> the parameters.
+Hi Andrew,
+I had the same problem today, with debian/testing and both 2.4 and 2.6 
+kernels.
+My root filesystem, a raid 1 device would come up degraded at every 
+reboot, even if it was clean on shutdown.
 
-I've tested some configurations with 128 GiB streams (iozone) on a
-dual Xeon 2.4GHz 2G RAM machine (running XFS).
+I solved the problem by creating a new initrd and fiddling with the lilo 
+configuration:
+for me,
+after re-adding the always-failing drive to the raid
+# mdadm -a /dev/md0 /dev/hda1
+i updated my lilo.conf to:
 
-3ware HW-RAID1, Linux SW-RAID0:	read 263 MiB/s, write 157 MiB/s
-3ware HW-RAID5, Linux SW-RAID0:	read 243 MiB/s, write 135 MiB/s
-Linux SW-RAID5:			read 225 MiB/s, write 135 MiB/s
-3ware HW-RAID10:		read 119 MiB/s, write  91 MiB/s
+...
+boot=/dev/md0
+raid-extra-boot=/dev/hda,/dev/hdc
+root=/dev/md0
+...
 
-Peter
 
---=20
-    .+'''+.         .+'''+.         .+'''+.         .+'''+.         .+'=
-'
- Kelemen P=E9ter     /       \       /       \     Peter.Kelemen@cern.c=
-h
-=2E+'         `+...+'         `+...+'         `+...+'         `+...+'
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+and created a new initrd
+# mkinitrd -k -r /dev/md0 -o /boot/initrd.img-2.6.3-1-k7
+
+and ran lilo again
+# lilo
+
+since that reboot, the raid comes up complete.
+
+hope that helps,
+
+cu, philipp
+
+-- 
+When in doubt, use brute force.
+
+                                -- Ken Thompson
