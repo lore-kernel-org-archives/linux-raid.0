@@ -1,42 +1,34 @@
-From: Gregory Leblanc <gleblanc@linuxweasel.com>
+From: Friedrich Lobenstock <fl@fl.priv.at>
 Subject: Re: IDE bus rescan
-Date: 04 Jun 2002 16:44:23 -0700
+Date: Wed, 05 Jun 2002 01:49:54 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1023234274.10648.67.camel@peecee>
+Message-ID: <3CFD5222.1070007@fl.priv.at>
 References: <5.1.0.14.2.20020604123917.06a1ac50@mail.harddata.com>
-	  <5.1.0.14.2.20020604171615.03d9ab90@mail.harddata.com>
+Reply-To: Linux RAID Mailing Liste <linux-raid@vger.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5.1.0.14.2.20020604171615.03d9ab90@mail.harddata.com>
-To: linux-raid@vger.kernel.org
+To: Linux RAID Mailing Liste <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, 2002-06-04 at 16:17, Maurice Hilarius wrote:
-> With regards to your message at 04:54 PM 6/4/02, Friedrich Lobenstock. 
-> Where you stated:
-> >Maurice Hilarius wrote:
-> >>Hi There
-> >>Problem:
-> >>On IDE software RAID setup, we want to be able to hot-swap out a failed disk.
-> >>Using 3Ware cards we can swap only by rebooting system to recognise the 
-> >>new drive
-> >>Question: Is there a way to rescan IDE bus to recognise a new drive?
-> >
-> >Are you using the 3Ware Diskmanager Daemon and its webinterface or not?
-> >It seems not.
-> As I understand it that is only useful if we use the 3Ware BIOS RAID.
-> In this case we are interested in doing this with software RAID
-> So how would we make it rescan with this??
+Maurice Hilarius wrote:
+> 
+> Question: Is there a way to rescan IDE bus to recognise a new drive?
 
-Hmm, hard to say.  When I'm hot swapping PCI cards, I simply unload the
-kernel module that is the driver for that card before I power-off/remove
-the card.  I don't know enough about kernel internals to know how to do
-this with a single IDE bus, though.  
-	Greg
+
+With a "normal" IDE controller my best guess would be:
+
+# hdparm -h 2>&1|grep DANGER
+  -r   get/set readonly flag (DANGEROUS to set)
+  -R   register an IDE interface (DANGEROUS)
+  -U   un-register an IDE interface (DANGEROUS)
+  -w   perform device reset (DANGEROUS)
+  -W   set drive write-caching flag (0/1) (DANGEROUS)
+  -x   perform device for hotswap flag (0/1) (DANGEROUS)
+
 
 -- 
-Portland, Oregon, USA.
-Please don't copy me on replies to the list.
+MfG / Regards
+Friedrich Lobenstock
 
