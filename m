@@ -1,37 +1,24 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: Automatic Write Reallocation Enable, question?
-Date: Sun, 16 Nov 2003 19:46:59 -0500
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <200311170047.hAH0l2E15254@www.watkins-home.com>
-References: <20031114182927.GA8810@gtf.org>
+From: jlewis@lewis.org
+Subject: Adaptec 1200A & Asus P2L97
+Date: Sun, 16 Nov 2003 20:35:30 -0500 (EST)
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <Pine.LNX.4.44.0311162029460.1140-100000@redhat1.mmaero.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <20031114182927.GA8810@gtf.org>
-To: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-raid-owner@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-My hard disks support some programmable options.
+I was hoping to turn an old desktop into a home file server using this 
+HPT370A based IDE RAID card and Asus PII motherboard.  With the 1200A 
+installed, the system will not POST.  The manual mentions the 1200A 
+requires a system that's PCI 2.2 (or previous revision) compliant.  The 
+P2L97 is old enough that it only does PCI 2.1, and I wonder if that's the 
+problem or if my card is just DOA?
 
-Automatic Write Reallocation Enable (AWRE):
-  On, drive automatically relocates bad blocks detected during write
-operations.  Off, drive creates Check Condition status with sense key of
-Medium Error if bad blocks are detected during write operations.
+----------------------------------------------------------------------
+ Jon Lewis *jlewis@lewis.org*|  I route
+ Senior Network Engineer     |  therefore you are
+ Atlantic Net                |  
+_________ http://www.lewis.org/~jlewis/pgp for PGP public key_________
 
-Automatic Read Reallocation Enable (ARRE):
-  On, drive automatically relocates bad blocks detected during read
-operations.  Off, drive creates Check Condition status with sense key of
-Medium Error if bad blocks are detected during read operations.
-
-These options are both off.
-
-Would md be happier if these were on?  This would hide recoverable errors
-from md.
-
-Any opinions?
-
-My disks are ST118202LC.
-
-Thanks.
