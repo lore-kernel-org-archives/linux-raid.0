@@ -1,153 +1,99 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: Raid 5 questions
-Date: Thu, 3 Jun 2004 11:13:06 -0400
+From: David Greaves <david@dgreaves.com>
+Subject: Re: Raid 5 questions
+Date: Thu, 03 Jun 2004 16:50:49 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200406031513.i53FDF314301@watkins-home.com>
+Message-ID: <40BF48D9.6020409@dgreaves.com>
 References: <40BF35D7.9050902@dgreaves.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <40BF35D7.9050902@dgreaves.com>
-To: 'David Greaves' <david@dgreaves.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Did you notice:
-	Rebuild Status : 0% complete
+Answering my own post:
+<snip>
+ > Rebuild Status : 0% complete
+<snip>
 
-Do this:
-	cat /proc/mdstat
+Yeah, ok, I'm dim :)
 
-Guy
+Maybe the output could be a little more helpful? State = rebuilding?
 
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of David Greaves
-Sent: Thursday, June 03, 2004 10:30 AM
-To: linux-raid@vger.kernel.org
-Subject: Raid 5 questions
+and for anyone else, cat /proc/mdstat gave me the hint!!
 
-Hi
+Other things:
+1)
+in Manage mode it's documented to allow multiple commands and yet:
 
-I've perused the archives and read the docs but I'm not sure on this 
-point :)
+cu:~# mdadm  /dev/md0 -f /dev/sdc1 -r /dev/sdc1
+mdadm: set /dev/sdc1 faulty in /dev/md0
+mdadm: hot remove failed for /dev/sdc1: Device or resource busy
+cu:~# mdadm  /dev/md0 -r /dev/sdc1
+mdadm: hot removed /dev/sdc1
 
-If I create an array with 3 250Gb disks and use the 'missing' option I 
-should get a degraded raid5 array with 750Gb
-Now, when another 250Gb disk arrives I want to add that as the missing 
-disk - will that work?
 
-Now, since I actually have the 3 disks and I'm waiting for the 4th, lets 
-try it with 2 and add a third...
+2)
+To allow autodetection on startup you're supposed to set the partition 
+type to 0xfd
+What if you're using whole disks? Are you supposed to create massive 
+partitions?
 
-Clear out the superblocks so we're starting from scratch
-cu:~# mdadm --stop /dev/md0
-cu:~# mdadm --zero-superblock /dev/sda
-cu:~# mdadm --zero-superblock /dev/sdb
-cu:~# mdadm --zero-superblock /dev/sdc
+3)
+I'm having some odd responses from the Monitor mode:
 
-Make the array.
-cu:~# mdadm -v -C /dev/md0 --chunk=128 --level=5 --raid-devices=3 
-/dev/sda /dev/sdb missing
-mdadm: layout defaults to left-symmetric
-mdadm: size set to 245117312K
-mdadm: array /dev/md0 started.
+Here is the system:
 
-What have we got?
 cu:~# mdadm --detail /dev/md0
 /dev/md0:
-        Version : 00.90.01
-  Creation Time : Thu Jun  3 16:19:26 2004
-     Raid Level : raid5
-     Array Size : 490234624 (467.52 GiB 502.00 GB)
-    Device Size : 245117312 (233.76 GiB 251.00 GB)
-   Raid Devices : 3
-  Total Devices : 2
+       Version : 00.90.01
+ Creation Time : Thu Jun  3 17:03:11 2004
+    Raid Level : raid5
+    Array Size : 1975552 (1.88 GiB 2.02 GB)
+   Device Size : 987776 (964.63 MiB 1011.48 MB)
+  Raid Devices : 3
+ Total Devices : 4
 Preferred Minor : 0
-    Persistence : Superblock is persistent
+   Persistence : Superblock is persistent
 
-    Update Time : Thu Jun  3 16:19:26 2004
-          State : clean, no-errors
- Active Devices : 2
-Working Devices : 2
- Failed Devices : 0
-  Spare Devices : 0
+   Update Time : Thu Jun  3 17:32:45 2004
+         State : clean, no-errors
+Active Devices : 3
+Working Devices : 4
+Failed Devices : 0
+ Spare Devices : 1
 
-         Layout : left-symmetric
-     Chunk Size : 128K
+        Layout : left-symmetric
+    Chunk Size : 128K
 
-    Number   Major   Minor   RaidDevice State
-       0       8        0        0      active sync   /dev/sda
-       1       8       16        1      active sync   /dev/sdb
-       2       0        0       -1      removed
-           UUID : 8acbe990:b31287f7:32888f7d:f0edcf0c
-         Events : 0.3887
+   Number   Major   Minor   RaidDevice State
+      0       8        1        0      active sync   /dev/sda1
+      1       8       17        1      active sync   /dev/sdb1
+      2       8       33        2      active sync   /dev/sdc1
+      3       8        2       -1      spare   /dev/sda2
+          UUID : 9120f538:88dcabef:ba6f5f75:d2ce9e00
+        Events : 0.3904
 
-Thats 2x 251Gb giving a 502Gb array - good
+I run the monitor using a PROGRAM to ensure I see all events (#'s below 
+are annotations :) )
+cu:~# mdadm --monitor -d 1 -t /dev/md0
+mdadm: Monitor using program "/bin/echo" from config file
+TestMessage /dev/md0
+# -f a device at this point
+Fail /dev/md0
+# Note that the device is not reported.
+# A bit later (not long now I'm using 1Gb test partitions!)
+SpareActive /dev/md0 /dev/sda2
+# Note there were no RebuildStarted, RebuildNN, RebuildFinished events?
+# -r the device - no events
+# -a the device - no events
+# mdadm --stop /dev/md0 here
+DeviceDisappeared /dev/md0
 
-Add this to the config
-cu:~# echo 'DEVICE /dev/sd[abcd]' >/etc/mdadm/mdadm.conf
-cu:~# mdadm --detail --scan >>/etc/mdadm/mdadm.conf
-cu:~# cat /etc/mdadm/mdadm.conf
-DEVICE /dev/sd[abcd]
-ARRAY /dev/md0 level=raid5 num-devices=3 
-UUID=8acbe990:b31287f7:32888f7d:f0edcf0c
-   devices=/dev/sda,/dev/sdb
+Also stopping the monitor and degrading the array (-f a device) followed 
+by a monitor restart doesn't give a DegradedArray event.
 
-Now, the new disk arrives...
-cu:~# mdadm  /dev/md0 -a /dev/sdc
-mdadm: hot added /dev/sdc
-
-So it should be working fine...
-cu:~# mdadm --detail /dev/md0
-/dev/md0:
-        Version : 00.90.01
-  Creation Time : Thu Jun  3 16:19:26 2004
-     Raid Level : raid5
-     Array Size : 490234624 (467.52 GiB 502.00 GB)
-    Device Size : 245117312 (233.76 GiB 251.00 GB)
-   Raid Devices : 3
-  Total Devices : 3
-Preferred Minor : 0
-    Persistence : Superblock is persistent
-
-    Update Time : Thu Jun  3 16:23:21 2004
-          State : clean, no-errors
- Active Devices : 2
-Working Devices : 3
- Failed Devices : 0
-  Spare Devices : 1
-
-         Layout : left-symmetric
-     Chunk Size : 128K
-
- Rebuild Status : 0% complete
-
-    Number   Major   Minor   RaidDevice State
-       0       8        0        0      active sync   /dev/sda
-       1       8       16        1      active sync   /dev/sdb
-       2       0        0       -1      removed
-       3       8       32        2      spare   /dev/sdc
-           UUID : 8acbe990:b31287f7:32888f7d:f0edcf0c
-         Events : 0.3888
-
-
-Nope it's a spare?
-Help - how do I make my array resilient?
-
-
-Environment:
-Debian testing
-Linux cu.dgreaves.com 2.6.6 #1 Thu Jun 3 14:12:01 BST 2004 i686 GNU/Linux
-mdadm - v1.5.0 - 22 Jan 2004
-
-Thanks
 
 David
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
 
