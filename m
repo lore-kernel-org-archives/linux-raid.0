@@ -1,68 +1,45 @@
-From: Arne Wiebalck <wiebalck@kip.uni-heidelberg.de>
-Subject: Re: Partitioning a RAID device
-Date: Mon, 9 Sep 2002 09:38:21 +0200 (METDST)
+From: Marc MERLIN <marc_news@merlins.org>
+Subject: Re: mdadm -A /dev/md3 fails
+Date: Mon, 9 Sep 2002 00:55:59 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.HPX.4.43.0209090937250.27829-100000@electra.kip.uni-heidelberg.de>
-References: <15736.14823.863026.285510@notabene.cse.unsw.edu.au>
+Message-ID: <20020909075559.GE3806@merlins.org>
+References: <20020909054800.GV3806@merlins.org> <15740.15774.911597.853392@notabene.cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <15736.14823.863026.285510@notabene.cse.unsw.edu.au>
+Content-Disposition: inline
+In-Reply-To: <15740.15774.911597.853392@notabene.cse.unsw.edu.au>
 To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: Derek Vadala <derek@cynicism.com>, linux-raid@vger.kernel.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Mon, Sep 09, 2002 at 04:20:14PM +1000, Neil Brown wrote:
+> That is part of the reason that I wrote mdadm.  It can do the right
+> thing for you.
 
-ok, works fine. thanks for your help.
+Apparently it can, but I'm having issues with it:
 
-arne
+My conf file says:
+DEVICE /dev/scsi/host*/bus*/target*/lun*/part*
+ARRAY /dev/md3 level=raid5 num-devices=7 UUID=7f69d69c:2d523219:4f3d1ea7:9b7f4057 devices=/dev/scsi/host3/bus0/target8/lun0/part1,/dev/scsi/host3/bus0/target9/lun0/part1,/dev/scsi/host3/bus0/target10/lun0/part1,/dev/scsi/host3/bus0/target11/lun0/part1,/dev/scsi/host3/bus0/target12/lun0/part1,/dev/scsi/host3/bus0/target13/lun0/part1,/dev/scsi/host3/bus0/target14/lun0/part1
 
+gargamel:/etc/mdadm# mdadm -A  -v /dev/md3
+mdadm: No identity information available for /dev/md3 - cannot assemble.
 
-On Fri, 6 Sep 2002, Neil Brown wrote:
+Any idea why 
+mdadm -A -v /dev/md3 doesn't work?
 
-> On Thursday September 5, wiebalck@kip.uni-heidelberg.de wrote:
-> >
-> > fdisk(pid 1344) tried BLKRRPART ioctl on MD device. Should use MDP
-> > device.
->
-> Yes, you shold use the MDP devices... look in /proc/devices to find
-> the major number.
-> >
-> > md: fdisk(pid 2486) used obsolete MD ioctl, upgrade your software to use
-> > new ictls.
->
-> Ignore this, it doesn't really mean anything.
->
-> >
-> > so, partitioning did not work.
-> >
-> > my fdisk version is 2.11.
-> > should I use another tool for partitioning?
->
-> fdisk, cfdisk, sfdisk all work fine.
->
-> > who is responsible for making the device special files?
->
-> You.  (or devfs).
-> The first 16 minors for mdp correspond to md0
-> The second 16 minors for mdp correspond to md1
-> etc.
->
-> NeilBrown
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Am I supposed to actually start the device with
+mdadm -A  -v /dev/md3 /dev/scsi/host3/bus0/target*/lun0/part1 ?
+or
+mdadm -A  -v -u 7f69d69c:2d523219:4f3d1ea7:9b7f4057 /dev/md3 ?
 
-**********************************************************************
- Arne Wiebalck                        Kirchhoff Institute for Physics
-                                           Technical Computer Science
-                                                     Schroederstr. 90
-                                                   D-69120 Heidelberg
+(I thought mdadm would get that data from the config file)
 
- e-mail: wiebalck@kip.uni-heidelberg.de      Tel.: (+49) 6221/54-4362
- web   : http://www.kip.uni-heidelberg.de    Fax.: (+49) 6221/54-4345
-**********************************************************************
-
-
+Thanks
+Marc
+-- 
+"A mouse is a device used to point at the xterm you want to type in" - A.S.R.
+Microsoft is to operating systems & security ....
+                                      .... what McDonalds is to gourmet cooking 
+Home page: http://marc.merlins.org/   |   Finger marc_f@merlins.org for PGP key
