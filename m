@@ -1,38 +1,48 @@
-From: Jeff Garzik <jgarzik@pobox.com>
+From: Clemens Schwaighofer <cs@tequila.co.jp>
 Subject: Re: Which raid card to buy for Sarge
-Date: Thu, 01 Apr 2004 00:58:23 -0500
+Date: Thu, 01 Apr 2004 15:39:43 +0900
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <406BAF7F.2030307@pobox.com>
-References: <008f01c41737$8b57be40$6405a8c0@a30> <006401c417a1$36a45790$6405a8c0@a30>
+Message-ID: <406BB92F.1080200@tequila.co.jp>
+References: <008f01c41737$8b57be40$6405a8c0@a30> <006401c417a1$36a45790$6405a8c0@a30> <406BA12A.6020300@tequila.co.jp> <406BA9F8.9010709@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <006401c417a1$36a45790$6405a8c0@a30>
-To: me@heyjay.com
-Cc: linux-raid@vger.kernel.org
+In-Reply-To: <406BA9F8.9010709@pobox.com>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: me@heyjay.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-me@heyjay.com wrote:
-> I'd like to thank everyone who responded, and I didn't mean to start a
-> software vs hardware war.  But now that I did I'm sort of happy, because
-> it's made me question if my direction is proper for my goals.
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-Not your fault, it's inevitable ;-)
+Jeff Garzik wrote:
+| Clemens Schwaighofer wrote:
+|
+|> The only thing that comes to my mind is hot swapping. If you go with IDE
+|> drives it is highlu possible it is not going to work. which means, you
+|> don't have data loss if a drive fails, but downtime (depends on the
+|> server if this is critical).
 
+| It works in SATA just fine.
+|
+| (for Linux, it will work when I release the code...)
 
-> - I'm using a (fairly) old machine, I have to figure processor speed has to
-> be an issue with software raid
-> - When the box is being stressed most of the work is computational, the
-> process I run puts the CPU% at 98% (according to top).
+well, I was not 100% clear. I am sorry, SATA of course (depends on the
+chipset thought) can do hotswap. I was more referring to the old IDE
+(simple ATA drives).
 
-98% cpu doing just raid 1?  That sounds highly strange, even on an older 
-CPU.
+- --
+Clemens Schwaighofer - IT Engineer & System Administration
+==========================================================
+TEQUILA\Japan, 6-17-2 Ginza Chuo-ku, Tokyo 104-8167, JAPAN
+Tel: +81-(0)3-3545-7703            Fax: +81-(0)3-3545-7343
+http://www.tequila.co.jp
+==========================================================
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.4 (GNU/Linux)
 
-Typically RAID1 doesn't stress the cpu as much as PCI bus bandwidth and 
-the drives...
-
-	Jeff
-
-
-
+iD8DBQFAa7kvjBz/yQjBxz8RAlBBAKCzMIik9EM3ClXh3yoc+VQr7RTsTwCgkOPA
+/RpQ3UNDF4azD4pTO4iD/Ls=
+=tPeb
+-----END PGP SIGNATURE-----
