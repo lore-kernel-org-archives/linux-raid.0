@@ -1,80 +1,80 @@
-From: rich turner <rich@storix.com>
-Subject: RE: raidtools vs mdadm
-Date: Tue, 31 Aug 2004 15:03:20 -0700
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: raid5 won't resync
+Date: Tue, 31 Aug 2004 18:37:18 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1093989799.3399.27.camel@rich>
-References: <8075D5C3061B9441944E1373776451186488CB@cinshrexc03.shermfin.com>
+Message-ID: <200408312237.i7VMbN311819@watkins-home.com>
+References: <Pine.LNX.4.58.0408311714440.1949@web1.mmaero.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <8075D5C3061B9441944E1373776451186488CB@cinshrexc03.shermfin.com>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <Pine.LNX.4.58.0408311714440.1949@web1.mmaero.com>
+To: 'Jon Lewis' <jlewis@lewis.org>
+Cc: linux-raid@vger.kernel.org, aaron@america.com
 List-Id: linux-raid.ids
 
-are there any incompatibilities related to mdadm? does it only support
-the md driver at a certain level? our software supports kernel version
-2.2 and later.
+You have 2 failed drives?
+RAID5 only supports 1 failed drive.
 
-does it fully support creating a raid device on logical volumes, and
-creating logical volumes on raid devices? i have played with this a
-little and havent seen any problems but i thought i would ask to see if
-anyone has seen anything.
+Have you tested the drives to determine if they are good?
+Example:
+dd if=/dev/sdf of=/dev/null bs=64k
 
-would i expect to see the mdadm executable available on most
-distributions today by default?
+If you can find enough good drives, use the force option on assemble.
+But don't include any disks that don't have 100% of the data.
+A spare that did a partial re-build is not good to use at this point.
 
-i realize that raid devices created with raidtools and raid devices
-created with mdadm can co-exist. is there an easy way to know which
-method was used to create them?
+So, if your array had 10 disks, you need to find 9 of them that are still
+working.
 
-thanks for the responses
+Guy
 
+-----Original Message-----
+From: Jon Lewis [mailto:jlewis@lewis.org] 
+Sent: Tuesday, August 31, 2004 5:27 PM
+To: Guy
+Cc: linux-raid@vger.kernel.org; aaron@america.com
+Subject: RE: raid5 won't resync
 
-On Tue, 2004-08-31 at 12:38, Rechenberg, Andrew wrote:
-> I currently use a combination of raidtools and mdadm.  I may be the
-> exception rather than the rule because I'm currently using an old
-> distribution (Red Hat 7.3) because of application compatibility.
-> 
-> I use mdadm exclusively for management of arrays though (failing, hot
-> removing, hot adding, monitoring).  Fedora Core 2 is using mdadm for
-> monitoring although I'm not sure what FC2 anaconda is using to setup
-> RAID arrays.  I believe it still uses raidtools and rc.sysinit on FC2
-> still uses raidtools.  I'm a RH die-hard so I'm not sure what other
-> distros use.
-> 
-> I would venture to say that mdadm is becoming the defacto although it's
-> not quite there yet.
-> 
-> > -----Original Message-----
-> > From: linux-raid-owner@vger.kernel.org 
-> > [mailto:linux-raid-owner@vger.kernel.org] On Behalf Of rich turner
-> > Sent: Tuesday, August 31, 2004 2:56 PM
-> > To: linux-raid@vger.kernel.org
-> > Subject: raidtools vs mdadm
-> > 
-> > i work for a software company that develops backup and 
-> > disaster recovery software for linux. our product supports 
-> > software raid, but i must say that we currently only support 
-> > it when devices are created with raidtools. i only recently 
-> > heard about mdadm and am very impressed with its flexibility 
-> > and funtionality.
-> > 
-> > my question is how popular is mdadm in production 
-> > environments as this compares to raidtools?
-> > 
-> > is mdadm used to configure software raid on any distribution 
-> > installations?
-> > 
-> > is mdadm trending to become the defacto standard for software 
-> > raid on linux?
-> > 
-> > rich turner
-> > 
-> > -
-> > To unsubscribe from this list: send the line "unsubscribe 
-> > linux-raid" in the body of a message to 
-> > majordomo@vger.kernel.org More majordomo info at  
-> > http://vger.kernel.org/majordomo-info.html
-> > 
+On Tue, 31 Aug 2004, Guy wrote:
+
+> I think what you did should work, but...
+> I have had similar problems.
+> Try again, but this time don't include any spare disks, or any other
+disks.
+> Only include the disks you know have the data.
+> Or, just list the disks on the command line.
+
+# mdadm --assemble /dev/md2 /dev/sdc1 /dev/sdm1 /dev/sdf1 /dev/sde1
+/dev/sdd1 /dev/sdg1 /dev/sdk1 /dev/sdj1 /dev/sdi1
+mdadm: /dev/md2 assembled from 4 drives and 1 spare - not enough to start
+the array.
+
+I've left sdl1 and sdn1 out of the above as they're the failed drive and
+the partially rebuilt spare.
+
+I see a pattern that could explain why mdadm thinks there are only 4
+drives.  From mdadm -E on each drive:
+
+sdc1:    Update Time : Tue Aug 31 03:47:27 2004
+sdd1:    Update Time : Tue Aug 31 03:47:27 2004
+sde1:    Update Time : Tue Aug 31 03:47:27 2004
+sdf1:    Update Time : Tue Aug 31 03:47:27 2004
+sdg1:    Update Time : Mon Aug 30 22:42:36 2004
+sdi1:    Update Time : Mon Aug 30 22:42:36 2004
+sdj1:    Update Time : Mon Aug 30 22:42:36 2004
+sdk1:    Update Time : Mon Aug 30 22:42:36 2004
+sdl1:    Update Time : Tue Jul 13 02:08:37 2004
+sdm1:    Update Time : Mon Aug 30 22:42:36 2004
+sdn1:    Update Time : Mon Aug 30 22:42:36 2004
+
+Is mdadm --assemble seeing that 4 drives have a more recent Update Time
+than the rest and ignoring the rest?
+
+----------------------------------------------------------------------
+ Jon Lewis                   |  I route
+ Senior Network Engineer     |  therefore you are
+ Atlantic Net                |
+_________ http://www.lewis.org/~jlewis/pgp for PGP public key_________
 
