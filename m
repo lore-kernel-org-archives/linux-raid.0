@@ -1,49 +1,48 @@
-From: "David PARRIEL" <dparriel@gfi.fr>
-Subject: Mount root filesystem on Raid 1 Software
-Date: Mon, 24 Feb 2003 12:18:49 +0100
+From: "Sean Kormilo" <skormilo@nortelnetworks.com>
+Subject: Odd raid1 rebuild performance
+Date: 24 Feb 2003 09:44:58 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <C1256CD7.003DBA2C.00@mta-out.gfi.fr>
+Message-ID: <1046097898.30229.8.camel@wmery000.ca.nortel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+I've been doing some testing lately with raid1 rebuilds.
 
+I'm using an dual PentiumIV Xeon CPU system, with an adaptec UltraSCSI
+320 controller and dual 10K RPM SCSI disks.
 
+I simulate a failure of one of the disks, and then simulate the
+replacement of the "failed" disk.
 
-Hello,
+The first time I do this, I get good rebuild performance of
+approximately 40MB/s.
 
-I try to use Raid 1 software on a Linux Debian 3.0 (kernel 2.4).
+If I then go ahead and repeat exactly the same test once the rebuild has
+completed, I get relatively poor performance of approximately 6.3MB/s. 
 
-I've no problems to mount my /boot partition on /dev/md1 device and my /usr
-partition on /dev/md2 device, no problems to reboot.
+If I reboot the system, the rebuild rate goes back up to 40MB/s for the
+first rebuild, but the second is poor as above.
 
-On boot when Debian system try to mount the root filesystem on /dev/md0
-(/dev/sdb3 is raid-disk and /dev/sda3 is failed-disk), I obtain this message :
+There is no change in the system load between the tests. The system load
+is virtually non-existent during my testing.
 
-"fsck.ext3 : invalid argument while trying to open /dev/md0.
+I'm using 2.4.19 kernel, with the 1.3.0 aic79xx adaptec SCSI driver, and
+the XFS 1.2 release. I've applied a patch I received from Neil Brown to
+reduce the frequency of a kernel oops I was seeing.
 
- The superblock could not be read or does not describe a correct ext2
- filesystem. If the device is valid and it really contain an ext2
- filesystem then the superblock is corrupt and you might try running
- e2fsck with an alternate superblock.
-      e2fsck -b 8193 <device>
- fsck failed. Please repair manually."
+Any suggestions as to how I can help to debug this?
 
- I ran "fsck /dev/md0" and bellow the result :
- "Bad magic number in superblock while trying to open /dev/hda. The
- superblock could not be read or does not describe a correct
- filesystem" .
+Thanks!
 
- I tried with mke2fs -b 4096 -R stride=8 /dev/md0 and other values, I've always
-the same problem when I reboot.
+Sean.
 
- Have you got an idea of this problem ?
+-- 
 
- In advance, thank you.
-
- David
-
+Sean C. Kormilo, STORM Software Architect, Nortel Networks
+              email: skormilo@nortelnetworks.com
+  
 
