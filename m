@@ -1,78 +1,78 @@
-From: Steven Dake <sdake@mvista.com>
-Subject: Re: problems with raidhotgenerateerror
-Date: Wed, 18 Dec 2002 12:34:10 -0700
+From: Christoph Plattner <christoph.plattner@gmx.at>
+Subject: Bug by starting with missed first devies - bug fix included !!
+Date: Wed, 18 Dec 2002 21:06:32 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3E00CDB2.9090909@mvista.com>
-References: <200212180222.gBI2MUD23542@ars.net>
+Message-ID: <3E00D548.3000907@gmx.at>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Claudio Fleiner <raid@fleiner.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-You should try setting the raid device to faulty which will allow 
-atleast the disk to be hot removed.
+Hello RADI hackers,
 
-Thanks
--steve
+some days ago I recongnized, that `raidstart' has a problem, if 
+`raid-disk 0' is missed or defect. This was a critical problem
+on my RAID 5 for me.
 
-Claudio Fleiner wrote:
+Solution for this problem: try to use all devices to get RAID info,
+not only the first defined device (bad design bug).
 
->I was playing around with raid1 using two loopback devices of 4M each.
->The config file I'm using looks like this:
->
->raiddev /dev/md0
->          raid-level      1
->          nr-raid-disks   2
->          nr-spare-disks  0
->          chunk-size     4
->          persistent-superblock 1
->          device          /dev/loop0
->          raid-disk       0
->          device          /dev/loop1
->          raid-disk       1
->
->
->Everything works as expected, except that I cannot simulate an error using
->raidhotgenerateerror. The command runs just fine (as confirmed by the following strace,
->(all unnecessary stuff removed):
->
->execve("/home/cfl/prog/raidtools-20010914/raidhotgenerateerror", ["/home/cfl/prog/raidtools-20010914/raidhotgenerateerror", "-c", "c", "/dev/md0", "/dev/loop0"], [/* 58 vars */]) = 0
->open("/dev/md0", O_RDONLY)              = 4
->ioctl(4, 0x800c0910, 0x804f948)         = 0
->open("/dev/md0", O_RDWR)                = 5
->fstat64(5, {st_mode=S_IFBLK|0660, st_rdev=makedev(9, 0), ...}) = 0
->stat64("/dev/loop0", {st_mode=S_IFBLK|0660, st_rdev=makedev(7, 0), ...}) = 0
->ioctl(5, 0x92a, 0x700)                  = 0
->_exit(0)                                = ?
->
->but /proc/mdstat shows that loop0 is still OK (writing to the md0 device
->does not make a difference) and removing the drive using raidhotremove
->fails):
->
->Personalities : [raid0] [raid1] [raid5] 
->read_ahead 1024 sectors
->md0 : active raid1 [dev 07:01][1] [dev 07:00][0]
->      4032 blocks [2/2] [UU]
->      
->
->I'm using Redhat 7.2 with a 2.4.19 kernel.
->
->Any idea why this is not working?
->
->Thanks, Claudio
->
->
->
->-
->To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->
->
->  
->
+I am not sure, if this is already reported or fixed, I have release
+20010914, and the raidstart `v0.3d'.
+
+Please answer directly to me, I am not registered on the RAID
+mailing list !! (Perhaps I will do in future).
+
+
+One possible fix:
+
+bash# diff -u raidlib.c.ORIG raidlib.c
+--- raidlib.c.ORIG      Wed Dec 18 20:59:11 2002
++++ raidlib.c   Sun Dec 15 13:42:06 2002
+@@ -395,11 +395,29 @@
+        case raidstart:
+        {
+         struct stat s;
++       int did = 0;
++       int done = 0;
++
++       fd = open_or_die(cfg->md_name);
+
+-       stat (cfg->device_name[0], &s);
++       while (cfg->device_name [did])
++       {
++           stat (cfg->device_name [did], &s);
+
+-       fd = open_or_die(cfg->md_name);
+-       if (do_mdstart (fd, cfg->md_name, s.st_rdev)) rc++;
++           if (do_mdstart (fd, cfg->md_name, s.st_rdev) == 0)
++           {
++               done = 1;
++               break;
++           }
++           did ++;
++       }
++
++       if (done == 0)
++       {
++           rc++;
++           close (fd);
++       }
++
+         break;
+        }
+
+
+
+With friendly regards
+Christoph Plattner
+
+
+
+-- 
+-------------------------------------------------------
+private:	christoph.plattner@gmx.at
+company:	christoph.plattner@alcatel.at
 
