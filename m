@@ -1,27 +1,38 @@
-From: Brad Campbell <brad@wasp.net.au>
-Subject: Rebuild after catastrophic event?
-Date: Sat, 08 Jan 2005 19:08:44 +0400
-Message-ID: <41DFF77C.8070108@wasp.net.au>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Mario Holbe <Mario.Holbe@TU-Ilmenau.DE>
+Subject: Re: Spares and partitioning huge disks
+Date: Sat, 8 Jan 2005 16:50:23 +0100
+Message-ID: <crovfv$sod$1@sea.gmane.org>
+References: <crmt7e$8d6$1@sea.gmane.org> <200501072157.j07Lvg906301@www.watkins-home.com> <20050108145228.GB26475@janus>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: RAID Linux <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-G'day all,
+Frank van Maarseveen <frankvm@frankvm.com> wrote:
+> Intriguing setup. Do you think this actually improves the reliability
+> with respect to disk failure compared to creating just one large RAID5
 
-With 2.4 kernels I recall that md would resync an array after a catastrophic event (like a power 
-failure or kernel oops/panic). 2.6 does not seem to do that and just merrily fires up the array and 
-continues on its way. Is there a reason for the change in behaviour?
+Well, there is this one special case where it's a bit more robust:
+sector read errors.
 
-I'm wondering if I should force a resync with mdadm after such an event?
+> me the odds of losing the entire array won't change (simplified --
+> because the increased complexity creates room for additional errors).
 
-I know it used to resync, and the server at work (running 2.4.26) certainly does on next powerup.
+You don't do anything else with RAID1 or 5 or whatever: You add
+code to reduce the impact of a single disk failure. You add new
+points of failure to reduce the impact of other points of failure
+there, too.
+In this case here, you add code (the RAID0 or LVM code, whatever
+you like more) to reduce the impact of two sector read errors on
+two disks. Of course the new code can contain new points of
+failures. It's as always: know the risk and decide :)
 
-The only other change is I recall I used to have md autodetect the arrays on startup, and now I use 
-mdadm to start them, but that should not matter. (should it?)
 
-Regards,
-Brad (who came home to find a paniced box and thus must ask the question)
+regards,
+   Mario
+-- 
+<jv> Oh well, config
+<jv> one actually wonders what force in the universe is holding it
+<jv> and makes it working
+<Beeth> chances and accidents :)
+
