@@ -1,35 +1,45 @@
-From: Florian Schanda <ma1flfs@bath.ac.uk>
-Subject: Re: 2.6.0-test{1,2,3} kernels + software raid 0 + xfs broken?
-Date: Wed, 27 Aug 2003 13:21:43 +0000
+From: mjstumpf <mjstumpf@cotse.net>
+Subject: Re: RAID recovery question
+Date: Wed, 27 Aug 2003 09:14:15 -0400 (EDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200308271321.44105.ma1flfs@bath.ac.uk>
-References: <200308231916.00588.ma1flfs@bath.ac.uk>
-Reply-To: ma1flfs@bath.ac.uk
+Message-ID: <bWpzdHVtcGY=.ad924856996f27b71d0056adbf646113@1061990055.cotse.net>
+References: <Pine.LNX.4.50.0308262115130.6333-100000@scrappy.it.l3.com>
+Reply-To: mjstumpf@pobox.com
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200308231916.00588.ma1flfs@bath.ac.uk>
-Content-Disposition: inline
-To: linux-raid@vger.kernel.org
-Cc: Neil Brown <neilb@cse.unsw.edu.au>
+In-Reply-To: <Pine.LNX.4.50.0308262115130.6333-100000@scrappy.it.l3.com>
+To: eric.rumer@level3.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Saturday 23 August 2003 19:16, Florian Schanda wrote:
-> I am running a 2.4.21 kernel + xfs + raid0 (software) on 2 scsi disks. It
-> works without flaws.
+
+> /dev/md3 = RAID5, /dev/sde1 + /dev/sdf1 + /dev/sdg1 + /dev/sdh1
+> /dev/md4 = RAID5, /dev/sdi1 + /dev/sdj1 + /dev/sdk1 + /dev/sdl1
+> /dev/md5 = RAID0, /dev/md3 + /dev/md4
+
+> When I try to run raidstart /dev/md3 I get -
 >
-> Trying the same setup in 2.6.0-test{1,2,3} (haven't tested 4 yet) _will_
-> give data corruption if I write to the array.
+> Aug 26 20:37:15 davis kernel:  [events: 0000000f]
+> Aug 26 20:37:15 davis kernel:  [events: 0000000f]
+> Aug 26 20:37:15 davis kernel:  [events: 0000000d]
 
-Looking at: 
-ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/must-fix/must-fix-6.txt
+I am most definitely NOT the expert, however I would recommend getting
+"mdadm" (search this list for the tool) and using it exclusively from now
+on.  The FAQ/howto is badly out of date.
 
-> o RAID0 dies on strangely aligned BIOs
+It would be interesting to see the event counter on the failed device.
 
-Is that my problem? I'm not sure I fully undestand this -- what is strangely 
-aligned here?
+With mdadm you can reassemble the array and start it even though the event
+counters disagree.  I had to do this recently when a failed drive caused a
+partial boot, and my array (on attempting to boot) was incrementing the
+first of the drives' event counters.  I knew nothing had changed, so it
+was very safe to force.
 
-	Florian Schanda
+This might be a similar situation.  I'd guess the worst thing you would
+face is a few corrupted files.
+
+
+
 
