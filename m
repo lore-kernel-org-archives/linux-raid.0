@@ -1,67 +1,76 @@
-From: Bruno Kropp <bruno.kropp@denken.it>
-Subject: nbd and raid devices problems
-Date: Tue, 3 Sep 2002 16:57:00 +0200
-Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200209031657.00991.bruno.kropp@denken.it>
-Reply-To: bruno.kropp@denken.it
+From: Andries Brouwer <aebr@win.tue.nl>
+Subject: Re: PATCH - change to blkdev->queue calling triggers BUG in md.c
+Date: Tue, 3 Sep 2002 17:22:06 +0200
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20020903152206.GA9634@win.tue.nl>
+References: <UTC200209030053.g830r9b16219.aeb@smtp.cwi.nl> <Pine.LNX.4.44.0209022051540.1332-100000@home.transmeta.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44.0209022051540.1332-100000@home.transmeta.com>
+To: Linus Torvalds <torvalds@transmeta.com>
+Cc: Andries.Brouwer@cwi.nl, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, neilb@cse.unsw.edu.au
 List-Id: linux-raid.ids
 
-Good evening,
+On Mon, Sep 02, 2002 at 08:55:47PM -0700, Linus Torvalds wrote:
 
-I have problems using RAID5 (md) over nbd. 
+Discussion so far:
 
-my setup is:
+(1) It is wrong when the kernel guesses, because it may guess wrong.
+Userspace must tell the kernel what to do.
 
-host 1 (front end):
-Kernel 2.4.18 
-nbd-client  (nbd 2.0 from nbd-2.0.tar.gz)
-RAID5 (md0) over 3 /dev/nd(x)  
-|	|	|
-|	|	|
-|	|	host 4 (node1):
-|	|	Kernel 2.4.18 
-|	|	nbd-server  (nbd 2.0 from nbd-2.0.tar.gz)
-|	|
-|	|
-|	|
-|	host 3 (node1):
-|	Kernel 2.4.18 
-|	nbd-server  (nbd 2.0 from nbd-2.0.tar.gz)
-|
-host 2 (node0):
-Kernel 2.4.18 
-nbd-server  (nbd 2.0 from nbd-2.0.tar.gz)
+[The mount call is not "mount dev dir" but "mount -t type dev dir".
+The kernel could guess, and often guess right, but some types are
+close, like ext2 and ext3, or various ufs types, and some types may be
+indistinguishable from the disk image, like msdos and vfat, where the
+right type may depend on the intentions of the user.]
+
+[In a similar way it is bad when the kernel unprovoked starts trying
+to interpret the first few and last few sectors of the disk as an
+Acorn, Amiga, Atari, BSD, DOS, EFI, IBM, Mac, Minix, LDM, OSF, SGI,
+Sun, Ultrix partition table. Maybe there was no table. Maybe there
+is a table of a kind the kernel did not know about, e.g. an AIX or
+Plan 9 table, or a newer version of *BSD or Minix while the kernel
+only knows about older versions, or ...]
 
 
-Everything seems to be ok, I can startup the nbd-client/server, I can build 
-the RAID5, I can create Filesystem on the md, I can mount, I can Write/Read 
-on it...
+(2) In all kinds of special situations attempts to read a partition
+table lead to errors, even to kernel crashes. The kernel should not
+unprovoked start doing I/O, guessing where the partition table might be,
+and what type it might have.
 
-But, when disconnecting a network link from nbd server (is not relevant if 
-host 2,3 or 4) all process on host 1 in I/O over md0 remain hang in D state 
-for 15 minutes...
+> > Yes - that is my main point: doing it on demand. On demand only.
+> 
+> But I actually _agree_ with this. 
+> 
+> However, that has nothing to do with whether it is in user space or kernel 
+> space. In many ways it is _easier_ to do on demand in kernel space: when 
+> somebody opens /dev/sda1 and it isn't partitioned yet, you know it needs 
+> to be. 
 
-After this timeout, the host 1 declare the raidset degraded and all is ok 
-again...
+At first I misread this sentence ("partitioning" for me is something
+done with fdisk) but now I take it to mean: If we have /dev/sda
+but have not read its partition table, and somebody opens /dev/sda1,
+then we decide that we must read a partition table.
 
-I have already tried to modify /proc/sys/net/ipv4/tcp_keepalive_xxxxx 
-(thinking the problem to be related to socket or TCP keepalive) but all 
-remain the same: 15 minutes in D state...
+If that is what you mean, I disagree.
+(Compare: we have /mnt/cdrom and someone opens /mnt/cdrom/foo, should we
+decide to automatically mount /dev/cdrom? An automounter in user space
+may do such things. The kernel may not.)
 
-The same problems on a single block device mounted as simple file system 
-(without RAID).
+> Note that this actually allows you to do your own user-space partitioning 
+> if you want to - simply by making sure that you do your partitioning 
+> _before_ somebody tries to open a partition on the device.
 
-Is there any workaround?
+You are inventing a can of worms. Suppose user space already told the
+kernel where the partitions are, and the kernel knows about sda1, sda2, sda3.
+Now somebody refers to sda4. Does the kernel start reading the device,
+possibly changing the meaning of sda1 etc?
+What if this disk is part of a RAID?
 
-Thanks in advance for your help
+No, we must slowly migrate to the state where the kernel never takes the
+initiative to search for a partition table. That initiative belongs to
+user space.
 
-Best Regards
-
-Bruno Kropp
-
+Andries
