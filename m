@@ -1,77 +1,47 @@
 From: "Chris Evans" <chris1@psyctc.org>
 Subject: Re: md: can not impport hdb1, has active inodes!
-Date: Wed, 03 Mar 2004 01:13:54 -0000
+Date: Wed, 03 Mar 2004 01:20:54 -0000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <40453152.462.2FC95FD@localhost>
-References: <16453.12057.827300.308373@notabene.cse.unsw.edu.au>
+Message-ID: <404532F6.8743.303008B@localhost>
+References: <4045288B.27321.2DA4EF3@localhost>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: <16453.12057.827300.308373@notabene.cse.unsw.edu.au>
-References: message from Chris Evans on Wednesday March 3
+In-reply-to: <200403030211.35753.maarten@vbvb.nl>
 To: debian-user@lists.debian.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 3 Mar 2004 at 12:04, Neil Brown wrote:
+On 3 Mar 2004 at 2:11, Maarten J H van den Berg wrote:
 
-> > > You missed a step (step 9).  You have to reboot so that /dev/md0
-> > > is your root device. Once you have done that and are happy with
-> > > it, you add in /dev/hdb1 and let it resync.
-> > Ditto: did that, no go.
-> 
-> Sorry, I missed where you said that you rebooted.
-you are correct: I didn't say that, but I have done!
+> Hope it's not too obvious, but...
+> Did you also actually _run_ lilo ?  
+> Is fstab on /dev/md0 edited to reflect the new mountpoints ?
+No it's not too obvious and maybe I need to work through all the 
+options again and document what went wrong each time but I did try to 
+run lilo on each: some ran without complaint but didn't solve the 
+problem, and some resulted in lilo complaining something along the 
+lines that it was using the current boot device and that device x (a 
+numeric representatiion, sorry, didn't note it) wasn't a device in 
+which it could write its stuff.
+
+> Not that it helps you here, but I followed the procedure -albeit not
+> from the same howto[1]- multiple times with many machines. It _should_
+> work...
+Well, it encourages me!
  
-> It sounds very odd.
-Well, I thought so too, but I see I'm not alone in experiencing this.
+>   [1] I used a howto by the name of Boot+root+raid+llilo. Maybe see if
+> there are any obvious differences between the two procedures /
+> howtos...? 
+Yes, found that.  Mostly the differences are that the one I worked 
+from uses mdadm and that one uses raidtools2 but I thought they said 
+the same things really and I couldn't get either approach: mdadm or 
+raidtools/raidtab, to work for me.
 
-> What does "cat /proc/mounts" say?
-Aha, didn't know that wrinkle: lovely.  Mount says:
-/dev/md0 on / type ext3 (rw,errors=remount-ro)
-proc on /proc type proc (rw)
-devpts on /dev/pts type devpts (rw,gid=5,mode=620)
+One thing: I asssume that mdrecoveryd isn't holding an inode active?  
+I _think_ I've failed just as totally after killing mdrecoveryd but 
+can't vouch for having done that every time.
 
-and cat /proc/mounts says:
-rootfs / rootfs rw 0 0
-/dev/root / ext2 rw 0 0
-proc /proc proc rw 0 0
-devpts /dev/pts devpts rw 0 0
+Thanks Maarten,
 
-Does that "/dev/root" bit indicate anything useful?
-
-> Does your kernel use an initrd?
-No, at least, I haven't asked it to!
- 
-> Exactly how did you tell lilo to use /dev/md0?
-> With
->    root=/dev/md0
-> as an option in lilo.conf, or with
->    append= "root=/dev/md0"
-
-I think I've only tried the former (with and without an earlier line, 
-before the image stanzas, saying root=/dev/hdb1)
-
-I haven't used an "append" clause anywhere.
-
-One problem is keeping in mind which of the lilo.conf tweaks 
-installed with lilo but didn't solve the problem, and which were the 
-ones that lilo refused to install.
-
-I'm happy to try alternatives and report effects, on or off list, of 
-each.
-
-Many thanks,
-
-Chris
-
-
-
-> 
-> or both or something else?
-> 
-> NeilBrown
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"
-> in the body of a message to majordomo@vger.kernel.org More majordomo
-> info at  http://vger.kernel.org/majordomo-info.html
+C
 
 PSYCTC: Psychotherapy, Psychology, Psychiatry, Counselling
    and Therapeutic Communities; practice, research, 
