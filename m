@@ -1,41 +1,44 @@
-From: Jakob Oestergaard <jakob@unthought.net>
-Subject: Re: Can't boot from /dev/md0 (RAID-1)
-Date: Mon, 1 Jul 2002 13:21:11 +0200
+From: Flemming Frandsen <ff@partyticket.net>
+Subject: Non-equal sized partitions vs RAID 1
+Date: Mon, 01 Jul 2002 13:29:46 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20020701112111.GB18580@unthought.net>
-References: <200206302046.g5UKkgpS006815@ns2.is.bizsystems.com> <200207011207.07552.roy@karlsbakk.net>
+Message-ID: <3D203D2A.5030307@partyticket.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <200207011207.07552.roy@karlsbakk.net>
-To: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
-Cc: michael@insulin-pumpers.org, Kernel mailing list <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Jul 01, 2002 at 12:07:07PM +0200, Roy Sigurd Karlsbakk wrote:
-=2E..
->=20
-> I've read the fscking manual - all I can find - for both grub and lil=
-o, and=20
-> I've tried all possible configurations I can think of.
->=20
-> point is - I beleive there's a BIOS/linux misunderstanding somewhere
+I have two disks in my box, both are MAXTOR 6L080L4 (80GB IDE) and 
+physically the same disks, both have 3 partitions, one for /boot one for 
+swap and one huge one for the rest for the mirrored data.
 
-Did you try the   raid-extra-boot  option for LILO ?  I really don't
-know if this is the problem you are seeing, but it's worth a shot I
-think.
+The mirror works as expected, but somewhere something went slightly 
+wrong because one disks geometry is:
+physical     155114/16/63
+logical      155114/16/63
 
---=20
-=2E...............................................................
-:   jakob@unthought.net   : And I see the elder races,         :
-:.........................: putrid forms of man                :
-:   Jakob =D8stergaard      : See him rise and claim the earth,  :
-:        OZ9ABN           : his downfall is at hand.           :
-:.........................:............{Konkhra}...............:
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The other disk is:
+physical     155114/16/63
+logical      9732/255/63
+
+Now, this has the annoying sideeffect of making it impossible for me to 
+partition them exactly the same way, so I ended up creating the mirror 
+on disk 1 (which has a slightly smaller partition for mirroring than 
+disk 2) and then adding disk 2 later.
+
+This will get me in trouble (I tested it) when disk 1 fails and I need 
+to replace it, because then I have to make that partition slightly 
+larger than the disk 2 partition so it can be added to the mirror.
+
+Now for the questions:
+* Is there a way to change the logical geometry of disk 2, so I can 
+partition correctly (well if there is then this post is OT)?
+
+* Is there a way to force the array to keep being the same size, even 
+after the smaller partition has failed?
+
+* Why does the BIOS think that it's cool to translate similar disks 
+differently, are BIOS writers crackheads or was I just unlucky?
+
