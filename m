@@ -1,28 +1,35 @@
-From: "jeff millar" <wa1hco@adelphia.net>
-Subject: Fw: fsck on raidvolumes at boot
-Date: Sun, 11 May 2003 09:18:55 -0400
+From: Mikael Johansson <mpjohans@pcu.helsinki.fi>
+Subject: Re: fsck on raidvolumes at boot
+Date: Sun, 11 May 2003 16:48:15 +0300 (EEST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <019e01c317bf$e07237c0$6a01a8c0@wa1hco>
+Message-ID: <Pine.OSF.4.51.0305111646340.136560@soul.helsinki.fi>
+References: <871y0ejtdf.fsf@jumper.lonesom.pp.fi>
+ <Pine.OSF.4.51.0305102009550.135362@soul.helsinki.fi>
+ <16061.61482.79132.824395@notabene.cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <16061.61482.79132.824395@notabene.cse.unsw.edu.au>
+To: Neil Brown <neilb@cse.unsw.edu.au>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> ----- Original Message -----
-> From: "Neil Brown" <neilb@cse.unsw.edu.au>
-> To: "Mikael Johansson" <mpjohans@pcu.helsinki.fi>
-> Cc: <linux-raid@vger.kernel.org>
-> Sent: Sunday, May 11, 2003 2:39 AM
-> Subject: Re: fsck on raidvolumes at boot
-> 
-> 
-> > What number do you have in column 6 of /etc/fstab for these
-> > filesystems?
-> > If 0, make it non-zero.
-> 
-> Ok...what if the raid volumes get automounted? I didn't see any place for
-> the check?
-> 
+
+Hello Neil and All!
+
+On Sun, 11 May 2003, Neil Brown wrote:
+
+> > Is there a way to make Linux automatically check the /dev/md*'s before
+> > mounting them if they are dirty?
+>
+> What number do you have in column 6 of /etc/fstab for these
+> filesystems?
+> If 0, make it non-zero.
+
+Thank you very much! When knowing what to search for, it was easy :-) I
+guess the recommended value is 2 for non-root partitions. I had both col 5
+and 6 plain empty...
+
+Have a nice day,
+    Mikael J.
+    http://www.helsinki.fi/~mpjohans/
