@@ -1,29 +1,53 @@
-From: maarten <maarten@ultratux.net>
-Subject: Spares and partitioning huge disks
-Date: Thu, 6 Jan 2005 15:16:47 +0100
-Message-ID: <200501061516.47376.maarten@ultratux.net>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: Spares and partitioning huge disks
+Date: Thu, 6 Jan 2005 11:46:41 -0500
+Message-ID: <200501061646.j06Gkm931902@www.watkins-home.com>
+References: <200501061516.47376.maarten@ultratux.net>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="us-ascii"
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <200501061516.47376.maarten@ultratux.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: 'maarten' <maarten@ultratux.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+This is from "man mdadm":
+As  well  as  reporting  events,  mdadm may move a spare drive from one
+array to another if they are in the same spare-group and if the  desti-
+nation array has a failed drive but not spares.
+
+You can do what you want.  I have never tried.  My arrays are too different.
+I don't want to waste an 18Gig spare on a 256M array.
+
+Guy
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of maarten
+Sent: Thursday, January 06, 2005 9:17 AM
+To: linux-raid@vger.kernel.org
+Subject: Spares and partitioning huge disks
 
 
 Hi
 
-I just got my 4 new 250GB disks.  I have read someone on this list advocating 
-that it is better to build arrays with smaller volumes, as that decreases the 
-chance of failure, especially failures of two disks in a raid5 configuration. 
+I just got my 4 new 250GB disks.  I have read someone on this list
+advocating 
+that it is better to build arrays with smaller volumes, as that decreases
+the 
+chance of failure, especially failures of two disks in a raid5
+configuration. 
 
 The idea behind it was that since a drive gets kicked when a read-error 
-occurs, the chance is lower that a 40 GB part develops a read error than for 
-the full size 250 GB.  Thus, if you have 24 40GB parts, there is no fatal two 
+occurs, the chance is lower that a 40 GB part develops a read error than for
+
+the full size 250 GB.  Thus, if you have 24 40GB parts, there is no fatal
+two 
 disk failure when part sda6 and part sdc4 develop a bad sector at the same 
-time. On the other hand, if the (full-size) disk sda1 and sdc1 do fail at the 
+time. On the other hand, if the (full-size) disk sda1 and sdc1 do fail at
+the 
 same time, you're in deep shit. 
 I thought it was real insightful, so I would like to try that now.
 
@@ -31,8 +55,10 @@ I thought it was real insightful, so I would like to try that now.
 
 Now my two questions regarding this.
 
-1) What is better, make 6 raid5 arrays consisting of all 40GB partitions and 
-group them in a LVM set, or group them in a raid-0 set (if the latter is even 
+1) What is better, make 6 raid5 arrays consisting of all 40GB partitions and
+
+group them in a LVM set, or group them in a raid-0 set (if the latter is
+even 
 possible that is) ?
 
 2) Seen as the 'physical' volumes are now 40 GB, I could add an older 80GB 
@@ -46,4 +72,9 @@ Thanks for any insights!
 Maarten
 
 -- 
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
