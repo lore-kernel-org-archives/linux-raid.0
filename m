@@ -1,51 +1,56 @@
-From: Frank van Maarseveen <frankvm@frankvm.com>
-Subject: Re: Spares and partitioning huge disks
-Date: Mon, 10 Jan 2005 09:15:26 +0100
-Message-ID: <20050110081526.GA15920@janus>
-References: <crmt7e$8d6$1@sea.gmane.org> <200501092226.25910.maarten@ultratux.net> <20050109222900.GA12793@janus> <200501100016.58847.maarten@ultratux.net>
+From: Mitchell Laks <mlaks@verizon.net>
+Subject: how to move a raid1 drive to a new machine
+Date: Mon, 10 Jan 2005 03:43:01 -0500
+Message-ID: <200501100343.01672.mlaks@verizon.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <200501100016.58847.maarten@ultratux.net>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Jan 10, 2005 at 12:16:58AM +0100, maarten wrote:
-> On Sunday 09 January 2005 23:29, Frank van Maarseveen wrote:
-> 
-> I either don't understand this, or I don't agree. Assemble --force effectively 
-> disables all sanitychecks,
+Hi gurus,
 
-ok, wasn't sure about that. but then:
+A simple question. I have studied the documents
 
-> The result is 
-> therefore an array that either (A) holds a good FS with a couple of corrupted 
-> files (silent corruption)
+Software raid howto
+http://www.tldp.org/HOWTO/Boot+Root+Raid+LILO.html
+and scoured google.
 
-> So I certainly would opt for the "possibility of silent corruption" choice. 
-> And if I ever find the corrupted file I delete it and mark it for 'new 
-> retrieval" or some such followup.  Or restore from tape where applicable.
-> 
-> > so, we can't ignore errors during RAID5 reconstruction and we're toast
-> > if it happens, even more toast than we would have been with a normal
-> > disk (barring the case of an entirely dead disk). If you look at the
-> > lower level then of course RAID5 has an advantage but to me it seems to
-> > vaporize when exposed to the _complexity_ of handling secondary errors
-> > during the reconstruction.
-> 
-> You cut out my entire idea about leaving the 'failed' disk around to 
-> eventually being able to compensate a further block error on another media.  
-> Why ?  It would _solve_ your problem, wouldn't it ?
+Given a raid1 on a machine 
 
-I did not intend to cut it out but simplified the situation a bit: if
-you have all the RAID5 disks even with a bunch of errors spread out over
-all of them then yes, you basically still have the data.  Nothing is
-lost provided there's no double fault and disks are not dead yet. But
-there are not many technical people I would trust for recovering from
-this situation. And I wouldn't trust myself without a significant
-coffee intake either :)
+/dev/md0 consists of /dev/hdc and /dev/hde.
 
--- 
-Frank
+I want to grab one of those disks and move it to a new machine and make it 
+available there.
+
+What I have thought about:
+
+turn off machine. grab /dev/hde. put in new machine say at position
+/dev/hdc (for grins).
+
+now take an identical copy of /etc/raidtab from the original machine.
+install it as /etc/raidtab
+modprobe raid1
+mknod /dev/md0 b 9 0 (if necessary).
+raidstart /dev/md0
+
+will this work? 
+
+questions:
+1) when do i do mkraid /dev/md0 (ie what does that do... will it zap all the 
+stuff in /dev/hdc => ie what was on old /dev/hde??)
+2) what is the mysterious failed-disk parameter in /etc/raidtab used for - ie 
+will it help here preserve the data while we start up the raid.
+3) lets say i want to start the raid without a partner drive, ie just with 
+/dev/hdc ( "drive that used to be known as /dev/hde" "my apologies to glyph 
+who used to be Prince"), what do i do???
+
+Thanks,
+Mitchell
+
+ 
+ 
