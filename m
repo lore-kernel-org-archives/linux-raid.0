@@ -1,43 +1,26 @@
-From: Nathan Lewis <nathapl@cs.okstate.edu>
-Subject: Re: Adding Reed-Solomon Personality to MD, need help/advice
-Date: Sat, 31 Jan 2004 12:56:58 -0600
+From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+Subject: striping and mirroring with only two disks
+Date: Sat, 31 Jan 2004 20:53:02 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <6.0.1.1.2.20040131124325.03fafe78@a.cs.okstate.edu>
-References: <6.0.1.1.2.20040130235924.03f39710@mail.athenet.net>
- <16411.35140.244946.630202@notabene.cse.unsw.edu.au>
+Message-ID: <20040131195302.GA18341@rap.rap.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <16411.35140.244946.630202@notabene.cse.unsw.edu.au>
-References: <6.0.1.1.2.20040130235924.03f39710@mail.athenet.net>
- <16411.35140.244946.630202@notabene.cse.unsw.edu.au>
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: linux-raid@vger.kernel.org
+Content-Disposition: inline
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-At 04:53 AM 1/31/2004, Neil Brown wrote:
->I strongly agree with Peter.  Base your work on 2.6, not 2.4.  The
->raid code is much cleaner in 2.6.
+Hi!
 
-I'll take a look at 2.6 then and see what's different.  It may not be 
-possible for me to use 2.6 due to restrictions on the test machines I'll be 
-using.  I chose 2.4 because that's what was included in the distribution 
-I'm using, it is what my professor is using on his machines, and it is the 
-version covered by the Rubini book.  It seemed like a logical 
-choice.  Where's the most comprehensive list of changes 2.4->2.6 dealing 
-with block drivers and linux-raid?
+Is it possible to both do striping and mirroring if you only have 2 disks?
 
->Good.  md/raid uses the make_request_fn function, not the request_fn
->function like most device drivers use.
->.....<snip>....
+I was thinking of having the chunks organized on each disk so
+that striping reads and writes could be done. Eg. by having 
 
-I really appreciate the answers to my questions.
+disk1: chunk0 chunk2 chunk4 ......   chunk1 chunk3 chunk5
+disk2: chunk1 chunk3 chunk5 ......   chunk0 chunk2 chunk4
 
->I too would be interest to see just how you would apply reed-solomon
->encoding to RAID.
+Would such a layout of chunks allow for striped reading and writing?
 
-In short, it is a distributed storage mechanism for a small (~50) group of 
-workstations with a central coordinating server.  RS is needed for the high 
-levels of redundancy possible.
-
-
+Best regards
+keld
