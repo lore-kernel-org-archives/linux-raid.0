@@ -1,42 +1,50 @@
-From: lilha@legend.com.cn
-Subject: some question in SoftRaid
-Date: Thu, 23 May 2002 17:08:22 +0800
+From: "Rene Scherer" <rene@scherer-online.com>
+Subject: /proc/mdstat output
+Date: Thu, 23 May 2002 11:54:01 +0100 (BST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <OF3F6026D2.567B40AF-ON48256BC2.00308831@legend.com.cn>
+Message-ID: <64718.139.149.1.195.1022151241.squirrel@www.scherer-online.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-hello,everyone.i am a freshman in linux raid.
+Hi all
 
-i want to know some limits about raid,i try to find it in Raid-Howto and
-Raid-FAQ,etc..
-but i cann't find it.
+I've got a small question about the output of "cat /proc/mdstat"
 
-Follow is my question:
+I've got 3 RAIDs configured (RAID-1 mirror), md0, md1 and md2
+When I run "cat /proc/mdstat", I get the following output:
 
-1.Raid 0,1,5 must install in differ disk?right?
-RAID-0 and RAID-1 need at lest 2 disk
-RAID-5 need at lest 3 disk,is it right?
-then is there any requrement about the partition Type(such as
-primary,logical or extend partition )?
+Personalities : [raid1]
+read_ahead 1024 sectors
+md1 : active raid1 sdb2[1] [dev 08:02][0]
+      10241344 blocks [2/2] [UU]
 
-2.can i setup raid0,1,5 in the partition which has different size?
-such as:
-/dev/hda1 500M
-/dev/hdc1 600M
-can i setup raid-0 or raid-1?i try it,but failed.
+md2 : active raid1 sdb3[1] [dev 08:03][0]
+      38130176 blocks [2/2] [UU]
 
-3.how can I remove raid from disk?
-such as,i have md0(RAID 0),it use /dev/hda2 and /dev/hdc2
-now i want to these partitions don't use raid,i want to release these
-partition
-then how can I do?
+md0 : active raid1 sdb1[1] [dev 08:01][0]
+      10241280 blocks [2/2] [UU]
+
+unused devices: <none>
+
+It looks like all 3 arrays are working fine (e.g. [UU]), but only 1
+partition is listed (e.g. sdb1[1]). Why is it's mirror sda1 not listed?
+
+Because of this webmin thinks all the sda disk are down. :-(
+
+Any ideas?
+
+Thanks,
+Rene
 
 
-thanks a lot.
 
-Regards, echo
+---------------------------------------------------------------------------
+Rene Scherer, 12 Bushwood Drive, London SE1 5RE, United Kingdom
+Tel: +44 (20) 7232 1867, Fax: +44 (20) 7232 1867
+Email: rene@scherer-online.com, Web: http://www.scherer-online.com
+
 
