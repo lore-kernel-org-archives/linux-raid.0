@@ -1,55 +1,51 @@
 From: Neil Brown <neilb@cse.unsw.edu.au>
 Subject: Re: ext3 journal on software raid (was Re: PROBLEM: Kernel 2.6.10 crashing repeatedly and hard)
-Date: Tue, 4 Jan 2005 14:42:59 +1100
-Message-ID: <16858.4291.816499.371678@cse.unsw.edu.au>
-References: <l1nna2-e9i.ln1@news.it.uc3m.es>
-	<200501031846.42950.maarten@ultratux.net>
-	<200501032052.21459.maarten@ultratux.net>
-	<a9noa2-o12.ln1@news.it.uc3m.es>
-	<fh0pa2-kvp.ln1@news.it.uc3m.es>
-	<16857.55609.534526.297577@cse.unsw.edu.au>
-	<jh4pa2-pi.ln1@news.it.uc3m.es>
-	<16857.64086.362458.177296@cse.unsw.edu.au>
-	<6d5bedd80501031816eb8f296@mail.gmail.com>
-	<16857.65024.745883.752981@cse.unsw.edu.au>
-	<20050104024108.GK99565@caffreys.strugglers.net>
+Date: Tue, 4 Jan 2005 15:29:01 +1100
+Message-ID: <16858.7053.312590.647797@cse.unsw.edu.au>
+References: <jh4pa2-pi.ln1@news.it.uc3m.es>
+	<Pine.LNX.3.96.1050103170449.22620A-100000@Maggie.Linux-Consulting.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Andy Smith on Tuesday January 4
+In-Reply-To: message from Alvin Oga on Monday January 3
 Sender: linux-raid-owner@vger.kernel.org
-To: Andy Smith <andy@strugglers.net>
-Cc: linux-raid@vger.kernel.org
+To: Alvin Oga <aoga@ns.Linux-Consulting.com>
+Cc: "Peter T. Breuer" <ptb@lab.it.uc3m.es>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday January 4, andy@strugglers.net wrote:
-> On Tue, Jan 04, 2005 at 01:22:56PM +1100, Neil Brown wrote:
-> > On Monday January 3, ewan.grantham@gmail.com wrote:
-> > > I've setup a RAID-5 array using two internal 250 Gig HDs and two
-> > > external 250 Gig HDs through a USB-2 interface. Each of the externals
-> > > is on it's own card, and the internals are on seperate IDE channels.
-> > > 
-> > > I "thought" I was doing a good thing by doing all of this and then
-> > > setting them up using an ext3 filesystem.
-> > 
-> > Sounds like a perfectly fine setup (providing always that external
-> > cables are safe from stray feet etc).
-> > 
-> > No need to change anything.
+On Monday January 3, aoga@ns.Linux-Consulting.com wrote:
 > 
-> Except that Peter says that the ext3 journals should be on separate
-> non-mirrored devices and the reason this is not mentioned in any
-> documentation (md / ext3) is that everyone sees it as obvious.
-> Whether it is true or not it's clear to me that it's not obvious to
-> everyone.
+> > > think, the branch of mathematics that has the highest ratio of people
+> > > who think that understand it to people to actually do (witness the
+> > > success of lotteries).
+> 
+> ahh ... but the stock market is the worlds largest casino
 
-If Peter says that, then Peter is WRONG.
+and how many people do you know who make money on stock markets.
+Now compare that with how many loose money on lotteries.
+Find out the ratio and .....
 
-ext3 journals are much safer on mirrored devices than on non-mirrored
-devices just the same as any other data is safer on mirrored than on
-non-mirrored. 
-In the case in question, it is raid5, not mirrored, but still raid5 is
-safer than raid0 or single devices (possibly not quite as safe was raid1).
+>  
+> > Possibly. But not all of them teach probability at university level
+> > (and did so when they were 21, at the University of Cambridge to boot,
+> > and continued teaching pure math there at all subjects and all levels
+> > until the age of twenty-eight - so puhleeeze don't bother!).
+
+Apparently teaching probability at University doesn't necessary mean
+that you understand it.  I cannot comment on your understanding, but
+if you ask google about the Monty Hall problem  and include search
+terms like "professor" or "maths department" you will find plenty of
+(reported) cases of University staff not getting it.
+
+e.g.  http://www25.brinkster.com/ranmath/marlright/montynyt.htm
+
+ "Our math department had a good, self-righteous laugh at your
+ expense," wrote Mary Jane Still, a professor at Palm Beach Junior
+ College. Robert Sachs, a professor of mathematics at George Mason
+ University in Fairfax, Va., expressed the prevailing view that there
+ was no reason to switch doors. 
+
+They were both wrong.
 
 NeilBrown
