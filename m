@@ -1,38 +1,42 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: RAID detection and activation w/o auto detection
-Date: Tue, 30 Apr 2002 13:31:22 +1000 (EST)
+From: Ross Vandegrift <ross@willow.seitz.com>
+Subject: Creating failed-mode RAID1 with mdadm
+Date: Tue, 30 Apr 2002 14:48:32 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <15566.4106.971348.1325@notabene.cse.unsw.edu.au>
-References: <Pine.GSO.4.21.0204290956010.8825-100000@gecko.roadtoad.net>
-	<076401c1efee$885325d0$6501a8c0@bomoon>
+Message-ID: <20020430184832.GA381@willow.seitz.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from bo on Monday April 29
-To: bo <bo@sosnetwork.net>
-Cc: linux-raid@vger.kernel.org
+Content-Disposition: inline
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday April 29, bo@sosnetwork.net wrote:
-> Hello,
-> 
-> How to detect and activate the RAID manually without 
-> "auto detection"(0xFD in partition type)?
-> 
-> I tried with "mdadm -R" or "mdadm -A", but it did not work.
+Hey everyone,
 
-echo '/dev/hd* /dev/sd*' > /etc/mdadm.conf
-mdadm -Dsb >> /etc/mdadm.conf
+	Creating a new array today, I decided I should probably start
+using mdadm instead of the old tools.  I've been using it a bit at home
+to do minor things, and it seemed nice.
+	I've got a box with two 20G ide drives installed.  One is
+currently the root drive at /dev/hda1 and the other is one of the disks
+for the mirrored pair at /dev/hde1.  I'm trying to create the array with
+/dev/hdg1 as a failed disk, and then move /dev/hda to /dev/hde after I
+start booting the machine off of /dev/md0.
+	When I do:
 
-# look at /etc/mdadm.conf and make sure that it looks ok.
+# mdadm --create /dev/md0 --level 1 --raid-disks=2 /dev/hde1 /dev/hdg1
 
-# add  "mdadm -As" to an appropriate startup script.
+I get:
 
-Note that this won't work for assembling the root filesystem.
-To do that, you either need an init-ramdisk which runs "mdadm -As", or
-use kernel parameters to start the root device.e.g.
+mdadm: Cannot open /dev/hdg1: No such device or address
+mdadm: create aborted
 
-  append="root=/dev/md0 md=0,/dev/hda1,/dev/hdc1"
+This makes sense, as /dev/hdg doesn't really exist yet.  I've tried
+doing:
 
-NeilBrown
+# mdadm --set-faulty /dev/md0 /dev/hdg1
+
+but it doesn't seem to help.  How can I build an array like this via
+mdadm?
+
+Ross Vandegrift
+ross@willow.seitz.com
+
