@@ -1,52 +1,70 @@
-From: Frank Wittig <fw@weisshuhn.de>
-Subject: Re: md Grow for Raid 5
-Date: Wed, 09 Mar 2005 10:31:49 +0100
-Message-ID: <422EC285.50403@weisshuhn.de>
-References: <676e074ffe5f52e6671aac5a2c14e984@case.edu> <422DFE60.5020807@weisshuhn.de> <422E1C6A.2000006@h3c.com> <422E31F3.3070104@panix.com> <422E3352.20002@h3c.com>
+From: Gordon Henderson <gordon@drogon.net>
+Subject: Re: now on to tuning....
+Date: Wed, 9 Mar 2005 09:46:01 +0000 (GMT)
+Message-ID: <Pine.LNX.4.56.0503090926190.4055@lion.drogon.net>
+References: <6F9171BE257CA742BFBCFA87B8F20F8D030E4351@NZURC900PEX1.ubsgs.ubsgroup.net>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enigFDD7C8425D6C4AC20BF84439"
-In-Reply-To: <422E3352.20002@h3c.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+In-Reply-To: <6F9171BE257CA742BFBCFA87B8F20F8D030E4351@NZURC900PEX1.ubsgs.ubsgroup.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mike Hardy <mhardy@h3c.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enigFDD7C8425D6C4AC20BF84439
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+On Wed, 9 Mar 2005 peter.greis@ubs.com wrote:
 
-Mike Hardy wrote:
+> Greetings All,
+>
+> I have been lurking for a while.... I recently put together a raid 5
+> system (Asus K8NE SIL 3114/2.6.8.1 kernel) with 4 300GB SATA Seagate
+> drives (a lot smaller than the bulk of what seems to be on this list!).
 
-> You're very correct about needing to grow the FS after growing the 
-> device though. Most FS's have tools for that, or there's LVM...
-> 
-> -Mike
+Size isn't important :)
 
-I've tested with LVM2 an found, that resizing is not supported at the 
-moment (newest kernel with FC3).
-LVM can only grow by adding PVs to the VG. Growing PVs is not supported.
-The only way is to export and reimport the VG configuration with 
-vgcfgbackup and vgcfgrestore and to alter the number of physical extends 
-of the grown PV manually.
+> Currently this is used for video and mp3 storage, being Reiser on LVM2.
+>
+> So a couple of questions:
+>
+> Bonnie++ to test, but with which parameters ? Also, I have seen the
+> mount option "nolargeio=1" for reiser, but not a lot of information on
+> the impact in raid systems.
+>
+> Any thoughts ?
 
-Greetings,
-Frank
+Why LVM2? Are you taking snapshots, or expecting to re-size the array?
 
---------------enigFDD7C8425D6C4AC20BF84439
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
+I just could never work out why I needed yet another layer of software
+between the application and the disk platter. There may well by a good
+reason for it - I did look into LVM some 18 months ago when I was looking
+at snapshot solutions though, but it was hideously slow (or appeared to
+be) after I'd taken a snapshot. (My intention was to tape dump from the
+snapshots, and provide a 'yesterday' & 'the day before' type things. I now
+use rsync for that - takes time to make the snapshot, but accesses to it
+are no slower than accessing the live aray.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.6 (GNU/Linux)
-Comment: Using GnuPG with Thunderbird - http://enigmail.mozdev.org
+I know nothing about reiser either, so can't help there, I'm afraid,
+however, XFS has some real-time facilities which might be useful for
+streaming data, but again, it's not something I've looked into.
 
-iD8DBQFCLsKFx6tzaD9P7mkRAgVkAJ9F1FZ7PnO+VZUAuythEY0nv8ErlwCfVRDf
-tU7YACVfK7pNPbSOfhgqHqU=
-=5Y3+
------END PGP SIGNATURE-----
+Anyway - if you are streaming big files, you want nothing more than time
+dd to test the speed of the thing. Bonnie++ will limit the size of a
+single file to 2GB (and write multiple 2GB files if you specify a bigger
+size) and you'll get an indication of how busy the CPU is when it's
+writing & reading. Your drive will have between 55 and 65MB/sec of head
+bandwidth, so anything better than that is a bonus, athough the 3114 will
+have all 4 ports on the same PCI bus, so thats going to be your
+bottleneck.
 
---------------enigFDD7C8425D6C4AC20BF84439--
+If you want more speed, you might want to try to reconfigure it in a
+RAID-10 way, but then you'll only get 2 disks worth of storage rather than
+the 3 in a RAID-5 setup.
+
+Also test streaming over LAN if thats what you are doing - if it's just a
+100Mb LAN, then all your disk system needs to be able to do is 12MB/ses
+and anything more is a bonus.
+
+And do check your disks regularly, although I don't think current version
+of smartmontools fully supports sata under the scsi subsystem yet...
+
+Good luck,
+
+Gordon
