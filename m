@@ -1,28 +1,23 @@
-From: Brennahn Chesteine <ven_ficken@yahoo.com>
-Subject: Why is grub trying to boot off of 1,9 when root is 0,0
-Date: Wed, 26 Mar 2003 10:20:10 -0800 (PST)
+From: <danfisher@bwkip.com>
+Subject: I have a failed disk need help!
+Date: Thu, 27 Mar 2003 03:19:21 -0500 (EST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20030326182010.36650.qmail@web14410.mail.yahoo.com>
+Message-ID: <2999.204.250.25.205.1048753161.squirrel@webmail.bwkip.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Been trying to get my software raid0 box up and goinf
-with 2220 for 2 weeks now with no luck. 
+We were preforming system updates on the system and had pulled the master
+out to keep a backup incase of disaster.  And so disaster hit and we want
+to reraid the master to the slave - Not so easy.  The kernel keeps wanting
+to use hdb but we want to mark hdb as failed and get it to boot to hda when
+hdb is in the mirror.
 
-For some reason it dies out saying cannot find root on
-dev 1,9. this makes no sense since root is 0,0
-according to grub. 
+What do I do to do this.  I have an additional system to preform it on for
+safety precautions before I actually do it so see what you guys can come up
+with.
 
-Is there a way to get my boot log so I could paste it
-to be looked at? Cause it looks like the RAID bit at
-start is crapping out. 
 
-Hey, thanks in advance for any help!
-
-__________________________________________________
-Do you Yahoo!?
-Yahoo! Platinum - Watch CBS' NCAA March Madness, live on your desktop!
-http://platinum.yahoo.com
