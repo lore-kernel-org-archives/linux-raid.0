@@ -1,85 +1,66 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: Spares and partitioning huge disks
-Date: Sat, 8 Jan 2005 11:33:13 -0500
-Message-ID: <200501081633.j08GXK910004@www.watkins-home.com>
-References: <200501081319.00799.maarten@ultratux.net>
+From: maarten <maarten@ultratux.net>
+Subject: Re: Spares and partitioning huge disks
+Date: Sat, 8 Jan 2005 17:49:32 +0100
+Message-ID: <200501081749.32816.maarten@ultratux.net>
+References: <crmt7e$8d6$1@sea.gmane.org> <200501072157.j07Lvg906301@www.watkins-home.com> <20050108145228.GB26475@janus>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="us-ascii"
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200501081319.00799.maarten@ultratux.net>
+In-Reply-To: <20050108145228.GB26475@janus>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: 'maarten' <maarten@ultratux.net>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Maarten,
-	I was thinking again!
-
-You plan on using an 80 gig disk as a spare disk.  2 40 Gig partitions.  If
-both spares end up in the same RAID5 array, that would be bad!  mdadm
-supports spare groups, you should create 2 groups, put 1 spare partition in
-each group.  Then put 1/2 of your RAID5 arrays in each group.
-
-Guy
-
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of maarten
-Sent: Saturday, January 08, 2005 7:19 AM
-To: linux-raid@vger.kernel.org
-Subject: Re: Spares and partitioning huge disks
-
-On Saturday 08 January 2005 11:22, Mario Holbe wrote:
-> Guy <bugzilla@watkins-home.com> wrote:
+On Saturday 08 January 2005 15:52, Frank van Maarseveen wrote:
+> On Fri, Jan 07, 2005 at 04:57:35PM -0500, Guy wrote:
+> > His plan is to split the disks into 6 partitions.
 > > Each of his six RAID5 arrays will only use 1 partition of each physical
 > > disk.
+> > If he were to lose a disk, all 6 RAID5 arrays would only see 1 failed
+> > disk. If he gets 2 read errors, on different disks, at the same time, he
+> > has a 1/6 chance they would be in the same array (which would be bad).
 > > His plan is to combine the 6 arrays with LVM or a linear array.
 >
-> Ah, I just missed that part, sorry & thanks :)
-> I agree with you then - it's something like a RAID5+0 (analogue
-> to RAID1+0) then and it *should* work just fine :)
+> Intriguing setup. Do you think this actually improves the reliability
+> with respect to disk failure compared to creating just one large RAID5
+> array?
 
-Yes, it should.  And the array does indeed work, but I'm plagued with a host
+Yes.  But I get no credits; someone else here invented the idea.
 
-of other -unrelated- problems now. :-(
-First, I had to upgrade from kernel 2.4 to 2.6 because I lacked a driver for
+> For one second I thought it's a clever trick but gut feeling tells
+> me the odds of losing the entire array won't change (simplified --
+> because the increased complexity creates room for additional errors).
 
-my SATA card.  That was quite complicated as there is no official support to
+No.  It is somewhat more complex, true, but no different than making, for 
+example, 6 md arrays for six different mountpoints. And I just add all six 
+together in an LVM. The idea behind it is that not all errors with md are 
+fatal.  In the case of a non-fatal error, just re-adding the disk might solve 
+it since the drive then will remap the bad sector.  However, IF during that 
+resync one other drive has a read error, it gets kicked too and the array 
+dies.  The chances of that happening are not very small; during resync all of 
+the other drives get read in whole, so that is much more intensive than 
+normal operation. So at the precise moment you really can't afford to get a 
+read error, the chances of getting one are greater than ever(!). 
 
-run 2.6 kernels on Suse 9.0. It also entailed migrating to lvm2 as lvm is
-not 
-part of 2.6.  But as it turns out, the 2.6 kernel I eventually installed
-does 
-somehow not initialize my bttv cards correctly and also ALSA has problems.  
-So now I'm reverting back to a 2.4 kernel which should support SATA, version
+By dividing the physical disk in smaller parts one decreases the chance of a 
+second disk with a bad sector being on the same array. You could have 3 or 
+even 4 disks with bad sectors without losing the array, provided you're lucky 
+and they all are on different parts of the drive platters (precisely: in 
+different arrays). This is in theory of course, you'd be stupid to leave an 
+array degraded and let chance decide which one breaks next... ;-)
 
-2.4.28, which I'm building as we speak from vanilla kernel sources...
-But that has a lot of hurdles too, and I'd still have to find an ALSA driver
+Besides this, the resync time in case of a fault decreases by a factor 6 too 
+as an added bonus. I don't know about you but over here resyncing a 250GB 
+disk takes the better part of the day. (To be honest, that was a slow system)
 
-for that as well.  Worse, I fear that I will have to migrate back to lvm1
-now 
-too, so that means copying all the 200 Gig data _again_, which by itself 
-takes about 10 hours... :-(
-Ah, if only I would have bought ATA disks instead of SATA !
-I've thought about putting the disks in another system and just use them
-over 
-NFS, but that would mean another system that is powered for 24/7, and that 
-gets to be a bit much.  Reinstalling from scratch with a 9.1 / 2.6 distro is
-
-a worse option still, as mythtv carries such a bucket full of obscure 
-dependencies I'd hate to install all that again. 
-
-In other words, I'm not there yet, but at least that has little or nothing
-to 
-do with lvm or md.  But this does 'suck' a lot.
+Now it is certain that you'll strike a compromise between the added complexity 
+and the benefits of this setup, so you choose an arbitrary amount of md 
+arrays to define. For me six seemed okay, there is no need to go overboard 
+and define real small arrays like 10 GB ones (24 of them).  ;-)
 
 Maarten
 
--- 
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
