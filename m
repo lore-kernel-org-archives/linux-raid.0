@@ -1,72 +1,74 @@
-From: Andries Brouwer <aebr@win.tue.nl>
+From: Linus Torvalds <torvalds@transmeta.com>
 Subject: Re: PATCH - change to blkdev->queue calling triggers BUG in md.c
-Date: Tue, 3 Sep 2002 01:08:24 +0200
+Date: Mon, 2 Sep 2002 16:27:41 -0700 (PDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20020902230824.GB9359@win.tue.nl>
-References: <UTC200209022141.g82LfMV21308.aeb@smtp.cwi.nl> <Pine.LNX.4.44.0209021459030.1401-100000@home.transmeta.com>
+Message-ID: <Pine.LNX.4.44.0209021622330.1265-100000@home.transmeta.com>
+References: <20020902230824.GB9359@win.tue.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44.0209021459030.1401-100000@home.transmeta.com>
-To: Linus Torvalds <torvalds@transmeta.com>
+In-Reply-To: <20020902230824.GB9359@win.tue.nl>
+To: Andries Brouwer <aebr@win.tue.nl>
 Cc: Andries.Brouwer@cwi.nl, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, neilb@cse.unsw.edu.au
 List-Id: linux-raid.ids
 
-On Mon, Sep 02, 2002 at 03:00:27PM -0700, Linus Torvalds wrote:
 
-> > No, my suggested changes would not break a single Linux installation
-> > in the world.
+On Tue, 3 Sep 2002, Andries Brouwer wrote:
 > 
-> .. by making your suggested behaviour not be used. Yes.
+> I think it important to get rid of partition table reading in the kernel.
 
-Not so pessimistic. We go by small steps.
+Why? 
 
-I think it important to get rid of partition table reading in the kernel.
+> It (pt reading) is wrong in principle, as we agree already.
 
-It (pt reading) is wrong in principle, as we agree already.
-But there are also all kinds of practical reasons.
+No, we don't agree.
 
- One argument is that our traditional DOS-type partition table will soon
- be at the end of its useful life. Yes, maybe it survives a few more years
- but our own stability requires slow changes, so we must start thinking a
- long time in advance.
- Another argument is that it sometimes takes a *long* time, like several
- minutes, especially when this reading triggers hardware bugs.
- Another argument is that nobody knows whether there is a partition table.
- In the case of ZIP drives there sometimes is a jumper or special SCSI command
- to switch between the "large floppy" and "removable disk" statuses, and
- the kernel doesnt know.
- Another argument is that tricky things happen in the presence of disk managers.
+I see that some people would like to remove it from the kernel, and I'm 
+not violently opposed to it if it can be done without breaking existing 
+behaviour.
 
-So stage one is a kernel boot parameter "nopt" or so, that stops parsing
-of partition tables other than the root partition. Some people need it
-because of special problems, others just want to experiment. That is good,
-and we'll get some feedback on partx and family.
+But I do _not_ see any really fundamental reason why the kernel shouldn't
+parse the partition tables. I see a lot of problems if the kernel were to 
+stop, and I don't see a lot of advantages to not doing so.
 
-Stage two happens a year later, when we have a working initrd. Seen from the
-outside the new (kernel + initrd) plays the role of the old kernel.
-Ha. That means that we can move the pt reading to initrd, and nobody notices.
+> But there are also all kinds of practical reasons.
+> 
+>  One argument is that our traditional DOS-type partition table will soon
+>  be at the end of its useful life. Yes, maybe it survives a few more years
+>  but our own stability requires slow changes, so we must start thinking a
+>  long time in advance.
 
-Stage three happens when initrd and kernel no longer are so tightly coupled.
-Initrd is just early userspace, tools exist to populate it, distributions make
-their own. Now the kernel does not need any partition reading code and
-nobody ever noticed. And the setup has become much more powerful.
+That's a bad argument. It's not as if we want to have random formats for 
+this thing. Partitioning is damn important, and it has to be portable 
+across different machines and different operating systems. That all means 
+that there is absolutely _zero_ incentive to make up a partition format of 
+our own, since there are perfectly fine and existing formats.
 
------
+>  Another argument is that it sometimes takes a *long* time, like several
+>  minutes, especially when this reading triggers hardware bugs.
 
-> But if that is the case, then we _still_ need to fix the media change and 
-> partition read issue. Right? Which brings back _all_ my points for why it 
-> should be done at open time, and by the generic routine. Agreed?
+This is only an argument for doing it on demand, not for dropping it.
 
-The above was mainly about the partition reading at boot time.
-There are two other situations: partition reading at insmod time,
-and partition reading at media change time.
+>  Another argument is that nobody knows whether there is a partition table.
+>  In the case of ZIP drives there sometimes is a jumper or special SCSI command
+>  to switch between the "large floppy" and "removable disk" statuses, and
+>  the kernel doesnt know.
+>  Another argument is that tricky things happen in the presence of disk managers.
 
-But these are easier situations. There is a functioning userspace already.
-As I said, in view of the desired direction, I would not mind at all if
-a media change did not trigger partition reading today.
-(In fact, for me, under 2.5.33, it doesn't. But blockdev --rereadpt helps.)
+And none of these work any better in user space.
 
+> > But if that is the case, then we _still_ need to fix the media change and 
+> > partition read issue. Right? Which brings back _all_ my points for why it 
+> > should be done at open time, and by the generic routine. Agreed?
+> 
+> The above was mainly about the partition reading at boot time.
+> There are two other situations: partition reading at insmod time,
+> and partition reading at media change time.
+> 
+> But these are easier situations. There is a functioning userspace already.
 
-Andries
+You seem to think that kernel space somehow cannot do something that user 
+space can. I just don't see the overriding problems you claim.
+
+		Linus
+
