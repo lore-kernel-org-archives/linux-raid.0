@@ -1,32 +1,16 @@
-From: Derek Vadala <derek@cynicism.com>
-Subject: Re: RAID0 versus Linear
-Date: Mon, 23 Sep 2002 17:10:36 -0700 (PDT)
+From: "Shaw, Marco" <marco.shaw@nbtel.nb.ca>
+Subject: Growing volumes
+Date: Tue, 24 Sep 2002 10:16:54 -0300
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.30.0209231704260.10988-100000@jaded.cynicism.com>
-References: <C65F89D1AC0BB54B865127151A24DA780BAD5BA7@nbexchm2.aliant.icn>
+Message-ID: <C65F89D1AC0BB54B865127151A24DA780BAD5BB6@nbexchm2.aliant.icn>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <C65F89D1AC0BB54B865127151A24DA780BAD5BA7@nbexchm2.aliant.icn>
-To: "Shaw, Marco" <marco.shaw@nbtel.nb.ca>
-Cc: "'linux-raid@vger.kernel.org'" <linux-raid@vger.kernel.org>
+To: "'linux-raid@vger.kernel.org'" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, 23 Sep 2002, Shaw, Marco wrote:
+Is there some kind of doc/howto/faq on growing software raid "volumes"?  I'm planning for a system that may require additional storage down the road.
 
-> be OK.  The logs complained about an invalid superblock on the device
-> 0 everytime.)
+For example, do both RAID0 and Linear allow for growing filesystems without having to backup & restore data?  Although this may not be the most reliable thing to do, if it just happens to work, then I get to go to sleep a lot earlier during maintenance windows.  :)
 
-If it's still broke, send the log entries, kernel version, etc.
-
-> I'd also like to confirm that RAID0 can only be used for disks of
-> aproximately the same size.  If they aren't, does the extra space
-> become unusable?
-
-RAID-0 can use disks of varying sizes and will stripe data across
-remaining disks when individual drives fill up.
-
----
-Derek Vadala, derek@cynicism.com, http://www.cynicism.com/~derek
-
-
+Marco
