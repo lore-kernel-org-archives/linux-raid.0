@@ -1,73 +1,71 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: resync patch & Neil's recent patches
-Date: Sat, 29 Jun 2002 23:02:28 +1000 (EST)
+From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
+Subject: Can't boot from /dev/md0 (RAID-1)
+Date: Sun, 30 Jun 2002 15:37:44 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <15645.45028.216750.35335@notabene.cse.unsw.edu.au>
-References: <1025113529.1793.8.camel@jason.storix.com>
-	<15642.421.825234.16918@notabene.cse.unsw.edu.au>
-	<1025114738.1794.19.camel@jason.storix.com>
-	<15642.1309.651737.496391@notabene.cse.unsw.edu.au>
-	<009b01c21d5e$e68c7050$5701a8c0@bomoon>
-	<15644.32486.805715.177514@notabene.cse.unsw.edu.au>
-	<001e01c21efd$f6afa2e0$5701a8c0@bomoon>
+Message-ID: <200206301537.44139.roy@karlsbakk.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from bo on Friday June 28
-To: bo <bo@sosnetwork.net>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Friday June 28, bo@sosnetwork.net wrote:
-> Neil,
-> 
-> > > I saw some bug fixes and improvement on this topic from
-> > >  http://marc.theaimsgroup.com/?l=linux-kernel&m=100876771508736&w=2
-> >
-> 
-> According to log file(from above infor), it cleaned up many things related
-> with RESYNC, and had
-> some bug fixes. He mentioned it goes to linux2.5.x.
-> 
-> I think we should have the same changes to Linux 2.4.x, don't you?
+I hope this is not OT - didn't find any LILO mailing list. after trying 
+virtually everything - can anyone help me with a tip?
 
-I don't think they were significant bugs.  resync works quite well in
-2.4.  Well enough that I don't think it should be fiddled with too much.
 
-> If so which release should include them? Any problem to apply this patch
-> to my 2.4.5?
+Running 2.4.19-pre10-ac2, RedHat 7.3 (LILO version 21.4-4), I have root on 
+/dev/md0 on RAID-1 on /dev/hda1 and /dev/hdb1. I've tried the howto at 
+http://www.tldp.org/HOWTO/mini/Boot+Root+Raid+LILO-3.html#ss3.1, but it still 
+doesn't help me. lilo just tells me "L 99 99 99 99 ..." some half a page, and 
+then stops.I'm trying. All the time it prints this, it seems to be searching 
+the floppy for some reason.
 
-They won't work in 2.4 as they stand.  There were some major changes
-to the block device layer in 2.5 and these patches require (and are
-required by) these changes.
 
-> 
-> How about your patches(23+)? Can I apply them to my lINUX2.4.5?
+The lilo.conf suggested by the above HOWTO, is this
 
-No.  Same reason.  I might back-port the more significant ones, but
-much of it was code-cleanliness rather than bug fixes.
 
-> 
-> I already use 100M  for speed _limit_min,  300M for speed _limit_max.
-> I could not notice a big difference from changing this values.
-> 
-> Q1: This value go back to the default at boot/reset,  Should I modify to
-> change this
->        default value in "md.c"? By any config parameter?
+# lilo.conf.hda - primary ide master
+disk=/dev/md0
+bios=0x80
+sectors=63
+heads=16
+cylinders=39770
+partition=/dev/md1
+start=63
+boot=/dev/hda
+map=/boot/map
+install=/boot/boot.b
 
-Don't modify md.c.  Just echo a number to the /proc file in a boot
-script.
 
-> 
-> Q2:  >hdparm -tT /dev/hdxx
->           Timing buffer-cache reads: 52.24 MB/s
->           Timing buffered disk reads: 24.43 MB/s
-> 
->         The "resync" speed on the raid1 device with hdxx:  25.4MB/s.
-> 
->         Do you think this speed is reasonable enough?
+image=/boot/bzImage
+        root=/dev/md0
+        read-only
+        label=LinuxRaid
 
-You couldn't ask for better.  This speed looks fine.
 
-NeilBrown
+sector/head/cylinder is corrected to the actual data reported from 'fdisk 
+-ul'. 
+
+
+When trying to set. boot=/dev/hdm (which is the first drive on the on-board 
+chipset), lilo installs, and I get LI instead of L 99 99 ... Same result with 
+LBA32.
+
+
+I also have another box with Linux, running SuSE 7.2 (LILO version 21.7-5) 
+with RAID-1 on two drives. Here everything works fine
+
+
+thanks for all help
+
+
+roy
+
+-- 
+Roy Sigurd Karlsbakk, Datavaktmester
+
+Computers are like air conditioners.
+They stop working when you open Windows.
+
