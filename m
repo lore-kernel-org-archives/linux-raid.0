@@ -1,99 +1,25 @@
-From: Markus Krause <markus.krause@gmx.net>
-Subject: Re: recover short-time-power-failure of raid 5?
-Date: 28 Nov 2002 10:26:22 +0100
+From: "Shaw, Marco" <marco.shaw@nbtel.nb.ca>
+Subject: Recovering from a disaster...
+Date: Thu, 28 Nov 2002 08:53:59 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1038475582.1601.2.camel@marvin>
-References: <15841.25746.94261.22043@notabene.cse.unsw.edu.au>
-	<E18GFks-0001XZ-00@config8.kundenserver.de>
-	<15841.62611.118178.276815@notabene.cse.unsw.edu.au>
+Message-ID: <C65F89D1AC0BB54B865127151A24DA780BAD6494@nbexchm2.aliant.icn>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature";
-	boundary="=-KlfBna4nhi8oL8MSJF7G"
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <15841.62611.118178.276815@notabene.cse.unsw.edu.au>
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: linux-raid@vger.kernel.org
+To: "'linux-raid@vger.kernel.org'" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Going for my RHCE in a few weeks...  Always wondered:
 
---=-KlfBna4nhi8oL8MSJF7G
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+1. Are there any gotchas in a corrupted software RAID filesystem?  For example, /dev/md0 is an RAID1 MD device, and either the 1st superblock on /dev/md0 or maybe the underlying /dev/sda1 partition is zero'ed out.  How does one go about fixing it?  Will a simple fsck here work?  But in the above case, is fsck run against md0 or sda1?
 
-Am Mon, 2002-11-25 um 10.59 schrieb Neil Brown:=20
-> On Monday November 25, krause@mogli-soft.de wrote:
-> >=20
-> > hello neilbrown,=20
-> >=20
-> > thanks a lot for your fast response!
-> > i tried the command as you suggested but i am not sure if it really
-> > worked, it seems that /dev/sdc2 is not yet used (but of course i may be
-> > wrong! ;-) )
-> .....
-> >=20
-> > what about disk /dev/sdc2 ? i have tried to access /dev/sdc1 (a small
-> > ext2 partition) and the data there was correct, so it seems that the
-> > disk is accessable and did not got damaged by the shot power failure.
-> >=20
-> > how can i get the third disk back into the raid system? or do i have to
-> > backup all reconstructed data from the two disks and reinit the raid
-> > from the start?
->=20
-> mdadm -A --force
-> will only 'force' into the array enough drives to make it work.  For
-> your 3 drive raid5 array, it ony needs to force in 2 drives, so it
-> takes the two most recent drives and uses them.  They will have all
-> the data on them, but no redundancy.
->=20
-> I suggest that after assembling the array, you 'fsck' the filesystem
-> on md0 just to make sure that the data is fine and then simply hot-add
-> the third device:
->   mdadm /dev/md0 -a /dev/sdc
->=20
-> If fsck reports lots of error..... maybe try force the assmbly from a
-> different pair of drives. e.g.
->    mdadm -A --force /dev/sda1 /dev/sdc2
->=20
-> and then do the fsck.
->=20
-> NeilBrown
-hi again and sorry for the delayed answer, i had to work a few days=20
-"on the road" and could not test your suggestion until some minutes ago!
-and i worked exactly as you described! great! thanks a lot, thats real
-cool!=20
+2. If one knows that /dev/md0 is in trouble (composed of /dev/sda1 and /dev/sdb1), but /dev/sda1 is fine, can one, upon boot, simply change LILO/GRUB from trying to mount root from /dev/md0 to /dev/sda1?  My guess is no, since the disk label is different.
 
-what i did exactly (maybe someone else is interested):=20
-(i snipped the output)=20
+3. I also wonder about LVM (now with RedHat 8.0), but will ask an LVM list...
 
-  [root@merlin root]# mdadm -A /dev/md0 --force /dev/sda1 /dev/sdb1
-/dev/sdc2
+A typical scnerario could be LVM sitting on top of MD, and have to recover from some kind of disaster.
 
-  [root@merlin root]# fsck.ext3 -n /dev/md0=20
+A co-worker just screwed up a system I suspect was setup with a combination of LVM and MD.  I may have too quickly tried mounting /dev/sda2 (root on on disk), and maybe should have tried mounting /dev/md0.  After trying to mount /dev/sda2 (with an raid autodetect type), I think mount complained about invalid options, so I proceeded to do an fsck on /dev/sda2, only to have mention something about the superblock (yes, I should write all the errors down), so I tried fsck on something like 32768,
+and it started up... And ran... And ran.  Result aftewards: all /dev/sda2 contains now after an attempt to mount it is "lost+found"!  :(
 
-  [root@merlin root]# mdadm /dev/md0 -a /dev/sdc
-
-and everything worked, all the data is back again!
-
-well, except the fact, that now its a ext2 file system and not ext3, but
-right now (till the current project is done in about two weeks) thats ok
-for me, i can (must!) life without a journal file system.
-
-thanks again for all your help!
-
-   markus
-
---=-KlfBna4nhi8oL8MSJF7G
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: Dies ist ein digital signierter Nachrichtenteil
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.0.6 (GNU/Linux)
-Comment: Weitere Infos: siehe http://www.gnupg.org
-
-iD8DBQA95eE+kTxNDyi6FVwRAjbzAKCBQh1QD6e0riFB7WXBxDnBSncVjACeIZpV
-ir0dHBFSRtClm81KJv8TLzs=
-=oHe9
------END PGP SIGNATURE-----
-
---=-KlfBna4nhi8oL8MSJF7G--
-
+Marco
