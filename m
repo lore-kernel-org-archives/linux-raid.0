@@ -1,74 +1,110 @@
-From: Linus Torvalds <torvalds@transmeta.com>
+From: Andries.Brouwer@cwi.nl
 Subject: Re: PATCH - change to blkdev->queue calling triggers BUG in md.c
-Date: Mon, 2 Sep 2002 16:27:41 -0700 (PDT)
+Date: Tue, 3 Sep 2002 02:53:09 +0200 (MEST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0209021622330.1265-100000@home.transmeta.com>
-References: <20020902230824.GB9359@win.tue.nl>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Message-ID: <UTC200209030053.g830r9b16219.aeb@smtp.cwi.nl>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20020902230824.GB9359@win.tue.nl>
-To: Andries Brouwer <aebr@win.tue.nl>
+To: aebr@win.tue.nl, torvalds@transmeta.com
 Cc: Andries.Brouwer@cwi.nl, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, neilb@cse.unsw.edu.au
 List-Id: linux-raid.ids
 
+    > I think it important to get rid of partition table reading in the kernel.
 
-On Tue, 3 Sep 2002, Andries Brouwer wrote:
-> 
-> I think it important to get rid of partition table reading in the kernel.
+    Why?
 
-Why? 
+Let me be more precise.
+I think it important to get rid of automatic partition table reading
+in the kernel.
 
-> It (pt reading) is wrong in principle, as we agree already.
+Why?
+Because in some cases it is undesirable.
+Because in some cases it crashes the kernel.
+Because it involves guessing and heuristics.
+Because policy belongs in user space.
 
-No, we don't agree.
 
-I see that some people would like to remove it from the kernel, and I'm 
-not violently opposed to it if it can be done without breaking existing 
-behaviour.
+    >  One argument is that our traditional DOS-type partition table will
+    >  soon be at the end of its useful life. Yes, maybe it survives
+    >  a few more years but our own stability requires slow changes,
+    >  so we must start thinking a long time in advance.
 
-But I do _not_ see any really fundamental reason why the kernel shouldn't
-parse the partition tables. I see a lot of problems if the kernel were to 
-stop, and I don't see a lot of advantages to not doing so.
+    That's a bad argument. It's not as if we want to have random formats for 
+    this thing. Partitioning is damn important, and it has to be portable 
+    across different machines and different operating systems. That all means 
+    that there is absolutely _zero_ incentive to make up a partition format of 
+    our own, since there are perfectly fine and existing formats.
 
-> But there are also all kinds of practical reasons.
-> 
->  One argument is that our traditional DOS-type partition table will soon
->  be at the end of its useful life. Yes, maybe it survives a few more years
->  but our own stability requires slow changes, so we must start thinking a
->  long time in advance.
+That is a separate discussion best left for some other time.
+[But every OS has its own partition table type, and the types
+are not compatible. We started using the DOS-type partition table.
+But it is dying. Windows replaces it with their dynamic disks.
+What do we do? Follow Microsoft? Pick the Plan9 format?]
 
-That's a bad argument. It's not as if we want to have random formats for 
-this thing. Partitioning is damn important, and it has to be portable 
-across different machines and different operating systems. That all means 
-that there is absolutely _zero_ incentive to make up a partition format of 
-our own, since there are perfectly fine and existing formats.
+    >  Another argument is that it sometimes takes a *long* time, like several
+    >  minutes, especially when this reading triggers hardware bugs.
 
->  Another argument is that it sometimes takes a *long* time, like several
->  minutes, especially when this reading triggers hardware bugs.
+    This is only an argument for doing it on demand, not for dropping it.
 
-This is only an argument for doing it on demand, not for dropping it.
+Yes - that is my main point: doing it on demand. On demand only.
 
->  Another argument is that nobody knows whether there is a partition table.
->  In the case of ZIP drives there sometimes is a jumper or special SCSI command
->  to switch between the "large floppy" and "removable disk" statuses, and
->  the kernel doesnt know.
->  Another argument is that tricky things happen in the presence of disk managers.
+    >  Another argument is that nobody knows whether there is
+    >  a partition table. (ZIP: "large floppy" vs "removable disk")
+    >  Another argument is that tricky things happen with disk managers.
 
-And none of these work any better in user space.
+    And none of these work any better in user space.
 
-> > But if that is the case, then we _still_ need to fix the media change and 
-> > partition read issue. Right? Which brings back _all_ my points for why it 
-> > should be done at open time, and by the generic routine. Agreed?
-> 
-> The above was mainly about the partition reading at boot time.
-> There are two other situations: partition reading at insmod time,
-> and partition reading at media change time.
-> 
-> But these are easier situations. There is a functioning userspace already.
+Well, in fact they do.
 
-You seem to think that kernel space somehow cannot do something that user 
-space can. I just don't see the overriding problems you claim.
+The user knows whether she treats her ZIP like a removable disk
+or like a big floppy, that is, whether she should ask or refrain
+from asking to read the pt.
 
-		Linus
+And yes, if the partitions on the disk are to be shifted by 63 sectors
+then partx can notice that and tell the kernel. But if the kernel does
+these things automatically it can be difficult to remove Disk Manager.
+
+
+    You seem to think that kernel space somehow cannot do something that
+    user space can. I just don't see the overriding problems you claim.
+
+It is the user who knows and wants to decide.
+
+If my disk has media errors and I want to rescue what still can be read,
+then I am very unhappy that the kernel starts reading the first sector
+and the last sector and various sectors in the middle.
+I want to have very precise control over what I/O happens.
+
+If I insert a SmartMedia card then I know very precisely that it has
+a FAT filesystem, a special one. Some cameras will refuse to read
+such cards formatted by DOS. If the kernel starts probing, as it does
+today, then it will read the first sector and the last sector, etc.
+But my reader has a firmware bug, an off-by-one mistake in the reported
+capacity, and the kernel tries to read a sector past the end of the card,
+gets an error and the SCSI code starts retrying, resetting the device,
+the host, the bus, finally takes the device offline. In the meantime
+the USB code is entirely confused by aborts and crashes the kernel.
+Of course both SCSI and USB code have to be improved, but it would
+certainly be nice if I could tell from userspace: probe only for FAT.
+No need at all to read this last sector.
+
+I have seen partition tables with a loop. They would poison Linux
+so that it was impossible to boot Linux on a system with such a disk.
+
+I have seen disks with random test data causing Linux to go out and
+read nonexistent sectors. There is the real possibility that no
+partition table is present, and trying to find one may be a bad idea.
+
+I have seen disks that form part of a multi-disk array.
+Often the partition tables are meaningless.
+
+
+Not doing things automatically gives power to the user.
+In some situations this power is needed.
+
+
+And once this partition reading is done on demand only, it does not
+matter very much who does the reading. It may be the kernel.
+It may be a user space program.
+
+Andries
 
