@@ -1,48 +1,51 @@
-From: Alvin Oga <aoga@ns.Linux-Consulting.com>
-Subject: Re: Q: RAID-1 w/2x160GB, ReiserFS, Debian 'woody', homebrew 2.4.25 kernel
-Date: Wed, 4 Aug 2004 04:12:28 -0700 (PDT)
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: Q: RAID-1 w/2x160GB, ReiserFS, Debian "woody", homebrew 2.4.25
+ kernel
+Date: Wed, 4 Aug 2004 14:25:34 +0200 (CEST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.3.96.1040804040733.28482A-100000@Maggie.Linux-Consulting.com>
-References: <200408041129.44767.m.watts@eris.qinetiq.com>
+Message-ID: <Pine.LNX.4.44.0408041423480.7382-100000@uplift.swm.pp.se>
+References: <200408041310.12982.jens@spamfreemail.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200408041129.44767.m.watts@eris.qinetiq.com>
-To: Mark Watts <m.watts@eris.qinetiq.com>
-Cc: linux-raid@vger.kernel.org, Robin Bowes <robin-lists@robinbowes.com>
+In-Reply-To: <200408041310.12982.jens@spamfreemail.de>
+To: Jens Benecke <jens-dated-1092049816.9085e9@spamfreemail.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Wed, 4 Aug 2004, Jens Benecke wrote:
 
+> thanks for your answer. What hardware RAID1 options would I have here=
+ that=20
+> are somewhat affordable? I see 3ware 2-drive RAID controllers for =A4=
+120.-=20
+> here, and Promise UDMA for =A460.-
+>=20
+> I hear Promise only offers binary drivers and is only "software RAID"=
+, is=20
+> the 3ware solution worth the extra =A460 (less hassle and more=20
+> compatbility)?
 
-On Wed, 4 Aug 2004, Mark Watts wrote:
+I have never tried to boot off of a 3ware raid, but to Linux it looks l=
+ike=20
+a scsi drive so I would imagine that it should work well. Someone else =
+who=20
+has actually done this for real is probably better suited to answer.
 
-> Talking of partitioning several disks the same, is there an easy way to 
-> automate this?
+I never use software raid for the partitions that need to be present at=
+=20
+boot, since I have had total nightmares with root mirroring on other OS=
+es=20
+(Solaris and DEC OSF), and I feel that backups of those partitions are=20
+better than the problems one might run into with software root mirrorin=
+g.
 
-# imagine the sequence of the characters you type to fdisk
-echo n
-echo p
-echo 1
-echo 1
-echo +256M
-.....
+--=20
+Mikael Abrahamsson    email: swmike@swm.pp.se
 
-and run that script for each new unpartitioned/virgin /dev/hda disk ..
-
-	fdisk.automated.sh | fdisk /dev/hda
-
-sample partition script:
-	http://linux-consulting.com/Boot/Linux-1U/clone.suse-8.2.fdisk.sh1
-
-sample cloning script:
-	... tar ... onto target disk
-
-	http://linux-consulting.com/Boot/Linux-1U/clone.suse-8.2.sh
-
-works good when you're doing 10's, 100's of identical disks ... or 
-same partition scheme ...
-
-c ya
-alvin
-
-
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
