@@ -1,29 +1,39 @@
 From: ptb@lab.it.uc3m.es (Peter T. Breuer)
-Subject: Re: Write Order Restrictions
-Date: Tue, 8 Mar 2005 13:39:33 +0100
-Message-ID: <51j0g2-c27.ln1@news.it.uc3m.es>
-References: <67694f3ccfa401a4523d7b2ed7a18e38@stanford.edu>
+Subject: Re: [PATCH md 0 of 4] Introduction
+Date: Tue, 8 Mar 2005 13:49:10 +0100
+Message-ID: <6jj0g2-c27.ln1@news.it.uc3m.es>
+References: <20050308165021.3745.patches@notabene>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Can Sar <csar@stanford.edu> wrote:
-> the driver just cycles through all devices that make up a soft raid 
-> device and just calls generic_make_request on them. Is this correct, or 
-> does some other function involved in the write process (starting from 
-> the soft raid level down) actually wait on buffers to enforce 
-> restrictions that e.g. cause blocks for one disk to be written before 
-> those of another?
+NeilBrown <neilb@cse.unsw.edu.au> wrote:
+> The second two fix bugs that were introduced by the recent=20
+> bitmap-based-intent-logging patches and so are not relevant
 
-None that I know of.  Neil may have more to say.
+Neil - can you describe for me (us all?) what is meant by
+intent=ADlogging here.
 
-In particular, I don't know of any *explicit* mechanism that guarantees
-that write order is preserved on any ONE mirror (in the case of raid1).
+Well, I can guess - I suppose the driver marks the bitmap before a writ=
+e
+(or group of writes) and unmarks it when they have completed
+successfully.  Is that it?
 
-On the other hand, md interposes its own make_request (as I recall),
-so the generic kernel request elevator aggregation algorithm does not
-apply.  And I think I remember that it does not allow queues greater
-than length 1. If so, that would be helpful.
+If so, how does it manage to mark what it is _going_ to do (without
+psychic powers) on the disk bitmap?  Unmarking is easy - that needs a
+queue of things due to be unmarked in the bitmap, and a point in time a=
+t
+which they are all unmarked at once on disk.
+
+Then resync would only deal with the marked blocks.
 
 Peter
 
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
