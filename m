@@ -1,29 +1,26 @@
-From: Mike Dresser <mdresser_l@windsormachine.com>
-Subject: OT Ramblings about a bugzilla report: was Re: Problems with IDE
- Software RAID
-Date: Wed, 5 Nov 2003 16:33:45 -0500 (EST)
+From: RSABROSO <RSABROSO@teleline.es>
+Subject: scsi raid controller in debian
+Date: Thu, 06 Nov 2003 13:36:38 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.56.0311051625260.26608@router.windsormachine.com>
-References: <3FA96994.5020406@arabidopsis.info>
+Message-ID: <12c77fe67.fe6712c77@teleline.es>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3FA96994.5020406@arabidopsis.info>
+Content-Language: es
+Content-Disposition: inline
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 5 Nov 2003, David J Craigon wrote:
+I don't know if that's the best place to answer it, but i don't have
+found anymore...
 
-> bugzilla? http://bugzilla.kernel.org/show_bug.cgi?id=956
+I have an scsi raid controller which I configured in setup. But when i'm
+trying to install debian it haven't the modules to detect the
+controller. I made a modules disk but i don't know what parameters
+indicate. Do you know something about it?
 
-I don't think that bugzilla report could be setup any worse.
-Promise, VIA, IBM drives, and an SBLive?  Individually some of these are
-dangerous enough, but combined?  I half expect to find it's all running
-off a 200 watt power supply, and overclocked by 40%. :)
+Thanks a lot
+Rui
 
-Ancient VIA at that.  I used to have a board with the MVP3 chipset at
-home, and it locked up under load, even something as simple as writing a
-fair amount of data over the network to the hard drive would lock up the
-system hard.
 
-Mike
