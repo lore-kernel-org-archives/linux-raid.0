@@ -1,33 +1,173 @@
-From: "Peter T. Breuer" <ptb@it.uc3m.es>
-Subject: Re: Fast (intelligent) raid1
-Date: Tue, 18 Feb 2003 16:04:46 +0100 (MET)
+From: Oren Held <mar_garina@held.org.il>
+Subject: [LAME_PATCH] Three non-urgent issues
+Date: Tue, 18 Feb 2003 23:24:40 +0200 (IST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200302181504.h1IF4kh12195@oboe.it.uc3m.es>
-References: <15952.20989.131713.951636@notabene.cse.unsw.edu.au>
-Reply-To: ptb@it.uc3m.es
+Message-ID: <Pine.LNX.4.53.0302182313380.13255@linbox.held.org.il>
+Mime-Version: 1.0
+Content-Type: MULTIPART/MIXED; BOUNDARY="-1463811840-881383387-1045603480=:13255"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <15952.20989.131713.951636@notabene.cse.unsw.edu.au> from Neil Brown
- at "Feb 17, 2003 02:07:41 pm"
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: ptb@it.uc3m.es, Ross Vandegrift <ross@willow.seitz.com>, Ingo Molnar <mingo@redhat.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-"A month of sundays ago Neil Brown wrote:"
-> The first time you set a bit, record the current 'event' number with
-> the bitmap.
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
+  Send mail to mime@docserver.cac.washington.edu for more info.
 
-I'm having some trouble with this part. Now, there ARE things called
-event_hi and event_lo in the current raid code, and you may be
-referring to these.
+---1463811840-881383387-1045603480=:13255
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 
-Correct?
+Hi,
 
-> On hot-add, read the old superblock.  If it looks valid and matches
-> the current array, and has an event counter of X or more, then ignore
+I've just began using raidtools and I'm really impressed..
+Anyway there were three not-really-important, but still annoying issues
+which disturbed me, and attached are patches which fix them
+(The patches are against v1.00.3):
 
-And this is the same event_hi and event_lo?
+1. raidtools-raidstart.patch: Adds some stuff to the --help screen
+   a. Shows the different usage line for raidhotadd and friends
+   b. Gives nicer help screen (also explains each flag, just like gnu ls)
 
-Now this all HAS to be done in md.c, vecause the read_disk_sb and
-write_disk_sb functions are not exported from there.
+I know it's not THAT important, but I think it makes raidtools looks
+more professional, with the patch.
 
-Peter
+I hope my texts are correct. I wasn't sure why there's an asterisk
+in the end of the usage line, so I left it there.
+
+2. raidtools-Makefile.patch: renames the 'clean' target to 'distclean' and
+adds a standard 'clean' target, which only cleans the binaries and not the
+config.h and the others. First time I see that 'make clean' also cleans
+config.h.
+
+3. raid-mkraid: gcc 3.2.3 complains about multi-line function arguments
+(in our case the warning message in printf()) being a deprecated feature,
+so I've made it the way gcc wants it, so this warning will be gone.
+
+If you have comments please reply..
+
+- Oren
+---1463811840-881383387-1045603480=:13255
+Content-Type: TEXT/PLAIN; charset=US-ASCII; name="raidtools-mkraid.patch"
+Content-Transfer-Encoding: BASE64
+Content-ID: <Pine.LNX.4.53.0302182324390.13255@linbox.held.org.il>
+Content-Description: 
+Content-Disposition: attachment; filename="raidtools-mkraid.patch"
+
+LS0tIHJhaWR0b29scy0xLjAwLjMvbWtyYWlkLmMJMjAwMy0wMS0xNSAxMDo1
+ODoyNS4wMDAwMDAwMDAgKzAyMDANCisrKyByYWlkdG9vbHMtMS4wMC4zL21r
+cmFpZC5jLm5ldwkyMDAzLTAyLTE4IDIzOjEwOjMyLjAwMDAwMDAwMCArMDIw
+MA0KQEAgLTE3MSwzMSArMTcxLDMxIEBADQogICAgIGlmIChvbGRfZm9yY2Vf
+ZmxhZyAmJiAoZnVuYyA9PSBta3JhaWQpKSB7DQogCWZwcmludGYoc3RkZXJy
+LCANCiANCi0iDQotIFdBUk5JTkchDQotDQotIE5PVEU6IGlmIHlvdSBhcmUg
+cmVjb3ZlcmluZyBhIGRvdWJsZS1kaXNrIGVycm9yIG9yIHNvbWUgb3RoZXIg
+ZmFpbHVyZSBtb2RlDQotIHRoYXQgbWFkZSB5b3VyIGFycmF5IHVucnVubmFi
+bGUgYnV0IGRhdGEgaXMgc3RpbGwgaW50YWN0IHRoZW4gaXQncyBzdHJvbmds
+eQ0KLSByZWNvbW1lbmRlZCB0byB1c2UgdGhlIGxzcmFpZCB1dGlsaXR5IGFu
+ZCB0byByZWFkIHRoZSBsc3JhaWQgSE9XVE8uDQotDQotIElmIHlvdXIgUkFJ
+RCBhcnJheSBob2xkcyB1c2VmdWwgYW5kIG5vdCB5ZXQgYmFja2VkIHVwIGRh
+dGEgdGhlbiAtLWZvcmNlDQotIGFuZCB0aGUgaG90LWFkZC9ob3QtcmVtb3Zl
+IGZ1bmN0aW9uYWxpdHkgc2hvdWxkIGJlIHVzZWQgd2l0aCBleHRyZW1lIGNh
+cmUhDQotIElmIHlvdXIgL2V0Yy9yYWlkdGFiIGZpbGUgaXMgbm90IGluIHN5
+bmMgd2l0aCB0aGUgcmVhbCBhcnJheSBjb25maWd1cmF0aW9uLA0KLSB0aGVu
+IC0tZm9yY2UgbWlnaHQgREVTVFJPWSBBTEwgWU9VUiBEQVRBLiBJdCdzIGVz
+cGVjaWFsbHkgZGFuZ2Vyb3VzIHRvIHVzZQ0KLSAtZiBpZiB0aGUgYXJyYXkg
+aXMgaW4gZGVncmFkZWQgbW9kZS4NCi0NCi0gSWYgeW91ciAvZXRjL3JhaWR0
+YWIgZmlsZSBtYXRjaGVzIHRoZSByZWFsIGxheW91dCBvZiBvbi1kaXNrIGRh
+dGEgdGhlbg0KLSByZWNyZWF0aW5nIHRoZSBhcnJheSB3aWxsIG5vdCBodXJ0
+IHlvdXIgZGF0YSwgYnV0IGJlIGF3YXJlIG9mIHRoZSByaXNrcw0KLSBvZiBk
+b2luZyB0aGlzIGFueXdheTogZnJlc2hseSBjcmVhdGVkIFJBSUQxIGFuZCBS
+QUlENSBhcnJheXMgZG8gYSBmdWxsDQotIHJlc3luYyBvZiB0aGVpciBtaXJy
+b3IvcGFyaXR5IGJsb2Nrcywgd2hpY2gsIGlmIHRoZSByYWlkdGFiIGlzIGlu
+Y29ycmVjdCwNCi0gdGhlIHJlc3luYyB3aWxsIHdpcGUgb3V0IGRhdGEgaXJy
+ZWNvdmVyYWJseS4gQWxzbywgaWYgeW91ciBhcnJheSBpcyBpbg0KLSBkZWdy
+YWRlZCBtb2RlIHRoZW4gdGhlIHJhaWR0YWIgbXVzdCBtYXRjaCB0aGUgZGVn
+cmFkZWQgY29uZmlnIGV4YWN0bHksDQotIG90aGVyd2lzZSB5b3UnbGwgZ2V0
+IHRoZSBzYW1lIGtpbmQgb2YgZGF0YSBkZXN0cnVjdGlvbiBkdXJpbmcgcmVz
+eW5jLg0KLSAoc2VlIHRoZSBmYWlsZWQtZGlzayByYWlkdGFiIG9wdGlvbi4p
+IFlvdSBoYXZlIGJlZW4gd2FybmVkIQ0KLQ0KLSBbIElmIHlvdXIgYXJyYXkg
+aG9sZHMgbm8gZGF0YSwgb3IgeW91IGhhdmUgaXQgYWxsIGJhY2tlZCB1cCwg
+b3IgaWYgeW91DQotIGtub3cgcHJlY2lzZWx5IHdoYXQgeW91IGFyZSBkb2lu
+ZyBhbmQgeW91IHN0aWxsIHdhbnQgdG8gcHJvY2VlZCB0aGVuIHVzZQ0KLSB0
+aGUgLS1yZWFsbHktZm9yY2UgKG9yIC1SKSBmbGFnLiBdDQorIlxuXA0KKyBX
+QVJOSU5HIVxuXA0KK1xuXA0KKyBOT1RFOiBpZiB5b3UgYXJlIHJlY292ZXJp
+bmcgYSBkb3VibGUtZGlzayBlcnJvciBvciBzb21lIG90aGVyIGZhaWx1cmUg
+bW9kZVxuXA0KKyB0aGF0IG1hZGUgeW91ciBhcnJheSB1bnJ1bm5hYmxlIGJ1
+dCBkYXRhIGlzIHN0aWxsIGludGFjdCB0aGVuIGl0J3Mgc3Ryb25nbHlcblwN
+CisgcmVjb21tZW5kZWQgdG8gdXNlIHRoZSBsc3JhaWQgdXRpbGl0eSBhbmQg
+dG8gcmVhZCB0aGUgbHNyYWlkIEhPV1RPLlxuXA0KK1xuXA0KKyBJZiB5b3Vy
+IFJBSUQgYXJyYXkgaG9sZHMgdXNlZnVsIGFuZCBub3QgeWV0IGJhY2tlZCB1
+cCBkYXRhIHRoZW4gLS1mb3JjZVxuXA0KKyBhbmQgdGhlIGhvdC1hZGQvaG90
+LXJlbW92ZSBmdW5jdGlvbmFsaXR5IHNob3VsZCBiZSB1c2VkIHdpdGggZXh0
+cmVtZSBjYXJlIVxuXA0KKyBJZiB5b3VyIC9ldGMvcmFpZHRhYiBmaWxlIGlz
+IG5vdCBpbiBzeW5jIHdpdGggdGhlIHJlYWwgYXJyYXkgY29uZmlndXJhdGlv
+bixcblwNCisgdGhlbiAtLWZvcmNlIG1pZ2h0IERFU1RST1kgQUxMIFlPVVIg
+REFUQS4gSXQncyBlc3BlY2lhbGx5IGRhbmdlcm91cyB0byB1c2VcblwNCisg
+LWYgaWYgdGhlIGFycmF5IGlzIGluIGRlZ3JhZGVkIG1vZGUuXG5cDQorXG5c
+DQorIElmIHlvdXIgL2V0Yy9yYWlkdGFiIGZpbGUgbWF0Y2hlcyB0aGUgcmVh
+bCBsYXlvdXQgb2Ygb24tZGlzayBkYXRhIHRoZW5cblwNCisgcmVjcmVhdGlu
+ZyB0aGUgYXJyYXkgd2lsbCBub3QgaHVydCB5b3VyIGRhdGEsIGJ1dCBiZSBh
+d2FyZSBvZiB0aGUgcmlza3NcblwNCisgb2YgZG9pbmcgdGhpcyBhbnl3YXk6
+IGZyZXNobHkgY3JlYXRlZCBSQUlEMSBhbmQgUkFJRDUgYXJyYXlzIGRvIGEg
+ZnVsbFxuXA0KKyByZXN5bmMgb2YgdGhlaXIgbWlycm9yL3Bhcml0eSBibG9j
+a3MsIHdoaWNoLCBpZiB0aGUgcmFpZHRhYiBpcyBpbmNvcnJlY3QsXG5cDQor
+IHRoZSByZXN5bmMgd2lsbCB3aXBlIG91dCBkYXRhIGlycmVjb3ZlcmFibHku
+IEFsc28sIGlmIHlvdXIgYXJyYXkgaXMgaW5cblwNCisgZGVncmFkZWQgbW9k
+ZSB0aGVuIHRoZSByYWlkdGFiIG11c3QgbWF0Y2ggdGhlIGRlZ3JhZGVkIGNv
+bmZpZyBleGFjdGx5LFxuXA0KKyBvdGhlcndpc2UgeW91J2xsIGdldCB0aGUg
+c2FtZSBraW5kIG9mIGRhdGEgZGVzdHJ1Y3Rpb24gZHVyaW5nIHJlc3luYy5c
+blwNCisgKHNlZSB0aGUgZmFpbGVkLWRpc2sgcmFpZHRhYiBvcHRpb24uKSBZ
+b3UgaGF2ZSBiZWVuIHdhcm5lZCFcblwNCitcblwNCisgWyBJZiB5b3VyIGFy
+cmF5IGhvbGRzIG5vIGRhdGEsIG9yIHlvdSBoYXZlIGl0IGFsbCBiYWNrZWQg
+dXAsIG9yIGlmIHlvdVxuXA0KKyBrbm93IHByZWNpc2VseSB3aGF0IHlvdSBh
+cmUgZG9pbmcgYW5kIHlvdSBzdGlsbCB3YW50IHRvIHByb2NlZWQgdGhlbiB1
+c2VcblwNCisgdGhlIC0tcmVhbGx5LWZvcmNlIChvciAtUikgZmxhZy4gXVxu
+XA0KICIpOw0KIAlyZXR1cm4gRVhJVF9GQUlMVVJFOw0KICAgICB9DQo=
+
+---1463811840-881383387-1045603480=:13255
+Content-Type: TEXT/PLAIN; charset=US-ASCII; name="raidtools-Makefile.patch"
+Content-Transfer-Encoding: BASE64
+Content-ID: <Pine.LNX.4.53.0302182324400.13255@linbox.held.org.il>
+Content-Description: 
+Content-Disposition: attachment; filename="raidtools-Makefile.patch"
+
+LS0tIHJhaWR0b29scy0xLjAwLjMvTWFrZWZpbGUuaW4JMjAwMy0wMS0xNSAx
+MDo1ODoyNS4wMDAwMDAwMDAgKzAyMDANCisrKyByYWlkdG9vbHMtMS4wMC4z
+L01ha2VmaWxlLmluLm5ldwkyMDAzLTAyLTE4IDIzOjEwOjI4LjAwMDAwMDAw
+MCArMDIwMA0KQEAgLTcwLDYgKzcwLDkgQEANCiAJJChDQykgLW8gJEAgJDwg
+JChJTlRFUk5BTF9MSUJTKSAkKExERkxBR1MpDQogDQogY2xlYW46DQorCXJt
+IC1mICQoQklOQVJJRVMpICQoTElOS1MpICoubyBjb3JlICp+DQorDQorZGlz
+dGNsZWFuOg0KIAlybSAtZiAkKEJJTkFSSUVTKSAkKExJTktTKSAqLm8gY29y
+ZSAqfiBjb25maWcuc3RhdHVzIGNvbmZpZy5jYWNoZSBNYWtlZmlsZSBjb25m
+aWcuaCBjb25maWcubG9nDQogDQogcmVhbGNsZWFuOiBjbGVhbg0K
+
+---1463811840-881383387-1045603480=:13255
+Content-Type: TEXT/PLAIN; charset=US-ASCII; name="raidtools-raidstart.patch"
+Content-Transfer-Encoding: BASE64
+Content-ID: <Pine.LNX.4.53.0302182324401.13255@linbox.held.org.il>
+Content-Description: 
+Content-Disposition: attachment; filename="raidtools-raidstart.patch"
+
+LS0tIHJhaWR0b29scy0xLjAwLjMvcmFpZHN0YXJ0LmMJMjAwMy0wMS0xNSAx
+MDo1ODoyNS4wMDAwMDAwMDAgKzAyMDANCisrKyByYWlkdG9vbHMtMS4wMC4z
+L3JhaWRzdGFydC5jLm5ldwkyMDAzLTAyLTE4IDIzOjEwOjQzLjAwMDAwMDAw
+MCArMDIwMA0KQEAgLTMxLDcgKzMxLDE5IEBADQogDQogDQogdm9pZCB1c2Fn
+ZSh1bnNpZ25lZCBjaGFyICphcmcpIHsNCi0gICAgcHJpbnRmKCJ1c2FnZTog
+JXMgWy0tYWxsXSBbLS1jb25maWdmaWxlXSBbLS1oZWxwXSBbLS12ZXJzaW9u
+XSBbLWFjaHZdIDwvZGV2L21kPz4qXG4iLCBhcmcpOw0KKyAgICBpZiAoc3Ry
+Y21wKGFyZywgInJhaWRzZXRmYXVsdHkiKSA9PSAwIHx8IA0KKyAgICAgICAg
+c3RyY21wKGFyZywgInJhaWRob3RnZW5lcmF0ZWVycm9yIikgPT0gMCB8fCAN
+CisgICAgICAgIHN0cmNtcChhcmcsICJyYWlkaG90YWRkIikgPT0gMCB8fA0K
+KyAgICAgICAgc3RyY21wKGFyZywgInJhaWRob3RyZW1vdmUiKSA9PSAwKQ0K
+KyAgICAgICAgcHJpbnRmKCJ1c2FnZTogJXMgW09QVElPTlNdIDxtZC1kZXZp
+Y2U+IDxoZC1kZXZpY2U+XG4iLCBhcmcpOw0KKyAgICBlbHNlDQorICAgICAg
+ICBwcmludGYoInVzYWdlOiAlcyBbT1BUSU9OU10gPG1kLWRldmljZT4qXG4i
+LCBhcmcpOw0KKyANCisgICAgcHJpbnRmKCJcbk9QVElPTlMgbWF5IGJlOlxu
+XA0KKy1hLCAtLWFsbCAgICAgICAgICAgICAgICAgIGFwcGx5IHRvIGFsbCBk
+ZXZpY2VzIHNwZWNpZmllZCBpbiBjb25maWcgZmlsZVxuXA0KKy1jLCAtLWNv
+bmZpZ2ZpbGUgZmlsZW5hbWUgIHVzZSBmaWxlbmFtZSBhcyBjb25maWcgZmls
+ZSAoL2V0Yy9yYWlkdGFiIGlzIGRlZmF1bHQpXG5cDQorLWgsIC0taGVscCAg
+ICAgICAgICAgICAgICAgdGhpcyBoZWxwIHNjcmVlblxuXA0KKy12LCAtLXZl
+cnNpb24gICAgICAgICAgICAgIGRpc3BsYXkgYSBzaG9ydCB2ZXJzaW9uIG1l
+c3NhZ2UsIHRoZW4gZXhpdFxuIik7DQogfQ0KIA0KIGludCBtYWluIChpbnQg
+YXJnYywgY2hhciAqYXJndltdKSB7DQo=
+
+---1463811840-881383387-1045603480=:13255--
