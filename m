@@ -1,49 +1,27 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: "Enhanced" MD code avaible for review
-Date: Wed, 17 Mar 2004 19:32:06 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [Fwd: "Enhanced" MD code avaible for review]
+Date: Wed, 17 Mar 2004 20:34:16 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040317193206.A17987@infradead.org>
-References: <459805408.1079547261@aslan.scsiguy.com> <4058A481.3020505@pobox.com>
+Message-ID: <20040317193416.GA24542@lst.de>
+References: <405899E8.8070806@pobox.com> <20040317183756.GA23667@lst.de> <2241002704.1079549645@aslan.btc.adaptec.com> <20040317190117.GA23968@lst.de> <2260532704.1079550351@aslan.btc.adaptec.com> <20040317190916.GA24118@lst.de> <4058A6FB.6080602@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <4058A481.3020505@pobox.com>; from jgarzik@pobox.com on Wed, Mar 17, 2004 at 02:18:25PM -0500
+In-Reply-To: <4058A6FB.6080602@pobox.com>
 To: Jeff Garzik <jgarzik@pobox.com>
-Cc: "Justin T. Gibbs" <gibbs@scsiguy.com>, linux-raid@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>
+Cc: "Justin T. Gibbs" <Justin_Gibbs@adaptec.com>, linux-raid@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, Mar 17, 2004 at 02:18:25PM -0500, Jeff Garzik wrote:
-> > 	o Allow fully pluggable meta-data modules
->=20
-> yep, needed
+On Wed, Mar 17, 2004 at 02:28:59PM -0500, Jeff Garzik wrote:
+> If early userspace isn't ready, it sounds like a choice between 
+> "nothing" and "it works".
+> 
+> We want a clean, tasteful solution, sure.  But I think we can work 
+> within the confines of the existing 2.6 API, and not postpone this stuff 
+> under early userspace is ready.
 
-Well, this is pretty much the EVMS route we all heavily argued against.
-Most of the metadata shouldn't be visible in the kernel at all.
+Umm, early userspace works nicely, you don't need the klibc and
+initramfs buzzwords for that, good 'ol initrd still works and people
+actually use it, e.g. for dm.
 
-> > 	o Improve the ability of MD to auto-configure arrays.
->=20
-> hmmmm.  Maybe in my language this means "improve ability for low-leve=
-l=20
-> drivers to communicate RAID support to upper layers"?
-
-I think he's talking about the deprecated raid autorun feature.  Again
-something that is completely misplaced in the kernel.  (=E5gain EVMS li=
-ght)
-
-> > 	o Support multi-level arrays transparently yet allow
-> > 	  proper event notification across levels when the
-> > 	  topology is known to MD.
->=20
-> I'll need to see the code to understand what this means, much less=20
-> whether it is needed ;-)
-
-I think he mean the broken inter-driver raid stacking mentioned below.
-Why do I have to thing of EVMS when for each feature?..
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
