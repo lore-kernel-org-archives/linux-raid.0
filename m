@@ -1,45 +1,47 @@
-From: Paul Clements <Paul.Clements@SteelEye.com>
-Subject: Re: question regarding a raid-1 set
-Date: Tue, 26 Aug 2003 12:11:37 -0400
+From: Kanoa Withington <kanoa@cfht.hawaii.edu>
+Subject: Re: sorta OT:  vibration dampening, maximum promise cards?
+Date: Tue, 26 Aug 2003 08:25:31 -1000 (HST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3F4B86B9.A1125164@SteelEye.com>
-References: <200308261637.08588.jbaten@i2rs.nl> <yq13cfov4g7.fsf@wilson.mkp.net> <3F4B8076.5CF468D5@SteelEye.com> <200308261800.28078.jbaten@i2rs.nl>
+Message-ID: <Pine.LNX.4.55.0308260823141.940@umi.cfht.hawaii.edu>
+References: <Pine.GSO.4.30.0308260924260.24071-100000@multivac.sdsc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Jeroen Baten <jbaten@i2rs.nl>
-Cc: linux-raid@vger.kernel.org
+In-Reply-To: <Pine.GSO.4.30.0308260924260.24071-100000@multivac.sdsc.edu>
+To: "Peter L. Ashford" <ashford@sdsc.edu>
+Cc: mjstumpf@pobox.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Jeroen Baten wrote:
- 
-> Well.... If you really like to know (I would really apreciate it!) this is the
-> bootlog (bare in mind there are 3 raid-1 arrays):
+It works under Linux too. The old 'Ultra100' cards are also
+independent of the newer 'tx2' cards so they can be mixed as well.
 
-Looks like md is confused because sdb6 is in slot 1. So the hot-remove,
-hot-add should get you back up and running (hot-add will put the disk
-back in slot 2, which should make md happy).
+-Kanoa
 
---
-Paul
+On Tue, 26 Aug 2003, Peter L. Ashford wrote:
 
-
-> <6>md:  adding sdb6 ...
-> <6>md:  adding sda6 ...
-> <6>md: created md2
-> <6>md: bind<sda6,1>
-> <6>md: bind<sdb6,2>
-> <6>md: running: <sdb6><sda6>
-> <6>md: sdb6's event counter: 00000028
-> <6>md: sda6's event counter: 00000028
-> <6>md: RAID level 1 does not need chunksize! Continuing anyway.
-> <6>md2: max total readahead window set to 508k
-> <6>md2: 1 data-disks, max readahead per data-disk: 508k
-> <3>raid1: disabled mirror sdb6 (not in sync)
-> <6>raid1: device sda6 operational as mirror 0
-> <1>raid1: md2, not all disks are operational -- trying to recover array
-> <6>raid1: raid set md2 active with 1 out of 2 mirrors
-> <6>md: recovery thread got woken up ...
-> <3>md2: no spare disk to reconstruct array! -- continuing in degraded mode
-> <6>md: recovery thread finished ...
+> On Tue, 26 Aug 2003, mjstumpf wrote:
+>
+> > 2)  Anyone know what the limit of the newer "tx2" promise 2-channel ATA
+> > cards is in a given system?  I read somewhere the older ones were limited
+> > to 3..  I'm at 3 now.
+>
+> To the best of my knowledge, the Promise Ultra-100 and Ultra-133 cards
+> have BIOS limitations, which only allow two cards to be used at the same
+> time.  There may be ways to 'trick' the BIOS to recognize a third card,
+> but I don't know of any.  I have never heard of anyone getting a fourth
+> card to work.
+>
+> Now for the good news.  The BIOS for the Ultra-100 doesn't know about the
+> Ultra-133 and vice versa.  This means that, as far as the BIOS is
+> concerned, two Ultra-100 cards and two Ultra-133 cards should work in the
+> same system.  I don't know what the Linux drivers would do in this case,
+> as I've only done this under Windoze.
+>
+> I hope this helps.
+> 				Peter Ashford
+>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
