@@ -1,61 +1,67 @@
-From: "Potthoff, Kay" <Kay.Potthoff@force.de>
-Subject: RE: /proc/mdstat output
-Date: Thu, 23 May 2002 14:06:24 +0200
+From: Danilo Godec <danci@agenda.si>
+Subject: Re: some question in SoftRaid
+Date: Thu, 23 May 2002 15:48:45 +0200 (CEST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <9CFB9DA5261CD611A29B00508B789048654305@ex-deu-munich02.force.de>
+Message-ID: <Pine.LNX.4.30.0205231534110.11465-100000@duplo.agenda.si>
+References: <OF3F6026D2.567B40AF-ON48256BC2.00308831@legend.com.cn>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: 'Rene Scherer' <rene@scherer-online.com>
+In-Reply-To: <OF3F6026D2.567B40AF-ON48256BC2.00308831@legend.com.cn>
+To: lilha@legend.com.cn
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> -----Original Message-----
-> From: Rene Scherer [mailto:rene@scherer-online.com]
-> Sent: Donnerstag, 23. Mai 2002 12:54
-> To: linux-raid@vger.kernel.org
-> Subject: /proc/mdstat output
->=20
->=20
-> Hi all
->=20
-> I've got a small question about the output of "cat /proc/mdstat"
->=20
-> I've got 3 RAIDs configured (RAID-1 mirror), md0, md1 and md2
-> When I run "cat /proc/mdstat", I get the following output:
->=20
-> Personalities : [raid1]
-> read_ahead 1024 sectors
-> md1 : active raid1 sdb2[1] [dev 08:02][0]
->       10241344 blocks [2/2] [UU]
->=20
-> md2 : active raid1 sdb3[1] [dev 08:03][0]
->       38130176 blocks [2/2] [UU]
->=20
-> md0 : active raid1 sdb1[1] [dev 08:01][0]
->       10241280 blocks [2/2] [UU]
->=20
-> unused devices: <none>
->=20
+On Thu, 23 May 2002 lilha@legend.com.cn wrote:
 
-It seems that the first partition is shown as [dev 08:02][0], which is
-/dev/sda2 (for example). I have no idea why the name is not listed.
+> 1.Raid 0,1,5 must install in differ disk?right?
 
-Regards, Kay
+Not really, you can make Linux SW RAID on any kind of partition - even on
+the same disk. It really makes no sense, thouhg.
 
-######################################################
-# Kay Potthoff              Senior Software Engineer
-#
-# FORCE Computers GmbH        Tel.: +49-89-60814-356
-# Prof.-Messerschmitt-Str. 1       FAX : +49-89-6097793
-# 85579 Neubiberg/M=FCnchen
-# Deutschland/Germany
-#
-# mailto:Kay.Potthoff@force.de
-######################################################
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> RAID-0 and RAID-1 need at lest 2 disk
+> RAID-5 need at lest 3 disk,is it right?
+
+Right.
+
+> then is there any requrement about the partition Type(such as
+> primary,logical or extend partition )?
+
+I think not. I'm not sure about the extended partitions, but primary and
+logical should work.
+
+> 2.can i setup raid0,1,5 in the partition which has different size?
+> such as:
+> /dev/hda1 500M
+> /dev/hdc1 600M
+> can i setup raid-0 or raid-1?i try it,but failed.
+
+For RAID0, partitions should be approx. the same size, but it should work
+in any case, however the striping will only be performed for the size of
+the smaller partition. Maybe there is a treshold when the difference gets
+to big...
+
+You should also be able to create a RAID1 array with two different
+partition sizes, however the resultin array will be the size of the
+smaller partition. I'm not certain, but maybe the order is important - if
+the smaller partition is listed first, the bigger will be partially used.
+If the bigger is listed first, the smaller will end up being 'too
+small'...
+
+I'm not sure about RAID5, but I think the partitions should be the same
+size (at least very close). At least that's how I do it.
+
+> 3.how can I remove raid from disk? such as,i have md0(RAID 0),it use
+> /dev/hda2 and /dev/hdc2 now i want to these partitions don't use
+> raid,i want to release these partition then how can I do?
+
+You can use 'the old' raidsetfaulty - raidhotremove combination, or you
+can use the new mdadm. Both do the job.
+
+If you use autodetection, you can also change the partition type from
+'0xfd' to something else.
+
+  D.
+
+
+
