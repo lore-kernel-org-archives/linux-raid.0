@@ -1,50 +1,41 @@
-From: Gordon Henderson <gordon@drogon.net>
-Subject: RE: Mirroring swap
-Date: Thu, 26 Jun 2003 09:30:23 +0100 (BST)
+From: Scott McDermott <vaxerdec@frontiernet.net>
+Subject: Re: Mirroring swap
+Date: Thu, 26 Jun 2003 05:46:55 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.43.0306260916190.5551-100000@unicorn.drogon.net>
-References: <BKEGKPICNAKILKJKMHCAEEFPEHAA.Riley@Williams.Name>
+Message-ID: <20030626054655.Q9583@newbox.localdomain>
+References: <Pine.LNX.4.44.0306251535120.16603-100000@gpu.utcc>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BKEGKPICNAKILKJKMHCAEEFPEHAA.Riley@Williams.Name>
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44.0306251535120.16603-100000@gpu.utcc>; from dky@utcc.utoronto.ca on Wed, Jun 25, 2003 at 03:39:45PM -0400
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 26 Jun 2003, Riley Williams wrote:
+Derek Yeung on Wed 25/06 15:39 -0400:
+> I was wondering if it's a good idea to also mirror the
+> swap partition?  
 
-> Personally, I can't see the point. the contents of swap are by
-> definition short term temporary data with copies held either in
-> memory or elsewhere on the hard disk subsystem.
+You should definitely mirror swap or any dirty pages which
+are swap-backed will be lost when the swap device dies,
+resulting in data or filesystem corruption.  Not to mention
+that your system will almost certainly crash when this
+occurs.
 
-Not strictly true. The whole point of "virual memory" is that the OS has
-the right to shift parts of, or an entire programs data segment (and
-stack, and other volatile data needed to resume execution of that program
-which isn't mirrored elsewhere in memory or the filing system)  onto a
-swap device when memory becomes tight. If later, it tries to read that
-data back to resume execution of the program and it fails then at best it
-will abort the program and at worst it'll just give up and panic. I've had
-the latter happen when a swap partition developed a bad sector.
+> I was reading old posts in the newsgroups that suggest
+> this may not be a good idea but i can't seem to find an
+> answer as to why.
 
-So now with important machines which had mirrored or RAIDed disk systems,
-I always put swap on a mirrored or RAID5d device.
+The old RAID code couldn't handle swap for some reason, but
+that was fixed a long time ago.  I believe it had something
+to do with deadlocking in a situation where the RAID code
+needed memory for some dealings with the mirrored swap
+device, but the memory couldn't be obtained without swapping
+out, which as you can imagine would cause problems.  I think
+they changed this by making the kinds of buffers used by
+RAID in these situations to be pinned, but I don't know.
 
-Eg.
+> If it's a good idea, can anyone suggest how i can do it?
+> (mirror swap?)  I don't currently have it set up yet.
 
-gordonh @ red: cat /proc/swaps
-Filename                        Type            Size    Used    Priority
-/dev/md2                        partition       1991672 12512   -1
-
-md2 : active raid5 hdm2[2] hdk2[4] hdi2[1] hdg2[3] hde2[0]
-      1991680 blocks level 5, 32k chunk, algorithm 0 [5/5] [UUUUU]
-
-> My preference is to create multiple swap partitions, one on each
-> hard drive, as in that situation, the swap subsystem always uses
-> a swap partition on a different drive to the original copy when
-> it decides where to swap out to.
-
-Linux will round-robbin swap allocation between all swap devices, unless
-you give a device a higher priority in the fstab. (or swapon command)
-
-Gordon
-
+swapoff, mkraid, raidstart, mkswap, swapon, vi /etc/fstab
