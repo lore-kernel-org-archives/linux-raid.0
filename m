@@ -1,51 +1,39 @@
-From: FRLinux <frlinux@frlinux.net>
-Subject: multiple distros & raid issues
-Date: Tue, 03 Aug 2004 18:04:49 +0100
+From: Jon Lewis <jlewis@lewis.org>
+Subject: Re: what is the best multi-SATA-controller-on-a-single-board out
+ there?
+Date: Tue, 3 Aug 2004 13:45:46 -0400 (EDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1091552689.8445.3.camel@tux.power.users>
-Reply-To: frlinux@frlinux.net
+Message-ID: <Pine.LNX.4.58.0408031341170.7852@web1.mmaero.com>
+References: <20040730234706.M12321@contactbda.com>
+ <Pine.LNX.4.44.0407311045460.4528-100000@uplift.swm.pp.se>
+ <20040801150258.M30882@contactbda.com> <1091382829.11770.14.camel@tinny.home.foo>
+ <410E15EB.7030407@buttersideup.com> <Pine.LNX.4.58.0408021700230.7852@web1.mmaero.com>
+ <410F52ED.9070403@buttersideup.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-D73C4030VPCXVqQNFhGG"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <410F52ED.9070403@buttersideup.com>
+To: Tim Small <tim@buttersideup.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Tue, 3 Aug 2004, Tim Small wrote:
 
---=-D73C4030VPCXVqQNFhGG
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> I'm using kernel.org 2.6.8rc2 (also used 2.6.5rc3), with libata on
+> Debian/Sarge (not that the distribution should matter, this is all
+> kernel side stuff) - both on Xeons, and Opterons, all filesystems are
 
-Hello,
+It matters to the extent that some of the distros like to use heavily
+patched kernels...so one distro's 2.4.x kernel may be quite different from
+another's.  So unless you build custom kernels from the kernel.org
+sources, kernel verion _and_ distro is more meaningful.
 
-I noticed a problem with having several distributions on the same
-machine (multi boot) and the sil3112 driver. My main distribution is
-Gentoo running a kernel 2.6.7 and two soft raid 1 partitions (md0,1)
-which are working perfectly.
+It seems (from Maxtor's powermax util) that I do have at least one
+defective drive...so hopefully that's all the problem was.  I'm building
+an array now with the remaining 5 drives that passed the powermax tests.
 
-Now, when booting up on any other distro (i got suse 9.1, fedora core 2,
-mandrake 10.0 official and slackware 10), one time out of 2 i get : raid
-array in bad state, starting reconstruction, it then disconnects one of
-the devices, reattaches it an syncs the whole thing.
-
-Anyone ever witnessed that ?
-Thanks for any reply,
-Steph
---=20
-This mail was sent under Gentoo 2004.1 - Gnome & Kernel 2.6nptl
-http://frlinux.net - Site d'aide aux Debutants sous Linux
-Public key : http://frlinux.net/files/frlinux_public_key.asc
-
---=-D73C4030VPCXVqQNFhGG
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.4 (GNU/Linux)
-
-iD8DBQBBD8WxplbM2wjOZgMRAtliAKCkw3mLz0Smx/e6ZWUo+Oc3kvuaCwCdGbqQ
-4+FeqW8gLkg/0sfKZdmTfdQ=
-=l+Gp
------END PGP SIGNATURE-----
-
---=-D73C4030VPCXVqQNFhGG--
-
+----------------------------------------------------------------------
+ Jon Lewis                   |  I route
+ Senior Network Engineer     |  therefore you are
+ Atlantic Net                |
+_________ http://www.lewis.org/~jlewis/pgp for PGP public key_________
