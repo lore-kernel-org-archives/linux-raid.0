@@ -1,65 +1,58 @@
-From: Danilo Godec <danci@agenda.si>
-Subject: Re: mdrecoveryd oops
-Date: Thu, 30 May 2002 11:52:25 +0200 (CEST)
+From: Jeff Hill <jhill@hrpost.com>
+Subject: Re: mdadm mail option configuration
+Date: Thu, 30 May 2002 10:11:57 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.30.0205301148420.13515-101000@duplo.agenda.si>
-References: <3CF5E020.70200@ynet.sk>
+Message-ID: <5.1.0.14.0.20020530095915.01f38c48@205.233.215.4>
+References: <message from Jeff Hill on Wednesday May 29>
+ <message from Jeff Hill on Tuesday May 28>
+ <5.1.0.14.0.20020528111927.01f28280@205.233.215.4>
+ <5.1.0.14.0.20020529080432.01f32cd8@205.233.215.4>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-154941680-330858946-1022752345=:13515"
+Content-Type: text/plain; charset="us-ascii"; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3CF5E020.70200@ynet.sk>
-To: VanTo <vanto@ynet.sk>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+In-Reply-To: <15605.23522.860348.236412@notabene.cse.unsw.edu.au>
+To: Neil Brown <neilb@cse.unsw.edu.au>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
-  Send mail to mime@docserver.cac.washington.edu for more info.
+At 08:53 AM 30/05/2002 +1000, Neil Brown wrote:
+>On Wednesday May 29, jhill@hrpost.com wrote:
+> > >> Then, I just have an init script that runs:
+> > >>       /sbin/mdadm -Fs --delay=600 &
+> > >Why 600 (10 minutes)?? I would suggest 60seconds for normal operation
+> > >and 1 second for testing.
+> > Okay, changed. My choice was arbitrary, just assumed it would be
+> > reasonable -- I'm moving it on to a heavily loaded production server
+> > and the e-mail isn't constantly monitored so I assumed . . . .
+>
+>You assumed what?  Are you thinking that it wil send mail every $delay
+>seconds if there is a problem, and you didn't want to be spammed?
 
----154941680-330858946-1022752345=:13515
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-
-On Thu, 30 May 2002, VanTo wrote:
-
-> I also wanted to ask if it is supported to use md array during recovery?
-> (with some journaling fs on it). When a system fails I have to wait for
-> about 1 hour while recovery finishes before i mount fs on md, or else it
-> crashes. I tried many kernel versions from 2.4.16 to 2.4.19-pre8, with
-> the same result.
-
-It *should* work. Are you using this on a SMP machine? There are some race
-situations causing crashes, but it should work with an UP machine.
-
-Here is a patch produced by gody@agenda.si that should help in SMP
-machine. It not pretty and it's not '100% right', but it seems to work.
-
-   D.
+No, I assumed there was no reason to add additional polling. If there is no 
+one around to read the e-mail, there seemed no reason to add to the number 
+of processes being run on a heavily loaded server. I expect the load of 
+polling is miniscule, but it all adds something.
 
 
----154941680-330858946-1022752345=:13515
-Content-Type: APPLICATION/x-patch; name="md.race.patch"
-Content-Transfer-Encoding: BASE64
-Content-ID: <Pine.LNX.4.30.0205301152250.13515@duplo.agenda.si>
-Content-Description: 
-Content-Disposition: attachment; filename="md.race.patch"
+>Mdadm only sends mail when it notices a drive fail, not when it
+>notices that a drive is failed.
+>i.e. if on one poll the drive is working, and on the next poll the
+>drive is not working, then it sends mail saying "The drive just
+>failed".
+>
+>So when you were testing, was "mdadm -Fs" actually running at the
+>moment when you simulated a drive failure?
 
-ZGlmZiAtdU5yIGxpbnV4Lm9yaWcvZHJpdmVycy9tZC9tZC5jIGxpbnV4L2Ry
-aXZlcnMvbWQvbWQuYwotLS0gbGludXgub3JpZy9kcml2ZXJzL21kL21kLmMJ
-RnJpIERlYyAyMSAxODo0MTo1NCAyMDAxCisrKyBsaW51eC9kcml2ZXJzL21k
-L21kLmMJTW9uIE1hciAxMSAxMzoyOTo1MCAyMDAyCkBAIC00NjgsNiArNDY4
-LDE5IEBACiAJfQogfQogCitzdGF0aWMgaW5saW5lIGludCBtYXJrX3JkZXZf
-ZmF1bHR5IChtZGtfcmRldl90ICogcmRldikKK3sKKyAgICAgICBpZiAoIXJk
-ZXYpIHsKKyAgICAgICAgICAgICAgIE1EX0JVRygpOworICAgICAgICAgICAg
-ICAgcmV0dXJuIDA7CisgICAgICAgfQorICAgICAgIGlmIChyZGV2LT5mYXVs
-dHkpCisgICAgICAgICAgICAgICByZXR1cm4gMDsKKyAgICAgICBmcmVlX2Rp
-c2tfc2IocmRldik7CisgICAgICAgcmRldi0+ZmF1bHR5ID0gMTsKKyAgICAg
-ICByZXR1cm4gMTsKK30KKwogc3RhdGljIGludCByZWFkX2Rpc2tfc2IobWRr
-X3JkZXZfdCAqIHJkZXYpCiB7CiAJaW50IHJldCA9IC1FSU5WQUw7CkBAIC0z
-MDQ4LDEwICszMDYxLDE0IEBACiAJcnJkZXYgPSBmaW5kX3JkZXYobWRkZXYs
-IHJkZXYpOwogCWlmICghcnJkZXYgfHwgcnJkZXYtPmZhdWx0eSkKIAkJcmV0
-dXJuIDA7CisJaWYgKCFtYXJrX3JkZXZfZmF1bHR5KHJyZGV2KSkKKwkJcmV0
-dXJuIDA7CiAJaWYgKCFtZGRldi0+cGVycy0+ZXJyb3JfaGFuZGxlcgogCQkJ
-fHwgbWRkZXYtPnBlcnMtPmVycm9yX2hhbmRsZXIobWRkZXYscmRldikgPD0g
-MCkgeworLyoKIAkJZnJlZV9kaXNrX3NiKHJyZGV2KTsKIAkJcnJkZXYtPmZh
-dWx0eSA9IDE7CisqLwogCX0gZWxzZQogCQlyZXR1cm4gMTsKIAkvKgo=
----154941680-330858946-1022752345=:13515--
+I certainly thought it was, but unfortunately I wasn't simulating. When I 
+saw that all of the partitions on sdb had been kicked out of the array, I 
+saw that mdadm -Fs was running, but the drive could have failed before a 
+reboot when mdadm might not have been running. When you confirmed that my 
+configuration was generally correct, I assumed that mdadm wasn't running or 
+that I had done something else wrong. When I can get the system running 
+again (lilo is hosed; looking at grub for boot raid?), I'll test and 
+promise to e-mail back.
+
+Regards,
+
+Jeff Hill
+
