@@ -1,120 +1,149 @@
-From: "Mike Black" <mblack@csi-inc.com>
-Subject: Re: RAID SCSI binding
-Date: Mon, 3 Mar 2003 08:32:21 -0500
+From: linux@horizon.com
+Subject: Lots of "bio too big" errors with 2.5.63bk5
+Date: 4 Mar 2003 12:45:03 -0000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <01ff01c2e189$5231cdc0$f6de11cc@black>
-References: <015d01c2df23$9c22f020$f6de11cc@black> <15967.52086.864201.674739@notabene.cse.unsw.edu.au>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Message-ID: <20030304124503.10104.qmail@science.horizon.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org, mingo@elte.hu
 List-Id: linux-raid.ids
 
-Using mdadm v1.0.0
+I asked about this in linux-kernel, but nobody rose to the bait.
 
-/dev/sdn1:
-          Magic : a92b4efc
-        Version : 00.90.00
-           UUID : 05084a65:52ffddf9:e971cafd:3aca3445
-  Creation Time : Wed Nov  7 07:19:15 2001
-     Raid Level : raid5
-    Device Size : 36081792 (34.41 GiB 36.94 GB)
-   Raid Devices : 7
-  Total Devices : 8
-Preferred Minor : 4
+I have a fairly generic Athlon+KT133 system with two IDE drives, which
+I have striped together (software RAID-0, stripe size 256K) for speed
+and hack value.
 
-    Update Time : Fri Feb 28 05:53:34 2003
-          State : dirty, no-errors
- Active Devices : 7
-Working Devices : 7
- Failed Devices : 1
-  Spare Devices : 0
-       Checksum : a1e07486 - correct
-         Events : 0.189
+Anyway, since jumping from 2.4 to 2.5 recently (2.5.63 is the oldest
+2.5 kernel I've run), I've been seeing lots of:
 
-         Layout : left-asymmetric
-     Chunk Size : 128K
+bio too big device ide0(3,4) (256 > 255)
+bio too big device ide1(22,4) (256 > 255)
+bio too big device ide0(3,4) (424 > 255)
+bio too big device ide0(3,4) (272 > 255)
+bio too big device ide1(22,4) (512 > 255)
+bio too big device ide0(3,4) (512 > 255)
+bio too big device ide1(22,4) (512 > 255)
+bio too big device ide0(3,4) (512 > 255)
+bio too big device ide1(22,4) (512 > 255)
+bio too big device ide1(22,4) (512 > 255)
+bio too big device ide0(3,4) (512 > 255)
+bio too big device ide1(22,4) (512 > 255)
+bio too big device ide0(3,4) (512 > 255)
+bio too big device ide1(22,4) (512 > 255)
+bio too big device ide0(3,4) (512 > 255)
+bio too big device ide1(22,4) (512 > 255)
+bio too big device ide0(3,4) (512 > 255)
+bio too big device ide1(22,4) (512 > 255)
+bio too big device ide0(3,4) (512 > 255)
+bio too big device ide1(22,4) (512 > 255)
+bio too big device ide0(3,4) (512 > 255)
+bio too big device ide1(22,4) (512 > 255)
+bio too big device ide0(3,4) (512 > 255)
+bio too big device ide1(22,4) (512 > 255)
+bio too big device ide0(3,4) (328 > 255)
+bio too big device ide1(22,4) (512 > 255)
+bio too big device ide0(3,4) (488 > 255)
+bio too big device ide1(22,4) (424 > 255)
+bio too big device ide0(3,4) (288 > 255)
+bio too big device ide0(3,4) (456 > 255)
+bio too big device ide1(22,4) (512 > 255)
+bio too big device ide0(3,4) (256 > 255)
+bio too big device ide1(22,4) (296 > 255)
+bio too big device ide0(3,4) (512 > 255)
+bio too big device ide1(22,4) (512 > 255)
+bio too big device ide0(3,4) (376 > 255)
+bio too big device ide1(22,4) (336 > 255)
+bio too big device ide0(3,4) (384 > 255)
+bio too big device ide0(3,4) (512 > 255)
+bio too big device ide0(3,4) (376 > 255)
+bio too big device ide0(3,4) (272 > 255)
+bio too big device ide1(22,4) (344 > 255)
+bio too big device ide0(3,4) (424 > 255)
+bio too big device ide0(3,4) (272 > 255)
+bio too big device ide1(22,4) (512 > 255)
+bio too big device ide0(3,4) (512 > 255)
+bio too big device ide1(22,4) (512 > 255)
+bio too big device ide0(3,4) (512 > 255)
+bio too big device ide1(22,4) (512 > 255)
+bio too big device ide1(22,4) (256 > 255)
+bio too big device ide0(3,4) (424 > 255)
+bio too big device ide0(3,4) (272 > 255)
+bio too big device ide1(22,4) (512 > 255)
+bio too big device ide0(3,4) (360 > 255)
+bio too big device ide0(3,4) (424 > 255)
+bio too big device ide0(3,4) (272 > 255)
+bio too big device ide1(22,4) (512 > 255)
+bio too big device ide0(3,4) (360 > 255)
+bio too big device ide1(22,4) (456 > 255)
+bio too big device ide0(3,4) (424 > 255)
+bio too big device ide0(3,4) (272 > 255)
+bio too big device ide1(22,4) (512 > 255)
+bio too big device ide0(3,4) (360 > 255)
+bio too big device ide0(3,4) (424 > 255)
+bio too big device ide0(3,4) (272 > 255)
+bio too big device ide1(22,4) (512 > 255)
+bio too big device ide0(3,4) (360 > 255)
+bio too big device ide0(3,4) (424 > 255)
+bio too big device ide0(3,4) (272 > 255)
+bio too big device ide1(22,4) (512 > 255)
+bio too big device ide0(3,4) (360 > 255)
+bio too big device ide1(22,4) (256 > 255)
+bio too big device ide1(22,4) (256 > 255)
+bio too big device ide0(3,4) (424 > 255)
+bio too big device ide0(3,4) (272 > 255)
+bio too big device ide1(22,4) (512 > 255)
+bio too big device ide0(3,4) (360 > 255)
+bio too big device ide1(22,4) (256 > 255)
+bio too big device ide0(3,4) (424 > 255)
+bio too big device ide0(3,4) (272 > 255)
+bio too big device ide1(22,4) (512 > 255)
+bio too big device ide0(3,4) (360 > 255)
+bio too big device ide0(3,4) (256 > 255)
+bio too big device ide0(3,4) (256 > 255)
+bio too big device ide0(3,4) (424 > 255)
+bio too big device ide0(3,4) (272 > 255)
+bio too big device ide1(22,4) (512 > 255)
+bio too big device ide0(3,4) (360 > 255)
+bio too big device ide0(3,4) (424 > 255)
+bio too big device ide0(3,4) (272 > 255)
+bio too big device ide1(22,4) (512 > 255)
+bio too big device ide0(3,4) (360 > 255)
+bio too big device ide0(3,4) (424 > 255)
+bio too big device ide0(3,4) (272 > 255)
+bio too big device ide1(22,4) (512 > 255)
+bio too big device ide0(3,4) (360 > 255)
+bio too big device ide0(3,4) (424 > 255)
+bio too big device ide0(3,4) (272 > 255)
+bio too big device ide1(22,4) (512 > 255)
+bio too big device ide0(3,4) (512 > 255)
+bio too big device ide1(22,4) (512 > 255)
+bio too big device ide0(3,4) (512 > 255)
+bio too big device ide1(22,4) (512 > 255)
+bio too big device ide1(22,4) (512 > 255)
+bio too big device ide0(3,4) (512 > 255)
+bio too big device ide1(22,4) (512 > 255)
+bio too big device ide0(3,4) (512 > 255)
+bio too big device ide1(22,4) (512 > 255)
+bio too big device ide0(3,4) (512 > 255)
 
-      Number   Major   Minor   RaidDevice State
-this     0       8      209        0      active sync   /dev/sdn1
-   0     0       8      209        0      active sync   /dev/sdn1
-   1     1       8      225        1      active sync   /dev/sdo1
-   2     2       8      241        2      active sync   /dev/sdp1
-   3     3      65        1        3      active sync   /dev/sdq1
-   4     4      65       17        4      active sync   /dev/sdr1
-   5     5      65       33        5      active sync   /dev/sds1
-   6     6      65       49        6      active sync   /dev/sdt1
-/dev/sdo1:
-          Magic : a92b4efc
-        Version : 00.90.00
-           UUID : 05084a65:52ffddf9:e971cafd:3aca3445
-  Creation Time : Wed Nov  7 07:19:15 2001
-     Raid Level : raid5
-    Device Size : 36081792 (34.41 GiB 36.94 GB)
-   Raid Devices : 7
-  Total Devices : 8
-Preferred Minor : 4
+Since nothing seemed to be breaking, I was just curious if this was
+something important or log spam, but since then I've had dkpg complaining
+that downloaded packages were corrupt.
 
-    Update Time : Fri Feb 28 05:53:34 2003
-          State : dirty, no-errors
- Active Devices : 7
-Working Devices : 7
- Failed Devices : 1
-  Spare Devices : 0
-       Checksum : a1e07498 - correct
-         Events : 0.189
+The coincidence of the 256K stripe size and the 512 sector maximum in
+the messages suggests that the RAID-0 code isn't obeying the IDE
+driver's max_sectors limit.  I can't find mention of it in the
+raid0.c code.  Unfortunately, I'm not too sure where such a check
+should go.  raid0_mergeable_bvec?
 
-         Layout : left-asymmetric
-     Chunk Size : 128K
+The problem is, right now it doesn't seem to even know, at merge time,
+which underlying device the request will be sent to, and they might have
+different max_sectors values or even merge_bvec_fns of their own.
 
-      Number   Major   Minor   RaidDevice State
-this     1       8      225        1      active sync   /dev/sdo1
-   0     0       8      209        0      active sync   /dev/sdn1
-   1     1       8      225        1      active sync   /dev/sdo1
-   2     2       8      241        2      active sync   /dev/sdp1
-   3     3      65        1        3      active sync   /dev/sdq1
-   4     4      65       17        4      active sync   /dev/sdr1
-   5     5      65       33        5      active sync   /dev/sds1
-   6     6      65       49        6      active sync   /dev/sdt1
+Any suggestions?  Perhaps a simple fix could be done by changing the
+blk_queue_max_sectors limit to the minimum of mddev->chunk_size>>9
+and the max_sectors values of all of the underlying devices, but that's
+suboptimal if the max_sectors values differ (admittedly unlikely) and
+still doesn't take care of the merge_bvec_fn issue.
 
------ Original Message -----
-From: "Neil Brown" <neilb@cse.unsw.edu.au>
-To: "Mike Black" <mblack@csi-inc.com>
-Cc: "linux-kernel" <linux-kernel@vger.kernel.org>; "linux-raid" <linux-raid@vger.kernel.org>
-Sent: Friday, February 28, 2003 3:49 PM
-Subject: Re: RAID SCSI binding
-
-
-> On Friday February 28, mblack@csi-inc.com wrote:
-> > Linux 2.4.20 (but not unique to this kernel -- been this way for over a year):
-> > I have a RAID5 array that doesn't startup properly during boot (I have to stop it and restart after the system is up).  I've had
-> > this problem forever and have been trying to fix it.
-> > Here's what it looks like when it's up and running:
-> > md4 : active raid5 sdn1[0] sdt1[6] sds1[5] sdr1[4] sdq1[3] sdp1[2] sdo1[1]
-> >      216490752 blocks level 5, 128k chunk, algorithm 0 [7/7] [UUUUUUU]
-> > The partitions types are set to 0x83 and the array is being manually
-> > started in rc.local instead of doing auto-start.
->
-> What tool are you using to start the array? raidstart or mdadm?
-> There doesn't seem to be enough noise in the logs for it to be
-> raidstart (no "md: autorun ...") so I assume mdadm.
->
-> What do you get if you add "-v" to the mdadm running from rc.local?
-> Can you show me
->   mdadm -E /dev/sda1 /dev/sdo1
->
-> NeilBrown
->
-> >
-> > So it looks to me like the md driver doesn't like the raid system crossing the major device boundary for some odd reason.
-> > Although I'm not sure why I can stop and restart after the system is totally up but not start it in rc.local using the same
-> > commands:
->
-> I suspect this is just a co-incidence.  I cannot imagine how the major
-> device number could affect things at all.
->
-> NeilBrown
-
+Thanks!
