@@ -1,30 +1,30 @@
-From: Victor Gregorio <victor@opsource.net>
-Subject: MegaRaid 2002 Only Works on Install
-Date: Thu, 01 Apr 2004 14:18:03 -0800
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: new IDE drive returning errors - is drive bad?
+Date: Thu, 01 Apr 2004 17:28:10 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <406C951B.4050509@opsource.net>
+Message-ID: <406C977A.1040209@pobox.com>
+References: <20040401222025.75979.qmail@web40712.mail.yahoo.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <20040401222025.75979.qmail@web40712.mail.yahoo.com>
+To: David Nedved <david_nedved@yahoo.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello.  We are trying to get the megaraid 2002 driver working on a Dell 
-Poweredge system with RedHat ES 2.1.  The driver can be loaded properly 
-on install via floppy.
+David Nedved wrote:
+> <without DMA>
+> similar lines other than the following three:
+> 
+> Apr  1 13:23:53 celeri kernel: APIC error on CPU0: 08(02)
 
-Towards the end of installation when I <cntrl><alt><F2> and 'mkinitrd' 
-as the Dell documentation instructs, I get a binary operator expected 
-error on the megaraid_2002.o module.  I don't know why the Dell 
-documentation asks that I make initrd since it is already available in 
-/boot.
 
-On boot, the system throws up a screenfull of unresolved symbol errors 
-for megaraid_2002.o and then kernel panics because it can't mount /boot 
-and sees no initrd.
+If you're getting APIC errors, I wouldn't necessarily blame the drive. 
+That sounds more like motherboard/cpu.
 
-How can the driver work during installation, but not at boot?  Any 
-advice is appreciated.
+Another common area of annoyance is bad drive cables.
 
-Thank you, Victor.
+	Jeff
+
+
