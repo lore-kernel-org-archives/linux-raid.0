@@ -1,64 +1,64 @@
-From: Roy Sigurd Karlsbakk <roy@karlsbakk.net>
-Subject: Re: SV: RAID-6 support in kernel?
-Date: Mon, 3 Jun 2002 11:59:33 +0200
+From: Christian Schmit <cschmit@vo.lu>
+Subject: RH 7.3 raid1 setup
+Date: Mon, 3 Jun 2002 12:39:22 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200206030959.g539xXb31139@mail.pronto.tv>
-References: <A2C65A3296DA4A4FB30DB57A9A464A16436851@exchange.lan.vanadis.no>
+Message-ID: <0617855078.20020603123922@vo.lu>
+Reply-To: Christian Schmit <cschmit@vo.lu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <A2C65A3296DA4A4FB30DB57A9A464A16436851@exchange.lan.vanadis.no>
-To: Christian Vik <cvik@vanadis.no>
-Cc: linux-kernel@vger.kernel.org, Kasper Dupont <kasperd@daimi.au.dk>, linux-raid@vger.kernel.org, dstephenson@snapserver.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> > > > > RAID-6 layout: http://www.acnc.com/04_01_06.html
-> >=A0>
->  >=A0> If it is supposed to survive two arbitrary disk failures somet=
-hing is
-> >=A0> wrong with that figure. They store 12 logical sectors in 20 phy=
-sical
->=A0> > sectors across 4 drives. With two lost disks there are 10 physi=
-cal
->=A0> > sectors left from which we want to reconstruct 12 logical secto=
-rs.
->=A0> > That is impossible.
-> >
-> > Might be the diagram is wrong.
 
-> Could be the case, so until I find another description I will
-> still not know how RAID-6 works.
+I installed RH 7.3 on raid1 using the standard
+RH 7.3 GUI setup.
 
-Below is a (patented?) version that works. This is from the linux-raid =
-list
+Everything installs fine. According to mdstat
+raid1 seems to be running fine:
 
->  A1   A2  (P1) (PA)
-> (P2) (PB)  B2   B1
->  C4   C3  (PC) (P3)
-> (PD) (P4)  D3   D4
->
-> Disclaimer: I took that from Patent 6,353,895.  If you look it up you=
-'ll see
-> a lot of different schemes and discussion of XOR-based RAID 6, in lan=
-guage
-> disguised as English.  You'll also see that I'm listed as the invento=
-r.
-> That's four companies back for me, but my current employer unknowingl=
-y
-> has some rights to it, so I hope it will see the light of day sometim=
-e.
->
-> Dale Stephenson
-> steph@snapserver.com
+# cat /proc/mdstat 
+Personalities : [raid1] 
+read_ahead 1024 sectors
+md1 : active raid1 hda5[0] hdc5[1]
+      3494016 blocks [2/2] [UU]
+      
+md2 : active raid1 hda3[0] hdc3[1]
+      16892224 blocks [2/2] [UU]
+      
+md3 : active raid1 hda2[0] hdc2[1]
+      19454592 blocks [2/2] [UU]
+      
+md0 : active raid1 hda1[0] hdc1[1]
+      361344 blocks [2/2] [UU]
+      
+unused devices: <none>
 
---=20
-Roy Sigurd Karlsbakk, Datavaktmester
+However when shutting down the system and 
+disconnecting the 1st IDE drive I cannot 
+boot from the mirrored disk. I assume this 
+is because the MBR is not mirrored.
 
-Computers are like air conditioners.
-They stop working when you open Windows.
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+So to see if all the data is present on the 
+mirrored disk I launch the "linux rescue" mode
+from the RH7.3 CD but it cannot find any partitions
+to mount from on the 2nd mirrored disk.
+
+Making the same with the primary ide disk works 
+fine, in thsi case "linux rescue" can mount all 
+partitions.
+
+How can I check if all data is being mirrored
+on the 2nd ide disk?
+
+How do I make the 2nd ide disk bootable? 
+(I use grub as bootloader)
+I already tried: 
+
+root (hd1,0)
+setup (hd1)
+
+regards,
+Christian
+
