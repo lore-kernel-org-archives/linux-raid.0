@@ -1,53 +1,37 @@
-From: Matt Gulick <gulickconsulting@direcway.com>
-Subject: Re: Stripe Block Size.
-Date: Mon, 05 Apr 2004 11:03:06 -0500
+From: Mark Hahn <hahn@physics.mcmaster.ca>
+Subject: Re: RAID1 Mirroring question.
+Date: Mon, 5 Apr 2004 12:50:00 -0400 (EDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1081180986.4745.4.camel@localhost.localdomain>
-References: <40718078.7010303@ocis.net>
-Reply-To: gulickconsulting@direcway.com
+Message-ID: <Pine.LNX.4.44.0404051242480.13902-100000@coffee.psychology.mcmaster.ca>
+References: <E1BAVLe-0001EM-00@intern.SerNet.DE>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: <40718078.7010303@ocis.net>
-To: "Jason C. Leach" <jleach@ocis.net>
-Cc: RAID Linux <linux-raid@vger.kernel.org>
+In-Reply-To: <E1BAVLe-0001EM-00@intern.SerNet.DE>
+To: Timo.Bolse@SerNet.DE
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 2004-04-05 at 10:51, Jason C. Leach wrote:
-> hi,
-> 
-> I have a Promise SX6000 in a RAID5 using Linux Debian on an AMD 
-> AthelonXP 2500+.  This array will store mostly GIS data. So about 30% 
-> large files (a few hundred megs) and 70% small files (several megs).  I 
-> am curious what stripe block size to use 4-64k (the fs is reiserfs).  I 
-> was thinking 32k for the stripe block size.
-> 
-> Thanks,
-> J.
+> We have a Linux Software RAID1 (mirroring). If there is a little error on one
+> of the disks (such a little error that the kernel dosn't recognize it). There
+> is a read request on the raid for a specific file. The output of one of the
+> disks differ from the output of the other disk. (But there are no errors 
+> recognized by the kernel / fs / raid-driver. Only one inverted bit for example)
+> What is RAID/MD doing? Are there checksums for the original file?
 
-J,
+afaikt, MD raid1 assumes that any data-corrupting errors are reported.
+if the device corrupts data and lies to the driver/kernel/md, then you
+are in trouble.  this applies to both reads and writes.
 
-If the large files are Audio/Video for streaming, then you will want a
-larger stripe size.  If not, go with the smallest that you can (a small
-~.h or text file will take the same amount of space as your stripe
-size).
+it's easy to imagine a ckraid1 tool that somehow forces reads of all
+copies of each block. but with two mirrors, there would presumably
+be no way to decide which to use...
 
-The best way to set this is to consider the total volume size.  What
-will be the allocation block size be for that size of volume if it were
-on a single disk for that OS?.  Set you allocation size to be the same
-or some multiple of that value.
+all that said, I've never seen this happen.
 
-Good luck.
+then again, raid1 is a sort of ugly niche feature, IMO.  how many 
+systems can afford two but not three disks?  raid5 is not scary!
 
-Matt
-
-----------------------------------------
-Matt Gulick
-Sr. Staff Engineer
-Adaptec, Inc.
-gulickconsulting@direcway.com
-matt_gulick@adaptec.com
-(715) 426-0884
+regards, mark hahn.
 
 
