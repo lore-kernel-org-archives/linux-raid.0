@@ -1,34 +1,29 @@
-From: <peter.greis@ubs.com>
-Subject: setup confusion - what to use ?
-Date: Tue, 14 Sep 2004 09:37:19 +0200
+From: "harry" <hfranklin97@excite.com>
+Subject: disk testing
+Date: Tue, 14 Sep 2004 04:50:07 -0400 (EDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <6F9171BE257CA742BFBCFA87B8F20F8D030E3C47@NZURC900PEX1.ubsgs.ubsgroup.net>
+Message-ID: <20040914085007.486103E2F@xprdmailfe12.nwk.excite.com>
+Reply-To: hfranklin97@excite.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Greetings All,
 
-Perhaps someone could clear up a few questions....
+I just bought 3 sata drives and set them up in a raid5 array. About 45% into syncing them, the first disk gets an error and goes offline. I figure I did something wrong, so I retrace my steps and try again, and again, I get an error about 45% of the way through, the first disk errors and goes offline. 
 
-I just took delivery of an ASUS K8NED (AMD 64), which has two sets of onboard SATA controllers. The first is the nVidia nForce3 250Gb (two channels), the second Silicon Image 3114 (four channels).
+So, I think I have a bad disk. But wait! I created a raid 1 array on the remaining two to see if there are any other errors later on those two (there weren't), and I create a normal partition/fs on the failing disk. I begin writing various bitpatterns across the entire disk and reading them back, trying to find the problem. So far, I've done about 5 passes over the entire disk without error! 
 
-Using SUSE 9.1, I would like to configure the nForce for RAID 10 (two hitachi 80gb drives), and the SI 3114 for RAID 5. Allegedly there is BIOS support for all of this.
+So, any idea why raid would be getting errors from the disk, but I don't seem to be able to? (or, what I should tell the store I bought it from when I try to get it replaced?)
 
-What I am not sure of....
+Thanks, Harry
 
-1. Should I set anything up with the bios settings, or just ignore them ? I have seen a posted decrying the bios stuff as "crap".
+ps, The only thing I can think of is that the first time through I had been using the array (created a partition, started moving files onto it), and the excessive thrashing of the heads caused an intermittent error to show itself, whereas the tests I'm currently running are strictly linear and easy enough on the disk that the problem doesn't appear. 
 
-2. Should I use the vendor drivers, or the code provided by Garzik and co ? Any comments ?
 
-3. I have seen the comments that this is not really hardware RAID - does this imply that I should generally follow the software RAID setup (http://www.ram.org/computing/linux/dpt_raid.html) ?
 
-If anyone has set up one of these mobos, I would appreciate hearing from you.
-
-regards,
-
--Peter
+_______________________________________________
+Join Excite! - http://www.excite.com
+The most personalized portal on the Web!
