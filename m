@@ -1,35 +1,62 @@
-From: <danfisher@bwkip.com>
-Subject: Raid Boot problem
-Date: Tue, 1 Apr 2003 23:47:49 -0500 (EST)
+From: Christian Diehl <christian.diehl@kmstudiosystems.com>
+Subject: Re: 3ware bad write speed.
+Date: 02 Apr 2003 09:20:10 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <2809.204.250.25.205.1049258869.squirrel@webmail.bwkip.com>
+Message-ID: <1049268010.670.2245.camel@hippokrates>
+References: <004f01c2f0b3$f72478d0$df01010a@moon>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <004f01c2f0b3$f72478d0$df01010a@moon>
 To: linux-raid@vger.kernel.org
-Cc: danfisher@bwkip.com
 List-Id: linux-raid.ids
 
-I have raid up and running again but for some reason when I switched the
-drives resynced them and typed lilo to re-add a boot sector the freshly
-raided hdb it just tells me
+Hi * 
 
-boot = /dev/hda, map = /boot/map.0301
-Added linux *
+I am using several hardware raid systems based on 3Ware, Adaptec and 
+AC&NC hardware. 
+
+The Mainboard of the test machine is a Supermicro P4DMS-6GM with two
+Xeon 2.4GHz Processors and 1 Gig of RAM. 
+
+IDE (WD 120 Gig) disks are used in the AC&NC Jetstor III (14 disks) and
+in the 3Ware (7 disks). The Adaptec Raids use SCSI (Seagate) Disks. 
+
+All these systems show a remarkably bad performance (max. 80 MB/s write
+and max. 70 MB/s read, exact figures (bonnie++,iostat) available). 
+
+I am using kernel 2.4.20 without any patches (Highmem on / i2o off) 
+and an ext3 filesystem. 
+I have played around with different stride settings and block sizes as
+well as chunk sizes on the raid and experienced minor differences within
+the above limits. 
+
+By setting 
+
+echo 256 > /proc/sys/vm/max-readahead 
+echo 128 > /proc/sys/vm/min-readahead 
+
+I could convince the 3ware to read data with up to 114 MB/s. 
+
+So basically I am experiencing the same bad speeds (especially write
+speeds) as Donghui (and others). 
+
+It seems to me like there might be a common reason behind the bad
+performance. (the VM Layer settings?) 
+
+While writing this email I just finished a bonnie++ run on a new
+software raid using 8 SCSI Disks: 
+
+softr.8disk.64chunk,2000M:64k,13630,99,41206,41,27280,27,15278,97,156480,62,329.8,12,16,1322,81,+++++,+++,29177,99,1510,99,+++++,+++,3981,98 
+
+That's an amazing difference in reading speed to the hardware raids
+(soft:156480;hard:70155). I will most probably not be able to convert
+all my Raids to Software Raids, so I would like to reach a similar
+performance with the Hardware Raid. 
 
 
-
-It would normally say:
-
-boot = /dev/hda, map = /boot/map.0301
-Added linux *
-boot = /dev/hdb, map = /boot/map.0341
-Added linux *
-
-Which tells me both drives are  bootable now.  The "map.0341" is still in
-the boot directory but where do I add it?
-
-Thanks!
+Any ideas,comments,...? 
 
 
+Christian
