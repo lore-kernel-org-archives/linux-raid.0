@@ -1,35 +1,28 @@
 From: Hermann Himmelbauer <dusty@strike.wu-wien.ac.at>
-Subject: Re: Linux drivers for ICH5R (RAID1) and Promise PDC20378, Performance
-Date: Tue, 14 Oct 2003 00:23:13 +0200
+Subject: 4*300GB SW-RAID5 - bad idea?
+Date: Tue, 14 Oct 2003 00:17:41 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200310140023.13957.dusty@strike.wu-wien.ac.at>
-References: <200310140008.43189.dusty@strike.wu-wien.ac.at> <1066083358.4761.254.camel@persist.az.mvista.com>
+Message-ID: <200310140017.41042.dusty@strike.wu-wien.ac.at>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-15"
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1066083358.4761.254.camel@persist.az.mvista.com>
 Content-Disposition: inline
-To: sdake@mvista.com
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tuesday 14 October 2003 00:15, Steven Dake wrote:
-> On Mon, 2003-10-13 at 15:08, Hermann Himmelbauer wrote:
-> > Moreover I would like to know which filesystem would suit best. For the
-> > HW-RAID solutions this should not make any difference but I heard that
-> > e.g. ReiserFS + Linux SW-RAID is quite slow.
->
-> I use ext3 + raid1 with two western digital 8MB cache disks.  I get
-> about 65mb/sec sustained read performance.  With one disk, I get about
-> 40mb/sec sustained read performance.  The linux raid code read balances
-> across disks, but doesn't write balance.
+Hi,
+I am considering putting up a slow but huge storage area. For cost reasons I 
+am considering 4* 300GB Maxtor 5400 drives with Linux Software RAID5.
 
-Thank you for your quick answer.
-This sounds interesting, but what is the CPU Load of your System when 
-reading/writing with full speed? (e.g. cat big-file > /dev/null)
-I read that the ICH5R and the Promise use only ~ 3% of the CPU.
+The CPU of this machine would be a P4-2.4Ghz.
+
+Some people told me that this configuration would be a bad idea as accessing 
+the RAID would produce a very high load and the RAID would be very slow.
+
+Is this true? Are there any performance/CPU Load stats with Linux SW-RAID that 
+I can have a look at?
 
 		Best Regards,
 		Hermann
