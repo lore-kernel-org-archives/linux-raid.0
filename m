@@ -1,142 +1,173 @@
 From: NeilBrown <neilb@cse.unsw.edu.au>
-Subject: [PATCH] md - 1 of 4 - Misc little raid fixes
-Date: Thu, 07 Nov 2002 11:56:00 +1100
+Subject: [PATCH] md - 2 of 4 - Fix assorted raid1 problems.
+Date: Thu, 07 Nov 2002 11:56:05 +1100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <E189axk-0008JD-00@notabene.cse.unsw.edu.au>
+Message-ID: <E189axp-0008JJ-00@notabene.cse.unsw.edu.au>
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: Linus Torvalds <torvalds@transmeta.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Here begins 4 patch that fix an assortment of small and medium bugs in
-md and get it mostly working again...
-
-NeilBrown
 
 ### Comments for ChangeSet
 
-Roughly in order of patch:
+From: Angus Sawyer <angus.sawyer@dsl.pipex.com>
 
-1/ xor.h is never needed in md.c
-2/ set sb_loaded when we 'sync' mddev to rdev as well as when we load 
-   sb into rdev from disk.
-2/ due to lifetime changes, active count can be 2 when we stop array
-3/ due to lifetime changes, we need to explicitly clear the ->pers when we
-   stop an array
-4/ autostart can only work for 0.90.0 superblocks.  
-   None others would be silly enough to store device numbers for
-   all devices in the superblock...
-5/ we had lost the setting of 'sb' when auto-starting an array.
-6/ Code currently calls export_rdev(start_rdev) when
-   IS_ERR(start_rdev), which causes an oops.
-7/ /proc/mdstat contents error: 
-       code does not take into account that delayed 
-       resyncs can wait with curr_resync = 1 or 2.
-8/ There is a premature "return NOTIFY_DONE", that possibly was in 
-   for debugging once...
+
+1. Null pointer dereference in end_sync_read
+
+r1_bio->read_disk is not initialised correctly in sync_request .
+
+this is used in end_sync_read to reference the structure
+conf->mirror[read_disk].rdev which with one disk missing is NULL.
+
+
+2. Null pointer dereference in mempool_free()
+
+This is a race between close_sync() conf->r1_bufpool =3D NULL and put_buf()
+mempool_free().
+
+bio completion -> resume_device -> put_buf -> mempool_free(r1_bufpool)
+				|
+			[ wakeup]
+				|
+			close_sync()	-> r1_bufpool = NULL;
+
+The patch attached  reorders the mempool_free before the  barrier is released
+and merges resume_device() into put_buf(), (they are only used together).
+Otherwise I have kept the locking and wakeups identical to the existing code.
+(maybe this could be streamlined)
+
+3.  BUG() at close_sync() if (waitqueue_active(&conf->wait_resume).
+
+This occurs with and without the patch for (2).
+
+I think this is a false BUG().  From what I understand of the device barrier
+code, there is nothing wrong with make_request() waiting on wait_resume when
+this test is made.  Therefore I have removed it (the wait_idle test is still
+correct).
+
+4. raid1 tries to start a resync if there is only one working drive,
+   which is pretty pointless, and noisy.  We notice that special case and
+   avoid the resync.
+
+
+
+
 
 
  ----------- Diffstat output ------------
- ./drivers/md/md.c |   32 +++++++++++++++++++-------------
- 1 files changed, 19 insertions(+), 13 deletions(-)
+ ./drivers/md/raid1.c |   39 +++++++++++++++++----------------------
+ 1 files changed, 17 insertions(+), 22 deletions(-)
 
---- ./drivers/md/md.c	2002/11/06 22:51:20	1.1
-+++ ./drivers/md/md.c	2002/11/06 22:58:15	1.2
-@@ -34,7 +34,6 @@
- #include <linux/raid/md.h>
- #include <linux/sysctl.h>
- #include <linux/bio.h>
--#include <linux/raid/xor.h>
- #include <linux/devfs_fs_kernel.h>
- #include <linux/buffer_head.h> /* for invalidate_bdev */
+--- ./drivers/md/raid1.c	2002/11/06 22:59:16	1.1
++++ ./drivers/md/raid1.c	2002/11/06 23:02:38	1.2
+@@ -173,12 +173,6 @@ static inline void put_buf(r1bio_t *r1_b
+ 	struct bio *bio = r1_bio->master_bio;
+ 	unsigned long flags;
  
-@@ -995,8 +994,10 @@ static void sync_sbs(mddev_t * mddev)
- 	mdk_rdev_t *rdev;
- 	struct list_head *tmp;
- 
--	ITERATE_RDEV(mddev,rdev,tmp)
-+	ITERATE_RDEV(mddev,rdev,tmp) {
- 		super_90_sync(mddev, rdev);
-+		rdev->sb_loaded = 1;
-+	}
- }
- 
- static void md_update_sb(mddev_t * mddev)
-@@ -1531,7 +1532,7 @@ static int do_md_stop(mddev_t * mddev, i
- 	int err = 0;
- 	struct gendisk *disk = disks[mdidx(mddev)];
- 
--	if (atomic_read(&mddev->active)>1) {
-+	if (atomic_read(&mddev->active)>2) {
- 		printk(STILL_IN_USE, mdidx(mddev));
- 		err = -EBUSY;
- 		goto out;
-@@ -1561,6 +1562,7 @@ static int do_md_stop(mddev_t * mddev, i
- 					set_disk_ro(disk, 1);
- 				goto out;
- 			}
-+			mddev->pers = NULL;
- 			if (mddev->ro)
- 				mddev->ro = 0;
- 		}
-@@ -1736,17 +1738,26 @@ static int autostart_array(dev_t startde
- 	start_rdev = md_import_device(startdev, 1);
- 	if (IS_ERR(start_rdev)) {
- 		printk(KERN_WARNING "md: could not import %s!\n", partition_name(startdev));
--		goto abort;
-+		return err;
-+	}
+-	spin_lock_irqsave(&conf->resync_lock, flags);
+-	if (!--conf->nr_pending) {
+-		wake_up(&conf->wait_idle);
+-		wake_up(&conf->wait_resume);
+-	}
+-	spin_unlock_irqrestore(&conf->resync_lock, flags);
+ 	/*
+ 	 * undo any possible partial request fixup magic:
+ 	 */
+@@ -186,6 +180,19 @@ static inline void put_buf(r1bio_t *r1_b
+ 		bio->bi_io_vec[bio->bi_vcnt-1].bv_len = PAGE_SIZE;
+ 	put_all_bios(conf, r1_bio);
+ 	mempool_free(r1_bio, conf->r1buf_pool);
 +
-+	/* NOTE: this can only work for 0.90.0 superblocks */
-+	sb = (mdp_super_t*)page_address(start_rdev->sb_page);
-+	if (sb->major_version != 0 ||
-+	    sb->minor_version != 90 ) {
-+		printk(KERN_WARNING "md: can only autostart 0.90.0 arrays\n");
-+		export_rdev(start_rdev);
-+		return err;
- 	}
- 
- 	if (start_rdev->faulty) {
- 		printk(KERN_WARNING "md: can not autostart based on faulty %s!\n",
- 						bdev_partition_name(start_rdev->bdev));
--		goto abort;
-+		export_rdev(start_rdev);
-+		return err;
- 	}
- 	list_add(&start_rdev->same_set, &pending_raid_disks);
- 
--
- 	for (i = 0; i < MD_SB_DISKS; i++) {
- 		mdp_disk_t *desc;
- 		dev_t dev;
-@@ -1773,10 +1784,6 @@ static int autostart_array(dev_t startde
- 	autorun_devices();
- 	return 0;
- 
--abort:
--	if (start_rdev)
--		export_rdev(start_rdev);
--	return err;
++	spin_lock_irqsave(&conf->resync_lock, flags);
++	if (!conf->barrier)
++		BUG();
++	--conf->barrier;
++	wake_up(&conf->wait_resume);
++	wake_up(&conf->wait_idle);
++
++	if (!--conf->nr_pending) {
++		wake_up(&conf->wait_idle);
++		wake_up(&conf->wait_resume);
++	}
++	spin_unlock_irqrestore(&conf->resync_lock, flags);
  }
  
- #undef BAD_VERSION
-@@ -2693,9 +2700,9 @@ static int md_status_read_proc(char *pag
- 		sz += mddev->pers->status (page+sz, mddev);
+ static int map(mddev_t *mddev, mdk_rdev_t **rdevp)
+@@ -442,17 +449,6 @@ static void device_barrier(conf_t *conf,
+ 	spin_unlock_irq(&conf->resync_lock);
+ }
  
- 		sz += sprintf(page+sz, "\n      ");
--		if (mddev->curr_resync > 1)
-+		if (mddev->curr_resync > 2)
- 			sz += status_resync (page+sz, mddev);
--		else if (mddev->curr_resync == 1)
-+		else if (mddev->curr_resync == 1 || mddev->curr_resync == 2)
- 				sz += sprintf(page + sz, "	resync=DELAYED");
+-static void resume_device(conf_t *conf)
+-{
+-	spin_lock_irq(&conf->resync_lock);
+-	if (!conf->barrier)
+-		BUG();
+-	--conf->barrier;
+-	wake_up(&conf->wait_resume);
+-	wake_up(&conf->wait_idle);
+-	spin_unlock_irq(&conf->resync_lock);
+-}
+-
+ static int make_request(request_queue_t *q, struct bio * bio)
+ {
+ 	mddev_t *mddev = q->queuedata;
+@@ -664,7 +660,6 @@ static void close_sync(conf_t *conf)
  
- 		sz += sprintf(page + sz, "\n");
-@@ -3050,7 +3057,6 @@ int md_notify_reboot(struct notifier_blo
- 	if ((code == SYS_DOWN) || (code == SYS_HALT) || (code == SYS_POWER_OFF)) {
+ 	if (conf->barrier) BUG();
+ 	if (waitqueue_active(&conf->wait_idle)) BUG();
+-	if (waitqueue_active(&conf->wait_resume)) BUG();
  
- 		printk(KERN_INFO "md: stopping all md devices.\n");
--		return NOTIFY_DONE;
+ 	mempool_destroy(conf->r1buf_pool);
+ 	conf->r1buf_pool = NULL;
+@@ -802,7 +797,6 @@ static int end_sync_write(struct bio *bi
  
- 		ITERATE_MDDEV(mddev,tmp)
- 			if (mddev_trylock(mddev)==0)
+ 	if (atomic_dec_and_test(&r1_bio->remaining)) {
+ 		md_done_sync(mddev, r1_bio->master_bio->bi_size >> 9, uptodate);
+-		resume_device(conf);
+ 		put_buf(r1_bio);
+ 	}
+ 	atomic_dec(&conf->mirrors[mirror].rdev->nr_pending);
+@@ -829,7 +823,6 @@ static void sync_request_write(mddev_t *
+ 		 */
+ 		printk(IO_ERROR, bdev_partition_name(bio->bi_bdev), (unsigned long long)r1_bio->sector);
+ 		md_done_sync(mddev, r1_bio->master_bio->bi_size >> 9, 0);
+-		resume_device(conf);
+ 		put_buf(r1_bio);
+ 		return;
+ 	}
+@@ -881,7 +874,6 @@ static void sync_request_write(mddev_t *
+ 		printk(KERN_ALERT "raid1: sync aborting as there is nowhere to write sector %llu\n", 
+ 			(unsigned long long)r1_bio->sector);
+ 		md_done_sync(mddev, r1_bio->master_bio->bi_size >> 9, 0);
+-		resume_device(conf);
+ 		put_buf(r1_bio);
+ 		return;
+ 	}
+@@ -1021,7 +1013,7 @@ static int sync_request(mddev_t *mddev, 
+ 	atomic_inc(&conf->mirrors[disk].rdev->nr_pending);
+ 	spin_unlock_irq(&conf->device_lock);
+ 
+-	mirror = conf->mirrors + conf->last_used;
++	mirror = conf->mirrors + disk;
+ 
+ 	r1_bio = mempool_alloc(conf->r1buf_pool, GFP_NOIO);
+ 
+@@ -1032,6 +1024,7 @@ static int sync_request(mddev_t *mddev, 
+ 	r1_bio->mddev = mddev;
+ 	r1_bio->sector = sector_nr;
+ 	r1_bio->cmd = SPECIAL;
++	r1_bio->read_disk = disk;
+ 
+ 	bio = r1_bio->master_bio;
+ 	nr_sectors = RESYNC_BLOCK_SIZE >> 9;
+@@ -1155,6 +1148,8 @@ static int run(mddev_t *mddev)
+ 	conf->raid_disks = mddev->raid_disks;
+ 	conf->mddev = mddev;
+ 	conf->device_lock = SPIN_LOCK_UNLOCKED;
++	if (conf->working_disks == 1)
++		mddev->state |= (1 << MD_SB_CLEAN);
+ 
+ 	conf->resync_lock = SPIN_LOCK_UNLOCKED;
+ 	init_waitqueue_head(&conf->wait_idle);
