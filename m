@@ -1,39 +1,51 @@
-From: Jon Lewis <jlewis@lewis.org>
-Subject: Re: what is the best multi-SATA-controller-on-a-single-board out
- there?
-Date: Tue, 3 Aug 2004 13:45:46 -0400 (EDT)
+From: Frank van Maarseveen <frankvm@xs4all.nl>
+Subject: Re: RAID 5 questions
+Date: Tue, 3 Aug 2004 22:23:34 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.58.0408031341170.7852@web1.mmaero.com>
-References: <20040730234706.M12321@contactbda.com>
- <Pine.LNX.4.44.0407311045460.4528-100000@uplift.swm.pp.se>
- <20040801150258.M30882@contactbda.com> <1091382829.11770.14.camel@tinny.home.foo>
- <410E15EB.7030407@buttersideup.com> <Pine.LNX.4.58.0408021700230.7852@web1.mmaero.com>
- <410F52ED.9070403@buttersideup.com>
+Message-ID: <20040803202334.GB5148@janus>
+References: <1091325475.2374.11.camel@localhost> <20040801033109.GA23032@jim.sh> <410DD8AA.6060609@softers.net> <20040802060939.GA12472@jim.sh> <410DECC6.6040403@softers.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=iso-8859-15
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <410F52ED.9070403@buttersideup.com>
-To: Tim Small <tim@buttersideup.com>
-Cc: linux-raid@vger.kernel.org
+Content-Disposition: inline
+In-Reply-To: <410DECC6.6040403@softers.net>
+To: Jarmo =?iso-8859-15?B?SuRydmVucOTk?= <Jarmo.Jarvenpaa@softers.net>
+Cc: RAID Linux <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, 3 Aug 2004, Tim Small wrote:
+On Mon, Aug 02, 2004 at 10:27:02AM +0300, Jarmo J=E4rvenp=E4=E4 wrote:
+> Jim Paris wrote:
+>=20
+> >README.raid from lilo-22.5.9 (the latest version) states:
+> >
+> >"Only RAID1 is supported.  LILO may be used to boot a system
 
-> I'm using kernel.org 2.6.8rc2 (also used 2.6.5rc3), with libata on
-> Debian/Sarge (not that the distribution should matter, this is all
-> kernel side stuff) - both on Xeons, and Opterons, all filesystems are
+yep. and even that may go wrong.
 
-It matters to the extent that some of the distros like to use heavily
-patched kernels...so one distro's 2.4.x kernel may be quite different from
-another's.  So unless you build custom kernels from the kernel.org
-sources, kernel verion _and_ distro is more meaningful.
+> Hmm, I'm not sure how to convince you :-)
 
-It seems (from Maxtor's powermax util) that I do have at least one
-defective drive...so hopefully that's all the problem was.  I'm building
-an array now with the remaining 5 drives that passed the powermax tests.
+try running lilo with -v -v -v
 
-----------------------------------------------------------------------
- Jon Lewis                   |  I route
- Senior Network Engineer     |  therefore you are
- Atlantic Net                |
-_________ http://www.lewis.org/~jlewis/pgp for PGP public key_________
+Then you might see the BIOS drive number, geometry it assumes etc. You
+will probably see only _one_ disk and in that case your system boots
+by sheer luck.
+
+With -v -v -v I discovered why my system refused to boot from raid 1.
+It appears to actually boot from the first disk in the raid set, e.g:
+
+	md1 : active raid1 hdg1[1] hda1[0]
+				   ^^^^^^^
+
+This is mounted on /boot and lilo will boot from hda1 (bios disk 0x80).
+I had to reassemble the raid set in opposite order to get this because
+hdg is unbootable (lilo assumed bios drive 0x81). But maybe my lilo is
+old (21.4-4).
+
+--=20
+=46rank
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
