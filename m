@@ -1,77 +1,36 @@
-From: David Greaves <david@dgreaves.com>
+From: =?iso-8859-1?q?M=E5ns_Rullg=E5rd?= <mru@inprovide.com>
 Subject: Re: RAID5 - 2nd drive died whilst waiting for RMA
-Date: Sat, 13 Nov 2004 19:48:36 +0000
-Message-ID: <41966514.8000301@dgreaves.com>
-References: <200411121847.iACIlNN01272@www.watkins-home.com>
+Date: Sat, 13 Nov 2004 21:01:45 +0100
+Message-ID: <yw1xwtwpjz6e.fsf@ford.inprovide.com>
+References: <200411121847.iACIlNN01272@www.watkins-home.com> <41966514.8000301@dgreaves.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200411121847.iACIlNN01272@www.watkins-home.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Guy <bugzilla@watkins-home.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-OK, not great, but nothing has broken either.
+David Greaves <david@dgreaves.com> writes:
 
-So the reboot happened, the disks went in and got moved around:
-new drive->/dev/sdd1
-the machine hung complaining 'ata4 timed out' during dd if=sda of=sdd :(
-reboot, did it again and it worked fine ( - no errors? maybe it was 
-transient? anway...)
+> Now, Guy, your next step:
+> # mdadm --assemble --force /dev/sda1 /dev/sdb1 /dev/sdc1 /dev/hdb1
+> mdadm: /dev/sda1 does not appear to be an md device
 
-powerdown
-move sickly drive (sda) to new controller (new:sde)
-move new copy (sdd) to position 1 (new:sda)
-insert new spare disk (new:sdd)
+Sorry to butt in, but that command should, assuming the components are
+correct, read as
 
-of course, the partitions are 'fd' so boot produces:
-md: Autodetecting RAID arrays.
-md: invalid raid superblock magic on sdd1
-md: sdd1 has invalid sb, not importing!
-# that's fair, I just made a partition, never used, no sb
-md: autorun ...
-md: considering sde1 ...
-# hmm, ok, it's fd and has a superblock but should be marked faulty
-md: adding sde1 ...
-md: adding sdc1 ...
-md: adding sdb1 ...
-md: adding sda1 ...
-md: adding hdb1 ...
-md: created md0
-md: bind<hdb1>
-md: bind<sda1>
-md: bind<sdb1>
-md: bind<sdc1>
-md: export_rdev(sde1)
-# what does this mean? does it mean 'sb is marked faulty'?
-md: running: <sdc1><sdb1><sda1><hdb1>
-md: kicking non-fresh sda1 from array!
-# OK, so you recognise it as an md device but think it's dirty - good
-md: unbind<sda1>
-md: export_rdev(sda1)
-raid5: device sdc1 operational as raid disk 1
-raid5: device sdb1 operational as raid disk 2
-raid5: device hdb1 operational as raid disk 4
-raid5: not enough operational devices for md0 (2/5 failed)
-# as expected
+mdadm --assemble <raiddevice> --force /dev/sda1 /dev/sdb1 /dev/sdc1 /de=
+v/hdb1
 
+with <raiddevice> replaced by something like /dev/md0.
 
-Now, Guy, your next step:
-# mdadm --assemble --force /dev/sda1 /dev/sdb1 /dev/sdc1 /dev/hdb1
-mdadm: /dev/sda1 does not appear to be an md device
+--=20
+M=E5ns Rullg=E5rd
+mru@inprovide.com
 
-Oh.
-
-So the first thing I'm doing is to cleanly redo the dd_rescue from (now) 
-sde to sda
-
-Comments?
-
-David
-
-PS Guy, my ISP has blocked comcast.net due to excessive spam - he's 
-reconsidered and will unblock them 'soon' but for now I can only 
-apologise :(
-
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
