@@ -1,56 +1,78 @@
 From: Alvin Oga <aoga@Maggie.Linux-Consulting.com>
-Subject: Re: RAID backup - media
-Date: Fri, 4 Oct 2002 14:37:49 -0700 (PDT)
+Subject: Re: RAID backup
+Date: Fri, 4 Oct 2002 14:45:55 -0700 (PDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.3.96.1021004143424.10481A-100000@Maggie.Linux-Consulting.com>
-References: <1033735943.31839.12.camel@irongate.swansea.linux.org.uk>
+Message-ID: <Pine.LNX.3.96.1021004144054.10481B-100000@Maggie.Linux-Consulting.com>
+References: <20021004150752.B16727@flint.arm.linux.org.uk>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1033735943.31839.12.camel@irongate.swansea.linux.org.uk>
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Illtud Daniel <illtud.daniel@llgc.org.uk>, Effrem Norwood <enorwood@effrem.com>, Kanoalani Withington <kanoa@cfht.hawaii.edu>, Roy Sigurd Karlsbakk <roy@karlsbakk.net>, jbradford@dial.pipex.com, jakob@unthought.net, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org
+In-Reply-To: <20021004150752.B16727@flint.arm.linux.org.uk>
+To: Russell King <rmk@arm.linux.org.uk>
+Cc: "Dr. David Alan Gilbert" <gilbertd@treblig.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-hi ya alan
+hi ya
 
-yuppers... 
+mroe fun stuff
 
-those 320GB disks are not cheap?? but are floating around
+"drop tests" ... that person that tend to have "accidents" should be
+kept outof the lab and away from hardware
+	( ceo/cfo/managers dont wanna spend un-necessary $2K - $10k
+	( because somebody dropped it ... or dropped a screw in a running
+	( system
 
-- i use backups for "warm swap".... and dont care about it over time sorta
-  thing ... need to be able to keep TBs of data online as fast as possible
-  ( few minutes ) to restore a dead/hacked box..
-
-- for "fast turn around"... tapes have always been dayz of effort to
-  restore  and too much of a headache to keep the tapes and heads clean
-  and test it more rigorously than having to test disks 
-
-- you already implicitly trusts disks to hold your data .. till the disk
-  dies ... hopefully due to ball bearing/lubricant/heat failure etc
-
-fun stuff
+on the other hand... that clumbsy tech/engineer is purrfect ina
+testing lab or qa lab where they do require drop tests for "submarine"
+applications
 
 have fun
 alvin
 
-On 4 Oct 2002, Alan Cox wrote:
+- i never dropped a disks in 20 years... or mb or anything
+  importnat/expensive
 
-> On Fri, 2002-10-04 at 12:20, Alvin Oga wrote:
-> > we can build an 8-drive ( 120GB at $200ea )  or ( 160GB at $300>? each )
-> > 1U box...about 0.960 - 1.28 TB each backup server ( 1U ) for under $2,500 in parts
-> > +  cost of raid setup/testing is up to the user
-> > 	- am thinking the 1.6TB of storage for 10K lira(?) is too much
-> > 
-> > i prefer disks to backup data.. so that its always a semi-warm backup
-> > ( tapes have always been way tooo slow to find a file and to restore 
+- dropped lots of screws, screwdrivers into "turned off systems" while
+  working on it
+
+- dropped tape drives too and sometimes the tape drives itself ejects the
+  tapes too too fast
+	- clumbsy me for not being able to catch the 'flying tape" as
+	it ejects
+
+- a months worth of daily tapes ( we keep 30 days worth of tape )
+	takes up as much room as a 1U box.. 
+
+	-  a 1U box can hold about 3 months worth of compressed data
+	in our environment ... ( 3:1 compression on the average )
+
+
+On Fri, 4 Oct 2002, Russell King wrote:
+
+> On Fri, Oct 04, 2002 at 02:24:19PM +0100, Dr. David Alan Gilbert wrote:
+> > Not sure about that; DLT tapes are pretty bulky themselves; I think the
+> > difference between say a set of 4 DLT tapes and a single Maxtor 320 in
+> > caddy would be minimal.
 > 
-> The problem with disks is you still have to archive them somewhere, and
-> they are bulky. I also dont know what studies are available on the
-> degradation of stored disk media over time. 
+> The 4 DLT tapes would take up twice the room.
 > 
-> Capacity is not a problem, 3ware do a 12 channel sata card, with maxtor
-> drives that comes in at 320x12 = 3.5Tb
+> > As for stored media, I think Maxtor are quoting
+> > 1M hours MTTF - (I hate to think how you measure such a figure) - for
+> > the 320G, and that is probably longer than I'd trust either the tape or
+> > the drive to survive.
+> 
+> However, drive in caddy or no caddy, the accidental drop test would
+> probably be more favourable to the DLT tape surviving over the drive.
+> Physical accidents do happen.
+> 
+> -- 
+> Russell King (rmk@arm.linux.org.uk)                The developer of ARM Linux
+>              http://www.arm.linux.org.uk/personal/aboutme.html
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
 
