@@ -1,34 +1,33 @@
-From: "Henrik Lewander" <henrik@lewander.com>
-Subject: Re: messed up raid5 array
-Date: Wed, 26 May 2004 13:04:46 +0200
+From: <mk423@lw1.cc-computer.de>
+Subject: Re: Can't add or delete a device from raid 1
+Date: Wed, 26 May 2004 14:54:27 +0200 (CEST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <00de01c44311$6aa94640$0580a8c0@europe.ad.flextronics.com>
-References: <004001c44252$1845de00$7200a8c0@europe.ad.flextronics.com>
+Message-ID: <Pine.LNX.4.33.0405261443440.32533-100000@lw2.cc-computer.de>
+References: <001e01c442dd$e9636f30$6705a8c0@a30>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <001e01c442dd$e9636f30$6705a8c0@a30>
 To: linux-raid@vger.kernel.org
+Cc: me@heyjay.com
 List-Id: linux-raid.ids
 
-> One disk failed in my four disk raid5 array this morning. I think I messed
-> up a bit, anyway it ended with that I removed all disks from the raid
-array.
-> Now when I add them again they show up as spares and I have no main disks
-at
-> all. Is there a way to force the three remaining disks (excluding the
-faulty
-> one) to be an array again and not lose the current data? If I do --create,
-> mdadm warns me that they are already a part of md1, yes but just as
-spares!
-> If I let mdadm do --create, I suppose I lose all the data? What can I do?
+Hi!
 
-Replying to myself here... Can I do something like "mkraid --force" with
-mdadm? I don't have any raidtab and would prefer not to make one. I know
-about the -f flag but what I want to do is to not add the disks as spares, I
-want them back as the normal maindisks. The data on them should be OK, but I
-suppose some raid meta data is wrong?
+On Tue, 25 May 2004 me@heyjay.com wrote:
 
-Regards, Henrik
+> I'm trying to add a partition to a raid 1 set that I built with a "missing"
+> partition.  But mdadm won't let me add it to md0, or remove it
+>
+> platinum:~# cd /
+> platinum:/# mdadm /dev/md0 -r /dev/hda1
+> mdadm: hot remove failed for /dev/hda1: No such device or address
+> platinum:/# mdadm /dev/md0 -a /dev/hda1
+> mdadm: hot add failed for /dev/hda1: Invalid argument
+
+What do "mdadm --detail /dev/md0" and "mdadm --examine /dev/hda1"
+report?
+
+Regards,
+Martin
 
