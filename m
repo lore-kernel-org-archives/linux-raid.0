@@ -1,104 +1,98 @@
-From: Jesse Burkhardt <jesse@skybuilders.com>
-Subject: More: Fedora 2.0 - raid1 not working
-Date: Tue, 09 Nov 2004 17:14:25 -0500
-Message-ID: <41914141.6030108@skybuilders.com>
-References: <419115A5.4050905@skybuilders.com> <20041109192219.GA5822@middle.of.nowhere> <41911ACB.2070604@skybuilders.com> <20041109194127.GA17963@middle.of.nowhere>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: always dirty RAID5 arrays
+Date: Tue, 9 Nov 2004 17:27:10 -0500
+Message-ID: <200411092227.iA9MREN18155@www.watkins-home.com>
+References: <200411091603.24933.sransom@cv.nrao.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20041109194127.GA17963@middle.of.nowhere>
+In-Reply-To: <200411091603.24933.sransom@cv.nrao.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jurriaan <thunder7@xs4all.nl>
-Cc: linux-raid@vger.kernel.org
+To: sransom@nrao.edu, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-A little more info - this is excerpted from dmesg:
+Dirty does not indicate a re-sync is needed, just that changes have
+occurred.  If the array were shutdown incorrectly (like a crash) then on
+re-start a re-build of parity would be done.
 
-md: Autodetecting RAID arrays.
-md: autorun ...
-md: considering hdd3 ...
-md:  adding hdd3 ...
-md: hdd1 has different UUID to hdd3
-md:  adding hda3 ...
-md: hda1 has different UUID to hdd3
-md: created md1
-md: bind<hda3>
-md: bind<hdd3>
-md: running: <hdd3><hda3>
-md: kicking non-fresh hdd3 from array!
-md: unbind<hdd3>
-md: export_rdev(hdd3)
-md: personality 3 is not loaded!
-md :do_md_run() returned -22
-md: md1 stopped.
-md: unbind<hda3>
-md: export_rdev(hda3)
-md: considering hdd1 ...
-md:  adding hdd1 ...
-md:  adding hda1 ...
-md: created md0
-md: bind<hda1>
-md: bind<hdd1>
-md: running: <hdd1><hda1>
-md: kicking non-fresh hdd1 from array!
-md: unbind<hdd1>
-md: export_rdev(hdd1)
-md: personality 3 is not loaded!
-md :do_md_run() returned -22
-md: md0 stopped.
-md: unbind<hda1>
-md: export_rdev(hda1)
-md: ... autorun DONE.
-RAMDISK: Compressed image found at block 0
-VFS: Mounted root (ext2 filesystem).
-md: raid1 personality registered as nr 3
-md: Autodetecting RAID arrays.
-md: autorun ...
-md: considering hda1 ...
-md:  adding hda1 ...
-md:  adding hdd1 ...
-md: hda3 has different UUID to hda1
-md: hdd3 has different UUID to hda1
-md: created md0
-md: bind<hdd1>
-md: bind<hda1>
-md: running: <hda1><hdd1>
-md: kicking non-fresh hdd1 from array!
-md: unbind<hdd1>
-md: export_rdev(hdd1)
-raid1: raid set md0 active with 1 out of 2 mirrors
-md: considering hda3 ...
-md:  adding hda3 ...
-md:  adding hdd3 ...
-md: created md1
-md: bind<hdd3>
-md: bind<hda3>
-md: running: <hda3><hdd3>
-md: kicking non-fresh hdd3 from array!
-md: unbind<hdd3>
-md: export_rdev(hdd3)
-raid1: raid set md1 active with 1 out of 2 mirrors
-md: ... autorun DONE.
-md: Autodetecting RAID arrays.
-md: autorun ...
-md: considering hdd3 ...
-md:  adding hdd3 ...
-md: hdd1 has different UUID to hdd3
-md: md1 already running, cannot run hdd3
-md: export_rdev(hdd3)
-md: considering hdd1 ...
-md:  adding hdd1 ...
-md: md0 already running, cannot run hdd1
-md: export_rdev(hdd1)
-md: ... autorun DONE.
+For more details:
+    man md
 
-Thanks again.
+Guy
 
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Scott Ransom
+Sent: Tuesday, November 09, 2004 4:03 PM
+To: linux-raid@vger.kernel.org
+Cc: sransom@nrao.edu
+Subject: always dirty RAID5 arrays
+
+Hi All,
+
+On one of our servers we have 4 6-disk RAID5 arrays running.  Each of the 
+arrays was created using the following command:
+
+mdadm --create /dev/md3 --level=5 --verbose --force --chunk=128 \ 
+--raid-devices=6 /dev/sd[ijklmn]1
+
+After building and a resync (and a reboot and a resync...), the array looks 
+like this:
+
+--------------------------------------------
+spigot2  sransom 84: mdadm --detail /dev/md3
+/dev/md3:
+        Version : 00.90.00
+  Creation Time : Tue Sep 21 15:54:31 2004
+     Raid Level : raid5
+     Array Size : 1220979200 (1164.42 GiB 1250.28 GB)
+    Device Size : 244195840 (232.88 GiB 250.06 GB)
+   Raid Devices : 6
+  Total Devices : 6
+Preferred Minor : 3
+    Persistence : Superblock is persistent
+
+    Update Time : Sat Nov  6 10:58:12 2004
+          State : dirty
+ Active Devices : 6
+Working Devices : 6
+ Failed Devices : 0
+  Spare Devices : 0
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+           UUID : 264b9069:96d7a1a6:d3b17be5:23fa47ce
+         Events : 0.30
+
+    Number   Major   Minor   RaidDevice State
+       0       8      129        0      active sync   /dev/sdi1
+       1       8      145        1      active sync   /dev/sdj1
+       2       8      161        2      active sync   /dev/sdk1
+       3       8      177        3      active sync   /dev/sdl1
+       4       8      193        4      active sync   /dev/sdm1
+       5       8      209        5      active sync   /dev/sdn1
+-----------------------------------------------------------------
+
+
+Notice that the State is "dirty".  If we reboot, the arrays are in a dirty 
+status and always need to resync.  Any idea why would this be?  (I'm 
+running XFS on the RAIDs and am using a slightly modified RH9.0 kernel:  
+2.4.24aa1-xfs)
+
+Thanks for the help,
+
+Scott
 
 -- 
-
- Jesse Burkhardt, Cambridge MA
- jesse@skybuilders.com  (w) 617-876-5680
- aerogoose.com          (h) 617-354-5523
+Scott M. Ransom            Address:  NRAO
+Phone:  (434) 296-0320               520 Edgemont Rd.
+email:  sransom@nrao.edu             Charlottesville, VA 22903 USA
+GPG Fingerprint: 06A9 9553 78BE 16DB 407B  FFCA 9BFA B6FF FFD3 2989
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
