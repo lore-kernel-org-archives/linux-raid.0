@@ -1,110 +1,76 @@
-From: Carl-Daniel Hailfinger <c-d.hailfinger.kernel.2004@gmx.net>
-Subject: Re: [RFC] [DRAFT] [udev PATCH] First attempt at vendor RAID support
- in 2.6
-Date: Sat, 17 Apr 2004 19:35:40 +0200
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <40816AEC.6020309@gmx.net>
-References: <Pine.LNX.4.40.0404151458450.30892-100000@jehova.dsm.dk> <40803C61.503@gmx.net>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: mdadm -A -s and a mirror of two stripes
+Date: Sat, 17 Apr 2004 18:18:28 -0400
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <200404172218.i3HMIWQ24208@dns1.watkins-home.com>
+References: <Pine.LNX.4.58.0404170145320.7026@potato.cts.ucla.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <40803C61.503@gmx.net>
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Cc: Thomas Horsten <thomas@horsten.com>, medley@lists.infowares.com, linux-hotplug-devel@lists.sourceforge.net, Wilfried Weissmann <Wilfried.Weissmann@gmx.at>, Jeff Garzik <jgarzik@pobox.com>, Bartlomiej Zolnierkiewicz <B.Zolnierkiewicz@elka.pw.edu.pl>, Greg KH <greg@kroah.com>, Linux RAID Mailing List <linux-raid@vger.kernel.org>, Martins Krikis <mkrikis@yahoo.com>, ataraid-list@redhat.com, linux-scsi@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.58.0404170145320.7026@potato.cts.ucla.edu>
+To: 'Chris Stromsoe' <cbs@cts.ucla.edu>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-[crossposting this to hopefully relevant lists]
-Hi,
+I took a quick look.  I think this is the issue.
+Your device line does not have md0
 
-since on one side ATARAID support has vanished from 2.6 and on the other
-side some parties are pushing for an enhanced MD driver in the kernel, why
- don't we do the setup and metadata handling of all those types of RAID in
-userspace?
+Change:
+	DEVICE /dev/sd[abcdefghij]1 /dev/md[12]
+To:
+	
+	DEVICE /dev/sd[abcdefghij]1 /dev/md[012]
 
-I got positive feedback by private mail from several kernel developers for
-the last incarnations of raiddetect, so if you disagree, speak up now.
-
-Raiddetect is a program to find vendor software RAID superblocks, analyze
-them for validity, group them by RAID vendor and (later on) set them up
-via MD/DM. It is small (~35kB compiled statically against klibc) and
-designed to be run from initrd/initramfs.
-
-raiddetect now supports the following metadata formats:
--Promise RAID
--Highpoint RAID
--Medley RAID
--Intel RAID
-
-If you want support for another metadata format, please tell me which and
-I'll try to add it. Patches are preferred ;-) My current wishlist is:
-- Adaptec ASR HostRAID
-- DDF RAID
-
-Hot-add and hot-remove features can be added easily if raiddetect is
-called by an udev rule on block device removal/insertion. If raiddetect
-stays loaded into memory or is allowed to save its state, hotplug events
-will not trigger any access to devices not related to that particular RAID
-array.
-
-It seems that there are some host adapter drivers out there implementing
-their own RAID engine which could be consolidated into a single RAID
-"library" instead. If you know about such drivers, please speak up.
-
-The following issues remain still to be sorted out:
-
-Carl-Daniel Hailfinger wrote:
-
-> Greg: Would you accept this patch into your udev package?
-> 
-> Thomas Horsten wrote:
-> 
->>On Thu, 15 Apr 2004, Carl-Daniel Hailfinger wrote:
->>
->>
->>>What I need:
->>>- Criticism of coding style/ missing abstraction
-> 
-> 
-> I got a mail from Barlomiej Zolnierkiewicz where he suggested to split the
-> vendor dependent code out of raiddetect.c. This will happen in one of the
-> next revisions.
-
-This is on hold until I receive feedback from Greg K-H whether this will
-be accepted into udev or not.
+Guy
 
 
->>>- People checking the numerous FIXMEs
-> 
-> 
-> I now have the following FIXMEs (aka "I have no idea about it"):
-> - 5 FIXMEs in the Medley RAID code. Thomas, could you comment once you're
-> back?
-> - 3 FIXMEs in the Highpoint RAID code. Wilfried, could you please take a
-> look at them?
-> - 2 FIXMEs in the Promise RAID code. I will work on those myself.
-> 
-> - some generic FIXMEs:
->   - Is the sector size of a harddisk always 512 bytes?
->   - Is /sys/block/*/size always in 512-byte units?
->   - Are there controllers out there which occupy more than one PCI device?
->   - How can I find out if a block device under /sys/block is a disk?
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Chris Stromsoe
+Sent: Saturday, April 17, 2004 4:55 AM
+To: linux-raid@vger.kernel.org
+Subject: mdadm -A -s and a mirror of two stripes
 
-Do you have an idea about the generic FIXMEs listed above?
+I've got two stripes that were set up as
 
+mdadm -C /dev/md1 --level=stripe -n 5 \
+    /dev/sda1 /dev/sdb1 /dev/sdc1 /dev/sdd1 /dev/sde1
+mdadm -C /dev/md2 --level=stripe -n 5 \
+    /dev/sdf1 /dev/sdg1 /dev/sdh1 /dev/sdi1 /dev/sdj1
 
->>>- Help with sorting out who owns which copyrights
-> 
-> This is still a _big issue_.
+and a mirror that was set up by doing
 
-Since the patch is already too big (~42kB) for some mailing lists, please
-get the latest version from
-http://www.hailfinger.org/carldani/linux/patches/raiddetect/
-
-The patch is against the latest udev bitkeeper tree and applies fine to
-udev-024 if you prefer working with officially released versions.
+mdadm -C /dev/md0 --level=mirror -n 2 /dev/md1 /dev/md2
 
 
-Regards,
-Carl-Daniel
+My /etc/mdadm/mdadm.conf reads
+
+DEVICE /dev/sd[abcdefghij]1 /dev/md[12]
+ARRAY /dev/md1 level=raid0 num-devices=5
+UUID=75892ebc:b52333a4:b77cbdca:9d50c65d
+devices=/dev/sda1,/dev/sdb1,/dev/sdc1,/dev/sdd1,/dev/sde1
+ARRAY /dev/md2 level=raid0 num-devices=5
+UUID=c7547e18:48952f89:49893143:e477c407
+devices=/dev/sdf1,/dev/sdg1,/dev/sdh1,/dev/sdi1,/dev/sdj1
+ARRAY /dev/md0 level=raid1 num-devices=2
+UUID=26e3111e:90a3407d:341ed800:1f431f24 devices=/dev/md1,/dev/md2
+
+
+mdadm -A -s starts md1, then md2, but doesn't start md0.  I have to run it
+a second time to get md0 to start.  The first run prints out:
+
+mdadm: /dev/md1 has been started with 5 drives.
+mdadm: /dev/md2 has been started with 5 drives.
+mdadm: no devices found for /dev/md0
+
+Is that a bug or a feature?  mdadm is v1.4.0.
+
+
+-Chris
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 
