@@ -1,107 +1,126 @@
-From: "Tom 'spot' Callaway" <tcallawa@redhat.com>
-Subject: sparc64 raid issues
-Date: 18 Nov 2002 16:56:49 -0500
-Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1037656609.9166.60.camel@zorak.rdu.redhat.com>
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: RFC - new raid superblock layout for md driver
+Date: Wed, 20 Nov 2002 15:09:18 +1100
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <15835.2798.613940.614361@notabene.cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I'm having an odd problem with RAID 0 on Linux/sparc64. My kernel is
-2.4.20-rc1.
 
-I created a RAID 0 partition with two identical partitions, /dev/hda2
-and /dev/hdb2, then set it as /, formatted ext3 (this was all done in
-the Aurora SPARC Linux installer (RHL 7.3 equivalent) with parted). All
-seems to go properly.
+The md driver in linux uses a 'superblock' written to all devices in a
+RAID to record the current state and geometry of a RAID and to allow
+the various parts to be re-assembled reliably.
 
-Upon rebooting, the machine refuses to boot.
+The current superblock layout is sub-optimal.  It contains a lot of
+redundancy and wastes space.  In 4K it can only fit 27 component
+devices.  It has other limitations.
 
-Here are the md config settings for the default Aurora kernel:
+I (and others) would like to define a new (version 1) format that
+resolves the problems in the current (0.90.0) format.
 
-CONFIG_MD=y
-CONFIG_BLK_DEV_MD=m
-CONFIG_MD_LINEAR=m
-CONFIG_MD_RAID0=m
-CONFIG_MD_RAID1=m
-CONFIG_MD_RAID5=m
-CONFIG_MD_MULTIPATH=m
+The code in 2.5.lastest has all the superblock handling factored out so
+that defining a new format is very straight forward.
 
- Here is the relevant section of dmesg:
+I would like to propose a new layout, and to receive comment on it..
 
-Red Hat nash version 3.3.10 starting
-Loading md module
-md: md driver 0.90.0 MAX_MD_DEVS=256, MD_SB_DISKS=27
-Loading raid0 module
-md: raid0 personality registered as nr 2
-Loading lbd module
-Journalled Block Device driver loaded
-Loading ext3 module
-Mounting /proc filesystem
-Creating root device
-raidautorun: RAID_AUTORUN failed: 19
-Mounting root filesystem
-EXT3-fs: unable to read superblock
-mount: error 22 mounting ext3
-pivotroot: pivot_root(/sysroot, /sysroot/initrd) failed: 2
+My current design looks like:
+	/* constant array information - 128 bytes */
+    u32  md_magic
+    u32  major_version == 1
+    u32  feature_map     /* bit map of extra features in superblock */
+    u32  set_uuid[4]
+    u32  ctime
+    u32  level
+    u32  layout
+    u64  size		/* size of component devices, if they are all
+			 * required to be the same (Raid 1/5 */
+    u32  chunksize
+    u32  raid_disks
+    char name[32]
+    u32  pad1[10];
 
-At this point, I booted the CD into rescue mode to try to figure out
-what happened, and that kernel gave me a slightly more interesting
-dmesg. 
+	/* constant this-device information - 64 bytes */
+    u64  address of superblock in device
+    u32  number of this device in array  /* constant over reconfigurations */
+    u32  device_uuid[4]
+    u32  pad3[9]
 
-The Aurora rescue kernel has the following MD config settings:
+	/* array state information - 64 bytes */
+    u32  utime
+    u32  state    /* clean, resync-in-progress */
+    u32  sb_csum
+    u64  events
+    u64  resync-position	/* flag in state if this is valid)
+    u32  number of devices
+    u32  pad2[8]
 
-CONFIG_MD=y
-CONFIG_BLK_DEV_MD=y
-CONFIG_MD_LINEAR=m
-CONFIG_MD_RAID0=m
-CONFIG_MD_RAID1=m
-CONFIG_MD_RAID5=m
-CONFIG_MD_MULTIPATH=m
+	/* device state information, indexed by 'number of device in array' 
+	   4 bytes per device */
+    for each device:
+      u16 position     /* in raid array or 0xffff for a spare. */
+      u16 state flags  /* error detected,  in-sync */
 
-Here is the md section from its dmesg:
 
-md: autorun...
-md: considering hdb2...
-md:   adding hdb2 ...
-md:   adding hda2 ...
-md: created md0
-md: bind<hda2,1>
-md: bind<hdb2,2>
-md: running: <hdb2><hda2>
-md: hdb2's event counter: 00000004
-md: hda2's event counter: 00000004
-md: personality 2 is not loaded!
-md :do_md_run() returned -22
-md: md0 stopped
-md: unbind<hdb2,1>
-md: export_rdev(hdb2)
-md: unbind<hda2,0>
-md: export_rdev(hda2)
+This has 128 bytes for essentially constant information about the
+array, 64 bytes for constant information about this device, 64 bytes
+for changable state information about the array, and 4 bytes per
+device for state information about the devices.  This would allow an
+array with 192 devices in a 1K superblock, and 960 devices in a 4k
+superblock (the current size).
 
-I double checked to make sure that raid0.o is in both initrds, and it
-is.
+Other features:
+   A feature map instead of a minor version number.
+   64 bit component device size field.
+   field for storing current position of resync process if array is
+       shut down while resync is running.
+   no "minor" field but a textual "name" field instead.
+   address of superblock in superblock to avoid misidentifying
+      superblock. e.g. is it in a partition or a whole device.
+   uuid for each device.  This is not directly used by the md driver,
+      but it is maintained, even if a drive is moved between arrays, 
+      and user-space can use it for tracking devices.
 
-Now, I figure either one of two things is happening:
+md would, of course, continue to support the current layout
+indefinately, but this new layout would be available for use by people
+who don't need compatability with 2.4 and do want more than 27 devices
+etc. 
 
-1. I'm building something wrong in my Aurora kernels, e.g. the md
-modules need to be compiled in to work.
-2. There's a bug in the RAID drivers on sparc64.
+To create an array with the new superblock layout, the user-space
+tool would write directly to the devices, (like mkfs does) and then
+assemble the array.  Creating an array using the ioctl interface will
+still create an array with the old superblock.
 
-But I'm no RAID expert. Any assistance is appreciated.
+When the kernel loads a superblock, it would check the major_version
+to see which piece of code to use to handle it.
+When it writes out a superblock, it would use the same version as was
+read in (of course).
 
-~spot
----
-Tom "spot" Callaway <tcallawa(a)redhat*com> Red Hat Sales Engineer
-Sair Linux and GNU Certified Administrator (LCA)
-Red Hat Certified Engineer (RHCE)
-GPG: D786 8B22 D9DB 1F8B 4AB7  448E 3C5E 99AD 9305 4260
+This superblock would *not* support in-kernel auto-assembly as that
+requires the "minor" field that I have deliberatly removed.  However I
+don't think this is a big cost as it looks like in-kernel
+auto-assembly is about to disappear with the early-user-space patches.
 
-The words and opinions reflected in this message do not necessarily
-reflect those of my employer, Red Hat, and belong solely to me.
+The interpretation of the 'name' field would be up to the user-space
+tools and the system administrator.
+I imagine having something like:
+	host:name
+where if "host" isn't the current host name, auto-assembly is not
+tried, and if "host" is the current host name then:
+  if "name" looks like "md[0-9]*" then the array is assembled as that
+    device
+  else the array is assembled as /dev/mdN for some large, unused N,
+    and a symlink is created from /dev/md/name to /dev/mdN
+If the "host" part is empty or non-existant, then the array would be
+assembled no-matter what the hostname is.  This would be important
+e.g. for assembling the device that stores the root filesystem, as we
+may not know the host name until after the root filesystem were loaded.
 
-"Immature poets borrow, mature poets steal." --- T. S. Eliot
+This would make auto-assembly much more flexable.
 
+Comments welcome.
+
+NeilBrown
