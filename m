@@ -1,40 +1,38 @@
-From: Mike Fedyk <mfedyk@matchmail.com>
-Subject: Re: Extend raid 5
-Date: Sun, 11 Jan 2004 18:13:35 -0800
+From: Sharif Islam <mislam@ux1.cso.uiuc.edu>
+Subject: Array Size
+Date: Sun, 11 Jan 2004 21:48:39 -0600 (CST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040112021335.GF17845@matchmail.com>
-References: <1704458665.20040112011155@gmx.de>
+Message-ID: <Pine.GSO.4.31.0401112145170.19340-100000@staff1.cso.uiuc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1704458665.20040112011155@gmx.de>
-To: buliwyf <buliwyf@gmx.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Jan 12, 2004 at 01:11:55AM +0100, buliwyf wrote:
-> Hello
-> 
-> I have the following problem.
-> I have set up a Linux Software Raid 5 with 4 160GB Disks.
-> This works well. Now i run out of Disk Space and want to add another
-> 160 GB Disk on the fly. Is this possible without loosing Data?
+I have 6 IDE hard drives, each 120 GB.
+I am bit confused by the reported array size.
 
-No, the raid format splits the raid stripes sequencially between the drives
-available in the array.  So adding an extra online disk would really mess up
-the formatting of the array, and therefore isn't allowed.
+# mdadm -D /dev/md0
+/dev/md0:
+        Version : 00.90.00
+  Creation Time : Fri Jan  9 13:52:20 2004
+     Raid Level : linear
+     Array Size : 703324416 (670.74 GiB 720.25 GB)
 
-There really isn't a way to get the redundancy of raid and the size addition
-capabilities of LVM when you only want to add one disk.
+[....]
 
-If you had lvm on top of raid, you could add that one disk to your lvm set,
-but it wouldn't be redundant unless you added two disks and added a raid1
-array to your lvm set.
+# df -h
+Filesystem            Size  Used Avail Use% Mounted on
+/dev/hda1              26G  1.2G   23G   5% /
+/dev/hda5             2.6G   33M  2.4G   2% /tmp
+/dev/hda3             3.9G   59M  3.6G   2% /var
+/dev/md0              661G   33M  627G   1% /ppa
 
-I'd also suggest you get an extra drive as a spare for your raid5 array.
 
-I'd suggest you add the drive as a seperate filesystem until you can setup
-your array with lvm on raid.
+Shouldn't the above be ~720GB?
 
-Mike
+Thanks.
+
+-Sharif
+
+
