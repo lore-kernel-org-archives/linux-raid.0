@@ -1,28 +1,70 @@
-From: "nickolas" <mmica1li@hotmail.com>
-Subject: Ultimate Internet CAS1N0! t-bone roym
-Date: Wed, 28 Apr 2004 03:54:46 GMT
+From: Don Jessup <donj@asaca.com>
+Subject: RAID5 temperorary loss two disk
+Date: Wed, 28 Apr 2004 07:28:49 -0700 (PDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1083124486-28900__49774.7496505783$1083149437@excite.com>
-Content-Type: text/plain;
+Message-ID: <20040428142849.68073.qmail@web14525.mail.yahoo.com>
+References: <408D0FF0.5000608@uni-mainz.de>
+Reply-To: donj@asaca.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-kernel@vger.kernel.org
+In-Reply-To: <408D0FF0.5000608@uni-mainz.de>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Come and play at the world's PREMIvERE ONLINmE CASsINO!
-We are happy to offer you, in an elegant atmosphere, a 50% BONUnS for YOUR FIRST DEPOsSIT as a New Player.
-
-Sign up now! Don't wait!
-
-http://www.casino-4-free.com/_e4faa55afa1972493c43ac8a3f66f869/
 
 
-We'll automatically CREDIuT your account with a 50% BONUrS of extra chips, to wager in our CASIeNO.
-Don't hesiutate and try your luck!
+   I have RAID5 volume that has two disk that have been marked as failed.
+   I believe this happen do to loss of communication with the disk. NOT because
+   of a total disk failure. I assume if I can get the superblocks back into
+    a good state I can reassemble the RAID5 and try to read what data I can
+    off the volume.  Does anyone know how to force RAID5 superblocks
+    into a state so I can do reads from the volume?   
+   I really need help on this.  By the way the kernel version is 2.4.22.
 
-CLICeK HERaE!
+    Thank You
+  
 
-http://www.casino-4-free.com/_e4faa55afa1972493c43ac8a3f66f869/
+--- Dominik Kubla <dominik.kubla@uni-mainz.de> wrote:
+> christophe varoqui wrote:
+> 
+> >>Unfortunately very little effort seems to be spent on documenting the
+> features of device-mapper and how to use them. I originally intended to use
+> DM, but since i could not find any information on how to configure mirrored
+> multipath devices i decided against it.
+> >>
+> >>What is the word on MD and DM? I miss some sort of road map and a general
+> overview (preferrably with executive summary). (I am willing to write one if
+> i can find/get the necessary information.)
+> >>
+> > 
+> > I'm quite fond of my docs on multipath with the device-mapper subsystem.
+> > You can find them at http://christophe.varoqui.free.fr
+> > 
+> > Hope it helps.
+> > 
+> > regards,
+> > cvaroqui
+> > 
+> 
+> Excellent! Thanks a lot!
+> 
+> Dominik
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
+> 
+> 
 
 
-
-dougie corrado lucas god bfi septembe director canela pisces bull pisces chevy chiquita florida blowfish johnson chiquita t-bone love jamaica mikael sally gray tintin jan charlott
+=====
+Don Jessup
+Asaca/Shibasoku Corp. of America
+400 Corporate Circle, Unit G
+Golden, CO  80401
+303-278-1111 X232
+donj@asaca.com
+http://www.asaca.com
