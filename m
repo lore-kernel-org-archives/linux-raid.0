@@ -1,33 +1,47 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: small patches to mdadm
-Date: Mon, 6 Sep 2004 14:47:48 +1000
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH md 1 of 2] Add interface to md driver for userspace monitoring of events.
+Date: Mon, 6 Sep 2004 16:02:33 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16699.60404.552366.954950@cse.unsw.edu.au>
-References: <20040825072235.GB5851@percy.comedia.it>
-	<16686.39118.516906.365004@cse.unsw.edu.au>
-	<20040830130904.GA1763@percy.comedia.it>
+Message-ID: <20040906140233.GB20941@lst.de>
+References: <20040903122034.15346.patches@notabene> <E1C33nX-00040i-9v@notabene.cse.unsw.edu.au> <20040903031920.11e31d3f.akpm@osdl.org> <16699.47090.307180.958993@cse.unsw.edu.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Luca Berra on Monday August 30
-To: Luca Berra <bluca@comedia.it>
-Cc: linux raid <linux-raid@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <16699.47090.307180.958993@cse.unsw.edu.au>
+To: Neil Brown <neilb@cse.unsw.edu.au>
+Cc: Andrew Morton <akpm@osdl.org>, linux-raid@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 List-Id: linux-raid.ids
 
-On Monday August 30, bluca@comedia.it wrote:
-> On Fri, Aug 27, 2004 at 12:13:34PM +1000, Neil Brown wrote:
-> >They'll both be in the next release.
-> thanks a lot!
-> here is another patch for mdassemble.
-> 1) add raid6 and raid10
-> 2) add support for the auto=... option.
-> the auto= can be disabled in the Makefile, allowing users to save about
-> 5k (on x86).
+On Mon, Sep 06, 2004 at 11:05:54AM +1000, Neil Brown wrote:
+> > Christoph points out that this is fairly wild procfs abuse.  We want to be
+> > moving away from that sort of thing, not adding to it.
+> 
+> I guess it depends on what you mean by "wild procfs abuse"...
+> Given that /proc/mdstat already exists it doesn't seem too
+> unreasonable to add a little functionality to it.  How much does it hurt?
 
-Thanks.  
-I redid the auto= stuff.  I moved mddev_open into a separate file.
+poll on procfs is defintily abuse, even in categories of the use procfs
+every times.
 
-It'll be in the next mdadm.
+> > Is it possible to use rml's new event stuff from rc1-mm3's
+> > kernel-sysfs-events-layer.patch?  Or a bare netlink interface?  Or
+> > raidfs?
+> 
+> sysfs:  
+>   Probably.  I would like to improve sysfs support for md but I
+>   haven't taken the plunge yet to figure out how it all works.
+>   kevents may well be ok, but as you may need to handle
+>   multipath-failed events in times if high memory pressure, and need
+>   to handle it before pressure can be relieved, I prefer to minimise
+>   the number of kmallocs needed to get the event to userspace.
+> 
+> bare netlink:
+>   Probably perter sysfs... Funny, but I remember reading a comment in
+>   the code (2.4 I think, ages ago) about netlink being deprecated or
+>   something like that, so I never bothered looking at it.  I wonder
+>   what it meant.
 
-NeilBrown
+netlink isn't deprecated, netlink_dev (aka netlink as chardevice nodes)
+is.
+
