@@ -1,31 +1,29 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Problems with RAID1 using SATA disks.
-Date: Wed, 12 May 2004 18:09:44 +0100
+From: "Eric Wood" <eric@interplas.com>
+Subject: Re: Sync rates?
+Date: Wed, 12 May 2004 14:04:43 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040512180944.A31062@infradead.org>
-References: <40A255D5.3090602@acm.org>
+Message-ID: <043b01c4384b$9abdd010$b100000a@M145Primary>
+References: <00a401c4339e$7f86b340$6705a8c0@a30> <yw1xsmede4hk.fsf@kth.se> <409A94BD.40207@steeleye.com> <00cb01c433a3$64865eb0$6705a8c0@a30>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <40A255D5.3090602@acm.org>; from stratus@acm.org on Wed, May 12, 2004 at 01:50:29PM -0300
-To: Gustavo Franco <stratus@acm.org>
-Cc: linux-raid@vger.kernel.org, linux-xfs@oss.sgi.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, May 12, 2004 at 01:50:29PM -0300, Gustavo Franco wrote:
-> I've already reported[0] my problem on Apr 12, with few details on
-> lkml.Since then, only Steve Lord (xfs) have replied to me writing that
-> Christoph was looking into it.I'll explain my problem here again, since
-> with my new tests i can see clearly that it isn't a xfs problem.I just don't
-> known if it's a hardware, software raid or libata problem.
+----- Original Message ----- >
+> platinum:~# cat /proc/sys/dev/raid/speed_limit_min
+> 1000
+> platinum:~# cat /proc/sys/dev/raid/speed_limit_max
+> 200000
+> 
+> Are these acceptable?
+> 
+> Jay
 
-The thing at [0] certainly is not a raid problem.  Most likely it's a
-XFS problem although there's a small but non-zero chance that either
-the VFS or nfsd are at fault.  I currently have a bunch of more important
-issue on my plate, but for now the patch at:
+# echo -n 500000 > /proc/sys/dev/raid/speed_limit_max
 
-	http://oss.sgi.com/bugzilla/attachment.cgi?id=108&action=view
+That'll speed it up.
 
-should fix it at the cost of slower deletions.
 
