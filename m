@@ -1,29 +1,33 @@
-From: Tim Small <tim@buttersideup.com>
-Subject: Re: Definition of hotswap, was 1x 3ware controllers vs. 2x 3ware
- controllers
-Date: Tue, 03 Aug 2004 12:55:11 +0100
+From: Nick Maynard <nick.maynard@alumni.doc.ic.ac.uk>
+Subject: Re: raidreconf
+Date: Tue,  3 Aug 2004 13:55:57 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <410F7D1F.90609@buttersideup.com>
-References: <Pine.LNX.4.44.0408010858370.7382-100000@uplift.swm.pp.se>	 <Pine.LNX.4.56.0408010804370.6442@lion.drogon.net>	 <Pine.LNX.4.58.0408021554070.7168@taurus.cesta.com> <1091498700.18467.286.camel@tinny.home.foo>
+Message-ID: <1091537757.410f8b5da3dee@www.tastycake.net>
+References: <1091196159.410a54ff91240@www.tastycake.net> <410CC5BF.4050600@wasp.net.au> <1091363336.410ce208494b0@www.tastycake.net> <410CE664.2070705@wasp.net.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1091498700.18467.286.camel@tinny.home.foo>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <410CE664.2070705@wasp.net.au>
+To: Brad Campbell <brad@wasp.net.au>
+Cc: RAID Linux <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Scott T. Smith wrote:
+> I certainly have played with various mods to that code but not managed to
+> turn up anything reliable yet. I did have it converting raid-0 and raid-5 to
+> raid-6 at one stage
+That was what I read about...
 
->This link seems to indicate "hot swap" means telling the machine you're
->going to remove the device, and then removing the device.  To me, that's
->not really hot swapping; I would prefer to be able to just yank to drive
->and let the OS figure it out itself.
->
->What is the common industry definition of hot swapping?
->  
->
-I'd say the most common definition is the ability to swap-out a failed 
-disk whilst power is connected to the system, and the OS remains up - 
-sometimes informing the controller, sometimes not..
+> and I got all excited about that, but when I slightly altered the
+configuration
+> it all came crashing down. Then I dropped the disk and I really just chucked
+> all my toys out of the pram and went back to doing anything other than playing
+> with hard disks. I have yet to pick up another disk and get back into it.
+*chuckle* Right - I can understand that ;-)
 
+Righty - raidtools-1.00.3.tar.gz it is.  Thanks for the assitance.
+
+--
+
+Nick Maynard
+nick.maynard@alumni.doc.ic.ac.uk
