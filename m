@@ -1,63 +1,48 @@
-From: Jens Benecke <jens-dated-1092049816.9085e9@spamfreemail.de>
-Subject: Re: Q: RAID-1 w/2x160GB, ReiserFS, Debian "woody",
-	homebrew 2.4.25 kernel
-Date: Wed, 4 Aug 2004 13:10:12 +0200
+From: Alvin Oga <aoga@ns.Linux-Consulting.com>
+Subject: Re: Q: RAID-1 w/2x160GB, ReiserFS, Debian 'woody', homebrew 2.4.25 kernel
+Date: Wed, 4 Aug 2004 04:12:28 -0700 (PDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200408041310.12982.jens@spamfreemail.de>
-References: <Pine.LNX.4.44.0408041058470.7382-100000@uplift.swm.pp.se>
+Message-ID: <Pine.LNX.3.96.1040804040733.28482A-100000@Maggie.Linux-Consulting.com>
+References: <200408041129.44767.m.watts@eris.qinetiq.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44.0408041058470.7382-100000@uplift.swm.pp.se>
-Content-Disposition: inline
-To: Mikael Abrahamsson <swmike@swm.pp.se>
-Cc: linux-raid@vger.kernel.org
+In-Reply-To: <200408041129.44767.m.watts@eris.qinetiq.com>
+To: Mark Watts <m.watts@eris.qinetiq.com>
+Cc: linux-raid@vger.kernel.org, Robin Bowes <robin-lists@robinbowes.com>
 List-Id: linux-raid.ids
 
-Am Mittwoch, 4. August 2004 11:00 schrieb Mikael Abrahamsson:
-
-> On Wed, 4 Aug 2004, Jens Benecke wrote:
-> > The goal is to have as "stress free" a system as possible - i.e. wi=
-th
-> > as little manual configuration, and in event of emergencies, as lit=
-tle
-> > work to do, as possible.
->
-> You probably should go for hardware RAID1 instead, this will present =
-the
-> drive as a single drive to the OS and will handle all failure scenari=
-os,
-> you will not be hindered by fixing LILO to boot etc. Yes, it'll cost =
-a
-> bit more but if your goal is simplicity and carefree running, this is
-> probably the best way.
-
-Hi Mikael,
-
-thanks for your answer. What hardware RAID1 options would I have here t=
-hat=20
-are somewhat affordable? I see 3ware 2-drive RAID controllers for =A412=
-0.-=20
-here, and Promise UDMA for =A460.-
-
-I hear Promise only offers binary drivers and is only "software RAID", =
-is=20
-the 3ware solution worth the extra =A460 (less hassle and more=20
-compatbility)?
 
 
-Thanks!
+On Wed, 4 Aug 2004, Mark Watts wrote:
 
---=20
-Dipl.-Ing. Jens Benecke
-http://www.hitchhikers.de - Europas kostenlose Mitfahrzentrale seit 199=
-8
-http://www.rb-hosting.de - Webhosting mit Extras - PHP ab =A49 - SSH ab=
- =A419
-http://www.spamfreemail.de - 100% saubere Postf=E4cher, garantiert!
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Talking of partitioning several disks the same, is there an easy way to 
+> automate this?
+
+# imagine the sequence of the characters you type to fdisk
+echo n
+echo p
+echo 1
+echo 1
+echo +256M
+.....
+
+and run that script for each new unpartitioned/virgin /dev/hda disk ..
+
+	fdisk.automated.sh | fdisk /dev/hda
+
+sample partition script:
+	http://linux-consulting.com/Boot/Linux-1U/clone.suse-8.2.fdisk.sh1
+
+sample cloning script:
+	... tar ... onto target disk
+
+	http://linux-consulting.com/Boot/Linux-1U/clone.suse-8.2.sh
+
+works good when you're doing 10's, 100's of identical disks ... or 
+same partition scheme ...
+
+c ya
+alvin
+
+
