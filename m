@@ -1,44 +1,69 @@
-From: ptb@lab.it.uc3m.es (Peter T. Breuer)
-Subject: Re: RAID1 & 2.6.9 performance problem
-Date: Mon, 17 Jan 2005 17:46:30 +0100
-Message-ID: <6o6tb2-cj2.ln1@news.it.uc3m.es>
-References: <41EBD827.80701@pipi.ma.cx> <Pine.LNX.4.56.0501171528010.21510@lion.drogon.net> <1105977081.15184.12.camel@linux.local>
+From: Andy Smith <andy@lug.org.uk>
+Subject: Is this hdparm -t output correct? (was Re: RAID1 & 2.6.9 performance problem)
+Date: Mon, 17 Jan 2005 16:51:33 +0000
+Message-ID: <20050117165133.GC99565@caffreys.strugglers.net>
+References: <41EBD827.80701@pipi.ma.cx> <Pine.LNX.4.56.0501171528010.21510@lion.drogon.net> <200501171624.47645.andrew@walrond.org>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="+USGC6dOGWst/L1U"
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <200501171624.47645.andrew@walrond.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hans Kristian Rosbach <hk@isphuset.no> wrote:
-> -It selects the disk that is closest to the wanted sector by remembering
->  what sector was last requested and what disk was used for it.
-> -For sequential reads (sucha as hdparm) it will override and use the
->  same disk anyways. (sector = lastsector+1)
-> 
-> I gained a lot of throughput by alternating disk, but seek time was
-> roughly doubled. I also tried to get smart and played some with the
-> code in order to avoid seeking both disks back and forth wildly when
-> there were two sequential reads. I didn't find a good way to do it
-> unfortunately.
 
-Interesting. How did you measure latency? Do you have a script you
-could post?
+--+USGC6dOGWst/L1U
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> I'm not going to make any patch available, because I removed bad-disk
-> checking in order to simplify it.
+On Mon, Jan 17, 2005 at 04:24:47PM +0000, Andrew Walrond wrote:
+> FWIW I get these results with RAID-0
+>=20
+> andrew@orac ~ $ sudo hdparm -t /dev/sda /dev/sdb /dev/md0
+>=20
+> /dev/sda:
+>  Timing buffered disk reads:  170 MB in  3.00 seconds =3D  56.64 MB/sec
+>=20
+> /dev/sdb:
+>  Timing buffered disk reads:  170 MB in  3.02 seconds =3D  56.37 MB/sec
+>=20
+> /dev/md0:
+>  Timing buffered disk reads:  236 MB in  3.02 seconds =3D  78.08 MB/sec
 
-The FR1 patch measures disk latency and weights the disk head distances
-by the measured latency, which may help.  It probably also gets rid of
-that sequential read thing (I haven't done anything but port the patch
-to 2.6, not actually run it in anger!).
+As an aside, when I try this, how come I get this:
 
-  ftp://oboe.it.uc3m.es/pub/Programs/fr1-2.15b.tgz
+$ sudo hdparm -t /dev/sda /dev/sdb /dev/md0
 
-(I am doing a 2.16 with the robust-read patch I suggested added in).
+/dev/sda:
+ Timing buffered disk reads:  152 MB in  3.03 seconds =3D  50.19 MB/sec
+HDIO_DRIVE_CMD(null) (wait for flush complete) failed: Inappropriate ioctl =
+for device
 
-I really don't think this measuring disk head position can help unless
-raid controls ALL of the disks in question, or the disks are otherwise
-inactive.  Is that your case?
+/dev/sdb:
+ Timing buffered disk reads:  152 MB in  3.03 seconds =3D  50.24 MB/sec
+HDIO_DRIVE_CMD(null) (wait for flush complete) failed: Inappropriate ioctl =
+for device
 
+/dev/md0:
+ Timing buffered disk reads:  read(2097152) returned 524288 bytes
 
-Peter
+(note warnings about ioctls and no speed output for /dev/md0)
 
+These are SATA drives in a RAID 1.
+
+--+USGC6dOGWst/L1U
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.0 (FreeBSD)
+
+iD8DBQFB6+0VIJm2TL8VSQsRAndyAJ9slfekNndNxReszxCYkh29vr0WhwCg0TDW
+k1pOYgmS57jIGBbmbaH/nl8=
+=aQU9
+-----END PGP SIGNATURE-----
+
+--+USGC6dOGWst/L1U--
