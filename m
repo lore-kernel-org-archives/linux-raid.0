@@ -1,64 +1,127 @@
-From: Paul Clements <paul.clements@steeleye.com>
-Subject: Re: [ANNOUNCE][PATCH 2.6] md: persistent (file-backed) bitmap and
- async writes
-Date: Thu, 17 Jun 2004 13:57:13 -0400
+From: Ben <ben@easynews.com>
+Subject: Very strange drive performance
+Date: Thu, 17 Jun 2004 18:40:23 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <40D1DB79.5080507@steeleye.com>
-References: <40198E85.29EBC8E0@SteelEye.com>	<16422.62911.755570.855200@notabene.cse.unsw.edu.au>	<4027E342.D02202F1@SteelEye.com>	<16424.8182.876520.280031@notabene.cse.unsw.edu.au>	<402D3A86.97CF894F@SteelEye.com>	<16456.2775.641721.204171@notabene.cse.unsw.edu.au>	<4048F9AA.1BBD67F@SteelEye.com>	<406B1024.7BF88C@SteelEye.com>	<16528.49083.998593.199805@cse.unsw.edu.au>	<40C6273B.2060200@steeleye.com> <16590.38597.170409.499394@cse.unsw.edu.au>
+Message-ID: <1087522823.13935.17.camel@solaris.skunkware.org>
+Reply-To: ben@easynews.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="=-7NJW6OOmZ5KcmrORDHc1"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <16590.38597.170409.499394@cse.unsw.edu.au>
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: linux-raid@vger.kernel.org, ptb@it.uc3m.es, mingo@redhat.com, "james.bottomley" <james.bottomley@steeleye.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
 
-> The changes to mdadm need a bit of work.
->  
-> You have added "--persistent" and "--non-persistent" flags for
-> --create.  This is wrong.
-> --create always uses persistent superblocks.
-> --build makes arrays without persistent superblocks.
+--=-7NJW6OOmZ5KcmrORDHc1
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 
-Yes, I think --build didn't use to work for raid1, though, which is why 
-I went the create route. I'll fix this.
+I've been fighting with some hardware raid 5 issues for the last 4
+weeks, I'm finally seeing some progress using redhat's dac960 driver
+under 2.4 but it is very spotty.
 
-> I don't think I like --create-bitmap.  A bitmap file should always be
-> created in the context of a particular array (partly so that the size
-> and uuid can be set correctly).  I think I would like to bitmap to be
-> specified as a "--bitmap=filename" option to --create, --build, or
-> --grow.  I haven't thought this through in great detail yet, but that
-> is my leaning.
+I am getting sequential write bursts of up to 200MB/s, but then for 3 or
+so seconds after that, there is zero disk i/o (however the disk is at
+100% utilization even when no i/o is being done.. messed up counters?). 
+I've attached output from iostat in 1 second intravls.  The drives and
+the array are fine, no bad disks, no rebuilding volumes, no errors of
+any type... performance is just WAY spotty.
 
-That all sounds fine except for --build. How do we know if we're doing 
-the initial build or just a rebuild. We need to know this so we know 
-whether to initialize the bitmap or simply use it. So I think we still 
-need --create-bitmap for the build command (and then build will just use 
-the bitmap, not initialize it). For --create I can make it so that the 
-bitmap is always initialized using the array parameters, so no separate 
---create-bitmap will be needed. I'll need to work out the conflict that 
-this will create with the --chunk option, though, since --chunk is the 
-array chunk size for --create and --chunk is the bitmap chunk size for 
---bitmap-create. Any suggestions?
+My stripe width is 4 and my stripe size is 128k (I've tried tons and
+tons of different configs using different stripe sizes).  The drives are
+Ultra320 10k and the raid card is a Mylex extremeRaid 2000 (DAC960
+driver).
 
-> --examine-bitmap is a bit of a pain too. 
 
--X is usually what I use...that's a lot easier to remember and type...
 
-> I think I would like
-> --examine to figure out what it has been given to look at, and report
-> on whatever it finds.
+Thanks,
+Ben
 
-Well, that gets into a little bit of black magic when you're talking 
-about examining a disk or partition, which could conceivably contain 
-both an md superblock at the end and a bitmap at the front. How do we 
-know which one it is "supposed" to be? Or do you just want examine to 
-print information for both? That would seem a little confusing to me 
-(granted this would only happen when a disk changed roles between bitmap 
-and array component).
+--=-7NJW6OOmZ5KcmrORDHc1
+Content-Disposition: attachment; filename=iostats.log
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; name=iostats.log; charset=
 
---
-Paul
+RGV2aWNlOiAgICBycnFtL3Mgd3JxbS9zICAgci9zICAgdy9zICByc2VjL3MgIHdzZWMvcyAgICBy
+a0IvcyAgICB3a0IvcyBhdmdycS1zeiBhdmdxdS1zeiAgIGF3YWl0ICBzdmN0bSAgJXV0aWwNCi0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tDQpyZC9jMGQxICAgICAgMC4wMCAzMzY3NC4wMCAgMC4wMCAgMC4wMCAgIDI0LjAwIDI3MTgw
+OC4wMCAgICAxMi4wMCAxMzU5MDQuMDAgICAgIDAuMDAgICAgODIuODcgICAgMC4wMCAgIDAuMDAg
+MTAwLjAwDQpyZC9jMGQxICAgICAgMC4wMCA3ODk5LjAwICAwLjAwICAwLjAwICAgIDguMDAgNjM3
+NDQuMDAgICAgIDQuMDAgMzE4NzIuMDAgICAgIDAuMDAgICA0MDMuNzAgICAgMC4wMCAgIDAuMDAg
+MTAwLjAwDQpyZC9jMGQxICAgICAgMC4wMCAgIDAuMDAgIDAuMDAgIDAuMDAgICAgMC4wMCAgICAw
+LjAwICAgICAwLjAwICAgICAwLjAwICAgICAwLjAwICAgNDA2LjAwICAgIDAuMDAgICAwLjAwIDEw
+MC4wMA0KcmQvYzBkMSAgICAgIDAuMDAgNDUxODIuMDAgIDAuMDAgIDAuMDAgICAgOC4wMCAzNjQ1
+NDQuMDAgICAgIDQuMDAgMTgyMjcyLjAwICAgICAwLjAwICAgNDk1Ljc2ICAgIDAuMDAgICAwLjAw
+IDEwMC4wMA0KcmQvYzBkMSAgICAgIDAuMDAgICAwLjAwICAwLjAwICAwLjAwICAgIDAuMDAgICAg
+MC4wMCAgICAgMC4wMCAgICAgMC4wMCAgICAgMC4wMCAgIDc5My4wMCAgICAwLjAwICAgMC4wMCAx
+MDAuMDANCnJkL2MwZDEgICAgICAwLjAwICAgMC4wMCAgMC4wMCAgMC4wMCAgICAwLjAwICAgIDAu
+MDAgICAgIDAuMDAgICAgIDAuMDAgICAgIDAuMDAgICA3OTMuMDAgICAgMC4wMCAgIDAuMDAgMTAw
+LjAwDQpyZC9jMGQxICAgICAgMC4wMCAgIDAuMDAgIDAuMDAgIDAuMDAgICAgMC4wMCAgICAwLjAw
+ICAgICAwLjAwICAgICAwLjAwICAgICAwLjAwICAgNzkzLjAwICAgIDAuMDAgICAwLjAwIDEwMC4w
+MA0KcmQvYzBkMSAgICAgIDAuMDAgICAwLjAwICAwLjAwICAwLjAwICAgIDAuMDAgICAgOC4wMCAg
+ICAgMC4wMCAgICAgNC4wMCAgICAgMC4wMCAgIDc5My44MSAgICAwLjAwICAgMC4wMCAxMDAuMDAN
+CnJkL2MwZDEgICAgICAwLjAwICAgMC4wMCAgMC4wMCAgMC4wMCAgICAwLjAwICAgIDAuMDAgICAg
+IDAuMDAgICAgIDAuMDAgICAgIDAuMDAgICA3OTQuMDAgICAgMC4wMCAgIDAuMDAgMTAwLjAwDQpy
+ZC9jMGQxICAgICAgMC4wMCAyNDA1MS4wMCAgMC4wMCAgMC4wMCAgIDE2LjAwIDE5NDEyOC4wMCAg
+ICAgOC4wMCA5NzA2NC4wMCAgICAgMC4wMCAgIDgzNi4xMCAgICAwLjAwICAgMC4wMCAxMDAuMDAN
+CnJkL2MwZDEgICAgICAwLjAwIDE0OTAuMDAgIDAuMDAgIDAuMDAgICAgOC4wMCAxMjAzMi4wMCAg
+ICAgNC4wMCAgNjAxNi4wMCAgICAgMC4wMCAgMTAyMy44NiAgICAwLjAwICAgMC4wMCAxMDAuMDAN
+CnJkL2MwZDEgICAgICAwLjAwIDk0MTUyLjAwICAwLjAwICAwLjAwICAgIDAuMDAgNzYwNDgwLjAw
+ICAgICAwLjAwIDM4MDI0MC4wMCAgICAgMC4wMCAgMTQxOC45OCAgICAwLjAwICAgMC4wMCAxMDAu
+MDANCnJkL2MwZDEgICAgICAwLjAwIDY0NS4wMCAgMC4wMCAgMC4wMCAgICAwLjAwIDUxOTIuMDAg
+ICAgIDAuMDAgIDI1OTYuMDAgICAgIDAuMDAgIDE5MzcuMjIgICAgMC4wMCAgIDAuMDAgMTAwLjAw
+DQpyZC9jMGQxICAgICAgMC4wMCAgIDAuMDAgIDAuMDAgIDAuMDAgICAgMC4wMCAgICAwLjAwICAg
+ICAwLjAwICAgICAwLjAwICAgICAwLjAwICAxOTM4LjAwICAgIDAuMDAgICAwLjAwIDEwMC4wMA0K
+cmQvYzBkMSAgICAgIDAuMDAgICAwLjAwICAwLjAwICAwLjAwICAgIDAuMDAgICAgMC4wMCAgICAg
+MC4wMCAgICAgMC4wMCAgICAgMC4wMCAgMTkzOC4wMCAgICAwLjAwICAgMC4wMCAxMDAuMDANCnJk
+L2MwZDEgICAgICAwLjAwICAgMC4wMCAgMC4wMCAgMC4wMCAgICAwLjAwICAgIDAuMDAgICAgIDAu
+MDAgICAgIDAuMDAgICAgIDAuMDAgIDE5MzguMDAgICAgMC4wMCAgIDAuMDAgMTAwLjAwDQpyZC9j
+MGQxICAgICAgMC4wMCAgIDAuMDAgIDAuMDAgIDAuMDAgICAgMC4wMCAgICAwLjAwICAgICAwLjAw
+ICAgICAwLjAwICAgICAwLjAwICAxOTM4LjAwICAgIDAuMDAgICAwLjAwIDEwMC4wMA0KcmQvYzBk
+MSAgICAgIDAuMDAgICAwLjAwICAwLjAwICAwLjAwICAgIDAuMDAgICAgMC4wMCAgICAgMC4wMCAg
+ICAgMC4wMCAgICAgMC4wMCAgMTkzOC4wMCAgICAwLjAwICAgMC4wMCAxMDAuMDANCnJkL2MwZDEg
+ICAgICAwLjAwICAgMC4wMCAgMC4wMCAgMC4wMCAgICAwLjAwICAgIDAuMDAgICAgIDAuMDAgICAg
+IDAuMDAgICAgIDAuMDAgIDE5MzguMDAgICAgMC4wMCAgIDAuMDAgMTAwLjAwDQpyZC9jMGQxICAg
+ICAgMC4wMCAgIDAuMDAgIDAuMDAgIDAuMDAgICAgMC4wMCAgICAwLjAwICAgICAwLjAwICAgICAw
+LjAwICAgICAwLjAwICAxOTM4LjAwICAgIDAuMDAgICAwLjAwIDEwMC4wMA0KcmQvYzBkMSAgICAg
+IDAuMDAgICAwLjAwICAwLjAwICAwLjAwICAgIDAuMDAgICAgMC4wMCAgICAgMC4wMCAgICAgMC4w
+MCAgICAgMC4wMCAgMTkzOC4wMCAgICAwLjAwICAgMC4wMCAxMDAuMDANCnJkL2MwZDEgICAgICAw
+LjAwIDE1NzM5LjAwICAwLjAwICAwLjAwICAgMTYuMDAgMTI3MDcyLjAwICAgICA4LjAwIDYzNTM2
+LjAwICAgICAwLjAwICAxOTgxLjQyICAgIDAuMDAgICAwLjAwIDEwMC4wMA0KcmQvYzBkMSAgICAg
+IDAuMDAgICAwLjAwICAwLjAwICAwLjAwICAgIDAuMDAgICAgMC4wMCAgICAgMC4wMCAgICAgMC4w
+MCAgICAgMC4wMCAgMjA4NS4wMCAgICAwLjAwICAgMC4wMCAxMDAuMDANCnJkL2MwZDEgICAgICAw
+LjAwIDE0MjYwLjAwICAwLjAwICAwLjAwICAgIDguMDAgMTE1MTA0LjAwICAgICA0LjAwIDU3NTUy
+LjAwICAgICAwLjAwICAyMTU3LjQwICAgIDAuMDAgICAwLjAwIDEwMC4wMA0KcmQvYzBkMSAgICAg
+IDAuMDAgMTk3OTguMDAgIDAuMDAgIDAuMDAgICAgMC4wMCAxNTk3NDQuMDAgICAgIDAuMDAgNzk4
+NzIuMDAgICAgIDAuMDAgIDIyNDkuNTQgICAgMC4wMCAgIDAuMDAgMTAwLjAwDQpyZC9jMGQxICAg
+ICAgMC4wMCAxMjY4Ny4wMCAgMC4wMCAgMC4wMCAgICA4LjAwIDEwMjQwMC4wMCAgICAgNC4wMCA1
+MTIwMC4wMCAgICAgMC4wMCAgMjM5OC4wOSAgICAwLjAwICAgMC4wMCAxMDAuMDANCnJkL2MwZDEg
+ICAgICAwLjAwIDI0MTYwLjAwICAwLjAwICAwLjAwICAgIDguMDAgMTk1ODQwLjAwICAgICA0LjAw
+IDk3OTIwLjAwICAgICAwLjAwICAyNzg2Ljc3ICAgIDAuMDAgICAwLjAwIDEwMC4wMA0KcmQvYzBk
+MSAgICAgIDAuMDAgICAwLjAwICAwLjAwICAwLjAwICAgIDAuMDAgICAgMC4wMCAgICAgMC4wMCAg
+ICAgMC4wMCAgICAgMC4wMCA0MDEzMC42NyAgICAwLjAwICAgMC4wMCAxMDAuMDANCnJkL2MwZDEg
+ICAgICAwLjAwIDI2NTEyLjAwICAwLjAwICAwLjAwICAgIDAuMDAgMjEzODMyLjAwICAgICAwLjAw
+IDEwNjkxNi4wMCAgICAgMC4wMCAgMzAxMC4wMSAgICAwLjAwICAgMC4wMCAxMDAuMDANCnJkL2Mw
+ZDEgICAgICAwLjAwIDUwOS4wMCAgMC4wMCAgMC4wMCAgICAwLjAwIDQwOTYuMDAgICAgIDAuMDAg
+IDIwNDguMDAgICAgIDAuMDAgIDMwMzYuNjkgICAgMC4wMCAgIDAuMDAgMTAwLjAwDQpyZC9jMGQx
+ICAgICAgMC4wMCAgIDAuMDAgIDAuMDAgIDAuMDAgICAgMC4wMCAgICAwLjAwICAgICAwLjAwICAg
+ICAwLjAwICAgICAwLjAwICAzMDM5LjAwICAgIDAuMDAgICAwLjAwIDEwMC4wMA0KcmQvYzBkMSAg
+ICAgIDAuMDAgICAwLjAwICAwLjAwICAwLjAwICAgIDAuMDAgICAgMC4wMCAgICAgMC4wMCAgICAg
+MC4wMCAgICAgMC4wMCAgMzAzOS4wMCAgICAwLjAwICAgMC4wMCAxMDAuMDANCnJkL2MwZDEgICAg
+ICAwLjAwICAgMC4wMCAgMC4wMCAgMC4wMCAgICAwLjAwICAgIDAuMDAgICAgIDAuMDAgICAgIDAu
+MDAgICAgIDAuMDAgIDMwMzkuMDAgICAgMC4wMCAgIDAuMDAgMTAwLjAwDQpyZC9jMGQxICAgICAg
+MC4wMCAxNDIzNC4wMCAgMC4wMCAgMC4wMCAgICAwLjAwIDExNDg1Ni4wMCAgICAgMC4wMCA1NzQy
+OC4wMCAgICAgMC4wMCAgMzE0Ni43OSAgICAwLjAwICAgMC4wMCAxMDAuMDANCnJkL2MwZDEgICAg
+ICAwLjAwIDE1MTgyLjAwICAwLjAwICAwLjAwICAgIDguMDAgMTIyODg4LjAwICAgICA0LjAwIDYx
+NDQ0LjAwICAgICAwLjAwICAzMTkxLjk2ICAgIDAuMDAgICAwLjAwIDEwMC4wMA0KcmQvYzBkMSAg
+ICAgIDAuMDAgICAwLjAwICAwLjAwICAwLjAwICAgIDAuMDAgICAgMC4wMCAgICAgMC4wMCAgICAg
+MC4wMCAgICAgMC4wMCAgMzM0Mi4wMCAgICAwLjAwICAgMC4wMCAxMDAuMDANCnJkL2MwZDEgICAg
+ICAwLjAwIDMyNTA3LjAwICAwLjAwICAwLjAwICAgIDguMDAgMjYyMzEyLjAwICAgICA0LjAwIDEz
+MTE1Ni4wMCAgICAgMC4wMCAgMzU1OS45NyAgICAwLjAwICAgMC4wMCAxMDAuMDANCnJkL2MwZDEg
+ICAgICAwLjAwICAgMC4wMCAgMC4wMCAgMC4wMCAgICAwLjAwICAgIDAuMDAgICAgIDAuMDAgICAg
+IDAuMDAgICAgIDAuMDAgIDM2MjUuMDAgICAgMC4wMCAgIDAuMDAgMTAwLjAwDQpyZC9jMGQxICAg
+ICAgMC4wMCAgNTUuMDAgIDAuMDAgIDAuMDAgICAgMC4wMCAgNDQ4LjAwICAgICAwLjAwICAgMjI0
+LjAwICAgICAwLjAwICAzNjI1LjYzICAgIDAuMDAgICAwLjAwIDEwMC4wMA0KDQo=
+
+--=-7NJW6OOmZ5KcmrORDHc1--
