@@ -1,71 +1,62 @@
-From: Jesse Burkhardt <jesse@skybuilders.com>
-Subject: Fedora 2.0 - raid1 not working
-Date: Tue, 09 Nov 2004 14:08:22 -0500
-Message-ID: <419115A5.4050905@skybuilders.com>
+From: Jurriaan <thunder7@xs4all.nl>
+Subject: Re: Fedora 2.0 - raid1 not working
+Date: Tue, 9 Nov 2004 20:22:19 +0100
+Message-ID: <20041109192219.GA5822@middle.of.nowhere>
+References: <419115A5.4050905@skybuilders.com>
+Reply-To: Jurriaan <thunder7@xs4all.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <419115A5.4050905@skybuilders.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Jesse Burkhardt <jesse@skybuilders.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I am new to raid installations. I have installed Fedora 2.0 onto a 
-system with two identical drives that I configured to be a raid1 mirror 
-through the disk druid interface. I created partition mirrors for both 
-the /boot partition (md0) and the / partition (md1). Then I created same 
-sized, non-mirrored swap partitions on each of the identical drives. 
-After the installation process, I found that I could boot with both 
-physical drives online and only one of the two physical drives when 
-booting in a single drive (failure simulation) mode.
+From: Jesse Burkhardt <jesse@skybuilders.com>
+Date: Tue, Nov 09, 2004 at 02:08:22PM -0500
+> After the installation process, I found that I could boot with both 
+> physical drives online and only one of the two physical drives when 
+> booting in a single drive (failure simulation) mode.
+> 
 
-I am wondering if there is a required kernel module that is not loaded 
-or compiled into the default Fedora 2.6 kernel.
+I take it this is your question? And do I read correctly you mean that
+you cannot boot if you disconnect drive A, but can boot if you
+disconnect drive B?
 
-When I look into the process list I see processes called md0_raid and 
-md1_raid. I did not run the raidstart command but assume that it 
-probably has been run.
+In that case, could you please give some more details on 'could boot'.
+Is this a problem with your bootloader (lilo, grub or other?) or with
+the kernel?
 
-Also here are a few raid file listings:
+For the record: here's my /boot/grub/menu.lst, which allows me to boot
+from both drives of my mirrored raid-1 root partition.
 
-/etc/raidtab
+timeout 15
+default 0
+color white/blue white/red
+fallback 1
 
-raiddev             /dev/md1
-raid-level                  1
-nr-raid-disks               2
-chunk-size                  256
-persistent-superblock       1
-nr-spare-disks              0
-    device          /dev/hda3
-    raid-disk     0
-    device          /dev/hdd3
-    raid-disk     1
-raiddev             /dev/md0
-raid-level                  1
-nr-raid-disks               2
-chunk-size                  256
-persistent-superblock       1
-nr-spare-disks              0
-    device          /dev/hda1
-    raid-disk     0
-    device          /dev/hdd1
-    raid-disk     1
+title  GNU/Linux (Debian working 2.6.9-mm1 kernel /dev/hda (part of raid-1 system))
+root (hd0,0)
+kernel /boot/vmlinuz-269mm1 root=/dev/md3 video=radeonfb:1600x1200-32@85 softrepeat=1
 
-And /proc/mdstat
+title  GNU/Linux (Debian working 2.6.9-mm1 kernel /dev/hdb (part of raid-1 system))
+root (hd5,0)
+kernel /boot/vmlinuz-269mm1 root=/dev/md3 video=radeonfb:1600x1200-32@85 softrepeat=1 floppy=no_acpi
 
-Personalities : [raid1]
-md1 : active raid1 hda3[0]
-      242958848 blocks [2/1] [U_]
+title Memtest86
+root (hd0,0)
+kernel /boot/memtest86.bin
 
-md0 : active raid1 hda1[0]
-      104192 blocks [2/1] [U_]
+title Floppy
+root (fd0)
+chainloader +1
 
-unused devices: <none>
-
-
-Thanks for any help.
+Good luck,
+Jurriaan
 -- 
-
-Jesse Burkhardt, Cambridge MA
-jesse@skybuilders.com (w) 617-876-5680
-aerogoose.com (h) 617-354-5523
+"Evayne told you this."
+"Evayne," he said softly, "has forced me to bear witness to much in my life."
+	Michelle West - Sea of Sorrows
+Debian (Unstable) GNU/Linux 2.6.9-mm1 2x6078 bogomips load 0.34
