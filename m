@@ -1,35 +1,24 @@
-From: Nerijus Baliunas <nerijus@users.sourceforge.net>
-Subject: mounting /dev/hdax and xfs problems
-Date: Sun, 5 Oct 2003 02:26:02 +0300 (EEST)
+From: Dan Hollis <goemon@anime.net>
+Subject: possible to use 1 drive as hot failover for 2 raid1's?
+Date: Mon, 6 Oct 2003 16:27:59 -0700 (PDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <S262703AbTJDX0w/20031004232652Z+8001@vger.kernel.org>
+Message-ID: <Pine.LNX.4.44.0310061625260.12382-100000@sasami.anime.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; CHARSET=US-ASCII
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: INLINE
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
+We have 5 drives, 2 for raid1-md0 and 2 for raid1-md1. they are all the 
+exact same model and partitioned exactly the same. we also have a 5th 
+drive we want to use as hot-failover.
 
-I have on debian /home mounted on raid1. Some time ago
-it was remounted as 'mount /dev/hda2 /home' instead of
-'mount /dev/md0 /home'. Now when I umount it and try
-to mount /dev/md0, I see in dmesg:
+is it possible to use the single drive as hot-failover for both md0 and 
+md1?
 
-XFS mounting filesystem md(9,0)
-Starting XFS recovery on filesystem: md(9,0) (dev: 9/0)
-XFS: dirty log written in incompatible format - can't recover
-XFS: log mount/recovery failed
-XFS: log mount failed
+please respond in email as i am not subscribed to the list.
 
-When mounting /dev/hda2 it succeeds. The question is -
-does mounting part of raid1 mirror when raid is still running
-do anything bad for a raid? How raid works in this situation -
-is it still mirroring info from /dev/hda2 to /dev/hdb2?
-If I raidstop and raidstart, can it damage filesystem?
+-Dan
+-- 
+[-] Omae no subete no kichi wa ore no mono da. [-]
 
-/proc/mdstat shows that everything is OK.
-
-Regards,
-Nerijus
