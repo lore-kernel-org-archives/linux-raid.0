@@ -1,26 +1,33 @@
-From: "Cornelius" <ddkrieeuffhwuwujdy@charter.com>
-Subject: Best Pha|rmma|cy you 0rder
-Date: Sat, 12 Feb 2005 20:20:30 -1000
-Message-ID: <7355B925.4E74522__1735.90735435045$1108205893$gmane$org@charter.com>
-Reply-To: "Cornelius" <ddkrieeuffhwuwujdy@charter.com>
+From: "Gordon Mohr (@ Bitzi)" <gojomo@bitzi.com>
+Subject: Questions: understanding fail/remove steps from RAID1
+Date: Sat, 12 Feb 2005 14:11:07 -0800
+Message-ID: <420E7EFB.4000303@bitzi.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: linux-raid-owner@vger.kernel.org
-To: Park <linux-ppp@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
- Wapspv,Oiyiqqows
+I've been experiencing as-yet-undiagnosed kernel panics on a server
+with two RAID1 arrays. (x86_64; 2.6.10 FC3 kernel; Promise SATA with
+Seagate drives.)
 
-Cl||A1lIS works in as Iitt|e as 3O mi nutes and |asts for up to 36 hours. 
-|EV1l   TRA  works in as 1ittle as 25 minutes and Iasts fro up to 24 h ours
- 
+After a recent panic and reboot, the two RAID1 arrays dropped their
+member partitions from a certain drive (sdb).
 
-http://www.unharness8syndrome.com/?jv=voO&f=0&vw=FM6TyGYG&qjm=jFJOX
+Based on previous experience with simulated failures, I had expected
+the devices to still be listed by name as part of the array, but as
+failed/faulty. Instead, they were not listed in either /proc/mdstat
+or 'mdadm --detail' output.
 
+Were my expectations wrong -- is this by design?
 
- Jeedik,Yaav
+Looking over /var/log/messages, there's no clear indication of a
+specific time or reason the sdb partitions were dropped from the array.
 
+Are raid array events logged somewhere else?
 
+Thanks for any insights,
 
+- Gordon
