@@ -1,56 +1,115 @@
-From: christophe varoqui <christophe.varoqui@free.fr>
-Subject: [ANNOUNCE] multipath-tools-0.2.8
-Date: Sat, 14 Aug 2004 13:59:25 +0200
-Sender: linux-scsi-owner@vger.kernel.org
-Message-ID: <1092484765.3571.17.camel@zezette>
-References: <1090836168.4104d6c8a2b22@imp6-q.free.fr>
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: mdadm - comments on command layout
+Date: Sat, 14 Aug 2004 22:33:41 +1000
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <16670.1701.954970.773800@cse.unsw.edu.au>
+References: <16669.9163.392465.637229@gargle.gargle.HOWL>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1090836168.4104d6c8a2b22@imp6-q.free.fr>
-To: device-mapper development <dm-devel@redhat.com>
-Cc: linux-raid@vger.kernel.org, linux-hotplug-devel@lists.sourceforge.net, Jan Kunigk <jan.kunigk@de.ibm.com>, linux-scsi@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from John Stoffel on Friday August 13
+To: John Stoffel <stoffel@lucent.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
+On Friday August 13, stoffel@lucent.com wrote:
+> 
+> Hi Neil,
+> 
+> I've been using mdadm recently to work with some arrays and I really
+> have to say I dislike how the commands are laid out and used.  First
+> off, they're not consistent from one usage to another.  Of course, I'm
+> going to be jerk and not give good examples since my personal box at
+> home is down and I'm at work.  But the idea is that when you assemble
+> a RAID device, it should look similiar to how you manage that raid
+> device.
 
-here goes multipath-tools version 0.2.8
+Examples would really help.  In my mind it is very regular.  There is
+some room for flexibility, but generally, the usage is 
 
-This is pre-vacation release, to sync up with guys working with the
-priority framework.
-I'll be mostly off till Sept 1st.
+   mdadm --mode --option...  /dev/md-device  [ component devices  ... ]
 
-Reported build breakage on IA64 is not solved in this release. I don't
-have the hw to investigate this. If someone is interested, feel free to
-debug this and send a patch. The breakage seem to come from the clone
-syscall declaration.
 
-Todo, for next releases :
+> 
+> I'd also love it if there was an mdadm shell, so I could just type
+> 'mdadm' and get back a shell prompt like:
+> 	
+> 	mdadm>
+> 
+> which I could then use to manage my arrays.  
+> 
+> For example, I think all the commands should be of the format:
+> 
+>     mdadm <comand> [options] <array> [devices...]
 
-* move to the new klibc development environment Sam Ravnborg is working
-on, as soon as it stabilizes : hope to drop the klibc tree from the
-multipath-tools tarball, and finally be packageable by distributors.
+Except that I follow the Unix norms of --command, that is (to me)
+exactly what usage is like.
 
-* resolve the OOM scenarii for multipathd. I guess the kernel will have
-to help in some way. Anyway, advice badly needed here.
+> 
+> as much as possible.  I'm basing my thoughts on both the Vertias VxVM
+> command set, as well as the ClearCase 'cleartool' command shell.  So
+> ideally I could do either:
+> 
+>   > mdadm assemble md0 /dev/hda1 /dev/hda2 ...
+> 
+> or
+> 
+>   > mdadm
+>   madam> assemble md0 /dev/hda1 /dev/hda2 ...
+> 
+> depending on my mood.  Currently, the mdadm commands use various
+> formats for their arguement layouts and it's a pain to figure out what
+> to use.  
 
-2004-08-14 multipath-tools-0.2.8
-        * [multipathd] setsched prio to RT
-        * [multipath] massive include cleanup
-        * [multipath] add a "default_prio_callout" keyword
-          first user will be SPC-3 ALUA priority field fetcher
-          from IBM
-        * [multipath] reenable stdout on some error paths
-        * [build] spilt KERNEL_DIR into KERNEL_SOURCE &
-          KERNEL_BUILD as per 2.6 and SuSe convention
-        * [klibc] kill warnings due to awk parsing wrong locale in
-          arch/i386/MCONFIG
-        * [multipath] implement a generic group_by_prio pgpolicy
-        * [multipath] fix the broken failover pgpolicy
+Well, if you really want a shell mode, I recommend writing one using a
+popular shell, such as bash.  I have included a code fragment below.
+If you store it in a file named, e.g., 'mdsh', then it will do
+essentially what you seem to be asking.
 
-Downloads and docs at http://christophe.varoqui.free.fr
+> 
+> So before I get all worked up on this issue, and spend a bunch of time
+> mapping out how I think the commands should work, do people agree with
+> my observation?  
 
-regards,
-cvaroqui
+I don't, but I'm obviously biased.  Maybe if you could (as I said
+above) show me where the irregularities are, that would help.
+Possibly  it's just a case of needing improved documentation.
 
+
+Anyway, here is a code fragment which implements a command called
+"mdsh".  If you type "mdsh" with no args, you get a shell prompt.  All
+normal shell commands work as well as a new command "assemble" which
+adds "/dev/" to it's first argument and passes the whole lot to "mdadm
+--assemble".  Alternately, you can run
+   mdsh assemble md0 ....
+
+and get a similar effect.  Extensions are left as an exercise for the
+reader. :-)
+
+NeilBrown
+
+#!/bin/bash
+
+if [ $# -eq 0 -a " $mdsh_running" != " yes" ]
+then
+ export mdsh_running=yes
+ exec bash --rcfile `which $0`
+ exit 1
+fi
+
+assemble()
+{
+  mdev=$1; shift
+  if [ ! -b "$mdev" -a -b /dev/"$mdev" ]
+  then mdev=/dev/"$mdev"
+  fi
+  mdadm --assemble $mdev "$@"
+}
+
+case $# in
+  0 )
+    PS1='mdsh > '  PS2='mdsh.. '
+    ;;
+  * ) eval "$@"
+esac
