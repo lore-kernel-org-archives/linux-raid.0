@@ -1,40 +1,41 @@
-From: Paul Clements <Paul.Clements@SteelEye.com>
-Subject: Re: enhancements to the raid1 driver
-Date: Mon, 17 Feb 2003 15:09:16 -0500
+From: "Peter T. Breuer" <ptb@it.uc3m.es>
+Subject: Re: Fast (intelligent) raid1
+Date: Tue, 18 Feb 2003 01:57:37 +0100 (MET)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3E51416C.2E7E92D@SteelEye.com>
-References: <3E4D96DB.7AC5954B@SteelEye.com> <15952.20020.858737.543347@notabene.cse.unsw.edu.au>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Message-ID: <200302180057.h1I0vbN29768@oboe.it.uc3m.es>
+References: <15952.20989.131713.951636@notabene.cse.unsw.edu.au>
+Reply-To: ptb@it.uc3m.es
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <15952.20989.131713.951636@notabene.cse.unsw.edu.au> from Neil Brown
+ at "Feb 17, 2003 02:07:41 pm"
 To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: linux-raid@vger.kernel.org, jejb@SteelEye.com
+Cc: ptb@it.uc3m.es, Ross Vandegrift <ross@willow.seitz.com>, Ingo Molnar <mingo@redhat.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil,
+"Neil Brown wrote:"
+> Rather than having several bitmaps, have just one.  Normally it is
+> full of zero and isn't touched.
 
-Neil Brown wrote:
-> Maybe if you explain more about what would be the specifics of these
-> ioctls that you want to pass down.
+> On hot-add, read the old superblock.  If it looks valid and matches
+> the current array, and has an event counter of X or more, then ignore
 
-Sure, no problem...
- 
-> > asynchronous replication - to get acceptable performance when the backup
-> > leg of the raid1 mirror is slow (e.g., nbd over a LAN or WAN)
-> 
-> Hmmm. I cannot figure out exactly what would be asynchronous...  Nor
-> can I see how this would require an ioctl.
+I've made a preliminary patch. Available as
 
-Basically, we're trying to overcome latency penalties associated with
-writing data and waiting for acknowledgements over a network (or any
-other slow transport). So, all writes to the backup device(s) would be
-queued, so that the writes could take place asynchronously. The size of
-the queue and whether or not to enable this asynchronous mode would be
-user-configurable; that's where the ioctls come in. Since user
-configuration of the md driver is currently done with ioctls, this
-seemed like the natural choice. Of course, I'm open to other
-suggestions, if there's a better way to do this...
+  ftp://oboe.it.uc3m.es/pub/Programs/fr1-2.2.tgz
 
---
-Paul
+This still needs to have the checkpoint (X) stuff put in, but I'm too
+tired to do it right now. What it has is
+
+  1) single bitmap
+  2) recognition of a "hotrepair" via the superblock on a persistent 
+    sb array
+
+and also
+
+  3) allow "hotrepair" on a nonpersistent sb array when a hotadd
+     follows a setfaulty directlym without hotremove.
+
+I'll complete it tomorrow. I checked basic functionality (i.e. "it
+works", tm).
+
+Peter
