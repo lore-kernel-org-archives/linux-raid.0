@@ -1,40 +1,35 @@
-From: Jure Pecar <pegasus@nerv.eu.org>
-Subject: Re: Bug in multipath code (Linux 2.6.x) ?
-Date: Wed, 14 Apr 2004 13:09:07 +0200
+From: Sandro Dentella <sandro.dentella@tin.it>
+Subject: SRCS14L Controller?
+Date: Wed, 14 Apr 2004 22:50:58 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200404141309.07314.pegasus@nerv.eu.org>
-References: <B7A4A15090CB1847A60B569AC92FB9B352D280@EXSTORE2.zdv.uni-mainz.de>
+Message-ID: <20040414205058.GA11159@bluff>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <B7A4A15090CB1847A60B569AC92FB9B352D280@EXSTORE2.zdv.uni-mainz.de>
 Content-Disposition: inline
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday 13 of April 2004 12:46, Dominik Kubla wrote:
-> Unfortunately very little effort seems to be spent on documenting the
-> features of device-mapper and how to use them. I originally intended =
-to use
-> DM, but since i could not find any information on how to configure mi=
-rrored
-> multipath devices i decided against it.
->
-> What is the word on MD and DM? I miss some sort of road map and a gen=
-eral
-> overview (preferrably with executive summary). (I am willing to write=
- one
-> if i can find/get the necessary information.)
+A customer of mine asked me to set up a fileserver on raid system. The
+hardware they bought is an Intel RAID SRCS14L (a "hardware-based Serial ATA
+(sata) RAID card"). Linux see it via gdth module.
 
-Take a look at EVMS then. (http://evms.sf.net)
-It has excellent documentation and a roadmap as well ;)
+My (and their) idea was to use sw RAID. Beside general discussion on which
+is best (sw as opposed to hw), that I already followed on this list, I'd
+like to know if there is any particular comment on this card that I
+personally never used. I never used any SATA hard disks, really.
 
---
+I only worked on that machine running on a live CD that I use to install
+from remote, but what strickes me is that after loading the gdth module I
+couldn't see any disks, even thought the module loaded correctly: using
+devfs 'find /dev -name disc' gave no results. Any clues?
 
-Jure Pe=C4=8Dar
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thank in advance
+sandro
+*:-)
+
+
+-- 
+Sandro Dentella  *:-)
+e-mail: sandro.dentella@tin.it 
+http://www.tksql.org                    TkSQL Home page - My GPL work
