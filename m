@@ -1,39 +1,55 @@
 From: Mark Hahn <hahn@physics.mcmaster.ca>
-Subject: Re: Looking for the cause of poor I/O performance
-Date: Sat, 4 Dec 2004 17:59:28 -0500 (EST)
-Message-ID: <Pine.LNX.4.44.0412041745290.21262-100000@coffee.psychology.mcmaster.ca>
-References: <200412031503.32130.systemloc@earthlink.net>
+Subject: RE: Looking for the cause of poor I/O performance
+Date: Sat, 4 Dec 2004 18:51:27 -0500 (EST)
+Message-ID: <Pine.LNX.4.44.0412041809530.21262-100000@coffee.psychology.mcmaster.ca>
+References: <200412041759.iB4HxG922078@www.watkins-home.com>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200412031503.32130.systemloc@earthlink.net>
+In-Reply-To: <200412041759.iB4HxG922078@www.watkins-home.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: TJ <systemloc@earthlink.net>
+To: Guy <bugzilla@watkins-home.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> throughput. I'm hoping that this still may be related to some sort of PCI 
-> latency issue.
+> Timing buffer-cache reads:
+> 128 MB in 11.18 seconds = 11.45 MB/sec
+...
+> 
+> Timing buffered disk reads:
+> 64 MB in  9.42 seconds =  6.79 MB/sec
+...
+> 
+> This is from a single disk:
+> Timing buffer-cache reads:   128 MB in  0.87 seconds =147.13 MB/sec
+> Timing buffered disk reads:  64 MB in  3.51 seconds = 18.23 MB/sec
 
-you can use setpci to do this sort of tweaking.  naturally,
-you probably want to mount your filesystems RO when you do this,
-since accidents do happen...
+excellent!  this is really a great example of how a machine's limited
+internal bandwidth infringes on your raid performance.
 
-but in abstract, it's quite odd to believe that you can persuade a 
-7-year old machine to perform as well as a current one.  sure, it 
-sometimes happens, but so very much has changed.  as a completely
-random example, the topology of bus-like links in a modern box is 
-vastly less bottlenecked than in the bad old days.  for instance,
-it was completely normal back then for the chipset's builtin IDE
-(and any add-ons) to sit on a single 32x33 PCI segment.  that segment
-was often unable to actually approach 133 MB/s (80 was pretty good 
-in those days).  and often vendors would bend the rules a little
-like adding a bit more delay in arbitration in order to permit
-more PCI slots (since PCI, like any multidrop bus, always has a 
-speed-drops tradeoff). 
+running hdparm -T shows that your machine can manage about 150 MB/s
+when simply doing a syscall, copying bytes to userspace, and returning.
+no involvement of any IO device.  this number is typically about half
+the user-visible dram bandwidth as reported by the stream benchmark.
 
-nowadays, it's actually common to see unshared pcix slots direct
-to a memory-controller-hub, along with unshared connections for 
-*ATA, sound, even ethernet.  not to mention the fact that memory
-itself is 10x faster.
+when you try to do parallel IO (either with a bunch of hdparm -t's 
+or with raid), each disk is desperately trying to write to dram
+at about 18 MB/s, ignoring other bottlenecks.  alas, we already know 
+that your available dram bandwidth is much lower than 14*18.
+
+for comparison, a fairly crappy SiS 735-based k7 system with 
+64b-wide PC2100 can deliver maybe 1.2 GB/s dram bandwidth.
+hdparm -T is about 500 MB/s, and would probably have trouble
+breaking 200 MB/s with raid0 even if it had enough buses.
+
+an older server of mine is e7500-based, dual xeon/2.4's, with 
+2xPC1600 ram.  it sustains about 1.6 GB/s on Stream, and about 
+500 MB/s hdparm -T, and can sustain 250 MB/s through it's 6-disk
+raid without any problem.
+
+a newish server (dual-opteron, 2xPC2700) gives 1.4 GB/s under 
+hdparm -T, and I expect it could hit 600 MB/s without much trouble,
+if given 10-12 disks and pcix (or better) controllers...
+
+regards, mark hahn.
 
