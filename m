@@ -1,79 +1,50 @@
-From: "Corey McGuire" <coreyfro@coreyfro.com>
-Subject: Re: Show me the cache, was Mirroring swap
-Date: Fri, 27 Jun 2003 16:31:55 -0700
+From: Matt E <mgeusenet@yahoo.com>
+Subject: Questions Degraded Array with LVM
+Date: Fri, 27 Jun 2003 16:49:20 -0700 (PDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200306271631550843.587FEC42@shargaas.coreyfro.com>
-References: <Pine.GSO.4.33.0306271420230.7750-100000@sweetums.bluetronic.net>
-Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20030627234920.95101.qmail@web20418.mail.yahoo.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.GSO.4.33.0306271420230.7750-100000@sweetums.bluetronic.net>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hello All.
 
-Understand, but my point was that my disk happy windows apps actually work
-better under wine than windows due to more persistent caching.
+Currently, I have an LVM running on my system that is
+composed of an 80 gig drive and a 120 gig drive.  I
+plan to install a 4 disk RAID-5 Array in my system.  1
+of the disk will come from the LVM array.
 
-I have this asset-tracking app that I use to process application licenses.
-It keeps all its data in a big text file.  In windows, processing the
-results from a single system can take up to a minute.  In Linux, this takes
-seconds.
+I'd like to not loose any data doing this, if
+possible.
 
-Wizardry 8, a fun RPG, takes huge amounts of time to load new maps under
-windows.  In linux, these maps load much more quickly.
+Here's what I want to do:
 
-Win-mx generates "bit prints" for files so when you search for a file, as
-long as you know its bit print (actually, you don't need to, the program
-handles it) you can easily find THAT SPECIFIC FILE on other peoples boxes.
-Very nice!  Generating these bit prints is also faster under linux, but
-this probably has less to do with cache and more to do with driver
-performance.
+1) Install the 3 New 120 Gig Disks.  Use mdadm to
+create a degraded RAID-5 array.
 
-*********** REPLY SEPARATOR  ***********
+2) Put this array under LVM control.
 
-On 6/27/2003 at 2:24 PM Ricky Beam wrote:
+3) Use LVM to create a file system on the array.
 
->On Fri, 27 Jun 2003, Corey McGuire wrote:
->>"DisablePagingExecutive"=dword:00000001
->
->(That doesn't actually work.  NT/2000/XP will still page the kernel parts.
-> But not much of it.)
->
->>...  "LargeSystemCache" hardly
->>helps, as it basicly tells Windows "yes, all RAM _CAN_ be used for cache"
->>instead of just a paultry 4MB.  Does this help?  Yeah, my 512MB machine
-is
->>currently using 18MB's of cache.
->
->Currently, my XP Home laptop is using 356,188K of cache.  That will go to
->"all available RAM" if an application starts writing large volumes of data
->to disk. (Linux throttles processes that flood the cache.)
->
->--Ricky
->
->
->-
->To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
+4) Copy the data from the old LVM array to the new
+RAID-5/LVM array.
 
+5) Take down the old (80 + 120 GIG) array.  Blank the
+120 Gig drive from this LVM and then install it into
+the degraded array (filling the missing slot).
 
+Does anyone know if this is the right way to do this? 
+Does anyone know if there will be issues with LVM
+created on the degraded array (perhaps this aspect is
+off topic)?
 
+Thanks in advance.
 
-/\/\/\/\/\/\ Nothing is foolproof to a talented fool. /\/\/\/\/\/\
+Cheers
 
-coreyfro@coreyfro.com
-http://www.coreyfro.com/
-http://stats.distributed.net/rc5-64/psummary.php3?id=196879
-ICQ : 3168059
-
------BEGIN GEEK CODE BLOCK-----
-GCS d--(+) s: a-- C++++$ UBL++>++++ P+ L+ E W+++$ N+ o? K? w++++$>+++++$
-O---- !M--- V- PS+++ PE++(--) Y+ PGP- t--- 5(+) !X- R(+) !tv b-(+)
-Dl++(++++) D++ G+ e>+++ h++(---) r++>+$ y++*>$ H++++ n---(----) p? !au w+
-v- 3+>++ j- G'''' B--- u+++*** f* Quake++++>+++++$
-------END GEEK CODE BLOCK------
-
-Home of Geek Code - http://www.geekcode.com/
-The Geek Code Decoder Page - http://www.ebb.org/ungeek//
-
+__________________________________
+Do you Yahoo!?
+SBC Yahoo! DSL - Now only $29.95 per month!
+http://sbc.yahoo.com
