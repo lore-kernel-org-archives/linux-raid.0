@@ -1,36 +1,60 @@
-From: Tim Moore <tim.moore@nsr500.net>
+From: Gordon Henderson <gordon@drogon.net>
 Subject: Re: [PATCH md 2 of 4] Fix raid6 problem
-Date: Sun, 13 Feb 2005 20:56:13 -0800
-Message-ID: <42102F6D.7060703@nsr500.net>
-References: <Pine.LNX.4.44.0502131602470.16537-100000@coffee.psychology.mcmaster.ca> <Pine.LNX.4.56.0502132113430.29594@lion.drogon.net>
+Date: Mon, 14 Feb 2005 08:05:51 +0000 (GMT)
+Message-ID: <Pine.LNX.4.56.0502140754340.29594@lion.drogon.net>
+References: <200502031743.j13Hha910546@www.watkins-home.com> <42026860.1000409@zytor.com>
+ <Pine.LNX.4.56.0502031822160.9028@lion.drogon.net> <421028BC.6040902@nsr500.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-In-Reply-To: <Pine.LNX.4.56.0502132113430.29594@lion.drogon.net>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+In-Reply-To: <421028BC.6040902@nsr500.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Tim Moore <linux-raid@nsr500.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Sun, 13 Feb 2005, Tim Moore wrote:
 
+> Gordon Henderson wrote:
+> >
+> > Anyone using Tyan Thunder K8W motherboards???
+> >
+> > I now know, there is a K8S (server?) version of that mobo, but at the time
+> > it was all orderd, I wasn't aware of it - my thoughts are there there is
+> > some sort of PCI/PCI-X problem with either the motherboard or the chipset,
+> > and in all probability the K8S mobo will have the same chipsset and same
+> > problems anyway...
+>
+> I'm using a K8W at work as a driver client for NAS testing.  Onboard
+> Broadcom GigE, Linksys Marvell GigE, 2xWD1200JD + 2xMaxtor Maxline Plus II
+> as RAID-0 and RAID-5 using the Sil_3114, 2.4.29, raidtools 1.0.  2+2x1GB
+> PC-2700 in first and third slots for each CPU.  All PCI-X/HT configs set to
+>   Auto in BIOS and Jumpers, 2.02b BIOS.  No issues except for a bad SATA cable.
+>
+> Striping yields ~90MB/s, RAID-5 about 65r, 55w on 8GB Bonnie++ runs, 2GB dd
+> reads on raw devices yields ~55MB/s
 
-Gordon Henderson wrote:
-> On Sun, 13 Feb 2005, Mark Hahn wrote:
-> I was about to post that I've solved my problems with that Tyan dual
-> opteron motherboard, but it's still crap. I upgraded the BIOS to the 2.02
-> beta and it seemed to work a lot better.  Still couldn't boot off it with
-> all 8 drives in, but solved that with the use of a 32MB flash IDE unit
-> holding /boot... However, it dropped a drive during initial sync of the
-> raid6 arrays with lots of SCSI errors, and had given lots of DMA interrupt
-> missing, etc. thorugh the day when I've run soaktests on it, so I'm going
+I've not had any issues with the on-board 3114 controller. It's not
+blindingly fast, but it's at the end of 2 PCI bridges and on a 33MHz
+32-bit bus, but it's fine. I've had over 270MB/sec reads out of an 8-way
+RAID-0 array. (300Mb/sec writes!) although I want raid-6 on all
+partitions, that drops down to ~130MB/sec read.
 
-2 of the 4 SATA cables packaged with the K8W were intermittent bad 
-(SCSI/DMA errors, BIOS didn't see them at boot).  New cables, no problem.
+The problems happen when I plug-in a PCI SATA card (3112 chipset based).
+I've tried 2 different types of cards and while one is better than the
+other (causes less or no lock-ups) it's still not perfect. I'm going to
+try a 4-port card this week. It's solid with only one PCI card in.
+Assitionally, if I plug a card into PCI slots 3 or 4, then the bios locks
+up at boot time (Checking NVRAM ... )
 
-No I don't work for AMD or Tyan :)  I tried the K8W as a high throughput 
-client driver platform because I couldnt take the budget hit on an Iwill 
-QK8S which we use in production...they work like perfect screaming daemons.
+Hm. According to the manual, your memory configuration isn't supported -
+you should be using slots 1 & 2 for each processor to get 128-bit
+access... I only have 2 x 512MB PC2700 modules in slots 1 & 2 of CPU0.
 
-Also considered the MSI board but no numa memory interconnect and no 64bit 
-slots.
+If this box was just going to be a fileserver (NAS sort of thing) then I'd
+have gone with a single processor, but it's also going to be running some
+huge CVS and MySQL application (home built version control system) and
+they specified dual-processors. (The existing setup runs on a dual Xeon
+PII/700 Dull box which takes up too much rack space and doesn't have
+enough disks)
 
-Good luck.
+Gordon
