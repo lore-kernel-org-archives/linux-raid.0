@@ -1,8 +1,8 @@
 From: =?iso-8859-2?Q?Karel_Kulhav=FD?= <clock@twibright.com>
-Subject: Multiline string literals patch
-Date: Fri, 9 Jan 2004 14:45:01 +0100
+Subject: mkraid with 2.6.0
+Date: Fri, 9 Jan 2004 14:55:47 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040109144501.A19523@beton.cybernet.src>
+Message-ID: <20040109145547.B19523@beton.cybernet.src>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
@@ -10,72 +10,14 @@ Content-Disposition: inline
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-mkraid.c in raidtools-1.00.3.tar.gz from
-http://people.redhat.com/mingo/raidtools
-is uncompilable with gcc-3.3.2 dues to usage of multiline string literals
+bash-2.05b# mkraid /dev/md0
+/dev/md1: array is active -- run raidstop first.
+mkraid: aborted.
+(In addition to the above messages, see the syslog and /proc/mdstat as well
+ for potential clues.)
 
-A patch follows.
+It seems like mkraid from raidtools-1.00.3 doesn't work with 2.6.0 kernel.
+I want it to make /dev/md0 and it tell me /dev/md1 is active - /dev/md1
+is active, but it is not a reason to refuse to work.
 
 Cl<
-
-diff -Pur raidtools-1.00.3/mkraid.c raidtools-1.00.3-patched/mkraid.c
---- raidtools-1.00.3/mkraid.c   2003-01-15 09:58:25.000000000 +0100
-+++ raidtools-1.00.3-patched/mkraid.c   2004-01-09 14:34:46.283311980 +0100
-@@ -171,32 +171,32 @@
-     if (old_force_flag && (func == mkraid)) {
-        fprintf(stderr,
-
--"
-- WARNING!
--
-- NOTE: if you are recovering a double-disk error or some other failure mode
-- that made your array unrunnable but data is still intact then it's strongly
-- recommended to use the lsraid utility and to read the lsraid HOWTO.
--
-- If your RAID array holds useful and not yet backed up data then --force
-- and the hot-add/hot-remove functionality should be used with extreme care!
-- If your /etc/raidtab file is not in sync with the real array configuration,
-- then --force might DESTROY ALL YOUR DATA. It's especially dangerous to use
-- -f if the array is in degraded mode.
--
-- If your /etc/raidtab file matches the real layout of on-disk data then
-- recreating the array will not hurt your data, but be aware of the risks
-- of doing this anyway: freshly created RAID1 and RAID5 arrays do a full
-- resync of their mirror/parity blocks, which, if the raidtab is incorrect,
-- the resync will wipe out data irrecoverably. Also, if your array is in
-- degraded mode then the raidtab must match the degraded config exactly,
-- otherwise you'll get the same kind of data destruction during resync.
-- (see the failed-disk raidtab option.) You have been warned!
--
-- [ If your array holds no data, or you have it all backed up, or if you
-- know precisely what you are doing and you still want to proceed then use
-- the --really-force (or -R) flag. ]
--");
-+""
-+" WARNING!"
-+""
-+" NOTE: if you are recovering a double-disk error or some other failure mode"
-+" that made your array unrunnable but data is still intact then it's strongly"
-+" recommended to use the lsraid utility and to read the lsraid HOWTO."
-+""
-+" If your RAID array holds useful and not yet backed up data then --force"
-+" and the hot-add/hot-remove functionality should be used with extreme care!"
-+" If your /etc/raidtab file is not in sync with the real array configuration,"
-+" then --force might DESTROY ALL YOUR DATA. It's especially dangerous to use"
-+" -f if the array is in degraded mode."
-+""
-+" If your /etc/raidtab file matches the real layout of on-disk data then"
-+" recreating the array will not hurt your data, but be aware of the risks"
-+" of doing this anyway: freshly created RAID1 and RAID5 arrays do a full"
-+" resync of their mirror/parity blocks, which, if the raidtab is incorrect,"
-+" the resync will wipe out data irrecoverably. Also, if your array is in"
-+" degraded mode then the raidtab must match the degraded config exactly,"
-+" otherwise you'll get the same kind of data destruction during resync."
-+" (see the failed-disk raidtab option.) You have been warned!"
-+""
-+" [ If your array holds no data, or you have it all backed up, or if you"
-+" know precisely what you are doing and you still want to proceed then use"
-+" the --really-force (or -R) flag. ]"
-+);
-        return EXIT_FAILURE;
-     }
