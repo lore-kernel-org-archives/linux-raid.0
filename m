@@ -1,19 +1,21 @@
-From: "Georgia" <willsk@aci.on.ca>
-Subject: Effortless Perscription Faciliation dg
-Date: Sat, 7 Jan 2006 10:43:28 -0500
-Message-ID: <200601071543.k07FhG1k006776@zeus2.kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: "Wesley Page" <MVEQVDQJC@hotmail.com>
+Subject: King of Pharrmacy r6dkx9
+Date: Mon, 15 Mar 2004 08:32:47 +0600
+Message-ID: <CFE9.9A6.3040098B8C@mopalinux.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux-net@vger.kernel.org
+Cc: linux-newbie@vger.kernel.org, linux-ppp@vger.kernel.org, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, linux-serial@vger.kernel.org
 List-Id: linux-raid.ids
 
-Check Out our new Online Ph¡rm¡cy and retain up to 85%
 
-Dozens of Products to Purchase
+Huge selection of meds available
+at attractive prices. 
+Highest quality assured.
 
-http://uk.geocities.com/SaraDupree4690/
+Try us out today..
 
-We are your source for Astronomical Dicounts
+http://obhohl.multicountry.com/?dmnpmcxwnopytbplwgzpoafwcfr
 
+
+zO4zMM
