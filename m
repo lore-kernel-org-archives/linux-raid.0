@@ -1,89 +1,97 @@
-From: ptb@lab.it.uc3m.es (Peter T. Breuer)
+From: Maarten <maarten@ultratux.net>
 Subject: Re: ext3 journal on software raid (was Re: PROBLEM: Kernel 2.6.10 crashing repeatedly and hard)
-Date: Tue, 4 Jan 2005 16:12:20 +0100
-Message-ID: <kboqa2-ana.ln1@news.it.uc3m.es>
-References: <200501030916.j039Gqe23568@inv.it.uc3m.es> <l1nna2-e9i.ln1@news.it.uc3m.es> <200501031846.42950.maarten@ultratux.net> <200501032052.21459.maarten@ultratux.net> <a9noa2-o12.ln1@news.it.uc3m.es> <fh0pa2-kvp.ln1@news.it.uc3m.es> <16857.55609.534526.297577@cse.unsw.edu.au> <jh4pa2-pi.ln1@news.it.uc3m.es> <16857.64086.362458.177296@cse.unsw.edu.au> <ms4qa2-0qa.ln1@news.it.uc3m.es> <41DAA243.3060202@dgreaves.com> <qikqa2-4m2.ln1@news.it.uc3m.es> <41DAAB7D.2030400@dgreaves.com>
+Date: Tue, 4 Jan 2005 16:31:16 +0100
+Message-ID: <200501041631.16339.maarten@ultratux.net>
+References: <200501030916.j039Gqe23568@inv.it.uc3m.es> <200501041424.19802.maarten@ultratux.net> <eekqa2-4m2.ln1@news.it.uc3m.es>
+Mime-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <eekqa2-4m2.ln1@news.it.uc3m.es>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-David Greaves <david@dgreaves.com> wrote:
-> Disks suffer from random *detectable* corruption events on (or after) 
-> write (eg media or transient cache being hit by a cosmic ray, cpu 
-> fluctuations during write, e/m or thermal variations).
+On Tuesday 04 January 2005 15:05, Peter T. Breuer wrote:
+> Maarten <maarten@ultratux.net> wrote:
+> > On Tuesday 04 January 2005 11:14, Peter T. Breuer wrote:
+> > > maarten <maarten@ultratux.net> wrote:
+> > > > On Monday 03 January 2005 21:41, Peter T. Breuer wrote:
+> > > > > maarten <maarten@ultratux.net> wrote:
 
-Well, and also people hitting the off switch (or the power going off)
-during a write sequence to a mirror, but after one of a pair of mirror
-writes has gone to disk, but before the other of the pair has.
+> > Well, that IS an eye-opener for me.  I was unaware studying math was a
+>
+> One doesn't "study" math, one _does_ math, just as one _does_ walking
+> down the street, talking, and opening fridge doors. Your competency
+> at it gets certified in school and uni, that's all.
 
-(If you want to say "but the fs is journalled", then consider what if 
-the write is to the journal ...).
+I know a whole mass of people who can't calculate what chance the toss of a 
+coin has.  Or who don't know how to verify their money change is correct.
+So it seems math is not an essential skill, like walking and talking is.
+I'll not even go into gambling, which is immensely popular.  I'm sure there 
+are even mathematicians who gamble.  How do you figure that ?? 
 
-> Disks suffer from random *undetectable* corruption events on (or after) 
-> write (eg media or transient cache being hit by a cosmic ray, cpu 
-> fluctuations during write, e/m or thermal variations)
+> > but that doesn't make it so that any harddrive has a life expectancy of
+> > 20+ years, as the daily facts prove all the time.
+>
+> It does mean it. It means precisely that (given certain experimental
+> conditions). If you want to calculate the MTBF in a real dusty noisy
+> environment, I would say it is about ten years. That is, 10% chance of
+> failure per year.
+>
+> If they say it is 20 years and not 10 years, well I believe that too,
+> but they must be keeping the monkeys out of the room.
 
-Yes. This is not different from what I have said. I didn't have any
-particular scenario in mind.
+Nope, not 10 years, not 20 years, not even 40 years.  See this Seagate sheet 
+below where they go on record with a whopping 1200.000 hours MTBF.  That 
+translates to 137 years.  Now can you please state here and now that you 
+actually believe that figure ?  Cause it would show that you have indeed 
+fully and utterly lost touch with reality.  No sane human being would take 
+seagate for their word seen as we all experience many many more drive 
+failures within the first 10 years, let alone 20, to even remotely support 
+that outrageous MTBF claim.
 
-But I see that you are correct in pointing out that some error
-posibilities arer _created_ by the presence of raid that would not
-ordinarily be present. So there is some scaling with the
-number of disks that needs clarification.
+All this goes to show -again- that you can easily make statistics which do not 
+resemble anything remotely possible in real life.  Seagate determines MTBF by 
+setting up 1.200.000 disks, running them for one hour, applying some magic 
+extrapolation wizardry which should (but clearly doesn't) properly account 
+for aging, and hey presto, we've designed a drive with a statistical average 
+life expectancy of 137 years.  Hurray.  
 
-> Raid disks have more 'corruption-susceptible' data capacity per useable 
-> data capacity and so the probability of a corruption event is higher. 
+Any reasonable person will ignore that MTBF as gibberish, and many people 
+would probably even state as much as that NONE of those drives will still 
+work after 137 years. (too bad there's no-one to collect the prize money)
 
-Well, the probability is larger no matter what the nature of the event.
-In principle, and vry apprximately, there are simply more places (and
-times!) for it to happen TO.
+So, the trick seagate does is akin to your trick of defining t as small as you 
+like and [then] proving that p goes to zero.  Well newsflash, you can't 
+determine anything useful from running 1000 drives for one hour, and probably 
+even less from running 3.600.000 drives for one second.  The idea alone is 
+preposterous.
 
-Yes, you may say but those errors that are produced by the cpu don't
-scale, nor do those that are produced by software. I'd demur. If you
-think about each kind you have in mind you'll see that they do scale:
-for example, the cpu has to work twice as often to write to two raid
-disks as it does to have to write to one disk, so the opportunities for
-IT to get something wrong are doubled.  Ditto software.  And of course,
-since it is writing twice as often , the chance of being interrupted at
-an inopportune time by a power failure are also doubled.
+http://www.seagate.com/cda/products/discsales/marketing/
+detail/0,1081,551,00.html
 
-See?
+> > Maybe p really is the failure
+> > rate in 20 year old DAT tapes that were stored at 40 degrees C.  Maybe it
+> > is
+>
+> You simply are spouting nonsense. Please cease. It is _painful_. Like
+> hearing somebody trying to sing when they cannot sing, or having to
+> admire amateur holiday movies.
 
+Nope.  I want you to provide a formula which shows how likely a failure is.  
+It is entirely my prerogative to test that formula with media with a massive 
+failure rate.  I want to build a raid-1 array out of 40 pieces of 5.25" 
+25-year old floppy drives, and who's stopping me.  
+What is my expected failure rate ?
 
-> Since a detectable error is detected it can be retried and dealt with.
+> Rest of crank math removed. One can't reason with people who simply
+> don't have the wherewithal to recognise that the problem is inside
+> them.
 
-No. I made no such assumption. I don't know or care what you do with a
-detectable error. I only say that whatever your test is, it detects it!
-IF it looks at the right spot, of course. And on raid the chances of
-doing that are halved, because it has to choose which disk to read.
+This sentence could theoretically equally well apply to you, couldn't it ?
 
-
-> This leaves the fact that essentially, raid disks are less reliable than 
-> non-raid disks wrt undetectable corruption events.
-
-Well, that too. There is more real estate.
-
-But this "corruption"  word seems to me to imply that you think I was
-imagining errors produced by cosmic rays. I made no such restriction.
-
-> However, we need to carry out risk analysis to decide if the increase in 
-> susceptibility to certain kinds of corruption (cosmic rays) is 
-
-
-Ahh. Yes you do. No I don't! This is your own invention, and I said no
-such thing. By "errors", I meant anything at all that you consider to be
-an error. It's up to you.  And I see no reason to restrict the term to
-what is produced by something like "cosmic rays". "People hitting the
-off switch at the wrong time" counts just as much, as far as I know.
-
-I would guess that you are trying to classify errors by the way their
-probabilities scale with number of disks. I made no such distinction,
-in principle.  I simply classified errors according to whether you could
-(in principle, also) detect them or not, whatever your test is.
-
-> acceptable given the reduction in susceptibility to other kinds (bearing 
-> or head failure).
-
-Peter
+Maarten
 
