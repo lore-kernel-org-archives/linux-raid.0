@@ -1,67 +1,48 @@
-From: Alvin Oga <aoga@ns.Linux-Consulting.com>
-Subject: errors Re: ext3 journal on software raid (was Re: PROBLEM: Kernel 2.6.10 crashing repeatedly and hard)
-Date: Wed, 5 Jan 2005 06:55:50 -0800 (PST)
-Message-ID: <Pine.LNX.3.96.1050105064738.9245B-100000@Maggie.Linux-Consulting.com>
-References: <41DBFBAE.1070309@tls.msk.ru>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: ext3 journal on software raid (was Re: PROBLEM: Kernel 2.6.10 crashing repeatedly and hard)
+Date: Wed, 5 Jan 2005 10:09:30 -0500
+Message-ID: <200501051509.j05F9a925718@www.watkins-home.com>
+References: <41DBB6C6.2040301@wasp.net.au>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <41DBFBAE.1070309@tls.msk.ru>
+In-Reply-To: <41DBB6C6.2040301@wasp.net.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Michael Tokarev <mjt@tls.msk.ru>
-Cc: linux-raid@vger.kernel.org
+To: 'Brad Campbell' <brad@wasp.net.au>, 'RAID Linux' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Dude!  That's a lot of mp3 files!  :)
 
-hi ya michael
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Brad Campbell
+Sent: Wednesday, January 05, 2005 4:44 AM
+To: RAID Linux
+Subject: Re: ext3 journal on software raid (was Re: PROBLEM: Kernel 2.6.10
+crashing repeatedly and hard)
 
-On Wed, 5 Jan 2005, Michael Tokarev wrote:
+Sorry, sent this privately by mistake.
 
-> The drive IS reporting read errors in most cases.
+Peter T. Breuer wrote:
 
-and by the time it reports an error ... its too late ...
+> If you do an md5sum on file contents and compare with a previous md5sum
+> run, then it will be detected provided that the error occurs in a file,
+> but assuming that your disk is 50% full, that is only 50% likely.
+> 
+> I.e. "it depends on your test".
 
-- one has to play detective and figure out why the error occured
-  and prevent it next time
+brad@srv:~$ df -h | grep md0
+/dev/md0              2.1T  2.1T  9.2G 100% /raid
 
-- the worst possible thing to do is .. "disk seems to be dying"
-  so 95% of the people say backup the disks ..
-	-- its too too late
-	-- exercising a dead/dying disks will only aggravate the
-	problem even more
+I'd say likely :p)
 
-- luckily, most "disks errors" are silly errors
-	- bad (cheap, not-too-specs) ide cables
-	- 80 conductor vs 40 conductor
-	- combining 2 different ata speed drives on the same idea cable
-	- too long of an ide cable ... 18" is max
-	- disk running too hot ... if its warm to the touch,
-	its too hot
-	( 35C is maybe okay .. use hddtemp to see what its running at )
-	- bent disk cables 
-	- bad (electrical characteristics) of the ide drivers from the
-	motherboard
-	- ... on and on ...
+Regards,
+Brad
 
-	- todays drives are 1000x better quality than 5-10 years ago
-
-> so things are screwed.  Just like if you hot-remove a DIMM while the
-> system is running:
-
-those that do hot-swap of memory deserve what they get :-)
-( i know you're joking ... and i've seen it done by forgetful admins
-	- these atx power supplies are bad for that reason, since
-	the motherboard is still live, even if the pc is off, due to
-	standby voltages floating around
-
->  The talks isn't about
-> "undetectable" (unreported etc) errors here, but about the fact that
-> the error is here.
-
-the trick is to find out what caused the error ... 
-	- if you dont figure out what happened ... the problem will 
-	continue 
-
-have fun raiding
-alvin
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
