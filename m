@@ -1,57 +1,26 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: ANNOUNCE: mdadm 1.7.0 - A tool for managing Soft RAID under Linux
-Date: Wed, 11 Aug 2004 12:29:13 +1000
+From: Philip Molter <philip@corp.texas.net>
+Subject: Re: Force parity resync on raid5?
+Date: Tue, 10 Aug 2004 22:37:06 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16665.33913.505058.370245@cse.unsw.edu.au>
+Message-ID: <41199462.9050408@corp.texas.net>
+References: <4118B9A8.2040102@corp.texas.net>	<16664.49686.253255.828936@cse.unsw.edu.au>	<4118DBFA.6020607@corp.texas.net> <16665.33845.170965.226004@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <16665.33845.170965.226004@cse.unsw.edu.au>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+> However I have just release mdadm 1.7.0 which supports
+>    --assemble --update=resync
+> 
+> which will cause an array to resync immediately after being
+> assembling.  This don't help you for an array with a root filesystem
+> on it, but should do want you want for any other array.
 
+Neil,
 
-I am pleased to announce the availability of 
-   mdadm version 1.7.0
-It is available at
-   http://www.cse.unsw.edu.au/~neilb/source/mdadm/
-and
-   http://www.{countrycode}.kernel.org/pub/linux/utils/raid/mdadm/
+Thank you.  I'll let you know if we have any problems with the resyncing.
 
-as a source tar-ball and (at the first site) as an SRPM, and as an RPM for i386.
-
-mdadm is a tool for creating, managing and monitoring
-device arrays using the "md" driver in Linux, also
-known as Software RAID arrays.
-
-Release 1.7.0 adds:
-    -   Support "--grow --add" to add a device to a linear array, if the
-        kernel supports it.  Not documented yet.
-    -   Restore support for uclibc which was broken recently.
-    -   Several improvements to the output of --detail, including
-        reporting "resyncing" or "recovering" in the state.
-    -   Close filedescriptor at end of --detail (exit would have closed it 
-	anyway, so this isn't abig deal).
-    -   Report "Sync checkpoint" in --examine output if appropriate.
-    -   Add --update=resync for --assemble mode to for a resync when the
-        array is assembled.	 
-    -   Add support for "raid10", which is under development in 2.6.
-	Not documented yet.
-    -   --monitor now reads spare-group and spares info from config file
-	even when names of arrays to scan are given on the command line
-
-It is expected that the next full release of mdadm will be 2.0.0
-and it will have substantially re-written handling for superblocks and
-array creation.  In particular, it will be able to work with the new
-superblock format (version 1) supported by 2.6.
-Prior to that, some point releases (1.7.1, 1.7.2 ...) may be released 
-so that the changes can be tested by interrested parties.
-
-Development of mdadm is sponsored by CSE@UNSW: 
-  The School of Computer Science and Engineering
-at
-  The University of New South Wales
-
-NeilBrown  11 August 2004
-
+Philip
