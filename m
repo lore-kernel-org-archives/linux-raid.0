@@ -1,37 +1,18 @@
-From: Massimiliano Masserelli <negro@interim.it>
-Subject: Re: RAID1 root - troubles booting in degraded mode
-Date: Wed, 30 Oct 2002 12:10:44 +0100
+From: <danfisher@bwkip.com>
+Subject: Raid with RH 7.1
+Date: Wed, 30 Oct 2002 09:44:33 -0500 (EST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20021030111044.GA5337@sgabanaz.interim.it>
-References: <4D618F6493CE064A844A5D496733D66703142F@freedom.icomedias.com>
+Message-ID: <2606.204.250.25.205.1035989073.squirrel@webmail.bwkip.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4D618F6493CE064A844A5D496733D66703142F@freedom.icomedias.com>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Oct 30, 2002 at 11:52:25AM +0100, Martin Bene wrote:
+I have a RH 7.1 box running and want to raid it now.  How do I compile the
+kernel to add mirroring raid 1?
 
-> This look like you're initializing the array from an initrd using
-> raidstart.
+-Dan
 
-Indeed I am.
 
-> Reason why it's not working: raidstart is stupid. it just reads the
-> first device from raidtab and tries to read the raid superblock from
-> there. if the first device listed in raidtab doesn't work, raidstart
-> can't start the array.
-
-Pity I didn't find this little detail in any of the docu I found and
-read... Thank you very very much for the hint, I'll make some
-experiments (static raid support vs. mdadm).
-
-Bye.
--- 
-Massimiliano Masserelli
--------------------------------------------------------------------------------
-Nella sua prima passione la donna ama il suo amante,
-in tutte le altre cio` che ama e` il suo amore.
-    	-- Byron, "Don Juan"
