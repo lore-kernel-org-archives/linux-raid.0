@@ -1,31 +1,81 @@
-From: Mike Fedyk <mfedyk@matchmail.com>
-Subject: Re: RAID 5 from 2.4.24 to 2.6.0
-Date: Thu, 8 Jan 2004 17:28:36 -0800
+From: =?iso-8859-2?Q?Karel_Kulhav=FD?= <clock@twibright.com>
+Subject: Multiline string literals patch
+Date: Fri, 9 Jan 2004 14:45:01 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040109012836.GT1882@matchmail.com>
-References: <20040108151447.GA15294@piper.madduck.net>
+Message-ID: <20040109144501.A19523@beton.cybernet.src>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20040108151447.GA15294@piper.madduck.net>
-To: linux raid mailing list <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Jan 08, 2004 at 04:14:47PM +0100, Martin F Krafft wrote:
-> Due to stability problems with the RAID code in 2.4 (detaailed
-> message forthcoming), I would like to try 2.6.0 on one of our
-> servers. However, anticipating problems, I want to make sure that
-> this change is not irreversible.
-> 
-> Can I mount RAID 1 and 5 partitions in 2.6.0 and 2.4.24
-> interchangeably?
+mkraid.c in raidtools-1.00.3.tar.gz from
+http://people.redhat.com/mingo/raidtools
+is uncompilable with gcc-3.3.2 dues to usage of multiline string literals
 
-Yes, you can.
+A patch follows.
 
-Though since the 2.4 raid code is quite fragile in states not possible from
-2.4 code, I found one problem a while back where 2.6-test would set the state
-bits wrong.  The problem was fixed though.
+Cl<
 
-You can use 2.6 and 2.4 raid interchangably, but don't scrimp on persuing
-the problem from a 2.4 perspective.
+diff -Pur raidtools-1.00.3/mkraid.c raidtools-1.00.3-patched/mkraid.c
+--- raidtools-1.00.3/mkraid.c   2003-01-15 09:58:25.000000000 +0100
++++ raidtools-1.00.3-patched/mkraid.c   2004-01-09 14:34:46.283311980 +0100
+@@ -171,32 +171,32 @@
+     if (old_force_flag && (func == mkraid)) {
+        fprintf(stderr,
+
+-"
+- WARNING!
+-
+- NOTE: if you are recovering a double-disk error or some other failure mode
+- that made your array unrunnable but data is still intact then it's strongly
+- recommended to use the lsraid utility and to read the lsraid HOWTO.
+-
+- If your RAID array holds useful and not yet backed up data then --force
+- and the hot-add/hot-remove functionality should be used with extreme care!
+- If your /etc/raidtab file is not in sync with the real array configuration,
+- then --force might DESTROY ALL YOUR DATA. It's especially dangerous to use
+- -f if the array is in degraded mode.
+-
+- If your /etc/raidtab file matches the real layout of on-disk data then
+- recreating the array will not hurt your data, but be aware of the risks
+- of doing this anyway: freshly created RAID1 and RAID5 arrays do a full
+- resync of their mirror/parity blocks, which, if the raidtab is incorrect,
+- the resync will wipe out data irrecoverably. Also, if your array is in
+- degraded mode then the raidtab must match the degraded config exactly,
+- otherwise you'll get the same kind of data destruction during resync.
+- (see the failed-disk raidtab option.) You have been warned!
+-
+- [ If your array holds no data, or you have it all backed up, or if you
+- know precisely what you are doing and you still want to proceed then use
+- the --really-force (or -R) flag. ]
+-");
++""
++" WARNING!"
++""
++" NOTE: if you are recovering a double-disk error or some other failure mode"
++" that made your array unrunnable but data is still intact then it's strongly"
++" recommended to use the lsraid utility and to read the lsraid HOWTO."
++""
++" If your RAID array holds useful and not yet backed up data then --force"
++" and the hot-add/hot-remove functionality should be used with extreme care!"
++" If your /etc/raidtab file is not in sync with the real array configuration,"
++" then --force might DESTROY ALL YOUR DATA. It's especially dangerous to use"
++" -f if the array is in degraded mode."
++""
++" If your /etc/raidtab file matches the real layout of on-disk data then"
++" recreating the array will not hurt your data, but be aware of the risks"
++" of doing this anyway: freshly created RAID1 and RAID5 arrays do a full"
++" resync of their mirror/parity blocks, which, if the raidtab is incorrect,"
++" the resync will wipe out data irrecoverably. Also, if your array is in"
++" degraded mode then the raidtab must match the degraded config exactly,"
++" otherwise you'll get the same kind of data destruction during resync."
++" (see the failed-disk raidtab option.) You have been warned!"
++""
++" [ If your array holds no data, or you have it all backed up, or if you"
++" know precisely what you are doing and you still want to proceed then use"
++" the --really-force (or -R) flag. ]"
++);
+        return EXIT_FAILURE;
+     }
