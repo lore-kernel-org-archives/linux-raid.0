@@ -1,60 +1,41 @@
-From: jlewis@lewis.org
-Subject: Re: scsi card recommendations
-Date: Mon, 20 Oct 2003 21:37:35 -0400 (EDT)
+From: Mental Patient <mental@neverlight.com>
+Subject: ataraid in 2.6?
+Date: Mon, 20 Oct 2003 22:08:18 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0310202136290.8137-100000@redhat1.mmaero.com>
-References: <3F94867C.2020005@fantinibakery.com>
+Message-ID: <3F949512.30907@neverlight.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3F94867C.2020005@fantinibakery.com>
-To: rob <rob@fantinibakery.com>
-Cc: michael@insulin-pumpers.org, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Also, Leonard, who wrote the Linux mylex drivers died.  Has anyone picked 
-up maintenance of the Mylex/Buslogic drivers?
+Forgive me if this is a faq, but I'm trying to get my high point raid 
+controler working under 2.6. For various reasons (mainly support for my 
+kt400 agp chipset) 2.4 isn't going to work for me.
 
-On Mon, 20 Oct 2003, rob wrote:
+I've done some looking and grepping through the code, but ataraid is 
+nowhere to be found. The docs I've found regarding the high point 
+controler indicate that I should be enabling ataraid in the same section 
+where ide support is in the kernel config.
 
-> I like the Mylex AcceleRaid cards.
-> 
-> You can usually find good deals on E-Bay.
-> 
-> I don't know if Mylex cards are currently being develoiped. as Mylex was 
-> purchased by IBM then LSI logic.
-> 
-> 
-> http://www.lsilogic.com/products/stor_prod/raid/mylex.html cards.
-> 
->  
-> 
-> Michael wrote:
-> 
-> >I've just inherited a couple of rack servers that have the buggy dpt 
-> >scsi controllers and I need to replace them with something solid.
-> >
-> >Recommendations for a pci scsi-3 controller would be appreciated.
-> >
-> >Thanks
-> >Michael
-> >Michael@Insulin-Pumpers.org
-> >-
-> >To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> >the body of a message to majordomo@vger.kernel.org
-> >More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >  
-> >
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+http://lists.insecure.org/lists/linux-kernel/2003/Sep/5600.html
 
-----------------------------------------------------------------------
- Jon Lewis *jlewis@lewis.org*|  I route
- Senior Network Engineer     |  therefore you are
- Atlantic Net                |  
-_________ http://www.lewis.org/~jlewis/pgp for PGP public key_________
+This message indicates that 2.6 doesnt have ata-raid (yet) and that the 
+device mapper can be used instead. Is this correct? Is this in any way 
+related to the md driver used for software raid? Would a different card 
+be better supported? Something from 3ware perhaps?
+
+http://www.spinics.net/lists/raid/msg03448.html
+
+This message also points me towards the device mapper. Has/is anyone 
+using a high point 372 under linux 2.6.0-test???
+
+If some kind soul could point me in the right direction, I would greatly 
+appreciate it. Please cc me as I'm not on the list.
+
+Thanks much.
+
+-- 
+Jason
 
