@@ -1,62 +1,79 @@
 From: Alex Verbitsky <alexver5@mail.ru>
-Subject: Re[2]: experiences with 3Ware 6400 3W-6400?
-Date: Sat, 28 Jun 2003 14:40:33 +0300
+Subject: 3ware 7500 performance, was: experiences with 3Ware 6400 3W-6400?
+Date: Sat, 28 Jun 2003 17:00:15 +0300
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <14152929388.20030628144033@mail.ru>
-References: <Pine.LNX.4.55.0306270920010.6883@datavibe.net>
- <Pine.LNX.4.43.0306271429480.32150-100000@unicorn.drogon.net>
- <3841.208.48.139.163.1056738220.squirrel@www.greenhydrant.com>
- <Pine.LNX.4.55.0306271540140.6883@datavibe.net>
+Message-ID: <6661311060.20030628170015@mail.ru>
+References: <Pine.LNX.4.33.0306271017580.9087-100000@router.windsormachine.com>
 Reply-To: Alex Verbitsky <alexver5@mail.ru>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.55.0306271540140.6883@datavibe.net>
-To: "Rev. Jeffrey Paul" <sneak@datavibe.net>
+In-Reply-To: <Pine.LNX.4.33.0306271017580.9087-100000@router.windsormachine.com>
+To: Mike Dresser <mdresser_l@windsormachine.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello Rev. Jeffrey Paul,
+Hello Mike,
 
-Friday, June 27, 2003, 10:45:08 PM, you wrote:
-RJP> Exactly.  Another issue is that I want them to be able to just swap out
-RJP> (not necessarily hot, but offline even) a failed drive without my
-RJP> intervention.... I assume the card will just resync it?  Under linux, it'd
-RJP> require mucking about with mdadm or the raidtools and I want this to be a
-RJP> fire-and-forget kind of system.  On solid hardware on a UPS, the only
-RJP> things likely to die are the processor fan, the power supply, and the
-RJP> drives...  all of which can be replaced with no knowledge of the raid or
-RJP> software configuration.
-you are wrong that 3ware card automatically resync replaced drive. I've
-done some research with 7500-8 and it showed that:
-1) 3ware card doesn't detect that drive was inserted - you should
-   manually add it to the list using 3DM or CLI
-2) after you added the drive you should _manually_ start rebuilding
-   the array with that drive again using 3DM or CLI
-3) OR you have to go to 3ware BIOS on boot - then new drive will be
-   detected automatically and you just have to start rebuilding with ths
-   drive. BUT:
-      - after reboot rebuild will continue on first array access
-        (mounting volume or running fdisk) not on start-up
-      - if you reboot after drive swap and do nothing in BIOS you will
-        not be able to use newly inserted drive for array rebuild
-        since BIOS adds it as independed 1-disk JBOD array.
-        Until 7.6 3ware software you had to go to 3ware BIOS in this
-        situation. With 7.6 software you can handle this since add and
-        delete array commands are now available.
+Friday, June 27, 2003, 5:36:09 PM, you wrote:
+MD> P4 2.53, Asus P4B533-e, 3ware 7500-4, 4 Maxtor Maxline 250 gb drives in
+MD> raid5.
+MD> mickey,512M,17840,60,19878,5,8683,2,28247,89,91356,8,243.0,0,16,2576,81,+++++,+++,+++++,+++,3184,96,+++++,+++,9392,96
 
-I am not 100% sure about 1) since i did not have a chance to test it with
-3ware drive cage (which might have some logic for signaling drive
-inesrtion to the card), but on the hand i looked through 3ware manual and
-did not see any mention of auto-detection - only manual operations.
+MD> P4 2.53, Asus P4B533, 3ware 7500-4, 2 Maxtor DiamondMax 9 200 gb drives in
+MD> Raid1. (different machine)
+MD> r1,512M,26616,94,52362,15,21394,5,28918,92,47633,4,301.8,0,16,3145,99,+++++,+++,+++++,+++,3214,99,+++++,+++,10229,95
 
-If you think i'm wrong or have any info on this I am all ears.
+MD> Half to a third the write speed, although the read speed is a lot
+MD> better.
+What kernel did you use for testing?
+I believe it makes difference: when i tried RH9 (2.4.20 kernel) i got
+for 3 drive harware RAID5 - 11 MB/s seq write,
+after downgrading to RH8 (2.4.18-14) i got 25-26 MB/s.
+drives were ibm AVVA 80GB 7200RPM
 
-I believe that is possible to create some set of scripts for
-monitoring 3ware array and auto-resyncng replaced drive but that would
-be limited to single array on card i think.
-Actually i am now trying to write script of this kind using perl and CLI.
+when i added another 3 drives (ibm dtla, maxtor and barracuda 4 -
+all 7200rpm) i got on 6 drive RAID5 - 29.5 MB/s (though CPU usage was
+high - 50%)
+
+upgrading to 2.4.21 made no difference (against 2.4.18),
+upgrading firmware to 7.6 - the same.
+
+my configuraton: Via Epia-M with Via C3-933mhz CPU, 256MB RAM, 3ware 7500-8
+
+under Win2k on the same configuration i got 40-42 MB/s seq write for
+4 drive harware RAID5 with 6% CPU usage.
+
+As a conclusion, seems that RH9's kernel (and maybe some other kernels?) are broken.
+
+Also, did you tweaked max-readahead/min-readahead params?
+doing this:
+        echo 256 > /proc/sys/vm/max-readahead
+        echo 128 > /proc/sys/vm/min-readahead
+increased my sequental read from 58 MB/s to 80 MB/s (at expense of CPU
+usage - from 22% to 36%).
+
+Also you did not report your RAM size. if you have 512 MB, your
+results are not very accurate because some amount of writes is
+cached.
+I believe that test file should be at least twice size of the system
+RAM, 4-6 times are better.
+
+MD> Haven't upgraded to the 7.6 firmware yet(still using 7.5.3 that was on
+MD> the card), anyone notice any difference?
+I highly recommend you to upgrade - though i did not notice any
+performance gains, it contains new improved CLI utility with online
+array create/delete commands, and also better support RH8.
+
+MD> The 7000-2 and 7500-4's in raid1 work quite nicely.  The 7500-4 in raid5
+MD> actually lags the system for 3-5 seconds when doing a lot of disk i/o.
+MD> Feels like working on a p120 with DMA shut off, to be honest.
+What do you mean by this? I did not notice anything like this, though i
+use it for sequental i/o mainly.
+if your i/o is highly random, then 3ware acceleration (R5 fusion) is
+not working and you should receive something like 5-10 MB/s.
+
 
 -- 
 Best regards,
