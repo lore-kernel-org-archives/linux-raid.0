@@ -1,41 +1,48 @@
-From: Gordon Henderson <gordon@drogon.net>
-Subject: Re: EVMS or md?
-Date: Mon, 4 Apr 2005 23:52:23 +0100 (BST)
-Message-ID: <Pine.LNX.4.56.0504042336500.21243@lion.drogon.net>
-References: <200504040708.j3478bm03863@www.watkins-home.com>
- <1112642928.25469.28.camel@dyn95395156> <200504041446.50337.kewley@gps.caltech.edu>
- <d2seal$ntf$1@terminus.zytor.com>
+From: Alvin Oga <aoga@mail.Linux-Consulting.com>
+Subject: Re: raid5 - failed disks - i'm confusing
+Date: Mon, 4 Apr 2005 15:51:55 -0700 (PDT)
+Message-ID: <Pine.LNX.3.96.1050404154812.6316C-100000@Maggie.Linux-Consulting.com>
+References: <1112641157.29559.22.camel@compaq-rhel4.xsintricity.com>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <d2seal$ntf$1@terminus.zytor.com>
+In-Reply-To: <1112641157.29559.22.camel@compaq-rhel4.xsintricity.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Doug Ledford <dledford@redhat.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 4 Apr 2005, H. Peter Anvin wrote:
 
-> I can't speak for the EVMS people, but I got to stress-test my RAID6
-> test system some this weekend; after having run in 1-disk degraded
-> mode for several months (thus showing that the big bad "degraded
-> write" bug has been thoroughly fixed) I changed the motherboard, and
-> the kernel didn't support one of the controllers.  And now there were
-> 2 missing drives.  Due to some bootloader problems, I ended up
-> yo-yoing between the two kernels a bit more than I intended to, and
-> went through quite a few RAID disk losses and rebuilds as a result.
 
-I bit the bullet recently and moved a raft of servers over to 2.6.11 and
-RAID-6. Biggest single partition is 1.3TB over 8 drives. Oddest is
-probably 4 drives in a RAID-6 setup, but hey ... (All are running Debian
-Woody FWIW)
+On Mon, 4 Apr 2005, Doug Ledford wrote:
 
-So-far so good. No crashes, no failures. Performance is adequate (Mix of
-Opteron and Hyperthreading Xeon processors, SCSI and SATA drives, Gb
-Ether) and I'm hoping they'll stay that way for the next 3 years until
-they are replaced.
+> Anyway, it might or might not hurt the drives to run them well below
+> their designed operating temperature, I don't have schematics and
+> materials lists in front of me to tell for sure.
 
-6 years ago, I built mt first (Linux S/W) RAID-5 system... (and that
-server was only retired last year) Lets hope RAID-6 does just as good a
-job!
+ez enough to do ... its called "specs" on the various manufacturers 
+websites ... similarly for the operating temp of the ICs on the
+disk controllers ..
 
-Gordon
+you're welcome to run your disks hot ...
+
+i prefer to run it cool to the finger touch test as the server
+room to be 65F
+
+and its a known "fact" for 40+ years ... "heat kills" electromechanical
+items,  car engines is a different animal for different reasons
+
+c ya
+alvin
+- feel free to second guess my reasons :-) ... there's no specs on that
+
+>  But second guessing
+> mechanical engineers that likely have compensated for thermal issues at
+> a given, specific common operating temperature is usually risky.  Most
+> people think "Heat kills" and therefore like to keep things as cool as
+> possible.  For mechanical devices anyway, it's not so much that heat
+> kills, as it is operating outside of the designed temperature range,
+> either above or below, that reduces overall life expectancy.  Keep your
+> drives from overheating, but don't try to freeze them would be my
+> advice.
+
