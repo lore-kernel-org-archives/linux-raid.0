@@ -1,67 +1,38 @@
-From: berk walker <berk@panix.com>
-Subject: Re: [OT] best tape backup system?
-Date: Sat, 26 Feb 2005 18:09:56 -0500
-Message-ID: <422101C4.20901@panix.com>
-References: <Pine.LNX.4.44.0502261730450.14465-100000@coffee.psychology.mcmaster.ca>
+From: "Brett I. Holcomb" <brettholcomb@charter.net>
+Subject: Missing compent in RAID.
+Date: Sat, 26 Feb 2005 22:28:53 -0500
+Message-ID: <Pine.LNX.4.62.0502262228060.9441@gandalf>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-In-Reply-To: <Pine.LNX.4.44.0502261730450.14465-100000@coffee.psychology.mcmaster.ca>
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: linux-raid-owner@vger.kernel.org
-To: Mark Hahn <hahn@physics.mcmaster.ca>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-And worse yet, you have to run them to the end and then rewind them if 
-you are going to keep the data for long [the magnetic fields affect 
-layers near them]. An array of RAID1 disks, which sleep deeply [off] 
-between uses would probably be affordable, and last MUCH longer.
+I have a system with an Adaptec 2100S SCSI  RAID controller.  It's been
+doing well until recently.  The system boots, sees the RAID array and 
+lists
+it and the spare disk.  However, it then (sometimes!) has an error during
+boot or while the system is running.  If I go to the Adaptec BIOS I see 
+that
+all drives are marked as "missing compenent".
 
-Just my 2 cents worth-
-ya, well, that's what you get for 2 cents.
-b-
+This does not happen all the time - sometimes it won't boot because it 
+can't
+find the drives, other times it finds the RAID and drives, boots, runs and
+then the drives are missing.  I checked the cables and caddies for the
+drives, checked to make sure the RAID card was seated.
 
-Mark Hahn wrote:
+Any ideas on what might me happening and how to fix it would be 
+appreciated.
+The system is Win XP Pro, Asus motherboard with ALI chipset, 3Com 3c980 
+NIC,
+Santa Cruz sound card, and a GeForce video card.
 
->>Not sure if it is important to many people, but tapes take a lot less
->>electricity than online disks.
->>    
->>
->
->do you really care?  an active disk is about 15W, inactive 5W
->and asleep nearly zero.  even assuming idle-but-spinning, 
->I make that as about $2/year.
->
->tapes are wonderful in every way except one: they're finicky
->and difficult to care for properly.  for instance, do you have 
->a humidity and temperature-controlled place to store them?
->and have you actually logged the temp/hum for that to see 
->whether, for instance, it gets warm on weekends?
->
->if I were forced to use tapes, I would insist on making 2+ copies
->of everything.  note that this clearly hurt's tape's competitiveness
->WRT price, size, bandwidth, etc.
->
->I don't see any new tape installations that are not driven by 
->secondary factors such as big piles of old data already on tape,
->or someone wanting to physically move the media into a vault.
->
->(on that topic, I don't buy the idea that tape's less vulnerable 
->to hacking, either.  just because your backup is on disk doesn't
->mean that it's online or accessible.  similarly, just because 
->your tape is in a separate cabinet doesn't mean that a sufficiently
->motivated badguy could not get the tape put into some drive...)
->
->regards, mark hahn.
->(buying many TB of disk this year and no tape)
->
->-
->To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->.
->
->  
->
+Thank you.
+
+-- 
+Brett I. Holcomb
+brettholcomb@R777charter.net
+Registered Linux User #188143
+Remove R777 to email
 
