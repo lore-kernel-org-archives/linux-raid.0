@@ -1,51 +1,33 @@
-From: Michel <michel@ket.kth.se>
-Subject: Performance difference between two raid0 arrays on same drives?
-Date: Fri, 11 Jul 2003 18:13:26 +0200
+From: =?iso-8859-1?q?Leonardo=20Dias?= <leoadias@yahoo.com.br>
+Subject: Tecs informations about Software RAID on Linux
+Date: Fri, 11 Jul 2003 17:26:26 -0300 (ART)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200307111813.26177.michel@ket.kth.se>
+Message-ID: <20030711202626.19448.qmail@web13706.mail.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi!
+Hi,
 
-I have set two raid0 arrays on two hardrives, using 2x2 partitions. I did a 
-benchmark of the resulting arrays and one is much slower than the other one. 
-I used bonnie++ and hdparm for the tests. It showed that /dev/md0 is 30% 
-slower than /dev/md1. 
-/dev/md1 is really close to twice the performance of a single drive.
-I set the arrays with the same parameters. md0 is built from 2x 5 Gb while md1 
-is built from 2x2 Gb. The harddrives have the same partition table. md0 is 
-the closest to the begining of the drives.
-The filessystem is Reiserfs on both arrays.
-Everything works well, except i am curious about such a difference in 
-performances, since the arrays share the same hardware. 
-I am new to linux raid, i do not know if this is normal or weird.
-Thanks for any help!
+Where can I find tecs informations about Software RAID
+on Linux. I need to know how RAID stores blocks on
+discks and how parity is granted.
 
-/etc/raidtab:
-raiddev /dev/md0
-	raid-level 0
-	nr-raid-disks 2
-	persistent-superblock 1
-	chunk-size 32
-	device /dev/hde3
-	raid-disk 0
-	device /dev/hdg3
-	raid-disk 1
+Where can I find it???
 
-raiddev /dev/md1
-	raid-level 0
-	nr-raid-disks 2
-	persistent-superblock 1
-	chunk-size 32
-	device /dev/hde5
-	raid-disk 0
-	device /dev/hdg5
-	raid-disk 1
+Leonardo Dias
+Brazil
 
+_______________________________________________________________________
+Yahoo! Mail
+Mais espa=E7o, mais seguran=E7a e gratuito: caixa postal de 6MB, antiv=ED=
+rus, prote=E7=E3o contra spam.
+http://br.mail.yahoo.com/
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
