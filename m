@@ -1,46 +1,60 @@
-From: Aaron Longfield <aaron@wire-head.org>
-Subject: Partitioning on RAID (Ref: Mounting Promise RAID0 w/ Linux software
- RAID)
-Date: Thu, 01 Jul 2004 12:01:56 -0400
+From: Ricky Beam <jfbeam@bluetronic.net>
+Subject: Re: Partitioning on RAID (Ref: Mounting Promise RAID0 w/ Linux
+ software RAID)
+Date: Thu, 1 Jul 2004 12:40:40 -0400 (EDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <40E43574.5050802@wire-head.org>
-References: <40E40616.8000004@wire-head.org>
+Message-ID: <Pine.GSO.4.33.0407011230500.25702-100000@sweetums.bluetronic.net>
+References: <40E43574.5050802@wire-head.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <40E40616.8000004@wire-head.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <40E43574.5050802@wire-head.org>
+To: Aaron Longfield <aaron@wire-head.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I found that I can combine the discs raw into one large array that maps 
-properly.  Problem is that now I have an array that has a partition 
-table and a partition that I can't seem to mount.  Is there any way to 
-coax the system into letting me do this?  I couldn't find any 
-documentation on it, but there seems to be support in the kernel code 
-for the md driver.
+On Thu, 1 Jul 2004, Aaron Longfield wrote:
+>properly.  Problem is that now I have an array that has a partition
+>table and a partition that I can't seem to mount.  Is there any way to
+>coax the system into letting me do this?  I couldn't find any
+>documentation on it, but there seems to be support in the kernel code
+>for the md driver.
 
--Aaron Longfield
+It actually is documented... Documentation/md.txt.  The "magic" is the
+raid device's major number:
+	[root:pts/8]spork:~/[12:36 PM]:cat /proc/devices |grep 'md\|Block'
+	Block devices:
+  	9 md
+	254 mdp
 
-Partition on the array:
+"mdp" is dynamically allocated, so booting to a partitioned soft-raid is
+tricky, but certainly do able.
 
-Disk /dev/md0: 245.8 GB, 245884649472 bytes
-255 heads, 63 sectors/track, 29893 cylinders
-Units = cylinders of 16065 * 512 = 8225280 bytes
+Simply change your raid device from /dev/md0 (which is major #9) to something
+with a major number matching mdp.  In my case:
+	[root:pts/8]spork:~/[12:36 PM]:ls -l /dev/md0
+	brw-rw----  1 root disk 9, 0 Feb 23 16:04 /dev/md0
+	[root:pts/8]spork:~/[12:38 PM]:ls -l /dev/md
+	total 0
+	brw-r--r--  1 root root 254, 0 Jun  9 21:04 d0
+	brw-r--r--  1 root root 254, 1 Jun  9 21:04 d0p1
+	brw-r--r--  1 root root 254, 2 Jun  9 21:04 d0p2
+	brw-rw----  1 root disk 254, 3 Jun 17 15:09 d0p3
 
-     Device Boot	     Start	   End	    Blocks    Id  System
-/dev/md0p1   *		 1	 29893	 240115491     7  HPFS/NTFS
+	[root:pts/8]spork:~/[12:38 PM]:fdisk -l /dev/md/d0
+
+	Disk /dev/md/d0: 640.1 GB, 640167510016 bytes
+	255 heads, 63 sectors/track, 77829 cylinders
+	Units = cylinders of 16065 * 512 = 8225280 bytes
+
+	      Device Boot      Start         End      Blocks   Id  System
+	/dev/md/d0p1               1       72606   583207663+   7  HPFS/NTFS
+	/dev/md/d0p2   *       72607       77306    37752750   83  Linux
+	/dev/md/d0p3           77307       77828     4192965   82  Linux swap
+
+--Ricky
+
+PS: The above naming scheme requires a small patch to grub to make it name
+the partitions correctly.  By default, it'll look for /dev/md/d01, etc.
 
 
-raidtab entry:
-
-raiddev /dev/md0
-	raid-level		0
-	nr-raid-disks		2
-	persistent-superblock	0
-	chunk-size		64
-
-	device			/dev/hdc
-	raid-disk		0
-	device			/dev/hdd
-	raid-disk		1
