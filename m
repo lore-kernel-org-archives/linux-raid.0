@@ -1,27 +1,33 @@
-From: Stephan van Hienen <raid@a2000.nu>
-Subject: Re: mdadm -D shows incorrect working devices ?
-Date: Sun, 5 Jan 2003 21:10:11 +0100 (CET)
+From: NeilBrown <neilb@cse.unsw.edu.au>
+Subject: [PATCH] md - 1 of 3 - Make sure yielding thread actually yields cpu when waiting for turn at reconstruct.
+Date: Mon, 06 Jan 2003 11:42:49 +1100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.51.0301052109430.31131@ddx.a2000.nu>
-References: <Pine.LNX.4.50.0212172214130.25725-100000@ddx.a2000.nu>
- <Pine.LNX.4.50.0212182153120.4838-100000@ddx.a2000.nu>
- <Pine.LNX.4.50.0212221112050.24883-100000@ddx.a2000.nu>
- <Pine.LNX.4.51.0301021611450.11876@ddx.a2000.nu> <002701c2b320$4da3c8e0$6401a8c0@cfl.rr.com>
- <Pine.LNX.4.51.0301032202420.18601@ddx.a2000.nu> <021801c2b3fb$0c341be0$6401a8c0@cfl.rr.com>
- <Pine.LNX.4.51.0301050216270.23409@ddx.a2000.nu> <011f01c2b4d1$7a0e0960$6401a8c0@cfl.rr.com>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Message-ID: <E18VLLt-00036C-00@notabene.cse.unsw.edu.au>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <011f01c2b4d1$7a0e0960$6401a8c0@cfl.rr.com>
-To: Mike Black <mblack@csi-inc.com>
+To: Linus Torvalds <torvalds@transmeta.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, 5 Jan 2003, Mike Black wrote:
 
-> One more idea -- try doing an "mdadm --zero-superblock" on all your devices before you build them.
-> This looks to me like the info is being carried forward because of the "persistent" superblocks.
-> I don't know how to fix this on a running array.
+### Comments for ChangeSet
 
-don't think i want to do this ?
-(since i have data on this raid5)
+
+ ----------- Diffstat output ------------
+ ./drivers/md/md.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletion(-)
+
+diff ./drivers/md/md.c~current~ ./drivers/md/md.c
+--- ./drivers/md/md.c~current~	2003-01-06 11:11:06.000000000 +1100
++++ ./drivers/md/md.c	2003-01-06 11:11:06.000000000 +1100
+@@ -2815,8 +2815,10 @@ static void md_do_sync(void *data)
+ 				printk(KERN_INFO "md: delaying resync of md%d until md%d "
+ 				       "has finished resync (they share one or more physical units)\n",
+ 				       mdidx(mddev), mdidx(mddev2));
+-				if (mddev < mddev2) /* arbitrarily yield */
++				if (mddev < mddev2) {/* arbitrarily yield */
+ 					mddev->curr_resync = 1;
++					yield();
++				}
+ 				if (wait_event_interruptible(resync_wait,
+ 							     mddev2->curr_resync < 2)) {
+ 					flush_curr_signals();
