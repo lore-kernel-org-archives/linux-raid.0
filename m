@@ -1,52 +1,46 @@
-From: Maurice Hilarius <maurice@harddata.com>
-Subject: RE: large devices (3ware) - thanx for the info
-Date: Wed, 21 Aug 2002 15:30:01 -0600
+From: Jakob Oestergaard <jakob@unthought.net>
+Subject: Re: Perhaps this has been answered before...
+Date: Thu, 22 Aug 2002 01:53:26 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <5.1.0.14.2.20020821152814.03a98d80@mail.harddata.com>
-References: <CDF05CB9FCA0C845B9778F9E463C476101FC69@cinshrexc01.shermfi
- n.com>
+Message-ID: <20020821235326.GE5617@unthought.net>
+References: <Pine.OSF.4.30.0208212024340.15250-100000@soul.helsinki.fi> <3D63D0BD.50005@hum.auc.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; format=flowed
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CDF05CB9FCA0C845B9778F9E463C476101FC69@cinshrexc01.shermfi
- n.com>
-To: "Rechenberg, Andrew" <ARechenberg@shermanfinancialgroup.com>
-Cc: linux-raid@vger.kernel.org
+Content-Disposition: inline
+In-Reply-To: <3D63D0BD.50005@hum.auc.dk>
+To: Mads Peter Bach <mpb@hum.auc.dk>
+Cc: Mikael Johansson <mpjohans@pcu.helsinki.fi>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-With regards to your message at 03:16 PM 8/21/02, Rechenberg, Andrew. Where 
-you stated:
+On Wed, Aug 21, 2002 at 07:41:17PM +0200, Mads Peter Bach wrote:
+=2E..
+> >I however do not see why this should freeze your machine.
+>=20
+>=20
+> Me neither. Swap on RAID-1 works fine for me (though on 2.4).
 
->Just as an FYI on the PCI bus, we found out from some testing that a
->64-bit, 66MHz PCI bus can be the bottleneck while driving two LTO
->Ultrium tape devices, so the PCI bus could definitely be a bottleneck
->for fast hard disks (I don't know about ATA100/133 IDE, but with that
->many disks, probably).
->
->The next step up would be PCI-X which (I believe) is currently running
->at 133MHz and provides burst transfer rates at up to 1GB/s
->(GigaByte/sec) .
->
->Regards,
->Andy.
+RAID in 2.2 is seriously broken unless the RAID patches are applied.
 
-Problem is we are seeing WORSE figures on so-called fast PCI buses.
-Both the Intel 7500 and Serverworks GC-LE actually give us WORSE figures on 
-these same cards, which are 64 bit / 33MHz. Both boards have PCI-X slots, 
-and we see no better in these slots.
+With the patches, there are problems with stability in the case where
+you actually swap on the RAID device.
 
-And, from what I am seeing Intel 7500 has similar DMA issues in PCI as the 
-old 860 chipset.
+With a recent 2.4 kernel, the swap stability problem should be gone. At
+least swapping on RAID-1 works for me as well, on several systems here.
 
+So just don't swap on RAID if you're on 2.2  :)   On 2.4 it should work=
+=2E
 
-
-With our best regards,
-
-Maurice W. Hilarius       Telephone: 01-780-456-9771
-Hard Data Ltd.               FAX:       01-780-456-9772
-11060 - 166 Avenue        mailto:maurice@harddata.com
-Edmonton, AB, Canada      http://www.harddata.com/
-    T5X 1Y3
-
-2.3TB RAID5 NAS server - dual AthlonMP CPU, Linux, $10,995 CAD / $6850 USD
-
+--=20
+=2E...............................................................
+:   jakob@unthought.net   : And I see the elder races,         :
+:.........................: putrid forms of man                :
+:   Jakob =D8stergaard      : See him rise and claim the earth,  :
+:        OZ9ABN           : his downfall is at hand.           :
+:.........................:............{Konkhra}...............:
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
