@@ -1,100 +1,83 @@
-From: dlists@technobrat.com
-Subject: Re: Raidreconf w/ 2.6.2
-Date: Tue, 21 Sep 2004 11:42:36 -0700
+From: Paul Clements <paul.clements@steeleye.com>
+Subject: Re: [ANNOUNCE][PATCH 2.6] md: persistent (file-backed) bitmap and
+ async writes
+Date: Tue, 21 Sep 2004 15:19:03 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040921184236.GC31433@baby.technobrat.com>
+Message-ID: <41507EA7.1000905@steeleye.com>
+References: <40198E85.29EBC8E0@SteelEye.com>	<16422.62911.755570.855200@notabene.cse.unsw.edu.au>	<4027E342.D02202F1@SteelEye.com>	<16424.8182.876520.280031@notabene.cse.unsw.edu.au>	<402D3A86.97CF894F@SteelEye.com>	<16456.2775.641721.204171@notabene.cse.unsw.edu.au>	<4048F9AA.1BBD67F@SteelEye.com>	<406B1024.7BF88C@SteelEye.com>	<16528.49083.998593.199805@cse.unsw.edu.au>	<40C6273B.2060200@steeleye.com>	<16590.38597.170409.499394@cse.unsw.edu.au>	<40D9FA9E.9010003@steeleye.com>	<40F7E50F.2040308@steeleye.com>	<16649.61212.310271.36561@cse.unsw.edu.au>	<4119400A.40307@steeleye.com> <16668.12228.187383.596856@cse.unsw.edu.au> <414F9FD4.4070308@steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-To: linux-raid@vger.kernel.org
+In-Reply-To: <414F9FD4.4070308@steeleye.com>
+To: Neil Brown <neilb@cse.unsw.edu.au>
+Cc: jejb@steeleye.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
-Hi,
-
-I've got a large raid and I was hit by this problem.  I used raidreconf to add 
-a disk to my raid 5. The disk was larger than the other disks already in the 
-array. So I created a partition on the disk that was about the same size as the 
-other disks so that they would match up. The only problem is, I later found an 
-extra 10k in the partition I created on the new disk. 
-
-Obviously linux has no problem with this extra space. It just ignores it.  The 
-super block shows all the disks the same size (apparent disk size).
-
-We've started getting some corruption in the array though. But not at a low level. 
-Badblocks shows no problems on the low level disks. The raid array never complains 
-or resyncs. But I have some applications that work with large files on the arrays. 
-If I have them check their files after a large amount of time they soemtimes find 
-that some small amount of data has gotten corrupted. I've tried this with multiple 
-unrelated applications.
-
-Additionally I had created an ext2 partition on the extra space of the new drive. 
-That partiton also showed this corruption.
-
-Obviously after testing other applications my next step was to shrink the array 
-removing the new disk and see if this still happens.
-
-But the problem is, if I try to shrink the array I get this raid5_global_to_local 
-error which I believe is due to the different disk sizes. In this case the 
-partition on the new disk has the extra 10k. The error happens at the start of the 
-raidreconf so a quick fsck finds no issues. And I'm willing to deal with a little 
-data loss so I'm not concerned.
-
-Finally my question is this. Am I correct in assuming that the extra 10k is going 
-to go completely untouched by the raid system? And thus I could resolve my 
-raidreconf issues by truncating the partition on the new disk down to the same 
-size as the other disks. And then merely fixing up anything that would be confused 
-by the new partition size.
-
-Any help is appreciated.
-
-Jason S.
-
+Paul Clements wrote:
+> OK, here we go again. The patch has been updated to 2.6.9-rc2 and mdadm 
+> 1.7.0, and I've implemented the suggestions you've made below...
 > 
-> Hi Mike,
+> Patches: http://parisc-linux.org/~jejb/md_bitmap/
+
+Well, I ran some simple write performance benchmarks today and I was 
+stunned to find the bitmap performance was terrible. After debugging a 
+while, I realized the problem was having the bitmap daemon do the 
+wait_on_page_writeback...if the daemon got caught at the wrong time, it 
+could take quite a while to come back around and do the writeback. So, I 
+added yet another thread, the bitmap writeback daemon (whose sole 
+purpose is to wait for page writebacks) and now things are running 
+excellently. My simple benchmarks, which previously showed about a 
+25-30% slowdown when using a bitmap vs. not using one, now show only a 
+4% slowdown, which is pretty close to the margin of error in the test 
+itself. Check out the new patch here:
+
+http://parisc-linux.org/~jejb/md_bitmap/md_bitmap_2_37_2_6_9_rc2.diff
+
+Thanks again,
+Paul
+
+
+
+> Neil Brown wrote:
 > 
-> Glad to know that it's helped someone else.  It's a little worrying to
-> see
-> the error messages...
-> 
-> I believe that is the error message I received.  It appears to happen
-> when
-> the disks are of differing sizes.  I think what's happening is that it
-> runs off of the end of one of the disks - i.e., Disk1 = 200 blocks and
-> Disk2 =99 blocks.  It assumes that all of the disks are the same size
-> instead of looking at the lowest common denominator.
-> 
-> Hope this helps.
-> 
-> -steffan-
+>> This is definitely heading in the right direction.  However I think
+>> you have missed some of the subtleties of plugging.
 > 
 > 
-> On Mon, 16 Aug 2004, Mike Baynton wrote:
+> [snip]
 > 
-> > Hi
-> > This is related to a message you put on linux-raid months ago
-> > (http://marc.theaimsgroup.com/?l=linux-raid&m=108509877724484&w=2 ). I
-> > am having the same problem (as near as I can tell so far all my data's
-> > intact using the method you suggested in that post...I had no data
-> > near
-> > the end of my array) but I'd like to be sure we're dealing with the
-> > same
-> > problem/bug before I start speculating about a bug in raidreconf on
-> > linux-raid.
-> >
-> > Do you remember if you got an error message like
-> >
-> > raid5_map_global_to_local: disk 0 block out of range: 2442004
-> > (2442004)
-> > gblock = 7326012
-> > aborted (core dumped)
-> >
-> > when this happened to you?
-> >
-> > Thanks,
-> > Mike Baynton
-> >
->
->
+>> That should then have the bitmap updates happening before the
+>> data updates, and should cluster bitmap updates better.
+> 
+> 
+> OK, I've fixed that.
+> 
+>> The next step would be to stop write_page from being synchronous - I'm
+>> not comfortable about ->unplug-fn having to wait for disk io.
+> 
+> 
+> Well, it still does have to wait for the bitmap writes to complete 
+> before letting the regular writes go, but I see your point about the 
+> writes being submitted simultaneously (nearly) rather than being 
+> completely serialized.
+> 
+>> This looks to be quite awkward as there is not call-back that happens
+>> when writeback on a page is completed.  You need to have a kernel
+>> thread to wait for the pages to complete.  I would get the
+>> bitmap_daemon to do this.
+> 
+> 
+> OK, this is what I've done...there didn't seem to be a better place to 
+> do it.
+> 
+>> Does that make sense?
+> 
+> 
+> Certainly does, and seems to work...
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
