@@ -1,36 +1,37 @@
-From: Konstantin Olchanski <olchansk@sam.triumf.ca>
-Subject: Re: Good news / bad news - The joys of RAID
-Date: Thu, 2 Dec 2004 21:40:18 -0800
-Message-ID: <20041203054018.GC23350@sam.triumf.ca>
-References: <200412030416.iB34Go913239@www.watkins-home.com> <41AFF87D.8080102@sauce.co.nz>
+From: TJ <systemloc@earthlink.net>
+Subject: Re: Looking for the cause of poor I/O performance
+Date: Fri, 3 Dec 2004 01:33:07 -0500
+Message-ID: <200412030133.07743.systemloc@earthlink.net>
+References: <200412030354.iB33sD913132@www.watkins-home.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <200412030354.iB33sD913132@www.watkins-home.com>
 Content-Disposition: inline
-In-Reply-To: <41AFF87D.8080102@sauce.co.nz>
 Sender: linux-raid-owner@vger.kernel.org
-To: Richard Scobie <richard@sauce.co.nz>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: Guy <bugzilla@watkins-home.com>
 List-Id: linux-raid.ids
 
-On Fri, Dec 03, 2004 at 06:24:13PM +1300, Richard Scobie wrote:
-> >If the problem was a firmware issue, why didn't IBM release a firmware
-> >update?
-> 
-> I believe they did. I recall downloading something similar to this:
-> http://support.dell.com/support/downloads/format.aspx?releaseid=r37239&c=us&l=en&s=biz&cs=555
+> My linux system is a P3-500 with 2 CPUs and 512 Meg RAM.  My system is much
+> faster than my network.  I don't know how your K6-500 compares to my
+> P3-500. But RAM may be your issue.  That amount of ram seems very low.  Are
+> you swapping?  What is your CPU load during the tests?  If you are at 100%,
+> then you are CPU bound.
 
-The updated IBM firmware helped. Before, every power outage would
-produce disks with unreadable sectors. Now, all our IBM disks have
-the "new" firmware and they hardly ever develop unreadable sectors.
+You've got a dual CPU setup, mine is only single. I'll bet you have a server 
+chipset too. Still, I have serious doubts that the CPU is at fault. My guess 
+would be that this could be a VIA chipset problem. The load averages while 
+running these tests are allways well below 1. 
 
-This makes me suspect that there are *two* unrelated problems:
-1) the "scribble at power down" problem, fixed by the firmware update;
-2) the "overheated disks lose data due to platter thermal expansion" problem,
-   probably unfixable, other than by keeping the disks cool.
+I mistyped the amount of memory. I have approx 409 MB. I am not swapping. 
 
--- 
-Konstantin Olchanski
-Data Acquisition Systems: The Bytes Must Flow!
-Email: olchansk-at-triumf-dot-ca
-Snail mail: 4004 Wesbrook Mall, TRIUMF, Vancouver, B.C., V6T 2A3, Canada
+> Your disk performance is faster than a 100BaseT network.  So, your
+> performance may not be an issue.
+
+The network is gigabit, with a crossover to the client machine. I used ttcp to 
+verify that the link is capable of over 146 MB/sec.
+
+TJ
