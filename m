@@ -1,40 +1,91 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: md device stuck!
-Date: Wed, 31 Jul 2002 09:16:12 +1000 (EST)
+From: Jakob Oestergaard <jakob@unthought.net>
+Subject: Re: RAID problems
+Date: Wed, 31 Jul 2002 05:42:15 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <15687.7740.359627.282411@notabene.cse.unsw.edu.au>
-References: <15685.5438.362051.450805@notabene.cse.unsw.edu.au>
-	<Pine.LNX.4.32.0207291541380.4476-100000@dope.pingdynasty.com>
+Message-ID: <30738.2608451464$1028087098@news.gmane.org>
+References: <20020730175505.GI11129@unthought.net> <Pine.LNX.3.96.1020730223102.6974A-100000@gatekeeper.tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from martin@hack.org on Monday July 29
-To: martin@hack.org
-Cc: linux-raid@vger.kernel.org
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.3.96.1020730223102.6974A-100000@gatekeeper.tmr.com>
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: Kernel mailing list <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday July 29, martin@hack.org wrote:
-> 
-> hiya,
-> 
-> has anyone come across the problem of md devices getting 'stuck'?
-> currently, if i try to mount/umount md2, or run either raidstop or
-> mdadm --stop, the commands just hang and /proc/mdstat gives no indication
-> of anything going on. (the only way to kill the command seems to be to
-> SIGKILL its parent process...)
-> 
-> any ideas?
+On Tue, Jul 30, 2002 at 10:46:55PM -0400, Bill Davidsen wrote:
+=2E..
+> I think you misread my comment, it was not "why doesn't the documenta=
+tion
+> say this" but rather "why does software RAID have this problem?"
 
-You didn't say which kernel you are running ......
+Ok, my bad.
 
-> 
-> dope:~ # ps -flw
->   F S UID        PID  PPID  C PRI  NI ADDR SZ WCHAN  STIME TTY          TIME CMD
-> 004 S root      4414  4413  0  72   0 -   506 norita 15:33 pts/4    00:00:00 -bash
-> 000 D root      4438  4414  0  72   0 -   220 ptrace 15:34 pts/4    00:00:00 mdadm --stop /dev/md2
+ - btw. I CC'ed linux-raid as this is getting a little OT for
+   linux-kernel.  Let's let the thread migrate to linux-raid instead...
 
-and you don't have a correct System.map file.  There is no-way that
-mdadm will be blocked in ptrace.
+> I know
+> this can happen in theory, but it seems that the docs imply that this
+> isn't a surprise in practice. I've been running systems with SCSI RAI=
+D and
 
-NeilBrown
+I would say it's not a surprise as such, but it's something that really
+should be a very very rare occurrance.
+
+I've seen it maybe once on a production system, having run MD on quite =
+a
+few computers for the past half decade.  And I've had a few handfulls o=
+f
+people asking me about it over the years.
+
+=2E..
+> I just surprised that the software RAID doesn't have better luck with
+> this, I don't see any magic other than maybe a bus reset the firmware
+> would be doing, and I'm wondering why this seems to be common with Li=
+nux.
+
+I don't have the impression that it is common on stable hardware.  Can
+anyone who runs SW RAID on a number (greater than 1) of machines commen=
+t
+on this ?
+
+However, some people run their RAID-5 arrays on the same SCSI busses as
+their Zip drives, their scanners, and five other el-cheapo almost-scsi
+devices, and that is just *bound* to cause this kind of mess when one o=
+f
+the devices decide to lock up the bus.
+
+You don't see this with HW raid because you don't put your $15
+almost-scsi magic-foo device on your $2k HW RAID controller.
+
+There might be other simple reasons why some HW cards don't show this
+behaviour - they might simply maintain their superblocks differently
+from Linux SW RAID.   I have *no* idea how current controllers do this.
+
+> Or am I misreading the frequency with which it happens?
+
+I hope  ;)
+
+At least in the "stable hardware" situation.  Comments, please...
+
+=2E..
+> Thye words are clear, I'm surprised at the behaviour. Yes, I know tha=
+t's
+> not your thing.
+
+I *will* be surprised if it turns out that this is really a common
+occurrence for people.   :)
+
+--=20
+=2E...............................................................
+:   jakob@unthought.net   : And I see the elder races,         :
+:.........................: putrid forms of man                :
+:   Jakob =D8stergaard      : See him rise and claim the earth,  :
+:        OZ9ABN           : his downfall is at hand.           :
+:.........................:............{Konkhra}...............:
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
