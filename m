@@ -1,10 +1,9 @@
 From: "Calvin D. Webster" <cwebster@ec.rr.com>
 Subject: Re: Software RAID Stopped Working With Aurora Kernel
-Date: Mon, 20 May 2002 17:33:03 -0400
+Date: Tue, 21 May 2002 07:24:49 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3CE96B8F.2BD45CC3@ec.rr.com>
-References: <15592.56683.75251.569129@notabene.cse.unsw.edu.au>
-		<NDBBIAKEEKGGEIKCBKNAEEMHCPAA.kc130iseo@coastalnet.com> <15593.26098.199785.56464@notabene.cse.unsw.edu.au>
+Message-ID: <3CEA2E81.F08127AF@ec.rr.com>
+References: <CPEAKNIMKMJOCFPEOBGACECFCFAA.cwebster@ec.rr.com> <15592.56683.75251.569129@notabene.cse.unsw.edu.au>
 Reply-To: cwebster@ec.rr.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
@@ -16,104 +15,317 @@ List-Id: linux-raid.ids
 
 Neil Brown wrote:
 > 
-> On Monday May 20, kc130iseo@coastalnet.com wrote:
-> > >     I don't know why, but in one instance it tried to load
-> > >       /lib/raid5.o
-> > >     and gets :unresolved symbol md_unregister_thread_R4ba824f9
-> > >
-> > >     The other time it correctly loads
-> > >       /lib/modules/2.4.18-0.92sparc/kernel/drivers/md/raid5.o
-> > >
-> > >     I suggest removing /lib/raid5.c
-> >
-> > Strangely, the only time this error occurred was when I tried to boot with
-> > "md0" devices listed in /etc/fstab. I don't know why it reported this path.
-> > There are no modules directly under /lib. Here's where all the modules are.
-> > I will remove all but the current kernel modules. In fact, I'll be removing
-> > all the 2.2 kernels since I can't boot them any more anyway.
+> On Sunday May 19, cwebster@ec.rr.com wrote:
+> > Looking for help from list members in resolving software RAID problems.
 > 
-> Odd.... you could do an "nm" of each raid5.o and see which one
-> mentions
->    md_unregister_thread_R4ba824f9
+> Here is the help:
+>    For each device that should be part of the array (e.g. /dev/sda1)
+>    run
+>       mdadm --examine /dev/sda1
+>    This should show you some sensible information up to the Checksum,
+>    and then bad information after that.
 
-Both of the 2.4 raid5.o modules show this. None of the 2.2 modules do.
+Yup, just like you said... sensible before, nonsense after.
 
-> > Using your source RPM:
-> ...
-> > gcc -Wall -Werror -Wstrict-prototypes -DCONFFILE=\"/etc/mdadm.conf\" -O2 -m3
-> > 2 -m
-> > tune=ultrasparc   -c -o mdadm.o mdadm.c
-> > cc1: warnings being treated as errors
-> > In file included from mdadm.h:57,
-> >                  from mdadm.c:30:
-> > md_p.h: In function `md_event':
-> > md_p.h:168: warning: left shift count >= width of type
-> > make: *** [mdadm.o] Error 1
-> > error: Bad exit status from /var/tmp/rpm-tmp.90717 (%build)
-> 
-> Even odder.  It seems to think that __u64 is only 32bits wide.
-> Sounds like a compiler error, or an include file error.
-> I suspect __u64 is defined in /usr/include/asm/types.h to be
->   typedef unsigned long __u64;
-> 
+>    Then run
+>       mdadm --examine --sparc2.2  /dev/sda1
+>    This should show you the same sensible information, and then
+>    sensible information after the Checksum as well.
 
-This is probably my fault. I've had to rearrange the "asm" links in the
-include directories to get some packages to build while upgrading to
-Aurora. The RHL 6.2 "include/asm*" links and directories were different.
-I think I lost track of which were supposed to be where in the 2.4
-kernel.
+This looks much better, but not just right. I would expect that the list
+following "Chunk Size" would be close to the /etc/raidtab that was being
+used prior to the Aurora upgrade when it was last working. At any rate,
+the "this" device and the last device listed are definitely not correct.
+I'm not sure what "this" should be, but I assume it should list
+parameters for the device being queried. 
 
-Tom "Spot" Callaway was good enough to build mdadm for me on his machine
-and upload it to the Aurora site. So, I've got a good package to use
-until this gets fixed.
+What I'm getting with "mdadm --examine --sparc2.2":
 
-Here's what I've got now. What do they need to look like? I know, its a
-mess.
+The first device listed ("this") always has a minor number of "8". Major
+numbers for the "this" device on each raid drive, a through f, are
+4,5,0,2,3,1, respectively. I don't know if this is random or somehow
+correlates to the original raid device sequence. None of these is an
+actual raid device, though.
 
-[root@winggear rpms]# ls -l /usr/include/ | grep asm
-lrwxrwxrwx    1 root     root           34 May 20 14:09 asm ->
-/usr/src/linux/include/asm-sparc64
-lrwxrwxrwx    1 root     root           34 May 11 16:54 asm-generic ->
-/usr/src/linux/include/asm-generic
-drwxr-xr-x    2 root     root         4096 May 20 14:09 asm.sav
-lrwxrwxrwx    1 root     root           32 May 11 16:56 asm-sparc ->
-/usr/src/linux/include/asm-sparc
-lrwxrwxrwx    1 root     root           34 May 11 16:56 asm-sparc64 ->
-/usr/src/linux/include/asm-sparc64
+The last device listed is always:
 
-[root@winggear rpms]# ls -l /usr/include/asm.sav/
-total 0
-lrwxrwxrwx    1 root     root           34 May 11 17:01 asm-generic ->
-/usr/src/linux/include/asm-generic
-lrwxrwxrwx    1 root     root           32 Apr  5 17:38 asm-sparc ->
-/usr/src/linux/include/asm-sparc
-lrwxrwxrwx    1 root     root           34 Apr  5 17:39 asm-sparc64 ->
-/usr/src/linux/include/asm-sparc64
+   5     0       5        8       33      faulty sync
 
-[root@winggear rpms]# ls -l /usr/src/ | grep linux
-lrwxrwxrwx    1 root     root           22 May 11 14:36 linux ->
-linux-2.4.18-0.92sparc
-drwxr-xr-x    5 root     root         4096 May  6 02:47 linux-2.2.19
-lrwxrwxrwx    1 root     root           22 May  7 18:41 linux-2.4 ->
-linux-2.4.18-0.92sparc
-drwxr-xr-x   15 root     root         4096 May 15 12:57
-linux-2.4.18-0.92sparc
+The remaining devices in the middle of each list, although out of
+sequence in terms of /etc/raidtab, have the correct major/minor device
+numbers. To be honest, though, I don't remember if the device list in
+/proc/mdstat prior to the Aurora upgrade actually matched /etc/raidtab
+in terms of raid device numbers either. If I remember correctly, they
+seemed to be reversed but it worked so I left it alone. I do distinctly
+remember that, prior to the Aurora upgrade, all raid devices were
+operational and there was no reconstruction in progress. The system was
+virtually quiescent.
 
-[root@winggear rpms]# ls -l /usr/src/linux-2.4.18-0.92sparc/include/ |
-grep asm
-lrwxrwxrwx    1 root     root           11 May 15 12:25 asm ->
-asm-sparc64
-drwxr-xr-x    2 root     root         4096 May  7 18:41 asm-generic
-drwxr-xr-x    2 root     root         4096 May  7 18:41 asm-sparc
-drwxr-xr-x    2 root     root         4096 May 11 14:12 asm-sparc64
+How should the spare drive show up in these lists? /dev/sdc1 is missing
+from all the lists. Could this have been the actual spare? 
 
-/usr/src/linux-2.4.18-0.92sparc/include/asm-generic
-/usr/src/linux-2.4.18-0.92sparc/include/asm
-/usr/src/linux-2.4.18-0.92sparc/include/asm-sparc
-/usr/src/linux-2.4.18-0.92sparc/include/asm-sparc64
+I've included below, the complete output from "mdadm --examine
+--sparc2.2" for each raid device. First, I've listed the contents of
+/etc/raidtab and a long listing of the actual raid devices. Please let
+me know if this makes any sense to you.
 
-Thanks!
-
-I'm working on the RAID now, using your mdadm tool.
+Thanks for the help!
 
 --Cal Webster
+
+==============================================================================================
+
+## Contents of /etc/raidtab
+
+------------------------------------------------
+#
+# 'persistent' RAID5 setup, with one spare disk:
+#
+raiddev /dev/md0
+    raid-level                5
+    nr-raid-disks             5
+    nr-spare-disks            1
+    persistent-superblock     1
+    chunk-size                128
+
+    device                    /dev/sdb1
+    raid-disk                 1
+    device                    /dev/sdc1
+    raid-disk                 2
+    device                    /dev/sdd1
+    raid-disk                 3
+    device                    /dev/sde1
+    raid-disk                 4
+    device                    /dev/sda1
+    raid-disk                 0
+    device                    /dev/sdf1
+    spare-disk                0
+------------------------------------------------
+
+## Raid devices:
+
+----------------------------------------------------------------------
+brw-rw----    1 root     disk       8,   1 May  5  1998 sda1
+brw-rw----    1 root     disk       8,  17 May  5  1998 sdb1
+brw-rw----    1 root     disk       8,  33 May  5  1998 sdc1
+brw-rw----    1 root     disk       8,  49 May  5  1998 sdd1
+brw-rw----    1 root     disk       8,  65 Apr 16  1999 sde1
+brw-rw----    1 root     disk       8,  81 Apr 16  1999 sdf1
+----------------------------------------------------------------------
+
+----------------[ mdadm --examine --sparc2.2  /dev/sda1
+]----------------
+
+/dev/sda1:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : 494dd54f:15e7b548:90bae5c3:532ac910
+  Creation Time : Thu Apr 26 12:29:38 2001
+     Raid Level : raid5
+    Device Size : 17681664 (16.86 GiB 18.15 GB)
+   Raid Devices : 5
+  Total Devices : 6
+Preferred Minor : 0
+
+    Update Time : Mon May  6 18:41:41 2002
+          State : clean, no-errors
+ Active Devices : 5
+Working Devices : 6
+ Failed Devices : 0
+  Spare Devices : 1
+       Checksum : 6515abae - correct
+ --- adjusting superblock for 2.2/sparc compatability ---
+         Events : 0.171
+
+         Layout : left-asymmetric
+     Chunk Size : 128K
+
+      Number   Major   Minor   RaidDevice State
+this     0       4        8        1     
+   0     0       8       17        1      active sync   /dev/sdb1
+   1     1       8       81        2      active sync   /dev/sdf1
+   2     2       8       49        3      active sync   /dev/sdd1
+   3     3       8       65        4      active sync   /dev/sde1
+   4     4       8        1        0      active sync   /dev/sda1
+   5     0       5        8       33      faulty sync
+
+----------------[ mdadm --examine --sparc2.2  /dev/sdb1
+]----------------
+
+/dev/sdb1:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : 494dd54f:15e7b548:90bae5c3:532ac910
+  Creation Time : Thu Apr 26 12:29:38 2001
+     Raid Level : raid5
+    Device Size : 17681664 (16.86 GiB 18.15 GB)
+   Raid Devices : 5
+  Total Devices : 6
+Preferred Minor : 0
+
+    Update Time : Mon May  6 18:41:41 2002
+          State : clean, no-errors
+ Active Devices : 5
+Working Devices : 6
+ Failed Devices : 0
+  Spare Devices : 1
+       Checksum : 6515abbb - correct
+ --- adjusting superblock for 2.2/sparc compatability ---
+         Events : 0.171
+
+         Layout : left-asymmetric
+     Chunk Size : 128K
+
+
+      Number   Major   Minor   RaidDevice State
+this     0       0        8       17      faulty
+   0     0       8       17        1      active sync   /dev/sdb1
+   1     1       8       81        2      active sync   /dev/sdf1
+   2     2       8       49        3      active sync   /dev/sdd1
+   3     3       8       65        4      active sync   /dev/sde1
+   4     4       8        1        0      active sync   /dev/sda1
+   5     0       5        8       33      faulty sync
+
+----------------[ mdadm --examine --sparc2.2  /dev/sdc1
+]----------------
+
+/dev/sdc1:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : 494dd54f:15e7b548:90bae5c3:532ac910
+  Creation Time : Thu Apr 26 12:29:38 2001
+     Raid Level : raid5
+    Device Size : 17681664 (16.86 GiB 18.15 GB)
+   Raid Devices : 5
+  Total Devices : 6
+Preferred Minor : 0
+
+    Update Time : Mon May  6 18:41:41 2002
+          State : clean, no-errors
+ Active Devices : 5
+Working Devices : 6
+ Failed Devices : 0
+  Spare Devices : 1
+       Checksum : 6515abce - correct
+ --- adjusting superblock for 2.2/sparc compatability ---
+         Events : 0.171
+
+         Layout : left-asymmetric
+     Chunk Size : 128K
+
+      Number   Major   Minor   RaidDevice State
+this     0       5        8       33      faulty sync
+   0     0       8       17        1      active sync   /dev/sdb1
+   1     1       8       81        2      active sync   /dev/sdf1
+   2     2       8       49        3      active sync   /dev/sdd1
+   3     3       8       65        4      active sync   /dev/sde1
+   4     4       8        1        0      active sync   /dev/sda1
+   5     0       5        8       33      faulty sync
+
+----------------[ mdadm --examine --sparc2.2  /dev/sdd1
+]----------------
+
+/dev/sdd1:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : 494dd54f:15e7b548:90bae5c3:532ac910
+  Creation Time : Thu Apr 26 12:29:38 2001
+     Raid Level : raid5
+    Device Size : 17681664 (16.86 GiB 18.15 GB)
+   Raid Devices : 5
+  Total Devices : 6
+Preferred Minor : 0
+
+    Update Time : Mon May  6 18:41:41 2002
+          State : clean, no-errors
+ Active Devices : 5
+Working Devices : 6
+ Failed Devices : 0
+  Spare Devices : 1
+       Checksum : 6515abdf - correct
+ --- adjusting superblock for 2.2/sparc compatability ---
+         Events : 0.171
+
+         Layout : left-asymmetric
+     Chunk Size : 128K
+
+      Number   Major   Minor   RaidDevice State
+this     0       2        8       49      faulty active   /dev/fd0h1200
+   0     0       8       17        1      active sync   /dev/sdb1
+   1     1       8       81        2      active sync   /dev/sdf1
+   2     2       8       49        3      active sync   /dev/sdd1
+   3     3       8       65        4      active sync   /dev/sde1
+   4     4       8        1        0      active sync   /dev/sda1
+   5     0       5        8       33      faulty sync
+
+----------------[ mdadm --examine --sparc2.2  /dev/sde1
+]----------------
+
+/dev/sde1:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : 494dd54f:15e7b548:90bae5c3:532ac910
+  Creation Time : Thu Apr 26 12:29:38 2001
+     Raid Level : raid5
+    Device Size : 17681664 (16.86 GiB 18.15 GB)
+   Raid Devices : 5
+  Total Devices : 6
+Preferred Minor : 0
+
+    Update Time : Mon May  6 18:41:41 2002
+          State : clean, no-errors
+ Active Devices : 5
+Working Devices : 6
+ Failed Devices : 0
+  Spare Devices : 1
+       Checksum : 6515abf1 - correct
+ --- adjusting superblock for 2.2/sparc compatability ---
+         Events : 0.171
+
+         Layout : left-asymmetric
+     Chunk Size : 128K
+
+      Number   Major   Minor   RaidDevice State
+this     0       3        8       65      sync   /dev/hda8
+   0     0       8       17        1      active sync   /dev/sdb1
+   1     1       8       81        2      active sync   /dev/sdf1
+   2     2       8       49        3      active sync   /dev/sdd1
+   3     3       8       65        4      active sync   /dev/sde1
+   4     4       8        1        0      active sync   /dev/sda1
+   5     0       5        8       33      faulty sync
+
+----------------[ mdadm --examine --sparc2.2  /dev/sdf1
+]----------------
+
+/dev/sdf1:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : 494dd54f:15e7b548:90bae5c3:532ac910
+  Creation Time : Thu Apr 26 12:29:38 2001
+     Raid Level : raid5
+    Device Size : 17681664 (16.86 GiB 18.15 GB)
+   Raid Devices : 5
+  Total Devices : 6
+Preferred Minor : 0
+
+    Update Time : Mon May  6 18:41:41 2002
+          State : clean, no-errors
+ Active Devices : 5
+Working Devices : 6
+ Failed Devices : 0
+  Spare Devices : 1
+       Checksum : 6515abfd - correct
+ --- adjusting superblock for 2.2/sparc compatability ---
+         Events : 0.171
+
+         Layout : left-asymmetric
+     Chunk Size : 128K
+
+      Number   Major   Minor   RaidDevice State
+this     0       1        8       81      active   /dev/ram8
+   0     0       8       17        1      active sync   /dev/sdb1
+   1     1       8       81        2      active sync   /dev/sdf1
+   2     2       8       49        3      active sync   /dev/sdd1
+   3     3       8       65        4      active sync   /dev/sde1
+   4     4       8        1        0      active sync   /dev/sda1
+   5     0       5        8       33      faulty sync
