@@ -1,18 +1,45 @@
-From: Michael Tokarev <mjt@tls.msk.ru>
-Subject: Re: [OT] best tape backup system?
-Date: Wed, 23 Feb 2005 21:28:31 +0300
-Message-ID: <421CCB4F.2020301@tls.msk.ru>
-References: <200502230126.j1N1Q5923933@www.watkins-home.com>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: [OT] best tape backup system?
+Date: Wed, 23 Feb 2005 14:46:13 -0500
+Message-ID: <200502231946.j1NJkI927144@www.watkins-home.com>
+References: <421CCB4F.2020301@tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-In-Reply-To: <200502230126.j1N1Q5923933@www.watkins-home.com>
+In-Reply-To: <421CCB4F.2020301@tls.msk.ru>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: 'Michael Tokarev' <mjt@tls.msk.ru>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+We must be in 2 different worlds!!!
+
+I can have wide LVD and narrow SE on the same card (2940U2W).  And wide
+ultra and narrow SE on the same card (2940UW).  That is why the card is so
+good.  IMO.  Just not with linux.  The OS that must not be named, supports
+the above.  :(  In fact, I have a PC with a 2940UW with 2 disks (UW), 2 CDs,
+1 DDS3 and a zip drive.  All happy with OS to not be named 98.  Maybe I
+should try knopix, and see if that system likes Linux.
+
+However, as I said before.  I did not swap out every component.  I used the
+same disks every time, but did swap the data cables, tape drives, SCSI cards
+and terminators.  But those disks still work today in U2W (LVD-80) mode.
+
+My last attempt to mix SCSI disks and tapes was over 1 year ago, using RH9.
+On previous attempts I would have used RH7.  I don't recall ever using RH8.
+
+Guy
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Michael Tokarev
+Sent: Wednesday, February 23, 2005 1:29 PM
+To: linux-raid@vger.kernel.org
+Subject: Re: [OT] best tape backup system?
+
 Guy wrote:
-> I know a thing or 2 about SCSI.  I know I had it correct.  1 config was all
+> I know a thing or 2 about SCSI.  I know I had it correct.  1 config was
+all
 > wide LVD (2940U2W).  My card has a LVD and a SE port on the same logical
 > SCSI bus.
 
@@ -31,8 +58,10 @@ device attached).
 
 >   Another config was wide LVD disks and a narrow SE tape.  Another,
 > my disks support SE, I had all SE wide and narrow.  Correct terminators in
-> each case.  I also tried a 2940UW, no LVD, all SE.  All configs worked if I
-> only used the disks or the tape drives, but failed if I used disks and tape
+> each case.  I also tried a 2940UW, no LVD, all SE.  All configs worked if
+I
+> only used the disks or the tape drives, but failed if I used disks and
+tape
 > at the same time.
 
 Well, this is weird.  We have numerous configurations with mixed tapes and
@@ -41,3 +70,8 @@ works (except of that obvious LVD vs SE issue).  Including 2940UW and other
 controllers.
 
 /mjt
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
