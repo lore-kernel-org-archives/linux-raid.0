@@ -1,14 +1,40 @@
-From: Mark Thompson <mark@ruthless.ws>
-Subject: Trashed Raid 5 software array
-Date: Sun, 07 Nov 2004 15:50:24 +1300
-Message-ID: <418D8D70.50905@ruthless.ws>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: Trashed Raid 5 software array
+Date: Sat, 6 Nov 2004 22:07:49 -0500
+Message-ID: <200411070307.iA737sN30882@www.watkins-home.com>
+References: <418D8D70.50905@ruthless.ws>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <418D8D70.50905@ruthless.ws>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux Raid <linux-raid@vger.kernel.org>
+To: 'Mark Thompson' <mark@ruthless.ws>, 'Linux Raid' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
+
+Based on the output of mdadm -D /dev/md1...  It looks like your array is
+working just fine, but missing 1 disk.  You should have access to your data
+now, without any extra effort.
+
+Since your array is running and working just fine (I hope).  Just add the
+missing disk with this command.
+mdadm /dev/md1 -a /dev/hdj1
+
+You may want to test the disk first with this command.
+dd if=/dev/hdj of=/dev/null bs=1024k
+Note: I said test the disk, not the partition.
+
+Any questions?  Email back before you do anything that may risk your data.
+
+Guy
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Mark Thompson
+Sent: Saturday, November 06, 2004 9:50 PM
+To: Linux Raid
+Subject: Trashed Raid 5 software array
 
 Hi there,
 
@@ -74,3 +100,8 @@ What I'm wanting to know, is despite the fact that hdj1 doesn't have the
 superblock is there a way I can add it to the array so that I can then 
 start it and hopefuly recover the 200 gig of data on there, which I can 
 then shift off to a hardware array?
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
