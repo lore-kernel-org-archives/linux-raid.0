@@ -1,77 +1,29 @@
-From: Micah Anderson <micah@riseup.net>
-Subject: Unable to read superblock
-Date: Wed, 17 Jul 2002 20:34:04 -0700
+From: "Yildiz, Murat" <murat.yildiz@atosorigin.com>
+Subject: /boot with raid1-root
+Date: Thu, 18 Jul 2002 10:35:59 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20020718033404.GR17829@riseup.net>
+Message-ID: <09DC92F4BACCD31198FC009027D3A0C00299F2B4@exchange-s>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I'm confused, I've done this hundreds of times, but for some reason it
-doesn't work now, I must be missing something, can someone poke me in
-the eye with it?
 
-I've currently got 2.2.20 with raid-1 devices booting fine:
 
-Filesystem           1k-blocks      Used Available Use% Mounted on
-/dev/md5                139945     28617    104103  22% /
-/dev/md0                  7683      4253      3034  58% /boot
-/dev/hda5                69904        15     66280   0% /tmp
-/dev/md4               1430864    933128    425048  69% /usr
-/dev/md3               1438768    392848    972832  29% /var
-/dev/md2              35990024   3980340  30181492  12% /var/spool
-/dev/md1                233225    160199     60985  72% /home
 
-cat /proc/mdstat
-Personalities : [linear] [raid0] [raid1] [raid5] [translucent] 
-read_ahead 1024 sectors
-md0 : active raid1 hdc2[0] hda2[1] 7936 blocks [2/2] [UU]
-md5 : active raid1 hdc3[0] hda3[1] 144512 blocks [2/2] [UU]
-md6 : active raid1 hdc5[0] hda5[1] 72192 blocks [2/2] [UU]
-md4 : active raid1 hdc6[0] hda6[1] 1453760 blocks [2/2] [UU]
-md3 : active raid1 hdc7[0] hda7[1] 1461760 blocks [2/2] [UU]
-md2 : active raid1 hdc9[0] hda9[1] 36563840 blocks [2/2] [UU]
-md1 : active raid1 hdc10[0] hda10[1] 240832 blocks [2/2] [UU]
-unused devices: <none>
+Hi,
+my last try was with the following settings;
+I have installed suse7.3 with 4G raid1 /  (/dev/sda1 & /dev/sdb1  as
+/dev/md0) and 1G swap as /dev/sda2.I chose to install the boot loader to the
+/dev/sda1 partition and the install was completed except at the end it said
+it could not write the boot loader to the partition.
+But when I rebooted the machine it booted from /dev/md0 and the install was
+ok.
+The question is, why does an error occur if I have a non-raid /boot
+partition and tell the installer to install the boot record to /boot?
 
-I had lilo set for:
+thx
 
-boot=/dev/md0
-root=/dev/md5
-image=/boot/vmlinuz-2.2.20RAID
-        label=RAID
-        read-only
-        alias=4
-		
-When I installed 2.4.18, all of a sudden I can't boot, EXT2-fs: unable
-to read superblock. Yes, I selected all the RAID options on kernel
-compile.
-
-What the heck?
-
-Ok, so I think it is a lilo problem, I wanted to toss lilo and put
-grub on anyway:
-
-My grub is set for:
-kernel (hd0,1)/vmlinuz-2.2.20RAID root=/dev/md5
-
-If I have grub set to:
-
-kernel (hd0,1)/vmlinuz-2.4.18 root=/dev/md5
-
-again with the unable to read superblock stuff....
-
-if I have it set to:
-kernel (hd0,1)/vmlinuz-2.4.18 root=/dev/hda3
-
-request module [block major 3]: root fs not mounted
-cannot open root device hda3
-please append correct root= boot option
-
-AGGGH?!
-
-Thanks,
-Micah
+Murat 
