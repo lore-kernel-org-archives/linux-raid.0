@@ -1,8 +1,8 @@
 From: NeilBrown <neilb@cse.unsw.edu.au>
-Subject: [PATCH] md - 4 of 7 - Collect device IO statistics for MD personalities.
-Date: Fri, 23 Jan 2004 11:14:24 +1100
+Subject: [PATCH] md - 6 of 7 - Allow partitioning of MD devices.
+Date: Fri, 23 Jan 2004 11:14:25 +1100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <E1Ajoxs-0000jk-00@notabene>
+Message-ID: <E1Ajoxt-0000k2-00@notabene>
 References: <20040123105615.2237.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: Andrew Morton <akpm@osdl.org>
@@ -10,126 +10,175 @@ Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-Update {read,write}{s,_sectors} on each request to an MD array.
+With this patch, md used two major numbers for arrays.
+
+One Major is number 9 with name 'md'  have unpartitioned md arrays,
+one per minor number.
+
+The other Major is allocated dynamically with name 'mdp' and had 
+on array for every 64 minors, allowing for upto 63 partitions.
+
+The arrays under one major are completely separate from the arrays
+under the other.
+
+The preferred name for devices with the new major are of the form:
+
+  /dev/md/d1p3  # partion 3 of device 1 - minor 67
 
  ----------- Diffstat output ------------
- ./drivers/md/linear.c    |    8 ++++++++
- ./drivers/md/multipath.c |    7 +++++++
- ./drivers/md/raid0.c     |    8 ++++++++
- ./drivers/md/raid1.c     |    8 ++++++++
- ./drivers/md/raid5.c     |    8 ++++++++
- ./drivers/md/raid6main.c |    8 ++++++++
- 6 files changed, 47 insertions(+)
+ ./drivers/md/md.c |   64 ++++++++++++++++++++++++++++++++++++++++++------------
+ 1 files changed, 50 insertions(+), 14 deletions(-)
 
-diff ./drivers/md/linear.c~current~ ./drivers/md/linear.c
---- ./drivers/md/linear.c~current~	2004-01-23 10:30:07.000000000 +1100
-+++ ./drivers/md/linear.c	2004-01-23 10:36:51.000000000 +1100
-@@ -208,6 +208,14 @@ static int linear_make_request (request_
- 	dev_info_t *tmp_dev;
- 	sector_t block;
+diff ./drivers/md/md.c~current~ ./drivers/md/md.c
+--- ./drivers/md/md.c~current~	2004-01-23 10:37:44.000000000 +1100
++++ ./drivers/md/md.c	2004-01-23 10:37:32.000000000 +1100
+@@ -52,6 +52,9 @@
+ #define MAJOR_NR MD_MAJOR
+ #define MD_DRIVER
  
-+	if (bio_data_dir(bio)==WRITE) {
-+		disk_stat_inc(mddev->gendisk, writes);
-+		disk_stat_add(mddev->gendisk, write_sectors, bio_sectors(bio));
-+	} else {
-+		disk_stat_inc(mddev->gendisk, reads);
-+		disk_stat_add(mddev->gendisk, read_sectors, bio_sectors(bio));
-+	}
++/* 63 partitions with the alternate major number (mdp) */
++#define MdpMinorShift 6
 +
- 	tmp_dev = which_dev(mddev, bio->bi_sector);
- 	block = bio->bi_sector >> 1;
-   
-
-diff ./drivers/md/multipath.c~current~ ./drivers/md/multipath.c
---- ./drivers/md/multipath.c~current~	2004-01-23 10:30:08.000000000 +1100
-+++ ./drivers/md/multipath.c	2004-01-23 10:36:51.000000000 +1100
-@@ -167,6 +167,13 @@ static int multipath_make_request (reque
- 	mp_bh->master_bio = bio;
- 	mp_bh->mddev = mddev;
+ #define DEBUG 0
+ #define dprintk(x...) ((void)(DEBUG && printk(x)))
  
-+	if (bio_data_dir(bio)==WRITE) {
-+		disk_stat_inc(mddev->gendisk, writes);
-+		disk_stat_add(mddev->gendisk, write_sectors, bio_sectors(bio));
-+	} else {
-+		disk_stat_inc(mddev->gendisk, reads);
-+		disk_stat_add(mddev->gendisk, read_sectors, bio_sectors(bio));
+@@ -1442,14 +1445,24 @@ abort:
+ 	return 1;
+ }
+ 
++static int mdp_major = 0;
+ 
+ static struct kobject *md_probe(dev_t dev, int *part, void *data)
+ {
+ 	static DECLARE_MUTEX(disks_sem);
+-	int unit = *part;
+-	mddev_t *mddev = mddev_find(unit);
++	int unit;
++	int minor;
++	mddev_t *mddev;
+ 	struct gendisk *disk;
+ 
++	if (data) {
++		unit = *part >> MdpMinorShift;
++		minor = unit << MdpMinorShift;
++		unit = -1-unit;
++	} else
++		minor = unit = *part;
++
++	mddev = mddev_find(unit);
+ 	if (!mddev)
+ 		return NULL;
+ 
+@@ -1459,15 +1472,18 @@ static struct kobject *md_probe(dev_t de
+ 		mddev_put(mddev);
+ 		return NULL;
+ 	}
+-	disk = alloc_disk(1);
++	disk = alloc_disk(data ? (1<<MdpMinorShift) : 1);
+ 	if (!disk) {
+ 		up(&disks_sem);
+ 		mddev_put(mddev);
+ 		return NULL;
+ 	}
+-	disk->major = MD_MAJOR;
+-	disk->first_minor = mdidx(mddev);
+-	sprintf(disk->disk_name, "md%d", mdidx(mddev));
++	disk->major = data ? mdp_major : MD_MAJOR;
++	disk->first_minor = minor;
++	if (data)
++		sprintf(disk->disk_name, "md_d%d", minor >> MdpMinorShift);
++	else
++		sprintf(disk->disk_name, "md%d", minor);
+ 	disk->fops = &md_fops;
+ 	disk->private_data = mddev;
+ 	disk->queue = mddev->queue;
+@@ -1495,6 +1511,7 @@ static int do_md_run(mddev_t * mddev)
+ 	struct list_head *tmp;
+ 	mdk_rdev_t *rdev;
+ 	struct gendisk *disk;
++	struct block_device *bdev;
+ 	char b[BDEVNAME_SIZE];
+ 	int unit;
+ 
+@@ -1636,6 +1653,19 @@ static int do_md_run(mddev_t * mddev)
+ 	mddev->queue->queuedata = mddev;
+ 	mddev->queue->make_request_fn = mddev->pers->make_request;
+ 
++	bdev = bdget_disk(disk, 0);
++	if (bdev) {
++		/* We need to reread the partition table, and that requires
++		 * setting the size of the blockdev inode suitably.
++		 * This code should really be export from block_dev.c,
++		 * but for now it is copied from dm.c:__set_size
++		 */
++		down(&bdev->bd_inode->i_sem);
++		i_size_write(bdev->bd_inode, (loff_t)mddev->array_size << 10);
++		up(&bdev->bd_inode->i_sem);
++		ioctl_by_bdev(bdev, BLKRRPART, 0);
++		bdput(bdev);
 +	}
+ 	return 0;
+ }
+ 
+@@ -2366,7 +2396,6 @@ static int md_ioctl(struct inode *inode,
+ 			unsigned int cmd, unsigned long arg)
+ {
+ 	char b[BDEVNAME_SIZE];
+-	unsigned int minor = iminor(inode);
+ 	int err = 0;
+ 	struct hd_geometry *loc = (struct hd_geometry *) arg;
+ 	mddev_t *mddev = NULL;
+@@ -2374,11 +2403,6 @@ static int md_ioctl(struct inode *inode,
+ 	if (!capable(CAP_SYS_ADMIN))
+ 		return -EACCES;
+ 
+-	if (minor >= MAX_MD_DEVS) {
+-		MD_BUG();
+-		return -EINVAL;
+-	}
+-
  	/*
- 	 * read balancing logic:
- 	 */
-
-diff ./drivers/md/raid0.c~current~ ./drivers/md/raid0.c
---- ./drivers/md/raid0.c~current~	2004-01-23 10:30:08.000000000 +1100
-+++ ./drivers/md/raid0.c	2004-01-23 10:36:51.000000000 +1100
-@@ -365,6 +365,14 @@ static int raid0_make_request (request_q
- 	unsigned long chunk;
- 	sector_t block, rsect;
+ 	 * Commands dealing with the RAID driver but not any
+ 	 * particular array:
+@@ -3497,15 +3521,23 @@ int __init md_init(void)
  
-+	if (bio_data_dir(bio)==WRITE) {
-+		disk_stat_inc(mddev->gendisk, writes);
-+		disk_stat_add(mddev->gendisk, write_sectors, bio_sectors(bio));
-+	} else {
-+		disk_stat_inc(mddev->gendisk, reads);
-+		disk_stat_add(mddev->gendisk, read_sectors, bio_sectors(bio));
+ 	if (register_blkdev(MAJOR_NR, "md"))
+ 		return -1;
+-
++	if ((mdp_major=register_blkdev(0, "mdp"))<=0) {
++		unregister_blkdev(MAJOR_NR, "md");
++		return -1;
 +	}
-+
- 	chunk_size = mddev->chunk_size >> 10;
- 	chunk_sects = mddev->chunk_size >> 9;
- 	chunksize_bits = ffz(~chunk_size);
-
-diff ./drivers/md/raid1.c~current~ ./drivers/md/raid1.c
---- ./drivers/md/raid1.c~current~	2004-01-23 10:30:08.000000000 +1100
-+++ ./drivers/md/raid1.c	2004-01-23 10:36:51.000000000 +1100
-@@ -474,6 +474,14 @@ static int make_request(request_queue_t 
- 	conf->nr_pending++;
- 	spin_unlock_irq(&conf->resync_lock);
+ 	devfs_mk_dir("md");
+ 	blk_register_region(MKDEV(MAJOR_NR, 0), MAX_MD_DEVS, THIS_MODULE,
+ 				md_probe, NULL, NULL);
++	blk_register_region(MKDEV(mdp_major, 0), MAX_MD_DEVS<<MdpMinorShift, THIS_MODULE,
++			    md_probe, NULL, (void*)1);
  
-+	if (bio_data_dir(bio)==WRITE) {
-+		disk_stat_inc(mddev->gendisk, writes);
-+		disk_stat_add(mddev->gendisk, write_sectors, bio_sectors(bio));
-+	} else {
-+		disk_stat_inc(mddev->gendisk, reads);
-+		disk_stat_add(mddev->gendisk, read_sectors, bio_sectors(bio));
+ 	for (minor=0; minor < MAX_MD_DEVS; ++minor) {
+ 		devfs_mk_bdev(MKDEV(MAJOR_NR, minor),
+ 				S_IFBLK|S_IRUSR|S_IWUSR,
+ 				"md/%d", minor);
++		devfs_mk_bdev(MKDEV(mdp_major, minor<<MdpMinorShift),
++			      S_IFBLK|S_IRUSR|S_IWUSR,
++			      "md/d%d", minor);
+ 	}
+ 
+ 	register_reboot_notifier(&md_notifier);
+@@ -3568,11 +3600,15 @@ static __exit void md_exit(void)
+ 	struct list_head *tmp;
+ 	int i;
+ 	blk_unregister_region(MKDEV(MAJOR_NR,0), MAX_MD_DEVS);
+-	for (i=0; i < MAX_MD_DEVS; i++)
++	blk_unregister_region(MKDEV(mdp_major,0), MAX_MD_DEVS << MdpMinorShift);
++	for (i=0; i < MAX_MD_DEVS; i++) {
+ 		devfs_remove("md/%d", i);
++		devfs_remove("md/d%d", i);
 +	}
-+
- 	/*
- 	 * make_request() can abort the operation when READA is being
- 	 * used and no empty request is available.
-
-diff ./drivers/md/raid5.c~current~ ./drivers/md/raid5.c
---- ./drivers/md/raid5.c~current~	2004-01-23 10:30:08.000000000 +1100
-+++ ./drivers/md/raid5.c	2004-01-23 10:36:51.000000000 +1100
-@@ -1326,6 +1326,14 @@ static int make_request (request_queue_t
- 	sector_t logical_sector, last_sector;
- 	struct stripe_head *sh;
+ 	devfs_remove("md");
  
-+	if (bio_data_dir(bi)==WRITE) {
-+		disk_stat_inc(mddev->gendisk, writes);
-+		disk_stat_add(mddev->gendisk, write_sectors, bio_sectors(bi));
-+	} else {
-+		disk_stat_inc(mddev->gendisk, reads);
-+		disk_stat_add(mddev->gendisk, read_sectors, bio_sectors(bi));
-+	}
-+
- 	logical_sector = bi->bi_sector & ~(STRIPE_SECTORS-1);
- 	last_sector = bi->bi_sector + (bi->bi_size>>9);
- 
-
-diff ./drivers/md/raid6main.c~current~ ./drivers/md/raid6main.c
---- ./drivers/md/raid6main.c~current~	2004-01-23 10:30:08.000000000 +1100
-+++ ./drivers/md/raid6main.c	2004-01-23 10:36:51.000000000 +1100
-@@ -1488,6 +1488,14 @@ static int make_request (request_queue_t
- 	sector_t logical_sector, last_sector;
- 	struct stripe_head *sh;
- 
-+	if (bio_data_dir(bi)==WRITE) {
-+		disk_stat_inc(mddev->gendisk, writes);
-+		disk_stat_add(mddev->gendisk, write_sectors, bio_sectors(bi));
-+	} else {
-+		disk_stat_inc(mddev->gendisk, reads);
-+		disk_stat_add(mddev->gendisk, read_sectors, bio_sectors(bi));
-+	}
-+
- 	logical_sector = bi->bi_sector & ~(STRIPE_SECTORS-1);
- 	last_sector = bi->bi_sector + (bi->bi_size>>9);
- 
+ 	unregister_blkdev(MAJOR_NR,"md");
++	unregister_blkdev(mdp_major, "mdp");
+ 	unregister_reboot_notifier(&md_notifier);
+ 	unregister_sysctl_table(raid_table_header);
+ 	remove_proc_entry("mdstat", NULL);
