@@ -1,32 +1,53 @@
-From: Gordon Henderson <gordon@drogon.net>
-Subject: Re: Good news / bad news - The joys of RAID
-Date: Fri, 19 Nov 2004 21:58:21 +0000 (GMT)
-Message-ID: <Pine.LNX.4.56.0411192142360.19380@lion.drogon.net>
-References: <419E6060.8030000@robinbowes.com>
+From: Glyn Davies <scrumpydude@yahoo.com>
+Subject: System hangs when starting RAID5
+Date: Sat, 20 Nov 2004 12:15:25 +0000 (GMT)
+Message-ID: <20041120121525.5520.qmail@web13608.mail.yahoo.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <419E6060.8030000@robinbowes.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Robin Bowes <robin-lists@robinbowes.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 19 Nov 2004, Robin Bowes wrote:
+Hi All,
 
-> What actually happened was that I rebooted to activate a new kernel and
-> the box didn't come back up. As the machine runs headless, I had to
-> power it off and take it to a monitor/keyboard to check it.
+Long story here but I'll just give the current
+sypmtoms for the time being.
 
-Not directly related to your RAID issue, but I've been running headless
-servers with console on serial ports as of late. LILO has an option to put
-output on a serial line, and there's a kernel compile flag and an append
-instruction to make it all work.
+I have 4x160GB (hde to hdh) disks, RAID5. Volume
+manager on top of that. System disk
+(/,usr,var,boot,swap) on hda.  OS is Fedora Core2.
+System died in a big lock up. Now, when booting it
+hangs after announcing "Remounting root filesystem in
+read-write mode". The OK prompt for this action is
+never displayed. The system is locked up.
 
-That combined with a power cycler makes me feel more at ease about the
-remote servers I run.
+Booting FC2 disk1 as rescue disk I can mount the
+volumes on the raid but after a short while 10-20s or
+as soon as I try to browse into the directories the
+system hangs. Booting the rescue CD but not starting
+md0 is fine. Start it with raidstart and (after the
+few seconds) it hangs. It looks to me as if this is
+one well corrupted RAID5. Any suggestions of how this
+can be fixed or at least kept alive long enough to get
+some data off (possibly by not starting the
+reconstruction - forgot to say the raid is dirty).
 
-Just don't connect 2 PCs back to back and run a getty on each serial
-line...
+MTIA
 
-Gordon
+=3D=3D=3D=3D=3D
+Best Regards
+Glyn
+
+
+	=09
+___________________________________________________________=20
+Moving house? Beach bar in Thailand? New Wardrobe? Win =A310k with Yaho=
+o! Mail to make your dream a reality.=20
+Get Yahoo! Mail www.yahoo.co.uk/10k
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
