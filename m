@@ -1,84 +1,47 @@
-From: Jeff Baitis <baitisj@evolution.com>
-Subject: raidreconf success raid0 -> raid5, 60051568kB
-Date: Sat, 16 Aug 2003 03:15:45 -0700
+From: Dave Wreski <dave@guardiandigital.com>
+Subject: Replacing failed disk in RAID1
+Date: Sun, 17 Aug 2003 18:26:30 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20030816031544.B5582@luca.pas.lab>
-Reply-To: baitisj@evolution.com
+Message-ID: <3F400116.1000608@guardiandigital.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi!
-Just had a success upgrading a RAID0 to RAID5. Details below.
+Hi all,
 
-Quick question: in my machine, hda and hdg are both the same model hard drives
-with the same geometry; however, hde is a larger drive with different geometry.
-Shouldn't all the raid 5 devices be the same size? If I lose hde3, will I have
-missing 'holes' in my filesystem? Or is Linux smart about that?
+I spent the last five or six hours working with a failed RAID1 array, 
+and was able to get it up and running quite quickly after finding mdadm.
 
-Here is the output of raidreconf:
+The part I don't understand is why raidhotadd didn't work as I expected. 
+/dev/hda1 failed, so I replaced /dev/hda and rebooted. This marked hda 
+in md0 and md1 as faulty.
 
-raidreconf -o raidtab.old -n raidtab.new -m /dev/md0
-    Working (\) [00938304/00938304] [############################################] 
-    Source drained, flushing sink.
-    Reconfiguration succeeded, will update superblocks...
-    Updating superblocks...
-    handling MD device /dev/md0
-    analyzing super-block
-    disk 0: /dev/hda1, 60051568kB, raid superblock at 60051456kB
-    disk 1: /dev/hde3, 60067035kB, raid superblock at 60066944kB
-    disk 2: /dev/hdg1, 60051568kB, raid superblock at 60051456kB
-    Array is updated with kernel.
-    Disks re-inserted in array... Hold on while starting the array...
-    Maximum friend-freeing depth:         2
-    Total wishes hooked:             938304
-    Maximum wishes hooked:             1047
-    Total gifts hooked:              938304
-    Maximum gifts hooked:              1047
-    Congratulations, your array has been reconfigured,
-    and no errors seem to have occured.
+After partitioning the new disk exactly as the old, and marking them as 
+raid-autostart, raidhotadd reported:
 
-raidtab.old:
-    raiddev /dev/md0
-    raid-level 0
-    persistent-superblock 1
-    nr-raid-disks 2
-    chunk-size 128
-    nr-spare-disks 0
-    device /dev/hdg1
-    raid-disk 0
-    device /dev/hda1
-    raid-disk 1
+md: invalid raid superblock magic on ide/host0/bus0/target0/lun0/part1
+md: ide/host0/bus0/target0/lun0/part1 has invalid sb, not importing!
+md: could not import ide/host0/bus0/target0/lun0/part1!
+md: autostart ide/host0/bus0/target0/lun0/part1 failed!
 
-raidtab.new:
-    raiddev /dev/md0
-    raid-level 5
-    persistent-superblock 1
-    nr-raid-disks 3
-    parity-algorithm left-symmetric
-    chunk-size 128
-    nr-spare-disks 0
+Luckily I was able to use mdadm to find a list of available arrays and 
+assemble them. I also tried raidsetfaulty, to no avail.
 
-    device /dev/hda1
-    raid-disk 0
+Also, my lilo.conf stated /dev/md0 (root partition) as its boot 
+parameter, but after replacing hda, it would not boot. I had partitioned 
+it the same as the defective disk. Changing the first boot disk to hdb 
+resulting in "LI". Shouldn't both of these have worked?
 
-    device /dev/hde3
-    raid-disk 1
+What did I do wrong?
 
-    device /dev/hdg1
-    raid-disk 2
-
-Thanks. I hope this information is useful to someone.
+Thanks,
+Dave
 
 -- 
-         Jeffrey Baitis - Associate Software Engineer
-
-                    Evolution Robotics, Inc.
-                     130 West Union Street
-                       Pasadena CA 91103
-
- tel: 626.535.2776  |  fax: 626.535.2777  |  baitisj@evolution.com 
+Dave Wreski                                 Guardian Digital, Inc.
+(201) 934-9230                Pioneering.  Open Source.  Security.
+dave@guardiandigital.com            http://www.guardiandigital.com
 
