@@ -1,88 +1,73 @@
 From: ptb@lab.it.uc3m.es (Peter T. Breuer)
 Subject: Re: ext3 journal on software raid (was Re: PROBLEM: Kernel 2.6.10 crashing repeatedly and hard)
-Date: Wed, 5 Jan 2005 00:53:00 +0100
-Message-ID: <srmra2-n0n.ln1@news.it.uc3m.es>
-References: <2h9ra2-mfj.ln1@news.it.uc3m.es> <200501042138.j04Lcs921349@www.watkins-home.com>
+Date: Wed, 5 Jan 2005 01:08:26 +0100
+Message-ID: <qonra2-n0n.ln1@news.it.uc3m.es>
+References: <l1nna2-e9i.ln1@news.it.uc3m.es> <20050104024108.GK99565@caffreys.strugglers.net> <895qa2-0qa.ln1@news.it.uc3m.es> <200501042002.32292.maarten@ultratux.net> <j6dra2-9vs.ln1@news.it.uc3m.es> <16859.5895.203013.789777@cse.unsw.edu.au>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Guy <bugzilla@watkins-home.com> wrote:
-> A birthday candle lasts about 2 minutes (as a guess).  I think they would
-> light 1000 candles at the same time.  Then monitor them until the first one
-> fails, say at 2 minutes.  I think the MTBF would then be computed as 2000
-> minutes MTBF!
+Neil Brown <neilb@cse.unsw.edu.au> wrote:
+> On Tuesday January 4, ptb@lab.it.uc3m.es wrote:
+> > 
+> > Uh, that's not at issue. The question is whether it is CORRECT, not
+> > whether it is consistent.
+> > 
+> 
+> What exactly do you mean by "correct".
 
-If the distribution is Poisson (i.e. the probabilty of dying per moment
-time is constant over time) then that is correct. I don't know offhand
-if that is an unbiassed estimator. I would imagine not. It would be
-biassed to the short side.
+Whatever you mean by it - I don't have a preference myself, though I
+might have an opinion in specific situations.  It means whatever you
+consider and it is up to you to make your own definition for yourself,
+to your own satisfaction in particular circumstances, if you feel you
+need a constructive definition in other terms (and I don't!).  I merely
+gave the concept a name for you.
 
-> But we can be sure that by 2.5 minutes, at least 90% of them
-> would have failed.
+> If I have a program that writes some data:
+>    write(fd, buffer, 8192);
+> and then makes sure the data is on disk:
+>    fsync(fd);
+> 
+> but the computer crashes sometime between when the write call started
+> and the fsync called ended, then I reboot and read back that block of
+> data from disc, what is the "CORRECT" value that I should read back?
 
-Then you would be sure that the distribution was not Poisson. What is
-the problem here, exactly?  Many different distributions can have the
-same mean.  For example, this one:
+I would say that if nothing on your machine or elsewhere "noticed" you
+doing the write of any part of the block, then the correct answer is
+"the block as it was before you wrote any of it".  However, if nothing
+cares at all one way or the other, then it could be annything, what you
+wrote, what you got, or even any old nonsense.
 
-deaths per unit time
-|
-|   /\
-|  /  \
-| /    \
-|/      \
----------->t
+In other words, I would say "anything that conforms with what the
+universe outside the program has observed of the transaction".  If you
+wish to apply a general one-size-fits rule, then I would say "as many
+blocks as you have written that have been read by other processes which
+in turn have communicated their state elsewhere should be present on the
+disk as is necessary to conform with that state".
 
-and this one
+So if you had some other process watching the file grow, you would need
+to be sure that as much as that other process had seen was actually on
+the disk.
 
-deaths per unit time
-|
-|\      /
-| \    /
-|  \  /
-|   \/
----------->t
+Anyway, I don't care. It's up to you. I merely ask that you assign a
+probability to it (and don't tell me what it is! Please).
 
-have the same mean. The same mtbf.
+> The answer is, of course, that there is no one "correct" value.
 
-Is this a surprise ? The mean on its own is only one parameter of a
-distribution - for a posson distribution, it is the only parameter, but
-that is a particular case.  For the normal disribution you require both
-the mean and the standard deviation in order to specify the
-distribution.  You can get very different normal distributions with the
-same mean!
+There is whatever one pleases you as correct.  Please do not fall into a
+sollipsistic trap!  It is up to YOU to decide what is correct and assign
+probabilities.  I only pointed out how those probabilities scale with
+the size of a RAID array WHATEVER THEY ARE.
 
-I can't draw a Poisson distribution in ascii, but it has a short sharp
-rise to the peak, then a long slow decline to infinity. If you were to
-imagine that half the machines had died by the time the mtbf were
-reached, you would be very wrong! Many more have died than half. But
-that long tail of those very few machines that live a LOT longer than
-the mtbf balances it out.
+I don't care what they are to you. It's absurd to ask me. I only tell
+you how they grow with size of array.
 
-I already did this once for you, but I'll do it again: if the mtbf is
-ten years, then 10% die every year.  Or 90% survive every year.  This
-means that by the time 10 years have passed only 35% have survived
-(90%^10).  So 2/3 of the machines have died by the time the mtbf is
-reached!
+> After an unclean shutdown of a raid1 array, every (working) device
+> has correct data on it.  They may not all be the same, but they are
+> all correct.
 
-If you want to know where the peak of the death rate occurs, well, it
-looks to me as though it is at the mtbf (but I am calculating mentally,
-not on paper, so do your own checks). After that deaths become less
-frequent in the population as a whole.
-
-To estimate the mtbf, I would imagine that one averages the proportion
-of the population that die per month, for several months. But I guess
-serious appicative statisticians have evolved far more sophisticated
-and more efficient estimators.
-
-And then there is the problem that the distribution is bipolar, not pure
-poisson.  There will be a subpopulation of faulty disks that die off
-earlier.  So they need to discount early measurements in favour of the
-later ones (bad luck if you get one of the subpopulation of defectives
-:) - but that's what their return policy is for).
-
-
+No they are not.  They are consistent. That is different! 
 
 Peter
 
