@@ -1,21 +1,38 @@
-From: Stephan van Hienen <raid@a2000.nu>
-Subject: mdadm monitor keeps device locked ?
-Date: Tue, 17 Feb 2004 13:59:53 +0100 (CET)
+From: "fredric" <kdoty98@hotmail.com>
+Subject: A D-r-u-g more potent than VIAG-RA?!
+Date: Tue, 17 Feb 2004 07:00:41 GMT
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.58.0402171353040.7525@ddx.a2000.nu>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Message-ID: <1077001241-12222__13953.5875562162$1077026688@excite.com>
+Content-Type: text/plain;
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+To: linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-]# raidstart /dev/md0
-]# mdadm --monitor --scan --daemonise > /var/run/mdadm
-]# raidstop /dev/md0
-/dev/md0: Device or resource busy
 
-I first have to kill the mdadm monitor process befor i can stop the md0
-(if i don't stop the raid has to resync after reboot?)
+"I went from about 6in. to over 7.5 in 90days!" - JL - Tulsa, OK
 
-is there a better way of stopping the raid, without doing killing the
-mdadm (i use killall mdadm now) ?
+http://drlaurent.com/mm/index.php?pid=eph9106
+
+
+"NOT only the SIZE increased..but also the feeling!" - ER - Dallas, TX
+
+http://drlaurent.com/mm/index.php?pid=eph9106
+
+
+"I grew about 2in - and more so..remain rock-hard during love making. I owe it
+all to Maxaman! Not bad for a 56 year old."  MT - Pensacola, FL
+
+http://drlaurent.com/mm/index.php?pid=eph9106
+
+
+
+
+
+
+
+
+inside  connors sunday marcous bruceg pjvolz  beagle </U> 
+feng deep  bird lavallee petteway pmokodom takara  golfer jpwu Please kamal jfleming  dawes hebleshm peck  ajagisim weenie Kinder humility
+krwallma
+Get off this list by writing to getmeoff731@mail.com
+
