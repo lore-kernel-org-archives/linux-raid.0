@@ -1,142 +1,68 @@
-From: linuxraid@valli.org
-Subject: 2010S issues
-Date: Wed, 14 Jan 2004 13:43:28 +0100 (CET)
-Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <36903.194.153.178.110.1074084208.squirrel@mail.valli.org>
-References: <400518E8.1060409@xs4all.nl>
+From: Kevin Corry <kevcorry@us.ibm.com>
+Subject: Re: Proposed enhancements to MD
+Date: Wed, 14 Jan 2004 09:52:59 -0600
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <200401140952.59447.kevcorry@us.ibm.com>
+References: <40043C75.6040100@pobox.com> <400457E3.5030602@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain;charset=iso-8859-1
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <400518E8.1060409@xs4all.nl>
-To: Jasper Slits <slits@xs4all.nl>, linux-raid@vger.kernel.org
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <400457E3.5030602@adaptec.com>
+Content-Disposition: inline
+To: Scott Long <scott_long@adaptec.com>, Jeff Garzik <jgarzik@pobox.com>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, linux-raid <linux-raid@vger.kernel.org>, Neil Brown <neilb@cse.unsw.edu.au>
 List-Id: linux-raid.ids
 
-Hi Jasper,
-I have installed debian via the gentoo livecd 1.
-(gentoo is another great distro. www.gentoo.org)
-The kernel of this CD detects your raid.
+On Tuesday 13 January 2004 14:41, Scott Long wrote:
+> A problem that we've encountered, though, is the following sequence:
+>
+> 1) md is inialized during boot
+> 2) drives X Y and Z are probed during boot
+> 3) root fs exists on array [X Y Z], but md didn't see them show up,
+>     so it didn't auto-configure the array
+>
+> I'm not sure how this can be addressed by a userland daemon.  Remember
+> that we are focused on providing RAID during boot; configuring a
+> secondary array after boot is a much easier problem.
 
-Do the following steps to install debian via the gentoo CD:
-- Boot with the gentoo LiveCD
-- Create partitions with fdisk
-  # fdisk /dev/sda
-- Create filesystems like
-  # mke2fs -j /dev/sda1
-  # mkswap /dev/sda2
-  # mkreiserfs /dev/sda3
-- Mount partitions
-  # swapon /dev/sda2
-  # mount /dev/sda3 /mnt/gentoo
-  # mkdir /mnt/gentoo/boot
-  # mount /dev/sda1 /mnt/gentoo/boot
-- Do the following on a already installed debian-machine
-  # apt-get --download-only install debootstrap
-- On the new machine do
-  # mkdir /root/work
-  # cd /root/work
-  # scp debianmachine:/var/cache/apt/archives/debootstrap_0.1.17_i386.deb .
-  # ar -xf debootstrap_0.1.17_i386.deb
-  # cd /mnt/gentoo
-  # mkdir tmp
-  # cd tmp
-  # mkdir debinst
-  # cp -a /mnt/cloop/usr .
-  # tar zxvf /root/work/data.tar.gz
-  # cd /
-  # rm usr
-  # ln -s /mnt/gentoo/tmp/debinst/usr .
-  # /usr/sbin/sbin/debootstrap --arch i386 woody /mnt/gentoo
-http://http.us.debian.org/debian
-  # chroot /mnt/gentoo /bin/bash
-- debian base dirs are now installed. edit now the /etc/fstab
-  # vi /etc/fstab
-  # mount -a
-  # mount -t proc proc /proc
-  # dpkg-reconfigure console-data
-- configure the net
-  # vi /etc/network/interfaces
-  # vi /etc/resolve.conf
-  # vi /etc/hostname
-- do now the debian base-config
-  # /usr/sbin/base-config
-- install packages desired for kernel-compile
-  # apt-get update
-  # apt-get upgrade
-  # apt-get install perl
-  # apt-get install make
-  # apt-get install gcc
-  # apt-get install ssh
-  # apt-get install wget
-  # apt-get install bzip2
-  # apt-get install libncurses5-dev
-- compile the kernel
-  # wget http://www.kernel.org/pub/linux/v2.4/linux-2.4.24.tar.bz2
-  # tar jxvf linux-2.4.24.tar.bz2
-  # ln -s linux-2.4.24 linux
-  # cd linux
-  # make mrproper
-  # make menuconfig
-- kernel configuration
-  - DO NOT include 79xx support.
-  - include Adaptec i20 RAID support (in scsi menu) i2o_dpt
-  - DO NOT include i2o device support
-- know compile
-  # make dep
-  # make clean
-  # make bzImage
-  # make modules
-  # make modules_install
-  # cp arch/i386/boot/bzImage /boot/vmlinuz-2.4.24
-  # cp System.map /boot/System.map-2.4.24
-  # cp .config /boot/config-2.4.24
-- configure lilo
-  # vi /etc/lilo.conf
-  # vi /boot/bootmess.txt
-  # /sbin/lilo -v
-- Create bootdisks (insert an empty floppy)
-  # mkboot /boot/vmlinuz-2.4.24
+This can already be accomplished with an init-ramdisk (or initramfs in the 
+future). These provide the ability to run user-space code before the real 
+root filesystem is mounted.
 
-FINISH
-- try to reboot
-  unfortunatelly we can only boot from the bootdisk
-  booting from the RAID doesn't work
+> > I thought that raid0 was one of the few that actually did bio splitting
+> > correctly?  Hum, maybe this is a 2.4-only issue.  Interesting, and
+> > agreed, if so...
+>
+> This is definitely still a problem in 2.6.1
 
-Good luck
-Regards valli
+Device-Mapper does bio-splitting correctly, and already has a "stripe" module. 
+It's pretty trivial to set up a raid0 device with DM.
 
+> As for the question of DM vs. MD, I think that you have to consider that
+> DM right now has no concept of storing configuration data on the disk
+> (at least that I can find, please correct me if I'm wrong).  I think
+> that DM will make a good LVM-like layer on top of MD, but I don't see it
+> replacing MD right now.
 
-> hi valli,
->
-> I am sorry to bother you, but i have the same RAID1 card as you and i
-> going to run Debian on my server (Supermicro, Intel Xeon, Adaptec 7902
-> dual-channel Ultra320 SCSI onboard and Zero-channel RAID support using
-> Adaptec 2010S).
->
-> I havent tried to install it yet but i read you managed to get it
-> working
-> (http://marc.theaimsgroup.com/?l=linux-raid&m=107403841015538&w=2).
->
-> That's a big relieve because i have read some stories of people who
-> didnt get it working with Debian. Adaptec seems to think that there
-> arent any other distros besides SuSE & RedHat :)
->
-> Can you give me any tips on installing it succesfully? I have two 36GB
-> discs and no IDE disc to boot from, but a floppy will do i hope ;)
->
-> My approach will be:
-> - config 2.4.24 (2.6.1 seems to have a broken Adaptec i2o_dpt)
-> - include 790x support and Adaptec i20 support.
-> - compile the kernel
-> - create a new Debian bootdisk using this newly created kernel
-> - boot the new server and install debian using net-install
-> - boot from floppy
->
-> Are there any steps i forgot?
->
-> I already tested that dpt_util on a spare Debian box and it runs, of
-> course it can't detect scsi-adapters though.
->
-> Kind regards,
->
-> Jasper
->
+The DM core has no knowledge of any metadata, but that doesn't mean its 
+sub-modules ("targets" in DM-speak) can't. Example, the dm-snapshot target 
+has to record enough on-disk metadata for its snapshots to be persistent 
+across reboots. Same with the persistent dm-mirror target that Joe Thornber 
+and co. have been working on. You could certainly write a raid5 target that 
+recorded parity and other state information on disk.
+
+The real key here is keeping the metadata that simply identifies the device 
+separate from the metadata that keeps track of the device state. Using the 
+snapshot example again, DM keeps a copy of the remapping table on disk, so an 
+existing snapshot can be initialized when it's activated at boot-time. But 
+this remapping table is completely separate from the metadata that identifies 
+a device/volume as being a snapshot. In fact, EVMS and LVM2 have completely 
+different ways of identifying snapshots (which is done in user-space), yet 
+they both use the same kernel snapshot module.
+
+-- 
+Kevin Corry
+kevcorry@us.ibm.com
+http://evms.sourceforge.net/
