@@ -1,98 +1,33 @@
-From: "Donghui Wen" <dhwen@protegonetworks.com>
-Subject: Re: Help with /etc/raidtab
-Date: Tue, 8 Jul 2003 15:32:57 -0700
+From: <TristanWW@SmileAtYou.com>
+Subject: New Piece Available
+Date: Tue, 08 Jul 2003 19:34:55 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <005d01c345a0$e1250710$df01010a@moon>
-References: <befehe$k5a$1@main.gmane.org> <befg8h$sid$1@main.gmane.org>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Message-ID: <E19a4nH-0007Fm-00@hawk.mail.pas.earthlink.net>
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org, "Bradley D. Thornton" <gmane@tallship.net>
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-You have to specify each partition.
+Title: 'Behind Left Ear'
+Artist: Derek Olson (Tristan Woodworks)
+Auction Estimate: $3000-$5000
+Medium: Hand carved Mahogany
+Size: 17.75 in. x 10.25 in.
+Type: Wall Art
 
-Donghui
+Artist's Description of the piece:
+My head used to hurt very much. It mainly hurt behind my left ear and that is why I did this piece. This is how it felt.
 
------ Original Message -----
-From: "Bradley D. Thornton" <website.is@www.NorthTech.US>
-To: <linux-raid@vger.kernel.org>
-Sent: Tuesday, July 08, 2003 3:21 PM
-Subject: Re: Help with /etc/raidtab
+Link to piece:
+http://cgi.ebay.com/ws/eBayISAPI.dll?ViewItem&item=3535576253
+
+Derek Olson
+Tristan Woodworks
+http://www.SmileAtYou.com
+Highlands Ranch, Colorado
+
+You are subscribed as linux-raid@vger.kernel.org
+If you know someone who might like this, or you'd like off, please let me know.
 
 
-> I realize that the example below is ugly, sorry for that :(
->
-> Basically what I'm asking is, can't I just specify /dev/sdX in raidtab or
-do
-> I actually have to specify each and evry single partition on the disk for
-> the array to work - i.e., /dev/sdX#   ????
->
-> Please see below if you can deal with the lousy formatting.
->
->
-> "Bradley D. Thornton" <website.is@www.NorthTech.US> wrote in message
-> news:befehe$k5a$1@main.gmane.org...
-> > I've been looking around for example /etc/raidtabs and only seem to find
-> > ones that look like this:
-> >
-> > raiddev /dev/md0
-> >         raid-level      1
-> >         nr-raid-disks   2
-> >         nr-spare-disks  0
-> >         chunk-size     4
-> >         persistent-superblock 1
-> >         device          /dev/sda1
-> >         raid-disk       0
-> >         device          /dev/sdb1
-> >         raid-disk       1
-> > My question is, considering that I have multiple partitions that I want
-to
-> > array and I also want to boot from my RAID 1 array, can I just do this?
-> >         device          /dev/sda
-> >         raid-disk       0
-> >         device          /dev/sdb
-> >         raid-disk       1
-> > or do I need to do this?
-> >         device          /dev/sda1
-> >         raid-disk       0        device          /dev/sda3
-> raid-disk
-> > 0        device          /dev/sda5        raid-disk       0
-device
-> > /dev/sda6        raid-disk       0        device          /dev/sdb1
-> >         raid-disk       1        device          /dev/sdb3
-> raid-disk
-> > 1        device          /dev/sdb5        raid-disk       1
-device
-> > /dev/sdb6        raid-disk       1Any assistance would be greatly
-> > appreciated.
-> > ---Outgoing mail is certified Virus Free.Checked by AVG anti-virus
-system
-> > (http://www.grisoft.com).Version: 6.0.449 / Virus Database: 251 -
-Release
-> > Date: 01/27/03
-> >
-> >
-> >
-> > -
-> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >
->
->
-> ---
-> Outgoing mail is certified Virus Free.
-> Checked by AVG anti-virus system (http://www.grisoft.com).
-> Version: 6.0.449 / Virus Database: 251 - Release Date: 01/27/03
->
->
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+
 
