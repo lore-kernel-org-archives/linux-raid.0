@@ -1,74 +1,37 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: "Enhanced" MD code avaible for review
-Date: Tue, 30 Mar 2004 17:34:51 -0500
+From: Ninti Systems <office@ninti.com.au>
+Subject: Re: O'Reilly RAID Book
+Date: 31 Mar 2004 08:57:01 +0930
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <4069F60B.6000102@pobox.com>
-References: <760890000.1079727553@aslan.btc.adaptec.com> <200403261315.20213.kevcorry@us.ibm.com> <1644340000.1080333901@aslan.btc.adaptec.com> <200403270939.29164.kevcorry@us.ibm.com> <842610000.1080666235@aslan.btc.adaptec.com> <4069AB1B.90108@pobox.com> <854630000.1080668158@aslan.btc.adaptec.com> <4069B289.9030807@pobox.com> <866290000.1080669880@aslan.btc.adaptec.com> <4069EB03.9000202@pobox.com> <1001500000.1080684755@aslan.btc.adaptec.com>
+Message-ID: <1080689221.1069.9.camel@localhost>
+References: <1080605251.1695.14.camel@localhost>
+	 <11188.129.44.35.24.1080671702.squirrel@cynicism.com>
+Reply-To: office@ninti.com.au
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1001500000.1080684755@aslan.btc.adaptec.com>
-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Cc: Kevin Corry <kevcorry@us.ibm.com>, linux-kernel@vger.kernel.org, Neil Brown <neilb@cse.unsw.edu.au>, linux-raid@vger.kernel.org, dm-devel@redhat.com
+In-Reply-To: <11188.129.44.35.24.1080671702.squirrel@cynicism.com>
+To: derek@cynicism.com
+Cc: RAID Linux <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Justin T. Gibbs wrote:
->>>So you are saying that this presents an unrecoverable situation?
->>
->>No, I'm saying that the data phase need not have a bunch of in-kernel
->>checks, it should be generated correctly from the source.
-> 
-> 
-> The SCSI drivers validate the controller's data phase based on the
-> expected phase presented to them from an upper layer.  I never talked
-> about adding checks that make little sense or are overly expensive.  You
-> seem to equate validation with huge expense.  That is just not the
-> general case.
-> 
-> 
->>>Hmm.  I've never had someone tell me that my SCSI drivers are slow.
->>
->>This would be noticed in the CPU utilization area.  Your drivers are
->>probably a long way from being CPU-bound.
-> 
-> 
-> I very much doubt that.  There are perhaps four or five tests in the
-> I/O path where some value already in a cache line that has to be accessed
-> anyway is compared against a constant.  We're talking about something
-> down in the noise of any type of profiling you could perform.  As I said,
-> validation makes sense where there is basically no-cost to do it.
-> 
-> 
->>>I don't think that your statement is true in the general case.  My
->>>belief is that validation should occur where it is cheap and efficient
->>>to do so.  More expensive checks should be pushed into diagnostic code
->>>that is disabled by default, but the code *should be there*.  In any event,
->>>for RAID meta-data, we're talking about code that is *not* in the common
->>>or time critical path of the kernel.  A few dozen lines of validation code
->>>there has almost no impact on the size of the kernel and yields huge
->>>benefits for debugging and maintaining the code.  This is even more
->>>the case in Linux the end user is often your test lab.
->>
->>It doesn't scale terribly well, because the checks themselves become a
->>source of bugs.
-> 
-> 
-> So now the complaint is that validation code is somehow harder to write
-> and maintain than the rest of the code?
+On Wed, 2004-03-31 at 04:05, Derek Vadala wrote:
 
-Actually, yes.  Validation of random user input has always been a source 
-of bugs (usually in edge cases), in Linux and in other operating 
-systems.  It is often the area where security bugs are found.
+> I'm surprised to learn that Slackware 9.1 doesn't have decent install-time
+> support for RAID-1.
+> 
 
-Basically you want to avoid add checks for conditions that don't occur 
-in properly written software, and make sure that the kernel always 
-generates correct requests.  Obviously that excludes anything on the 
-target side, but other than that...  in userland, a priveleged user is 
-free to do anything they wish, including violate protocols, cook their 
-disk, etc.
+I'm no Slackware expert, but there are certainly no 
+options to set up RAID during install that I can see. 
+I believe I have seen this confirmed elsewhere.
+There could easily be support in some form or other that 
+I don't know about, however.
 
-	Jeff
+OTOH, I'm now forced to learn how to use the Linux tools 
+(raidtools, mdadm) which is what I really want, and which 
+Slackware is supposedly all about. 
 
-
+That's good (going public domain) and bad (no edition 2) news
+about 'Managing RAID on Linux'. I don't know about sales, but
+the topic itself seems pretty important to me.
 
