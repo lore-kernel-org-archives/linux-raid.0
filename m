@@ -1,25 +1,44 @@
-From: "emma o'neill" <emma_on@ureach.com>
-Subject: Red Hat HA Cluster
-Date: Fri, 8 Oct 2004 16:54:48 -0400
+From: Robin Bowes <robin-lists@robinbowes.com>
+Subject: Stress testing system?
+Date: Fri, 08 Oct 2004 22:32:58 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200410082054.QAA02192@www22.ureach.com>
-Reply-To: <emma_on@ureach.com>
+Message-ID: <4167078A.3030609@robinbowes.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=iso-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-A Red Hat instructor told us that their HA Cluster did not
-support sw RAID.  Was she talking about the standard raid tools,
-or does this also apply to mdadm?
+Hi,
+
+I've got six 250GB Maxtor drives connected to 2 Promise SATA controllers 
+  configured as follows:
+
+Each disk has two partitions: 1.5G and 248.5G.
+
+/dev/sda1 & /dev/sdd1 are mirrored and form the root filesystem.
+
+/dev/sd[abcdef]2 are configured as a RAID5 array with one hot spare.
+
+I use lvm to create a 10G /usr partition, a 5G /var partition, and the 
+rest of the array (994G) in /home.
+
+The system in which I installed these drives was rock-solid before I 
+added the RAID storage (it had a single 120G drive). However, since 
+adding the 6 disks I have experienced the system simply powering down 
+and requiring filesystem recovering when it restarted.
+
+I suspected this was down to an inadequate power supply (it was 400W) so 
+I've upgrade to an OCZ 520W PSU.
+
+I'd like to stress test the system to see if the new PSU has sorted the 
+problem, i.e. really work the disks.
+
+What's the best way to do get all six drives working as hard as possible?
 
 Thanks,
 
-emma
-
-________________________________________________
-Get your own "800" number
-Voicemail, fax, email, and a lot more
-http://www.ureach.com/reg/tag
+R.
+-- 
+http://robinbowes.com
