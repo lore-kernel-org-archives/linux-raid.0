@@ -1,39 +1,57 @@
-From: Gordon Henderson <gordon@drogon.net>
-Subject: Re: Replacing Dead Disks in Hardware Array
-Date: Tue, 4 Jan 2005 08:34:12 +0000 (GMT)
-Message-ID: <Pine.LNX.4.56.0501040832080.16453@lion.drogon.net>
-References: <41D9E3B0.6080808@ruthless.ws>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+From: ptb@lab.it.uc3m.es (Peter T. Breuer)
+Subject: Re: ext3 journal on software raid (was Re: PROBLEM: Kernel 2.6.10 crashing repeatedly and hard)
+Date: Tue, 4 Jan 2005 09:43:38 +0100
+Message-ID: <qi1qa2-squ.ln1@news.it.uc3m.es>
+References: <jh4pa2-pi.ln1@news.it.uc3m.es> <Pine.LNX.3.96.1050103170449.22620A-100000@Maggie.Linux-Consulting.com> <16858.7053.312590.647797@cse.unsw.edu.au>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <41D9E3B0.6080808@ruthless.ws>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mark Thompson <mark@ruthless.ws>
-Cc: Mailing List - Linux Raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 4 Jan 2005, Mark Thompson wrote:
+Neil Brown <neilb@cse.unsw.edu.au> wrote:
+> On Monday January 3, aoga@ns.Linux-Consulting.com wrote:
+> > 
+> > > > think, the branch of mathematics that has the highest ratio of people
+> > > > who think that understand it to people to actually do (witness the
+> > > > success of lotteries).
+> > 
+> > ahh ... but the stock market is the worlds largest casino
+> 
+> and how many people do you know who make money on stock markets.
 
-> Hi there,
->
-> While this isn't specific to linux, I've recently had a 160 gig 5400 RPM
-> Maxtor drive die in my Hardware raid (3ware Escalade PATA Controller) as
-> I am unable to find a suitable drive to replace it, would it be possible
-> to repleace it with a 7200RPM Maxtor 160 gig drive?
->
-> Model:
-> Maxtor D540X-4G 5400 RPM
-> 160 GB Ultra ATA/133 Hard Drive
->
-> PS: I live in New Zealand where sourcing old/obscure drives can become
-> very difficult so I'm looking at just upgrading to a newer disk.
+Ooh .. several mathematicians (pay is not very high!). 
 
-As long as the total number of blocks are the same (or slightly more) you
-shouldn't have a problem.
+> Now compare that with how many loose money on lotteries.
 
-However, check the archives for comments on Maxtor disks (I've had one
-fail personally), and you also might find that the 7200 RPM drive runs
-slightly hotter than the 5400 RPM drive, so make sure the airflow &
-cooling are good.
+I don't have to - I wouldn't place money in a lottery.  The expected
+gain is negative whatever you do.  I stick to investments where I have
+an expectation of a positive gain with at least some strategy.
 
-Gordon
+Mind you, as Conway often said,  statistics don't apply to improbable
+events. So you should bet on anything which is not likely to occur more
+than once or twice a lifetime (theory - if you win, just don't try it
+again; if you die first, well, you won't care).
+
+Stick to someting more certain, like blackjack, if you want to  make $.
+
+> Apparently teaching probability at University doesn't necessary mean
+> that you understand it. 
+
+Perhaps the problem is at your end?
+
+> I cannot comment on your understanding, but
+> if you ask google about the Monty Hall problem  and include search
+> terms like "professor" or "maths department" you will find plenty of
+> (reported) cases of University staff not getting it.
+
+Who cares? It's easy to concoct problems that a person will get wrong
+if they answer according to intuition. I can do that trick easily on
+you! (or anyone).
+
+> They were both wrong.
+
+What are you trying to "prove"? There is no need to be insulting.
+Simply pick up the technical conversation!
+
+Peter
+
