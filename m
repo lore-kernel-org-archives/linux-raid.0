@@ -1,46 +1,65 @@
-From: Can Sar <csar@stanford.edu>
-Subject: Raid Recovery after Machine Failure
-Date: Sat, 12 Mar 2005 17:54:20 -0800
-Message-ID: <94a5aa6f5e94171df4c070e741014f02@stanford.edu>
-Mime-Version: 1.0 (Apple Message framework v619.2)
-Content-Type: text/plain; charset=US-ASCII; format=flowed
+From: Mitchell Laks <mlaks@verizon.net>
+Subject: disaster. raid1 drive failure rsync=DELAYED why?? please help
+Date: Sat, 12 Mar 2005 23:51:23 -0500
+Message-ID: <200503122351.23430.mlaks@verizon.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
+Content-disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 Hi,
+I have a remote system with a raid1 of a data disk. I got a call from  the 
+person using the system that the application that writes to the data disk was 
+not working.
 
-I am working with a research group that is currently building a tool to 
-automatically find bugs in file systems, and related questions. We are 
-trying to check whether file systems really guarantee the consistencies 
-they promise, and one aspect we are looking at is running them on top 
-of Raid devices. In order to do this we have to understand a few things 
-about the Linux Raid driver/tools and I haven't been able to figure 
-this out from the documention/source code, so maybe you can help me.
-I asked this same question a few days ago, but I think I didn't really 
-state it clearly, so let me try to rephrase it.
+system drive is /dev/hda with separte partitions / , /var, /home, /tmp.
+data drive is linux software raid1 /dev/md0 with /dev/hdc1,  /dev/hde1. 
 
-For Raid 4-6 and for say 5 disks say we write a block that is striped 
-across all the disks, and after 4 of the disks write their part of the 
-block to disk the machine crashes without the 5th disk being able to 
-complete the write. Because of this, the checksum for this stripe 
-should be incorrect, right?
+I logged in remotely and discovered that the /var partition was full because 
+many write errors from /dev/hde1 in /var/log/syslog.
 
-The raid array is a Linux soft raid array set up using mdadm, and none 
-of the disks actually crashed or wrote had any errors during this 
-operation (the machine crashed for some other reason) We then reboot 
-the machine and recreate the array, then remount it and then try to 
-read the sector that was previously written (that has an incorrect 
-checksum). At what point will the raid driver discover that something 
-is wrong? Will it ever (I feel that it should discover this during the 
-read at latest). Will it try to perform any kind of recovery or simply 
-fail?
-How would this change if only 3 of the 5 disk writes made it to disk? 
-Fixing the error would be impossible of course (at least with Raid 4 
-and 5, i know little about 6), but detection should still work. Will 
-the driver complain?
+When I looked into cat /proc/mdstat i discovered that /dev/md0 was degraded  
+because /dev/hdc1 had failed (there was an f there) and /dev/hde1 was 
+carrying the load.
 
-Thank you so very much for your help,
-Can
+I shut down the applications in background. I emptied out /var/log/syslog. I 
+then removed /dev/hdc1 from the array /dev/md0. 
 
+I had another pair of drives on the system that was part of another mirrored 
+array /dev/md1 with no useful information stored on them. 
+
+/dev/md1  /dev/hdf1 /dev/hdh1 
+
+I thought ok, let me detach /dev/hdf1 from the  other array /dev/md1  and try 
+attach it to /dev/md0 and rebuild the array /dev/md0. That way i would rescue 
+the data on the threatening drive /dev/hde1 which is spewing out error 
+messages to my /var/log/syslog and threatening to die! 
+
+So stupidly (probably), I did
+
+mdadm /dev/md1  --fail /dev/hdf1 --remove /dev/hdf1
+
+then i did 
+mdadm /dev/md0 --add /dev/hdf1
+
+Now when i did 
+cat /proc/mdstat I see:
+
+md0 : active raid1 hdf1[2] hde1[0]
+      244195904 blocks [2/1] [U_]
+        resync=DELAYED
+
+I don't see any rebuilding action going on.
+
+Did I have to do something like fdisk 
+to the drive /dev/hdf1 before adding it to the array?? I didnt do anything to 
+zero out the data that was on the disk (no data really just whatever was 
+created on the disk when i made it part of an ext3 raid /dev/md1.  I had 
+fdisked it a while ago as a linux raid type partition...
+
+What do I do to rebuild the raid?
+Thanks millions for your help!!
+Mitchell
