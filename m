@@ -1,38 +1,46 @@
-From: Hendrik Visage <hvisage@envisage.co.za>
-Subject: Re: libata + raid
-Date: Mon, 24 Nov 2003 21:58:15 +0200
+From: Hermann Himmelbauer <dusty@strike.wu-wien.ac.at>
+Subject: Re: I'm Astounded by How Good Linux Software RAID IS!
+Date: Tue, 25 Nov 2003 00:45:18 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20031124195815.GS17908@hvs.envisage.co.za>
-References: <200311241842.39015.oheinz@stud.fbi.fh-darmstadt.de>
+Message-ID: <200311250045.18770.dusty@strike.wu-wien.ac.at>
+References: <172.22899f68.2cf365fc@aol.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <172.22899f68.2cf365fc@aol.com>
 Content-Disposition: inline
-In-Reply-To: <200311241842.39015.oheinz@stud.fbi.fh-darmstadt.de>
-To: Oliver Heinz <oheinz@stud.fbi.fh-darmstadt.de>
-Cc: linux-raid@vger.kernel.org
+To: AndyLiebman@aol.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Nov 24, 2003 at 06:42:39PM +0100, Oliver Heinz wrote:
-> 
-> Libata support seems to be derived from the pdc-ultra-driver which seems to
->  be non-raid only unlike the partly closed source par15-driver, right?
-> When I boot with libata enabled on a pdc20378 in raid-mode I get two
-> independend drives instead off one raid-array.
+On Monday 24 November 2003 14:47, AndyLiebman@aol.com wrote:
+>> Hmmm, here are some of my thoughts, maybe some of my assumptions are wrong
+>> as I am no RAID expert. If so, please correct me!
+>>
+>> - Maximum FW-Speed = 400Mbit/s, that's with the protocol overhead ~ 35Mb/s
+>> - Theoretical PCI-Bandwidth: 133 MB/s
+>
+>
+> Do you think this 35 MB/sec applies, even though I am using 5 separate
+> Firewire PCI cards? That's 5 separate channels, each of which has a 400
+> Mbit/sec speed. Keep in mind that EACH drive on the RAID 5 is on it's own
+> separate PCI card.
 
-Which is typically also the case with W2k/XP/etc. except that the driver
-"hides" that fact to you by interpreting the on disk/bios information and
-it then does the sofware RAID. Thus you are using Software RAID with BIOS
-support for booting the RAID. Elsewher called "quasi-raid".
+I already assumed that you use one drive on each channel. Nevertheless, the 
+maximum throughput from a drive to the CPU is limited by the 400Mbit/s 
+Firewire speed, that's around 35Mbyte/s.
 
-> Will raid-mode be supported? Is there a way I can help? Or maybe it's just
-> stupid to complain about missing support on a quite powerful machine (2xXeon
-> 2.6GHz), and I should use software raid anyway?
+On a first glance this is no limitation as normal IDE-Drives don't deliver 
+much more than that but the interface speed can be much higher - and that's 
+my point: Transfers from the internal harddisk cache to the CPU are also 
+limited by the firewire speed.
 
-Refer to the (getting obsolete) ataraid/pdcraid/hptraid modules, which emulated
-the Windows driver.
+		Best Regards,
+		Hermann
 
-> Does libata (need to?) support hot-plugging?
-
-Hopefully it does :)
+-- 
+x1@aon.at
+GPG key ID: 299893C7 (on keyservers)
+FP: 0124 2584 8809 EF2A DBF9  4902 64B4 D16B 2998 93C7
 
