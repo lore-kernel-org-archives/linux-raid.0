@@ -1,80 +1,70 @@
-From: <robin-lists@robinbowes.com>
-Subject: RE: what is the best multi-SATA-controller-on-a-single-board out there?
-Date: Mon, 2 Aug 2004 23:48:44 +0100
+From: Julian Cowley <julian@lava.net>
+Subject: Re: [RAID] Re: 1x 3ware controllers vs. 2x 3ware controllers
+Date: Mon, 2 Aug 2004 15:58:27 -1000 (HST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <S264389AbUHBWsr/20040802224847Z+6586@vger.kernel.org>
-References: <Pine.LNX.4.58.0408021700230.7852@web1.mmaero.com>
+Message-ID: <Pine.LNX.4.58.0408021554070.7168@taurus.cesta.com>
+References: <Pine.LNX.4.44.0408010858370.7382-100000@uplift.swm.pp.se>
+ <Pine.LNX.4.56.0408010804370.6442@lion.drogon.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.58.0408021700230.7852@web1.mmaero.com>
-To: 'Jon Lewis' <jlewis@lewis.org>, 'Tim Small' <tim@buttersideup.com>
+In-Reply-To: <Pine.LNX.4.56.0408010804370.6442@lion.drogon.net>
+To: Gordon Henderson <gordon@drogon.net>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org 
-> [mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Jon Lewis
-> Sent: 02 August 2004 21:10
-> To: Tim Small
-> Cc: linux-raid@vger.kernel.org
-> Subject: Re: what is the best 
-> multi-SATA-controller-on-a-single-board out there?
-> 
-> On Mon, 2 Aug 2004, Tim Small wrote:
-> 
-> > The Promise cards, are cheap, but only do 66Mhz/32 bit PCI 
-> and provide 
-> > four SATA ports, so they may not be well suited to some 
-> boards..  Both 
-> > chipsets were used with libata on 2.6 kernels, with a 
-> mixture of s/w 
-> > raid5, and s/w raid1.  The only slight irritation is the 
-> current lack 
-> > of smartd support (pending libata driver support).
-> 
-> With what distros / exactly which kernels?  I've been testing 
-> a system with 2 Promise SATA150 TX4's and 6 Maxtor 200gb SATA 
-> drives in a supermicro (mb/chassis) system with 7 drive 
-> hot-swap drive carrier.  I've been having serious problems 
-> and am having trouble telling if its hardware or software.  
-> I've been trying both Whitebox (basically RH ES 3.0 which 
-> uses a 2.4 kernel and includes libata but doesn't build it by 
-> default) and Fedora Core 2, which supports the SATA hardware 
-> by default.  OS gets installed on smaller drives on the MB's 
-> PATA controller.  The big 6 drives are supposed to be SW 
-> RAID5.  The system usually locks up while building the array. 
->  Today it got as far as nearly finishing the mke2fs on the 
-> array when it locked up.
-> 
-> Running badblocks on each 200gb drive individually, I got 
-> errors on one of them once.  When I reran badblocks on that 
-> drive, I did not get errors.
-> I still can't get an array built/formatted (under whitebox 
-> today) without the system locking up.
-> 
-> So, I'm curious who else is using the SATA150 TX4 and with 
-> which kernel/driver and whether they're having or have seen 
-> any similar problems.
+On Sun, 1 Aug 2004, Gordon Henderson wrote:
+> On Sun, 1 Aug 2004, Mikael Abrahamsson wrote:
+> > And also because scsi drives can do tagged queueing which makes it more
+> > efficient to do a lot of smaller operations. Historically the SCSI drives
+> > also had more cache memory which helps the situation, and the scsi
+> > RAID controllers probably also had more cache memory on them (I know RAID
+> > systems that have gigabytes of cache memory).
+>
+> What I find amusing these days is trying to work out the "boundary" point
+> between a "traditional" server with an (external) RAID controller and say
+> a Linux server with software RAID in a purely fileserving environment (eg.
+> NFS/Samba, not used for local operations at all) ... Both systems as a
+> unit provide the same services - ie. filespace at the end of the Ether,
+> but what are the advantages of one over the other, and why would I ever
+> want a hardware RAID controller in a PCI slot in a Server PC?
+>
+> Discuss... ;-)
 
-Jon,
+Recently I did a survey of this very question (hardware vs. software
+RAID) based on the comments from this mailing list:
 
-I've got a very similar setup to you - 2 x SATA150 TX4 with 6 x Maxtor 250GB
-drives.
+Software
+--------
 
-I had exactly the same symptoms and I found it was caused by failing drives.
-I think I got a bad batch, or a bad supplier or something because I had
-three out of a batch of four fail. I got replacements from Maxtor (3 year
-warranty) and have not had any problems since.
+- CPU must handle operations
+- twice the I/O bandwidth when using RAID1
++ non-proprietary disk format
++ open source implementation
+- limited or non-existent support for hot-swapping, even with SATA
+  (see http://www.redhat.com/archives/fedora-test-list/2004-March/msg01204.html)
+- OS-specific format (can't be shared between Linux, Windows, etc.)
++ drives can be anything (ie. a mixture of SATA, PATA, Firewire, USB, etc.)
+- disk surface testing must be done manually (7/2004)
+- no bad block relocation (7/2004)
+- no parity verification (7/2004)
+- no mirror verification (7/2004)
++ reputedly, much better performance than hardware raid
 
-When you RMA their drives they ask that you download a utility called
-"powermax" and check out the drives before returning them - the utility
-gives you a failure code if the drive is bad. Try downloading it and running
-the quick test on your drives. I'll give you 5-1 that they will fail.
+Hardware
+--------
 
-R.
---
-http://robinbowes.com 
-
++ off-loads the CPU
++ I/O bandwidth needed on a RAID1 system is same as single disk
+- proprietary disk format (although limited drivers are available for Linux)
+- proprietary implementation
++ easy hot-swapping (some controllers even indicate the bad drive with an LED)
++ non-OS-specific (can share between Linux, Windows, etc.)
+- some features may not be supported on non-Windows operating systems
++ able to create logical disks that seem like physical disks to the OS
++ bad sector relocation (on the fly?)
+- drives must connect to the controller and all must be same type (e.g. SATA)
++ disk surface testing done automatically
++ automatic bad block relocation
++ parity verification
++ mirror verification
