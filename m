@@ -1,56 +1,67 @@
-From: chris <linux_mail@rozpooh.com>
-Subject: RAID, Serial ATA, ReiserFS, EVMS
-Date: Thu, 11 Mar 2004 00:15:03 -0600
+From: Norbert Preining <preining@logic.at>
+Subject: Is data on a `failed-disk' secure after a reboot? (raid1)
+Date: Thu, 11 Mar 2004 12:10:57 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200403110015.03805.linux_mail@rozpooh.com>
+Message-ID: <20040311111057.GG16350@gamma.logic.tuwien.ac.at>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-15
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I presently have a modest RAID 1 setup on a Highpoint 370 RAID controller 
-built into my motherboard.  I very much need additional storage space and I 
-am looking at serial ATA RAID solutions that will work with the 2.6.x kernel 
-(it is my understanding that my existing highpoint raid controller is not yet 
-supported in the newer kernel).
+Hi!
 
-As I do not yet wish to upgrade my motherboard, I have been looking into add 
-in serial ATA RAID controllers.  At this point, it seems that the 3Ware 
-8506-4LP or the Adaptec 2410SA would be my primary choice (I don't see much 
-point in spending money on low end RAID controller cards that still mostly 
-rely on software in their drivers for RAID calculations).  However, I mostly 
-intend to use RAID 1 and I am more interested in read performance than write.  
-Rather than spend $350 on a hardware RAID controller, perhaps it would be in 
-my best interests to implement software RAID.  In that case, I would simply 
-invest in an add in non-RAID serial ATA controller card.
+I have set up a raid1 on our server with hda and hdc, but the partition=
+s
+of hda are marked as failed-disk in /etc/raidtab.
+Then I did mkraid all the devices, mke2fs (-j) and copied all the files=
+=2E
+This worked all very well.
 
-I am mainly interested in purchasing products from companies who are more 
-cooperative in Linux driver support especially those companies offering 
-source code that can be compiled with any kernel (rather than precompiled 
-drivers for Red Hat or SUSE).
+Now: What will happen when I reboot?
 
-I seek advice in choosing serial ATA controller cards with the best supported 
-chipsets (especially with 2.6.x) and from companies who are most helpful in 
-the driver writing process.
+Using the persistent superblock option will linux (2.4.25) start syncin=
+g
+hdc onto hda or will it treat hda still as failed-disk?
 
-I am also interested in comments regarding relatively low end hardware vs. 
-software RAID.  Is there much advantage in hardware RAID unless you are using 
-the highend gear?
+I will/would reboot with lilo options
+        root=3D/dev/md0
+but the kernel is on hda1 (for now, until hda is added to the raid)
 
-My data archive is a large number of smaller (20 MB or less) files and I am 
-thinking about using ReiserFS when I upgrade.  I am a little scared of Reiser 
-4 (even though it appears to kick ass!) and have Reiser 3 in mind.  Does 
-anyone trust Reiser with their precious RAIDs?
+Reason for the question: I want to run several tests before completely
+switching and want to be able to go back to normal hda behaviour.
 
-Also, I have been reading about EVMS and I am curious if most would agree that 
-this is the direction that volume management in linux is headed.  I have the 
-impression that this is much more than I need with my simple RAID 
-implementation, but, I am curious what everyone thinks about EVMS in 
-enterprise settings.  I assume that this a more mature product, but, not 
-necessarily better than other solutions.  Thoughts?
+In case you need these data:
+linux-2.4.25 (self compiled)
+debian/woody
+raidtools2 0.90.20010914-15
+(no I am not using mdadm ATM, because all the howtos were written for
+raidtools. I will switch to mdadm, lateron)
 
--chris
+Please Cc: me any answer, thanks a lot.
+
+
+Best wishes
+
+Norbert
+
+-----------------------------------------------------------------------=
+--------
+Norbert Preining <preining AT logic DOT at>         Technische Universi=
+t=E4t Wien
+gpg DSA: 0x09C5B094      fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 0=
+9C5 B094
+-----------------------------------------------------------------------=
+--------
+KIRBY MISPERTON (n.)
+One who kindly attempts to wipe an apparent kirby (q.v.) off another's
+face with a napkin, and then discovers it to be a wart or other
+permanent fixture, is said to have committed a 'kirby misperton'.
+			--- Douglas Adams, The Meaning of Liff
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
