@@ -1,56 +1,28 @@
-From: "Brett I. Holcomb" <brettholcomb@charter.net>
-Subject: RE:  Adaptec 3210S Problems
-Date: Sat, 2 Apr 2005 18:54:25 -0500
-Message-ID: <Pine.LNX.4.62.0504021851590.9514@gandalf>
-References: <60807403EABEB443939A5A7AA8A7458BED2BDD@otce2k01.adaptec.com>
+From: Max Waterman <davidmaxwaterman@fastmail.co.uk>
+Subject: Re: 8-port SATA PCI/PCIX adaptor
+Date: Sun, 03 Apr 2005 08:44:20 +0800
+Message-ID: <d2ne6a$i4s$1@sea.gmane.org>
+References: <d2mae1$ii$1@sea.gmane.org> <Pine.LNX.4.56.0504021552250.30253@lion.drogon.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <60807403EABEB443939A5A7AA8A7458BED2BDD@otce2k01.adaptec.com>
+In-Reply-To: <Pine.LNX.4.56.0504021552250.30253@lion.drogon.net>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Followup for the archives.  With the help of several it turns out to be 
-termination (surprise!!! <G>).  I've used non-RAID SCSI for years and have 
-always been paranoid about terminating.  However, this system was set up 
-for me by someone that I assumed (yes, I know <G>) knew RAID better than I 
-did.  The drives are in caddies that are hot swappable and the drive ID is 
-assigned by the caddy frame.  Consequently the installer did not put any 
-jumpers on the  drives and did not terminate the last drive.
+Gordon Henderson wrote:
+> On Sat, 2 Apr 2005, Max Waterman wrote:
+>
+>>I wonder how it performs - esp. compared to the supermicro card
+>>http://supermicro.com/products/accessories/addon/DAC-SATA-MV8.cfm which
+>>which is a fair bit cheaper at ~$99 and presents the ports internally. I
+>>know the Supermicro has a linux driver (they emailed it to me)
 
-Thanks all.
+> If internally, I'd go for a board that has open-source drivers.
 
+The supermicro board's drivers are open source.
 
-
-On Mon, 21 Mar 2005, Salyzyn, Mark wrote:
-
-> Termination, Cabling and/or Drive Firmware Incompatibilities. Good idea
-> to get your TSID ready, list of components and their firmware versions
-> and call Adaptec Support and work through the discovery cookbook.
->
-> Sincerely -- Mark Salyzyn
->
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org
-> [mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Brett I. Holcomb
-> Sent: Saturday, March 19, 2005 1:22 AM
-> To: linux-raid@vger.kernel.org
-> Subject: Adaptec 3210S Problems
->
-> I'm running a Linux system with a Adaptec 3210S controller.  Right now
-> the
-> system has nothing on it and I have not created any RAID.  I've notice
-> that when I boot into the Adaptec CD and watch the drives they keep
-> getting flagged as missing.  If I do a "Read system config" the drives
-> show up and the flag goes away.  A few minutes later they are flagged as
->
-> missing again.  This is a little discouraging as it appears I have a
-> problem.  Any ideas on what is happening - why do my drives keep getting
->
-> flagged as missing?  I need to find out before I install Linux!
->
-> Thanks.
->
->
+Max.
 
