@@ -1,93 +1,77 @@
-From: Matthew Elvey <matthew@elvey.com>
-Subject: Solution: Re: (Can I mark a RAID 1 drive as old?   Move it? SCA hangs)
-  Troubles   creating a reliable backup system.
-Date: Tue, 10 Aug 2004 18:49:24 -0700
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: Force parity resync on raid5?
+Date: Wed, 11 Aug 2004 12:28:05 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <41197B24.8000002@elvey.com>
+Message-ID: <16665.33845.170965.226004@cse.unsw.edu.au>
+References: <4118B9A8.2040102@corp.texas.net>
+	<16664.49686.253255.828936@cse.unsw.edu.au>
+	<4118DBFA.6020607@corp.texas.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid <linux-raid@vger.kernel.org>
+In-Reply-To: message from Philip Molter on Tuesday August 10
+To: Philip Molter <philip@corp.texas.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
-On Thu, 08 Jul 2004 14:42:13 -0700, "Matthew (RAID)"
-<RAID@lists.elvey.com> said:
-> I think I want to [...] move arrays around...
+On Tuesday August 10, philip@corp.texas.net wrote:
+> Neil Brown wrote:
 > 
-...
-> I've been using raidtools, as that's what all the HOWTOs use; I'm not
-> comfortable with mdadm yet.
+> > On Tuesday August 10, philip@corp.texas.net wrote:
+> > 
+> >>Linux RAID *has* to have sort of way to force a parity resync.  If it
+> >>doesn't have one, it needs one.  That's a glaring omission to make.
+> > 
+> > Well, you get what you pay for.....
 > 
-> So, I (safely) hot pull sdb, sdd and sdf from LIVE, put them in BK, make
-> them redundant, and put them back in LIVE.
-> I'm debating not using the hot-swap feature, and trying to resolve the
-> problems I ran into when doing the above.
+> Tell me where to send the checks.  Seriously.  I know you guys work hard 
+> on this stuff and I will gladly donate to the fund to have important (to 
+> me) features implemented.
+
+Hmmm. Awkward.
+I'm not averse to doing a bit of contracting at times (taking un-paid
+leave or similar from my day job), but having a fund that people can
+donate to might be a bit more awkward...
+
+
 > 
-...
-> Reasons to use the hot-swap feature : 
-> If I add and remove drives with the sytem off, I hit a different set of
-> problems:
-> 1)If the system comes up with half the drives removed, the drives get
-> relabled : they are always sda, sdb, and sdc.
->   I could rearrange things so that it's sdd,sde,and sdf that get pulled,
->   but I don't know how to do that. Hence the second question in this
->   email's subject.
-The solution was to switch to using mdadm in startup scripts.  It
-can handle drive letter changes.  It looks in all partitions for
-superblocks indicating a raid array component.  Apply the patch below.
-I also did the e2label thing on the web page; not sure if that's
-necessary too.  Worked great.
+> > The easiest way to force a resync would be to re-create the array.
+> > 
+> >  - Note the exact order of the drives in the array, and the chunk size.
+> >  - Stop the array.
+> >  - Create the array with mdadm using --force.  That bit is important.
+> 
+> Do I need to note the parity algorithm, too?
 
- >> 2)If I put back the pulled drives, when the system restarts, sometimes
- >> these drives are chosen by the RAID code as being newer than the drives
- >> that haven't been pulled. Hence the first question in this email's
- >> subject.
+Yes, though I strongly suspect the array was created with the default
+parity algorithm, so it shouldn't make any difference.
 
-  "To mark a drive (old) you have to fail it, remove it from the array,
-  and re-insert it."
+> 
+> >     mdadm --create /dev/mdX --level=5 --force --disks=whatever \
+> >        --chunksize=64k  /dev/sda1 /dev/sdb1 .....
+> > 
+> >  Remember the --force.  If you don't have it, you will get a recovery
+> >  cycle that rebuilds one drive against the others rather than a resync
+> >  that checks and corrects parity.
+> > 
+> >  This will recreate the array (almost) exactly as it currently is, but
+> >  it will not be marked 'clean', so a parity check-and-correct will
+> >  happen.
+> 
+> Does this destroy the data on the array?  I seem to remember getting 
+> this advice a while back when encountering a similar problem and seeing 
+> my data go up in smoke.  I could easily have done something wrong, though.
 
-I haven't tried this yet.  I'd come up with and tried my own solution:
-Change the partition table to make the partitions all of size 0.
-This seemed to work at first, but then I ran into problems.
+No, it doesn't destroy the data - provided you have the configuration
+exactly the same as before.  It will only update the superblocks and
+correct all parity blocks.  Data blocks won't be changed.
 
-I got the above solutions from Derek Vadala (thanks again!)  He wrote a
-book on Linux raid, which I just bought - but it's still en route, and
-he's a friend of a friend, so I called him up.
+However I have just release mdadm 1.7.0 which supports
+   --assemble --update=resync
 
-Still having other problems though; will post an update.
-Still failing to change the system partitions to raid.
+which will cause an array to resync immediately after being
+assembling.  This don't help you for an array with a root filesystem
+on it, but should do want you want for any other array.
 
---
-Matthew
-
-http://togami.com/~warren/guides/remoteraidcrazies/ has the following:
-
-Apply this patch to /etc/rc.d/rc.sysinit so your system will use mdadm
-rather than raidtools during bootup for starting the RAID arrays.
-
---- rc.sysinit.orig     2004-02-04 01:42:10.000000000 -0600
-+++ rc.sysinit  2004-02-04 02:26:45.000000000 -0600
-@@ -435,6 +435,10 @@
-         /etc/rc.modules
-  fi
-
-+if [ -f /etc/mdadm.conf ]; then
-+       /sbin/mdadm -A -s
-+fi
-+
-  update_boot_stage RCraid
-  if [ -f /etc/raidtab ]; then
-      # Add raid devices
-@@ -467,6 +471,10 @@
-                             RESULT=0
-                             RAIDDEV="$RAIDDEV(skipped)"
-                         fi
-+                       if [ $RESULT -gt 0 -a -x /sbin/mdadm ]; then
-+                               /sbin/mdadm -Ac partitions $i -m dev
-+                               RESULT=$?
-+                       fi
-                         if [ $RESULT -gt 0 -a -x /sbin/raidstart ]; then
-                                 /sbin/raidstart $i
-                                 RESULT=$?
+NeilBrown
