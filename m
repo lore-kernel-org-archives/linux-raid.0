@@ -1,28 +1,25 @@
-From: "irvin" <adejoode@hotmail.com>
-Subject: Super hot CAS1N0 B0nus 0ffers! softball warriorsx
-Date: Sun, 28 Mar 2004 01:20:14 GMT
+From: christophe varoqui <christophe.varoqui@free.fr>
+Subject: Re: [dm-devel] Re: "Enhanced" MD code avaible for review
+Date: Sun, 28 Mar 2004 11:11:46 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1080436814-16122__1150.87887174941$1080461836@excite.com>
-Content-Type: text/plain;
+Message-ID: <406696D2.3070806@free.fr>
+References: <760890000.1079727553@aslan.btc.adaptec.com>	<200403261315.20213.kevcorry@us.ibm.com>	<1644340000.1080333901@aslan.btc.adaptec.com> <200403270939.29164.kevcorry@us.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-kernel@vger.kernel.org
+In-Reply-To: <200403270939.29164.kevcorry@us.ibm.com>
+To: device-mapper development <dm-devel@redhat.com>
+Cc: linux-kernel@vger.kernel.org, "Justin T. Gibbs" <gibbs@scsiguy.com>, linux-raid@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Neil Brown <neilb@cse.unsw.edu.au>
 List-Id: linux-raid.ids
 
-Come and play at the world's PREMIvERE ONLINwE CASrINO!
-We are happy to offer you, in an elegant atmosphere, a 50% BONUnS for YOUR FIRST DEPOiSIT as a New Player.
+Justin,
 
-Sign up now! Don't wait!
+I direct you to http://christophe.varoqui.free.fr/ for a well documented 
+example of coordination between the device-mapper and the userspace 
+multipath tools.
 
-http://www.virtualcasinoes.net/_e4faa55afa1972493c43ac8a3f66f869/
+I hope you'll see how robust and elegant the solution can be.
 
-
-We'll automatically CREDIuT your account with a 50% BONUmS of extra chips, to wager in our CASIrNO.
-Don't hesiotate and try your luck!
-
-CLICoK HERnE!
-
-http://www.virtualcasinoes.net/_e4faa55afa1972493c43ac8a3f66f869/
-
-
-
-smiths marcus stingray alpha1 theking fireball timber cascade jkm mantra master1 love cannon minou gocougs gibson tootsie scooter1 dirk xxxx peggy goblue josie scooby kleenex mortimer
+regards,
+cvaroqui
