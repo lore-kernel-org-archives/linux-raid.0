@@ -1,42 +1,68 @@
-From: "Sean Kormilo" <skormilo@nortelnetworks.com>
-Subject: Re: Expanding size of existing raid1 md device
-Date: 25 Apr 2003 07:57:22 -0400
+From: David Redman <djhr@bluetone.com>
+Subject: RAID1/5, SMP 2.4.18-27.7-xsmp, EXT3 and file system corruption
+Date: Sat, 26 Apr 2003 23:23:29 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1051271841.2851.83.camel@pcary03q.ca.nortel.com>
-References: <1051210082.2852.65.camel@pcary03q.ca.nortel.com>
-	 <05bf01c30a93$5cd3a3b0$f6de11cc@black>
-	 <1051217226.2856.77.camel@pcary03q.ca.nortel.com>
-	 <20030424171426.A17124@newbox.localdomain>
+Message-ID: <3EAB7761.5000803@bluetone.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20030424171426.A17124@newbox.localdomain>
-To: Scott McDermott <vaxerdec@frontiernet.net>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Scott,
+First off, I am not subscribed to the list and I also sent this to 
+linux-kernel, so I appologise inadvance if some of you get this twice.
+Please reply directly to me: djhr@bluetone.com or to
+david.redman@sun.com.
 
-I'm using XFS and have the ability to grow the filesystem. That piece
-isn't a problem. The issue I have is "growing" the md raid1 device.
+So onto the problem: I've been seeing data corruption on my RAID
+metadrives for some time (months); over reboots they almost never come
+up clean, and a umount and fsck -f always ends up finding damage.
+These are large EXT3 FSs - 120GB.
 
-Sean.
+This is one of the failing configs:
+	/dev/md0 4x40GB IBM drives RAID5
+	/dev/md1 2x120GB IBM drives RAID1
+I have also tried:
+	/dev/md0 4x40 RAID5
+	/dev/md1 /dev/md0 + 1x120 RAID1
+and I see corruption on both metadisks in both configurations.
 
-> Sean Kormilo on Thu 24/04 16:47 -0400:
-> > One thing I forgot to mention is that I want to be able to
-> > do this without taking the system down at all.
-> 
-> You can only do that if you have built your kernel with the
-> online ext[23]-resize patches.  Otherwise there is no way to
-> grow a mounted filesystem.
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
--- 
+The arrays get consistently damaged; I get duplicate blocks, corrupted
+inodes, and directory holes.
+An example from dmesg:
+	Apr 25 04:19:35 nasbox kernel: EXT3-fs error (device md(9,2)):
+	ext3_readdir: dir dectory #7603330 contains a hole at offset
+	12288
+This is from the RAID5 array..
 
-Sean C. Kormilo, STORM Software Architect, Nortel Networks
-              email: skormilo@nortelnetworks.com
-  
+My machine is nothing special Dual P3@700Mhz 384Mb DRAM, P6DBE
+super-micro motherboard. the IDE controllers running the discs are all
+PROMISE IDE PDC20262 controllers, the drives are all using UltraDMA
+cables and all drives are the master on thier own controllers (Ie 3
+cards, each with 2 drives). Root/swap is on the motherboard IDE. My
+kernel is a stock Redhat7.3; A home-brew also gets corrupted FSs.
+
+Anyone else seen this kind of corruption? I've searched google and
+noticed a few other postings, but I thought I'd ask here.
+
+Since I broke the mirror and just mounted a single drive (ie no
+/dev/md1, just using a raw drive /dev/hde1) I have not noticed any
+corruption on the filesystem, the other drive /dev/md0 (RAID5) is still
+getting corrupted.
+
+I have also tried running a mirror on the single 120GB drive in degraded
+mode (ie one disk missing) and it also gets corruption. At this point I
+have to assume that my problem is /dev/md related, and because I dont
+see anyone else complaining I am assuming it is somehow tied to SMP.
+
+I'm going to boot a non-SMP kernel and see if that changes the behavior;
+problem is it takes a horribly long time to fsck the arrays when/if they
+go bad.. sigh.
+
+Thanks for any input;
+
+dave.
+
+
 
