@@ -1,41 +1,31 @@
-From: Dirk Meul <dirk.meul@epost.de>
-Subject: Re: SW-RAID1 and 2.5.34
-Date: 13 Sep 2002 22:24:22 +0200
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: PATCH - cset 1.497.59.25 breaks MD autodetect
+Date: Sat, 14 Sep 2002 19:49:14 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1031948663.1034.10.camel@aragorn>
-References: <1031835624.1155.3.camel@aragorn>
-	<15745.13537.81300.413518@notabene.cse.unsw.edu.au>
-Reply-To: dirk.meul@epost.de
+Message-ID: <15747.1562.257819.793820@notabene.cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <15745.13537.81300.413518@notabene.cse.unsw.edu.au>
-To: linux-raid@vger.kernel.org
+To: Linus Torvalds <torvalds@transmeta.com>, Alexander Viro <viro@math.psu.edu>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Thank you!
 
-Am Fre, 2002-09-13 um 02.44 schrieb Neil Brown:
-> > I'm not able to boot plain 2.5.34 with RAID1 enabled. My root partition
-> > is RAID1 and with 2.4.19 everything is ok. But bug on md.c:3153 in
-> > md_queue_proc. What can i do to fix it?
-> 
-> The patch just went it Linus' BK tree.
-> It is below.
-> I don't promise that this fixes everything, just that if fixes the
-> "bug at md.c:3153".
+cset 1.497.59.25 shifts a lot of indexes down one, but this one
+shouldn't have been shifted...
 
-With the patch applied the kernel didn't oops, but 2.5.34 tries to use
-hde2. The RAID1 partitions are hde1/hdg1! hde2 is a swap partition so
-following message is correct:
-invalid raid superblock magic on hde2.
+NeilBrown
 
-There is a [events: a8bc0fb6] message.
 
-How can i fix this? Or do i have to make a new RAID1 device?
-
-Regards,
--- 
-Dirk Meul <dirk.meul@epost.de>
-
+--- ./fs/partitions/check.c	2002/09/14 09:46:21	1.1
++++ ./fs/partitions/check.c	2002/09/14 09:46:27
+@@ -251,7 +251,7 @@ static void check_partition(struct gendi
+ 			p[j-1].start_sect = state->parts[j].from;
+ 			p[j-1].nr_sects = state->parts[j].size;
+ #if CONFIG_BLK_DEV_MD
+-			if (!state->parts[j-1].flags)
++			if (!state->parts[j].flags)
+ 				continue;
+ 			md_autodetect_dev(bdev->bd_dev+j);
+ #endif
