@@ -1,59 +1,75 @@
-From: "Tomi Orava" <tomimo+linux-raid@ncircle.nullnet.fi>
-Subject: Re: Raid1 recovery problem - need help!
-Date: Fri, 26 Sep 2003 11:14:54 +0300 (EEST)
+From: "Christof Soehngen" <christof@soehngen.org>
+Subject: Expert opinion on "Recovering from a multiple disk failure"
+Date: Fri, 26 Sep 2003 23:08:36 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <13800.194.237.142.24.1064564094.squirrel@ncircle.nullnet.fi>
-References: <40408.194.237.142.24.1064555851.squirrel@ncircle.nullnet.fi><16243.55544.424789.503682@notabene.cse.unsw.edu.au><61251.194.237.142.24.1064557502.squirrel@ncircle.nullnet.fi><16243.57487.124068.470173@notabene.cse.unsw.edu.au><17620.194.237.142.24.1064560221.squirrel@ncircle.nullnet.fi>
-    <16243.61083.69286.766387@notabene.cse.unsw.edu.au>
+Message-ID: <008501c38472$5aa0c650$9b00a8c0@Laptop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <16243.61083.69286.766387@notabene.cse.unsw.edu.au>
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hello list,
 
-Neil,
+I seem to be in severe trouble because my software RAID 5 is not
+accessible anymore, needless to say the data on it is important to me ;)
+I use the four disks hde, hdf, hdg, hdh. I'm 100% sure my /etc/raidtab
+has correct and actual settings:
 
-Thank you, the last command was able to get the RAID1+0 running
-as needed. Unfortunately, the re-assembled disc is not functional.
-However, I still wonder if I have made a mistake in figuring out the
-proper failed disc (based on your comments) ... Therefore, I'll have
-to switch the discs as soon as I get back to home and check if I can
-get anything else from the raid-device with your incstructions
-(as neither of the discs are absolutely dead, one of them just
-hangs the machine completely sooner or later ie in 5mins or 1h).
+raiddev /dev/md0
+ raid-level 5
+ nr-raid-disks 4
+ nr-spare-disks 0
+ persistent-superblock 1
+ parity-algorithm left-symmetric
+ chunk-size 128
+ device /dev/hde1
+ raid-disk 0
+ device /dev/hdf1
+ raid-disk 1
+ device /dev/hdg1
+ raid-disk 2
+ device /dev/hdh1
+ raid-disk 3
 
-I'm also wondering, how it can be that a single IDE-disc (in this
-case IBM 60GXP or 75GXP don't know which one for sure) is able to
-halt the whole machine ... I have 6 discs connected to that server
-and they are all the only drives in their own channel (no slaves).
-Four of the drives are connected to HPT374-chip and two more to
-Sil680 PCI-card. I don't really expect any solution for this question,
-I'm more or less just wondering if anyone else has had similar
-problems with their hardware ?
+Yesterday there were two power outages. After the first, I saw one of
+the hdds rebuilding (hdd led was on all the time).
+After the second outage, the md0 was not recognised correctly anymore
+after startup.
 
-> It should assemble successfully, but I make not promises about what
-> sort of data will be on them.
+I think, the important lines from /var/log/boot.msg are the following:
 
-Thank you for your time Neil!
+hdh1's event counter: 0000001c
+hdg1's event counter: 0000001c
+hdf1's event counter: 0000001a
+hde1's event counter: 0000001b
+superblock update inconsistency
+kicking non-fresh hdf1 from array!
+kicking faulty hde1!
+not enough operational devices for md0 (2/4 failed)
 
-Sincerely,
-Tomi Orava
+Now I read the ideas in
+http://www.faqs.org/docs/Linux-HOWTO/Software-RAID-HOWTO.html#ss6.1
+("Recovering from a multiple disk failure") and played with a test raid
+system (md1) a little bit. I found out the following:
 
-PS. I wonder if there exists any problem solving examples about real life
-    cases in any of the docs (HOWTO, man-page etc).
-    Perhaps it might be helpful to some one if I just gather up
-    the mails related to this case and put them on the web for example ...
-    even though every problem has little bit different environment &
-    setup, but it might still help in deciding which commands to run
-    and which ones to avoid (in order to not lose data by mistake).
+- If I create a new raid for testing (md1 on hdd1 to hdd4), stop it,
+damage one disk (I formatted it), then do a "mkraid /dev/md1 --force",
+all data is lost.
+- If I mark the faulty disk as "failed-disk" in /etc/raidtab, then do a
+"mkraid /dev/md1 --force", the raid is present again, albeit in degraded
+mode. A "raidhotadd /dev/md1 /dev/hdd1" would launch a rebuild.
 
+Now my question is: According to the messages displayed above, I figure
+out that disk hde1 is damaged, disk hdf1 has a wrong superblock.
+I would do the following :
 
+1. Mark hde1 as failed-disk in /etc/raidtab
+2. Do a "mkraid /dev/md0 --force"
+3. Do a "raidhotadd /dev/md0 /dev/hde1"
 
-
-
-
+What do you think, will my real data be online again?
+I really would appreciate your help, thanks in advance, Christof
 
