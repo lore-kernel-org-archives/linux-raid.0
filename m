@@ -1,8 +1,8 @@
 From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: PATCH - md 13 of 22 - First step to tidying mddev recounting and locking.
-Date: Wed, 19 Jun 2002 10:52:56 +1000 (EST)
+Subject: PATCH - md 14 of 22 - Second step to tidying mddev refcounts and locking
+Date: Wed, 19 Jun 2002 10:53:09 +1000 (EST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <15631.54760.78699.569348@notabene.cse.unsw.edu.au>
+Message-ID: <15631.54773.177802.684600@notabene.cse.unsw.edu.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
@@ -13,293 +13,107 @@ List-Id: linux-raid.ids
 
 
 
-First step to tidying mddev recounting and locking.
+This patch gets md_open to use mddev_find instead of kdev_to_mddev, thus
+creating the mddev if necessary.
+This guarantees that md_release will be able to find an mddev to
+mddev_put.
 
-This patches introduces
-  mddev_get   which incs the refcount on an mddev
-  mddev_put   which decs it and, if it becomes unused, frees it
-  mddev_find  which finds or allocated an mddev for a given minor
-              This is mostly the old alloc_mddev
-
-
-free_mddev no longer actually frees it.  It just disconnects all drives
-so that mddev_put will do the free.
-
-Now the test for "does an mddev exist" is not "mddev != NULL"
-but involves checking if the mddev has disks or a superblock
-attached.
-
-This makes the semantics of do_md_stop a bit cleaner.  Previously
-if do_md_stop succeed for a real stop (not a read-only stop) then
-you didn't have to unlock the mddev, otherwise you did.  Now
-you always unlock the mddev after do_md_stop.
+Now that we are certain of getting the refcount right at open/close time,
+we don't need the "countdev" stuff.  If START_ARRAY happens to start and
+array other than that the one that is currently opened, it won't confuse
+things at all.
 
 
  ----------- Diffstat output ------------
- ./drivers/md/md.c |  125 +++++++++++++++++++++++++++---------------------------
- 1 files changed, 63 insertions(+), 62 deletions(-)
+ ./drivers/md/md.c |   32 +++++++++++++++++---------------
+ 1 files changed, 17 insertions(+), 15 deletions(-)
 
---- ./drivers/md/md.c	2002/06/18 04:37:53	1.12
-+++ ./drivers/md/md.c	2002/06/18 04:40:56	1.13
-@@ -145,13 +145,30 @@
- 	return 0;
- }
- 
--static mddev_t * alloc_mddev(kdev_t dev)
-+static inline mddev_t *mddev_get(mddev_t *mddev)
-+{
-+	atomic_inc(&mddev->active);
-+	return mddev;
-+}
-+
-+static void mddev_put(mddev_t *mddev)
-+{
-+	if (!atomic_dec_and_test(&mddev->active))
-+		return;
-+	if (!mddev->sb && list_empty(&mddev->disks)) {
-+		list_del(&mddev->all_mddevs);
-+		mddev_map[mdidx(mddev)] = NULL;
-+		kfree(mddev);
-+		MOD_DEC_USE_COUNT;
-+	}
-+}
-+
-+static mddev_t * mddev_find(int unit)
+--- ./drivers/md/md.c	2002/06/18 04:40:56	1.13
++++ ./drivers/md/md.c	2002/06/18 04:47:43	1.14
+@@ -1809,7 +1809,7 @@
+  *
+  * If "unit" is allocated, then bump its reference count
+  */
+-static void autorun_devices(kdev_t countdev)
++static void autorun_devices(void)
  {
- 	mddev_t *mddev;
- 
--	if (major(dev) != MD_MAJOR) {
--		MD_BUG();
--		return 0;
-+	if ((mddev = mddev_map[unit])) {
-+		return mddev_get(mddev);
- 	}
- 	mddev = (mddev_t *) kmalloc(sizeof(*mddev), GFP_KERNEL);
- 	if (!mddev)
-@@ -159,15 +176,15 @@
- 
- 	memset(mddev, 0, sizeof(*mddev));
- 
--	mddev->__minor = minor(dev);
-+	mddev->__minor = unit;
- 	init_MUTEX(&mddev->reconfig_sem);
- 	init_MUTEX(&mddev->recovery_sem);
- 	init_MUTEX(&mddev->resync_sem);
- 	INIT_LIST_HEAD(&mddev->disks);
- 	INIT_LIST_HEAD(&mddev->all_mddevs);
--	atomic_set(&mddev->active, 0);
-+	atomic_set(&mddev->active, 1);
- 
--	mddev_map[mdidx(mddev)] = mddev;
-+	mddev_map[unit] = mddev;
- 	list_add(&mddev->all_mddevs, &all_mddevs);
- 
- 	MOD_INC_USE_COUNT;
-@@ -631,11 +648,6 @@
- 		schedule();
- 	while (atomic_read(&mddev->recovery_sem.count) != 1)
- 		schedule();
--
-- 	mddev_map[mdidx(mddev)] = NULL;
--	list_del(&mddev->all_mddevs);
--	kfree(mddev);
--	MOD_DEC_USE_COUNT;
- }
- 
- #undef BAD_CSUM
-@@ -1803,8 +1815,6 @@
+ 	struct list_head candidates;
  	struct list_head *tmp;
- 	mdk_rdev_t *rdev0, *rdev;
- 	mddev_t *mddev;
--	kdev_t md_kdev;
--
- 
- 	printk(KERN_INFO "md: autorun ...\n");
- 	while (!list_empty(&pending_raid_disks)) {
-@@ -1831,28 +1841,31 @@
- 		 * mostly sane superblocks. It's time to allocate the
- 		 * mddev.
- 		 */
--		md_kdev = mk_kdev(MD_MAJOR, rdev0->sb->md_minor);
--		mddev = kdev_to_mddev(md_kdev);
--		if (mddev) {
-+
-+		mddev = mddev_find(rdev0->sb->md_minor);
-+		if (!mddev) {
-+			printk(KERN_ERR "md: cannot allocate memory for md drive.\n");
-+			ITERATE_RDEV_GENERIC(candidates,pending,rdev,tmp)
-+				export_rdev(rdev);
-+			break;
-+		}
-+		if (mddev->sb || !list_empty(&mddev->disks)) {
- 			printk(KERN_WARNING "md: md%d already running, cannot run %s\n",
- 			       mdidx(mddev), partition_name(rdev0->dev));
- 			ITERATE_RDEV_GENERIC(candidates,pending,rdev,tmp)
- 				export_rdev(rdev);
-+			mddev_put(mddev);
- 			continue;
- 		}
--		mddev = alloc_mddev(md_kdev);
--		if (!mddev) {
--			printk(KERN_ERR "md: cannot allocate memory for md drive.\n");
--			break;
--		}
--		if (kdev_same(md_kdev, countdev))
--			atomic_inc(&mddev->active);
- 		printk(KERN_INFO "md: created md%d\n", mdidx(mddev));
- 		ITERATE_RDEV_GENERIC(candidates,pending,rdev,tmp) {
- 			bind_rdev_to_array(rdev, mddev);
+@@ -1863,9 +1863,7 @@
  			list_del_init(&rdev->pending);
  		}
  		autorun_array(mddev);
-+		if (minor(countdev) != mdidx(mddev))
-+		    mddev_put(mddev);
-+		/* else put will happen at md_close time */
+-		if (minor(countdev) != mdidx(mddev))
+-		    mddev_put(mddev);
+-		/* else put will happen at md_close time */
++		mddev_put(mddev);
  	}
  	printk(KERN_INFO "md: ... autorun DONE.\n");
  }
-@@ -2486,29 +2499,16 @@
- 	 * Commands creating/starting a new array:
+@@ -1902,7 +1900,7 @@
+ #define AUTORUNNING KERN_INFO \
+ "md: auto-running md%d.\n"
+ 
+-static int autostart_array(kdev_t startdev, kdev_t countdev)
++static int autostart_array(kdev_t startdev)
+ {
+ 	int err = -EINVAL, i;
+ 	mdp_super_t *sb = NULL;
+@@ -1962,7 +1960,7 @@
+ 	/*
+ 	 * possibly return codes
  	 */
+-	autorun_devices(countdev);
++	autorun_devices();
+ 	return 0;
  
--	mddev = kdev_to_mddev(dev);
-+	mddev = mddev_find(minor);
- 
--	switch (cmd)
--	{
--		case SET_ARRAY_INFO:
--		case START_ARRAY:
--			if (mddev) {
--				printk(KERN_WARNING "md: array md%d already exists!\n",
--								mdidx(mddev));
--				err = -EEXIST;
--				goto abort;
--			}
--		default:;
-+	if (!mddev) {
-+		err = -ENOMEM;
-+		goto abort;
- 	}
-+
- 	switch (cmd)
- 	{
- 		case SET_ARRAY_INFO:
--			mddev = alloc_mddev(dev);
--			if (!mddev) {
--				err = -ENOMEM;
--				goto abort;
--			}
--			atomic_inc(&mddev->active);
- 
+ abort:
+@@ -2549,7 +2547,7 @@
  			/*
- 			 * alloc_mddev() should possibly self-lock.
-@@ -2519,7 +2519,12 @@
- 				       err, cmd);
- 				goto abort;
- 			}
--
-+			if (!list_empty(&mddev->disks)) {
-+				printk(KERN_WARNING "md: array md%d already has disks!\n",
-+					mdidx(mddev));
-+				err = -EBUSY;
-+				goto abort_unlock;
-+			}
- 			if (mddev->sb) {
- 				printk(KERN_WARNING "md: array md%d already has a superblock!\n",
- 					mdidx(mddev));
-@@ -2559,10 +2564,6 @@
- 	 * Commands querying/configuring an existing array:
- 	 */
- 
--	if (!mddev) {
--		err = -ENODEV;
--		goto abort;
--	}
- 	err = lock_mddev(mddev);
- 	if (err) {
- 		printk(KERN_INFO "md: ioctl lock interrupted, reason %d, cmd %d\n",err, cmd);
-@@ -2592,8 +2593,7 @@
- 			goto done_unlock;
- 
- 		case STOP_ARRAY:
--			if (!(err = do_md_stop (mddev, 0)))
--				mddev = NULL;
-+			err = do_md_stop (mddev, 0);
- 			goto done_unlock;
- 
- 		case STOP_ARRAY_RO:
-@@ -2672,8 +2672,7 @@
+ 			 * possibly make it lock the array ...
  			 */
+-			err = autostart_array(val_to_kdev(arg), dev);
++			err = autostart_array(val_to_kdev(arg));
  			if (err) {
- 				mddev->sb_dirty = 0;
--				if (!do_md_stop (mddev, 0))
--					mddev = NULL;
-+				do_md_stop (mddev, 0);
- 			}
- 			goto done_unlock;
- 		}
-@@ -2688,8 +2687,8 @@
- 
- done_unlock:
- abort_unlock:
--	if (mddev)
--		unlock_mddev(mddev);
-+	unlock_mddev(mddev);
-+	mddev_put(mddev);
- 
- 	return err;
- done:
-@@ -2706,7 +2705,7 @@
+ 				printk(KERN_WARNING "md: autostart %s failed!\n",
+ 					partition_name(val_to_kdev(arg)));
+@@ -2701,19 +2699,23 @@
+ static int md_open(struct inode *inode, struct file *file)
+ {
+ 	/*
+-	 * Always succeed, but increment the usage count
++	 * Succeed if we can find or allocate a mddev structure.
  	 */
- 	mddev_t *mddev = kdev_to_mddev(inode->i_rdev);
- 	if (mddev)
--		atomic_inc(&mddev->active);
-+		mddev_get(mddev);
- 	return (0);
+-	mddev_t *mddev = kdev_to_mddev(inode->i_rdev);
+-	if (mddev)
+-		mddev_get(mddev);
+-	return (0);
++	mddev_t *mddev = mddev_find(minor(inode->i_rdev));
++
++	if (mddev) 
++		return 0; /* and we "own" a reference */
++	else
++		return -ENOMEM;
  }
  
-@@ -2714,7 +2713,7 @@
+ static int md_release(struct inode *inode, struct file * file)
  {
  	mddev_t *mddev = kdev_to_mddev(inode->i_rdev);
- 	if (mddev)
--		atomic_dec(&mddev->active);
-+		mddev_put(mddev);
+-	if (mddev)
+-		mddev_put(mddev);
++	if (!mddev)
++		BUG();
++	mddev_put(mddev);
++
  	return 0;
  }
  
-@@ -3688,19 +3687,20 @@
- 		if (!md_setup_args.device_set[minor])
- 			continue;
- 
--		if (mddev_map[minor]) {
--			printk(KERN_WARNING
--			       "md: Ignoring md=%d, already autodetected. (Use raid=noautodetect)\n",
--			       minor);
--			continue;
--		}
- 		printk(KERN_INFO "md: Loading md%d: %s\n", minor, md_setup_args.device_names[minor]);
- 
--		mddev = alloc_mddev(mk_kdev(MD_MAJOR,minor));
-+		mddev = mddev_find(minor);
- 		if (!mddev) {
- 			printk(KERN_ERR "md: kmalloc failed - cannot start array %d\n", minor);
- 			continue;
- 		}
-+		if (mddev->sb || !list_empty(&mddev->disks)) {
-+			printk(KERN_WARNING
-+			       "md: Ignoring md=%d, already autodetected. (Use raid=noautodetect)\n",
-+			       minor);
-+			mddev_put(mddev);
-+			continue;
-+		}
- 		if (md_setup_args.pers[minor]) {
- 			/* non-persistent */
- 			mdu_array_info_t ainfo;
-@@ -3752,6 +3752,7 @@
- 			do_md_stop(mddev, 0);
- 			printk(KERN_WARNING "md: starting md%d failed\n", minor);
- 		}
-+		mddev_put(mddev);
+@@ -3548,7 +3550,7 @@
  	}
+ 	dev_cnt = 0;
+ 
+-	autorun_devices(to_kdev_t(-1));
++	autorun_devices();
  }
  
+ static struct {
