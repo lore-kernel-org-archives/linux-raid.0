@@ -1,15 +1,16 @@
-From: Tim Moore <linux-raid@nsr500.net>
+From: Tim Moore <tim.moore@nsr500.net>
 Subject: Re: raid5 performance after upgrade to 2.4.28
-Date: Thu, 13 Jan 2005 08:25:40 -0800
-Message-ID: <41E6A104.4080608@nsr500.net>
+Date: Thu, 13 Jan 2005 08:24:36 -0800
+Message-ID: <41E6A0C4.1030405@nsr500.net>
+References: <200501120743.j0C7h2929495@www.watkins-home.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <200501120743.j0C7h2929495@www.watkins-home.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
-
 
 Did values change in /proc/sys/vm/{min,max}-readahead?
 
@@ -87,7 +88,3 @@ Guy wrote:
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
-
-
--- 
-  | for direct mail add "private_" in front of user name
