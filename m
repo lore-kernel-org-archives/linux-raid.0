@@ -1,46 +1,42 @@
-From: "Peter T. Breuer" <ptb@it.uc3m.es>
-Subject: Re: double read in raid1
-Date: Fri, 27 Aug 2004 12:07:15 +0200 (MET DST)
+From: Kevin Corry <kevcorry@us.ibm.com>
+Subject: Re: compile errors in 2.6.8.1 in drivers/md/*
+Date: Fri, 27 Aug 2004 06:39:47 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200408271007.i7RA7Fp04492@oboe.it.uc3m.es>
-References: <16683.64082.542823.562247@cse.unsw.edu.au>
-Reply-To: ptb@it.uc3m.es
+Message-ID: <200408270639.47900.kevcorry@us.ibm.com>
+References: <20040827093634.GA4853@fuchi>
+Mime-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <16683.64082.542823.562247@cse.unsw.edu.au> from Neil Brown at "Aug
- 25, 2004 12:32:50 pm"
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: ptb@it.uc3m.es, linux raid <linux-raid@vger.kernel.org>
+In-Reply-To: <20040827093634.GA4853@fuchi>
+Content-Disposition: inline
+To: Sebastian Henschel <shensche@xtops.de>, linux-raid@vger.kernel.org
+Cc: dm-devel@redhat.com
 List-Id: linux-raid.ids
 
-"Also sprach Neil Brown:"
-> Sounds like "plugging" might be the thing to do.
-> 
-> When a read request arrives, just stick it on a queue, counting
->    the number of sectors.
-> When an "unplug" call is made:
->     Sort the queue
->     Submit half the sectors to one drive, and the other half
->      to the other drive.
+On Friday 27 August 2004 04:36, Sebastian Henschel wrote:
+> hello folks...
+>
+> hopefully i am right here... i just compiled a kernel 2.6.8.1 and two
+> similar errors occurred:
+>
+> drivers/md/dm-raid.c:1241 - the workqueue creation misses an argument. i
+> have set the flag to 0.
+> drivers/md/kcopyd.c:612 - the singlethread workqueue creation misses an
+> argument. i have set the flag to 0.
+>
+> the kernel compiles now, but i do not if it really is a fix. since the
+> machine this kernel was compiled on, does not make use of a software
+> raid, i cannot test it.
 
-I've been thinking about a couple of possible algorithms. The one above
-"suffers" in that it has to deal with the latency caused by the queuing
-of requests already in the component drivers (assuming we cannot turn it
-off) as well as the component readaheads (ditto).  I don't like
-introducing an extra queue on top of that.
+Are you building a stock 2.6.8.1 kernel? Could it be -mm or one of the other 
+common extra patchsets? I don't see any compile warnings or errors anywhere 
+in the drivers/md/ directory when I build my kernel, which is mostly a stock 
+2.6.8.1 with a few extra DM patches. 
 
-How about simply divvying up the mirror into say, 64K (or 2M, whatever)
-contiguous regions.  If a read request falls in a even numbered region,
-send it to the first drive. If it falls in an odd-numbered region, send
-it to the second drive.
+-- 
+Kevin Corry
+kevcorry@us.ibm.com
+http://evms.sourceforge.net
 
-The region size should be enough to outpace any likely readahead. But
-it should be small enough that a full queue of requests on one of the
-component drives can't fit into more than about half a region. That
-ensures that when the moment comes that queues on the component drives
-are unplugged by the kernel (because they can't queue any more
-requests), we haven't sent requests only to one of the drives so far.
-
-That allows the raid driver to send requests 1-by-1 instead of plugging
-and queueing itself.
-
-Peter
