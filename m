@@ -1,50 +1,65 @@
-From: "Martin Bene" <martin.bene@icomedias.com>
-Subject: AW: 3ware raid 10 rebuild fails
-Date: Mon, 15 Jul 2002 15:50:53 +0200
+From: Michael Tokarev <mjt@tls.msk.ru>
+Subject: Several small raids or one big?
+Date: Tue, 16 Jul 2002 02:55:53 +0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <4D618F6493CE064A844A5D496733D66704DE7B@freedom.icomedias.com>
+Message-ID: <3D3352F9.F01816EA@tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=koi8-r
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-content-class: urn:content-classes:message
-To: "drenning, bruce" <bdrenni@catholicrelief.org>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Bruce,
+Is there any way to say which is "better"?  I'm trying to
+set up our server here.  4 scsi disks of equal capacity,
+should do raid5.  But the question is - how to set up
+filesystems on them?  We'll need several addtitional
+filesystems in additional to standard ones.  There are
+2 options.
 
-> Jul 14 08:24:43 files3 kernel: 3w-xxxx: Received AEN 0xb
-> Jul 14 08:24:48 files3 3w-xxxx[583]: Rebuild started on unit 
-> 0 on controller
-> ID:0. (0xb)
-> Jul 14 08:25:02 files3 kernel: 3w-xxxx: Received AEN 0x4
-> Jul 14 08:25:04 files3 3w-xxxx[583]: Rebuild/Initialization 
-> failed on unit 0
-> on controller ID:0. Check drives for media errors. (0x4)
-> 
-> I tried swapping out the controller w/ another from a 
-> spare/test server,
-> same result. Running 2.4.9-31 Red Hat kernel under 7.1. Anyone have a
-> suggestion as to how to get this array rebuilt? thanks.
+a) create set of partitions on each, one partition for
+each /usr, /var, /home, etc., and create one raid device
+for each filesystem.  I.e. sd[abcd]2 => md2 => /usr,
+sd[abcd]5 => md3 => /var etc.
 
-This means that there's either a write error on the target disk or a read
-error on the source disk for the rebuild; 
+b) create one large partition, create raid array on it,
+and use something like LVM to "partition" it.  Some essential
+(system) partitions (/usr, /var) may be created on separate
+raid arrays (as in option 2) in order to be less dependant on
+LVM (I still can't trust it fully).
 
-First step now should be to back up your data if you haven't done so :-)
+I know LVM's variant gives me more flexibility in layout, esp.
+having in mind that we'll use Oracle on raw partitions heavily,
+and that SCSI disks may have only 15 partitions max (this is
+terrible small).
 
-Next, I'd check the target disk for errors; best you can do would be to hook
-it up to an onboard ide interface and run a manufacturer-provided disgnostic
-test on the drive (like DFT for IBM drives for example).
+But the question is - will 2 raid arrais created on the same set
+of disks work "better" than one, if accesses concurrently?  I.e.
+having 2 concurrent processes that are both I/O bound but are
+working with different filesystems, which layout of underliyin
+devices is preferrable - 2 raid arrays or one large divided into
+2 pieces somehow?  In principle, the end factor is disks anyway,
+but will raid code block other process while servicing requests
+from first process in this case too?  Disk drives can do TCQ and
+can reorder/optimize requests somehow, I don't know if this helps
+here or not.
 
-If this test of the target drive turns up nothing you most probably have read
-errors on the source drive - not good. 
+May raid benefit from SMP machine in this context?  I think not,
+since it should ensure consistency by doing some internal locking
+anyway.  Well, for 2 arrays, 2 CPUs may be better than one (not
+having in mind other processes), but one array seems to be for
+one CPU anyway, correct? :)
 
-Writing the damaged sectors can give the drive electronics a chance to remap
-them to good areas; alternatively you might want to just replace the drive.
+And another question, probably an off-topic here, is - raid5 + lvm
+combo - how it perform?  Is it worth it to try?  My tests shows
+that LVM may significantly slow disk access down for raw devices,
+and this is quite unacceptable for us.  But I can't imagine how it
+will work once set up for real life load.  The problem is that it's
+really difficult to set up a test machine: the whole process takes
+several 10s of hours.  I've already set up multiple raid5 devices
+as in variant a) above, it seems to work almost ok but system CPU
+usage is relatively high.
 
-To avoid getting into this situation in the first place, it's a good idea to
-regularely scan your raid devices for media damage - recent versions of the
-3dmd device manager (I'm running 1.11.00.006) offer an option to schedule
-regular scans: Configure => Media Scan. 
+Thank you.
 
-Bye, Martin
+/mjt
