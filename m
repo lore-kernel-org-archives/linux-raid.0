@@ -1,48 +1,33 @@
-From: Mario Giammarco <mgiammarco@virgilio.it>
-Subject: Re: RAID1 VS RAID5
-Date: Sun, 26 Oct 2003 19:22:48 +0100
+From: Jason Lunz <lunz@falooley.org>
+Subject: Re: recovery of hosed raid5 array
+Date: Sun, 26 Oct 2003 14:48:27 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1067192568.1280.6.camel@cala>
-References: <1067179519.1222.107.camel@cala>
-	 <200310261716.17030.maarten@vbvb.nl>
+Message-ID: <20031026194827.GA18591@orr.falooley.org>
+References: <slrnbog9og.t0c.lunz@orr.homenet> <no.Yo.24973.N.nN.0310111457280@business.com> <slrnboirt8.me8.lunz@orr.homenet> <Pine.LNX.4.58.0310121034090.7866@twinlark.arctic.org> <20031026194051.GA4511@matchmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200310261716.17030.maarten@vbvb.nl>
-To: maarten van den Berg <maarten@vbvb.nl>
+Content-Disposition: inline
+In-Reply-To: <20031026194051.GA4511@matchmail.com>
+To: Mike Fedyk <mfedyk@matchmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Il dom, 2003-10-26 alle 17:16, maarten van den Berg ha scritto:
->   Raid1 being a mirror set it does not make sense to 
-> interleave anything. Either disk1 reads it first or disk2 reads it first. 
-> Once you get the data from either disk, then you're done; no need to wait for 
-> the second disk (giving you the identical datablock).  
+On Sun, Oct 26, 2003 at 11:40AM -0800, Mike Fedyk wrote:
+> 1.  Were they maxtor 160GB 8MB cache drives?
 
-OK I have some difficulties to explain it, I will try again: usually
-linux do read prefetch so when you read block "n" after it linux reads
-block "n+1". So the "n+1" block can be read at the same time on the
-other disk.
+Maxtor DiamondMax Plus 30G, model #53073H4, on a 
+Promise 20262 pci ide card
 
-Reading past mailing lists posts it seems that raid1 behaviour is this:
+luckily enough, I got all my data back. The "dead" drive turned out to
+work well enough to read most of the data. By some miracle, the portion
+of the drive with unrecoverable sectors was entirely in the 10% of the
+disk that wasn't part of the raid partition.
 
-1) disk idle
-2) request for block "n"
-3) request is passed to hard disk with head nearer to block "n" (is it
-true? I am not sure)
-4) request to block "n+1" "n+2" etc. are on the same disk so THE OTHER
-DISK IS READY FOR A READ REQUEST FROM OTHER PROCESSES
-5) if sequential reading continue after some minutes the other disk is
-chosen to not stress too much only one disk (is it true?)
+> 2.  Is there any package that will take one drive in a raid1/5 array
+> offline, and run badblocks on it?
 
-Obviously this behaviour (point 4) helps servers with a lot of
-multitasking and processes.
+package? That's a pretty short script to write, using mdadm and
+badblocks.
 
-I prefer a "sequential" optimization.
-
-Can it be done?
-
-Thanks again!
-
-
+Jason
