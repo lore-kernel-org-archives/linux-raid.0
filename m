@@ -1,16 +1,36 @@
-From: Alvin Oga <aoga@ns.Linux-Consulting.com>
+From: "Guy" <bugzilla@watkins-home.com>
 Subject: RE: Busted disks caused healthy ones to fail
-Date: Tue, 14 Dec 2004 15:54:40 -0800 (PST)
-Message-ID: <Pine.LNX.3.96.1041214154622.17352A-100000@Maggie.Linux-Consulting.com>
-References: <200412142147.iBELlv911030@www.watkins-home.com>
+Date: Tue, 14 Dec 2004 20:03:04 -0500
+Message-ID: <200412150103.iBF13A911583@www.watkins-home.com>
+References: <Pine.LNX.3.96.1041214154622.17352A-100000@Maggie.Linux-Consulting.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200412142147.iBELlv911030@www.watkins-home.com>
+In-Reply-To: <Pine.LNX.3.96.1041214154622.17352A-100000@Maggie.Linux-Consulting.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Guy <bugzilla@watkins-home.com>
+To: 'Alvin Oga' <aoga@ns.Linux-Consulting.com>
 Cc: 'Brad Campbell' <brad@wasp.net.au>, comsatcat@earthlink.net, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+Just an FYI...
+My disks take 2.5 amps on the 12V line (30 watts) to start.
+Someone else said his require 2.9 amps (34.8 watts).
+The above does not include the 5V line.
+
+2 X startup wattage or amperage seems excessive.
+Power supply delivers 50% during startup, and 25% while the system is in
+use.  Seems wrong to me.
+
+Guy
+
+-----Original Message-----
+From: Alvin Oga [mailto:aoga@ns.Linux-Consulting.com] 
+Sent: Tuesday, December 14, 2004 6:55 PM
+To: Guy
+Cc: 'Brad Campbell'; comsatcat@earthlink.net; linux-raid@vger.kernel.org
+Subject: RE: Busted disks caused healthy ones to fail
 
 
 
@@ -42,7 +62,8 @@ works"
 	system and the drives think you're in "normal operation"
 	and enables write  while in fact, its is still in its bootup
 
-> Also, I would not want to push a power supply to the max rating.  It should
+> Also, I would not want to push a power supply to the max rating.  It
+should
 > be sized 50 watts or more beyond what you need.
 
 make that 2x the total wattage needed by the system .. NOT 50W 
