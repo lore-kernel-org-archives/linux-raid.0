@@ -1,44 +1,34 @@
-From: Gordon Henderson <gordon@drogon.net>
-Subject: RE: Good news / bad news - The joys of RAID
-Date: Tue, 23 Nov 2004 15:33:07 +0000 (GMT)
-Message-ID: <Pine.LNX.4.56.0411231529120.17251@lion.drogon.net>
-References: <200411222348.iAMNmJN01404@www.watkins-home.com>
+From: hpa@zytor.com (H. Peter Anvin)
+Subject: Re: Good news / bad news - The joys of RAID
+Date: Tue, 23 Nov 2004 19:10:45 +0000 (UTC)
+Message-ID: <co01vl$m4$1@terminus.zytor.com>
+References: <200411192128.iAJLSrN12727@www.watkins-home.com> <Pine.LNX.4.44.0411201238320.19120-100000@coffee.psychology.mcmaster.ca>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200411222348.iAMNmJN01404@www.watkins-home.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Guy <bugzilla@watkins-home.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 22 Nov 2004, Guy wrote:
-
-> Amanda...
-> I looked into this about 2 years ago.  From what I found, each daily backup
-> used a different tape.  This is crazy!  I can put 10-20 days on 1 tape.
-> Maybe more, not really sure.  Of course it is based on how much data changes
-> each day.  So, my full backups are only needed about once every 2-3 weeks.
+Followup to:  <Pine.LNX.4.44.0411201238320.19120-100000@coffee.psychology.mcmaster.ca>
+By author:    Mark Hahn <hahn@physics.mcmaster.ca>
+In newsgroup: linux.dev.raid
 >
-> Since Amanda uses up too many tapes, I use a home grown set of scripts that
-> maintain the tape position and use cpio for the backup.
->
-> Do you know if the above is true about Amanda?
+> > Never buy Maxtor drives again!
+> 
+> you imply that Maxtor drives are somehow inherently flawed.
+> can you explain why you think millions of people/companies
+> are naive idiots for continuing to buy Maxtor disks?
+> 
+> this sort of thing is just not plausible: Maxtor competes 
+> with the other top-tier disk vendors with similar products 
+> and prices and reliability.
+> 
 
-Yes. Amanda uses one tape per backup. It writes a label at the start of
-every tape to make sure it's writing the backup to the right tape.
+In my experience, that is bullshit.  Maxtor competes on price using
+inferior products.  I bought two Maxtor drives, both of them failed
+within 13 months.  That was my first attempt at trying Maxtor again
+after taking them off my sh*tlist from last time.
 
-With your system, if you lose one tape, you lose a lot of backups
-(however, I have a client who uses one removable disk and I store multiple
-backups on that disk)...
-
-> About tape age.  I know of a system that has DLT tapes that are over 7 years
-> old.  They have 21 tape drives total in 7 tape juke boxes.  No idea about
-> the number of tapes, but well over 4000.  These very in age from less than 1
-> year to over 7 years old.  They also have 2 copies of all data.  So, if a
-> tape fails, just find the copy.  Also make a new copy to maintain 2 copies.
-
-As long as they remember to take a set of tapes out of the jukebox from
-time to time and replace with fresh :)
-
-Gordon
+	-hpa
