@@ -1,41 +1,51 @@
-From: "Bill Rugolsky Jr." <brugolsky@telemetry-investments.com>
-Subject: Re: Booting from a raid1 device ?
-Date: Fri, 31 Oct 2003 12:40:32 -0500
+From: 240260@mail.com
+Subject: The 30 Hour Wonder!                1791165494
+Date: Sat, 01 Nov 2003 15:24:29 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20031031174032.GC819@ti19.telemetry-investments.com>
-References: <E5DA6395B8F9614EB7A784D628184B200E33DE@hdsmsx402.hd.intel.com> <3FA06158.9040007@tls.msk.ru> <20031031082841.GB26757@percy.comedia.it>
+Message-ID: <S263836AbTKAMYL/20031101122411Z+25415@vger.kernel.org>
+Reply-To: 240260@msn.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20031031082841.GB26757@percy.comedia.it>
 To: linux-raid@vger.kernel.org
-Cc: Luca Berra <bluca@comedia.it>
 List-Id: linux-raid.ids
 
-On Fri, Oct 31, 2003 at 09:28:42AM +0100, Luca Berra wrote:
-> Btw i recall reading somewhere that grub actually modifies the disk it
-> is booting from if luser wants to change the kernel command line.
-> I dunno if it is true or not, and i am too lazy to read the source. Can
-> anyone confirm or deny that?
- 
-That was me.  It may not be true, because I haven't had time and a
-a spare machine to verify.
+Cyalus comes in smaller doses and produces fewer side effects. 
+Cyalus also works much faster than Sildenafil-based medications. 
+In clinical trials, the majority of men who took the drug were able to 
+engage in sexual intercourse within 30 minutes or less. 
+The studies also indicated that Cyalus stays in the system 
+for up to 30 hours. That's 26 hours longer than the traditional 
+Sildenafil-based medications treatment. 
 
-The symptom that we see is that /boot/grub/stage2 sometimes becomes
-desynchronized between the RAID1 partitions after a reboot.
+Test results showed that out of 700 participants at least 88 percent of men experienced improvement with their erections. 
 
-Every night we compare file MD5 sums temporally (day-over-day) and
-spatially (between "identically" configured machines).  In the
-event that a file block is desynchronized, we will typically see
-the MD5 oscillate between two values, depending on which drive MD
-chose to populate the cache.  An MD resync of /boot cures the problem.
+More info http://www.hostvy.com/
 
-Since this only seems to occur with /boot/grub/stage2, I've ruled out
-most other theories.  We reboot a machine so infrequently that I've only
-seen this three times in more than a year, so I haven't been motivated
-to track it down.
 
-Regards,
 
-	Bill Rugolsky
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+77CEBC25-6DCC795D-5CA56DE0-964E8-22336C7F
+  
+585513A-43F06AB0-5B36B9F1-66677879-4154E521
+     
+5663D083-6CA0CCF-DB1E936-215A100A-202C757E
+            
+
+
