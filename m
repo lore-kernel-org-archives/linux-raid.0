@@ -1,65 +1,62 @@
-From: "Rechenberg, Andrew" <ARechenberg@shermanfinancialgroup.com>
-Subject: RE: Using mdadm.conf to create arrays
-Date: Fri, 7 Mar 2003 11:53:18 -0500
+From: "Simon Edwards" <simon.edwards@proprius.co.uk>
+Subject: Suggested patch against raidtools
+Date: Sun, 9 Mar 2003 23:46:54 -0000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <8075D5C3061B9441944E137377645118012E87@cinshrexc03.shermfin.com>
+Message-ID: <000601c2e696$2a24e8a0$05eb10ac@bongo2>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: multipart/mixed;
+	boundary="----=_NextPart_000_0007_01C2E696.2A24E8A0"
 Return-path: <linux-raid-owner@vger.kernel.org>
-content-class: urn:content-classes:message
-To: Derek Vadala <derek@cynicism.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-The shell script sounds like a better idea.
+This is a multi-part message in MIME format.
 
-Basically here's what I'm doing - I'm replacing our hardware RAID setup
-with Linux software RAID.  We have 56 disks attached to this system and
-we're going to run a RAID10 array.  I have to create 26 RAID1 arrays (52
-disks mirrored + four spares) and then strip across those.  I wanted to
-have a "one-stop-shop" if you will with mdadm and mdadm.conf so if there
-is a way to setup mdadm.conf once to create the arrays and to start them
-upon boot, I would like that instead of having to create them all by
-hand and then use 'mdadm --examine --scan' to create mdadm.conf and
-after that's created then assign spare-groups.
+------=_NextPart_000_0007_01C2E696.2A24E8A0
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
 
-Also, would there be any benefits with doing RAID100 (2 RAID10 sets
-striped) other than I could go over the MAX_SB_DISKS limit (according to
-dmesg MAX_SB_DISKS=27 which would indicate to me that I can only make an
-md device with 27/28 real block devices)?  Would I get any performance
-benefit, or would performance actually decrease?
+Hello,
+	I know that mdadm appears to be in vogue at present, but for any
+of you using the "raidtools" suite of programs, please find a patch
+against raidtools-1.00.3. The patch addresses a couple of problems I
+found in raidtools - mainly due to the coding assumption that only raid
+devices "md0 - md9" would be used - if you try and use "md1" and "md10"
+you'll get an error saying the device is already running.
 
-I sent an email to the list a couple of weeks ago to see if anyone has
-done something this large with software RAID and Maurice from HardData
-said that he had, but that's all I've heard so far.  Have you heard of
-this magnitude in production?  I want to make sure I'm not digging a
-hole for myself :)
+	The patch also includes the --no-delay flag for mkraid which is
+used to avoid the 5 second warning included when using the
+--dangerous-no-resync option. I've found this useful for avoiding the
+delay when using mkraid in scripts.
 
-Thanks,
-Andy.
+Regards,
 
------Original Message-----
-From: Derek Vadala [mailto:derek@cynicism.com] 
-Sent: Friday, March 07, 2003 11:15 AM
-To: linux-raid@vger.kernel.org
-Cc: Rechenberg, Andrew
-Subject: Re: Using mdadm.conf to create arrays
+Simon.
 
 
-On Fri, 7 Mar 2003, Rechenberg, Andrew wrote:
+------=_NextPart_000_0007_01C2E696.2A24E8A0
+Content-Type: application/x-gzip;
+	name="raidtools-1.00.3.patch.gz"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+	filename="raidtools-1.00.3.patch.gz"
 
-> With raidtools I can create the conf file and then do an 'mkraid 
-> /dev/md[0-9]' and that will create those ten arrays.  Is there a way 
-> to accomplish something similar with mdadm and mdadm.conf?
+H4sICJdcaz4AA3JhaWR0b29scy0xLjAwLjMucGF0Y2gApVRtT6NAEP5Mf8VIcpUKVMDWNm28eNHT
+mJhqet6HSy4hK+wWIl3IAt41xv9+M0ARted9OEJ4mXnm2dmZZyeMhQB7wUoFisVhkaZJbrtDxxke
+Ha4fyDQM3nnsjBVBxMMW0bNt++/xmuc4R7bj2u4YnOlsPJ15Y0Q0F5j07Jmm+e91Gia8J+BOZuPR
+zJ2+Yzo9Bft4ah2Dic8JnJ72gK5YFvDIVR6nEk7AsSDiSVZ/hfy+XNHnvIYGEVNwAEEqRby6iBOO
+vuWXq3P/7GZxcXU5fyEUqQq4LxLWhJtbh0z9kCds02Elc5qE/tuY1llmK8XCnS6kUzzfyKDjpH1O
+Xdrn1Gv2qT2BXmctMGvdgv1g34Lbm9s7/8vy0v92t7xaXFrQf9mZBQ48W3VklRgFCQzCsvRfZ9uF
+Ks6SZGO3Ecsm4h3aJLRM7aoYegUi3LY8Xc5m+0RXNnTdinShIZMrrtIyt5G6LgyFqf2WvVOtbiD1
+nJBRg6T/xk/l9EYjy3XB9EbHluu10vkVkQaMA6ZW+QCekAr3CQapJxArP+IsnEOGNxoy+7Pkv4sa
+VrVPgJEXKlhnBvrWoS/ZGstekw1IZEUsSz7v2S0cNR88+Cwo4kdu4AoIw0Lu9GbkA01bpUUK7D5V
+xbyz7ks76nw0kSmUk8CEQq6UBfr5VxTFzQ+UBRQRr7LhssghFfApR+nBGHKO1jC34KxQiX1GxKXM
+S8X3fkp9uxFKX8sTzjNjjD+mpsXC2Nu2eUCGjrvO8LmbaSkDODmpRoCjStnkSy4qG1OKbYYZU2w9
+TPgjT2APz8AA+v1e+MEEI4Mfpx+NsBaye4a17v8fYm+p2ik2mbnezik29o7oeNOrOd9VPYIIdYaS
+wvuVpPTDdaijHrCMi+/X1wMqoOJFqWQ1SzRSYbYx7kshOPY+iEy3ahXZWdHaddCrFlVrCdK0SDMu
+Df0wU2mAa+QFK7DxuvposebMuNTIP33D/1NlBgAA
 
-I don't think mdadm has the functionality you're looking for. Maybe I'm
-missing something, but why not just create a shell script to create the
-arrays? Surely some substitutions and regex's in vi to build mdadm -C
-commands would be simpler than creating a config file. Perhaps if you
-explained what you're trying to do a little bit more...
-
---
-Derek Vadala, derek@cynicism.com, http://www.cynicism.com/~derek
+------=_NextPart_000_0007_01C2E696.2A24E8A0--
 
 
