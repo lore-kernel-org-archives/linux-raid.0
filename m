@@ -1,46 +1,73 @@
-From: Maarten <maarten@ultratux.net>
-Subject: Re: lilo boot problems
-Date: Tue, 31 Aug 2004 02:22:23 +0200
+From: Jon Lewis <jlewis@lewis.org>
+Subject: raid5 won't resync
+Date: Mon, 30 Aug 2004 23:08:31 -0400 (EDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200408310222.24563.maarten@ultratux.net>
-References: <200408251458.46575.maarten@ultratux.net> <200408280044.55286.maarten@ultratux.net> <20040830082625.GA9916@apartia.fr>
+Message-ID: <Pine.LNX.4.58.0408302237580.1949@web1.mmaero.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20040830082625.GA9916@apartia.fr>
-Content-Disposition: inline
 To: linux-raid@vger.kernel.org
+Cc: aaron@america.com
 List-Id: linux-raid.ids
 
-On Monday 30 August 2004 10:26, Louis-David Mitterrand wrote:
-> On Sat, Aug 28, 2004 at 12:44:55AM +0200, maarten wrote:
-> > On Friday 27 August 2004 15:04, Laurent CARON wrote:
-> > > maarten wrote:
+We had a large mail server lose a drive today (not the first time), but
+we've been having alot of trouble with the resync this time.
 
->
-> > > you have to reconstruct your array first.
-> >
-> > Eeh...  You're joking, right ?
-> > The array holds no data as yet so it is possible, but several things seem
-> > too odd about this advice.  First, there is nothing wrong with this
-> > array, it was created by mdadm with all the right options. Second, this
-> > being linux (not windows) I can hardly believe one has to solve problems
-> > by no other means than starting all over ("reinstall windows") if the
-> > only error is due to the bootmanager interacting with the kernel
-> > (remember, this error doesn't occur with other, earlier, kernels).
-> >
-> > Anyway, I chose to work around it by installing grub (and it works fine).
->
-> By "reconstruct" I think Laurent meant "synchronize". In effect,
-> degraded arrays would produce that error with lilo with certain versions
-> of kernel 2.6.x
+mdadm told us /dev/sde1 had failed.  Coworker did a raidhotadd with a hot
+spare (/dev/sdg1).  Machine was under heavy load so we weren't surprised
+that the rebuild was going kind of slowly.  About 4 hours later, the
+system locked up with lots of "qlogifc0: no handles slots, this should not
+happen" error messages.
 
-Ah, okay.  This would make sense, yes.  But it creates a catch-22 situation 
-because I can't add the missing drive to the array when I have booted off 
-that single drive, and I can't boot off the array due to this lilo error.
-Not that that can't be fixed...
+At this point, we moved the drives (fiber channel attached SCA scsi drive
+array) to a spare system with its own qlogic card.  Kernel sees the RAID5
+and says that /dev/sde1 is bad.  It starts trying to resync it, but
+it's using a different spare drive.  After about 10% of the resync, the
+K/s resync speed slows to a few hundred K/sec, and keeps getting slower.
+At this point the FS on the RAID5 isn't even mounted, so there shouldn't
+be any system activity competing with the RAID rebuild.
+/proc/sys/dev/raid/speed_limit_max is set to 100000.
 
-Maarten
+Personalities : [raid5]
+read_ahead 1024 sectors
+md2 : active raid5 sdf1[10] sdm1[9] sdl1[8] sdk1[7] sdj1[6] sdn1[5]
+sdg1[3]
+sdd1[2] sdc1[1] sdb1[0]
+     315266688 blocks level 5, 64k chunk, algorithm 2 [10/9] [UUUU_UUUUU]
+     [==>..................]  recovery = 11.6% (4065836/35029632)
+finish=1400.0min speed=368K/sec
 
+kernel version in the original system where the drive failed and the
+lockup happened during resync was 2.4.20-28.rh8.0.atsmp from
+http://atrpms.net.  ATrpms are simply rebuilding the redhat kernel with
+the XFS patches applied.
+
+That system will also crash with the following ATrpms kernels:
+2.4.20-35
+2.4.20-19
+2.4.18-14
+
+Kernel version on spare system doing the slow resync is 2.4.22 from
+kernel.org with XFS patches from http://oss.sgi.com/projects/xfs/.  The
+big raid5 is an XFS fs.
+
+Each system has 2 qlogic cards (all of which are the same).  The one where
+it's resyncing now are:
+
+QLogic ISP2100 SCSI on PCI bus 01 device 10 irq 27 base 0xe800
+QLogic ISP2100 SCSI on PCI bus 01 device 18 irq 23 base 0xe400
+
+The drives are all:
+  Vendor: IBM      Model: DRHL36L  CLAR36  Rev: 3347
+  Type:   Direct-Access                    ANSI SCSI revision: 02
+
+Both systems are dual PIII 1.4's with 4GB RAM.
+
+Anyone have any idea what bug(s) we're running into or have suggestions
+for getting this RAID5 back in sync and in service?
+
+----------------------------------------------------------------------
+ Jon Lewis                   |  I route
+ Senior Network Engineer     |  therefore you are
+ Atlantic Net                |
+_________ http://www.lewis.org/~jlewis/pgp for PGP public key_________
