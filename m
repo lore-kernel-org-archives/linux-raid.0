@@ -1,54 +1,31 @@
 From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: Raidstop /dev/md0 won't work
-Date: Fri, 3 May 2002 15:00:58 +1000 (EST)
+Subject: Re: Creating failed-mode RAID1 with mdadm
+Date: Fri, 3 May 2002 15:49:41 +1000 (EST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <15570.6538.877456.348186@notabene.cse.unsw.edu.au>
-References: <3CD1AF20.45E85EC8@cognigencorp.com>
+Message-ID: <15570.9461.715820.460557@notabene.cse.unsw.edu.au>
+References: <20020430184832.GA381@willow.seitz.com>
+	<20020430190315.GA680@willow.seitz.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Scott Walter on Thursday May 2
-To: Scott Walter <walter@cognigencorp.com>
+In-Reply-To: message from Ross Vandegrift on Tuesday April 30
+To: Ross Vandegrift <ross@willow.seitz.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday May 2, walter@cognigencorp.com wrote:
-> this is probably a very dumb question.. however I am not able to
-> raidstop my raid-array using, which i need to do before running
-> raidreconf.
+On Tuesday April 30, ross@willow.seitz.com wrote:
+> > # mdadm --create /dev/md0 --level 1 --raid-disks=2 /dev/hde1 /dev/hdg1
+> > 
+> > I get:
+> > 
+> > mdadm: Cannot open /dev/hdg1: No such device or address
+> > mdadm: create aborted
 > 
-> %> raidstop /dev/md0
-> /dev/md0: Device or resource busy.
-> %>
-> 
-> any suggestions... i have already tried unmounting the device.
+> Hmmm, funny - as it turns out, mdadm actually created the array and
+> started it with /dev/hdg1 failed.  It just said it didn't.
 
-This is a bug in raidstop.  If you strace you will notice that it
-opens it twice and before trying to ioctl(STOP...) it.
-
-Upgrade raidtools or use mdadm.
-
-And a quick and dirty:
-
-   mv /dev/md0 /dev/mdx
-   mv /dev/md1 /dev/md0
-   mv /dev/mdx /dev/md0
-   raidstop /dev/md1
-   mv /dev/md0 /dev/mdx
-   mv /dev/md1 /dev/md0
-   mv /dev/mdx /dev/md0
-
-should work.
+That surprises me?   Are you in a position to try it again and see?
+If so, what version of mdadm?
 
 NeilBrown
-
-> 
-> thanks.
-> 
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
