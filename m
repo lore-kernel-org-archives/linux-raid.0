@@ -1,50 +1,64 @@
-From: hpa@zytor.com (H. Peter Anvin)
-Subject: Re: Digging into raid5.c and raid6main.c...
-Date: Tue, 24 Feb 2004 22:25:09 +0000 (UTC)
+From: Christian Kivalo <valo@valo.at>
+Subject: mdadm 1.5.0, email not being sent on all events!?
+Date: Tue, 24 Feb 2004 23:43:24 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <c1gj05$17g$1@terminus.zytor.com>
-References: <6.0.1.1.2.20040217232659.0211de48@mail.athenet.net>
+Message-ID: <20040224234324.00004fc9@valo.lan.valo.at>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Followup to:  <6.0.1.1.2.20040217232659.0211de48@mail.athenet.net>
-By author:    Nathan Lewis <nathapl@cs.okstate.edu>
-In newsgroup: linux.dev.raid
->
-> I've decided to base my rs-raid work on 2.6, and thus raid5.c and 
-> raid6main.c.  I'm pretty sure I can utilize all the stripe buffer code 
-> pretty much verbatim, and most of the rework will need to be done to 
-> handle_stripe().  I've dug through most of it, updating things to 
-> correspond to m parity disks instead of 1 or 2.  However, I've encountered 
-> something strange.  From what I can tell, after a call to compute_block_1 
-> or compute_block_2, I assumed that all the data in the stripe (including 
-> parity) was valid.  However, around line 1270 in raid6main.c, 
-> compute_block_1 or 2 may be called, then immediately after the PRINTK, it 
-> calls compute_parity too.  Isn't this redundant somehow?  The logic that 
-> sets must_compute is also really complicated - can anyone explain this 
-> section to me?
-> 
+hi!
 
-must_compute counts the number of drives for which (a) we don't have
-data already in memory and (b) we can't perform I/O, and (c) we need
-data from.
+mdadm is startet in monitor mode at boot like this:
 
-You're absolutely correct in that invoking compute_parity() there in
-the case ( must_compute > 0 ) is redundant.  In fact, so is using
-(failed) rather than (must_compute) in the switch statement
-(since must_compute <= failed.)  None of these are significant for
-performance, however, and it made the already complex bookkeeping
-slightly easier.  Once I'm more convinced the code is actually stable
-I will try to clean up stuff like this.
+mdadm --monitor --daemonise /dev/md0 /dev/md1 /dev/md2 /dev/md3 /dev/md=
+4
 
-	-hpa
+(i tried mdadm --monitor --scan --daemonise as  M=E5ns Rullg=E5rd sugge=
+sted
+in an other thread, same results)
 
+in my /etc/mdadm.conf i got "MAILADDR root@myhostname.tld" and mdadm
+tells me it is using that emailadress when starting in monitor mode.
 
+mdadm sends one or sometimes two emails when i manually fail a disk
+(mdadm --manage /dev/md3 --fail /dev/sda5), but it does not send email
+on the following events:
 
+no spare left
+hotadd/rebuild
+start rebuild finished
 
+i believe this would be pretty nice feature, at least on a 800GB array
+where rebuilding takes a large amount of time to complete ;)
 
+the ANNOUNCE-1.5.0 file in mdadm source directory says:
 
+- RebuildFinished event in monitor mode.
+
+in syslog i get messages from md that sda5 is removed and that there is
+no spare drive left to rebuild. but no email (is this expected to work?=
+)
+
+there is some more stuff:
+
+sometimes mdadm tells me which drive failed and sometimes it won't. the
+md-device is always reported correctly.
+
+could somebody please shed some light on this, testmessages function
+properly for all arrays.
+
+if there is some more information needed i can provide that.
+
+thanks in advance
+
+regards
+christian
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
