@@ -1,42 +1,18 @@
 From: "Guy" <bugzilla@watkins-home.com>
 Subject: RE: Hardware versus Software
-Date: Fri, 21 May 2004 14:52:05 -0400
+Date: Fri, 21 May 2004 14:39:12 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200405211852.i4LIqBB24688@www.watkins-home.com>
+Message-ID: <200405211839.i4LIdGB24653@www.watkins-home.com>
+References: <547AF3BD0F3F0B4CBDC379BAC7E4189FAD4BE1@otce2k03.adaptec.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: 
+In-Reply-To: <547AF3BD0F3F0B4CBDC379BAC7E4189FAD4BE1@otce2k03.adaptec.com>
 To: "'Salyzyn, Mark'" <mark_salyzyn@adaptec.com>, 'Ricky Beam' <jfbeam@bluetronic.net>, 'Ben Edwards' <ben@serverone.co.uk>
 Cc: 'Linux RAID List' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
-
-I should have added...
-
-There are other reasons for going to hardware raid.
-Easy hot swap.  Some even indicate the bad drive with an LED.
-Disk surface testing.
-Bad block relocation.
-Parity verification.
-Mirror verification.
-Able to create logical disks that seem like physical disks to the OS.
-50% less IO bandwidth usage on a RAID1 system.
-I am sure there are others.  But CPU load would not be a factor.
-
-Not all hardware systems do all of the above.
-
-Anyone else know how much CPU load you have during a rebuild?
-
-Guy
-
------Original Message-----
-From: Guy [mailto:bugzilla@watkins-home.com] 
-Sent: Friday, May 21, 2004 2:39 PM
-To: 'Salyzyn, Mark'; 'Ricky Beam'; 'Ben Edwards'
-Cc: 'Linux RAID List'
-Subject: RE: Hardware versus Software
 
 From what I have seen, the XOR logic does not use much CPU.  Less than 5% on
 my 500Mhz P3 system during a rebuild of a 14 disk RAID5 array.  Rebuild rate
