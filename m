@@ -1,31 +1,38 @@
-From: dean gaudet <dean-list-linux-raid@arctic.org>
-Subject: Re: *terrible* direct-write performance with raid5
-Date: Tue, 22 Feb 2005 15:08:06 -0800 (PST)
-Message-ID: <Pine.LNX.4.62.0502221507160.25248@twinlark.arctic.org>
-References: <421B6E5D.6030004@tls.msk.ru>
+From: hpa@zytor.com (H. Peter Anvin)
+Subject: Re: Forcing a more random uuid (random seed bug)
+Date: Tue, 22 Feb 2005 23:55:50 +0000 (UTC)
+Message-ID: <cvggq6$721$1@terminus.zytor.com>
+References: <200502011847.39444.niccolo@texnet.it> <200502021433.42108.niccolo@texnet.it>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-In-Reply-To: <421B6E5D.6030004@tls.msk.ru>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Sender: linux-raid-owner@vger.kernel.org
-To: Michael Tokarev <mjt@tls.msk.ru>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 22 Feb 2005, Michael Tokarev wrote:
+Followup to:  <200502021433.42108.niccolo@texnet.it>
+By author:    Niccolo Rigacci <niccolo@texnet.it>
+In newsgroup: linux.dev.raid
+>
+> > I get /dev/md5, /dev/md6, /dev/md7
+> > and /dev/md8 all with the same UUID!
+> 
+> It seems that there is a bug in mdadm: when generating the UUID for a 
+> volume, the random() function is called, but the random sequence is never 
+> initialized.
+> 
+> The result is that every volume created with mdadm has an uuid of:
+> 6b8b4567:327b23c6:643c9869:66334873
+> 
+> See also Debian bug 292784 at
+> http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=292784
+> 
+> I fixed the problem adding the following patch to mdadm.c, but please bear 
+> in mind that I'm totally unaware of mdadm code and quite naive in C 
+> programming:
+> 
 
-> When debugging some other problem, I noticied that
-> direct-io (O_DIRECT) write speed on a software raid5
-> is terrible slow.  Here's a small table just to show
-> the idea (not numbers by itself as they vary from system
-> to system but how they relate to each other).  I measured
-> "plain" single-drive performance (sdX below), performance
-> of a raid5 array composed from 5 sdX drives, and ext3
-> filesystem (the file on the filesystem was pre-created
-> during tests).  Speed measurements performed with 8Kbyte
-> buffer aka write(fd, buf, 8192*1024), units a Mb/sec.
+Please don't use (s)random at all, except as a possible fallback to
+/dev/(u)random.
 
-with O_DIRECT you told the kernel it couldn't cache anything... you're 
-managing the cache.  you should either be writing 64KiB or you should 
-change your chunksize to 8KiB (if it goes that low).
-
--dean
+	-hpa
