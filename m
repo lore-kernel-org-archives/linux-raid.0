@@ -1,33 +1,35 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: Re: Linux software RAID vs. udev
-Date: Tue, 4 May 2004 23:26:54 +0200
+From: AndyLiebman@aol.com
+Subject: RE: Serial ATA Cards
+Date: Tue, 4 May 2004 18:23:08 EDT
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040504212653.GB30691@percy.comedia.it>
-References: <4092FCA6.2020103@backtobasicsmgmt.com> <16534.64452.67783.81354@cse.unsw.edu.au> <409708C4.6070905@backtobasicsmgmt.com>
+Message-ID: <98.9f31412.2dc971cc@aol.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <409708C4.6070905@backtobasicsmgmt.com>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, May 03, 2004 at 08:06:44PM -0700, Kevin P. Fleming wrote:
->Hypothetically speaking, how would you feel about a solution where the 
->md driver also exposed a single "control" device (character device 
->presumably) where mdadm could do all its machinations? Something like 
->the device-mapper control interface is what I'm envisioning here, 
->although this starts to get into the dm/md overlap area...
-this seems like a nice idea to me, i never liked using md0 as a control
-device.
+Got the 3ware card working. Simple as running 'modprobe 3w-xxxx' and then all 
+the drives show up as SCSI devices. Works about the same as the Silicon Image 
+ports on my motherboard. Getting around 175 MB/sec Software RAID 5 on 8 
+drives according to Bonnie++.  Around 2x the speed of the 3ware "Hardware RAID 5" 
+(also measured with Bonnie ++). 
 
-regards,
-L.
+But... I'd sure like to use that new Promise card instead. Half the price. 
+133 Mhz instead of 66. No extra RAID hardware that I don't need. 
 
--- 
-Luca Berra -- bluca@comedia.it
-        Communication Media & Services S.r.l.
- /"\
- \ /     ASCII RIBBON CAMPAIGN
-  X        AGAINST HTML MAIL
- / \
+So, does anybody know how to use 'mknod' to create a home for the SATA 
+drives? Apparently the drives won't show up as either SCSI or IDE drives under the 
+new Promise driver that's included in the 2.6.5+ kernel. They need to have 
+devices created for them. I know that the "major number" is supposed to be 160. 
+But I have no idea how to find out what the "minor numbers" are supposed to be. 
+I'm kind of in the dark here. 
+
+Hopefully Promise will send me an installation script that will reveal what 
+to do. But just in case, if anyone knows how to proceed I would appreciate some 
+hints. 
+
+Thanks 
+
+Andy Liebman
