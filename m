@@ -1,53 +1,101 @@
-From: Mads Peter Bach <mpb@hum.auc.dk>
-Subject: Re: Converting existing Data to RAID5
-Date: Fri, 02 May 2003 19:46:13 +0200
+From: Paul Clements <Paul.Clements@SteelEye.com>
+Subject: Re: [PATCH 2.5.68] eliminate deprecated
+ MOD_INC_USE_COUNT/MOD_DEC_USE_COUNT in md.c
+Date: Fri, 02 May 2003 18:00:17 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3EB2AEE5.10803@hum.auc.dk>
-References: <20030502172613.GA20267@moof.org.uk>
+Message-ID: <3EB2EA71.BA0DC039@SteelEye.com>
+References: <3EA595D9.E4CBB684@SteelEye.com>
+		<16037.55226.267006.507998@notabene.cse.unsw.edu.au>
+		<3EA6BA35.3A5F25CF@SteelEye.com> <16049.64476.440042.635337@notabene.cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/mixed;
+ boundary="------------C0CE75A60115081B88BB7E6F"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20030502172613.GA20267@moof.org.uk>
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@cse.unsw.edu.au>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Giles A. Radford wrote:
+This is a multi-part message in MIME format.
+--------------C0CE75A60115081B88BB7E6F
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 
-> Now, Having read back on this list the stock answer to "I want to
-> expand my RAID5 array" seems to be (at the moment) "Use raidreconf,
-> but at your own risk, and it'll take ages". I don't have a problem wi=
-th
-> the "ages" bit, but I'd like to be as datasafe as possible.
+Neil Brown wrote:
+> 
+> On Wednesday April 23, Paul.Clements@SteelEye.com wrote:
+> > Neil Brown wrote:
 
-> Could I start up a Raid 5 array with one or two real disks and three
-> or four faulty drives which I would then activate as and when copying
-> from them onto the new array has finished?
+> It is possible for an array to be half-assembled.  To have some drives
+> attached, but not to have been started.
+> This can happen (for example) if you use mdadm to assemble a raid5
+> array without given all of the drives, and without giving --run.
+> 
+> In this case you don't want 'md' to be unloaded, but you haven't
+> loaded a personality module yet.  So you need to take a reference to
+> the md module whenever you start putting an md array together.
 
-No, sorry, that wouldn't work. You can have one one drive missing. raid=
-reconf=20
-is probably your best bet.
+Ah...I had missed that...appears that was an existing problem, even with
+the MOD_INC_USE_COUNT in place. 
 
-> On a slightly similar note, I'm used to using ext2 and ext3, but I've
-> heard a lot of people talk positively about XFS recently, so I'm
-> wondering if any of you have any opinions on whether I should use ext=
-3
-> or XFS for this new array?
+So we need to do the ref counting at bind/unbind time, rather than
+activation/deactivation time.
 
-Depends on your application. I quite fond of XFS in my fileservers, but=
- it has=20
-the added hassle of requiring patches to the standard kernel, unless yo=
-u use a=20
-distro with XFS support, but they tend to lag a bit behind.
+So here's the patch...compiled and tested briefly against
+2.5.68-bklatest, the ref counting looks correct
 
---=20
-Mads Peter Bach
-Systemadministrator,  Det Humanistiske Fakultet, Aalborg Universitet
-Kroghstr=E6de 3 - 5.111, DK-9220 Aalborg =D8st - (+45) 96358062
-# whois MPB1-DK@whois.dk-hostmaster.dk
+--
+Paul
+--------------C0CE75A60115081B88BB7E6F
+Content-Type: text/plain; charset=us-ascii;
+ name="md_mod_ref.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="md_mod_ref.diff"
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--- linux-2.5/drivers/md/md.c.2.5.68-bklatest	2003-05-02 11:56:18.000000000 -0400
++++ linux-2.5/drivers/md/md.c	2003-05-02 13:11:57.000000000 -0400
+@@ -181,7 +181,6 @@ static void mddev_put(mddev_t *mddev)
+ 		list_del(&mddev->all_mddevs);
+ 		mddev_map[mdidx(mddev)] = NULL;
+ 		kfree(mddev);
+-		MOD_DEC_USE_COUNT;
+ 	}
+ 	spin_unlock(&all_mddevs_lock);
+ }
+@@ -203,7 +202,6 @@ static mddev_t * mddev_find(int unit)
+ 		mddev_map[unit] = new;
+ 		list_add(&new->all_mddevs, &all_mddevs);
+ 		spin_unlock(&all_mddevs_lock);
+-		MOD_INC_USE_COUNT;
+ 		return new;
+ 	}
+ 	spin_unlock(&all_mddevs_lock);
+@@ -1016,7 +1014,12 @@ static int bind_rdev_to_array(mdk_rdev_t
+ 		if (find_rdev_nr(mddev, rdev->desc_nr))
+ 			return -EBUSY;
+ 	}
+-			
++
++	/* get a module ref if this is the first disk in the array */
++	if (list_empty(&mddev->disks))
++		if (!try_module_get(THIS_MODULE))
++			return -EBUSY;
++
+ 	list_add(&rdev->same_set, &mddev->disks);
+ 	rdev->mddev = mddev;
+ 	printk(KERN_INFO "md: bind<%s>\n", bdev_partition_name(rdev->bdev));
+@@ -1031,6 +1034,11 @@ static void unbind_rdev_from_array(mdk_r
+ 	}
+ 	list_del_init(&rdev->same_set);
+ 	printk(KERN_INFO "md: unbind<%s>\n", bdev_partition_name(rdev->bdev));
++
++	/* drop module ref if this array has no more disks */
++	if (list_empty(&rdev->mddev->disks))
++		module_put(THIS_MODULE);
++
+ 	rdev->mddev = NULL;
+ }
+ 
+
+--------------C0CE75A60115081B88BB7E6F--
+
