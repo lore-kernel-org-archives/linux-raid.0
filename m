@@ -1,47 +1,23 @@
-From: Mads Peter Bach <mpb@hum.auc.dk>
-Subject: Re: Last ditch effort for RH9 and LSR0
-Date: Wed, 14 May 2003 03:03:57 +0200
+From: "Peter T. Breuer" <ptb@it.uc3m.es>
+Subject: calc. of currspeed in md.c code in 2.4.20
+Date: Wed, 14 May 2003 10:33:05 +0200 (MET DST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3EC195FD.70609@hum.auc.dk>
-References: <20030514005119.10758.qmail@web14410.mail.yahoo.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Message-ID: <200305140833.h4E8X5P00764@oboe.it.uc3m.es>
+Reply-To: ptb@it.uc3m.es
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20030514005119.10758.qmail@web14410.mail.yahoo.com>
-To: linux-raid@vger.kernel.org
+To: neilb@cse.unsw.edu.au
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Brennahn Chesteine wrote:
-> Then how does the stock RH kernel boot this cursid thing up? I have h=
-ad 1
-> and 5 and just a lone /boot partition but nothing has worked so far.
 
-I have no idea. I can't see how they would be able to do it with RAID5,=
- unless
-grub or whatever bootloader RedHat uses is MUCH smarter than I give it =
-credit for.
+Can you shed some light on this for me?
 
-If you can't get it to boot, when your /boot is just a normal partition=
-, then
-you should probably look elsewhere for a problem.
+currspeed =
+ (j-mddev->resync_mark_cnt)/2/((jiffies-mddev->resync_mark)/HZ +1) +1;
 
-If you include your bootup messages, it would be much easier to figure =
-out what
-goes wrong.
+jiffies is divided by HZ here, which results in a quantity of dimension
+time-squared!
 
-You could also include the output of "cat /proc/mdstat" and "mount", wh=
-en your
-system is bootet with the redhat kernel.
+I could understand it (better) if jiffies were multiplied by HZ.
 
---=20
-Mads Peter Bach
-Systemadministrator,  Det Humanistiske Fakultet, Aalborg Universitet
-Kroghstr=E6de 3 - 5.111, DK-9220 Aalborg =D8st - (+45) 96358062
-# whois MPB1-DK@whois.dk-hostmaster.dk
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Peter
