@@ -1,31 +1,316 @@
-From: Molle Bestefich <molle.bestefich@gmail.com>
-Subject: Re: strangre drive behaviour.
-Date: Mon, 7 Mar 2005 22:21:22 +0100
-Message-ID: <62b0912f050307132144db2b6b@mail.gmail.com>
-References: <422AAAA7.6080106@fastmail.co.uk>
-Reply-To: Molle Bestefich <molle.bestefich@gmail.com>
+From: John McMonagle <johnm@advocap.org>
+Subject: Re: kernel panic??
+Date: Mon, 07 Mar 2005 20:02:03 -0600
+Message-ID: <422D079B.7050507@advocap.org>
+References: <4225E09C.5010401@advocap.org> <42271B3D.1050000@advocap.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-In-Reply-To: <422AAAA7.6080106@fastmail.co.uk>
+In-Reply-To: <42271B3D.1050000@advocap.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Max Waterman wrote:
-> Can I just make it a slave device? How will that effect performance?
+Changed the subject the slow sync is now a low priority :(
 
-AFAIR (CMIIW):
-- The standards does not allow a slave without a master.
-- The master has a role to play in that it does coordination of some
-sort (commands perhaps?) between the slave drive and the controller.
+Getting rather concerned.
 
-But on the other hand, I've seen ATAPI cdrom drives working in "slave
-only" configurations for years.  Hm.
+I finally failed the  questionable sdb drive.
+I managed to  backup the partition on the bad spot.
+It was up about 24 hours when I did the backup.
+Copied to a usb external drive. Very slow  but kept running.
+At this point doesn't really think it's a problem with raid.
+I did dd if=/dev/sdb2 of=/dev/null bs=64k with sdb2 failed.
+And it caused a kernel panic!
+This was with  2.6.11 with ata patch in run level 1
+Oddly the Call trace doesn't list anything to do with disk io??
+Abbreviated trace:
+drain_array_locked
+cache_reap
+worker_thread
+default_wake_function
+default_wake_function
+worker_thread
+kthread
+kthread
+kernel_thread_helper
 
-It shouldn't cause performance degradation, but it's a kinky setup
-which you should probably trust a bit less than a master-only setup.
+More if it helps.
 
-If it's not the CABLE SELECT thing, it could be that the firmware on
-the drive acting up is different from f/w on the other drives.  Check
-versions?
+All panics seem to be associated with accessing bad spot on sdb
+It seems really strange that one can get panic from a drive problem.
+
+mother board is asus p2b with 512mb ecc ram. It's been 100% reliable for 
+about 5 years. Ran memtest86 and it looked OK.
+
+Drive controller is promise tx4 4 port sata controller.
+Any issues with this controller?
+
+Drives are western digital WD2000JD I'm a bit concerned about the 
+quality as this is the  the 3rd failure. Had 2 bad drives in the first 
+week.
+Even then is it possible for a drive failure to cause a kernel panic???
+
+Really appreciate  feedback even if it's what hardware works for you.
+
+John
+
+John McMonagle wrote:
+
+> It kernel panicked again at around 30% with the 2.6.10 kernel :(
+> I'm not on site yet but I'll check the kernel message.
+> Remotely it's acting the same as the first time. Oddly ping and nmap 
+> looks OK but nothing responds.
+> I'll be taking it off line until I can figure it out.
+> Any suggestions?
+>
+> Is it possible to stop the resync to to get some data off it? It's 
+> really unresponsive with it running.
+>
+> My guess is there is something wrong with a drive and with the raid 
+> resync code.
+> I'll do some tests on the drives. The rest I'll need help with.
+>
+> John
+>
+>
+> John McMonagle wrote:
+>
+>> Have a backup system that recently had a kernel panic and am having 
+>> problems with rsync.
+>>
+>>
+>> It's a p2 460mhz mb 512 mb ram.
+>> promise sata comtroler.
+>> 3 200gb sata drives
+>> debain sarge
+>> 2.6.10 kernel  from kernel.org with  smart sata patches.
+>> mdadm  v1.9.0
+>>
+>>
+>> /proc/mdstat
+>>
+>> Personalities : [raid1] [raid5]
+>> md0 : active raid1 sdb1[0] sda1[2] sdc1[1]
+>>      586240 blocks [3/3] [UUU]
+>>
+>> md1 : active raid5 sda2[0] sdc2[2] sdb2[1]
+>>      389543936 blocks level 5, 128k chunk, algorithm 2 [3/3] [UUU]
+>>      [=====>...............]  resync = 28.9% (56429568/194771968) 
+>> finish=1374.9min speed=1675K/sec
+>> unused devices: <none>
+>>
+>> Was running just fine for a few months.
+>>
+>> System is very unresponsive.  Sometimes takes a minute to respond to 
+>> cat /proc/mdstat
+>> I know some of this is because it's doing it's normal programs but it 
+>> was not that much better in single user mode.
+>> Much to my amazement it managed to do the overnight backups while 
+>> resyncing.
+>> Interested why it takes so long and if there is anything one can do?
+>>
+>> As i recall it took about 120 minutes to build initially.
+>>
+>> Other related issue:
+>>
+>> Tried  to resync on the sarge 2.6.8 kernel it seemed to go a little 
+>> bit faster but it ended up kernel panicing at about 30%. Did this 
+>> twice.  Now I'm on the 2.6.10 and getting close to that point . Will 
+>> know if it makes it past that soon.
+>>
+>> I did get a smart message this morning but it not clear to me that 
+>> there is anything wrong.
+>>
+>> Here is the email:
+>>
+>> This email was generated by the smartd daemon running on:
+>>
+>>   host name: fonbackup
+>>  DNS domain: advocap.org
+>>  NIS domain: (none)
+>>
+>> The following warning/error was logged by the smartd daemon:
+>>
+>> Device: /dev/sdb, Self-Test Log error count increased from 0 to 1
+>>
+>> For details see host's SYSLOG (default: /var/log/messages).
+>>
+>> You can also use the smartctl utility for further investigation.
+>>
+>> ..................................................
+>> smartctl -a -d ata /dev/sdb
+>> smartctl version 5.32 Copyright (C) 2002-4 Bruce Allen
+>> Home page is http://smartmontools.sourceforge.net/
+>>
+>> === START OF INFORMATION SECTION ===
+>> Device Model:     WDC WD2000JD-00FYB0
+>> Serial Number:    WD-WMAEH2121689
+>> Firmware Version: 02.05D02
+>> Device is:        In smartctl database [for details use: -P show]
+>> ATA Version is:   6
+>> ATA Standard is:  Exact ATA specification draft version not indicated
+>> Local Time is:    Wed Mar  2 06:51:26 2005 CST
+>> SMART support is: Available - device has SMART capability.
+>> SMART support is: Enabled
+>>
+>> === START OF READ SMART DATA SECTION ===
+>> SMART overall-health self-assessment test result: PASSED
+>> See vendor-specific Attribute list for marginal Attributes.
+>>
+>> General SMART Values:
+>> Offline data collection status:  (0x85) Offline data collection activity
+>>                                        was aborted by an interrupting 
+>> command from host.
+>>                                        Auto Offline Data Collection: 
+>> Enabled.
+>> Self-test execution status:      (  73) The previous self-test 
+>> completed having
+>>                                        a test element that failed and 
+>> the test
+>>                                        element that failed is not known.
+>> Total time to complete Offline
+>> data collection:                 (6933) seconds.
+>> Offline data collection
+>> capabilities:                    (0x79) SMART execute Offline immediate.
+>>                                        No Auto Offline data 
+>> collection support.
+>>                                        Suspend Offline collection 
+>> upon new
+>>                                        command.
+>>                                        Offline surface scan supported.
+>>                                        Self-test supported.
+>>                                        Conveyance Self-test supported.
+>>                                        Selective Self-test supported.
+>> SMART capabilities:            (0x0003) Saves SMART data before entering
+>>                                        power-saving mode.
+>>                                        Supports SMART auto save timer.
+>> Error logging capability:        (0x01) Error logging supported.
+>>                                        No General Purpose Logging 
+>> support.
+>> Short self-test routine
+>> recommended polling time:        (   2) minutes.
+>> Extended self-test routine
+>> recommended polling time:        (  88) minutes.
+>> Conveyance self-test routine
+>> recommended polling time:        (   5) minutes.
+>>
+>> SMART Attributes Data Structure revision number: 16
+>> Vendor Specific SMART Attributes with Thresholds:
+>> ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE      
+>> UPDATED  WHEN_FAILED RAW_VALUE
+>>  1 Raw_Read_Error_Rate     0x000b   001   001   051    Pre-fail  
+>> Always   FAILING_NOW 12058
+>>  3 Spin_Up_Time            0x0007   124   122   021    Pre-fail  
+>> Always       -       4316
+>>  4 Start_Stop_Count        0x0032   100   100   040    Old_age   
+>> Always       -       24
+>>  5 Reallocated_Sector_Ct   0x0033   200   200   140    Pre-fail  
+>> Always       -       0
+>>  7 Seek_Error_Rate         0x000b   200   200   051    Pre-fail  
+>> Always       -       0
+>>  9 Power_On_Hours          0x0032   099   099   000    Old_age   
+>> Always       -       1263
+>> 10 Spin_Retry_Count        0x0013   100   253   051    Pre-fail  
+>> Always       -       0
+>> 11 Calibration_Retry_Count 0x0013   100   253   051    Pre-fail  
+>> Always       -       0
+>> 12 Power_Cycle_Count       0x0032   100   100   000    Old_age   
+>> Always       -       24
+>> 194 Temperature_Celsius     0x0022   115   253   000    Old_age   
+>> Always       -       35
+>> 196 Reallocated_Event_Count 0x0032   200   200   000    Old_age   
+>> Always       -       0
+>> 197 Current_Pending_Sector  0x0012   200   200   000    Old_age   
+>> Always       -       0
+>> 198 Offline_Uncorrectable   0x0012   200   200   000    Old_age   
+>> Always       -       0
+>> 199 UDMA_CRC_Error_Count    0x000a   200   253   000    Old_age   
+>> Always       -       0
+>> 200 Multi_Zone_Error_Rate   0x0009   200   155   051    Pre-fail  
+>> Offline      -       0
+>>
+>> SMART Error Log Version: 1
+>> No Errors Logged
+>>
+>> SMART Self-test log structure revision number 1
+>> Num  Test_Description    Status                  Remaining  
+>> LifeTime(hours)  LBA_of_first_error
+>> # 1  Short offline       Completed: unknown failure    90%       
+>> 170         1114112
+>> # 2  Short offline       Completed without error       00%       
+>> 126         -
+>> # 3  Short offline       Completed without error       00%       
+>> 103         -
+>> # 4  Short offline       Completed without error       00%        
+>> 79         -
+>> # 5  Short offline       Completed without error       00%        
+>> 56         -
+>> # 6  Short offline       Completed without error       00%        
+>> 32         -
+>> # 7  Short offline       Completed without error       00%         
+>> 9         -
+>> # 8  Extended offline    Completed without error       00%      
+>> 1081         -
+>> # 9  Short offline       Completed without error       00%      
+>> 1079         -
+>> #10  Short offline       Completed without error       00%      
+>> 1056         -
+>> #11  Short offline       Completed without error       00%      
+>> 1032         -
+>> #12  Short offline       Completed without error       00%      
+>> 1009         -
+>> #13  Short offline       Completed without error       00%       
+>> 985         -
+>> #14  Short offline       Completed without error       00%       
+>> 962         -
+>> #15  Short offline       Completed without error       00%       
+>> 939         -
+>> #16  Extended offline    Completed without error       00%       
+>> 919         -
+>> #17  Short offline       Completed without error       00%       
+>> 916         -
+>> #18  Short offline       Completed without error       00%       
+>> 893         -
+>> #19  Short offline       Completed without error       00%       
+>> 869         -
+>> #20  Short offline       Completed without error       00%       
+>> 846         -
+>> #21  Short offline       Completed without error       00%       
+>> 823         -
+>>
+>> SMART Selective self-test log data structure revision number 1
+>> SPAN  MIN_LBA  MAX_LBA  CURRENT_TEST_STATUS
+>>    1        0        0  Not_testing
+>>    2        0        0  Not_testing
+>>    3        0        0  Not_testing
+>>    4        0        0  Not_testing
+>>    5        0        0  Not_testing
+>> Selective self-test flags (0x0):
+>>  After scanning selected spans, do NOT read-scan remainder of disk.
+>> If Selective self-test is pending on power-up, resume after 0 minute 
+>> delay.
+>>
+>>
+>> ......................................
+>>
+>> Any sugestions?
+>>
+>> John
+>>
+>>
+>>
+>>
+>> -
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
+>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
