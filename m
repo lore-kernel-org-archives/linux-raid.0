@@ -1,105 +1,65 @@
 From: Neil Brown <neilb@cse.unsw.edu.au>
 Subject: Re: RFC - new raid superblock layout for md driver
-Date: Thu, 21 Nov 2002 10:24:34 +1100
-Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <15836.6578.878775.208602@notabene.cse.unsw.edu.au>
-References: <OF6B381288.73386F52-ON85256C77.00543682@pok.ibm.com>
+Date: Thu, 21 Nov 2002 10:31:47 +1100
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <15836.7011.785444.979392@notabene.cse.unsw.edu.au>
+References: <15835.2798.613940.614361@notabene.cse.unsw.edu.au>
+	<20021120160259.GW806@nic1-pc.us.oracle.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Steve Pratt on Wednesday November 20
-To: Steve Pratt <slpratt@us.ibm.com>
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: message from Joel Becker on Wednesday November 20
+To: Joel Becker <Joel.Becker@oracle.com>
 Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday November 20, slpratt@us.ibm.com wrote:
+On Wednesday November 20, Joel.Becker@oracle.com wrote:
+> On Wed, Nov 20, 2002 at 03:09:18PM +1100, Neil Brown wrote:
+> > The interpretation of the 'name' field would be up to the user-space
+> > tools and the system administrator.
+> > I imagine having something like:
+> > 	host:name
+> > where if "host" isn't the current host name, auto-assembly is not
+> > tried, and if "host" is the current host name then:
+> >   if "name" looks like "md[0-9]*" then the array is assembled as that
+> >     device
+> >   else the array is assembled as /dev/mdN for some large, unused N,
+> >     and a symlink is created from /dev/md/name to /dev/mdN
+> > If the "host" part is empty or non-existant, then the array would be
+> > assembled no-matter what the hostname is.  This would be important
+> > e.g. for assembling the device that stores the root filesystem, as we
+> > may not know the host name until after the root filesystem were loaded.
 > 
-> Neil Brown wrote;
-> 
-> >I would like to propose a new layout, and to receive comment on it..
-> 
-> 
->  >/* constant this-device information - 64 bytes */
->     >u64  address of superblock in device
->     >u32  number of this device in array  /* constant over reconfigurations
->     */
-> 
->  Does this mean that there can be holes in the numbering for disks that die
->     and are replaced?
+> 	Hmm, what is the intended future interaction of DM and MD?  Two
+> ways at the same problem?  Just curious.
 
-Yes.  When a drive is added to an array it gets a number which it
-keeps for it's life in the array.  This is completely separate from
-the number that says what it's role in the array is.  This number,
-together with the set_uuid, forms the 'name' of the device as long as
-it is part of the array.  So there could well be holes in the
-numbering of devices, but in general the set of numbers would be
-fairly dense (max number of holes is max number of hot-spaces that you
-have had in the array at any one time).
+I see MD and DM as quite different, though I haven't looked much as DM
+so I could be wrong.
 
-> 
->     >u32  device_uuid[4]
->     >u32  pad3[9]
-> 
->  >/* array state information - 64 bytes */
->     >u32  utime
->     >u32  state    /* clean, resync-in-progress */
->     >u32  sb_csum
-> 
->  These next 2 fields are not 64 bit aligned. Either rearrange or add
->     padding.
+I see raid1 and raid5 as being the key elements of MD.  i.e. handling
+redundancy, rebuilding hot spares, stuff like that.  raid0 and linear
+are almost optional frills.
 
-Thanks.  I think I did check that once, but then I changed things
-again :-(
-Actually, making utime a u64 makes this properly aligned again, but I
-will group the u64s together at the top.
+DM on the other hand doesn't do redundancy (I don't think) but helps
+to chop devices up into little bits and put them back together into
+other devices.... a bit like a filesystem really, but it provided block
+devices instead of files.
 
-> 
->     >u64  events
->     >u64  resync-position     /* flag in state if this is valid)
->     >u32  number of devices
->     >u32  pad2[8]
-> 
-> 
-> 
-> >Other features:
->    >A feature map instead of a minor version number.
-> 
-> Good.
-> 
->    >64 bit component device size field.
-> 
-> Size in sectors not blocks please.
-
-Another possibility that I considered was a size in chunks, but
-sectors is less confusing.
-
-> 
-> 
->    >no "minor" field but a textual "name" field instead.
-> 
-> Ok, I assume that there will be some way for userspace to query the minor
->    which gets dynamically assigned when the array is started.
-
-Well, actually it is user-space which dynamically assigns a minor.
-It then has the option of recording, possibly as a symlink in /dev, the
-relationship between the 'name' of the array and the dynamically
-assigned minor.
-
-> 
->    >address of superblock in superblock to avoid misidentifying superblock.
->    e.g. is it >in a partition or a whole device.
-> 
-> Really needed this.
-> 
-> 
-> >The interpretation of the 'name' field would be up to the user-space
-> >tools and the system administrator.
-> 
-> Yes, so let's leave this out of this discussion.
-
-... except to show that is is sufficient to meet the needs of users.
+So raid0 and linear are more the domain of DM than MD in my mind.
+But they are currently supported by MD and there is no real need to
+change that.
 
 
-Thanks for your comments,
+> 	Assuming MD as a continually used feature, the "name" bits above
+> seem to be preparing to support multiple shared users of the array.  If
+> that is the case, shouldn't the superblock contain everything needed for
+> "clustered" operation?
+
+Only if I knew what 'everything needed for clustered operation' was....
+There is room for expansion in the superblock so stuff could be added.
+If there were some specific things that you think would help clustered
+operation, I'd be happy to hear the details.
+
+Thanks,
 NeilBrown
