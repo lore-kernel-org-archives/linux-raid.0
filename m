@@ -1,25 +1,49 @@
-From: Mark Hahn <hahn@physics.mcmaster.ca>
-Subject: Re: What SATA controller for software raid and/or lvm?
-Date: Mon, 19 Jan 2004 18:16:08 -0500 (EST)
+From: Jean Jordaan <jean@upfrontsystems.co.za>
+Subject: Recovering RAID5 array
+Date: Tue, 20 Jan 2004 08:54:55 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0401191813140.12676-100000@coffee.psychology.mcmaster.ca>
-References: <1074469835.7611.9.camel@localhost.localdomain>
+Message-ID: <400CD0BF.2010808@upfrontsystems.co.za>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1074469835.7611.9.camel@localhost.localdomain>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> However, before I rush and order these two Highpoint 1820's ($300), it
+Hi all
 
-I was looking at them too, but was swayed towards promise by:
+I'm having a RAID week. It looks like 1 disk out of a
+3-disk RAID5 array has failed. The array consists of
+/dev/hda3 /dev/hdb3 /dev/hdc3 (all 40Gb)
+I'm not sure which one is physically faulty. In an attempt
+to find out, I did:
+   mdadm --manage --set-faulty /dev/md0 /dev/hda3
 
-http://www.xbitlabs.com/articles/storage/display/promise-fts150-tx4_7.html
+The consequence of this was 2 disks marked faulty and no
+way to get the array up again in order to use raidhotadd
+to put that device back.
 
-my main concern with the nice ($US 65) SATA 150TX4 boards was whether
-their 32x66 interface would be enough.  the review demonstrates that 
->200 MB/s can be pumped through each, which is what I'm looking for...
+I'm scared of recreating superblocks and losing all my data.
+So now I'm doing 'dd if=/dev/hdb3 of=/dev/hdc2' of all three
+RAID partitions so that I can work on a *copy* of the data.
 
-regards, mark hahn.
+Then I aim to
+mdadm --create /dev/md0 --raid-devices=3 --level=5 \
+   --spare-devices=1 --chunk=64 --size=37111 \
+   /dev/hda1 /dev/hda2 missing /dev/hdb1 /dev/hdb2
+
+hda2 is a copy of the partition of the drive I'm currently
+suspecting of failure. hdb2 is a blank partition.
+
+I've been running Seagate's drive diagnostic software
+overnight, and the old disks check out clean. This makes me
+afraid that it's reiserfs corruption, not a RAID disk
+failure :/
+
+Does anyone here have any comments on what I've done so far,
+or if there's anything better I can do next?
+
+-- 
+Jean Jordaan
+http://www.upfrontsystems.co.za
 
