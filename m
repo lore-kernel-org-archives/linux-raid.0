@@ -1,14 +1,29 @@
-From: Robin Bowes <robin-lists@robinbowes.com>
-Subject: Good news / bad news - The joys of RAID
-Date: Fri, 19 Nov 2004 21:06:40 +0000
-Message-ID: <419E6060.8030000@robinbowes.com>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: Good news / bad news - The joys of RAID
+Date: Fri, 19 Nov 2004 16:28:48 -0500
+Message-ID: <200411192128.iAJLSrN12727@www.watkins-home.com>
+References: <419E6060.8030000@robinbowes.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <419E6060.8030000@robinbowes.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: 'Robin Bowes' <robin-lists@robinbowes.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+Reminder....
+Never buy Maxtor drives again!
+
+Guy
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Robin Bowes
+Sent: Friday, November 19, 2004 4:07 PM
+To: linux-raid@vger.kernel.org
+Subject: Good news / bad news - The joys of RAID
 
 The bad news is I lost another disk tonight. Remind me *never* to buy 
 Maxtor drives again.
@@ -94,3 +109,8 @@ Is this normal behaviour?
 R.
 -- 
 http://robinbowes.com
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
