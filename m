@@ -1,46 +1,56 @@
-From: Hermann Himmelbauer <dusty@strike.wu-wien.ac.at>
-Subject: Re: I'm Astounded by How Good Linux Software RAID IS!
-Date: Tue, 25 Nov 2003 00:45:18 +0100
+From: "Caleb Crome" <linux-raid@crome.org>
+Subject: Adding a mirror to a RAID1 Device
+Date: Mon, 24 Nov 2003 22:19:44 -0800 (PST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200311250045.18770.dusty@strike.wu-wien.ac.at>
-References: <172.22899f68.2cf365fc@aol.com>
+Message-ID: <63168.209.233.26.53.1069741184.squirrel@sampson.crome.org>
+References: <S262074AbTKYGHX/20031125060723Z+10693@vger.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <172.22899f68.2cf365fc@aol.com>
-Content-Disposition: inline
-To: AndyLiebman@aol.com, linux-raid@vger.kernel.org
+In-Reply-To: <S262074AbTKYGHX/20031125060723Z+10693@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday 24 November 2003 14:47, AndyLiebman@aol.com wrote:
->> Hmmm, here are some of my thoughts, maybe some of my assumptions are wrong
->> as I am no RAID expert. If so, please correct me!
->>
->> - Maximum FW-Speed = 400Mbit/s, that's with the protocol overhead ~ 35Mb/s
->> - Theoretical PCI-Bandwidth: 133 MB/s
->
->
-> Do you think this 35 MB/sec applies, even though I am using 5 separate
-> Firewire PCI cards? That's 5 separate channels, each of which has a 400
-> Mbit/sec speed. Keep in mind that EACH drive on the RAID 5 is on it's own
-> separate PCI card.
+Hello all, I've got a peculiar problem.  I added some new disk space to my
+system (Linux 2.4.19, Mandrake), and created a RAID1 drive /dev/md0 with
+only 1 active mirror because I didn't have enough space (yet) to put
+everything on my new raid drive.  I had the intention of then addeding
+another disk to the raid setup later so that it would just
+auto-reconsctruct and be ready to go.
 
-I already assumed that you use one drive on each channel. Nevertheless, the 
-maximum throughput from a drive to the CPU is limited by the 400Mbit/s 
-Firewire speed, that's around 35Mbyte/s.
+However, when I do raidhotadd, I doesn't seem to reconsctruct.
 
-On a first glance this is no limitation as normal IDE-Drives don't deliver 
-much more than that but the interface speed can be much higher - and that's 
-my point: Transfers from the internal harddisk cache to the CPU are also 
-limited by the firewire speed.
 
-		Best Regards,
-		Hermann
+So, my /proc/mdstat looks like this:
 
--- 
-x1@aon.at
-GPG key ID: 299893C7 (on keyservers)
-FP: 0124 2584 8809 EF2A DBF9  4902 64B4 D16B 2998 93C7
+Personalities : [raid1]
+read_ahead 1024 sectors
+md0 : active raid1 ide/host0/bus1/target0/lun0/part3[0]
+      81920064 blocks [1/1] [U]
+
+
+When I
+   raidhotadd /dev/md0  /dev/ide/host0/bus0/target0/lun0/part3
+
+I get the following /proc/mdstat:
+
+Personalities : [raid1]
+read_ahead 1024 sectors
+md0 : active raid1 ide/host0/bus1/target0/lun0/part3[0] \ <contd.>
+                   ide/host0/bus0/target0/lun0/part3[0]
+      81920064 blocks [1/1] [U]
+
+unused devices: <none>
+
+
+It doesn't reconsctruct the drive from bus0 as I expected it to.  What do
+I do to convince the kernel to do the reconstruction?
+
+Thanks,
+-Caleb
+
+
+
+
 
