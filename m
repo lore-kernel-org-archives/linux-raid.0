@@ -1,40 +1,30 @@
-From: "Peter L. Ashford" <ashford@sdsc.edu>
-Subject: Re: Consensus?...
-Date: Thu, 28 Aug 2003 14:49:33 -0700 (PDT)
+From: Catalin BOIE <util@deuroconsult.ro>
+Subject: 2.422 + RAID 1 + SATA + 2 disks => no maximum speed
+Date: Fri, 29 Aug 2003 07:35:09 +0300 (EEST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.GSO.4.30.0308281352280.3109-100000@multivac.sdsc.edu>
-References: <1062035585.21455.6.camel@south.rosestar.lan>
+Message-ID: <Pine.LNX.4.56.0308290730560.31668@hosting.rdsbv.ro>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1062035585.21455.6.camel@south.rosestar.lan>
-To: Bob Hillegas <bobhillegas@houston.rr.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 27 Aug 2003, Bob Hillegas wrote:
+Hi!
 
-> I will be setting up a raided system early next year once kernel 2.6 is
-> stable.
->
-> Is there any consensus as to which scsi adapter AND non-scsi adapter
-> will be preferred?
+I have a machine with 2 SATA disks on 2 separate buses.
+hdparm /dev/hda reports 50MB/s
+hdparm /dev/hdb reports 50MB/s
 
-I have used many of the 3Ware 7000/7500 series IDE RAID controllers.  They
-are quite stable.  One of my customers had never-ending problems with
-their Adaptec 2400A controllers, until they switched to 3Ware.
+I created a raid1 array with hda3 and hdc3, same partition sizes.
 
-One caveat to this is the disks.  I used Western Digital disks in many of
-the systems I've built.  On those systems AND ONLY THOSE SYSTEMS, I'm
-getting a disk failure rate of 1%-2% per month.  This is with disks that
-have the updated firmware.
+If I do hdparm /dev/md0 it reports 50MB/s
 
-When the WD diagnostic ('dlgdiag') is run on the disk, problems are
-normally found, and repaired.  The bad news is that it takes time to
-replace the disk, and run the diagnostic.
+If I do cat /dev/md0 > /dev/null, vmstat reports 50MB/s
+If I start two command like above, simultaneously I get 100MB/s.
 
-I have seen NO significant problems with IBM/Hitachi or Maxtor disks.  I
-haven't tried using Seagate disks in an IDE array.
+Why I don't get 100MB/s on a single cat command?
+Thank you very much!
 
-				Peter Ashford
-
+---
+Catalin(ux) BOIE
+catab@deuroconsult.ro
