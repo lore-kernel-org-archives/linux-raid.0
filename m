@@ -1,132 +1,99 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: How to force raid to stop, cleanly? More info
-Date: Wed, 9 Apr 2003 11:11:20 +1000
+From: Chuck Ebbert <76306.1226@compuserve.com>
+Subject: Re: [PATCH] raid1d bugfix/2.4
+Date: Wed, 9 Apr 2003 02:19:05 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16019.29496.215437.669497@notabene.cse.unsw.edu.au>
-References: <200304082229.PAA04958@washington.seas.ucla.edu>
+Message-ID: <200304090222_MC3-1-33A7-11C5@compuserve.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	 charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Stephen C Woods on Tuesday April 8
-To: Stephen C Woods <scw@seas.ucla.edu>
-Cc: Linux-raid maillist <linux-raid@vger.kernel.org>
+Content-Disposition: inline
+To: Neil Brown <neilb@cse.unsw.edu.au>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tuesday April 8, scw@seas.ucla.edu wrote:
-> 
-> >   We're running 2.4.20,  we've come across a situation where the 
-> >raid and overlying LVM seems to be stuck.  No I/O is occuring, processes
-> >trying to access to raid or overlying volumes hang and can't be
-> >terminated.
-> >
-> >   What we'd like to do is to force the raid volume to terminate
-> >and sync its disks and superblocks, so that the raid volume is
-> >or thinks it is consistant.
-> >
-> > The overlying JFS will clean up when it restarts, but we don't want to
-> >wait 3 days for the RAID to finish recomputing parity (these are some really
-> >large arrays).
-> 
->   Here's a little more info. 
-> (1)The scsi disks are responding correctly,  I can read from each drive.  
-> (2) More processes are getting stuck, lilo, sync and mkdir
-> (3) There are 2 processes stuck on rwsem_down_failed both related to
->     the raid/lvm.
-> (3) mdadm thinks the everything is just fine.
+Neil Brown wrote:
 
-Looks like a jfs bug of some sort.
-I suspect your best bet is to 
-   reboot -f -n
-or
-   alt-sysrq-U   # unmount
-   alt-sysrq-S   # sync
-   alt-sysrq-B   # boot
 
-and hope that works.  It should write out the raid superblcoks, but if
-it doesn't nothing else will.
+>> 
+>>   The second 'if' is assuming that conf->last_used can't change during
+>> rebuild,
+>> but it can (line 1419):
+>> 
+>> 
+>> 	disk = conf->last_used;
+>> 	/* make sure disk is operational */
+>> 	while (!conf->mirrors[disk].operational) {
+>> 		if (disk <= 0) disk = conf->raid_disks;
+>> 		disk--;
+>> 		if (disk == conf->last_used)
+>> 			break;
+>> 	}
+>> 	conf->last_used = disk;
+>> 
+>> 
+>>   This could only happen if a second disk failed during rebuild of a 3+
+>> disk array.
+>
+>True, but if a disk fails during a rebuild the rebuild is aborted, so
+>it doesn't really matter.
 
-NeilBrown
 
-> 
-> Current ps output.
->   PID STAT %CPU  WCHAN WIDE-WCHAN-COLUMN COMMAND,wchan=WIDE-WCHAN-COLUMN -o arg 
->     1 S     0.0 14af8d do_select         init [3] 
->     2 SW    0.0 127efd context_thread    [keventd]
->     3 SW    0.0 11566a apm_mainloop      [kapmd]
->     4 SWN   0.0 11f30e ksoftirqd         [ksoftirqd_CPU0]
->     5 SW    0.1 133806 kswapd            [kswapd]
->     6 SW    0.0 13fe2a bdflush           [bdflush]
->     7 DW    0.1 a2a048 end               [kupdated]
->     8 SW<   0.0 1ebfb5 md_thread         [mdrecoveryd]
->    12 SW    0.0 81cb6c end               [kjournald]
->    68 SW    0.0 83d52e end               [khubd]
->   168 SW    0.0 81cb6c end               [kjournald]
->   169 SW    0.0 81cb6c end               [kjournald]
->   170 SW    0.0 81cb6c end               [kjournald]
->   171 SW    0.0 81cb6c end               [kjournald]
->   465 S     0.0 14af8d do_select         syslogd -m 0
->   469 S     0.0 11a3d1 do_syslog         klogd -x
->   486 S     0.0 14b716 do_poll           portmap
->   505 S     0.0 14af8d do_select         rpc.statd
->   586 S     0.0 14af8d do_select         /usr/sbin/apmd -p 10 -w 5 -W -P /etc/sy
->   602 S     0.0 14b716 do_poll           ypserv
->   614 S     0.0 14b716 do_poll           ypbind
->   661 S     0.0 14af8d do_select         /usr/sbin/sshd
->   675 S     0.0 14af8d do_select         xinetd -stayalive -reuse -pidfile /var/
->   686 SL    0.0 14af8d do_select         ntpd -U ntp -g
->   705 S     0.0 14b716 do_poll           rpc.rquotad
->   709 SW    0.0 95bf32 end               [nfsd]
->   710 SW    0.0 95bf32 end               [nfsd]
->   711 SW    0.0 95bf32 end               [nfsd]
->   712 SW    0.0 95bf32 end               [lockd]
->   713 SW    0.0 95845e end               [rpciod]
->   714 SW    0.0 95bf32 end               [nfsd]
->   715 SW    0.0 95bf32 end               [nfsd]
->   716 SW    0.0 95bf32 end               [nfsd]
->   717 SW    0.0 95bf32 end               [nfsd]
->   718 SW    0.0 95bf32 end               [nfsd]
->   724 S     0.0 14b716 do_poll           rpc.mountd
->   733 S     0.0 14af8d do_select         gpm -t ps/2 -m /dev/mouse
->   742 S     0.0 1231e3 nanosleep         crond
->   771 S     0.0 14af8d do_select         xfs -droppriv -daemon
->   789 S     0.0 1231e3 nanosleep         /usr/sbin/atd
->   802 S     0.0 1231e3 nanosleep         rhnsd --interval 120
->   806 S     0.0 177e9d read_chan         /sbin/mingetty tty1
->   807 S     0.0 177e9d read_chan         /sbin/mingetty tty2
->   808 S     0.0 177e9d read_chan         /sbin/mingetty tty3
->   809 S     0.0 177e9d read_chan         /sbin/mingetty tty4
->   810 S     0.0 177e9d read_chan         /sbin/mingetty tty5
->   811 S     0.0 177e9d read_chan         /sbin/mingetty tty6
->   856 SW<   1.5 1ebfb5 md_thread         [raid5d]
->   857 SWN   0.1 1ebfb5 md_thread         [raid5syncd]
->   882 SW    0.0 a297cb end               [jfsIO]
->   883 DW    0.0 24aa8c rwsem_down_failed [jfsCommit]
->   884 SW    0.0 a2d7cd end               [jfsSync]
->  1669 SW<   2.2 1ebfb5 md_thread         [raid5d]
->  1670 SWN   0.5 1ebfb5 md_thread         [raid5syncd]
-> 24442 DN    0.0 a2a048 end               rsync -avHx . /vg00/raid0/topanga/icsl.
-> 24445 DN    0.0 a2a048 end               rsync -avHx . /vg00/raid1/topanga/ee.05
-> 24500 DN    1.1 a2a048 end               rsync -avHx . /vg00/raid0/topanga/icsl.
-> 24501 DN    0.8 24aa8c rwsem_down_failed rsync -avHx . /vg00/raid1/topanga/ee.05
-> 26064 D     0.0 a2a048 end               mkdir topanga.030408
-> 26110 D     0.0 107c4a down              ls
-> 26116 D     0.0 a2a048 end               sync
-> 26672 S     0.0 14af8d do_select         in.rlogind
-> 26673 S     0.0 11da20 wait4             login -- root
-> 26674 S     0.0 177e9d read_chan         -bash
-> 26773 D     0.0 15011b wait_on_inode     lilo
-> 26840 D     0.0 15011b wait_on_inode     lilo
-> 26857 S     0.0 14af8d do_select         in.rlogind
-> 26858 S     0.0 11da20 wait4             login -- root
-> 26859 S     0.0 11da20 wait4             -bash
-> 
-> 
-> -----
-> Stephen C. Woods; UCLA SEASnet; 2567 Boelter hall; LA CA 90095; (310)-825-8614
-> Unless otherwise noted these statements are my own, Not those of the 
-> University of California.                      Internet mail:scw@seas.ucla.edu
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ Even on a 3-disk mirror where there's a good data disk left to rebuild
+from?
+That sounds bad, and it looked to me like the code I quoted was looking for
+another working drive if one failed during rebuild/resync.
+
+
+>However there are more cosmetic changes than real content, making it
+>harder for me to find the significant change.  It is much easier to
+>read a patch if it just does one thing.
+
+diff -u --exclude-from=/home/me/.exclude -r linux-2.4.21-pre6-ref/drivers/md/raid1.c pre6-raid1d-a/drivers/md/raid1.c
+--- linux-2.4.21-pre6-ref/drivers/md/raid1.c	Thu Apr  3 13:21:37 2003
++++ pre6-raid1d-a/drivers/md/raid1.c	Wed Apr  9 01:24:06 2003
+@ -1188,7 +1188,7 @
+ 				for (i = 0; i < disks ; i++) {
+ 					if (!conf->mirrors[i].operational)
+ 						continue;
+-					if (i==conf->last_used)
++					if (conf->mirrors[i].dev == bh->b_dev)
+ 						/* we read from here, no need to write */
+ 						continue;
+ 					if (i < conf->raid_disks
+
+
+
+I rebuilt a mirror with this patch (cut from a larger one)
+applied to 2.4.20aa1 and it didn't complain:
+
+
+@@ -1160,6 +1174,7 @@
+ 	raid1_conf_t *conf = data;
+ 	mddev_t *mddev = conf->mddev;
+ 	kdev_t dev;
++	static int _warned = 0; /* FIXME debug */
+ 
+ 	if (mddev->sb_dirty)
+ 		md_update_sb(mddev);
+@ -1191,7 +1206,14 @
+ 						continue;
+ 					if (i==conf->last_used)
+ 						/* we read from here, no need to write */
++					{	/* FIXME just checking */
++						if (_warned < 5
++						    && conf->mirrors[i].dev != bh->b_dev) {
++							printk(KERN_WARNING "raid1d: dev != b_dev");
++							_warned++;
++						}
+ 						continue;
++					}
+ 					if (i < conf->raid_disks
+ 					    && !conf->resync_mirrors)
+ 						/* don't need to write this,
+
+
+--
+ Chuck
+ I am not a number!
