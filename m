@@ -1,27 +1,22 @@
-From: Mira Jung <mira@seas.ucla.edu>
-Subject: raid 5 parity check
-Date: Fri, 10 Jan 2003 17:21:53 -0800 (PST)
+From: Stephan van Hienen <raid@a2000.nu>
+Subject: Re: Can't start raid 5 when device names have changed
+Date: Mon, 13 Jan 2003 09:56:34 +0100 (CET)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200301110121.RAA37770@kinross.seas.ucla.edu>
+Message-ID: <Pine.LNX.4.51.0301130955060.11116@ddx.a2000.nu>
+References: <200301101352.h0ADqhr03685@dns1.watkins-home.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
-Cc: mira@seas.ucla.edu
+In-Reply-To: <200301101352.h0ADqhr03685@dns1.watkins-home.com>
+To: bugzilla@watkins-home.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+On Fri, 10 Jan 2003 bugzilla@watkins-home.com wrote:
 
-I want to set up a software raid 5 system on Red Hat 8. 
-Although I believe the parity data is computed correctly initially,
-I wonder how one can make sure the parity data will be always correct. 
+>
+> But I have a question...
+> >From what I have read the "persistent-superblock 1" should allow device names to change.  Is there a bug someone needs to fix?
 
-1) Is there a utility to allow me to check parity routinley?
+don't know
 
-2) How are the parity block redistributed 
-   when you add another disk to raid 5 system?
-
-Thank you in advance for any advice,
-
-Mira
