@@ -1,37 +1,53 @@
-From: Paul Clements <Paul.Clements@SteelEye.com>
-Subject: Re: async writes in raid1
-Date: Tue, 15 Apr 2003 14:14:07 -0400
-Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3E9C4BEF.84E49DE5@SteelEye.com>
-References: <200304141924.h3EJO4x07957@oboe.it.uc3m.es>
+From: Chuck Ebbert <76306.1226@compuserve.com>
+Subject: Re: Benefits from computing physical IDE disk geometry?
+Date: Tue, 15 Apr 2003 14:33:51 -0400
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <200304151436_MC3-1-3487-215F@compuserve.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	 charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-To: ptb@it.uc3m.es
-Cc: linux-raid@vger.kernel.org
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+Content-Disposition: inline
+To: Nick Piggin <piggin@cyberone.com.au>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-"Peter T. Breuer" wrote:
-> 
-> "A month of sundays ago Paul Clements wrote:"
+Nick Piggin wrote:
 
-> > * allowing the bitmap to be rescaled -- i.e., changing the amount of
-> > data that each bit represents
-> 
-> I really don't agree with that :-).  But maybe it can be done!  It's
-> just I personally see no way anyone can count in anything except 1K
-> blocks with the current raid code the way it is.
-> 
-> Originally I wrote the patch with more generality, but realized that the
-> generality could never be made use of - there are too many assumptions
-> in the extant raid code that one block = 1KB.
 
-The translation from 1K blocks to whatever-sized bitmap blocks (or
-"chunks") will be done only when marking or unmarking the bitmap (and
-incrementing/decrementing the block counters). The block counters allow
-us to know when multiple 1K block writes are actually on the same
-"chunk" so that everything is handled correctly.
+> OK right. As far as I can see, the algorithm in the RAID1 code
+> is used to select the best drive to read from? If that is the
+> case then I don't think it could make better decisions given
+> more knowledge.
+
+
+  How about if it just asks the elevator whether or not a given read
+is a good fit with its current workload?  I saw in 2.5 where the balance
+code is looking at the number of pending requests and if it's zero then
+it sends it to that device.  Somehow I think something better than
+that could be done, anyway.
+
+
+> It seems to me that a better way to layer it would be to have
+> the complex (ie deadline/AS/CFQ/etc) scheduler handling all
+> requests into the raid block device, then having a raid
+> scheduler distributing to the disks, and having the disks
+> run no scheduler (fifo).
+
+
+ That only works if RAID1 is working at the physical disk level (which
+it should be AFAIC but people want flexibility to mirror partitions.)
+
+
+> In practice the current scheme probably works OK, though I
+> wouldn't know due to lack of resources here :P
+
+
+ I've been playing with the 2.4 read balance code and have some
+improvements, but real gains need a new approach.
+
+(cc'd to linux-raid)
 
 --
-Paul
+ Chuck
