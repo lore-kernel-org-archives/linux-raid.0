@@ -1,23 +1,26 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+From: "Bill Rugolsky Jr." <brugolsky@telemetry-investments.com>
 Subject: Re: RFC - new raid superblock layout for md driver
-Date: 20 Nov 2002 14:09:41 +0000
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <1037801381.3267.17.camel@irongate.swansea.linux.org.uk>
+Date: Wed, 20 Nov 2002 08:58:38 -0500
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <20021120085838.A9206@ti19>
 References: <15835.2798.613940.614361@notabene.cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <15835.2798.613940.614361@notabene.cse.unsw.edu.au>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <15835.2798.613940.614361@notabene.cse.unsw.edu.au>; from neilb@cse.unsw.edu.au on Wed, Nov 20, 2002 at 03:09:18PM +1100
 To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 2002-11-20 at 04:09, Neil Brown wrote:
->     u32  set_uuid[4]
+On Wed, Nov 20, 2002 at 03:09:18PM +1100, Neil Brown wrote:
+>     u32  feature_map     /* bit map of extra features in superblock */
 
-Wouldnt u8 for the uuid avoid a lot of endian mess
+Perhaps compat/incompat feature flags, like ext[23]?
 
->     u32  ctime
+Also, journal information, such as a journal UUID?
 
-Use some padding so you can go to 64bit times
+Regards,
+
+	Bill Rugolsky
+
