@@ -1,44 +1,38 @@
-From: Pete Zaitcev <zaitcev@redhat.com>
-Subject: Bug in RAID1 in 2.4
-Date: Sat, 20 Dec 2003 03:25:47 -0500
+From: "H. Peter Anvin" <hpa@zytor.com>
+Subject: Re: Adding a mirror to a RAID1 Device
+Date: 21 Dec 2003 00:23:21 -0800
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20031220082547.GB18118@devserv.devel.redhat.com>
+Message-ID: <bs3l9p$8c1$1@cesium.transmeta.com>
+References: <S262074AbTKYGHX/20031125060723Z+10693@vger.kernel.org> <63168.209.233.26.53.1069741184.squirrel@sampson.crome.org> <16323.732.390200.935640@notabene.cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-To: neilb@cse.unsw.edu.au
-Cc: linux-raid@vger.kernel.org, Ingo Molnar <mingo@redhat.com>, Pete Zaitcev <zaitcev@redhat.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-In drivers/md/raid1.c, raid1_sync_request contains the following:
-  
-        block_nr = sector_nr;
-        bsize = 512;
-        while (!(block_nr & 1) && bsize < PAGE_SIZE
-                        && (block_nr+2)*(bsize>>9) < (mddev->sb->size *2)) {
-                block_nr >>= 1;
-                bsize <<= 1;
-        }
+Followup to:  <16323.732.390200.935640@notabene.cse.unsw.edu.au>
+By author:    Neil Brown <neilb@cse.unsw.edu.au>
+In newsgroup: linux.dev.raid
+> 
+> What you should have done is make a raid1 with 2 drives, one of which
+> was missing/failed.  With mdadm, the command would be:
+> 
+>   mdadm -C /dev/md0 --level=raid1 --disks=2 /dev/hda3 missing
+> 
+> then you can hot-add the extra drive when it arrives.
+> 
+> What you have to do now is recreate the raid1 with two drives.  You
+> will have to have the filesystem unmounted and the raid stopped, but
+> you will not lose any data.
+> 
 
-Suppose that a mirror is 4K in size. The code above produces
-reads (and writes) of the following offsets and sizes:
- 0K[2K], 2K[1K], 3K[0.5K], 3.5K[0.5K]
+For the case of RAID-1 in particular, it would be nice to be able to
+hotadd drives "ad infinitum"... after all they're all the same.
 
-The above is correct, but it makes the RAID1 completely unuseable
-on s390, because I/O with sizes less than 4K is not supported.
-I would like the attached patch applied to correct the issue.
-
--- Pete
-
---- linux-2.4.23/drivers/md/raid1.c	2003-06-13 07:51:34.000000000 -0700
-+++ linux-2.4.23-nip/drivers/md/raid1.c	2003-12-19 23:57:57.000000000 -0800
-@@ -1436,7 +1436,7 @@
- 	block_nr = sector_nr;
- 	bsize = 512;
- 	while (!(block_nr & 1) && bsize < PAGE_SIZE
--			&& (block_nr+2)*(bsize>>9) < (mddev->sb->size *2)) {
-+			&& (block_nr+2)*(bsize>>9) <= (mddev->sb->size *2)) {
- 		block_nr >>= 1;
- 		bsize <<= 1;
- 	}
+	-hpa
+-- 
+<hpa@transmeta.com> at work, <hpa@zytor.com> in private!
+If you send me mail in HTML format I will assume it's spam.
+"Unix gives you enough rope to shoot yourself in the foot."
+Architectures needed: ia64 m68k mips64 ppc ppc64 s390 s390x sh v850 x86-64
