@@ -1,32 +1,49 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: Unable to read superblock
-Date: Tue, 23 Jul 2002 13:57:49 +1000 (EST)
+From: <martin@hack.org>
+Subject: BSD disklabel and autodetection
+Date: Tue, 23 Jul 2002 14:04:37 +0000 (GMT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <15676.54333.424977.14113@notabene.cse.unsw.edu.au>
-References: <20020718033404.GR17829@riseup.net>
-	<20020722234502.GP12736@riseup.net>
+Message-ID: <Pine.LNX.4.32.0207231350400.978-100000@dope.pingdynasty.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Micah Anderson on Monday July 22
-To: Micah Anderson <micah@riseup.net>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday July 22, micah@riseup.net wrote:
-> I never received a reply to my problem, is it because there isn't
-> anyone who knows why it is not working? Should I provide some more
-> information?
-> 
 
-Sometimes you have to ask twice...  
+hi all,
 
-> > 
-> > request module [block major 3]: root fs not mounted
-> > cannot open root device hda3
+i'm trying to get autodetection to work on a RAID 5 raiddevice made up
+from three devices. two of them reside on disks with DOS-style partition
+tables, the third is on a disk with a BSD disklabel. all of them have the
+partition type set to 0xfd, but only the first two devices are configured
+at boot time.
+the unit, which happens to be my root fs, still comes up but with only
+two devices working.
+i also have swap space configured as RAID1 over two BSD disklabel disks
+which doesn't come up at all, and another RAID5 (/home) that doesn't
+autodetect, so this is a bit of a problem to me.
+if i run raidstart everything works fine, but that isn't an option for
+root.
+the same thing happens with kernel 2.4.4 and 2.4.18 - the BSD disklabel
+partitions are not considered as autodetectable at boot time.
 
-Looks to me like you compiled a kernel that doesn't know about you IDE
-controller.  Is that possible??
+any ideas? i've tried to find information about this from the FAQ and
+kernel mailinglists but can't figure out how to do it.
 
-NeilBrown
+here's some output i get - md1 should consist of sdb5, sdd2 and sdc2 and
+md0 of sda2 and sdb2:
+
+md: autorun ...
+md: considering sdd2 ...
+md:  adding sdd2 ...
+md:  adding sdc2 ...
+md: created md1
+md: bind<sdc2,1>
+md: bind<sdd2,2>
+md: running: <sdd2><sdc2>
+
+
+many thanks in advance,
+
+/m
+
