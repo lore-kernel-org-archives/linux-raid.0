@@ -1,41 +1,36 @@
-From: "Mikko Saukkoriipi" <mikko.saukkoriipi@helsinki.fi>
-Subject: RE: location of archives & join list
-Date: Mon, 17 Feb 2003 11:29:07 +0200
+From: Stephan van Hienen <raid@a2000.nu>
+Subject: Re: raid5 2TB+ NO GO ?
+Date: Mon, 17 Feb 2003 11:24:23 +0100 (CET)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <004801c2d667$05380c50$11b2d680@ltdk.ad.helsinki.fi>
-References: <84BB6E1F4E011742AFB186D469FDEA9A0157E8@fastterminal.fasttrack.net.au>
+Message-ID: <Pine.LNX.4.53.0302171123480.2464@ddx.a2000.nu>
+References: <Pine.LNX.4.53.0302060059210.6169@ddx.a2000.nu>
+ <Pine.LNX.4.53.0302060123150.6169@ddx.a2000.nu> <Pine.LNX.4.53.0302060211030.6169@ddx.a2000.nu>
+ <15937.50001.367258.485512@wombat.chubb.wattle.id.au>
+ <Pine.LNX.4.53.0302061915390.17629@ddx.a2000.nu>
+ <15945.31516.492846.870265@wombat.chubb.wattle.id.au>
+ <Pine.LNX.4.53.0302121129480.13462@ddx.a2000.nu> <044101c2d2a9$4fcdf980$f6de11cc@black>
+ <Pine.LNX.4.53.0302141120230.19336@ddx.a2000.nu>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <84BB6E1F4E011742AFB186D469FDEA9A0157E8@fastterminal.fasttrack.net.au>
-To: 'Lewis Shobbrook' <lshobbrook@fasttrack.net.au>, linux-raid@vger.kernel.org
+In-Reply-To: <Pine.LNX.4.53.0302141120230.19336@ddx.a2000.nu>
+To: kernel@ddx.a2000.nu
+Cc: Mike Black <mblack@csi-inc.com>, Peter Chubb <peter@chubb.wattle.id.au>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, bernard@biesterbos.nl, ext2-devel@lists.sourceforge.net
 List-Id: linux-raid.ids
 
-http://marc.theaimsgroup.com/?l=linux-raid is one of the archives. Same
-location has several other linux-related and other mailing list
-archived.
-Subscribing is done by sending an e-mail to majordomo@vger.kernel.org
-with the messagebody "subscribe linux-raid"
+On Fri, 14 Feb 2003 kernel@ddx.a2000.nu wrote:
 
-Mikko Saukkoriipi
+> On Wed, 12 Feb 2003, Mike Black wrote:
+>
+> > I did a 12x180G and as I recall was unable to do 13x180G as it overflowed during mke2fs.  This was a year ago though so I don't know
+> > if that's been improved since then.
+> >
+>
+> does anyone know for sure what is the limit for md raid5 ?
+>
+> can i use 13*180GB in raid5 ?
+> or should i go for 12*180GB in raid5 ?
 
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Lewis Shobbrook
-Sent: 14. helmikuuta 2003 1:58
-To: linux-raid@vger.kernel.org
-Subject: location of archives & join list
-
-
-Can anyone tell me if the linux-raid maillist archives exist, where they
-are located,  and where you can join this mail list if it is open?
-
-Lewis Shobbrook
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org More majordomo info
-at  http://vger.kernel.org/majordomo-info.html
+I really want to create this raid this week
+so is there anyone with info what will be the limit ?
 
