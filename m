@@ -1,18 +1,30 @@
-From: "David Wasylciw" <mailinglists-david@wasylciw.com>
+From: "Guy" <bugzilla@watkins-home.com>
 Subject: RE: Problem with RAID5 + ext3 expansion
-Date: Sun, 24 Oct 2004 14:41:15 -0300
+Date: Sun, 24 Oct 2004 14:12:26 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <0MKz5u-1CLmMl2d62-000794@mrelay.perfora.net>
-References: <200410230542.i9N5gRN10583@www.watkins-home.com>
-Reply-To: <mailinglists-david@wasylciw.com>
+Message-ID: <200410241812.i9OICUN20874@www.watkins-home.com>
+References: <0MKz5u-1CLmMl2d62-000794@mrelay.perfora.net>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200410230542.i9N5gRN10583@www.watkins-home.com>
-To: 'Guy' <bugzilla@watkins-home.com>, linux-raid@vger.kernel.org
+In-Reply-To: <0MKz5u-1CLmMl2d62-000794@mrelay.perfora.net>
+To: mailinglists-david@wasylciw.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+I was hoping you would find a bad disk.  I don't know what could be wrong.
+
+Anyone else have any ideas?
+
+Guy
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of David Wasylciw
+Sent: Sunday, October 24, 2004 1:41 PM
+To: 'Guy'; linux-raid@vger.kernel.org
+Subject: RE: Problem with RAID5 + ext3 expansion
 
 I ran that test on each drive but all checked out just fine. What should I
 do now? 
@@ -69,4 +81,9 @@ To unsubscribe from this list: send the line "unsubscribe linux-raid" in the
 body of a message to majordomo@vger.kernel.org More majordomo info at
 http://vger.kernel.org/majordomo-info.html
 
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
