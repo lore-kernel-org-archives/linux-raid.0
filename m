@@ -1,80 +1,29 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: raid5 won't resync
-Date: Tue, 31 Aug 2004 18:37:18 -0400
+From: rich turner <rich@storix.com>
+Subject: more mdadm questions
+Date: Tue, 31 Aug 2004 17:13:26 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200408312237.i7VMbN311819@watkins-home.com>
-References: <Pine.LNX.4.58.0408311714440.1949@web1.mmaero.com>
+Message-ID: <1093997605.3399.34.camel@rich>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.58.0408311714440.1949@web1.mmaero.com>
-To: 'Jon Lewis' <jlewis@lewis.org>
-Cc: linux-raid@vger.kernel.org, aaron@america.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-You have 2 failed drives?
-RAID5 only supports 1 failed drive.
+when mdadm queries information about the raid devices, does it simply
+get the imformation from /proc/mdstat and format it accordingly?
 
-Have you tested the drives to determine if they are good?
-Example:
-dd if=/dev/sdf of=/dev/null bs=64k
+when mdadm displays information about the block devices raid devices are
+built on how does it display the name the devices? does it show the
+devfs name? does it show the mapper name if built on a logical volume?
+are these names consistent?
 
-If you can find enough good drives, use the force option on assemble.
-But don't include any disks that don't have 100% of the data.
-A spare that did a partial re-build is not good to use at this point.
+what about raid devices that were built with raidtools? does it look in
+/proc/mdstat for information?
 
-So, if your array had 10 disks, you need to find 9 of them that are still
-working.
+how does mdadm know what devices to query if they are not defined in
+/etc/mdadm/mdamd.conf with DEVICES?
 
-Guy
-
------Original Message-----
-From: Jon Lewis [mailto:jlewis@lewis.org] 
-Sent: Tuesday, August 31, 2004 5:27 PM
-To: Guy
-Cc: linux-raid@vger.kernel.org; aaron@america.com
-Subject: RE: raid5 won't resync
-
-On Tue, 31 Aug 2004, Guy wrote:
-
-> I think what you did should work, but...
-> I have had similar problems.
-> Try again, but this time don't include any spare disks, or any other
-disks.
-> Only include the disks you know have the data.
-> Or, just list the disks on the command line.
-
-# mdadm --assemble /dev/md2 /dev/sdc1 /dev/sdm1 /dev/sdf1 /dev/sde1
-/dev/sdd1 /dev/sdg1 /dev/sdk1 /dev/sdj1 /dev/sdi1
-mdadm: /dev/md2 assembled from 4 drives and 1 spare - not enough to start
-the array.
-
-I've left sdl1 and sdn1 out of the above as they're the failed drive and
-the partially rebuilt spare.
-
-I see a pattern that could explain why mdadm thinks there are only 4
-drives.  From mdadm -E on each drive:
-
-sdc1:    Update Time : Tue Aug 31 03:47:27 2004
-sdd1:    Update Time : Tue Aug 31 03:47:27 2004
-sde1:    Update Time : Tue Aug 31 03:47:27 2004
-sdf1:    Update Time : Tue Aug 31 03:47:27 2004
-sdg1:    Update Time : Mon Aug 30 22:42:36 2004
-sdi1:    Update Time : Mon Aug 30 22:42:36 2004
-sdj1:    Update Time : Mon Aug 30 22:42:36 2004
-sdk1:    Update Time : Mon Aug 30 22:42:36 2004
-sdl1:    Update Time : Tue Jul 13 02:08:37 2004
-sdm1:    Update Time : Mon Aug 30 22:42:36 2004
-sdn1:    Update Time : Mon Aug 30 22:42:36 2004
-
-Is mdadm --assemble seeing that 4 drives have a more recent Update Time
-than the rest and ignoring the rest?
-
-----------------------------------------------------------------------
- Jon Lewis                   |  I route
- Senior Network Engineer     |  therefore you are
- Atlantic Net                |
-_________ http://www.lewis.org/~jlewis/pgp for PGP public key_________
+if devices are missing from the raid device, is there a way of knowing
+the name of the missing device without the configuration file?
 
