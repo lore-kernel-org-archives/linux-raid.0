@@ -1,38 +1,63 @@
-From: Mike Fedyk <mfedyk@matchmail.com>
-Subject: Re: recovery of hosed raid5 array
-Date: Sun, 26 Oct 2003 11:40:51 -0800
+From: maarten van den Berg <maarten@vbvb.nl>
+Subject: new problem has developed
+Date: Sun, 26 Oct 2003 21:08:50 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20031026194051.GA4511@matchmail.com>
-References: <slrnbog9og.t0c.lunz@orr.homenet> <no.Yo.24973.N.nN.0310111457280@business.com> <slrnboirt8.me8.lunz@orr.homenet> <Pine.LNX.4.58.0310121034090.7866@twinlark.arctic.org>
+Message-ID: <200310262108.50632.maarten@vbvb.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.58.0310121034090.7866@twinlark.arctic.org>
-To: dean gaudet <dean-list-linux-raid@arctic.org>
-Cc: Jason Lunz <lunz@falooley.org>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, Oct 12, 2003 at 10:39:50AM -0700, dean gaudet wrote:
-> 
-> 
-> On Sun, 12 Oct 2003, Jason Lunz wrote:
-> 
-> > What was foolish was me provoking /dev/hde by asking it to report
-> > diagnostics with smartctl at the same time the array was rebuilding
-> > /dev/hdg. Even if something _was_ wrong with hde, it wouldn't have
-> > helped me to find out then during the rebuild. Had the resync completed,
-> > I'd have all my data now and one dead disk.
-> 
-> querying SMART shouldn't cause this to happen -- but i've seen it occur
-> with a promise controller and maxtor disks.  i used to query the SMART
-> data once a night just to have a log.  then i switched it to once every 5
-> minutes so i could graph the drive temperature... and when i went to once
-> every 5 minutes the system became unstable.  the kernel would randomly
-> lose the ability to talk to a disk.  the problem would go away after a
-> reboot.  i assume it was some sort of race condition.
 
-1.  Were they maxtor 160GB 8MB cache drives?
+Hi list,
 
-2.  Is there any package that will take one drive in a raid1/5 array
-offline, and run badblocks on it?
+Last week I asked about restoring a raid5 array with multiple failed disks. 
+Thanks for your help, I've got it back online in degraded mode and was able 
+to burn 10 DVD+RWs as a backup measure.  Now I have a new problem though.
+
+I added a spare new disk to the degraded array after making said backups and 
+it started resyncing. I went to sleep, only to find out next morning that the 
+resync was only at 5.3% and speed was 5K/sec (!).  The system was still 
+responsive, no runaway processes and no sign of any hardware trouble in 
+/var/log/messages.  I killed the machine and retried... with the same result: 
+at exactly 5.3% the speed starts dropping until it is near zero.
+
+For various reasons I decided to decommission the old hardware (AMD K6) and I 
+built a newer (and 100% known-good) board in it earlier today. That makes a 
+BIG difference in initial speed, I now get 14000K/sec instead of the dead 
+slow AMD K6 did. However, at 5.2% the speed drops significantly. We're now 
+back at 5.3% and speed has dropped from 13000K to 170K and continues to drop.
+
+I investigated already on the old machine with several tools, of course mdadm, 
+but also iostat and keeping an eye on /var/log/messages.  All seems proper.
+Also, immediately after "rescueing" the array from the miltiple disk failure I 
+ran a long reiserfsck --check on the volume which found no problems at all.
+
+I'm now at a loss...  Does anyone know what to monitor or check first ??
+
+I'm unsure if this could be due to a disk hardware fault but then it would 
+surely show up in syslog, right ? Could disk corruption be the culprit ? My 
+guess would be "no", not only the reiserfs on top of the md0 tests fine, but 
+these are on different layers anyhow, correct ?
+
+One last remark; once this state occurs (near the 5.3% mark) any command that 
+tries to query the array hangs indefinitely. (umount, mount, mdadm, even df).
+Those commands are unkillable, what also entails that there is no way to 
+reboot the machine except by resetswitch (shutdown hangs forever).
+Apart from those commands the machine is still totally responsive (on another 
+terminal).  Needless to say this bugs me enormously...  :-(
+
+Some info:
+The machine has a boot disk which provides "/" and a full linux system. Apart 
+from that it has seven (7) 80GB disks connected to 2 promise adapters(100TX2)
+Those disks should be a raid5 array with one spare (but they are obviously 
+kinda inbetween states right now).  The kernel was 2.4.10 and is now 2.4.18.
+
+If anyone can help, that would be greatly appreciated...
+Maarten
+
+-- 
+Yes of course I'm sure it's the red cable. I guarante[^%!/+)F#0c|'NO CARRIER
