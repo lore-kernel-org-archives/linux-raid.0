@@ -1,13 +1,41 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: 3ware 7500-12, bad write speed
-Date: Wed, 25 Sep 2002 22:43:11 +0200 (CEST)
+From: Adam Radford <aradford@3WARE.com>
+Subject: RE: 3ware 7500-12, bad write speed
+Date: Wed, 25 Sep 2002 14:12:17 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0209252237100.23239-100000@uplift.swm.pp.se>
+Message-ID: <A1964EDB64C8094DA12D2271C04B812672C6FC@tabby>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+To: 'Mikael Abrahamsson' <swmike@swm.pp.se>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+This is because of the vmlayer and your bdflush settings and the fact that
+you are
+running a journalling filesystem.  Our raid 5 caching strategy gives the
+best results when
+given sequential writes.  Doing journaling fs and caching writes in the
+vmlayer causes the firmware caching strategy to perform 'sub optimal' since
+the lba's accessed aren't actually
+sequential.  Thus your 15 MB/s.  We do do elevator seek in the FW, but this
+can only help
+you so much.
+
+What you are benchmarking is VM layer performance+filesystem
+performance+3ware device
+performance.
+
+Try some other settings or use a benchmark that issues raw asynchronous IO
+(not filesystem benchmark) (Iometer for Linux?)
+
+-Adam
+
+-----Original Message-----
+From: Mikael Abrahamsson [mailto:swmike@swm.pp.se]
+Sent: Wednesday, September 25, 2002 1:43 PM
+To: linux-raid@vger.kernel.org
+Subject: 3ware 7500-12, bad write speed
+
 
 
 I have a 6 drive (120 gig drives) RAID5 using a 3ware 7500-12. I have the
@@ -35,3 +63,7 @@ the single drive as well?
 -- 
 Mikael Abrahamsson    email: swmike@swm.pp.se
 
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
