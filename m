@@ -1,75 +1,49 @@
-From: Louis-David Mitterrand <vindex@apartia.org>
-Subject: repeatable crash during raid5 rebuild on 2.4.19-smp
-Date: Sun, 6 Oct 2002 12:16:37 +0200
+From: Jani Averbach <jaa@cc.jyu.fi>
+Subject: BUG: 2.5.41 left raid array to unclean mode (Kernel bug at raid1.c:667)
+Date: Tue, 8 Oct 2002 02:49:35 +0300 (EEST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20021006101636.GA29381@apartia.org>
+Message-ID: <Pine.GSO.4.33.0210080229560.5342-100000@tukki.cc.jyu.fi>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-To: linux-raid@vger.kernel.org
+To: mingo@redhat.com, neilb@cse.unsw.edu.au
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-Yesterday when I entered the server room at 1600 I thought I'd be out b=
-y
-1800, with the intention of adding a Fujitsu MAM3367MP (15krpm 36G) to
-a raid1 array and converting it to raid5.
+Hello,
 
-I did the following:
+(Resending this, orig was 2002-03-10)
 
-- halt machine (dell Poweredge 1400 dual 1Ghz), add third drive
-- reboot with root=3D/dev/sda1 instead of root=3D/dev/md0 to have 2 fre=
-e
-  drives out of 3 to build a degraded raid5 array,
-- create /dev/md0 (small raid1 boot partition), /dev/md1 (raid5 root),
-  /dev/md2 (raid5 swap) with /dev/sdb (former /dev/sda mirror) and
-  /dev/sdc (new identical drive),
-- switch to runlevel 1, copy / (/dev/sda1) to /mnt (/dev/md1)
-- adjust /mnt/etc/fstab to mount /dev/md1 as root and /dev/md2 as swap
-- reboot with root=3D/dev/md1
-- all is well, cat /proc/mdstat shows /dev/md[012] are working fine in
-  degraded mode,=20
-- /dev/sda is partitioned identically to /dev/sd[bc]
-- final steps:=20
-	- "mdadm /dev/md0 --add /dev/sda1" goes OK
-	- "mdadm /dev/md1 --add /dev/sda2" starts OK, says 15 minutes to go,
-	  when at 25% rebuild suddenly it stops with "md_do_sync() caught
-	  signal, exiting"
+[1.] One line summary of the problem:
 
-Now the machine is hung, I can switch virtual consoles but can't login.
-No disk activity. I hit the reset button and on reboot /dev/md1 won't
-start. I tried the multiple disk failure recovery from the howto withou=
-t
-success: no filesystem identified on the partition.
+Shutdown left (always) software raid array in unclean mode, next shutdown
+(during reconstructing) will cause kernel bug.
 
-To make sure I retried all these steps three times with always the same
-result: the array resync stops at 25%, the machine hangs and the array
-won't come back on-line.
+[2.] Full description of the problem/report:
 
-Is there a known issue with 2.4.19-smp and raid5? Did I hit a bug or is
-the problem somewhere in my hardware.=20
+With 2.5.6 (and 2.5.6-pre1 at least) shutdown procedure left raid
+array in unclean state. Next time when machine is going down (during
+reconstruction) there will be kernel bug in the raid1.c:656. This is
+completely reproductable.
 
-The exact same procedure on a uniprocessor 2.4.19 with 3 IDE drives
-worked fine.
+If you run shutdown after reconstruction has been finished, there is no
+problem. However raid array is again left in unclean mode.
+...
 
-I can provide more details if needed. I'd really like to understand wha=
-t
-happened there.
+This is still the case with kernel 2.5.41.
 
-In the end I exited the server room around 0130 sunday morning after
-recovering the machine from backup.
+Please see details from here:
 
-Cheers,
+http://marc.theaimsgroup.com/?l=linux-raid&m=101576857227286&w=2
 
---=20
-    PHEDRE: Malheureuse ! Voil=E0 comme tu m'as perdue.
-            Au jour que je fuyais c'est toi qui m'as rendue.
-                                          (Ph=E8dre, J-B Racine, acte 4=
-, sc=E8ne 6)
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+It would be really nice if this one get nailed down. I would like to test
+2.5.x again, but at the moment it is a bit no go.
+
+Thanks for the hacking kernel!
+
+BR, Jani
+
+--
+Jani Averbach
+
