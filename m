@@ -1,16 +1,52 @@
-From: Mike Tran <mhtran@us.ibm.com>
+From: "Guy" <bugzilla@watkins-home.com>
 Subject: RE: raid and sleeping bad sectors
-Date: 30 Jun 2004 16:40:55 -0500
+Date: Wed, 30 Jun 2004 18:44:16 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1088631655.5376.311.camel@star2.austin.ibm.com>
-References: <200406300219.i5U2JW327038@watkins-home.com>
+Message-ID: <200406302244.i5UMiG332041@watkins-home.com>
+References: <1088631655.5376.311.camel@star2.austin.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200406300219.i5U2JW327038@watkins-home.com>
-To: 'linux-raid' <linux-raid@vger.kernel.org>
+In-Reply-To: <1088631655.5376.311.camel@star2.austin.ibm.com>
+To: 'Mike Tran' <mhtran@us.ibm.com>, 'linux-raid' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
+
+I have been wanting plan "a" for a long time now.  It's not a new idea, but
+it is a good one.  I don't know if it was my idea first or not.  Probably
+not.  :(
+
+Your plan "b" is new to me.  I still don't like it. :(
+Maybe because there are other things I want more.
+I want plan "a".  I want the system to correct the bad block by re-writing
+it!  I want the system to count the number of times blocks have been
+re-located by the drive.  I want the system to send an alert when a limit
+has been reached.  This limit should be before the disk runs out of spare
+blocks.  I want the system to periodically verify all parity data and
+mirrors.  I want the system to periodically do a surface scan (would be a
+side effect of verify parity).
+
+I want to convert my RAID5 to RAID6.  Humm, 2.4 kernel  Doh!
+
+By counting bad blocks, we should not reach the limit required by your plan
+"b".  But other problems could be saved by plan "b".
+
+Not sure I said this... RAID6 with option "a" and bad block re-writes would
+be able to survive a failed disk and 1 or more bad blocks on the other
+disks.  As long as each bad block is not on the same offset of a chunk.
+This would make for a rock solid stable system.  Add redundant power
+supplies and UPSs.  Nothing is 100%, but it would be much closer to 100%
+than what we have now!
+
+Guy
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Mike Tran
+Sent: Wednesday, June 30, 2004 5:41 PM
+To: 'linux-raid'
+Subject: RE: raid and sleeping bad sectors
 
 Hello Guy,
 
@@ -56,28 +92,37 @@ Mike T.
 On Tue, 2004-06-29 at 21:19, Guy wrote:
 > I don't think plan b needs to be handled as stated.  If a cable is loose,
 > the amount of data that needs to be written somewhere else could be vast.
-> At least as big as 1 disk!  Maybe just re-try the write.  If the failure is
+> At least as big as 1 disk!  Maybe just re-try the write.  If the failure
+is
 > not a bad block, then let it die!  Unless you want to allow the user to
 > define the amount of spare space.  Create an array, but leave x% of the
 > space unused for temp data relocation.  So, what do you do when the x% is
 > full?  To me it seems too risky to attempt to track the re-located data.
-> After all you must be able to re-boot without loosing this data.  Otherwise,
+> After all you must be able to re-boot without loosing this data.
+Otherwise,
 > don't even attempt it.  The "normal" systems administrator (operator) is
 > going to try a re-boot as the first step in correcting a problem!!!  I am
-> not referring to the systems administrator that installed the system!  I am
+> not referring to the systems administrator that installed the system!  I
+am
 > referring to the people that "operate" the system.  In some cases they may
-> be the same person, luck you.  In my environment we tend to deliver systems
+> be the same person, luck you.  In my environment we tend to deliver
+systems
 > to customers, they "operate" the systems.
 > 
-> If the hard drive can't re-locate the bad block, then, accept that you have
+> If the hard drive can't re-locate the bad block, then, accept that you
+have
 > had a failure.  But, maybe still attempt reads, the drive may come back to
-> life some day.  But then you must track which blocks are good and which are
-> not.  The not good blocks (stale) must be re-built, the good blocks (synced)
-> can still be read.  This info also must be retained after a re-boot.  Again,
+> life some day.  But then you must track which blocks are good and which
+are
+> not.  The not good blocks (stale) must be re-built, the good blocks
+(synced)
+> can still be read.  This info also must be retained after a re-boot.
+Again,
 > too risky to me!
 > 
 > That brings me back to:
-> If the hard drive can't re-locate the bad block, then, accept that you have
+> If the hard drive can't re-locate the bad block, then, accept that you
+have
 > had a failure.
 > 
 > Guy
@@ -151,4 +196,9 @@ On Tue, 2004-06-29 at 21:19, Guy wrote:
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
