@@ -1,100 +1,58 @@
-From: John McMonagle <johnm@advocap.org>
+From: ptb@lab.it.uc3m.es (Peter T. Breuer)
 Subject: Re: Possible failures in raid5?
-Date: Tue, 28 Dec 2004 17:23:45 -0600
-Message-ID: <41D1EB01.1040204@advocap.org>
-References: <41CF6209.2050209@advocap.org> <qnf7a2-fln.ln1@news.it.uc3m.es>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Date: Wed, 29 Dec 2004 00:40:15 +0100
+Message-ID: <vf79a2-pci.ln1@news.it.uc3m.es>
+References: <41CF6209.2050209@advocap.org> <qnf7a2-fln.ln1@news.it.uc3m.es> <41D1EB01.1040204@advocap.org>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <qnf7a2-fln.ln1@news.it.uc3m.es>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Peter T. Breuer" <ptb@lab.it.uc3m.es>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Thanks Peter
+John McMonagle <johnm@advocap.org> wrote:
+> If one is using a journaling file system like ext3. Will that fix the 
+> problem area?
 
-If one is using a journaling file system like ext3. Will that fix the 
-problem area?
-My concern was that writes are being done in larger chunks than the 
-written data but possibly that is not a problem.
+No. Journalling systems perform no magic - they merely promise that
+the file systems they run are consistent, not that they contain the
+right data!  They don't and can't compensate for corruptions in the
+medium below them.
 
-Another issue is it's good to know about any disk failures as soon as 
-possible.
+And the raid system lies below them.
 
-I see someone has suggested running something like
-dd if=/dev/sda of=/dev/null bs=64k
+But be careful not to put the journal on the raid system too, if you do
+use a journalling file system! That would be extremely nasty.
 
-I have used that before and it does work. What I would prefer is to run 
-it periodically and email on failures.
-I haven't seen any scripts for this.
-Not that hard to do but I'm wondering how to detect errors in the script.
-When I ran by hand in the past I got scsi errors even if the read 
-ultimately worked.
-Kind of hard to test without a bad drive on hand :)
-If one redirects errors to a file will the scsi or ide errors go to the 
-file?
+> My concern was that writes are being done in larger chunks than the 
+> written data but possibly that is not a problem.
 
-John
+?? I don't understand what you are saying here.  Writes write what is
+written. No more and no less.
 
-Peter T. Breuer wrote:
+Are you referring to the fact that block devices write in units of 1KB
+(or other)?  That simply means that in order to write 1B the kernel has
+to read 1KB, modify it, then write 1KB back to the device.
 
->John McMonagle <johnm@advocap.org> wrote:
->  
->
->>I am  concerned what will happen if the computer dies while writing a strip.
->>    
->>
->
->Well, the strip will be partially written.
->
->  
->
->>Is it possible that the stripe will be corrupted?
->>    
->>
->
->No - it will be partially written.  The parity data may or may not be
->consistent with the real data at that point, and if you lose a disk
->before the next resync (at next reboot) you may get some different data
->reconstructed using parity than if you had used the data itself. OTOH
->if you reboot with all disks intact the parity will be reconstructed
->properly and the inconsistency will be removed. But any missed writes
->will remain missing.
->
->  
->
->>If so will the  the rest of the raid array be OK?
->>    
->>
->
->Apart from that strip?  I'm not sure exactly what you mean by "strip"
->(probably some raid jargon?  Don't they use "chunks" and "stripes"?)!
->But clearly the data inconsistency will be confined to it.
->
->  
->
->>if so is there anything one can do  about it?
->>    
->>
->
->? Nothing has happened - you have simply not written all the
->data you wanted to write. This happens all the time when writing to
->disks and crashing your computer! But since raid writes at least twice,
->once for data and once for parity, you have the extra pssibility of 
->having missed some of the parity data (or having written parity but not
->data). That produces an inconsistency in the redundant data. You can
->fix it by rebooting with all disks intact. Hey - you even fix the
->inconsistency by rebooting with one missing; you just have less chance
->of reconstructing the intended data that way.
->
->Peter
->
->-
->To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->  
->
+> Another issue is it's good to know about any disk failures as soon as 
+> possible.
+
+Oh, you will!
+
+> I see someone has suggested running something like
+> dd if=/dev/sda of=/dev/null bs=64k
+
+Well that's a read test. You might just as well run e2fsck -c, which
+does the same. But it doesn't fix anything, whereas you would fix it if
+you simply wrote the block you couldn't read. The drive would fill it
+in with a spare.
+
+But why? You can interrogate the disk directly about its condition!
+That's what SMART means.
+
+> If one redirects errors to a file will the scsi or ide errors go to the 
+> file?
+
+Eh? What do you mean by "an error"? Anyway, whatever you redirect will
+go wherever you redirect it to! That's what redirection means.
+
+Peter
 
