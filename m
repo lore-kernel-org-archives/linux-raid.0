@@ -1,69 +1,83 @@
-From: Jeff Woods <kazrak+kernel@cesmail.net>
+From: Hermann Himmelbauer <dusty@strike.wu-wien.ac.at>
 Subject: Re: RAID1 VS RAID5
-Date: Mon, 27 Oct 2003 02:16:40 -0800
+Date: Mon, 27 Oct 2003 12:01:10 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <5.2.1.1.0.20031027015844.03a85e68@no.incoming.mail>
-References: <200310261716.17030.maarten@vbvb.nl>
- <1067179519.1222.107.camel@cala>
- <200310261716.17030.maarten@vbvb.nl> <200310270927.32751.dusty@strike.wu-wien.ac.at>
+Message-ID: <200310271201.10418.dusty@strike.wu-wien.ac.at>
+References: <1067179519.1222.107.camel@cala> <200310270933.37564.dusty@strike.wu-wien.ac.at> <Pine.LNX.4.56.0310270916270.5277@unicorn.drogon.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200310270927.32751.dusty@strike.wu-wien.ac.at>
-References: <200310261716.17030.maarten@vbvb.nl>
- <1067179519.1222.107.camel@cala>
- <200310261716.17030.maarten@vbvb.nl>
-To: Hermann Himmelbauer <dusty@strike.wu-wien.ac.at>
-Cc: maarten van den Berg <maarten@vbvb.nl>, Mario Giammarco <mgiammarco@virgilio.it>, linux-raid@vger.kernel.org
+In-Reply-To: <Pine.LNX.4.56.0310270916270.5277@unicorn.drogon.net>
+Content-Disposition: inline
+To: Gordon Henderson <gordon@drogon.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-At 10/27/2003 09:27 AM +0100, Hermann Himmelbauer wrote:
->It seems you're missing something: Interleaving means here, reading one 
->part of the data from one disk and another part from the other disk, not 
->reading the same data from both.
+On Monday 27 October 2003 10:19, Gordon Henderson wrote:
+> On Mon, 27 Oct 2003, Hermann Himmelbauer wrote:
+> > My experience is that software RAID5 is quite slow.
 >
->When reading a file from the RAID1, you could e.g. read the first block 
->from the first disk, the second from the second disk, the third from the 
->first disk and so on.
+> My experiences are the opposite to yours I'm afraid - I've not found it
+> any slower than a single drive and in some cases a lot faster!
 >
->This would *theoretically* double the read speed - like with RAID0.
+> A lot depends on exactly what you are doing with it though, but I'm
+> willing to sacrifice some speed for data integrity.
 >
->Practically this speed doubling would not occur as you have to add the 
->seek times when reading files, but I assume with TCQ and things like that 
->there could be some tricks to optimize the read behavior.
->
->Anyway - it seems no RAID1 implementation - be it hardware or software 
->RAID1 - seems to make use of this read performance increase.
+> Most of my systems are network servers with 100Mb Network cards fitted -
+> as long as my disk systems are faster than 12.5MB/sec I'm happy. In
+> practice I can stream 50MB/sec+ out of some simple RAID5 IDE systems I
+> have.
 
-Disc I/O performance is significantly more complicated than you seem to 
-perceive it.  Disc drive performance (in stand-alone, JBOD and RAID 
-configurations) depends on many factors such as spindle speed, number of 
-sectors per track and cylinder (which varies substantially between inner 
-and outer cylinders) and other things.  However, serial reads are generally 
-limited by the rotation speed (measured in sectors passing the head(s) per 
-second) and seek times of the portion of the drive being accessed.
+Well - I have an old Dual P-II-266 System with an onboard SCSI-Controller with 
+3 Ultra SCSI-disks connected, building a RAID5. I did a simple Test with 
+"hdparm -tT" to provide you with numbers:
 
-As performance benchmarks that test inner versus outer cylinders generally 
-show, the drives are much faster at both random seeks and sustained 
-transfer rates on the "larger" outer cylinders.  That's because more data 
-is flying under the heads on each rotation and head seeks are needed less 
-often (especially for sequential reads and/or writes!).
+/dev/sdb:
+ Timing buffer-cache reads:   128 MB in  1.46 seconds = 87.67 MB/sec
+ Timing buffered disk reads:  64 MB in  5.07 seconds = 12.62 MB/sec
 
-Alternating I/Os between two spindles on a RAID1 pair won't (in general) 
-speed up the transfer rate.  Worse, it will needlessly monopolize both 
-spindles when only one provides the same performance.  Leaving the other 
-spindle available to seek to another part of the drive and provide double 
-the bandwidth has major advantages in a multiprocessing environment 
-(including typical Linux, Unix and Windows environments... even single user 
-"desktop" workstations).  It sounds to me like the current algorithm used 
-likely provides near-optimal performance for RAID1 configuration.
+/dev/sdc:
+ Timing buffer-cache reads:   128 MB in  1.47 seconds = 87.07 MB/sec
+ Timing buffered disk reads:  64 MB in  4.78 seconds = 13.39 MB/sec
 
-OTOH, you have access to the source code if you really want to try it 
-another way.  But I strongly urge you to actually benchmark any changes you 
-make to prove that you've made an improvement, especially before submitting 
-it as a patch to the current code.
+/dev/sdd:
+ Timing buffer-cache reads:   128 MB in  1.49 seconds = 85.91 MB/sec
+ Timing buffered disk reads:  64 MB in  5.05 seconds = 12.67 MB/sec
 
---
-Jeff Woods <kazrak+kernel@cesmail.net> 
+So you see, the seperate disks achieve ~ 13MB/s. My RAID5 raidtab looks like 
+this:
+raiddev /dev/md0
+        raid-level              5
+        nr-raid-disks           3
+        nr-spare-disks          0
+        chunk-size              4
+        persistent-superblock   1
+        parity-algorithm        left-symmetric
+        device                  /dev/sdb2
+        raid-disk               0
+        device                  /dev/sdc2
+        raid-disk               1
+        device                  /dev/sdd2
+        raid-disk               2
 
+And "hdparm -tT" looks like this:
+
+/dev/md0:
+ Timing buffer-cache reads:   128 MB in  1.45 seconds = 88.28 MB/sec
+ Timing buffered disk reads:  64 MB in 13.85 seconds =  4.62 MB/sec
+
+So this is ~ 1/3rd of the read performance of a single disk. And this is what 
+a appr. measure when copying files etc.
+
+My kernel version is 2.4.20 and the CPU-Load during the hdparm test is only at 
+~ 30%.
+
+		Best Regards,
+		Hermann
+
+-- 
+x1@aon.at
+GPG key ID: 299893C7 (on keyservers)
+FP: 0124 2584 8809 EF2A DBF9  4902 64B4 D16B 2998 93C7
 
