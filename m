@@ -1,50 +1,48 @@
-From: <robin-lists@robinbowes.com>
-Subject: Multi-channel ATA controller cards
-Date: Sun, 9 May 2004 00:06:10 +0100
+From: iletisim@turizmkariyerturk.com
+Subject: Ucretsiz Eleman  =?ISO-8859-1?Q?=20ilan=FD?=  =?ISO-8859-1?Q?=20Yay=FDnlama?=
+Date: Sun, 9 May 2004 03:56:54 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <S263851AbUEHXGM/20040508230612Z+21001@vger.kernel.org>
+Message-ID: <S264309AbUEIH4y/20040509075654Z+3454@vger.kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+www.TurizmKariyerturk.com
 
-I'm putting together a (relatively) large capacity Raid 5 storage solution
-for home use to store rips of all my CDs, probably in flac format.
+Açýldý...!
 
-As I'm paying for it cost is a major factor, more so than performance but
-not over and above data integrity, i.e. my priorities are 1. Data Integrity,
-2. Cost, 3. Performance.
+15 Mayýs' a kadar üye olan Turizm Kurumsal Üyelere
 
-I'll be building this into a CoolerMaster case which can take up to six 3.5"
-drives. I've been looking into various controller options, both PATA and
-SATA, and have decided that PATA will give me best price/capacity.
+SINIRSIZ ÜCRETSÝZ ilan yayýnlama hakký ...
 
-So far, the most likely candidate (on a cost basis) is the Acard AEC6885S
-(http://www.acard.com/eng/product/adapter/pc/ide/aec-6885.html) which is a
-4-channel ATA-133 "RAID" Controller. I'm not too bothered about the RAID
-capabilities as I would configure it as JBOD, although I might use the
-controller RAID1 functionality to create mirrors to host /boot and swap, but
-that's just implementation detail.
+DÝGER SEKTÖRLERDEKÝ kurumsal uyelerimizde www.kariyerturk.com ‘a üye olduklarýnda bir yýlda 3 ücretsiz eleman ilaný yayýnlama….
 
-Has anyone got any experience with this controller? Is it well supported
-under Linux?
+Turizm Sektöründe Ýþ ve Eleman Bulma sitesi www.TurizmKariyerTurk.com
+Siz Turizm Sektöründe Eleman arayanlar ve Kariyerini Turizm
+Sektöründe Yapmak isteyenler için Yayýn Hayatýna Baþladý
+HR TÜRK GROUP iþtiraki olan www.TurizmKariyerTurk.com 'a üye olacak Turizm Sektöründeki Kurumsal Üyelerimize Bir yýl içinde SINIRISIZ ÝLAN YAYINLAMA ve Yine Genel Sektor ilanlarý Yayýnlayan www.KariyerTurk.com ' da da 3 adet Eleman ilanlarý Ücretsiz Yayýnlanacaktýr.
 
-I was planning to buy two of these and to hang three drives off each one.
-Does anyone know if two of these controllers will co-exist in the same
-machine?
+CV inceleme, istediginiz zaman kullanabilmek uzere cv arsivleme,
 
-One other possibility is to use three two-channel controllers (two disks on
-each one). Does anyone know if this is feasible?
+On-Line toplu veya Tek Tek cevaplama, Basvurulara
 
-Finally, does anyone know of any other 4-channel (or 6-channel) ATA
-controllers that would be worth my checking out?
+On-line mesaj gonderme, Gruplama, ozel listeler hazýrlama
 
-Thanks,
+kýsaca Tüm sistemi kullanabilme imkaný
 
-R.
+Tek yapmanýz gereken
+
+www.TurizmKariyerTurk.com
+
+' a
+
+girerek Kurumsal üye olmanýz.
+
+Kurumsal Üyelik Ücretsizdir
+------------------------------------------------------------------
+www.TurizmKariyerTurk.com
+
+www.hrturkgroup.com Ýþtirakidir
 
