@@ -1,51 +1,45 @@
-From: Jure Pecar <pegasus@telemach.net>
-Subject: Re: What is the logic behind 'Device or resource busy' ?
-Date: Tue, 27 May 2003 04:56:39 +0200
+From: NeilBrown <neilb@cse.unsw.edu.au>
+Subject: [PATCH] md - 7 of 14 - Always allow a half-built md array to be stopped.
+Date: Tue, 27 May 2003 13:01:13 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20030527045639.1e74abcf.pegasus@telemach.net>
-References: <20030527015918.047bf247.pegasus@telemach.net>
-	<Pine.LNX.4.44.0305261738440.19678-100000@q7.q7.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="pgp-sha1"; boundary="=.q2QC9TbTEfymPu"
+Message-ID: <E19KUi9-0003H5-00@notabene.cse.unsw.edu.au>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44.0305261738440.19678-100000@q7.q7.com>
-To: Joe Pruett <joey@q7.com>
+To: Linus Torvalds <torvalds@transmeta.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---=.q2QC9TbTEfymPu
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+### Comments for ChangeSet
 
-On Mon, 26 May 2003 17:39:45 -0700 (PDT)
-Joe Pruett <joey@q7.com> wrote:
+When starting an array fails, we have to tear it down, but
+in some circumstances (particularly autostart_array) the
+reference count will be 3, so do_md_stop will fail.
 
-> i don't know the mdadm equivalent, but i do raidhotremove followed by 
-> raidhotadd to get around that issue.  if you look at /proc/mdstat after 
-> the failure, you'll probably see the drive is still part of the array, but
-> 
-> just marked as down.  raidhotremove tells the system it is gone and then 
-> you can add it back.
+With this patch we only worry about the number of users
+is the array has been fully started.
 
+ ----------- Diffstat output ------------
+ ./drivers/md/md.c |   11 +++++------
+ 1 files changed, 5 insertions(+), 6 deletions(-)
 
-hm yes... a failed drive is still present and has to be removed. makes sense
-now, thanks.
-
-
--- 
-
-Jure Pecar
-
---=.q2QC9TbTEfymPu
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.1 (GNU/Linux)
-
-iD8DBQE+0tPpOHUMrcOSg+8RAltoAKC6PChq3hoj0kyHNrBMx4L+tWauHwCgp4xs
-UB4+I6GmlXMhEwbTILyj0Es=
-=KvYb
------END PGP SIGNATURE-----
-
---=.q2QC9TbTEfymPu--
+diff ./drivers/md/md.c~current~ ./drivers/md/md.c
+--- ./drivers/md/md.c~current~	2003-05-27 11:58:23.000000000 +1000
++++ ./drivers/md/md.c	2003-05-27 11:58:24.000000000 +1000
+@@ -1669,13 +1669,12 @@ static int do_md_stop(mddev_t * mddev, i
+ 	int err = 0;
+ 	struct gendisk *disk = disks[mdidx(mddev)];
+ 
+-	if (atomic_read(&mddev->active)>2) {
+-		printk("md: md%d still in use.\n",mdidx(mddev));
+-		err = -EBUSY;
+-		goto out;
+-	}
+-
+ 	if (mddev->pers) {
++		if (atomic_read(&mddev->active)>2) {
++			printk("md: md%d still in use.\n",mdidx(mddev));
++			return -EBUSY;
++		}
++
+ 		if (mddev->sync_thread) {
+ 			set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+ 			md_unregister_thread(mddev->sync_thread);
