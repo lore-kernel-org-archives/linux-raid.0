@@ -1,43 +1,57 @@
-From: "Lewis Shobbrook" <lshobbrook@fasttrack.net.au>
-Subject: resync issue with raid 1 under 2.6.8
-Date: Mon, 13 Sep 2004 14:06:53 +1000
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: [BUG / PATCH] raid1: set BIO_UPTODATE after read error
+Date: Mon, 13 Sep 2004 15:32:21 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <0C8098CA7F09CE419F0C2B68EB83587648B262@exchange.fasttrack.net.au>
+Message-ID: <16709.12517.514905.627708@cse.unsw.edu.au>
+References: <41420D07.4060001@steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-To: linux-raid@vger.kernel.org
+In-Reply-To: message from Paul Clements on Friday September 10
+To: Paul Clements <paul.clements@steeleye.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Friday September 10, paul.clements@steeleye.com wrote:
+> Neil,
+> 
+> unless you've already done so, I believe there is a little fix needed in 
+> the raid1 read reschedule code. As the code currently works, a read that 
+> is retried will continue to fail and cause raid1 to go into an infinite 
+> retry loop:
 
-Hi All,
+Thanks.  I must have noticed this when writing the raid10 module
+because it gets it right.  Obviously I didn't "back-port" it to raid1.
 
-I've noted some posts regarding resyncing issues with 2.6.6 so I thought
-I'd forward this one on just in case.  Unfortunately I'm not able to
-gather much hard info, so apologies if I'm too vague.
+A few other fields need to be reset for safety.
 
+NeilBrown
 
-The problems started with a sector error on device (1) of a ATA raid 1
-array (extfs3), apparently looping and stating something about md and
-illegal sector on /dev/hdc2.  Unfortunately I wasn't there to witness
-first hand and the error was not written down. (Just reboot the machine
-and see if that fixes it!!!) 
-Anyway an md resync ensured following the reboot, when 100% was reached
-the system immediately switched to read-only, no syslog entries...  The
-console was spewing out errors "md: error in start_transaction: Read
-Only file system".  Had to forcibly reboot after 10 minutes waiting for
-reboot to occur.  After an fsck and another reboot all is UU OK.  I've
-been running raid on the machine for a couple of years, I've had two
-drive failures in that time (raid worked perfectly without interuption)
-and not had an issue til now following a relatively recent kernel
-upgrade from 2.4.20 5 weeks ago to 2.6.7 and 2 weeks ago 2.6.8. 
+======================================================
+Make sure bio is re-initialised properly before a raid1 re-read.
 
-Using ...  md driver 0.90.0 MAX_MD_DEVS=256, MD_SB_DISKS=27 on Debian
-unstable
+Various bio fields might have been changed by a failed read request.
+We must reset them.
 
-Cheers,
+Signed-off-by: Neil Brown <neilb@cse.unsw.edu.au>
 
-Lewis 
+### Diffstat output
+ ./drivers/md/raid1.c |    5 +++++
+ 1 files changed, 5 insertions(+)
+
+diff ./drivers/md/raid1.c~current~ ./drivers/md/raid1.c
+--- ./drivers/md/raid1.c~current~	2004-09-13 15:27:05.000000000 +1000
++++ ./drivers/md/raid1.c	2004-09-13 15:27:40.000000000 +1000
+@@ -952,6 +952,11 @@ static void raid1d(mddev_t *mddev)
+ 					       (unsigned long long)r1_bio->sector);
+ 				bio->bi_bdev = rdev->bdev;
+ 				bio->bi_sector = r1_bio->sector + rdev->data_offset;
++				bio->bi_next = NULL;
++				bio->bi_flags &= (1<<BIO_CLONED);
++				bio->bi_flags |= 1 << BIO_UPTODATE;
++				bio->bi_idx = 0;
++				bio->bi_size = r1_bio->sectors << 9;
+ 				bio->bi_rw = READ;
+ 				unplug = 1;
+ 				generic_make_request(bio);
