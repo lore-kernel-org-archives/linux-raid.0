@@ -1,34 +1,32 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: 2.5.39 raid0 on Alpha: bug: can't convert block across chunks or bigger than 32k
-Date: Sun, 29 Sep 2002 18:32:16 +0200
+From: Adam Luter <luterac@bellsouth.net>
+Subject: Re: In a pickle got out of most of it.
+Date: Sun, 29 Sep 2002 12:13:47 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20020929163216.GA22484@suse.de>
-References: <87elbdwpe0.fsf@student.uni-tuebingen.de>
+Message-ID: <20020929171347.GA490@smeagol>
+References: <20020928110111.BJBJ4190.imf26bis.bellsouth.net@localhost>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <87elbdwpe0.fsf@student.uni-tuebingen.de>
-To: Falk Hueffner <falk.hueffner@student.uni-tuebingen.de>
-Cc: linux-raid@vger.kernel.org, Neil Brown <neilb@cse.unsw.edu.au>
+In-Reply-To: <20020928110111.BJBJ4190.imf26bis.bellsouth.net@localhost>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, Sep 29 2002, Falk Hueffner wrote:
-> Hi,
-> 
-> I've tried to mount a raid0 on an Alpha with kernel 2.5.39. It works
-> fine with a RedHat 2.4.18. On 2.5.39, I quickly get the following
-> messages, though:
-> 
-> raid0_make_request bug: can't convert block across chunks or bigger than 32k 138506232 48
-> raid0_make_request bug: can't convert block across chunks or bigger than 32k 138506232 8
+I found out that the spare disk replaces the old disk transparantly,
+after it syncs.  However, I also found out that one of my harddrives
+had bad sectors! ( :( :( ).  And it wasn't the spare disk either.  So
+I had to not sync (because trying to read the bad sectors would cause
+that device to fail, bringing the whole array down).
 
-This is a bug in raid0 (well, all of the raid levels I suppose). They
-need to set queue limitations based on low level device, and they need
-to add a q->merge_bvec_fn() for the odd case.
+Instead I just mounted ro, and copied the most important bits out
+(well the ones that would fit on my sytem drive), then ran a badblock
+program that I got from the manufacturer's site to "remove" the
+badblocks (that is, hide them).  And finally rebuilt the array from
+scratch.
 
-Neil knows about this, so I hope he will fix it soon.
+The only lucky thing was that I still had the old array available,
+just not onsite.  So after procuring it and copying it back onto the
+new array (along with the saved bits) I've lost only about 10% of my
+data.
 
--- 
-Jens Axboe
-
+-Gryn (Adam Luter)
