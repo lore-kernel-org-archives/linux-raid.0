@@ -1,40 +1,44 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
+From: Mike Dresser <mdresser_l@windsormachine.com>
 Subject: Re: promise sx6000 success / raid options
-Date: Mon, 28 Oct 2002 15:46:11 +0100 (CET)
+Date: Mon, 28 Oct 2002 10:06:36 -0500 (EST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0210281543340.30878-100000@uplift.swm.pp.se>
-References: <200210280806.g9S86L220650@mailgate.mailbox.co.za>
+Message-ID: <Pine.LNX.4.33.0210280957480.14007-100000@router.windsormachine.com>
+References: <Pine.LNX.4.44.0210281543340.30878-100000@uplift.swm.pp.se>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200210280806.g9S86L220650@mailgate.mailbox.co.za>
-To: Vlad Milovanovic <vlad@webmail.co.za>
-Cc: linux-raid@vger.kernel.org
+In-Reply-To: <Pine.LNX.4.44.0210281543340.30878-100000@uplift.swm.pp.se>
+To: Mikael Abrahamsson <swmike@swm.pp.se>
+Cc: Vlad Milovanovic <vlad@webmail.co.za>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 28 Oct 2002, Vlad Milovanovic wrote:
+Something seems really off, here's what I'm getting with a software raid5,
+with 5 old drives.  Quantum AS's, ranging from 30 to 60 gig, using a 30
+gig partition at the beginning of the disk.
 
-> ext3 will not slow things down noticeably. I also don't know what type
-> of disks and how many disks you are using, but 15 MB/s seems very
-> slow. You have also not specified what RAID level you are using, so it
-> is difficult to say what your performance should be (ballpark figure).
+Version 1.02b       ------Sequential Output------ --Sequential Input- --Random-
+                    -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- --Seeks--
+Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP /sec %CP
+mickey         496M 25696  86 52301  13 17383   5 23384  76 52586   5 288.4   0
+                    ------Sequential Create------ --------Random Create--------
+                    -Create-- --Read--- -Delete-- -Create-- --Read--- -Delete--
+              files  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP
+                 16  5149  92 +++++ +++ +++++ +++  5820  99 +++++ +++ 15755 100
+mickey,496M,25696,86,52301,13,17383,5,23384,76,52586,5,288.4,0,16,5149,92,+++++,+++,+++++,+++,5820,99,+++++,+++,15755,100
 
-The 15 meg/s is with a 5 120 gig raid0. I get approx the same with a 6 or 
-8 disk RAID5 with a 3ware 7500 controller. This is all with hardware raid 
-enabled.
+e2fs'd with -i 262144, using a 256k blocksize in my raidtab.  2.4.20pre11
+kernel(onboard ide doesn't work in dma with stock 2.4.19)
 
-I recreated the RAID5 with 8 disks today and used the stride=16 option and 
-that didnt seem to change anything when it comes to performance.
- 
-> But to answer your question, I have found stride option to make a huge
-> impact in RAID 5 setups. Also, depending on what kind of system you
-> are running, you may want to look into using the -T largefile (or some
-> other) option, to let the filesystem reduce (or increase) the number
-> of inodes that you have created. You should pay attention to the way
+50 meg per second on block, in or out.
 
-I used the 100000 bytes/inode when I created the system, sounded like a 
-nice number.
+CPU is a single P4/2.53, 256 meg pc2100.  Using the onboard promise chips,
+two drives per controller, and the last drive is on an onboard port.
 
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+Yes, I know this is not a very good way of doing this, if one drive fails
+it might take the other on the chain with it.  But I'm waiting for Maxtor
+to actually release(not this vapourware stuff) their 320 gig drives, so I
+can get ahold of a 3ware 7500-4 and 3 of the 320's, and replace this
+horrible mess.
+
+Mike
 
