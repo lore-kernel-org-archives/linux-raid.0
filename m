@@ -1,48 +1,33 @@
-From: iletisim@turizmkariyerturk.com
-Subject: Ucretsiz Eleman  =?ISO-8859-1?Q?=20ilan=FD?=  =?ISO-8859-1?Q?=20Yay=FDnlama?=
-Date: Sun, 9 May 2004 03:56:54 -0400
+From: christophe.varoqui@free.fr
+Subject: [ANNOUNCE] multipath-tools-0.1.7
+Date: Mon, 10 May 2004 10:08:28 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <S264309AbUEIH4y/20040509075654Z+3454@vger.kernel.org>
+Message-ID: <1084176508.409f387c1e110@imp5-q.free.fr>
 Mime-Version: 1.0
-Content-Type: text/plain;
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+To: linux-hotplug-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org
+Cc: nickyin@hotmail.com
 List-Id: linux-raid.ids
 
-www.TurizmKariyerturk.com
+Hello,
 
-Açýldý...!
+here goes multipath-tools-0.1.7
 
-15 Mayýs' a kadar üye olan Turizm Kurumsal Üyelere
+Changelog for this release :
 
-SINIRSIZ ÜCRETSÝZ ilan yayýnlama hakký ...
+        * bugfixes from Andy <genanr@emsphone.com> :
+                * read the last line of the config file
+                * add an entry for the 3PARData storage ctlrs
+                * read the last char of vendor and model strings
+        * dmadm exits cleanly when it has nothing to do
 
-DÝGER SEKTÖRLERDEKÝ kurumsal uyelerimizde www.kariyerturk.com ‘a üye olduklarýnda bir yýlda 3 ücretsiz eleman ilaný yayýnlama….
+Downloads and docs at http://christophe.varoqui.free.fr
 
-Turizm Sektöründe Ýþ ve Eleman Bulma sitesi www.TurizmKariyerTurk.com
-Siz Turizm Sektöründe Eleman arayanlar ve Kariyerini Turizm
-Sektöründe Yapmak isteyenler için Yayýn Hayatýna Baþladý
-HR TÜRK GROUP iþtiraki olan www.TurizmKariyerTurk.com 'a üye olacak Turizm Sektöründeki Kurumsal Üyelerimize Bir yýl içinde SINIRISIZ ÝLAN YAYINLAMA ve Yine Genel Sektor ilanlarý Yayýnlayan www.KariyerTurk.com ' da da 3 adet Eleman ilanlarý Ücretsiz Yayýnlanacaktýr.
+[Nick, you were certainly hit by the bugs Andy spotted.
+Please try this release.]
 
-CV inceleme, istediginiz zaman kullanabilmek uzere cv arsivleme,
-
-On-Line toplu veya Tek Tek cevaplama, Basvurulara
-
-On-line mesaj gonderme, Gruplama, ozel listeler hazýrlama
-
-kýsaca Tüm sistemi kullanabilme imkaný
-
-Tek yapmanýz gereken
-
-www.TurizmKariyerTurk.com
-
-' a
-
-girerek Kurumsal üye olmanýz.
-
-Kurumsal Üyelik Ücretsizdir
-------------------------------------------------------------------
-www.TurizmKariyerTurk.com
-
-www.hrturkgroup.com Ýþtirakidir
-
+regards,
+cvaroqui
+-- 
