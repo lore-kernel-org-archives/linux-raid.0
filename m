@@ -1,44 +1,30 @@
-From: danci@agenda.si
-Subject: Re: Raid autodetection
-Date: Fri, 6 Dec 2002 08:34:15 +0100 (CET)
+From: "bmoon" <bo@anthologysolutions.com>
+Subject: Hot swap on IDE
+Date: Fri, 6 Dec 2002 11:03:08 -0800
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0212060830030.24068-100000@duplo.agenda.si>
-References: <Pine.LNX.4.33.0212040849050.4409-100000@nooks.wimpunk.com>
+Message-ID: <037201c29d5a$1d4a6ef0$6a01a8c0@bmoon>
+References: <Pine.LNX.4.44.0212060830030.24068-100000@duplo.agenda.si>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.33.0212040849050.4409-100000@nooks.wimpunk.com>
-To: Wim Vinckier <wim-raid@tisnix.be>
-Cc: Steven Dake <sdake@mvista.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 4 Dec 2002, Wim Vinckier wrote:
+Hello,
 
-> On Wed, 4 Dec 2002 danci@agenda.si wrote:
->
-> > On Tue, 3 Dec 2002, Steven Dake wrote:
-> >
-> > > You can set a RAID to autostart by setting its partition id to 0xfd
-> > > (RAID autostart) with the fdisk utility.
-> >
-> > I know that, it's what I do for last three years. But recently, I've
-> > been trying to use modular kernels with SCSI drivers as modules.
-> >
-> > As the inital kernel raid autodetection happens BEFORE initrd loads the
-> > SCSI drivers, it won't work.
-> >
->
-> You have to build your own initrd which loads the correct modules.  I
-> thought SuSE has its own procedures to do it.  I thought you have to add
-> the modules somewhere in /etc/rc.config and run mkinitrd.  Just check the
-> documentation.
+I want to find that anyone made a successful work for the HOT-SWAP
+on the IDE master/slave.
 
-I know and I'm NOT using SuSE.
+Ther are many systems that use the IDE for RAID. However, I heard most of
+them
+use the MASTER.
 
-I just noted a 'new' command that SuSE had while the normal, plain
-raidtools from Mingo had none. So I implemented the 'new' command
-(raidautorun) in my distro and now it's all OK.
+Is it really impossible to make use of both master and slave?
+I mean "Are there any sucess story to use the slave?".
 
-  D.
+Thanks in advance,
 
+Bo
 
