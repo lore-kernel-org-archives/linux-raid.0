@@ -1,48 +1,32 @@
-From: "Sean Kormilo" <skormilo@nortelnetworks.com>
-Subject: Odd raid1 rebuild performance
-Date: 24 Feb 2003 09:44:58 -0500
+From: Joshua Baker-LePain <jlb17@duke.edu>
+Subject: Re: 3ware 7500-8 confusion
+Date: Mon, 24 Feb 2003 09:41:44 -0500 (EST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1046097898.30229.8.camel@wmery000.ca.nortel.com>
+Message-ID: <Pine.LNX.4.44.0302240937520.2586-100000@chaos.egr.duke.edu>
+References: <5.1.1.6.2.20030222232508.039dbda0@mail.harddata.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <5.1.1.6.2.20030222232508.039dbda0@mail.harddata.com>
+To: Maurice Hilarius <maurice@harddata.com>
+Cc: Gregory Leblanc <gleblanc@linuxweasel.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I've been doing some testing lately with raid1 rebuilds.
+On 23 Feb 2003 at 12:53am, Maurice Hilarius wrote
 
-I'm using an dual PentiumIV Xeon CPU system, with an adaptec UltraSCSI
-320 controller and dual 10K RPM SCSI disks.
+> Actually it makes tons of sense.
+*snip*
+> 2) If you lose a disk at a later date, you don;t have to worry about 
+> getting the same exact drive to replace it with.
 
-I simulate a failure of one of the disks, and then simulate the
-replacement of the "failed" disk.
-
-The first time I do this, I get good rebuild performance of
-approximately 40MB/s.
-
-If I then go ahead and repeat exactly the same test once the rebuild has
-completed, I get relatively poor performance of approximately 6.3MB/s. 
-
-If I reboot the system, the rebuild rate goes back up to 40MB/s for the
-first rebuild, but the second is poor as above.
-
-There is no change in the system load between the tests. The system load
-is virtually non-existent during my testing.
-
-I'm using 2.4.19 kernel, with the 1.3.0 aic79xx adaptec SCSI driver, and
-the XFS 1.2 release. I've applied a patch I received from Neil Brown to
-reduce the frequency of a kernel oops I was seeing.
-
-Any suggestions as to how I can help to debug this?
-
-Thanks!
-
-Sean.
+Don't most hardware RAIDs (including the 3ware) deal just fine with 
+dissimilar new disks, as long as their block count is >= that of the 
+original disks?  My external IDE-SCSI unit does this, and I know my 3wares 
+deal with disks with different rotation speeds.
 
 -- 
+Joshua Baker-LePain
+Department of Biomedical Engineering
+Duke University
 
-Sean C. Kormilo, STORM Software Architect, Nortel Networks
-              email: skormilo@nortelnetworks.com
-  
 
