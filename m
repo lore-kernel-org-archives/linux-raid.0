@@ -1,27 +1,47 @@
-From: "Bailey, Scott" <scott.bailey@eds.com>
-Subject: RE: raid1 boots with one disk only
-Date: Fri, 4 Mar 2005 16:05:46 -0500
-Message-ID: <2263802DEDF02046B82EB18DE91725ED17A3E7@usahm236.amer.corp.eds.com>
+From: Matthias Julius <jnews@julius-net.net>
+Subject: Re: non-optimal RAID 5 performance with 8 drive array
+Date: Fri, 04 Mar 2005 17:23:42 -0500
+Message-ID: <87y8d3oxsh.fsf@julius-net.net>
+References: <42246D1F.3070407@variant.ch>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Steve Kwee' <skwee@itw.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I think you need to tweak your kernel lines in /boot/grub/menu.lst to
-include the following clause:
+Nicola Fankhauser <nicola.fankhauser@variant.ch> writes:
 
-	md=1,/dev/sda2,/dev/sdc2
+> Hi all
+>
+> I have a RAID 5 array consisting of 8 300GB Maxtor SATA drives
+> (6B300S0), hooked up to a Asus A8N-SLI deluxe motherboard with 4
+> NForce4 SATA ports and 4 SiI 3114 ports.
+>
+> see [3] for a description of what I did and more details.
+>
+> each single disk in the array gives a read performance (tested with
+> dd) of about 62MB/s (when reading the first 4GiB of a disk).
+>
+> the array (reading the first 8GiB from /dev/md0 with dd, bs=1024K)
+> performs at about 174MiB/s, accessing the array through LVM2 (still
+> with bs=1024K) only 86MiB/s.
+>
+> my first conclusion was to leave out the LVM2 of the loop and directly
+> put a file system on /dev/md0.
+>
+> however, when reading Neil Brown's article [1], I got the impression
+> that my system should perform better, given the fact that each disk
+> has a transfer rate of minimally 37MiB/s, maximally 65MiB/s [2].
+>
+> or is there a flaw in my argumentation and the current performance is
+> normal? are at last the controllers saturating?
+>
+> any suggestions are welcome.
 
-...assuming I didn't misinterpret your configuration information. :-) You
-should be able to append this right onto the end of the existing options.
-This tells the RAID module explicitly to assemble device /dev/md1 from the
-listed physical devices.
+Maybe you should try to measure performance by reading from all drives
+directly in parallel.  That might show hardware bottlenecks.  The SiL
+is certainly connected to the PCI and can surely not transmit 4 x 62
+MB/s (theoretical maximum of PCI 133 MB/s).
 
-This works fine for me on an x86 system at home and an alpha system at work.
-:-)
+Matthias
 
-Cheers,
-
-	Scott
