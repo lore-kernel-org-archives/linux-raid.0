@@ -1,50 +1,77 @@
-From: Sharif Islam <mislam@uiuc.edu>
-Subject: Worked!! Re: recreate superblock? (was Re: mdadm: failed to RUN_ARRAY)
-Date: Mon, 11 Oct 2004 15:00:02 -0500
+From: Ming Zhang <mingz@ele.uri.edu>
+Subject: Re: consistency detect
+Date: Mon, 11 Oct 2004 17:15:34 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <416AE642.9040504@uiuc.edu>
-References: <4168064D.3050903@uiuc.edu> <4168140A.6070300@uiuc.edu>	 <416AB1E1.1070605@uiuc.edu> <1097502158.5815.62.camel@langvan2.homenetwork> <416ADA7A.5060802@uiuc.edu>
+Message-ID: <1097529334.3103.22.camel@localhost.localdomain>
+References: <1097465522.3111.24.camel@localhost.localdomain>
+	 <416A4A29.9080906@wasp.net.au> <416A63B2.7020004@tls.msk.ru>
+	 <416A6773.1080104@wasp.net.au>
+Reply-To: mingz@ele.uri.edu
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <416ADA7A.5060802@uiuc.edu>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <416A6773.1080104@wasp.net.au>
+To: Brad Campbell <brad@wasp.net.au>
+Cc: Michael Tokarev <mjt@tls.msk.ru>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Thanks. This worked. I am back with degraded mode.
+Thank all so much for reply.
 
- mdadm --create --verbose /dev/md5 --level=5 --chunk=128 
---raid-devices=6 /dev/hde1 /dev/hdf1 /dev/hdg1 /dev/hdh1 /dev/hdi1 missing
+On Mon, 2004-10-11 at 06:58, Brad Campbell wrote:
+> Michael Tokarev wrote:
+> 
+> >> In short, it does not deal with it at all. RAID will deal with a disk 
+> >> failure, it has no guarantees about consistency on power failures, 
+> >> hard lockups or other catastrophic events.
+> > 
+> > 
+> > This is incorrect.  In-kernel raid code keeps track of arrays and
+> > underlying disk state during write operations.  On clean shutdown,
+> > when everything has been written, raid superblocks on all disks
+> > gets updated to indicate this.  In case of unclean shutdown, raid
+> > code will reconstruct older copies of data using most recent ones
+> > (ie, from a disk which has most recent "events" value in superblock).
+> > The same is done for all other raid levels (4, 5, 6), but onot for
+> > raid0 for obvious reasons (as there's no R in raid0 per se).
+> 
+> 
+> When does the "events" value in the superblock actually get updated? I understood it only got 
+> updated on an event, ie raid start, raid stop, disk add/remove/fail.
+> 
+yes, I guess if this information get updated frequently, it will have
+impact on performance. but if not that frequently, it is useless for
+this situation at all.
 
-Sharif Islam wrote:
 
-> Mike Tran wrote:
->
->> Hi Sharif,
->>
->>> From the kernel log, I believe that the raid5 array now has 4 working
->>
->> disks out of 6 raid disks.  My suggestion is to recreate the array.
->>
->> Before recreating the MD array, I would suggest that you run mdadm
->> --examine /dev/hdxx (i.e. hde1, hdf1 or hdg1) and write down the
->> information of the original array setup.
->> Some of the important Raid5 info are : Raid Devices, Total Devices,
->> Preferred Minor (/dev/mdx), Spare Devices, Layout, Chunk Size, order of
->> devices.
->> When you **decide** to use mdadm -C to recreate array, mdadm will ask
->> you to confirm on overwriting existing md superblock.
->>  
->>
-> Thanks for your response. Will it delete the existing the data on the 
-> RAID?
->
-> -Sharif
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> I realise the system does an auto rebuild when started after an unclean shutdown, the question 
+> really is how does it know which disk is the freshest in a raid-1? In a raid-4,5,6 it's pretty 
+> obvious as there is really only one copy of the data, but then does the code actually ensure that 
+> the data gets written before the updated parity? or does it just flush the lot to disk in what it 
+> thinks is the most optimum fashion?
+> 
+> The In-kernel data becomes pretty moot when the kernel has just blasted a couple of large blocks out 
+> to a couple of disks and the plug has been pulled. It's going to be pretty indeterminate as to which 
+> disk has the most accurate image of what was actually sent to it. Thus my comment that there is 
+> really no way of accurately dealing with a catastrophic failure, and RAID is not there to do that 
+> anyway.
+> 
+with this indeterminate results, i do not know how raid code to detect
+which one is the latest copy, or a half-half? and in previous email, u
+suggest to have UPS and journal fs. but 1) u system will crash sometime
+even with UPS, so a UPS can not 100% prevent this. 2) JFS can not 100%
+solve this as well. especially when jfs only have metadata in log.
+
+
+> I guess if you had a hardware RAID card that had a battery backed up RAM you have a much better 
+> chance but then you really have a mini-ups :p)
+> 
+so here a NVRAM is the only way to solve this. :P also need a separate
+cpu running separate code.
+
+> Brad
+
+
+ming
 
 
