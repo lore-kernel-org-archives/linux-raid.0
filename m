@@ -1,43 +1,72 @@
-From: <peter.greis@ubs.com>
-Subject: RE: Fresh setup....
-Date: Tue, 21 Sep 2004 11:26:58 +0200
+From: "Stern, Rick (Serviceguard Linux)" <rick.stern@hp.com>
+Subject: RE: SuSE Linux cluster using MC/ServiceGuard --- shared storage
+Date: Tue, 21 Sep 2004 06:40:43 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <6F9171BE257CA742BFBCFA87B8F20F8D030E3CB7@NZURC900PEX1.ubsgs.ubsgroup.net>
+Message-ID: <1C4766A743ADF74FAEDF2AAD0679BAA2036B97B2@cacexc03.americas.cpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-content-class: urn:content-classes:message
-To: thunder7@xs4all.nl
-Cc: linux-raid@vger.kernel.org
+Content-class: urn:content-classes:message
+To: Luca Berra <bluca@comedia.it>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-An excellent idea. Maybe someone has insight into the next hurdle... it looks like there is nVidia nForce3 support in 2.6.8.1 (sata_nv). I have built this kernel (make oldconfig and the like), but on boot I get a slew of messages (ata_) which seem to indicate that libata is not loaded. Which option do I need in my .config to get this built in ?
+It is my understanding that MD/DM does not have the specific commands to
+support controller failover in the EVA.  
 
-I have also come across http://www.amdzone.com/modules.php?op=modload&name=PNphpBB2&file=viewtopic&t=2300 which would make me think I'm sol anyway...
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Luca Berra
+Sent: Monday, September 20, 2004 11:34 PM
+To: linux-raid@vger.kernel.org
+Subject: Re: SuSE Linux cluster using MC/ServiceGuard --- shared storage
 
-Thanks to everyone for all of the help,
+On Mon, Sep 20, 2004 at 08:33:18PM +0200, Lars Marowsky-Bree wrote:
+>On 2004-09-20T15:55:51,
+>   Luca Berra <bluca@comedia.it> said:
+>
+>> >Do I still need to use the Driver Patch for EVA
+>> >Controller Failover? 
+>> i believe using the qlogic driver failover is a viable solutio,
+>
+>The DM multipath in 2.6 should handle the EVA just fine.
 
--Peter
+you mean multipath-tools
+(http://christophe.varoqui.free.fr/multipath.html)?
+i suppose so, using the "group_by_tur" spreading policy. fortunately i
+don't have any spare EVA to test, plenty of XP tough :)
 
------Original Message----- 
-From: Jurriaan [mailto:thunder7@xs4all.nl]
-Sent: 20 September 2004 19:21
-To: Greis, Peter
-Cc: linux-raid@vger.kernel.org
-Subject: Re: Fresh setup....
+>The qlogic internal failover is being depreciated and AFAIK isn't
+>included in 2.6 mainline even...
 
+excuse me, are you shipping (or at least supporting) a 2.6 kernel on
+your SLES 8.0 product?
 
-From: peter.greis@ubs.com <peter.greis@ubs.com>
-Date: Mon, Sep 20, 2004 at 03:21:26PM +0200
-> OK, I believe that I have determined that I need a newer kernel (2.6.7 or later) to get this new mobo running (Asus K8N-E deluxe) with RAID-1 OS disks. Is my only option here to build up the system on a normal IDE drive, get the kernel rebuilt and up to date, configure the raid, then "dd" the partitions over ?
-> 
-Why not just unplug one of the drives and resync when you have your new
-kernel up and running? The usual precautions apply (tested backups etc).
+>> another is purchasing securepath from HP. but i believe there were
+>> issues using securepath and lvm together.
+>
+>Proprietary multipathing solutions are a thing of the past on Linux,
+one
+>hopes.
+i hope so, but for this statement to become true we need some other
+vendor to ship a 2.6 based 'enterprise level' distribution with proper
+device-mapper implementation, and application vendors (that includes
+HP and IBM) to adapt.
+Anyway, i do not really believe securepath to be a viable solution(*), i
+was enumerating possibilities.
 
-Good luck,
-Jurriaan
+(*) and hp suggests using qlogic 7.00.3 driver with internal failover
+for use with their Serviceguard product.
+
 -- 
-Linux is obsolete
-	Andrew Tanenbaum
-Debian (Unstable) GNU/Linux 2.6.9-rc1-mm4 2x6209 bogomips load 1.38
+Luca Berra -- bluca@comedia.it
+        Communication Media & Services S.r.l.
+ /"\
+ \ /     ASCII RIBBON CAMPAIGN
+  X        AGAINST HTML MAIL
+ / \
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
