@@ -1,68 +1,74 @@
-From: "Cristian Banciu" <Cristian.Banciu@eea.eu.int>
-Subject: raidreconf error
-Date: Thu, 11 Sep 2003 12:10:48 +0200
+From: "Doug Griswold" <griswld@cio.sc.gov>
+Subject: Re: md multipath and failover
+Date: Thu, 11 Sep 2003 07:07:16 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <6B238F130041BF46AF3592E6700E7E14770639@panda.eea.eu.int>
+Message-ID: <sf601f2f.086@gw.state.sc.us>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-content-class: urn:content-classes:message
-To: linux-raid@vger.kernel.org
+Content-Disposition: inline
+To: Doug Griswold <griswld@cio.sc.gov>, lmb@suse.de, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+Thanks for the info.  My next question is I have set the link down
+timeout in the emulex driver to be 15 seconds but the paths are still
+not failing over for 5 minutes.  Is there a way to get the scsi timeout=
+s
+down
+to 30 seconds?  Can I pass anything to the scsi module at boot?  If I
+applied your patch that provides load balancing then I would not have t=
+o
+worry about this issue since they are both working already we wouldn't
+have the timeout issue.  Does your patch pick up on the path once it
+becomes available after losing it? =20
 
-I have done a software raid5 with 5 scci disks. Now I want to add one more disk to the current configuration without loosing data. But for some unkown reason the operation fails. Has anyone any idea why could I make this thing working ?
 
-Thank you very much!
+Thanks for the info.
+Doug=20
 
 
-#raidreconf -o /etc/raidtab -n /etc/raidtab.new -m /dev/md0
-Working with device /dev/md0
-Parsing /etc/raidtab
-Parsing /etc/raidtab.new
-Your on-disk array MUST be clean first.
-reconfiguration failed
+>>> Lars Marowsky-Bree <lmb@suse.de> 09/11/03 03:45 AM >>>
+On 2003-09-10T18:55:41,
+   Doug Griswold <griswld@cio.sc.gov> said:
 
-This is how raidtab looks liks
-#cat /etc/raidtab
-raiddev /dev/md0
-        raid-level              5
-        nr-raid-disks           5
-        nr-spare-disks          0
-        persistent-superblock   1
-        parity-algorithm        left-symmetric
-        chunk-size              32
-        device                  /dev/sdb1
-        raid-disk               0
-        device                  /dev/sdc1
-        raid-disk               1
-        device                  /dev/sdd1
-        raid-disk               2
-        device                  /dev/sde1
-        raid-disk               3
-        device                  /dev/sdf1
-        raid-disk               4
+> Alright I got md/multipath to failover with 2 emulex hba's on red hat
+> advanced server 2.1 kernel version 2.4.9-27enterprise.  My next new
+> problem is that it took five minutes to fail over from when I yanked
+one
+> of the fibre channel cables.   Where could this timeout come from?  I
+> have tried several times but each time it takes 5 minutes to failover=
+=2E
 
-And this is how the new raidtab looks like
-#cat /etc/raidtab.new
-raiddev /dev/md0
-        raid-level              5
-        nr-raid-disks           6
-        nr-spare-disks          0
-        persistent-superblock   1
-        parity-algorithm        left-symmetric
-        chunk-size              32
-        device                  /dev/sdb1
-        raid-disk               0
-        device                  /dev/sdc1
-        raid-disk               1
-        device                  /dev/sdd1
-        raid-disk               2
-        device                  /dev/sde1
-        raid-disk               3
-        device                  /dev/sdf1
-        raid-disk               4
-        device                  /dev/sdh1
-        raid-disk               5
+> Also it won't failback.  Any ideas out there. =20
+
+The plain md multipath can't do failback automatically. People's opinio=
+n
+on whether that is a good idea do differ ;-)
+
+The timeout is the time needed until the damn (sorry) Linux Kernel SCSI
+layers give up retrying and then pass the error code up to md for
+handling. You can maybe try tuning some emulex parameters to fix that.
+
+If you want load balancing for the md multipath, you could try checking
+out my patch at ftp://ftp.suse.com/pub/people/lmb/md-mp/ vs 2.4, it add=
+s
+some features to md and also makes it quite a bit more robust.
+
+
+Sincerely,
+    Lars Marowsky-Br=E9e <lmb@suse.de>
+
+--=20
+High Availability & Clustering		ever tried. ever failed. no
+matter.
+SuSE Labs				try again. fail again. fail
+better.
+Research & Development, SuSE Linux AG		-- Samuel Beckett
+
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
