@@ -1,45 +1,52 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: fsck on raidvolumes at boot
-Date: Sun, 11 May 2003 16:39:38 +1000
+From: Torsten Landschoff <torsten@debian.org>
+Subject: Re: OOPS with raid1
+Date: Sun, 11 May 2003 13:45:05 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16061.61482.79132.824395@notabene.cse.unsw.edu.au>
-References: <871y0ejtdf.fsf@jumper.lonesom.pp.fi>
-	<Pine.OSF.4.51.0305102009550.135362@soul.helsinki.fi>
+Message-ID: <20030511114505.GA8087@stargate.galaxy>
+References: <20030508152237.GB26189@stargate.galaxy>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="liOOAslEiF7prFVr"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Mikael Johansson on Saturday May 10
-To: Mikael Johansson <mpjohans@pcu.helsinki.fi>
-Cc: linux-raid@vger.kernel.org
+Content-Disposition: inline
+In-Reply-To: <20030508152237.GB26189@stargate.galaxy>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Saturday May 10, mpjohans@pcu.helsinki.fi wrote:
-> 
-> Hello All!
-> 
-> When making an unclean shutdown/reset of the system, Linux normally checks
-> the disk partitions at boot with fsck (e2fsck). For raided mounts this
-> does not happen however, instead only a warning message of "unclean
-> partition mounted" (or similar) appears, as fstab is read and, say,
-> /dev/md0 gets mounted to, say, /wrk.
-> 
-> Is there a way to make Linux automatically check the /dev/md*'s before
-> mounting them if they are dirty?
 
-What number do you have in column 6 of /etc/fstab for these
-filesystems?
-If 0, make it non-zero.
+--liOOAslEiF7prFVr
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-NeilBrown
+Hi,=20
 
-> 
-> I'm using Debian 3.0 and raidtools2.
-> 
-> Have a nice weekend,
->     Mikael J.
->     http://www.helsinki.fi/~mpjohans/
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Thu, May 08, 2003 at 05:22:37PM +0200, Torsten Landschoff wrote:
+> pulsar:~# uname -a
+> Linux pulsar 2.4.20-686-smp #1 SMP Mon Jan 13 23:06:41 EST 2003 i686
+>=20
+> (that's the kernel as shipped in Debian unstable's
+> kernel-image-2.4.20-686-smp)
+
+Additional info: I tried to reproduce this problem in user-mode-linux
+for easier debugging. Funny enough I did not get it to break there. Both
+systems I used to test this where running an SMP kernel so I'll try to=20
+reproduce this without SMP on a real system now.
+
+Greetings
+
+	Torsten
+
+--liOOAslEiF7prFVr
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.1 (GNU/Linux)
+
+iD8DBQE+vjfBdQgHtVUb5EcRAjvIAJ4kSLwxdejU5rlENziKpI5c3e+1kQCfZqfe
+OOCi3r+K+I4oZJ3O4DzvLQY=
+=+lxg
+-----END PGP SIGNATURE-----
+
+--liOOAslEiF7prFVr--
