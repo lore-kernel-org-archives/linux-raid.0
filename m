@@ -1,18 +1,67 @@
-From: Ninti Systems <office@ninti.com.au>
-Subject: Re: Please review: Slackware RAID How-To
-Date: 17 May 2004 12:06:59 +0930
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: Please review: Slackware RAID How-To
+Date: Mon, 17 May 2004 00:51:45 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1084761418.1963.11.camel@localhost>
-References: <1084290138.25942.30.camel@ws101.darkcore.net>
-Reply-To: office@ninti.com.au
+Message-ID: <200405170451.i4H4pqB05999@www.watkins-home.com>
+References: <1084761418.1963.11.camel@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1084290138.25942.30.camel@ws101.darkcore.net>
-To: John Lange <john.lange@bighostbox.com>
-Cc: LinuxRaid <linux-raid@vger.kernel.org>
+In-Reply-To: <1084761418.1963.11.camel@localhost>
+To: office@ninti.com.au, 'John Lange' <john.lange@bighostbox.com>
+Cc: 'LinuxRaid' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
+
+Stride=32
+
+Using the example.  md0 and md1 are RAID1, md2 is RAID5
+
+RAID1 does not have a strip size.  Therefore stride=anything would be wrong,
+but may not hurt, not sure.  Filesystem gods watching?
+
+md2 has 4 disks with a chunk size of 128K.  Since only 3 disks are used for
+data, and the filesystem block size is 4K, the stride size should be
+128*3/4, or 96.
+Change:
+	mke2fs -b 4096 -R stride=32 /dev/md2
+To:
+	mke2fs -b 4096 -R stride=96 /dev/md2
+
+Hay, I may be wrong!  I have never noticed the stride option before 5
+minutes ago!  10 - 15 minutes now.  Got to type faster! :)
+
+If I misread, or misunderstood anything, please correct me fast!
+
+From "man mke2fs":
+stride=stripe-size
+      Configure  the  filesystem  for  a  RAID  array with
+      stripe-size filesystem blocks per stripe.
+
+My logic:
+	"Stripe size" is "chunk size" times "number of data disks".
+	From example:
+		"chunk size" = 128
+		"number of data disks" = "nr-raid-disks" - 1 (-2 if RAID6)
+
+On a related subject...
+	I use grub, not lilo!
+	Please consider a grub section.
+	Is one better than the other?
+	The only reason I use grub is 2-3 years ago I was told grub was
+newer.
+
+Guy
+
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Ninti Systems
+Sent: Sunday, May 16, 2004 10:37 PM
+To: John Lange
+Cc: LinuxRaid
+Subject: Re: Please review: Slackware RAID How-To
 
 If at first you don't succeed ...
 
@@ -64,4 +113,10 @@ Ph/Fax: 08 8953 1442
 Email:  office at ninti dot com dot au
 Web:    http://ninti.com.au
 --------------------------------------
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 
