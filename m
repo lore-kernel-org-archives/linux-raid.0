@@ -1,53 +1,84 @@
-From: Bernd Schubert <bernd-schubert@web.de>
-Subject: Re: messages after server crash
-Date: Tue, 12 Nov 2002 17:02:26 +0100
+From: Jakob Oestergaard <jakob@unthought.net>
+Subject: Re: RAID-6
+Date: Tue, 12 Nov 2002 17:22:05 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200211121702.27034.bernd-schubert@web.de>
-References: <200211111526.37325.bernd-schubert@web.de> <15824.3059.420677.958049@notabene.cse.unsw.edu.au>
+Message-ID: <20021112162205.GB22407@unthought.net>
+References: <aqou9k$ou5$1@cesium.transmeta.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <15824.3059.420677.958049@notabene.cse.unsw.edu.au>
-To: Neil Brown <neilb@cse.unsw.edu.au>
+Content-Disposition: inline
+In-Reply-To: <aqou9k$ou5$1@cesium.transmeta.com>
+To: "H. Peter Anvin" <hpa@zytor.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello Neil,
+On Mon, Nov 11, 2002 at 10:52:36AM -0800, H. Peter Anvin wrote:
+> Hi all,
+>=20
+> I'm playing around with RAID-6 algorithms lately.  With RAID-6 I mean
+> a setup which needs N+2 disks for N disks worth of storage and can
+> handle any two disks failing -- this seems to be the contemporary
+> definition of RAID-6 (the originally proposed "two-dimensional parity=
+"
+> which required N+2*sqrt(N) drives never took off for obvious reasons.=
+)
+>=20
+> Based on my current research, I think the following should be true:
+>=20
+> a) write performance will be worse than RAID-5, but I believe it can
+>    be kept to within a factor of 1.5-2.0 on machines with suitable
+>    SIMD instruction sets (e.g. MMX or SSE-2);
 
-thanks for your answer.
+Please note that raw CPU power is usually *not* a limiting (or even
+significantly contributing) factor, on modern systems.
 
-> > Well, the 'delaying resync ...' messages are easy to understand, but are
-> > they related to the 'resync aborted' messages ? At least the /proc/mdstat
-> > looks fine.
->
-> It looks fine ... but the arrays probably aren't in sync.
+Limitations are disk reads/writes/seeks, bus bandwidth, etc.
 
-How can we force the syncing ?
+You will probably cause more bus activity with RAID-6, and that might
+degrade performance. But I don't think you need to worry about
+MMX/SSE/...  If you can do as well as the current RAID-5 code, then you
+will be in the clear until people have 1GB/sec disk transfer-rates on
+500MHz PIII systems  ;)
 
-> The 'resync aborted' is caused either by IO errors, which should show
-> up in dmesg, or the resync threads being signaled, or by the array
-> being switched into readonly mode.
+>=20
+> b) read performance in normal and single failure degraded mode will b=
+e
+>    comparable to RAID-5;
 
-Hmm, I think the dmesg-output doesn't show IO-errors and since we write to the 
-disks (our home-partition is on it), it shouldn't be readonly, either.
+Which again is like a RAID-0 with some extra seeks... Eg. not too bad
+with huge chunk sizes.
 
->
-> I'm curious about this raidautorun which said:
-> md: raidautorun(pid 89) used obsolete MD ioctl, upgrade your software to
-> use new ictls
->
-> That appears to be part of mkinitrd.  What distribution are you
-> running? What version?  What version of mkinitrd?
->
+You might want to consider using huge chunk-sizes when reading, but
+making sure that writes can be made on "sub-chunks" - so that one could
+run a RAID-6 with a 128k chunk size, yet have writes performed on 4k
+chunks.  This is important for performance on both read and write, but
+it is an optimization the current RAID-5 code lacks.
 
-This is a Suse-7.3 system, but with vanilla kernel and without initrd-support. 
-I guess it comes from the Suse-start-up-scripts, that try to enable the raid, 
-though it was already enabled by the kernel.
-The raidautorun-binary comes from the Suse-raidtools package (version 0.9), is 
-there an upgraded version available (I found only patched debian packages, 
-but no general tgz-files) ?
+>=20
+> c) read performance in dual failure degraded mode will be quite bad.
+>=20
+> I'm curious how much interest there would be in this, since I
+> certainly have enough projects without it, and I'm probably going to
+> need some of Neil's time to integrate it into the md driver and the
+> tools.
 
-So thanks again,
+I've seen quite some people ask for it.  You might find a friend in "Ro=
+y
+Sigurd Karlsbach" - he for one has been asking (loudly) for it  ;)
 
-Bernd
+Go Peter!    ;)
+
+--=20
+=2E...............................................................
+:   jakob@unthought.net   : And I see the elder races,         :
+:.........................: putrid forms of man                :
+:   Jakob =D8stergaard      : See him rise and claim the earth,  :
+:        OZ9ABN           : his downfall is at hand.           :
+:.........................:............{Konkhra}...............:
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
