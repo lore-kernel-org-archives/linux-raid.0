@@ -1,44 +1,52 @@
-From: Flemming Frandsen <ff@partyticket.net>
-Subject: Non-equal sized partitions vs RAID 1
-Date: Mon, 01 Jul 2002 13:29:46 +0200
+From: Danilo Godec <danci@agenda.si>
+Subject: Re: Non-equal sized partitions vs RAID 1
+Date: Mon, 1 Jul 2002 13:54:44 +0200 (CEST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3D203D2A.5030307@partyticket.net>
+Message-ID: <Pine.LNX.4.30.0207011342230.20670-100000@duplo.agenda.si>
+References: <3D203D2A.5030307@partyticket.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <3D203D2A.5030307@partyticket.net>
+To: Flemming Frandsen <ff@partyticket.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I have two disks in my box, both are MAXTOR 6L080L4 (80GB IDE) and 
-physically the same disks, both have 3 partitions, one for /boot one for 
-swap and one huge one for the rest for the mirrored data.
+On Mon, 1 Jul 2002, Flemming Frandsen wrote:
 
-The mirror works as expected, but somewhere something went slightly 
-wrong because one disks geometry is:
-physical     155114/16/63
-logical      155114/16/63
+> Now for the questions:
+> * Is there a way to change the logical geometry of disk 2, so I can
+> partition correctly (well if there is then this post is OT)?
 
-The other disk is:
-physical     155114/16/63
-logical      9732/255/63
+You can use 'hdx=c,h,s' kernel parameter on boot. You can also use fdisk's
+expert menu to change the geometry while creating the partitions. I don't
+know if the later alone is enough, I prefer to use the kernel parameter
+and only use the fdisk trick to skip one reboot.
 
-Now, this has the annoying sideeffect of making it impossible for me to 
-partition them exactly the same way, so I ended up creating the mirror 
-on disk 1 (which has a slightly smaller partition for mirroring than 
-disk 2) and then adding disk 2 later.
+Remember to replace 'hdx' with your actual device name... :)
 
-This will get me in trouble (I tested it) when disk 1 fails and I need 
-to replace it, because then I have to make that partition slightly 
-larger than the disk 2 partition so it can be added to the mirror.
+> * Is there a way to force the array to keep being the same size, even
+> after the smaller partition has failed?
 
-Now for the questions:
-* Is there a way to change the logical geometry of disk 2, so I can 
-partition correctly (well if there is then this post is OT)?
+After the array is created, it doesn't (shouldn't) change.
 
-* Is there a way to force the array to keep being the same size, even 
-after the smaller partition has failed?
+> * Why does the BIOS think that it's cool to translate similar disks
+> differently, are BIOS writers crackheads or was I just unlucky?
 
-* Why does the BIOS think that it's cool to translate similar disks 
-differently, are BIOS writers crackheads or was I just unlucky?
+All BIOSes seem to do that: Disks, connected to the primary IDE interface
+show 'correct' geometry, while disks, connected to the secondary interface
+don't. I hoped it would go away with recent bioses, but I'm affraid I'll
+just have to get used to it... :/
+
+
+   D.
+
+-- 
+___________________________________________________________________
+|    Danilo Godec    |     Agenda d.o.o.    |   ISP for business  |
+|  jr. Syst. Admin   |    Gosposvetska 84   |     WAN networks    |
+|  danci@agenda.si   |    si-2000 Maribor   |  Internet/Intranet  |
+| tel:+386.2.2340860 |       Slovenija      | Application servers |
+| fax:+386.2.2340854 | http://www.agenda.si |  Caldera OpenLinux  |
+
 
