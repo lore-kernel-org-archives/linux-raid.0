@@ -1,39 +1,27 @@
-From: maarten van den Berg <maarten@ultratux.net>
-Subject: Re: Kernel panic, FS corruption  Was: Re: Call for RAID-6 users
-Date: Mon, 2 Aug 2004 00:10:07 +0200
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: 1x 3ware controllers vs. 2x 3ware controllers
+Date: Mon, 2 Aug 2004 00:32:17 +0200 (CEST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200408020010.07572.maarten@ultratux.net>
-References: <cds76e$ee7$1@terminus.zytor.com> <200408011503.20452.maarten@ultratux.net> <20040801180536.GA3897@jim.sh>
+Message-ID: <Pine.LNX.4.44.0408020025460.7382-100000@uplift.swm.pp.se>
+References: <410D4444.8000302@dgreaves.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20040801180536.GA3897@jim.sh>
-Content-Disposition: inline
+In-Reply-To: <410D4444.8000302@dgreaves.com>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sunday 01 August 2004 20:05, you wrote:
-> > I eventually got a kernel panic when copying large amounts of data to a
-> > [degraded] raid6 array, which this time was the full 600 GB size.
-> > Don't know if it is helpful to anyone but info below:
->
-> The panic is from reiserfs, and it's occuring because the FS is
-> getting corrupted due to the raid6 problems.
+On Sun, 1 Aug 2004, David Greaves wrote:
 
-Ok.  Thanks.  I expected as much.  I will now try to make a raid 5 array 
-instead, and make double sure I do not suffer the same fate.
-I am cautious because I do not want to be bitten by a bug in this SuSE kernel 
-or a bug in one of the SATA drivers. 
+> I'm thinking about building a 2Tb SW RAID but will wait a few months
+> because I want PCI-X or similar to get the bandwidth to the gigabit card.
 
-Pity though, that this was not discovered when testing with the smallish 
-arrays I ran yesterday.  Seems like it takes a lot of beating to reproduce.
-
-Maarten
-
-> -jim
+According to Adaptec, their 16 port card with 64bit 66MHz PCI will 
+transfer up to 1.5gigabit/s. That's a tad low I must say, that's only 190 
+megabytes/s. I've gotten better read performance off of a 3ware card. Good 
+enough for feed a gig card though, especially if you have multiple PCI 
+buses.
 
 -- 
-When I answered where I wanted to go today, they just hung up -- Unknown
+Mikael Abrahamsson    email: swmike@swm.pp.se
 
