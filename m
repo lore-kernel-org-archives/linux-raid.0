@@ -1,8 +1,8 @@
 From: Tom Oehser <tom@toms.net>
-Subject: mount-by-label finds drive not array ????
-Date: Thu, 1 Jul 2004 07:41:27 -0400 (EDT)
+Subject: is automount affecting root device? huh?
+Date: Thu, 1 Jul 2004 08:08:04 -0400 (EDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.58.0407010736180.15444@jupiter.toms.net>
+Message-ID: <Pine.LNX.4.58.0407010801300.471@jupiter.toms.net>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
@@ -10,25 +10,44 @@ To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-Hi,
+Hi-
 
-I'm accustomed to doing something like:
+I have 2 raid-5 arrays, one is md software raid running on a Highpoint
+1540, the other one is a Mylex Acceleraid-250 hardware scsi raid card.
 
-LABEL=tomsvol2  /mnt/foo   ext3      defaults        0 2
+Lilo is working fine to boot from the Mylex.  But, if I have the md on
+the Highpoint autodetected, and if it doesn't have a /etc/fstab entry,
+it seems to screw up the kernel's root device!?!
 
-But if I do that on my raid-5 md arrays, it tries to mount
-disk 1 of the 4 disks that make up the array!  Apparently,
-the first stripe has enough of the filesystem that it must
-be thinking that is what to mount!  Even with type "FD"!!!
+That is, if LILO has:
 
-So, with an array /dev/md0 made of hda1 hdb1 hdc1 hdd1, I
-am having to do a literal:
+boot = /dev/rd/c0d0
+disk = /dev/rd/c0d0
+BIOS = 0x80
+image = /2.6.7b
+  label = 2.6.7b2
+  append = "nmi_watchdog=2 reboot=cold parport=0x378,7"
+  read-only
+  root = /dev/rd/c0d0p1
 
-/dev/md0        /mnt/bar      ext3      defaults        0 4
+and there is no:
 
-Since if I do it by "LABEL=", it tries to mount hda1, not md0!
+# /dev/md1        /mnt/md1      ext3      defaults        0 0
 
-Is this just a known/accepted brain-deadness of the mount code?
+line, it fails when it tries to mount the root filesystem.
+
+BUT, if I add either:
+
+ raid=noautomount
+
+_or_
+
+ the fstab line that mounts it on /mnt/md1
+
+it seems to work fine...
+
+Is the mount code ignoring the "root = /dev/rd/c0d0p1", seeing the
+autodetected raid, and deciding to magically mount it as root...?
 
 -Tom
 
