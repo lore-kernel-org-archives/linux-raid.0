@@ -1,8 +1,8 @@
 From: "Roberto Samarone Araujo \(RSA\)" <sama@inf.ufsc.br>
 Subject: Re: Help ! Kernel panic: VFS: Unable to mount root fs on 09:01
-Date: Thu, 1 May 2003 17:43:11 -0300
+Date: Thu, 1 May 2003 17:42:43 -0300
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <000e01c31022$48b108c0$b3d7d9c8@inpa.gov.br>
+Message-ID: <000901c31022$3faf6e60$b3d7d9c8@inpa.gov.br>
 References: <002301c31015$8c75e4c0$9affff0a@inpa.gov.br> <3EB18094.41F84BAA@SteelEye.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
