@@ -1,14 +1,17 @@
-From: god516@rediffmail.com
-Subject: hi
-Date: 8 Sep 2004 13:53:21 -0000
+From: rich turner <rich@storix.com>
+Subject: raid superblock
+Date: Wed, 08 Sep 2004 10:41:50 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040908135321.32240.qmail@webmail16.rediffmail.com>
+Message-ID: <1094665310.30346.5.camel@rich>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-hi
-cool here n hope the same for u,
-just tell me whats going on ur part
-by for this time but keep in touch
-have a nice time
+if i wanted to dd off the raid superblock, where would i find it on the
+disk or partition? i realize there are tools to read the superblock and
+output it in a readable format, but i would like to have it in raw
+format for formatting on my own.
+
