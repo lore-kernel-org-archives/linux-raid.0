@@ -1,18 +1,32 @@
-From: Mike Hardy <mhardy@h3c.com>
-Subject: Re: No swap can be dangerous (was Re: swap on RAID (was Re: swp -
- Re: ext3 journal on software raid))
-Date: Thu, 06 Jan 2005 14:57:32 -0800
-Message-ID: <41DDC25C.2040404@h3c.com>
-References: <41DC9420.5030701@h3c.com> <20050106093811.GB99565@caffreys.strugglers.net> <41DD798F.8030902@h3c.com> <200501062208.39563.andrew@walrond.org> <Pine.LNX.4.61.0501062333260.3430@dragon.hygekrogen.localhost>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: No swap can be dangerous (was Re: swap on RAID (was Re: swp - Re: ext3 journal on software raid))
+Date: Thu, 6 Jan 2005 18:15:18 -0500
+Message-ID: <200501062316.j06NFP900855@www.watkins-home.com>
+References: <41DDC25C.2040404@h3c.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.61.0501062333260.3430@dragon.hygekrogen.localhost>
+In-Reply-To: <41DDC25C.2040404@h3c.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jesper Juhl <juhl-lkml@dif.dk>
-Cc: Andrew Walrond <andrew@walrond.org>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: 'Mike Hardy' <mhardy@h3c.com>, 'Jesper Juhl' <juhl-lkml@dif.dk>
+Cc: 'Andrew Walrond' <andrew@walrond.org>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
+
+If I MUST/SHOULD have swap space....
+Maybe I will create a RAM disk and use it for swap!  :)  :)  :)
+
+Guy
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Mike Hardy
+Sent: Thursday, January 06, 2005 5:58 PM
+To: Jesper Juhl
+Cc: Andrew Walrond; linux-raid@vger.kernel.org; linux-kernel@vger.kernel.org
+Subject: Re: No swap can be dangerous (was Re: swap on RAID (was Re: swp -
+Re: ext3 journal on software raid))
 
 
 
@@ -30,18 +44,23 @@ Jesper Juhl wrote:
 >>>need it, you don't need it.
 >>>
 >>
->>If I recollect a recent thread on LKML correctly, your 'no inherent need for 
+>>If I recollect a recent thread on LKML correctly, your 'no inherent need
+for 
 >>swap' might be wrong.
 >>
 >>I think the gist was this: the kernel can sometimes needs to move bits of 
->>memory in order to free up dma-able ram, or lowmem. If I recall correctly, 
->>the kernel can only do this move via swap, even if there is stacks of free 
+>>memory in order to free up dma-able ram, or lowmem. If I recall correctly,
+
+>>the kernel can only do this move via swap, even if there is stacks of free
+
 >>(non-dmaable or highmem) memory.
 >>
->>I distinctly remember the moral of the thread being "Always mount some swap, 
+>>I distinctly remember the moral of the thread being "Always mount some
+swap, 
 >>if you can"
 >>
->>This might have changed though, or I might have got it completely wrong. - 
+>>This might have changed though, or I might have got it completely wrong. -
+
 >>I've cc'ed LKML incase somebody more knowledgeable can comment...
 >>
 > 
@@ -65,3 +84,8 @@ performance/policy/risk-management question, not a correctness question.
 If I'm wrong, I'd definitely like to know...
 
 -Mike
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
