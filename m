@@ -1,32 +1,57 @@
-From: Robin Bowes <robin-lists@robinbowes.com>
-Subject: Re: Good news / bad news - The joys of RAID
-Date: Wed, 01 Dec 2004 11:50:37 +0000
-Message-ID: <41ADB00D.7080709@robinbowes.com>
-References: <200411192142.iAJLgRN12792@www.watkins-home.com>	 <41A9CF7E.4000804@robinbowes.com>	 <16811.54622.500830.508054@cse.unsw.edu.au> <1101872071.3815.135.camel@compaq-rhel4.xsintricity.com>
+From: Fabrice LORRAIN <Fabrice.Lorrain@univ-mlv.fr>
+Subject: Re: mdadm drives me crazy
+Date: Wed, 01 Dec 2004 13:53:26 +0100
+Message-ID: <41ADBEC6.8030701@univ-mlv.fr>
+References: <41ADA964.3030606@univ-mlv.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1101872071.3815.135.camel@compaq-rhel4.xsintricity.com>
+In-Reply-To: <41ADA964.3030606@univ-mlv.fr>
 Sender: linux-raid-owner@vger.kernel.org
-To: Doug Ledford <dledford@redhat.com>
-Cc: Neil Brown <neilb@cse.unsw.edu.au>, Guy <bugzilla@watkins-home.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: Fabrice.Lorrain@univ-mlv.fr
 List-Id: linux-raid.ids
 
-Doug Ledford wrote:
+Fabrice LORRAIN wrote:
+> Hi all,
 > 
-> If I recall correctly, this fixes the primary symptom, but not the whole
-> problem.  When in --monitor mode, mdadm will reopen each device every 15
-> seconds to scan its status.  As such, a shutdown could still fail if
-> mdadm is still running and the timing is right.  In that instance,
-> retrying the shutdown on failure would likely be enough to solve the
-> problem, but that sounds icky to me.  Would be much better if mdadm
-> could open a control device of some sort and query about running arrays
-> instead of opening the arrays themselves.
+...
+> $ sudo mdadm --create /dev/md0 --level=5 --raid-devices=6 /dev/loop[0-5]
 
-Wouldn't simply killing the "mdadm --monitor" process early on in the 
-shutdown process achieve the same result?
 
-R.
--- 
-http://robinbowes.com
+$ sudo mdadm --create /dev/md0 --force --level=5 --raid-devices=6 
+/dev/loop[0-5]
+
+Seems to give what I expected (a raid5 pool with 6 devices, no spare).
+
+ From mdadm man page :
+"...When creating a RAID5 array, mdadm will automatically create a 
+degraded array with an extra spare drive.  This is because building the 
+spare into a  degraded  array  is in general faster than resyncing the 
+parity on a non-degraded, but not clean, array.  This feature can be 
+over-ridden with the -I --force option."
+
+"-I" doesn't seems to be understood by mdadm. Leftover ?
+
+I don't understand what the previous extract from the man page means. My 
+understanding is that the default behaviour of mdadm is to create a 
+raid5 pool in degraded mode aka with a missing drive ? Is this correct ?
+
+after
+$ sudo mdadm --create /dev/md0 --force --level=5 --raid-devices=6 
+/dev/loop[0-5]
+
+the state of the array is dirty. Why ?
+
+$ sudo mdadm --stop /dev/md0 followed by
+$ sudo mdadm --examine /dev/loop[0-5]
+
+gives a clean state for each device but
+
+$ sudo mdadm --assemble /dev/md0 /dev/loop[0-5] keeps the dirty state of 
+the array.
+
+Thanks,
+
+	Fab
