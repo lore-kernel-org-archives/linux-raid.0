@@ -1,43 +1,49 @@
-From: Joshua Baker-LePain <jlb17@duke.edu>
-Subject: Re: 3ware escalade vs software raid, from a different jeff
-Date: Tue, 24 Feb 2004 09:16:18 -0500 (EST)
+From: Paul Clements <Paul.Clements@SteelEye.com>
+Subject: Re: [PATCH] md: fix device size calculation with non-persistent
+ superblock
+Date: Tue, 24 Feb 2004 10:27:55 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.58.0402240908530.25541@chaos.egr.duke.edu>
-References: <Law11-F34H1dsDb7xBN000117b3@hotmail.com>
+Message-ID: <403B6D7B.29A4B2A0@SteelEye.com>
+References: <20040223024124.GA1590@psilocybus>
+		<16441.33071.218049.163976@notabene.cse.unsw.edu.au>
+		<403A30F9.D54AAC68@SteelEye.com> <16442.42303.445148.394516@notabene.cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Law11-F34H1dsDb7xBN000117b3@hotmail.com>
-To: Jeff Gray <jeffgray@hotmail.com>
-Cc: Holger.Kiehl@dwd.de, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@cse.unsw.edu.au>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 23 Feb 2004 at 5:23pm, Jeff Gray wrote
+Neil Brown wrote:
+> 
+> On Monday February 23, Paul.Clements@SteelEye.com wrote:
+> > Neil,
+> >
+> > Currently, the device size calculation is not correct when hot-adding
+> > devices to arrays with non-persistent superblocks. Device size is always
+> > calculated as if there were a physical superblock on every device. The
+> > attached simple change to hot_add_disk() fixes the problem.
+> 
+> Hmm.. I had always assumed that non-persistent superblocks only worked
+> for linear and raid0.  I'm not sure I would trust any other
+> configuration.
+> 
+> Are you seriously using raid1 with non-persistent superblocks?  
 
-> I am curious as to which filesystem you are using on that server. I've asked 
-> questions on other
-> mailing lists before regarding journaling filesystems but it's always 
-> interesting to see how people
-> are using them in real-life scenarios. Currently I'm trying to choose 
-> between Reiser and XFS.
+Yes, and this works fine in 2.4, as well. We opted for non-persistent
+superblocks in order to support creation of raid1 mirrors over
+partitions that already had filesystems or other data present (and yes,
+we calculate the size of the new md device to make sure the existing
+data will fit).
 
-It very much depends on your workload and typical file size.  I use XFS on 
-my big 3ware based servers (2 2TB servers, and 1 1TB), and generally am 
-*very* pleased with it.  It's very popular on the linux-ide-arrays list as 
-well.
 
-XFS usually is very fast.  Where it falls down (at least, I think it's the 
-culprit) is when you have *lots* of very small files.  One directory on 
-one of my servers is ~450 GB big and has ~3.4M files in ~29K 
-subdirectories (avg file size 140Kb).  Operations on that directory are 
-noticeably slow.  For that sort of workload, I'd think Reiser would 
-be better.
+> How do you ensure reliable re-assembly after a device failure followed by
+> shutdown?
 
-And lots of folks just stick with ext3.  The best answer, of course, is to 
-test with something that as closely as possible resembles your expected 
-workload.
+There is a user-level clustering framework that sets up, monitors, and
+takes down the mirror. Disk failures and other events are handled by
+this framework.
 
--- 
-Joshua Baker-LePain
-Department of Biomedical Engineering
-Duke University
+--
+Paul
