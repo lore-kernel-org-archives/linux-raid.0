@@ -1,136 +1,52 @@
 From: NeilBrown <neilb@cse.unsw.edu.au>
-Subject: [PATCH] md - 8 of 10 - Remove the 'disks' array from md which holds the gendisk structures.
-Date: Fri, 16 Jan 2004 12:19:40 +1100
+Subject: [PATCH] md - 5 of 10 - Make sure md recovery happens appropriately.
+Date: Fri, 16 Jan 2004 12:19:39 +1100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <E1AhIeC-0002Uu-00@notabene>
+Message-ID: <E1AhIeB-0002UT-00@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: Andrew Morton <akpm@osdl.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-### Comments for ChangeSet
 
-Move the pointers into mddev.  The reduces dependance on MAX_MD_DEVS.
+Currently if there are two failed drives,
+and two spares are added, then recovery starts onto
+the first spare, but never notices the second spare.
+To cope, we set RECOVERY_NEEDED when recovery finishes
+so that we re-check.
 
  ----------- Diffstat output ------------
- ./drivers/md/md.c           |   27 +++++++++++++--------------
- ./include/linux/raid/md_k.h |    2 ++
- 2 files changed, 15 insertions(+), 14 deletions(-)
+ ./drivers/md/md.c |    8 ++++++--
+ 1 files changed, 6 insertions(+), 2 deletions(-)
 
 diff ./drivers/md/md.c~current~ ./drivers/md/md.c
---- ./drivers/md/md.c~current~	2004-01-16 12:06:43.000000000 +1100
-+++ ./drivers/md/md.c	2004-01-16 12:07:31.000000000 +1100
-@@ -123,8 +123,6 @@ static ctl_table raid_root_table[] = {
- 
- static struct block_device_operations md_fops;
- 
--static struct gendisk *disks[MAX_MD_DEVS];
--
- /*
-  * Enables to iterate over all existing md arrays
-  * all_mddevs_lock protects this list as well as mddev_map.
-@@ -1461,7 +1459,7 @@ static struct kobject *md_probe(dev_t de
- 		return NULL;
- 
- 	down(&disks_sem);
--	if (disks[unit]) {
-+	if (mddev->gendisk) {
- 		up(&disks_sem);
- 		mddev_put(mddev);
- 		return NULL;
-@@ -1479,7 +1477,7 @@ static struct kobject *md_probe(dev_t de
- 	disk->private_data = mddev;
- 	disk->queue = mddev->queue;
- 	add_disk(disk);
--	disks[mdidx(mddev)] = disk;
-+	mddev->gendisk = disk;
- 	up(&disks_sem);
- 	return NULL;
- }
-@@ -1597,7 +1595,7 @@ static int do_md_run(mddev_t * mddev)
- 
- 	unit = mdidx(mddev);
- 	md_probe(0, &unit, NULL);
--	disk = disks[unit];
-+	disk = mddev->gendisk;
- 	if (!disk)
- 		return -ENOMEM;
- 
-@@ -1648,7 +1646,7 @@ static int do_md_run(mddev_t * mddev)
- 
- static int restart_array(mddev_t *mddev)
- {
--	struct gendisk *disk = disks[mdidx(mddev)];
-+	struct gendisk *disk = mddev->gendisk;
- 	int err;
- 
- 	/*
-@@ -1688,7 +1686,7 @@ out:
- static int do_md_stop(mddev_t * mddev, int ro)
- {
- 	int err = 0;
--	struct gendisk *disk = disks[mdidx(mddev)];
-+	struct gendisk *disk = mddev->gendisk;
- 
- 	if (mddev->pers) {
- 		if (atomic_read(&mddev->active)>2) {
-@@ -1739,7 +1737,7 @@ static int do_md_stop(mddev_t * mddev, i
- 		export_array(mddev);
- 
- 		mddev->array_size = 0;
--		disk = disks[mdidx(mddev)];
-+		disk = mddev->gendisk;
- 		if (disk)
- 			set_capacity(disk, 0);
- 	} else
-@@ -2528,7 +2526,7 @@ static int md_ioctl(struct inode *inode,
- 			err = put_user (4, (char *) &loc->sectors);
- 			if (err)
- 				goto abort_unlock;
--			err = put_user(get_capacity(disks[mdidx(mddev)])/8,
-+			err = put_user(get_capacity(mddev->gendisk)/8,
- 						(short *) &loc->cylinders);
- 			if (err)
- 				goto abort_unlock;
-@@ -3568,6 +3566,8 @@ static void autostart_arrays(void)
- 
- static __exit void md_exit(void)
- {
-+	mddev_t *mddev;
-+	struct list_head *tmp;
- 	int i;
- 	blk_unregister_region(MKDEV(MAJOR_NR,0), MAX_MD_DEVS);
- 	for (i=0; i < MAX_MD_DEVS; i++)
-@@ -3580,15 +3580,14 @@ static __exit void md_exit(void)
- #ifdef CONFIG_PROC_FS
- 	remove_proc_entry("mdstat", NULL);
- #endif
--	for (i = 0; i < MAX_MD_DEVS; i++) {
--		struct gendisk *disk = disks[i];
--		mddev_t *mddev;
--		if (!disks[i])
-+	ITERATE_MDDEV(mddev,tmp) {
-+		struct gendisk *disk = mddev->gendisk;
-+		if (!disk)
- 			continue;
--		mddev = disk->private_data;
- 		export_array(mddev);
- 		del_gendisk(disk);
- 		put_disk(disk);
-+		mddev->gendisk = NULL;
- 		mddev_put(mddev);
- 	}
- }
-
-diff ./include/linux/raid/md_k.h~current~ ./include/linux/raid/md_k.h
---- ./include/linux/raid/md_k.h~current~	2004-01-16 11:58:49.000000000 +1100
-+++ ./include/linux/raid/md_k.h	2004-01-16 12:07:31.000000000 +1100
-@@ -188,6 +188,8 @@ struct mddev_s
- 	int				sb_dirty;
- 	int				ro;
- 
-+	struct gendisk			*gendisk;
-+
- 	/* Superblock information */
- 	int				major_version,
- 					minor_version,
+--- ./drivers/md/md.c~current~	2004-01-16 11:59:46.000000000 +1100
++++ ./drivers/md/md.c	2004-01-16 12:05:40.000000000 +1100
+@@ -3372,9 +3372,11 @@ void md_check_recovery(mddev_t *mddev)
+ 		if (mddev->sb_dirty)
+ 			md_update_sb(mddev);
+ 		if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery) &&
+-		    !test_bit(MD_RECOVERY_DONE, &mddev->recovery))
++		    !test_bit(MD_RECOVERY_DONE, &mddev->recovery)) {
+ 			/* resync/recovery still happening */
++			clear_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+ 			goto unlock;
++		}
+ 		if (mddev->sync_thread) {
+ 			/* resync has finished, collect result */
+ 			md_unregister_thread(mddev->sync_thread);
+@@ -3387,11 +3389,13 @@ void md_check_recovery(mddev_t *mddev)
+ 			}
+ 			md_update_sb(mddev);
+ 			mddev->recovery = 0;
++			/* flag recovery needed just to double check */
++			set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+ 			wake_up(&resync_wait);
+ 			goto unlock;
+ 		}
+ 		if (mddev->recovery) {
+-			/* that's odd.. */
++			/* probably just the RECOVERY_NEEDED flag */
+ 			mddev->recovery = 0;
+ 			wake_up(&resync_wait);
+ 		}
