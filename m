@@ -1,36 +1,25 @@
-From: Troy Benjegerdes <hozer@drgw.net>
-Subject: on-disk superblock sanity checking
-Date: Sun, 11 Aug 2002 02:17:56 -0500
+From: Johannes Langauf <johannes@langauf.de>
+Subject: raid autodetect problems
+Date: Mon, 12 Aug 2002 16:54:58 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20020811071755.GF3215@altus.drgw.net>
+Message-ID: <20020812165458.C3835@hurricane>
+Reply-To: johannes@langauf.de
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I have recently run into a case where a kernel bug appears to have written 
-a bogus value into the raid superblock structure (in particular, 
-sb->disks[26].raid_disk was 0xd7e56000).
+Hi,
 
-This caused the following code in raid1_run() to kernel panic..
-
-        for (i = 0; i < MD_SB_DISKS; i++) {
-
-                //descriptor = sb->disks+i;
-                descriptor = &sb->disks[i];
-                disk_idx = descriptor->raid_disk;
-                disk = conf->mirrors + disk_idx;
+I've got a 4-ide-disk-raid5 array. I had all disks on two ide-buses. To
+improve speed I bought an ide-controller, so that every disk has its own
+bus now. But the autdetect function doesn't recognise the array anymore.
+This seems to be because the persistent superblocks still point to the old
+position of the devices. I already started the array with an updated
+/etc/raidtab, but that didn't help.
+I need autodetection because normally the array is my root fs. So what can
+I do to make things work again besides from rebuilding the array?
 
 
-'mkraid --force /dev/md0' appears to have cleaned up the panic on boot 
-problem.. but I wonder if it wouldn't be a good idea to have some 
-additional sanity checking? 
-
--- 
-Troy Benjegerdes | master of mispeeling | 'da hozer' |  hozer@drgw.net
------"If this message isn't misspelled, I didn't write it" -- Me -----
-"Why do musicians compose symphonies and poets write poems? They do it
-because life wouldn't have any meaning for them if they didn't. That's 
-why I draw cartoons. It's my life." -- Charles Schulz
