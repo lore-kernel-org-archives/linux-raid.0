@@ -1,30 +1,36 @@
-From: Dan Egli <dan@eglifamily.dnsalias.net>
+From: seth vidal <skvidal@phy.duke.edu>
 Subject: Re: raid 0 on different size devices?
-Date: Wed, 19 Nov 2003 13:01:10 -0700 (MST)
+Date: 19 Nov 2003 15:05:11 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0311191300350.6810-100000@eglifamily.dnsalias.net>
-References: <1069269741.6952.33.camel@opus>
+Message-ID: <1069272311.6952.36.camel@opus>
+References: <Pine.LNX.4.44.0311191300350.6810-100000@eglifamily.dnsalias.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1069269741.6952.33.camel@opus>
-To: seth vidal <skvidal@phy.duke.edu>
-Cc: Hermann Himmelbauer <dusty@strike.wu-wien.ac.at>, linux-raid@vger.kernel.org
+In-Reply-To: <Pine.LNX.4.44.0311191300350.6810-100000@eglifamily.dnsalias.net>
+To: Dan Egli <dan@eglifamily.dnsalias.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 19 Nov 2003, seth vidal wrote:
 
-> 
-> > AFAIK they have to be of equal size but as you can create a 27GB partition on 
-> > the 40GB drive, you could at least get 54GB out of this configuration. 
-> 
-> No. I have a 120GB and a 60GB disk in a linear array working just fine.
-> 
-> it's not technically raid0, but it lets the person do what they're
-> wanting to do.
+> How do I setup a linear array?
 
-How do I setup a linear array?
+a raidtab for use with mkraid might look something like this:
+raiddev             /dev/md0
+raid-level                  linear
+nr-raid-disks               2
+chunk-size                  32
+persistent-superblock       1
+    device          /dev/hda1
+    raid-disk     0
+    device          /dev/hdc1
+    raid-disk     1
 
---- dan
+
+or you can use mdadm -C -llinear etc etc etc - man mdadm for complete
+options.
+
+-sv
 
 
