@@ -1,26 +1,30 @@
-From: Bin Ren <br260@cam.ac.uk>
-Subject: some other raid1_conf_t member meanings (Modified by Bin Ren)
-Date: Mon, 5 Jan 2004 11:58:14 +0000
+From: mru@kth.se (=?iso-8859-1?q?M=E5ns_Rullg=E5rd?=)
+Subject: Force RAID1 as clean
+Date: Tue, 06 Jan 2004 03:13:17 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <B610CE30-3F76-11D8-8AD6-000A9576014E@cam.ac.uk>
-Mime-Version: 1.0 (Apple Message framework v609)
-Content-Type: text/plain; charset=US-ASCII; format=flowed
-Content-Transfer-Encoding: 7bit
+Message-ID: <yw1xn091zuwy.fsf@ford.guide>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
 
-I'm reading the source codes of RAID1. In file 
-'include/linux/raid/raid1.h',
-in struct raid1_private_data, there are these members:
+Is there a way to forcibly mark a RAID1 as clean?  I know it can be
+dangerous, I just don't want to wait for 200GB of scrap to resync.
 
-int phase;
-int window;
+=46or some reason, the resync is terribly slow in Linux 2.6.0, only
+~1MB/s.  DMA is enabled on all disks and the individual performance of
+each disk is normal.  There are no error messages from the kernel.  It
+just doesn't seem right.
 
-Could anybody tell me their meanings?
+--=20
+M=E5ns Rullg=E5rd
+mru@kth.se
 
-Thanks a lot.
-Bin
-
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
