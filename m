@@ -1,67 +1,51 @@
-From: Peter.Seiderer@gmx.de
-Subject: Bugfix: mkraid
-Date: Fri, 11 Jul 2003 17:13:27 +0200 (MEST)
+From: Michel <michel@ket.kth.se>
+Subject: Performance difference between two raid0 arrays on same drives?
+Date: Fri, 11 Jul 2003 18:13:26 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <6298.1057936407@www40.gmx.net>
+Message-ID: <200307111813.26177.michel@ket.kth.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
+Hi!
 
-the following patch is a bugfix for mkraid (from raidtools-1.00.3).
+I have set two raid0 arrays on two hardrives, using 2x2 partitions. I did a 
+benchmark of the resulting arrays and one is much slower than the other one. 
+I used bonnie++ and hdparm for the tests. It showed that /dev/md0 is 30% 
+slower than /dev/md1. 
+/dev/md1 is really close to twice the performance of a single drive.
+I set the arrays with the same parameters. md0 is built from 2x 5 Gb while md1 
+is built from 2x2 Gb. The harddrives have the same partition table. md0 is 
+the closest to the begining of the drives.
+The filessystem is Reiserfs on both arrays.
+Everything works well, except i am curious about such a difference in 
+performances, since the arrays share the same hardware. 
+I am new to linux raid, i do not know if this is normal or weird.
+Thanks for any help!
 
-It fixes that a call 'mkraid /dev/md5' will check if /dev/md5 is active=
- and
-not
-if the last entry from the config file is active.
+/etc/raidtab:
+raiddev /dev/md0
+	raid-level 0
+	nr-raid-disks 2
+	persistent-superblock 1
+	chunk-size 32
+	device /dev/hde3
+	raid-disk 0
+	device /dev/hdg3
+	raid-disk 1
 
---- raidtools-1.00.3/mkraid.c_orig      2003-07-11 16:49:23.000000000 +=
-0200
-+++ raidtools-1.00.3/mkraid.c   2003-07-11 17:15:24.000000000 +0200
-@@ -219,7 +219,7 @@
-     while (*args) {
-        for (p =3D cfg_head; p; p =3D p->next) {
-            if (strcmp(p->md_name, *args)) continue;
--           if (check_active(cfg))=20
-+           if (check_active(p))=20
-                goto abort;
-            if (force_flag) {
-                fprintf(stderr, "DESTROYING the contents of %s in 5 sec=
-onds,
-Ctrl-C if unsure!\n", *args);
+raiddev /dev/md1
+	raid-level 0
+	nr-raid-disks 2
+	persistent-superblock 1
+	chunk-size 32
+	device /dev/hde5
+	raid-disk 0
+	device /dev/hdg5
+	raid-disk 1
 
-
-And another little patch for against SEGV when called with a very long
-cmdline (e.g.
-/dev/md_this_is_very_long_md_device_and_longer_than_MAX_LINE_LENGTH_)
-
---- raidtools-1.00.3/raid_io.c_orig     2003-07-11 16:09:43.000000000 +=
-0200
-+++ raidtools-1.00.3/raid_io.c  2003-07-11 17:15:25.000000000 +0200
-@@ -522,7 +522,7 @@
-=20
-        if ((ch =3D strstr(p->md_name, "/md")) =3D=3D NULL)
-                return 0;
--       strcpy(buffer, ch+1);
-+       strncpy(buffer, MAX_LINE_LENGTH, ch+1);
-        if ((fp =3D fopen("/proc/mdstat", "r")) =3D=3D NULL)
-                return 0;
-        while (1) {
-
-
-Peter
-
---=20
-+++ GMX - Mail, Messaging & more  http://www.gmx.net +++
-
-Jetzt ein- oder umsteigen und USB-Speicheruhr als Pr=E4mie sichern!
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
