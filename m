@@ -1,32 +1,28 @@
-From: Michael Tokarev <mjt@tls.msk.ru>
-Subject: Re: Postgres on RAID5
-Date: Wed, 16 Mar 2005 19:55:49 +0300
-Message-ID: <42386515.1070103@tls.msk.ru>
-References: <4231F5F2.6000509@m-cam.com> <Pine.LNX.4.58.0503160947080.11922@lewis.et.byu.edu>
+From: Arshavir Grigorian <ag@m-cam.com>
+Subject: RAID0+1
+Date: Wed, 16 Mar 2005 14:23:09 -0500
+Message-ID: <4238879D.7040608@m-cam.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-In-Reply-To: <Pine.LNX.4.58.0503160947080.11922@lewis.et.byu.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Dougall <davidd@et.byu.edu>
-Cc: Arshavir Grigorian <ag@m-cam.com>, linux-raid@vger.kernel.org, pgsql-performance@postgresql.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-David Dougall wrote:
-> In my experience, if you are concerned about filesystem performance, don't
-> use ext3.  It is one of the slowest filesystems I have ever used
-> especially for writes.  I would suggest either reiserfs or xfs.
+Hi,
 
-I'm a bit afraid to start yet another filesystem flamewar, but.
-Please don't make such a claims without providing actual numbers
-and config details.  Pretty please.
+I have a RAID1+0 array. During boot time, RAID1 arrays get correctly 
+detected and activated. But RAID0 fails to come up. I am guessing the 
+reason the RAID0 cannot be autodetected is that it's built on other md 
+devices and not a physical disk. Anyone knows how to get around this?
 
-ext3 performs well for databases, there's no reason for it to be
-slow.  Ok, enable data=journal and use it with eg Oracle - you will
-see it is slow.  But in that case it isn't the filesystem to blame,
-it's operator error, simple as that.
+I am using Debian Sarge with mdadm -v1.9.0 running a custom compiled 
+2.4.27 kernel.
 
-And especially reiserfs, with its tail packing enabled by default,
-is NOT suitable for databases...
+TIA.
 
-/mjt
+
+-- 
+Arshavir Grigorian
+Systems Administrator/Engineer
+M-CAM, Inc.
