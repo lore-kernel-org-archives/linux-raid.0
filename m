@@ -1,35 +1,19 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: mkraid-problems
-Date: Sat, 16 Aug 2003 07:01:58 +1000
+From: berk walker <berk.walker@verizon.net>
+Subject: mr. brown: point me to text on RAID
+Date: Fri, 15 Aug 2003 21:00:17 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16189.19014.742060.8200@gargle.gargle.HOWL>
-References: <3F3D4391.2020702@lissners.de>
+Message-ID: <3F3D8221.50601@verizon.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Ekkehard Lissner on Friday August 15
-To: Ekkehard Lissner <ekkehard@lissners.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Friday August 15, ekkehard@lissners.de wrote:
-> 
-> If there is no normal way to reconstruct the array without losing my 
-> data, how about patching the timestamps with
-> a disk-editor? Which bytes must be read from sdc1 and be written to sdd1 
-> and sdb1?
-> 
+Sir, I have seen that you are both knowing and published.  What might I 
+buy as end-all/do-all text on RAID (software)?
 
-Your array sounds very sick, though it is not at all clear what the
-problem really is.
+Thanks for your consideration.
 
-I suggest you get mdadm, and use
-  mdadm --assemble --force /dev/md0 /dev/sd[bcd]1
+b-
 
-It will try to assemble the array for force-update event counts as
-necessary.
-
-What kernel version are you running?
-
-NeilBrown
