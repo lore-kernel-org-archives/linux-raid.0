@@ -1,55 +1,55 @@
-From: Mark Hahn <hahn@physics.mcmaster.ca>
-Subject: RE: Good news / bad news - The joys of RAID
-Date: Sat, 20 Nov 2004 18:30:07 -0500 (EST)
-Message-ID: <Pine.LNX.4.44.0411201741300.19120-100000@coffee.psychology.mcmaster.ca>
-References: <200411201937.iAKJbwN17977@www.watkins-home.com>
+From: berk walker <berk.walker@verizon.net>
+Subject: Re: Good news / bad news - The joys of RAID
+Date: Sat, 20 Nov 2004 20:01:34 -0500
+Message-ID: <419FE8EE.40505@verizon.net>
+References: <Pine.LNX.4.44.0411201238320.19120-100000@coffee.psychology.mcmaster.ca>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200411201937.iAKJbwN17977@www.watkins-home.com>
+In-Reply-To: <Pine.LNX.4.44.0411201238320.19120-100000@coffee.psychology.mcmaster.ca>
 Sender: linux-raid-owner@vger.kernel.org
-To: Guy <bugzilla@watkins-home.com>
+To: Mark Hahn <hahn@physics.mcmaster.ca>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> Can you explain how the disks have a MTBF of 1,000,000 hours?  But fail more
-> often than that?  Maybe I just don't understand some aspect of MTBF.
+ALL of the Maxtor junk that I have sitting next to me were in factory 
+packaging, and not likely to have been affected by either physical or 
+electrical shock.
 
-simple: the MTBF applies to very large sets of disks.  if you had 
-millions of disks, you'd expect to average mtbf/ndisks between failures.
-with statistically trivial sample sizes (10 disks), you can't 
-really say much.  of course, a proper model of the failure rate 
-would have a lot more than 1 parameter...
+HE might have implied, I am saying it!  Why ask someone as you did in 
+sentence #2?  Ask them - or yourself.
 
-for instance, my organization will be buying about .5 PB
-of storage soon.  here are some options:
+Of course, he probably missed the warranty statement to not run Linux.
 
-disk		n	mtbf	hours	$/disk	$K total
+Mark Hahn wrote:
 
-250GB SATA	1920	1e6	500	399	766
-600GB SATA	800	1e6	1250	600?	480
-
-73GB SCSI/FC	6575	1.3e6	198	389	2558
-146GB SCSI/FC	3288	1.3e6	395	600	1973
-300GB SCSI/FC	1600	1.3e6	813	1200	1920
-
-these mtbf's are basically made up, since disk vendors aren't really
-very helpful in publishing their true reliability distributions.
-these disk counts are starting to be big enough to give some meaning
-to the hours=mtbf/n calculation - I'd WAG that "hours" is within
-a factor of two.  (I looked at only three lines of SCSI disks to 
-get 1.3e6 - two quoted 1.2 and the newer was 1.4.)  vendors seem 
-to be switching to quoting "annualized failure rates", which are 
-probably easier to understand - 1.2e6 MTBF or 0.73% AFR, for instance.
-the latter makes it more clear that we're talking about gambling ;)
-
-but the message is clear: for a fixed, large capacity, your main 
-concern should be bigger disks.  since our money is also fixed,
-you can see that SCSI/FC prices are a big problem (these are 
-real list prices from a tier-1 vendor who marks up their SATA
-by an embarassing amount...)  further, there's absolutely no chance
-we could ever keep .5 PB of disks busy at 100% duty cycle, so that's
-not a reason to buy SCSI/FC either...
-
-regards, mark hahn.
-
+>>Never buy Maxtor drives again!
+>>    
+>>
+>
+>you imply that Maxtor drives are somehow inherently flawed.
+>can you explain why you think millions of people/companies
+>are naive idiots for continuing to buy Maxtor disks?
+>
+>this sort of thing is just not plausible: Maxtor competes 
+>with the other top-tier disk vendors with similar products 
+>and prices and reliability.  yes, if you buy a 1-year disk,
+>you can expect it to have been less carefully tested, possibly
+>be of lower-end design and reliability, and to have been handle
+>more poorly by the supply chain.  thankfully, you don't have 
+>to buy 1-year disks any more.
+>
+>read the specs.  make sure your supply chain knows how to 
+>handle disks.  make sure your disks are mounted correctly,
+>both mechanically and with enough airflow.  use raid and 
+>some form of archiving/backups.  don't get hung up on which 
+>of the 4-5 top-tier vendors makes your disk.
+>
+>-
+>To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>  
+>
