@@ -1,53 +1,34 @@
-From: Clemens Schwaighofer <cs@tequila.co.jp>
+From: Brad Campbell <brad@wasp.net.au>
 Subject: Re: Which raid card to buy for Sarge
-Date: Thu, 01 Apr 2004 13:57:14 +0900
+Date: Thu, 01 Apr 2004 09:01:51 +0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <406BA12A.6020300@tequila.co.jp>
-References: <008f01c41737$8b57be40$6405a8c0@a30> <006401c417a1$36a45790$6405a8c0@a30>
+Message-ID: <406BA23F.7000506@wasp.net.au>
+References: <Pine.LNX.4.44.0403311442520.31572-100000@coffee.psychology.mcmaster.ca>	 <406B9F3E.4020701@wasp.net.au> <1080795066.16499.15.camel@binkley>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <006401c417a1$36a45790$6405a8c0@a30>
-To: me@heyjay.com
+In-Reply-To: <1080795066.16499.15.camel@binkley>
+To: seth vidal <skvidal@phy.duke.edu>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+seth vidal wrote:
+>>One point. Hardware raid (and faux hardware raid) provides real hot swap with on-the-fly rebuilds.
+>>Linux software raid can't (yet).
+> 
+> 
+> umm. That's surprising. My software raid arrays running on dell
+> powervault 221s scsi boxes with adaptec 39160 controllers are
+> hotswappable and when I put in a new disk and add it to the array it
+> resyncs on the fly.
+> 
+> Are you just talking about ide-based raid?
 
-me@heyjay.com wrote:
+Yes. ATA and SATA raid (Which is the majority of low budget linux software raid stuff)
+I realise scsi is hotswap. It comes with the turf.
 
-| - I'm using a (fairly) old machine, I have to figure processor speed
-has to
-| be an issue with software raid
-| - When the box is being stressed most of the work is computational, the
-| process I run puts the CPU% at 98% (according to top).
-| - Most of the disk activity is read (the disks aren't very active in
-| general)
-| - I'm going to use WD 7200 rpm drives
-| - going to do raid 1
-| - I'm going to want to do backups onto a tape drive
+I would find it pretty hard to justify the expense of scsi for my 7 drive 1.4TB low speed array (Low 
+speed because I never *need* more than about 2MB/s in any direction but I need heaps of space)
 
-The only thing that comes to my mind is hot swapping. If you go with IDE
-drives it is highlu possible it is not going to work. which means, you
-don't have data loss if a drive fails, but downtime (depends on the
-server if this is critical).
-If you use SCSI drives and Softwareraid you can make hotswap, then if
-you don't have an special reason for hardware raid, you can go for
-software raid.
-
-- --
-Clemens Schwaighofer - IT Engineer & System Administration
-==========================================================
-TEQUILA\Japan, 6-17-2 Ginza Chuo-ku, Tokyo 104-8167, JAPAN
-Tel: +81-(0)3-3545-7703            Fax: +81-(0)3-3545-7343
-http://www.tequila.co.jp
-==========================================================
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.4 (GNU/Linux)
-
-iD8DBQFAa6EqjBz/yQjBxz8RApbuAKDf2q472lXPznFHPkpQ56dSLRkKJwCdGHWm
-agCc+RjOofOQk3aNaZRB4GY=
-=w1b7
------END PGP SIGNATURE-----
+Brad
