@@ -1,145 +1,58 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: Minor bugs in "mdadm --monitor --scan &"
-Date: Mon, 10 Jan 2005 02:00:28 -0500
-Message-ID: <200501100700.j0A70b920101@www.watkins-home.com>
-References: <200501100527.j0A5Rn919868@www.watkins-home.com>
+From: Mitchell Laks <mlaks@verizon.net>
+Subject: convert degraded raid1 drive to ext3 format
+Date: Mon, 10 Jan 2005 02:02:50 -0500
+Message-ID: <200501100202.50532.mlaks@verizon.net>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="us-ascii"
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200501100527.j0A5Rn919868@www.watkins-home.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Guy
-Sent: Monday, January 10, 2005 12:28 AM
-To: linux-raid@vger.kernel.org
-Subject: Minor bugs in "mdadm --monitor --scan &"
+Hi,
 
-I have mdadm configured to run a script when an event occurs.
+Only a newbie could ask this question. Guess what, I really am!
 
-I start mdadm like this:
-mdadm --monitor --scan&
+I have 4 hard drives on my ssytem to store data. currently i use raid5.
 
-That is from a script in /etc/init.d
+I am seriously considering using raid1 instead of raid5. 
+But  I only need raid1 while data is being initially collected on the server. 
+So  I would like to use raid1 (with ext3 format) initially and then convert 
+to standard ext3 drives.if this is possible.
 
-My /etc/mdadm.conf file has this:
-PROGRAM /root/bin/handle-mdadm-events
-Other lines not related.
+i have 4 drives  
+/dev/hda, /dev/hdc, /dev/hde, /dev/hdg
 
-The script has these 2 lines:
-echo '$1'=$1 '$2'=$2 '$3'=$3 '$4'=$4 >> /root/bin/handle-mdadm-events.log
-(date;cat /proc/mdstat;mdadm --detail $2)|mail -s "md event: $1 $2 $3"
-bugzilla@watkins-home.com 
+What I would like to do is use 
+stage 1)     /hda and /hdg as  a raid initially and leave /dev/hdc, /dev/hde 
+alone
+then use
+stage 2)    /hdc and /hdg as a raid and use "/hda as if it were a ext3 drive"
+then use
+stage 3)   /hde and  /hdg as a raid and use "/hda and /hdc as if there were 
+ext3 drives"
 
-I have a test array with 8 disks, /dev/ram[0-7]
+Now i see easily that I can run at stage3) 
 
-I ran this command:
+/dev/md0 --      /hda alone in degraded mode
+/dev/md1 ----  /hdc alone in degraded mode
+/dev/md2 ---    /hde and /hdg together.
 
-# mdadm /dev/md3 -f /dev/ram0
-mdadm: set /dev/ram0 faulty in /dev/md3
+if i do raidsetfaulty to /dev/hdg and raidhotremove /dev/hdg each time and add 
+it to the new /dev/md1 and /dev/md2 as I need them.
 
-I waited, I got 1 email:
-Fail /dev/md3 /dev/ram0
+But i would prefer REAL ext3 drives instead of degraded /dev/md0 and /dev/md1 
+(i think???). In place of /dev/md0 and /dev/md1.
 
-I ran these 2 commands:
-# mdadm /dev/md3 -a /dev/ram8
-mdadm: hot added /dev/ram8
-# mdadm /dev/md3 -a /dev/ram9
-mdadm: hot added /dev/ram9
+So my question is: I s it possible to "convert a degraded raid1  consisting of 
+a single hard drive over to a standard ext3 format drive (ie /dev/md0 is only 
+one drive so can it become ext3) ?" without doing something like rsync of the 
+data on /dev/md0  to a fresh drive "the new /dev/hda" ???
 
-Now I have 2 spares.
-I waited, I got this email:
-SpareActive /dev/md3 /dev/ram8
+Thanks,
+Mitchell Laks
 
-The Fail event and 4 others were missed.
-Examples from a slower array:
-$1=Fail $2=/dev/md2 $3=/dev/sdq1 $4=
-$1=Rebuild20 $2=/dev/md2 $3= $4=
-$1=Rebuild40 $2=/dev/md2 $3= $4=
-$1=Rebuild60 $2=/dev/md2 $3= $4=
-$1=Rebuild80 $2=/dev/md2 $3= $4=
-$1=SpareActive $2=/dev/md2 $3=/dev/sdc1 $4=
-
-
-I ran this command:
-# mdadm /dev/md3 -f /dev/ram1
-mdadm: set /dev/ram1 faulty in /dev/md3
-
-No emails were generated.  About 6 events were missed.
-The Fail and SpareActive events were missed, and the 4 Rebuild events.
-
-I think, since the state changed, then changed back, within 60 seconds, the
-events were missed.
-
-For me, I don't recall ever missing an event on a "real" array, but with the
-faster disks and very small /boot partitions I believe it could easily
-happen.  My small partitions don't have spares.
-
-Also, adds and removes don't generate events.
-
-Also, if there is no spare, the console display an extra warning:
-"md3: no spare disk to reconstruct array! -- continuing in degraded mode"
-Maybe this event should also generate an email.
-
-If there is a spare, the console displays this message:
-"md3: resyncing spare disk [dev 01:0e] to replace failed disk"
-
-Maybe both of the above should generate emails.  Otherwise you must wait
-until the Rebuild20 event to know that there is a spare.  Or I wait forever
-if there is not a spare.
-
-Just noticed while playing!
-If I use MAILADDR and don't use PROGRAM, like this:
-MAILADDR bugzilla@watkins-home.com
-# PROGRAM /root/bin/handle-mdadm-events
-
-I don't get Fail events, but I do get some events, like SpareActive.
-No!  Another test I got the Fail event, but not the SpareActive.
-With the above I did wait 60 seconds or more!
-
-And when I start monitor mode using PROGRAM I get these:
-$1=SparesMissing $2=/dev/md2 $3= $4=
-$1=SparesMissing $2=/dev/md3 $3= $4=
-$1=SparesMissing $2=/dev/md1 $3= $4=
-$1=SparesMissing $2=/dev/md0 $3= $4=
-
-But when using MAILADDR I don't get them!
-And they are wrong!  /dev/md2 does have a spare, and sometimes md3 has one.
-
-Also, if I use both, PROGRAM and MAILADDR I get some events from MAILADDR
-and some from PROGRAM, I don't always get all events from both.  I have not
-tried this much, so no details.
-
-Maybe md could save events in a queue, and mdadm --monitor could access the
-queue.  Maybe something like /proc/mdevents could be usefull.
-
-I am using kernel 2.4.28 and mdadm 1.8.0.
-
-Guy
-
-=========================================================================
-I checked my email, I got this wrong:
-
-Guy said:
-"If I use MAILADDR and don't use PROGRAM, like this:
-MAILADDR bugzilla@watkins-home.com
-# PROGRAM /root/bin/handle-mdadm-events
-
-I don't get Fail events, but I do get some events, like SpareActive.
-No!  Another test I got the Fail event, but not the SpareActive.
-With the above I did wait 60 seconds or more!"
-
-I do get Fail events, but do not get SpareActive.
-Both tests were the same.  Not sure how I got that wrong.
-
-Guy
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
