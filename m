@@ -1,30 +1,45 @@
-From: Daniel Brahneborg <daniel.com@wtnord.net>
-Subject: Re: BUG: Data corruption on Raid5 in Linux 2.6.0
-Date: Sun, 28 Dec 2003 16:00:10 +0100
+From: mattyml@bellsouth.net
+Subject: Persisting hotspare configuration
+Date: Sun, 28 Dec 2003 14:13:11 -0500 (EST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20031228160010.B5275@nettis.grimsta>
-References: <20031228000008.B2433@nettis.grimsta> <16366.28299.160756.494452@notabene.cse.unsw.edu.au>
+Message-ID: <Pine.GSO.4.58.0312281358001.20976@winnie.matty.com>
+Reply-To: mattyml@bellsouth.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <16366.28299.160756.494452@notabene.cse.unsw.edu.au>; from neilb@cse.unsw.edu.au on Sun, Dec 28, 2003 at 04:47:55PM +1100
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: Daniel Brahneborg <daniel.com@wtnord.net>, mingo@redhat.com, linux-raid@vger.kernel.org
+To: Linux Software RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sun, Dec 28, 2003 at 04:47:55PM +1100, Neil Brown wrote:
-> On Sunday December 28, daniel.com@wtnord.net wrote:
-> > I have a Raid5 system of four 160GB SATA disks. The drives
-> > themselves work fine, but when large files (a few hundred
-> > megs) are written to the raid disks they get corrupted after
-> > a random amount of data.  The kernel is Linus 2.6.0.
-> 
-> What file system?
+Howdy,
 
-I've now tried the same thing on an ext3 filesystem on the
-raid5 setup, with the same result.  "cp a b; md5sum a b"
-gives different values for b each time.
+I followed the directions in the FAQ, and mirrored "/" and swap on one
+of my machines. I am attempting to add a hotspare drive for these raid
+devices, and did the following:
 
-/Basic
+1) Update /etc/raidtab
 
+raiddev             /dev/md1
+raid-level                  1
+nr-raid-disks               2
+persistent-superblock       1
+nr-spare-disks              1
+    device          /dev/hda2
+    raid-disk     0
+    device          /dev/hdc2
+    raid-disk     1
+    device          /dev/hde1
+    spare-disk    0
+
+2) Add the hotspare to the device
+$ raidhotadd /dev/md1 /dev/hde1
+
+This works fine, but the configuration (from "cat /proc/mdstat")
+disappears after a reboot. I suspect that the configuration isn't
+getting written to the persistent-superblock? I looked through
+the "man -k raid" manpages, the FAQ, and various messages in the archives,
+but can't seem to figure out why the hotspare isn't visible when the box
+reboots? Is there an easy way to print the configuration that resides
+within the persistent-superblock?
+
+Thanks,
+- Ryan
