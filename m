@@ -1,55 +1,49 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [Fwd: "Enhanced" MD code avaible for review]
-Date: Wed, 17 Mar 2004 14:28:59 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: "Enhanced" MD code avaible for review
+Date: Wed, 17 Mar 2004 19:32:06 +0000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <4058A6FB.6080602@pobox.com>
-References: <405899E8.8070806@pobox.com> <20040317183756.GA23667@lst.de> <2241002704.1079549645@aslan.btc.adaptec.com> <20040317190117.GA23968@lst.de> <2260532704.1079550351@aslan.btc.adaptec.com> <20040317190916.GA24118@lst.de>
+Message-ID: <20040317193206.A17987@infradead.org>
+References: <459805408.1079547261@aslan.scsiguy.com> <4058A481.3020505@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20040317190916.GA24118@lst.de>
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Justin T. Gibbs" <Justin_Gibbs@adaptec.com>, linux-raid@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4058A481.3020505@pobox.com>; from jgarzik@pobox.com on Wed, Mar 17, 2004 at 02:18:25PM -0500
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: "Justin T. Gibbs" <gibbs@scsiguy.com>, linux-raid@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
+On Wed, Mar 17, 2004 at 02:18:25PM -0500, Jeff Garzik wrote:
+> > 	o Allow fully pluggable meta-data modules
+>=20
+> yep, needed
 
-(added linux-kernel to CC, where IMO the discussion on wider issues belongs)
+Well, this is pretty much the EVMS route we all heavily argued against.
+Most of the metadata shouldn't be visible in the kernel at all.
 
-Christoph Hellwig wrote:
-> On Wed, Mar 17, 2004 at 12:05:51PM -0700, Justin T. Gibbs wrote:
->>I'm aware of Neil's past comments on the subject, but I was not aware
->>of a more full discussion on what this means in terms of lost functionality
->>for Linux.  I would like to have that discussion.  I'm more than willing
->>to adjust our strategy once that discussion takes place and a consensus
->>is reached.
-> 
-> 
-> We're not far enough to actually removing functionlly yet.  For that
-> early userspace needs to get a little more mature and more widely used.
-> 
-> We're not going to add more functionaly like that. though.
+> > 	o Improve the ability of MD to auto-configure arrays.
+>=20
+> hmmmm.  Maybe in my language this means "improve ability for low-leve=
+l=20
+> drivers to communicate RAID support to upper layers"?
 
-If early userspace isn't ready, it sounds like a choice between 
-"nothing" and "it works".
+I think he's talking about the deprecated raid autorun feature.  Again
+something that is completely misplaced in the kernel.  (=E5gain EVMS li=
+ght)
 
-We want a clean, tasteful solution, sure.  But I think we can work 
-within the confines of the existing 2.6 API, and not postpone this stuff 
-under early userspace is ready.
+> > 	o Support multi-level arrays transparently yet allow
+> > 	  proper event notification across levels when the
+> > 	  topology is known to MD.
+>=20
+> I'll need to see the code to understand what this means, much less=20
+> whether it is needed ;-)
 
-<rant>
-Overall... the storage industry finally got off their ass and created a 
-vendor-neutral RAID format, and they're actually using it.  Linux users 
-don't deserve to be left out in the cold until 2.7.x klibc stuff is in, 
-since they will be buying such RAID hardware right now.
+I think he mean the broken inter-driver raid stacking mentioned below.
+Why do I have to thing of EVMS when for each feature?..
 
-I got into the Linux kernel game years ago in a large part because of 
-precisely this -- getting Linux users going on hardware that would 
-otherwise be Windows-only, without my help.  (or would otherwise be a 
-grotty and buggy vendor driver, without my help:))
-</rant>
-
-	Jeff
-
-
-
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
