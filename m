@@ -1,43 +1,46 @@
-From: Paul Clements <Paul.Clements@SteelEye.com>
-Subject: Re: Issues with Raid1 on a SS20 running 2.4.20
-Date: Mon, 09 Jun 2003 23:36:52 -0400
+From: danci@agenda.si
+Subject: PDC202xx with 130GB+ disk
+Date: Tue, 10 Jun 2003 13:59:14 +0200 (CEST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3EE55254.AE887892@SteelEye.com>
-References: <1055208821.22414.3.camel@ninja.crib.unspeakable.org>
+Message-ID: <Pine.LNX.4.53.0306101349300.4820@duplo.agenda.si>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Scott Walker <crimson@unspeakable.org>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Scott Walker wrote:
- 
-> Below is what happens when I fsck a raid device, Either on start or from
-> cli.
-> 
-> (none):~# fsck /tmp
-> fsck 1.33 (21-Apr-2003)
-> e2fsck 1.33 (21-Apr-2003)
-> The filesystem size (according to the superblock) is 255626 blocks
-> The physical size of the device is 255600 blocks
-> Either the superblock or the partition table is likely to be corrupt!
-> Abort<y>?
+Hello!
 
-> I'm at a loss. Does anyone have some info?
+I have a problem with PDC202xx controller and WDC WD1800JB hard drives.
+The PDC202xx shows only 130GB for this disks, while they should be 180GB.
 
-I'm guessing that you created the filesystem on one of the component
-devices (sda6, sdb6) before raiding them together. That doesn't always
-work. The resulting md device can be up to 4K (your chunk size is 4k) or
-64k (if you have a persistent superblock) smaller than the component
-devices.
+Since I have no physical access to the system (I'm administering it
+remotly), I've instructed the local sysadmin to update the controller BIOS
+to the lates revision which is supposed to support 42 bit LBA.
 
-You can try to resize2fs the filesystem to the proper size or recreate
-the filesystem by doing mkfs /dev/md2.
+That had no effect, fdisk still shows only 130GB available:
 
-You will eventually get filesystem errors when the filesystem approaches
-full capacity if you continue to use it as-is.
+Command (m for help): p
 
---
-Paul
+Disk /dev/hde: 16 heads, 63 sectors, 266305 cylinders
+Units = cylinders of 1008 * 512 bytes
+
+   Device Boot    Start       End    Blocks   Id  System
+/dev/hde1             1    266305 134217719+  83  Linux
+
+Right now I have 2.4.18 kernel with (I think) no extra IDE or Promise
+related patches.
+
+Is the PDC202xx driver in 2.4.18 too old to recognize more than 130GB???
+Would kernel upgrade help?
+
+ Thanks, D.
+
+
+ --
+___________________________________________________________________
+|    Danilo Godec    |     Agenda d.o.o.    |   ISP for business  |
+|  jr. Syst. Admin   |    Gosposvetska 84   |     WAN networks    |
+|  danci@agenda.si   |    si-2000 Maribor   |  Internet/Intranet  |
+| tel:+386.2.2340860 |       Slovenija      | Application servers |
+| fax:+386.2.2340854 | http://www.agenda.si |  Caldera OpenLinux  |
