@@ -1,236 +1,67 @@
-From: Andy Smith <andy@lug.org.uk>
-Subject: Re: swp - Re: ext3 journal on software raid (was Re: PROBLEM: Kernel 2.6.10 crashing repeatedly and hard)
-Date: Wed, 5 Jan 2005 22:35:56 +0000
-Message-ID: <20050105223556.GS99565@caffreys.strugglers.net>
-References: <20050105172627.GQ99565@caffreys.strugglers.net> <Pine.LNX.3.96.1050105101721.9914A-100000@Maggie.Linux-Consulting.com>
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: Linux 2.6.10 / RAID1 problem
+Date: Thu, 6 Jan 2005 09:35:40 +1100
+Message-ID: <16860.27580.73601.462427@cse.unsw.edu.au>
+References: <41DC515C.7030208@anduras.de>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="hPlPb9n7ZCbLHHmC"
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.3.96.1050105101721.9914A-100000@Maggie.Linux-Consulting.com>
+In-Reply-To: message from Sven Anders on Wednesday January 5
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Sven Anders <anders@anduras.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Wednesday January 5, anders@anduras.de wrote:
+> -----BEGIN PGP SIGNED MESSAGE-----
+> Hash: SHA1
+> 
+> Hello!
+> 
+> I'm expirencing strange problems on my server running Software RAID1 (Mirroring) under
+> the Linux kernel 2.6.10. It works nicely under Linux 2.4.18!
 
---hPlPb9n7ZCbLHHmC
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Why do you think it is a raid problem rather than an ext3 problem?
 
-On Wed, Jan 05, 2005 at 10:32:37AM -0800, Alvin Oga wrote:
->=20
-> hi ya andy
->=20
-> On Wed, 5 Jan 2005, Andy Smith wrote:
->=20
-> > > > Your recommendations
-> > >=20
-> > > that'd be your comment ... that is not whati said above
-> >=20
-> > Direct quote:
-> >=20
-> >         i'd add more memory before i'd use raid
->=20
-> i see ... when i say "i would use" ... i dont mean or imply=20
-> others to do so ..
+....
+> Test case:
+> ~ dd if=/dev/zero of=test0 bs=1M count=300
+> ~ while :; do cp test0 test1; cp test1 test2; cp test2 test0; od test0; done
+> 
+> Error:
+> ~ On Linux 2.4.18 it worked serveral hours perfectly (until I stopped it...)
+> ~ On Linux 2.6.10 after some minutes the following (or similar) error occures:
+> 
+> 
+> EXT3-fs error (device md5): ext3_free_blocks_sb: bit already cleared for block 1303980
+> Aborting journal on device md5.
+> ext3_abort called.
+.....
+> 
+> 
+> Does anybody have an idea?
+> What's the cause of this???
 
-That is not a very useful thing to say in response to someone who
-suggests using RAID mirrors for swap.
+No (not me at least).
+Are you able to run the same test on a single unraided drive?
 
-> > > and all i said, was use memory before you use swap on disks
-> >=20
-> > Which means what?  Who is there on this list who likes to use swap
-> > *before* physical memory?
->=20
-> you'd be surprized how many people wonder why their system is slow
-> and they using 100% swap ( hundreds of MB of swap ) and little memory
-> beause its $50 of expensive memory
+> 
+> Is there an known bug in the 2.6.10?
+> Is the Software RAID in the 2.6 series stable?
 
-What you said was (and I quoted it for you) "use memory before you
-use swap".  I am asking you if this also is a useful thing to say,
-because I was not aware there was anyone who would prefer to use
-swap before memory.
+I am not aware of any significant problems with Software RAID in
+2.6.10.
 
-Unless you simply mean "add more memory" which again would be a
-strange thing to say in a discussion about putting swap on a RAID
-mirror -> implies "always have enough RAM, configure no swap" but
-since you seem to have a great objection to me trying to make sense
-of what you're saying I won't go any further stating what I think
-you imply.
+> 
+> Any special kernel compile options not to use when using RAID?
 
-> > Do all your machines which you believe have adequate memory also
-> > have no swap configured?
->=20
-> yes .... in my machines .. they are all mostly tuned for specfic
-> tasks ... very little ( say 0.05% swap usage even at peak )
+No.
 
-So "no" then as I asked if your machines had any swap configured and
-you reply that they use 0.05% at peak.  To use 0.05% they need to
-have swap configured.
+> Any other (better) test to do?
 
-So your machines do have swap configured, that is what the question
-was.
+As above, try without raid. 
+If the problem goes away, come back here and report that fact.
+If it doesn't report it to the ext3 mailing list, or to linux-kernel.
 
-> > Fact is if your machine has swap configured then that swap is part
-> > of your virtual memory and if a device that is providing part of
-> > your virtual memory suddenly fails then your machine is going down.
->=20
-> yup...
->=20
-> and in some systems ... having swap ( too slow ) is NOT an option ...=20
-> 	( embedded systems, realtime operations, ... )
-
-That's great but it's irrelevant to this discussion since the
-situation discussed is swap on mirror or not.  Whether swap is
-required or beneficial is an admin issue outside the scope of RAID.
-We can assume that the admin ahs already determined that configuring
-some amount of swap is required, otherwise we cannot assume anything
-about their setup and will be telling them how to lay out their
-filesystems, what distribution to use, etc. etc..  There are some
-things that just don't need to be said and on a RAID list, "add more
-memory, swap is slow" is IMHO one of them.
-
-> 	=3D=3D you should NEVER have swap problems
-> 	=3D=3D otherwise, toss that system out or salvage what you can
-> 	=3D=3D
-
-If you use RAID-1 (-4, -5,- 10, etc.) then I think you are
-acknowledging that your disks are a cause for concern for you.
-Otherwise no one would be using RAID.  If you would not be willing
-to say the following:
-
-        you should NEVER have filesystem problems
-        otherwise, toss that system out or salvage what you can
-
-then I don't understand why you are willing to say it when it comes
-to swap and not a filesystem.  Disks fail, it's why we're here on
-this list.
-
-> >  You are replying to add more memory and
-> > don'trun things that can get swapped.=20
->=20
-> you're twisting things gain
-
-All I've got to work with is what you're giving me.  Direct quotes
-of yours lead me to believe that these are your points.  In a
-discussion about swap on RAID you have clearly stated to add more
-RAM, use higher quality components, not run certain userland
-processes.  If you say these things in a discussion about swap on
-RAID then I'm left to believe either that you see these things as an
-alternative to swap on RAID or else you are just posting irrelevant
-basic admin tips that have nothing to do with linux RAID.
-
-> > Those don't seem like very  useful recommendations.
->=20
-> that is becuase you're twisting things so you can make
-> comments i didnt say
-
-Then please explain yourself better using points that are relevant
-to RAID using md on Linux.
-
-> > > 	- and i don't think anybody is idiotic enough to add
-> > > 	more memory for the "spikes" in the workload
-> >=20
-> > OK so you must add swap to handle those spikes which means either
-> > you are happy that your machine will crash should the device that
-> > the swap is on die, or you use swap on a mirror to try to mitigate
-> > that.
->=20
-> this is pointless isnt it ...
->=20
-> are you an idiot or what ..
-
-It's possible to disagree and debate while still being civil.  If you
-don't have that skill then I'm not willing to spend time teaching
-you it.
-
-> do you like to put words and recommendations that i didnt say
-> and twist it in your favor=20
-
-No, I like understanding your point but at the moment all I can see
-is basic unix admin recommendations that are unrelated to the
-discussion at hand - you admit you have swap configured on your
-servers so all the other stuff you have mentioned is irrelevant.  So
-help me understand.
-
-I don't understand how you intend to survive a disk failure
-involving your swap unless you put it on a mirror or configure no
-swap or never have a disk failure, ever, or intend to have downtime
-when you do have a disk failure.
-
-So help me understand.
-
-> > From previous email (not a direct quote):
-> >=20
-> >         Don't run lpd on user-accessible machine
->=20
-> you obviously do NOT understand where to run lpd and where
-> to run dns and where to run pop and where to run ssh and where
-> to run mta ... and on and on and on ...
-
-You have no idea whether I do or do not know these things and on
-this list you never will, because placement of these things is
-irrelevant to linux raid.
-
-> > If you do not suffer disk crashes then why do you use mirrors at
-> > all?
->=20
-> i do NOT use mirrors for the protection against disk failures
->=20
-> nobody said i did .. you again are twisting things into your
-> own ideas and misconceptions
-
-Well indeed, if you never suffer disk failures as you go on to say
-then I imagine you don't use mirrors for that..
-
-> >  If you do suffer disk crashes then any disk that is providing
-> > swap may very well cause the machine to crash.
->=20
-> i dont have that problem ...  but if someone ddid have that
-> problem ... i assuem they are smart enough to figure out
-> within 5-10 minutes why the disk/system is crashing
-
-Such a person, if they were not as fortunate and/or skiled at
-purchasing hardware as you appear to be, and so happened to suffer
-the occasional disk failure, may wish that their system did not
-crash and suffer 5 to 10 minutes of downtime because a disk failed.
-They may wish that the device would just fail and they could
-schedule a downtime or hot swap it.
-
-If you are not one of those people (and, since you say you don't
-have disk failures then you wouldn't be), it doesn't mean those
-people don't exist and don't have a valid requirement.
-
-> > I thought everyone suffered disk crashes and that was the point of
-> > RAID.
->=20
-> not everybody suffers disk crashes ... in such great numbers
-> that raid is better solution ...
-> 	- raid is NOT theonly solution
->=20
-> =3D=3D ever hear of high availability ...
-> 	=3D clusters ...
-> 	=3D even plain ole backups
->=20
-> there are more than one solution to one disk crashing
-
-Is there any reason why someone could not use swap on raid as well
-as any of the above as they see fit?  Maybe those who advocate swap
-on raid already use high availablity and clusters.  And we'd
-certainly hope they have backups.
-
---hPlPb9n7ZCbLHHmC
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.0 (FreeBSD)
-
-iD8DBQFB3GvLIJm2TL8VSQsRAnlsAKCINEQH/sCetMUInpUMD6fC0Tqz9wCeMbVS
-/2u+T3HblLPYdCfzARowc2o=
-=6UmC
------END PGP SIGNATURE-----
-
---hPlPb9n7ZCbLHHmC--
+NeilBrown
