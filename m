@@ -1,102 +1,83 @@
-From: David Wuertele <dave-gnus@bfnet.com>
-Subject: mdadm -Af /dev/md0 => Segmentation fault
-Date: Thu, 11 Nov 2004 10:45:43 -0800
-Message-ID: <m3mzxody20.fsf@bfnet.com>
+From: christophe varoqui <christophe.varoqui@free.fr>
+Subject: [ANNOUNCE] multipath-tools-0.3.7
+Date: Fri, 12 Nov 2004 00:10:16 +0100
+Message-ID: <1100214617.10251.92.camel@zezette>
+References: <1096071849.4466.31.camel@zezette>
+	 <1097054573.4163b96d1262c@imp5-q.free.fr>
+	 <1097495416.416a73787e0ae@imp1-q.free.fr> <1098021787.5433.8.camel@zezette>
+	 <1098269169.417641f18a234@imp1-q.free.fr>
+	 <1098656088.9350.88.camel@zezette>
+	 <1098785191.417e21a7a7c28@imp1-q.free.fr>
+	 <1099328918.5525.10.camel@zezette>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-hotplug-devel-admin@lists.sourceforge.net>
+In-Reply-To: <1099328918.5525.10.camel@zezette>
+Sender: linux-hotplug-devel-admin@lists.sourceforge.net
+Errors-To: linux-hotplug-devel-admin@lists.sourceforge.net
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel>,
+	<mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Post: <mailto:linux-hotplug-devel@lists.sourceforge.net>
+List-Help: <mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel>,
+	<mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=subscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-hotplug-devel>
+To: device-mapper development <dm-devel@redhat.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-hotplug-devel@lists.sourceforge.net" <linux-hotplug-devel@lists.sourceforge.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Attempting to recover from a downed RAID5 array:
+Hello,
 
-  # mdadm -S /dev/md0
-  # mdadm -Af /dev/md0 /dev/hdm4 /dev/hde2 /dev/hdo2 /dev/hdh2 /dev/hdf2 /dev/hdg2
-  Segmentation fault
-  #
+here goes multipath-tools-0.3.7
 
-Could it be that my mdadm is making some assumptions about my system
-that it shouldn't?  This mdadm was compiled on a different 2.6.8
-system, since my RAID5 box can't access its compiler, which is on the
-RAID5 partition.  Is there anyone out there who has a mdadm static
-binary that is compiled for kernel 2.6.8-gentoo-r3?
+Resync before commencing adjusting for new kernel driver rules.
+Note, the default build is now "glibc" to ease packagers work.
+Important bugfixes from Suse.
 
-Here are more details:
+Full ChangeLog for the release :
 
-I have a gentoo system (kernel 2.6.8-gentoo-r3) with a 7 drive RAID5
-array.  Recently that array went down, and I was advised by the list
-to try mdadm.
+	* [libmultipath] make the config file parser play nice
+	  with the stack (Hannes, Suse)
+	* [multipathd] fix off by one memory allocation (Hannes,
+	  Suse)
+	* [multipathd] introduce a default callout handler that
+	  just remembers to put the callout in ramfs, even if the
+	  daemon has no direct use of them. multipath need some
+	  that where forgotten, so parse them and use that default
+	  handler.
+	* [libcheckers] emc_clariion checker update (heinz, Suse)
+	* [build] exit build process on failure (heinz, Suse)
+	* [kpartx] exit early if DM prereq not met
+	* [multipath] exit early if DM prereq not met
+	* [libmultipath] new dm_prereq() fn to check out if all DM
+	  prerequisites are met
+	* [libmultipath] move callout.[ch] function in there.
+	  multipath and multipathd impacted
+	* [libmultipath] move dm_* function in there. kpartx,
+	  multipath are impacted
+	* [priority] pp_balance_lun should use DM_DEVICE_TABLE ioctl
+	  instead of DM_DEVICE_STATUS to find out paths from the
+	  primary path groups.
+	* [klibc] drop in "Stable" version 0.190
+	* [build] add manpages for kpartx and multipathd (Patrick
+	  Caulfield)
+	* [build] use system's sysfs for multipathd linking
+	* [build] make glibc the default build
+	* [build] "make BUILD=klibc" is enough, deprecate the 
+	  "make BUILD=klibc klibc" synthax
 
-When I boot, I see the "Starting up RAID devices: ... * Trying
-md0... [ !!FAILED ]" and the system drops me to the shell.  I type:
+As usual, doc and download at :
+http://christophe.varoqui.free.fr/
 
-  # cat /proc/mdstat
-  Personalities : [raid1] [raid5]
-  md0 : inactive hdm4[0] hde2[6] hdo2[5] hdh2[4] hdf2[3] hdg2[2]
-        1464789888 blocks
-  unused devices: <none>
+regards,
+-- 
+christophe varoqui <christophe.varoqui@free.fr>
 
-OK, the array is missing partition hdp2.  dmesg says it has an invalid
-superblock:
 
-  # dmesg | grep hdp
-      ide7: BM-DMA at 0xd808-0xd80f, BIOS settings: hdo:DMA, hdp:DMA
-  hdp: WDC WD2500JB-00GVA0, ATA DISK drive
-  hdp: max request size: 1024KiB
-  hdp: 488397168 sectors (250059 MB) w/8192KiB Cache, CHS=30401/255/63, UDMA (100)
-  md: invalid raid superblock magic on hdp2
-  md: hdp2 has invalid sb, not importing!
-  Adding 64220k swap on /dev/hdp1.  Priority:-2 extents:1
 
-I didn't see any indication that there is anything wrong with the hdp
-drive.  Here is my /etc/mdadm.conf file:
-
-  # cat /etc/mdadm.conf
-  DEVICE partitions
-  ARRAY /dev/md0 level=raid5 num-devices=7 UUID=d312c423:e2eeeff5:3401806f:ab10e3c
-     devices=/dev/ide/host2/bus0/target0/lun0/part2,/dev/ide/host2/bus0/target1/lun0/part2,/dev/ide/host2/bus1/target0/lun0/part2,/dev/ide/host2/bus1/target1/lun0/part2,/dev/ide/host6/bus0/target0/lun0/part4,/dev/ide/host6/bus1/target0/lun0/part2
-
-Since /proc/mdstat reports that six of the seven drives are already
-assembled, I tried running as-is:
-
-  # mdadm --run /dev/md0
-  mdadm: failed to run array /dev/md0: Invalid argument
-  # mdadm -v --run --force /dev/md0
-  mdadm: failed to run array /dev/md0: Invalid argument
-
-Hmm... not very descriptive.  I looked at the end of dmesg again for
-more hints:
-
-  # dmesg | tail -18
-  md: pers->run() failed ...
-  raid5: device hdm4 operational as raid disk 0
-  raid5: device hde2 operational as raid disk 6
-  raid5: device hdo2 operational as raid disk 5
-  raid5: device hdh2 operational as raid disk 4
-  raid5: device hdf2 operational as raid disk 3
-  raid5: device hdg2 operational as raid disk 2
-  raid5: cannot start dirty degraded array for md0
-  RAID5 conf printout:
-   --- rd:7 wd:6 fd:1
-   disk 0, o:1, dev:hdm4
-   disk 2, o:1, dev:hdg2
-   disk 3, o:1, dev:hdf2
-   disk 4, o:1, dev:hdh2
-   disk 5, o:1, dev:hdo2
-   disk 6, o:1, dev:hde2
-  raid5: failed to run raid set md0
-  md: pers->run() failed ...
-
-It is at this point that I tried stopping and starting the array as
-described on the mailing list:
-
-  # mdadm -S /dev/md0
-  # mdadm -Af /dev/md0 /dev/hdm4 /dev/hde2 /dev/hdo2 /dev/hdh2 /dev/hdf2 /dev/hdg2
-  Segmentation fault
-  #
-
-Any suggestions?
-Thanks,
-Dave
-
+-------------------------------------------------------
+This SF.Net email is sponsored by:
+Sybase ASE Linux Express Edition - download now for FREE
+LinuxWorld Reader's Choice Award Winner for best database on Linux.
+http://ads.osdn.com/?ad_id=5588&alloc_id=12065&op=click
