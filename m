@@ -1,41 +1,42 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: 3ware escalade vs software raid, from a different jeff
-Date: Wed, 18 Feb 2004 17:58:23 -0500
+From: "Stephan Kessler" <root@warpy.yomeganet.biz>
+Subject: Strange behavior: Badblocks go away ;)
+Date: Thu, 19 Feb 2004 06:39:46 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <4033EE0F.5090206@pobox.com>
-References: <20040218214840.GS20790@datavibe.net>
+Message-ID: <000001c3f6aa$c94632c0$4db0fea9@kessler.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+	charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20040218214840.GS20790@datavibe.net>
-To: "Rev. Jeffrey Paul" <sneak@datavibe.net>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Rev. Jeffrey Paul wrote:
-> I'm building an nfs server to export home directories to a few login 
-> servers used somewhat heavily by a few hundred people.  Additionally, on 
-> the array will be a bunch of web content and mysql data files.
-> 
-> I'm currently thinking of a few different configurations, all using four
-> drives in the 180-250gb range.  I could get sata or udma drives, i could
-> go raid5 or raid10, and i could do this in linux software raid (using,
-> say, a pair of promise ultra100s to give me four udma ports, or with an
-> SATA card), using 3ware's UDMA four-port escalade, or with 3ware's new
-> sata escalade.
+Hi,
 
+Corresponding to that:
+http://marc.theaimsgroup.com/?l=linux-raid&m=107684467010898&w=2
 
-3ware hardware is really nice, so that would be a good choice.
+I have had some badblocks and wanted to fix them. The only real Problem
+was if an 
 
-But...  I am a bit biased:  I almost always prefer software RAID over 
-hardware RAID.  Much more flexibility to move disks between systems, 
-choose controller(s) you like, etc.
+"e2fsck -f -n -l bblist /dev/md0"
 
-In theory performance of hardware RAID can be better than software RAID. 
-  In practice, only a few hardware RAID controllers actually achieve this.
+On a mounted RAID Device will make damage to a file system. If anyone
+knows an answer to this, i would be real happy :)
 
-	Jeff
+Anyways why i open a new thread:
+Yesterday the PowerSupply in the computercenter, where my server stands,
+was broken and my server was unwillingly rebooted. Because it was a
+power failure, the raid had to resync. After that i took a look in the
+syslog (kern.log), and there wasn't any hint on badblocks (like an
+uncorrectable error on /dev/hda1 etc.) So it seems that the badblocks
+went away....
 
+I'm happy but i still want to know where they are, and if they come back
+;)
 
+Any hint is useful! :D
+
+Greetings,
+Stephan
 
