@@ -1,290 +1,432 @@
-From: ptb@lab.it.uc3m.es (Peter T. Breuer)
-Subject: Re: ext3 journal on software raid (was Re: PROBLEM: Kernel 2.6.10 crashing repeatedly and hard)
-Date: Mon, 3 Jan 2005 15:23:38 +0100
-Message-ID: <a41oa2-fr7.ln1@news.it.uc3m.es>
-References: <m3is6k4oeu.fsf@reason.gnu-hamburg> <m38y7fn4ay.fsf@reason.gnu-hamburg> <v3rda2-hjn.ln1@news.it.uc3m.es> <41D45C1F.5030307@tls.msk.ru> <u59ea2-4qr.ln1@news.it.uc3m.es> <20050102194240.GE99565@caffreys.strugglers.net> <5h1ma2-asq.ln1@news.it.uc3m.es> <20050103003005.GG99565@caffreys.strugglers.net> <2rana2-0if.ln1@news.it.uc3m.es> <41D93657.7090908@tls.msk.ru>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: ext3 journal on software raid (was Re: PROBLEM: Kernel 2.6.10 crashing repeatedly and hard)
+Date: Mon, 3 Jan 2005 12:34:16 -0500
+Message-ID: <200501031734.j03HYO914483@www.watkins-home.com>
+References: <l1nna2-e9i.ln1@news.it.uc3m.es>
+Mime-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <l1nna2-e9i.ln1@news.it.uc3m.es>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: "'Peter T. Breuer'" <ptb@lab.it.uc3m.es>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Michael Tokarev <mjt@tls.msk.ru> wrote:
-> Peter T. Breuer wrote:
-> > This is always a VERY bad idea. /boot and /root want to be on as simple
-> > and uncomplicated a system as possible. Moreover, they never change, so
-> > what is the point of having a real time mirror for them? It would be
-> > sufficient to copy them every day (which is what I do) at file system
-> > level to another partition, if you want a spare copy for emergencies.
+Having a filesystem go into read only mode is a "down system".  Not
+acceptable to me!  Maybe ok for a home system, but I don't assume Linux is
+limited to home use.  In my case, this is not acceptable for my home system.
+Time is money!
+
+About user intervention.  If the system stops working until someone does
+something, that is a down system.  That is what I meant by user
+intervention.  Replacing a disk Monday that failed Friday night, is what I
+would expect.  This is a normal failure to me.  Even if a re-boot is
+required, as long as it can be scheduled, it is acceptable to me.
+
+You and I have had very different failures over the years!
+In my case, most failures are disks, and most of the time the system
+continues to work just fine, without user intervention.  If spare disks are
+configured, the array re-builds to the spare.  At my convenience, I replace
+the disk, without a system re-boot.  Most Unix systems I have used have SCSI
+disks.  IDE tends to be in home systems.  My home system is Linux with 17
+SCSI disks.  I have replaced a disk without a re-boot, but the disk cabinet
+is not hot-swap, so I tend to shut down the system to replace a disk.
+
+My 20 systems had anywhere from 4 to about 44 disks.  You should expect 1
+disk failure out of 25-100 disks per year.  There are good years and bad!
+Our largest customer system has more than 300 disks.  I don't know the
+failure rate, but most failures do not take the system down!  Our customer
+systems tend to have hardware RAID systems.  HP, EMC, DG (now EMC).
+
+If you have a 10% disk failure rate per year, something else is wrong!  You
+may have a bad building ground, or too much current flowing on the building
+ground line.  All sorts of power problems are very common.  Most if not all
+electricians only know the building code.  They are not qualified to debug
+all power problems.  I once talked to an expert in the field.  He said
+thunder causes more power problems than lighting!  Most buildings use
+conduit for ground, no separate ground wire.  The thunder will shake the
+conduit and loosen the connections.  This causes a bad ground during the
+thunder, which could crash computer systems (including hardware RAID boxes).
+Never depend a conduit for ground, always have a separate ground wire.  This
+is just one example of many issues he had, I don't recall all the details,
+and I am not an expert on building power.
+
+I know of 1 event that matches your most common failure.  A PC with a $50
+case and power supply, the power supply failed in such a way that it put
+120V on the 12V and/or 5V line.  Everything in the case was lost!  Well, the
+heat sink was ok. :)  The system was not repaired, it went into the trash.
+But this was a home user's clone PC, not a server.
+
+Guy
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Peter T. Breuer
+Sent: Monday, January 03, 2005 6:32 AM
+To: linux-raid@vger.kernel.org
+Subject: Re: ext3 journal on software raid (was Re: PROBLEM: Kernel 2.6.10
+crashing repeatedly and hard)
+
+Guy <bugzilla@watkins-home.com> wrote:
+> "Also sprach Guy:"
+> > "Well, you can make somewhere. You only require an 8MB (one cylinder)
+> > partition."
+> > 
+> > So, it is ok for your system to fail when this disk fails?
 > 
-> Raid1 (mirror) is the most "trivial" raid level out there, especially
+> You lose the journal, that's all.  You can react with a simple tune2fs
+> -O ^journal or whatever is appropriate.  And a journal is ONLY there in
+> order to protect you against crashes of the SYSTEM (not the disk), so
+> what was the point of having the journal in the first place? 
+> 
+> ** When you lose the journal, does the system continue without it?
+> ** Or does it require user intervention?
 
-Hi!
+I don't recall. It certainly at least puts itself into read-only mode
+(if that's the error mode specified via tune2fs). And the situation
+probably changes from version t version.
 
-> having in mind that the underlying devices -- all of them -- contains
-> (or should, in theory -- modulo the "50% chance of any difference
-> being unnoticied" etc) exact copy of the filesystem.  Also, root (and
-> /boot -- i for one have both /boot in root in a single small filesystem)
-> do change -- not that often but often enouth so that "newaliases problem"
-> (when you "forgot" to backup it after a change) happens from time to time.
+On a side note, I don't know why you think user intervention is not
+required when a raid system dies.  As a matter of liklihoods, I have
+never seen a disk die while IN a working soft (or hard) raid system, and
+the system continue working afterwards, instead the normal disaster
+sequence as I have experienced it is:
 
-Well, my experience is that anything "unusual" is bad:  sysadmins change
-over the years;  the guy who services the system may not be the one that
-built it;  the "rescue" cd or floppy he has may not have MD support
-built into the kernel (and he probably will need a rescue cd just to get
-support for a raid card, if the machine has hardware raid as well as or
-instead of software raid).
+   1) lightning strikes rails, or a/c goes out and room full of servers
+      overheats. All lights go off.
 
-Therefore, I have learned not to build a system that is more complicated
-than the most simple human being that may administer it. This always
-works - if it breaks AND they cannot fix it, then THEY get the blame.
+   2) when sysadmin arrives to sort out the smoking wrecks, he finds
+      that 1 in 3 random disks are fried - they're simply the points
+      of failure that died first, and they took down the hardware with
+      them.
 
-So I "prefer" to not have a raided boot partition, but instead to rsync
-the root partition every day to a spare on a differet disk, or/and at the
-other end of the same disk. This also saves the system from sysadmin
-gaffes - I don't WANT an instantaneous copy of every error made by the
-humans.
+   3) sysadmin buys or jury-rigs enough pieces of nonsmoking hardware
+      to piece together the raid arrays from the surviving disks, and
+      hastily does a copy to somewhere very safe and distant, while
+      an assistant holds off howling hordes outside the door with
+      a shutgun.
 
-This is not to say that I do not like your ideas, expressed here. I do.
-I even agree with them.
+In this scenario, a disk simply acts as the weakest link in a fuse
+chain, and the whole chain goes down.  But despite my dramatisation it
+is likely that a hardware failure will take out or damage your hardware!
+Ide disks live on an electric bus conected to other hardware.  Try a
+shortcircuit and see what happens.  You can't even yank them out while
+the bus is operating if you want to keep your insurance policy.
 
-It is just that when they mess up the root partition, I can point to
-the bootloader entry that says "boot from spare root partition".
+For scsi the situation is better wrt hot-swap, but still not perfect.
+And you have the electric connections also. That makes it likely that a
+real nasty hardware failure will do nasty things (tm) to whatever is in
+the same electric environment.  It is possible if not likely that you
+will lose contact with scsi disks further along the bus, if you don't
+actually blow the controller.
 
-And let's not get into what they can do to the labelling on the
-partition types - FD? Must be a mistake!
+That said, there ARE situations which raid protects you from - simply a
+"gentle disconnect" (a totally failed disk that goes open circuit), or
+a "gradual failure" (a disk that runs out of spare sectors). In the
+latter case the raid will fail the disk completely at the first
+detected error, which may well be what you want (or may not be!).
 
+However, I don't see how you can expect to replace a failed disk
+without taking down the system. For that reason you are expected to be
+running "spare disks" that you can virtually insert hot into the array
+(caveat, it is possible with scsi, but you will need to rescan the bus,
+which will take it out of commission for some seconds, which may
+require you to take the bus offline first, and it MAY be possible with
+recent IDE buses that purport to support hotswap - I don't know).
 
-> After several years of expirience with alot of systems (and alot of various
-> disk failure scenarios too: when you have many systems, you have good
-> chances to see a failure ;), I now use very simple and (so far) reliable
-> approach, which I explained here on this list before.  You have several
-> (we use 2, 3 or 4) disks which are the same (or almost: eg some 36Gb
+So I think the relevant question is: "what is it that you are protecting
+yourself from by this strategy of yours".
 
-Well, whenever I buy anything, I buy two. I buy two _controller_ cards,
-and tape the extra one inside the case. But of course I buy two
-machines, so that is four cards ... .
-
-And I betcha softraid sb has changed format ver the years. I am still
-running P100s!
-
-> disks are really 35Gb or 37Gb; in case they're differ, "extra" space
-> on large disk isn't used); root and /boot are on small raid1 partition
-> which is mirrored on *every* disk; swap is on raid1; the rest (/usr,
-
-I like this - except of course that I rsync them, not raid them. I
-don't mind if I have to reboot a server. Nobody will notice the tcp
-outage and the other one of the pair will failover for it, albeit in
-readonly mode, for the maximum of the few minutes required.
-
-Your swap idea is crazy, but crazy enough to be useful. YES, there used
-to be a swap bug which corrupted swap every so often (in 2.0? 2.2?) and
-meant one had to swapoff and swapon again, having first cleared all
-processes by an init 1 and back. Obviously that bug would bite whatever
-you had as media, but it still is a nice idea to have raided memory
-:-).
+When you have the scenario, you can evaluate risks.
 
 
-> /home, /var etc) are on raid5 arrays (maybe also raid0 for some "scratch"
+> > I don't want system failures when a disk fails,
+> 
+> Your scenario seems to be that you have the disks of your mirror on the
+> same physical system.  That's fundamentally dangerous.  They're both
+> subject to damage when the system blows up.  [ ... ]  I have an array
+> node (where the journal is kept), and a local mirror component and a
+> remote mirror component.
+> 
+> That system is doubled, and each half of the double hosts the others
+> remote mirror component. Each half fails over to the other.
 
-I don't put /var on raid if I can help it. But there is nothing
-particularly bad about it. It is just that /var is the most active
-place and therefore the most likely to suffer damage of some kind, somehow.
-And damaged raided partitions are really not nice. Raid does not
-protect you against hardware corruption - on the contrary, it makes it
-more difficult to spot and doubles the probabilities of it happening.
+> ** So, you have 2 systems, 1 fails and the "system" switches to the other.
+> ** I am not going for a 5 nines system.
+> ** I just don't want any down time if a disk fails.
 
-> space).  This way, you have "equal" drives, and *any* drive, including
-> boot one, may fail at any time and the system will continue working
-> as if all where working, including reboot (except of a (very rare in
-> fact) failure scenario when your boot disk has failed MBR or other
-> sectors required to boot, but "the rest" of that disk is working,
-> in which case you'll need physical presence to bring the machine up).
+Well,
 
-That's actually not so. Over new year I accidently booted my home
-server (222 days uptime!) and discovered its boot sector had evaporated.
-Well, maybe I moved the kernels ..  anyway, it has no floppy and the
-nearest boot cd was an hour's journey away in the cold, on new year.  Uh
-uh.  It took me about 8 hrs, but I booted it via PXE DHCP TFTP
-wake-on-lan and the wireless network, from my laptop, without leaving
-the warm.
+(1) how likely is it that a disk will fail without taking down the system
+(2) how likely is it that a disk will fail
+(3) how likely is it that a whole system will fail
 
-Next time I may even know how to do it beforehand :).
+I would say that (2) is about 10% per year. I would say that (3) is
+about 1200% per year. It is therefore difficult to calculate (1), which
+is your protection scenario, since it doesn't show up very often in the
+stats!
 
-> All the drives are "symmetrical", usage patterns for all drives are
-> the same, and due to usage of raid arrays, load is spread among them
-> quite nicely.  You're free to reorder the drives in any way you want,
-> to replace any of them (maybe rearranging the rest if you're
-> replacing the boot drive) and so on.
+> ** A disk failing is the most common failure a system can have (IMO).
 
-You can do this hot? How? Oh, you must mean at reboot.
+Not in my experience. See above. I'd say each disk has about a 10%
+failure expectation per year. Whereas I can guarantee that an
+unexpected  system failure will occur about once a month, on every
+important system.
 
-> Yes, root fs does not changes often, and yes it is small enouth
-> (I use 1Gb, or 512Mb, or even 256Mb for root fs - not a big deal
+If you think about it that is quite likely, since a system is by
+definition a complicated thing. And then it is subject to all kinds of
+horrible outside influences, like people rewiring the server room in 
+order to reroute cables under the floor instead of through he ceiling,
+and the maintenance people spraying the building with insecticide,
+everywhere, or just "turning off the electricity in order to test it"
+(that happens about four times a year here - hey, I remember when they
+tested the giant UPS by turning off the electricity! Wrong switch.
+Bummer).
 
-Mine are always under 256MB, but I give 512MB.
+Yes, you can try and keep these systems out of harms way on a
+colocation site, or something, but by then you are at professional
+level paranoia. For "home systems", whole system failures are far more
+common than disk failures.
 
-> to allocate that space on every of 2 or 3 or 4 or 5 disks).  So
-> it isn't quite relevant how fast the filesystem will be on writes,
-> and hence it's ok to place it on raid1 composed from 5 components.
+I am not saying that RAID is useless! Just the opposite. It is a useful
+and EASY way of allowing you to pick up the pieces when everything
+falls apart. In contrast, running a backup regime is DIFFICULT.
 
-That is, uh, paranoid.
 
-> The stuff just works, it is very simple to administer/support,
-> and does all the "backups" automatically. 
+> ** In a computer room with about 20 Unix systems, in 1 year I have seen 10
+> or so disk failures and no other failures.
 
-Except that  it doesn't - backups are not raid images. Backups are
-snapshots. Maybe you mean that.
+Well, let's see. If each system has 2 disks, then that would be 25% per
+disk per year, which I would say indicates low quality IDE disks, but
+is about the level I would agree with as experiential.
 
-> In case of some problem
-> (yes I dislike any additional layers for critical system components
-> as any layer may fail to start during boot etc), you can easily
-> bring the system up by booting off the underlying root-raid partiton
-> to repair the system -- all the utilities are here.  More, you can
 
-Well, you could, and I could, but I doubt if the standard tech could.
+> ** Are your 2 systems in the same state?
 
-> boot from one disk (without raid) and try to repair root fs on
-> another drive (if things are really screwed up), and when you're
-> done, bring the raid up on that repaired partition and add other
-> drives to the array.
+No, why should they be?
 
-But why bother? If you didn't have raid there on root you wouldn't
-need to repair it. Nothing is quite as horrible as having a
-fubarred root partition.  That's why I also always have two! But I
-don't see that having the copy made by raid rather than rsync wins
-you anything in the situaton where you have to  reboot - rather, it
-puts off that moment to a moment of your choosing, which may be good, 
-but is not an unqualified bonus, given the cons.
+> ** They should be at least 50 miles apart (at a minimum).
 
-> To summarize: having /boot and root on raid1 is a very *good* idea. ;)
-> It saved our data alot of times in the past few years already.
+They aren't - they are in two different rooms. Different systems copy
+them every day to somewhere else. I have no need for instant
+survivability across nuclear attack.
 
-No - it saved you from taking the system down at that moment in time.
-You could always have rebooted it from a spare root partition whether
-you had raid there or not.
+> ** Otherwise if your data center blows up, your system is down!
 
-> If you're worried about "silent data corruption" due to different
-> data being read from different components of the raid array.. Well,
-> first of all, we never saw that yet (we have quite good "testcase")
+True. So what? I don't care. The cost of such a thing is zero, because
+if my data center goes I get a lot of insurance money and can retire.
+The data is already backed up elsewhere if anyone cares.
 
-It's hard to see, and youhave to crash and come back up quite a lot to
-make it probable. A funky scsi cable would help you see it!
+> ** In my case, this is so rare, it is not an issue.
 
-> (and no, I'm not saying it's impossible ofcourse).  On rarely-changed
-> filesystem, with real drives which does no silent remapping of an
-> undeadable blocks to new place with the data on them becoming all-0s,
+It's very common here and everywhere else I know! Think about it - if
+your disks are in the same box then it is statistically likely that when
+one disks fails it is BECAUSE of some local cause, and that therefore
+the other disk will also be affected by it.
 
-Yes, I agree. On rarely changing systems raid is a benefit, because
-it enables you to carry on in case the unthinkable happens and one disk
-vaporizes (while letting the rest of the system carry on, with much luck).
-On rapidly changing systems like /var I start to get a little uneasy.
-On /home I am quite happy with it. I wouldn't have it any other way
-there..
+It's your "if your date center burns down" reasoning, applied to your
+box.
 
-> without drives with uncontrollable write caching (quite common for
-> IDE drives) and things like that, and with real memory (ECC I mean),
-> where you *know* what you're writing to each disk (yes, there's also
-> another possible cause of a problem: software errors aka bugs ;),
+> ** Just use off-site tape backups.
 
-Indeed, and very frequent they are too.
+No way! I hate tapes. I backup to other disks.
 
-> that case with different data on different drives becomes quite..
-> rare.  In order to be really sure, one can mount -o remount,ro /
-> and just compare all components of the root raid, periodically.
-> When there's more than 2 components on that array, it should be
-> easy to determine which drive is "lying" in case of any difference.
-> I do similar procedure on my systems during boot.
+> ** My computer room is for development and testing, no customer access.
 
-Well, voting is one possible procedure. I don't know if softraid does
-that anywhere, or attempts repairs.
+Unfortunately, the admins do most of the sabotage.
+
+> ** If the data center is gone, the workers have nowhere to work anyway (in
+> my case).
+
+I agree. Therefore who cares. OTOH, if only the  server room smokes
+out, they have plenty of places to work, but nothing to work on.
+Tut tut.
+
+> ** Some of our customers do have failover systems 50+ miles apart.
+
+Banks don't (hey, I wrote the interbank communications encryption
+software here on the peninsula) here.  They have tapes.  As far as I
+know, the tapes are sent to vaults. It often happens that their systems
+go down. In fact, I have NEVER managed to connect via the internet page
+to their systems at a time when they were in working order. And I have
+been trying on and off for about three years. And I often have been in
+the bank managers office (discussing mortgages, national debt, etc.)
+when the bank's internal systems have gone down, nationwide.
+
+> > so mirror (or RAID5)
+> > everything required to keep your system running.
+> > 
+> > "And there is a risk of silent corruption on all raid systems - that is
+> > well known."
+> > I question this....
+> 
+> Why!
+> ** You lost me here.  I did not make the above statement. 
+
+Yes you did. You can see from the quoting that you did.
+
+> But, in the case
+> of RAID5, I believe it can occur.
+
+So do I. I am asking why you "question this">
+
+> Your system crashes while a RAID5 stripe
+> is being written, but the stripe is not completely written. 
+
+This is fairly meaningless.  I don't now what precise meaning the word
+"stripe" has in raid5 but it's irrelevant.  Simply, if you write
+redundant data, whatever way you write it, raid 1, 5, 6 or whatever,
+there is a possibility that you write only one of the copies before the
+system goes down. Then when the system comes up it has two different 
+sources of data to choose to believe.
+
+> During the
+> re-sync, the parity will be adjusted,
+
+See. "when the system comes up ...".
+
+There is no need to go into detail and I don't know why you do!
+
+> but it may be more current than 1 or
+> more of the other disks.  But this would be similar to what would happen
+to
+> a non-RAID disk (some data not written).
+
+No, it would not be similar. You don't seem to understand the
+mechanism. The mechanism for corruption is that there are two different
+versions of the data available when the system comes back up, and you
+and the raid system don't know which is more correct. Or even what it
+means to be "correct". Maybe the earlier written data is "correct"!
+
+> ** Also with RAID1 or RAID5, if corruption does occur without a crash or
+> re-boot, then a disk fails, the corrupt data will be copied to the
+> replacement disk.
+
+Exactly so. It's a generic problem with redundant data sources. You
+don't know which one to believe when they disagree!
+
+> With RAID1 a 50% risk of copying the corruption, and 50%
+> risk of correcting the corruption.  With RAID5, risk % depends on the
+number
+> of disks in the array.
+
+It's the same.  There are two sources of data that you can believe.  The
+"real data on disk" or "all the other data blocks in the 'stripe' plus
+the parity block".  You get to choose which you believe.
+
+> > I bet a non-mirror disk has similar risk as a RAID1.  But with a RAID1,
+you
+> 
+> The corruption risk is doubled for a 2-way mirror, and there is a 50%
+> chance of it not being detected at all even if you try and check for it,
+> because you may be reading from the wrong mirror at the time you pass
+> over the imperfection in the check.
+> ** After a crash, md will re-sync the array.
+
+It doesn't know which disk to believe is correct.
+
+There is a stamp on the disks superblocks, but it is only updated every
+so often. If the whole system dies while both disks are OK, I don't know 
+what will be stamped or what will happen (which will be believed) at
+resync. I suspect it is random. I would appreciate clarificaton from
+Neil.
+
+> ** But during the re-sync, md could be checking for differences and
+> reporting them.
+
+It could. That might be helpful.
+
+> ** It won't help correct anything, but it could explain why you may be
+> having problems with your data.
+
+Indeed, it sounds a good idea. It could slow down RAID1 resync, but I
+don't think the impact on RAID5 would be noticable.
+
+> ** Since md re-syncs after a crash, I don't think the risk is double.
+
+That is not germane. I already pointed out that you are 50% likely to
+copy the "wrong" data IF you copy (and WHEN you copy).  Actually doing
+the copy merely brings that calculation into play at the moment of the
+resync, instead of later, at the moment when one of the two disks
+actually dies and yu have to use the remaining one.
+
+> Isn't that simply the most naive calculation? So why would you make
+> your bet?
+> ** I don't understand this.
+
+Evidently! :)
+
+> And then of course you don't generally check at all, ever.
+> ** True, But I would like md to report when a mirror is wrong.
+> ** Or a RAID5 parity is wrong.
+
+Software raid does not spin off threads randomly checking data. If you
+don't use it, you don't get to check at all. So just leaving disks
+sitting there exposes them to corruption that is checked least of all.
+
+> But whether you check or not, corruptions simply have only a 50% chancce
+> of being seen (you look on the wrong mirror when you look), and a 200%
+> chance of occuring (twice as much real estate) wrt normal rate.
+> ** Since md re-syncs after a crash, I don't think the risk is double.
+
+It remains double whatever you think. The question is whether you
+detect it or not. You cannot detect it without checking.
+
+> ** Also, I don't think most corruption would be detectable (ignoring a
+RAID
+> problem).
+
+You wouldn't know which disk was right. The disk might know if it was a
+hardware problem
+
+Incidentally, I wish raid would NOT offline the disk when it detects a
+read error. It should fall back to the redundant data. 
+
+I may submit a patch for that.
+
+In 2.6 the raid system may even do that. The resync thread comments SAY
+that it retries reads. I don't know if it actually does.
 
 Neil?
 
-> >>There is nowhere that is not software RAID to put the journals, so
-> > 
-> > Well, you can make somewhere. You only require an 8MB (one cylinder)
-> > partition.
+> ** It depends to the type of data.
+> ** Example: Your MP3 collection would go undetected until someone listened
+> to the corrupt file. 
+
+:-).
+
+> In contrast, on a single disk they have a 100% chance of detection (if
+> you look!) and a 100% chance of occuring, wrt normal rate.
+> ** Are you talking about the disk drive detecting the error?
+
+No. You are quite right. I should categorise the types of error more
+precisely. We want to distinguish
+
+    1) hard errors (detectable by the disk firmware)
+    2) soft errors (not detected by the above)
+
+> ** If so, are you referring to a read error or what?
+
+Read.
+
+> ** Please explain the nature of the detectable error.
+
+"wrong data on the disk or as read from the disk". Define "wrong"!
+
+
+> > know when a difference occurs, if you want.
 > 
-> Note scsi disks in linux only supports up to 14 partitions, which
+> How?
+> ** Compare the 2 halves or the RAID1, or check the parity of RAID5.
 
-You can use lvm (device mapper). Admittedly I was thinking of IDE.
-
-If you like I can patch scsi for 63 partitions?
-
-> isn't sometimes sufficient even without additional partitions for
-> journal.  When you have large amount of disks (so having that
-> "fully-symmetrical" layout as I described above becomes impractical),
-> you can use one set of drives for data and another set of drives
-> for journal for that data.  When you only have 4 (or less) drives...
-> 
-> And yes I'm aware of mdp devices (partitions inside the raid
-> arrays).. but that's just another layer "which may fail": if
-> raid5 array won't start, I at least can reconstruct filesystem
-> image by reading chunks of data from appropriate places from
-> all drives and try to recover that image; with any additional
-
-Now that is just perverse.
-
-> structure inside the array (and the lack of "loopP" aka partitioned
-> loop devices) it becomes more and more tricky to recover any
-> data (from this point of view, raid1 is the niciest raid level ;)
-
-Agree.
-
-> Again: instead of using a partition for the journal, use (another?)
-> raid array.  This way, the system will work if the drive wich
-> contains the journal fails.
-
-But the journal will also contain corruptions if the whole system
-crashes, and is rebooted. You just spent several paragraphs (?) arguing
-so. Do you really want those rolled forward to complete? I would
-rather they were rolled back! I.e. that the journal were not there -
-I am in favour of a zero size journal, in other words, which only acts
-to guarantee atomicity of FS ops (FS code on its own may do that), but
-which does not contain data.
-
-> Note above about swap: in all my
-> systems, swap is also on raid (raid1 in this case).  At the first
-> look, that can be a nonsense: having swap on raid.  But we had
-> enouth cases when due to a failed drive swap becomes corrupt
-> (unreadable really), and the system goes havoc, *damaging*
-> other data which was unaffected by the disk failure!  With
-
-Yes, this used to be quite common when swap had that size bug.
-
-> swap on raid1, the system continues working if any drive
-> fails, which is good.  (Older kernels, esp. 2.2.* series,
-> had several probs with swap on raid, but that has been fixed
-> now; there where other bugs fixed too (incl. bugs in ext3fs)
-> so there should be no such damage to other data due to
-> unreadable swap.. hopefully.  But I can't trust my systems
-> anymore after seeing (2 times in 4 years) what can happen with
-> the data...)
-> 
-> []
-> 
-> And I also want to "re-reply" to the first your message in this
-> thread, where I was saying that "it's a nonsense that raid does
-> not preserve write ordering".  Ofcourse I mean not write ordering
-> but working write barriers (as Neil pointed out, md subsystem does
-> not implement write barriers directly but the concept is "emulated"
-> by linux block subsystem).  Write barriers should be sufficient to
-> implement journalling safely.
-
-I am not confident that Neil did say so. I have not reexamined his
-post, but I got the impression that he hummed and hawed over that.
-I do not recall that he said that raid implements write barriers -
-perhaps he did. Anyway, I do not recall any code to handle "special"
-requests, which USED to be the kernel's barrier mechanism. Has that
-mechanism changed (it could have!)?
-
-What is the write barrier mechanism in the 2.6 series (and what was it
-in 2.4? I don't recall one at all)?
-
-I seem to recall that Neil said instead that raid acks writes only after
-they have been carried out on all components, which Stephen said was
-sufficient for ext3. OTOH we do not know if it is sufficient for
-reiserfs, xfs, jfs, etc.
+You wouldn't necesarily know  which of the two data sources was
+"correct".
 
 Peter
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
