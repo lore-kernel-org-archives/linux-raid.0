@@ -1,64 +1,159 @@
-From: AndyLiebman@aol.com
-Subject: What does mdadm --run do? And should I do it?
-Date: Fri, 5 Mar 2004 23:11:19 EST
+From: Corey McGuire <coreyfro@coreyfro.com>
+Subject: Re: RAID 5 lost two disks
+Date: Sat, 6 Mar 2004 01:56:11 -0800
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1ea.1aa8d579.2d7aa967@aol.com>
+Message-ID: <200403060156.11808.coreyfro@coreyfro.com>
+References: <200403050926.42047.coreyfro@coreyfro.com> <200403051005.20830.coreyfro@coreyfro.com> <200403051225.30661.coreyfro@coreyfro.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <200403051225.30661.coreyfro@coreyfro.com>
+Content-Disposition: inline
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi all. I made a couple of postings here two days ago and didn't get any 
-definitive response so let me re-phrase my question in a more focused way. 
 
-I have a problem with a 5-disk RAID 5 array. It seems that one of my drives 
-(sdc1) failed or got corrupted, but DID NOT get marked in the moment as 
-"faulty, removed". Why the Linux md subsystem thought the drive was still good is an 
-interesting question but besides the point right now.  Anyway, AFTER I 
-REBOOTED the superblock was gone on sdc1. 
+Well, I got the RAID up, I had reiserfsck work its mojo (it looks like I lost 
+lots of folder names, but the files appear to remember who they are)
 
-mdadm -E /dev/sdc1
-mdadm: No super block found on /dev/sdc1 (Expected magic a92b4efc, got 
-00000000)
+BUT mount segfaults (or something segfaults) every time I try to mount the 
+damn thing...
 
-However, the other 4 drives in the array apparently don't "know" that sdc1 is 
-faulty so the Linux RAID system is looking for the 5th drive in order to 
-start the array. When I try to start it with madam and the uuid, I get this: 
+I'm going to try running 2.6.somthing, hoping that maybe of the tools I built 
+was just too new for suse 8.2/linux 2.4.23... but i highly doubt it... who 
+knows, maybe 2.6 will behave more nicely... i hope mount -o ro will be enough 
+to protect me if it doesn't... who knows...
 
-mdadm: added /dev/sdh1 to /dev/md6 as 1
-mdadm: added /dev/sdj1 to /dev/md6 as 2
-mdadm: no uptodate device for slot 3 of /dev/md6
-mdadm: added /dev/sdb1 to /dev/md6 as 4
-mdadm: added /dev/sdf1 to /dev/md6 as 0
-mdadm: /dev/md6 assembled from 4 drives - need all 5 to start it (use --run 
-to insist)
+any ideas what might be segfaulting mount?...
 
-And when I do mdadm -E on the 4 drives that are added to md6, they all report 
-that there are 5 active drives in the array, and that none are faulty. 
+this is from /var/log/messages from about the time I tried mounting
 
-It seems pretty clear to me that I have to mark sdc1 as faulty and remove it 
-(and then add it back, or replace the disk). But what isn't clear is whether I 
-should 
+Mar  6 01:14:39 ilneval kernel: raid5: switching cache buffer size, 4096 --> 
+1024
+Mar  6 01:14:39 ilneval kernel: raid5: switching cache buffer size, 1024 --> 
+4096
+Mar  6 01:14:39 ilneval kernel: reiserfs: found format "3.6" with standard 
+journal
+Mar  6 01:14:41 ilneval kernel: Unable to handle kernel paging request at 
+virtual address e09ce004
+Mar  6 01:14:41 ilneval kernel:  printing eip:
+Mar  6 01:14:41 ilneval kernel: c01839b5
+Mar  6 01:14:41 ilneval kernel: *pde = 1f5f7067
+Mar  6 01:14:41 ilneval kernel: *pte = 00000000
+Mar  6 01:14:41 ilneval kernel: Oops: 0002
+Mar  6 01:14:41 ilneval kernel: CPU:    0
+Mar  6 01:14:41 ilneval kernel: EIP:    0010:[<c01839b5>]    Not tainted
+Mar  6 01:14:41 ilneval kernel: EFLAGS: 00010286
+Mar  6 01:14:41 ilneval kernel: eax: dae13bc0   ebx: e09c6000   ecx: dae13c08   
+edx: dae13bc0
+Mar  6 01:14:41 ilneval kernel: esi: df26a000   edi: 00001000   ebp: dbf32000   
+esp: dbeb1e2c
+Mar  6 01:14:41 ilneval kernel: ds: 0018   es: 0018   ss: 0018
+Mar  6 01:14:41 ilneval kernel: Process mount (pid: 829, stackpage=dbeb1000)
+Mar  6 01:14:41 ilneval kernel: Stack: 00000902 00001003 00001000 00000003 
+00000001 df26a000 00000902 dbf32000
+Mar  6 01:14:41 ilneval kernel:        c01843cc df26a000 00000400 00002000 
+dbeb1e68 00000001 00000000 00000000
+Mar  6 01:14:41 ilneval kernel:        00000246 00000000 00000000 00000902 
+fffffff3 df26a000 00000001 c013a4ba
+Mar  6 01:14:41 ilneval kernel: Call Trace:    [<c01843cc>] [<c013a4ba>] 
+[<c013ad4b>] [<c014c8ae>] [<c013b0d0>]
+Mar  6 01:14:41 ilneval kernel:   [<c014da3e>] [<c014dd6c>] [<c014db95>] 
+[<c014e15a>] [<c010745f>]
+Mar  6 01:14:41 ilneval kernel:
+Mar  6 01:14:41 ilneval kernel: Code: 89 44 fb 04 b8 01 00 00 00 8b 96 f4 00 
+00 00 8b 4c fa 04 85
 
-1) FIRST start the array with --run (as the mdadm message suggests) and 
-afterwards do the ' --fail --remove '  thing? 
-
-2)  FIRST do ' mdadm -- fail --remove ' on sdc1 and then use --run? 
-
-3)  do ' mdadm -- fail --remove ' on sdc1 and then not bother with --run?
-
-3)  or whether --run itself will cause sdc1 to be set as faulty, removed
 
 
-This just isn't clear from the mdadm manual pages. Is --run a combination of 
--- fail --remove --and then start? 
-
-I'm really worried about doing the wrong thing. Is there somebody out there 
-who knows what's correct? If you want more information about what happened to 
-my arrays and the nature of the corruption, please look at my previous posts. 
-
-Thanks in advance for your answers. 
-
-Andy Liebman
+On Friday 05 March 2004 12:25 pm, Corey McGuire wrote:
+> That kinda worked!!!!!! I need to FSCK it, but i'm still afraid of fscking
+> it up...
+>
+> Does anyone in San Jose/San Francisco/Anywhere-in-frag'n-California have a
+> free TB I can use for a DD?  I will offer you my first child!
+>
+> If I need to sweeten the deal, I have LOTS to share... I have a TB of
+> goodies just looking to be backed up!
+>
+> On Friday 05 March 2004 10:14 am, you wrote:
+> > I had a 2 disk failure; I will explain what I did.
+> > 1 disk was bad; it affected all disks on that SCSI buss.
+> > The RAID software got into a bad state, I think I needed to reboot, or
+> > power cycle.
+> > After the reboot, it said 2 disks were non fresh or whatever.
+> > My array had 14 disks, 7 on the buss with the 2 non fresh disks.
+> > I could not do a dd read test with much success on most of the disks,
+> > maybe 2 or 3 seemed ok, but not if I did 2 dd's at the same time.
+> > So I unplugged all disks but 1, tested the 1.  If success repeat with the
+> > next disk.  I found 1 disk that did not work.  So I connected the 6 good
+> > disks.  Did 6 dd's at the same time, all was well.
+> >
+> > So, now I have 13 of 14 disks and 1 of the 13 is non fresh.  I issued
+> > this command.
+> >
+> > mdadm -A --force /dev/md2 --scan
+> > For some reason my filesystem was corrupt.  I noticed that the spare disk
+> > was in the list.  I knew the rebuild to the spare never finished.  It may
+> > not have been synced at all since so many disks were not working.  So, I
+> > knew the spare should not be part of the array, yet!
+> >
+> > I had trouble stopping the array, so reboot.
+> >
+> > This time I listed the disks excluding the spare and the failed disk.
+> >
+> > mdadm -A --force /dev/md2 /dev/sdk1 /dev/sdd1 /dev/sdl1 /dev/sde1
+> > /dev/sdm1 /dev/sdf1 /dev/sdn1 /dev/sdg1 /dev/sdh1 /dev/sdo1 /dev/sdi1
+> > /dev/sdp1 /dev/sdj1
+> >
+> > I did not include the missing disk, but I did include the non fresh disk.
+> > Now my filesystem is fine.
+> >
+> > I added the spare, it re-built, a good day!  I bet if this had happened
+> > to a hardware RAID it could not have been saved.
+> >
+> > I replaced the bad disk and added it as a spare.
+> > That was about 1 month ago, everything is still fine.
+> >
+> > You will need to install mdadm if you don't have it.  mdadm does not use
+> > raidtab, it uses /etc/mdadm.conf
+> >
+> > Man mdadm for details!
+> >
+> > Good luck!
+> >
+> > Guy
+> >
+> > =========================================================================
+> >== = Tips:
+> >
+> > This will give details of each disk.
+> > mdadm -E /dev/hda3
+> > repeat for hdc3, hde3, hdg3, hdi3, hdk3.
+> >
+> > dd test...  To test a disk to determine if the surface is good.
+> > This is just a read test!
+> > dd if=/dev/hda of=/dev/null bs=64k
+> > repeat for hdc, hde, hdg, hdi, hdk.
+> >
+> > My mdadm.conf:
+> > MAILADDR bugzilla@watkins-home.com
+> > PROGRAM /root/bin/handle-mdadm-events
+> >
+> > DEVICE /dev/sd[abcdefghijklmnopqrstuvwxyz][12]
+> >
+> > ARRAY /dev/md0 level=raid1 num-devices=2
+> > UUID=1fb2890c:2c9c47bf:db12e1e3:16cd7ffe
+> >
+> > ARRAY /dev/md1 level=raid1 num-devices=2
+> > UUID=8f183b62:ea93fe30:a842431c:4b93c7bb
+> >
+> > ARRAY /dev/md2 level=raid5 num-devices=14
+> > UUID=8357a389:8853c2d1:f160d155:6b4e1b99
+>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
