@@ -1,34 +1,64 @@
-From: Andrej <andrej@rikom.si>
-Subject: RAID-1 on RedHat 7.3 (resize problems)
-Date: Fri, 24 Jan 2003 17:32:53 +0100 (CET)
+From: James Ralston <qralston+ml.linux-raid@andrew.cmu.edu>
+Subject: mdadmin can't re-sync a mirror?!
+Date: Fri, 24 Jan 2003 15:34:40 -0500 (EST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.30.0301241727400.24381-100000@www.sk-branik.si>
+Message-ID: <Pine.LNX.4.44.0301241529360.26021-100000@pcmy.sei.cmu.edu>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello!
+Either I've grossly understood how Linux RAID and/or the mdadmin
+command works, or this is horribly wrong:
 
-I have been trying to setup raid 1 on an Redhat 7.3 box. I
-have used the "Software Raid HOWTO"
-(http://www.tldp.org/HOWTO/Software-RAID-HOWTO.html).
-In setting up the raid I have booted using rescue mode and tried to follow
-the 13 steps in the howto but get stuck on one of the last steps. The
-final step tells me I should have all md based filesytems unmounted except
-root which is remount as read-only. When I try to resize the partion using
-resize2fs /dev/md0 it complains that it is mounted. I can not unmount it
-as it is in use (as read-only). Should the resize command work with the
-partion as read-only as the howto suggests?
-How else do I complete this step?
+   Device Boot    Start       End    Blocks   Id  System
+/dev/sdb1             1        33    265041   fd  Linux raid autodetect
 
-I have two identical disks (hda,hdc) and the following setup :
-md0(hda1,hdc1) /boot
-md1(hda2,hdc2) /
-md2(hda3,hdc3) SWAP
+   Device Boot    Start       End    Blocks   Id  System
+/dev/sdc1             1        33    265041   fd  Linux raid autodetect
 
-Thanks for your help and have a nice day,
+$ mdadm --create /dev/md0 --verbose --level=mirror --raid-devices=2 /dev/sdb1 /dev/sdc1
 
-	Andrej.
+[wait for mirror to sync]
+
+$ cat /proc/mdstat
+Personalities : [raid1]
+read_ahead 1024 sectors
+md0 : active raid1 sdc1[1] sdb1[0]
+      264960 blocks [2/2] [UU]
+unused devices: <none>
+
+Okay, now simulate (without physically changing any disks) a failure,
+and then a replacement:
+
+$ mdadm /dev/md0 -f /dev/sdc1 -r /dev/sdc1
+mdadm: set /dev/sdc1 faulty in /dev/md0
+mdadm: hot removed /dev/sdc1
+
+$ mdadm --zero-superblock /dev/sdc1
+
+$ mdadm /dev/md0 -a /dev/sdc1
+mdadm: hot added /dev/sdc1
+
+But the mirror doesn't sync (!):
+
+$ cat /proc/mdstat
+Personalities : [raid1]
+read_ahead 1024 sectors
+md0 : active raid1 sdc1[2] sdb1[0]
+      264960 blocks [2/1] [U_]
+unused devices: <none>
+
+Have I completely misunderstood how Linux software RAID is supposed to
+work?  (I certainly hope so, because otherwise, it can't even perform
+the simplest of recovery operations: replacing a failed mirror
+component and re-syncing.)
+
+Thanks for any comments...
+
+-- 
+James Ralston, Information Technology
+Software Engineering Institute
+Carnegie Mellon University, Pittsburgh, PA, USA
 
