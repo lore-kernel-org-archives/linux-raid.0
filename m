@@ -1,46 +1,39 @@
-From: =?iso-8859-1?q?M=E5ns_Rullg=E5rd?= <mru@kth.se>
-Subject: Re: HighPoint Rocket 1540 hang driver load
-Date: Thu, 22 Apr 2004 20:29:38 +0200
+From: AndyLiebman@aol.com
+Subject: Automatic Recovery Program?
+Date: Fri, 23 Apr 2004 12:55:16 EDT
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <yw1x7jw7uar1.fsf@kth.se>
-References: <40865AEC.8040604@online.no> <1082561078.40869236f3c14@www.tastycake.net>
- <yw1xd66146fo.fsf@kth.se> <1082641732.4087cd44b504f@www.tastycake.net>
- <yw1x7jw8qeff.fsf@kth.se> <40880724.3060600@online.no>
+Message-ID: <190.28ac9dc5.2dbaa474@aol.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Lars Gaarden <lar-gaar@online.no> writes:
+Does anybody know of a program that will: 
+-- analyze linux RAID arrays (in my case, RAID 5 arrays) and figure out 
+whether all drives are active or whether some drives have been set as faulty and 
+removed;
+-- if one or more drives are faulty and removed, automatically perform a 
+reasonable diagnostic test on the missing drives to see if they are physically 
+okay;
+-- if the drives are okay, hot add the drives back into the appropriate 
+array(s) and initiate recovery.
 
-> M=E5ns Rullg=E5rd wrote:
->> Nick Maynard <nick.maynard@alumni.doc.ic.ac.uk> writes:
->>
->>>The Rocket 1540 and the RocketRAID 1540 are different cards.  I am s=
-ure the
->>>RocketRAID 1540 is a lovely card.  The Rocket 1540 is not, however.
->> Apparently that is the case.  What is the exact PCI id and revision
->> of
->> the chip used on the Rocket1540?  My Rocketraid 1540 reports as
->> 1103:0008 (rev 07).
->>
->
-> No chance distinguishing them based on PCI id/rev, it seems.
-> Here is the lspci -vvn for my Rocket1540.
->
-> 00:08.0 Class 0104: 1103:0008 (rev 07)
->          Subsystem: 1103:0001
+BTW, I'm talking about doing this under the 2.6 kernel. 
 
-=46or the record, my rocketraid1540 has that same subsystem id too.
+If such a program exists -- call it an "automatic recovery program" -- I 
+would sure like to know about it. If not, I am considering writing such a program 
+and would appreciate your input into what it should do. 
 
---=20
-M=E5ns Rullg=E5rd
-mru@kth.se
+I am thinking about creating a very basic program that will assist 
+non-technical Linux users in being able to check the status of RAID 5 arrays on their 
+machines and, in the event a drive has been removed from an array, initiate 
+recovery without having to know ANYTHING about mdadm or the inner workings of 
+Linux RAID. In other words, make RAID recovery very "user friendly".  
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Can software RAID recovery be as simple as what an external Hardware RAID box 
+would do? 
+
+Thanks in advance for your comments. 
+Andy Liebman
