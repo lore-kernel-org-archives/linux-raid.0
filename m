@@ -1,8 +1,9 @@
-From: Ken Schneider <kschneider@bout-tyme.net>
-Subject: LSI Logic ata raid sources
-Date: Fri, 13 Feb 2004 19:36:50 -0500
+From: Matt Thrailkill <xwred1@modestolan.com>
+Subject: mkraid, busted raid0 superblock
+Date: Sat, 14 Feb 2004 19:59:29 -0800
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1076719010.1170.7.camel@pc1.bout-tyme.net>
+Message-ID: <1076817569.7354.8.camel@tallgeese.xwredwing.net>
+Reply-To: xwred1@modestolan.com
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
@@ -10,21 +11,19 @@ Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I was sent the sources by tech support at LSI Logic for the megaide raid
-controller that is embedded on a HP proliant ML330 computer. I would
-like to forward the sources to kernel.org but am new on this list and
-don't know who to contact.
+Last night I triggered a bug in the driver for my ide controller, the
+controller that the drives for my raid0 were hanging off of, and the
+superblocks got out of sync.  After some googling and reading
+(especially this:
+http://marc.theaimsgroup.com/?l=linux-raid&m=107282085211211&w=2) it
+looks like I should do an mkraid -R on my array.  My raidtab is the same
+as when I created it, so I assume it is consistent.  
 
-I have been able to create the module so that I could install SuSE 9.0
-and have also been able to create the module for the SMP kernel as well.
-It would be great to have this incorporated into the kernel tree so that
-other people that have this controller would not have to jump through
-all of the hoops I did to get this to work. LSI has sent me an email
-stating that the sources are open and can be included in the kernel
-tree.
+Only thing is, is there something I should examine with lsraid?  mkraid
+mentions an lsraid howto which I can't find.  I did a few things with
+lsraid, it reported the constituent drives of my array as being good. 
+Whatever I do, I obviously want to keep the filesystem intact.  Any
+tips?
 
-Any help would be appreciated.
-
--- 
-Ken Schneider <kschneider@bout-tyme.net>
+Thanks.
 
