@@ -1,49 +1,40 @@
-From: Alvin Oga <aoga@ns.Linux-Consulting.com>
-Subject: RE: ext3 journal on software raid (was Re: PROBLEM: Kernel 2.6.10 crashing repeatedly and hard)
-Date: Wed, 5 Jan 2005 09:21:53 -0800 (PST)
-Message-ID: <Pine.LNX.3.96.1050105091502.9709A-100000@Maggie.Linux-Consulting.com>
-References: <200501051707.j05H7m926213@www.watkins-home.com>
+From: Erik Mouw <erik@harddisk-recovery.com>
+Subject: Re: ext3 journal on software raid (was Re: PROBLEM: Kernel 2.6.10 crashing repeatedly and hard)
+Date: Wed, 5 Jan 2005 18:11:04 +0100
+Message-ID: <20050105171104.GG13684@harddisk-recovery.com>
+References: <Pine.LNX.3.96.1050105023623.27288A-100000@Maggie.Linux-Consulting.com> <41DBC7DE.509@wasp.net.au> <20050105141251.GE13684@harddisk-recovery.com> <41DBFBAE.1070309@tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200501051707.j05H7m926213@www.watkins-home.com>
+Content-Disposition: inline
+In-Reply-To: <41DBFBAE.1070309@tls.msk.ru>
 Sender: linux-raid-owner@vger.kernel.org
-To: Guy <bugzilla@watkins-home.com>
-Cc: 'Alvin Oga' <aoga@ns.Linux-Consulting.com>, linux-raid@vger.kernel.org
+To: Michael Tokarev <mjt@tls.msk.ru>
+Cc: Brad Campbell <brad@wasp.net.au>, Alvin Oga <aoga@ns.Linux-Consulting.com>, Andy Smith <andy@strugglers.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
-hi ya guy
-
-On Wed, 5 Jan 2005, Guy wrote:
-
-> RAID does not cause bad data!
-
-again .. that's not what i said ..
-
-the point i've been tring to say .. one MUST figure out "exactly"
-where the bad data or errors or crashes are coming from
-
-	it will usually be bad ("cheap") parts or operator error
-	or simple "slapped" together boxes
-
-> Bad data can get on any disk, even if it is part of a RAID system.
-> The bad data does not come from the hard disk, CRCs prevent that.
+On Wed, Jan 05, 2005 at 05:37:34PM +0300, Michael Tokarev wrote:
+> Erik Mouw wrote:
+> >If you have a  bad block in your swap partition and the device doesn't
+> >report an error about it, no amount of RAID is going to help you
+> >against it.
 > 
-> The problem is:  Where does the bad data come from?
-> Bad memory?  No, everyone use ECC memory, right?
+> The drive IS reporting read errors in most cases. 
 
-that's what i was saying... but you do a better job
+"most cases" and "all cases" makes quite a difference.
 
-even if one uses ecc... ecc can only fix certain errors,
-and non-correctable errors are flagged and not fixed
-( burst errors are hard to fix )
+> And please, pretty PLEASE stop talking about those mysterious
+> "undetectable" or "unreported" errors here.  A drive that develops
+> "unreported" errors just does not work and should not be here in
+> the first place, just like bad memory or CPU: if your cpu or memory
+> is failing, no software tricks helps and the failing part should
+> be replaced BEFORE even thinking about possible ways to recover.
 
-and people that use ecc memory ... usually have higher-end motherboards
-and more memory in the system vs the $50 motherboard+cpu combo (disasters)
-from fries ( a local pc store )
-
-c ya
-alvin
+Indeed: any suspicious part should not be used in the recovery process.
 
 
+Erik
+
+-- 
++-- Erik Mouw -- www.harddisk-recovery.com -- +31 70 370 12 90 --
+| Lab address: Delftechpark 26, 2628 XH, Delft, The Netherlands
