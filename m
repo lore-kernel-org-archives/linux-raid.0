@@ -1,88 +1,28 @@
-From: "Michael Daskalov" <MDaskalov@technologica.biz>
-Subject: RE: Raid 1 after shutdown or reboot not clean
-Date: Thu, 5 Jun 2003 14:29:00 +0300
+From: Prakash Achuthan <prakasha@india.hp.com>
+Subject: Changing MD device partition type
+Date: Thu, 05 Jun 2003 14:51:35 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <15F26D0D9E18E24583D912511D668FF8027270@exchange.ad.tlogica.com>
+Message-ID: <3EDFBB67.5030504@india.hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-content-class: urn:content-classes:message
-To: Armin Mohring <arminmohring@surfeu.de>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 Hi,
-I had the same problem with root-raid.
-I migrated to 2.4.20 kernel from www.kernel.org and problem disappeared.
 
-Seems like a bug in suse kernel to me.
+I have a software RAID volume (of four 160 GB harddisk) which is to be 
+added to a separate volume group. Now, when I do a pvcreate (pvcreate 
+/dev/md3), it fails saying "Invalid phyiscal volume". All the disks in 
+the RAID volume have their partition type set to "linux auto detect". 
+One of the mails in a mailing list says that the partition type of the 
+md0 should be "8e".
 
-Regards,
-Mihail Daskalov
-
-Here is my previous post to the mailing list:
-
-
-I have SuSE 7.2 on a machine with 4 HDDs.
-I have configured my root and boot to be on RAID1.
- 
-I installed the machine with he latest available kernel as a patch to SuSE 7.2 (ftp://ftp.suse.com/pub/suse/i386/update/7.2/kernel/2.4.18-20030324/k_de
-flt-2.4.18-262.i386.rpm)
-I had a problem with the IDE devices. Two blocks on two different disk were reported as bad and my raid5 was broken. Testing the IBM 120GB disks with the software provided by IBM/Hitachi revealed there were no problems in the disks.
- 
-Hoping that this was due to a problem with the IDE driver in the last kernel, I tried
-ftp://ftp.suse.com/pub/people/mantel/next/RPM/kernel-source-2.4.20.SuSE-
-62.i586.rpm
- 
-I compiled it myself including md,raid1,raid5 in the kernel (not as
-modules)
- 
-and there exists the following problem:
-
-After every shutdown or reboot my /dev/md1 (rootfs) device needs recyncing. It's because it's not stopped cleanly on shutdown or reboot.
- 
-All other /dev/md? devices are stopped on shutdown, only this one is not. On the console I see messages like ....skip....
-/dev/md0: switching to read-only mode
-....skip....
-/dev/md2: switching to read-only mode
-....skip....
-/dev/md3: switching to read-only mode
-....skip....
-/dev/md4: switching to read-only mode
- 
-but I don't see that message for /dev/md0. Instead I see a message saying that /dev/md1 is still in use.
-
-Anyone know why this happens on newer kernels? How can I fix the problem?
- 
-I didn't have this problem on k_deflt-2.4.18-262.i386.rpm . Does this version have any known problems with Intel 845 PESV motherboards?
-
-Should I try a stock kernel from www.kernel.org ? Which one supports LVM?
- 
-Thanks in advance,
- 
-Mihail Daskalov
-MDaskalov@technologica.biz 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in the body of a message to majordomo@vger.kernel.org More majordomo info at  http://vger.kernel.org/majordomo-info.html
+How do I change the partition type ? fdisk /dev/md3 does not show any 
+partition.
 
 
+Thanks,
+Prakash
 
------Original Message-----
-From: Armin Mohring [mailto:arminmohring@surfeu.de] 
-Sent: Thursday, June 05, 2003 9:12 AM
-To: linux-raid@vger.kernel.org
-Subject: Raid 1 after shutdown or reboot not clean
-
-
-Hello!
-
-Kernel 2.4.20-62 from Suse
-Two IBM DTLA 305040 with software raid 1
-After (clean) shutdown or reboot, the root partition is not clean and 
-the reconstruction begins.
-
-Kind regards
-Armin Mohring
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in the body of a message to majordomo@vger.kernel.org More majordomo info at  http://vger.kernel.org/majordomo-info.html
