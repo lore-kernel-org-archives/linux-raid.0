@@ -1,31 +1,30 @@
-From: Stephen Lee <splee@plexio.com>
-Subject: Re: How to set speed_limit_max for mdrecoveryd?
-Date: 24 Sep 2002 07:40:31 -0700
+From: Derek Vadala <derek@cynicism.com>
+Subject: Re: Growing volumes
+Date: Tue, 24 Sep 2002 10:26:18 -0700 (PDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1032878432.8864.10.camel@ralph.plexio.private>
-References: <A5974D8E5F98D511BB910002A50A66470580D1FE@hdsmsx103.hd.intel.com>
+Message-ID: <Pine.LNX.4.30.0209241024590.18094-100000@jaded.cynicism.com>
+References: <C65F89D1AC0BB54B865127151A24DA780BAD5BB6@nbexchm2.aliant.icn>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <A5974D8E5F98D511BB910002A50A66470580D1FE@hdsmsx103.hd.intel.com>
-To: "Cress, Andrew R" <andrew.r.cress@intel.com>
-Cc: Raid <linux-raid@vger.kernel.org>
+In-Reply-To: <C65F89D1AC0BB54B865127151A24DA780BAD5BB6@nbexchm2.aliant.icn>
+To: "Shaw, Marco" <marco.shaw@nbtel.nb.ca>
+Cc: "'linux-raid@vger.kernel.org'" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, 2002-09-24 at 07:01, Cress, Andrew R wrote:
-> 
-> I couldn't find this is a quick scan of the code, and thought it should be
-> documented somewhere.  Maybe I just have a blind spot.  Can someone tell me
-> how to set the speed_limit_max variable for mdrecoveryd?  
-> 
+On Tue, 24 Sep 2002, Shaw, Marco wrote:
 
-Try this:
+> Is there some kind of doc/howto/faq on growing software raid
+> "volumes"?  I'm planning for a system that may require additional
+> storage down the road.
 
-echo some_value > /proc/sys/dev/raid/speed_limit_max
+As far as I'm aware, this is the only choice you have:
 
-or what ever value you wish.
+http://unthought.net/raidreconf/
 
-Stephen
+Please note all the caveats.
 
+
+---
+Derek Vadala, derek@cynicism.com, http://www.cynicism.com/~derek
 
