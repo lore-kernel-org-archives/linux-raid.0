@@ -1,52 +1,69 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: RAID 1+0 makes BUG in raid1.c, but 0+1 works?
-Date: Thu, 2 Jan 2003 11:07:21 +1100
+From: Alvin Oga <aoga@Maggie.Linux-Consulting.com>
+Subject: Re: Raid1 fast resync
+Date: Thu, 2 Jan 2003 01:44:33 -0800 (PST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <15891.33465.348466.886941@notabene.cse.unsw.edu.au>
-References: <20021225172009.Z1089@questra.com>
+Message-ID: <Pine.LNX.3.96.1030102013608.31808A-100000@Maggie.Linux-Consulting.com>
+References: <3E130F39.3000706@attbi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Scott Mcdermott on Wednesday December 25
-To: Scott Mcdermott <smcdermott@questra.com>
+In-Reply-To: <3E130F39.3000706@attbi.com>
+To: Philip Cameron <pecameron@attbi.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday December 25, smcdermott@questra.com wrote:
+
+hi ya philip
+
+On Wed, 1 Jan 2003, Philip Cameron wrote:
+
+> Do any of you know of work that is going on to improve the raid 1 resync 
+> speed? I am starting to evaluate approaches to reducing the time to 
+> resync the disks.
 > 
-> is there something I'm doing wrong or is this a bug? Should I not be
-> using RAID1+0 ? I just tried it with RAID0+1 instead and it seems to
-> work fine (although it's somewhat slower than I expected, and initial
-> sync goes 250K/s for some reason until I turn up the minimum).  This
-> makes no sense to me as I thought that RAID devices were a block-level
-> abstraction...so why would 0+1 work but not 1+0 ?? I really dislike the
-> additional probability of second-disk failure in RAID0+1 over RAID1+0,
-> and the ridiculous resync times, and I don't like the slow write speed
-> of RAID5.
+> I am involved in a project on a fault tolerant x86 based server that has 
+> hot plugable scsi disks and PCI busses. There are two PCI busses and 3 
+> mirrrored sets of two disks. When a PCI bus is pulled all of the mirrors 
+> are broken so when the PCI bus is again inserted, all of the disks 
+> resync which takes hours. Also, during development the resync after 
+> crash really slows down debug.
 
-It is a bug.  Arguably, the bug is that the test and BUG() call are
-wrong, but  the patch below is probably the perferred fix in a stable
-kernel.
+without knowing more details ... here's some comments
 
-I always recommend raid1 or raid5 at the bottom, and raid0/linear/lvm
-on top of that.
+- when a pci card is pulled out, you stand a good chance that the cpu bios
+  will need to be reset ( re-saved )
+	- the machine goes into bios mode, whether you like it or not
 
-NeilBrown
+- since you are using scsi disks..
+	- when you pull out a scsi disk, the next time you reboot,
+	the scsi drives will be in different order if you lost sda
+	or lost sdb and you had sdc  which is now your new sdb
 
- ----------- Diffstat output ------------
- ./drivers/md/md.c |    2 +-
- 1 files changed, 1 insertion(+), 1 deletion(-)
+- if you have 2 pci buses...
+	- put sda  on pci #1
+	and put sdb ( mirrored ) onto pci #2
 
-diff ./drivers/md/md.c~current~ ./drivers/md/md.c
---- ./drivers/md/md.c~current~	2002-12-17 15:20:57.000000000 +1100
-+++ ./drivers/md/md.c	2003-01-02 11:05:20.000000000 +1100
-@@ -489,7 +489,7 @@ static int sync_page_io(kdev_t dev, unsi
- 	init_buffer(&bh, bh_complete, &event);
- 	bh.b_rdev = dev;
- 	bh.b_rsector = sector;
--	bh.b_state	= (1 << BH_Req) | (1 << BH_Mapped);
-+	bh.b_state	= (1 << BH_Req) | (1 << BH_Mapped) | (1 << BH_Locked);
- 	bh.b_size = size;
- 	bh.b_page = page;
- 	bh.b_reqnext = NULL;
+	- if any pci buss dies, your system can still function properly
+	since its mirror is on the other pci buss which is working
+
+- to avoid resyncing the raid data...
+	- use a 3rd (spare) disk local to the 2 disks
+	when one disk dies, the spare supposed to kick-in 
+
+	- have a spare system, that mirror's the "main" data,
+	and rebuild a spare disk on a constant basis so that
+	the "spare" can be plugged into the "main" data asap
+	whenver a disk dies that didnt have a spare previously
+
+	- when resyncing... you only need to "resync changed data"
+	( changed/new files for today ) and NOT the whole array
+	which might have a year's worth of data..
+
+	- yesterday's hot swap ( spare ) is ready to go anytime
+
+- if you want more raid interactivity and keyboard/ssh control,
+  renice the apps and raid parameters
+
+have fun
+alvin
+
