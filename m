@@ -1,45 +1,37 @@
-From: Cyril Bouthors <cyril@bouthors.org>
-Subject: Re: Unable to handle kernel NULL pointer dereference with 2.4.27
-Date: Tue, 30 Nov 2004 15:48:06 +0300
-Message-ID: <87fz2r4i61.fsf@wide.bouthors.org>
-References: <87653oimzy.fsf@wide.bouthors.org>
-	<16811.50295.566088.579804@cse.unsw.edu.au>
+From: Ewan Grantham <ewan.grantham@gmail.com>
+Subject: Re: USB raid5?
+Date: Tue, 30 Nov 2004 07:51:54 -0600
+Message-ID: <6d5bedd8041130055139423510@mail.gmail.com>
+References: <41AC11CF.2050102@pobox.com>
+Reply-To: Ewan Grantham <ewan.grantham@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha1; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <16811.50295.566088.579804@cse.unsw.edu.au> (Neil Brown's
- message of "Tue, 30 Nov 2004 11:53:11 +1100")
+In-Reply-To: <41AC11CF.2050102@pobox.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: mjstumpf@pobox.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---=-=-=
+On Tue, 30 Nov 2004 00:23:11 -0600, Michael Stumpf <mjstumpf@pobox.com> wrote:
+> In the interminable battle with physical arrangement & rack space, has
+> anyone tried arrays of "external" usb 2.0 or firewire connected drives?
+> 
+> Are there limitations to size, or to bandwidth that aren't obvious, that
+> make this a non desirable solution?
 
-On 30 Nov 2004, Neil Brown wrote:
-> No.  The reference to raid0 is purely accidental - the offset into
-> raid0 that is mentioned is -235378 : a negative number !!!!
+Am currently running a RAID-5 array that has two internal drives and
+two external firewire drives. Bandwidth is good enough for doing hour
+long plus video captures with no dropped frames, and to playback video
+and audio with no drops or stutters.
 
-Sorry about that.
+USB 2 appears to offer similar bandwidth, but at the expense of more
+CPU overhead - which may or may not be an issue depending on your
+configuration.
 
-> I suspect that it is a filesystem problem.
-> I recommend reporting the problem to linux-kernel@vger.kernel.org
-> and mentioning what filesystem you are using.
+In either case, you're more likely going to have a problem getting
+your Linux system to recognize the external drive than in using it as
+part of an array.
 
-I will.
-
-Thanks.
--- 
-Cyril Bouthors
-
---=-=-=
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.5 (GNU/Linux)
-
-iD8DBQBBrGwGZ1SJHeqsYt8RAoIVAKC1LzQ72jtVgcEyBovzb92Z9wcZoQCgoQtB
-0qBsS25ihXSxDy6gflE/Q2c=
-=dHSZ
------END PGP SIGNATURE-----
---=-=-=--
+YMMV, IANAL, etc.
