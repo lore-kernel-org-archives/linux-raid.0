@@ -1,38 +1,45 @@
-From: Miquel van Smoorenburg <miquels@cistron.nl>
-Subject: Re: read-balancing not working in 2.6?
-Date: Tue, 30 Nov 2004 13:38:43 +0100
-Message-ID: <20041130123841.GA19796@cistron.nl>
-References: <16811.50006.976036.367501@cse.unsw.edu.au>
+From: Cyril Bouthors <cyril@bouthors.org>
+Subject: Re: Unable to handle kernel NULL pointer dereference with 2.4.27
+Date: Tue, 30 Nov 2004 15:48:06 +0300
+Message-ID: <87fz2r4i61.fsf@wide.bouthors.org>
+References: <87653oimzy.fsf@wide.bouthors.org>
+	<16811.50295.566088.579804@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; boundary="=-=-=";
+	micalg=pgp-sha1; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <16811.50006.976036.367501@cse.unsw.edu.au>
+In-Reply-To: <16811.50295.566088.579804@cse.unsw.edu.au> (Neil Brown's
+ message of "Tue, 30 Nov 2004 11:53:11 +1100")
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: linux-raid@vger.kernel.org, Per Andreas Buer <perbu@linpro.no>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> On Monday November 29, perbu@linpro.no wrote:
-> > 
-> > Hi.
-> > 
-> > We have a busy mailserver with the mail-spool on MD (raid1, consisting
-> > of sda and sdb, ext3 w/data=journal noatime nodiratime, 2.6.6,
-> > Debian Woody). The read-balancing does not seem to work properly.
-> 
-> The array wasn't resyncing at the time was it?
-> I ask partly because resyncing substantially reduces the opportunities
-> for read-balance (it will only read balance parts of the array that
-> are known to  be in-sync) and partly because the amount of read
-> traffic to sdb seems to start picking up at the end of your log.
-> 
-> If you can confirm that it wasn't resyncing, I will look into it.
+--=-=-=
 
-You already did that in June :) It's a known bug in 2.6.6
+On 30 Nov 2004, Neil Brown wrote:
+> No.  The reference to raid0 is purely accidental - the offset into
+> raid0 that is mentioned is -235378 : a negative number !!!!
 
-http://marc.theaimsgroup.com/?t=108686719100002&r=1&w=2
-http://marc.theaimsgroup.com/?l=linux-raid&m=108725741411235&w=2
+Sorry about that.
 
-Mike.
+> I suspect that it is a filesystem problem.
+> I recommend reporting the problem to linux-kernel@vger.kernel.org
+> and mentioning what filesystem you are using.
+
+I will.
+
+Thanks.
+-- 
+Cyril Bouthors
+
+--=-=-=
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.5 (GNU/Linux)
+
+iD8DBQBBrGwGZ1SJHeqsYt8RAoIVAKC1LzQ72jtVgcEyBovzb92Z9wcZoQCgoQtB
+0qBsS25ihXSxDy6gflE/Q2c=
+=dHSZ
+-----END PGP SIGNATURE-----
+--=-=-=--
