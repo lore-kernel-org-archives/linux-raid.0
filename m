@@ -1,66 +1,54 @@
-From: Derek Vadala <derek@cynicism.com>
+From: Kasper Dupont <kasperd@daimi.au.dk>
 Subject: Re: RAID-6 support in kernel?
-Date: Wed, 5 Jun 2002 18:19:53 -0700 (PDT)
+Date: Thu, 06 Jun 2002 10:28:28 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.GSO.4.21.0206051716530.16571-100000@gecko.roadtoad.net>
-References: <Pine.LNX.3.96.1020604144204.5024D-100000@gatekeeper.tmr.com>
+Message-ID: <3CFF1D2C.5861132C@daimi.au.dk>
+References: <Pine.GSO.4.21.0206051716530.16571-100000@gecko.roadtoad.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.3.96.1020604144204.5024D-100000@gatekeeper.tmr.com>
-To: Bill Davidsen <davidsen@tmr.com>
+To: Derek Vadala <derek@cynicism.com>
 Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 4 Jun 2002, Bill Davidsen wrote:
+Derek Vadala wrote:
+>=20
+>   RAID-1 --------> RAID-5 (D0,D1,D2,D3,P0)
+>               |--> RAID-5 (D0,D1,D2,D3,P0)
+>    (four disks used for data, only one from each RAID-5 can fail)
 
-> On Sun, 2 Jun 2002, Derek Vadala wrote:
-> 
-> > You can always fake this effect by combining two 8-disk RAID-5s into a
-> > RAID-0. It's not technically RAID-6, but can withstand a 2-disk failure,
-> > although not _any_ 2-disk failure.
-> 
-> I think (hope) you meant 1+5, which will stand any three disk failure, and
-> up to 1+N/2 if just the right drives fail. They never do, of course.
+Wrong, any three disks can fail. If the one RAID has only
+one faulty disk, the other RAID can have any number of
+faulty disks without loosing data.
 
-I did mean RAID-0 combined with RAID-5. You can search for RAID-50 for
-more info. The configuration you describe (RAID-5s combined into a mirror)
-would have a disk overhead that is worse than RAID-10/RAID-0+1. For two
-5-disk RAID-5s combined into a RAID-1 you end up using six of your disks
-for parity and disk mirroring:
+>=20
+> With RAID-10:
+>=20
+>   RAID-0 --------> RAID-1 (D0,D0)
+>               |--> RAID-1 (D1,D1)
+>               |--> RAID-1 (D2,D2)
+>               |--> RAID-1 (D3,D3)
+>               |--> RAID-1 (D4,D4)
+>    (five disks used for data, one from each mirror can fail)
+>=20
+> With RAID-50:
+>=20
+>   RAID-0 --------> RAID-5 (D0,D2,D4,D6,P0)
+>               |--> RAID-5 (D1,D3,D5,D7,P0)
+>=20
+>    (two disks wasted only one from each RAID-5 can fail)
+>=20
+> I believe that I/O performance would be similar for each
+> configuration. I'll try to run some tests in the next few days.
 
-  RAID-1 --------> RAID-5 (D0,D1,D2,D3,P0)
-              |--> RAID-5 (D0,D1,D2,D3,P0)
-   (four disks used for data, only one from each RAID-5 can fail)
+I'd guess that depends on the access patterns.
 
-With RAID-10:
-
-  RAID-0 --------> RAID-1 (D0,D0)
-              |--> RAID-1 (D1,D1)
-              |--> RAID-1 (D2,D2)
-              |--> RAID-1 (D3,D3)
-              |--> RAID-1 (D4,D4)
-   (five disks used for data, one from each mirror can fail)
-
-With RAID-50:
-
-  RAID-0 --------> RAID-5 (D0,D2,D4,D6,P0)
-              |--> RAID-5 (D1,D3,D5,D7,P0)
-
-   (two disks wasted only one from each RAID-5 can fail)
-
-I believe that I/O performance would be similar for each
-configuration. I'll try to run some tests in the next few days.
-
-> I doubt it. Unless you run a system with heavy CPU demand there are lots
-> of cycles for this stuff. I run 0+1 several places and I don't see serious
-> CPU load. I would be very interested in RAID-6 in the kernel, but I have
-
-Mirroing doesnt hit the CPU nearly as much as RAID-5 does. I suspect
-RAID-6 would incur greater overhead because of its double parity blocks.
-But, there's no point in arguing about kernel RAID-6 without data to back
-it up.
-
----
-Derek Vadala, derek@cynicism.com, http://www.cynicism.com/~derek
-
+--=20
+Kasper Dupont -- der bruger for meget tid p=E5 usenet.
+=46or sending spam use mailto:razor-report@daimi.au.dk
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
