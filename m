@@ -1,25 +1,65 @@
-From: cokumoto@cyber-hawaii.com
-Subject: Please re-send your email to me
-Date: Wed, 30 Jun 2004 02:44:17 -0700
+From: "Stephen Hargrove" <stephen@exitwound.org>
+Subject: Should I Start Over?
+Date: Wed, 30 Jun 2004 08:46:02 -0500 (CDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200406300944.i5U9iA0K013804@zeus.kernel.org>
+Message-ID: <1147.66.230.1.97.1088603162.squirrel@exitwound.org>
+Reply-To: stephen@exitwound.org
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Greetings!
+I'm having no luck with this problem.  If this is not the correct place to
+seek assistance or if there is some other place I should ask, I would
+appreciate it someone could point me in the right direction.
 
-Thanks for trying to send me an email. I'm sorry but I did not receive it because I don't know if you are a person or a mass-emailing program. I accept email from any person (whether I know them or not) but I do not accept email from mass-emailing programs unless I have explicitly authorized them. 
+About a month ago, my system crashed.  When it booted, the raid array
+would not start.  The system is seeing all of the drives, but can't find
+/dev/md0.  I've got about 80Gb of data on the array which can be recovered
+in time, but if I can rebuild the array without losing the data, that
+would rock.
 
-I need you to click on the link below so that I know you are a person. Then please re-send me your email. You will never have to repeat this step.
+dmesg shows the following:
 
-I am very much looking forward to reading your email. 
+sh-2006: reiserfs read_super_block: bread failed (dev 09:00, block 8, size
+1024)
+sh-2006: reiserfs read_super_block: bread failed (dev 09:00, block 64,
+size 1024)
+sh-2021: reiserfs_read_super: can not find reiserfs on md(9,0)
 
-Please click on this link:
-http://sk.cyber-hawaii.com/SpamValidation/addUsrValidation.aspx?addr_id=287378210&email_Addr=linux-raid@vger.kernel.org
+The above is repeated 3 more times.  dmesg does see the four drives that
+should compose /dev/md0 (hde is a spare):
 
+# dmesg | grep hd
+...
+hdc: Maxtor 6Y120P0, ATA DISK drive
+hdd: Maxtor 6Y120P0, ATA DISK drive
+hde: Maxtor 6Y120P0, ATA DISK drive
+hdg: Maxtor 6Y120P0, ATA DISK drive
+...
 
-Thanks!
+# cat /proc/mdstat:
 
-p.s. Please do not reply to this email as I will not receive it.
+Personalities : [raid5]
+read_ahead not set
+unused devices: <none>
 
+# cat /etc/mdadm/mdadm.conf
+DEVICE /dev/hd*
+ARRAY /dev/md0 level=raid5 num-devices=3
+UUID=fef44719:ddd66a49:0a337b48:b53e14c0
+   devices=/dev/hdg1,/dev/hdd1,/dev/hdc1
+
+# mdadmin --assemble --scan
+mdadm: no devices found for /dev/md0
+
+I don't know where to turn from here.  This is my first real experience
+with Linux and raid devices.  If someone could help, I'd really appreciate
+it.
+
+Thanks.
+
+--
+Steve
