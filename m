@@ -1,73 +1,37 @@
-From: Tim Moore <linux-raid@nsr500.net>
-Subject: Re: Raid5 Construction Question
-Date: Thu, 19 Aug 2004 11:32:32 -0700
+From: Mike Hardy <mhardy@h3c.com>
+Subject: Re: Linux tuning whitepaper now available from 3ware
+Date: Thu, 19 Aug 2004 11:35:00 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <4124F240.20606@nsr500.net>
-References: <4124E24E.7070802@psc.edu>
+Message-ID: <4124F2D4.0@h3c.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4124E24E.7070802@psc.edu>
-To: linux-raid@vger.kernel.org
+To: "'linux-raid@vger.kernel.org'" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-My raid tab has 'chunk-size 64' and I get 64k chunks.  Does 'chunk-size 
-64k' mean 64M chunks?
 
-Did you set stride correctly when running mke2fs (based on 
-chunk_size/fs_block_size)?
+I'll give you credit - I took the bait and gave you a little personal
+information to see what was in there.
 
-Either one of these could trash performance.
+I didn't see a single thing in there that looked like marketing or
+sales, it was all very solid technical information covering the basics
+of disk benchmarking. These days, that's a happy surprise.
 
-rgds,
-tim
+I'll probably end up using it double-check my work the next time I build
+a system, so in that sense, I'll find it useful.
 
-PAulN wrote:
-> Hi,
-> So I have a raid 5 which is around ~1TB and the problem I've been having 
-> is that
-> the resync rate is really bad.  This is understandable given that the 
-> raid5 has not
-> been initialized.  Does anyone know a way for me to initialize my raid5 
-> before I use it so
-> that the resync process doesn't run for 3 days?
-> thanks
-> paul
+Thanks for putting it together - as long as I don't get any spam from it
+this is a nice contribution :-)
+
+-Mike
+
+David Graas wrote:
+> Hello everyone, I noticed that some people might be experiencing low performance on Linux platforms with our controllers and wanted to let you know about a tuning whitepaper we recently released. I have posted the link to it below. It has helpful information on configuring Linux for optimal performance. It does require a brief registration to download the file but this is only for our internal use and will not be used for SPAM or released to third parties. Let me know if you have any questions I can help with. Regards,
 > 
+> http://www.3ware.com/linuxbenchmarks.htm
 > 
-> Config:
-> -------------------------------------------------
-> raiddev             /dev/md0
-> raid-level                  5
-> nr-raid-disks               7
-> nr-spare-disks              1
-> chunk-size                  64k
-> persistent-superblock       1
-> parity-algorithm        left-symmetric
->    device          /dev/sda1
->    raid-disk     0
->    device          /dev/sdb1
->    raid-disk     1
->    device          /dev/sdc1
->    raid-disk     2
->    device          /dev/sdd1
->    raid-disk     3
->    device          /dev/sde1
->    raid-disk     4
->    device          /dev/sdg1
->    raid-disk     5
->    device          /dev/sdf1
->    raid-disk    6
->    device          /dev/sdh1
->    spare-disk     0
-> ----------------------------------------
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+> David Graas 
+> Corporate Sales Manager 
+> 3ware - an AMCC company 
 
--- 
-  | for direct mail add "private_" in front of user name
