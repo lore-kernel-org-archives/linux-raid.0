@@ -1,16 +1,43 @@
-From: Robert Osiel <bob@osiel.org>
-Subject: Re: A few mdadm questions
-Date: Sat, 13 Nov 2004 18:35:39 -0600
-Message-ID: <4196A85B.5060106@osiel.org>
-References: <419580D8.1020900@osiel.org>	<200411130421.iAD4LwN03759@www.watkins-home.com> <16789.47235.818038.175157@cse.unsw.edu.au>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: A few mdadm questions
+Date: Sat, 13 Nov 2004 21:03:47 -0500
+Message-ID: <200411140203.iAE23rN08652@www.watkins-home.com>
+References: <4196A85B.5060106@osiel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <16789.47235.818038.175157@cse.unsw.edu.au>
+In-Reply-To: <4196A85B.5060106@osiel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: 'Robert Osiel' <bob@osiel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+Your array had 5 disks, not counting any spares.
+You need to start the array with at least 4 of the five disks, spares don't
+help when starting an array.
+
+I don't know why it thinks your disk (hdi1) is a spare.  But, that may
+explain how it was removed from the array.  Unless Neil has some magic
+incantations, I think you are out of luck.
+
+If Neil has no ideas, you could try to start the array with the drive that
+failed (hdk1), but that will cause corruption of any stripes that have
+changed since the drive was removed from the array.  So, save this option as
+a last resort.  Of course, if hdk1 has failed hard, you will not be able to
+use it.
+
+Last resort!!!  Corruption will occur!
+mdadm --assemble --force /dev/md0 /dev/hde1 /dev/hdk1 /dev/hdm1 /dev/hdo1
+
+Guy
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Robert Osiel
+Sent: Saturday, November 13, 2004 7:36 PM
+To: linux-raid@vger.kernel.org
+Subject: Re: A few mdadm questions
 
 Guy/Neil:
 
@@ -168,7 +195,8 @@ Neil Brown wrote:
 >On Friday November 12, bugzilla@watkins-home.com wrote:
 >  
 >
->>First, stop using the old raid tools.  Use mdadm only!  mdadm would not have
+>>First, stop using the old raid tools.  Use mdadm only!  mdadm would not
+have
 >>allowed your error to occur.
 >>    
 >>
@@ -194,4 +222,9 @@ Neil Brown wrote:
 >NeilBrown
 >  
 >
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
