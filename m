@@ -1,46 +1,46 @@
-From: Dirk Hufnagel <hufnagel@mps.ohio-state.edu>
-Subject: Re: XFS RAID only writing half the time
-Date: Tue, 25 Nov 2003 14:26:49 -0500
-Sender: linux-xfs-bounce@oss.sgi.com
-Message-ID: <3FC3ACF9.4000509@mps.ohio-state.edu>
-References: <114.2c0b3fa3.2cf4ee43@aol.com>
+From: jlewis@lewis.org
+Subject: Re: Adding a mirror to a RAID1 Device
+Date: Tue, 25 Nov 2003 16:03:20 -0500 (EST)
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <Pine.LNX.4.44.0311251557120.1140-100000@redhat1.mmaero.com>
+References: <16323.732.390200.935640@notabene.cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-xfs-bounce@oss.sgi.com>
-In-Reply-To: <114.2c0b3fa3.2cf4ee43@aol.com>
-Errors-to: linux-xfs-bounce@oss.sgi.com
-To: AndyLiebman@aol.com
-Cc: linux-raid@vger.kernel.org, linux-xfs@oss.sgi.com
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <16323.732.390200.935640@notabene.cse.unsw.edu.au>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-AndyLiebman@aol.com wrote:
-> Hendrik, 
+On Tue, 25 Nov 2003, Neil Brown wrote:
 
-<snip>
+> What you should have done is make a raid1 with 2 drives, one of which
+> was missing/failed.  With mdadm, the command would be:
+> 
+>   mdadm -C /dev/md0 --level=raid1 --disks=2 /dev/hda3 missing
+> 
+> then you can hot-add the extra drive when it arrives.
+> 
+> What you have to do now is recreate the raid1 with two drives.  You
+> will have to have the filesystem unmounted and the raid stopped, but
+> you will not lose any data.
 
-> I'm going to want to try to come up with some settings that allow capturing 
-> uncompressed video (18 MB/sec) while one or two other users are trying to read 
-> DV video (3.5 MB/sec) from the same drives. I guess that means I will want get 
-> the cache written to disk as soon as possible (leaving margin for difficult 
-> moments) while allowing other users to read from the disk on demand. In some 
-> ways, reading video files is more demanding than writing -- because what is read 
-> MUST arrive at the client computer exactly when needed. 
+I have a somewhat related question.  Suppose I have a system with RAID1 
+(several md devices) using identical partitions on hda and hdc.  When a 
+card that works arrives, I want to move these two disks to the faster ATA 
+interfaces, which will likely make then hde and hdg.  
 
-Could be problematic since you can't just add bandwidth requierements
-and compare it to the maximum bandwidth. Multiple active disk access
-jobs means that the disk will be seeking, which means that the read
-accesses will interfere with your write stream, possible to a point
-where the writing will skip.
+To do this, can I fail hdc, move it to hde, edit the raidtab on hde to say
+that the md devices are hde and hdg, start up that "new" RAID1 degraded,
+then pull hda, and hot add it to the new md devices and resync?
 
-If you are not writing 24/7 and it's in your budget, I would put two
-RAID arrays into the machine, one to write to and the other one
-for reading. You can synchronize them whenever you are not writing.
-Of course, that only works if you don't need to read the written
-data immediatly. For the read array I would use Raid5 for the data
-security and for the write array you can either use Raid5 or Raid0.
-Raid0 is faster compared to Raid5, especially for writes, but it
-would mean your data isn't secure until it has been copied to the
-other Raid5 array.
+Is there a better way to get these 2 disks moved from the ATA33 
+motherboard interfaces to an ATA100 controller card?  Perhaps just boot in 
+rescue mode from a CD (system told me a bootfloppy could not be made due 
+to kernel/modules sizes) edit raidtab and then just reboot?
+ 
+----------------------------------------------------------------------
+ Jon Lewis *jlewis@lewis.org*|  I route
+ Senior Network Engineer     |  therefore you are
+ Atlantic Net                |  
+_________ http://www.lewis.org/~jlewis/pgp for PGP public key_________
 
-	Dirk
