@@ -1,69 +1,22 @@
-From: Adam Radford <aradford@3WARE.com>
-Subject: RE: 3ware 7500-12, bad write speed
-Date: Thu, 26 Sep 2002 10:50:31 -0700
+From: "Shaw, Marco" <marco.shaw@nbtel.nb.ca>
+Subject: 3 questions...
+Date: Fri, 27 Sep 2002 20:51:50 -0300
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <A1964EDB64C8094DA12D2271C04B812672C703@tabby>
+Message-ID: <C65F89D1AC0BB54B865127151A24DA780BAD5C7B@nbexchm2.aliant.icn>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: 'Jason' <bind@swift-web.com>, Mikael Abrahamsson <swmike@swm.pp.se>
-Cc: linux-raid@vger.kernel.org
+To: "'linux-raid@vger.kernel.org'" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Jason,
+1. When using fdisk, is it really required (or a "good idea") to create the partitions as type "fd"?  I've typically just created a regular Linux partition, and would let mkraid to it's thing.  (As a result, it seems strange that I ran into #2 below since I didn't do this step of changing the type.)
 
-If you're using the 7.5.1 codeset, you can add a jbod with the following
-command:
+2. I can't seem to find a document describing how software RAID really works technically.  (Yes, I could read the source, but I'm not the most proficient C person, nor do I want to work all weekend looking at the source either.)  I had a problem the other day, where I had a md0 device that the system was not able to mount (logical disks mounted from a SAN).  Because the system could not mount the disks, it would fail to boot at the section where the system would attempt to auto-detect md0 and would drop me to single-user mode type prompt.
 
-tw_cli maint add c0 p0 jbod
+Taking the directory out of fstab, and tried to find something in /etc/rc.d/init.d that was trying to do stuff with the md devices at boot but couldn't find anything.  Ended up being a problem with an old modular driver, and had to create a new initrd with an updated driver, but I was stuck for a second (well more than a second really).
 
-By default, you get a cbod, so you must specify jbod's and spare's.
+3. Is "persistent-superblock" supported with Linear and RAID0?  I think chunk-size is only supported in RAID0 and higher, but Linear will just skip the configuration with an informational warning at boot.
 
--Adam
+Marco
 
------Original Message-----
-From: Jason [mailto:bind@swift-web.com]
-Sent: Wednesday, September 25, 2002 11:43 PM
-To: Mikael Abrahamsson
-Cc: linux-raid@vger.kernel.org
-Subject: RE: 3ware 7500-12, bad write speed
-
-
-> Yes, don't use the 3Ware BIOS RAID.
-> Run it in JBOD mode, and use Linux RAID.
-> Neil's md tools make this very nice, and if you go to the 3Ware site and
-> look in the downloads they have CLI tools to support hotswap and other
-> useful things.
-> On a set of 16 Maxtor 160GB disk, and a pair of 3Ware 8 port cards we
-> regularly get RAID5 writes (using a 4GB block/file size measured by
-> bonnie++) of over 75MB/sec and reads over 160MB/sec.
->
-> I do think you should be seeing better results with the card and it's
-> native BIOS RAID, but I still think that software Linux RAID is a lot
-> faster and more flexible.
-
-I'm with Maurice on this one.  I changed over from using 3wares BIOS RAID to
-using Linux software RAID and my write speeds went up to from 15mb/sec
-(pathetic) to almost 120mb/sec which almost matches my read speeds (using
-Bonnie++).  This was using 4x40GB Maxtor drives in a RAID 5 configuration.
-
-One downside to using the drives in JBOD mode is with 3wares current drivers
-if you use their software to remove the drive and then put it back in, it
-then recognizes it as a CBOD drive of which then is unrecognizable by the
-software RAID.  3ware had a few suggestions that simply were not working so
-I placed the drive in a separate machine and ran fdisk to remove all
-partitions.  Then upon putting it back in with a reboot rather than using
-the software it was again seen as a JBOD drive.  This means no hot swapping
-but a reboot would be required.  The good news is 3ware has told me they are
-attempting to make a workaround in their drivers so you can add and remove a
-JBOD drive without a shutdown.
-
-Jay
->
-
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+PS Basing some of my assumptions/statements above from the Software-RAID HOWTO v. 0.90.7.
