@@ -1,79 +1,106 @@
-From: ptb@lab.it.uc3m.es (Peter T. Breuer)
-Subject: Re: *terrible* direct-write performance with raid5
-Date: Tue, 22 Feb 2005 21:11:10 +0100
-Message-ID: <u7gse2-sul.ln1@news.it.uc3m.es>
-References: <421B6E5D.6030004@tls.msk.ru>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: [OT] best tape backup system?
+Date: Tue, 22 Feb 2005 16:39:55 -0500
+Message-ID: <200502222140.j1MLe1923228@www.watkins-home.com>
+References: <Pine.LNX.4.56.0502221703210.4157@lion.drogon.net>
+Mime-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+In-Reply-To: <Pine.LNX.4.56.0502221703210.4157@lion.drogon.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: 'Gordon Henderson' <gordon@drogon.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Michael Tokarev <mjt@tls.msk.ru> wrote:
-> When debugging some other problem, I noticied that
-> direct-io (O_DIRECT) write speed on a software raid5
+In my case, I am sure I had the termination correct.  I normally don't set
+the SCSI card to auto termination, since I don't trust it!  But I did try
+every valid permutation.  On non-Linux systems, I have never had problems
+mixing disks with tapes or anything else.  And since I swapped terminators,
+cables and cards, the only hardware that could be at fault would be the tape
+or disk drives.  But, they are still working to this day, just on separate
+SCSI cards.
 
-And normal write speed (over 10 times the size of ram)?
+If I recall, I once had a Unix system where someone created about 128 Gig of
+sparse files.  I backed up the files to a DDS-3 tape (12-24 Gig).  The
+backup took more than 24 hours.  That is better than 10 to 1.  :)  So, yes,
+giving the correct data, 2 to 1 can be done, but not in the real world.
+IMO.
 
-> is terrible slow.  Here's a small table just to show
-> the idea (not numbers by itself as they vary from system
-> to system but how they relate to each other).  I measured
-> "plain" single-drive performance (sdX below), performance
-> of a raid5 array composed from 5 sdX drives, and ext3
-> filesystem (the file on the filesystem was pre-created
+Guy
 
-And ext2? You will be enormously hampered by using a journalling file
-system, especially with journal on the same system as the one you are
-testing! At least put the journal elsewhere - and preferably leave it
-off.
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Gordon Henderson
+Sent: Tuesday, February 22, 2005 12:40 PM
+To: Guy
+Cc: linux-raid@vger.kernel.org
+Subject: RE: [OT] best tape backup system?
 
-> during tests).  Speed measurements performed with 8Kbyte
-> buffer aka write(fd, buf, 8192*1024), units a Mb/sec.
-> 
->            write   read
->    sdX      44.9   45.5
->    md        1.7*  31.3
-> fs on md    0.7*  26.3
-> fs on sdX  44.7   45.3
-> 
-> "Absolute winner" is a filesystem on top of a raid5 array:
+On Tue, 22 Feb 2005, Guy wrote:
 
-I'm afraid there are too many influences to say much from it overall.
-The "legitimate" (i.e.  controlled) experiment there is between sdX and
-md (over sdx), with o_direct both times.  For reference I personally
-would like to see the speed withut o_direct on those two.  And the
-size/ram of the transfer - you want to run over ten times size of ram
-when you run without o_direct.
+> I have NOT been able to share a SCSI cable/card with disks and a tape
+> drive. Tried for days.  I would get disk errors, or timeouts.  I
+> corrected the problem by putting the tape drive on a dedicated SCSI
+> bus/card.  I don't recall the details of the failures, since it has been
+> well over a year now. But I do know I only had problems while using the
+> tape drive and the disks at the same time.  Like, during a backup.  The
+> disks were happy while the tape drive was idle.  I also swapped parts,
+> it had no effect.  I assumed Linux does not like to share SCSI.
 
-Then I would like to see a similar comparison made over hdX instead of
-sdX.
+Linux is fine with multiple devices on SCSI - scanners, drives, tapes. I
+haven't had problems with these combinations. The "usual culprit" is
+termination. Either not enough or too much! You need termination at both
+ends of the bus - one end is usually (but not always) the SCSI card, and
+all cards I've used in the past few years have had the ability to turn
+termination on or off (You turn it off if the card is not at one end of
+the bus) Some tape drives I've used also have the ability to turn
+termination on, or not - sometimes you set the drive number to one range
+for termination, another range for not (eg. 0-7 no termination, 8-15
+active termination). It's a real PITA to get right at times.
 
-You can forget the fs-based tests for the moment, in other words. You
-already have plenty there to explain in the sdX/md comparison. And to
-explain it I would like to see sdX replaced with hdX.
+> I have not had problems with 2 or more tape drives on the same SCSI
+> bus/card.  I think I had 3 at one time.
+>
+> Amanda...  The last time I checked, incremental backups require a
+different
+> tape each time.  You will need a lot of tapes.  If a full backup fits on a
+> single tape, just do a full backup each night.  I need many tapes to do a
+> full backup, but a single tape can hold many daily incremental backups.  I
+> deemed Amanda to wasteful for me.  I use home made scripts and cpio and do
+a
+> full backup about once per month, and do nightly incremental backups to 1
+> tape.  Once the daily tape is full I do another full backup.  Works very
+> well for me.  But, restoring is a pain, but that is very rare for me, only
+> once in 1+ years, so far.  My scripts seek the tape as required, so I can
+> eject the tape if needed, as long as I put it back in time for the nightly
+> backup.
 
-A time-wise graph of the instantaneous speed to disk would probably
-also be instructive, but I guess you can't get that!
+Yup. One tape per backup run with Amanda. Way back when tape capacity
+exceeded disk capacity, I used Amanda to backup many machines to one tape
+every night - that was its original strength, the ability to backup many
+machines over the LAN to one tape drive. These days with disk capacities
+generally exceeding tapes, it's not like that anymore (although I still
+have some smaller servers backed up to a non-local tape drive for reasons
+of economy)
 
-I would guess that you are seeing the results of one read and write to
-two disks happening in sequence and not happening with any great
-urgency.  Are the writes sent to each of the mirror targets from raid
-without going through VMS too?  I'd suspect that - surely the requests
-are just queued as normal by raid5 via the block device system. I don't
-think the o_direct taint persists on the requests - surely it only
-exists on the file/inode used for access.
+> If anyone gets 1.3 to 1 compression, that is real good!!!!  IMO.  The
+> last time I checked, I got about 1.1 to 1.  What a marketing scam!!!!
 
-Suppose the mirrored requests are NOT done directly - then I guess we
-are seeing an interaction with the VMS, where priority inversion causes
-the high-priority requests to the md device to wait on the fulfilment of
-low priority requests to the sdX devices below them.  The sdX devices
-requests may not ever get treated until the buffers in question age
-sufficiently, or until the kernel finds time for them. When is that?
-Well, the kernel won't let your process run .. hmm. I'd suspect the
-raid code should be deliberately signalling the kernel to run the
-request_fn of the mirror devices more often.
+Compression is always a weirdism - I'm guessing your data is music, video
+or pictures - stuff thats already compressed which won't compress twice.
+Typical "officy" type data would be stuff that generally compresses well -
+text documents, spreadsheets, program source code (& compiled binaries)
+etc. Amanda can compress data and in some cases better than the tape
+drives (using gzip, etc), but it's slow and makes restoring more
+interesting...
 
-> Comments anyone? ;)
+I think Sony are claiming 2.3:1 with their new tapes - well, they'll get
+that with text-files, but nothing near that with anything else!
 
-Random guesses above. Purely without data, of course.
-
-Peter
+Gordon
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
