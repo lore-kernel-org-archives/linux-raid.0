@@ -1,29 +1,58 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: Re: Problem with mdadm and raidstart
-Date: Fri, 2 Apr 2004 00:29:48 +0200
+From: Abhishek Rai <abba@cs.sunysb.edu>
+Subject: [2.4.25], [scsi aic79xx-2.0.8], raid5, problems with aic79xx on 2.4
+ (fwd)
+Date: Thu, 1 Apr 2004 18:44:55 -0500 (EST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040401222947.GB31662@percy.comedia.it>
-References: <20040401192015.40822.qmail@web14522.mail.yahoo.com>
+Message-ID: <Pine.GSO.4.53.0404011844010.20022@compserv1>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20040401192015.40822.qmail@web14522.mail.yahoo.com>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Apr 01, 2004 at 11:20:15AM -0800, Don Jessup wrote:
->   I have been testing disk failures with RAID5.   I have problems that I
->  have run into that happens with raidstart and mdadm. 
-use the --scan and --super-minor or --uuid parameters to mdadm.
-you will need to edit mdadm.conf
 
-L.
+Hi,
+I have an Adaptec 29320A Ultra320 SCSI host bus adapter with which I
+connect to a SCSI array of 9 disks, each of which is capable of 320MBps.
+Initially, in the BIOS settings, I configure each disk to operate at
+160MBps. aic79xx-2.0.8 driver for 2.4 works just fine on 2.4.25 with this
+setting. I am able to create a raid device on top of this 9-disk array,
+and everything works fine.
 
--- 
-Luca Berra -- bluca@comedia.it
-        Communication Media & Services S.r.l.
- /"\
- \ /     ASCII RIBBON CAMPAIGN
-  X        AGAINST HTML MAIL
- / \
+Now, I configure each disk in the BIOS settings to operate at 320MBps. I
+now start having trouble beginning with aic79xx module insertion itself.
+
+1. modprobe aic79xx.o (version 2.0.8 dated 3/16/2004, latest from justin's
+page) gives some warnings/errors (a couple of "overrun detected")
+2. sometimes upon insertion, aic79xx.o is able to configure all of the 9
+disks while at other times, it misses out on one of them (I couldn't
+repeat it for long enough to make sure if it misses out on more than one
+or is it just that disk, as this happened only once).
+3. After this, I can see all the 9 disks in /proc/scsi/scsi and I try to
+build raid on top of this array (mkraid -R /dev/md0). This eventually
+causes the kernel to crash with a NULL pointer dereference. But before
+that a lot of stuff happens. The Internet url to my log file is at the
+bottom of this email. The log file shows the trace following insmod of
+aic79xx (2.0.8, dated 3/16/2004), and later shows what all happens when a
+mkraid is started.
+
+4. In addition, during this mkraid, there are no LEDs glowing on any of
+the 9 disks (as happens in the OK case, when the disks operate at 160MBps)
+while the driver times out again and again (as the following log shows)
+and the proc/mdstat keeps showing an increasingly long time until
+completion.
+
+
+The log files are at:
+
+http://www.fsl.cs.sunysb.edu/~abba/scsi-raid-1.txt
+(this instance ended with a kernel NULL pointer dereference within 2
+minutes, couldn't ksymoops it)
+
+http://www.fsl.cs.sunysb.edu/~abba/scsi-raid-2.txt
+(this instance ran with errors and without any actual disk activity (no
+LEDs glowing) for around 90 minutes before I terminated it).
+
+
+Abhishek
+
