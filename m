@@ -1,48 +1,94 @@
-From: Thomas Andrews <tandrews@grok.co.za>
-Subject: Re: One partition degraded after every reboot
-Date: Sun, 11 Apr 2004 21:55:35 +0200
+From: Duncan Hill <dhill+linuxraid@cricalix.net>
+Subject: IT 8212F drivers for kernel-2.6.x failure
+Date: Sun, 11 Apr 2004 22:19:30 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040411195535.GA5359@gaspode.nextlink.co.za>
-References: <20040326154125.GN1950@gaspode.nextlink.co.za> <20040409133949.GA10900@gaspode.nextlink.co.za>
+Message-ID: <200404112219.30612.dhill+linuxraid@cricalix.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20040409133949.GA10900@gaspode.nextlink.co.za>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Apr 09, 2004 at 03:39:49PM +0200, Thomas Andrews wrote:
+Carsten Luedtke wrote:
 
-> What can cause this to occur after a clean shutdown & reboot:
-> "md1: former device ide/host2/bus0/target0/lun0/part5 is unavailable, removing from array!"
+> -----snip-----
+> Dear Sir,
+> 
+> Please visit our web site for downloading the newest driver for kernel
+> 2.6.x. 
+> http://www.ite.com.tw/productInfo/Download.html#IT8212 ATA133 Controller
+> 
+> Best Regards,
+> -----snip-----
+> 
+> You guys with this chipset onboard, please test these drivers and report
+> problems to itesupport@ite.com.tw . 
+> The drivers are available from the link above as source or binary
+> drivers.
 
-Well I finally solved it. The error above is somewhat misleading! I
-originally created the initrd with the raid1 array degraded. It had to
-be done that way because I wanted to re-boot using md1 as the root
-device, but at the time /dev/hda5 was still the root.
+For me, this driver has some serious issues with a 2.6 kernel on an AMD64 box.  
+I have sent a bug report to itesupport, once I got them to acknowledge that 
+they actually wrote the driver (the first response was to talk to nvidia!), 
+but I've heard nothing since.  Distro is Gentoo 2004.0 - had to shoehorn in 
+the source code into the linux kernel tree, as it wouldn't build outside of 
+the tree.
 
-mkinitrd created a script called "script" which contained the line:
+If anyone cares:
+Mar 24 08:29:38  kernel: Found Controller: IT8212 UDMA/ATA133 RAID Controller
+Mar 24 08:29:38  kernel: Device 0 is IDE
+Mar 24 08:29:38  kernel: Channel[0] BM-DMA at 0xA400-0xA407
+Mar 24 08:29:38  kernel: IssueIdentify: Resetting channel.
+Mar 24 08:29:38  kernel: IssueIdentify (IDE): Disk[0] not ready. Status=0x20
+Mar 24 08:29:38  kernel: Device 2 is not present
+Mar 24 08:29:38  kernel: IssueIdentify: Resetting channel.
+Mar 24 08:29:38  kernel: IssueIdentify (IDE): Disk[1] not ready. Status=0x30
+Mar 24 08:29:38  kernel: Device 3 is not present
+Mar 24 08:29:38  kernel: Channel[1] BM-DMA at 0xA408-0xA40F
+Mar 24 08:29:38  kernel: scsi0 : ITE RAIDExpress133
+Mar 24 08:29:38  kernel: Vendor: ITE       Model: IT8212F           Rev: 1.3
+Mar 24 08:29:38  kernel: Type:   Direct-Access                      ANSI SCSI 
+revision: 00
+Mar 24 08:29:38  kernel: sda : sector size 0 reported, assuming 512.
+Mar 24 08:29:38  kernel: SCSI device sda: 240121728 512-byte hdwr sectors 
+(122942 MB)
+Mar 24 08:29:38  kernel: sda: asking for cache data failed
+Mar 24 08:29:38  kernel: sda: assuming drive cache: write through
+Mar 24 08:29:38 s_dgram@highlander scsi.agent[6024]: how to add device type= 
+at /devices/platform/host0/0:0:0:0 ??
+Mar 24 08:30:00 s_dgram@highlander CRON[6042]: (root) CMD (test 
+-x /usr/sbin/run-crons && /usr/sbin/run-crons )
+Mar 24 08:30:08  
+kernel: /dev/scsi/host0/bus0/target0/lun0:AtapiStartIo:Already have a 
+request!
+Mar 24 08:30:08  kernel: AtapiResetController enter
+Mar 24 08:30:08  kernel: IT8212ResetAdapter: Reset channel 0
+Mar 24 08:30:08  kernel: IT8212ResetAdapter Success!
+Mar 24 08:30:08  kernel: AtapiResetController exit
+Mar 24 08:30:08  kernel: AtapiResetController enter
+Mar 24 08:30:08  kernel: IT8212ResetAdapter: Reset channel 0
+Mar 24 08:30:08  kernel: IT8212ResetAdapter Success!
+Mar 24 08:30:08  kernel: AtapiResetController exit
+Mar 24 08:30:48  kernel: AtapiStartIo:Already have a request!
+Mar 24 08:30:48  kernel: AtapiResetController enter
+Mar 24 08:30:48  kernel: IT8212ResetAdapter: Reset channel 0
+Mar 24 08:30:48  kernel: IT8212ResetAdapter Success!
+Mar 24 08:30:48  kernel: AtapiResetController exit
+Mar 24 08:30:48  kernel: AtapiResetController enter
+Mar 24 08:30:48  kernel: IT8212ResetAdapter: Reset channel 0
+Mar 24 08:30:48  kernel: IT8212ResetAdapter Success!
+Mar 24 08:30:48  kernel: AtapiResetController exit
+Mar 24 08:31:28  kernel: AtapiStartIo:Already have a request!
+Mar 24 08:31:28  kernel: AtapiResetController enter
+Mar 24 08:31:28  kernel: IT8212ResetAdapter: Reset channel 0
+Mar 24 08:31:28  kernel: IT8212ResetAdapter Success!
+Mar 24 08:31:28  kernel: AtapiResetController exit
+Mar 24 08:31:28  kernel: AtapiResetController enter
+Mar 24 08:31:28  kernel: IT8212ResetAdapter: Reset channel 0
+Mar 24 08:31:28  kernel: IT8212ResetAdapter Success!
+Mar 24 08:31:28  kernel: AtapiResetController exit
 
-mdadm -A /devfs/md/4 -R -u <magic_number> /dev/hdc5
-
-But what it needs is:
-
-mdadm -A /devfs/md/4 -R -u <magic_number> /dev/hdc5 /dev/hda5
-
-The reason other people get it to work by "fiddling around" is that they
-invariably re-do the mkinitrd afterwards, and chances are, most of the
-time they will do it with all the devices in the array (ie not degraded
-mode.) Creating the initrd with the raid1 running in it's final desired
-manner results in mkinitrd putting the correct command into "script", so
-there you are.
-
-It's worth noting also that the "broken" initrd also only had /dev/hdc5
-whereas the working one has /dev/hdc5 *and* /dev/hda4
-
-In summary, if you get the error above, get the complete raid array up
-and running with all devices inserted, and then re-create your initrd:
-mkinitrd -r /dev/md? -o /boot/initrd.img-?.?.??-raid
-
--Thomas
-
+At this point the system locked into a loop of resets.  Had to use the power 
+button :(
