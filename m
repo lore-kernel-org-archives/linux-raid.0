@@ -1,83 +1,59 @@
-From: christophe varoqui <christophe.varoqui@free.fr>
-Subject: [ANNOUNCE] multipath-tools-0.3.7
-Date: Fri, 12 Nov 2004 00:10:16 +0100
-Message-ID: <1100214617.10251.92.camel@zezette>
-References: <1096071849.4466.31.camel@zezette>
-	 <1097054573.4163b96d1262c@imp5-q.free.fr>
-	 <1097495416.416a73787e0ae@imp1-q.free.fr> <1098021787.5433.8.camel@zezette>
-	 <1098269169.417641f18a234@imp1-q.free.fr>
-	 <1098656088.9350.88.camel@zezette>
-	 <1098785191.417e21a7a7c28@imp1-q.free.fr>
-	 <1099328918.5525.10.camel@zezette>
+From: David Greaves <david@dgreaves.com>
+Subject: RAID5 - 2nd drive died whilst waiting for RMA
+Date: Fri, 12 Nov 2004 10:07:33 +0000
+Message-ID: <41948B65.3090504@dgreaves.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-hotplug-devel-admin@lists.sourceforge.net>
-In-Reply-To: <1099328918.5525.10.camel@zezette>
-Sender: linux-hotplug-devel-admin@lists.sourceforge.net
-Errors-To: linux-hotplug-devel-admin@lists.sourceforge.net
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel>,
-	<mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Post: <mailto:linux-hotplug-devel@lists.sourceforge.net>
-List-Help: <mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel>,
-	<mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=subscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-hotplug-devel>
-To: device-mapper development <dm-devel@redhat.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-hotplug-devel@lists.sourceforge.net" <linux-hotplug-devel@lists.sourceforge.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
+Hi
+Remember I had a disk fail a couple of weeks back - and being a normal 
+person and not a business I don't have hot spares lying about...
+Well, it got back from RMA today.
+And before I could plug it in, another drive got a bad block 
+reallocation error.
 
-here goes multipath-tools-0.3.7
+So my RAID5 has 2 dead drives and is toasted :(
+I had a few smaller disks on another machine which I lvm'ed together to 
+do a backup - but I could only fit about a quarter of my data there. I'd 
+*really* like not to have lost all this stuff.
 
-Resync before commencing adjusting for new kernel driver rules.
-Note, the default build is now "glibc" to ease packagers work.
-Important bugfixes from Suse.
+However I do now have a 'good' drive.
+Can I dd the newly dead drive (bear in mind it probably only has a bad 
+block or two) onto the new drive and come back up in degraded mode?
 
-Full ChangeLog for the release :
+Any other suggestions.
 
-	* [libmultipath] make the config file parser play nice
-	  with the stack (Hannes, Suse)
-	* [multipathd] fix off by one memory allocation (Hannes,
-	  Suse)
-	* [multipathd] introduce a default callout handler that
-	  just remembers to put the callout in ramfs, even if the
-	  daemon has no direct use of them. multipath need some
-	  that where forgotten, so parse them and use that default
-	  handler.
-	* [libcheckers] emc_clariion checker update (heinz, Suse)
-	* [build] exit build process on failure (heinz, Suse)
-	* [kpartx] exit early if DM prereq not met
-	* [multipath] exit early if DM prereq not met
-	* [libmultipath] new dm_prereq() fn to check out if all DM
-	  prerequisites are met
-	* [libmultipath] move callout.[ch] function in there.
-	  multipath and multipathd impacted
-	* [libmultipath] move dm_* function in there. kpartx,
-	  multipath are impacted
-	* [priority] pp_balance_lun should use DM_DEVICE_TABLE ioctl
-	  instead of DM_DEVICE_STATUS to find out paths from the
-	  primary path groups.
-	* [klibc] drop in "Stable" version 0.190
-	* [build] add manpages for kpartx and multipathd (Patrick
-	  Caulfield)
-	* [build] use system's sysfs for multipathd linking
-	* [build] make glibc the default build
-	* [build] "make BUILD=klibc" is enough, deprecate the 
-	  "make BUILD=klibc klibc" synthax
+Then RMA *this* Maxtor and hope to resync in a couple of weeks (well, 
+actually - these drives seem so damned unreliable I guess I'm going to 
+*have* to buy a spare)
 
-As usual, doc and download at :
-http://christophe.varoqui.free.fr/
+FYI these are 250Gb Maxtor SATA disks.
 
-regards,
--- 
-christophe varoqui <christophe.varoqui@free.fr>
+David
 
+Nov 12 09:45:40 cu kernel: scsi0: ERROR on channel 0, id 0, lun 0, CDB: 
+Read (10) 0
+0 0d 3b 56 97 00 00 08 00
+Nov 12 09:45:40 cu kernel: Current sda: sense key Medium Error
+Nov 12 09:45:40 cu kernel: Additional sense: Unrecovered read error - 
+auto realloca
+te failed
+Nov 12 09:45:40 cu kernel: end_request: I/O error, dev sda, sector 221992599
+Nov 12 09:45:40 cu kernel: RAID5 conf printout:
+Nov 12 09:45:40 cu kernel:  --- rd:5 wd:3 fd:2
+Nov 12 09:45:40 cu kernel:  disk 0, o:0, dev:sda1
+Nov 12 09:45:40 cu kernel:  disk 1, o:1, dev:sdc1
+Nov 12 09:45:40 cu kernel:  disk 2, o:1, dev:sdb1
+Nov 12 09:45:40 cu kernel:  disk 4, o:1, dev:hdb1
+Nov 12 09:45:40 cu kernel: RAID5 conf printout:
+Nov 12 09:45:40 cu kernel:  --- rd:5 wd:3 fd:2
+Nov 12 09:45:40 cu kernel:  disk 1, o:1, dev:sdc1
+Nov 12 09:45:40 cu kernel:  disk 2, o:1, dev:sdb1
+Nov 12 09:45:40 cu kernel:  disk 4, o:1, dev:hdb1
+Nov 12 09:45:41 cu kernel: lost page write due to I/O error on dm-0
 
-
--------------------------------------------------------
-This SF.Net email is sponsored by:
-Sybase ASE Linux Express Edition - download now for FREE
-LinuxWorld Reader's Choice Award Winner for best database on Linux.
-http://ads.osdn.com/?ad_id=5588&alloc_id=12065&op=click
