@@ -1,35 +1,42 @@
-From: Danilo Godec <danci@agenda.si>
+From: Neil Brown <neilb@cse.unsw.edu.au>
 Subject: Re: mdadm mail option configuration
-Date: Wed, 29 May 2002 16:04:57 +0200 (CEST)
+Date: Thu, 30 May 2002 08:53:22 +1000 (EST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.30.0205291602130.23219-100000@duplo.agenda.si>
-References: <15604.45423.781175.499314@notabene.cse.unsw.edu.au>
+Message-ID: <15605.23522.860348.236412@notabene.cse.unsw.edu.au>
+References: <message from Jeff Hill on Tuesday May 28>
+	<5.1.0.14.0.20020528111927.01f28280@205.233.215.4>
+	<5.1.0.14.0.20020529080432.01f32cd8@205.233.215.4>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <15604.45423.781175.499314@notabene.cse.unsw.edu.au>
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: Jeff Hill <jhill@hronline.com>, linux-raid@vger.kernel.org
+In-Reply-To: message from Jeff Hill on Wednesday May 29
+To: Jeff Hill <jhill@hrpost.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 29 May 2002, Neil Brown wrote:
-
-> > Then, I just have an init script that runs:
+On Wednesday May 29, jhill@hrpost.com wrote:
+> >> Then, I just have an init script that runs:
+> >> 
+> >>       /sbin/mdadm -Fs --delay=600 &
 > >
-> > 	/sbin/mdadm -Fs --delay=600 &
->
-> Why 600 (10 minutes)?? I would suggest 60seconds for normal operation
-> and 1 second for testing.
+> >Why 600 (10 minutes)?? I would suggest 60seconds for normal operation
+> >and 1 second for testing.
+> 
+> Okay, changed. My choice was arbitrary, just assumed it would be 
+> reasonable -- I'm moving it on to a heavily loaded production server 
+> and the e-mail isn't constantly monitored so I assumed . . . .
 
-I've tried this and maybe I'm missing something. I've set a 5 second
-interval for checking and I only got one mail - notifiyng me about
-a failure.
+You assumed what?  Are you thinking that it wil send mail every $delay
+seconds if there is a problem, and you didn't want to be spammed?
 
-Now I'm not sure whether mdadm is supposed to send mail on every check? Or
-is it sending mail just when a BAD thing happens?
+Mdadm only sends mail when it notices a drive fail, not when it
+notices that a drive is failed.
+i.e. if on one poll the drive is working, and on the next poll the
+drive is not working, then it sends mail saying "The drive just
+failed".
 
-  D.
+So when you were testing, was "mdadm -Fs" actually running at the
+moment when you simulated a drive failure?
 
-PS: The PROGRAM was started more often (I think three times).
-
-
+NeilBrown
