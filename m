@@ -1,78 +1,96 @@
-From: "Doug Griswold" <griswld@cio.sc.gov>
-Subject: Re: multipath - stable ?
-Date: Fri, 12 Dec 2003 20:56:48 -0500
+From: "Christer Backstrom" <cbackstrom@chemist.com>
+Subject: Re: Firewire RAID bootparameters?
+Date: Sat, 13 Dec 2003 06:19:47 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <sfda2b99.034@gw.state.sc.us>
+Message-ID: <20031213111947.99239.qmail@mail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-To: sdake@mvista.com, franc@tech.sirca.org.au
+To: "Rechenberg, Andrew" <ARechenberg@shermanfinancialgroup.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Ours takes about thirty seconds with qlogic and emulex cards.
 
->>> Franc Carter <franc@tech.sirca.org.au> 12/12/03 18:36 PM >>>
+----- Original Message -----
+From: "Rechenberg, Andrew" <ARechenberg@shermanfinancialgroup.com>
+Date: Fri, 12 Dec 2003 14:19:52 -0500
+To: Christer Bäckström <cbackstrom@chemist.com>
+Subject: Re: Firewire RAID bootparameters?
 
-Thanks, 
+> I'm not sure which distro you're running, but we needed a module to load
+> before another one and I modified the linuxrc script in our initrd image
+> to change the load order.
+> 
+> Red Hat (and probably other distros) initrd images have a script in the
+> initrd image to load drivers.  You can loop mount the current image, add
+> the modules you need, modify the script, and then copy it back into
+> /boot.
+> 
+> The initrd image in Red Hat is gzipped so this is the procedure that I
+> follow:
+> 
+> . *** MAKE A BACKUP COPY OF YOUR CURRENT INITRD AND BOOTLOADER CONF ***
+> . cp /boot/initrd.img /tmp
+> . cd /tmp
+> . mv initrd.img initrd.img.gz
+> . gunzip initrd.img 
+> . mount -o loop initrd.img /mnt/cdrom
+> . Copy any necessary modules to /mnt/cdrom/lib
+> . Edit /mnt/cdrom/linuxrc and add a couple of lines to load your
+> firewire module in the proper order.
+> . umount /mnt/cdrom
+> . gzip /tmp/initrd.img
+> . cp /tmp/initrd.img.gz /boot/mynewinitrd.img
+> 
+> Then what I would do is make a new bootloader (LILO/GRUB) entry with all
+> the same options except use your edited initrd image instead of the
+> stock one.  That way you can test it, but still be able to boot with you
+> known-good initrd image.
+> 
+> This is probably a big hack, but it worked for me :)
 
-can you give me a ballpark on 'high' >5 minutes ?
+Yes, this is new information for me. I never considered (or knew how to) manipulate the initrd loading. I got two more mails saying about the same thing, but they weren't cc:ed to the list. (Thanks Joe Pruett and David Haring) This would enable me to put even my root-filesystem on the firewire drive. Very nice. In my case, as I only keep my /home on the raid1 mirror, it was even simpler. I looked into the initrd man page, and found  a reference to append "noinitrd" to lilo.conf, which stops loading of modules by initrd altogether. The rc.sysinit will then, in my case (Mandrake-9.2), load the modules in the right order. I stiil wonder if the loading sequence should not be different when loading compiled-in modules. Nowadays firewire and usb2 drives are fast and commonplace, and an excellent way of securing the regular harddrive. Especially on a laptop, where the regular drives are small a
+ nd singular. To load the raid subsystem before these systems can't be right. I wonder if i
+ t should not be changed? Anyways: Me happy. Thanks all for the help!
 
-cheers
+/Chris
 
-On Sat, 13 Dec 2003 04:35 am, Steven Dake wrote:
-> The multipath code is simple and seems pretty stable to me.
 > 
-> There is one issue, in that failover can sometimes take a long time
-> because of the SCSI layer's insistence upon executing error recovery. 
-> In the case of multipath I/O's, there is no need to error recover
-before
-> processing the I/O.  Instead, once error is detected, failover, then
-> start error recovery.
-> 
-> The SCSI layer doesn't do this currently, so failover times are high.
-> 
-> Thanks
-> -steve
+> Hope this helps,
+> Andy.
 > 
 > 
-> On Thu, 2003-12-11 at 21:52, Franc Carter wrote:
+> On Fri, 2003-12-12 at 07:45, Christer BÃ¤ckstrÃ¶m wrote:
 > > Hi,
 > > 
-> > I've been using linux sofwtare raid for years and had no problems.
-> > We are about to install some disk systems that have dual contollers
-> > and am wondering wether multipath is as stable as the rest of
-software
-> > raid ?
+> > I've recently bought a 160Gb firewire drive and RAID1:ed it to mirror my 
+> > main harddrive. Unfortunately, the md subsystem seems to load before the 
+> > firewire in the kernel bootsequence, which mean I have to do some weird 
+> > stuff to make it work. Basically, I compiled the md system as modules 
+> > (with the SCSI patch to make it work a bit better), and hid the modules 
+> > in a different directory, so they wouldn't load. I later load them in 
+> > manually rc.sysinit. This work, but is a little clumsy. Is there a way 
+> > to use append any boot-parameters to lilo to make the RAID subsystem 
+> > load the firewire system? Or is there another solution? Thanks,
 > > 
-> > thanks
+> > 
+> > /Chris
+> > 
+> > -
+> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> -- 
 > 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"
-in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Regards,
+> Andrew Rechenberg
+> Infrastructure Team, Sherman Financial Group
 > 
 > 
-
 -- 
-Franc Carter     Ph:61-2-8374-5071      Fax: 61-2-8374-5070
-Systems Manager, SIRCA Ltd              http://www.sirca.org.au/
-
-DISCLAIMER: The contents of this email, inclusive of attachments, may
-be legally privileged and confidential. Any unauthorised use of the
-contents is expressly prohibited. If you have received this message in
-error or are not the intended recipient, you should destroy the email
-message along with any attachment(s).  Unintended recipients of this
-email are prohibited from retaining, disclosing, distributing or using
-any information contained herein.  This email is also subject to
-copyright. No part of it should be reproduced, adapted or transmitted
-without the written consent of the copyright owner.
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+___________________________________________________________
+Sign-up for Ads Free at Mail.com
+http://promo.mail.com/adsfreejump.htm
 
