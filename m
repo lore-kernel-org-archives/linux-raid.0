@@ -1,53 +1,67 @@
-From: <robin-lists@robinbowes.com>
-Subject: Sanity check installation scheme
-Date: Thu, 15 Apr 2004 00:37:17 +0100
+From: Jeff Woods <Kazrak+kernel@cesmail.net>
+Subject: Re: Sanity check installation scheme
+Date: Wed, 14 Apr 2004 18:12:51 -0600
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <S262063AbUDNXhL/20040414233712Z+1806@vger.kernel.org>
+Message-ID: <6.0.1.1.0.20040414175626.04221ec0@no.incoming.mail>
+References: <S262063AbUDNXhL/20040414233712Z+1806@vger.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <S262063AbUDNXhL/20040414233712Z+1806@vger.kernel.org>
+References: <S262063AbUDNXhL/20040414233712Z+1806@vger.kernel.org>
+To: robin-lists@robinbowes.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+At 4/15/2004 12:37 AM +0100, robin-lists@robinbowes.com wrote:
+>Partition | sda          | sdb          | sdc      | sdd      |
+>----------+--------------+--------------+----------+----------+
+>         1 | RAID-1       | RAID-1       | swap     | swap     |
+>           | (/boot, 80M) | (/boot, 80M) | (180M)   | (180M)   |
+>           +--------------+--------------+----------+----------+
+>         2 | RAID-1       | RAID-1       | RAID-5   | RAID-5   |
+>           | (/, 100M)    | (/, 100M)    | (~4G)    | (~4G)    |
+>           +--------------+--------------+----------+----------+
+>         3 | RAID-5       | RAID-5       |
+>           | (~4G)        | (~4G)        |
+>           +--------------+--------------+
+>
+>This will give me the following partitions:
+>
+>/     100MB, mirrored
+>/boot 80MB, mirrored
+>/usr, /var, et. All on ~12G RAID-5 array.
+>
+>Does this look feasible? Can you see any major gotchas? Any better
+>suggestions?
 
-I'm building a server from a few bits and pieces I have spare, including
-several 4.3GB SCSI drives. I'll most likely be using Fedora since I'm
-familiar with the Redhat flavour of linux.
-
-To maximise disk space I'd like to use software RAID-5 across either 3 or 4
-disks (depends how many I can squeeze into the case!). However, I am aware
-that it is not possible to boot from a Software RAID-5 array. To overcome
-this, I propose to create a small RAID-1 array across two drives to hold
-/boot, plus swap partitions on one or two other drives. I may also consider
-another RAID-1 array for /.
-
-Here's what I envisage:
+How about:
 
 Partition | sda          | sdb          | sdc      | sdd      |
 ----------+--------------+--------------+----------+----------+
-        1 | RAID-1       | RAID-1       | swap     | swap     |
-          | (/boot, 80M) | (/boot, 80M) | (180M)   | (180M)   |
-          +--------------+--------------+----------+----------+
-        2 | RAID-1       | RAID-1       | RAID-5   | RAID-5   |
-          | (/, 100M)    | (/, 100M)    | (~4G)    | (~4G)    |
-          +--------------+--------------+----------+----------+
-        3 | RAID-5       | RAID-5       |
-          | (~4G)        | (~4G)        |
-          +--------------+--------------+
+         1 | RAID-1       | RAID-1       | swap     | swap     |
+           | (/boot, 80M) | (/boot, 80M) | (130M)   | (130M)   |
+           +--------------+--------------+          |          |
+         2 | swap         | swap         |          |          |
+           | (50M)        | (50M)        |          |          |
+           +--------------+--------------+----------+----------+
+         3 | RAID-5       | RAID-5       | RAID-5   | RAID-5   |
+           | (/, ~4G)     | (/, ~4G)     | (/, ~4G) | (/, ~4G) |
+           +--------------+--------------+----------+----------+
 
 This will give me the following partitions:
 
-/     100MB, mirrored
 /boot 80MB, mirrored
-/usr, /var, et. All on ~12G RAID-5 array.
+/, /usr, /var, et. All on ~12G RAID-5 array.
+360M swap spread across all 4 spindles
 
-Does this look feasible? Can you see any major gotchas? Any better
-suggestions?
+Adjust the capacities to suit.
 
-Thanks,
+Alternatively, use the other two spindles "next to" the /boot RAID-1 
+partitions to provide a RAID-1 or RAID-0 /tmp filesystem.  However, I'd be 
+inclined to increase the swap area and use tmpfs (which is virtual-memory 
+based; i.e. RAM+swap) for /tmp.
+--
+Jeff Woods <kazrak+kernel@cesmail.net> 
 
-R.
 
