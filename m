@@ -1,13 +1,35 @@
-From: David Wuertele <dave-gnus@bfnet.com>
-Subject: mdadm: Invalid Argument ("cannot start dirty degraded array")
-Date: Tue, 09 Nov 2004 08:15:57 -0800
-Message-ID: <m3ekj3f16q.fsf@bfnet.com>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: mdadm: Invalid Argument ("cannot start dirty degraded array")
+Date: Tue, 9 Nov 2004 11:31:57 -0500
+Message-ID: <200411091632.iA9GW2N16673@www.watkins-home.com>
+References: <m3ekj3f16q.fsf@bfnet.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <m3ekj3f16q.fsf@bfnet.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: 'David Wuertele' <dave-gnus@bfnet.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+Someone had a similar problem a few days ago.
+
+Try stopping the array, then starting it.
+mdadm -S /dev/md0
+mdadm -A /dev/md0 --scan
+
+Also, test the failed disk with this command:
+dd if=/dev/hdp of=/dev/null bs=1024k
+
+Guy
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of David Wuertele
+Sent: Tuesday, November 09, 2004 11:16 AM
+To: linux-raid@vger.kernel.org
+Subject: mdadm: Invalid Argument ("cannot start dirty degraded array")
 
 I have a gentoo system (kernel 2.6.8-gentoo-r3) with a 7 drive RAID5
 array.  Recently that array went down, and I was advised by the list
@@ -30,7 +52,8 @@ superblock:
       ide7: BM-DMA at 0xd808-0xd80f, BIOS settings: hdo:DMA, hdp:DMA
   hdp: WDC WD2500JB-00GVA0, ATA DISK drive
   hdp: max request size: 1024KiB
-  hdp: 488397168 sectors (250059 MB) w/8192KiB Cache, CHS=30401/255/63, UDMA (100)
+  hdp: 488397168 sectors (250059 MB) w/8192KiB Cache, CHS=30401/255/63, UDMA
+(100)
   md: invalid raid superblock magic on hdp2
   md: hdp2 has invalid sb, not importing!
   Adding 64220k swap on /dev/hdp1.  Priority:-2 extents:1
@@ -40,8 +63,13 @@ drive.  Here is my /etc/mdadm.conf file:
 
   # cat /etc/mdadm.conf
   DEVICE partitions
-  ARRAY /dev/md0 level=raid5 num-devices=7 UUID=d312c423:e2eeeff5:3401806f:ab10e3c
-     devices=/dev/ide/host2/bus0/target0/lun0/part2,/dev/ide/host2/bus0/target1/lun0/part2,/dev/ide/host2/bus1/target0/lun0/part2,/dev/ide/host2/bus1/target1/lun0/part2,/dev/ide/host6/bus0/target0/lun0/part4,/dev/ide/host6/bus1/target0/lun0/part2
+  ARRAY /dev/md0 level=raid5 num-devices=7
+UUID=d312c423:e2eeeff5:3401806f:ab10e3c
+ 
+devices=/dev/ide/host2/bus0/target0/lun0/part2,/dev/ide/host2/bus0/target1/l
+un0/part2,/dev/ide/host2/bus1/target0/lun0/part2,/dev/ide/host2/bus1/target1
+/lun0/part2,/dev/ide/host6/bus0/target0/lun0/part4,/dev/ide/host6/bus1/targe
+t0/lun0/part2
 
 Since /proc/mdstat reports that six of the seven drives are already
 assembled, I tried running as-is:
@@ -77,4 +105,9 @@ more hints:
 Any suggestions?
 Thanks,
 Dave
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
