@@ -1,38 +1,111 @@
-From: "Kevin P. Fleming" <kpfleming@backtobasicsmgmt.com>
-Subject: Re: Proposed Enhancements to MD
-Date: Tue, 13 Jan 2004 11:19:47 -0700
-Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <400436C3.6050507@backtobasicsmgmt.com>
-References: <40036902.8080403@adaptec.com> <20040113081932.A721@lists.us.dell.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: Proposed enhancements to MD
+Date: Tue, 13 Jan 2004 13:44:05 -0500
+Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <40043C75.6040100@pobox.com>
+References: <40033D02.8000207@adaptec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20040113081932.A721@lists.us.dell.com>
-To: Matt Domsch <Matt_Domsch@dell.com>
-Cc: Scott Long <scott_long@adaptec.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+In-Reply-To: <40033D02.8000207@adaptec.com>
+To: Scott Long <scott_long@adaptec.com>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, linux-raid <linux-raid@vger.kernel.org>, Neil Brown <neilb@cse.unsw.edu.au>
 List-Id: linux-raid.ids
 
-Matt Domsch wrote:
+Scott Long wrote:
+> I'm going to push these changes out in phases in order to keep the risk
+> and churn to a minimum.  The attached patch is for the partition
+> support.  It was originally from Ingo Molnar, but has changed quite a
+> bit due to the radical changes in the disk/block layer in 2.6.  The 2.4
+> version works quite well, while the 2.6 version is fairly fresh.  One
+> problem that I have with it is that the created partitions show up in
+> /proc/partitions after running fdisk, but not after a reboot.
 
-> DDF is quickly becoming important to RAID and system vendors, and I
-> welcome Adaptec's work to implement DDF support on Linux.
+You sorta hit a bad time for 2.4 development.  Even though my employer 
+(Red Hat), Adaptec, and many others must continue to support new 
+products on 2.4.x kernels, kernel development has shifted to 2.6.x (and 
+soon 2.7.x).
 
-Fully agreed, the days of vendor-specific metadata formats need to be 
-numbered (with a small number). Speaking a customer with a CMD 
-FC-to-SCSI RAID controller, which used to be dual-redundant but is now 
-single (because of a dead unit), we are not looking forward to the day 
-when the remaining controller dies and we lose all the data on the array 
-due to a forced metadata format change.
+In general, you want a strategy of "develop on latest, then backport if 
+needed."  Once a solution is merged into the latest kernel, it 
+automatically appears in many companies' products (and perhaps more 
+importantly) product roadmaps.  Otherwise you will design various things 
+into your software that have already been handled different in the 
+future, thus creating an automatically-obsolete solution and support 
+nightmare.
 
-However, given that this will not likely be 2.6 material until after 
-it's built and tested in 2.7 and then backported, it doesn't seem to 
-make any sense to me to build any of this on top of the MD subsystem at 
-all (see other replies about using DM instead). Additionally, it also 
-does not seem to make any sense to build any of the DDF 
-reading/writing/management in the kernel _at all_. There is no advantage 
-to it being there once initramfs is a standard part of the boot process, 
-so all of this should be done is userspace and just communicated into 
-the kernel to tell it what logical devices to construct using which DM 
-modules.
+Now, addressing your specific issues...
 
+> hile MD is fairly functional and clean, there are a number of enhancements to it that we have been working on for a while and would
+> like to push out to the community for review and integration.  These
+> include:
+> 
+> - partition support for md devices:  MD does not support the concept of
+>   fdisk partitions; the only way to approximate this right now is by
+>   creating multiple arrays on the same media.  Fixing this is required
+>   for not only feature-completeness, but to allow our BIOS to recognise
+>   the partitions on an array and properly boot them as it would boot a
+>   normal disk.
+
+Neil Brown already done a significant amount of research into this 
+topic.  Given this, and his general status as md maintainer, you should 
+definitely make sure he's kept in the loop.
+
+Partitioning for md was discussed in this thread:
+http://lkml.org/lkml/2003/11/13/182
+
+In particular note Al Viro's response to Neil, in addition to Neil's own 
+post.
+
+And I could have _sworn_ that Neil already posted a patch to do 
+partitions in md, but maybe my memory is playing tricks on me.
+
+
+> - generic device arrival notification mechanism:  This is needed to
+>   support device hot-plug, and allow arrays to be automatically
+>   configured regardless of when the md module is loaded or initialized.
+>   RedHat EL3 has a scaled down version of this already, but it is
+>   specific to MD and only works if MD is statically compiled into the
+>   kernel.  A general mechanism will benefit MD as well as any other
+>   storage system that wants hot-arrival notices.
+
+This would be via /sbin/hotplug, in the Linux world.  SCSI already does 
+this, I think, so I suppose something similar would happen for md.
+
+
+> - RAID-0 fixes:  The MD RAID-0 personality is unable to perform I/O
+>   that spans a chunk boundary.  Modifications are needed so that it can
+>   take a request and break it up into 1 or more per-disk requests.
+
+I thought that raid0 was one of the few that actually did bio splitting 
+correctly?  Hum, maybe this is a 2.4-only issue.  Interesting, and 
+agreed, if so...
+
+
+> - Metadata abstraction:  We intend to support multiple on-disk metadata
+>   formats, along with the 'native MD' format.  To do this, specific
+>   knowledge of MD on-disk structures must be abstracted out of the core
+>   and personalities modules.
+
+> - DDF Metadata support: Future products will use the 'DDF' on-disk
+>   metadata scheme.  These products will be bootable by the BIOS, but
+>   must have DDF support in the OS.  This will plug into the abstraction
+>   mentioned above.
+
+Neil already did the work to make 'md' support multiple types of 
+superblocks, but I'm not sure if we want to hack 'md' to support the 
+various vendor RAIDs out there.  DDF support we _definitely_ want, of 
+course.  DDF follows a very nice philosophy:  open[1] standard with no 
+vendor lock-in.
+
+IMO, your post/effort all boils down to an open design question:  device 
+mapper or md, for doing stuff like vendor-raid1 or vendor-raid5?  And it 
+is even possible to share (for example) raid5 engine among all the 
+various vendor RAID5's?
+
+	Jeff
+
+
+[1] well, developed in secret, but published openly.  Not quite up to 
+Linux's standards, but decent for the h/w world.
