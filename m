@@ -1,18 +1,21 @@
-From: Lars Marowsky-Bree <lmb@suse.de>
+From: "Doug Griswold" <griswld@cio.sc.gov>
 Subject: Re: How robust is MD/multipath????
-Date: Mon, 29 Sep 2003 11:27:59 +0200
+Date: Mon, 29 Sep 2003 08:16:15 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20030929092758.GC16928@marowsky-bree.de>
-References: <sf75d847.068@gw.state.sc.us>
+Message-ID: <sf77ea5d.082@gw.state.sc.us>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <sf75d847.068@gw.state.sc.us>
-To: Doug Griswold <griswld@cio.sc.gov>, linux-raid@vger.kernel.org
+To: lmb@suse.de, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+How about without the patch?  I'm using rh as2.1 so if I recompile I
+will lose support if ever needed.  Is the red hat md/multipath
+production ready???
+
+>>> Lars Marowsky-Bree <lmb@suse.de> 09/29/03 05:27AM >>>
 On 2003-09-27T18:34:39,
    Doug Griswold <griswld@cio.sc.gov> said:
 
@@ -28,10 +31,17 @@ Sincerely,
     Lars Marowsky-Br=E9e <lmb@suse.de>
 
 --=20
-High Availability & Clustering		ever tried. ever failed. no matter.
-SuSE Labs				try again. fail again. fail better.
+High Availability & Clustering		ever tried. ever failed. no
+matter.
+SuSE Labs				try again. fail again. fail
+better.
 Research & Development, SUSE LINUX AG		-- Samuel Beckett
 
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid"
+in
+the body of a message to majordomo@vger.kernel.org=20
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 -
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
