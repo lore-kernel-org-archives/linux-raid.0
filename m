@@ -1,57 +1,48 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
+From: Jean Jordaan <jean@upfrontsystems.co.za>
 Subject: Re: Recovering RAID5 array
-Date: Tue, 20 Jan 2004 20:59:30 +1100
+Date: Tue, 20 Jan 2004 12:40:44 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16396.64514.820157.677722@notabene.cse.unsw.edu.au>
-References: <400CD0BF.2010808@upfrontsystems.co.za>
-	<16396.53737.911347.812076@notabene.cse.unsw.edu.au>
-	<400CE215.2050502@upfrontsystems.co.za>
+Message-ID: <400D05AC.4030409@upfrontsystems.co.za>
+References: <400CD0BF.2010808@upfrontsystems.co.za>	<16396.53737.911347.812076@notabene.cse.unsw.edu.au>	<400CE215.2050502@upfrontsystems.co.za> <16396.64514.820157.677722@notabene.cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Jean Jordaan on Tuesday January 20
-To: Jean Jordaan <jean@upfrontsystems.co.za>
+In-Reply-To: <16396.64514.820157.677722@notabene.cse.unsw.edu.au>
+To: Neil Brown <neilb@cse.unsw.edu.au>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday January 20, jean@upfrontsystems.co.za wrote:
-> > mdadm --assemble /dev/md0 --force /dev/hd[abc]3
-> > 
-> > should put it back together for you.
-> 
-> No luck ..
-> 
-> cdimage root # mdadm --verbose --assemble /dev/md0 --force /dev/hda3 /dev/hdb3 
-> /dev/hdc3
-> mdadm: looking for devices for /dev/md0
-> mdadm: /dev/hda3 is identified as a member of /dev/md0, slot 3.
-> mdadm: /dev/hdb3 is identified as a member of /dev/md0, slot 4.
-> mdadm: /dev/hdc3 is identified as a member of /dev/md0, slot 2.
-> mdadm: no uptodate device for slot 0 of /dev/md0
-> mdadm: no uptodate device for slot 1 of /dev/md0
+Neil,
 
-Looks like you must have done a hot-add in the mean time....
+thank you very much for your help ..
 
-I would try:
+>  mdadm -C /dev/md0 -l 5 -n 3 /dev/hda3 missing /dev/hdc3
 
- mdadm -C /dev/md0 -l 5 -n 3 /dev/hda3 missing /dev/hdc3
+Did that, once with 'missing' in each place. All I get:
 
-and check "fsck -f -n" to check the the filesystem looks OK.
+cdimage root # mdadm --create /dev/md0 --raid-devices=3 --level=5 
+--spare-devices=0 --chunk=64 missing /dev/hdb3 /dev/hdc3
+mdadm: /dev/hdb3 appears to be part of a raid array:
+     level=5 devices=3 ctime=Tue Jan 20 10:35:45 2004
+mdadm: /dev/hdc3 appears to be part of a raid array:
+     level=5 devices=3 ctime=Tue Jan 20 10:09:43 2004
+Continue creating array? y
+mdadm: array /dev/md0 started.
+cdimage root # mount -r -t reiserfs /dev/md0 /mnt/gentoo/raid/
+mount: Not a directory
 
-This 'mdadm' command will not change any data except the raid
-superblocks, which are already a mess anyway.
+cdimage root # cat /proc/mdstat
+Personalities : [raid5]
+read_ahead 1024 sectors
+md0 : active raid5 ide/host0/bus1/target0/lun0/part3[2] 
+ide/host0/bus0/target1/lun0/part3[1]
+       76003328 blocks level 5, 64k chunk, algorithm 2 [3/2] [_UU]
 
-If the looks OK, you can then 
-   mdadm /dev/md0 --add /dev/hdb3
-and see if hdb is working after all.
+unused devices: <none>
 
-If it didn't look OK, stop the array and try create the array with a
-different combination of devices.
 
-As long as you create a raid5 array with one missing device and only
-read from the resulting device, no data apart from the superblock will
-be corrupted.  Once you hot-add, or create without a missing device
-data could get corrupted if the array hasn't been assembled correctly.
+-- 
+Jean Jordaan
+http://www.upfrontsystems.co.za
 
-NeilBrown
