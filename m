@@ -1,52 +1,126 @@
-From: <martin@hack.org>
-Subject: Re: BSD disklabel and autodetection
-Date: Wed, 24 Jul 2002 09:09:32 +0000 (UTC)
+From: Agustinus Tedja <agustinus.tedja@infodesign-osd.de>
+Subject: RAID-0 Autodetection fails
+Date: Wed, 24 Jul 2002 14:22:03 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <12115.5969136909$1027501772@news.gmane.org>
-References: <87y9c2r2vn.fsf@qaip3.ins.cwi.nl>
+Message-ID: <3D3E9BEB.41C0F8CC@infodesign-osd.de>
+Reply-To: agustinus.tedja@infodesign-osd.de
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87y9c2r2vn.fsf@qaip3.ins.cwi.nl>
-To: Hein Roehrig <hpr@eml.cc>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hello everybody,
+I am installing Linux SuSE 8.0 with kernel version 2.4.18-4GB. This
+kernel should have already contain the Software-RAID module as
+advertised by SuSE.
+I have 3 equal drives. For simplicity I installed complete Linux only in
+a drive hdb(the boot and the root is in this normal drive) and now I am
+trying to make a RAID level 0 with the rest 2 drives called hdc and hdd. 
+I have made these two drives into a RAID-drive called /dev/md0 with
+YaST2 help and it was successfully mounted and used.
+But each time I rebooted the system, this /dev/md0 could not be
+recognized at startup and all data in /dev/md0 was lost as well. I
+needed to mount it again afterwards, that made it a silly idea.
+What is wrong ? Any hints and helps are gladly welcomed.
 
-On 23 Jul 2002, Hein Roehrig wrote:
->
-> <martin at hack.org> writes:
->
-> > i'm trying to get autodetection to work on a RAID 5 raiddevice made up
-> > from three devices. two of them reside on disks with DOS-style partition
-> > tables, the third is on a disk with a BSD disklabel. all of them have the
-> > partition type set to 0xfd, but only the first two devices are configured
-> > at boot time.
->
-> See message <1019846049.1670.76.camel@peecee> on this mailing list. I
-> am in the process of patching my personal 2.4.19-rc3 to do
-> autodetection -- in the long run initrd is the way to go.
+Here is the message on boot:
+...
+<6>md: md driver 0.90.0 MAX_MD_DEVS=256, MD_SB_DISKS=27
+<6>md: Autodetecting RAID arrays.
+<6> |events: 0000009a]
+<6> |events: 0000009a]
+<6>md: autorun ...
+<6>md: considering hdd1 ...
+<6>md:  adding hdd1 ...
+<6>md:  adding hdc1 ...
+<6>md: created md0
+<6>md: bind<hdc1,1>
+<6>md: bind<hdd1,2>
+<6>md: running: <hdd1><hdc1>
+<6>md: hdd1's event counter: 0000009a
+<6>md: hdc1's event counter: 0000009a
+<3>request_module[md-personality-2]: Root fs not mounted
+<3>md: personality 2 is not loaded!
+<4>md: do_md_run() returned -22
+<6>md: md0 stopped.
+<6>md: unbind<hdd1,1>
+<6>md: export_rdev(hdd1)
+<6>md: unbind<hdc1,0>
+<6>md: export_rdev(hdc1)
+<6>md: ... autorun DONE.
 
-Hein, i don't quite understand how initrd will solve my problem? i'm
-quite happy with my handrolled kernel, it's just that some of the
-partitions of the raid device are not detected.
+...and after some lines below there is other messages:
 
-following some hints i've seen elsewhere on the list i tried to pass md
-parameters to the kernel ->
+<3>md: invalid raid superblock magic on hdc
+<4>md: hdc has invalid sb, not importing!
+<4>md: could not import hdc!
+<4>md: autostart hdc failed!
+<6>md: Autodetecting RAID arrays.
+<6> |events: 0000009a]
+<6> |events: 0000009a]
+<6>md: autorun ...
+<6>md: considering hdd1 ...
+<6>md:  adding hdd1 ...
+<6>md:  adding hdc1 ...
+<6>md: created md0
+<6>md: bind<hdc1,1>
+<6>md: bind<hdd1,2>
+<6>md: running: <hdd1><hdc1>
+<6>md: hdc1's event counter: 0000009a
+<6>md: hdd1's event counter: 0000009a
+<6>md: raid0 personality readahead registered as nr 2
+<6>md0: max total readahead window set to 496k
+<6>md0: 2 data-disks, max readahead per data-disk: 248k
+<4>raid0: looking at hdc1
+<4>raid0:   comparing hdc1 (80418112) with hdc1(80418112)
+<4>raid0:   END
+<4>raid0:   ==> UNIQUE
+<4>raid0: 1 zones
+<4>raid0: looking at hdd1
+<4>raid0:   comparing hdd1 (80418112) with hdc1(80418112)
+<4>raid0:   EQUAL
+<4>raid0: FINAL 1 zones
+<4>raid0: zone 0
+<4>raid0:
+<4>raid0:
+<4>raid0:
+<4>raid0:
+<4>raid0:
+<4>raid0:
+<4>raid0:
+<4>raid0:
+<4>raid0:
 
-Booting on Nautilus using machine vector Nautilus from SRM
-Command line: ro root=/dev/md1 md=1,/dev/sdb5,/dev/sdc2,/dev/sdd2 raid=noautodetect
-md: Will configure md1 (super-block) from /dev/sdb5,/dev/sdc2,/dev/sdd2, below.
+FYI here I give the content of some important files:
+/etc/fstab:
+	/dev/hdb3	/		reiserfs	defaults 1 2
+	/dev/hdb2	/boot		reiserfs	defaults 1 2
+	/dev/md0	/dataraid	auto		noauto, user 0 0
+	devpts		/dev/pts	devpts		defaults 0 0
+	/dev/cdrecorder	/media/cdrecorder auto		ro,noauto,user,exec 0 0
+	/dev/cdrom	/media/cdrom	auto		noauto,user,exec 0 0
+	/dev/fd0	/media/floppy	auto		noauto,user,sync 0 0
+	usbdevs		/proc/bus/usb	usbdevs		noauto 0 0
+	proc		/proc		proc		defaults 0 0
+	/dev/hdb1	swap		swap		pri=42 0 0	
 
-with the raid=noautodetect option it works.
+/etc/raidtab:
+	raiddev /dev/md0
+	raid-level 0
+	nr-raid-disks 2
+	persistent-superblock 1
+	chunk-size 32
+	device /dev/hdc
+	raid-disk 0
+	device /dev/hdd
+	raid-disk 1
 
-what other raid/md options can be passed this way? and how do i configure
-more than one device? geez, hope there's not a 256 char limit to the
-command line...
-are these options documented somewhere??
-
-
-with regards,
-
-/m
-
+/etc/mtab: (not mdtab, inside there is no md0 entry)
+	/dev/hdb3 	/	reiserfs	rw 0 0
+	proc		/proc	proc		rw 0 0
+	devpts		/dev/pts devpts		rw 0 0
+	/dev/hdb2	/boot	reiserfs	rw 0 0
+	shmfs		/dev/shm  shm		rw 0 0
+	usbdevfs 	/proc/bus/usb  usbdevs	rw 0 0
