@@ -1,30 +1,40 @@
-From: stef@chronozon.artofdns.com (Stef Telford)
-Subject: Re: 2.5.62 oops and Raid-5
-Date: Mon, 17 Feb 2003 19:50:42 -0500 (EST)
+From: Friedrich Lobenstock <fl@fl.priv.at>
+Subject: Re: ANNOUNCE: mdadm-1.0.9 - prelease for 1.1.0
+Date: Tue, 18 Feb 2003 10:09:38 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20030218005042.130A5469C1@chronozon.artofdns.com>
+Message-ID: <3E51F852.2070400@fl.priv.at>
+References: <15945.38175.58593.681394@notabene.cse.unsw.edu.au>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: neilb@cse.unsw.edu.au, stef@chronozon.artofdns.com
+In-Reply-To: <15945.38175.58593.681394@notabene.cse.unsw.edu.au>
+To: Neil Brown <neilb@cse.unsw.edu.au>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-actually, whilst i was sending you the ksymoops output
-i searched and googled a bit and saw that hotplug seems
-to crop up more than once in conjunction with the 
-worker_thread 'oops'. I disabled that and recompiled 
-(its an athlon, so it doesnt take long), re-lilo'd and
-booted the 'new kernel'. This was the only kernel parameter
-i changed and now i can mount the raid5 and it is marked
-'clean' after the rebuild. i am currently using it as
-well, playing mp3's from it, so its looking good.
+Hi!
 
-that being said, there -was- a symoops on mount, although
-it wasnt enough to stop it from mounting, and it appears
-to be the same as the last one (same sort of ksymoops
-output :\
+Neil Brown wrote:
+> Hi all,
+>  I have just placed mdadm-1.0.9 at
+> 
+>    http://www.cse.unsw.edu.au/~neilb/source/mdadm/mdadm-1.0.9.tgz
+> 
+>  and it should appear at
+>  
+>    http://www.kernel.org/pub/linux/utils/raid/mdadm/mdadm-1.0.9.tar.gz
+> 
+>  shortly.
 
-i will try the patch tomorrow and let you know, i am
-jst glad that the drive is working (for now :)
+Might I suggest you store this accouncement in a file and put it at the
+same place as mdadm? At least the changelog. Thanks.
 
-thanks for the help 
-Stef
+-- 
+MfG / Regards
+Friedrich Lobenstock
+____________________________________________________________________
+Friedrich Lobenstock         FL226-RIPE             Internetservices
+URL: http://www.fl.priv.at/                     Email: fl@fl.priv.at
+____________________________________________________________________
+
