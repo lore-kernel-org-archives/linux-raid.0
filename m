@@ -1,84 +1,41 @@
-From: Florian Reitmeir <fr@3node.com>
-Subject: 15 ide driver, raid0 / raid5
-Date: Sun, 2 Nov 2003 04:22:06 +0100
+From: Wichert Akkerman <wichert@wiggy.net>
+Subject: lock failure when creating raid on 2.6.0-test9
+Date: Mon, 3 Nov 2003 14:35:26 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20031102032206.GB3464@squat.noreply.org>
-Reply-To: Florian Reitmeir <fr@3node.com>
+Message-ID: <20031103133526.GC24627@wiggy.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+I am trying to setup RAID 1 array on two SCSI disks on a 2.6.0-test9
+kernel but I am hitting the following:
 
-i'm using on the machine kernel 2.6.0-test6-mm1 and 15 IDE Drives. Everything worked fine (uptime about 30 days)
-I used, some raid5's, below some raid0's and on top evms.
+vortex:~# mkraid /dev/md0
+handling MD device /dev/md0
+analyzing super-block
+disk 0: /dev/hda2, 35077927kB, raid superblock at 35077824kB
+disk 1: /dev/hdc2, 35077927kB, raid superblock at 35077824kB
+md: bind<hda2>
+md: could not lock hdc2.
+md: error, md_import_device() returned -16
+mkraid: aborted.
+(In addition to the above messages, see the syslog and /proc/mdstat as well
+ for potential clues.)
 
-heres "cat /proc/mdstat" so its more clear
+-16 is EBUSY, which is unepexted since nothing else is using that disk.
+At this stage /proc/mdstat contains:
 
-============ cut 
-Personalities : [raid0] [raid5]
-md4 : active raid5 hdp[2] hdo[1] hdn[0]
-      120627072 blocks level 5, 32k chunk, algorithm 2 [4/3] [UUU_]
-
-md3 : active raid0 hdm[1] hdl[0]
-			49956352 blocks 32k chunks
-
-md0 : inactive hdc[0]
-			80418176 blocks
+Personalities : [raid1] 
+md0 : inactive hda2[0]
+      35077824 blocks
 unused devices: <none>
-============ cut 
 
-here are some drives missig, 
-	md0, is one drive missing
-	md1, complete
-	md2, also
-									
-when i make a "evms_activate" i get
+Wichert.
 
+-- 
+Wichert Akkerman <wichert@wiggy.net>    It is simple to make things.
+http://www.wiggy.net/                   It is hard to make things simple.
 
-========= CUT
-MDRaid5RegMgr: Region md/md4 object index 3 is faulty. Array may be degraded.
-MDRaid5RegMgr: Region md/md4 disks array not zeroed
-MDRaid5RegMgr: Region md/md4 has disk counts that are not correct.
-MDRaid5RegMgr: RAID5 array md/md4 is missing the member md/md3 with RAID index 3.  The array is running in degrade mode.
-LvmRegMgr: Container lvm/rubbish has incorrect number of objects!
-LvmRegMgr: Looking for 3 objects, found 2 objects.
-LvmRegMgr: A UUID is recorded for PV 3, but PV 3 was not found.
-LvmRegMgr:      UUID: vWAf1j-veQx-IDk7-SaJ0-dhga-Lase-rQ9ydR
-LvmRegMgr: Container lvm/rubbish has a UUID recorded for PV 3, but PV 3 was not found. Would you like to remove PV 3 from container lvm/rubbish *PERMANENTLY*?
-
-You should only remove this PV if you know the PV will *NEVER* be available again. If you think it is just temporarily missing, do not remove it from the container.evms_activate: Responding with default selection "Don't Remove".
-LvmRegMgr: Would you like to fix the metadata for container lvm/rubbish?
-evms_activate: Responding with default selection "Don't Fix".
-LvmRegMgr: Region lvm/rubbish/basket has an incomplete LE map.
-Missing 7327 out of 14359 LEs.
-MDRaid5RegMgr: RAID5 array md/md2 is missing the member  with RAID index 3.  The array is running in degrade mode.
-MDRaid0RegMgr: Region md/md1 object index incorrect: is 0, should be 1
-MDRaid0RegMgr: Region md/md1 object index 1 is greater than nr_disks.
-MDRaid0RegMgr: Region md/md1 object index 1 is in invalid state.
-MDRaid0RegMgr: Region md/md1 disk counts incorrect
-Engine: Error code 5 (Input/output error) when reading the primary copy of feature header on object lvm/rubbish/basket.
-Engine: Error code 5 (Input/output error) when reading the secondary copy of feature header on object lvm/rubbish/basket.
-MDRaid0RegMgr: Region md/md1 object index incorrect: is 0, should be 1
-MDRaid0RegMgr: Region md/md1 object index 1 is greater than nr_disks.
-MDRaid0RegMgr: Region md/md1 object index 1 is in invalid state.
-MDRaid0RegMgr: Region md/md1 disk counts incorrect
-MDRaid0RegMgr: Region md/md1 object index incorrect: is 0, should be 1
-MDRaid0RegMgr: Region md/md1 object index 1 is greater than nr_disks.
-MDRaid0RegMgr: Region md/md1 object index 1 is in invalid state.
-MDRaid0RegMgr: Region md/md1 disk counts incorrect
-========= CUT
-
-
-or in other words, its a mess. I verfied, all drives are found and work correct, so its "only" the meta information which is broken, i uses evmsgui to configure the whole thing, so there is no raidtab file, which i could use to force the configuration.
-
-I also tried newer Kernel versions, but there is a timing problem i think, i use promise ide-pci controllers, and the new test9 always tries to reset those with UDMA(i think so), which won't work with that many drives.
-
-So, is there someone who can help me ? 
-
-PS: sorry, if you get this mail duplicated, its my fault.
---
-mfG Florian Reitmeir
