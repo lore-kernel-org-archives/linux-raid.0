@@ -1,30 +1,37 @@
-From: "Koen De Jaeger" <hunter15847@hotmail.com>
-Subject: mdadm multipath poweredge qlogic emc -> howto use failover
-Date: Mon, 19 Jul 2004 10:37:09 +0200
+From: =?ISO-8859-1?Q?Aur=E9lien_Gouny?= <aurelien@gouny.org>
+Subject: New RAID-5 800GB array, wich fs ? wich stripe block size ?
+Date: Mon, 19 Jul 2004 11:19:57 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <BAY14-F30FTXY6zN80X000bf14e@hotmail.com>
+Message-ID: <40FB923D.1080903@gouny.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I wanted to know if there is a free solution available for the following 
-problem:
+Hi all,
 
-Our dell poweredge 2650 uses two qlogic fiberoptic channels to connect to 
-emc storage on gentoo linux. (sdb and sdc)
+I have a Promise SX6000 card and i juste have bought 6x160 GB HDs that=20
+make a 800 GB RAID-5 array.
+I was wondering wich filesytem I should use (ext3/reiserfs/xfs/jfs/...)=
+,=20
+if I should make one or more partitions and wich stripe block size to=20
+use knowing that:
 
-Since only sdc is active (sdb only works when sdc fails); the kernel only 
-initialises sdc on boot time.
+- it will be mainly a file-server with mp3s, divx, pictures (1 to 4MB=20
+each) and some files (openoffice, ...) all shared with Samba.
+- it will have a small postgresql database
 
-Now when I make a multipath with mdadm for sdb and sdb, and sdc fails. Then 
-it tries to connect to sdb but this doesn't work because for the kernel sdb 
-was not ready.
+If someone need more information in order to determine the stripe block=
+=20
+size or else, just ask ;)
 
-What do I have to do to make this work?
-
-_________________________________________________________________
-Plannen om een nieuwe computer te kopen? Kijk eens hier.. 
-http://www.msn.be/shopping/dell_bis/
-
+Thanks a lot, (sorry for bad english)
+Aur=E9lien
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
