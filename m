@@ -1,46 +1,72 @@
-From: Marcelo Tosatti <marcelo.tosatti@cyclades.com>
-Subject: Re: RAID-0 read perf. decrease after 2.4.20
-Date: Fri, 21 Nov 2003 11:47:49 -0200 (BRST)
+From: "Rechenberg, Andrew" <ARechenberg@shermanfinancialgroup.com>
+Subject: Re: How safe is software RAID compared to how safe hardware RAID
+	is!?
+Date: Fri, 21 Nov 2003 09:02:47 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0311211144130.15440-100000@logos.cnet>
-References: <Pine.OSF.4.58.0311201827090.515286@soul.helsinki.fi>
+Message-ID: <1069423366.27921.44.camel@localhost.localdomain>
+References: <PPEOJEIEFLAONFNHJPOOAEICGOAA.jim@jimtreats.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.OSF.4.58.0311201827090.515286@soul.helsinki.fi>
-To: Mikael Johansson <mpjohans@pcu.helsinki.fi>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <PPEOJEIEFLAONFNHJPOOAEICGOAA.jim@jimtreats.com>
+To: James R Bamford <jim@jimtreats.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+We've been using software RAID for about 10 months now on our large
+production database server and I have nothing but good things to say
+about SW RAID.  
 
+I believe we have one of the larger Linux software RAID arrays and it's
+been great.  We've had some other hardware issues unrelated to the array
+and the array has faired well.  The only thing you have to remember is
+that if your machine goes down hard, your arrays will rebuild upon
+reboot because they weren't marked as clean.
 
-On Thu, 20 Nov 2003, Mikael Johansson wrote:
+We also are getting MUCH better performance from SW RAID that our Dell
+PERC3/QC hardware RAID cards.  Here are some numbers:
 
+PERC3/QC single channel RAID0, 64KB chunk, ext3 ordered:
+- 90MB/s sequential read
+
+Adaptec 39160 single channel Linux SW RAID0, 64kb chunk, ext3 ord:
+- 138MB/s
+
+We are now running a 56 disk SW RAID10 array (52 disks + 4 spares) and
+performance is great!
+
+Let me know if you have any questions, but I highly recommend Linux
+software RAID.
+
+On Tue, 2003-11-18 at 18:12, James R Bamford wrote:
+> Hi folks..
 > 
-> Hello All!
+> hopefully everything will be working soon and i can get on with trying to
+> get some backup scripts working :)
 > 
-> Has anyone else experienced a drastic drop in read performance on software
-> RAID-0 with post 2.4.20 kernels? We have a few Athlon XP's here at our
-> lab with double IDE disks on different channels set up as RAID-0. Some
-> bonnie++ benchmark results with various kernels, on the same machine
-> (Athlon XP 2400+, 2 GHz, 1.5 GB RAM, VIA chipset, 2*Maxtor 120 GB
-> 6Y060L0):
-> 		write	read
-> 2.4.20-ac1:	88,000 	135,000 K/sec
-> 2.4.21-pre7:	93,000   75,000
-> 2.4.22-ac4:	94,000	 82,000
+> I am going to stick with this software RAID for the near future if it
+> carries on working correctly.. I was just wondering what peoples views were
+> of software vs hardware raid... anything and everything really.. I'm not
+> that up on all the technology... I know that 3ware have a good rep in
+> hardware... I also imagine that for more exotic RAID configurations its
+> obviously a help to not stress the CPU with the RAID tasks.. for me tho with
+> simple mirroring the CPU costs are minimal.. the linux core is a sturdy base
+> to build upon so is software raid in this way a perfectly acceptible
+> reliable RAID solution..
 > 
-> So the write speed has gone up a bit, but the read speed performance has
-> plunged. Any ideas on what happened between 2.4.20 and 2.4.21 and what to
-> do about it? I'm eagerly awaiting suggestions, good read speed is quite
-> critical for many of our calculations :-) I will of course provide more
-> details if necessary.
+> Just curious..
+> 
+> Thanks for everyones help
+> 
+> Jim
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
 
-There have been no significant changes in the RAID driver in 2.4.21, so I
-suspect the cause for the slowdowns might the changes to the IO scheduler
-(ll_rw_blk.c) or VM changes.
-
-Isolating the -pre which the slowdown starts helps a lot.
-
-
-
+Regards,
+Andrew Rechenberg
+Infrastructure Team, Sherman Financial Group
