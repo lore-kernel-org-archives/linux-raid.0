@@ -1,50 +1,45 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
+From: <me@heyjay.com>
 Subject: Re: Deleting an raid device
-Date: Wed, 26 May 2004 09:42:04 +1000
+Date: Tue, 25 May 2004 20:21:40 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16563.55756.112020.262470@cse.unsw.edu.au>
-References: <002501c44257$7135dd80$6705a8c0@a30>
+Message-ID: <009201c442c0$df19caa0$6705a8c0@a30>
+References: <002501c44257$7135dd80$6705a8c0@a30> <Pine.LNX.4.58.0405252115280.6990@praktifix.dwd.de>
+Reply-To: <me@heyjay.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from me@heyjay.com on Tuesday May 25
-To: me@heyjay.com
+To: Holger Kiehl <Holger.Kiehl@dwd.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday May 25, me@heyjay.com wrote:
-> Hi,
-> 
-> What are the proper steps for deleting all remnants of a previous raid
-> install?
-> 
-> I've done:
-> mdadm --stop /dev/md0
-> mdadm --zero-superblock /dev/md0
+Yes they are
 
-I doubt that.  After stopping /dev/md0, trying to zero a superblock in
-/dev/md0 would fail.
-Superblocks don't live in the array, they live in the individual
-component drives:
+Jay
+----- Original Message ----- 
+From: "Holger Kiehl" <Holger.Kiehl@dwd.de>
+To: <me@heyjay.com>
+Cc: <linux-raid@vger.kernel.org>
+Sent: Tuesday, May 25, 2004 4:17 PM
+Subject: Re: Deleting an raid device
 
-  mdadm --zero-superblock /dev/sd?c
-or something.
 
-But there is no harm having stray superblocks lying around.  
-Make sure the partitions are not raid-auto-detect (as someone else
-has mentioned I think) and make sure mdadm.conf doesn't mention the
-arrays.
-
-NeilBrown
- 
+> On Tue, 25 May 2004 me@heyjay.com wrote:
 > 
-> But I still see it getting stopped on shutdown.
+> > Hi,
+> > 
+> > What are the proper steps for deleting all remnants of a previous raid
+> > install?
+> > 
+> > I've done:
+> > mdadm --stop /dev/md0
+> > mdadm --zero-superblock /dev/md0
+> > 
+> > But I still see it getting stopped on shutdown.
+> > 
+> Are the partitions system id still fd (raid autodetect)?
 > 
-> Thanks
-> Jay
+> Holger
 > 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
