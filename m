@@ -1,111 +1,77 @@
-From: Harland Christofferson <debian-user@zerocrossings.com>
-Subject: mdadm raid1 howto
-Date: Wed, 22 Dec 2004 16:38:19 -0500
-Message-ID: <jUsT.aNoTheR.mEsSaGe.iD.11037516514657@24.45.154.254>
-Reply-To: debian-user@zerocrossings.com
+From: "Caushik, Ramesh" <ramesh.caushik@intel.com>
+Subject: RE: [dm-devel] [ANNOUNCE] multipath-tools-0.4.1
+Date: Wed, 22 Dec 2004 13:54:45 -0800
+Message-ID: <EA4DC661A6353747A2E5C0DE8792DDDE075013FE@orsmsx404.amr.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso8859-1
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-class: urn:content-classes:message
+Sender: linux-scsi-owner@vger.kernel.org
+To: device-mapper development <dm-devel@redhat.com>
+Cc: linux-raid@vger.kernel.org, linux-hotplug-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
 List-Id: linux-raid.ids
 
+The newer Qlogic (qla2xxx) driver for kernel versions 2.6.9 and later d=
+o not support the fc_transport class. The support is #ifdefed for kerne=
+ls > 2.6.6 & < 2.6.9. So I will have to wait till they support this for=
+ newer kernels. Meanwhile I can work with a patched version of multipat=
+h tools. Thanks for feedback.=20
 
-i currently have a two systems running kernel v 2.4.18 and have raid 
-support. i have found a howto on getting raid1 working on pre-existing 
-system but when i tried it, i messed up my boot sector. i was able 
-to recover but i do not wish to do this again. i am pretty confised 
-as to how to straighten this out. any help is appreciated!!
+Ramesh.  =20
 
-right now, my configuration is as follows:
+-----Original Message-----
+=46rom: dm-devel-bounces@redhat.com [mailto:dm-devel-bounces@redhat.com=
+] On Behalf Of christophe varoqui
+Sent: Wednesday, December 22, 2004 3:31 PM
+To: device-mapper development
+Cc: linux-raid@vger.kernel.org; linux-hotplug-devel@lists.sourceforge.n=
+et; linux-scsi@vger.kernel.org
+Subject: RE: [dm-devel] [ANNOUNCE] multipath-tools-0.4.1
 
-> mdadm -D /dev/md0
-/dev/md0:
-        Version : 00.90.00
-  Creation Time : Tue Dec 14 18:14:03 2004
-     Raid Level : raid1
-     Array Size : 40021568 (38.16 GiB 40.98 GB)
-    Device Size : 40021568 (38.16 GiB 40.98 GB)
-     Raid Disks : 2
-    Total Disks : 2
-Preferred Minor : 0
-    Persistance : Superblock is persistant
+James, thank you for the clarification (and I didn't mean to string
+anyone :).
 
-    Update Time : Thu Dec 16 06:40:04 2004
-          State : dirty, no-errors
-  Active Drives : 2
- Working Drives : 2
-  Failed Drives : 0
-   Spare Drives : 0
+Ramesh, I don't feel like going through the hassle of supporting
+multiple synthax until the multipath target has made its way into the
+standard kernel, so I'll keep guessing the node_name in
+behing /sys/class/fc_transport/target<host>:<channel>:<target> or skip
+the node_name fetch.
 
+ok with you ?
 
-    Number   Major   Minor   RaidDisk   State
-       0       3        0        0      active sync   /dev/hda
-       1      22        0        1      active sync   /dev/hdc
-           UUID : e5dd4d59:8c468e45:01ae5099:8a1ee740
+regards,
+cvaroqui
 
-> df -h
-Filesystem            Size  Used Avail Use% Mounted on
-/dev/hda7             9.2G  2.1G  6.7G  24% /
-/dev/hda1              31M   12M   18M  41% /boot
-/dev/hda6              19G  6.7G   11G  39% /home
-/dev/hda8             9.6G  1.2G  8.0G  13% /var
-
-> fdisk -l /dev/md0
-
-Disk /dev/md0: 2 heads, 4 sectors, 10005392 cylinders
-Units = cylinders of 8 * 512 bytes
-
-    Device Boot    Start       End    Blocks   Id  System
-/dev/md0p1   *         8      8033     32098+  83  Linux
-Partition 1 does not end on cylinder boundary:
-     phys=(3, 254, 63) should be (3, 1, 4)
-/dev/md0p2          8033  10004479  39985785    5  Extended
-Partition 2 does not end on cylinder boundary:
-     phys=(1023, 254, 63) should be (1023, 1, 4)
-/dev/md0p5          8041    132537    497983+  82  Linux swap
-/dev/md0p6        132545   5016297  19535008+  83  Linux
-/dev/md0p7       5016305   7458177   9767488+  83  Linux
-/dev/md0p8       7458185  10004479  10185178+  83  Linux
-
-> fdisk -l /dev/hda
-
-Disk /dev/hda: 255 heads, 63 sectors, 4982 cylinders
-Units = cylinders of 16065 * 512 bytes
-
-   Device Boot    Start       End    Blocks   Id  System
-/dev/hda1   *         1         4     32098+  83  Linux
-/dev/hda2             5      4982  39985785    5  Extended
-/dev/hda5             5        66    497983+  82  Linux swap
-/dev/hda6            67      2498  19535008+  83  Linux
-/dev/hda7          2499      3714   9767488+  83  Linux
-/dev/hda8          3715      4982  10185178+  83  Linux
-
-> fdisk -l /dev/hdc
-
-Disk /dev/hdc: 255 heads, 63 sectors, 4998 cylinders
-Units = cylinders of 16065 * 512 bytes
-
-   Device Boot    Start       End    Blocks   Id  System
-/dev/hdc1   *         1         4     32098+  83  Linux
-/dev/hdc2             5      4982  39985785    5  Extended
-/dev/hdc5             5        66    497983+  82  Linux swap
-/dev/hdc6            67      2498  19535008+  83  Linux
-/dev/hdc7          2499      3714   9767488+  83  Linux
-/dev/hdc8          3715      4982  10185178+  83  Linux
-
-----------------------------------------------------------------------
-Zero Crossings, Inc. -- Embedded and Digital Signal Processing Systems
-
-http://www.zerocrossings.com/
+Le mercredi 22 d?embre 2004 =E0 16:05 -0500, James.Smart@Emulex.Com a
+=E9crit :
+> Qlogic shouldn't be strung out. It wasn't them....
+>=20
+> As part of a change that went into the FC transport - the device repo=
+rted under this directory was moved from the LUN device to the Target d=
+evice - thus the change in name format (it killed replication of target=
+ data that was being done for all luns). The attributes underneath rema=
+in the same. I believe this change occurred in the first rc1 patch to 2=
+=2E6.9.
+>=20
+> As to the grand plan - you should be fine if you :
+>  pre-2.6.10: it's the older name format "/sys/class/fc_transport/<hos=
+t>:<channel>:<target>:<lun>"
+>  2.6.10 and later : it's the new format "/sys/class/fc_transport/targ=
+et<host>:<channel>:<target>"
+>=20
+>  and the folks running a patched 2.6.9 have to live by the new format=
+=2E
+>=20
+> --
 
 
-
-
-
-
-
-
-
-
+--
+dm-devel mailing list
+dm-devel@redhat.com
+https://www.redhat.com/mailman/listinfo/dm-devel
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
