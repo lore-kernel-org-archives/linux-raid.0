@@ -1,75 +1,76 @@
 From: ptb@lab.it.uc3m.es (Peter T. Breuer)
-Subject: Re: Which drive gets read in case of inconsistency? [was: ext3 journal on software raid etc]
-Date: Tue, 4 Jan 2005 15:56:59 +0100
-Message-ID: <renqa2-ml6.ln1@news.it.uc3m.es>
-References: <200501030916.j039Gqe23568@inv.it.uc3m.es> <41DA84C5.3070403@tls.msk.ru> <7nfqa2-3qg.ln1@news.it.uc3m.es> <200501041522.37374.maarten@ultratux.net>
+Subject: Re: ext3 journal on software raid (was Re: PROBLEM: Kernel 2.6.10 crashing repeatedly and hard)
+Date: Tue, 4 Jan 2005 16:20:43 +0100
+Message-ID: <broqa2-ana.ln1@news.it.uc3m.es>
+References: <l1nna2-e9i.ln1@news.it.uc3m.es> <200501031846.42950.maarten@ultratux.net> <200501032052.21459.maarten@ultratux.net> <a9noa2-o12.ln1@news.it.uc3m.es> <fh0pa2-kvp.ln1@news.it.uc3m.es> <16857.55609.534526.297577@cse.unsw.edu.au> <jh4pa2-pi.ln1@news.it.uc3m.es> <16857.64086.362458.177296@cse.unsw.edu.au> <6d5bedd80501031816eb8f296@mail.gmail.com> <16857.65024.745883.752981@cse.unsw.edu.au> <20050104024108.GK99565@caffreys.strugglers.net> <16858.4291.816499.371678@cse.unsw.edu.au> <0h5qa2-0qa.ln1@news.it.uc3m.es> <41DAA510.4060202@dgreaves.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Maarten <maarten@ultratux.net> wrote:
-> On Tuesday 04 January 2005 13:44, Peter T. Breuer wrote:
-> > Michael Tokarev <mjt@tls.msk.ru> wrote:
+David Greaves <david@dgreaves.com> wrote:
+> Peter T. Breuer wrote:
 > 
-> Hm, Peter, you did it again.  At the very end of an admittedly interesting 
-> discussion you come out with the baseless assumptions and conclusions.
-> Just when I was prepared to give you the benefit of the doubt...
-
-:-(.
-
-> > Anyway, strictly speaking, the answer to your question is "yes". It
-> > does not decrease the probability, and therefore it increases it. The
-> > question is by how much, and that is unanswerable.
+> >>ext3 journals are much safer on mirrored devices than on non-mirrored
+> >That's irrelevant - you don't care what's in the journal, because if
+> >your system crashes before committal you WANT the data in the journal
+> >to be lost, rolled back, whatever, and you don't want your machine to
+> >have acked the write until it actually has gone to disk.
+> >
+> >Or at least that's what *I* want. But then everyone has different
+> >wants and needs. What is obvious, however, are the issues involved.
 > 
-> You continue to amaze me. If it does not decrease, it automatically 
-> increases ?? 
+> If the journal is safely written to the journal device and the machine 
 
-Yes.
+You don't know it has been. Raid can't tell.
 
-> What happened to the "stays equal" possibility ?
+> crashes whilst updating the main filesystem you want the journal to be 
+> replayed, not erased. The journal entries are designed to be replayable 
+> to a partially updated filesystem.
 
-It's included in the "automatically increases". But anyway, it's
-neglible.  Any particular precise outcome (such as "stays precisely the
-same") is neglibly likely in a cntinuous universe.  Probability
-distributions are only stated to "almost everywhere" equivalence, since
-they are fundamentally just measures on the universe, so we can't even
-talk about "=", properly speaking.
+It doesn't work. You can easily get a block  written to the journal on
+disk A, but not on disk B (supposing raid 1 with disks A and B).
+According to you "this" should be replayed. Well, which result do you
+want? Raid has no way of telling.
 
-> Do you exclusively use ">" and "<" instead of "=" in your math too ?  
+Suppose that A contains the last block to be written to a file, and
+does not. Yet B is chosen by raid as the "reliable" source.
 
-No. I use >= and <=, since I said "increases" and "decreases".
+Then what happens? 
 
-> Maybe the increase is zero.
+Is the transaction declared "completed" with incomplete data? With
+incorrect data?
 
-Exactly.
+Myself I'd hope it were rolled back, whichever of A or B were chosen,
+because some final annotation was missing from the journal, saying
+"finished and ready to send" (alternating bit protocol :-). But you
+can't win ... what if the "final" annotation were written to journal on
+A but not on B.
 
-> Oh wait, it could even be negative, right ? Just 
+Then what would happen?
 
-No, I said "increases". I would have said "strictly increases" or
-"properly increases"  if I had meant "<" and not "<=". But I didn't
-bother to distinguish since the distinction is unimportant, and
-unmeasurable (in the frmal sense), and besides I wuldn't ever
-distinguish between < and <= in such situations.
+Well, then whichever of A or B the raid chose, you'd either get the
+data rolled forward or backward.
 
-> as with probability. So it possibly has an increase of, say, -0.5 ?
-> (see how easy it is to confuse people ?)
 
-No. I am very exact! Automatically, I may add.
+Which would you prefer? 
 
-But anyway, it doesn't matter, since the possibility of the
-probabilities being unaffected is zero in any situation where there is a
-real causal mechanism acting to influence them, with a continuous range
-of outcomes (hey, computers are random, right?).  So you may deduce
-(correctly) that in all likelihood the probability that we were speaking
-of is _strictly_ increased by the mechanism we were discussing.
+I'd just prefer that it was all rolled back. 
 
-If you care.
 
-Whatever it was. Or is.
 
-Really! I do expect a certain minimum of numericity! :(.
+> That's the whole point of journalling filesystems, write the deltas to 
+> the journal, make the changes to the fs, delete the deltas from the journal.
 
+Consider the above. There is no magic.
+
+> If the machine crashes whilst the deltas are being written then you 
+> won't play them back - but your fs will be consistent.
+
+What if the delta is written to one journal, but not to the other, when
+the machine crashes?
+
+I outlined the problem above. You can't win this game.
 
 Peter
 
