@@ -1,30 +1,46 @@
-From: buggz <buggz@america.net>
-Subject: 3ware 7506-8 and Tyan Thunder 2500, S1867, anyone?
-Date: Fri, 28 May 2004 14:35:01 -0400
+From: Jeffrey C Albro <jalbro@bu.edu>
+Subject: Documentation bugs in raidtools
+Date: Fri, 28 May 2004 14:59:57 -0400 (EDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.CYG.4.58.0405281426090.316@buggz4>
-References: <20040528163700.9426.patches@notabene> <E1BTb7N-0002Tk-C3@notabene.cse.unsw.edu.au>
+Message-ID: <Pine.LNX.4.44.0405281445550.25012-100000@signals10.bu.edu>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <E1BTb7N-0002Tk-C3@notabene.cse.unsw.edu.au>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Has anyone gotten this combination to work?
-I cannot.
-I get BLANK video, NO BIOS screens, NOTHING, whenever I have the 3ware
-card installed.
-I am using a Creative TNT2Ultra AGP video card.  I have tried ALL 6 PCI slots,
-I have tried myrid array of BIOS settings.
-I have even tried a PCI video card, ALL to same effect, NO VIDEO w/ the
-3ware card installed.
-I finally installed this card in a DEC Alpha PC164SX mb, I then get video
-w/ the 3ware card installed!
-Sigh...
-I'm wondering now, can this card be used successfully on the Alpha mb?  If
-so, I guess I will go that route and try Gentoo.
-I am being told from Tyan that these 3ware cards were all built out of
-PCI spec, a known standing problem.  Anyone know about that?
+
+I am reporting based on raidtools-1.00.3-2 on a Redhat 9 system.
+
+You can't "raidhotremove" until you "raidsetfaulty" regardless of
+whether the disk is actually failed or not.  I would like there to be 
+better documentation to clue the admin into this fact.  
+
+My specific concerns:
+
+1) raidhotremove does not give helpful error messages.  You get a message
+like "/dev/md0: can not hot-remove disk: disk busy!".  But if you stop the
+raid, you still can't remove the disk.  The raid has to be running AND the
+disk needs to be marked faulty.  There should be a hint in the error
+message given by raidhotremove.
+
+2) raidhotremove does not have a man page.
+
+3) raidsetfaulty does not have a man page.
+
+I am attaching a "bug bounty" of a coupon for a pint of Ben and Jerry's 
+Ice Cream to the resolution of this bug.
+
+Thanks!
+
+-Jeff
+
+
+-----------------------------------------------------------
+Jeffrey Albro | Systems Administrator | Boston University
+   - Department of Electrical and Computer Engineering -
+jalbro@bu.edu |  Photonics, Room 305  | 617-358-2785
+-----------------------------------------------------------
+
 
 
