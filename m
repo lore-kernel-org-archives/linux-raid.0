@@ -1,45 +1,64 @@
-From: Joshua Baker-LePain <jlb17@duke.edu>
-Subject: Re: Software RAID-0 striping over Hardware RAID-5
-Date: Mon, 20 Sep 2004 09:55:50 -0400 (EDT)
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: SuSE Linux cluster using MC/ServiceGuard --- shared storage
+Date: Mon, 20 Sep 2004 15:55:51 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.58.0409200953110.6936@chaos.egr.duke.edu>
-References: <1a1.29d2b13e.2e8039e4@aol.com>
+Message-ID: <20040920135549.GA8201@percy.comedia.it>
+References: <20040920132846.29970.qmail@web61108.mail.yahoo.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1a1.29d2b13e.2e8039e4@aol.com>
-To: AndyLiebman@aol.com
-Cc: linux-raid@vger.kernel.org
+Content-Disposition: inline
+In-Reply-To: <20040920132846.29970.qmail@web61108.mail.yahoo.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 20 Sep 2004 at 9:49am, AndyLiebman@aol.com wrote
+On Mon, Sep 20, 2004 at 06:28:46AM -0700, Biju A wrote:
+>Hi,
+>
+>In a Linux cluster setup, I have some issues.
+>
+>I am trying to use 'md' driver in Linux for multipath
+>to shared storage with Enterprise Virtual Array 3000
+>(EVA 3000)
 
-> Have you ever tested your systems while one of your RAID5 arrays is 
-> rebuilding or verifying? (I'm about to do that right now). I'm wondering if Linux 
-> Software RAID-0 might falter if one of the two arrays is significantly slower than 
-> the other (while rebuilding)?
+i believe someone from HP already stated in this list that md driver
+(multipath) does not work with EVA, i guess do to issues with
+preferred path.
 
-I've had arrays under normal (sporadically heavy) usage during a rebuild, 
-and there wasn't a problem.
+>Do I still need to use the Driver Patch for EVA
+>Controller Failover? 
+i believe using the qlogic driver failover is a viable solutio, another
+is purchasing securepath from HP. but i believe there were issues using
+securepath and lvm together.
 
-> My inclination is to not use a hot spare. Instead, I rely on 3ware's email 
-> notification feature to alert me that a drive needs to be replaced. I always 
-> keep a spare handy that can be popped into place immediately. Also, I want to 
-> have control over when rebuilding takes place. It would be a bad thing to rebuild 
-> during certain critical high I/O moments of the day -- whereas rebuilding at 
-> night would be much less stressful on the system. Do you see anything wrong 
-> with this approach? 
+>The MC/SG spec says that 'md' driver should not be
+>active at the same time on both the cluster nodes. So,
+>I am not using the 'fd' type of partition which starts
+>the arrays at boot time. I just use the default 83
+>type.
+>
+>Is there any specific need to update to 2.6 kernel in
+>order to support LVM 2?
 
-Yes -- it requires you to be on call 24x7 for maximum protection.  And 
-even then the level of protection is less than with a hot spare, given 
-that it will take you time to get from whereever you are to whereever the 
-server is.  Also, disks can sometimes have a tendency to go in quick 
-succession.  I would *strongly* recommend a hot spare.
+i don't know if that is supported by either hp or suse.
 
-Remember, you're cutting your reliability in half by striping the two 
-arrays.  Why not maximally protect those individual arrays?
+>The kernel version of the O/S in the cluster nodes is
+>2.4.19 which contains lvm 1.0.5-51. It does not
+>support 'pvremove' and probably the tool 'mkraid' does
+>have some bugs. No idea if there are fixes for the
+>same. Is it better to use 'mdadm'? 
+
+i do personallu prefer mdadm to mkraid.
+
+>Any hints/suggestions would be appreciated.
+also try asking in the hp itrc forums.
+
+L.
 
 -- 
-Joshua Baker-LePain
-Department of Biomedical Engineering
-Duke University
+Luca Berra -- bluca@comedia.it
+        Communication Media & Services S.r.l.
+ /"\
+ \ /     ASCII RIBBON CAMPAIGN
+  X        AGAINST HTML MAIL
+ / \
