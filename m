@@ -1,50 +1,62 @@
-From: Andre Tomt <andre@tomt.net>
-Subject: Re: md: bug in file md.c, line 1440 (2.4.22)
-Date: Sun, 07 Sep 2003 02:06:49 +0200
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <3F5A7699.9080208@tomt.net>
-References: <3F5017CA.4080700@tomt.net> <16213.14893.955734.797630@gargle.gargle.HOWL>
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: a couple of mdadm questions
+Date: Mon, 8 Sep 2003 17:06:53 +1000
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <16220.10893.339884.282892@gargle.gargle.HOWL>
+References: <1062879895.8172.20.camel@opus>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: <16213.14893.955734.797630@gargle.gargle.HOWL>
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, mingo@redhat.com
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from seth vidal on  September 6
+To: seth vidal <skvidal@phy.duke.edu>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> Your problem is that these extra slots (N:0) are flagged as failed
-> (S:9) and this confuses md.c.
->=20
-> If you get mdadm 1.3.0 and apply the three patches that can be found
-> in
->    http://cgi.cse.unsw.edu.au/~neilb/source/mdadm/patch/applied/
->=20
-> and then stop the array and use:
->    mdadm --assemble --update=3Dsummaries /dev/md5 /dev/sda9 /dev/sdc9
->=20
-> then it should fix things up for you.
-> You will need to do a similar thing for all of the arrays.
-> This will be difficult for md2 as it is 'root'.  You will need to boo=
-t
-> a rescue disc to fix this one.
->=20
-> I have not idea how it got the failed flag.
+On  September 6, skvidal@phy.duke.edu wrote:
+> 
+> When I do a mdadm -D /dev/md1 it lists out very oddly:
+> 
+....
+> 
+> So why does this say - 5 working devices, 2 failed devices and 7 active
+> devices?
+> 
 
-I didn't read this in time to get this tested - I did a full backup and=
-=20
-restore earlier, zeroing all sectors on both drives. All is fine now,=20
-however I have no idea how this has happened. I'll set one partition=20
-faulty, re-add it and reboot later just to make sure it really works.
+Because the code in the kernel for keeping these counters up-to-date
+is rather fragile and probably broken, but as the counters aren't
+actually used for anything (much) I have never bothered fixing it.
 
-2.6 has never been booted on that machine, or disks.
+> 
+> It seems like it should read:
+> 7 active devices and 7 working devices.
+> In addition, I can't get State: dirty, no-errors to go away.
+> 
+> I considered recreating this array with:
+> 
+> mdadm -C /dev/md1 -l 5 -n 7 -c 64 /dev/sdb1 /dev/sdc1 /dev/sdd1 \
+> /dev/sde1 /dev/sdf1 /dev/sdg1 /dev/sdh1
+> 
+> but I was a little leery that I might screw something up. There is a lot
+> of important data on this array.
+> 
 
-Thanks, I'll keep mdadm in mind next time something like this happens ;=
--)
+You could get mdadm 1.3.0, add some patches from
+    http://cgi.cse.unsw.edu.au/~neilb/source/mdadm/patch/applied/
+and try
+   --assemble --update=summaries
 
---=20
-Cheers,
-Andr=E9 Tomt
-andre@tomt.net
+it should fix these counts for you.
+
+> 
+> The only other thing that is very odd is that on boot the system always
+> claims to fail to start the array, that there are too few drives. But
+> then it starts, mounts and the data all looks good. I've compared big
+> chunks of the data with md5sum and it's valid. So I think it has
+> something to do with the Working Device counts.
+> 
+> Is that the case?
+
+Probably.  What is the actual message?
+
+NeilBrown
