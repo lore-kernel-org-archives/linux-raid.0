@@ -1,40 +1,45 @@
-From: Robin Bowes <robin-lists@robinbowes.com>
-Subject: Re: Good news / bad news - The joys of RAID
-Date: Fri, 26 Nov 2004 22:41:53 +0000
-Message-ID: <41A7B131.3090506@robinbowes.com>
-References: <04Nov26.172857est.30052@gpu.utcc.utoronto.ca>
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: RAID10 overwrites partition tables
+Date: Sat, 27 Nov 2004 11:02:24 +1100
+Message-ID: <16807.50192.233832.966091@cse.unsw.edu.au>
+References: <10578812.1101490100216.JavaMail.www@wwinf3001>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <04Nov26.172857est.30052@gpu.utcc.utoronto.ca>
-Sender: linux-raid-owner@vger.kernel.org
-To: Chris Siebenmann <cks@utcc.utoronto.ca>, linux-raid@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S263119AbUK0AK4@vger.kernel.org>
+In-Reply-To: message from Felix Bellaby on Friday November 26
+Sender: linux-kernel-owner@vger.kernel.org
+To: member@bellaby.freeserve.co.uk
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Chris Siebenmann wrote:
-> You write:
-> | Thinking about what happened, I would have expected that the bad
-> | drive would just be removed from the array and spare activated and
-> | re-syncing started automatically.
-> 
->  This is what is supposed to happen; when the hardware winds are blowing
-> in the right direction and the software recognizes everything, it even
-> really does happen.
+On Friday November 26, member@bellaby.freeserve.co.uk wrote:
+>    	 mdadm --level 10 does not seem to respect disk partition boundaries.
 
-Chris,
+Hmmm, yes, thanks.
 
-I suspect that what happened is that the array was in the process of 
-re-syncing when I powered off the box because it had frozen because of 
-an ATA timeout error.
+I think the following should fix the bug.  It only affects 'resync'
+not normal IO or recovery (after a drive has failed).
 
-When I re-booted, the RAID1 root partition was dirty and wouldn't 
-re-sync while the RAID 5 array was re-syncing.
+(I only tested it on whole-drives....)
 
-Whatever, I got it back up and running by disconnecting the failed drive.
+Please let me know if it helps.
 
-Cheers,
+NeilBrown
 
-R.
--- 
-http://robinbowes.com
+
+ ----------- Diffstat output ------------
+ ./drivers/md/raid10.c |    1 +
+ 1 files changed, 1 insertion(+)
+
+diff ./drivers/md/raid10.c~current~ ./drivers/md/raid10.c
+--- ./drivers/md/raid10.c~current~	2004-11-16 16:33:50.000000000 +1100
++++ ./drivers/md/raid10.c	2004-11-27 11:00:06.000000000 +1100
+@@ -1150,6 +1150,7 @@ static void sync_request_write(mddev_t *
+ 		md_sync_acct(conf->mirrors[d].rdev->bdev, tbio->bi_size >> 9);
+ 
+ 		tbio->bi_sector += conf->mirrors[d].rdev->data_offset;
++		tbio->bi_bdev = conf->mirrors[d].rdev->bdev;
+ 		generic_make_request(tbio);
+ 	}
+ 
