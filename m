@@ -1,87 +1,82 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: Recovering RAID5 array
-Date: Tue, 20 Jan 2004 02:22:25 -0500
+From: Jean Jordaan <jean@upfrontsystems.co.za>
+Subject: Re: Recovering RAID5 array
+Date: Tue, 20 Jan 2004 10:08:53 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200401200722.i0K7MTi03836@dns1.watkins-home.com>
-References: <400CD0BF.2010808@upfrontsystems.co.za>
+Message-ID: <400CE215.2050502@upfrontsystems.co.za>
+References: <400CD0BF.2010808@upfrontsystems.co.za> <16396.53737.911347.812076@notabene.cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <400CD0BF.2010808@upfrontsystems.co.za>
-To: 'Jean Jordaan' <jean@upfrontsystems.co.za>, linux-raid@vger.kernel.org
+In-Reply-To: <16396.53737.911347.812076@notabene.cse.unsw.edu.au>
+To: Neil Brown <neilb@cse.unsw.edu.au>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Warning!  Don't create, you could lose data!  Use --assemble --force!!!!!!
+> mdadm --assemble /dev/md0 --force /dev/hd[abc]3
+> 
+> should put it back together for you.
 
-In the future...  If you need to determine which disk is which.  Just dd
-each disk to /dev/null, and note which disk has an access light on solid!
-After you have done this to all of the good disks, then the 1 that is left
-must be the bad disk.  Or trace the cables, and decode the jumpers!
+No luck ..
 
-Using dd to test a disk, seems like a good test for me.  I have been using
-dd for years to verify that a disk works.  I am sure it is not a 100% test,
-but is will find a read error!  Just dd a disk to /dev/null, any errors, bad
-disk.  After the disk has been removed from your array you could determine
-if the bad block(s) can be relocated by the drive.  To do this, dd another
-disk to the bad disk.  If success, then do another read test of the "bad"
-disk.  If success, then the bad blocks(s) have been relocated.  I wish the
-OS or md could do something like this before the disk is dropped from the
-array.  It would save a lot of problems.  In this case the bad block(s)
-would be over-written with re-constructed data using the redundancy logic.
+cdimage root # mdadm --verbose --assemble /dev/md0 --force /dev/hda3 /dev/hdb3 
+/dev/hdc3
+mdadm: looking for devices for /dev/md0
+mdadm: /dev/hda3 is identified as a member of /dev/md0, slot 3.
+mdadm: /dev/hdb3 is identified as a member of /dev/md0, slot 4.
+mdadm: /dev/hdc3 is identified as a member of /dev/md0, slot 2.
+mdadm: no uptodate device for slot 0 of /dev/md0
+mdadm: no uptodate device for slot 1 of /dev/md0
+mdadm: added /dev/hda3 to /dev/md0 as 3
+mdadm: added /dev/hdb3 to /dev/md0 as 4
+mdadm: added /dev/hdc3 to /dev/md0 as 2
+mdadm: /dev/md0 assembled from 1 drive - not enough to start it (use --run to 
+insist).
 
-Also, I don't think a file system could cause a bad disk.
+cdimage root # cat /proc/mdstat
+Personalities : [raid5]
+read_ahead not set
+md0 : inactive ide/host0/bus1/target0/lun0/part3[2] 
+ide/host0/bus0/target1/lun0/part3[4] ide/host0/bus0/target0/lun0/part3[3]
+       0 blocks
+unused devices: <none>
+cdimage root # mdadm --verbose --examine /dev/hda3
+/dev/hda3:
+           Magic : a92b4efc
+         Version : 00.90.00
+            UUID : dd5156aa:9157bc3c:9500db42:445b91fe
+   Creation Time : Wed Dec 17 11:44:50 2003
+      Raid Level : raid5
+     Device Size : 38001664 (36.24 GiB 38.91 GB)
+    Raid Devices : 3
+   Total Devices : 4
+Preferred Minor : 0
 
-Guy
+     Update Time : Mon Jan 19 07:41:21 2004
+           State : dirty, no-errors
+  Active Devices : 1
+Working Devices : 3
+  Failed Devices : 1
+   Spare Devices : 2
+        Checksum : 736178ae - correct
+          Events : 0.82
 
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Jean Jordaan
-Sent: Tuesday, January 20, 2004 1:55 AM
-To: linux-raid@vger.kernel.org
-Subject: Recovering RAID5 array
+          Layout : left-symmetric
+      Chunk Size : 64K
 
-Hi all
+       Number   Major   Minor   RaidDevice State
+this     3       3        3        3        /dev/ide/host0/bus0/target0/lun0/part3
+    0     0       0        0        0      faulty removed
+    1     1       0        0        1      faulty removed
+    2     2      22        3        2      active sync 
+/dev/ide/host0/bus1/target0/lun0/part3
+    3     3       3        3        3        /dev/ide/host0/bus0/target0/lun0/part3
+    4     4       3       67        4        /dev/ide/host0/bus0/target1/lun0/part3
 
-I'm having a RAID week. It looks like 1 disk out of a
-3-disk RAID5 array has failed. The array consists of
-/dev/hda3 /dev/hdb3 /dev/hdc3 (all 40Gb)
-I'm not sure which one is physically faulty. In an attempt
-to find out, I did:
-   mdadm --manage --set-faulty /dev/md0 /dev/hda3
-
-The consequence of this was 2 disks marked faulty and no
-way to get the array up again in order to use raidhotadd
-to put that device back.
-
-I'm scared of recreating superblocks and losing all my data.
-So now I'm doing 'dd if=/dev/hdb3 of=/dev/hdc2' of all three
-RAID partitions so that I can work on a *copy* of the data.
-
-Then I aim to
-mdadm --create /dev/md0 --raid-devices=3 --level=5 \
-   --spare-devices=1 --chunk=64 --size=37111 \
-   /dev/hda1 /dev/hda2 missing /dev/hdb1 /dev/hdb2
-
-hda2 is a copy of the partition of the drive I'm currently
-suspecting of failure. hdb2 is a blank partition.
-
-I've been running Seagate's drive diagnostic software
-overnight, and the old disks check out clean. This makes me
-afraid that it's reiserfs corruption, not a RAID disk
-failure :/
-
-Does anyone here have any comments on what I've done so far,
-or if there's anything better I can do next?
+I think /dev/hdb3 was the one originally marked faulty,
+and I wrongly --set-faulty /dev/hda3 ..
 
 -- 
 Jean Jordaan
 http://www.upfrontsystems.co.za
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
 
