@@ -1,33 +1,32 @@
-From: Jose Luis Domingo Lopez <linux-raid@24x7linux.com>
-Subject: Re: raid 0 on different size devices?
-Date: Wed, 19 Nov 2003 21:21:34 +0100
+From: Gordon Henderson <gordon@drogon.net>
+Subject: Re: How safe is software RAID compared to how safe hardware RAID
+Date: Wed, 19 Nov 2003 22:28:05 +0000 (GMT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20031119202134.GA5015@localhost>
-References: <1069269741.6952.33.camel@opus> <Pine.LNX.4.44.0311191300350.6810-100000@eglifamily.dnsalias.net>
+Message-ID: <Pine.LNX.4.56.0311192224210.19690@unicorn.drogon.net>
+References: <PPEOJEIEFLAONFNHJPOOAEICGOAA.jim@jimtreats.com>
+ <Pine.LNX.4.55.0311190935440.10628@umi.cfht.hawaii.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44.0311191300350.6810-100000@eglifamily.dnsalias.net>
+In-Reply-To: <Pine.LNX.4.55.0311190935440.10628@umi.cfht.hawaii.edu>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday, 19 November 2003, at 13:01:10 -0700,
-Dan Egli wrote:
+On Wed, 19 Nov 2003, Kanoa Withington wrote:
 
-> How do I setup a linear array?
-> 
-Maybe you should give LVM a try if you just want to set up a linear
-array, to aggregate disk space into one (large) block device. With LVM
-you have all the features of a linear RAID array and more, for example
-it is possible to add more drives at a later time and give the added
-space to the LV (equivalent to a partition).
+> In a software RAID 1 array, each of the sub-volumes can be used just
+> like a normal partition+file system outside of the array and the whole
+> domain of software RAID, which is very nice for fault recovery. With a
+> hardware controller this usually cannot be done, the data on the disks
+> is useless without the controller.
 
-Better than trying to explain in two lines what LVM is, have a look at
-LVM-HOWTO at http://tldp.org/HOWTO/LVM-HOWTO/
+Just as an aside, I've recently had to build several near identical
+machines with a mirrored disk set (ie. s/w RAID1) and I used this feature
+to "clone" the other boxes... ie. build one with 2 disks, make sure the
+mirrors are syncd up, then take one drive out and use it to build a 2nd,
+and a 3rd, etc.  each time putting in a blank 2nd disk and partitioning it
+as before then letting the mirror re-sync...
 
-Greetings.
+I'm sure there may be easier ways, but this worked for me!
 
--- 
-Jose Luis Domingo Lopez
-Linux Registered User #189436     Debian Linux Sid (Linux 2.6.0-test9-mm3)
+Gordon
