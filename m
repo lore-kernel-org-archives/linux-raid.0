@@ -1,100 +1,49 @@
-From: Evan Felix <evan.felix@pnl.gov>
-Subject: Re: [PATCH] Linux Raid5/6 abover 2 Terabytes
-Date: Mon, 12 Apr 2004 08:53:54 -0700
+From: Mike Barnard <mike@tracersinfo.com>
+Subject: Problems with huge filesystem
+Date: Mon, 12 Apr 2004 12:25:58 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1081785234.22588.5.camel@e-linux>
-References: <249C1CB246997C48BB74963CCD361C1B02376A60@pnlmse28.pnl.gov>
+Message-ID: <407AC316.8040605@tracersinfo.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: <249C1CB246997C48BB74963CCD361C1B02376A60@pnlmse28.pnl.gov>
-To: linux-raid <linux-raid@vger.kernel.org>
-Cc: neilb@cse.unsw.edu.au
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Niel, did you push this patch to the kernel guys for inclusion in the
-next 2.6 kernel?
+    Hi, folks. My apologies if this has been asked and answered, but a 
+quick scan of the archives didn't turn up anything helpful. I'm trying 
+to create a huge filesystem with Linux software RAID and I'm running 
+into a problem. I'm not even sure if the problem is with raidtools or 
+the standard Linux filesystem utilities.
 
-Also by way of status i've built a 5.7Tb SATA array (level 5/6) with
-this change in the kernel.
+    I've got two Promise IDE hardware RAID boxes chock full o' 200GB 
+disks, 1.1 TB usable space each. For those unfamiliar with these boxes, 
+they are external SCSI devices that combine a slew of IDE drives into 
+one big SCSI RAID array. I'm trying to use Linux software raid (raid 1) 
+to combine the two boxes into one single 2.2TB filesystem.
 
-so that pushes us to about 4 Arrays now..
+    When I run mkraid, it exits and tells me it's created an array of 
+about 2.2TB, like it should. But then when I run any of the other utils 
+(mkfs.jfs, mkreiserfs, fdisk) they only ever see about 200 GB. I can, of 
+course, cut and paste screen captures of all this stuff if anyone wants 
+to see it. I've created 1TB+ reiserfs and jfs filesystems before without 
+any problem, incidentally, using just the individual RAID boxes as 
+single disks.
 
-Evan
+    I'm running Redhat Linux 9 with the stock 2.4.20smp kernel on a dual 
+Athlon MP 1800+ box with 2G RAM.
 
-On Tue, 2004-04-06 at 14:00, Felix, Evan J wrote:
-> Here is a patch that fixes a major issue in the raid5/6 code.  It
-> seems
-> that the code:
-> 
-> logical_sector = bi->bi_sector & ~(STRIPE_SECTORS-1);
-> (sector_t)     = (sector_t)    & (constant)
-> 
-> that the right side of the & does not get extended correctly when the
-> constant is promoted to the sector_t type.  I have CONFIG_LBD turned
-> on
-> so sector_t should be 64bits wide.  This fails to properly mask the
-> value of 4294967296 (2TB/512) to 4294967296.  in my case it was coming
-> out 0.  this cause the loop following this code to read from 0 to
-> 4294967296 blocks so it could write one character.
-> 
-> As you might imagine this makes a format of a 3.5TB filesystem take a
-> very long time.
-> 
-> Here is the patch:
-> Binary files linux-2.6.5/drivers/md/mktables and
-> linux-2.6.5fixraid/drivers/md/mktables differ
-> diff -urN -X /home/efelix/.cvsignore linux-2.6.5/drivers/md/raid5.c
-> linux-2.6.5fixraid/drivers/md/raid5.c
-> --- linux-2.6.5/drivers/md/raid5.c      2004-04-04 03:36:26.000000000
-> +0000
-> +++ linux-2.6.5fixraid/drivers/md/raid5.c       2004-04-06
-> 18:26:05.000000000
-> +0000
-> @@ -1334,8 +1334,9 @@
->                 disk_stat_add(mddev->gendisk, read_sectors,
-> bio_sectors(bi));
->         }
-> 
-> -       logical_sector = bi->bi_sector & ~(STRIPE_SECTORS-1);
-> +       logical_sector = bi->bi_sector &
-> ~((sector_t)STRIPE_SECTORS-1);
->         last_sector = bi->bi_sector + (bi->bi_size>>9);
-> +       PRINTK("Bio: %Lu logical %Lu   last
-> %Lu\n",bi->bi_sector,logical_sector,last_sector);
->  
->         bi->bi_next = NULL;
->         bi->bi_phys_segments = 1;       /* over-loaded to count active
-> stripes */
-> diff -urN -X /home/efelix/.cvsignore
-> linux-2.6.5/drivers/md/raid6main.c
-> linux-2.6.5fixraid/drivers/md/raid6main.c
-> --- linux-2.6.5/drivers/md/raid6main.c  2004-04-04 03:36:14.000000000
-> +0000
-> +++ linux-2.6.5fixraid/drivers/md/raid6main.c   2004-04-06
-> 18:31:30.000000000 +0000
-> @@ -1496,7 +1496,7 @@
->                 disk_stat_add(mddev->gendisk, read_sectors,
-> bio_sectors(bi));
->         }
->  
-> -       logical_sector = bi->bi_sector & ~(STRIPE_SECTORS-1);
-> +       logical_sector = bi->bi_sector &
-> ~((sector_t)STRIPE_SECTORS-1);
->         last_sector = bi->bi_sector + (bi->bi_size>>9);
->  
->         bi->bi_next = NULL;
-> 
-> 
-> I have tested this on at least 2 arrays, with ext2 and some long dd's
-> 
-> Evan
-> -- 
-> -------------------------
-> Evan Felix
-> Administrator of Supercomputer #5 in Top 500, Nov 2003
-> Environmental Molecular Sciences Laboratory
-> Pacific Northwest National Laboratory
-> Operated for the U.S. DOE by Battelle
-> 
+Here's my raidtab:
+
+raiddev /dev/md0
+        raid-level      0
+        nr-raid-disks   2
+        persistent-superblock   1
+        chunk-size      64
+        device          /dev/sda1
+        raid-disk       0
+        device          /dev/sdb1
+        raid-disk       1
+
+    Any help would be greatly appreciated! Thanks in advance!
+
