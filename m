@@ -1,30 +1,41 @@
-From: Derek Vadala <derek@cynicism.com>
-Subject: Re: Growing an Array?
-Date: Mon, 11 Nov 2002 13:41:14 -0500 (EST)
+From: "H. Peter Anvin" <hpa@zytor.com>
+Subject: RAID-6
+Date: 11 Nov 2002 10:52:36 -0800
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20021111184114.7BBDB3B807@jaded.cynicism.com>
-References: <aqot4v$os5$1@cesium.transmeta.com>
+Message-ID: <aqou9k$ou5$1@cesium.transmeta.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <aqot4v$os5$1@cesium.transmeta.com>
-To: "H. Peter Anvin" <hpa@zytor.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 11 Nov 2002, H. Peter Anvin wrote:
+Hi all,
 
-> Note that in large-scale data moves, like this, where you're reluctant
-> to take the system offline: if you can put the new storage online
-> (connected either to the same or a different server) you run the copy
-> process while the data is still online, then when you close for the
-> migration you can do an incremental update (rsync -aHS --delete is
-> good for this; if you want to be extra paranoid at the expense of
-> significantly slower execution rsync -acHS --delete.)  This is
-> typically a lot quicker than copying all the data once offline.
+I'm playing around with RAID-6 algorithms lately.  With RAID-6 I mean
+a setup which needs N+2 disks for N disks worth of storage and can
+handle any two disks failing -- this seems to be the contemporary
+definition of RAID-6 (the originally proposed "two-dimensional parity"
+which required N+2*sqrt(N) drives never took off for obvious reasons.)
 
-This is exactly what I meant, sorry if I implied otherwise.
+Based on my current research, I think the following should be true:
 
---
-Derek Vadala, derek@cynicism.com, http://www.cynicism.com/~derek
+a) write performance will be worse than RAID-5, but I believe it can
+   be kept to within a factor of 1.5-2.0 on machines with suitable
+   SIMD instruction sets (e.g. MMX or SSE-2);
 
+b) read performance in normal and single failure degraded mode will be
+   comparable to RAID-5;
+
+c) read performance in dual failure degraded mode will be quite bad.
+
+I'm curious how much interest there would be in this, since I
+certainly have enough projects without it, and I'm probably going to
+need some of Neil's time to integrate it into the md driver and the
+tools.
+
+	-hpa
+-- 
+<hpa@transmeta.com> at work, <hpa@zytor.com> in private!
+"Unix gives you enough rope to shoot yourself in the foot."
+http://www.zytor.com/~hpa/puzzle.txt	<amsp@zytor.com>
