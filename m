@@ -1,44 +1,46 @@
-From: Terry <td3201@yahoo.com>
-Subject: raid 5 catastrophy
-Date: Wed, 31 Mar 2004 20:42:31 -0800 (PST)
+From: Brad Campbell <brad@wasp.net.au>
+Subject: Re: Which raid card to buy for Sarge
+Date: Thu, 01 Apr 2004 08:49:02 +0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040401044231.92394.qmail@web60309.mail.yahoo.com>
+Message-ID: <406B9F3E.4020701@wasp.net.au>
+References: <Pine.LNX.4.44.0403311442520.31572-100000@coffee.psychology.mcmaster.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.44.0403311442520.31572-100000@coffee.psychology.mcmaster.ca>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I made a mistake on a raid 5 array.  I accidentally
-tried to “raidhotadd” 2 of the 3 drives from the raid
-5 array into another array.  Now the two partitions
-FROM the raid 5 think they are part of the other
-array.  The raidtab for the array is:
+Mark Hahn wrote:
+>>If would not use the "raid" feature of the Highpoint cards, because it is only 
+>>software raid and not so performant as a hardware raid. If you don't need a 
+> 
+> 
+> please don't say things like this.  HW raid is *NOT* generally
+> faster or better than software raid.  yes, if you're building a 
+> quad-gigabit fileserver out of an old P5/100 you had sitting around,
+> you're not even going to start looking at sw raid.
 
-raiddev			/dev/md4
-raid-level		5
-nr-raid-disks		3
-chuck-size		64k
-oersustebt-superblock	1
-nr-spare-disks		0
-device			/dev/hda2
-raid-disk		0
-device			/dev/hdb2
-raid-disk		1
-device			/dev/hdc2
-raid-disk		2
+One point. Hardware raid (and faux hardware raid) provides real hot swap with on-the-fly rebuilds.
+Linux software raid can't (yet).
+Both promise and highpoint proprietary ide raid drivers can, but no raw kernel or libata drivers can 
+as yet, and the interface between the hotswap driver and md driver is no where near there.
 
-Ultimately, the raid5 array is broken.  It won't start
-because it only has one good disk to its name right
-now.  How can I fix this?  I assume the data on the
-other two drives is still intact (bad assumption?)
+With the Highpoint driver I get a drive failure and the card starts beeping. I fire up the 
+management util, remove the faulty drive, swap it out and insert the new drive in the array. The 
+array starts rebuilding - no effect on the uptime and only a slight loss in throughput. Plus it's 
+seamless.
 
-Thanks for the help!
+I used a pair of Highpoint Rocketraid 1540 cards with the Highpoint driver (as it presented all 8 
+drives as 8 units on a scsi chain) with linux md raid-5, and I have now moved onto 3 Promise 
+SATA150-TX4 units in an md raid-5.
 
-=====
-Terry
+I did play with the highpoint raid-5 (which can now span controllers) and it's management features, 
+hotswap and hot-rebuild were quite good.
 
-__________________________________
-Do you Yahoo!?
-Yahoo! Small Business $15K Web Design Giveaway 
-http://promotions.yahoo.com/design_giveaway/
+Not that I'm advocating hardware or faux hardware raid, just noting that linux software raid still 
+has a large deficiency.
+
+Regards,
+Brad
