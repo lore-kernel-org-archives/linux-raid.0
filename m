@@ -1,30 +1,24 @@
-From: mru@kth.se (=?iso-8859-1?q?M=E5ns_Rullg=E5rd?=)
-Subject: Force RAID1 as clean
-Date: Tue, 06 Jan 2004 03:13:17 +0100
+From: Steve Hill <steve@navaho.co.uk>
+Subject: Raid 1 without a persistent superblock
+Date: Tue, 6 Jan 2004 13:00:04 +0000 (GMT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <yw1xn091zuwy.fsf@ford.guide>
+Message-ID: <Pine.LNX.4.58.0401061257440.27264@sorbus2.navaho>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-Is there a way to forcibly mark a RAID1 as clean?  I know it can be
-dangerous, I just don't want to wait for 200GB of scrap to resync.
+I can't seem to find any information on how to start a raid array which 
+doesn't have a persistent superblock - from what I can tell, raidstart 
+only works with devices with a persistent superblock, so how do I start a 
+raid array based entirely on the information in /etc/raidtab?
 
-=46or some reason, the resync is terribly slow in Linux 2.6.0, only
-~1MB/s.  DMA is enabled on all disks and the individual performance of
-each disk is normal.  There are no error messages from the kernel.  It
-just doesn't seem right.
+- Steve Hill
+Senior Software Developer                        Email: steve@navaho.co.uk
+Navaho Technologies Ltd.                           Tel: +44-870-7034015
 
---=20
-M=E5ns Rullg=E5rd
-mru@kth.se
+        ... Alcohol and calculus don't mix - Don't drink and derive! ...
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
