@@ -1,77 +1,38 @@
-From: Chris Zimmerman <czimmer@mclaneco.com>
-Subject: Re: Perhaps this has been answered before...
-Date: 22 Aug 2002 09:47:20 -0500
+From: "John P. Looney" <valen@tuatha.org>
+Subject: Re: Problems with RAID1 on cobalt raq3
+Date: Thu, 22 Aug 2002 16:25:45 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1030027640.31114.83.camel@zimmerman>
-References: <Pine.OSF.4.30.0208212024340.15250-100000@soul.helsinki.fi>
-	<3D63D0BD.50005@hum.auc.dk>  <20020821235326.GE5617@unthought.net>
+Message-ID: <20020822152545.GJ3670@jinny.ie>
+References: <200208172056.g7HKuHm05754@raq.iceblink.org> <1029624922.14769.119.camel@atherton> <20020819140815.GY26818@jinny.ie>
+Reply-To: valen@tuatha.org
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature";
-	boundary="=-It07cvd4atHefAkSli2e"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20020821235326.GE5617@unthought.net>
+Content-Disposition: inline
+In-Reply-To: <20020819140815.GY26818@jinny.ie>
 To: linux-raid@vger.kernel.org
+Cc: ilug@linux.ie
 List-Id: linux-raid.ids
 
+On Mon, Aug 19, 2002 at 03:08:16PM +0100, John P. Looney mentioned:
+>  This is likely because to get it to boot, like the cobalt, I'm actually
+> passing root=/dev/hda5 to the kernel, not /dev/md0. 
 
---=-It07cvd4atHefAkSli2e
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+ Just to solve this...the reason I was booting the box with
+root=/dev/hda5, not /dev/md0 was because /dev/md0 wasn't booting - it
+would barf with 'can't find init'.
 
-Based on this, I have upgraded the system to 2.4.19.  Since this is a
-cluster, I will run this kernel on the secondary (and it seems to be
-working fine so far), then I will push this to the primary after about
-30-60 days of stable operation.  Thanks to all for the suggestions and
-help.=20
+ It turns out that this is because I was populating md0 with tar. Which
+seems to have 'issues' with crosslinked files - for instance, it was
+trying to make a hard link of glibc.so to hda - and failing. It was only
+as I did it again with a friend present, that he spotted the errors, and
+queried them. We noticed that the hard linked files just didn't exist on
+the new rootfs.
 
-Chris Zimmerman=20
+ When we duplicated the filesystems with dump instead of tar, it worked
+fine, I was able to tell lilo to use root=/dev/md0 and everything worked.
 
-On Wed, 2002-08-21 at 18:53, Jakob Oestergaard wrote:
-    On Wed, Aug 21, 2002 at 07:41:17PM +0200, Mads Peter Bach wrote:
-    ...
-    > >I however do not see why this should freeze your machine.
-    >=20
-    >=20
-    > Me neither. Swap on RAID-1 works fine for me (though on 2.4).
-   =20
-    RAID in 2.2 is seriously broken unless the RAID patches are applied.
-   =20
-    With the patches, there are problems with stability in the case where
-    you actually swap on the RAID device.
-   =20
-    With a recent 2.4 kernel, the swap stability problem should be gone. At
-    least swapping on RAID-1 works for me as well, on several systems here.
-   =20
-    So just don't swap on RAID if you're on 2.2  :)   On 2.4 it should work=
-.
-   =20
-    --=20
-    ................................................................
-    :   jakob@unthought.net   : And I see the elder races,         :
-    :.........................: putrid forms of man                :
-    :   Jakob =D8stergaard      : See him rise and claim the earth,  :
-    :        OZ9ABN           : his downfall is at hand.           :
-    :.........................:............{Konkhra}...............:
-    -
-    To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-    the body of a message to majordomo@vger.kernel.org
-    More majordomo info at  http://vger.kernel.org/majordomo-info.html
-   =20
-   =20
-   =20
+ Woohoo.
 
---=-It07cvd4atHefAkSli2e
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+Kate
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.0.6 (GNU/Linux)
-Comment: For info see http://www.gnupg.org
-
-iD8DBQA9ZPl49u4GRRZAJ2YRAgVqAJ9gwxSqUOi5JCGOzjx16ByfMMrM8QCgr+Si
-0wUrw8wI3UytyAvRFghpcps=
-=LZJ+
------END PGP SIGNATURE-----
-
---=-It07cvd4atHefAkSli2e--
