@@ -1,212 +1,76 @@
-From: =?iso-8859-1?Q?Agust=EDn_Ciciliani?= <agustin@maderonet.net.ar>
-Subject: RAID 1 - mdadm - Different UUID when booting
-Date: Mon, 4 Oct 2004 09:13:49 -0300
-Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <00e501c4aa0b$9b409680$6800a8c0@Agus>
+From: William Knop <wknop@andrew.cmu.edu>
+Subject: libata badness
+Date: Mon, 4 Oct 2004 08:12:32 -0400 (EDT)
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <Pine.LNX.4.60-041.0410040656001.2350@unix48.andrew.cmu.edu>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_NextPart_000_00E2_01C4A9F2.75CEBF80"
-Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Return-path: <linux-ide-owner@vger.kernel.org>
+To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-raid.ids
 
-This is a multi-part message in MIME format.
+Hi all,
 
-------=_NextPart_000_00E2_01C4A9F2.75CEBF80
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 8bit
+I'm running a raid5 array atop a few sata drives via a promise tx4 
+controller. The kernel is the official fedora lk 2.6.8-1, although I had 
+run a few different kernels (never entirely successfully) with this array 
+in the past.
 
-Hi,
+In fact, this past weekend, I was getting oopses and panics (on lk 
+2.6.8.1, 2.6.9-rc3, 2.6.9-rc3-mm1, and 2.6.9-rc3 w/ Jeff Garzik's recent 
+libata patches) all of which happened when rebuilding a spare drive in the 
+array. Unfortunately, somehow my root filesystem (ext3) got blown away-- 
+it was on a reliable scsi drive (no bad blocks; I checked afterwards), and 
+an adaptec aic7xxx host. The ram was good; I ran memtest86 on it. I'm 
+assuming this was caused by some major kernel corruption, originating from 
+libata.
 
-Everytime I boot my system It says that my partitions have different UUID.
-If anybody know what I can do about it...
+I have since rebuilt my computer using an AMD Sempron (basically a Duron) 
+rather than a P4. Other than that (cpu + m/b), it's the same hardware.
 
- Thanks in advance,
+The errors I got over the weekend are similar to the one I just captured 
+on my fresh fc2/lk2.6.8-1 install (at the same point; the spare disk had 
+begun rebuilding). It's attached below.
 
- Agustín
+Anyway, I haven't been able to find any other reports of this, so I'm at a 
+loss about what to do. I hesitate to bring my array up at all now, for 
+fear of blowing it away. Any assistance would be greatly appriciated.
+
+Thanks much,
+Will
 
 
-------=_NextPart_000_00E2_01C4A9F2.75CEBF80
-Content-Type: text/plain;
-	name="different UUID.txt"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename="different UUID.txt"
-
-Oct  1 03:34:41 maria kernel: md: Autodetecting RAID arrays.
-Oct  1 03:34:41 maria kernel: md: autorun ...
-Oct  1 03:34:41 maria kernel: md: considering hdc13 ...
-Oct  1 03:34:41 maria kernel: md:  adding hdc13 ...
-Oct  1 03:34:41 maria kernel: md: hdc12 has different UUID to hdc13
-Oct  1 03:34:41 maria kernel: md: hdc11 has different UUID to hdc13
-Oct  1 03:34:41 maria kernel: md: hdc9 has different UUID to hdc13
-Oct  1 03:34:41 maria kernel: md: hdc8 has different UUID to hdc13
-Oct  1 03:34:41 maria kernel: md: hdc7 has different UUID to hdc13
-Oct  1 03:34:41 maria kernel: md: hdc6 has different UUID to hdc13
-Oct  1 03:34:41 maria kernel: md: hdc5 has different UUID to hdc13
-Oct  1 03:34:41 maria kernel: md: hdc2 has different UUID to hdc13
-Oct  1 03:34:41 maria kernel: md: hdc1 has different UUID to hdc13
-Oct  1 03:34:41 maria kernel: md:  adding hda13 ...
-Oct  1 03:34:41 maria kernel: md: hda12 has different UUID to hdc13
-Oct  1 03:34:41 maria kernel: md: hda11 has different UUID to hdc13
-Oct  1 03:34:41 maria kernel: md: hda9 has different UUID to hdc13
-Oct  1 03:34:41 maria kernel: md: hda8 has different UUID to hdc13
-Oct  1 03:34:41 maria kernel: md: hda7 has different UUID to hdc13
-Oct  1 03:34:41 maria kernel: md: hda6 has different UUID to hdc13
-Oct  1 03:34:41 maria kernel: md: hda5 has different UUID to hdc13
-Oct  1 03:34:41 maria kernel: md: hda2 has different UUID to hdc13
-Oct  1 03:34:41 maria kernel: md: hda1 has different UUID to hdc13
-Oct  1 03:34:41 maria kernel: md: created md13
-Oct  1 03:34:41 maria kernel: md: bind<hda13>
-Oct  1 03:34:41 maria kernel: md: bind<hdc13>
-Oct  1 03:34:41 maria kernel: md: running: <hdc13><hda13>
-Oct  1 03:34:41 maria kernel: raid1: raid set md13 active with 2 out of 2 mirrors
-Oct  1 03:34:41 maria kernel: md: considering hdc12 ...
-Oct  1 03:34:41 maria kernel: md:  adding hdc12 ...
-Oct  1 03:34:41 maria kernel: md: hdc11 has different UUID to hdc12
-Oct  1 03:34:41 maria kernel: md: hdc9 has different UUID to hdc12
-Oct  1 03:34:41 maria kernel: md: hdc8 has different UUID to hdc12
-Oct  1 03:34:41 maria kernel: md: hdc7 has different UUID to hdc12
-Oct  1 03:34:41 maria kernel: md: hdc6 has different UUID to hdc12
-Oct  1 03:34:41 maria kernel: md: hdc5 has different UUID to hdc12
-Oct  1 03:34:41 maria kernel: md: hdc2 has different UUID to hdc12
-Oct  1 03:34:41 maria kernel: md: hdc1 has different UUID to hdc12
-Oct  1 03:34:41 maria kernel: md:  adding hda12 ...
-Oct  1 03:34:41 maria kernel: md: hda11 has different UUID to hdc12
-Oct  1 03:34:41 maria kernel: md: hda9 has different UUID to hdc12
-Oct  1 03:34:41 maria kernel: md: hda8 has different UUID to hdc12
-Oct  1 03:34:41 maria kernel: md: hda7 has different UUID to hdc12
-Oct  1 03:34:41 maria kernel: md: hda6 has different UUID to hdc12
-Oct  1 03:34:41 maria kernel: md: hda5 has different UUID to hdc12
-Oct  1 03:34:41 maria kernel: md: hda2 has different UUID to hdc12
-Oct  1 03:34:41 maria kernel: md: hda1 has different UUID to hdc12
-Oct  1 03:34:41 maria kernel: md: created md12
-Oct  1 03:34:41 maria kernel: md: bind<hda12>
-Oct  1 03:34:41 maria kernel: md: bind<hdc12>
-Oct  1 03:34:41 maria kernel: md: running: <hdc12><hda12>
-Oct  1 03:34:41 maria kernel: raid1: raid set md12 active with 2 out of 2 mirrors
-Oct  1 03:34:41 maria kernel: md: considering hdc11 ...
-Oct  1 03:34:41 maria kernel: md:  adding hdc11 ...
-Oct  1 03:34:41 maria kernel: md: hdc9 has different UUID to hdc11
-Oct  1 03:34:41 maria kernel: md: hdc8 has different UUID to hdc11
-Oct  1 03:34:41 maria kernel: md: hdc7 has different UUID to hdc11
-Oct  1 03:34:41 maria kernel: md: hdc6 has different UUID to hdc11
-Oct  1 03:34:41 maria kernel: md: hdc5 has different UUID to hdc11
-Oct  1 03:34:41 maria kernel: md: hdc2 has different UUID to hdc11
-Oct  1 03:34:41 maria kernel: md: hdc1 has different UUID to hdc11
-Oct  1 03:34:41 maria kernel: md:  adding hda11 ...
-Oct  1 03:34:41 maria kernel: md: hda9 has different UUID to hdc11
-Oct  1 03:34:41 maria kernel: md: hda8 has different UUID to hdc11
-Oct  1 03:34:41 maria kernel: md: hda7 has different UUID to hdc11
-Oct  1 03:34:41 maria kernel: md: hda6 has different UUID to hdc11
-Oct  1 03:34:41 maria kernel: md: hda5 has different UUID to hdc11
-Oct  1 03:34:41 maria kernel: md: hda2 has different UUID to hdc11
-Oct  1 03:34:41 maria kernel: md: hda1 has different UUID to hdc11
-Oct  1 03:34:41 maria kernel: md: created md11
-Oct  1 03:34:41 maria kernel: md: bind<hda11>
-Oct  1 03:34:41 maria kernel: md: bind<hdc11>
-Oct  1 03:34:41 maria kernel: md: running: <hdc11><hda11>
-Oct  1 03:34:41 maria kernel: raid1: raid set md11 active with 2 out of 2 mirrors
-Oct  1 03:34:41 maria kernel: md: considering hdc9 ...
-Oct  1 03:34:41 maria kernel: md:  adding hdc9 ...
-Oct  1 03:34:41 maria kernel: md: hdc8 has different UUID to hdc9
-Oct  1 03:34:41 maria kernel: md: hdc7 has different UUID to hdc9
-Oct  1 03:34:41 maria kernel: md: hdc6 has different UUID to hdc9
-Oct  1 03:34:41 maria kernel: md: hdc5 has different UUID to hdc9
-Oct  1 03:34:41 maria kernel: md: hdc2 has different UUID to hdc9
-Oct  1 03:34:41 maria kernel: md: hdc1 has different UUID to hdc9
-Oct  1 03:34:41 maria kernel: md:  adding hda9 ...
-Oct  1 03:34:41 maria kernel: md: hda8 has different UUID to hdc9
-Oct  1 03:34:41 maria kernel: md: hda7 has different UUID to hdc9
-Oct  1 03:34:41 maria kernel: md: hda6 has different UUID to hdc9
-Oct  1 03:34:41 maria kernel: md: hda5 has different UUID to hdc9
-Oct  1 03:34:41 maria kernel: md: hda2 has different UUID to hdc9
-Oct  1 03:34:41 maria kernel: md: hda1 has different UUID to hdc9
-Oct  1 03:34:41 maria kernel: md: created md9
-Oct  1 03:34:41 maria kernel: md: bind<hda9>
-Oct  1 03:34:41 maria kernel: md: bind<hdc9>
-Oct  1 03:34:41 maria kernel: md: running: <hdc9><hda9>
-Oct  1 03:34:41 maria kernel: raid1: raid set md9 active with 2 out of 2 mirrors
-Oct  1 03:34:41 maria kernel: md: considering hdc8 ...
-Oct  1 03:34:41 maria kernel: md:  adding hdc8 ...
-Oct  1 03:34:41 maria kernel: md: hdc7 has different UUID to hdc8
-Oct  1 03:34:41 maria kernel: md: hdc6 has different UUID to hdc8
-Oct  1 03:34:41 maria kernel: md: hdc5 has different UUID to hdc8
-Oct  1 03:34:41 maria kernel: md: hdc2 has different UUID to hdc8
-Oct  1 03:34:41 maria kernel: md: hdc1 has different UUID to hdc8
-Oct  1 03:34:41 maria kernel: md:  adding hda8 ...
-Oct  1 03:34:41 maria kernel: md: hda7 has different UUID to hdc8
-Oct  1 03:34:41 maria kernel: md: hda6 has different UUID to hdc8
-Oct  1 03:34:41 maria kernel: md: hda5 has different UUID to hdc8
-Oct  1 03:34:41 maria kernel: md: hda2 has different UUID to hdc8
-Oct  1 03:34:41 maria kernel: md: hda1 has different UUID to hdc8
-Oct  1 03:34:41 maria kernel: md: created md8
-Oct  1 03:34:41 maria kernel: md: bind<hda8>
-Oct  1 03:34:41 maria kernel: md: bind<hdc8>
-Oct  1 03:34:41 maria kernel: md: running: <hdc8><hda8>
-Oct  1 03:34:41 maria kernel: raid1: raid set md8 active with 2 out of 2 mirrors
-Oct  1 03:34:41 maria kernel: md: considering hdc7 ...
-Oct  1 03:34:41 maria kernel: md:  adding hdc7 ...
-Oct  1 03:34:41 maria kernel: md: hdc6 has different UUID to hdc7
-Oct  1 03:34:41 maria kernel: md: hdc5 has different UUID to hdc7
-Oct  1 03:34:41 maria kernel: md: hdc2 has different UUID to hdc7
-Oct  1 03:34:41 maria kernel: md: hdc1 has different UUID to hdc7
-Oct  1 03:34:41 maria kernel: md:  adding hda7 ...
-Oct  1 03:34:41 maria kernel: md: hda6 has different UUID to hdc7
-Oct  1 03:34:41 maria kernel: md: hda5 has different UUID to hdc7
-Oct  1 03:34:41 maria kernel: md: hda2 has different UUID to hdc7
-Oct  1 03:34:41 maria kernel: md: hda1 has different UUID to hdc7
-Oct  1 03:34:41 maria kernel: md: created md7
-Oct  1 03:34:41 maria kernel: md: bind<hda7>
-Oct  1 03:34:41 maria kernel: md: bind<hdc7>
-Oct  1 03:34:41 maria kernel: md: running: <hdc7><hda7>
-Oct  1 03:34:41 maria kernel: raid1: raid set md7 active with 2 out of 2 mirrors
-Oct  1 03:34:41 maria kernel: md: considering hdc6 ...
-Oct  1 03:34:41 maria kernel: md:  adding hdc6 ...
-Oct  1 03:34:41 maria kernel: md: hdc5 has different UUID to hdc6
-Oct  1 03:34:41 maria kernel: md: hdc2 has different UUID to hdc6
-Oct  1 03:34:41 maria kernel: md: hdc1 has different UUID to hdc6
-Oct  1 03:34:41 maria kernel: md:  adding hda6 ...
-Oct  1 03:34:41 maria kernel: md: hda5 has different UUID to hdc6
-Oct  1 03:34:41 maria kernel: md: hda2 has different UUID to hdc6
-Oct  1 03:34:41 maria kernel: md: hda1 has different UUID to hdc6
-Oct  1 03:34:41 maria kernel: md: created md6
-Oct  1 03:34:41 maria kernel: md: bind<hda6>
-Oct  1 03:34:41 maria kernel: md: bind<hdc6>
-Oct  1 03:34:41 maria kernel: md: running: <hdc6><hda6>
-Oct  1 03:34:41 maria kernel: raid1: raid set md6 active with 2 out of 2 mirrors
-Oct  1 03:34:41 maria kernel: md: considering hdc5 ...
-Oct  1 03:34:41 maria kernel: md:  adding hdc5 ...
-Oct  1 03:34:41 maria kernel: md: hdc2 has different UUID to hdc5
-Oct  1 03:34:41 maria kernel: md: hdc1 has different UUID to hdc5
-Oct  1 03:34:41 maria kernel: md:  adding hda5 ...
-Oct  1 03:34:41 maria kernel: md: hda2 has different UUID to hdc5
-Oct  1 03:34:41 maria kernel: md: hda1 has different UUID to hdc5
-Oct  1 03:34:41 maria kernel: md: created md5
-Oct  1 03:34:41 maria kernel: md: bind<hda5>
-Oct  1 03:34:41 maria kernel: md: bind<hdc5>
-Oct  1 03:34:41 maria kernel: md: running: <hdc5><hda5>
-Oct  1 03:34:41 maria kernel: raid1: raid set md5 active with 2 out of 2 mirrors
-Oct  1 03:34:41 maria kernel: md: considering hdc2 ...
-Oct  1 03:34:41 maria kernel: md:  adding hdc2 ...
-Oct  1 03:34:41 maria kernel: md: hdc1 has different UUID to hdc2
-Oct  1 03:34:41 maria kernel: md:  adding hda2 ...
-Oct  1 03:34:41 maria kernel: md: hda1 has different UUID to hdc2
-Oct  1 03:34:41 maria kernel: md: created md2
-Oct  1 03:34:41 maria kernel: md: bind<hda2>
-Oct  1 03:34:41 maria kernel: md: bind<hdc2>
-Oct  1 03:34:41 maria kernel: md: running: <hdc2><hda2>
-Oct  1 03:34:41 maria kernel: raid1: raid set md2 active with 2 out of 2 mirrors
-Oct  1 03:34:41 maria kernel: md: considering hdc1 ...
-Oct  1 03:34:41 maria kernel: md:  adding hdc1 ...
-Oct  1 03:34:41 maria kernel: md:  adding hda1 ...
-Oct  1 03:34:41 maria kernel: md: created md1
-Oct  1 03:34:41 maria kernel: md: bind<hda1>
-Oct  1 03:34:41 maria kernel: md: bind<hdc1>
-Oct  1 03:34:41 maria kernel: md: running: <hdc1><hda1>
-Oct  1 03:34:41 maria kernel: raid1: raid set md1 active with 2 out of 2 mirrors
-Oct  1 03:34:41 maria kernel: md: ... autorun DONE.
-
-------=_NextPart_000_00E2_01C4A9F2.75CEBF80--
+---------- SNIP ----------
+Unable to handle kernel paging request at virtual address 01000004
+  printing eip:
+229e4d8c
+*pde = 00000000
+Oops: 0000 [#1]
+Modules linked in: raid5 xor sata_promise md5 ipv6 parport_pc lp parport 
+autofs4 sunrpc sk98lin sg joydev dm_mod uhci_hcd ehci_hcd button battery 
+asus_acpi ac ext3 jbd sata_via libata aic7xxx sd_mod scsi_mod
+CPU:    0
+EIP:    0060:[<229e4d8c>]    Not tainted
+EFLAGS: 00010206   (2.6.8-1.521)
+EIP is at handle_stripe+0x29a/0x1407 [raid5]
+eax: 00000001   ebx: 00000000   ecx: 00915cb8   edx: 21f7e1c0
+esi: 1ccbd118   edi: 21f7e1c0   ebp: 01000000   esp: 1d300f28
+ds: 007b   es: 007b   ss: 0068
+Process md0_raid5 (pid: 2626, threadinfo=1d300000 task=1d317970)
+Stack: 2283eb57 20db8000 21f7e1c0 21c30288 1ccbd204 20db8000 00000001 
+1ccbd158
+        00000002 00000000 00000000 00000001 00000000 00000000 00000001 
+00000000
+        00000001 00000001 00000000 00000003 1ccbd0ac 21f7e1c0 1ccbd0ac 
+21f76c00
+Call Trace:
+  [<2283eb57>] ata_scsi_queuecmd+0xbe/0xc7 [libata]
+  [<229e6b1c>] raid5d+0x1ce/0x2f8 [raid5]
+  [<0228f5d2>] md_thread+0x227/0x256
+  [<0211be05>] autoremove_wake_function+0x0/0x2d
+  [<0211be05>] autoremove_wake_function+0x0/0x2d
+  [<0228f3ab>] md_thread+0x0/0x256
+  [<021041d9>] kernel_thread_helper+0x5/0xb
+Code: 8b 55 04 83 c1 08 8b 45 00 83 d3 00 39 da 72 0e 0f 87 e0 01
+---------- SNIP ----------
 
