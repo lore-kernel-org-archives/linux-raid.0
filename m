@@ -1,58 +1,25 @@
-From: Alvin Oga <aoga@Maggie.Linux-Consulting.com>
-Subject: Re: PDC 20276 RAID support in 2.4.18
-Date: Fri, 26 Jul 2002 17:51:29 -0700 (PDT)
+From: Holger Kiehl <Holger.Kiehl@dwd.de>
+Subject: What is the status of SW-Raid in 2.5.x
+Date: Mon, 29 Jul 2002 10:20:24 +0200 (CEST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.3.96.1020726174544.22189A-100000@Maggie.Linux-Consulting.com>
-References: <3D412ED5.7000209@mvista.com>
+Message-ID: <Pine.LNX.4.33.0207291008200.29640-100000@talentix.dwd.de>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3D412ED5.7000209@mvista.com>
-To: Steven Dake <sdake@mvista.com>
-Cc: arjanv@redhat.com, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hello
 
-hi ya steve
+What's the status of SW-Raid in the 2.5.x kernel? I did try it with
+2.5.29 and it does seem to boot fine, however when booting 2.4.19-rc1
+it always whant's to resink and then sometimes fails because
+it kicks out one or more drives telling me they are bad. Using
+only 2.4.19-rc1 everything is ok and I can reboot as much as I want.
 
-how was the system tested ???
+My setup is raid1 as root and /home is a raid5 spread over 6 disks
+(4 scsci and 2 ide's) and there is also a raid0 partition for playing.
+There are also three swap raid1 partitions. System has two CPU's.
 
--- my simple raid-compatibility test is:
-	( assuming raid1 or raid5 setup on ide disks )
-
-- pull out /dev/hda
-	- see if it boots
-
-- pull out /dev/hdc  ( the other boot disk )
-	- see if it boots
-
-- plug a virgin ( unformatted/unpartitioned disk )
-  into either /dev/hda or /dev/hdc
-	- see if it boots and resyncs itself
-
-if the system doesnt boot or doesnt resync ( all by itself )
-than i'd see its a problem and need more fixing... and tweeking
-
-- i disable all onboard ( motherboard/firmware based raid )
-
-have fun
-alvin
-
-the pdc 202xx series chips are great for sw raid5...
-( inexpensive, functional and works in the promise/maxtor pci cards )
-
-On Fri, 26 Jul 2002, Steven Dake wrote:
-
-> Arjan and others,
-> 
-> I have added support for the PDC 20276 used on Gigabyte GA-8IHXP (and 
-> possibly other motherboards) to the ATARAID feature of the linux 2.4.18 
-> kernel.  I have tested that the pdcraid.c code works with this device.
-> 
-> I suspect you can drive this patch into the mainline kernel, but if you 
-> know of a better person, please advise.
-> 
-> Thanks!
-> -steve
-> 
+Holger
 
