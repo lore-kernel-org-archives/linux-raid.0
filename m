@@ -1,8 +1,8 @@
 From: "Phil Drummond" <raidtools@fubard.org>
-Subject: [PATCH] raidreconf (v2)
-Date: Sat, 6 Dec 2003 13:13:34 -0000 (GMT)
+Subject: repost {PATCH} parser.c stronger
+Date: Sat, 6 Dec 2003 13:19:39 -0000 (GMT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <32812.192.168.65.254.1070716414.squirrel@web.fubard.org>
+Message-ID: <32818.192.168.65.254.1070716779.squirrel@web.fubard.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
@@ -10,247 +10,349 @@ Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-ok, restored bits of Jakob's code that I should never have touched in the first place and we seem to be in business.
-
-happily converting between various combinations of raid0 and raid5 with & without spares, with component devices of different sizes.
-
-anyone out there able to break it ?
-
-Phil.
+and parser.c not trashed by the wordwrap in my email client. doh.
 
 
-diff -ur raidtools-1.00.3/raidreconf.c raidtools-1.00.3-rrc_raid5_spare+unequal_v2/raidreconf.c
---- raidtools-1.00.3/raidreconf.c       Wed Jan 15 08:58:25 2003
-+++ raidtools-1.00.3-rrc_raid5_spare+unequal_v2/raidreconf.c    Sat Dec  6 01:47:09 2003
-@@ -93,7 +93,7 @@
-        }
+diff -ur raidtools-1.00.3/parser.c raidtools-1.00.3+parser_stronger/parser.c
+--- raidtools-1.00.3/parser.c   Wed Jan 15 08:58:25 2003
++++ raidtools-1.00.3+parser_stronger/parser.c   Wed Dec  3 20:12:50 2003
+@@ -36,7 +36,7 @@
 
-        if (version) {
--               printf ("raidreconf 0.1.2 for mkraid version %d.%d.%d\n",
-+               printf ("raidreconf 0.1.2-h for mkraid version %d.%d.%d\n",
-                        MKRAID_MAJOR_VERSION, MKRAID_MINOR_VERSION,
-                        MKRAID_PATCHLEVEL_VERSION);
-                return EXIT_VERSION;
-@@ -175,7 +175,7 @@
-                fprintf (stderr, "Parsing %s\n", old_raidtab);
-                if (parse_config (fp)) {
-                        fprintf (stderr,
--                                "Cannot parse old-array configuration file");
-+                                "Cannot parse old-array configuration file\n");
-                        return EXIT_FAILURE;
-                }
-
-@@ -218,7 +218,7 @@
-                fprintf (stderr, "Parsing %s\n", new_raidtab);
-                if (parse_config (fp)) {
-                        fprintf (stderr,
--                                "Cannot parse new-array configuration file.\n");
-+                                "Cannot parse new-array configuration file\n");
-                        return EXIT_FAILURE;
-                }
-
-@@ -351,7 +351,7 @@
-        int i;
-
-        *sum = 0;
--       for (i = 0; i != cfg->array.param.nr_disks; i++) {
-+       for (i = 0; i != cfg->array.param.raid_disks; i++) {
-                int dnum = cfg->array.disks[i].raid_disk;
-                char *devname = cfg->device_name[dnum];
-                int fd = open (devname, O_RDONLY);
-diff -ur raidtools-1.00.3/reconfiguration.c raidtools-1.00.3-rrc_raid5_spare+unequal_v2/reconfiguration.c
---- raidtools-1.00.3/reconfiguration.c  Wed Jan 15 08:58:25 2003
-+++ raidtools-1.00.3-rrc_raid5_spare+unequal_v2/reconfiguration.c       Thu Dec  4 00:57:57 2003
-@@ -94,11 +94,11 @@
-        source_disk_free_map =
-
-            (char **) malloc (sizeof (char *) *
--                             old_md_cfg->array.param.nr_disks);
-+                             old_md_cfg->array.param.raid_disks);
-        if (!source_disk_free_map)
-                return "Cannot allocate source_disk_free_map";
-
--       for (sd = 0; sd != old_md_cfg->array.param.nr_disks; sd++) {
-+       for (sd = 0; sd != old_md_cfg->array.param.raid_disks; sd++) {
-                /* initialize .reconf_blocks in rrc structure */
-                old_rrc_cfg[sd].reconf_blocks = old_rrc_cfg[sd].blocks;
- #if 0
-@@ -121,7 +121,7 @@
-        }
-
-        /* Initialize the sink disk .reconf_blocks as well */
--       for (sd = 0; sd != new_md_cfg->array.param.nr_disks; sd++) {
-+       for (sd = 0; sd != new_md_cfg->array.param.raid_disks; sd++) {
-                new_rrc_cfg[sd].reconf_blocks = new_rrc_cfg[sd].blocks;
- #if 0
-                new_rrc_cfg[sd].reconf_blocks = new_rrc_cfg[sd].chunks
-@@ -247,7 +247,7 @@
-
-        if (
-            (ret =
--            setup_free_blocks (old_md_cfg->array.param.nr_disks,
-+            setup_free_blocks (old_md_cfg->array.param.raid_disks,
-                                old_rrc_cfg))) return ret;
-
-        if ((ret = initialize_unique_disks ()))
-diff -ur raidtools-1.00.3/rrc_common.c raidtools-1.00.3-rrc_raid5_spare+unequal_v2/rrc_common.c
---- raidtools-1.00.3/rrc_common.c       Wed Jan 15 08:58:25 2003
-+++ raidtools-1.00.3-rrc_raid5_spare+unequal_v2/rrc_common.c    Thu Dec  4 00:57:57 2003
-@@ -434,7 +434,7 @@
-
-        /*
-         * This may be a request to free a block from the source disks, where the
--        * corrosponding location on the sink disks is not yet free.
-+        * corresponding location on the sink disks is not yet free.
-         * The common reader will detect this case and bring two gifts from only
-         * one wish.  So, worst case, we will end up with twice as many gifts
-         * as we had wishes.
-@@ -457,7 +457,7 @@
-        unsigned long ret = 0;
-        int d;
-
--       for (d = 0; d != old_md_cfg->array.param.nr_disks; d++) {
-+       for (d = 0; d != old_md_cfg->array.param.raid_disks; d++) {
-                ret += nr_free_disk_blocks[d];
- /*      fprintf(stderr, "\nFree blocks in disk %i = %lu\n", d, nr_free_disk_blocks[d]); */
-        }
-@@ -470,7 +470,7 @@
+ static int process_entry (char *par, char *val_s)
  {
-        int d;
+-       int val, i;
++       int val, i, j;
+        md_raid_info_t *array;
+        md_cfg_entry_t *last;
 
--       for (d = 0; d != old_md_cfg->array.param.nr_disks; d++)
-+       for (d = 0; d != old_md_cfg->array.param.raid_disks; d++)
-                if (old_rrc_cfg[d].disk_id == diskid)
+@@ -68,6 +68,10 @@
+                }
+                strcpy(cfg->md_name, val_s);
+                cfg->array.param.nr_disks = 0;
++               cfg->array.param.level = -9;
++               cfg->array.param.layout = -1;
++               cfg->array.param.raid_disks = -1;
++               cfg->array.param.spare_disks = -1;
+
+                last = cfg_head;
+                while (last && last->next) last = last->next;
+@@ -101,37 +105,43 @@
+                        fprintf(stderr, "raid level %d not supported\n", val);
                         return 1;
-        return 0;
-@@ -482,10 +482,10 @@
-        int disk;
-        unsigned long blk, ofs;
-
--       for (disk = 0; disk != old_md_cfg->array.param.nr_disks; disk++)
-+       for (disk = 0; disk != old_md_cfg->array.param.raid_disks; disk++)
-                if (old_rrc_cfg[disk].disk_id == diskid)
-                        break;
--       if (disk == old_md_cfg->array.param.nr_disks) {
-+       if (disk == old_md_cfg->array.param.raid_disks) {
-                /* disk is not in source, so block is free per definition */
-                return 1;
-        }
-@@ -517,10 +517,10 @@
-        int disk;
-        unsigned long blk, ofs;
-
--       for (disk = 0; disk != old_md_cfg->array.param.nr_disks; disk++)
-+       for (disk = 0; disk != old_md_cfg->array.param.raid_disks; disk++)
-                if (old_rrc_cfg[disk].disk_id == diskid)
-                        break;
--       if (disk == old_md_cfg->array.param.nr_disks) {
-+       if (disk == old_md_cfg->array.param.raid_disks) {
-                /* disk is not in source, so block is free per definition */
-                fprintf (stderr, "\ndisk_id %i not in source\n", diskid);
-                return;
-@@ -582,10 +582,10 @@
-        int disk;
-        unsigned long blk, ofs;
-
--       for (disk = 0; disk != old_md_cfg->array.param.nr_disks; disk++)
-+       for (disk = 0; disk != old_md_cfg->array.param.raid_disks; disk++)
-                if (old_rrc_cfg[disk].disk_id == diskid)
-                        break;
--       if (disk == old_md_cfg->array.param.nr_disks) {
-+       if (disk == old_md_cfg->array.param.raid_disks) {
-                /* disk is not in source, so block cannot be unfreed
-                 * This is an acceptable error, (in order to keep the unfree_all_blocks() routines simple
-                 */
-@@ -626,7 +626,7 @@
- {
-        int disk;
-
--       for (disk = 0; disk != old_md_cfg->array.param.nr_disks; disk++) {
-+       for (disk = 0; disk != old_md_cfg->array.param.raid_disks; disk++) {
-                unsigned long blk;
-
-                fprintf (stderr, "\nUnfree blocks on disk %i\n", disk);
-@@ -673,7 +673,7 @@
-        const char *ret = 0;
-
-        /* Traverse sink disks */
--       for (dsk = 0; dsk != new_md_cfg->array.param.nr_disks; dsk++) {
-+       for (dsk = 0; dsk != new_md_cfg->array.param.raid_disks; dsk++) {
-                fulfilled_t *gift =
-
-                    gift_list_sink_diskid (new_rrc_cfg[dsk].disk_id);
-@@ -737,7 +737,7 @@
-         * to know that the write has completed, if we will be doing more
-         * sophisticated requesting in the future
-         */
--       for (dsk = 0; dsk != new_md_cfg->array.param.nr_disks; dsk++)
-+       for (dsk = 0; dsk != new_md_cfg->array.param.raid_disks; dsk++)
-                fsync (new_rrc_cfg[dsk].fd);
-
-        return ret;
-@@ -902,11 +902,11 @@
-                cdepth++;
-                /* Calculate block and disk numbers */
-                source_block = block * reconf_block_size;
--               for (dsk = 0; dsk != old_md_cfg->array.param.nr_disks;
-+               for (dsk = 0; dsk != old_md_cfg->array.param.raid_disks;
-                     dsk++)
-                        if (old_rrc_cfg[dsk].disk_id == diskid)
-                                break;
--               if (dsk == old_md_cfg->array.param.nr_disks) {
-+               if (dsk == old_md_cfg->array.param.raid_disks) {
-                        fprintf (stderr,
-                                 "Diskid %i is not in source, when freeing blocks and their friends...\n",
-                                 diskid);
-diff -ur raidtools-1.00.3/rrc_raid5.c raidtools-1.00.3-rrc_raid5_spare+unequal_v2/rrc_raid5.c
---- raidtools-1.00.3/rrc_raid5.c        Wed Jan 15 08:58:25 2003
-+++ raidtools-1.00.3-rrc_raid5_spare+unequal_v2/rrc_raid5.c     Sat Dec  6 02:08:46 2003
-@@ -39,10 +39,10 @@
-        if (cfg->array.param.level != 5)
-                return ("Wrong level for RAID-5 Driver");
-
--       if (cfg->array.param.nr_disks < 3)
-+       if (cfg->array.param.raid_disks < 3)
-                return "Too few disks for RAID5";
-
--       ctx->raid_disks = cfg->array.param.nr_disks;
-+       ctx->raid_disks = cfg->array.param.raid_disks;
-        ctx->data_disks = ctx->raid_disks-1;
-        ctx->chunk_size = cfg->array.param.chunk_size;
-        ctx->algorithm = cfg->array.param.layout;
-@@ -51,11 +51,16 @@
-
-        /* sum the total blocks in the array */
-        ctx->tot_chunks = 0;
--       for (d = 0; d < ctx->raid_disks; ++d)
--               ctx->tot_chunks += ctx->disks[d].chunks;
-+       for (d = 0; d < cfg->array.param.nr_disks; ++d) {
-+               if ((!ctx->tot_chunks) || (ctx->disks[d].chunks < ctx->tot_chunks)) {
-+                       ctx->tot_chunks = ctx->disks[d].chunks;
+                }
+-               array->param.level = val;
+-               if ((val == 0) || (val == -1))
+-                       array->param.not_persistent = 1;
+-               else
+-                       array->param.not_persistent = 0;
+-               return 0;
++               if (array->param.level == -9) {
++                       array->param.level = val;
++                       if ((val == 0) || (val == -1))
++                               array->param.not_persistent = 1;
++                       else
++                               array->param.not_persistent = 0;
++                       return 0;
++               } else {
++                       fprintf(stderr, "raid-level defined twice in %s\n", cfg->md_name);
++                       return 1;
 +               }
-+       }
-+       fprintf(stderr, "RAID5 smallest component %lu chunks\n", ctx->tot_chunks);
+        } else if (strcmp(par, "nr-raid-disks") == 0) {
+                if (val < 0)
+                        return 1;
+-               array->param.raid_disks = val;
+-               return 0;
++               if (array->param.raid_disks < 0) {
++                       array->param.raid_disks = val;
++                       return 0;
++               } else {
++                       fprintf(stderr, "nr-raid-disks defined twice in %s\n", cfg->md_name);
++                       return 1;
++               }
+        } else if (strcmp(par, "persistent-superblock") == 0) {
+                if ((val < 0) || (val > 1))
+                        return 1;
+                array->param.not_persistent = 1-val;
+                return 0;
+        } else if (strcmp(par, "nr-spare-disks") == 0) {
+-               if ((array->param.level < 1) && (array->param.level != -4) && val) {
+-                       fprintf(stderr, "nr-spare-disks must be zero for raid level %d\n", array->param.level);
+-                       return 1;
+-               }
+-
+                if (val < 0)
+                        return 1;
+-               array->param.spare_disks = val;
+-               return 0;
+-       } else if (strcmp(par, "parity-algorithm") == 0) {
+-               if (array->param.level != 5) {
+-                       fprintf(stderr, "parity-algorithm undefined for raid level %d\n", array->param.level);
++               if (array->param.spare_disks < 0) {
++                       array->param.spare_disks = val;
++                       return 0;
++               } else {
++                       fprintf(stderr, "nr-spare-disks defined twice in %s\n", cfg->md_name);
+                        return 1;
+                }
++       } else if (strcmp(par, "parity-algorithm") == 0) {
+                if (val < 0)
+                        val = parity_algorithm_to_num(val_s);
+                if (val < 0)
+@@ -139,6 +149,10 @@
+                array->param.layout = val;
+                return 0;
+        } else if (strcmp(par, "chunk-size") == 0) {
++               if (array->param.chunk_size) {
++                       fprintf(stderr, "chunk-size defined twice in %s\n", cfg->md_name);
++                       return 1;
++               }
+                if (!val || val % 4 || ((1 << (ffs(val)-1)) != val)) {
+                        fprintf(stderr, "invalid chunk-size (%dkB)\n", val);
+                        return 1;
+@@ -151,38 +165,84 @@
+                        return 1;
+                }
+                i = array->param.nr_disks++;
++               i--;
++               if ((i > 0) && (array->disks[i].raid_disk == -1)) {
++                       fprintf(stderr, "disk index line expected\n");
++                       return 1;
++               }
++               i++;
+                if ((cfg->device_name[i] = malloc(strlen(val_s) + 1)) == NULL) {
+                        fprintf(stderr, "out of memory\n");
+                        return 1;
+                }
+                strcpy(cfg->device_name[i], val_s);
+-               array->disks[i].raid_disk = i;
++               array->disks[i].raid_disk = -1;
+                return 0;
+        } else if (strcmp(par, "raid-disk") == 0) {
++               if (array->param.level == -9) {
++                       fprintf(stderr, "raid-level not defined before disks in %s\n", cfg->md_name);
++                       return 1;
++               }
++               if (array->param.raid_disks == -1) {
++                       fprintf(stderr, "nr-raid-disks not defined before disks in %s\n", cfg->md_name);
++                       return 1;
++               }
+                if (!array->param.nr_disks) {
+                        fprintf(stderr, "\"device\" line expected\n");
+                        return 1;
+                }
+-               if (val >= array->param.raid_disks) {
+-                       fprintf(stderr, "raid-disk should be smaller than raid_disks\n");
++               if ((val < 0 ) || (val >= array->param.raid_disks)) {
++                       fprintf(stderr, "bad raid-disk index %d\n", val);
+                        return 1;
+                }
+                i = array->param.nr_disks - 1;
++               if (array->disks[i].raid_disk != -1) {
++                       fprintf(stderr, "\"device\" line expected\n");
++                       return 1;
++               }
+                array->disks[i].raid_disk = val;
+                return 0;
+        } else if (strcmp(par, "spare-disk") == 0) {
++               if (array->param.level == -9) {
++                       fprintf(stderr, "raid-level not defined before disks in %s\n", cfg->md_name);
++                       return 1;
++               }
++               if (array->param.raid_disks == -1) {
++                       fprintf(stderr, "nr-raid-disks not defined before disks in %s\n", cfg->md_name);
++                       return 1;
++               }
+                if ((array->param.level != 5) && (array->param.level != 4) && (array->param.level != 1) && (array->param.level != -4)) {
+                        fprintf(stderr, "spare-disk not supported for raid level %d\n", array->param.level);
+                        return 1;
+                }
++               if (array->param.spare_disks < 1) {
++                       fprintf(stderr, "spare-disk defined but none expected for %s\n", cfg->md_name);
++                       return 1;
++               }
+                if (!array->param.nr_disks) {
+                        fprintf(stderr, "\"device\" line expected\n");
+                        return 1;
+                }
++               if ((val < 0) || (val >= array->param.spare_disks)) {
++                       fprintf(stderr, "bad spare-disk index %d\n", val);
++                       return 1;
++               }
+                i = array->param.nr_disks - 1;
+-               array->disks[i].raid_disk = i;
++               if (array->disks[i].raid_disk != -1) {
++                       fprintf(stderr, "\"device\" line expected\n");
++                       return 1;
++               }
++               array->disks[i].raid_disk = array->param.raid_disks + val;
+                return 0;
+        } else if (strcmp(par, "parity-disk") == 0) {
++               if (array->param.level == -9) {
++                       fprintf(stderr, "raid-level not defined before disks in %s\n", cfg->md_name);
++                       return 1;
++               }
++               if (array->param.raid_disks == -1) {
++                       fprintf(stderr, "nr-raid-disks not defined before disks in %s\n", cfg->md_name);
++                       return 1;
++               }
+                if (!array->param.nr_disks) {
+                        fprintf(stderr, "\"device\" line expected\n");
+                        return 1;
+@@ -192,23 +252,116 @@
+                        return 1;
+                }
+                i = array->param.nr_disks - 1;
++               if (array->disks[i].raid_disk != -1) {
++                       fprintf(stderr, "\"device\" line expected\n");
++                       return 1;
++               }
+                array->disks[i].raid_disk = array->param.raid_disks - 1;
+                return 0;
+        } else if (strcmp(par, "failed-disk") == 0) {
++               if (array->param.level == -9) {
++                       fprintf(stderr, "raid-level not defined before disks in %s\n", cfg->md_name);
++                       return 1;
++               }
++               if (array->param.raid_disks == -1) {
++                       fprintf(stderr, "nr-raid-disks not defined before disks in %s\n", cfg->md_name);
++                       return 1;
++               }
+                if ((array->param.level != 5) && (array->param.level != 4) && (array->param.level != 1)) {
+                        fprintf(stderr, "failed-disk not supported for raid level %d\n", array->param.level);
+                        return 1;
+                }
+-               if (val >= array->param.raid_disks) {
+-                       fprintf(stderr, "failed-disk should be smaller than raid_disks\n");
++               if (!array->param.nr_disks) {
++                       fprintf(stderr, "\"device\" line expected\n");
++                       return 1;
++               }
++               if ((val < 0) || (val >= array->param.raid_disks)) {
++                       fprintf(stderr, "bad failed-disk index %d\n", val);
+                        return 1;
+                }
+                i = array->param.nr_disks - 1;
++               if (array->disks[i].raid_disk != -1) {
++                       fprintf(stderr, "\"device\" line expected\n");
++                       return 1;
++               }
+                array->disks[i].raid_disk = val;
+                array->disks[i].state |= (1 << MD_DISK_FAULTY);
+                array->param.failed_disks++;
+                return 0;
+-
++       } else if (strcmp(par, "verify-stanza") == 0) {
++               /*
++                * check for missing and incompatible options
++                * check each slot in array index has an entry
++                */
++/*             fprintf(stderr, "verifying stanza %s\n", cfg->md_name); */
++               if (array->param.spare_disks == -1)
++                       array->param.spare_disks = 0;
++               if (array->param.level == -9) {
++                       fprintf(stderr, "raid-level not defined in %s\n", cfg->md_name);
++                       return 1;
++               }
++               if (!array->param.chunk_size && (array->param.level != -1)) {
++                       fprintf(stderr, "chunk-size not defined in %s\n", cfg->md_name);
++                       return 1;
++               }
++               if (array->param.raid_disks < 0) {
++                       fprintf(stderr, "nr-raid-disks not defined in %s\n", cfg->md_name);
++                       return 1;
++               }
++               if ((array->param.level < 1) && (array->param.level != -4) && (array->param.spare_disks != 0)) {
++                       fprintf(stderr, "nr-spare-disks must be zero for raid level %d in %s\n", array->param.level, cfg->md_name);
++                       return 1;
++               }
++               if ((array->param.layout > -1) && (array->param.level != 5)) {
++                       fprintf(stderr, "parity-algorithm undefined for raid level %d in %s\n", array->param.level, cfg->md_name);
++                       return 1;
++               }
++               if ((array->param.level == 5) && (array->param.layout < 0)) {
++                       fprintf(stderr, "parity-algorithm required for raid level %d in %s\n", array->param.level, cfg->md_name);
++                       return 1;
++               }
++               if (array->param.nr_disks != array->param.raid_disks + array->param.spare_disks) {
++                       fprintf(stderr, "device entries does not match defined number of disks in %s\n", cfg->md_name);
++                       return 1;
++               }
++               for (i = 0; i < array->param.nr_disks - 1; i++) {
++                       par = cfg->device_name[i];
++                       val = array->disks[i].raid_disk;
++                       if (val == -1) {
++                               fprintf(stderr, "%s index not set in %s\n",
++                                               par, cfg->md_name);
++                               return 1;
++                       }
++                       for (j = i + 1; j < array->param.nr_disks; j++) {
++                               if (strcmp(par, cfg->device_name[j]) == 0) {
++                                       fprintf(stderr, "%s not unique in %s\n", par, cfg->md_name);
++                                       return 1;
++                               }
++                               if (val == array->disks[j].raid_disk) {
++                                       fprintf(stderr, "error in disk indexes in %s\n", cfg->md_name);
++                                       return 1;
++                               }
++                       }
++               }
++               /* check last item as loop does disks - 1 */
++               if (array->disks[i].raid_disk == -1) {
++                       fprintf(stderr, "%s index not set in %s\n", cfg->device_name[i], cfg->md_name);
++                       return 1;
++               }
++               /* sort devices as we allow any order in raidtab */
++               for (i = 0; i < array->param.nr_disks - 1; i++) {
++                       par = cfg->device_name[i];
++                       val = array->disks[i].raid_disk;
++                       while (val != i) {
++                               cfg->device_name[i] = cfg->device_name[val];
++                               array->disks[i].raid_disk = array->disks[val].raid_disk;
++                               cfg->device_name[val] = par;
++                               array->disks[val].raid_disk = val;
++                               par = cfg->device_name[i];
++                               val = array->disks[i].raid_disk;
++                       }
++               }
++               return 0;
+        }
+        fprintf(stderr, "unrecognized option %s\n", par);
+        return 1;
+@@ -216,7 +369,7 @@
 
-        /* RAID5 uses one disk's worth of data for parity, so subtract it */
--       ctx->tot_chunks -= ctx->disks[0].chunks;
-+       ctx->tot_chunks *= (ctx->raid_disks - 1);
-+       fprintf(stderr, "RAID5 array total %lu chunks\n", ctx->tot_chunks);
+ int parse_config (FILE *fp)
+ {
+-       int nr = 0;
++       int nr = 0, indevflag = 0;
+        char line[MAX_LINE_LENGTH], par[MAX_LINE_LENGTH], val[MAX_LINE_LENGTH];
 
-        /* set up the disk_id -> disks[] mapping */
-        for (d = 0; d < ctx->raid_disks; ++d)
-@@ -84,8 +89,9 @@
-
-        for (d = 0; d < ctx->raid_disks; ++d)
-                ctx->disk_total_blocks[d] =
--                   cfgdisks[d].chunks * (ctx->chunk_size / MD_BLK_SIZ) /
--                   reconf_block_size;
-+                   (ctx->tot_chunks / (ctx->raid_disks - 1)) *
-+                       (ctx->chunk_size / MD_BLK_SIZ) /
-+                           reconf_block_size;
-
-        return NULL;
- }
+ #if DEBUG
+@@ -236,11 +389,25 @@
+ #if DEBUG
+                printf("par == %s, val == %s\n", par, val);
+ #endif /* DEBUG */
++               if (strcmp(par, "verify-stanza") == 0) {
++                       printf("detected error on line %d:\n\t%s", nr, line);
++                       return 1;
++               }
++               if (strcmp(par, "raiddev") == 0) {
++                       if (!indevflag) {
++                               indevflag++;
++                       } else {
++                               if (process_entry("verify-stanza", "0"))
++                                       return 1;
++                       }
++               }
+                if (process_entry(par, val)) {
+                        printf("detected error on line %d:\n\t%s", nr, line);
+                        return 1;
+                }
+        }
++       if ((indevflag) && (process_entry("verify-stanza", "0")))
++               return 1;
+ #if DEBUG
+        printf("finished to parse configuration file\n");
+ #endif /* DEBUG */
 
 
 
