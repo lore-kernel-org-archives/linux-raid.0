@@ -1,51 +1,54 @@
-From: "Kyle" <kyle@southa.com>
-Subject: Something md raid-5 questions
-Date: Sat, 21 Feb 2004 15:47:03 +0800
+From: Norman Schmidt <norman.schmidt@web.de>
+Subject: Re: strange nr. of devices in array
+Date: Sat, 21 Feb 2004 10:19:01 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <006e01c3f84e$e5a46680$353ffea9@kyle>
+Message-ID: <40372285.7060002@web.de>
+References: <20040220214811.0000192c@valo.lan.valo.at>
+Reply-To: schmidt@naa.net
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="big5"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <20040220214811.0000192c@valo.lan.valo.at>
+To: Christian Kivalo <valo@valo.at>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi all,
+Hi Christian!
 
-I'm planning to built a md raid-5 with 6 IDE-disks, and I have somethings
-questions, wish that someone here can give me some advance.
+Christian Kivalo schrieb:
+> hi everybody!
+> 
+> i found out, that the superblock of my raid5 array says it's built out
+> of 7 disks, but i created it with only 6 disk. the mdadm call used to
+> create the array was:
+>
 
-If I built a raid-5 like this:
-/dev/md0 (raid1 mirroring for /boot) :
-/dev/hda1, /dev/hdb1, /dev/hdc1, /dev/hdd1, /dev/hde1, /dev/hdf1
+> i'm using mdadm version 0.7.2, i think that is pretty old. i will
+> upgrade to a more recent version and recreate the array.
+> 
+> still i would like to know if i encountered a bug or if thats some other
+> problem. this mdadm version is the one from debian woody (stable).
+> 
+> 
+> thanks in advance
+> christian
 
-/dev/md1 (/dev/hdf2 being hot-spare disk):
-/dev/hda2 + /dev/hdb2 + /dev/hdc2 + /dev/hdd2 + /dev/hde2 + /dev/hdf2
+Yes, that is a bug in the (very old) 0.7.2 of Debian. Additionally, 
+these old versions cannot handle spare devices (after each assemble, you 
+hae to add them manually). Use at least mdadm 1.4.0, better the newest 
+(I believe 1.5.0). You do not need to recreate the array, simply stop it 
+and (re-)assemble it after you have the new mdadm in place - and the bug 
+and the wrong output is gone.
 
-1. If, one of the disk from hd(a-e) failed, will /dev/hdf auto re-built with
-contents of the failed disk?
-2. If, one of the disk from hd(a-e) failed AND /dev/hdf is rebuilded with
-contents of failed disk, can I shut down the machine, unplug /dev/hdf, plug
-it back as /dev/hd(a-e), and assume I can boot the machine and mount
-/dev/md0 and /dev/md1 w/o problems?
-3, If, /dev/hda dead, will there be any difficulty or is there any special
-things for me to recover the raid?
-4. Any special advance for builting such a raid5 ?
-5. I know SCSI is good and fast, but I can't really afford it (I need 6 x
-250GB, or 12 x 146GB for SCSI!), any recommended IDE controller / chipset
-known to be happy with kernel 2.6.x? I don't need/want any hardware RAID
-solutions, since I always think that, if the card itself got some problems
-..... I'll have a hard-time to get my data back.
+Had the same problem (that with the spare device) with SuSE 8.2 and 
+Debian Woody...
 
-6. Is there any up-to-date documentations for md raid5 for me to read from
-web?
+Bye, Norman.
 
-Thanks in advance, I read the maillist from the web so please CC my email if
-possible.
+-- 
 
-Kyle
-
-
-
-
+Norman Schmidt          Institut fuer Physikal. u. Theoret. Chemie
+Dipl.-Chem.             Friedrich-Alexander-Universitaet
+schmidt@naa.net         Erlangen-Nuernberg
+                         IT-Systembetreuer Physikalische Chemie
