@@ -1,53 +1,51 @@
-From: SoulBlazer <soul@lamp-post.net>
-Subject: Re: 2 HBA's and Multipath.
-Date: Mon, 8 Apr 2002 15:03:00 -0500
+From: "Gernot A. Weber" <gernot@tux-web.de>
+Subject: broken disk?
+Date: Mon, 8 Apr 2002 22:27:25 +0200 (CEST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20020408200445Z313701-22651+2147@vger.kernel.org>
-References: <20020408190441Z313735-22651+2113@vger.kernel.org> <20020408191622.GB21055@colombina.comedia.it>
+Message-ID: <Pine.LNX.4.33.0204082219000.845-100000@kopernikus.tux-web.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-In-Reply-To: <20020408191622.GB21055@colombina.comedia.it>
-To: bluca@comedia.it, linux-raid@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-What about write balancing ?
+Hi,
 
-I would also be interested in discussing a possible patch to the raid code to 
-do write/read balancing over N hba's if it is that trivial.
+since last weekend my machine (dual PIII-450) is attached to a software
+raid 5 (three scsi-disks - several partitions on each - three raid
+arrays). After a few hours the system freezes. I found foolowing ebtries
+in the logs:
 
-On April 8, 2002 03:16 pm, Luca Berra wrote:
-> On Mon, Apr 08, 2002 at 02:02:56PM -0500, SoulBlazer wrote:
-> > Question,
-> >
-> > I have 2 Qlogic Fiberchannel HBA's (2100F's) connected directly to both
-> > FCAL ports on my Sun A5200 22 Disk disk array.  If I enable multipath, do
-> > I get twice the throughput between my linux box and the array ? Or is
-> > multipath purely for failover.
-> >
-> > Additionally do I get twice the bandwidth anyhow since both HBA's see the
-> > same disk ?  How can I tell if either one or the other or both hba's are
-> > being utilized...
->
-> multipath does not do any read-balancing (see code below),
-> while i don't think it would be difficult to implement (cut&paste from
-> raid1.c) i did not have any time to try
->
-> only way i found to do read-balancing at the moment is if you have multiple
-> luns on your array you can create md configs with alternating channel
-> order.
->
-> regards,
-> Luca
->
-> ------- from 2.4.18-rc1/drivers/md/multipath.c
-> static int multipath_read_balance (multipath_conf_t *conf)
-> {
->         int disk;
->
->         for (disk = 0; disk < conf->raid_disks; disk++)
->                 if (conf->multipaths[disk].operational)
->                         return disk;
->         BUG();
->         return 0;
-> }
+Apr  8 20:56:01 kopernikus kernel: (scsi0:A:2:0): Unexpected busfree in
+Data-out
+ phase
+Apr  8 20:56:01 kopernikus kernel: SEQADDR == 0x1a6
+Apr  8 20:56:01 kopernikus kernel: Device 08:25 not ready.
+Apr  8 20:56:01 kopernikus kernel:  I/O error: dev 08:25, sector 128
+Apr  8 20:56:01 kopernikus kernel: Device 08:25 not ready.
+
+Is the disk broken? And - WHICH disk is it (I assume it's the disk with
+ID2, but is there a map, which tells me the meaning of Device 08:25?)? One
+disk goes offline after some hours - but I'm able to reattach it and
+rebuild the data on it. I found a jumper on the disk which says enable
+auto spin - what does it mean? Sorry, when I'm probably a bit out of topic
+with this SCSI problems... I also got some messages like:
+
+Apr  8 09:18:25 kopernikus kernel: (scsi0:A:2:0): Locking max tag count at
+64
+
+Are these serios?
+
+Thanks a lot in advance
+
+    Gernot Weber
+
+
+-- 
+Gernot A. Weber
+http://www.tux-web.de
+
+Only wimps use tape backup: _real_ men just upload their important stuff
+on ftp, and let the rest of the world mirror it.
+
+                              Linus Torvalds, after a hard drive crash
+
