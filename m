@@ -1,56 +1,67 @@
-From: Bernd Schubert <bernd.schubert@pci.uni-heidelberg.de>
-Subject: is raid of raid possible ?
-Date: Fri, 11 Jul 2003 16:09:54 +0200
-Sender: enbd-admin@lists.community.tummy.com
-Message-ID: <200307111609.54844.bernd.schubert@pci.uni-heidelberg.de>
-Reply-To: enbd@lists.community.tummy.com
+From: Peter.Seiderer@gmx.de
+Subject: Bugfix: mkraid
+Date: Fri, 11 Jul 2003 17:13:27 +0200 (MEST)
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <6298.1057936407@www40.gmx.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <enbd-admin@lists.community.tummy.com>
-Content-Disposition: inline
-Errors-To: enbd-admin@lists.community.tummy.com
-List-Unsubscribe: <http://lists.community.tummy.com/mailman/listinfo/enbd>,
-	<mailto:enbd-request@lists.community.tummy.com?subject=unsubscribe>
-List-Post: <mailto:enbd@lists.community.tummy.com>
-List-Help: <mailto:enbd-request@lists.community.tummy.com?subject=help>
-List-Subscribe: <http://lists.community.tummy.com/mailman/listinfo/enbd>,
-	<mailto:enbd-request@lists.community.tummy.com?subject=subscribe>
-List-Archive: <http://lists.community.tummy.com/pipermail/enbd/>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
-Cc: enbd@lists.community.tummy.com
 List-Id: linux-raid.ids
 
-Hi,
+Hello,
 
-for fallback reasons of an existing server with software-raid5 I would like=
- to=20
-install a raid1 via enbd to another system of this raid5-device.
+the following patch is a bugfix for mkraid (from raidtools-1.00.3).
 
-scheme-1:
-server1(software-raid5)-->raid1-->enbd-->fall-back server(hardisk or=20
-software-raid)
+It fixes that a call 'mkraid /dev/md5' will check if /dev/md5 is active=
+ and
+not
+if the last entry from the config file is active.
 
-scheme-2:
-server1(software-raid5)-->enbd-->fall-back-server(hardisk)--raid1
+--- raidtools-1.00.3/mkraid.c_orig      2003-07-11 16:49:23.000000000 +=
+0200
++++ raidtools-1.00.3/mkraid.c   2003-07-11 17:15:24.000000000 +0200
+@@ -219,7 +219,7 @@
+     while (*args) {
+        for (p =3D cfg_head; p; p =3D p->next) {
+            if (strcmp(p->md_name, *args)) continue;
+-           if (check_active(cfg))=20
++           if (check_active(p))=20
+                goto abort;
+            if (force_flag) {
+                fprintf(stderr, "DESTROYING the contents of %s in 5 sec=
+onds,
+Ctrl-C if unsure!\n", *args);
 
-I guess that scheme-2, so exporting a mdX-device via enbd and importing thi=
-s=20
-device on the fallback-server and mirroring it via raid1 to another=20
-hardisk-partition should work anyway.
 
-But whats about scheme-1 in general ? Or in scheme-2 if one would like to p=
-ut=20
-the the raid1 to another software-raid5 ?
+And another little patch for against SEGV when called with a very long
+cmdline (e.g.
+/dev/md_this_is_very_long_md_device_and_longer_than_MAX_LINE_LENGTH_)
 
-Thanks in advance,
-	Bernd
+--- raidtools-1.00.3/raid_io.c_orig     2003-07-11 16:09:43.000000000 +=
+0200
++++ raidtools-1.00.3/raid_io.c  2003-07-11 17:15:25.000000000 +0200
+@@ -522,7 +522,7 @@
+=20
+        if ((ch =3D strstr(p->md_name, "/md")) =3D=3D NULL)
+                return 0;
+-       strcpy(buffer, ch+1);
++       strncpy(buffer, MAX_LINE_LENGTH, ch+1);
+        if ((fp =3D fopen("/proc/mdstat", "r")) =3D=3D NULL)
+                return 0;
+        while (1) {
 
-=2D-=20
-Bernd Schubert
-Physikalisch Chemisches Institut / Theoretische Chemie
-Universit=E4t Heidelberg
-INF 229
-69120 Heidelberg
-e-mail: bernd.schubert@pci.uni-heidelberg.de
+
+Peter
+
+--=20
++++ GMX - Mail, Messaging & more  http://www.gmx.net +++
+
+Jetzt ein- oder umsteigen und USB-Speicheruhr als Pr=E4mie sichern!
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
