@@ -1,38 +1,40 @@
-From: Norman Schmidt <norman.schmidt@ratnet.stw.uni-erlangen.de>
-Subject: partitions on md-devices - /dev-entries
-Date: Fri, 12 Dec 2003 17:58:09 +0100
+From: Steven Dake <sdake@mvista.com>
+Subject: Re: multipath - stable ?
+Date: Fri, 12 Dec 2003 10:35:19 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3FD9F3A1.1010705@ratnet.stw.uni-erlangen.de>
-Reply-To: schmidt@naa.net
+Message-ID: <1071250518.13240.32.camel@persist.az.mvista.com>
+References: <200312121552.02975.franc@tech.sirca.org.au>
+Reply-To: sdake@mvista.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid <linux-raid@vger.kernel.org>
+In-Reply-To: <200312121552.02975.franc@tech.sirca.org.au>
+To: Franc Carter <franc@tech.sirca.org.au>
+Cc: Linux-raid maillist <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi raiders of the lost byte!
+The multipath code is simple and seems pretty stable to me.
 
-I just made some partitions on my new 740 GB md raid5. Unfortunately,=20
-under suse8.2 no devices for the partitions (like /dev/md10p1) exist.
+There is one issue, in that failover can sometimes take a long time
+because of the SCSI layer's insistence upon executing error recovery. 
+In the case of multipath I/O's, there is no need to error recover before
+processing the I/O.  Instead, once error is detected, failover, then
+start error recovery.
 
-How do I generate them (i.e. which major/minor numbers should I invoke=20
-mknod with)? Does somebody have a script to create them all at once?
+The SCSI layer doesn't do this currently, so failover times are high.
 
-By the way, the compilation and installation of the mdadm 1.4.0 source=20
-on another (debian) machine didn=B4t generate them either.
+Thanks
+-steve
 
-Thanks, Norman.
---=20
---
 
-Norman Schmidt          Institut fuer Physikal. u. Theoret. Chemie
-Dipl.-Chem.             Friedrich-Alexander-Universitaet
-schmidt@naa.net         Erlangen-Nuernberg
+On Thu, 2003-12-11 at 21:52, Franc Carter wrote:
+> Hi,
+> 
+> I've been using linux sofwtare raid for years and had no problems.
+> We are about to install some disk systems that have dual contollers
+> and am wondering wether multipath is as stable as the rest of software
+> raid ?
+> 
+> thanks
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
