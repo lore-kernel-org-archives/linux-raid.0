@@ -1,50 +1,31 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: Re: Problem with auto-assembly on Itanium
-Date: Thu, 10 Mar 2005 21:49:41 +0100
-Message-ID: <20050310204940.GD9714@percy.comedia.it>
-References: <1110364128.14707.19.camel@localhost> <20050309164352.GB21635@percy.comedia.it> <1110449024.12242.2.camel@localhost>
+From: John McMonagle <johnm@advocap.org>
+Subject: Convert raid5 to raid1?
+Date: Thu, 10 Mar 2005 15:38:30 -0600
+Message-ID: <4230BE56.6090905@advocap.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Disposition: inline
-In-Reply-To: <1110449024.12242.2.camel@localhost>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Mar 10, 2005 at 11:03:44AM +0100, Jimmy Hedman wrote:
->On Wed, 2005-03-09 at 17:43 +0100, Luca Berra wrote:
->> On Wed, Mar 09, 2005 at 11:28:48AM +0100, Jimmy Hedman wrote:
->> >Is there any way i can make this work? Could it be doable with mdadm in
->> >a initrd?
->> >
->> mdassembled was devise for this purpose.
->> 
->> create an /etc/mdadm.conf with
->> echo "DEVICE partitions" >> /etc/mdadm.conf
->> /sbin/mdadm -D -b /dev/md0 | grep '^ARRAY' >> /etc/mdadm.conf
->> 
->> copy the mdadm.conf and mdassemble to initrd
->> make linuxrc run mdassemble.
->
->So there are no way of doing it the same way i386 does it, ie scanning
->the partitions and assembly the raid by it self? Is this a bug on the
->itanium (GPT partition scheme) or is this intentional?
->
-if you mean the in-kernel autodetect junk, you should only be happy it
-does not work on your system, so you are not tempted to use it.
-even on i386 it is badly broken, and i won't return on the subject.
-it has been discussed on this list to boredom.
+Was planning to adding a hot spare to my 3 disk raid5 array and was 
+thinking if I go to 4 drives I would be a  better off  as 2 raid1 arrays 
+considering the current state of raid5.
 
-L.
+If you think that is wrong please speak up now :)
 
-btw. you don't need cc-ing me. i read the list.
+Thinking I would  make a raid1  array for /.
+The rest of the first pair  and the second pair of disks raid1 and tie 
+together with lvm2.
 
-L.
+Can easily fit what I have so far on 1 drive so figure I could build the 
+first 2 raids on it  them copy from the current degraded array.
 
--- 
-Luca Berra -- bluca@comedia.it
-        Communication Media & Services S.r.l.
- /"\
- \ /     ASCII RIBBON CAMPAIGN
-  X        AGAINST HTML MAIL
- / \
+Just wonder what happens to the md sequence when I remove the original 
+raid arrays?
+When I'm done will I have md0,md1 and md2 or  md2,md3 and md4?
+
+John
+
+
