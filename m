@@ -1,8 +1,8 @@
 From: Song Pan <pansong@ookyy.com>
 Subject: Howto recover 2 SoftRaid 5 device fail
-Date: Fri, 28 Nov 2003 20:22:19 +0000
+Date: Fri, 28 Nov 2003 20:48:29 +0000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3FC7AE7B.7000001@ookyy.com>
+Message-ID: <3FC7B49D.6020207@ookyy.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
@@ -41,7 +41,12 @@ nr-spare-disks 0
 I read the Softraid howto, and it seems I can use "mkraid --force" to
 get my data back. Is this ok with my situation?
 
+I am using redhat 9.0
+
 thanks
+
+
+
 
 
 
