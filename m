@@ -1,41 +1,62 @@
-From: Lars Ehrhardt <0104@ng.h42.de>
-Subject: mdadm --manage --run stops a running array
-Date: Wed, 07 Jan 2004 15:26:09 +0100
+From: "Cress, Andrew R" <andrew.r.cress@intel.com>
+Subject: RE: Please help with a special RAID 1 setup
+Date: Wed, 7 Jan 2004 09:48:12 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3FFC1701.1000705@ng.h42.de>
+Message-ID: <E5DA6395B8F9614EB7A784D628184B207E14CE@hdsmsx402.hd.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+content-class: urn:content-classes:message
+To: Catalin BOIE <util@deuroconsult.ro>, Mircea Ciocan <mirceac@interplus.ro>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
 
-I was creating a documentation about a local raid setup and typed
-"mdadm --manage --run /dev/md1"
-This was on a running array and the command returned:
-mdadm: failed to run array "/dev/md1": Device or ressource busy.
+Note that RAID-1 will only ever have a maximum of 2 active disks.
+When you add the 3rd disk, it is added to the array as a spare, that's
+why it doesn't rebuild.
 
-I thought, alright, this makes sense /dev/md1 is already started and
-mounted as /, so running it again does not work.
+Andy
 
-Unfortunately I was not able to do anything useful after that, since all
-shell commands, like ls failed. Investigating this a bit on a
-testmachine I found out that the raid array was shut-down and marked as
-clean due to this run command. So, what happened was that the / fs was
-still mounted but the raid-device was not running anymore and thus I
-could not do anything useful with the system.
-
-I've tested this on two different machines, running kernel 2.4.23 with
-the grsecurity patch.
-
-Is this a bug or expected? In my opinion the run command should not stop
-an already running (and mounted) array.
-
-Kind regards
-
-Lars
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Catalin BOIE
+Sent: Wednesday, January 07, 2004 8:48 AM
+To: Mircea Ciocan
+Cc: linux-raid@vger.kernel.org
+Subject: Re: Please help with a special RAID 1 setup
 
 
+> >I think that you must replace:
+> >	nr-raid-disks   2
+> >with
+> >	nr-raid-disks   3
+> >Plus, the correspinding entry:
+> >	device          /dev/sdb3
+> >	raid-disk       2
+> >
+> >Else, the third drive isn't recognized as part of the md array.
+> >Probably, you must restart the array (only first time).
+> >You may want to use mdadm instead of raidtools.
+> >
+> >
+> >
+>
+>     Modified config file, umounted and stoped raid, restarted raid,
+> hotadded the disk, still the same results :(.
+> Any other ideeas ??
+>
+>     Mircea
 
+I think you must rebuid the /dec/md0 with mkraid --upgrade.
+Warning! You may destroy all data, so backup first.
+
+---
+Catalin(ux) BOIE
+catab@deuroconsult.ro
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
