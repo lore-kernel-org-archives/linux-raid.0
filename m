@@ -1,8 +1,8 @@
 From: Ninti Systems <office@ninti.com.au>
 Subject: Re: Please review: Slackware RAID How-To
-Date: 16 May 2004 15:13:36 +0930
+Date: 16 May 2004 16:10:52 +0930
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1084686215.1197.24.camel@localhost>
+Message-ID: <1084689652.1197.34.camel@localhost>
 References: <1084290138.25942.30.camel@ws101.darkcore.net>
 Reply-To: office@ninti.com.au
 Mime-Version: 1.0
@@ -14,26 +14,15 @@ To: John Lange <john.lange@bighostbox.com>
 Cc: LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-John, I've had a chance to review the Slackware RAID How-to, which I
-used to help build a RAID1 array with two disks under Slackware 9.1.
+I had another go with a new slackware.iso and lilo appears to have
+installed OK this time (no complaints anyway), but still can't boot
+(kernal panics as it cant find init).
 
-Building the arrays went like a dream, I don't know why I never thought
-of doing it this way before, rather than trying to work with degraded
-arrays etc after the OS was already installed.
+Another start up message:
 
-I had some initial problems loading software, I kept getting disk full
-messages, but I think that was an installer script issue: it doesn't
-seem very tolerant of option changes being made, and there is often no
-going back if you make a wrong selection.
+  RAID level 1 does not need chunksize! Continuing anyway.
 
-Anyway, I built the arrays and installed the OS, but can't get LILO
-figured out. No matter whether I try to use automatic or expert mode, I
-can't install LILO to either the MBR or /boot. So I never get a bootable
-system at the end of the process. 
-
-I've read the lilo and lilo.conf man pages to try a find out what my
-lilo.conf file should look like and what files should be where (eg
-vmLinuz etc), but they're not much use to someone new to this. 
+Mick
 
 
 On Wed, 2004-05-12 at 01:12, John Lange wrote:
