@@ -1,13 +1,60 @@
-From: linux-lists@artelesys.com
-Subject: Failed Devices = -1 ?????
-Date: Mon, 5 Jul 2004 16:03:50 -0500 (CDT)
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: Failed Devices = -1 ?????
+Date: Mon, 5 Jul 2004 17:11:53 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.44.0407051600250.2153-100000@westhost38.westhost.net>
+Message-ID: <200407052111.i65LBs330685@watkins-home.com>
+References: <Pine.LNX.4.44.0407051600250.2153-100000@westhost38.westhost.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: 'linux-raid' <linux-raid@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.44.0407051600250.2153-100000@westhost38.westhost.net>
+To: linux-lists@artelesys.com, 'linux-raid' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
+
+Some sort of bug.  The counts are wrong and they only get worse over time.
+I have read that it has been fixed.  Don't recall the details, but the
+current 2.6 kernel should have the fix if it exists.
+
+I have 2.4, I have the bug(s).
+
+I get this:
+   Raid Devices : 14
+  Total Devices : 13
+          State : dirty, no-errors
+ Active Devices : 14
+Working Devices : 12
+ Failed Devices : 1
+  Spare Devices : 1
+    Number   Major   Minor   RaidDevice State
+       0       8       49        0      active sync   /dev/sdd1
+       1       8      161        1      active sync   /dev/sdk1
+       2       8       65        2      active sync   /dev/sde1
+       3       8      177        3      active sync   /dev/sdl1
+       4       8       81        4      active sync   /dev/sdf1
+       5       8      193        5      active sync   /dev/sdm1
+       6       8       97        6      active sync   /dev/sdg1
+       7       8      209        7      active sync   /dev/sdn1
+       8       8      113        8      active sync   /dev/sdh1
+       9       8      225        9      active sync   /dev/sdo1
+      10       8      129       10      active sync   /dev/sdi1
+      11       8      241       11      active sync   /dev/sdp1
+      12       8      145       12      active sync   /dev/sdj1
+      13       8       33       13      active sync   /dev/sdc1
+      14      65        1       14        /dev/sdq1
+
+I really have 14 raid5 disks and 1 spare.  No failed disks.
+
+Guy
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of
+linux-lists@artelesys.com
+Sent: Monday, July 05, 2004 5:04 PM
+To: 'linux-raid'
+Subject: Failed Devices = -1 ?????
 
 
 Hello.
@@ -40,4 +87,9 @@ Working Devices : 2
        1      22        6        1      active sync   /dev/hdc6
            UUID : 255a65a8:5e8e0a35:0aef765e:6f307c50
          Events : 0.196
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
