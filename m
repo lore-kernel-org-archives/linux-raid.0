@@ -1,89 +1,160 @@
-From: "Robert L. Harris" <Robert.L.Harris@rdlg.net>
-Subject: Failing disk?
-Date: Wed, 25 Jun 2003 14:31:11 -0400
+From: "Corey McGuire" <coreyfro@coreyfro.com>
+Subject: RAID5 causing lockups
+Date: Wed, 25 Jun 2003 12:16:30 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20030625183111.GF21580@rdlg.net>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="Clx92ZfkiYIKRjnr"
+Message-ID: <200306251216300921.4D495D48@shargaas.coreyfro.com>
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-To: Linux-Raid <linux-raid@vger.kernel.org>
+To: alewman@sjdccd.cc.ca.us, bort@partikelsoft.com, corvus@consolex.com, kratz.franz@ssd.loral.com, blatt.guy@ssd.loral.com, linux-raid@vger.kernel.org, mario.scalise@schwab.com, harbeck.seth@ssd.loral.com, phil@matroxusers.com
 List-Id: linux-raid.ids
 
+Hey folks,
 
---Clx92ZfkiYIKRjnr
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+I just upgraded my system from a ~200GB mirror to a ~1TB RAID5, but all has
+not transitioned well.
 
+I really don't know how to debug this issue, though I have tried.  I gave
+up this morning before work, but I was going to try the magickey next
+(something I don't really know how to use, but anything for a clue)
+followed by upgrading to 2.4.21.
 
+The lock up is typical to a system with a failing drive; the system is
+responsive to input, but nothing happens.  Keyboard works fine, but
+programs become idle (not really crashing.)  I tried keeping "top" up,
+hoping I would see something obvious, like raid5syncd doing something
+strange, but if it does, top doesn't update after the problem.
 
-I'm asking this on the raid list even though it's LVM related for 2
-reasons.  It's the best list I know of for this question and because the
-LVM in question is disk 0 in a RAID 1 scheme so it's not 100 % off
-topic.
+The lockups happen even if the system is doing nothing (other than
+raid5syncd, which is awfully busy since my RAID won't stay up)
 
-I've got an lvm which consists of drive sda and sdbc.  One of the two
-disks is complaining about scsi errors.  I get this on the console:
+If I unmount the RAID5 and RAIDSTOP it, my system will work fine, but I'm
+out 1TB of disk.  Right now, I have it running the bare essentials (all
+services on, but my /home directory has only public_html and mail stuff for
+each user.)
 
-md: lvm-vg2/lvm2 [events: 0000000b]<6>(write) lvm-vg2/lvm2's sb offset:
-35618752
- I/O error: dev 08:22, sector 35430824
- I/O error: dev 08:22, sector 35431072
- I/O error: dev 08:22, sector 35431320
- I/O error: dev 08:22, sector 35431568
- I/O error: dev 08:22, sector 35431816
- I/O error: dev 08:22, sector 35432064
- I/O error: dev 08:22, sector 35432312
-
-
-Am I correct in assuming that the 22 is hex which translates to 34
-giving me:
-root@performance.tok:~# cat /proc/partitions=20
-major minor  #blocks  name
-
-  58     0   35618816 lvm-vg1/lvm1
-  58     1   35618816 lvm-vg2/lvm2
-   9     0   35618752 md/0
-   8     0   17921835 scsi/host0/bus0/target0/lun0/disc
-=2E
-=2E
-=2E
-   8    33     104422 scsi/host0/bus0/target2/lun0/part1
-   8    34   17816085 scsi/host0/bus0/target2/lun0/part2
+Anything I can do to get more information out of this problem?  I don't
+really know where to look.
 
 
-Meaning it's partition 2 of disk hdc (host 0 target 2)?
+System Infro
+=======================================================================
 
-Thoughts?
-  Robert
+My kernel is 2.4.20, my raid tools is raidtools-0.90, no patches on
+anything, home built distro (linux from scratch.)  Had been running on a
+mirror for nearly a year.
+
+Each drive on my system is connected to promise UltraATA 100 controllers.
+I have 6 drives and 3 controllers.  Each drive is a 200GB WD drive, set to
+"Single/Master" on their channel.
+
+No device has a slave.
+
+Drives are hda hdc hde hdg hdi hdk
+
+------- Each drive is configured exactly like the device below -------
+
+Disk /dev/hda: 255 heads, 63 sectors, 24321 cylinders
+Units = cylinders of 16065 * 512 bytes
+
+   Device Boot    Start       End    Blocks   Id  System
+/dev/hda1             1       319   2562336   fd  Linux raid autodetect
+/dev/hda2           320       352    265072+  82  Linux swap
+/dev/hda3           353     24321 192530992+  fd  Linux raid autodetect
+
+------------------------- Here is my raidtab -------------------------
+
+raiddev /dev/md0
+   raid-level            1
+   chunk-size           32
+   nr-raid-disks         2
+   nr-spare-disks        0
+   persistent-superblock 1
+   device        /dev/hda1
+   raid-disk             0
+   device        /dev/hdc1
+   raid-disk             1
+
+raiddev /dev/md1
+   raid-level            1
+   chunk-size           32
+   nr-raid-disks         2
+   nr-spare-disks        0
+   persistent-superblock 1
+   device        /dev/hde1
+   raid-disk             0
+   device        /dev/hdg1
+   raid-disk             1
+
+raiddev /dev/md2
+   raid-level            5
+   chunk-size           32
+   nr-raid-disks         6
+   nr-spare-disks        0
+   persistent-superblock 1
+   device        /dev/hda3
+   raid-disk             0
+   device        /dev/hdc3
+   raid-disk             1
+   device        /dev/hde3
+   raid-disk             2
+   device        /dev/hdg3
+   raid-disk             3
+   device        /dev/hdi3
+   raid-disk             4
+   device        /dev/hdk3
+   raid-disk             5
+
+raiddev /dev/md3
+   raid-level            1
+   chunk-size           32
+   nr-raid-disks         2
+   nr-spare-disks        0
+   persistent-superblock 1
+   device        /dev/hdi1
+   raid-disk             0
+   device        /dev/hdk1
+   raid-disk             1
+
+-------------------------- Here is my fstab --------------------------
+
+# Begin /etc/fstab
+
+# filesystem   mount-point     fs-type    options           dump fsck-order
+
+/dev/md0       /               reiserfs   defaults             1 1
+/dev/md1       /mnt/backup     reiserfs   noauto,defaults      1 3
+/dev/md2       /home           reiserfs   defaults             1 2
+/dev/hda2      swap            swap       pri=42               0 0
+/dev/hdc2      swap            swap       pri=42               0 0
+/dev/hde2      swap            swap       pri=42               0 0
+/dev/hdg2      swap            swap       pri=42               0 0
+/dev/hdi2      swap            swap       pri=42               0 0
+/dev/hdk2      swap            swap       pri=42               0 0
+proc           /proc           proc       defaults             0 0
+
+# End /etc/fstab
+
+=======================================================================
+
+Let me know if I missed anything (probably lots.)
+
+Thanks for your time.
 
 
+/\/\/\/\/\/\ Nothing is foolproof to a talented fool. /\/\/\/\/\/\
 
+coreyfro@coreyfro.com
+http://www.coreyfro.com/
+http://stats.distributed.net/rc5-64/psummary.php3?id=196879
+ICQ : 3168059
 
-:wq!
----------------------------------------------------------------------------
-Robert L. Harris                     | GPG Key ID: E344DA3B
-                                         @ x-hkp://pgp.mit.edu
-DISCLAIMER:
-      These are MY OPINIONS ALONE.  I speak for no-one else.
+-----BEGIN GEEK CODE BLOCK-----
+GCS d--(+) s: a-- C++++$ UBL++>++++ P+ L+ E W+++$ N+ o? K? w++++$>+++++$
+O---- !M--- V- PS+++ PE++(--) Y+ PGP- t--- 5(+) !X- R(+) !tv b-(+)
+Dl++(++++) D++ G+ e>+++ h++(---) r++>+$ y++*>$ H++++ n---(----) p? !au w+
+v- 3+>++ j- G'''' B--- u+++*** f* Quake++++>+++++$
+------END GEEK CODE BLOCK------
 
-Diagnosis: witzelsucht
+Home of Geek Code - http://www.geekcode.com/
+The Geek Code Decoder Page - http://www.ebb.org/ungeek//
 
-IPv6 =3D robert@ipv6.rdlg.net	http://ipv6.rdlg.net
-IPv4 =3D robert@mail.rdlg.net	http://www.rdlg.net
-
---Clx92ZfkiYIKRjnr
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.2 (GNU/Linux)
-
-iD8DBQE++epv8+1vMONE2jsRAkqVAKCG3f49Fu7z9ynd9WwaJCldx28WAwCdF4sk
-DpZNAKW0N8jwkjm3IG6Qv4c=
-=FFw7
------END PGP SIGNATURE-----
-
---Clx92ZfkiYIKRjnr--
