@@ -1,44 +1,71 @@
-From: Miquel van Smoorenburg <miquels@cistron.nl>
+From: Neil Brown <neilb@cse.unsw.edu.au>
 Subject: Re: Raid1 doesn't balance under high load [patch]
-Date: Thu, 10 Jun 2004 16:42:06 +0200
+Date: Fri, 11 Jun 2004 11:26:32 +1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040610144206.GA16625@cistron.nl>
-References: <20040610113019.GA8660@cistron.nl> <000c01c44ef0$195820a0$0201a8c0@windows>
+Message-ID: <16585.2632.321497.620210@cse.unsw.edu.au>
+References: <20040610113019.GA8660@cistron.nl>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <000c01c44ef0$195820a0$0201a8c0@windows>
-To: TJ Harrell <systemloc@earthlink.net>
+In-Reply-To: message from Miquel van Smoorenburg on Thursday June 10
+To: Miquel van Smoorenburg <miquels@cistron.nl>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-According to TJ Harrell:
-> I don't know the details of how writing works in the code. I do know that
-> consecutive writes must be issued to both disks, though. This means that
-> there is a concievable time when one disk is written to and one is not,
-> making the array unclean. I'm assuming that this is the reason that the
-> array is marked unclean during a write. If you disable this, I would bet
-> that it will create a race condition where you may read from a disk before
-> it is written to and get old data. This would probably cause data
-> corruption, no?
+On Thursday June 10, miquels@cistron.nl wrote:
+> I have several servers installed with a bootable raid1 array. I noticed
+> that under high load, the load wasn't balanced over the 2 disks in
+> the array anymore - all reads went to just one of the disks.
+> 
+> The problem is in raid1.c:read_balance().
+> 
+> There's a check to see if the array is in sync:
+> 
+>         /*
+>          * Check if it if we can balance. We can balance on the whole
+>          * device if no resync is going on, or below the resync window.
+>          * We take the first readable disk when above the resync window.
+>          */
+>         if (!conf->mddev->in_sync && (this_sector + sectors >= conf->next_resync)) {
+> 
+> Now if you write to the array, the array is marked not in sync by
+> md.c:md_write_start(). conf->next_resync is initialized to zero, so
+> that means read balancing doesn't work anymore.
 
-Not when going through the buffer/page cache, which acts as a syncpoint.
-If you write a page to disk, it is first put in the pagecache as
-"dirty" page. Once the write is complete (meaning both disks have
-written it) the page is marked as clean.
+Yes, you are right.  Thanks.
+Your patch is close, but not quite right (though it would be hard to
+cause it to actually fail).
+I think it patch is more correct.  I would appreciate it if you could
+confirm that it works for you.
 
-If some other process wants to read the same data from disk, it
-will go through the buffer/page cache and get the data from the
-(dirty or in the mean time clean) page that is there already.
-It won't go behind the buffer/pagecache's back to read the data
-straight from disk ...
+Thanks again,
+NeilBrown
 
-Think about it - all writes to disk-like devices are queued, so if
-this didn't happen you'd have that problem all the time.
+==========================================
+Fix raid1 read_balancing code.
 
-So the code in there isn't about preventing that at all. It is
-really checking for 'is there a rebuild in progress' but it simply
-gets that wrong ..
+The meaning of mddev->in_sync changed subtly a while ago, and raid1
+wasn't changed to match.  This results in raid1 read_balancing
+not working properly.
+This patch corrects the relevant test.
 
-Mike.
+Signed-off-by: Neil Brown <neilb@cse.unsw.edu.au>
+
+### Diffstat output
+ ./drivers/md/raid1.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletion(-)
+
+diff ./drivers/md/raid1.c~current~ ./drivers/md/raid1.c
+--- ./drivers/md/raid1.c~current~	2004-06-11 11:20:34.000000000 +1000
++++ ./drivers/md/raid1.c	2004-06-11 11:21:57.000000000 +1000
+@@ -375,7 +375,8 @@ static int read_balance(conf_t *conf, st
+ 	 * device if no resync is going on, or below the resync window.
+ 	 * We take the first readable disk when above the resync window.
+ 	 */
+-	if (!conf->mddev->in_sync && (this_sector + sectors >= conf->next_resync)) {
++	if (!conf->mddev->recovery_cp < MaxSector &&
++	    (this_sector + sectors >= conf->next_resync)) {
+ 		/* make sure that disk is operational */
+ 		new_disk = 0;
+ 
