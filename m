@@ -1,36 +1,35 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: [PATCH md 3 of 4] Delete unplug timer before shutting down md array.
-Date: Wed, 3 Nov 2004 11:29:42 +1100
-Message-ID: <16776.9846.775539.684677@cse.unsw.edu.au>
-References: <20041102143440.12019.patches@notabene>
-	<E1COpUP-000392-Hw@notabene.cse.unsw.edu.au>
-	<20041101205735.5fc68d69.akpm@osdl.org>
-	<20041101210044.20c4a8e0.akpm@osdl.org>
-	<16775.3329.279178.375487@cse.unsw.edu.au>
-	<20041101213333.201769d0.akpm@osdl.org>
-	<20041102071258.GA9190@percy.comedia.it>
+From: AndyLiebman@aol.com
+Subject: Re: ANNOUNCE: mdadm 1.8.0 - A tool for managing Soft RAID under Linux
+Date: Tue, 2 Nov 2004 20:27:40 EST
+Message-ID: <46.5c932a76.2eb98e0c@aol.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Luca Berra on Tuesday November 2
 Sender: linux-raid-owner@vger.kernel.org
-To: Luca Berra <bluca@comedia.it>
-Cc: linux-raid@vger.kernel.org
+To: neilb@cse.unsw.edu.au, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday November 2, bluca@comedia.it wrote:
-> >hm, OK.  So perhaps using /dev/mdX as a control channel for creating and
-> >destroying /dev/mdX was unfortunate design.  Ho hum.
-> 
-> would it be unfeasible to create a custom (misc) character device, say
-> /dev/mdadm and use that to control arrays instead of /dev/md0?
-> 
+>neilb@cse.unsw.edu.au writes:
+>Release 1.8.0 adds:
+>   -   --pid-file option to declare a file to record the pid in for 
+>   --monitor --daemonise
+>    -   Support for new "faulty" personalitiy (see md.4) - not submited to
+>        kernel.org yet.
+>    -   support for raid0 and linear over devices larger than 2 Terabytes.
+>    -   assorted bug fixes.
 
-Sure it would.  Though I would rather so sort of filesystem interface.
+Hello Neil, 
 
-But it is unreasonable to remove the current interface without a
-reasonable transition period.  So the current code needs to be made to
-work.
+Is this to say that earlier versions of mdadm did NOT support RAID-0 on 
+devices larger than 2 TB? 
 
-NeilBrown
+I have been using mdadm 1.6 to create a 4.8 TB RAID-0 array (md0) on top of 
+two 3ware 2.4 TB Hardware RAID-5 arrays (/dev/sda and /dev/sdb) -- and so far I 
+don't see any problems. The RAID-0 is created without trouble. The resulting 
+size is reported as 4.8 TB. The performance is awesome. And, presumably, the 
+data protection is sound.
+
+Am I missing something? 
+
+Andy Liebman
