@@ -1,16 +1,32 @@
-From: Eric Drew Hollins <gte275e@mail.gatech.edu>
-Subject: RAID1 (drive isn't detecting on boot)
-Date: Thu, 30 Jan 2003 11:30:21 -0500
+From: "Cress, Andrew R" <andrew.r.cress@intel.com>
+Subject: RE: RAID1 (drive isn't detecting on boot)
+Date: Thu, 30 Jan 2003 08:39:51 -0800
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1043944221.3e39531db4ef8@webmail.mail.gatech.edu>
+Message-ID: <A5974D8E5F98D511BB910002A50A66470580D5B7@hdsmsx103.hd.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: 'Eric Drew Hollins' <gte275e@mail.gatech.edu>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Ok, I have a RAID1 set up on identical Maxtor 60GB drives.  They were working
+You need to include your kernel version.  
+
+Apparently you are running ok on hdg1 in degraded mode, but hde1 has an
+invalid superblock magic.
+You should be able to reconstruct the superblock on hde1 by using mdadm,
+then resync.
+
+Andy
+
+-----Original Message-----
+From: Eric Drew Hollins [mailto:gte275e@mail.gatech.edu] 
+Sent: Thursday, January 30, 2003 11:30 AM
+To: Linux RAID Mailing List
+Subject: RAID1 (drive isn't detecting on boot)
+
+
+Ok, I have a RAID1 set up on identical Maxtor 60GB drives.  They were
+working
 the other day, but not now.  Here is the message that I get when I boot up:
 
 md: raid1 personality registered as nr 3
@@ -53,3 +69,7 @@ Any ideas?  If you need more info, just let me know.  Thanks.
 **** C: 404.312.0685 ****
 
 
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
