@@ -1,42 +1,39 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: Re: Forcing a disk online
-Date: Sat, 10 Jan 2004 13:51:58 +0100
-Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040110125157.GC5928@percy.comedia.it>
-References: <20040110004054.GB3322@munchnet.com>
+From: Daniel Brahneborg <daniel.com@wtnord.net>
+Subject: Re: Status of Promise drivers?
+Date: Sat, 10 Jan 2004 16:14:29 +0100
+Sender: linux-ide-owner@vger.kernel.org
+Message-ID: <20040110161429.B6153@nettis.grimsta>
+References: <20031230200012.C14399@nettis.grimsta> <3FF1CCC1.3050304@pobox.com> <20031230202447.D14399@nettis.grimsta> <3FF1D8AE.2000107@pobox.com> <20031230211826.F14399@nettis.grimsta> <3FF1DF2B.3000501@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20040110004054.GB3322@munchnet.com>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <3FF1DF2B.3000501@pobox.com>; from jgarzik@pobox.com on Tue, Dec 30, 2003 at 03:25:15PM -0500
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Jan 09, 2004 at 04:40:54PM -0800, Nathan Hunsperger wrote:
->However, I don't see any way to 'force a disk online' like you can on
->hardware raid.  How can I change the status?  If I can force the disk
->online, I should be able to mount the array in degraded mode, and
->recover most everything, except for the data that lies on the stripe
->using those 8K.
+On Tue, Dec 30, 2003 at 03:25:15PM -0500, Jeff Garzik wrote:
+> For VIA SATA, neither IDE nor libata program the chipset 100%, so I'm 
+> not surprised you're seeing failures.  I'm working with VIA to get more 
+> details as we speak.  They've been helpful so far.  I would recommend 
+> sata_via over the generic IDE driver, but that's sorta a toss-up at present.
 
-you have to recreate the array using all the devices in the same order
-as they were before, without the spare, and using the "missing" keyword
-in place of the removed drive. also other options like layout and chunk
-size must be the same. having a missing drive will cause the array to be
-created in degraded mode and parity not rebuilt, so you will have a
-chance for data recovery
+I've made some tests with 2.6.1 and 2.6.1-mm2.
 
->Below is the output I have from looking at the status of each drive.
->The very last disk is the partially rebuilt replacement for Raid
->Device 7.  I need to mark RaidDevice 8 as active.
-that is all the info you need.
+Good news: RAID1 works on two SATA disks with the IDE VIA
+driver (via82cxxx).  At least after a while (see below).
 
-L.
+Bug 1: Doing a "modprobe via82cxxx" fails, since it tries to
+aquire ide0 and ide1 even though they are used by other drivers.
+Statically linked, it takes ide2 and ide3, just as it should.
+My ide0 and ide1 are PATA connectors that I'd like to keep
+even though the SATA connectors are activated.  The siimage
+driver behaves correctly here, but only with the -mm2 version.
 
--- 
-Luca Berra -- bluca@comedia.it
-        Communication Media & Services S.r.l.
- /"\
- \ /     ASCII RIBBON CAMPAIGN
-  X        AGAINST HTML MAIL
- / \
+Bug 2: Using the RAID1 array while it is being synced causes
+data corruption.  When the sync is complete, everything seems
+to work fine.
+
+/Basic
+
