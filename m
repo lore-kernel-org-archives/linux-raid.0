@@ -1,88 +1,51 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: [PERFORM] Postgres on RAID5
-Date: Mon, 14 Mar 2005 18:49:11 -0500
-Message-ID: <200503142349.j2ENnG510033@www.watkins-home.com>
-References: <42361474.9060500@tls.msk.ru>
+From: Paul Clements <paul.clements@steeleye.com>
+Subject: Re: [PATCH 1/2] md bitmap bug fixes
+Date: Mon, 14 Mar 2005 23:24:00 -0500
+Message-ID: <42366360.8020600@steeleye.com>
+References: <422F7621.8090602@steeleye.com> <16949.5768.392061.95882@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-In-Reply-To: <42361474.9060500@tls.msk.ru>
+In-Reply-To: <16949.5768.392061.95882@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Michael Tokarev' <mjt@tls.msk.ru>, 'Arshavir Grigorian' <ag@m-cam.com>
-Cc: linux-raid@vger.kernel.org, pgsql-performance@postgresql.org
+To: Neil Brown <neilb@cse.unsw.edu.au>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-You said:
-"If your write size is smaller than chunk_size*N (N = number of data blocks
-in a stripe), in order to calculate correct parity you have to read data
-from the remaining drives."
+Neil Brown wrote:
+> On Wednesday March 9, paul.clements@steeleye.com wrote:
 
-Neil explained it in this message:
-http://marc.theaimsgroup.com/?l=linux-raid&m=108682190730593&w=2
+>>avoid setting of sb->events_lo = 1 when creating a 0.90 superblock -- it 
+>>doesn't seem to be necessary and it was causing the event counters to 
+>>start at 4 billion+ (events_lo is actually the high part of the events 
+>>counter, on little endian machines anyway)
 
-Guy
+> events_lo really should be the low part of the counter and it is for
+> me....  something funny must be happening for you...
 
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Michael Tokarev
-Sent: Monday, March 14, 2005 5:47 PM
-To: Arshavir Grigorian
-Cc: linux-raid@vger.kernel.org; pgsql-performance@postgresql.org
-Subject: Re: [PERFORM] Postgres on RAID5
+Yikes...compiling mdadm against the kernel headers. I was trying to 
+simplify things and avoid the inevitable breakage that occurs when 
+kernel and mdadm headers get out of sync, but alas, it's causing 
+problems because of differences between kernel and userland header 
+definitions...my mdadm was wrongly assuming big endian for the events 
+counters.
 
-Arshavir Grigorian wrote:
-> Alex Turner wrote:
-> 
-[]
-> Well, by putting the pg_xlog directory on a separate disk/partition, I 
-> was able to increase this rate to about 50 or so per second (still 
-> pretty far from your numbers). Next I am going to try putting the 
-> pg_xlog on a RAID1+0 array and see if that helps.
 
-pg_xlog is written syncronously, right?  It should be, or else reliability
-of the database will be at a big question...
+>>if'ed out super1 definition which is now in the kernel headers
 
-I posted a question on Feb-22 here in linux-raid, titled "*terrible*
-direct-write performance with raid5".  There's a problem with write
-performance of a raid4/5/6 array, which is due to the design.
+> I don't like this.  I don't mdadm to include the kernel raid headers.
+> I want it to use it's own. 
 
-Consider raid5 array (raid4 will be exactly the same, and for raid6,
-just double the parity writes) with N data block and 1 parity block.
-At the time of writing a portion of data, parity block should be
-updated too, to be consistent and recoverable.  And here, the size of
-the write plays very significant role.  If your write size is smaller
-than chunk_size*N (N = number of data blocks in a stripe), in order
-to calculate correct parity you have to read data from the remaining
-drives.  The only case where you don't need to read data from other
-drives is when you're writing by the size of chunk_size*N, AND the
-write is block-aligned.  By default, chunk_size is 64Kb (min is 4Kb).
-So the only reasonable direct-write size of N drives will be 64Kb*N,
-or else raid code will have to read "missing" data to calculate the
-parity block.  Ofcourse, in 99% cases you're writing in much smaller
-sizes, say 4Kb or so.  And here, the more drives you have, the
-LESS write speed you will have.
+Yes, I agree, see above... :/
 
-When using the O/S buffer and filesystem cache, the system has much
-more chances to re-order requests and sometimes even omit reading
-entirely (when you perform many sequentional writes for example,
-without sync in between), so buffered writes might be much fast.
-But not direct or syncronous writes, again especially when you're
-doing alot of sequential writes...
 
-So to me it looks like an inherent problem of raid5 architecture
-wrt database-like workload -- databases tends to use syncronous
-or direct writes to ensure good data consistency.
+>>included sys/time.h to avoid compile error
 
-For pgsql, which (i don't know for sure but reportedly) uses syncronous
-writs only for the transaction log, it is a good idea to put that log
-only to a raid1 or raid10 array, but NOT to raid5 array.
+> I wonder why I don't get an error.. What error do you get?
 
-Just IMHO ofcourse.
+The machine I happen to be compiling on has old gcc/libc (2.91) and it's 
+not getting the definition for one of the time structures (I forget 
+which...).
 
-/mjt
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+Thanks,
+Paul
