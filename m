@@ -1,73 +1,63 @@
-From: Stephan van Hienen <raid@a2000.nu>
-Subject: Re: raid5 slow
-Date: Tue, 30 Nov 2004 01:50:29 +0100 (CET)
-Message-ID: <Pine.LNX.4.61.0411300146360.32052@adsl.a2000.nu>
-References: <200411290449.iAT4nsN02715@www.watkins-home.com>
- <Pine.LNX.4.61.0411290928430.13437@adsl.a2000.nu>
- <Pine.LNX.4.61.0411290948230.13437@adsl.a2000.nu> <16811.48945.141392.294625@cse.unsw.edu.au>
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: Unable to handle kernel NULL pointer dereference with 2.4.27
+Date: Tue, 30 Nov 2004 11:53:11 +1100
+Message-ID: <16811.50295.566088.579804@cse.unsw.edu.au>
+References: <87653oimzy.fsf@wide.bouthors.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <16811.48945.141392.294625@cse.unsw.edu.au>
+In-Reply-To: message from Cyril Bouthors on Monday November 29
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: Guy <bugzilla@watkins-home.com>, linux-raid@vger.kernel.org
+To: Cyril Bouthors <cyril@bouthors.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 30 Nov 2004, Neil Brown wrote:
+On Monday November 29, cyril@bouthors.org wrote:
+> Hi,
+> 
+> I'm having this error several times a month on a heavy loaded production NFS server with RAID0:
+> 
+> Unable to handle kernel NULL pointer dereference at virtual address 00000020
+>  printing eip:
+> f884488e
+> *pde = 00000000
+> Oops: 0002
+> CPU:    0
+> EIP:    0010:[raid0:__insmod_raid0_O/lib/modules/2.4.27-1-686/kernel/drivers/md+-235378/96]    Not tainted
+> EFLAGS: 00010202
+> eax: f884d6a0   ebx: efd32600   ecx: 00000000   edx: 00000020
+> esi: efd32600   edi: c2825f5c   ebp: 00001ee2   esp: c2825f1c
+> ds: 0018   es: 0018   ss: 0018
+> Process kswapd (pid: 4, stackpage=c2825000)
+> Stack: efd32600 efd32600 c0153734 efd32600 efd32608 c015379d efd32600 f421cc28
+>        c0150018 c3581408 c35817c0 c35817c8 00000000 c0153a24 c2825f5c 00015d9c
+>        efd32428 f50ebdc8 000001d0 0000003c 00000015 c025d478 c0153bb4 00015d9c
+> Call Trace:    [clear_inode+196/224] [dispose_list+77/176] [__get_lease+488/608] [prune_icache+100/464] [shrink_icache_memory+36/64]
+>   [try_to_free_pages_zone+143/256] [kswapd_balance_pgdat+102/176] [kswapd_balance+40/64] [kswapd+152/185] [_stext+0/64] [arch_kernel_thread+46/64]
+>   [kswapd+0/185]
+> 
+> Code: ff 0a 0f 94 c0 84 c0 75 44 ba ff ff ff ff 89 93 8c 01 00 00
+>  <5>__alloc_pages: 0-order allocation failed (gfp=0xf0/0)
+> 
+> I'm running 2.4.27 compiled with Debian Sid options from the
+> kernel-image-2.4.27-1-686 package.
+> 
+> Is this a bug in raid0.c ?
 
-> On Monday November 29, raid@a2000.nu wrote:
->>
->> now i get 275MB/sec with raid0 (14 disks)
->> 171MB/sec with raid5 (14 disks)
->>
->> while the old raid5 situation was 257MB/sec with raid5 (13 disks)
->
-> I presume you are only looking at 'read' speed here.
-yes i'm looking at the read spead
+No.  The reference to raid0 is purely accidental - the offset into
+raid0 that is mentioned is -235378 : a negative number !!!!
 
-just tested 2.6.10-rc2
+> 
+> Is there a way to fix this?
 
-142148
+I suspect that it is a filesystem problem.
+I recommend reporting the problem to linux-kernel@vger.kernel.org and
+mentioning what filesystem you are using.
 
-this is 50% of the performance i get with the 2.4 kernel
-(the 171MB/sec i got yesterday with 14 disks was also with xfs)
-(xfs on 14d r5 gives 171371 read/ext3 on 14 r5 gives 132845 read)
+NeilBrown
 
-(2.6.10-rc2 13d r5 ext3)
-
-Version  1.03       ------Sequential Output------ --Sequential Input- 
---Random-
-                     -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- 
---Seeks--
-Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP 
-/sec %CP
-storage.a2000.nu 2G 24730  99 108265  88 59460  59 25759  91 142148  69 
-586.8   3
-                     ------Sequential Create------ --------Random 
-Create--------
-                     -Create-- --Read--- -Delete-- -Create-- --Read--- 
--Delete--
-               files  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP 
-/sec %CP
-                  16  1432  78 +++++ +++ +++++ +++  1456  77 +++++ +++ 
-4908  97
-storage.a2000.nu,2G,24730,99,108265,88,59460,59,25759,91,142148,69,586.8,3,16,1432,78,+++++,+++,+++++,+++,1456,77,+++++,+++,4908,97
-
->
-> There is a read optimisation that I haven't implemented in 2.6 yet
-> that could  account for about a 10% difference, but a 30% difference
-> definitely surprises me.
->
-> Normally raid5 will read into the stripe cache, and then copy data out
-> of the stripe cache and into the request buffer for reads.
-> The optimisation is to read directly into the request buffer in
-> situations where no degraded stripes or pending write requests.  This
-> optimisation is implemented in 2.4 and gave me about a 10% speedup on
-> sequential reads.  Its substantially more complicated in 2.6...
->
-> I might do a bit of testing myself, but more results from others would
-> be helpful...
->
-> NeilBrown
->
+> 
+> Thanks.
+> -- 
+> Cyril Bouthors
