@@ -1,55 +1,91 @@
-From: "John Stoffel" <stoffel@lucent.com>
-Subject: mdadm - comments on command layout
-Date: Fri, 13 Aug 2004 16:25:47 -0400
+From: Richard Massa <ramassa@ucdavis.edu>
+Subject: raid5 two disk temp failure
+Date: Fri, 13 Aug 2004 13:40:51 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16669.9163.392465.637229@gargle.gargle.HOWL>
+Message-ID: <20040813134051.B3328@tictactoe.unixboxen.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-md5;
+	protocol="application/pgp-signature"; boundary="H1spWtNR+x+ondvy"
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-Hi Neil,
+--H1spWtNR+x+ondvy
+Content-Type: multipart/mixed; boundary="y0ulUmNC+osPPQO6"
+Content-Disposition: inline
 
-I've been using mdadm recently to work with some arrays and I really
-have to say I dislike how the commands are laid out and used.  First
-off, they're not consistent from one usage to another.  Of course, I'm
-going to be jerk and not give good examples since my personal box at
-home is down and I'm at work.  But the idea is that when you assemble
-a RAID device, it should look similiar to how you manage that raid
-device.
 
-I'd also love it if there was an mdadm shell, so I could just type
-'mdadm' and get back a shell prompt like:
-	
-	mdadm>
+--y0ulUmNC+osPPQO6
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-which I could then use to manage my arrays.  
+Hi all,
 
-For example, I think all the commands should be of the format:
+I've got a 6 disk raid5 array that just failed because some little elf loos=
+ened the cable going=20
+to two of the disks in a scsi enclosure.  Both of them got kicked.
 
-    mdadm <comand> [options] <array> [devices...]
+Using mdadm -a /dev/md2 gives a segfault in both versions 1.6.0 and 1.7.0.
 
-as much as possible.  I'm basing my thoughts on both the Vertias VxVM
-command set, as well as the ClearCase 'cleartool' command shell.  So
-ideally I could do either:
+I can query the array using mdadm just fine, the output is attached.=20
 
-  > mdadm assemble md0 /dev/hda1 /dev/hda2 ...
-
-or
-
-  > mdadm
-  madam> assemble md0 /dev/hda1 /dev/hda2 ...
-
-depending on my mood.  Currently, the mdadm commands use various
-formats for their arguement layouts and it's a pain to figure out what
-to use.  
-
-So before I get all worked up on this issue, and spend a bunch of time
-mapping out how I think the commands should work, do people agree with
-my observation?  
+Anyone know what is going on?  I can attach a strace if that helps...
 
 Thanks,
-John
+Richard
+
+--y0ulUmNC+osPPQO6
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="t.txt"
+
+root@aske:/tmp/mdadm-1.6.0# mdadm -Q --examine /dev/sda1
+/dev/sda1:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : 92a6f7c4:4327b1f9:04f5c750:691edd28
+  Creation Time : Fri Jun 25 22:06:08 2004
+     Raid Level : raid5
+    Device Size : 195358336 (186.31 GiB 200.05 GB)
+   Raid Devices : 6
+  Total Devices : 6
+Preferred Minor : 2
+
+    Update Time : Fri Aug 13 19:58:01 2004
+          State : dirty
+ Active Devices : 4
+Working Devices : 4
+ Failed Devices : 2
+  Spare Devices : 0
+       Checksum : 7bc34bee - correct
+         Events : 0.43642
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+      Number   Major   Minor   RaidDevice State
+this     0       8        1        0      active sync   /dev/sda1
+   0     0       8        1        0      active sync   /dev/sda1
+   1     1       8       17        1      active sync   /dev/sdb1
+   2     2       8       33        2      active sync   /dev/sdc1
+   3     3       8       49        3      active sync   /dev/sdd1
+   4     4       8       65        4      faulty   /dev/sde1
+   5     5       8       81        5      faulty   /dev/sdf1
+
+--y0ulUmNC+osPPQO6--
+
+--H1spWtNR+x+ondvy
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.4 (GNU/Linux)
+
+iD8DBQFBHSdSxxcYbGc/L9URAvkkAJsH52kU90cLb+MNE78qQZVUKHrOcgCeMDN1
+DMjK1cxiTOw82m31eC6XmjU=
+=MWet
+-----END PGP SIGNATURE-----
+
+--H1spWtNR+x+ondvy--
