@@ -1,26 +1,28 @@
-From: Robin Bowes <robin-lists@robinbowes.com>
-Subject: Re: Broken harddisk
-Date: Tue, 01 Feb 2005 15:02:54 +0000
-Message-ID: <cto5m9$5k9$1@sea.gmane.org>
-References: <200501291617.j0TGHG918839@www.watkins-home.com> <41FBD68C.4040701@h3c.com>
+From: Niccolo Rigacci <niccolo@texnet.it>
+Subject: Forcing a more random uuid
+Date: Tue, 1 Feb 2005 18:47:39 +0100
+Message-ID: <200502011847.39444.niccolo@texnet.it>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-In-Reply-To: <41FBD68C.4040701@h3c.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Mike Hardy wrote:
-> If you're drives don't talk SMART (older ones don't, it doesn't work 
-> through all interfaces either) then by all means take Guy's advice. A 
-> 'dd' test is certainly valuable. But if they do talk SMART, I think its 
-> better
+My previous post was answered very quickly and with an optimal solution, 
+but unfortunately I have a new question...
 
-True enough. However, until SMART support makes it into linux SATA 
-drivers I'm pretty much stuck with dd!
+I'm writing a script to clone a disk with several md devices.
 
-R.
+The raid1 volumes are created on the blank disk within a very quick loop, I 
+think this is the reason why I get /dev/md5, /dev/md6, /dev/md7 
+and /dev/md8 all with the same UUID!
+
+Is there a way to force a more random UUID, or do I have to provide an 
+--uid option on the command line?
+
 -- 
-http://robinbowes.com
-
+Niccolo Rigacci
+http://www.texnet.it/
