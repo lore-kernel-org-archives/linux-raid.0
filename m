@@ -1,17 +1,35 @@
-From: Gordon Henderson <gordon@drogon.net>
-Subject: Re: Broken harddisk
-Date: Sat, 29 Jan 2005 15:56:18 +0000 (GMT)
-Message-ID: <Pine.LNX.4.56.0501291538270.25299@lion.drogon.net>
-References: <41FAD73F.1070504@gmx.net> <Pine.LNX.4.56.0501291218200.25299@lion.drogon.net>
- <41FBAD0B.2080408@gmx.net>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: Broken harddisk
+Date: Sat, 29 Jan 2005 11:19:11 -0500
+Message-ID: <200501291617.j0TGHG918839@www.watkins-home.com>
+References: <Pine.LNX.4.56.0501291538270.25299@lion.drogon.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <41FBAD0B.2080408@gmx.net>
+In-Reply-To: <Pine.LNX.4.56.0501291538270.25299@lion.drogon.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: "T. Ermlich" <pelegrine@gmx.net>
+To: 'Gordon Henderson' <gordon@drogon.net>, "'T. Ermlich'" <pelegrine@gmx.net>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+For future reference:
+
+Everyone should do a nightly disk test to prevent bad blocks from hiding
+undetected.  smartd, badblocks or dd can be used.  Example:
+dd if=/dev/sda of=/dev/null bs=64k
+
+Just create a nice little script that emails you the output.  Put this
+script in a nighty cron to run while the system is idle.
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Gordon Henderson
+Sent: Saturday, January 29, 2005 10:56 AM
+To: T. Ermlich
+Cc: linux-raid@vger.kernel.org
+Subject: Re: Broken harddisk
 
 On Sat, 29 Jan 2005, T. Ermlich wrote:
 
@@ -108,3 +126,8 @@ No... You don't need to format/mkfs the partitions, as the raid resync
 will take care of making it a mirror of the existing working disk.
 
 Gordon
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
