@@ -1,43 +1,57 @@
-From: Gordon Henderson <gordon@drogon.net>
-Subject: Re: /proc/partitions
-Date: Mon, 20 Dec 2004 12:32:32 +0000 (GMT)
-Message-ID: <Pine.LNX.4.56.0412201229240.4389@lion.drogon.net>
-References: <200411210433.iAL4XIN19967@www.watkins-home.com>
- <Pine.LNX.4.61.0411220909180.5652@treant.hhmi.umbc.edu> <41A281AD.8050404@verizon.net>
- <41A301DA.4010303@robinbowes.com> <1101213077.2244.6.camel@south.rosestar.lan>
- <Pine.LNX.4.56.0412201046050.4389@lion.drogon.net> <20041220114939.GA20243@inara.maison.net>
+From: christophe varoqui <christophe.varoqui@free.fr>
+Subject: [ANNOUNCE] multipath-tools-0.4.1
+Date: Mon, 20 Dec 2004 17:01:23 +0100
+Message-ID: <1103558483.11345.17.camel@zezette>
+References: <1096071849.4466.31.camel@zezette>
+	 <1097054573.4163b96d1262c@imp5-q.free.fr>
+	 <1097495416.416a73787e0ae@imp1-q.free.fr> <1098021787.5433.8.camel@zezette>
+	 <1098269169.417641f18a234@imp1-q.free.fr>
+	 <1098656088.9350.88.camel@zezette>
+	 <1098785191.417e21a7a7c28@imp1-q.free.fr>
+	 <1099328918.5525.10.camel@zezette> <1100214617.10251.92.camel@zezette>
+	 <1101394541.5820.71.camel@zezette>  <1102261392.29843.2.camel@zezette>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20041220114939.GA20243@inara.maison.net>
+In-Reply-To: <1102261392.29843.2.camel@zezette>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: device-mapper development <dm-devel@redhat.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-hotplug-devel@lists.sourceforge.net" <linux-hotplug-devel@lists.sourceforge.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, 20 Dec 2004, KELEMEN Peter wrote:
+Hello,
 
-> * Gordon Henderson (gordon@drogon.net) [20041220 10:50]:
->
-> > Is there any plans to make the entries in /proc/partitions
-> > return anything sensible for the md devices?
->
-> AFACT not.  Current consensus is that md devices don't do I/O,
-> they only dispatch I/O to lower layer devices, hence no stats.
-> (OTOH, I personally was in a situation at least once when it
-> would have been very useful -- regardless of the obvious double
-> accounting.)
+here goes multipath-tools-0.4.1
 
-Ok, Thanks.
+Another round of bugfixes.
+People are starting to report sane behaviour.
 
-> > If not, is there any other way to get some stats on reading &
-> > writing each md device?
->
-> Parse /proc/mdstat and cook up your own stat counters based on the
-> md member devices' stats.
+If someone at IBM (or knowledgeable enough) is listening, we need a
+method to check a path status on a T200 that don't trigger a controler
+bounce. Is it possible at all ?
 
-Sure. No real issue, actually graphing the individual disks might be
-interesting anyway, and then it ought to be easy to just sum the values.
-I'll drop the mrtg stuff back to the list if anyones intersted..
+Full ChangeLog for the release :
 
-Gordon
+        * [multipath] bump SERIAL_SIZE to 19
+        * [multipath] add a new group_by_node_name pgpolicy
+        * [multipath] move getopt policy parser to
+          get_policy_id()
+        * [multipath] remove get_evpd_wwid()
+        * [checkers] fix the wwn_set test in emc checker
+          (Hergen Lange)
+        * [checkers] treat the emc checker in the name to
+          index translator function (Hergen Lange)
+        * [multipath] print to stderr DM unmet requirement
+          (Guido Guenther)
+        * [multipath] fix realloc return value store not
+          propagated to caller by merge_word() (Nicola Ranaldo)
+
+As usual, doc and download at :
+http://christophe.varoqui.free.fr/
+
+regards,
+-- 
+christophe varoqui <christophe.varoqui@free.fr>
+
 
