@@ -1,17 +1,16 @@
 From: Loris <loris@sat.epfl.ch>
-Subject: (unknown)
-Date: Thu, 25 Sep 2003 01:37:04 +0200
+Subject: raid5 algorithm
+Date: Thu, 25 Sep 2003 01:44:28 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <00A23F76-EEE8-11D7-AD04-000502DEFA47@sat.epfl.ch>
+Message-ID: <09572E94-EEE9-11D7-AD04-000502DEFA47@sat.epfl.ch>
 Mime-Version: 1.0 (Apple Message framework v552)
-Content-Type: multipart/alternative; boundary=Apple-Mail-2-240078238
+Content-Type: multipart/alternative; boundary=Apple-Mail-4-240522342
 Return-path: <linux-raid-owner@vger.kernel.org>
-Subject: 
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
---Apple-Mail-2-240078238
+--Apple-Mail-4-240522342
 Content-Transfer-Encoding: 7bit
 Content-Type: text/plain;
 	charset=US-ASCII;
@@ -134,7 +133,7 @@ This is the end, my friend...
 Thanks for helping,
 
 Loris
---Apple-Mail-2-240078238
+--Apple-Mail-4-240522342
 Content-Transfer-Encoding: 7bit
 Content-Type: text/enriched;
 	charset=US-ASCII
@@ -348,5 +347,5 @@ Thanks for helping,
 
 
 Loris</fontfamily>
---Apple-Mail-2-240078238--
+--Apple-Mail-4-240522342--
 
