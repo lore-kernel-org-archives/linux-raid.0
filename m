@@ -1,49 +1,33 @@
-From: Lars Marowsky-Bree <lmb@suse.de>
+From: Gordon Henderson <gordon@drogon.net>
 Subject: Re: Checking consistency of Linux software RAID
-Date: Mon, 30 Jun 2003 15:16:33 +0200
+Date: Mon, 30 Jun 2003 14:28:57 +0100 (BST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20030630131633.GD12240@marowsky-bree.de>
-References: <4D618F6493CE064A844A5D496733D667031A01@freedom.icomedias.com>
+Message-ID: <Pine.LNX.4.43.0306301425030.31613-100000@unicorn.drogon.net>
+References: <20030630131655.GE12240@marowsky-bree.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4D618F6493CE064A844A5D496733D667031A01@freedom.icomedias.com>
-To: Martin Bene <martin.bene@icomedias.com>, linux-raid@vger.kernel.org
+In-Reply-To: <20030630131655.GE12240@marowsky-bree.de>
+To: Lars Marowsky-Bree <lmb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2003-06-30T14:58:19,
-   Martin Bene <martin.bene@icomedias.com> said:
+On Mon, 30 Jun 2003, Lars Marowsky-Bree wrote:
 
-> Scheduling a (weekly) complete media scan where all surfaces of all d=
-rives
-> get read; in case of read errors a repair is tried: the content for t=
-he
-> failed sector is reconstructed just as if the drive had completely fa=
-iled and
-> rewritten to the failed sector; if reading works afterwards, regard t=
-he
-> repair as successfull and continue using the drive.
+> On 2003-06-30T14:13:57,
+>    Gordon Henderson <gordon@drogon.net> said:
+>
+> > Try
+> >
+> > 	badblocks -v -s /dev/md0
+>
+> This won't do what he asked.
 
-This can't currently be done.
+You are pedantically correct, but in the absence of anything else, at
+least it could form a partial solution and let him know that a problem
+exists which could them be actioned in some way before it becomes data
+threatening.
 
-I'd suggest to start from the resync code and instead use it to check
-instead; add an ioctl to trigger the consistency scan, then you can
-schedule it via cron all you like.
+Gordon
 
 
-Sincerely,
-    Lars Marowsky-Br=E9e <lmb@suse.de>
-
---=20
-SuSE Labs - Research & Development, SuSE Linux AG
- =20
-"If anything can go wrong, it will." "Chance favors the prepared (mind)=
-=2E"
-  -- Capt. Edward A. Murphy            -- Louis Pasteur
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
