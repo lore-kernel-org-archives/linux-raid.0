@@ -1,108 +1,54 @@
-From: Emmanuel Michon <emmanuel_michon@realmagic.fr>
-Subject: trying to force usage of spare disk with raidhotremove causes bad logs
-Date: 22 Oct 2002 15:50:33 -0700
+From: Tim Hockin <thockin@sun.com>
+Subject: raid1.c BUG()
+Date: Wed, 23 Oct 2002 17:54:25 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <7wy98qrsue.fsf@achille.soft.sdesigns.com>
+Message-ID: <3DB744C1.3010604@sun.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+kernel 2.5.41
+Adaptec aic7899 U160 SCSI
+RAID1 on sda1 and sdb3
 
-my configuration is a default RH8.0:
-[root@frogproject root]#  rpm -qa |grep raid
-raidtools-1.00.2-3.3
-[root@frogproject root]# uname -a
-Linux frogproject.soft.sdesigns.com 2.4.18-14 #1 Wed Sep 4 13:35:50 EDT 2002 i686 i686 i386 GNU/Linux
-[root@frogproject root]# 
 
-I have setup a RAID5 software on five identical IDE drives hdb, hdc, hde, hdf, hdg
+------------[ cut here ]------------
+kernel BUG at drivers/md/raid1.c:667!
+invalid operand: 0000
+eepro100 mii binfmt_misc nfs lockd sunrpc nls_iso8859-1 nls_cp437 vfat 
+fat usbcore
+CPU:    0
+EIP:    0060:[<c025cbbc>]    Not tainted
+EFLAGS: 00010283
+EIP is at close_sync+0xdc/0x100
+eax: dfcb1314   ebx: 00000000   ecx: dfce1ea4   edx: 00000000
+esi: dfcb1200   edi: dfce1e00   ebp: 001f2100   esp: dfc7bea8
+ds: 0068   es: 0068   ss: 0068
+Process md_resync (pid: 19, threadinfo=dfc7a000 task=dfc7e140)
+Stack: c0116540 deb91f30 c0359800 dfc7e560 c02fdd00 dfc7e140 c03604a0 
+dfb4d70c
+        dfcb1200 00000002 dfce1e00 c025d4a3 dfcb1200 c043b6d7 001f2100 
+dfc7a000
+        00000002 dfce1e00 dfce1e00 c0267083 dfce1e00 001f2100 00000001 
+dfc7a000
+Call Trace:
+  [<c0116540>] __wake_up_common+0x40/0x60
+  [<c025d4a3>] sync_request+0x43/0x1d0
+  [<c0267083>] md_do_sync+0x513/0x560
+  [<c01164c0>] default_wake_function+0x0/0x40
+  [<c02660c9>] md_thread+0x169/0x1d0
+  [<c01164c0>] default_wake_function+0x0/0x40
+  [<c0265f60>] md_thread+0x0/0x1d0
+  [<c01070a9>] kernel_thread_helper+0x5/0xc
 
-Starting with:
-0:hdf 1:hdc 2:hde 3:hdg spare:hdb
-without recovery thread running, I just wanted to remove hde from the array to see the
-recovery thread using the spare hdb. Unfortunately this causes:
-
-# raidhotremove /dev/md0 /dev/hde1
-/dev/md0: can not hot-remove disk: disk busy!
-
-Even if user operation is bad, I should not get this log:
-
-Oct 22 15:40:34 frogproject kernel: md: bug in file md.c, line 2341
-Oct 22 15:40:34 frogproject kernel: 
-Oct 22 15:40:34 frogproject kernel: md:^I**********************************
-Oct 22 15:40:34 frogproject kernel: md:^I* <COMPLETE RAID STATE PRINTOUT> *
-Oct 22 15:40:34 frogproject kernel: md:^I**********************************
-Oct 22 15:40:34 frogproject kernel: md0: <hdb1><hdc1><hde1><hdf1><hdg1> array superblock:
-Oct 22 15:40:34 frogproject kernel: md:  SB: (V:0.90.0) ID:<3da9462e.51bae484.3ce93a37.a4af326e> CT:3db517fa
-Oct 22 15:40:34 frogproject kernel: md:     L5 S80035712 ND:5 RD:4 md0 LO:0 CS:65536
-Oct 22 15:40:34 frogproject kernel: md:     UT:3db5d2ff ST:0 AD:4 WD:5 FD:0 SD:1 CSUM:9a5912ec E:00000016
-Oct 22 15:40:34 frogproject kernel:      D  0:  DISK<N:0,hdf1(33,65),R:0,S:6>
-Oct 22 15:40:34 frogproject kernel:      D  1:  DISK<N:1,hdc1(22,1),R:1,S:6>
-Oct 22 15:40:34 frogproject kernel:      D  2:  DISK<N:2,hde1(33,1),R:2,S:6>
-Oct 22 15:40:34 frogproject kernel:      D  3:  DISK<N:3,hdg1(34,1),R:3,S:6>
-Oct 22 15:40:34 frogproject kernel:      D  4:  DISK<N:4,hdb1(3,65),R:4,S:0>
-Oct 22 15:40:34 frogproject kernel: md:     THIS:  DISK<N:4,hdb1(3,65),R:4,S:0>
-Oct 22 15:40:34 frogproject kernel: md: rdev hdb1: O:hdb1, SZ:80043136 F:0 DN:4 <6>md: rdev superblock:
-Oct 22 15:40:34 frogproject kernel: md:  SB: (V:0.90.0) ID:<3da9462e.51bae484.3ce93a37.a4af326e> CT:3db517fa
-Oct 22 15:40:34 frogproject kernel: md:     L5 S80035712 ND:5 RD:4 md0 LO:0 CS:65536
-Oct 22 15:40:34 frogproject kernel: md:     UT:3db5d2ff ST:0 AD:4 WD:5 FD:0 SD:1 CSUM:9a591328 E:00000016
-Oct 22 15:40:34 frogproject kernel:      D  0:  DISK<N:0,hdf1(33,65),R:0,S:6>
-Oct 22 15:40:34 frogproject kernel:      D  1:  DISK<N:1,hdc1(22,1),R:1,S:6>
-Oct 22 15:40:34 frogproject kernel:      D  2:  DISK<N:2,hde1(33,1),R:2,S:6>
-Oct 22 15:40:34 frogproject kernel:      D  3:  DISK<N:3,hdg1(34,1),R:3,S:6>
-Oct 22 15:40:34 frogproject kernel:      D  4:  DISK<N:4,hdb1(3,65),R:4,S:0>
-Oct 22 15:40:34 frogproject kernel: md:     THIS:  DISK<N:4,hdb1(3,65),R:4,S:0>
-Oct 22 15:40:34 frogproject kernel: md: rdev hdc1: O:hdc1, SZ:80043136 F:0 DN:1 <6>md: rdev superblock:
-Oct 22 15:40:34 frogproject kernel: md:  SB: (V:0.90.0) ID:<3da9462e.51bae484.3ce93a37.a4af326e> CT:3db517fa
-Oct 22 15:40:34 frogproject kernel: md:     L5 S80035712 ND:5 RD:4 md0 LO:0 CS:65536
-Oct 22 15:40:34 frogproject kernel: md:     UT:3db5d2ff ST:0 AD:4 WD:5 FD:0 SD:1 CSUM:9a5912fb E:00000016
-Oct 22 15:40:34 frogproject kernel:      D  0:  DISK<N:0,hdf1(33,65),R:0,S:6>
-Oct 22 15:40:34 frogproject kernel:      D  1:  DISK<N:1,hdc1(22,1),R:1,S:6>
-Oct 22 15:40:34 frogproject kernel:      D  2:  DISK<N:2,hde1(33,1),R:2,S:6>
-Oct 22 15:40:34 frogproject kernel:      D  3:  DISK<N:3,hdg1(34,1),R:3,S:6>
-Oct 22 15:40:34 frogproject kernel:      D  4:  DISK<N:4,hdb1(3,65),R:4,S:0>
-Oct 22 15:40:34 frogproject kernel: md:     THIS:  DISK<N:1,hdc1(22,1),R:1,S:6>
-Oct 22 15:40:34 frogproject kernel: md: rdev hde1: O:hde1, SZ:80043136 F:0 DN:2 <6>md: rdev superblock:
-Oct 22 15:40:34 frogproject kernel: md:  SB: (V:0.90.0) ID:<3da9462e.51bae484.3ce93a37.a4af326e> CT:3db517fa
-Oct 22 15:40:34 frogproject kernel: md:     L5 S80035712 ND:5 RD:4 md0 LO:0 CS:65536
-Oct 22 15:40:34 frogproject kernel: md:     UT:3db5d2ff ST:0 AD:4 WD:5 FD:0 SD:1 CSUM:9a591308 E:00000016
-Oct 22 15:40:34 frogproject kernel:      D  0:  DISK<N:0,hdf1(33,65),R:0,S:6>
-Oct 22 15:40:34 frogproject kernel:      D  1:  DISK<N:1,hdc1(22,1),R:1,S:6>
-Oct 22 15:40:34 frogproject kernel:      D  2:  DISK<N:2,hde1(33,1),R:2,S:6>
-Oct 22 15:40:34 frogproject kernel:      D  3:  DISK<N:3,hdg1(34,1),R:3,S:6>
-Oct 22 15:40:34 frogproject kernel:      D  4:  DISK<N:4,hdb1(3,65),R:4,S:0>
-Oct 22 15:40:34 frogproject kernel: md:     THIS:  DISK<N:2,hde1(33,1),R:2,S:6>
-Oct 22 15:40:34 frogproject kernel: md: rdev hdf1: O:hdf1, SZ:80043136 F:0 DN:0 <6>md: rdev superblock:
-Oct 22 15:40:34 frogproject kernel: md:  SB: (V:0.90.0) ID:<3da9462e.51bae484.3ce93a37.a4af326e> CT:3db517fa
-Oct 22 15:40:34 frogproject kernel: md:     L5 S80035712 ND:5 RD:4 md0 LO:0 CS:65536
-Oct 22 15:40:34 frogproject kernel: md:     UT:3db5d2ff ST:0 AD:4 WD:5 FD:0 SD:1 CSUM:9a591344 E:00000016
-Oct 22 15:40:34 frogproject kernel:      D  0:  DISK<N:0,hdf1(33,65),R:0,S:6>
-Oct 22 15:40:34 frogproject kernel:      D  1:  DISK<N:1,hdc1(22,1),R:1,S:6>
-Oct 22 15:40:34 frogproject kernel:      D  2:  DISK<N:2,hde1(33,1),R:2,S:6>
-Oct 22 15:40:34 frogproject kernel:      D  3:  DISK<N:3,hdg1(34,1),R:3,S:6>
-Oct 22 15:40:34 frogproject kernel:      D  4:  DISK<N:4,hdb1(3,65),R:4,S:0>
-Oct 22 15:40:34 frogproject kernel: md:     THIS:  DISK<N:0,hdf1(33,65),R:0,S:6>
-Oct 22 15:40:34 frogproject kernel: md: rdev hdg1: O:hdg1, SZ:80043136 F:0 DN:3 <6>md: rdev superblock:
-Oct 22 15:40:34 frogproject kernel: md:  SB: (V:0.90.0) ID:<3da9462e.51bae484.3ce93a37.a4af326e> CT:3db517fa
-Oct 22 15:40:34 frogproject kernel: md:     L5 S80035712 ND:5 RD:4 md0 LO:0 CS:65536
-Oct 22 15:40:34 frogproject kernel: md:     UT:3db5d2ff ST:0 AD:4 WD:5 FD:0 SD:1 CSUM:9a59130b E:00000016
-Oct 22 15:40:34 frogproject kernel:      D  0:  DISK<N:0,hdf1(33,65),R:0,S:6>
-Oct 22 15:40:34 frogproject kernel:      D  1:  DISK<N:1,hdc1(22,1),R:1,S:6>
-Oct 22 15:40:34 frogproject kernel:      D  2:  DISK<N:2,hde1(33,1),R:2,S:6>
-Oct 22 15:40:34 frogproject kernel:      D  3:  DISK<N:3,hdg1(34,1),R:3,S:6>
-Oct 22 15:40:34 frogproject kernel:      D  4:  DISK<N:4,hdb1(3,65),R:4,S:0>
-Oct 22 15:40:34 frogproject kernel: md:     THIS:  DISK<N:3,hdg1(34,1),R:3,S:6>
-Oct 22 15:40:34 frogproject kernel: md:^I**********************************
-Oct 22 15:40:34 frogproject kernel: 
-Oct 22 15:40:34 frogproject kernel: md: cannot remove active disk hde1 from md0 ... 
-
-Do you have an advise about this?
+Code: 0f 0b 9b 02 a4 25 2d c0 8b 8e 20 01 00 00 51 e8 f0 0b ee ff
 
 -- 
-Emmanuel Michon
-Chef de projet
-REALmagic France SAS
-Mobile: 0614372733 GPGkeyID: D2997E42  
+Tim Hockin
+Systems Software Engineer
+Sun Microsystems, Linux Kernel Engineering
+thockin@sun.com
+
