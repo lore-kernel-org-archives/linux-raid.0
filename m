@@ -1,57 +1,60 @@
-From: "Rev. Jeffrey Paul" <sneak@datavibe.net>
+From: Gordon Henderson <gordon@drogon.net>
 Subject: Re: experiences with 3Ware 6400 3W-6400?
-Date: Fri, 27 Jun 2003 09:24:02 -0400 (EDT)
+Date: Fri, 27 Jun 2003 14:43:23 +0100 (BST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.55.0306270920010.6883@datavibe.net>
-References: <Pine.LNX.4.55.0306261656520.6883@datavibe.net><Pine.LNX.4.55.03062616
-     56520.6883@datavibe.net>      <5.1.1.6.2.20030626174603.03bacec0@mail.harddata.com>
- <1908.66.75.244.69.1056697569.squirrel@www.greenhydrant.com>
+Message-ID: <Pine.LNX.4.43.0306271429480.32150-100000@unicorn.drogon.net>
+References: <Pine.LNX.4.55.0306270920010.6883@datavibe.net>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1908.66.75.244.69.1056697569.squirrel@www.greenhydrant.com>
-To: David Rees <dbr@greenhydrant.com>
-Cc: linux-raid@vger.kernel.org
+In-Reply-To: <Pine.LNX.4.55.0306270920010.6883@datavibe.net>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 27 Jun 2003, David Rees wrote:
+On Fri, 27 Jun 2003, Rev. Jeffrey Paul wrote:
 
-> Maurice Hilarius said:
-> >>Rev. Jeffrey Paul said:
-> >> >
-> >> > I'm thinking of buying one of these for a production server that I'm
-> >> > setting up.  Has anyone had any experiences with these on linux, good
-> >> > or bad?
-> >
-> > Why would you buy a 2 year old, nearly unsupported card?
-> > ?Heck I can sell you 8 port 3W-7810 cards for under $300
-> > And they work really well in software RAID.
->
-> I was going to mention the same thing in my post, but forgot.  I didn't
-> think that you could buy the 6400 new anymore, so where are you getting
-> them from?  The 7500 runs about $250 which is a bit expensive for real
-> low-budget servers.
->
-> -Dave
+> I'd done some quick searches for "3ware" on ebay, having heard good things
+> about their ide-raid cards.  The 7xxx series are too expensive for the
+> project I'm working on at the moment.  It's either an older card, or
+> software RAID1 (and, with all due respect, I don't want to use linux
+> software raid in -this sort- of production environment).
 
-I'd done some quick searches for "3ware" on ebay, having heard good things
-about their ide-raid cards.  The 7xxx series are too expensive for the
-project I'm working on at the moment.  It's either an older card, or
-software RAID1 (and, with all due respect, I don't want to use linux
-software raid in -this sort- of production environment).
+Er.. Why not?
 
-Are the 6xxx series really that bad?  I don't care about 'nearly'
-unsupported, just as long as it works.  My budget for this whole project
-is likely less than $500.
+> We're currently looking at raid1 across two 80-120GB disks for a samba
+> file server in an office that does a lot of graphic design.
 
-We're currently looking at raid1 across two 80-120GB disks for a samba
-file server in an office that does a lot of graphic design.
+I've setup several small servers doing just this with 2 x IDE drives
+mirrored (RAID1) using the on-board controllers on the motherboard
+concerned. Make both drives masters, connect them up, pick your Linux
+distribution and off you go..
 
--j
+There is the problem that the dual on-board IDE controllers are usually
+inside the same physical chip, and if that fails you'll lose both drives
+until you replace the mobo, but you are in the same boat if a plug-in PCI
+RAID card fails too. I've not (yet?) had problems with a failed drive
+stopping the 2nd drive from working, as long as they are on separate
+controllers (ie 2 masters off the mobo controller) I have seen one failed
+drive take out a 2nd on the same bus though, so thats not recomended.
+(once the failed drive was removed, the other did work correctly though)
 
---
---------------------------------------------------------
- Rev. Jeffrey Paul    -datavibe-     sneak@datavibe.net
-   aim:x736e65616b   pgp:0x15FA257E   phone:8777483467
-    70E0 B896 D5F3 8BF4 4BEE 2CCF EF2F BA28 15FA 257E
---------------------------------------------------------
+Eg. the PC I'm currently typing this email on is 100 miles away and I
+don't particularly want to drive to it to fix it if a disk fails...
+
+gordon @ unicorn: df -h /
+Filesystem            Size  Used Avail Use% Mounted on
+/dev/md0              236M   20M  204M   9% /
+
+gordon @ unicorn: cat /proc/mdstat
+...
+md0 : active raid1 hdc1[1] hda1[0]
+      249856 blocks [2/2] [UU]
+...
+
+I've been using Linux software RAID1 on this particular machine for well
+over 2 years now. This is one of my own personal servers and 2.5 years ago
+I had to think hard about spending the extra on a 2nd drive. These days I
+wouldn't think twice about doing it.
+
+Gordon
+
