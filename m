@@ -1,43 +1,42 @@
-From: "Dave Dodge" <dododge@smart.net>
-Subject: Re: ANNOUNCE: User-space System Device Enumation (uSDE)
-Date: Thu, 30 Oct 2003 21:29:26 -0500
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: Booting from a raid1 device ?
+Date: Fri, 31 Oct 2003 09:28:42 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200310310229.VAA30940@smarty.smart.net>
-References: <20031031005854.GC4906@kroah.com>
+Message-ID: <20031031082841.GB26757@percy.comedia.it>
+References: <E5DA6395B8F9614EB7A784D628184B200E33DE@hdsmsx402.hd.intel.com> <3FA06158.9040007@tls.msk.ru>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: Greg KH <greg@kroah.com>
-Cc: "Guo, Min" <min.guo@intel.com>, Steven Dake <sdake@mvista.com>, Lars Marowsky-Bree <lmb@suse.de>, Mark Bellon <mbellon@mvista.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, linux-hotplug-devel@lists.sourceforge.net, cgl_discussion@osdl.org, "Ling, Xiaofeng" <xiaofeng.ling@intel.com>
+Content-Disposition: inline
+In-Reply-To: <3FA06158.9040007@tls.msk.ru>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Greg KH writes: 
-> On Thu, Oct 30, 2003 at 07:45:08PM -0500, David Dodge wrote:
-[...]
-> > Mainly I'm asking because I did try putting a hotplug script into an
-> > initramfs a few weeks ago (using -test7), and it didn't appear to be
-> > invoked for e.g. the VESA framebuffer. So I want to make sure this is a
-> > "future" capability and not something that should have worked :-)
-> 
-> This is something that should have worked for you today, /sbin/hotplug
-> does get called during early boot, before init is started up.
+On Thu, Oct 30, 2003 at 03:54:48AM +0300, Michael Tokarev wrote:
+>  why the hell a boot loader should "mirror" anything to the second disk? :)
+>
+>That is.  Place standard MBR into the boot sector.  An MBR that will boot
+>from active partition.  Be it e.g. /dev/hda and /dev/hdb.  Create raid1
+>device from /dev/hda1 and /dev/hdb1.  Mark both partitions as active.
+>And install whatever boot loader you want into /dev/md1 - it will be
+>mirrored automatically to /dev/hda1 and /dev/hdb1 (and to whatever else
+>disks you'll use).
+1) are you really mirroring on the same ide controller?
+2) whoever told you that the first 512 bytes of a partition are fair
+game? lvm uses those, and IIRC xfs does too.
 
-Okay, I'll keep working at it.  Unfortunately my main test system has
-since had a major hardware failure and I haven't gotten a replacement
-set up yet.
+L.
+Btw i recall reading somewhere that grub actually modifies the disk it
+is booting from if luser wants to change the kernel command line.
+I dunno if it is true or not, and i am too lazy to read the source. Can
+anyone confirm or deny that?
 
-In the meantime, from a quick look at the kernel code I see this:
+L.
 
-  - invocations of /sbin/hotplug normally go through call_usermodehelper.
-
-  - kernel/kmod.c: call_usermodehelper does this prior to scheduling
-    any work:
-
-        if (!system_running)
-                return -EBUSY;
-
-  - init/main.c: system_running is not set non-zero until just
-    prior to starting init. 
-
-So it looks like calls to hotplug are dropped while compiled-in
-drivers are initializing.  Or am I missing something obvious?  I
-needed a one-line patch to be able to boot into initramfs; do I need
-another to enable call_usermodehelper earlier?
+-- 
+Luca Berra -- bluca@comedia.it
+        Communication Media & Services S.r.l.
+ /"\
+ \ /     ASCII RIBBON CAMPAIGN
+  X        AGAINST HTML MAIL
+ / \
