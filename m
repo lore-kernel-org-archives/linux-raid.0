@@ -1,46 +1,47 @@
-From: Suresh Grandhi <Sureshg@ami.com>
-Subject: Bug in the raidtools-1.00.3 package
-Date: Wed, 17 Sep 2003 16:35:49 -0400
+From: Lars Marowsky-Bree <lmb@suse.de>
+Subject: Re: md multipath and failover
+Date: Thu, 18 Sep 2003 11:12:54 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <8CCBDD5583C50E4196F012E79439B45C058C1F@atl-ms1.megatrends.com>
+Message-ID: <20030918091254.GB30149@marowsky-bree.de>
+References: <sf607904.085@gw.state.sc.us>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: "'linux-raid@vger.kernel.org'" <linux-raid@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <sf607904.085@gw.state.sc.us>
+To: Doug Griswold <griswld@cio.sc.gov>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
-With the raidtools package, mkraid fails while creating devices /dev/md1
-when the raid device /dev/md10 is already running.
-The problem is that the code has used strstr("/dev/md1", "/dev/md10")  which
-returns valid pointer, which outputs 
-"array is active - run raidstop first" error message.
+On 2003-09-11T13:30:41,
+   Doug Griswold <griswld@cio.sc.gov> said:
 
-I am including a patch for the code.
+> deal.  My next question is how can I apply this patch to the red hat
+> supplied kernel 2.4.9-27 enterprise so I will still have red hat supp=
+ort
+> on this kernel?
 
-diff -urN raidtools-1.00.3/raid_io.c raidtools-1.00.3-new/raid_io.c
---- raidtools-1.00.3/raid_io.c  2002-12-11 12:35:14.000000000 -0500
-+++ raidtools-1.00.3-new/raid_io.c      2003-09-17 16:20:19.000000000 -0400
-@@ -520,6 +520,9 @@
-        char buffer[MAX_LINE_LENGTH], line[MAX_LINE_LENGTH], *ch;
-        FILE *fp;
+No idea. I doubt RH will support a patched kernel anyway, even if you
+started from their base source. I suggest you contact your support
+representative about this.
 
-+       memset(buffer, 0, MAX_LINE_LENGTH);
-+       memset(line, 0, MAX_LINE_LENGTH);
-+
-        if ((ch = strstr(p->md_name, "/md")) == NULL)
-                return 0;
-        strcpy(buffer, ch+1);
-@@ -528,7 +531,7 @@
-        while (1) {
-                if ((fgets(line, MAX_LINE_LENGTH, fp)) == NULL)
-                        break;
--               if (strstr(line, buffer) && !strstr(line, "inactive")) {
-+               if (!strcmp(line, buffer) && !strstr(line, "inactive")) {
-                        fprintf(stderr, "%s: array is active -- run raidstop
-first.\n", p->md_name);
-                        fclose(fp);
-                        return 1;
+> Also is there away with this patch applied to get failback? =20
 
-Regards,
-Suresh Grandhi
+You have to do it in user-space, ie monitor the paths periodically and
+restore them if you are satisfied.
+
+
+Sincerely,
+    Lars Marowsky-Br=E9e <lmb@suse.de>
+
+--=20
+High Availability & Clustering		ever tried. ever failed. no matter.
+SuSE Labs				try again. fail again. fail better.
+Research & Development, SuSE Linux AG		-- Samuel Beckett
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
