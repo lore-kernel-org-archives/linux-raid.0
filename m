@@ -1,17 +1,34 @@
-From: Robin Bowes <robin-lists@robinbowes.com>
-Subject: Re: Stress testing system?
-Date: Sat, 09 Oct 2004 00:44:11 +0100
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: Stress testing system?
+Date: Fri, 8 Oct 2004 19:48:42 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <4167264B.8070507@robinbowes.com>
-References: <4167078A.3030609@robinbowes.com> <Pine.LNX.4.56.0410082257450.26162@lion.drogon.net>
+Message-ID: <200410082348.i98NmlN19747@www.watkins-home.com>
+References: <4167264B.8070507@robinbowes.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.56.0410082257450.26162@lion.drogon.net>
-To: Gordon Henderson <gordon@drogon.net>
+In-Reply-To: <4167264B.8070507@robinbowes.com>
+To: 'Robin Bowes' <robin-lists@robinbowes.com>, 'Gordon Henderson' <gordon@drogon.net>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+Not normal.  Was it ever synced?
+Wait for it to re-sync, then reboot and check the status.
+Some people have problems after a reboot.
+
+Cat /proc/mdstat for the ETA and status.
+
+Guy
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Robin Bowes
+Sent: Friday, October 08, 2004 7:44 PM
+To: Gordon Henderson
+Cc: linux-raid@vger.kernel.org
+Subject: Re: Stress testing system?
 
 Gordon Henderson wrote:
 > On Fri, 8 Oct 2004, Robin Bowes wrote:
@@ -32,15 +49,24 @@ I tried this - just a simple command to start with:
 
 This gave the following results:
 
-Version  1.03       ------Sequential Output------ --Sequential Input- --Random-
-                     -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- --Seeks--
-Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP  /sec %CP
-dude.robinbowes 10M 11482  92 +++++ +++ +++++ +++ 15370 100 +++++ +++ 13406 124
-                     ------Sequential Create------ --------Random Create--------
-                     -Create-- --Read--- -Delete-- -Create-- --Read--- -Delete--
-               files  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP
-                  16   347  88 +++++ +++ 19794  91   332  86 +++++ +++  1106  93
-dude.robinbowes.com,10M,11482,92,+++++,+++,+++++,+++,15370,100,+++++,+++,13406.0
+Version  1.03       ------Sequential Output------ --Sequential Input-
+--Random-
+                     -Per Chr- --Block-- -Rewrite- -Per Chr- --Block--
+--Seeks--
+Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP  /sec
+%CP
+dude.robinbowes 10M 11482  92 +++++ +++ +++++ +++ 15370 100 +++++ +++ 13406
+124
+                     ------Sequential Create------ --------Random
+Create--------
+                     -Create-- --Read--- -Delete-- -Create-- --Read---
+-Delete--
+               files  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec
+%CP
+                  16   347  88 +++++ +++ 19794  91   332  86 +++++ +++  1106
+93
+dude.robinbowes.com,10M,11482,92,+++++,+++,+++++,+++,15370,100,+++++,+++,134
+06.0
 ,124,16,347,88,+++++,+++,19794,91,332,86,+++++,+++,1106,93
 
 
@@ -97,8 +123,14 @@ Working Devices : 6
 
         5       8       82        -      spare   /dev/sdf2
 
-Is this normal? Should running bonnie++ result in the array being dirty and requiring resyncing?
+Is this normal? Should running bonnie++ result in the array being dirty and
+requiring resyncing?
 
 R.
 -- 
 http://robinbowes.com
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
