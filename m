@@ -1,35 +1,27 @@
-From: Jure =?UTF-8?Q?Pe=C3=A8ar?= <pegasus@nerv.eu.org>
-Subject: Re: ANNOUNCE: mdadm 1.7.0 - A tool for managing Soft RAID under
- Linux
-Date: Wed, 11 Aug 2004 15:55:07 +0200
+From: Bellet@cdrom.com
+Subject: software
+Date: Wed, 11 Aug 2004 19:04:13 +0000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040811155507.307d91d0.pegasus@nerv.eu.org>
-References: <16665.33913.505058.370245@cse.unsw.edu.au>
+Message-ID: <4LCDH159D4BGBIKG@cdrom.com>
+References: <78HC59543B334A44@vger.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <16665.33913.505058.370245@cse.unsw.edu.au>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <78HC59543B334A44@vger.kernel.org>
+To: Linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, 11 Aug 2004 12:29:13 +1000
-Neil Brown <neilb@cse.unsw.edu.au> wrote:
-	=20
->     -   Add support for "raid10", which is under development in 2.6.
-> 	Not documented yet.
+Windows 2000 Server - 50
+Adobe Illustrator 10 - 80
+Office 2003 Professional - 110   
+Windows 2000 Server - 50
+Adobe Acrobat 6.0 Professional - 100
+Microsoft Office XP Professional - 100
+Adobe InDesign CS - 100
+Adobe PageMaker 7.0 - 60
+Adobe Illustrator 10 - 80
+Ahead Nero v6.3 Powerpack - 40
 
-Where can one read more about this? I assume it's going to be a seppara=
-te
-raid personality, not just raid0 over raid1? Or is it going to be a dm
-mapping scheme?
+and a lot more http://www.bestsoftconvert.info/
 
-
---=20
-
-Jure Pe=E8ar
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
