@@ -1,28 +1,25 @@
-From: <me@heyjay.com>
-Subject: Deleting an raid device
-Date: Tue, 25 May 2004 07:54:38 -0500
+From: danci@agenda.si
+Subject: SAF-TE - status lights ctrl tool?
+Date: Tue, 25 May 2004 15:02:52 +0200 (CEST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <002501c44257$7135dd80$6705a8c0@a30>
-Reply-To: <me@heyjay.com>
+Message-ID: <Pine.LNX.4.58.0405251458170.16269@desktop.agenda.si>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+The thing is I have a remote server with HotSwap SAF-TE enclosure and 
+Linux SW RAID-1 (2.2 kernel).
 
-What are the proper steps for deleting all remnants of a previous raid
-install?
+One of the disks has gone bad and it needs to be replaced. I can get
+somebody local to do that but I need to make it very clear to them which
+of the disks is bad and may be pulled out.
 
-I've done:
-mdadm --stop /dev/md0
-mdadm --zero-superblock /dev/md0
+SAF-TE enclosure has status LEDs for such purpose and HW RAID controllers
+use them to mark failed drives...
 
-But I still see it getting stopped on shutdown.
+Does anyone know if it is possible to activate/deactive this LEDs from 
+within Linux and how?
 
-Thanks
-Jay
-
+ Thanks, D.
