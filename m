@@ -1,61 +1,26 @@
-From: Alex <devel@qnet.ro>
+From: Derek Vadala <derek@cynicism.com>
 Subject: Re: AW: raid1 reconfig failed to work! help!
-Date: Wed, 2 Oct 2002 17:00:42 +0300
+Date: Wed, 2 Oct 2002 10:06:18 -0400 (EDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200210021700.42481.devel@qnet.ro>
-References: <4D618F6493CE064A844A5D496733D66703132C@freedom.icomedias.com>
+Message-ID: <Pine.LNX.4.30.0210021005100.14300-100000@jaded.cynicism.com>
+References: <200210021700.42481.devel@qnet.ro>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D618F6493CE064A844A5D496733D66703132C@freedom.icomedias.com>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <200210021700.42481.devel@qnet.ro>
+To: Alex <devel@qnet.ro>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Martin,
+On Wed, 2 Oct 2002, Alex wrote:
 
-Thanks for the hint is working!
+> Another question: did you know a program for monitoring raid array and
+> when a hdd is down(mark failed) to start some beeps?
 
-Another question: did you know a program for monitoring raid array and 
-when a hdd is down(mark failed) to start some beeps?
+Try mdadm (http://www.cse.unsw.edu.au/~neilb/source/mdadm/). It has a
+monitor mode which can be customized to execute any program when an array
+(or array member disk) fails. It can also send email alerts.
 
-Thanks,
-Alex
-
-
-On Wednesday 02 October 2002 16:01, Martin Bene wrote:
-> > [root@server root]# cat /etc/raidtab
-> > raiddev /dev/md0
-> >         raid-level      1
-> >         nr-raid-disks   2
-> >         nr-spare-disks  0
-> >         chunk-size     32
-> >         persistent-superblock 1
-> >         device          /dev/sdb1
-> >         raid-disk       0
-> >         device          /dev/sdc1
-> >         raid-disk       1
-> >
-> > Now i tryed to add a spare hdd. For this, i edited a newraidtab
-> > file: [root@server root]# cat /etc/newraidtab
-> > raiddev /dev/md0
-> >         raid-level      1
-> >         nr-raid-disks   2
-> >         nr-spare-disks  1
-> >         chunk-size     32
-> >         persistent-superblock 1
-> >         device          /dev/sdb1
-> >         raid-disk       0
-> >         device          /dev/sdc1
-> >         raid-disk       1
-> > 	device	/dev/sdb1
-> > 	spare-disk	0
-> >
-> > [root@server root]# raidreconf -o /etc/raidtab -n /etc/newraidtab
-> > -m
->
-> You don't need raidreconf to add a spare disk; just add it with
-> raidhotadd to the running array.
->
-> Bye, Martin
+---
+Derek Vadala, derek@cynicism.com, http://www.cynicism.com/~derek
 
