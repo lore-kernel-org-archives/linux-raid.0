@@ -1,36 +1,23 @@
-From: "Stephen Hargrove" <stephen@exitwound.org>
-Subject: Re: Bad Recovery
-Date: Sat, 10 Jan 2004 14:08:23 -0600 (CST)
+From: Daniel Brahneborg <daniel.com@wtnord.net>
+Subject: More info regarding failed RAID over VIA
+Date: Sun, 11 Jan 2004 14:34:17 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3460.192.168.1.81.1073765303.squirrel@exitwound.org>
-References: <4648.192.168.1.81.1073694507.squirrel@exitwound.org>
-    <20040110124512.GB5928@percy.comedia.it>
-Reply-To: stephen@exitwound.org
+Message-ID: <20040111143417.F2945@nettis.grimsta>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20040110124512.GB5928@percy.comedia.it>
+Content-Disposition: inline
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Luca Berra said:
-> On Fri, Jan 09, 2004 at 06:28:27PM -0600, Stephen Hargrove wrote:
->># mdadm -a /dev/hde1
->>mdadm: /dev/hde1 does not appear to be an md device
->
-> syntax is: mdadm /dev/md<number> -a /dev/hde1
+With SATA disks connected to the chipset VIA237SATA, handled
+by the generic IDE PCI driver, RAID0 and RAID1 work fine as
+long as one waits for the sync to finish.  Even RAID1 over
+RAID0 works fine.
 
+However, RAID5 on the same partitions causes file corruption
+every time.  I've tried both 2 and 4 partitions, with and
+without the Device Mapper.
 
-Oh man ... I can't believe I screwed that up.  This did it.  Thanks!
-
---
-Steve
-------------------------------------------
-http://www.exitwound.org......hard to find
-http://www.buckowensfan.com...he's the man
-------------------------------------------
-On some days, it's hard to believe I
-out-swam a million other sperm.
-------------------------------------------
+/Basic
 
