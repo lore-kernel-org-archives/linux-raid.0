@@ -1,199 +1,35 @@
-From: alexander.weber@pta.de
-Subject: RAID1-Device won't survive reboot
-Date: Wed, 8 Oct 2003 17:25:53 +0200
+From: anthony mayes <anmayes@siue.edu>
+Subject: raid0 + raid1 question
+Date: Wed, 08 Oct 2003 15:53:19 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <OFBE4F4C3A.AD55E9B4-ONC1256DB9.0052F11A@pta.de>
+Message-ID: <3F84793F.6060400@siue.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello fellows,
+I have 7 disks in an x86 box.  I want to have 2 raid0's (concatenations) 
+of 3 disks each.  Then I want to raid1 (mirror) the raid0's.   This 
+leaves 1 disk for the OS.
 
-I have set up a SuSE 8.2-box with two harddrives making up a RAID1-Array,
-including the root-partition on /dev/md0. The system works just fine, but
-what me keeps uncomfortable is the fact that after reboot /dev/md0 works on
-only one disk. Look:
+Is it possible to remove one of the raid0's (concatenation of 3 disks) 
+from the raid1 (mirror)?
 
-cat /proc/mdstat
-Personalities : [raid1]
-read_ahead 1024 sectors
-md0 : active raid1 hdb1[0]
-      5245120 blocks [2/1] [U_]
+I need to perform a backup while a highly visible application continues 
+to run.  Currently I am using Disksuite on a Solaris 8/SPARC platform 
+with the afore mentioned configuration. First the mirror is broken and 
+half of the mirror is mounted as another filesystem while the 
+application continues to run on the other half of the mirror.  The 
+backup is performed and then the mirror is resync'ed.  However, I want 
+to move to x86 and linux and need to know if the same is possible and 
+how to do it.  Does anyone have any experience / advise?
 
-md1 : active raid1 hdb5[0] hda5[1]
-      5245120 blocks [2/2] [UU]
+-- 
+Anthony Mayes
+UNIX Server Administration
+Southern Illinois University Edwardsville
+anmayes@siue.edu
 
-md2 : active raid1 hdb6[0] hda6[1]
-      15735552 blocks [2/2] [UU]
-
-md3 : active raid1 hdb7[0] hda7[1]
-      5245120 blocks [2/2] [UU]
-
-unused devices: <none>
-
-After
-raidhotadd /dev/md0 /dev/hda1
-/dev/hda1 is added to the array, and after resyncing it will do its job,
-but the next reboot will leave it failed again.
-
-What can I do to make my RAID-array survive a reboot?
-Thanks for hints.
-
-Alexander
-
-
-
-Before raidhotadd:
- # mdadm -E /dev/hda1
-/dev/hda1:
-          Magic : a92b4efc
-        Version : 00.90.00
-           UUID : 2598fd96:1021343c:b783de9d:198f6167
-  Creation Time : Fri Sep 12 17:42:02 2003
-     Raid Level : raid1
-    Device Size : 5245120 (5.00 GiB 5.37 GB)
-   Raid Devices : 2
-  Total Devices : 3
-Preferred Minor : 0
-
-    Update Time : Mon Sep 29 15:31:47 2003
-          State : dirty, no-errors
- Active Devices : 2
-Working Devices : 2
- Failed Devices : 1
-  Spare Devices : 0
-       Checksum : 2f2368bf - correct
-         Events : 0.106
-
-
-      Number   Major   Minor   RaidDevice State
-this     1       3        1        1      active sync   /dev/hda1
-   0     0       3       65        0      active sync   /dev/hdb1
-   1     1       3        1        1      active sync   /dev/hda1
-
-Then:
-
-# raidhotadd /dev/md0 /dev/hda1
-# mdadm -E /dev/hda1
-/dev/hda1:
-          Magic : a92b4efc
-        Version : 00.90.00
-           UUID : 2598fd96:1021343c:b783de9d:198f6167
-  Creation Time : Fri Sep 12 17:42:02 2003
-     Raid Level : raid1
-    Device Size : 5245120 (5.00 GiB 5.37 GB)
-   Raid Devices : 2
-  Total Devices : 3
-Preferred Minor : 0
-
-    Update Time : Wed Oct  8 16:21:39 2003
-          State : dirty, no-errors
- Active Devices : 1
-Working Devices : 2
- Failed Devices : 1
-  Spare Devices : 1
-       Checksum : 2f2f51eb - correct
-         Events : 0.112
-
-
-      Number   Major   Minor   RaidDevice State
-this     2       3        1        2        /dev/hda1
-   0     0       3       65        0      active sync   /dev/hdb1
-   1     1       0        0        1      faulty removed
-   2     2       3        1        2        /dev/hda1
-# cat /proc/mdstat
-Personalities : [raid1]
-read_ahead 1024 sectors
-md0 : active raid1 hda1[2] hdb1[0]
-      5245120 blocks [2/1] [U_]
-      [======>..............]  recovery = 31.1% (1632712/5245120)
-finish=1.8min speed=32243K/sec
-md1 : active raid1 hdb5[0] hda5[1]
-      5245120 blocks [2/2] [UU]
-
-md2 : active raid1 hdb6[0] hda6[1]
-      15735552 blocks [2/2] [UU]
-
-md3 : active raid1 hdb7[0] hda7[1]
-      5245120 blocks [2/2] [UU]
-
-unused devices: <none>
-
-# cat /proc/mdstat
-Personalities : [raid1]
-read_ahead 1024 sectors
-md0 : active raid1 hda1[1] hdb1[0]
-      5245120 blocks [2/2] [UU]
-
-md1 : active raid1 hdb5[0] hda5[1]
-      5245120 blocks [2/2] [UU]
-
-md2 : active raid1 hdb6[0] hda6[1]
-      15735552 blocks [2/2] [UU]
-
-md3 : active raid1 hdb7[0] hda7[1]
-      5245120 blocks [2/2] [UU]
-
-unused devices: <none>
-
-# mdadm -E /dev/hda1
-/dev/hda1:
-          Magic : a92b4efc
-        Version : 00.90.00
-           UUID : 2598fd96:1021343c:b783de9d:198f6167
-  Creation Time : Fri Sep 12 17:42:02 2003
-     Raid Level : raid1
-    Device Size : 5245120 (5.00 GiB 5.37 GB)
-   Raid Devices : 2
-  Total Devices : 3
-Preferred Minor : 0
-
-    Update Time : Wed Oct  8 16:24:14 2003
-          State : dirty, no-errors
- Active Devices : 2
-Working Devices : 2
- Failed Devices : 1
-  Spare Devices : 0
-       Checksum : 2f2f5291 - correct
-         Events : 0.113
-
-
-      Number   Major   Minor   RaidDevice State
-this     1       3        1        1      active sync   /dev/hda1
-   0     0       3       65        0      active sync   /dev/hdb1
-   1     1       3        1        1      active sync   /dev/hda1
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-**********************************************************************
-http://www.pta.de
-Mit 783 Erfahrungsberichten aus 34 Jahren erfolgreicher Projektarbeit!
-**********************************************************************
 
