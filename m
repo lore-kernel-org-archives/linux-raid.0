@@ -1,9 +1,9 @@
 From: "Michael S. Peek" <peek@tiem.utk.edu>
 Subject: Questions about LARGE, RAID storage under Linux
 Date: Tue, 20 May 2003 12:15:39 -0400
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <S263852AbTETQCk/20030520160240Z+2889@vger.kernel.org>
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <S263850AbTETQCk/20030520160240Z+12789@vger.kernel.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
 To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 Cc: peek@vger.kernel.org
 List-Id: linux-raid.ids
@@ -35,3 +35,4 @@ later down the road and use software RAID to concatenate them together.
 Thanks for any help you can give,
 
 Michael
+
