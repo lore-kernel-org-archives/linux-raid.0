@@ -1,63 +1,88 @@
-From: "Jason C. Leach" <jleach@ocis.net>
-Subject: Re: I/O Blocking
-Date: Thu, 22 Jul 2004 11:09:53 -0700
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: Add disks to RAID5 array
+Date: Thu, 22 Jul 2004 14:07:28 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <410002F1.3050703@ocis.net>
-References: <200407221802.i6MI2n328114@watkins-home.com>
+Message-ID: <200407221807.i6MI7S328145@watkins-home.com>
+References: <S266727AbUGVQUG/20040722162006Z+461@vger.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200407221802.i6MI2n328114@watkins-home.com>
-To: Guy <bugzilla@watkins-home.com>
-Cc: linux-raid@vger.kernel.org
+In-Reply-To: <S266727AbUGVQUG/20040722162006Z+461@vger.kernel.org>
+To: robin-lists@robinbowes.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Guy:
+A tool called Raidreconf can do what you want.
+I have never used it.
+I don't know how much risk there is in data loss.
+I would backup my data first!
 
-CPU load is very low (95-96% idle), load avg is 2. The system has 512MB 
-RAM, some free and only a few megs swapped out.  If I was really working 
-the RAID card I would get load avgs more like 2.5-3.  Right now just 
-light USB and system usage and I am at 2.
+Find it, read about it, and understand it.
 
-I though if one CPU was tied up with the process that is blocking (using 
-the RAID card), then the second would be free to deal with user 
-requests. Or am I misunderstanding SMP and blocking I/O?
+Maybe someone else can comment on the risks?
 
-J.
+Guy
 
-Guy wrote:
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of
+robin-lists@robinbowes.com
+Sent: Thursday, July 22, 2004 12:20 PM
+To: linux-raid@vger.kernel.org
+Subject: Add disks to RAID5 array
 
->What is the CPU load like?  Are you at 100%?  If so a second CPU may help.
->If you are blocked on i/o it should not use much CPU, so my guess is your
->CPU load is very low, and a second CPU won't do much.  How much RAM do you
->have?  Are you swapping?
->
->Guy
->
->-----Original Message-----
->From: linux-raid-owner@vger.kernel.org
->[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Jason C. Leach
->Sent: Thursday, July 22, 2004 12:29 PM
->To: linux-raid@vger.kernel.org
->Subject: I/O Blocking
->
->Hi,
->
->Both the RAID (Promise SuperTrak 6000) or the USB subsystems really 
->drive the system load up. I'm using a AMD 3200+ system that is only a 
->few months old with the 2.4.25 kernel.  When the I/O systems are 
->blocking the system is very unresponsive. Some times samba will timeout, 
->or I'll wait several seconds for commands like df, top, w and so on.
->
->I am wondering if I were to use a dual CPU system, would this solve my 
->I/O blocking problem?  Would one CPU tend to the I/O subsystem and the 
->second would deal with other system requests I (samba, DB, LDAP, ...)?
->-
->To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->  
->
+Hi,
+
+I had intended to build a RAID5 array using 6 x 250GB drives. However, 3 of
+6 drives have proven to be faulty and have been RMA'd.
+
+I've successfully built the array using the remaining 3 x 250GB drives
+(details below)
+
+Now, when I get the other three disks back, how do I add them to this array
+and increase the size of the array? Is this possible?
+
+Thanks,
+
+R.
+
+
+
+[root@dude root]# mdadm --detail /dev/md5
+/dev/md5:
+        Version : 00.90.01
+  Creation Time : Thu Jul 22 14:13:50 2004
+     Raid Level : raid5
+     Array Size : 487283200 (464.71 GiB 498.98 GB)
+    Device Size : 243641600 (232.35 GiB 249.49 GB)
+   Raid Devices : 3
+  Total Devices : 3
+Preferred Minor : 5
+    Persistence : Superblock is persistent
+
+    Update Time : Thu Jul 22 17:00:18 2004
+          State : clean
+ Active Devices : 3
+Working Devices : 3
+ Failed Devices : 0
+  Spare Devices : 0
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+    Number   Major   Minor   RaidDevice State
+       0       8        2        0      active sync   /dev/sda2
+       1       8       18        1      active sync   /dev/sdb2
+       2       8       34        2      active sync   /dev/sdc2
+           UUID : dde32a88:4b9bf7c1:1a634922:efbac4b0
+         Events : 0.448136
+
+--
+http://robinbowes.com 
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
