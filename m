@@ -1,79 +1,183 @@
-From: "berk walker" <berk@panix.com>
-Subject: Re: Broken harddisk
-Date: Sat, 29 Jan 2005 18:30:42 -0500
-Message-ID: <opsld0xgoiv40d6c@berk.site>
-References: <200501291617.j0TGHG918839@www.watkins-home.com> <41FBD68C.4040701@h3c.com>
-Mime-Version: 1.0
-Content-Type: text/plain; format=flowed; delsp=yes; charset=utf-8
-Content-Transfer-Encoding: 8bit
+From: ptb@lab.it.uc3m.es (Peter T. Breuer)
+Subject: Robust read patch for raid1
+Date: Sun, 30 Jan 2005 02:26:42 +0100
+Message-ID: <inptc2-f5r.ln1@news.it.uc3m.es>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <41FBD68C.4040701@h3c.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mike Hardy <mhardy@h3c.com>, Guy <bugzilla@watkins-home.com>
-Cc: 'Gordon Henderson' <gordon@drogon.net>, "'T. Ermlich'" <pelegrine@gmx.net>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I think it might be a good idea to check memory, and power supply.  I have  
-had several motherboards where the IDE channels went bad. I have become a  
-believer of not using exact same drives in an array, because today's  
-quality control in manufacturing (not design nor testing) Clones may have  
-very similardegradation rates, suddenly, it seems, dying together.  it is  
-not possible to get the manufacturer's name and lot for the platters, but  
-_maybe_ buying similar drives of different mfgs might cut down the  
-multiple failure rates.  raid1 your boot disk.  another compubox sometimes  
-helps as a control for checking hdwe.  Think about spending the extra bux  
-for another raid box, and have them rsync'd. you _can_ have stable,  
-automatic, online backup of all of your data (don't forget the ups's), if  
-the house burns down, it will be trivial that you lost data - or you could  
-share mirroring with a remotely located friend, so if one house burnt to  
-the ground, maybe the other still has the data.  doing the continuous  
-circle of backups level 1 thru 9 by hand feeding tapes just sux, and might  
-not even work on restore.  knew a business that backed up every day,  
-system fried - and the tapes could not be read.
+I've had the opportunity to test the "robust read" patch that I posted
+earier in the month (10 Jan, Subject: Re: Spares and partitioning huge
+disks), and it needs one more change ... I assumed that the raid1 map
+function would move a (retried) request to another disk, but it des not,
+it always moves it to disk 0 in the array.  So now I've changed the
+function to move the request to the next disk instead.  The previous
+patch would only have worked if the read fault were not on the first
+disk.
 
-sorry - too much from me (just thinking that it's too damned bad that we  
-can't go to the local whatever store and walk out with SCSI stuff.
+Allow me to remind what the patch does: it allows raid1 to proceed
+smoothly after a read error on a mirror component, without faulting the
+component.  If the information is on another component, it will be
+returned.  If all components are faulty, an error will be returned, but
+nothing faulted out of the array.
 
-b-
+An additional ifdefed out patch within the patch does a write repair,
+but it is untested (probably incomplete) so I haven't enabled it.
+
+The patch I am publishing below has only been confirmed to work on the
+2.4.24 kernel, but I'll publish the 2.6.8.1 version (untested, hey,
+even uncompiled) in the hopes of getting more testers.
+
+Fuller patches with hookups to the kernel config files (make
+menuconfig, etc) are in there as part of the fr1 patchset at
+
+   ftp://oboe.it.uc3m.es/pub/Programs/fr1-2.16.tgz
+
+The tests I have run on 2.4 are this paltry few:
+
+   1) confirm that normal operation is well, normal, incuding rsyncs
+   2) confirm that a read error in a block on one mirror component
+      is recovered via a read from a different component.
+
+I haven't tested what happens when all the components have a read error
+in the same block. It was hard enough to do (2).
+
+The patch is now in FOUR hunks.
+
+1) Put the count of valid disks in the "remaining" field during
+   construction of a raid1 read bio (make_request).
+
+2) In the end_request code, simply, instead of erroring the current disk
+   out of the array whenever an error has happened, do it only if a
+   WRITE is being handled.
+
+3) Also in end_request, finish a read request back to the user not only
+   if the component read was successful, but also if we were
+   unsuccessful and we have already tried all possible mirror components
+   (we decrement the remaining count each time we go through here).
+
+   The read request will be rescheduled otherwise.
+
+4) change the remap (map) of the target device that happens on
+   rescheduling to move on to the next possibility, not always try the
+   first mirror component, as at present.
+
+You have to set
+
+  CONFIG_MD_RAID1_ROBUST_READ
 
 
-On Sat, 29 Jan 2005 10:31:40 -0800, Mike Hardy <mhardy@h3c.com> wrote:
+--- linux-2.6.8.1/drivers/md/raid1.c.pre-fr1-robust-read	Sun Jan 16 12:48:15 2005
++++ linux-2.6.8.1/drivers/md/raid1.c	Sun Jan 30 00:56:37 2005
+@@ -227,6 +227,9 @@
+ {
+ 	conf_t *conf = mddev_to_conf(mddev);
+ 	int i, disks = conf->raid_disks;
++#ifdef CONFIG_MD_RAID1_ROBUST_READ
++        mdk_rdev_t *rdev = *rdevp;
++#endif /* CONFIG_MD_RAID1_ROBUST_READ */
+ 
+ 	/*
+ 	 * Later we do read balancing on the read side
+@@ -234,6 +237,31 @@
+ 	 */
+ 
+ 	spin_lock_irq(&conf->device_lock);
++#ifdef CONFIG_MD_RAID1_ROBUST_READ
++        /*
++         * Uh, no. Choose the next disk if we can, not the first.
++         */
++	for (i = 0; i < disks; i++) {
++		if (conf->mirrors[i].rdev == rdev) {
++        	        i++;
++                    	break;
++                }
++        }
++	if (i >= disks)
++		i = 0;
++	for (; i < disks; i++) {
++		if (conf->mirrors[i].operational) {
++			*rdevp = conf->mirrors[i].rdev;
++			atomic_inc(&(*rdevp)->nr_pending);
++			spin_unlock_irq(&conf->device_lock);
++			return i;
++		}
++        }
++        /*
++         * If for some reason we fund nothing, dropthru and use the old
++         * routine.
++         */
++#endif /* CONFIG_MD_RAID1_ROBUST_READ */
+ 	for (i = 0; i < disks; i++) {
+ 		mdk_rdev_t *rdev = conf->mirrors[i].rdev;
+ 		if (rdev && rdev->in_sync) {
+@@ -342,9 +370,19 @@
+ 	/*
+ 	 * this branch is our 'one mirror IO has finished' event handler:
+ 	 */
+-	if (!uptodate)
+-	        md_error(r1_bio->mddev, conf->mirrors[mirror].rdev);
+-        else
++	if (!uptodate) {
++#ifdef CONFIG_MD_RAID1_ROBUST_READ
++	        /*
++                 * Only fault disk out of array on write error, not read.
++                 */
++	        if (0)
++#endif /* CONFIG_MD_RAID1_ROBUST_READ */
++	        	md_error(r1_bio->mddev, conf->mirrors[mirror].rdev);
++#ifdef DO_ADD_READ_WRITE_CORRECT
++	        else    /* tell next time we're here that we're a retry */
++	                set_bit(R1BIO_ReadRetry, &r1_bio->state);
++#endif /* DO_ADD_READ_WRITE_CORRECT */
++        } else
+ 		/*
+ 		 * Set R1BIO_Uptodate in our master bio, so that
+ 		 * we will return a good error code for to the higher
+@@ -361,8 +399,20 @@
+ 	/*
+ 	 * we have only one bio on the read side
+ 	 */
+-	if (uptodate)
+-		raid_end_bio_io(r1_bio);
++	if (uptodate
++#ifdef CONFIG_MD_RAID1_ROBUST_READ
++                /* Give up and error if we're last */
++                || (atomic_dec_and_test(&r1_bio->remaining))
++#endif /* CONFIG_MD_RAID1_ROBUST_READ */
++                )
++#ifdef DO_ADD_READ_WRITE_CORRECT
++	        if (uptodate && test_bit(R1BIO_ReadRewrite, &r1_bio->state)) {
++	                /* Success at last - rewrite failed reads */
++			set_bit(R1BIO_IsSync, &r1_bio->state);
++			reschedule_retry(r1_bio);
++		} else
++#endif /* DO_ADD_READ_WRITE_CORRECT */
++			raid_end_bio_io(r1_bio);
+ 	else {
+ 		/*
+ 		 * oops, read error:
+@@ -665,6 +718,21 @@
+ 		read_bio->bi_end_io = raid1_end_read_request;
+ 		read_bio->bi_rw = READ;
+ 		read_bio->bi_private = r1_bio;
++#ifdef CONFIG_MD_RAID1_ROBUST_READ
++                if (1) {
++			atomic_set(&r1_bio->remaining, 0);
++			/* count source devices under spinlock */
++			spin_lock_irq(&conf->device_lock);
++	        	disks = conf->raid_disks;
++			for (i = 0;  i < disks; i++) {
++				if (conf->mirrors[i].rdev &&
++				!conf->mirrors[i].rdev->faulty) {
++					atomic_inc(&r1_bio->remaining);
++				} 
++			}
++			spin_unlock_irq(&conf->device_lock);
++                }
++#endif /* CONFIG_MD_RAID1_ROBUST_READ */
+ 
+ 		generic_make_request(read_bio);
+ 		return 0;
 
->
-> Guy wrote:
->> For future reference:
->>  Everyone should do a nightly disk test to prevent bad blocks from  
->> hiding
->> undetected.  smartd, badblocks or dd can be used.  Example:
->> dd if=/dev/sda of=/dev/null bs=64k
->>  Just create a nice little script that emails you the output.  Put this
->> script in a nighty cron to run while the system is idle.
->
-> While I agree with your purpose 100% Guy, I respectfully disagree with  
-> the method. If at all possible, you should use tools that access the  
-> SMART capabilities of the device so that you get more than a read test -  
-> you also get statistics on the various other health parameters the drive  
-> checks some of which can serve fair warning of impending death before  
-> you get bad blocks.
->
-> http://smartmontools.sf.net is the source for fresh packages there, and  
-> smartd can be set up with a config file to do tests on any schedule you  
-> like, emailing you urgent results as it gets them, or just putting  
-> information of general interest in the logs that Logwatch picks up.
->
-> If you're drives don't talk SMART (older ones don't, it doesn't work  
-> through all interfaces either) then by all means take Guy's advice. A  
-> 'dd' test is certainly valuable. But if they do talk SMART, I think its  
-> better
->
-> -Mike
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
-
-
--- 
-Using Opera's revolutionary e-mail client: http://www.opera.com/m2/
