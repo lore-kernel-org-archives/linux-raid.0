@@ -1,52 +1,41 @@
-From: christophe.varoqui@free.fr
-Subject: [ANNOUNCE] multipath-tools-0.3.5
-Date: Tue, 26 Oct 2004 12:06:31 +0200
-Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1098785191.417e21a7a7c28@imp1-q.free.fr>
-References: <1096071849.4466.31.camel@zezette> <1097054573.4163b96d1262c@imp5-q.free.fr> <1097495416.416a73787e0ae@imp1-q.free.fr> <1098021787.5433.8.camel@zezette> <1098269169.417641f18a234@imp1-q.free.fr> <1098656088.9350.88.camel@zezette>
+From: Lars Marowsky-Bree <lmb@suse.de>
+Subject: Re: [dm-devel] Re: [ANNOUNCE] multipath-tools-0.3.4
+Date: Mon, 25 Oct 2004 23:03:04 +0200
+Sender: linux-scsi-owner@vger.kernel.org
+Message-ID: <20041025210304.GH3714@marowsky-bree.de>
+References: <1096071849.4466.31.camel@zezette> <1097054573.4163b96d1262c@imp5-q.free.fr> <1097495416.416a73787e0ae@imp1-q.free.fr> <1098021787.5433.8.camel@zezette> <1098269169.417641f18a234@imp1-q.free.fr> <1098656088.9350.88.camel@zezette> <1098692559.2798.7.camel@laptop.fenrus.org> <1098697123.417cc9a3b5bc5@imp1-q.free.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1098656088.9350.88.camel@zezette>
-To: device-mapper development <dm-devel@redhat.com>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1098697123.417cc9a3b5bc5@imp1-q.free.fr>
+To: device-mapper development <dm-devel@redhat.com>, Arjan van de Ven <arjan@infradead.org>
 Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-hotplug-devel@lists.sourceforge.net" <linux-hotplug-devel@lists.sourceforge.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hello,
+On 2004-10-25T11:38:43, christophe.varoqui@free.fr wrote:
 
-here goes multipath-tools-0.3.5
+> In fact all the sg stuff I use is done with the SG_IO ioctl (see
+> libcheckers/*.c) But somehow, it doesn't work as expected. I don't
+> remember how exactly it failed in my tests but it did ... I remembere=
+d
+> receiving bad path status and experiencing blocked checkers.
 
-As expected, 0.3.4 was still cutting at the edges, so this is a bugfix oriented
-release. Thanks for the feedback so far.
+Can you please clarify the error you saw? I didn't experience that yet
+with the SG_IO ioctl().
 
-Note the changes to udev config files : they need updating
-Note the unproven 2.6.10-rc1+ new dependency for SG_IO ioctl on bdevs.
 
-Full ChangeLog for the release :
+Sincerely,
+    Lars Marowsky-Br=E9e <lmb@suse.de>
 
-	* [multipathd] fix broken test for path going up or shaky
-	  that kept executing multipath when it shouldn't
-	* change multipath.dev to exit early when udev' DEVNAME is
-	  a devmap (/dev/dm-*). This avoids a recursion case when
-	  the kernel devmapper keeps removing a map after multipath
-	  configures it.
-	* change multipath.rules to follow the new -D synthax
-	* [multipath] "-D major minor" synthax changed to
-	  "-D major:minor" to match the sysfs attribute value.
-	  This change removes a few translations in multipath and
-	  multipathd.
-	* [multipath] fix segfault in test if conf->dev is a devmap
-	  (the one forwarded by MikeAnd)
-	* SG_IO ioctl seem to work in lk 2.6.10+, so remove all sg
-	  device knowledge and advertise (here) the new dependency.
-	* [multipath] remove unused do_tur()
-	* [multipath] fix sort_pg_by_summed_prio(), and don't add up
-	  failed path priority
+--=20
+High Availability & Clustering
+SUSE Labs, Research and Development
+SUSE LINUX AG - A Novell company
 
-As usual, doc and download at :
-http://christophe.varoqui.free.fr/
-
-regards,
---
-christophe varoqui <christophe.varoqui@free.fr>
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
