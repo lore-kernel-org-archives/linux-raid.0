@@ -1,40 +1,63 @@
-From: Sevatio <sevatio@atella.com>
-Subject: Re: Bootable Raid Problem
-Date: Sat, 15 May 2004 09:40:02 -0700
+From: Ninti Systems <office@ninti.com.au>
+Subject: Re: Please review: Slackware RAID How-To
+Date: 16 May 2004 15:13:36 +0930
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <40A647E2.50606@atella.com>
-References: <40A4E19F.4080405@atella.com> <40A60F4D.2020909@begu.net>
+Message-ID: <1084686215.1197.24.camel@localhost>
+References: <1084290138.25942.30.camel@ws101.darkcore.net>
+Reply-To: office@ninti.com.au
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <40A60F4D.2020909@begu.net>
-To: linux-raid@vger.kernel.org
-Cc: Bernd Fischer <bernd@begu.net>
+In-Reply-To: <1084290138.25942.30.camel@ws101.darkcore.net>
+To: John Lange <john.lange@bighostbox.com>
+Cc: LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Bernd Fischer wrote:
+John, I've had a chance to review the Slackware RAID How-to, which I
+used to help build a RAID1 array with two disks under Slackware 9.1.
 
-> Sevatio wrote:
-> 
->> I'm having a problem with md0.  It's supposed to bind hda5 and hdc5 
->> but it's only able to bring up hdc5 for md0.  md0 is being mounted as 
->> /boot.  Being that it's /boot, I can't seem to umount it to do 
->> anything to it. 
-> 
-> 
-> I can't make much of this question, but I can tell you two things:
-> 
-> 1. You don't need to umount the device for most operations.
-> 
-> 2. You can umount next to anything, provided there are no opened files 
-> there. Do a "lsof /boot", or perhaps "lsof | grep boot" and kill the 
-> listed programs before trying umount (usually, it's only klogd reading 
-> /boot/System.map).
-> 
-> Bernd Fischer
-> 
-> 
+Building the arrays went like a dream, I don't know why I never thought
+of doing it this way before, rather than trying to work with degraded
+arrays etc after the OS was already installed.
 
-Thanks so much Bernd.  I was able to umount /boot so I can hopefully get 
-to the raid1 portion of this problem.
+I had some initial problems loading software, I kept getting disk full
+messages, but I think that was an installer script issue: it doesn't
+seem very tolerant of option changes being made, and there is often no
+going back if you make a wrong selection.
+
+Anyway, I built the arrays and installed the OS, but can't get LILO
+figured out. No matter whether I try to use automatic or expert mode, I
+can't install LILO to either the MBR or /boot. So I never get a bootable
+system at the end of the process. 
+
+I've read the lilo and lilo.conf man pages to try a find out what my
+lilo.conf file should look like and what files should be where (eg
+vmLinuz etc), but they're not much use to someone new to this. 
+
+
+On Wed, 2004-05-12 at 01:12, John Lange wrote:
+> As mentioned, I have created a Slackware RAID How-To and an initial
+> draft is located here:
+> 
+> http://www.langefamily.ca/howto/SlackwareRaidHowTo.html
+> 
+> This document covers getting Slackware installed on a system with RAID.
+> This technique does not require a temporary hard drive or anything other
+> than a Slackware boot CD.
+> 
+> I am fairly new to linux software RAID so I really hope some more
+> experienced people will take some time to read it and give me some
+> feedback. I would hate to have some glaring errors inflicted on others!
+> 
+> Thanks.
+-- 
+--------------------------------------
+Ninti Systems: Smart IT Solutions
+Michael Hall
+Mobile: 0429 095 392
+Ph/Fax: 08 8953 1442       
+Email:  office at ninti dot com dot au
+Web:    http://ninti.com.au
+--------------------------------------
+
