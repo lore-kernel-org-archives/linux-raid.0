@@ -1,17 +1,44 @@
 From: "Guy" <bugzilla@watkins-home.com>
-Subject: Odd md related top output with kernel 2.4.28
-Date: Mon, 6 Dec 2004 01:41:55 -0500
-Message-ID: <200412060642.iB66g0900966@www.watkins-home.com>
-References: <20041205072652.GA30477@percy.comedia.it>
+Subject: RE: Odd md related top output with kernel 2.4.28
+Date: Mon, 6 Dec 2004 02:15:13 -0500
+Message-ID: <200412060715.iB67FI901088@www.watkins-home.com>
+References: <200412060642.iB66g0900966@www.watkins-home.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20041205072652.GA30477@percy.comedia.it>
+In-Reply-To: <200412060642.iB66g0900966@www.watkins-home.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+I did a reboot, the same thing.  Even if the system is idle.
+
+From "top":
+    8 root     18446744073709551615 -20     0    0     0 SW<   0.0  0.0
+0:00
+   28 root     18446744073709551615 -20     0    0     0 SW<   0.0  0.0
+0:00
+   29 root     18446744073709551615 -20     0    0     0 SW<   0.0  0.0
+0:00
+   30 root     18446744073709551615 -20     0    0     0 SW<   0.0  0.0
+0:00
+
+From "ps -ef"
+root         8     1  0 01:57 ?        00:00:00 [mdrecoveryd]
+root        28     1  0 01:57 ?        00:00:00 [raid5d]
+root        29     1  0 01:57 ?        00:00:00 [raid1d]
+root        30     1  0 01:57 ?        00:00:00 [raid1d]
+
+Guy
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Guy
+Sent: Monday, December 06, 2004 1:42 AM
+To: linux-raid@vger.kernel.org
+Subject: Odd md related top output with kernel 2.4.28
 
 Neil, (or anyone)
 	I just upgraded my system from kernel 2.4.20.8smp (redhat) to 2.4.28
@@ -63,4 +90,9 @@ ksoftirqd_CPU
    21 root       9   0     0    0     0 SW    0.0  0.0   0:00   1 scsi_eh_3
    28 root     18446744073709551615 -20     0    0     0 SW<   0.0  0.0
 0:01
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
