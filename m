@@ -1,61 +1,59 @@
-From: Mike Tran <mhtran@us.ibm.com>
-Subject: Re: Spare disk could not sleep / standby
-Date: Tue, 08 Mar 2005 09:59:48 -0600
-Message-ID: <422DCBF4.9060306@us.ibm.com>
-References: <422D327D.11718.F8DB3@localhost>	<200503080414.j284EG510309@www.watkins-home.com> <16941.11443.107607.735855@cse.unsw.edu.au>
+From: Paul Clements <paul.clements@steeleye.com>
+Subject: Re: [PATCH md 0 of 4] Introduction
+Date: Tue, 08 Mar 2005 12:02:17 -0500
+Message-ID: <422DDA99.60608@steeleye.com>
+References: <20050308165021.3745.patches@notabene> <6jj0g2-c27.ln1@news.it.uc3m.es>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-In-Reply-To: <16941.11443.107607.735855@cse.unsw.edu.au>
+Content-Type: text/plain; charset=iso-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+In-Reply-To: <6jj0g2-c27.ln1@news.it.uc3m.es>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@cse.unsw.edu.au>
+To: "Peter T. Breuer" <ptb@lab.it.uc3m.es>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
+Peter T. Breuer wrote:
 
->On Monday March 7, bugzilla@watkins-home.com wrote:
->  
->
->>I have no idea, but...
->>
->>Is the disk IO reads or writes.  If writes, scary!!!!  Maybe data destined
->>for the array goes to the spare sometimes.  I hope not.  I feel safe with my
->>2.4 kernel.  :)
->>    
->>
->
->It is writes, but don't be scared.  It is just super-block updates.
->
->In 2.6, the superblock is marked 'clean' whenever there is a period of
->about 20ms of no write activity.  This increases the chance on a
->resync won't be needed after a crash.
->(unfortunately) the superblocks on the spares need to be updated too.
->
->The only way around this that I can think of is to have the spares
->attached to some other array, and have mdadm monitoring the situation
->and using the SpareGroup functionality to move the spare to where it
->is needed when it is needed.
->This would really require having and array with spare drives but no
->data drives... maybe a 1-drive raid1 with a loopback device as the
->main drive, and all the spares attached to that..... there must be a
->better way, or atleast some sensible support in mdadm to make it not
->too horrible.  I'll think about it.
->
->  
->
-While updating superblocks, faulty disks are skipped.  Maybe skipping 
-superblock update on spares could be considered.  Of course, this 
-requires conresponding changes in md superblock validation code.
+> Neil - can you describe for me (us all?) what is meant by
+> intent=ADlogging here.
 
-In addition, I would suggest to treat spares as shared global disks.   
-That is a spare can be referenced by more than 1 md array.  After a 
-spare is selected to recover a degraded array, it will be removed from 
-the shared list.  I know that this suggestion is away from the 
-SpareGroup functionality used by mdadm.  But I am afraid that there is 
-timing issue with monitoring /proc/mdstat.
+Since I wrote a lot of the code, I guess I'll try...
+
+> Well, I can guess - I suppose the driver marks the bitmap before a wr=
+ite
+> (or group of writes) and unmarks it when they have completed
+> successfully.  Is that it?
+
+Yes. It marks the bitmap before writing (actually queues up the bitmap=20
+and normal writes in bunches for the sake of performance). The code is=20
+actually (loosely) based on your original bitmap (fr1) code.
+
+> If so, how does it manage to mark what it is _going_ to do (without
+> psychic powers) on the disk bitmap? =20
+
+That's actually fairly easy. The pages for the bitmap are locked in=20
+memory, so you just dirty the bits you want (which doesn't actually=20
+incur any I/O) and then when you're about to perform the normal writes,=
+=20
+you flush the dirty bitmap pages to disk.
+
+Once the writes are complete, a thread (we have the raid1d thread doing=
+=20
+this) comes back along and flushes the (now clean) bitmap pages back to=
+=20
+disk. If the pages get dirty again in the meantime (because of more=20
+I/O), we just leave them dirty and don't touch the disk.
+
+> Then resync would only deal with the marked blocks.
+
+Right. It clears the bitmap once things are back in sync.
 
 --
-Regards,
-Mike T.
+Paul
 
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
