@@ -1,33 +1,34 @@
-From: Gordon Henderson <gordon@drogon.net>
-Subject: /proc/partitions
-Date: Mon, 20 Dec 2004 10:50:01 +0000 (GMT)
-Message-ID: <Pine.LNX.4.56.0412201046050.4389@lion.drogon.net>
-References: <200411210433.iAL4XIN19967@www.watkins-home.com>
- <Pine.LNX.4.61.0411220909180.5652@treant.hhmi.umbc.edu>  <41A281AD.8050404@verizon.net>
-  <41A301DA.4010303@robinbowes.com> <1101213077.2244.6.camel@south.rosestar.lan>
+From: Holger Kiehl <Holger.Kiehl@dwd.de>
+Subject: Re: Maximum theoretical RAID-0 Speed
+Date: Mon, 20 Dec 2004 11:08:55 +0000 (GMT)
+Message-ID: <Pine.LNX.4.58.0412201056430.10850@diagnostix.dwd.de>
+References: <1c4.217b364e.2ef65ba7@aol.com> <41C5CBB4.1040606@nsr500.net>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1101213077.2244.6.camel@south.rosestar.lan>
+In-Reply-To: <41C5CBB4.1040606@nsr500.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Tim Moore <linux-raid@nsr500.net>
+Cc: linux-raid <linux-raid@vger.kernel.org>, AndyLiebman@aol.com
 List-Id: linux-raid.ids
 
+On Sun, 19 Dec 2004, Tim Moore wrote:
 
-Is there any plans to make the entries in /proc/partitions return anything
-sensible for the md devices?
+> AndyLiebman@aol.com wrote:
+> > So, as I said above,  that means I don't have any drives connected to the
+> > two PCI-X 133 slots (or to the segments they correspond to) because that
+> > would slow down the bus speed for those segments and presumably hurt my
+> > network performance. 
+> 
+>   Since the PCI/133 bandwidth available is about 1GB/s and a GbE port consumes
+> 100MB/s, that leaves 900MB/s for disk controllers that will only do 400MB/s.
+> On the 100MHz slot you get 800MB/s.  This is the first thing to change, then
+> retest.
+> 
+Network controllers are very interrupt intensive and can pull down the
+troughput of the disk controllers due to the high interrupt rate. I remember
+when I added, on a PCI-X bus that only had the disk controller, a GbE card
+the performance of the disks dropped by 10-20%. Bandwith was more then
+enough there.
 
-(Or is it just something that intrinsically hard to do in the drivers?)
-
-If not, is there any other way to get some stats on reading & writing each
-md device?
-
-I'm intersted in graphing (mrtg) disk reads & writes per second for some
-file & web servers I'm running.
-
-Cheers,
-
-Gordon
-
-Ps. I'm still in the dark days of 2.4.27 if this now works in 2.6.x it
-might be the push required to make me switch...
+Holger
