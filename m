@@ -1,29 +1,34 @@
 From: NeilBrown <neilb@cse.unsw.edu.au>
-Subject: [PATCH md 0 of 6] Introduction
+Subject: [PATCH md 2 of 6] Prevent oops when drive set faulty in inactive md array.
 Date: Mon, 07 Feb 2005 13:44:19 +1100
-Message-ID: <20050207133555.17870.patches@notabene>
+Message-ID: <E1Cxyst-0004fe-HX@notabene.cse.unsw.edu.au>
+References: <20050207133555.17870.patches@notabene>
 Sender: linux-raid-owner@vger.kernel.org
 To: Andrew Morton <akpm@osdl.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-Following are 6 patches for md in 2.6.11-rc2-mm2
+hot_add_disk and hot_remove_disk check mddev->pers before proceeding.
+set_disk_faulty should too.
 
-I believe they are all suitable for inclusion in 2.6.11
 
-- Fix silly bugs in version-1 superblock code (which currently is 
-   not widely used)
-- Fix possible Oops in raid_set_faulty (which is hard to trigger in 
-   normal usage)
-- Make md work better with devfs when it is compiled in.
-- Fix a possible endless-resync-loop
-- Removing the for loop in "copy_data" (raid5 and raid6) which caused 
-  some copinging to be done multiple times (should be harmless, but is 
-  a waste)
-- Fix handling for overlapping requests to raid5 and raid6.  -mm currently
-  has a patch which is even more broken than the original code.  Adding
-  this patch fixes it up.
+Signed-off-by: Neil Brown <neilb@cse.unsw.edu.au>
 
-Thanks,
-NeilBrown
+### Diffstat output
+ ./drivers/md/md.c |    3 +++
+ 1 files changed, 3 insertions(+)
+
+diff ./drivers/md/md.c~current~ ./drivers/md/md.c
+--- ./drivers/md/md.c~current~	2005-02-07 13:31:08.000000000 +1100
++++ ./drivers/md/md.c	2005-02-07 13:32:00.000000000 +1100
+@@ -2489,6 +2489,9 @@ static int set_disk_faulty(mddev_t *mdde
+ {
+ 	mdk_rdev_t *rdev;
+ 
++	if (mddev->pers == NULL)
++		return -ENODEV;
++
+ 	rdev = find_rdev(mddev, dev);
+ 	if (!rdev)
+ 		return -ENODEV;
