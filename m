@@ -1,193 +1,83 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: Please review: Slackware RAID How-To
-Date: Thu, 20 May 2004 00:35:38 -0400
+From: Mark Hahn <hahn@physics.mcmaster.ca>
+Subject: Re: Hard drive Reliability?
+Date: Thu, 20 May 2004 00:39:46 -0400 (EDT)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200405200435.i4K4ZgB18007@www.watkins-home.com>
-References: <200405200311.i4K3BIB17777@www.watkins-home.com>
+Message-ID: <Pine.LNX.4.44.0405200018170.15906-100000@coffee.psychology.mcmaster.ca>
+References: <1084996693.4021.8.camel@ws101.darkcore.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200405200311.i4K3BIB17777@www.watkins-home.com>
-To: 'Guy' <bugzilla@watkins-home.com>, 'John Lange' <john.lange@bighostbox.com>
-Cc: 'LinuxRaid' <linux-raid@vger.kernel.org>
+In-Reply-To: <1084996693.4021.8.camel@ws101.darkcore.net>
+To: John Lange <john.lange@bighostbox.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I looked at the code.  The stride option only seems to align tables on a
-boundary (stride size).  The stride size is only used to define the starting
-point of a table, not the table size.  The stride size does not affect disk
-writes as far as I can tell.  At least not directly.
+> all come to the conclusion that Hard Drives are far less reliable than
+> they used to be.
 
-Also, the change log talks about RAID0 stride size.  No comments on RAID5.
-The comments are dated 1997 and 1998.  Maybe RAID5 came after 1997/1998.
+margins are stretched, for sure.  I don't believe this is the main
+cause of people's frustration with disk failures, but instead the 
+fact that drives are treated with less care.  nowadays, those annoying
+randoms at the corner computer store keep a pile of disks under 
+the counter, with nothing but an anti-static bag to protect them.
+think nothing of clanking them together to shuffle the deck looking
+for the 80G one you're asking for.  and how did those disks arrive?
+some low-margin shipping service, packed 40 per box, from a fourth-line
+reseller that specializes in shifting objects at high speed.
 
-Anyway, based on what I found in the code, I bet if you base "stride size"
-on "chunk size" you will be fine.
+the fact is that disks are dirt cheap now, so whining about their 
+robustness is kind of silly.  if you don't like trusting a single 
+disk, use raid: that's what it's for.  yes, it's less of a clean
+solution on small machines, but there is *no* reliability problem
+on servers, since raid5 is fast and cheap and you get to choose
+your comfort level of bomb-proof-ness.
 
-But maybe "stride size" should be based on "stripe size" sometime in the
-future!  See my comments below.
+> Case in point, I have a 120G Maxtor drive in a server that began to fail
+> less than 8 months into service. Major headache.
 
-Guy
+there is no conspiracy: all the top-tier vendors have roughly the same 
+quality (and product lines, and prices, etc.)
 
-This is the code:
-===========================================================================
-This is the only place stride is used in the code.
-From misc/mke2fs.c
-/*
-         * Allocate the block and inode bitmaps, if necessary
-         */
-        if (fs->stride) {
-                start_blk = group_blk + fs->inode_blocks_per_group;
-                start_blk += ((fs->stride * group) %
-                              (last_blk - start_blk));
-                if (start_blk > last_blk)
-                        start_blk = group_blk;
-        } else
-                start_blk = group_blk;
+> fail so often this saves loads of headaches. After a their system has
+> died and they 'lost everything' people are more than willing to pay the
+> extra $150 for redundancy.
 
-===========================================================================
-There was also some other hard coded STRIDE_LENGTH stuff.
-STRIDE_LENGTH is NOT related to stride.
-I think they should be the same.
-The disk i/o is at a size of STRIDE_LENGTH.
-If this was 1 stripe the RAID5, RAID0 or RAID6 software may go faster.
-This hard coded 8 seems wrong to me.
-I bet it matched the writers chunk size at the time, and maybe he planned to
-make it a parameter after testing.
+it's curious to reflect on the social aspects of the PC revolution.
+people just plain like the idea of having their stuff stored on a box
+that sits within reach.  the fact that this is becoming cheaper and 
+cheaper doesn't mean that it's the right solution, always, all ways.
+diskless PCs make HUGE amounts of sense; I suppose we can blame MSFT
+somewhat for fighting that.
 
-Also, next_update_incr is not used.  What if num/100 is < 1?
-This line:
-	next_update += num / 100;
-Should be:
-	next_update += next_update_incr;
+> I know drive manufactures were sued recently in a class action for
+> shipping drives which they knew were going to fail prematurely but that
+> was a few years back.
 
-From misc/mke2fs.c
+that is a somewhat deceptive way to put it.  IBM honestly produced 
+a product that they thought was good.  in fact, it was the darling
+of the geek industry, until people realized that there were some odd
+issues having to do with abrupt power-offs (do we even have the story
+straight yet?).  IBM is, like any other large organization, crippled
+by its legal types, and can't just forthrightly say "we screwed up 
+and didn't test this odd usage pattern properly".
 
-#define STRIDE_LENGTH 8
+as products mature, they tend to become more complex, and entertain 
+new failure modes.  can you reach under the hood and tweak the carb
+on your car?  similarly, features like auto-defect-sparing and 
+write-behind caches that flush on power-loss are tricky, and produce
+non-intuitive failure modes.  can they be tested better, sure.  is there
+any going back?  no.
 
-/* Allocate the zeroizing buffer if necessary */
-        if (!buf) {
-                buf = malloc(fs->blocksize * STRIDE_LENGTH);
-                if (!buf) {
-                        com_err("malloc", ENOMEM,
-                                _("while allocating zeroizing buffer"));
-                        exit(1);
-                }
-                memset(buf, 0, fs->blocksize * STRIDE_LENGTH);
-        }
-        /* OK, do the write loop */
-        next_update = 0;
-        next_update_incr = num / 100;
-        if (next_update_incr < 1)
-                next_update_incr = 1;
-        for (j=0; j < num; j += STRIDE_LENGTH, blk += STRIDE_LENGTH) {
-                count = num - j;
-                if (count > STRIDE_LENGTH)
-                        count = STRIDE_LENGTH;
-                retval = io_channel_write_blk(fs->io, blk, count, buf);
-                if (retval) {
-                        if (ret_count)
-                                *ret_count = count;
-                        if (ret_blk)
-                                *ret_blk = blk;
-                        return retval;
-                }
-                if (progress && j > next_update) {
-                        next_update += num / 100;
-                        progress_update(progress, blk);
-                }
-        }
-        return 0;
+> So what are other peoples feelings about drive reliability and are some
+> brands better than others?
 
-==========================================================================
+maxtor/seagate/hgst/wd are safe bets.  go for 3yr warranties.  
+use some form of raid and/or backup and/or replication.
 
+> Does anyone know of any web sites with statistics or test data?
 
-
-
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Guy
-Sent: Wednesday, May 19, 2004 11:11 PM
-To: 'John Lange'
-Cc: 'LinuxRaid'
-Subject: RE: Please review: Slackware RAID How-To
-
-The man page says "strip size", not "chunk size", which is correct?
-
-RAID5:
-	"strip size" = ("Number of disks in array" - 1) * "chunk size"
-RAID6:
-	"strip size" = ("Number of disks in array" - 2) * "chunk size"
-
-"Number of disks in array" does not include spares!
-
-It would be GREAT for performance if writes were full strips at a time,
-since no reads would be required.
-
-I don't think it would help performance if writes were full chunks at a
-time, since the target chunk would still need to be read to compute the
-parity chunk.
-
-Any filesystem gods out there?  Any opinions?
-
-Guy
-
-
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of John Lange
-Sent: Wednesday, May 19, 2004 9:42 PM
-To: Guy
-Cc: 'LinuxRaid'
-Subject: RE: Please review: Slackware RAID How-To
-
-On Sun, 2004-05-16 at 23:51, Guy wrote:
-> md2 has 4 disks with a chunk size of 128K.  Since only 3 disks are used
-for
-> data, and the filesystem block size is 4K, the stride size should be
-> 128*3/4, or 96.
-> Change:
-> 	mke2fs -b 4096 -R stride=32 /dev/md2
-> To:
-> 	mke2fs -b 4096 -R stride=96 /dev/md2
-> 
-> My logic:
-> 	"Stripe size" is "chunk size" times "number of data disks".
-> 	From example:
-> 		"chunk size" = 128
-> 		"number of data disks" = "nr-raid-disks" - 1 (-2 if RAID6)
-
-I think this is incorrect. At this point I defer to the
-Software-RAID-HOWTO.
-
-http://www.tldp.org/HOWTO/Software-RAID-HOWTO-5.html#ss5.10
-
-From that document stride is chucksize/blocksize . Number of disks does
-not enter into it.
-
-So with a chunksize of 128, and a block size of 4 it would be:
-
-128K/4K = 32 for stride.
-
-If this is indeed correct I will be sure to expand that area of the
-How-To so it is more clear.
-
-Thanks very much for your feedback.
-
-Regards,
-
-John Lange
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+storagereview.com tries, but its hard to collect serious data from
+random, noncompliant populations.  in particular, squeaky wheels lead
+to drastic biases.
 
 
