@@ -1,58 +1,61 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: Re: 2 HBA's and Multipath.
-Date: Thu, 11 Apr 2002 11:49:59 +0200
+From: Mohamed Farouk <mohamed.farouk@memscap.com>
+Subject: Mirroring
+Date: Thu, 11 Apr 2002 14:23:00 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20020411094959.GE3256@colombina.comedia.it>
-References: <20020408190441Z313735-22651+2113@vger.kernel.org> <20020408191622.GB21055@colombina.comedia.it> <20020408200445Z313701-22651+2147@vger.kernel.org>
-Reply-To: bluca@comedia.it
+Message-ID: <3CB58024.9080008@memscap.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20020408200445Z313701-22651+2147@vger.kernel.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Apr 08, 2002 at 03:03:00PM -0500, SoulBlazer wrote:
-> What about write balancing ?
-> 
-> I would also be interested in discussing a possible patch to the raid code to 
-> do write/read balancing over N hba's if it is that trivial.
+Dear Sir
 
-the multipath_read_balance routine is actually used both for reading and writing
-besides with multipath we don't need to check the head position of the disk
-since they are supposed to be the same (if the concept of head position has
-any sense with your storage, which i strongly doubt).
 
-what we would need is adding an
-int last_used;
-to struct multipath_private_data
-in include/linux/raid/multipath.h
+First i read about your experience in the Unix  Administration, and it 
+is ereal great, hoping one day to reach your point.
 
-then rewrite multipath_read_balance in drivers/md/multipath.c
-to look something like this.
+Second, i have a question concerning the Mirroring technique as i use it 
+here, knowing that i am working with RedHat linux 7.2. My question is:
 
-static int multipath_read_balance (multipath_conf_t *conf)
-{
-    int disk;
 
-    for (disk = conf->last_used + 1; disk != conf->last_used; disk++) {
-	if (disk > conf->raid_disks)
-	    disk = 0;
-        if (conf->multipaths[disk].operational)
-	    return disk;
-	}
-    BUG();
-    return 0;
-}
+How can i make the slave or the backup disk bootable in case of master 
+disk crash?
 
-that's all folks, unless i did some very big fuck-up in the code
+More exploration:
+
+I have 2 hard disks, one is the master and the other is the slave or the 
+backup, or the mirror (whatever), i finished installing them and they 
+are working fine (till now !!), but when i make a test to remove anyone 
+to see if the other will work properly (as this will be the case in case 
+of anyone of them crash), i found that the master one is working fine 
+(which contain the boot commands) while the other failed to boot. I 
+tried to put a bootable disk but it gives me something related to kernel 
+panics.
+
+Your help will be much appreciatted:
+
 
 
 -- 
-Luca Berra -- bluca@comedia.it
-        Communication Media & Services S.r.l.
- /"\
- \ /     ASCII RIBBON CAMPAIGN
-  X        AGAINST HTML MAIL
- / \
+Mohamed Farouk
+System Engineer
+IT Dept.
+MEMScAP
+9 St, Ebn Batouta, Beside the Baron, Cairo, Egypt
+Tel: 4146860 Ext: 102
+Mobile: 0101828653
+http://www.memscap.com
+
+
+-------------------------------------------------------------------------
+"This message and any attachment are confidential and may be privileged
+or otherwise protected from disclosure.  If you are not the intended
+recipient, please telephone or email the sender and delete this message
+and any attachment from your system.  If you are not the intended
+recipient you must not copy this message or attachment or disclose the
+contents to any other person."
+-------------------------------------------------------------------------
+
+
