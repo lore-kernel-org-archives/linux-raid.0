@@ -1,65 +1,59 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: Is my raid setup speed ok?!
-Date: Wed, 19 Nov 2003 11:49:23 -0500
+From: "Bill Rugolsky Jr." <rugolsky@ti19.telemetry-investments.com>
+Subject: Re: How safe is software RAID compared to how safe hardware RAID is!?
+Date: Wed, 19 Nov 2003 11:55:19 -0500
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200311191649.hAJGnTE25045@www.watkins-home.com>
-References: <PPEOJEIEFLAONFNHJPOOMEILGOAA.jim@jimtreats.com>
+Message-ID: <20031119165519.GB14191@ti19.telemetry-investments.com>
+References: <16314.40792.616508.878124@notabene.cse.unsw.edu.au> <PPEOJEIEFLAONFNHJPOOAEICGOAA.jim@jimtreats.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <PPEOJEIEFLAONFNHJPOOMEILGOAA.jim@jimtreats.com>
-To: 'James R Bamford' <jim@jimtreats.com>, linux-raid@vger.kernel.org
+Content-Disposition: inline
+In-Reply-To: <PPEOJEIEFLAONFNHJPOOAEICGOAA.jim@jimtreats.com>
+To: linux-raid@vger.kernel.org
+Cc: James R Bamford <jim@jimtreats.com>
 List-Id: linux-raid.ids
 
-Each time you re-boot.
+On Tue, Nov 18, 2003 at 11:12:43PM -0000, James R Bamford wrote:
+> I am going to stick with this software RAID for the near future if it
+> carries on working correctly.. I was just wondering what peoples views were
+> of software vs hardware raid... anything and everything really.. I'm not
+> that up on all the technology... I know that 3ware have a good rep in
+> hardware... I also imagine that for more exotic RAID configurations its
+> obviously a help to not stress the CPU with the RAID tasks.. for me tho with
+> simple mirroring the CPU costs are minimal.. the linux core is a sturdy base
+> to build upon so is software raid in this way a perfectly acceptible
+> reliable RAID solution..
+ 
+I have had a 3ware 7800 RAID controller for a while, and I'm pleased with
+it, but I use it in JBOD mode, with Linux MD on top.  Why?
 
-It's not a fix.  It's just changing a default.  If your system ran too slow
-during a re-build, you would want to lower the number.
+1. The version of the firmware that I have on the card requires one
+   to reboot into the BIOS to change the configuration.  My understanding
+   is that later firmware revisions allow it to be reconfigured from
+   the command line.
 
-As I understand it, this limits the data rate to each disk.  Since you had 2
-disks, you were getting 20000K per second of disk i/o.
+2. The 3dm monitoring package was closed source.  That may have changed.
 
-It would be nice if /proc/mdstat would display the current min and max speed
-limits.  It would also be nice if there was a place you could set them just
-once.  Maybe /etc/raidtab.  Maybe a new file /etc/md.conf.  I would prefer
-to have an overall throughput speed limit, and a per array group speed
-limit.  The overall throughput speed limit would not be per disk, but total
-disk i/o.
+3. The RAID meta-data was undocumented last time I checked.  With Linux MD,
+   I can plug the drives into any IDE controller and figure out what is
+   going on.  Not so long ago, I had a two drive failure in the same day;
+   I was able to partially resurrect the second drive, and recovered the
+   data from it.
 
-Guy
+The benefit of hardware RAID1, in particular, is to not send the same
+data twice over the bus.  Were I trying to eek every last bit of
+performance, I'd use the hardware solution.
 
------Original Message-----
-From: James R Bamford [mailto:jim@jimtreats.com] 
-Sent: Wednesday, November 19, 2003 8:57 AM
-To: Guy; 'James R Bamford'; linux-raid@vger.kernel.org
-Subject: RE: Is my raid setup speed ok?!
+I played with the 3ware hardware RAID back at 2.4.early when there were
+concerns about the interaction between ext3, LVM, and MD.  But once that
+settled down, I switched to soft-RAID.
 
-> -----Original Message-----
-> From: Guy [mailto:bugzilla@watkins-home.com]
-> Sent: 19 November 2003 04:10
-> To: 'James R Bamford'; linux-raid@vger.kernel.org
-> Subject: RE: Is my raid setup speed ok?!
->
->
-> It may be too late for this re-sync, but in the future do this:
-> echo 100000 > /proc/sys/dev/raid/speed_limit_max
->
-> The default speed limit is 10000, that's what you are getting.
-> So you have reached a software imposed limit, not a hardware limit.
->
->
+Ideally, hardware RAID vendors would publish complete meta-data specs,
+and provide a simple userland tool to extract and parse when the drive
+is plugged into a non-RAID controller.  Perhaps some do.
+If meta-data were documented, it might be relatively easy to extract data
+with just a script, or perhaps a small Device Mapper module.
 
-Thanks.. I wondered about this.. it could really do with being added into
-the HOWTO..
+Regards,
 
-Is this fix a do once.. fix everytime.. or something that i have to do each
-time i plan to rebuild an array.. (isn't proc deleted every boot!? so
-someone has asked me...)
-
-Thanks tho
-
-Jim
-
-
+	Bill Rugolsky
