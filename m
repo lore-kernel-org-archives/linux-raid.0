@@ -1,40 +1,56 @@
-From: Joshua Baker-LePain <jlb17@duke.edu>
-Subject: Re: 3ware escalade vs software raid, from a different jeff
-Date: Fri, 20 Feb 2004 02:19:26 -0500 (EST)
+From: Nathan Hunsperger <linux-raid@hunsperger.com>
+Subject: Re: Bizarre RAID "failure"
+Date: Fri, 20 Feb 2004 00:33:27 -0800
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <Pine.LNX.4.58.0402200217080.2393@chaos.egr.duke.edu>
-References: <Pine.LNX.4.44.0402191118090.10623-100000@praktifix.dwd.de>
- <Pine.LNX.4.58.0402190704420.25541@chaos.egr.duke.edu> <20040219175630.GA20790@datavibe.net>
- <4035571B.505@pobox.com>
+Message-ID: <20040220083327.GB5535@munchnet.com>
+References: <1077230692.28817.485.camel@s8n-1.thereinc.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4035571B.505@pobox.com>
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: "Rev. Jeffrey Paul" <sneak@datavibe.net>, linux-raid@vger.kernel.org
+Content-Disposition: inline
+In-Reply-To: <1077230692.28817.485.camel@s8n-1.thereinc.com>
+To: Tom Maddox <tmaddox@thereinc.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 19 Feb 2004 at 7:38pm, Jeff Garzik wrote
+On Thu, Feb 19, 2004 at 02:44:52PM -0800, Tom Maddox wrote:
+<SNIP>
+> If the system goes down unexpectedly (e.g., because of a power failure),
+> the RAID array comes back up dirty and begins to rebuild itself, which
+> is odd enough on its own.  What's worse is that, whenever this happens,
+> the rebuild hangs at about 2.4%.  When it reaches that point, the array
+> becomes totally nonresponsive--I can't even query its status with mdadm
+> or any other tool, although I can use "cat /proc/mdstat" to see the
+> status of the rebuild.  Any command that attempts to access the RAID
+> drive hangs.
+<SNIP>
+> Has anyone seen this behavior before, and can you recommend a solution?
 
-> Rev. Jeffrey Paul wrote:
+Tom,
 
-> > I am looking at a four disk raid5 or raid10, and it seems like 
-> > the interrupt load from four drives on four channels might be a bit 
-> > excesive.  I'm going to be running critical services on the machine 
-> > that the drives are in (namely mysql and nfs) and don't want to worry 
-> > about performance.
+I have had problems very similar to this before.  I was running 14 fibre
+channel disks on a QLA2100 HBA w/ various 2.4 kernels.  What I found
+was that after a while of heavy IO, all access to the disks stopped,
+and the rebuild would hang.  Additionally, any command that required
+access to any filesystem data that wasn't cached (on any filesystem)
+would hang.  By switching between the 3 or so available QLA drivers,
+I could affect the delta between reboot and stall.  I knew the hardware
+was fine, as it worked flawlessly under Solaris.  In the end, I had
+to upgrade the HBA to a QLA2200, at which time I had no more problems.
+Because the hardware works under different OSs, I have to believe that
+my problem was an incompatability between the QLA2100 and the drivers
+(even though they claimed to work for it).
+
+I hope that at least gives you some possible insight.
+
+- Nathan
+
 > 
-> Once your spindles can max out your PCI bus bandwidth, -then- you can 
-> start worrying about PCI bandwidth and interrupt load ;-)
-
-With some boards, it's actually pretty easy to do that.  ;)  Not with 4 
-disks, as the OP is doing, but 8 disks on one 64bit/33MHz bus (3ware 
-7500-8) can start to bump up against the PCI bandwidth.  I've got a couple 
-servers with 2 3wares and 16 disks, and I need to put the 3wares on 
-separate PCI busses to make sure I get the full speed out of the combined 
-array (hardware RAID5, software RAID0).
-
--- 
-Joshua Baker-LePain
-Department of Biomedical Engineering
-Duke University
+> Thanks,
+> 
+> Tom
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
