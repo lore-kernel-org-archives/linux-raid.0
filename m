@@ -1,42 +1,32 @@
-From: Ross Vandegrift <ross@willow.seitz.com>
+From: Neil Brown <neilb@cse.unsw.edu.au>
 Subject: Re: Unable to read superblock
-Date: Mon, 22 Jul 2002 22:52:05 -0400
+Date: Tue, 23 Jul 2002 13:57:49 +1000 (EST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20020723025205.GB14359@willow.seitz.com>
-References: <20020718033404.GR17829@riseup.net> <20020722234502.GP12736@riseup.net>
+Message-ID: <15676.54333.424977.14113@notabene.cse.unsw.edu.au>
+References: <20020718033404.GR17829@riseup.net>
+	<20020722234502.GP12736@riseup.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20020722234502.GP12736@riseup.net>
+In-Reply-To: message from Micah Anderson on Monday July 22
 To: Micah Anderson <micah@riseup.net>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Jul 22, 2002 at 04:45:03PM -0700, Micah Anderson wrote:
-> > I had lilo set for:
+On Monday July 22, micah@riseup.net wrote:
+> I never received a reply to my problem, is it because there isn't
+> anyone who knows why it is not working? Should I provide some more
+> information?
+> 
+
+Sometimes you have to ask twice...  
+
 > > 
-> > boot=/dev/md0
-> > root=/dev/md5
-> > image=/boot/vmlinuz-2.2.20RAID
-> >         label=RAID
-> >         read-only
-> >         alias=4
+> > request module [block major 3]: root fs not mounted
+> > cannot open root device hda3
 
-Are you using the raid-extra-boot option?  If you aren't you probably
-want to be - it'll allow the system to boot if one of the boot drives is
-dead.
+Looks to me like you compiled a kernel that doesn't know about you IDE
+controller.  Is that possible??
 
-However, this shouldn't be preventing you from mounting root.
-
-> > When I installed 2.4.18, all of a sudden I can't boot, EXT2-fs: unable
-> > to read superblock. Yes, I selected all the RAID options on kernel
-> > compile.
-
-This may sound dumb, but are you sure you didn't compile RAID1 as a
-module?  If you did, you'll need to use an initrd to load the module
-before you mount root.  Otherwise, you'll need to rebuild the kernel
-with the driver included in the kernel.
-
-Ross Vandegrift
-ross@willow.seitz.com
+NeilBrown
