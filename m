@@ -1,39 +1,53 @@
-From: Arshavir Grigorian <ag@m-cam.com>
-Subject: raid on sparc
-Date: Thu, 04 Nov 2004 15:54:43 -0500
-Message-ID: <418A9713.50408@m-cam.com>
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: ANNOUNCE: mdadm 1.8.0 - A tool for managing Soft RAID under Linux
+Date: Fri, 5 Nov 2004 13:50:42 +1100
+Message-ID: <16778.60034.295831.641999@cse.unsw.edu.au>
+References: <d9.18ba3ed3.2eba25c5@aol.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from AndyLiebman@aol.com on Wednesday November 3
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: AndyLiebman@aol.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+On Wednesday November 3, AndyLiebman@aol.com wrote:
+> > neilb@cse.unsw.edu.au writes:
+> >
+> > Hmmm... I might work with 1.6 if you --build that raid0 (rather than
+> > --create),  or if you are using a 64bit processor like alpha or ia64. 
+> > But mdadm 1.6 definitely have problems in i386 processors when you try
+> > to --create a raid0 with devices larger than 2 terabytes.
+> 
+> I have been using "mdadm -Cv /dev/md0 -n2 -l0 -c[256 or 512] /dev/sd{a,b}" 
+> without incident. But I'll switch over to 1.8. 
 
-After 2 days of struggling with setting up RAID5 (mdadm) on Sparc, 
-someone finally told me that the partition included in the array cannot 
-start at sector 0 because raidtools overwrites the partition table. He 
-also told me that mdadm should not have that problem, but from what I 
-could see, that problem was very much there and only moving the 
-partition to cyl 1 fixed it.
-Could someone please comment on this?
-What I am trying to figure out is whether it is the raid partition that 
-can't be on cyl 0, or any partition. I have a machine with 4 disks of 
-which 3 are in a RAID5 array (no spare) and the forth has my /boot 
-partition and the original root filesystem which is now on the array. I 
-would like to eventually add this disk as a spare to the array but am am 
-afraid that doing so will screw up my partition table since my /boot 
-partition start at cyl 0.
+Very odd.  Is this on a 2.4 or a 2.6 linux kernel??
 
-On a related note, it would be very helpful to include this info in the 
-HOWTO. Maybe a little note under the Devices section.
+> 
+> Was the previous problem only one of creating the arrays? Or could there be 
+> further problems down the line with my arrays that were created with
+> 1.6? 
 
-Thanks in advance.
+If your arrays were successfully created and appear to be working,
+they should be fine and should continue to work.
 
-
-Arshavir
+NeilBrown
 
 
-
+> 
+> By the way, do you know anybody with enough understanding of the Linux kernel 
+> to be able to rationally and logically tune the following items, which all 
+> relate to one another and MUST have some optimum settings for low-latency/high 
+> throughput over a network. 
+> 
+> * chunk size/stripe size of Hardware and Software arrays
+> * blockdev --setra (for each Hardware array)
+> * blockdev --setra (for each Linux Software array on top of Hardware)
+> * tcp items in /proc/sys/net/core and /proc/sys/net/ipv4 like rmem_max, 
+> wmem_max and the like
+> 
+> Regards, 
+> Andy Liebman
