@@ -1,23 +1,39 @@
-From: Miroslav 'Sirka' Hrachovec <hrachovm@sirka.cz>
-Subject: Simple syntax error in raidtools-1.00.3
-Date: Sun, 22 Feb 2004 19:19:25 +0100
+From: "emerson" <benson21god@hotmail.com>
+Subject: Stronger than V1AGRA?!
+Date: Mon, 23 Feb 2004 14:28:47 GMT
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20040222181925.GA26212@darkslum.inway.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Message-ID: <1077546527-30955__21898.4984596775$1077500017@excite.com>
+Content-Type: text/plain;
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-To: linux-raid@vger.kernel.org
+To: linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+The Biggest New Drug since V1agra! Many times as powerful.
 
-I just found an error in mkraid.c line 174.
-There is an huge multiline string constant
-and it have no '\' on ends of lines.
-GCC 3.3.2 refuse to compile it. Adding the
-'\' chars fix the problem.
+http://healthdo.com/sv/index.php?pid=eph9106
 
-best Regards,
-Miroslav Hrachovec
+C1AL1S has been seen all over TV as of late.
+
+So why is it so much better than V1agra? Why are so many switching brands?
+
+-A quicker more stable erection
+-More enjoyable sex for both
+-Longer sex
+-Known to add length to you erection
+-Lasts up to 36 hours (not a thrity-six hour erection, but enhancement for thirty-six)
+
+We have it at a discounted savings. Save when you go through our site on all your orders.
+
+See the difference today.
+
+http://medspro.net/sv/index.php?pid=eph9106
+
+
+
+
+
+
+
+graphic abcdefricky cannonda dan laura h2opolo concept 
+mailman daddybfi safety percy
+tracy dirk dollars 
