@@ -1,47 +1,105 @@
 From: Neil Brown <neilb@cse.unsw.edu.au>
 Subject: Re: RFC - new raid superblock layout for md driver
-Date: Thu, 21 Nov 2002 10:17:21 +1100
-Sender: linux-kernel-owner@vger.kernel.org
-Message-ID: <15836.6145.203067.371300@notabene.cse.unsw.edu.au>
-References: <15835.2798.613940.614361@notabene.cse.unsw.edu.au>
-	<20021120085838.A9206@ti19>
+Date: Thu, 21 Nov 2002 10:24:34 +1100
+Sender: linux-raid-owner@vger.kernel.org
+Message-ID: <15836.6578.878775.208602@notabene.cse.unsw.edu.au>
+References: <OF6B381288.73386F52-ON85256C77.00543682@pok.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+linux-kernel=40quimby.gnus.org@vger.kernel.org>
-In-Reply-To: message from Bill Rugolsky Jr. on Wednesday November 20
-To: "Bill Rugolsky Jr." <brugolsky@telemetry-investments.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from Steve Pratt on Wednesday November 20
+To: Steve Pratt <slpratt@us.ibm.com>
 Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday November 20, brugolsky@telemetry-investments.com wrote:
-> On Wed, Nov 20, 2002 at 03:09:18PM +1100, Neil Brown wrote:
-> >     u32  feature_map     /* bit map of extra features in superblock */
+On Wednesday November 20, slpratt@us.ibm.com wrote:
 > 
-> Perhaps compat/incompat feature flags, like ext[23]?
+> Neil Brown wrote;
+> 
+> >I would like to propose a new layout, and to receive comment on it..
+> 
+> 
+>  >/* constant this-device information - 64 bytes */
+>     >u64  address of superblock in device
+>     >u32  number of this device in array  /* constant over reconfigurations
+>     */
+> 
+>  Does this mean that there can be holes in the numbering for disks that die
+>     and are replaced?
 
-I thought about that, but am not sure that it makes sense as there is
-much less metadata in a raid array than there is in a filesystem.
-I think I am happier to have initial code require feature_map == 0 or
-it doesn't get loaded, and if it becomes an issue, get user-space to
-clear any 'compatible' flags before passing the device to an 'old'
-kernel.
+Yes.  When a drive is added to an array it gets a number which it
+keeps for it's life in the array.  This is completely separate from
+the number that says what it's role in the array is.  This number,
+together with the set_uuid, forms the 'name' of the device as long as
+it is part of the array.  So there could well be holes in the
+numbering of devices, but in general the set of numbers would be
+fairly dense (max number of holes is max number of hot-spaces that you
+have had in the array at any one time).
 
 > 
-> Also, journal information, such as a journal UUID?
+>     >u32  device_uuid[4]
+>     >u32  pad3[9]
+> 
+>  >/* array state information - 64 bytes */
+>     >u32  utime
+>     >u32  state    /* clean, resync-in-progress */
+>     >u32  sb_csum
+> 
+>  These next 2 fields are not 64 bit aligned. Either rearrange or add
+>     padding.
 
-As there is no current code, or serious project that I know of, to add
-journalling to md (I have thought about it, but it isn't a priority) I
-wouldn't like to pre-empt it at all by defining fields now.  I would
-rather that presense-of-a-journal be indicated by a bit in the feature map,
-and that would imply uuid was stored in one of the current 'pad'
-fields.  I think there is plenty of space.
+Thanks.  I think I did check that once, but then I changed things
+again :-(
+Actually, making utime a u64 makes this properly aligned again, but I
+will group the u64s together at the top.
 
-Thanks,
+> 
+>     >u64  events
+>     >u64  resync-position     /* flag in state if this is valid)
+>     >u32  number of devices
+>     >u32  pad2[8]
+> 
+> 
+> 
+> >Other features:
+>    >A feature map instead of a minor version number.
+> 
+> Good.
+> 
+>    >64 bit component device size field.
+> 
+> Size in sectors not blocks please.
+
+Another possibility that I considered was a size in chunks, but
+sectors is less confusing.
+
+> 
+> 
+>    >no "minor" field but a textual "name" field instead.
+> 
+> Ok, I assume that there will be some way for userspace to query the minor
+>    which gets dynamically assigned when the array is started.
+
+Well, actually it is user-space which dynamically assigns a minor.
+It then has the option of recording, possibly as a symlink in /dev, the
+relationship between the 'name' of the array and the dynamically
+assigned minor.
+
+> 
+>    >address of superblock in superblock to avoid misidentifying superblock.
+>    e.g. is it >in a partition or a whole device.
+> 
+> Really needed this.
+> 
+> 
+> >The interpretation of the 'name' field would be up to the user-space
+> >tools and the system administrator.
+> 
+> Yes, so let's leave this out of this discussion.
+
+... except to show that is is sufficient to meet the needs of users.
+
+
+Thanks for your comments,
 NeilBrown
-
-
-> 
-> Regards,
-> 
-> 	Bill Rugolsky
