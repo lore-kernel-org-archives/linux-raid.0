@@ -1,56 +1,33 @@
-From: Nick Maynard <nick.maynard@alumni.doc.ic.ac.uk>
+From: Brad Campbell <brad@wasp.net.au>
 Subject: Re: raidreconf
-Date: Sun,  1 Aug 2004 13:28:56 +0100
+Date: Sun, 01 Aug 2004 16:47:32 +0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1091363336.410ce208494b0@www.tastycake.net>
-References: <1091196159.410a54ff91240@www.tastycake.net> <410CC5BF.4050600@wasp.net.au>
+Message-ID: <410CE664.2070705@wasp.net.au>
+References: <1091196159.410a54ff91240@www.tastycake.net> <410CC5BF.4050600@wasp.net.au> <1091363336.410ce208494b0@www.tastycake.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <410CC5BF.4050600@wasp.net.au>
-To: Brad Campbell <brad@wasp.net.au>
-Cc: linux-raid@vger.kernel.org
+In-Reply-To: <1091363336.410ce208494b0@www.tastycake.net>
+To: Nick Maynard <nick.maynard@alumni.doc.ic.ac.uk>, RAID Linux <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-> Things have slowed a little in that department at the moment as my main test
-> hard disk underwent a
-> rapid deceleration test from a table to a tiled floor and has somewhat ceased
-> to function. (Don't
-> try this one at home kids)
->
-> Prior to that I had got as far as intermittently creating raid-6 volumes that
-> worked (the rest of
-> the time the blocks were all intact but in the wrong order!) and kludging it
-> to work with raid-5
-> volumes over 2TB. (I did manage to reconfigure a 1.6TB array to be a 2.1TB
-> array with no data loss).
->
-> I have a new set of test drives in my purchase queue, but have not quite got
-> that far yet.
->
-> The raidtools-1.00.3.tar.gz package is the one I have been working with and
-> seems to be pretty
-> stable on anything under 2TB. I certainly did not hit any major flaws while
-> working with it as is.
->
-> I'm currently thinking about how to do it while removing the dependency on
-> raidtools and moving to a
-> mdadm like setup, but have not got far down that path.
->
-> If you want to use raidreconf and you created your arrays with mdadm then use
-> lsraid to generate a
-> suitable raidtab, edit that to create the new one and have at it.
-> On <2TB I found it pretty solid.
-So the current version of raidreconf is included with raidtools-1.00.3.tar.gz?
+Nick Maynard wrote:
 
-Looking at http://people.redhat.com/mingo/raidtools/, I find that archive is
-dated 15 Jan 2003.  Is that the version you're using, or have you
-improved/fixed/patched raidreconf since then?
+> So the current version of raidreconf is included with raidtools-1.00.3.tar.gz?
 
-Thanks,
+As far as I can see.
 
---
+> Looking at http://people.redhat.com/mingo/raidtools/, I find that archive is
+> dated 15 Jan 2003.  Is that the version you're using, or have you
+> improved/fixed/patched raidreconf since then?
 
-Nick Maynard
-nick.maynard@alumni.doc.ic.ac.uk
+I certainly have played with various mods to that code but not managed to turn up anything reliable 
+yet. I did have it converting raid-0 and raid-5 to raid-6 at one stage and I got all excited about 
+that, but when I slightly altered the configuration it all came crashing down. Then I dropped the 
+disk and I really just chucked all my toys out of the pram and went back to doing anything other 
+than playing with hard disks. I have yet to pick up another disk and get back into it.
+
+
+Regards,
+Brad
