@@ -1,45 +1,37 @@
-From: "J. Ryan Earl" <ryan@dynaconnections.com>
-Subject: RE: /dev/md* Device Files
-Date: Wed, 26 Jan 2005 16:10:54 -0600
-Message-ID: <OMEKLMBKKEOEENCKLEIDKECLCBAA.ryan@dynaconnections.com>
-References: <Pine.LNX.4.61.0501251445420.6553@electra.rsc.raytheon.com>
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: RE: Software RAID 0+1 with mdadm.
+Date: Thu, 27 Jan 2005 16:24:34 +1100
+Message-ID: <16888.31506.646380.934873@cse.unsw.edu.au>
+References: <20050126151703.GA2040@percy.comedia.it>
+	<OMEKLMBKKEOEENCKLEIDAECMCBAA.ryan@dynaconnections.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.61.0501251445420.6553@electra.rsc.raytheon.com>
+In-Reply-To: message from J. Ryan Earl on Wednesday January 26
 Sender: linux-raid-owner@vger.kernel.org
-To: Steve Witt <sawitt@electra.rsc.raytheon.com>, linux-raid@vger.kernel.org
+To: "J. Ryan Earl" <ryan@dynaconnections.com>
+Cc: Luca Berra <bluca@comedia.it>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Did you have the md module inserted into the kernel at this point?  It
-should automatically the md device entries for you, at least it does with
-udev-045.
+On Wednesday January 26, ryan@dynaconnections.com wrote:
+> This bug that's fixed in 1.9.0, is in a bug when you create the array?  ie
+> do we need to use 1.9.0 to create the array.  I'm looking to do the same but
+> my bootdisk currently only has 1.7.soemthing on it.  Do I need to make a
+> custom bootcd with 1.9.0 on it?
 
--ryan
+This issue that will be fixed in 1.9.0 has nothing to do with creating
+the array.
 
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org]On Behalf Of Steve Witt
-Sent: Tuesday, January 25, 2005 4:54 PM
-To: linux-raid@vger.kernel.org
-Subject: /dev/md* Device Files
+It is only relevant for stacked arrays (e.g. a raid0 made out of 2 or
+more raid1 arrays), and only if you are using
+   mdadm --assemble --scan
+(or similar) to assemble your arrays, and you specify the devices to
+scan in mdadm.conf as
+   DEVICES partitions
+(i.e. don't list actual devices, just say to get them from the list of
+known partitions).
 
+So, no: no need for a custom bootcd.
 
-I'm installing a software raid system on a new server that I've just
-installed Debian 3.1 (sarge) on. It will be a raid5 on 5 IDE disks using
-mdadm. I'm trying to create the array with 'mdadm --create /dev/md0 ...'
-and am getting an error: 'mdadm: error opening /dev/md0: No such file or
-directory'. There are no /dev/md* devices in /dev at the present time. I
-do have the md and raid5 kernel modules loaded. My question is: how do the
-/dev/md* files get created? Are they normal device file that are created
-with MAKEDEV?
-
-Thanks...
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+NeilBrown
