@@ -1,73 +1,50 @@
-From: Norman Schmidt <norman.schmidt@chemie.uni-erlangen.de>
-Subject: partitions on software raid revisited - more questions
-Date: Thu, 06 May 2004 10:29:06 +0200
+From: Juri Haberland <list-linux.raid@spoiled.org>
+Subject: Re: Missing capacity in a RAID 5 array?
+Date: Thu, 6 May 2004 10:18:07 +0000 (UTC)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <4099F752.3020704@chemie.uni-erlangen.de>
-Reply-To: schmidt@naa.net
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Message-ID: <news2mail-c7d3cv$bpa$1@cartman.spoiled.org>
+References: <4099D554.808@jmorrow.org>
+Reply-To: Juri Haberland <juri@koschikode.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hallo there!
+Jeff Morrow <jmorrow@jmorrow.org> wrote:
+> I've created a software RAID 5 array consisting of 8 160 GB drives.  One 
+> of the drives had prior data I wanted to keep, so I first created a 
+> 7-drive array, copied the data from the original drive to the array, 
+> then added the 8th drive using raidreconf.  Worked like a charm (took 
+> about 27 hours, though!)
+> 
+> The OS now reports that the total capacity on /dev/md0 is about 920 GB:
+> 
+> /dev/md0             923029884 172872252 750157632  19% /mnt/store
+> 
+> Now, even if we take into account that the drives are 160 decimal GB, 
+> which equates to 149 binary GB, my array should still have a total 
+> capacity somewhere around 7 x 149 = 1043 GB.
+> 
+> Am I really losing 120 GB to reserved space for RAID and/or filesystem 
+> accounting?  I feel like I'm missing something obvious here.  Can I get 
+> my full terabyte somehow?
 
-Some time ago there was a discussion about software raid and the new=20
-partitionability feature.
+So you created a RAID5 array out of 7 disk. The capacity of a RAID5
+array of equally sized disk can be calculated like this:
+total_size = (n -1) * single_disk_size
+which calculates to a total size of 894MB - 960MB (depending on how you
+calculate a MegaByte).
+The extra disk that you added is most certainly now seen as a spare disk
+which adds now capacity to the array, just a instant replacement in case
+of failures.
 
-Since I upgraded to kernel 2.6.6-rc3 with libata I now have this featur=
-e=20
-inside the "native" kernel and want to try it out.
+What you should have done:
+Create a degraded RAID5 array out of 8 drives with the 8th one marked as
+missing/failed. Then copy all the data from the 8th drive to the array.
+After this hot-add the 8th drive to degraded array and let it rebuild.
 
-The dynamically allocated major number seems to be 254 (according to=20
-/proc/devices). This, however, could change when adding more dynamicall=
-y=20
-allocating drivers. Am I right?
+Regards,
+Juri
 
-My main problem at this moment is how I can access the devices via=20
-/dev/something.
+-- 
+Juri Haberland  <juri@koschikode.com> 
 
-There should be something like /dev/md/d1p2 for example. This is not=20
-existing per se on a Debian woody system (no wonder). How can I make=20
-these entries, since mknod wants to have a major number to make these=20
-devices? Do I have to use a newer mknod? Or does my kernel lack some=20
-functionality? Perhaps then I wouldn=B4t need nodes at all?
-
-One other thing: I put together a raid5 out of four identical sata hdds=
-=20
-(dev/sda and so on), then partitioned it (md9) with fdisk. fdisk -l of=20
-the drives shows me no entries for sdb and sdc, however the following=20
-(similar for sda and sdd):
-
-> rossweisse:/# fdisk -l /dev/sdd
->=20
-> Disk /dev/sdd: 255 heads, 63 sectors, 19457 cylinders
-> Units =3D cylinders of 16065 * 512 bytes
->=20
->    Device Boot    Start       End    Blocks   Id  System
-> /dev/sdd1             1        98    786434   83  Linux
-> Partition 1 does not end on cylinder boundary:
->      phys=3D(1023, 1, 4) should be (1023, 254, 63)
-> /dev/sdd2            98     38950 312074260   83  Linux
-> Partition 2 does not end on cylinder boundary:
->      phys=3D(1023, 1, 4) should be (1023, 254, 63)
-> /dev/sdd3         38950     58372 156011752   83  Linux
-> Partition 3 does not end on cylinder boundary:
->      phys=3D(1023, 1, 4) should be (1023, 254, 63)
-
-Is this normal?
-
-Thanks for any help, Norman.
---=20
-Norman Schmidt          Institut fuer Physikal. u. Theoret. Chemie
-Dipl.-Chem. Univ.       Friedrich-Alexander-Universitaet
-schmidt@naa.net         Erlangen-Nuernberg
-                         IT-Systembetreuer Physikalische Chemie
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
