@@ -1,91 +1,27 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: How do we handle the same but uptodated data to disk cache?
-Date: Fri, 30 May 2003 14:07:11 +1000
+From: Greg Rasberry <rgreg-r@pacbell.net>
+Subject: Software RAID level 1 issue
+Date: Fri, 30 May 2003 10:53:45 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16086.55535.905007.233783@notabene.cse.unsw.edu.au>
-References: <Pine.LNX.4.44.0305261738440.19678-100000@q7.q7.com>
-	<004301c323f9$71916a10$6b01a8c0@bmoon>
-	<16082.53674.340479.177651@notabene.cse.unsw.edu.au>
-	<007c01c32491$43cf41e0$6b01a8c0@bmoon>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Message-ID: <01C32699.D5B0EE60.rgreg-r@pacbell.net>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from bmoon on Tuesday May 27
-To: bmoon <bo@anthologysolutions.com>
-Cc: linux-raid@vger.kernel.org
+To: 'Linux raid mailing list' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tuesday May 27, bo@anthologysolutions.com wrote:
-> Neil,
-> 
-> It improved a lot for the sync I/O.
-> However, I am looking for a solution to handle
-> the regular async I/O with a page data on the
-> same sector repeatedly like writing the MD SB
-> data to disk without flushing.
+I have a RedHat 9.0 server that went down. On re-start the server has 
+started to come up just fine. It started re-syncing, the first of the raid 
+partitions, the first one went buy fast, then the second took a day and the 
+last drive (md2) has been working on the re-sync for four days (it is 
+fairly large 70 Gig).  We are unable to use the server and cannot pull the 
+data off of it because the drives have not mounted, etc.
 
-This is a filesystem question.  Not a raid question.
+I was wondering if anyone knows if this is normal, and/or how I can get 
+around this problem. I understand that the re-sync is supposed to happen in 
+the background?
 
-I would just:
-   getblk
-   copy new data in
-   mark update
-   mark dirty
-   release block
+I have only been using Linux for about a year and could really use some 
+help with this, the system has been down for a week.
+Thanks in advance for your help.
 
-and it will eventually be flushed to disk.
-If you want to written sooner, call
-   submit_bh
+R,
+Greg
 
-
-NeilBrown
-
-> 
-> The follwing is my simple algorithm for it;
-> 
->         bh=getblk(dev, block, size);
->         if (buffer_uptodate(bh)) { /* still in cache, not flushed yet */
->               bh->b_data = "updated data";
->               brelse(bh);
->         }
->         else { /* all were flushed or new  */
->             .
->             .
->              mark_buffer_uptodate(bh,1);
->              mark_buffer_dirty(bh);
->             generic_make_request(rw, &bh);
->        }
-> 
->  Please give me your suggestion or comment.
-> 
-> 
-> Bo
-> ----- Original Message -----
-> From: "Neil Brown" <neilb@cse.unsw.edu.au>
-> To: "bmoon" <bo@anthologysolutions.com>
-> Cc: <linux-raid@vger.kernel.org>
-> Sent: Monday, May 26, 2003 7:47 PM
-> Subject: Re: How do we handle the same but uptodated data to disk cache?
-> 
-> 
-> > On Monday May 26, bo@anthologysolutions.com wrote:
-> > > Hello,
-> > >
-> > > I want to write the data to the fixed sector with the same size
-> frequently
-> > > just like MD super block, but I do not want to sync and flush the dev
-> > > on each write.
-> > >
-> > > For example, to write md super block in /drivers/md/md.c
-> >
-> > I suggest you look at a newer md.c.  With 2.4.21pre or 2.5.* have
-> > "sync_page_io" which does what you want more effectively.
-> >
-> > NeilBrown
-> >
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
