@@ -1,44 +1,36 @@
-From: =?iso-8859-1?q?M=E5ns_Rullg=E5rd?= <mru@kth.se>
+From: Nick Maynard <nick@tastycake.net>
 Subject: Re: Which raid card to buy for Sarge
-Date: Fri, 16 Apr 2004 17:09:43 +0200
+Date: Fri, 16 Apr 2004 17:29:15 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <yw1x7jwg6jt4.fsf@kth.se>
-References: <Pine.LNX.4.44.0403311442520.31572-100000@coffee.psychology.mcmaster.ca> <406B9F3E.4020701@wasp.net.au>
- <1082125542.407fece65df29@www.tastycake.net>
+Message-ID: <1082132955.408009db77fc2@www.tastycake.net>
+References: <Pine.LNX.4.44.0403311442520.31572-100000@coffee.psychology.mcmaster.ca> <406B9F3E.4020701@wasp.net.au> <1082125542.407fece65df29@www.tastycake.net> <yw1x7jwg6jt4.fsf@kth.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <yw1x7jwg6jt4.fsf@kth.se>
+To: =?iso-8859-1?b?TeVucyA=?= =?iso-8859-1?b?UnVsbGflcmQ=?= <mru@kth.se>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Nick Maynard <nick.maynard@alumni.doc.ic.ac.uk> writes:
+> I'm running four disks off a RocketRAID 1540 SATA card with Linux
+> software RAID since kernel 2.6.0.  The driver included with the kernel
+> works just fine.  Any card using the hpt374 chip should work, whatever
+> the name on the box happens to be.
+Yea.  You should note that I have a Rocket 1540, not a RocketRAID 1540.  There's
+a difference - shown particularly by the fact that Highpoint release open
+drivers for the RocketRAID and not the Rocket.
+Should doesn't necessarily mean does, unfortunately.  My reasoning was exactly
+the same as yours, except it's bitten me where it hurts...
 
->> I used a pair of Highpoint Rocketraid 1540 cards with the Highpoint
->> driver (as it presented all 8 drives as 8 units on a scsi chain)
->> with linux md raid-5, and I have now moved onto 3 Promise
->> SATA150-TX4 units in an md raid-5.
-> This is probably slightly off-topic, but has anyone heard of
-> successful use of the Rocket 1540 (non-RAID, HPT374 based) card on
-> Linux 2.6.x yet?
+> Perfectly good drivers are included with the kernel.
+And this is where I got bitten.  The standard kernel drivers (HPT374 is
+supported by hpt366.o) in 2.6.5 (and 2.4.something) lock up on boot, during the
+probe bit I think.  Are you using any other module?
 
-I'm running four disks off a RocketRAID 1540 SATA card with Linux
-software RAID since kernel 2.6.0.  The driver included with the kernel
-works just fine.  Any card using the hpt374 chip should work, whatever
-the name on the box happens to be.
+Cheers,
 
-> Highpoint provides binary drivers for Redhat and SuSE, but no other
-> distros and no source - anyone any idea where to get hold of
-> functional drivers?
+--
 
-Perfectly good drivers are included with the kernel.
-
---=20
-M=E5ns Rullg=E5rd
-mru@kth.se
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Nick Maynard
+nick@tastycake.net
