@@ -1,50 +1,35 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: 2.6.0-test1-bk2 ate my root raid
-Date: Thu, 24 Jul 2003 09:21:57 +1000
+From: Warren Young <warren@etr-usa.com>
+Subject: Re: Fast RAID rebuild?
+Date: Thu, 24 Jul 2003 15:38:12 -0600
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16159.6293.395295.30625@gargle.gargle.HOWL>
-References: <20030723203425.GA22680@drunk.brewdrinkers.com>
+Message-ID: <3F2051C4.8020001@etr-usa.com>
+References: <Pine.LNX.4.53.0307221333120.21063@duplo.agenda.si>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Thomas on Wednesday July 23
-To: Thomas <thomas@zimres.net>
-Cc: linux-raid@vger.kernel.org
+In-Reply-To: <Pine.LNX.4.53.0307221333120.21063@duplo.agenda.si>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday July 23, thomas@zimres.net wrote:
-> I tested 2.6.0-test1-bk2 out, and it wouldn't boot using 
-> my devfs name. No real problem there, as I've seen the workaround--
-> use the huge ugly devfs name (or hex'ed numbers)--I've got a backup root
-> partition (I've got to learn to type one of these days if I play with
-> root). Boot using the backup partition, 
-> "2.6.0-test1-bk2 root=/dev/hdc1 init=/bin/bash" and notice that 
-> the new kernel doesn't see my promise controler (odd that, half
-> of the raid is on that "lost" drive"). 
+danci@agenda.si wrote:
 > 
-> Boot back into 2.4.21; I get a quick kernel panic (no root)
-> but can't tell why as once you've panic'ed you can't scroll up. I've
-> got a Knoppix cd, so all will be well. Boot that, and load the md 
-> modules and got the following, and here I'm a bit stumped :"
->  [events: 0000001d]
-> md: bind<hda1,1>
->  [events: 0000001c]
-> md: bind<hde1,2>
-> md: hde1's event counter: 0000001c
-> md: hda1's event counter: 0000001d
-> md: superblock update time inconsistency -- using the most recent one
-> md: freshest: hda1
-> md: bug in file md.c, line 1475
+> Is there a way to quickly add the disk back to array without resyncing
+> - something like 'mdadm --unfail'? :)
 
+md is right not to trust the state of the replaced disk.  Just in order 
+to get to the mdadm point, you have to boot up, which means files have 
+changed on the live disks relative to the one that was temporarily 
+missing.  You'd risk massive corruption by forcing it to accept the new 
+disk without rebuilding the array.
 
-I think your best bet is to get mdadm and assemble the array
-with
-   mdadm -A /dev/md0 --force /dev/hda1
-   mdadm /dev/md0 --add /dev/hde1
+You maybe could get away with this in a hardware RAID system because you 
+can administer the array before the OS comes up.  None of the RAID cards 
+I've ever played with allow this, though.
 
-and wait for the rebuild.
+The real solution to your problem is to put all the disks on the same 
+kind of controller.  A 4-port 3Ware card, for instance.  Then all disks 
+come up together or none of them do.  You can still use Linux soft RAID 
+with most hardware RAID cards, if you must.  Or, if you want to cheap 
+out, get a 2-port Promise IDE card and put the three disks on it.
 
-I'll try to see if I can figure out what is causing the oops.
-
-NeilBrown
