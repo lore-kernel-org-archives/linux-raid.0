@@ -1,73 +1,60 @@
-From: "Rechenberg, Andrew" <ARechenberg@shermanfinancialgroup.com>
-Subject: RE: RAID1, backup & BCV
-Date: Wed, 19 Jun 2002 08:55:20 -0400
+From: Titus Winters <twinters@odin.ac.hmc.edu>
+Subject: Re: Not-fresh + failure
+Date: Wed, 19 Jun 2002 09:24:35 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <CDF05CB9FCA0C845B9778F9E463C4761255390@cinshrexc01.shermfin.com>
+Message-ID: <20020619092435.A6189@cs.hmc.edu>
+References: <20020618162813.A2366@cs.hmc.edu> <20020618233748.GA13086@unthought.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-content-class: urn:content-classes:message
-To: "Buechler, Mark R" <Mark_R_Buechler@bausch.com>, linux-raid@vger.kernel.org
+Content-Disposition: inline
+In-Reply-To: <20020618233748.GA13086@unthought.net>; from jakob@unthought.net on Wed, Jun 19, 2002 at 01:37:48AM +0200
+To: Jakob Oestergaard <jakob@unthought.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-We had a triple mirror setup on our production box to do almost what you
-are describing.  We wouldn't do reverse sync, but we had a triple mirror
-throughout the day and then broke off one of the devices at night with
-mdctl (now mdadm) and backed it up.  After the backup we resynced and
-again had a triple mirror.
+My apologies for asking a question that was in the FAQ.  I thought the
+not-fresh attribute was perhaps recoverable with something less scary
+than mkraid --force.  Turns out this was the correct solution, and
+my data is recovered, safe and sound.  Thank you very much.
 
-I don't see a problem with the reverse sync, but you would have to
-script something like that.  No fancy GUI stuff or scripts pre-made like
-EMC.
+-Titus
 
-Regards,
-Andy.
-
-Andrew Rechenberg
-Infrastructure Team, Sherman Financial Group
-arechenberg (at) shermanfinancialgroup.com
-
-
-
------Original Message-----
-From: Buechler, Mark R [mailto:Mark_R_Buechler@bausch.com] 
-Sent: Wednesday, June 19, 2002 8:40 AM
-To: 'linux-raid@vger.kernel.org'
-Subject: RAID1, backup & BCV
-
-
-I was wondering if Linux RAID had anything like what EMC corporation
-calls a BCV (Business Continuity Volume). A BCV is simply a second or
-third mirror which is synced up with the main devices and then broken
-off and kept as a backup. You can then at any point restore from the BCV
-mirror by doing a reverse sync from it to the main devices. This is a
-very handy thing when it comes to shared disk. You can sync a mirror on
-one system, break it and mount it up on another to back it up and all
-without having to stop any applications on the primary server or put any
-excessive load on it.
-
-I was wondering if there were plans for this sort of functionality or if
-anyone has given it any thought.
-
-- Mark.
-
-
-EMAIL DISCLAIMER 
-
-Please Note: The information contained in this message may be privileged
-and confidential, protected from disclosure, and/or intended only for
-the use of the individual or entity named above. If the reader of this
-message is not the intended recipient, or an employee or agent
-responsible for delivering this message to the intended recipient, you
-are hereby notified that any disclosure, distribution, copying or other
-dissemination of this communication is strictly prohibited. If you
-received this communication in error, please immediately reply to the
-sender, delete the message and destroy all copies of it.
-
-Thank You
+On (06/19 01:37), Jakob Oestergaard wrote:
+> On Tue, Jun 18, 2002 at 04:28:13PM -0700, Titus Winters wrote:
+> > Please help my poor file server:=20
+> >=20
+> > I've got 4 scsi drives on two controllers running RAID-5 in softwar=
+e.
+> >=20
+> > So as near as I can tell I've got one drive that failed and cut off=
+=20
+> > communications with the other disk on the SCSI controller (or somet=
+hing)
+> > which made that second drive become not-fresh before the kernel pan=
+icked.
+> >=20
+> > dmseg says that one is not-fresh, and the other is faulty.  How do =
+I
+> > proceed without data loss?  I've tried raidhotadd to bring up the=20
+> > not-fresh drive, but the raid device can't start up and thus I can'=
+t=20
+> > hot add it. =20
+>=20
+> Section 6.1 in the Software RAID HOWTO:
+>=20
+> http://unthought.net/Software-RAID.HOWTO/Software-RAID.HOWTO-6.html#s=
+s6.1
+>=20
+> --=20
+> ................................................................
+> :   jakob@unthought.net   : And I see the elder races,         :
+> :.........................: putrid forms of man                :
+> :   Jakob =D8stergaard      : See him rise and claim the earth,  :
+> :        OZ9ABN           : his downfall is at hand.           :
+> :.........................:............{Konkhra}...............:
 -
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org More majordomo info
-at  http://vger.kernel.org/majordomo-info.html
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
