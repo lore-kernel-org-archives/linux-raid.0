@@ -1,48 +1,73 @@
-From: Michael Tokarev <mjt@tls.msk.ru>
+From: Arne Wiebalck <wiebalck@kip.uni-heidelberg.de>
 Subject: Re: Partitioning a RAID device
-Date: Thu, 05 Sep 2002 18:00:57 +0400
+Date: Thu, 5 Sep 2002 17:42:35 +0200 (METDST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3D776399.AC6BD33E@tls.msk.ru>
+Message-ID: <Pine.HPX.4.43.0209051727350.11531-100000@electra.kip.uni-heidelberg.de>
 References: <Pine.LNX.4.30.0209040912270.11782-100000@jaded.cynicism.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=koi8-r
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <Pine.LNX.4.30.0209040912270.11782-100000@jaded.cynicism.com>
+To: Derek Vadala <derek@cynicism.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Derek Vadala wrote:
-> 
+
+thanks for the hint!
+I applied all the md patches for my kernel (2.4.18).
+
+the compilation complained about __minor not to be member of the
+mddev structure, so replaced it by a __unit. apart from that patching and
+compiling was without problems.
+
+I tried to partition the device using fdisk, but in /var/log/messages
+I found
+
+fdisk(pid 1344) tried BLKRRPART ioctl on MD device. Should use MDP device.
+
+and
+
+md: fdisk(pid 2486) used obsolete MD ioctl, upgrade your software to use
+new ictls.
+
+so, partitioning did not work.
+
+my fdisk version is 2.11.
+should I use another tool for partitioning?
+who is responsible for making the device special files?
+
+TIA,
+ arne
+
+
+
+On Wed, 4 Sep 2002, Derek Vadala wrote:
+
 > On Wed, 4 Sep 2002, Arne Wiebalck wrote:
-> 
+>
 > > is it possible to have partitions on a RAID device?
 > >
 > > [...]
 > >
 > > Anything I am missing here?
-> 
+>
 > You first need to patch your kernel so that the md driver and md devices
 > support partitioning. Check out
 > http://cgi.cse.unsw.edu.au/~neilb/patches/linux-stable/ for the patches.
+>
+>
+> ---
+> Derek Vadala, derek@cynicism.com, http://www.cynicism.com/~derek
+>
 
-Hmm, interesting.  What's those patches are for?  What's their status?
-Are they just experiments, proof-of-concept, or intended for general
-use?  Are there any interdependances of the set of 5 md-related patches
-for 2.4.19?  Some more information on this all?  Discussions?  Official
-2.4/2.5 status of this work?  Relation with e.g. LVM?  Iteraction with
-devfs for mdp?  Device nodes assignment (i.e. what will become mpa, mpb
-etc when one have md0, md1 etc)?  (There are quite a few aspects mentioned
-on the above page, mostly nfs-, ext[23]- and md-related stuff, but this is
-linux-raid list :)
+**********************************************************************
+ Arne Wiebalck                        Kirchhoff Institute for Physics
+                                           Technical Computer Science
+                                                     Schroederstr. 90
+                                                   D-69120 Heidelberg
 
-Errm, so many question... ;)
+ e-mail: wiebalck@kip.uni-heidelberg.de      Tel.: (+49) 6221/54-4362
+ web   : http://www.kip.uni-heidelberg.de    Fax.: (+49) 6221/54-4345
+**********************************************************************
 
-BTW, still don't know which is "better" -- have several md arrays for every
-filesystem/whatether, or have one md array and split it using e.g. lvm or
-using this mdp method?  (Two different point of view: system resource usage
-should be less for one large md array, but will this one large array handle
-load as effective as several independant ones?)
 
-Thanks.
-
-/mjt
