@@ -1,64 +1,34 @@
-From: Jakob Oestergaard <jakob@unthought.net>
-Subject: Re: RAID5 reconfig
-Date: Mon, 20 Jan 2003 01:19:42 +0100
+From: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
+Subject: Re: http://www.cse.unsw.edu.au/~neilb/source/mdadm/ gone?
+Date: Sun, 19 Jan 2003 20:21:09 -0500 (EST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20030120001941.GB23750@unthought.net>
-References: <000f01c2ae90$3e9c4eb0$6500a8c0@system>
+Message-ID: <Pine.LNX.4.52.0301192018450.31406@filesrv1.baby-dragons.com>
+References: <20030119232606.3E65C3B81C@jaded.cynicism.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <000f01c2ae90$3e9c4eb0$6500a8c0@system>
-To: TJ <tjharrel@eagle.fgcu.edu>
-Cc: linux-raid@vger.kernel.org
+In-Reply-To: <20030119232606.3E65C3B81C@jaded.cynicism.com>
+To: Derek Vadala <derek@cynicism.com>
+Cc: Linux RAID Mailing Liste <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sat, Dec 28, 2002 at 11:43:25AM -0500, TJ wrote:
-> > Use with extreme care:
-> > http://unthought.net/raidreconf/index.shtml
->=20
-> > Someone posted a success story on this list a few weeks ago using a
-> > pretty big RAID5 volume/array.
->=20
-> > Marco
->=20
-> > PS: Please use the 'Subject' field.
->=20
-> Sorry about that.. Please CC me, I don't seem to be getting any feed =
-from
-> the list.
->=20
-> Thanks for the link. I've been reading up on others experiences and
-> documentation seems somewhat thin. Does a mini-HOWTO exist anywhere?
-> >From what I've read, first raidreconf is used to change the array, t=
-hen
-> fsck -f is run to check the product, then the file system resize util=
-ity
-> must be used to change the size of the filesystem on the RAID array. =
-Then it
-> would probably be a good idea to run fsck -f once more. This should b=
-e
-> sufficient to add more disks to a RAID 5 array and enlarge the filesy=
-stem to
-> take advantage of the larger block device. Am I missing anything?
 
-Only that in some scenarios raidreconf fails horribly - this seems to a=
-t
-least happen if you have hot spares configured.
+	Hello Derek ,  Thank you for pointing that mirror out .
+	Nice to see the tool on kernel.org too .  I sure hope that
+	is what Neil is doing .  This almost looks like a failed restore
+	from backups .  Ie: all I had seen is directory structure and no
+	files .   Tnx ,  JimL
 
-Make sure you have a good backup.  Please report success/failure to the
-list - that is greatly appreciated  :)
-
---=20
-=2E...............................................................
-:   jakob@unthought.net   : And I see the elder races,         :
-:.........................: putrid forms of man                :
-:   Jakob =D8stergaard      : See him rise and claim the earth,  :
-:        OZ9ABN           : his downfall is at hand.           :
-:.........................:............{Konkhra}...............:
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Sun, 19 Jan 2003, Derek Vadala wrote:
+> On Sun, 19 Jan 2003, Friedrich Lobenstock wrote:
+> > Is http://www.cse.unsw.edu.au/~neilb/source/mdadm/ gone?
+> > I only get "Error 404 - File Not Found".
+> I noticed the same thing yesterday. Maybe Neil is reorganizing.
+> Try:
+> ftp.kernel.org/pub/linux/utils/raid/mdadm
+-- 
+       +------------------------------------------------------------------+
+       | James   W.   Laferriere | System    Techniques | Give me VMS     |
+       | Network        Engineer |     P.O. Box 854     |  Give me Linux  |
+       | babydr@baby-dragons.com | Coudersport PA 16915 |   only  on  AXP |
+       +------------------------------------------------------------------+
