@@ -1,83 +1,78 @@
-From: "TJ Harrell" <systemloc@earthlink.net>
+From: Gordon Henderson <gordon@drogon.net>
 Subject: Re: New RAID-5 800GB array, wich fs ? wich stripe block size ?
-Date: Mon, 19 Jul 2004 22:39:20 -0400
+Date: Tue, 20 Jul 2004 09:29:08 +0100 (BST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <001a01c46e02$c30d5f80$0201a8c0@windows>
-References: <40FB923D.1080903@gouny.org> <40FC30C2.5050600@dobbels.com> <40FC37A9.6060006@h3c.com>
+Message-ID: <Pine.LNX.4.56.0407200902120.30363@lion.drogon.net>
+References: <40FB923D.1080903@gouny.org> <40FC30C2.5050600@dobbels.com>
+ <40FC37A9.6060006@h3c.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: =?iso-8859-1?Q?Aur=E9lien_Gouny?= <aurelien@gouny.org>, linux-raid@vger.kernel.org
+In-Reply-To: <40FC37A9.6060006@h3c.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+On Mon, 19 Jul 2004, Mike Hardy wrote:
 
 > I just chose plain vanilla ext3 ('mke2fs -j -m1 /dev/md2') on top of
 > plain ol' raid 5. The only option that's different there is the "m1"
 > since with an enormous filesystem, reserving 5% of it for root use is a
 > bit silly.
 
-I have a similar set up. A 600GB RAID-5 serving mp3's, and divx. I use ext3.
-The journalling is a lifesaver if you ever have a crash for some reason.
-Fsck
-on a file-system that large is amazingly slow. I also mount it in
-data=writeback
-mode to improve performance. The -m option is important, otherwise you
-waste a great deal of space. Additionally, the stripe and chunck sizes
-should
-be matched to the array when you issue the mke2fs. That's something that
-was difficult for me to understand, so someone might want to explain that
-one.
-
+I'm using ext3 on some biggish systems too. Never thought about the -m
+option, but I always thought the 5% was for efficiency to stop
+fragmentation?
 
 > With regard to performance, the first thing you'll notice is that unless
 > you have gigabit to everywhere, you're limited by network I/O. I am
 > anyway. I could saturate a 100Mbit network connection with the read
 > speed, and after that, who cares?
 
-I do have gigabit from my fileserver :) The disk bandwidth is actually not
-that
-great, though. I have yet to figure out why.
+One thing you might want to look into with ext2/3 is the stride size.
+Theres an option in mkfs.ext2/3 to let you set this, and words in the S/W
+RAID HowTo describing its use with a RAID5 setup.
+
+However, as you say, it probably doesn't matter if you only have 100Mb
+networking! DAThe only time I've seen this make a difference though is
+when backing up to a local DLT tape drive.
+
+Basically, you set the stride size to the chunk-size / 4 (if you are using
+the default 4K block size) So with a chunk-size of 64, the stride size
+will be 16; mkfs -t ext3 -R stride=16 /dev/mdX
+
+See
+
+  http://www.tldp.org/HOWTO/Software-RAID-HOWTO-5.html#ss5.10
+
+and read down to the bottom of the page.
+
+However, I feel that this sort of tuning will really only matter if your
+data is of a nature to take full advantage of it - eg. all big files,
+access sequentially rather than lots of little files access randomly, or
+whatever! I suspect the only way to see what will work for you is to suck
+it and see!
+
+> Different filesystems will clearly be better for different situations,
+> but if you're just looking to serve files over the network you're really
+> not going to need to work hard to get it set up "good enough".
+
+Indeed. One other thing that you might want to invest in is a managed
+Ethernet switch. That way to can see if it really is the filesystem thats
+a bottleneck (assuming it's a server and not just a filestore for local
+applications). I recently checked a network I look after, after the users
+were wondering if the network was running flat-out (it's only 100Mb) and
+was able to show that actually, 10Mb switches would be almost good enough
+for the most-part. MRTG is your friend here! I was able to get more or
+less full bandwidth out of it via NFS (running Bonnie) and over 5 times
+that locally (again with Bonnie) so I was happy with the servers
+performance and happy to blame the applications for being slow to write
+their data ;-)
 
 > I will say though, I've had hardware failures and machine failures take
 > the array out before - remember that MTBF is divided by the number of
 > parts and arrays usually have lots of parts. Don't forget to backup
 > early and often...
 
-Yes.. RAID is no replacement for backing up!!! My RAID array has proven
-extremely durable and reliable through several hardware failures, however,
-two drives dying at once, a simple power surge from a faulty PSU or
-lightning,
-or many other things could kill it. Even mistyping a command during a
-recovery
-could destroy the array.
+Absolutely.
 
-> Bernhard Dobbels wrote:
-> > Technically speaking, I prefer the LVM2 solution on which you can make
-> > and resize partitions on the fly.
-> >
-> > I must admit I lost my raid5 with LVM2. The cause will probably have
-> > been my fault, although I don't know what I did wrong, so I suggest if
-> > you have critical data, a backup on another medium is still advised.
-
-I mount my array on /home, and have all data files in the home directory of
-my
-user account, myself. I can create additional home directories for different
-shares.
-This is convient to me, although other people may feel otherwise. I do not
-use LVM2
-for two reasons. It is extra for me to learn to use, and it is an extra
-possible point
-of failure. The RAID code alone has been found to have bugs and weak code in
-the
-past. Using LVM2 on top of RAID, which also may have weak code or bugs, is
-just
-an additional possible fail point. In my opinion, it should not be used
-unless it is
-significantly useful. In my case, it isn't. I get by without needing it.
-
-
-I wish you success,
-TJ Harrell
-
-
+Gordon
