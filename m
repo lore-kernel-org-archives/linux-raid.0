@@ -1,35 +1,43 @@
-From: =?iso-8859-1?q?M=E5ns_Rullg=E5rd?= <mru@inprovide.com>
+From: ptb@lab.it.uc3m.es (Peter T. Breuer)
 Subject: Re: Checking if RAID does work?
-Date: Wed, 19 Jan 2005 22:22:01 +0100
-Message-ID: <yw1xk6q9xgg6.fsf@ford.inprovide.com>
-References: <20050117010355.GH347@unthought.net> <20050119195154.23514.qmail@web60405.mail.yahoo.com>
- <a0s2c2-7i2.ln1@news.it.uc3m.es> <200501192217.29258.maarten@ultratux.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Date: Wed, 19 Jan 2005 22:24:59 +0100
+Message-ID: <bqv2c2-uec.ln1@news.it.uc3m.es>
+References: <20050117010355.GH347@unthought.net> <20050119195154.23514.qmail@web60405.mail.yahoo.com> <a0s2c2-7i2.ln1@news.it.uc3m.es> <200501192217.29258.maarten@ultratux.net>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-maarten <maarten@ultratux.net> writes:
+maarten <maarten@ultratux.net> wrote:
+> On Wednesday 19 January 2005 21:19, Peter T. Breuer wrote:
+> > Poonam Dalya <poonamsbox@yahoo.com> wrote:
+> > > I mounted my /dev/md1 on /mnt/raid. and then wrote a
+> > > file on it. Then I tried to mount the raid disks
+> > > /dev/hda10 on some other mount point and checked that
+> > > mount point. But there was nothing in that mount
+> > > point. Please could you please help me with this.
+> 
+> You did not forget to format / mkfs it I suppose ?
+> 
+> > Don't do that then. Do you have any reason to suppose that buffers were
+> > already written to the top level system yet, or that mounting the same
+> > device twice will caus eanything but pain and confusion and much
+> > wailing and gnashing of teeth?
+> 
+> Sigh.
 
-> To the OP: Yes, every part of a raid-1 array (but only a raid-1
-> array) will / should be mountable and have the same filesystem as
-> the array has.  HOWEVER you should never ever mount the array AT THE
-> SAME TIME as one of its underlying devices!  Always umount first,
-> and only then mount the other.
+You don't understand - he mounted the raw partitions that make up the
+raid array WHILE THE RAID WAS RUNNING somewhere else.
 
-=46urthermore, never ever mount a raid-1 component alone in read-write
-mode.  Modifying the mirrors individually will almost certainly result
-in breakage when the array is activated again.
+If the mount had failed he would have said. Therefore it did not fail.
+If he had unmounted the raid array first, then the umount would have
+flushed buffers to that device (the kernel sends flush_buffers or
+whatever it is called nowadays) and the file would have been visible
+when he did the later mount.
 
---=20
-M=E5ns Rullg=E5rd
-mru@inprovide.com
+It was not, therefore he did not.
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+Peter
+
