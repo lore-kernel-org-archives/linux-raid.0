@@ -1,89 +1,33 @@
-From: Robert Washburne <rcwash3@comcast.net>
-Subject: Re: new raid system for home use
-Date: Wed, 21 Apr 2004 09:24:14 -0400
+From: Nick Maynard <nick.maynard@alumni.doc.ic.ac.uk>
+Subject: Re: HighPoint Rocket 1540 hang driver load (Was: Re: Which raid card to buy for Sarge)
+Date: Wed, 21 Apr 2004 16:24:38 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <6.0.3.0.1.20040421090309.01ad88b0@mail.comcast.net>
-References: <Pine.LNX.4.44.0404181411130.21013-100000@coffee.psychology.mcmaster.ca>
- <Pine.LNX.4.58.0404181253470.24065@spoon.loc>
- <4083F865.7070803@chemie.uni-erlangen.de>
+Message-ID: <1082561078.40869236f3c14@www.tastycake.net>
+References: <40865AEC.8040604@online.no>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4083F865.7070803@chemie.uni-erlangen.de>
-References: <Pine.LNX.4.44.0404181411130.21013-100000@coffee.psychology.mcmaster.ca>
- <Pine.LNX.4.58.0404181253470.24065@spoon.loc>
- <4083F865.7070803@chemie.uni-erlangen.de>
-To: linux-raid@vger.kernel.org
+In-Reply-To: <40865AEC.8040604@online.no>
+To: Lars Gaarden <lar-gaar@online.no>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Grettengs!  This is my first post to the list.
+Thanks all for your replies.
 
-On my system (a dedicated fileserver running gentoo Linux) I partition =
-all=20
-of my drives the same way:
-P1 - 1 cyl - /boot
-P2 - swap
-P3 - 2G/RAID 5 - /
-L5 - 4G/ext2 - / alternate
-L* - 35G/RAID 5 - Storage partitions
+After having tried near everything (RocketRAID OSS driver with NON_RAID=1 (and a
+Makefile adjustment for brain errors from Highpoint) ), I still get the hangs
+you guys are talking about.  Not to mention hardware conflicts with my ancient
+mobo with onboard HPT366.
 
-I use lilo with a duel boot.
-Default boot uses the RAID 5 root.
-Secondary boot uses the ext2 root.  This partition is copied onto every=
- drive.
+I've come to the conclusion that the Rocket 1540 is quite frankly a useless
+card, and to get it to work with 2.6.x is probably asking too much.  I've
+managed to RMA the Rocket 1540 card, and I'm buying a Promise SATA150 TX4.
 
-This way, I have all of the advantages of RAID 5 for my OS, but I can b=
-oot=20
-to a mundane partition if the RAID should break or needs maintanence (l=
-ike=20
-adding another drive).
-If the boot drive dies, I can boot from CD and chroot to any of the=20
-remaining drive's L5 partition.
-I have tested both boots and it works quite well.  The cost in space is=
- 4G=20
-from a 250G drive.  About a 2% overhead.
+So to repeat for future reference by the list, Rocket 1540 on Linux (esp 2.6) is
+a nono.  Buy a Promise card.
 
-It could be argued that this layout would be more efficient if root wer=
-e=20
-placed closer to the center of the cylinders.  But this is not a very=20
-active machine.  It basicly holds my large multimedia files while they =
-wait=20
-their turn for processing (takes 100G to filter and process 1 hour of=20
-video).  No data streaming applications.  So I took the mental shortcut=
-=2E
+--
 
-Hope this is useful.
-
-Bob W.
-
-At 12:03 PM 4/19/2004, you wrote:
->Hi Paul!
->
->Paul Phillips schrieb:
->
->>I was under the impression that I can't boot off raid-5, but if that
->>information is dated then all the better.
->>Thanks again.
->
->Afaik, that=B4s still true. The reason is that the two (or more) drive=
-s of a=20
->raid 1 essentially hold the same data, and if you do everything right,=
- the=20
->complete boot mechanism is on all disks, so that you can boot with any=
- of=20
->them. On raid 5 disks, you would never have the complete data on any o=
-f=20
->the disks.
->
->Norman.
->
->--
-
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Nick Maynard
+nick.maynard@alumni.doc.ic.ac.uk
