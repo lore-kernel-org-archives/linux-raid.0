@@ -1,62 +1,31 @@
-From: Jeff Byrkit <jbyrkit@pcpao.org>
-Subject: Re: mdadm and --program
-Date: Fri, 4 Oct 2002 07:45:53 -0400
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: RAID backup
+Date: 04 Oct 2002 13:52:23 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200210040745.53281.jbyrkit@pcpao.org>
-References: <20021003205948.EC0F43B828@jaded.cynicism.com>
+Message-ID: <1033735943.31839.12.camel@irongate.swansea.linux.org.uk>
+References: <Pine.LNX.3.96.1021004041421.5688A-100000@Maggie.Linux-Consulting.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20021003205948.EC0F43B828@jaded.cynicism.com>
-To: Derek Vadala <derek@cynicism.com>
-Cc: linux-raid@vger.kernel.org
+In-Reply-To: <Pine.LNX.3.96.1021004041421.5688A-100000@Maggie.Linux-Consulting.com>
+To: Alvin Oga <aoga@Maggie.Linux-Consulting.com>
+Cc: Illtud Daniel <illtud.daniel@llgc.org.uk>, Effrem Norwood <enorwood@effrem.com>, Kanoalani Withington <kanoa@cfht.hawaii.edu>, Roy Sigurd Karlsbakk <roy@karlsbakk.net>, jbradford@dial.pipex.com, jakob@unthought.net, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Excellent. I'm new to scripting...guess it's time for this old vms hack to 
-learn shell programming....
-Thanks again.
+On Fri, 2002-10-04 at 12:20, Alvin Oga wrote:
+> we can build an 8-drive ( 120GB at $200ea )  or ( 160GB at $300>? each )
+> 1U box...about 0.960 - 1.28 TB each backup server ( 1U ) for under $2,500 in parts
+> +  cost of raid setup/testing is up to the user
+> 	- am thinking the 1.6TB of storage for 10K lira(?) is too much
+> 
+> i prefer disks to backup data.. so that its always a semi-warm backup
+> ( tapes have always been way tooo slow to find a file and to restore 
 
-On Thursday, October 03 2002 04:59 pm, Derek Vadala wrote:
-> On Thu, 3 Oct 2002, Jeff Byrkit wrote:
-> > # mdadm --follow --program /etc/handle-mdadm-events  --delay 1 /dev/md0
-> >
-> > where handle-mdadm-events is (culled from previous posts):
-> >
-> > echo $*
-> > logger -p kern.crit -t RAID $*
->
-> Does your script have a #! line at the top, for example:
->
-> #!/bin/bash
->
-> You could alternatively use:
->
-> # mdadm --follow --program='/bin/bash /etc/handle-mdadm-events' --delay=1
-> /dev/md0
->
-> > but I never get anything at my terminal or in the log. If I don't use the
-> > --program, it gives me:
->
-> Don't forget to make sure /etc/syslog.conf has an appropriate entry too.
->
-> > anyone have any ideas? can I do --program "echo $*" ? just to get it to
-> > do something?
->
-> Yeah, but you don't need $* and you should use the full path to echo.
->
-> # mdadm -F /dev/md0 -p/bin/echo -d1
->
-> ---
-> Derek Vadala, derek@cynicism.com, http://www.cynicism.com/~derek
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The problem with disks is you still have to archive them somewhere, and
+they are bulky. I also dont know what studies are available on the
+degradation of stored disk media over time. 
 
--- 
-Jeff Byrkit
-Assistant Deputy for Information Systems
-Pinellas County Property Appraiser
+Capacity is not a problem, 3ware do a 12 channel sata card, with maxtor
+drives that comes in at 320x12 = 3.5Tb
 
