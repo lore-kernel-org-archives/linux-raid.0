@@ -1,32 +1,44 @@
-From: Scott Laird <scott@sigkill.org>
-Subject: Re: Irritating RAID problem (kept spare, kicked data disks due to timestamp)
-Date: Mon, 10 Jan 2005 09:35:26 -0800
-Message-ID: <03873167-632E-11D9-B5C2-000393667D82@sigkill.org>
-References: <21F89945-6328-11D9-B5C2-000393667D82@sigkill.org> <200501101816.36581.maarten@ultratux.net>
-Mime-Version: 1.0 (Apple Message framework v619)
-Content-Type: text/plain; charset=US-ASCII; format=flowed
+From: maarten <maarten@ultratux.net>
+Subject: Re: Spares and partitioning huge disks
+Date: Mon, 10 Jan 2005 19:40:36 +0100
+Message-ID: <200501101940.36167.maarten@ultratux.net>
+References: <200501101713.j0AHDx922062@www.watkins-home.com>
+Mime-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200501101816.36581.maarten@ultratux.net>
+In-Reply-To: <200501101713.j0AHDx922062@www.watkins-home.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: maarten <maarten@ultratux.net>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Monday 10 January 2005 18:13, Guy wrote:
 
-On Jan 10, 2005, at 9:16 AM, maarten wrote:
-> Or rather, find out how the spare can have a newer timestamp, since 
-> this is
-> not something that should ever happen.  Afaik.  This might be a bug ?
+> I have 4 of these:
+> raid5: switching cache buffer size, 4096 --> 1024
+>
+> And 2 of these:
+> raid5: switching cache buffer size, 1024 --> 4096
 
-Well, my disk controller locked up right before this happened, so it's 
-probably possible that the timestamp writes to the other drives were 
-lost.  I've went through disk hell over the past week reconstructing 
-multiple failed RAID arrays (disk failure, my screwup, nothing 
-mysterious, just irritating), and this is just the most recent problem. 
-  I wouldn't necessarily read too much into how the timestamp weirdness 
-happened.
+Another thing that only strikes me now that I'm actually counting them: I have 
+_exactly_ 24 of those messages per minute. At any moment, at any time, idle 
+or not. (Although a PVR is never really 'idle', but nevertheless)
+(well, not really _every_ time, but out of ten samples nine were 24 and only 
+one was 36)
 
+And this one may be particularly interesting:
 
-Scott
+Jan  9 02:47:19 dozer kernel: raid5: switching cache buffer size, 512 --> 4096
+Jan  9 02:47:24 dozer kernel: raid5: switching cache buffer size, 0 --> 4096
+Jan  9 02:47:24 dozer kernel: raid5: switching cache buffer size, 4096 --> 512
+
+Switching from buffer size 0 ?  Wtf ?
+
+Another thing to note is that my switches are between 4096 and 512, not 
+between 4k and 1k as Neil's reply would indicate being normal. But I don't 
+consider this bit really important.
+
+Maarten
 
