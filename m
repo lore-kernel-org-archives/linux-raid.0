@@ -1,8 +1,9 @@
-From: Eric BENARD / Free <ebenard@free.fr>
-Subject: RAID detection
-Date: Fri, 22 Aug 2003 09:39:05 +0200
+From: Florian Schanda <ma1flfs@bath.ac.uk>
+Subject: 2.6.0-test{1,2,3} kernels + software raid 0 + xfs broken?
+Date: Sat, 23 Aug 2003 19:16:00 +0000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200308220939.07092.ebenard@free.fr>
+Message-ID: <200308231916.00588.ma1flfs@bath.ac.uk>
+Reply-To: ma1flfs@bath.ac.uk
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="us-ascii"
@@ -12,21 +13,26 @@ Content-Disposition: inline
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+Hi all,
 
-I'm trying to switch my raid machine from kernel IDE drivers to promise ones.
-The problem is : promise driver "FastTrak.o" can only be compiled as a module 
-and shows drive as SCSI ones when opensource driver shows them as IDE.
+I am running a 2.4.21 kernel + xfs + raid0 (software) on 2 scsi disks. It 
+works without flaws.
 
-So I created an initrd which loads FastTrak.o and detects properly drives and 
-partitions but raid layer doesn't detect raid array (0, 1 and 5 on 4 drives). 
-This initrd also will do raidstart /dev/mdx (with x from 0 to 5) ... but 
-befor it needs to detect raid array properly ;-)
+Trying the same setup in 2.6.0-test{1,2,3} (haven't tested 4 yet) _will_ give 
+data corruption if I write to the array.
 
-md drivers are compiled inside the kernel, not as modules.
+2 Things that happen are:
+* Creating a directory and then being unable to remove it: (rm -r foo says foo 
+is not directory, rmdir foo says foo is not a directory, rm foo says foo is a 
+directory, ls -l foo says it is a directory)
+* writing files to the array, unmount array (works fine up here), mounting 
+again utterly fails. (bad superblock, etc, etc) Doing an "xfs_repair -L" will 
+kill a lot of data (the files modifies / written) but fix it. Rebooting into 
+2.4 will fix it too (It doesn't even complain when mounting the thing.)
 
-Is there a trick to get md layer detect raid array in this case ?
+Anybody has an idea?
 
-Many thanks and best regards
-Eric
+Thanks,
+
+	- Florian
 
