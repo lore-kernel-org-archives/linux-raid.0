@@ -1,34 +1,30 @@
-From: Steven Ihde <x-linux-raid@hamachi.dyndns.org>
-Subject: Re: Thanks :)
-Date: Fri, 22 Oct 2004 13:51:44 -0700
+From: Anu Matthew <anu.matthew@bms.com>
+Subject: Re: monitoring multipath arrays plus inconsistent /proc/mdstat?
+Date: Fri, 22 Oct 2004 16:44:38 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20041022205144.GA28719@hamachi.dyndns.org>
-References: <41794C1D.4080004@dgreaves.com> <41796ACC.2010601@robinbowes.com>
+Message-ID: <41797136.2050209@bms.com>
+References: <20041021165119.GU3911@marowsky-bree.de>
+ <Pine.LNX.4.44.0410220739480.13142-100000@lajli.gau.hu>
+ <20041022091719.GF3911@marowsky-bree.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; format=flowed; charset=us-ascii
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <41796ACC.2010601@robinbowes.com>
+In-reply-to: <20041022091719.GF3911@marowsky-bree.de>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 22 Oct 2004 21:17:16 +0100, Robin Bowes wrote:
-> David Greaves wrote:
-> >I got this yesterday
-> >
-> >#################
-> >This is an automatically generated mail message from mdadm
-> >running on cu.dgreaves.com
-> >
-> >A Fail event had been detected on md device /dev/md0.
-> >#################
-> 
-> David,
-> 
-> How have you set things up to achieve this?
+<snip>
+Afaik emc powerpath dont's support 2.6.x kernels, is it?
 
-See the section on Monitor mode (-F option) in the mdadm man page.
-Debian's mdadm package, for example, sets it up so mdadm -F gets run
-automatically at boot time to monitor your arrays.
 
--Steve
+No, and as far as I know, it's not going to.
+<snip>
+
+May I ask, why? We are to evaluate Power Path also for 2.4, and am just curious why it is not going to run on 2.6? That could be a very important factor in decision making if it won't make it on 2.6.x
+
+Thanks in advance,
+
+Anu Matthew
+
+
