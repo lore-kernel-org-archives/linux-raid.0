@@ -1,62 +1,65 @@
-From: Ming Zhang <mingz@ele.uri.edu>
-Subject: Re: Hardware versus Software
-Date: Wed, 19 May 2004 16:03:02 -0400
+From: =?iso-8859-1?q?M=E5ns_Rullg=E5rd?= <mru@kth.se>
+Subject: Re: Hard drive Reliability?
+Date: Wed, 19 May 2004 22:49:57 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <1084996982.4948.198.camel@localhost.localdomain>
-References: <Pine.GSO.4.33.0405191452450.14297-100000@sweetums.bluetronic.net>
-Reply-To: mingz@ele.uri.edu
+Message-ID: <yw1xd650cfbe.fsf@ford.guide>
+References: <1084996693.4021.8.camel@ws101.darkcore.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.GSO.4.33.0405191452450.14297-100000@sweetums.bluetronic.net>
-To: Ricky Beam <jfbeam@bluetronic.net>
-Cc: AndyLiebman@aol.com, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 2004-05-19 at 15:00, Ricky Beam wrote:
-> On Wed, 19 May 2004 AndyLiebman@aol.com wrote:
-> >But the question still remains, is there any other safety and reliability
-> >advantage to using Hardware? Is the data on a Hardware RAID more likely to
-> >remain intact in the event of a computer crash or freeze?
-> 
-> The linux software RAID is good stuff.  It *can* be difficult to repair
-> an array in a few cases -- don't put the root FS in a non-mirrored array
-> and they shouldn't be a problem.
-> 
-> As you don't care about CPU cycles used by the array, you're far better
-> off using the software raid with normal drive controllers. (esp. true
-> for SATA.)  Hardware RAID cards generally offer better managability
-> and stability -- the OS doesn't have to know if a drive fails, they're
-> designed to hot-swap drives with little or no fuss, etc.  But, they will
-> be just a reliable as anything else.
-is there any support from linux that can do this hot swappable a little
-easier? 
+John Lange <john.lange@bighostbox.com> writes:
 
+> I have a few discussions recently with technical service people and w=
+e
+> all come to the conclusion that Hard Drives are far less reliable tha=
+n
+> they used to be.
+>
+> Case in point, I have a 120G Maxtor drive in a server that began to f=
+ail
+> less than 8 months into service. Major headache.
+>
+> I've heard similar stories from other people. I guy I know that sells
+> both desktop and file server systems now says he now only builds
+> motherboards with some kind of RAID 1 and dual drives because drives
+> fail so often this saves loads of headaches. After a their system has
+> died and they 'lost everything' people are more than willing to pay t=
+he
+> extra $150 for redundancy.
+>
+> I know drive manufactures were sued recently in a class action for
+> shipping drives which they knew were going to fail prematurely but th=
+at
+> was a few years back.
+>
+> So what are other peoples feelings about drive reliability and are so=
+me
+> brands better than others?
 
-> 
-> For a system I never want to have to touch, I use hardware raid.  For those
-> systems sitting at my feet, that isn't as important.
-> 
-> --Ricky
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
--- 
- --------------------------------------------------
-| Ming Zhang, PhD. Student
-| Dept. of Electrical & Computer Engineering
-| College of Engineering
-| University of Rhode Island
-| Kingston RI. 02881
-| e-mail: mingz at ele.uri.edu
-| Tel. (401) 874-2293 
-| Fax. (401) 782-6422
-| http://www.ele.uri.edu/~mingz/
- --------------------------------------------------
+I'd agree that drives are not as good as they used to be.  I recently
+had a one year old Western Digital disk suddenly drop dead while
+running.  Nothing could be recovered from it.  Shortly after that I
+bought four Seagate Barracuda ATA disks, one of which was defective.
+It would work flawlessly for an hour to a month, then shut itself
+down.  Rebooting made it run for a while before it repeated.
 
+Compare this to the 1GB Quantum Fireball SCSI disk sitting in my
+firewall.  It's been running 24/7 since some time around 1996.
 
+> Does anyone know of any web sites with statistics or test data?
 
+That would be interesting.
+
+--=20
+M=E5ns Rullg=E5rd
+mru@kth.se
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
