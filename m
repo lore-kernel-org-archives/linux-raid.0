@@ -1,83 +1,45 @@
-From: "TJ Harrell" <systemloc@earthlink.net>
-Subject: Re: Add disks to RAID5 array
-Date: Thu, 22 Jul 2004 13:59:04 -0400
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: I/O Blocking
+Date: Thu, 22 Jul 2004 14:02:49 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <002501c47015$93ee5230$0201a8c0@windows>
-References: <S266727AbUGVQUG/20040722162006Z+461@vger.kernel.org>
+Message-ID: <200407221802.i6MI2n328114@watkins-home.com>
+References: <40FFEB55.2000905@ocis.net>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="iso-8859-1"
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org, robin-lists@robinbowes.com
+In-Reply-To: <40FFEB55.2000905@ocis.net>
+To: "'Jason C. Leach'" <jleach@ocis.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Check out the "raidreconf" utility. It will grow RAID 5 arrays onto new
-disks. It will not expand the partitions on the raid, though. For that
-you'll need a utility like resize2fs.
+What is the CPU load like?  Are you at 100%?  If so a second CPU may help.
+If you are blocked on i/o it should not use much CPU, so my guess is your
+CPU load is very low, and a second CPU won't do much.  How much RAM do you
+have?  Are you swapping?
 
------ Original Message ----- 
-From: <robin-lists@robinbowes.com>
-To: <linux-raid@vger.kernel.org>
-Sent: Thursday, July 22, 2004 12:20 PM
-Subject: Add disks to RAID5 array
+Guy
 
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Jason C. Leach
+Sent: Thursday, July 22, 2004 12:29 PM
+To: linux-raid@vger.kernel.org
+Subject: I/O Blocking
 
-> Hi,
->
-> I had intended to build a RAID5 array using 6 x 250GB drives. However, 3
-of
-> 6 drives have proven to be faulty and have been RMA'd.
->
-> I've successfully built the array using the remaining 3 x 250GB drives
-> (details below)
->
-> Now, when I get the other three disks back, how do I add them to this
-array
-> and increase the size of the array? Is this possible?
->
-> Thanks,
->
-> R.
->
->
->
-> [root@dude root]# mdadm --detail /dev/md5
-> /dev/md5:
->         Version : 00.90.01
->   Creation Time : Thu Jul 22 14:13:50 2004
->      Raid Level : raid5
->      Array Size : 487283200 (464.71 GiB 498.98 GB)
->     Device Size : 243641600 (232.35 GiB 249.49 GB)
->    Raid Devices : 3
->   Total Devices : 3
-> Preferred Minor : 5
->     Persistence : Superblock is persistent
->
->     Update Time : Thu Jul 22 17:00:18 2004
->           State : clean
->  Active Devices : 3
-> Working Devices : 3
->  Failed Devices : 0
->   Spare Devices : 0
->
->          Layout : left-symmetric
->      Chunk Size : 128K
->
->     Number   Major   Minor   RaidDevice State
->        0       8        2        0      active sync   /dev/sda2
->        1       8       18        1      active sync   /dev/sdb2
->        2       8       34        2      active sync   /dev/sdc2
->            UUID : dde32a88:4b9bf7c1:1a634922:efbac4b0
->          Events : 0.448136
->
-> --
-> http://robinbowes.com
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Hi,
 
+Both the RAID (Promise SuperTrak 6000) or the USB subsystems really 
+drive the system load up. I'm using a AMD 3200+ system that is only a 
+few months old with the 2.4.25 kernel.  When the I/O systems are 
+blocking the system is very unresponsive. Some times samba will timeout, 
+or I'll wait several seconds for commands like df, top, w and so on.
+
+I am wondering if I were to use a dual CPU system, would this solve my 
+I/O blocking problem?  Would one CPU tend to the I/O subsystem and the 
+second would deal with other system requests I (samba, DB, LDAP, ...)?
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
