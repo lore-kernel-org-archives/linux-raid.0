@@ -1,24 +1,22 @@
-From: MShetty <mranalini.shetty@patni.com>
-Subject: Inputs on implementing 'Layered Driver' in Linux
-Date: Thu, 24 Oct 2002 21:35:15 +0530
+From: "bmoon" <bo@anthologysolutions.com>
+Subject: test
+Date: Thu, 24 Oct 2002 09:38:56 -0700
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3DB81A3B.BCF10E7D@patni.com>
+Message-ID: <007501c27b7b$d8b7e740$6a01a8c0@bmoon>
+References: <15789.39436.702725.363437@proizd.camtp.uni-mb.si>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-scsi <linux-scsi@vger.kernel.org>, linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
+Cc: bo@anthologysolutions.com
 List-Id: linux-raid.ids
 
-Hi,
+Testing.....
 
-I want to implement a 'Layered Driver' in Linux... where requests from
-the application will be passed to the sd driver. I thinks it is possible
-to do so .... as the 'md driver' I believe is also done in a similar
-fashion.
+I could not get any email for last one week.
 
-Would help if I could get some input on how this could be achieved.
+Am I OK?????
 
-Thanks and Regards
-M Shetty
-
+Bo
