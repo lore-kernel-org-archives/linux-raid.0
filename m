@@ -1,45 +1,55 @@
-From: Ross Vandegrift <ross@willow.seitz.com>
-Subject: Re: RAID1 help
-Date: Mon, 9 Jun 2003 11:48:02 -0400
+From: Scott Walker <crimson@unspeakable.org>
+Subject: Issues with Raid1 on a SS20 running 2.4.20
+Date: 09 Jun 2003 21:33:41 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <20030609154802.GB24153@willow.seitz.com>
-References: <20030608211051.GA17000@willow.seitz.com> <529E44D4-99F7-11D7-8B62-000393795060@fifreak.dyndns.org>
+Message-ID: <1055208821.22414.3.camel@ninja.crib.unspeakable.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <529E44D4-99F7-11D7-8B62-000393795060@fifreak.dyndns.org>
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, Jun 08, 2003 at 05:22:35PM -0400, Jason Gordon wrote:
-> Also recall I was able to
-> get the system to boot using 2 out of the 3 possible combinations
-> (booting with drives 1 & 2 attached works, booting with drive 1
-> attached works, but booting with just drive 2 attached gives me the
-> kernel panic).  This is with all of the various parameters in lilo.conf
-> referring to /dev/md* devices.
+I have a SS20 with 2 18G disks in it. Both disks are identical Here is
+my config setup.
 
-Hmmm, well if your kernel is mountiing /dev/mdx as root, then you've got
-the driver issue figured out.
 
-It sounds like perhaps you're missing the raid-extra-boot line (the
-howto you listed on docman.sf.net describes it)?  This should load
-complete boot stuff onto any disks you specify on the configuration
-line.  If you're using LBA32, ignore the notes about a /boot partition -
-you shouldn't need it anymore.
+raiddev                 /dev/md2
+raid-level              1
+nr-raid-disks           2
+nr-spare-disks          0
+chunk-size              4
+persistent-superblock   1
 
-Now I'm gonna have to go over these docs and figure out what they did to
-get it working with stock kernels that I missed!
+device                  /dev/sda6
+raid-disk               0
+device                  /dev/sdb6
+raid-disk               1
 
--- 
-Ross Vandegrift
-ross@willow.seitz.com
+I have Raid and Raid1 compiled into Kernel 2.4.20.
 
-A Pope has a Water Cannon.                               It is a Water Cannon.
-He fires Holy-Water from it.                        It is a Holy-Water Cannon.
-He Blesses it.                                 It is a Holy Holy-Water Cannon.
-He Blesses the Hell out of it.          It is a Wholly Holy Holy-Water Cannon.
-He has it pierced.                It is a Holey Wholly Holy Holy-Water Cannon.
-He makes it official.       It is a Canon Holey Wholly Holy Holy-Water Cannon.
-Batman and Robin arrive.                                       He shoots them.
+Below is what happens when I fsck a raid device, Either on start or from
+cli.
+
+(none):~# fsck /tmp
+fsck 1.33 (21-Apr-2003)
+e2fsck 1.33 (21-Apr-2003)
+The filesystem size (according to the superblock) is 255626 blocks
+The physical size of the device is 255600 blocks
+Either the superblock or the partition table is likely to be corrupt!
+Abort<y>? 
+
+If I mount -a I get it mounted with no issues and the files systesm
+works perfectly.
+
+md: raid1 personality registered as nr 3
+md: md driver 0.90.0 MAX_MD_DEVS=256, MD_SB_DISKS=27
+md: Autodetecting RAID arrays.
+md: autorun ...
+md: ... autorun DONE.
+
+Above is the line from the kernel boot up
+
+
+I'm at a loss. Does anyone have some info?
+
