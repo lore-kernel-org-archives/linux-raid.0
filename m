@@ -1,61 +1,78 @@
-From: Ferenc-Jan <ferenc@avz.xs4all.nl>
-Subject: Ghost partition after raid1 rebuild? Baffled! State 'sync'?
-Date: Sun, 19 Dec 2004 10:18:59 +0100
-Message-ID: <41C54783.70704@avz.xs4all.nl>
+From: Tim Moore <linux-raid@nsr500.net>
+Subject: Re: Maximum theoretical RAID-0 Speed
+Date: Sun, 19 Dec 2004 10:43:00 -0800
+Message-ID: <41C5CBB4.1040606@nsr500.net>
+References: <1c4.217b364e.2ef65ba7@aol.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1c4.217b364e.2ef65ba7@aol.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
+Cc: AndyLiebman@aol.com
 List-Id: linux-raid.ids
 
-Hi!
 
-First off, kudo's to the linux sw raid + tools maintainers. You saved me 
-this time.
 
-I had a hd fail with several raid1 partitions. I replaced the hd, 
-partitioned it and hotadded the partitions. /proc/mdstat reported 
-syncing, so I guess my data is safe. But I  still get [U_] instead of 
-[UU]. Help.
+AndyLiebman@aol.com wrote:
+> I'm wondering if anyone on this list can shed some light on a question that 
+> pertains to the maximum theoretical read speed for the RAIDS on my Linux box, 
+> and whether I have reached it. My guess is, there are about 2 people in the 
+> world who possibly understand this. Linus Torvolds, perhaps. And maybe somebody 
+> else. But I'll give this list a try. I've met some pretty sharp people here.
 
-Also, mdadm -D results has me baffled. For instance:
+Do some research on Garth Gibson at CMU's Parallel Computing group.
 
-# mdadm -D /dev/md3
-/dev/md3:
-         Version : 00.90.00
-   Creation Time : Sun Dec 19 01:07:36 2004
-      Raid Level : raid1
-      Array Size : 293184 (286.31 MiB 300.22 MB)
-     Device Size : 293184 (286.31 MiB 300.22 MB)
-    Raid Devices : 2
-   Total Devices : 2
-Preferred Minor : 3
-     Persistence : Superblock is persistent
+> Here's the scenario I have been testing. 
+> 
+> I have a single Xeon 3.06 processor set to use Hyperthreading, 2 GB of RAM on 
+> a SuperMicro Motherboard. The motherboard has 4 PCI "bus segments" with a 
+> total of six expansion slots. There are two PCI-X 133 Mhz slots (each associated 
 
-     Update Time : Sun Dec 19 09:50:14 2004
-           State : dirty
-  Active Devices : 2
-Working Devices : 2
-  Failed Devices : 0
-   Spare Devices : 0
+These are 64 bit slots, so 133MHz*64b/8bits/byte = 1.06GigaBytes/second 
+theoretical sustained
 
-            UUID : 27601b2c:d3238813:6fb674c9:289bda1f
-          Events : 0.380
+> with its own PCI bus segment). There is one PCI-X 100 Mhz slot (on ITS own 
+100*64/8 = 800MB/s sustained
 
-     Number   Major   Minor   RaidDevice State
-        0       3        6        0      active sync   /dev/hda6
-        1       0        0        0      sync
+> segment) and  three PCI-32bit 33/66 Mhz slots (all sharing the same bus segment).
+32*66/8 = 264MB/s shared
 
-        2      22        6        2      active sync   /dev/hdc6
+> Each of the PCI-X 133 Mhz slots also has one of the built-in GigE ports on it 
+GbE = 100MB/s
 
-And I'm out of wit here. Which partition/device relates to the line
-"1  0  0  0  sync"? What is state 'sync'?
+> (and I put all my other Intel GigE ports on these two bus segments -- 
+> sometimes I have up to 6 ports in total on my machine). So I leave the 133 Mhz slots 
+> out of the RAIDS. 
 
-any help much appreciated,
+> 
+> I have 16 or 24 SATA drive bays in my enclosures. 
+> 
+> My basic design is to make Hardware RAID-5 arrays with 3ware 9000 cards and 
 
-cheers
+64*66/8 = 528MB/s (RAID0), however I believe the 9000's drop to about 
+400MB/s on RAID5 (>4 ports), so that's your RAID5 bottleneck.
 
-Ferenc
+> Serial ATA drives. Then I make a Software RAID-0 stripe on top of the Hardware 
+> RAID-5. Sometimes I work with 8-channel 3ware cards, sometimes with 12-channel 
+> cards. So far, I have always put the cards (they're 66Mhz cards) in a 
+> combination of the 3 PCI 33/66 Mhz slots and the one PCI-X 100 Mhz slot. 
 
+So your max throughput assuming a max load on each PCI/66 slot is 88MB/s 
+each, the PCI/100 is 400MB/s (3ware limit).  Put your 3ware cards on the 
+PCI/133 slots first, the the PCI/100, then the PCI/33.
+
+> So, as I said above,  that means I don't have any drives connected to the two 
+> PCI-X 133 slots (or to the segments they correspond to) because that would 
+> slow down the bus speed for those segments and presumably hurt my network 
+> performance. 
+
+   Since the PCI/133 bandwidth available is about 1GB/s and a GbE port 
+consumes 100MB/s, that leaves 900MB/s for disk controllers that will only 
+do 400MB/s.  On the 100MHz slot you get 800MB/s.  This is the first thing 
+to change, then retest.
+
+Cheers,
+-- 
+  | for direct mail add "private_" in front of user name
