@@ -1,18 +1,31 @@
-From: Derek Piper <derek.piper@gmail.com>
-Subject: Re: RAID5 drive failure, please verify my commands
-Date: Tue, 18 Jan 2005 10:46:26 -0500
-Message-ID: <eaa6dfe050118074677f4bd6f@mail.gmail.com>
-References: <7C8198B3-67EA-11D9-9A87-00039363AEBE@bitart.com>
-	 <41EADBAE.6070400@h3c.com> <cshj5a$21v$4@sea.gmane.org>
-Reply-To: Derek Piper <derek.piper@gmail.com>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: RAID5 drive failure, please verify my commands
+Date: Tue, 18 Jan 2005 12:10:21 -0500
+Message-ID: <200501181712.j0IHCU903873@www.watkins-home.com>
+References: <eaa6dfe050118074677f4bd6f@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <cshj5a$21v$4@sea.gmane.org>
+In-Reply-To: <eaa6dfe050118074677f4bd6f@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: 'Derek Piper' <derek.piper@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+You should download "SeaTools Enterprise".
+If this tool fails the drive, I think it is safe to return.
+The tool uses the sg devices.  I am not sure, but I think these are for SCSI
+devices.
+
+Guy
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Derek Piper
+Sent: Tuesday, January 18, 2005 10:46 AM
+To: linux-raid@vger.kernel.org
+Subject: Re: RAID5 drive failure, please verify my commands
 
 Since we're on the subject of RMA'ing hard drives, I have this
 question: I have a Seagate drive that during the course of running dd
@@ -82,3 +95,8 @@ On Mon, 17 Jan 2005 23:53:15 +0000, Robin Bowes
 -- 
 Derek Piper - derek.piper@gmail.com
 http://doofer.org/
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
