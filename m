@@ -1,56 +1,99 @@
-From: "Martin Bene" <martin.bene@icomedias.com>
-Subject: Re: Checking consistency of Linux software RAID
-Date: Wed, 9 Jul 2003 10:06:00 +0200
+From: "Mikael Chambon" <raid-ml@cronos.org>
+Subject: RAID md-personality
+Date: Thu, 10 Jul 2003 20:46:46 -1000
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <4D618F6493CE064A844A5D496733D667031A3D@freedom.icomedias.com>
+Message-ID: <007701c34778$32aea5e0$c9e903ca@magnus>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Class: urn:content-classes:message
-To: Bernd Schubert <bernd-schubert@web.de>, Corey McGuire <coreyfro@coreyfro.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Bernd,
+Hi All,
 
-> /proc/mdstat is to monitor the status of your raid, so when 
-> one drive fails it becomes dropped out of the raid-array. 
-> Using mdadm you can monitor /proc/mdstat and it even can 
-> send you a mail when one of your disks fails.
+I am quite new to RAID (please forgive if my questions are stupid) and
+I tried to read almost all papers (HOW-TO) that I was able to find on
+tldp.org
+but I still have some questions, I will split them in different emails.
 
-Yes, but it can only notify you of errors that it actually detects; as writen
-before my concern is silent "bitrot", i.e unaccessed data on the disks going
-bad.
+I would really appreciate if someone could answer my questions or if someone
+could
+give me a good link. For this setup I am using a RH 7.3 with a 2.4.20-18.7
+kernel.
 
-> So if you really want to scan your disk once a week, why not 
-> running 'dd if=/dev/mdX of=/dev/null'? 
-> So every block of every raid-disk should become
-> read and the md-driver should automatically drop a failing 
-> disk  out of the raid.
 
-Umm, no: this only reads each logical block but doesn't read the redundant
-information on raid1 or raid5. Meaning: even if a read of the whole MD device
-works, it doesn't guarantee that all sectors of all physical devices can
-actually be read.
+1) During boot time, when md is trying to autodetect a RAID array before the
+root
+filesystem is mounted, I get the following error when kmod
+is trying to load md-personality (someone know what this module is for ?).
 
-To check for errors, scanning the lowlevel devices (/dev/sd??) could work,
-but still won't help for errors as described further down.
 
-> I guess you could even try to repair a disk when it became 
-> dropped out of the raid by running some scripts, but since 
-> I never trusted any disk that had failed ones, I never worried 
-> about it.
+=========
+Jul  9 15:28:29 mekare kernel: md: md driver 0.90.0 MAX_MD_DEVS=256,
+MD_SB_DISKS=27
+Jul  9 15:28:29 mekare kernel: md: Autodetecting RAID arrays.
+Jul  9 15:28:29 mekare kernel:  [events: 00000004]
+Jul  9 15:28:29 mekare kernel:  [events: 00000004]
+Jul  9 15:28:29 mekare kernel: md: autorun ...
+Jul  9 15:28:29 mekare kernel: md: considering hdc1 ...
+Jul  9 15:28:29 mekare kernel: md:  adding hdc1 ...
+Jul  9 15:28:29 mekare kernel: md:  adding hda8 ...
+Jul  9 15:28:29 mekare kernel: md: created md0
+Jul  9 15:28:29 mekare kernel: md: bind<hda8,1>
+Jul  9 15:28:29 mekare kernel: md: bind<hdc1,2>
+Jul  9 15:28:29 mekare kernel: md: running: <hdc1><hda8>
+Jul  9 15:28:29 mekare kernel: md: hdc1's event counter: 00000004
+Jul  9 15:28:29 mekare kernel: md: hda8's event counter: 00000004
+Jul  9 15:28:29 mekare kernel: md: md0: raid array is not clean -- starting
+background reconstruction
+Jul  9 15:28:29 mekare kernel: md: RAID level 1 does not need chunksize!
+Continuing anyway.
+Jul  9 15:28:29 mekare kernel: kmod: failed to exec /sbin/modprobe -s -k
+md-personality-3, errno = 2
+Jul  9 15:28:29 mekare kernel: md: personality 3 is not loaded!
+==========
 
-If a write is in progress during a power failure, chances are quite high that
-you end up with at least one unreadable sector on the drive; repairing these
-is quite OK and not a sign of the drive going bad. So having one sector bad
-on drive 0 and another sector on drive 1 is not too farfetched - currently,
-there's no good way to recover from such a situation: if you hit the bad
-sector on drive 0, drive0 will be kicked from the array; when you hit the bad
-sector on drive1 during resync, resync will fail.
+- I can' find this module anywhere.
+- I have tried to include the raid1 module in the RAMDISK using mkinitrd
+but I still have the same error.
+- When the root filesystem is mounted, I don't have this error anymore as
+you
+can see:
 
-With (some) hardware raid, solutions, a media scan will find both errors and
-rewrite the bad sectors with recostructed data from the other drives. Quite a
-useful feature but not yet possible with linux SW raid.
 
-Bye, Martin
+=========
+Jul  9 15:28:29 mekare kernel: VFS: Mounted root (ext2 filesystem).
+Jul  9 15:28:29 mekare kernel: md: raid1 personality registered as nr 3
+Jul  9 15:28:29 mekare kernel: Journalled Block Device driver loaded
+Jul  9 15:28:29 mekare kernel: md: Autodetecting RAID arrays.
+Jul  9 15:28:29 mekare kernel:  [events: 00000004]
+Jul  9 15:28:29 mekare kernel:  [events: 00000004]
+Jul  9 15:28:29 mekare kernel: md: autorun ...
+Jul  9 15:28:29 mekare kernel: md: considering hda8 ...
+Jul  9 15:28:29 mekare kernel: md:  adding hda8 ...
+Jul  9 15:28:29 mekare kernel: md:  adding hdc1 ...
+Jul  9 15:28:29 mekare kernel: md: created md0
+Jul  9 15:28:29 mekare kernel: md: bind<hdc1,1>
+Jul  9 15:28:29 mekare kernel: md: bind<hda8,2>
+Jul  9 15:28:29 mekare kernel: md: running: <hda8><hdc1>
+Jul  9 15:28:29 mekare kernel: md: hda8's event counter: 00000004
+Jul  9 15:28:29 mekare kernel: md: hdc1's event counter: 00000004
+Jul  9 15:28:29 mekare kernel: md: md0: raid array is not clean -- starting
+background reconstruction
+Jul  9 15:28:29 mekare kernel: md: RAID level 1 does not need chunksize!
+Continuing anyway.
+Jul  9 15:28:29 mekare kernel: md0: max total readahead window set to 508k
+Jul  9 15:28:29 mekare kernel: md0: 1 data-disks, max readahead per
+data-disk: 508k
+Jul  9 15:28:29 mekare kernel: raid1: device hda8 operational as mirror 0
+===========
+
+
+If someone could  help me a little.
+Thanks.
+
+--
+Mikael Chambon
+
