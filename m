@@ -1,36 +1,83 @@
-From: "Eric Wood" <eric@interplas.com>
-Subject: Re: does ext3 trample on mkraid superblocks and visa-versa?
-Date: Thu, 11 Sep 2003 13:33:15 -0400
+From: "Doug Griswold" <griswld@cio.sc.gov>
+Subject: Re: md multipath and failover
+Date: Thu, 11 Sep 2003 13:30:41 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <039101c3788a$c8269ea0$9100000a@intgrp.com>
-References: <107a01c376fe$a29bdc00$9100000a@intgrp.com> <03dd01c377d1$a28c9be0$9100000a@intgrp.com> <Pine.LNX.4.53.0309101442180.1812@twinlark.arctic.org>
+Message-ID: <sf607904.085@gw.state.sc.us>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+Content-Disposition: inline
+To: lmb@suse.de
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I'm still trying to find out if I *must* remove the ext3 journal (tune2fs -O
-^has_journal /dev/hdaN) before going through the RAID setup.  I'm guess it
-would be trivial to convert back anyway, as I don't see any documentation
-stating the mkraid (or resize2fs, or mdadm) doesn't clobber the ext3
-journals.  Then again ext3 simple keeps it's journal in a .journal file or a
-hidden inode file as opposed the far end block - so the conversion back to
-ext2 doesn't seem to be neccessary.
+Here is a update on my situation.  I downloaded the md-mp patch and
+tried to apply it to the Red Hat kernel source 2.4.9-27enterprise
+kernel, this did not patch correctly.  I then downloaded the 2.4.22
+kernel and applied with success.   The box now fails over in a matter o=
+f
+seconds instead of minutes it still doesn't failback but that's no big
+deal.  My next question is how can I apply this patch to the red hat
+supplied kernel 2.4.9-27 enterprise so I will still have red hat suppor=
+t
+on this kernel?  Also is there away with this patch applied to get
+failback? =20
 
-Whew... thanks for the info. I'm learning!  Sounds like some insight from
-Stephen Tweedie or Theodore Ts'o is needed.
--eric wood
 
-dean gaudet wrote:
-> the "easiest" way to do this is probably as follows (from a bootable
-> rescue CD, i don't think you want to attempt this live):
->
-> - resize2fs the filesystem (via the /dev/hdaN or whatever partition
->   device) to be 1MB smaller (be careful to use the right
->   "blocks" here -- resize2fs blocks are the same size as the
->   filesystem blocks, so most likely 4096 bytes, but could be 1024
->   bytes in some cases... tune2fs -l is your friend.)
 
+
+Thanks,
+Doug
+
+>>> Lars Marowsky-Bree <lmb@suse.de> 09/11/03 03:43AM >>>
+On 2003-09-10T18:55:41,
+   Doug Griswold <griswld@cio.sc.gov> said:
+
+> Alright I got md/multipath to failover with 2 emulex hba's on red
+hat
+> advanced server 2.1 kernel version 2.4.9-27enterprise.  My next new
+> problem is that it took five minutes to fail over from when I yanked
+one
+> of the fibre channel cables.   Where could this timeout come from?=20
+I
+> have tried several times but each time it takes 5 minutes to
+failover.=20
+> Also it won't failback.  Any ideas out there. =20
+
+The plain md multipath can't do failback automatically. People's
+opinion
+on whether that is a good idea do differ ;-)
+
+The timeout is the time needed until the damn (sorry) Linux Kernel
+SCSI
+layers give up retrying and then pass the error code up to md for
+handling. You can maybe try tuning some emulex parameters to fix that.
+
+If you want load balancing for the md multipath, you could try
+checking
+out my patch at ftp://ftp.suse.com/pub/people/lmb/md-mp/ vs 2.4, it
+adds
+some features to md and also makes it quite a bit more robust.
+
+
+Sincerely,
+    Lars Marowsky-Br=E9e <lmb@suse.de>
+
+--=20
+High Availability & Clustering		ever tried. ever failed. no
+matter.
+SuSE Labs				try again. fail again. fail
+better.
+Research & Development, SuSE Linux AG		-- Samuel Beckett
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid"
+in
+the body of a message to majordomo@vger.kernel.org=20
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
