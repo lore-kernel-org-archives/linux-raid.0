@@ -1,69 +1,39 @@
-From: "Cristian Banciu" <Cristian.Banciu@eea.eu.int>
-Subject: raidreconf eror
-Date: Thu, 11 Sep 2003 11:39:09 +0200
+From: "akshaysalkar" <akshaysalkar@indiatimes.com>
+Subject: resize2fs woes...
+Date: Thu, 11 Sep 2003 15:08:09 +0530
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <6B238F130041BF46AF3592E6700E7E14770634@panda.eea.eu.int>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Message-ID: <200309110920.OAA12032@WS0005.indiatimes.com>
+Reply-To: "akshaysalkar" <akshaysalkar@indiatimes.com>
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-content-class: urn:content-classes:message
-To: linux-raid@vger.kernel.org
+To: andrew.r.cress@intel.com, linux-raid@vger.kernel.org
+Cc: eric@interplas.com
 List-Id: linux-raid.ids
 
-Hi,
+I am facing problem with my RedHat 8.0 
+I tried to make a raid 1 
 
-I have done a software raid5 with 5 scci disks. Now I want to add one more disk to the current configuration without loosing data. But for some unkown reason the operation fails. Has anyone any idea why could I make this thing working ?
+refered to the software-raid howto
+section  converting a non-raid RH system to run on software raid
 
-Thank you very much!
+but the step of resize2fs is a problem
+there is no resize2fs on rescue disk/cd
+and resize2fs doesnt seem to work on a mounted system (even a read mount)
+it gves error saying
+'cannot resize2fs on mounted system'
+or somewhat very much similar..
 
 
-#raidreconf -o /etc/raidtab -n /etc/raidtab.new -m /dev/md0
-Working with device /dev/md0
-Parsing /etc/raidtab
-Parsing /etc/raidtab.new
-Your on-disk array MUST be clean first.
-reconfiguration failed
+any suggestions/solutions...
 
-This is how raidtab looks liks
-#cat /etc/raidtab
-raiddev /dev/md0
-        raid-level              5
-        nr-raid-disks           5
-        nr-spare-disks          0
-        persistent-superblock   1
-        parity-algorithm        left-symmetric
-        chunk-size              32
-        device                  /dev/sdb1
-        raid-disk               0
-        device                  /dev/sdc1
-        raid-disk               1
-        device                  /dev/sdd1
-        raid-disk               2
-        device                  /dev/sde1
-        raid-disk               3
-        device                  /dev/sdf1
-        raid-disk               4
 
-And this is how the new raidtab looks like
-#cat /etc/raidtab.new
-raiddev /dev/md0
-        raid-level              5
-        nr-raid-disks           6
-        nr-spare-disks          0
-        persistent-superblock   1
-        parity-algorithm        left-symmetric
-        chunk-size              32
-        device                  /dev/sdb1
-        raid-disk               0
-        device                  /dev/sdc1
-        raid-disk               1
-        device                  /dev/sdd1
-        raid-disk               2
-        device                  /dev/sde1
-        raid-disk               3
-        device                  /dev/sdf1
-        raid-disk               4
-        device                  /dev/sdh1
-        raid-disk               5
+regards
+
+
+
+Get Your Private, Free E-mail from Indiatimes at http://email.indiatimes.com
+
+ Buy The Best In BOOKS at http://www.bestsellers.indiatimes.com
+
+Bid for for Air Tickets on Air Sahara Flights at Prices Lower Than Before. Just log on to http://airsahara.indiatimes.com and Bid Now!
 
