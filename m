@@ -1,38 +1,122 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: RAID-6 works!  (At least it seems to...)
-Date: 23 Dec 2003 00:43:27 -0800
+From: "khamalu james" <kh_james@wp.pl>
+Subject: THANKS
+Date: Tue, 23 Dec 2003 14:16:45 +0100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <bs8v7f$klr$1@cesium.transmeta.com>
+Message-ID: <3fe8403d70324@wp.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=iso-8859-2
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: linux-raid@vger.kernel.org
+Content-Disposition: inline
 List-Id: linux-raid.ids
 
-Well, at least I have a piece of code that passes my relatively simple
-functionality tests.  Still, that's news, and this is the first RAID-6
-snapshot that isn't *known* to be broken :)
+I am Dr Khamalu James an Executive Accountant with=20
+the Department of finance of mineral resources and=20
+energy South Africa.=20
 
-I can at least mount filesystems, read and write data, reboot the
-system and have the data still there, with 1 or 2 disks lost, and do a
-reconstruction once the drives are added back in.
+=46irst and foremost, I apologized using this medium to=20
+reach you for a transaction/business of this=20
+magnitude, but this is due to confidentiality and=20
+prompt access reposed on this medium.=20
 
-New development snapshot at:
+I have decided to seek a confidential=20
+co-operation with you in the execution of the deal=20
+described Hereunder for the benefit of all parties=20
+and hope you will keep it as a top secret because of=20
+the=20
+nature of this transaction.=20
 
-ftp://ftp.kernel.org/pub/linux/kernel/people/hpa/raid6-20031224-experimental.tar.gz
+Within the Department of finance where I work as an=20
+Executive Accountant and with the cooperation of four=20
+other top officials,=20
+we have in our possession as overdue payment bills=20
+totaling=20
+Eighteen Million, Five Hundred Thousand U. S.=20
+Dollars ($18,500,000.) which we want to transfer=20
+abroad with the assistance and cooperation of a=20
+foreign company/individual to receive the said fund=20
+on our behalf or a reliable foreign non-company=20
+account=20
+to receive such funds. More so, we are handicapped in=20
+the circumstances, as the South Africa Civil Service=20
+Code of Conduct does not allow us to operate offshore=20
+account hence your importance in the whole=20
+transaction.=20
+This amount $18.5m represents the balance of the=20
+total revenue collections from income tax, mining=20
+lease and export duties in respect of diamond mines,=20
+expressed as a=20
+percentage of total tax revenues (net collections,=20
+National Revenue Account .=20
 
-Please test it out and let me know how badly it sucks :)
+from this projects we have been able to secure this=20
+reasonable ammount.$18.5m as commission resulting from=20
+over=20
+invoice ,hench all the necessary approvals has been=20
+completed.=20
 
-At some point I'll try to run some benchmarks.  There is also a lot of
-optimization still to be done.
+This amount $18.5m represents the balance of the=20
+Estimated revenue=20
+total value executed on behalf of my Department by=20
+a foreign contracting firm, which we the officials=20
+over-invoiced deliberately. Though the actual=20
+Estimated revenue cost have been paid to the original=20
+contractor,=20
+leaving the balance in the Tune of the said amount=20
+which we have in principles gotten approval to remit=20
+by Key tested Telegraphic Transfer (K.T.T) to any=20
+foreign bank account you will provide by filing in an=20
+application through the Justice Ministry here in=20
+South Africa for the transfer of rights and privileges=20
+of=20
+the former contractor to you.=20
+I have the authority of my partners involved to=20
+propose that should you be willing to assist us in=20
+the transaction, your share of the sum will be 20% of=20
+the=20
+$18.5 million, 70% for us and 10% for taxation and=20
+miscellaneous expenses. The business itself is 100%=20
+safe, on your part provided you treat it with utmost=20
+secrecy and confid entiality.=20
 
-       -hpa
+Also your area of specialization is not a hindrance to=20
+the successful=20
+execution of this transaction. I have reposed my=20
+confidence in you and hope that you will not=20
+disappoint me.=20
 
-[And again, thanks to Penguin Computing for donating a test system,
-without which this would never have happened.]
--- 
-<hpa@transmeta.com> at work, <hpa@zytor.com> in private!
-If you send me mail in HTML format I will assume it's spam.
-"Unix gives you enough rope to shoot yourself in the foot."
-Architectures needed: ia64 m68k mips64 ppc ppc64 s390 s390x sh v850 x86-64
+Endeavor to contact me immediately  through my Holland base=20
+telephone number +31630858310 because i am presently=20
+in Holland on official assigment on whether or not you=20
+are interested in this deal. If you are not, it will=20
+enable me scout for another foreign partner to carry=20
+out this deal I want to assure you that my partners=20
+and myself are in a position to make the payment of=20
+this claim possible=20
+provided you can give us a very strong Assurance and=20
+guarantee that our share will be secured and please=20
+remember to treat this matter as very confidential=20
+matter, because we will not comprehend with any form=20
+of exposure as we are still in active Government=20
+Service and remember once again that time is of the=20
+essence in this business.=20
+
+
+I wait in anticipation of your fullest co-operation.=20
+
+Yours faithfully,=20
+Dr Khamalu James=20
+
+
+
+
+----------------------------------------------------
+Zapraszamy na czadowy serwis =B6wi=B1teczny: http://klik.wp.pl/?adr=3Dw=
+ww.swieta.wp.pl&sid=3D85
+
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
