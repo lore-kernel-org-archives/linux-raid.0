@@ -1,77 +1,47 @@
-From: Paul Clements <Paul.Clements@SteelEye.com>
+From: Ross Vandegrift <ross@willow.seitz.com>
 Subject: Re: poor performance with raid1 / raid0
-Date: Wed, 18 Jun 2003 10:59:59 -0400
+Date: Wed, 18 Jun 2003 11:03:30 -0400
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3EF07E6F.FF55F908@SteelEye.com>
-References: <PERBUMSGID-ul6fzm7tvl3.fsf@ipchains.linpro.no>		<1055943743.31927.20.camel@cinshrlnxws01.shermfin.com> <PERBUMSGID-ul63ci7trhw.fsf@ipchains.linpro.no> <3EF079A9.9FB561AF@SteelEye.com> <3EF07C9C.7070802@bnap.hu>
+Message-ID: <20030618150330.GA19643@willow.seitz.com>
+References: <PERBUMSGID-ul6fzm7tvl3.fsf@ipchains.linpro.no> <1055943743.31927.20.camel@cinshrlnxws01.shermfin.com> <PERBUMSGID-ul63ci7trhw.fsf@ipchains.linpro.no> <3EF079A9.9FB561AF@SteelEye.com> <3EF07C9C.7070802@bnap.hu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <3EF07C9C.7070802@bnap.hu>
 To: Farkas Levente <lfarkas@bnap.hu>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Farkas Levente wrote:
-> 
-> Paul Clements wrote:
-> > Per Andreas Buer wrote:
-> >
-> >>Andrew Rechenberg <arechenberg@shermfin.com> writes:
-> >>
-> >>
-> >>>Check /proc/sys/dev/raid/speed_limit_[min|max].  If they are set too low
-> >>>then your re-mirror will behave as such.  To change just echo a new
-> >>>value:
-> >>>
-> >>>echo 30000 > /proc/sys/dev/raid/speed_limit_min
-> >>>echo 50000 > /proc/sys/dev/raid/speed_limit_max
-> >>>
-> >>
-> >>I did so - and now:
-> >>
-> >>md6 : active raid1 md16[2] sdd6[0]
-> >>      117185984 blocks [2/1] [U_]
-> >>      [>....................]  recovery =  0.1% (229120/117185984)
-> >>finish=59.5min speed=32731K/sec
-> >
-> >
-> > That's probably because you just lowered the values. The maximum is
-> > normally 100000. To check what the default values are, reboot and do:
-> >
-> > cat /proc/sys/dev/raid/speed_limit_*
-> >
-> > Then echo a _larger_ number into those files.
-> >
-> > There is no absolute maximum value (except maybe 2^32), so don't be
-> > afraid to raise the values to 10 or 100 times what they were. That
-> > should ensure that your resync speed is close to its theoretical
-> > maximum.
-> 
+On Wed, Jun 18, 2003 at 04:52:12PM +0200, Farkas Levente wrote:
 > can someone tell me what these numbers means?
 
-I think I posted something a week or two ago that explained what these
-are...
+They're a max speed in K/sec.
 
-
-> of course my goal (as everyones) to achieve the maximum possible
+> of course my goal (as everyones) to achieve the maximum possible 
 > performance.
-
-Well, this is a trade-off, that's precisely why these values are
-tunables. 
-
-These tunables govern the _resync_ speed of a raid1/5 array. They do not
-control the regular I/O throughput. So what you generally want to do is
-to set these values as high as possible without there being an impact on
-normal I/O (or for that matter, system responsiveness on the whole)
-during a resync.
-
-
 > can I do any harm if I set these numbers to high?
 
-Yes, the system might become sluggish or your regular I/O throughput to
-the device might become very slow during resyncs if these values are too
-high.
+Nope.
 
---
-Paul
+> it no, why not set it bu default?
+
+By default, the RAID code uses max bandwidth and backs off when it sees
+that the device is busy.  However, you're running RAID1 over RAID0 - so
+to the RAID1 layer, the lower layer is busy - namely, it's being used by
+the RAID0 code.  You can avoid this problem by running RAID0 over RAID1
+instead.  But since your disk configuration makes this impossible (you'd
+need matching disks for the mirrors), just modify your boot scripts to max
+out speed_limit*.
+
+-- 
+Ross Vandegrift
+ross@willow.seitz.com
+
+A Pope has a Water Cannon.                               It is a Water Cannon.
+He fires Holy-Water from it.                        It is a Holy-Water Cannon.
+He Blesses it.                                 It is a Holy Holy-Water Cannon.
+He Blesses the Hell out of it.          It is a Wholly Holy Holy-Water Cannon.
+He has it pierced.                It is a Holey Wholly Holy Holy-Water Cannon.
+He makes it official.       It is a Canon Holey Wholly Holy Holy-Water Cannon.
+Batman and Robin arrive.                                       He shoots them.
