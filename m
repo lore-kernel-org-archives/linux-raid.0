@@ -1,79 +1,110 @@
 From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: [PATCH] md - 1 of 2 - Use "shedule_timeout(2)" instead of
- yield() as it seems to wait for less time.
-Date: Wed, 10 Mar 2004 13:26:35 +1100
+Subject: Re: Booting from partitioned raid,  do_mounts_md.c patch (was: Re: Partitioned raid and major number)
+Date: Wed, 10 Mar 2004 13:36:23 +1100
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16462.31963.71512.109872@notabene.cse.unsw.edu.au>
-References: <20040305164342.7205.patches@notabene>
-	<E1Az89R-0001su-00@notabene>
-	<20040304221621.47dd459f.akpm@osdl.org>
+Message-ID: <16462.32551.605611.601873@notabene.cse.unsw.edu.au>
+References: <20040225145624.GA1513@cistron.nl>
+	<16445.12026.812778.621025@notabene.cse.unsw.edu.au>
+	<20040226215144.GC11831@drinkel.cistron.nl>
+	<16446.36226.591283.495194@notabene.cse.unsw.edu.au>
+	<16446.39583.968782.41221@notabene.cse.unsw.edu.au>
+	<20040309164623.GO3084@traveler.cistron.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Andrew Morton on Thursday March 4
-To: Andrew Morton <akpm@osdl.org>
+In-Reply-To: message from Miquel van Smoorenburg on Tuesday March 9
+To: Andrew Morton <akpm@odsl.org>, Miquel van Smoorenburg <miquels@cistron.nl>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday March 4, akpm@osdl.org wrote:
-> NeilBrown <neilb@cse.unsw.edu.au> wrote:
-> >
-> > +		schedule_timeout(2);
+On Tuesday March 9, miquels@cistron.nl wrote:
+> > 
+> > Sorry, that patch was wrong.
+> > This one, ontop of the original patch, works for me (I finally got
+> > around to testing it).
+> > 
+> > 
+> >  ----------- Diffstat output ------------
+> >  ./drivers/md/md.c     |    2 +-
+> >  ./init/do_mounts_md.c |    9 ++++++++-
+> >  2 files changed, 9 insertions(+), 2 deletions(-)
+> > 
+> > diff ./drivers/md/md.c~current~ ./drivers/md/md.c
+> > diff ./init/do_mounts_md.c~current~ ./init/do_mounts_md.c
 > 
-> Are you sure we want to sleep for 20-30 milliseconds on a 100 Hz
-> machine?
+> I've tested this a lot as well, and it works fine. On my supermicro 1U test
+> machine I can now pull out one of the two disks, and the machine still boots.
+> I can even take out disk2, insert disk1 in the slot for disk2 and it
+> still boots. Which is pretty cool ;)
+> 
+> I didn't see this in -rc2-mm1 yet - is this going to be submitted to -mm soon ?
+> 
 
-I'm not sure it really matters.  This bit of code doesn't trigger very
-often.
+Thanks for reminding me.
 
-I'm not unhappy with your version, but I suspect that just
-	schedule_timeout(1)
-would be ok.  I think I used '2' because there is no lower bound on
-how long schedule_timeout(1) will sleep (until the next tick, which
-could be anytime - right?).
-But on reflection, that doesn't really matter.  As long as it pauses
-for a little while at least once in a while, it will give any non-sync
-IO a chance, that once that starts happening, resync will
-automatically wind back and there won't be a problem anymore.
+Andrew: please include this patch which completes the change started
+by "md-array-assembly-fix".
 
-So I think (and some testing seems to demonstrate) that it doesn't
-really matter.  So leave it as it is I guess.
-
-Thank,
+Thanks,
 NeilBrown
 
 
-> 
-> Wouldn't it be better to do
-> 
-> diff -puN drivers/md/raid5.c~md-use-schedule_timeout drivers/md/raid5.c
-> --- 25/drivers/md/raid5.c~md-use-schedule_timeout	2004-03-04 22:15:14.000000000 -0800
-> +++ 25-akpm/drivers/md/raid5.c	2004-03-04 22:15:41.000000000 -0800
-> @@ -1409,7 +1409,8 @@ static int sync_request (mddev_t *mddev,
->  		/* make sure we don't swamp the stripe cache if someone else
->  		 * is trying to get access 
->  		 */
-> -		yield();
-> +		set_current_state(TASK_UNINTERRUPTIBLE);
-> +		schedule_timeout(max(HZ/500, 1));
->  	}
->  	spin_lock(&sh->lock);	
->  	set_bit(STRIPE_SYNCING, &sh->state);
-> diff -puN drivers/md/raid6main.c~md-use-schedule_timeout drivers/md/raid6main.c
-> --- 25/drivers/md/raid6main.c~md-use-schedule_timeout	2004-03-04 22:15:14.000000000 -0800
-> +++ 25-akpm/drivers/md/raid6main.c	2004-03-04 22:15:50.000000000 -0800
-> @@ -1571,7 +1571,8 @@ static int sync_request (mddev_t *mddev,
->  		/* make sure we don't swamp the stripe cache if someone else
->  		 * is trying to get access
->  		 */
-> -		yield();
-> +		set_current_state(TASK_UNINTERRUPTIBLE);
-> +		schedule_timeout(max(HZ/500, 1));
->  	}
->  	spin_lock(&sh->lock);
->  	set_bit(STRIPE_SYNCING, &sh->state);
-> 
-> _
-> 
-> ?
+----------------------------------------------------
+Make sure correct major is used when assembling partitioned md arrays from boot parameters.
+
+We need to make mdp_major available to do_mounts_md.c, and use it
+there.
+
+ ----------- Diffstat output ------------
+ ./drivers/md/md.c     |    2 +-
+ ./init/do_mounts_md.c |    9 ++++++++-
+ 2 files changed, 9 insertions(+), 2 deletions(-)
+
+diff ./drivers/md/md.c~current~ ./drivers/md/md.c
+--- ./drivers/md/md.c~current~	2004-02-28 11:19:17.000000000 +1100
++++ ./drivers/md/md.c	2004-02-28 11:19:17.000000000 +1100
+@@ -1450,7 +1450,7 @@ abort:
+ 	return 1;
+ }
+ 
+-static int mdp_major = 0;
++int mdp_major = 0;
+ 
+ static struct kobject *md_probe(dev_t dev, int *part, void *data)
+ {
+
+diff ./init/do_mounts_md.c~current~ ./init/do_mounts_md.c
+--- ./init/do_mounts_md.c~current~	2004-02-28 11:19:17.000000000 +1100
++++ ./init/do_mounts_md.c	2004-02-28 11:19:17.000000000 +1100
+@@ -24,6 +24,7 @@ static struct {
+ 
+ static int md_setup_ents __initdata;
+ 
++extern int mdp_major;
+ /*
+  * Parse the command-line parameters given our kernel, but do not
+  * actually try to invoke the MD device now; that is handled by
+@@ -115,6 +116,8 @@ static int __init md_setup(char *str)
+ 	return 1;
+ }
+ 
++#define MdpMinorShift 6
++
+ static void __init md_setup_drive(void)
+ {
+ 	int minor, i, ent, partitioned;
+@@ -134,7 +137,11 @@ static void __init md_setup_drive(void)
+ 
+ 		sprintf(name, "/dev/md%s%d", partitioned?"_d":"", minor);
+ 		sprintf(devfs_name, "/dev/md/%s%d", partitioned?"d":"", minor);
+-		create_dev(name, MKDEV(MD_MAJOR, minor), devfs_name);
++		if (partitioned)
++			dev = MKDEV(mdp_major, minor << MdpMinorShift);
++		else
++			dev = MKDEV(MD_MAJOR, minor);
++		create_dev(name, dev, devfs_name);
+ 		for (i = 0; i < MD_SB_DISKS && devname != 0; i++) {
+ 			char *p;
+ 			char comp_name[64];
+
