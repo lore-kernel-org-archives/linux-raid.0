@@ -1,29 +1,83 @@
-From: "Peter T. Breuer" <ptb@it.uc3m.es>
-Subject: Re: Fast (intelligent) raid1
-Date: Mon, 17 Feb 2003 16:08:15 +0100 (MET)
+From: "Cress, Andrew R" <andrew.r.cress@intel.com>
+Subject: RE: root filesystem copy ro raid
+Date: Mon, 17 Feb 2003 07:47:09 -0800
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <200302171508.h1HF8Fe31915@oboe.it.uc3m.es>
-References: <200302171317.h1HDH1J20820@oboe.it.uc3m.es>
-Reply-To: ptb@it.uc3m.es
+Message-ID: <A5974D8E5F98D511BB910002A50A66470580D636@hdsmsx103.hd.intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200302171317.h1HDH1J20820@oboe.it.uc3m.es> from "Peter T. Breuer"
- at "Feb 17, 2003 02:17:01 pm"
-To: ptb@it.uc3m.es
-Cc: Neil Brown <neilb@cse.unsw.edu.au>, Ross Vandegrift <ross@willow.seitz.com>, Ingo Molnar <mingo@redhat.com>, linux-raid@vger.kernel.org
+To: 'Lewis Shobbrook' <lshobbrook@fasttrack.net.au>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-"Peter T. Breuer wrote:"
-> "A month of sundays ago Neil Brown wrote:"
-> > Rather than having several bitmaps, have just one.  Normally it is
-> > full of zero and isn't touched.
-> 
-> I'm not too sure what whole-array structure to attach the bitmap to.
-> Suggestions welcome.
+Lewis,
 
-This would be the raid1_conf_t ("conf") that is referenced in the private
-data field of the mddev_t.
+Here's what I use for that.
 
-I'll do that first, though I presume it should later be promoted to
-become an md-wide field.
+Andy
 
-Peter
+   # Script 8 to copy Linux files to mounted tree
+   todir=/mnt/b
+   notf=/tmp/dirnot.tmp
+   cat - <<%%% >$notf
+tmp
+proc
+mnt
+boot
+lost+found
+%%%
+   dirs=`ls / |grep -vf $notf`
+   cd /
+   # Copy each directory in the list
+   # could use "find . -print | cpio -pdumv" if grep -v extra stuff. 
+   for d in $dirs
+   do
+       echo "Copying $d to $todir/$d..."
+       cp -a $d $todir
+   done
+   # Do /tmp, /proc, /mnt, and /boot specially
+   echo "Creating $todir/tmp, mnt, proc..."
+   mkdir -p $todir/tmp  
+   chmod 777 $todir/tmp
+   chmod +t $todir/tmp
+   mkdir -p $todir/proc
+   # makes /mnt directories like cdrom and floppy
+   for i in `ls -l /mnt |grep "^dr" |cut -c57-80`
+   do
+       mkdir -p $todir/mnt/$i
+   done
+   echo "Copying boot to $todir/boot..."
+   cp -f /boot/* $todir/boot 2>/dev/null
+   # This will usually give an "omitting lost+found" stderr message.   
+   # end script 8
+
+
+-----Original Message-----
+From: Lewis Shobbrook [mailto:lshobbrook@fasttrack.net.au] 
+Sent: Monday, February 17, 2003 12:39 AM
+To: linux-raid@vger.kernel.org
+Subject: root filesystem copy ro raid
+
+
+I'm surprised to find such little info on copying an existing filesystem
+onto a new raid partition.  
+The howto's use cp -a or pipe to cpio -pm .
+I've tried both methods, but here we have the problem of symbolic links
+and hardlinks not being copied, which when you have an elaborate system
+that you'd like to migrate across to raid, doesn't cut the mustard. 
+Has anyone tried or succeeded with any alternate methods?  Are there any
+utilities such as parted to copy the whole lot.  
+I'm not sure how apps such as parted work, but as /dev/mdX is formatted
+with mke2fs, as is most root filesystem, I'd like to hope that with a
+raid aware kernel and the root filesystem unmounted it could be copied
+directly eg.  /dev/hda1 => /dev/mdX.
+
+Apologies if this topic has been visited before, I couldn't find any
+reference to it in the archives...
+
+
+Lewis
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
