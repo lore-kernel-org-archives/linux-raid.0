@@ -1,38 +1,65 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: Testing md modules?
-Date: Fri, 27 Feb 2004 16:49:21 +1100
+From: Bretton Vine <bretton@hivemind.net>
+Subject: software raid options
+Date: Fri, 27 Feb 2004 08:45:14 +0200
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16446.55905.531219.529867@notabene.cse.unsw.edu.au>
-References: <6.0.1.1.2.20040226233706.0290bec0@mail.athenet.net>
+Message-ID: <403EE77A.2060508@hivemind.net>
+Reply-To: bretton@hivemind.net
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Nathan Lewis on Thursday February 26
-To: Nathan Lewis <nathapl@cs.okstate.edu>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday February 26, nathapl@cs.okstate.edu wrote:
-> I'm to the point now where my Reed-Solomon code appears to be working, at 
-> least for some simple tests I've thrown at it.  I'd like to test it more 
-> exhaustively - does anybody have any scripts or programs that work 
-> deterministicly on a block device to test it for correctness?  What has 
-> been done in the past to make sure the previous RAID modules worked, beside 
-> sticking the code out there and waiting for bug reports?
+Hi All
 
-untar a complete kernel source, and compile it.
-Lots of times in parallel.
+I'm new to the list so apologies if any of my questions have come up
+before and been answered.
 
-It certainly isn't guaranteed to find all problems, but it is easy to
-do and will exercise a lot of code.
+Given the costs of a hardware raid solution here in South Africa (3-4
+times the cost of hardware at online retailers) I've opted for a
+software raid configuration under Debian Linux.
 
-You should randomly fail drives and start rebuilds while that is
-happening.
+Where I'm hitting a snag is in determining the ideal hardware setup. The
+motherboard has an onboard ide controller but only two channels. I'd
+like to run raid 5 and have investigated costs for purchasing two new
+pci parallel ATA ide controllers, or one pci SATA ide controller.
+(I don't want one controller under via chipset and another under a
+different chipset - seems like things may go wrong in that situation)
 
-Also diff -r of two kernel trees after exploding them.
+1) Will one SATA ide controller suffice if I want to run four disks off
+it, one acting as hot spare. (yeah I know s/w raid is over partitions).
+I'm completely unfamiliar with SATA and don't know if you can run four
+masters off four SATA connections on the same SATA pci card.
 
-And make sure you are short of memory so that lots of reads go to
-disk.
+2) Other option is two have two duplicate pci parallel ide controllers
+(leave the onboard Via chipset controller out of the equation) and run
+two disks per controller. Is there anything I should be aware of if I'm
+sticking in two pci ide controllers. Is this a suggested solution?
 
-NeilBrown
+3) I've looked at the Promise SATA150 TX4 and the Promise Ultra133 TX2:
+of these two which is better. Broad question I know, but I'm a bit
+confused as to whether moving to SATA is even worth it just yet as the
+costs are considerably higher than parallel ATA.
+
+4) Is there any other brand of SATA/Parallel pci controller card that
+will have few to none driver/kernel issues under Linux. Any particular
+brand well supported and ideal?
+
+Thanks in advance and once I have a clear idea of what I'm doing on the
+initial hardware setup I'll probably have some more interesting
+questions to ponder.
+
+Bretton
+-- 
+cell: +27.82.494.6902  meatspace: Johannesburg, South Africa
+        yahoo: bretton69   icq: 175753755   aim: brettonv
+              jabber: bretton@jabber.obsidian.co.za
+                        ..gpg key on request..
+
+"The great tragedy of science -- the slaying of a beautiful hypothesis
+by an ugly fact." - Thomas Huxley
+
+
+
+
