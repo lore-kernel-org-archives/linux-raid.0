@@ -1,42 +1,90 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: MD device id change
-Date: Sun, 6 Apr 2003 15:20:10 +1000
+From: Stephan van Hienen <raid@a2000.nu>
+Subject: tuning disk on 3ware /performance problem
+Date: Sun, 6 Apr 2003 16:20:33 +0200 (CEST)
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <16015.47370.218258.430178@notabene.cse.unsw.edu.au>
-References: <Pine.LNX.4.33.0304031754490.5184-100000@worf.desy.de>
-	<16012.45741.447317.341813@notabene.cse.unsw.edu.au>
-	<019301c2faac$fcde9640$f6de11cc@black>
+Message-ID: <Pine.LNX.4.53.0304061251190.8636@ddx.a2000.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Mike Black on Friday April 4
-To: Mike Black <mblack@csi-inc.com>
-Cc: raid-list <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: bernard@biesterbos.nl
 List-Id: linux-raid.ids
 
-On Friday April 4, mblack@csi-inc.com wrote:
-> Here's one I've run into Neil -- Put an already-running md on another system with the same minor #.
-> 
-> Can you start the new md and not have to stop the old one?
-> 
-> i.e.
-> /dev/md2 on system#1
-> /dev/md2 on system#2
-> move /dev/md2 chassis to system#2
-> 
-> Would this work?
-> mdadm --assemble --uuid=MOVED_MD2 --super-minor=2 /dev/md3
+same disk (WD1800BB) on different controllers
 
-You would need to tell mdadm that devices to look at, possibly
-using --config=partitions, but that would work to assemble the array.
-> 
-> And would the array now stay as md3?
+----------
+on intel u100/promise U100 :
 
-Not in 2.4 (though in 2.5 it would).
+/dev/hde:
+ Timing buffer-cache reads:   128 MB in  0.28 seconds =457.14 MB/sec
+ Timing buffered disk reads:  64 MB in  1.37 seconds = 46.72 MB/sec
 
-You need --update=super-minor for that to happen.  Ofcourse if you use
-mdadm for assembling arrays and always use UUID, then you don't need
-to convern yourself with the minor number in the superblock at all.
+Version 1.02c       ------Sequential Output------ --Sequential Input-
+--Random-
+                    -Per Chr- --Block-- -Rewrite- -Per Chr- --Block--
+--Seeks--
+Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP
+/sec %CP
+storage.a2000.nu 1G 22364  96 42206  13 15897   6 22634  91 44019  10
+252.1   0
+                    ------Sequential Create------ --------Random
+Create--------
+                    -Create-- --Read--- -Delete-- -Create-- --Read---
+-Delete--
+              files  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP
+/sec %CP
+                 16  3658  99 +++++ +++ +++++ +++  3757  99 +++++ +++
+9681 100
+storage.a2000.nu,1G,22364,96,42206,13,15897,6,22634,91,44019,10,252.1,0,16,3658,99,+++++,+++,+++++,+++,3757,99,+++++,+++,9681,100
+----------
+# hdparm -v /dev/hde
 
-NeilBrown
+/dev/hde:
+ multcount    = 16 (on)
+ IO_support   =  3 (32-bit w/sync)
+ unmaskirq    =  0 (off)
+ using_dma    =  1 (on)
+ keepsettings =  0 (off)
+ readonly     =  0 (off)
+ readahead    =  8 (on)
+ geometry     = 21889/255/63, sectors = 351651888, start = 0
+
+
+----------
+on 3ware (7850) :
+
+/dev/sdb:
+ Timing buffer-cache reads:   128 MB in  0.28 seconds =457.14 MB/sec
+ Timing buffered disk reads:  64 MB in  1.70 seconds = 37.65 MB/sec
+
+
+Version 1.02c       ------Sequential Output------ --Sequential Input-
+--Random-
+                    -Per Chr- --Block-- -Rewrite- -Per Chr- --Block--
+--Seeks--
+Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP
+/sec %CP
+storage.a2000.nu 1G 22151  94 67312  18 20152   8 22315  90 38488   9
+260.4   0
+                    ------Sequential Create------ --------Random
+Create--------
+                    -Create-- --Read--- -Delete-- -Create-- --Read---
+-Delete--
+              files  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP
+/sec %CP
+                 16  3706  99 +++++ +++ +++++ +++  3895  99 +++++ +++
+9686  99
+storage.a2000.nu,1G,22151,94,67312,18,20152,8,22315,90,38488,9,260.4,0,16,3706,99,+++++,+++,+++++,+++,3895,99,+++++,+++,9686,99
+----------
+]# hdparm -v /dev/sdb
+
+/dev/sdb:
+ readonly     =  0 (off)
+ geometry     = 21889/255/63, sectors = 351651888, start = 0
+
+
+Is there anything i can do to tune the drives connected to he 3ware
+controller ? (37MB/sec vs 43MB/sec)
+(and why is the seq. output block 65MB/sec on the 3ware vs 41MB/sec on
+'ide controllers')
+
