@@ -1,50 +1,55 @@
-From: Vladimir Milovanovic <vlad@webmail.co.za>
-Subject: Somewhat ot, but I think that this is a place to ask
-Date: Tue, 08 Apr 2003 21:15:54 +0200
+From: George Karaolides <george.karaolides@planitis.net>
+Subject: Hot-removing SCSI disk freezes system
+Date: 08 Apr 2003 22:37:29 +0300
 Sender: linux-raid-owner@vger.kernel.org
-Message-ID: <3E931FEA.30707@webmail.co.za>
+Message-ID: <1049830649.2926.3.camel@deimos>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-To: raid-list <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi everyone,
+Hi all,
 
-This post is somewhat OT, but it does have to do with md, and also I 
-know that people that hang out here are knowledgeable about this stuff...
+I am stress-testing an LVM-on-RAID5 setup with Debian GNU/Linux 3.0
+"woody".  Kernel version is 2.4.20
 
-Anyway, I am working on a project where we have some data streaming in 
-from an AD converter onto a card attached to a PCI bus. The data rate is 
-quite high, about 80 MB/s. The PCI card is a local bus master, and a PCI 
-slave device. My intention is to have the data from the PCI card (which 
-is essentially an LVDS to PCI converter) transferred onto a large RAID 5 
-created using md. I am doing this since I need redundancy and 
-reliability (which I am hoping RAID 5 will provide) and also the high 
-tranfer rates that I will get by combining disks into a RAID.
+To test redundancy I hot-remove one of the SCSI SCA disks in which the
+array is built.
 
-I still haven't decided on what kind of SCSI controller and what kind of 
-SCSI disks I will use in this project, and I am very much open to 
-suggestions from people here. I am toying with an idea of using a 64 bit 
-PCI bus mobo, and thus a 64 bit SCSI card, since I have read that data 
-rates of up to 266 MB/s (i.e. double of standard PCI) are possible with 
-this.
+A lot of error messages come up, ending with:
 
-My main question is this: is it possible, and if yes under what 
-circumstances, that two PCI devices (in this case the LVDS->PCI card and 
-the SCSI card) can transfer directly to each other, without writing to 
-RAM first, i.e. can the LVDS->PCI card transfer data over the PCI bus 
-directly to the SCSI card? If this is possible, it would make planning a 
-lot easier.
+sym53c8xx_reset: pid=383206 reset_flags=1 serial_number_at_timeout=0
+scsi0: device driver called scsi_done() for a synchronous reset.
+SCSI disk error: host 0 channel 0 id 2 lun 0 return code = 2603007f
+I/O error: dev 08:22, sector 31496
 
-Well I have some more questions, but I want to see whether this is too 
-OT to be discussed here or not. Anyway, if anyone here think that they 
-can help, or have some useful links and this turns out to be too OT, I 
-would be much oblidged if you would reply by email.
+The machine then locks up.  It looks like the kernel is still there: 
+The syslog still dumps to stdout, the TCP/IP stack responds to ping, 
+and the virtual terminals present a login prompt, but I can't log in 
+and nothing else works.
 
-Thanks and cheers,
+On reboot, the array and filesystems (I use reiserfs for everything
+expcept /boot which is on ext2) come up normally (arrays come up in
+degraded mode, of course).  This is good news, but I'd rather the 
+machine did not freeze.
 
-Vlad.
+Anyone have any ideas as to what causes the crash and how to prevent
+it?
+
+
+
+-- 
+Best regards,
+
+|   George Karaolides                      Planitis Communications Ltd.,
+|
+|   tel:   +357 22 45 65 00              Office 102, 11 Florinis Street,
+|
+|   web:   www.planitis.net                             Nicosia CY 1065,
+|
+|   email: george.karaolides@planitis.net           Republic  of Cyprus.
+|
 
 
