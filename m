@@ -1,29 +1,80 @@
-From: HOWARD_JONES <HOWARD_JONES@terra.es>
-Subject: we can work together
-Date: Thu, 07 Apr 2005 03:52:35 +0200
-Message-ID: <ff08d1032fc.1032fcff08d__22197.9121830829$1112838785$gmane$org@teleline.es>
-Reply-To: howardjones@katamail.com
+From: Mitchell Laks <mlaks@verizon.net>
+Subject: How to move a singleton raid1 drive from raid1 /dev/md2 to /dev/md1
+Date: Thu, 07 Apr 2005 01:25:08 -0400
+Message-ID: <200504070125.09062.mlaks@verizon.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Language: es
-Content-Disposition: inline
+Content-disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Dear Sir,
+Hi Software Raid Gurus!:
 
-You will be surprise to see this message but I got your information
-through Spartanburg, area chamber of commerce USA.
-My name is Howard Jones, a Chief Auditor, during my last auditing in
-the United States of America with JPMORGANCHASE CO.in New York, we 
-realized
-the sum $35.5million owned by one Patric Zuma from Egypt who died
-during the terrorist attack of Sept.11,2001 in the world trade center.
-All efforts,which have been made to reach the relatives of Mr.Patric
-Zuma for the past two years, have not yielded any positive result. It
-was later gathered that Mr.Zuma|s divorced wife and only son died in
-the September 11 bombing of the World Trade center in New York the same
+I have 
+
+A1:~# cat /proc/mdstat
+Personalities : [raid1]
+md0 : active raid1 hdb1[0] hdg1[1]
+      244195904 blocks [2/2] [UU]
+
+md1 : active raid1 hdc1[0]
+      244195904 blocks [1/1] [U]
+
+md2 : active raid1 hde1[0]
+      244195904 blocks [1/1] [U]
+
+Now I want to take /dev/hde1 and get rid of /dev/md2 and add /dev/hde1 
+to /dev/md1.
+
+First i made sure that /dev/md2 was unmounted. I then took it out 
+of /etc/fstab.
+
+Then I did:
+
+A1:~# mdadm /dev/md2 -f /dev/hde1
+mdadm: set /dev/hde1 faulty in /dev/md2
+
+Then I tried:
+
+A1:~# mdadm /dev/md2 -r /dev/hde1
+mdadm: hot remove failed for /dev/hde1: Device or resource busy
+
+So I didnt know what to do next. So I did
+
+A1:~# mdadm -S /dev/md2
+
+then I did
+
+A1:~# mdadm /dev/md2 -r /dev/hde1
+mdadm: cannot get array info for /dev/md2
+
+obviously the wrong thing to do...
+
+A1:~# cat /proc/mdstat
+Personalities : [raid1]
+md0 : active raid1 hdb1[0] hdg1[1]
+      244195904 blocks [2/2] [UU]
+
+md1 : active raid1 hdc1[0]
+      244195904 blocks [1/1] [U]
+
+unused devices: <none>
+A1:~#                                              
 
 
+
+So I decided not to risk anything else, and I turn to you for help. I would 
+like to take the device /dev/hde1 at this point and add it to /dev/md1 safely 
+and then sync /dev/md1 to full raid1 status  ... Then I would like to adjust 
+the /etc/mdadm.conf file ...
+
+I guess I dont know the algorithm for ending a raid on a single 
+drive/partition and then making it subservient to another drive in a raid1 
+status.
+
+Thank you all for your help!!!!
+
+Mitchell Laks
