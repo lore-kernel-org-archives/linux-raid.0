@@ -1,52 +1,74 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: How to move a singleton raid1 drive from raid1 /dev/md2 to /dev/md1
-Date: Thu, 7 Apr 2005 15:41:05 +1000
-Message-ID: <16980.51185.391624.438300@cse.unsw.edu.au>
-References: <200504070125.09062.mlaks@verizon.net>
+From: Schuett Thomas EXT <Thomas.Schuett.extern@mchh.siemens.de>
+Subject: AW: RAID1 and data safety?
+Date: Thu, 7 Apr 2005 17:35:10 +0200
+Message-ID: <76592C4D3DA1AC4FB8424084D10D31A8061152B0@mchh2c4e.mchh.siemens.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Mitchell Laks on Thursday April 7
 Sender: linux-raid-owner@vger.kernel.org
-To: Mitchell Laks <mlaks@verizon.net>
+To: 'Doug Ledford' <dledford@xsintricity.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday April 7, mlaks@verizon.net wrote:
-> Hi Software Raid Gurus!:
-> 
-> I have 
-> 
-> A1:~# cat /proc/mdstat
-> Personalities : [raid1]
-> md0 : active raid1 hdb1[0] hdg1[1]
->       244195904 blocks [2/2] [UU]
-> 
-> md1 : active raid1 hdc1[0]
->       244195904 blocks [1/1] [U]
-> 
-> md2 : active raid1 hde1[0]
->       244195904 blocks [1/1] [U]
-> 
-> Now I want to take /dev/hde1 and get rid of /dev/md2 and add /dev/hde1 
-> to /dev/md1.
+[Please excuse, my mailtool breaks threads ...]
+Reply to mail from 2005-04-05
 
-md1 is a 1-drive array.  You to make it a 2-drive array you need a
-recent 2.6 kernel and a recent release of mdadm.  If you have these,
-then
+Hello Doug,
 
-  mdadm -S /dev/md2  # shutdown md2 and release hde1
-  mdadm /dev/md1 -a /dev/hde1 # add hde1 as a spare in md1
-  mdadm -G -n2 /dev/md1 # grow md1 to have two devices.
+many thanks for this highly detailed and structured posting.
 
-If you don't have 2.6, then you will have to recreate md1 with
-the desired number of components, which will require unmounting it.
+A few questions are left: Is it common today, that a (eide) HD does
+not state a write as finished (aka send completion events, if I got this 
+right), before it was written to *media*?
 
-   mdadm -S /dev/md2
-   mdadm -S /dev/md1
-   mdadm -C /dev/md1 -l1 -n2 /dev/hdc1 missing
+I am happy to hear about this "write barriers", even as I am astonished, that 
+it doesn't bring down the whole system performance (at least for raid1).
 
-   mdadm /dev/md1 -a /dev/hde1
 
-NeilBrown
+> This is where the event counters
+> come into play.  That's what md uses to be able to tell which drives in
+> an array are up to date versus those that aren't, which is what's needed
+> to satisfy C.
+
+So event counters are the 2nd type of information, that gets written with write 
+barriers. One is the journal data from the (j)fs (and actually the real data 
+too, to make it gain sence, otherwise the end-of-transaction-write is like a 
+semaphor with only one of the two parties using it), and the other is the event 
+counter.
+
+> Now, if I recall correctly, Peter posted a patch that changed this
+> semantic in the raid1 code.  The raid1 code does not complete a write to
+> the upper layers of the kernel until it's been completed on all devices
+> and his patch made it such that as soon as it hit 1 device it returned
+> the write to the upper layers of the kernel.
+
+I am glad to hear, that the behaviour is such, that the barrier stops, until 
+*all* media got written. That was one of the things that really made me 
+worrying. I hope, the patch is backed out and didn't went into any distros.
+
+> had in its queue.  Being a nice, smart SCSI disk with tagged queuing
+> enabled, it then proceeds to complete the whole queue of writes in
+> whatever order is most efficient for it.
+
+But just to make sure: Your previous statement "...when the linux block layer 
+did not provide any means of write barriers. As a result, they used completion 
+events as write barriers." indicates, that even "nice, smart SCSI disk with 
+tagged queuing enabled" will act as demanded, because the special way of write 
+with appended "completion events testing" will make sure they do?
+
+---
+
+You mentioned data journaling, and it sounded like it is reliable working. 
+Which one of the existing journaling fs did you have in your mind?
+
+---
+
+Afaik a read only reads from *one* HD (in raid1). So how to be sure, 
+that *both* HDs are still perfectly o.k.? Am I am fine to do a 
+   cat /dev/hda2 > /dev/null ; cat /dev/hdb2 > /dev/null
+even *during* the md is active and getting used r/w?
+
+best regards,
+  Thomas
+
+
