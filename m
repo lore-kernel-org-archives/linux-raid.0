@@ -1,108 +1,24 @@
-From: Heinz Mauelshagen <mauelshagen@redhat.com>
-Subject: *** Announcement: dmraid 1.0.0.rc7 ***
-Date: Mon, 11 Apr 2005 20:14:36 +0200
-Message-ID: <20050411181436.GA12235@redhat.com>
-Reply-To: mauelshagen@redhat.com
+From: "Tinning F. Embarrassing" <mugurelu@bigfoot.com>
+Subject: Linux.. how are you?
+Date: Tue, 12 Apr 2005 16:03:55 -0400
+Message-ID: <8956195288.20050412160355@bigfoot.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Linux <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Hi ;) I have found cool site. There are many games for PC. It's all downloadable. Purchase and instantly download. I have
+already downloaded 15 games.
+It's more convient, then to buy in a shop - You save a lot money! All games are new, for example
+Half-Life 2
+Alexander
+Codename: Panzers
+Counter-Strike: Condition Zero
+The Sims 2and more
+Doom3
+This is cool! That URL www.shopgamers.biz/gate.php?sid=cWoZdeuD&pj=544
+Bye 
 
-               *** Announcement: dmraid 1.0.0.rc7 ***
-
-dmraid 1.0.0.rc7 is available at
-http://people.redhat.com:/heinzm/sw/dmraid/ in source tarball,
-source rpm and i386 rpms (shared, static and dietlibc).
-
-This release fixes size bugs with Highpoint and Promise RAID1 sets.
-
-dmraid (Device-Mapper Raid tool) discovers, [de]activates and displays
-properties of software RAID sets (i.e. ATARAID) and contained DOS
-partitions using the device-mapper runtime of the 2.6 kernel.
-
-The following ATARAID types are supported on Linux 2.6:
-
-Highpoint HPT37X
-Highpoint HPT45X
-Intel Software RAID
-LSI Logic MegaRAID
-NVidia NForce
-Promise FastTrack
-Silicon Image Medley
-VIA Software RAID
-
-Please provide insight to support those metadata formats completely.
-
-Thanks.
-
-
-See files README and CHANGELOG, which come with the source tarball for
-prerequisites to run this software, further instructions on installing
-and using dmraid!
-
-CHANGELOG is contained below for your convenience as well.
-
-
-Call for testers:
------------------
-
-I need testers with the above ATARAID types, to check that the mapping
-created by this tool is correct (see options "-t -ay") and access to the
-ATARAID data is proper.
-
-In case you have a different ATARAID solution from those listed above,
-please feel free to contact me about supporting it in dmraid.
-
-You can activate your ATARAID sets without danger of overwriting
-your metadata, because dmraid accesses it read-only unless you use
-option -E together with -r in order to erase ATARAID metadata
-(see 'man dmraid')!
-
-This is a release candidate version so you want to have backups of your valuable
-data *and* you want to test accessing your data read-only first in order to
-make sure that the mapping is correct before you go for read-write access.
-
-
-Contacts:
----------
-
-The author is reachable at <Mauelshagen@RedHat.com>.
-
-For test results, mapping information, discussions, questions, patches,
-enhancement requests and the like, please subscribe and mail to
-<ataraid-list@redhat.com>.
-
---
-
-Regards,
-Heinz    -- The LVM Guy --
-
-
-CHANGELOG:
----------
-
-Changelog from dmraid 1.0.0.rc6 to 1.0.0.rc7            2005.04.07
-
-FIXES:
-------
-o pdc.c, hpt37x.c, hpt45x.c: fixed size in sectors() for RAID1
-
-
-MISCELANIOUS:
-------------
-
-o sil_valid() displays the area number where the checksum is invalid now.
-
-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
-Heinz Mauelshagen                                 Red Hat GmbH
-Consulting Development Engineer                   Am Sonnenhang 11
-                                                  56242 Marienrachdorf
-                                                  Germany
-Mauelshagen@RedHat.com                            +49 2626 141200
-                                                       FAX 924446
-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
