@@ -1,37 +1,39 @@
 From: Lars Marowsky-Bree <lmb@suse.de>
-Subject: md multipath corruption in 2.4.x
-Date: Wed, 13 Apr 2005 11:26:05 +0200
-Message-ID: <20050413092605.GM32354@marowsky-bree.de>
+Subject: [PATCH] Re: md multipath corruption in 2.4.x
+Date: Wed, 13 Apr 2005 22:13:01 +0200
+Message-ID: <20050413201301.GY32354@marowsky-bree.de>
+References: <20050413092605.GM32354@marowsky-bree.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
+In-Reply-To: <20050413092605.GM32354@marowsky-bree.de>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi all,
+On 2005-04-13T11:26:05, Lars Marowsky-Bree <lmb@suse.de> wrote:
 
-I'm currently having to hunt down a source of corruption in md multipat=
-h
-in 2.4.21 (but the respective code paths haven't changed until 2.4.30
-either, so it's likely present in all 2.4.x kernels).
+Ok, so the subject is a bit of a lie, because I haven't yet brought ove=
+r
+all changes from our 2.4.21 vendor kernel to 2.4.30 (as I'd need to
+disentangle some feature additions first which Neil doesn't like).
 
-The corruption is triggered by a path failure; then some writes go
-wrong. (It's a bit difficult to figure out what exactly is happening as
-it takes a fairly substantial write load too it seems.)
+However, I've found the root cause of the data corruption issue with md
+multipath, after having been side tracked by the abhorrent locking
+issues ;-)
 
-I saw that raid1 has received locking fixes for the access to its
-internal structs in 2.4.28 and I've already ported these over to
-multipath too, but it doesn't seem to be causing this.
+It's this innocent "bh->b_rsector =3D bh->b_blocknr;" in
+multipath.c:multipathd(), an obvious artifact from having forked this
+from raid1.c - where however this has a clearly different meaning.
 
-I'll have to dig deeper into the code base now and try to figure out
-what is going wrong; the problem is that the code _looks_ correct ;-)
+=46or md multipath, this basically implies that _EVERY_ IO which was
+in-flight when the error happened and was requeued will be written to a
+wrong block on disk.
 
-So, if anybody has experienced similar issues with md multipath in 2.4,
-or has some data points to share (or "what you always thought smelled
-fishy about md multipath"), I'd appreciate this.
+A minimal fix would be to remove at least this one line, if one didn't
+want to fix the locking raid1.c-style (was introduced with 2.4.28).
 
 
 Sincerely,
