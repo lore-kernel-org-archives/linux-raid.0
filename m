@@ -1,8 +1,7 @@
-From: =?iso-8859-1?Q?Herv=E9?= Eychenne <rv@eychenne.org>
-Subject: waiting for recovery to complete
-Date: Wed, 13 Apr 2005 10:50:56 +0200
-Message-ID: <20050413085056.GP21278@eychenne.org>
-Reply-To: rv@eychenne.org
+From: Lars Marowsky-Bree <lmb@suse.de>
+Subject: md multipath corruption in 2.4.x
+Date: Wed, 13 Apr 2005 11:26:05 +0200
+Message-ID: <20050413092605.GM32354@marowsky-bree.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
@@ -12,50 +11,36 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
- Hi,
+Hi all,
 
-Suppose I'm waiting for a recovery to be completed, and want to run a
-command afterwards (halt, send a mail, or anything else...).
-The most practiacl way I can see is to check /proc/mdstat.
+I'm currently having to hunt down a source of corruption in md multipat=
+h
+in 2.4.21 (but the respective code paths haven't changed until 2.4.30
+either, so it's likely present in all 2.4.x kernels).
 
-But what if I want to do that automatically (without bothering looking
-at it manually from time to time)?
-=46or example, one could do:
-# while cat /proc/mdstat | grep recovery > /dev/null ; do sleep 5 ; don=
-e
+The corruption is triggered by a path failure; then some writes go
+wrong. (It's a bit difficult to figure out what exactly is happening as
+it takes a fairly substantial write load too it seems.)
 
-But that's quite ugly, as:
-- it's an active polling, and it is time consuming (even if slightly)
-- it may even be unreliable, as I guess one cannot ensure that /proc/md=
-stat
-  will print the "recovery" string during the (very short, but well...)
-  transition between two partitions to recover
+I saw that raid1 has received locking fixes for the access to its
+internal structs in 2.4.28 and I've already ported these over to
+multipath too, but it doesn't seem to be causing this.
 
-I think that a passive wait would be much better instead.
-And ideally, we should have a simple and efficient way to let a program
-know if a device is in a clean state (or being recovered), and another
-that would wait until the device is clean (recovery finished).
+I'll have to dig deeper into the code base now and try to figure out
+what is going wrong; the problem is that the code _looks_ correct ;-)
 
-So, the while loop could be replaced by something like
- mdadm --recovery-wait    (for example)
-which would exit only when all pending recoveries have finished, and
-let the script continue.
-That would be much practical, reliable, and cleaner than a loop, don't =
-you
-think?
+So, if anybody has experienced similar issues with md multipath in 2.4,
+or has some data points to share (or "what you always thought smelled
+fishy about md multipath"), I'd appreciate this.
 
-How this could be achieved is another question... probably the best
-would be that userspace can select on a file descriptor, or something
-like that (netlink device?)
-What do you think?
 
- Herv=E9
+Sincerely,
+    Lars Marowsky-Br=E9e <lmb@suse.de>
 
 --=20
- _
-(=B0=3D  Herv=E9 Eychenne
-//)  Homepage:          http://www.eychenne.org/
-v_/_ WallFire project:  http://www.wallfire.org/
+High Availability & Clustering
+SUSE Labs, Research and Development
+SUSE LINUX Products GmbH - A Novell Business
 
 -
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
