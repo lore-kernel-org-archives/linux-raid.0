@@ -1,79 +1,92 @@
-From: Gordon Henderson <gordon@drogon.net>
+From: David Greaves <david@dgreaves.com>
 Subject: Re: Expanding array by changing disks (one by one)
-Date: Thu, 14 Apr 2005 12:02:08 +0100 (BST)
-Message-ID: <Pine.LNX.4.56.0504141148400.14678@lion.drogon.net>
+Date: Thu, 14 Apr 2005 12:04:26 +0100
+Message-ID: <425E4E3A.7070403@dgreaves.com>
 References: <425E41C8.7050704@apartia.fr>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <425E41C8.7050704@apartia.fr>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux <linux-raid@vger.kernel.org>
+To: Laurent CARON <lcaron@apartia.fr>
+Cc: Linux <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, 14 Apr 2005, Laurent CARON wrote:
+Laurent CARON wrote:
 
 > Hello,
 >
-> We are in the process of increasing the size our RAID Arrays as our
+> We are in the process of increasing the size our RAID Arrays as our 
 > storage needs increase.
+
+Hi,
+I'm no expert but I'll bounce some thoughts back at you...
+
 >
 > I've got 2 solutions for this:
 >
 > - Copy the data over a new array and replace the disks
 
-Do this! You know it makes sense. If nothing else, it'll make sure you
-have an archive of the data. Do verify the copy before you replace the
-disks too.
+pros:
+sane and minimal risk of data loss since you don't delete data until the 
+new one is up.
+quickest solution (in manpower, elapsed time and system outages)
 
-> - Replace each disk (one after the other(after resync)) of the existing
-> array with a bigger one.
+cons:
+doesn't test Neils grow mode in mdadm (without which none of this would 
+be possible)
+
+> - Replace each disk (one after the other(after resync)) of the 
+> existing array with a bigger one.
+
+and the corollorary of sane would be... <joke>
+
 >
 > Start:
->     - Array is ok
+>    - Array is ok
 > - Remove 1 disk
->     - Array is degraded
+>    - Array is degraded
 > - Add a bigger disk
->     - Resync
+>    - Resync
 > - Remove another disk
->     - Array is degraded
+>    - Array is degraded
 > - Add a bigger disk
->     - Resync
+>    - Resync
 > .....
 >
+This seems like it would work with mdadm's shiny new(?) grow command.
+It looks from the man page like you use the grow command *after* 
+changing out all the disks; yes?
+Shiny and new means you need a reliable backup.
+And this is likely to be slow - 1 resync per disk - and needs a system 
+shutdown/outage for each disk swapped (assuming not hot-swap-able)
+If you do have hot-swap then this seems like quite a nice option (no 
+outages)
+
+Mad speculative question ...
+Would doing this work:
+- add new big disk
+- mdadm --remove a disk
+- dd if=<removed disk> of=<new disk>
+- mdadm -add new disk?
+- remove small disk
+
+if so it'd be a lot quicker than a resync each time...
+
 > Would this be the 'state of the art' way ?
 
-You would have to guarantee that each disk had zero surface defects before
-you started this. Use badblocks (or dd) to do a surface scan of each disk.
-One bad block and you'll be in the 2-disk failure mode which will likely
-cause loss of all data.
+Have you seen EVMS? It has the ability to add devices to a raid5 array.
+I'd class that as state of the art since you aren't 'throwing away' the 
+smaller disks.
 
 > Will the filesystem cope with it?
 
-Firstly, will the RAID cope with it, and my understanding is that it might
-not - initially. When you put in a new, bigger disk, it will only use the
-same number of blocks as the disk you are replacing it had.
+yes assuming it has a growfs.
 
-So after doing all the disks, the array size won't have changed!
-
-So next you'd need to look at the grow the array mechanism, and as I
-understand it, this is supported in the 2.6 kernel and mdadm, but the man
-page is short on examples, but I'm sure someone here might fill in the
-details.
-
-Then you'd have to grow the filesystem under it.
-
+>
 > Is my mind completely broken?
 
-Well - not really, but IMO, doing it the individual disk swapping way is
-just too prone to errors and failure. I'd backup the data, replace the
-drives and restore it.
+not yet - let us know after you try it...
 
-And even if you do go down this route, I'd backup my data first anyway!
-(And then, since you have a backup, you have nothing to lose doing it the
-multiple disk swapping way, so write back and let us know if it worked :)
-
-Good luck!
-
-Gordon
-
+David
