@@ -1,92 +1,55 @@
-From: David Greaves <david@dgreaves.com>
+From: Mike Hardy <mhardy@h3c.com>
 Subject: Re: Expanding array by changing disks (one by one)
-Date: Thu, 14 Apr 2005 12:04:26 +0100
-Message-ID: <425E4E3A.7070403@dgreaves.com>
-References: <425E41C8.7050704@apartia.fr>
+Date: Thu, 14 Apr 2005 08:08:10 -0700
+Message-ID: <425E875A.2010503@h3c.com>
+References: <425E41C8.7050704@apartia.fr> <Pine.LNX.4.56.0504141148400.14678@lion.drogon.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <425E41C8.7050704@apartia.fr>
+In-Reply-To: <Pine.LNX.4.56.0504141148400.14678@lion.drogon.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Laurent CARON <lcaron@apartia.fr>
-Cc: Linux <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Laurent CARON wrote:
 
-> Hello,
->
-> We are in the process of increasing the size our RAID Arrays as our 
-> storage needs increase.
 
-Hi,
-I'm no expert but I'll bounce some thoughts back at you...
+Gordon Henderson wrote:
+> On Thu, 14 Apr 2005, Laurent CARON wrote:
+>>
+>>- Copy the data over a new array and replace the disks
+> 
+> 
+> Do this! You know it makes sense. If nothing else, it'll make sure you
+> have an archive of the data. Do verify the copy before you replace the
+> disks too.
 
->
-> I've got 2 solutions for this:
->
-> - Copy the data over a new array and replace the disks
+Definitely make a backup, and once you do that the rest is just testing
+anyway, isn't it?
 
-pros:
-sane and minimal risk of data loss since you don't delete data until the 
-new one is up.
-quickest solution (in manpower, elapsed time and system outages)
+>>- Replace each disk (one after the other(after resync)) of the existing
+>>array with a bigger one.
+> 
+> You would have to guarantee that each disk had zero surface defects before
+> you started this. Use badblocks (or dd) to do a surface scan of each disk.
+> One bad block and you'll be in the 2-disk failure mode which will likely
+> cause loss of all data.
 
-cons:
-doesn't test Neils grow mode in mdadm (without which none of this would 
-be possible)
+Alternatively, you could do a round of SMART long tests via smartctl.
 
-> - Replace each disk (one after the other(after resync)) of the 
-> existing array with a bigger one.
+If you have one bad block you will be in 2-disk failure mode, but this
+will not result in loss of all data. It will result in loss of whichever
+file had the bad block in it. Even then, there are now tools (namely a
+script I've posted a couple times) that can calculate the contents of a
+given parity block or disk block just from the disk contents (while the
+array is offline) so its possible to manually correct single block
+failures as long as the rest of the blocks in the stripe are okay.
 
-and the corollorary of sane would be... <joke>
+That solves the most usual scenario, albeit via a process that is pretty
+ugly. Should make you feel safer if you feel like experimenting though.
 
->
-> Start:
->    - Array is ok
-> - Remove 1 disk
->    - Array is degraded
-> - Add a bigger disk
->    - Resync
-> - Remove another disk
->    - Array is degraded
-> - Add a bigger disk
->    - Resync
-> .....
->
-This seems like it would work with mdadm's shiny new(?) grow command.
-It looks from the man page like you use the grow command *after* 
-changing out all the disks; yes?
-Shiny and new means you need a reliable backup.
-And this is likely to be slow - 1 resync per disk - and needs a system 
-shutdown/outage for each disk swapped (assuming not hot-swap-able)
-If you do have hot-swap then this seems like quite a nice option (no 
-outages)
+The real takeaway is that making a backup, verifying it, and then doing
+your maintenance is going to be the fastest and safest way to do this,
+even if the disk-by-disk swap / mdadm grow way works
 
-Mad speculative question ...
-Would doing this work:
-- add new big disk
-- mdadm --remove a disk
-- dd if=<removed disk> of=<new disk>
-- mdadm -add new disk?
-- remove small disk
-
-if so it'd be a lot quicker than a resync each time...
-
-> Would this be the 'state of the art' way ?
-
-Have you seen EVMS? It has the ability to add devices to a raid5 array.
-I'd class that as state of the art since you aren't 'throwing away' the 
-smaller disks.
-
-> Will the filesystem cope with it?
-
-yes assuming it has a growfs.
-
->
-> Is my mind completely broken?
-
-not yet - let us know after you try it...
-
-David
+-Mike
