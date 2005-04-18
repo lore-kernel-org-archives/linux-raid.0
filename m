@@ -1,82 +1,57 @@
-From: ptb@lab.it.uc3m.es (Peter T. Breuer)
+From: Frank Wittig <fw@weisshuhn.de>
 Subject: Re: Questions about software RAID
-Date: Mon, 18 Apr 2005 22:15:41 +0200
-Message-ID: <d4hdj2-e6h.ln1@news.it.uc3m.es>
+Date: Mon, 18 Apr 2005 22:50:14 +0200
+Message-ID: <42641D86.1030302@weisshuhn.de>
 References: <1113853825.1483.34.camel@debian>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enigBF9085E8C8F32C525538C36B"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1113853825.1483.34.camel@debian>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: tmp <skrald@amossen.dk>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-tmp <skrald@amossen.dk> wrote:
-> 1) I have a RAID-1 setup with one spare disk. A disk crashes and the
-> spare disk takes over. Now, when the crashed disk is replaced with a new
-> one, what is then happening with the role of the spare disk? Is it
-> reverting to its old role as spare disk?
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enigBF9085E8C8F32C525538C36B
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-Try it and see.  Run raidsetfaulty on one disk.  That will bring the
-spare in.  Run raidhotremove on the original.  Then "replace" it
-with raidhotadd.
+tmp wrote:
 
-> If it is NOT reverting to it's old role, then the raidtab file will
-> suddenly be out-of-sync with reality. Is that correct?
+>2) The new disk has to be manually partitioned before beeing used in the
+>array. What happens if the new partitions are larger than other
+>partitions used in the array? What happens if they are smaller?
+>  
+>
+there's no problem to create partitions which have exactly the same size
+as the old ones.
+your disks can be from a different manufacturer, have differnt sizes,
+different number of physical heads or anything else.
 
-Shrug. It was "out of sync" as you call it the moment the spare disk
-started to be used not as a spare but as part of the array.
+if you set up your disks to have the same geometry (heads, cylinders,
+sectors) you can have partitions exactly the same size. (the extra size
+of larger disks won't be lost.)
 
-> Does the answer given here differ in e.g. RAID-5 setups?
+read "man fdisk" and have a look at the parameters -C -H and -S...
 
-No.
+greetings,
+frank
 
-> 2) The new disk has to be manually partitioned before beeing used in the
-> array. What happens if the new partitions are larger than other
-> partitions used in the array?
+--------------enigBF9085E8C8F32C525538C36B
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
 
-Bigger is fine, obviously!
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.6 (GNU/Linux)
+Comment: Using GnuPG with Fedora - http://enigmail.mozdev.org
 
-> What happens if they are smaller?
+iD8DBQFCZB2Lx6tzaD9P7mkRAsF1AJ9HDFiGxzMFSXBzrUKcZyhR6jIdoQCfWTVX
+juGDIxZ1xjkCjrt7LpIXR9c=
+=qRRF
+-----END PGP SIGNATURE-----
 
-They can't be used.
-
-> 3) Must all partition types be 0xFD? What happens if they are not?
-
-They can be anything you like. If they aren't, then the kernel
-can't set them up at boot.
-
-> 4) I guess the partitions itself doesn't have to be formated as the
-> filesystem is on the RAID-level. Is that correct?
-
-?? Sentence does not compute, I am afraid.
-
-
-> 5) Removing a disk requires that I do a "mdadm -r" on all the partitions
-> that is involved in a RAID array.
-
-Does it? Well, I see that you mean "removing a disk intentionally".
-
-> I attempt to by a hot-swap capable
-> controler, so what happens if I just pull out the disk without this
-> manual removal command?
-
-The disk will error at the next access and will be faulted out of the
-array.
-
-> Aren't there some more hotswap-friendly setup?
-
-?? Not sure what you mean. You mean, can you program the hotplug system
-to do a setfaulty and remove from the array? Yes. Look at your hotplug
-scripts in /etc/hotplug. But it' always going to be late hatever it
-does, given that pulling the array is the trigger!
-
-> 6) I know that the kernel does stripping automatically if more
-> partitions are given as swap partitions in /etc/fstab. But can it also
-> handle if one disk crashes? I.e. do I have to let my swap disk be a
-> RAID-setup too if I wan't it to continue upon disk crash?
-
-People have recently pointed out that raiding your swap makes sense
-exactly in order to cope robustly with this eventually. You'd have had
-to raid everything ELSE on the dead disk, of course, so I'm not quite
-as sure as everyone else that it's a truly staggeringly wonderful idea. 
-
-Peter
-
+--------------enigBF9085E8C8F32C525538C36B--
