@@ -1,57 +1,44 @@
-From: Frank Wittig <fw@weisshuhn.de>
-Subject: Re: Questions about software RAID
-Date: Mon, 18 Apr 2005 22:50:14 +0200
-Message-ID: <42641D86.1030302@weisshuhn.de>
-References: <1113853825.1483.34.camel@debian>
+From: Anu Matthew <anu.matthew@bms.com>
+Subject: Trouble assembling multipath md devices between two nodes who see the
+ same LUNs.
+Date: Mon, 18 Apr 2005 17:14:53 -0400
+Message-ID: <4264234D.7030703@bms.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enigBF9085E8C8F32C525538C36B"
+Content-Type: text/plain; format=flowed; charset=ISO-8859-1
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1113853825.1483.34.camel@debian>
 Sender: linux-raid-owner@vger.kernel.org
-To: tmp <skrald@amossen.dk>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enigBF9085E8C8F32C525538C36B
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Hello,
 
-tmp wrote:
+I have two nodes, hostA and hostB, both of them see the same 4 multipath 
+LUNs.
 
->2) The new disk has to be manually partitioned before beeing used in the
->array. What happens if the new partitions are larger than other
->partitions used in the array? What happens if they are smaller?
->  
->
-there's no problem to create partitions which have exactly the same size
-as the old ones.
-your disks can be from a different manufacturer, have differnt sizes,
-different number of physical heads or anything else.
+md0 to md4 are thus visible to both the hosts, (yeah, they both do not 
+write to thoe md devices at the same time, hostB mounts them only when 
+hostA is down or has crashed, and viceversa.)
 
-if you set up your disks to have the same geometry (heads, cylinders,
-sectors) you can have partitions exactly the same size. (the extra size
-of larger disks won't be lost.)
+It works for a while.
 
-read "man fdisk" and have a look at the parameters -C -H and -S...
+While testing, the latest we have seen is, after md devices are stopped 
+on hostA, hostB cannot start the md devices, as the uuid changes, and
+comes back with a message in --verbose mode: 
 
-greetings,
-frank
+mdadm: /dev/sdc  has wrong uuid
 
---------------enigBF9085E8C8F32C525538C36B
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
+mdadm: no devices found for /dev/md0
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.6 (GNU/Linux)
-Comment: Using GnuPG with Fedora - http://enigmail.mozdev.org
+Tried copying over the mdadm.conf with the latest uuids from hostA, 
+still hostB cannot assemble them. I have to re-create the md devices on  
+hostB eventually, then after a while, hostA starts to act up: it simply 
+refuses to assemble.
 
-iD8DBQFCZB2Lx6tzaD9P7mkRAsF1AJ9HDFiGxzMFSXBzrUKcZyhR6jIdoQCfWTVX
-juGDIxZ1xjkCjrt7LpIXR9c=
-=qRRF
------END PGP SIGNATURE-----
+Is there a way I can circumvent this problem? I am running rhel 3.0 (AS 
+and ES), and we're on  mdadm - v1.5.0 - 22 Jan 2004, from Redhat's 
+mdadm-1.5.0-9 rpm.
 
---------------enigBF9085E8C8F32C525538C36B--
+Thank you so much in advance,
+
+--AM
