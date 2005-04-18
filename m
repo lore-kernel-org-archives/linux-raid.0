@@ -1,112 +1,82 @@
-From: David Greaves <david@dgreaves.com>
+From: ptb@lab.it.uc3m.es (Peter T. Breuer)
 Subject: Re: Questions about software RAID
-Date: Mon, 18 Apr 2005 21:12:21 +0100
-Message-ID: <426414A5.3020706@dgreaves.com>
+Date: Mon, 18 Apr 2005 22:15:41 +0200
+Message-ID: <d4hdj2-e6h.ln1@news.it.uc3m.es>
 References: <1113853825.1483.34.camel@debian>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1113853825.1483.34.camel@debian>
 Sender: linux-raid-owner@vger.kernel.org
-To: tmp <skrald@amossen.dk>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-tmp wrote:
+tmp <skrald@amossen.dk> wrote:
+> 1) I have a RAID-1 setup with one spare disk. A disk crashes and the
+> spare disk takes over. Now, when the crashed disk is replaced with a new
+> one, what is then happening with the role of the spare disk? Is it
+> reverting to its old role as spare disk?
 
->I read the software RAID-HOWTO, but the below 6 questions is still
->unclear. I have asked around on IRC-channels and it seems that I am not
->the only one being confused. Maybe the HOWTO could be updated to
->clearify the below items?
->
->
->1) I have a RAID-1 setup with one spare disk. A disk crashes and the
->spare disk takes over. Now, when the crashed disk is replaced with a new
->one, what is then happening with the role of the spare disk?
->
-the new disk is spare, the array doesn't revert to it's original state.
+Try it and see.  Run raidsetfaulty on one disk.  That will bring the
+spare in.  Run raidhotremove on the original.  Then "replace" it
+with raidhotadd.
 
-> Is it
->reverting to its old role as spare disk?
->  
->
-so no it doesn't.
+> If it is NOT reverting to it's old role, then the raidtab file will
+> suddenly be out-of-sync with reality. Is that correct?
 
->If it is NOT reverting to it's old role, then the raidtab file will
->suddenly be out-of-sync with reality. Is that correct?
->  
->
-yes
-raidtab is deprecated - man mdadm
+Shrug. It was "out of sync" as you call it the moment the spare disk
+started to be used not as a spare but as part of the array.
 
->Does the answer given here differ in e.g. RAID-5 setups?
->  
->
-no
+> Does the answer given here differ in e.g. RAID-5 setups?
 
->
->2) The new disk has to be manually partitioned before beeing used in the
->array.
->
-no it doesn't. You could use the whole disk (/dev/hdb).
-In general, AFAIK, partitions are better as they allow automatic 
-assembly at boot.
+No.
 
-> What happens if the new partitions are larger than other
->partitions used in the array?
->
-nothing special - eventually, if you replace all the partitions with 
-bigger ones you can 'grow' the array
+> 2) The new disk has to be manually partitioned before beeing used in the
+> array. What happens if the new partitions are larger than other
+> partitions used in the array?
+
+Bigger is fine, obviously!
 
 > What happens if they are smaller?
->  
->
-it won't work (doh!)
 
->
->3) Must all partition types be 0xFD? What happens if they are not?
->  
->
-no
-They won't be autodetected by the _kernel_
+They can't be used.
 
->
->4) I guess the partitions itself doesn't have to be formated as the
->filesystem is on the RAID-level. Is that correct?
->  
->
-compulsory!
+> 3) Must all partition types be 0xFD? What happens if they are not?
 
->
->5) Removing a disk requires that I do a "mdadm -r" on all the partitions
->that is involved in a RAID array. I attempt to by a hot-swap capable
->controler, so what happens if I just pull out the disk without this
->manual removal command?
->  
->
-as far as md is concerned the disk disappeared.
-I _think_ this is just like mdadm -r.
+They can be anything you like. If they aren't, then the kernel
+can't set them up at boot.
 
->Aren't there some more hotswap-friendly setup?
->  
->
-What's unfriendly?
+> 4) I guess the partitions itself doesn't have to be formated as the
+> filesystem is on the RAID-level. Is that correct?
 
->
->6) I know that the kernel does stripping automatically if more
->partitions are given as swap partitions in /etc/fstab. But can it also
->handle if one disk crashes?
->
-no - striping <> mirroring
-The kernel will fail to read data on the crashed disk - game over.
-
-> I.e. do I have to let my swap disk be a
->RAID-setup too if I wan't it to continue upon disk crash?
->  
->
-yes - a mirror, not a stripe.
+?? Sentence does not compute, I am afraid.
 
 
-David
+> 5) Removing a disk requires that I do a "mdadm -r" on all the partitions
+> that is involved in a RAID array.
+
+Does it? Well, I see that you mean "removing a disk intentionally".
+
+> I attempt to by a hot-swap capable
+> controler, so what happens if I just pull out the disk without this
+> manual removal command?
+
+The disk will error at the next access and will be faulted out of the
+array.
+
+> Aren't there some more hotswap-friendly setup?
+
+?? Not sure what you mean. You mean, can you program the hotplug system
+to do a setfaulty and remove from the array? Yes. Look at your hotplug
+scripts in /etc/hotplug. But it' always going to be late hatever it
+does, given that pulling the array is the trigger!
+
+> 6) I know that the kernel does stripping automatically if more
+> partitions are given as swap partitions in /etc/fstab. But can it also
+> handle if one disk crashes? I.e. do I have to let my swap disk be a
+> RAID-setup too if I wan't it to continue upon disk crash?
+
+People have recently pointed out that raiding your swap makes sense
+exactly in order to cope robustly with this eventually. You'd have had
+to raid everything ELSE on the dead disk, of course, so I'm not quite
+as sure as everyone else that it's a truly staggeringly wonderful idea. 
+
+Peter
 
