@@ -1,44 +1,48 @@
-From: Anu Matthew <anu.matthew@bms.com>
-Subject: Trouble assembling multipath md devices between two nodes who see the
- same LUNs.
-Date: Mon, 18 Apr 2005 17:14:53 -0400
-Message-ID: <4264234D.7030703@bms.com>
+From: Lars Marowsky-Bree <lmb@suse.de>
+Subject: Re: Trouble assembling multipath md devices between two nodes who see the same LUNs.
+Date: Tue, 19 Apr 2005 00:34:08 +0200
+Message-ID: <20050418223408.GC29071@marowsky-bree.de>
+References: <4264234D.7030703@bms.com>
 Mime-Version: 1.0
-Content-Type: text/plain; format=flowed; charset=ISO-8859-1
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4264234D.7030703@bms.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Anu Matthew <anu.matthew@bms.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
+On 2005-04-18T17:14:53, Anu Matthew <anu.matthew@bms.com> wrote:
 
-I have two nodes, hostA and hostB, both of them see the same 4 multipath 
-LUNs.
+> Hello,
+>=20
+> I have two nodes, hostA and hostB, both of them see the same 4 multip=
+ath=20
+> LUNs.
+>=20
+> md0 to md4 are thus visible to both the hosts, (yeah, they both do no=
+t=20
+> write to thoe md devices at the same time, hostB mounts them only whe=
+n=20
+> hostA is down or has crashed, and viceversa.)
+>=20
+> It works for a while.
 
-md0 to md4 are thus visible to both the hosts, (yeah, they both do not 
-write to thoe md devices at the same time, hostB mounts them only when 
-hostA is down or has crashed, and viceversa.)
+md multipath has on-disk metadata and modifies it. md is NOT
+cluster-safe for concurrent activation.
 
-It works for a while.
 
-While testing, the latest we have seen is, after md devices are stopped 
-on hostA, hostB cannot start the md devices, as the uuid changes, and
-comes back with a message in --verbose mode: 
+Sincerely,
+    Lars Marowsky-Br=E9e <lmb@suse.de>
 
-mdadm: /dev/sdc  has wrong uuid
+--=20
+High Availability & Clustering
+SUSE Labs, Research and Development
+SUSE LINUX Products GmbH - A Novell Business
 
-mdadm: no devices found for /dev/md0
-
-Tried copying over the mdadm.conf with the latest uuids from hostA, 
-still hostB cannot assemble them. I have to re-create the md devices on  
-hostB eventually, then after a while, hostA starts to act up: it simply 
-refuses to assemble.
-
-Is there a way I can circumvent this problem? I am running rhel 3.0 (AS 
-and ES), and we're on  mdadm - v1.5.0 - 22 Jan 2004, from Redhat's 
-mdadm-1.5.0-9 rpm.
-
-Thank you so much in advance,
-
---AM
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
