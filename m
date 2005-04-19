@@ -1,101 +1,69 @@
-From: =?iso-8859-1?Q?Herv=E9?= Eychenne <rv@eychenne.org>
-Subject: Re: waiting for recovery to complete
-Date: Tue, 19 Apr 2005 12:28:10 +0200
-Message-ID: <20050419102810.GH3103@eychenne.org>
-References: <20050413085056.GP21278@eychenne.org> <4262A19A.9010909@nsr500.net>
-Reply-To: rv@eychenne.org
+From: bernd@rhm.de
+Subject: Re: Questions about software RAID
+Date: Tue, 19 Apr 2005 13:00:11 +0200 (MESZ)
+Message-ID: <200504191100.NAA01462@node130.rhm.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4262A19A.9010909@nsr500.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Tim Moore <linux-raid@nsr500.net>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, Apr 17, 2005 at 10:49:14AM -0700, Tim Moore wrote:
+>Devid wrote:
+>>>>
+>>>> >5) Removing a disk requires that I do a "mdadm -r" on all the 
+>>>> partitions
+>>>> >that is involved in a RAID array. I attempt to by a hot-swap capable
+>>>> >controler, so what happens if I just pull out the disk without this
+>>>> >manual removal command?
+>>>> as far as md is concerned the disk disappeared.
+>>>> I _think_ this is just like mdadm -r.
+>>
+>> i think it will be marked faulty, not removed.
+>>
+>yep - you're right, I remember now.
+>You have to mdadm -r remove it and re-add it once you restore the disk.
 
- Hi,
+First you have to look if there are partitions on that disk to which no
+data was written since the disk failed (this typically concerns the swap
+partition). These partitions have to be marked faulty by hand using mdadm -f
+before you can remove them with mdadm -r. If you have scsi-disks you have 
+to use the following command to take it out off the kernel after removing 
+a faulty disk:
 
-> The recovery daemon adjusts reconstruction speed dynamically accordin=
-g to=20
-> available system resources.
-> Disk I/O is somewhat slower but works just fine.  You don't have to w=
-ait.
+echo "scsi remove-single-device h.c.i.l" >/proc/scsi/scsi
 
-So I don't have to wait to take the disk out, as the recovery will
-continue with embedded disk battery and wireless bus connection?
-How cool... ;-)
+>>> So I could actually just pull out the disk, insert a new one and do a
+>>> "mdadm -a /dev/mdX /dev/sdY"?
+>>> The RAID system won't detect the newly inserted disk itself?
+>
+>or:
+>no, it would be mighty strange if the raid subsystem just grabbed every
+>new disk it saw...
+>Think of what would happen when I insert my camera's compact flash card
+>and it suddenly gets used as a hot spare <grin>
 
-Well... more seriously, I can't believe this question doesn't raise
-any interest, even if it seems like it does not. :-(
-Does everyone really type cat /proc/mdstat from time to time??
-How clumsy...
-I just want to chat about the best way to add a backend for this kind
-of feature, so we could implement that properly... (and yes, that is
-definitely _nedded_ if you want to do things right)
+But if the new disk contains any RAID information and partitions on it
+then after spinning it up with something like 
+ 
+echo "scsi add-single-device h.c.i.l" >/proc/scsi/scsi
+                                                      
+the RAID system immediately tries to activate those incomming array(s).
+We had this yesterday on a SuSE 9.3 system. So be carefull walking with
+used disks from one system to another (this szenario is discussed actually
+in a parallel thread under topic ... uuid...).
+                                       
+>> no, think of it as flexibility. if you want you can build something
+>> using the "hotplug" subsystem.
+                                 
+We tried to build "something like a hotplug system" :-). Our hardware
+supports this but in a ratio of 1:10 the kernel (actually 2.6.11-4) 
+crashes when there is activity on that controller while spinning up the
+new disk. We hoped the system would survive with the remaining (second)
+controller and the part of the mirrors (RAID1) attached to it but it
+fails in ca. 10% of our attempts. So till now we weren't lucky to build
+up a system based on software-raid with no downtime in case of a disk 
+failure. But may be this problem is more related to SCSI than to sw-raid...
 
- Herve
-
-> Herv=E9 Eychenne wrote:
-> > Hi,
-> >
-> >Suppose I'm waiting for a recovery to be completed, and want to run =
-a
-> >command afterwards (halt, send a mail, or anything else...).
-> >The most practiacl way I can see is to check /proc/mdstat.
-> >
-> >But what if I want to do that automatically (without bothering looki=
-ng
-> >at it manually from time to time)?
-> >For example, one could do:
-> ># while cat /proc/mdstat | grep recovery > /dev/null ; do sleep 5 ; =
-done
-> >
-> >But that's quite ugly, as:
-> >- it's an active polling, and it is time consuming (even if slightly=
-)
-> >- it may even be unreliable, as I guess one cannot ensure that /proc=
-/mdstat
-> >  will print the "recovery" string during the (very short, but well.=
-=2E.)
-> >  transition between two partitions to recover
-> >
-> >I think that a passive wait would be much better instead.
-> >And ideally, we should have a simple and efficient way to let a prog=
-ram
-> >know if a device is in a clean state (or being recovered), and anoth=
-er
-> >that would wait until the device is clean (recovery finished).
-> >
-> >So, the while loop could be replaced by something like
-> > mdadm --recovery-wait    (for example)
-> >which would exit only when all pending recoveries have finished, and
-> >let the script continue.
-> >That would be much practical, reliable, and cleaner than a loop, don=
-'t you
-> >think?
-> >
-> >How this could be achieved is another question... probably the best
-> >would be that userspace can select on a file descriptor, or somethin=
-g
-> >like that (netlink device?)
-> >What do you think?
-> >
-> > Herv=E9
-
- Herv=E9
-
---=20
- _
-(=B0=3D  Herv=E9 Eychenne
-//)  Homepage:          http://www.eychenne.org/
-v_/_ WallFire project:  http://www.wallfire.org/
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Bernd Rieke
