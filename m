@@ -1,69 +1,71 @@
-From: bernd@rhm.de
-Subject: Re: Questions about software RAID
-Date: Tue, 19 Apr 2005 13:00:11 +0200 (MESZ)
-Message-ID: <200504191100.NAA01462@node130.rhm.de>
+From: David Greaves <david@dgreaves.com>
+Subject: Re: waiting for recovery to complete
+Date: Tue, 19 Apr 2005 12:16:30 +0100
+Message-ID: <4264E88E.7020202@dgreaves.com>
+References: <20050413085056.GP21278@eychenne.org> <4262A19A.9010909@nsr500.net> <20050419102810.GH3103@eychenne.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20050419102810.GH3103@eychenne.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: rv@eychenne.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->Devid wrote:
->>>>
->>>> >5) Removing a disk requires that I do a "mdadm -r" on all the 
->>>> partitions
->>>> >that is involved in a RAID array. I attempt to by a hot-swap capable
->>>> >controler, so what happens if I just pull out the disk without this
->>>> >manual removal command?
->>>> as far as md is concerned the disk disappeared.
->>>> I _think_ this is just like mdadm -r.
->>
->> i think it will be marked faulty, not removed.
->>
->yep - you're right, I remember now.
->You have to mdadm -r remove it and re-add it once you restore the disk.
+Herv=E9 Eychenne wrote:
+> On Sun, Apr 17, 2005 at 10:49:14AM -0700, Tim Moore wrote:
+>>The recovery daemon adjusts reconstruction speed dynamically accordin=
+g to=20
+>>available system resources.
+>>Disk I/O is somewhat slower but works just fine.  You don't have to w=
+ait.
+>=20
+>=20
+> So I don't have to wait to take the disk out, as the recovery will
+> continue with embedded disk battery and wireless bus connection?
+> How cool... ;-)
+Your original phrasing looked (to me too) like you thought you couldn't=
+=20
+use the raid whilst it was reconstructing (I'm still not convinced you=20
+realise this so, to be clear: "whilst mdadm is rebuilding the array you=
+=20
+can use the array as normal with no risk of data corruption. You do=20
+_not_ have to wait for resync to finish before remounting and using the=
+=20
+device.")
+Tim's response told you you had no need to be alerted when it was OK=20
+since you had no need to stop working in the first place.
 
-First you have to look if there are partitions on that disk to which no
-data was written since the disk failed (this typically concerns the swap
-partition). These partitions have to be marked faulty by hand using mdadm -f
-before you can remove them with mdadm -r. If you have scsi-disks you have 
-to use the following command to take it out off the kernel after removing 
-a faulty disk:
+(And why are you wanting to take a disk out after you just synced it? -=
+=20
+no, don't answer that...)
 
-echo "scsi remove-single-device h.c.i.l" >/proc/scsi/scsi
+Now it looks like you just want to know when it's done for your own=20
+peace of mind, so...
+>=20
+> Well... more seriously, I can't believe this question doesn't raise
+> any interest, even if it seems like it does not. :-(
+well, once recovery has started I don't *really* care when it finishes.
+> Does everyone really type cat /proc/mdstat from time to time??
+> How clumsy...
+And yes, I do :)
+(well, actually I optimise to <up arrow> <return>)
 
->>> So I could actually just pull out the disk, insert a new one and do a
->>> "mdadm -a /dev/mdX /dev/sdY"?
->>> The RAID system won't detect the newly inserted disk itself?
->
->or:
->no, it would be mighty strange if the raid subsystem just grabbed every
->new disk it saw...
->Think of what would happen when I insert my camera's compact flash card
->and it suddenly gets used as a hot spare <grin>
+> I just want to chat about the best way to add a backend for this kind
+> of feature, so we could implement that properly... (and yes, that is
+> definitely _nedded_ if you want to do things right)
+If you want to monitor _properly_ then use nagios (or monit)
 
-But if the new disk contains any RAID information and partitions on it
-then after spinning it up with something like 
- 
-echo "scsi add-single-device h.c.i.l" >/proc/scsi/scsi
-                                                      
-the RAID system immediately tries to activate those incomming array(s).
-We had this yesterday on a SuSE 9.3 system. So be carefull walking with
-used disks from one system to another (this szenario is discussed actually
-in a parallel thread under topic ... uuid...).
-                                       
->> no, think of it as flexibility. if you want you can build something
->> using the "hotplug" subsystem.
-                                 
-We tried to build "something like a hotplug system" :-). Our hardware
-supports this but in a ratio of 1:10 the kernel (actually 2.6.11-4) 
-crashes when there is activity on that controller while spinning up the
-new disk. We hoped the system would survive with the remaining (second)
-controller and the part of the mirrors (RAID1) attached to it but it
-fails in ca. 10% of our attempts. So till now we weren't lucky to build
-up a system based on software-raid with no downtime in case of a disk 
-failure. But may be this problem is more related to SCSI than to sw-raid...
+Or since mdadm already uses -F to follow and notify on errors, then I=20
+suggest you start hacking other alert options in there...
 
-Bernd Rieke
+David
+
+--=20
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
