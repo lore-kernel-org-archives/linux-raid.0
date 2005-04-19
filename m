@@ -1,36 +1,63 @@
-From: Alvin Oga <aoga@mail.Linux-Consulting.com>
-Subject: Re: waiting for recovery to complete
-Date: Tue, 19 Apr 2005 05:27:37 -0700 (PDT)
-Message-ID: <Pine.LNX.3.96.1050419052603.25829A-100000@Maggie.Linux-Consulting.com>
-References: <62b0912f05041905221da4a0b5@mail.gmail.com>
+From: =?iso-8859-1?Q?Herv=E9?= Eychenne <rv@eychenne.org>
+Subject: Re: Questions about software RAID
+Date: Tue, 19 Apr 2005 16:40:11 +0200
+Message-ID: <20050419144011.GI3103@eychenne.org>
+References: <200504191100.NAA01462@node130.rhm.de>
+Reply-To: rv@eychenne.org
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <62b0912f05041905221da4a0b5@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <200504191100.NAA01462@node130.rhm.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Molle Bestefich <molle.bestefich@gmail.com>
+To: bernd@rhm.de
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Tue, Apr 19, 2005 at 01:00:11PM +0200, bernd@rhm.de wrote:
 
+> >You have to mdadm -r remove it and re-add it once you restore the di=
+sk.
 
-On Tue, 19 Apr 2005, Molle Bestefich wrote:
+> First you have to look if there are partitions on that disk to which =
+no
+> data was written since the disk failed (this typically concerns the s=
+wap
+> partition). These partitions have to be marked faulty by hand using m=
+dadm -f
+> before you can remove them with mdadm -r.
 
-> David Greaves wrote:
-> >> Does everyone really type cat /proc/mdstat from time to time??
-> >> How clumsy...
-> > And yes, I do :)
-> 
-> You're not alone..
+Ok, but how do you automate/simplify that?
 
-and it's still a lot better than some of the hw raid monitoring tools
-	- more data
-	- more info 
-	- other things we can do while waiting ..
-	- other gui we can add around it
-	- other alarms we can generate to prevent the raid failure
+A script with a while loop and some grep,sed commands? A grep on what
+exactly? (this kind of precise information seems to be written nowhere =
+in
+the manpage of the HOWTOs)
 
-c ya
-alvin
+Wouldn't it be much simpler if it could be possible to do something
+like the following?
+# mdadm --remove-disk /dev/sda
+So this command could mark as faulty and remove of the array any
+implied partition(s) of the disk to be removed.
+Does this currently exist?  If not, would you be willing to integrate a=
+ patch
+in that sense? It would be much simpler, don't you think?
 
+Same thing for addition...
+# mdadm --add-disk /dev/sda
+would do the job quite automatically...
 
+ Herve
+
+--=20
+ _
+(=B0=3D  Herv=E9 Eychenne
+//)  Homepage:          http://www.eychenne.org/
+v_/_ WallFire project:  http://www.wallfire.org/
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
