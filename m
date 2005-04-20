@@ -1,74 +1,95 @@
-From: Santeri Stolt <santtu@penti.org>
-Subject: Re: cannot write a new superblock
-Date: Wed, 20 Apr 2005 19:56:41 +0300 (EEST)
-Message-ID: <Pine.LNX.4.60.0504201915030.8999@penti.org>
-References: <19839.212.101.18.92.1114002550.squirrel@212.101.18.92>
+From: Molle Bestefich <molle.bestefich@gmail.com>
+Subject: Re: Questions about software RAID
+Date: Wed, 20 Apr 2005 19:36:40 +0200
+Message-ID: <62b0912f050420103618110e66@mail.gmail.com>
+References: <200504200415.j3K4FWm29946@www.watkins-home.com>
+	 <42660BED.7000804@dgreaves.com>
+	 <62b0912f05042002266bfef91d@mail.gmail.com>
+	 <20050420093222.GL3103@eychenne.org>
+Reply-To: Molle Bestefich <molle.bestefich@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <19839.212.101.18.92.1114002550.squirrel@212.101.18.92>
+In-Reply-To: <20050420093222.GL3103@eychenne.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: romualdo@solnet.ch
+To: rv@eychenne.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Herv=E9 Eychenne wrote:
+> Molle Bestefich wrote:
+> > There seems to be an obvious lack of a properly thought out interfa=
+ce
+> > to notify userspace applications of MD events (disk failed --> go
+> > light a LED, etc).
+> >=20
+> > I'm not sure how a proper interface could be done (so I'm basically
+> > just blabbering).  ACPI has some sort of event system, but the MD o=
+ne
+> > would need to be more flexible.  For instance userspace apps has to
+> > pick up on MD events such as disk failures, even if the userspace a=
+pp
+> > happens to not be running in the exact moment that the event occurs
+> > (due to system restart, daemon restart or what not).  So the system
+> > that ACPI uses is probably unsuited.
+> >=20
+> > Perhaps a simple logfile would do.  It's focus should be
+> > machine-readability (vs. human readability for mdstat).  A userspac=
+e
+> > app could follow MD's state from the beginning (bootup, no devices
+> > discovered, logfile cleared), through device discovery and RAID
+> > assembly and to failing devices.  By adding up the information in a=
+ll
+> > the log lines, a userspace app could derive the current state of MD
+> > (which disks are dead..).
+>
+> No, as it requires active polling.
 
-Hello,
+No it doesn't.
+Just tail -f the logfile (or /proc/xxxx or /sys/xxxx "file"), and your
+app will receive due notice exactly when something happens.  Or use
+inotify.
 
-On Wed, 20 Apr 2005 romualdo@solnet.ch wrote:
+> I think something like a netlink device would be more accurate,
+> but I'm not a kernel guru.
 
-> md: sda1 has invalid sb, not importing!
+No idea how that works :-).
+If by "accurate" you mean you'll get a faster reaction, that's wrong
+as per above explanation.  And I'll try to explain why a logfile in
+other respects are actually _more_ accurate.
 
-I have this problem as well. I am trying to put together a RAID5 array 
-consisting of 6*120GB disks - 4*P-ATA and 2*S-ATA. The controller is a 
-cheap Sil3112-based PCI thingy. I use the serial-ata driver which is part 
-of the SCSI subsystem, because it is faster than its deprecated IDE-SATA 
-predecessor.
+I can see why a logfile _seems_ wrong at first sight.
+But the idea that it allows you to (*also*!) see historic MD events
+instead of just the current status this instant seems compelling.
 
-Symptoms: I can build the array, everything looks fine during the 
-resync, when resync finishes the array is usable. But during resync 
-completion the superblocks on the S-ATA disks get mangled:
+ - You can be sure that you haven't missed or lost any MD events.  If
+your monitoring app crashes or restarts, just look in the log.  (If
+you're unsure whether you've notified the admin on some event or not;
+I'm sure MD could log the disk's event counters.  The monitoring app
+could keep it's own "how far have I gotten" event counter [on disk],
+so the app knows "it's own status".)
 
-tupolev root # mdadm --examine  /dev/hd[egik]1 /dev/sd[ab]1|grep Checksum
-        Checksum : 70dcd999 - correct
-        Checksum : 70dcd99c - correct
-        Checksum : 70dcd9b4 - correct
-        Checksum : 70dcd9b7 - correct
-        Checksum : 70dcd97c - expected 70dcd90c
-        Checksum : 70dcd98e - expected 70dcd91e
+ - If the log resides in eg. /proc/whatever, you can pipe it to an
+actual file.  It could be pretty useful for debugging MD (attach your
+MD log, send a mail asking "what happened", and it'll be clear to the
+super-md-dude at first sight).
 
-The array works fine though, until it is restarted or a reboot occurs:
+ - Seems more convincing to enterprise customers that you can actually
+see MD's every move in the log.  Makes it seem much more robust and
+reliable.
 
-[dmesg output]
-md: raidstart(pid 5781) used deprecated START_ARRAY ioctl. This will not 
-be supported beyond 2.6
-md: invalid superblock checksum on sda1
-md: sda1 has invalid sb, not importing!
-md: autostart failed!
-md: md0 stopped.
+ - Really useful for debugging the monitoring app....
 
-I use up-to-date Gentoo, and I've tried combinations of the following:
+ - Probably other advantages.....  Haven't really thought it trough
+that well :-).
 
-Kernels:
-2.6.10-gentoo-r1
-2.6.11-gentoo-r6
-2.6.12-rc3-mm3
-
-raidtools & mdadm: latest stable Gentoo builds
-
-Seems possible to me that something is broken in how raidtools/mdadm talk 
-to the SCSI subsystem. IIRC, kernel ver. 2.6.8 inroduced a hefty bunch of 
-restrictions for system calls, and that caused trouble for applications 
-like growisofs. Maybe for mdadm/raidtools also? Just guessing here...
-
-I am lost here, like you! If someone finds this problem interesting, I'd 
-be more than happy to provide logs, info etc.
-
-> I was reading through all the web, and I have only found questions but no
-> answers about this problem
-
-Yup, I've been tweaking on this for quite a while, too... any help is 
-appreciated!
-
--- 
-santtu@penti.org
+The problem, as I see it, is if it's worth the implementation trouble
+(is it any harder than to implement a netlink / what not interface?=20
+No idea!)
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
