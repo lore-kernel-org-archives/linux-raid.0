@@ -1,94 +1,74 @@
-From: Robbie Hughes <spam@dynsysgroup.com>
-Subject: remove resyncing disk
-Date: Wed, 20 Apr 2005 17:52:58 +0100
-Message-ID: <426688EA.80802@dynsysgroup.com>
+From: Santeri Stolt <santtu@penti.org>
+Subject: Re: cannot write a new superblock
+Date: Wed, 20 Apr 2005 19:56:41 +0300 (EEST)
+Message-ID: <Pine.LNX.4.60.0504201915030.8999@penti.org>
+References: <19839.212.101.18.92.1114002550.squirrel@212.101.18.92>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <19839.212.101.18.92.1114002550.squirrel@212.101.18.92>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
+Cc: romualdo@solnet.ch
 List-Id: linux-raid.ids
 
-Can anyone help?
-I am having problems with a raid1 setup i built ages ago.
-The machine got taken to a datacentre recently and I thought the other 
-day to check things over on it.
-I then discovered that only one of the 2 drives was actually part of the 
-/dev/md0 filesystem, i then added the other drive and resyncing began.
-the output is as below:
 
+Hello,
 
-#mdadm --detail /dev/md0
-/dev/md0:
-        Version : 00.90.01
-  Creation Time : Thu Jun 10 09:52:47 2004
-     Raid Level : raid1
-     Array Size : 39843648 (37.100 GiB 40.80 GB)
-    Device Size : 39843648 (37.100 GiB 40.80 GB)
-   Raid Devices : 2
-  Total Devices : 2
-Preferred Minor : 0
-    Persistence : Superblock is persistent
+On Wed, 20 Apr 2005 romualdo@solnet.ch wrote:
 
-    Update Time : Wed Apr 20 17:37:10 2005
-          State : clean, no-errors
- Active Devices : 1
-Working Devices : 2
- Failed Devices : 0
-  Spare Devices : 1
+> md: sda1 has invalid sb, not importing!
 
+I have this problem as well. I am trying to put together a RAID5 array 
+consisting of 6*120GB disks - 4*P-ATA and 2*S-ATA. The controller is a 
+cheap Sil3112-based PCI thingy. I use the serial-ata driver which is part 
+of the SCSI subsystem, because it is faster than its deprecated IDE-SATA 
+predecessor.
 
- Rebuild Status : 6% complete
+Symptoms: I can build the array, everything looks fine during the 
+resync, when resync finishes the array is usable. But during resync 
+completion the superblocks on the S-ATA disks get mangled:
 
-    Number   Major   Minor   RaidDevice State
-       0       0        0       -1      removed
-       1      22       66        1      active sync   /dev/hdd2
-       2       3        3        0      spare   /dev/hda3
-           UUID : 533f5ae9:cdd1c37a:57475cdd:bce0f006
-         Events : 0.7535478
+tupolev root # mdadm --examine  /dev/hd[egik]1 /dev/sd[ab]1|grep Checksum
+        Checksum : 70dcd999 - correct
+        Checksum : 70dcd99c - correct
+        Checksum : 70dcd9b4 - correct
+        Checksum : 70dcd9b7 - correct
+        Checksum : 70dcd97c - expected 70dcd90c
+        Checksum : 70dcd98e - expected 70dcd91e
 
+The array works fine though, until it is restarted or a reboot occurs:
 
-The main problem i have now is that this output is a day and a half 
-hence. It has been continually resyncing since I added the drive and 
-when it gets to 100%, it starts over.
+[dmesg output]
+md: raidstart(pid 5781) used deprecated START_ARRAY ioctl. This will not 
+be supported beyond 2.6
+md: invalid superblock checksum on sda1
+md: sda1 has invalid sb, not importing!
+md: autostart failed!
+md: md0 stopped.
 
-I thought this was odd so i checked dmesg to find 8 messages like this:
+I use up-to-date Gentoo, and I've tried combinations of the following:
 
-hdd: dma_intr: status=0x51 { DriveReady SeekComplete Error }
-hdd: dma_intr: error=0x40 { UncorrectableError }, LBAsect=76658506, 
-sector=76658504
-end_request: I/O error, dev hdd, sector 76658504
+Kernels:
+2.6.10-gentoo-r1
+2.6.11-gentoo-r6
+2.6.12-rc3-mm3
 
-finishing in a
-raid1: hdd: unrecoverable I/O read error for block 76052608
-md: md0: sync done.
-md: syncing RAID array md0
-md: minimum _guaranteed_ reconstruction speed: 1000 KB/sec/disc.
-md: using maximum available idle IO bandwith (but not more than 200000 
-KB/sec) for reconstruction.
-md: using 128k window, over a total of 39843648 blocks.
+raidtools & mdadm: latest stable Gentoo builds
 
-so i ran badblocks and discovered 8 bad blocks right at the tail end of 
-my /dev/hdd2 drive that is the no (1) drive in the array, not the spare.
+Seems possible to me that something is broken in how raidtools/mdadm talk 
+to the SCSI subsystem. IIRC, kernel ver. 2.6.8 inroduced a hefty bunch of 
+restrictions for system calls, and that caused trouble for applications 
+like growisofs. Maybe for mdadm/raidtools also? Just guessing here...
 
-So far as I can tell, I am now stuffed.
-I guess i need to do one of 3 things:
+I am lost here, like you! If someone finds this problem interesting, I'd 
+be more than happy to provide logs, info etc.
 
-1) Stop the mad resyncing process before the system overheats (will this 
-happen??)
-2) fix the bad blocks and do a good resync before swapping out the 
-failed drive
-3) copy what i can off the server (i have no data on the failed blocks 
-or anywhere near them) and replace the drive having rebuilt the server.
+> I was reading through all the web, and I have only found questions but no
+> answers about this problem
 
-If anyone can offer me any advice on how to do this, I would be most 
-grateful. The datacentre is over 100 miles away so I really don't want 
-to go there until my next scheduled trip (in a couple of weeks) If i can 
-set the other HD up and get both running together properly I would be v 
-happy, even just stopping the resyncing would be a bonus. I am just 
-afraid of running mdadm -r /dev/md0 /dev/hda3 in the middle of a resync. 
-Will this do anything bad?
+Yup, I've been tweaking on this for quite a while, too... any help is 
+appreciated!
 
-All advice much appreciated....
-robbie
+-- 
+santtu@penti.org
