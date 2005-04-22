@@ -1,79 +1,138 @@
 From: Molle Bestefich <molle.bestefich@gmail.com>
-Subject: MD bug or me being stupid?
-Date: Fri, 22 Apr 2005 12:45:55 +0200
-Message-ID: <62b0912f0504220345349335f9@mail.gmail.com>
+Subject: Re: MD bug or me being stupid?
+Date: Fri, 22 Apr 2005 13:25:11 +0200
+Message-ID: <62b0912f05042204256c228ea7@mail.gmail.com>
+References: <62b0912f0504220345349335f9@mail.gmail.com>
 Reply-To: Molle Bestefich <molle.bestefich@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: multipart/mixed;
+	boundary="----=_Part_705_22596625.1114169111025"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <62b0912f0504220345349335f9@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Just upgraded a MD RAID 5 box to 2.6.11 from 2.4.something.
+------=_Part_705_22596625.1114169111025
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-Found out one disk was failing completely, got a replacement from Maxtor.  Neat.
-Replaced disk, rebooted..
-Added the new disk to the array with 'raidhotadd'.
-MD started syncing.
+Hmm, I think the information in /var/log/messages are actually
+interesting for MD debugging.
 
-A couple of minutes into the process, it started *seriously* spamming
-the console with messages:
+Seems there was a bad sector somewhere in the middle of all this,
+which might have triggered something?
 
-==========================
-Apr 22 01:47:00 linux kernel: ..<6>md: syncing RAID array md1
-Apr 22 01:47:00 linux kernel: md: minimum _guaranteed_ reconstruction
-speed: 1000 KB/sec/disc.
-Apr 22 01:47:00 linux kernel: md: using maximum available idle IO bandwith (but
-not more than 200000 KB/sec) for reconstruction.
-Apr 22 01:47:00 linux kernel: md: using 128k window, over a total of
-199141632 blocks.
-Apr 22 01:47:00 linux kernel: md: md1: sync done.
-Apr 22 01:47:00 linux kernel: ..<6>md: syncing RAID array md1
-Apr 22 01:47:01 linux kernel: md: minimum _guaranteed_ reconstruction
-speed: 1000 KB/sec/disc.
-Apr 22 01:47:01 linux kernel: md: using maximum available idle IO bandwith (but
-not more than 200000 KB/sec) for reconstruction.
-Apr 22 01:47:01 linux kernel: md: using 128k window, over a total of
-199141632 blocks.
-Apr 22 01:47:01 linux kernel: md: md1: sync done.
-==========================
+Attached (gzipped - sorry for the inconvenience, but it's 5 kB vs. 250 kB!)
 
-Thought it had probably gone haywire and decided to start trashing my
-data, so pulled the plug and rebooted.  When examining the log
-afterwards, I can see that the above messages repeat themselves.
-cat /var/log/messages | grep md | grep 'Apr 22 01:47:01' | grep 'sync done'
-tells me that the messages were repeated 12 times per second.  The
-/var/log/messages file grew to 600kB before I pulled the plug.
+I've cut out a lot of irrelevant cruft (kernel messages) and added
+comments about what I did when.
 
-Noticed something strange during next boot: Linux failed to recognize
-one of the disks.  Booted into Maxtor PowerMax and it said various
-weird things (seemed different each time) about the disk too.  So
-decided to switch ATA cables on this disk, which made wonders - both
-PowerMax and Linux talks to the disk fine now.
+------=_Part_705_22596625.1114169111025
+Content-Type: application/x-gzip; name="linux-22apr-messages.gz"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="linux-22apr-messages.gz"
 
-Now, when I boot the machine, the 6 disks in the array have these
-event counters, according to mdadm:
-
-sda1:  0.19704  (completely new, "blank" disk)
-sdb1:  0.19704
-sdc1:  0.144      (but why?)
-sdd1:  0.19704
-sde1:  0.19704  (this disk had the bad cable)
-sdf1:  0.19704
-
-My questions now are (and yes, I know I had faulty hardware, but
-that's incidentally also the reason I use MD at all):
-
-1. What's with the infinitely repeated md1: sync done messages?
-
-2. Wouldn't the mentioned event counters cause MD to think that the
-totally blank disk /dev/sda1 has valid data, and that the disk with
-valid data (/dev/sdc1) does not next time it syncs?
-
-3. How do I proceed from here, if I want to rescue my data?
-
-
-Best regards, many thanks for MD and all that :-).
+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
+ltTh/wPIe6vOaXkDAA==
+------=_Part_705_22596625.1114169111025--
