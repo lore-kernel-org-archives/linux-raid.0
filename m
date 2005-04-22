@@ -1,58 +1,79 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: Raid1 stalls during hotplug and Promise SATA TX4
-Date: Fri, 22 Apr 2005 09:04:55 +0100
-Message-ID: <4268B027.9070504@dgreaves.com>
-References: <32973.10.0.0.2.1114128004.squirrel@resen.org>
+From: Molle Bestefich <molle.bestefich@gmail.com>
+Subject: MD bug or me being stupid?
+Date: Fri, 22 Apr 2005 12:45:55 +0200
+Message-ID: <62b0912f0504220345349335f9@mail.gmail.com>
+Reply-To: Molle Bestefich <molle.bestefich@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <32973.10.0.0.2.1114128004.squirrel@resen.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: skrald@amossen.dk
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-not sure about this but it looks like the problem is occuring at a lower 
-  level than md.
+Just upgraded a MD RAID 5 box to 2.6.11 from 2.4.something.
 
-I'd take it over to ide-linux and/or hotplug.
+Found out one disk was failing completely, got a replacement from Maxtor.  Neat.
+Replaced disk, rebooted..
+Added the new disk to the array with 'raidhotadd'.
+MD started syncing.
 
-ide-linux is at linux-ide@vger.kernel.org
-I don't know about hotplug
+A couple of minutes into the process, it started *seriously* spamming
+the console with messages:
 
-It would help to tell them what kernel you're running too <grin>
+==========================
+Apr 22 01:47:00 linux kernel: ..<6>md: syncing RAID array md1
+Apr 22 01:47:00 linux kernel: md: minimum _guaranteed_ reconstruction
+speed: 1000 KB/sec/disc.
+Apr 22 01:47:00 linux kernel: md: using maximum available idle IO bandwith (but
+not more than 200000 KB/sec) for reconstruction.
+Apr 22 01:47:00 linux kernel: md: using 128k window, over a total of
+199141632 blocks.
+Apr 22 01:47:00 linux kernel: md: md1: sync done.
+Apr 22 01:47:00 linux kernel: ..<6>md: syncing RAID array md1
+Apr 22 01:47:01 linux kernel: md: minimum _guaranteed_ reconstruction
+speed: 1000 KB/sec/disc.
+Apr 22 01:47:01 linux kernel: md: using maximum available idle IO bandwith (but
+not more than 200000 KB/sec) for reconstruction.
+Apr 22 01:47:01 linux kernel: md: using 128k window, over a total of
+199141632 blocks.
+Apr 22 01:47:01 linux kernel: md: md1: sync done.
+==========================
 
-HTH
-David
+Thought it had probably gone haywire and decided to start trashing my
+data, so pulled the plug and rebooted.  When examining the log
+afterwards, I can see that the above messages repeat themselves.
+cat /var/log/messages | grep md | grep 'Apr 22 01:47:01' | grep 'sync done'
+tells me that the messages were repeated 12 times per second.  The
+/var/log/messages file grew to 600kB before I pulled the plug.
+
+Noticed something strange during next boot: Linux failed to recognize
+one of the disks.  Booted into Maxtor PowerMax and it said various
+weird things (seemed different each time) about the disk too.  So
+decided to switch ATA cables on this disk, which made wonders - both
+PowerMax and Linux talks to the disk fine now.
+
+Now, when I boot the machine, the 6 disks in the array have these
+event counters, according to mdadm:
+
+sda1:  0.19704  (completely new, "blank" disk)
+sdb1:  0.19704
+sdc1:  0.144      (but why?)
+sdd1:  0.19704
+sde1:  0.19704  (this disk had the bad cable)
+sdf1:  0.19704
+
+My questions now are (and yes, I know I had faulty hardware, but
+that's incidentally also the reason I use MD at all):
+
+1. What's with the infinitely repeated md1: sync done messages?
+
+2. Wouldn't the mentioned event counters cause MD to think that the
+totally blank disk /dev/sda1 has valid data, and that the disk with
+valid data (/dev/sdc1) does not next time it syncs?
+
+3. How do I proceed from here, if I want to rescue my data?
 
 
-skrald@amossen.dk wrote:
-> AApr 22 00:58:16 server kernel: ata4: command timeout
-> Apr 22 00:58:16 server kernel: ata4: status=0x51 { DriveReady SeekComplete
-> Error }
-> Apr 22 00:58:16 server kernel: ata4: called with no error (51)!
-> Apr 22 00:58:16 server kernel: SCSI error : <4 0 0 0> return code = 0x8000002
-> Apr 22 00:58:16 server kernel: sdc: Current: sense key=0x3
-> Apr 22 00:58:16 server kernel:     ASC=0x11 ASCQ=0x4
-> Apr 22 00:58:16 server kernel: end_request: I/O error, dev sdc, sector 4199
-> Apr 22 00:58:16 server kernel: raid1: Disk failure on sdc1, disabling device.
-
-so /dev/sdc is toast, not /dev/sdb
-
-
-> Apr 22 00:58:16 server kernel: ^IOperation continuing on 1 devices
-> Apr 22 00:58:16 server kernel: raid1: sdc1: rescheduling sector 4136
-> Apr 22 01:14:32 server kernel: Disabling IRQ #10
-> Apr 22 00:58:46 server kernel: ata2: command timeout
-> Apr 22 00:58:46 server kernel: ATA: abnormal status 0xFF on port 0xCA81429C
-> Apr 22 00:58:46 server kernel: ata2: status=0xff { Busy }
-> Apr 22 00:58:46 server kernel: SCSI error : <2 0 0 0> return code = 0x8000002
-> Apr 22 00:58:46 server kernel: sdb: Current: sense key=0xb
-> Apr 22 00:58:46 server kernel:     ASC=0x47 ASCQ=0x0
-> Apr 22 00:58:46 server kernel: end_request: I/O error, dev sdb, sector
-> 38491583
-> Apr 22 00:58:46 server kernel: md: write_disk_sb failed for device sdb1
-
-oops, so is /dev/sdb
-
+Best regards, many thanks for MD and all that :-).
