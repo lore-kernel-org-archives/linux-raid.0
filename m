@@ -1,28 +1,33 @@
-From: Gil <gil@fooplanet.com>
-Subject: Re: raid 10 or 1+0 ?
-Date: Mon, 25 Apr 2005 13:26:58 -0700
-Message-ID: <426D5292.4080007@fooplanet.com>
-References: <E3B0B2160F552B408D3655883F58C14490CC@cinshrexc02.shermfin.com>
+From: Anu Matthew <anu.matthew@bms.com>
+Subject: Does mdadm work on active/passive arrays
+Date: Mon, 25 Apr 2005 16:29:39 -0400
+Message-ID: <426D5333.4080502@bms.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; format=flowed; charset=ISO-8859-1
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <E3B0B2160F552B408D3655883F58C14490CC@cinshrexc02.shermfin.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Rechenberg Lists <flux-ml@sfg.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Andrew Rechenberg Lists wrote:
-> I've never seen nor tried a "/" file system on RAID10 or RAID0+1. 
-> What I usually hear recommended is /boot and or / on RAID1 and then 
-> if you need better performance for a database or other application, 
-> then create a /data partition or something of the sort on a separate 
-> RAID10 array that is on different disk spindles.
+Hi,
 
-Having a RAID1 root partition is fantastic because even if you totally
-flub your RAID setup elsewhere you can still boot the system without
-being RAID aware.  This is a huge advantage over either RAID10 or
-RAID0+1 in my mind.
+Just a small question about creating multipath devices using mdadm:
 
---Gil
+Does it support Active/Passive Arrays like the Clariion?
+
+I am using mdadm  v1.11.0, and the devices return no UUID when queried 
+using mdadm -D --scan.
+
+dmesg has a lots of entries like:
+
+md: write_disk_sb failed for device sdf
+md: errors occurred during superblock update, repeating
+Device 08:50 not ready.
+
+BTW, I am using qla2300 modules with options scsi_mod max_scsi_luns=255 
+scsi_allow_ghost_devices=1.
+
+Thanks in advance,
+
+--AM
