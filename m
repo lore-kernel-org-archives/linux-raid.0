@@ -1,87 +1,48 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: raid 10 or 1+0 ?
-Date: Mon, 25 Apr 2005 17:49:37 -0400
-Message-ID: <200504252149.j3PLngm00560@www.watkins-home.com>
-References: <62b0912f050425130869cff461@mail.gmail.com>
+From: "Chris Mason (Lists)" <lists@masonc.com>
+Subject: Hwo to add swap to raid
+Date: Tue, 26 Apr 2005 06:57:56 -0400
+Message-ID: <20050426110439.6EF4792C3AC@mercury.mason.home>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <62b0912f050425130869cff461@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Molle Bestefich' <molle.bestefich@gmail.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This is from an email Neil Brown sent 8/22/2004:
-Following are 4 patches for md in 2.6.8.1-mm4
+I have a server that was setup with RAID1 so that the data would not be lost
+on a drive failure. However, I since realized I did not RAID the swap file
+and so in the event of a drive failure the server would crash.
+How can I convert the swap partition to RAID? I replaced /dev/hdc and
+partitioned it tbe same as /dev/had, and rebuild /dev/md0 and /dev/md1, but
+need to find a way to get the swap to be /dev/md2.
 
-The first three are minor improvements and modifications either
-required by or inspired by the fourth.
 
-The fourth adds a new raid personality - raid10.  At 56K, I'm not 
-sure it will get through the mailing list, but interested parties
-can find it at:
+   Device Boot    Start       End    Blocks   Id  System
+/dev/hda1   *         1        26    208813+  fd  Linux raid autodetect
+/dev/hda2            27       153   1020127+  82  Linux swap
+/dev/hda3           154     24792 197912767+  fd  Linux raid autodetect
 
-  http://neilb.web.cse.unsw.edu.au/patches/linux-devel/2.6/2004-08-23-03
+   Device Boot    Start       End    Blocks   Id  System
+/dev/hdc1   *         1        26    208813+  fd  Linux raid autodetect
+/dev/hdc2            27       153   1020127+  82  Linux swap
+/dev/hdc3           154     24792 197912767+  fd  Linux raid autodetect
 
-raid10 provides a combination of raid0 and raid1.
-It requires mdadm 1.7.0 or later to use.  
+[root@mercury root]# cat /proc/mdstat 
+Personalities : [raid1] 
+read_ahead 1024 sectors
+md1 : active raid1 hdc3[2] hda3[0]
+      197912640 blocks [2/1] [U_]
+      [>....................]  recovery =  1.3% (2665008/197912640)
+finish=306.1min speed=10625K/sec
+md0 : active raid1 hdc1[1] hda1[0]
+      208704 blocks [2/2] [UU]
 
-The next release of mdadm should have better documention of raid10, but 
-from the comment in the .c file:
-
-/*
- * RAID10 provides a combination of RAID0 and RAID1 functionality.
- * The layout of data is defined by 
- *    chunk_size
- *    raid_disks
- *    near_copies (stored in low byte of layout)
- *    far_copies (stored in second byte of layout)
- *
- * The data to be stored is divided into chunks using chunksize.
- * Each device is divided into far_copies sections.
- * In each section, chunks are layed out in a style similar to raid0, but
- * near_copies copies of each chunk is stored (each on a different drive).
- * The starting device for each section is offset near_copies from the
-starting
- * device of the previous section.
- * Thus there are (near_copies*far_copies) of each chunk, and each is on a
-different
- * drive.
- * near_copies and far_copies must be at least one, and there product is at
-most
- * raid_disks.
- */
-
-raid10 is currently marked EXPERIMENTAL, and this should be taken seriously.
-A reasonable amount of basic testing hasn't shown any bugs, and it seems to
-resync
-and rebuild correctly.  However wider testing would help.
-
-NeilBrown
-
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> owner@vger.kernel.org] On Behalf Of Molle Bestefich
-> Sent: Monday, April 25, 2005 4:08 PM
-> To: linux-raid@vger.kernel.org
-> Subject: Re: raid 10 or 1+0 ?
-> 
-> Molle Bestefich wrote:
-> > Guy wrote:
-> > > md supports a built-in RAID10.
-> > > RAID10 can be used with an odd number of disks and is a single array.
-> >
-> > *sighs a bit*..
-> [snip]
-> 
-> Doesn't look that bad actually.  There's a vendor section called
-> "proprietary raid levels" where "Linux MD RAID 10" would fit in
-> nicely.  So if anybody knows enough about how MD RAID 10 works, here's
-> something to do when you get bored :-).
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Chris Mason
+NetConcepts
+(264) 497-5670 Fax: (264) 497-8463
+Int:  (646)722-0001 Fax: (815)301-9759 
+Yahoo IM: netconcepts_anguilla@yahoo.com 
+Skype ID: netconcepts
 
