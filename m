@@ -1,35 +1,53 @@
-From: Tyler <pml@dtbb.net>
-Subject: raid sync looping filling log files
-Date: Wed, 27 Apr 2005 04:14:47 -0700
-Message-ID: <426F7427.3070504@dtbb.net>
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: [PATCH] secure write for RAID1
+Date: Wed, 27 Apr 2005 13:26:08 +0200
+Message-ID: <20050427112608.GB19485@percy.comedia.it>
+References: <1toqj2-sjd.ln1@news.it.uc3m.es> <17007.1524.476174.515614@cse.unsw.edu.au> <20050427060531.GH4431@marowsky-bree.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20050427060531.GH4431@marowsky-bree.de>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-The other day i ran across a problem trying to rebuild a raid using a 
-spare, but didn't seem to be getting anywhere.  Below is what is in the 
-log files, over and over and over, eventually filling up the small 2gb 
-root partition with log files (six hundred plus megabytes worth).  
-Thankfully this was just a new raid, and didn't have any data on it yet, 
-and i found the easiest way to fix it, was to stop the array, and 
-re-create it.  Currently its syncing, and I will write the list again if 
-it happens again.. but I am curious if this is a known problem, and what 
-might have caused it, as I have other raid5's that i hope don't have the 
-same problem one day.
+On Wed, Apr 27, 2005 at 08:05:31AM +0200, Lars Marowsky-Bree wrote:
+>On 2005-04-27T13:24:36, Neil Brown <neilb@cse.unsw.edu.au> wrote:
+>
+>> On Saturday April 23, ptb@lab.it.uc3m.es wrote:
+>> > This patch (completely untested of course - what, me?) makes RAID1 write
+>> > to all components of a raid-1 array, else return error to the write
+>> > attempt, when one component cannot be written.
+>> I don't understand why or when you would want this.
+>> 
+>> This wouldn't just return an error to the application if the write
+>> wasn't completely safe.  It would cause the filesystem to switch to
+>> read-only very quickly and make your machine un-usable.  Is that
+>> really what you want??
+>
+>Databases sometimes want this (also for replication).
+>
+>They'd rather fail than potentially lose a committed transaction, and to
+>that end they require that the data be written to at least two disks; ie
+>they want the data to be able to withstand at least one failure.  We've
+>had such a request from a big database vendor for drbd too.
 
-.<6>md: syncing RAID array md0
-md: minimum _guaranteed_ reconstruction speed: 1000 KB/sec/disc.
-md: using maximum available idle IO bandwith (but not more than 200000 
-KB/sec) for reconstruction.
-md: using 128k window, over a total of 195360896 blocks.
-md: md0: sync done.
+yes, if it were possible to return the failure to the application it
+would be great. if it is not, in such "corner" cases it is better to
+have an app fail than to promise it has committed a replicated
+transaction, and lie about it.
 
-over and over and over, the above message hits the logs several times 
-per second.
+>(This however is a great application for >2 mirrors and a write quorum
+>of two, though.)
++1
 
-Regards,
-Tyler.
+L.
+
+-- 
+Luca Berra -- bluca@comedia.it
+        Communication Media & Services S.r.l.
+ /"\
+ \ /     ASCII RIBBON CAMPAIGN
+  X        AGAINST HTML MAIL
+ / \
