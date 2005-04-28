@@ -1,47 +1,72 @@
-From: Tom Coughlan <coughlan@redhat.com>
-Subject: Re: [PATCH] secure write for RAID1
-Date: Thu, 28 Apr 2005 08:34:30 -0400
-Message-ID: <1114691670.11434.2599.camel@bianchi.boston.redhat.com>
-References: <1toqj2-sjd.ln1@news.it.uc3m.es>
-	 <17007.1524.476174.515614@cse.unsw.edu.au>
-	 <20050427060531.GH4431@marowsky-bree.de>
+From: "miele\@inwind\.it" <miele@inwind.it>
+Subject: Re: Can you help me on Linux SW RAID?
+Date: Thu, 28 Apr 2005 14:57:29 +0200
+Message-ID: <IFNQNT$8C53F6787AC5A41F552611EC85CACF6C@libero.it>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20050427060531.GH4431@marowsky-bree.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Lars Marowsky-Bree <lmb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: lmb <lmb@suse.de>
+Cc: jakob <jakob@unthought.net>, linux-raid <linux-raid@vger.kernel.org>, mingo <mingo@chiara.csoma.elte.hu>, bueso <bueso@vives.org>
 List-Id: linux-raid.ids
 
-On Wed, 2005-04-27 at 02:05, Lars Marowsky-Bree wrote:
-> On 2005-04-27T13:24:36, Neil Brown <neilb@cse.unsw.edu.au> wrote:
-> 
-> > On Saturday April 23, ptb@lab.it.uc3m.es wrote:
-> > > This patch (completely untested of course - what, me?) makes RAID1 write
-> > > to all components of a raid-1 array, else return error to the write
-> > > attempt, when one component cannot be written.
-> > I don't understand why or when you would want this.
-> > 
-> > This wouldn't just return an error to the application if the write
-> > wasn't completely safe.  It would cause the filesystem to switch to
-> > read-only very quickly and make your machine un-usable.  Is that
-> > really what you want??
-> 
-> Databases sometimes want this (also for replication).
-> 
-> They'd rather fail than potentially lose a committed transaction, and to
-> that end they require that the data be written to at least two disks; ie
-> they want the data to be able to withstand at least one failure.  We've
-> had such a request from a big database vendor for drbd too.
-> 
-> (This however is a great application for >2 mirrors and a write quorum
-> of two, though.)
+OK.
 
-As a further optimization, when multi-site replication is required, some
-would like to require at least one successful write to each site. Maybe
-a "site" attribute for RAID set members is in the future. 
+=46inally I can say that one solution is to have a disk array HW-RAID c=
+ompliant.
+:-)))
 
-Tom
 
+Anyway, omitting RAID features I think my nodes should correctly see th=
+e same data on the shared disk array, using Oracle OCFS or RedHat GFS.
+Do you agree?
+
+Have you experienced problem using OCFS insetad of OCFS2??
+
+
+
+
+
+> On 2005-04-28T13:41:45, "miele@inwind.it" <miele@inwind.it> wrote:
+>=20
+> > Obviously I've plan to use OCFS (Oracle Cluster File System) to sha=
+re
+> > data access between nodes...=0D
+> > ..I've to implement an Oracle 9i RAC.
+>=20
+> OCFS2 is fine for that.=0D
+>=20
+> > You discourage anyway my use of RAID??
+>=20
+> md is NOT CLUSTER-AWARE. It will not work, and it will eat your data.
+>=20
+> You have been warned.
+>=20
+> Run the RAID level of your choice on the SAN backend, and put OCFS2 o=
+n
+> top.
+>=20
+>=20
+> Sincerely,
+>     Lars Marowsky-Br=E9e <lmb@suse.de>
+>=20
+> --=20
+> High Availability & Clustering
+> SUSE Labs, Research and Development
+> SUSE LINUX Products GmbH - A Novell Business
+>=20
+>=20
+
+
+
+____________________________________________________________
+6X velocizzare la tua navigazione a 56k? 6X Web Accelerator di Libero!
+Scaricalo su INTERNET GRATIS 6X http://www.libero.it
+
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
