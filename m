@@ -1,39 +1,67 @@
-From: =?iso-8859-1?Q?Alberto_Pic=F3n_Couselo?=
-	<albertopicon@picon-networks.com>
-Subject: Promise FastTrak TX2200 SATA RAID Controller
-Date: Wed, 27 Apr 2005 15:46:40 +0200
-Message-ID: <002401c54b2f$8da760b0$1a01a8c0@carpetana07>
+From: "miele\@inwind\.it" <miele@inwind.it>
+Subject: Can you help me on Linux SW RAID?
+Date: Thu, 28 Apr 2005 12:11:37 +0200
+Message-ID: <IFNIZD$19CF4F5AC29109D5327F89A86EC57541@libero.it>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: jakob <jakob@unthought.net>, linux-raid <linux-raid@vger.kernel.org>, mingo <mingo@chiara.csoma.elte.hu>, bueso <bueso@vives.org>
 List-Id: linux-raid.ids
 
-Hello there. I have been testing successfully an installation procedure
-to use a Promise FastTrak TX2000 RAID controller on a Dell PowerEdge
-1420SC server with Debian Woody 3.0rc2. This controller card is designe=
-d
-for IDE hard disks and I've been using it without problems through the
-beta driver 0.03 of the kernel 2.4.30.=20
 
-However, I'm trying to use the same installation procedure for a Promis=
-e
-=46astTrak TX2200 SATA RAID controller and it seems that the PDC20571
-(TX2200) chip is not supported under kernel 2.4.30 for the moment. Can
-anybody tell me if this card will be supported in the near future?
+Hi.
 
-Thank you very much,
-Al
+First of all my compliments for your job about Linux SW RAID HOWTO and relative mailing list.
 
---
-Alberto Pic=F3n - albertopicon@picon-networks.com
-Picon Networks S.L. - Improving your performance
+I have a question for you .
+
+I'm using 2 redhat nodes (Kernel version 2.4.21...) with a shared (SCSI) disk array,
+and I want to use SW RAID1 features to store data in it.
+
+So I followed the steps below on first node:
+1) Using fdisk I Created a partition of type fd (Linux-raid-autodetect) on each devices (disks) of my future raid device /dev/md0. The partition takes entire space of disks.
+2) Set properly /etc/raidtab to include my new raid device /dev/md0 (also using persistent-block to have autodetect at startup)
+3) Created my raid device using mkraid (mkraid /dev/md0)
+Then cause I want to use LVM too I...
+
+4) Created a Physical Volume on my raid device /dev/md0 (pvcreate /dev/md0...)
+5) Created the Volume Group containing PV created above
+6) Created the Logical Volume on VG created above
+
+Actually I've not yet created nothing on my LV (fs, raw device, ...) cause it's not my goal, but...
+
+It's OK! On my first node all is functioning well.
+I also rebooted my first node to see if autodetect is OK and ..It's OK! My raid device /dev/md0 correctly starts at boot.
+
+Then I copied the /etc/raidtab of the first node into the second node and I've rebooted the second node.
+Great!!!
+
+All things are correctly autodetected and functioning also on the second node!!!
+Raid device /dev/md0 is started and (with my surprise) LVM is already correctly set.. 
+.. vgscan, lvscan and pvscan stated on both node produce the same output!!
+
+All is wonderful but.. when all seems ok and my work seems to be finished..
+..I'm having hard doubts on this RAID configuration and its stability.
+I fear that RAID SW modules that runs on each of two Linux nodes, and works on the same data of the shared disk array, could produce conflicts, misalignments, or I don't know what other..
 
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Can you give me a comment or suggests about RAID SW use i've made?
+
+
+
+Thanks a lot in advance for your attention!!
+
+Bye,
+Andrea Miele
+
+
+
+
+
+____________________________________________________________
+6X velocizzare la tua navigazione a 56k? 6X Web Accelerator di Libero!
+Scaricalo su INTERNET GRATIS 6X http://www.libero.it
+
+
