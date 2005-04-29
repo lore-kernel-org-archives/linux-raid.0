@@ -1,95 +1,86 @@
-From: "J. Ryan Earl" <ryan@dynaconnections.com>
-Subject: RE: Can you help me on Linux SW RAID? [OT]
-Date: Thu, 28 Apr 2005 17:32:08 -0500
-Message-ID: <OMEKLMBKKEOEENCKLEIDOEPHCIAA.ryan@dynaconnections.com>
-References: <20050428195610.GO21645@marowsky-bree.de>
+From: Mitchell Laks <mlaks@verizon.net>
+Subject: what does spares=1 mean  in mdadm --detail --scan for raid1
+Date: Fri, 29 Apr 2005 02:25:42 -0400
+Message-ID: <200504290225.42442.mlaks@verizon.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20050428195610.GO21645@marowsky-bree.de>
+Content-disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Lars Marowsky-Bree <lmb@suse.de>, miele@inwind.it
-Cc: jakob <jakob@unthought.net>, linux-raid <linux-raid@vger.kernel.org>, mingo <mingo@chiara.csoma.elte.hu>, bueso <bueso@vives.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I've had 2.6 based systems deployed in datacenters for over a year now,=
- and
-it's pretty good for commodity hardware, but people still have to use 2=
-=2E4
-for most of the BigIron type stuff.  For instance, EMC only supports
-PowerPath (their multi-pathing driver) for 2.4 last I checked, and thou=
-gh
-the newest 2.6 line has EMC CX/AX multipathing support built into DM, i=
-t's
-still experimental and I just can't tell a customer that's spent possib=
-ly
-millions of dollars on hardware and software licenses that we're using =
-new
-unproven technology.  Tons of Oracle things only come for 2.4 (ASMlib f=
-or
-example).
+Hi,
+I have multiple raid 1 devices on my system.
 
-That, and, once things are setup, stable, and work, you generally just =
-don't
-want to change them *ahem* break them.  We -just- retired a Oracle data=
-base
-that's been running a 2.4.9 derived kernel for the last two years.
-Additionally 2.6 performance has varied widely between releases this ye=
-ar,
-I've found that 2.6.3 was more stable than most of the versions that
-followed it.  All my application servers run a 2.6 derived kernel, but =
-the
-database nodes will have to be on 2.4 for at least another year if not
-two--how many people have tested 2.6's memory management performance on
-systems with 32GB of RAM for instance?
+recently i noticed read seek errors in /var/log/kern.log from /dev/hdi1 which 
+is part of /dev/md1.
 
-Interesting on the OCFS2 support in SLES, our Oracle DBA prefered RHEL
-because he had read about lots of problems between Oracle and SLES.  I
-forwarded him your email =3D)  And now that I'm sufficiently off-topic,=
- I will
-be quiet.
+I then did a lot of work with /dev/md1 and then i noticed that /dev/hdi1 
+failed in the /dev/md1 but the data was fine on remaining part of raid1.
 
-J. Ryan Earl
-Systems/Network Engineer
-dynaConnections Corporation
-512.306.9898
+I then shut system down and 
+then i put in another device to replace /dev/hdi1 and rebooted
 
------Original Message-----
-=46rom: Lars Marowsky-Bree [mailto:lmb@suse.de]
-Sent: Thursday, April 28, 2005 2:56 PM
-To: J. Ryan Earl; miele@inwind.it
-Cc: jakob; linux-raid; mingo; bueso
-Subject: Re: Can you help me on Linux SW RAID?
+At this point of rebooting,  i had forgotten to edit the contents 
+of /etc/mdadm/mdadm.conf and it still had the line something like
 
+  ARRAY /dev/md1 level=raid1 num-devices=2 \ 
+UUID=d876333b:694e852b:e9a6f40f:0beb90f9
+devices /dev/hdc1,/dev/hdi1
 
-On 2005-04-28T14:18:28, "J. Ryan Earl" <ryan@dynaconnections.com> wrote=
-:
+then i got an error from fsck on bootup as it reached /dev/md1 
+and dropped me into single user  mode
+then i changed the mdadm.conf file to 
 
-> OCFS2 isn't stable yet, I wouldn't suggest its use for production sys=
-tems.
-> Furthermore, where did the requirement for 2.6 (kernel I assume) come
-from?
-> Sounds like he was using RHEL3 anyway...
+  ARRAY /dev/md1 level=raid1 num-devices=2 
+UUID=d876333b:694e852b:e9a6f40f:0beb90f9
+devices /dev/hdc1
 
-That wasn't mentioned in the mail I replied to; anyone deploying a new
-2.4 based system right now is a bit behind the times in my opinion, I
-hope 2.4 goes away soon ;-)
+and it booted fine.
 
-OCFS2 is already included in SLES9 SP2 beta; we'll ship it for
-production use with SLES9 SP2 general availability.
+i then did 
+mdadm /dev/md1 -a /dev/hdi1
+to add in my new drive.
 
+Mdadm then began to recreate the array.
 
-Sincerely,
-    Lars Marowsky-Br=E9e <lmb@suse.de>
+and then, while the raid was in the process of rebuilding
+i did
+mdadm --detail --scan
+and the line read 
 
---
-High Availability & Clustering
-SUSE Labs, Research and Development
-SUSE LINUX Products GmbH - A Novell Business
+  ARRAY /dev/md1 level=raid1 num-devices=2 spares=1 \ 
+UUID=d876333b:694e852b:e9a6f40f:0beb90f9
+devices /dev/hdc1,/dev/hdi1
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+so my question for the group is
+
+what is the meaning of spares=1?
+
+does it mean to indicate that the device is still rebuilding?
+ 
+On the other raid 1 devices on my system, such as 
+/dev/md0 the mdadm --detail --scan  says
+
+  ARRAY /dev/md0 level=raid1 num-devices=2 
+UUID=d876333b:694e852b:e9a6f40f:0beb90f9
+devices /dev/hda1,/dev/hdg1
+
+without the spares=1  clause.
+
+The reason I ask is: What should I write into my new version of mdadm.conf?
+I am  guessing  I should write
+
+   ARRAY /dev/md1 level=raid1 num-devices=2  
+UUID=d876333b:694e852b:e9a6f40f:0beb90f9
+devices /dev/hdc1,/dev/hdi1
+
+without the spares=1 thing.
+
+I am confused what spares=1 is for.....
+
+Thanks!!!
+Mitchell Laks
+
