@@ -1,38 +1,29 @@
-From: jshankar <jshankar@CS.ColoState.EDU>
-Subject: raid-0,raid-1 help
-Date: Fri, 29 Apr 2005 08:00:58 -0600
-Message-ID: <42763803@webmail.colostate.edu>
+From: Stefan Muenkner <stefan.muenkner@web.de>
+Subject: Re: ATA Raid on a Dual Boot (Win 2K and Linux [kernel 2.6])?
+Date: Fri, 29 Apr 2005 18:39:54 +0200
+Message-ID: <4272635A.5090005@web.de>
+References: <4270F5D6.2060004@web.de> <Pine.LNX.4.58.0504281043330.16175@chaos.egr.duke.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.58.0504281043330.16175@chaos.egr.duke.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: njayshankar@gmail.com
+To: Joshua Baker-LePain <jlb17@duke.edu>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
+> 
+> If you're willing to pay a bit more, you could buy a "real" RAID card 
+> (e.g. a 3ware 8000 series) with support in both OSes.  Do a hardware 
+> mirror in the 3ware, and then both OSes will see a single drive via their 
+> native drivers.  A 8006-2 (2 port SATA) is $130 on buy.com.
+> 
 
-I need some help in understanding the linux raid-0 and raid-1.
-If in raid-0 , i have two device (/dev/sda and /dev/sdb and the chunk size is 
-4k, which part of the code is responsible for deciding that the first 4k goes 
-into /dev/sda and then second write of 4K goes into /dev/sdb.How does md 
-driver knows the layout of the disk. Does it leave to the ide or scsi driver.
+My problem is: Here in Germany the cheapest 8006-2 I can get hold of is 
+at just under 140 Euros (about $180) which is quite a bit more than I 
+was actually thinking to invest. Well, I will consider it, technically 
+it is a sweet solution....
 
+Thanks,
 
-Also while reading the data, it needs to read from /dev/sda first and then 
-from /dev/sdb. which routine is responsible for tracking the blocks and lba.
-
-also Which routine is responsible for queuing the md driver data and command.
-
-where can i find the documentation for raid source code.
-
-All help appreciated.
-
-Thanks
-Jay
-
-Note: Please email the response to my email id. I am not a subscriber of 
-linux-raid group.
-
-
+   Stefan
