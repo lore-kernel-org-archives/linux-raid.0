@@ -1,33 +1,37 @@
-From: Mitchell Laks <mlaks@verizon.net>
-Subject: Re: what does spares=1 mean  in mdadm --detail --scan for raid1
-Date: Fri, 29 Apr 2005 04:44:17 -0400
-Message-ID: <200504290444.17675.mlaks@verizon.net>
-References: <200504290638.j3T6cEm19128@www.watkins-home.com>
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: ATA Raid on a Dual Boot (Win 2K and Linux [kernel 2.6])?
+Date: Fri, 29 Apr 2005 10:51:19 +0200
+Message-ID: <20050429085118.GB21154@percy.comedia.it>
+References: <4270F5D6.2060004@web.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-8-i
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: <200504290638.j3T6cEm19128@www.watkins-home.com>
-Content-disposition: inline
+Content-Disposition: inline
+In-Reply-To: <4270F5D6.2060004@web.de>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Friday 29 April 2005 02:38 am, Guy wrote:
+On Thu, Apr 28, 2005 at 04:40:22PM +0200, Stefan Muenkner wrote:
+>As far as I know, Linux should be seeing all the partitions made for the
+>"hardware" raid windows setup as being separate partitions on the two
+>hard disks (identical layout). So I should be able to mirror them using
+>sw-raid.
 
-> >
-> > what is the meaning of spares=1?
->
-> When you add a disk it is a spare.
-i see. 
+i would not be confident in having md over a fakeraid, sooner or later
+the fakeraid will overwrite one of the two md superblocks with the copy
+from the other disk, so if you really want to do this, you should use
+dmraid instead.
 
-So it is important information but not intended for mdadm.conf....
+note, there is no bootloader which is yet able to boot from lvm over
+dmraid, you will need a separate /stand for the moment.
 
-indeed when the rsync completed it no longer said
-spares=1 in 
-mdadm --detail --scan
+L.
 
-so i left it out of the mdadm.conf for the next time and it worked.
-
-thanks,
-Mitchell
+-- 
+Luca Berra -- bluca@comedia.it
+        Communication Media & Services S.r.l.
+ /"\
+ \ /     ASCII RIBBON CAMPAIGN
+  X        AGAINST HTML MAIL
+ / \
