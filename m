@@ -1,30 +1,38 @@
-From: Mitchell Laks <mlaks@verizon.net>
-Subject: Re: anatomy of a disaster and how to assess suitability of hard drives
- after raid1 failure?
-Date: Fri, 29 Apr 2005 08:01:12 -0400
-Message-ID: <200504290801.13137.mlaks@verizon.net>
+From: jshankar <jshankar@CS.ColoState.EDU>
+Subject: raid-0,raid-1 help
+Date: Fri, 29 Apr 2005 08:00:58 -0600
+Message-ID: <42763803@webmail.colostate.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset="ISO-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
+Cc: njayshankar@gmail.com
 List-Id: linux-raid.ids
 
-Dear Tyler,
+Hello,
 
-I am using an Antec SL450 450W power supply.
-Model: SL450 
+I need some help in understanding the linux raid-0 and raid-1.
+If in raid-0 , i have two device (/dev/sda and /dev/sdb and the chunk size is 
+4k, which part of the code is responsible for deciding that the first 4k goes 
+into /dev/sda and then second write of 4K goes into /dev/sdb.How does md 
+driver knows the layout of the disk. Does it leave to the ide or scsi driver.
 
-with specs at
-http://www.antec.com/specs/sl450_spe.html
-I am of limited knowledge but this seems pretty good, tell me what you think. 
 
-isnt that good enough? I have been using them on 30 systems for over a year.
+Also while reading the data, it needs to read from /dev/sda first and then 
+from /dev/sdb. which routine is responsible for tracking the blocks and lba.
 
-Do  you have recommendations perhaps for a UPS or a power conditioner?
-I have used a good belkin surgemaster, but perhaps environmental surges are 
-getting to my machines.....
+also Which routine is responsible for queuing the md driver data and command.
 
-Mitchell
+where can i find the documentation for raid source code.
+
+All help appreciated.
+
+Thanks
+Jay
+
+Note: Please email the response to my email id. I am not a subscriber of 
+linux-raid group.
+
+
