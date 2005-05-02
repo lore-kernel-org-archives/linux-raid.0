@@ -1,46 +1,62 @@
-From: "Eric Wood" <eric@interplas.com>
-Subject: Re: Raid 1 fails on every reboot?
-Date: Sun, 1 May 2005 21:59:18 -0400
-Message-ID: <001801c54eba$8d9198a0$6402a8c0@vaio>
-References: <42744609.10101@advocap.org>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="iso-8859-1";
-	reply-type=response
-Content-Transfer-Encoding: 7bit
+From: ptb@lab.it.uc3m.es (Peter T. Breuer)
+Subject: Re: Any way to Increase MD_SB_DISKS=27 ? I need 31 devices
+Date: Mon, 2 May 2005 09:09:56 +0200
+Message-ID: <4b0hk2-1gn.ln1@news.it.uc3m.es>
+References: <427583FA.7030704@dtbb.net>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Tyler <pml@dtbb.net> wrote:
+> I'd like to build a Raid-6 array using 31 drives, is there a patch 
+> available or an easy way to safely increase the *MD_SB_DISKS*=27 to a 
+> higher number?  My attempts at patching the source myself were 
+> unsuccessful, more than likely because i don't know what/why the limit 
+> is 27, and whether that effects other parts of the kernel.
 
------ Original Message ----- 
-From: "John McMonagle"
-> So here is my problem.
-> Any time I reboot only the partitions on the first drive are active.
-> If I switch drives it's always the first one that is active.
+It's 27 because that's how much space there is in some of the structs.
 
-I'm not sure about scsi drives, but for RAID-1 IDE drives I find that I have 
-to add a -h argument to the halt script.
+Look in include/linux/raid. md_p.h, for example.
 
-The last lines of:
-/etc/init.d/halt
+   #define MD_SB_DISKS                     27
 
-are:
+and it calculates how much space that needs:
 
-HALTARGS="-i -d -h"
-[ -f /poweroff -o ! -f /halt ] && HALTARGS="$HALTARGS -p"
+   #define MD_SB_DISKS_WORDS (MD_SB_DISKS*MD_SB_DESCRIPTOR_WORDS)
+   #define MD_SB_DESCRIPTOR_WORDS          32
 
-exec $command $HALTARGS
+and all that is part of what must fit in a "mdp_superblock_s" struct.
+
+           /*
+            * Disks information
+            */
+           mdp_disk_t disks[MD_SB_DISKS];
+
+with the space at the tail of the struct calculated ...
 
 
-What I have found is that by adding a -h (man halt: Put all harddrives on 
-the system in  standby  mode  just  before halt or poweroff), this somehow 
-flushes the drives and I don't have rebuild problems upon reboot.  However, 
-this works for FC 1 systems and I do not know if this is still neccessary 
-for other distros.
+        /*
+         * Reserved
+         */
+        __u32 reserved[MD_SB_RESERVED_WORDS];
 
--Eric Wood
+ ... by figuring how much space was used and subtracting from 1K:
 
+       #define MD_SB_RESERVED_WORDS            (1024 - MD_SB_GENERIC_WORDS - MD_SB_PERSONALITY_WORDS - MD_SB_DISKS_WORDS - MD_SB_DESCRIPTOR_WORDS)
+
+and the space used includes the MD_SB_DESCRIPTOR_WORDS conisting of
+those 27 32-byte array elements.
+
+To make this number bigger, you would first have to make more room in
+the struct, by changing the 1K in the calculation to 4096 (thus
+extending the struct by extending its reserved section), then you
+could use more of that room by increasing the 27. I presume the max
+would now be 3*32+27 = 123.
+
+
+There might be another such struct in the includes. I haven't looked
+ ...
+
+Peter
 
