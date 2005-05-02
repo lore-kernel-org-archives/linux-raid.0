@@ -1,304 +1,40 @@
-From: John McMonagle <johnm@advocap.org>
-Subject: Re: Raid 1 fails on every reboot?
-Date: Sun, 01 May 2005 11:57:23 -0500
-Message-ID: <42750A73.6060200@advocap.org>
-References: <42744609.10101@advocap.org> <4274AF2E.2060003@gw.unix-scripts.info> <4274DE22.3@advocap.org>
+From: Tyler <pml@dtbb.net>
+Subject: Any way to Increase MD_SB_DISKS=27 ? I need 31 devices
+Date: Sun, 01 May 2005 18:35:54 -0700
+Message-ID: <427583FA.7030704@dtbb.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4274DE22.3@advocap.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+I'd like to build a Raid-6 array using 31 drives, is there a patch 
+available or an easy way to safely increase the *MD_SB_DISKS*=27 to a 
+higher number?  My attempts at patching the source myself were 
+unsuccessful, more than likely because i don't know what/why the limit 
+is 27, and whether that effects other parts of the kernel.
 
-See the cause in the start up script in the initrd:
+Thanks,
+Tyler.
 
-mdadm -A /devfs/md/1 -R -u 90b9e6d2:c78b1827:77f469ad:0f8997ed /dev/sda=
-2
-mkdir /devfs/vg1
-mount_tmpfs /var
-if [ -f /etc/lvm/lvm.conf ]; then
-cat /etc/lvm/lvm.conf > /var/lvm.conf
-fi
-mount_tmpfs /etc/lvm
-if [ -f /var/lvm.conf ]; then
-cat /var/lvm.conf > /etc/lvm/lvm.conf
-fi
-mount -nt devfs devfs /dev
-vgchange -a y vg1
-umount /dev
-umount -n /var
-umount -n /etc/lvm
-ROOT=3D/dev/md0
-mdadm -A /devfs/md/0 -R -u 647381d7:fb84da16:f43e8c51:3695f234 /dev/sda=
-1
+PS - I've tryed the latest 2.6.12-rc3-mm2 kernel, with mdadm v2.0-devel, 
+using the --metadata 1.0 option on the create line, and still get:
 
-This is debian sarge with 2.6.11 kernel.
-
-Can make it work by adding the partitions to md0 and md1 and then=20
-rebuild the initrd.
-
-While this gets me running it doesn't seem ideal.
-There is a good chance of changing devices without rebuilding the initr=
-d.
-
-Is it possible to do the mdadm -A with out specifying the devices such =
-as?
-mdadm -A /devfs/md/0 -R -u 647381d7:fb84da16:f43e8c51:3695f234
-
-If so it's something to bug the debian folks about.
-
-Any other way it should be done?
-
-Thanks
-
-John
-
-
-
-
-
-
-
-
-John McMonagle wrote:
-
-> Laurent CARON wrote:
->
->> John McMonagle a =E9crit :
->>
->>> I cloned a system with 2 drives and 2 raid 1 partitions.
->>>
->>> I took a drive out of the old system.
->>> Recreated the raids to get a new uuids.
->>> Partitioned a new drive and added the partitions.
->>> There were a couple other problems that I'm pretty sure was caused=20
->>> by a bad sata controller but think I have that under control.
->>>
->>> So here is my problem.
->>> Any time I reboot only the partitions on the first drive are active=
-=2E
->>> If I switch drives it's always the first one that is active.
->>>
->>> Here is my mdadm.conf
->>> DEVICE  /dev/sd*
->>> ARRAY /dev/md0 level=3Draid1 num-devices=3D2=20
->>> UUID=3D647381d7:fb84da16:f43e8c51:3695f234
->>> ARRAY /dev/md1 level=3Draid1 num-devices=3D2=20
->>> UUID=3D90b9e6d2:c78b1827:77f469ad:0f8997ed
->>>
->>> This is all after reboot:
->>> cat /proc/mdstat
->>> Personalities : [raid1]
->>> md0 : active raid1 sda1[1]
->>>      586240 blocks [2/1] [_U]
->>>
->>> md1 : active raid1 sda2[1]
->>>      194771968 blocks [2/1] [_U]
->>>
->>> mdadm -E /dev/sda1
->>> /dev/sda1:
->>>          Magic : a92b4efc
->>>        Version : 00.90.00
->>>           UUID : 647381d7:fb84da16:f43e8c51:3695f234
->>>  Creation Time : Sat Apr 30 06:02:47 2005
->>>     Raid Level : raid1
->>>   Raid Devices : 2
->>>  Total Devices : 1
->>> Preferred Minor : 0
->>>
->>>    Update Time : Sat Apr 30 21:47:22 2005
->>>          State : clean
->>> Active Devices : 1
->>> Working Devices : 1
->>> Failed Devices : 0
->>>  Spare Devices : 0
->>>       Checksum : b8e8e847 - correct
->>>         Events : 0.4509
->>>
->>>
->>>      Number   Major   Minor   RaidDevice State
->>> this     1       8        1        1      active sync   /dev/sda1
->>>
->>>   0     0       0        0        0      removed
->>>   1     1       8        1        1      active sync   /dev/sda1
->>>
->>> mdadm -E /dev/sdb1
->>> /dev/sdb1:
->>>          Magic : a92b4efc
->>>        Version : 00.90.00
->>>           UUID : 647381d7:fb84da16:f43e8c51:3695f234
->>>  Creation Time : Sat Apr 30 06:02:47 2005
->>>     Raid Level : raid1
->>>   Raid Devices : 2
->>>  Total Devices : 2
->>> Preferred Minor : 0
->>>
->>>    Update Time : Sat Apr 30 21:26:07 2005
->>>          State : clean
->>> Active Devices : 2
->>> Working Devices : 2
->>> Failed Devices : 0
->>>  Spare Devices : 0
->>>       Checksum : b8e8e1d8 - correct
->>>         Events : 0.4303
->>>
->>>
->>>      Number   Major   Minor   RaidDevice State
->>> this     0       8       17        0      active sync   /dev/sdb1
->>>
->>>   0     0       8       17        0      active sync   /dev/sdb1
->>>   1     1       8        1        1      active sync   /dev/sda1
->>>
->>> After adding /dev/sdb1 to md0:
->>>
->>> cat /proc/mdstat
->>> Personalities : [raid1]
->>> md0 : active raid1 sdb1[0] sda1[1]
->>>      586240 blocks [2/2] [UU]
->>>
->>> md1 : active raid1 sda2[1]
->>>      194771968 blocks [2/1] [_U]
->>>
->>> unused devices: <none>
->>> mdadm -E /dev/sda1
->>> /dev/sda1:
->>>          Magic : a92b4efc
->>>        Version : 00.90.00
->>>           UUID : 647381d7:fb84da16:f43e8c51:3695f234
->>>  Creation Time : Sat Apr 30 06:02:47 2005
->>>     Raid Level : raid1
->>>   Raid Devices : 2
->>>  Total Devices : 2
->>> Preferred Minor : 0
->>>
->>>    Update Time : Sat Apr 30 21:51:11 2005
->>>          State : clean
->>> Active Devices : 2
->>> Working Devices : 2
->>> Failed Devices : 0
->>>  Spare Devices : 0
->>>       Checksum : b8e8e99a - correct
->>>         Events : 0.4551
->>>
->>>
->>>      Number   Major   Minor   RaidDevice State
->>> this     1       8        1        1      active sync   /dev/sda1
->>>
->>>   0     0       8       17        0      active sync   /dev/sdb1
->>>   1     1       8        1        1      active sync   /dev/sda1
->>> mdadm -E /dev/sdb1
->>> /dev/sdb1:
->>>          Magic : a92b4efc
->>>        Version : 00.90.00
->>>           UUID : 647381d7:fb84da16:f43e8c51:3695f234
->>>  Creation Time : Sat Apr 30 06:02:47 2005
->>>     Raid Level : raid1
->>>   Raid Devices : 2
->>>  Total Devices : 2
->>> Preferred Minor : 0
->>>
->>>    Update Time : Sat Apr 30 21:51:43 2005
->>>          State : clean
->>> Active Devices : 2
->>> Working Devices : 2
->>> Failed Devices : 0
->>>  Spare Devices : 0
->>>       Checksum : b8e8e9d0 - correct
->>>         Events : 0.4555
->>>
->>>
->>>      Number   Major   Minor   RaidDevice State
->>> this     0       8       17        0      active sync   /dev/sdb1
->>>
->>>   0     0       8       17        0      active sync   /dev/sdb1
->>>   1     1       8        1        1      active sync   /dev/sda1
->>>
->>>
->>> Any Idea what is wrong?
->>>
->>> John
->>>
->>>
->>
->> what does fdisk -l says?
->>
-> neebackup:~# fdisk -l
->
-> Disk /dev/sda: 200.0 GB, 200049647616 bytes
-> 255 heads, 63 sectors/track, 24321 cylinders
-> Units =3D cylinders of 16065 * 512 =3D 8225280 bytes
->
->   Device Boot      Start         End      Blocks   Id  System
-> /dev/sda1   *           1          73      586341   fd  Linux raid=20
-> autodetect
-> /dev/sda2              74       24321   194772060   fd  Linux raid=20
-> autodetect
->
-> Disk /dev/sdb: 200.0 GB, 200049647616 bytes
-> 255 heads, 63 sectors/track, 24321 cylinders
-> Units =3D cylinders of 16065 * 512 =3D 8225280 bytes
->
->   Device Boot      Start         End      Blocks   Id  System
-> /dev/sdb1   *           1          73      586341   fd  Linux raid=20
-> autodetect
-> /dev/sdb2              74       24321   194772060   fd  Linux raid=20
-> autodetect
->
-> Also a lttle more info.
->
-> It's debian sarge.
->
-> It's a SATA150 TX4 sata controler that had been in use for months.
-> neebackup:~# mdadm -D /dev/md0
-> /dev/md0:
->        Version : 00.90.01
->  Creation Time : Sat Apr 30 06:02:47 2005
->     Raid Level : raid1
->     Array Size : 586240 (572.50 MiB 600.31 MB)
->    Device Size : 586240 (572.50 MiB 600.31 MB)
->   Raid Devices : 2
->  Total Devices : 1
-> Preferred Minor : 0
->    Persistence : Superblock is persistent
->
->    Update Time : Sun May  1 08:40:40 2005
->          State : clean, degraded
-> Active Devices : 1
-> Working Devices : 1
-> Failed Devices : 0
->  Spare Devices : 0
->
->           UUID : 647381d7:fb84da16:f43e8c51:3695f234
->         Events : 0.4875
->
->    Number   Major   Minor   RaidDevice State
->       0       8        1        0      active sync   /dev/sda1
->       1       0        0        -      removed
->
-> There are no disk error messages.
->
-> I booted with a fedora 3 rescue cd and md0 started properly so I=20
-> assume it's something in the  startup.
->
-> I rebuilt the initrd a couple times. Is there anything in it that=20
-> could cause this problem?
->
-> John
->
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+# mdadm -C -e 1.0 -l 6 -n 31 /dev/md0 /dev/hdb /dev/hdc /dev/hdd 
+/dev/sda /dev/sdb /dev/sdc /dev/sdd /dev/sde /dev/sdf /dev/sdg /dev/sdh 
+/dev/sdi /dev/sdj /dev/sdk /dev/sdl /dev/sdm /dev/sdn /dev/sdo /dev/sdp 
+/dev/sdq /dev/sdr /dev/sds /dev/sdt /dev/sdu /dev/sdv /dev/sdw /dev/sdx 
+/dev/sdy /dev/sdz /dev/sdaa /dev/sdab
+mdadm: invalid number of raid devices: 31
+# mdadm -V
+mdadm - v2.0-devel-1 - DEVELOPMENT VERSION NOT FOR REGULAR USE - 18 
+February 2005
+# uname -a
+Linux pink 2.6.12-rc3-mm2 #1 SMP Mon May 2 02:15:28 CEST 2005 i686 GNU/Linux
+# dmesg |grep md
+md: raid5 personality registered as nr 4
+md: raid6 personality registered as nr 8
+md: md driver 0.90.2 MAX_MD_DEVS=256, MD_SB_DISKS=27
+md: bitmap version 3.38
