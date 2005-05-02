@@ -1,105 +1,81 @@
-From: ptb@lab.it.uc3m.es (Peter T. Breuer)
-Subject: Re: Any way to Increase MD_SB_DISKS=27 ? I need 31 devices
-Date: Mon, 2 May 2005 11:36:20 +0200
-Message-ID: <kt8hk2-lhp.ln1@news.it.uc3m.es>
-References: <427583FA.7030704@dtbb.net> <4b0hk2-1gn.ln1@news.it.uc3m.es> <4275E782.6090509@dtbb.net> <mj6hk2-4lb.ln1@news.it.uc3m.es>
+From: Herta Van den Eynde <herta.vandeneynde@cc.kuleuven.be>
+Subject: mdadm: /dev/md3 has wrong uuid.
+Date: Mon, 02 May 2005 13:38:52 +0200
+Message-ID: <4276114C.1090705@cc.kuleuven.be>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Peter T. Breuer <ptb@lab.it.uc3m.es> wrote:
-> Tyler <pml@dtbb.net> wrote:
-> > figured out what you put below, i'm wondering though, will changing the 
-> > structures here affect anything else? other than the mdadm tool.. what 
+I just upgraded my Red Hat Advanced Server 2.1 systems from
+2.4.9-e.59enterprise to 2.4.9-e.62enterprise.  The systems were running=
+=20
+mdadm-1.4.0-1.
 
-> I can't think of anything, offhand.  I would first check through the
-> kernel cde looking for associated gotchas before worrying about trivia
-> like applications, however!
+During startup, they complained that
 
-mdp_super_t (the size of which you modified) is used throughout md.c
-only.  You want to check if it is mapped to disk or not. I think it is
-(offhand) ...
+md: mount(pid 869) used obsolete MD ioctl, upgrade your software to use=
+=20
+new ictls.
 
-  mdp_super_t *sb;
+So I picked up mdadm-1.11.0.tgz,  and on one of the system ran "make"=20
+and "make install", and rebooted.
 
-  ...
+This time, startup throws me a bunch of
 
-  bdevname(rdev->bdev, b);
-  sb = (mdp_super_t*)page_address(rdev->sb_page);
+SCSI device sdc: 71132959 512-byte hdwr sectors (
+36420 MB)
+sdc: unknown partition table
 
+messages (one for each of the 14 devices).  I had this happen a couple=20
+of times before, and re-fdisk-ing so far always got me out of the jam.=20
+So I fdisk all the devices, specifying fd (linux raid autodetect) as ty=
+pe.
 
-So it seems to me to be intended to be 1KB of (sb) info on disk. If the
-blocksize is 1K, then reading/writing from disk may only deliver 1K.
-...
+Now, it pretty much looks like the UUIDs have been erased.
+# mdadm -E -s; echo $?
+0
+# mdadm -Asv
+mdadm: looking for devices for /dev/md3
+mdadm: no RAID superblock on /dev/md3
+mdadm: /dev/md3 has wrong uuid.
+mdadm: no RAID superblock on /dev/md2
+mdadm: /dev/md2 has wrong uuid.
+mdadm: no RAID superblock on /dev/md1
+mdadm: /dev/md1 has wrong uuid.
+mdadm: no RAID superblock on /dev/md0
+mdadm: /dev/md0 has wrong uuid.
+mdadm: no RAID superblock on /dev/md7
+mdadm: /dev/md7 has wrong uuid.
+mdadm: no RAID superblock on /dev/md6
+mdadm: /dev/md6 has wrong uuid.
+mdadm: no RAID superblock on /dev/md5
+mdadm: /dev/md5 has wrong uuid.
+mdadm: no RAID superblock on /dev/sdp1
+mdadm: /dev/sdp1 has wrong uuid.
+mdadm: no RAID superblock on /dev/sdp
+mdadm: /dev/sdp has wrong uuid.
 
-     if (!sync_page_io(rdev->bdev, rdev->sb_offset<<1, MD_SB_BYTES, rdev->sb_page, READ))
-              goto fail;
+Any suggestions, both for the current system and the other ones?  I got=
+=20
+backups, but it's a lot of data to pull over, so I'd prefer to avoid=20
+that if I can.
 
-Hmm ... MD_SB_BYTES. But ....
+Kind regards,
 
+Herta
+--=20
+Herta Van den Eynde              -=3D- Toledo system management
+K.U. Leuven - Ludit              -=3D- phone: +32 (0)16 322 166
+                                  -=3D- 50=B051'27" N 004=B040'39" E
 
-  #define MD_SB_BYTES                     4096
-
-So we read 4K off disk at a time! Phew! 
-
-Arrgh, but the undimensioned counts in md_p.h are in units of 4B, so
-when it says "1024 - ...", it really means "4KB - ...", and hence if
-you are going to icrease the size of the superblock, what you should do
-is
-
-1) increase MD_SB_BYTES to 8KB.
-2) change "1024 - ..." to "2048 - ..." in md_p.h.
-3) keep looking. Can one get 2 pages at once off disk with sync_page_io?
-
-Where is that rdev->sb_offset set? Great, in calc_dev_sboffset:
-
-        /*
-         * Calculate the position of the superblock,
-         * it's at the end of the disk.
-         *
-         * It also happens to be a multiple of 4Kb.
-         */
-        sb_offset = calc_dev_sboffset(rdev->bdev);
-        rdev->sb_offset = sb_offset;
-
-Yes, but if we are going to increase the size to 8KB, we'd better check
-that calc ...
-
-inline static sector_t calc_dev_sboffset(struct block_device *bdev)
-{
-        sector_t size = bdev->bd_inode->i_size >> BLOCK_SIZE_BITS;
-        return MD_NEW_SIZE_BLOCKS(size);
- }
-
-Uh huhh... it counts the blocks in the device (I think those are 1KB
-units, not device-dependent, but I may be wrong). Then it chooses the
-index of a smaller number to return - 1 past the available array size:
-
-  #define MD_NEW_SIZE_BLOCKS(x)           ((x & ~(MD_RESERVED_BLOCKS - 1)) - MD_RESERVED_BLOCKS)
-
-Ummmm ... that appears to be an attempt to calculate (x / y) * y - y, where 
-y is a power of two ...
-
-   #define MD_RESERVED_BLOCKS      (MD_RESERVED_BYTES / BLOCK_SIZE)
-
-and the clunker ...
-
-   #define MD_RESERVED_BYTES       (64 * 1024)
-
-OK. So AT LEAST 64KB are reserved at the end of the disk. We can only
-count on 64KB, however. The good news is that it looks like the first
-4KB of that is the superblock, and that we might be able to use the rest
-for a bigger superblock (I suspect bitmap info will be kept there
-eventually). Provided you can arrange to read 8KB of sb, you might be
-OK.
-
-
-Peter
-
-
-
-
-
-Peter
-
+"I wish I were two little cats.  Then I could play together."
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
