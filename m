@@ -1,81 +1,34 @@
-From: Herta Van den Eynde <herta.vandeneynde@cc.kuleuven.be>
-Subject: mdadm: /dev/md3 has wrong uuid.
-Date: Mon, 02 May 2005 13:38:52 +0200
-Message-ID: <4276114C.1090705@cc.kuleuven.be>
+From: Paul Clements <paul.clements@steeleye.com>
+Subject: Re: Any way to Increase MD_SB_DISKS=27 ? I need 31 devices
+Date: Mon, 02 May 2005 10:58:28 -0400
+Message-ID: <42764014.5060909@steeleye.com>
+References: <427583FA.7030704@dtbb.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <427583FA.7030704@dtbb.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Tyler <pml@dtbb.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I just upgraded my Red Hat Advanced Server 2.1 systems from
-2.4.9-e.59enterprise to 2.4.9-e.62enterprise.  The systems were running=
-=20
-mdadm-1.4.0-1.
+Tyler wrote:
 
-During startup, they complained that
+> PS - I've tryed the latest 2.6.12-rc3-mm2 kernel, with mdadm v2.0-devel, 
+> using the --metadata 1.0 option on the create line, and still get:
 
-md: mount(pid 869) used obsolete MD ioctl, upgrade your software to use=
-=20
-new ictls.
+> # mdadm -C -e 1.0 -l 6 -n 31 /dev/md0 /dev/hdb /dev/hdc /dev/hdd 
+> /dev/sda /dev/sdb /dev/sdc /dev/sdd /dev/sde /dev/sdf /dev/sdg /dev/sdh 
+> /dev/sdi /dev/sdj /dev/sdk /dev/sdl /dev/sdm /dev/sdn /dev/sdo /dev/sdp 
+> /dev/sdq /dev/sdr /dev/sds /dev/sdt /dev/sdu /dev/sdv /dev/sdw /dev/sdx 
+> /dev/sdy /dev/sdz /dev/sdaa /dev/sdab
+> mdadm: invalid number of raid devices: 31
 
-So I picked up mdadm-1.11.0.tgz,  and on one of the system ran "make"=20
-and "make install", and rebooted.
+As far as I can tell, mdadm just shouldn't give this error when you're 
+using a version 1 superblock. If you disable that check in mdadm.c, I 
+think everything will work. Version 1 superblocks allow something like 
+2000 disks in an array.
 
-This time, startup throws me a bunch of
-
-SCSI device sdc: 71132959 512-byte hdwr sectors (
-36420 MB)
-sdc: unknown partition table
-
-messages (one for each of the 14 devices).  I had this happen a couple=20
-of times before, and re-fdisk-ing so far always got me out of the jam.=20
-So I fdisk all the devices, specifying fd (linux raid autodetect) as ty=
-pe.
-
-Now, it pretty much looks like the UUIDs have been erased.
-# mdadm -E -s; echo $?
-0
-# mdadm -Asv
-mdadm: looking for devices for /dev/md3
-mdadm: no RAID superblock on /dev/md3
-mdadm: /dev/md3 has wrong uuid.
-mdadm: no RAID superblock on /dev/md2
-mdadm: /dev/md2 has wrong uuid.
-mdadm: no RAID superblock on /dev/md1
-mdadm: /dev/md1 has wrong uuid.
-mdadm: no RAID superblock on /dev/md0
-mdadm: /dev/md0 has wrong uuid.
-mdadm: no RAID superblock on /dev/md7
-mdadm: /dev/md7 has wrong uuid.
-mdadm: no RAID superblock on /dev/md6
-mdadm: /dev/md6 has wrong uuid.
-mdadm: no RAID superblock on /dev/md5
-mdadm: /dev/md5 has wrong uuid.
-mdadm: no RAID superblock on /dev/sdp1
-mdadm: /dev/sdp1 has wrong uuid.
-mdadm: no RAID superblock on /dev/sdp
-mdadm: /dev/sdp has wrong uuid.
-
-Any suggestions, both for the current system and the other ones?  I got=
-=20
-backups, but it's a lot of data to pull over, so I'd prefer to avoid=20
-that if I can.
-
-Kind regards,
-
-Herta
---=20
-Herta Van den Eynde              -=3D- Toledo system management
-K.U. Leuven - Ludit              -=3D- phone: +32 (0)16 322 166
-                                  -=3D- 50=B051'27" N 004=B040'39" E
-
-"I wish I were two little cats.  Then I could play together."
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--
+Paul
