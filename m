@@ -1,148 +1,166 @@
-From: Mitchell Laks <mlaks@verizon.net>
-Subject: apparent but not real raid1 failure. what happened? still confused.
- Gurus Please help...
-Date: Mon, 02 May 2005 12:24:35 -0400
-Message-ID: <200505021224.35396.mlaks@verizon.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+From: ptb@lab.it.uc3m.es (Peter T. Breuer)
+Subject: Re: apparent but not real raid1 failure. what happened? still confused. Gurus Please help...
+Date: Mon, 2 May 2005 20:20:45 +0200
+Message-ID: <tk7ik2-4f2.ln1@news.it.uc3m.es>
+References: <200505021224.35396.mlaks@verizon.net>
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I recently had what appeared to be 
-a raid1 failure and was wondering what insight I should draw. The kernel 
-diagnostics suggested a dual drive failure - but the data turned out to still 
-be there. What does this mean?
+Mitchell Laks <mlaks@verizon.net> wrote:
+> Initially, one raid failed:
+> /dev/md0 between /dev/hda1 and
+> /dev/hdg1 with the /dev/hdg1 on a highpoint rocket 133 controller.
 
-I described what happened in an earlier post, but I really don't understand 
-and would be very grateful for insight from the gurus on the list.
+> From reading the log files I see that initially /dev/hda1 died
 
-Is it a bug in the kernel? in software raid? Is it my stupidity?
+Yes, but then so did hdg1.
 
-my system: 
-
-asus K8v-x motherboard with amd64 processor,
-uname -a
-Linux A2 2.6.8-1-386 #1 Mon Jan 24 03:01:58 EST 2005 i686 GNU/Linux
-(this was the debian stock 2.6.8 kernel circa January)
-
-mdadm-v1.9.0
-
-All harddrives are 250GB  parallel ata ide drives, 
-WD2500 JB drives (3 year warranty)
-
-Initially, one raid failed:
-/dev/md0 between /dev/hda1 and
-/dev/hdg1 with the /dev/hdg1 on a highpoint rocket 133 controller.
-
-From reading the log files I see that initially /dev/hda1 died
-
-Apr 21 07:36:01 A2 kernel: hda: dma_intr: status=0x51 { DriveReady
-SeekComplete Error }
-Apr 21 07:36:01 A2 kernel: hda: dma_intr: error=0x40 { UncorrectableError },
-LBAsect=209715335, high=12, low=8388743, sector=209
-715335
-Apr 21 07:36:01 A2 kernel: end_request: I/O error, dev hda, sector 209715335
-Apr 21 07:36:01 A2 kernel: raid1: Disk failure on hda1, disabling device.
-Apr 21 07:36:01 A2 kernel: ^IOperation continuing on 1 devices
-Apr 21 07:36:01 A2 kernel: raid1: hda1: rescheduling sector 209715272
-Apr 21 07:36:01 A2 kernel: RAID1 conf printout:
-Apr 21 07:36:01 A2 kernel:  --- wd:1 rd:2
-Apr 21 07:36:01 A2 kernel:  disk 0, wo:1, o:0, dev:hda1
-Apr 21 07:36:01 A2 kernel:  disk 1, wo:0, o:1, dev:hdg1
-Apr 21 07:36:01 A2 kernel: RAID1 conf printout:
-Apr 21 07:36:01 A2 kernel:  --- wd:1 rd:2
-Apr 21 07:36:01 A2 kernel:  disk 1, wo:0, o:1, dev:hdg1
-Apr 21 07:36:01 A2 kernel: raid1: hdg1: redirecting sector 209715272 to
-another mirror
-Apr 21 07:36:21 A2 kernel: hdg: dma_timer_expiry: dma status == 0x20
-Apr 21 07:36:21 A2 kernel: hdg: DMA timeout retry
-Apr 21 07:36:21 A2 kernel: hdg: timeout waiting for DMA
-Apr 21 07:36:21 A2 kernel: hdg: status error: status=0x58 { DriveReady
-SeekComplete DataRequest }
-Apr 21 07:36:21 A2 kernel:
-Apr 21 07:36:21 A2 kernel: hdg: drive not ready for command
-Apr 21 07:36:21 A2 kernel: raid1: hdg1: rescheduling sector 209715272
-Apr 21 07:36:21 A2 kernel: raid1: hdg1: redirecting sector 209715272 to
-another mirror
-Apr 21 07:36:21 A2 kernel: hdg: status error: status=0x58 { DriveReady
-SeekComplete DataRequest }
-Apr 21 07:36:21 A2 kernel:
-Apr 21 07:36:21 A2 kernel: hdg: drive not ready for command
-Apr 21 07:36:41 A2 kernel: hdg: dma_timer_expiry: dma status == 0x20
-Apr 21 07:36:41 A2 kernel: hdg: DMA timeout retry
-Apr 21 07:36:41 A2 kernel: hdg: timeout waiting for DMA
-Apr 21 07:36:41 A2 kernel: hdg: status error: status=0x58 { DriveReady
-SeekComplete DataRequest }
-Apr 21 07:36:41 A2 kernel:
-Apr 21 07:36:41 A2 kernel: hdg: drive not ready for command
-Apr 21 07:36:41 A2 kernel: raid1: hdg1: rescheduling sector 209715272
-Apr 21 07:36:41 A2 kernel: raid1: hdg1: redirecting sector 209715272 to
-another mirror
-Apr 21 07:36:41 A2 kernel: hdg: status error: status=0x58 { DriveReady
-SeekComplete DataRequest }
-Apr 21 07:36:41 A2 kernel:
-
-and then /dev/hdg1 immediately began to spew forth error messages of the
-following sort 
-
-Apr 22 22:29:21 A2 kernel: hdg: status error: status=0x58 { DriveReady
-SeekComplete DataRequest }
-Apr 22 22:29:21 A2 kernel:
-Apr 22 22:29:21 A2 kernel: hdg: drive not ready for command
-Apr 22 22:29:21 A2 kernel: raid1: hdg1: rescheduling sector 209715272
-Apr 22 22:29:21 A2 kernel: raid1: hdg1: redirecting sector 209715272 to
-another
-mirror
-Apr 22 22:29:21 A2 kernel: hdg: status error: status=0x58 { DriveReady
-SeekCompl
-ete DataRequest }
-Apr 22 22:29:21 A2 kernel:
-Apr 22 22:29:21 A2 kernel: hdg: drive not ready for command
-Apr 22 22:29:21 A2 kernel: raid1: hdg1: rescheduling sector 209715272
-Apr 22 22:29:21 A2 kernel: raid1: hdg1: redirecting sector 209715272 to other
- ....
-
-These errors continued nonstop all day/night until /
-var ran out of space and errors filled the 6GB /var partition.
-
-2.6GB of         /var/log/kern.log and
-2.6GB of        /var/log/syslog and
-1GB of          /var/log/messages
-were filled by these errors.
-
-I then pulled the two drives out of the system and 
-put a pair of new drives in for /dev/hda1 and /dev/hdg1 and
-and created /dev/md0 anew, and restored the data to my servers from backups.
+Or at least they were slow replying, or perhaps spun down.
 
 
-I then took the two drives /dev/hda1 and /dev/hdg1 to another machine
+> Apr 21 07:36:01 A2 kernel: hda: dma_intr: status=0x51 { DriveReady
+> SeekComplete Error }
+> Apr 21 07:36:01 A2 kernel: hda: dma_intr: error=0x40 { UncorrectableError },
+> LBAsect=209715335, high=12, low=8388743, sector=209
+> 715335
+> Apr 21 07:36:01 A2 kernel: end_request: I/O error, dev hda, sector 209715335
 
-and ran the Western Digital drive diagnostics on both of them and they 
-are both fine. No errors.
+Well, this seems to be a bona fide error on hda.  It's about 100GB in.
+Is that right? Looks like slow wakeup, or tracking problem.
 
-I then took /dev/hda1 on the new system and did
-modprobe raid1
-mknod /dev/md0 b 9 0
-mdadm -A /dev/md0  /dev/hda1 
+Anyway, it might have been a read error. Those happen. I posted a patch
+("robust raid") to stop the disk being faulted out of the array on
+those errors, letting the other disk be tried instead.
 
-and then mount /dev/md0 /mnt and i see my data which looks intact.
-Similarly if I do that with /dev/hdg1 i see the same data.
+> Apr 21 07:36:01 A2 kernel:  disk 1, wo:0, o:1, dev:hdg1
+> Apr 21 07:36:01 A2 kernel: RAID1 conf printout:
+> Apr 21 07:36:01 A2 kernel:  --- wd:1 rd:2
+> Apr 21 07:36:01 A2 kernel:  disk 1, wo:0, o:1, dev:hdg1
+> Apr 21 07:36:01 A2 kernel: raid1: hdg1: redirecting sector 209715272 to
+> another mirror
 
-(note if i then try to do mdadm -A /dev/md0 /dev/hda1 /dev/hdc1 
-(where /dev/hdc1 was /dev/hdg1 on the other machine) then i get a message
-saying effectively that they are not up to date to each other ...)
- 
-Has anyone else had this trouble? Could someone explain what happened?
+Oh, well after faulting out hda1, hdg1 got tried anyay.
 
-What should I have done when I found the errors when my system failed?
+> Apr 21 07:36:21 A2 kernel: hdg: dma_timer_expiry: dma status == 0x20
+> Apr 21 07:36:21 A2 kernel: hdg: DMA timeout retry
+> Apr 21 07:36:21 A2 kernel: hdg: timeout waiting for DMA
+> Apr 21 07:36:21 A2 kernel: hdg: status error: status=0x58 { DriveReady
+> SeekComplete DataRequest }
 
-Is it safe for me to continue to use raid1?
+But it was not ready either.  It looks like neither disk is especially
+happy using that mode of dma.  I'd play with hdparm!
 
-Thanks,
+> Apr 21 07:36:21 A2 kernel: hdg: drive not ready for command
+> Apr 21 07:36:21 A2 kernel: raid1: hdg1: rescheduling sector 209715272
+> Apr 21 07:36:21 A2 kernel: raid1: hdg1: redirecting sector 209715272 to
+> another mirror
 
-Mitchell
+That's a silly (harmless) raid bug. There is no other mirror.
+
+> and then /dev/hdg1 immediately began to spew forth error messages of the
+> following sort 
+
+> Apr 22 22:29:21 A2 kernel: hdg: status error: status=0x58 { DriveReady
+> SeekComplete DataRequest }
+> Apr 22 22:29:21 A2 kernel:
+> Apr 22 22:29:21 A2 kernel: hdg: drive not ready for command
+> Apr 22 22:29:21 A2 kernel: raid1: hdg1: rescheduling sector 209715272
+> Apr 22 22:29:21 A2 kernel: raid1: hdg1: redirecting sector 209715272 to
+> another
+> mirror
+
+Well, maybe not so harmless.  Same sector every time. It never learns.
+
+> These errors continued nonstop all day/night until /
+> var ran out of space and errors filled the 6GB /var partition.
+
+Shrug. They were harmless otherwise.
+
+> 2.6GB of         /var/log/kern.log and
+
+You need to practice better log control!
+
+> 2.6GB of        /var/log/syslog and
+> 1GB of          /var/log/messages
+> were filled by these errors.
+
+Unfortunate, but not terribly harmful.
+
+
+> I then pulled the two drives out of the system and 
+
+There's nothing wrong with them as far as I can see!  Just let them cool
+down or use another dma mode, or rewrite the god*mn bad sector and let
+them go on their merry way.
+
+> put a pair of new drives in for /dev/hda1 and /dev/hdg1 and
+
+Nooooooo.
+
+> and created /dev/md0 anew, and restored the data to my servers from backups.
+
+
+It is not likely that both disks are kaput. It's not even likely that
+one disk was. It's likely that your controller or disk was not happy
+with the dma mode, or simply that you had the immense bad luck to get a
+read error from the same sector on both. That's not disastrous. It
+sounds like it's something in common about your machine, since errors
+are really unlikely on the same sector in two independent drives!
+
+
+> I then took the two drives /dev/hda1 and /dev/hdg1 to another machine
+> and ran the Western Digital drive diagnostics on both of them and they 
+> are both fine. No errors.
+
+See!
+
+
+> Has anyone else had this trouble? Could someone explain what happened?
+
+Sure - you saw what happened. Read error. Leading to raid ejection.
+Leading to admin panic.
+
+
+
+> What should I have done when I found the errors when my system failed?
+
+Nothing.  Nothing was very wrong.  Rewrite the failed sector with zeros,
+at worst, and restart the raid array, and take the 512B loss like a man.
+
+But I'd be looking hard at your dma settings! You can't leave the disks
+in that setting - they error!
+
+You might also be inspecting cables or anything else that occurs to you
+to check. Heat?
+
+But by all accounts (your report), nothing was really deeply wrong!
+
+You needed to force the raid to restart.  I think a mkraid --force would
+have done the trick.  I'm wondering whether to use
+--dangerous-no-resync, because a rewrite would be nice in order to at
+least warm up and fix one disk!  But would it read the bad sector?
+Maybe.  Maybe not. That dma setting needs changing.
+
+Perhaps you also want to check for disk settings (if you can get at
+them) like "error on read error", or "replace bad sector on read".
+You might have a SMART control that can do that.
+
+
+> Is it safe for me to continue to use raid1?
+
+Not if you continue to do that, unfortunately - most likely nothing was
+wrong at all and the array merely needed restarting to correct its.
+overzealous action in ejecting the disk after read error.  I think
+that's going a bit far, and one should tell it not to do that and get on
+with life.  But you rather paniced and took it all offline instead of
+kicking its pants and telling it to calm down and be a good boy.
+
+My "robost raid" patch purports to at least stop the disk being kicked
+on a read error, but it's not clear that it would have helped here
+because BOTH disks failed on that sector.  It looks as though your
+motherboard was a bit hot to the touch at that moment ...
+
+Peter
 
