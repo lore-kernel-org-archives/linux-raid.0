@@ -1,40 +1,46 @@
-From: Tyler <pml@dtbb.net>
-Subject: Any way to Increase MD_SB_DISKS=27 ? I need 31 devices
-Date: Sun, 01 May 2005 18:35:54 -0700
-Message-ID: <427583FA.7030704@dtbb.net>
+From: "Eric Wood" <eric@interplas.com>
+Subject: Re: Raid 1 fails on every reboot?
+Date: Sun, 1 May 2005 21:59:18 -0400
+Message-ID: <001801c54eba$8d9198a0$6402a8c0@vaio>
+References: <42744609.10101@advocap.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	format=flowed;
+	charset="iso-8859-1";
+	reply-type=response
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I'd like to build a Raid-6 array using 31 drives, is there a patch 
-available or an easy way to safely increase the *MD_SB_DISKS*=27 to a 
-higher number?  My attempts at patching the source myself were 
-unsuccessful, more than likely because i don't know what/why the limit 
-is 27, and whether that effects other parts of the kernel.
 
-Thanks,
-Tyler.
+----- Original Message ----- 
+From: "John McMonagle"
+> So here is my problem.
+> Any time I reboot only the partitions on the first drive are active.
+> If I switch drives it's always the first one that is active.
 
-PS - I've tryed the latest 2.6.12-rc3-mm2 kernel, with mdadm v2.0-devel, 
-using the --metadata 1.0 option on the create line, and still get:
+I'm not sure about scsi drives, but for RAID-1 IDE drives I find that I have 
+to add a -h argument to the halt script.
 
-# mdadm -C -e 1.0 -l 6 -n 31 /dev/md0 /dev/hdb /dev/hdc /dev/hdd 
-/dev/sda /dev/sdb /dev/sdc /dev/sdd /dev/sde /dev/sdf /dev/sdg /dev/sdh 
-/dev/sdi /dev/sdj /dev/sdk /dev/sdl /dev/sdm /dev/sdn /dev/sdo /dev/sdp 
-/dev/sdq /dev/sdr /dev/sds /dev/sdt /dev/sdu /dev/sdv /dev/sdw /dev/sdx 
-/dev/sdy /dev/sdz /dev/sdaa /dev/sdab
-mdadm: invalid number of raid devices: 31
-# mdadm -V
-mdadm - v2.0-devel-1 - DEVELOPMENT VERSION NOT FOR REGULAR USE - 18 
-February 2005
-# uname -a
-Linux pink 2.6.12-rc3-mm2 #1 SMP Mon May 2 02:15:28 CEST 2005 i686 GNU/Linux
-# dmesg |grep md
-md: raid5 personality registered as nr 4
-md: raid6 personality registered as nr 8
-md: md driver 0.90.2 MAX_MD_DEVS=256, MD_SB_DISKS=27
-md: bitmap version 3.38
+The last lines of:
+/etc/init.d/halt
+
+are:
+
+HALTARGS="-i -d -h"
+[ -f /poweroff -o ! -f /halt ] && HALTARGS="$HALTARGS -p"
+
+exec $command $HALTARGS
+
+
+What I have found is that by adding a -h (man halt: Put all harddrives on 
+the system in  standby  mode  just  before halt or poweroff), this somehow 
+flushes the drives and I don't have rebuild problems upon reboot.  However, 
+this works for FC 1 systems and I do not know if this is still neccessary 
+for other distros.
+
+-Eric Wood
+
+
