@@ -1,64 +1,58 @@
 From: Tyler <pml@dtbb.net>
-Subject: BUGREPORT: mdadm v2.0-devel - can't create array using version 1
- superblock, possibly related to previous bugreport
-Date: Tue, 03 May 2005 04:15:19 -0700
-Message-ID: <42775D47.4000805@dtbb.net>
+Subject: Re: Any way to Increase MD_SB_DISKS=27 ? I need 31 devices
+Date: Tue, 03 May 2005 04:22:33 -0700
+Message-ID: <42775EF9.7030009@dtbb.net>
+References: <427583FA.7030704@dtbb.net> <42764014.5060909@steeleye.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <42764014.5060909@steeleye.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@cse.unsw.edu.au
-Cc: linux-raid@vger.kernel.org
+To: Paul Clements <paul.clements@steeleye.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-When i try to create any raid5/raid6 array with --metadata 1 or 
---metadata 1.0, it simply spits out a response saying /dev/hdX is 
-busy... X being whichever drive i listed as an array member first on the 
-list of drives.  1.x.0 doesn't support version 1 superblocks, but i used 
-it as an example below without the metadata option to show that creating 
-the raid works fine, and then the same with mdadm v2.0-devel, they 
-create fine until you add the metadata option.  Kernel is 2.6.12-rc3-mm2.
+Hi Paul,
 
-First I create an array using v1.9.0 successfully (from system path):
+Isn't the superblock still limited to 27 drives though? .. is there 
+maybe a patch for version 1 superblocks that i don't have in 
+2.6.12-rc3-mm2, that changes the max drives in the md_p.h and md.c 
+driver?  There is only 4096 bytes earmarked for superblocks, and within 
+that amount, there isn't enough room to list more than 27 drives that 
+may be part of the same array.
 
-root@localhost:~/dev/mdadm-2.0-devel-1# mdadm -C -l 5 -n 3 /dev/md0 
-/dev/hdb /dev/hdc /dev/hdd
-mdadm: array /dev/md0 started.
-root@localhost:~/dev/mdadm-2.0-devel-1# mdadm -S /dev/md0
+Do I need some more patches for this to work, that aren't in the -mm 
+tree yet?  I was under the impression (from the mdadm v2.0 announce 
+file, that anything *after* 2.6.11-rc3 in the -mm tree would have the 
+required patches.
 
-Then successfully create an array with default superblock (0.90?) using 
-v2.0-devel (from current dir):
+Also, where can I disable the check in mdadm?
 
-root@localhost:~/dev/mdadm-2.0-devel-1# ./mdadm -C -l 5 -n 3 /dev/md0 
-/dev/hdb /dev/hdc /dev/hdd
-mdadm: /dev/hdb appears to be part of a raid array:
-    level=5 devices=3 ctime=Tue May  3 11:42:28 2005
-mdadm: /dev/hdc appears to be part of a raid array:
-    level=5 devices=3 ctime=Tue May  3 11:42:28 2005
-mdadm: /dev/hdd appears to be part of a raid array:
-    level=5 devices=3 ctime=Tue May  3 11:42:28 2005
-Continue creating array? y
-VERS = 9002
-mdadm: array /dev/md0 started.
-root@localhost:~/dev/mdadm-2.0-devel-1# ./mdadm -S /dev/md0
+Thanks,
+Tyler.
 
-Then try creating a raid with version 1 superblock, which fails:
+Paul Clements wrote:
 
-root@localhost:~/dev/mdadm-2.0-devel-1# mdadm -C -l 5 -n 3 --metadata 1 
-/dev/md0 /dev/hdb /dev/hdc /dev/hdd
-mdadm: /dev/hdb appears to be part of a raid array:
-    level=5 devices=3 ctime=Tue May  3 11:43:00 2005
-mdadm: /dev/hdc appears to be part of a raid array:
-    level=5 devices=3 ctime=Tue May  3 11:43:00 2005
-mdadm: /dev/hdd appears to be part of a raid array:
-    level=5 devices=3 ctime=Tue May  3 11:43:00 2005
-Continue creating array? y
-VERS = 9002
-mdadm: ADD_NEW_DISK for /dev/hdb failed: Device or resource busy
+> Tyler wrote:
+>
+>> PS - I've tryed the latest 2.6.12-rc3-mm2 kernel, with mdadm 
+>> v2.0-devel, using the --metadata 1.0 option on the create line, and 
+>> still get:
+>
+>
+>> # mdadm -C -e 1.0 -l 6 -n 31 /dev/md0 /dev/hdb /dev/hdc /dev/hdd 
+>> /dev/sda /dev/sdb /dev/sdc /dev/sdd /dev/sde /dev/sdf /dev/sdg 
+>> /dev/sdh /dev/sdi /dev/sdj /dev/sdk /dev/sdl /dev/sdm /dev/sdn 
+>> /dev/sdo /dev/sdp /dev/sdq /dev/sdr /dev/sds /dev/sdt /dev/sdu 
+>> /dev/sdv /dev/sdw /dev/sdx /dev/sdy /dev/sdz /dev/sdaa /dev/sdab
+>> mdadm: invalid number of raid devices: 31
+>
+>
+> As far as I can tell, mdadm just shouldn't give this error when you're 
+> using a version 1 superblock. If you disable that check in mdadm.c, I 
+> think everything will work. Version 1 superblocks allow something like 
+> 2000 disks in an array.
+>
+> -- 
+> Paul
 
-I believe it *could* have something to do with the fact that mdadm 
-2.0-devel doesn't detect previously written (and/or blanked) raid 
-superblocks, look at my previous bugreport I filed a few minutes ago.  
-Maybe its seeing what the --examine feature shows, that there's an 
-"active" array on the drive still, hence, being unable to create a new one.
