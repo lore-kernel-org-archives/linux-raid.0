@@ -1,8 +1,8 @@
-From: Tyler <tyler@dtbb.net>
+From: Tyler <pml@dtbb.net>
 Subject: Re: BUGREPORT: mdadm v2.0-devel - can't create array using version
  1 superblock, possibly related to previous bugreport
-Date: Tue, 03 May 2005 04:38:33 -0700
-Message-ID: <427762B9.1000802@dtbb.net>
+Date: Tue, 03 May 2005 04:38:42 -0700
+Message-ID: <427762C2.9070502@dtbb.net>
 References: <42775D47.4000805@dtbb.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
