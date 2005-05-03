@@ -1,88 +1,64 @@
 From: Tyler <pml@dtbb.net>
-Subject: BUGREPORT: mdadm v2.0-devel - Examine and zero-superblock misbehaving
-Date: Tue, 03 May 2005 04:02:57 -0700
-Message-ID: <42775A61.6020708@dtbb.net>
+Subject: BUGREPORT: mdadm v2.0-devel - can't create array using version 1
+ superblock, possibly related to previous bugreport
+Date: Tue, 03 May 2005 04:15:19 -0700
+Message-ID: <42775D47.4000805@dtbb.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org, neilb@cse.unsw.edu.au
+To: neilb@cse.unsw.edu.au
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On a site note, mdadm --zero-superblock doesn't seem to work correctly 
-with mdadm v2.0-devel, it reports no error when you use it, but you can 
-mdadm -E /dev/hdX after using it, and there is still a superblock, if 
-you use mdadm v1.9.0-2, it works correctly, and the examine shows 
-nothing afterwards.  Examples follow after the first problem.  Mdadm 
-v2.0 also seems to misreport the findings using the examine function.. 
-"381 spares."  Using kernel 2.6.12-rc3-mm2.
+When i try to create any raid5/raid6 array with --metadata 1 or 
+--metadata 1.0, it simply spits out a response saying /dev/hdX is 
+busy... X being whichever drive i listed as an array member first on the 
+list of drives.  1.x.0 doesn't support version 1 superblocks, but i used 
+it as an example below without the metadata option to show that creating 
+the raid works fine, and then the same with mdadm v2.0-devel, they 
+create fine until you add the metadata option.  Kernel is 2.6.12-rc3-mm2.
 
-First i run zero superblock with mdadm v2.0-devel from current dir:
+First I create an array using v1.9.0 successfully (from system path):
 
-root@localhost:~/dev/mdadm-2.0-devel-1# ./mdadm --zero-superblock /dev/hdc
+root@localhost:~/dev/mdadm-2.0-devel-1# mdadm -C -l 5 -n 3 /dev/md0 
+/dev/hdb /dev/hdc /dev/hdd
+mdadm: array /dev/md0 started.
+root@localhost:~/dev/mdadm-2.0-devel-1# mdadm -S /dev/md0
 
-Then examine the superblock using mdadm v2.0-devel from current dir:
+Then successfully create an array with default superblock (0.90?) using 
+v2.0-devel (from current dir):
 
-root@localhost:~/dev/mdadm-2.0-devel-1# ./mdadm -E /dev/hdc
-/dev/hdc:
-          Magic : a92b4efc
-        Version : 01.00
-     Array UUID : f4b2dc026e:a3cc3e95:de0563f5:199250
-           Name :
-  Creation Time : Tue May  3 11:16:22 2005
-     Raid Level : raid5
-   Raid Devices : 3
+root@localhost:~/dev/mdadm-2.0-devel-1# ./mdadm -C -l 5 -n 3 /dev/md0 
+/dev/hdb /dev/hdc /dev/hdd
+mdadm: /dev/hdb appears to be part of a raid array:
+    level=5 devices=3 ctime=Tue May  3 11:42:28 2005
+mdadm: /dev/hdc appears to be part of a raid array:
+    level=5 devices=3 ctime=Tue May  3 11:42:28 2005
+mdadm: /dev/hdd appears to be part of a raid array:
+    level=5 devices=3 ctime=Tue May  3 11:42:28 2005
+Continue creating array? y
+VERS = 9002
+mdadm: array /dev/md0 started.
+root@localhost:~/dev/mdadm-2.0-devel-1# ./mdadm -S /dev/md0
 
-    Device Size : 390721952 (186.31 GiB 200.05 GB)
-   Super Offset : 390721952 sectors
-          State : active
-    Device UUID : f4b2dc026e:a3cc3e95:de0563f5:199250
-    Update Time : Tue May  3 11:16:22 2005
-       Checksum : d4cd5d80 - correct
-         Events : 0
+Then try creating a raid with version 1 superblock, which fails:
 
-         Layout : -unknown-
-     Chunk Size : 64K
+root@localhost:~/dev/mdadm-2.0-devel-1# mdadm -C -l 5 -n 3 --metadata 1 
+/dev/md0 /dev/hdb /dev/hdc /dev/hdd
+mdadm: /dev/hdb appears to be part of a raid array:
+    level=5 devices=3 ctime=Tue May  3 11:43:00 2005
+mdadm: /dev/hdc appears to be part of a raid array:
+    level=5 devices=3 ctime=Tue May  3 11:43:00 2005
+mdadm: /dev/hdd appears to be part of a raid array:
+    level=5 devices=3 ctime=Tue May  3 11:43:00 2005
+Continue creating array? y
+VERS = 9002
+mdadm: ADD_NEW_DISK for /dev/hdb failed: Device or resource busy
 
-   Array State : Uuu 381 spares
-
-Then i try using mdadm v1.9.0 (from system path):
-
-root@localhost:~/dev/mdadm-2.0-devel-1# mdadm --version
-mdadm - v1.9.0 - 04 February 2005
-root@localhost:~/dev/mdadm-2.0-devel-1# mdadm -E /dev/hdc
-mdadm: No super block found on /dev/hdc (Expected magic a92b4efc, got 
-00000000)
-
-Then i try erasing the superblock again with mdadm v1.9.0 from system path:
-
-root@pink:~/dev/mdadm-2.0-devel-1# mdadm --version
-mdadm - v1.9.0 - 04 February 2005
-root@pink:~/dev/mdadm-2.0-devel-1# mdadm --zero-superblock /dev/hdc
-mdadm: /dev/hdc does not appear to have an MD superblock.
-
-Then examine it again with mdadm v2.0-devel from current dir:
-
-root@pink:~/dev/mdadm-2.0-devel-1# ./mdadm -E /dev/hdc
-/dev/hdc:
-          Magic : a92b4efc
-        Version : 01.00
-     Array UUID : f4b2dc026e:a3cc3e95:de0563f5:199250
-           Name :
-  Creation Time : Tue May  3 11:16:22 2005
-     Raid Level : raid5
-   Raid Devices : 3
-
-    Device Size : 390721952 (186.31 GiB 200.05 GB)
-   Super Offset : 390721952 sectors
-          State : active
-    Device UUID : f4b2dc026e:a3cc3e95:de0563f5:199250
-    Update Time : Tue May  3 11:16:22 2005
-       Checksum : d4cd5d80 - correct
-         Events : 0
-
-         Layout : -unknown-
-     Chunk Size : 64K
-
-   Array State : Uuu 381 spares
+I believe it *could* have something to do with the fact that mdadm 
+2.0-devel doesn't detect previously written (and/or blanked) raid 
+superblocks, look at my previous bugreport I filed a few minutes ago.  
+Maybe its seeing what the --examine feature shows, that there's an 
+"active" array on the drive still, hence, being unable to create a new one.
