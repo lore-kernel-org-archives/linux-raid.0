@@ -1,41 +1,72 @@
-From: ptb@lab.it.uc3m.es (Peter T. Breuer)
-Subject: Re: Any way to Increase MD_SB_DISKS=27 ? I need 31 devices
-Date: Tue, 3 May 2005 15:45:34 +0200
-Message-ID: <usbkk2-1e9.ln1@news.it.uc3m.es>
-References: <427583FA.7030704@dtbb.net> <4b0hk2-1gn.ln1@news.it.uc3m.es> <4275E782.6090509@dtbb.net> <mj6hk2-4lb.ln1@news.it.uc3m.es> <kt8hk2-lhp.ln1@news.it.uc3m.es> <4277641D.6060303@dtbb.net>
+From: Herta Van den Eynde <herta.vandeneynde@cc.kuleuven.be>
+Subject: mdadm create size problem
+Date: Tue, 03 May 2005 15:53:30 +0200
+Message-ID: <4277825A.1070405@cc.kuleuven.be>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Tyler <pml@dtbb.net> wrote:
-> Thanks for all the great info, I had about half of it figured out :)  
-> I'm starting to wonder though, isn't the version 1 superblock supposed 
-> to be able to use many more drives than 27? .. If so, should this not 
+Red Hat AS 2.1 mdadm 1.11
+I have two devices that used to be part of a now corrupt RAID10=20
+configuration.  When I try to reuse them to create a RAID1, it only use=
+s=20
+about 1 third of the diskspace available.
+# fdisk -l /dev/sdg
 
-I don't know (nor do I know anything about superblocks, i.e.  which
-format you should be using).  All I can see is that the struct you
-wanted to modify (the one with the "27" in its standard definition) is
-read and written to disk in the first 4K of the 64K just after the
-array contents.
+Disk /dev/sdg: 255 heads, 63 sectors, 8924 cylinders
+Units =3D cylinders of 16065 * 512 bytes
 
-Maybe you don't want to modify that struct but something else.  Maybe
-something slightly different is written to disk.  That's impossible to
-tell without documetation or experiment!
+    Device Boot    Start       End    Blocks   Id  System
+/dev/sdg1             1      8924  71681998+  fd  Linux raid autodetect
 
-According to Paul, all should just work hunky-dory if you just suppress
-the check in mdadm itself!
+# fdisk -l /dev/sdn
 
-> already be patched in the kernel source, and in the mdadm source?  What 
-> am I missing? .. it seems like I am trying to do something that's 
-> already supposedly done.. am I not?
+Disk /dev/sdn: 255 heads, 63 sectors, 8924 cylinders
+Units =3D cylinders of 16065 * 512 bytes
 
-It most definitely is not the case that a particular one of the structs
-in md_p.h can take more than 27 entries in the array that appears in it.
-What significance that has requires some strategic inverse engineering
-to discover. The most obvious interpretation is that it is a real
-limit, but maybe not one that comes into play because we are using a
-different ondis struct.
+    Device Boot    Start       End    Blocks   Id  System
+/dev/sdn1             1      8924  71681998+  fd  Linux raid autodetect
 
-Peter
+# mdadm --create --verbose /dev/md5 --level=3D1 --raid-devices=3D2 /dev=
+/sdg=20
+/dev/sdn
+mdadm: /dev/sdg appears to contain an ext2fs file system
+     size=3D419520K  mtime=3DMon May  2 17:04:04 2005
+mdadm: /dev/sdn appears to contain an ext2fs file system
+     size=3D419520K  mtime=3DMon May  2 17:04:04 2005
+mdadm: size set to 139904K
+Continue creating array? n
 
+If I try to add the --size option, even a size that is 139904K or less,=
+=20
+it tells me the size is invalid:
+
+# mdadm --create --verbose /dev/md5 --level=3D1 --raid-devices=3D2 /dev=
+/sdg=20
+/dev/sdn --size=3D139904K
+mdadm: invalid size: 139904K
+
+I did reboot the system after fdisk'ing the devices.
+
+Do I need to low-level format these devices to be able to reuse them?
+
+Kind regards,
+
+Herta
+
+--=20
+Herta Van den Eynde              -=3D- Toledo system management
+K.U. Leuven - Ludit              -=3D- phone: +32 (0)16 322 166
+                                  -=3D- 50=B051'27" N 004=B040'39" E
+
+"I wish I were two little cats.  Then I could play together."
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
