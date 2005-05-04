@@ -1,14 +1,12 @@
 From: Tyler <pml@dtbb.net>
-Subject: Re: BUGREPORT: mdadm v2.0-devel - can't create array using version
- 1 superblock, possibly related to previous bugreport
-Date: Wed, 04 May 2005 05:13:48 -0700
-Message-ID: <4278BC7C.5060705@dtbb.net>
-References: <42775D47.4000805@dtbb.net>	<17016.3902.917012.297224@cse.unsw.edu.au>	<4278271B.1020408@dtbb.net>	<17016.12489.9021.728737@cse.unsw.edu.au>	<427858EB.4070501@dtbb.net> <17016.25780.914854.293277@cse.unsw.edu.au>
+Subject: BUGREPORT: mdadm v2.0-devel - Inconsistent create command ordering,
+ and inconsistent use/addition of spare drive with raid6
+Date: Wed, 04 May 2005 05:59:39 -0700
+Message-ID: <4278C73B.8040306@dtbb.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17016.25780.914854.293277@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
 To: Neil Brown <neilb@cse.unsw.edu.au>
 Cc: linux-raid@vger.kernel.org
@@ -16,115 +14,150 @@ List-Id: linux-raid.ids
 
 Hi Neil,
 
-The last two patches got me going, however, I tried raid5 for the heck 
-of it (I was just using it for testing earlier, and figured I would get 
-the lesser of two evils working, then go for raid6), and it creates the 
-array fine, and I can make a filesystem on it, and I can mount it, but, 
-it is listed as clean, degraded in mdadm -D /dev/md0, and cat 
-/proc/mdstat doesn't show any rebuilding/resyncing going on.  It doesn't 
-seem to start the resync, never gaining redundancy.  Raid6 seems to be 
-working just fine, thanks :).  Possibly another patch needed for raid5 
-still.  Also, is there going to be more detail available about the array 
-like there was with older mdadm tools?  Right now when you do a -D 
-/dev/mdX, with a version one superblock, there doesn't seem to be much 
-information regarding what drives are in the array, etc.   I also posted 
-a bug a few days ago regarding mdadm v1.9.0 (or maybe 1.11 .. i forget 
-if i tried it also), where if you have a large number of drives (I 
-tested with 27), that the bottom of the -D /dev/mdX page seemed to be 
-cut off, and didn't show things like spares, and removed drive, etc.
+Here's a few more bugs i found, using mdadm v2.0-devel with the big 
+patch I posted earlier (with 4 patches together).  It seems that the 
+create command wants the metadata command earlier in the command set.  
+Secondly, after creating a raid6 array, the use/display of a spare drive 
+that was included on the create command line doesn't seem to be right, 
+compared to added a spare drive manually after creating the array, the 
+details page is different, and it doesn't even list a spare (mind you, 
+it hasn't finished syncing the raid, but why should it be any different 
+of information, than that of the manual adding of a spare (and still not 
+be synced yet)).
 
-Currently I'm using a 2.6.11.8 vanilla kernel (md v0.90.01), I did *not* 
-change "pad1[128-96]" to "pad1[128-100]", since 2.6.11.8 vanilla doesn't 
-have the bitmap_offset added yet, I did patch super1.c to include the 
-"info->layout" near line 400 (this patch was also present in one of your 
-other patches), I also patched it with the one patch that came out on 
-your web page after 2.0-devel was released (bitmap for v0.90.0 
-superblock I believe), and patched with the raid5 superblock version 1 
-support patch, the "disk busy" patch, and the greater than 27 MD 
-superblock devices patch.  I think thats it :)
+And I would like to remind you about the zero-superblock not working on 
+version 1 superblocks, and of course my curiosity regarding the raid 
+information (or lack there of) using the --detail command.
 
-Not that it should matter, but i did it in this order:
-patch.greater.than.27.superblock.devices (this patch includes change to 
-super1.c near line 400, info->layout)
-patch.raid5.to.support.superblock.version.1
-patch.bitmap.support.for.v0.90.0.superblocks
-patch.disk.busy
+Thanks again :)
 
-I ran a diff against it with the above patches, and have posted it at 
-http://www.dtbb.net/~tyler/linux.troubleshoot/
+Creating new raid fails (with mdadm 2.0-devel patch i posted on my 
+website) (raid6, 30 drives, 1 spare, superblock version 1):
 
-I almost forgot to mention that one of the patches against Grow.c failed 
-(I'm maybe missing another patch against Grow that you've done? Mine 
-only has 194 lines):
+root@localhost:~/dev/mdadm-2.0-devel-1# mdadm -C -l 6 -n 30 -x 1 -e 1 -c 
+128 /dev/md0 /dev/hdb /dev/hdc /dev/hdd /dev/sd[a-z] /dev/sdaa /dev/sdab
+mdadm: invalid number of raid devices: 30
 
-root@localhost:~/dev/mdadm-2.0-devel-1# cat Grow.c.rej
-***************
-*** 236,242 ****
-        }
-        if (strcmp(file, "internal") == 0) {
-                int d;
--               for (d=0; d< MD_SB_DISKS; d++) {
-                        mdu_disk_info_t disk;
-                        char *dv;
-                        disk.number = d;
---- 236,242 ----
-        }
-        if (strcmp(file, "internal") == 0) {
-                int d;
-+               for (d=0; d< st->max_devs; d++) {
-                        mdu_disk_info_t disk;
-                        char *dv;
-                        disk.number = d;
+Do it again, but simply re-order the commands, and magically it works:
+
+root@localhost:~/dev/mdadm-2.0-devel-1# mdadm -C -l 6 -e 1 -n 30 -x 1 -c 
+128 /dev/md0 /dev/hdb /dev/hdc /dev/hdd /dev/sd[a-z] /dev/sdaa /dev/sdab
+mdadm: array /dev/md0 started.
+
+Looking at mdstat and --detail of /dev/md0, it doesn't list the spare 
+drive that I added during creation, and it shows 1 drive failed:
+
+root@localhost:~/dev/mdadm-2.0-devel-1# cat /proc/mdstat
+Personalities : [raid5] [raid6]
+md0 : active raid6 sdab[30](F) sdaa[29] sdz[28] sdy[27] sdx[26] sdw[25] 
+sdv[24] sdu[23] sdt[22] sds[21] sdr[20] sdq[19] sdp[18] sdo[17] sdn[16] 
+sdm[15] sdl[14] sdk[13] sdj[12] sdi[11] sdh[10] sdg[9] sdf[8] sde[7] 
+sdd[6] sdc[5] sdb[4] sda[3] hdd[2] hdc[1] hdb[0]
+      5470105088 blocks level 6, 128k chunk, algorithm 2 [30/30] 
+[UUUUUUUUUUUUUUUUUUUUUUUUUUUUUU]
+      [>....................]  resync =  0.0% (8384/195360972) 
+finish=1162.8min speed=2794K/sec
+unused devices: <none>
+root@localhost:~/dev/mdadm-2.0-devel-1# mdadm -D /dev/md0
+/dev/md0:
+        Version : 01.00.01
+  Creation Time : Wed May  4 13:36:00 2005
+     Raid Level : raid6
+     Array Size : 5470105088 (5216.70 GiB 5601.39 GB)
+    Device Size : 195360896 (186.31 GiB 200.05 GB)
+   Raid Devices : 30
+  Total Devices : 31
+Preferred Minor : 0
+    Persistence : Superblock is persistent
+
+    Update Time : Wed May  4 13:36:00 2005
+          State : clean, resyncing
+ Active Devices : 30
+Working Devices : 30
+ Failed Devices : 1
+  Spare Devices : 0
+
+     Chunk Size : 128K
+
+ Rebuild Status : 0% complete
+
+    Number   Major   Minor   RaidDevice State
+
+Stop the array, and re-create it again without the spare on the command 
+line, magically it says no drives failed, and reports no spares of course:
+
+root@localhost:~/dev/mdadm-2.0-devel-1# mdadm -S /dev/md0
+root@localhost:~/dev/mdadm-2.0-devel-1# mdadm -C -l 6 -e 1 -n 30 -c 128 
+/dev/md0 /dev/hdb /dev/hdc /dev/hdd /dev/sd[a-z] /dev/sdaa    
+mdadm: array /dev/md0 started.
+
+root@localhost:~/dev/mdadm-2.0-devel-1# cat /proc/mdstat
+Personalities : [raid5] [raid6]
+md0 : active raid6 sdaa[29] sdz[28] sdy[27] sdx[26] sdw[25] sdv[24] 
+sdu[23] sdt[22] sds[21] sdr[20] sdq[19] sdp[18] sdo[17] sdn[16] sdm[15] 
+sdl[14] sdk[13] sdj[12] sdi[11] sdh[10] sdg[9] sdf[8] sde[7] sdd[6] 
+sdc[5] sdb[4] sda[3] hdd[2] hdc[1] hdb[0]
+      5470105088 blocks level 6, 128k chunk, algorithm 2 [30/30] 
+[UUUUUUUUUUUUUUUUUUUUUUUUUUUUUU]
+      [>....................]  resync =  0.0% (8424/195360972) 
+finish=1149.1min speed=2808K/sec
+unused devices: <none>
+
+root@localhost:~/dev/mdadm-2.0-devel-1# mdadm -D /dev/md0
+/dev/md0:
+        Version : 01.00.01
+  Creation Time : Wed May  4 13:38:06 2005
+     Raid Level : raid6
+     Array Size : 5470105088 (5216.70 GiB 5601.39 GB)
+    Device Size : 195360896 (186.31 GiB 200.05 GB)
+   Raid Devices : 30
+  Total Devices : 30
+Preferred Minor : 0
+    Persistence : Superblock is persistent
+
+    Update Time : Wed May  4 13:38:06 2005
+          State : clean, resyncing
+ Active Devices : 30
+Working Devices : 30
+ Failed Devices : 0
+  Spare Devices : 0
+
+     Chunk Size : 128K
+
+ Rebuild Status : 0% complete
+
+    Number   Major   Minor   RaidDevice State
+
+Now adding the spare drive manually after the creation of the array, and 
+it says 31 working devices, 1 spare, 0 failed:
+
+root@localhost:~/dev/mdadm-2.0-devel-1# mdadm --add /dev/md0 /dev/sdab
+mdadm: added /dev/sdab
+
+root@localhost:~/dev/mdadm-2.0-devel-1# mdadm -D /dev/md0
+/dev/md0:
+        Version : 01.00.01
+  Creation Time : Wed May  4 13:38:06 2005
+     Raid Level : raid6
+     Array Size : 5470105088 (5216.70 GiB 5601.39 GB)
+    Device Size : 195360896 (186.31 GiB 200.05 GB)
+   Raid Devices : 30
+  Total Devices : 31
+Preferred Minor : 0
+    Persistence : Superblock is persistent
+
+    Update Time : Wed May  4 13:38:06 2005
+          State : clean, resyncing
+ Active Devices : 30
+Working Devices : 31
+ Failed Devices : 0
+  Spare Devices : 1
+
+     Chunk Size : 128K
+
+ Rebuild Status : 0% complete
+
+    Number   Major   Minor   RaidDevice State
 
 Regards,
 Tyler.
-
-Neil Brown wrote:
-
->On Tuesday May 3, pml@dtbb.net wrote:
->  
->
->>What kernel are you using Neil, and what patches to the kernel if any, 
->>and which patches to mdadm 2.0-devel?  
->>    
->>
->
->2.6.12-rc2-mm1  and a few patches to mdadm, but none significant to
->your current issue.
->
->The reason it worked for me is that I tried raid6 and you tried raid5.
->To make it work with raid5 you need the following patch.  I haven't
->actually tested it as my test machine has had odd hardware issues for
->ages (only causing problems at reboot, but for a test machine, that is
->often..) and it is finally being looked at.
->
->Let me know if this gets you further.
->
->NeilBrown
->
->
-> ----------- Diffstat output ------------
-> ./super1.c |    2 +-
-> 1 files changed, 1 insertion(+), 1 deletion(-)
->
->diff ./super1.c~current~ ./super1.c
->--- ./super1.c~current~	2005-05-04 12:06:33.000000000 +1000
->+++ ./super1.c	2005-05-04 15:54:59.000000000 +1000
->@@ -411,7 +411,7 @@ static int init_super1(void **sbp, mdu_a
-> 
-> 	sb->utime = sb->ctime;
-> 	sb->events = __cpu_to_le64(1);
->-	if (info->state & MD_SB_CLEAN)
->+	if (info->state & (1<<MD_SB_CLEAN))
-> 		sb->resync_offset = ~0ULL;
-> 	else
-> 		sb->resync_offset = 0;
->-
->To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->
->  
->
-
