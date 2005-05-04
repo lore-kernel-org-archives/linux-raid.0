@@ -1,130 +1,75 @@
-From: Tyler <pml@dtbb.net>
+From: Neil Brown <neilb@cse.unsw.edu.au>
 Subject: Re: BUGREPORT: mdadm v2.0-devel - can't create array using version
  1 superblock, possibly related to previous bugreport
-Date: Tue, 03 May 2005 18:36:27 -0700
-Message-ID: <4278271B.1020408@dtbb.net>
-References: <42775D47.4000805@dtbb.net> <17016.3902.917012.297224@cse.unsw.edu.au>
+Date: Wed, 4 May 2005 12:17:45 +1000
+Message-ID: <17016.12489.9021.728737@cse.unsw.edu.au>
+References: <42775D47.4000805@dtbb.net>
+	<17016.3902.917012.297224@cse.unsw.edu.au>
+	<4278271B.1020408@dtbb.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17016.3902.917012.297224@cse.unsw.edu.au>
+In-Reply-To: message from Tyler on Tuesday May 3
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@cse.unsw.edu.au>
+To: Tyler <pml@dtbb.net>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Neil,
-
-I've gotten past the device being busy using the patch, and onto a new 
-error message and set of problems:
-
-root@localhost:~/dev/mdadm-2.0-devel-1# ./mdadm -E /dev/hdb
-root@localhost:~/dev/mdadm-2.0-devel-1# ./mdadm -E /dev/hdc
-root@localhost:~/dev/mdadm-2.0-devel-1# ./mdadm -E /dev/hdd
-root@localhost:~/dev/mdadm-2.0-devel-1# ./mdadm -C -l 5 -n 3 -e 1 
-/dev/md0 /dev/hdb /dev/hdc /dev/hdd
-VERS = 9002
-mdadm: ADD_NEW_DISK for /dev/hdb failed: Invalid argument
-root@localhost:~/dev/mdadm-2.0-devel-1# ./mdadm -E /dev/hdb
-/dev/hdb:
-          Magic : a92b4efc
-        Version : 01.00
-     Array UUID : 02808c44c0:1a8f4351:d5dc7f68:fe2e4c
-           Name :
-  Creation Time : Wed May  4 02:31:48 2005
-     Raid Level : raid5
-   Raid Devices : 3
-
-    Device Size : 390721952 (186.31 GiB 200.05 GB)
-   Super Offset : 390721952 sectors
-          State : active
-    Device UUID : 02808c44c0:1a8f4351:d5dc7f68:fe2e4c
-    Update Time : Wed May  4 02:31:48 2005
-       Checksum : 7462e130 - correct
-         Events : 0
-
-         Layout : -unknown-
-     Chunk Size : 64K
-
-   Array State : Uu_ 380 spares 2 failed
-root@localhost:~/dev/mdadm-2.0-devel-1# ./mdadm -E /dev/hdc
-root@localhost:~/dev/mdadm-2.0-devel-1# ./mdadm -E /dev/hdd
-
-And the following in Dmesg:
-md: hdb has invalid sb, not importing!
-md: md_import_device returned -22
-
-So it would seem that a bad superblock gets written to the first device, 
-then the program bails, leaving the bad superblock (that was blank 
-before), and doesn't finish.  Mdadm is unable to zero this superblock 
-either, as i posted earlier, even after multiple attempts.  I did manage 
-to erase it using 'dd if=/dev/zero of=/dev/hdb bs=64k seek=3050000' to 
-seek near the end of the drive and erase it, but thats when I ran the 
-above steps, coming to the same problem each time.
-
-Thanks,
-Tyler.
-
-Neil Brown wrote:
-
->On Tuesday May 3, pml@dtbb.net wrote:
->  
->
->>When i try to create any raid5/raid6 array with --metadata 1 or 
->>--metadata 1.0, it simply spits out a response saying /dev/hdX is 
->>busy... X being whichever drive i listed as an array member first on the 
->>list of drives.
->>    
->>
->
->Yes .... thanks for the very clear bug report.  Some clumsy developer
->forgot to close the file, didn't that :-(
->Patch below.
->
->NeilBrown
->
->
->
->### Diffstat output
-> ./super1.c |    9 +++++++--
-> 1 files changed, 7 insertions(+), 2 deletions(-)
->
->diff ./super1.c~current~ ./super1.c
->--- ./super1.c~current~	2005-05-04 09:45:24.000000000 +1000
->+++ ./super1.c	2005-05-04 09:52:34.000000000 +1000
->@@ -496,11 +496,15 @@ static int write_init_super1(struct supe
-> 		free(refsb);
-> 	}
->     
->-	if (ioctl(fd, BLKGETSIZE, &size))
->+	if (ioctl(fd, BLKGETSIZE, &size)) {
->+		close(fd);
-> 		return 1;
->+	}
+On Tuesday May 3, pml@dtbb.net wrote:
+> Hi Neil,
 > 
->-	if (size < 24)
->+	if (size < 24) {
->+		close(fd);
-> 		return 2;
->+	}
+> I've gotten past the device being busy using the patch, and onto a new 
+> error message and set of problems:
 > 
+> root@localhost:~/dev/mdadm-2.0-devel-1# ./mdadm -E /dev/hdb
+> root@localhost:~/dev/mdadm-2.0-devel-1# ./mdadm -E /dev/hdc
+> root@localhost:~/dev/mdadm-2.0-devel-1# ./mdadm -E /dev/hdd
+> root@localhost:~/dev/mdadm-2.0-devel-1# ./mdadm -C -l 5 -n 3 -e 1 
+> /dev/md0 /dev/hdb /dev/hdc /dev/hdd
+> VERS = 9002
+> mdadm: ADD_NEW_DISK for /dev/hdb failed: Invalid argument
+....
 > 
-> 	/*
->@@ -540,6 +544,7 @@ static int write_init_super1(struct supe
-> 	rv = store_super1(fd, sb);
-> 	if (rv)
-> 		fprintf(stderr, Name ": failed to write superblock to %s\n", devname);
->+	close(fd);
-> 	return rv;
-> }
+> And the following in Dmesg:
+> md: hdb has invalid sb, not importing!
+> md: md_import_device returned -22
 > 
->-
->To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->
->  
->
 
+Hey, I got that too!
+You must be running an -mm kernel (I cannot remember what kernel you
+said you were using).
+
+Look in include/linux/md_p.h near line 205.
+If it has
+	__u32	chunksize;	/* in 512byte sectors */
+	__u32	raid_disks;
+	__u32	bitmap_offset;	/* sectors after start of superblock that bitmap starts
+				 * NOTE: signed, so bitmap can be before superblock
+				 * only meaningful of feature_map[0] is set.
+				 */
+	__u8	pad1[128-96];	/* set to 0 when written */
+
+then change the '96' to '100'.  (It should have been changed when
+bitmap_offset was added).
+
+You will then need to mdadm some more.  In super1.c near line 400,
+
+	sb->ctime = __cpu_to_le64((unsigned long long)time(0));
+	sb->level = __cpu_to_le32(info->level);
+	sb->layout = __cpu_to_le32(info->level);
+	sb->size = __cpu_to_le64(info->size*2ULL);
+
+notice that 'layout' is being set to 'level'.  This is wrong.  That
+line should be
+
+	sb->layout = __cpu_to_le32(info->layout);
+
+With these changes, I can create a 56 device raid6 array. (I only have
+14 drives, but I partitioned each into 4 equal parts!).
+
+I'll try to do another mdadm-2 release in the next week.
+
+Thanks for testing this stuff...
+
+NeilBrown
