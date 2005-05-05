@@ -1,58 +1,43 @@
-From: Robey Holderith <robey@flaminglunchbox.net>
-Subject: success repairing raid5 with 2 dead drives
-Date: Thu, 05 May 2005 16:07:53 -0400
-Message-ID: <427A7D19.1030805@flaminglunchbox.net>
+From: gdnixon1@enterate.com.ar
+Subject: Inquiry From Gerald
+Date: Thu,  5 May 2005 19:26:53 -0300
+Message-ID: <1115332013.427a9dad1bfe8@mail.enterate.com.ar>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Awhile ago I had a power failure on a raid 5 array.  Two drives were 
-reported out of sync and the array made me force it back together.  So I 
-just did:
+Dear Friend,
+I am Mr. Gerald Nixon, I write to inform you of my desire to acquire properties 
+Hence i am contacting you if you would agree to assist me in other to actualize 
+this transaction. the funds to carry out this proposed investments is presently 
+lodged in a finance security firm i honestly request your assistance to provide 
+for me a safe account in your country to receive the money before we can put 
+the funds into use. The total sum is 4.5Million Great Britain Pounds.  
+As soon as the amount mentioned above is successfully transferred into your 
+account, you can go ahead in buying the properties. It might interest you to 
+note that transaction of such may raise suspicion of irrationality but i assure 
+you it will be executed safely without breaching our limited personal integrity 
+that we have in one way or the other aspire to protect. So let us allow trust 
+to play a very minimal role until performance is seen.  Thank you in 
+anticipation of your co-operation.
+Best Regards,
+Mr. Gerald Nixon
 
-mdadm --assemble --force /dev/md0 /dev/sd[a-f]2
+Note: I have set aside 25% of this fund to consult your assistance.
 
-After processing for awhile two of the six drives were marked as failed 
-and were dropped out of the array.  Using badblocks revealed that both 
-drives had failed sectors in the same areas. ... Ugh!  Have I lost all 
-information?  It seemed kindof silly that all information would be lost 
-when it was very specific sectors that were dead.  Here are the steps I 
-took to save 99.9% of the information on the array.  I am not claiming 
-that anyone else will have success using these methods and am not 
-responsible for anyone's mistakes but my own.
 
-1.  Back up whatever you can.  Using mdadm --assemble --force gave me 
-about 2 hours before the drives were dropped from the array.  Doing this 
-a couple of times allowed me to get the latest versions of important files.
 
-2.  Get some new drives (but don't get rid of the old data).
 
-3.  dd_rescue data.  Use dd_rescue to copy over whatever data is still 
-good from the bad drives.  In my case I took out two of the good drives 
-from the array and replaced them with the new drives.  I then did:
+* Este mensaje fue enviado desde http://www.enterate.com.ar/ 
+____________________________________________________________ 
 
-dd_rescue /dev/sdd /dev/sdc
+* Conectate GRATIS a Internet desde Enterate ! 
+Usuario   : enterate@enterate.com.ar 
+Clave     : enterate 
+desde Buenos Aires : 4004-8007 
+desde otras ciudades, consulta en : 
+http://www.enterate.com.ar/InternetGratis.htm 
 
-and
-
-dd_rescue /dev/sdf /dev/sde
-
-as sdd and sdf were the drives that were going and sdc and sde were the 
-locations of the new drives.  Once the data is copied replace the bad 
-drives with the two that were removed.
-
-4.  Re-assemble array.  With the new drives in place use 'mdadm 
---assemble --force' to reconstruct the array.  If all goes well you 
-should be done.
-
-Anyway... this is just to let people know that it is possible to save 
-data from dead arrays.  Just make sure you plan your steps carefully and 
-think throught the consequences of all of your actions.
-
-Also... thanks to everyone who helped me figure out what steps to take.
-
--Robey Holderith
