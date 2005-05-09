@@ -1,86 +1,86 @@
-From: Glatzel Tino <tino.glatzel@badenIT.de>
-Subject: swap with raid1
-Date: Mon, 9 May 2005 18:32:03 +0200
-Message-ID: <23ADBF4236843B469BE57F05F135897602E744E2@srvntexc2.swfr>
+From: SainTiss <saintiss@gmx.net>
+Subject: raid reconstruction woes
+Date: Mon, 9 May 2005 20:21:33 +0200
+Message-ID: <200505092021.35283.saintiss@gmx.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/signed;
+  boundary="nextPart3625723.CyyNXXK2GP";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: "'linux-raid@vger.kernel.org'" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello list,
+--nextPart3625723.CyyNXXK2GP
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
+Hi all,
 
-my Debian GNU Linux Sarge is working with a static kernel with the following
-/etc/fstab:
+I had a RAID-1 array set up, and one disk went bad. So I replaced it, but t=
+hen=20
+I did something I probably shouldn't have done: remove the UUID's of the ro=
+ot=20
+partitions (i.e. the partitions with the / filesystem on).
 
-proc            /proc           proc    defaults        0       0
-/dev/md2       /               ext3    defaults,errors=remount-ro 0       1
-/dev/md1       /boot           ext3    defaults        0       2
-/dev/md7       /home           ext3
-rw,nosuid,nodev,noexec,auto,nouser,async        0       2
-/dev/md8       /opt            ext3    defaults        0       2
-/dev/md5       /tmp            ext3
-rw,nosuid,nodev,noexec,auto,nouser,async        0       2
-/dev/md6       /var            ext3    defaults,nodev        0       2
-/dev/hda10       none            swap    sw              0       0
+I then used knoppix as a bootdisk to execute the following command:
 
+mdadm --create /dev/md1 --raid-devices=3D2 --level=3D1 /dev/sda2 /dev/sdb2
 
+That worked, and the partitions synched.
 
-I have tried to setup the swap-partition to /dev/md3, but after this change
-the system comes up with a lot of errormessages. Some daemons cant create
-files and so on. 
-I have created the swap partition like this:
+However, booting into my main (debian sarge, kernel 2.6.8.1) system, it sai=
+d=20
+"/dev/sd[ab]2 has wrong uuid".
 
+At first I didn't understand, since I had no mdadm.conf file, so I didn't s=
+ee=20
+how uuid information could be obtained other than from the partitions itsel=
+f.
 
-mdadm --create /dev/md3 --level 1 --raid-device=2 /dev/hda3 /dev/hdc3
+That led me to think it might be stored inside initrd, and indeed, mkinitrd=
+=20
+solved that error message.
 
-mkswap /dev/md3
+However, the remaining problem is that, during boot, /dev/md1 is never=20
+correctly set up:
 
-/dev/hda1               1         124       62464+  fd  Linux raid
-autodetect
-/dev/hda2             125        2062      976752   fd  Linux raid
-autodetect
-/dev/hda3            2063        5937     1953000   fd  Linux raid
-autodetect
-/dev/hda4            5938      155061    75158496    5  Extended
-/dev/hda5            5938        6930      500440+  fd  Linux raid
-autodetect
-/dev/hda6            6931       10899     2000344+  fd  Linux raid
-autodetect
-/dev/hda7           10900       12884     1000408+  fd  Linux raid
-autodetect
-/dev/hda8           12885       16853     2000344+  fd  Linux raid
-autodetect
-/dev/hda9           16854       24791     4000720+  83  Linux
-/dev/hda10          24792       28760     2000344+  82  Linux swap / Solaris
+=2D either I have root=3D/dev/sda2 in grub, and then it will start /dev/md1=
+ with=20
+only /dev/sdb2, claiming that /dev/sda2 can't be added because the device i=
+s=20
+busy.
+=2D either I have root=3D/dev/sdb2 in grub, and then I have the same proble=
+m,=20
+except that this time /dev/sdb2 can't be added.
+=2D either I have root=3D/dev/md1 in grub, and then it doesn't seem to find=
+=20
+an /sbin/init executable, so the boot process doesn't complete.
 
+I'm guessing that the "busy" partition is busy because it's being specified=
+ as=20
+the root partition in grub. However, it would seem logical that /dev/md1=20
+would be constructed *before* the root partition becomes active, no?
 
+Anyway, is this a problem which can be solved?
 
-/dev/hdc1               1         125       62968+  fd  Linux raid
-autodetect
-/dev/hdc2             126        2110     1000440   fd  Linux raid
-autodetect
-/dev/hdc3            2111        6079     2000376   fd  Linux raid
-autodetect
-/dev/hdc4            6080       28902    11502792    5  Extended
-/dev/hdc5            6080        7072      500440+  fd  Linux raid
-autodetect
-/dev/hdc6            7073       11041     2000344+  fd  Linux raid
-autodetect
-/dev/hdc7           11042       13026     1000408+  fd  Linux raid
-autodetect
-/dev/hdc8           13027       16995     2000344+  fd  Linux raid
-autodetect
-/dev/hdc9           16996       24933     4000720+  83  Linux
-/dev/hdc10          24934       28902     2000344+  82  Linux swap / Solaris
+Thanks in advance,
 
+Hans
 
+--nextPart3625723.CyyNXXK2GP
+Content-Type: application/pgp-signature
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.5 (GNU/Linux)
 
+iD8DBQBCf6ovXlnUYIbmLOQRAg5TAJ4s7nFxeGIN7zq8X041y50mP7Ug3ACeNQNd
+nYXISwkIj/e+OpuSxFfdpkY=
+=YQUJ
+-----END PGP SIGNATURE-----
 
-It does not work. Can anyone help me ??
-
-
-Tino
+--nextPart3625723.CyyNXXK2GP--
