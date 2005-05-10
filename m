@@ -1,31 +1,39 @@
 From: NeilBrown <neilb@cse.unsw.edu.au>
-Subject: [PATCH md 000 of 4] Introduction
+Subject: [PATCH md 001 of 4] Fix spliting of md/linear request that cross a device boundary
 Date: Tue, 10 May 2005 15:04:02 +1000
-Message-ID: <20050510145931.1553.patches@notabene>
+Message-ID: <E1DVMuY-0000Ps-9V@notabene.cse.unsw.edu.au>
+References: <20050510145931.1553.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: Andrew Morton <akpm@osdl.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Andrew,
 
-Following are 4 patches for md in 2.6.12-rc3-mm3
+When a request crosses a boundary between devices, it needs to
+be split.  But where we should calculate the amount of the request
+before the boundary to find the split-point, we care currently calculating
+the amount that is *after* the boundary !!!
 
-The first is appropriate for 2.6.12 - it fixes a potential data corruption 
-with linear arrays (which was notice under XFS which does journal writes with
-interesting alignments I think).
-The second fixes an unlikely-to-hit-in-real-life bug where if an array fails
-to be assembled properly, an oops maybe could eventuate.
 
-The last two relate to bitmap intent logging and so depend on the other 
-related patches in -mm.
-I think this bitmap stuff should be ready to go to Linus as soon as 2.6.12 is out.
+Signed-off-by: Neil Brown <neilb@cse.unsw.edu.au>
 
-Thanks,
-NeilBrown
+### Diffstat output
+ ./drivers/md/linear.c |    5 ++---
+ 1 files changed, 2 insertions(+), 3 deletions(-)
 
- [PATCH md 001 of 4] Fix spliting of md/linear request that cross a device boundary
- [PATCH md 002 of 4] Set the unplug_fn and issue_flush_fn for md devices *after* committed to creation.
- [PATCH md 003 of 4] Two small fixes for md verion-1 superblocks.
- [PATCH md 004 of 4] Make sure md/bitmap doesn't try to write a page with active writeback
+diff ./drivers/md/linear.c~current~ ./drivers/md/linear.c
+--- ./drivers/md/linear.c~current~	2005-05-10 14:25:28.000000000 +1000
++++ ./drivers/md/linear.c	2005-05-10 14:26:45.000000000 +1000
+@@ -269,9 +269,8 @@ static int linear_make_request (request_
+ 		 * split it.
+ 		 */
+ 		struct bio_pair *bp;
+-		bp = bio_split(bio, bio_split_pool, 
+-			       (bio->bi_sector + (bio->bi_size >> 9) -
+-				(tmp_dev->offset + tmp_dev->size))<<1);
++		bp = bio_split(bio, bio_split_pool,
++			       ((tmp_dev->offset + tmp_dev->size)<<1) - bio->bi_sector);
+ 		if (linear_make_request(q, &bp->bio1))
+ 			generic_make_request(&bp->bio1);
+ 		if (linear_make_request(q, &bp->bio2))
