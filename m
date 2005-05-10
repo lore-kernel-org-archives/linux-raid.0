@@ -1,16 +1,22 @@
-From: Mag <excrete@hudnall.com>
-Subject: eBay Pharmacy
-Date: Tue, 10 May 2005 21:53:44 +0800
-Message-ID: <3458253899.115484@222.182.39.119>
-Mime-Version: 1.0 (Apple Message framework v728)
-Content-Type: text/plain; charset=US-ASCII; format=flowed
-Content-Transfer-Encoding: 7bit
+From: David.rutter@adsl-19-114-140.asm.bellsouth.net
+Subject: Online software shop. Free to the door. ISO for download
+Date: Tue, 10 May 2005 18:37:11 +0000
+Message-ID: <9JBC721LBEC4J0HC@adsl-19-114-140.asm.bellsouth.net>
+References: <FBF3F3I117H73J1B@vger.kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <FBF3F3I117H73J1B@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Reviewed Online Pharmacy
-http://brl.m17xq5mfjw4u854.dngfbsjd.com
+OEM version:
+www.pwb4ao7dbipe4q7.bokarkdjjbc.com
 
+Download version:
+www.b0x7w0dzf4tacet.aphraimnhl.com
+
+Linux-raid.
 
