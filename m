@@ -1,7 +1,7 @@
 From: NeilBrown <neilb@cse.unsw.edu.au>
-Subject: [PATCH md 004 of 4] Make sure md/bitmap doesn't try to write a page with active writeback
+Subject: [PATCH md 002 of 4] Set the unplug_fn and issue_flush_fn for md devices *after* committed to creation.
 Date: Tue, 10 May 2005 15:04:02 +1000
-Message-ID: <E1DVMuY-0000Q4-R1@notabene.cse.unsw.edu.au>
+Message-ID: <E1DVMuY-0000Pw-LC@notabene.cse.unsw.edu.au>
 References: <20050510145931.1553.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
@@ -10,145 +10,139 @@ Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-Due to the use of write-behind, it is possible for md to 
-write a page to the bitmap file that is still completing writeback.
-This is not allowed.
-
-With this patch, we detect those cases and either force a sync write,
-or back off and try later, as appropriate.
+We we set the too early, they may still be in place and possibly get called
+even though the array didn't get set up properly.
 
 Signed-off-by: Neil Brown <neilb@cse.unsw.edu.au>
 
 ### Diffstat output
- ./drivers/md/bitmap.c |   68 +++++++++++++++++++++++++++-----------------------
- 1 files changed, 38 insertions(+), 30 deletions(-)
+ ./drivers/md/multipath.c |    8 ++++----
+ ./drivers/md/raid1.c     |    7 +++----
+ ./drivers/md/raid10.c    |    6 +++---
+ ./drivers/md/raid5.c     |    7 ++++---
+ ./drivers/md/raid6main.c |    6 +++---
+ 5 files changed, 17 insertions(+), 17 deletions(-)
 
-diff ./drivers/md/bitmap.c~current~ ./drivers/md/bitmap.c
---- ./drivers/md/bitmap.c~current~	2005-05-10 14:44:11.000000000 +1000
-+++ ./drivers/md/bitmap.c	2005-05-10 14:55:51.000000000 +1000
-@@ -313,7 +313,16 @@ static int write_page(struct bitmap *bit
- 	if (bitmap->file == NULL)
- 		return write_sb_page(bitmap->mddev, bitmap->offset, page, wait);
- 
--	lock_page(page);
-+	if (wait)
-+		lock_page(page);
-+	else {
-+		if (TestSetPageLocked(page))
-+			return -EAGAIN; /* already locked */
-+		if (PageWriteback(page)) {
-+			unlock_page(page);
-+			return -EAGAIN;
-+		}
-+	}
- 
- 	ret = page->mapping->a_ops->prepare_write(NULL, page, 0, PAGE_SIZE);
- 	if (!ret)
-@@ -400,7 +409,7 @@ int bitmap_update_sb(struct bitmap *bitm
- 	if (!bitmap->mddev->degraded)
- 		sb->events_cleared = cpu_to_le64(bitmap->mddev->events);
- 	kunmap(bitmap->sb_page);
--	return write_page(bitmap, bitmap->sb_page, 0);
-+	return write_page(bitmap, bitmap->sb_page, 1);
- }
- 
- /* print out the bitmap file superblock */
-@@ -762,6 +771,7 @@ int bitmap_unplug(struct bitmap *bitmap)
- 	unsigned long i, attr, flags;
- 	struct page *page;
- 	int wait = 0;
-+	int err;
- 
- 	if (!bitmap)
- 		return 0;
-@@ -782,9 +792,17 @@ int bitmap_unplug(struct bitmap *bitmap)
- 			wait = 1;
- 		spin_unlock_irqrestore(&bitmap->lock, flags);
- 
--		if (attr & (BITMAP_PAGE_DIRTY | BITMAP_PAGE_NEEDWRITE))
--			if (write_page(bitmap, page, 0))
-+		if (attr & (BITMAP_PAGE_DIRTY | BITMAP_PAGE_NEEDWRITE)) {
-+			err = write_page(bitmap, page, 0);
-+			if (err == -EAGAIN) {
-+				if (attr & BITMAP_PAGE_DIRTY)
-+					err = write_page(bitmap, page, 1);
-+				else
-+					err = 0;
-+			}
-+			if (err)
- 				return 1;
-+		}
+diff ./drivers/md/multipath.c~current~ ./drivers/md/multipath.c
+--- ./drivers/md/multipath.c~current~	2005-05-10 14:30:02.000000000 +1000
++++ ./drivers/md/multipath.c	2005-05-10 14:29:15.000000000 +1000
+@@ -462,10 +462,6 @@ static int multipath_run (mddev_t *mddev
  	}
- 	if (wait) { /* if any writes were performed, we need to wait on them */
- 		if (bitmap->file) {
-@@ -1006,8 +1024,15 @@ int bitmap_daemon_work(struct bitmap *bi
- 				}
- 				spin_unlock_irqrestore(&bitmap->lock, flags);
- 				if (attr & BITMAP_PAGE_NEEDWRITE) {
--					if (write_page(bitmap, page, 0))
-+					switch (write_page(bitmap, page, 0)) {
-+					case -EAGAIN:
-+						set_page_attr(bitmap, page, BITMAP_PAGE_NEEDWRITE);
-+						break;
-+					case 0:
-+						break;
-+					default:
- 						bitmap_file_kick(bitmap);
-+					}
- 					page_cache_release(page);
- 				}
- 				continue;
-@@ -1020,6 +1045,10 @@ int bitmap_daemon_work(struct bitmap *bi
- 					clear_page_attr(bitmap, lastpage, BITMAP_PAGE_NEEDWRITE);
- 					spin_unlock_irqrestore(&bitmap->lock, flags);
- 					err = write_page(bitmap, lastpage, 0);
-+					if (err == -EAGAIN) {
-+						err = 0;
-+						set_page_attr(bitmap, lastpage, BITMAP_PAGE_NEEDWRITE);
-+					}
- 				} else {
- 					set_page_attr(bitmap, lastpage, BITMAP_PAGE_NEEDWRITE);
- 					spin_unlock_irqrestore(&bitmap->lock, flags);
-@@ -1068,6 +1097,10 @@ int bitmap_daemon_work(struct bitmap *bi
- 			clear_page_attr(bitmap, lastpage, BITMAP_PAGE_NEEDWRITE);
- 			spin_unlock_irqrestore(&bitmap->lock, flags);
- 			err = write_page(bitmap, lastpage, 0);
-+			if (err == -EAGAIN) {
-+				set_page_attr(bitmap, lastpage, BITMAP_PAGE_NEEDWRITE);
-+				err = 0;
-+			}
- 		} else {
- 			set_page_attr(bitmap, lastpage, BITMAP_PAGE_NEEDWRITE);
- 			spin_unlock_irqrestore(&bitmap->lock, flags);
-@@ -1421,31 +1454,6 @@ static void bitmap_set_memory_bits(struc
- 	}
- }
+ 	memset(conf->multipaths, 0, sizeof(struct multipath_info)*mddev->raid_disks);
  
--/* dirty the entire bitmap */
--int bitmap_setallbits(struct bitmap *bitmap)
--{
--	unsigned long flags;
--	unsigned long j;
+-	mddev->queue->unplug_fn = multipath_unplug;
 -
--	/* dirty the in-memory bitmap */
--	bitmap_set_memory_bits(bitmap, 0, bitmap->chunks << CHUNK_BLOCK_SHIFT(bitmap), 1);
+-	mddev->queue->issue_flush_fn = multipath_issue_flush;
 -
--	/* dirty the bitmap file */
--	for (j = 0; j < bitmap->file_pages; j++) {
--		struct page *page = bitmap->filemap[j];
+ 	conf->working_disks = 0;
+ 	ITERATE_RDEV(mddev,rdev,tmp) {
+ 		disk_idx = rdev->raid_disk;
+@@ -528,6 +524,10 @@ static int multipath_run (mddev_t *mddev
+ 	 * Ok, everything is just fine now
+ 	 */
+ 	mddev->array_size = mddev->size;
++
++	mddev->queue->unplug_fn = multipath_unplug;
++	mddev->queue->issue_flush_fn = multipath_issue_flush;
++
+ 	return 0;
+ 
+ out_free_conf:
+
+diff ./drivers/md/raid1.c~current~ ./drivers/md/raid1.c
+--- ./drivers/md/raid1.c~current~	2005-05-10 14:30:02.000000000 +1000
++++ ./drivers/md/raid1.c	2005-05-10 14:29:15.000000000 +1000
+@@ -1331,10 +1331,6 @@ static int run(mddev_t *mddev)
+ 	if (!conf->r1bio_pool)
+ 		goto out_no_mem;
+ 
+-	mddev->queue->unplug_fn = raid1_unplug;
 -
--		spin_lock_irqsave(&bitmap->lock, flags);
--		page_cache_get(page);
--		spin_unlock_irqrestore(&bitmap->lock, flags);
--		memset(kmap(page), 0xff, PAGE_SIZE);
--		kunmap(page);
--		if (write_page(bitmap, page, 0))
--			return 1;
--	}
+-	mddev->queue->issue_flush_fn = raid1_issue_flush;
 -
--	return 0;
--}
+ 	ITERATE_RDEV(mddev, rdev, tmp) {
+ 		disk_idx = rdev->raid_disk;
+ 		if (disk_idx >= mddev->raid_disks
+@@ -1418,6 +1414,9 @@ static int run(mddev_t *mddev)
+ 	 */
+ 	mddev->array_size = mddev->size;
+ 
++	mddev->queue->unplug_fn = raid1_unplug;
++	mddev->queue->issue_flush_fn = raid1_issue_flush;
++
+ 	return 0;
+ 
+ out_no_mem:
+
+diff ./drivers/md/raid10.c~current~ ./drivers/md/raid10.c
+--- ./drivers/md/raid10.c~current~	2005-05-10 14:30:02.000000000 +1000
++++ ./drivers/md/raid10.c	2005-05-10 14:29:15.000000000 +1000
+@@ -1645,9 +1645,6 @@ static int run(mddev_t *mddev)
+ 			mdname(mddev));
+ 		goto out_free_conf;
+ 	}
+-	mddev->queue->unplug_fn = raid10_unplug;
 -
- /*
-  * free memory that was allocated
-  */
+-	mddev->queue->issue_flush_fn = raid10_issue_flush;
+ 
+ 	ITERATE_RDEV(mddev, rdev, tmp) {
+ 		disk_idx = rdev->raid_disk;
+@@ -1719,6 +1716,9 @@ static int run(mddev_t *mddev)
+ 	mddev->array_size = size/2;
+ 	mddev->resync_max_sectors = size;
+ 
++	mddev->queue->unplug_fn = raid10_unplug;
++	mddev->queue->issue_flush_fn = raid10_issue_flush;
++
+ 	/* Calculate max read-ahead size.
+ 	 * We need to readahead at least twice a whole stripe....
+ 	 * maybe...
+
+diff ./drivers/md/raid5.c~current~ ./drivers/md/raid5.c
+--- ./drivers/md/raid5.c~current~	2005-05-10 14:30:02.000000000 +1000
++++ ./drivers/md/raid5.c	2005-05-10 14:29:15.000000000 +1000
+@@ -1620,9 +1620,6 @@ static int run (mddev_t *mddev)
+ 	atomic_set(&conf->active_stripes, 0);
+ 	atomic_set(&conf->preread_active_stripes, 0);
+ 
+-	mddev->queue->unplug_fn = raid5_unplug_device;
+-	mddev->queue->issue_flush_fn = raid5_issue_flush;
+-
+ 	PRINTK("raid5: run(%s) called.\n", mdname(mddev));
+ 
+ 	ITERATE_RDEV(mddev,rdev,tmp) {
+@@ -1728,6 +1725,10 @@ memory = conf->max_nr_stripes * (sizeof(
+ 	}
+ 
+ 	/* Ok, everything is just fine now */
++
++	mddev->queue->unplug_fn = raid5_unplug_device;
++	mddev->queue->issue_flush_fn = raid5_issue_flush;
++
+ 	mddev->array_size =  mddev->size * (mddev->raid_disks - 1);
+ 	return 0;
+ abort:
+
+diff ./drivers/md/raid6main.c~current~ ./drivers/md/raid6main.c
+--- ./drivers/md/raid6main.c~current~	2005-05-10 14:30:02.000000000 +1000
++++ ./drivers/md/raid6main.c	2005-05-10 14:29:15.000000000 +1000
+@@ -1779,9 +1779,6 @@ static int run (mddev_t *mddev)
+ 	atomic_set(&conf->active_stripes, 0);
+ 	atomic_set(&conf->preread_active_stripes, 0);
+ 
+-	mddev->queue->unplug_fn = raid6_unplug_device;
+-	mddev->queue->issue_flush_fn = raid6_issue_flush;
+-
+ 	PRINTK("raid6: run(%s) called.\n", mdname(mddev));
+ 
+ 	ITERATE_RDEV(mddev,rdev,tmp) {
+@@ -1895,6 +1892,9 @@ static int run (mddev_t *mddev)
+ 
+ 	/* Ok, everything is just fine now */
+ 	mddev->array_size =  mddev->size * (mddev->raid_disks - 2);
++
++	mddev->queue->unplug_fn = raid6_unplug_device;
++	mddev->queue->issue_flush_fn = raid6_issue_flush;
+ 	return 0;
+ abort:
+ 	if (conf) {
