@@ -1,42 +1,52 @@
-From: Joshua Baker-LePain <jlb17@duke.edu>
-Subject: Re: SATA RAID5 kernel hang on 2.6.11-1.14_FC3
-Date: Thu, 12 May 2005 05:27:17 -0400 (EDT)
-Message-ID: <Pine.LNX.4.58.0505120525480.6834@chaos.egr.duke.edu>
-References: <20050512053716.97460.qmail@web30504.mail.mud.yahoo.com>
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: Failed RAID5
+Date: Thu, 12 May 2005 20:05:50 +1000
+Message-ID: <17027.10878.872935.948925@cse.unsw.edu.au>
+References: <4283172b.242.630.20549@clanwind.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20050512053716.97460.qmail@web30504.mail.mud.yahoo.com>
+In-Reply-To: message from janaka@clanwind.com on Thursday May 12
 Sender: linux-raid-owner@vger.kernel.org
-To: Tim Harvey <tim_harvey@yahoo.com>
+To: janaka@clanwind.com
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 11 May 2005 at 10:37pm, Tim Harvey wrote
-
-> Greetings,
+On Thursday May 12, janaka@clanwind.com wrote:
+> Hey,
 > 
-> I'm attempting to run a RAID5 array with the following configuration:
+> I am trying to rebuild a failed raid 5.  I have one disk
+> that's bad, and one disk that, in the confusion, has become
+> convinced that it is a spare.  I don't know where it got
+> this idea, but I have drive "mdadm --assemble --force
+> /dev/md2 /dev/hda3 /dev/hdc3 /dev/hde3 /dev/hdg3 /dev/hdi3
+> /dev/hdk3" as well as "mkraid --force /dev/md2" and my
+> raidtab hasn't changed except to state that HDA has failed.
 > 
-> ASUS TUSI-M Motherboard, Celeron 1GHz, 256MB SDRAM
-> Promise SATAII-150-TX4 4-port RAID controller
-> 4 x Seagate ST300 300GB SATA NQC drives
-> Linux FC3 system with 2.6.11-1.14_FC3
+> Is there anyway for me to force the "spare disk" to
+> reconsider its purpose in life?  Which is presently to make
+> my data accessable so I can move to raid 10 or some other
+> more simple raid format.
 > 
-*snip*
-> do_IRQ: stack overflow: 312
-*snip*
->  [<cfac1805>] xfs_buf_get_flags+0xc4/0x108 [xfs]
->  [<cfac209c>] pagebuf_iostart+0x53/0x8c [xfs]
->  [<cfac1898>] xfs_buf_read_flags+0x4f/0x6c [xfs]
->  [<cfab42ff>] xfs_trans_read_buf+0x1b9/0x31b [xfs]
-> ...
+> I mean, I am sure it is some bit in the superblock that is
+> miss set, but how do I fix that?
 
-It looks like you were using XFS as your filesystem?  XFS has had some 
-issues with 4K stacks, although I thought they were lessened in more 
-recent kernels.  You may want to ask over on the XFS list.
+If you are confident that you know what belongs where, then the best
+thing is to recreate the array. Make sure you leave a "missing" device
+so that it doesn't do a resync.
+e.g.
 
--- 
-Joshua Baker-LePain
-Department of Biomedical Engineering
-Duke University
+  mdadm --create /dev/md2 -l5 -n6 /dev/hda3 /dev/hdc3 /dev/hde3 \
+      missing /dev/hdi3 /dev/hdk3
+
+or whatever happens to be right in your situation.
+This will rewrite all superblocks but will not touch any data (unless
+you try to write to md2).
+I suggest that after this you "fsck -n" the make sure the data looks
+reasonably OK, and if it does, mount read-only and copy the data off.
+
+If fsck thinks it is trash, then maybe you got the order wrong.  Just
+"mdadm -S /dev/md2" and try again.
+
+NeilBrown
