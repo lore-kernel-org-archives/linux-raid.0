@@ -1,71 +1,52 @@
 From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: MD bug or me being stupid?
-Date: Fri, 13 May 2005 12:55:29 +1000
-Message-ID: <17028.5921.815691.401690@cse.unsw.edu.au>
-References: <62b0912f0504220345349335f9@mail.gmail.com>
-	<62b0912f050512015585a6ba5@mail.gmail.com>
+Subject: Re: grow problem
+Date: Fri, 13 May 2005 13:12:58 +1000
+Message-ID: <17028.6970.46578.888643@cse.unsw.edu.au>
+References: <42812E77.9060503@advocap.org>
+	<17025.18070.800000.318669@cse.unsw.edu.au>
+	<42820EC8.1020300@advocap.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Molle Bestefich on Thursday May 12
+In-Reply-To: message from John McMonagle on Wednesday May 11
 Sender: linux-raid-owner@vger.kernel.org
-To: Molle Bestefich <molle.bestefich@gmail.com>
+To: John McMonagle <johnm@advocap.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday May 12, molle.bestefich@gmail.com wrote:
-> On 4/22/05, Molle Bestefich wrote:
-> > Just upgraded a MD RAID 5 box to 2.6.11 from 2.4.something.
-> > 
-> > Found out one disk was failing completely, got a replacement from Maxtor.  Neat.
-> > Replaced disk, rebooted..
-> > Added the new disk to the array with 'raidhotadd'.
-> > MD started syncing.
-> > 
-> > A couple of minutes into the process, it started *seriously* spamming
-> > the console with messages:
-> > 
-> > ==========================
-> > Apr 22 01:47:00 linux kernel: ..<6>md: syncing RAID array md1
-> > Apr 22 01:47:00 linux kernel: md: minimum _guaranteed_ reconstruction
-> > speed: 1000 KB/sec/disc.
-> > Apr 22 01:47:00 linux kernel: md: using maximum available idle IO bandwith (but
-> > not more than 200000 KB/sec) for reconstruction.
-> > Apr 22 01:47:00 linux kernel: md: using 128k window, over a total of
-> > 199141632 blocks.
-> > Apr 22 01:47:00 linux kernel: md: md1: sync done.
-> > Apr 22 01:47:00 linux kernel: ..<6>md: syncing RAID array md1
-> > Apr 22 01:47:01 linux kernel: md: minimum _guaranteed_ reconstruction
-> > speed: 1000 KB/sec/disc.
-> > Apr 22 01:47:01 linux kernel: md: using maximum available idle IO bandwith (but
-> > not more than 200000 KB/sec) for reconstruction.
-> > Apr 22 01:47:01 linux kernel: md: using 128k window, over a total of
-> > 199141632 blocks.
-> > Apr 22 01:47:01 linux kernel: md: md1: sync done.
-> > ==========================
+On Wednesday May 11, johnm@advocap.org wrote:
 > 
-> [snip]
+> Probably unrelated but I'll pass it on just in case it's useful.
 > 
-> > afterwards, I can see that the above messages repeat themselves.
-> > cat /var/log/messages | grep md | grep 'Apr 22 01:47:01' | grep 'sync done'
-> > tells me that the messages were repeated 12 times per second.  The
-> 
-> Ping!...
-> Neil, just wondering, any comments regarding this particular endless loop in MD?
-> (Anything I can test or some such?)
+> Added to md0 with no problem.
+> When added to md1 got a kernel panic.
+> Happened to have serial console logging to this is what is says:
 
-Thanks for the ping, things sometimes get lost in the noise....
+Thanks.  I'm pretty sure I know what happened here:
 
-This sounds a bit like the problem that is addressed by 
-  md-make-raid5-and-raid6-robust-against-failure-during-recovery.patch 
-in the current -mm patches (look in the brokenout directory).
+raid1 maintains a concept of the "last_used" drive and it starts
+search from there.
+The Oops happened in sync_request at:
+	disk = conf->last_used;
+	/* make sure disk is operational */
 
-This would only happen if you have multiple failed devices.  So maybe
-while the rebuild was happening, another device failed (which seems to
-happen more and more as device sizes are increasing and reliability is
-going the other way).
+	while (conf->mirrors[disk].rdev == NULL ||
+	       !conf->mirrors[disk].rdev->in_sync) {
+		if (disk <= 0)
+			disk = conf->raid_disks;
+		disk--;
+		if (disk == conf->last_used)
+			break;
+	}
 
-Could this (another drive failure) be the case?
+'rdev' is not NULL, it is 0xFFFF, do dereferencing ->in_sync from
+there caused the oops.
+last_used must have been '2', but you just reduced the size of the
+array to only have 2 devices, so only '0' and '1' are valid.  '2' fell
+off the end of the array.
 
+I'll fix it in the next patchset.
+
+Thanks again,
 NeilBrown
