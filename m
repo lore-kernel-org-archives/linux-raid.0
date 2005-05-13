@@ -1,24 +1,32 @@
-From: berk walker <berk@panix.com>
-Subject: is this area not monitored at all?
-Date: Thu, 12 May 2005 18:52:24 -0400
-Message-ID: <4283DE28.6060204@panix.com>
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: is this area not monitored at all?
+Date: Fri, 13 May 2005 12:50:40 +1000
+Message-ID: <17028.5632.546400.252451@cse.unsw.edu.au>
 References: <8633629511.110169@200.195.18.8>
+	<4283DE28.6060204@panix.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <8633629511.110169@200.195.18.8>
+In-Reply-To: message from berk walker on Thursday May 12
 Sender: linux-raid-owner@vger.kernel.org
+To: berk walker <berk@panix.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Someone needs to cut the spam from here.  But maybe someone is, and all 
-I see is the new ones.
+On Thursday May 12, berk@panix.com wrote:
+> Someone needs to cut the spam from here.  But maybe someone is, and all 
+> I see is the new ones.
 
-Is there some way to track down the sources and shut them down?   I love 
-this group and hate the spamcrap.
+See  http://vger.kernel.org/majordomo-info.html#taboo for what is
+being done.
 
-BTW, Neil, does MD run on BSD?
-b-
+> 
+> Is there some way to track down the sources and shut them down?   I love 
+> this group and hate the spamcrap.
+> 
+> BTW, Neil, does MD run on BSD?
 
->
+No. However FreeBSD (atleast) has "vinum" which does similar things.
+
+NeilBrown
