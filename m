@@ -1,45 +1,36 @@
-From: Molle Bestefich <molle.bestefich@gmail.com>
-Subject: Re: MD bug or me being stupid?
-Date: Sun, 15 May 2005 20:10:00 +0200
-Message-ID: <62b0912f05051511107a0c4e0@mail.gmail.com>
-References: <62b0912f0504220345349335f9@mail.gmail.com>
-	 <62b0912f050512015585a6ba5@mail.gmail.com>
-	 <17028.5921.815691.401690@cse.unsw.edu.au>
-Reply-To: Molle Bestefich <molle.bestefich@gmail.com>
+From: Patrik Jonsson <patrik@ucolick.org>
+Subject: Strange behaviour on "toy array"
+Date: Sun, 15 May 2005 11:22:52 -0700
+Message-ID: <4287937C.3090307@ucolick.org>
+References: <62b0912f0504220345349335f9@mail.gmail.com>	 <62b0912f050512015585a6ba5@mail.gmail.com>	 <17028.5921.815691.401690@cse.unsw.edu.au> <62b0912f05051511107a0c4e0@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17028.5921.815691.401690@cse.unsw.edu.au>
-Content-Disposition: inline
+In-Reply-To: <62b0912f05051511107a0c4e0@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@cse.unsw.edu.au>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> Molle Bestefich wrote:
-> > Ping!...
-> > Neil, just wondering, any comments regarding this particular endless loop in MD?
-> > (Anything I can test or some such?)
-> 
-> Thanks for the ping, things sometimes get lost in the noise....
+hi all,
 
-Thanks for taking a look at it!
+I'm gearing up to setting up a 2tb raid for our research group, and just 
+to see how this stuff works I made a loopback array on one of my 
+machines. I created 5 loopback devices of 1mb each, created a raid5 
+array and formatted. so far so good. I could copy files on and off, fail 
+a disk with mdadm -f  and then return it and everything seemed to work 
+as i expected. Then I decided to see what happens if things go bad, so i 
+fail one disk. fine, array reports "clean, degraded" but I can still 
+access files. Then I fail another, now expecting not to be able to read 
+anything. But, array reports "clean, degraded" and I can still access 
+the files. I then proceeded to fail ALL disks and the array was still 
+"clean, degraded" and I could read the files on it just as well as 
+before??? Can anyone explain to me what's going on here? Was I seeing 
+some cached version (given that the array was so small)?
 
-> This sounds a bit like the problem that is addressed by
->   md-make-raid5-and-raid6-robust-against-failure-during-recovery.patch
-> in the current -mm patches (look in the brokenout directory).
-> 
-> This would only happen if you have multiple failed devices.  So maybe
-> while the rebuild was happening, another device failed (which seems to
-> happen more and more as device sizes are increasing and reliability is
-> going the other way).
-> 
-> Could this (another drive failure) be the case?
+This is on a machine running fedora core 3 ppc.
 
-Sounds correct!
-There was both a real disk failure and a cable failure involved (first
-message in this thread has details).
+thanks,
 
-Apologies for bringing up already fixed bugs.
+/Patrik
+
