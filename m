@@ -1,47 +1,38 @@
-From: Mike Hardy <mhardy@h3c.com>
+From: Jay Strauss <me@heyjay.com>
 Subject: Re: Raid 1 install revealed poor HD performance (I think)
-Date: Tue, 17 May 2005 09:52:03 -0700
-Message-ID: <428A2133.4080202@h3c.com>
-References: <428A09A3.9000802@heyjay.com> <Pine.LNX.4.56.0505171649090.32621@lion.drogon.net> <428A1924.8030801@heyjay.com> <Pine.LNX.4.56.0505171720070.32621@lion.drogon.net>
+Date: Tue, 17 May 2005 15:51:26 -0500
+Message-ID: <428A594E.5080207@heyjay.com>
+References: <428A09A3.9000802@heyjay.com> <Pine.LNX.4.56.0505171649090.32621@lion.drogon.net> <428A1924.8030801@heyjay.com> <Pine.LNX.4.56.0505171720070.32621@lion.drogon.net> <428A2133.4080202@h3c.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.56.0505171720070.32621@lion.drogon.net>
+In-Reply-To: <428A2133.4080202@h3c.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Gordon Henderson <gordon@drogon.net>
-Cc: Jay Strauss <me@heyjay.com>, linux-raid@vger.kernel.org
+To: Mike Hardy <mhardy@h3c.com>
+Cc: Gordon Henderson <gordon@drogon.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-Gordon Henderson wrote:
+> I was sure it would be DMA too :-). Wonder if multicount makes that much
+> of a difference?
 
-> However, I notice that Sarge isn't using multicount. You can turn that on
-> with hdparm -m 16 /dev/hda /dev/hdc
+It doesn't, I tried just before leaving this morning.  No diff.
+
 > 
-> To work out your IDE controller, try: lspci and have a look at the output
-> of /var/log/dmesg (or just type dmesg | less - knoppix might not create a
-> /var/log/dmesg) The output of lspci will tell you what hardware you have
-> then you'll need to examinf the dmesg output to see if you have support
-> for it, or need to compile it in.
-> 
-> Gordon
+> Either way, one of the first things I typically do on a server is add an
+> hdparm line with whatever the disks need for that particular machine.
 
-I was sure it would be DMA too :-). Wonder if multicount makes that much
-of a difference?
+I don't understand the above "whatever the disks need" portion of this 
+statement.  Can you give me a little more detail?
 
-Either way, one of the first things I typically do on a server is add an
-hdparm line with whatever the disks need for that particular machine.
-Usually it goes in rc.sysinit or rc.local or similar.
+> So, even if you can't get your distribution to tune your IDE chipset and
+> IDE hard drives perfectly, with something like multicount or write
+> caching, its effective (IMHO) to just force your settings on boot.
 
-In particular, drives like to enable write-caching out of the box now,
-which opens a window for data corruption that has bitten more than a few
-high-profile sites as it causes the disk to break the fsync contract
-which in turn bubbles up and breaks the 'D' part of the ACID contract
-for databases (or journalling filesystems).
+What settings am I to force?  And to what values?  I guess I'm asking, 
+are you saying just put the hdparm setting in a rc.local?  If so, I'm 
+still stumped on what those settings need to be
 
-So, even if you can't get your distribution to tune your IDE chipset and
-IDE hard drives perfectly, with something like multicount or write
-caching, its effective (IMHO) to just force your settings on boot.
-
--Mike
+Thanks
+Jay
