@@ -1,52 +1,110 @@
-From: Jay Strauss <me@heyjay.com>
+From: Henrik Holst <henrik_holst@home.se>
 Subject: Re: Raid 1 install revealed poor HD performance (I think)
-Date: Tue, 17 May 2005 18:00:26 -0500
-Message-ID: <428A778A.9020209@heyjay.com>
-References: <428A09A3.9000802@heyjay.com> <Pine.LNX.4.56.0505171649090.32621@lion.drogon.net> <428A1924.8030801@heyjay.com> <Pine.LNX.4.56.0505171720070.32621@lion.drogon.net> <428A2133.4080202@h3c.com> <428A594E.5080207@heyjay.com> <428A59F9.5050908@h3c.com> <428A6D27.7070703@medien.uni-weimar.de>
+Date: Wed, 18 May 2005 01:42:05 +0200
+Message-ID: <428A814D.3000803@home.se>
+References: <428A09A3.9000802@heyjay.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <428A6D27.7070703@medien.uni-weimar.de>
+In-Reply-To: <428A09A3.9000802@heyjay.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Tobias Hofmann <tobias.hofmann@medien.uni-weimar.de>
-Cc: Mike Hardy <mhardy@h3c.com>, Gordon Henderson <gordon@drogon.net>, linux-raid@vger.kernel.org
+To: Jay Strauss <me@heyjay.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Tobias Hofmann wrote:
-> On 17.05.2005 22:54, Mike Hardy wrote:
-> 
-> [...]
-> 
->> That's fine-grained tuning mostly though, and not really on topic for
->> you as it appears you have something entirely different going on. What
->> exactly is going on, I must admit, I don't know. :-/
-> 
-> 
-> <delurk>
-> Well, let's find out then, no? ;)
-> 
-> Jay, you said it yourself - Knoppix seems to be setting something 
-> different than Sarge. I am not very familiar with both, but doing a 
-> lspci on both (just in case they "see" something different) and 
-> comparing, like Gordon suggested, the output of dmesg | less (or a less 
-> /var/log/dmesg) on both systems might give you an idea where things 
-> start to go differently.
-> 
-> I would look for differences in the discovery of (the) 
-> ide-controller(s), and how the HDs are discovered/treated.
-> 
-> For completeness' sake, the kernel version of each try could give the 
-> experts an idea of differences I am not aware of.
-> 
-> I am sure to have forgotten something here, but for starters, it might 
-> work.
-> 
-> Just my 2c, good luck, tobi... ;)
+You might also want to try and force UltraDMA mode5 (or the highest 
+UltraDMA mode supported by your hardware) with "hdparm -X69 /dev/hda" 
+combined with the "Multiple sector mode" (set with "hdparm -m 16 
+/dev/hda") that was suggested earlier.
 
-Ok :), when I get home I'll be doing everything everyone has asked
+/ Henrik Holst
 
-It's a drag booting knoppix on this machine, it takes forever
-
-Jay
+Jay Strauss wrote:
+> Hi,
+> 
+> I just installed a simple raid-1.  I have a single HD on each 
+> controller.  ie. 2 controllers 2 HDs. That's it, no CD players or DVD 
+> drives...
+> 
+> I did a fresh install of Sarge.  After reboot I unplugged the CD drive, 
+> and let the array sync overnight.  It took 10hrs to sync 160GiB, which 
+> seemed pretty long, so I executed the "dd if=/dev/hda of=/dev/null 
+> bs=64k count=10000" command I've seen posted on this list.
+> 
+> It took about a minute and change to complete, which is long.  So out of 
+> curiosity I plugged in a CD player and booted Knoppix.  When I ran the 
+> same command it took only 30 seconds (which is still not as quick as 
+> some of the numbers on this list, but it's an old celeron 466MHz).
+> 
+> I'm very unfamiliar with options for speeding up hard drive access. What 
+> might Knoppix be setting (and how would I look for it), that it's 
+> getting 100% better drive performance than a plain jane Sarge install?
+> 
+> Thanks
+> Jay
+> 
+> ******** Knoppix Run ***********
+> 
+> root@ttyp0[~]# for i in 1 2 3; do
+>  > time dd if=/dev/hda of=/dev/null bs=64k count=10000
+>  > done
+> 10000+0 records in
+> 10000+0 records out
+> 655360000 bytes transferred in 46.301872 seconds (14154071 bytes/sec)
+> 
+> real    0m46.754s
+> user    0m0.480s
+> sys     0m29.710s
+> 
+> 10000+0 records in
+> 10000+0 records out
+> 655360000 bytes transferred in 49.852186 seconds (13146063 bytes/sec)
+> 
+> real    0m51.075s
+> user    0m0.430s
+> sys     0m26.610s
+> 
+> 10000+0 records in
+> 10000+0 records out
+> 655360000 bytes transferred in 46.237684 seconds (14173720 bytes/sec)
+> 
+> real    0m47.928s
+> user    0m0.480s
+> sys     0m31.770s
+> 
+> ************** Sarge Run *************
+> 
+> sandy:~# for i in 1 2 3; do
+>  > time dd if=/dev/hda of=/dev/null bs=64k count=10000
+>  > done
+> 10000+0 records in
+> 10000+0 records out
+> 655360000 bytes transferred in 66.004525 seconds (9929016 bytes/sec)
+> 
+> real    1m6.052s
+> user    0m0.637s
+> sys     1m2.888s
+> 
+> 10000+0 records in
+> 10000+0 records out
+> 655360000 bytes transferred in 63.797226 seconds (10272547 bytes/sec)
+> 
+> real    1m3.886s
+> user    0m0.678s
+> sys     1m0.732s
+> 
+> 10000+0 records in
+> 10000+0 records out
+> 655360000 bytes transferred in 64.729628 seconds (10124575 bytes/sec)
+> 
+> real    1m4.822s
+> user    0m0.616s
+> sys     1m1.668s
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
