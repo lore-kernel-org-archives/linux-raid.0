@@ -1,46 +1,42 @@
-From: Mike Hardy <mhardy@h3c.com>
+From: Tobias Hofmann <tobias.hofmann@medien.uni-weimar.de>
 Subject: Re: Raid 1 install revealed poor HD performance (I think)
-Date: Tue, 17 May 2005 13:54:17 -0700
-Message-ID: <428A59F9.5050908@h3c.com>
-References: <428A09A3.9000802@heyjay.com> <Pine.LNX.4.56.0505171649090.32621@lion.drogon.net> <428A1924.8030801@heyjay.com> <Pine.LNX.4.56.0505171720070.32621@lion.drogon.net> <428A2133.4080202@h3c.com> <428A594E.5080207@heyjay.com>
+Date: Wed, 18 May 2005 00:16:07 +0200
+Message-ID: <428A6D27.7070703@medien.uni-weimar.de>
+References: <428A09A3.9000802@heyjay.com> <Pine.LNX.4.56.0505171649090.32621@lion.drogon.net> <428A1924.8030801@heyjay.com> <Pine.LNX.4.56.0505171720070.32621@lion.drogon.net> <428A2133.4080202@h3c.com> <428A594E.5080207@heyjay.com> <428A59F9.5050908@h3c.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <428A594E.5080207@heyjay.com>
+In-Reply-To: <428A59F9.5050908@h3c.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jay Strauss <me@heyjay.com>
-Cc: Gordon Henderson <gordon@drogon.net>, linux-raid@vger.kernel.org
+To: Mike Hardy <mhardy@h3c.com>
+Cc: Jay Strauss <me@heyjay.com>, Gordon Henderson <gordon@drogon.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On 17.05.2005 22:54, Mike Hardy wrote:
 
+[...]
 
-Jay Strauss wrote:
+> That's fine-grained tuning mostly though, and not really on topic for
+> you as it appears you have something entirely different going on. What
+> exactly is going on, I must admit, I don't know. :-/
 
-> I don't understand the above "whatever the disks need" portion of this
-> statement.  Can you give me a little more detail?
+<delurk>
+Well, let's find out then, no? ;)
 
-I did mean the hdparm settings, sorry I wasn't clearer
+Jay, you said it yourself - Knoppix seems to be setting something 
+different than Sarge. I am not very familiar with both, but doing a 
+lspci on both (just in case they "see" something different) and 
+comparing, like Gordon suggested, the output of dmesg | less (or a less 
+/var/log/dmesg) on both systems might give you an idea where things 
+start to go differently.
 
-> What settings am I to force?  And to what values?  I guess I'm asking,
-> are you saying just put the hdparm setting in a rc.local?  If so, I'm
-> still stumped on what those settings need to be
+I would look for differences in the discovery of (the) 
+ide-controller(s), and how the HDs are discovered/treated.
 
-Well, the "typical" problem with regard to speed is DMA detection on
-your IDE chipset, which Gordon guessed (and which I would have). That
-needs to be set sometimes.
+For completeness' sake, the kernel version of each try could give the 
+experts an idea of differences I am not aware of.
 
-I usually also set write-caching to off, although this does have a
-performance impact. Its also possible to twiddle some of the other
-hdparm settings, though these may or may not help. Things like
-multicount, IRQ unmasking.
+I am sure to have forgotten something here, but for starters, it might work.
 
-You can try any of them, then run bonnie++ or similar and see if they
-have an effect, and put them in rc.local (or similar) to make sure they
-stay in force across reboots.
-
-That's fine-grained tuning mostly though, and not really on topic for
-you as it appears you have something entirely different going on. What
-exactly is going on, I must admit, I don't know. :-/
-
--Mike
+Just my 2c, good luck, tobi... ;)
