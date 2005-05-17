@@ -1,7 +1,7 @@
 From: Henrik Holst <henrik_holst@home.se>
 Subject: Re: Raid 1 install revealed poor HD performance (I think)
-Date: Wed, 18 May 2005 01:42:05 +0200
-Message-ID: <428A814D.3000803@home.se>
+Date: Wed, 18 May 2005 01:44:59 +0200
+Message-ID: <428A81FB.1070201@home.se>
 References: <428A09A3.9000802@heyjay.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
