@@ -1,89 +1,93 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: Strange behaviour on "toy array"
-Date: Tue, 17 May 2005 09:41:36 +0100
-Message-ID: <4289AE40.4090201@dgreaves.com>
-References: <200505170228.j4H2Sim20649@www.watkins-home.com> <42898989.8060201@ucolick.org> <42899947.6080107@ucolick.org>
+From: Jay Strauss <me@heyjay.com>
+Subject: Raid 1 install revealed poor HD performance (I think)
+Date: Tue, 17 May 2005 10:11:31 -0500
+Message-ID: <428A09A3.9000802@heyjay.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <42899947.6080107@ucolick.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Patrik Jonsson <patrik@ucolick.org>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-IIRC, Neil submitted a fix for this looping very recently.
+Hi,
 
-yup - 13/May/05 03:55
+I just installed a simple raid-1.  I have a single HD on each 
+controller.  ie. 2 controllers 2 HDs. That's it, no CD players or DVD 
+drives...
 
->Thanks for the ping, things sometimes get lost in the noise....
->
->This sounds a bit like the problem that is addressed by 
->  md-make-raid5-and-raid6-robust-against-failure-during-recovery.patch 
->in the current -mm patches (look in the brokenout directory).
->
->This would only happen if you have multiple failed devices.  So maybe
->while the rebuild was happening, another device failed (which seems to
->happen more and more as device sizes are increasing and reliability is
->going the other way).
->
->Could this (another drive failure) be the case?
->
->NeilBrown
->  
->
+I did a fresh install of Sarge.  After reboot I unplugged the CD drive, 
+and let the array sync overnight.  It took 10hrs to sync 160GiB, which 
+seemed pretty long, so I executed the "dd if=/dev/hda of=/dev/null 
+bs=64k count=10000" command I've seen posted on this list.
 
-I would say that there's been a fair amount of bug fixing activity since
-2.6.9 and mdadm 1.6
-I'd be happy with them for 'simple' ext3 over md but I'm pretty damned
-sure that you'll have problems with xfs and/or lvm2
+It took about a minute and change to complete, which is long.  So out of 
+curiosity I plugged in a CD player and booted Knoppix.  When I ran the 
+same command it took only 30 seconds (which is still not as quick as 
+some of the numbers on this list, but it's an old celeron 466MHz).
 
-I _strongly_ suggest 2.6.11.xx and mdadm 1.9 if you'll be playing with
-xfs and or lvm2 (which I suggest you do for the system you described)
+I'm very unfamiliar with options for speeding up hard drive access. 
+What might Knoppix be setting (and how would I look for it), that it's 
+getting 100% better drive performance than a plain jane Sarge install?
 
+Thanks
+Jay
 
+******** Knoppix Run ***********
 
-David
+root@ttyp0[~]# for i in 1 2 3; do
+ > time dd if=/dev/hda of=/dev/null bs=64k count=10000
+ > done
+10000+0 records in
+10000+0 records out
+655360000 bytes transferred in 46.301872 seconds (14154071 bytes/sec)
 
+real    0m46.754s
+user    0m0.480s
+sys     0m29.710s
 
+10000+0 records in
+10000+0 records out
+655360000 bytes transferred in 49.852186 seconds (13146063 bytes/sec)
 
-Patrik Jonsson wrote:
+real    0m51.075s
+user    0m0.430s
+sys     0m26.610s
 
-> Just as a further comment on what happened when my system hung: The
-> process [md0_sync] was rapidly respawning and the syslog filled with
-> thousands of messages like these:
->
-> May 16 23:16:44 localhost kernel: md: syncing RAID array md0
-> May 16 23:16:44 localhost kernel: md: minimum _guaranteed_
-> reconstruction speed\
-> : 1000 KB/sec/disc.
-> May 16 23:16:44 localhost kernel: md: using maximum available idle IO
-> bandwith \
-> (but not more than 200000 KB/sec) for reconstruction.
-> May 16 23:16:44 localhost kernel: md: using 128k window, over a total
-> of 960 bl\
-> ocks.
-> May 16 23:16:44 localhost kernel: md: md0: sync done.
-> May 16 23:16:44 localhost kernel: md: syncing RAID array md0
-> May 16 23:16:44 localhost kernel: md: minimum _guaranteed_
-> reconstruction speed\
-> : 1000 KB/sec/disc.
-> May 16 23:16:44 localhost kernel: md: using maximum available idle IO
-> bandwith \
-> (but not more than 200000 KB/sec) for reconstruction.
-> May 16 23:16:44 localhost kernel: md: using 128k window, over a total
-> of 960 bl\
-> ocks.
-> May 16 23:16:45 localhost kernel: md: md0: sync done.
-> ... etc etc...
->
-> I had to halt the system to make it stop. I tried to stop the array
-> with mdadm -S /dev/md0 but got "device or resource busy". Did i do
-> something illegal here?
->
-> Thanks,
->
-> /Patrik
+10000+0 records in
+10000+0 records out
+655360000 bytes transferred in 46.237684 seconds (14173720 bytes/sec)
 
+real    0m47.928s
+user    0m0.480s
+sys     0m31.770s
+
+************** Sarge Run *************
+
+sandy:~# for i in 1 2 3; do
+ > time dd if=/dev/hda of=/dev/null bs=64k count=10000
+ > done
+10000+0 records in
+10000+0 records out
+655360000 bytes transferred in 66.004525 seconds (9929016 bytes/sec)
+
+real    1m6.052s
+user    0m0.637s
+sys     1m2.888s
+
+10000+0 records in
+10000+0 records out
+655360000 bytes transferred in 63.797226 seconds (10272547 bytes/sec)
+
+real    1m3.886s
+user    0m0.678s
+sys     1m0.732s
+
+10000+0 records in
+10000+0 records out
+655360000 bytes transferred in 64.729628 seconds (10124575 bytes/sec)
+
+real    1m4.822s
+user    0m0.616s
+sys     1m1.668s
 
