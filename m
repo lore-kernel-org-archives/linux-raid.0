@@ -1,56 +1,49 @@
-From: Jay Strauss <me@heyjay.com>
+From: Mike Hardy <mhardy@h3c.com>
 Subject: Re: Raid 1 install revealed poor HD performance (I think)
-Date: Thu, 19 May 2005 13:40:22 -0500
-Message-ID: <428CDD96.2070006@heyjay.com>
-References: <428A09A3.9000802@heyjay.com> <428A81FB.1070201@home.se> <428CB19B.8010402@heyjay.com> <428CBB4A.8080900@h3c.com>
+Date: Thu, 19 May 2005 13:43:29 -0700
+Message-ID: <428CFA71.6040202@h3c.com>
+References: <428A09A3.9000802@heyjay.com> <428A81FB.1070201@home.se> <428CB19B.8010402@heyjay.com> <428CBB4A.8080900@h3c.com> <428CDD96.2070006@heyjay.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <428CBB4A.8080900@h3c.com>
+In-Reply-To: <428CDD96.2070006@heyjay.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mike Hardy <mhardy@h3c.com>
+To: Jay Strauss <me@heyjay.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Mike Hardy wrote:
-> That's more like what we were expecting!
+
+
+Jay Strauss wrote:
+
+> Thanks for the reply Mike.  After some Googling and looking at my kernel
+> config file,  it seems that SIS support is a module, like so:
 > 
-> I can't tell you why its like that or how, but this *is* the typical
-> problem with IDE. Most likely the chipset is being detected incorrectly,
-> or its being detected correctly but there is some errata that's
-> disabling dma, or maybe dma is experimental for the card.
+> CONFIG_BLK_DEV_SIS5513=m
 > 
-> Places to look for information are in the dmesg for the sis chipset's
-> detection diagnostics, then on the internet as a google for your sis
-> chipset number then "linux dma" maybe. You may end up with some ide
-> things on your kernel command line (via grub or lilo)
+> I found this link but can't find any of the files that it references
 > 
-> I'll reiterate something I said previously though, other than
-> write-caching (which is potentially dangerous) none of the other hdparm
-> or IDE settings are really going to give you that much of a boost unless
-> your workload is specifically tunable. They're all just little minor
-> twiddles you can do - nothing even close to the difference between
-> having DMA or not. So I'd just focus on enabling DMA. The other stuff is
-> all uninteresting compared to it.
-> 
-> -Mike
-> 
+> http://kerneltrap.org/comment/reply/4925/129324
 
-Thanks for the reply Mike.  After some Googling and looking at my kernel 
-config file,  it seems that SIS support is a module, like so:
+That message looks like the trick - the module doesn't have the right
+PCI id for some reason, assuming you have the same chip
 
-CONFIG_BLK_DEV_SIS5513=m
+You may not have the kernel source, if you can't find the file with
+locate. You'll need to fetch the kernel source first, then build a
+custom kernel with that line changed.
 
-I found this link but can't find any of the files that it references
+This issue came up with my laptop when I first got it - a Dell Latitude
+D800, it has an intel 5705M chipset that was supportable but had a new
+PCI id and so didn't work. The custom kernel was a bit of a pain, but it
+did work, and the patch made its way upstream really quickly. You can
+help that along by posting it to linux-kernel even, most likely
+(assuming it works)
 
-http://kerneltrap.org/comment/reply/4925/129324
+If not, I will say that this is probably something that should be on
+linux-ide at this point, as it really has nothing to do with raid
+specifically other than this being a decent place to find folks trying
+to help. The linux-ide folks will be closer to the code you're working
+with so might be more capable
 
-I'm not sure if having CONFIG_BLK_DEV_SIS5513 as a module has anything 
-to do with this.
-
-I can't get to my box right now, because out of curiosity I did hdparm 
--D 0 /dev/hda and ran the dd test, I think it crashed the box.  The box 
-is in my basement at home, so I'll have to wait until tonight.
-
-Jay
+-Mike
