@@ -1,159 +1,73 @@
-From: Tyler <pml@dtbb.net>
-Subject: Re: Problems setting up RAID1
-Date: Thu, 19 May 2005 06:40:36 -0700
-Message-ID: <428C9754.8080503@dtbb.net>
+From: Jay Strauss <me@heyjay.com>
+Subject: Re: Raid 1 install revealed poor HD performance (I think)
+Date: Thu, 19 May 2005 10:32:43 -0500
+Message-ID: <428CB19B.8010402@heyjay.com>
+References: <428A09A3.9000802@heyjay.com> <428A81FB.1070201@home.se>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------090301060908020405060107"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <428A81FB.1070201@home.se>
 Sender: linux-raid-owner@vger.kernel.org
-To: George Huber <huber_geo@hotmail.com>
+To: Henrik Holst <henrik_holst@home.se>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This is a multi-part message in MIME format.
---------------090301060908020405060107
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Hi (again):
 
-I posted this response about 2 weeks ago, for someone trying to do the 
-same thing.
+I diff'ed the contents of /proc/ide of Knoppix and Sarge, there were a 
+couple of (possibly) interesting differences.  I'm not sure how to go 
+about changing the settings.  The net/net is on my controller under 
+knoppix it says UDMA Enabled but on Sarge it's disabled.  Also the 
+writecache is enabled under knoppix (I did a hdparm -W 1 /dev/hda, but 
+my tests were identical)
 
-Regards,
-Tyler.
+Below are the diffs,  I'd like to make the sarge install setting 
+identical, and see if that changes anything.
 
---------------090301060908020405060107
-Content-Type: message/rfc822;
- name="Re: raid 1 with static kernel."
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="Re: raid 1 with static kernel."
+If anyone knows how to alter these settings, I'd be appreciated
 
-X-Account-Key: account2
-Return-Path: <linux-raid-owner@vger.kernel.org>
-Delivered-To: tyler@goliath.digitallyperfect.com
-Received: (qmail 27804 invoked by alias); 4 May 2005 15:53:21 -0000
-Delivered-To: pml@dtbb.net
-Received: (qmail 27800 invoked from network); 4 May 2005 15:53:21 -0000
-Received: from vger.kernel.org (12.107.209.244)
-  by 0 with SMTP; 4 May 2005 15:53:21 -0000
-Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-	id S261891AbVEDP4b (ORCPT <rfc822;pml@dtbb.net>);
-	Wed, 4 May 2005 11:56:31 -0400
-Received: (majordomo@vger.kernel.org) by vger.kernel.org id S261901AbVEDP4b
-	(ORCPT <rfc822;linux-raid-outgoing>); Wed, 4 May 2005 11:56:31 -0400
-Received: from outbound05.telus.net ([199.185.220.224]:29856 "EHLO
-	priv-edtnes40.telusplanet.net") by vger.kernel.org with ESMTP
-	id S261891AbVEDP4U (ORCPT <rfc822;linux-raid@vger.kernel.org>);
-	Wed, 4 May 2005 11:56:20 -0400
-Received: from [192.168.0.28] (really [142.179.55.145])
-          by priv-edtnes40.telusplanet.net
-          (InterMail vM.6.01.04.04 201-2131-118-104-20050224) with ESMTP
-          id <20050504155619.LKZD17135.priv-edtnes40.telusplanet.net@[192.168.0.28]>;
-          Wed, 4 May 2005 09:56:19 -0600
-Message-ID: <4278F0A5.60406@dtbb.net>
-Date: Wed, 04 May 2005 08:56:21 -0700
-From: Tyler <pml@dtbb.net>
-User-Agent: Mozilla Thunderbird 1.0.2 (Windows/20050317)
-X-Accept-Language: en-us, en
-MIME-Version: 1.0
-To: Glatzel Tino <tino.glatzel@badenIT.de>, linux-raid@vger.kernel.org
-Subject: Re: raid 1 with static kernel.
-References: <23ADBF4236843B469BE57F05F135897602E744DB@srvntexc2.swfr>
-In-Reply-To: <23ADBF4236843B469BE57F05F135897602E744DB@srvntexc2.swfr>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Sender: linux-raid-owner@vger.kernel.org
-Precedence: bulk
-X-Mailing-List: linux-raid@vger.kernel.org
+thanks
+Jay
 
-Try this howto:
+jstrauss@hydrogen:~$ diff -r sarge.ide/sis knoppix.ide/sis
+10,11c10,11
+<                 UDMA Enabled                   UDMA Enabled
+<                 UDMA Cycle Time    2 CLK       UDMA Cycle Time    4 CLK
+---
+ >                 UDMA Disabled                          UDMA Disabled
+ >                 UDMA Cycle Time    Reserved    UDMA Cycle Time 
+Reserved
 
-http://www.linuxsa.org.au/mailing-list/2003-07/1270.html
-
-Regards,
-Tyler.
-
-Glatzel Tino wrote:
-
->hello list,
->
->
->my system is a Debian GNU Linux Sarge. The kernelversion is 2.6.10 without
->modulsupport.
->The partion id is  fd.
->In the first step, the complete system is installed on /dev/hda3.
->In the second step, i have created a raid 1 device:
->mdadm --create /dev/md0 --level 1 --raid-device=2 /dev/hda1 /dev/hdc1
->mkfs -t ext3 /dev/md0
->mount /dev/md0 /mnt
->cp -pr /boot /mnt
->umount /mnt
->
->I want to mount /dev/md0 in /boot
->change in the /etc/fstab
->/dev/md0       /boot   ext3    defaults    0      2
->
->
->
->after a reboot, i see the mounted devices:
->
->/dev/hda3 on / type ext3 (rw,errors=remount-ro)
->/dev/md0 on /boot type ext3 (rw)
->
->so, i think i will never need the files in the old /boot directory.
->
->umount /boot
->cd /boot
->ls
->System.map-2.6.8-1-386
->config-2.6.8-1-386      vmlinuz-2.6.10
->grub                    vmlinuz-2.6.10-raid-grsec
->initrd.img-2.6.8-1-386  vmlinuz-2.6.10-raid-grsec-hotplug
->lost+found              vmlinuz-2.6.8-1-386
->System.map-2.6.10
->
->
->
->rm -r *
->cd ..
->mount /boot
->ls /boot
->System.map-2.6.8-1-386
->config-2.6.8-1-386      vmlinuz-2.6.10
->grub                    vmlinuz-2.6.10-raid-grsec
->initrd.img-2.6.8-1-386  vmlinuz-2.6.10-raid-grsec-hotplug
->lost+found              vmlinuz-2.6.8-1-386
->System.map-2.6.10
->
->
->after a reboot, i see the following message from Grub:
->
->GRUB Loading Stage1.5
->
->GRUB loading, please wait ...
->Error 15
->
->
->Ok, i think GRUB can`t access to /dev/md0
->what can i do?
->
->
->Tino
->-
->To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->
->  
->
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-
---------------090301060908020405060107--
+and
+jstrauss@hydrogen:~$ diff sarge.ide/hda/settings knoppix.ide/hda/settings
+7a8
+ > breada_readahead        8               0               255 
+    rw
+9c10
+< current_speed           68              0               70              rw
+---
+ > current_speed           12              0               70 
+    rw
+11c12,13
+< init_speed              68              0               70              rw
+---
+ > file_readahead          124             0               16384 
+    rw
+ > init_speed              12              0               70 
+    rw
+16c18,19
+< multcount               0               0               16              rw
+---
+ > max_kb_per_request      128             1               255 
+    rw
+ > multcount               16              0               16 
+    rw
+20a24
+ > slow                    0               0               1 
+    rw
+23c27
+< wcache                  1               0               1               rw
+---
+ > wcache                  0               0               1 
+    rw
