@@ -1,42 +1,50 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: Multipath issues with gentoo
-Date: Fri, 20 May 2005 18:03:06 -0400
-Message-ID: <1116626586.23785.158.camel@compaq-rhel4.xsintricity.com>
-References: <1115829789.a20b141cglore24d@erau.edu>
+From: berk walker <berk@panix.com>
+Subject: Re: Bug report: mdadm -E oddity
+Date: Fri, 20 May 2005 18:14:44 -0400
+Message-ID: <428E6154.9040803@panix.com>
+References: <1115999051.3974.14.camel@compaq-rhel4.xsintricity.com> <1116004267.3974.35.camel@compaq-rhel4.xsintricity.com> <17029.12773.197506.463977@cse.unsw.edu.au> <1116077316.13780.52.camel@compaq-rhel4.xsintricity.com> <17037.35615.456231.737766@cse.unsw.edu.au> <1116592212.23785.75.camel@compaq-rhel4.xsintricity.com> <428E0A92.3060108@steeleye.com> <1116611115.23785.89.camel@compaq-rhel4.xsintricity.com> <d5n1m2-rb5.ln1@news.it.uc3m.es> <428E421B.3050902@panix.com> <on22m2-d85.ln1@news.it.uc3m.es>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1115829789.a20b141cglore24d@erau.edu>
+In-Reply-To: <on22m2-d85.ln1@news.it.uc3m.es>
 Sender: linux-raid-owner@vger.kernel.org
-To: Nolan Glore <glore24d@erau.edu>
+To: "Peter T. Breuer" <ptb@lab.it.uc3m.es>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 2005-05-11 at 12:43 -0400, Nolan Glore wrote:
-
-> If I try and take advantage of the mdadm.conf file and execute this command to start md0: 
->  
-> Code: 
->  
-> mdadm -As
->  
-> 
-> I get the following message: 
->  
-> Code: 
->  
-> mdadm: failed to add /dev/sdd1 to /dev/md0: Device or resource busy 
-> mdadm: /dev/md0 has been started with 1 drive (out of 2). 
-
-Hmmm...I wonder if, in scan mode, mdadm has a bug related to not closing
-the sdd1 file handle prior to trying to use sdd1 in an md array?  Maybe
-during scan mode when it finds the last device it needs to assemble an
-array it's jumping the gun and trying to assemble before closing out the
-device it just scanned.  Neil?
-
--- 
-Doug Ledford <dledford@redhat.com>
-http://people.redhat.com/dledford
 
 
+Peter T. Breuer wrote:
+
+>berk walker <berk@panix.com> wrote:
+>  
+>
+>>for us old folks, please expand "idempotent" in usage to reflect the 
+>>relationships to which you refer.
+>>    
+>>
+>
+>Function f is idempotent when f.f = f. I.e. Doing it twice is the same as
+>doing it once.
+>
+>Here the question is if you do a fraction f of a write w, and then do the
+>whole write w again, whether you get what you are expecting. I.e. if
+>
+>     w.f = w
+>
+>and f is the restriction of w to some set s, f = w|s.
+>
+>Peter
+>
+>-
+>To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>.
+>
+>  
+>
+OK, I understand that def.  thanks, PTB.
+b-
