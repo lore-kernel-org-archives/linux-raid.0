@@ -1,70 +1,43 @@
-From: Paul Clements <paul.clements@steeleye.com>
+From: ptb@lab.it.uc3m.es (Peter T. Breuer)
 Subject: Re: Bug report: mdadm -E oddity
-Date: Fri, 20 May 2005 12:04:34 -0400
-Message-ID: <428E0A92.3060108@steeleye.com>
-References: <1115999051.3974.14.camel@compaq-rhel4.xsintricity.com>	 <1116004267.3974.35.camel@compaq-rhel4.xsintricity.com>	 <17029.12773.197506.463977@cse.unsw.edu.au>	 <1116077316.13780.52.camel@compaq-rhel4.xsintricity.com>	 <17037.35615.456231.737766@cse.unsw.edu.au> <1116592212.23785.75.camel@compaq-rhel4.xsintricity.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Date: Fri, 20 May 2005 19:16:36 +0200
+Message-ID: <kki1m2-r1n.ln1@news.it.uc3m.es>
+References: <1115999051.3974.14.camel@compaq-rhel4.xsintricity.com> <1116004267.3974.35.camel@compaq-rhel4.xsintricity.com> <17029.12773.197506.463977@cse.unsw.edu.au> <1116077316.13780.52.camel@compaq-rhel4.xsintricity.com> <17037.35615.456231.737766@cse.unsw.edu.au> <1116592212.23785.75.camel@compaq-rhel4.xsintricity.com> <428E0A92.3060108@steeleye.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1116592212.23785.75.camel@compaq-rhel4.xsintricity.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Doug Ledford <dledford@redhat.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Doug,
+Paul Clements <paul.clements@steeleye.com> wrote:
+> disk1   disk2   {disk3}
 
-Doug Ledford wrote:
-> On Fri, 2005-05-20 at 17:00 +1000, Neil Brown wrote:
+>   D1       P      {D2}
 
->>There is a converse to this.  People should be made to take notice if
->>there is possible data corruption.
->>
->>i.e. if you have a system crash while running a degraded raid5, then
->>silent data corruption could ensue.  mdadm will currently not start
->>any array in this state without an explicit '--force'.  This is somewhat
->>akin to fsck sometime requiring human interaction.  Ofcourse if there
->>is good reason to believe the data is still safe, mdadm should -- and
->>I believe does -- assemble the array even if degraded.
-> 
-> 
-> Well, as I explained in my email sometime back on the issue of silent
-> data corruption, this is where journaling saves your ass.  Since the
-> journal has to be written before the filesystem proper updates are
-> writting, if the array goes down it either is in the journal write, in
-> which case you are throwing those blocks away anyway and so corruption
-> is irrelevant, or it's in the filesystem proper writes and if they get
-> corrupted you don't care because we are going to replay the journal and
-> rewrite them.
+> So, say we're in the middle of updating this stripe, and we're writing 
+> D1 and P to disk when the system crashes. We may have just corrupted D2, 
+> which isn't even active right now. This is because we'll use D1 and P to 
+> reconstruct D2 when disk3 (or its replacement) comes back. If we wrote 
+> D1 and not P, then when we use D1 and P to reconstruct D2, we'll get the 
+> wrong data. Same goes if we wrote P and not D1, or some partial piece of 
+> either or both.
 
-I think you may be misunderstanding the nature of the data corruption 
-that ensues when a system with a degraded raid4, raid5, or raid6 array 
-crashes. Data that you aren't even actively writing can get corrupted. 
-For example, say we have a 3 disk raid5 and disk 3 is missing. This 
-means that for some stripes, we'll be writing parity and data:
+> There's no way for a filesystem journal to protect us from D2 getting 
+> corrupted, as far as I know.
 
-disk1   disk2   {disk3}
+Surely the raid won't have acked the write, so the journal won't
+consider the write done and will replay it next chance it gets. Mind
+you ... owwww! If we restart the array AGAIN without D3, and the
+journal is now replayed(to redo the write), then since we have already
+written D1, the parity in P is all wrong relative to it, and hence we
+will have virtual data in D3 which is all wrong, and hence when we come
+to write the parity info P we will get it wrong. No? (I haven't done
+the calculation and so there might be some idempotency here that the
+casual reasoning above fails to take account of).
 
-  D1       P      {D2}
+On the other hand, if the journal itself is what we are talking about,
+being located on the raid device, all bets are off (I've said that
+before, and remain to be convinced that it is not so, but it may be so
+- I simply see a danger that I have not been made to feel good about ..). 
 
-So, say we're in the middle of updating this stripe, and we're writing 
-D1 and P to disk when the system crashes. We may have just corrupted D2, 
-which isn't even active right now. This is because we'll use D1 and P to 
-reconstruct D2 when disk3 (or its replacement) comes back. If we wrote 
-D1 and not P, then when we use D1 and P to reconstruct D2, we'll get the 
-wrong data. Same goes if we wrote P and not D1, or some partial piece of 
-either or both.
+Peter
 
-There's no way for a filesystem journal to protect us from D2 getting 
-corrupted, as far as I know.
-
-Note that if we lose the parity disk in a raid4, this type of data 
-corruption isn't possible. Also note that for some stripes in a raid5 or 
-raid6, this type of corruption can't happen (as long as the parity for 
-that stripe is on the missing disk). Also, if you have a non-volatile 
-cache on the array, as most hardware RAIDs do, then this type of data 
-corruption doesn't occur.
-
---
-Paul
