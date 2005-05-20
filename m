@@ -1,7 +1,7 @@
 From: George Huber <huber_geo@hotmail.com>
 Subject: Re: Problems setting up RAID1
-Date: Fri, 20 May 2005 11:16:49 -0400
-Message-ID: <428DFF61.2010801@hotmail.com>
+Date: Fri, 20 May 2005 11:19:06 -0400
+Message-ID: <428DFFEA.4050004@hotmail.com>
 References: <d6danj$nmr$1@sea.gmane.org> <428C3C73.7010208@fooplanet.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
@@ -15,12 +15,11 @@ List-Id: linux-raid.ids
 Gil wrote:
 > George Huber wrote:
 > 
->>all,
+[...snip...}
+Thanks,
 
-[...snip...]
-
-Thanks Gil, your instructions proved invaluable and I have the
-RAID setup.
+Your instructions worked perfectly.  I have my RAID setup.
 
 George
+
 
