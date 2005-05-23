@@ -1,42 +1,95 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH] bio: set bi_idx after bio cloning
-Date: Mon, 23 May 2005 09:31:32 +0200
-Message-ID: <20050523073131.GD9855@suse.de>
-References: <1116020307.6557.34.camel@langvan2.homenetwork> <17029.13146.794856.708018@cse.unsw.edu.au> <1116257122.15450.6.camel@langvan2.homenetwork>
+From: Heinz Mauelshagen <mauelshagen@redhat.com>
+Subject: *** Announcement: dmraid 1.0.0.rc8 ***
+Date: Mon, 23 May 2005 15:25:25 +0200
+Message-ID: <20050523132525.GA30788@redhat.com>
+Reply-To: mauelshagen@redhat.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1116257122.15450.6.camel@langvan2.homenetwork>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mike Tran <mhtran@us.ibm.com>
-Cc: Neil Brown <neilb@cse.unsw.edu.au>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, May 16 2005, Mike Tran wrote:
-> 
-> Hi Jens,
-> 
-> Unless you have specific reason for not doing in __bio_clone(), I agree
-> with Neil's suggestion.  Please consider the following patch:
-> 
-> --- linux-2.6.12-rc4-orig/fs/bio.c   2005-05-16 10:13:27.000000000 -0500
-> +++ linux-2.6.12-rc4-patch/fs/bio.c   2005-05-16 10:15:06.000000000 -0500
-> @@ -255,10 +255,7 @@
->         bio->bi_flags |= 1 << BIO_CLONED;
->         bio->bi_rw = bio_src->bi_rw;
-> 
-> -       /*
-> -        * notes -- maybe just leave bi_idx alone. assume identical mapping
-> -        * for the clone
-> -        */
-> +       bio->bi_idx = bio_src->bi_idx;
->         bio->bi_vcnt = bio_src->bi_vcnt;
->         bio->bi_size = bio_src->bi_size;
->         bio_phys_segments(q, bio);
 
-That patch is fine with me, I'll add it. Thanks.
+               *** Announcement: dmraid 1.0.0.rc8 ***
 
--- 
-Jens Axboe
+dmraid 1.0.0.rc8 is available at
+http://people.redhat.com:/heinzm/sw/dmraid/ in source tarball,
+source rpm and i386 rpm (with shared and static dietlibc binary).
 
+This release fixes a stripe size bug in NVidia and avoids using
+the Silicon Image incarnation number for RAID name creation
+(should avoid some sets not grouping properly).
+It adds an '--ignorelocking' in order to allow dmraid to run in
+early boot where no read/write access to /var is given.
+
+
+dmraid (Device-Mapper RAID tool) discovers, [de]activates and displays
+properties of software RAID sets (i.e. ATARAID) and contained DOS
+partitions using the device-mapper runtime of the 2.6 kernel.
+
+The following ATARAID types are supported on Linux 2.6:
+
+Highpoint HPT37X
+Highpoint HPT45X
+Intel Software RAID
+LSI Logic MegaRAID
+NVidia NForce
+Promise FastTrack
+Silicon Image Medley
+VIA Software RAID
+
+Please provide insight to support those metadata formats completely.
+
+Thanks.
+
+
+See files README and CHANGELOG, which come with the source tarball for
+prerequisites to run this software, further instructions on installing
+and using dmraid!
+
+
+Call for testers:
+-----------------
+
+I need testers with the above ATARAID types, to check that the mapping
+created by this tool is correct (see options "-t -ay") and access to the
+ATARAID data is proper.
+
+In case you have a different ATARAID solution from those listed above,
+please feel free to contact me about supporting it in dmraid.
+
+You can activate your ATARAID sets without danger of overwriting
+your metadata, because dmraid accesses it read-only unless you use
+option -E together with -r in order to erase ATARAID metadata
+(see 'man dmraid')!
+
+This is a release candidate version so you want to have backups of your valuable
+data *and* you want to test accessing your data read-only first in order to
+make sure that the mapping is correct before you go for read-write access.
+
+
+Contacts:
+---------
+
+The author is reachable at <Mauelshagen@RedHat.com>.
+
+For test results, mapping information, discussions, questions, patches,
+enhancement requests and the like, please subscribe and mail to
+<ataraid-list@redhat.com>.
+
+--
+
+Regards,
+Heinz    -- The LVM Guy --
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+Heinz Mauelshagen                                 Red Hat GmbH
+Consulting Development Engineer                   Am Sonnenhang 11
+                                                  56242 Marienrachdorf
+                                                  Germany
+Mauelshagen@RedHat.com                            +49 2626 141200
+                                                       FAX 924446
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
