@@ -1,16 +1,31 @@
-From: Eustace <labelling@cancian.com>
-Subject: refill your prescription online
-Date: Wed, 25 May 2005 18:34:16 +1300
-Message-ID: <92259121704.1712266809@222-153-69-156.jetstream.xtra.co.nz>
-Mime-Version: 1.0 (News mailer)
-Content-Type: text/plain; charset=US-ASCII; format=flowed
-Content-Transfer-Encoding: 7bit
+From: danci@agenda.si
+Subject: Is there any way to delay reconstruction
+Date: Wed, 25 May 2005 08:16:22 +0200 (CEST)
+Message-ID: <Pine.LNX.4.61.0505250811520.16854@desktop.agenda.si>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Why are online drugs popular
-http://jnqezrq.639hspoh3yowa76.gruelhgrue2.com
+Hi,
 
+I have 800+ machines all using Linux SW RAID-1. Recent kernels use modules 
+for IDE (piix) and before those modules are loaded, I cannot turn on DMA. 
+So I do this using hdparm from a rc.boot script. 
 
+The problem is that usually fails with 'hdX: lost interrupt' if the disks 
+are busy due to RAID reconstruction - which happens a lot as some of the 
+800+ machines get rebooted for various reasons...
+
+Of course I could be running without DMA (that's what I did on most 
+critical machines), but that is painfully slow and it takes forever just 
+to finish RAID reconstruction.
+
+So I need to know if there is any way (kernel parameter would be ideal) to 
+delay reconstruction for X seconds/minutes?
+
+Any other suggestions to deal with the problem?
+
+ Thanks, Danilo
