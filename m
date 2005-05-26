@@ -1,36 +1,29 @@
 From: danci@agenda.si
 Subject: Re: Is there any way to delay reconstruction
-Date: Thu, 26 May 2005 08:48:25 +0200 (CEST)
-Message-ID: <Pine.LNX.4.61.0505260841130.22131@desktop.agenda.si>
+Date: Thu, 26 May 2005 08:59:00 +0200 (CEST)
+Message-ID: <Pine.LNX.4.61.0505260848320.22131@desktop.agenda.si>
 References: <Pine.LNX.4.61.0505250811520.16854@desktop.agenda.si>
- <Pine.LNX.4.62.0505250925360.6360@webhosting.rdsbv.ro>
- <Pine.LNX.4.61.0505251019280.16854@desktop.agenda.si> <429495C9.3090208@h3c.com>
+ <eaa6dfe0505250825295cb284@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <429495C9.3090208@h3c.com>
+In-Reply-To: <eaa6dfe0505250825295cb284@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mike Hardy <mhardy@h3c.com>
+To: Derek Piper <derek.piper@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 25 May 2005, Mike Hardy wrote:
+On Wed, 25 May 2005, Derek Piper wrote:
 
-> I've had this problem. I turned the raid speed limit max to 0, slept for
-> a second (just because), did my hdparm commands, slept another second
-> (again, just because - may not be necessary), then turned the raid speed
-> limit back to something that was good for background reconstruction.
-> 
-> That got rid of my dropped interrupts
+> Why would rebooting the machines cause raid reconstruction? that
+> sounds pretty bad to need to do that. Shouldn't that be addressed
+> first? Then you might not need to worry about reconstruction so much.
 
-That's a good idea - why didn't I think of that! :)
+Rebooting the 'clean' way (CTRL-ALT-DEL or 'shutdown -r now') is no 
+problem - it doesn't require reconstruction.
 
-Anyway, I've recompiled the kernel with piix NOT as a module and it 
-works.
-
-But maybe it would be easier to change the rc.boot script then reinstall 
-the kernel - on the 800+ machines!?
-
-Thanks for the idea!
+It's 'cold' (or hardware) resets (such as power outages, silly users, 
+etc.) that cause that - I don't think there is much you can do about that. 
 
  D.
+
