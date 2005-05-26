@@ -1,22 +1,17 @@
-From: Alice <coarseness@inatrice.every1.net>
-Subject: Don't be a fuddy-duddy...use the software everyone's using...
-Date: Tue, 24 May 2005 20:59:05 +0900
-Message-ID: <5460228350.59085124299@211.195.134.130>
-Mime-Version: 1.0 (Apple Message framework v728)
-Content-Type: text/plain; charset=US-ASCII; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Ian_robertson@mae.it
+Subject: seventy dollars for CorelDraw
+Date: Thu, 26 May 2005 22:30:17 +0000
+Message-ID: <K6H6907C7J398JFL@mae.it>
+References: <D9EH8L9A562957LK@vger.kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <D9EH8L9A562957LK@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Let your child grow with the best software... 
-http://epyd.nu92845g2f5c2on.japekejape8.com
-
-
-
-
-The gods too are fond of a joke.     
-I don't really trust a sane person.      
+www.nu9k8mnb9g5cko5.sdlhnwkjeb.com
 
 
