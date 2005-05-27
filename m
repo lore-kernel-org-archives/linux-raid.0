@@ -1,32 +1,22 @@
-From: Mike Hardy <mhardy@h3c.com>
-Subject: Re: Is there any way to delay reconstruction
-Date: Thu, 26 May 2005 09:07:16 -0700
-Message-ID: <4295F434.60203@h3c.com>
-References: <Pine.LNX.4.61.0505250811520.16854@desktop.agenda.si> <eaa6dfe0505250825295cb284@mail.gmail.com> <Pine.LNX.4.61.0505260848320.22131@desktop.agenda.si>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+From: Bella <matcher@schreiber.org>
+Subject: The best you may make for is to be the #1 lover.
+Date: Thu, 26 May 2005 23:15:15 -0700
+Message-ID: <5948187617.7919717061@pcp01305534pcs.pimaco01.az.comcast.net>
+Mime-Version: 1.0 (Apple Message framework v728)
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.61.0505260848320.22131@desktop.agenda.si>
 Sender: linux-raid-owner@vger.kernel.org
-To: danci@agenda.si, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+The objective of this guide is to save you time and money. 
+http://hnqv.roukda926j9hvs9.sogagmsoga1.com
 
 
-danci@agenda.si wrote:
 
-> Rebooting the 'clean' way (CTRL-ALT-DEL or 'shutdown -r now') is no 
-> problem - it doesn't require reconstruction.
-> 
-> It's 'cold' (or hardware) resets (such as power outages, silly users, 
-> etc.) that cause that - I don't think there is much you can do about that. 
+Do not speak of repulsive matters at table.     
+A woman without a man is like a fish without a bicycle. 
+The greatest power that a person possesses is the power to choose. 
 
-If/when you upgrade to 2.6.x you'll notice that even on the vast
-majority of abnormal reboots, it still won't reconstruct. The code in
-2.6.x marks the array as "clean" very quickly after writes stop so
-unless the array is actually being written when it goes down, its
-probably okay. On a huge array, that's nearly worth the upgrade right
-there...
 
--Mike
