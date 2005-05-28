@@ -1,22 +1,23 @@
-From: Solly <schemas@avs-allfinanz.ch>
-Subject: Looking for cheap high-quality software?
-Date: Fri, 28 May 2004 13:29:52 +0300
-Message-ID: <163911983.7923184718@dsl85-96-20205.ttnet.net.tr>
-Mime-Version: 1.0 (Apple Message framework v728)
-Content-Type: text/plain; charset=US-ASCII; format=flowed
-Content-Transfer-Encoding: 7bit
+From: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
+Subject: cpu
+Date: Sun, 29 May 2005 00:25:20 +0200
+Message-ID: <5d96567b05052815251f1cd297@mail.gmail.com>
+Reply-To: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Send the love home with an online photo album
-http://kridmw.07mflh0bxsi7fji.retunfsq.com
+I was testing linux raid for sometime, I created several test units
+which send read request to the raid using big buffers( 4MB).
+It seems to be that the software raid consumes to much cpu. I reach
+100% cpu usage just by reading from the raid.
+I used 4 disks raid 0.
 
-
-
-
-Anybody remotely interesting is mad, in some way or another.   
-Power is the ability not to have to please.    
-
-
+-- 
+Raz
+Long Live the Penguin
