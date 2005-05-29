@@ -1,28 +1,27 @@
 From: Michael Tokarev <mjt@tls.msk.ru>
-Subject: Re: cpu
-Date: Sun, 29 May 2005 23:52:35 +0400
-Message-ID: <429A1D83.6010901@tls.msk.ru>
-References: <5d96567b05052815251f1cd297@mail.gmail.com>
+Subject: Re: raid1 w/ 3 active mirrors?
+Date: Sun, 29 May 2005 23:54:32 +0400
+Message-ID: <429A1DF8.6050409@tls.msk.ru>
+References: <429A13BC.2090809@bitzi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5d96567b05052815251f1cd297@mail.gmail.com>
+In-Reply-To: <429A13BC.2090809@bitzi.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
+To: "Gordon Mohr (@ Bitzi)" <gojomo@bitzi.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Raz Ben-Jehuda(caro) wrote:
-> I was testing linux raid for sometime, I created several test units
-> which send read request to the raid using big buffers( 4MB).
-> It seems to be that the software raid consumes to much cpu. I reach
-> 100% cpu usage just by reading from the raid.
-> I used 4 disks raid 0.
+Gordon Mohr (@ Bitzi) wrote:
+> I may have missed this is various docs, but is there any way to make
+> a raid1 array which has 3 (or more) active mirrors, rather than 2 mirrors
+> and spares?
 
-Now try to do the same test without raid - I bet it will use
-as much CPU as your raid test.  Raid0 requires almost no CPU
-resources, unlike improperly set up IDE disks (no DMA is the
-first thing to check -- hdparm is your friend).
+On our machines with software raid, I usually use all available disks to
+create (small) root filesystem on raid1 - which is 2, 3, 4, 5, or even 8
+on one machine.  There's no special restriction on number of mirrors in
+a raid1 set.  You create raid1 array on top of N disks exactly the same
+as you create it on 2 disks.
 
 /mjt
