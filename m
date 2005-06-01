@@ -1,100 +1,140 @@
-From: "Harry M. Aasterud" <harry@aasterudweb.com>
-Subject: mdamin on Fedora Core 3 - recovery procedures
-Date: Wed, 1 Jun 2005 15:08:40 +0200
-Message-ID: <001c01c566ab$07bd1480$d01301c3@aasterudweb.com>
+From: "Francisco Zafra" <fzafra@gmail.com>
+Subject: RE: Troubles making a raid5 system work.
+Date: Wed, 1 Jun 2005 19:51:19 +0200
+Message-ID: <429df617.35a2a6be.0f63.ffffff9a@mx.gmail.com>
+References: <62b0912f05053000534655bb7f@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=Windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <62b0912f05053000534655bb7f@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux-raid@vger.kernel.org
+To: 'Molle Bestefich' <molle.bestefich@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+ 
+Thanks Molle,
 
-I found this email adress on the website of Neil Brown at
-http://cgi.cse.unsw.edu/~neilb/Contact. I hope this email will find its
-way to the right person, within reasonable time.
+Finally I made the raid system work fine :-) I followed your steps, I it
+worked... That exactly what I did:
+- I applied the patch
+md-make-raid5-and-raid6-robust-against-failure-during-recovery.patch to my
+kernel.
+- dd the all the hardisk erasing superblock info and all...
+- Create again the array from 0.
 
-I installed FC3 with server installation. I'm using to identical disks
-40 Gb each, no RAID controller. Disc 1 on IDE controler 1, 2 on 2.
-During partitioning, I did this:
+I checked the logs and all seems to be right.
 
-- deleted all partitions
-- created new partition on hda, file system type software RAID, 100 Mb.
-This will be boot partition on hda. Did the same on hdc
-- created new partition on hda, file system type software RAID, 512 Mb.
-This will be swap partition on hda. Did the same on hdc
-- created new partition on hda, file system type software RAID, fill to
-max size . This will be / partition on hda. Did the same on hdc
+Thanks again.
 
-Created RAID devices
+By the way... I have two questions.
+1.- This patch will be included in new kernels versions or I have to applied
+each time I compile a new kernel version?
+2.- Working with big files (700megs) in the RAID comsumes a lot of cpu
+resources, is this normal? I have an Pentium 4, 3Ghz and 1GB RAM...
 
-selected hda1 and hdc1 -> md1
-selected hda2 and hdc2 -> md2
-selected hda3 and hdc3 -> md3
+That's all.
 
-copied MBR via grub
 
-When doing so, al works fine. Shutting down the system, disconnecting
-disc 2, and reboot. Doing cat /proc/mdstat shows only hda1/2/3, which i=
-s
-correct. just one minor problem: Smartd failed to load during reboot,
-though the smard.conf points to both hda and hdc. But the system is
-working OK.
+> Francisco Zafra wrote:
+> >  I have 8 200GB new SATA HDs, mdadm v1.9.0 and kernel 2.6.11.8.
+> 
+> > When the create command finish proc/mdstats report the following:
+> >         md0 : active raid5 sda1[0] sdh1[8] sdg1[6] sdf1[5] sde1[4] 
+> > sdd1[3]
+> > sdc1[9](F) sdb1[1]
+> >         1367507456 blocks level 5, 256k chunk, algorithm 2 [8/6] 
+> > [UU_UUUU_]
+> 
+> Odd that there's two missing disks in [UU_UUUU_], but only 
+> one F marker on the above line.
+> 
+> > mdadm --detail, an obtained this:
+> > /dev/md0:
+> >         Version : 00.90.01
+> >   Creation Time : Tue May 24 20:02:28 2005
+> >      Raid Level : raid5
+> >      Array Size : 1367507456 (1304.16 GiB 1400.33 GB)
+> >     Device Size : 195358208 (186.31 GiB 200.05 GB)
+> >    Raid Devices : 8
+> >   Total Devices : 8
+> > Preferred Minor : 0
+> >     Persistence : Superblock is persistent
+> > 
+> >     Update Time : Sun May 29 17:29:45 2005
+> >           State : clean, degraded
+> >  Active Devices : 6
+> > Working Devices : 7
+> >  Failed Devices : 1
+> >   Spare Devices : 1
+> 
+> Oh, so that's why there's a missing F.
+> 
+> MD has assigned one of the disks to be a Spare device, even 
+> though you did not specify any spares on the mdadm command 
+> line or in the .conf file.
+> 
+> No clue why, but seems wrong!!
+> 
+> >        8       8      113        7      spare rebuilding   /dev/sdh1
+> 
+> MD's trying to rebuild with the spare.
+> 
+> >        9       8       33        -      faulty   /dev/sdc1
+> 
+> Doesn't look good.
+> 
+> > in the system logs I have thousands of messages like this, that not 
+> > were generating during the create command:
+> 
+> [snip repeated sync start/done messages]
+> 
+> I had the same problem.
+> There was once a bug in MD that caused this when syncing + 
+> multiple devices fail.
+> See this thread for details:
+> 
+> http://thread.gmane.org/gmane.linux.raid/7714
+> 
+> (Ignore everything from Patrik Jonsson / "toy array" and 
+> onwards, it's just someone that doesn't know how their mailer 
+> works - shouldn't have been part of the thread)
+> 
+> > # mdadm -R /dev/md0
+> > mdadm: failed to run array /dev/md0: Invalid argument
+> 
+> Hm, could be a bug, or maybe it's just a misleading error message.
+> 
+> I wouldn't expect anyone to be able to figure out what's 
+> going on from the two words "Invalid argument", so if it can 
+> be fixed, this should definitely say something a little more 
+> informational.
+> 
+> > I have tried this several times, I have even earsed and 
+> checked each 
+> > drive
+> > with:
+> > 
+> >         mdadm --zero-superblock /dev/sdd
+> >         dd if=/dev/sdd of=/dev/null bs=1024k
+> >         badblocks -svw /dev/sdd
+> 
+> Perhaps there is a more subtle hardware problem, for example 
+> cable problems are  common with SATA drives.
+> 
+> If you're using Maxtor disks, you could try testing each disk 
+> with their PowerMax utility, available for download on their web site.
+> 
+> It might be that your problem only occurs when multiple disks 
+> are accessed at the same time.  You could:
+>  - Try the above dd, but run it in the background with "dd <...> &"
+> for multiple disks at the same time.
+>  - Nuke the superblocks and create the array again, but this 
+> time do a 'tail -f /var/log/messages | grep -v md:' before 
+> you start, to check for any IDE messages you might have missed.
+>  - Apply the patch that Neil Brown mentions in the 
+> aforelinkedto thread and see if things start to become more clear.
+> 
 
-Shutting down again, reconnect disc 2, and reboot. Starting the server
-again with 2 discs. Now cat /proc/mdstat only sees this:
-
-md3-hda1 size 100000 (/boot)
-md2-hda3 size 38000000 (/)
-md1-hdc2 - hda2 size 500000 (swap)
-
-This is what bothers me. I am not familiar with the RAID1 disc recoverr=
-y
-procedures, and can't tell if this how it it supposed to work.When I
-after reboot do mdadm /dev/md3 --add /dev/hdc1, then the disk is loaded
-into the array. The same with mdadm /dev/md2 --add /dev/hdc3.
-
-After that, all works fine. I also tested it by removing disk 1 (primar=
-y
-disk), and replacing it with a brand new unformatted disk. At reboot th=
-e
-error showed, not bootable. so I swapped the discs, and then it worked.
-
-Another strange thing is that I configured the partitions at
-installation after the logical sequence, that md1 should contain hda1
-and hdc1, md2 has hda2 and hdc2 etc. After installation you see that md=
-3
-has hdx1, md2 has hdx3 and md1 has hdx2...
-
-Anyway, after putting the discs back, and mdadm --add them again, thing=
-s
-appear to be working again.
-
-BUT: What I can't find in the documentation (and I've been searching no=
-w
-for 3 whole days) is what to do when I replace a disk. I replaced one o=
-f
-the discs with a blanc unformated disk. The system boots up from the on=
-e
-working harddisk. Where is it written what command to execute to create
-an exact bootable copy on the new unformated drive.
-
-Looking forward to hear from you soon.
-
-Best regards,
-
-Live support? http://www.aasterudweb.com/live
-
-Aasterud WebCom     URL: aasterudweb.com
-Harry M. Aasterud      Tel.: +47 / 48 046 256
-H.K. Foosn=E6s veg 5    Faks: +47 / 92 179 882
-NO-7730 Beitstad
-Norge - Norway
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
