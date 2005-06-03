@@ -1,7 +1,7 @@
-From: Gwendolen <watchword@graf.tc>
-Subject: Improve sexual health with viagra!
-Date: Fri, 3 Jun 2005 17:57:13 +0200
-Message-ID: <40502123754.629430366@aoz14.internetdsl.tpnet.pl>
+From: Sadie <visitation@solorzano.com>
+Subject: Reach new customers on the internet and grow your business... with dynamic software, you can!
+Date: Sat, 4 Jun 2005 05:59:58 +0900
+Message-ID: <1956744526.10611069916@p14152-adsao05douji-acca.osaka.ocn.ne.jp>
 Mime-Version: 1.0 (Apple Message framework v728)
 Content-Type: text/plain; charset=US-ASCII; format=flowed
 Content-Transfer-Encoding: 7bit
@@ -10,13 +10,13 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-10 minutes before sex, lasts for 24-36 hours
-http://endz.rockda92oj9hvar.autopointnd.com
+Name-brand software at low, low, low, low prices 
+http://elsl.g52v1fyrvqg5vzg.foliolateda.com
 
 
 
-Television: chewing gum for the eyes.       
-A man cannot be too careful in the choice of his enemies. 
-There are men I could spend eternity with. but not this life. 
+
+To feel fit as a fiddle you must tone down your middle. 
+Man forgives woman anything save the wit to outwit him.   
 
 
