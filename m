@@ -1,7 +1,7 @@
-From: Jack <Markovian@sueiro.com>
-Subject: Software cds $15 and $99 get al software in 1 cd
-Date: Sun, 5 Jun 2005 20:12:12 +0700
-Message-ID: <6359973211.5380777643@222.124.1.70>
+From: Jo <taps@edisonreport.com>
+Subject: Now your woman will be really happy with your intimate life!
+Date: Sat, 4 Jun 2005 22:20:13 -0300
+Message-ID: <3217149471.6385096866@pc-58-175-104-200.cm.vtr.net>
 Mime-Version: 1.0 (Apple Message framework v728)
 Content-Type: text/plain; charset=US-ASCII; format=flowed
 Content-Transfer-Encoding: 7bit
@@ -10,13 +10,13 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-All the Software You'll Ever Need To Successfully Make Money Online!
-http://jlzp.074flz0tfsi7f1i.aladfala9.com
+Why are online drugs popular
+http://uqhmdwl.wbz70fwpbow40xw.haetndhaet9.com
 
 
 
-
-Never underestimate the power of the irate customer.     
-Great deeds are usually wrought at great risks.     
+A person who trusts no one can't be trusted.    
+Egotism -- usually just a case of mistaken nonentity.    
+Government expands to absorb revenue - and then some.    
 
 
