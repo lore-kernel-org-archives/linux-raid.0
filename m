@@ -1,23 +1,22 @@
-From: Jason Leach <jason.leach@gmail.com>
-Subject: Choosing a RAID card.
-Date: Mon, 6 Jun 2005 11:12:41 -0700
-Message-ID: <602f2f2b05060611125c2f1898@mail.gmail.com>
-Reply-To: Jason Leach <jason.leach@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+From: Eugene <fecund@villagetrade.com>
+Subject: Viagra - Proven step to start something all over again.
+Date: Mon, 6 Jun 2005 22:43:23 +0200
+Message-ID: <11441692597.5758811386@nat1.oslavany.net>
+Mime-Version: 1.0 (Apple Message framework v728)
+Content-Type: text/plain; charset=US-ASCII; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-hi,
- 
- I'm going to be building a large RAID server on a 3Ware Escalade
-card.  Does anyone foresee a problem with my card selection?  The
-alternate would be Adaptek.  I have used the Promise cards in the past
-but they have poor Linux support and the cards don't have very good
-IO.
- 
- J.
+Security - we offer more consumer guarantees than any other website
+http://okjn.tqw4xut48lb1xut.geneserinege.com
+
+
+
+The soul of this man is in his clothes.    
+He who limps still walks.        
+People are simply incapable of prolonged, sustained goodness.     
+
+
