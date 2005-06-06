@@ -1,22 +1,23 @@
-From: Jo <taps@edisonreport.com>
-Subject: Now your woman will be really happy with your intimate life!
-Date: Sat, 4 Jun 2005 22:20:13 -0300
-Message-ID: <3217149471.6385096866@pc-58-175-104-200.cm.vtr.net>
-Mime-Version: 1.0 (Apple Message framework v728)
-Content-Type: text/plain; charset=US-ASCII; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Jason Leach <jason.leach@gmail.com>
+Subject: Choosing a RAID card.
+Date: Mon, 6 Jun 2005 11:12:41 -0700
+Message-ID: <602f2f2b05060611125c2f1898@mail.gmail.com>
+Reply-To: Jason Leach <jason.leach@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Why are online drugs popular
-http://uqhmdwl.wbz70fwpbow40xw.haetndhaet9.com
-
-
-
-A person who trusts no one can't be trusted.    
-Egotism -- usually just a case of mistaken nonentity.    
-Government expands to absorb revenue - and then some.    
-
-
+hi,
+ 
+ I'm going to be building a large RAID server on a 3Ware Escalade
+card.  Does anyone foresee a problem with my card selection?  The
+alternate would be Adaptek.  I have used the Promise cards in the past
+but they have poor Linux support and the cards don't have very good
+IO.
+ 
+ J.
