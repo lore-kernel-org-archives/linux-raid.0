@@ -1,86 +1,53 @@
 From: Mike Hardy <mhardy@h3c.com>
 Subject: Re: entire array lost when some blocks unreadable?
-Date: Tue, 07 Jun 2005 14:13:20 -0700
-Message-ID: <42A60DF0.3070502@h3c.com>
-References: <42A60A1A.9030302@gmx.ch>
+Date: Tue, 07 Jun 2005 14:21:30 -0700
+Message-ID: <42A60FDA.5080402@h3c.com>
+References: <42A60A1A.9030302@gmx.ch> <42A60D5F.2060407@wasp.net.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <42A60A1A.9030302@gmx.ch>
+In-Reply-To: <42A60D5F.2060407@wasp.net.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Tom Eicher <tom.eicher@gmx.ch>, linux-raid@vger.kernel.org
+To: Brad Campbell <brad@wasp.net.au>
+Cc: Tom Eicher <tom.eicher@gmx.ch>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-Linux raid considers one unreadable block on one drive sufficient
-evidence to kick the whole device out of the array.
 
-If at that point reconstruction finds other blocks, you have the dreaded
-raid 5 double disk failure. Total loss, *seemingly*.
+Brad Campbell wrote:
 
-You already realize the important information though, which is that the
-unreadable sections of disk are probably not in the same stripe on each
-disk (that's highly improbably, at least, and you can check either way)
-so you actually have enough information via redundancy to recover all of
-your information.
+> Join the long line next to the club trophy cabinet :)
 
-You just can't do it with the main raid tools.
+Its a shame the line is this long - I wish I had the time to implement
+the solution myself, but not having that I can't really whine either.
+Its still a shame though. Alas.
 
-I posted a number of things under the heading "the dreaded double disk
-failure" on this list, including a script to create a loopback device
-test array, and a perl script (several iterations, in fact) that
-implements the raid5 algorithm in software and can read raid5 stripes
-and tell you (via parity) what the data in a given device for a given
-stripe should be.
+> Something along those lines.
+> Generally if I get an error notification from smartd I pull the drive
+> from the array and re-add it. This causes a rewrite of the entire disk
+> and everyone is happy. (Unless the drive is dying, in which case the
+> rewrite of the entire disk usually finishes it off nicely)
 
-Using a strategy similar to this, you can then re-write the data onto
-the unreadable sectors, causing the drive firmware to remap those
-sectors and fix that spot.
+When I get one of those, the first thing I do is verify my backup :-).
+The backup is a second array that's on the network, so I typically
+remount it read-only at that point.
 
-Repeat until you're clean, and you may have your data back.
+Then I start drive scans on all drives (primary and backup) to see if
+I've got any other blocks that will stop reconstruction. If I find any
+other bad blocks on other devices, I immediately remount the primary as
+read-only to preserve the data (if its not already gone) on all of the
+disks. Note my disks almost never get written to, so this actually does
+preserve the old data everywhere in all the cases I care about.
 
-In general though, your hunch is right. smartd
-(http://smartmontools.sf.net) running scans (I do a short scan on each
-disk staggered nightly, and a long scan on each disk once a week also
-staggered) with email notifications will help. mdadm running with email
-notifications will notify when you lost a disk so you can take action if
-necessary (for instance, a long scan of all the remaining disks ASAP)
+After that, a fail and re-add has done the trick for me in the past, but
+once I actually got remapped into a bad block. Very annoying. Since
+then, I fail the disk and do multiple badblocks passes on it.
 
-Also, raid is no substitute for good backups.
-
-Good luck - and if you use the scripts, please post any patches that
-make them more useful. They are far from perfect, but worked for me.
-Hopefully they can help you if you need them.
+Being able to enable an "aggressively correct" raid mode where any
+single-block read error triggered a reconstruct/write/re-read cycle
+until either it worked or failed would be nice. Bonus points for extra
+md status markers that mdadm could pick up and mail to folks depending
+on policy configuration.
 
 -Mike
-
-Tom Eicher wrote:
-> Hi list,
-> 
-> I might be missing the point here... I lost my first Raid-5 array
-> (apparently) because one drive was kicked out after a DriveSeek error.
-> When reconstruction startet at full speed, some blocks on another drive
-> appeared to have uncorrectable errors, resulting in that drive also
-> being kicked... you get it.
-> 
-> Now here is my question: On a normal drive, I would expect that a drive
-> seek error or uncorrectable blocks would typically not take out the
-> entire drive, but rather just corrupt the files that happen to be on
-> those blocks. With RAID, a local error seems to render the entire array
-> unusable. This would seem like an extreme measure to take just for some
-> corrupt blocks.
-> 
-> - Is it correct that a relatively small corrupt area on a drive can
-> cause the raid manager to kick out a drive?
-> - How does one prevent the scenario above?
->  - periodically run drive tests (smart -t...) to early detect problems
-> before multiple drives fail?
->  - periodically run over the entire drives and copy the data around so
-> the drives can sort out the bad blocks?
-> 
-> Thanks for any insight, tom
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
