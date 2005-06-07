@@ -1,42 +1,47 @@
-From: Dan Stromberg <strombrg@dcs.nac.uci.edu>
-Subject: LVM2 of a series of mdadm RAID 5's?
-Date: Tue, 07 Jun 2005 16:40:28 -0700
-Message-ID: <1118187628.15459.99.camel@seki.nac.uci.edu>
+From: Mike Hardy <mhardy@h3c.com>
+Subject: Re: Can "mdadm" linux RAID go large?
+Date: Tue, 07 Jun 2005 16:46:15 -0700
+Message-ID: <42A631C7.2060309@h3c.com>
+References: <1118187516.15459.93.camel@seki.nac.uci.edu>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-A6WarAnqGNISIxU/l/87"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1118187516.15459.93.camel@seki.nac.uci.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: strombrg@dcs.nac.uci.edu
+To: Dan Stromberg <strombrg@dcs.nac.uci.edu>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
---=-A6WarAnqGNISIxU/l/87
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Not sure about the size limits per se
+(http://www.suse.de/~aj/linux_lfs.html has good info there)
 
+I can say that with a very large number of disks, you will hit
+single-block read errors quite frequently due to the nature of the math
+behind MTBF. This will lead to frequent drive expulsion / rebuild
+cycles, as discussed in another thread today.
 
-Has anyone constructed an LVM2 concatenation of a bunch of mdadm RAID
-5's?
+In another question (you could post them all as one mail,
+incidentally...) you asked if it was stable. The only evidence appears
+to be anecdotal, but it appears extremely stable to me, even under very
+heavy testing - normal new machine cpu/network/ram burn-in tests,
+combined with multiple bonnie++ processes hitting the array. Any
+problems I've had have been attributable to hardware or hardware drivers
+thus far.
 
-Was it reliable?
+There have been problems (like the recent set of looping-resync issues
+for instance), but I don't remember hearing any that resulted in data
+loss, and they get fixed quickly. Serious problems still leave you with
+your data on a set of disks in a known format, which means that it may
+be laborious but you can reconstruct. So it "degrades" more gracefully
+than the black box that are some hardware raid systems.
 
-How large was it?
+It takes care to run well and safely though, as with any machine.
 
-Thanks to all respondents!
+-Mike
 
-
---=-A6WarAnqGNISIxU/l/87
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.6 (GNU/Linux)
-
-iD8DBQBCpjBso0feVm00f/8RApeZAKCB55rVC/h07BCNxhQTMrzKrLA7vgCdHw1N
-JYqlDy8nkzIdhBzDCIF2Niw=
-=Bvw6
------END PGP SIGNATURE-----
-
---=-A6WarAnqGNISIxU/l/87--
-
+Dan Stromberg wrote:
+> Can mdadm linux RAID go past 2 terabytes reliably?
+> 
+> Can mdadm linux RAID go past 16 terabytes reliably?
+> 
