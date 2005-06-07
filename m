@@ -1,72 +1,86 @@
-From: Brad Campbell <brad@wasp.net.au>
+From: Mike Hardy <mhardy@h3c.com>
 Subject: Re: entire array lost when some blocks unreadable?
-Date: Wed, 08 Jun 2005 01:10:55 +0400
-Message-ID: <42A60D5F.2060407@wasp.net.au>
+Date: Tue, 07 Jun 2005 14:13:20 -0700
+Message-ID: <42A60DF0.3070502@h3c.com>
 References: <42A60A1A.9030302@gmx.ch>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <42A60A1A.9030302@gmx.ch>
 Sender: linux-raid-owner@vger.kernel.org
-To: Tom Eicher <tom.eicher@gmx.ch>
-Cc: linux-raid@vger.kernel.org
+To: Tom Eicher <tom.eicher@gmx.ch>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+
+Linux raid considers one unreadable block on one drive sufficient
+evidence to kick the whole device out of the array.
+
+If at that point reconstruction finds other blocks, you have the dreaded
+raid 5 double disk failure. Total loss, *seemingly*.
+
+You already realize the important information though, which is that the
+unreadable sections of disk are probably not in the same stripe on each
+disk (that's highly improbably, at least, and you can check either way)
+so you actually have enough information via redundancy to recover all of
+your information.
+
+You just can't do it with the main raid tools.
+
+I posted a number of things under the heading "the dreaded double disk
+failure" on this list, including a script to create a loopback device
+test array, and a perl script (several iterations, in fact) that
+implements the raid5 algorithm in software and can read raid5 stripes
+and tell you (via parity) what the data in a given device for a given
+stripe should be.
+
+Using a strategy similar to this, you can then re-write the data onto
+the unreadable sectors, causing the drive firmware to remap those
+sectors and fix that spot.
+
+Repeat until you're clean, and you may have your data back.
+
+In general though, your hunch is right. smartd
+(http://smartmontools.sf.net) running scans (I do a short scan on each
+disk staggered nightly, and a long scan on each disk once a week also
+staggered) with email notifications will help. mdadm running with email
+notifications will notify when you lost a disk so you can take action if
+necessary (for instance, a long scan of all the remaining disks ASAP)
+
+Also, raid is no substitute for good backups.
+
+Good luck - and if you use the scripts, please post any patches that
+make them more useful. They are far from perfect, but worked for me.
+Hopefully they can help you if you need them.
+
+-Mike
 
 Tom Eicher wrote:
 > Hi list,
 > 
-> I might be missing the point here... I lost my first Raid-5 array 
-> (apparently) because one drive was kicked out after a DriveSeek error. 
-> When reconstruction startet at full speed, some blocks on another drive 
-> appeared to have uncorrectable errors, resulting in that drive also 
+> I might be missing the point here... I lost my first Raid-5 array
+> (apparently) because one drive was kicked out after a DriveSeek error.
+> When reconstruction startet at full speed, some blocks on another drive
+> appeared to have uncorrectable errors, resulting in that drive also
 > being kicked... you get it.
-
-Join the long line next to the club trophy cabinet :)
-
-> Now here is my question: On a normal drive, I would expect that a drive 
-> seek error or uncorrectable blocks would typically not take out the 
-> entire drive, but rather just corrupt the files that happen to be on 
-> those blocks. With RAID, a local error seems to render the entire array 
-> unusable. This would seem like an extreme measure to take just for some 
+> 
+> Now here is my question: On a normal drive, I would expect that a drive
+> seek error or uncorrectable blocks would typically not take out the
+> entire drive, but rather just corrupt the files that happen to be on
+> those blocks. With RAID, a local error seems to render the entire array
+> unusable. This would seem like an extreme measure to take just for some
 > corrupt blocks.
-
-Perhaps.. I believe something may be on the cards in regard to trying to do a reconstruction 
-re-write of the dodgy sector to try and force a reallocation prior to kicking the drive, but I only 
-recall a rumbling of the ground type of rumour there.
-
-> - Is it correct that a relatively small corrupt area on a drive can 
+> 
+> - Is it correct that a relatively small corrupt area on a drive can
 > cause the raid manager to kick out a drive?
-
-At the moment, yes..
-
 > - How does one prevent the scenario above?
->  - periodically run drive tests (smart -t...) to early detect problems 
+>  - periodically run drive tests (smart -t...) to early detect problems
 > before multiple drives fail?
-
-I run a short test on every drive 6 days a week, and a long test on every drive, every sunday.
-This does a good job of locating pending errors and smartd E-mails me any issues it spots. My server 
-is not a heavily loaded machine however, and I generally have a chance to trigger a write to 
-reallocate the sectors prior to a read hitting it and kicking the drive out (or with the bug I have 
-at the moment, killing the box - but that is not an md issue)
-
->  - periodically run over the entire drives and copy the data around so 
+>  - periodically run over the entire drives and copy the data around so
 > the drives can sort out the bad blocks?
-
-Something along those lines.
-Generally if I get an error notification from smartd I pull the drive from the array and re-add it. 
-This causes a rewrite of the entire disk and everyone is happy. (Unless the drive is dying, in which 
-case the rewrite of the entire disk usually finishes it off nicely)
-
-Another interesting thought is to unmount the drive and run a badblocks non-destructive media test 
-on the array. This will read a stripe into memory (depending on how you configure badblocks) and 
-write a series of patterns to the stripe (which will re-write every sector in the stripe). It will 
-then write back the original data. Although, I guess in thinking about it, the reading the stripe 
-will cause the drive to be kicked if it has a bad block anyway.. so scratch that. It's late here :)
-
-Regards,
-Brad
--- 
-"Human beings, who are almost unique in having the ability
-to learn from the experience of others, are also remarkable
-for their apparent disinclination to do so." -- Douglas Adams
+> 
+> Thanks for any insight, tom
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
