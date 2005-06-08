@@ -1,26 +1,20 @@
-From: raz ben jehuda <razb@bitband.com>
-Subject: raid1 fault disk
-Date: Wed, 08 Jun 2005 13:25:34 +0300
-Message-ID: <1118226334.31330.17.camel@raz-laptop>
+From: Keven <cleghorn_june@gamebox.net>
+Subject: look through the message
+Date: Wed, 8 Jun 2005 11:53:25 +0000 (UTC)
+Message-ID: <417609819965.52947330680381@d141-191-131.home.cgocable.net>
+Reply-To: Ada <cleghorn_june@gamebox.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+        charset="Windows-1252"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+Date: Wen, 8 Jun 2005 07:55:41 +0000
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello to you all.
-I am using 2 sata disk 250GB each with raid1 over linux-2.6.11.6. the 
-mirror is composed of 3x2 partitions , two  partitions on two different 
-disks that creates one mirror.
-The "/" directory is one of the mirrors.
-When I  detach one of the disks  a command such as  dmesg
-hangs or any thing of that sort.  When  i return the disk  everything
-goes back to place.
-Anyone ?
--- 
-Raz
-Long Live The Penguin
-
+admirable best asian ladyboy site:
+)
+We offer the best service:
+http://www.asiants.com
 
