@@ -1,58 +1,40 @@
-From: Dan Stromberg <strombrg@dcs.nac.uci.edu>
-Subject: Re: active/active vs active/passive?
-Date: Wed, 08 Jun 2005 11:28:11 -0700
-Message-ID: <1118255291.15459.164.camel@seki.nac.uci.edu>
-References: <1118189397.15459.108.camel@seki.nac.uci.edu>
+From: Mike Hardy <mhardy@h3c.com>
+Subject: Re: 3Ware on 64bit Linux.
+Date: Wed, 08 Jun 2005 11:49:23 -0700
+Message-ID: <42A73DB3.9050705@h3c.com>
+References: <602f2f2b050608100938ddad81@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-toF+iGpaj+8gxaX9W5R3"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1118189397.15459.108.camel@seki.nac.uci.edu>
+In-Reply-To: <602f2f2b050608100938ddad81@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: strombrg@dcs.nac.uci.edu
+To: Jason Leach <jason.leach@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
---=-toF+iGpaj+8gxaX9W5R3
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I can't speak to your specific card, but I'm using another of their
+cards (8-port PATA, I think that's the 7xxx?) and the driver and admin
+client (3dm2) haven't had stability problems so far on a dual opteron
+that previously had problems handling the interrupt traffic with
+multiple promise/cmd-type PATA cards.
 
-On Tue, 2005-06-07 at 17:09 -0700, Dan Stromberg wrote:
-> The lecturer at the recent NG storage talk at Usenix in Anaheim,
-> indicated that it was best to avoid "active/active" and get
-> "active/passive" instead.
->=20
-> Does anyone:
->=20
-> 1) Know what these things mean?
->=20
-> 2) Know why active/passive might be preferred over active/active?
->=20
-> If I had to guess, I'd say that active/active means that n servers are
-> all watching n-1 others to decide when they should jump to life, while
-> in active/passive perhaps 1 server is primary, and the passive nodes
-> only monitor that 1 server.  Maybe?  Just a totally wild guess based on
-> next to nothing.  :)
+I won't send the details since its all very specific (hopefully someone
+else has done it), but 3ware can work well on dual-opteron stuff, which
+is a positive sign for you
 
-I think I found a relevant context.  Say you have two RAID controllers
-per "Storage Brick", the latter apparently being a dual-ported way of
-accessing a SATA or FC disk.  Does active/active mean they'll send data
-at the disk in question via both ports?
+-Mike
 
-Thanks!
-
-
---=-toF+iGpaj+8gxaX9W5R3
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.6 (GNU/Linux)
-
-iD8DBQBCpzi7o0feVm00f/8RAonLAKChEbQIWhQjQlDEw16XiS9d1Xga9wCfSLbj
-0GZ9BryAMGDu75ylqCw16pw=
-=bwIe
------END PGP SIGNATURE-----
-
---=-toF+iGpaj+8gxaX9W5R3--
-
+Jason Leach wrote:
+> hi,
+> 
+> Does anyone have a 3ware 90500S card working on 64bit Linux to a point
+> where it is very stable and preforming as advertised?  If so, can you
+> send me the HW specs you are using? (mobo, cpu, chipsets).  I'm
+> considering putting one together but don't want an unstable system.
+> 
+> Jason.
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
