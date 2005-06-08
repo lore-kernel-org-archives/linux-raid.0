@@ -1,20 +1,35 @@
-From: Keven <cleghorn_june@gamebox.net>
-Subject: look through the message
-Date: Wed, 8 Jun 2005 11:53:25 +0000 (UTC)
-Message-ID: <417609819965.52947330680381@d141-191-131.home.cgocable.net>
-Reply-To: Ada <cleghorn_june@gamebox.net>
+From: Sebastian =?ISO-8859-1?Q?Cla=DFen?=
+	<Sebastian.Classen@freenet-ag.de>
+Subject: raidtools vs. mdadm
+Date: Wed, 08 Jun 2005 14:21:29 +0200
+Message-ID: <1118233289.12044.13.camel@basti79.freenet-ag.de>
+Reply-To: Sebastian.Classen@freenet-ag.de
 Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="Windows-1252"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Date: Wen, 8 Jun 2005 07:55:41 +0000
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-admirable best asian ladyboy site:
-)
-We offer the best service:
-http://www.asiants.com
+Hi all...
+
+We want to change from old raidtools to mdadm and have a problem:
+
+While using the old raidtools the complete raid configuration was stored
+in /etc/raidtab. With mdadm there are missing some informations in the
+configuration file, espacialy those which are important for array
+creation (e.g. the chunk size).
+
+With raidtools it was possible to call 'mkraid /dev/md?' and all
+informations have been fetched from raidtab. With mdadm you have to
+manualy enter those missing configuration options when creating a new
+array.
+
+Is there any way to keep all configuration information together when
+switching to mdadm?
+
+Greets
+  Sebastian.
+
 
