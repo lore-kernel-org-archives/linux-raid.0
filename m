@@ -1,22 +1,22 @@
-From: Ralph <contributory@meden.com.pl>
-Subject: You can finally get real viagra medication that works!
-Date: Wed, 8 Jun 2005 19:07:31 +0200
-Message-ID: <33455128546.5459633816@os-gornik.bochnia.pl>
-Mime-Version: 1.0 (Apple Message framework v728)
-Content-Type: text/plain; charset=US-ASCII; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Jason Leach <jason.leach@gmail.com>
+Subject: 3Ware on 64bit Linux.
+Date: Wed, 8 Jun 2005 10:09:25 -0700
+Message-ID: <602f2f2b050608100938ddad81@mail.gmail.com>
+Reply-To: Jason Leach <jason.leach@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-No #1 drug for male impotence
-http://xtm.crxnyvc5rmckgvc.tapetiec.com
+hi,
 
+Does anyone have a 3ware 90500S card working on 64bit Linux to a point
+where it is very stable and preforming as advertised?  If so, can you
+send me the HW specs you are using? (mobo, cpu, chipsets).  I'm
+considering putting one together but don't want an unstable system.
 
-
-The extreme limit of wisdom-- that is what the public calls madness. 
-No athlete is crowned but in the sweat of his brow.  
-Sleep, those little slices of death; Oh how I loathe them.  
-
-
+Jason.
