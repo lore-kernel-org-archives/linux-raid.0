@@ -1,54 +1,45 @@
-From: Dan Stromberg <strombrg@dcs.nac.uci.edu>
+From: Konstantin Olchanski <olchansk@sam.triumf.ca>
 Subject: Re: 3Ware on 64bit Linux.
-Date: Wed, 08 Jun 2005 12:58:40 -0700
-Message-ID: <1118260720.15459.177.camel@seki.nac.uci.edu>
-References: <602f2f2b050608100938ddad81@mail.gmail.com>
-	 <200506081156.31051.hjm@tacgi.com>
+Date: Wed, 8 Jun 2005 14:36:15 -0700
+Message-ID: <20050608213615.GC14944@sam.triumf.ca>
+References: <602f2f2b050608100938ddad81@mail.gmail.com> <200506081156.31051.hjm@tacgi.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-/b3rNV0ke4hDJpxs/O6A"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 In-Reply-To: <200506081156.31051.hjm@tacgi.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Harry Mangalam <hjm@tacgi.com>
-Cc: strombrg@dcs.nac.uci.edu, Jason Leach <jason.leach@gmail.com>, linux-raid@vger.kernel.org
+Cc: Jason Leach <jason.leach@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Wed, Jun 08, 2005 at 11:56:30AM -0700, Harry Mangalam wrote:
+> I have what is probably a relatively common setup for a medium high end, 
+> stand-alone, PC-based server:
+> 
+> - dual opteron IWILL Mobo, Gb ethernet
+> - 3ware 9500S 8 port card running 8x250GB WD 2500SD disks in RAID5.  
+> - Disks are in 2x 4slot Chenbro hotswap RAID cages. 
+> - running kubuntu Linux in pure 64bit mode
+> - OS is running from a separate 200GB IDE disk 
+> - on an APC UPS (runnning apcupsd w/ a usb cable)
 
---=-/b3rNV0ke4hDJpxs/O6A
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I have a 3ware 8506-12 SATA controller with 12 WD 250 GByte SATA disks,
+on an old dual opteron-242 Tyan mobo. The system disk is a
+separate 80 GB IDE disk. The SATA disks are confugured into 2
+striped (one hardware raid, one software raid) logical volumes (1.5 TB
+each). The box and the hot-swap disk enclosure is el-cheapo stuff
+from Hard Data in Edmonton, AB (works great!).
 
-On Wed, 2005-06-08 at 11:56 -0700, Harry Mangalam wrote:
+This system has been rock solid from day one, running RedHat 9 (32-bit),
+then Fedora 1 (32-bit), than Fedora 2 and 3 (64-bit).
 
->=20
-> Dan Stromberg who has been posting here recently can speak to the=20
-> viability/reliability of the right Maxtor disks to use, but the 3ware tec=
-h=20
-> said that the WD SD series disks were very reliable and fast.
+I use the 3ware driver that comes with the Red Hat kernels, the
+additional monitoring tools from 3ware do not work. SMART monitoring
+works via "smartctl -a -d 3ware,0 /dev/twe0".
 
-I have a writeup of the 3ware+maxtor SATA mess we just got a refund on
-at:
-
-http://dcs.nac.uci.edu/~strombrg/3ware-maxtor-notes.html
-
-...but in short, we never determined definitively if the hardware
-problems (there were software problems too) were due to the RAID
-controllers or the disks.  The integrator we were working with was
-blaming the disks, but sometimes we'd get repeated failures with
-different disks in the same slot of a given RAID controller.
-
-
---=-/b3rNV0ke4hDJpxs/O6A
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.6 (GNU/Linux)
-
-iD8DBQBCp03wo0feVm00f/8RAig5AKCbGO9cUOh9FXIGDD9/hkKCaC/MqwCeMqIz
-K4gFTm0y7tPPco1ZpqEtdug=
-=CiJP
------END PGP SIGNATURE-----
-
---=-/b3rNV0ke4hDJpxs/O6A--
-
+-- 
+Konstantin Olchanski
+Data Acquisition Systems: The Bytes Must Flow!
+Email: olchansk-at-triumf-dot-ca
+Snail mail: 4004 Wesbrook Mall, TRIUMF, Vancouver, B.C., V6T 2A3, Canada
