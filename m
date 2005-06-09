@@ -1,63 +1,76 @@
-From: Sven Hessenmueller <Sven.Hessenmueller@gmx.de>
-Subject: trouble with software raid-1 on dm-multipath-devices
-Date: Thu, 09 Jun 2005 12:19:34 +0200
-Message-ID: <42A817B6.70709@gmx.de>
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: Is there a good reason why I can't "mdadm -Gfn1 /dev/md1" ?
+Date: Thu, 9 Jun 2005 21:12:02 +1000
+Message-ID: <17064.9218.919914.356958@cse.unsw.edu.au>
+References: <E1DgFzi-0007K9-00@mta2.cl.cam.ac.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from Piete Brooks on Thursday June 9
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Piete Brooks <Piete.Brooks@cl.cam.ac.uk>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-hi list!
+On Thursday June 9, Piete.Brooks@cl.cam.ac.uk wrote:
+> I really love having my partitions as RAID1 devices as it allows the actual 
+> partition major and minor numbers to change, and allows me to "move" 
+> partitions by adding and removing them from the array.
+> 
+> As such I do this even when there is only one partition. To move it, I can 
+> make it a two way mirror, add the new partition, then remove the old. However, 
+> I can't then shrink it back to being a one way mirror. Is there a good reason 
+> for this, or is it just not something that was considered sane?
+> [ "really" just runs a command as root ]
+> 
+> bedat-32:~: really mdadm -Gn1 /dev/md1
+> mdadm: '1' is an unusual number of drives for an array, so it is probably
+>      a mistake.  If you really mean it you will need to specify --force before
+>      setting the number of drives.
+> bedat-32:~: really mdadm -G --force -n1 /dev/md1
+> mdadm: option f not valid in grow mode
 
-i want to build a software raid-1 on top of multipath-devices and maybe
-need to stack an lvm on top of this (not sure yet).
+Hmmm.... yes... Didn't think of that did I?
 
-some details of my trouble by doing so:
+I'm very close to releasing mdadm 1.12.0.  It will have this fixed.
 
-my host with 2 HBAs (emulex lp9802) is attached to 2 storage-arrays
-(emc symmetrix on different locations) on a dual independet fabric (1
-hba on each fabric).
+If you are impatient, the patch against 1.11.0 is very simple.  See
+below.
 
-i have 2 paths to each symmetrix - looks like this:
+Thanks,
+NeilBrown
 
 
-SYMMETRIX1:
- (0 0 0 10) sdb [ready ] (8:16)
- (1 0 0 10) sdr [ready ] (65:16)
-SYMMETRIX2:
- (0 0 1 61) sdj [ready ] (8:144)
- (1 0 1 61) sdz [ready ] (65:144)
+### Diffstat output
+ ./mdadm.c |    1 +
+ 1 files changed, 1 insertion(+)
 
-so i just build the multipath devices:
+diff ./mdadm.c~current~ ./mdadm.c
+--- ./mdadm.c~current~	2005-06-08 14:41:33.000000000 +1000
++++ ./mdadm.c	2005-06-09 21:08:40.000000000 +1000
+@@ -466,6 +466,7 @@ int main(int argc, char *argv[])
+ 			continue;
+ 
+ 		case O(BUILD,'f'): /* force honouring '-n 1' */
++		case O(GROW,'f'): /* ditto */
+ 		case O(CREATE,'f'): /* force honouring of device list */
+ 		case O(ASSEMBLE,'f'): /* force assembly */
+ 		case O(MISC,'f'): /* force zero */
 
-echo "0 17677440 multipath 2 round-robin 1 0 65:16 round-robin 1 0 
-8:16"  | dmsetup create sym1_388
 
-...make the nodes via dmsetup mknodes etc.
 
-to this point all is fine.
-
-but now i want to build a mirror between the syms and *grmbl*:
-
-mdadm -C -l mirror -n 2 /dev/md0 /dev/mapper/sym1_dev388 
-/dev/mapper/sym2_dev388
-
-results in:
-
-Jun  8 02:24:09 s01kr606 kernel: md: could not lock dm-7.
-Jun  8 02:24:09 s01kr606 kernel: md: error, md_import_device() returned -16
-
-is there any other possibility or any clue to get it working??
-
-i'm using a sles9 with sp1. in the past (kernel 2.4, sles8 w sp3) i got 
-the same construction working with md-only (md-multipathing, stacking a 
-md-mirror on top and finally stacking an lvm on top of the mirror) but i 
-like the multipath implemetation with dm much more...
-
-thanks!
-
--sven
-
+> bedat-32:~: really mdadm --force -Gn1 /dev/md1
+> mdadm: -G would set mode to grow, but it is already manage.
+> bedat-32:~:  mdadm -V
+> mdadm - v1.6.0 - 4 June 2004
+> bedat-32:~: rpm -q mdadm       
+> mdadm-1.6.0-2
+> bedat-32:~: 
+> 
+> Any ideas?
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
