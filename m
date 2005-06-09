@@ -1,47 +1,63 @@
-From: ptb@lab.it.uc3m.es (Peter T. Breuer)
-Subject: Re: Is there a good reason why I can't "mdadm -Gfn1 /dev/md1" ?
-Date: Thu, 9 Jun 2005 08:07:51 +0200
-Message-ID: <nu2ln2-tfg.ln1@news.it.uc3m.es>
-References: <E1DgFzi-0007K9-00@mta2.cl.cam.ac.uk>
+From: Sven Hessenmueller <Sven.Hessenmueller@gmx.de>
+Subject: trouble with software raid-1 on dm-multipath-devices
+Date: Thu, 09 Jun 2005 12:19:34 +0200
+Message-ID: <42A817B6.70709@gmx.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Piete Brooks <Piete.Brooks@cl.cam.ac.uk> wrote:
-> I really love having my partitions as RAID1 devices as it allows the actual 
-> partition major and minor numbers to change, and allows me to "move" 
-> partitions by adding and removing them from the array.
+hi list!
 
-Good idea.
+i want to build a software raid-1 on top of multipath-devices and maybe
+need to stack an lvm on top of this (not sure yet).
 
-> As such I do this even when there is only one partition. To move it, I can 
-> make it a two way mirror, add the new partition, then remove the old. However, 
-I think I'd call that "copying", not moving!
+some details of my trouble by doing so:
 
-> I can't then shrink it back to being a one way mirror. Is there a good reason 
-> for this, or is it just not something that was considered sane?
-> [ "really" just runs a command as root ]
+my host with 2 HBAs (emulex lp9802) is attached to 2 storage-arrays
+(emc symmetrix on different locations) on a dual independet fabric (1
+hba on each fabric).
 
-> bedat-32:~: really mdadm -Gn1 /dev/md1
-> mdadm: '1' is an unusual number of drives for an array, so it is probably
->      a mistake.  If you really mean it you will need to specify --force before
->      setting the number of drives.
-> bedat-32:~: really mdadm -G --force -n1 /dev/md1
-> mdadm: option f not valid in grow mode
-> bedat-32:~: really mdadm --force -Gn1 /dev/md1
-> mdadm: -G would set mode to grow, but it is already manage.
-> bedat-32:~:  mdadm -V
-> mdadm - v1.6.0 - 4 June 2004
-> bedat-32:~: rpm -q mdadm       
-> mdadm-1.6.0-2
-> bedat-32:~: 
+i have 2 paths to each symmetrix - looks like this:
 
-Well, you could always just remake the mirror with --dangerous-no-resync
-using mkraid. I don't know if mdadm permits that. I would have thought
-it supported the semantics in mode create or assemble or whatever, just
-by virtue of the fact of making an array with one compnent. So try -C
-or -A.
 
-Peter
+SYMMETRIX1:
+ (0 0 0 10) sdb [ready ] (8:16)
+ (1 0 0 10) sdr [ready ] (65:16)
+SYMMETRIX2:
+ (0 0 1 61) sdj [ready ] (8:144)
+ (1 0 1 61) sdz [ready ] (65:144)
+
+so i just build the multipath devices:
+
+echo "0 17677440 multipath 2 round-robin 1 0 65:16 round-robin 1 0 
+8:16"  | dmsetup create sym1_388
+
+...make the nodes via dmsetup mknodes etc.
+
+to this point all is fine.
+
+but now i want to build a mirror between the syms and *grmbl*:
+
+mdadm -C -l mirror -n 2 /dev/md0 /dev/mapper/sym1_dev388 
+/dev/mapper/sym2_dev388
+
+results in:
+
+Jun  8 02:24:09 s01kr606 kernel: md: could not lock dm-7.
+Jun  8 02:24:09 s01kr606 kernel: md: error, md_import_device() returned -16
+
+is there any other possibility or any clue to get it working??
+
+i'm using a sles9 with sp1. in the past (kernel 2.4, sles8 w sp3) i got 
+the same construction working with md-only (md-multipathing, stacking a 
+md-mirror on top and finally stacking an lvm on top of the mirror) but i 
+like the multipath implemetation with dm much more...
+
+thanks!
+
+-sven
 
