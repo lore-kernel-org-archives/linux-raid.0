@@ -1,44 +1,60 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: Is there a good reason why I can't "mdadm -Gfn1 /dev/md1" ?
-Date: Thu, 9 Jun 2005 23:18:36 +1000
-Message-ID: <17064.16812.95215.185952@cse.unsw.edu.au>
-References: <E1DgFzi-0007K9-00@mta2.cl.cam.ac.uk>
-	<17064.9218.919914.356958@cse.unsw.edu.au>
-	<20050609112055.GA26006@percy.comedia.it>
+From: Lars Marowsky-Bree <lmb@suse.de>
+Subject: Re: trouble with software raid-1 on dm-multipath-devices
+Date: Thu, 9 Jun 2005 16:42:42 +0200
+Message-ID: <20050609144242.GT25717@marowsky-bree.de>
+References: <42A817B6.70709@gmx.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Luca Berra on Thursday June 9
+Content-Disposition: inline
+In-Reply-To: <42A817B6.70709@gmx.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Luca Berra <bluca@comedia.it>
-Cc: linux-raid@vger.kernel.org
+To: Sven Hessenmueller <Sven.Hessenmueller@gmx.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday June 9, bluca@comedia.it wrote:
-> On Thu, Jun 09, 2005 at 09:12:02PM +1000, Neil Brown wrote:
-> >I'm very close to releasing mdadm 1.12.0.  It will have this fixed.
-> 
-> do you have a prerelease, i'd like to test the stacking stuff.
+On 2005-06-09T12:19:34, Sven Hessenmueller <Sven.Hessenmueller@gmx.de> =
+wrote:
 
-try:
-  http://www.cse.unsw.edu.au/~neilb/source/mdadm/mdadm-test.tgz
+> mdadm -C -l mirror -n 2 /dev/md0 /dev/mapper/sym1_dev388=20
+> /dev/mapper/sym2_dev388
+>=20
+> results in:
+>=20
+> Jun  8 02:24:09 s01kr606 kernel: md: could not lock dm-7.
+> Jun  8 02:24:09 s01kr606 kernel: md: error, md_import_device() return=
+ed -16
+>=20
+> is there any other possibility or any clue to get it working??
 
-It doesn't have an updated version number of anything, but it does try
-to get --stop --scan right for stacked devices, and it does have
-ChangeLog entries.
-(I haven't done anything about improving the lot of --assemble for
-stacked devices)
+This should work, I test that frequently.
 
-NeilBrown
+Are the /dev/dm-xx mounted/accessed by anything else?
 
-> 
-> L.
-> 
-> -- 
-> Luca Berra -- bluca@comedia.it
->         Communication Media & Services S.r.l.
->  /"\
->  \ /     ASCII RIBBON CAMPAIGN
->   X        AGAINST HTML MAIL
->  / \
+(And, because of a bug, I'm hoping you're running SLES9 SP1 with a
+kernel updated to post-SP1, because that one was broken with DM/md
+stacking due to an oversight... But then, you'd have seen an oops
+already ;-)
+
+SP2 will bring much improved DM multipath, too.
+
+Actually, in the future you may want to annoy the Novell / SUSE support
+organization with questions about SLES9 kernels, because they are fairl=
+y
+different from mainline ;-)
+
+
+Sincerely,
+    Lars Marowsky-Br=E9e <lmb@suse.de>
+
+--=20
+High Availability & Clustering
+SUSE Labs, Research and Development
+SUSE LINUX Products GmbH - A Novell Business	 -- Charles Darwin
+"Ignorance more frequently begets confidence than does knowledge"
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
