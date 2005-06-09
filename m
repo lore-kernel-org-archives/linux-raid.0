@@ -1,41 +1,58 @@
-From: "Martin D. Weinberg" <weinberg@astro.umass.edu>
-Subject: Help migrating array from Promise IDE cards to 3ware card
-Date: Thu, 9 Jun 2005 14:17:42 -0400
-Message-ID: <20050609141742.2f1be0c8.weinberg@astro.umass.edu>
+From: Richard Jacobsen <richard@unixboxen.net>
+Subject: removing faulty drive on 3ware 9xxx card
+Date: Thu, 9 Jun 2005 12:08:01 -0700
+Message-ID: <20050609120801.Z13710@tictactoe.unixboxen.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: weinberg@astro.umass.edu
 List-Id: linux-raid.ids
 
-Folks,
+Hello everyone,
 
-I just upgraded a server to a dual opteron box (32 bit OS) and could no longer
-run the two Promise PDC20269 used to control 8 160GB Maxtor disks on RAID5.
+I have a drive which is constantly putting out:
 
-I bought and installed an 8-port 3ware card.  The OS detects the 8 disks but
-the system seems to fail with raidstart:
+3w-9xxx: scsi0: AEN: ERROR (0x04:0x0009): Drive timeout detected:port=4,
 
-Jun  9 14:04:37 kestrel kernel: md: raid5 personality registered as nr 4
-Jun  9 14:04:44 kestrel kernel: md: could not open unknown-block(1824,41760).
-Jun  9 14:04:44 kestrel kernel: md: autostart failed!
-Jun  9 14:04:44 kestrel kernel: md: could not open unknown-block(1824,41760).
-Jun  9 14:04:44 kestrel kernel: md: autostart failed!
-Jun  9 14:04:44 kestrel kernel: md: could not open unknown-block(1824,41760).
-Jun  9 14:04:44 kestrel kernel: md: autostart failed!
-Jun  9 14:04:44 kestrel kernel: md: could not open unknown-block(1824,41760).
-Jun  9 14:04:44 kestrel kernel: md: autostart failed!
-Jun  9 14:04:44 kestrel kernel: md: could not open unknown-block(1824,41760).
-Jun  9 14:04:44 kestrel kernel: md: autostart failed!
-Jun  9 14:04:44 kestrel kernel: md: could not open unknown-block(1824,41760).
-Jun  9 14:04:44 kestrel kernel: md: autostart failed!
- 
-and etc.
+However the 3ware cli reports it as still a valid member of the array:
 
-Is there a way to get this array back?  Thanks!!!
+//beautemps> info c0
 
---Martin
+Unit  UnitType  Status         %Cmpl  Stripe  Size(GB)  Cache  AVerify  IgnECC
+------------------------------------------------------------------------------
+u0    RAID-5    OK             -      64K     2328.2    ON     OFF      OFF      
 
+Port   Status           Unit   Size        Blocks        Serial
+---------------------------------------------------------------
+p0     OK               u0     232.88 GB   488397168     WD-WMAEP28256 
+p1     OK               u0     232.88 GB   488397168     WD-WMAEP28252 
+p2     OK               u0     232.88 GB   488397168     WD-WMAEP27015 
+p3     OK               u0     232.88 GB   488397168     WD-WMAEP28280 
+p4     OK               u0     232.88 GB   488397168     WD-WMAEP28256 
+p5     OK               u0     232.88 GB   488397168     WD-WMAEP28257 
+p6     OK               u0     232.88 GB   488397168     WD-WMAEP28253 
+p7     OK               u0     232.88 GB   488397168     WD-WMAEP28252 
+p8     OK               u0     232.88 GB   488397168     WD-WMAEP28566 
+p9     OK               u0     232.88 GB   488397168     WD-WMAEP25657 
+p10    OK               u0     232.88 GB   488397168     WD-WMAEP28584 
+p11    OK               -      232.88 GB   488397168     WD-WMAEP28250 
+
+Since I'm assuming that this constant drive timeout is what is making my array
+show to a crawl, I'd like to remove p4 from the array, have the hotswap on 
+p11 take over, then replace p4.
+
+I'm thinking that:
+
+maint remove c0 p4
+
+Is the command I'm looking for.  Any caveats before I try? 
+
+Thanks,
+Richard
+
+-- 
+"a professional is simply one who gets paid for doing what an amateur does for
+love."
+																	-- Ursula K. Le Guin
