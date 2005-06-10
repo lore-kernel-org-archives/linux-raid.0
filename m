@@ -1,67 +1,100 @@
-From: Dan Stromberg <strombrg@dcs.nac.uci.edu>
-Subject: Re: RAID 5 of RAID 5's?
-Date: Fri, 10 Jun 2005 13:43:39 -0700
-Message-ID: <1118436219.25226.252.camel@seki.nac.uci.edu>
-References: <1118187572.15459.96.camel@seki.nac.uci.edu>
-	 <42A93D30.6080900@apartia.fr>
+From: "John Madden" <jmadden@ivytech.edu>
+Subject: md multipath restart problem
+Date: Fri, 10 Jun 2005 17:07:53 -0500 (EST)
+Message-ID: <59129.10.0.15.208.1118441273.squirrel@postal2>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-CMFgK4IKg7BQMC1vU67e"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <42A93D30.6080900@apartia.fr>
 Sender: linux-raid-owner@vger.kernel.org
-To: Laurent CARON <lcaron@apartia.fr>
-Cc: strombrg@dcs.nac.uci.edu, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+I'm connecting to an IBM 6800 SAN via two QLogic 2340's to a single LUN and I've
+been wrestling with multipathing to them for about a week now.  "Both" LUNs
+are visible as two scsi devices, /dev/sda and /dev/sdb.
 
---=-CMFgK4IKg7BQMC1vU67e
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+So I slap a Linux (0x83) partition on the device (and it is visible through
+the "second" lun) and I create the md device:
 
-On Fri, 2005-06-10 at 09:11 +0200, Laurent CARON wrote:
-> Dan Stromberg a =E9crit :
->=20
-> >Has anyone constructed a RAID 5 of RAID 5's using mdadm on a linux
-> >system?
-> >
-> >Was it reliable?
-> >
-> >How large was it?
-> >
-> >Thanks!
-> >
-> > =20
-> >
-> Seems to be a large waste of space....
+# ./mdadm --create /dev/md0 --force --level=multipath --raid-disks=2 \
+/.dev/scsi/host0/bus0/target0/lun0/part1 \
+/.dev/scsi/host1/bus0/target0/lun0/part1
+mdadm: array /dev/md0 started.
 
-Consider:
+That can be formatted, mounted, written to, etc., all reliably.  Info:
 
-You have a bunch of "bricks" that can shuffle data between a NAS head
-and a bunch of disks.
+# dmesg
+multipath: array md0 active with 2 out of 2 IO paths
 
-The disks are RAID'd (through the "bricks"), but if one of the bricks
-themselves dies, you're kinda stuck.
+# ./mdadm --detail /dev/md0
+/dev/md0:
+        Version : 00.90.01
+  Creation Time : Fri Jun 10 16:07:16 2005
+     Raid Level : multipath
+     Array Size : 314568640 (299.100 GiB 322.12 GB)
+   Raid Devices : 2
+  Total Devices : 2
+Preferred Minor : 0
+    Persistence : Superblock is persistent
 
-But if you RAID 5 the RAID 5's, then you don't end up with massive
-parity pounding, and your bricks aren't a single point of failure, and
-you don't lose as much space as if you mirrored.
+    Update Time : Fri Jun 10 16:07:16 2005
+          State : clean
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 0
 
-Sound copacetic?
+           UUID : a917893d:4570204d:bcf77929:a2564bef
+         Events : 0.2
 
-Thanks for your feedback!
+    Number   Major   Minor   RaidDevice State
+       0       8       49        0      active sync   /dev/sda1
+       1       8       65        1      active sync   /dev/sdb1
+
+The config file, switched to devfs names since sda and sdb could move
+around:
+
+DEVICE /.dev/scsi/host0/bus0/target0/lun0/part1
+/.dev/scsi/host0/bus0/target0/lun0/part1
+ARRAY /dev/md0 level=multipath num-devices=2
+UUID=a917893d:4570204d:bcf77929:a2564bef
+devices=/.dev/scsi/host0/bus0/target0/lun0/part1,/.dev/scsi/host1/bus0/target0/l
+
+And then we reboot.
+
+When the device is brought up the second time (and I don't think a reboot is
+even needed), only one of the paths to the storage will be added, the other
+failing with "Device or resource busy."
+
+dmesg after boot:
+md: md0 stopped.
+md: bind<sdb1>
+md: export_rdev(sda1)
+multipath: array md0 active with 1 out of 2 IO paths
+
+When I stop it manually, then re-activate it:
+
+# ./mdadm -A /dev/md0
+mdadm: device 1 in /dev/md0 has wrong state in superblock, but
+/.dev/scsi/host1/bus0/target0/lun0/part1 seems ok
+mdadm: failed to add /.dev/scsi/host0/bus0/target0/lun0/part1 to /dev/md0:
+Device or resource busy
+mdadm: /dev/md0 has been started with 1 drive (out of 2).
+
+So I'd guess that something's going wrong there but I have little idea what.
+The bad part is that while troubleshooting this, I managed to make any
+number of things go wrong, so I'm not even sure anymore if this is the root
+of my problem, but it's where I am right now.  Any suggestions?
+
+Thanks,
+  John
 
 
---=-CMFgK4IKg7BQMC1vU67e
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.6 (GNU/Linux)
-
-iD8DBQBCqft7o0feVm00f/8RAj8AAJ4ncBYn58pB4FbEwz89YU405wJ8gwCdF1rX
-m9MOqal0dwYXInjAHRezkJA=
-=s+Vz
------END PGP SIGNATURE-----
-
---=-CMFgK4IKg7BQMC1vU67e--
+-- 
+John Madden
+UNIX Systems Engineer
+Ivy Tech Community College of Indiana
+jmadden@ivytech.edu
 
