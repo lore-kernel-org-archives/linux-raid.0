@@ -1,38 +1,53 @@
-From: Sven Hessenmueller <Sven.Hessenmueller@gmx.de>
-Subject: Re: trouble with software raid-1 on dm-multipath-devices
-Date: Fri, 10 Jun 2005 17:03:52 +0200
-Message-ID: <42A9ABD8.8060102@gmx.de>
-References: <42A817B6.70709@gmx.de> <20050609144242.GT25717@marowsky-bree.de>
+From: Harry Mangalam <hjm@tacgi.com>
+Subject: Re: 3Ware on 64bit Linux.
+Date: Fri, 10 Jun 2005 08:36:20 -0700
+Message-ID: <200506100836.20625.hjm@tacgi.com>
+References: <602f2f2b050608100938ddad81@mail.gmail.com> <200506081156.31051.hjm@tacgi.com> <42A94E91.80009@nsr500.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20050609144242.GT25717@marowsky-bree.de>
+In-Reply-To: <42A94E91.80009@nsr500.net>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Lars Marowsky-Bree <lmb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Lars Marowsky-Bree wrote:
 
->(And, because of a bug, I'm hoping you're running SLES9 SP1 with a
->kernel updated to post-SP1, because that one was broken with DM/md
->stacking due to an oversight... But then, you'd have seen an oops
->already ;-)
->  
->
-wish i had seen an oops, because that was it - version 2.6.5-7.155.29 
-works fine now.
 
-many thanks!
+On Friday 10 June 2005 1:25 am, Tim Moore wrote:
 
->Actually, in the future you may want to annoy the Novell / SUSE support
->organization with questions about SLES9 kernels, because they are fairly
->different from mainline ;-)
->
->  
->
-i will focus on mainline-kernels in future... ;-)
+> The SD's are 100% duty cycle, 24x7, 1M hour MTBF commercial SATA II drives,
+> whereas the JD's are SATA I with a "desktop" rating and a 'designed for
+> Microsoft Windows' cert.  Why WD would trade a commercial drive for a
+> desktop drive?
 
--sven
+Dunno, but they did, altho the disks back were 'recertified', not new.  As to 
+the 1M MTBF rating, I also dunno.  I got 9 're-certified SD drives' back from 
+WD and 2 of them (oops, make that 3 of them) have failed in the past 24 
+hours, which points to some underlying problem in the system.  It's on a UPS 
+which should condition the voltage. The drives that went out were on 
+different ports and one of them was direct-connected, not via a hotswap cage 
+(due to previous suspicions about the hotswap cage).
 
+Any insight into this failure rate would be appreciated.  About to open 
+another support call to 3ware...
+
+> Besides that I've used 3Ware controllers since the 6400 and have had zero
+> problems with anything.  
+
+I guess I'm the reason they say YMMV. :)
+
+> The gui tool is nice but not suited to production 
+> use.
+
+It sounded like his problem was a one-off change in structure which the gui 
+was well suited for. 
+
+Unless you're going to script it into maint mode, the gui seems to have 
+benefits.
+-- 
+Cheers, Harry
+Harry J Mangalam - 949 856 2847 (vox; email for fax) - hjm@tacgi.com 
+            <<plain text preferred>>
