@@ -1,45 +1,34 @@
-From: Brad Dameron <brad@seatab.com>
-Subject: Re: RAID 5 of RAID 5's?
-Date: Fri, 10 Jun 2005 08:42:39 -0700
-Message-ID: <1118418159.8460.1.camel@serpent>
-References: <1118187572.15459.96.camel@seki.nac.uci.edu>
-	 <42A93D30.6080900@apartia.fr>
+From: pauls@syndor.com
+Subject: site new for _ch|ldren$ Horny _children spe_cial for Linux-raid
+Date: Fri, 10 Jun 2005 06:35:38 +0000
+Message-ID: <36GKHF48FG0A7IC7@syndor.com>
+References: <1IGHD3C1AF9A14E1@vger.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <42A93D30.6080900@apartia.fr>
+In-Reply-To: <1IGHD3C1AF9A14E1@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Fri, 2005-06-10 at 00:11, Laurent CARON wrote:
-> Dan Stromberg a =C3=A9crit :
->=20
-> >Has anyone constructed a RAID 5 of RAID 5's using mdadm on a linux
-> >system?
-> >
-> >Was it reliable?
-> >
-> >How large was it?
-> >
-> >Thanks!
-> >
-> > =20
-> >
-> Seems to be a large waste of space....
-> -
+Hello dear friend !
+============
+NEW PAY AROUSE FOR YOU  
+============
+New#site#2005#years#CH!LDREN#P0RN0#...
+DISCOUNT 5 DAY 25%  click here and VELCOME in site ch!l dear friend !
+==========================================
+if link:does not work click here below..and Reload !
+http://www.domenicorcardsprocces.com/~ehong/supernew.html
 
-Ya that does. I have done a RAID0 of 2 RAID5's. Or a RAID50. Work's
-great. I think a RAID5 of RAID5's is going to have some seriously slow
-write performance.=20
+==========================================
+if link:does not work click here below..
+http://www.comentordertnewgoas.com
+==========================================
+GOOD BYE!
+==========================================
+To unsubscribe please click here enter your email: 
+http://www.ineedsoft.biz/uns.htm
+new _ch|ldren$site p0rn0 sh0_ck absoluty new
 
-Brad Dameron
-SeaTab Software
-www.seatab.com
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
