@@ -1,63 +1,46 @@
-From: Andy Smith <andy@lug.org.uk>
-Subject: Re: RAID 5 of RAID 5's?
-Date: Mon, 13 Jun 2005 10:03:39 +0000
-Message-ID: <20050613100339.GO750@strugglers.net>
-References: <1118187572.15459.96.camel@seki.nac.uci.edu> <42A93D30.6080900@apartia.fr> <1118436219.25226.252.camel@seki.nac.uci.edu> <42AD329B.4080103@apartia.fr>
+From: Michael Tokarev <mjt@tls.msk.ru>
+Subject: Re: sata_nv and RAID1
+Date: Mon, 13 Jun 2005 15:57:49 +0400
+Message-ID: <42AD74BD.8050704@tls.msk.ru>
+References: <200506111613.42962.dvadell@lantech.com.ar> <20050611192606.GA4055@pentafluge.infradead.org> <42AB49BC.50104@tls.msk.ru> <42AD2B85.30303@pobox.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="kcP3xCD2XyuzODov"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <42AD329B.4080103@apartia.fr>
+In-Reply-To: <42AD2B85.30303@pobox.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: "Diego M. Vadell" <dvadell@lantech.com.ar>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Jeff Garzik wrote:
+[linux I/O layer loops forever on SATA drive unplug;
+  SATA hotplug is unsupported yet]
 
---kcP3xCD2XyuzODov
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+>> It isn't hotPLUG -- it's hotUNplug.  Happens when drive is dying for
+> 
+> Same difference to me:  both require new code.
 
-On Mon, Jun 13, 2005 at 09:15:39AM +0200, Laurent CARON wrote:
-> Dan Stromberg a ?crit :
-> >>>Has anyone constructed a RAID 5 of RAID 5's using mdadm on a linux
-> >>>system?
-> >>>
-> >>>Was it reliable?
-> >>>
-> >>>How large was it?
-> >
-> RAID 10 is IMHO a bit more efficient.
->=20
-> Raid 5 means at least 9 disks:
-> Usable capacity: 4 Disks
-> Read speed: Good
-> Write speed: poor
+Jeff,
 
-With a low number of disks, you would indeed get the same or less
-capacity with RAID 5 + RAID 5 as compared to RAID 10, but as the
-number of disks gets higher, doesn't the capacity of RAID 5 on top
-of RAID 5 (we need a name for this, is RAID 55 technically correct?)
-get better?
+I didn't want to blame you or anyone else (just in case
+if that wasn't clear).  Instead, I just wanted to understand
+what's the current state of the whole thing.  I know SATA
+hotplug is unsupported, and some code has to be written for
+that to work.  But I don't know if hotUNplugging and error
+handling comes together.  That is, is there a difference
+between real drive failure (and oh, there are alot of various
+failure scenarios too, from bad block, including a drive dying
+completely during normal operations as if there wa no drive at
+all, up to unplugging the cable by a mistake) and such hot-
+UN-plugging?  Will current code notice and properly propagate
+I/O errors on the drive, or drive dying?  If some errors are
+propagated properly now, Where's the "boundary" between I/O
+errors (implemented) and hotplug (not implemented)?
 
-For example, 30 disks, organised as 10 3-disk RAID 5s, have 9*2 or
-18 disks of capacity, whereas a RAID 10 of same would be 15 disks.
+This all is quite important IMHO.  Without proper error handling
+(if I/O errors are "blacked" by that "boundary" too), linux SATA
+subsystem isn't ready for production, and people should not
+rely on it *now*.
 
-The write performance seems bad though, and maybe the rebuild time
-as well.
-
---kcP3xCD2XyuzODov
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-
-iD8DBQFCrVn7IJm2TL8VSQsRAsKrAJ0WLJq5F672YEk1dxON+3h4iVtuOwCeLJKE
-Tylqv0xlHvjXmkdO7xi49sU=
-=2RIp
------END PGP SIGNATURE-----
-
---kcP3xCD2XyuzODov--
+/mjt
