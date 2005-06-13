@@ -1,40 +1,77 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: sata_nv and RAID1
-Date: Mon, 13 Jun 2005 02:45:25 -0400
-Message-ID: <42AD2B85.30303@pobox.com>
-References: <200506111613.42962.dvadell@lantech.com.ar> <20050611192606.GA4055@pentafluge.infradead.org> <42AB49BC.50104@tls.msk.ru>
+From: Laurent CARON <lcaron@apartia.fr>
+Subject: Re: RAID 5 of RAID 5's?
+Date: Mon, 13 Jun 2005 09:15:39 +0200
+Message-ID: <42AD329B.4080103@apartia.fr>
+References: <1118187572.15459.96.camel@seki.nac.uci.edu>	 <42A93D30.6080900@apartia.fr> <1118436219.25226.252.camel@seki.nac.uci.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <42AB49BC.50104@tls.msk.ru>
+In-Reply-To: <1118436219.25226.252.camel@seki.nac.uci.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Michael Tokarev <mjt@tls.msk.ru>
-Cc: "Diego M. Vadell" <dvadell@lantech.com.ar>, linux-raid@vger.kernel.org
+To: Dan Stromberg <strombrg@dcs.nac.uci.edu>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Michael Tokarev wrote:
-> Jeff Garzik wrote:
-> 
->> On Sat, Jun 11, 2005 at 04:13:42PM +0000, Diego M. Vadell wrote:
+Dan Stromberg a =E9crit :
+
+>On Fri, 2005-06-10 at 09:11 +0200, Laurent CARON wrote:
+> =20
+>
+>>Dan Stromberg a =E9crit :
 >>
->>> Hi,
->>>   A new computer arrived at work with 4 160GB SATA disks. I made a
->>> couple of RAID 1 (mirror) with two disks each, and then joined them wih
->>> LVM. Now I have 320GB in my root volume.
+>>   =20
+>>
+>>>Has anyone constructed a RAID 5 of RAID 5's using mdadm on a linux
+>>>system?
 >>>
->>> My boss asked me to test it, so we all gathered and unplugged the data
->>> cable of one of the disks. I was hoping to see linux making warnings for
+>>>Was it reliable?
+>>>
+>>>How large was it?
+>>>
+>>>Thanks!
+>>>
+>>>=20
+>>>
+>>>     =20
+>>>
+>>Seems to be a large waste of space....
+>>   =20
 >>
->>
->> Hotplug is not supported yet.  Don't do that :)
-> 
-> 
-> It isn't hotPLUG -- it's hotUNplug.  Happens when drive is dying for
+>
+>Consider:
+>
+>You have a bunch of "bricks" that can shuffle data between a NAS head
+>and a bunch of disks.
+>
+>The disks are RAID'd (through the "bricks"), but if one of the bricks
+>themselves dies, you're kinda stuck.
+>
+>But if you RAID 5 the RAID 5's, then you don't end up with massive
+>parity pounding, and your bricks aren't a single point of failure, and
+>you don't lose as much space as if you mirrored.
+>
+>Sound copacetic?
+>
+>Thanks for your feedback!
+>
+> =20
+>
+RAID 10 is IMHO a bit more efficient.
 
-Same difference to me:  both require new code.
+Raid 5 means at least 9 disks:
+Usable capacity: 4 Disks
+Read speed: Good
+Write speed: poor
 
-	Jeff
+Raid 10 with 8 disks can store the same amount of data.
+Read speed: Average
+Write Speed: Better than raid5
 
 
-
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
