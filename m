@@ -1,72 +1,89 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: ANNOUNCE: mdadm 1.12.0 - A tool for managing Soft RAID under Linux
-Date: Tue, 14 Jun 2005 13:55:01 +1000
-Message-ID: <17070.21781.242958.788715@cse.unsw.edu.au>
+From: "Mark Cuss" <mcuss@cdlsystems.com>
+Subject: write_disk_sb failed
+Date: Tue, 14 Jun 2005 13:46:34 -0600
+Message-ID: <015401c57119$c55db120$ab0e10ac@pinchy>
+Reply-To: "Mark Cuss" <mcuss@cdlsystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	format=flowed;
+	charset="iso-8859-1";
+	reply-type=original
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hello List
 
-[[NOTE: a number of the improvements in this release were extracted
-  from the current debian package.  If any package maintainers for
-  other distros are sitting on patches that might be more widely
-  usefully, I'd love to hear about them...
-]]
+I have a RH 9 system (kernel 2.4.27 vanilla) running a Dell SCSI disk array 
+(JBOD) with a bunch of SW RAID5 devices...  lately, I've been having a lot 
+of problems with disks dropping from the RAID devices.  I've replaced these 
+disks (via the usual SCSI cat > /proc/scsi/scsi and a 
+raidhotremove/raidhotadd )  These devices get added OK and the RAID recovery 
+goes through, but the next morning the RAIDs have bad devices again...  I've 
+done this a few times during the week and doubt that all of these disks are 
+bad...
+
+Today, the system is complaining about sdq.  The kernel log is full of 
+messages like:
+Jun 14 09:02:50 hal kernel: md: updating md4 RAID superblock on device
+Jun 14 09:02:50 hal kernel: md: sdq1 [events: 0000002f]<6>(write) sdq1's sb 
+offset: 430108096
+Jun 14 09:02:50 hal kernel:  I/O error: dev 41:01, sector 860216192
+Jun 14 09:02:50 hal kernel: md: write_disk_sb failed for device sdq1
+Jun 14 09:02:50 hal kernel: md: sdm1 [events: 0000002f]<6>(write) sdm1's sb 
+offset: 143371968
+Jun 14 09:02:50 hal kernel: md: sdl1 [events: 0000002f]<6>(write) sdl1's sb 
+offset: 143371968
+Jun 14 09:02:50 hal kernel: md: sdk1 [events: 0000002f]<6>(write) sdk1's sb 
+offset: 143371968
+Jun 14 09:02:50 hal kernel: md: errors occurred during superblock update, 
+repeating
+
+The system is cranky about sdq:
+[root@hal dev]# mdadm --examine /dev/sdq1
+mdadm: Cannot read superblock on /dev/sdq1
+
+However, the RAID device containing sdq is still up and running (for now, 
+anyways):
+md4 : active raid5 sdq1[0] sdm1[3] sdl1[2] sdk1[1]
+      430115904 blocks level 5, 64k chunk, algorithm 2 [4/4] [UUUU]
+
+All signs would point to the fact that sdq is a dead drive, but this has 
+happened 2 or 3 times this week with a few fairly new drives, so I don't 
+think they're all bad.  Can anyone shed any wisdom as to why this may be 
+happening?  This system has been running for about 18 months and hasn't had 
+a lot of problems - maybe 2 or 3 drives have quit.  The stupid Dell disk 
+array sometimes kicks out disks when they're not bad, so it may be at fault 
+in this case...  Can anyone offer any ideas as to how to troubleshoot?
+
+Related to troubleshooting:  Over the past few days, SCSI devices have been 
+removed and added and the SCSI disk lettering is all jumbled around...  Now, 
+when I see that sdX fails in the log, I can no longer figure out which 
+physical disk or which SCSI ID that sdX corresponds to.  Originally, I'd 
+just count down the disk array until I arrived at the right letter, and the 
+SCSI ID is marked on the array.  Now I can't do that, as the letters are 
+jumbled around a little.  Is there a trick or technique to determine which 
+SCSI ID that sdX corresponds to?
+
+Thanks in advance,
+Mark
 
 
-I am pleased to announce the availability of 
-   mdadm version 1.12.0
-It is available at
-   http://www.cse.unsw.edu.au/~neilb/source/mdadm/
-and
-   http://www.{countrycode}.kernel.org/pub/linux/utils/raid/mdadm/
 
-as a source tar-ball and (at the first site) as an SRPM, and as an RPM for i386.
 
-mdadm is a tool for creating, managing and monitoring
-device arrays using the "md" driver in Linux, also
-known as Software RAID arrays.
 
-Release 1.12.0 adds:
-  Several of these are backported from the Debian package
-    -   Don't use 'lstat' to check for blockdevices, use stat.
-    -   Get size calculation right when in Create when BLKGESIZE64 not available
-    -   Document --size=max option for --grow
-    -   Document SparesMissing event and DeviceDisappeared/WrongLevel
-    -   --stop --scan repeatly cycles until no more progress can be made
-	so that stack devices are stopped properly
-    -   Minor type rationalisation for ident->uuid - now always 'int[]'
-    -   Fix type in online help for --grow (was -F, now -G)
-    -   Allow --auto command line option to set default auto=
-	value when running "--assemble --scan".  Previously
-	--auto was ignored if --scan was given
-    -   Fix a few type casts
-    -   Fix parsing of /dev/md/N in is_standard
-    -   Fix rounding errors in human_size()
-    -   Fix silly example in mdadm.conf-examples
-    -   When finding a /dev name for a device, prefer shorter names
-    -   Suppress listing of devices= in --brief output of -D or -E,
-	unless -v is given (-vv gives the old behaviour with -Dsv).
-	This is because the device list can change and so is not a
-	stable aspect of the array
-    -   Allow --force with --grow so '-Gfn1' works (on raid1)
-    -   Make --examine --brief report spares= properly.
-    -   When device files are made with "--assemble --auto",
-	add them to the list of known device name, so that 
-	assembling stacked devices has a better chance of working.
-    -   Replace sprintf calls with snprintf (to quiet diet-libc)
-    -   Add man page for mdassemble
-    -   Fix compilation with tinyc
-    -   Lot of minor manpage updates
+Mark Cuss, B. Sc.
+Real Time Systems Analyst
+System Administrator
+CDL Systems Ltd
+Suite 230
+3553 - 31 Street NW
+Calgary, AB, Canada
 
-Development of mdadm is sponsored by CSE@UNSW: 
-  The School of Computer Science and Engineering
-at
-  The University of New South Wales
+Phone: 403 289 1733 ext 226
+Fax: 403 289 3967
+www.cdlsystems.com 
 
-NeilBrown  14 June 2005
 
