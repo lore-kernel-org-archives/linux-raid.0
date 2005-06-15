@@ -1,61 +1,42 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: sata_nv and RAID1
-Date: Tue, 14 Jun 2005 20:34:11 -0400
-Message-ID: <200506150034.j5F0YG218110@www.watkins-home.com>
-References: <42AF7234.5020608@pobox.com>
+From: Mark Hahn <hahn@physics.mcmaster.ca>
+Subject: Re: sata_nv and RAID1
+Date: Wed, 15 Jun 2005 15:17:29 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44.0506151512140.13609-100000@coffee.psychology.mcmaster.ca>
+References: <62b0912f050614153092c01c0@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <42AF7234.5020608@pobox.com>
+In-Reply-To: <62b0912f050614153092c01c0@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Jeff Garzik' <jgarzik@pobox.com>, 'Molle Bestefich' <molle.bestefich@gmail.com>
-Cc: 'Michael Tokarev' <mjt@tls.msk.ru>, linux-raid@vger.kernel.org
+To: Molle Bestefich <molle.bestefich@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+> > > unplugging both SATA and PATA devices Just Works (tm).  I'm having a
+> > > hard time figuring how this works: there's enough people supporting
+> > > Linux to build a complete web-enabled SCM system (git) in a couple of
+> > > weeks,
+> > 
+> > SW engineering
+
+and a real and urgent need.  and also the fact that it's easier.
 
 
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> owner@vger.kernel.org] On Behalf Of Jeff Garzik
-> Sent: Tuesday, June 14, 2005 8:12 PM
-> To: Molle Bestefich
-> Cc: Michael Tokarev; linux-raid@vger.kernel.org
-> Subject: Re: sata_nv and RAID1
+> > > but noone has bothered to fix this glaring flaw for the past 5
+> > > years?
+> > >
+> > HW engineering
 > 
-> Molle Bestefich wrote:
-> > So you don't care that your Linux system will deadlock if a PATA disk
-> > is removed, for instance?  Just an example, one that I've seen happen
-> > a couple of times.  Never seen it with Windows, it just tells you that
-> > the disk is gone.
-> 
-> Your computer will deadlock if you yank a PCI card out, too.  That
-> doesn't mean all PCI drivers are broken.
-> 
-> Very very (did I say "very"?) few people yank hard drives which are not
-> built specifically for hotplug, in a hotplug enclosure.
+> Aha.  And how would you explain that this currently works under Windows?
 
-But...
-If a hard disk fails in such a way that the interface from the disk goes
-dead, that is not a hot un-plug!  It is a drive failure.  Maybe a hot
-un-plug should be considered a failure until support is added.
+someone paid to get it to work under windows.  also, the quality requirement
+for windows is basically non-existent (redmond will not tell you you have 
+crap code in your driver).
 
-I have seen SCSI disks go away when they fail, no one pulled any plugs!
+I think the main issue is that there's not that much demand for ata-hotplug
+under linux.  it is, after all, an unusual thing to do, mainly involving
+crashes.  perhaps linux experiences fewer crashes.
 
-Also, it is common in the SCSI world to have 2 disk trays in a RAID1 config,
-each with different power supplies.  If a power supply were to fail half the
-disks would be gone.  Would SATA/Linux consider half the disks hot
-un-plugged?
-
-Guy
-
-> 
-> 	Jeff
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+but if you're so upset about this, why not either go back to windows,
+or do something constructive (program or pay someone to program for you)?
 
