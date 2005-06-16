@@ -1,60 +1,49 @@
-From: Harry Mangalam <hjm@tacgi.com>
-Subject: Re: Smart and SATA with FC4
-Date: Thu, 16 Jun 2005 10:51:27 -0700
-Message-ID: <200506161051.27648.hjm@tacgi.com>
-References: <42B1A8EB.6060805@ucolick.org>
+From: Carlos Knowlton <cknowlton@update.fsix.com>
+Subject: Re: RAID - mdadm Help. (Newbie in Linux)
+Date: Thu, 16 Jun 2005 13:13:48 -0500
+Message-ID: <42B1C15C.7080801@update.fsix.com>
+References: <20050616165338.QGIX1725.tomts27-srv.bellnexxia.net@i8600>
+Reply-To: cknowlton@science.edu
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <42B1A8EB.6060805@ucolick.org>
-Content-Disposition: inline
+In-Reply-To: <20050616165338.QGIX1725.tomts27-srv.bellnexxia.net@i8600>
 Sender: linux-raid-owner@vger.kernel.org
-To: Patrik Jonsson <patrik@ucolick.org>
+To: pluk@impressio.ca
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-on the unpatched kernel, have you tried forcing the smartctl to see the disks 
-as ATA devices:
-
-smartctl -a -d ata /dev/sd[etc]
-            ^^^^^^
-Using Ubuntu's 2.6.10-5-amd64-generic (unsure if it has been patched), I was 
-surprised that this worked great, including being able to force long tests to 
-the disks.
-
-harry (my mileage DOES vary) mangalam
+Need more data.  What problems are you having?
 
 
-On Thursday 16 June 2005 9:29 am, you wrote:
-> Hello all,
->
-> I just installed a machine running Fedora Core 4 x86_64
-> (2.6.11-1.1369_FC4 kernel) and I'd like to get smartmontools to work
-> with my 8-drive SATA array. According to the smartmontools web page and
-> previous emails in this list you have to patch
-> the kernel, so I got the patch called "2.6.11-libata-dev1.patch.gz"
-> from the libata-dev patchset web page and I'm trying to apply it, but
-> the patching fails and even after I (think) that I've manually resolved
-> the problems, the kernel won't compile.
->
-> Can some kind soul outline the sequence of events necessary to patch the
-> kernel and get it to work? I've tried both smartmontools 5.32 and 5.33.
-> Is one or the other necessary? Or maybe the problem is the FC4 kernel,
-> which already has a bunch of patches applied?
->
-> Thanks,
->
-> /Patrik Jonsson
->
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I had a little difficulty getting used to the new syntax of the mdadm 
+utility after using the old raidtools pkg on the 2.2 and 2.4 kernel. 
+However, after studying the  man pages for  mdadm(8) and mdadm.conf(5) 
+(glossing over them didn't help me much, there is a lot of important 
+detail there!), I finally got the hang of it.  mdadm is a powerful 
+tool!  I've grown to really like it.  (after my growing pains, that is :)
 
--- 
-Cheers, Harry
-Harry J Mangalam - 949 856 2847 (vox; email for fax) - hjm@tacgi.com 
-            <<plain text preferred>>
+
+Regards,
+Carlos 
+
+Patrick Luk wrote:
+
+>Hi there,
+> 
+>    I'm trying to setup a raid system using RedHat Enterprise ES 4. I've
+>looked through alot of web info and still can't make it work. Any where I
+>can get some help on how-to do this and make it work consistenly? 
+> 
+>    Thanks!
+> 
+>Patrick
+>
+>-
+>To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>  
+>
+
