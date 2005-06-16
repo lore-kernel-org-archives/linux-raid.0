@@ -1,50 +1,73 @@
-From: Paul Clements <paul.clements@steeleye.com>
-Subject: Re: Is there a drive error "retry" parameter?
-Date: Wed, 15 Jun 2005 20:20:42 -0400
-Message-ID: <42B0C5DA.1040205@steeleye.com>
-References: <200505021224.35396.mlaks@verizon.net> <429F2458.6070404@update.fsix.com> <429F3ED5.4020005@tls.msk.ru> <42AF51CD.7050102@update.fsix.com> <42AF5E2B.3010908@tls.msk.ru>
+From: raz ben jehuda <razb@bitband.com>
+Subject: Re: sata_nv and RAID1
+Date: Thu, 16 Jun 2005 09:43:00 +0300
+Message-ID: <1118904180.3079.5.camel@raz-laptop>
+References: <200506111613.42962.dvadell@lantech.com.ar>
+	 <200506131841.32850.dvadell@lantech.com.ar>
+	 <1118818568.3089.5.camel@raz-laptop>
+	 <200506151427.09114.dvadell@lantech.com.ar>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <42AF5E2B.3010908@tls.msk.ru>
+In-Reply-To: <200506151427.09114.dvadell@lantech.com.ar>
 Sender: linux-raid-owner@vger.kernel.org
-To: Michael Tokarev <mjt@tls.msk.ru>
-Cc: cknowlton@science.edu, linux-raid@vger.kernel.org
+To: "Diego M. Vadell" <dvadell@lantech.com.ar>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Michael Tokarev wrote:
-> Carlos Knowlton wrote:
+"didn't fail" means that the raid entered into degraded mode. in
+/proc/mdstats you would notice that the disk is faulty.
+I have a root file system over raid1 and I could not allow myself 
+letting the operating system hang, so i added it. 
+This is not the best solution and the maintainers of the code would
+disapprove it since it is not complete.But for myself it is suffice.   
 
->>>> Is there a "retry" parameter that can be set in the kernel parameters,
->>>> or else in the code itself to prolong the existence of a drive in an
->>>> array before it is considered dirty?
->>>
->>>
->>> There's no such parameter currently.  But there was several discussions
->>> about how to make raid code more robust - in particular, in case of
->>> read error, raid code may keep the errored drive in the array and mark
->>> it dirty only in case of write error.
->>>
->> That would be nice.  Do you know if anyone has done any work toward 
->> such a fix?
+On Wed, 2005-06-15 at 17:27, Diego M. Vadell wrote:
+> Hi Raz,
+>    My english is not good enough. When you say "And the raid1 didn't fail", 
+> did you mean it worked as expected, entering degraded mode, or that it failed 
+> to enter in degraded mode?
+>    Also, is there any reason why you didnt send this also to the mailling 
+> list? Maybe it's useful to somebody else.
 > 
+>   Thank you very much for your mail. I dont know if I will be able to test it, 
+> as the server is in it's way to production , but if I can, I will give it a 
+> try.
 > 
-> Looks like this is a "FAQ #1" candidate for linux softraid ;)
-> I tried to do just that myself, with a help from Peter T. Breuer.
-> The code even worked here on a test machine for some time.
-> But it's umm.. quite a bit ugly, and Neil is going to slightly
-> different direction (which I for one don't like much - the
-> persistent bitmaps stuff, -- I think simpler approach is better).
-
-The persistent bitmap code has got nothing to do with read/write error 
-correction. The bitmap simply keeps track of what's out of sync between 
-the component drives, so you never need a full resync. On the other 
-hand, read/write error correction tries to limit the conditions under 
-which a drive would be kicked out of an array (thus resulting in a 
-resync). Ultimately, I think we'd like to see both capabilities in md, 
-though...
-
---
-Paul
+>  -- Diego.
+> 
+> On Wednesday 15 June 2005 06:56, you wrote:
+> > I had the same problem.I added at the end ata_scsi_error the following
+> > command:
+> > ata_port_disable(ap);
+> > And the raid1 didn't fail. I didn't get the hotswap so rebooting is
+> > necessary and then you raidhotadd the new disk.
+> > Also, before hotadd type :
+> > echo 1000 > /proc/sys/dev/raid1/speed_limit_max
+> > so your system won't be too busy with ios.
+> >
+> > On Tue, 2005-06-14 at 00:41, Diego M. Vadell wrote:
+> > > On Monday 13 June 2005 18:20, you wrote:
+> > > > You need to go into the SCSI layer and figure out how to do it.
+> > > >
+> > > > Calling scsi_remove_device() in the appropriate place is a good start.
+> > > > Add a debounce timer.  Make sure all commands are completed with an
+> > > > error (avoids memory leaks and lock-ups).  Other details.
+> > > >
+> > > > Hot unplug is not just a simple function call...
+> > > >
+> > > >  Jeff
+> > >
+> > > thank you Jeff! I dont think I will be able to do it, though. Thank you
+> > > for the fast answers.
+> > >
+> > >  -- Diego.
+> > > -
+> > > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Raz
+Long Live The Penguin
 
