@@ -1,22 +1,28 @@
-From: Cora <ours@facestock.com>
-Subject: Leading in affordable healthcare... we care for you!
-Date: Sat, 18 Jun 2005 00:39:29 +0200
-Message-ID: <6470285242.12484819042@84-120-75-162.onocable.ono.com>
-Mime-Version: 1.0 (Apple Message framework v728)
-Content-Type: text/plain; charset=US-ASCII; format=flowed
-Content-Transfer-Encoding: 7bit
+From: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
+Subject: when does it become faulty disk
+Date: Sat, 18 Jun 2005 13:47:16 +0200
+Message-ID: <5d96567b05061804477325d743@mail.gmail.com>
+Reply-To: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Look to our shop for all your prescription needs.
-http://walb.2z5v6lkdzu2solk.interdinelk.com
+I have managed to make the kernel remove a disk 
+from my raid even if this raid is "/" . I did it by adding a line 
+in ata_scsi_error that remove the ata disk from the raid array.
+This means that when the first error ocurrs on a disk It is removed 
+from the array. 
+Well, this is not the best thing to do..
+Question is :
+When does a disk become faulty ?
+Is when you have N errors in T time ?
+New ideas would be welcomed.
 
-
-
-Life is too short to be taken seriously.     
-When the student is ready. . . the lesson appears.   
-Girls are always running through my mind. They don't dare walk.  
-
-
+-- 
+Raz
+Long Live the Penguin
