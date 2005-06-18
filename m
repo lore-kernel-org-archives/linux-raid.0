@@ -1,28 +1,39 @@
-From: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
-Subject: when does it become faulty disk
-Date: Sat, 18 Jun 2005 13:47:16 +0200
-Message-ID: <5d96567b05061804477325d743@mail.gmail.com>
-Reply-To: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
+From: birini_bul@gmx.net
+Subject: Birini Bul
+Date: 19 Jun 2005 01:36:19 +0300
+Message-ID: <20050619011623.7FB99CD08F62B70E@gmx.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I have managed to make the kernel remove a disk 
-from my raid even if this raid is "/" . I did it by adding a line 
-in ata_scsi_error that remove the ata disk from the raid array.
-This means that when the first error ocurrs on a disk It is removed 
-from the array. 
-Well, this is not the best thing to do..
-Question is :
-When does a disk become faulty ?
-Is when you have N errors in T time ?
-New ideas would be welcomed.
+http://www.birinibul.com/?up=3D213  =20
+=20
+Birinibul.com nedir?
+    =C7al=FD=FEan, kariyerine =F6nem veren ve i=FE hayat=FDn=FDn zorluk=
+lar=FD ile=20
+u=F0ra=FE=FDrken bir sevgiliye zaman ay=FDramayan, yeti=FEkin kad=FDnla=
+r=FD ve erkekleri=20
+bulu=FEturmak i=E7in kurulmu=FE bir sitedir.
+    Birinibul.com'da, e=F0iliminize ve isteklerinize uygun =FCyeleri ar=
+ay=FDp=20
+bulabilir ve onlar ile mesajla=FEabilirsiniz.  =DCye olma s=FDras=FDnda=
+,=20
+ad=FDn=FDz, adresiniz, telefonunuz gibi size =F6zel hi=E7bir bilgiyi ve=
+rmeniz=20
+gerekmiyor. Sadece =F6zelliklerinizi ve arad=FD=F0=FDn=FDz =F6zellikler=
+i girerek 1=20
+dakika i=E7inde siz de bize kat=FDlabilirsiniz.=20
+=20
+http://www.birinibul.com/?up=3D213
 
--- 
-Raz
-Long Live the Penguin
+
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
