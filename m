@@ -1,39 +1,29 @@
-From: birini_bul@gmx.net
-Subject: Birini Bul
-Date: 19 Jun 2005 01:36:19 +0300
-Message-ID: <20050619011623.7FB99CD08F62B70E@gmx.net>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Aaron Botsis <aaron@blight.com>
+Subject: raid5 endian question....
+Date: Sun, 19 Jun 2005 01:14:29 -0500
+Message-ID: <61C14314-53E9-4140-A4DB-3929A683FE67@blight.com>
+Mime-Version: 1.0 (Apple Message framework v730)
+Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-http://www.birinibul.com/?up=3D213  =20
-=20
-Birinibul.com nedir?
-    =C7al=FD=FEan, kariyerine =F6nem veren ve i=FE hayat=FDn=FDn zorluk=
-lar=FD ile=20
-u=F0ra=FE=FDrken bir sevgiliye zaman ay=FDramayan, yeti=FEkin kad=FDnla=
-r=FD ve erkekleri=20
-bulu=FEturmak i=E7in kurulmu=FE bir sitedir.
-    Birinibul.com'da, e=F0iliminize ve isteklerinize uygun =FCyeleri ar=
-ay=FDp=20
-bulabilir ve onlar ile mesajla=FEabilirsiniz.  =DCye olma s=FDras=FDnda=
-,=20
-ad=FDn=FDz, adresiniz, telefonunuz gibi size =F6zel hi=E7bir bilgiyi ve=
-rmeniz=20
-gerekmiyor. Sadece =F6zelliklerinizi ve arad=FD=F0=FDn=FDz =F6zellikler=
-i girerek 1=20
-dakika i=E7inde siz de bize kat=FDlabilirsiniz.=20
-=20
-http://www.birinibul.com/?up=3D213
+Hello,
 
+I'm attempting to move a raid5 array from a big endian ppc machine to  
+a little endian x86.
+Upon trying to import the array, I get:
+mdadm: No super block found on /dev/hde1 (Expected magic a92b4efc,  
+got fc4e2ba9)
 
+I assume this to be an endianess issue...
+Is this a bug? Is just the magic number whacked? or are the  
+superblock data structures too?
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+what's the best way to fix this?
+
+Many thanks in advance.
+
+-Aaron
