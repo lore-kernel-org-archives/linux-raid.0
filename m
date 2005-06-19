@@ -1,54 +1,48 @@
-From: Tim Moore <tim.moore@nsr500.net>
-Subject: Re: 3Ware on 64bit Linux.
-Date: Sun, 19 Jun 2005 08:57:45 -0700
-Message-ID: <42B595F9.9020207@nsr500.net>
-References: <602f2f2b050608100938ddad81@mail.gmail.com> <200506081156.31051.hjm@tacgi.com> <42A94E91.80009@nsr500.net> <200506100836.20625.hjm@tacgi.com>
+From: Molle Bestefich <molle.bestefich@gmail.com>
+Subject: Re: when does it become faulty disk
+Date: Sun, 19 Jun 2005 21:10:05 +0200
+Message-ID: <62b0912f05061912103ad3c459@mail.gmail.com>
+References: <5d96567b05061804477325d743@mail.gmail.com>
+Reply-To: Molle Bestefich <molle.bestefich@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200506100836.20625.hjm@tacgi.com>
+In-Reply-To: <5d96567b05061804477325d743@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Raz Ben-Jehuda(caro) wrote:
+> I have managed to make the kernel remove a disk
+> from my raid even if this raid is "/" . I did it by adding a line
+> in ata_scsi_error that remove the ata disk from the raid array.
+> This means that when the first error ocurrs on a disk It is removed
+> from the array.
+> Well, this is not the best thing to do..
+> Question is :
+> When does a disk become faulty ?
 
+When trying to read sectors from a disk and the disk fails the read:
+ 1.)  Read the data from the other disks in the RAID and
+ 2.)  Overwrite the sectors where the read error occur.
+If this write also fails, then the disk has used up it's spare sectors
+area.  The RAID array is now by definition in a degraded state since
+that sector no longer exists in a redundant (readable at least) way. 
+The disk should therefore be kicked, in order to notify the user that
+it should be replaced immediately.
 
-Harry Mangalam wrote:
-> 
-> On Friday 10 June 2005 1:25 am, Tim Moore wrote:
-> 
-> 
->>The SD's are 100% duty cycle, 24x7, 1M hour MTBF commercial SATA II drives,
->>whereas the JD's are SATA I with a "desktop" rating and a 'designed for
->>Microsoft Windows' cert.  Why WD would trade a commercial drive for a
->>desktop drive?
-> 
-> 
-> Dunno, but they did, altho the disks back were 'recertified', not new.  As to 
+> Is when you have N errors in T time ?
 
-Interesting.  Maybe there were serious mfg problems with the JDs.
+Nah, it's when you run out of spare sectors and your data redundancy
+is thereby lost that you have to fault the disk to prevent future data
+loss.  Don't try to second-guess when the disk is going to get faulty
+based on how many errors occurred.  If you want to do something like
+that, read out the SMART data from the disk.  The manufacturer's data
+about the disks health should be your data source.
 
-> the 1M MTBF rating, I also dunno.  I got 9 're-certified SD drives' back from 
-> WD and 2 of them (oops, make that 3 of them) have failed in the past 24 
-> hours, which points to some underlying problem in the system.  It's on a UPS 
-> which should condition the voltage. The drives that went out were on 
-> different ports and one of them was direct-connected, not via a hotswap cage 
-> (due to previous suspicions about the hotswap cage).
-> 
-> Any insight into this failure rate would be appreciated.  About to open 
-> another support call to 3ware...
+> New ideas would be welcomed.
 
-I've also taken "failed" WD drives on production hardware which have passed 
-WD's own check program and found that badblocks -n will force remapping the 
-bad sectors.
-
-> 
-> 
->>Besides that I've used 3Ware controllers since the 6400 and have had zero
->>problems with anything.  
-> 
-> 
-> I guess I'm the reason they say YMMV. :)
-
-Fair enough.
+HTH..
