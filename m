@@ -1,48 +1,44 @@
-From: Molle Bestefich <molle.bestefich@gmail.com>
-Subject: Re: when does it become faulty disk
-Date: Sun, 19 Jun 2005 21:10:05 +0200
-Message-ID: <62b0912f05061912103ad3c459@mail.gmail.com>
-References: <5d96567b05061804477325d743@mail.gmail.com>
-Reply-To: Molle Bestefich <molle.bestefich@gmail.com>
+From: Paul Clements <paul.clements@steeleye.com>
+Subject: Re: raid5 endian question....
+Date: Sun, 19 Jun 2005 18:05:22 -0400
+Message-ID: <42B5EC22.4030906@steeleye.com>
+References: <61C14314-53E9-4140-A4DB-3929A683FE67@blight.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5d96567b05061804477325d743@mail.gmail.com>
-Content-Disposition: inline
+In-Reply-To: <61C14314-53E9-4140-A4DB-3929A683FE67@blight.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
+To: Aaron Botsis <aaron@blight.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Raz Ben-Jehuda(caro) wrote:
-> I have managed to make the kernel remove a disk
-> from my raid even if this raid is "/" . I did it by adding a line
-> in ata_scsi_error that remove the ata disk from the raid array.
-> This means that when the first error ocurrs on a disk It is removed
-> from the array.
-> Well, this is not the best thing to do..
-> Question is :
-> When does a disk become faulty ?
+Aaron Botsis wrote:
+> I'm attempting to move a raid5 array from a big endian ppc machine to  a 
+> little endian x86.
 
-When trying to read sectors from a disk and the disk fails the read:
- 1.)  Read the data from the other disks in the RAID and
- 2.)  Overwrite the sectors where the read error occur.
-If this write also fails, then the disk has used up it's spare sectors
-area.  The RAID array is now by definition in a degraded state since
-that sector no longer exists in a redundant (readable at least) way. 
-The disk should therefore be kicked, in order to notify the user that
-it should be replaced immediately.
+> Upon trying to import the array, I get:
+> mdadm: No super block found on /dev/hde1 (Expected magic a92b4efc,  got 
+> fc4e2ba9)
 
-> Is when you have N errors in T time ?
+> I assume this to be an endianess issue...
 
-Nah, it's when you run out of spare sectors and your data redundancy
-is thereby lost that you have to fault the disk to prevent future data
-loss.  Don't try to second-guess when the disk is going to get faulty
-based on how many errors occurred.  If you want to do something like
-that, read out the SMART data from the disk.  The manufacturer's data
-about the disks health should be your data source.
+Yes.
 
-> New ideas would be welcomed.
+> Is this a bug? Is just the magic number whacked? or are the  superblock 
+> data structures too?
 
-HTH..
+The version 0.90 superblock is not "endian agnostic". It records data in 
+whatever endian order the host machine is (Version 1 superblocks, by the 
+way, fix this, but are not available unless you have the latest 2.6 
+kernel and mdadm).
+
+> what's the best way to fix this?
+
+Unfortunately, I don't think there's an easy way. But, if you can get 
+the array back up on the original machine and copy down all the 
+information (or if you already have it) then you can re-create the array 
+on the x86 machine using "mdadm -C", but be careful... :)
+
+--
+Paul
