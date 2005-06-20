@@ -1,37 +1,53 @@
-From: "John Madden" <jmadden@ivytech.edu>
-Subject: RE: md multipath restart problem
-Date: Mon, 20 Jun 2005 09:41:56 -0500 (EST)
-Message-ID: <47024.10.0.15.208.1119278516.squirrel@postal2>
-References: <92952AEF1F064042B6EF2522E0EEF4376EE2F2@EXNA.corp.stratus.com>
+From: raz ben jehuda <razb@bitband.com>
+Subject: Re: when does it become faulty disk
+Date: Mon, 20 Jun 2005 18:35:32 +0300
+Message-ID: <1119281732.3377.6.camel@raz-laptop>
+References: <5d96567b05061804477325d743@mail.gmail.com>
+	 <62b0912f05061912103ad3c459@mail.gmail.com>  <42B6C880.6020305@tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <92952AEF1F064042B6EF2522E0EEF4376EE2F2@EXNA.corp.stratus.com>
+In-Reply-To: <42B6C880.6020305@tls.msk.ru>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Nagpure, Dinesh" <Dinesh.Nagpure@stratus.com>
-Cc: linux-raid@vger.kernel.org, "Nagpure, Dinesh" <dinesh.nagpure@stratus.com>
+To: Michael Tokarev <mjt@tls.msk.ru>
+Cc: Molle Bestefich <molle.bestefich@gmail.com>, "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-> Have you found a solution to the problem? If not then which kernel version are you
-> using. The problem you are talking about seems like a bug in md that got fixed
-> recently.
-
-And to think I was just about to give up and unsubscribe... :)
-
-I did actually manage to fix the issue by just not doing things correctly -- if I
---build the array instead of starting it with -A, it works.  (See my previous
-posts.) I'm running kernel 2.6.11.8 so far, what version has a/the fix?
-
-Thanks,
-  John
 
 
-
-
+On Mon, 2005-06-20 at 16:45, Michael Tokarev wrote:
+> Molle Bestefich wrote:
+> > Raz Ben-Jehuda(caro) wrote:
+> > 
+> >>I have managed to make the kernel remove a disk
+> >>from my raid even if this raid is "/" . I did it by adding a line
+> >>in ata_scsi_error that remove the ata disk from the raid array.
+> >>This means that when the first error ocurrs on a disk It is removed
+> >>from the array.
+> >>Well, this is not the best thing to do..
+> >>Question is :
+> >>When does a disk become faulty ?
+> > 
+> > 
+> > When trying to read sectors from a disk and the disk fails the read:
+> >  1.)  Read the data from the other disks in the RAID and
+> >  2.)  Overwrite the sectors where the read error occur.
+> 
+> Note: this is NOT how current linux softraid code works, it's
+> how it *supposed* to work.  And right now, linux raid code
+> kicks a drive out of the array after *any* error (read or
+> write), without trying to "understand" what happened.
+no accurate.
+I have raid1 over "/" and whenever I pull out one of the disks
+the system hangs. in order to fix it I added to ata_scsi_error()
+ata_port_disable(). 
+> /mjt
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 -- 
-John Madden
-UNIX Systems Engineer
-Ivy Tech Community College of Indiana
-jmadden@ivytech.edu
+Raz
+Long Live The Penguin
 
