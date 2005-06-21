@@ -1,53 +1,53 @@
-From: Clemens Schwaighofer <cs@tequila.co.jp>
-Subject: from raidtools2 to mdadm
-Date: Tue, 21 Jun 2005 14:40:54 +0900
-Message-ID: <42B7A866.1080802@tequila.co.jp>
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: from raidtools2 to mdadm
+Date: Tue, 21 Jun 2005 15:54:04 +1000
+Message-ID: <17079.43900.652982.735401@cse.unsw.edu.au>
+References: <42B7A866.1080802@tequila.co.jp>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enig96F0C6A37FCE0F04D64671A6"
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from Clemens Schwaighofer on Tuesday June 21
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Clemens Schwaighofer <cs@tequila.co.jp>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enig96F0C6A37FCE0F04D64671A6
-Content-Type: text/plain; charset=ISO-2022-JP
-Content-Transfer-Encoding: 7bit
+On Tuesday June 21, cs@tequila.co.jp wrote:
+> Hi,
+> 
+> as debian changed their package from raidtools2 to mdadm and left us
+> users out in the cold (no mdadm.conf craeted, lsraid commands left in
+> crontab, etc), I am now a bit worried if the command
 
-Hi,
+Unfortunate...
 
-as debian changed their package from raidtools2 to mdadm and left us
-users out in the cold (no mdadm.conf craeted, lsraid commands left in
-crontab, etc), I am now a bit worried if the command
+> 
+> #> mdadm --detail --scan>> mdadm.conf
+> 
+> is enought to get the raid started the next time I have to reboot
+> the box.
 
-#> mdadm --detail --scan>> mdadm.conf
+1/ remove the 'devices=' parts.  Then it should be ok, providing there
+   is a suitable DEVICES line at the top.
+2/ If you were depending on 'raidstart' to start your arrays before,
+   mdadm will definitely be more reliable (which is to say that it
+   should still work if you lose the first drive of your array...)
+3/ Best way to find out is to try it!
 
-is enought to get the raid started the next time I have to reboot the box.
+> 
+> Until now I used only the raidtools (raidhotadd, lsraid, etc). Is there
+> somehwere a reference like what raidhotadd would be in mdadm
+> command?
 
-Until now I used only the raidtools (raidhotadd, lsraid, etc). Is there
-somehwere a reference like what raidhotadd would be in mdadm command?
+Well, there is the man-page for mdadm.  An understanding is always
+better than a cheat-sheet...
 
--- 
-[ Clemens Schwaighofer                      -----=====:::::~ ]
-[ TEQUILA\ Japan IT Group                                    ]
-[                6-17-2 Ginza Chuo-ku, Tokyo 104-8167, JAPAN ]
-[ Tel: +81-(0)3-3545-7703            Fax: +81-(0)3-3545-7343 ]
-[ http://www.tequila.co.jp                                   ]
+But raidhotadd /dev/mdX /dev/hdY  -> mdaddm /dev/mdX --add /dev/hdy
+    s/add/remove/
+    raidstop -> mdadm --stop
 
---------------enig96F0C6A37FCE0F04D64671A6
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
+There is no real equivalent for mkraid. mdadm --create does the same
+thing in a very different way.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-Comment: Using GnuPG with Thunderbird - http://enigmail.mozdev.org
-
-iD8DBQFCt6hojBz/yQjBxz8RAtMfAKCSxalyWKSEgFP66mSyVYfibQKQ0gCgipSe
-5xCrEeRjM0cj98n1Qd9mRd0=
-=kex4
------END PGP SIGNATURE-----
-
---------------enig96F0C6A37FCE0F04D64671A6--
+NeilBrown
