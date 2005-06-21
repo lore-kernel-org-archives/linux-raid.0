@@ -1,31 +1,42 @@
-From: Luca Berra <bluca@comedia.it>
+From: Ron Murray <murrayr@dor.state.ma.us>
 Subject: Re: Is my raid-1 array working?
-Date: Tue, 21 Jun 2005 18:17:41 +0200
-Message-ID: <20050621161741.GE27691@percy.comedia.it>
+Date: Tue, 21 Jun 2005 12:37:38 -0400
+Message-ID: <42B84252.1070408@dor.state.ma.us>
 References: <42B8146D.4030004@dor.state.ma.us>
+    <13541.194.178.120.170.1119365942.squirrel@194.178.120.170>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <42B8146D.4030004@dor.state.ma.us>
+In-Reply-To: <13541.194.178.120.170.1119365942.squirrel@194.178.120.170>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: jurriaan@rivierenland.xs4all.nl
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Jun 21, 2005 at 09:21:49AM -0400, Ron Murray wrote:
-> > Found duplicate PV xxxxxxxxxxxxxxxx: using /dev/sdc4 not /dev/sdb4
+Jurriaan Kalkman wrote:
+>> > md: Autodetecting RAID arrays.
+>> > md: autorun ...
+>> > md: ... autorun DONE.
+> 
+> 
+> Since no partitions seem to be recognized here, my first question would
+> be: are the partitions of type 0xfd - the one you need for them to be
+> automatically recognized?
+> 
+> Kind regards,
+> Jurriaan
 
-check that you have 
-    md_component_detection = 1
 
-in /etc/lvm/lvm.conf
+Aaaaahhhhhhhhhhhhhhh!!!! That fixed it. I must have missed that part.
 
-L.
+Thanks for the help.
 
--- 
-Luca Berra -- bluca@comedia.it
-        Communication Media & Services S.r.l.
- /"\
- \ /     ASCII RIBBON CAMPAIGN
-  X        AGAINST HTML MAIL
- / \
+  .....Ron
+
+**********************************************************************
+This email and any files transmitted with it are confidential and 
+intended solely for the use of the individual or entity to whom they   
+are addressed. If you have received this email in error please notify 
+the system manager at postmaster at dor.state.ma.us.
+**********************************************************************
