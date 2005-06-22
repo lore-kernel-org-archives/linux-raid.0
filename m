@@ -1,86 +1,143 @@
-From: Brad Dameron <brad@seatab.com>
+From: Harry Mangalam <hjm@tacgi.com>
 Subject: Re: More tales of horror from the linux (HW) raid crypt
-Date: Wed, 22 Jun 2005 14:09:25 -0700
-Message-ID: <1119474566.11039.12.camel@dhcpc226.office.pivotlink.com>
-References: <5d96567b05061804477325d743@mail.gmail.com>
-	 <200506201853.11768.hjm@tacgi.com> <42B9BCF6.1010206@h3c.com>
-	 <200506221316.33178.hjm@tacgi.com>
+Date: Wed, 22 Jun 2005 14:33:00 -0700
+Message-ID: <200506221433.00321.hjm@tacgi.com>
+References: <5d96567b05061804477325d743@mail.gmail.com> <200506221316.33178.hjm@tacgi.com> <20050622223833.60b3eba1.pegasus@nerv.eu.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="iso-8859-2"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200506221316.33178.hjm@tacgi.com>
+In-Reply-To: <20050622223833.60b3eba1.pegasus@nerv.eu.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 2005-06-22 at 13:16 -0700, Harry Mangalam wrote:
-> Thanks for the note - I'd also be interested in what drives people people use 
-> that seem to be robust and which are having problems.  The 3ware tech that I 
-> spoke to recommended the WD-SD series, but a local senior sysadmin has warned 
-> his entire dept off WD drives for the reasons I've mentioned.  He rec'ed 
-> Seagate (5 year warr) and Hitachi.  So far the only good thing that I can say 
-> about WD is that their return policy has been relatively smooth (tho they 
-> smoothly keep returning bad drives :( )
-> 
-> I personally buy IBM (now Hitachi I think) and Seagate and have always avoided 
-> WD as being cheap and cheesy.  5 years ago when I was a sysadmin, I was 
-> replacing WD at probably 5 times the rate of anything else.  It was probably 
-> strongly influenced by the fact that more people were using them than the 
-> others but I don't think I've ever had an IBM or seagate 3.5" die (have a 
-> teetering stack of working ones that just got too small to bother with).  I 
-> figured that since WD was still in business (tho seeming always on the verge 
-> of going bust) their quality must have improved, but maybe not.
-> 
-> Happy to be contradicted.  If there's a 'Consumer's Reports' for HD 
-> reliability on the web, I couldn't find it.  Maybe it's time to set one up - 
-> with SMART disk records, it's possible to get more reliable runtime records 
-> and data than just the usual single point or small data set that individuals 
-> can provide (and you can bet that most vendors aren't going to make their 
-> failures public..).
-> 
-> Perhaps something like the CDDB, where a you can run an applet on a cronjob 
-> that will upload your disk's SMART data cache to a remote DB on a regular 
-> basis, so the millions of disks out there can be profiled.  Hmmm - sounds 
-> like a good undergrad project. Did someone say Summer of Code? 
-> (http://code.google.com/summerofcode.html)
-> 
-> hjm
+Is this too OT? Let me know..
 
-Everyone has had issues with one brand or another. Sometimes the
-shipping can make all the difference. As I have had 4-5 out of 16 drives
-shipped come up bad out of the box. And these were Seagate 73GB SCSI
-drives. Not some cheap SATA/PATA drives. Now when you come to comparing
-drives you have to remember that not all manufacturers make their own
-drives. It is know that WD has sold IBM drives as theirs and vice-versa.
-I currently have a 12 drive 3ware 9500S-12 with 73GB WD 10k raptor
-drives in it that has been online for a year and a month without issues.
-And the controller has the very first firmware and linux drivers out. 
-I also have several hundred Seagate SCSI 10k drives from 36gb to 146gb. 
-And a few dozen Fujitsu 15k 73gb SCSI drives. And out of all these
-drives Seagate is the only ones I have to keep sending in for RMA. Now
-mind you I do have about 5 times as many drives. 
+The Storage Review DB would be a decent 1st approximation (includes data on 
+~35K drives), but relies on entering the info on only drives that the DB 
+knows about, and also relies on info that the person entering the data 
+remembers - how many hours in use, etc. It's also available only to 
+registered users who might be entering spurious data to gain access to the 
+DB.
 
-I used to not be partial to Maxtor either due to a issue several years
-ago with their PATA drives dieing on me in bulk. But I am currently
-purchasing 16 of their Maxline III SATA 300GB drives for a large storage
-array. Why am I going with them? Because they have the best reported
-performance for this type of drive. Not because they have a record of
-lasting longer. It is too hard to tell in a production/semi-production
-environment which brand will last the longest. So go with what you think
-is the best. And have spares/backups and monitoring programs to be
-prepared for when one does die. The odds of multiple failures at the
-same time are pretty high. 
+The SMART data (granted, it would only be possible to collect data from SMART 
+drives) would tell you considerably more info:
+(including that I was mistaken when I previously said I only bought IBM's and 
+Seagates) :)
 
-And just for the record, look at the Areca SATA RAID cards. They have 16
-and even 24 port cards if you want very large arrays. The cards greatly
-out perform the 3ware cards in READ/WRITE performance. They even offer
-RAID6. Just look at the processor on the ARC-12xx series.
+This is the kind of info that wold be quite useful to have available in a 
+CDDB-like DB.  It would also point out which drives are susceptible to 
+failure under continuous-on conditions versus frequent power-cycling, etc.
 
-Just my 2 cents. Hope it helps.
+an example from my home system:
 
-Brad Dameron
-SeaTab Software
-www.seatab.com
+1062 $ smartctl -a /dev/hda
+smartctl version 5.32 Copyright (C) 2002-4 Bruce Allen
+Home page is http://smartmontools.sourceforge.net/
+
+=== START OF INFORMATION SECTION ===
+Device Model:     WDC WD800JB-00CRA1
+Serial Number:    WD-WMA8E4088773
+Firmware Version: 17.07W17
+Device is:        In smartctl database [for details use: -P show]
+ATA Version is:   5
+ATA Standard is:  Exact ATA specification draft version not indicated
+Local Time is:    Wed Jun 22 14:24:56 2005 PDT
+SMART support is: Available - device has SMART capability.
+SMART support is: Enabled
+
+=== START OF READ SMART DATA SECTION ===
+SMART overall-health self-assessment test result: PASSED
+
+General SMART Values:
+Offline data collection status:  (0x84) Offline data collection activity
+                                        was suspended by an interrupting 
+command from host.
+                                        Auto Offline Data Collection: Enabled.
+Self-test execution status:      (   0) The previous self-test routine 
+completed
+                                        without error or no self-test has ever
+                                        been run.
+Total time to complete Offline
+data collection:                 (3120) seconds.
+Offline data collection
+capabilities:                    (0x3b) SMART execute Offline immediate.
+                                        Auto Offline data collection on/off 
+support.
+                                        Suspend Offline collection upon new
+                                        command.
+                                        Offline surface scan supported.
+                                        Self-test supported.
+                                        Conveyance Self-test supported.
+                                        No Selective Self-test supported.
+SMART capabilities:            (0x0003) Saves SMART data before entering
+                                        power-saving mode.
+                                        Supports SMART auto save timer.
+Error logging capability:        (0x01) Error logging supported.
+                                        No General Purpose Logging support.
+Short self-test routine
+recommended polling time:        (   2) minutes.
+Extended self-test routine
+recommended polling time:        (  58) minutes.
+Conveyance self-test routine
+recommended polling time:        (   5) minutes.
+
+SMART Attributes Data Structure revision number: 16
+Vendor Specific SMART Attributes with Thresholds:
+ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE      UPDATED  
+WHEN_FAILED RAW_VALUE
+  1 Raw_Read_Error_Rate     0x000b   200   200   051    Pre-fail  Always       
+-       0
+  3 Spin_Up_Time            0x0007   099   095   021    Pre-fail  Always       
+-       4141
+  4 Start_Stop_Count        0x0032   100   100   040    Old_age   Always       
+-       122
+  5 Reallocated_Sector_Ct   0x0033   199   199   140    Pre-fail  Always       
+-       2
+  7 Seek_Error_Rate         0x000b   200   200   051    Pre-fail  Always       
+-       0
+  9 Power_On_Hours          0x0032   075   075   000    Old_age   Always       
+-       18940
+ 10 Spin_Retry_Count        0x0013   100   100   051    Pre-fail  Always       
+-       0
+ 11 Calibration_Retry_Count 0x0013   100   100   051    Pre-fail  Always       
+-       0
+ 12 Power_Cycle_Count       0x0032   100   100   000    Old_age   Always       
+-       120
+196 Reallocated_Event_Count 0x0032   198   198   000    Old_age   Always       
+-       2
+197 Current_Pending_Sector  0x0012   200   200   000    Old_age   Always       
+-       0
+198 Offline_Uncorrectable   0x0012   200   200   000    Old_age   Always       
+-       0
+199 UDMA_CRC_Error_Count    0x000a   200   253   000    Old_age   Always       
+-       0
+200 Multi_Zone_Error_Rate   0x0009   200   200   051    Pre-fail  Offline      
+-       0
+
+SMART Error Log Version: 1
+No Errors Logged
 
 
+On Wednesday 22 June 2005 1:38 pm, Jure Pecar wrote:
+> On Wed, 22 Jun 2005 13:16:33 -0700
+>
+> Harry Mangalam <hjm@tacgi.com> wrote:
+> > Perhaps something like the CDDB, where a you can run an applet on a
+> > cronjob  that will upload your disk's SMART data cache to a remote DB on
+> > a regular  basis, so the millions of disks out there can be profiled. 
+> > Hmmm - sounds  like a good undergrad project. Did someone say Summer of
+> > Code? (http://code.google.com/summerofcode.html)
+>
+> Actually if you look at the storagereview.com, they already have a crude
+> form of this online under "reliability survey". You have to login, then you
+> can enter disk model that you have expirience with and what were those
+> expiriences. There's quite some info already available ...
+
+-- 
+Cheers, Harry
+Harry J Mangalam - 949 856 2847 (vox; email for fax) - hjm@tacgi.com 
+            <<plain text preferred>>
