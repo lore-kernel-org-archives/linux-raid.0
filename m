@@ -1,22 +1,24 @@
-From: Ada <vilifies@deaton.net>
-Subject: Large natural erection!
-Date: Tue, 21 Jun 2005 17:08:26 -0300
-Message-ID: <6777923929.1871156826@200-204-183-105.dsl.telesp.net.br>
-Mime-Version: 1.0 (Apple Message framework v728)
-Content-Type: text/plain; charset=US-ASCII; format=flowed
-Content-Transfer-Encoding: 7bit
+From: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
+Subject: A general Raid 5 question
+Date: Wed, 22 Jun 2005 19:31:09 +0200
+Message-ID: <5d96567b050622103157ada455@mail.gmail.com>
+Reply-To: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-The supremacy in bed!
-http://frhe.7msit8p0mh7xb87.dissuasionhi.com
+If I pull the plug out from my machine while io is being generated. 
+Is there a chance that  i would loose the raid ( obviously i would
+loose some data).
+I am refering to raid with no backup battery unit or anything of that sort.
 
+I tried to do it and the worst case was that the rebuilding was long (
+both in software raid and hardware raid -- 3ware ).
 
-
-Never raise your hand to your children; it leaves your midsection unprotected. 
-Poor is the man whose pleasures depend on the permission of another. 
-Living in a vacuum sucks.        
-
-
+I would appreciate answers
+Raz.
