@@ -1,40 +1,79 @@
-From: "Preben Mikael Bohn" <preben@chin.dk>
-Subject: Detection of drive failure using external USB2/firewire disks
-Date: Thu, 23 Jun 2005 13:29:44 +0200 (CEST)
-Message-ID: <31298.193.163.1.105.1119526184.squirrel@mail.chin.dk>
+From: Ming Zhang <mingz@ele.uri.edu>
+Subject: RE: More tales of horror from the linux (HW) raid crypt
+Date: Thu, 23 Jun 2005 08:31:47 -0400
+Message-ID: <1119529907.5503.1.camel@localhost.localdomain>
+References: <200506230305.j5N35u222988@www.watkins-home.com>
+Reply-To: mingz@ele.uri.edu
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-U0tS4vXuYy1zmmFYuvIG"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <200506230305.j5N35u222988@www.watkins-home.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Guy <bugzilla@watkins-home.com>
+Cc: bdameron@pivotlink.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi all, I'm completely new to RAID but I think I have understood the
-basics. :-)
 
-I am thinking about setting up a home-server with SW-RAID-1 on two
-external USB2 (or firewire) drives. Only var and home (and possibly tmp)
-will be mounted on these drives.
+--=-U0tS4vXuYy1zmmFYuvIG
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-My main objective is to have a low-cost, reliable (but not necessarily
-fast) system at home; with USB2 devices it is also easy to swap drives
-without opening the box. I have spent too many hours restoring from
-backups due to failed mechanical hardware. The only mechanical hardware
-left in my system now are these two harddrives (and the backup harddrive).
+On Wed, 2005-06-22 at 23:05 -0400, Guy wrote:
+> > -----Original Message-----
+> > >
+> > > > will this 24 port card itself will be a bottleneck?
+> > > >
+> > > > ming
+> > >
+> > > Since the card is PCI-X the only bottleneck on it might be the Proces=
+sor
+> > since
+> > > it is shared with all 24 ports. But I do not know for sure without
+> > testing it.
+> > > I personally am going to stick with the new 16 port version. Which is=
+ a
+> > PCI-
+> > > Express card and has twice the CPU power. Since there are so many
+> > spindles it
+> > > should be pretty darn fast. And remember that even tho the drives are
+> > 150MBps
+> > > they realistically only do about 25-30MBps.
+> >=20
+> > the problem here is taht each HD can stably deliver 25-30MBps while the
+> > PCI-x will not arrive that high if have 16 or 24 ports. i do not have a
+> > chance to try out though. those bus at most arrive 70-80% the claimed
+> > peak # :P
+>=20
+> Maybe my math is wrong...
+> But 24 disks at 30 MB/s is 720 MB/s, that is about 68.2% of the PCI-X
+> bandwidth of 1056 MB/s.
+yes, u math is better.
 
-I don't see any problems using external USB2 drives for RAID-1 in normal
-operation (am I wrong here?). However my question is: How does the RAID SW
-detect a drive failure on such external drives? _Will_ it be able to
-detect which drive is failing if for example one of the drives simply
-starts to send out garbage data? I assume that most USB<->ATA bridges
-implements some kind of minimal set of commands used for normal operation,
-but failing drives are not "normal" as such...
+>=20
+> Also, 30 MB/s assumes sequential disk access.  That does not occur in the
+> real world.  Only during testing.  IMO
+yes, only during test. but what if people build raid5 base on it, this
+is probably what people do. and then a disk fail? then a full disk
+sequential access becomes normal. and disk fail in 24 disk is not so
+uncommon.
 
-If the RAID SW is not able to detect which drive is failing I can just as
-well avoid using RAID...
+>=20
+> Guy
+>=20
+> >=20
 
-Any thoughts?
 
-Best regards Preben
+--=-U0tS4vXuYy1zmmFYuvIG
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.6 (GNU/Linux)
+
+iD8DBQBCuquySYbkL5BnVYoRAjsvAJ9f6ghLfwA0h/9ABEAJUXTPbLVqggCfejNP
+WYUnTniaqHMHwpjmpUmYVGs=
+=/kKi
+-----END PGP SIGNATURE-----
+
+--=-U0tS4vXuYy1zmmFYuvIG--
 
