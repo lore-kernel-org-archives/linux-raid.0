@@ -1,117 +1,42 @@
-From: Ming Zhang <mingz@ele.uri.edu>
-Subject: RE: More tales of horror from the linux (HW) raid crypt
-Date: Thu, 23 Jun 2005 09:19:20 -0400
-Message-ID: <1119532760.5503.18.camel@localhost.localdomain>
-References: <200506231303.j5ND3e224877@www.watkins-home.com>
-Reply-To: mingz@ele.uri.edu
+From: "bart@ardistech.com" <bart@ardistech.com>
+Subject: Re: RAID5 attempt rebuilding despite being incomplete
+Date: Thu, 23 Jun 2005 15:45:01 +0200
+Message-ID: <42BABCDD.F4D0191E@ardistech.com>
+References: <42BA9D87.B6808FFC@ardistech.com> <17082.46466.985928.971926@cse.unsw.edu.au>
+Reply-To: bart@ardistech.com
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-JSy1JPSkxMmosPWv8NdJ"
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200506231303.j5ND3e224877@www.watkins-home.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Guy <bugzilla@watkins-home.com>
-Cc: bdameron@pivotlink.com, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@cse.unsw.edu.au>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi Neil,
 
---=-JSy1JPSkxMmosPWv8NdJ
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> > I have the problem that my RAID5 (created with 4 drives) array is resyning
+> > despite the fact I removed one drive. Any Idea what it is doing?
+> 
+> Sound's familar.  Thought I had fixed it.  What kernel are you
+> running?
+> 
+I'm running on a 2.6.11 kernel, it should be pretty up to date.
 
-On Thu, 2005-06-23 at 09:03 -0400, Guy wrote:
->=20
-> > -----Original Message-----
-> > From: Ming Zhang [mailto:mingz@ele.uri.edu]
-> > Sent: Thursday, June 23, 2005 8:32 AM
-> > To: Guy
-> > Cc: bdameron@pivotlink.com; linux-raid@vger.kernel.org
-> > Subject: RE: More tales of horror from the linux (HW) raid crypt
-> >=20
-> > On Wed, 2005-06-22 at 23:05 -0400, Guy wrote:
-> > > > -----Original Message-----
-> > > > >
-> > > > > > will this 24 port card itself will be a bottleneck?
-> > > > > >
-> > > > > > ming
-> > > > >
-> > > > > Since the card is PCI-X the only bottleneck on it might be the
-> > Processor
-> > > > since
-> > > > > it is shared with all 24 ports. But I do not know for sure withou=
-t
-> > > > testing it.
-> > > > > I personally am going to stick with the new 16 port version. Whic=
-h
-> > is a
-> > > > PCI-
-> > > > > Express card and has twice the CPU power. Since there are so many
-> > > > spindles it
-> > > > > should be pretty darn fast. And remember that even tho the drives
-> > are
-> > > > 150MBps
-> > > > > they realistically only do about 25-30MBps.
-> > > >
-> > > > the problem here is taht each HD can stably deliver 25-30MBps while
-> > the
-> > > > PCI-x will not arrive that high if have 16 or 24 ports. i do not ha=
-ve
-> > a
-> > > > chance to try out though. those bus at most arrive 70-80% the claim=
-ed
-> > > > peak # :P
-> > >
-> > > Maybe my math is wrong...
-> > > But 24 disks at 30 MB/s is 720 MB/s, that is about 68.2% of the PCI-X
-> > > bandwidth of 1056 MB/s.
-> > yes, u math is better.
-> >=20
-> > >
-> > > Also, 30 MB/s assumes sequential disk access.  That does not occur in
-> > the
-> > > real world.  Only during testing.  IMO
-> > yes, only during test. but what if people build raid5 base on it, this
-> > is probably what people do. and then a disk fail? then a full disk
-> > sequential access becomes normal. and disk fail in 24 disk is not so
-> > uncommon.
-> But, this is hardware RAID.  A re-sync would not affect the PCI bus.  All
-> disk i/o related to re-building the array would be internal to the card.
-> However, even if it were a software RAID card, the PCI-X would be at 68.2=
-%
-> load, so it should not be a problem.  If my math is correct!  :)
->=20
-> Also, a single RAID5 array on 24 disks would be high risk of a double
-> failure.  I think I would build 2 RAID5 arrays of 12 disks each.  Or 2 RA=
-ID5
-> arrays of 11 disks each, with 2 spares.
->=20
-or build with raid6. but anyway, once u a disk, u will need to have a
-rsync. with MD, u might try the fr5.
+I forgot to mention that it only occurs if the drive is removed from the
+RAID5 set before it is 'synced' for the first time.
 
-no money, otherwise buy one and try. :P
+Could it be the mddev->curr_resync or mddev->recovery_cp are handled wrong
+in this case? I saw the prints:
 
-i think i need a 4U unit, dual amd64...
+..
+Jun 23 12:26:10 172 kernel: md: checkpointing recovery of md3.
+..
+Jun 23 12:26:15 172 kernel: md: resuming recovery of md3 from checkpoint.
+..
 
-ming
+in the error situation, while there is no state to recover at all at that
+point (the array is incomplete/degraded).
 
-> >=20
-> > >
-> > > Guy
-> > >
-> > > >
->=20
->=20
-
---=-JSy1JPSkxMmosPWv8NdJ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.6 (GNU/Linux)
-
-iD8DBQBCurbYSYbkL5BnVYoRAhU3AJ9Pu/ykotLKQSvGi/Rt+4W3voXC7ACbBSS5
-xA8Se1PokM7PYGdwNGGpxwM=
-=RcUP
------END PGP SIGNATURE-----
-
---=-JSy1JPSkxMmosPWv8NdJ--
-
+Cheers,
+	Bart
