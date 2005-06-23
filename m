@@ -1,79 +1,40 @@
-From: "bart@ardistech.com" <bart@ardistech.com>
-Subject: RAID5 attempt rebuilding despite being incomplete
-Date: Thu, 23 Jun 2005 13:31:19 +0200
-Message-ID: <42BA9D87.B6808FFC@ardistech.com>
-Reply-To: bart@ardistech.com
+From: "Preben Mikael Bohn" <preben@chin.dk>
+Subject: Detection of drive failure using external USB2/firewire disks
+Date: Thu, 23 Jun 2005 13:29:44 +0200 (CEST)
+Message-ID: <31298.193.163.1.105.1119526184.squirrel@mail.chin.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+Hi all, I'm completely new to RAID but I think I have understood the
+basics. :-)
 
-I have the problem that my RAID5 (created with 4 drives) array is resyning
-despite the fact I removed one drive. Any Idea what it is doing?
+I am thinking about setting up a home-server with SW-RAID-1 on two
+external USB2 (or firewire) drives. Only var and home (and possibly tmp)
+will be mounted on these drives.
 
-To trigger this:
-- Created RAID5 array with 4 partitions (no spares).
-- Set one drive to fail with 'mdadm --fail /dev/md3 /dev/hdf4'
-- Removed this drive with 'mdadm --remove /dev/md3 /dev/hdf4'
+My main objective is to have a low-cost, reliable (but not necessarily
+fast) system at home; with USB2 devices it is also easy to swap drives
+without opening the box. I have spent too many hours restoring from
+backups due to failed mechanical hardware. The only mechanical hardware
+left in my system now are these two harddrives (and the backup harddrive).
 
-After this I get:
+I don't see any problems using external USB2 drives for RAID-1 in normal
+operation (am I wrong here?). However my question is: How does the RAID SW
+detect a drive failure on such external drives? _Will_ it be able to
+detect which drive is failing if for example one of the drives simply
+starts to send out garbage data? I assume that most USB<->ATA bridges
+implements some kind of minimal set of commands used for normal operation,
+but failing drives are not "normal" as such...
 
----------------------------------------------------
+If the RAID SW is not able to detect which drive is failing I can just as
+well avoid using RAID...
 
-# mdadm --detail /dev/md3
-/dev/md3:
-        Version : 00.90.01
-  Creation Time : Thu Jun 23 11:43:59 2005
-     Raid Level : raid5
-     Array Size : 228151872 (217.58 GiB 233.63 GB)
-    Device Size : 76050624 (72.53 GiB 77.88 GB)
-   Raid Devices : 4
-  Total Devices : 3
-Preferred Minor : 3
-    Persistence : Superblock is persistent
+Any thoughts?
 
-    Update Time : Thu Jun 23 12:26:19 2005
-          State : active, degraded, resyncing
- Active Devices : 3
-Working Devices : 3
- Failed Devices : 0
-  Spare Devices : 0
+Best regards Preben
 
-         Layout : left-symmetric
-     Chunk Size : 64K
-
- Rebuild Status : 24% complete
-
-           UUID : b9e2b624:b9bef9df:dcdec561:0c3a8dfd
-         Events : 0.9
-
-    Number   Major   Minor   RaidDevice State
-       0       3        4        0      active sync   /dev/.static/dev/hda4
-       1       3       68        1      active sync   /dev/.static/dev/hdb4
-       2      33        4        2      active sync   /dev/.static/dev/hde4
-       3       0        0        -      removed
-
---------------------------------------------------
-
-and in /proc/mdstat is says:
-
---------------------------------------------------
-
-md3 : active raid5 hde4[2] hdb4[1] hda4[0]
-      228151872 blocks level 5, 64k chunk, algorithm 2 [4/3] [UUU_]
-      [=====>...............]  resync = 25.5% (19442692/76050624) finish=101.0min speed=9332K/sec
-
---------------------------------------------------
-
-Removing all the drives seem leads to the array resyncing with 0 drives in
-a loop, causing the /var/log/messages to grow at a rate of > 100MByte/sec :(
-
-Isn't it a bug that the array starts resyning whithout checking if the
-drives needed for a synced state are present?
-
-	Bart
