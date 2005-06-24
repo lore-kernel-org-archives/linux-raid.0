@@ -1,52 +1,42 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: from raidtools2 to mdadm
-Date: Fri, 24 Jun 2005 12:01:48 +1000
-Message-ID: <17083.27020.649915.592929@cse.unsw.edu.au>
-References: <42B7A866.1080802@tequila.co.jp>
-	<17079.43900.652982.735401@cse.unsw.edu.au>
-	<42B7ACDA.1000605@tequila.co.jp>
-	<17079.45804.485652.77989@cse.unsw.edu.au>
-	<42B9B274.7050109@tmr.com>
+From: "bart@ardistech.com" <bart@ardistech.com>
+Subject: Re: RAID5 attempt rebuilding despite being incomplete
+Date: Fri, 24 Jun 2005 10:20:49 +0200
+Message-ID: <42BBC261.1408AA23@ardistech.com>
+References: <42BA9D87.B6808FFC@ardistech.com>
+		<17082.46466.985928.971926@cse.unsw.edu.au>
+		<42BABCDD.F4D0191E@ardistech.com> <17083.25767.665831.24231@cse.unsw.edu.au>
+Reply-To: bart@ardistech.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Bill Davidsen on Wednesday June 22
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Clemens Schwaighofer <cs@tequila.co.jp>, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@cse.unsw.edu.au>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday June 22, davidsen@tmr.com wrote:
+Hi Neil,
+
+> I cannot find the patch I was thinking of to check when it went in,
+> but I have just tested various failure scenarios on 2.6.12-rc3-mm3 and
+> it handles them all properly.
 > 
-> So is there no way to ask mdadm to take what's running and create a 
-> config to make it happen again? Telling people to cread the man pages 
-> for a utility they did not use by choice and create a config file which 
-> could result in losing their data if it's wrong is a deterent to an 
-> upgrade, I suspect.
+> If you could try 2.6.12 and confirm, I would appreciate it.
+> 
+Ok, will try with 2.6.12
 
-There is a complexity in that devices can change there names across
-reboot, and mdadm has no way to know a minimal set of possible new
-names.
+> I noticed that the raid5 was resyncing rather than recovering.
+> Normally when you create a raid5 with mdadm it will recover as this is
+> faster than resync.  Did you create the array with '-f' ??
+> 
+No, but the '--run' flag was set. I noticed that when ommiting the
+'--run' flag (like 'mdadm --create /dev/md3 --level=5 --raid-devices=4
+/dev/hd[abef]4') the array goes into recovery straight away, so 
+probably the '--run' flag forces a '-f'.
 
-You could:
-  echo DEVICES partitions > /etc/mdadm.conf
-  mdadm -Ds | grep -v devices >> /etc/mdadm.conf
+It also looks like the '--detail --test' flag of mdadm (to obtain the array
+status as return value) does not work (always returns 0). I'll start a
+different thread on that when I tested it further.
 
-and then
-  mdadm -As
-
-should re-assemble  everything properly at boot time.
-However this might not handle stacked devices (raid0 comprised for
-raid1s) very well (maybe an enhancement for the next mdadm?).
-
-A bad config file is unlikely to cause data loss.  It might result it
-data not being visible until the problem is fixed.
-
-I'm working towards making auto-assembly more bullet-proof, but it is
-not trivial, and I would rather it not give the appearance of working
-correctly until it really does (in contrast to 'raidstart' which gives
-the appearance of working correctly until a drive fails.  Then it
-fails too :-( )
-
-NeilBrown
+Cheers,
+	Bart
