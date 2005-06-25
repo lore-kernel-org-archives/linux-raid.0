@@ -1,7 +1,7 @@
-From: Mabel <viscous@shacklette.com>
-Subject: New and unique way to take care of medical needs at an afordable price online.
-Date: Sat, 25 Jun 2005 08:52:13 -0400
-Message-ID: <3818245020.1654510352@c-24-61-80-212.hsd1.ma.comcast.net>
+From: Lily <individual@thecaptainstable.com>
+Subject: LOWEST PRICE GUARANTEED! download and Buy Cds
+Date: Sun, 26 Jun 2005 00:13:19 +0300
+Message-ID: <672656050.5816733208@dsl.dynamic812156010.ttnet.net.tr>
 Mime-Version: 1.0 (Apple Message framework v728)
 Content-Type: text/plain; charset=US-ASCII; format=flowed
 Content-Transfer-Encoding: 7bit
@@ -10,13 +10,13 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Have you ever bought drugs online?
-http://upys.9oc2ds9kojrzvsr.evelynlb.com
+Software taking a bite out of your budget? Try OEM! 
+http://brqiwk.8xu5tpq1n0qfn98.poromajg.info
 
 
 
-Life is just one damned thing after another.     
-The best soldiers are not warlike.       
-He's a fine friend. He stabs you in the front.   
+
+I've been traveling so much, I haven't had time to grow it. 
+Well-behaved women rarely make history.        
 
 
