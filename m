@@ -1,8 +1,7 @@
 From: Mitchell Laks <mlaks@verizon.net>
-Subject: can we run a degraded raid 1 normally (without adding in a replacement
- second drive)
-Date: Sun, 26 Jun 2005 13:21:39 -0400
-Message-ID: <200506261321.39964.mlaks@verizon.net>
+Subject: what is /dev/.static/dev/md0 ???
+Date: Sun, 26 Jun 2005 14:22:27 -0400
+Message-ID: <200506261422.28250.mlaks@verizon.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
@@ -12,53 +11,66 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Dear Raid Gurus!
+Hi,
 
-I described in my last post that when I physically removed one of the two 
-mirror drives from my raid 1
-/dev/md0 /dev/hdb1 /dev/hdg1
-in the most direct way possible (shut down machine and removed it), 
-where /dev/md0 is mounted in an optional part of the Linux file system 
-(ie a (non LHS compliant) mount point I call /big  :) )
-I was unable to figure out how to make my system boot normally- ie
+Continuing with my saga with my 1/2 raid 1 pair devices....
 
-boot - start the raid device - mount it via /etc/fstab in usual way.
+I took  1/2 of a raid1 pair from one system and placed it on another system. 
+Connected it up as the /dev/hdb location. It has a single partition /dev/hdb1 
+which is of type linux autodetect fd and formated ext3.
 
-I found that I needed to: manually invoke 
+Then I tried to assemble it 
+mdadm -A /dev/md0 /dev/hdb1
 
-mdadm -A --run /dev/md0 /dev/hdb1
-and then i could do 
-mount -t ext3 /dev/md0 /big
+and got error message
+error opening /dev/md0  no such file or directory
 
-or else my system drops to single  user repair mode when it can't 
-start /dev/md0 and it tries to run fsck.ext3 on the nonexistent mount 
-point /big if it is present in /etc/fstab
+(this is debian sid 
+uname -a
+2.6.10-1-k7-smp
+mdadm -V
+mdadm -v1.9.0
+)
 
-I have been thinking about this, and reading on the net via google.
+(who ??? knows what the hell is going on with udev here....)
 
-I know that it is nonstandard to do this crazy thing I am doing.
-Typically after a drive "failure" you  simply
-1) replace  /dev/hdg1, 
-2) run fdisk  /dev/hdg and create a partion with a superblock
-perhaps zero any pre-existing superblock on /dev/hdg1 with
-  mdadm --zero-superblock /dev/hdg1
-3) then do mdadm -a /dev/md0 /dev/hdg1
- and wait till it resyncs.
+then undetered i did 
+mknod /dev/md0 b 9 0
+mknod /dev/md1 b 9 1
+ 
+then i did 
+mdadm -A /dev/md0 /dev/hdg1
 
-However in my case i want to run the raid without a backup - because by taking 
-the mirror off line I am better off (perhaps). 
+and got response 
 
-If I  have a mirror off line this is good enough for me - and better in this 
-case cause it is  not potentially corrupted by power surges and disaster of 
-everyday life. 
+mdadm: /dev/md0 assembled from 1 drive
+need all 2 to start it
+need to --run to insist
 
-Also I am adding a new additional raid device  /dev/md2 which needs to be 
-mirrored as it is getting fresh data in.... so I want to use that cable 
-location for that new mirrored raid device.
+So of course i insisted and it started and it was accessible and mounted fine
+as /dev/md0.
 
-So is there a way to do this or must i set up a separate init script of my own 
-to do this --run initiallization after the regular boot is completed 
-(dumb ...).
+then i did same with another device for /dev/md1.
 
-Thanks !!
+then i  wanted to make a mdadm.conf file to play with booting normally 
+
+Machine:~# mdadm --detail --scan
+
+ARRAY /dev/md1 level=raid1 num-devices=2 
+UUID=86af4f07:91fe306c:d1cb5c86:e87dc7de
+   devices=/dev/.static/dev/hdg1
+ARRAY /dev/md0 level=raid1 num-devices=2 
+UUID=19def19e:3995fe1e:5470d62a:c44b069c
+   devices=/dev/.static/dev/hdb1
+
+My question:
+
+what the heck is  
+devices=/dev/.static/dev/hdb1
+
+and why doesnt it say what i expect 
+devices=/dev/hdb1 and
+devices=/dev/hdg1
+
+?????? thanks
 Mitchell Laks
