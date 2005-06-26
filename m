@@ -1,7 +1,7 @@
 From: Mitchell Laks <mlaks@verizon.net>
-Subject: what is /dev/.static/dev/md0 ???
-Date: Sun, 26 Jun 2005 14:22:27 -0400
-Message-ID: <200506261422.28250.mlaks@verizon.net>
+Subject: /dev/.static/dev/md0 works - weird...
+Date: Sun, 26 Jun 2005 16:21:01 -0400
+Message-ID: <200506261621.01799.mlaks@verizon.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
@@ -11,51 +11,21 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+Now I try the following. 
 
-Continuing with my saga with my 1/2 raid 1 pair devices....
+I notice that on this sysem (which has that damn udev installed) 
+/dev/md0 disappears on reboot.
 
-I took  1/2 of a raid1 pair from one system and placed it on another system. 
-Connected it up as the /dev/hdb location. It has a single partition /dev/hdb1 
-which is of type linux autodetect fd and formated ext3.
+So I see why mdadm --detail --scan came up with that weird 
+/dev/.static/dev/md0, 
 
-Then I tried to assemble it 
-mdadm -A /dev/md0 /dev/hdb1
+/dev/.static/dev/md0 at least this device persists after reboot:
+that seems to stay around after reboot...
 
-and got error message
-error opening /dev/md0  no such file or directory
 
-(this is debian sid 
-uname -a
-2.6.10-1-k7-smp
-mdadm -V
-mdadm -v1.9.0
-)
+So I edit /etc/mdadm/mdadm.conf to read as follows
 
-(who ??? knows what the hell is going on with udev here....)
-
-then undetered i did 
-mknod /dev/md0 b 9 0
-mknod /dev/md1 b 9 1
- 
-then i did 
-mdadm -A /dev/md0 /dev/hdg1
-
-and got response 
-
-mdadm: /dev/md0 assembled from 1 drive
-need all 2 to start it
-need to --run to insist
-
-So of course i insisted and it started and it was accessible and mounted fine
-as /dev/md0.
-
-then i did same with another device for /dev/md1.
-
-then i  wanted to make a mdadm.conf file to play with booting normally 
-
-Machine:~# mdadm --detail --scan
-
+Device /dev/.static/dev/hdg1 /dev/.static/dev/hdb1
 ARRAY /dev/md1 level=raid1 num-devices=2 
 UUID=86af4f07:91fe306c:d1cb5c86:e87dc7de
    devices=/dev/.static/dev/hdg1
@@ -63,14 +33,31 @@ ARRAY /dev/md0 level=raid1 num-devices=2
 UUID=19def19e:3995fe1e:5470d62a:c44b069c
    devices=/dev/.static/dev/hdb1
 
-My question:
+and  now I reboot the system.
 
-what the heck is  
-devices=/dev/.static/dev/hdb1
+And now if I run 
 
-and why doesnt it say what i expect 
-devices=/dev/hdb1 and
-devices=/dev/hdg1
+mdadm -A --run  /dev/.static/dev/md0 /dev/hdb1
+it starts it running. and i can mount it.
+mount -t ext3 /dev/.static/dev/md0  /big1
 
-?????? thanks
+
+So I think that I must create a init.d script to run at the end of the boot to 
+do
+
+mdadm -A --run  /dev/.static/dev/md0 /dev/hdb1
+mount -t ext3 /dev/.static/dev/md0  /big1
+
+and then I won't have problems....
+
+However I think that raids should boot as long as they are intact, as a matter 
+of policy. Otherwise we lose our  ability to rely upon them for remote 
+servers...
+
 Mitchell Laks
+
+
+
+
+
+
