@@ -1,165 +1,139 @@
-From: Radu Filip <radu@tuiasi.ro>
-Subject: Problem with software RAID-5
-Date: Sun, 26 Jun 2005 07:20:16 +0300 (EEST)
-Message-ID: <Pine.LNX.4.63.0506242010240.5345@localhost.localdomain>
+From: Mitchell Laks <mlaks@verizon.net>
+Subject: mdadm --run required to start raid1 device /dev/md0 after removal of
+ one drive. why?
+Date: Sun, 26 Jun 2005 02:50:24 -0400
+Message-ID: <200506260250.24186.mlaks@verizon.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: linux-admin@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi,
 
-Greetings,
+My system has 4 250GB hard drives:
 
-I have encounered a wierd problem with software RAID 5: I can write files 
-on the RAID volume, but when I read the files I get strange I/O errors:
+/dev/md0  /dev/hdb1, /dev/hdg1
+/dev/md1  /dev/hdc1,  /dev/hde1
 
-Jun 25 23:40:39 raid1 kernel: attempt to access beyond end of device
-Jun 25 23:40:39 raid1 kernel: md0: rw=0, want=10749025768, limit=1757815296
-Jun 25 23:40:39 raid1 kernel: attempt to access beyond end of device
-Jun 25 23:40:39 raid1 kernel: md0: rw=0, want=13199519200, limit=1757815296
-Jun 25 23:40:39 raid1 kernel: attempt to access beyond end of device
-[...]
+My data is static, so 
+I decided to take a single device from each raid off line and keep it safe.
 
-Seems to be an ext3 error, but I think it is. Here is the long story:
+This was the content of the /etc/mdadm/mdadm.conf file at that moment.
 
-I have few machines with TYAN motherboards, some with Intel CPU's, some 
-with AMD Athlon. All with at least 1.5 GB of RAM. Some has 5 hard drives 
-(ATA, using PCI exctention card), some has 6 hard drives. I think they are 
-all Maxtor DiamondPlus drives.
+# cat mdadm.conf.6.25.2005
+DEVICE /dev/hdb1 /dev/hdc1  /dev/hdg1 /dev/hde1
 
-The problem is the same on all three machines (which until recently ran 
-RedHat 9.0 with software RAID0 with no problem; but now I have to make 
-them RAID5). I think I can exclude hardware errors. On all these machines, 
-I ran badblocks for few night, I also tested the drives with Maxtor 
-utilities, and they are ok.
+ARRAY /dev/md1 level=raid1 num-devices=2 
+UUID=19def19e:3995fe1e:5470d62a:c44b06c
+   devices=/dev/hdc1,/dev/hde1
+ARRAY /dev/md0 level=raid1 num-devices=2 
+UUID=ca17eac7:01b4ccb7:c768ca76:7b9febd
+   devices=/dev/hdb1,/dev/hdg1
 
-Memory is ok, I tested half a night with MemTest86.
 
-I also tried different filesystems, not just Ext3. I tried also XFS and 
-ReiserFS. No matter ther filesystem, when I try to read the test files I 
-put there (and I fill up the RAID volume) I get strange errors, XFS hangs 
-the machine, for example.
+So I edited mdadm.conf to  changing  num-devices=2 to num-devices=1:
 
-I also tried different kernels and different distributions. I tried Fedora 
-Core 3, RedHat Enterprise 3 (both default kernel and updated kernel from 
-update 3.5), Gentoo, CentOS 4 and CentOS 4.1. I also tried vanilla 
-kernels, including the latest one 2.6.12.1. No matter whay I tried, and 
-there are already three weeks since I am working on this, I always get on 
-the damn error.
+A1:~# cat /etc/mdadm/mdadm.conf
+DEVICE /dev/hdb1 /dev/hdc1
 
-So in the end I think there are two possiblities:
+ARRAY /dev/md1 level=raid1 num-devices=1 
+UUID=19def19e:3995fe1e:5470d62a:c44b06c
+   devices=/dev/hdc1
+ARRAY /dev/md0 level=raid1 num-devices=1 
+UUID=ca17eac7:01b4ccb7:c768ca76:7b9febd
+   devices=/dev/hdb1
 
-1) either I am doing the same mistake all the time and I don't realize, 
-even after I read the HOWTO-s for a number of times
 
-2) there is something wrong in the Linux implementation of RAID5
+And then I turned off the system, and pulled out both of  the drives /dev/hdg1 
+and /dev/hde1.
 
-Here is how I created the RAID5 the last time:
+Then I rebooted the sytem, and the system stopped during the standard boot 
+point where it runs fsck.ext3 on the mounted drives. 
+because the system was unable to start the devices /dev/md0 or /dev/md1
 
-# mdadm --create /dev/md0 -c 128 -l 5 -n 5 /dev/hd{b,g,e,h}1 /dev/hda4
+It refused to boot until I removed the mount points /dev/md0 and /dev/md1 from 
+/etc/fstab.
 
-(I waited to volume to get into clean mode)
+Now I naively thought that /dev/md0 and /dev/md1  would both start naturally,
+with the new mdadm.conf and simply indicate a failed device in 
+cat /proc/mdstat?
 
-# cat /proc/mdstat
-Personalities : [linear] [raid0] [raid1] [raid5] [multipath] [raid10] [faulty]
-md0 : active raid5 hdh2[3] hdg2[2] hde2[1] hdc2[0] hda4[4]
-        1084708352 blocks level 5, 64k chunk, algorithm 2 [5/5] [UUUUU]
+That is what hardware raid does ... I think ...
+  
+Well after I commented out /dev/md* from /etc/fstab
+I  got the system to boot, and  I ran
 
-unused devices: <none>
+mdadm -A /dev/md0 /dev/hdb1
 
-$ mdadm --misc -D /dev/md0
-/dev/md0:
-          Version : 00.90.01
-    Creation Time : Fri May 27 03:34:20 2005
-       Raid Level : raid5
-       Array Size : 1084708352 (1034.46 GiB 1110.74 GB)
-      Device Size : 271177088 (258.61 GiB 277.69 GB)
-     Raid Devices : 5
-    Total Devices : 5
+and the system said to me:
+
+mdadm: /dev/md0 assembled from 1 drive, need all 2 to start it.
+use --run to insist.
+
+Now if I do 
+mmdadm -A --run /dev/md0 /dev/hdb1 then it starts.
+
+similarly with /dev/md1.
+
+But what can I do to restore the previous situation with the old /etc/fstab
+so that I can reboot and have the system 
+remount itself without doing this --run by hand each time? 
+
+and also what is rhe --run needed here for??
+
+this is the current content of 
+mdadm --detail --scan
+
+ARRAY /dev/md0 level=raid1 num-devices=2 
+UUID=ca17eac7:01b4ccb7:c768ca76:7b9febd
+   devices=/dev/hdb1
+ARRAY /dev/md1 level=raid1 num-devices=2 
+UUID=19def19e:3995fe1e:5470d62a:c44b06c
+   devices=/dev/hdc1
+
+while i had put num-devices=1 in the new mdadm.conf . Is this the problem?
+
+I am running debian sarge 
+A1:~# uname -a
+Linux A1 2.6.8-1-386 #1 Thu Nov 25 04:24:08 UTC 2004 i686 GNU/Linux
+A1:~# mdadm -V
+mdadm - v1.9.0 - 04 February 2005
+
+also here is the output of 
+
+A1:~# mdadm -E /dev/hdb1
+/dev/hdb1:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : ca17eac7:01b4ccb7:c768ca76:7b9febad
+  Creation Time : Mon Jan 10 13:55:58 2005
+     Raid Level : raid1
+   Raid Devices : 2
+  Total Devices : 1
 Preferred Minor : 0
-      Persistence : Superblock is persistent
 
-      Update Time : Tue May 31 03:19:58 2005
-            State : clean
-   Active Devices : 5
-Working Devices : 5
-   Failed Devices : 0
-    Spare Devices : 0
+    Update Time : Sun Jun 26 01:15:21 2005
+          State : clean
+ Active Devices : 1
+Working Devices : 1
+ Failed Devices : 1
+  Spare Devices : 0
+       Checksum : 4b3c0cec - correct
+         Events : 0.364978
 
-           Layout : left-symmetric
-       Chunk Size : 64K
-
-             UUID : 1f9feaed:d48e56c8:d68e1f66:0ff88b64
-           Events : 0.8483
 
       Number   Major   Minor   RaidDevice State
-         0      22        2        0      active sync   /dev/hdc2
-         1      33        2        1      active sync   /dev/hde2
-         2      34        2        2      active sync   /dev/hdg2
-         3      34       66        3      active sync   /dev/hdh2
-         4       3        4        4      active sync   /dev/hda4
+this     0       3       65        0      active sync   /dev/hdb1
 
-I have formated the volume this way:
-# mkfs.ext3 -v -b 4096 -R stride=32 /dev/md0
+   0     0       3       65        0      active sync   /dev/hdb1
+   1     1       0        0        1      faulty removed
 
 
 
-Usually, I gen only "attempt to access beyond end of device", but with 
-several occasions I've also got:
+Thanks!!!
 
-Jun 14 08:36:47 raid1 kernel: ------------[ cut here ]------------
-Jun 14 08:36:47 raid1 kernel: kernel BUG at drivers/md/raid5.c:813!
-Jun 14 08:36:47 raid1 kernel: invalid operand: 0000 [#1]
-Jun 14 08:36:47 raid1 kernel: Modules linked in: nfs lockd md5 ipv6 parport_pc lp parport autofs4 i2c_dev i2c_core sunrpc dm_mod button battery ac ohci_hcd ehci_hcd r8169 floppy ext3 jbd raid5 xor raid0
-Jun 14 08:36:47 raid1 kernel: CPU:    0
-Jun 14 08:36:47 raid1 kernel: EIP:    0060:[<628638bb>]    Not tainted VLI
-Jun 14 08:36:47 raid1 kernel: EFLAGS: 00010016   (2.6.9-1.667)
-Jun 14 08:36:47 raid1 kernel: EIP is at add_stripe_bio+0x195/0x3ec [raid5]
-Jun 14 08:36:47 raid1 kernel: eax: 2362a9a0   ebx: 00000000   ecx: 2362a978   edx: 00000000
-Jun 14 08:36:47 raid1 kernel: esi: 06e0da40   edi: 39f821c0   ebp: 39fdb3e0   esp: 0e1f6b38
-Jun 14 08:36:47 raid1 kernel: ds: 007b   es: 007b   ss: 0068
-Jun 14 08:36:47 raid1 kernel: Process md5sum (pid: 17070, threadinfo=0e1f6000 task=26cdb770)
-Jun 14 08:36:47 raid1 kernel: Stack: 00000002 39fdb3e0 03e119b4 39f821c0 2362a978 00000000 39fdb3e0 62865405
-Jun 14 08:36:47 raid1 kernel:        00000000 03e119b4 2362a980 00000000 00000004 00000005 39ff2a00 00000002
-Jun 14 08:36:47 raid1 kernel:        00000000 60701c80 61c7fb50 39fdb3e0 00000000 022494f7 814eabf8 00000000
-Jun 14 08:36:47 raid1 kernel: Call Trace:
-Jun 14 08:36:47 raid1 kernel:  [<62865405>] make_request+0x112/0x3a9 [raid5]
-Jun 14 08:36:47 raid1 kernel:  [<022494f7>] generic_make_request+0x190/0x1a0
-Jun 14 08:36:47 raid1 kernel:  [<0218ede0>] mpage_end_io_read+0x0/0x5e
-Jun 14 08:36:47 raid1 kernel:  [<022495ab>] submit_bio+0xa4/0xac
-Jun 14 08:36:47 raid1 kernel:  [<628bdf03>] ext3_get_block+0x64/0x6c [ext3]
-Jun 14 08:36:47 raid1 kernel:  [<0218ede0>] mpage_end_io_read+0x0/0x5e
-Jun 14 08:36:47 raid1 kernel:  [<0218eeab>] mpage_bio_submit+0x19/0x1d
-Jun 14 08:36:47 raid1 kernel:  [<0218f1f8>] do_mpage_readpage+0x259/0x352
-Jun 14 08:36:47 raid1 kernel:  [<021db898>] radix_tree_node_alloc+0x10/0x41
-Jun 14 08:36:47 raid1 kernel:  [<021dba2a>] radix_tree_insert+0x6e/0xe7
-Jun 14 08:36:47 raid1 kernel:  [<0218f382>] mpage_readpages+0x91/0xf9
-Jun 14 08:36:47 raid1 kernel:  [<628bde9f>] ext3_get_block+0x0/0x6c [ext3]
-Jun 14 08:36:47 raid1 kernel:  [<021464e6>] __rmqueue+0xbb/0x106
-Jun 14 08:36:47 raid1 kernel:  [<628bea38>] ext3_readpages+0x12/0x14 [ext3]
-Jun 14 08:36:47 raid1 kernel:  [<628bde9f>] ext3_get_block+0x0/0x6c [ext3]
-Jun 14 08:36:47 raid1 kernel:  [<021498a7>] read_pages+0x2d/0xd0
-Jun 14 08:36:47 raid1 kernel:  [<02146b10>] buffered_rmqueue+0x1dd/0x200
-Jun 14 08:36:47 raid1 kernel:  [<02146be7>] __alloc_pages+0xb4/0x298
-Jun 14 08:36:47 raid1 kernel:  [<02149ee7>] do_page_cache_readahead+0x29a/0x2ba
-Jun 14 08:36:47 raid1 kernel:  [<0214a072>] page_cache_readahead+0x16b/0x19e
-Jun 14 08:36:47 raid1 kernel:  [<02142ed2>] do_generic_mapping_read+0xd9/0x37c
-Jun 14 08:36:47 raid1 kernel:  [<021433d1>] __generic_file_aio_read+0x164/0x17e
-Jun 14 08:36:47 raid1 kernel:  [<02143175>] file_read_actor+0x0/0xf8
-Jun 14 08:36:47 raid1 kernel:  [<0214342b>] generic_file_aio_read+0x40/0x47
-Jun 14 08:36:47 raid1 kernel:  [<02165467>] do_sync_read+0x97/0xc9
-Jun 14 08:36:47 raid1 kernel:  [<0211cf5b>] autoremove_wake_function+0x0/0x2d
-Jun 14 08:36:47 raid1 kernel:  [<0211ae71>] recalc_task_prio+0x128/0x133
-[...]
-Jun 14 08:36:47 raid1 kernel:  [<0211cf5b>] autoremove_wake_function+0x0/0x2d
-Jun 14 08:36:47 raid1 kernel:  [<0211ae71>] recalc_task_prio+0x128/0x133
-Jun 14 08:36:47 raid1 kernel:  [<0216554f>] vfs_read+0xb6/0xe2
-Jun 14 08:36:47 raid1 kernel:  [<02165762>] sys_read+0x3c/0x62
-
-
-So can somebody please help me to debug this RAID5 problem?
-
-Thanks!
+Mitchell Laks
