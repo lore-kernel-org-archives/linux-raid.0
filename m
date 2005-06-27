@@ -1,40 +1,32 @@
-From: "Bernd Schubert" <Bernd.Schubert@tc.pci.uni-heidelberg.de>
-Subject: Re: what is /dev/.static/dev/md0 ???
-Date: Mon, 27 Jun 2005 10:58:13 +0200
-Message-ID: <20050627085813.GB14246@tc.pci.uni-heidelberg.de>
-References: <200506261422.28250.mlaks@verizon.net>
+From: Michael Frotscher <infomails@tronserver.dyndns.org>
+Subject: Adding spare to running array?
+Date: Mon, 27 Jun 2005 15:12:30 +0200
+Message-ID: <200506271512.30327.infomails@tronserver.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <200506261422.28250.mlaks@verizon.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mitchell Laks <mlaks@verizon.net>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Mitchell,
+Hello,
 
+I experienced what probably many of you experienced before me: one disk in my 
+RAID-1-array died, I got a new one and reconstructed the array. Everything 
+went fine. However, there was warranty on the dead drive and I eventually got 
+it back, now having one spare drive.
+Is there a way to integrate that drive as a hot spare so the array will not 
+fall into degraded mode even if another drive fails?
 
-[...]
+I mean, I could write a config-file which contains this array with a spare and 
+do a "raidhotadd --configfile=", but will that work and leave my data 
+untouched?
 
-> (who ??? knows what the hell is going on with udev here....)
-> 
-[...]
-> 
-> My question:
-> 
-> what the heck is  
-> devices=/dev/.static/dev/hdb1
-
-/dev/.static should be bindmounted your old, pre udev/tmpfs mounted /dev
-directory. AFAIK, udev takes it as sample directory to create the proper 
-device names.
-Don't ask me why udev sometimes works and sometimes not. After shortly
-trying it last year on our sever systems, I quickly decided to better
-not to use it there. On our diskless clients it is really neccessary, but
-also has *sometimes* issues there, e.g. on about 5 of 45 clients
-reboots, it forgets to create /dev/pts on those 5 clients.
-
-Cheers,
-	Bernd
+Sincerely,
+-- 
+Dipl.-Chem. Michael Frotscher
+Institute of Inorganic and Applied Chemistry
+University of Hamburg, Germany 
