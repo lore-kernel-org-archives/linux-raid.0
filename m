@@ -1,7 +1,7 @@
 From: Mitchell Laks <mlaks@verizon.net>
-Subject: /dev/.static/dev/md0 works - weird...
-Date: Sun, 26 Jun 2005 16:21:01 -0400
-Message-ID: <200506261621.01799.mlaks@verizon.net>
+Subject: modify mdadm-raid script
+Date: Sun, 26 Jun 2005 20:10:50 -0400
+Message-ID: <200506262010.50472.mlaks@verizon.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
@@ -11,53 +11,72 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Now I try the following. 
+Along the same lines as above:
 
-I notice that on this sysem (which has that damn udev installed) 
-/dev/md0 disappears on reboot.
+Should I simply modify the init script
+/etc/init.d/mdadm-raid
 
-So I see why mdadm --detail --scan came up with that weird 
-/dev/.static/dev/md0, 
+script to  add in 
+--run to the line which starts the raid??
 
-/dev/.static/dev/md0 at least this device persists after reboot:
-that seems to stay around after reboot...
+ie. change the line
 
+               $MDADM -A -s 
+to
+               $MDADM -A -s --run
 
-So I edit /etc/mdadm/mdadm.conf to read as follows
-
-Device /dev/.static/dev/hdg1 /dev/.static/dev/hdb1
-ARRAY /dev/md1 level=raid1 num-devices=2 
-UUID=86af4f07:91fe306c:d1cb5c86:e87dc7de
-   devices=/dev/.static/dev/hdg1
-ARRAY /dev/md0 level=raid1 num-devices=2 
-UUID=19def19e:3995fe1e:5470d62a:c44b069c
-   devices=/dev/.static/dev/hdb1
-
-and  now I reboot the system.
-
-And now if I run 
-
-mdadm -A --run  /dev/.static/dev/md0 /dev/hdb1
-it starts it running. and i can mount it.
-mount -t ext3 /dev/.static/dev/md0  /big1
+so that even if the array is degraded it will start??
 
 
-So I think that I must create a init.d script to run at the end of the boot to 
-do
+Mitchell
 
-mdadm -A --run  /dev/.static/dev/md0 /dev/hdb1
-mount -t ext3 /dev/.static/dev/md0  /big1
+Please tell me if I am really doing something really dangerous and dumb
+...
 
-and then I won't have problems....
-
-However I think that raids should boot as long as they are intact, as a matter 
-of policy. Otherwise we lose our  ability to rely upon them for remote 
-servers...
-
+Thanks!
 Mitchell Laks
+ 
 
+#!/bin/sh
+#
+# Start any arrays which are described in /etc/mdadm/mdadm.conf and which are
+# not running already.
+#
+# Copyright (c) 2001-2004 Mario Jou/3en <joussen@debian.org>
+# Distributable under the terms of the GNU GPL version 2.
 
+MDADM=/sbin/mdadm
+MDRUN=/sbin/mdrun
+CONFIG=/etc/mdadm/mdadm.conf
+DEBIANCONFIG=/etc/default/mdadm
 
+test -x $MDADM || exit 0
 
+AUTOSTART=true
+test -f $DEBIANCONFIG && . $DEBIANCONFIG
 
+case "$1" in
+    start)
+        if [ "x$AUTOSTART" = "xtrue" ] ; then
+            if [ ! -f /proc/mdstat ] && [ -x /sbin/modprobe ] ; then
+                /sbin/modprobe -k md > /dev/null 2>&1
+            fi
+            test -f /proc/mdstat || exit 0
+            echo "Starting raid devices: "
+            if [ -f $CONFIG ] && [ -x $MDADM ] ; then
+                $MDADM -A -s
+            elif [ -x $MDRUN ] ; then
+                $MDRUN
+            fi
+            echo "done."
+        fi
+        ;;
+    stop|restart|reload|force-reload)
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|restart|reload|force-reload}"
+        exit 1
+        ;;
+esac
 
+exit 0
