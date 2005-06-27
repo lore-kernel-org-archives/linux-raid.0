@@ -1,46 +1,34 @@
-From: "Catalin(ux aka Dino) BOIE" <util@deuroconsult.ro>
-Subject: Re: Adding spare to running array?
-Date: Mon, 27 Jun 2005 16:28:30 +0300 (EEST)
-Message-ID: <Pine.LNX.4.62.0506271627540.10339@webhosting.rdsbv.ro>
-References: <200506271512.30327.infomails@tronserver.dyndns.org>
+From: David Wuertele <dave-gnus@bfnet.com>
+Subject: Repost --- please help, did "mdadm --create" make my data unrecoverable?
+Date: 27 Jun 2005 11:13:19 -0700
+Message-ID: <m3irzzbrcw.fsf@bfnet.com>
+References: <m364w22e80.fsf@bfnet.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200506271512.30327.infomails@tronserver.dyndns.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Michael Frotscher <infomails@tronserver.dyndns.org>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 27 Jun 2005, Michael Frotscher wrote:
+I recently had a raid server hang, and after a reset the 1.5TB raid 5
+array no longer mounted.  Being hasty, I messed around with mdadm
+commands trying to find out what was going wrong, and in the process I
+ran "mdadm -C" thinking that it was one of the steps for mounting an
+existing array.  I suspect that this was a fatal error, because now
+fsck.reiserfs can't find the superblock on the array!
 
-> Hello,
->
-> I experienced what probably many of you experienced before me: one disk in my
-> RAID-1-array died, I got a new one and reconstructed the array. Everything
-> went fine. However, there was warranty on the dead drive and I eventually got
-> it back, now having one spare drive.
-> Is there a way to integrate that drive as a hot spare so the array will not
-> fall into degraded mode even if another drive fails?
->
-> I mean, I could write a config-file which contains this array with a spare and
-> do a "raidhotadd --configfile=", but will that work and leave my data
-> untouched?
+I know how to create a new superblock for reiserfs, and rebuild the
+tree, but that will only work if the data is still readable.  Should I
+go ahead and try this, or should I first try to reassemble my raid to
+find the correct configuration?
 
-Use mdadm and you can hot add the spare.
+I had an /etc/mdadm.conf file lying around, and I happened to compare
+the uuid in the /etc/mdadm.conf file and on one of the partitions.
+They did not match!!!
 
-> Sincerely,
-> -- 
-> Dipl.-Chem. Michael Frotscher
-> Institute of Inorganic and Applied Chemistry
-> University of Hamburg, Germany
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Did I forever ruin my raid array?  Is there a way to recover my
+reiserfs superblock and the original array data?
 
----
-Catalin(ux aka Dino) BOIE
-catab at deuroconsult.ro
-http://kernel.umbrella.ro/
+Thanks,
+Dave
+
