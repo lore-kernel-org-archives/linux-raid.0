@@ -1,65 +1,40 @@
-From: Christopher Smith <csmith@nighthawkrad.net>
-Subject: Problems with software RAID + iSCSI or GNBD
-Date: Mon, 27 Jun 2005 12:42:42 +1000
-Message-ID: <42BF67A2.6040601@nighthawkrad.net>
+From: "Bernd Schubert" <Bernd.Schubert@tc.pci.uni-heidelberg.de>
+Subject: Re: what is /dev/.static/dev/md0 ???
+Date: Mon, 27 Jun 2005 10:58:13 +0200
+Message-ID: <20050627085813.GB14246@tc.pci.uni-heidelberg.de>
+References: <200506261422.28250.mlaks@verizon.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <200506261422.28250.mlaks@verizon.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Mitchell Laks <mlaks@verizon.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I'm not sure if this is the correct list to be posting this to, but it 
-is software RAID related, so if nothing else hopefully someone here can 
-point me in the right direction.
-
-I'm trying to roll my own SAN, but I've had mixed results thus far.  In 
-my basic, initial setup I've created a configuration with two "disk 
-nodes" and a single "concentrator node".  My objective is to have the 
-"concentrator" take the physical disk exported from the "disk nodes" and 
-  stitch it together into a RAID1.  So, it looks like this:
-
-              "Concentrator"
-                 /dev/md0
-                  /     \
-              GigE       GigE
-                /         \
-     "Disk node 1"       "Disk node 2"
-
-So far I've tried using iSCSI and GNBD as the "back end" to make the 
-disk space in the nodes visible to the concentrator.  I've had two 
-problems, one unique to using iSCSI and the other common to both.
+Hi Mitchell,
 
 
-Problem 1: (Re)Sync performance is atrocious with iSCSI
+[...]
 
-If I use iSCSI as the back end, the RAID only builds at about 6 - 
-7M/sec.  Once that is complete, however, performance is much better - 
-reads around 100M/sec and writes around 50M/sec.  It's only during the 
-sync the performance is awful.  It's not related to 
-/proc/sys/dev/raid/speed_limit_max either, which I have set to 50M/sec. 
-  Nor is it related to the sheer volume of traffic flying around, as if 
-I use disktest to simultaneously read and write to both disk nodes, 
-performance on all benchmarks only drops down to about 40 - 50M/sec.
+> (who ??? knows what the hell is going on with udev here....)
+> 
+[...]
+> 
+> My question:
+> 
+> what the heck is  
+> devices=/dev/.static/dev/hdb1
 
-If I switch the back end to GNBD, the resync speed is around 40 - 50M/sec.
-
-
-Problem 2: The system doesn't deal with failure very well.
-
-Once I got the RAID1 up and running, I tried to simulate a node failure 
-by pulling the network cable from the node while disk activity was 
-taking place.  I was hoping the concentrator would detect the "disk" had 
-failed and simply drop it from the array (so it could later be simply 
-re-added).  Unfortunately that doesn't appear to happen.  What does 
-happen is that all IO to the md device "hangs" (eg: disktest throughput 
-drops to 0M/sec), I am unable to either 'cat /prod/mdstat' to see the md 
-device's status or use mdadm to manually fail the device - both simply 
-result in the command "hanging".
-
-
-Does anyone have any insight as to what might be causing these problems ?
+/dev/.static should be bindmounted your old, pre udev/tmpfs mounted /dev
+directory. AFAIK, udev takes it as sample directory to create the proper 
+device names.
+Don't ask me why udev sometimes works and sometimes not. After shortly
+trying it last year on our sever systems, I quickly decided to better
+not to use it there. On our diskless clients it is really neccessary, but
+also has *sometimes* issues there, e.g. on about 5 of 45 clients
+reboots, it forgets to create /dev/pts on those 5 clients.
 
 Cheers,
-CS
+	Bernd
