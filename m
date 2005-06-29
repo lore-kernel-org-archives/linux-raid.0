@@ -1,35 +1,30 @@
-From: "Rickey Mcconnell" <quvudej@ezagenda.com>
-Subject: QA: Unique Logos / customer recognition
-Date: Wed, 29 Jun 2005 22:01:24 +0000 (UTC)
-Message-ID: <200506292205.j5TM4mLr024638__31832.023317884$1120082484$gmane$org@zeus2.kernel.org>
+From: Eric Pretorious <eric@pretorious.net>
+Subject: linux-raid compatable w/ Adaptec AIC-7902?
+Date: Wed, 29 Jun 2005 15:38:02 -0700
+Message-ID: <200506291538.03233.eric@pretorious.net>
+Reply-To: eric@pretorious.net
 Mime-Version: 1.0
 Content-Type: text/plain;
-        charset="Windows-1252"
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Date: Wen, 29 Jun 2005 09:15:52 +0000
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
+Cc: Mike V <mike@asacomputers.com>
 List-Id: linux-raid.ids
 
-Your business lacks visual identity?
+Hello, All:
 
-Marketing efforts falling short?
+I'm trying to install CentOS 3.3 (a.k.a. RedHat Enterprise Linux 3) on a 
+Supermicro 5013C-M8 w/ on-board Adaptec AIC-7902 Ultra320 controller 
+(connected to two Seagate ST373207LC 73GB hdd's in RAID1 connfiguration) but 
+am getting random crashes. (The screen is FILLED with I/O errors and raid1 
+messages.)
 
-Invisible among a sea of competitors?
+Is linux-raid compatible with the infamous AIC-7902? Is there any special 
+configuration that I need to perform in the Adaptect BIOS?
 
-You're on the right track for a solution - keep reading...
-Our professional designers specialize in the creation of custom logos and business/corporate identities. Our design needs to be seen only once to gain customer attention and recognition. With one of our unique, eye-catching mages you'll never have to introduce yourself twice!
-We promise fast turnaround and 100% customer satisfaction. Choose from as any design ideas as necessary, select as many colors as you wish, order any modifications you like, and request any format. Our prices are affordable for any size of business, and get this: there are no hidden fees.
-
-Follow the link below to browse our portfolio and check out our Sweet Deals.
-Wipe the "in" from "invisible" in just a few days - with us!
-http://lkc5.com.ox-files.info
-
-Sincerely,
-Rickey Mcconnell
-
-
-
-
-
+-- 
+Eric P.,
+Truckee, CA
