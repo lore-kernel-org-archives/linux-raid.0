@@ -1,47 +1,30 @@
-From: Ming Zhang <mingz@ele.uri.edu>
-Subject: fast build raid5
-Date: Wed, 29 Jun 2005 13:52:46 -0400
-Message-ID: <1120067566.7414.64.camel@localhost.localdomain>
-Reply-To: mingz@ele.uri.edu
+From: Mitchell Laks <mlaks@verizon.net>
+Subject: Re: problems creating my first  raid 1 on debian
+Date: Wed, 29 Jun 2005 14:19:43 -0400
+Message-ID: <200506291419.43890.mlaks@verizon.net>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-JnyPw6+p7Z0ATNcmymyB"
+Content-Type: text/plain; charset=iso-8859-8-i
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Wednesday 29 June 2005 08:05 am, you wrote:
+> I've been using Mandrake Linux for a few years now, and always preferred
+> LM8.2 because it was supposed to be the most stable version they have
+> produce to date. But i got hacked and the main problem was updating
+> packages no longer supported by Mandrake.
+>
+> I don't like their end of product life expectancy, similar to windows.
+>
+> I'm now starting with Debian, because there more interested in stability
+> than adding everything before its been fully tested.
 
---=-JnyPw6+p7Z0ATNcmymyB
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+You are using an out of date Debian. The latest debian stable is Sarge.
+Download the new sarge installer and you should be ok....
+I have used Sarge for over 6 months on servers....
 
-I have 5 new disks and I want to build a raid5.
-
-I am think which one is the better method.
-
-1) build normally, so raid will do reconstruction and i probably want to
-wait till it ends
-
-2) zero all disks using dd. then build a raid without need to computer
-checksum at all since 0xor0=3D0.=20
-
-in fact, i am thinking which mdadm command can allow me to do (2)
-
-
-Ming
-
-
---=-JnyPw6+p7Z0ATNcmymyB
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.6 (GNU/Linux)
-
-iD8DBQBCwt/uSYbkL5BnVYoRAsF2AJ4w2JJKhKGkLb98zqLdmLQai0YoZwCfRSkq
-5VeXPSN22394PwUGjj/Ciyw=
-=mP86
------END PGP SIGNATURE-----
-
---=-JnyPw6+p7Z0ATNcmymyB--
-
+Regards,
+Mitchell
