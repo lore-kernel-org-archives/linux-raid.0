@@ -1,60 +1,58 @@
 From: Christopher Smith <csmith@nighthawkrad.net>
 Subject: Re: Problems with software RAID + iSCSI or GNBD
-Date: Wed, 29 Jun 2005 12:09:45 +1000
-Message-ID: <42C202E9.40504@nighthawkrad.net>
-References: <42BF67A2.6040601@nighthawkrad.net> <42C17540.3000709@pobox.com>
+Date: Wed, 29 Jun 2005 14:42:33 +1000
+Message-ID: <42C226B9.4000504@nighthawkrad.net>
+References: <42BF67A2.6040601@nighthawkrad.net> <42C1F54B.1060405@steeleye.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <42C17540.3000709@pobox.com>
+In-Reply-To: <42C1F54B.1060405@steeleye.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: mjstumpf@pobox.com
-Cc: linux-raid@vger.kernel.org
+To: Paul Clements <paul.clements@steeleye.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Michael Stumpf wrote:
-> I probably can't help much at the moment, but...
+Paul Clements wrote:
+> Christopher Smith wrote:
 > 
-> I didn't realize that NBD type things had advanced to even this level of 
-> stability.  This is good news.  I've been wanting to do something like 
-> what you're trying for some time to overcome the bounds of  
-> power/busses/heat/space that limit you to a single machine when building 
-> a large md or LVM.  Looking at the GNBD project page, it still seems 
-> pretty raw, although a related project DDRAID seems to hold some promise.
+>>  stitch it together into a RAID1.  So, it looks like this:
+>>
+>>              "Concentrator"
+>>                 /dev/md0
+>>                  /     \
+>>              GigE       GigE
+>>                /         \
+>>     "Disk node 1"       "Disk node 2"
+>>
+>> So far I've tried using iSCSI and GNBD as the "back end" to make the 
+>> disk space in the nodes visible to the concentrator.  I've had two 
+>> problems, one unique to using iSCSI and the other common to both.
 > 
-> I'd be pretty timid about putting anything close to production on these 
-> drivers, though.
 > 
-> What distro / kernel version / level of GNBD are you using?
+> Personally, I wouldn't mess with iSCSI or GNBD. You don't need GNBD in 
+> this scenario anyway; simple nbd (which is in the mainline kernel...get 
+> the userland tools at sourceforge.net/projects/nbd) will do just fine, 
+> and I'd be willing to bet that it is more stable and faster...
 
-Well, I don't know if they have yet - the main reason I'm fiddling with 
-this is to see if it's feasible :).
+I'd briefly tried nbd, but decided to look elsewhere since it needed to 
+much manual configuration (no included rc script, /dev nodes appear to 
+have to be manually created - yes, I'm lazy).
 
-However, I have belted tens of gigabytes of data at the mirror-over-GNBD 
-and mirror-over-iSCSI using various benchmarking tools without any 
-kernel panics or (apparent) data corruption, so I'm gaining confidence 
-that it's a workable solution.  I haven't yet started the same level of 
-testing with Windows and Linux clients sitting above the 
-initiator/bridge level yet, however, as I want to make sure the back end 
-is pretty stable before moving on (as it will become a - relatively - 
-single point of failure for most of the important machines in our 
-network, and hence the entire company).
+I've just finished trying NBD now and it seems to solve both my problems 
+- rebuild speed is a healthy 40MB/sec + and the failures are dealt with 
+"properly" (ie: the md device goes into degraded mode if a component nbd 
+suddenly disappears).  This looks like it might be a goer for the disk 
+node/RAID-over-network back-end.
 
-I'm just using a stock Fedora Core 4 and the GNBD it includes.  A bit 
-bleeding edge, I know, but I figured since it had just been released 
-when I started on this project, why not ;).
+On the "front end", however, we have to use iSCSI because we're planning 
+on doling the aggregate disk space out to a mix of platforms (some of 
+them potentially clustered in the future) so they can re-share the space 
+to "client" machines.  However, the IETD iSCSI Target seems pretty 
+solid, so I'm not really concerned about that.
 
-With regards to the problem I was having with node failures, at least 
-with iSCSI the solution was setting a timeout so that a "disk failed" 
-error was actually returned - by default the iSCSI initiator assumes any 
-disconnection errors are network-related and transient, so it simply 
-stops any IO to the iSCSI target until it reappears.  Now that I've 
-specified a timeout, node "failures" behave as expected and the mirror 
-goes into degraded mode.
+> Well, that's the fault of either iSCSI or GNBD. md/raid1 over nbd works 
+> flawlessly in this scenario on 2.6 kernels (for 2.4, you'll need a 
+> special patch -- ask me for it, if you want).
 
-I assume I need to do something similar with GNBD so that it really does 
-"fail", rather than "hang", but I've been too busy over the last few 
-days to actually look into it.
-
-CS
+Yeah, I fixed that problem (at least with iSCSI - haven't tried with 
+GNBD).  It was a PEBKAC issue :).
