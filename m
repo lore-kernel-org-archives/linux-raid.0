@@ -1,37 +1,47 @@
-From: KELEMEN Peter <Peter.Kelemen@cern.ch>
-Subject: Re: Slow reconstruction
-Date: Wed, 29 Jun 2005 20:00:03 +0200
-Message-ID: <20050629180003.GB6431@inara.maison.net>
-References: <1120061430.21458.236.camel@volt> <42C2CEF0.7030108@h3c.com> <1120066268.21458.252.camel@volt> <20050629174943.GA6431@inara.maison.net> <1120067521.21458.261.camel@volt>
+From: Ming Zhang <mingz@ele.uri.edu>
+Subject: fast build raid5
+Date: Wed, 29 Jun 2005 13:52:46 -0400
+Message-ID: <1120067566.7414.64.camel@localhost.localdomain>
+Reply-To: mingz@ele.uri.edu
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-JnyPw6+p7Z0ATNcmymyB"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1120067521.21458.261.camel@volt>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-* John Rowe (rowe@excc.ex.ac.uk) [20050629 18:52]:
 
-> None of it is very modern - it's put together from what we had
-> lying around :-(
+--=-JnyPw6+p7Z0ATNcmymyB
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-It is most likely that the controllers (and/or respective drivers)
-are the source of your problem.  I'd say the controllers are
-UDMA(66) only.
+I have 5 new disks and I want to build a raid5.
 
-Peter
+I am think which one is the better method.
 
---=20
-    .+'''+.         .+'''+.         .+'''+.         .+'''+.         .+'=
-'
- Kelemen P=C3=A9ter     /       \       /       \     Peter.Kelemen@cer=
-n.ch
-=2E+'         `+...+'         `+...+'         `+...+'         `+...+'
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+1) build normally, so raid will do reconstruction and i probably want to
+wait till it ends
+
+2) zero all disks using dd. then build a raid without need to computer
+checksum at all since 0xor0=3D0.=20
+
+in fact, i am thinking which mdadm command can allow me to do (2)
+
+
+Ming
+
+
+--=-JnyPw6+p7Z0ATNcmymyB
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.6 (GNU/Linux)
+
+iD8DBQBCwt/uSYbkL5BnVYoRAsF2AJ4w2JJKhKGkLb98zqLdmLQai0YoZwCfRSkq
+5VeXPSN22394PwUGjj/Ciyw=
+=mP86
+-----END PGP SIGNATURE-----
+
+--=-JnyPw6+p7Z0ATNcmymyB--
+
