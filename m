@@ -1,138 +1,66 @@
-From: Tyler <pml@dtbb.net>
-Subject: Re: problems creating my first  raid 1 on debian
-Date: Wed, 29 Jun 2005 08:01:31 -0700
-Message-ID: <42C2B7CB.10500@dtbb.net>
-References: <60F5F1E2B94AD4119F0B00B0D0215FFF01A69EC8@bsc.tt.umist.ac.uk>
+From: David Dougall <davidd@et.byu.edu>
+Subject: Re: Problems with software RAID + iSCSI or GNBD
+Date: Wed, 29 Jun 2005 09:24:52 -0600 (MDT)
+Message-ID: <Pine.LNX.4.58.0506290918380.799@lewis.et.byu.edu>
+References: <Pine.LNX.4.44.0506291027460.26718-100000@firewall2.tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <60F5F1E2B94AD4119F0B00B0D0215FFF01A69EC8@bsc.tt.umist.ac.uk>
+In-Reply-To: <Pine.LNX.4.44.0506291027460.26718-100000@firewall2.tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ken Walker <ken.walker@manchester.ac.uk>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-One thing I noticed, is the "required 0.90.0 or later" message... thats 
-tell you that the kernel doesn't have the required MD version.  I'm not 
-sure what kernel 0.90.0 appeared in, but it seems like you're gonna need 
-a kernel update.
+This discussion intrigues me.  I think there is a lot of merit to running
+a raid in this manner.  However, if I understand correctly, under normal
+circumstances reads from a Raid1 md device will always round-robin between
+the devices to increase performance.  Is there a way or what would need to
+be done to set a single component in the device to be the primary.  ie.
+don't read from the other device unless the first one fails.
+I think there was some discussion about this a month or so ago concerning
+ramdisk(which I don't know would be quite as useful), but the theory can
+apply to any block devices with significantly different speed/latencies,
+etc.
+Please advise.
+--David Dougall
 
-Tyler.
 
-Ken Walker wrote:
+On Wed, 29 Jun 2005, Bill Davidsen wrote:
 
->I've been using Mandrake Linux for a few years now, and always preferred
->LM8.2 because it was supposed to be the most stable version they have
->produce to date. But i got hacked and the main problem was updating packages
->no longer supported by Mandrake.
+> On Wed, 29 Jun 2005, Christopher Smith wrote:
 >
->I don't like their end of product life expectancy, similar to windows.
+> > > Personally, I wouldn't mess with iSCSI or GNBD. You don't need GNBD in
+> > > this scenario anyway; simple nbd (which is in the mainline kernel...get
+> > > the userland tools at sourceforge.net/projects/nbd) will do just fine,
+> > > and I'd be willing to bet that it is more stable and faster...
+> >
+> > I'd briefly tried nbd, but decided to look elsewhere since it needed to
+> > much manual configuration (no included rc script, /dev nodes appear to
+> > have to be manually created - yes, I'm lazy).
 >
->I'm now starting with Debian, because there more interested in stability
->than adding everything before its been fully tested.
+> Based on one test of nbd, it seems to be stable. I did about what you are
+> trying, a RAID1 to create an md device, then did an encrypted filesystem
+> on it. My test was minor, throw a lot of data at it, check that it is
+> there (md5sum), reboot and verify everything still works, drop the local
+> drive and rebuild. I did NOT try a rebuild on the nbd drive.
 >
->I could never get uprmi to work, even on Mandrakes latest releases, but apt
->is excellent, works first time every time ( apart for openoffice, its says
->there isn't one available )
+> >
+> > I've just finished trying NBD now and it seems to solve both my problems
+> > - rebuild speed is a healthy 40MB/sec + and the failures are dealt with
+> > "properly" (ie: the md device goes into degraded mode if a component nbd
+> > suddenly disappears).  This looks like it might be a goer for the disk
+> > node/RAID-over-network back-end.
 >
->Anyway, I'm trying to build a raid 1 with two 160gig IDE drives, I'm booting
->from Debian 3.0r5 'vanilla' kernel from Scsi and have the two ide's on
->separate ide channels.
+> I failed it manually, can't say what pulling the plug will do. Glad it's
+> working, I may be doing this on a WAN in the fall.
 >
->Going through mdadm howtos and such they say start with the following
+> --
+> bill davidsen <davidsen@tmr.com>
 >
->Samba3:/etc/init.d# mkraid /dev/md0
->
->And i get the following 
->
->mkraid version 0.36.4
->parsing configuration file
->mkraid: aborted
->
->so then i tried 
->
->Samba3:/etc/init.d# mdadm --create --verbose /dev/md0 --level=linear
->--raid-devices=2 /dev/hda /dev/hdc
->
->and got the following
->
->mdadm: Create requires md driver version 0.90.0 or later
->
->So i looked at the version of mdadm i had updated to using apt-get install
->mdadm
->
->Samba3:/etc/init.d# mdadm -V
->
->and it said
->
->mdadm - v1.9.0 - 04 February 2005
->
->How do i get the latest version of md via apt, or am i doing something else
->wrong here
->
->I have also read that if i do the following
->
->Samba3:/proc# cat mdstat
->
->and get the following result  ( below is me )
->
->Personalities :
->read_ahead not set
->md0 : inactive
->md1 : inactive
->md2 : inactive
->md3 : inactive
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >
 >
->Then i need kernel patches for raid !
 >
->Do i need kernel patches ( I'm running Debain on 'vanilla' because of my
->scsi card )
->
->ps if i run apt-get install mdadm now i get the following
->
->Samba3:/proc# apt-install mdadm
->bash: apt-install: command not found
->Samba3:/proc# apt-get install mdadm
->Reading Package Lists... Done
->Building Dependency Tree... Done
->The following NEW packages will be installed:
->  mdadm
->0 packages upgraded, 1 newly installed, 0 to remove and 344  not upgraded.
->Need to get 0B/104kB of archives. After unpacking 254kB will be used.
->debconf: unable to initialize frontend: Kde
->debconf: (Can't locate Qt.pm in @INC (@INC contains: /etc/perl
->/usr/local/lib/perl/5.8.4 /usr/local/share/perl/5.8.4 /usr/lib/perl5
->/usr/share/perl5 /usr/lib/perl/5.8 /usr/share/perl/5.8
->/usr/local/lib/site_perl .) at
->/usr/share/perl5/Debconf/FrontEnd/Kde/Wizard.pm line 7, <> line 1.)
->debconf: falling back to frontend: Dialog
->Preconfiguring packages ...
->(Reading database ... 48796 files and directories currently installed.)
->Unpacking mdadm (from .../mdadm_1.9.0-4_i386.deb) ...
->dpkg: error processing /var/cache/apt/archives/mdadm_1.9.0-4_i386.deb
->(--unpack):
-> trying to overwrite `/sbin/mdrun', which is also in package raidtools
->dpkg-deb: subprocess paste killed by signal (Broken pipe)
->Errors were encountered while processing:
-> /var/cache/apt/archives/mdadm_1.9.0-4_i386.deb
->E: Sub-process /usr/bin/dpkg returned an error code (1)
->Samba3:/proc#
->
->could this be my problem
->
->Many thanks
->
->Ken
->
->
->	
->-
->To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->  
->
-
