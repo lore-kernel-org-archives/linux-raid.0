@@ -1,19 +1,19 @@
-From: Mike Hardy <mhardy@h3c.com>
+From: seth vidal <skvidal@phy.duke.edu>
 Subject: Re: Slow reconstruction
-Date: Wed, 29 Jun 2005 09:40:16 -0700
-Message-ID: <42C2CEF0.7030108@h3c.com>
+Date: Wed, 29 Jun 2005 13:32:58 -0400
+Message-ID: <1120066378.10448.57.camel@cutter>
 References: <1120061430.21458.236.camel@volt>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1120061430.21458.236.camel@volt>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Rowe <rowe@excc.ex.ac.uk>, linux-raid@vger.kernel.org
+To: John Rowe <rowe@excc.ex.ac.uk>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
-John Rowe wrote:
+On Wed, 2005-06-29 at 17:10 +0100, John Rowe wrote:
 > First, thanks to all the authors of software RAID, which works really
 > well. 
 > 
@@ -25,20 +25,15 @@ John Rowe wrote:
 > FWIW, each disk is the master drive on an IDE card, two of the disks are
 > shared with the RAID1 root partition and one of the 5 devices is a RAID0
 > stripe. The system isn't doing anything else, it's just used for backup.
+> 
 
-That is an astonishingly slow reconstruction time.
+you know about /proc/sys/dev/raid/speed_limit_max and speed_limit_min,
+right?
 
-Have you looked at hdparm informational output on each of the drives?
-dmesg, grepping for the hard drive initialization information?
+echo 40000 > /proc/sys/dev/raid/speed_limit_max
 
-With speeds like that, I suspect you don't have DMA enabled for some
-reason. Maybe someone else has seen something more exactly matching
-this, but when speeds are this off, that's what its been for me in the past.
+see if it goes faster, then.
 
-Running hdparm -Tt /dev/hdXX can tell you what the disks can do
-individually, I'd start there, and look at the hdparm -i (or -I?) output
-to see what they were set at, and start tuning the interface.
+-sv
 
-Hopefully that turns something up quickly.
 
--Mike
