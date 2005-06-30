@@ -1,42 +1,85 @@
-From: "Dinesh" <dinesh@asacomputers.com>
-Subject: Re: linux-raid compatable w/ Adaptec AIC-7902?
-Date: Thu, 30 Jun 2005 08:51:49 -0700
-Message-ID: <001801c57d8b$a0cbe3d0$1800a8c0@concard>
-References: <200506291538.03233.eric@pretorious.net> <200506291738.30516.eric@pretorious.net> <200506291808.54549.eric@pretorious.net>
+From: Gil <gil@fooplanet.com>
+Subject: Re: Hung rebuilding
+Date: Thu, 30 Jun 2005 09:25:18 -0700
+Message-ID: <42C41CEE.6020602@fooplanet.com>
+References: <20050630134537.GA14145@casa.e-den.it>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="iso-8859-1";
-	reply-type=original
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20050630134537.GA14145@casa.e-den.it>
 Sender: linux-raid-owner@vger.kernel.org
-To: eric@pretorious.net, linux-raid@vger.kernel.org
-Cc: Mike V <mike@asacomputers.com>, tech@asacomputers.com
+To: Sandro Dentella <sandro@e-den.it>
+Cc: Linux Raid List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hello Eric,
->>SCSI disk error : host 0 channel 0 id 0 lun 0 return code = 10000
->>I/O error: dev 08:07, sector 2980224
->>raid1: disk failure on sda7, disabling device.
->> Operation continuing on 1 devices
->>raid1: mirro resync was not fully finished, restarting next time.
->>md4: no spare disk to reconstruct array! -- continuing in degraded mode
->>md: md_do_sync() got signal ... exiting
+> Jun 30 14:40:31 srv-ornago kernel: hda: dma_intr: status=0x51 {
+> DriveReady SeekComplete Error } Jun 30 14:40:31 srv-ornago
+> kernel: hda: dma_intr: error=0x40 { UncorrectableError },
+> LBAsect=15584452, sector=4194304 Jun 30 14:40:31 srv-ornago
+> kernel: end_request: I/O error, dev 03:07 (hda), sector 4194304
 
-From messages above it clearly says that sda7 is bad. so remove sda7 and put 
-the new disk in and rebuild RAID. RAID will rebuild in background so you 
-will feel a little bit slow response from the system. Once it finished RAID, 
-system comes back to normal.
+This sequence usually indicates a bad block on the media.  If you
+have enabled SMART on your disks, you can confirm this with
 
-> I expected that a mirror would be more robust than to bring-down the 
-> entire
-> system when one RAID member fails. Was this assumption incorrect?
+    smartctl -l error /dev/hda
 
-You don't need bring down system when one RAID member fails. Just replace 
-the faulty one with new one.
+You'll see a bunch of UNC errors.
 
-Thanks
-Dinesh 
+> Jun 30 14:40:31 srv-ornago kernel: ide0(3,7):sh-2029: reiserfs
+> read_bitmaps: bitmap block (#524288) reading failed Jun 30
+> 14:40:31 srv-ornago kernel: ide0(3,7):sh-2014:
+> reiserfs_read_super: unable to read bitmap
+
+Worse yet it appears that your bad block contains a part of the
+reiserfs superblock which would be why you can't mount the filesystem.
+
+At first blush it would appear that the bad block is preventing the
+resync from happening, but I'm no expert in the reading of mdadm -D.
+
+>       srv-ornago:~# mdadm -D /dev/md3
+>       /dev/md3:
+> 	      Version : 00.90.00
+> 	Creation Time : Wed Dec  8 12:28:15 2004
+> 	   Raid Level : raid1
+> 	   Array Size : 74340672 (70.90 GiB 76.12 GB)
+> 	  Device Size : 74340672 (70.90 GiB 76.12 GB)
+> 	 Raid Devices : 2
+> 	Total Devices : 2
+>       Preferred Minor : 3
+> 	  Persistence : Superblock is persistent
+>
+> 	  Update Time : Thu Jun 30 12:53:14 2005
+> 		State : dirty, degraded, recovering
+>        Active Devices : 1
+>       Working Devices : 2
+>        Failed Devices : 0
+> 	Spare Devices : 1
+>
+>        Rebuild Status : 0% complete
+>
+> 		 UUID : 1ea38e0e:050ac659:7e84e367:2d256edd
+> 	       Events : 0.171
+>
+> 	  Number   Major   Minor   RaidDevice State
+> 	     0       0        0        0      faulty removed
+> 	     1      22        7        1      active sync
+> /dev/ide/host0/bus1/target0/lun0/part7
+>
+> 	     2       3        7        2      spare rebuilding
+> /dev/ide/host0/bus0/target0/lun0/part7
 
 
+I'm confused by this because your I/O error is on hda according to
+the kernel output, but hda should be the disk onto which the rebuild
+would be writing.
+
+>    Jun 30 14:33:48 srv-ornago kernel: md: cannot remove active
+> disk ide/host0/bus0/target0/lun0/part7 from md3 ...
+
+However, this error message seems to say that hda is, in fact, a
+part of the array.
+
+Someone with better mdadm -D kung-fu: what are your thoughts?
+
+--Gil
