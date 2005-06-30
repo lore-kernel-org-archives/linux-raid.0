@@ -1,46 +1,42 @@
-From: Sandro Dentella <sandro@e-den.it>
-Subject: Re: Hung rebuilding
-Date: Thu, 30 Jun 2005 17:38:16 +0200
-Message-ID: <20050630153816.GA17341@casa.e-den.it>
-References: <20050630134537.GA14145@casa.e-den.it>
+From: "Dinesh" <dinesh@asacomputers.com>
+Subject: Re: linux-raid compatable w/ Adaptec AIC-7902?
+Date: Thu, 30 Jun 2005 08:51:49 -0700
+Message-ID: <001801c57d8b$a0cbe3d0$1800a8c0@concard>
+References: <200506291538.03233.eric@pretorious.net> <200506291738.30516.eric@pretorious.net> <200506291808.54549.eric@pretorious.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	format=flowed;
+	charset="iso-8859-1";
+	reply-type=original
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20050630134537.GA14145@casa.e-den.it>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux Raid List <linux-raid@vger.kernel.org>
+To: eric@pretorious.net, linux-raid@vger.kernel.org
+Cc: Mike V <mike@asacomputers.com>, tech@asacomputers.com
 List-Id: linux-raid.ids
 
-Following to the previous mail. I really need to recover the data in the
-array. I didn't think it was sure to fsck during a stuck reconstruction so I
-set faulty the disk that is probably faulty 
+Hello Eric,
+>>SCSI disk error : host 0 channel 0 id 0 lun 0 return code = 10000
+>>I/O error: dev 08:07, sector 2980224
+>>raid1: disk failure on sda7, disabling device.
+>> Operation continuing on 1 devices
+>>raid1: mirro resync was not fully finished, restarting next time.
+>>md4: no spare disk to reconstruct array! -- continuing in degraded mode
+>>md: md_do_sync() got signal ... exiting
 
-  mdadm /dev/md3 --fail   /dev/hda7 (devfs way really...)
-  mdadm /dev/md3 --remove /dev/hda7 (devfs way really...)
-  
-  now I read 
+From messages above it clearly says that sda7 is bad. so remove sda7 and put 
+the new disk in and rebuild RAID. RAID will rebuild in background so you 
+will feel a little bit slow response from the system. Once it finished RAID, 
+system comes back to normal.
 
-srv-ornago:~# cat /proc/mdstat
-Personalities : [raid1]
-read_ahead 1024 sectors
- (...)
-md3 : active raid1 ide/host0/bus1/target0/lun0/part7[1]
-      74340672 blocks [2/1] [_U]
-      [>....................]  recovery =  0.0% (192/74340672) finish=328392.5min speed=0K/sec
-unused devices: <none>
+> I expected that a mirror would be more robust than to bring-down the 
+> entire
+> system when one RAID member fails. Was this assumption incorrect?
 
-so it is marked _U but is still under recovery!!!
+You don't need bring down system when one RAID member fails. Just replace 
+the faulty one with new one.
 
-Is it safe to fsck now? (at least as w/ 1 single disk...)
-
-
-TIA
-sandro
-*:-)
+Thanks
+Dinesh 
 
 
--- 
-Sandro Dentella  *:-)
-e-mail: sandro@e-den.it 
-http://www.tksql.org                    TkSQL Home page - My GPL work
