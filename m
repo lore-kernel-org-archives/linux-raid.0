@@ -1,56 +1,68 @@
-From: Eric Pretorious <eric@pretorious.net>
-Subject: Re: linux-raid compatable w/ Adaptec AIC-7902?
-Date: Wed, 29 Jun 2005 18:08:54 -0700
-Message-ID: <200506291808.54549.eric@pretorious.net>
-References: <200506291538.03233.eric@pretorious.net> <200506291738.30516.eric@pretorious.net>
-Reply-To: eric@pretorious.net
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: linux-raid compatable w/ Adaptec AIC-7902?
+Date: Wed, 29 Jun 2005 22:10:32 -0400
+Message-ID: <200506300210.j5U2Acp04142@www.watkins-home.com>
+References: <200506291655.39703.eric@pretorious.net>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200506291738.30516.eric@pretorious.net>
-Content-Disposition: inline
+In-Reply-To: <200506291655.39703.eric@pretorious.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Mike V <mike@asacomputers.com>, tech@asacomputers.com, Dinesh <dinesh@asacomputers.com>
+To: eric@pretorious.net, linux-raid@vger.kernel.org
+Cc: 'Mike V' <mike@asacomputers.com>
 List-Id: linux-raid.ids
 
-On Wednesday 29 June 2005 05:38 pm, Eric Pretorious wrote:
->So it would appear that sda7 has failed. Is that correct?
 
-I was in the process of reading this portion of /var/log/messages...
 
->SCSI disk error : host 0 channel 0 id 0 lun 0 return code = 10000
->I/O error: dev 08:07, sector 2980224
->raid1: disk failure on sda7, disabling device.
->	Operation continuing on 1 devices
->raid1: mirro resync was not fully finished, restarting next time.
->md4: no spare disk to reconstruct array! -- continuing in degraded mode
->md: md_do_sync() got signal ... exiting
->  ...
->md: autorun
->md: considering sdb7 ...
->md:  adding sdb7 ...
->md:  adding sdb7 ...
->md: created md4
->md: bind<sda7,1>
->md: bind<sdb7,2>
->md: running: <sdb7><sda7>
->md: sdb7's event counter: 0000002b
->md: sda7's event counter: 0000002a
->md: superblcokc update time inconsistency -- using the most recent one
->md: freshest: sdb7
->md4: kicking faulty sda7! 
->md: unbind<sda7,1>
->md: export rdev(sda7)
->mf: md4: raid array is not clean -- starting background reconstruction
+> -----Original Message-----
+> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+> owner@vger.kernel.org] On Behalf Of Eric Pretorious
+> Sent: Wednesday, June 29, 2005 7:56 PM
+> To: linux-raid@vger.kernel.org
+> Cc: Mike V
+> Subject: Re: linux-raid compatable w/ Adaptec AIC-7902?
+> 
+> On Wednesday 29 June 2005 03:38 pm, Eric Pretorious wrote:
+> >I'm trying to install CentOS 3.3 (a.k.a. RedHat Enterprise Linux 3) on a
+> >Supermicro 5013C-M8 w/ on-board Adaptec AIC-7902 Ultra320 controller
+> >(connected to two Seagate ST373207LC 73GB hdd's in RAID1 connfiguration)
+> but
+> >am getting random crashes. (The screen is FILLED with I/O errors and
+> raid1
+> >messages.)
+> >
+> >Is linux-raid compatible with the infamous AIC-7902? Is there any special
+> >configuration that I need to perform in the Adaptect BIOS?
+> 
+> Hm... This sounds fishy:
+> 
+> %> dmesg
+> ...
+> md: md3: sync done.
+> md: syncing: RAID array md2
+> md: minimum _guarenteed_ reconstruction speed: 100KB/sec/disc.
+> md: using maximum available idle IO bandwidth (but not more than...
+> md: using 12k window, over a total of 48064 blocks.
+> md: delaying resync of md0 until md2 has finished resync (they share one
+> or more physical units)
+> md: delaying resync of md1 until md2 has finished resync (they share one
+> or more physical units)
+> ...
+> 
+> Should I be concerned by the last two lines?
+No, this is normal.  Your 3 arrays are on the same disk(s).  In this case,
+it is faster to do them 1 at a time.
 
-...when the system choked, again.  Ug!
+Guy
 
-I expected that a mirror would be more robust than to bring-down the entire 
-system when one RAID member fails. Was this assumption incorrect?
+> 
+> --
+> Eric P.,
+> Truckee, CA
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
--- 
-Eric P.,
-Truckee, CA
