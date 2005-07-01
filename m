@@ -1,38 +1,59 @@
-From: "John Madden" <jmadden@ivytech.edu>
-Subject: Re: raid0 low performance
-Date: Thu, 30 Jun 2005 21:57:40 -0500 (EST)
-Message-ID: <50513.168.91.5.7.1120186660.squirrel@localhost>
-References: <1120184148.5521.21.camel@localhost.localdomain>
-    <42C4AA31.8040307@dtbb.net>
+From: Clemens Schwaighofer <cs@tequila.co.jp>
+Subject: Re: A general Raid 5 question
+Date: Fri, 01 Jul 2005 13:36:38 +0900
+Message-ID: <42C4C856.50908@tequila.co.jp>
+References: <5d96567b050622103157ada455@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enig3561AAEC4F2F4B39C6842E5D"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <42C4AA31.8040307@dtbb.net>
+In-Reply-To: <5d96567b050622103157ada455@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-Cc: mingz@ele.uri.edu, Linux RAID <linux-raid@vger.kernel.org>, Tyler <pml@dtbb.net>
+To: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> useage during the tests?  even PCI 32bit, 33mhz should be able to hit
-> 133 Mbytes per second I believe.  What are you writing *from* ? dev/zero
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enig3561AAEC4F2F4B39C6842E5D
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-~127MB/s is the theoretical bus speed of PCI/33.  Actual throughput is much less
-than that, of course.
+On 06/23/2005 02:31 AM, Raz Ben-Jehuda(caro) wrote:
+> If I pull the plug out from my machine while io is being generated. 
+> Is there a chance that  i would loose the raid ( obviously i would
+> loose some data).
+> I am refering to raid with no backup battery unit or anything of that sort.
+> 
+> I tried to do it and the worst case was that the rebuilding was long (
+> both in software raid and hardware raid -- 3ware ).
+> 
+> I would appreciate answers
 
-But you're not on a 33MHz bus, you should be at at least 66MHz (and info in /proc
-should tell you).  Given the lack of performance increase though, I'm guessing
-you're either pegging the bus or the CPU, not yet the throughput of the kernel
-itself.  Does the program block in disk wait when running?
-
-John
-
-(Go Rams)
-
-
+I have several hardware raid5 and one sw raid5 and I never had any kind
+of issues during my initial test. Although I haven't had a poweroutage
+to the box (well you should have UPS in front anyway), I had two other
+lockups (some netaltalk issues) but the raids stayed all very fine.
 
 -- 
-John Madden
-UNIX Systems Engineer
-Ivy Tech Community College of Indiana
-jmadden@ivytech.edu
+[ Clemens Schwaighofer                      -----=====:::::~ ]
+[ TEQUILA\ Japan IT Group                                    ]
+[                6-17-2 Ginza Chuo-ku, Tokyo 104-8167, JAPAN ]
+[ Tel: +81-(0)3-3545-7703            Fax: +81-(0)3-3545-7343 ]
+[ http://www.tequila.co.jp                                   ]
 
+--------------enig3561AAEC4F2F4B39C6842E5D
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+Comment: Using GnuPG with Thunderbird - http://enigmail.mozdev.org
+
+iD8DBQFCxMhYjBz/yQjBxz8RAqxiAJ9A2FLRRV6IghB8L/co3JzSnJQrWACeOfAt
+TknmdBVz+ehI1fLvXYcWDkM=
+=8kj+
+-----END PGP SIGNATURE-----
+
+--------------enig3561AAEC4F2F4B39C6842E5D--
