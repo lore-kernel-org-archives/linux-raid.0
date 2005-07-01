@@ -1,97 +1,66 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: raid0 low performance
-Date: Fri, 1 Jul 2005 08:55:27 -0400
-Message-ID: <200507011255.j61CtXp10224@www.watkins-home.com>
+From: Ming Zhang <mingz@ele.uri.edu>
+Subject: Re: raid0 low performance
+Date: Fri, 01 Jul 2005 09:10:35 -0400
+Message-ID: <1120223435.5507.33.camel@localhost.localdomain>
 References: <1120184148.5521.21.camel@localhost.localdomain>
+	 <42C4AA31.8040307@dtbb.net>
+	 <50513.168.91.5.7.1120186660.squirrel@localhost>
+	 <1120221664.5507.25.camel@localhost.localdomain>
+	 <49052.10.0.15.208.1120222485.squirrel@postal2>
+Reply-To: mingz@ele.uri.edu
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-m/82GUNXjniwnAFADc8i"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1120184148.5521.21.camel@localhost.localdomain>
+In-Reply-To: <49052.10.0.15.208.1120222485.squirrel@postal2>
 Sender: linux-raid-owner@vger.kernel.org
-To: mingz@ele.uri.edu, 'Linux RAID' <linux-raid@vger.kernel.org>
+To: John Madden <jmadden@ivytech.edu>
+Cc: Tyler <pml@dtbb.net>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-I think you should test 2 or more disks at the same time.  This would prove
-that your system can or can't move more than about 60MB/s.
 
-My old P3-500 SMP can move at least 150MB/s.  But I have 3 SCSI buses and 3
-PCI buses.
+--=-m/82GUNXjniwnAFADc8i
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Guy
+On Fri, 2005-07-01 at 07:54 -0500, John Madden wrote:
+> > which one? i can not find. :P could u tell me? thx
+>=20
+> lspci -vv
+thx. cool flag. i use lspci all the time but never find that -vv stuff.
+so from now on every command i will add a -vvvvvvv. :P
 
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> owner@vger.kernel.org] On Behalf Of Ming Zhang
-> Sent: Thursday, June 30, 2005 10:16 PM
-> To: Linux RAID
-> Subject: raid0 low performance
-> 
-> I meet some strange low performance when run RAID0 with vanilla kernel
-> 2.4.27/2.6.11.12.
-> 
-> My box is a 2.8G P4 and 1G RAM. 8 400GB SATA disk and A marvel 8port
-> controller. I run marvel 3.4.1 driver. I wrote a small program to write
-> device sequentially and SYNCHRONOUSLY.
-> 
-> This is performance of 1 disk. looks fine.
-> 
->  1048576Bytes *     1024 :    55.466MB/s
->   524288Bytes *     2048 :    55.830MB/s
->   262144Bytes *     4096 :    55.782MB/s
->   131072Bytes *     8192 :    55.567MB/s
->    65536Bytes *    16384 :    55.926MB/s
->    32768Bytes *    32768 :    54.344MB/s
->    16384Bytes *    65536 :    41.415MB/s
->     8192Bytes *    65536 :    26.499MB/s
->     4096Bytes *    65536 :    15.110MB/s
->     2048Bytes *    65536 :     8.422MB/s
->     1024Bytes *    65536 :     4.318MB/s
-> 
-> But when run 2 disk raid0, there is only 10% improvement.
-> 
-> md3 : active raid0 sdb[1] sda[0]
->       781422592 blocks 64k chunks
->  1048576Bytes *     1024 :    67.300MB/s
->   524288Bytes *     2048 :    66.796MB/s
->   262144Bytes *     4096 :    65.728MB/s
->   131072Bytes *     8192 :    65.017MB/s
->    65536Bytes *    16384 :    59.223MB/s
->    32768Bytes *    32768 :    49.766MB/s
->    16384Bytes *    65536 :    39.162MB/s
->     8192Bytes *    65536 :    26.386MB/s
->     4096Bytes *    65536 :    15.084MB/s
->     2048Bytes *    65536 :     8.383MB/s
->     1024Bytes *    65536 :     4.303MB/s
-> 
-> And when use 4 disks, the speed is slower!
-> md0 : active raid0 sdh[3] sdg[2] sdf[1] sde[0]
->       1562845184 blocks 64k chunks
->  1048576Bytes *     1024 :    58.032MB/s
->   524288Bytes *     2048 :    56.994MB/s
->   262144Bytes *     4096 :    58.289MB/s
->   131072Bytes *     8192 :    65.999MB/s
->    65536Bytes *    16384 :    59.723MB/s
->    32768Bytes *    32768 :    50.061MB/s
->    16384Bytes *    65536 :    38.689MB/s
->     8192Bytes *    65536 :    26.169MB/s
->     4096Bytes *    65536 :    15.169MB/s
->     2048Bytes *    65536 :     8.378MB/s
->     1024Bytes *    65536 :     4.287MB/s
-> 
-> 
-> Any hint on this?
-> 
-> * I do not know how to check current PCI bus speed and I am not sure
-> whether is limited by that. It is a 64bit card but I am not sure if it
-> is run at 66MHZ. Should be, but want to check to make sure.
-> * I tested each disk and all disk performs OK.
-> 
-> 
-> Thanks
-> 
-> 
-> Ming
 
+> > but my friend run same code on a 3ware 4 disk raid0 and get 140MB
+> > easily.
+> >
+> > similar box, P4 2.8G 1G ram. supermicro board.
+>=20
+> Then I agree with the other reply -- suspect that Marvel controller or it=
+s driver
+> is at fault.  Can you borrow your friend's controller? :)
+>=20
+he has oracle on it. run a test like that already take a long time and
+some beers. :P
+
+
+> John
+>=20
+>=20
+>=20
+>=20
+>=20
+
+--=-m/82GUNXjniwnAFADc8i
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.6 (GNU/Linux)
+
+iD8DBQBCxUDLSYbkL5BnVYoRAmmrAKCHvG9oNFfwXLtMnBONkEzpz55giACbBdGX
+AvrVtuCftmh3UffBaYzgWKs=
+=O0C5
+-----END PGP SIGNATURE-----
+
+--=-m/82GUNXjniwnAFADc8i--
 
