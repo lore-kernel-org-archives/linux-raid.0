@@ -1,7 +1,7 @@
-From: Nell <adoptive@coronationstreet.com>
-Subject: Bro check out this awesome new product
-Date: Sat, 2 Jul 2005 17:43:52 +0200
-Message-ID: <1709357836.5093564241@220.1-dial.augustakom.net>
+From: Janet <monumental@dixondesign.com>
+Subject: Little magic. Perfect weekends.
+Date: Sun, 3 Jul 2005 12:25:41 +0900
+Message-ID: <6680990063.10949852650@211.117.163.75>
 Mime-Version: 1.0 (Apple Message framework v728)
 Content-Type: text/plain; charset=US-ASCII; format=flowed
 Content-Transfer-Encoding: 7bit
@@ -10,17 +10,13 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Buyer beware - Penis patches!
-http://www.siratu.com/ss/
+Top 10 meds bought online
+http://cjit.jymunkjcyt1rn21.carucatedlf.info
 
 
 
-
-
-God reveals himself in the orderly harmony of what exists.   
-The path of precept is long, that of example short and effectual. 
-It's not what you look at that matters, it's what you see. 
-Woe be to him that reads but one book.    
-Poverty is a weapon of mass destruction.      
+Ready tears are a sign of treachery, not of grief.   
+Familiarity breeds contempt, while rarity wins admiration.      
+That which does not kill me, makes me stronger.    
 
 
