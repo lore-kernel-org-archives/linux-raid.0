@@ -1,38 +1,51 @@
 From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: A general Raid 5 question
-Date: Mon, 4 Jul 2005 16:35:01 +1000
-Message-ID: <17096.55445.909008.12947@cse.unsw.edu.au>
-References: <5d96567b050622103157ada455@mail.gmail.com>
+Subject: Re: Why does my drive get set readonly?
+Date: Mon, 4 Jul 2005 17:02:19 +1000
+Message-ID: <17096.57083.572126.181450@cse.unsw.edu.au>
+References: <Pine.LNX.4.61.0506291431530.7208@filestore.ivimey.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Raz Ben-Jehuda(caro) on Wednesday June 22
+In-Reply-To: message from Ruth Ivimey-Cook on Wednesday June 29
 Sender: linux-raid-owner@vger.kernel.org
-To: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
+To: Ruth Ivimey-Cook <Ruth.Ivimey-Cook@ivimey.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday June 22, raziebe@gmail.com wrote:
-> If I pull the plug out from my machine while io is being generated. 
-> Is there a chance that  i would loose the raid ( obviously i would
-> loose some data).
-> I am refering to raid with no backup battery unit or anything of that sort.
+On Wednesday June 29, Ruth.Ivimey-Cook@ivimey.org wrote:
 > 
-> I tried to do it and the worst case was that the rebuilding was long (
-> both in software raid and hardware raid -- 3ware ).
+> Hi,
 > 
-> I would appreciate answers
+> I'm hoping someone can help suggest where I might look to sort a problem. even 
+> a pointer is useful!
+> 
+> I have three raid arrays, two raid1 and one raid5 called md2. Basically they 
+> run fine, but something is switching md2 readonly during the boot process; the 
+> only way I can get the machine to reboot is to remove md2 from fstab, boot 
+> single-user, do an "mdadm -w /dev/md2", then "init 5".
+> 
+> I'm running Fedora 3 in a very standard configuration.
+> 
+> Here's the dmesg output (with the new printk timestamp option enabled). Note 
+> the line just after the block of selinux calls.
+> 
+> What could be setting it readonly?
 
-"Pulling the plug" can cause physical harm.  It  probably isn't
-common, and probably only affects cheaper hardware, but it can happen.
-Electrical spikes or other sudden changes may not be what the device
-was designed to handle.
+Odd !!
 
-If you pull the plug and hurt two drives of a raid5 array, you lose.
+> [4294696.943000] md: md2 switched to read-only mode.
 
-So yes, it can happen.  But is less likely to happen with better
-quality components.
-Possibly the old adage "RAID doesn't replace backups" applies.
+In the mainline kernel, only two thing can cause this to happen.
+1/ if an array is still active during shutdown, it will be switched to
+   read-only.
+2/ if some user-space program call the ioctl equivalent to "mdadm --readonly".
+
+However it is possible that the Fedora-3 kernel does extra stuff
+... maybe related to selinux ???
+
+I would suggest asking in a Fedora-specific forum.
+
+(feel froo to quote anything I have said there).
 
 NeilBrown
