@@ -1,48 +1,33 @@
-From: Turbo Fredriksson <turbo@bayour.com>
-Subject: Re: linux-raid compatable w/ Adaptec AIC-7902?
-Date: Mon, 04 Jul 2005 13:27:14 +0200
-Message-ID: <87r7eex14d.fsf@pumba.bayour.com>
-References: <200506300210.j5U2Acp04142@www.watkins-home.com>
-	<200506301014.11454.eric@pretorious.net>
+From: Mark Hahn <hahn@physics.mcmaster.ca>
+Subject: RE: raid0 low performance
+Date: Mon, 4 Jul 2005 20:13:33 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44.0507042009340.16047-100000@coffee.psychology.mcmaster.ca>
+References: <1120226073.5501.13.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200506301014.11454.eric@pretorious.net> (Eric Pretorious's
- message of "Thu, 30 Jun 2005 10:14:11 -0700")
+In-Reply-To: <1120226073.5501.13.camel@localhost.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Ming Zhang <mingz@ele.uri.edu>
+Cc: 'Linux RAID' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
->>>>> "Eric" == Eric Pretorious <eric@pretorious.net> writes:
+> # ./lspci -vv -d 11ab:
+> 02:01.0 Class 0100: 11ab:5081 (rev 03)
+>         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop-
+> ParErr- Stepping- SERR- FastB2B-
+>         Status: Cap+ 66Mhz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort-
+> <TAbort- <MAbort- >SERR- <PERR-
+>         Latency: 32, cache line size 08
 
-    Eric> On Wednesday 29 June 2005 07:10 pm, Guy wrote:
-    >>> md: delaying resync of md0 until md2 has finished resync (they
-    >>> share one or more physical units) md: delaying resync of md1
-    >>> until md2 has finished resync (they share one or more physical
-    >>> units) ...
-    >>> 
-    >>> Should I be concerned by the last two lines?
-    >> No, this is normal.  Your 3 arrays are on the same disk(s).  In
-    >> this case, it is faster to do them 1 at a time.
+latency 32 is quite low; this parameter effects how long the device
+can hold onto the bus.  try
+	setpci -s 02:01.0 latency_timer=80
+and see whether it improves things.  I'm unclear on whether a bridged device
+also needs the bridge's latency setting changed.
 
-    Eric> Oh - I get it: md can only work on one RAID at a time
-    Eric> because md0, md1, & md2 are all on sda & sdb (i.e., sda is
-    Eric> mirrored on sdb). Thanks!
+>         Latency: 32, cache line size 08
 
-I'm not DELIBERATELY trying to be rude here, but I want you to find the
-answer yourself... :)
+also low.  I'm guessing that your bios is tuned for desktop use - some audio
+setups need low latency settings.
 
-WHY are you putting multiple md's on the same disks? Did you intend to
-do something like this?
-
-   md0          /boot      sd[ab]1
-   md1          /          sd[ab]2
-   md2          /usr       sd[ab]3
-   md3          /var       sd[ab]4
-
-Just one question (this is the magic :). What do you gain by this? And
-why do you do it?
--- 
-Marxist Albanian quiche NSA critical FBI Honduras radar president
-cracking assassination FSF cryptographic DES Mossad
-[See http://www.aclu.org/echelonwatch/index.html for more about this]
