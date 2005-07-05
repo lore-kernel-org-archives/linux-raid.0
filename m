@@ -1,65 +1,73 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: Inactive RAID5 and different states
-Date: Tue, 5 Jul 2005 15:40:19 +1000
-Message-ID: <17098.7491.742060.73486@cse.unsw.edu.au>
-References: <200507012128.37408.01771@iha.dk>
+From: Ming Zhang <mingz@ele.uri.edu>
+Subject: RE: raid0 low performance
+Date: Tue, 05 Jul 2005 09:19:47 -0400
+Message-ID: <1120569587.5535.7.camel@localhost.localdomain>
+References: <Pine.LNX.4.44.0507042009340.16047-100000@coffee.psychology.mcmaster.ca>
+	 <1120523217.5459.20.camel@localhost.localdomain>
+Reply-To: mingz@ele.uri.edu
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Jacob Madsen on Friday July 1
+In-Reply-To: <1120523217.5459.20.camel@localhost.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jacob Madsen <01771@iha.dk>
-Cc: linux-raid@vger.kernel.org
+To: Mark Hahn <hahn@physics.mcmaster.ca>
+Cc: 'Linux RAID' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Friday July 1, 01771@iha.dk wrote:
-> Hello,
+Hi,
+
+With this
+
+-[00]-+-00.0  8086:2578
+      +-03.0-[01]----01.0  8086:1075
+      +-1c.0-[02]--+-01.0  11ab:5081
+      |            +-03.0  9005:00c0
+      |            +-03.1  9005:00c0
+      |            \-04.0  11ab:5041
+      +-1e.0-[03]--+-09.0  1002:4752
+      |            \-0a.0  8086:1076
+      +-1f.0  8086:25a1
+      +-1f.1  8086:25a2
+      +-1f.2  8086:25a3
+      \-1f.3  8086:25a4
+
+i tried to tune the latency-timer on 02:01.0 02:04.0 and 00:1c.0
+individually or both. tried 40, 60, 80. no luck.
+
+so i think it is the driver or card fault. :) thanks anyway.
+
+ming
+
+On Mon, 2005-07-04 at 20:26 -0400, Ming Zhang wrote:
+> On Mon, 2005-07-04 at 20:13 -0400, Mark Hahn wrote:
+> > > # ./lspci -vv -d 11ab:
+> > > 02:01.0 Class 0100: 11ab:5081 (rev 03)
+> > >         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop-
+> > > ParErr- Stepping- SERR- FastB2B-
+> > >         Status: Cap+ 66Mhz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort-
+> > > <TAbort- <MAbort- >SERR- <PERR-
+> > >         Latency: 32, cache line size 08
+> > 
+> > latency 32 is quite low; this parameter effects how long the device
+> > can hold onto the bus.  try
+> > 	setpci -s 02:01.0 latency_timer=80
 > 
-> Xorg recently crashed and I was forced to reset the computer. After booting I 
-> discovered that partition 'sda10' was missing from an array. I checked the 
-> logs, since I suspected that 'sda' was faulty, but there was no messages 
-> about 'sda' at all. So I examined the md device and sda device.
-> Nothing seemed wrong as far as I could tell (its SATA, so I cant run a 
-> internal diagnostic on the harddrive, since my kernel doesnt support SMART 
-> for SATA), so I went on and added 'sda10' back to the array. But nothing 
-> happened and the array was still marked inactive.
-> I then stopped the array with 'mdadm -S /dev/md8' and got this in kernel log:
-> [kernel] md: md8 stopped.
+> thanks a lot for this and i will test it tomorrow.
 > 
-> I then executed 'mdadm --assemble --scan'.
-> This is the entries in /etc/mdadm.conf (two lines):
-> DEVICE /dev/sda10 /dev/sdb10 /dev/sdc10 /dev/sdd10
-> ARRAY /dev/md8 level=raid5 num-devices=4 
-> UUID=fc549abf:0e1662f3:3b60b5c3:7a8e6fc7 
-> devices=/dev/sda10,/dev/sdb10,/dev/sdc10,/dev/sdd10
-> And this is from the kernel log:
-> [kernel] md: bind<sda10>
-> [kernel] md: bind<sdc10>
-> [kernel] md: bind<sdd10>
-> [kernel] md: bind<sdb10>
-> [kernel] md: kicking non-fresh sda10 from array!
-> [kernel] md: unbind<sda10>
+> > and see whether it improves things.  I'm unclear on whether a bridged device
+> > also needs the bridge's latency setting changed.
+> > 
+> > >         Latency: 32, cache line size 08
+> > 
+> > also low.  I'm guessing that your bios is tuned for desktop use - some audio
+> > setups need low latency settings.
+> > 
+> yes, i guess so, the only drawback of this box is that i am using a
+> entry level server box. so its chipset is quite weak and the setting i
+> left as default.
 > 
-> Since I have no idea what is suddently wrong with 'sda10' I went on and added 
-> it back to the array 'mdadm /dev/md8 -a /dev/sda10' output: 'mdadm: 
-> added /dev/sda10'
-> >From kernel log:
-> [kernel] md: bind<sda10>
+> 
+> Ming
+> 
 
-Are you sure there are no messages like:
-
-raid5: cannot start dirty degraded array for md1
-
-and 
-
-raid5: failed to run raid set md1
-
-??
-In any case, try adding "--force" to "mdadm --assemble", but be aware
-that data corruption may have happened.
-If a raid5 suffers an unclean shutdown and a lost drive, it is
-possible that some blocks will contain garbage, and impossible to know
-which ones.
-
-NeilBrown
