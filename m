@@ -1,22 +1,30 @@
-From: Cora <switchman@jackson.nu>
-Subject: Download and Buy CDS all software under $15-$99
-Date: Wed, 6 Jul 2005 11:18:57 -0400
-Message-ID: <123664101050.5115495643@pa-65-164-19-89.dyn.sprint-hsd.net>
-Mime-Version: 1.0 (Apple Message framework v728)
-Content-Type: text/plain; charset=US-ASCII; format=flowed
+From: Michael Tokarev <mjt@tls.msk.ru>
+Subject: Re: skip raid5 reconstruction
+Date: Wed, 06 Jul 2005 19:45:10 +0400
+Message-ID: <42CBFC86.4090009@tls.msk.ru>
+References: <1120584167.5535.56.camel@localhost.localdomain>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=KOI8-R
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1120584167.5535.56.camel@localhost.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: mingz@ele.uri.edu
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Best software prices. 
-http://ithxmh.i74xlzibxa07fj0.guigehl.com
+Ming Zhang wrote:
+> Hi folks
+> 
+> I am testing some HW performance with raid5 with 2.4.x kenrel.
+> 
+> It is really troublesome every time I create a raid5, wait 4 hours for
+> reconstruction, and then test some data and then recreate another one
+> and wait again. I wonder if there is any hack or option available to
+> create a raid5 without reconstruct the parity disk. I just have interest
+> to test the performance so do not care about data correctness at this
+> stage.
 
+Maybe try smaller partitions?
 
-
-
-Every man is like the company he is wont to keep.  
-..the fog is rising.         
-
-
+/mjt
