@@ -1,54 +1,40 @@
-From: Daniel Pittman <daniel@rimspace.net>
-Subject: Re: Degraded raid5 returns mdadm: /dev/hdc5 has no superblock - assembly aborted
-Date: Fri, 08 Jul 2005 13:38:48 +1000
-Message-ID: <874qb6m0fr.fsf@enki.rimspace.net>
-References: <42CDE44C.9020804@phys.unsw.edu.au>
+From: Brad Campbell <brad@wasp.net.au>
+Subject: Re: skip raid5 reconstruction
+Date: Wed, 06 Jul 2005 10:47:01 +0400
+Message-ID: <42CB7E65.5010204@wasp.net.au>
+References: <1120584167.5535.56.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1120584167.5535.56.camel@localhost.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: mingz@ele.uri.edu
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 8 Jul 2005, Melinda Taylor wrote:
-> We have a computer based at the South Pole which has a degraded raid 5
-> array across 4 disks. One of the 4 HDD's mechanically failed but we have 
-> bought the majority of the system back online except for the raid5 
-> array. I am pretty sure that data on the remaining 3 partitions that 
-> made up the raid5 array is intact - just confused. The reason I know 
-> this is that just before we took the system down, the raid5 array 
-> (mounted as /home) was still readable and writable even though 
-> /proc/mdstat said:
+Ming Zhang wrote:
+> Hi folks
+> 
+> I am testing some HW performance with raid5 with 2.4.x kenrel.
+> 
+> It is really troublesome every time I create a raid5, wait 4 hours for
+> reconstruction, and then test some data and then recreate another one
+> and wait again. I wonder if there is any hack or option available to
+> create a raid5 without reconstruct the parity disk. I just have interest
+> to test the performance so do not care about data correctness at this
+> stage.
 
-[...]
+I did a similar thing a while back.
+I created the raid and waited for it to sync, I then make dd copies of the raid superblocks.
+When I blew it up I just dd the clean superblocks back again (saved a 12 hour rebuild time)
 
-> /*[root@planet mdadm-1.12.0]# mdadm --assemble --force /dev/md2 
-> /dev/hdd5 /dev/hda5 /dev/hdb5 /dev/hdc5
-> mdadm: no RAID superblock on /dev/hdc5
-> mdadm: /dev/hdc5 has no superblock - assembly aborted
->
-> *//dev/hdc is the new disk I have just installed to replace the failed
-> one (/dev/hda). I have parititioned it correctly and in fact one 
-> partition on /dev/hdc1 is now happily part of another raid1 set on the 
-> system so I know all is good with /dev/hdc
+Having just thought about what you wrote, I guess you are building the raid in different
+configurationes each time, so my method might not be good for you.
 
-What you want to do is start the array as degraded, using *only* the
-devices that were part of the disk set.  Substitute 'missing' for the
-last device if needed but, IIRC, you should be able to say just:
-
-] mdadm --assemble --force /dev/md2 /dev/hd[abd]5
-
-Don't forget to fsck the filesystem thoroughly at this point. :)
-
-Once the array is up and running, you *then* add the new disk to it by
-saying:
-
-] mdadm -a /dev/md2 /dev/hdc5
-
-The array will then recover and, hopefully, life is good.
-
-    Daniel
+Regards,
+Brad
 -- 
-Anyone who goes to a psychiatrist ought to have his head examined.
-        -- Samuel Goldwyn
-
+"Human beings, who are almost unique in having the ability
+to learn from the experience of others, are also remarkable
+for their apparent disinclination to do so." -- Douglas Adams
