@@ -1,21 +1,32 @@
-From: Uncle Den <UncleDan@hotmail.com>
-Subject: (unknown)
-Date: Thu, 07 Jul 2005 12:28:41 +0000
-Message-ID: <00e401c582ef$5dd2125f$3fee3da1@hotmail.com>
+From: Edmund <untagged@scbbs-bo.com>
+Subject: Welcome to VIP Quality Software.
+Date: Thu, 7 Jul 2005 14:08:03 -0200
+Message-ID: <12472550113.49535117157__13631.9766323597$1120753812$gmane$org@200.170.127.206.user.ajato.com.br>
 Mime-Version: 1.0
-Content-Type: text/plain;
-    format=flowed;
-    charset="iso-8859-1";
-    reply-type=original
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Subject: 
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello!
+The world's best software for research, science and engineering.
+http://xakzeio.kr6h51kdhuk9z32.isothujonene.org
 
-Glad to hear from you!
 
-Bye
+
+
+The arts are the servant; wisdom its master.     
+Don't expect to build up the weak by pulling down the strong. 
+
+
+y office, thou sendest me to God. 
+
+
+
+
+-- 
+Internal Virus Database is out-of-date.
+Checked by AVG Anti-Virus.
+Version: 7.0.300 / Virus Database: 266.0.0 - Release Date: 18/2/2005
+
