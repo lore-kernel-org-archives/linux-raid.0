@@ -1,32 +1,24 @@
-From: Edmund <untagged@scbbs-bo.com>
-Subject: Welcome to VIP Quality Software.
-Date: Thu, 7 Jul 2005 14:08:03 -0200
-Message-ID: <12472550113.49535117157__13631.9766323597$1120753812$gmane$org@200.170.127.206.user.ajato.com.br>
+From: David Greaves <david@dgreaves.com>
+Subject: Re: RAID5 rebuild question
+Date: Thu, 07 Jul 2005 21:48:38 +0100
+Message-ID: <42CD9526.6050704@dgreaves.com>
+References: <42C78399.5030501@nighthawkrad.net>	<200507030642.j636g5p16857@www.watkins-home.com> <17096.36590.780673.451541@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <17096.36590.780673.451541@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@cse.unsw.edu.au>
+Cc: Guy <bugzilla@watkins-home.com>, 'Christopher Smith' <csmith@nighthawkrad.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-The world's best software for research, science and engineering.
-http://xakzeio.kr6h51kdhuk9z32.isothujonene.org
 
+>This should go in a FAQ.  Is anyone actively maintaining an md/mdadm
+>FAQ at the moment, or should I start putting something together??
+>
+Can I suggest a wiki? Or an 'online multi-persin editable document' :)
 
+There are a few people here who could contribute and/or edit.
 
-
-The arts are the servant; wisdom its master.     
-Don't expect to build up the weak by pulling down the strong. 
-
-
-y office, thou sendest me to God. 
-
-
-
-
--- 
-Internal Virus Database is out-of-date.
-Checked by AVG Anti-Virus.
-Version: 7.0.300 / Virus Database: 266.0.0 - Release Date: 18/2/2005
-
+David
