@@ -1,58 +1,36 @@
-From: "Bailey, Scott" <scott.bailey@eds.com>
-Subject: RE: mdadm memory leak?
-Date: Wed, 6 Jul 2005 12:09:49 -0400
-Message-ID: <E26C409DCE780347BD93D08771FF08E92F74D8@usahm236.amer.corp.eds.com>
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: Bugreport mdadm-2.0-devel-1
+Date: Thu, 7 Jul 2005 10:10:13 +1000
+Message-ID: <17100.29413.164442.415932@cse.unsw.edu.au>
+References: <1684363827.20050706121331@netvision.net.il>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
+In-Reply-To: message from Maxim Kozover on Wednesday July 6
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@cse.unsw.edu.au>, Eric Sandall <eric@sandall.us>
-Cc: David Kowis <dkowis@shlrm.org>, linux-raid@vger.kernel.org
+To: Maxim Kozover <maximkoz@netvision.net.il>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->diff -Nru a/drivers/md/md.c b/drivers/md/md.c
->--- a/drivers/md/md.c	2005-01-22 00:16:02 -08:00
->+++ b/drivers/md/md.c	2005-01-22 00:16:02 -08:00
->@@ -332,29 +332,26 @@
-> static int sync_page_io(struct block_device *bdev, sector_t sector,
-int size,
-> 		   struct page *page, int rw)
-> {
->-	struct bio bio;
->-	struct bio_vec vec;
->+	struct bio *bio = bio_alloc(GFP_KERNEL, 1);
-> 	struct completion event;
->+	int ret;
->+
->+	bio_get(bio);
->....
->+	bio_put(bio);
->+	return ret;
-> }
->
->bio_alloc sets the refcount to 1.
->bio_get increments it to 2.
->bio_put sets it back to 1.  But it never reaches zero.
->
->You want to get rid of that bio_get near the top of sync_page_io.
+On Wednesday July 6, maximkoz@netvision.net.il wrote:
+> Hi!
+> I'm getting problems with raid1 creation using new superblock format.
+> Kernel used is 2.6.12.2 (with drivers/md and include/linux/raid taken from
+> 2.6.13-rc1 to have a support for bitmaps and bug correction of md
+> failing when starting resync), all compiled together.
+> 
+> For mdadm I tried both mdadm-2.0-devel-1 and mdadm-2.0-devel-1a.
+> Compiles only if -Werror is removed from the Makefile, otherwise
+> /usr/include/asm/byteorder.h:6:2: #warning using private kernel header; include <endian.h> instead!
 
-I had been wondering why my Alphaserver running Debian kernel 2.6.10-5
-had been OOMing every week or so. :-) When I started reading this
-thread, nearly a week since the last reboot, I found I had more than 3GB
-of memory tied up in bio and biovec-1 slab. (!)
+Hmmm... I don't get that.  I must have different header files.  And my
+<endian.h> doesn't provide the needed functionality :-(
 
-With the offending "bio_get(bio);" removed as described above, the
-system is looking much better. With unpatched kernel, I rebooted system
-and started synchronization of 9GB RAID-1 drive - at completion, the bio
-slab had grown to something like 15,000+ entries. With patched kernel, I
-rebooted and am doing another RAID-1 rebuild now - with that about 50%
-complete, there are only 992 bio entries. (And only half of those are in
-use - this never went below 99% before.)
+Anyway, try
+  http://www.cse.unsw.edu.au/~neilb/source/mdadm/mdadm-2.0-devel-2.tgz
 
-Many thanks,
+(and remove -Werror).  It works for me with the command line that you
+give.
 
-	Scott Bailey
-	scott.bailey@eds.com
+NeilBrown
