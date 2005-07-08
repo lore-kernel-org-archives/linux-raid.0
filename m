@@ -1,57 +1,45 @@
 From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: Degraded raid5 returns mdadm: /dev/hdc5 has no superblock - assembly aborted
-Date: Fri, 8 Jul 2005 21:24:00 +1000
-Message-ID: <17102.25168.888298.566858@cse.unsw.edu.au>
-References: <42CDE44C.9020804@phys.unsw.edu.au>
-	<874qb6m0fr.fsf@enki.rimspace.net>
-	<62b0912f05070801436421ea0e@mail.gmail.com>
-	<87oe9dlkc2.fsf@enki.rimspace.net>
+Subject: Re: RAID1 assembly requires manual "mdadm --run"
+Date: Fri, 8 Jul 2005 21:42:58 +1000
+Message-ID: <17102.26306.174427.502866@cse.unsw.edu.au>
+References: <200506261621.01799.mlaks@verizon.net>
+	<62b0912f05070623185b90e732@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Daniel Pittman on Friday July 8
+In-Reply-To: message from Molle Bestefich on Thursday July 7
 Sender: linux-raid-owner@vger.kernel.org
-To: Daniel Pittman <daniel@rimspace.net>
+To: Molle Bestefich <molle.bestefich@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Friday July 8, daniel@rimspace.net wrote:
-> On 8 Jul 2005, Molle Bestefich wrote:
-> >> On 8 Jul 2005, Melinda Taylor wrote:
-> >>> We have a computer based at the South Pole which has a degraded raid 5
-> >>> array across 4 disks. One of the 4 HDD's mechanically failed but we have
-> >>> bought the majority of the system back online except for the raid5
-> >>> array. I am pretty sure that data on the remaining 3 partitions that
-> >>> made up the raid5 array is intact - just confused. The reason I know
-> >>> this is that just before we took the system down, the raid5 array
-> >>> (mounted as /home) was still readable and writable even though
-> >>> /proc/mdstat said:
-> >
-> > On 7/8/05, Daniel Pittman wrote:
-> >> What you want to do is start the array as degraded, using *only* the
-> >> devices that were part of the disk set.  Substitute 'missing' for the
-> >> last device if needed but, IIRC, you should be able to say just:
-> >>
-> >> ] mdadm --assemble --force /dev/md2 /dev/hd[abd]5
-> >>
-> >> Don't forget to fsck the filesystem thoroughly at this point. :)
-> >
-> > At this point, before adding the new disk, I'd suggest making *very*
-> > sure that the event counters match on the three existing disks. 
-> > Because if they don't, MD will add the new disk with an event counter
-> > matching the freshest disk in the array.  That will cause it to start
-> > synchronizing onto one of the good disks instead of onto the newly
-> > added disk....  Happened to me once, gah.
+On Thursday July 7, molle.bestefich@gmail.com wrote:
+> Mitchell Laks wrote:
+> > However I think that raids should boot as long as they are intact, as a matter
+> > of policy. Otherwise we lose our  ability to rely upon them for remote
+> > servers...
 > 
-> Ack!  I didn't know that.  If the event counters don't match up, what
-> can you do to correct the problem?  
+> It does seem wrong that a RAID 5 starts OK with a disk missing, but a
+> RAID 1 fails.
+> 
+> Perhaps MD is unable to tell which disk in the RAID 1 is the freshest
+> and therefore refuses to assemble any RAID 1's with disks missing?
 
-The "--assemble --force" should result in all the event counters of
-the named drives being the same.  Then it should be perfectly safe the
-add the new drive.
+This doesn't sound right at all.
 
-I cannot quite imagine a situation as described by Molle.  If it was
-at all reproducible I'd love to hear more details.
+"--run" is required to start a degraded array as a way of confirming
+to mdadm that you really have listed all the drives available.
+The normal way of starting an array at boot time is by describing the
+array (usually by UUID) in mdadm.conf and letting mdadm find the
+component devices with "mdadm --assemble --scan".
+
+This usage does not require --run.
+
+The only time there is a real reluctance to start a degraded array is
+when it is raid5/6 and it suffered an unclean shutdown.
+A dirty, degraded raid5/6 can have undetectably data corruption, and I
+really want you to be aware of that and not just assume that "because
+it started, the data must be OK".
 
 NeilBrown
