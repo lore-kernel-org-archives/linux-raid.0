@@ -1,40 +1,50 @@
-From: Brad Campbell <brad@wasp.net.au>
-Subject: Re: skip raid5 reconstruction
-Date: Wed, 06 Jul 2005 10:47:01 +0400
-Message-ID: <42CB7E65.5010204@wasp.net.au>
-References: <1120584167.5535.56.camel@localhost.localdomain>
+From: Molle Bestefich <molle.bestefich@gmail.com>
+Subject: Re: Degraded raid5 returns mdadm: /dev/hdc5 has no superblock - assembly aborted
+Date: Fri, 8 Jul 2005 10:43:46 +0200
+Message-ID: <62b0912f05070801436421ea0e@mail.gmail.com>
+References: <42CDE44C.9020804@phys.unsw.edu.au>
+	 <874qb6m0fr.fsf@enki.rimspace.net>
+Reply-To: Molle Bestefich <molle.bestefich@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1120584167.5535.56.camel@localhost.localdomain>
+In-Reply-To: <874qb6m0fr.fsf@enki.rimspace.net>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: mingz@ele.uri.edu
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
+Cc: melinda@phys.unsw.edu.au
 List-Id: linux-raid.ids
 
-Ming Zhang wrote:
-> Hi folks
+> On 8 Jul 2005, Melinda Taylor wrote:
+> > We have a computer based at the South Pole which has a degraded raid 5
+> > array across 4 disks. One of the 4 HDD's mechanically failed but we have
+> > bought the majority of the system back online except for the raid5
+> > array. I am pretty sure that data on the remaining 3 partitions that
+> > made up the raid5 array is intact - just confused. The reason I know
+> > this is that just before we took the system down, the raid5 array
+> > (mounted as /home) was still readable and writable even though
+> > /proc/mdstat said:
+
+On 7/8/05, Daniel Pittman wrote:
+> What you want to do is start the array as degraded, using *only* the
+> devices that were part of the disk set.  Substitute 'missing' for the
+> last device if needed but, IIRC, you should be able to say just:
 > 
-> I am testing some HW performance with raid5 with 2.4.x kenrel.
+> ] mdadm --assemble --force /dev/md2 /dev/hd[abd]5
 > 
-> It is really troublesome every time I create a raid5, wait 4 hours for
-> reconstruction, and then test some data and then recreate another one
-> and wait again. I wonder if there is any hack or option available to
-> create a raid5 without reconstruct the parity disk. I just have interest
-> to test the performance so do not care about data correctness at this
-> stage.
+> Don't forget to fsck the filesystem thoroughly at this point. :)
 
-I did a similar thing a while back.
-I created the raid and waited for it to sync, I then make dd copies of the raid superblocks.
-When I blew it up I just dd the clean superblocks back again (saved a 12 hour rebuild time)
+At this point, before adding the new disk, I'd suggest making *very*
+sure that the event counters match on the three existing disks. 
+Because if they don't, MD will add the new disk with an event counter
+matching the freshest disk in the array.  That will cause it to start
+synchronizing onto one of the good disks instead of onto the newly
+added disk....  Happened to me once, gah.
 
-Having just thought about what you wrote, I guess you are building the raid in different
-configurationes each time, so my method might not be good for you.
-
-Regards,
-Brad
--- 
-"Human beings, who are almost unique in having the ability
-to learn from the experience of others, are also remarkable
-for their apparent disinclination to do so." -- Douglas Adams
+> Once the array is up and running, you *then* add the new disk to it by
+> saying:
+> 
+> ] mdadm -a /dev/md2 /dev/hdc5
+> 
+> The array will then recover and, hopefully, life is good.
