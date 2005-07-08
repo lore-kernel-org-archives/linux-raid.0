@@ -1,45 +1,54 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: RAID1 assembly requires manual "mdadm --run"
-Date: Fri, 8 Jul 2005 21:42:58 +1000
-Message-ID: <17102.26306.174427.502866@cse.unsw.edu.au>
-References: <200506261621.01799.mlaks@verizon.net>
-	<62b0912f05070623185b90e732@mail.gmail.com>
+From: Ming Zhang <mingz@ele.uri.edu>
+Subject: Re: skip raid5 reconstruction
+Date: Fri, 08 Jul 2005 08:22:46 -0400
+Message-ID: <1120825366.5461.14.camel@localhost.localdomain>
+References: <1120584167.5535.56.camel@localhost.localdomain>
+	 <42CB7E65.5010204@wasp.net.au>
+Reply-To: mingz@ele.uri.edu
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Molle Bestefich on Thursday July 7
+In-Reply-To: <42CB7E65.5010204@wasp.net.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Molle Bestefich <molle.bestefich@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Brad Campbell <brad@wasp.net.au>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thursday July 7, molle.bestefich@gmail.com wrote:
-> Mitchell Laks wrote:
-> > However I think that raids should boot as long as they are intact, as a matter
-> > of policy. Otherwise we lose our  ability to rely upon them for remote
-> > servers...
+On Wed, 2005-07-06 at 10:47 +0400, Brad Campbell wrote:
+> Ming Zhang wrote:
+> > Hi folks
+> > 
+> > I am testing some HW performance with raid5 with 2.4.x kenrel.
+> > 
+> > It is really troublesome every time I create a raid5, wait 4 hours for
+> > reconstruction, and then test some data and then recreate another one
+> > and wait again. I wonder if there is any hack or option available to
+> > create a raid5 without reconstruct the parity disk. I just have interest
+> > to test the performance so do not care about data correctness at this
+> > stage.
 > 
-> It does seem wrong that a RAID 5 starts OK with a disk missing, but a
-> RAID 1 fails.
+> I did a similar thing a while back.
+> I created the raid and waited for it to sync, I then make dd copies of the raid superblocks.
+> When I blew it up I just dd the clean superblocks back again (saved a 12 hour rebuild time)
+interesting to know about this. u just check the dmesg and see where is
+the sb and then u dd it out and dd back later?
+
+
 > 
-> Perhaps MD is unable to tell which disk in the RAID 1 is the freshest
-> and therefore refuses to assemble any RAID 1's with disks missing?
+> Having just thought about what you wrote, I guess you are building the raid in different
+> configurationes each time, so my method might not be good for you.
+> 
+yes, i changed it many times.
 
-This doesn't sound right at all.
 
-"--run" is required to start a degraded array as a way of confirming
-to mdadm that you really have listed all the drives available.
-The normal way of starting an array at boot time is by describing the
-array (usually by UUID) in mdadm.conf and letting mdadm find the
-component devices with "mdadm --assemble --scan".
+thx anyway!
 
-This usage does not require --run.
 
-The only time there is a real reluctance to start a degraded array is
-when it is raid5/6 and it suffered an unclean shutdown.
-A dirty, degraded raid5/6 can have undetectably data corruption, and I
-really want you to be aware of that and not just assume that "because
-it started, the data must be OK".
+Ming
 
-NeilBrown
+
+
+> Regards,
+> Brad
+
