@@ -1,33 +1,101 @@
-From: Brad Campbell <brad@wasp.net.au>
-Subject: Re: skip raid5 reconstruction
-Date: Fri, 08 Jul 2005 22:14:01 +0400
-Message-ID: <42CEC269.6010205@wasp.net.au>
-References: <1120584167.5535.56.camel@localhost.localdomain>	 <42CB7E65.5010204@wasp.net.au> <1120825366.5461.14.camel@localhost.localdomain>
+From: Molle Bestefich <molle.bestefich@gmail.com>
+Subject: Re: RAID1 assembly requires manual "mdadm --run"
+Date: Fri, 8 Jul 2005 20:38:51 +0200
+Message-ID: <62b0912f05070811386bf7c72d@mail.gmail.com>
+References: <200506261621.01799.mlaks@verizon.net>
+	 <62b0912f05070623185b90e732@mail.gmail.com>
+	 <17102.26306.174427.502866@cse.unsw.edu.au>
+Reply-To: Molle Bestefich <molle.bestefich@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1120825366.5461.14.camel@localhost.localdomain>
+In-Reply-To: <17102.26306.174427.502866@cse.unsw.edu.au>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: mingz@ele.uri.edu
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Ming Zhang wrote:
-
->>I did a similar thing a while back.
->>I created the raid and waited for it to sync, I then make dd copies of the raid superblocks.
->>When I blew it up I just dd the clean superblocks back again (saved a 12 hour rebuild time)
+On 7/8/05, Neil Brown <neilb@cse.unsw.edu.au> wrote:
+> On Thursday July 7, molle.bestefich@gmail.com wrote:
+> > Mitchell Laks wrote:
+> > > However I think that raids should boot as long as they are intact, as a matter
+> > > of policy. Otherwise we lose our  ability to rely upon them for remote
+> > > servers...
+> >
+> > It does seem wrong that a RAID 5 starts OK with a disk missing, but a
+> > RAID 1 fails.
+> >
+> > Perhaps MD is unable to tell which disk in the RAID 1 is the freshest
+> > and therefore refuses to assemble any RAID 1's with disks missing?
 > 
-> interesting to know about this. u just check the dmesg and see where is
-> the sb and then u dd it out and dd back later?
+> This doesn't sound right at all.
+> 
+> "--run" is required to start a degraded array as a way of confirming
+> to mdadm that you really have listed all the drives available.
+> The normal way of starting an array at boot time is by describing the
+> array (usually by UUID) in mdadm.conf and letting mdadm find the
+> component devices with "mdadm --assemble --scan".
+> 
+> This usage does not require --run.
+> 
+> The only time there is a real reluctance to start a degraded array is
+> when it is raid5/6 and it suffered an unclean shutdown.
+> A dirty, degraded raid5/6 can have undetectably data corruption, and I
+> really want you to be aware of that and not just assume that "because
+> it started, the data must be OK".
 
-Actually, I used blockdev to get the device size and then just copied the last 64kb from memory.. 
-It's a bit hazy now but that's pretty close I think
+Sounds very sane.
 
-Regards
-Brad
--- 
-"Human beings, who are almost unique in having the ability
-to learn from the experience of others, are also remarkable
-for their apparent disinclination to do so." -- Douglas Adams
+So a clean RAID1 with a disk missing should start without --run, just
+like a clean RAID5 with a disk missing?
+
+Nevermind, I'll try to reproduce it instead of asking too many questions.
+And I suck a bit at testing MD with loop devices, so if someone could
+pitch in and tell me what I'm doing wrong here, I'd appreciate it very
+much (-:
+
+# mknod /dev/md0 b 9 0
+# dd if=/dev/zero of=test1 bs=1M count=100
+# dd if=/dev/zero of=test2 bs=1M count=100
+# dd if=/dev/zero of=test3 bs=1M count=100
+# losetup /dev/loop1 test1
+# losetup /dev/loop2 test2
+# losetup /dev/loop3 test3
+# mdadm --create /dev/md0 -l 1 -n 3 /dev/loop1 /dev/loop2 /dev/loop3
+mdadm: array /dev/md0 started.
+
+# mdadm --detail --scan > /etc/mdadm.conf
+# cat /etc/mdadm.conf
+ARRAY /dev/md0 level=raid1 num-devices=3
+   UUID=1dcc972f:0b856580:05c66483:e14940d8
+   devices=/dev/loop/1,/dev/loop/2,/dev/loop/3
+
+# mdadm --stop /dev/md0
+# mdadm --assemble --scan
+mdadm: no devices found for /dev/md0
+
+// ^^^^^^^^^^^^^^^^^^^^^^^^  ??? Why?
+
+# mdadm --assemble /dev/md0 /dev/loop1 /dev/loop2 /dev/loop3
+mdadm: /dev/md0 has been started with 3 drives.
+
+// So far so good..
+
+# mdadm --stop /dev/md0
+# losetup -d /dev/loop3
+# mdadm --assemble /dev/md0 /dev/loop1 /dev/loop2 /dev/loop3
+mdadm: no RAID superblock on /dev/loop7
+mdadm: /dev/loop7 has no superblock - assembly aborted
+
+// ^^^^^^^^^^^^^^^^^^^^^^^^  ??? It aborts :-(...
+// Doesn't an inactive loop device seem the same as a missing disk to MD?
+
+# rm -f /dev/loop3
+# mdadm --assemble /dev/md0 /dev/loop1 /dev/loop2 /dev/loop3
+mdadm: cannot open device /dev/loop7: No such file or directory
+mdadm: /dev/loop7 has no superblock - assembly aborted
+
+// ^^^^^^^^^^^^^^^^^^^^^^^^  ??? It aborts, just as above...
+
+Hm!
