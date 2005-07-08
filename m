@@ -1,126 +1,121 @@
 From: Tyler <pml@dtbb.net>
-Subject: Re: RAID1 assembly requires manual "mdadm --run"
-Date: Fri, 08 Jul 2005 16:12:09 -0700
-Message-ID: <42CF0849.1000103@dtbb.net>
-References: <200506261621.01799.mlaks@verizon.net>	 <62b0912f05070623185b90e732@mail.gmail.com>	 <17102.26306.174427.502866@cse.unsw.edu.au> <62b0912f05070811386bf7c72d@mail.gmail.com>
+Subject: Re: mdadm memory leak?
+Date: Fri, 08 Jul 2005 16:15:39 -0700
+Message-ID: <42CF091B.7030402@dtbb.net>
+References: <42CA0B7E.4040109@shlrm.org>	<17098.4949.378512.822529@cse.unsw.edu.au>	<20050705105229.7aisufvrk8so0ook@shlrm.org> <17098.64085.334793.282803@cse.unsw.edu.au> <42CEF85F.5060409@shlrm.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <62b0912f05070811386bf7c72d@mail.gmail.com>
+In-Reply-To: <42CEF85F.5060409@shlrm.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Molle Bestefich <molle.bestefich@gmail.com>
+To: David Kowis <dkowis@shlrm.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Molle Bestefich wrote:
+David Kowis wrote:
 
->On 7/8/05, Neil Brown <neilb@cse.unsw.edu.au> wrote:
+>-----BEGIN PGP SIGNED MESSAGE-----
+>Hash: SHA1
+>
+>
+>
+>Neil Brown wrote:
 >  
 >
->>On Thursday July 7, molle.bestefich@gmail.com wrote:
->>    
->>
->>>Mitchell Laks wrote:
+>>> OBJS ACTIVE  USE OBJ SIZE  SLABS OBJ/SLAB CACHE SIZE NAME
+>>>152098 151909  99%    0.02K    673      226      2692K fasync_cache
+>>>24867  24846  99%    0.05K    307       81      1228K buffer_head
+>>>12432   8306  66%    0.27K    888       14      3552K radix_tree_node
+>>> 7308   6876  94%    0.13K    252       29      1008K dentry_cache
+>>> 6303   5885  93%    0.36K    573       11      2292K reiser_inode_cache
 >>>      
 >>>
->>>>However I think that raids should boot as long as they are intact, as a matter
->>>>of policy. Otherwise we lose our  ability to rely upon them for remote
->>>>servers...
->>>>        
->>>>
->>>It does seem wrong that a RAID 5 starts OK with a disk missing, but a
->>>RAID 1 fails.
->>>
->>>Perhaps MD is unable to tell which disk in the RAID 1 is the freshest
->>>and therefore refuses to assemble any RAID 1's with disks missing?
->>>      
->>>
->>This doesn't sound right at all.
+>>So you have about 16 megabytes used by the slab cache, none of the big
+>>users 'md' related. 
+>>16M doesn't sound like a big deal, so I suspect this isn't the source
+>>of the leak. 
+>> From a separate Email I see:
 >>
->>"--run" is required to start a degraded array as a way of confirming
->>to mdadm that you really have listed all the drives available.
->>The normal way of starting an array at boot time is by describing the
->>array (usually by UUID) in mdadm.conf and letting mdadm find the
->>component devices with "mdadm --assemble --scan".
->>
->>This usage does not require --run.
->>
->>The only time there is a real reluctance to start a degraded array is
->>when it is raid5/6 and it suffered an unclean shutdown.
->>A dirty, degraded raid5/6 can have undetectably data corruption, and I
->>really want you to be aware of that and not just assume that "because
->>it started, the data must be OK".
 >>    
 >>
+>>>Mem:    773984k total,   765556k used,     8428k free,    65812k buffers
+>>>Swap:  2755136k total,        0k used,  2755136k free,   526632k cached
+>>>      
+>>>
+>>The fact that swap isn't being touched at all suggests that you aren't
+>>currently running low on memory.
+>>The fact the free is low doesn't directly indicate a problem.  Linux
+>>uses free memory to cache files.  It will discard then from the cache
+>>if it needs more memory.
+>>The fact that the OOM killer is hiting obviously is a problem.  Maybe
+>>you need to report this on linux-kernel was an OOM problem.
+>>
+>>    
+>>
+>I've let my computer run for a while longer, and it's eaten more memory than before. I'll paste the relevant parts. I'm not sure this is a
+>kernel thing, since I didn't have this problem before setting up a mirrored RAID array using mdadm.
 >
->Sounds very sane.
->
->So a clean RAID1 with a disk missing should start without --run, just
->like a clean RAID5 with a disk missing?
->
->Nevermind, I'll try to reproduce it instead of asking too many questions.
->And I suck a bit at testing MD with loop devices, so if someone could
->pitch in and tell me what I'm doing wrong here, I'd appreciate it very
->much (-:
->
-># mknod /dev/md0 b 9 0
-># dd if=/dev/zero of=test1 bs=1M count=100
-># dd if=/dev/zero of=test2 bs=1M count=100
-># dd if=/dev/zero of=test3 bs=1M count=100
-># losetup /dev/loop1 test1
-># losetup /dev/loop2 test2
-># losetup /dev/loop3 test3
-># mdadm --create /dev/md0 -l 1 -n 3 /dev/loop1 /dev/loop2 /dev/loop3
->mdadm: array /dev/md0 started.
->
-># mdadm --detail --scan > /etc/mdadm.conf
-># cat /etc/mdadm.conf
->ARRAY /dev/md0 level=raid1 num-devices=3
->   UUID=1dcc972f:0b856580:05c66483:e14940d8
->   devices=/dev/loop/1,/dev/loop/2,/dev/loop/3
 >  
 >
-Why does this show /dev/loop/1 instead of /dev/loop1 ?
+David, unless you have mdadm running in monitor mode, its not "actively" 
+in memory.. the MD driver is in the kernel, and in memory.  Mdadm is 
+simply a tool, just as fsck.ext2 or such.. its not active until you run 
+it, and leaves memory when it finishes its one task.  (Someone correct 
+me if I'm wrong please....).
 
-># mdadm --stop /dev/md0
-># mdadm --assemble --scan
->mdadm: no devices found for /dev/md0
->
->// ^^^^^^^^^^^^^^^^^^^^^^^^  ??? Why?
->
-># mdadm --assemble /dev/md0 /dev/loop1 /dev/loop2 /dev/loop3
->mdadm: /dev/md0 has been started with 3 drives.
->
->// So far so good..
->
-># mdadm --stop /dev/md0
-># losetup -d /dev/loop3
-># mdadm --assemble /dev/md0 /dev/loop1 /dev/loop2 /dev/loop3
->mdadm: no RAID superblock on /dev/loop7
->mdadm: /dev/loop7 has no superblock - assembly aborted
->  
->
-Where's loop7 coming from all of a sudden? I thought you were using 
-loop1, loop2, loop3
+Tyler.
 
->// ^^^^^^^^^^^^^^^^^^^^^^^^  ??? It aborts :-(...
->// Doesn't an inactive loop device seem the same as a missing disk to MD?
+>from slabtop:
+> Active / Total Objects (% used)    : 80755 / 86856 (93.0%)
+> Active / Total Slabs (% used)      : 2974 / 2975 (100.0%)
+> Active / Total Caches (% used)     : 76 / 140 (54.3%)
+> Active / Total Size (% used)       : 11445.72K / 12330.93K (92.8%)
+> Minimum / Average / Maximum Object : 0.01K / 0.14K / 128.00K
 >
-># rm -f /dev/loop3
-># mdadm --assemble /dev/md0 /dev/loop1 /dev/loop2 /dev/loop3
->mdadm: cannot open device /dev/loop7: No such file or directory
->mdadm: /dev/loop7 has no superblock - assembly aborted
->  
+>  OBJS ACTIVE  USE OBJ SIZE  SLABS OBJ/SLAB CACHE SIZE NAME
+> 44469  44441  99%    0.05K    549       81      2196K buffer_head
+>  8946   8192  91%    0.27K    639       14      2556K radix_tree_node
+>  6960   4720  67%    0.13K    240       29       960K dentry_cache
+>  3510   3510 100%    0.09K     78       45       312K vm_area_struct
+>  3179   2522  79%    0.36K    289       11      1156K reiser_inode_cache
+>  3050   2477  81%    0.06K     50       61       200K size-64
+>  2782   2713  97%    0.04K     26      107       104K sysfs_dir_cache
+>  2405   2378  98%    0.29K    185       13       740K inode_cache
+>  2142   2142 100%    0.03K     18      119        72K size-32
+>  1860   1817  97%    0.12K     60       31       240K size-128
+>   875    875 100%    0.16K     35       25       140K filp
 >
-Once again, where is loop7 coming from?
-
->// ^^^^^^^^^^^^^^^^^^^^^^^^  ??? It aborts, just as above...
+>from free:
+>             total       used       free     shared    buffers     cached
+>Mem:        773900     765416       8484          0      75680     450004
+>- -/+ buffers/cache:     239732     534168
+>Swap:      2755136     118568    2636568
 >
->Hm!
+>
+>Something's digesting memory and not giving it back.
+>I'm now running 2.6.12.1 instead of 2.6.11.12 in the hopes that something was fixed, but no.
+>
+>Thanks,
+>- --
+>David Kowis
+>
+>ISO Team Lead - www.sourcemage.org
+>SourceMage GNU/Linux
+>
+>One login to rule them all, one login to find them. One login to bring them all, and in the web bind them.
+>-----BEGIN PGP SIGNATURE-----
+>Version: GnuPG v1.4.1 (MingW32)
+>
+>iD8DBQFCzvhftgErhgxHMHsRAthSAJ0bSkP2xuhIeXYcuXx0P46ENdom2ACgmhB1
+>J0A5DfZu5vxwlKT2Dar55J8=
+>=pmX1
+>-----END PGP SIGNATURE-----
 >-
 >To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 >the body of a message to majordomo@vger.kernel.org
 >More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 >  
 >
+
