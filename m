@@ -1,59 +1,83 @@
-From: Joshua Baker-LePain <jlb17@duke.edu>
-Subject: Re: linux-raid compatable w/ Adaptec AIC-7902?
-Date: Fri, 8 Jul 2005 08:52:41 -0400 (EDT)
-Message-ID: <Pine.LNX.4.58.0507080848470.4766@chaos.egr.duke.edu>
-References: <200506300210.j5U2Acp04142@www.watkins-home.com>
- <200506301014.11454.eric@pretorious.net> <87r7eex14d.fsf@pumba.bayour.com>
- <200507071149.54019.eric@pretorious.net> <877jg1fp3d.fsf@pumba.bayour.com>
+From: Molle Bestefich <molle.bestefich@gmail.com>
+Subject: Re: Degraded raid5 returns mdadm: /dev/hdc5 has no superblock - assembly aborted
+Date: Fri, 8 Jul 2005 19:53:53 +0200
+Message-ID: <62b0912f0507081053901c61c@mail.gmail.com>
+References: <42CDE44C.9020804@phys.unsw.edu.au>
+	 <874qb6m0fr.fsf@enki.rimspace.net>
+	 <62b0912f05070801436421ea0e@mail.gmail.com>
+	 <87oe9dlkc2.fsf@enki.rimspace.net>
+	 <17102.25168.888298.566858@cse.unsw.edu.au>
+Reply-To: Molle Bestefich <molle.bestefich@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <877jg1fp3d.fsf@pumba.bayour.com>
+In-Reply-To: <17102.25168.888298.566858@cse.unsw.edu.au>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Turbo Fredriksson <turbo@bayour.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 8 Jul 2005 at 2:40pm, Turbo Fredriksson wrote
-
-> Quoting Eric Pretorious <eric@pretorious.net>:
-> 
-> > On Monday 04 July 2005 04:27 am, Turbo Fredriksson wrote:
-> >>WHY are you putting multiple md's on the same disks? Did you intend to
-> >>do something like this?
-> >>
-> >>   md0          /boot      sd[ab]1
-> >>   md1          /          sd[ab]2
-> >>   md2          /usr       sd[ab]3
-> >>   md3          /var       sd[ab]4
-> >>
-> >>Just one question (this is the magic :). What do you gain by this? And
-> >>why do you do it?
+> On Friday July 8, daniel@rimspace.net wrote:
+> > On 8 Jul 2005, Molle Bestefich wrote:
+> > >> On 8 Jul 2005, Melinda Taylor wrote:
+> > >>> We have a computer based at the South Pole which has a degraded raid 5
+> > >>> array across 4 disks. One of the 4 HDD's mechanically failed but we have
+> > >>> bought the majority of the system back online except for the raid5
+> > >>> array. I am pretty sure that data on the remaining 3 partitions that
+> > >>> made up the raid5 array is intact - just confused. The reason I know
+> > >>> this is that just before we took the system down, the raid5 array
+> > >>> (mounted as /home) was still readable and writable even though
+> > >>> /proc/mdstat said:
+> > >
+> > > On 7/8/05, Daniel Pittman wrote:
+> > >> What you want to do is start the array as degraded, using *only* the
+> > >> devices that were part of the disk set.  Substitute 'missing' for the
+> > >> last device if needed but, IIRC, you should be able to say just:
+> > >>
+> > >> ] mdadm --assemble --force /dev/md2 /dev/hd[abd]5
+> > >>
+> > >> Don't forget to fsck the filesystem thoroughly at this point. :)
+> > >
+> > > At this point, before adding the new disk, I'd suggest making *very*
+> > > sure that the event counters match on the three existing disks.
+> > > Because if they don't, MD will add the new disk with an event counter
+> > > matching the freshest disk in the array.  That will cause it to start
+> > > synchronizing onto one of the good disks instead of onto the newly
+> > > added disk....  Happened to me once, gah.
 > >
-> > I'm just trying to mirror two disks - that's all. Is there a better way?
-> 
-> The keyword(s) here is _same disk_.
-> 
-> This is a very complicated way to do it... The idea behind partitioning the
-> disk(s) this way (many partition, one partition for 'each important FS') is
-> 'to protect the root partition' (or rather 'protect the file systems from
-> each others failures'). That is, a crash in the /var FS (or that partition)
-> will not interfere against the /usr FS/partition etc...
+> > Ack!  I didn't know that.  If the event counters don't match up, what
+> > can you do to correct the problem?
 
-There are other reasons to use multiple partitions.  Having /home as a 
-separate partition, e.g., allows one to reinstall without copying the data 
-off to another machine.  It also prevents a user from filling up the root 
-fs, which often has bad consequences.  The same goes for partitions for 
-/tmp and/or /var.
+Daniel Pittman wrote:
+> Ack!  I didn't know that.  If the event counters don't match up, what
+> can you do to correct the problem?
 
-> Just create ONE partition (plus a swap on each disk, totaling the total amount
-> of swap you want/need) and set that up as md0 (mounted as /) and that's it!
+In the 2.4 days, I think I used to plug cables in and out of the
+disks, rebooting the system again and again until the counters were
+aligned.
 
-But then if a disk dies, the system is still going to crash, b/c half the 
-swap is suddenly gone.  If you want the system to not crash if a disk 
-dies, then you must mirror swap as well.
+Neil Brown wrote:
+> The "--assemble --force" should result in all the event counters of
+> the named drives being the same.  Then it should be perfectly safe the
+> add the new drive.
 
--- 
-Joshua Baker-LePain
-Department of Biomedical Engineering
-Duke University
+Sounds like a better option!
+
+> I cannot quite imagine a situation as described by Molle.
+
+Fair enough, the situation just struck me as something I had seen
+before, and it doesn't hurt to be sure..
+
+> If it was at all reproducible I'd love to hear more details.
+
+I'd rather not reproduce it :-).
+
+It's happened a couple of times on a production system..
+Once back when it was running 2.4 and an old version of MD, and once
+while I was in the process of upgrading the box to 2.6 (so it might
+have been while it was booted into 2.4.. not sure).  The box used to
+have two disks failing from time to time, one due to a semi-bad disk
+and one due to a flaky SATA cable.
+
+That's about all I can remember on top of my head.
