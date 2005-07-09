@@ -1,58 +1,120 @@
 From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: Re[2]: Bugreport mdadm-2.0-devel-1
-Date: Sat, 9 Jul 2005 11:33:46 +1000
-Message-ID: <17103.10618.547298.274604@cse.unsw.edu.au>
-References: <1684363827.20050706121331@netvision.net.il>
-	<17100.29413.164442.415932@cse.unsw.edu.au>
-	<1892534227.20050707043013@netvision.net.il>
+Subject: Re: RAID1 assembly requires manual "mdadm --run"
+Date: Sat, 9 Jul 2005 11:44:28 +1000
+Message-ID: <17103.11260.748962.629919@cse.unsw.edu.au>
+References: <200506261621.01799.mlaks@verizon.net>
+	<62b0912f05070623185b90e732@mail.gmail.com>
+	<17102.26306.174427.502866@cse.unsw.edu.au>
+	<62b0912f05070811386bf7c72d@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Maxim Kozover on Thursday July 7
+In-Reply-To: message from Molle Bestefich on Friday July 8
 Sender: linux-raid-owner@vger.kernel.org
-To: Maxim Kozover <maximkoz@netvision.net.il>
+To: Molle Bestefich <molle.bestefich@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday July 7, maximkoz@netvision.net.il wrote:
-> Hi Neil!
-> Thanks much for your help, array creation using devel-2 just works,
-> however, the array can't be assembled again after it's stopped:(
+On Friday July 8, molle.bestefich@gmail.com wrote:
+> 
+> So a clean RAID1 with a disk missing should start without --run, just
+> like a clean RAID5 with a disk missing?
 
-Hmm, yeh, nor it can :-(
+Anything degraded needs at least --run or --scan.
 
-I'm not sure when I'll have time to look at this (I'm on leave at the
-moment with family visiting and such) but I'll definitely get back to
-you by Thursday if not before.
+> 
+> Nevermind, I'll try to reproduce it instead of asking too many questions.
+> And I suck a bit at testing MD with loop devices, so if someone could
+> pitch in and tell me what I'm doing wrong here, I'd appreciate it very
+> much (-:
+> 
+> # mknod /dev/md0 b 9 0
+> # dd if=/dev/zero of=test1 bs=1M count=100
+> # dd if=/dev/zero of=test2 bs=1M count=100
+> # dd if=/dev/zero of=test3 bs=1M count=100
+> # losetup /dev/loop1 test1
+> # losetup /dev/loop2 test2
+> # losetup /dev/loop3 test3
+> # mdadm --create /dev/md0 -l 1 -n 3 /dev/loop1 /dev/loop2 /dev/loop3
+> mdadm: array /dev/md0 started.
+> 
+> # mdadm --detail --scan > /etc/mdadm.conf
+> # cat /etc/mdadm.conf
+> ARRAY /dev/md0 level=raid1 num-devices=3
+>    UUID=1dcc972f:0b856580:05c66483:e14940d8
+>    devices=/dev/loop/1,/dev/loop/2,/dev/loop/3
 
-Thanks,
+/dev/loop/N is reported instead of /dev/loopN because mdadm only has
+major/minor device numbers to go on and scans /dev, returning the
+first name it finds. 1.12.0 returns the shortest name it finds.
+
+
+> 
+> # mdadm --stop /dev/md0
+> # mdadm --assemble --scan
+> mdadm: no devices found for /dev/md0
+> 
+> // ^^^^^^^^^^^^^^^^^^^^^^^^  ??? Why?
+
+The ARRAY line doesn't tell mdadm where to find the array.  It only
+tells mdadm how to recognised the components when they are found(*).
+The DEVICES line (which you don't have) tells mdadm where to find
+components.
+So:
+  echo 'DEVICES /dev/loop?' > /etc/mdadm.conf
+  mdadm --detail --scan >> /etc/mdadm.conf
+  mdadm --stop /dev/md0
+  mdadm --assemble --scan
+should work
+
+> 
+> # mdadm --assemble /dev/md0 /dev/loop1 /dev/loop2 /dev/loop3
+> mdadm: /dev/md0 has been started with 3 drives.
+> 
+> // So far so good..
+> 
+> # mdadm --stop /dev/md0
+> # losetup -d /dev/loop3
+> # mdadm --assemble /dev/md0 /dev/loop1 /dev/loop2 /dev/loop3
+> mdadm: no RAID superblock on /dev/loop7
+> mdadm: /dev/loop7 has no superblock - assembly aborted
+> 
+> // ^^^^^^^^^^^^^^^^^^^^^^^^  ??? It aborts :-(...
+> // Doesn't an inactive loop device seem the same as a missing disk
+> to MD?
+
+I assume that is loop3, not loop7 ??
+
+You have asked mdadm to assemble /dev/loop1 /dev/loop2 and /dev/loop3
+into an array.  But it can tell that they are not all parts of the
+same array (infact loop3 isn't part of an array at all).
+The only parts of the array that you currently have are on /dev/loop1
+and /dev/loop2. So you want to
+
+  mdadm --assemble /dev/md0 --run /dev/loop1 /dev/loop2
+(you need --run to convince mdadm that you know what you are doing).
+Not that with /dev/loop3 no funcitoning,
+  mdadm --assemble --scan
+will still work.
 
 NeilBrown
 
-> 
-> # mdadm --zero-superblock -e 1 /dev/sdb
-> # mdadm --zero-superblock -e 1 /dev/sdc
-> # /bin/rm -rf /bitmap
-> # mdadm -C /dev/md0 -e 1 --bitmap /bitmap -l 1 -n 2 /dev/sdb /dev/sdc
-> mdadm: array /dev/md0 started.
-> # more /proc/mdstat
-> Personalities : [raid1]
-> md0 : active raid1 sdc[1] sdb[0]
->       33554424 blocks [2/2] [UU]
->       [>....................]  resync =  0.6% (206400/33554424) finish=16.1min s
-> peed=34400K/sec
->       bitmap: 4096/4096 pages [16384KB], 4KB chunk, file: /bitmap
-> 
-> unused devices: <none>
-> # mdadm -S /dev/md0
-> # more /proc/mdstat
-> Personalities : [raid1]
-> unused devices: <none>
-> # mdadm -A /dev/md0 -e 1 --bitmap /bitmap /dev/sdb /dev/sdc
-> mdadm: device 1 in /dev/md0 has wrong state in superblock, but /dev/sdc seems ok
-> mdadm: failed to add /dev/sdc to /dev/md0: Invalid argument
-> mdadm: failed to add /dev/sdb to /dev/md0: Invalid argument
-> mdadm: /dev/md0 assembled from 0 drives - not enough to start the array.
-> (even if you stop the array after resync completes, it doesn't matter
-> as expected).
+
+(*)
+The mdadm.conf entry
+> ARRAY /dev/md0 level=raid1 num-devices=3
+>    UUID=1dcc972f:0b856580:05c66483:e14940d8
+>    devices=/dev/loop/1,/dev/loop/2,/dev/loop/3
+
+tells mdadm:
+  You can recognise components of /dev/md0 as they have a raid
+  superblock which records the level as 'raid1', the number of devices
+  as '3', the UUID as 1dcc972f:0b856580:05c66483:e14940d8, and they
+  will only be on one of the devices /dev/loop/1, /dev/loop/2, or
+  /dev/loop/3.
+
+Normally you will not want the 'devices=' section and mdadm 1.12.0
+won't report if unless you give a '-v'.
+
+NeilBrown
