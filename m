@@ -1,81 +1,32 @@
-From: Eric Sandall <eric@sandall.us>
-Subject: Re: mdadm memory leak?
-Date: Sat, 9 Jul 2005 13:11:10 -0700 (PDT)
-Message-ID: <Pine.LNX.4.63.0507091309380.486@cerberus>
-References: <42CA0B7E.4040109@shlrm.org> <17098.4949.378512.822529@cse.unsw.edu.au>
- <Pine.LNX.4.63.0507050831130.15691@cerberus> <17098.63205.207499.40820@cse.unsw.edu.au>
- <Pine.LNX.4.63.0507051458380.7296@cerberus> <17099.13342.229652.667901@cse.unsw.edu.au>
+From: Devon Brobst <McGuinn585@terra.com>
+Subject: Make money at home part time
+Date: Sat, 09 Jul 2005 21:15:52 +0000
+Message-ID: <300701c584cb$dfd9cefc$75be82ea@terra.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain;
+    format=flowed;
+    charset="iso-8859-1";
+    reply-type=original
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17099.13342.229652.667901@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: Eric Sandall <eric@sandall.us>, David Kowis <dkowis@shlrm.org>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+Do you want to make money working at home? Do you need second income source?
+We need right candidates that would like to make money from home!
+No special skills required! No fees to start! We will train you.
+Your personal coach will explain you how to put the internet and your computer to work for you.
+Work around YOUR Schedule! The more you work, the more you make.
+You can start part time until you're ready to go full-time or start full time right away.
+Our company is designed to take advantage of the exploding internet technology market.
+Unlimited Income Potential! Take Action and Start Doing Something Positive TODAY!
+Remember there are no costs to start working with our company.
+You can try it on for size without jeopardizing your current position!
+Take the vacation of your dreams, buy a better car, and build your dream home!
+Live Life To Its Fullest! You can do it all!
 
-On Wed, 6 Jul 2005, Neil Brown wrote:
-> On Tuesday July 5, eric@sandall.us wrote:
->> Which kernel is that against? It doesn't apply against my 2.6.10-as7
->> nor David Kowis' 2.6.12.1 and 2.6.11.12 kernel source trees
->> (I don't even have the super_written function the patch is referring
->> to)?
->
-> It was against ... 2.6.12-mm1 or similar I think.  Looks like the bug
-> didn't get to main-line until just before the fix, which it good.
->
-> 2.6.10-as7 seems to have a different though related bug.
-> It contains the patch:
-> http://www.acm.cs.rpi.edu/~dilinger/patches/2.6.10/as7/linux-2.6.10-as7/051-md_sync_page_io_max_vecs.patch
->
-> which contains:
-> diff -Nru a/drivers/md/md.c b/drivers/md/md.c
-> --- a/drivers/md/md.c	2005-01-22 00:16:02 -08:00
-> +++ b/drivers/md/md.c	2005-01-22 00:16:02 -08:00
-> @@ -332,29 +332,26 @@
-> static int sync_page_io(struct block_device *bdev, sector_t sector, int size,
-> 		   struct page *page, int rw)
-> {
-> -	struct bio bio;
-> -	struct bio_vec vec;
-> +	struct bio *bio = bio_alloc(GFP_KERNEL, 1);
-> 	struct completion event;
-> +	int ret;
-> +
-> +	bio_get(bio);
-> ....
-> +	bio_put(bio);
-> +	return ret;
-> }
->
-> bio_alloc sets the refcount to 1.
-> bio_get increments it to 2.
-> bio_put sets it back to 1.  But it never reaches zero.
->
-> You want to get rid of that bio_get near the top of sync_page_io.
+APPLY NOW to find out more about this exciting opportunity.
+To carry on with the application or to get more information, please fill out request form at:
 
-I've patched[0] my kernel with that and recompiled it, but haven't
-rebooted into it yet as I have some processes running that I don't
-want to kill until they've finished.
-
-Should be good to go tomorrow, then I'll report back, thanks. :)
-
-- -sandalle
-
-[0] Removing only the bio_get(bio);, not applying the entire patch.
-
-- --
-Eric Sandall                     |  Source Mage GNU/Linux Developer
-eric@sandall.us                  |  http://www.sourcemage.org/
-http://eric.sandall.us/          |  SysAdmin @ Inst. Shock Physics @ WSU
-http://counter.li.org/  #196285  |  http://www.shock.wsu.edu/
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-
-iD8DBQFC0C9hHXt9dKjv3WERAqgFAJ9UsWg7gtm2aUv/rLtPnjsBrV6A7QCgww1F
-r7s0Th0J5LMLXIkfdyv5G/8=
-=tMC0
------END PGP SIGNATURE-----
+http://www.globaltransfer.org/vacancies.html
