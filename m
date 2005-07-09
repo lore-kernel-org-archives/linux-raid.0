@@ -1,50 +1,58 @@
-From: Tyler <pml@dtbb.net>
-Subject: Re: linux-raid compatable w/ Adaptec AIC-7902?
-Date: Fri, 08 Jul 2005 16:20:08 -0700
-Message-ID: <42CF0A28.9080603@dtbb.net>
-References: <Pine.LNX.4.44.0507081852360.29479-100000@coffee.psychology.mcmaster.ca>
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: Re[2]: Bugreport mdadm-2.0-devel-1
+Date: Sat, 9 Jul 2005 11:33:46 +1000
+Message-ID: <17103.10618.547298.274604@cse.unsw.edu.au>
+References: <1684363827.20050706121331@netvision.net.il>
+	<17100.29413.164442.415932@cse.unsw.edu.au>
+	<1892534227.20050707043013@netvision.net.il>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44.0507081852360.29479-100000@coffee.psychology.mcmaster.ca>
+In-Reply-To: message from Maxim Kozover on Thursday July 7
 Sender: linux-raid-owner@vger.kernel.org
-To: Mark Hahn <hahn@physics.mcmaster.ca>
+To: Maxim Kozover <maximkoz@netvision.net.il>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Mark Hahn wrote:
+On Thursday July 7, maximkoz@netvision.net.il wrote:
+> Hi Neil!
+> Thanks much for your help, array creation using devel-2 just works,
+> however, the array can't be assembled again after it's stopped:(
 
->>>>>  md0          /boot      sd[ab]1
->>>>>  md1          /          sd[ab]2
->>>>>  md2          /usr       sd[ab]3
->>>>>  md3          /var       sd[ab]4
->>>>>          
->>>>>
->...
->  
->
->>There are other reasons to use multiple partitions.  Having /home as a 
->>separate partition, e.g., allows one to reinstall without copying the data 
->>off to another machine.  It also prevents a user from filling up the root 
->>fs, which often has bad consequences.  The same goes for partitions for 
->>/tmp and/or /var.
->>    
->>
->
->one very serious problem with this approach is that each filesystem
->will probably be journaled, which means that it'll spend a lot of time
->shuttling the heads between journal and data areas.  if you have activity
->on /, /usr and /var at the same time, your heads will do little other 
->than rush madly around.  in cases where this can't be avoided (for instance,
->using quotas to eliminate the user-fills-partition problem), you can 
->often improve things markedly by turning on noatime/nodiratime.
->
->  
->
-Also, depending on the file system, you can set reserved space 
-percentage for root with tools such as tune2fs.
+Hmm, yeh, nor it can :-(
 
-Tyler.
+I'm not sure when I'll have time to look at this (I'm on leave at the
+moment with family visiting and such) but I'll definitely get back to
+you by Thursday if not before.
 
+Thanks,
 
+NeilBrown
+
+> 
+> # mdadm --zero-superblock -e 1 /dev/sdb
+> # mdadm --zero-superblock -e 1 /dev/sdc
+> # /bin/rm -rf /bitmap
+> # mdadm -C /dev/md0 -e 1 --bitmap /bitmap -l 1 -n 2 /dev/sdb /dev/sdc
+> mdadm: array /dev/md0 started.
+> # more /proc/mdstat
+> Personalities : [raid1]
+> md0 : active raid1 sdc[1] sdb[0]
+>       33554424 blocks [2/2] [UU]
+>       [>....................]  resync =  0.6% (206400/33554424) finish=16.1min s
+> peed=34400K/sec
+>       bitmap: 4096/4096 pages [16384KB], 4KB chunk, file: /bitmap
+> 
+> unused devices: <none>
+> # mdadm -S /dev/md0
+> # more /proc/mdstat
+> Personalities : [raid1]
+> unused devices: <none>
+> # mdadm -A /dev/md0 -e 1 --bitmap /bitmap /dev/sdb /dev/sdc
+> mdadm: device 1 in /dev/md0 has wrong state in superblock, but /dev/sdc seems ok
+> mdadm: failed to add /dev/sdc to /dev/md0: Invalid argument
+> mdadm: failed to add /dev/sdb to /dev/md0: Invalid argument
+> mdadm: /dev/md0 assembled from 0 drives - not enough to start the array.
+> (even if you stop the array after resync completes, it doesn't matter
+> as expected).
