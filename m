@@ -1,41 +1,60 @@
-From: Ming Zhang <mingz@ele.uri.edu>
-Subject: Re: skip raid5 reconstruction
-Date: Fri, 08 Jul 2005 15:25:26 -0400
-Message-ID: <1120850726.26926.2.camel@localhost.localdomain>
-References: <1120584167.5535.56.camel@localhost.localdomain>
-	 <42CB7E65.5010204@wasp.net.au>
-	 <1120825366.5461.14.camel@localhost.localdomain>
-	 <42CEC269.6010205@wasp.net.au>
-Reply-To: mingz@ele.uri.edu
+From: "quazi " <quazi41hossain@yahoo.com>
+Subject: How about looking out for a business we can go into
+Date: Fri, 08 Jul 2005 22:51:58 -0300
+Message-ID: <125d01c5840f$a5721460$2b99d528@quazi41hossain>
+Reply-To: "quazi " <quazi41hossain@yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <42CEC269.6010205@wasp.net.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Brad Campbell <brad@wasp.net.au>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Administrator <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Fri, 2005-07-08 at 22:14 +0400, Brad Campbell wrote:
-> Ming Zhang wrote:
-> 
-> >>I did a similar thing a while back.
-> >>I created the raid and waited for it to sync, I then make dd copies of the raid superblocks.
-> >>When I blew it up I just dd the clean superblocks back again (saved a 12 hour rebuild time)
-> > 
-> > interesting to know about this. u just check the dmesg and see where is
-> > the sb and then u dd it out and dd back later?
-> 
-> Actually, I used blockdev to get the device size and then just copied the last 64kb from memory.. 
-> It's a bit hazy now but that's pretty close I think
-> 
-:P that is a good method!
+Hello!
+Compliments
+I have been searching for a person whom we can jointly invest, Trust in and
+also solicit an honorable partnership with. 
+I want to confirm that your contact information was got from a web email
+directory. I represent a client who is interested in investing in your
+country in areas related to agriculture or any business of your choice, to
+initiate a proper and structured relationship. Please let me know what your
+response will be to an offer to receive investment funds in cash if; 
+1. The said fund amounts to US$8,500,000 (Eight Million, Five hundred
+Thousand US Dollars).
+2. The said fund is in cash and needs to be transferred in the same state,
+due to some covert reasons.
+3. The fund could be invested through your agency in the purchase of
+facility and assets for investment purposes within your country, in
+collaboration with the agency of the current brokers.
+4. This transaction will result in you being paid a commission of 10% off
+the investment capital.
+5. The fund owners desire absolute confidentiality and professionalism
+in the handling of this matter, due to risks of seizure of the fund and
+litigation if personalities are revealed. 
+The fund owners have interest to invest in any of the following industries,
+depending on which is most transparent, low risk, and average profit
+yielding: Power Generation, Telecommunication and Software Development, Film
+Production, Hardware Manufacturing and Export, Medicine, Construction or
+Real-Estate Development.
+Based upon the information provided above, I would like to know if you
+shall be able to assist in the nature of managing the investment fund. You
+must note that the fund can only be transferred in cash, therefore if you
+are in acceptance to participate with us in the investment of the fund, you
+shall also need to participate with us in the transfer of the fund in cash
+in the manner of receiving the fund in cash and depositing it in a Trusted
+account opened in favour of the investment to be established.
+And this account would serve as the base or operating account for the
+investment. I am obliged to believe that you would be able to understand the
+information above, and should you need further information, please do not
+hesitate to ask.
+Kindly confirm receipt of this email by sending all correspondence to:
+quazihossain44@netscape.net
 
-thx
+Sincerely,
 
-ming
+Quazi Hossain  (Esq)
 
-> Regards
-> Brad
+
 
