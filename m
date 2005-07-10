@@ -1,32 +1,133 @@
-From: Devon Brobst <McGuinn585@terra.com>
-Subject: Make money at home part time
-Date: Sat, 09 Jul 2005 21:15:52 +0000
-Message-ID: <300701c584cb$dfd9cefc$75be82ea@terra.com>
+From: Molle Bestefich <molle.bestefich@gmail.com>
+Subject: Re: RAID1 assembly requires manual "mdadm --run"
+Date: Sun, 10 Jul 2005 11:10:46 +0200
+Message-ID: <62b0912f05071002106c833601@mail.gmail.com>
+References: <200506261621.01799.mlaks@verizon.net>
+	 <62b0912f05070623185b90e732@mail.gmail.com>
+	 <17102.26306.174427.502866@cse.unsw.edu.au>
+	 <62b0912f05070811386bf7c72d@mail.gmail.com>
+	 <42CF0849.1000103@dtbb.net>
+Reply-To: Molle Bestefich <molle.bestefich@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-    format=flowed;
-    charset="iso-8859-1";
-    reply-type=original
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <42CF0849.1000103@dtbb.net>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Tyler <pml@dtbb.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Do you want to make money working at home? Do you need second income source?
-We need right candidates that would like to make money from home!
-No special skills required! No fees to start! We will train you.
-Your personal coach will explain you how to put the internet and your computer to work for you.
-Work around YOUR Schedule! The more you work, the more you make.
-You can start part time until you're ready to go full-time or start full time right away.
-Our company is designed to take advantage of the exploding internet technology market.
-Unlimited Income Potential! Take Action and Start Doing Something Positive TODAY!
-Remember there are no costs to start working with our company.
-You can try it on for size without jeopardizing your current position!
-Take the vacation of your dreams, buy a better car, and build your dream home!
-Live Life To Its Fullest! You can do it all!
+Tyler wrote:
+> Molle Bestefich wrote:
+>> Neil Brown wrote:
+>>> Molle Bestefich wrote:
+>>>> Mitchell Laks wrote:
+>>>>> However I think that raids should boot as long as they are
+intact, as a matter
+>>>>> of policy. Otherwise we lose our  ability to rely upon them for remote
+>>>>> servers...
+>>>>>
+>>>>>
+>>>> It does seem wrong that a RAID 5 starts OK with a disk missing, but a
+>>>> RAID 1 fails.
+>>>>
+>>>> Perhaps MD is unable to tell which disk in the RAID 1 is the freshest
+>>>> and therefore refuses to assemble any RAID 1's with disks missing?
+>>>>
+>>>>
+>>> This doesn't sound right at all.
+>>>
+>>> "--run" is required to start a degraded array as a way of confirming
+>>> to mdadm that you really have listed all the drives available.
+>>> The normal way of starting an array at boot time is by describing the
+>>> array (usually by UUID) in mdadm.conf and letting mdadm find the
+>>> component devices with "mdadm --assemble --scan".
+>>>
+>>> This usage does not require --run.
+>>>
+>>> The only time there is a real reluctance to start a degraded array is
+>>> when it is raid5/6 and it suffered an unclean shutdown.
+>>> A dirty, degraded raid5/6 can have undetectably data corruption, and I
+>>> really want you to be aware of that and not just assume that "because
+>>> it started, the data must be OK".
+>>>
+>>>
+>>
+>> Sounds very sane.
+>>
+>> So a clean RAID1 with a disk missing should start without --run, just
+>> like a clean RAID5 with a disk missing?
+>>
+>> Nevermind, I'll try to reproduce it instead of asking too many questions.
+>> And I suck a bit at testing MD with loop devices, so if someone could
+>> pitch in and tell me what I'm doing wrong here, I'd appreciate it very
+>> much (-:
+>>
+>> # mknod /dev/md0 b 9 0
+>> # dd if=/dev/zero of=test1 bs=1M count=100
+>> # dd if=/dev/zero of=test2 bs=1M count=100
+>> # dd if=/dev/zero of=test3 bs=1M count=100
+>> # losetup /dev/loop1 test1
+>> # losetup /dev/loop2 test2
+>> # losetup /dev/loop3 test3
+>> # mdadm --create /dev/md0 -l 1 -n 3 /dev/loop1 /dev/loop2 /dev/loop3
+>> mdadm: array /dev/md0 started.
+>>
+>> # mdadm --detail --scan > /etc/mdadm.conf
+>> # cat /etc/mdadm.conf
+>> ARRAY /dev/md0 level=raid1 num-devices=3
+>>    UUID=1dcc972f:0b856580:05c66483:e14940d8
+>>    devices=/dev/loop/1,/dev/loop/2,/dev/loop/3
+>>
+>>
+> Why does this show /dev/loop/1 instead of /dev/loop1 ?
 
-APPLY NOW to find out more about this exciting opportunity.
-To carry on with the application or to get more information, please fill out request form at:
+Hm!  Didn't spot that.
+This machine is using udev, so /dev/loopx is a symbolic link to /dev/loop/x.
+I haven't got a clue why DM resolves the link..
 
-http://www.globaltransfer.org/vacancies.html
+But since mdadm --assemble --scan doesn't seem to work correctly using
+this example, and I'm punching in loop device names anyway, it's less
+important..
+
+>> # mdadm --stop /dev/md0
+>> # mdadm --assemble --scan
+>> mdadm: no devices found for /dev/md0
+>>
+>> // ^^^^^^^^^^^^^^^^^^^^^^^^  ??? Why?
+>>
+>> # mdadm --assemble /dev/md0 /dev/loop1 /dev/loop2 /dev/loop3
+>> mdadm: /dev/md0 has been started with 3 drives.
+>>
+>> // So far so good..
+>>
+>> # mdadm --stop /dev/md0
+>> # losetup -d /dev/loop3
+>> # mdadm --assemble /dev/md0 /dev/loop1 /dev/loop2 /dev/loop3
+>> mdadm: no RAID superblock on /dev/loop7
+>> mdadm: /dev/loop7 has no superblock - assembly aborted
+>>
+>>
+> Where's loop7 coming from all of a sudden? I thought you were using
+> loop1, loop2, loop3
+
+Ehehe.. Oops.
+I redid the test with different loop devices, just to be sure.
+
+Copy/pasted from the wrong place in the terminal window.
+Sorry for the confusion.  Just imagine that the 7 is really a 3 :-).
+
+>> // ^^^^^^^^^^^^^^^^^^^^^^^^  ??? It aborts :-(...
+>> // Doesn't an inactive loop device seem the same as a missing disk to MD?
+>>
+>> # rm -f /dev/loop3
+>> # mdadm --assemble /dev/md0 /dev/loop1 /dev/loop2 /dev/loop3
+>> mdadm: cannot open device /dev/loop7: No such file or directory
+>> mdadm: /dev/loop7 has no superblock - assembly aborted
+>>
+>>
+> Once again, where is loop7 coming from?
+
+Same as above.
