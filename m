@@ -1,10 +1,9 @@
-From: "bart@ardistech.com" <bart@ardistech.com>
-Subject: How to auto rebuild array?
-Date: Tue, 12 Jul 2005 15:46:00 +0200
-Message-ID: <42D3C998.3F84EF1C@ardistech.com>
-Reply-To: bart@ardistech.com
+From: Laurent CARON <lcaron@apartia.fr>
+Subject: Raid, resync and hotspare
+Date: Tue, 12 Jul 2005 17:33:08 +0200
+Message-ID: <42D3E2B4.1070605@apartia.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
@@ -13,25 +12,22 @@ List-Id: linux-raid.ids
 
 Hi,
 
-I have the problem that after a power failure I get the message:
+I recently moved a server from old disks to now ones and added a 
+hotspare (mdadm /dev/md1 -a /dev/sdf2)
 
-Jul 12 15:29:17 kernel: md: created md3
-Jul 12 15:29:17 kernel: md: bind<hda4>
-Jul 12 15:29:17 kernel: md: bind<hdb4>
-Jul 12 15:29:17 kernel: md: bind<hde4>
-Jul 12 15:29:17 kernel: md: bind<hdf4>
-Jul 12 15:29:17 kernel: md: running: <hdf4><hde4><hdb4><hda4>
-Jul 12 15:29:17 kernel: md: kicking non-fresh hde4 from array!
-Jul 12 15:29:17 kernel: md: unbind<hde4>
+the hotspare appears in  /proc/mdstat
 
-I understand that hde4 is not 'fresh' and the array need to be rebuild
-but I only can do that with 'mdadm --add /dev/md3 /dev/hde4'. I would
-like to have it turned into a hot-spare, in which case a rebuild would
-start automatic.
+Personalities : [linear] [raid0] [raid1] [raid5] [multipath] [raid6]
+md1 : active raid5 sdf2[5] sde2[4] sdd2[3] sdc2[2] sdb2[1] sda2[0]
+      285699584 blocks level 5, 64k chunk, algorithm 2 [5/5] [UUUUU]
 
-This application runs unattended, so there is nobody there to enter
-mdadm commands.... How can I make the rebuild starting automatic
-(like a hardware raidcard does)?
 
-Regards,
-	Bart
+when I fail a disk, mdadm does *not* send me any warning.
+
+Only at the second failure when the array is in degraded state I receive 
+a warning.
+
+How may I receive a warning when the hotspare disk has been used to cope 
+with a disk failure?
+
+Thanks
