@@ -1,66 +1,38 @@
-From: Rui Santos <rsantos@ruisantos.com>
-Subject: Re: How to auto rebuild array?
-Date: Wed, 13 Jul 2005 21:45:16 +0100
-Message-ID: <42D57D5C.4070601@ruisantos.com>
-References: <42D3C998.3F84EF1C@ardistech.com>
+From: David Greaves <david@dgreaves.com>
+Subject: Re: RAID-5 streaming read performance
+Date: Wed, 13 Jul 2005 22:18:57 +0100
+Message-ID: <42D58541.7000702@dgreaves.com>
+References: <874qb14btr.fsf@uwo.ca>	 <1121220487.5552.34.camel@localhost.localdomain> <87mzorfmdx.fsf@uwo.ca>	 <1121257494.5504.4.camel@localhost.localdomain> <87eka2g9dp.fsf@uwo.ca>	 <1121259126.5504.14.camel@localhost.localdomain> <87vf3eeqe2.fsf@uwo.ca>	 <42D5573A.6090801@dgreaves.com> <1121278451.5504.79.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <42D3C998.3F84EF1C@ardistech.com>
+In-Reply-To: <1121278451.5504.79.camel@localhost.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: mingz@ele.uri.edu
+Cc: Dan Christensen <jdc@uwo.ca>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi Bart,
+Ming Zhang wrote:
 
-   Is that a RAID1 ou RAID5?
-
-   Can you give the output of these commands?
-
-   mdadm --misc -D /dev/md3
-   mdadm --misc -E /dev/hd{a,b,e,f}4
-
-   One other thing. Are you sure that all you raid partitions are marked 
-0xfd ?
-
-   Also attach you mdadm.conf/raidconf file, if you have any...
-
-Regards,
-Rui Santos
-
-bart@ardistech.com wrote:
-
->Hi,
+>>component partitions, e.g. /dev/sda7: 39MB/s
+>>raid device /dev/md2:                 31MB/s
+>>lvm device /dev/main/media:           53MB/s
+>>
+>>(oldish system - but note that lvm device is *much* faster)
+>>    
+>>
 >
->I have the problem that after a power failure I get the message:
->
->Jul 12 15:29:17 kernel: md: created md3
->Jul 12 15:29:17 kernel: md: bind<hda4>
->Jul 12 15:29:17 kernel: md: bind<hdb4>
->Jul 12 15:29:17 kernel: md: bind<hde4>
->Jul 12 15:29:17 kernel: md: bind<hdf4>
->Jul 12 15:29:17 kernel: md: running: <hdf4><hde4><hdb4><hda4>
->Jul 12 15:29:17 kernel: md: kicking non-fresh hde4 from array!
->Jul 12 15:29:17 kernel: md: unbind<hde4>
->
->I understand that hde4 is not 'fresh' and the array need to be rebuild
->but I only can do that with 'mdadm --add /dev/md3 /dev/hde4'. I would
->like to have it turned into a hot-spare, in which case a rebuild would
->start automatic.
->
->This application runs unattended, so there is nobody there to enter
->mdadm commands.... How can I make the rebuild starting automatic
->(like a hardware raidcard does)?
->
->Regards,
->	Bart
->-
->To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->
+>this is so interesting to see! seems that some read ahead parameters
+>have negative impact.
 >  
 >
+I guess each raw device does some readahead, then the md0 does some
+readahead and then the lvm does some readahead. Theoretically the md0
+and lvm should overlap - but I guess that much of the raw device level
+readahead is discarded.
+
+David
+
+-- 
 
