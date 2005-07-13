@@ -1,127 +1,66 @@
-From: Ming Zhang <mingz@ele.uri.edu>
-Subject: Re: RAID-5 streaming read performance
-Date: Wed, 13 Jul 2005 14:14:11 -0400
-Message-ID: <1121278451.5504.79.camel@localhost.localdomain>
-References: <874qb14btr.fsf@uwo.ca>
-	 <1121220487.5552.34.camel@localhost.localdomain> <87mzorfmdx.fsf@uwo.ca>
-	 <1121257494.5504.4.camel@localhost.localdomain> <87eka2g9dp.fsf@uwo.ca>
-	 <1121259126.5504.14.camel@localhost.localdomain> <87vf3eeqe2.fsf@uwo.ca>
-	 <42D5573A.6090801@dgreaves.com>
-Reply-To: mingz@ele.uri.edu
+From: Rui Santos <rsantos@ruisantos.com>
+Subject: Re: How to auto rebuild array?
+Date: Wed, 13 Jul 2005 21:45:16 +0100
+Message-ID: <42D57D5C.4070601@ruisantos.com>
+References: <42D3C998.3F84EF1C@ardistech.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <42D5573A.6090801@dgreaves.com>
+In-Reply-To: <42D3C998.3F84EF1C@ardistech.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Greaves <david@dgreaves.com>
-Cc: Dan Christensen <jdc@uwo.ca>, Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 2005-07-13 at 19:02 +0100, David Greaves wrote:
-> Dan Christensen wrote:
-> 
-> >Ming Zhang <mingz@ele.uri.edu> writes:
-> >
-> >  
-> >
-> >>test on a production environment is too dangerous. :P
-> >>and many benchmark tool u can not perform as well.
-> >>    
-> >>
-> >
-> >Well, I put "production" in quotes because this is just a home mythtv
-> >box.  :-)  So there are plenty of times when it is idle and I can do
-> >benchmarks.  But I can't erase the hard drives in my tests.
-> >  
-> >
-> Me too.
-> 
-> >>LVM overhead is small, but file system overhead is hard to say.
-> >>    
-> >>
-> >I expected LVM overhead to be small, but in my tests it is very high.
-> >I plan to discuss this on the lvm mailing list after I've got the RAID
-> >working as well as possible, but as an example:
-> >
-> >Streaming reads using dd to /dev/null:
-> >
-> >component partitions, e.g. /dev/sda7: 58MB/s
-> >raid device /dev/md2:                 59MB/s
-> >lvm device /dev/main/media:           34MB/s
-> >  
-> >
-> This is not my experience.
-> What are the readahead settings?
-> I found significant variation in performance by varying the readahead at
-> raw, md and lvm device level
-> 
-> In my setup I get
-> 
-> component partitions, e.g. /dev/sda7: 39MB/s
-> raid device /dev/md2:                 31MB/s
-> lvm device /dev/main/media:           53MB/s
-> 
-> (oldish system - but note that lvm device is *much* faster)
+Hi Bart,
 
-this is so interesting to see! seems that some read ahead parameters
-have negative impact.
+   Is that a RAID1 ou RAID5?
 
+   Can you give the output of these commands?
 
-> 
-> For your entertainment you may like to try this to 'tune' your readahead
-> - it's OK to use so long as you're not recording:
-> 
-> (FYI I find that setting readahead to 0 on all devices and 4096 on the
-> lvm device gets me the best performance - which makes sense if you think
-> about it...)
-> 
-> #!/bin/bash
-> RAW_DEVS="/dev/sda /dev/sdb /dev/sdc /dev/sdd /dev/sde /dev/sdf /dev/hdb"
-> MD_DEVS=/dev/md0
-> LV_DEVS=/dev/huge_vg/huge_lv
-> 
-> LV_RAS="0 128 256 1024 4096 8192"
-> MD_RAS="0 128 256 1024 4096 8192"
-> RAW_RAS="0 128 256 1024 4096 8192"
-> 
-> function show_ra()
-> {
-> for i in $RAW_DEVS $MD_DEVS $LV_DEVS
-> do echo -n "$i `blockdev --getra $i`  ::  "
-> done
-> echo
-> }
-> 
-> function set_ra()
-> {
->  RA=$1
->  shift
->  for dev in $@
->  do
->    blockdev --setra $RA $dev
->  done
-> }
-> 
-> function show_performance()
-> {
->  COUNT=4000000
->  dd if=$LV_DEVS of=/dev/null count=$COUNT 2>&1 | grep seconds
-> }
-> 
-> for RAW_RA in $RAW_RAS
->  do
->  set_ra $RAW_RA $RAW_DEVS
->  for MD_RA in $MD_RAS
->    do
->    set_ra $MD_RA $MD_DEVS
->    for LV_RA in $LV_RAS
->      do
->      set_ra $LV_RA $LV_DEVS
->      show_ra
->      show_performance
->      done
->    done
->  done
-> 
+   mdadm --misc -D /dev/md3
+   mdadm --misc -E /dev/hd{a,b,e,f}4
+
+   One other thing. Are you sure that all you raid partitions are marked 
+0xfd ?
+
+   Also attach you mdadm.conf/raidconf file, if you have any...
+
+Regards,
+Rui Santos
+
+bart@ardistech.com wrote:
+
+>Hi,
+>
+>I have the problem that after a power failure I get the message:
+>
+>Jul 12 15:29:17 kernel: md: created md3
+>Jul 12 15:29:17 kernel: md: bind<hda4>
+>Jul 12 15:29:17 kernel: md: bind<hdb4>
+>Jul 12 15:29:17 kernel: md: bind<hde4>
+>Jul 12 15:29:17 kernel: md: bind<hdf4>
+>Jul 12 15:29:17 kernel: md: running: <hdf4><hde4><hdb4><hda4>
+>Jul 12 15:29:17 kernel: md: kicking non-fresh hde4 from array!
+>Jul 12 15:29:17 kernel: md: unbind<hde4>
+>
+>I understand that hde4 is not 'fresh' and the array need to be rebuild
+>but I only can do that with 'mdadm --add /dev/md3 /dev/hde4'. I would
+>like to have it turned into a hot-spare, in which case a rebuild would
+>start automatic.
+>
+>This application runs unattended, so there is nobody there to enter
+>mdadm commands.... How can I make the rebuild starting automatic
+>(like a hardware raidcard does)?
+>
+>Regards,
+>	Bart
+>-
+>To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
+>  
+>
 
