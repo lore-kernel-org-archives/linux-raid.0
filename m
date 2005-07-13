@@ -1,33 +1,35 @@
 From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: disk failed, operator error: Now can't use RAID
-Date: Thu, 14 Jul 2005 17:03:57 +1000
-Message-ID: <17110.3677.293133.503161@cse.unsw.edu.au>
-References: <7500724905071314574a13d966@mail.gmail.com>
-	<7500724905071317297f7277a7@mail.gmail.com>
+Subject: Re: RAID-5 streaming read performance
+Date: Thu, 14 Jul 2005 08:42:47 +1000
+Message-ID: <17109.39143.863798.150755@cse.unsw.edu.au>
+References: <874qb14btr.fsf@uwo.ca>
+	<1121220487.5552.34.camel@localhost.localdomain>
+	<87mzorfmdx.fsf@uwo.ca>
+	<1121257494.5504.4.camel@localhost.localdomain>
+	<87eka2g9dp.fsf@uwo.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Hank Barta on Wednesday July 13
+In-Reply-To: message from Dan Christensen on Wednesday July 13
 Sender: linux-raid-owner@vger.kernel.org
-To: Hank Barta <hbarta@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Dan Christensen <jdc@uwo.ca>
+Cc: mingz@ele.uri.edu, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wednesday July 13, hbarta@gmail.com wrote:
-> 
-> I would very much appreciate suggestions on how to get the raid
-> running again.
+On Wednesday July 13, jdc@uwo.ca wrote:
+> Question for the list:  if I'm doing a long sequential write, naively
+> each parity block will get recalculated and rewritten several times,
+> once for each non-parity block in the stripe.  Does the write-caching
+> that the kernel does mean that each parity block will only get written
+> once?
 
-Remove the 
->    devices=/dev/hde1,/dev/sdd1,/dev/sdc1,/dev/sdb1,/dev/sda1
+Raid5 does the best it can.  It delays write requests as long as
+possible, and then when it must do the write, it writes every other
+block in the stripe that it has been asked to write, so only one
+parity update is needed for all those blocks.
 
-line from mdadm.conf (it is wrong and un-needed).
-
-Then
-  mdadm -S /dev/md0  # just to be sure
-  mdadm -A /dev/md0 -f /dev/sd[abcd]1 /dev/hd[eg]1
-
-and see if that works.
+My tests suggest that for long sequential writes (Without syncs) this
+achieves full-stripe writes most of the time.
 
 NeilBrown
