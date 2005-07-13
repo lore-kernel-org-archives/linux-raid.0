@@ -1,67 +1,146 @@
-From: Louis-David Mitterrand <vindex@apartia.org>
-Subject: Re: Raid, resync and hotspare
-Date: Wed, 13 Jul 2005 16:54:26 +0200
-Message-ID: <20050713145426.GA30370@apartia.fr>
-References: <42D3E2B4.1070605@apartia.fr>
+From: James Pearson <james-p@moving-picture.com>
+Subject: Oops when starting md multipath on a 2.4 kernel
+Date: Wed, 13 Jul 2005 17:51:55 +0100
+Message-ID: <42D546AB.6060101@moving-picture.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <42D3E2B4.1070605@apartia.fr>
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
-Cc: Laurent Caron <lcaron@apartia.fr>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Jul 12, 2005 at 05:33:08PM +0200, Laurent Caron wrote:
-> Hi,
-> 
-> I recently moved a server from old disks to now ones and added a 
-> hotspare (mdadm /dev/md1 -a /dev/sdf2)
-> 
-> the hotspare appears in  /proc/mdstat
-> 
-> Personalities : [linear] [raid0] [raid1] [raid5] [multipath] [raid6]
-> md1 : active raid5 sdf2[5] sde2[4] sdd2[3] sdc2[2] sdb2[1] sda2[0]
->      285699584 blocks level 5, 64k chunk, algorithm 2 [5/5] [UUUUU]
-> 
-> 
-> when I fail a disk, mdadm does *not* send me any warning.
+We have an existing system runing a 2.4.27 based kernel that uses md 
+multipath and external fibre channel arrays.
 
-From the mdamd man page:
+We need to add more internal disks to the system, which means the 
+external drives change device names.
 
-	Only  Fail , FailSpare , DegradedArray , and TestMessage cause Email to be
-	sent.
+When I tried to start the md multipath device using mdadm, the kernel 
+Oops'd. Removing the new internal disks and going back the original 
+setup, I can start the multipath device - as this machine is in 
+production, I can't do any more tests.
 
-Your event is "SpareActive" which does not trigger an alert mail,
-however all events can be reported through the "--program" switch:
+However, I can reproduce the problem on test system by creating an md 
+multipath device on an external SCSI disk, using /dev/sda1, stopping the 
+multipath device, rmmod'ing the SCSI driver, pluging in a couple of USB 
+storage devices which become /dev/sda and /dev/sdb and then modprobing 
+the SCSI driver, so the original /dev/sda1 is now /dev/sdc1.
 
-	All events cause the program to be run.  The program  is  run with
-	two or  three  arguments,  they  being the event name, the array
-	device and possibly a second device.
+When I run 'mdadm -A -s', I get the following Oops:
 
-> Only at the second failure when the array is in degraded state I receive 
-> a warning.
+  [events: 00000004]
+md: bind<sdc1,1>
+md: sdc1's event counter: 00000004
+md0: former device sda1 is unavailable, removing from array!
+md: unbind<sdc1,0>
+md: export_rdev(sdc1)
+md: RAID level -4 does not need chunksize! Continuing anyway.
+md: multipath personality registered as nr 7
+md0: max total readahead window set to 124k
+md0: 1 data-disks, max readahead per data-disk: 124k
+Unable to handle kernel NULL pointer dereference at virtual address 00000040
+  printing eip:
+e096527e
+*pde = 00000000
+Oops: 0000
+CPU:    0
+EIP:    0010:[<e096527e>]    Not tainted
+EFLAGS: 00010246
+eax: deb62a94   ebx: 00000000   ecx: dd65b400   edx: 00000000
+esi: 0000001c   edi: deb62a94   ebp: 00000000   esp: dd5fbdbc
+ds: 0018   es: 0018   ss: 0018
+Process mdadm (pid: 1389, stackpage=dd5fb000)
+Stack: dd4c4000 dfa96000 c035ad00 00000000 00000286 dd4c4000 00000000 
+00000000
+        deb62a94 dd5fbe5c dd4c6000 c02a6e10 dd65b400 c035ef1f 0000007c 
+00000000
+        0000000a ffffffff 00000002 00002e2e c0118b49 00002e2e 00002e2e 
+00000286
+Call Trace:    [<c02a6e10>] [<c0118b49>] [<c0118cc4>] [<c024a88c>] 
+[<c024abb6>]
+   [<c0118cc4>] [<c024907e>] [<c024b6f2>] [<c024c60c>] [<c014a326>] 
+[<c013c483>]
+   [<c013ca18>] [<c01375ac>] [<c013ca63>] [<c01439b6>] [<c01087c7>]
 
-> How may I receive a warning when the hotspare disk has been used to cope 
-> with a disk failure?
+Code: 8b 45 40 85 c0 0f 84 c2 01 00 00 6a 00 ff b4 24 cc 00 00 00
 
---program "my_mail_script.sh"
+Running through ksymoops gives:
 
-	#!/bin/sh
-	nail -s "$1 event detected on device $2 $3" root < EOF
+Unable to handle kernel NULL pointer dereference at virtual address 00000040
+e096527e
+*pde = 00000000
+Oops: 0000
+CPU:    0
+EIP:    0010:[<e096527e>]    Not tainted
+Using defaults from ksymoops -t elf32-i386 -a i386
+EFLAGS: 00010246
+eax: deb62a94   ebx: 00000000   ecx: dd65b400   edx: 00000000
+esi: 0000001c   edi: deb62a94   ebp: 00000000   esp: dd5fbdbc
+ds: 0018   es: 0018   ss: 0018
+Process mdadm (pid: 1389, stackpage=dd5fb000)
+Stack: dd4c4000 dfa96000 c035ad00 00000000 00000286 dd4c4000 00000000 
+00000000
+        deb62a94 dd5fbe5c dd4c6000 c02a6e10 dd65b400 c035ef1f 0000007c 
+00000000
+        0000000a ffffffff 00000002 00002e2e c0118b49 00002e2e 00002e2e 
+00000286
+Call Trace:    [<c02a6e10>] [<c0118b49>] [<c0118cc4>] [<c024a88c>] 
+[<c024abb6>]
+   [<c0118cc4>] [<c024907e>] [<c024b6f2>] [<c024c60c>] [<c014a326>] 
+[<c013c483>]
+   [<c013ca18>] [<c01375ac>] [<c013ca63>] [<c01439b6>] [<c01087c7>]
+Code: 8b 45 40 85 c0 0f 84 c2 01 00 00 6a 00 ff b4 24 cc 00 00 00
 
-	Dear admin,
+ >>EIP; e096527e <[multipath]multipath_run+2be/6c0>   <=====
+Trace; c02a6e10 <vsnprintf+2e0/450>
+Trace; c0118b49 <call_console_drivers+e9/f0>
+Trace; c0118cc4 <printk+104/110>
+Trace; c024a88c <device_size_calculation+19c/1f0>
+Trace; c024abb6 <do_md_run+2d6/360>
+Trace; c0118cc4 <printk+104/110>
+Trace; c024907e <bind_rdev_to_array+9e/b0>
+Trace; c024b6f2 <add_new_disk+132/290>
+Trace; c024c60c <md_ioctl+6fc/790>
+Trace; c014a326 <iput+236/240>
+Trace; c013c483 <bdput+93/a0>
+Trace; c013ca18 <blkdev_put+98/a0>
+Trace; c01375ac <fput+bc/e0>
+Trace; c013ca63 <blkdev_ioctl+23/30>
+Trace; c01439b6 <sys_ioctl+216/230>
+Trace; c01087c7 <system_call+33/38>
+Code;  e096527e <[multipath]multipath_run+2be/6c0>
+00000000 <_EIP>:
+Code;  e096527e <[multipath]multipath_run+2be/6c0>   <=====
+    0:   8b 45 40                  mov    0x40(%ebp),%eax   <=====
+Code;  e0965281 <[multipath]multipath_run+2c1/6c0>
+    3:   85 c0                     test   %eax,%eax
+Code;  e0965283 <[multipath]multipath_run+2c3/6c0>
+    5:   0f 84 c2 01 00 00         je     1cd <_EIP+0x1cd> e096544b 
+<[multipath]m
+ultipath_run+48b/6c0>
+Code;  e0965289 <[multipath]multipath_run+2c9/6c0>
+    b:   6a 00                     push   $0x0
+Code;  e096528b <[multipath]multipath_run+2cb/6c0>
+    d:   ff b4 24 cc 00 00 00      pushl  0xcc(%esp,1)
 
-	You array seems to have suffered to breakage:
+My /etc/mdadm.conf contains:
 
-	A $1 event was received on for device $2 $3.
+DEVICE /dev/sd?1
+ARRAY /dev/md0 level=multipath num-devices=1
+   UUID=277e4ba5:6c23c087:e17c877c:da642955
 
-	Fix it ASAP!
 
-	Regards,
+Should md multipath be able to handle changes like this with the 
+underlying devices?
 
-	EOF
 
--- 
-This space for rent.
+Thanks
+
+James Pearson
+
+
+
+
+
+
