@@ -1,87 +1,33 @@
-From: "bart@ardistech.com" <bart@ardistech.com>
-Subject: Re: How to auto rebuild array?
-Date: Thu, 14 Jul 2005 08:54:28 +0200
-Message-ID: <42D60C24.AF0C2931@ardistech.com>
-References: <42D3C998.3F84EF1C@ardistech.com> <42D567F7.7010408@ruisantos.com>
-Reply-To: bart@ardistech.com
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: disk failed, operator error: Now can't use RAID
+Date: Thu, 14 Jul 2005 17:03:57 +1000
+Message-ID: <17110.3677.293133.503161@cse.unsw.edu.au>
+References: <7500724905071314574a13d966@mail.gmail.com>
+	<7500724905071317297f7277a7@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from Hank Barta on Wednesday July 13
 Sender: linux-raid-owner@vger.kernel.org
-To: Rui Santos <rsantos@ruisantos.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Hank Barta <hbarta@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Rui,
-
->     Is that a RAID1 ou RAID5?
+On Wednesday July 13, hbarta@gmail.com wrote:
 > 
-It's a RAID5, but the problem also happends on RAID1.
+> I would very much appreciate suggestions on how to get the raid
+> running again.
 
->     Can you give the output of these commands?
-> 
->     mdadm --misc -D /dev/md3
->     mdadm --misc -E /dev/hda4
->     mdadm --misc -E /dev/hdb4
->     mdadm --misc -E /dev/hde4
->     mdadm --misc -E /dev/hdf4
-> 
->     One other thing. Are you sure that all you raid partitions are
-> marked 0xfd ?
-> 
-There are 0xfd partitions with persistent superblock.
+Remove the 
+>    devices=/dev/hde1,/dev/sdd1,/dev/sdc1,/dev/sdb1,/dev/sda1
 
->     Also attach you mdadm.conf/raidconf file, if you have any...
-> 
-I don't use a /etc/mdadm/mdadm.conf file, the raid is started during kernel
-boot with raid autodetect. That's when the 'kicking non-fresh drive' print
-occurs. When this happened 'mdadm --detail' will not display the kicked disk
-in the list of array disks anymore, also the mdadm deamon only will get the
-name of the array that's degraded, not the name of the kicked device :(
+line from mdadm.conf (it is wrong and un-needed).
 
-I made a script that runs after reboot as fix, it will hott-add the kicked
-disks back to the array. It seems to fix the problem.
+Then
+  mdadm -S /dev/md0  # just to be sure
+  mdadm -A /dev/md0 -f /dev/sd[abcd]1 /dev/hd[eg]1
 
-Regards,
-		Bart
+and see if that works.
 
-
------------------------------------------------------
-#! /bin/bash
-
-DEVLIST=`ls /dev/hd??`
-for dev in $DEVLIST; do
-	 result=`mdadm --query $dev | grep mismatch`
-	 if [ -n "$result" ]; then
-		raid=/dev/`echo $result | awk 'BEGIN {FS="[ .]"} {print $9}'`
-		echo $raid needs $dev added
-		mdadm --add $raid $dev
-	 fi
-done
------------------------------------------------------
-
-
-
-
-> >
-> >I have the problem that after a power failure I get the message:
-> >
-> >Jul 12 15:29:17 kernel: md: created md3
-> >Jul 12 15:29:17 kernel: md: bind<hda4>
-> >Jul 12 15:29:17 kernel: md: bind<hdb4>
-> >Jul 12 15:29:17 kernel: md: bind<hde4>
-> >Jul 12 15:29:17 kernel: md: bind<hdf4>
-> >Jul 12 15:29:17 kernel: md: running: <hdf4><hde4><hdb4><hda4>
-> >Jul 12 15:29:17 kernel: md: kicking non-fresh hde4 from array!
-> >Jul 12 15:29:17 kernel: md: unbind<hde4>
-> >
-> >I understand that hde4 is not 'fresh' and the array need to be rebuild
-> >but I only can do that with 'mdadm --add /dev/md3 /dev/hde4'. I would
-> >like to have it turned into a hot-spare, in which case a rebuild would
-> >start automatic.
-> >
-> >This application runs unattended, so there is nobody there to enter
-> >mdadm commands.... How can I make the rebuild starting automatic
-> >(like a hardware raidcard does)?
-> >
+NeilBrown
