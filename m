@@ -1,61 +1,50 @@
-From: Lars Marowsky-Bree <lmb@suse.de>
-Subject: Re: Oops when starting md multipath on a 2.4 kernel
-Date: Thu, 14 Jul 2005 12:13:29 +0200
-Message-ID: <20050714101329.GI25179@marowsky-bree.de>
-References: <42D546AB.6060101@moving-picture.com> <42D5FCA4.10104@us.ibm.com> <42D639DC.80608@moving-picture.com>
+From: Ming Zhang <mingz@ele.uri.edu>
+Subject: Re: RAID-5 streaming read performance
+Date: Wed, 13 Jul 2005 20:09:33 -0400
+Message-ID: <1121299773.5504.151.camel@localhost.localdomain>
+References: <874qb14btr.fsf@uwo.ca>
+	 <1121220487.5552.34.camel@localhost.localdomain> <87mzorfmdx.fsf@uwo.ca>
+	 <1121257494.5504.4.camel@localhost.localdomain> <87eka2g9dp.fsf@uwo.ca>
+	 <1121259126.5504.14.camel@localhost.localdomain> <87vf3eeqe2.fsf@uwo.ca>
+	 <1121264997.5504.29.camel@localhost.localdomain> <87r7e2egjk.fsf@uwo.ca>
+	 <17109.38909.400379.597785@cse.unsw.edu.au>
+Reply-To: mingz@ele.uri.edu
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <42D639DC.80608@moving-picture.com>
+In-Reply-To: <17109.38909.400379.597785@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: James Pearson <james-p@moving-picture.com>, Mike Tran <mhtran@us.ibm.com>
-Cc: lnx1138@us.ibm.com, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@cse.unsw.edu.au>
+Cc: Dan Christensen <jdc@uwo.ca>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 2005-07-14T11:09:32, James Pearson <james-p@moving-picture.com> wrot=
-e:
-
-> Thanks - that patch applies OK to more recent 2.4 kernels and appears=
- to=20
-> 'fix' this problem.
->=20
-> However, if you have a cut down patch that fixes just this problem, t=
-hen=20
-> I would appreciate it if you could make it available.
-
-There's a bugfix needed for 2.4 md multipath which prevents guaranteed =
-data
-corruption on failover too. I don't have time to redo the diffs against
-2.4 proper, but
-
--                       bh->b_rdev =3D bh->b_dev;
--                       bh->b_rsector =3D bh->b_blocknr;
-
-are probably the two most important changes to multipath.c:multipathd()=
-=2E
-
-The patch in the SLES8 2.4 kernel is
-patches.common/md-multipath-retry-handling - there's also some locking
-fixes etc in there.
-
-The problem is our kernel has deviated so much from 2.4, and active
-development is now focused on DM mpath in 2.6, that pulling out smaller
-chunks and feeding them upstream on 2.4 just isn't worth it :-(
+On Thu, 2005-07-14 at 08:38 +1000, Neil Brown wrote:
+> On Wednesday July 13, jdc@uwo.ca wrote:
+> > Here's a question for people running software raid-5:  do you get
+> > significantly better read speed from a raid-5 device than from it's
+> > component partitions/hard drives, using the simple dd test I did?
+> 
+> SCSI-160 bus, using just 4 of the 15000rpm drives:
+> 
+> each drive by itself delivers about 67M/s
+> Three drives in parallel deliver 40M/s each, total of 120M/s
+> 4 give 30M/s each or a total of 120M/s
+> 
+> raid5 over 4 drives delivers 132M/s
+why here a 132MB/s instead of 120MB/s (3 * 40MB/s) as u mentioned? any
+factor lead to this increase?
 
 
-Sincerely,
-    Lars Marowsky-Br=E9e <lmb@suse.de>
+> 
+> (We've just ordered a SCSI-320 card to make better use of the drives).
+> 
+> So with top-quality (and price) hardware, it seems to do the right
+> thing.
+> 
+> NeilBrown
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
---=20
-High Availability & Clustering
-SUSE Labs, Research and Development
-SUSE LINUX Products GmbH - A Novell Business	 -- Charles Darwin
-"Ignorance more frequently begets confidence than does knowledge"
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
