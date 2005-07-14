@@ -1,69 +1,43 @@
-From: Hank Barta <hbarta@gmail.com>
-Subject: Re: disk failed, operator error: Now can't use RAID
-Date: Thu, 14 Jul 2005 18:05:11 -0500
-Message-ID: <75007249050714160559cc2588@mail.gmail.com>
-References: <7500724905071314574a13d966@mail.gmail.com>
-	 <7500724905071317297f7277a7@mail.gmail.com>
-	 <17110.3677.293133.503161@cse.unsw.edu.au>
-Reply-To: Hank Barta <hbarta@gmail.com>
+From: Mark Hahn <hahn@physics.mcmaster.ca>
+Subject: Re: RAID-5 streaming read performance
+Date: Thu, 14 Jul 2005 19:29:32 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44.0507141921050.16602-100000@coffee.psychology.mcmaster.ca>
+References: <1121376646.5544.125.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17110.3677.293133.503161@cse.unsw.edu.au>
-Content-Disposition: inline
+In-Reply-To: <1121376646.5544.125.camel@localhost.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: linux-raid@vger.kernel.org
+To: Ming Zhang <mingz@ele.uri.edu>
+Cc: Dan Christensen <jdc@uwo.ca>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 7/14/05, Neil Brown <neilb@cse.unsw.edu.au> wrote:
-> On Wednesday July 13, hbarta@gmail.com wrote:
-> >
-> > I would very much appreciate suggestions on how to get the raid
-> > running again.
-> 
-> Remove the
-> >    devices=/dev/hde1,/dev/sdd1,/dev/sdc1,/dev/sdb1,/dev/sda1
-> 
-> line from mdadm.conf (it is wrong and un-needed).
-> 
-> Then
->   mdadm -S /dev/md0  # just to be sure
->   mdadm -A /dev/md0 -f /dev/sd[abcd]1 /dev/hd[eg]1
-> 
-> and see if that works.
+> i also want a way to clear part of the whole page cache by file id. :)
 
-Yes, Thanks!
+understandably, kernel developers are don't high-prioritize this sort of 
+not-useful-for-normal-work feature.
 
-Results are:
+> i also want a way to tell the cache distribution, how many for file A
+> and B, ....
 
-oak:~# mdadm -S /dev/md0
-oak:~# mdadm -A /dev/md0 -f /dev/sd[abcd]1 /dev/hd[eg]1
-mdadm: forcing event count in /dev/sda1(0) from 1271893 upto 2816178
-mdadm: /dev/md0 has been started with 4 drives (out of 5) and 1 spare.
-oak:~# cat /proc/mdstat
-Personalities : [raid5]
-md0 : active raid5 sda1[0] hde1[5] sdd1[3] sdc1[2] sdb1[1]
-      781433344 blocks level 5, 32k chunk, algorithm 2 [5/4] [UUUU_]
-      [>....................]  recovery =  0.1% (389320/195358336)
-finish=280.4min speed=11585K/sec
-unused devices: <none>
-oak:~#
+you should probably try mmaping the file and using mincore.
+come to think of it, mmap+madvise might be a sensible way to 
+flush pages corresponding to a particular file, as well.
 
-Now... After this is through rebuilding, I need to replace the failed
-drive. (Creating one partition and setting it to type 0xFD (Linux raid
-autodetect)
+> > I'm really surprised there isn't something in /proc you can use to
+> > clear or disable the cache.  Would be very useful for benchmarking!
 
-What's the best way to get this in service with one drive as a spare?
-Can I convert my current spare (/dev/hde1) to a regular disk and add
-the new disk as a spare?
+I assume you noticed "blockdev --flushbufs", no?  it works for me 
+(ie, a small, repeated streaming read of a disk device will show 
+pagecache speed).
 
-Or should I add the new disk as an active drive and if so, will it be
-rebuilt and the spare (/dev/hde1) be relegated back as a spare?
+I think the problem is that it's difficult to dissociate readahead,
+writebehind and normal lru-ish caching.  there was quite a flurry of 
+activity around 2.4.10 related to this, and it left a bad taste in 
+everyone's mouth.  I think the main conclusion was that too much fanciness
+results in a fragile, more subtle and difficult-to-maintain system 
+that performs better, true, but over a narrower range of workloads.
 
-thanks again,
-hank
+regards, mark hahn
+sharcnet/mcmaster.
 
--- 
-Beautiful Sunny Winfield, Illinois
