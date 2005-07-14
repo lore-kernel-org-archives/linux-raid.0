@@ -1,161 +1,112 @@
-From: Hank Barta <hbarta@gmail.com>
-Subject: disk failed, operator error: Now can't use RAID
-Date: Wed, 13 Jul 2005 19:29:32 -0500
-Message-ID: <7500724905071317297f7277a7@mail.gmail.com>
-References: <7500724905071314574a13d966@mail.gmail.com>
-Reply-To: Hank Barta <hbarta@gmail.com>
+From: Ming Zhang <mingz@ele.uri.edu>
+Subject: Re: RAID-5 streaming read performance
+Date: Thu, 14 Jul 2005 08:30:55 -0400
+Message-ID: <1121344255.5544.7.camel@localhost.localdomain>
+References: <874qb14btr.fsf@uwo.ca>
+	 <1121220487.5552.34.camel@localhost.localdomain> <87mzorfmdx.fsf@uwo.ca>
+	 <1121257494.5504.4.camel@localhost.localdomain> <87eka2g9dp.fsf@uwo.ca>
+	 <1121259126.5504.14.camel@localhost.localdomain> <87vf3eeqe2.fsf@uwo.ca>
+	 <42D5573A.6090801@dgreaves.com>  <87r7e23uo5.fsf@uwo.ca>
+Reply-To: mingz@ele.uri.edu
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <7500724905071314574a13d966@mail.gmail.com>
-Content-Disposition: inline
+In-Reply-To: <87r7e23uo5.fsf@uwo.ca>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Dan Christensen <jdc@uwo.ca>
+Cc: David Greaves <david@dgreaves.com>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-I experienced a disk failure on a raid5 array that had one 6 disks
-including one spare. For reasons I couldn't determine, the spare was
-not used automatically. I added the spare in using:
-   mdadm -add /dev/md0 /dev/sda1
-And the raid started rebuilding using the spare drive.
+On Wed, 2005-07-13 at 23:58 -0400, Dan Christensen wrote:
+> David Greaves <david@dgreaves.com> writes:
+> 
+> > In my setup I get
+> >
+> > component partitions, e.g. /dev/sda7: 39MB/s
+> > raid device /dev/md2:                 31MB/s
+> > lvm device /dev/main/media:           53MB/s
+> >
+> > (oldish system - but note that lvm device is *much* faster)
+> 
+> Did you test component device and raid device speed using the
+> read-ahead settings tuned for lvm reads?  If so, that's not a fair
+> comparison.  :-)
+> 
+> > For your entertainment you may like to try this to 'tune' your readahead
+> > - it's OK to use so long as you're not recording:
+> 
+> Thanks, I played around with that a lot.  I tuned readahead to
+> optimize lvm device reads, and this improved things greatly.  It turns
+> out the default lvm settings had readahead set to 0!  But by tuning
+> things, I could get my read speed up to 59MB/s.  This is with raw
+> device readahead 256, md device readahead 1024 and lvm readahead 2048.
+> (The speed was most sensitive to the last one, but did seem to depend
+> on the other ones a bit too.)
+> 
+> I separately tuned the raid device read speed.  To maximize this, I
+> needed to set the raw device readahead to 1024 and the raid device
+> readahead to 4096.  This brought my raid read speed from 59MB/s to
+> 78MB/s.  Better!  (But note that now this makes the lvm read speed
+> look bad.)
+> 
+> My raw device read speed is independent of the readahead setting,
+> as long as it is at least 256.  The speed is about 58MB/s.
+> 
+> Summary:
+> 
+> raw device:  58MB/s
+> raid device: 78MB/s
+> lvm device:  59MB/s
+> 
+> raid still isn't achieving the 106MB/s that I can get with parallel
+> direct reads, but at least it's getting closer.
+> 
+> As a simple test, I wrote a program like dd that reads and discards
+> 64k chunks of data from a device, but which skips 1 out of every four
+> chunks (simulating skipping parity blocks).  It's not surprising that
+> this program can only read from a raw device at about 75% the rate of
+> dd, since the kernel readahead is probably causing the skipped blocks
+> to be read anyways (or maybe because the disk head has to pass over
+> those sections of the disk anyways).
+> 
+> I then ran four copies of this program in parallel, reading from the
+> raw devices that make up my raid partition.  And, like md, they only
+> achieved about 78MB/s.  This is very close to 75% of 106MB/s.  Again,
+> not surprising, since I need to have raw device readahead turned on
+> for this to be efficient at all, so 25% of the chunks that pass
+> through the controller are ignored.
+> 
+> But I still don't understand why the md layer can't do better.  If I
+> turn off readahead of the raw devices, and keep it for the raid
+> device, then parity blocks should never be requested, so they
+> shouldn't use any bus/controller bandwidth.  And even if each drive is
+> only acting at 75% efficiency, the four drives should still be able to
+> saturate the bus/controller.  So I can't figure out what's going on
+> here.
+when read, i do not think MD will read parity at all. but since parity
+is on all disk, there might be a seek here. so you might want to try a
+raid4 to see what happen as well.
 
-Not satisfied ( ;) ) I tried to remove the failed drive (/dev/hdg1)
-using the command
-   mdadm /dev/md0 -r /dev/sdg1
 
-Then I realized that I had meant to type /dev/hdg1 and repeated the
-command accordingly. My raid originally consisted of /dev/sd[a|b|c|d]1
-and /dev/hd[e|g]1 and /dev/hde1 was the spare disk. Looking at the
-status now, it appeared that there was a problem with /dev/sda1. Still
-not satisfied, I decided it would be a good idea to reboot the system
-and when I did, the raid did not come up.
 
-I've fiddled some more and still not gotten the raid to work. I have
-added /dev/sda1 back, but the device information in the other drives
-does not seem to reflect it. I have run cfdisk on all devices to
-verify that the system sees them and that seems to be the case.
-Examining drive /dev/sda1 I get:
-oak:~# mdadm -Q --examine /dev/sda1
-/dev/sda1:
-          Magic : a92b4efc
-        Version : 00.90.00
-           UUID : a7cc80af:206de849:dd30336a:6ea23e69
-  Creation Time : Sun Dec 26 21:51:39 2004
-     Raid Level : raid5
-   Raid Devices : 5
-  Total Devices : 5
-Preferred Minor : 0
 
-    Update Time : Sat Jul  9 11:27:33 2005
-          State : clean
- Active Devices : 4
-Working Devices : 5
- Failed Devices : 1
-  Spare Devices : 1
-       Checksum : 4da3ec1f - correct
-         Events : 0.1271893
+> 
+> Is there a way for me to simulate readahead in userspace, i.e. can
+> I do lots of sequential asynchronous reads in parallel?
+> 
+> Also, is there a way to disable caching of reads?  Having to clear
+> the cache by reading 900M each time slows down testing.  I guess
+> I could reboot with mem=100M, but it'd be nice to disable/enable
+> caching on the fly.  Hmm, maybe I can just run something like
+> memtest which locks a bunch of ram...
+after you run your code, check the meminfo, the cached value might be
+much lower than u expected. my feeling is that linux page cache will
+discard all cache if last file handle closed.
 
-         Layout : left-symmetric
-     Chunk Size : 32K
 
-      Number   Major   Minor   RaidDevice State
-this     0       8        1        0      active sync   /dev/.static/dev/sda1
+> 
+> Thanks for all of the help so far!
+> 
+> Dan
 
-   0     0       8        1        0      active sync   /dev/.static/dev/sda1
-   1     1       8       17        1      active sync   /dev/.static/dev/sdb1
-   2     2       8       33        2      active sync   /dev/.static/dev/sdc1
-   3     3       8       49        3      active sync   /dev/.static/dev/sdd1
-   4     4       0        0        4      faulty removed
-   5     5      33        1        5      spare   /dev/.static/dev/hde1
-oak:~#
-
-and examining /dev/sdb1 I see:
-oak:~# mdadm -Q --examine /dev/sdb1
-/dev/sdb1:
-          Magic : a92b4efc
-        Version : 00.90.00
-           UUID : a7cc80af:206de849:dd30336a:6ea23e69
-  Creation Time : Sun Dec 26 21:51:39 2004
-     Raid Level : raid5
-   Raid Devices : 5
-  Total Devices : 5
-Preferred Minor : 0
-
-    Update Time : Sat Jul  9 12:22:25 2005
-          State : clean
- Active Devices : 3
-Working Devices : 4
- Failed Devices : 2
-  Spare Devices : 1
-       Checksum : 4dd319d4 - correct
-         Events : 0.2816178
-
-         Layout : left-symmetric
-     Chunk Size : 32K
-
-      Number   Major   Minor   RaidDevice State
-this     1       8       17        1      active sync   /dev/.static/dev/sdb1
-
-   0     0       0        0        0      removed
-   1     1       8       17        1      active sync   /dev/.static/dev/sdb1
-   2     2       8       33        2      active sync   /dev/.static/dev/sdc1
-   3     3       8       49        3      active sync   /dev/.static/dev/sdd1
-   4     4       0        0        4      faulty removed
-   5     5      33        1        4      spare   /dev/.static/dev/hde1
-oak:~#
-
-So it seems like /dev/sdb1 (and the other raid devices) does not list /dev/sda1.
-
-Other "interesting files are:
-oak:~# cat /etc/mdadm/mdadm.conf
-DEVICE /dev/hd*[0-9] /dev/sd*[0-9]
-ARRAY /dev/md0 level=raid5 num-devices=5
-UUID=a7cc80af:206de849:dd30336a:6ea23e69
-   devices=/dev/hde1,/dev/sdd1,/dev/sdc1,/dev/sdb1,/dev/sda1
-oak:~# cat /proc/mdstat
-Personalities : [raid5]
-md0 : inactive sda1[0] sdb1[1] hde1[5] sdd1[3] sdc1[2]
-      976791680 blocks
-unused devices: <none>
-oak:~#
-
-If I try to run the raid, I get:
-
-oak:/var/log# mdadm -R /dev/md0
-mdadm: failed to run array /dev/md0: Invalid argument
-oak:/var/log#
-
-In the log I filJul 13 16:48:54 localhost kernel: raid5: device sdb1
-operational as raid disk 1
-Jul 13 16:48:54 localhost kernel: raid5: device sdd1 operational as raid disk 3
-Jul 13 16:48:54 localhost kernel: raid5: device sdc1 operational as raid disk 2
-Jul 13 16:48:54 localhost kernel: RAID5 conf printout:
-Jul 13 16:48:54 localhost kernel:  --- rd:5 wd:3 fd:2
-Jul 13 16:48:54 localhost kernel:  disk 0, o:1, dev:sda1
-Jul 13 16:48:54 localhost kernel:  disk 1, o:1, dev:sdb1
-Jul 13 16:48:54 localhost kernel:  disk 2, o:1, dev:sdc1
-Jul 13 16:48:54 localhost kernel:  disk 3, o:1, dev:sdd1
-
-Elsewhere in the log I find:
-Jul 13 13:30:16 localhost kernel:  disk 2, o:1, dev:sdc1
-Jul 13 13:30:16 localhost kernel:  disk 3, o:1, dev:sdd1
-Jul 13 13:34:03 localhost kernel: md: error, md_import_device() returned -16
-Jul 13 13:35:00 localhost kernel: md: error, md_import_device() returned -16
-Jul 13 13:36:21 localhost kernel: raid5: device sdb1 operational as raid disk 1
-Jul 13 13:36:21 localhost kernel: raid5: device sdd1 operational as raid disk 3
-Jul 13 13:36:21 localhost kernel: raid5: device sdc1 operational as raid disk 2
-
-I would very much appreciate suggestions on how to get the raid running again.
-
-I have a replacement drive, but don't want to put it in until I get
-this issue resolved.
-
-I'm running Debian testing (386) with kernel 2.6.8-1-386 and mdadm
-tools 1.9.0-4.1.
-
-thanks,
-hank
-
---
-Beautiful Sunny Winfield, Illinois
