@@ -1,185 +1,199 @@
-From: Mark Hahn <hahn@physics.mcmaster.ca>
-Subject: Re: RAID-5 streaming read performance
-Date: Thu, 14 Jul 2005 00:13:53 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44.0507140004550.29240-200000@coffee.psychology.mcmaster.ca>
-References: <87r7e23uo5.fsf@uwo.ca>
+From: Mike Tran <mhtran@us.ibm.com>
+Subject: Re: Oops when starting md multipath on a 2.4 kernel
+Date: Thu, 14 Jul 2005 00:48:20 -0500
+Message-ID: <42D5FCA4.10104@us.ibm.com>
+References: <42D546AB.6060101@moving-picture.com>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="1904360410-58787854-1121314433=:29240"
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87r7e23uo5.fsf@uwo.ca>
+In-Reply-To: <42D546AB.6060101@moving-picture.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Christensen <jdc@uwo.ca>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: James Pearson <james-p@moving-picture.com>, lmb@suse.de, lnx1138@us.ibm.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
-  Send mail to mime@docserver.cac.washington.edu for more info.
+James Pearson wrote:
 
---1904360410-58787854-1121314433=:29240
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+> We have an existing system runing a 2.4.27 based kernel that uses md=20
+> multipath and external fibre channel arrays.
+>
+> We need to add more internal disks to the system, which means the=20
+> external drives change device names.
+>
+> When I tried to start the md multipath device using mdadm, the kernel=
+=20
+> Oops'd. Removing the new internal disks and going back the original=20
+> setup, I can start the multipath device - as this machine is in=20
+> production, I can't do any more tests.
+>
+> However, I can reproduce the problem on test system by creating an md=
+=20
+> multipath device on an external SCSI disk, using /dev/sda1, stopping=20
+> the multipath device, rmmod'ing the SCSI driver, pluging in a couple=20
+> of USB storage devices which become /dev/sda and /dev/sdb and then=20
+> modprobing the SCSI driver, so the original /dev/sda1 is now /dev/sdc=
+1.
+>
+> When I run 'mdadm -A -s', I get the following Oops:
+>
+>  [events: 00000004]
+> md: bind<sdc1,1>
+> md: sdc1's event counter: 00000004
+> md0: former device sda1 is unavailable, removing from array!
+> md: unbind<sdc1,0>
+> md: export_rdev(sdc1)
+> md: RAID level -4 does not need chunksize! Continuing anyway.
+> md: multipath personality registered as nr 7
+> md0: max total readahead window set to 124k
+> md0: 1 data-disks, max readahead per data-disk: 124k
+> Unable to handle kernel NULL pointer dereference at virtual address=20
+> 00000040
+>  printing eip:
+> e096527e
+> *pde =3D 00000000
+> Oops: 0000
+> CPU:    0
+> EIP:    0010:[<e096527e>]    Not tainted
+> EFLAGS: 00010246
+> eax: deb62a94   ebx: 00000000   ecx: dd65b400   edx: 00000000
+> esi: 0000001c   edi: deb62a94   ebp: 00000000   esp: dd5fbdbc
+> ds: 0018   es: 0018   ss: 0018
+> Process mdadm (pid: 1389, stackpage=3Ddd5fb000)
+> Stack: dd4c4000 dfa96000 c035ad00 00000000 00000286 dd4c4000 00000000=
+=20
+> 00000000
+>        deb62a94 dd5fbe5c dd4c6000 c02a6e10 dd65b400 c035ef1f 0000007c=
+=20
+> 00000000
+>        0000000a ffffffff 00000002 00002e2e c0118b49 00002e2e 00002e2e=
+=20
+> 00000286
+> Call Trace:    [<c02a6e10>] [<c0118b49>] [<c0118cc4>] [<c024a88c>]=20
+> [<c024abb6>]
+>   [<c0118cc4>] [<c024907e>] [<c024b6f2>] [<c024c60c>] [<c014a326>]=20
+> [<c013c483>]
+>   [<c013ca18>] [<c01375ac>] [<c013ca63>] [<c01439b6>] [<c01087c7>]
+>
+> Code: 8b 45 40 85 c0 0f 84 c2 01 00 00 6a 00 ff b4 24 cc 00 00 00
+>
+> Running through ksymoops gives:
+>
+> Unable to handle kernel NULL pointer dereference at virtual address=20
+> 00000040
+> e096527e
+> *pde =3D 00000000
+> Oops: 0000
+> CPU:    0
+> EIP:    0010:[<e096527e>]    Not tainted
+> Using defaults from ksymoops -t elf32-i386 -a i386
+> EFLAGS: 00010246
+> eax: deb62a94   ebx: 00000000   ecx: dd65b400   edx: 00000000
+> esi: 0000001c   edi: deb62a94   ebp: 00000000   esp: dd5fbdbc
+> ds: 0018   es: 0018   ss: 0018
+> Process mdadm (pid: 1389, stackpage=3Ddd5fb000)
+> Stack: dd4c4000 dfa96000 c035ad00 00000000 00000286 dd4c4000 00000000=
+=20
+> 00000000
+>        deb62a94 dd5fbe5c dd4c6000 c02a6e10 dd65b400 c035ef1f 0000007c=
+=20
+> 00000000
+>        0000000a ffffffff 00000002 00002e2e c0118b49 00002e2e 00002e2e=
+=20
+> 00000286
+> Call Trace:    [<c02a6e10>] [<c0118b49>] [<c0118cc4>] [<c024a88c>]=20
+> [<c024abb6>]
+>   [<c0118cc4>] [<c024907e>] [<c024b6f2>] [<c024c60c>] [<c014a326>]=20
+> [<c013c483>]
+>   [<c013ca18>] [<c01375ac>] [<c013ca63>] [<c01439b6>] [<c01087c7>]
+> Code: 8b 45 40 85 c0 0f 84 c2 01 00 00 6a 00 ff b4 24 cc 00 00 00
+>
+> >>EIP; e096527e <[multipath]multipath_run+2be/6c0>   <=3D=3D=3D=3D=3D
+> Trace; c02a6e10 <vsnprintf+2e0/450>
+> Trace; c0118b49 <call_console_drivers+e9/f0>
+> Trace; c0118cc4 <printk+104/110>
+> Trace; c024a88c <device_size_calculation+19c/1f0>
+> Trace; c024abb6 <do_md_run+2d6/360>
+> Trace; c0118cc4 <printk+104/110>
+> Trace; c024907e <bind_rdev_to_array+9e/b0>
+> Trace; c024b6f2 <add_new_disk+132/290>
+> Trace; c024c60c <md_ioctl+6fc/790>
+> Trace; c014a326 <iput+236/240>
+> Trace; c013c483 <bdput+93/a0>
+> Trace; c013ca18 <blkdev_put+98/a0>
+> Trace; c01375ac <fput+bc/e0>
+> Trace; c013ca63 <blkdev_ioctl+23/30>
+> Trace; c01439b6 <sys_ioctl+216/230>
+> Trace; c01087c7 <system_call+33/38>
+> Code;  e096527e <[multipath]multipath_run+2be/6c0>
+> 00000000 <_EIP>:
+> Code;  e096527e <[multipath]multipath_run+2be/6c0>   <=3D=3D=3D=3D=3D
+>    0:   8b 45 40                  mov    0x40(%ebp),%eax   <=3D=3D=3D=
+=3D=3D
+> Code;  e0965281 <[multipath]multipath_run+2c1/6c0>
+>    3:   85 c0                     test   %eax,%eax
+> Code;  e0965283 <[multipath]multipath_run+2c3/6c0>
+>    5:   0f 84 c2 01 00 00         je     1cd <_EIP+0x1cd> e096544b=20
+> <[multipath]m
+> ultipath_run+48b/6c0>
+> Code;  e0965289 <[multipath]multipath_run+2c9/6c0>
+>    b:   6a 00                     push   $0x0
+> Code;  e096528b <[multipath]multipath_run+2cb/6c0>
+>    d:   ff b4 24 cc 00 00 00      pushl  0xcc(%esp,1)
+>
+> My /etc/mdadm.conf contains:
+>
+> DEVICE /dev/sd?1
+> ARRAY /dev/md0 level=3Dmultipath num-devices=3D1
+>   UUID=3D277e4ba5:6c23c087:e17c877c:da642955
+>
+>
+> Should md multipath be able to handle changes like this with the=20
+> underlying devices?
+>
+>
+> Thanks
+>
+> James Pearson
+>
+Hi James,
 
-> > component partitions, e.g. /dev/sda7: 39MB/s
-> > raid device /dev/md2:                 31MB/s
-> > lvm device /dev/main/media:           53MB/s
-> >
-> > (oldish system - but note that lvm device is *much* faster)
-> 
-> Did you test component device and raid device speed using the
-> read-ahead settings tuned for lvm reads?  If so, that's not a fair
-> comparison.  :-)
+My co-worker and I just happened to run into this problem a few days=20
+ago. So, I would like to share with you what we know.
 
-I did an eval with a vendor who claimed that their lvm actually
-improved bandwidth because it somehow triggered better full-stripe
-operations, or readahead, or something.  filtered through a marketing
-person, of course ;(
+The device major/minor numbers no longer match up values recorded in th=
+e=20
+descriptor array in the md superblock. Because of the exception made in=
+=20
+the current code, the descriptor entries are removed and although the=20
+real devices are present and accounted for, they are kicked out from th=
+e=20
+array. This leaves the array with zero devices. When multipath_run() is=
+=20
+invoked, it blows up expecting to have had some disks.
 
-> Is there a way for me to simulate readahead in userspace, i.e. can
-> I do lots of sequential asynchronous reads in parallel?
+Lars Marowsky-Br=E9e suggested some patches for md multipath in 2002 bu=
+t=20
+never made it to mainline 2.4 kernel:
+http://marc.theaimsgroup.com/?l=3Dlinux-kernel&m=3D103355467608953&w=3D=
+2
 
-there is async IO, but I don't think this is going to help you much.
+That patch is large and most of it is not requried for this particular=20
+problem.  The section that reinitializes the descriptor array from=20
+current rdevs for the case of multipath will resolve this issue of=20
+device names shift.
 
-> Also, is there a way to disable caching of reads?  Having to clear
+Lars, Is it ok with you if I compose a patch from your original patch=20
+and post it here?
 
-yes: O_DIRECT.
+--
+Regards,
+Mike T.
 
-I'm attaching a little program I wrote which basically just shows you
-incremental bandwidth.  you can use it to show the zones on a disk
-(just iorate -r -l 9999 /dev/hda and plot the results), or to
-do normal r/w bandwidth without being confused by the page-cache.
-you can even use it as a filter to measure tape backup performance.
 
-it doesn't try to do anything with random seeks.  it doesn't do 
-anything multi-stream.
-
-regards, mark hahn.
-
---1904360410-58787854-1121314433=:29240
-Content-Type: TEXT/PLAIN; charset=US-ASCII; name="iorate.c"
-Content-Transfer-Encoding: BASE64
-Content-ID: <Pine.LNX.4.44.0507140013530.29240@coffee.psychology.mcmaster.ca>
-Content-Description: 
-Content-Disposition: attachment; filename="iorate.c"
-
-LyogaW9yYXRlLmMgLSBtZWFzdXJlIHJhdGVzIG9mIHNlcXVlbnRpYWwgSU8s
-IHNob3dpbmcgaW5jcmVtZW50YWwgDQogICBiYW5kd2lkdGggd3JpdHRlbiBi
-eSBNYXJrIEhhaG4gKGhhaG5AbWNtYXN0ZXIuY2EpIDIwMDMsMjAwNCwyMDA1
-DQogICB0aGUgbWFpbiBwb2ludCBvZiB0aGlzIGNvZGUgaXMgdG8gaWxsdXN0
-cmF0ZSB0aGUgZGFuZ2VyIG9mIA0KICAgcnVubmluZyBuYWl2ZSBiYW5kd2lk
-dGggdGVzdHMgb24gZmlsZXMgdGhhdCBhcmUgc21hbGwgcmVsYXRpdmUNCiAg
-IHRvIHRoZSBtZW1vcnkvZGlzayBiYW5kd2lkdGggcmF0aW8gb2YgeW91ciBz
-eXN0ZW0uICB0aGF0IGlzLA0KICAgb24gYW55IHN5c3RlbSwgdGhlIGluY3Jl
-bWVudGFsIGJhbmR3aWR0aCB3aWxsIHN0YXJ0IG91dCBodWdlLA0KICAgc2lu
-Y2UgSU8gaXMgcHVyZWx5IHRvIHRoZSBwYWdlIGNhY2hlLiAgb25jZSB5b3Ug
-ZXhjZWVkIHRoYXQgc2l6ZSwNCiAgIGJhbmR3aWR0aCB3aWxsIGJlIGRvbWlu
-YXRlZCBieSB0aGUgcmVhbCBkaXNrIHBlcmZvcm1hbmNlLiAgYnV0IA0KICAg
-dXNpbmcgdGhlIGF2ZXJhZ2Ugb2YgdGhlc2UgdHdvIG1vZGVzIGlzIGEgbWlz
-dGFrZSwgZXZlbiBpZiANCiAgIHlvdSB1c2UgdmVyeSBsYXJnZSBmaWxlcy4N
-CiovDQojZGVmaW5lIF9MQVJHRUZJTEU2NF9TT1VSQ0UgMQ0KI2luY2x1ZGUg
-PHN0ZGlvLmg+DQojaW5jbHVkZSA8dW5pc3RkLmg+DQojaW5jbHVkZSA8c3Rk
-bGliLmg+DQojaW5jbHVkZSA8ZXJybm8uaD4NCiNpbmNsdWRlIDxzeXMvdGlt
-ZS5oPg0KI2luY2x1ZGUgPHN5cy9mY250bC5oPg0KI2luY2x1ZGUgPHN5cy9z
-dGF0Lmg+DQojaW5jbHVkZSA8c3RkYXJnLmg+DQojaW5jbHVkZSA8c3RyaW5n
-Lmg+DQojaW5jbHVkZSA8c3lzL21tYW4uaD4NCg0KI2lmZGVmIE9fTEFSR0VG
-SUxFDQojZGVmaW5lIExGIE9fTEFSR0VGSUxFDQojZWxpZiBkZWZpbmVkKF9P
-X0xBUkdFRklMRSkNCiNkZWZpbmUgTEYgX09fTEFSR0VGSUxFDQojZWxzZQ0K
-I2RlZmluZSBMRiAwDQojZW5kaWYNCg0KI2lmbmRlZiBPX0RJUkVDVA0KI2Rl
-ZmluZSBPX0RJUkVDVCAwNDAwMDANCiNlbmRpZg0KDQp0eXBlZGVmIHVuc2ln
-bmVkIGxvbmcgbG9uZyB1NjQ7DQoNCnU2NCBieXRlcyA9IDAsIGJ5dGVzTGFz
-dCA9IDA7DQpkb3VibGUgdGltZVN0YXJ0ID0gMCwgdGltZUxhc3QgPSAwOw0K
-DQovKiBkZWZhdWx0IHJlcG9ydGluZyBpbnRlcnZhbCBpcyBldmVyeSAyIHNl
-Y29uZHM7DQogICBpbiAyMDA0LCBhbiBlbnRyeS1sZXZlbCBkZXNrdG9wIGRp
-c2sgd2lsbCBzdXN0YWluIGFyb3VuZCA1MCBNQi9zLA0KICAgc28gdGhlIGRl
-ZmF1bHQgYnl0ZXMgaW50ZXJ2YWwgaXMgMTAwIE1CLiAgd2hpY2hldmVyIGNv
-bWVzIGZpcnN0LiAqLw0KdTY0IGJ5dGVJbnRlcnZhbCA9IDEwMDsNCmRvdWJs
-ZSB0aW1lSW50ZXJ2YWwgPSAyOw0KDQpkb3VibGUgZ3RvZCgpIHsNCiAgICBz
-dHJ1Y3QgdGltZXZhbCB0djsNCiAgICBnZXR0aW1lb2ZkYXkoJnR2LDApOw0K
-ICAgIHJldHVybiB0di50dl9zZWMgKyAxZS02ICogdHYudHZfdXNlYzsNCn0N
-Cg0Kdm9pZCBkdW1wc3RhdHMoaW50IGZvcmNlKSB7DQogICAgdTY0IGRiID0g
-Ynl0ZXMgLSBieXRlc0xhc3Q7DQogICAgZG91YmxlIG5vdyA9IGd0b2QoKTsN
-CiAgICBkb3VibGUgZHQ7DQogICAgc3RhdGljIGludCBmaXJzdCA9IDE7DQoN
-CiAgICBpZiAodGltZUxhc3QgPT0gMCkgdGltZVN0YXJ0ID0gdGltZUxhc3Qg
-PSBub3c7DQoNCiAgICBkdCA9IG5vdyAtIHRpbWVMYXN0Ow0KDQogICAgaWYg
-KCFmb3JjZSAmJiBkYiA8IGJ5dGVJbnRlcnZhbCAmJiBkdCA8IHRpbWVJbnRl
-cnZhbCkgcmV0dXJuOw0KDQogICAgaWYgKGZpcnN0KSB7DQoJcHJpbnRmKCIj
-JTdzICU3cyAlN3MgJTdzXG4iLCANCgkgICAgICAgInNlY3MiLA0KCSAgICAg
-ICAiTUIiLA0KCSAgICAgICAiTUIvc2VjIiwNCgkgICAgICAgIk1CL3NlYyIp
-Ow0KCWZpcnN0ID0gMDsNCiAgICB9DQoNCiAgICBwcmludGYoIiU3LjNmICU3
-LjNmICU3LjNmICU3LjNmXG4iLCANCgkgICBub3cgLSB0aW1lU3RhcnQsDQoJ
-ICAgMWUtNiAqIGJ5dGVzLCANCgkgICAxZS02ICogZGIgLyBkdCwNCgkgICAx
-ZS02ICogYnl0ZXMgLyAobm93LXRpbWVTdGFydCkpOw0KICAgIHRpbWVMYXN0
-ID0gbm93Ow0KICAgIGJ5dGVzTGFzdCA9IGJ5dGVzOw0KfQ0KDQp2b2lkIHVz
-YWdlKCkgew0KICAgIGZwcmludGYoc3RkZXJyLCJpb3JhdGUgWy1yL3cgZmls
-ZW5hbWVdIFstZF0gWy1jIGNodW5rc3pdWy1iIGJ5dGVpdmxdWy10IGl2bF1b
-LWwgc3psaW1dIFstciBpbl0gWy13IG91dF1cbiIpOw0KICAgIGZwcmludGYo
-c3RkZXJyLCItciBpbiBvciAtdyBvdXQgc2VsZWN0IHdoaWNoIGZpbGUgaXMg
-cmVhZCBvciB3cml0dGVuICgnLScgZm9yIHN0ZGluL291dClcbiIpOw0KICAg
-IGZwcmludGYoc3RkZXJyLCItYyBjaHVua3N6IC0gc2l6ZSBvZiBjaHVua3Mg
-d3JpdHRlbiAoS0IpO1xuIik7DQogICAgZnByaW50ZihzdGRlcnIsIi10IHRp
-bWVpbnRlcnZhbCAtIGNvbGxlY3QgcmF0ZSBlYWNoIHRpbWVpbnRlcnZhbCBz
-ZWNvbmRzO1xuIik7DQogICAgZnByaW50ZihzdGRlcnIsIi1iIGJ5dGVpbnRl
-cnZhbCAtIGNvbGxlY3QgcmF0ZSBlYWNoIGJ5dGVpbnRlcnZhbCBNQjtcbiIp
-Ow0KICAgIGZwcmludGYoc3RkZXJyLCItbCBsaW1pdCAtIHRvdGFsIG91dHB1
-dCBzaXplIGxpbWl0IChNQik7XG4iKTsNCiAgICBmcHJpbnRmKHN0ZGVyciwi
-LWQgdXNlIE9fRElSRUNUXG4iKTsNCiAgICBmcHJpbnRmKHN0ZGVyciwiZGVm
-YXVsdHMgYXJlOiAnLWMgOCAtYiAyMCAtdCAxMCAtbCAxMCdcbiIpOw0KICAg
-IGV4aXQoMSk7DQp9DQoNCnZvaWQgZmF0YWwoY2hhciAqZm9ybWF0LCAuLi4p
-IHsNCiAgICB2YV9saXN0IGFwOw0KICAgIHZhX3N0YXJ0KGFwLGZvcm1hdCk7
-DQoNCiAgICB2ZnByaW50ZihzdGRlcnIsZm9ybWF0LGFwKTsNCiAgICBmcHJp
-bnRmKHN0ZGVyciwiOiBlcnJubz0lZCAoJXMpXG4iLGVycm5vLHN0cmVycm9y
-KGVycm5vKSk7DQogICAgdmFfZW5kKGFwKTsNCiAgICBkdW1wc3RhdHMoMSk7
-DQogICAgZXhpdCgxKTsNCn0NCg0KLyogYWxsb2NhdGUgYSBidWZmZXIgdXNp
-bmcgbW1hcCB0byBlbnN1cmUgaXQncyBwYWdlLWFsaWduZWQuICANCiAgIE9f
-RElSRUNUICpjb3VsZCogYmUgbW9yZSBzdHJpY3QgdGhhbiB0aGF0LCBidXQg
-cHJvYmFibHkgaXNuJ3QgKi8NCnZvaWQgKm15YWxsb2ModW5zaWduZWQgc2l6
-ZSkgew0KICAgIHVuc2lnbmVkIHMgPSAoc2l6ZSArIDQwOTUpICYgfjQwOTVV
-Ow0KICAgIHZvaWQgKnAgPSBtbWFwKDAsIA0KICAgICAgICAgICAgICAgICAg
-IHMsIA0KICAgICAgICAgICAgICAgICAgIFBST1RfUkVBRHxQUk9UX1dSSVRF
-LCANCiAgICAgICAgICAgICAgICAgICBNQVBfQU5PTllNT1VTfE1BUF9QUklW
-QVRFLCANCiAgICAgICAgICAgICAgICAgICAtMSwgMCk7DQogICAgaWYgKHAg
-PT0gTUFQX0ZBSUxFRCkNCiAgICAgICAgcmV0dXJuIDA7DQogICAgcmV0dXJu
-IHA7DQp9DQoNCmludCBtYWluKGludCBhcmdjLCBjaGFyICphcmd2W10pIHsN
-CiAgICB1bnNpZ25lZCBzaXplID0gODsNCiAgICBjaGFyICpidWZmZXI7DQog
-ICAgdTY0IGxpbWl0ID0gMTA7DQogICAgY2hhciAqZm5hbWVJID0gMDsNCiAg
-ICBjaGFyICpmbmFtZU8gPSAwOw0KICAgIGludCBmZEkgPSAwOw0KICAgIGlu
-dCBmZE8gPSAxOw0KICAgIGludCBkb1JlYWQgPSAwOw0KICAgIGludCBkb1dy
-aXRlID0gMDsNCiAgICBpbnQgZG9EaXJlY3QgPSAwOw0KDQogICAgaW50IGxl
-dHRlcjsNCiAgICB3aGlsZSAoKGxldHRlciA9IGdldG9wdChhcmdjLGFyZ3Ys
-InI6dzpiOmM6bDp0OmQiKSkgIT0gLTEpIHsNCglzd2l0Y2gobGV0dGVyKSB7
-DQoJY2FzZSAncic6DQoJICAgIGZuYW1lSSA9IG9wdGFyZzsNCgkgICAgZG9S
-ZWFkID0gMTsNCgkgICAgYnJlYWs7DQoJY2FzZSAndyc6DQoJICAgIGZuYW1l
-TyA9IG9wdGFyZzsNCgkgICAgZG9Xcml0ZSA9IDE7DQoJICAgIGJyZWFrOw0K
-CWNhc2UgJ2InOg0KCSAgICBieXRlSW50ZXJ2YWwgPSBhdG9pKG9wdGFyZyk7
-DQoJICAgIGJyZWFrOw0KCWNhc2UgJ2MnOg0KCSAgICBzaXplID0gYXRvaShv
-cHRhcmcpOw0KCSAgICBicmVhazsNCgljYXNlICdsJzoNCgkgICAgbGltaXQg
-PSBhdG9pKG9wdGFyZyk7DQoJICAgIGJyZWFrOw0KCWNhc2UgJ3QnOg0KCSAg
-ICB0aW1lSW50ZXJ2YWwgPSBhdG9mKG9wdGFyZyk7DQoJICAgIGJyZWFrOw0K
-CWNhc2UgJ2QnOg0KCSAgICBkb0RpcmVjdCA9IDE7DQoJICAgIGJyZWFrOw0K
-CWRlZmF1bHQ6DQoJICAgIHVzYWdlKCk7DQoJfQ0KICAgIH0NCiAgICANCiAg
-ICBpZiAoYXJnYyAhPSBvcHRpbmQpIHVzYWdlKCk7DQoNCiAgICBieXRlSW50
-ZXJ2YWwgKj0gMWU2Ow0KICAgIGxpbWl0ICo9IDFlNjsNCiAgICBzaXplICo9
-IDEwMjQ7DQoNCiAgICBzZXRidWYoc3Rkb3V0LCAwKTsNCg0KICAgIGZwcmlu
-dGYoc3RkZXJyLCJjaHVuayAlZEssIGJ5dGVJbnRlcnZhbCAldU0sIHRpbWVJ
-bnRlcnZhbCAlZiwgbGltaXQgJXVNXG4iLA0KCSAgICBzaXplPj4xMCwNCgkg
-ICAgKHVuc2lnbmVkKShieXRlSW50ZXJ2YWw+PjIwKSwNCgkgICAgdGltZUlu
-dGVydmFsLA0KCSAgICAodW5zaWduZWQpKGxpbWl0Pj4yMCkpOw0KDQogICAg
-aWYgKGRvUmVhZCAmJiBmbmFtZUkgJiYgc3RyY21wKGZuYW1lSSwiLSIpKSB7
-DQoJZmRJID0gb3BlbihmbmFtZUksIE9fUkRPTkxZIHwgTEYpOw0KCWlmIChm
-ZEkgPT0gLTEpIGZhdGFsKCJvcGVuKHJlYWQpIGZhaWxlZCIpOw0KICAgIH0N
-CiAgICBpZiAoZG9Xcml0ZSAmJiBmbmFtZU8gJiYgc3RyY21wKGZuYW1lTywi
-LSIpKSB7DQoJaW50IGZsYWdzID0gT19SRFdSIHwgT19DUkVBVCB8IExGOw0K
-CWlmIChkb0RpcmVjdCkgZmxhZ3MgfD0gT19ESVJFQ1Q7DQoNCglmZE8gPSBv
-cGVuKGZuYW1lTywgZmxhZ3MsIDA2MDApOw0KCWlmIChmZE8gPT0gLTEpIGZh
-dGFsKCJvcGVuKHdyaXRlKSBmYWlsZWQiKTsNCiAgICB9DQoNCiAgICBidWZm
-ZXIgPSBteWFsbG9jKHNpemUpOw0KICAgIG1lbXNldChidWZmZXIsJ20nLHNp
-emUpOw0KDQogICAgdGltZVN0YXJ0ID0gdGltZUxhc3QgPSBndG9kKCk7DQoN
-CiAgICBieXRlcyA9IDA7DQoNCiAgICB3aGlsZSAoYnl0ZXMgPCBsaW1pdCkg
-ew0KCWludCBjID0gc2l6ZTsNCg0KICAgIAlkdW1wc3RhdHMoMCk7DQoNCglp
-ZiAoZG9SZWFkKSB7DQoJICAgIGMgPSByZWFkKGZkSSxidWZmZXIsYyk7DQoJ
-ICAgIGlmIChjID09IC0xKSBmYXRhbCgicmVhZCBmYWlsZWQiKTsNCgl9DQoN
-CglpZiAoZG9Xcml0ZSkgew0KCSAgICBjID0gd3JpdGUoZmRPLGJ1ZmZlcixj
-KTsNCgkgICAgaWYgKGMgPT0gLTEpIGZhdGFsKCJ3cml0ZSBmYWlsZWQiKTsN
-Cgl9DQoNCglieXRlcyArPSBjOw0KDQoJLyogc2hvcnQgcmVhZC93cml0ZSBt
-ZWFucyBFT0YuICovDQoJaWYgKGMgPCBzaXplKSBicmVhazsNCiAgICB9DQoN
-CiAgICBkdW1wc3RhdHMoMSk7DQoNCiAgICByZXR1cm4gMDsNCn0NCg==
---1904360410-58787854-1121314433=:29240--
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
