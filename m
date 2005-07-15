@@ -1,38 +1,57 @@
-From: Ming Zhang <mingz@ele.uri.edu>
-Subject: Re: RAID-5 streaming read performance
-Date: Fri, 15 Jul 2005 08:29:43 -0400
-Message-ID: <1121430583.5548.11.camel@localhost.localdomain>
-References: <874qb14btr.fsf@uwo.ca>
-	 <1121220487.5552.34.camel@localhost.localdomain> <87mzorfmdx.fsf@uwo.ca>
-	 <1121257494.5504.4.camel@localhost.localdomain> <87eka2g9dp.fsf@uwo.ca>
-	 <1121259126.5504.14.camel@localhost.localdomain> <87vf3eeqe2.fsf@uwo.ca>
-	 <42D5573A.6090801@dgreaves.com> <87r7e23uo5.fsf@uwo.ca>
-	 <87wtns7pzc.fsf@uwo.ca>
-	 <Pine.LNX.4.61.0507150558330.10696@praktifix.dwd.de>
-Reply-To: mingz@ele.uri.edu
+From: Forrest Taylor <ftaylor@redhat.com>
+Subject: RAID 5 Grow
+Date: Fri, 15 Jul 2005 13:50:52 -0600
+Message-ID: <1121457052.3012.36.camel@x1-6-00-0d-60-fd-e8-4c>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.61.0507150558330.10696@praktifix.dwd.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Holger Kiehl <Holger.Kiehl@dwd.de>
-Cc: Dan Christensen <jdc@uwo.ca>, Linux RAID <linux-raid@vger.kernel.org>
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-in my previous test, using SATA, i got better result in 2.6 instead of
-2.4. :P
+I am doing some RAID scenarios on a single disc (testing purposes) on
+RHEL4.  I have some partitions as follows:
 
-Ming
+/dev/hda5  100M
+/dev/hda6  200M
+/dev/hda7  200M
+/dev/hda8  200M
+/dev/hda9  200M
 
-On Fri, 2005-07-15 at 06:01 +0000, Holger Kiehl wrote:
-> > I'm trying to figure out why the last two numbers differ.
-> >
-> Have you checked what the performance with a 2.4.x kernel is? If I
-> remember correctly there was some discussion on this list that 2.4
-> raid5
-> has better read performance.
-> 
-> Holger
-> 
+I create a RAID 5 set with /dev/hda{5,6,7,8}.  I fail/remove /dev/hda5
+and add /dev/hda9, at which point I can grow the RAID.  Running:
+
+mdadm -G /dev/md0 -z max
+
+will increase the RAID size, however, it sets off a infinite resync.  I
+have tested with mdadm-1.6.0-2, and with mdadm-1.12.0-1 rebuilt from the
+source rpm.
+
+Here is a snippet of the messages:
+
+Jul 13 09:33:36 station8 kernel: md: syncing RAID array md0
+Jul 13 09:33:36 station8 kernel: md: minimum _guaranteed_ reconstruction
+speed: 1000 KB/sec/disc.
+Jul 13 09:33:36 station8 kernel: md: using maximum available idle IO
+bandwith (but not more than 200000 KB/sec) for reconstruction.
+Jul 13 09:33:36 station8 kernel: md: using 128k window, over a total of
+104320 blocks.
+Jul 13 09:33:36 station8 kernel: md: resuming recovery of md0 from
+checkpoint.
+Jul 13 09:33:36 station8 kernel: md: md0: sync done.
+Jul 13 09:33:36 station8 kernel: RAID5 conf printout:
+Jul 13 09:33:36 station8 kernel:  --- rd:4 wd:4 fd:0
+Jul 13 09:33:36 station8 kernel:  disk 0, o:1, dev:hda6
+Jul 13 09:33:36 station8 kernel:  disk 1, o:1, dev:hda7
+Jul 13 09:33:36 station8 kernel:  disk 2, o:1, dev:hda8
+Jul 13 09:33:36 station8 kernel:  disk 3, o:1, dev:hda9
+
+which print out many times per second.  I have to reboot the system to
+get it to stop filling /var/log/messages.  Once it reboots, and syncs, I
+don't get any problems with it.  Any idea where the problem might be?
+
+Thanks,
+
+Forrest
 
