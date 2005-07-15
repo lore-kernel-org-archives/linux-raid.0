@@ -1,116 +1,72 @@
-From: "bart@ardistech.com" <bart@ardistech.com>
-Subject: Re: How to auto rebuild array?
-Date: Fri, 15 Jul 2005 12:04:46 +0200
-Message-ID: <42D78A3E.777FAC84@ardistech.com>
-References: <42D3C998.3F84EF1C@ardistech.com> <42D567F7.7010408@ruisantos.com> <42D60C24.AF0C2931@ardistech.com> <42D77A6E.3070205@ruisantos.com>
-Reply-To: bart@ardistech.com
+From: Ming Zhang <mingz@ele.uri.edu>
+Subject: Re: RAID-5 streaming read performance
+Date: Fri, 15 Jul 2005 08:28:57 -0400
+Message-ID: <1121430537.5548.9.camel@localhost.localdomain>
+References: <Pine.LNX.4.44.0507141921050.16602-100000@coffee.psychology.mcmaster.ca>
+	 <1121390620.5544.134.camel@localhost.localdomain>   <871x6095ty.fsf@uwo.ca>
+Reply-To: mingz@ele.uri.edu
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <871x6095ty.fsf@uwo.ca>
 Sender: linux-raid-owner@vger.kernel.org
-To: Rui Santos <rsantos@ruisantos.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Dan Christensen <jdc@uwo.ca>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi Rui,
-
->  Nevertheless, i could realy use those commands outputs.
+On Thu, 2005-07-14 at 22:11 -0400, Dan Christensen wrote:
+> Ming Zhang <mingz@ele.uri.edu> writes:
 > 
-Below are the command outputs for the RAID1 set when /dev/hdb3 was
-kicked during raid autodetect.
+> > On Thu, 2005-07-14 at 19:29 -0400, Mark Hahn wrote:
+> >>
+> >> > i also want a way to clear part of the whole page cache by file id. :)
+> >> 
+> >> understandably, kernel developers are don't high-prioritize this sort of 
+> >> not-useful-for-normal-work feature.
+> > agree.
+> 
+> Clearing just part of the page cache sounds too complicated to be
+> worth it, but clearing it all seems reasonable;  some kernel developers
+> spend time doing benchmarks too!
 
-Cheers,
-	Bart
-
-
---------------------------------------------------------------------
-# cat /proc/mdstat 
-Personalities : [linear] [raid0] [raid1] [raid5] 
-md1 : active raid1 hdb2[1] hda2[0]
-      99904 blocks [2/2] [UU]
-      
-md2 : active raid1 hda3[0]
-      999936 blocks [2/1] [U_]
+maybe they do not care to run a program to clear it every time. :P
 
 
-# mdadm --misc -D /dev/md2
-/dev/md2:
-        Version : 00.90.01
-  Creation Time : Tue Jul  5 09:15:31 2005
-     Raid Level : raid1
-     Array Size : 999936 (976.50 MiB 1023.93 MB)
-    Device Size : 999936 (976.50 MiB 1023.93 MB)
-   Raid Devices : 2
-  Total Devices : 1
-Preferred Minor : 2
-    Persistence : Superblock is persistent
 
-    Update Time : Fri Jul 15 12:03:17 2005
-          State : clean, degraded
- Active Devices : 1
-Working Devices : 1
- Failed Devices : 0
-  Spare Devices : 0
+> 
+> >> > Dan Christensen wrote:
+> >> >
+> >> > > I'm really surprised there isn't something in /proc you can use to
+> >> > > clear or disable the cache.  Would be very useful for benchmarking!
+> >> 
+> >> I assume you noticed "blockdev --flushbufs", no?  it works for me 
+> 
+> I had tried this and noticed that it didn't work for files on a
+> filesystem.  But it does seem to work for block devices.  That's
+> great, thanks.  I didn't realize the cache was so complicated;
+> it can be retained for files but not for the block device underlying
+> those files!  
 
-           UUID : 1c03c211:3bbbdacf:20ff8e96:29bd37e7
-         Events : 0.211375
-
-    Number   Major   Minor   RaidDevice State
-       0       3        3        0      active sync   /dev/.static/dev/hda3
-       1       0        0        -      removed
+yes, that is the why the command name is blockdev. :) i guess for files
+we just need to call fsync system call? is that call work on block
+device as well?
 
 
-# mdadm --misc -E /dev/hda3
-/dev/hda3:
-          Magic : a92b4efc
-        Version : 00.90.01
-           UUID : 1c03c211:3bbbdacf:20ff8e96:29bd37e7
-  Creation Time : Tue Jul  5 09:15:31 2005
-     Raid Level : raid1
-   Raid Devices : 2
-  Total Devices : 1
-Preferred Minor : 2
+> 
+> > a test i did show that even you have sda and sdb to form a raid0,
+> > the page cache for sda and sdb will not be used by raid0. kind of
+> > funny.
+> 
+> I thought I had noticed raid devices making use of cache from
+> underlying devices, but a test I just did agrees with your result, for
+> both RAID-1 and RAID-5.  Again, this seems odd.  Shouldn't the raid
+> layer take advantage of a block that's already in RAM?  I guess this
+> won't matter in practice, since you usually don't read from both a
+> raid device and an underlying device.
 
-    Update Time : Fri Jul 15 12:03:17 2005
-          State : clean
- Active Devices : 1
-Working Devices : 1
- Failed Devices : 1
-  Spare Devices : 0
-       Checksum : d15f25b8 - correct
-         Events : 0.211375
+you are right, that is weired in real world.
+
+ming
 
 
-      Number   Major   Minor   RaidDevice State
-this     0       3        3        0      active sync   /dev/.static/dev/hda3
-
-   0     0       3        3        0      active sync   /dev/.static/dev/hda3
-   1     1       0        0        1      faulty removed
-
-# mdadm --misc -E /dev/hdb3
-/dev/hdb3:
-          Magic : a92b4efc
-        Version : 00.90.01
-           UUID : 1c03c211:3bbbdacf:20ff8e96:29bd37e7
-  Creation Time : Tue Jul  5 09:15:31 2005
-     Raid Level : raid1
-   Raid Devices : 2
-  Total Devices : 2
-Preferred Minor : 2
-
-    Update Time : Fri Jul 15 11:25:42 2005
-          State : clean
- Active Devices : 2
-Working Devices : 2
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : d15f1c9a - correct
-         Events : 0.211268
-
-
-      Number   Major   Minor   RaidDevice State
-this     1       3       67        1      active sync   /dev/.static/dev/hdb3
-
-   0     0       3        3        0      active sync   /dev/.static/dev/hda3
-   1     1       3       67        1      active sync   /dev/.static/dev/hdb3
