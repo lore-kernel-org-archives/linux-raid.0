@@ -1,41 +1,38 @@
 From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: Raid5 Failure
-Date: Fri, 15 Jul 2005 11:43:09 +1000
-Message-ID: <17111.5293.613636.774198@cse.unsw.edu.au>
-References: <001401c588d5$b0b15370$c200a8c0@NCNF5131FTH>
+Subject: Re: Re[2]: Bugreport mdadm-2.0-devel-1
+Date: Fri, 15 Jul 2005 11:54:25 +1000
+Message-ID: <17111.5969.741703.944406@cse.unsw.edu.au>
+References: <1684363827.20050706121331@netvision.net.il>
+	<17100.29413.164442.415932@cse.unsw.edu.au>
+	<1892534227.20050707043013@netvision.net.il>
+	<17103.10618.547298.274604@cse.unsw.edu.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from David M. Strang on Thursday July 14
+In-Reply-To: message from Neil Brown on Saturday July 9
 Sender: linux-raid-owner@vger.kernel.org
-To: "David M. Strang" <dstrang@shellpower.net>
-Cc: linux-raid@vger.kernel.org
+To: Maxim Kozover <maximkoz@netvision.net.il>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday July 14, dstrang@shellpower.net wrote:
+On Saturday July 9, neilb@cse.unsw.edu.au wrote:
+> On Thursday July 7, maximkoz@netvision.net.il wrote:
+> > Hi Neil!
+> > Thanks much for your help, array creation using devel-2 just works,
+> > however, the array can't be assembled again after it's stopped:(
 > 
-> It looks like the first 'segment of discs' sda->sdm are all marked clean; 
-> while sdn->sdab are marked active.
+> Hmm, yeh, nor it can :-(
 > 
-> What can I do to resolve this issue? Any assistance would be greatly 
-> appreciated.
+> I'm not sure when I'll have time to look at this (I'm on leave at the
+> moment with family visiting and such) but I'll definitely get back to
+> you by Thursday if not before.
 
+Sorry for the delay.
 
-Apply the following patch to mdadm-2.0-devel2 (it fixes a few bugs and
-particularly make --assemble work) then try:
-
-mdadm -A /dev/md0 /dev/sd[a-z] /dev/sd....
-
-Just list all 28 SCSI devices, I'm not sure what their names are.
-
-This will quite probably fail.
-If it does, try again with 
-   --force
+The following patch against -devel2 should fix these problems if
+(when?) you get more, please let me know.
 
 NeilBrown
-
-
 
 Signed-off-by: Neil Brown <neilb@cse.unsw.edu.au>
 
