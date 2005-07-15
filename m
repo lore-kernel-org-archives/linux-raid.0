@@ -1,79 +1,135 @@
-From: Dan Christensen <jdc@uwo.ca>
-Subject: Re: RAID-5 streaming read performance
-Date: Thu, 14 Jul 2005 22:38:47 -0400
-Message-ID: <87wtns7pzc.fsf@uwo.ca>
-References: <874qb14btr.fsf@uwo.ca>
-	<1121220487.5552.34.camel@localhost.localdomain>
-	<87mzorfmdx.fsf@uwo.ca>
-	<1121257494.5504.4.camel@localhost.localdomain>
-	<87eka2g9dp.fsf@uwo.ca>
-	<1121259126.5504.14.camel@localhost.localdomain>
-	<87vf3eeqe2.fsf@uwo.ca> <42D5573A.6090801@dgreaves.com>
-	<87r7e23uo5.fsf@uwo.ca>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: NeilBrown <neilb@cse.unsw.edu.au>
+Subject: [PATCH md ] md/raid1: clear bitmap when fullsync completes
+Date: Fri, 15 Jul 2005 14:21:40 +1000
+Message-ID: <E1DtHhk-0004zS-Qo@notabene.cse.unsw.edu.au>
+References: <20050715141642.19145.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Summary so far:
+This patch against 2.6.13-rc2-mm2 fixes a slightly obscure problem
+with the bitmap resync code.  With this it should be quite reliable
+(still room for more testing though).
 
-RAID-5, four SATA hard drives, 2.6.12.2 kernel.  Testing streaming
-read speed.  With readahead optimized, I get:
+It would be good for this to get into 2.6.13.
 
-each raw device:        58MB/s
-raid device:            78MB/s
-3 or 4 parallel reads
-from the raw devices:  106MB/s
-
-I'm trying to figure out why the last two numbers differ.
-
-I was afraid that for some reason the kernel was requesting the parity
-blocks instead of just the data blocks, but by using iostat it's
-pretty clear that the right number of blocks are being requested from
-the raw devices.  If I write a dumb program that reads 3 out of every
-4 64k chunks of a raw device, the kernel readahead kicks in and chunks
-I skip over do contribute to the iostat numbers.  But the raid layer
-is correctly avoiding this readahead.
-
-One other theory at this point is that my controller is trying to be
-clever and doing some readahead itself.  Even if this is the case, I'd
-be surprised if this would cause a problem, since the data won't have
-to go over the bus.  But maybe the controller is doing this and is
-causing itself to become overloaded?  My controller is a Silicon Image
-3114.  Details at the end, for the record.
-
-Second theory:  for contiguous streams from the raw devices, the reads
-are done in really big chunks.  But for md layer reads, the biggest
-possible chunk is 3 x 64k, if you want to skip parity blocks.  Could
-3 x 64k be small enough to cause overhead?  Seems unlikely.
-
-Those are my only guesses.  Any others?
-
-It seems strange that I can beat the md layer in userspace by 33%, by
-just reading from three of the devices and using parity to reconstruct
-the fourth!
-
-Thanks again for all the help.  I've learned a lot!  And I haven't
-even started working on write speed...
-
-Dan
+Thanks,
+NeilBrown
 
 
-0000:01:0b.0 RAID bus controller: Silicon Image, Inc. (formerly CMD Technology Inc) SiI 3114 [SATALink/SATARaid] Serial ATA Controller (rev 02)
-        Subsystem: Silicon Image, Inc. (formerly CMD Technology Inc): Unknown device 6114
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
-        Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-        Latency: 32, Cache Line Size: 0x08 (32 bytes)
-        Interrupt: pin A routed to IRQ 177
-        Region 0: I/O ports at 9400 [size=8]
-        Region 1: I/O ports at 9800 [size=4]
-        Region 2: I/O ports at 9c00 [size=8]
-        Region 3: I/O ports at a000 [size=4]
-        Region 4: I/O ports at a400 [size=16]
-        Region 5: Memory at e1001000 (32-bit, non-prefetchable) [size=1K]
-        Capabilities: [60] Power Management version 2
-                Flags: PMEClk- DSI+ D1+ D2+ AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
-                Status: D0 PME-Enable- DSel=0 DScale=2 PME-
+### Comments for Changeset
 
+We need to be careful differentiating between a resync of a complete array,
+in which we can clear the bitmap, and a resync of a degraded array,
+in which we cannot.
+
+This patch cleans all that up.
+
+Cc: Paul Clements <paul.clements@steeleye.com>
+Signed-off-by: Neil Brown <neilb@cse.unsw.edu.au>
+
+### Diffstat output
+ ./drivers/md/bitmap.c         |    9 ++++++---
+ ./drivers/md/raid1.c          |   34 ++++++++++++++++------------------
+ ./include/linux/raid/bitmap.h |    2 +-
+ 3 files changed, 23 insertions(+), 22 deletions(-)
+
+diff ./drivers/md/bitmap.c~current~ ./drivers/md/bitmap.c
+--- ./drivers/md/bitmap.c~current~	2005-07-15 13:57:39.000000000 +1000
++++ ./drivers/md/bitmap.c	2005-07-15 13:57:39.000000000 +1000
+@@ -1345,7 +1345,8 @@ void bitmap_endwrite(struct bitmap *bitm
+ 	}
+ }
+ 
+-int bitmap_start_sync(struct bitmap *bitmap, sector_t offset, int *blocks)
++int bitmap_start_sync(struct bitmap *bitmap, sector_t offset, int *blocks,
++			int degraded)
+ {
+ 	bitmap_counter_t *bmc;
+ 	int rv;
+@@ -1362,8 +1363,10 @@ int bitmap_start_sync(struct bitmap *bit
+ 			rv = 1;
+ 		else if (NEEDED(*bmc)) {
+ 			rv = 1;
+-			*bmc |= RESYNC_MASK;
+-			*bmc &= ~NEEDED_MASK;
++			if (!degraded) { /* don't set/clear bits if degraded */
++				*bmc |= RESYNC_MASK;
++				*bmc &= ~NEEDED_MASK;
++			}
+ 		}
+ 	}
+ 	spin_unlock_irq(&bitmap->lock);
+
+diff ./drivers/md/raid1.c~current~ ./drivers/md/raid1.c
+--- ./drivers/md/raid1.c~current~	2005-07-15 13:57:39.000000000 +1000
++++ ./drivers/md/raid1.c	2005-07-15 13:57:39.000000000 +1000
+@@ -1126,21 +1126,19 @@ static sector_t sync_request(mddev_t *md
+ 		 * only be one in raid1 resync.
+ 		 * We can find the current addess in mddev->curr_resync
+ 		 */
+-		if (!conf->fullsync) {
+-			if (mddev->curr_resync < max_sector)
+-				bitmap_end_sync(mddev->bitmap,
+-						mddev->curr_resync,
++		if (mddev->curr_resync < max_sector) /* aborted */
++			bitmap_end_sync(mddev->bitmap, mddev->curr_resync,
+ 						&sync_blocks, 1);
+-			bitmap_close_sync(mddev->bitmap);
+-		}
+-		if (mddev->curr_resync >= max_sector)
++		else /* completed sync */
+ 			conf->fullsync = 0;
++
++		bitmap_close_sync(mddev->bitmap);
+ 		close_sync(conf);
+ 		return 0;
+ 	}
+ 
+-	if (!conf->fullsync &&
+-	    !bitmap_start_sync(mddev->bitmap, sector_nr, &sync_blocks)) {
++	if (!bitmap_start_sync(mddev->bitmap, sector_nr, &sync_blocks, mddev->degraded) &&
++	    !conf->fullsync) {
+ 		/* We can skip this block, and probably several more */
+ 		*skipped = 1;
+ 		return sync_blocks;
+@@ -1243,15 +1241,15 @@ static sector_t sync_request(mddev_t *md
+ 			len = (max_sector - sector_nr) << 9;
+ 		if (len == 0)
+ 			break;
+-		if (!conf->fullsync) {
+-			if (sync_blocks == 0) {
+-				if (!bitmap_start_sync(mddev->bitmap,
+-						       sector_nr, &sync_blocks))
+-					break;
+-				if (sync_blocks < (PAGE_SIZE>>9))
+-					BUG();
+-				if (len > (sync_blocks<<9)) len = sync_blocks<<9;
+-			}
++		if (sync_blocks == 0) {
++			if (!bitmap_start_sync(mddev->bitmap, sector_nr,
++					       &sync_blocks,
++					       mddev->degraded)
++			    && !conf->fullsync)
++				break;
++			if (sync_blocks < (PAGE_SIZE>>9))
++				BUG();
++			if (len > (sync_blocks<<9)) len = sync_blocks<<9;
+ 		}
+ 
+ 		for (i=0 ; i < conf->raid_disks; i++) {
+
+diff ./include/linux/raid/bitmap.h~current~ ./include/linux/raid/bitmap.h
+--- ./include/linux/raid/bitmap.h~current~	2005-07-15 13:57:39.000000000 +1000
++++ ./include/linux/raid/bitmap.h	2005-07-15 13:57:39.000000000 +1000
+@@ -262,7 +262,7 @@ void bitmap_write_all(struct bitmap *bit
+ int bitmap_startwrite(struct bitmap *bitmap, sector_t offset, unsigned long sectors);
+ void bitmap_endwrite(struct bitmap *bitmap, sector_t offset, unsigned long sectors,
+ 		     int success);
+-int bitmap_start_sync(struct bitmap *bitmap, sector_t offset, int *blocks);
++int bitmap_start_sync(struct bitmap *bitmap, sector_t offset, int *blocks, int degraded);
+ void bitmap_end_sync(struct bitmap *bitmap, sector_t offset, int *blocks, int aborted);
+ void bitmap_close_sync(struct bitmap *bitmap);
+ 
