@@ -1,64 +1,153 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: RAID 5 Grow
-Date: Sat, 16 Jul 2005 14:54:28 +1000
-Message-ID: <17112.37636.345831.676818@cse.unsw.edu.au>
-References: <1121457052.3012.36.camel@x1-6-00-0d-60-fd-e8-4c>
+From: Jim Radford <jradford@npl.com>
+Subject: md_import_device returned -16 raid1
+Date: Sat, 16 Jul 2005 15:47:46 -0700 (PDT)
+Message-ID: <Pine.LNX.4.61.0507161534210.8523@hoss.npl.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Forrest Taylor on Friday July 15
 Sender: linux-raid-owner@vger.kernel.org
-To: Forrest Taylor <ftaylor@redhat.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Friday July 15, ftaylor@redhat.com wrote:
-> I am doing some RAID scenarios on a single disc (testing purposes) on
-> RHEL4.  I have some partitions as follows:
-> 
-> /dev/hda5  100M
-> /dev/hda6  200M
-> /dev/hda7  200M
-> /dev/hda8  200M
-> /dev/hda9  200M
-> 
-> I create a RAID 5 set with /dev/hda{5,6,7,8}.  I fail/remove /dev/hda5
-> and add /dev/hda9, at which point I can grow the RAID.  Running:
-> 
-> mdadm -G /dev/md0 -z max
-> 
-> will increase the RAID size, however, it sets off a infinite resync.  I
-> have tested with mdadm-1.6.0-2, and with mdadm-1.12.0-1 rebuilt from the
-> source rpm.
+Greetings all:
 
-What kernel were you running?  There were problems with looping
-resyncs, but I think they have been fixed.
+Having a bit of difficulty with raid1, I built the array lastnight with 
+two new drives, and it built fine but when I rebooted I get the following 
+error when trying to start the array:
 
-I just repeated your experiment on 2.6.13-rc1-mm1 and didn't get an
-infinite loop, but it took < 1second to sync the second 200M, whereas
-the first 100M took 7 seconds, so I'm a bit worried...
+I'm running Mandrake 10.1 kernel 2.6.8.1-12mdk
 
-Ahh, found the problem.  The following patch is required to make it
-resync properly, and with it the experiment does what is expected.
-Thanks for helping me find that.
+[root@localhost jradford]# mdadm --version
+mdadm - v1.7.0 - 11 August 2004
 
-NeilBrown
+[root@bengali jradford]# mdadm -A -s
+mdadm: failed to add /dev/hdc to /dev/md0: Device or resource busy
+mdadm: /dev/md0 has been started with 1 drive (out of 2).
 
-Signed-off-by: Neil Brown <neilb@cse.unsw.edu.au>
+The following error message shows up in dmesg:
 
-### Diffstat output
- ./drivers/md/md.c |    1 +
- 1 files changed, 1 insertion(+)
+[root@bengali jradford]# dmesg | grep md:
+md: md driver 0.90.0 MAX_MD_DEVS=256, MD_SB_DISKS=27
+md: Autodetecting RAID arrays.
+md: autorun ...
+md: ... autorun DONE.
+md: md0 stopped.
+md: could not lock unknown-block(22,0).
+md: md_import_device returned -16
+md: bind<hdb>
 
-diff ./drivers/md/md.c~current~ ./drivers/md/md.c
---- ./drivers/md/md.c~current~	2005-07-16 14:41:19.000000000 +1000
-+++ ./drivers/md/md.c	2005-07-16 14:41:21.000000000 +1000
-@@ -2580,6 +2580,7 @@ static int update_array_info(mddev_t *md
- 			if (avail < ((sector_t)info->size << 1))
- 				return -ENOSPC;
- 		}
-+		mddev->resync_max_sectors =  (sector_t)info->size *2; /*default */
- 		rv = mddev->pers->resize(mddev, (sector_t)info->size *2);
- 		if (!rv) {
- 			struct block_device *bdev;
+my /proc/mdstat:
+
+[root@bengali jradford]# cat /proc/mdstat
+Personalities : [raid1]
+md0 : active raid1 hdb[0]
+       195360896 blocks [2/1] [U_]
+
+unused devices: <none>
+
+Some drive specific information
+
+[root@bengali jradford]# mdadm -E /dev/hdb
+/dev/hdb:
+           Magic : a92b4efc
+         Version : 00.90.00
+            UUID : 9d09bd52:e44dc514:4e6b732f:5263e2f8
+   Creation Time : Fri Jul 15 21:16:18 2005
+      Raid Level : raid1
+     Device Size : 195360896 (186.31 GiB 200.05 GB)
+    Raid Devices : 2
+   Total Devices : 2
+Preferred Minor : 0
+
+     Update Time : Sat Jul 16 07:33:32 2005
+           State : clean
+  Active Devices : 2
+Working Devices : 2
+  Failed Devices : 0
+   Spare Devices : 0
+        Checksum : 5ca8741a - correct
+          Events : 0.326
+
+
+       Number   Major   Minor   RaidDevice State
+this     0       3       64        0      active sync   /dev/hdb
+
+    0     0       3       64        0      active sync   /dev/hdb
+    1     1      22        0        1      active sync   /dev/hdc
+
+[root@localhost jradford]# mdadm -E /dev/hdc
+/dev/hdc:
+           Magic : a92b4efc
+         Version : 00.90.00
+            UUID : 9d09bd52:e44dc514:4e6b732f:5263e2f8
+   Creation Time : Fri Jul 15 21:16:18 2005
+      Raid Level : raid1
+     Device Size : 195360896 (186.31 GiB 200.05 GB)
+    Raid Devices : 2
+   Total Devices : 2
+Preferred Minor : 0
+
+     Update Time : Sat Jul 16 07:33:32 2005
+           State : clean
+  Active Devices : 2
+Working Devices : 2
+  Failed Devices : 0
+   Spare Devices : 0
+        Checksum : 5ca873ef - correct
+          Events : 0.326
+
+
+       Number   Major   Minor   RaidDevice State
+this     1      22        0        1      active sync   /dev/hdc
+
+    0     0       3       64        0      active sync   /dev/hdb
+    1     1      22        0        1      active sync   /dev/hdc
+
+And for the md status:
+
+[root@bengali mdadm-2.0-devel-2]# mdadm -D /dev/md0
+/dev/md0:
+         Version : 00.90.01
+   Creation Time : Fri Jul 15 21:16:18 2005
+      Raid Level : raid1
+      Array Size : 195360896 (186.31 GiB 200.05 GB)
+     Device Size : 195360896 (186.31 GiB 200.05 GB)
+    Raid Devices : 2
+   Total Devices : 1
+Preferred Minor : 0
+     Persistence : Superblock is persistent
+
+     Update Time : Sat Jul 16 07:33:32 2005
+           State : clean, degraded
+  Active Devices : 1
+Working Devices : 1
+  Failed Devices : 0
+   Spare Devices : 0
+
+            UUID : 9d09bd52:e44dc514:4e6b732f:5263e2f8
+          Events : 0.326
+
+     Number   Major   Minor   RaidDevice State
+        0       3       64        0      active sync   /dev/hdb
+        1       0        0        -      removed
+
+
+
+If I try and add hdc to the array With version 1.9.0 I get
+mdadm: hot add failed for /dev/hdc: Invalid argument
+but the same message in dmesg as above.
+
+with 2.0devel2 I get:
+mdadm: Cannot open /dev/hdc: Device or resource busy
+But also the same message in dmesg as above
+
+Any advice would be greatly appreciated.
+
+Regards,
+Jim
+
+-- 
+==========================================================================
+Jim Radford <jradford@npl.com>
+http://www.jimradford.com/
+==========================================================================
