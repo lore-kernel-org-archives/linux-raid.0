@@ -1,54 +1,64 @@
-From: Brad Campbell <brad@wasp.net.au>
-Subject: Raid-6 stability gets my vote
-Date: Sat, 16 Jul 2005 00:44:38 +0400
-Message-ID: <42D82036.3060602@wasp.net.au>
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: RAID 5 Grow
+Date: Sat, 16 Jul 2005 14:54:28 +1000
+Message-ID: <17112.37636.345831.676818@cse.unsw.edu.au>
+References: <1121457052.3012.36.camel@x1-6-00-0d-60-fd-e8-4c>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from Forrest Taylor on Friday July 15
 Sender: linux-raid-owner@vger.kernel.org
-To: RAID Linux <linux-raid@vger.kernel.org>
+To: Forrest Taylor <ftaylor@redhat.com>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-G'day all,
+On Friday July 15, ftaylor@redhat.com wrote:
+> I am doing some RAID scenarios on a single disc (testing purposes) on
+> RHEL4.  I have some partitions as follows:
+> 
+> /dev/hda5  100M
+> /dev/hda6  200M
+> /dev/hda7  200M
+> /dev/hda8  200M
+> /dev/hda9  200M
+> 
+> I create a RAID 5 set with /dev/hda{5,6,7,8}.  I fail/remove /dev/hda5
+> and add /dev/hda9, at which point I can grow the RAID.  Running:
+> 
+> mdadm -G /dev/md0 -z max
+> 
+> will increase the RAID size, however, it sets off a infinite resync.  I
+> have tested with mdadm-1.6.0-2, and with mdadm-1.12.0-1 rebuilt from the
+> source rpm.
 
-This message is really just for future googles.
-I have been running a 15 disk raid-6 since 24th feb in production and can completely vouch for it's 
-stability. I have had both simulated and real drive failures and it has handled itself perfectly 
-under all cases. Unclean shutdowns and resyncs have all been perfect.
-I know it's tagged as stable in any case, but I still get E-mails from people dragging my name from 
-google asking about it, so I place this here for the public record.
+What kernel were you running?  There were problems with looping
+resyncs, but I think they have been fixed.
 
-storage1:/home/brad# mdadm -D /dev/md0
-/dev/md0:
-         Version : 00.90.01
-   Creation Time : Thu Feb 24 14:51:17 2005
-      Raid Level : raid6
-      Array Size : 3186525056 (3038.91 GiB 3263.00 GB)
-     Device Size : 245117312 (233.76 GiB 251.00 GB)
-    Raid Devices : 15
-   Total Devices : 15
-Preferred Minor : 0
-     Persistence : Superblock is persistent
+I just repeated your experiment on 2.6.13-rc1-mm1 and didn't get an
+infinite loop, but it took < 1second to sync the second 200M, whereas
+the first 100M took 7 seconds, so I'm a bit worried...
 
-     Update Time : Fri Jul 15 13:27:51 2005
-           State : clean
-  Active Devices : 15
-Working Devices : 15
-  Failed Devices : 0
-   Spare Devices : 0
+Ahh, found the problem.  The following patch is required to make it
+resync properly, and with it the experiment does what is expected.
+Thanks for helping me find that.
 
-Many thanks to hpa and others responsible for raid-6. I have already had a 2 drive failure and they 
-were so close together even a hot spare would not have had time to rebuild.
+NeilBrown
 
-Also thanks to Neil Brown for a great monitoring and management tool. Mdadm and it's monitoring to 
-E-mail has been invaluable.
+Signed-off-by: Neil Brown <neilb@cse.unsw.edu.au>
 
-I'd also like to thank Maxtor for producing drives that actually have useful S.M.A.R.T. data. Wish 
-the other manuf's would follow suit.
+### Diffstat output
+ ./drivers/md/md.c |    1 +
+ 1 files changed, 1 insertion(+)
 
-Brad
--- 
-"Human beings, who are almost unique in having the ability
-to learn from the experience of others, are also remarkable
-for their apparent disinclination to do so." -- Douglas Adams
+diff ./drivers/md/md.c~current~ ./drivers/md/md.c
+--- ./drivers/md/md.c~current~	2005-07-16 14:41:19.000000000 +1000
++++ ./drivers/md/md.c	2005-07-16 14:41:21.000000000 +1000
+@@ -2580,6 +2580,7 @@ static int update_array_info(mddev_t *md
+ 			if (avail < ((sector_t)info->size << 1))
+ 				return -ENOSPC;
+ 		}
++		mddev->resync_max_sectors =  (sector_t)info->size *2; /*default */
+ 		rv = mddev->pers->resize(mddev, (sector_t)info->size *2);
+ 		if (!rv) {
+ 			struct block_device *bdev;
