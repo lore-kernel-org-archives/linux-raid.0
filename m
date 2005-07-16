@@ -1,88 +1,52 @@
-From: Jim Radford <jradford@npl.com>
-Subject: Re: md_import_device returned -16 raid1
-Date: Sat, 16 Jul 2005 16:32:05 -0700 (PDT)
-Message-ID: <Pine.LNX.4.61.0507161630330.8523@hoss.npl.com>
-References: <Pine.LNX.4.61.0507161534210.8523@hoss.npl.com>
- <17113.37737.512268.68189@cse.unsw.edu.au> <Pine.LNX.4.61.0507161611050.8523@hoss.npl.com>
+From: Michael Tokarev <mjt@tls.msk.ru>
+Subject: Re: [patch] linear does not need chunksize
+Date: Sun, 17 Jul 2005 03:50:48 +0400
+Message-ID: <42D99D58.6080207@tls.msk.ru>
+References: <20050716231236.1851A8DC9@gandalf.tls.msk.ru> <17113.38562.489541.760889@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.61.0507161611050.8523@hoss.npl.com>
+In-Reply-To: <17113.38562.489541.760889@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@cse.unsw.edu.au>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-lvm2 seems to be the cause, I removed all lv/vg/pv's and it started fine. 
-My guess is I need to change something in the mandrake initscripts (order 
-wise) to make sure lvm doesn't kick into gear until the raid has started.
+Neil Brown wrote:
+> On Sunday July 17, mjt@tls.msk.ru wrote:
+[]
+>>Note chunk size is never used on linear array.  The
+>>only usage of chunk_size member is in /proc/mdstat,
+>>as "rounding" parameter (linear.c) - looks like it
+>>should be removed too.
+> 
+> This statement isn't entirely true, though it took me a little while
+> to remind myself exactly how linear.c does use chunk_size.
+> 
+> linear_run in linear.c uses rdev->size for each devices.
+> in md.c rdev->size is set by a call to calc_dev_size()
+> calc_dev_size *does* use chunk_size (if it is non-zero)
 
-Thanks for your thoughts!
+Aha.
 
-Jim
+Well, in that case, the whole stuff around that check should
+be reviewed.  At least, all the various raid levels should
+have device size to be at least PAGE_SIZE (as checked in the
+code fragment surrounded by this if() statement).
 
-On Sat, 16 Jul 2005, Jim Radford wrote:
+BTW, I don't really know how we got zero chunksize in the
+superblock in the first place.  It was evms who screwed up
+3-components linear array somehow (which worked before),
+and, since I for one know nothing about evms, we tried to
+assemble it with mdadm, which failed due to this very check
+in kernel.  So we were forced to re-create the array to
+work around this in-kernel check (since for linear array
+recreate operation is safe and leaves the data intact).
 
-> I'm not exactly sure what could be making it busy, I don't have it mounted, 
-> and I can't seem to find anything in /proc that shows it is in use in another 
-> way. I can't think of a way to check what might be causing it to think it is 
-> in use. Even during boot before userspace it is giving the same error.
->
-> Thanks for your assistance.
->
-> [...]
-> Bridge firewalling registered
->> Autodetecting RAID arrays.
->> autorun ...
->> ... autorun DONE.
->
-> [...]
->
->> md0 stopped.
->> could not bd_claim hdc.
->> md_import_device returned -16
->> bind<hdb>
->> raid1 personality registered as nr 3
-> raid1: raid set md0 active with 1 out of 2 mirrors
-> kjournald starting.  Commit interval 5 seconds
->
-> [...]
->
->
-> /dev/hda1 on / type ext3 (rw)
-> none on /proc type proc (rw)
-> none on /sys type sysfs (rw)
-> /dev/hda6 on /home type ext3 (rw)
->
-> On Sun, 17 Jul 2005, Neil Brown wrote:
->
->> On Saturday July 16, jradford@npl.com wrote:
->>> Greetings all:
->>> 
->>> Having a bit of difficulty with raid1, I built the array lastnight with
->>> two new drives, and it built fine but when I rebooted I get the 
->>> following
->>> error when trying to start the array:
->>> 
->>> I'm running Mandrake 10.1 kernel 2.6.8.1-12mdk
->>> 
->>> [root@localhost jradford]# mdadm --version
->>> mdadm - v1.7.0 - 11 August 2004
->>> 
->>> [root@bengali jradford]# mdadm -A -s
->>> mdadm: failed to add /dev/hdc to /dev/md0: Device or resource busy
->> 
->> This is telling you that /dev/hdc is 'busy'.
->> Maybe a filesystem is mounted of it, or of a partition of it?
->> 
->> Could it already be in use?
->> 
->> NeilBrown
->> 
->
->
+So maybe the whole issue is moot: how often do you see
+an array with zero chunk-size?
 
--- 
-==========================================================================
-Jim Radford <jradford@npl.com>
-http://www.jimradford.com/
-==========================================================================
+Thanks.
+
+/mjt
