@@ -1,68 +1,153 @@
-From: "Francisco Zafra" <fzafra@gmail.com>
-Subject: Recovery raid5 after sata cable failure.
-Date: Sun, 17 Jul 2005 13:34:34 +0200
-Message-ID: <42da427a.2e075618.7fea.2c30@mx.gmail.com>
+From: djani22@dynamicweb.hu
+Subject: Found a new bug!
+Date: Sun, 17 Jul 2005 14:10:26 +0200
+Message-ID: <009001c58ac8$9ab25d40$0400a8c0@LocalHost>
+References: <20050717182650.24540.patches@notabene> <E1Du4Uu-0006O7-84@notabene.cse.unsw.edu.au>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="US-ASCII"
+	charset="iso-8859-2"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi all,
- 
-    I have raid5 array working without problem for some months. A SATA cable
-failed and de raid5 works fine keeping the superblock persistent, but now, I
-can't get the old device inserted into the array.
-    This is the array just now:
- 
-root@Torero-2:/mnt/raid5 # mdadm --detail /dev/md0
-/dev/md0:
-        Version : 00.90.01
-  Creation Time : Tue May 31 19:37:37 2005
-     Raid Level : raid5
-     Array Size : 1367507456 (1304.16 GiB 1400.33 GB)
-    Device Size : 195358208 (186.31 GiB 200.05 GB)
-   Raid Devices : 8
-  Total Devices : 7
-Preferred Minor : 0
-    Persistence : Superblock is persistent
- 
-    Update Time : Sun Jul 17 13:06:17 2005
-          State : clean, degraded
- Active Devices : 7
-Working Devices : 7
- Failed Devices : 0
-  Spare Devices : 0
- 
-         Layout : left-symmetric
-     Chunk Size : 512K
- 
-           UUID : c4ed8e45:2a036953:92bff479:7cf5bac9
-         Events : 0.162797
- 
-    Number   Major   Minor   RaidDevice State
-       0       8        1        0      active sync   /dev/sda1
-       1       8       17        1      active sync   /dev/sdb1
-       2       8       33        2      active sync   /dev/sdc1
-       3       8       49        3      active sync   /dev/sdd1
-       4       8       65        4      active sync   /dev/sde1
-       5       8       81        5      active sync   /dev/sdf1
-       6       8       97        6      active sync   /dev/sdg1
-       7       0        0        -      removed
+Hi all!
+
+I think I found a new bug in the kernel ! (or mdadm?)
+
+First I try this:
+mkraid --configfile /etc/raidtab.nw /dev/md0 -R
+DESTROYING the contents of /dev/md0 in 5 seconds, Ctrl-C if unsure!
+handling MD device /dev/md0
+analyzing super-block
+couldn't get device size for /dev/md31 -- File too large
+mkraid: aborted.
+(In addition to the above messages, see the syslog and /proc/mdstat as well
+ for potential clues.)
+
+Next  I try this:
+
+./create_linear
+mdadm: /dev/md31 appears to be part of a raid array:
+    level=0 devices=1 ctime=Sun Jul 17 13:30:27 2005
+Continue creating array? y
+./create_linear: line 1:  2853 Segmentation fault      mdadm --create
+/dev/md0 --chunk=32 --level=linear --force --raid-devices=1 /dev/md31
+
+After this little script the half of the raid subsystem hangs:
+
+The raidtools makes nothing, the mdadm makes nothing too.
+AND the cat /proc/mdstat is hangs too!
+But the /dev/md31 device is still working.
+
+mdstat in previous 2s: (watch cat /proc/mdstat)
+
+Personalities : [linear] [raid0] [raid1] [raid5] [multipath] [faulty]
+md31 : active raid0 md4[3] md3[2] md2[1] md1[0]
+      7814332928 blocks 32k chunks
+
+md4 : active raid1 nbd3[0]
+      1953583296 blocks [2/1] [U_]
+
+md3 : active raid1 nbd2[0]
+      1953583296 blocks [2/1] [U_]
+
+md2 : active raid1 nbd1[0]
+      1953583296 blocks [2/1] [U_]
+
+md1 : active raid1 nbd0[0]
+      1953583296 blocks [2/1] [U_]
+
+unused devices: <none>
+
+Kernel: 2.6.13-rc3
+raidtools-1.00.3
+mdadm-1.12.0
+
+The background:
+I try to build a big array ~8TB.
+
+I use for this 5 PCs.
+4 for "disk nodes" with nbd and 1 for "concentrator".
+(from previous idea in this list. ;)
+In the concentrator, the first level raid  (md1-4) is for ability to backup,
+swap the disk nodes. (node-spare)
+The next level (md31) is for the performance. ;)
+And, the last level (md0 linear) for scalability.
+
+Why dont use LVM for last level?
+Well, I try that, but cat /dev/.../LV >/dev/null can do only 15 - 16 MB/s
+and cat /dev/md31 >/dev/null can do 34-38MB/s.
+(the network is G-Ethernet, but only 32bit/33MHz PCI!)
+
+Thanks
+Janos
 
 
-	And I try to re-add the old disk in this way:
+----- Original Message -----
+From: "NeilBrown" <neilb@cse.unsw.edu.au>
+To: "Andrew Morton" <akpm@osdl.org>
+Cc: <linux-raid@vger.kernel.org>
+Sent: Sunday, July 17, 2005 10:27 AM
+Subject: [PATCH md ] When resizing an array, we need to update
+resync_max_sectors as well as size.
 
-root@Torero-2:/mnt/raid5 # mdadm /dev/md0 -a /dev/sdh1   
-mdadm: Cannot open /dev/sdh1: Device or resource busy
 
-	What is wrong? What I am doing bad? Sdh1 is absolutely unused, so I
-don't understand the error "resource busy"
-
-	Thanks,
-
-	Paco Zafra.
+> Another md patch against 2.6.13-rc2-mm2, suitable for 2.6.13.
+> Thanks,
+> NeilBrown
+>
+> ### Comments for Changeset
+>
+> Without this, and attempt to 'grow' an array will claim to have synced
+> the extra part without actually having done anything.
+>
+> Signed-off-by: Neil Brown <neilb@cse.unsw.edu.au>
+>
+> ### Diffstat output
+>  ./drivers/md/raid1.c     |    1 +
+>  ./drivers/md/raid5.c     |    1 +
+>  ./drivers/md/raid6main.c |    1 +
+>  3 files changed, 3 insertions(+)
+>
+> diff ./drivers/md/raid1.c~current~ ./drivers/md/raid1.c
+> --- ./drivers/md/raid1.c~current~ 2005-07-17 18:25:47.000000000 +1000
+> +++ ./drivers/md/raid1.c 2005-07-17 17:18:13.000000000 +1000
+> @@ -1467,6 +1467,7 @@ static int raid1_resize(mddev_t *mddev,
+>   set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+>   }
+>   mddev->size = mddev->array_size;
+> + mddev->resync_max_sectors = sectors;
+>   return 0;
+>  }
+>
+>
+> diff ./drivers/md/raid5.c~current~ ./drivers/md/raid5.c
+> --- ./drivers/md/raid5.c~current~ 2005-07-17 18:25:47.000000000 +1000
+> +++ ./drivers/md/raid5.c 2005-07-17 18:25:52.000000000 +1000
+> @@ -1931,6 +1931,7 @@ static int raid5_resize(mddev_t *mddev,
+>   set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+>   }
+>   mddev->size = sectors /2;
+> + mddev->resync_max_sectors = sectors;
+>   return 0;
+>  }
+>
+>
+> diff ./drivers/md/raid6main.c~current~ ./drivers/md/raid6main.c
+> --- ./drivers/md/raid6main.c~current~ 2005-07-17 18:25:47.000000000 +1000
+> +++ ./drivers/md/raid6main.c 2005-07-17 17:19:04.000000000 +1000
+> @@ -2095,6 +2095,7 @@ static int raid6_resize(mddev_t *mddev,
+>   set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+>   }
+>   mddev->size = sectors /2;
+> + mddev->resync_max_sectors = sectors;
+>   return 0;
+>  }
+>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
