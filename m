@@ -1,47 +1,58 @@
-From: djani22@dynamicweb.hu
-Subject: Re: Found a new bug!
-Date: Mon, 18 Jul 2005 00:31:13 +0200
-Message-ID: <013701c58b1f$3e6e7300$0400a8c0@LocalHost>
-References: <20050717182650.24540.patches@notabene><E1Du4Uu-0006O7-84@notabene.cse.unsw.edu.au><009001c58ac8$9ab25d40$0400a8c0@LocalHost> <17114.55335.687696.686786@cse.unsw.edu.au>
+From: "David M. Strang" <dstrang@shellpower.net>
+Subject: Re: Raid5 Failure
+Date: Sun, 17 Jul 2005 19:15:34 -0400
+Message-ID: <00e101c58b25$6f5c06c0$c200a8c0@NCNF5131FTH>
+References: <009401c58ae6$65b57870$c200a8c0@NCNF5131FTH> <17114.54800.132155.142544@cse.unsw.edu.au>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="ISO-8859-1"
+	format=flowed;
+	charset="iso-8859-1";
+	reply-type=original
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@cse.unsw.edu.au>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Neil -
 
------ Original Message -----
-From: "Neil Brown" <neilb@cse.unsw.edu.au>
-To: <djani22@dynamicweb.hu>
-Cc: <linux-raid@vger.kernel.org>
-Sent: Monday, July 18, 2005 12:13 AM
-Subject: Re: Found a new bug!
+-(root@abyss)-(/)- # mdadm --manage -add /dev/md0 /dev/sdaa
+mdadm: hot add failed for /dev/sdaa: Invalid argument
+-(root@abyss)-(/)- # mdadm --version
+mdadm - v2.0-devel-2 - DEVELOPMENT VERSION NOT FOR REGULAR USE - 7 July 2005
+-(root@abyss)-(/)- #
+
+Jul 17 19:13:57 abyss kernel: md0: HOT_ADD may only be used with version-0 
+superblocks.
+
+I'm using the devel-2 version, with the patch you posted previously.
+
+-- David M. Strang
+
+----- Original Message ----- 
+From: Neil Brown
+To: David M. Strang
+Cc: linux-raid@vger.kernel.org
+Sent: Sunday, July 17, 2005 6:05 PM
+Subject: Re: Raid5 Failure
 
 
-> On Sunday July 17, djani22@dynamicweb.hu wrote:
-> > Hi all!
-> >
-> > I think I found a new bug in the kernel ! (or mdadm?)
+On Sunday July 17, dstrang@shellpower.net wrote:
+> -(root@abyss)-(/)- # mdadm --manage --add /dev/md0 /dev/sdaa
+> mdadm: hot add failed for /dev/sdaa: Invalid argument
 >
-> Yes.  With the current code you cannot have components of a 'linear'
-> which are larger than 2^32 sectors.  I'll try to put together a fix
-> for this in the next day or so.
+> Jul 17 11:42:38 abyss kernel: md0: HOT_ADD may only be used with version-0
+> superblocks.
 >
-> NeilBrown
+> What, if anything, can I do since I'm using a version 1.0
+> superblock?
 
-Thanks for help!
+Use a newer mdadm.  This works with v2.0-devel-2 (I just checked).
 
-Another one question:
-
-I did'nt find an usable way for me, but my system must start anyway....
-
-I hava created the XFS directly to the 8TB raid0 (/dev/md31), and now the
-copy is runing...
-It is possible in the future to convert it to be a part of the planned
-linear array without backup all data?
-
-Thanks.
+NeilBrown
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html 
 
