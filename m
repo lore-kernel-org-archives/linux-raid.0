@@ -1,41 +1,34 @@
-From: Brad Campbell <brad@wasp.net.au>
-Subject: Re: Recovery raid5 after sata cable failure.
-Date: Mon, 18 Jul 2005 14:15:40 +0400
-Message-ID: <42DB814C.1070409@wasp.net.au>
-References: <42db7d1e.6cc951d1.55b4.ffffb383@mx.gmail.com>
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: md_import_device returned -16 raid1
+Date: Mon, 18 Jul 2005 17:57:06 +0200
+Message-ID: <20050718155706.GF31959@percy.comedia.it>
+References: <Pine.LNX.4.61.0507161534210.8523@hoss.npl.com> <17113.37737.512268.68189@cse.unsw.edu.au> <Pine.LNX.4.61.0507161611050.8523@hoss.npl.com> <Pine.LNX.4.61.0507161630330.8523@hoss.npl.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <42db7d1e.6cc951d1.55b4.ffffb383@mx.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.61.0507161630330.8523@hoss.npl.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Francisco Zafra <fzafra@gmail.com>
-Cc: 'Neil Brown' <neilb@cse.unsw.edu.au>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Francisco Zafra wrote:
-> Hi Neil, 
-> Since some hours I am trying to solved it with the last version:
-> root@Torero-2:~ # mdadm --version
-> mdadm - v2.0-devel-2 - DEVELOPMENT VERSION NOT FOR REGULAR USE - 7 July 2005
-> 
-> With the same results :(
-> 
-> I really don't think it is locked I dd it in act of desperation and I have
-> no problems:
-> root@Torero-2:~ # dd if=/dev/zero of=/dev/sdh bs=1k count=1000
-> 1000+0 records in
-> 1000+0 records out
-> 1024000 bytes transferred in 0.417862 seconds (2450570 bytes/sec)
-> 
+On Sat, Jul 16, 2005 at 04:32:05PM -0700, Jim Radford wrote:
+>lvm2 seems to be the cause, I removed all lv/vg/pv's and it started fine. 
+>My guess is I need to change something in the mandrake initscripts (order 
+>wise) to make sure lvm doesn't kick into gear until the raid has started.
+>
+check you have 
+    md_component_detection = 1
 
-Asking a silly question perhaps..
-
-fuser /dev/sdh
+in /etc/lvm/lvm.conf, it should be the default.
 
 Regards,
-Brad
+L.
+
 -- 
-"Human beings, who are almost unique in having the ability
-to learn from the experience of others, are also remarkable
-for their apparent disinclination to do so." -- Douglas Adams
+Luca Berra -- bluca@comedia.it
+        Communication Media & Services S.r.l.
+ /"\
+ \ /     ASCII RIBBON CAMPAIGN
+  X        AGAINST HTML MAIL
+ / \
