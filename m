@@ -1,19 +1,44 @@
-From: Tyler <pml@dtbb.net>
+From: "David M. Strang" <dstrang@shellpower.net>
 Subject: Re: Raid5 Failure
-Date: Sun, 17 Jul 2005 19:10:37 -0700
-Message-ID: <42DB0F9D.6040904@dtbb.net>
-References: <009401c58ae6$65b57870$c200a8c0@NCNF5131FTH><17114.54800.132155.142544@cse.unsw.edu.au><00e101c58b25$6f5c06c0$c200a8c0@NCNF5131FTH><17114.62108.319878.983091@cse.unsw.edu.au><010701c58b32$ee423830$c200a8c0@NCNF5131FTH><17115.149.130115.176372@cse.unsw.edu.au><001601c58b37$620c69d0$c200a8c0@NCNF5131FTH> <17115.1749.370942.838069@cse.unsw.edu.au> <004b01c58b3a$8e26f910$c200a8c0@NCNF5131FTH>
+Date: Sun, 17 Jul 2005 22:12:33 -0400
+Message-ID: <005c01c58b3e$28baef60$c200a8c0@NCNF5131FTH>
+References: <009401c58ae6$65b57870$c200a8c0@NCNF5131FTH><17114.54800.132155.142544@cse.unsw.edu.au><00e101c58b25$6f5c06c0$c200a8c0@NCNF5131FTH><17114.62108.319878.983091@cse.unsw.edu.au><010701c58b32$ee423830$c200a8c0@NCNF5131FTH><17115.149.130115.176372@cse.unsw.edu.au><001601c58b37$620c69d0$c200a8c0@NCNF5131FTH> <17115.1749.370942.838069@cse.unsw.edu.au> <004b01c58b3a$8e26f910$c200a8c0@NCNF5131FTH> <42DB0F9D.6040904@dtbb.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	format=flowed;
+	charset="iso-8859-1";
+	reply-type=response
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <004b01c58b3a$8e26f910$c200a8c0@NCNF5131FTH>
 Sender: linux-raid-owner@vger.kernel.org
-To: "David M. Strang" <dstrang@shellpower.net>
+To: Tyler <pml@dtbb.net>
 Cc: Neil Brown <neilb@cse.unsw.edu.au>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-If you cat /proc/mdstat, it should show the array resyncing... when its 
+-(root@abyss)-(/)- # cat /proc/mdstat
+Personalities : [raid5] [multipath]
+md0 : active raid5 sdaa[28] sda[0] sdab[27] sdz[25] sdy[24] sdx[23] sdw[22] 
+sdv[21] sdu[20] sdt[19] sds[18] sdr[17] sdq[16] sdp[15] sdo[14] sdn[13] 
+sdm[12] sdl[11] sdk[10] sdj[9] sdi[8] sdh[7] sdg[6] sdf[5] sde[4] sdd[3] 
+sdc[2] sdb[1]
+      1935556992 blocks level 5, 128k chunk, algorithm 0 [28/27] 
+[UUUUUUUUUUUUUUUUUUUUUUUUUU_U]
+
+unused devices: <none>
+
+Do I need to do anything else to 'kick it off' ?
+
+-- David M. Strang
+
+----- Original Message ----- 
+From: Tyler
+To: David M. Strang
+Cc: Neil Brown ; linux-raid@vger.kernel.org
+Sent: Sunday, July 17, 2005 10:10 PM
+Subject: Re: Raid5 Failure
+
+
+If you cat /proc/mdstat, it should show the array resyncing... when its
 done, it will put the drive back as device 26.
 
 Tyler.
@@ -22,8 +47,8 @@ David M. Strang wrote:
 
 > Neil --
 >
-> That worked, the device has been added to the array. Now, I think the 
-> next problem is my own ignorance.
+> That worked, the device has been added to the array. Now, I think the next 
+> problem is my own ignorance.
 >
 > -(root@abyss)-(/)- # mdadm --detail /dev/md0
 > /dev/md0:
@@ -78,8 +103,7 @@ David M. Strang wrote:
 >      24      65      128       24      active sync   /dev/evms/.nodes/sdy
 >      25      65      144       25      active sync   /dev/evms/.nodes/sdz
 >      26       0        0        -      removed
->      27      65      176       27      active sync   
-> /dev/evms/.nodes/sdab
+>      27      65      176       27      active sync   /dev/evms/.nodes/sdab
 >
 >      28      65      160        -      spare   /dev/evms/.nodes/sdaa
 >
@@ -88,8 +112,8 @@ David M. Strang wrote:
 > degraded.
 >
 > What do I do next? What I wanted to do was to put /dev/sdaa back in as 
-> device 26, but now it's device 28 - and flagged as spare. How do I 
-> make it active in the array again?
+> device 26, but now it's device 28 - and flagged as spare. How do I make it 
+> active in the array again?
 >
 > -- David M. Strang
 >
@@ -137,3 +161,8 @@ David M. Strang wrote:
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html 
+
