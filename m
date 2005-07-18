@@ -1,71 +1,187 @@
 From: Maxim Kozover <maximkoz@netvision.net.il>
-Subject: Re: 2.6.13-rc3 (ide ?) kernel crash
-Date: Tue, 19 Jul 2005 00:06:32 +0300
-Message-ID: <96921040.20050719000632@netvision.net.il>
-References: <1057870318.20050718195400@netvision.net.il>
+Subject: Re: Re: Re[2]: Bugreport mdadm-2.0-devel-1
+Date: Tue, 19 Jul 2005 00:08:11 +0300
+Message-ID: <69444850.20050719000811@netvision.net.il>
+References: <1684363827.20050706121331@netvision.net.il>
+ <17100.29413.164442.415932@cse.unsw.edu.au>
+ <1892534227.20050707043013@netvision.net.il>
+ <17103.10618.547298.274604@cse.unsw.edu.au>
+ <17111.5969.741703.944406@cse.unsw.edu.au>
 Reply-To: Maxim Kozover <maximkoz@netvision.net.il>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: <1057870318.20050718195400@netvision.net.il>
+In-reply-to: <17111.5969.741703.944406@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Sorry, this was for linux-kernel.
+Thanks much, Neil, will try.
 
 Thanks,
 
 Maxim.
 
-MK> Hi!
-MK> Trying 2.6.13-rc3 for Supermicro dual Xeon x86_64 with maxcpus=1 (because of
-MK> hyperthreading bug) I get an ide-related (?) kernel crash:
-MK> Uniform Multi-Platform E-IDE driver Revision: 7.00alpha2
-MK> ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=xx
-MK> hdb: HL-DT-STCD-RW/DVD DRIVE GCC-4240N, ATAPI CD/DVD-ROM drive
-MK> ide1: I/O resource 0x170-0x177 not free.
-MK> ide1: ports already in use, skipping probe
-MK> Unable to handle kernel NULL pointer dereference at 0000000000000020 RIP:
-MK> <ffffffff80297940>{init_irq+448}
-MK> PGD 0
-MK> Oops: 0000 [1] SMP
-MK> CPU 0
-MK> Modules linked in:
-MK> Pid: 1, comm: swapper Not tainted 2.6.13-rc3
-MK> RIP: 0010:[<ffffffff80297940>] <ffffffff80297940>{init_irq+448}
-MK> RSP: 0018:ffff81007ff29e38  EFLAGS: 00010246
-MK> RAX: 0000000000000000 RBX: 0000000000007580 RCX: 0000000000000000
-MK> RDX: ffff810037e39500 RSI: 00000000000000d0 RDI: 0000000000000198
-MK> RBP: ffffffff804f5200 R08: 0000000000000030 R09: 0000000000000002
-MK> R10: 000000000000000e R11: 0000000000000000 R12: ffffffff804fc780
-MK> R13: 00000000ffffffff R14: 0000ffffffff8010 R15: ffffffff8051bfb0
-MK> FS:  0000000000000000(0000) GS:ffffffff8050f800(0000) knlGS:0000000000000000
-MK> CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
-MK> CR2: 0000000000000020 CR3: 0000000000101000 CR4: 00000000000006e0
-MK> Process swapper (pid: 1, threadinfo ffff81007ff28000, task ffff81007ff274d0)
-MK> Stack: 0000000000000003 0000000000000246 0000000000000000 0000000000000000
-MK>        0000000000000246 ffffffff804f5200 ffffffff804f5220 0000000000000001
-MK>        0000000000000001 0000ffffffff8010
-MK> Call Trace:<ffffffff80298138>{hwif_init+328}
-MK> <ffffffff80298443>{ideprobe_init+131}
-MK>        <ffffffff801be662>{create_proc_entry+146}
-MK> <ffffffff8053a0a9>{ide_generic_init+9}
-MK>        <ffffffff8010b249>{init+505}
-MK> <ffffffff8010e93f>{child_rip+8}
-MK>        <ffffffff8010b050>{init+0} <ffffffff8010e937>{child_rip+0}
+NB> On Saturday July 9, neilb@cse.unsw.edu.au wrote:
+>> On Thursday July 7, maximkoz@netvision.net.il wrote:
+>> > Hi Neil!
+>> > Thanks much for your help, array creation using devel-2 just works,
+>> > however, the array can't be assembled again after it's stopped:(
+>> 
+>> Hmm, yeh, nor it can :-(
+>> 
+>> I'm not sure when I'll have time to look at this (I'm on leave at the
+>> moment with family visiting and such) but I'll definitely get back to
+>> you by Thursday if not before.
 
+NB> Sorry for the delay.
 
-MK> Code: 48 8b 40 20 48 0f b6 80 98 00 00 00 0f b6 90 c0 55 49 80 e8
-MK> RIP <ffffffff80297940>{init_irq+448} RSP <ffff81007ff29e38>
-MK> CR2: 0000000000000020
-MK>  <0>Kernel panic - not syncing: Attempted to kill init!
+NB> The following patch against -devel2 should fix these problems if
+NB> (when?) you get more, please let me know.
 
-MK> Please advise.
+NB> NeilBrown
 
-MK> Thanks,
+NB> Signed-off-by: Neil Brown <neilb@cse.unsw.edu.au>
 
-MK> Maxim Kozover.
+NB> ### Diffstat output
+NB>  ./Assemble.c |   13 ++++++++++++-
+NB>  ./Query.c    |   33 +++++++++++++++++++--------------
+NB>  ./mdadm.h    |    2 +-
+NB>  ./super0.c   |    1 +
+NB>  ./super1.c   |    4 ++--
+NB>  5 files changed, 35 insertions(+), 18 deletions(-)
+
+NB> diff ./Assemble.c~current~ ./Assemble.c
+NB> --- ./Assemble.c~current~       2005-07-15 10:13:04.000000000 +1000
+NB> +++ ./Assemble.c        2005-07-15 10:37:59.000000000 +1000
+NB> @@ -473,6 +473,7 @@ int Assemble(struct supertype *st, char 
+NB>                 if (!devices[j].uptodate)
+NB>                         continue;
+NB>                 info.disk.number = i;
+NB> +               info.disk.raid_disk = i;
+NB>                 info.disk.state = desired_state;
+ 
+NB>                 if (devices[j].uptodate &&
+NB> @@ -526,7 +527,17 @@ int Assemble(struct supertype *st, char 
+ 
+NB>         /* Almost ready to actually *do* something */
+NB>         if (!old_linux) {
+NB> -               if (ioctl(mdfd, SET_ARRAY_INFO, NULL) != 0) {
+NB> +               int rv;
+NB> +               if ((vers % 100) >= 1) { /* can use different versions */
+NB> +                       mdu_array_info_t inf;
+NB> +                       memset(&inf, 0, sizeof(inf));
+NB> +                       inf.major_version = st->ss->major;
+NB> +                       inf.minor_version = st->minor_version;
+NB> +                       rv = ioctl(mdfd, SET_ARRAY_INFO, &inf);
+NB> +               } else 
+NB> +                       rv = ioctl(mdfd, SET_ARRAY_INFO, NULL);
+NB> +
+NB> +               if (rv) {
+NB>                         fprintf(stderr, Name ":
+NB> SET_ARRAY_INFO failed for %s: %s\n",
+NB>                                 mddev, strerror(errno));
+NB>                         return 1;
+
+NB> diff ./Query.c~current~ ./Query.c
+NB> --- ./Query.c~current~  2005-07-07 09:19:53.000000000 +1000
+NB> +++ ./Query.c   2005-07-15 11:38:18.000000000 +1000
+NB> @@ -105,26 +105,31 @@ int Query(char *dev)
+NB>         if (superror == 0) {
+NB>                 /* array might be active... */
+NB>                 st->ss->getinfo_super(&info, super);
+NB> -               mddev = get_md_name(info.array.md_minor);
+NB> -               disc.number = info.disk.number;
+NB> -               activity = "undetected";
+NB> -               if (mddev && (fd = open(mddev, O_RDONLY))>=0) {
+NB> -                       if (md_get_version(fd) >= 9000 &&       
+NB> -                           ioctl(fd, GET_ARRAY_INFO, &array)>= 0) {
+NB> -                               if (ioctl(fd, GET_DISK_INFO, &disc) >= 0 &&
+NB> -                                  
+NB> makedev((unsigned)disc.major,(unsigned)disc.minor) == stb.st_rdev)
+NB> -                                       activity = "active";
+NB> -                               else
+NB> -                                       activity = "mismatch";
+NB> +               if (st->ss->major == 0) {
+NB> +                       mddev = get_md_name(info.array.md_minor);
+NB> +                       disc.number = info.disk.number;
+NB> +                       activity = "undetected";
+NB> +                       if (mddev && (fd = open(mddev, O_RDONLY))>=0) {
+NB> +                               if (md_get_version(fd) >= 9000 &&
+NB> +                                   ioctl(fd, GET_ARRAY_INFO, &array)>= 0) {
+NB> +                                       if (ioctl(fd, GET_DISK_INFO, &disc) >= 0 &&
+NB> +                                          
+NB> makedev((unsigned)disc.major,(unsigned)disc.minor) == stb.st_rdev)
+NB> +                                               activity = "active";
+NB> +                                       else
+NB> +                                               activity = "mismatch";
+NB> +                               }
+NB> +                               close(fd);
+NB>                         }
+NB> -                       close(fd);
+NB> +               } else {
+NB> +                       activity = "unknown";
+NB> +                       mddev = "array";
+NB>                 }
+NB> -               printf("%s: device %d in %d device %s %s
+NB> md%d.  Use mdadm --examine for more detail.\n",
+NB> +               printf("%s: device %d in %d device %s %s %s. 
+NB> Use mdadm --examine for more detail.\n",
+NB>                        dev, 
+NB>                        info.disk.number, info.array.raid_disks,
+NB>                        activity,
+NB>                        map_num(pers, info.array.level),
+NB> -                      info.array.md_minor);
+NB> +                      mddev);
+NB>         }
+NB>         return 0;
+NB>  }
+
+NB> diff ./mdadm.h~current~ ./mdadm.h
+NB> --- ./mdadm.h~current~  2005-07-07 09:19:53.000000000 +1000
+NB> +++ ./mdadm.h   2005-07-15 10:15:51.000000000 +1000
+NB> @@ -73,7 +73,7 @@ struct mdinfo {
+NB>         mdu_array_info_t        array;
+NB>         mdu_disk_info_t         disk;
+NB>         __u64                   events;
+NB> -       unsigned int            uuid[4];
+NB> +       int                     uuid[4];
+NB>  };
+ 
+NB>  #define Name "mdadm"
+
+NB> diff ./super0.c~current~ ./super0.c
+NB> --- ./super0.c~current~ 2005-07-07 09:19:53.000000000 +1000
+NB> +++ ./super0.c  2005-07-15 11:27:12.000000000 +1000
+NB> @@ -205,6 +205,7 @@ static void getinfo_super0(struct mdinfo
+NB>         info->disk.major = sb->this_disk.major;
+NB>         info->disk.minor = sb->this_disk.minor;
+NB>         info->disk.raid_disk = sb->this_disk.raid_disk;
++       info->>disk.number = sb->this_disk.number;
+ 
+NB>         info->events = md_event(sb);
+ 
+
+NB> diff ./super1.c~current~ ./super1.c
+NB> --- ./super1.c~current~ 2005-07-07 09:19:53.000000000 +1000
+NB> +++ ./super1.c  2005-07-15 11:25:04.000000000 +1000
+NB> @@ -278,7 +278,7 @@ static void getinfo_super1(struct mdinfo
+ 
+NB>         info->disk.major = 0;
+NB>         info->disk.minor = 0;
+NB> -
++       info->>disk.number = __le32_to_cpu(sb->dev_number);
+NB>         if (__le32_to_cpu(sb->dev_number) >= __le32_to_cpu(sb->max_dev) ||
+NB>             __le32_to_cpu(sb->max_dev) > 512)
+NB>                 role = 0xfffe;
+NB> @@ -303,7 +303,7 @@ static void getinfo_super1(struct mdinfo
+ 
+NB>         for (i=0; i< __le32_to_cpu(sb->max_dev); i++) {
+NB>                 role = __le16_to_cpu(sb->dev_roles[i]);
+NB> -               if (role == 0xFFFF || role < info->array.raid_disks)
+NB> +               if (/*role == 0xFFFF || */role < info->array.raid_disks)
+NB>                         working++;
+NB>         }
 
 
