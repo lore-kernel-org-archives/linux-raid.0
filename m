@@ -1,28 +1,51 @@
 From: "David M. Strang" <dstrang@shellpower.net>
 Subject: Re: Raid5 Failure
-Date: Sun, 17 Jul 2005 21:26:08 -0400
-Message-ID: <002901c58b37$ace88970$c200a8c0@NCNF5131FTH>
-References: <009401c58ae6$65b57870$c200a8c0@NCNF5131FTH><17114.54800.132155.142544@cse.unsw.edu.au><00e101c58b25$6f5c06c0$c200a8c0@NCNF5131FTH><17114.62108.319878.983091@cse.unsw.edu.au><010701c58b32$ee423830$c200a8c0@NCNF5131FTH> <17115.149.130115.176372@cse.unsw.edu.au>
+Date: Sun, 17 Jul 2005 21:31:52 -0400
+Message-ID: <003a01c58b38$79eb9980$c200a8c0@NCNF5131FTH>
+References: <009401c58ae6$65b57870$c200a8c0@NCNF5131FTH><17114.54800.132155.142544@cse.unsw.edu.au><00e101c58b25$6f5c06c0$c200a8c0@NCNF5131FTH><17114.62108.319878.983091@cse.unsw.edu.au><010701c58b32$ee423830$c200a8c0@NCNF5131FTH> <17115.149.130115.176372@cse.unsw.edu.au> <002901c58b37$ace88970$c200a8c0@NCNF5131FTH>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	format=flowed;
 	charset="iso-8859-1";
-	reply-type=original
+	reply-type=response
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
+To: Neil Brown <neilb@cse.unsw.edu.au>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+Oops -
+
+forgot this part:
+
+(gdb) print array
+$1 = {major_version = -1208614704, minor_version = 134596176, patch_version 
+= -1079477788, ctime = -1209047397, level = 5, size = -1079477052, nr_disks 
+= 134623392, raid_disks = 134623456,
+  md_minor = -1079477212, not_persistent = 0, utime = -1208577344, state 
+= -1208582100, active_disks = -1208448832, working_disks = -1079477752, 
+failed_disks = -1209047199, spare_disks = 5,
+  layout = -1079477052, chunk_size = 134623392}
+
+-- David M. Strang
+----- Original Message ----- 
+From: David M. Strang
+To: unlisted-recipients: ; no To-header on input
+Cc: linux-raid@vger.kernel.org
+Sent: Sunday, July 17, 2005 9:26 PM
+Subject: Re: Raid5 Failure
+
 
 -(root@abyss)-(~)- # gdb mdadm
 GNU gdb 6.2
 Copyright 2004 Free Software Foundation, Inc.
 GDB is free software, covered by the GNU General Public License, and you are
-welcome to change it and/or distribute copies of it under certain 
+welcome to change it and/or distribute copies of it under certain
 conditions.
 Type "show copying" to see the conditions.
 There is absolutely no warranty for GDB.  Type "show warranty" for details.
-This GDB was configured as "i686-pc-linux-gnu"...Using host libthread_db 
+This GDB was configured as "i686-pc-linux-gnu"...Using host libthread_db
 library "/lib/libthread_db.so.1".
 
 (gdb) b 'Manage_subdevs'
@@ -33,7 +56,7 @@ warning: Unable to find dynamic linker breakpoint function.
 GDB will be unable to debug shared library initializers
 and track explicitly loaded dynamic code.
 
-Breakpoint 1, Manage_subdevs (devname=0xbfe0de75 "/dev/md0", fd=7, 
+Breakpoint 1, Manage_subdevs (devname=0xbfe0de75 "/dev/md0", fd=7,
 devlist=0x8067018) at Manage.c:174
 174             void *dsuper = NULL;
 (gdb) n
@@ -57,7 +80,7 @@ devlist=0x8067018) at Manage.c:174
 (gdb) n
 212                                     if (ioctl(fd, HOT_ADD_DISK,
 (gdb) n
-219                                     fprintf(stderr, Name ": hot add 
+219                                     fprintf(stderr, Name ": hot add
 failed for %s: %s\n",
 (gdb) n
 mdadm: hot add failed for /dev/sdaa: Invalid argument
@@ -108,6 +131,11 @@ to print the 'array' structure.
 Then continue with 'n' repeatedly.
 
 NeilBrown
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 -
 To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 the body of a message to majordomo@vger.kernel.org
