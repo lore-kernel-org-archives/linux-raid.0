@@ -1,169 +1,139 @@
 From: Tyler <pml@dtbb.net>
-Subject: bug report: mdadm-devel-2 , superblock version 1
-Date: Sun, 17 Jul 2005 19:09:05 -0700
-Message-ID: <42DB0F41.7030806@dtbb.net>
-References: <009401c58ae6$65b57870$c200a8c0@NCNF5131FTH>	<17114.54800.132155.142544@cse.unsw.edu.au>	<00e101c58b25$6f5c06c0$c200a8c0@NCNF5131FTH>	<17114.62108.319878.983091@cse.unsw.edu.au>	<010701c58b32$ee423830$c200a8c0@NCNF5131FTH>	<17115.149.130115.176372@cse.unsw.edu.au>	<001601c58b37$620c69d0$c200a8c0@NCNF5131FTH> <17115.1749.370942.838069@cse.unsw.edu.au>
+Subject: Re: Raid5 Failure
+Date: Sun, 17 Jul 2005 19:10:37 -0700
+Message-ID: <42DB0F9D.6040904@dtbb.net>
+References: <009401c58ae6$65b57870$c200a8c0@NCNF5131FTH><17114.54800.132155.142544@cse.unsw.edu.au><00e101c58b25$6f5c06c0$c200a8c0@NCNF5131FTH><17114.62108.319878.983091@cse.unsw.edu.au><010701c58b32$ee423830$c200a8c0@NCNF5131FTH><17115.149.130115.176372@cse.unsw.edu.au><001601c58b37$620c69d0$c200a8c0@NCNF5131FTH> <17115.1749.370942.838069@cse.unsw.edu.au> <004b01c58b3a$8e26f910$c200a8c0@NCNF5131FTH>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17115.1749.370942.838069@cse.unsw.edu.au>
+In-Reply-To: <004b01c58b3a$8e26f910$c200a8c0@NCNF5131FTH>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: linux-raid@vger.kernel.org
+To: "David M. Strang" <dstrang@shellpower.net>
+Cc: Neil Brown <neilb@cse.unsw.edu.au>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-# uname -a
-Linux server 2.6.12.3 #3 SMP Sun Jul 17 14:38:12 CEST 2005 i686 GNU/Linux
-# ./mdadm -V
-mdadm - v2.0-devel-2 - DEVELOPMENT VERSION NOT FOR REGULAR USE - 7 July 2005
+If you cat /proc/mdstat, it should show the array resyncing... when its 
+done, it will put the drive back as device 26.
 
-root@server:~/dev/mdadm-2.0-devel-2# ./mdadm -S /dev/md1
+Tyler.
 
-** stop the current array
+David M. Strang wrote:
 
-root@server:~/dev/mdadm-2.0-devel-2# ./mdadm -C /dev/md1 -l 5 
---raid-devices 3 -e 1 /dev/sda2 /dev/sdb2 /dev/sdc2
-mdadm: /dev/sda2 appears to be part of a raid array:
-    level=5 devices=3 ctime=Mon Jul 18 03:22:05 2005
-mdadm: /dev/sdb2 appears to be part of a raid array:
-    level=5 devices=3 ctime=Mon Jul 18 03:22:05 2005
-mdadm: /dev/sdc2 appears to be part of a raid array:
-    level=5 devices=3 ctime=Mon Jul 18 03:22:05 2005
-Continue creating array? y
-mdadm: array /dev/md1 started.
-
-** create and start new array using 3 drives, superblock version 1
-
-root@server:~/dev/mdadm-2.0-devel-2# cat /proc/mdstat
-Personalities : [raid5]
-md1 : active raid5 sdc2[3] sdb2[1] sda2[0]
-      128384 blocks level 5, 64k chunk, algorithm 2 [3/3] [UUU]
-
-unused devices: <none>
-
-** mdstat mostly okay, except sdc2 is listed as device3 instead of 
-device2 (from 0,1,2)
-
-root@server:~/dev/mdadm-2.0-devel-2# ./mdadm -D /dev/md1
-/dev/md1:
-        Version : 01.00.01
-  Creation Time : Mon Jul 18 03:56:40 2005
-     Raid Level : raid5
-     Array Size : 128384 (125.40 MiB 131.47 MB)
-    Device Size : 64192 (62.70 MiB 65.73 MB)
-   Raid Devices : 3
-  Total Devices : 3
-Preferred Minor : 1
-    Persistence : Superblock is persistent
-
-    Update Time : Mon Jul 18 03:56:42 2005
-          State : clean
- Active Devices : 3
-Working Devices : 3
- Failed Devices : 0
-  Spare Devices : 0
-
-         Layout : left-symmetric
-     Chunk Size : 64K
-
-           UUID : 1baa875e87:9ec208b2:7f5e6a27:db1f5e
-         Events : 1
-
-    Number   Major   Minor   RaidDevice State
-       0       8        2        0      active sync   /dev/.static/dev/sda2
-       1       8       18        1      active sync   /dev/.static/dev/sdb2
-       2       0        0        -      removed
-
-       3       8       34        2      active sync   /dev/.static/dev/sdc2
-
-** reports version 01.00.01 superblock, but reports as if there were 4 
-devices used
-
-root@server:~/dev/mdadm-2.0-devel-2# ./mdadm -S /dev/md1
-
-** stop the array
-
-root@server:~/dev/mdadm-2.0-devel-2# ./mdadm -A /dev/md1
-Segmentation fault
-
-** try to assemble the array
-
-root@server:~/dev/mdadm-2.0-devel-2# ./mdadm -D /dev/md1
-mdadm: md device /dev/md1 does not appear to be active.
-
-** check if its active at all
-
-root@server:~/dev/mdadm-2.0-devel-2# ./mdadm -A /dev/md1 /dev/sda2 
-/dev/sdb2 /dev/sdc2
-mdadm: device 1 in /dev/md1 has wrong state in superblock, but /dev/sdb2 
-seems ok
-mdadm: device 2 in /dev/md1 has wrong state in superblock, but /dev/sdc2 
-seems ok
-mdadm: /dev/md1 has been started with 3 drives.
-
-** try restarting it with drive details, and it starts
-
-root@server:~/dev/mdadm-2.0-devel-2# ./mdadm -D /dev/md1
-/dev/md1:
-        Version : 00.90.01
-  Creation Time : Mon Jul 18 02:53:55 2005
-     Raid Level : raid5
-     Array Size : 128384 (125.40 MiB 131.47 MB)
-    Device Size : 64192 (62.70 MiB 65.73 MB)
-   Raid Devices : 3
-  Total Devices : 3
-Preferred Minor : 1
-    Persistence : Superblock is persistent
-
-    Update Time : Mon Jul 18 02:53:57 2005
-          State : clean
- Active Devices : 3
-Working Devices : 3
- Failed Devices : 0
-  Spare Devices : 0
-
-         Layout : left-symmetric
-     Chunk Size : 64K
-
-           UUID : e798f37d:baf98c2f:e714b50c:8d1018b1
-         Events : 0.2
-
-    Number   Major   Minor   RaidDevice State
-       0       8        2        0      active sync   /dev/.static/dev/sda2
-       1       8       18        1      active sync   /dev/.static/dev/sdb2
-       2       8       34        2      active sync   /dev/.static/dev/sdc2
-
-** magically, we now have a v00.90.01 superblock, it reports the proper 
-list of drives
-
-root@server:~/dev/mdadm-2.0-devel-2# ./mdadm -S /dev/md1
-root@server:~/dev/mdadm-2.0-devel-2# ./mdadm -A /dev/md1
-Segmentation fault
-
-** try to stop and restart again, doesn't work
-
-root@server:~/dev/mdadm-2.0-devel-2# ./mdadm -E /dev/sda2
-/dev/sda2:
-          Magic : a92b4efc
-        Version : 01.00
-     Array UUID : 1baa875e87:9ec208b2:7f5e6a27:db1f5e
-           Name :
-  Creation Time : Mon Jul 18 03:56:40 2005
-     Raid Level : raid5
-   Raid Devices : 3
-
-    Device Size : 128504 (62.76 MiB 65.79 MB)
-   Super Offset : 128504 sectors
-          State : clean
-    Device UUID : 1baa875e87:9ec208b2:7f5e6a27:db1f5e
-    Update Time : Mon Jul 18 03:56:42 2005
-       Checksum : 903062ed - correct
-         Events : 1
-
-         Layout : left-symmetric
-     Chunk Size : 64K
-
-   Array State : Uuu 1 failed
-
-** the drives themselves still report a version 1 superblock... wierd
+> Neil --
+>
+> That worked, the device has been added to the array. Now, I think the 
+> next problem is my own ignorance.
+>
+> -(root@abyss)-(/)- # mdadm --detail /dev/md0
+> /dev/md0:
+>        Version : 01.00.01
+>  Creation Time : Wed Dec 31 19:00:00 1969
+>     Raid Level : raid5
+>     Array Size : 1935556992 (1845.89 GiB 1982.01 GB)
+>    Device Size : 71687296 (68.37 GiB 73.41 GB)
+>   Raid Devices : 28
+>  Total Devices : 28
+> Preferred Minor : 0
+>    Persistence : Superblock is persistent
+>
+>    Update Time : Sun Jul 17 17:32:12 2005
+>          State : clean, degraded
+> Active Devices : 27
+> Working Devices : 28
+> Failed Devices : 0
+>  Spare Devices : 1
+>
+>         Layout : left-asymmetric
+>     Chunk Size : 128K
+>
+>           UUID : 4e2b6b0a8e:92e91c0c:018a4bf0:9bb74d
+>         Events : 176939
+>
+>    Number   Major   Minor   RaidDevice State
+>       0       8        0        0      active sync   /dev/evms/.nodes/sda
+>       1       8       16        1      active sync   /dev/evms/.nodes/sdb
+>       2       8       32        2      active sync   /dev/evms/.nodes/sdc
+>       3       8       48        3      active sync   /dev/evms/.nodes/sdd
+>       4       8       64        4      active sync   /dev/evms/.nodes/sde
+>       5       8       80        5      active sync   /dev/evms/.nodes/sdf
+>       6       8       96        6      active sync   /dev/evms/.nodes/sdg
+>       7       8      112        7      active sync   /dev/evms/.nodes/sdh
+>       8       8      128        8      active sync   /dev/evms/.nodes/sdi
+>       9       8      144        9      active sync   /dev/evms/.nodes/sdj
+>      10       8      160       10      active sync   /dev/evms/.nodes/sdk
+>      11       8      176       11      active sync   /dev/evms/.nodes/sdl
+>      12       8      192       12      active sync   /dev/evms/.nodes/sdm
+>      13       8      208       13      active sync   /dev/evms/.nodes/sdn
+>      14       8      224       14      active sync   /dev/evms/.nodes/sdo
+>      15       8      240       15      active sync   /dev/evms/.nodes/sdp
+>      16      65        0       16      active sync   /dev/evms/.nodes/sdq
+>      17      65       16       17      active sync   /dev/evms/.nodes/sdr
+>      18      65       32       18      active sync   /dev/evms/.nodes/sds
+>      19      65       48       19      active sync   /dev/evms/.nodes/sdt
+>      20      65       64       20      active sync   /dev/evms/.nodes/sdu
+>      21      65       80       21      active sync   /dev/evms/.nodes/sdv
+>      22      65       96       22      active sync   /dev/evms/.nodes/sdw
+>      23      65      112       23      active sync   /dev/evms/.nodes/sdx
+>      24      65      128       24      active sync   /dev/evms/.nodes/sdy
+>      25      65      144       25      active sync   /dev/evms/.nodes/sdz
+>      26       0        0        -      removed
+>      27      65      176       27      active sync   
+> /dev/evms/.nodes/sdab
+>
+>      28      65      160        -      spare   /dev/evms/.nodes/sdaa
+>
+>
+> I've got 28 devices, 1 spare, 27 active. I'm still running as clean, 
+> degraded.
+>
+> What do I do next? What I wanted to do was to put /dev/sdaa back in as 
+> device 26, but now it's device 28 - and flagged as spare. How do I 
+> make it active in the array again?
+>
+> -- David M. Strang
+>
+>
+> ----- Original Message ----- From: Neil Brown
+> To: David M. Strang
+> Cc: linux-raid@vger.kernel.org
+> Sent: Sunday, July 17, 2005 9:33 PM
+> Subject: Re: Raid5 Failure
+>
+> Ahhhh...  I cannot read my own code, that is the problem!!
+>
+> This patch should fix it.
+>
+> Thanks for persisting.
+>
+> NeilBrown
+>
+> Signed-off-by: Neil Brown <neilb@cse.unsw.edu.au>
+>
+> ### Diffstat output
+> ./Manage.c |    7 ++-----
+> 1 files changed, 2 insertions(+), 5 deletions(-)
+>
+> diff ./Manage.c~current~ ./Manage.c
+> --- ./Manage.c~current~ 2005-07-07 09:19:53.000000000 +1000
+> +++ ./Manage.c 2005-07-18 11:31:57.000000000 +1000
+> @@ -204,11 +204,8 @@ int Manage_subdevs(char *devname, int fd
+>  return 1;
+>  }
+>  close(tfd);
+> -#if 0
+> - if (array.major_version == 0) {
+> -#else
+> - if (md_get_version(fd)%100 < 2) {
+> -#endif
+> + if (array.major_version == 0 &&
+> +     md_get_version(fd)%100 < 2) {
+>  if (ioctl(fd, HOT_ADD_DISK,
+>    (unsigned long)stb.st_rdev)==0) {
+>  fprintf(stderr, Name ": hot added %s\n",
+> -
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
