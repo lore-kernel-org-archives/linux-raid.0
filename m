@@ -1,42 +1,24 @@
-From: "Simon" <isuqatntul@moose-mail.com>
-Subject: THEY FOUND NEW ANTIDOTE
-Date: Wed, 20 Jul 2005 19:08:13 -0400
-Message-ID: <00b901c58d7f$e7504e50$776be6ec__898.383840876882$1121900963$gmane$org@efvut>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="iso-8859-1";
-	reply-type=original
+From: Cora <memorabilia@jazzbonerecords.com>
+Subject: Adobe Premier Pro 7.0 XP - $50
+Date: Fri, 22 Jul 2005 00:57:51 -0500
+Message-ID: <9180326069.684533754@CPE-24-208-66-48.neb.res.rr.com>
+Mime-Version: 1.0 (Apple Message framework v728)
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: sparclinux@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-The Ancient Secret of Life
-'THE ANTIDOTE'
-
-Kills ALL known deadly Viruses & Bacteria in the body that keep diseases, namely: 
-Influenza, SARS, Cancer, HIV etc. etc. active.
-
-http://www.dghsfaes.com/fvd
-
-A disease must be made DORMANT to stop infection.
-'The ANTIDOTE' is the answer.
-
-
-WE ARE THE ONLY COMPANY IN THE WORLD WHO HAVE DEVELOPED AND 
-ENHANCED THIS PRODUCT FOR SALE.
+Top 30 Downloads
+http://wintry.jetlow.com/
 
 
 
-http://www.dghsfaes.com/fvd
 
 
+Nothing feeds upon itself as liberality does.      
+It is within the families themselves where peace can begin.   
+Happy is he who can give himself up.     
 
-If you cannot access the site it maybe busy due to high demand for this product.
-Please try again later in a few hours or the next day.
 
-
-Nah not for me
-http://www.dghsfaes.com/backhome
