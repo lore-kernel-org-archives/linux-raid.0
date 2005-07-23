@@ -1,18 +1,17 @@
-From: Tyler <tyler@dtbb.net>
+From: Tyler <pml@dtbb.net>
 Subject: Any chance you can look at this Superblock v1 bug Neil?
-Date: Sat, 23 Jul 2005 15:28:15 -0700
-Message-ID: <42E2C47F.409@dtbb.net>
+Date: Sat, 23 Jul 2005 15:30:18 -0700
+Message-ID: <42E2C4FA.6060707@dtbb.net>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="------------080300050809090204030606"
+ boundary="------------020206010307070400080900"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: Linux RAID <linux-raid@vger.kernel.org>
-Cc: Neil Brown <neilb@cse.unsw.edu.au>
 List-Id: linux-raid.ids
 
 This is a multi-part message in MIME format.
---------------080300050809090204030606
+--------------020206010307070400080900
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 
@@ -25,7 +24,10 @@ results.
 Thanks,
 Tyler.
 
---------------080300050809090204030606
+( I accidentally sent to the list using the wrong email address 
+previously, this was originally sent to the list and Neil)
+
+--------------020206010307070400080900
 Content-Type: message/rfc822;
  name="bug report: mdadm-devel-2 , superblock version 1"
 Content-Transfer-Encoding: 7bit
@@ -231,7 +233,7 @@ the body of a message to majordomo@vger.kernel.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
---------------080300050809090204030606
+--------------020206010307070400080900
 Content-Type: message/rfc822;
  name="Re: bug report: mdadm-devel-2 , superblock version 1"
 Content-Transfer-Encoding: 7bit
@@ -458,4 +460,4 @@ the body of a message to majordomo@vger.kernel.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
---------------080300050809090204030606--
+--------------020206010307070400080900--
