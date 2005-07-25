@@ -1,49 +1,24 @@
-From: Rainer Fuegenstein <rfu@kaneda.iguw.tuwien.ac.at>
-Subject: strange SATA phenomenon
-Date: Mon, 25 Jul 2005 12:21:45 +0200
-Message-ID: <633351412.20050725122145@kaneda.iguw.tuwien.ac.at>
-Reply-To: Rainer Fuegenstein <rfu@kaneda.iguw.tuwien.ac.at>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Bod <baited@europartners.org>
+Subject: Free prescription and Viagra overnight delivery.
+Date: Mon, 25 Jul 2005 19:29:57 +0200
+Message-ID: <7268100497.3775419592@BSN-165-122-97.dsl.siol.net>
+Mime-Version: 1.0 (Apple Message framework v728)
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+Best deals on online prescription drugs
+http://Caine.palns.net/ph/as/
 
-I don't know if this problem is raid related, but chances are high:
 
-I try to install linux (centros 4.0, fedora core 4, 3) on an HP
-proliant DL140 G2 (2.8 GHz xeon, 2 SATA ports, 1 PATA port). 2 160 GB
-SATA disks in raid-1, 5.25" CD rom drive temporarily connected to PATA
-port.
 
-- if the 2 SATA disks AND the cdrom drive are connected, the system
-boots smoothly, runs fine & fast
 
-- if I disconnect the cdrom drive (leaving only the 2 SATA raid-1
-disks connected), the server claims something like "losing to many
-ticks" during boot, the server reacts extremely slow (like typing over
-a 300 baud line), has a high system load, needs 13 hours to sync a
-100GB raid-1 partition).
+Zeus does not bring all men's plans to fulfillment.    
+Problems are only opportunities in work clothes.      
+If you want to endure life, prepare yourself for death.   
+The most valuable function performed by the federal government is entertainment.  
 
-- if I also disconnect the 2nd sata drive (leaving only the 1st sata
-drive connected), the system boots in degraded mode, but is quick and
-fast as expected.
-
-I also bought and attached two 200GB SATA disks since I assumed the 160GB drives may
-cause the problem, but it's the same, either with the 200GB oder the
-160GB drives.
-
-another strange thing: Centos installer / diskdruid shows the drives
-as sda/sdb, but the kernel messages during bootup show them as
-hda/hdc.
-
-any ideas ? tnx in advance.
-
--- 
-Best regards,
- Rainer                          mailto:rfu@kaneda.iguw.tuwien.ac.at
 
