@@ -1,81 +1,198 @@
-From: Molle Bestefich <molle.bestefich@gmail.com>
-Subject: Re: Software RAID on Windows using Embedded Linux?
-Date: Sun, 24 Jul 2005 21:22:57 +0200
-Message-ID: <62b0912f050724122234673002@mail.gmail.com>
-References: <6d5bedd8050724070995073e1@mail.gmail.com>
-	 <62b0912f050724075638c18d91@mail.gmail.com>
-	 <6d5bedd8050724113142284b32@mail.gmail.com>
-Reply-To: Molle Bestefich <molle.bestefich@gmail.com>
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: bug report: mdadm-devel-2 , superblock version 1
+Date: Mon, 25 Jul 2005 10:36:22 +1000
+Message-ID: <17124.13318.958372.399899@cse.unsw.edu.au>
+References: <009401c58ae6$65b57870$c200a8c0@NCNF5131FTH>
+	<17114.54800.132155.142544@cse.unsw.edu.au>
+	<00e101c58b25$6f5c06c0$c200a8c0@NCNF5131FTH>
+	<17114.62108.319878.983091@cse.unsw.edu.au>
+	<010701c58b32$ee423830$c200a8c0@NCNF5131FTH>
+	<17115.149.130115.176372@cse.unsw.edu.au>
+	<001601c58b37$620c69d0$c200a8c0@NCNF5131FTH>
+	<17115.1749.370942.838069@cse.unsw.edu.au>
+	<42DB0F41.7030806@dtbb.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <6d5bedd8050724113142284b32@mail.gmail.com>
-Content-Disposition: inline
+In-Reply-To: message from Tyler on Sunday July 17
 Sender: linux-raid-owner@vger.kernel.org
-To: Ewan Grantham <ewan.grantham@gmail.com>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Tyler <pml@dtbb.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 7/24/05, Ewan Grantham <ewan.grantham@gmail.com> wrote:
-> On 7/24/05, Molle Bestefich <molle.bestefich@gmail.com> wrote:
-> > Ewan Grantham wrote:
-> > > I know, this is borderline, but figure this is the group of folks who
-> > > will know. I do a lot of audio and video stuff for myself and my
-> > > family. I also have a rather unusual networking setup. Long story
-> > > short, when I try to run Linux as my primary OS, I usually end up
-> > > reinstalling Windows after a couple weeks because there are still
-> > > holes in what I can do. That isn't the fault of Linux as much as folks
-> > > who write device drivers or have video codecs that require DirectShow.
-> > >
-> > > However, the big thing I really miss from Linux that keeps me trying
-> > > to find a way to convert is the support for Software RAID 5.
-> > >
-> > > It occured to me yesterday that perhaps the trick would be to use QEMU
-> > > to run Knoppix or Damn Small Linux under Windows, and then setup a
-> > > RAID 5 array under one of those. Not to mention then having access to
-> > > Linux for some other fun stuff.
-> > >
-> > > I'm not sure if that's even possible, and if it is, how much trouble I
-> > > would have moving files around to and from the RAID array if it's
-> > > setup that way. So I'm wondering if anyone on the list has ever tried
-> > > this?
-> >
-> > Not too much trouble, you should be able to just setup Samba in the
-> > Knoppix/DSL and access your files through QEMU's network emulation.
-> >
-> > It will be damn slow, however :-).
-> >
-> > Perhaps buy a NAS device like Linksys NSLU2?
-> > It's cheap and has low power consumption - but you'll need to hack it
-> > to add disks (via USB).
-> >
-> > http://peter.korsgaard.com/articles/debian-nslu2.php
-> >  or
-> > http://www.tomsnetworking.com/Sections-article85-page3.php
-> >
-> > explains how to get into the Linux guts of the box.
+On Sunday July 17, pml@dtbb.net wrote:
+> # uname -a
+> Linux server 2.6.12.3 #3 SMP Sun Jul 17 14:38:12 CEST 2005 i686 GNU/Linux
+> # ./mdadm -V
+> mdadm - v2.0-devel-2 - DEVELOPMENT VERSION NOT FOR REGULAR USE - 7 July 2005
 > 
-> Interesting idea. However, I note that it is rather slow as well -
-> since you're then accessing disks over 100 Mbps rather than at full
-> USB2. And it appears you can only attach 2 USB disks to it.
 
-You should be able to hack it to accept more than 2 disks..
-You're right about the 100 mbps network interface..
+...
+> root@server:~/dev/mdadm-2.0-devel-2# cat /proc/mdstat
+> Personalities : [raid5]
+> md1 : active raid5 sdc2[3] sdb2[1] sda2[0]
+>       128384 blocks level 5, 64k chunk, algorithm 2 [3/3] [UUU]
+> 
+> unused devices: <none>
+> 
+> ** mdstat mostly okay, except sdc2 is listed as device3 instead of 
 
-> Which makes me wonder just how slow you mean when you say that the
-> QEMU version would be slow? Slow compared to native access? Slow
-> compared to the NSLU2 solution discussed above? Or slow compared to a
-> snail being attacked by one of those Hawaiian Catepillars? :-)
+Hmmm, yes....  It is device number 3 in the array, but it is playing
+role-2 in the raid5.  When using Version-1 superblocks, we don't moved
+devices around, in the "list of all devices".  We just assign them
+different roles. (device-N or 'spare').
 
-"Slow" as in a passing tortoise would take that system by surprise =)..
 
-Based on QEMU being a CPU emulator, not a virtualization system, thus
-penalizing performance with a factor 10 or so.
+> device2 (from 0,1,2)
+> 
+> root@server:~/dev/mdadm-2.0-devel-2# ./mdadm -D /dev/md1
+> /dev/md1:
+>         Version : 01.00.01
+>   Creation Time : Mon Jul 18 03:56:40 2005
+>      Raid Level : raid5
+>      Array Size : 128384 (125.40 MiB 131.47 MB)
+>     Device Size : 64192 (62.70 MiB 65.73 MB)
+>    Raid Devices : 3
+>   Total Devices : 3
+> Preferred Minor : 1
+>     Persistence : Superblock is persistent
+> 
+>     Update Time : Mon Jul 18 03:56:42 2005
+>           State : clean
+>  Active Devices : 3
+> Working Devices : 3
+>  Failed Devices : 0
+>   Spare Devices : 0
+> 
+>          Layout : left-symmetric
+>      Chunk Size : 64K
+> 
+>            UUID : 1baa875e87:9ec208b2:7f5e6a27:db1f5e
+>          Events : 1
+> 
+>     Number   Major   Minor   RaidDevice State
+>        0       8        2        0      active sync   /dev/.static/dev/sda2
+>        1       8       18        1      active sync   /dev/.static/dev/sdb2
+>        2       0        0        -      removed
+> 
+>        3       8       34        2      active sync   /dev/.static/dev/sdc2
+> 
+> ** reports version 01.00.01 superblock, but reports as if there were 4 
+> devices used
 
-Actually, just checked their web site, and they now have a
-non-open-source alternative that uses virtualization, so if you're
-going to use that it just might work ok.  If you're willing to live
-with the fact that MD will at times suck up some CPU.  Looking forward
-to hearing whether you can live with the solution or not (if you go
-that way) :-).
+Ok, this output definitely needs fixing.  But as you can see, there
+are 3 devices playing roles (RaidDevice) 0, 1, and 2.  They reside in
+slots 0, 1, and 3 of the array.
+
+> 
+> root@server:~/dev/mdadm-2.0-devel-2# ./mdadm -A /dev/md1
+> Segmentation fault
+> 
+> ** try to assemble the array
+
+This is not how you assemble an array.  You need to tell mdadm which
+component devices to use, either on command line or in /etc/mdadm.conf
+(and give --scan).
+
+> 
+> root@server:~/dev/mdadm-2.0-devel-2# ./mdadm -D /dev/md1
+> mdadm: md device /dev/md1 does not appear to be active.
+> 
+> ** check if its active at all
+> 
+> root@server:~/dev/mdadm-2.0-devel-2# ./mdadm -A /dev/md1 /dev/sda2 
+> /dev/sdb2 /dev/sdc2
+> mdadm: device 1 in /dev/md1 has wrong state in superblock, but /dev/sdb2 
+> seems ok
+> mdadm: device 2 in /dev/md1 has wrong state in superblock, but /dev/sdc2 
+> seems ok
+> mdadm: /dev/md1 has been started with 3 drives.
+> 
+> ** try restarting it with drive details, and it starts
+
+Those message are a bother though.  I think I know roughly what is
+going on.  I'll look into it shortly.
+
+> 
+> root@server:~/dev/mdadm-2.0-devel-2# ./mdadm -D /dev/md1
+> /dev/md1:
+>         Version : 00.90.01
+>   Creation Time : Mon Jul 18 02:53:55 2005
+>      Raid Level : raid5
+>      Array Size : 128384 (125.40 MiB 131.47 MB)
+>     Device Size : 64192 (62.70 MiB 65.73 MB)
+>    Raid Devices : 3
+>   Total Devices : 3
+> Preferred Minor : 1
+>     Persistence : Superblock is persistent
+> 
+>     Update Time : Mon Jul 18 02:53:57 2005
+>           State : clean
+>  Active Devices : 3
+> Working Devices : 3
+>  Failed Devices : 0
+>   Spare Devices : 0
+> 
+>          Layout : left-symmetric
+>      Chunk Size : 64K
+> 
+>            UUID : e798f37d:baf98c2f:e714b50c:8d1018b1
+>          Events : 0.2
+> 
+>     Number   Major   Minor   RaidDevice State
+>        0       8        2        0      active sync   /dev/.static/dev/sda2
+>        1       8       18        1      active sync   /dev/.static/dev/sdb2
+>        2       8       34        2      active sync   /dev/.static/dev/sdc2
+> 
+> ** magically, we now have a v00.90.01 superblock, it reports the proper 
+> list of drives
+
+Ahhh...  You have assembled a different array (look at create time too).
+version-1 superblocks live at a different location to version-0.90
+superblocks.  So it is possible to have both on the one drive.  It is
+supposed to pick the newest, but appears not to have done.  You should
+really remove old superblocks.... maybe mdadm should do that for you
+???
+
+> 
+> root@server:~/dev/mdadm-2.0-devel-2# ./mdadm -S /dev/md1
+> root@server:~/dev/mdadm-2.0-devel-2# ./mdadm -A /dev/md1
+> Segmentation fault
+> 
+> ** try to stop and restart again, doesn't work
+
+Again, don't do that!
+
+> 
+> root@server:~/dev/mdadm-2.0-devel-2# ./mdadm -E /dev/sda2
+> /dev/sda2:
+>           Magic : a92b4efc
+>         Version : 01.00
+>      Array UUID : 1baa875e87:9ec208b2:7f5e6a27:db1f5e
+>            Name :
+>   Creation Time : Mon Jul 18 03:56:40 2005
+>      Raid Level : raid5
+>    Raid Devices : 3
+> 
+>     Device Size : 128504 (62.76 MiB 65.79 MB)
+>    Super Offset : 128504 sectors
+>           State : clean
+>     Device UUID : 1baa875e87:9ec208b2:7f5e6a27:db1f5e
+>     Update Time : Mon Jul 18 03:56:42 2005
+>        Checksum : 903062ed - correct
+>          Events : 1
+> 
+>          Layout : left-symmetric
+>      Chunk Size : 64K
+> 
+>    Array State : Uuu 1 failed
+> 
+> ** the drives themselves still report a version 1 superblock... wierd
+
+Yeh.  Assemble and Examine should pick the say one by default.  It
+appears they don't.  I'll look into it.
+
+Thanks for the very helpful  feedback.
+
+NeilBrown
