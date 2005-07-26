@@ -1,105 +1,53 @@
-From: Harry Mangalam <hjm@tacgi.com>
-Subject: Re: 3ware + RAID5 + xfs performance
-Date: Mon, 25 Jul 2005 21:34:13 -0700
-Message-ID: <200507252134.13869.hjm@tacgi.com>
-References: <Pine.SOL.4.58.0507252110320.2683@titan.cfa.harvard.edu>
+From: "J. Ali Harlow" <ali@juiblex.co.uk>
+Subject: Re: Can't work out how to recover after multiple failures
+Date: Tue, 26 Jul 2005 09:51:47 +0100
+Message-ID: <1122367907.1184.239244752@webmail.messagingengine.com>
+References: <1122222141.13200.239118760@webmail.messagingengine.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.SOL.4.58.0507252110320.2683@titan.cfa.harvard.edu>
 Content-Disposition: inline
+In-Reply-To: <1122222141.13200.239118760@webmail.messagingengine.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: gbakos@cfa.harvard.edu
-Cc: linux-raid@vger.kernel.org, linux-xfs@oss.sgi.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I went thru the same hardware config gymnastics (confounded by bad disk=
-s, a=20
-bad controller, bad hotswap cages, and some SW config issues - see:
-http://maillists.uci.edu/mailman/public/uci-linux/2005-June/001067.html=
-).
 
+On Sun, 24 Jul 2005 17:22:21 +0100, "J. Ali Harlow" <ali@juiblex.co.uk>
+said:
+> Can anyone please help me get my raid 1 device back up and running? I
+> had a chipset failure which took out one disk and then just after
+> replacing the disk and resyncing, the original disk lost power due to=
+ a
+> loose connection. mdadm seems to think that both devices are fine, bu=
+t I
+> can't seem to fine the magic vodoo to get the raid array working agai=
+n.
+> Sorry if this is a really stupid question. I did read the documentati=
+on
+> for mdadm pretty carefully, but I'm obviously missing something. Many
+> thanks,
 
-The 3ware info is partially reported here:
-http://maillists.uci.edu/mailman/public/uci-linux/2005-June/001134.html
+=46inally got this working. There seem to have been two issues. First,
+mdadm didn't like running an array as a seperate step to assembling it.
+(mdadm -R /dev/md0 was giving me "Invalid Argument"). Doing this in one
+step however did work. Secondly, I suspect the two devices weren't
+synced even though mdadm -E wasn't showing this which was casuing
+attempts to assemble an array containing both devices to quietly fail.
+The final sequence which worked was:
 
-and I believe I also sent a similar report to this list, but google doe=
-sn't=20
-show it.
+reboot
+mdadm --assemble /dev/md0 --run /dev/hda2
+mdadm /dev/md0 -a /dev/hde2
 
+Easy when you know :-)
 
-Here's the results of my bonnie tests on a similar system:
-8x250GB WD SD series disks on a 3ware 9500S-8, on an IWILL 2x Opteron m=
-obo,=20
-4GB RAM, with XFS.
+Ali.
 
-The XFS parameters are with a 64K stripe to match the RAID card; other =
-params=20
-more or less vanilla.
+--=20
+http://www.fastmail.fm - Same, same, but different=85
 
-Below are some bonnie timing results with differing filesystems (1 run =
-with=20
-ext3, 3 with XFS with differnt file sizes - unwrap in an editor to comp=
-are in=20
-columns:
-
- XFS sand,=20
-7000M,52315,99,104402,22,32242,8,32018,60,127998,20,435.5,0,80,1724,15,=
-+++++,
-+++, 3248, 16,1718,15,+++++,+++,750, 4
-ext3 sand, 7000M,40682,91, 47732,23,25432,9,38027,72,179352,27,311.1,0,=
-80,=20
-416,99,+++++,+++,53250,100, 423,99,+++++,+++,560,58
- XFS sand,=20
-7000M,50040,98,106324,24,33046,8,31269,59,112240,17,416.0,0,80,1930,17,=
-+++++,
-+++, 3753, 17,1913,17,+++++,+++,449, 2
- XFS sand,=20
-15000M,51065,99,101659,24,26884,7,35344,69,141223,23,263.0,0,80,1666,14=
-,
-+++++,+++, 4565, 22,1700,16,+++++,+++,793, 4
-
-=46rom my reading (see URL above for resourcelist), XFS is quite bad fo=
-r tiny=20
-files - we use it for very large files (>GB size); using XFS for this w=
-ould=20
-generally be a bad thing.  We do NOT get tremendous performance out of =
-it;=20
-but the performance is much better than with ext3 and the CPU usage is =
-lower,=20
-sometimes dramtically so.  Real life experience with some benchmarks co=
-nfirms=20
-this - we get approximately ~ the same real life thruput as we do on a =
-IBM=20
-SP2 8way module with a direct attach disk.
-
-We are now considering adding a local PVFS2 system to a small cluster f=
-or very=20
-fast IO under MPI
-
-
-
-
-On Monday 25 July 2005 18:11, Gaspar Bakos wrote:
-> Dear all,
->
-> The purpose of this email is twofold:
-> - to share the results of the many tests I performed with
-> =A0 a 3ware RAID card + RAID-5 + XFS, pushing for better file I/O,
-> - and to initiate some brainstorming on what parameters can be tuned =
-for
-> =A0 getting a good performance out of this hardware under 2.6.* kerne=
-ls.
->
-> I started all these tests because the performance was quite poor, mea=
-ning
-> that the write speed was slow, the read speed was barely acceptable, =
-and
-> the system load went very high (10.0) during bonnie++ tests.
-> My questions are marked below with "Q".
-
-<clipped>
 -
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
