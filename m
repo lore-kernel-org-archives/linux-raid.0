@@ -1,29 +1,30 @@
-From: Ewan Grantham <ewan.grantham@gmail.com>
-Subject: Re: Software RAID on Windows using Embedded Linux?
-Date: Tue, 26 Jul 2005 07:31:48 -0500
-Message-ID: <6d5bedd8050726053198b0d30@mail.gmail.com>
-References: <6d5bedd8050724070995073e1@mail.gmail.com>
-	 <62b0912f050724075638c18d91@mail.gmail.com>
-	 <6d5bedd8050724113142284b32@mail.gmail.com>
-	 <62b0912f050724122234673002@mail.gmail.com>
-Reply-To: Ewan Grantham <ewan.grantham@gmail.com>
+From: Selim Daoud <selim.daoud@gmail.com>
+Subject: Multipath
+Date: Tue, 26 Jul 2005 16:30:13 +0100
+Message-ID: <d01c0b6205072608305de15a6f@mail.gmail.com>
+Reply-To: Selim Daoud <selim.daoud@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <62b0912f050724122234673002@mail.gmail.com>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Molle Bestefich <molle.bestefich@gmail.com>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Well, as I have been investigating how I would set things up with QEMU
-and the Accelerator, I got pointed to this wiki posting for coLinux:
-http://wiki.colinux.org/cgi-bin/raid_solution
+Hi,
 
-So am now thinking that might be worth looking into. Though I'd also
-love to hear from anyone who has already tried this.
+I am trying to configure multipath on a Sun SE3510FC (fibre channel)
+the configuration wiht mdadm works fine and I can see or manipulat both path.
+unfortunately as soon as I mount the md device, md_multipathd process
+takes 99% of CPU and at some point, server is not accessible anymore
+it's SUSE9SP2, with qlogic 2342 HBAs
 
-Thanks again for the time and assistance,
-Ewan
+Is the multipath really working or is it still under early dev?. This
+is supposed to be running Oracle DB (production system) for my company
+..do you reckon we can rely on this mutipathing at this point in time
+or is it better to wait?
+
+thanks
+
+Selim
