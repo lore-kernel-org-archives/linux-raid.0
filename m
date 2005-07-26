@@ -1,49 +1,156 @@
-From: Lars Marowsky-Bree <lmb@suse.de>
-Subject: Re: Multipath
-Date: Tue, 26 Jul 2005 19:31:00 +0200
-Message-ID: <20050726173100.GZ16649@marowsky-bree.de>
-References: <d01c0b6205072608305de15a6f@mail.gmail.com>
+From: Tyler <pml@dtbb.net>
+Subject: Re: Failed RAID-5 with 4 disks
+Date: Tue, 26 Jul 2005 14:58:43 -0700
+Message-ID: <42E6B213.8020108@dtbb.net>
+References: <20050726170329.GA30354@intoxicatedmind.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <d01c0b6205072608305de15a6f@mail.gmail.com>
+In-Reply-To: <20050726170329.GA30354@intoxicatedmind.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Selim Daoud <selim.daoud@gmail.com>, linux-raid@vger.kernel.org
+To: Frank Blendinger <fb@intoxicatedmind.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2005-07-26T16:30:13, Selim Daoud <selim.daoud@gmail.com> wrote:
+My suggestion would be to buy two new drives, and DD (or dd rescue) the 
+two bad drives onto the new drives, and then plug the new drive that has 
+the most recent failure on it (HDG?) in, and try running a forced 
+assemble including the HDG drive, then, in readonly mode, run an fsck to 
+check the file system, and see if it thinks most things are okay.  *IF* 
+it checks out okay (for the most part.. you will probably lose some 
+data), then plug the second new disk in, and add it to the array as a 
+spare, and it would then start a resync of the array.  Otherwise, if the 
+fsck found that the entire filesystem was fubar... then I would try the 
+above steps, but force the assemble with the original failed disk.. but 
+depending on how long in between the two failures its been, and if any 
+data was written to the array after the first failure, this is probably 
+not going to be a good thing.. but could still be useful if you were 
+trying to recover specific files that were not touched in between the 
+two failures.
 
-> I am trying to configure multipath on a Sun SE3510FC (fibre channel)
-> the configuration wiht mdadm works fine and I can see or manipulat bo=
-th path.
-> unfortunately as soon as I mount the md device, md_multipathd process
-> takes 99% of CPU and at some point, server is not accessible anymore
-> it's SUSE9SP2, with qlogic 2342 HBAs
+I would also suggest googling raid manual recovery procedures, some info 
+is outdated, but some of it describes what I just described above.
 
-In 2.6, work has shifted to Device-Mapper multipath.
+Tyler.
 
-In particular if you're running SLES9 SP2, please refer to the article
-on multipathing at portal.suse.com (SDB). And if you have issues which
-concern your production servers, you're going to be more happy with
-asking them via your support contract instead of posting to public
-mailing lists where people will tell you to try a vanilla kernel instea=
-d
-;-)
+Frank Blendinger wrote:
 
-
-Sincerely,
-    Lars Marowsky-Br=E9e <lmb@suse.de>
-
---=20
-High Availability & Clustering
-SUSE Labs, Research and Development
-SUSE LINUX Products GmbH - A Novell Business	 -- Charles Darwin
-"Ignorance more frequently begets confidence than does knowledge"
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>Hi,
+>
+>I have a RAID-5 set up with the following raidtab:
+>
+>raiddev /dev/md0
+>        raid-level              5
+>        nr-raid-disks           4
+>        nr-spare-disks          0
+>        persistent-superblock   1
+>        parity-algorithm        left-symmetric
+>        chunk-size              256
+>        device                  /dev/hde
+>        raid-disk               0
+>        device                  /dev/hdg
+>        raid-disk               1
+>        device                  /dev/hdi
+>        raid-disk               2
+>        device                  /dev/hdk
+>        raid-disk               3
+>
+>My hde has failed some time ago, leaving some 
+>	hde: dma_intr: status=0x51 { DriveReady SeekComplete Error }
+>	hde: dma_intr: error=0x84 { DriveStatusError BadCRC }
+>messages in the syslog.
+>
+>I wanted to get sure it really was damaged, so I did a badblocks
+>(read-only) scan on /dev/hde. It actually found a bad sector on the
+>disk.
+>
+>
+>I wanted to take the disk out to get me a new one, but unfortunately my
+>hdg seems to have run into trouble too, now. I also have some
+>SeekComplete/BadCRC errors in my log for that disk, too.
+>
+>Furthermore, i got this:
+>
+>Jul 25 10:35:49 blackbox kernel: ide: failed opcode was: unknown
+>Jul 25 10:35:49 blackbox kernel: hdg: DMA disabled
+>Jul 25 10:35:49 blackbox kernel: PDC202XX: Secondary channel reset.
+>Jul 25 10:35:49 blackbox kernel: PDC202XX: Primary channel reset.
+>Jul 25 10:35:49 blackbox kernel: hde: lost interrupt
+>Jul 25 10:35:49 blackbox kernel: ide3: reset: master: error (0x00?)
+>Jul 25 10:35:49 blackbox kernel: end_request: I/O error, dev hdg, sector 488396928
+>Jul 25 10:35:49 blackbox kernel: end_request: I/O error, dev hdg, sector 159368976
+>Jul 25 10:35:49 blackbox kernel: end_request: I/O error, dev hdg, sector 159368984
+>Jul 25 10:35:49 blackbox kernel: end_request: I/O error, dev hdg, sector 159368992
+>Jul 25 10:35:49 blackbox kernel: end_request: I/O error, dev hdg, sector 159369000
+>Jul 25 10:35:49 blackbox kernel: end_request: I/O error, dev hdg, sector 159369008
+>Jul 25 10:35:49 blackbox kernel: end_request: I/O error, dev hdg, sector 159369016
+>Jul 25 10:35:49 blackbox kernel: end_request: I/O error, dev hdg, sector 159369024
+>Jul 25 10:35:49 blackbox kernel: end_request: I/O error, dev hdg, sector 159369032
+>Jul 25 10:35:49 blackbox kernel: md: write_disk_sb failed for device hdg
+>Jul 25 10:35:49 blackbox kernel: lost page write due to I/O error on md0
+>Jul 25 10:35:49 blackbox kernel: lost page write due to I/O error on md0
+>Jul 25 10:35:49 blackbox kernel: RAID5 conf printout:
+>Jul 25 10:35:49 blackbox kernel:  --- rd:4 wd:2 fd:2
+>Jul 25 10:35:49 blackbox kernel:  disk 0, o:1, dev:hdk
+>Jul 25 10:35:49 blackbox kernel:  disk 1, o:1, dev:hdi
+>Jul 25 10:35:49 blackbox kernel:  disk 2, o:0, dev:hdg
+>Jul 25 10:35:49 blackbox kernel: RAID5 conf printout:
+>Jul 25 10:35:49 blackbox kernel:  --- rd:4 wd:2 fd:2
+>Jul 25 10:35:49 blackbox kernel:  disk 0, o:1, dev:hdk
+>Jul 25 10:35:49 blackbox kernel:  disk 1, o:1, dev:hdi
+>Jul 25 10:35:49 blackbox kernel: lost page write due to I/O error on md0
+>
+>
+>Well, now it seems I have to failed disks in my RAID-5, which of course
+>would be fatal. I am still hoping to somehow rescue the data on the
+>array somehow, but I am not sure what would be the best approach. I don't
+>want to cause any more damage.
+>
+>When booting my system with all four disks connected, hde and hdg as
+>expected won't get added:
+>
+>Jul 26 18:07:59 blackbox kernel: md: hdg has invalid sb, not importing!
+>Jul 26 18:07:59 blackbox kernel: md: autorun ...
+>Jul 26 18:07:59 blackbox kernel: md: considering hdi ...
+>Jul 26 18:07:59 blackbox kernel: md:  adding hdi ...
+>Jul 26 18:07:59 blackbox kernel: md:  adding hdk ...
+>Jul 26 18:07:59 blackbox kernel: md:  adding hde ...
+>Jul 26 18:07:59 blackbox kernel: md: created md0
+>Jul 26 18:07:59 blackbox kernel: md: bind<hde>
+>Jul 26 18:07:59 blackbox kernel: md: bind<hdk>
+>Jul 26 18:07:59 blackbox kernel: md: bind<hdi>
+>Jul 26 18:07:59 blackbox kernel: md: running: <hdi><hdk><hde>
+>Jul 26 18:07:59 blackbox kernel: md: kicking non-fresh hde from array!
+>Jul 26 18:07:59 blackbox kernel: md: unbind<hde>
+>Jul 26 18:07:59 blackbox kernel: md: export_rdev(hde)
+>Jul 26 18:07:59 blackbox kernel: raid5: device hdi operational as raid disk 1
+>Jul 26 18:07:59 blackbox kernel: raid5: device hdk operational as raid disk 0
+>Jul 26 18:07:59 blackbox kernel: RAID5 conf printout:
+>Jul 26 18:07:59 blackbox kernel:  --- rd:4 wd:2 fd:2
+>Jul 26 18:07:59 blackbox kernel:  disk 0, o:1, dev:hdk
+>Jul 26 18:07:59 blackbox kernel:  disk 1, o:1, dev:hdi
+>Jul 26 18:07:59 blackbox kernel: md: do_md_run() returned -22
+>Jul 26 18:07:59 blackbox kernel: md: md0 stopped.
+>Jul 26 18:07:59 blackbox kernel: md: unbind<hdi>
+>Jul 26 18:07:59 blackbox kernel: md: export_rdev(hdi)
+>Jul 26 18:07:59 blackbox kernel: md: unbind<hdk>
+>Jul 26 18:07:59 blackbox kernel: md: export_rdev(hdk)
+>Jul 26 18:07:59 blackbox kernel: md: ... autorun DONE.
+>
+>So hde is not fresh (it has been removed from the array for quite some
+>time now) and hdg has an invalid superblock.
+>
+>Any advice on what I should do now? Should I better try to rebuild the
+>array with hde or with hdg?
+>
+>
+>Greetings,
+>Frank
+>-
+>To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>  
+>
