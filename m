@@ -1,17 +1,217 @@
-From: "Banters G. Salinity" <gsromero@vaclensa.u-net.com>
-Subject: wishes of  your gilrfriend
-Date: Tue, 26 Jul 2005 18:17:37 -0400
-Message-ID: <9391492693.20050726181737@vaclensa.u-net.com>
+From: Dan Stromberg <strombrg@dcs.nac.uci.edu>
+Subject: Re: Failed RAID-5 with 4 disks
+Date: Tue, 26 Jul 2005 15:36:14 -0700
+Message-ID: <1122417374.28969.156.camel@seki.nac.uci.edu>
+References: <20050726170329.GA30354@intoxicatedmind.net>
+	 <42E6B213.8020108@dtbb.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-vfdnF6jnpEr3AYcmGKi5"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <42E6B213.8020108@dtbb.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux <linux-raid@vger.kernel.org>
+To: Tyler <pml@dtbb.net>
+Cc: Frank Blendinger <fb@intoxicatedmind.net>, linux-raid@vger.kernel.org, strombrg@dcs.nac.uci.edu
 List-Id: linux-raid.ids
 
-www.a7vlwbsgw3s0ebs.retypekmdbh.com
 
-------------------------------------
-Bye
+--=-vfdnF6jnpEr3AYcmGKi5
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+
+It seems theoretically possible, but might take some semi-substantial
+coding effort, to build a program that would sort of combine fsck and
+RAID information to get back as much as is feasible.
+
+For example, this program might track down all the inodes it can, and
+perhaps even hunt for inode magic numbers to augment the inode list
+(using fuzzy logic - if the inode points to a reasonable series of
+blocks, for example, and has a possible file length and the files are
+owned by an existing user - each of these strengthens the program's
+believe that it has heuristically found a real inode), and then look
+down the block pointers in the inodes for blocks that are known still
+good, and ignoring the ones that aren't.
+
+I suppose then you'd need some sort of table, built out of lots of range
+arithmetic, indicating that N files were 100% recovered, and M files
+were recovered only in ranges such and so.
+
+Might actually be kind of a fun project once you get really immersed
+into it.
+
+HTH. :)
+
+On Tue, 2005-07-26 at 14:58 -0700, Tyler wrote:
+> My suggestion would be to buy two new drives, and DD (or dd rescue) the=20
+> two bad drives onto the new drives, and then plug the new drive that has=20
+> the most recent failure on it (HDG?) in, and try running a forced=20
+> assemble including the HDG drive, then, in readonly mode, run an fsck to=20
+> check the file system, and see if it thinks most things are okay.  *IF*=20
+> it checks out okay (for the most part.. you will probably lose some=20
+> data), then plug the second new disk in, and add it to the array as a=20
+> spare, and it would then start a resync of the array.  Otherwise, if the=20
+> fsck found that the entire filesystem was fubar... then I would try the=20
+> above steps, but force the assemble with the original failed disk.. but=20
+> depending on how long in between the two failures its been, and if any=20
+> data was written to the array after the first failure, this is probably=20
+> not going to be a good thing.. but could still be useful if you were=20
+> trying to recover specific files that were not touched in between the=20
+> two failures.
+>=20
+> I would also suggest googling raid manual recovery procedures, some info=20
+> is outdated, but some of it describes what I just described above.
+>=20
+> Tyler.
+>=20
+> Frank Blendinger wrote:
+>=20
+> >Hi,
+> >
+> >I have a RAID-5 set up with the following raidtab:
+> >
+> >raiddev /dev/md0
+> >        raid-level              5
+> >        nr-raid-disks           4
+> >        nr-spare-disks          0
+> >        persistent-superblock   1
+> >        parity-algorithm        left-symmetric
+> >        chunk-size              256
+> >        device                  /dev/hde
+> >        raid-disk               0
+> >        device                  /dev/hdg
+> >        raid-disk               1
+> >        device                  /dev/hdi
+> >        raid-disk               2
+> >        device                  /dev/hdk
+> >        raid-disk               3
+> >
+> >My hde has failed some time ago, leaving some=20
+> >	hde: dma_intr: status=3D0x51 { DriveReady SeekComplete Error }
+> >	hde: dma_intr: error=3D0x84 { DriveStatusError BadCRC }
+> >messages in the syslog.
+> >
+> >I wanted to get sure it really was damaged, so I did a badblocks
+> >(read-only) scan on /dev/hde. It actually found a bad sector on the
+> >disk.
+> >
+> >
+> >I wanted to take the disk out to get me a new one, but unfortunately my
+> >hdg seems to have run into trouble too, now. I also have some
+> >SeekComplete/BadCRC errors in my log for that disk, too.
+> >
+> >Furthermore, i got this:
+> >
+> >Jul 25 10:35:49 blackbox kernel: ide: failed opcode was: unknown
+> >Jul 25 10:35:49 blackbox kernel: hdg: DMA disabled
+> >Jul 25 10:35:49 blackbox kernel: PDC202XX: Secondary channel reset.
+> >Jul 25 10:35:49 blackbox kernel: PDC202XX: Primary channel reset.
+> >Jul 25 10:35:49 blackbox kernel: hde: lost interrupt
+> >Jul 25 10:35:49 blackbox kernel: ide3: reset: master: error (0x00?)
+> >Jul 25 10:35:49 blackbox kernel: end_request: I/O error, dev hdg, sector=
+ 488396928
+> >Jul 25 10:35:49 blackbox kernel: end_request: I/O error, dev hdg, sector=
+ 159368976
+> >Jul 25 10:35:49 blackbox kernel: end_request: I/O error, dev hdg, sector=
+ 159368984
+> >Jul 25 10:35:49 blackbox kernel: end_request: I/O error, dev hdg, sector=
+ 159368992
+> >Jul 25 10:35:49 blackbox kernel: end_request: I/O error, dev hdg, sector=
+ 159369000
+> >Jul 25 10:35:49 blackbox kernel: end_request: I/O error, dev hdg, sector=
+ 159369008
+> >Jul 25 10:35:49 blackbox kernel: end_request: I/O error, dev hdg, sector=
+ 159369016
+> >Jul 25 10:35:49 blackbox kernel: end_request: I/O error, dev hdg, sector=
+ 159369024
+> >Jul 25 10:35:49 blackbox kernel: end_request: I/O error, dev hdg, sector=
+ 159369032
+> >Jul 25 10:35:49 blackbox kernel: md: write_disk_sb failed for device hdg
+> >Jul 25 10:35:49 blackbox kernel: lost page write due to I/O error on md0
+> >Jul 25 10:35:49 blackbox kernel: lost page write due to I/O error on md0
+> >Jul 25 10:35:49 blackbox kernel: RAID5 conf printout:
+> >Jul 25 10:35:49 blackbox kernel:  --- rd:4 wd:2 fd:2
+> >Jul 25 10:35:49 blackbox kernel:  disk 0, o:1, dev:hdk
+> >Jul 25 10:35:49 blackbox kernel:  disk 1, o:1, dev:hdi
+> >Jul 25 10:35:49 blackbox kernel:  disk 2, o:0, dev:hdg
+> >Jul 25 10:35:49 blackbox kernel: RAID5 conf printout:
+> >Jul 25 10:35:49 blackbox kernel:  --- rd:4 wd:2 fd:2
+> >Jul 25 10:35:49 blackbox kernel:  disk 0, o:1, dev:hdk
+> >Jul 25 10:35:49 blackbox kernel:  disk 1, o:1, dev:hdi
+> >Jul 25 10:35:49 blackbox kernel: lost page write due to I/O error on md0
+> >
+> >
+> >Well, now it seems I have to failed disks in my RAID-5, which of course
+> >would be fatal. I am still hoping to somehow rescue the data on the
+> >array somehow, but I am not sure what would be the best approach. I don'=
+t
+> >want to cause any more damage.
+> >
+> >When booting my system with all four disks connected, hde and hdg as
+> >expected won't get added:
+> >
+> >Jul 26 18:07:59 blackbox kernel: md: hdg has invalid sb, not importing!
+> >Jul 26 18:07:59 blackbox kernel: md: autorun ...
+> >Jul 26 18:07:59 blackbox kernel: md: considering hdi ...
+> >Jul 26 18:07:59 blackbox kernel: md:  adding hdi ...
+> >Jul 26 18:07:59 blackbox kernel: md:  adding hdk ...
+> >Jul 26 18:07:59 blackbox kernel: md:  adding hde ...
+> >Jul 26 18:07:59 blackbox kernel: md: created md0
+> >Jul 26 18:07:59 blackbox kernel: md: bind<hde>
+> >Jul 26 18:07:59 blackbox kernel: md: bind<hdk>
+> >Jul 26 18:07:59 blackbox kernel: md: bind<hdi>
+> >Jul 26 18:07:59 blackbox kernel: md: running: <hdi><hdk><hde>
+> >Jul 26 18:07:59 blackbox kernel: md: kicking non-fresh hde from array!
+> >Jul 26 18:07:59 blackbox kernel: md: unbind<hde>
+> >Jul 26 18:07:59 blackbox kernel: md: export_rdev(hde)
+> >Jul 26 18:07:59 blackbox kernel: raid5: device hdi operational as raid d=
+isk 1
+> >Jul 26 18:07:59 blackbox kernel: raid5: device hdk operational as raid d=
+isk 0
+> >Jul 26 18:07:59 blackbox kernel: RAID5 conf printout:
+> >Jul 26 18:07:59 blackbox kernel:  --- rd:4 wd:2 fd:2
+> >Jul 26 18:07:59 blackbox kernel:  disk 0, o:1, dev:hdk
+> >Jul 26 18:07:59 blackbox kernel:  disk 1, o:1, dev:hdi
+> >Jul 26 18:07:59 blackbox kernel: md: do_md_run() returned -22
+> >Jul 26 18:07:59 blackbox kernel: md: md0 stopped.
+> >Jul 26 18:07:59 blackbox kernel: md: unbind<hdi>
+> >Jul 26 18:07:59 blackbox kernel: md: export_rdev(hdi)
+> >Jul 26 18:07:59 blackbox kernel: md: unbind<hdk>
+> >Jul 26 18:07:59 blackbox kernel: md: export_rdev(hdk)
+> >Jul 26 18:07:59 blackbox kernel: md: ... autorun DONE.
+> >
+> >So hde is not fresh (it has been removed from the array for quite some
+> >time now) and hdg has an invalid superblock.
+> >
+> >Any advice on what I should do now? Should I better try to rebuild the
+> >array with hde or with hdg?
+> >
+> >
+> >Greetings,
+> >Frank
+> >-
+> >To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> >the body of a message to majordomo@vger.kernel.org
+> >More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >
+> > =20
+> >
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>=20
+
+--=-vfdnF6jnpEr3AYcmGKi5
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+
+iD8DBQBC5rreo0feVm00f/8RAqiuAJ4gG8O2GRTybSxTk7GOC8lAPdWPsACeNzfg
+HTHXvw3/A090fzHocmLwkek=
+=ffor
+-----END PGP SIGNATURE-----
+
+--=-vfdnF6jnpEr3AYcmGKi5--
 
