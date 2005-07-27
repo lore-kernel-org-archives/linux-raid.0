@@ -1,37 +1,26 @@
-From: Jan-Frode Myklebust <Jan-Frode.Myklebust@bccs.uib.no>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
 Subject: Re: 3ware + RAID5 + xfs performance
-Date: Wed, 27 Jul 2005 19:36:29 +0200
-Message-ID: <20050727173629.GA14879@ii.uib.no>
-References: <Pine.SOL.4.58.0507252110320.2683@titan.cfa.harvard.edu> <200507252134.13869.hjm@tacgi.com> <20050727092104.GA6215@ii.uib.no> <200507270915.32011.hjm@tacgi.com>
+Date: Wed, 27 Jul 2005 20:04:56 +0200 (CEST)
+Message-ID: <Pine.LNX.4.62.0507272003380.3636@uplift.swm.pp.se>
+References: <Pine.SOL.4.58.0507252110320.2683@titan.cfa.harvard.edu>
+ <200507252134.13869.hjm@tacgi.com> <20050727092104.GA6215@ii.uib.no>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-xfs-bounce@oss.sgi.com>
-Content-Disposition: inline
-In-Reply-To: <200507270915.32011.hjm@tacgi.com>
-Sender: linux-xfs-bounce@oss.sgi.com
-Errors-to: linux-xfs-bounce@oss.sgi.com
-To: Harry Mangalam <hjm@tacgi.com>
-Cc: linux-raid@vger.kernel.org, linux-xfs@oss.sgi.com
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20050727092104.GA6215@ii.uib.no>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Jul 27, 2005 at 09:15:31AM -0700, Harry Mangalam wrote:
-> That's very impressive!  How many config iterations did you have to do to get 
-> this perf? 
+On Wed, 27 Jul 2005, Jan-Frode Myklebust wrote:
 
-Not too many I think.. only tried a few tunings of stripe-unit in the
-3ware CLI, and scratched my heads a few times to try to understand the
-mkfs.xfs sunit/swidth-options..
+> On Mon, Jul 25, 2005 at 09:34:13PM -0700, Harry Mangalam wrote:
+>> I went thru the same hardware config gymnastics
+>
+> me too, but for RAID0, so here are my numbers for show-off, since I was
 
-> 
-> I'd certainly consider GPFS but I was under the impression that it was only 
-> available for IBM-branded Linux boxes w/ customized kernels.  Can you buy it 
-> a la carte?
+But... RAID0 doesn't have the inherent problem RAID5 has in that it has to 
+read in order to write, so it's no surprise it's very fast?
 
-Yes, and maybe even for free from the IBM Scholars programme if you
-qualify. But yes, it does require a couple of "GPFS" kernel modules,
-which will typically only build for vendor kernels (i.e. not keeping
-up with the latest kernel.org releases). We're running a RHEL-3 clone,
-so that's not been a problem for us so far.
-
-
-  -jf
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
