@@ -1,181 +1,163 @@
-From: Tyler <pml@dtbb.net>
-Subject: Re: Failed RAID-5 with 4 disks
-Date: Tue, 26 Jul 2005 16:12:02 -0700
-Message-ID: <42E6C342.9000304@dtbb.net>
-References: <20050726170329.GA30354@intoxicatedmind.net> <42E6B213.8020108@dtbb.net>
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: bug report: mdadm-devel-2 , superblock version 1
+Date: Wed, 27 Jul 2005 12:08:51 +1000
+Message-ID: <17126.60595.794344.181886@cse.unsw.edu.au>
+References: <009401c58ae6$65b57870$c200a8c0@NCNF5131FTH>
+	<17114.54800.132155.142544@cse.unsw.edu.au>
+	<00e101c58b25$6f5c06c0$c200a8c0@NCNF5131FTH>
+	<17114.62108.319878.983091@cse.unsw.edu.au>
+	<010701c58b32$ee423830$c200a8c0@NCNF5131FTH>
+	<17115.149.130115.176372@cse.unsw.edu.au>
+	<001601c58b37$620c69d0$c200a8c0@NCNF5131FTH>
+	<17115.1749.370942.838069@cse.unsw.edu.au>
+	<42DB0F41.7030806@dtbb.net>
+	<17124.13318.958372.399899@cse.unsw.edu.au>
+	<42E460EA.3020707@dtbb.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <42E6B213.8020108@dtbb.net>
+In-Reply-To: message from Tyler on Sunday July 24
 Sender: linux-raid-owner@vger.kernel.org
-Cc: Frank Blendinger <fb@intoxicatedmind.net>, linux-raid@vger.kernel.org
+To: Tyler <pml@dtbb.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I had a typo in my original email, near the end, where I say "was 
-fubar... then I would try the above steps, but force the assemble with 
-the original failed disk", I actually meant to say "but force the 
-assemble with the newly DD'd copy of the original/first drive that failed."
+On Sunday July 24, pml@dtbb.net wrote:
+> Neil Brown wrote:
+> > On Sunday July 17, pml@dtbb.net wrote:
+> > 
+> >># uname -a
+> >>Linux server 2.6.12.3 #3 SMP Sun Jul 17 14:38:12 CEST 2005 i686 GNU/Linux
+> >># ./mdadm -V
+> >>mdadm - v2.0-devel-2 - DEVELOPMENT VERSION NOT FOR REGULAR USE - 7 July 2005
+> >>
+> > ...
+> > 
+> >>root@server:~/dev/mdadm-2.0-devel-2# cat /proc/mdstat
+> >>Personalities : [raid5]
+> >>md1 : active raid5 sdc2[3] sdb2[1] sda2[0]
+> >>      128384 blocks level 5, 64k chunk, algorithm 2 [3/3] [UUU]
+> >>
+> >>unused devices: <none>
+> >>
+> >>** mdstat mostly okay, except sdc2 is listed as device3 instead of 
+> > 
+> > Hmmm, yes....  It is device number 3 in the array, but it is playing
+> > role-2 in the raid5.  When using Version-1 superblocks, we don't moved
+> > devices around, in the "list of all devices".  We just assign them
+> > different roles. (device-N or 'spare').
+> > 
+> 
+> So if I were to add (as an example) 7 spares to a 3 disk raid-5 array, 
+> and later removed them for use elsewhere, a raid using a v1.x superblock 
+> would keep a permanent listing of those drives even after being
+> removed? 
 
-Tyler.
+No.  A device retains it's slot number only while it is a member of
+the array.  Once it is removed from the array it is forgotten.  If it
+is re-added, it appears simply as a new drive and is allocated the
+first free slot.
 
-Tyler wrote:
 
-> My suggestion would be to buy two new drives, and DD (or dd rescue) 
-> the two bad drives onto the new drives, and then plug the new drive 
-> that has the most recent failure on it (HDG?) in, and try running a 
-> forced assemble including the HDG drive, then, in readonly mode, run 
-> an fsck to check the file system, and see if it thinks most things are 
-> okay.  *IF* it checks out okay (for the most part.. you will probably 
-> lose some data), then plug the second new disk in, and add it to the 
-> array as a spare, and it would then start a resync of the array.  
-> Otherwise, if the fsck found that the entire filesystem was fubar... 
-> then I would try the above steps, but force the assemble with the 
-> original failed disk.. but depending on how long in between the two 
-> failures its been, and if any data was written to the array after the 
-> first failure, this is probably not going to be a good thing.. but 
-> could still be useful if you were trying to recover specific files 
-> that were not touched in between the two failures.
->
-> I would also suggest googling raid manual recovery procedures, some 
-> info is outdated, but some of it describes what I just described above.
->
-> Tyler.
->
-> Frank Blendinger wrote:
->
->> Hi,
->>
->> I have a RAID-5 set up with the following raidtab:
->>
->> raiddev /dev/md0
->>        raid-level              5
->>        nr-raid-disks           4
->>        nr-spare-disks          0
->>        persistent-superblock   1
->>        parity-algorithm        left-symmetric
->>        chunk-size              256
->>        device                  /dev/hde
->>        raid-disk               0
->>        device                  /dev/hdg
->>        raid-disk               1
->>        device                  /dev/hdi
->>        raid-disk               2
->>        device                  /dev/hdk
->>        raid-disk               3
->>
->> My hde has failed some time ago, leaving some     hde: dma_intr: 
->> status=0x51 { DriveReady SeekComplete Error }
->>     hde: dma_intr: error=0x84 { DriveStatusError BadCRC }
->> messages in the syslog.
->>
->> I wanted to get sure it really was damaged, so I did a badblocks
->> (read-only) scan on /dev/hde. It actually found a bad sector on the
->> disk.
->>
->>
->> I wanted to take the disk out to get me a new one, but unfortunately my
->> hdg seems to have run into trouble too, now. I also have some
->> SeekComplete/BadCRC errors in my log for that disk, too.
->>
->> Furthermore, i got this:
->>
->> Jul 25 10:35:49 blackbox kernel: ide: failed opcode was: unknown
->> Jul 25 10:35:49 blackbox kernel: hdg: DMA disabled
->> Jul 25 10:35:49 blackbox kernel: PDC202XX: Secondary channel reset.
->> Jul 25 10:35:49 blackbox kernel: PDC202XX: Primary channel reset.
->> Jul 25 10:35:49 blackbox kernel: hde: lost interrupt
->> Jul 25 10:35:49 blackbox kernel: ide3: reset: master: error (0x00?)
->> Jul 25 10:35:49 blackbox kernel: end_request: I/O error, dev hdg, 
->> sector 488396928
->> Jul 25 10:35:49 blackbox kernel: end_request: I/O error, dev hdg, 
->> sector 159368976
->> Jul 25 10:35:49 blackbox kernel: end_request: I/O error, dev hdg, 
->> sector 159368984
->> Jul 25 10:35:49 blackbox kernel: end_request: I/O error, dev hdg, 
->> sector 159368992
->> Jul 25 10:35:49 blackbox kernel: end_request: I/O error, dev hdg, 
->> sector 159369000
->> Jul 25 10:35:49 blackbox kernel: end_request: I/O error, dev hdg, 
->> sector 159369008
->> Jul 25 10:35:49 blackbox kernel: end_request: I/O error, dev hdg, 
->> sector 159369016
->> Jul 25 10:35:49 blackbox kernel: end_request: I/O error, dev hdg, 
->> sector 159369024
->> Jul 25 10:35:49 blackbox kernel: end_request: I/O error, dev hdg, 
->> sector 159369032
->> Jul 25 10:35:49 blackbox kernel: md: write_disk_sb failed for device hdg
->> Jul 25 10:35:49 blackbox kernel: lost page write due to I/O error on md0
->> Jul 25 10:35:49 blackbox kernel: lost page write due to I/O error on md0
->> Jul 25 10:35:49 blackbox kernel: RAID5 conf printout:
->> Jul 25 10:35:49 blackbox kernel:  --- rd:4 wd:2 fd:2
->> Jul 25 10:35:49 blackbox kernel:  disk 0, o:1, dev:hdk
->> Jul 25 10:35:49 blackbox kernel:  disk 1, o:1, dev:hdi
->> Jul 25 10:35:49 blackbox kernel:  disk 2, o:0, dev:hdg
->> Jul 25 10:35:49 blackbox kernel: RAID5 conf printout:
->> Jul 25 10:35:49 blackbox kernel:  --- rd:4 wd:2 fd:2
->> Jul 25 10:35:49 blackbox kernel:  disk 0, o:1, dev:hdk
->> Jul 25 10:35:49 blackbox kernel:  disk 1, o:1, dev:hdi
->> Jul 25 10:35:49 blackbox kernel: lost page write due to I/O error on md0
->>
->>
->> Well, now it seems I have to failed disks in my RAID-5, which of course
->> would be fatal. I am still hoping to somehow rescue the data on the
->> array somehow, but I am not sure what would be the best approach. I 
->> don't
->> want to cause any more damage.
->>
->> When booting my system with all four disks connected, hde and hdg as
->> expected won't get added:
->>
->> Jul 26 18:07:59 blackbox kernel: md: hdg has invalid sb, not importing!
->> Jul 26 18:07:59 blackbox kernel: md: autorun ...
->> Jul 26 18:07:59 blackbox kernel: md: considering hdi ...
->> Jul 26 18:07:59 blackbox kernel: md:  adding hdi ...
->> Jul 26 18:07:59 blackbox kernel: md:  adding hdk ...
->> Jul 26 18:07:59 blackbox kernel: md:  adding hde ...
->> Jul 26 18:07:59 blackbox kernel: md: created md0
->> Jul 26 18:07:59 blackbox kernel: md: bind<hde>
->> Jul 26 18:07:59 blackbox kernel: md: bind<hdk>
->> Jul 26 18:07:59 blackbox kernel: md: bind<hdi>
->> Jul 26 18:07:59 blackbox kernel: md: running: <hdi><hdk><hde>
->> Jul 26 18:07:59 blackbox kernel: md: kicking non-fresh hde from array!
->> Jul 26 18:07:59 blackbox kernel: md: unbind<hde>
->> Jul 26 18:07:59 blackbox kernel: md: export_rdev(hde)
->> Jul 26 18:07:59 blackbox kernel: raid5: device hdi operational as 
->> raid disk 1
->> Jul 26 18:07:59 blackbox kernel: raid5: device hdk operational as 
->> raid disk 0
->> Jul 26 18:07:59 blackbox kernel: RAID5 conf printout:
->> Jul 26 18:07:59 blackbox kernel:  --- rd:4 wd:2 fd:2
->> Jul 26 18:07:59 blackbox kernel:  disk 0, o:1, dev:hdk
->> Jul 26 18:07:59 blackbox kernel:  disk 1, o:1, dev:hdi
->> Jul 26 18:07:59 blackbox kernel: md: do_md_run() returned -22
->> Jul 26 18:07:59 blackbox kernel: md: md0 stopped.
->> Jul 26 18:07:59 blackbox kernel: md: unbind<hdi>
->> Jul 26 18:07:59 blackbox kernel: md: export_rdev(hdi)
->> Jul 26 18:07:59 blackbox kernel: md: unbind<hdk>
->> Jul 26 18:07:59 blackbox kernel: md: export_rdev(hdk)
->> Jul 26 18:07:59 blackbox kernel: md: ... autorun DONE.
->>
->> So hde is not fresh (it has been removed from the array for quite some
->> time now) and hdg has an invalid superblock.
->>
->> Any advice on what I should do now? Should I better try to rebuild the
->> array with hde or with hdg?
->>
->>
->> Greetings,
->> Frank
->> -
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->>  
->>
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+>    Is there a possibility (for either asthetics, or just keeping things 
+> easier to read and possibly diagnose at a later date during manual 
+> recoveries) of adding a command line option to "re-order and remove" old 
+> devices that are marked as removed, that could only function if the 
+> array was clean, and non-degraded?  (this would be a manual feature we 
+> would run, especially if automatically doing this might actually confuse 
+> us during times of trouble-shooting?)
+
+I'd rather change the output of mdadm to display the important
+information (role in array) more prominently that the less important
+info (position in array).
+> >>
+> >>    Number   Major   Minor   RaidDevice State
+> >>       0       8        2        0      active sync   /dev/.static/dev/sda2
+> >>       1       8       18        1      active sync   /dev/.static/dev/sdb2
+> >>       2       0        0        -      removed
+> >>
+> >>       3       8       34        2      active sync   /dev/.static/dev/sdc2
+> >>
+> >>** reports version 01.00.01 superblock, but reports as if there were 4 
+> >>devices used
+> > 
+> > Ok, this output definitely needs fixing.  But as you can see, there
+> > are 3 devices playing roles (RaidDevice) 0, 1, and 2.  They reside in
+> > slots 0, 1, and 3 of the array.
+> 
+> Depending on your answer to the first question up above, a new question 
+> based on your comment here comes to mind... if we assume, as you say 
+> above that it is normal for v1 superblocks to keep old removed drives 
+> listed, but down here you say the output needs fixing, which output is 
+> wrong in the example showing 0,1,2,3 devices, with device #2 removed, 
+> and device 3 acting as raiddevice 2 ?  If the v1 superblocks are 
+> designed to keep removed drives listed, then the above output makes 
+> sense.. now that you've pointed out the "feature".
+
+It should look more like:
+
+    Number   Major   Minor   RaidDevice State
+       0       8        2        0      active sync   /dev/.static/dev/sda2
+       1       8       18        1      active sync   /dev/.static/dev/sdb2
+       3       8       34        2      active sync   /dev/.static/dev/sdc2
+
+i.e. printing something that is 'removed' is pointless.  And the list
+should be sorted by 'RaidDevice', not 'Number'.
+
+
+> 
+> >>root@server:~/dev/mdadm-2.0-devel-2# ./mdadm -A /dev/md1
+> >>Segmentation fault
+> >>
+> >>** try to assemble the array
+> > 
+> > This is not how you assemble an array.  You need to tell mdadm which
+> > component devices to use, either on command line or in /etc/mdadm.conf
+> > (and give --scan).
+> 
+> I failed to mention that I had an up to date mdadm.conf file, with the 
+> raid UUID in it, and (I will have to verify this) I believe the command 
+> as I typed it above, works with the 1.12 mdadm.  The mdadm.conf file has 
+> a DEVICE=/dev/hd[b-z] /dev/sd* line at the beginning of the config file, 
+> and then the standard options (but no devices= line).  Does -A still 
+> need *some* options even if the config file is up to date??  (as I said, 
+> I'll have to verify if 1.12 works with just the -A).
+
+mdadm won't look at the config file unless you tell it too (with
+--scan or --configfile).  At least that is what I intended.
+
+
+
+> 
+> Also, if -A requires some other options on the command line, should it 
+> not complain, instead of segfaulting? :D
+
+Certainly!
+
+
+> 
+> >>root@server:~/dev/mdadm-2.0-devel-2# ./mdadm -D /dev/md1
+> >>mdadm: md device /dev/md1 does not appear to be active.
+> >>
+> >>** check if its active at all
+> >>
+> >>root@server:~/dev/mdadm-2.0-devel-2# ./mdadm -A /dev/md1 /dev/sda2 
+> >>/dev/sdb2 /dev/sdc2
+> >>mdadm: device 1 in /dev/md1 has wrong state in superblock, but /dev/sdb2 
+> >>seems ok
+> >>mdadm: device 2 in /dev/md1 has wrong state in superblock, but /dev/sdc2 
+> >>seems ok
+> >>mdadm: /dev/md1 has been started with 3 drives.
+> >>
+> >>** try restarting it with drive details, and it starts
+> > 
+> > Those message are a bother though.  I think I know roughly what is
+> > going on.  I'll look into it shortly.
+> 
+> Is this possibly where the v1 superblocks are being mangled, and so it 
+> reverts back to the v0.90 superblocks that it finds on the disk?
+
+I'm not sure until I look carefully through the code.
+
+NeilBrown
