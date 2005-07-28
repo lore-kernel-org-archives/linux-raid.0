@@ -1,82 +1,53 @@
-From: Max Waterman <davidmaxwaterman+news@fastmail.co.uk>
-Subject: Re: raidreconfig advice
-Date: Thu, 28 Jul 2005 10:28:05 +0800
-Message-ID: <dc9fsa$r94$1@sea.gmane.org>
-References: <4232B49C.6080306@fastmail.co.uk> <42331AC6.6050109@h3c.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <42331AC6.6050109@h3c.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+From: akpm@osdl.org
+Subject: [patch 01/18] bio_clone fix
+Date: Thu, 28 Jul 2005 01:07:18 -0700
+Message-ID: <200507280808.j6S88F15013833@shell0.pdx.osdl.net>
+Reply-To: device-mapper development <dm-devel@redhat.com>
+Return-path: <dm-devel-bounces@redhat.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: torvalds@osdl.org
+Cc: akpm@osdl.org, linux-raid@vger.kernel.org, dm-devel@redhat.com, axboe@suse.de, matthew4196@gmail.com
 List-Id: linux-raid.ids
 
-Mike Hardy wrote:
-> 
-> 
-> Max Waterman wrote:
-> 
->> OK, I am going to try to expand the capacity of my raid5 array and I 
->> want to make sure I've got it right.
-> 
-> 
-> Not a bad idea, as its all or nothing...
-> 
->> Disk /dev/hdg: 200.0 GB, 200049647616 bytes
->> Disk /dev/hdi: 200.0 GB, 200049647616 bytes
->> Disk /dev/hdk: 200.0 GB, 200049647616 bytes
->> Disk /dev/sda: 200.0 GB, 200049647616 bytes
->> Disk /dev/sdb: 200.0 GB, 200049647616 bytes
->> Disk /dev/sdc: 200.0 GB, 200049647616 bytes
->> Disk /dev/sdd: 200.0 GB, 200049647616 bytes
-> 
-> 
-> They certainly all looked the same (including the C/H/S counts)
-> 
->> This leaves me with sdc which I can try to add. If that goes OK, I'll 
->> trash the backup and add sd[ab] too.
-> 
-> 
-> I'd be very wary of this, for two reasons. One, you have the backup 
-> during the add for a reason. If anything goes wrong, there goes your 
-> data. Second, where would you ever back your raid up to? What about fs 
-> corruption?
-> 
-> The rule of thumb with databases is to always have enough contiguous 
-> scratch space to dump and restore your biggest table. With large RAID, 
-> you should always be able to dump and restore your largest raid device, 
-> imho. Its a bunch more disk yes, but you'll need it at some point, I 
-> promise. Many future tears can be averted...
 
-I'm not worried about losing my data enough to make regular backups.
-I recently thought I'd lost all my data - it wasn't that much of a 
-shock. I since discovered I hadn't lost it all, so all is well.
+From: Andrew Morton <akpm@osdl.org>
 
-I've made a backup onto a spare array, plus onto one of the 200GB disks 
-which I will use as a spare later.
+Fix bug introduced in 2.6.11-rc2: when we clone a BIO we need to copy over the
+current index into it as well.
 
-> 
->> 3) Are there any instructions for raidreconfig? I understand is uses 
->> some non-mdadm config files as from/to input.
-> 
-> 
-> the man page is great - honest. Two conf files (current and future) and 
-> you're set
+It corrupts data with some MD setups.
 
-Yeah, but I don't know how to use raidconf files. I use mdadm. I 
-currently have in my mdadm.conf :
+See http://bugzilla.kernel.org/show_bug.cgi?id=4946
 
-DEVICE /dev/hd[egik]
-ARRAY /dev/md0 level=raid5 num-devices=4  devices=/dev/hd[egik]
+Huuuuuuuuge thanks to Matthew Stapleton <matthew4196@gmail.com> for doggedly
+chasing this one down.
 
-I think my target mdadm.conf would be :
+Acked-by: Jens Axboe <axboe@suse.de>
+Cc: <linux-raid@vger.kernel.org>
+Cc: <dm-devel@redhat.com>
+Signed-off-by: Andrew Morton <akpm@osdl.org>
+---
 
-DEVICE /dev/hd[egik] /dev/sd[abc]
-ARRAY /dev/md0 level=raid5 num-devices=7
-devices=/dev/hd[egik],/dev/sd[abc]
+ fs/bio.c |    1 +
+ 1 files changed, 1 insertion(+)
 
-What are these in raidtab(5) terms?
-
-Max.
-
+diff -puN fs/bio.c~bio_clone-fix fs/bio.c
+--- devel/fs/bio.c~bio_clone-fix	2005-07-28 00:39:40.000000000 -0700
++++ devel-akpm/fs/bio.c	2005-07-28 01:02:34.000000000 -0700
+@@ -261,6 +261,7 @@ inline void __bio_clone(struct bio *bio,
+ 	 */
+ 	bio->bi_vcnt = bio_src->bi_vcnt;
+ 	bio->bi_size = bio_src->bi_size;
++	bio->bi_idx = bio_src->bi_idx;
+ 	bio_phys_segments(q, bio);
+ 	bio_hw_segments(q, bio);
+ }
+_
