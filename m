@@ -1,36 +1,24 @@
-From: "selim" <selwess11@yahoo.com>
-Subject: e-maillist...
-Date: Thu, 28 Jul 2005 16:02:55 +0300
-Message-ID: <200507281302.j6SD2jbb013276@zeus1.kernel.org>
-Reply-To: ahuvi@mynet.com
+From: Roger <lowlands@mosley.tc>
+Subject: Viagra - Proven step to start something all over again.
+Date: Thu, 28 Jul 2005 22:58:44 +0200
+Message-ID: <9079532077.4242293725@85.93.245.16>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-msdos-owner@vger.kernel.org>
-Sender: linux-msdos-owner@vger.kernel.org
-To: linux-fsdevel@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-msdos@vger.kernel.org, linux-newbie@vger.kernel.org, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Bazen bir musteri ya da tuketiciye ulasmak zahmetli ve masrafli olabilir.
-Sirketler satis ekipleriyle ancak sinirli sayida musteriye ulasabilmektedir.
-Basindan ve televizyonlardan yapilacak reklamlara guc yeter mi?
-Sitenizin arama motorlarina yillik kayit ucretlerini karsilayabilir misiniz?
-INTERNET'TEN E-TICARET VE E-REKLAM ICIN IHTIYACINIZ OLAN E- MAIL LISTELERI ILE ... daha yaygin bir musteri portfoyu olusturabilirsiniz.
-Firmanizin tanitimi,
-Urunlerinizin tanitimi,
-Web sitenizin tanitimi ile 
-Kampanya ve promosyonlarinizi duyurabilmeniz icin;
-Amerika,Asya,Avrupa,Avusturalya ve Afrika kitalarina ulasin!
-ULKELER VE SEKTORLER
-300.000.000 ADEDIN UZERINDE e-mail adresi (5 KITA)
-8.000.000 ADEDIN UZERINDE e-mail adresi (TURKIYE)
-(hotmail,yahoo,mynet vd...adresler)
-KOLAY KURULUM VE HIZLI KULLANIM AVANTAJI ILE
-Yabanci e-mail adresleri:50.YTL
-Turkiye e-mail adresleri:25.YTL
-ikisi beraber:60 YTL
-Sizi ilgilendiren insanlar da bu mesaji almis olabilir!
-ahuvi@mynet.com <mailto:ahuvi@mynet.com>
+Your Discount prescriptions resource online.
+http://misshapen.vaiium.com/ph/as/
+
+
+
+
+I'm from Iowa, I only work in space.     
+Acting is standing up naked and turning around very slowly.   
+Life is divided into the horrible and the miserable.    
+There is no revenge so complete as forgiveness.     
 
 
