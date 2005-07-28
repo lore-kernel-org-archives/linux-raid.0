@@ -1,53 +1,36 @@
-From: akpm@osdl.org
-Subject: [patch 01/18] bio_clone fix
-Date: Thu, 28 Jul 2005 01:07:18 -0700
-Message-ID: <200507280808.j6S88F15013833@shell0.pdx.osdl.net>
-Reply-To: device-mapper development <dm-devel@redhat.com>
-Return-path: <dm-devel-bounces@redhat.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: torvalds@osdl.org
-Cc: akpm@osdl.org, linux-raid@vger.kernel.org, dm-devel@redhat.com, axboe@suse.de, matthew4196@gmail.com
+From: "selim" <selwess11@yahoo.com>
+Subject: e-maillist...
+Date: Thu, 28 Jul 2005 16:02:55 +0300
+Message-ID: <200507281302.j6SD2jbb013276@zeus1.kernel.org>
+Reply-To: ahuvi@mynet.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-msdos-owner@vger.kernel.org>
+Sender: linux-msdos-owner@vger.kernel.org
+To: linux-fsdevel@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-msdos@vger.kernel.org, linux-newbie@vger.kernel.org, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-raid.ids
 
+Bazen bir musteri ya da tuketiciye ulasmak zahmetli ve masrafli olabilir.
+Sirketler satis ekipleriyle ancak sinirli sayida musteriye ulasabilmektedir.
+Basindan ve televizyonlardan yapilacak reklamlara guc yeter mi?
+Sitenizin arama motorlarina yillik kayit ucretlerini karsilayabilir misiniz?
+INTERNET'TEN E-TICARET VE E-REKLAM ICIN IHTIYACINIZ OLAN E- MAIL LISTELERI ILE ... daha yaygin bir musteri portfoyu olusturabilirsiniz.
+Firmanizin tanitimi,
+Urunlerinizin tanitimi,
+Web sitenizin tanitimi ile 
+Kampanya ve promosyonlarinizi duyurabilmeniz icin;
+Amerika,Asya,Avrupa,Avusturalya ve Afrika kitalarina ulasin!
+ULKELER VE SEKTORLER
+300.000.000 ADEDIN UZERINDE e-mail adresi (5 KITA)
+8.000.000 ADEDIN UZERINDE e-mail adresi (TURKIYE)
+(hotmail,yahoo,mynet vd...adresler)
+KOLAY KURULUM VE HIZLI KULLANIM AVANTAJI ILE
+Yabanci e-mail adresleri:50.YTL
+Turkiye e-mail adresleri:25.YTL
+ikisi beraber:60 YTL
+Sizi ilgilendiren insanlar da bu mesaji almis olabilir!
+ahuvi@mynet.com <mailto:ahuvi@mynet.com>
 
-From: Andrew Morton <akpm@osdl.org>
 
-Fix bug introduced in 2.6.11-rc2: when we clone a BIO we need to copy over the
-current index into it as well.
-
-It corrupts data with some MD setups.
-
-See http://bugzilla.kernel.org/show_bug.cgi?id=4946
-
-Huuuuuuuuge thanks to Matthew Stapleton <matthew4196@gmail.com> for doggedly
-chasing this one down.
-
-Acked-by: Jens Axboe <axboe@suse.de>
-Cc: <linux-raid@vger.kernel.org>
-Cc: <dm-devel@redhat.com>
-Signed-off-by: Andrew Morton <akpm@osdl.org>
----
-
- fs/bio.c |    1 +
- 1 files changed, 1 insertion(+)
-
-diff -puN fs/bio.c~bio_clone-fix fs/bio.c
---- devel/fs/bio.c~bio_clone-fix	2005-07-28 00:39:40.000000000 -0700
-+++ devel-akpm/fs/bio.c	2005-07-28 01:02:34.000000000 -0700
-@@ -261,6 +261,7 @@ inline void __bio_clone(struct bio *bio,
- 	 */
- 	bio->bi_vcnt = bio_src->bi_vcnt;
- 	bio->bi_size = bio_src->bi_size;
-+	bio->bi_idx = bio_src->bi_idx;
- 	bio_phys_segments(q, bio);
- 	bio_hw_segments(q, bio);
- }
-_
