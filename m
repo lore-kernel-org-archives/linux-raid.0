@@ -1,33 +1,39 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: Adaptec 79xx HostRAID support
-Date: Fri, 29 Jul 2005 12:12:31 -0400
-Message-ID: <42EA556F.6000003@pobox.com>
-References: <21447.202.173.144.102.1122625238.squirrel@webmail.ilisys.com.au>
+From: birini.bul@gmx.net
+Subject: Bul_Birini:)
+Date: 29 Jul 2005 23:28:57 +0300
+Message-ID: <20050729193512.4EF5D0DB801387B9@gmx.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <21447.202.173.144.102.1122625238.squirrel@webmail.ilisys.com.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Tim Kent <tim.kent@wkconsulting.com.au>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Tim Kent wrote:
-> Hello,
-> 
-> I've compiled the Linux 2.6.8 kernel (Debian Sarge version) with the
-> updated aic79xx drivers from Just Gibbs' web site which has allowed me to
-> now see disks while in HostRAID mode.  What is the next step to see the
-> logical RAID device instead of the disks?  I understand that the Linux
-> kernel needs to understand the Adaptec metadata on the disk.  I've tried
-> applying the rather dated emd diffs (emd-2.6-20040425-diffs.gz) to this
-> kernel without success.
+http://www.birinibul.com/?up=3D213  =20
+=20
+Birinibul.com nedir?
+    =C7al=FD=FEan, kariyerine =F6nem veren ve i=FE hayat=FDn=FDn zorluk=
+lar=FD ile=20
+u=F0ra=FE=FDrken bir sevgiliye zaman ay=FDramayan, yeti=FEkin kad=FDnla=
+r=FD ve erkekleri=20
+bulu=FEturmak i=E7in kurulmu=FE bir sitedir.
+    Birinibul.com'da, e=F0iliminize ve isteklerinize uygun =FCyeleri ar=
+ay=FDp=20
+bulabilir ve onlar ile mesajla=FEabilirsiniz.  =DCye olma s=FDras=FDnda=
+,=20
+ad=FDn=FDz, adresiniz, telefonunuz gibi size =F6zel hi=E7bir bilgiyi ve=
+rmeniz=20
+gerekmiyor. Sadece =F6zelliklerinizi ve arad=FD=F0=FDn=FDz =F6zellikler=
+i girerek 1=20
+dakika i=E7inde siz de bize kat=FDlabilirsiniz.=20
+=20
+http://www.birinibul.com/?up=3D213
 
-Adding support to 'dmraid' for the vendor-proprietary format would be 
-the next step.
-
-	Jeff
 
 
-
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
