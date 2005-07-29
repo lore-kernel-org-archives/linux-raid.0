@@ -1,24 +1,25 @@
-From: Roger <lowlands@mosley.tc>
-Subject: Viagra - Proven step to start something all over again.
-Date: Thu, 28 Jul 2005 22:58:44 +0200
-Message-ID: <9079532077.4242293725@85.93.245.16>
+From: "Tim Kent" <tim.kent@wkconsulting.com.au>
+Subject: Adaptec 79xx HostRAID support
+Date: Fri, 29 Jul 2005 18:20:38 +1000 (EST)
+Message-ID: <21447.202.173.144.102.1122625238.squirrel@webmail.ilisys.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Your Discount prescriptions resource online.
-http://misshapen.vaiium.com/ph/as/
+Hello,
 
+I've compiled the Linux 2.6.8 kernel (Debian Sarge version) with the
+updated aic79xx drivers from Just Gibbs' web site which has allowed me to
+now see disks while in HostRAID mode.  What is the next step to see the
+logical RAID device instead of the disks?  I understand that the Linux
+kernel needs to understand the Adaptec metadata on the disk.  I've tried
+applying the rather dated emd diffs (emd-2.6-20040425-diffs.gz) to this
+kernel without success.
 
-
-
-I'm from Iowa, I only work in space.     
-Acting is standing up naked and turning around very slowly.   
-Life is divided into the horrible and the miserable.    
-There is no revenge so complete as forgiveness.     
-
+Thanks,
+Tim
 
