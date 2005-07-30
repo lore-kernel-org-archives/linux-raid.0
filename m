@@ -1,39 +1,24 @@
-From: birini.bul@gmx.net
-Subject: Bul_Birini:)
-Date: 29 Jul 2005 23:28:57 +0300
-Message-ID: <20050729193512.4EF5D0DB801387B9@gmx.net>
+From: Lizzie <unshared@o-regan.com>
+Subject: Enhance your sexual lifestyle!
+Date: Sat, 30 Jul 2005 14:00:09 +0200
+Message-ID: <90791107611.7334013771@p54AB5B7D.dip.t-dialin.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-http://www.birinibul.com/?up=3D213  =20
-=20
-Birinibul.com nedir?
-    =C7al=FD=FEan, kariyerine =F6nem veren ve i=FE hayat=FDn=FDn zorluk=
-lar=FD ile=20
-u=F0ra=FE=FDrken bir sevgiliye zaman ay=FDramayan, yeti=FEkin kad=FDnla=
-r=FD ve erkekleri=20
-bulu=FEturmak i=E7in kurulmu=FE bir sitedir.
-    Birinibul.com'da, e=F0iliminize ve isteklerinize uygun =FCyeleri ar=
-ay=FDp=20
-bulabilir ve onlar ile mesajla=FEabilirsiniz.  =DCye olma s=FDras=FDnda=
-,=20
-ad=FDn=FDz, adresiniz, telefonunuz gibi size =F6zel hi=E7bir bilgiyi ve=
-rmeniz=20
-gerekmiyor. Sadece =F6zelliklerinizi ve arad=FD=F0=FDn=FDz =F6zellikler=
-i girerek 1=20
-dakika i=E7inde siz de bize kat=FDlabilirsiniz.=20
-=20
-http://www.birinibul.com/?up=3D213
+Are you ready to Rock On? Let the Man in You Rise! 
+http://informative.palns.net/pharmacy/dir/
 
 
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+Be not ashamed of mistakes and thus make them crimes.   
+The best soldiers are not warlike.       
+He who would travel happily must travel light.     
+You can't shake hands with a clenched fist.     
+
+
