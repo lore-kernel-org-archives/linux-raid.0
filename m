@@ -1,58 +1,45 @@
-From: NeilBrown <neilb@cse.unsw.edu.au>
-Subject: [PATCH md ] Make sure raid5/raid6 resync uses correct 'max_sectors'
-Date: Mon, 01 Aug 2005 14:46:52 +1000
-Message-ID: <E1DzSCS-0006um-GO@notabene.cse.unsw.edu.au>
-References: <20050801144150.23561.patches@notabene>
+From: Jeff Breidenbach <breidenbach@gmail.com>
+Subject: Re: Multiplexed RAID-1 mode
+Date: Mon, 1 Aug 2005 02:09:20 -0400
+Message-ID: <e03b90ae050731230950444b63@mail.gmail.com>
+References: <Pine.LNX.4.56.0507310955400.3698@lion.drogon.net>
+	 <200507311907.WAA07886@raad.intranet>
+	 <17133.41835.683675.621675@cse.unsw.edu.au>
+Reply-To: jeff@jab.org
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <17133.41835.683675.621675@cse.unsw.edu.au>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@cse.unsw.edu.au>
+Cc: Al Boldi <a1426z@gawab.com>, Gordon Henderson <gordon@drogon.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I'm putting together a test-suite for mdadm and md (About time), and
-it found this bug for me.  Without it, an array creating in just the
-right way (i.e. the way that mdadm-v2 creates array) will resync
-forever.
+Hi Neil, 
 
-It would be good if this went into 2.6.13
+Are you suggesting I do this?
 
-Thanks,
-NeilBrown
+mdadm --create /dev/md0 --level=10 --raid-devices=2 \
+              --parity=f2 /dev/sdc1 /dev/sdd1
 
+I just tried it and it appears dog slow - for example
+hdparm -t /dev/md0 claims 18MB/s, and I see a similar 
+number in /proc/mdstat for resync speed.
 
---
+Getting rid of the --parity=f2 parameter, the numbers 
+jump up to about 65MB/s which is similar to single drive
+transfer rate.
 
-The default resync_max_sector is set to "mddev->size << 1".
-If the raid-personality-module updates mddev->size, it must
-update resync_max_sectors too.
+Anyway, I haven't thoroughly benchmarked and I know hdparm
+is not to be trusted, but so far it's not obvious to me level=10 
+beats level=1 for a two drive array. If you think it is worth 
+pursuing I will do so.
 
-Signed-off-by: Neil Brown <neilb@cse.unsw.edu.au>
+Cheers,
+Jeff
 
-### Diffstat output
- ./drivers/md/raid5.c     |    1 +
- ./drivers/md/raid6main.c |    1 +
- 2 files changed, 2 insertions(+)
-
-diff ./drivers/md/raid5.c~current~ ./drivers/md/raid5.c
---- ./drivers/md/raid5.c~current~	2005-08-01 14:36:10.000000000 +1000
-+++ ./drivers/md/raid5.c	2005-08-01 14:36:10.000000000 +1000
-@@ -1653,6 +1653,7 @@ static int run (mddev_t *mddev)
- 
- 	/* device size must be a multiple of chunk size */
- 	mddev->size &= ~(mddev->chunk_size/1024 -1);
-+	mddev->resync_max_sectors = mddev->size << 1;
- 
- 	if (!conf->chunk_size || conf->chunk_size % 4) {
- 		printk(KERN_ERR "raid5: invalid chunk size %d for %s\n",
-
-diff ./drivers/md/raid6main.c~current~ ./drivers/md/raid6main.c
---- ./drivers/md/raid6main.c~current~	2005-08-01 14:36:10.000000000 +1000
-+++ ./drivers/md/raid6main.c	2005-08-01 14:36:10.000000000 +1000
-@@ -1813,6 +1813,7 @@ static int run (mddev_t *mddev)
- 
- 	/* device size must be a multiple of chunk size */
- 	mddev->size &= ~(mddev->chunk_size/1024 -1);
-+	mddev->resync_max_sectors = mddev->size << 1;
- 
- 	if (conf->raid_disks < 4) {
- 		printk(KERN_ERR "raid6: not enough configured devices for %s (%d, minimum 4)\n",
+PS. I care most about small (~5K) file read performance. Think
+very busy webserver with hundreds of gigabytes of small files.
+And an occasional medium size file of a few megabytes.
