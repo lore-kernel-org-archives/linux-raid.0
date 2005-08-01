@@ -1,39 +1,36 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: Multiplexed RAID-1 mode
-Date: Mon, 1 Aug 2005 16:23:11 +1000
-Message-ID: <17133.49103.445619.191869@cse.unsw.edu.au>
-References: <Pine.LNX.4.56.0507310955400.3698@lion.drogon.net>
-	<200507311907.WAA07886@raad.intranet>
-	<17133.41835.683675.621675@cse.unsw.edu.au>
-	<e03b90ae050731230950444b63@mail.gmail.com>
+From: "Al Boldi" <a1426z@gawab.com>
+Subject: RE: Multiplexed RAID-1 mode
+Date: Mon, 1 Aug 2005 17:12:09 +0300
+Message-ID: <200508011412.RAA06326@raad.intranet>
+References: <17133.41835.683675.621675@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Jeff Breidenbach on Monday August 1
+In-Reply-To: <17133.41835.683675.621675@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: jeff@jab.org
-Cc: Al Boldi <a1426z@gawab.com>, Gordon Henderson <gordon@drogon.net>, linux-raid@vger.kernel.org
+To: 'Neil Brown' <neilb@cse.unsw.edu.au>
+Cc: 'Gordon Henderson' <gordon@drogon.net>, linux-raid@vger.kernel.org, 'Jeff Breidenbach' <jeff@jab.org>
 List-Id: linux-raid.ids
 
-On Monday August 1, breidenbach@gmail.com wrote:
-> Hi Neil, 
+Neil Brown wrote: {
+On Sunday July 31, a1426z@gawab.com wrote:
 > 
-> Are you suggesting I do this?
+> Multiplexing read/write requests would certainly improve performance 
+> ala RAID-0 (-offset overhead).
+> During reads the same RAID-0 code (+mirroring offset) could be used.
+> During writes though, this would imply delayed mirroring.
 
-Well, suggesting you "try" rather than "do", but yes, that is what I
-was suggesting.
+But what exactly do you mean by 'delayed mirroring'?
+Are you suggesting that the write request completes after only writing to
+one mirror?  If so, which one?  Wouldn't this substantially reduce the value
+of mirroring?
+}
 
-> 
-> mdadm --create /dev/md0 --level=10 --raid-devices=2 \
->               --parity=f2 /dev/sdc1 /dev/sdd1
-> 
-> I just tried it and it appears dog slow - for example
-> hdparm -t /dev/md0 claims 18MB/s, and I see a similar 
-> number in /proc/mdstat for resync speed.
+Think of it as a _smart_ resync running on idle.
+Should be an option though!
 
-Hmm, you're right.  It isn't as fast as I expected.  I'll look into
-that.
+--
+Al
 
-Thanks,
-NeilBrown
