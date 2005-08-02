@@ -1,48 +1,30 @@
-From: Jason Leach <jason.leach@gmail.com>
-Subject: Re: 3ware raid question
-Date: Tue, 2 Aug 2005 13:27:22 -0700
-Message-ID: <602f2f2b05080213272aec2685@mail.gmail.com>
-References: <3800555526607650241@unknownmsgid>
-Reply-To: Jason Leach <jason.leach@gmail.com>
+From: "Boik Moon" <bmoon@yellowmachine.com>
+Subject: RAID read performance
+Date: Tue, 2 Aug 2005 15:43:44 -0700
+Message-ID: <9A6ED0928D2DE54CAD74FDC8DCE9843505DA70@asi-exchange.ASI.int>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3800555526607650241@unknownmsgid>
-Content-Disposition: inline
+Content-class: urn:content-classes:message
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Raz:
- 
- The 3ware (at least my 9500S-8) keeps the info about the disk and how
-it fits into the RAID array on the disk;  I think in the DCB is used
-for this.  You can (and I have) unplug the disks, then connect them to
-different ports and the array will still work fine.
- 
- When you are adding a disk from a different array it probably has the
-DCB from that array.  This is conflicting with your new array. I would
-do as the Dan suggests, and clear the disk.
- 
- Jason.
+Hi,
 
-On 8/2/05, Dan Stromberg <strombrg@dcs.nac.uci.edu> wrote: On Tue,
-2005-08-02 at 13:52 +0300, Raz Ben-Jehuda(caro) wrote:
+According to RAID theory, the READ performance with RAID0, 1 and 5
+should
+Be faster than one with non-RAID. I tested it on Redhat linux(ES) on
+Pentium PC, but they are almost same. I am using
+RocketRAID404(HPT374)PCI card to connect 4 master IDE
+Drivers.
+Ideally it must be 2 or more times faster on RAID0/1/5.
 
-> i have encountered a weired feature of 3ware raid.
-> When i try to put inside an existing raid a disk which
-> belonged to a different 3ware raid if fail. 
-> Any idea anyone ?
+Do we still have an issue on parallelism on 2.4 and 2.6 Linux kernel?
 
-Two thoughts:
+Thanks,
 
-1) Maybe test the disk in another machine and see if it's still good
+Bo
 
-2) Maybe wipe the disk clean in another machine with something like:
-
-        dd if=/dev/zero of=/dev/sdb 
-
-...but be very careful to get the right disk (IE, you may not
-need /dev/sdb, you might need /dev/hdd or a number of other
-possibilities).
