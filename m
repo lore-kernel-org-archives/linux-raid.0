@@ -1,41 +1,52 @@
-From: "[frid04@pochta.ru]" <fridwaldsa@yahoo.co.uk>
-Subject: REPRESENTATIVE NEEDED,
-Date: Tue, 2 Aug 2005 20:18:35 +0400 (MSD)
-Message-ID: <200508021618.j72GIZaV002194__4807.02425488761$1123000145$gmane$org@www2.pochta.ru>
+From: Dan Stromberg <strombrg@dcs.nac.uci.edu>
+Subject: Re: 3ware raid question
+Date: Tue, 02 Aug 2005 12:10:24 -0700
+Message-ID: <1123009824.11363.129.camel@seki.nac.uci.edu>
+References: <5d96567b0508020352252af125@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-g+iPaXcM1pNSOW+VYUWS"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <5d96567b0508020352252af125@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: frid04@pochta.ru
+To: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
+Cc: linux-raid@vger.kernel.org, strombrg@dcs.nac.uci.edu
 List-Id: linux-raid.ids
 
-Dear friend, 
-              
-I represent WFS INC based in Finland. My company markets and exports 
-cotton,cocoa and other products for world trade. We are searching for 
-representatives who can help us establish a medium of getting to our 
-customers in Europe and America as well as making payments through 
-you as our payment officer. It is upon this note that we seek your 
-assistance to stand as our representative in your country.
- 
-Note that, as our representative, you will receive 5% of whatever 
-amount you clear for the company and the balance will be paid into an 
-account we will avail to you. Please, to facilitate the conclusion of 
-this transaction if accepted, do send me promptly by email the 
-following:
- 
-(1)Your full names.
-(2)Contact address.and,Phone/fax numbers. 
-(3)Age.
- 
-Thank you for your time.
- 
-Very Respectfully,
 
- 
-Mr Sauerwald Wilhelm Fridrich. President, 
-WFS INC. 
-Finland.
+--=-g+iPaXcM1pNSOW+VYUWS
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
+On Tue, 2005-08-02 at 13:52 +0300, Raz Ben-Jehuda(caro) wrote:
+> i have encountered a weired feature of 3ware raid.
+> When i try to put inside an existing raid a disk which=20
+> belonged to a different 3ware raid if fail.
+> Any idea anyone ?=20
+
+Two thoughts:
+
+1) Maybe test the disk in another machine and see if it's still good
+
+2) Maybe wipe the disk clean in another machine with something like:
+
+	dd if=3D/dev/zero of=3D/dev/sdb
+
+...but be very careful to get the right disk (IE, you may not
+need /dev/sdb, you might need /dev/hdd or a number of other
+possibilities).
+
+
+--=-g+iPaXcM1pNSOW+VYUWS
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+
+iD8DBQBC78Ugo0feVm00f/8RApTlAJ9s+qDfp6GWoEK7MCGo3TgY7RpY6wCeM2ZG
+e8GPfCLskIMdG290qXeFARc=
+=9AdB
+-----END PGP SIGNATURE-----
+
+--=-g+iPaXcM1pNSOW+VYUWS--
 
