@@ -1,30 +1,25 @@
-From: Paul Clements <paul.clements@steeleye.com>
-Subject: Re: endianness of Linux kernel RAID
-Date: Wed, 03 Aug 2005 09:05:27 -0400
-Message-ID: <42F0C117.5020506@steeleye.com>
-References: <20050803120656.GA16696@anthropohedron.net>
+From: Mike Dresser <mdresser_l@windsormachine.com>
+Subject: Re: 3ware raid question
+Date: Wed, 3 Aug 2005 10:26:27 -0400 (EDT)
+Message-ID: <Pine.LNX.4.62.0508031025490.22417@router.windsormachine.com>
+References: <5d96567b0508020352252af125@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20050803120656.GA16696@anthropohedron.net>
+In-Reply-To: <5d96567b0508020352252af125@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: gsslist+linuxraid@anthropohedron.net
-Cc: Linux RAID list <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Gregory Seidman wrote:
-> It turns out that if one uses the kernel (2.4.x-2.6.x) RAID support (RAID5,
-> anyway, since that's all I've tested), the RAID'd disks cannot be moved to
-> another system with a different endianness. I don't know how hard that
+On Tue, 2 Aug 2005, Raz Ben-Jehuda(caro) wrote:
 
-> Unfortunately, I haven't gotten into kernel development and, therefore, do
-> not have the necessary expertise to fix it. Is anyone here interested in
-> this issue?
+> i have encountered a weired feature of 3ware raid.
+> When i try to put inside an existing raid a disk which
+> belonged to a different 3ware raid if fail.
+> Any idea anyone ?
 
-Version 1 superblock support, which was recently added to the 2.6 kernel 
-and mdadm tool, fixes this issue. Metadata is always stored in little 
-endian on disk.
+It's a feature on the 9500S's.  You have to unlock the drive to be able to 
+use it in another machine.  Protects you from accidentally wiping out a 
+raid volume disk.
 
---
-Paul
+Mike
