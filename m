@@ -1,58 +1,58 @@
-From: <martin.lonkwitz.sp@lhsystems.com>
-Subject: RE: Question about MD multipathing
-Date: Thu, 4 Aug 2005 14:46:28 +0200
-Message-ID: <38295A62BCF9744C9C0D5AD9FB7747C8E87CBA@XW2K3-FRAMBX-06.ads.dlh.de>
+From: Gordon Henderson <gordon@drogon.net>
+Subject: Re: RAID read performance
+Date: Thu, 4 Aug 2005 09:22:40 +0100 (BST)
+Message-ID: <Pine.LNX.4.56.0508031822040.20853@lion.drogon.net>
+References: <9A6ED0928D2DE54CAD74FDC8DCE9843505DA70@asi-exchange.ASI.int>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
+In-Reply-To: <9A6ED0928D2DE54CAD74FDC8DCE9843505DA70@asi-exchange.ASI.int>
 Sender: linux-raid-owner@vger.kernel.org
-To: lmb@suse.de, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello Lars,
+On Tue, 2 Aug 2005, Boik Moon wrote:
 
-Thank you very much for your mail.
-Well, unfortunately I don't have a choice and musst use kernel 2.4 :-(
-But therefore we use mostly Suse :)
-Any more options ? We tried the qlogic fail-over driver. But it looks lik=
-e
-that this driver are unable to handle the way over 2 fabrics to a lun.
+> Hi,
+>
+> According to RAID theory, the READ performance with RAID0, 1 and 5
+> should
+> Be faster than one with non-RAID. I tested it on Redhat linux(ES) on
+> Pentium PC, but they are almost same. I am using
+> RocketRAID404(HPT374)PCI card to connect 4 master IDE
+> Drivers.
+> Ideally it must be 2 or more times faster on RAID0/1/5.
 
-Regards,
-          Martin Lonkwitz
+Why must it be?
 
+There was a discussion about this here recently IIRC... Maybe the archives
+have the full details.
 
------Original Message-----
-From: Lars Marowsky-Bree [mailto:lmb@suse.de]=20
-Sent: Donnerstag, 4. August 2005 14:30
-To: LONKWITZ, MARTIN; linux-raid@vger.kernel.org
-Subject: Re: Question about MD multipathing
+I'm assuming you are using software RAID here and not what the card
+supports...
 
-On 2005-08-03T14:14:56, martin.lonkwitz.sp@lhsystems.com wrote:
+You should be able to see a speed-up with RAID-0, but with the other
+levels, it's not always obvious.
 
-> Cause I have problems with active/passiv storage (storagetek D240)=20
-> while Lun's jump to the passiv controller of the storage cause of=20
-> traffic comes to this one :/ Dones anyone can suggest another solution=20
-> for active/passive storage that works with linux kernel 2.4 and 2.6 ?
+My experiences are that in general, I don't see a speed-up with RAID-1. I
+tend to test systems with a RAID-0 array if possible though and then there
+usually is an obvious speed-up, but a lot depends on your hardware. If you
+have (eg) one card with 4 drives hung off it, then you might find that the
+PCI bandwdith is the bottleneck - if you want absolute preformance, you'd
+need a motherboard with separate PCI busses, etc.
 
-You should use DM multipath. md multipath isn't going to perform well for=
- you in 2.4 (unless you're using the SLES8 kernel, which is hacked up qui=
-te a bit).
+AIUI, RAID-1 will read 'chunksize' off one disk, then move to the next
+disk, although I'm not sure if the reads are/can be posted together. It
+probably depends on how much data you are readong off the filesystem at
+that time
 
-With 2.6, Device-Mapper has been choosen for the multipath IO to be imple=
-mented in.
+Do make sure you have DMA enabled on each drive/controler, etc. You should
+be able to use hdparm to check this - a modern drive should be able to
+sustain a read speed of between 50 and 60MB/sec... You'll see this drop
+down to 3-5MB/sec if theres no DMA...
 
+I also think YMMV is the phrase to use here...
 
+Good luck!
 
-Sincerely,
-    Lars Marowsky-Br=E9e <lmb@suse.de>
-
---
-High Availability & Clustering
-SUSE Labs, Research and Development
-SUSE LINUX Products GmbH - A Novell Business	 -- Charles Darwin
-"Ignorance more frequently begets confidence than does knowledge"
-
+Gordon
