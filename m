@@ -1,44 +1,58 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: File corruption on LVM2 on top of software RAID1
-Date: Fri, 5 Aug 2005 01:02:36 -0700
-Message-ID: <20050805010236.12d811ff.akpm@osdl.org>
-References: <45138.213.188.237.106.1123086677.squirrel@localhost>
-	<20050804195853.0866ade9.akpm@osdl.org>
-	<34082.213.188.237.106.1123228569.squirrel@localhost>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: <martin.lonkwitz.sp@lhsystems.com>
+Subject: RE: Question about MD multipathing
+Date: Thu, 4 Aug 2005 14:46:28 +0200
+Message-ID: <38295A62BCF9744C9C0D5AD9FB7747C8E87CBA@XW2K3-FRAMBX-06.ads.dlh.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <34082.213.188.237.106.1123228569.squirrel@localhost>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Simon Matter <simon.matter@invoca.ch>
-Cc: linux-raid@vger.kernel.org, kernel-maint@redhat.com, dm-devel@redhat.com, linux-kernel@vger.kernel.org
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-class: urn:content-classes:message
+Sender: linux-raid-owner@vger.kernel.org
+To: lmb@suse.de, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-"Simon Matter" <simon.matter@invoca.ch> wrote:
->
-> While looking at some data corruption vulnerability reports on
->  Securityfocus I wonder why this issue does not get any attention from
->  distributors. I have an open bugzilla report with RedHat, have an open
->  customer service request with RedHat, have mailed peoples directly. No
->  real feedback.
->  I'm now in the process of restoring intergrity of my data with the help of
->  backups and mirrored data. Maybe I just care too much about other peoples
->  data, but I know that this bug will corrupt files on hundreds or thousands
->  of servers today and most people simply don't know it. Did I miss
->  something?
+Hello Lars,
 
-I guess the bug hit really rarely and maybe the reports were lost in the
-permanent background noise of dodgy hardware.
+Thank you very much for your mail.
+Well, unfortunately I don't have a choice and musst use kernel 2.4 :-(
+But therefore we use mostly Suse :)
+Any more options ? We tried the qlogic fail-over driver. But it looks lik=
+e
+that this driver are unable to handle the way over 2 fabrics to a lun.
 
-We only found and fixed it last week, due to much sleuthing by Matthew
-Stapleton.  I assume vendor updates are in the pipeline.
+Regards,
+          Martin Lonkwitz
+
+
+-----Original Message-----
+From: Lars Marowsky-Bree [mailto:lmb@suse.de]=20
+Sent: Donnerstag, 4. August 2005 14:30
+To: LONKWITZ, MARTIN; linux-raid@vger.kernel.org
+Subject: Re: Question about MD multipathing
+
+On 2005-08-03T14:14:56, martin.lonkwitz.sp@lhsystems.com wrote:
+
+> Cause I have problems with active/passiv storage (storagetek D240)=20
+> while Lun's jump to the passiv controller of the storage cause of=20
+> traffic comes to this one :/ Dones anyone can suggest another solution=20
+> for active/passive storage that works with linux kernel 2.4 and 2.6 ?
+
+You should use DM multipath. md multipath isn't going to perform well for=
+ you in 2.4 (unless you're using the SLES8 kernel, which is hacked up qui=
+te a bit).
+
+With 2.6, Device-Mapper has been choosen for the multipath IO to be imple=
+mented in.
+
+
+
+Sincerely,
+    Lars Marowsky-Br=E9e <lmb@suse.de>
+
+--
+High Availability & Clustering
+SUSE Labs, Research and Development
+SUSE LINUX Products GmbH - A Novell Business	 -- Charles Darwin
+"Ignorance more frequently begets confidence than does knowledge"
+
