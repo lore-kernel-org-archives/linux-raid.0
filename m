@@ -1,58 +1,35 @@
-From: Gordon Henderson <gordon@drogon.net>
-Subject: Re: RAID read performance
-Date: Thu, 4 Aug 2005 09:22:40 +0100 (BST)
-Message-ID: <Pine.LNX.4.56.0508031822040.20853@lion.drogon.net>
-References: <9A6ED0928D2DE54CAD74FDC8DCE9843505DA70@asi-exchange.ASI.int>
+From: Gregory Seidman <gsslist+linuxraid@anthropohedron.net>
+Subject: Re: endianness of Linux kernel RAID
+Date: Thu, 4 Aug 2005 07:40:08 -0400
+Message-ID: <20050804114002.GA12764@anthropohedron.net>
+References: <20050803120656.GA16696@anthropohedron.net> <17137.42015.808716.889138@cse.unsw.edu.au>
+Reply-To: gsslist+linuxraid@anthropohedron.net
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <9A6ED0928D2DE54CAD74FDC8DCE9843505DA70@asi-exchange.ASI.int>
+Content-Disposition: inline
+In-Reply-To: <17137.42015.808716.889138@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Linux RAID list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, 2 Aug 2005, Boik Moon wrote:
+On Thu, Aug 04, 2005 at 03:14:07PM +1000, Neil Brown wrote:
+[...]
+} If you would be willing to help test some changes over the next
+} several days, I'd be happy to add this functionality to mdadm.
+} The risk of data-loss for you would be very remote.  However there
+} would be some risk of extended down-time while you wait for me to fix
+} some silly bug.
+[...]
 
-> Hi,
->
-> According to RAID theory, the READ performance with RAID0, 1 and 5
-> should
-> Be faster than one with non-RAID. I tested it on Redhat linux(ES) on
-> Pentium PC, but they are almost same. I am using
-> RocketRAID404(HPT374)PCI card to connect 4 master IDE
-> Drivers.
-> Ideally it must be 2 or more times faster on RAID0/1/5.
+I am planning on building a new RAID soon (from external FW/USB2 drives),
+and I'll be happy to test on that. Unfortunately, the timeframe for that is
+before the end of the year, and I can't risk downtime on my current RAID
+due to the imminent threat of murder by my wife if her email and music are
+not available.
 
-Why must it be?
+I greatly appreciate that this is progressing, however.
 
-There was a discussion about this here recently IIRC... Maybe the archives
-have the full details.
+} NeilBrown
+--Greg
 
-I'm assuming you are using software RAID here and not what the card
-supports...
-
-You should be able to see a speed-up with RAID-0, but with the other
-levels, it's not always obvious.
-
-My experiences are that in general, I don't see a speed-up with RAID-1. I
-tend to test systems with a RAID-0 array if possible though and then there
-usually is an obvious speed-up, but a lot depends on your hardware. If you
-have (eg) one card with 4 drives hung off it, then you might find that the
-PCI bandwdith is the bottleneck - if you want absolute preformance, you'd
-need a motherboard with separate PCI busses, etc.
-
-AIUI, RAID-1 will read 'chunksize' off one disk, then move to the next
-disk, although I'm not sure if the reads are/can be posted together. It
-probably depends on how much data you are readong off the filesystem at
-that time
-
-Do make sure you have DMA enabled on each drive/controler, etc. You should
-be able to use hdparm to check this - a modern drive should be able to
-sustain a read speed of between 50 and 60MB/sec... You'll see this drop
-down to 3-5MB/sec if theres no DMA...
-
-I also think YMMV is the phrase to use here...
-
-Good luck!
-
-Gordon
