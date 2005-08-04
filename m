@@ -1,91 +1,53 @@
-From: Dan Stromberg <strombrg@dcs.nac.uci.edu>
-Subject: Re: endianness of Linux kernel RAID
-Date: Wed, 03 Aug 2005 11:50:05 -0700
-Message-ID: <1123095005.14126.69.camel@seki.nac.uci.edu>
-References: <20050803120656.GA16696@anthropohedron.net>
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: raid5 endian question....
+Date: Thu, 4 Aug 2005 15:09:05 +1000
+Message-ID: <17137.41713.860387.102586@cse.unsw.edu.au>
+References: <61C14314-53E9-4140-A4DB-3929A683FE67@blight.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Z3uspIrL8kBC4EY0qTkT"
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20050803120656.GA16696@anthropohedron.net>
+In-Reply-To: message from Aaron Botsis on Sunday June 19
 Sender: linux-raid-owner@vger.kernel.org
-To: gsslist+linuxraid@anthropohedron.net
-Cc: Linux RAID list <linux-raid@vger.kernel.org>, strombrg@dcs.nac.uci.edu
+To: Aaron Botsis <aaron@blight.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Sunday June 19, aaron@blight.com wrote:
+> Hello,
+> 
+> I'm attempting to move a raid5 array from a big endian ppc machine to  
+> a little endian x86.
+> Upon trying to import the array, I get:
+> mdadm: No super block found on /dev/hde1 (Expected magic a92b4efc,  
+> got fc4e2ba9)
+> 
+> I assume this to be an endianess issue...
+> Is this a bug? Is just the magic number whacked? or are the  
+> superblock data structures too?
+> 
+> what's the best way to fix this?
 
---=-Z3uspIrL8kBC4EY0qTkT
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+As has been said, the original raid superblock (still the default)
+uses host-endian data and so cannot be moved between machines.
+The new version uses little-endian, but isn't in wide use yet.
 
+It would not be too hard to get mdadm to re-write the superblocks when
+assembling an array on a different machine.  However I am not in a
+position to test it very well.
 
-I don't have time to fix this by a long stretch, but I do have a web
-page that talks about endianness issues, including ways of avoiding
-painting yourself into a corner with them:
+If you would be willing to help test some changes over the next
+several days, I'd be happy to add this functionality to mdadm.
+The risk of data-loss for you would be very remote.  However there
+would be some risk of extended down-time while you wait for me to fix
+some silly bug.
 
-http://dcs.nac.uci.edu/~strombrg/converting-binary.html
+The change would involve:
+  1/ Teaching "mdadm --examine" to recognise a wrong-endian superblock
+     and display it with suitable swaps.
+  2/ Teaching "mdadm --assemble" to accept "--update=endian" which
+     would byte-swap all the superblocks and write them out again.
 
-The section at the top about architecture-neutral formats is probably
-most relevant to this discussion - more so than the conversion programs.
+NeilBrown
 
-As far as fixing up the mess, it'd probably be best to have some sort of
-RAID usage option that would allow:
-
-1) byte swap all endian-dependent integers on reads and writes - EG
-little to big, or big to little (the operation is typically its own
-inverse)
-
-2) use a canonical format (best for use at creation time) that will
-always store byte-sex dependent integers the same way, irrespective of
-what sort of platform one is on
-
-It might also not hurt to, at the same time,  make sure that integer
-size (say, 32 bits vs 64 bits) isn't an issue.
-
-I'm actually a bit discouraged that more projects aren't just using some
-sort of canonical, arbitrary-precision integer format, to eliminate
-these issues for good.  Granted, disk space isn't growing fast enough at
-current speed to exceed a 128 bit integer anytime soon, but you never
-know if there's going to be a big leap in disk capacity someday.  IMO,
-this is the ideal long-term solution to this sort of problem.
-
-On Wed, 2005-08-03 at 08:07 -0400, Gregory Seidman wrote:
-> It turns out that if one uses the kernel (2.4.x-2.6.x) RAID support (RAID=
-5,
-> anyway, since that's all I've tested), the RAID'd disks cannot be moved t=
-o
-> another system with a different endianness. I don't know how hard that
-> would be to fix, but it did mean that when my ancient Mac clone I was usi=
-ng
-> as a server died I couldn't bring the RAID over to my spare x86 Linux box=
-;
-> I had to dedicate other hardware (my dual G4 that I had been happily usin=
-g
-> with OS X) to the task instead.
->=20
-> Unfortunately, I haven't gotten into kernel development and, therefore, d=
-o
-> not have the necessary expertise to fix it. Is anyone here interested in
-> this issue?
->=20
-> --Greg
->=20
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->=20
-
---=-Z3uspIrL8kBC4EY0qTkT
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-
-iD8DBQBC8RHdo0feVm00f/8RAj1xAJ9OEbGwUOyLm4ewAcMNwyNsrBCtrACfW0aI
-OQFSHYzxyH2tBLcPGRDz3x4=
-=BSdi
------END PGP SIGNATURE-----
-
---=-Z3uspIrL8kBC4EY0qTkT--
-
+ 
