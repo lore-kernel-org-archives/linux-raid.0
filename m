@@ -1,55 +1,45 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: RAID5 question.
-Date: Fri, 5 Aug 2005 06:53:23 +1000
-Message-ID: <17138.32835.190046.8088@cse.unsw.edu.au>
-References: <17137.43778.476908.961140@cse.unsw.edu.au>
-	<01f001c598fd$c59a51a0$0400a8c0@LocalHost>
+From: Lars Marowsky-Bree <lmb@suse.de>
+Subject: Re: Question about MD multipathing
+Date: Thu, 4 Aug 2005 14:51:17 +0200
+Message-ID: <20050804125117.GG11081@marowsky-bree.de>
+References: <38295A62BCF9744C9C0D5AD9FB7747C8E87CBA@XW2K3-FRAMBX-06.ads.dlh.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from djani22@dynamicweb.hu on Thursday August 4
+Content-Disposition: inline
+In-Reply-To: <38295A62BCF9744C9C0D5AD9FB7747C8E87CBA@XW2K3-FRAMBX-06.ads.dlh.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: djani22@dynamicweb.hu
-Cc: linux-raid@vger.kernel.org
+To: martin.lonkwitz.sp@lhsystems.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday August 4, djani22@dynamicweb.hu wrote:
-> Hi list, Neil!
-> 
-> I have a little question because I'v got some performance problem...
+On 2005-08-04T14:46:28, martin.lonkwitz.sp@lhsystems.com wrote:
 
-What performance problem?
+> Hello Lars,
+>=20
+> Thank you very much for your mail.
+> Well, unfortunately I don't have a choice and musst use kernel 2.4 :-(
+> But therefore we use mostly Suse :)
 
-> Is the RAID5 do any type of headahead with the default config?
+OK, md multipath works rather well in the latest SLES8 2.4 kernel
+update.
 
-Technically: no.
-raid5 itself doesn't do readahead.
-The filesystem or VM layer does read-ahead.
-The block device can suggest the sort of read-ahead size which might
-be appropriate.
+Just don't set all paths to active, add the passive ones as spares, and
+then you will have a true active/passive scenario.
 
-> It is possible to disable the readahead? (if it is.)
+> Any more options ? We tried the qlogic fail-over driver. But it looks l=
+ike
+> that this driver are unable to handle the way over 2 fabrics to a lun.
 
-This has been answered - man blockdev
-But you almost certainly don't want to. 
+No idea, I don't use qlogic internal multipathing at all.
 
-> Or just the io_sched do that on the disks?
-> 
-> How can I disable the whole headahead on top of the RAID5 array?
-> 
-> The RAID5 can do multiple small (<4kb) reads of disks for the multithreaded
-> read requests?
-> (chunk size is 32k)
 
-Multiple small random read requests should evenly distribute over all
-drives and give reasonable performance.
+Sincerely,
+    Lars Marowsky-Br=E9e <lmb@suse.de>
 
-But again, you haven't said what your problem is....
+--=20
+High Availability & Clustering
+SUSE Labs, Research and Development
+SUSE LINUX Products GmbH - A Novell Business	 -- Charles Darwin
+"Ignorance more frequently begets confidence than does knowledge"
 
-NeilBrown
-
-> 
-> Thanks for helping!
-> 
-> Janos
