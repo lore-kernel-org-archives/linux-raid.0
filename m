@@ -1,42 +1,65 @@
-From: Lars Marowsky-Bree <lmb@suse.de>
-Subject: Re: Question about MD multipathing
-Date: Thu, 4 Aug 2005 14:30:13 +0200
-Message-ID: <20050804123013.GE11081@marowsky-bree.de>
-References: <38295A62BCF9744C9C0D5AD9FB7747C8D796B4@XW2K3-FRAMBX-06.ads.dlh.de>
+From: "Mark Cuss" <mcuss@cdlsystems.com>
+Subject: How to force a spare drive to take over in a RAID5?
+Date: Fri, 5 Aug 2005 08:31:47 -0600
+Message-ID: <006301c599ca$69410700$ab0e10ac@pinchy>
+References: <45138.213.188.237.106.1123086677.squirrel@localhost><20050804195853.0866ade9.akpm@osdl.org><34082.213.188.237.106.1123228569.squirrel@localhost> <20050805010236.12d811ff.akpm@osdl.org>
+Reply-To: "Mark Cuss" <mcuss@cdlsystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain;
+	format=flowed;
+	charset="iso-8859-1";
+	reply-type=original
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <38295A62BCF9744C9C0D5AD9FB7747C8D796B4@XW2K3-FRAMBX-06.ads.dlh.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: martin.lonkwitz.sp@lhsystems.com, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2005-08-03T14:14:56, martin.lonkwitz.sp@lhsystems.com wrote:
+Hi!
 
-> Cause I have problems with active/passiv storage (storagetek D240) whil=
-e
-> Lun's jump to the passiv controller of the storage cause of traffic
-> comes to this one :/
-> Dones anyone can suggest another solution for active/passive storage
-> that works with linux kernel 2.4 and 2.6 ?
+I have a 4 drive SW RAID5 running on my machine.  One of the drives is upset 
+for some reason - I'm not sure if the drive itself is bad, but that's not 
+too important right now.  The important thing is to get the RAID5 to stop 
+using this drive and start using a spare drive that I just added.
 
-You should use DM multipath. md multipath isn't going to perform well
-for you in 2.4 (unless you're using the SLES8 kernel, which is hacked up
-quite a bit).
+The current raid status is:
+[root@hal cdl]# lsraid -a /dev/md4
+lsraid: Unable to read raid superblock from device "/dev/sdr1": Input/output 
+error
+lsraid: Device "/dev/sdr1" does not have a valid raid superblock
+lsraid: Unable to read raid superblock from device "/dev/sdr1": Input/output 
+error
+lsraid: Device "/dev/sdr1" does not have a valid raid superblock
+lsraid: Unable to read raid superblock from device "/dev/sdr1": Input/output 
+error
+lsraid: Device "/dev/sdr1" does not have a valid raid superblock
+lsraid: Unable to read raid superblock from device "/dev/sdr1": Input/output 
+error
+lsraid: Device "/dev/sdr1" does not have a valid raid superblock
+lsraid: Unable to read raid superblock from device "/dev/sdr1": Input/output 
+error
+lsraid: Device "/dev/sdr1" does not have a valid raid superblock
+[dev   9,   4] /dev/md4         24989439.D4F0D908.67494E4A.97B3BA91 online
+[dev   ?,   ?] (unknown)        00000000.00000000.00000000.00000000 missing
+[dev   8,  161] /dev/sdk1        24989439.D4F0D908.67494E4A.97B3BA91 good
+[dev   8,  177] /dev/sdl1        24989439.D4F0D908.67494E4A.97B3BA91 good
+[dev   8,  193] /dev/sdm1        24989439.D4F0D908.67494E4A.97B3BA91 good
+[dev  65,  33] /dev/sds1        24989439.D4F0D908.67494E4A.97B3BA91 spare
 
-With 2.6, Device-Mapper has been choosen for the multipath IO to be
-implemented in.
+[root@hal cdl]#
 
+Clearly, sdr is unhappy.  However, /proc/mdstat says that all the drives are 
+online:
+md4 : active raid5 sds1[4] sdr1[0] sdm1[3] sdl1[2] sdk1[1]
+      430115904 blocks level 5, 64k chunk, algorithm 2 [4/4] [UUUU]
 
+I did a raidhotadd to add in a new drive, sds.  Now, I would like the array 
+to stop using sdr and reconstruct all of the parity tables on sds so I can 
+pull sdr and get it replaced or whatever...
 
-Sincerely,
-    Lars Marowsky-Br=E9e <lmb@suse.de>
+Any ideas?
 
---=20
-High Availability & Clustering
-SUSE Labs, Research and Development
-SUSE LINUX Products GmbH - A Novell Business	 -- Charles Darwin
-"Ignorance more frequently begets confidence than does knowledge"
+Thanks
+Mark
+
 
