@@ -1,24 +1,34 @@
-From: Ben <antisera@sinatra.as>
-Subject: Symantec Norton Ghost 9.0 - $14.95
-Date: Sat, 6 Aug 2005 13:02:54 +0400
-Message-ID: <611091956.11472273547@ppp85-140-40-138.pppoe.mtu-net.ru>
-Mime-Version: 1.0 (Apple Message framework v728)
-Content-Type: text/plain; charset=US-ASCII; format=flowed
+From: Paul Clements <paul.clements@steeleye.com>
+Subject: Re: does chunksize matter in raid-1?
+Date: Sat, 06 Aug 2005 08:44:49 -0400
+Message-ID: <42F4B0C1.1080306@steeleye.com>
+References: <e03b90ae05080521077404ad09@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <e03b90ae05080521077404ad09@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: jeff@jab.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Microsoft Office XP Professional with SP2 - $49.95
-http://extricate.pepme.com/
+Jeff Breidenbach wrote:
+> Does chunk size matter *at all* for RAID-1?
+> 
+> mdadm --create /dev/md0 --level=1 --chunk=8 /dev/sdc1 /dev/sdd1   
+> mdadm --create /dev/md0 --level=1 --chunk=128 /dev/sdc1 /dev/sdd1
+> 
+> In my mental model of how RAID works, it can't possibly matter
+> what my chunk size is whether I've got 1KB files or 1GB files because
+> no striped reading occurs. 
+> 
+> Is my mental model wrong?
 
 
+No, chunk size does not matter for raid1. In fact, some/most? kernels 
+will print a message to that effect if you specify a chunk size for a 
+raid1 array.
 
-
-
-CUI BONO? [Latin] What good would that do _me_?    
-Be not afraid of going slowly; be only afraid of standing still. 
-A minute's success pays the failure of years.     
-
-
+--
+Paul
