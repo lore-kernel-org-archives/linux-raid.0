@@ -1,24 +1,26 @@
-From: Rob <bath@mail.ddg.com>
-Subject: Levitra the most essential thing for good sex.
-Date: Fri, 5 Aug 2005 18:14:48 -0500
-Message-ID: <23411103210.12967377455@dsl215-172.mvtel.net>
+From: Jeff Breidenbach <breidenbach@gmail.com>
+Subject: does chunksize matter in raid-1?
+Date: Sat, 6 Aug 2005 00:07:48 -0400
+Message-ID: <e03b90ae05080521077404ad09@mail.gmail.com>
+Reply-To: jeff@jab.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Identical to the brandname drugs, low prices, international shipping.
-http://arclike.valentlne.com/pharmacy/dir/
+Does chunk size matter *at all* for RAID-1?
 
+mdadm --create /dev/md0 --level=1 --chunk=8 /dev/sdc1 /dev/sdd1   
+mdadm --create /dev/md0 --level=1 --chunk=128 /dev/sdc1 /dev/sdd1
 
+In my mental model of how RAID works, it can't possibly matter
+what my chunk size is whether I've got 1KB files or 1GB files because
+no striped reading occurs. 
 
+Is my mental model wrong?
 
-The best way to predict the future is to invent it.  
-Furious activity is no substitute for understanding.      
-Treasure your relationships, not your possessions.       
-A little inaccuracy sometimes saves tons of explanation.     
-
-
+-Jeff
