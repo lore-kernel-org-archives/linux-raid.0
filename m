@@ -1,26 +1,35 @@
-From: Jeff Breidenbach <breidenbach@gmail.com>
-Subject: does chunksize matter in raid-1?
-Date: Sat, 6 Aug 2005 00:07:48 -0400
-Message-ID: <e03b90ae05080521077404ad09@mail.gmail.com>
-Reply-To: jeff@jab.org
+From: Trevor Cordes <trevor@tecnopolis.ca>
+Subject: RAID6 starts before RAID0 component - how to force the order?
+Date: Fri, 5 Aug 2005 23:50:43 -0500
+Message-ID: <20050806045043.GA31307@pog.tecnopolis.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Does chunk size matter *at all* for RAID-1?
+I'll keep this short and to the point and I'm hoping for a quick simple 
+high-level answer from the gurus.  I don't need hand holding, so please 
+take a quick look!
 
-mdadm --create /dev/md0 --level=1 --chunk=8 /dev/sdc1 /dev/sdd1   
-mdadm --create /dev/md0 --level=1 --chunk=128 /dev/sdc1 /dev/sdd1
+I have a new RAID6 array.  A component of that array is a RAID0 sub-array.  
+mdadm creates and rebuilds this multilevel array just fine.  Then I 
+reboot.  Boot log shows RAID6 detected first, _THEN_ RAID0.  Thus RAID6 is 
+degraded without its RAID0 component.
 
-In my mental model of how RAID works, it can't possibly matter
-what my chunk size is whether I've got 1KB files or 1GB files because
-no striped reading occurs. 
+The RAID0 array is fine/clean.  It's just a boot order problem I'm sure.
 
-Is my mental model wrong?
+How do I set/force the order that arrays are started at boot time?  When 
+doing multi-level arrays, you would think either a) you can force it or b) 
+it would be "smart" about it.
 
--Jeff
+FC3 kernel-2.6.12-1.1372_FC3
+using mdadm
+no raidtab
+
+Thanks!
+
+PS #1: if this is a mailing list, please CC my email.
+PS #2: I did google searches for 2 hours and there is ZILCH on this topic
