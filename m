@@ -1,44 +1,37 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: Getting md0 to come back automatically
-Date: Sun, 7 Aug 2005 16:48:42 +1000
-Message-ID: <17141.44746.1917.952435@cse.unsw.edu.au>
-References: <6d5bedd8050806171140e7f9dd@mail.gmail.com>
+From: David Greaves <david@dgreaves.com>
+Subject: Re: How to force a spare drive to take over in a RAID5?
+Date: Sun, 07 Aug 2005 12:29:52 +0100
+Message-ID: <42F5F0B0.3050105@dgreaves.com>
+References: <45138.213.188.237.106.1123086677.squirrel@localhost><20050804195853.0866ade9.akpm@osdl.org><34082.213.188.237.106.1123228569.squirrel@localhost> <20050805010236.12d811ff.akpm@osdl.org> <006301c599ca$69410700$ab0e10ac@pinchy>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Ewan Grantham on Saturday August 6
+In-Reply-To: <006301c599ca$69410700$ab0e10ac@pinchy>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ewan Grantham <ewan.grantham@gmail.com>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Mark Cuss <mcuss@cdlsystems.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Saturday August 6, ewan.grantham@gmail.com wrote:
-> I'm running mdadm 1.9.0 on a Debian build (using coLinux 0.7.1), and
-> have the following for my /etc/mdadm/mdadm.conf:
-> 
-> ARRAY /dev/md0 level=raid5 num-devices=4
-> UUID=777b15e6:6791bb61:96a9c2f4:80e2f7bf
-> DEVICE /dev/cobd3,/dev/cobd4,/dev/cobd5,/dev/cobd6
-                   ^          ^          ^
+Mark Cuss wrote:
 
-get rid of the commas.
-
-NeilBrown
+> Hi!
+>
+> I have a 4 drive SW RAID5 running on my machine.  One of the drives is
+> upset for some reason - I'm not sure if the drive itself is bad, but
+> that's not too important right now.  The important thing is to get the
+> RAID5 to stop using this drive and start using a spare drive that I
+> just added.
 
 
+> I did a raidhotadd to add in a new drive, sds.  Now, I would like the
+> array to stop using sdr and reconstruct all of the parity tables on
+> sds so I can pull sdr and get it replaced or whatever...
+>
+> Any ideas?
 
-> 
-> I can rebuild the array manually after a restart using:
-> 
-> mdadm -A /dev/md0 /dev//cobd3 /dev/cobd4 /dev/cobd5 /dev/cobd6
-> 
-> but it doesn't come up automatically on it's own. Anything that y'all
-> can see that's wrong with this?
-> 
-> Thanks,
-> Ewan
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Install and read the manpage for mdadm
+
+What kernel version?
+
+David
