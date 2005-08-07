@@ -1,41 +1,56 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: RAID5 question.
-Date: Sun, 07 Aug 2005 12:40:47 +0100
-Message-ID: <42F5F33F.8020905@dgreaves.com>
-References: <17137.43778.476908.961140@cse.unsw.edu.au>	<01f001c598fd$c59a51a0$0400a8c0@LocalHost> <17138.32835.190046.8088@cse.unsw.edu.au>
+From: Trevor Cordes <trevor@tecnopolis.ca>
+Subject: SOLVED: forcing boot ordering of multilevel RAID arrays
+Date: Sun, 7 Aug 2005 16:08:35 -0500 (CDT)
+Message-ID: <200508072108.j77L8ZPt019570@pog.tecnopolis.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17138.32835.190046.8088@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: djani22@dynamicweb.hu, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
+How to have raid-based subcomponents autorun before a superset raid array
+(ie: RAID6+0 or RAID1+0/RAID10) in a multilevel/multilayer array setup:
 
->Technically: no.
->raid5 itself doesn't do readahead.
->  
->
-Could you clarify this line please:
+(It would be nice if the autodetect during boot would be intelligent
+about starting subarrays first, but it currently is not.  It would not
+be that hard to code smart autodetection, or even easier (for the
+programmers), read some kernel command line parameters that allows the
+user to specify a manual start order.  But for now, here's the way to
+fudge it.)
 
->The filesystem or VM layer does read-ahead.
->  
->
- suggests that either: performance should only be affected by the
-readahead setting of the block layer immediately below the filesystem
-or: lvm and md use the VM layer to access the lower block levels and so
-performance is affected by readahead settings for all involved
-layers/devices.
-I strongly suspect the latter as I run xfs over lvm over md over sata
-and I found (I posted the test script aeons ago) that varying the
-readhead on different layers affects performance. The best performance
-(for my usage) was obtained by setting readahead to zero on all layers
-except the topmost (lvm for me).
+Any array that is a superset of other arrays (a multilevel array) must
+set to non-autodetect.  Use fdisk to change the parition type to 83
+(standard linux), NOT "fd" (linux raid autodetect).  That stops the
+kernel autodetect boot process on that array.  Then, for Fedora Core
+(FC3 tested) add that array manually to /etc/mdadm.conf:
 
-Comments?
+#cat /etc/mdadm.conf
+DEVICE partitions
+ARRAY /dev/md5 UUID=9b3c3ca9:9637ed8a:4da282fe:63e5a3ab
+MAILADDR my@email.foo
 
-David
+(Get the UUID for the array with mdadm -D /dev/md5.)
+
+Then because of the mdadm call in /etc/rc.d/rc.sysinit (in FC at least),
+the higher-order array will get run automatically during the boot
+process but (hopefully) after the kernel autodetect (of the lower-order
+arrays) is done.  This is tested working fine on FC3 at the following
+level:
+
+initscripts-7.93.7-1
+kernel-2.6.12-1.1372_FC3
+
+If your distro doesn't have a line in /etc/rc.d/rc.sysinit that calls
+"mdadm -As", then figure a way to add it to the boot process scripts
+early enough that it comes up just after RAID autodetection.  If you
+aren't running any boot daemons off that array, it would probably be ok
+to start the array really late in the boot process like in rc.local.
+
+Note, the log output shows some interleaving of these commands so
+perhaps there may be a race condition and rc.sysinit may have to be
+modified to enforce a wait for the kernel autodetect to finish.  So
+far this hasn't happened to me yet.
+
+(PS: Thanks guys for all your input.)
 
