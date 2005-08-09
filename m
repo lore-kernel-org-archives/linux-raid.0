@@ -1,57 +1,43 @@
-From: Brent Walsh <blinux_adm@yahoo.com>
+From: Neil Brown <neilb@cse.unsw.edu.au>
 Subject: Re: endianness of Linux kernel RAID
-Date: Mon, 8 Aug 2005 21:49:03 -0700 (PDT)
-Message-ID: <20050809044903.97593.qmail@web35308.mail.mud.yahoo.com>
+Date: Tue, 9 Aug 2005 14:57:37 +1000
+Message-ID: <17144.14273.684705.729233@cse.unsw.edu.au>
+References: <20050809044903.97593.qmail@web35308.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from Brent Walsh on Monday August 8
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Brent Walsh <blinux_adm@yahoo.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
+On Monday August 8, blinux_adm@yahoo.com wrote:
+> 
+> I have a PowerPC based NAS device that was damaged by
+> a recent a brownout.  The drives in the array are
+> fine, but the device's firmware was corrupted.  My
+> first attempt to assemble the array on my x86 system
+> failed due to the endian differences.  After applying
+> this patch, the mdadm examine command worked
+> perfectly.  As of yet, I have not attempted to update
+> the superblocks.  I would like to leave the original
+> superblocks intact so that I can reinstall the drives
+> in my NAS device when it is repaired.  Is it possible
+> to assemble the array without overwriting the
+> superblocks?
 
->I decided to try it anyway...
->
->The following patch, when applied to
->mdadm-2.0-devel-3 (Recently
->released) should allow:
->
->  mdadm --examine --metadata=0.swap /dev/sda1
->
->which will show the superblock with bytes swapped.
->If that looks right for all devices, then
->
->  mdadm --assemble /dev/mdX
->--update=byteorder /dev/sda1 /dev/sdb1 ...
->
->
->will assemble the array after swapping the byte
->order on all devices. Once it has been assembled
->this way, the superblocks will have the correct
->byte order, and in future the array can be
->assembled in the normal way.
+Not really....  The kernel reads the superblocks to find out the
+details of the array.  If it cannot read them, it won't assemble the
+array.
 
-I have a PowerPC based NAS device that was damaged by
-a recent a brownout.  The drives in the array are
-fine, but the device's firmware was corrupted.  My
-first attempt to assemble the array on my x86 system
-failed due to the endian differences.  After applying
-this patch, the mdadm examine command worked
-perfectly.  As of yet, I have not attempted to update
-the superblocks.  I would like to leave the original
-superblocks intact so that I can reinstall the drives
-in my NAS device when it is repaired.  Is it possible
-to assemble the array without overwriting the
-superblocks?
+Depending on the type of array, you could --build the array instead.
+This allows for arrays that deliberately don't have superblocks.
+It should work for raid0, might work for linear, could work for raid1,
+but no for anything else.
 
--Brent
+If you want to try it, send me the --examine output. and I'll suggest
+a command.
 
-
-
-		
-____________________________________________________
-Start your day with Yahoo! - make it your home page 
-http://www.yahoo.com/r/hs 
- 
+NeilBrown
