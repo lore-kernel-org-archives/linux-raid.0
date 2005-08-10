@@ -1,19 +1,27 @@
-From: Gaspar Bakos <gbakos@cfa.harvard.edu>
-Subject: Hitachi 7K500
-Date: Tue, 9 Aug 2005 22:29:17 -0400 (EDT)
-Message-ID: <Pine.SOL.4.58.0508092228150.10177@titan.cfa.harvard.edu>
-Reply-To: gbakos@cfa.harvard.edu
+From: Christopher Smith <csmith@nighthawkrad.net>
+Subject: Re: Migrating from non-RAID to RAID-1
+Date: Wed, 10 Aug 2005 13:52:52 +1000
+Message-ID: <42F97A14.4080300@nighthawkrad.net>
+References: <7f45d93905080916414e291a87@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <7f45d93905080916414e291a87@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Shaun Jackman <sjackman@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+Shaun Jackman wrote:
+> I have a single non-RAID SATA drive with Debian (Sarge) installed and
+> data on it. I also have a duplicate blank drive. I would like to
+> migrate from my non-RAID system to a RAID-1 (mirrored) system for
+> redundancy, with each disk being an exact duplicate of the other. Is
+> it possible to do this without having to wipe the first drive clean?
+> I'd appreciate a pointer to a HOWTO or recipe if it answers this
+> specific question.
 
-I was wondering if anyone tried this 500Gb SATA drive either with
-software or hw RAID, and has experience with it under Linux.
+This should get you started:
 
-Cheers
-Gaspar
+http://xtronics.com/reference/SATA-RAID-debian-for-2.6.html
