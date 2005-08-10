@@ -1,35 +1,44 @@
-From: Gaspar Bakos <gbakos@cfa.harvard.edu>
-Subject: RAID readonly before final shutdown
-Date: Wed, 10 Aug 2005 11:27:24 -0400 (EDT)
-Message-ID: <Pine.SOL.4.58.0508101126520.23305@titan.cfa.harvard.edu>
-Reply-To: gbakos@cfa.harvard.edu
+From: Shaun Jackman <sjackman@gmail.com>
+Subject: Re: Migrating from non-RAID to RAID-1
+Date: Wed, 10 Aug 2005 16:39:55 -0700
+Message-ID: <7f45d9390508101639635ab965@mail.gmail.com>
+References: <7f45d93905080916414e291a87@mail.gmail.com>
+	 <42F97A14.4080300@nighthawkrad.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <42F97A14.4080300@nighthawkrad.net>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Christopher Smith <csmith@nighthawkrad.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+2005/8/9, Christopher Smith <csmith@nighthawkrad.net>:
+> Shaun Jackman wrote:
+> > I have a single non-RAID SATA drive with Debian (Sarge) installed and
+> > data on it. I also have a duplicate blank drive. I would like to
+> > migrate from my non-RAID system to a RAID-1 (mirrored) system for
+> > redundancy, with each disk being an exact duplicate of the other. Is
+> > it possible to do this without having to wipe the first drive clean?
+> > I'd appreciate a pointer to a HOWTO or recipe if it answers this
+> > specific question.
+> 
+> This should get you started:
+> 
+> http://xtronics.com/reference/SATA-RAID-debian-for-2.6.html
 
-The entire OS I am using is running on software RAID-1. Before killing
-the power of the UPS (in case of a power outage), I issue:
+Amazing! Thanks for the tip, Christopher. The document [1] you
+mentioned is an absolute must-read for anyone migrating from a
+non-RAID to RAID-1 storage system. The document's title suggests it's
+Debian specific, but the vast majority of it is distribution agnostic.
+It's up to date, using the modern mdadm tool; many documents I read
+still referred to raidtools. The migration process went quite
+flawlessly!
 
-/sbin/mdadm --readonly $RAIDDEV
-on all the RAID devices I have.
+Thanks to all those that helped. Cheers,
+Shaun
 
-This, however, does not seem to be enough, and when i power the system
-back on, the RAID arrays are not clean, and a long syncing starts. A
-last step is missing; something like marking the arrays that they are
-clean. I see this happening for a flash of a second when i tell the PC
-to "/sbin/poweroff", i.e. "halt -p". The very last second, before the
-ATX power is turned OFF, the kernel does something to the md arrays.
-
-My questions are:
-1. What exactly is this last step?
-2. Can I achieve it manually by sth like
- echo *** > /proc/***
-or by using mdadm?
-
-Cheers
-Gaspar
+[1] Installing Debian with SATA based RAID
+http://xtronics.com/reference/SATA-RAID-debian-for-2.6.html
