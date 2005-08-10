@@ -1,43 +1,36 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: endianness of Linux kernel RAID
-Date: Tue, 9 Aug 2005 14:57:37 +1000
-Message-ID: <17144.14273.684705.729233@cse.unsw.edu.au>
-References: <20050809044903.97593.qmail@web35308.mail.mud.yahoo.com>
+From: Shaun Jackman <sjackman@gmail.com>
+Subject: Re: Migrating from non-RAID to RAID-1
+Date: Tue, 9 Aug 2005 18:42:57 -0700
+Message-ID: <7f45d9390508091842473da782@mail.gmail.com>
+References: <7f45d93905080916414e291a87@mail.gmail.com>
+	 <42F93FB5.1040901@h3c.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Brent Walsh on Monday August 8
+In-Reply-To: <42F93FB5.1040901@h3c.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Brent Walsh <blinux_adm@yahoo.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday August 8, blinux_adm@yahoo.com wrote:
+2005/8/9, Mike Hardy <mhardy@h3c.com>:
+> This was asked not but a few days ago. While not intending to be rude, I
+> believe searching the archives will turn up step by step guidance
 > 
-> I have a PowerPC based NAS device that was damaged by
-> a recent a brownout.  The drives in the array are
-> fine, but the device's firmware was corrupted.  My
-> first attempt to assemble the array on my x86 system
-> failed due to the endian differences.  After applying
-> this patch, the mdadm examine command worked
-> perfectly.  As of yet, I have not attempted to update
-> the superblocks.  I would like to leave the original
-> superblocks intact so that I can reinstall the drives
-> in my NAS device when it is repaired.  Is it possible
-> to assemble the array without overwriting the
-> superblocks?
+> -Mike
 
-Not really....  The kernel reads the superblocks to find out the
-details of the array.  If it cannot read them, it won't assemble the
-array.
+Thanks for the pointer, Mike. I was using Google's mailing list
+archive, but it seems woefully incomplete.
+http://groups.google.ca/group/mlist.linux.raid
 
-Depending on the type of array, you could --build the array instead.
-This allows for arrays that deliberately don't have superblocks.
-It should work for raid0, might work for linear, could work for raid1,
-but no for anything else.
+Another linux-raid archive had the message you mentioned:
+http://marc.theaimsgroup.com/?l=linux-raid&m=112318177226599
 
-If you want to try it, send me the --examine output. and I'll suggest
-a command.
+The directions were...
+sfdisk -d /dev/sda > /tmp/sda.part
+sfdisk /dev/sdb < /tmp/sda.part
+read the Software RAID-HowTo, and look for the Root-RAID section
 
-NeilBrown
+Cheers,
+Shaun
