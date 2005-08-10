@@ -1,36 +1,35 @@
-From: Tyler <pml@dtbb.net>
-Subject: Re: Hitachi 7K500
-Date: Tue, 09 Aug 2005 21:51:44 -0700
-Message-ID: <42F987E0.3060306@dtbb.net>
-References: <Pine.SOL.4.58.0508092228150.10177@titan.cfa.harvard.edu>
+From: Gaspar Bakos <gbakos@cfa.harvard.edu>
+Subject: RAID readonly before final shutdown
+Date: Wed, 10 Aug 2005 11:27:24 -0400 (EDT)
+Message-ID: <Pine.SOL.4.58.0508101126520.23305@titan.cfa.harvard.edu>
+Reply-To: gbakos@cfa.harvard.edu
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.SOL.4.58.0508092228150.10177@titan.cfa.harvard.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: gbakos@cfa.harvard.edu
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-We've got 15 of the 250gb models in a raid5, no problems for around 6 
-months or more.
+Hi,
 
-Tyler.
+The entire OS I am using is running on software RAID-1. Before killing
+the power of the UPS (in case of a power outage), I issue:
 
-Gaspar Bakos wrote:
+/sbin/mdadm --readonly $RAIDDEV
+on all the RAID devices I have.
 
->Hi,
->
->I was wondering if anyone tried this 500Gb SATA drive either with
->software or hw RAID, and has experience with it under Linux.
->
->Cheers
->Gaspar
->-
->To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->  
->
+This, however, does not seem to be enough, and when i power the system
+back on, the RAID arrays are not clean, and a long syncing starts. A
+last step is missing; something like marking the arrays that they are
+clean. I see this happening for a flash of a second when i tell the PC
+to "/sbin/poweroff", i.e. "halt -p". The very last second, before the
+ATX power is turned OFF, the kernel does something to the md arrays.
+
+My questions are:
+1. What exactly is this last step?
+2. Can I achieve it manually by sth like
+ echo *** > /proc/***
+or by using mdadm?
+
+Cheers
+Gaspar
