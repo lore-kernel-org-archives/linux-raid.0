@@ -1,32 +1,41 @@
 From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: RAID5 spare change
-Date: Thu, 11 Aug 2005 20:08:22 +1000
-Message-ID: <17147.9110.577486.974589@cse.unsw.edu.au>
-References: <20050811171720.10115.patches@notabene>
-	<E1E37OV-0002jQ-5u@notabene.cse.unsw.edu.au>
-	<010201c59e52$460d22a0$0400a8c0@LocalHost>
+Subject: Re: How to force a spare drive to take over in a RAID5?
+Date: Thu, 11 Aug 2005 20:11:21 +1000
+Message-ID: <17147.9289.214312.837092@cse.unsw.edu.au>
+References: <45138.213.188.237.106.1123086677.squirrel@localhost>
+	<20050804195853.0866ade9.akpm@osdl.org>
+	<34082.213.188.237.106.1123228569.squirrel@localhost>
+	<20050805010236.12d811ff.akpm@osdl.org>
+	<006301c599ca$69410700$ab0e10ac@pinchy>
+	<42F5F0B0.3050105@dgreaves.com>
+	<012701c59c62$3db09d40$ab0e10ac@pinchy>
+	<1123540166.17810.1.camel@star2.austin.ibm.com>
+	<00b301c59d1b$5d5645a0$ab0e10ac@pinchy>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from djani22@dynamicweb.hu on Thursday August 11
+In-Reply-To: message from Mark Cuss on Tuesday August 9
 Sender: linux-raid-owner@vger.kernel.org
-To: djani22@dynamicweb.hu
+To: Mark Cuss <mcuss@cdlsystems.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday August 11, djani22@dynamicweb.hu wrote:
+On Tuesday August 9, mcuss@cdlsystems.com wrote:
+> Hmm - Okay.  If I do that, I get "/dev/sdr1 does not appear to be an md 
+> device".  If I add --force with this it doesn't seem to matter.
 > 
-> It is possible to mirror only one drive, and after it is synced, remove the
-> old, or similar?
+...
+> From: "Mike Tran" <mhtran@us.ibm.com>
+> To: <linux-raid@vger.kernel.org>
+> Sent: Monday, August 08, 2005 4:29 PM
+> Subject: Re: How to force a spare drive to take over in a RAID5?
 > 
+> 
+> > You're on the right track :) mdadm --fail /dev/sdr should do.
 
-That would be nice, wouldn't it.
-It isn't possible yet.
-When we get the bitmap intent logging working for raid5, it will be
-possible to do it with just 2 small windows while the array is
-degraded. 
-Whether it will ever be possible to do it with no window, I don't
-know.
+Ofcourse, What Mike meant was 
+  mdadm /dev/md4 --fail /dev/sdr
 
 NeilBrown
+
