@@ -1,56 +1,39 @@
-From: "Mark Cuss" <mcuss@cdlsystems.com>
-Subject: Re: How to force a spare drive to take over in a RAID5?
-Date: Thu, 11 Aug 2005 10:03:45 -0600
-Message-ID: <006301c59e8e$40d235f0$ab0e10ac@pinchy>
-References: <45138.213.188.237.106.1123086677.squirrel@localhost><20050804195853.0866ade9.akpm@osdl.org><34082.213.188.237.106.1123228569.squirrel@localhost><20050805010236.12d811ff.akpm@osdl.org><006301c599ca$69410700$ab0e10ac@pinchy><42F5F0B0.3050105@dgreaves.com><012701c59c62$3db09d40$ab0e10ac@pinchy><1123540166.17810.1.camel@star2.austin.ibm.com><00b301c59d1b$5d5645a0$ab0e10ac@pinchy> <17147.9289.214312.837092@cse.unsw.edu.au>
-Reply-To: "Mark Cuss" <mcuss@cdlsystems.com>
+From: Al Boldi <a1426z@gawab.com>
+Subject: Re: [PATCH md 006 of 6] Add write-behind support for md/raid1
+Date: Fri, 12 Aug 2005 09:22:52 +0300
+Message-ID: <200508120922.52689.a1426z@gawab.com>
+References: <20050811171720.10115.patches@notabene> <E1E37OV-0002jU-9q@notabene.cse.unsw.edu.au>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	format=flowed;
-	charset="iso-8859-1";
-	reply-type=original
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <E1E37OV-0002jU-9q@notabene.cse.unsw.edu.au>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid-owner@vger.kernel.org
+To: NeilBrown <neilb@cse.unsw.edu.au>, Andrew Morton <akpm@osdl.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Oh jeez how obvious - I guess I should've RTFM'd with a little more 
-attention to detail - sorry 'bout the extremely obvious question!
+NeilBrown wrote:
+> If a device is flagged 'WriteMostly' and the array has a bitmap,
+> and the bitmap superblock indicates that write_behind is allowed,
+> then write_behind is enabled for WriteMostly devices.
 
-Mark
+Nice, but why is it dependent on WriteMostly?
 
------ Original Message ----- 
-From: "Neil Brown" <neilb@cse.unsw.edu.au>
-To: "Mark Cuss" <mcuss@cdlsystems.com>
-Cc: <linux-raid@vger.kernel.org>
-Sent: Thursday, August 11, 2005 4:11 AM
-Subject: Re: How to force a spare drive to take over in a RAID5?
+> This requires memory allocation to make a local copy of the data
+> being written.  If there is insufficient memory, then we fall-back
+> on normal write semantics.
 
+Good!
 
-> On Tuesday August 9, mcuss@cdlsystems.com wrote:
->> Hmm - Okay.  If I do that, I get "/dev/sdr1 does not appear to be an md
->> device".  If I add --force with this it doesn't seem to matter.
->>
-> ...
->> From: "Mike Tran" <mhtran@us.ibm.com>
->> To: <linux-raid@vger.kernel.org>
->> Sent: Monday, August 08, 2005 4:29 PM
->> Subject: Re: How to force a spare drive to take over in a RAID5?
->>
->>
->> > You're on the right track :) mdadm --fail /dev/sdr should do.
->
-> Ofcourse, What Mike meant was
->  mdadm /dev/md4 --fail /dev/sdr
->
-> NeilBrown
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Also, it would be nice to have something like:
+echo 1 > /proc/md../../WriteBehindEnabled
+echo 10 > /proc/md../../WriteBehindMaxDelayBeforeSync
 
+Thanks!
+
+--
+Al
 
