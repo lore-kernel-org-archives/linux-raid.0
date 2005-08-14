@@ -1,34 +1,37 @@
-From: Stephen Walton <stephen.walton@csun.edu>
-Subject: convert legacy array in place?
-Date: Sun, 14 Aug 2005 14:40:12 -0700
-Message-ID: <42FFBA3C.1010102@csun.edu>
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: [PATCH md 006 of 6] Add write-behind support for md/raid1
+Date: Mon, 15 Aug 2005 08:16:39 +1000
+Message-ID: <17151.49863.851690.714360@cse.unsw.edu.au>
+References: <20050811171720.10115.patches@notabene>
+	<E1E37OV-0002jU-9q@notabene.cse.unsw.edu.au>
+	<200508120922.52689.a1426z@gawab.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from Al Boldi on Friday August 12
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Al Boldi <a1426z@gawab.com>
+Cc: Andrew Morton <akpm@osdl.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+On Friday August 12, a1426z@gawab.com wrote:
+> 
+> Also, it would be nice to have something like:
+> echo 1 > /proc/md../../WriteBehindEnabled
+> echo 10 > /proc/md../../WriteBehindMaxDelayBeforeSync
 
-It seems like this should be a FAQ but careful google and mailing list 
-archive searches didn't seem to turn up anything.
+Something like
+   echo 1 > /sys/block/md0/md/d4/write_behind
+or
+   echo 10 > /sys/block/md0/md/max_write_behind
 
-I have two machines with legacy RAID-0 arrays created with raidtools.  I 
-have updated one to Fedora Core 4 and now use mdadm.  Am I correct in 
-thinking I have to use "mdadm --build" every boot to access the array?  
-My mdadm.conf contains
+are real possibilities.
+However "WriteBehindMaxDelayBeforeSync" doesn't make sense I don't
+think.  When doing write behind, we don't delay the write at all.  We
+just assume that it will take longer because it is on a slow device.
+The only limit is the number of outstanding write requests.  Once this
+crosses a maximum, all further requests a fully synchronous until the
+number of outstanding writes drops below the maximum.
 
-DEVICES /dev/hda1 /dev/hdb1 /dev/hdc1
-ARRAY /dev/md0 level=raid0 num-devices=3 
-devices=/dev/hda1,/dev/hdb1,/dev/hdc1
-
-but the array doesn't seem to come up by itself on boot.
-
-On the same lines, can this array be converted to a new style array just 
-by writing new superblocks, or do I have to do the 
-backup-reformat-restore thing?
-
-TIA.
-
+NeilBrown
