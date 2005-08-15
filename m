@@ -1,53 +1,64 @@
-From: Tyler <pml@dtbb.net>
+From: Neil Brown <neilb@cse.unsw.edu.au>
 Subject: Re: confused raid1
-Date: Mon, 15 Aug 2005 11:56:21 -0700
-Message-ID: <4300E555.5090804@dtbb.net>
-References: <Pine.LNX.4.61.0508151131020.10349@soloth.lewis.org> <4300BC7E.6030009@dtbb.net> <Pine.LNX.4.61.0508151202160.10349@soloth.lewis.org> <4300C5D6.3090706@dtbb.net> <Pine.LNX.4.61.0508151326210.10349@soloth.lewis.org>
+Date: Tue, 16 Aug 2005 08:57:40 +1000
+Message-ID: <17153.7652.11545.728235@cse.unsw.edu.au>
+References: <Pine.LNX.4.61.0508151131020.10349@soloth.lewis.org>
+	<4300BC7E.6030009@dtbb.net>
+	<Pine.LNX.4.61.0508151202160.10349@soloth.lewis.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.61.0508151326210.10349@soloth.lewis.org>
+In-Reply-To: message from Jon Lewis on Monday August 15
 Sender: linux-raid-owner@vger.kernel.org
 To: Jon Lewis <jlewis@lewis.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Well, i guess you won't know if you don't try.
+On Monday August 15, jlewis@lewis.org wrote:
+> 
+> It's quite probable, that before the following reboot, md1 was hdc1 
+> and hde1.
+> 
+> Aug  9 02:02:39  kernel: md: created md1
+> Aug  9 02:02:39  kernel: md: bind<hdc1,1>
+> Aug  9 02:02:39  kernel: md: bind<hde1,2>
+> Aug  9 02:02:39  kernel: md: bind<hdg1,3>
+> Aug  9 02:02:39  kernel: md: running: <hdg1><hde1><hdc1>
+> Aug  9 02:02:39  kernel: md: hdg1's event counter: 000000b0
+> Aug  9 02:02:39  kernel: md: hde1's event counter: 000000b4
+> Aug  9 02:02:39  kernel: md: hdc1's event counter: 000000b4
+> Aug  9 02:02:39  kernel: md: superblock update time inconsistency -- using the most recent one
+> Aug  9 02:02:39  kernel: md: freshest: hde1
+> Aug  9 02:02:39  kernel: md: kicking non-fresh hdg1 from array!
+> Aug  9 02:02:39  kernel: md: unbind<hdg1,2>
+> Aug  9 02:02:39  kernel: md: export_rdev(hdg1)
+> Aug  9 02:02:39  kernel: md: RAID level 1 does not need chunksize! Continuing anyway.
+> Aug  9 02:02:39  kernel: kmod: failed to exec /sbin/modprobe -s -k md-personality-3, errno = 2
+> Aug  9 02:02:39  kernel: md: personality 3 is not loaded!
+> Aug  9 02:02:39  kernel: md :do_md_run() returned -22
+> Aug  9 02:02:39  kernel: md: md1 stopped.
+> Aug  9 02:02:39  kernel: md: unbind<hde1,1>
+> Aug  9 02:02:39  kernel: md: export_rdev(hde1)
+> Aug  9 02:02:39  kernel: md: unbind<hdc1,0>
+> Aug  9 02:02:39  kernel: md: export_rdev(hdc1)
+> Aug  9 02:02:39  kernel: md: ... autorun DONE.
 
-Do your other servers pronounce the same "error" in their logs upon 
-bootup? regarding the module?
+So md-personality-3 doesn't get loaded, and the array doesn't get
+started at all.  i.e. the 'partition type FD' is not having any
+useful effect.
 
-Tyler.
+So how does the array get started?  
+Are there other message about md later in the kernel logs that talk
+about md1 ??
 
-Jon Lewis wrote:
+My guess is that 'raidstart' is being used to start the array
+somewhere along the line.  'raidstart' doesn't not start raid arrays
+reliably.  Don't use it.  Remove it from your system.  It is unsafe.
 
-> On Mon, 15 Aug 2005, Tyler wrote:
->
->> Try this suggestion (regarding modules.conf).
->>
->> https://www.redhat.com/archives/fedora-list/2003-December/msg05205.html
->
->
-> I don't see why that modules.conf addition would be necessary / make a 
-> difference.  I have other servers with root-raid1 that haven't needed 
-> that, and mkinitrd is smart enough (reads /etc/raidtab) to know that 
-> raid1 is needed and loads the raid1 module in the initrd linuxrc script.
->
-> ----------------------------------------------------------------------
->  Jon Lewis                   |  I route
->  Senior Network Engineer     |  therefore you are
->  Atlantic Net                | _________ 
-> http://www.lewis.org/~jlewis/pgp for PGP public key_________
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+If you cannot get the raid1 module to be loaded properly, make sure
+that 'mdadm' is being used to assemble the array.  It has a much
+better chance of getting it right.
 
-
--- 
-No virus found in this outgoing message.
-Checked by AVG Anti-Virus.
-Version: 7.0.338 / Virus Database: 267.10.9/72 - Release Date: 8/14/2005
+NeilBrown
 
