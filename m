@@ -1,52 +1,53 @@
-From: Nishanth Aravamudan <nacc@us.ibm.com>
-Subject: [-mm PATCH 24/32] drivers/md: fix-up schedule_timeout() usage
-Date: Mon, 15 Aug 2005 11:24:36 -0700
-Message-ID: <20050815182436.GA2854@us.ibm.com>
-References: <20050815180514.GC2854@us.ibm.com>
+From: Tyler <pml@dtbb.net>
+Subject: Re: confused raid1
+Date: Mon, 15 Aug 2005 11:56:21 -0700
+Message-ID: <4300E555.5090804@dtbb.net>
+References: <Pine.LNX.4.61.0508151131020.10349@soloth.lewis.org> <4300BC7E.6030009@dtbb.net> <Pine.LNX.4.61.0508151202160.10349@soloth.lewis.org> <4300C5D6.3090706@dtbb.net> <Pine.LNX.4.61.0508151326210.10349@soloth.lewis.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20050815180514.GC2854@us.ibm.com>
+In-Reply-To: <Pine.LNX.4.61.0508151326210.10349@soloth.lewis.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: mingo@redhat.com, neilb@cse.unsw.edu.au
-Cc: akpm@osdl.org, linux-raid@vger.kernel.org
+To: Jon Lewis <jlewis@lewis.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Description: Use schedule_timeout_interruptible() instead of
-set_current_state()/schedule_timeout() to reduce kernel size.
+Well, i guess you won't know if you don't try.
 
-Signed-off-by: Nishanth Aravamudan <nacc@us.ibm.com>
+Do your other servers pronounce the same "error" in their logs upon 
+bootup? regarding the module?
 
----
+Tyler.
 
- drivers/md/raid5.c     |    3 +--
- drivers/md/raid6main.c |    3 +--
- 2 files changed, 2 insertions(+), 4 deletions(-)
+Jon Lewis wrote:
 
-diff -urpN 2.6.13-rc5-mm1/drivers/md/raid5.c 2.6.13-rc5-mm1-dev/drivers/md/raid5.c
---- 2.6.13-rc5-mm1/drivers/md/raid5.c	2005-08-07 10:05:20.000000000 -0700
-+++ 2.6.13-rc5-mm1-dev/drivers/md/raid5.c	2005-08-08 15:06:49.000000000 -0700
-@@ -1522,8 +1522,7 @@ static sector_t sync_request(mddev_t *md
- 		/* make sure we don't swamp the stripe cache if someone else
- 		 * is trying to get access 
- 		 */
--		set_current_state(TASK_UNINTERRUPTIBLE);
--		schedule_timeout(1);
-+		schedule_timeout_uninterruptible(1);
- 	}
- 	spin_lock(&sh->lock);	
- 	set_bit(STRIPE_SYNCING, &sh->state);
-diff -urpN 2.6.13-rc5-mm1/drivers/md/raid6main.c 2.6.13-rc5-mm1-dev/drivers/md/raid6main.c
---- 2.6.13-rc5-mm1/drivers/md/raid6main.c	2005-08-07 10:05:20.000000000 -0700
-+++ 2.6.13-rc5-mm1-dev/drivers/md/raid6main.c	2005-08-08 15:06:55.000000000 -0700
-@@ -1681,8 +1681,7 @@ static sector_t sync_request(mddev_t *md
- 		/* make sure we don't swamp the stripe cache if someone else
- 		 * is trying to get access
- 		 */
--		set_current_state(TASK_UNINTERRUPTIBLE);
--		schedule_timeout(1);
-+		schedule_timeout_uninterruptible(1);
- 	}
- 	spin_lock(&sh->lock);
- 	set_bit(STRIPE_SYNCING, &sh->state);
+> On Mon, 15 Aug 2005, Tyler wrote:
+>
+>> Try this suggestion (regarding modules.conf).
+>>
+>> https://www.redhat.com/archives/fedora-list/2003-December/msg05205.html
+>
+>
+> I don't see why that modules.conf addition would be necessary / make a 
+> difference.  I have other servers with root-raid1 that haven't needed 
+> that, and mkinitrd is smart enough (reads /etc/raidtab) to know that 
+> raid1 is needed and loads the raid1 module in the initrd linuxrc script.
+>
+> ----------------------------------------------------------------------
+>  Jon Lewis                   |  I route
+>  Senior Network Engineer     |  therefore you are
+>  Atlantic Net                | _________ 
+> http://www.lewis.org/~jlewis/pgp for PGP public key_________
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
+
+-- 
+No virus found in this outgoing message.
+Checked by AVG Anti-Virus.
+Version: 7.0.338 / Virus Database: 267.10.9/72 - Release Date: 8/14/2005
+
