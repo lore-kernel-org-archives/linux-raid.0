@@ -1,24 +1,63 @@
 From: Jon Lewis <jlewis@lewis.org>
 Subject: Re: confused raid1
-Date: Mon, 15 Aug 2005 12:01:55 -0400 (EDT)
-Message-ID: <Pine.LNX.4.61.0508151201150.10349@soloth.lewis.org>
+Date: Mon, 15 Aug 2005 12:12:54 -0400 (EDT)
+Message-ID: <Pine.LNX.4.61.0508151202160.10349@soloth.lewis.org>
 References: <Pine.LNX.4.61.0508151131020.10349@soloth.lewis.org>
- <ddqdtv$3m1$1@sea.gmane.org>
+ <4300BC7E.6030009@dtbb.net>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <ddqdtv$3m1$1@sea.gmane.org>
+In-Reply-To: <4300BC7E.6030009@dtbb.net>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 15 Aug 2005, Mario 'BitKoenig' Holbe wrote:
+On Mon, 15 Aug 2005, Tyler wrote:
 
-> Well, reading the kernel boot messages could help.
-> Perhaps, the hdc1 partition is type fd (raid autodetect) and the driver
-> for hd[eg] is not in place when the RAID Autodetection is running.
+> A few questions:
+>
+> a) what kernel version are you using?
+> b) what mdadm version are you using?
+> c) what messages conscerning the raid are in the log when its failing
+> one of the drives and making hdc1 an active drive?
+> d) what linux distribution (and version) are you using?
 
-I should have included that.  All 3 of them are type fd.
+The server is RH 8.0.  The kernel is a 3rd party "meant for RH 8" one, 
+2.4.20-28_36.rh8.0.atsmp.  We've had alot of issues with drivers for the 
+QLA2100 FC host adapter and XFS, so I'm somewhat hesitant to try different 
+kernels.  Last one we tried was a 2.4.31 snapshot from SGI's cvs (supposed 
+to have the latest/greatest XFS driver, and I'd added the latest QLA2100 
+driver module from qlogic to it).  In that kernel, NFS export of XFS was 
+broken.  Clients could mount, but not actually read files.
+
+It's quite probable, that before the following reboot, md1 was hdc1 
+and hde1.
+
+Aug  9 02:02:39  kernel: md: created md1
+Aug  9 02:02:39  kernel: md: bind<hdc1,1>
+Aug  9 02:02:39  kernel: md: bind<hde1,2>
+Aug  9 02:02:39  kernel: md: bind<hdg1,3>
+Aug  9 02:02:39  kernel: md: running: <hdg1><hde1><hdc1>
+Aug  9 02:02:39  kernel: md: hdg1's event counter: 000000b0
+Aug  9 02:02:39  kernel: md: hde1's event counter: 000000b4
+Aug  9 02:02:39  kernel: md: hdc1's event counter: 000000b4
+Aug  9 02:02:39  kernel: md: superblock update time inconsistency -- using the most recent one
+Aug  9 02:02:39  kernel: md: freshest: hde1
+Aug  9 02:02:39  kernel: md: kicking non-fresh hdg1 from array!
+Aug  9 02:02:39  kernel: md: unbind<hdg1,2>
+Aug  9 02:02:39  kernel: md: export_rdev(hdg1)
+Aug  9 02:02:39  kernel: md: RAID level 1 does not need chunksize! Continuing anyway.
+Aug  9 02:02:39  kernel: kmod: failed to exec /sbin/modprobe -s -k md-personality-3, errno = 2
+Aug  9 02:02:39  kernel: md: personality 3 is not loaded!
+Aug  9 02:02:39  kernel: md :do_md_run() returned -22
+Aug  9 02:02:39  kernel: md: md1 stopped.
+Aug  9 02:02:39  kernel: md: unbind<hde1,1>
+Aug  9 02:02:39  kernel: md: export_rdev(hde1)
+Aug  9 02:02:39  kernel: md: unbind<hdc1,0>
+Aug  9 02:02:39  kernel: md: export_rdev(hdc1)
+Aug  9 02:02:39  kernel: md: ... autorun DONE.
+
+mdadm - v1.4.0 - 29 Oct 2003 (not exactly the latest)
 
 ----------------------------------------------------------------------
   Jon Lewis                   |  I route
