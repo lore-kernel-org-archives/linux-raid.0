@@ -1,54 +1,53 @@
 From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: RAID readonly before final shutdown
-Date: Mon, 15 Aug 2005 14:24:35 +1000
-Message-ID: <17152.6403.579491.428656@cse.unsw.edu.au>
-References: <Pine.SOL.4.58.0508101126520.23305@titan.cfa.harvard.edu>
+Subject: Re: convert legacy array in place?
+Date: Mon, 15 Aug 2005 14:29:38 +1000
+Message-ID: <17152.6706.174775.819015@cse.unsw.edu.au>
+References: <42FFBA3C.1010102@csun.edu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Gaspar Bakos on Wednesday August 10
+In-Reply-To: message from Stephen Walton on Sunday August 14
 Sender: linux-raid-owner@vger.kernel.org
-To: gbakos@cfa.harvard.edu
+To: Stephen Walton <stephen.walton@csun.edu>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday August 10, gbakos@cfa.harvard.edu wrote:
+On Sunday August 14, stephen.walton@csun.edu wrote:
 > Hi,
 > 
-> The entire OS I am using is running on software RAID-1. Before killing
-> the power of the UPS (in case of a power outage), I issue:
+> It seems like this should be a FAQ but careful google and mailing list 
+> archive searches didn't seem to turn up anything.
 > 
-> /sbin/mdadm --readonly $RAIDDEV
-> on all the RAID devices I have.
+> I have two machines with legacy RAID-0 arrays created with raidtools.  I 
+> have updated one to Fedora Core 4 and now use mdadm.  Am I correct in 
+> thinking I have to use "mdadm --build" every boot to access the array?  
+> My mdadm.conf contains
 > 
-> This, however, does not seem to be enough, and when i power the system
-> back on, the RAID arrays are not clean, and a long syncing starts. A
-> last step is missing; something like marking the arrays that they are
-> clean. I see this happening for a flash of a second when i tell the PC
-> to "/sbin/poweroff", i.e. "halt -p". The very last second, before the
-> ATX power is turned OFF, the kernel does something to the md arrays.
+> DEVICES /dev/hda1 /dev/hdb1 /dev/hdc1
+> ARRAY /dev/md0 level=raid0 num-devices=3 
+> devices=/dev/hda1,/dev/hdb1,/dev/hdc1
 > 
-> My questions are:
-> 1. What exactly is this last step?
+> but the array doesn't seem to come up by itself on boot.
 
-It is exactly switching the arrays to readonly.
+If it is a "legacy array" in that it was created with
+"persisent-superblock = no"
+then you are right. You need to use "mdadm --build" to assemble it.
+--assemble ONLY works with arrays that have superblocks.
+With --build, you need to make sure that you get the chunksize correct
+of course (as it isn't stored in the superblock).
 
+> 
+> On the same lines, can this array be converted to a new style array just 
+> by writing new superblocks, or do I have to do the 
+> backup-reformat-restore thing?
 
-> 2. Can I achieve it manually by sth like
->  echo *** > /proc/***
+An array with superblocks is slightly smaller than the legacy array
+(due to the superblocks).  So you cannot do a straight conversion.
+If you have afford to loose the last 64k-per-device of the array, then
+you can simply re-create it as a with-superblock array.
 
-no (maybe echo ?? > /sys/block/.... one day).
-
-> or by using mdadm?
-
-no.  You can only switch an array to read-only when it is not in use.
-So you have to unmount it first.  That possibly sounds a bit
-pointless, and it probably is.  But it hasn't been a high priority.
-
-If you are using 2.6, then the arrays will be automatically marked
-clean after 20ms of inactivity.  If you "kill -9" the "md*_raid1"
-processes, then it will start marking the array clean the instant of
-inactivity.
+If you are using ext2 or ext3, then you may be able to resize you
+filesystem down with resize2fs and then remake the array.
 
 NeilBrown
