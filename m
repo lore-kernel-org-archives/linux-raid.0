@@ -1,74 +1,129 @@
-From: Pallai Roland <dap@mail.index.hu>
-Subject: Re: [PATCH] proactive raid5 disk replacement for 2.6.11
-Date: Mon, 15 Aug 2005 15:50:11 +0200
-Message-ID: <1124113811.10436.139.camel@localhost.localdomain>
-References: <1124050204.3810.28.camel@localhost.localdomain>
-	 <ddpuau$nv8$1@sea.gmane.org>
+From: Jon Lewis <jlewis@lewis.org>
+Subject: confused raid1
+Date: Mon, 15 Aug 2005 11:41:57 -0400 (EDT)
+Message-ID: <Pine.LNX.4.61.0508151131020.10349@soloth.lewis.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <ddpuau$nv8$1@sea.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+I've inheritted responsibility for a server with a root raid1 that 
+degrades every time the system is rebooted.  It's a 2.4.x kernel.  I've 
+got both raidutils and mdadm available.
 
-On Mon, 2005-08-15 at 13:29 +0200, Mario 'BitKoenig' Holbe wrote:
-> Pallai Roland <dap@mail.index.hu> wrote:
-> >  this is a feature patch that implements 'proactive raid5 disk
-> > replacement' (http://www.arctic.org/~dean/raid-wishlist.html),
-> > that could help a lot on large raid5 arrays built from cheap sata
-> ...
-> >  linux software raid is very fragile by default, the typical (nervous)
-> 
-> What I'm wondering about is how does your patch make the whole system
-> behave in case of more harmful errors?
-> The read errors you are talking about are quite harmless regarding
-> subsequent access to the device. Unfortunately there *are* errors (even
-> read errors, too), especially when you are talking about cheap IDE (ATA,
-> SATA) equipment, where subsequent access to the device results in
-> infinite (bus-)lockups. I think, this is the reason why Software-RAID
-> does never ever touch a failing drive again. If you are changing this
-> behaviour in general, you risk lock-ups of the raid-device just because
-> one of the drives got locked up.
- yes, I understand your point, but I think the low level ATA driver must
-be fixed if that lets a drive to lock up. as I know, the SCSI layer send
-an abort/reset to the device driver if a request not served within a
-timeout value ("hey, give me some kind of result, now!"), it's a good
-operation, only a really braindead driver ignores that alarm..
- as I saw it in practice, modern sata drivers doesn't let a drive to
-lock up, others should be teached about "timeout"
+The raid1 device is supposed to be /dev/hde1 & /dev/hdg1 with /dev/hdc1 as 
+a spare.  I believe it was created with raidutils and the following 
+portion of /etc/raidtab:
 
- unfortunately, bad blocks are often served slowly from damaged disks
-and the array tries to access those periodically in this way, it could
-slow down the array. I think about it, and would be a good starting
-practice to build a table called 'this disk is bad for this stripe', an
-insert occurs after a read error, a delete after if stripe is rewritten
-to the disk. it reduces error lines in dmesg about bad sectors too
+raiddev             /dev/md1
+raid-level                  1
+nr-raid-disks               2
+chunk-size                  64k
+persistent-superblock       1
+nr-spare-disks              1
+     device          /dev/hde1
+     raid-disk     0
+     device          /dev/hdg1
+     raid-disk     1
+     device          /dev/hdc1
+     spare-disk    0
 
-> What I did not find in your patch is some differentiation between the
-> harmless and harmful error conditions. I'm not even sure, if this is
-> possible at all.
- currently it doesn't tolerate write errors, if a write fails, the drive
-gets kicked immediately, so a fully failed disk will not be accessed
-forever.. anyway, it's really hard to determine what's a harmful error
-(at this layer we've got a bit for that:), maybe we should to compute a
-success-fail ratio (%) for a time, or scan the 'this disk is bad for
-this stripe' table for errors and disable the disk if count of bad
-blocks is over a user-defined threshold
+The output of mdadm -E concerns me though.
 
-summary (todo..!):
- - I think, we shouldn't care about drive lockups
- - would be good a 'this disk is bad for this stripe' table to speed up
-array with partially failed drives, easy to implement it
- - make a switch to choose 'partially failed' feature on per-array basis
-after the patch is being applied (eg. to remain compatible with buggy -
-forever locking- device drivers)
+# mdadm -E /dev/hdc1
+/dev/hdc1:
+           Magic : a92b4efc
+         Version : 00.90.00
+            UUID : 8b65fa52:21176cc9:cbb74149:c418b5a4
+   Creation Time : Tue Jan 13 13:21:41 2004
+      Raid Level : raid1
+     Device Size : 30716160 (29.29 GiB 31.45 GB)
+    Raid Devices : 2
+   Total Devices : 1
+Preferred Minor : 1
 
- well?
+     Update Time : Thu Aug 11 08:38:59 2005
+           State : dirty, no-errors
+  Active Devices : 2
+Working Devices : 2
+  Failed Devices : -1
+   Spare Devices : 0
+        Checksum : 6a4dddb8 - correct
+          Events : 0.195
+
+       Number   Major   Minor   RaidDevice State
+this     1      22        1        1      active sync   /dev/hdc1
+    0     0      33        1        0      active sync   /dev/hde1
+    1     1      22        1        1      active sync   /dev/hdc1
+
+# mdadm -E /dev/hde1
+/dev/hde1:
+           Magic : a92b4efc
+         Version : 00.90.00
+            UUID : 8b65fa52:21176cc9:cbb74149:c418b5a4
+   Creation Time : Tue Jan 13 13:21:41 2004
+      Raid Level : raid1
+     Device Size : 30716160 (29.29 GiB 31.45 GB)
+    Raid Devices : 2
+   Total Devices : 1
+Preferred Minor : 1
+
+     Update Time : Mon Aug 15 11:16:43 2005
+           State : dirty, no-errors
+  Active Devices : 2
+Working Devices : 2
+  Failed Devices : -1
+   Spare Devices : 0
+        Checksum : 6a5348c9 - correct
+          Events : 0.199
 
 
--- 
- dap
+       Number   Major   Minor   RaidDevice State
+this     0      33        1        0      active sync   /dev/hde1
+    0     0      33        1        0      active sync   /dev/hde1
+    1     1      34        1        1      active sync   /dev/hdg1
 
+# mdadm -E /dev/hdg1
+/dev/hdg1:
+           Magic : a92b4efc
+         Version : 00.90.00
+            UUID : 8b65fa52:21176cc9:cbb74149:c418b5a4
+   Creation Time : Tue Jan 13 13:21:41 2004
+      Raid Level : raid1
+     Device Size : 30716160 (29.29 GiB 31.45 GB)
+    Raid Devices : 2
+   Total Devices : 1
+Preferred Minor : 1
+
+     Update Time : Mon Aug 15 11:16:43 2005
+           State : dirty, no-errors
+  Active Devices : 2
+Working Devices : 2
+  Failed Devices : -1
+   Spare Devices : 0
+        Checksum : 6a5348cc - correct
+          Events : 0.199
+
+
+       Number   Major   Minor   RaidDevice State
+this     1      34        1        1      active sync   /dev/hdg1
+    0     0      33        1        0      active sync   /dev/hde1
+    1     1      34        1        1      active sync   /dev/hdg1
+
+Shouldn't total devices be at least 2?  How can failed devices be -1?
+
+When the system reboots, md1 becomes just /dev/hdc1.  I've used mdadm to 
+add hde1, fail and then remove hdc1, and add hdg1.  How can I repair the 
+array such that it will survive the next reboot and keep hde1 and hdg1 as 
+the working devices?
+
+md1 : active raid1 hdg1[1] hde1[0]
+       30716160 blocks [2/2] [UU]
+
+----------------------------------------------------------------------
+  Jon Lewis                   |  I route
+  Senior Network Engineer     |  therefore you are
+  Atlantic Net                | 
+_________ http://www.lewis.org/~jlewis/pgp for PGP public key_________
