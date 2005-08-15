@@ -1,29 +1,29 @@
-From: Al Boldi <a1426z@gawab.com>
-Subject: Re: [PATCH md 006 of 6] Add write-behind support for md/raid1
-Date: Mon, 15 Aug 2005 07:45:53 +0300
-Message-ID: <200508150745.53213.a1426z@gawab.com>
-References: <20050811171720.10115.patches@notabene> <200508130800.32901.a1426z@gawab.com> <17151.50336.645817.629042@cse.unsw.edu.au>
+From: Claas Hilbrecht <claas+maillinglists.linux-raid@jucs-kramkiste.de>
+Subject: Re: [PATCH] proactive raid5 disk replacement for 2.6.11
+Date: Mon, 15 Aug 2005 08:45:24 +0200
+Message-ID: <C0A1E607B5206F88D89CAF42@[192.168.1.22]>
+References: <1124050204.3810.28.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17151.50336.645817.629042@cse.unsw.edu.au>
+In-Reply-To: <1124050204.3810.28.camel@localhost.localdomain>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: Paul Clements <paul.clements@steeleye.com>, Andrew Morton <akpm@osdl.org>, linux-raid@vger.kernel.org
+To: Pallai Roland <dap@mail.index.hu>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> As read-latency and write-latency are likely to go together, it
-> seems reasonable for WriteMostly and WriteBehind to go together. 
-> Do you disagree?
+--Am Sonntag, 14. August 2005 22:10 +0200 Pallai Roland <dap@mail.index.hu> 
+schrieb:
 
-In OOP terms, always try to remove dependencies.
-Try to make your implementation as general as possible to facilitate 
-code reuse thus increasing scalability!
+>  this is a feature patch that implements 'proactive raid5 disk
+> replacement' (http://www.arctic.org/~dean/raid-wishlist.html),
 
---
-Al
+After my experience with a broken raid5 (read the list) I think the 
+"partially failed disks" feature you describe is really useful. I agree 
+with you that this kind of error is rather common.
+
+-- 
+ Claas Hilbrecht
+ http://www.jucs-kramkiste.de
 
