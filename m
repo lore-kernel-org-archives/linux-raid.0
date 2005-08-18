@@ -1,46 +1,56 @@
 From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: perfomance question.
-Date: Thu, 18 Aug 2005 14:59:23 +1000
-Message-ID: <17156.5547.61133.39733@cse.unsw.edu.au>
-References: <20050717182650.24540.patches@notabene>
-	<E1Du4Uu-0006O7-84@notabene.cse.unsw.edu.au>
-	<009001c58ac8$9ab25d40$0400a8c0@LocalHost>
-	<17114.55335.687696.686786@cse.unsw.edu.au>
-	<03e501c5a120$f3a79a00$0400a8c0@LocalHost>
-	<17151.60931.26972.713074@cse.unsw.edu.au>
-	<011101c5a187$3bc8cf00$0400a8c0@LocalHost>
-	<016001c5a26a$05ad3e40$0400a8c0@LocalHost>
+Subject: Re: [PATCH] proactive raid5 disk replacement for 2.6.11, updated
+Date: Thu, 18 Aug 2005 15:28:41 +1000
+Message-ID: <17156.7305.638579.812295@cse.unsw.edu.au>
+References: <1124322731.3810.77.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from djani22@dynamicweb.hu on Tuesday August 16
+In-Reply-To: message from Pallai Roland on Thursday August 18
 Sender: linux-raid-owner@vger.kernel.org
-To: djani22@dynamicweb.hu
+To: Pallai Roland <dap@mail.index.hu>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday August 16, djani22@dynamicweb.hu wrote:
-> Hello list,
-> 
-> I have performance problem. (again) :-)
-> 
-> What chunk size is better in  raid5, and raid0?
-> The lot of small chunks, or some bigger?
 
-This is highly dependant one workload and hardware performance. 
-The best thing to do is develop a test that simulates your real
-workload and run it with various stripe sizes, and see which one wins.
+Thanks for this.  There are definitely some good ideas here.
+However I think I would like to do it a little bit differently.
 
-I suspect there would be very little gain in going to very small chunk
-sizes (<16k).  Anywhere between there and 1Meg is worth trying.
+If we want to mirror a single drive in a raid5 array, I would really
+like to do that using the raid1 personality.
+e.g.
+   suspend io
+   remove the drive
+   build a raid1 (with no superblock) using the drive.
+   add that back into the array
+   resume io.
 
-mdadm uses a default of 64k which is probably not too bad for most
-situations, but I cannot promise it being optimal for any.
+Then another drive can be added to the raid1 and synced.
 
-Sorry I cannot be more helpful.
+This allows shuffling of drives even when they haven't actually
+failed.
 
-Your performance problem may not be chunk-size related.  Maybe
-increasing the readahead (with blockdev) would help...
+To handle read failures, I would like the first step to be to re-write
+the failed block.  I believe most (all?) drives will relocate the
+block if a write cannot succeed at the normal location, so this will
+often fix the problem.  
+
+A userspace process can then notice an unacceptable failure rate and
+start a miror/swap process as above.
+
+This possible doesn't handle the possibility of a write failing very
+well, but I'm not sure what your approach does in that case.  Could
+you explain that?
+
+It also means that if the raid1 rebuild hits a read-error it cannot
+cope whereas your code would just reconstruct the block from the rest
+of the raid5.
+
+I'll think through this some more and try to work out how I really
+want it to work.
+
+Thanks again for the ideas and code,
 
 NeilBrown
+
