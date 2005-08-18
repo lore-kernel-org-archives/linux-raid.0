@@ -1,62 +1,90 @@
-From: Pallai Roland <dap@mail.index.hu>
-Subject: Re: [PATCH] proactive raid5 disk replacement for 2.6.11, updated
-Date: Thu, 18 Aug 2005 16:13:03 +0200
-Message-ID: <1124374384.21362.114.camel@localhost.localdomain>
-References: <1124322731.3810.77.camel@localhost.localdomain>
-	 <17156.7305.638579.812295@cse.unsw.edu.au>
-	 <20050818102458.GJ13344@marowsky-bree.de>
+From: djani22@dynamicweb.hu
+Subject: Re: Found a new bug!
+Date: Thu, 18 Aug 2005 17:39:01 +0200
+Message-ID: <007001c5a40b$03f7e3a0$0400a8c0@LocalHost>
+References: <20050717182650.24540.patches@notabene><E1Du4Uu-0006O7-84@notabene.cse.unsw.edu.au><009001c58ac8$9ab25d40$0400a8c0@LocalHost><17114.55335.687696.686786@cse.unsw.edu.au><03e501c5a120$f3a79a00$0400a8c0@LocalHost><17151.60931.26972.713074@cse.unsw.edu.au><011101c5a187$3bc8cf00$0400a8c0@LocalHost> <17156.4079.67097.825741@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20050818102458.GJ13344@marowsky-bree.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Lars Marowsky-Bree <lmb@suse.de>
+To: Neil Brown <neilb@cse.unsw.edu.au>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
-On Thu, 2005-08-18 at 12:24 +0200, Lars Marowsky-Bree wrote:
-> On 2005-08-18T15:28:41, Neil Brown <neilb@cse.unsw.edu.au> wrote:
-> > To handle read failures, I would like the first step to be to re-write
-> > the failed block.  I believe most (all?) drives will relocate the
-> > block if a write cannot succeed at the normal location, so this will
-> > often fix the problem.  
-> 
-> Yes. This would be highly useful.
- yes, but I'm not sure that should be handled immediately, see my
-previous mail
-
-> > This possible doesn't handle the possibility of a write failing very
-> > well, but I'm not sure what your approach does in that case.  Could
-> > you explain that?
-> 
-> I think a failed write can't really be handled - it might be retried
-> once or twice, but then the way to proceed is to kick the drive and
-> rebuild the array.
- I'm not sure that's a fatal error if that sector isn't readable too.
-badblock tolerance comes to play there..
-
-> > It also means that if the raid1 rebuild hits a read-error it cannot
-> > cope whereas your code would just reconstruct the block from the rest
-> > of the raid5.
-> 
-> Good point. One way to fix this would be to have a callback to one level
-> up "Hi, I can't read this section, can you reconstruct and give it to
-> me?". (Which is a pretty ugly hack.)
- I think it's simpler, just issue a generic read request to the parent,
-special callback isn't needed
-
-> However, that would also assume that the data on the disk which _can_ be
-> read still can be trusted. I'm not sure I'd buy that myself, untrusted.
-> But a periodic background consistency check for RAID might help convince
-> users that this is indeed the case ;-)
-> If you can no longer pro-actively reconstruct the disk because it has
-> indeed failed, maybe treating it like a failed disk and rebuilding the
-> array in the "classic" fashion isn't the worst idea, though.
- yes, the chance for that will have been forever of course
+----- Original Message -----
+From: "Neil Brown" <neilb@cse.unsw.edu.au>
+To: <djani22@dynamicweb.hu>
+Cc: <linux-raid@vger.kernel.org>
+Sent: Thursday, August 18, 2005 6:34 AM
+Subject: Re: Found a new bug!
 
 
--- 
- dap
+> On Monday August 15, djani22@dynamicweb.hu wrote:
+> > Thanks, I will test it, when I can...
+> >
+> > In this moment, my system is an working online system, and now only one
+8TB
+> > space what I can use...
+> > Thats right, maybe I can built linear array from only one soure
+device,but:
+> > My first problem is, on my 8TB device is already exists XFS filesystem,
+with
+> > valuable data, what I can't backup.
+> > It is still OK, but I can't insert one raid layer, because the raid's
+> > superblock, and the XFS is'nt shrinkable. :-(
+> >
+> > The only one way (I think) to plug in another raw device, and build an
+array
+> > from 8TB-device + new small device, to get much space to FS.
+> >
+> > But it is too risky for me!
+>
+> Yes, I wouldn't bother just for testing.  I've managed to put together
+> some huge devices with spare files and multi-layer linear arrays (ext3
+> won't allow files as big as 2TB) and I am happy that the patch works.
+>
+> Longer term, I have been thinking of enhancing mdadm so that when you
+> create a linear array, it copies the few blocks from the end that will
+> be over written by the superblock onto the start of the second
+> device.  This would allow a single device to be extended into a linear
+> array without loss.  (I also have patches to hot-add devices to the
+> end of a linear array which I really should dust-off and get into
+> mainline).
+
+Yes!
+This is very good idea!
+I can do that manually with dd, but some people can't.
+This, and sometimes reverse of this is a usefull options!
+
+In my case:
+I add some small HDD to my big array, to try the patch.
+Thats ok.
+But later, when I try to change the small to another big, there is no easy
+way, to do this.
+When I copy the small drive with dd or cat to 2nd big array, the superblock
+is wrong placed.
+(or not?)
+
+
+> >
+> > Do you think it is safe?
+> >
+> > Currently I use 2.6.13-rc3.
+> > This patch is good for this version, or only the last version?
+> >
+> > Witch is the last? 2.6.13-rc6 or rc6-git7, or 2.6.14 -git cvs? :)
+>
+> The patch should be good against any reasonable recent version of
+> 2.6.  I always work against the latest -mm, but this code has been
+> largely untouched for a while so there shouldn't be any patch
+> conflicts.
+
+Thanks, I will try it!
+But in the last month my system's downtime is almost more than uptime, and
+now I try to fix this very bad stat. :-)
+
+
+Janos
 
