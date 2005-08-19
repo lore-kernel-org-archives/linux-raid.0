@@ -1,78 +1,65 @@
-From: djani22@dynamicweb.hu
-Subject: Re: perfomance question.
-Date: Thu, 18 Aug 2005 17:20:38 +0200
-Message-ID: <006f01c5a40b$03c58900$0400a8c0@LocalHost>
-References: <20050717182650.24540.patches@notabene><E1Du4Uu-0006O7-84@notabene.cse.unsw.edu.au><009001c58ac8$9ab25d40$0400a8c0@LocalHost><17114.55335.687696.686786@cse.unsw.edu.au><03e501c5a120$f3a79a00$0400a8c0@LocalHost><17151.60931.26972.713074@cse.unsw.edu.au><011101c5a187$3bc8cf00$0400a8c0@LocalHost><016001c5a26a$05ad3e40$0400a8c0@LocalHost> <17156.5547.61133.39733@cse.unsw.edu.au>
+From: Pallai Roland <dap@mail.index.hu>
+Subject: Re: [PATCH] proactive raid5 disk replacement for 2.6.11, updated
+Date: Fri, 19 Aug 2005 16:58:31 +0200
+Message-ID: <1124463511.21362.211.camel@localhost.localdomain>
+References: <1124322731.3810.77.camel@localhost.localdomain>
+	 <17156.7305.638579.812295@cse.unsw.edu.au>
+	 <1124372804.21362.92.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1124372804.21362.92.camel@localhost.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: Neil Brown <neilb@cse.unsw.edu.au>
 List-Id: linux-raid.ids
 
-Thanks for trying to help me!
 
-My problem is (looks like) solved.
-It was a kernel problem. (I think...)
-When I switch to 2.6.13-rc6 (from rc3), the problem is gone!
-It is very interesting!
+On Thu, 2005-08-18 at 15:46 +0200, Pallai Roland wrote:
+> On Thu, 2005-08-18 at 15:28 +1000, Neil Brown wrote:
+> > If we want to mirror a single drive in a raid5 array, I would really
+> > like to do that using the raid1 personality.
+> > [...]
+>  the current hack allows too, but using the raid1 personality would be a
+> clear solution, I agree. although, I have some doubt.. very simple task
+> to mirror a drive (some lines of code in raid5.c in this master-slave
+> method), but if we call raid1 into the game, the situation goes more
+> difficult:
+>  - we should transfer the badblock cache at the building of raid1
+>  - the raid1.c should be hacked to make requests for data if the sync
+> has stopped due to read error and the parent is a raid5 array
 
-I use SWRAID to distribute equal load to nodes.
-(raid0 chunksize 32k)
-In my system with 2.6.13-rc3 the "node-3" gets  much more (4x - 5x) read
-requests, but dont know why, dont ask! :-)
+ It's harder than I though first, we must know a lot about the raid5
+array (parity algorithm, position of the parity disk in that chunk, etc)
+to rebuild an arbitary block of a disk if we have only the full stripe
+data by make_request. a very ugly hack if I put it all into the raid1.c,
+but if I don't, then a special callback is needed from raid1 to raid5
+what asks the rebuilding of n-th chunk of a disk, and I don't know how
+could I do it nicely.. maybe should I make a generic ioctl for this?
+(what's less ugly, but ugly, too)
 
-First I think, the XFS's log is somehow always on 3 rd chunk.
-I send this question to XFS-list too, and get this answer:
-"The XFS log is always write, except recoverying." - Thats right!
-
-Next idea is to break more the 32k chunks, and send this previous letter to
-here.
-But I have more problems (network layer-bug) with 13-rc3, and try the newer
-kernel, and the problem is gone. :-)
-It looks like some network issue.
-
-Thanks
-
-Janos
-
------ Original Message -----
-From: "Neil Brown" <neilb@cse.unsw.edu.au>
-To: <djani22@dynamicweb.hu>
-Cc: <linux-raid@vger.kernel.org>
-Sent: Thursday, August 18, 2005 6:59 AM
-Subject: Re: perfomance question.
+ in this minute, I can't believe that raid1 should be used for proactive
+rebuilding.. it's too complex and no real advantage exclusive of
+theory.. Neil, give me a hint please if you've see a good solution
 
 
-> On Tuesday August 16, djani22@dynamicweb.hu wrote:
-> > Hello list,
-> >
-> > I have performance problem. (again) :-)
-> >
-> > What chunk size is better in  raid5, and raid0?
-> > The lot of small chunks, or some bigger?
->
-> This is highly dependant one workload and hardware performance.
-> The best thing to do is develop a test that simulates your real
-> workload and run it with various stripe sizes, and see which one wins.
->
-> I suspect there would be very little gain in going to very small chunk
-> sizes (<16k).  Anywhere between there and 1Meg is worth trying.
->
-> mdadm uses a default of 64k which is probably not too bad for most
-> situations, but I cannot promise it being optimal for any.
->
-> Sorry I cannot be more helpful.
->
-> Your performance problem may not be chunk-size related.  Maybe
-> increasing the readahead (with blockdev) would help...
->
-> NeilBrown
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ otherwise, I've done with a userspace error handler what's called when
+a disk seems like failed (steps over badblock threshold) and that
+handles the situation instead of error(). using a userspace error
+handler was a good idea, thanks for this. that can make a decision (by
+calling mdadm) based on SMART values or whatever:
+ a., fail the drive and do nothing, the array becomes degraded
+ b., fail the drive, add a spare, rebuild on the classic way
+ c., don't fail the drive, add a spare and start proactive rebuilding
+ d., don't fail the drive, schelude userspace badblock rewriting, raise
+the badblock tolerance and everything goes on
+ e., anything what you want..
+
+ I'll release the patch with some new features (eg. userspace badblock
+rewriter) after I cleaning up the code a little
+
+
+-- 
+ dap
 
