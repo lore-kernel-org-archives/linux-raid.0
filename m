@@ -1,27 +1,38 @@
-From: "J. Ryan Earl" <ryan@dynaconnections.com>
-Subject: Re: RAID10 vs. LVM on RAID1
-Date: Mon, 22 Aug 2005 17:24:32 -0500
-Message-ID: <430A50A0.4070608@dynaconnections.com>
-References: <20050822213100.GA6165@anthropohedron.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: NeilBrown <neilb@cse.unsw.edu.au>
+Subject: [PATCH md 000 of 8] Introduction
+Date: Mon, 22 Aug 2005 11:59:13 +1000
+Message-ID: <20050822115252.4868.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20050822213100.GA6165@anthropohedron.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: gsslist+linuxraid@anthropohedron.net
-Cc: Linux RAID list <linux-raid@vger.kernel.org>
+To: Andrew Morton <akpm@osdl.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Gregory Seidman wrote:
 
->Is there any advantage to RAID10 over creating an LVM volume group across
->the same number of RAID1 pairs? LVM does striping, after all. Am I
->overlooking something?
->  
->
-This may have changed, but the last time I checked (~2.6.3) LVM was 
-significantly slower in this regard.  In general I've found LVM to be a 
-performance bottleneck.
+Following are 8 patches for md in 2.6.13-rc6-mm1.
 
--ryan
+The first patch could usefully go into 2.6.13.  The remainder should wait
+for 2.6.14-rc1.
+
+Number 001 simply calls md_wakeup_thread during raid startup to make
+sure that resync gets started.  It is always perfectly safe to call
+this function -- as long as we don't call it continuously -- as an
+extra wakeup doesn't hurt.
+The remainder fix:
+    bugs in code that is only in -mm as yet, 
+    minor bugs in recently added 'bitmap' code,
+    fix a long standing shortcoming with 'linear' the only one person has 
+      complained about.
+
+Thanks,
+NeilBrown
+
+
+ [PATCH md 001 of 8] Make sure resync gets started when array starts.
+ [PATCH md 002 of 8] Support md/linear array with components greater than 2 terabytes.
+ [PATCH md 003 of 8] raid1_quiesce is back to front, fix it.
+ [PATCH md 004 of 8] Make sure bitmap_daemon_work actually does work.
+ [PATCH md 005 of 8] Do not set mddev->bitmap until bitmap is fully initialised
+ [PATCH md 006 of 8] Allow hot-adding devices to arrays with non-persistant superblocks.
+ [PATCH md 007 of 8] Allow md to load a superblock with feature-bit '1' set
+ [PATCH md 008 of 8] Fix bitmap/read_sb_page so that it handles errors properly.
