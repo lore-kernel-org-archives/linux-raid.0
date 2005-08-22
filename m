@@ -1,7 +1,7 @@
 From: NeilBrown <neilb@cse.unsw.edu.au>
-Subject: [PATCH md 005 of 8] Do not set mddev->bitmap until bitmap is fully initialised
+Subject: [PATCH md 007 of 8] Allow md to load a superblock with feature-bit '1' set
 Date: Mon, 22 Aug 2005 11:59:13 +1000
-Message-ID: <E1E71aj-0001IF-KF@notabene.cse.unsw.edu.au>
+Message-ID: <E1E71aj-0001IS-Td@notabene.cse.unsw.edu.au>
 References: <20050822115252.4868.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
@@ -10,117 +10,59 @@ Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-When hot-adding a bitmap, bitmap_daemon_work could get called
-while the bitmap is being created, so don't set mddev->bitmap
-until the bitmap is ready.
-This requires freeing the bitmap inside bitmap_create if 
-creation failed part-way through.
+As this is used to flag an internal bitmap.
+
+Also, introduce symbolic names for feature bits.
 
 Signed-off-by: Neil Brown <neilb@cse.unsw.edu.au>
 
 ### Diffstat output
- ./drivers/md/bitmap.c |   33 ++++++++++++++++++++++++---------
- 1 files changed, 24 insertions(+), 9 deletions(-)
+ ./drivers/md/md.c           |    6 +++---
+ ./include/linux/raid/md_p.h |    5 +++++
+ 2 files changed, 8 insertions(+), 3 deletions(-)
 
-diff ./drivers/md/bitmap.c~current~ ./drivers/md/bitmap.c
---- ./drivers/md/bitmap.c~current~	2005-08-22 11:49:43.000000000 +1000
-+++ ./drivers/md/bitmap.c	2005-08-22 11:49:45.000000000 +1000
-@@ -1503,17 +1503,14 @@ void bitmap_flush(mddev_t *mddev)
- /*
-  * free memory that was allocated
-  */
--void bitmap_destroy(mddev_t *mddev)
-+static void bitmap_free(struct bitmap *bitmap)
- {
- 	unsigned long k, pages;
- 	struct bitmap_page *bp;
--	struct bitmap *bitmap = mddev->bitmap;
+diff ./drivers/md/md.c~current~ ./drivers/md/md.c
+--- ./drivers/md/md.c~current~	2005-08-22 11:49:47.000000000 +1000
++++ ./drivers/md/md.c	2005-08-22 11:49:49.000000000 +1000
+@@ -875,7 +875,7 @@ static int super_1_load(mdk_rdev_t *rdev
+ 	    sb->major_version != cpu_to_le32(1) ||
+ 	    le32_to_cpu(sb->max_dev) > (4096-256)/2 ||
+ 	    le64_to_cpu(sb->super_offset) != (rdev->sb_offset<<1) ||
+-	    sb->feature_map != 0)
++	    (le32_to_cpu(sb->feature_map) & ~MD_FEATURE_ALL) != 0)
+ 		return -EINVAL;
  
- 	if (!bitmap) /* there was no bitmap */
- 		return;
+ 	if (calc_sb_1_csum(sb) != sb->sb_csum) {
+@@ -954,7 +954,7 @@ static int super_1_validate(mddev_t *mdd
  
--	mddev->bitmap = NULL; /* disconnect from the md device */
--
- 	/* release the bitmap file and kill the daemon */
- 	bitmap_file_put(bitmap);
+ 		mddev->max_disks =  (4096-256)/2;
  
-@@ -1531,6 +1528,17 @@ void bitmap_destroy(mddev_t *mddev)
- 	kfree(bp);
- 	kfree(bitmap);
- }
-+void bitmap_destroy(mddev_t *mddev)
-+{
-+	struct bitmap *bitmap = mddev->bitmap;
+-		if ((le32_to_cpu(sb->feature_map) & 1) &&
++		if ((le32_to_cpu(sb->feature_map) & MD_FEATURE_BITMAP_OFFSET) &&
+ 		    mddev->bitmap_file == NULL ) {
+ 			if (mddev->level != 1) {
+ 				printk(KERN_WARNING "md: bitmaps only supported for raid1\n");
+@@ -1029,7 +1029,7 @@ static void super_1_sync(mddev_t *mddev,
+ 
+ 	if (mddev->bitmap && mddev->bitmap_file == NULL) {
+ 		sb->bitmap_offset = cpu_to_le32((__u32)mddev->bitmap_offset);
+-		sb->feature_map = cpu_to_le32(1);
++		sb->feature_map = cpu_to_le32(MD_FEATURE_BITMAP_OFFSET);
+ 	}
+ 
+ 	max_dev = 0;
+
+diff ./include/linux/raid/md_p.h~current~ ./include/linux/raid/md_p.h
+--- ./include/linux/raid/md_p.h~current~	2005-08-22 11:48:18.000000000 +1000
++++ ./include/linux/raid/md_p.h	2005-08-22 11:49:49.000000000 +1000
+@@ -238,5 +238,10 @@ struct mdp_superblock_1 {
+ 	__u16	dev_roles[0];	/* role in array, or 0xffff for a spare, or 0xfffe for faulty */
+ };
+ 
++/* feature_map bits */
++#define MD_FEATURE_BITMAP_OFFSET	1
 +
-+	if (!bitmap) /* there was no bitmap */
-+		return;
++#define	MD_FEATURE_ALL			1
 +
-+	mddev->bitmap = NULL; /* disconnect from the md device */
-+
-+	bitmap_free(bitmap);
-+}
+ #endif 
  
- /*
-  * initialize the bitmap structure
-@@ -1561,15 +1569,15 @@ int bitmap_create(mddev_t *mddev)
- 
- 	spin_lock_init(&bitmap->lock);
- 	bitmap->mddev = mddev;
--	mddev->bitmap = bitmap;
- 
- 	spin_lock_init(&bitmap->write_lock);
- 	INIT_LIST_HEAD(&bitmap->complete_pages);
- 	init_waitqueue_head(&bitmap->write_wait);
- 	bitmap->write_pool = mempool_create(WRITE_POOL_SIZE, write_pool_alloc,
- 				write_pool_free, NULL);
-+	err = -ENOMEM;
- 	if (!bitmap->write_pool)
--		return -ENOMEM;
-+		goto error;
- 
- 	bitmap->file = file;
- 	bitmap->offset = mddev->bitmap_offset;
-@@ -1577,7 +1585,7 @@ int bitmap_create(mddev_t *mddev)
- 	/* read superblock from bitmap file (this sets bitmap->chunksize) */
- 	err = bitmap_read_sb(bitmap);
- 	if (err)
--		return err;
-+		goto error;
- 
- 	bitmap->chunkshift = find_first_bit(&bitmap->chunksize,
- 					sizeof(bitmap->chunksize));
-@@ -1601,8 +1609,9 @@ int bitmap_create(mddev_t *mddev)
- #else
- 	bitmap->bp = kmalloc(pages * sizeof(*bitmap->bp), GFP_KERNEL);
- #endif
-+	err = -ENOMEM;
- 	if (!bitmap->bp)
--		return -ENOMEM;
-+		goto error;
- 	memset(bitmap->bp, 0, pages * sizeof(*bitmap->bp));
- 
- 	bitmap->flags |= BITMAP_ACTIVE;
-@@ -1617,16 +1626,22 @@ int bitmap_create(mddev_t *mddev)
- 	err = bitmap_init_from_disk(bitmap, start);
- 
- 	if (err)
--		return err;
-+		goto error;
- 
- 	printk(KERN_INFO "created bitmap (%lu pages) for device %s\n",
- 		pages, bmname(bitmap));
- 
-+	mddev->bitmap = bitmap;
-+
- 	/* kick off the bitmap daemons */
- 	err = bitmap_start_daemons(bitmap);
- 	if (err)
- 		return err;
- 	return bitmap_update_sb(bitmap);
-+
-+ error:
-+	bitmap_free(bitmap);
-+	return err;
- }
- 
- /* the bitmap API -- for raid personalities */
