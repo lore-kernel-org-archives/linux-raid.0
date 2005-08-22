@@ -1,7 +1,8 @@
 From: NeilBrown <neilb@cse.unsw.edu.au>
-Subject: [PATCH md 000 of 8] Introduction
+Subject: [PATCH md 006 of 8] Allow hot-adding devices to arrays with non-persistant superblocks.
 Date: Mon, 22 Aug 2005 11:59:13 +1000
-Message-ID: <20050822115252.4868.patches@notabene>
+Message-ID: <E1E71aj-0001IO-Q1@notabene.cse.unsw.edu.au>
+References: <20050822115252.4868.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: Andrew Morton <akpm@osdl.org>
@@ -9,30 +10,33 @@ Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-Following are 8 patches for md in 2.6.13-rc6-mm1.
+It is possibly (and occasionally useful) to have a raid1 without
+persistent superblocks.  The code in add_new_disk for adding a 
+device to such an array always tries to read a superblock.  
+This will obviously fail.
+So do the appropriate test and call md_import_device with
+appropriate args.
 
-The first patch could usefully go into 2.6.13.  The remainder should wait
-for 2.6.14-rc1.
+Signed-off-by: Neil Brown <neilb@cse.unsw.edu.au>
 
-Number 001 simply calls md_wakeup_thread during raid startup to make
-sure that resync gets started.  It is always perfectly safe to call
-this function -- as long as we don't call it continuously -- as an
-extra wakeup doesn't hurt.
-The remainder fix:
-    bugs in code that is only in -mm as yet, 
-    minor bugs in recently added 'bitmap' code,
-    fix a long standing shortcoming with 'linear' the only one person has 
-      complained about.
+### Diffstat output
+ ./drivers/md/md.c |    7 +++++--
+ 1 files changed, 5 insertions(+), 2 deletions(-)
 
-Thanks,
-NeilBrown
-
-
- [PATCH md 001 of 8] Make sure resync gets started when array starts.
- [PATCH md 002 of 8] Support md/linear array with components greater than 2 terabytes.
- [PATCH md 003 of 8] raid1_quiesce is back to front, fix it.
- [PATCH md 004 of 8] Make sure bitmap_daemon_work actually does work.
- [PATCH md 005 of 8] Do not set mddev->bitmap until bitmap is fully initialised
- [PATCH md 006 of 8] Allow hot-adding devices to arrays with non-persistant superblocks.
- [PATCH md 007 of 8] Allow md to load a superblock with feature-bit '1' set
- [PATCH md 008 of 8] Fix bitmap/read_sb_page so that it handles errors properly.
+diff ./drivers/md/md.c~current~ ./drivers/md/md.c
+--- ./drivers/md/md.c~current~	2005-08-22 11:48:37.000000000 +1000
++++ ./drivers/md/md.c	2005-08-22 11:49:47.000000000 +1000
+@@ -2225,8 +2225,11 @@ static int add_new_disk(mddev_t * mddev,
+ 			       mdname(mddev));
+ 			return -EINVAL;
+ 		}
+-		rdev = md_import_device(dev, mddev->major_version,
+-					mddev->minor_version);
++		if (mddev->persistent)
++			rdev = md_import_device(dev, mddev->major_version,
++						mddev->minor_version);
++		else
++			rdev = md_import_device(dev, -1, -1);
+ 		if (IS_ERR(rdev)) {
+ 			printk(KERN_WARNING 
+ 				"md: md_import_device returned %ld\n",
