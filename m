@@ -1,7 +1,7 @@
 From: NeilBrown <neilb@cse.unsw.edu.au>
-Subject: [PATCH md 006 of 8] Allow hot-adding devices to arrays with non-persistant superblocks.
+Subject: [PATCH md 003 of 8] raid1_quiesce is back to front, fix it.
 Date: Mon, 22 Aug 2005 11:59:13 +1000
-Message-ID: <E1E71aj-0001IO-Q1@notabene.cse.unsw.edu.au>
+Message-ID: <E1E71aj-0001I6-CT@notabene.cse.unsw.edu.au>
 References: <20050822115252.4868.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
@@ -10,33 +10,35 @@ Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-It is possibly (and occasionally useful) to have a raid1 without
-persistent superblocks.  The code in add_new_disk for adding a 
-device to such an array always tries to read a superblock.  
-This will obviously fail.
-So do the appropriate test and call md_import_device with
-appropriate args.
+A state of 0 mean 'not quiesced'
+A state of 1 means 'is quiesced'
+
+The original code got this wrong.
+
 
 Signed-off-by: Neil Brown <neilb@cse.unsw.edu.au>
 
 ### Diffstat output
- ./drivers/md/md.c |    7 +++++--
- 1 files changed, 5 insertions(+), 2 deletions(-)
+ ./drivers/md/raid1.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff ./drivers/md/md.c~current~ ./drivers/md/md.c
---- ./drivers/md/md.c~current~	2005-08-22 11:48:37.000000000 +1000
-+++ ./drivers/md/md.c	2005-08-22 11:49:47.000000000 +1000
-@@ -2225,8 +2225,11 @@ static int add_new_disk(mddev_t * mddev,
- 			       mdname(mddev));
- 			return -EINVAL;
- 		}
--		rdev = md_import_device(dev, mddev->major_version,
--					mddev->minor_version);
-+		if (mddev->persistent)
-+			rdev = md_import_device(dev, mddev->major_version,
-+						mddev->minor_version);
-+		else
-+			rdev = md_import_device(dev, -1, -1);
- 		if (IS_ERR(rdev)) {
- 			printk(KERN_WARNING 
- 				"md: md_import_device returned %ld\n",
+diff ./drivers/md/raid1.c~current~ ./drivers/md/raid1.c
+--- ./drivers/md/raid1.c~current~	2005-08-22 11:48:18.000000000 +1000
++++ ./drivers/md/raid1.c	2005-08-22 11:49:41.000000000 +1000
+@@ -1708,14 +1708,14 @@ void raid1_quiesce(mddev_t *mddev, int s
+ 	conf_t *conf = mddev_to_conf(mddev);
+ 
+ 	switch(state) {
+-	case 0:
++	case 1:
+ 		spin_lock_irq(&conf->resync_lock);
+ 		conf->barrier++;
+ 		wait_event_lock_irq(conf->wait_idle, !conf->nr_pending,
+ 				    conf->resync_lock, raid1_unplug(mddev->queue));
+ 		spin_unlock_irq(&conf->resync_lock);
+ 		break;
+-	case 1:
++	case 0:
+ 		spin_lock_irq(&conf->resync_lock);
+ 		conf->barrier--;
+ 		spin_unlock_irq(&conf->resync_lock);
