@@ -1,78 +1,49 @@
-From: "Andrew Rechenberg Lists" <flux-ml@resurgent.com>
-Subject: RE: RAID10 vs. LVM on RAID1
-Date: Tue, 23 Aug 2005 13:46:41 -0400
-Message-ID: <E3B0B2160F552B408D3655883F58C144040FEF@cinshrexc02.shermfin.com>
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: RAID10 vs. LVM on RAID1
+Date: Wed, 24 Aug 2005 10:05:34 +1000
+Message-ID: <17163.47566.348423.869060@cse.unsw.edu.au>
+References: <20050822213100.GA6165@anthropohedron.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
+In-Reply-To: message from Gregory Seidman on Monday August 22
 Sender: linux-raid-owner@vger.kernel.org
 To: gsslist+linuxraid@anthropohedron.net
 Cc: Linux RAID list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-We actually use both RAID10 and LVM.  It's on a 2.4 kernel so we're not
-using device mapper, however it gives us the performance we want along
-with the LVM disk management and snapshot abilities.
+On Monday August 22, gsslist+linuxraid@anthropohedron.net wrote:
+> Is there any advantage to RAID10 over creating an LVM volume group across
+> the same number of RAID1 pairs? LVM does striping, after all. Am I
+> overlooking something?
 
-LVM gets a little cranky though so I had to muck with the initscripts.
-Other than that little detail, it works great for us:
+There are certainly some situations where 'raid10' and 'LVM over
+raid1' provide essentially the same service, so you probably choose
+whichever you are familiar with.
+There are also situations where one or the other provides better
+service. 
 
-52 SCSI disk + 4 hot spares in RAID10 with LVM on top of the RAID10
-array.
+Advantages of LVM over raid1:
+ -  If you want to use LVM for general logical volume management
+    (growing volumes seamlessly), then it probably makes sense to use
+    LVM over raid1.
+ -  The various raid1 pairs can be different sizes.
 
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org 
-> [mailto:linux-raid-owner@vger.kernel.org] On Behalf Of John McMonagle
-> Sent: Tuesday, August 23, 2005 11:47 AM
-> To: gsslist+linuxraid@anthropohedron.net
-> Cc: Linux RAID list
-> Subject: Re: RAID10 vs. LVM on RAID1
-> 
-> I did lvm over 2 raid 1 arrays recently.
-> 
-> Running dd on the lv gives about 3 times  the  drive speed.
-> Should be 4 times .
-> I hate to give up performance but I'm willing to live with it 
-> as lvm makes disk management so much easier.
-> 
-> John
->  
-> 
-> 
-> 
-> 
-> Gregory Seidman wrote:
-> 
-> >Is there any advantage to RAID10 over creating an LVM volume group 
-> >across the same number of RAID1 pairs? LVM does striping, 
-> after all. Am 
-> >I overlooking something?
-> >
-> >--Greg
-> >
-> >-
-> >To unsubscribe from this list: send the line "unsubscribe 
-> linux-raid" 
-> >in the body of a message to majordomo@vger.kernel.org More majordomo 
-> >info at  http://vger.kernel.org/majordomo-info.html
-> >  
-> >
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe 
-> linux-raid" in the body of a message to 
-> majordomo@vger.kernel.org More majordomo info at  
-> http://vger.kernel.org/majordomo-info.html
-> 
-Confidentiality Notice: This e-mail message including attachments, if any, is intended
-only for the person or entity to which it is addressed and may contain confidential
-and/or privileged material. Any unauthorized review, use, disclosure or distribution
-is prohibited. If you are not the intended recipient, please contact the sender by reply
-e-mail and destroy all copies of the original message. If you are the intended recipient,
-but do not wish to receive communications through this medium, please so advise the
-sender immediately.
+Advantages of RAID10:
+ - single integrated system - only one tool to use.
+ - One hot spare can service the whole array (though the spare-group
+   function of mdadm can support this in the other case too).
+ - A raid10 can consist of an odd number of drives (if you have a
+   cabinet with, say, 8 slots, you can have 1 hot spare, and 7 drives 
+   in a raid10.  You cannot do that with LVM (or raid0) over raid1).
+ - raid10 has a layout ('far') which theoretically can provide
+   sequential read throughput that scales by number of drives, rather
+   than number of raid1 pairs.  I say 'theoretically' because I think
+   there are still issues with the read-balancing code that make this
+   hard to get in practice (though increasing the read-ahead seems to
+   help). 
 
+So, choose the setup which best meets your needs.
 
+NeilBrown
