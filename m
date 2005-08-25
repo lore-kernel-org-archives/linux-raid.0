@@ -1,48 +1,67 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: RAID 5 write performance advice
-Date: Thu, 25 Aug 2005 07:32:45 +1000
-Message-ID: <17164.59261.540591.841830@cse.unsw.edu.au>
-References: <430C2EA6.2050103@web.de>
-	<1124887589.5550.27.camel@localhost.localdomain>
-	<430C798B.1030107@web.de>
+From: Lewis Shobbrook <mylists@blue-matrix.org>
+Subject: raid1 boot issues
+Date: Thu, 25 Aug 2005 19:03:46 +1000
+Message-ID: <200508251903.47194.mylists@blue-matrix.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Mirko Benz on Wednesday August 24
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Mirko Benz <mirko.benz@web.de>
-Cc: mingz@ele.uri.edu, Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday August 24, mirko.benz@web.de wrote:
-> Hello,
-> 
-> The RAID5 configuration is: 8 SATA disks, 8 port Marvel SATA PCI-X 
-> controller chip (SuperMicro board), Dual Xeon, 1 GB RAM, stripe size 
-> 64K, no spare disk.
-> 
-> Measurements are performed to the ram md device with:
-> disktest -PT -T30 -h1 -K8 -B65536 -ID /dev/md0
-> using the default stripe size (64K). 128K stripe size does not make a 
-> real difference.
+Hi All,
+I have a problem attempting to boot a raid 1 system from lilo. =A0I hav=
+e=20
+succeeded at this many times in the past, but am completely stumped as =
+to=20
+what the issue is in this instance. I have the boot and root partitions=
+=20
+seperate on /dev/md0 & /dev/md1 respectively, both raid1. =A0
+The mdadm examination  for =A0the components is clean and the superbloc=
+ks appear=20
+as they ought. =A0I'm using Debian unstable with std. apt kernel-image.=
+ =A0The=20
+correct modules are in place for the initrd.
+The boot partition fails to mount during =A0the boot process...
+fsck.ext3: invalid argument while trying to open /dev/md0
+The superblock can not be read or does not describe a correct ext2=20
+filesystem.... omitted usual stuff...
+Root password for maintenance or Control-D to continue...
 
-May I suggest you try creating a filesystem on the device and doing
-tests in the filesystem?  I have found the raw device slower that
-filesystem access before, and a quick test shows writing to the
-filesystem (ext3) is about 4 times as fast as writing to /dev/md1 on a
-6 drive raid5 array.
+The bizarre thing is that it appears perfectly clean, I've re-zero'd th=
+e=20
+superblocks and completely recreated the device, but the result is alwa=
+ys the=20
+same. =A0
+mdrun loads /dev/md0 in a clean state straight away and it mounts=20
+cleanly. =A0/dev/md1 is no problem.=20
+mdadm -E of the components is clean, as is mdadm -d for the device.
+My fstab & mtab are the same as systems running the same kernel that wo=
+rk=20
+fine.
 
-> 
-> If Linux uses "stripe write" why is it so much slower than HW Raid? Is 
-> it disabled by default?
+I found the system laying around from about 12 months ago which had ori=
+ginally=20
+been set-up using raidtools. =A0I upgraded the system using dist-upgrad=
+e=20
+installed mdadm; after zeroing all superblocks for both drives and comp=
+onent=20
+partitions, I created the devices with the following ...
 
-No, it is never disabled.  However it can only work if raid5 gets a
-full stripe of data before being asked to flush that data.  Writing to
-/dev/md0 directly may cause flushes too often.
+mdadm -C /dev/md0 -l1 -n2 /dev/hda1 missing
+reformatted ext3 and restored the files before adding the missing devic=
+es and=20
+resyncing. =A0
+I'm stumped!
+Anyone got any ideas?
 
+Cheers,
 
-Does your application actually require writing to the raw device, or
-will you be using a filesystem?  
-
-NeilBrown
+Lewis
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
