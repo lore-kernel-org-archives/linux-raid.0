@@ -1,33 +1,65 @@
-From: NeilBrown <neilb@cse.unsw.edu.au>
-Subject: [PATCH md 002 of 2] Clear the 'recovery' flags when starting an md array.
-Date: Fri, 26 Aug 2005 17:25:19 +1000
-Message-ID: <E1E8YaV-0004FQ-Vh@notabene.cse.unsw.edu.au>
-References: <20050826172148.16280.patches@notabene>
+From: Lewis Shobbrook <mylists@blue-matrix.org>
+Subject: Re: raid1 boot issues
+Date: Fri, 26 Aug 2005 11:21:11 +1000
+Message-ID: <200508261121.11961.mylists@blue-matrix.org>
+References: <200508251903.47194.mylists@blue-matrix.org> <430D8C09.9000602@dtbb.net>
+Mime-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <430D8C09.9000602@dtbb.net>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
+To: Tyler <pml@dtbb.net>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
-It possibly for this to still have flags in it and a previous
-instance has been stopped, and that confused the new array using
-the same mddev.
-
-Signed-off-by: Neil Brown <neilb@cse.unsw.edu.au>
-
-### Diffstat output
- ./drivers/md/md.c |    1 +
- 1 files changed, 1 insertion(+)
-
-diff ./drivers/md/md.c~current~ ./drivers/md/md.c
---- ./drivers/md/md.c~current~	2005-08-26 17:01:48.000000000 +1000
-+++ ./drivers/md/md.c	2005-08-26 17:04:20.000000000 +1000
-@@ -1701,6 +1701,7 @@ static int do_md_run(mddev_t * mddev)
- 	mddev->pers = pers[pnum];
- 	spin_unlock(&pers_lock);
- 
-+	mddev->recovery = 0;
- 	mddev->resync_max_sectors = mddev->size << 1; /* may be over-ridden by personality */
- 
- 	/* before we start the array running, initialise the bitmap */
+On Thursday 25 August 2005 7:14 pm, you wrote:
+> Fdisk it and set partitions to Raid Autodetect (0xfd) possibly?
+>
+> Tyler.
+Nope already set fd....
+> Lewis Shobbrook wrote:
+> >Hi All,
+> >I have a problem attempting to boot a raid 1 system from lilo.  I have
+> >succeeded at this many times in the past, but am completely stumped as to
+> >what the issue is in this instance. I have the boot and root partitions
+> >seperate on /dev/md0 & /dev/md1 respectively, both raid1.
+> >The mdadm examination  for  the components is clean and the superblocks
+> > appear as they ought.  I'm using Debian unstable with std. apt
+> > kernel-image.  The correct modules are in place for the initrd.
+> >The boot partition fails to mount during  the boot process...
+> >fsck.ext3: invalid argument while trying to open /dev/md0
+> >The superblock can not be read or does not describe a correct ext2
+> >filesystem.... omitted usual stuff...
+> >Root password for maintenance or Control-D to continue...
+> >
+> >The bizarre thing is that it appears perfectly clean, I've re-zero'd the
+> >superblocks and completely recreated the device, but the result is always
+> > the same.
+> >mdrun loads /dev/md0 in a clean state straight away and it mounts
+> >cleanly.  /dev/md1 is no problem.
+> >mdadm -E of the components is clean, as is mdadm -d for the device.
+> >My fstab & mtab are the same as systems running the same kernel that work
+> >fine.
+> >
+> >I found the system laying around from about 12 months ago which had
+> > originally been set-up using raidtools.  I upgraded the system using
+> > dist-upgrade installed mdadm; after zeroing all superblocks for both
+> > drives and component partitions, I created the devices with the following
+> > ...
+> >
+> >mdadm -C /dev/md0 -l1 -n2 /dev/hda1 missing
+> >reformatted ext3 and restored the files before adding the missing devices
+> > and resyncing.
+> >I'm stumped!
+> >Anyone got any ideas?
+> >
+> >Cheers,
+> >
+> >Lewis
+> >-
+> >To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> >the body of a message to majordomo@vger.kernel.org
+> >More majordomo info at  http://vger.kernel.org/majordomo-info.html
