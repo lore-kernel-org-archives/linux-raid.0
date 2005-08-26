@@ -1,28 +1,53 @@
-From: NeilBrown <neilb@cse.unsw.edu.au>
-Subject: [PATCH md 001 of 2] Create a MODULE_ALIAS for md corresponding to it's block major number.
-Date: Fri, 26 Aug 2005 17:25:19 +1000
-Message-ID: <E1E8YaV-0004FM-Mf@notabene.cse.unsw.edu.au>
-References: <20050826172148.16280.patches@notabene>
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: ANNOUNCE: mdadm 2.0 - A tool for managing Soft RAID under Linux
+Date: Fri, 26 Aug 2005 16:56:09 +1000
+Message-ID: <17166.48393.797189.610880@cse.unsw.edu.au>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-I just discoverred this is needed for module auto-loading.
 
-Signed-off-by: Neil Brown <neilb@cse.unsw.edu.au>
+I am (at last) please to announce the availability of
+   mdadm version 2.0
 
-### Diffstat output
- ./drivers/md/md.c |    1 +
- 1 files changed, 1 insertion(+)
+It is available at the usual places:
+   http://www.cse.unsw.edu.au/~neilb/source/mdadm/
+and
+   http://www.{countrycode}.kernel.org/pub/linux/utils/raid/mdadm/
 
-diff ./drivers/md/md.c~current~ ./drivers/md/md.c
---- ./drivers/md/md.c~current~	2005-08-26 17:00:40.000000000 +1000
-+++ ./drivers/md/md.c	2005-08-26 17:01:48.000000000 +1000
-@@ -4102,3 +4102,4 @@ EXPORT_SYMBOL(md_print_devices);
- EXPORT_SYMBOL(md_check_recovery);
- MODULE_LICENSE("GPL");
- MODULE_ALIAS("md");
-+MODULE_ALIAS_BLOCKDEV_MAJOR(MD_MAJOR);
+mdadm is a tool for creating, managing and monitoring
+device arrays using the "md" driver in Linux, also
+known as Software RAID arrays.
+
+Release 2.0 contains a substantial rewrite of various pieces of
+functionality, particularly the --create option.  This enables support
+for a new style of superblock - the version-1 superblock.
+Version-1 can support many more than 28 devices and can be easily
+moved between hosts with different endian-ness.
+Release 2.0 also contains support for the recent bitmap-intent-logging
+which will appear in 2.6.13, and the RAID1 write-behind that will be
+available in 2.6.14 (it is currently only in -mm).
+
+This release comes with a test-suite which has been used to verify that
+mdadm-2.0 actually works in a number of common scenarios.  Some of the
+tests require a bleeding-edge kernel, so don't be surprised if some fail
+on kernels prior to 2.6.14.
+
+Being a '.0' release, 2.0 should be treated with some caution.
+However I believe it is quite stable and can safely be used on
+production systems.
+
+Note that this release is "2.0", not "2.0.0".  I never found a use for
+the third number with 1.X.Y, so I dropped it.
+
+
+Development of mdadm has moved from CSE@UNSW and is now sponsored by
+ SUSE Labs, Novell Inc.
+
+NeilBrown  26th August 2005
+
