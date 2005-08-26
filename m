@@ -1,153 +1,78 @@
-From: Ming Zhang <mingz@ele.uri.edu>
-Subject: Re: RAID 5 write performance advice
-Date: Thu, 25 Aug 2005 12:54:36 -0400
-Message-ID: <1124988876.5552.59.camel@localhost.localdomain>
-References: <430C2EA6.2050103@web.de>
-	 <1124887589.5550.27.camel@localhost.localdomain>	<430C798B.1030107@web.de>
-	 <17164.59261.540591.841830@cse.unsw.edu.au>  <430DF416.1070101@web.de>
-Reply-To: mingz@ele.uri.edu
+From: Lewis Shobbrook <mylists@blue-matrix.org>
+Subject: Re: raid1 boot issues
+Date: Fri, 26 Aug 2005 11:32:00 +1000
+Message-ID: <200508261132.00591.mylists@blue-matrix.org>
+References: <200508251903.47194.mylists@blue-matrix.org> <430D8333.9020606@ruisantos.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <430DF416.1070101@web.de>
+In-Reply-To: <430D8333.9020606@ruisantos.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Mirko Benz <mirko.benz@web.de>
-Cc: Neil Brown <neilb@cse.unsw.edu.au>, Linux RAID <linux-raid@vger.kernel.org>
+To: Rui Santos <rsantos@ruisantos.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 2005-08-25 at 18:38 +0200, Mirko Benz wrote:
-> Hello,
->=20
-> We intend to export a lvm/md volume via iSCSI or SRP using InfiniBand=
- to=20
-> remote clients. There is no local file system processing on the stora=
-ge=20
-> platform. The clients may have a variety of file systems including ex=
-t3,=20
-> GFS.
->=20
-> Single disk write performance is: 58,5 MB/s. With large sequential wr=
-ite=20
-> operations I would expect something like 90% of n-1 *=20
-> single_disk_performance if stripe write can be utilized. So roughly 4=
-00=20
-> MB/s =E2=80=93 which the HW RAID devices achieve.
+On Thursday 25 August 2005 6:37 pm, you wrote:
+Thanks for the reply Rui,
 
-change to RAID0 and test to see if u controller will be a bottleneck.
+> Hi Lewis,
+>
+>     Are the boot sectors of your HD's clean? Or have you copied lilo
+> onto them?
+>     If not, are you shure that both you md0 partitions are marked as
+> bootable?
+>     Are the partitions marked 0xFD ?
+The bootsectors are clean.  The system boots fine it just won't mount /dev/md0 
+correctly during startup.  What surprises me is that /dev/md1 mounts.  Often 
+these type of problems are associated with the initrd modules, and result in 
+kernel panic earlier in the boot process.  I'd expect that if one raid1 
+device is mounted then all required modules are present.  
 
-
-
->=20
-> RAID setup:
-> Personalities : [raid0] [raid5]
-> md0 : active raid5 sdi[7] sdh[6] sdg[5] sdf[4] sde[3] sdd[2] sdc[1] s=
-db[0]
-> 1094035712 blocks level 5, 64k chunk, algorithm 2 [8/8] [UUUUUUUU]
->=20
-> We have assigned the deadline scheduler to every disk in the RAID. Th=
-e=20
-> default scheduler gives much lower results.
->=20
-> *** dd TEST ***
->=20
-> time dd if=3D/dev/zero of=3D/dev/md0 bs=3D1M
-> 5329911808 bytes transferred in 28,086199 seconds (189769779 bytes/se=
-c)
->=20
-> iostat 5 output:
-> avg-cpu: %user %nice %sys %iowait %idle
-> 0,10 0,00 87,80 7,30 4,80
->=20
-> Device: tps Blk_read/s Blk_wrtn/s Blk_read Blk_wrtn
-> hda 0,00 0,00 0,00 0 0
-> sda 0,00 0,00 0,00 0 0
-> sdb 1976,10 1576,10 53150,60 7912 266816
-> sdc 2072,31 1478,88 53150,60 7424 266816
-> sdd 2034,06 1525,10 53150,60 7656 266816
-> sde 1988,05 1439,04 53147,41 7224 266800
-> sdf 1975,10 1499,60 53147,41 7528 266800
-> sdg 1383,07 1485,26 53145,82 7456 266792
-> sdh 1562,55 1311,55 53145,82 6584 266792
-> sdi 1586,85 1295,62 53145,82 6504 266792
-> sdj 0,00 0,00 0,00 0 0
-> sdk 0,00 0,00 0,00 0 0
-> sdl 0,00 0,00 0,00 0 0
-> sdm 0,00 0,00 0,00 0 0
-> sdn 0,00 0,00 0,00 0 0
-> md0 46515,54 0,00 372124,30 0 1868064
->=20
-> Comments: Large write should not see any read operations. But there a=
-re=20
-> some???
-
-i always saw those small number reads and i feel it is reasonable since
-u stripe is 7 * 64KB
-
-
->=20
->=20
-> *** disktest ***
->=20
-> disktest -w -PT -T30 -h1 -K8 -B512k -ID /dev/md0
->=20
-> | 2005/08/25-17:27:04 | STAT | 4072 | v1.1.12 | /dev/md0 | Write=20
-> throughput: 160152507.7B/s (152.73MB/s), IOPS 305.7/s.
-> | 2005/08/25-17:27:05 | STAT | 4072 | v1.1.12 | /dev/md0 | Write=20
-> throughput: 160694272.0B/s (153.25MB/s), IOPS 306.6/s.
-> | 2005/08/25-17:27:06 | STAT | 4072 | v1.1.12 | /dev/md0 | Write=20
-> throughput: 160339606.6B/s (152.91MB/s), IOPS 305.8/s.
-
-so here 152/7 =3D 21, large than what u sdc sdd got.
-
-
->=20
-> iostat 5 output:
-> avg-cpu: %user %nice %sys %iowait %idle
-> 38,96 0,00 50,25 5,29 5,49
->=20
-> Device: tps Blk_read/s Blk_wrtn/s Blk_read Blk_wrtn
-> hda 0,00 0,00 0,00 0 0
-> sda 1,20 0,00 11,18 0 56
-> sdb 986,43 0,00 39702,99 0 198912
-> sdc 922,75 0,00 39728,54 0 199040
-> sdd 895,81 0,00 39728,54 0 199040
-> sde 880,84 0,00 39728,54 0 199040
-> sdf 839,92 0,00 39728,54 0 199040
-> sdg 842,91 0,00 39728,54 0 199040
-> sdh 1557,49 0,00 79431,54 0 397952
-> sdi 2246,71 0,00 104411,98 0 523104
-> sdj 0,00 0,00 0,00 0 0
-> sdk 0,00 0,00 0,00 0 0
-> sdl 0,00 0,00 0,00 0 0
-> sdm 0,00 0,00 0,00 0 0
-> sdn 0,00 0,00 0,00 0 0
-> md0 1550,70 0,00 317574,45 0 1591048
->=20
-> Comments:
-> Zero read requests =E2=80=93 as it should be. But the write requests =
-are not=20
-> proportional. sdh and sdi have significantly more requests???
-
-yes, interesting.
-
-
-> The write requests to the disks of the RAID should be 1/7 higher than=
- to=20
-> the md device.
-> But there are significantly more write operations.
->=20
-> All these operations are to the raw device. Setting up a ext3 fs we g=
-et=20
-> around 127 MB/s with dd.
->=20
-> Any idea?
->=20
-> --Mirko
->=20
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Hmmmm....
+> Rui Santos
+>
+> Lewis Shobbrook wrote:
+> >Hi All,
+> >I have a problem attempting to boot a raid 1 system from lilo.  I have
+> >succeeded at this many times in the past, but am completely stumped as to
+> >what the issue is in this instance. I have the boot and root partitions
+> >seperate on /dev/md0 & /dev/md1 respectively, both raid1.
+> >The mdadm examination  for  the components is clean and the superblocks
+> > appear as they ought.  I'm using Debian unstable with std. apt
+> > kernel-image.  The correct modules are in place for the initrd.
+> >The boot partition fails to mount during  the boot process...
+> >fsck.ext3: invalid argument while trying to open /dev/md0
+> >The superblock can not be read or does not describe a correct ext2
+> >filesystem.... omitted usual stuff...
+> >Root password for maintenance or Control-D to continue...
+> >
+> >The bizarre thing is that it appears perfectly clean, I've re-zero'd the
+> >superblocks and completely recreated the device, but the result is always
+> > the same.
+> >mdrun loads /dev/md0 in a clean state straight away and it mounts
+> >cleanly.  /dev/md1 is no problem.
+> >mdadm -E of the components is clean, as is mdadm -d for the device.
+> >My fstab & mtab are the same as systems running the same kernel that work
+> >fine.
+> >
+> >I found the system laying around from about 12 months ago which had
+> > originally been set-up using raidtools.  I upgraded the system using
+> > dist-upgrade installed mdadm; after zeroing all superblocks for both
+> > drives and component partitions, I created the devices with the following
+> > ...
+> >
+> >mdadm -C /dev/md0 -l1 -n2 /dev/hda1 missing
+> >reformatted ext3 and restored the files before adding the missing devices
+> > and resyncing.
+> >I'm stumped!
+> >Anyone got any ideas?
+> >
+> >Cheers,
+> >
+> >Lewis
+> >-
+> >To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> >the body of a message to majordomo@vger.kernel.org
+> >More majordomo info at  http://vger.kernel.org/majordomo-info.html
