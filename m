@@ -1,152 +1,46 @@
-From: Dan Stromberg <strombrg@dcs.nac.uci.edu>
+From: Mark Hahn <hahn@physics.mcmaster.ca>
 Subject: Re: number of global spares?
-Date: Fri, 26 Aug 2005 23:02:12 -0700
-Message-ID: <1125122532.1055.35.camel@seki.nac.uci.edu>
-References: <Pine.LNX.4.44.0508261744030.16239-100000@coffee.psychology.mcmaster.ca>
+Date: Sat, 27 Aug 2005 15:28:14 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44.0508271518520.24427-100000@coffee.psychology.mcmaster.ca>
+References: <1125122532.1055.35.camel@seki.nac.uci.edu>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44.0508261744030.16239-100000@coffee.psychology.mcmaster.ca>
+In-Reply-To: <1125122532.1055.35.camel@seki.nac.uci.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mark Hahn <hahn@physics.mcmaster.ca>
-Cc: Linux RAID <linux-raid@vger.kernel.org>, strombrg@dcs.nac.uci.edu
+To: Dan Stromberg <strombrg@dcs.nac.uci.edu>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Fri, 2005-08-26 at 18:21 -0400, Mark Hahn wrote:
-> > I've been working on a RAID setup with dual RAID controllers and
-> > three expansion boxes - 48 disks in all, including data, parity and
-> > global spares.
-> 
-> the first question you should ask is whether you're actually
-> winning by using HW raid.  yes, you already paid for it, but
-> SW raid offers some noticably better flexibility.
-
-Nod.  As well as better performance in many cases.
-
-> > Please be sure to use a fixed-pitch font when viewing the tables found
-> > below.  BTW, if people weren't so terrified of HTML, I could just make a
-> > nice HTML table for easy reading without silly font requirements...
-> 
-> it's not a matter of terror - many people still prefer ascii email.
-> (naturally, we also use fixed-pitch fonts for this.)
-
-Er, IMO it makes *ix folk look like hide bound traditionalists, which is
-unfortunate, because *ix is a more capable vehicle for OS evolution.
-HTML clearly has a great deal more expressive power - why fight it?
-
-Even mutt can do a decent job of HTML rendering...
-
-> > global spares: 0,16,32,48
+> > > Please be sure to use a fixed-pitch font when viewing the tables found
+> > > below.  BTW, if people weren't so terrified of HTML, I could just make a
+> > > nice HTML table for easy reading without silly font requirements...
 > > 
-> > Raidset	Disks used	                  Data:parity ratio
-> > 0	      1,2,3,4,5,6,7,8,9,10          9:1
-> > 1	      11,17,18,19,20,21,22,23,24,25	9:1
-> > 2	      26,27,33,34,35,36,37,38,39,40	9:1
-> > 3	      41,42,43,49,50,51,52,53,54,55	9:1
-> > 4	      56,57,58,59                   3:1
+> > it's not a matter of terror - many people still prefer ascii email.
+> > (naturally, we also use fixed-pitch fonts for this.)
 > 
-> why the magic numbers?  (5 raidsets, 9:1, etc)
-> you have 48 disks and "dual RAID controllers" (one channel each?) 
-> in 3 boxes, but what are your actual constraints?
+> Er, IMO it makes *ix folk look like hide bound traditionalists, which is
+> unfortunate, because *ix is a more capable vehicle for OS evolution.
+> HTML clearly has a great deal more expressive power - why fight it?
 
-The vendor suggested 9+1's and 4 global spares.  Yes, one channel for
-each RAID controller.  I'm going to pitch something like 4 8+1's though.
+people have different value functions - I don't find the expressiveness
+of html to be worthwhile enough, for instance.  language has, after all,
+proven itself pretty well over the millenia.
 
-> also, if you have dual controllers, can you truely have global spares?
-> that is, a controller can use a spare disk that it's not connected to?
+> So I hear.  Right now, we have one global spare per shelf, but the
+> vendor is advising we decrease the number of global spares.
 
-So I hear.  Right now, we have one global spare per shelf, but the
-vendor is advising we decrease the number of global spares.
+find out what your controller can do.  if it can actually use a spare
+that it's not connected to (doubtful), then you could certainly get 
+away with a single hot-spare.  you should also look up the MTBF specs 
+of the disks, or make a guess (are they in a well-cooled environment?)
+about how often you expect failures.  it may be that having a single
+cold spare in a cabinet is good enough.  after all, when a disk goes,
+you'll be in degraded mode for at least as long as it takes to rebuild
+the raid, plus any latency for making the spare available...
 
-> 9:1 is nothing to be scared of, though it means that to do a full-stripe
-> write, you'll need quite large blocks.  I'd be tempted to use raid6
-> rather than 5+spares, though.
-
-I'd feel better about RAID 6, but...
-
-> > And the vendor is suggesting that we move to something like:
-> > 
-> > global spares: 0
-> > 
-> > Raidset	Disks used	                  Data:parity ratio
-> > 0	      1,2,3,4,5,6,7,8,9,10          9:1
-> > 1	      11,17,18,19,20,21,22,23,24,25	9:1
-> > 2	      26,27,33,34,35,36,37,38,39,40	9:1
-> > 3	      41,42,43,49,50,51,52,53,54,55	9:1
-> > 4	      56,57,58,59,16,32,48          3:1
-> 
-> well, it just means that if you get a failure, you'll run in degraded
-> mode for a while, which is a window of vulnerability.
-> 
-> > ...or...:
-> > 
-> > global spares: 0,16
-> > 
-> > Raidset	Disks used	                  Data:parity ratio
-> > 0	      1,2,3,4,5,6,7,8,9,10          9:1
-> > 1	      11,17,18,19,20,21,22,23,24,25	9:1
-> > 2	      26,27,33,34,35,36,37,38,39,40	9:1
-> > 3	      41,42,43,49,50,51,52,53,54,55	9:1
-> > 4	      56,57,58,59,32,48             3:1
-> 
-> 2 spares seems OK to me, assuming a reasonable failure rate (>2 years
-> aggregate mtbf)
-> 
-> > Does anyone have any comments on:
-> > 
-> > 1) The sanity of these 10 disk RAID 5's?
-> 
-> if you're not worried about write performance, then sure.
-> I had an 18x raid5 for a while, but decided it was too hostile
-> to writes (iirc, a whole-stripe write was > 1MB)
-> 
-> > 2) The degree of loss of reliability incurred by moving 3 disks from
-> > global spare to data?
-> 
-> spares do not increase reliability, they reduce the window of 
-> vulnerability when you do have a "partial lack of reliability"...
-> 
-> > 3) The degree of loss of reliability incurred by moving 2 disks from
-> > global spare to data?
-> 
-> MTBF/ndisks hasn't changed here, at least for a particular raidset.
-> the chance of simultaneous failures of 2+ disks in multiple raidsets
-> seems pretty small...
-> 
-> > They don't feel that the storage has to be blazing fast, and 100% uptime
-> > isn't paramount, however they very much do not want to lose their data.
-> 
-> but their "very much" doesn't extend to two-site mirroring, eh?
-
-Correct, at least not mirroring provided by their admin.  :)  They -are-
-advising that individual users back up what needs to be backed up
-though.
-
-> there are unfortunate phenomena that can lead to bad behavior in 
-> a server like this, even when you do the due-dilligence (mtbf calcs,
-> spares, etc).  for instance, in the event of r5 failure, the spare
-> will trigger a rebuild, which can stress the surviving disks enough 
-> to cause further failures.  oops!  I guess that's the main reason 
-> I like raid6 better.
-
-Nod!  Especially if the RAID solution doesn't know to scan
-unused/infrequently used blocks for problems periodically.
-
-> > The filesystem will not be backed up - we simply don't have anything large
-> > enough to back it up -to-, so if the some part of the storage solution
-> > goes kerflooey, we're totally...  er...  out of luck, and they'll probably
-> > be looking at me (the primary sysadmin on the storage configuration),
-> > wondering why their data is gone.
-> 
-> this is a sticky subject, to be sure.  I tell people not to think about 
-> backups, or if they do, to think more in terms of mirroring.  perhaps that 
-> reflects scars I bear from dealing with finicky/flakey/frustrating tape
-> systems.  one good thing for you is that you say the files are fairly small,
-> so you *could* spew them onto something like DVD's.  I'd treat that as 
-> an archive, not a backup, and not abandon normal raid5-6 practices.
-
-Heh.  Saw an amusing ad with John Clease in it about the frustrations of
-tape backup relative to disk to disk backup.
-
+can you go *past* 9+1?  if you're already assuming read-mostly,
+or else slow writes (partial stripe RMW cycles), then going 
+to a pair of 22+1+spare sounds perfectly plausible to me.
+yes, it's not typically done, but not for inherent reasons...
 
