@@ -1,64 +1,125 @@
 From: Dan Stromberg <strombrg@dcs.nac.uci.edu>
-Subject: Re: number of global spares?
-Date: Fri, 26 Aug 2005 22:33:30 -0700
-Message-ID: <1125120811.1055.16.camel@seki.nac.uci.edu>
-References: <1125082848.25483.23.camel@seki.nac.uci.edu>
-	 <200508262321.j7QNLuE03756@www.watkins-home.com>
-	 <87u0hc55zn.fsf@rimspace.net>
+Subject: RE: number of global spares?
+Date: Fri, 26 Aug 2005 22:42:05 -0700
+Message-ID: <1125121325.1055.21.camel@seki.nac.uci.edu>
+References: <200508262321.j7QNLuE03756@www.watkins-home.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87u0hc55zn.fsf@rimspace.net>
+In-Reply-To: <200508262321.j7QNLuE03756@www.watkins-home.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Daniel Pittman <daniel@rimspace.net>
-Cc: linux-raid@vger.kernel.org, strombrg@dcs.nac.uci.edu
+To: Guy <bugzilla@watkins-home.com>
+Cc: 'Linux RAID' <linux-raid@vger.kernel.org>, strombrg@dcs.nac.uci.edu
 List-Id: linux-raid.ids
 
-On Sat, 2005-08-27 at 15:00 +1000, Daniel Pittman wrote:
-> "Guy" <bugzilla@watkins-home.com> writes:
+On Fri, 2005-08-26 at 19:21 -0400, Guy wrote:
 > 
-> [...]
+> > -----Original Message-----
+> > From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+> > owner@vger.kernel.org] On Behalf Of Dan Stromberg
+> > Sent: Friday, August 26, 2005 3:01 PM
+> > To: Linux RAID
+> > Cc: strombrg@dcs.nac.uci.edu
+> > Subject: number of global spares?
+> > 
+> > 
+> > I've been working on a RAID setup with dual RAID controllers and
+> > three expansion boxes - 48 disks in all, including data, parity and
+> > global spares.
+> > 
+> > We originally purchased the equipment expecting to get 16 terabytes of
+> > usable space.
+> > 
+> > Now that it's "all set up", we're really seeing more like 14 or 15
+> > terabytes, depending on how you do the calculation.
+> > 
+> > Please be sure to use a fixed-pitch font when viewing the tables found
+> > below.  BTW, if people weren't so terrified of HTML, I could just make a
+> > nice HTML table for easy reading without silly font requirements...
+> > 
+> > Anyway, what we have right now is:
+> > 
+> > global spares: 0,16,32,48
+> > 
+> > Raidset	Disks used	                  Data:parity ratio
+> > 0	      1,2,3,4,5,6,7,8,9,10          9:1
+> > 1	      11,17,18,19,20,21,22,23,24,25	9:1
+> > 2	      26,27,33,34,35,36,37,38,39,40	9:1
+> > 3	      41,42,43,49,50,51,52,53,54,55	9:1
+> > 4	      56,57,58,59                   3:1
+> > 
+> > 
+> > And the vendor is suggesting that we move to something like:
+> > 
+> > global spares: 0
+> > 
+> > Raidset	Disks used	                  Data:parity ratio
+> > 0	      1,2,3,4,5,6,7,8,9,10          9:1
+> > 1	      11,17,18,19,20,21,22,23,24,25	9:1
+> > 2	      26,27,33,34,35,36,37,38,39,40	9:1
+> > 3	      41,42,43,49,50,51,52,53,54,55	9:1
+> > 4	      56,57,58,59,16,32,48          3:1
+> > 
+> > ...or...:
+> > 
+> > global spares: 0,16
+> > 
+> > Raidset	Disks used	                  Data:parity ratio
+> > 0	      1,2,3,4,5,6,7,8,9,10          9:1
+> > 1	      11,17,18,19,20,21,22,23,24,25	9:1
+> > 2	      26,27,33,34,35,36,37,38,39,40	9:1
+> > 3	      41,42,43,49,50,51,52,53,54,55	9:1
+> > 4	      56,57,58,59,32,48             3:1
+> > 
+> > 
+> > Does anyone have any comments on:
+> > 
+> > 1) The sanity of these 10 disk RAID 5's?
+> > 
+> > 2) The degree of loss of reliability incurred by moving 3 disks from
+> > global spare to data?
+> > 
+> > 3) The degree of loss of reliability incurred by moving 2 disks from
+> > global spare to data?
+> > 
+> > 
+> > To answer these questions, you probably need to know how the storage is to
+> > be used.  This single, large filesystem will be used by a variety of
+> > researchers and students from around The University of California, Irvine,
+> > but was purchased primarily by the Earth System Science part of the
+> > Physical Sciences department, which in turn will primarily be storing many
+> > approximately 100 megabyte files which comprise time series related to
+> > climatology simulations.
+> > 
+> > They don't feel that the storage has to be blazing fast, and 100% uptime
+> > isn't paramount, however they very much do not want to lose their data.
+> > 
+> > The filesystem will not be backed up - we simply don't have anything large
+> > enough to back it up -to-, so if the some part of the storage solution
+> > goes kerflooey, we're totally...  er...  out of luck, and they'll probably
+> > be looking at me (the primary sysadmin on the storage configuration),
+> > wondering why their data is gone.
 > 
-> >> I've been working on a RAID setup with dual RAID controllers and
-> >> three expansion boxes - 48 disks in all, including data, parity and
-> >> global spares.
-> 
-> [...]
-> 
-> >> They don't feel that the storage has to be blazing fast, and 100% uptime
-> >> isn't paramount, however they very much do not want to lose their data.
-> >> 
-> >> The filesystem will not be backed up - we simply don't have anything large
-> >> enough to back it up -to-, so if the some part of the storage solution
-> >> goes kerflooey, we're totally...  er...  out of luck, and they'll probably
-> >> be looking at me (the primary sysadmin on the storage configuration),
-> >> wondering why their data is gone.
-> >
-> > RAID5, 6 or 1 is not data backup!  It is hardware redundancy!!
-> > Data loss or corruption can still occur with a RAID solution.  RAID won't
-> > help if someone fat fingers a "rm" command.
-> > Corruption of the filesystem can also cause major data loss, without a
-> > failed disk.
-> >
-> > If the data was lost, what would it cost to re-create it?
-> > Enough to buy a backup system?
-> 
-> I absolutely agree with this.  When - and it is when, not if - the
-> content of this filesystem goes away, you will be rightly blamed for it.
-> 
-> Invest the few thousand dollars in a good high capacity tape drive and
-> pay someone to change the tapes.  This will be worth it when the system
-> finally does fail in some nasty, unpredictable way!
+> RAID5, 6 or 1 is not data backup!  It is hardware redundancy!!
+> Data loss or corruption can still occur with a RAID solution.  RAID won't
+> help if someone fat fingers a "rm" command.
+> Corruption of the filesystem can also cause major data loss, without a
+> failed disk.
 
-I was on paternity leave when the solution was selected, but the guy
-with the grant money has been disinterested in backups from the
-beginning.
+Yeah.  I know.
 
-The policy is going to be "your homedir will be backed up.  Your files
-under /data will not, unless you back them up yourself."
+> If the data was lost, what would it cost to re-create it?
+> Enough to buy a backup system?
 
-My job is to work within that restriction, and possibly advise for
-backups, but nothing more.  The purchasing decision is not mine.
+The data generated by the primary purpose for the hardware, will
+primarily be time series from models, that are hoped to match empirical
+data obtained from other sources.
+
+IE, it would take months or years to regenerate, but it could be
+regenerated.
+
+And people who have info under /data (this RAID rig) that they cannot
+lose, are advised to back it up somewhere themselves.
 
 
