@@ -1,124 +1,51 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: number of global spares?
-Date: Fri, 26 Aug 2005 19:21:50 -0400
-Message-ID: <200508262321.j7QNLuE03756@www.watkins-home.com>
+From: Daniel Pittman <daniel@rimspace.net>
+Subject: Re: number of global spares?
+Date: Sat, 27 Aug 2005 15:00:28 +1000
+Message-ID: <87u0hc55zn.fsf@rimspace.net>
 References: <1125082848.25483.23.camel@seki.nac.uci.edu>
+	<200508262321.j7QNLuE03756@www.watkins-home.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1125082848.25483.23.camel@seki.nac.uci.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Dan Stromberg' <strombrg@dcs.nac.uci.edu>, 'Linux RAID' <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+"Guy" <bugzilla@watkins-home.com> writes:
 
+[...]
 
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> owner@vger.kernel.org] On Behalf Of Dan Stromberg
-> Sent: Friday, August 26, 2005 3:01 PM
-> To: Linux RAID
-> Cc: strombrg@dcs.nac.uci.edu
-> Subject: number of global spares?
-> 
-> 
-> I've been working on a RAID setup with dual RAID controllers and
-> three expansion boxes - 48 disks in all, including data, parity and
-> global spares.
-> 
-> We originally purchased the equipment expecting to get 16 terabytes of
-> usable space.
-> 
-> Now that it's "all set up", we're really seeing more like 14 or 15
-> terabytes, depending on how you do the calculation.
-> 
-> Please be sure to use a fixed-pitch font when viewing the tables found
-> below.  BTW, if people weren't so terrified of HTML, I could just make a
-> nice HTML table for easy reading without silly font requirements...
-> 
-> Anyway, what we have right now is:
-> 
-> global spares: 0,16,32,48
-> 
-> Raidset	Disks used	                  Data:parity ratio
-> 0	      1,2,3,4,5,6,7,8,9,10          9:1
-> 1	      11,17,18,19,20,21,22,23,24,25	9:1
-> 2	      26,27,33,34,35,36,37,38,39,40	9:1
-> 3	      41,42,43,49,50,51,52,53,54,55	9:1
-> 4	      56,57,58,59                   3:1
-> 
-> 
-> And the vendor is suggesting that we move to something like:
-> 
-> global spares: 0
-> 
-> Raidset	Disks used	                  Data:parity ratio
-> 0	      1,2,3,4,5,6,7,8,9,10          9:1
-> 1	      11,17,18,19,20,21,22,23,24,25	9:1
-> 2	      26,27,33,34,35,36,37,38,39,40	9:1
-> 3	      41,42,43,49,50,51,52,53,54,55	9:1
-> 4	      56,57,58,59,16,32,48          3:1
-> 
-> ...or...:
-> 
-> global spares: 0,16
-> 
-> Raidset	Disks used	                  Data:parity ratio
-> 0	      1,2,3,4,5,6,7,8,9,10          9:1
-> 1	      11,17,18,19,20,21,22,23,24,25	9:1
-> 2	      26,27,33,34,35,36,37,38,39,40	9:1
-> 3	      41,42,43,49,50,51,52,53,54,55	9:1
-> 4	      56,57,58,59,32,48             3:1
-> 
-> 
-> Does anyone have any comments on:
-> 
-> 1) The sanity of these 10 disk RAID 5's?
-> 
-> 2) The degree of loss of reliability incurred by moving 3 disks from
-> global spare to data?
-> 
-> 3) The degree of loss of reliability incurred by moving 2 disks from
-> global spare to data?
-> 
-> 
-> To answer these questions, you probably need to know how the storage is to
-> be used.  This single, large filesystem will be used by a variety of
-> researchers and students from around The University of California, Irvine,
-> but was purchased primarily by the Earth System Science part of the
-> Physical Sciences department, which in turn will primarily be storing many
-> approximately 100 megabyte files which comprise time series related to
-> climatology simulations.
-> 
-> They don't feel that the storage has to be blazing fast, and 100% uptime
-> isn't paramount, however they very much do not want to lose their data.
-> 
-> The filesystem will not be backed up - we simply don't have anything large
-> enough to back it up -to-, so if the some part of the storage solution
-> goes kerflooey, we're totally...  er...  out of luck, and they'll probably
-> be looking at me (the primary sysadmin on the storage configuration),
-> wondering why their data is gone.
+>> I've been working on a RAID setup with dual RAID controllers and
+>> three expansion boxes - 48 disks in all, including data, parity and
+>> global spares.
 
-RAID5, 6 or 1 is not data backup!  It is hardware redundancy!!
-Data loss or corruption can still occur with a RAID solution.  RAID won't
-help if someone fat fingers a "rm" command.
-Corruption of the filesystem can also cause major data loss, without a
-failed disk.
+[...]
 
-If the data was lost, what would it cost to re-create it?
-Enough to buy a backup system?
+>> They don't feel that the storage has to be blazing fast, and 100% uptime
+>> isn't paramount, however they very much do not want to lose their data.
+>> 
+>> The filesystem will not be backed up - we simply don't have anything large
+>> enough to back it up -to-, so if the some part of the storage solution
+>> goes kerflooey, we're totally...  er...  out of luck, and they'll probably
+>> be looking at me (the primary sysadmin on the storage configuration),
+>> wondering why their data is gone.
+>
+> RAID5, 6 or 1 is not data backup!  It is hardware redundancy!!
+> Data loss or corruption can still occur with a RAID solution.  RAID won't
+> help if someone fat fingers a "rm" command.
+> Corruption of the filesystem can also cause major data loss, without a
+> failed disk.
+>
+> If the data was lost, what would it cost to re-create it?
+> Enough to buy a backup system?
 
-Just my 3 cents!
+I absolutely agree with this.  When - and it is when, not if - the
+content of this filesystem goes away, you will be rightly blamed for it.
 
-Guy
+Invest the few thousand dollars in a good high capacity tape drive and
+pay someone to change the tapes.  This will be worth it when the system
+finally does fail in some nasty, unpredictable way!
 
-> 
-> Thanks!
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+        Daniel
+
 
