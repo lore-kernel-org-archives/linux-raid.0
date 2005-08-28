@@ -1,36 +1,37 @@
 From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: RAID 5 write performance advice
-Date: Mon, 29 Aug 2005 09:28:42 +1000
-Message-ID: <17170.18602.592283.92772@cse.unsw.edu.au>
-References: <430C2EA6.2050103@web.de>
-	<1124887589.5550.27.camel@localhost.localdomain>
-	<430C798B.1030107@web.de>
-	<17164.59261.540591.841830@cse.unsw.edu.au>
-	<430DF416.1070101@web.de>
-	<1124988876.5552.59.camel@localhost.localdomain>
-	<430ECA18.10405@web.de>
-	<1125066621.5549.27.camel@localhost.localdomain>
-	<430F3565.2070302@web.de>
+Subject: Re: Fibre Channel Shared Raid 5
+Date: Mon, 29 Aug 2005 09:33:03 +1000
+Message-ID: <17170.18863.428428.778402@cse.unsw.edu.au>
+References: <43113170.9030509@neo.tamu.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=unknown
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Mirko Benz on Friday August 26
+In-Reply-To: message from Thomas Garner on Saturday August 27
 Sender: linux-raid-owner@vger.kernel.org
-To: Mirko Benz <mirko.benz@web.de>
-Cc: mingz@ele.uri.edu, Linux RAID <linux-raid@vger.kernel.org>
+To: tlg1466@neo.tamu.edu
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Friday August 26, mirko.benz@web.de wrote:
-> Hello,
-> 
-> Here are the results using 5 disks for RAID 5 $,1rs(B basically the same 
-> results but with lower values.
-> Again, much slower than it could be.
+On Saturday August 27, tlg1466@neo.tamu.edu wrote:
+> Is it possible to take a group of fibre channel drives on a fc-al loop, 
+> run raid 5 on top of them, run lvm on top of that, then gfs on top of 
+> that, and have the entire thing readable/writable by multiple machines 
+> at the same time?  I have searched amongst lvm, clvm, evms, nbd, enbd, 
+> linux software raid, etc. but to no avail.  I assume that both clvm or 
+> evms would suit me to make the drives available to multiple machine 
+> concurrently, but not allow redundancy.  Hopefully I am wrong and this 
+> is in fact possible.
 
-Yes, there definitely does seem to be something wrong with raid5 write
-speed, doesn't there!!
+I think you are not wrong, sorry (assuming I understand you
+correctly).
 
-I will try to look into it over the next couple of weeks.
+md/raid5 cannot be distributed.  At any one time, one machine must be
+in control of the array and managing parity updates etc.  The device
+provided by md/raid5 can obviously be share with GFS or NFS or nbd of
+whatever.  But the management of the actually raid5 array must in the
+hands of just one machine.
 
 NeilBrown
+
+
