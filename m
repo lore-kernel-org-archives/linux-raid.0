@@ -1,37 +1,38 @@
 From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: Fibre Channel Shared Raid 5
-Date: Mon, 29 Aug 2005 09:33:03 +1000
-Message-ID: <17170.18863.428428.778402@cse.unsw.edu.au>
-References: <43113170.9030509@neo.tamu.edu>
+Subject: Re: [PATCH] proactive raid5 disk replacement for 2.6.11
+Date: Mon, 29 Aug 2005 09:35:28 +1000
+Message-ID: <17170.19008.732883.903851@cse.unsw.edu.au>
+References: <1124050204.3810.28.camel@localhost.localdomain>
+	<C0A1E607B5206F88D89CAF42@192.168.1.22>
+	<62b0912f0508220347135352ea@mail.gmail.com>
+	<1124711771.774.50.camel@localhost.localdomain>
+	<62b0912f050822065547a70a8e@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Thomas Garner on Saturday August 27
+In-Reply-To: message from Molle Bestefich on Monday August 22
 Sender: linux-raid-owner@vger.kernel.org
-To: tlg1466@neo.tamu.edu
-Cc: linux-raid@vger.kernel.org
+To: Molle Bestefich <molle.bestefich@gmail.com>
+Cc: Pallai Roland <dap@mail.index.hu>, Claas Hilbrecht <claas+maillinglists.linux-raid@jucs-kramkiste.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Saturday August 27, tlg1466@neo.tamu.edu wrote:
-> Is it possible to take a group of fibre channel drives on a fc-al loop, 
-> run raid 5 on top of them, run lvm on top of that, then gfs on top of 
-> that, and have the entire thing readable/writable by multiple machines 
-> at the same time?  I have searched amongst lvm, clvm, evms, nbd, enbd, 
-> linux software raid, etc. but to no avail.  I assume that both clvm or 
-> evms would suit me to make the drives available to multiple machine 
-> concurrently, but not allow redundancy.  Hopefully I am wrong and this 
-> is in fact possible.
+On Monday August 22, molle.bestefich@gmail.com wrote:
+> > >
+> > > My best guess would be that either you're using an old version of MD
+> > > that won't try to write to bad blocks, or the spare area on your disk
+> > > is full, in which case it should be replaced.  You can check the
+> > > status of spare areas on disks with 'smartctl' or similar.
+> >
+> >  Which version of md tries to rewrite bad blocks in raid5?
+> 
+> Haven't followed the discussions closely, but I sure hope that the
+> newest version does.  (After all, spare areas are a somewhat old
+> feature in harddrives..)
+> 
 
-I think you are not wrong, sorry (assuming I understand you
-correctly).
-
-md/raid5 cannot be distributed.  At any one time, one machine must be
-in control of the array and managing parity updates etc.  The device
-provided by md/raid5 can obviously be share with GFS or NFS or nbd of
-whatever.  But the management of the actually raid5 array must in the
-hands of just one machine.
+Sorry, but no - not yet.
+Over-writing bad blocks is on my todo list, and will probably happen
+this year, but it certainly is available yet.
 
 NeilBrown
-
-
