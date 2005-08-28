@@ -1,24 +1,36 @@
-From: Thomas Garner <tlg1466@neo.tamu.edu>
-Subject: Fibre Channel Shared Raid 5
-Date: Sat, 27 Aug 2005 23:37:20 -0400
-Message-ID: <43113170.9030509@neo.tamu.edu>
-Reply-To: tlg1466@neo.tamu.edu
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: RAID 5 write performance advice
+Date: Mon, 29 Aug 2005 09:28:42 +1000
+Message-ID: <17170.18602.592283.92772@cse.unsw.edu.au>
+References: <430C2EA6.2050103@web.de>
+	<1124887589.5550.27.camel@localhost.localdomain>
+	<430C798B.1030107@web.de>
+	<17164.59261.540591.841830@cse.unsw.edu.au>
+	<430DF416.1070101@web.de>
+	<1124988876.5552.59.camel@localhost.localdomain>
+	<430ECA18.10405@web.de>
+	<1125066621.5549.27.camel@localhost.localdomain>
+	<430F3565.2070302@web.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=unknown
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from Mirko Benz on Friday August 26
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Mirko Benz <mirko.benz@web.de>
+Cc: mingz@ele.uri.edu, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Is it possible to take a group of fibre channel drives on a fc-al loop, 
-run raid 5 on top of them, run lvm on top of that, then gfs on top of 
-that, and have the entire thing readable/writable by multiple machines 
-at the same time?  I have searched amongst lvm, clvm, evms, nbd, enbd, 
-linux software raid, etc. but to no avail.  I assume that both clvm or 
-evms would suit me to make the drives available to multiple machine 
-concurrently, but not allow redundancy.  Hopefully I am wrong and this 
-is in fact possible.
+On Friday August 26, mirko.benz@web.de wrote:
+> Hello,
+> 
+> Here are the results using 5 disks for RAID 5 $,1rs(B basically the same 
+> results but with lower values.
+> Again, much slower than it could be.
 
-Thanks!
-Thomas
+Yes, there definitely does seem to be something wrong with raid5 write
+speed, doesn't there!!
+
+I will try to look into it over the next couple of weeks.
+
+NeilBrown
