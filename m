@@ -1,38 +1,33 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: [PATCH] proactive raid5 disk replacement for 2.6.11
-Date: Mon, 29 Aug 2005 09:35:28 +1000
-Message-ID: <17170.19008.732883.903851@cse.unsw.edu.au>
-References: <1124050204.3810.28.camel@localhost.localdomain>
-	<C0A1E607B5206F88D89CAF42@192.168.1.22>
-	<62b0912f0508220347135352ea@mail.gmail.com>
-	<1124711771.774.50.camel@localhost.localdomain>
-	<62b0912f050822065547a70a8e@mail.gmail.com>
+From: Thomas Garner <tlg1466@neo.tamu.edu>
+Subject: Re: Fibre Channel Shared Raid 5
+Date: Sun, 28 Aug 2005 20:31:15 -0400
+Message-ID: <43125753.8000504@neo.tamu.edu>
+References: <43113170.9030509@neo.tamu.edu> <17170.18863.428428.778402@cse.unsw.edu.au>
+Reply-To: tlg1466@neo.tamu.edu
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Molle Bestefich on Monday August 22
+In-Reply-To: <17170.18863.428428.778402@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Molle Bestefich <molle.bestefich@gmail.com>
-Cc: Pallai Roland <dap@mail.index.hu>, Claas Hilbrecht <claas+maillinglists.linux-raid@jucs-kramkiste.de>, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@cse.unsw.edu.au>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday August 22, molle.bestefich@gmail.com wrote:
-> > >
-> > > My best guess would be that either you're using an old version of MD
-> > > that won't try to write to bad blocks, or the spare area on your disk
-> > > is full, in which case it should be replaced.  You can check the
-> > > status of spare areas on disks with 'smartctl' or similar.
-> >
-> >  Which version of md tries to rewrite bad blocks in raid5?
-> 
-> Haven't followed the discussions closely, but I sure hope that the
-> newest version does.  (After all, spare areas are a somewhat old
-> feature in harddrives..)
-> 
+I recently stumbled upon ddraid.  Would this work at all for what I'm 
+looking for?
 
-Sorry, but no - not yet.
-Over-writing bad blocks is on my todo list, and will probably happen
-this year, but it certainly is available yet.
+Thomas
 
-NeilBrown
+Neil Brown wrote:
+> I think you are not wrong, sorry (assuming I understand you
+> correctly).
+> 
+> md/raid5 cannot be distributed.  At any one time, one machine must be
+> in control of the array and managing parity updates etc.  The device
+> provided by md/raid5 can obviously be share with GFS or NFS or nbd of
+> whatever.  But the management of the actually raid5 array must in the
+> hands of just one machine.
+> 
+> NeilBrown
+
