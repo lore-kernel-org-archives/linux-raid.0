@@ -1,33 +1,32 @@
-From: Thomas Garner <tlg1466@neo.tamu.edu>
+From: Neil Brown <neilb@cse.unsw.edu.au>
 Subject: Re: Fibre Channel Shared Raid 5
-Date: Sun, 28 Aug 2005 20:31:15 -0400
-Message-ID: <43125753.8000504@neo.tamu.edu>
-References: <43113170.9030509@neo.tamu.edu> <17170.18863.428428.778402@cse.unsw.edu.au>
-Reply-To: tlg1466@neo.tamu.edu
+Date: Mon, 29 Aug 2005 13:56:49 +1000
+Message-ID: <17170.34689.140273.47944@cse.unsw.edu.au>
+References: <43113170.9030509@neo.tamu.edu>
+	<17170.18863.428428.778402@cse.unsw.edu.au>
+	<43125753.8000504@neo.tamu.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17170.18863.428428.778402@cse.unsw.edu.au>
+In-Reply-To: message from Thomas Garner on Sunday August 28
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@cse.unsw.edu.au>
+To: tlg1466@neo.tamu.edu
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I recently stumbled upon ddraid.  Would this work at all for what I'm 
-looking for?
+On Sunday August 28, tlg1466@neo.tamu.edu wrote:
+> I recently stumbled upon ddraid.  Would this work at all for what I'm 
+> looking for?
 
-Thomas
+I'm not certain, but I suspect not.
 
-Neil Brown wrote:
-> I think you are not wrong, sorry (assuming I understand you
-> correctly).
-> 
-> md/raid5 cannot be distributed.  At any one time, one machine must be
-> in control of the array and managing parity updates etc.  The device
-> provided by md/raid5 can obviously be share with GFS or NFS or nbd of
-> whatever.  But the management of the actually raid5 array must in the
-> hands of just one machine.
-> 
-> NeilBrown
+The 'dd' stands for 'distributed data'.  You have a cluster where each
+node has one drive, and you use ddraid to combine all these drives
+into an array which can survive as single node dying.  But I *think*
+you still need a master node which runs the array.  Also the slaves
+would need to access the array through the master.
+But as I said, I'm not sure.  You'd need to check with the author I
+guess.
 
+NeilBrown
