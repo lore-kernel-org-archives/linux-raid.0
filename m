@@ -1,32 +1,17 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: Fibre Channel Shared Raid 5
-Date: Mon, 29 Aug 2005 13:56:49 +1000
-Message-ID: <17170.34689.140273.47944@cse.unsw.edu.au>
-References: <43113170.9030509@neo.tamu.edu>
-	<17170.18863.428428.778402@cse.unsw.edu.au>
-	<43125753.8000504@neo.tamu.edu>
+From: "Outmoded B. Theft" <helpdesk@variphase.com>
+Subject: exclusive brands
+Date: Mon, 29 Aug 2005 09:18:28 -0500
+Message-ID: <2249000150.20050829091828@variphase.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Thomas Garner on Sunday August 28
 Sender: linux-raid-owner@vger.kernel.org
-To: tlg1466@neo.tamu.edu
-Cc: linux-raid@vger.kernel.org
+To: Linux <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sunday August 28, tlg1466@neo.tamu.edu wrote:
-> I recently stumbled upon ddraid.  Would this work at all for what I'm 
-> looking for?
+www.7zb1ad9vtipz8a7.fisusurrnb.com
 
-I'm not certain, but I suspect not.
+------------------------------------
+Bye
 
-The 'dd' stands for 'distributed data'.  You have a cluster where each
-node has one drive, and you use ddraid to combine all these drives
-into an array which can survive as single node dying.  But I *think*
-you still need a master node which runs the array.  Also the slaves
-would need to access the array through the master.
-But as I said, I'm not sure.  You'd need to check with the author I
-guess.
-
-NeilBrown
