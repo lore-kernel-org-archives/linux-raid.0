@@ -1,144 +1,79 @@
-From: Holger Kiehl <Holger.Kiehl@dwd.de>
-Subject: Re: Where is the performance bottleneck?
-Date: Tue, 30 Aug 2005 20:06:21 +0000 (GMT)
-Message-ID: <Pine.LNX.4.61.0508301919250.25574@diagnostix.dwd.de>
-References: <Pine.LNX.4.61.0508291811480.24072@diagnostix.dwd.de>
- <20050829202529.GA32214@midnight.suse.cz>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: Where is the performance bottleneck?
+Date: Tue, 30 Aug 2005 19:05:32 -0400
+Message-ID: <200508302305.j7UN5bE23350@www.watkins-home.com>
+References: <Pine.LNX.4.61.0508301859500.25574@diagnostix.dwd.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20050829202529.GA32214@midnight.suse.cz>
+In-Reply-To: <Pine.LNX.4.61.0508301859500.25574@diagnostix.dwd.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Vojtech Pavlik <vojtech@suse.cz>
-Cc: linux-raid <linux-raid@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: 'Holger Kiehl' <Holger.Kiehl@dwd.de>, 'Mark Hahn' <hahn@physics.mcmaster.ca>
+Cc: 'linux-raid' <linux-raid@vger.kernel.org>, 'linux-kernel' <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, 29 Aug 2005, Vojtech Pavlik wrote:
+In most of your results, your CPU usage is very high.  Once you get to about
+90% usage, you really can't do much else, unless you can improve the CPU
+usage.
 
-> On Mon, Aug 29, 2005 at 06:20:56PM +0000, Holger Kiehl wrote:
->> Hello
->>
->> I have a system with the following setup:
->>
->>     Board is Tyan S4882 with AMD 8131 Chipset
->>     4 Opterons 848 (2.2GHz)
->>     8 GB DDR400 Ram (2GB for each CPU)
->>     1 onboard Symbios Logic 53c1030 dual channel U320 controller
->>     2 SATA disks put together as a SW Raid1 for system, swap and spares
->>     8 SCSI U320 (15000 rpm) disks where 4 disks (sdc, sdd, sde, sdf)
->>       are on one channel and the other four (sdg, sdh, sdi, sdj) on
->>       the other channel.
->>
->> The U320 SCSI controller has a 64 bit PCI-X bus for itself, there is
->> no other device on that bus. Unfortunatly I was unable to determine at
->> what speed it is running, here the output from lspci -vv:
->
->> How does one determine the PCI-X bus speed?
->
-> Usually only the card (in your case the Symbios SCSI controller) can
-> tell. If it does, it'll be most likely in 'dmesg'.
->
-There is nothing in dmesg:
+Guy
 
-    Fusion MPT base driver 3.01.20
-    Copyright (c) 1999-2004 LSI Logic Corporation
-    ACPI: PCI Interrupt 0000:02:04.0[A] -> GSI 24 (level, low) -> IRQ 217
-    mptbase: Initiating ioc0 bringup
-    ioc0: 53C1030: Capabilities={Initiator,Target}
-    ACPI: PCI Interrupt 0000:02:04.1[B] -> GSI 25 (level, low) -> IRQ 225
-    mptbase: Initiating ioc1 bringup
-    ioc1: 53C1030: Capabilities={Initiator,Target}
-    Fusion MPT SCSI Host driver 3.01.20
-
->> Anyway, I thought with this system I would get theoretically 640 MB/s using
->> both channels.
->
-> You can never use the full theoretical bandwidth of the channel for
-> data. A lot of overhead remains for other signalling. Similarly for PCI.
->
->> I tested several software raid setups to get the best possible write
->> speeds for this system. But testing shows that the absolute maximum I
->> can reach with software raid is only approx. 270 MB/s for writting.
->> Which is very disappointing.
->
-> I'd expect somewhat better (in the 300-400 MB/s range), but this is not
-> too bad.
->
-> To find where the bottleneck is, I'd suggest trying without the
-> filesystem at all, and just filling a large part of the block device
-> using the 'dd' command.
->
-> Also, trying without the RAID, and just running 4 (and 8) concurrent
-> dd's to the separate drives could show whether it's the RAID that's
-> slowing things down.
->
-Ok, I did run the following dd command in different combinations:
-
-    dd if=/dev/zero of=/dev/sd?1 bs=4k count=5000000
-
-Here the results:
-
-    Each disk alone
-    /dev/sdc1 59.094636 MB/s
-    /dev/sdd1 58.686592 MB/s
-    /dev/sde1 55.282807 MB/s
-    /dev/sdf1 62.271240 MB/s
-    /dev/sdg1 60.872891 MB/s
-    /dev/sdh1 62.252781 MB/s
-    /dev/sdi1 59.145637 MB/s
-    /dev/sdj1 60.921119 MB/s
-
-    sdc + sdd in parallel (2 disks on same channel)
-    /dev/sdc1 42.512287 MB/s
-    /dev/sdd1 43.118483 MB/s
-
-    sdc + sdg in parallel (2 disks on different channels)
-    /dev/sdc1 42.938186 MB/s
-    /dev/sdg1 43.934779 MB/s
-
-    sdc + sdd + sde in parallel (3 disks on same channel)
-    /dev/sdc1 35.043501 MB/s
-    /dev/sdd1 35.686878 MB/s
-    /dev/sde1 34.580457 MB/s
-
-    Similar results for three disks (sdg + sdh + sdi) on the other channel
-    /dev/sdg1 36.381137 MB/s
-    /dev/sdh1 37.541758 MB/s
-    /dev/sdi1 35.834920 MB/s
-
-    sdc + sdd + sde + sdf in parallel (4 disks on same channel)
-    /dev/sdc1 31.432914 MB/s
-    /dev/sdd1 32.058752 MB/s
-    /dev/sde1 31.393455 MB/s
-    /dev/sdf1 33.208165 MB/s
-
-    And here for the four disks on the other channel
-    /dev/sdg1 31.873028 MB/s
-    /dev/sdh1 33.277193 MB/s
-    /dev/sdi1 31.910000 MB/s
-    /dev/sdj1 32.626744 MB/s
-
-    All 8 disks in parallel
-    /dev/sdc1 24.120545 MB/s
-    /dev/sdd1 24.419801 MB/s
-    /dev/sde1 24.296588 MB/s
-    /dev/sdf1 25.609548 MB/s
-    /dev/sdg1 24.572617 MB/s
-    /dev/sdh1 25.552590 MB/s
-    /dev/sdi1 24.575616 MB/s
-    /dev/sdj1 25.124165 MB/s
-
-So from these results, I may assume that md is not the cause of the problem.
-
-What comes as a big surprise is that I loose 25% performance with only
-two disks and each hanging on its own channel!
-
-Is this normal? I wonder if other people have the same problem with
-other controllers or the same.
-
-What can I do next to find out if this is a kernel, driver or hardware
-problem?
-
-Thanks,
-Holger
+> -----Original Message-----
+> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+> owner@vger.kernel.org] On Behalf Of Holger Kiehl
+> Sent: Tuesday, August 30, 2005 3:09 PM
+> To: Mark Hahn
+> Cc: linux-raid; linux-kernel
+> Subject: Re: Where is the performance bottleneck?
+> 
+> On Mon, 29 Aug 2005, Mark Hahn wrote:
+> 
+> >> The U320 SCSI controller has a 64 bit PCI-X bus for itself, there is no
+> other
+> >> device on that bus. Unfortunatly I was unable to determine at what
+> speed
+> >> it is running, here the output from lspci -vv:
+> > ...
+> >>                  Status: Bus=2 Dev=4 Func=0 64bit+ 133MHz+ SCD- USC-,
+> DC=simple,
+> >
+> > the "133MHz+" is a good sign.  OTOH the latency (72) seems rather low -
+> my
+> > understanding is that that would noticably limit the size of burst
+> transfers.
+> >
+> I have tried with 128 and 144, but the transfer rate is only a little
+> bit higher barely measurable. Or what values should I try?
+> 
+> >
+> >> Version  1.03        ------Sequential Output------ --Sequential Input-
+> --Random-
+> >>                       -Per Chr- --Block-- -Rewrite- -Per Chr- --Block--
+> --Seeks--
+> >> Machine         Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP
+> /sec %CP
+> >> Raid0 (8 disk)15744M 54406  96 247419 90 100752 25 60266  98 226651 29
+> 830.2   1
+> >> Raid0s(4 disk)15744M 54915  97 253642 89 73976  18 59445  97 198372 24
+> 659.8   1
+> >> Raid0s(4 disk)15744M 54866  97 268361 95 72852  17 59165  97 187183 22
+> 666.3   1
+> >
+> > you're obviously saturating something already with 2 disks.  did you
+> play
+> > with "blockdev --setra" setings?
+> >
+> Yes, I did play a little bit with it but this only changed read
+> performance,
+> it made no measurable difference when writting.
+> 
+> Thanks,
+> Holger
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
