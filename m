@@ -1,32 +1,50 @@
-From: Forrest Taylor <ftaylor@redhat.com>
-Subject: Re: raid5: Disk failure on sdm, disabling device
-Date: Wed, 31 Aug 2005 15:02:03 -0600
-Message-ID: <1125522122.3194.29.camel@x1-6-00-0d-60-fd-e8-4c>
-References: <003401c5ae61$d982b5d0$c100a8c0@NCNF5131FTH>
-	 <4316050B.1060805@tls.msk.ru> <005201c5ae63$ef23e6f0$c100a8c0@NCNF5131FTH>
-	 <43160DF2.6000504@tls.msk.ru>  <007401c5ae6a$7e9cd160$c100a8c0@NCNF5131FTH>
-	 <1125520778.3194.18.camel@x1-6-00-0d-60-fd-e8-4c>
-	 <008b01c5ae6c$e4db5e90$c100a8c0@NCNF5131FTH>
-	 <1125521616.3194.22.camel@x1-6-00-0d-60-fd-e8-4c>
-	 <00ab01c5ae6f$1bb27410$c100a8c0@NCNF5131FTH>
+From: "Dr. David Alan Gilbert" <dave@treblig.org>
+Subject: Re: Where is the performance bottleneck?
+Date: Wed, 31 Aug 2005 22:16:50 +0100
+Message-ID: <20050831211650.GD24383@gallifrey>
+References: <Pine.LNX.4.61.0508291811480.24072@diagnostix.dwd.de> <20050829202529.GA32214@midnight.suse.cz> <Pine.LNX.4.61.0508301919250.25574@diagnostix.dwd.de> <20050831071126.GA7502@midnight.ucw.cz> <20050831072644.GF4018@suse.de> <Pine.LNX.4.61.0508311029170.16574@diagnostix.dwd.de> <20050831120714.GT4018@suse.de> <Pine.LNX.4.61.0508311339140.16574@diagnostix.dwd.de> <20050831142413.GB24383@gallifrey> <Pine.LNX.4.61.0508312039220.1081@diagnostix.dwd.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <00ab01c5ae6f$1bb27410$c100a8c0@NCNF5131FTH>
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.61.0508312039220.1081@diagnostix.dwd.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: "David M. Strang" <dstrang@shellpower.net>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Holger Kiehl <Holger.Kiehl@dwd.de>
+Cc: linux-raid <linux-raid@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, 2005-08-31 at 15:01, David M. Strang wrote:
-> Is there something a little deeper to this error message?
-> 
-> Aug 31 04:48:15 abyss kernel: scsi2 (12:0): rejecting I/O to offline device
-> Aug 31 04:48:15 abyss kernel: raid5: Disk failure on sdm, disabling device.
+* Holger Kiehl (Holger.Kiehl@dwd.de) wrote:
 
-This error would make me think that the disk is bad.  Have you tested
-the disk, or replaced it with a known-good disk?
+> There is however one difference, here I had set
+> /sys/block/sd?/queue/nr_requests to 4096.
 
-Forrest
+Well from that it looks like none of the queues get about 255
+(hmm that's a round number....)
 
+> avg-cpu:  %user   %nice    %sys %iowait   %idle
+>            0.10    0.00   21.85   58.55   19.50
+
+Fair amount of system time.
+
+> Device:    rrqm/s wrqm/s   r/s   w/s  rsec/s  wsec/s    rkB/s    wkB/s 
+> avgrq-sz avgqu-sz   await  svctm  %util
+
+> sdf        11314.90   0.00 365.10  0.00 93440.00    0.00 46720.00     0.00  
+> 255.93     1.92    5.26   2.74  99.98
+> sdg        7973.20   0.00 257.20  0.00 65843.20    0.00 32921.60     0.00   
+> 256.00     1.94    7.53   3.89 100.01
+
+There seems to be quite a spread of read performance accross the drives
+(pretty consistent accross the run); what makes sdg so much slower than
+sdf (which seems to be the slowest and fastest drives respectively).
+I guess if everyone was running at sdf's speed you would be pretty happy.
+
+If you physically swap f and g does the performance follow the drive
+or the letter?
+
+Dave
+--
+ -----Open up your eyes, open up your mind, open up your code -------   
+/ Dr. David Alan Gilbert    | Running GNU/Linux on Alpha,68K| Happy  \ 
+\ gro.gilbert @ treblig.org | MIPS,x86,ARM,SPARC,PPC & HPPA | In Hex /
+ \ _________________________|_____ http://www.treblig.org   |_______/
