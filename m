@@ -1,62 +1,63 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: Where is the performance bottleneck?
-Date: Wed, 31 Aug 2005 09:26:45 +0200
-Message-ID: <20050831072644.GF4018@suse.de>
-References: <Pine.LNX.4.61.0508291811480.24072@diagnostix.dwd.de> <20050829202529.GA32214@midnight.suse.cz> <Pine.LNX.4.61.0508301919250.25574@diagnostix.dwd.de> <20050831071126.GA7502@midnight.ucw.cz>
+From: "David William" <davidwilliam@davidwilliam.net>
+Subject: INVISTMENT PROJECT
+Date: Wed, 31 Aug 2005 10:19:15 +0000
+Message-ID: <BAY15-F189032D188688A13FB3024ABA10__16971.5582197115$1125483660$gmane$org@phx.gbl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20050831071126.GA7502@midnight.ucw.cz>
 Sender: linux-raid-owner@vger.kernel.org
-To: Vojtech Pavlik <vojtech@suse.cz>
-Cc: Holger Kiehl <Holger.Kiehl@dwd.de>, linux-raid <linux-raid@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: davidwilliam@davidwilliam.net
 List-Id: linux-raid.ids
 
-On Wed, Aug 31 2005, Vojtech Pavlik wrote:
-> On Tue, Aug 30, 2005 at 08:06:21PM +0000, Holger Kiehl wrote:
-> > >>How does one determine the PCI-X bus speed?
-> > >
-> > >Usually only the card (in your case the Symbios SCSI controller) can
-> > >tell. If it does, it'll be most likely in 'dmesg'.
-> > >
-> > There is nothing in dmesg:
-> > 
-> >    Fusion MPT base driver 3.01.20
-> >    Copyright (c) 1999-2004 LSI Logic Corporation
-> >    ACPI: PCI Interrupt 0000:02:04.0[A] -> GSI 24 (level, low) -> IRQ 217
-> >    mptbase: Initiating ioc0 bringup
-> >    ioc0: 53C1030: Capabilities={Initiator,Target}
-> >    ACPI: PCI Interrupt 0000:02:04.1[B] -> GSI 25 (level, low) -> IRQ 225
-> >    mptbase: Initiating ioc1 bringup
-> >    ioc1: 53C1030: Capabilities={Initiator,Target}
-> >    Fusion MPT SCSI Host driver 3.01.20
-> > 
-> > >To find where the bottleneck is, I'd suggest trying without the
-> > >filesystem at all, and just filling a large part of the block device
-> > >using the 'dd' command.
-> > >
-> > >Also, trying without the RAID, and just running 4 (and 8) concurrent
-> > >dd's to the separate drives could show whether it's the RAID that's
-> > >slowing things down.
-> > >
-> > Ok, I did run the following dd command in different combinations:
-> > 
-> >    dd if=/dev/zero of=/dev/sd?1 bs=4k count=5000000
-> 
-> I think a bs of 4k is way too small and will cause huge CPU overhead.
-> Can you try with something like 4M? Also, you can use /dev/full to avoid
-> the pre-zeroing.
+Dear Beloved,
 
-That was my initial thought as well, but since he's writing the io side
-should look correct. I doubt 8 dd's writing 4k chunks will gobble that
-much CPU as to make this much difference.
 
-Holger, we need vmstat 1 info while the dd's are running. A simple
-profile would be nice as well, boot with profile=2 and do a readprofile
--r; run tests; readprofile > foo and send the first 50 lines of foo to
-this list.
+I am looking for your cooperation in building a
+Tourist Hotel/shopping Mall or Real Estate in your
+country. I am sorry if this is not in line
+with your business.I need an experienced person like
+you to assist me to set up , develop the project and
+assume responsibility of ownership as chairman but
+will be bringing in profit /distribute profit monthly
+or annually.
 
--- 
-Jens Axboe
+I am Henry Bori,a citizen of Nairobi ,Kenya.A former
+Presidential adviser on Budget and planning to the
+former president of Kenya,Daniel Arab Moi.I acuirred
+this money as a result of gold and diamond export.
+
+I am currently in possession of $58.1m,which i want to
+use for investment purposes preferably in your
+country.
+
+Now the present government of Mwai Kibaki has
+intensified efforts at probing Moi's government,
+goverment officials have turned their backs on us and
+have been frustrating me and others that served under
+Daniel Arab Moi. For this reason, I left Kenya for
+Western part of Africa, in the Calabar City.
+That is why i need someone like you who is trustworhty
+and honest, to assist me achieve my objectives,and
+also manage the business for me.
+
+However ,I got your email information on your Hotel
+contact list,that is why i am making this exclusive
+contact with you. your immediate reply will be highly
+appreciated and I shall give you more information on
+this project,and your percentage and all what is
+expected of you.
+
+Please contact me at my private email address
+bol200110@yahoo.co.uk
+
+
+Your response
+is higly welcomed.
+
+Thanks and God bless.
+
+I Remain Yours;
+
+Henry Bori.
+
 
