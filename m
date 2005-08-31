@@ -1,89 +1,26 @@
-From: Holger Kiehl <Holger.Kiehl@dwd.de>
-Subject: Re: Where is the performance bottleneck?
-Date: Wed, 31 Aug 2005 19:00:12 +0000 (GMT)
-Message-ID: <Pine.LNX.4.61.0508311846220.16574@diagnostix.dwd.de>
-References: <Pine.LNX.4.61.0508291811480.24072@diagnostix.dwd.de>
- <20050829202529.GA32214@midnight.suse.cz> <Pine.LNX.4.61.0508301919250.25574@diagnostix.dwd.de>
- <20050831071126.GA7502@midnight.ucw.cz> <20050831072644.GF4018@suse.de>
- <Pine.LNX.4.61.0508311029170.16574@diagnostix.dwd.de> <20050831120714.GT4018@suse.de>
- <Pine.LNX.4.61.0508311339140.16574@diagnostix.dwd.de> <20050831162053.GG4018@suse.de>
- <Pine.LNX.4.61.0508311648390.16574@diagnostix.dwd.de> <20050831173525.GJ4018@suse.de>
+From: Forrest Taylor <ftaylor@redhat.com>
+Subject: Re: raid5: Disk failure on sdm, disabling device
+Date: Wed, 31 Aug 2005 13:28:21 -0600
+Message-ID: <1125516500.3194.3.camel@x1-6-00-0d-60-fd-e8-4c>
+References: <003401c5ae61$d982b5d0$c100a8c0@NCNF5131FTH>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932517AbVHaTAP@vger.kernel.org>
-In-Reply-To: <20050831173525.GJ4018@suse.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: Vojtech Pavlik <vojtech@suse.cz>, linux-raid <linux-raid@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <003401c5ae61$d982b5d0$c100a8c0@NCNF5131FTH>
+Sender: linux-raid-owner@vger.kernel.org
+To: "David M. Strang" <dstrang@shellpower.net>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, 31 Aug 2005, Jens Axboe wrote:
+On Wed, 2005-08-31 at 13:26, David M. Strang wrote:
+> Okay, my array is degraded -- and the device /dev/sdm is disabled.
+> 
+> Short of a reboot, is there a way to re-enable the device? It's already 
+> flagged as faulty in mdadm.
 
-> On Wed, Aug 31 2005, Holger Kiehl wrote:
->>> # ./oread /dev/sdX
->>>
->>> and it will read 128k chunks direct from that device. Run on the same
->>> drives as above, reply with the vmstat info again.
->>>
->> Using kernel 2.6.12.5 again, here the results:
->
-> [snip]
->
-> Ok, reads as expected, like the buffered io but using less system time.
-> And you are still 1/3 off the target data rate, hmmm...
->
-> With the reads, how does the aggregate bandwidth look when you add
-> 'clients'? Same as with writes, gradually decreasing per-device
-> throughput?
->
-I performed the following tests with this command:
+Have you tried to remove /dev/sdm from the RAID and add it back in?  I
+guess that the larger question is what caused it to be flagged faulty?
 
-    dd if=/dev/sd?1 of=/dev/null bs=256k count=78125
+Forrest
 
-Single disk tests:
-
-    /dev/sdc1 74.954715 MB/s
-    /dev/sdg1 74.973417 MB/s
-
-Following disks in parallel:
-
-    2 disks on same channel
-    /dev/sdc1 75.034191 MB/s
-    /dev/sdd1 74.984643 MB/s
-
-    3 disks on same channel
-    /dev/sdc1 75.027850 MB/s
-    /dev/sdd1 74.976583 MB/s
-    /dev/sde1 75.278276 MB/s
-
-    4 disks on same channel
-    /dev/sdc1 58.343166 MB/s
-    /dev/sdd1 62.993059 MB/s
-    /dev/sde1 66.940569 MB/s
-    /dev/sdd1 70.986072 MB/s
-
-    2 disks on different channels
-    /dev/sdc1 74.954715 MB/s
-    /dev/sdg1 74.973417 MB/s
-
-    4 disks on different channels
-    /dev/sdc1 74.959030 MB/s
-    /dev/sdd1 74.877703 MB/s
-    /dev/sdg1 75.009697 MB/s
-    /dev/sdh1 75.028138 MB/s
-
-    6 disks on different channels
-    /dev/sdc1 49.640743 MB/s
-    /dev/sdd1 55.935419 MB/s
-    /dev/sde1 58.795241 MB/s
-    /dev/sdg1 50.280864 MB/s
-    /dev/sdh1 54.210705 MB/s
-    /dev/sdi1 59.413176 MB/s
-
-So this looks different from writting, only as of four disks does the
-performance begin to drop.
-
-I just noticed, did you want me to do these test with the oread program?
-
-Thanks,
-Holger
