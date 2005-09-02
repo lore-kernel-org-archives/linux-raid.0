@@ -1,40 +1,47 @@
-From: NeilBrown <neilb@suse.de>
-Subject: [PATCH md 004 of 5] Add information about superblock version to /proc/mdstat
-Date: Fri, 02 Sep 2005 16:12:54 +1000
-Message-ID: <E1EB4nG-0008NI-0T@notabene.cse.unsw.edu.au>
-References: <20050902161106.32018.patches@notabene>
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: question regarding multipath & Linux 2.6
+Date: Fri, 2 Sep 2005 08:38:56 +0200
+Message-ID: <20050902063856.GB8680@percy.comedia.it>
+References: <Pine.LNX.4.44.0509011419390.15688-100000@netra.cs.yale.edu>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44.0509011419390.15688-100000@netra.cs.yale.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Thu, Sep 01, 2005 at 02:51:44PM -0400, Jim Faulkner wrote:
+>
+>Hello,
+>
+>Recently my department had a SAN installed, and I am in the process of 
+>setting up one of the first Linux machines connected to it.  The machine 
+>is running Red Hat Enterprise AS4 (x86_64), which uses Linux kernel 
+>version 2.6.9-11.ELsmp.
+giving more info about the infamous SAN would help :)
+>
+>The SAN shows up twice in the kernel, as /dev/sdb and /dev/sdc.  /dev/sdb 
+>is inaccessible (I get a bunch of "Buffer I/O error on device sdb" kernel 
+>errors), but /dev/sdc works fine.  According to the administrator of the 
+it probably is a cheapo storage with an Active/Passive storage
+controller, you cannot use md to handle those.
 
-Leave it unchanged if the original (0.90) is used, incase it might
-be a compatability problem.
+>He told me to use PowerPath, but I'd rather not have to reinstall or 
+it is a long time i don't see powerpath on linux, but i am in favour of
+ditching proprietary multipath solutions in favour of free ones.
+>
+what you want is multipath-tools http://christophe.varoqui.free.fr/
+RH4 should already include a multipath-tools rpm.
 
-Signed-off-by: Neil Brown <neilb@suse.de>
+Regards,
+Luca
 
-### Diffstat output
- ./drivers/md/md.c |    9 +++++++++
- 1 file changed, 9 insertions(+)
-
-diff ./drivers/md/md.c~current~ ./drivers/md/md.c
---- ./drivers/md/md.c~current~	2005-09-02 15:59:46.000000000 +1000
-+++ ./drivers/md/md.c	2005-09-02 15:59:50.000000000 +1000
-@@ -3346,6 +3346,15 @@ static int md_seq_show(struct seq_file *
- 				seq_printf(seq, "\n      %llu blocks",
- 					(unsigned long long)size);
- 		}
-+		if (mddev->persistent) {
-+			if (mddev->major_version != 0 ||
-+			    mddev->minor_version != 90) {
-+				seq_printf(seq," super %d.%d",
-+					   mddev->major_version,
-+					   mddev->minor_version);
-+			}
-+		} else
-+			seq_printf(seq, " super non-persistent");
- 
- 		if (mddev->pers) {
- 			mddev->pers->status (seq, mddev);
+-- 
+Luca Berra -- bluca@comedia.it
+        Communication Media & Services S.r.l.
+ /"\
+ \ /     ASCII RIBBON CAMPAIGN
+  X        AGAINST HTML MAIL
+ / \
