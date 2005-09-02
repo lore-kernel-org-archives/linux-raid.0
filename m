@@ -1,47 +1,40 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: Re: question regarding multipath & Linux 2.6
-Date: Fri, 2 Sep 2005 08:38:56 +0200
-Message-ID: <20050902063856.GB8680@percy.comedia.it>
-References: <Pine.LNX.4.44.0509011419390.15688-100000@netra.cs.yale.edu>
+From: Claas Hilbrecht <claas+maillinglists.linux-raid@jucs-kramkiste.de>
+Subject: Re: MD or MDADM bug?
+Date: Fri, 02 Sep 2005 08:42:30 +0200
+Message-ID: <EA0E31E2DD4FA4EEF92B6D2F@[192.168.1.22]>
+References: <015901c5af3b$e0885710$c100a8c0@NCNF5131FTH>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <015901c5af3b$e0885710$c100a8c0@NCNF5131FTH>
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44.0509011419390.15688-100000@netra.cs.yale.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: "David M. Strang" <dstrang@shellpower.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Sep 01, 2005 at 02:51:44PM -0400, Jim Faulkner wrote:
->
->Hello,
->
->Recently my department had a SAN installed, and I am in the process of 
->setting up one of the first Linux machines connected to it.  The machine 
->is running Red Hat Enterprise AS4 (x86_64), which uses Linux kernel 
->version 2.6.9-11.ELsmp.
-giving more info about the infamous SAN would help :)
->
->The SAN shows up twice in the kernel, as /dev/sdb and /dev/sdc.  /dev/sdb 
->is inaccessible (I get a bunch of "Buffer I/O error on device sdb" kernel 
->errors), but /dev/sdc works fine.  According to the administrator of the 
-it probably is a cheapo storage with an Active/Passive storage
-controller, you cannot use md to handle those.
+--Am Donnerstag, 1. September 2005 17:26 -0400 "David M. Strang" 
+<dstrang@shellpower.net> schrieb:
 
->He told me to use PowerPath, but I'd rather not have to reinstall or 
-it is a long time i don't see powerpath on linux, but i am in favour of
-ditching proprietary multipath solutions in favour of free ones.
->
-what you want is multipath-tools http://christophe.varoqui.free.fr/
-RH4 should already include a multipath-tools rpm.
+> The problem is; my array is now 26 of 28 disks -- /dev/sdm *IS* bad; it
+[...]
+> What can I do? I don't believe this is working as intended.
 
-Regards,
-Luca
+Maybe you didn't notice that but there are two recent threads that reports 
+nearly the same problem. Look at the posts:
+
+08.08.2005: How to recover a multiple raid5 disk failure with mdadm?
+30.08.2005: 2 partition kicked from 6 raid5
+
+And as far as I can see there is no solution yet. Maybe it's faster to 
+restore the data from the backup instead of hoping someone can help you. 
+But I really think a howto with "how to replace a multiple raid5 disk 
+failure" is badly needed. Sometimes it happens that there is a bad cable or 
+a problem on a resync. And the users knows that the data is good or at 
+least most of the files are.
 
 -- 
-Luca Berra -- bluca@comedia.it
-        Communication Media & Services S.r.l.
- /"\
- \ /     ASCII RIBBON CAMPAIGN
-  X        AGAINST HTML MAIL
- / \
+ Claas Hilbrecht
+ http://www.jucs-kramkiste.de
+
+
