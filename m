@@ -1,75 +1,42 @@
-From: Al Boldi <a1426z@gawab.com>
-Subject: Re: Where is the performance bottleneck?
-Date: Fri, 2 Sep 2005 17:28:16 +0300
-Message-ID: <200509020936.14054.a1426z@gawab.com>
-References: <Pine.LNX.4.61.0508291811480.24072@diagnostix.dwd.de> <Pine.LNX.4.61.0508312148040.1081@diagnostix.dwd.de> <Pine.LNX.4.61.0509010852040.17882@diagnostix.dwd.de>
+From: Christopher Smith <csmith@nighthawkrad.net>
+Subject: Re: 3ware RAID (was Re: RAID resync stalled at 99.7% ?)
+Date: Sat, 03 Sep 2005 01:29:07 +1000
+Message-ID: <43186FC3.30601@nighthawkrad.net>
+References: <1125652202.3454.10.camel@chris.syd.nighthawkrad.net> <87vf1jsqjj.fsf@rimspace.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.61.0509010852040.17882@diagnostix.dwd.de>
-Content-Disposition: inline
+In-Reply-To: <87vf1jsqjj.fsf@rimspace.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Holger Kiehl <Holger.Kiehl@dwd.de>
-Cc: Jens Axboe <axboe@suse.de>, Vojtech Pavlik <vojtech@suse.cz>, linux-raid <linux-raid@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Nick Piggin <nickpiggin@yahoo.com.au>
+To: Daniel Pittman <daniel@rimspace.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Holger Kiehl wrote:
-> top - 08:39:11 up  2:03,  2 users,  load average: 23.01, 21.48, 15.64
-> Tasks: 102 total,   2 running, 100 sleeping,   0 stopped,   0 zombie
-> Cpu(s):  0.0% us, 17.7% sy,  0.0% ni,  0.0% id, 78.9% wa,  0.2% hi,  3.1%
-> si Mem:   8124184k total,  8093068k used,    31116k free,  7831348k
-> buffers Swap: 15631160k total,    13352k used, 15617808k free,     5524k
-> cached
->
->    PID USER      PR  NI  VIRT  RES  SHR S %CPU %MEM    TIME+  COMMAND
->   3423 root      18   0 55204  460  392 R 12.0  0.0   1:15.55 dd
->   3421 root      18   0 55204  464  392 D 11.3  0.0   1:17.36 dd
->   3418 root      18   0 55204  464  392 D 10.3  0.0   1:10.92 dd
->   3416 root      18   0 55200  464  392 D 10.0  0.0   1:09.20 dd
->   3420 root      18   0 55204  464  392 D 10.0  0.0   1:10.49 dd
->   3422 root      18   0 55200  460  392 D  9.3  0.0   1:13.58 dd
->   3417 root      18   0 55204  460  392 D  7.6  0.0   1:13.11 dd
->    158 root      15   0     0    0    0 D  1.3  0.0   1:12.61 kswapd3
->    159 root      15   0     0    0    0 D  1.3  0.0   1:08.75 kswapd2
->    160 root      15   0     0    0    0 D  1.0  0.0   1:07.11 kswapd1
->   3419 root      18   0 51096  552  476 D  1.0  0.0   1:17.15 dd
->    161 root      15   0     0    0    0 D  0.7  0.0   0:54.46 kswapd0
->
-> A loadaverage of 23 for 8 dd's seems a bit high. Also why is kswapd
-> working so hard? Is that correct.
+Daniel Pittman wrote:
+> Christopher Smith <csmith@nighthawkrad.net> writes:
+> 
+> [...]
+> 
+> 
+>>The components are 12x400GB drives attached to a 3ware 9500s-12
+>>controller.  They are configured as "single disks" on the controller,
+>>ie: no hardware RAID is involved.
+> 
+> 
+> A quick question for you, because I have a client looking at 3ware RAID
+> hardware at the moment:
+> 
+> Why are you running this as software RAID, rather than using the
+> hardware on the 3ware card?
 
-Actually, kswapd is another problem. (see "Kswapd Flaw"  thread)
-Which has little impact on your problem but basically kswapd tries very hard 
-maybe even to hard to fullfil a request for memory, so when the buffer/cache 
-pages are full kswapd tries to find some more unused memory. When it finds 
-none it starts recycling the buffer/cache pages.  Which is OK, but it only 
-does this after searching for swappable memory which wastes CPU cycles.
+Because after doing some preliminary benchmarks, I've found Linux's 
+software RAID to be significantly faster than 3ware's hardware RAID (at 
+the sacrifice of higher CPU usage, but since the machine has a fairly 
+fast CPU and doesn't do anything else, that's a sacrifice I'm happy to 
+make).
 
-This can be tuned a little but not much by adjusting /sys(proc)/.../vm/...
-Or renicing kswapd to the lowest priority, which may cause other problems.
+I have some iozone and bonnie++ results, but they're at work and I'm at 
+home - I'll post them tomorrow.
 
-Things get really bad when procs start asking for more memory than is 
-available, causing kswapd to take the liberty of paging out running procs in 
-the hope that these procs won't come back later.  So when they do come back 
-something like a wild goose chase begins.  This is also known as OverCommit. 
-
-This is closely related to the dreaded OOM-killer, which occurs when the 
-system cannot satisfy a memory request for a returning proc, causing the VM 
-to start killing in an unpredictable manner.
-
-Turning OverCommit off should solve this problem but it doesn't.
-
-This is why it is recommended to run the system always with swap enabled even 
-if you have tons of memory, which really only pushes the problem out of the 
-way until you hit the dead end and the wild goose chase begins again.
-
-Sadly 2.6.13 did not fix this either.
-
-Although this description only vaguely defines the problem from an end-user 
-pov, the actual semantics may be quite different.
-
---
-Al
-
+CS
