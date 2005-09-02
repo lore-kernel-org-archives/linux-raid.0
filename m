@@ -1,53 +1,70 @@
-From: NeilBrown <neilb@suse.de>
-Subject: [PATCH md ] Make sure the new 'sb_size' is set properly device added without pre-existing superblock.
-Date: Fri, 2 Sep 2005 22:48:37 +1000
-Message-ID: <1050902124837.1650@suse.de>
-References: <20050902224642.1518.patches@notabene>
+From: "Callahan, Tom" <CallahanT@tessco.com>
+Subject: RE: question regarding multipath & Linux 2.6
+Date: Fri, 2 Sep 2005 09:29:45 -0400
+Message-ID: <0481A62A3E95A044AC20A1A45899645C06B02EE0@glc-mail-1.tessco.com>
+Mime-Version: 1.0
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-raid@vger.kernel.org
+To: 'Luca Berra ' <bluca@comedia.it>, "'linux-raid-owner@vger.kernel.org '" <linux-raid-owner@vger.kernel.org>, "'linux-raid@vger.kernel.org '" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Looks like I should run my test suite with both mdadm-1.12 and mdadm-2.0,
-as this slipped through my testing.  (The bug is in code that
-didn't reach 2.6.13.  Only -mm is affected).
+Your running into the problem of the "active/passive" link as you stated. If
+you are using Qlogic FibreChannel cards, qlogic offers drivers on their
+website for this.
+
+I have a whitepaper I've written on this topic, please contact me if you
+would like a copy. We currently have many 2.6 Kernel Linux machines running
+exclusively off the SAN, with true failover support.
 
 Thanks,
-NeilBrown
+Tom Callahan 
 
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Sent: 9/2/2005 2:38 AM
+Subject: Re: question regarding multipath & Linux 2.6
 
-### Comments for Changeset
+On Thu, Sep 01, 2005 at 02:51:44PM -0400, Jim Faulkner wrote:
+>
+>Hello,
+>
+>Recently my department had a SAN installed, and I am in the process of 
+>setting up one of the first Linux machines connected to it.  The
+machine 
+>is running Red Hat Enterprise AS4 (x86_64), which uses Linux kernel 
+>version 2.6.9-11.ELsmp.
+giving more info about the infamous SAN would help :)
+>
+>The SAN shows up twice in the kernel, as /dev/sdb and /dev/sdc.
+/dev/sdb 
+>is inaccessible (I get a bunch of "Buffer I/O error on device sdb"
+kernel 
+>errors), but /dev/sdc works fine.  According to the administrator of
+the 
+it probably is a cheapo storage with an Active/Passive storage
+controller, you cannot use md to handle those.
 
-There are two ways to add devices to an md/raid array.
+>He told me to use PowerPath, but I'd rather not have to reinstall or 
+it is a long time i don't see powerpath on linux, but i am in favour of
+ditching proprietary multipath solutions in favour of free ones.
+>
+what you want is multipath-tools http://christophe.varoqui.free.fr/
+RH4 should already include a multipath-tools rpm.
 
-  It can have superblock written to it, and then given to the md driver,
-  which will read the superblock (the new way)
+Regards,
+Luca
 
-or
-
-  md can be told (through SET_ARRAY_INFO) the shape of the array, and
-  the told about individual drives, and md will create the required
-  superblock (the old way).
-
-The newly introduced sb_size was only set for drives being added the
-new way, not the old ways.  Oops :-(
-
-Signed-off-by: Neil Brown <neilb@suse.de>
-
-### Diffstat output
- ./drivers/md/md.c |    2 ++
- 1 file changed, 2 insertions(+)
-
-diff ./drivers/md/md.c~current~ ./drivers/md/md.c
---- ./drivers/md/md.c~current~	2005-09-02 16:00:04.000000000 +1000
-+++ ./drivers/md/md.c	2005-09-02 19:29:31.000000000 +1000
-@@ -2303,6 +2303,8 @@ static int add_new_disk(mddev_t * mddev,
- 		else
- 			rdev->in_sync = 0;
- 
-+		rdev->sb_size = MD_SB_BYTES;
-+
- 		if (info->state & (1<<MD_DISK_WRITEMOSTLY))
- 			set_bit(WriteMostly, &rdev->flags);
- 
+-- 
+Luca Berra -- bluca@comedia.it
+        Communication Media & Services S.r.l.
+ /"\
+ \ /     ASCII RIBBON CAMPAIGN
+  X        AGAINST HTML MAIL
+ / \
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
