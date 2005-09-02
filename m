@@ -1,88 +1,53 @@
-From: Harald Koenig <koenig@tat.physik.uni-tuebingen.de>
-Subject: [koenig@tat.physik.uni-tuebingen.de: [suse-beta-e] RFC: time_adj for HZ==250 in kernel/timer.c ?]
-Date: Fri, 2 Sep 2005 14:23:11 +0200
-Message-ID: <20050902122311.GA26608@turtle.tat.physik.uni-tuebingen.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+From: NeilBrown <neilb@suse.de>
+Subject: [PATCH md ] Make sure the new 'sb_size' is set properly device added without pre-existing superblock.
+Date: Fri, 2 Sep 2005 22:48:37 +1000
+Message-ID: <1050902124837.1650@suse.de>
+References: <20050902224642.1518.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: mingo@elte.hu, mingo@redhat.com
-Cc: linux-raid@vger.kernel.org, Harald Koenig <koenig@tat.physik.uni-tuebingen.de>, mantel@suse.de
+To: Andrew Morton <akpm@osdl.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Ingo & linux-kernel,
+Looks like I should run my test suite with both mdadm-1.12 and mdadm-2.0,
+as this slipped through my testing.  (The bug is in code that
+didn't reach 2.6.13.  Only -mm is affected).
 
-as I'm not subscribed to linix-kernel list, please send answers as with CC: PM.  thanks!
+Thanks,
+NeilBrown
 
 
-playing with the openSUSE 10.0 beta-test I slipped over problems with procinfo etc.
-so I noticed that at least suse/novell again changed the scheduler frequency HZ
-from 1000 to 250.  which led me to the following question,  for which I got no
-commets from SUSE so far, and since it's not a suse-only issue anyway... 
+### Comments for Changeset
+
+There are two ways to add devices to an md/raid array.
+
+  It can have superblock written to it, and then given to the md driver,
+  which will read the superblock (the new way)
+
+or
+
+  md can be told (through SET_ARRAY_INFO) the shape of the array, and
+  the told about individual drives, and md will create the required
+  superblock (the old way).
+
+The newly introduced sb_size was only set for drives being added the
+new way, not the old ways.  Oops :-(
+
+Signed-off-by: Neil Brown <neilb@suse.de>
+
+### Diffstat output
+ ./drivers/md/md.c |    2 ++
+ 1 file changed, 2 insertions(+)
+
+diff ./drivers/md/md.c~current~ ./drivers/md/md.c
+--- ./drivers/md/md.c~current~	2005-09-02 16:00:04.000000000 +1000
++++ ./drivers/md/md.c	2005-09-02 19:29:31.000000000 +1000
+@@ -2303,6 +2303,8 @@ static int add_new_disk(mddev_t * mddev,
+ 		else
+ 			rdev->in_sync = 0;
  
-
-the linux kernel for suse 10.0 will run with HZ==250 by default (9.x used HZ==1000).
-
-for HZ==100 and HZ==1000 there is special code in kernel/timer.c to 
-adjust the value of time_adj  because HZ isn't a power of two and
-clock stuff uses some binary shift operations instead of divides
-(and 100!=128 or 1000!=1024).
-
-what about having a similar special case for the new HZ==250 too ??
-using 250 instead of 256 (SHIFT_HZ==8), which is an error of 2.4 %,
-identical to 1000 vs. 1024.
-
-any feelings or comments about the following patch ?
-
--------------------------------------------------------------------------------
---- kernel/timer.c~     2005-08-22 22:50:27.000000000 +0200
-+++ kernel/timer.c      2005-08-31 15:12:57.801644750 +0200
-@@ -752,7 +752,7 @@
-     else
-        time_adj += (time_adj >> 2) + (time_adj >> 5);
- #endif
--#if HZ == 1000
-+#if HZ == 1000 || HZ == 250
-     /* Compensate for (HZ==1000) != (1 << SHIFT_HZ).
-      * Add 1.5625% and 0.78125% to get 1023.4375; => only 0.05% error (p. 14)
-      */
--------------------------------------------------------------------------------
-
-
-or maybe (just in case...:) even
-
-#if HZ == 1000 || HZ == 500 || HZ == 250
-
-
-
-comments ?
-
-Harald
--- 
-"I hope to die                                      ___       _____
-before I *have* to use Microsoft Word.",           0--,|    /OOOOOOO\
-Donald E. Knuth, 02-Oct-2001 in Tuebingen.        <_/  /  /OOOOOOOOOOO\
-                                                    \  \/OOOOOOOOOOOOOOO\
-                                                      \ OOOOOOOOOOOOOOOOO|//
-Harald Koenig,                                         \/\/\/\/\/\/\/\/\/
-Inst.f.Theoret.Astrophysik                              //  /     \\  \
-koenig@tat.physik.uni-tuebingen.de                     ^^^^^       ^^^^^
-
--- 
-To unsubscribe, e-mail: suse-beta-e-unsubscribe@suse.com
-For additional commands, e-mail: suse-beta-e-help@suse.com
-
------ End forwarded message -----
-
-
-Harald
--- 
-"I hope to die                                      ___       _____
-before I *have* to use Microsoft Word.",           0--,|    /OOOOOOO\
-Donald E. Knuth, 02-Oct-2001 in Tuebingen.        <_/  /  /OOOOOOOOOOO\
-                                                    \  \/OOOOOOOOOOOOOOO\
-                                                      \ OOOOOOOOOOOOOOOOO|//
-Harald Koenig,                                         \/\/\/\/\/\/\/\/\/
-Inst.f.Theoret.Astrophysik                              //  /     \\  \
-koenig@tat.physik.uni-tuebingen.de                     ^^^^^       ^^^^^
++		rdev->sb_size = MD_SB_BYTES;
++
+ 		if (info->state & (1<<MD_DISK_WRITEMOSTLY))
+ 			set_bit(WriteMostly, &rdev->flags);
+ 
