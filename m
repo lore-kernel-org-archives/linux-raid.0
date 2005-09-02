@@ -1,44 +1,75 @@
-From: Joshua Baker-LePain <jlb17@duke.edu>
-Subject: Re: 3ware RAID (was Re: RAID resync stalled at 99.7% ?)
-Date: Fri, 2 Sep 2005 15:34:03 -0400 (EDT)
-Message-ID: <Pine.LNX.4.58.0509021532490.5341@chaos.egr.duke.edu>
-References: <1125652202.3454.10.camel@chris.syd.nighthawkrad.net>
- <87vf1jsqjj.fsf@rimspace.net>  <1125678437.28420.1.camel@dhcpc226.office.pivotlink.com>
-  <43173F4F.1020505@panix.com> <1125684560.30693.6.camel@dhcpc226.office.pivotlink.com>
+From: christophe varoqui <christophe.varoqui@free.fr>
+Subject: [ANNOUNCE] multipath-tools-0.4.5
+Date: Fri, 02 Sep 2005 23:16:05 +0200
+Message-ID: <1125695765.6217.10.camel@zezette>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1125684560.30693.6.camel@dhcpc226.office.pivotlink.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Brad Dameron <brad@seatab.com>
-Cc: linux-raid@vger.kernel.org
+To: device-mapper development <dm-devel@redhat.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-hotplug-devel@lists.sourceforge.net" <linux-hotplug-devel@lists.sourceforge.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Fri, 2 Sep 2005 at 11:09am, Brad Dameron wrote
+Hello,
 
-> On Thu, 2005-09-01 at 13:50 -0400, berk walker wrote:
-> > I guess if we were all wholesalers with a nice long lead time, that
-> > would be great, Brad.  But where, and for how much might one purchase these?
-> > 
-> > b-
-> > 
-> 
-> http://www.topmicrousa.com/controllers--tekram.html
-> http://www.rackmountpro.com/productsearch.php?catid=199
-> http://www.pc-pitstop.com/sata_raid_controllers/
-> 
-> Just for starters. Google found those by the way. And yes they are a
-> little more than 3ware. But I can say they do twice the performance of
-> the 3ware cards. Mainly due to their 800Mhz processor and faster memory.
-> Their driver support is also more upt to date.
+here goes multipath-tools-0.4.5
 
-But has it made it into the mainline kernel yet?  3w-xxxx has been in 
-mainline for a *long* time.  3w-9xxx is still settling a bit, that's true, 
-but it's doing so in mainline.  Personally, I wouldn't put important data 
-on an Areca controller until the drivers have been through wider testing 
-than the -mm series (where I believe they're currently percolating).
+This release was long due.
+Full of new shiny features.
 
+Worth noting :
+
+    * multipathd keeps Device Mapper path status in sync with path
+      checker status : proactive fail_path and reinstate_path
+    * proactive path group re-enable, as soon as one path goes up
+    * multipathd is now fully event driven :
+          o NetLink? uevents for kernels/distro that enables the feature
+          o Hotplug
+          o Unix socket messages
+    * a Command Line Interface to drive and inspect the daemon
+    * remove the multipath(8) cache file logic in favour of a
+      multipathd<->multipath unix socket request/reply design
+    * split multipath(8) listing option into
+          o short-list (-l) : don't fetch wwid, path checker status,
+            priorities ... fast
+          o detailed-list (-ll) : refetch all info
+    * the daemon asynchronous logger is now solid and avoid sending
+      critical messages
+    * daemon CLI command to reload the config file
+    * path checking interval gets longer when the path is reliably up,
+      resets to short as soon as a problem occur
+    * daemon implements 3 path group failback methods :
+          o manual
+          o immediate : failback as soon as an (enabled && !active) PG
+            gets the highest priority
+          o defered : failback to the highest priority 
+            (enabled && !active) PG n seconds after the last PG priority
+            order change
+    * remove over-complicated and thread-confusing daemon initial
+      clone() w/ private namespace
+    * prioritizers official prefix is now mpath_prio_
+    * multipath(8) displays PG priorities when available
+    * new hp_sw checker. It's a tri-state UP/DOWN/GHOST
+    * new directio checker. Useful with DASD devices. May suplant
+      readsector0 in the long run ?
+    * stricter default blacklist regexps
+    * new '-f' multipath(8) flag to selectively suppress a multipath
+      map, and its device-mapped partitions
+    * alua prioritizer update, should work on x86
+    * support for >2TB multipaths
+    * claimed device detection : no more warning/error messages with
+      paths pinned by mounted FS
+    * option to use priorities as weights in the round-robin scheduler :
+      for people who can't wait for a qlen-based scheduler
+
+As usual, doc and download at :
+http://christophe.varoqui.free.fr/
+
+Archive mirror at ftp://sources.redhat.com/pub/dm/multipath-tools/
+
+Regards,
 -- 
-Joshua Baker-LePain
-Department of Biomedical Engineering
-Duke University
+christophe varoqui <christophe.varoqui@free.fr>
+
+
