@@ -1,7 +1,8 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PATCH md 000 of 5] Introduction
-Date: Fri, 02 Sep 2005 16:12:52 +1000
-Message-ID: <20050902161106.32018.patches@notabene>
+Subject: [PATCH md 003 of 5] Use queue_hardsect_size instead of block_size for md superblock size calc.
+Date: Fri, 02 Sep 2005 16:12:53 +1000
+Message-ID: <E1EB4nF-0008ND-JB@notabene.cse.unsw.edu.au>
+References: <20050902161106.32018.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: Andrew Morton <akpm@osdl.org>
@@ -9,17 +10,23 @@ Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-5 patches for md in 2.5.13-mm1.
-The first you may already have of linux-kernel.
+Doh.  I want the physical hard-sector-size, not the current block size...
 
-The remainder are little bug fixes and some enhancments to the content
-of /proc/mdstat.  All are suitable for early dispatch to Linus.
+Signed-off-by: Neil Brown <neilb@suse.de>
 
-Thanks,
-NeilBrown
+### Diffstat output
+ ./drivers/md/md.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
- [PATCH md 001 of 5] drivers/md/raid1.c: make a function static
- [PATCH md 002 of 5] Choose better default offset for bitmap.
- [PATCH md 003 of 5] Use queue_hardsect_size instead of block_size for md superblock size calc.
- [PATCH md 004 of 5] Add information about superblock version to /proc/mdstat
- [PATCH md 005 of 5] Report spare drives in /proc/mdstat
+diff ./drivers/md/md.c~current~ ./drivers/md/md.c
+--- ./drivers/md/md.c~current~	2005-09-02 15:59:39.000000000 +1000
++++ ./drivers/md/md.c	2005-09-02 15:59:46.000000000 +1000
+@@ -898,7 +898,7 @@ static int super_1_load(mdk_rdev_t *rdev
+ 	rdev->data_offset = le64_to_cpu(sb->data_offset);
+ 
+ 	rdev->sb_size = le32_to_cpu(sb->max_dev) * 2 + 256;
+-	bmask = block_size(rdev->bdev)-1;
++	bmask = queue_hardsect_size(rdev->bdev->bd_disk->queue)-1;
+ 	if (rdev->sb_size & bmask)
+ 		rdev-> sb_size = (rdev->sb_size | bmask)+1;
+ 
