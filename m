@@ -1,28 +1,47 @@
-From: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
-Subject: Re: MD or MDADM bug?
-Date: Mon, 5 Sep 2005 11:35:17 +0200
-Message-ID: <dfh3gl$s2b$1@sea.gmane.org>
-References: <015901c5af3b$e0885710$c100a8c0@NCNF5131FTH> <17176.2600.694418.472339@cse.unsw.edu.au> <018f01c5af99$0343f6d0$c100a8c0@NCNF5131FTH> <17176.4401.418417.56385@cse.unsw.edu.au> <019601c5af9b$23d8ce50$c100a8c0@NCNF5131FTH> <17176.7326.892297.381537@cse.unsw.edu.au> <01a101c5afa2$8b3f2060$c100a8c0@NCNF5131FTH> <17176.9057.119383.787644@cse.unsw.edu.au> <01ac01c5afa6$3d4d8690$c100a8c0@NCNF5131FTH> <17176.13548.477061.774536@cse.unsw.edu.au> <001c01c5b004$64c902e0$c700a8c0@NCNF5131FTH> <17176.51414.689631.346198@cse.unsw.edu.au> <003501c5b016$cc5d68d0$c700a8c0@NCNF5131FTH> <17177.7688.922030.788691@cse.unsw.edu.au> <43195D20.1070103@dtbb.net> <17178.37305.857263.952767@cse.unsw.edu.au> <Pine.LNX.4.61.0509051119300.32217@desktop.agenda.si>
+From: "Pau Oliva - pof" <pau@eslack.org>
+Subject: error in mdadm man page
+Date: Mon, 5 Sep 2005 13:45:07 +0200 (CEST)
+Message-ID: <22642.212.145.174.224.1125920707.squirrel@212.145.174.224>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-danci@agenda.si <danci@agenda.si> wrote:
-> On Sun, 4 Sep 2005, Neil Brown wrote:
->> I've never liked kernel autodetect, and while I won't break it, I
->> would like to migrate people away from it.
-> How will we use MD for root filesystem? Will we *always* need a tricky 
-> initrd with mdadm added?
+Hello,
 
-If you don't (like to) have kernel autodetection, you'll always need
-initrd with mdadm or something like that to boot up a MD for the root
-fs, yes.
+I think the man page of mdadm has an error. It says that -z (--size)
+option must be specified in Kibibytes and it is not true (at least) when
+used in combination with --grow it must be specified in bytes.
 
+I haven't looked at the mdadm code, but this is the experience I had:
 
-regards
-   Mario
--- 
-> As Luke Leighton said once on samba-ntdom, "now, what was that about
-> rebooting?   that was so long ago, i had to look it up with man -k."
+I had a raid1 on two 120Gb HD which were replaced by two 200Gb HD, and I
+had to grow the array after that because it was only 120Gb big. I looked
+at mdadm man page and used '--grow' in combination with '--size' options.
+
+This is what fdisk reports:
+     Disk /dev/hdg: 203.9 GB, 203928109056 bytes
+
+So the size in Kibibytes is 203928109056/1024 == 199148544.
+
+We have to substract 128K for the raid superblock, so this is the command
+I issued to change the size of the array:
+
+mdadm --grow /dev/md0 --size 199148416
+
+And instead of growing it to 200Gb it reduced it to (I think) ~20Gb. I
+rebooted and fsck fixed it :)
+
+I don't know if this list is the right place to report this, if it is not
+please reply to my email as I am not susbscribed to the list.
+
+Best regards,
+
+    Pau Oliva
+
+---
+http://pof.eslack.org
 
