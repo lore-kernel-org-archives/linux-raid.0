@@ -1,47 +1,61 @@
-From: "Pau Oliva - pof" <pau@eslack.org>
-Subject: error in mdadm man page
-Date: Mon, 5 Sep 2005 13:45:07 +0200 (CEST)
-Message-ID: <22642.212.145.174.224.1125920707.squirrel@212.145.174.224>
+From: Farkas Levente <lfarkas@bppiac.hu>
+Subject: Re: why the kernel and mdadm report differently
+Date: Mon, 05 Sep 2005 13:49:55 +0200
+Message-ID: <431C30E3.2040404@bppiac.hu>
+References: <431C0968.10301@bppiac.hu> <17180.3031.193961.445535@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <17180.3031.193961.445535@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@cse.unsw.edu.au>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
+Neil Brown wrote:
+> On Monday September 5, lfarkas@bppiac.hu wrote:
+> 
+>>hi,
+>>one of our raid array is crash all the time (once a week), 
+> 
+> 
+> Any kernel error messages?
 
-I think the man page of mdadm has an error. It says that -z (--size)
-option must be specified in Kibibytes and it is not true (at least) when
-used in combination with --grow it must be specified in bytes.
+i already send report about this a few times to this list without any 
+response, but i send you a private message will all logs.
 
-I haven't looked at the mdadm code, but this is the experience I had:
+>>and one more 
+>>stange thing that it's currently not working, kernel report inactive 
+>>while mdadm said it's active, degraded. what's more we cant put this 
+>>array into active state.
+> 
+> 
+> Looks like you need to stop in (mdadm -S /dev/md2) and re-assemble it
+> with --force:
+>   mdadm -A /dev/md2 -f /dev/sd[abcefgh]1
+> 
+> It looks like the computer crashed and when it came back up it was
+> missing a drive.  This situation can result in silent data corruption,
+> which is why md won't automatically assemble it.  When you do assemble
+> it, you should at least fsck the filesystem, and possibly check for
+> data corruption if that is possible.  At least be aware that some data
+> could be corrupt (there is a good chance that nothing is, but it is by
+> no means certain).
 
-I had a raid1 on two 120Gb HD which were replaced by two 200Gb HD, and I
-had to grow the array after that because it was only 120Gb big. I looked
-at mdadm man page and used '--grow' in combination with '--size' options.
+it works. but shouldn't it have to be both inactive or active?
 
-This is what fdisk reports:
-     Disk /dev/hdg: 203.9 GB, 203928109056 bytes
 
-So the size in Kibibytes is 203928109056/1024 == 199148544.
+>>this is mdadm 1.12, just another site note there is no rpm for version 
+>>2.0:-(
+> 
+> 
+> No.  I seem to remember some odd compile issue with making the RPM
+> and thinking "I don't care".   Maybe I should care a bit more....
 
-We have to substract 128K for the raid superblock, so this is the command
-I issued to change the size of the array:
+would be useful.
 
-mdadm --grow /dev/md0 --size 199148416
 
-And instead of growing it to 200Gb it reduced it to (I think) ~20Gb. I
-rebooted and fsck fixed it :)
-
-I don't know if this list is the right place to report this, if it is not
-please reply to my email as I am not susbscribed to the list.
-
-Best regards,
-
-    Pau Oliva
-
----
-http://pof.eslack.org
+-- 
+   Levente                               "Si vis pacem para bellum!"
 
