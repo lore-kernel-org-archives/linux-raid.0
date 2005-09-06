@@ -1,40 +1,42 @@
-From: Ken Walker <ken.walker@manchester.ac.uk>
-Subject: my first raid disaster on reboot :o(
-Date: Tue, 6 Sep 2005 14:25:41 +0100
-Message-ID: <60F5F1E2B94AD4119F0B00B0D0215FFF01A69F90@bsc.tt.umist.ac.uk>
+From: Dan Williams <dan.j.williams@gmail.com>
+Subject: Accelerating Linux software raid
+Date: Tue, 6 Sep 2005 11:24:24 -0700
+Message-ID: <e9c3a7c2050906112410dc1d16@mail.gmail.com>
+Reply-To: dan.j.williams@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
+Cc: dave.jiang@gmail.com
 List-Id: linux-raid.ids
 
-I've got debian 3.1, kernel 2.6 installed on a machine with two 9.1g SCSI
-and 4 160g IDE's.
+Hello,
 
-The SCSI is split up into /  /usr  /var  /swap  /tmp  and /home, each set as
-a raid1.
+I am writing to the list to gauge interest for a modification of the
+md driver that allows it to take advantage of raid acceleration
+hardware.  I/O processors like the Intel IOP333
+(http://www.intel.com/design/iio/docs/iop333.htm) contain an xor
+engine for raid5 and raid6 calculations, but currently the md driver
+does not fully utilize these resources.
 
-The IDE's are set up as raid1 on the ide channels, such that hda is mirrored
-with hdc and hdb is mirrored with hdd.
+Dave Jiang wrote a driver that re-routed calls to xor_block() to use
+the hardware xor engine.  However, from my understating, he found that
+performance did not improve, due to the fact that md deals in
+PAGE_SIZE (4K) blocks.  At 4K the overhead of setting up the engine
+destroys any performance advantage over a software xor.  The goal of
+the modification would be to enable md to understand the capacity of
+the platform's xor resources and allow it to issue optimal block
+sizes.
 
-I had to move the system today so powered down with shutdown -h now.
+The first question is whether a solution along these lines would be
+valued by the community?  The effort is non-trivial.
 
-On reboot i just get / mounted ( i think ) and everything else says mdx
-corrupt superblock or such and not a valid ext2 fs.
+Assuming a positive response I will solicit implementation ideas and
+acceptance criteria from the list.
 
-all the mirrors were set us as ext3 and when it was up and running
-/proc/mdstat said all was well.
+Thank you for your consideration,
 
-/etc/fstab has all the raids present.
-
-
-I'm kinda stuck as to where to start.
-
-
-Could anybody point me in the right direction please.
-
-many thanks
-
-Ken
+Dan
