@@ -1,36 +1,36 @@
-From: Molle Bestefich <molle.bestefich@gmail.com>
-Subject: Re: Drive fails & raid6 array is not self rebuild .
-Date: Thu, 8 Sep 2005 21:34:09 +0200
-Message-ID: <62b0912f0509081234326cc15a@mail.gmail.com>
-References: <60F5F1E2B94AD4119F0B00B0D0215FFF01A69F99@bsc.tt.umist.ac.uk>
-	 <Pine.LNX.4.63.0509081247060.29776@filesrv1.baby-dragons.com>
+From: Konstantin Olchanski <olchansk@sam.triumf.ca>
+Subject: Re: Anyone clueful on forcing 3ware drive discovery?
+Date: Thu, 8 Sep 2005 12:34:12 -0700
+Message-ID: <20050908193412.GH5304@sam.triumf.ca>
+References: <200509081914.j88JEWgr008704@wind.enjellic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.63.0509081247060.29776@filesrv1.baby-dragons.com>
 Content-Disposition: inline
+In-Reply-To: <200509081914.j88JEWgr008704@wind.enjellic.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
-Cc: linux-raid maillist <linux-raid@vger.kernel.org>
+To: greg@enjellic.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Mr. James W. Laferriere wrote:
-> Is there a documented procedure to follow during
-> creation or after that will get a raid6 array to self
-> rebuild ?
+On Thu, Sep 08, 2005 at 02:14:32PM -0500, Dr. Greg Wettstein wrote:
+> We are using a number of 3Ware 75xx and 8xxx controller cards...
+> Last week we had a 7508 kick a drive on an AEN, presumably tripped by
+> a SMART event on the drive.  After the error the controller disavowed
+> all knowledge of the drive and we had to power cycle the machine to
+> get the controller card to recognize the drive.
 
-MD will rebuild your array automatically, given that it has a spare disk to use.
+I once saw a similar fault with a SATA disk on a 3ware-SATA controller-
+it could not be accessed until power cycled. I assume the disk firmware
+crashed (or whatever) and stopped talking on the SATA interface. 
 
-> raid5: Disk failure on sde, disabling device. Operation continuing on 35 devices
+Maybe some hot-plug hardware allows cycling power on individual disks
+without physically walking/cycling/driving to the computer and doing
+it the hard way by pulling the disk out (pulling a spinning disk out, bad,
+bad, bad!).
 
-Seems like a raid5, not raid6..
-
-> [UU_UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU]
-
-No need to do any rebuilding on the remaining devices, since the data
-on them are fine.
-
-You've lost redundancy however, so you should add a new disk to the array ASAP.
-
-With 35 disks, I'd recommend that you at least use raid6 in place of raid5..
+-- 
+Konstantin Olchanski
+Data Acquisition Systems: The Bytes Must Flow!
+Email: olchansk-at-triumf-dot-ca
+Snail mail: 4004 Wesbrook Mall, TRIUMF, Vancouver, B.C., V6T 2A3, Canada
