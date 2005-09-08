@@ -1,158 +1,62 @@
-From: Ken Walker <ken.walker@manchester.ac.uk>
-Subject: RE: my first raid disaster on reboot :o( update
-Date: Thu, 8 Sep 2005 12:38:31 +0100
-Message-ID: <60F5F1E2B94AD4119F0B00B0D0215FFF01A69F99@bsc.tt.umist.ac.uk>
+From: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
+Subject: Drive fails & raid6 array is not self rebuild .
+Date: Thu, 8 Sep 2005 12:54:31 -0600 (MDT)
+Message-ID: <Pine.LNX.4.63.0509081247060.29776@filesrv1.baby-dragons.com>
+References: <60F5F1E2B94AD4119F0B00B0D0215FFF01A69F99@bsc.tt.umist.ac.uk>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <60F5F1E2B94AD4119F0B00B0D0215FFF01A69F99@bsc.tt.umist.ac.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux-raid maillist <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-I'm getting confused again.
-
-
-I installed Debian 3.1 onto two SCSI drives set up as raid1.
-
-I also set-up the four ide drives, during installation and set them as
-
-/dev/md7 using /dev/hda,/dev/hdc
-/dev/md8 using /dev/hab,/dev/hdd
-
-both ext3
-
-they started, and sync'd
-
-on reboot, md7 and md8 didn't auto start.
-
-so i created them again with
-
-mdadm -C /dev/md7 -l1 -n2 /dev/hda /dev/hdc
-
-this stared rebuilding.
-
-then i did the same for md8
-
-mdadm -C /dev/md8 -l1 -n2 /dev/hdb /dev/hdd
-
-then i did 
-
-mkfs.ext3 /dev/md7
-mkfs.ext3 /dev/md8
-
-I checked with Fdisk that they were all set as FD.
-
-then i did
-
-(i made a copy of the original mdadm.conf first.)
-
-mdadm --detail -- scan > mdadm.conf
-
-
-And on reboot only md0 would mount.
-
-
-So i copied the original mdadm.conf back and rebooted, and all the raids
-apart from md7 and md8 started.
-
-I noticed at the top of the original mdadm.conf i had the following
-
-DEVICE partitions
-
-so i did
-
-mdadm --detail -- scan > mdadm.conf
-
-again, with md7 and md8 running and rebooted.
-
-adding 
-
-DEVICE partitions
-
-back to the top
-
-The system booted up but again without md7 or md8, it did its corrupt
-superblock or ext2 file system complaints.
-
-
-But I'm getting confused, 
-
-because, on
-
-http://www.linuxdevcenter.com/pub/a/linux/2002/12/05/RAID.html
-
-
-which is where i got the 
-
-mdadm --detail -- scan > mdadm.conf
-
-from, 
-
-the example he gives
-
-DEVICE	/dev/sdb1 /dev/sdc1
-ARRAY 	/dev/md0 level=raid0 num-devices=2
-UUID=410a299e:4cdd535e:169d3df4:48b7144a
-
-is the other way round in my mdadm.conf file, i have
-
-ARRAY 	/dev/md0 level=raid0 num-devices=2
-UUID=410a299e:4cdd535e:169d3df4:48b7144a
-DEVICE	/dev/sdb1 /dev/sdc1
-
-Which way round should it be?
-
-
-I have also read that a mdadm.conf file isn't really needed, but can be
-helpful, if i hide me mdadm.conf file will the system boot with md7 and md8.
-
-I do have those two raids in my fstab file at the end as
-
-/dev/md7	/Cad100	ext3	defaults  0 2
-/dev/md8	/Cad200	ext3	defaults  0 2
-
-
-Can anybody help :o(
-
-Ken
-
------Original Message-----
-From: Ken Walker [mailto:ken.walker@manchester.ac.uk]
-Sent: 06 September 2005 2:26 pm
-To: linux-raid@vger.kernel.org
-Subject: my first raid disaster on reboot :o(
-
-
-I've got debian 3.1, kernel 2.6 installed on a machine with two 9.1g SCSI
-and 4 160g IDE's.
-
-The SCSI is split up into /  /usr  /var  /swap  /tmp  and /home, each set as
-a raid1.
-
-The IDE's are set up as raid1 on the ide channels, such that hda is mirrored
-with hdc and hdb is mirrored with hdd.
-
-I had to move the system today so powered down with shutdown -h now.
-
-On reboot i just get / mounted ( i think ) and everything else says mdx
-corrupt superblock or such and not a valid ext2 fs.
-
-all the mirrors were set us as ext3 and when it was up and running
-/proc/mdstat said all was well.
-
-/etc/fstab has all the raids present.
-
-
-I'm kinda stuck as to where to start.
-
-
-Could anybody point me in the right direction please.
-
-many thanks
-
-Ken
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ 	Hello All ,  Is there a documented procedure to follow during
+ 	creation or after that will get a raid6 array to self
+ 	rebuild ?
+
+ 	Why I am asking .
+ 	I was getting the errors below at a heavy rate , so ...
+
+Sep  7 20:11:49 localhost kernel: scsi2 (2:0): rejecting I/O to dead 
+device
+Sep  7 20:11:49 localhost kernel: md: write_disk_sb failed for device 
+sde
+Sep  7 20:11:49 localhost kernel: md: excessive errors occurred during 
+superblock update, exiting
+Sep  7 20:11:49 localhost kernel: raid5: Disk failure on sde, 
+disabling device. Operation continuing on 35 devices
+
+ 	I ran the below & the above messages stopped .  But the array
+ 	(appears to have) never tried rebuilding .
+
+# mdadm --manage --fail /dev/md_d0 /dev/sde
+
+ 	The problem arose because the drive died totally . ie:
+root@devel-0:/ # fdisk /dev/sde
+
+Unable to open /dev/sde
+
+
+# cat /proc/mdstat
+...snip...
+md_d0 : active raid5 sdc[0] sdao[40] sdan[34] sdam[33] sdal[32] 
+sdak[31] sdaj[30] sdah[29] sdag[28] sdaf[27] sdae[26] sdad[25] 
+sdac[24] sdab[23] sdaa[22] sdz[21] sdy[20] sdw[19] sdv[18] sdu[17] 
+sdt[16] sds[15] sdr[14] sdq[13] sdp[12] sdo[11] sdn[10] sdl[9] sdk[8] 
+sdj[7] sdi[6] sdh[5] sdg[4] sdf[3] sde[2](F) sdd[1]
+       1244826240 blocks level 5, 64k chunk, algorithm 2 [36/35] 
+[UU_UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU]
+...snip...
+
+# cat /etc/mdadm.conf
+DEV /dev/sd[c-l] /dev/sd[n-w] /dev/sd[yz] /dev/sda[a-h] /dev/sda[j-s]
+ARRAY /dev/md_d0 level=raid5 num-devices=36 spares=4 
+UUID=2006d8c6:71918820:247e00b0:460d5bc1
+
+-- 
++------------------------------------------------------------------+
+| James   W.   Laferriere | System    Techniques | Give me VMS     |
+| Network        Engineer | 3542 Broken Yoke Dr. |  Give me Linux  |
+| babydr@baby-dragons.com | Billings , MT. 59105 |   only  on  AXP |
++------------------------------------------------------------------+
