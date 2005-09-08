@@ -1,7 +1,7 @@
 From: Jay Marsh <gerdalti@gmail.com>
 Subject: Issue with MDADM raid 5
-Date: Thu, 08 Sep 2005 00:39:17 -0400
-Message-ID: <431FC075.1030805@gmail.com>
+Date: Thu, 08 Sep 2005 00:42:59 -0400
+Message-ID: <431FC153.6070804@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
@@ -13,7 +13,7 @@ List-Id: linux-raid.ids
 I recently put together a large Raid 5 file server.
 Computer is running Fedora Core 3. Raid 5 is software raid using mdadm. 
 Because the network here at my house is used by a bunch of semi-literate 
-(just enough to fuck things up) people, I run a chown script against the 
+(just enough to mess things up) people, I run a chown script against the 
 root of the samba share every so often. This has been working fine, but 
 has brought some things to my attention. I am loosing files slowly.
 The Raid itself is 5 WD 320gig SATA drives. Using a supermicro enclosure 
@@ -28,17 +28,22 @@ code:
 ------------------------------------------------------------------------
 
 Message 72:
-From root@RIAA.tekkiehaus.com <mailto:root@RIAA.tekkiehaus.com>  Fri Sep  2 10:30:32 2005
+
+> From root@RIAA.tekkiehaus.com <mailto:root@RIAA.tekkiehaus.com>  Fri 
+> Sep  2 10:30:32 2005
+
 Date: Fri, 2 Sep 2005 10:30:25 -0400
-From: root@RIAA.tekkiehaus.com <mailto:root@RIAA.tekkiehaus.com> (Cron Daemon)
+From: root@RIAA.tekkiehaus.com <mailto:root@RIAA.tekkiehaus.com> (Cron 
+Daemon)
 To: root@RIAA.tekkiehaus.com <mailto:root@RIAA.tekkiehaus.com>
 Subject: Cron <root@RIAA> chown -R nobody.nobody /fileserv
 
 
-chown: cannot access `/fileserv/Audio/Jay's Shit/Rap Hip-Hop/Talib Kweli/Talib Kweli & Hi-tek - Reflection Eternal/010-reflection_eternal-name_of_the_game-ego.mp3': 
-Input/output error
+chown: cannot access `/fileserv/Audio/Jay's Shit/Rap Hip-Hop/Talib 
+Kweli/Talib Kweli & Hi-tek - Reflection 
+Eternal/010-reflection_eternal-name_of_the_game-ego.mp3': Input/output 
+error
 ------------------------------------------------------------------------
-
 
 
 This file is now GONE. It will show up in an ls, but i can not access 
@@ -53,12 +58,18 @@ code:
 [root@RIAA ~]# cat /proc/mdstat
 Personalities : [raid5]
 md1 : active raid5 sde1[4] sdd1[1] sdc1[0] sdb1[3] sda1[2]
-      1250274304 blocks level 5, 64k chunk, algorithm 2 [5/5] [UUUUU]
+     1250274304 blocks level 5, 64k chunk, algorithm 2 [5/5] [UUUUU]
 
 unused devices: <none>
 ------------------------------------------------------------------------
 
-
-
 Do I have a bad drive? Or is something else going on here? Need more 
 info? Just ask, I'll provide what I can.
+
+
+PS: I sent this twice, I posted it on a forum that I frequent, and 
+realized that I had left a bad word or two in when I sent it to the 
+list. Sorry if you get it twice (hopefully the first gets filtered out 
+somehow), and if the bad word offends, this is the cleaner version. I 
+guess I should not write long emails at 12:42am
+
