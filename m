@@ -1,72 +1,62 @@
-From: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
-Subject: Re: Drive fails & raid6 array is not self rebuild .
-Date: Fri, 9 Sep 2005 18:54:06 -0600 (MDT)
-Message-ID: <Pine.LNX.4.63.0509091847520.4421@filesrv1.baby-dragons.com>
-References: <60F5F1E2B94AD4119F0B00B0D0215FFF01A69F99@bsc.tt.umist.ac.uk>
- <Pine.LNX.4.63.0509081247060.29776@filesrv1.baby-dragons.com>
- <17184.43156.113155.811612@cse.unsw.edu.au>
- <Pine.LNX.4.63.0509081525380.30261@filesrv1.baby-dragons.com>
- <17184.56377.773388.978710@cse.unsw.edu.au>
- <Pine.LNX.4.63.0509082000030.31748@filesrv1.baby-dragons.com>
- <17185.15446.481054.508746@cse.unsw.edu.au> <Pine.LNX.4.63.0509091406070.2949@filesrv1.baby-dragons.com>
- <17186.852.375882.250912@cse.unsw.edu.au>
+From: Mark Hahn <hahn@physics.mcmaster.ca>
+Subject: Re: Accelerating Linux software raid
+Date: Sat, 10 Sep 2005 00:51:27 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44.0509100033570.29141-100000@coffee.psychology.mcmaster.ca>
+References: <e9c3a7c2050906112410dc1d16@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17186.852.375882.250912@cse.unsw.edu.au>
+In-Reply-To: <e9c3a7c2050906112410dc1d16@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: linux-raid maillist <linux-raid@vger.kernel.org>
+To: Dan Williams <dan.j.williams@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
- 	Hello Neil ,
+> I am writing to the list to gauge interest for a modification of the
+> md driver that allows it to take advantage of raid acceleration
 
-On Sat, 10 Sep 2005, Neil Brown wrote:
-> On Friday September 9, babydr@baby-dragons.com wrote:
->>
->>  	Hello Neil ,  I patched all were successful .  But after a
->>  	make clean ; make
->>  	I get ...	Tia ,  JimL
->> ..snip...
->> gcc -Wall -Werror -Wstrict-prototypes -DCONFFILE=\"/etc/mdadm.conf\" -ggdb -DSendmail=\""/usr/sbin/sendmail -t"\"   -c -o Assemble.o Assemble.c
->> Assemble.c: In function `Assemble':
->> Assemble.c:323: error: `nextspare' undeclared (first use in this function)
->> Assemble.c:323: error: (Each undeclared identifier is reported only once
->> Assemble.c:323: error: for each function it appears in.)
->> make: *** [Assemble.o] Error 1
->
-> That's odd, as the patch contained:
->
-> --- ./Assemble.c~current~	2005-09-05 10:55:01.000000000 +1000
-> +++ ./Assemble.c	2005-09-09 16:24:50.000000000 +1000
-> @@ -119,6 +119,7 @@ int Assemble(struct supertype *st, char
-> 	struct mdinfo info;
-> 	struct mddev_ident_s ident2;
-> 	char *avail;
-> +	int nextspare = 0;
->
-> 	vers = md_get_version(mdfd);
-> 	if (vers <= 0) {
+not that much, I think.
 
- 	What was missing from my 2.0 sources was the 'char *avail;'
- 	and patching failed on that hunk ,  Which totally missed .
- 	So I hand entered as you suggested the above bits .
+> hardware.  I/O processors like the Intel IOP333
+> (http://www.intel.com/design/iio/docs/iop333.htm) contain an xor
+> engine for raid5 and raid6 calculations, but currently the md driver
+> does not fully utilize these resources.
 
- 	Now it failes on a Warning (???) .
- 	Never heard of failures on warnings before .
+the worst insult in the linux world is "solution in search of a problem".
+that applies here: are you sure that there is a problem?  yes, offload 
+can be a lovely thing, but it often falls behind the main driver of the 
+industry - host cpu performance.  unless you're specifically targetting
+a high-IO device with very little CPU power, I think you'll find a lot 
+of skepticism about IO coprocessors.
 
-gcc -Wall -Werror -Wstrict-prototypes -DCONFFILE=\"/etc/mdadm.conf\" -ggdb -DSendmail=\""/usr/sbin/sendmail -t"\"   -c -o Assemble.o Assemble.c
-Assemble.c: In function `Assemble':
-Assemble.c:121: warning: unused variable `avail'
-make: *** [Assemble.o] Error 1
+I have a server that can do the raid5 checksum at 8 GB/s, and have no 
+reason to ever want more than ~100 MB/s on that machine.  do I care 
+about "wasting" 1/80th of the machine?  not really, even though it's 
+a supercomputing cluster node.  for fileservers, I mind even less 
+wasting CPU using the host for parity, since the cycles aren't going
+to be used for anything else...
 
- 	Would you please cut a source set to the kernel site >
- 	Say as version 2.0a so I can see the diffs against the
- 	sources I have ?  Tia ,  JimL
+> Dave Jiang wrote a driver that re-routed calls to xor_block() to use
+> the hardware xor engine.  However, from my understating, he found that
+> performance did not improve, due to the fact that md deals in
+> PAGE_SIZE (4K) blocks.
 
--- 
-+------------------------------------------------------------------+
-| James   W.   Laferriere | System    Techniques | Give me VMS     |
-| Network        Engineer | 3542 Broken Yoke Dr. |  Give me Linux  |
-| babydr@baby-dragons.com | Billings , MT. 59105 |   only  on  AXP |
-+------------------------------------------------------------------+
+well, it calls xor_block with STRIPE_SIZE which is indeed PAGE_SIZE.
+
+> destroys any performance advantage over a software xor.  The goal of
+> the modification would be to enable md to understand the capacity of
+> the platform's xor resources and allow it to issue optimal block
+> sizes.
+
+this argument assumes that the HW xor is actually faster than the host,
+though.  is that true?  otherwise, HW xor starts out behind due to the 
+setup overhead, and falls further behind for larger stripe sizes!
+
+> The first question is whether a solution along these lines would be
+> valued by the community?  The effort is non-trivial.
+
+if you're interested in speeding up MD, then looking at how to make 
+STRIPE_SIZE bigger might be worthwhile.  (independent of HW xor.)
+
+regards, mark hahn.
+
