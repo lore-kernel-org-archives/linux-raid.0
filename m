@@ -1,50 +1,216 @@
-From: Dan Williams <dan.j.williams@gmail.com>
-Subject: Re: Accelerating Linux software raid
-Date: Sat, 10 Sep 2005 12:13:57 -0700
-Message-ID: <e9c3a7c205091012133d4e07fd@mail.gmail.com>
-References: <4322D862.3000300@emc.com>
-	 <Pine.LNX.4.44.0509100927130.29141-100000@coffee.psychology.mcmaster.ca>
-Reply-To: dan.j.williams@gmail.com
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Drive fails & raid6 array is not self rebuild .
+Date: Sun, 11 Sep 2005 07:58:29 +1000
+Message-ID: <17187.22277.553179.819577@cse.unsw.edu.au>
+References: <60F5F1E2B94AD4119F0B00B0D0215FFF01A69F99@bsc.tt.umist.ac.uk>
+	<Pine.LNX.4.63.0509081247060.29776@filesrv1.baby-dragons.com>
+	<17184.43156.113155.811612@cse.unsw.edu.au>
+	<Pine.LNX.4.63.0509081525380.30261@filesrv1.baby-dragons.com>
+	<17184.56377.773388.978710@cse.unsw.edu.au>
+	<Pine.LNX.4.63.0509082000030.31748@filesrv1.baby-dragons.com>
+	<17185.15446.481054.508746@cse.unsw.edu.au>
+	<Pine.LNX.4.63.0509091406070.2949@filesrv1.baby-dragons.com>
+	<17186.852.375882.250912@cse.unsw.edu.au>
+	<Pine.LNX.4.63.0509091847520.4421@filesrv1.baby-dragons.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: multipart/mixed; boundary="PzKOmyGgpx"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44.0509100927130.29141-100000@coffee.psychology.mcmaster.ca>
-Content-Disposition: inline
+In-Reply-To: message from Mr. James W. Laferriere on Friday September 9
 Sender: linux-raid-owner@vger.kernel.org
-To: Mark Hahn <hahn@physics.mcmaster.ca>
-Cc: Ric Wheeler <ric@emc.com>, linux-raid@vger.kernel.org
+To: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
+Cc: linux-raid maillist <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-> this is an excellent point, and one that argues *against* HW coprocessing.
-> consider the NIC market: TOE never happened because adding tcp/ssl to a
-> separate card just moves the complexity and bugs from an easy-to-patch place
-> into a harder-to-patch place.  I'd much rather upgrade from a uni server to a
-> dual and run the tcp/ssl in software than spend the same amount of money
-> on a $2000 nic that runs its own OS.  my tcp stack bugs get fixed in a
-> few hours if I email netdev, but who knows how long bugs would linger in
-> the firmware stack of a TOE card?
+
+--PzKOmyGgpx
+Content-Type: text/plain; charset=us-ascii
+Content-Description: message body text
+Content-Transfer-Encoding: 7bit
+
+On Friday September 9, babydr@baby-dragons.com wrote:
+>  	Hello Neil ,
 > 
-> same thing here, except moreso.  making storage appliances smarter is great,
-> but why put that smarts in some kind of opaque, inaccessible and hard-to-use
-> coprocessor?  good, thoughtful design leads towards a loosely-coupled cluster
-> of off-the-shelf components...
+> On Sat, 10 Sep 2005, Neil Brown wrote:
+> > On Friday September 9, babydr@baby-dragons.com wrote:
+> >>
+> >>  	Hello Neil ,  I patched all were successful .  But after a
+> >>  	make clean ; make
+> >>  	I get ...	Tia ,  JimL
+> >> ..snip...
+> >> gcc -Wall -Werror -Wstrict-prototypes -DCONFFILE=\"/etc/mdadm.conf\" -ggdb -DSendmail=\""/usr/sbin/sendmail -t"\"   -c -o Assemble.o Assemble.c
+> >> Assemble.c: In function `Assemble':
+> >> Assemble.c:323: error: `nextspare' undeclared (first use in this function)
+> >> Assemble.c:323: error: (Each undeclared identifier is reported only once
+> >> Assemble.c:323: error: for each function it appears in.)
+> >> make: *** [Assemble.o] Error 1
+> >
+> > That's odd, as the patch contained:
+> >
+> > --- ./Assemble.c~current~	2005-09-05 10:55:01.000000000 +1000
+> > +++ ./Assemble.c	2005-09-09 16:24:50.000000000 +1000
+> > @@ -119,6 +119,7 @@ int Assemble(struct supertype *st, char
+> > 	struct mdinfo info;
+> > 	struct mddev_ident_s ident2;
+> > 	char *avail;
+> > +	int nextspare = 0;
+> >
+> > 	vers = md_get_version(mdfd);
+> > 	if (vers <= 0) {
 > 
+>  	What was missing from my 2.0 sources was the 'char *avail;'
+>  	and patching failed on that hunk ,  Which totally missed .
 
-The question here is not can a modern server outperform a coprocessor
-at a given task.  Of course it can.  The issue here is how to scale
-embedded Linux I/O performance for system-on-a-chip storage silicon
-designs.  An embedded design breaks some of the assumptions of the
-current driver, first that dedicated raid5/6 offload logic is
-available, and that, in general, system resources can be biased
-towards the I/O subsystem.  I disagree that it is a solution looking
-for a problem.  The problem is the MD driver performs sub optimally on
-these platforms.
+The 'avail' is for a different independent patch which fixes a raid10
+issue.
+You can ignore it.
 
-I'm learning MD by reading the source, and stepping through it with a
-debugger.  If anyone knows of other documentation or talks given about
-MD please point me to it.
+>  	So I hand entered as you suggested the above bits .
+> 
+>  	Now it failes on a Warning (???) .
 
-Thanks,
+I guess you didn't ignore it. 
 
-Dan
+Just add the 'int next_spare = 0;' to what you had.  Don't worry that
+the 'char *avail;' isn't there.
+
+>  	Never heard of failures on warnings before .
+
+That would be because of the '-Werror' I put in there to make sure I
+don't get lazy about warnings.
+
+> 
+> gcc -Wall -Werror -Wstrict-prototypes -DCONFFILE=\"/etc/mdadm.conf\" -ggdb -DSendmail=\""/usr/sbin/sendmail -t"\"   -c -o Assemble.o Assemble.c
+> Assemble.c: In function `Assemble':
+> Assemble.c:121: warning: unused variable `avail'
+> make: *** [Assemble.o] Error 1
+> 
+>  	Would you please cut a source set to the kernel site >
+>  	Say as version 2.0a so I can see the diffs against the
+>  	sources I have ?  Tia ,  JimL
+
+I hope to do a 2.1 next week.  Here is the current complete patch
+against 2.0.
+NeilBrown
+
+
+
+--PzKOmyGgpx
+Content-Type: application/octet-stream
+Content-Disposition: attachment;
+	filename="mdadm.diff"
+Content-Transfer-Encoding: base64
+
+ZGlmZiAtcnUgL3Zhci90bXAvbWRhZG0tb2xkL21kYWRtLTIuMC9Bc3NlbWJsZS5jIC92YXIvdG1w
+L21kYWRtLW5ldy9tZGFkbS0yLjAvQXNzZW1ibGUuYwotLS0gL3Zhci90bXAvbWRhZG0tb2xkL21k
+YWRtLTIuMC9Bc3NlbWJsZS5jCTIwMDUtMDgtMTUgMTY6MzE6NTcuMDAwMDAwMDAwICsxMDAwCisr
+KyAvdmFyL3RtcC9tZGFkbS1uZXcvbWRhZG0tMi4wL0Fzc2VtYmxlLmMJMjAwNS0wOS0wOSAxNjoy
+NDo1MC4wMDAwMDAwMDAgKzEwMDAKQEAgLTExOCw2ICsxMTgsOCBAQAogCW1kZGV2X2Rldl90IHRt
+cGRldjsKIAlzdHJ1Y3QgbWRpbmZvIGluZm87CiAJc3RydWN0IG1kZGV2X2lkZW50X3MgaWRlbnQy
+OworCWNoYXIgKmF2YWlsOworCWludCBuZXh0c3BhcmUgPSAwOwogCQogCXZlcnMgPSBtZF9nZXRf
+dmVyc2lvbihtZGZkKTsKIAlpZiAodmVycyA8PSAwKSB7CkBAIC0zMTksNiArMzIxLDExIEBACiAJ
+CQlpID0gZGV2Y250OwogCQllbHNlCiAJCQlpID0gZGV2aWNlc1tkZXZjbnRdLnJhaWRfZGlzazsK
+KwkJaWYgKGkrMSA9PSAwKSB7CisJCQlpZiAobmV4dHNwYXJlIDwgaW5mby5hcnJheS5yYWlkX2Rp
+c2tzKQorCQkJCW5leHRzcGFyZSA9IGluZm8uYXJyYXkucmFpZF9kaXNrczsKKwkJCWkgPSBuZXh0
+c3BhcmUrKzsKKwkJfQogCQlpZiAoaSA8IDEwMDAwKSB7CiAJCQlpZiAoaSA+PSBiZXN0Y250KSB7
+CiAJCQkJdW5zaWduZWQgaW50IG5ld2Jlc3RjbnQgPSBpKzEwOwpAQCAtMzU5LDYgKzM2Niw4IEBA
+CiAJLyogbm93IHdlIGhhdmUgc29tZSBkZXZpY2VzIHRoYXQgbWlnaHQgYmUgc3VpdGFibGUuCiAJ
+ICogSSB3b25kZXIgaG93IG1hbnkKIAkgKi8KKwlhdmFpbCA9IG1hbGxvYyhpbmZvLmFycmF5LnJh
+aWRfZGlza3MpOworCW1lbXNldChhdmFpbCwgMCwgaW5mby5hcnJheS5yYWlkX2Rpc2tzKTsKIAlv
+a2NudCA9IDA7CiAJc3BhcmVjbnQ9MDsKIAlmb3IgKGk9MDsgaTwgYmVzdGNudCA7aSsrKSB7CkBA
+IC0zNzcsMTMgKzM4NiwxNiBAQAogCQlpZiAoZGV2aWNlc1tqXS5ldmVudHMrZXZlbnRfbWFyZ2lu
+ID49CiAJCSAgICBkZXZpY2VzW21vc3RfcmVjZW50XS5ldmVudHMpIHsKIAkJCWRldmljZXNbal0u
+dXB0b2RhdGUgPSAxOwotCQkJaWYgKGkgPCBpbmZvLmFycmF5LnJhaWRfZGlza3MpCisJCQlpZiAo
+aSA8IGluZm8uYXJyYXkucmFpZF9kaXNrcykgewogCQkJCW9rY250Kys7Ci0JCQllbHNlCisJCQkJ
+YXZhaWxbaV09MTsKKwkJCX0gZWxzZQogCQkJCXNwYXJlY250Kys7CiAJCX0KIAl9Ci0Jd2hpbGUg
+KGZvcmNlICYmICFlbm91Z2goaW5mby5hcnJheS5sZXZlbCwgaW5mby5hcnJheS5yYWlkX2Rpc2tz
+LCBva2NudCkpIHsKKwl3aGlsZSAoZm9yY2UgJiYgIWVub3VnaChpbmZvLmFycmF5LmxldmVsLCBp
+bmZvLmFycmF5LnJhaWRfZGlza3MsCisJCQkJaW5mby5hcnJheS5sYXlvdXQsCisJCQkJYXZhaWws
+IG9rY250KSkgewogCQkvKiBDaG9vc2UgdGhlIG5ld2VzdCBiZXN0IGRyaXZlIHdoaWNoIGlzCiAJ
+CSAqIG5vdCB1cC10by1kYXRlLCB1cGRhdGUgdGhlIHN1cGVyYmxvY2sKIAkJICogYW5kIGFkZCBp
+dC4KQEAgLTQzNCw2ICs0NDYsNyBAQAogCQljbG9zZShmZCk7CiAJCWRldmljZXNbY2hvc2VuX2Ry
+aXZlXS5ldmVudHMgPSBkZXZpY2VzW21vc3RfcmVjZW50XS5ldmVudHM7CiAJCWRldmljZXNbY2hv
+c2VuX2RyaXZlXS51cHRvZGF0ZSA9IDE7CisJCWF2YWlsW2Nob3Nlbl9kcml2ZV0gPSAxOwogCQlv
+a2NudCsrOwogCQlmcmVlKHN1cGVyKTsKIAl9CkBAIC01OTksNyArNjEyLDcgQEAKIAkJCiAJCWlm
+IChydW5zdG9wID09IDEgfHwKIAkJICAgIChydW5zdG9wID09IDAgJiYgCi0JCSAgICAgKCBlbm91
+Z2goaW5mby5hcnJheS5sZXZlbCwgaW5mby5hcnJheS5yYWlkX2Rpc2tzLCBva2NudCkgJiYKKwkJ
+ICAgICAoIGVub3VnaChpbmZvLmFycmF5LmxldmVsLCBpbmZvLmFycmF5LnJhaWRfZGlza3MsIGlu
+Zm8uYXJyYXkubGF5b3V0LCBhdmFpbCwgb2tjbnQpICYmCiAJCSAgICAgICAob2tjbnQgPj0gcmVx
+X2NudCB8fCBzdGFydF9wYXJ0aWFsX29rKQogCQkJICAgICApKSkgewogCQkJaWYgKGlvY3RsKG1k
+ZmQsIFJVTl9BUlJBWSwgTlVMTCk9PTApIHsKQEAgLTYyNyw3ICs2NDAsNyBAQAogCQkJZnByaW50
+ZihzdGRlcnIsIE5hbWUgIjogJXMgYXNzZW1ibGVkIGZyb20gJWQgZHJpdmUlcyIsIG1kZGV2LCBv
+a2NudCwgb2tjbnQ9PTE/IiI6InMiKTsKIAkJCWlmIChzcGFyZWNudCkKIAkJCQlmcHJpbnRmKHN0
+ZGVyciwgIiBhbmQgJWQgc3BhcmUlcyIsIHNwYXJlY250LCBzcGFyZWNudD09MT8iIjoicyIpOwot
+CQkJaWYgKCFlbm91Z2goaW5mby5hcnJheS5sZXZlbCwgaW5mby5hcnJheS5yYWlkX2Rpc2tzLCBv
+a2NudCkpCisJCQlpZiAoIWVub3VnaChpbmZvLmFycmF5LmxldmVsLCBpbmZvLmFycmF5LnJhaWRf
+ZGlza3MsIGluZm8uYXJyYXkubGF5b3V0LCBhdmFpbCwgb2tjbnQpKQogCQkJCWZwcmludGYoc3Rk
+ZXJyLCAiIC0gbm90IGVub3VnaCB0byBzdGFydCB0aGUgYXJyYXkuXG4iKTsKIAkJCWVsc2Ugewog
+CQkJCWlmIChyZXFfY250ID09IGluZm8uYXJyYXkucmFpZF9kaXNrcykKZGlmZiAtcnUgL3Zhci90
+bXAvbWRhZG0tb2xkL21kYWRtLTIuMC9NYW5hZ2UuYyAvdmFyL3RtcC9tZGFkbS1uZXcvbWRhZG0t
+Mi4wL01hbmFnZS5jCi0tLSAvdmFyL3RtcC9tZGFkbS1vbGQvbWRhZG0tMi4wL01hbmFnZS5jCTIw
+MDUtMDgtMjYgMTQ6NDk6MjUuMDAwMDAwMDAwICsxMDAwCisrKyAvdmFyL3RtcC9tZGFkbS1uZXcv
+bWRhZG0tMi4wL01hbmFnZS5jCTIwMDUtMDktMDkgMTY6MDQ6MTIuMDAwMDAwMDAwICsxMDAwCkBA
+IC0yODgsNyArMjg4LDcgQEAKIAkJCQkJCWlmIChpb2N0bChmZCwgQUREX05FV19ESVNLLCAmZGlz
+YykgPT0gMCkgewogCQkJCQkJCWlmICh2ZXJib3NlID49IDApCiAJCQkJCQkJCWZwcmludGYoc3Rk
+ZXJyLCBOYW1lICI6IHJlLWFkZGVkICVzXG4iLCBkdi0+ZGV2bmFtZSk7Ci0JCQkJCQkJcmV0dXJu
+IDA7CisJCQkJCQkJY29udGludWU7CiAJCQkJCQl9CiAJCQkJCQkvKiBmYWxsIGJhY2sgb24gbm9y
+bWFsLWFkZCAqLwogCQkJCQl9CmRpZmYgLXJ1IC92YXIvdG1wL21kYWRtLW9sZC9tZGFkbS0yLjAv
+bWRhZG0uaCAvdmFyL3RtcC9tZGFkbS1uZXcvbWRhZG0tMi4wL21kYWRtLmgKLS0tIC92YXIvdG1w
+L21kYWRtLW9sZC9tZGFkbS0yLjAvbWRhZG0uaAkyMDA1LTA4LTI2IDE0OjQ5OjI0LjAwMDAwMDAw
+MCArMTAwMAorKysgL3Zhci90bXAvbWRhZG0tbmV3L21kYWRtLTIuMC9tZGFkbS5oCTIwMDUtMDkt
+MDUgMTA6NTU6MDEuMDAwMDAwMDAwICsxMDAwCkBAIC0yOTEsNyArMjkxLDggQEAKIGV4dGVybiBp
+bnQgc2FtZV91dWlkKGludCBhWzRdLCBpbnQgYls0XSwgaW50IHN3YXB1dWlkKTsKIC8qIGV4dGVy
+biBpbnQgY29tcGFyZV9zdXBlcihtZHBfc3VwZXJfdCAqZmlyc3QsIG1kcF9zdXBlcl90ICpzZWNv
+bmQpOyovCiBleHRlcm4gdW5zaWduZWQgbG9uZyBjYWxjX2NzdW0odm9pZCAqc3VwZXIsIGludCBi
+eXRlcyk7Ci1leHRlcm4gaW50IGVub3VnaChpbnQgbGV2ZWwsIGludCByYWlkX2Rpc2tzLCBpbnQg
+YXZhaWxfZGlza3MpOworZXh0ZXJuIGludCBlbm91Z2goaW50IGxldmVsLCBpbnQgcmFpZF9kaXNr
+cywgaW50IGxheW91dCwKKwkJICAgY2hhciAqYXZhaWwsIGludCBhdmFpbF9kaXNrcyk7CiBleHRl
+cm4gaW50IGFzayhjaGFyICptZXNnKTsKIAogCmRpZmYgLXJ1IC92YXIvdG1wL21kYWRtLW9sZC9t
+ZGFkbS0yLjAvc3VwZXIwLmMgL3Zhci90bXAvbWRhZG0tbmV3L21kYWRtLTIuMC9zdXBlcjAuYwot
+LS0gL3Zhci90bXAvbWRhZG0tb2xkL21kYWRtLTIuMC9zdXBlcjAuYwkyMDA1LTA4LTI2IDE0OjQ5
+OjI0LjAwMDAwMDAwMCArMTAwMAorKysgL3Zhci90bXAvbWRhZG0tbmV3L21kYWRtLTIuMC9zdXBl
+cjAuYwkyMDA1LTA5LTA1IDEwOjU1OjAxLjAwMDAwMDAwMCArMTAwMApAQCAtMTMxLDYgKzEzMSwx
+MCBAQAogCQljID0gbWFwX251bShyNWxheW91dCwgc2ItPmxheW91dCk7CiAJCXByaW50ZigiICAg
+ICAgICAgTGF5b3V0IDogJXNcbiIsIGM/YzoiLXVua25vd24tIik7CiAJfQorCWlmIChzYi0+bGV2
+ZWwgPT0gMTApIHsKKwkJcHJpbnRmKCIgICAgICAgICBMYXlvdXQgOiBuZWFyPSVkLCBmYXI9JWRc
+biIsCisJCSAgICAgICBzYi0+bGF5b3V0JjI1NSwgKHNiLT5sYXlvdXQ+PjgpJjI1NSk7CisJfQog
+CXN3aXRjaChzYi0+bGV2ZWwpIHsKIAljYXNlIDA6CiAJY2FzZSA0OgpAQCAtMjM0LDYgKzIzOCw3
+IEBACiAJaW5mby0+YXJyYXkucGF0Y2hfdmVyc2lvbiA9IHNiLT5wYXRjaF92ZXJzaW9uOwogCWlu
+Zm8tPmFycmF5LnJhaWRfZGlza3MgPSBzYi0+cmFpZF9kaXNrczsKIAlpbmZvLT5hcnJheS5sZXZl
+bCA9IHNiLT5sZXZlbDsKKwlpbmZvLT5hcnJheS5sYXlvdXQgPSBzYi0+bGF5b3V0OwogCWluZm8t
+PmFycmF5Lm1kX21pbm9yID0gc2ItPm1kX21pbm9yOwogCWluZm8tPmFycmF5LmN0aW1lID0gc2It
+PmN0aW1lOwogCmRpZmYgLXJ1IC92YXIvdG1wL21kYWRtLW9sZC9tZGFkbS0yLjAvc3VwZXIxLmMg
+L3Zhci90bXAvbWRhZG0tbmV3L21kYWRtLTIuMC9zdXBlcjEuYwotLS0gL3Zhci90bXAvbWRhZG0t
+b2xkL21kYWRtLTIuMC9zdXBlcjEuYwkyMDA1LTA4LTI2IDE2OjA3OjMzLjAwMDAwMDAwMCArMTAw
+MAorKysgL3Zhci90bXAvbWRhZG0tbmV3L21kYWRtLTIuMC9zdXBlcjEuYwkyMDA1LTA5LTA1IDEw
+OjU1OjAxLjAwMDAwMDAwMCArMTAwMApAQCAtMTgwLDYgKzE4MCwxMSBAQAogCQljID0gbWFwX251
+bShyNWxheW91dCwgX19sZTMyX3RvX2NwdShzYi0+bGF5b3V0KSk7CiAJCXByaW50ZigiICAgICAg
+ICAgTGF5b3V0IDogJXNcbiIsIGM/YzoiLXVua25vd24tIik7CiAJfQorCWlmIChfX2xlMzJfdG9f
+Y3B1KHNiLT5sZXZlbCkgPT0gMTApIHsKKwkJaW50IGxvID0gX19sZTMyX3RvX2NwdShzYi0+bGF5
+b3V0KTsKKwkJcHJpbnRmKCIgICAgICAgICBMYXlvdXQgOiBuZWFyPSVkLCBmYXI9JWRcbiIsCisJ
+CSAgICAgICBsbyYyNTUsIChsbz4+OCkmMjU1KTsKKwl9CiAJc3dpdGNoKF9fbGUzMl90b19jcHUo
+c2ItPmxldmVsKSkgewogCWNhc2UgMDoKIAljYXNlIDQ6CkBAIC0yOTAsNiArMjk1LDcgQEAKIAlp
+bmZvLT5hcnJheS5wYXRjaF92ZXJzaW9uID0gMDsKIAlpbmZvLT5hcnJheS5yYWlkX2Rpc2tzID0g
+X19sZTMyX3RvX2NwdShzYi0+cmFpZF9kaXNrcyk7CiAJaW5mby0+YXJyYXkubGV2ZWwgPSBfX2xl
+MzJfdG9fY3B1KHNiLT5sZXZlbCk7CisJaW5mby0+YXJyYXkubGF5b3V0ID0gX19sZTMyX3RvX2Nw
+dShzYi0+bGF5b3V0KTsKIAlpbmZvLT5hcnJheS5tZF9taW5vciA9IC0xOwogCWluZm8tPmFycmF5
+LmN0aW1lID0gX19sZTY0X3RvX2NwdShzYi0+Y3RpbWUpOwogCmRpZmYgLXJ1IC92YXIvdG1wL21k
+YWRtLW9sZC9tZGFkbS0yLjAvdXRpbC5jIC92YXIvdG1wL21kYWRtLW5ldy9tZGFkbS0yLjAvdXRp
+bC5jCi0tLSAvdmFyL3RtcC9tZGFkbS1vbGQvbWRhZG0tMi4wL3V0aWwuYwkyMDA1LTA4LTE3IDE0
+OjI4OjM4LjAwMDAwMDAwMCArMTAwMAorKysgL3Zhci90bXAvbWRhZG0tbmV3L21kYWRtLTIuMC91
+dGlsLmMJMjAwNS0wOS0wNSAxMDo1NTowMS4wMDAwMDAwMDAgKzEwMDAKQEAgLTExOCwxMCArMTE4
+LDMxIEBACiAJcmV0dXJuIChhKjEwMDAwMDApKyhiKjEwMDApK2M7CiB9CiAKLWludCBlbm91Z2go
+aW50IGxldmVsLCBpbnQgcmFpZF9kaXNrcywgaW50IGF2YWlsX2Rpc2tzKQoraW50IGVub3VnaChp
+bnQgbGV2ZWwsIGludCByYWlkX2Rpc2tzLCBpbnQgbGF5b3V0LAorCSAgIGNoYXIgKmF2YWlsLCBp
+bnQgYXZhaWxfZGlza3MpCiB7CisJaW50IGNvcGllcywgZmlyc3Q7CiAJc3dpdGNoIChsZXZlbCkg
+ewotCWNhc2UgMTA6IHJldHVybiAxOyAvKiBhIGxpZSwgYnV0IGl0IGlzIGhhcmQgdG8gdGVsbCAq
+LworCWNhc2UgMTA6CisJCS8qIFRoaXMgaXMgdGhlIHRyaWNreSBvbmUgLSB3ZSBuZWVkIHRvIGNo
+ZWNrCisJCSAqIHdoaWNoIGFjdHVhbCBkaXNrcyBhcmUgcHJlc2VudC4KKwkJICovCisJCWNvcGll
+cyA9IChsYXlvdXQmMjU1KSogKGxheW91dD4+OCk7CisJCWZpcnN0PTA7CisJCWRvIHsKKwkJCS8q
+IHRoZXJlIG11c3QgYmUgb25lIG9mIHRoZSAnY29waWVzJyBmb3JtICdmaXJzdCcgKi8KKwkJCWlu
+dCBuID0gY29waWVzOworCQkJaW50IGNudD0wOworCQkJd2hpbGUgKG4tLSkgeworCQkJCWlmIChh
+dmFpbFtmaXJzdF0pCisJCQkJCWNudCsrOworCQkJCWZpcnN0ID0gKGZpcnN0KzEpICUgcmFpZF9k
+aXNrczsKKwkJCX0KKwkJCWlmIChjbnQgPT0gMCkKKwkJCQlyZXR1cm4gMDsKKworCQl9IHdoaWxl
+IChmaXJzdCAhPSAwKTsKKwkJcmV0dXJuIDE7CiAKIAljYXNlIC00OgogCQlyZXR1cm4gYXZhaWxf
+ZGlza3M+PSAxOwo=
+--PzKOmyGgpx--
