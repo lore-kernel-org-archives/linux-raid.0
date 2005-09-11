@@ -1,54 +1,63 @@
-From: Mark Hahn <hahn@physics.mcmaster.ca>
-Subject: Re: Accelerating Linux software raid
-Date: Sun, 11 Sep 2005 16:19:28 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44.0509111608210.29141-100000@coffee.psychology.mcmaster.ca>
-References: <43241C76.4030900@emc.com>
+From: Changsen Xu <xucs007@yahoo.com>
+Subject: Re: mdadm: which device set as source to mirror?
+Date: Sun, 11 Sep 2005 18:07:09 -0500
+Message-ID: <1126480029.5932.6.camel@r40>
+References: <1126458858.6042.6.camel@r40>
+	 <17188.44497.481437.390441@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <43241C76.4030900@emc.com>
+In-Reply-To: <17188.44497.481437.390441@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@cse.unsw.edu.au>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> >1) If you have an infinite power budget (big box), you might as well
-> >   let the main cpus do the raid stuff. If you are short on power (embedded),
-> >   you cannot afford to power an extra processor (+memory and stuff).
-> >
-> >2) If you have rich customers (big box), let them pay for a bigger
-> >   main cpu to do the raid, if you want to be cheap (embedded, appliance),
-> >   you cannot afford to plop an extra cpu (+support chips) on your custom pcb.
-> >
-> The actual facts don't support this view since the gap in power 
-> consumption is huge. Most of these system on a chip designs provide the 
-> main CPU/northbridge/southbridge and extra execution units for a small 
-> fraction of one standard CPU.  Say under 20  watts for all of the above 
-> versus up to (over sometimes) 100 watts for a standard CPU (without its 
-> system chip sets).
+Thanks for your quick response.
 
-we appear to be talking about different things.  the original suggestion
-was for appliances like tivo, which clearly have a limited power budget,
-but certainly > 20W.  I responded by suggesting that current mainstream
-mobile CPUs (like mobile athlon64's) have PLENTY of power to run MD - 
-in fact, more than an appliance could possibly have any need for.
-and they dissipate 20-30W.
+It won't matter if I want to use 2 blank partitions to build RAID1;
 
-then the topic somehow mutated into SoC designs, such as Intel's,
-which are actually intended to *be* the raid card, and have an ARM 
-core peaking at 600 MHz, and probably are challenged to sustain even
-100 MB/s.  (in spite of bragging about a multi-GB/s internal bus.)
+But now I wish to use mdadm to backup my /home partition, which
+already has tons of files on it;
 
-in other words, there's a third category: OEM customers who want to build
-a smart raid card that consists of a SoC running linux actually implementing
-the raid.  the main technical impediment is that Intel's solution has
-XOR and DMA engines to make up for the wimpy CPU, but those engines are 
-barely profitable with 4k block sizes.  since MD does XOR's in 4k chunks,
-some hacking would be necessary to expand this size.  I expect this would 
-have some modest benefit for systems other than the Intel SoC.  (but I 
-question the sanity of the Intel approach in the first place, since I believe
-the trend in storage is away from this kind of integration.  obviously,
-it also doesn't make much sense for linux hosts, but such a card would
-probably find more of a market in the windows world.)
+If mdadm happens to choose the other blank partition as source
+to do mirroring, all my data on /home will be lost;
 
-regards, mark hahn.
+Hardware RAID always allows me to choose which partition/drive
+to be used as source.
+
+Regards,
+
+
+
+
+On Mon, 2005-09-12 at 08:21 +1000, Neil Brown wrote:
+> On Sunday September 11, xucs007@yahoo.com wrote:
+> > Dear Neil Brown,
+> > 
+> > I'm trying to learn how to use your great mdadm,
+> > one thing I'm not quite sure, and couldn't find
+> > any clue in your man page, is,
+> > 
+> > During create or assemble mode, for RAID1, which
+> > device mdadm uses as source to make the mirroring?
+> > Is there any differences to determine it
+> > for situations of same-size devices and different-size
+> > devices (>1% differences) ?
+> 
+> I think it copies from the smallest numbered working drive (i.e. drive
+> 0 if that is working, else drive 1, etc).  However it really
+> shouldn't matter to you.  If you are doing something that depends on
+> having the right answer to this, you are probably doing it the wrong
+> way.  
+> 
+> If you would like to discuss it further, I suggest explaining what you
+> want to do, and why you think you need to know this, to
+> linux-raid@vger.kernel.org. 
+> 
+> NeilBrown
+> 
+-- 
+  Changsen Xu
+ 
 
