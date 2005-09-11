@@ -1,44 +1,54 @@
-From: Eyal Lebedinsky <eyal@eyal.emu.id.au>
-Subject: Re: Promise SATAII150 TX4 or raidreconf broken
-Date: Mon, 12 Sep 2005 01:50:56 +1000
-Message-ID: <43245260.6030907@eyal.emu.id.au>
-References: <430E4AB0.2060600@eyal.emu.id.au> <4313E433.1080602@pobox.com>	<43223709.8090002@eyal.emu.id.au> <x3kfysdq846.fsf@Psilocybe.Update.UU.SE>
+From: Mark Hahn <hahn@physics.mcmaster.ca>
+Subject: Re: Accelerating Linux software raid
+Date: Sun, 11 Sep 2005 16:19:28 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44.0509111608210.29141-100000@coffee.psychology.mcmaster.ca>
+References: <43241C76.4030900@emc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <x3kfysdq846.fsf@Psilocybe.Update.UU.SE>
+In-Reply-To: <43241C76.4030900@emc.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Thorild Selen <thorild@Update.UU.SE>
-Cc: linux-ide@vger.kernel.org, linux-raid list <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Thorild Selen wrote:
-> If you search a bit in the linux-ide and linux-kernel mailing list
-> archives, you will find that several people before have had problems
-> with SATA150-TX4 and SATAII150-TX4 (see for example posts by Jim
-> Ramsay, Joerg Sommrey and me).
+> >1) If you have an infinite power budget (big box), you might as well
+> >   let the main cpus do the raid stuff. If you are short on power (embedded),
+> >   you cannot afford to power an extra processor (+memory and stuff).
+> >
+> >2) If you have rich customers (big box), let them pay for a bigger
+> >   main cpu to do the raid, if you want to be cheap (embedded, appliance),
+> >   you cannot afford to plop an extra cpu (+support chips) on your custom pcb.
+> >
+> The actual facts don't support this view since the gap in power 
+> consumption is huge. Most of these system on a chip designs provide the 
+> main CPU/northbridge/southbridge and extra execution units for a small 
+> fraction of one standard CPU.  Say under 20  watts for all of the above 
+> versus up to (over sometimes) 100 watts for a standard CPU (without its 
+> system chip sets).
 
-Following up on this information I did more testing.
+we appear to be talking about different things.  the original suggestion
+was for appliances like tivo, which clearly have a limited power budget,
+but certainly > 20W.  I responded by suggesting that current mainstream
+mobile CPUs (like mobile athlon64's) have PLENTY of power to run MD - 
+in fact, more than an appliance could possibly have any need for.
+and they dissipate 20-30W.
 
-I verified that creating a 2-disk raid-5 and extending it to 3 disks
-always works. 3-disk to 4-disk end up corrupted.
+then the topic somehow mutated into SoC designs, such as Intel's,
+which are actually intended to *be* the raid card, and have an ARM 
+core peaking at 600 MHz, and probably are challenged to sustain even
+100 MB/s.  (in spite of bragging about a multi-GB/s internal bus.)
 
-BTW I had to change the check in raidreconf for a minimum of raid5
-disks from 3 to 2. It worked just fine.
+in other words, there's a third category: OEM customers who want to build
+a smart raid card that consists of a SoC running linux actually implementing
+the raid.  the main technical impediment is that Intel's solution has
+XOR and DMA engines to make up for the wimpy CPU, but those engines are 
+barely profitable with 4k block sizes.  since MD does XOR's in 4k chunks,
+some hacking would be necessary to expand this size.  I expect this would 
+have some modest benefit for systems other than the Intel SoC.  (but I 
+question the sanity of the Intel approach in the first place, since I believe
+the trend in storage is away from this kind of integration.  obviously,
+it also doesn't make much sense for linux hosts, but such a card would
+probably find more of a market in the windows world.)
 
-I then moved the first two disks to the motherboard (sd[cd] left on
-the TX4). The situation remained the same (but I did get better
-performance).
+regards, mark hahn.
 
-I am now less inclined to blame the TX4 and lean more towards
-raidreconf.
-
-I need to create a final test where I hit the disks concurrently
-without raidreconf to see how they fair...
-
-I did some tests and so far failed to provoke any i/o error.
-
--- 
-Eyal Lebedinsky (eyal@eyal.emu.id.au) <http://samba.org/eyal/>
-	attach .zip as .dat
