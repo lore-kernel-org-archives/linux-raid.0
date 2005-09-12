@@ -1,42 +1,36 @@
-From: Andy Dawson <A.J.Dawson@Bradford.ac.uk>
-Subject: Software RAID1 problems
-Date: Mon, 12 Sep 2005 15:30:52 +0100 (GMT Standard Time)
-Message-ID: <Pine.WNT.4.63.0509121523570.2828@endertoo>
-References: <17189.12673.432061.932394@cse.unsw.edu.au>
+From: Norman Schmidt <schmidt@naa.net>
+Subject: suggestions for SATA controllers (PCI-X or PCI-E), e.g. Highpoint,
+ wanted
+Date: Mon, 12 Sep 2005 17:01:20 +0200
+Message-ID: <43259840.2000402@naa.net>
+Reply-To: schmidt@naa.net
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17189.12673.432061.932394@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I've had some problems recently with a RAID1 setup on a couple of Seagate 
-SCSI disks.  I've setup the following partition scheme:
+Hi!
 
-/dev/md0 swap (/dev/sda1 and /dev/sdb1)
-/dev/md1 /    (/dev/sda2 and /dev/sdb2)
+Has anyone experience with a Highpoint SATA raid controller like the 1820A?
 
-md1 functions fine, and has so far not given me any problems at all.  Md0 
-however keeps dropping /dev/sdb1 from the array.  As I've set the system up 
-to let me know via e-mail should anything occur, I do receive notification 
-when sdb1 is kicked from the array.
+The reason why I ask:
 
-Hot adding sdb1 back into the array works fine, until the next 
-'degradedarray event'.
+We want to build a server with software raid with more than 4 SATA 
+drives (only on the data partition side). We will probably use software 
+raid 6 for it, but need a PCI-X or PCI-Express SATA controller with at 
+least six ports. The mentioned one is one that could probably do the job 
+and is not too expensive. We would not use the Highpoint raid firmware, 
+but misuse the card only as SATA host adapter.
 
-I've tested the disks with the Seagate tools (no problems), badblocks in 
-read-only mode and in write mode as well (recreating md0 afterwards), all 
-with no problems reported.
+Has abybody used a card like that for this or can anyone sugest a better 
+(cheap) solution in the USD 200 region?
 
-Has anyone any idea what might be causing the degradedarray event to 
-occur?
-
-Andy
-
-Dr. Andy Dawson
-A.J.Dawson@Bradford.ac.uk
-http://www.mossie.org
-http://www.museum-explorer.org.uk
-
-  Never attribute to malice that which can adequately be explained by stupidity
+Thanks for your comments, Norman.
+-- 
+Norman Schmidt          Institut fuer Physikal. u. Theoret. Chemie
+Dipl.-Chem. Univ.       Friedrich-Alexander-Universitaet
+schmidt@naa.net         Erlangen-Nuernberg
+                         IT-Systembetreuer Physikalische Chemie
