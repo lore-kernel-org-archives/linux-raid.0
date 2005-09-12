@@ -1,40 +1,49 @@
-From: amundson@trustcenter.de
-Subject: adult_virgin_p()rn@  Linux-raid linux-raid@vger.kernel.org 481866163197801311904571723662310497004424104
-Date: Mon, 12 Sep 2005 01:21:14 +0000
-Message-ID: <2JK25GCI6AHH77I7@trustcenter.de>
-References: <0GC5EIB34D307FK6@vger.kernel.org>
+From: Neil Brown <neilb@suse.de>
+Subject: ANNOUNCE: mdadm 2.1 - A tool for managing Soft RAID under Linux
+Date: Mon, 12 Sep 2005 17:42:57 +1000
+Message-ID: <17189.12673.432061.932394@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <0GC5EIB34D307FK6@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-hell0!  my dier Linux-raid
-new site sh0cks
-L=0=L  adult-virgin-p0rn@
-http://www.starwarsosnet.com/index.php.htm
-new-virgin-site-virgin-p0rn0-virgin-adult
-Hi I'm Katrina, and I am 18 years 0ld and my friends say that I d0n't take anything seri0usly! I always ask, "Why sh0uld I?" :-)
-real virgin vide() virgin p()rn()
-I l0ve t0 laugh, smile and d0 crazy things. I find s0mething funny in everything. I am taking new pics all the time, als0 vide0s very s00n, and can't wait f0r y0u all t0 see all 0f me!
-http://www.starwarsosnet.com/index.php.htm
-real_virgin_new_virgin_p@rn@_virgin_site
-My f0lks leave real early f0r w0rk, and I'm left h0me al0ne. I l0ve t0 walk ar0und the h0use c0mpletely naked, and g0 dressing up all the way t0 the kitchen, where breakfast's waiting! 0f c0urse I get distracted al0ng the way! N0 w0nder m0st 0f the time I'm s0 late f0r classes!
-hard/vide0/new/site
-http://www.starwarsosnet.com/index.php.htm
-real,hard,site,adult
-L0ve y0u bunches! Katrina
 
-see Katrina pics and vide0s >>
-super-virgin-p@rn@-virgin-site-virgin-new
-BEST TEEN SITE ARE 0NLINE!
-0VER 10GIGS 0F Y0UNG PH0T0S AND VIDE0S!
-ENJ0Y!
 
-linux-raid@vger.kernel.org
-klass/p@rn@/site/
-Linux-raid
+I am pleased to announce the availability of
+   mdadm version 2.1
+
+It is available at the usual places:
+   http://www.cse.unsw.edu.au/~neilb/source/mdadm/
+and (soon)
+   http://www.{countrycode}.kernel.org/pub/linux/utils/raid/mdadm/
+
+mdadm is a tool for creating, managing and monitoring
+device arrays using the "md" driver in Linux, also
+known as Software RAID arrays.
+
+Release 2.1 fixes a few problems found after the release of 2.0.
+If you are using raid10 or version-1 superblocks and upgrade is
+recommended.
+
+Specifically:
+    -   Fix assembling of raid10 array when devices are missing.
+	  mdadm now correctly detects if a array is workable or not
+	  depending on which devices are present, and so will correctly
+	  handle "--assemble --force"  if multiple devices have failed.
+    -   Report raid10 layout in --examine output.
+    -   Fix assembling of arrays that use the version-1 superblock and
+	  have spares.  Previously the spares would be ignored.
+    -   Fix bug so that multiple drives can be re-added at once.
+    -   Fix problem with hot-adding a bitmap to version-1-superblock
+	  arrays.
+
+
+Development of mdadm is sponsored by
+ SUSE Labs, Novell Inc.
+
+NeilBrown  12th September 2005
+
 
