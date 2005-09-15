@@ -1,29 +1,27 @@
-From: Molle Bestefich <molle.bestefich@gmail.com>
-Subject: Re: Implementing Encryption and Decryption in Raid Device Driver.
-Date: Wed, 14 Sep 2005 19:37:08 +0000
-Message-ID: <62b0912f050914123756d1f3d@mail.gmail.com>
-References: <20050914080425.GA11729@percy.comedia.it>
-	 <20050914101640.46658.qmail@web54713.mail.yahoo.com>
-Reply-To: molle.bestefich@gmail.com
+From: hpa@zytor.com (H. Peter Anvin)
+Subject: RAID6 on PowerPC is faulty
+Date: Thu, 15 Sep 2005 04:31:54 +0000 (UTC)
+Message-ID: <dgatfq$mrq$1@terminus.zytor.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20050914101640.46658.qmail@web54713.mail.yahoo.com>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: vinnakota chaitanya <chaitanyaa_v@yahoo.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-vinnakota chaitanya wrote:
-> Actually I forgot to mention the kernel I'am working
-> on, it is Montavista Kernel 2.4.19. In 2.4.19 there is
-> not support for dm_crypt i.e CONFIG_DM_CRYPT.
+If you have been running RAID6 on a PowerPC with Altivec, your RAID is
+not two-disk redundant, due to bad Q syndrome computation.
 
-Use loop-aes, it's absolutely fabulous.
+It *is* one-disk redundant, however.
 
-It works great with 2.4 as well as 2.6.
+The following patch will fix it:
 
-Instructions here.
-http://loop-aes.sourceforge.net/loop-AES.README
+http://www.kernel.org/pub/linux/kernel/people/hpa/raid6-altivec-fix.patch
+
+.. however, it will not correct an existing array without rewriting
+every stripe.
+
+Neil, is there any way to force md to recompute all the syndromes?
+
+	-hpa
