@@ -1,26 +1,38 @@
 From: "Jonathan Schmidt" <jon@impact-ltd.ca>
-Subject: Re: raidreconf error (bug)
-Date: Sun, 18 Sep 2005 10:47:52 -0700
-Message-ID: <dgk989$f4n$1@sea.gmane.org>
-References: <dgckbo$her$1@sea.gmane.org> <dgg0la$jlr$1@sea.gmane.org> <432D315E.10502@dtbb.net>
+Subject: Re: Good, recent FS comparison?
+Date: Sun, 18 Sep 2005 10:54:37 -0700
+Message-ID: <dgk9ku$g4o$1@sea.gmane.org>
+References: <6d5bedd8050915131148b8108a@mail.gmail.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Agreed, this would be an important fix to have committed back to the main 
-source.  Unfortunately the fix I made was more of a band-aid hack and will 
-only work on drives that are exactly the same size as mine are -- not really 
-that useful in its current state.  I've got my hands full backing up 300+GB 
-of data to DVDs and setting up a second server for replication, so I don't 
-have the time yet to generalize the fix.  Perhaps in the next few weeks I 
-will have time to do so.
+I've got the same opportunity as well -- setting up a new RAID, and having 
+to choose a filesystem.  I've used reiser3 and liked it, but I'm weary of 
+reiser4 just because it's so new.  My one and only concern is data 
+integrity.  CPU use, efficiency, etc are of no concern.  It sounds like the 
+reason to use XFS is because of speed, so that doesn't interest me.
 
-> Jonathan, did you also have the patch available for raidreconf?  Please 
-> attach it to your reply to the raid list, I think it would be a good thing 
-> to have in the archive.
+Are there any filesystems with error-correcting built in?  Reiser4 could 
+probably do it with a plugin, but Hans Reiser would probably also tell me 
+that error correction has no place in the filesystem code :)  Maybe I'm just 
+paranoid.
+
+"Ewan Grantham" <ewan.grantham@gmail.com> wrote in message 
+news:6d5bedd8050915131148b8108a@mail.gmail.com...
+> I've just setup a nice, 6-disk, USB-2 300 Gig/disk array, and was
+> prepared to follow my normal pattern of installing ext3 as the
+> filesystem. However, I saw the interview with Hans Reiser about
+> ReiserFS4, and am now wondering if reiser has really improved enough
+> to use it, or if ext3 is still the way to go?
 >
-> Tyler. 
+> Any thoughts?
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
 
 
