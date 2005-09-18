@@ -1,40 +1,140 @@
-From: Al Boldi <a1426z@gawab.com>
-Subject: Re: Good, recent FS comparison?
-Date: Sun, 18 Sep 2005 15:32:54 +0300
-Message-ID: <200509181426.33327.a1426z@gawab.com>
-References: <6d5bedd8050915131148b8108a@mail.gmail.com> <200509162258.37730.a1426z@gawab.com> <432D3024.3080302@dtbb.net>
+From: "JaniD++" <djani22@dynamicweb.hu>
+Subject: assembly aborted, superblock is missing. (need help!)
+Date: Sun, 18 Sep 2005 15:27:23 +0200
+Message-ID: <008801c5bc54$b9fd57f0$0400a8c0@dcccs>
+References: <6d5bedd8050915131148b8108a@mail.gmail.com> <200509162258.37730.a1426z@gawab.com> <432D3024.3080302@dtbb.net> <200509181426.33327.a1426z@gawab.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
+	charset="ISO-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <432D3024.3080302@dtbb.net>
-Content-Disposition: inline
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Tyler <pml@dtbb.net>
-Cc: linux-fsdevel@vger.kernel.org, Linux RAID Mailing List <linux-raid@vger.kernel.org>, linux-xfs@oss.sgi.com
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Tyler wrote:
-> Al Boldi wrote:
-> >Don't touch anything that doesn't do ordered-mode journaling, especially
-> > if you use raid, unless your data-consistency requirements don't require
-> > this.
->
-> Al... you've given us some "do's" .. can you give us some "why's" to go
-> along with them? :)  I would appreciate a run-down with some more
-> specific info as to what/why.
+Hello list!
 
-see 'XFS corruption on power-blackout' thread
+I have try to switch from 2.6.13 to 14-rc1, but this kernel breaks my
+device!
 
-> >XFS is best, but does not support ordered-mode.
-Highest performance ratio available due to low CPU usage.
+The problem:
+# mdadm -A -R -f  /dev/md31 /dev/md1 /dev/md2 /dev/md3 /dev/md4
+mdadm: no RAID superblock on /dev/md1
+mdadm: /dev/md1 has no superblock - assembly aborted
 
-> >reiser4 is still new.
-New, but promising.
 
-> >ext3 is rock-solid!
-Low performance ratio due to high CPU usage.
+md31 is a 8TB raid0 device.
 
---
-Al
+the 2. dev:
+# mdadm -E /dev/md2
+/dev/md2:
+          Magic : a92b4efc
+        Version : 00.90.02
+           UUID : 9a99d340:ab8f6bfc:bc8d42ed:79ce440e
+  Creation Time : Sun Jul 17 19:50:11 2005
+     Raid Level : raid0
+    Device Size : 1953583232 (1863.08 GiB 2000.47 GB)
+   Raid Devices : 4
+  Total Devices : 4
+Preferred Minor : 31
+
+    Update Time : Sun Jul 17 19:50:11 2005
+          State : active
+ Active Devices : 4
+Working Devices : 4
+ Failed Devices : 0
+  Spare Devices : 0
+       Checksum : 1fd71b51 - correct
+         Events : 0.2
+
+     Chunk Size : 32K
+
+      Number   Major   Minor   RaidDevice State
+this     1       9        2        1      active sync   /dev/md2
+
+   0     0       9        1        0      active sync   /dev/md1
+   1     1       9        2        1      active sync   /dev/md2
+   2     2       9        3        2      active sync   /dev/md3
+   3     3       9        4        3      active sync   /dev/md4
+
+the 3. dev:
+
+# mdadm -E /dev/md3
+/dev/md3:
+          Magic : a92b4efc
+        Version : 00.90.02
+           UUID : 9a99d340:ab8f6bfc:bc8d42ed:79ce440e
+  Creation Time : Sun Jul 17 19:50:11 2005
+     Raid Level : raid0
+    Device Size : 1953583232 (1863.08 GiB 2000.47 GB)
+   Raid Devices : 4
+  Total Devices : 4
+Preferred Minor : 31
+
+    Update Time : Sun Jul 17 19:50:11 2005
+          State : active
+ Active Devices : 4
+Working Devices : 4
+ Failed Devices : 0
+  Spare Devices : 0
+       Checksum : 1fd71b54 - correct
+         Events : 0.2
+
+     Chunk Size : 32K
+
+      Number   Major   Minor   RaidDevice State
+this     2       9        3        2      active sync   /dev/md3
+
+   0     0       9        1        0      active sync   /dev/md1
+   1     1       9        2        1      active sync   /dev/md2
+   2     2       9        3        2      active sync   /dev/md3
+   3     3       9        4        3      active sync   /dev/md4
+
+
+
+the 4.dev:
+
+# mdadm -E /dev/md4
+/dev/md4:
+          Magic : a92b4efc
+        Version : 00.90.02
+           UUID : 9a99d340:ab8f6bfc:bc8d42ed:79ce440e
+  Creation Time : Sun Jul 17 19:50:11 2005
+     Raid Level : raid0
+    Device Size : 1953583232 (1863.08 GiB 2000.47 GB)
+   Raid Devices : 4
+  Total Devices : 4
+Preferred Minor : 31
+
+    Update Time : Sun Jul 17 19:50:11 2005
+          State : active
+ Active Devices : 4
+Working Devices : 4
+ Failed Devices : 0
+  Spare Devices : 0
+       Checksum : 1fd71b57 - correct
+         Events : 0.2
+
+     Chunk Size : 32K
+
+      Number   Major   Minor   RaidDevice State
+this     3       9        4        3      active sync   /dev/md4
+
+   0     0       9        1        0      active sync   /dev/md1
+   1     1       9        2        1      active sync   /dev/md2
+   2     2       9        3        2      active sync   /dev/md3
+   3     3       9        4        3      active sync   /dev/md4
+
+
+but the md1 (the first dev) is this:
+# mdadm -E /dev/md1
+mdadm: No super block found on /dev/md1 (Expected magic a92b4efc, got
+56dfa32e)
+
+
+How can I fix this?
+Can somebody help?
+
+Thanks
+Janos
+
