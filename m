@@ -1,48 +1,48 @@
-From: Matt Stegman <matts@ksu.edu>
-Subject: Re: Good, recent FS comparison?
-Date: Sun, 18 Sep 2005 11:34:02 -0500 (CDT)
-Message-ID: <Pine.GSO.4.44L.0509181124430.23379-100000@unix2.cc.ksu.edu>
-References: <432D3024.3080302@dtbb.net>
+From: Norman Schmidt <schmidt@naa.net>
+Subject: Re: Highpoint 1820A
+Date: Sun, 18 Sep 2005 19:17:26 +0200
+Message-ID: <432DA126.6070206@naa.net>
+References: <Pine.LNX.4.62.0509170714560.21650@uplift.swm.pp.se> <432D2D92.3090804@dtbb.net>
+Reply-To: schmidt@naa.net
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <432D3024.3080302@dtbb.net>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Tyler <pml@dtbb.net>
-Cc: Al Boldi <a1426z@gawab.com>, linux-fsdevel@vger.kernel.org, Linux RAID Mailing List <linux-raid@vger.kernel.org>, linux-xfs@oss.sgi.com
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <432D2D92.3090804@dtbb.net>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This has been discussed on the mailing list before.  Quick rundown:
+Tyler schrieb:
 
-"Ordered mode" means that a file's metadata isn't written until after the
-file's data.  On XFS, which doesn't use ordered mode, under certain
-circumstances you may see files which are the correct size, with correct
-times, etc, but with only null bytes for the data.
 
-In my experience it's not that big a deal; I can almost always easily
-recreate data which could be lost by being written out just before a crash
-or power loss.  I put important systems on an UPS and use stable kernels,
-and I've never personally seen the null data problem.
+> and doesn't require such finicky drivers and support
+> from highpoint or any other company for that matter, as long as there=
+=20
+> are drivers to see the card, and the ports as standard sata/ata ports=
+=20
+> (and possibly some different settings in the cards bios).
 
-Currently, I believe only ext3 and reiserfs support ordered mode.  I'm not
-sure if reiser4's journaling is ordered or not.
+Unfortunately, that isn=B4t the case, at least the highpoint support,
+which I connected in the driver matter, says you need at least their
+open source driver (which contains some pre-compiled object code,
+anyway) and build a module from it, even to use just the SATA ports
+without the hardware raid functionality.
 
--- 
-Matt Stegman
+So it doesn=B4t work without drivers and changing the kernel (at least
+that=B4s what Highpoint thinks).
 
-On Sun, 18 Sep 2005, Tyler wrote:
->
-> Al Boldi wrote:
->
-> >Don't touch anything that doesn't do ordered-mode journaling, especially if
-> >you use raid, unless your data-consistency requirements don't require this.
-> >
-> >XFS is best, but does not support ordered-mode.
-> >reiser4 is still new.
-> >ext3 is rock-solid!
-> >
->
-> Al... you've given us some "do's" .. can you give us some "why's" to go
-> along with them? :)  I would appreciate a run-down with some more
-> specific info as to what/why.
+Norman.
 
+--=20
+Norman Schmidt          Institut fuer Physikal. u. Theoret. Chemie
+Dipl.-Chem. Univ.       Friedrich-Alexander-Universitaet
+schmidt@naa.net         Erlangen-Nuernberg
+                         IT-Systembetreuer Physikalische Chemie
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
