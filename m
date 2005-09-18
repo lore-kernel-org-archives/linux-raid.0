@@ -1,140 +1,48 @@
-From: "JaniD++" <djani22@dynamicweb.hu>
-Subject: assembly aborted, superblock is missing. (need help!)
-Date: Sun, 18 Sep 2005 15:27:23 +0200
-Message-ID: <008801c5bc54$b9fd57f0$0400a8c0@dcccs>
-References: <6d5bedd8050915131148b8108a@mail.gmail.com> <200509162258.37730.a1426z@gawab.com> <432D3024.3080302@dtbb.net> <200509181426.33327.a1426z@gawab.com>
+From: Matt Stegman <matts@ksu.edu>
+Subject: Re: Good, recent FS comparison?
+Date: Sun, 18 Sep 2005 11:34:02 -0500 (CDT)
+Message-ID: <Pine.GSO.4.44L.0509181124430.23379-100000@unix2.cc.ksu.edu>
+References: <432D3024.3080302@dtbb.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <432D3024.3080302@dtbb.net>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Tyler <pml@dtbb.net>
+Cc: Al Boldi <a1426z@gawab.com>, linux-fsdevel@vger.kernel.org, Linux RAID Mailing List <linux-raid@vger.kernel.org>, linux-xfs@oss.sgi.com
 List-Id: linux-raid.ids
 
-Hello list!
+This has been discussed on the mailing list before.  Quick rundown:
 
-I have try to switch from 2.6.13 to 14-rc1, but this kernel breaks my
-device!
+"Ordered mode" means that a file's metadata isn't written until after the
+file's data.  On XFS, which doesn't use ordered mode, under certain
+circumstances you may see files which are the correct size, with correct
+times, etc, but with only null bytes for the data.
 
-The problem:
-# mdadm -A -R -f  /dev/md31 /dev/md1 /dev/md2 /dev/md3 /dev/md4
-mdadm: no RAID superblock on /dev/md1
-mdadm: /dev/md1 has no superblock - assembly aborted
+In my experience it's not that big a deal; I can almost always easily
+recreate data which could be lost by being written out just before a crash
+or power loss.  I put important systems on an UPS and use stable kernels,
+and I've never personally seen the null data problem.
 
+Currently, I believe only ext3 and reiserfs support ordered mode.  I'm not
+sure if reiser4's journaling is ordered or not.
 
-md31 is a 8TB raid0 device.
+-- 
+Matt Stegman
 
-the 2. dev:
-# mdadm -E /dev/md2
-/dev/md2:
-          Magic : a92b4efc
-        Version : 00.90.02
-           UUID : 9a99d340:ab8f6bfc:bc8d42ed:79ce440e
-  Creation Time : Sun Jul 17 19:50:11 2005
-     Raid Level : raid0
-    Device Size : 1953583232 (1863.08 GiB 2000.47 GB)
-   Raid Devices : 4
-  Total Devices : 4
-Preferred Minor : 31
-
-    Update Time : Sun Jul 17 19:50:11 2005
-          State : active
- Active Devices : 4
-Working Devices : 4
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : 1fd71b51 - correct
-         Events : 0.2
-
-     Chunk Size : 32K
-
-      Number   Major   Minor   RaidDevice State
-this     1       9        2        1      active sync   /dev/md2
-
-   0     0       9        1        0      active sync   /dev/md1
-   1     1       9        2        1      active sync   /dev/md2
-   2     2       9        3        2      active sync   /dev/md3
-   3     3       9        4        3      active sync   /dev/md4
-
-the 3. dev:
-
-# mdadm -E /dev/md3
-/dev/md3:
-          Magic : a92b4efc
-        Version : 00.90.02
-           UUID : 9a99d340:ab8f6bfc:bc8d42ed:79ce440e
-  Creation Time : Sun Jul 17 19:50:11 2005
-     Raid Level : raid0
-    Device Size : 1953583232 (1863.08 GiB 2000.47 GB)
-   Raid Devices : 4
-  Total Devices : 4
-Preferred Minor : 31
-
-    Update Time : Sun Jul 17 19:50:11 2005
-          State : active
- Active Devices : 4
-Working Devices : 4
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : 1fd71b54 - correct
-         Events : 0.2
-
-     Chunk Size : 32K
-
-      Number   Major   Minor   RaidDevice State
-this     2       9        3        2      active sync   /dev/md3
-
-   0     0       9        1        0      active sync   /dev/md1
-   1     1       9        2        1      active sync   /dev/md2
-   2     2       9        3        2      active sync   /dev/md3
-   3     3       9        4        3      active sync   /dev/md4
-
-
-
-the 4.dev:
-
-# mdadm -E /dev/md4
-/dev/md4:
-          Magic : a92b4efc
-        Version : 00.90.02
-           UUID : 9a99d340:ab8f6bfc:bc8d42ed:79ce440e
-  Creation Time : Sun Jul 17 19:50:11 2005
-     Raid Level : raid0
-    Device Size : 1953583232 (1863.08 GiB 2000.47 GB)
-   Raid Devices : 4
-  Total Devices : 4
-Preferred Minor : 31
-
-    Update Time : Sun Jul 17 19:50:11 2005
-          State : active
- Active Devices : 4
-Working Devices : 4
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : 1fd71b57 - correct
-         Events : 0.2
-
-     Chunk Size : 32K
-
-      Number   Major   Minor   RaidDevice State
-this     3       9        4        3      active sync   /dev/md4
-
-   0     0       9        1        0      active sync   /dev/md1
-   1     1       9        2        1      active sync   /dev/md2
-   2     2       9        3        2      active sync   /dev/md3
-   3     3       9        4        3      active sync   /dev/md4
-
-
-but the md1 (the first dev) is this:
-# mdadm -E /dev/md1
-mdadm: No super block found on /dev/md1 (Expected magic a92b4efc, got
-56dfa32e)
-
-
-How can I fix this?
-Can somebody help?
-
-Thanks
-Janos
+On Sun, 18 Sep 2005, Tyler wrote:
+>
+> Al Boldi wrote:
+>
+> >Don't touch anything that doesn't do ordered-mode journaling, especially if
+> >you use raid, unless your data-consistency requirements don't require this.
+> >
+> >XFS is best, but does not support ordered-mode.
+> >reiser4 is still new.
+> >ext3 is rock-solid!
+> >
+>
+> Al... you've given us some "do's" .. can you give us some "why's" to go
+> along with them? :)  I would appreciate a run-down with some more
+> specific info as to what/why.
 
