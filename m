@@ -1,7 +1,7 @@
 From: Tyler <pml@dtbb.net>
 Subject: Re: Highpoint 1820A
-Date: Sun, 18 Sep 2005 02:01:56 -0700
-Message-ID: <432D2D04.4070702@dtbb.net>
+Date: Sun, 18 Sep 2005 02:04:18 -0700
+Message-ID: <432D2D92.3090804@dtbb.net>
 References: <Pine.LNX.4.62.0509170714560.21650@uplift.swm.pp.se>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
@@ -46,13 +46,12 @@ Mikael Abrahamsson wrote:
 > this and their open source driver, and hear what configuration you're 
 > using and if you had to do anything special.
 
-You don't provide any details as to what kernel version (and if its 
-vanilla or not), what versions of the highpoint driver(s)/programs and 
-bioses are you using, if there are any other messages in the system 
-logs, what type of raid you are using (raid 1 or 5 since it sounds like 
-you are using redundancy (re: hotplug, rebuild, etc)).
-
-Make your story longer :)
+I failed to mention it in my last email, but you may want to save 
+yourself alot of grief anyways, and just use software raid, chances are 
+it will be faster, and doesn't require such finicky drivers and support 
+from highpoint or any other company for that matter, as long as there 
+are drivers to see the card, and the ports as standard sata/ata ports 
+(and possibly some different settings in the cards bios).
 
 Tyler.
 
