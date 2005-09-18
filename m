@@ -1,38 +1,38 @@
-From: "Jonathan Schmidt" <jon@impact-ltd.ca>
-Subject: Re: Good, recent FS comparison?
-Date: Sun, 18 Sep 2005 10:54:37 -0700
-Message-ID: <dgk9ku$g4o$1@sea.gmane.org>
-References: <6d5bedd8050915131148b8108a@mail.gmail.com>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: Highpoint 1820A
+Date: Sun, 18 Sep 2005 21:13:09 +0200 (CEST)
+Message-ID: <Pine.LNX.4.62.0509182110110.21650@uplift.swm.pp.se>
+References: <Pine.LNX.4.62.0509170714560.21650@uplift.swm.pp.se>
+ <432D2D92.3090804@dtbb.net> <432DA126.6070206@naa.net>
+Mime-Version: 1.0
+Content-Type: MULTIPART/MIXED; BOUNDARY="918750597-9887249-1127070789=:21650"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <432DA126.6070206@naa.net>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I've got the same opportunity as well -- setting up a new RAID, and having 
-to choose a filesystem.  I've used reiser3 and liked it, but I'm weary of 
-reiser4 just because it's so new.  My one and only concern is data 
-integrity.  CPU use, efficiency, etc are of no concern.  It sounds like the 
-reason to use XFS is because of speed, so that doesn't interest me.
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-Are there any filesystems with error-correcting built in?  Reiser4 could 
-probably do it with a plugin, but Hans Reiser would probably also tell me 
-that error correction has no place in the filesystem code :)  Maybe I'm just 
-paranoid.
+--918750597-9887249-1127070789=:21650
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 8BIT
 
-"Ewan Grantham" <ewan.grantham@gmail.com> wrote in message 
-news:6d5bedd8050915131148b8108a@mail.gmail.com...
-> I've just setup a nice, 6-disk, USB-2 300 Gig/disk array, and was
-> prepared to follow my normal pattern of installing ext3 as the
-> filesystem. However, I saw the interview with Hans Reiser about
-> ReiserFS4, and am now wondering if reiser has really improved enough
-> to use it, or if ext3 is still the way to go?
->
-> Any thoughts?
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+On Sun, 18 Sep 2005, Norman Schmidt wrote:
 
+> So it doesn´t work without drivers and changing the kernel (at least 
+> that´s what Highpoint thinks).
 
+Quite. I had to compile a standard kernel (2.6.11.12 in my case) which I 
+tried everything on.
 
+The HPT driver for the 1820A won't compile on 2.6.13 because something was 
+depreciated that they're using in their driver.
+
+I wish I knew all this before I bought the unit. The 1820A is a nicely 
+priced unit, too bad it doesn't seem to work well under linux.
+
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
+--918750597-9887249-1127070789=:21650--
