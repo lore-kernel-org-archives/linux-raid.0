@@ -1,44 +1,47 @@
 From: Tyler <pml@dtbb.net>
-Subject: Re: suggestions for SATA controllers (PCI-X or PCI-E), e.g. Highpoint,
- wanted
-Date: Sun, 18 Sep 2005 02:16:26 -0700
-Message-ID: <432D306A.5030700@dtbb.net>
-References: <43259840.2000402@naa.net>
+Subject: Re: raidreconf error (bug)
+Date: Sun, 18 Sep 2005 02:20:30 -0700
+Message-ID: <432D315E.10502@dtbb.net>
+References: <dgckbo$her$1@sea.gmane.org> <dgg0la$jlr$1@sea.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <43259840.2000402@naa.net>
+In-Reply-To: <dgg0la$jlr$1@sea.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: schmidt@naa.net
+To: Jonathan Schmidt <jon@impact-ltd.ca>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Norman Schmidt wrote:
+Jonathan Schmidt wrote:
 
-> Hi!
+>I just thought I'd let everyone know that the problem has been solved by 
+>reversing the old and new raidtab files in the command line to raidreconf 
+>(after fixing the bug that causes the immediate abort).
 >
-> Has anyone experience with a Highpoint SATA raid controller like the 
-> 1820A?
+>The old 4-disk array is currently running with the filesystem intact.  I'll 
+>go about backing it up now :)
 >
-> The reason why I ask:
+>"Jonathan Schmidt" <jon@impact-ltd.ca> wrote in message 
+>news:dgckbo$her$1@sea.gmane.org...
+>  
 >
-> We want to build a server with software raid with more than 4 SATA 
-> drives (only on the data partition side). We will probably use 
-> software raid 6 for it, but need a PCI-X or PCI-Express SATA 
-> controller with at least six ports. The mentioned one is one that 
-> could probably do the job and is not too expensive. We would not use 
-> the Highpoint raid firmware, but misuse the card only as SATA host 
-> adapter.
->
-> Has abybody used a card like that for this or can anyone sugest a 
-> better (cheap) solution in the USD 200 region?
->
-> Thanks for your comments, Norman.
-
-Anyone....? going once... ....
+>>I just attempted to add a 5th 80GB disk to my RAID-5 array using 
+>>raidreconf. I previously added a 4th disk 6 months ago using the identical 
+>>tools with no errors or hiccups whatsoever.  Back then, I made a full 
+>>backup because of all the warnings.  This time, I assumed it would work 
+>>since it did last time, and did not backup the data.  You can see where 
+>>this is going...
+>>
+>>Here's some of the relevant info:
+>>    
+>>
+Jonathan, did you also have the patch available for raidreconf?  Please 
+attach it to your reply to the raid list, I think it would be a good 
+thing to have in the archive.
 
 Tyler.
+
 
 
 -- 
