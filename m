@@ -1,54 +1,28 @@
-From: "George N. White III" <aa056@chebucto.ns.ca>
-Subject: Re: Good, recent FS comparison?
-Date: Tue, 20 Sep 2005 18:00:37 -0300 (ADT)
-Message-ID: <Pine.LNX.4.63.0509201747360.12990@cerberus.cwmannwn.nowhere>
-References: <432D3024.3080302@dtbb.net> <Pine.GSO.4.44L.0509181124430.23379-100000@unix2.cc.ksu.edu>
-Reply-To: "George N. White III" <aa056@chebucto.ns.ca>
+From: Molle Bestefich <molle.bestefich@gmail.com>
+Subject: Re: Implementing Encryption and Decryption in Raid Device Driver.
+Date: Tue, 20 Sep 2005 23:52:50 +0000
+Message-ID: <62b0912f05092016525342c4c@mail.gmail.com>
+References: <62b0912f050914123756d1f3d@mail.gmail.com>
+	 <20050915073118.61198.qmail@web54703.mail.yahoo.com>
+Reply-To: molle.bestefich@gmail.com
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.GSO.4.44L.0509181124430.23379-100000@unix2.cc.ksu.edu>
+In-Reply-To: <20050915073118.61198.qmail@web54703.mail.yahoo.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Matt Stegman <matts@ksu.edu>
-Cc: Al Boldi <a1426z@gawab.com>, linux-fsdevel@vger.kernel.org, Linux RAID Mailing List <linux-raid@vger.kernel.org>, linux-xfs@oss.sgi.com
+To: vinnakota chaitanya <chaitanyaa_v@yahoo.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, 18 Sep 2005, Matt Stegman wrote:
+vinnakota chaitanya wrote:
+> 2. We were asked to use blow_fish algorithm instead.
+> So, how to go about it, are there any modules like
+> loop-aes or should I  consider the hooks
+>  raid5_make_request and raid5_end_read_request
+> for encryption and decryption
 
-> This has been discussed on the mailing list before.  Quick rundown:
->
-> "Ordered mode" means that a file's metadata isn't written until after the
-> file's data.  On XFS, which doesn't use ordered mode, under certain
-> circumstances you may see files which are the correct size, with correct
-> times, etc, but with only null bytes for the data.
-
-Another way to look at this: in some case, e.g., transaction processing,
-the priority is to make sure no data are lost.  The opposite situation is
-where you have large volumes of data coming in, e.g., remote sensing,
-rendering farms, big numerical simulations.  If something breaks you are
-losing data until the system is back.  With XFS you have a consistent 
-filesystem immediately, but you may want to look carefully at the files
-being written when the problem occurred.
-
-> In my experience it's not that big a deal; I can almost always easily
-> recreate data which could be lost by being written out just before a crash
-> or power loss.  I put important systems on an UPS and use stable kernels,
-> and I've never personally seen the null data problem.
-
-Clients and other data sources like satellite dishes often break at
-inconvenient times.
-
-Write a large structured file like hdf from an NFS client and pull the
-network plug or turn off the client when the client job finishes but 
-before the data has all been written.  You should endup with a consistent
-filesystem but a sparse file.
-
-> Currently, I believe only ext3 and reiserfs support ordered mode.  I'm not
-> sure if reiser4's journaling is ordered or not.
-
-I don't thnk you can make a blanket statement -- different horses for 
-different courses.
-
--- 
-George N. White III  <aa056@chebucto.ns.ca>
-
+There's a "ciphers" package in the loop-aes directory on sourceforge
+which adds Blowfish, Twofish and Serpent capability.  So hooking RAID5
+for that purpose doesn't seem worthwhile.
