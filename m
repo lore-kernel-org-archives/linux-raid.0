@@ -1,31 +1,26 @@
-From: Al Boldi <a1426z@gawab.com>
-Subject: Re: [PATCH md ] Better handling of readerrors with raid5.
-Date: Wed, 21 Sep 2005 18:07:24 +0300
-Message-ID: <200509211807.24194.a1426z@gawab.com>
-References: <20050916125754.11044.patches@notabene> <62b0912f050920171550edcab1@mail.gmail.com> <17201.9323.915024.189868@cse.unsw.edu.au>
+From: Jamie Lokier <jamie@shareable.org>
+Subject: Re: Good, recent FS comparison?
+Date: Wed, 21 Sep 2005 16:37:03 +0100
+Message-ID: <20050921153703.GB19896@mail.shareable.org>
+References: <6d5bedd8050915131148b8108a@mail.gmail.com> <432A37BF.7060305@dtbb.net> <200509162258.37730.a1426z@gawab.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17201.9323.915024.189868@cse.unsw.edu.au>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+In-Reply-To: <200509162258.37730.a1426z@gawab.com>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Al Boldi <a1426z@gawab.com>
+Cc: linux-fsdevel@vger.kernel.org, Linux RAID Mailing List <linux-raid@vger.kernel.org>, linux-xfs@oss.sgi.com
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> I'm nearly ready to give away a patch which does a background parity
-> check - it reads all blocks and checks parity, and reports the error
-> count etc.  Running such a thing every night (or every week) is
-> probably a good idea in some situations, but really needs the
-> fix-read-errors patch.
+Al Boldi wrote:
+> ext3 is rock-solid!
 
-I love it!
+If only.  Recently I had a system come up after a power cycle with a
+directory where reading any file in that directory gives an I/O error.
+The disk is fine, and it's using ext3 in ordered mode, with IDE
+write-caching disabled to be sure.
 
-Thanks!
+So while ext3 is good, I'm not convinced it's rock solid.
 
---
-Al
-
+-- Jamie
