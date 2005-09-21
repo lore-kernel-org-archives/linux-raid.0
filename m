@@ -1,28 +1,52 @@
 From: Molle Bestefich <molle.bestefich@gmail.com>
-Subject: Re: Implementing Encryption and Decryption in Raid Device Driver.
-Date: Tue, 20 Sep 2005 23:52:50 +0000
-Message-ID: <62b0912f05092016525342c4c@mail.gmail.com>
-References: <62b0912f050914123756d1f3d@mail.gmail.com>
-	 <20050915073118.61198.qmail@web54703.mail.yahoo.com>
+Subject: Re: [PATCH md ] Better handling of readerrors with raid5.
+Date: Wed, 21 Sep 2005 00:15:29 +0000
+Message-ID: <62b0912f050920171550edcab1@mail.gmail.com>
+References: <20050916125754.11044.patches@notabene>
+	 <1050916030157.11071@suse.de>
 Reply-To: molle.bestefich@gmail.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20050915073118.61198.qmail@web54703.mail.yahoo.com>
+In-Reply-To: <1050916030157.11071@suse.de>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: vinnakota chaitanya <chaitanyaa_v@yahoo.com>
+To: NeilBrown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-vinnakota chaitanya wrote:
-> 2. We were asked to use blow_fish algorithm instead.
-> So, how to go about it, are there any modules like
-> loop-aes or should I  consider the hooks
->  raid5_make_request and raid5_end_read_request
-> for encryption and decryption
+NeilBrown wrote:
+> TESTERS WANTED!!  SEE BELOW...
+> 
+> This patch changes the behaviour of raid5 when it gets a read error.
+> Instead of just failing the device, it tried to find out what should
+> have been there, and writes it over the bad block.
 
-There's a "ciphers" package in the loop-aes directory on sourceforge
-which adds Blowfish, Twofish and Serpent capability.  So hooking RAID5
-for that purpose doesn't seem worthwhile.
+Jip-hee!  Beautiful!!
+Neil, a big, warm and fuzzy Thank You for all the hard work you put into MD!
+
+I do not have a test system, so I've tried to apply the patch to a
+smallish (6 disk ata) live system instead.  (Am I sane?)
+
+Some of the disks have probably developed a couple of bad blocks here
+and there by now.  I imagine doing a 'dd' from the MD device will read
+at least 83% of all sectors (?), so there's a fair chance I'll hit
+something if it's there.
+
+Applying the patch doesn't quite work for me:
+==============================================
+linux-2.6.13.2 # patch --dry-run -p0 < md-rewrite-bad-blocks.patch
+patching file ./drivers/md/raid5.c
+Hunk #1 succeeded at 339 (offset -10 lines).
+Hunk #3 succeeded at 963 (offset -20 lines).
+Hunk #4 FAILED at 983.
+Hunk #5 succeeded at 1044 (offset -2 lines).
+Hunk #6 succeeded at 1274 (offset -32 lines).
+1 out of 6 hunks FAILED -- saving rejects to file ./drivers/md/raid5.c.rej
+patching file ./include/linux/raid/raid5.h
+Hunk #1 succeeded at 153 (offset -1 lines).
+==============================================
+
+Hunk #4 succeds if given a fuzz of 3...
+Is it safe to use the patch with 2.6.13.2?
