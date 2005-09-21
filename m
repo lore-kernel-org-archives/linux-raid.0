@@ -1,200 +1,217 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Fw: OOPS in raid10.c:1448 in vanilla 2.6.13.2
-Date: Tue, 20 Sep 2005 23:22:02 -0700
-Message-ID: <20050920232202.543fa6d0.akpm@osdl.org>
+From: Neil Brown <neilb@cse.unsw.edu.au>
+Subject: Re: OOPS in raid10.c:1448 in vanilla 2.6.13.2
+Date: Wed, 21 Sep 2005 10:30:49 +0200
+Message-ID: <17201.6713.60861.781073@cse.unsw.edu.au>
+References: <1127234670.2893.103.camel@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: multipart/mixed; boundary="2l1Skkao82"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@cse.unsw.edu.au>
-Cc: linux-raid@vger.kernel.org, Guus Houtzager <guus@luna.nl>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750771AbVIUIbE@vger.kernel.org>
+In-Reply-To: message from Guus Houtzager on Tuesday September 20
+Sender: linux-kernel-owner@vger.kernel.org
+To: Guus Houtzager <guus@luna.nl>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
+--2l1Skkao82
+Content-Type: text/plain; charset=us-ascii
+Content-Description: message body text
+Content-Transfer-Encoding: 7bit
 
-Begin forwarded message:
+On Tuesday September 20, guus@luna.nl wrote:
+> Hi,
+> 
+> On a new server I've been playing with software raid10.
+...
+> Sep 20 19:25:09 lorentz kernel: ------------[ cut here ]------------
+> Sep 20 19:25:09 lorentz kernel: kernel BUG at drivers/md/raid10.c:1448!
 
-Date: Tue, 20 Sep 2005 18:44:30 +0200
-From: Guus Houtzager <guus@luna.nl>
-To: linux-kernel@vger.kernel.org
-Subject: OOPS in raid10.c:1448 in vanilla 2.6.13.2
+This is fixed in 2.6.14-rc1.  I've attached the two patches that
+resolves this and a related problem.
 
+However I should point out that what you did was guaranteed to kill
+the array (though mdadm-2.1 should have been able to re-assemble it
+with --force):
 
-Hi,
+> # mdadm --create /dev/md1 --level=10 --raid-devices=4 /dev/sd[abcd]2
 
-On a new server I've been playing with software raid10.
-It's a Supermicro 5014C-MT which has a P8SCT motherboard.
-It has a 4 port SATA backplane connected to the ICH6R southbridge.
-From Jeff Garzik's webpages I know that libata does not and will not
-support hot swap on ICH6R, so if I trigger an OOPS while doing that,
-it's my problem. However, if I reset the machine after the oops, it
-oopses again when trying to resync the raiddevice with all disks present
-which I didn't expect and find very odd: I expected maybe an
-errormessage and at best a succesfull resync. 
+Now the four slots are 
+   sda2 sdb2 sdc2 sdd2
 
-This is what I did (Debian Sarge install):
-# mdadm --create /dev/md1 --level=10 --raid-devices=4 /dev/sd[abcd]2
-(mdadm is version 1.9.0-4, new enough to support raid10)
-And let it sync.
-# mke2fs -j /dev/md1
-# mount /dev/md1 /mnt
-Then removed sdb from the server. It took a while, but sdb2 got marked
-faulty. Gave messages like this in syslog (as I expected):
-Sep 20 19:08:23 lorentz kernel: ata2: error occurred, port reset
-Sep 20 19:08:23 lorentz kernel: ata2: status=0x01 { Error }
-Sep 20 19:08:23 lorentz kernel: ata2: called with no error (01)!
-Sep 20 19:08:23 lorentz kernel: SCSI error : <1 0 0 0> return code =
-0x8000002
-Sep 20 19:08:23 lorentz kernel: sdb: Current: sense key=0x3
-Sep 20 19:08:23 lorentz kernel:     ASC=0xc ASCQ=0x2
-Sep 20 19:08:23 lorentz kernel: end_request: I/O error, dev sdb, sector
-3919610
-Sep 20 19:08:23 lorentz kernel: raid10: Disk failure on sdb2, disabling
-device.
-Sep 20 19:08:23 lorentz kernel: ^IOperation continuing on 3 devices
+sda2 and sdb2 have the same data, as do sdc2 and sdd2
 
-Then removed sdc from the server. Also took a while, but sdc2 also got
-marked faulty.
-Filesystem on /mnt stays usable during all this (slight hickup when a
-disk is removed, but keeps going)
-Then reinserted sdc. To get it resynced I did:
-# mdadm /dev/md1 -r /dev/sdc2
-# mdadm /dev/md1 -a /dev/sdc2
-And it happily resynced and made sdc2 healthy again.
-Then removed sdd and sdd2 got marked faulty. Filesystem kept working.
-So at that point I was happy. At that point I just wanted to readd both
-disks and get on with installing the server. So I reinserted both disks
-m, waited several minutes and did:
-# mdadm /dev/md1 -r /dev/sdb2
-# mdadm /dev/md1 -r /dev/sdd2
-# mdadm /dev/md1 -a /dev/sdb2
-# mdadm /dev/md1 -a /dev/sdd2
-And then it OOPS-ed.
-Sep 20 19:25:01 lorentz kernel: md: unbind<sdb2>
-Sep 20 19:25:01 lorentz kernel: md: export_rdev(sdb2)
-Sep 20 19:25:06 lorentz kernel: md: unbind<sdd2>
-Sep 20 19:25:06 lorentz kernel: md: export_rdev(sdd2)
-Sep 20 19:25:09 lorentz kernel: md: bind<sdb2>
-Sep 20 19:25:09 lorentz kernel: RAID10 conf printout:
-Sep 20 19:25:09 lorentz kernel:  --- wd:2 rd:4
-Sep 20 19:25:09 lorentz kernel:  disk 0, wo:0, o:1, dev:sda2
-Sep 20 19:25:09 lorentz kernel:  disk 1, wo:0, o:1, dev:sdc2
-Sep 20 19:25:09 lorentz kernel:  disk 2, wo:1, o:1, dev:sdb2
-Sep 20 19:25:09 lorentz kernel: md: syncing RAID array md1
-Sep 20 19:25:09 lorentz kernel: md: minimum _guaranteed_ reconstruction
-speed: 1000 KB/sec/disc.
-Sep 20 19:25:09 lorentz kernel: md: using maximum available idle IO
-bandwith (but not more than 200000 KB/sec) for reconstruction.
-Sep 20 19:25:09 lorentz kernel: md: using 128k window, over a total of
-979840 blocks.
-Sep 20 19:25:09 lorentz kernel: ------------[ cut here ]------------
-Sep 20 19:25:09 lorentz kernel: kernel BUG at drivers/md/raid10.c:1448!
-Sep 20 19:25:09 lorentz kernel: invalid operand: 0000 [#1]
-Sep 20 19:25:09 lorentz kernel: SMP
-Sep 20 19:25:09 lorentz kernel: Modules linked in:
-Sep 20 19:25:09 lorentz kernel: CPU:    1
-Sep 20 19:25:09 lorentz kernel: EIP:    0060:[sync_request+780/2122]
-Not tainted VLI
-Sep 20 19:25:09 lorentz kernel: EFLAGS: 00010246   (2.6.13.2)
-Sep 20 19:25:09 lorentz kernel: EIP is at sync_request+0x30c/0x84a
-Sep 20 19:25:09 lorentz kernel: eax: 00000000   ebx: f75d9300   ecx:
-00000018   edx: 00000002
-Sep 20 19:25:09 lorentz kernel: esi: f7c63880   edi: f75d930c   ebp:
-f7c5c120   esp: f4df5eb0
-Sep 20 19:25:09 lorentz kernel: ds: 007b   es: 007b   ss: 0068
-Sep 20 19:25:09 lorentz kernel: Process md1_resync (pid: 1479,
-threadinfo=f4df5000 task=f74c2020)
-Sep 20 19:25:09 lorentz kernel: Stack: f7c63880 f75d9300 00000002
-00000000 00000010 00000000 00000080 00000000
-Sep 20 19:25:09 lorentz kernel:        00000000 00000000 00000002
-00000002 00000003 00000000 e3c2c626 f4df5f3c
-Sep 20 19:25:09 lorentz kernel:        f4df5f64 00000000 00000000
-00000000 00000000 00000000 f7c70000 c037e533
-Sep 20 19:25:09 lorentz kernel: Call Trace:
-Sep 20 19:25:09 lorentz kernel:  [md_do_sync+1370/1792] md_do_sync
-+0x55a/0x700
-Sep 20 19:25:09 lorentz kernel:  [complete+66/82] complete+0x42/0x52
-Sep 20 19:25:09 lorentz kernel:  [md_thread+297/359] md_thread
-+0x129/0x167
-Sep 20 19:25:09 lorentz kernel:  [autoremove_wake_function+0/75]
-autoremove_wake_function+0x0/0x4b
-Sep 20 19:25:09 lorentz kernel:  [md_thread+0/359] md_thread+0x0/0x167
-Sep 20 19:25:09 lorentz kernel:  [kernel_thread_helper+5/11]
-kernel_thread_helper+0x5/0xb
-Sep 20 19:25:09 lorentz kernel: Code: 00 8b 54 24 14 85 d2 0f 85 25 ff
-ff ff 8b 44 24 18 2b 44 24 64 01 44 24 20 83 44 24 24 01 8b 4c 24 18 89
-4c 24 64 e9 24 fd ff ff <0f> 0b a8 05 ff 19 46 c0 89 dd 8b 56 08 e9 b8
-fe ff ff 8b 46 60
-Sep 20 19:25:11 lorentz kernel:  <6>md: bind<sdd2>
-Sep 20 19:25:41 lorentz kernel: md: unbind<sdd2>
-Sep 20 19:25:41 lorentz kernel: md: export_rdev(sdd2)
-Sep 20 19:25:56 lorentz kernel: md: cannot remove active disk sdb2 from
-md1 ...
+> Sep 20 19:08:23 lorentz kernel: raid10: Disk failure on sdb2, disabling
+> device.
+> Sep 20 19:08:23 lorentz kernel: ^IOperation continuing on 3 devices
 
-And then I resetted the machine with the reset switch.
-But to my surprise it oopsed again on reboot when the machine tried to
-resync automatically. It looks like the same oops as above, but I
-included it just to be sure:
+now you have
+   sda2 missing sdc2 sdd2
 
-Sep 20 19:42:07 lorentz kernel: ------------[ cut here ]------------
-Sep 20 19:42:07 lorentz kernel: kernel BUG at drivers/md/raid10.c:1448!
-Sep 20 19:42:07 lorentz kernel: invalid operand: 0000 [#1]
-Sep 20 19:42:07 lorentz kernel: SMP
-Sep 20 19:42:07 lorentz kernel: Modules linked in:
-Sep 20 19:42:07 lorentz kernel: CPU:    1
-Sep 20 19:42:07 lorentz kernel: EIP:    0060:[sync_request+780/2122]
-Not tainted VLI
-Sep 20 19:42:07 lorentz kernel: EFLAGS: 00010246   (2.6.13.2)
-Sep 20 19:42:07 lorentz kernel: EIP is at sync_request+0x30c/0x84a
-Sep 20 19:42:07 lorentz kernel: eax: 00000000   ebx: f79bbc80   ecx:
-00000018 edx: 00000002
-Sep 20 19:42:07 lorentz kernel: esi: f7d13700   edi: f79bbc8c   ebp:
-f7cd63a0 esp: c1a28eb0
-Sep 20 19:42:07 lorentz kernel: ds: 007b   es: 007b   ss: 0068
-Sep 20 19:42:07 lorentz kernel: Process md1_resync (pid: 883,
-threadinfo=c1a28000 task=f7cdf020)
-Sep 20 19:42:07 lorentz kernel: Stack: f7d13700 f79bbc80 00000002
-00000000 00000010 00000000 00000080 00000000
-Sep 20 19:42:07 lorentz kernel:        00000000 00000000 00000002
-00000002 00000003 00000000 4335da26 c1a28f3c
-Sep 20 19:42:07 lorentz kernel:        c1a28f64 00000000 00000000
-00000000 00000000 00000000 f7ce2200 c037e533
-Sep 20 19:42:07 lorentz kernel: Call Trace:
-Sep 20 19:42:07 lorentz kernel:  [md_do_sync+1370/1792] md_do_sync
-+0x55a/0x700
-Sep 20 19:42:07 lorentz kernel:  [complete+66/82] complete+0x42/0x52
-Sep 20 19:42:07 lorentz kernel:  [md_thread+297/359] md_thread
-+0x129/0x167
-Sep 20 19:42:07 lorentz kernel:  [autoremove_wake_function+0/75]
-autoremove_wake_function+0x0/0x4b
-Sep 20 19:42:07 lorentz kernel:  [md_thread+0/359] md_thread+0x0/0x167
-Sep 20 19:42:07 lorentz kernel:  [kernel_thread_helper+5/11]
-kernel_thread_helper+0x5/0xb
-Sep 20 19:42:07 lorentz kernel: Code: 00 8b 54 24 14 85 d2 0f 85 25 ff
-ff ff 8b
-44 24 18 2b 44 24 64 01 44 24 20 83 44 24 24 01 8b 4c 24 18 89 4c 24 64
-e9 24 fd ff ff <0f> 0b a8 05 ff 19 46 c0 89 dd 8b 56 08 e9 b8 fe ff ff
-8b 46 60
+> 
+> Then removed sdc from the server. Also took a while, but sdc2 also got
+> marked faulty.
+now
+   sda2 missing missing sdd2
+all data is still safe.
 
-So did I stumble on a bug here or did I just do something stupid? I
-haven't tried with a different kernel.
-More information available on request.
+> Filesystem on /mnt stays usable during all this (slight hickup when a
+> disk is removed, but keeps going)
+> Then reinserted sdc. To get it resynced I did:
+> # mdadm /dev/md1 -r /dev/sdc2
+> # mdadm /dev/md1 -a /dev/sdc2
+> And it happily resynced and made sdc2 healthy again.
 
-Thanks!!
+now
+   sda2 sdc2 missing sdd2
 
-Regards,
+note that sdc2 took the first empty slot.
 
-Guus Houtzager
--- 
-                              Luna.nl B.V.
-                Puntegaalstraat 109 * 3024 EB Rotterdam
-              T 010 7502000 * F 010 7502002 * www.luna.nl
+> Then removed sdd and sdd2 got marked faulty.
+
+Now
+   sda2 sdc2 missing missing
+
+so you have lost half your data.
+
+>                                              Filesystem kept working.
+
+This is a bit odd - it should have stopped working, but that depends
+on how hard you pushed the filesystem.  It would have failed if you
+tried to read or write in the area covered by the 2 two devices.
 
 
+> So at that point I was happy. At that point I just wanted to readd both
+> disks and get on with installing the server. So I reinserted both disks
+> m, waited several minutes and did:
+> # mdadm /dev/md1 -r /dev/sdb2
+> # mdadm /dev/md1 -r /dev/sdd2
+> # mdadm /dev/md1 -a /dev/sdb2
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-Please read the FAQ at  http://www.tux.org/lkml/
+now you have
+  sda2 sdc2 sdb2-not-sync missing
+
+it tried to recover sdb2, but there was no-where to recover from.
+This caused the BUG.  The patches cause this situation to simply
+abort the recovery rather than BUG.
+
+NeilBrown
+
+
+--2l1Skkao82
+Content-Type: text/plain
+Content-Description: patch-1
+Content-Disposition: inline;
+	filename="442MdR10FixFailed"
+Content-Transfer-Encoding: 7bit
+
+Status: ok
+
+Fix raid10 assembly when too many devices are missing.
+
+if you try to assemble an array with too many missing devices,
+raid10 will now reject the attempt, instead of allowing it.
+
+Also check when hot-adding a drive and refuse the hot-add if 
+the array is beyond hope.
+
+Signed-off-by: Neil Brown <neilb@suse.de>
+
+### Diffstat output
+ ./drivers/md/raid10.c |   30 +++++++++++++++++++++++++++---
+ 1 file changed, 27 insertions(+), 3 deletions(-)
+
+diff ./drivers/md/raid10.c~current~ ./drivers/md/raid10.c
+--- ./drivers/md/raid10.c	2005-09-09 13:44:20.000000000 +1000
++++ ./drivers/md/raid10.c~current~	2005-09-09 13:44:20.000000000 +1000
+@@ -906,6 +906,27 @@ static void close_sync(conf_t *conf)
+ 	conf->r10buf_pool = NULL;
+ }
+ 
++/* check if there are enough drives for
++ * every block to appear on atleast one
++ */
++static int enough(conf_t *conf)
++{
++	int first = 0;
++
++	do {
++		int n = conf->copies;
++		int cnt = 0;
++		while (n--) {
++			if (conf->mirrors[first].rdev)
++				cnt++;
++			first = (first+1) % conf->raid_disks;
++		}
++		if (cnt == 0)
++			return 0;
++	} while (first != 0);
++	return 1;
++}
++
+ static int raid10_spare_active(mddev_t *mddev)
+ {
+ 	int i;
+@@ -944,6 +965,8 @@ static int raid10_add_disk(mddev_t *mdde
+ 		 * very different from resync
+ 		 */
+ 		return 0;
++	if (!enough(conf))
++		return 0;
+ 
+ 	for (mirror=0; mirror < mddev->raid_disks; mirror++)
+ 		if ( !(p=conf->mirrors+mirror)->rdev) {
+@@ -1684,9 +1707,10 @@ static int run(mddev_t *mddev)
+ 	init_waitqueue_head(&conf->wait_idle);
+ 	init_waitqueue_head(&conf->wait_resume);
+ 
+-	if (!conf->working_disks) {
+-		printk(KERN_ERR "raid10: no operational mirrors for %s\n",
+-			mdname(mddev));
++	/* need to check that every block has at least one working mirror */
++	if (!enough(conf)) {
++		printk(KERN_ERR "raid10: not enough operational mirrors for %s\n",
++		       mdname(mddev));
+ 		goto out_free_conf;
+ 	}
+ 
+
+--2l1Skkao82
+Content-Type: text/plain
+Content-Description: patch-2
+Content-Disposition: inline;
+	filename="443MdR10RebuildFix"
+Content-Transfer-Encoding: 7bit
+
+Status: ok
+
+Fix BUG when raid10 rebuilds without enough drives.
+
+This shouldn't be a BUG.  We should cope.
+
+Signed-off-by: Neil Brown <neilb@suse.de>
+
+### Diffstat output
+ ./drivers/md/raid10.c |    8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff ./drivers/md/raid10.c~current~ ./drivers/md/raid10.c
+--- ./drivers/md/raid10.c	2005-09-09 13:44:20.000000000 +1000
++++ ./drivers/md/raid10.c~current~	2005-09-09 13:44:20.000000000 +1000
+@@ -1474,7 +1474,13 @@ static sector_t sync_request(mddev_t *md
+ 					}
+ 				}
+ 				if (j == conf->copies) {
+-					BUG();
++					/* Cannot recover, so abort the recovery */
++					put_buf(r10_bio);
++					r10_bio = rb2;
++					if (!test_and_set_bit(MD_RECOVERY_ERR, &mddev->recovery))
++						printk(KERN_INFO "raid10: %s: insufficient working devices for recovery.\n",
++						       mdname(mddev));
++					break;
+ 				}
+ 			}
+ 		if (biolist == NULL) {
+
+--2l1Skkao82--
