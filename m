@@ -1,26 +1,55 @@
-From: "bart@ardistech.com" <bart@ardistech.com>
-Subject: Setting NR_STRIPES high increases RAID5 performance
-Date: Wed, 21 Sep 2005 11:33:46 +0200
-Message-ID: <433128FA.200E7018@ardistech.com>
-Reply-To: bart@ardistech.com
+From: Guus Houtzager <guus@luna.nl>
+Subject: Re: OOPS in raid10.c:1448 in vanilla 2.6.13.2
+Date: Wed, 21 Sep 2005 11:42:06 +0200
+Message-ID: <1127295726.5136.22.camel@localhost>
+References: <1127234670.2893.103.camel@localhost>
+	 <17201.6713.60861.781073@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <17201.6713.60861.781073@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Neil Brown <neilb@cse.unsw.edu.au>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 Hi,
 
-When testing a soft RAID5 (8 SATA drives, Marvell chip) with iometer I noticed
-that the read performance did drop much less when adding randomness to the drive
-access as the write performance (read 80MB/s->40MB/s, write 70MB/s->9MB/s). Such a
-difference I can't explain by the read-compute-write of the parity stripe.
-I found that increasing NR_STRIPES from 256 to (8*1024) did increase the throughput
-for write from 9MB/s to 35 MB/s. This is still less as I would expect from 8
-SATA disks in parallel. Could it be the raid5d thread is not waken up enough
-or has not enough priority? Anybody knows any other #defines that could help
-here?
+First of all: thanks for the speedy reply! Both patches applied cleanly
+to 2.6.13.2 and work as expected. No more oops :) I hope these patches
+make it into the next stable release of the 2.6.13 branch.
 
-	Bart
+On Wed, 2005-09-21 at 10:30 +0200, Neil Brown wrote:
+
+<snip>
+
+> > Filesystem on /mnt stays usable during all this (slight hickup when a
+> > disk is removed, but keeps going)
+> > Then reinserted sdc. To get it resynced I did:
+> > # mdadm /dev/md1 -r /dev/sdc2
+> > # mdadm /dev/md1 -a /dev/sdc2
+> > And it happily resynced and made sdc2 healthy again.
+> 
+> now
+>    sda2 sdc2 missing sdd2
+> 
+> note that sdc2 took the first empty slot.
+
+That's where I went wrong. I thought it would take it's "old" place
+again at the second empty slot.
+
+<snip the rest>
+
+Thanks again!
+
+Regards,
+
+Guus Houtzager
+-- 
+                              Luna.nl B.V.
+                Puntegaalstraat 109 * 3024 EB Rotterdam
+              T 010 7502000 * F 010 7502002 * www.luna.nl
+
+
+
