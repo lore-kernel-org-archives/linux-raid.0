@@ -1,26 +1,36 @@
-From: Jamie Lokier <jamie@shareable.org>
-Subject: Re: Good, recent FS comparison?
-Date: Wed, 21 Sep 2005 16:37:03 +0100
-Message-ID: <20050921153703.GB19896@mail.shareable.org>
-References: <6d5bedd8050915131148b8108a@mail.gmail.com> <432A37BF.7060305@dtbb.net> <200509162258.37730.a1426z@gawab.com>
+From: "Steinar H. Gunderson" <sgunderson@bigfoot.com>
+Subject: Re: [PATCH] Online RAID-5 resizing
+Date: Wed, 21 Sep 2005 21:23:26 +0200
+Message-ID: <20050921192326.GA30405@uio.no>
+References: <20050920143346.GA5777@uio.no> <17200.9302.242957.23189@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Content-Type: text/plain; charset=utf-8
+Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <200509162258.37730.a1426z@gawab.com>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Al Boldi <a1426z@gawab.com>
-Cc: linux-fsdevel@vger.kernel.org, Linux RAID Mailing List <linux-raid@vger.kernel.org>, linux-xfs@oss.sgi.com
+In-Reply-To: <17200.9302.242957.23189@cse.unsw.edu.au>
+Sender: linux-raid-owner@vger.kernel.org
+To: Neil Brown <neilb@cse.unsw.edu.au>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Al Boldi wrote:
-> ext3 is rock-solid!
+On Wed, Sep 21, 2005 at 01:01:42AM +1000, Neil Brown wrote:
+> I doubt speed is a top priority.
 
-If only.  Recently I had a system come up after a power cycle with a
-directory where reading any file in that directory gives an I/O error.
-The disk is fine, and it's using ext3 in ordered mode, with IDE
-write-caching disabled to be sure.
+I just found something interesting; if I raise speed_limit_min, I get much
+better speed than I initially got. My 2->4 slow IDE disk setup:
 
-So while ext3 is good, I'm not convinced it's rock solid.
+md1 : active raid5 hdg1[4] hde1[5] hdc1[1] hda1[0]
+      39078016 blocks level 5, 64k chunk, algorithm 2 [4/2] [UU__]
+      [==========>..........]  resync = 52.4% (20499840/39078016) finish=50.0min speed=6187K/sec
 
--- Jamie
+This is more than good enough for me, at least. :-)
+
+I noticed a problem during a big test resize now, BTW; for some reason,
+pdflush goes into uninterruptable sleep, and kjournald and thus the
+filesystem seems to follow. I'm not sure if this is a starvation issue or
+not, but it sure is a bug -- I'll look into it and see if I find something
+obvious.
+
+/* Steinar */
+-- 
+Homepage: http://www.sesse.net/
