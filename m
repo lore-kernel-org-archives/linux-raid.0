@@ -1,28 +1,41 @@
-From: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
-Subject: Re: raid5 or raid6 and the maximum size
-Date: Thu, 22 Sep 2005 15:52:08 +0200
-Message-ID: <dgucu8$66q$1@sea.gmane.org>
-References: <4332AD95.1080904@bppiac.hu>
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+From: Al Boldi <a1426z@gawab.com>
+Subject: Re: Good, recent FS comparison?
+Date: Thu, 22 Sep 2005 16:55:26 +0300
+Message-ID: <200509221655.26824.a1426z@gawab.com>
+References: <6d5bedd8050915131148b8108a@mail.gmail.com> <200509220034.42284.a1426z@gawab.com> <20050922121423.GA30182@mail.shareable.org>
+Mime-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <20050922121423.GA30182@mail.shareable.org>
+Content-Disposition: inline
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Jamie Lokier <jamie@shareable.org>
+Cc: linux-fsdevel@vger.kernel.org, Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Farkas Levente <lfarkas@bppiac.hu> wrote:
-> - 7 x 300GB in raid5 and one 300GB spare or
-> - 8 x 300GB in raid6?
-> it seems the same to me since both case we can get two disk faild and 
+Jamie Lokier wrote:
+> Al Boldi wrote:
+> > Jamie Lokier wrote:
+> > > Al Boldi wrote:
+> > > > ext3 is rock-solid!
+> > >
+> > > If only.  Recently I had a system come up after a power cycle with a
+> > > directory where reading any file in that directory gives an I/O error.
+> > > The disk is fine, and it's using ext3 in ordered mode, with IDE
+> > > write-caching disabled to be sure.
+>
+> 2.4.26, uclinux - it's an embedded device.
+>
+> Doing an fsck before mounting would be an unacceptable boot-time delay.
+>
+> Why do you suggest that, specifically for 2.4?  Is there a known
+> problem with 2.4 and ext3?
 
-No, it's everything but the same. raid5 always gives you survival of exactly
-one simultaneous disk failure. If two of your disks fail simultaneously
-in a raid5, you're lost. A spare disk gets used not before any disk
-failed. Then it needs time to get synched, where you have no redundancy
-at all. After that your raid5 is able to survive another disk failure.
+I saw this at least once on 2.4.18. A forced fsck on reboot fixed it.
+2.4.31 looks ok.
 
-
-regards
-   Mario
--- 
-As a rule, the more bizarre a thing is, the less mysterious it proves to be.
-                                    -- Sherlock Holmes by Arthur Conan Doyle
+--
+Al
 
