@@ -1,67 +1,41 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH] Online RAID-5 resizing
-Date: Thu, 22 Sep 2005 18:16:41 +0200
-Message-ID: <17202.55529.310871.877019@cse.unsw.edu.au>
-References: <20050920143346.GA5777@uio.no>
-	<17200.9302.242957.23189@cse.unsw.edu.au>
-	<20050920153622.GA14287@uio.no>
+From: berk walker <berk@panix.com>
+Subject: Re: raid5 or raid6 and the maximum size
+Date: Thu, 22 Sep 2005 12:28:58 -0400
+Message-ID: <4332DBCA.2090607@panix.com>
+References: <4332AD95.1080904@bppiac.hu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Steinar H. Gunderson on Tuesday September 20
+In-Reply-To: <4332AD95.1080904@bppiac.hu>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Steinar H. Gunderson" <sgunderson@bigfoot.com>
+To: Farkas Levente <lfarkas@bppiac.hu>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday September 20, sgunderson@bigfoot.com wrote:
-> 
-> > I'll try to have a read through your code over the next week or so and
-> > give you more detailed feedback.
-> 
-> OK, thanks. :-) There's a lot of unneeded junk in the patch, BTW (some
-> reindenting here and there that I don't know where is coming from, plus lots
-> of temporary added printks), but I guess we can sort out the cleanness after
-> a while. :-)
 
-Yes, that reindenting is a problem as it makes the patch hard to read
--- it's hard to see which bits need to be checked and which don't.  If
-you could remove them for the next version, it would help....
 
-Can I make two suggestions for a start?
+Farkas Levente wrote:
 
-1/ in raid5_reshape, rather than allocate a separate set of
-  stripe_heads, I think it would be good to re-size all of the stripes
-  and the continue running with the new set of stripe_heads.
-  This would involved repeatedly
+> hi,
+> i'd like to know the current state of the raid6 driver. we are now 
+> switching one of our server from 8 x 200GB to 8 x 300GB(or 400GB).
+> so which is the better if we use:
+> - 7 x 300GB in raid5 and one 300GB spare or
+> - 8 x 300GB in raid6?
+> it seems the same to me since both case we can get two disk faild and 
+> the same capacity. so why we choose raid6 over raid5 (when raid5 seems 
+> to be more stable then raid6)?
+> another question is there any upper limit for one raid5(6) partition? 
+> i read 1TB and 2TB too (although we already have a raid5 which is 
+> larger then 1TB). these are still real limit? or what is the current 
+> limit?
+> thank you for your help in advance.
+> yours.
+>
+With RAID5 and a spare, if another, rarely or never used area is found 
+to be bad on rebuild, your spare is of no use, and without heroic 
+measures, all is lost.  RAID6 can handle that scenario.
 
-     get_inactive_stripe
-     allocate new stripe slightly bigger
-     copy the pages across
-     allocate the extra pages
-     put it on a private list
+b-
 
-  Repeat this until we have all the stripes.  This will temporarily
-  stall the raid5 as the stripes will be exhausted.  
-  As soon as you have them all, you release them again, and the raid
-  will continue to work.  
-  Avoiding the two lists of stripe_heads will remove a fair bit of
-  code.
-
-2/ Reserve the stripe_heads needed for a chunk-resize in make_request
-   (where it is safe to block) rather than in handle_stripe.
-
-   so make_request reserves all the stripes needed to read, and all
-   needed to write (which may overlap for the first chunk) or 2,
-   (store them in an array or list in ->conf) and arrange for
-   handle_stripe to trigger the reads, and arrange that new write
-   requests to any of these flags block.
-   Once the reads are done, shuffle the pages (rather then memcpy,
-   just fiddle with pointers), and cause write-out to commence.
-
-Please let me know if that makes sense, or if you don't think it will
-work, or if you just don't have the time....
-
-Thanks,
-NeilBrown
