@@ -1,33 +1,43 @@
-From: Al Boldi <a1426z@gawab.com>
-Subject: Re: Good, recent FS comparison?
-Date: Thu, 22 Sep 2005 00:34:42 +0300
-Message-ID: <200509220034.42284.a1426z@gawab.com>
-References: <6d5bedd8050915131148b8108a@mail.gmail.com> <200509162258.37730.a1426z@gawab.com> <20050921153703.GB19896@mail.shareable.org>
+From: "Steinar H. Gunderson" <sgunderson@bigfoot.com>
+Subject: Re: [PATCH] Online RAID-5 resizing
+Date: Thu, 22 Sep 2005 02:14:21 +0200
+Message-ID: <20050922001421.GA2205@uio.no>
+References: <20050920143346.GA5777@uio.no> <17200.9302.242957.23189@cse.unsw.edu.au> <20050921192326.GA30405@uio.no>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <20050921153703.GB19896@mail.shareable.org>
+Content-Type: text/plain; charset=utf-8
+Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Jamie Lokier <jamie@shareable.org>
-Cc: linux-fsdevel@vger.kernel.org, Linux RAID Mailing List <linux-raid@vger.kernel.org>, linux-xfs@oss.sgi.com
+In-Reply-To: <20050921192326.GA30405@uio.no>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Jamie Lokier wrote:
-> Al Boldi wrote:
-> > ext3 is rock-solid!
->
-> If only.  Recently I had a system come up after a power cycle with a
-> directory where reading any file in that directory gives an I/O error.
-> The disk is fine, and it's using ext3 in ordered mode, with IDE
-> write-caching disabled to be sure.
+On Wed, Sep 21, 2005 at 09:23:26PM +0200, Steinar H. Gunderson wrote:
+> I noticed a problem during a big test resize now, BTW; for some reason,
+> pdflush goes into uninterruptable sleep, and kjournald and thus the
+> filesystem seems to follow. I'm not sure if this is a starvation issue or
+> not, but it sure is a bug -- I'll look into it and see if I find something
+> obvious.
 
-2.4 or 2.6?
+This might be it (apoligies for the inline patch, but it should be simple
+enough to apply by hand):
 
-In 2.4 try a reboot and force an fsck before mounting.
+--- drivers/md/raid5.c.orig     2005-09-22 02:15:30.000000000 +0200
++++ drivers/md/raid5.c  2005-09-22 01:49:30.000000000 +0200
+@@ -374,7 +374,7 @@
+					BUG();
+			} else {
+				if (!test_bit(STRIPE_HANDLE, &sh->state)) {
+-					if (conf->expand_in_progress && sector < conf->expand_progress) {
++					if (conf->expand_in_progress && sector * (conf->raid_disks - 1) < conf->expand_progress) {
+						atomic_inc(&conf->active_stripes_expand);
+					} else {
+						atomic_inc(&conf->active_stripes);
 
---
-Al
+It seems to survive even under quite heavy load now (but of course, restripe
+performance suffers badly when doing heavy stuff on the volume :-) ). Too
+soon to say if there are problems still, of course.
 
+/* Steinar */
+-- 
+Homepage: http://www.sesse.net/
