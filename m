@@ -1,48 +1,156 @@
-From: Ming Zhang <mingz@ele.uri.edu>
-Subject: Re: mdadm core dump
-Date: Fri, 23 Sep 2005 10:45:49 -0400
-Message-ID: <1127486750.5546.47.camel@localhost.localdomain>
-References: <1127484829.5546.38.camel@localhost.localdomain>
-	 <17204.5130.443085.827162@cse.unsw.edu.au>
-Reply-To: mingz@ele.uri.edu
+From: Heinz Mauelshagen <mauelshagen@redhat.com>
+Subject: *** Announcement: dmraid 1.0.0.rc9 ***
+Date: Fri, 23 Sep 2005 16:45:44 +0200
+Message-ID: <20050923144544.GA17698@redhat.com>
+Reply-To: mauelshagen@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17204.5130.443085.827162@cse.unsw.edu.au>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 2005-09-23 at 16:41 +0200, Neil Brown wrote:
-> On Friday September 23, mingz@ele.uri.edu wrote:
-> > i did not read the mdadm code. but i suspect there is a pointer misuse
-> > when there is no configuration file available.
-> > 
-> ...
-> > [root@localhost ~]# strace mdadm --assemble /dev/md0
-> > execve("/sbin/mdadm", ["mdadm", "--assemble", "/dev/md0"], [/* 23 vars
-> > */]) = 0
-> > uname({sys="Linux", node="localhost.localdomain", ...}) = 0
-> > brk(0)                                  = 0x515000
-> ...
-> > open("/etc/mdadm.conf", O_RDONLY)       = -1 ENOENT (No such file or
-> > directory)
-> > --- SIGSEGV (Segmentation fault) @ 0 (0) ---
-> > +++ killed by SIGSEGV +++
-> > 
-> > [root@localhost ~]# mdadm --version
-> > mdadm - v1.6.0 - 4 June 2004
-> 
-> Fixed in v1.8.0, but I would recommend upgrading all the way to
-> 1.12.0, or even 2.1.
-> 
-> NeilBrown
 
-ic. thx. but the centos 4.1 does not provide this update yet. will get
-around.
+               *** Announcement: dmraid 1.0.0.rc9 ***
 
-ming
+dmraid 1.0.0.rc9 is available at
+http://people.redhat.com/heinzm/sw/dmraid/ in source tarball,
+source rpm and i386 rpm (with shared and static dietlibc binary).
+
+This release fixes a stripe size bug on VIA and adds RAID10 support
+on Promise (see CHANGELOG below for more).
 
 
+dmraid (Device-Mapper RAID tool) discovers, [de]activates and displays
+properties of software RAID sets (i.e. ATARAID) and contained DOS
+partitions using the device-mapper runtime of the 2.6 kernel.
+
+The following ATARAID types are supported on Linux 2.6:
+
+Highpoint HPT37X
+Highpoint HPT45X
+Intel Software RAID
+LSI Logic MegaRAID
+NVidia NForce
+Promise FastTrack
+Silicon Image Medley
+VIA Software RAID
+
+Please provide insight to support those metadata formats completely.
+
+Thanks.
+
+
+See files README, which comes with the source tarball for
+prerequisites to run this software, further instructions on installing
+and using dmraid!
+
+
+Call for testers:
+-----------------
+
+I need testers with the above ATARAID types, to check that the mapping
+created by this tool is correct (see options "-t -ay") and access to the
+ATARAID data is proper.
+
+In case you have a different ATARAID solution from those listed above,
+please feel free to contact me about supporting it in dmraid.
+
+You can activate your ATARAID sets without danger of overwriting
+your metadata, because dmraid accesses it read-only unless you use
+option -E together with -r in order to erase ATARAID metadata
+(see 'man dmraid')!
+
+This is a release candidate version so you want to have backups of your valuable
+data *and* you want to test accessing your data read-only first in order to
+make sure that the mapping is correct before you go for read-write access.
+
+
+Contacts:
+---------
+
+The author is reachable at <Mauelshagen@RedHat.com>.
+
+For test results, mapping information, discussions, questions, patches,
+enhancement requests and the like, please subscribe and mail to
+<ataraid-list@redhat.com>.
+
+--
+
+Regards,
+Heinz    -- The LVM Guy --
+
+
+CHANGELOG from dmraid 1.0.0.rc8 to 1.0.0.rc9		2005.09.23
+------------------------------------------------------------------
+
+FIXES:
+------
+o via.c: checksum() calculation;
+	 stride size
+
+o toollib.c:  memory leak in _valid_format()
+
+o isw.c: avoid endianess conversion bug in to_cpu();
+         disk status check;
+	 version check to cover 1.2.02;
+	 isw_write() to store metadata in correct sequence
+
+o hpt37x.c, lsi.c, nv.c, pdc.c, sil.c via.c: streamlined grouping switch()
+
+o hpt45x.c: added missing RAID10 to capability string
+
+o sil.c: streamlined quorate()
+
+o misc.c: p_fmt() missed a free_string()
+
+
+FEATURES:
+---------
+o pdc.c: support RAID10
+
+o commands.c: added --separator option for selectable string
+	      separator character (used with --format etc.)
+
+o display.c: support customizable column output through field
+	     identifiers with -c option
+
+
+MISCELANIOUS:
+------------
+o metadata.c: use log_alloc_err()
+
+o format.h: introduced caps (RAID capabilities) member
+
+o format.c: introduced get_format_caps() and free_format_caps()
+	    to ease library use in installers (pjones@redhat.com)
+
+o display.c: streamlined log_devices()
+
+o toollib.c: stremalined collapse_delimiters()
+
+o isw.c: streamlined isw_read_extended() and setup_rd()
+
+o file.c: cleanup
+
+o add /var/lock/dmraid to rpm
+
+o avoid global variable format_names:
+  - change discover_raid_devices() interface
+  - saves code in toollib
+
+o added more info to format_error output
+
+o activate.c: display RAID string with unsupported mapping
+
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+Heinz Mauelshagen                                 Red Hat GmbH
+Consulting Development Engineer                   Am Sonnenhang 11
+                                                  56242 Marienrachdorf
+                                                  Germany
+Mauelshagen@RedHat.com                            +49 2626 141200
+                                                       FAX 924446
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
