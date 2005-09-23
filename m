@@ -1,156 +1,46 @@
-From: Heinz Mauelshagen <mauelshagen@redhat.com>
-Subject: *** Announcement: dmraid 1.0.0.rc9 ***
-Date: Fri, 23 Sep 2005 16:45:44 +0200
-Message-ID: <20050923144544.GA17698@redhat.com>
-Reply-To: mauelshagen@redhat.com
+From: Orion Poplawski <orion@cora.nwra.com>
+Subject: Re: raid5 missing drive at boot question
+Date: Fri, 23 Sep 2005 08:51:45 -0600
+Message-ID: <43341681.3010604@cora.nwra.com>
+References: <dgvb75$hp5$1@sea.gmane.org> <17203.50314.435293.665922@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <17203.50314.435293.665922@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@cse.unsw.edu.au>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Neil Brown wrote:
+> On Thursday September 22, orion@cora.nwra.com wrote:
+> 
+>>I created a new 8 disk raid5 set with no spares.  Now, when I boot I end 
+>>up with:
+>>
+>>
+>>md3 : active raid5 sdp1[7] sdo1[6] sdn1[5] sdm1[4] sdl1[3] sdk1[2] sdi1[0]
+>>       3418687552 blocks level 5, 64k chunk, algorithm 2 [8/7] [U_UUUUUU]
+>>
+>>which I believe is a "degraded" array.  I then have to do:
+>>
+>>mdadm -M -a /dev/md3 /dev/sdj1
+>>
+>>to add in the missing disk.  I had to do this after it was created as well.
+>>
+>>Why does this happen?  What am I not understanding?
+> 
+> 
+> I suspect that partition sdj1 isn't marked as 0xfd (auto-detect).
+> 
+> NeilBrown
 
-               *** Announcement: dmraid 1.0.0.rc9 ***
-
-dmraid 1.0.0.rc9 is available at
-http://people.redhat.com/heinzm/sw/dmraid/ in source tarball,
-source rpm and i386 rpm (with shared and static dietlibc binary).
-
-This release fixes a stripe size bug on VIA and adds RAID10 support
-on Promise (see CHANGELOG below for more).
-
-
-dmraid (Device-Mapper RAID tool) discovers, [de]activates and displays
-properties of software RAID sets (i.e. ATARAID) and contained DOS
-partitions using the device-mapper runtime of the 2.6 kernel.
-
-The following ATARAID types are supported on Linux 2.6:
-
-Highpoint HPT37X
-Highpoint HPT45X
-Intel Software RAID
-LSI Logic MegaRAID
-NVidia NForce
-Promise FastTrack
-Silicon Image Medley
-VIA Software RAID
-
-Please provide insight to support those metadata formats completely.
-
-Thanks.
+Right on the money, thanks!
 
 
-See files README, which comes with the source tarball for
-prerequisites to run this software, further instructions on installing
-and using dmraid!
-
-
-Call for testers:
------------------
-
-I need testers with the above ATARAID types, to check that the mapping
-created by this tool is correct (see options "-t -ay") and access to the
-ATARAID data is proper.
-
-In case you have a different ATARAID solution from those listed above,
-please feel free to contact me about supporting it in dmraid.
-
-You can activate your ATARAID sets without danger of overwriting
-your metadata, because dmraid accesses it read-only unless you use
-option -E together with -r in order to erase ATARAID metadata
-(see 'man dmraid')!
-
-This is a release candidate version so you want to have backups of your valuable
-data *and* you want to test accessing your data read-only first in order to
-make sure that the mapping is correct before you go for read-write access.
-
-
-Contacts:
----------
-
-The author is reachable at <Mauelshagen@RedHat.com>.
-
-For test results, mapping information, discussions, questions, patches,
-enhancement requests and the like, please subscribe and mail to
-<ataraid-list@redhat.com>.
-
---
-
-Regards,
-Heinz    -- The LVM Guy --
-
-
-CHANGELOG from dmraid 1.0.0.rc8 to 1.0.0.rc9		2005.09.23
-------------------------------------------------------------------
-
-FIXES:
-------
-o via.c: checksum() calculation;
-	 stride size
-
-o toollib.c:  memory leak in _valid_format()
-
-o isw.c: avoid endianess conversion bug in to_cpu();
-         disk status check;
-	 version check to cover 1.2.02;
-	 isw_write() to store metadata in correct sequence
-
-o hpt37x.c, lsi.c, nv.c, pdc.c, sil.c via.c: streamlined grouping switch()
-
-o hpt45x.c: added missing RAID10 to capability string
-
-o sil.c: streamlined quorate()
-
-o misc.c: p_fmt() missed a free_string()
-
-
-FEATURES:
----------
-o pdc.c: support RAID10
-
-o commands.c: added --separator option for selectable string
-	      separator character (used with --format etc.)
-
-o display.c: support customizable column output through field
-	     identifiers with -c option
-
-
-MISCELANIOUS:
-------------
-o metadata.c: use log_alloc_err()
-
-o format.h: introduced caps (RAID capabilities) member
-
-o format.c: introduced get_format_caps() and free_format_caps()
-	    to ease library use in installers (pjones@redhat.com)
-
-o display.c: streamlined log_devices()
-
-o toollib.c: stremalined collapse_delimiters()
-
-o isw.c: streamlined isw_read_extended() and setup_rd()
-
-o file.c: cleanup
-
-o add /var/lock/dmraid to rpm
-
-o avoid global variable format_names:
-  - change discover_raid_devices() interface
-  - saves code in toollib
-
-o added more info to format_error output
-
-o activate.c: display RAID string with unsupported mapping
-
-
-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
-Heinz Mauelshagen                                 Red Hat GmbH
-Consulting Development Engineer                   Am Sonnenhang 11
-                                                  56242 Marienrachdorf
-                                                  Germany
-Mauelshagen@RedHat.com                            +49 2626 141200
-                                                       FAX 924446
-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+-- 
+Orion Poplawski
+System Administrator                   303-415-9701 x222
+Colorado Research Associates/NWRA      FAX: 303-415-9702
+3380 Mitchell Lane, Boulder CO 80301   http://www.co-ra.com
