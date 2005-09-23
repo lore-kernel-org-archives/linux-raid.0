@@ -1,46 +1,68 @@
-From: Orion Poplawski <orion@cora.nwra.com>
-Subject: Re: raid5 missing drive at boot question
-Date: Fri, 23 Sep 2005 08:51:45 -0600
-Message-ID: <43341681.3010604@cora.nwra.com>
-References: <dgvb75$hp5$1@sea.gmane.org> <17203.50314.435293.665922@cse.unsw.edu.au>
+From: Andy Dawson <A.J.Dawson@Bradford.ac.uk>
+Subject: Re: Software RAID1 problems
+Date: Fri, 23 Sep 2005 16:45:34 +0100 (GMT Standard Time)
+Message-ID: <Pine.WNT.4.63.0509231622040.2312@ender>
+References: <17189.65525.274983.671124@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17203.50314.435293.665922@cse.unsw.edu.au>
+In-Reply-To: <17189.65525.274983.671124@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
 To: Neil Brown <neilb@cse.unsw.edu.au>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> On Thursday September 22, orion@cora.nwra.com wrote:
-> 
->>I created a new 8 disk raid5 set with no spares.  Now, when I boot I end 
->>up with:
+After a fairly long time without seeing the following message:
+
+"This is an automatically generated mail message from mdadm
+running on servername
+
+A DegradedArray event had been detected on md device /dev/md0.
+
+Faithfully yours, etc."
+
+It reared its head again today.
+
+I've checked dmesg and /var/log/messages and the only thing I've found so 
+far is the following in dmesg:
+
+md: considering sda1 ...
+md:  adding sda1 ...
+md: created md0
+md: bind<sda1>
+md: running: <sda1>
+raid1: raid set md0 active with 1 out of 2 mirrors
+
+md1 works fine and md sets md1 active with 2 out of 2 mirrors.
+
+/dev/sdb2 is the device that appears to be causing the problem, so can 
+anyone tell me what might be happening?  Any ideas why it might not be 
+included in the array at boot time? (I've tried Google but found no 
+answers yet).
+
+Any help would be appreciated!
+
+Regards
+Andy
+
+
+
+On Tue, 13 Sep 2005, Neil Brown wrote:
+
+> On Monday September 12, A.J.Dawson@Bradford.ac.uk wrote:
 >>
->>
->>md3 : active raid5 sdp1[7] sdo1[6] sdn1[5] sdm1[4] sdl1[3] sdk1[2] sdi1[0]
->>       3418687552 blocks level 5, 64k chunk, algorithm 2 [8/7] [U_UUUUUU]
->>
->>which I believe is a "degraded" array.  I then have to do:
->>
->>mdadm -M -a /dev/md3 /dev/sdj1
->>
->>to add in the missing disk.  I had to do this after it was created as well.
->>
->>Why does this happen?  What am I not understanding?
-> 
-> 
-> I suspect that partition sdj1 isn't marked as 0xfd (auto-detect).
-> 
+>> Has anyone any idea what might be causing the degradedarray event to
+>> occur?
+>
+> What kernel messages do you get when it happens (in /var/log/kern.log
+> on wherever your distro puts them)?
+>
 > NeilBrown
+>
 
-Right on the money, thanks!
+Dr. Andy Dawson
+A.J.Dawson@Bradford.ac.uk
+http://www.mossie.org
+http://www.museum-explorer.org.uk
 
-
--- 
-Orion Poplawski
-System Administrator                   303-415-9701 x222
-Colorado Research Associates/NWRA      FAX: 303-415-9702
-3380 Mitchell Lane, Boulder CO 80301   http://www.co-ra.com
+  Never attribute to malice that which can adequately be explained by stupidity
