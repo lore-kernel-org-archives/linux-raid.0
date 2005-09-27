@@ -1,41 +1,35 @@
-From: Norman Schmidt <schmidt@naa.net>
-Subject: still compile error
-Date: Tue, 27 Sep 2005 16:57:15 +0200
-Message-ID: <43395DCB.9010500@naa.net>
-Reply-To: schmidt@naa.net
+From: Brad Dameron <brad@seatab.com>
+Subject: Re: maximum size
+Date: Tue, 27 Sep 2005 09:18:52 -0700
+Message-ID: <1127837933.16750.4.camel@dhcpc226.office.pivotlink.com>
+References: <43394753.9040107@bppiac.hu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <43394753.9040107@bppiac.hu>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Unfortunately, Neils last answer didn=C2=B4t answer my compile error.
+On Tue, 2005-09-27 at 15:21 +0200, Farkas Levente wrote:
+> hi,
+> i'd been already asked, but don't get any answer. what is the maximum 
+> size of a raid5 and raid5 partition in kerenel 2.6? i try to find the 
+> answer but found only kernel 2.4 info.
+> thanks in advance.
+> 
 
-I just tried mdadm-1.9.0, it compiles well under a standard SuSE 9.3 di=
-stro.
+It depends on what FS you are using as well as if you are doing a
+software or hardware RAID. With software on a Reiser or XFS it is very
+very large. On hardware there is usually a controller limitation. I
+currently have a 3TB partition with Reiser 3 in a RAID5 on a 3ware
+9500S-12. However to get this size partition you have to use parted
+instead of fdisk to create it. Otherwise the largest you will see is
+700MB. 
 
-But mdadm-2.0 and mdadm-2.1 do not with the following error:
+Brad Dameron
+SeaTab Software
+www.seatab.com
 
-gcc -Wall -Werror -Wstrict-prototypes -DCONFFILE=3D\"/etc/mdadm.conf\"=20
--ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"   -c -o bitmap.o bitmap.=
-c
-bitmap.c: In function `bitmap_fd_read':
-bitmap.c:130: warning: int format, different type arg (arg 3)
-make: *** [bitmap.o] Error 1
 
-Help would be appreciated.
-
-Thanks, Norman.
---=20
-Norman Schmidt          Institut fuer Physikal. u. Theoret. Chemie
-Dipl.-Chem. Univ.       Friedrich-Alexander-Universitaet
-schmidt@naa.net         Erlangen-Nuernberg
-                         IT-Systembetreuer Physikalische Chemie
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
