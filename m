@@ -1,26 +1,41 @@
-From: Sebastian Kuzminsky <seb.kuzminsky@gmail.com>
-Subject: which external disk enclosure?
-Date: Tue, 27 Sep 2005 08:30:54 -0600
-Message-ID: <7f55de7205092707305f0c824b@mail.gmail.com>
-Reply-To: Sebastian Kuzminsky <seb.kuzminsky@gmail.com>
+From: Norman Schmidt <schmidt@naa.net>
+Subject: still compile error
+Date: Tue, 27 Sep 2005 16:57:15 +0200
+Message-ID: <43395DCB.9010500@naa.net>
+Reply-To: schmidt@naa.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I'm in the market for a nice external disk enclosure to hold all the
-disks for my raid array, 4-6 disks or so.  Last time I bought
-something like this was in the 90's, and it was SCSI.  Today I think
-I'd prefer SATA, USB 2.0, or firewire.
+Unfortunately, Neils last answer didn=C2=B4t answer my compile error.
 
-What's the done thing these days?
+I just tried mdadm-1.9.0, it compiles well under a standard SuSE 9.3 di=
+stro.
 
-Can anyone recommend a good make & model?
+But mdadm-2.0 and mdadm-2.1 do not with the following error:
 
+gcc -Wall -Werror -Wstrict-prototypes -DCONFFILE=3D\"/etc/mdadm.conf\"=20
+-ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"   -c -o bitmap.o bitmap.=
+c
+bitmap.c: In function `bitmap_fd_read':
+bitmap.c:130: warning: int format, different type arg (arg 3)
+make: *** [bitmap.o] Error 1
 
---
-Sebastian Kuzminsky
+Help would be appreciated.
+
+Thanks, Norman.
+--=20
+Norman Schmidt          Institut fuer Physikal. u. Theoret. Chemie
+Dipl.-Chem. Univ.       Friedrich-Alexander-Universitaet
+schmidt@naa.net         Erlangen-Nuernberg
+                         IT-Systembetreuer Physikalische Chemie
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
