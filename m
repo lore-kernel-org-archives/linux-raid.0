@@ -1,14 +1,29 @@
-From: Brad Dameron <brad@seatab.com>
-Subject: Multipath Tools.
-Date: Tue, 27 Sep 2005 14:40:11 -0700
-Message-ID: <1127857211.20884.10.camel@dhcpc226.office.pivotlink.com>
+From: Mike Tran <mhtran@us.ibm.com>
+Subject: [Fwd: Multipath Tools.]
+Date: Tue, 27 Sep 2005 17:06:20 -0500
+Message-ID: <1127858780.3119.18.camel@miketran.austin.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>, dm-devel <dm-devel@redhat.com>, brad@seatab.com
 List-Id: linux-raid.ids
+
+Hi Brad,
+
+Since you use Device Mapper, I am forwarding your message to
+dm-devel@redhat.com list.  Developers on dm-devel should be able to help
+you.
+
+--
+Mike Tran
+
+-------- Forwarded Message --------
+From: Brad Dameron <brad@seatab.com>
+To: linux-raid@vger.kernel.org
+Subject: Multipath Tools.
+Date: Tue, 27 Sep 2005 14:40:11 -0700
 
 Trying to get multipath round-robin working on a dual-port Qlogic 2300
 fiber card with both path's connected to a Sun A5200. I can see the
@@ -95,5 +110,11 @@ Any help to get this going appreciated.
 Thank you,
 Brad Dameron
 SeaTab Software
+
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
