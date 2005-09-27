@@ -1,40 +1,41 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: mdadm 2.0 and 2.1 compile error
-Date: Tue, 27 Sep 2005 09:51:11 +0200
-Message-ID: <17208.63983.493938.764444@cse.unsw.edu.au>
-References: <Pine.LNX.4.63.0509262217180.24352@adsl.a2000.nu>
+Subject: Re: did I just destroy my data?
+Date: Tue, 27 Sep 2005 11:51:36 +0200
+Message-ID: <17209.5672.702546.529979@cse.unsw.edu.au>
+References: <7f55de7205092700022e1650aa@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Stephan van Hienen on Monday September 26
+In-Reply-To: message from Sebastian Kuzminsky on Tuesday September 27
 Sender: linux-raid-owner@vger.kernel.org
-To: Stephan van Hienen <raid@a2000.nu>
+To: Sebastian Kuzminsky <seb.kuzminsky@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday September 26, raid@a2000.nu wrote:
-> I am trying to compile mdadm 2.x (currently running version 1.12)
+On Tuesday September 27, seb.kuzminsky@gmail.com wrote:
 > 
-> On "make" I get the following fatal error for both 2.0 and 2.1:
+> Please, cluebat me.  How do I unhork my raid now?  Is it even possible?
 > 
-> In file included from super0.c:31:
-> /usr/include/asm/byteorder.h:6:2: #warning using private kernel header; 
-> include <endian.h> instead!
-> make: *** [super0.o] Error 1
-> 
-> any idea ?
 
-This means your distro is crazy.  endian.h does not contain the
-defines that I need from byteorder.h.
-Just remove the '-Werror' from the Makefile and try again.
+You keep swapping between referring to the devices by number (1,2,3,4)
+and named (sda,sdb) and I get confused....
+
+Your best bet it to take the three drives that are mostly like to be
+mostly correct, which also certainly excludes the one that resync was
+happening on, and recreate the array.
+e.g.
+   mdadm -C /dev/md0 -l5 -n4 -c ?? /dev/sda /dev/sdb missing /dev/sdd
+
+but make sure you specify the chunksize as a number, and make sure you
+get the device order and positioning right.
+
+Then mount the filesystem read-only.
+Then - when you have your new drives - copy the data off.
+
+Don't trigger a resync.  Don't do a fsck.  These are likely to hit a
+bad block and hurt you.
+
+Good luck.
 
 NeilBrown
-
-> 
-> system is tao 1.0 (based on rhel3) with 2.6.13.2 kernel source (also tried 
-> 2.6.11.7 source)
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
