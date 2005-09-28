@@ -1,43 +1,51 @@
 From: Jeff Hanson <jhanson@sgi.com>
-Subject: Re: mdadm 2.0 and 2.1 compile error
-Date: Wed, 28 Sep 2005 09:46:01 -0400
-Message-ID: <pan.2005.09.28.13.45.57.358668@sgi.com>
-References: <Pine.LNX.4.63.0509262217180.24352@adsl.a2000.nu> <17208.63983.493938.764444@cse.unsw.edu.au>
+Subject: Re: still compile error
+Date: Wed, 28 Sep 2005 14:02:12 -0400
+Message-ID: <pan.2005.09.28.18.02.10.304558@sgi.com>
+References: <43395DCB.9010500@naa.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 27 Sep 2005 09:51:11 +0200, Neil Brown wrote:
+On Tue, 27 Sep 2005 16:57:15 +0200, Norman Schmidt wrote:
 
-> On Monday September 26, raid@a2000.nu wrote:
->> I am trying to compile mdadm 2.x (currently running version 1.12)
->> 
->> On "make" I get the following fatal error for both 2.0 and 2.1:
->> 
->> In file included from super0.c:31:
->> /usr/include/asm/byteorder.h:6:2: #warning using private kernel header; 
->> include <endian.h> instead!
->> make: *** [super0.o] Error 1
->> 
->> any idea ?
-> 
-> This means your distro is crazy.  endian.h does not contain the
-> defines that I need from byteorder.h.
-> Just remove the '-Werror' from the Makefile and try again.
+> Unfortunately, Neils last answer didn=B4t answer my compile error.
+>=20
+> I just tried mdadm-1.9.0, it compiles well under a standard SuSE 9.3 =
+distro.
+>=20
+> But mdadm-2.0 and mdadm-2.1 do not with the following error:
+>=20
+> gcc -Wall -Werror -Wstrict-prototypes -DCONFFILE=3D\"/etc/mdadm.conf\=
+"=20
+> -ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"   -c -o bitmap.o bitma=
+p.c
+> bitmap.c: In function `bitmap_fd_read':
+> bitmap.c:130: warning: int format, different type arg (arg 3)
+> make: *** [bitmap.o] Error 1
+>=20
 
-That resolved it for me.  Distro is RHEL 4 in my testing.
--- 
+What platform (i386, x86_64, ...).  On my i386 SuSE Linux 9.3 system
+it compiles just fine with gcc-3.3.5-5.
+
+Is the system updated from YOU?
+--=20
 -----------------------------------------------------------------------
 Jeff Hanson - jhanson@sgi.com - Field Technical Analyst
 
-You can choose a ready guide in some celestial voice. 
-If you choose not to decide, you still have made a choice. 
-You can choose from phantom fears and kindness that can kill; 
-I will choose a path that's clear 
+You can choose a ready guide in some celestial voice.=20
+If you choose not to decide, you still have made a choice.=20
+You can choose from phantom fears and kindness that can kill;=20
+I will choose a path that's clear=20
 I will choose freewill. - Lee/Lifeson/Peart
 
 
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
