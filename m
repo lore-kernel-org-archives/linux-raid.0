@@ -1,66 +1,55 @@
-From: "Guy" <bugzilla@watkins-home.com>
+From: dean gaudet <dean-list-linux-kernel@arctic.org>
 Subject: RE: Where is the performance bottleneck?
-Date: Fri, 30 Sep 2005 00:52:15 -0400
-Message-ID: <200509300452.j8U4qKw17804@www.watkins-home.com>
-References: <433AF75F.2060208@tmr.com>
+Date: Thu, 29 Sep 2005 22:19:41 -0700 (PDT)
+Message-ID: <Pine.LNX.4.63.0509292208100.27188@twinlark.arctic.org>
+References: <200509300452.j8U4qKw17804@www.watkins-home.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932202AbVI3Ew2@vger.kernel.org>
-In-Reply-To: <433AF75F.2060208@tmr.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: 'Bill Davidsen' <davidsen@tmr.com>
-Cc: 'Holger Kiehl' <Holger.Kiehl@dwd.de>, 'Mark Hahn' <hahn@physics.mcmaster.ca>, 'linux-raid' <linux-raid@vger.kernel.org>, 'linux-kernel' <linux-kernel@vger.kernel.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <200509300452.j8U4qKw17804@www.watkins-home.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Guy <bugzilla@watkins-home.com>
+Cc: 'Bill Davidsen' <davidsen@tmr.com>, 'Holger Kiehl' <Holger.Kiehl@dwd.de>, 'Mark Hahn' <hahn@physics.mcmaster.ca>, 'linux-raid' <linux-raid@vger.kernel.org>, 'linux-kernel' <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
+On Fri, 30 Sep 2005, Guy wrote:
 
-
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> owner@vger.kernel.org] On Behalf Of Bill Davidsen
-> Sent: Wednesday, September 28, 2005 4:05 PM
-> To: Guy
-> Cc: 'Holger Kiehl'; 'Mark Hahn'; 'linux-raid'; 'linux-kernel'
-> Subject: Re: Where is the performance bottleneck?
+> My old 500MHz P3 can xor at 1GB/sec.  I don't think the RAID5 logic is the
+> issue!  Also, I have not seen hardware that fast!  Or even half as fast.
+> But I must admit, I have not seen a hardware RAID5 in a few years.  :(
 > 
-> Guy wrote:
-> 
-> >In most of your results, your CPU usage is very high.  Once you get to
-> about
-> >90% usage, you really can't do much else, unless you can improve the CPU
-> >usage.
-> >
-> That seems one of the problems with software RAID, the calculations are
-> done in the CPU and not dedicated hardware. As you move to the top end
-> drive hardware the CPU gets to be a limit. I don't remember off the top
-> of my head how threaded this code is, and if more CPUs will help.
+>    8regs     :   918.000 MB/sec
+>    32regs    :   469.600 MB/sec
+>    pIII_sse  :   994.800 MB/sec
+>    pII_mmx   :  1102.400 MB/sec
+>    p5_mmx    :  1152.800 MB/sec
+> raid5: using function: pIII_sse (994.800 MB/sec)
 
-My old 500MHz P3 can xor at 1GB/sec.  I don't think the RAID5 logic is the
-issue!  Also, I have not seen hardware that fast!  Or even half as fast.
-But I must admit, I have not seen a hardware RAID5 in a few years.  :(
+those are cache based timings... an old 500mhz p3 probably has pc100 
+memory and main memory can't even go that fast.  in fact i've got one of 
+those here and it's lucky to get 600MB/s out of memory.
 
-   8regs     :   918.000 MB/sec
-   32regs    :   469.600 MB/sec
-   pIII_sse  :   994.800 MB/sec
-   pII_mmx   :  1102.400 MB/sec
-   p5_mmx    :  1152.800 MB/sec
-raid5: using function: pIII_sse (994.800 MB/sec)
+in fact, to compare sw raid to a hw raid you should count every byte of 
+i/o somewhere between 2 and 3 times.  this is because every line you read 
+into cache might knock out a dirty line, but it's definitely going to 
+replace something which would still be there on a hw raid.  (i.e. it 
+decreases the cache effectiveness and you end up paying later after the sw 
+raid xor to read data back in which wouldn't leave the cache on a hw 
+raid.)
 
-Humm..  It did not select the fastest?
+then add in the read/write traffic required on the parity block (which as 
+a fraction of i/o is worse with fewer drives) ... and it's pretty crazy to 
+believe that sw raid is "free" just because the kernel prints those 
+fantastic numbers at boot :)
 
-Guy
-> 
-> I see you are using RAID-1 for your system stuff, did one of the tests
-> use RAID-0 over all the drives? Mirroring or XOR redundancy help
-> stability but hurt performance. Was the 270MB/s with RAID-0 or ???
-> 
-> --
-> bill davidsen <davidsen@tmr.com>
->   CTO TMR Associates, Inc
->   Doing interesting things with small computers since 1979
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+> Humm..  It did not select the fastest?
+
+this is related to what i'm describing -- iirc the pIII_sse code uses a 
+non-temporal store and/or prefetchnta to reduce memory traffic.
+
+-dean
+
+p.s. i use sw raid regardless, i just don't like seeing these misleading 
+discussions pointing at the kernel raid timings and saying "hw offload is 
+pointless!"
