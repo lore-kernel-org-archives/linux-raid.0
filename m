@@ -1,41 +1,44 @@
-From: Andy Smith <andy@lug.org.uk>
-Subject: Re: Best way to achieve large, expandable, cheap storage?
-Date: Fri, 30 Sep 2005 18:34:20 +0000
-Message-ID: <20050930183420.GY6594@strugglers.net>
-References: <dhje16$tmq$1@sea.gmane.org> <20050930181643.GA23130@anthropohedron.net>
+From: Gordon Mohr <gojomo@bitzi.com>
+Subject: Re: Shrinking on-disk size of RAID1 array?
+Date: Fri, 30 Sep 2005 11:37:21 -0700
+Message-ID: <433D85E1.5030708@bitzi.com>
+References: <433CD4FA.6010603@bitzi.com> <63d08afd0509300232u36141930h@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="2SOO5c8OUGaKAwKs"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20050930181643.GA23130@anthropohedron.net>
+In-Reply-To: <63d08afd0509300232u36141930h@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Matthew Coulson wrote:
+>>I'm hoping to shrink the per-component size of an active RAID1
+>>array, so that I can transition the array to a smaller, faster
+>>set of drives.
+> 
+> 
+> I may be missing something here, but why not connect up the new
+> drives, setup the arrays, simply cp -R * everything over to the new
+> filesystems and update fstab and mdadm.conf? I can understand wanting
+> to let the system handle it all for you, but this way you'll get a
+> free defrag to boot :)
 
---2SOO5c8OUGaKAwKs
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Largest reason is that I want to minimize system downtime. My
+working assumption is that the 'parted' resize and 'mdadm'
+grow (shrink) would take minutes (or tens of minutes), then
+the background sync to the new smaller drive could happen
+at a leisurely pace, while services which actively write to
+the array remain up.
 
-On Fri, Sep 30, 2005 at 02:16:43PM -0400, Gregory Seidman wrote:
-> One advantage of LVM is snapshotting. It allows you to basically keep a
-> cheap diff backup of your disk. It's a really cool feature, but I'm not
-> going to go into detail about it here.
+I would expect a plain 'cp -R' to take hours, during
+which (to be safe) all services using the array should be
+stopped. (Perhaps I could do an initial 'cp -R' while services
+are running, then a quicker rsync for consistency when services
+are down?)
 
-I've found it (snapshots) too unstable for actual production use though.
+If my assumption about the relative time required of 'parted'
+resize and 'mdadm' grow is wrong, the simple copy approach
+would be more attractive.
 
---2SOO5c8OUGaKAwKs
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-
-iD8DBQFDPYUsIJm2TL8VSQsRAuRbAKDRZHCdwYgdHlXbrEvm9mzVLiFwmACePIk+
-fsCUFC0xR9tA/zlGkBJ4okc=
-=51kG
------END PGP SIGNATURE-----
-
---2SOO5c8OUGaKAwKs--
+- Gordon
