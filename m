@@ -1,73 +1,66 @@
-From: Jeff Hanson <jhanson@sgi.com>
-Subject: Re: still compile error
-Date: Thu, 29 Sep 2005 09:19:55 -0400
-Message-ID: <pan.2005.09.29.13.19.52.927124@sgi.com>
-References: <43395DCB.9010500@naa.net> <pan.2005.09.28.18.02.10.304558@sgi.com> <433AEBEC.2000003@naa.net>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: Where is the performance bottleneck?
+Date: Fri, 30 Sep 2005 00:52:15 -0400
+Message-ID: <200509300452.j8U4qKw17804@www.watkins-home.com>
+References: <433AF75F.2060208@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932202AbVI3Ew2@vger.kernel.org>
+In-Reply-To: <433AF75F.2060208@tmr.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: 'Bill Davidsen' <davidsen@tmr.com>
+Cc: 'Holger Kiehl' <Holger.Kiehl@dwd.de>, 'Mark Hahn' <hahn@physics.mcmaster.ca>, 'linux-raid' <linux-raid@vger.kernel.org>, 'linux-kernel' <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, 28 Sep 2005 21:15:56 +0200, Norman Schmidt wrote:
-
-> Jeff Hanson schrieb:
->=20
->>>Unfortunately, Neils last answer didn=B4t answer my compile error.
->>>
->>>I just tried mdadm-1.9.0, it compiles well under a standard SuSE 9.3=
- distro.
->>>
->>>But mdadm-2.0 and mdadm-2.1 do not with the following error:
->>>
->>>gcc -Wall -Werror -Wstrict-prototypes -DCONFFILE=3D\"/etc/mdadm.conf=
-\"=20
->>>-ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"   -c -o bitmap.o bitm=
-ap.c
->>>bitmap.c: In function `bitmap_fd_read':
->>>bitmap.c:130: warning: int format, different type arg (arg 3)
->>>make: *** [bitmap.o] Error 1
->>>
->>=20
->>=20
->> What platform (i386, x86_64, ...).  On my i386 SuSE Linux 9.3 system
->> it compiles just fine with gcc-3.3.5-5.
->>=20
->> Is the system updated from YOU?
->=20
-> It is fully updated with manual YOU. The platform is x86_64, processo=
-r=20
-> is one opteron 246 with 2 GB ram.
-
-Ah - same problem on ia64 system with SLES9SP2
-
-gcc -Wall -Werror -Wstrict-prototypes -DCONFFILE=3D\"/etc/mdadm.conf\" =
--ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"   -c -o bitmap.o bitmap.=
-c
-bitmap.c: In function `bitmap_fd_read':
-bitmap.c:130: warning: int format, different type arg (arg 3)
-bitmap.c:171: warning: long long unsigned int format, __u64 arg (arg 3)
-bitmap.c: In function `ExamineBitmap':
-bitmap.c:265: warning: long long unsigned int format, __u64 arg (arg 2)
-bitmap.c:266: warning: long long unsigned int format, __u64 arg (arg 2)
-bitmap.c:276: warning: long long unsigned int format, __u64 arg (arg 2)
-make: *** [bitmap.o] Error 1
-
---=20
------------------------------------------------------------------------
-Jeff Hanson - jhanson@sgi.com - Field Technical Analyst
-
-You can choose a ready guide in some celestial voice.=20
-If you choose not to decide, you still have made a choice.=20
-You can choose from phantom fears and kindness that can kill;=20
-I will choose a path that's clear=20
-I will choose freewill. - Lee/Lifeson/Peart
 
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> -----Original Message-----
+> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+> owner@vger.kernel.org] On Behalf Of Bill Davidsen
+> Sent: Wednesday, September 28, 2005 4:05 PM
+> To: Guy
+> Cc: 'Holger Kiehl'; 'Mark Hahn'; 'linux-raid'; 'linux-kernel'
+> Subject: Re: Where is the performance bottleneck?
+> 
+> Guy wrote:
+> 
+> >In most of your results, your CPU usage is very high.  Once you get to
+> about
+> >90% usage, you really can't do much else, unless you can improve the CPU
+> >usage.
+> >
+> That seems one of the problems with software RAID, the calculations are
+> done in the CPU and not dedicated hardware. As you move to the top end
+> drive hardware the CPU gets to be a limit. I don't remember off the top
+> of my head how threaded this code is, and if more CPUs will help.
+
+My old 500MHz P3 can xor at 1GB/sec.  I don't think the RAID5 logic is the
+issue!  Also, I have not seen hardware that fast!  Or even half as fast.
+But I must admit, I have not seen a hardware RAID5 in a few years.  :(
+
+   8regs     :   918.000 MB/sec
+   32regs    :   469.600 MB/sec
+   pIII_sse  :   994.800 MB/sec
+   pII_mmx   :  1102.400 MB/sec
+   p5_mmx    :  1152.800 MB/sec
+raid5: using function: pIII_sse (994.800 MB/sec)
+
+Humm..  It did not select the fastest?
+
+Guy
+> 
+> I see you are using RAID-1 for your system stuff, did one of the tests
+> use RAID-0 over all the drives? Mirroring or XOR redundancy help
+> stability but hurt performance. Was the 270MB/s with RAID-0 or ???
+> 
+> --
+> bill davidsen <davidsen@tmr.com>
+>   CTO TMR Associates, Inc
+>   Doing interesting things with small computers since 1979
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
