@@ -1,55 +1,96 @@
-From: dean gaudet <dean-list-linux-kernel@arctic.org>
-Subject: RE: Where is the performance bottleneck?
-Date: Thu, 29 Sep 2005 22:19:41 -0700 (PDT)
-Message-ID: <Pine.LNX.4.63.0509292208100.27188@twinlark.arctic.org>
-References: <200509300452.j8U4qKw17804@www.watkins-home.com>
+From: "Gordon Mohr (@ Bitzi)" <gojomo@bitzi.com>
+Subject: Shrinking on-disk size of RAID1 array?
+Date: Thu, 29 Sep 2005 23:02:34 -0700
+Message-ID: <433CD4FA.6010603@bitzi.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200509300452.j8U4qKw17804@www.watkins-home.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Guy <bugzilla@watkins-home.com>
-Cc: 'Bill Davidsen' <davidsen@tmr.com>, 'Holger Kiehl' <Holger.Kiehl@dwd.de>, 'Mark Hahn' <hahn@physics.mcmaster.ca>, 'linux-raid' <linux-raid@vger.kernel.org>, 'linux-kernel' <linux-kernel@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 30 Sep 2005, Guy wrote:
+Hi,
 
-> My old 500MHz P3 can xor at 1GB/sec.  I don't think the RAID5 logic is the
-> issue!  Also, I have not seen hardware that fast!  Or even half as fast.
-> But I must admit, I have not seen a hardware RAID5 in a few years.  :(
-> 
->    8regs     :   918.000 MB/sec
->    32regs    :   469.600 MB/sec
->    pIII_sse  :   994.800 MB/sec
->    pII_mmx   :  1102.400 MB/sec
->    p5_mmx    :  1152.800 MB/sec
-> raid5: using function: pIII_sse (994.800 MB/sec)
+I'm hoping to shrink the per-component size of an active RAID1
+array, so that I can transition the array to a smaller, faster
+set of drives.
 
-those are cache based timings... an old 500mhz p3 probably has pc100 
-memory and main memory can't even go that fast.  in fact i've got one of 
-those here and it's lucky to get 600MB/s out of memory.
+It appears I could do this by first shrinking the filesystem
+(ext3) with 'parted' as described here...
 
-in fact, to compare sw raid to a hw raid you should count every byte of 
-i/o somewhere between 2 and 3 times.  this is because every line you read 
-into cache might knock out a dirty line, but it's definitely going to 
-replace something which would still be there on a hw raid.  (i.e. it 
-decreases the cache effectiveness and you end up paying later after the sw 
-raid xor to read data back in which wouldn't leave the cache on a hw 
-raid.)
+http://www.gnu.org/software/parted/manual/html_mono/parted.html#SEC68
 
-then add in the read/write traffic required on the parity block (which as 
-a fraction of i/o is worse with fewer drives) ... and it's pretty crazy to 
-believe that sw raid is "free" just because the kernel prints those 
-fantastic numbers at boot :)
+...and then use 'mdadm' with the '--grow' and '--size' options
+to shrink my RAID1 array's extent on disks.
+
+But, I can't find a reference to doing exactly this online,
+the 'mdadm' man page is a little thin on 'grow' details, and
+there's at least one suggestion that the 'mdadm' man page is
+wrong about the units to use in the '--size' parameter. (See
+
+http://www.issociate.de/board/post/250478/error_in_mdadm_man_page.html
+)
+
+So, could someone "in the know" give a sanity check to my
+plan?
+
+I've got a 2.6.12 kernel and I've got the following RAID1
+arrays...
+
+# cat /proc/mdstat
+Personalities : [raid1]
+md1 : active raid1 sdc3[2] sdb3[1] sda3[0]
+       154087360 blocks [3/3] [UUU]
+
+md0 : active raid1 sdc1[1] sdb1[2] sda1[0]
+       104320 blocks [3/3] [UUU]
+
+unused devices: <none>
+
+I want to shrink /dev/md1 to about 70GB. The constituent
+physical partitions look like this...
+
+# fdisk /dev/sda
+
+Command (m for help): p
+
+Disk /dev/sda: 160.0 GB, 160041885696 bytes
+255 heads, 63 sectors/track, 19457 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+
+    Device Boot      Start         End      Blocks   Id  System
+/dev/sda1               1          13      104391   fd  Linux raid autodetect
+/dev/sda2              14         274     2096482+  82  Linux swap
+/dev/sda3             275       19457   154087447+  fd  Linux raid autodetect
+
+I presume I should boot from a CD, then without /dev/md1
+mounted, follow the instructions from the 'parted' docs to
+resize filesystem to 70000 megabytes (or is it mebibytes?
+the 'parted' doc isn't clear):
+
+# parted /dev/md1
+(parted) resize 1 0 70000
+(parted) quit
+
+Then, use 'mdadm' to shrink the array to the right size (which
+I'm assuming is 70000MiB*1024KiB/MiB == 71680000 kebibytes):
+
+# mdadm --grow /dev/md1 --size 71680000
+
+Then reboot, and all should be well at the smaller size.
+
+My main concerns:
+(1) Are these the right steps? (Missing anything?)
+(2) Are the 'parted' units truly meGAbytes?
+(3) How should the 'mdadm' '--size' parameter be related
+to the 'parted' parameter? (Is the man bug report suggesting
+the '--size' must be specified in bytes, not kebibytes,
+accurate? Do I have to deduct the 128K superblock space, or
+is that done automatically?)
+
+Thanks for any guidance!
+
+- Gordon @ Bitzi
 
 
-> Humm..  It did not select the fastest?
-
-this is related to what i'm describing -- iirc the pIII_sse code uses a 
-non-temporal store and/or prefetchnta to reduce memory traffic.
-
--dean
-
-p.s. i use sw raid regardless, i just don't like seeing these misleading 
-discussions pointing at the kernel raid timings and saying "hw offload is 
-pointless!"
