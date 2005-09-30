@@ -1,23 +1,26 @@
 From: Robin Bowes <robin-lists@robinbowes.com>
-Subject: Re: Best way to achieve large, expandable, cheap storage?
-Date: Fri, 30 Sep 2005 14:29:53 +0100
-Message-ID: <dhjeja$ve5$1@sea.gmane.org>
-References: <dhje16$tmq$1@sea.gmane.org>
+Subject: Convert RAID5 to RAID5?
+Date: Fri, 30 Sep 2005 17:16:10 +0100
+Message-ID: <dhjoc9$26u$1@sea.gmane.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <dhje16$tmq$1@sea.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Robin Bowes wrote:
-> For example, suppose I get something like this [1]
+OK,
 
-Ooops.
+Based on some comments I've received following my previous post about 
+large storage arrays, and having read around a bit, I think my 6-disk 
+1TB array would be better as RAID6 rather than RAID5 plus hot spare.
 
-http://www.cidesign.com/product_detail.jsp?productID=4
+Is it possible to convert from RAID5 to RAID6? Or would I have to dump 
+the whole array to tape, trash it, create the RAID6 array and restore 
+from tape?
+
+Thanks,
 
 R.
 -- 
