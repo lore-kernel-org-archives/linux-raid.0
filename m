@@ -1,26 +1,22 @@
-From: Lukasz Razmuk <Lukasz.Razmuk@pl.ibm.com>
-Subject: driver a320raid for kernel 2.4.21-3
-Date: Tue, 4 Oct 2005 09:54:44 +0200
-Message-ID: <OFC7F40674.92379EDD-ONC1257090.002B6AB1-C1257090.002B76DD@pl.ibm.com>
+From: "Kristy" <lfuentesjpbd@ual.es>
+Subject: Dont wait till tomorrow, someone could buy your dream item today.
+Date: Mon, 3 Oct 2005 13:34:22 -0500
+Message-ID: <5117237800.20051003133422@xgqpmyu>
+Reply-To: "Kristy Hilton" <lfuentesjpbd@ual.es>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello! 
 
-I'm looking for driver a320raid for kernel 2.4.21-32. Do you know where I 
-can download it? 
-On a server IBM x346 with RHES U4 after upgrade kernel from 2.4.21-27 to 
-2.4.21-32 via up2date, the process is terminated and file initrd isn't 
-created. 
-I suppose I need new version of the driver to new version of kernel. 
+What's your pleasure, squire?
+Meet the newest and most aggressive addition to Internet commerce - http://blowoutfallsale.biz/?47 ! 
+We offer up to 47% savings over the lowest price you can find on the Internet or a nearby store.  
+Our prices are low during our Special FALL SALE, but not for long, as items run out before you get a chance to buy them. 
+We offer quick order processing, online account reports, and live customer support for existing customers. 
+What are you waiting for??? Click and shop!!! 
 
-Z pozdrowieniami / Best regards, 
-Lukasz Razmuk
-IT Specialist
-tel. +48 22 609 5950
-Lukasz.Razmuk@pl.ibm.com
 
