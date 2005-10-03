@@ -1,63 +1,44 @@
-From: Sebastian Kuzminsky <seb.kuzminsky@gmail.com>
-Subject: Re: Best way to achieve large, expandable, cheap storage?
-Date: Mon, 3 Oct 2005 10:33:09 -0600
-Message-ID: <7f55de720510030933k26608cfsda63326a8438e35d@mail.gmail.com>
-References: <dhje16$tmq$1@sea.gmane.org> <433F63BB.3020008@nighthawkrad.net>
-Reply-To: Sebastian Kuzminsky <seb.kuzminsky@gmail.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: maximum size
+Date: Tue, 4 Oct 2005 09:48:17 +1000
+Message-ID: <17217.49985.339220.524306@cse.unsw.edu.au>
+References: <43394753.9040107@bppiac.hu>
+	<17209.18879.583532.761762@cse.unsw.edu.au>
+	<43394E4E.4060702@bppiac.hu>
+	<17210.23249.826375.668486@cse.unsw.edu.au>
+	<Pine.LNX.4.62.0509280826170.6259@chaos.egr.duke.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <433F63BB.3020008@nighthawkrad.net>
-Content-Disposition: inline
+In-Reply-To: message from Joshua Baker-LePain on Wednesday September 28
 Sender: linux-raid-owner@vger.kernel.org
-To: Christopher Smith <csmith@nighthawkrad.net>
-Cc: Robin Bowes <robin-lists@robinbowes.com>, linux-raid@vger.kernel.org
+To: Joshua Baker-LePain <jlb17@duke.edu>
+Cc: Farkas Levente <lfarkas@bppiac.hu>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 10/1/05, Christopher Smith <csmith@nighthawkrad.net> wrote:
-> I use a combination of Linux's software RAID + LVM for a flexible,
-> expandable data store.  I buy disks in sets of four, with a four-port
-> disk controller and a 4-drive, cooled chassis of some sort (lately, the
-> Coolermaster 4-in-3 part).
->
-> I RAID5 the drives together and glue multiple sets of 4 drives together
-> into a single usable chunk using LVM.
+On Wednesday September 28, jlb17@duke.edu wrote:
+> On Wed, 28 Sep 2005 at 10:56am, Neil Brown wrote
+> 
+> > On Tuesday September 27, lfarkas@bppiac.hu wrote:
+> 
+> >> suppose i create the raid device with:
+> >> mdadm --create /dev/md0--level=5 --raid-devices=8 --spare-devices=1
+> >> /dev/sd[abcdefgh]1
+> >> then what is the maximum size for /dev/md0?
+> >> (or more precisely after a mkfs.ext3 /dev/md0).
+> >
+> > The /dev/sdX1 cannot be larger than 2TB.  The /dev/md0 can be as big
+> > as you like.  The filesystem can be as big as your filesystem allows.
+> > I don't think ext3 can exceed 2 TB (I could be wrong).  Other
+> 
+> RH (e.g.) officially supports ext3 FSs up to 8TB in RHEL4.
 
-Sounds pretty cool.  I've used software RAID but never LVM, let me see
-if I understand your setup:
+See... I was wrong!  :-)
 
-At the lowest level, you have 4-disk controller cards, each connected
-to a set of 4 disks.  Each set of 4 has a software RAID-5.  All the
-RAID-5 arrays are used as LVM physical volumes.  These PVs are part of
-a single volume group, from which you make logical volumes as needed.
+I'm sure there is a 32bit limit somewhere, so it's probably that block
+addresses are limited to 32 bits.  With 4K blocks, that's 2^34 K, or
+16TB.... Maybe there is some confusion with the sign bit, making it on
+2^33K, or 8TB.
 
-When you want more disk, you buy 4 big modern disks (and a 4x
-controller if needed), RAID-5 them, extend the VG onto them, and
-extend the LV(s) on the VG.  Then I guess you have to unmount the
-filesystem(s) on the LV(s), resize them, and remount them.
-
-If you get low on room in the case or it gets too hot or noisy, you
-have to free up an old, small RAID array.  You unmount, resize, and
-remount the filesystem(s), reduce the LV(s) and the VG, and then
-you're free to pull the old RAID array from the case.
-
-
-> Apart from the actual hardware installations and removals, the various
-> reconfigurations have been quite smoothe and painless, with LVM allowing
-> easy migration of data to/from RAID devices, division of space, etc.
-> I've had 3 disk failures, none of which have resulted in any data loss.
->   The "data store" has been moved across 3 very different physical
-> machines and 3 different Linux installations (Redhat 9 -> RHEL3 -> FC4).
-
-Your data survives one disk per PV croaking, but two disks out on any
-one PV causes complete data loss, assuming you use the stripe mapping.
-
-You use SATA, which does not support SMART yet, right?  So you get no
-warning of pending drive failures yet.
-
-None the less, sounds like a nice flexible setup.
-
-
---
-Sebastian Kuzminsky
+NeilBrown
