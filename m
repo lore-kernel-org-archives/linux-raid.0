@@ -1,69 +1,104 @@
-From: Christopher Smith <csmith@nighthawkrad.net>
-Subject: Re: Best way to achieve large, expandable, cheap storage?
-Date: Tue, 04 Oct 2005 14:09:53 +1000
-Message-ID: <43420091.9060601@nighthawkrad.net>
-References: <dhje16$tmq$1@sea.gmane.org> <433F63BB.3020008@nighthawkrad.net> <7f55de720510030933k26608cfsda63326a8438e35d@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: NeilBrown <neilb@suse.de>
+Subject: [PATCH md 005 of 5] Teach raid5 the difference between 'check' and 'repair'.
+Date: Tue, 4 Oct 2005 15:23:53 +1000
+Message-ID: <1051004052353.28839@suse.de>
+References: <20051004151922.28715.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <7f55de720510030933k26608cfsda63326a8438e35d@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Sebastian Kuzminsky <seb.kuzminsky@gmail.com>
-Cc: Robin Bowes <robin-lists@robinbowes.com>, linux-raid@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Sebastian Kuzminsky wrote:
-> On 10/1/05, Christopher Smith <csmith@nighthawkrad.net> wrote:
-> 
->>I RAID5 the drives together and glue multiple sets of 4 drives together
->>into a single usable chunk using LVM.
-> 
-> 
-> Sounds pretty cool.  I've used software RAID but never LVM, let me see
-> if I understand your setup:
-> 
-> At the lowest level, you have 4-disk controller cards, each connected
-> to a set of 4 disks.  Each set of 4 has a software RAID-5.  All the
-> RAID-5 arrays are used as LVM physical volumes.  These PVs are part of
-> a single volume group, from which you make logical volumes as needed.
-> 
-> When you want more disk, you buy 4 big modern disks (and a 4x
-> controller if needed), RAID-5 them, extend the VG onto them, and
-> extend the LV(s) on the VG.  Then I guess you have to unmount the
-> filesystem(s) on the LV(s), resize them, and remount them.
-> 
-> If you get low on room in the case or it gets too hot or noisy, you
-> have to free up an old, small RAID array.  You unmount, resize, and
-> remount the filesystem(s), reduce the LV(s) and the VG, and then
-> you're free to pull the old RAID array from the case.
 
-Yep, that's pretty much bang on.  The only thing you've missed is using 
-pvmove to physically move the data off the soon-to-be-decomissioned 
-PVs(/RAID arrays).
+With this, raid5 can be asked to check parity without
+repairing it.  It also keeps a count of the number of 
+incorrect parity blocks found (mismatches) and reports
+them through sysfs.
+Signed-off-by: Neil Brown <neilb@suse.de>
 
-Be warned, for those who haven't used it before, pvmove is _very_ slow.
+### Diffstat output
+ ./drivers/md/md.c           |   18 ++++++++++++++++--
+ ./drivers/md/raid5.c        |    5 +++++
+ ./include/linux/raid/md_k.h |    4 ++++
+ 3 files changed, 25 insertions(+), 2 deletions(-)
 
->>Apart from the actual hardware installations and removals, the various
->>reconfigurations have been quite smoothe and painless, with LVM allowing
->>easy migration of data to/from RAID devices, division of space, etc.
->>I've had 3 disk failures, none of which have resulted in any data loss.
->>  The "data store" has been moved across 3 very different physical
->>machines and 3 different Linux installations (Redhat 9 -> RHEL3 -> FC4).
-> 
-> 
-> Your data survives one disk per PV croaking, but two disks out on any
-> one PV causes complete data loss, assuming you use the stripe mapping.
+diff ./drivers/md/md.c~current~ ./drivers/md/md.c
+--- ./drivers/md/md.c~current~	2005-10-04 14:19:35.000000000 +1000
++++ ./drivers/md/md.c	2005-10-04 14:42:04.000000000 +1000
+@@ -1758,16 +1758,29 @@ md_store_scan(mddev_t *mddev, const char
+ 	return len;
+ }
+ 
++static ssize_t
++md_show_mismatch(mddev_t *mddev, char *page)
++{
++	return sprintf(page, "%llu\n",
++		       (unsigned long long) mddev->resync_mismatches);
++}
++
+ static struct md_sysfs_entry md_scan_mode = {
+ 	.attr = {.name = "scan_mode", .mode = S_IRUGO|S_IWUSR },
+ 	.show = md_show_scan,
+ 	.store = md_store_scan,
+ };
+ 
++static struct md_sysfs_entry md_mismatches = {
++	.attr = {.name = "mismatch_cnt", .mode = S_IRUGO },
++	.show = md_show_mismatch,
++};
++
+ static struct attribute *md_default_attrs[] = {
+ 	&md_level.attr,
+ 	&md_raid_disks.attr,
+ 	&md_scan_mode.attr,
++	&md_mismatches.attr,
+ 	NULL,
+ };
+ 
+@@ -3884,12 +3897,13 @@ static void md_do_sync(mddev_t *mddev)
+ 		}
+ 	} while (mddev->curr_resync < 2);
+ 
+-	if (test_bit(MD_RECOVERY_SYNC, &mddev->recovery))
++	if (test_bit(MD_RECOVERY_SYNC, &mddev->recovery)) {
+ 		/* resync follows the size requested by the personality,
+ 		 * which defaults to physical size, but can be virtual size
+ 		 */
+ 		max_sectors = mddev->resync_max_sectors;
+-	else
++		mddev->resync_mismatches = 0;
++	} else
+ 		/* recovery follows the physical size of devices */
+ 		max_sectors = mddev->size << 1;
+ 
 
-Yep, that's correct.  I've never lost more than one disk out of an array 
-at once and I've always replaced any disk failures the same day.  I lost 
-two of the 40GB drives (about 6 months apart - back before I had decent 
-cooling on them) and one of the 120GB drives.
+diff ./drivers/md/raid5.c~current~ ./drivers/md/raid5.c
+--- ./drivers/md/raid5.c~current~	2005-10-04 13:08:44.000000000 +1000
++++ ./drivers/md/raid5.c	2005-10-04 14:42:32.000000000 +1000
+@@ -1292,6 +1292,11 @@ static void handle_stripe(struct stripe_
+ 			    !memcmp(pagea, pagea+4, STRIPE_SIZE-4)) {
+ 				/* parity is correct (on disc, not in buffer any more) */
+ 				set_bit(STRIPE_INSYNC, &sh->state);
++			} else {
++				conf->mddev->resync_mismatches += STRIPE_SECTORS;
++				if (test_bit(MD_RECOVERY_CHECK, &conf->mddev->recovery))
++					/* don't try to repair!! */
++					set_bit(STRIPE_INSYNC, &sh->state);
+ 			}
+ 		}
+ 		if (!test_bit(STRIPE_INSYNC, &sh->state)) {
 
-> You use SATA, which does not support SMART yet, right?  So you get no
-> warning of pending drive failures yet.
-
-Yep.  The only annoyance.  I eagerly await the ability to check my SATA 
-disks with SMART.
-
-CS
+diff ./include/linux/raid/md_k.h~current~ ./include/linux/raid/md_k.h
+--- ./include/linux/raid/md_k.h~current~	2005-10-04 14:15:54.000000000 +1000
++++ ./include/linux/raid/md_k.h	2005-10-04 14:35:29.000000000 +1000
+@@ -175,6 +175,10 @@ struct mddev_s
+ 	sector_t			resync_mark_cnt;/* blocks written at resync_mark */
+ 
+ 	sector_t			resync_max_sectors; /* may be set by personality */
++
++	sector_t			resync_mismatches; /* count of sectors where
++							    * parity/replica mismatch found
++							    */
+ 	/* recovery/resync flags 
+ 	 * NEEDED:   we might need to start a resync/recover
+ 	 * RUNNING:  a thread is running, or about to be started
