@@ -1,44 +1,67 @@
-From: Hank Barta <hbarta@gmail.com>
-Subject: Re: non-fresh drive?
-Date: Tue, 4 Oct 2005 07:52:33 -0500
-Message-ID: <750072490510040552l4e9052c6s7104a8fcf574a295@mail.gmail.com>
-References: <750072490510020810v72a97793m32e4835c36bb0289@mail.gmail.com>
-	 <17217.51330.226993.899160@cse.unsw.edu.au>
-Reply-To: Hank Barta <hbarta@gmail.com>
+From: Andy Smith <andy@lug.org.uk>
+Subject: Checking the sanity of SATA disks
+Date: Tue, 4 Oct 2005 14:29:13 +0000
+Message-ID: <20051004142913.GK6594@strugglers.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="hyTYhATX2oHzpZim"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17217.51330.226993.899160@cse.unsw.edu.au>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 10/3/05, Neil Brown <neilb@suse.de> wrote:
-> On Sunday October 2, hbarta@gmail.com wrote:
-> > I have a 5 disk raid that is currently using only 4 disks. On startup,
-> > it rejects an apparently good drive with the message that it is
-> > non-fresh. I don;t understand what non-fresh means nor how to resolve
-> > this.
->
-> 'non-fresh' means that it doesn't seem to up-to-date with respect to
-> the other drives in the array.
-> Use "mdadm --examine /dev/sda1" and compare that with
-> "mdadm --examine /dev/sdc1" to see what the difference is.  It is
-> probably the Event count.
->
-> To re-incorporate sda1 into the array, use
->  mdadm /dev/md0 -a /dev/sda1
 
-Yes, thanks. Another list member replied privately and helped me sort
-this out (except for the --examine part.) It's running on all 5 drives
-again but I'm still puzzled why the one became non-fresh. I'll have to
-watch it more closely.
+--hyTYhATX2oHzpZim
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-thanks,
-hank
+Hello,
 
---
-Beautiful Sunny Winfield, Illinois
+I have a home fileserver with 4 SATA disks in a RAID 5.  As I am
+sure you are aware, SATA devices in Linux currently cannot be
+queried for SMART info, so I can't do SMART health checks of these
+devices.
+
+Also there is still the tendency for Linux Software RAID to kick
+devices out of the array as soon as there is any error on them.
+
+I really don't want to be in the situation where a drive dies, I fit
+a new one, and during the resync another device is kicked out
+because of spontaneously finding a bad sector.
+
+I tried simply doing a
+
+        dd if=/dev/sd[abcd] of=/dev/null
+
+To check each disk in a very unsubtle fashion, but it drives the
+load average on the machine way way up (like to 20+) and makes it
+very unresponsive (wait several minutes for a keypress to be
+acknowledged), even if I run it under nice -n 19.
+
+I don't notice any performance problems on this server during normal
+day to day use, and while it's not particularly beefy it is an AMD
+Sempron 1.8GHz so I am surprised that simply reading from one disk
+causes these performance issues.
+
+I know this isn't right, so has anyone got any advice in the way of
+tracking down which part of the system is at fault, possibly
+off-list if it's too offtopic?
+
+Thanks,
+Andy
+
+--hyTYhATX2oHzpZim
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+
+iD8DBQFDQpG5IJm2TL8VSQsRAosWAJ94UUP0BBLkbDBRldfubNZm/19vVQCcDA7X
+zhd6jg/eB9S8XWomV8JiS68=
+=q0D3
+-----END PGP SIGNATURE-----
+
+--hyTYhATX2oHzpZim--
