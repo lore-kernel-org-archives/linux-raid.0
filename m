@@ -1,44 +1,34 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: maximum size
-Date: Tue, 4 Oct 2005 09:48:17 +1000
-Message-ID: <17217.49985.339220.524306@cse.unsw.edu.au>
-References: <43394753.9040107@bppiac.hu>
-	<17209.18879.583532.761762@cse.unsw.edu.au>
-	<43394E4E.4060702@bppiac.hu>
-	<17210.23249.826375.668486@cse.unsw.edu.au>
-	<Pine.LNX.4.62.0509280826170.6259@chaos.egr.duke.edu>
+Subject: Re: Convert RAID5 to RAID6?
+Date: Tue, 4 Oct 2005 10:07:55 +1000
+Message-ID: <17217.51163.347984.104961@cse.unsw.edu.au>
+References: <dhjoc9$26u$1@sea.gmane.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Joshua Baker-LePain on Wednesday September 28
+In-Reply-To: message from Robin Bowes on Friday September 30
 Sender: linux-raid-owner@vger.kernel.org
-To: Joshua Baker-LePain <jlb17@duke.edu>
-Cc: Farkas Levente <lfarkas@bppiac.hu>, linux-raid@vger.kernel.org
+To: Robin Bowes <robin-lists@robinbowes.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday September 28, jlb17@duke.edu wrote:
-> On Wed, 28 Sep 2005 at 10:56am, Neil Brown wrote
+On Friday September 30, robin-lists@robinbowes.com wrote:
+> OK,
 > 
-> > On Tuesday September 27, lfarkas@bppiac.hu wrote:
+> Based on some comments I've received following my previous post about 
+> large storage arrays, and having read around a bit, I think my 6-disk 
+> 1TB array would be better as RAID6 rather than RAID5 plus hot spare.
 > 
-> >> suppose i create the raid device with:
-> >> mdadm --create /dev/md0--level=5 --raid-devices=8 --spare-devices=1
-> >> /dev/sd[abcdefgh]1
-> >> then what is the maximum size for /dev/md0?
-> >> (or more precisely after a mkfs.ext3 /dev/md0).
-> >
-> > The /dev/sdX1 cannot be larger than 2TB.  The /dev/md0 can be as big
-> > as you like.  The filesystem can be as big as your filesystem allows.
-> > I don't think ext3 can exceed 2 TB (I could be wrong).  Other
-> 
-> RH (e.g.) officially supports ext3 FSs up to 8TB in RHEL4.
+> Is it possible to convert from RAID5 to RAID6? Or would I have to dump 
+> the whole array to tape, trash it, create the RAID6 array and restore 
+> from tape?
 
-See... I was wrong!  :-)
+It's possible that raidreconf might support raid6, but apart from 
+that - No.  Dump-and-restore is probably the best option if it is
+practical.
 
-I'm sure there is a 32bit limit somewhere, so it's probably that block
-addresses are limited to 32 bits.  With 4K blocks, that's 2^34 K, or
-16TB.... Maybe there is some confusion with the sign bit, making it on
-2^33K, or 8TB.
+I hope to get online-reconf from raid5 to raid6 working after the
+online raid5 resize has stablised.  But that is a little way off yet.
 
 NeilBrown
