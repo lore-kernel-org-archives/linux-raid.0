@@ -1,34 +1,31 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: Convert RAID5 to RAID6?
-Date: Tue, 4 Oct 2005 10:07:55 +1000
-Message-ID: <17217.51163.347984.104961@cse.unsw.edu.au>
-References: <dhjoc9$26u$1@sea.gmane.org>
+Subject: Re: non-fresh drive?
+Date: Tue, 4 Oct 2005 10:10:42 +1000
+Message-ID: <17217.51330.226993.899160@cse.unsw.edu.au>
+References: <750072490510020810v72a97793m32e4835c36bb0289@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Robin Bowes on Friday September 30
+In-Reply-To: message from Hank Barta on Sunday October 2
 Sender: linux-raid-owner@vger.kernel.org
-To: Robin Bowes <robin-lists@robinbowes.com>
+To: Hank Barta <hbarta@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Friday September 30, robin-lists@robinbowes.com wrote:
-> OK,
-> 
-> Based on some comments I've received following my previous post about 
-> large storage arrays, and having read around a bit, I think my 6-disk 
-> 1TB array would be better as RAID6 rather than RAID5 plus hot spare.
-> 
-> Is it possible to convert from RAID5 to RAID6? Or would I have to dump 
-> the whole array to tape, trash it, create the RAID6 array and restore 
-> from tape?
+On Sunday October 2, hbarta@gmail.com wrote:
+> I have a 5 disk raid that is currently using only 4 disks. On startup,
+> it rejects an apparently good drive with the message that it is
+> non-fresh. I don;t understand what non-fresh means nor how to resolve
+> this.
 
-It's possible that raidreconf might support raid6, but apart from 
-that - No.  Dump-and-restore is probably the best option if it is
-practical.
+'non-fresh' means that it doesn't seem to up-to-date with respect to
+the other drives in the array.
+Use "mdadm --examine /dev/sda1" and compare that with
+"mdadm --examine /dev/sdc1" to see what the difference is.  It is
+probably the Event count.
 
-I hope to get online-reconf from raid5 to raid6 working after the
-online raid5 resize has stablised.  But that is a little way off yet.
+To re-incorporate sda1 into the array, use
+  mdadm /dev/md0 -a /dev/sda1
 
 NeilBrown
