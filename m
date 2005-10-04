@@ -1,67 +1,86 @@
-From: Andy Smith <andy@lug.org.uk>
-Subject: Checking the sanity of SATA disks
-Date: Tue, 4 Oct 2005 14:29:13 +0000
-Message-ID: <20051004142913.GK6594@strugglers.net>
+From: Robin Bowes <robin-lists@robinbowes.com>
+Subject: ATAn timeout errors
+Date: Tue, 04 Oct 2005 15:37:56 +0100
+Message-ID: <dhu42t$216$1@sea.gmane.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="hyTYhATX2oHzpZim"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+I posted this on the linux-ide list but got no response so I thought I'd 
+try here.
 
---hyTYhATX2oHzpZim
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+My setup is as follows:
 
-Hello,
+Epox EP-D3VA
+Dual PIII 1GHZ processors
+1.5GB RAM
+Two of Promise SATA150 TX4 controllers
+Six of Maxtor 250GB SATA drives (7Y250M0) - three per controller
 
-I have a home fileserver with 4 SATA disks in a RAID 5.  As I am
-sure you are aware, SATA devices in Linux currently cannot be
-queried for SMART info, so I can't do SMART health checks of these
-devices.
+Running Fedora Core 4 with "stock" FC4 kernel (kernel-smp-2.6.12-1.1456_FC4)
 
-Also there is still the tendency for Linux Software RAID to kick
-devices out of the array as soon as there is any error on them.
+I have four md arrays as follows:
 
-I really don't want to be in the situation where a drive dies, I fit
-a new one, and during the resync another device is kicked out
-because of spontaneously finding a bad sector.
+/dev/md0 RAID1 /dev/sd[ad]
+/dev/md1 RAID1 /dev/sd[be]1
+/dev/md2 RAID1 /dev/sd[cf]1
+/dev/md5 RAID5 /dev/sd[abcef]2 (/dev/sdd2 is a hot spare)
 
-I tried simply doing a
+md[0-2] are 1.5 MB areas
+/dev/md0 is /
+/dev/md1 is swap
+/dev/md2 is currently not used
 
-        dd if=/dev/sd[abcd] of=/dev/null
+md5 is 929GB and I have used lvm to create:
 
-To check each disk in a very unsubtle fashion, but it drives the
-load average on the machine way way up (like to 20+) and makes it
-very unresponsive (wait several minutes for a keypress to be
-acknowledged), even if I run it under nice -n 19.
+/home home_lv audio_vg -wi-ao 914.38G
+/usr  usr_lv  audio_vg -wi-ao  10.00G
+/var  var_lv  audio_vg -wi-ao   5.00G
 
-I don't notice any performance problems on this server during normal
-day to day use, and while it's not particularly beefy it is an AMD
-Sempron 1.8GHz so I am surprised that simply reading from one disk
-causes these performance issues.
+Ok, onto the problem...
 
-I know this isn't right, so has anyone got any advice in the way of
-tracking down which part of the system is at fault, possibly
-off-list if it's too offtopic?
+After a couple of power outages I recently got myself a UPS but 
+(typically) didn't get round to installing it before another outage (doh!).
+
+The server came back up OK with /dev/md5 dirty and needing to resync.
+
+However, during the re-sync, one or more of the disks clunked and I saw 
+an "ATAn Timeout" message on the console and the system froze. (n 
+varied, e.g. ATA2, ATA1, ATA4, etc.)  This seemed to be triggered by 
+doing something that caused disk activity during the resync.
+
+I've seen this before and done a hard-reset to start again - eventually 
+the resync has completed and everything's back to normal.
+
+However, this time, I had to drop to single-user mode and reduce the 
+RAID sync speed (echo 5000 > /proc/sys/dev/raid/speed_limit_max) to get 
+the resync to complete.
+
+The server then hung again - same error - so I used Maxtor's PowerMax 
+utility to perform a full test of all drives and all passed 
+successfully. I then rebooted and left it re-syncing in multi-user mode 
+(with fingers crossed) and this time it completed successfully.
+
+Can anyone tell me if this is a bug somewhere or might it be a hardware 
+limitation, i.e. saturating the PCI bus when resyncing? Is there 
+anything I can do to prevent it from happening?
+
+I'm not too bothered about RAID performance - I mainly use it to store 
+.flac audio files which don't need great throuhgput to stream off the disk.
+
+Any suggestions (or fixes!) appreciated.
 
 Thanks,
-Andy
 
---hyTYhATX2oHzpZim
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
+R.
+-- 
+http://robinbowes.com
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
+If a man speaks in a forest,
+and his wife's not there,
+is he still wrong?
 
-iD8DBQFDQpG5IJm2TL8VSQsRAosWAJ94UUP0BBLkbDBRldfubNZm/19vVQCcDA7X
-zhd6jg/eB9S8XWomV8JiS68=
-=q0D3
------END PGP SIGNATURE-----
-
---hyTYhATX2oHzpZim--
