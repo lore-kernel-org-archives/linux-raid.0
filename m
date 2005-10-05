@@ -1,67 +1,51 @@
-From: "Daisy I. Castaneda" <d.i_castanedaac@stardust.co.jp>
-Subject: Under the Radawr Equity
-Date: Wed, 05 Oct 2005 02:26:26 +0100
-Message-ID: <925201c5c94b$bb5bc88d$464f398e@moj.go.kr>
+From: Andy Smith <andy@lug.org.uk>
+Subject: Re: Checking the sanity of SATA disks
+Date: Wed, 5 Oct 2005 11:08:03 +0000
+Message-ID: <20051005110803.GW6594@strugglers.net>
+References: <20051004142913.GK6594@strugglers.net> <1128447152.17447.69.camel@seki.nac.uci.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="V60jbYOS58+JZmBV"
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1128447152.17447.69.camel@seki.nac.uci.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-ATTENTION INVESTING PUBLIC
 
- 
+--V60jbYOS58+JZmBV
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-ASCE . PK
-Recent Trading Range: $.80 - $.90
-Expected Trading Range: $1.50 - $2.00
-ASCE . PK
+On Tue, Oct 04, 2005 at 10:32:32AM -0700, Dan Stromberg wrote:
+> You may be better off using smart, but if you want to go through all the
+> blocks in a device without making your load skyrocket, I have two
+> solutions for you:
 
- 
-BELLEVUE, WA. September 14, 2005 . Ascentia Biomedical Corporation (OTC Pink Sheets; ASCE), a leading researcher and developer of efficacious 
-pharmaceuticals, compounds and other products, announces it has received an initial commitment for up to $1 million in funding for continued research 
-particularly in anti-cancer compounds and for organizational growth.
+Thanks Dan.  As it happens it rapidly became clear there was some
+major problem with this machine as even normal tasks sent the load
+through the roof once they did any significant IO.  I rebooted it
+and now the drives all report 4 times the throughput from "hdparm
+-t" as they did before.  Something I need to investigate.
 
+Your "slowdown" tool looks useful though and I will no doubt use it
+in tandem with dd now, as I don't particularly need those dds to be
+fast.
 
-BELLEVUE, WA. September 27th, 2005 . Ascentia Biomedical Corporation (OTC Pink Sheets; ASCE), a leading researcher and developer of efficacious 
-pharmaceuticals, compounds and other products, announces the addition of Dr. Philip Mease to its Scientific Advisory Board. Dr. James Clagett, 
-President and CEO of Ascentia said, .We are privileged to have such an internationally recognized rheumatologist who has a distinguished career in the 
-clinical development of therapies for rheumatic diseases.  Dr. Mease.s experience in clinical drug discovery along with his respected relationship with 
-drug regulatory agencies will greatly assist Ascentia in its drug discovery and commercialization program..
+Thanks to others who took the time to reply also.
 
+--V60jbYOS58+JZmBV
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
 
-Dr. Mease is Chief of the Rheumatology Clinical Research Division at Swedish Hospital, Clinical Professor at the University of Washington, and founder 
-of Seattle Rheumatology Associates.  Dr. Mease graduated from Stanford University Medical School and completed his medical training at University of 
-Washington, Seattle.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
 
- 
-About Ascentia Biomedical Corporation
+iD8DBQFDQ7QTIJm2TL8VSQsRAm7AAJ9OmdILYCFuVetbxpgTP5NkUnIT7gCeIMhf
+3GfDrUETyU0yPhsqy26QjzU=
+=EK5p
+-----END PGP SIGNATURE-----
 
-Our focus is SOLUTIONS through RESEARCH and DISCOVERY. Ascentia is developing and commercializing new pharmaceutical and biomedical products for 
-application in a number of areas, including treatment for asthma, arthritis, psoriasis and cancer.  Initially, a majority of these products will be 
-secured through direct purchase or through licensing. As the Company grows and evolves, more products will be developed internally. Ascentia is focused 
-on therapies for cancer and diseases of inflammation.
-
-
-Forward-Looking Statements
-
- 
-
-This release may contain forward-looking statements that involve risks
-
-and uncertainties. These statements do not constitute representations
-
-or promises. Rather, these statements express opinions, hopes and
-
-desires that may not be based on objective or factual criteria or
-
-measurable results. No one should rely on such statements for any
-
-purpose except as specifically stated
-
- 
-
-To get taken off the list email NOSTK@Yahoo.com
-
+--V60jbYOS58+JZmBV--
