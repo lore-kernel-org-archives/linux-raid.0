@@ -1,44 +1,24 @@
-From: Tyler <pml@dtbb.net>
+From: Molle Bestefich <molle.bestefich@gmail.com>
 Subject: Re: RAID 6 corruption : please help!
-Date: Wed, 05 Oct 2005 17:17:31 -0700
-Message-ID: <43446D1B.1000105@dtbb.net>
-References: <200510051714.j95HEqvA026621@pog.tecnopolis.ca>
+Date: Thu, 6 Oct 2005 17:33:44 +0200
+Message-ID: <62b0912f0510060833i21317a3eg8dc06bfd9883cf7b@mail.gmail.com>
+References: <20051005152638.GA24382@pog.tecnopolis.ca>
+Reply-To: Molle Bestefich <molle.bestefich@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200510051714.j95HEqvA026621@pog.tecnopolis.ca>
+In-Reply-To: <20051005152638.GA24382@pog.tecnopolis.ca>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: Trevor Cordes <trevor@tecnopolis.ca>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 Trevor Cordes wrote:
+> I know all the data is just sitting there, there's just some wackiness to
+> the way it's been spread across the disks.
 
->Followup: Mr Anvin, the author of the RAID6 bits, pointed out to me that
->a major bug in RAID6 in degraded mode existed pre 2.6.10 or so.  Since I
->had just freshly installed FC3, I was using the stock FC3 DVD 2.6.9.
->That caused major corruption on write when degraded.
->
->I'm still playing around to see if I can recover at the filesystem
->level, since I didn't do much writing.
->
->Thanks to all who helped.  If anyone has any other ideas, please shout.
->
->-
->To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->  
->
-What was the bug, and is it maybe something that is reversible.. ?
-
-Tyler.
-
-
--- 
-No virus found in this outgoing message.
-Checked by AVG Anti-Virus.
-Version: 7.0.344 / Virus Database: 267.11.10/119 - Release Date: 10/4/2005
-
+What's stopping you from just pulling out the two new disks, mounting
+the array using the old, almost OK disks, and fsck'ing your way out of
+the couple of files that were corrupted when you were in rw mode?
