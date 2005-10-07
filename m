@@ -1,51 +1,50 @@
-From: "Steinar H. Gunderson" <sgunderson@bigfoot.com>
-Subject: Re: [PATCH] Online RAID-5 resizing
-Date: Fri, 7 Oct 2005 16:13:16 +0200
-Message-ID: <20051007141316.GA16113@uio.no>
-References: <20050920143346.GA5777@uio.no> <17200.9302.242957.23189@cse.unsw.edu.au> <20050920153622.GA14287@uio.no> <17202.55529.310871.877019@cse.unsw.edu.au> <20050924014412.GA19832@uio.no> <17221.59105.846162.739316@cse.unsw.edu.au>
+From: Trevor Cordes <trevor@tecnopolis.ca>
+Subject: Re: RAID 6 corruption : please help!
+Date: Fri, 7 Oct 2005 13:16:53 -0500 (CDT)
+Message-ID: <200510071816.j97IGrlV019508@pog.tecnopolis.ca>
+References: <43446D1B.1000105@dtbb.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: TEXT/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <17221.59105.846162.739316@cse.unsw.edu.au>
+In-Reply-To: <43446D1B.1000105@dtbb.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Oct 07, 2005 at 01:09:21PM +1000, Neil Brown wrote:
-> However it is usually easier to read a whole patch - reading a patch
-> that removes bits of a previous patch, and depends on other bits of
-> it, requires holding too much in one's brain at once.  If you could
-> possibly send a complete patch against a recent release kernel, it
-> would make review a lot easier.
+> What was the bug, and is it maybe something that is reversible.. ?
 
-Mm, OK.
+That's what I had thought until I knew the details of the bug.
 
->> I'm unsure how much this actually buys us (there's a slight reduction in
->> complexity, but I fear that will go up again once I implement it for read
->> stripes as well),
-> I think it buys us a lot.  It means we can wait for stripes to become
-> free instead of spinning around hoping they will come free soon.
+Mr. Anvin says:
 
-Well, I've been doing printk-debugging on this, and it's actually a quite
-rare case (even with heavy I/O) that it's starved for stripes.
+"No, it's "random"."
 
-> Currently the patch looks mostly good, but there are a couple of
-> structural changes that I think it needs as I mentioned previously.
-> Once these are in place, I can review the code more closely and look
-> for races and other subtle semantic issues.
+"The error was: when a write happened to a stripe that needs
+read-modify-write, it wouldn't properly schedule the reads, and would
+blindly write out whatever crap happened to be in the stripe cache."
 
-Mm. I'm still a bit ambivalent about a rewrite; I need something working in
-about exactly a month (when we're going to restripe our backup server) and a
-rewrite would no doubt destabilize it all for quite a while. My test server
-is currently broken after I tried to get in a kdb-enabled kernel; grub
-conveniently broke at about the same time :-) I'm not sure how much time I
-can dedicate to this ATM either.
+">Do you know where in the code the bug was?  If I can only discover
+>exactly what it did I could write a program to try to clean it up?"
 
-I definitely agree moving code into sync_request would result in a better
-overall model, though, with less overhead in the usual (non-restripe) paths.
+"No, it's timing-dependent and, in either case, involve writing non-data
+to the disks."
 
-/* Steinar */
--- 
-Homepage: http://www.sesse.net/
+On  6 Oct, Molle Bestefich wrote:
+> What's stopping you from just pulling out the two new disks, mounting
+> the array using the old, almost OK disks, and fsck'ing your way out of
+> the couple of files that were corrupted when you were in rw mode?
+
+That's kind of what I thought, but I had written to the disks and for
+each write lots of the entire stripe (in many cases) would get wiped out
+with random data.
+
+In the end, I ran fsck -y on it and crossed my fingers.  That recovered
+nearly 8/10ths of the data before it hit some fsck bug (dies on signal
+11).  The rest of the data I had 1 month old backups, so it actually
+turned out pretty good.  I'm certainly going to increase my backup
+frequency to weekly or twice weekly from now on -- even on a RAID6 setup
+that I was *really* trusting to protect my 2TB.
+
+Moral of the story is NEVER mount your RAID array until you update to AT
+LEAST the same kernel version you were running prior!
+
