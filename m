@@ -1,46 +1,55 @@
-From: Molle Bestefich <molle.bestefich@gmail.com>
+From: Andrew Walrond <andrew@walrond.org>
 Subject: Re: Anybody know about nforce4 SATA II hot swapping + linux raid?
-Date: Sat, 8 Oct 2005 14:26:14 +0000
-Message-ID: <62b0912f0510080726ge2436e9ra6d7e8d17d1001ee@mail.gmail.com>
-References: <200510071111.46788.andrew@walrond.org>
-	 <43477836.6020107@gmail.com>
+Date: Sat, 8 Oct 2005 15:55:40 +0100
+Message-ID: <200510081555.41159.andrew@walrond.org>
+References: <200510071111.46788.andrew@walrond.org> <43477836.6020107@gmail.com> <62b0912f0510080726ge2436e9ra6d7e8d17d1001ee@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932091AbVJHO0Q@vger.kernel.org>
-In-Reply-To: <43477836.6020107@gmail.com>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932146AbVJHOzp@vger.kernel.org>
+In-Reply-To: <62b0912f0510080726ge2436e9ra6d7e8d17d1001ee@mail.gmail.com>
 Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
-To: andrew@walrond.org
-Cc: htejun@gmail.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Molle Bestefich <molle.bestefich@gmail.com>, htejun@gmail.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Andrew Walrond wrote:
-> I need to deploy some very resilient servers with hot swapable drives.
-[snip]
-> Before I place an order, I need to know whether sata II hot swapping is up to
-> scratch in the linux kernel, and whether it works nicely with linux software
-> raid (which I already use/am familiar with).
+On Saturday 08 October 2005 15:26, Molle Bestefich wrote:
 >
-> Any knowledge greatfully accepted :)
+> IDE hotswap has never worked (OOTB at least) in Linux, and based on my
+> experience it never will.  Seems the IDE folks doesn't care a bit
+> about it.  (No offence meant.  Just keeping it real.)
 
-IDE hotswap has never worked (OOTB at least) in Linux, and based on my
-experience it never will.  Seems the IDE folks doesn't care a bit
-about it.  (No offence meant.  Just keeping it real.)
+Fair enough. What about SCSI? Do any of the in-kernel scsi drivers support 
+hotswap? And if so, how well does it cooperate with linux raid?
 
-So if you really need this, here's the opportunity to make a whole lot
-of people happy by implementing it yourself.  You'll probably need a
-lot of time on your hands - there's a very real chance that the IDE
-maintainers are too busy or whatever to answer any newbie questions
-you might have about how to attack the IDE layer.
+>
+> Tejun Heo wrote:
+> > If you're looking for stability/resilience for production machine,
+> > IMHO libata isn't still quite ready.
+>
+> I disagree...
+> I've used it for TBs of data without any problems.
 
+Likewise. I've been using exclusively SATA with linux raid for quite a while 
+now, with great success. But for the super resilient zero downtime servers I 
+now need to deploy, I must be able to swap dead drives without taking the 
+server down. Hence my query.
 
-Tejun Heo wrote:
-> If you're looking for stability/resilience for production machine,
-> IMHO libata isn't still quite ready.
+Off-list respondants have recommended 3ware hardware raid products, but 
+throughput concerns on another thread here have really put me off that idea. 
+So unless linux SCSI provides a useful solution, I'll stick with what seems 
+the only reliable solution out there; hardware scsi raid ( = small expensive 
+drives ).
 
-I disagree...
-I've used it for TBs of data without any problems.
+The lack of hot swapping does seem to be a serious weakness in linux, at least 
+for resilient server applications. It would really complete the linux raid 
+picture, and make it quite compelling.
 
-OTOH, with the regular ATA stuff I've experienced loads of IRQ
-problems, crashes and hangups.
+But I'm in no position to do it myself; I can only hope this thread inspires 
+some capable person to plug the gap :)
+
+Thanks to all who responded.
+
+Andrew Walrond
