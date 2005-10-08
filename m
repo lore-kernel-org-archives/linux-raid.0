@@ -1,55 +1,43 @@
-From: Andrew Walrond <andrew@walrond.org>
+From: Lukasz Kosewski <lkosewsk@gmail.com>
 Subject: Re: Anybody know about nforce4 SATA II hot swapping + linux raid?
-Date: Sat, 8 Oct 2005 15:55:40 +0100
-Message-ID: <200510081555.41159.andrew@walrond.org>
-References: <200510071111.46788.andrew@walrond.org> <43477836.6020107@gmail.com> <62b0912f0510080726ge2436e9ra6d7e8d17d1001ee@mail.gmail.com>
+Date: Sat, 8 Oct 2005 11:01:25 -0400
+Message-ID: <355e5e5e0510080801p88f04c7x7992c3d75f20e65c@mail.gmail.com>
+References: <200510071111.46788.andrew@walrond.org>
+	 <43477836.6020107@gmail.com>
+	 <62b0912f0510080726ge2436e9ra6d7e8d17d1001ee@mail.gmail.com>
+	 <200510081555.41159.andrew@walrond.org>
+Reply-To: Lukasz Kosewski <lkosewsk@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932146AbVJHOzp@vger.kernel.org>
-In-Reply-To: <62b0912f0510080726ge2436e9ra6d7e8d17d1001ee@mail.gmail.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <200510081555.41159.andrew@walrond.org>
 Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Molle Bestefich <molle.bestefich@gmail.com>, htejun@gmail.com, linux-raid@vger.kernel.org
+Sender: linux-raid-owner@vger.kernel.org
+To: Andrew Walrond <andrew@walrond.org>
+Cc: linux-kernel@vger.kernel.org, Molle Bestefich <molle.bestefich@gmail.com>, htejun@gmail.com, linux-raid@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
 List-Id: linux-raid.ids
 
-On Saturday 08 October 2005 15:26, Molle Bestefich wrote:
+On 10/8/05, Andrew Walrond <andrew@walrond.org> wrote:
+> The lack of hot swapping does seem to be a serious weakness in linux, at least
+> for resilient server applications. It would really complete the linux raid
+> picture, and make it quite compelling.
 >
-> IDE hotswap has never worked (OOTB at least) in Linux, and based on my
-> experience it never will.  Seems the IDE folks doesn't care a bit
-> about it.  (No offence meant.  Just keeping it real.)
+> But I'm in no position to do it myself; I can only hope this thread inspires
+> some capable person to plug the gap :)
 
-Fair enough. What about SCSI? Do any of the in-kernel scsi drivers support 
-hotswap? And if so, how well does it cooperate with linux raid?
+Hey Andrew,
 
->
-> Tejun Heo wrote:
-> > If you're looking for stability/resilience for production machine,
-> > IMHO libata isn't still quite ready.
->
-> I disagree...
-> I've used it for TBs of data without any problems.
+I've actually been working on implementing the core set of routines
+that will allow for hot-swapping SATA drives in Linux.  The core is
+not quite ready yet, but you can expect the next iteration within the
+week.  Once the core is integrated, someone will have to implement
+capturing hotswap events on the nForce4 SATA controller, and using the
+core functions.  I don't know how long that will take, but if the
+Linux SATA maintainer, Jeff Garzik (CCed on this email) knows how to
+do it, then it might be just a few weeks' time.
 
-Likewise. I've been using exclusively SATA with linux raid for quite a while 
-now, with great success. But for the super resilient zero downtime servers I 
-now need to deploy, I must be able to swap dead drives without taking the 
-server down. Hence my query.
+That said, if you want to use this for servers you might still want to
+wait a bit before committing your resources to this :)
 
-Off-list respondants have recommended 3ware hardware raid products, but 
-throughput concerns on another thread here have really put me off that idea. 
-So unless linux SCSI provides a useful solution, I'll stick with what seems 
-the only reliable solution out there; hardware scsi raid ( = small expensive 
-drives ).
-
-The lack of hot swapping does seem to be a serious weakness in linux, at least 
-for resilient server applications. It would really complete the linux raid 
-picture, and make it quite compelling.
-
-But I'm in no position to do it myself; I can only hope this thread inspires 
-some capable person to plug the gap :)
-
-Thanks to all who responded.
-
-Andrew Walrond
+Luke Kosewski
