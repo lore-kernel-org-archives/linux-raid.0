@@ -1,27 +1,45 @@
-From: "Allen Martin" <AMartin@nvidia.com>
-Subject: RE: Anybody know about nforce4 SATA II hot swapping + linux raid?
-Date: Sat, 8 Oct 2005 12:16:59 -0700
-Message-ID: <DBFABB80F7FD3143A911F9E6CFD477B00B41CA30@hqemmail02.nvidia.com>
+From: carlos@fisica.ufpr.br (Carlos Carvalho)
+Subject: Re: Automatic drive partitioning
+Date: Sat, 8 Oct 2005 17:32:31 -0300
+Message-ID: <17224.11487.659497.812038@fisica.ufpr.br>
+References: <200510081910.15934.thomas.jarosch@intra2net.com>
+	<Pine.LNX.4.44.0510081503490.28615-100000@coffee.psychology.mcmaster.ca>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
+In-Reply-To: <Pine.LNX.4.44.0510081503490.28615-100000@coffee.psychology.mcmaster.ca>
 Sender: linux-raid-owner@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>, Andrew Walrond <andrew@walrond.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->   One more thing to note is that nVidia cannot supply information
-> regarding SATA part (I think network part too) of its chipset to open
-> source community.  So, it is possible that not everything goes
-smoothly
-> with nf4 hotplug support even after other pieces come together
-eventually.
+Mark Hahn (hahn@physics.mcmaster.ca) wrote on 8 October 2005 15:09:
+ >> I tried copying the partition table using sfdisk and it complained
+ >> about "partition does not start at a cylinder boundary". After re-running
+ >> with the --force flag (like a dd copy would do) and formatting the partition,
+ >> the system went nuts.
+ >
+ >hmm, well, I guess you are coming from an older/non-LBA disk.  I suppose 
+ >I should have mentioned that little caveat: don't try the dd trick
+ >going from CHS to LBA.  LBA->LBA should be OK
 
-The sata_nv libata driver has had full support for hotplug for a while.
-When the rest of libata supports hotplug nForce4 SATA hotplug should
-just work.
+Agreed. I've been using sfdisk without problems with various drives. I even
+usually start the first partition on sector 1... When I want to copy
+the partition table of one disk to the other I do
+sfdisk -d partitioned-disk | sfdisk --force new-disk.
 
--Allen
+It works for drives of different sizes as well. Yesterday I tried
+this pipe with logical partitions and even with force it refused,
+complaining that an extended partition didn't start at a cylinder
+boundary. That's non-sense so I just did a
+
+# for i in each-of-the-disks; do
+sfdisk -uS /dev/sd$i << EOF
+partition info
+EOF
+done
+
+and all was well.
+
+The concept of cylinder et. al is history now. Only the manufacturer
+knows how the info is organized on the disk surface.
