@@ -1,47 +1,34 @@
-From: Ming Zhang <mingz@ele.uri.edu>
-Subject: unbalance?
-Date: Sat, 08 Oct 2005 12:25:59 -0400
-Message-ID: <1128788759.5431.20.camel@localhost.localdomain>
-Reply-To: mingz@ele.uri.edu
+From: Andrew Walrond <andrew@walrond.org>
+Subject: Re: Anybody know about nforce4 SATA II hot swapping + linux raid?
+Date: Sat, 8 Oct 2005 17:39:35 +0100
+Message-ID: <200510081739.35566.andrew@walrond.org>
+References: <200510071111.46788.andrew@walrond.org> <200510081555.41159.andrew@walrond.org> <17223.61190.917668.850611@smtp.charter.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932149AbVJHQji@vger.kernel.org>
+In-Reply-To: <17223.61190.917668.850611@smtp.charter.net>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: John Stoffel <john@stoffel.org>
+Cc: linux-kernel@vger.kernel.org, Molle Bestefich <molle.bestefich@gmail.com>, htejun@gmail.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi folks
+On Saturday 08 October 2005 17:08, John Stoffel wrote:
+>
+> Hmm... I've been watching those 3ware discussions with interest as
+> well, but I haven't seen any commments on how well they work as JBOD
+> controllers, esp if you get smaller ones with fewer channels and
+> stripe/mirror between controllers.  If you pair disks between
+> controllers, then that should limit the downtime, and also improve
+> performance.
 
-I met a strange scenario here. i have a 4 sata disk raid0. i ran dd
-write with 512K request size and got this.
+My application has hundreds/thousands of threads doing simultaneous small 
+reads, with infrequent small writes. Any problems would probably be mitigated 
+by having loads of ram for linux to use as disk cache, but this does seem to 
+be an access model at which the 3ware hardware is not good at handling. Of 
+course, it never hurts to remind them in a public forum; nothing focuses the 
+corporate mind better than bad press ;)
 
-it looks like 1 disk has particular low utilization compared with
-others.
-
-any idea? thanks!
-
-ming
-
------------------------------------------
-avg-cpu:  %user   %nice    %sys %iowait   %idle
-           0.00    0.00   15.84    6.44   77.72
-
-Device:    rrqm/s wrqm/s   r/s   w/s  rsec/s  wsec/s    rkB/s    wkB/s
-avgrq-sz avgqu-sz   await  svctm  %util
-hda          0.00   0.00  0.00  0.00    0.00    0.00     0.00     0.00
-0.00     0.00    0.00   0.00   0.00
-sda        4648.51   0.00 309.90  0.00 39667.33    0.00 19833.66
-0.00   128.00     0.91    2.95   2.95  91.49
-sdb        4648.51   0.00 309.90  0.00 39667.33    0.00 19833.66
-0.00   128.00     0.90    2.90   2.90  89.90
-sdc        4648.51   0.00 309.90  0.00 39667.33    0.00 19833.66
-0.00   128.00     0.25    0.79   0.79  24.55
-                ~~~~~~~~
-
-sdd        4646.53   0.00 311.88  0.00 39667.33    0.00 19833.66
-0.00   127.19     0.95    3.03   3.03  94.65
-md0          0.00   0.00 19833.66  0.00 158669.31    0.00 79334.65
-0.00     8.00     0.00    0.00   0.00   0.00
-
-
+Andrew Walrond
