@@ -1,30 +1,47 @@
-From: Thomas Jarosch <thomas.jarosch@intra2net.com>
-Subject: Re: Automatic drive partitioning
-Date: Sat, 8 Oct 2005 18:21:26 +0200
-Message-ID: <200510081821.26584.thomas.jarosch@intra2net.com>
-References: <200510081758.50918.thomas.jarosch@intra2net.com> <1128787703.15760.3.camel@seki.nac.uci.edu>
+From: Ming Zhang <mingz@ele.uri.edu>
+Subject: unbalance?
+Date: Sat, 08 Oct 2005 12:25:59 -0400
+Message-ID: <1128788759.5431.20.camel@localhost.localdomain>
+Reply-To: mingz@ele.uri.edu
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1128787703.15760.3.camel@seki.nac.uci.edu>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Dan,
+Hi folks
 
-On Saturday 08 October 2005 18:08, you wrote:
-> This isn't really what you were asking for, but if you decide you want a
-> starting point and/or a project to maintain whatever code you might
-> write, then you might look over:
->
-> http://dcs.nac.uci.edu/~strombrg/dup-label.html
+I met a strange scenario here. i have a 4 sata disk raid0. i ran dd
+write with 512K request size and got this.
 
-Thanks for the link. If there is no such tool as I described yet,
-I thought about adding some kind of "--adapt" mode to sfdisk
-as it can already dump & read partition tables.
+it looks like 1 disk has particular low utilization compared with
+others.
 
-Thomas
+any idea? thanks!
+
+ming
+
+-----------------------------------------
+avg-cpu:  %user   %nice    %sys %iowait   %idle
+           0.00    0.00   15.84    6.44   77.72
+
+Device:    rrqm/s wrqm/s   r/s   w/s  rsec/s  wsec/s    rkB/s    wkB/s
+avgrq-sz avgqu-sz   await  svctm  %util
+hda          0.00   0.00  0.00  0.00    0.00    0.00     0.00     0.00
+0.00     0.00    0.00   0.00   0.00
+sda        4648.51   0.00 309.90  0.00 39667.33    0.00 19833.66
+0.00   128.00     0.91    2.95   2.95  91.49
+sdb        4648.51   0.00 309.90  0.00 39667.33    0.00 19833.66
+0.00   128.00     0.90    2.90   2.90  89.90
+sdc        4648.51   0.00 309.90  0.00 39667.33    0.00 19833.66
+0.00   128.00     0.25    0.79   0.79  24.55
+                ~~~~~~~~
+
+sdd        4646.53   0.00 311.88  0.00 39667.33    0.00 19833.66
+0.00   127.19     0.95    3.03   3.03  94.65
+md0          0.00   0.00 19833.66  0.00 158669.31    0.00 79334.65
+0.00     8.00     0.00    0.00   0.00   0.00
+
+
