@@ -1,35 +1,52 @@
-From: Thomas Jarosch <thomas.jarosch@intra2net.com>
-Subject: Automatic drive partitioning
-Date: Sat, 8 Oct 2005 17:58:50 +0200
-Message-ID: <200510081758.50918.thomas.jarosch@intra2net.com>
+From: Andrew Walrond <andrew@walrond.org>
+Subject: Re: Anybody know about nforce4 SATA II hot swapping + linux raid?
+Date: Sat, 8 Oct 2005 17:03:32 +0100
+Message-ID: <200510081703.32873.andrew@walrond.org>
+References: <200510071111.46788.andrew@walrond.org> <200510081555.41159.andrew@walrond.org> <Pine.LNX.4.56.0510081600080.7326@lion.drogon.net>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932162AbVJHQDf@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.56.0510081600080.7326@lion.drogon.net>
 Content-Disposition: inline
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Gordon Henderson <gordon@drogon.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
+Hi Gordon,
 
-is there a tool that can copy a partition table from one drive
-and adapt it for another drive?
+On Saturday 08 October 2005 16:23, Gordon Henderson wrote:
+> On Sat, 8 Oct 2005, Andrew Walrond wrote:
+> > On Saturday 08 October 2005 15:26, Molle Bestefich wrote:
+> > > IDE hotswap has never worked (OOTB at least) in Linux, and based on my
+>
+> Ideally you want hardware that will power the drive down nicely before you
+> take it out (and power it up nicely after you plug it back in again) to
+> avoid any glitches on the SCSI bus, etc...
 
-In an ideal world both source and destination drive share the same geometry.
-The partition table could easily be copied using sfdisk.
+Sounds hairy! Are you aware of any linux scsi drivers which support this 
+powering up/down, via /proc or some userspace tools perhaps?
 
-But let's assume the geometry mismatches (RAID1 configuration
-using drives from different brands). The destination partitions
-have to be computed to match the source drive as close as possible.
+>
+> One thing to watch out for - if you reboot after taking the drive out the
+> scsi drive letters will be logically renumbered, so if you take out sda,
+> then reboot, what was sdb will now become sda, and so on, so if you then
+> subsequently hot plug a drive in, it will still have the same scsi host,
+> channel, id, lun numbers, but it'll be the last device in the array (eg.
+> it will be sdf if it was a 6-disk array) Reboot again and the original
+> numbering/lettering would be restored.
+>
+> Good job the RAID code doesn't really care about this...
 
-What's this all for you might ask?
-If one disc in a RAID1 array (without a preconfigured hot spare) fails,
-I want to plug in a replacement disc and the rest should be handled
-by some automatic system (partition the drive, hot-add it afterwards).
+Indeed. Linux raid is very fine. If we can just fixup this hotplug weakness, 
+it would be peerless.
 
-So, is there a tool that can copy and adapt partition tables?
+>
+> Good luck!
+>
 
-Cheers,
-Thomas
+Thanks, and good to hear from you ;)
+
+Andrew
