@@ -1,25 +1,24 @@
-From: Mark Hahn <hahn@physics.mcmaster.ca>
-Subject: Re: Checking the sanity of SATA disks
-Date: Sun, 9 Oct 2005 11:21:27 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44.0510091019050.28615-100000@coffee.psychology.mcmaster.ca>
-References: <20051004142913.GK6594@strugglers.net>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+From: Monty Fisher <refueled@waymire.com>
+Subject: We guarantee lowest price on quality medications
+Date: Sun, 9 Oct 2005 14:28:41 -0400
+Message-ID: <12701580723.155994914@80-195-197-242.cable.ubr01.perr.blueyonder.co.uk>
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20051004142913.GK6594@strugglers.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andy Smith <andy@lug.org.uk>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->         dd if=/dev/sd[abcd] of=/dev/null
+refill your prescription online
+http://glcpi.gfl93ol7l8m6gygslygalggy.marvinnc.com/?ofdt
 
-the only thing really wrong with that is that you're using 512 byte IOs,
-which is ridiculously inefficient.  disks these days don't do IO in 512B
-chunks, so there's no justification for this.  (the last time I did a scan
-of a sick disk, IIRC the minimum data size was actually 8K - that was an 
-old deathstar that someone had flopping around loose inside a case...)
 
-using, say, 128KB chunks will consume less overhead.  using O_DIRECT will
-also treat the rest your system a bit nicer.
+You can't build a reputation on what you intend to do.  
+The difference between genius and stupidity is that genius has its limits 
+A ruffled mind makes a restless pillow.      
+
+Don't play dumb. You're not as good at it as I am. 
+Only the mediocre are always at their best.     
+Colors fade, temples crumble, empires fall, but wise words endure.   
+People fail forward to success.        
 
