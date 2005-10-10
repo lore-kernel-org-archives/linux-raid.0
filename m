@@ -1,25 +1,31 @@
-From: Helena Rivera <porters@controller.net>
-Subject: Get the Software you need, now!
-Date: Mon, 10 Oct 2005 16:29:52 -0400
-Message-ID: <494846974.3485777331@194.63.139.66>
+From: "Erna Baxter" <ernabaxter_hb@123optic.com>
+Subject: =?iso-8859-1?B?YWJvdXQgdGltZQ==?=
+Date: Mon, 10 Oct 2005 22:39:47 +0000
+Message-ID: <1128983987.4803@123optic.com>
+References: <9adb01c5caed$d1b29623$fe8b8e94@aj0bg32>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <9adb01c5caed$d1b29623$fe8b8e94@aj0bg32>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Don't be a fuddy-duddy...use the software everyone's using... 
-In order to get the feed, go to Settings -> Links Feed and provide the list of IPs
+Hum.a.n Gro.wt.h hor.mon.e results have been proven in Hundreds of clin=
+ical studies.
 
+There is no question you will look and feal healthier.
 
-It is better to offer no excuse than a bad one.  
-It is better to light one candle than to curse the darkness. 
+Would you enjoy stopping the aging process?
 
-Any clod can have the facts, but having opinions is an Art. 
-When in doubt, tell the truth.       
+Safe, effective, and n-o risk!
 
-One loses all the time which he might employ to better purpose. 
-Fiction is obliged to stick to possibilities. Truth isn't.    
+=C2http://leadingofferdivision.com/h/heya/
 
+2
 
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
