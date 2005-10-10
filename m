@@ -1,31 +1,29 @@
-From: "Marvin Macias" <m.macias_nu@123moving.tv>
-Subject: =?ISO-8859-1?b?aXMgdGhpcyBpdA==?=
-Date: Mon, 10 Oct 2005 00:15:02 +0000
-Message-ID: <94f801c5cd2f$0fe933dc$c9831a3b@0ix2xkp>
-References: <edf501c5c858$37a219a2$be385c18@xg0xvh3>
+From: Dan Stromberg <strombrg@dcs.nac.uci.edu>
+Subject: Re: Automatic drive partitioning
+Date: Mon, 10 Oct 2005 10:41:21 -0700
+Message-ID: <1128966081.29024.16.camel@seki.nac.uci.edu>
+References: <200510081910.15934.thomas.jarosch@intra2net.com>
+	 <Pine.LNX.4.44.0510081503490.28615-100000@coffee.psychology.mcmaster.ca>
+	 <17224.11487.659497.812038@fisica.ufpr.br>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <edf501c5c858$37a219a2$be385c18@xg0xvh3>
+In-Reply-To: <17224.11487.659497.812038@fisica.ufpr.br>
 Sender: linux-raid-owner@vger.kernel.org
+To: Carlos Carvalho <carlos@fisica.ufpr.br>
+Cc: linux-raid@vger.kernel.org, strombrg@dcs.nac.uci.edu
 List-Id: linux-raid.ids
 
-Hum.a.n Gro.wt.h hor.mon.e results have been proven in Hundreds of clin=
-ical studies.
+On Sat, 2005-10-08 at 17:32 -0300, Carlos Carvalho wrote:
 
-There is no question you will look and feal healthier.
+> The concept of cylinder et. al is history now. Only the manufacturer
+> knows how the info is organized on the disk surface.
 
-Would you enjoy stopping the aging process?
+...but one could probably do some performance testing to determine the
+true physical geometry, at least until the (performance) block
+relationships change due to a new underlying technology.
 
-Safe, effective, and n-o risk!
+Nice article about use of sfdisk.
 
-=C2http://enjoyinnerspace.com/h/heya/
 
-2
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
