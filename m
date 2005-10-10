@@ -1,24 +1,31 @@
-From: Monty Fisher <refueled@waymire.com>
-Subject: We guarantee lowest price on quality medications
-Date: Sun, 9 Oct 2005 14:28:41 -0400
-Message-ID: <12701580723.155994914@80-195-197-242.cable.ubr01.perr.blueyonder.co.uk>
+From: "Marvin Macias" <m.macias_nu@123moving.tv>
+Subject: =?ISO-8859-1?b?aXMgdGhpcyBpdA==?=
+Date: Mon, 10 Oct 2005 00:15:02 +0000
+Message-ID: <94f801c5cd2f$0fe933dc$c9831a3b@0ix2xkp>
+References: <edf501c5c858$37a219a2$be385c18@xg0xvh3>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <edf501c5c858$37a219a2$be385c18@xg0xvh3>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-refill your prescription online
-http://glcpi.gfl93ol7l8m6gygslygalggy.marvinnc.com/?ofdt
+Hum.a.n Gro.wt.h hor.mon.e results have been proven in Hundreds of clin=
+ical studies.
 
+There is no question you will look and feal healthier.
 
-You can't build a reputation on what you intend to do.  
-The difference between genius and stupidity is that genius has its limits 
-A ruffled mind makes a restless pillow.      
+Would you enjoy stopping the aging process?
 
-Don't play dumb. You're not as good at it as I am. 
-Only the mediocre are always at their best.     
-Colors fade, temples crumble, empires fall, but wise words endure.   
-People fail forward to success.        
+Safe, effective, and n-o risk!
 
+=C2http://enjoyinnerspace.com/h/heya/
+
+2
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
