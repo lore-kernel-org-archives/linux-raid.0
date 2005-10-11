@@ -1,7 +1,7 @@
 From: Andrew Morton <akpm@osdl.org>
 Subject: Re: [PATCH md 004 of 5] Allow a manual resync with md
-Date: Tue, 11 Oct 2005 16:56:07 -0700
-Message-ID: <20051011165607.43fc05bf.akpm@osdl.org>
+Date: Tue, 11 Oct 2005 16:57:43 -0700
+Message-ID: <20051011165743.689aa317.akpm@osdl.org>
 References: <20051004151922.28715.patches@notabene>
 	<1051004052347.28827@suse.de>
 Mime-Version: 1.0
@@ -22,9 +22,6 @@ NeilBrown <neilb@suse.de> wrote:
 > +	char *type = "none";
 > +	if (mddev->recovery &
 > +	    ((1<<MD_RECOVERY_RUNNING) || (1<<MD_RECOVERY_NEEDED))) {
-
-Shouldn't this be a bitwise OR?
-
 > +		if (mddev->recovery & (1<<MD_RECOVERY_SYNC)) {
 > +			if (!test_bit(MD_RECOVERY_REQUESTED, &mddev->recovery))
 > +				type = "resync";
@@ -44,7 +41,6 @@ Shouldn't this be a bitwise OR?
 > +	int canscan=0;
 > +	if (mddev->recovery &
 > +	    ((1<<MD_RECOVERY_RUNNING) || (1<<MD_RECOVERY_NEEDED)))
-
-And this?
-
 > +		return -EBUSY;
+
+I'd be inclined to just use test_bit() here - it's pretty cheap.
