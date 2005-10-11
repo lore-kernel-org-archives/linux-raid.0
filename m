@@ -1,31 +1,56 @@
-From: "Erna Baxter" <ernabaxter_hb@123optic.com>
-Subject: =?iso-8859-1?B?YWJvdXQgdGltZQ==?=
-Date: Mon, 10 Oct 2005 22:39:47 +0000
-Message-ID: <1128983987.4803@123optic.com>
-References: <9adb01c5caed$d1b29623$fe8b8e94@aj0bg32>
+From: Miranda Lugo <mosses@stremmel.de>
+Subject: 11 Oct 2005 News-Letter.
+Date: Tue, 11 Oct 2005 14:43:35 +0200
+Message-ID: <830826611.20051009170113@g3a-osk-tp.onecik.pl>
+Reply-To: Ellen Downing <monopolizing@shoffner.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <9adb01c5caed$d1b29623$fe8b8e94@aj0bg32>
 Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hum.a.n Gro.wt.h hor.mon.e results have been proven in Hundreds of clin=
-ical studies.
+MOMENTUM ALERT ISSUED FOR OCTOBER 11, 2005
 
-There is no question you will look and feal healthier.
+EXPLOSIVE PICK FOR OUR MEMBERS
 
-Would you enjoy stopping the aging process?
+!!!RIDE THE STAIRWAY TO HEAVEN!!!!
 
-Safe, effective, and n-o risk!
+Date: 11 Oct 2005
+Stock Name: CWTD . OB
+Company Name: China World Trade Corporation
+Current Price: $2.06
+10 Day Target: $4
 
-=C2http://leadingofferdivision.com/h/heya/
 
-2
+About China World Trade Corporation
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+China World Trade Corporation (CWTC) has established its business
+in three distinct areas: the club and business centers throughout
+major cities in China, business travel-related services,
+and business value-added services. The Club and Business Center Division
+is devoted to the building of the World Trade brand throughout China
+via the opening and operating of business clubs in China's major,
+positioning the CWTC to act as a platform to facilitate trade
+between China and the world markets. The acquisition
+of CEO Clubs China Limited ("CEO Clubs") in May 2004
+further complements CWTC's offerings by targeting
+high-level corporate executives from premier companies.
+The Business Traveling Services Division, New Generation,
+provides CWTC access to the rapidly growing travel-related industry.
+New Generation is a pioneer and market leader in the travel agency business
+through its strong network of ticketing sales operations
+throughout Southern China. The Business Value- Added Services Division
+focuses on value-added services of credit cards, merchant-related
+business services, as well as consultancy services to CWTC members
+and clients. Guangdong World Trade Link Information Services Limited
+("WTC Link"), a subsidiary of CWTC, manages the Company's co-branded
+credit card project and is an active provider of CRM solutions
+and services in China.
+
+
+YOU COULD MAKE THOUSANDS OF DOLLARS TRADING.
+CWTD is ready to ROCK !!!!
+
+
+
