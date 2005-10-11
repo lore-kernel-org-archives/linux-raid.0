@@ -1,43 +1,69 @@
-From: Mattias Wadenstein <maswan@acc.umu.se>
-Subject: Re: [PATCH md ] Better handling of readerrors with raid5.
-Date: Tue, 11 Oct 2005 16:31:52 +0200 (MEST)
-Message-ID: <Pine.GSO.4.62.0510111605370.24146@shaka.acc.umu.se>
-References: <20050916125754.11044.patches@notabene> <1050916030157.11071@suse.de>
+From: =?ISO-8859-15?Q?Karsten_R=F6mke?= <k.roemke@gmx.de>
+Subject: big fault :-)
+Date: Tue, 11 Oct 2005 18:26:50 +0200
+Message-ID: <434BE7CA.4040707@gmx.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1050916030157.11071@suse.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Andrew Morton <akpm@osdl.org>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 16 Sep 2005, NeilBrown wrote:
+Hi,
+I think I do something which isn't very clever ...
+I needed temporarily some disk-space, so I thought:
+Look at your raid, if it works you can take one disk for
+a short time (I use raid1).
+cat /proc/mdstat looks good, so I hotremove one of two partitions.
+When adding the disk again with raidhotadd /dev/md1 /dev/hdb3
+it starts to synchronize but it never stops to synchronize...
 
-> TESTERS WANTED!!  SEE BELOW...
->
-> This patch changes the behaviour of raid5 when it gets a read error.
-> Instead of just failing the device, it tried to find out what should
-> have been there, and writes it over the bad block.  For some
-> media-errors, this has a reasonable chance of fixing the error.
-> If the write succeeds, and a subsequent read succeeds as well, raid5
-> decided the address is OK and conitnues.
->
-> I have tested this using the 'faulty' md personality, but it would be
-> really good to test it with real disks that have real errors.  If
-> anyone has such drives in a cupboard (or even in a computer) and would
-> be willing to give this a try, I would really appreciate it.
+in messages I found:
+---------------
+Oct 11 17:54:24 hhbgate kernel: md: trying to hot-add hdb3 to md1 ...
+Oct 11 17:54:24 hhbgate kernel: md: bind<hdb3>
+Oct 11 17:54:24 hhbgate kernel: RAID1 conf printout:
+Oct 11 17:54:24 hhbgate kernel:  --- wd:1 rd:2
+Oct 11 17:54:24 hhbgate kernel:  disk 0, wo:0, o:1, dev:hda3
+Oct 11 17:54:24 hhbgate kernel:  disk 1, wo:1, o:1, dev:hdb3
+Oct 11 17:54:24 hhbgate kernel: ..<6>md: syncing RAID array md1
+Oct 11 17:54:24 hhbgate kernel: md: minimum _guaranteed_ reconstruction speed: 1000 KB/sec/disc.
+Oct 11 17:54:24 hhbgate kernel: md: using maximum available idle IO bandwith (but not more than 200
+000 KB/sec) for reconstruction.
+Oct 11 17:54:24 hhbgate kernel: md: using 128k window, over a total of 78482304 blocks.
+---------------
+and later, when I am around 60 % of recovering:
+Oct 11 18:15:31 hhbgate kernel: hda: dma_intr: status=0x51 { DriveReady SeekComplete Error }
+Oct 11 18:15:31 hhbgate kernel: hda: dma_intr: error=0x40 { UncorrectableError }, LBAsect=97562309,
+  sector=97562224
+Oct 11 18:15:31 hhbgate kernel: ide: failed opcode was: unknown
+Oct 11 18:15:31 hhbgate kernel: end_request: I/O error, dev hda, sector 97562224
+Oct 11 18:15:32 hhbgate kernel: hda: dma_intr: status=0x51 { DriveReady SeekComplete Error }
+Oct 11 18:15:32 hhbgate kernel: hda: dma_intr: error=0x40 { UncorrectableError }, LBAsect=97562309,
+  sector=97562232
 
-I have been trying for the last couple of weeks on a batch of drives[1] 
-that are known to now and then pop up such errors, but I've so far only 
-managed to find two drives with real, permanent, failure modes. I don't 
-know if that's just because I haven't been looking hard enough, or that 
-the disks have started to behave though.
+and so on with some more sectors and later
 
-On the other hand, it does seem stable, I still have all my [test] data. 
-It managed to properly fail the broken disk and restripe onto a hot spare, 
-but I have no good observations on fixable media errors.
+Oct 11 18:15:44 hhbgate kernel: end_request: I/O error, dev hda, sector 97562304
+Oct 11 18:15:44 hhbgate kernel: raid1: hda: unrecoverable I/O read error for block 94440448
+Oct 11 18:15:44 hhbgate kernel: md: md1: sync done.
+Oct 11 18:15:44 hhbgate kernel: RAID1 conf printout:
+Oct 11 18:15:44 hhbgate kernel:  --- wd:1 rd:2
+Oct 11 18:15:44 hhbgate kernel:  disk 0, wo:0, o:1, dev:hda3
+Oct 11 18:15:44 hhbgate kernel:  disk 1, wo:1, o:1, dev:hdb3
+Oct 11 18:15:44 hhbgate kernel: RAID1 conf printout:
+Oct 11 18:15:44 hhbgate kernel:  --- wd:1 rd:2
+Oct 11 18:15:44 hhbgate kernel:  disk 0, wo:0, o:1, dev:hda3
+Oct 11 18:15:44 hhbgate kernel: RAID1 conf printout:
+Oct 11 18:15:44 hhbgate kernel:  --- wd:1 rd:2
+Oct 11 18:15:44 hhbgate kernel:  disk 0, wo:0, o:1, dev:hda3
+Oct 11 18:15:44 hhbgate kernel:  disk 1, wo:1, o:1, dev:hdb3
+Oct 11 18:15:44 hhbgate kernel: ..<6>md: syncing RAID array md1
 
-/Mattias Wadenstein
+the recovering prozess starts again and again.
 
-[1]: 3 4-drive raid5s with a hot spare each
+Any hints what to do?
+
+Thanks
+             karsten
