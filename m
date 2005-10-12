@@ -1,57 +1,50 @@
-From: Tim Walberg <twalberg@mindspring.com>
+From: Dan Stromberg <strombrg@dcs.nac.uci.edu>
 Subject: Re: big fault :-)
-Date: Wed, 12 Oct 2005 09:41:33 -0500
-Message-ID: <20051012144133.GK2870@mindspring.com>
-References: <434BE7CA.4040707@gmx.de> <Pine.LNX.4.61.0510121136250.27472@desktop.agenda.si> <434D18EF.6060507@onlinehome.de>
-Reply-To: Tim Walberg <twalberg@mindspring.com>
+Date: Wed, 12 Oct 2005 07:39:11 -0700
+Message-ID: <1129127952.4282.123.camel@seki.nac.uci.edu>
+References: <434BE7CA.4040707@gmx.de>
+	 <Pine.LNX.4.61.0510121136250.27472@desktop.agenda.si>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <434D18EF.6060507@onlinehome.de>
+In-Reply-To: <Pine.LNX.4.61.0510121136250.27472@desktop.agenda.si>
 Sender: linux-raid-owner@vger.kernel.org
-To: Karsten =?iso-8859-1?Q?R=F6mke?= <biermann-roemke@onlinehome.de>
-Cc: linux-raid@vger.kernel.org
+To: danci@agenda.si
+Cc: Karsten =?ISO-8859-1?Q?R=F6mke?= <k.roemke@gmx.de>, linux-raid@vger.kernel.org, strombrg@dcs.nac.uci.edu
 List-Id: linux-raid.ids
 
-In order to do that, the file system that lives on the RAID device
-has to support being shrunk first, which is possible in some cases,
-but far from all. Typically this would involve dumping the data
-somewhere, shrinking the RAID, then re-creating a filesystem and
-moving the data back...
+On Wed, 2005-10-12 at 11:41 +0200, danci@agenda.si wrote:
+> On Tue, 11 Oct 2005, Karsten R=F6mke wrote:
+>=20
+> > Oct 11 18:15:44 hhbgate kernel: end_request: I/O error, dev hda, se=
+ctor
+> > 97562304
+> > Oct 11 18:15:44 hhbgate kernel: raid1: hda: unrecoverable I/O read =
+error for
+> > block 94440448
+> >=20
+> > the recovering prozess starts again and again.
+> >=20
+> > Any hints what to do?
+>=20
+> Try to save as much data as possible to a new, known good disk - as s=
+oon=20
+> as possible. You might be lucky and the data is not spread over those=
+ bad=20
+> sectors...
+>=20
+> Syncing the array will *always* hit bad sectors and thus will *always=
+*=20
+> fail.
+>=20
+>  D.
 
-				tw
+An overview of various data recovery methods:
+
+http://dcs.nac.uci.edu/~strombrg/data-recovery.html
 
 
-
-On 10/12/2005 16:08 +0200, Karsten R=F6mke wrote:
->>	By the way: is it possible to make a raid1 array SMALLER?
->>	 I found hints howto get it bigger and the way seems very easy, but
->>	 to shrink it? Reason: When I set up the server I have some people b=
-ehind
->>	 me, who mostly say: can't it be faster? - so I accepted the partion=
-s which=20
->>	 are
->>	 recommended by Suse (and which are not really suitable for my needs=
-)
->>=09
->>=09
->>	-
->>	To unsubscribe from this list: send the line "unsubscribe linux-raid=
-" in
->>	the body of a message to majordomo@vger.kernel.org
->>	More majordomo info at  http://vger.kernel.org/majordomo-info.html
-End of included message
-
-
-
---=20
-+--------------------------+------------------------------+
-| Tim Walberg              | twalberg@mindspring.com      |
-| 830 Carriage Dr.         | www.mindspring.com/~twalberg |
-| Algonquin, IL 60102      |                              |
-+--------------------------+------------------------------+
 -
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
