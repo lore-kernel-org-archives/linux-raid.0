@@ -1,10 +1,10 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH md 004 of 5] Allow a manual resync with md
-Date: Thu, 13 Oct 2005 15:18:34 +1000
-Message-ID: <17229.60970.294343.705459@cse.unsw.edu.au>
+Subject: Re: [PATCH md 003 of 5] Add kobject/sysfs support to raid5
+Date: Thu, 13 Oct 2005 15:24:07 +1000
+Message-ID: <17229.61303.336584.706469@cse.unsw.edu.au>
 References: <20051004151922.28715.patches@notabene>
-	<1051004052347.28827@suse.de>
-	<20051011165607.43fc05bf.akpm@osdl.org>
+	<1051004052339.28815@suse.de>
+	<20051011165437.7d09468c.akpm@osdl.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
@@ -18,25 +18,20 @@ List-Id: linux-raid.ids
 On Tuesday October 11, akpm@osdl.org wrote:
 > NeilBrown <neilb@suse.de> wrote:
 > >
-> > static ssize_t
-> > +md_show_scan(mddev_t *mddev, char *page)
+> > +static ssize_t
+> > +raid5_store_stripe_cache_size(raid5_conf_t *conf, const char *page, ssize_t len)
 > > +{
-> > +	char *type = "none";
-> > +	if (mddev->recovery &
-> > +	    ((1<<MD_RECOVERY_RUNNING) || (1<<MD_RECOVERY_NEEDED))) {
+> > +	char *end;
+> > +	int new;
+> > +	if (len >= PAGE_SIZE)
+> > +		return -EINVAL;
 > 
-> Shouldn't this be a bitwise OR?
+> Can `len' be negative?
 
-Yes, though given that my testing showed it worked fine, there is
-little practical difference!!
-
-The constant value is becomes '1' instead of '33', and the '32' bit is
-only set for extremely short periods of time, so not testing doesn't
-make a visible difference!
-
-I will, ofcourse, fix it.
-
-Thanks for reviewing the patches.
+No, because sysfs_write_file only calls flush_write_buffer
+with a 'len' that is >0, and this is the only path that leads to
+raid5_store_stripe_cache_size.
+Do you think I should be defensive and double-check in
+raid5_attr_store?
 
 NeilBrown
-
