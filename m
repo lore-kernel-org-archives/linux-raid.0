@@ -1,28 +1,31 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: mdadm-2.1-1.i386.rpm and linux-gate.so.1
-Date: Thu, 13 Oct 2005 20:24:01 +1000
-Message-ID: <17230.13761.247780.898679@cse.unsw.edu.au>
-References: <434BCA8A.8030303@panix.com>
+From: =?ISO-8859-2?Q?Makovecz_=C1d=E1m?= <adam@makovecz.hu>
+Subject: RAID
+Date: Thu, 13 Oct 2005 22:18:53 +0200
+Message-ID: <434EC12D.4020300@makovecz.hu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-2; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from berk walker on Tuesday October 11
 Sender: linux-raid-owner@vger.kernel.org
-To: berk walker <berk@panix.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: neilb@cse.unsw.edu.au, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday October 11, berk@panix.com wrote:
-> so - rpm says mdadm depends on the so.1  Is this a problem with my 
-> system/configuration, or in the rpm?
+Hi Neil,
 
-Probably the RPM.  I built in under Debian/unstable.
-Google finds plenty of refs for linux-gate.  It is some magic 2.6
-thing.
+sorry for disturbation, but I'm afraid of my server data lost. Could you 
+help me a little? I didn't find any how-tos about this situtation. I 
+have two server and I made both of them RAID1 with raidtools2 and mdadm 
+0.9. No I upgraded the servers but thay said the mdadm new version is 
+different then tha created raid ones. Just a litte note in the 
+installation that I have to turn off the autoraid and after it take the 
+"mdadm --zero-superblock...." command. But I don't know how it works 
+on-the fly. The upgrade delet the raidstart and stop commands, so I 
+can't stop the raid for theese commands.
+1. What should I do? Is somewhere any hos to to this upgrade?
+2. One of the servers the raid is the root device. How can I upgrade this?
 
-I suggest you just rebuild mdadm.rpm from the source.
- 
-  rpm -ta mdadm-2.1.tgz
+Thanks for your fast help.
 
-NeilBrown
+A beginner RAID devil...
+Adam Makovecz
+
