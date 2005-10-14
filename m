@@ -1,7 +1,7 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PATCH md 001 of 8] Provide proper rcu_dereference / rcu_assign_pointer annotations in md
-Date: Fri, 14 Oct 2005 12:25:55 +1000
-Message-ID: <1051014022555.11758@suse.de>
+Subject: [PATCH md 004 of 8] Change raid5 sysfs attribute to not create a new directory.
+Date: Fri, 14 Oct 2005 12:26:11 +1000
+Message-ID: <1051014022611.11802@suse.de>
 References: <20051014122335.11602.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
@@ -10,318 +10,196 @@ Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
+There isn't really a need for raid5 attributes to be an a subdirectory,
+so this patch moves them from 
+  /sys/block/mdX/md/raid5/attribute
+to 
+  /sys/block/mdX/md/attribute
 
-Acked-by: <paulmck@us.ibm.com>
-Signed-off-by: <suzannew@cs.pdx.edu>
+This suggests that all md personalities should co-operate about
+namespace usage, but that shouldn't be a problem.
+
 Signed-off-by: Neil Brown <neilb@suse.de>
 
 ### Diffstat output
- ./drivers/md/multipath.c |    8 ++++----
- ./drivers/md/raid1.c     |   20 ++++++++++----------
- ./drivers/md/raid10.c    |   30 ++++++++++++++++--------------
- ./drivers/md/raid5.c     |    8 ++++----
- ./drivers/md/raid6main.c |    8 ++++----
- 5 files changed, 38 insertions(+), 36 deletions(-)
+ ./drivers/md/md.c            |    6 ---
+ ./drivers/md/raid5.c         |   72 ++++++++-----------------------------------
+ ./include/linux/raid/md_k.h  |    7 ++++
+ ./include/linux/raid/raid5.h |    1 
+ 4 files changed, 22 insertions(+), 64 deletions(-)
 
-diff ./drivers/md/multipath.c~current~ ./drivers/md/multipath.c
---- ./drivers/md/multipath.c~current~	2005-10-14 12:01:38.000000000 +1000
-+++ ./drivers/md/multipath.c	2005-10-14 12:15:25.000000000 +1000
-@@ -63,7 +63,7 @@ static int multipath_map (multipath_conf
+diff ./drivers/md/md.c~current~ ./drivers/md/md.c
+--- ./drivers/md/md.c~current~	2005-10-14 12:16:10.000000000 +1000
++++ ./drivers/md/md.c	2005-10-14 12:16:38.000000000 +1000
+@@ -1683,12 +1683,6 @@ static void analyze_sbs(mddev_t * mddev)
  
- 	rcu_read_lock();
- 	for (i = 0; i < disks; i++) {
--		mdk_rdev_t *rdev = conf->multipaths[i].rdev;
-+		mdk_rdev_t *rdev = rcu_dereference(conf->multipaths[i].rdev);
- 		if (rdev && rdev->in_sync) {
- 			atomic_inc(&rdev->nr_pending);
- 			rcu_read_unlock();
-@@ -139,7 +139,7 @@ static void unplug_slaves(mddev_t *mddev
+ }
  
- 	rcu_read_lock();
- 	for (i=0; i<mddev->raid_disks; i++) {
--		mdk_rdev_t *rdev = conf->multipaths[i].rdev;
-+		mdk_rdev_t *rdev = rcu_dereference(conf->multipaths[i].rdev);
- 		if (rdev && !rdev->faulty && atomic_read(&rdev->nr_pending)) {
- 			request_queue_t *r_queue = bdev_get_queue(rdev->bdev);
- 
-@@ -228,7 +228,7 @@ static int multipath_issue_flush(request
- 
- 	rcu_read_lock();
- 	for (i=0; i<mddev->raid_disks && ret == 0; i++) {
--		mdk_rdev_t *rdev = conf->multipaths[i].rdev;
-+		mdk_rdev_t *rdev = rcu_dereference(conf->multipaths[i].rdev);
- 		if (rdev && !rdev->faulty) {
- 			struct block_device *bdev = rdev->bdev;
- 			request_queue_t *r_queue = bdev_get_queue(bdev);
-@@ -335,7 +335,7 @@ static int multipath_add_disk(mddev_t *m
- 			conf->working_disks++;
- 			rdev->raid_disk = path;
- 			rdev->in_sync = 1;
--			p->rdev = rdev;
-+			rcu_assign_pointer(p->rdev, rdev);
- 			found = 1;
- 		}
- 
-
-diff ./drivers/md/raid1.c~current~ ./drivers/md/raid1.c
---- ./drivers/md/raid1.c~current~	2005-10-14 12:01:38.000000000 +1000
-+++ ./drivers/md/raid1.c	2005-10-14 12:15:25.000000000 +1000
-@@ -416,10 +416,10 @@ static int read_balance(conf_t *conf, r1
- 		/* Choose the first operation device, for consistancy */
- 		new_disk = 0;
- 
--		for (rdev = conf->mirrors[new_disk].rdev;
-+		for (rdev = rcu_dereference(conf->mirrors[new_disk].rdev);
- 		     !rdev || !rdev->in_sync
- 			     || test_bit(WriteMostly, &rdev->flags);
--		     rdev = conf->mirrors[++new_disk].rdev) {
-+		     rdev = rcu_dereference(conf->mirrors[++new_disk].rdev)) {
- 
- 			if (rdev && rdev->in_sync)
- 				wonly_disk = new_disk;
-@@ -434,10 +434,10 @@ static int read_balance(conf_t *conf, r1
- 
- 
- 	/* make sure the disk is operational */
--	for (rdev = conf->mirrors[new_disk].rdev;
-+	for (rdev = rcu_dereference(conf->mirrors[new_disk].rdev);
- 	     !rdev || !rdev->in_sync ||
- 		     test_bit(WriteMostly, &rdev->flags);
--	     rdev = conf->mirrors[new_disk].rdev) {
-+	     rdev = rcu_dereference(conf->mirrors[new_disk].rdev)) {
- 
- 		if (rdev && rdev->in_sync)
- 			wonly_disk = new_disk;
-@@ -474,7 +474,7 @@ static int read_balance(conf_t *conf, r1
- 			disk = conf->raid_disks;
- 		disk--;
- 
--		rdev = conf->mirrors[disk].rdev;
-+		rdev = rcu_dereference(conf->mirrors[disk].rdev);
- 
- 		if (!rdev ||
- 		    !rdev->in_sync ||
-@@ -496,7 +496,7 @@ static int read_balance(conf_t *conf, r1
- 
- 
- 	if (new_disk >= 0) {
--		rdev = conf->mirrors[new_disk].rdev;
-+		rdev = rcu_dereference(conf->mirrors[new_disk].rdev);
- 		if (!rdev)
- 			goto retry;
- 		atomic_inc(&rdev->nr_pending);
-@@ -522,7 +522,7 @@ static void unplug_slaves(mddev_t *mddev
- 
- 	rcu_read_lock();
- 	for (i=0; i<mddev->raid_disks; i++) {
--		mdk_rdev_t *rdev = conf->mirrors[i].rdev;
-+		mdk_rdev_t *rdev = rcu_dereference(conf->mirrors[i].rdev);
- 		if (rdev && !rdev->faulty && atomic_read(&rdev->nr_pending)) {
- 			request_queue_t *r_queue = bdev_get_queue(rdev->bdev);
- 
-@@ -556,7 +556,7 @@ static int raid1_issue_flush(request_que
- 
- 	rcu_read_lock();
- 	for (i=0; i<mddev->raid_disks && ret == 0; i++) {
--		mdk_rdev_t *rdev = conf->mirrors[i].rdev;
-+		mdk_rdev_t *rdev = rcu_dereference(conf->mirrors[i].rdev);
- 		if (rdev && !rdev->faulty) {
- 			struct block_device *bdev = rdev->bdev;
- 			request_queue_t *r_queue = bdev_get_queue(bdev);
-@@ -732,7 +732,7 @@ static int make_request(request_queue_t 
- #endif
- 	rcu_read_lock();
- 	for (i = 0;  i < disks; i++) {
--		if ((rdev=conf->mirrors[i].rdev) != NULL &&
-+		if ((rdev=rcu_dereference(conf->mirrors[i].rdev)) != NULL &&
- 		    !rdev->faulty) {
- 			atomic_inc(&rdev->nr_pending);
- 			if (rdev->faulty) {
-@@ -958,7 +958,7 @@ static int raid1_add_disk(mddev_t *mddev
- 			found = 1;
- 			if (rdev->saved_raid_disk != mirror)
- 				conf->fullsync = 1;
--			p->rdev = rdev;
-+			rcu_assign_pointer(p->rdev, rdev);
- 			break;
- 		}
- 
-
-diff ./drivers/md/raid10.c~current~ ./drivers/md/raid10.c
---- ./drivers/md/raid10.c~current~	2005-10-14 12:01:38.000000000 +1000
-+++ ./drivers/md/raid10.c	2005-10-14 12:15:25.000000000 +1000
-@@ -496,6 +496,7 @@ static int read_balance(conf_t *conf, r1
- 	int disk, slot, nslot;
- 	const int sectors = r10_bio->sectors;
- 	sector_t new_distance, current_distance;
-+	mdk_rdev_t *rdev;
- 
- 	raid10_find_phys(conf, r10_bio);
- 	rcu_read_lock();
-@@ -510,8 +511,8 @@ static int read_balance(conf_t *conf, r1
- 		slot = 0;
- 		disk = r10_bio->devs[slot].devnum;
- 
--		while (!conf->mirrors[disk].rdev ||
--		       !conf->mirrors[disk].rdev->in_sync) {
-+		while ((rdev = rcu_dereference(conf->mirrors[disk].rdev)) == NULL ||
-+		       !rdev->in_sync) {
- 			slot++;
- 			if (slot == conf->copies) {
- 				slot = 0;
-@@ -527,8 +528,8 @@ static int read_balance(conf_t *conf, r1
- 	/* make sure the disk is operational */
- 	slot = 0;
- 	disk = r10_bio->devs[slot].devnum;
--	while (!conf->mirrors[disk].rdev ||
--	       !conf->mirrors[disk].rdev->in_sync) {
-+	while ((rdev=rcu_dereference(conf->mirrors[disk].rdev)) == NULL ||
-+	       !rdev->in_sync) {
- 		slot ++;
- 		if (slot == conf->copies) {
- 			disk = -1;
-@@ -547,11 +548,11 @@ static int read_balance(conf_t *conf, r1
- 		int ndisk = r10_bio->devs[nslot].devnum;
- 
- 
--		if (!conf->mirrors[ndisk].rdev ||
--		    !conf->mirrors[ndisk].rdev->in_sync)
-+		if ((rdev=rcu_dereference(conf->mirrors[ndisk].rdev)) == NULL ||
-+		    !rdev->in_sync)
- 			continue;
- 
--		if (!atomic_read(&conf->mirrors[ndisk].rdev->nr_pending)) {
-+		if (!atomic_read(&rdev->nr_pending)) {
- 			disk = ndisk;
- 			slot = nslot;
- 			break;
-@@ -569,7 +570,7 @@ rb_out:
- 	r10_bio->read_slot = slot;
- /*	conf->next_seq_sect = this_sector + sectors;*/
- 
--	if (disk >= 0 && conf->mirrors[disk].rdev)
-+	if (disk >= 0 && (rdev=rcu_dereference(conf->mirrors[disk].rdev))!= NULL)
- 		atomic_inc(&conf->mirrors[disk].rdev->nr_pending);
- 	rcu_read_unlock();
- 
-@@ -583,7 +584,7 @@ static void unplug_slaves(mddev_t *mddev
- 
- 	rcu_read_lock();
- 	for (i=0; i<mddev->raid_disks; i++) {
--		mdk_rdev_t *rdev = conf->mirrors[i].rdev;
-+		mdk_rdev_t *rdev = rcu_dereference(conf->mirrors[i].rdev);
- 		if (rdev && !rdev->faulty && atomic_read(&rdev->nr_pending)) {
- 			request_queue_t *r_queue = bdev_get_queue(rdev->bdev);
- 
-@@ -614,7 +615,7 @@ static int raid10_issue_flush(request_qu
- 
- 	rcu_read_lock();
- 	for (i=0; i<mddev->raid_disks && ret == 0; i++) {
--		mdk_rdev_t *rdev = conf->mirrors[i].rdev;
-+		mdk_rdev_t *rdev = rcu_dereference(conf->mirrors[i].rdev);
- 		if (rdev && !rdev->faulty) {
- 			struct block_device *bdev = rdev->bdev;
- 			request_queue_t *r_queue = bdev_get_queue(bdev);
-@@ -772,9 +773,10 @@ static int make_request(request_queue_t 
- 	rcu_read_lock();
- 	for (i = 0;  i < conf->copies; i++) {
- 		int d = r10_bio->devs[i].devnum;
--		if (conf->mirrors[d].rdev &&
--		    !conf->mirrors[d].rdev->faulty) {
--			atomic_inc(&conf->mirrors[d].rdev->nr_pending);
-+		mdk_rdev_t *rdev = rcu_dereference(conf->mirrors[d].rdev);
-+		if (rdev &&
-+		    !rdev->faulty) {
-+			atomic_inc(&rdev->nr_pending);
- 			r10_bio->devs[i].bio = bio;
- 		} else
- 			r10_bio->devs[i].bio = NULL;
-@@ -984,7 +986,7 @@ static int raid10_add_disk(mddev_t *mdde
- 			p->head_position = 0;
- 			rdev->raid_disk = mirror;
- 			found = 1;
--			p->rdev = rdev;
-+			rcu_assign_pointer(p->rdev, rdev);
- 			break;
- 		}
- 
+-struct md_sysfs_entry {
+-	struct attribute attr;
+-	ssize_t (*show)(mddev_t *, char *);
+-	ssize_t (*store)(mddev_t *, const char *, size_t);
+-};
+-
+ static ssize_t
+ md_show_level(mddev_t *mddev, char *page)
+ {
 
 diff ./drivers/md/raid5.c~current~ ./drivers/md/raid5.c
---- ./drivers/md/raid5.c~current~	2005-10-14 12:15:05.000000000 +1000
-+++ ./drivers/md/raid5.c	2005-10-14 12:15:25.000000000 +1000
-@@ -1374,7 +1374,7 @@ static void handle_stripe(struct stripe_
- 			bi->bi_end_io = raid5_end_read_request;
-  
- 		rcu_read_lock();
--		rdev = conf->disks[i].rdev;
-+		rdev = rcu_dereference(conf->disks[i].rdev);
- 		if (rdev && rdev->faulty)
- 			rdev = NULL;
- 		if (rdev)
-@@ -1448,7 +1448,7 @@ static void unplug_slaves(mddev_t *mddev
+--- ./drivers/md/raid5.c~current~	2005-10-14 12:15:42.000000000 +1000
++++ ./drivers/md/raid5.c	2005-10-14 12:16:39.000000000 +1000
+@@ -1736,21 +1736,17 @@ static void raid5d (mddev_t *mddev)
+ 	PRINTK("--- raid5d inactive\n");
+ }
  
- 	rcu_read_lock();
- 	for (i=0; i<mddev->raid_disks; i++) {
--		mdk_rdev_t *rdev = conf->disks[i].rdev;
-+		mdk_rdev_t *rdev = rcu_dereference(conf->disks[i].rdev);
- 		if (rdev && !rdev->faulty && atomic_read(&rdev->nr_pending)) {
- 			request_queue_t *r_queue = bdev_get_queue(rdev->bdev);
+-struct raid5_sysfs_entry {
+-	struct attribute attr;
+-	ssize_t (*show)(raid5_conf_t *, char *);
+-	ssize_t (*store)(raid5_conf_t *, const char *, ssize_t);
+-};
+-
+ static ssize_t
+-raid5_show_stripe_cache_size(raid5_conf_t *conf, char *page)
++raid5_show_stripe_cache_size(mddev_t *mddev, char *page)
+ {
++	raid5_conf_t *conf = mddev_to_conf(mddev);
+ 	return sprintf(page, "%d\n", conf->max_nr_stripes);
+ }
  
-@@ -1493,7 +1493,7 @@ static int raid5_issue_flush(request_que
+ static ssize_t
+-raid5_store_stripe_cache_size(raid5_conf_t *conf, const char *page, ssize_t len)
++raid5_store_stripe_cache_size(mddev_t *mddev, const char *page, size_t len)
+ {
++	raid5_conf_t *conf = mddev_to_conf(mddev);
+ 	char *end;
+ 	int new;
+ 	if (len >= PAGE_SIZE)
+@@ -1774,68 +1770,33 @@ raid5_store_stripe_cache_size(raid5_conf
+ 	}
+ 	return len;
+ }
+-static struct raid5_sysfs_entry raid5_stripecache_size = {
++
++static struct md_sysfs_entry raid5_stripecache_size = {
+ 	.attr = {.name = "stripe_cache_size", .mode = S_IRUGO | S_IWUSR },
+ 	.show = raid5_show_stripe_cache_size,
+ 	.store = raid5_store_stripe_cache_size,
+ };
  
- 	rcu_read_lock();
- 	for (i=0; i<mddev->raid_disks && ret == 0; i++) {
--		mdk_rdev_t *rdev = conf->disks[i].rdev;
-+		mdk_rdev_t *rdev = rcu_dereference(conf->disks[i].rdev);
- 		if (rdev && !rdev->faulty) {
- 			struct block_device *bdev = rdev->bdev;
- 			request_queue_t *r_queue = bdev_get_queue(bdev);
-@@ -2169,7 +2169,7 @@ static int raid5_add_disk(mddev_t *mddev
- 			found = 1;
- 			if (rdev->saved_raid_disk != disk)
- 				conf->fullsync = 1;
--			p->rdev = rdev;
-+			rcu_assign_pointer(p->rdev, rdev);
- 			break;
- 		}
- 	print_raid5_conf(conf);
+ static ssize_t
+-raid5_show_stripe_cache_active(raid5_conf_t *conf, char *page)
++raid5_show_stripe_cache_active(mddev_t *mddev, char *page)
+ {
++	raid5_conf_t *conf = mddev_to_conf(mddev);
+ 	return sprintf(page, "%d\n", atomic_read(&conf->active_stripes));
+ }
+ 
+-static struct raid5_sysfs_entry raid5_stripecache_active = {
++static struct md_sysfs_entry raid5_stripecache_active = {
+ 	.attr = {.name = "stripe_cache_active", .mode = S_IRUGO},
+ 	.show = raid5_show_stripe_cache_active,
+ };
+ 
+-static struct attribute *raid5_default_attrs[] = {
++static struct attribute *raid5_attrs[] =  {
+ 	&raid5_stripecache_size.attr,
+ 	&raid5_stripecache_active.attr,
+ 	NULL,
+ };
+-
+-static ssize_t
+-raid5_attr_show(struct kobject *kobj, struct attribute *attr, char *page)
+-{
+-	struct raid5_sysfs_entry *entry = container_of(attr, struct raid5_sysfs_entry, attr);
+-	raid5_conf_t *conf = container_of(kobj, raid5_conf_t, kobj);
+-
+-	if (!entry->show)
+-		return -EIO;
+-	return entry->show(conf, page);
+-}
+-
+-static ssize_t
+-raid5_attr_store(struct kobject *kobj, struct attribute *attr,
+-	      const char *page, size_t length)
+-{
+-	struct raid5_sysfs_entry *entry = container_of(attr, struct raid5_sysfs_entry, attr);
+-	raid5_conf_t *conf = container_of(kobj, raid5_conf_t, kobj);
+-
+-	if (!entry->store)
+-		return -EIO;
+-	return entry->store(conf, page, length);
+-}
+-
+-static void raid5_free(struct kobject *ko)
+-{
+-	raid5_conf_t *conf = container_of(ko, raid5_conf_t, kobj);
+-	kfree(conf);
+-}
+-
+-
+-static struct sysfs_ops raid5_sysfs_ops = {
+-	.show		= raid5_attr_show,
+-	.store		= raid5_attr_store,
+-};
+-
+-static struct kobj_type raid5_ktype = {
+-	.release	= raid5_free,
+-	.sysfs_ops	= &raid5_sysfs_ops,
+-	.default_attrs	= raid5_default_attrs,
++static struct attribute_group raid5_attrs_group = {
++	.name = NULL,
++	.attrs = raid5_attrs,
+ };
+ 
+ static int run(mddev_t *mddev)
+@@ -1979,10 +1940,7 @@ memory = conf->max_nr_stripes * (sizeof(
+ 	}
+ 
+ 	/* Ok, everything is just fine now */
+-	conf->kobj.parent = &mddev->kobj;
+-	strcpy(conf->kobj.name, "raid5");
+-	conf->kobj.ktype = &raid5_ktype;
+-	kobject_register(&conf->kobj);
++	sysfs_create_group(&mddev->kobj, &raid5_attrs_group);
+ 
+ 	if (mddev->bitmap)
+ 		mddev->thread->timeout = mddev->bitmap->daemon_sleep * HZ;
+@@ -2016,7 +1974,7 @@ static int stop(mddev_t *mddev)
+ 	shrink_stripes(conf);
+ 	free_pages((unsigned long) conf->stripe_hashtbl, HASH_PAGES_ORDER);
+ 	blk_sync_queue(mddev->queue); /* the unplug fn references 'conf'*/
+-	kobject_unregister(&conf->kobj);
++	sysfs_remove_group(&mddev->kobj, &raid5_attrs_group);
+ 	mddev->private = NULL;
+ 	return 0;
+ }
 
-diff ./drivers/md/raid6main.c~current~ ./drivers/md/raid6main.c
---- ./drivers/md/raid6main.c~current~	2005-10-14 12:01:38.000000000 +1000
-+++ ./drivers/md/raid6main.c	2005-10-14 12:15:25.000000000 +1000
-@@ -1464,7 +1464,7 @@ static void handle_stripe(struct stripe_
- 			bi->bi_end_io = raid6_end_read_request;
+diff ./include/linux/raid/md_k.h~current~ ./include/linux/raid/md_k.h
+--- ./include/linux/raid/md_k.h~current~	2005-10-14 12:15:05.000000000 +1000
++++ ./include/linux/raid/md_k.h	2005-10-14 12:16:39.000000000 +1000
+@@ -282,6 +282,13 @@ struct mdk_personality_s
+ };
  
- 		rcu_read_lock();
--		rdev = conf->disks[i].rdev;
-+		rdev = rcu_dereference(conf->disks[i].rdev);
- 		if (rdev && rdev->faulty)
- 			rdev = NULL;
- 		if (rdev)
-@@ -1538,7 +1538,7 @@ static void unplug_slaves(mddev_t *mddev
  
- 	rcu_read_lock();
- 	for (i=0; i<mddev->raid_disks; i++) {
--		mdk_rdev_t *rdev = conf->disks[i].rdev;
-+		mdk_rdev_t *rdev = rcu_dereference(conf->disks[i].rdev);
- 		if (rdev && !rdev->faulty && atomic_read(&rdev->nr_pending)) {
- 			request_queue_t *r_queue = bdev_get_queue(rdev->bdev);
++struct md_sysfs_entry {
++	struct attribute attr;
++	ssize_t (*show)(mddev_t *, char *);
++	ssize_t (*store)(mddev_t *, const char *, size_t);
++};
++
++
+ static inline char * mdname (mddev_t * mddev)
+ {
+ 	return mddev->gendisk ? mddev->gendisk->disk_name : "mdX";
+
+diff ./include/linux/raid/raid5.h~current~ ./include/linux/raid/raid5.h
+--- ./include/linux/raid/raid5.h~current~	2005-10-14 12:14:52.000000000 +1000
++++ ./include/linux/raid/raid5.h	2005-10-14 12:16:39.000000000 +1000
+@@ -228,7 +228,6 @@ struct raid5_private_data {
+ 					    * Cleared when a sync completes.
+ 					    */
  
-@@ -1583,7 +1583,7 @@ static int raid6_issue_flush(request_que
- 
- 	rcu_read_lock();
- 	for (i=0; i<mddev->raid_disks && ret == 0; i++) {
--		mdk_rdev_t *rdev = conf->disks[i].rdev;
-+		mdk_rdev_t *rdev = rcu_dereference(conf->disks[i].rdev);
- 		if (rdev && !rdev->faulty) {
- 			struct block_device *bdev = rdev->bdev;
- 			request_queue_t *r_queue = bdev_get_queue(bdev);
-@@ -2158,7 +2158,7 @@ static int raid6_add_disk(mddev_t *mddev
- 			found = 1;
- 			if (rdev->saved_raid_disk != disk)
- 				conf->fullsync = 1;
--			p->rdev = rdev;
-+			rcu_assign_pointer(p->rdev, rdev);
- 			break;
- 		}
- 	print_raid6_conf(conf);
+-	struct kobject		kobj;
+ 	/*
+ 	 * Free stripes pool
+ 	 */
