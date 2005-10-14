@@ -1,27 +1,25 @@
-From: "Ms Liliana Rosario" <snmhmejauuzny@shawcable.net>
-Subject: Drugs that make life better
-Date: Fri, 14 Oct 2005 21:43:53 +0000 (UTC)
-Message-ID: <80208590881145.5706753E8A__28086.042594123$1129326233$gmane$org@209.132.176.167>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+From: Gil Carr <pickling@minden.com>
+Subject: Looking for quality oem software bundles? Try us at affordable wholesale rates for your business.
+Date: Fri, 14 Oct 2005 17:49:34 -0400
+Message-ID: <25215629.10244878829@201-14-231-205.paemt704.dsl.brasiltelecom.net.br>
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-tape@vger.kernel.org
-Cc: linux-gcc@vger.kernel.org, linux-ppp@vger.kernel.org, linux-net@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, linux-serial@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Ms Rosario referred this pharm store to me
-I was satified using this products, and
-recommending to you
-
-The Only online store verified by BBB and 
-approved by Visa Seal of Confidence
+cheap oem soft shipping worldwide 
+http://vaesem.6yteuguichueooo1b661too6.psellismbj.com/?wrxtv
 
 
-http://21.superchaprx.com
+
+When the going gets tough, the tough get going.    
+
+You can't have everything. Where would you put it?    
+I stand by all the misstatements that I've made.    
+
+The best mirror is an old friend.      
+Everyone rises to their level of incompetence.      
 
 
-my mistake?
-http://aty4x4ghywy2esalxss3xaas.carapaxjh.com/Liliana
