@@ -1,31 +1,56 @@
-From: =?ISO-8859-2?Q?Makovecz_=C1d=E1m?= <adam@makovecz.hu>
-Subject: RAID
-Date: Thu, 13 Oct 2005 22:18:53 +0200
-Message-ID: <434EC12D.4020300@makovecz.hu>
+From: Boris Shingarov <shingarov@ca.istop.com>
+Subject: All disks in the array suddenly non-fresh??
+Date: Thu, 13 Oct 2005 21:07:55 -0400
+Message-ID: <434F04EB.5070308@ca.istop.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2; format=flowed
+Content-Type: text/plain; charset=KOI8-R; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@cse.unsw.edu.au, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Neil,
+Hi,
 
-sorry for disturbation, but I'm afraid of my server data lost. Could you 
-help me a little? I didn't find any how-tos about this situtation. I 
-have two server and I made both of them RAID1 with raidtools2 and mdadm 
-0.9. No I upgraded the servers but thay said the mdadm new version is 
-different then tha created raid ones. Just a litte note in the 
-installation that I have to turn off the autoraid and after it take the 
-"mdadm --zero-superblock...." command. But I don't know how it works 
-on-the fly. The upgrade delet the raidstart and stop commands, so I 
-can't stop the raid for theese commands.
-1. What should I do? Is somewhere any hos to to this upgrade?
-2. One of the servers the raid is the root device. How can I upgrade this?
+I'm very new to raid so my question is probably very basic.
 
-Thanks for your fast help.
+This machine I have, is set up with three partitions on
+three different disks (/dev/hda3, /dev/hde1, /dev/hdg1)
+forming a raid-5 array, /dev/md0.
+At some point, the machine became unresponsive, and on a reboot,
+I get the following:
 
-A beginner RAID devil...
-Adam Makovecz
+...
+md: md driver 0.90.0 MAX_MD_DEVS=256, MD_SB_DISKS=27
+...
+md: Autodetecting RAID arrays.
+md: autorun ...
+md: considering hdg1 ...
+md:  adding hdg1 ...
+md:  adding hde1 ...
+md:  adding hda3 ...
+md: created md0
+md: bind<hda3>
+md: bind<hde1>
+md: bind<hdg1>
+md: running: <hdg1><hde1><hda3>
+md: kicking non-fresh hdg1 from array!
+md: unbind<hdg1>
+md: export_rdev(hdg1)
+md: kicking non-fresh hde1 from array!
+md: unbind<hde1>
+md: export_rdev(hde1)
+md: personality 4 is not loaded!
+md :do_md_run() returned -22
+md: md0 stopped.
+md: unbind<hda3>
+md: export_rdev(hda3)
+md: ... autorun DONE.
+
+I am using classic (non-mdadm) raid tools.  Of course everything
+like /proc/mdstat, shows I have no md0, nor can I start md0.
+What would be the next logical thing to investigate, to get out
+of this situation?
+
+Boris
 
