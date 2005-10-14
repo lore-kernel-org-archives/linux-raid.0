@@ -1,7 +1,7 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PATCH md 003 of 8] Minor MD fixes
-Date: Fri, 14 Oct 2005 12:26:06 +1000
-Message-ID: <1051014022606.11787@suse.de>
+Subject: [PATCH md 007 of 8] Make md on-disk bitmaps not host-endian
+Date: Fri, 14 Oct 2005 12:26:30 +1000
+Message-ID: <1051014022630.11847@suse.de>
 References: <20051014122335.11602.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
@@ -10,68 +10,143 @@ Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-1/ Use reduce stack usage, because 'gcc' apparently doesn't overlay 
-   different variables  that are in separate scopes...
+Current bitmaps use set_bit et.al and so are host-endian,
+which means not-portable.  Oops.
 
-2/ Use test_bit instead of ( .. & 1<< ..) which in this case is buggy.
-
-Thanks to Andrew Morton
+Define a new version number (4) for which bitmaps are 
+little-endian.
 
 Signed-off-by: Neil Brown <neilb@suse.de>
 
 ### Diffstat output
- ./drivers/md/md.c |   14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+ ./drivers/md/bitmap.c         |   22 ++++++++++++++++++----
+ ./drivers/md/md.c             |    2 +-
+ ./include/linux/raid/bitmap.h |   11 +++++++++--
+ ./include/linux/raid/md.h     |    4 +++-
+ 4 files changed, 31 insertions(+), 8 deletions(-)
+
+diff ./drivers/md/bitmap.c~current~ ./drivers/md/bitmap.c
+--- ./drivers/md/bitmap.c~current~	2005-10-14 12:18:10.000000000 +1000
++++ ./drivers/md/bitmap.c	2005-10-14 12:18:21.000000000 +1000
+@@ -483,7 +483,8 @@ static int bitmap_read_sb(struct bitmap 
+ 	/* verify that the bitmap-specific fields are valid */
+ 	if (sb->magic != cpu_to_le32(BITMAP_MAGIC))
+ 		reason = "bad magic";
+-	else if (sb->version != cpu_to_le32(BITMAP_MAJOR))
++	else if (le32_to_cpu(sb->version) < BITMAP_MAJOR_LO ||
++		 le32_to_cpu(sb->version) > BITMAP_MAJOR_HI)
+ 		reason = "unrecognized superblock version";
+ 	else if (chunksize < 512 || chunksize > (1024 * 1024 * 4))
+ 		reason = "bitmap chunksize out of range (512B - 4MB)";
+@@ -528,6 +529,8 @@ success:
+ 	bitmap->daemon_lastrun = jiffies;
+ 	bitmap->max_write_behind = write_behind;
+ 	bitmap->flags |= sb->state;
++	if (le32_to_cpu(sb->version) == BITMAP_MAJOR_HOSTENDIAN)
++		bitmap->flags |= BITMAP_HOSTENDIAN;
+ 	bitmap->events_cleared = le64_to_cpu(sb->events_cleared);
+ 	if (sb->state & BITMAP_STALE)
+ 		bitmap->events_cleared = bitmap->mddev->events;
+@@ -765,7 +768,10 @@ static void bitmap_file_set_bit(struct b
+ 
+  	/* set the bit */
+ 	kaddr = kmap_atomic(page, KM_USER0);
+-	set_bit(bit, kaddr);
++	if (bitmap->flags & BITMAP_HOSTENDIAN)
++		set_bit(bit, kaddr);
++	else
++		ext2_set_bit(bit, kaddr);
+ 	kunmap_atomic(kaddr, KM_USER0);
+ 	PRINTK("set file bit %lu page %lu\n", bit, page->index);
+ 
+@@ -892,6 +898,7 @@ static int bitmap_init_from_disk(struct 
+ 	oldindex = ~0L;
+ 
+ 	for (i = 0; i < chunks; i++) {
++		int b;
+ 		index = file_page_index(i);
+ 		bit = file_page_offset(i);
+ 		if (index != oldindex) { /* this is a new page, read it in */
+@@ -940,7 +947,11 @@ static int bitmap_init_from_disk(struct 
+ 
+ 			bitmap->filemap[bitmap->file_pages++] = page;
+ 		}
+-		if (test_bit(bit, page_address(page))) {
++		if (bitmap->flags & BITMAP_HOSTENDIAN)
++			b = test_bit(bit, page_address(page));
++		else
++			b = ext2_test_bit(bit, page_address(page));
++		if (b) {
+ 			/* if the disk bit is set, set the memory bit */
+ 			bitmap_set_memory_bits(bitmap, i << CHUNK_BLOCK_SHIFT(bitmap),
+ 					       ((i+1) << (CHUNK_BLOCK_SHIFT(bitmap)) >= start)
+@@ -1098,7 +1109,10 @@ int bitmap_daemon_work(struct bitmap *bi
+ 						  -1);
+ 
+ 				/* clear the bit */
+-				clear_bit(file_page_offset(j), page_address(page));
++				if (bitmap->flags & BITMAP_HOSTENDIAN)
++					clear_bit(file_page_offset(j), page_address(page));
++				else
++					ext2_clear_bit(file_page_offset(j), page_address(page));
+ 			}
+ 		}
+ 		spin_unlock_irqrestore(&bitmap->lock, flags);
 
 diff ./drivers/md/md.c~current~ ./drivers/md/md.c
---- ./drivers/md/md.c~current~	2005-10-14 12:15:42.000000000 +1000
-+++ ./drivers/md/md.c	2005-10-14 12:16:10.000000000 +1000
-@@ -698,6 +698,7 @@ static void super_90_sync(mddev_t *mddev
- 	struct list_head *tmp;
- 	mdk_rdev_t *rdev2;
- 	int next_spare = mddev->raid_disks;
-+	char nm[20];
+--- ./drivers/md/md.c~current~	2005-10-14 12:18:10.000000000 +1000
++++ ./drivers/md/md.c	2005-10-14 12:18:21.000000000 +1000
+@@ -4277,7 +4277,7 @@ static int __init md_init(void)
+ 			" MD_SB_DISKS=%d\n",
+ 			MD_MAJOR_VERSION, MD_MINOR_VERSION,
+ 			MD_PATCHLEVEL_VERSION, MAX_MD_DEVS, MD_SB_DISKS);
+-	printk(KERN_INFO "md: bitmap version %d.%d\n", BITMAP_MAJOR,
++	printk(KERN_INFO "md: bitmap version %d.%d\n", BITMAP_MAJOR_HI,
+ 			BITMAP_MINOR);
  
- 	/* make rdev->sb match mddev data..
- 	 *
-@@ -768,7 +769,6 @@ static void super_90_sync(mddev_t *mddev
- 			fixdesc |= (1 << desc_nr);
- 			rdev2->desc_nr = desc_nr;
- 			if (rdev2->raid_disk >= 0) {
--				char nm[20];
- 				sprintf(nm, "rd%d", rdev2->raid_disk);
- 				sysfs_remove_link(&mddev->kobj, nm);
- 			}
-@@ -814,7 +814,6 @@ static void super_90_sync(mddev_t *mddev
- 						  &rdev2->bdev->bd_disk->kobj,
- 						  "block");
- 				if (rdev2->raid_disk >= 0) {
--					char nm[20];
- 					sprintf(nm, "rd%d", rdev2->raid_disk);
- 					sysfs_create_link(&mddev->kobj,
- 							  &rdev2->kobj, nm);
-@@ -1722,9 +1721,9 @@ static ssize_t
- md_show_scan(mddev_t *mddev, char *page)
- {
- 	char *type = "none";
--	if (mddev->recovery &
--	    ((1<<MD_RECOVERY_RUNNING) || (1<<MD_RECOVERY_NEEDED))) {
--		if (mddev->recovery & (1<<MD_RECOVERY_SYNC)) {
-+	if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery) ||
-+	    test_bit(MD_RECOVERY_NEEDED, &mddev->recovery)) {
-+		if (test_bit(MD_RECOVERY_SYNC, &mddev->recovery)) {
- 			if (!test_bit(MD_RECOVERY_REQUESTED, &mddev->recovery))
- 				type = "resync";
- 			else if (test_bit(MD_RECOVERY_CHECK, &mddev->recovery))
-@@ -1741,8 +1740,9 @@ static ssize_t
- md_store_scan(mddev_t *mddev, const char *page, size_t len)
- {
- 	int canscan=0;
--	if (mddev->recovery &
--	    ((1<<MD_RECOVERY_RUNNING) || (1<<MD_RECOVERY_NEEDED)))
+ 	if (register_blkdev(MAJOR_NR, "md"))
+
+diff ./include/linux/raid/bitmap.h~current~ ./include/linux/raid/bitmap.h
+--- ./include/linux/raid/bitmap.h~current~	2005-10-14 12:01:38.000000000 +1000
++++ ./include/linux/raid/bitmap.h	2005-10-14 12:18:21.000000000 +1000
+@@ -6,7 +6,13 @@
+ #ifndef BITMAP_H
+ #define BITMAP_H 1
+ 
+-#define BITMAP_MAJOR 3
++#define BITMAP_MAJOR_LO 3
++/* version 4 insists the bitmap is in little-endian order
++ * with version 3, it is host-endian which is non-portable
++ */
++#define BITMAP_MAJOR_HI 4
++#define	BITMAP_MAJOR_HOSTENDIAN 3
 +
-+	if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery) ||
-+	    test_bit(MD_RECOVERY_NEEDED, &mddev->recovery))
- 		return -EBUSY;
- 	down(&mddev->reconfig_sem);
- 	if (mddev->pers && mddev->pers->sync_request)
+ #define BITMAP_MINOR 39
+ 
+ /*
+@@ -133,7 +139,8 @@ typedef __u16 bitmap_counter_t;
+ /* use these for bitmap->flags and bitmap->sb->state bit-fields */
+ enum bitmap_state {
+ 	BITMAP_ACTIVE = 0x001, /* the bitmap is in use */
+-	BITMAP_STALE  = 0x002  /* the bitmap file is out of date or had -EIO */
++	BITMAP_STALE  = 0x002,  /* the bitmap file is out of date or had -EIO */
++	BITMAP_HOSTENDIAN = 0x8000,
+ };
+ 
+ /* the superblock at the front of the bitmap file -- little endian */
+
+diff ./include/linux/raid/md.h~current~ ./include/linux/raid/md.h
+--- ./include/linux/raid/md.h~current~	2005-10-14 12:01:38.000000000 +1000
++++ ./include/linux/raid/md.h	2005-10-14 12:18:21.000000000 +1000
+@@ -66,8 +66,10 @@
+  *     and major_version/minor_version accordingly
+  * >=2 means that Internal bitmaps are supported by setting MD_SB_BITMAP_PRESENT
+  *     in the super status byte
++ * >=3 means that bitmap superblock version 4 is supported, which uses
++ *     little-ending representation rather than host-endian
+  */
+-#define MD_PATCHLEVEL_VERSION           2
++#define MD_PATCHLEVEL_VERSION           3
+ 
+ extern int register_md_personality (int p_num, mdk_personality_t *p);
+ extern int unregister_md_personality (int p_num);
