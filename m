@@ -1,7 +1,7 @@
-From: Arabella Haley <redefining@rasanen.com>
-Subject: Impress with your new Rolex
-Date: Sat, 15 Oct 2005 12:46:12 -0400
-Message-ID: <10361285327.12558423926@host81-152-246-142.range81-152.btcentralplus.com>
+From: Gwendolen Leon <obstructive@busdriver.com>
+Subject: Sex is a play, and you must win!
+Date: Sat, 15 Oct 2005 17:58:48 -0400
+Message-ID: <5298354661.8847232626@p578254F2.dip0.t-ipconnect.de>
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
@@ -9,20 +9,20 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Beautiful and Elegant Watches
-http://prudence.mryx.com/re/lib/
+refill your prescription online
+http://eroe.vittoriaconme.com/order.php?ref=136
 
 
-I don't like principles. I prefer prejudices.      
-Don't take life too seriously. You'll never get out of it alive. 
-Painless poverty is better than embittered wealth.      
 
-No one can make you feel inferior without your consent.   
-Patriotism is the willingness to kill and be killed for trivial reasons. 
+Human history becomes more and more a race between education and catastrophe. 
 
-When you sling mud, you lose ground.      
-The great end of life is not knowledge but action.   
-Minds are like parachutes - they only function when open.   
-PATIENCE, n. A minor form of despair, disguised as a virtue.  
+
+We never live; we are always in the expectation of living.  
+
+I am the only guinea pig I have.     
+Adversity makes men, and prosperity makes monsters.      
+
+
+Dinner theater is anti-culture.         
 
 
