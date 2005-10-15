@@ -1,25 +1,74 @@
-From: Gil Carr <pickling@minden.com>
-Subject: Looking for quality oem software bundles? Try us at affordable wholesale rates for your business.
-Date: Fri, 14 Oct 2005 17:49:34 -0400
-Message-ID: <25215629.10244878829@201-14-231-205.paemt704.dsl.brasiltelecom.net.br>
-Content-Type: text/plain; charset=us-ascii
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: RAID 6 corruption : please help!
+Date: Sat, 15 Oct 2005 00:18:23 -0400
+Message-ID: <4350830F.4020306@tmr.com>
+References: <200510071816.j97IGrlV019508@pog.tecnopolis.ca>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <200510071816.j97IGrlV019508@pog.tecnopolis.ca>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Trevor Cordes <trevor@tecnopolis.ca>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-cheap oem soft shipping worldwide 
-http://vaesem.6yteuguichueooo1b661too6.psellismbj.com/?wrxtv
+Trevor Cordes wrote:
 
+>>What was the bug, and is it maybe something that is reversible.. ?
+>>    
+>>
+>
+>That's what I had thought until I knew the details of the bug.
+>
+>Mr. Anvin says:
+>
+>"No, it's "random"."
+>
+>"The error was: when a write happened to a stripe that needs
+>read-modify-write, it wouldn't properly schedule the reads, and would
+>blindly write out whatever crap happened to be in the stripe cache."
+>
+>">Do you know where in the code the bug was?  If I can only discover
+>  
+>
+>>exactly what it did I could write a program to try to clean it up?"
+>>    
+>>
+>
+>"No, it's timing-dependent and, in either case, involve writing non-data
+>to the disks."
+>
+>On  6 Oct, Molle Bestefich wrote:
+>  
+>
+>>What's stopping you from just pulling out the two new disks, mounting
+>>the array using the old, almost OK disks, and fsck'ing your way out of
+>>the couple of files that were corrupted when you were in rw mode?
+>>    
+>>
+>
+>That's kind of what I thought, but I had written to the disks and for
+>each write lots of the entire stripe (in many cases) would get wiped out
+>with random data.
+>
+>In the end, I ran fsck -y on it and crossed my fingers.  That recovered
+>nearly 8/10ths of the data before it hit some fsck bug (dies on signal
+>11).  The rest of the data I had 1 month old backups, so it actually
+>turned out pretty good.  I'm certainly going to increase my backup
+>frequency to weekly or twice weekly from now on -- even on a RAID6 setup
+>that I was *really* trusting to protect my 2TB.
+>
 
+You want to google for "signal 11" it (usually?) means there are 
+hardware problems with the system, frequently memory or bus occasional 
+failures. Unfortunately you may not be out of the woods yet.
 
-When the going gets tough, the tough get going.    
+On the other hand, you did a lot of inadvisable things to get to this 
+point...
 
-You can't have everything. Where would you put it?    
-I stand by all the misstatements that I've made.    
-
-The best mirror is an old friend.      
-Everyone rises to their level of incompetence.      
-
+-- 
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+  Doing interesting things with small computers since 1979
 
