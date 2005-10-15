@@ -1,74 +1,45 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: RAID 6 corruption : please help!
-Date: Sat, 15 Oct 2005 00:18:23 -0400
-Message-ID: <4350830F.4020306@tmr.com>
-References: <200510071816.j97IGrlV019508@pog.tecnopolis.ca>
+Subject: Re: Anybody know about nforce4 SATA II hot swapping + linux raid?
+Date: Sat, 15 Oct 2005 00:24:37 -0400
+Message-ID: <43508485.5040800@tmr.com>
+References: <200510071111.46788.andrew@walrond.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200510071816.j97IGrlV019508@pog.tecnopolis.ca>
-Sender: linux-raid-owner@vger.kernel.org
-To: Trevor Cordes <trevor@tecnopolis.ca>
-Cc: linux-raid@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751071AbVJOEUJ@vger.kernel.org>
+In-Reply-To: <200510071111.46788.andrew@walrond.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Walrond <andrew@walrond.org>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Trevor Cordes wrote:
+Andrew Walrond wrote:
 
->>What was the bug, and is it maybe something that is reversible.. ?
->>    
->>
+>I need to deploy some very resilient servers with hot swapable drives.
 >
->That's what I had thought until I knew the details of the bug.
+>I always used dac960 based hardware raid for hot swapping in the past, but 
+>sata drives are so cheap compared to scsi that I'm considering the Tyan GT24 
+>server with 4 hot swappable SATA II drives (nforce4 pro controller)
 >
->Mr. Anvin says:
+>	http://www.tyan.com/products/html/gt24b2891.html
 >
->"No, it's "random"."
+>Before I place an order, I need to know whether sata II hot swapping is up to 
+>scratch in the linux kernel, and whether it works nicely with linux software 
+>raid (which I already use/am familiar with).
 >
->"The error was: when a write happened to a stripe that needs
->read-modify-write, it wouldn't properly schedule the reads, and would
->blindly write out whatever crap happened to be in the stripe cache."
->
->">Do you know where in the code the bug was?  If I can only discover
->  
->
->>exactly what it did I could write a program to try to clean it up?"
->>    
->>
->
->"No, it's timing-dependent and, in either case, involve writing non-data
->to the disks."
->
->On  6 Oct, Molle Bestefich wrote:
->  
->
->>What's stopping you from just pulling out the two new disks, mounting
->>the array using the old, almost OK disks, and fsck'ing your way out of
->>the couple of files that were corrupted when you were in rw mode?
->>    
->>
->
->That's kind of what I thought, but I had written to the disks and for
->each write lots of the entire stripe (in many cases) would get wiped out
->with random data.
->
->In the end, I ran fsck -y on it and crossed my fingers.  That recovered
->nearly 8/10ths of the data before it hit some fsck bug (dies on signal
->11).  The rest of the data I had 1 month old backups, so it actually
->turned out pretty good.  I'm certainly going to increase my backup
->frequency to weekly or twice weekly from now on -- even on a RAID6 setup
->that I was *really* trusting to protect my 2TB.
+>Any knowledge greatfully accepted :)
 >
 
-You want to google for "signal 11" it (usually?) means there are 
-hardware problems with the system, frequently memory or bus occasional 
-failures. Unfortunately you may not be out of the woods yet.
+As others have noted, SATA is young and should not be used for hot-swap, 
+at least in a production manner. I suggest the IBM ServeRAID controller 
+as one solution for SCSI. I have a bunch of servers in various places 
+around the country, and these have been good to me, work pretty well 
+with typical failures, and IBM supports them.
 
-On the other hand, you did a lot of inadvisable things to get to this 
-point...
+I've deployed about 35 of these and am still happy, so you have a data 
+point. Most of my servers have 3-6TB.
 
 -- 
 bill davidsen <davidsen@tmr.com>
   CTO TMR Associates, Inc
   Doing interesting things with small computers since 1979
-
