@@ -1,37 +1,25 @@
-From: Gil <gil@fooplanet.com>
-Subject: Re: mdadm-2.1-1.i386.rpm and linux-gate.so.1
-Date: Tue, 18 Oct 2005 03:55:43 -0700
-Message-ID: <4354D4AF.8010700@fooplanet.com>
-References: <434BCA8A.8030303@panix.com> <17230.13761.247780.898679@cse.unsw.edu.au> <4354C75C.3040707@panix.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+From: Jennifer Jarvis <somewhere@palletalliance.com>
+Subject: Shopping for software? Now in your language & currency!
+Date: Tue, 18 Oct 2005 08:18:12 -0400
+Message-ID: <123815121432.99707104499@host81-156-185-91.range81-156.btcentralplus.com>
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4354C75C.3040707@panix.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: berk walker <berk@panix.com>
-Cc: Neil Brown <neilb@suse.de>, linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-berk walker wrote:
-> Neil Brown wrote:
->> I suggest you just rebuild mdadm.rpm from the source.
->>
->>  rpm -ta mdadm-2.1.tgz
->>
->> NeilBrown
->>
->>  
->>
-> [berk@berk downloads]$ rpm
-> RPM version 4.3.2
-> Copyright (C) 1998-2002 - Red Hat, Inc.
-> [actually, 4.3.2-21]
-> [berk@berk downloads]$ rpm -ta mdadm-2.1.tgz
-> -ta: unknown option
-> hmmm -  'preciate the try -Next?
+Reach new customers on the internet and grow your business... with dynamic software, you can!
+http://yzyqv.9tf3wdfiwjwhr9r4wr9mw99r.prancingch.com/?xwszll
 
-Try rpmbuild -ta mdadm-2.1.tgz
 
-All the build options were removed from rpm a while back.
+There is nothing either good or bad, but thinking makes it so. 
+When money talks, nobody notices what grammar it uses.    
+
+What breaks in a moment may take years to mend.   
+I expect nothing. I fear no one. I am free.   
+
+To expect defeat is nine-tenths of defeat itself.     
+Conceal a flaw, and the world will imagine the worst.   
+
 
