@@ -1,75 +1,50 @@
-From: NeilBrown <neilb@suse.de>
-Subject: [PATCH md ] Three one-liners in md.c
-Date: Tue, 18 Oct 2005 10:38:42 +1000
-Message-ID: <1051018003842.3181@suse.de>
-References: <20051018103524.2617.patches@notabene>
+From: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
+Subject: Re: [PATCH md 000 of 8] Introduction
+Date: Mon, 17 Oct 2005 19:02:16 -0600 (MDT)
+Message-ID: <Pine.LNX.4.64.0510171854560.24222@filesrv1.baby-dragons.com>
+References: <20051014122335.11602.patches@notabene>
+ <Pine.LNX.4.64.0510160953530.11227@filesrv1.baby-dragons.com>
+ <17235.3772.465205.512774@cse.unsw.edu.au>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <17235.3772.465205.512774@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid maillist <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-This patch against anything since 2.6.14-rc1 (I think) fixes three md
-bugs.  If there is to be another 2.6.14-rc, it would be nice for it to
-go in that, but if not, it isn't critial.
-The main problem fixes is that in certain situations stopping md arrays 
-may take longer than you expect, or may require multiple attempts.  This 
-would only happen when resync/recovery is happening.
+ 	Hello Neil ,
 
-### Comments for Changeset
+On Mon, 17 Oct 2005, Neil Brown wrote:
+> On Sunday October 16, babydr@baby-dragons.com wrote:
+>>  	Hello Neil ,  Is it possible to inert in the 'Introduction's for your
+>>  	patches a Min & Max kernel level they will successfully patch
+>>  	against ?  ie: 2.6.12 to 2.6.14-rc4 or some such .
+>>  	That would sure take the angst out of guessing .  Tia ,  JimL
 
-This patch fixes three vaguely related bugs.
+> I could certainly be more precise about which kernel they are created
+> against (it is usually the latest 2.6-mm) .
+ 	Perfect .  Would you please insert the full kernel source version
+ 	number the patches were created from in with the 'Introductions' ,
+ 	Please ?
 
-1/ The recent change to use kthreads got the setting of the 
-   process name wrong.  This fixes it.
-2/ The recent change to use kthreads lost the ability for
-   md threads to be signalled with SIG_KILL.  This restores that.
-3/ There is a long standing bug in that if:
-    - An array needs recovery (onto a hot-spare) and
-    - The recovery is being blocked because some other array being
-       recovered shares a physical device and
-    - The recovery thread is killed with SIG_KILL
-   Then the recovery will appear to have completed with no IO being
-   done, which can cause data corruption.
-   This patch makes sure that incomplete recovery will be treated as
-   incomplete.
+> but it would be a lot of
+> work to figure out how far back you can safely go and still have the
+> patch usefully apply, and I'm not sure that it is really worth it, is
+> it?
+ 	Not really what I was looking for .  Was thinking more on the lines of
+ 	the last kernel version that had accepted a previous patch set of
+ 	yours as a approximation of patch'ability .  That sound do able ?
 
-Note that any kernel affected by bug 2 will not suffer the problem of
-bug 3, as the signal can never be delivered.  Thus the current
-2.6.14-rc kernels are not susceptible to data corruption.
-Note also that if arrays are shutdown (with "mdadm -S" or "raidstop")
-then the problem doesn't occur.  It only happens if a SIGKILL is
-independently delivered as done by 'init' when shutting down.Signed-off-by: Neil Brown <neilb@suse.de>
-
-### Diffstat output
- ./drivers/md/md.c |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff ./drivers/md/md.c~current~ ./drivers/md/md.c
---- ./drivers/md/md.c~current~	2005-10-17 16:38:57.000000000 +1000
-+++ ./drivers/md/md.c	2005-10-17 17:19:58.000000000 +1000
-@@ -3420,6 +3420,7 @@ static int md_thread(void * arg)
- 	 * many dirty RAID5 blocks.
- 	 */
- 
-+	allow_signal(SIGKILL);
- 	complete(thread->event);
- 	while (!kthread_should_stop()) {
- 		void (*run)(mddev_t *);
-@@ -3468,7 +3469,7 @@ mdk_thread_t *md_register_thread(void (*
- 	thread->mddev = mddev;
- 	thread->name = name;
- 	thread->timeout = MAX_SCHEDULE_TIMEOUT;
--	thread->tsk = kthread_run(md_thread, thread, mdname(thread->mddev));
-+	thread->tsk = kthread_run(md_thread, thread, name, mdname(thread->mddev));
- 	if (IS_ERR(thread->tsk)) {
- 		kfree(thread);
- 		return NULL;
-@@ -3926,6 +3927,7 @@ static void md_do_sync(mddev_t *mddev)
- 	try_again:
- 		if (signal_pending(current)) {
- 			flush_signals(current);
-+			set_bit(MD_RECOVERY_INTR, &mddev->recovery);
- 			goto skip;
- 		}
- 		ITERATE_MDDEV(mddev2,tmp) {
+> If you want to help test raid patch (and I do appreciate the help), it
+> is really best if you use the most recent kernel, otherwise there
+> could be unexpected interactions which invalidate the test.
+ 	I am definately willing to test patch sets .  Whether I'll be able to
+ 	do so for very long is another matter .  Tnx ,  JimL
+-- 
++------------------------------------------------------------------+
+| James   W.   Laferriere | System    Techniques | Give me VMS     |
+| Network        Engineer | 3542 Broken Yoke Dr. |  Give me Linux  |
+| babydr@baby-dragons.com | Billings , MT. 59105 |   only  on  AXP |
++------------------------------------------------------------------+
