@@ -1,28 +1,46 @@
-From: Sylvia Slater <shooter@advertising.com>
-Subject: Italian Crafted Rolex from $75 to $275 - Free Shipping
-Date: Tue, 18 Oct 2005 01:28:57 -0400
-Message-ID: <6170856918.10477026370@adsl-69-209-219-188.dsl.chcgil.ameritech.net>
-Content-Type: text/plain; charset=us-ascii
+From: berk walker <berk@panix.com>
+Subject: Re: mdadm-2.1-1.i386.rpm and linux-gate.so.1
+Date: Tue, 18 Oct 2005 05:58:52 -0400
+Message-ID: <4354C75C.3040707@panix.com>
+References: <434BCA8A.8030303@panix.com> <17230.13761.247780.898679@cse.unsw.edu.au>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <17230.13761.247780.898679@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Your swiss watch order
-http://tinily.yi4.net/rep/lib/
+Neil Brown wrote:
 
+>On Tuesday October 11, berk@panix.com wrote:
+>  
+>
+>>so - rpm says mdadm depends on the so.1  Is this a problem with my 
+>>system/configuration, or in the rpm?
+>>    
+>>
+>
+>Probably the RPM.  I built in under Debian/unstable.
+>Google finds plenty of refs for linux-gate.  It is some magic 2.6
+>thing.
+>
+>I suggest you just rebuild mdadm.rpm from the source.
+> 
+>  rpm -ta mdadm-2.1.tgz
+>
+>NeilBrown
+>
+>  
+>
+[berk@berk downloads]$ rpm
+RPM version 4.3.2
+Copyright (C) 1998-2002 - Red Hat, Inc.
+[actually, 4.3.2-21]
+[berk@berk downloads]$ rpm -ta mdadm-2.1.tgz
+-ta: unknown option
+hmmm -  'preciate the try -Next?
 
-Rebellion to tyrants is obedience to God.      
-Whenever people agree with me I always feel I must be wrong. 
-I never cease being dumbfounded by the unbelievable things people believe  
-
-First things first, but not necessarily in that order.    
-HUMANITY, n. The human race, collectively, exclusive of the anthropoid poets.  
-
-Respect a man, he will do the more.     
-Hatred - The anger of the weak.      
-Never forget what a man says to you when he is angry. 
-There are two rules for success: 1) Never tell everything you know. 
-
+b-
 
