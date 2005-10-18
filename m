@@ -1,50 +1,37 @@
-From: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
-Subject: Re: [PATCH md 000 of 8] Introduction
-Date: Mon, 17 Oct 2005 19:02:16 -0600 (MDT)
-Message-ID: <Pine.LNX.4.64.0510171854560.24222@filesrv1.baby-dragons.com>
-References: <20051014122335.11602.patches@notabene>
- <Pine.LNX.4.64.0510160953530.11227@filesrv1.baby-dragons.com>
- <17235.3772.465205.512774@cse.unsw.edu.au>
+From: Brad Campbell <brad@wasp.net.au>
+Subject: Re: RAID-5 or RAID-6 with mdadm 1.9.0-4 and 2.6.11.9
+Date: Tue, 18 Oct 2005 08:48:39 +0400
+Message-ID: <43547EA7.8000508@wasp.net.au>
+References: <6d5bedd80510171720x16b962fcjd6dc878450b642d8@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17235.3772.465205.512774@cse.unsw.edu.au>
+In-Reply-To: <6d5bedd80510171720x16b962fcjd6dc878450b642d8@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid maillist <linux-raid@vger.kernel.org>
+To: Ewan Grantham <ewan.grantham@gmail.com>
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
- 	Hello Neil ,
+Ewan Grantham wrote:
+> A rather specific question, I know. But I'm intrigued by some of the
+> things I've read about what RAID-6 offers. On the other hand, given
+> the version of mdadm and the Linux kernel I'm running, I'm wondering
+> which would be more stable and/or give better performance.
 
-On Mon, 17 Oct 2005, Neil Brown wrote:
-> On Sunday October 16, babydr@baby-dragons.com wrote:
->>  	Hello Neil ,  Is it possible to inert in the 'Introduction's for your
->>  	patches a Min & Max kernel level they will successfully patch
->>  	against ?  ie: 2.6.12 to 2.6.14-rc4 or some such .
->>  	That would sure take the angst out of guessing .  Tia ,  JimL
+I'm running both RAID-5 and RAID-6 on 2.6.11.7 and they work a treat.
 
-> I could certainly be more precise about which kernel they are created
-> against (it is usually the latest 2.6-mm) .
- 	Perfect .  Would you please insert the full kernel source version
- 	number the patches were created from in with the 'Introductions' ,
- 	Please ?
+RAID-6 saved me from a dual drive failure a little while back, where a 2nd drive developed (or 
+noticed) grown defects during the rebuild of the first failed drive (it takes about 15 hours to 
+rebuild this RAID-6)
 
-> but it would be a lot of
-> work to figure out how far back you can safely go and still have the
-> patch usefully apply, and I'm not sure that it is really worth it, is
-> it?
- 	Not really what I was looking for .  Was thinking more on the lines of
- 	the last kernel version that had accepted a previous patch set of
- 	yours as a approximation of patch'ability .  That sound do able ?
+brad@storage1:~$ uname -a
+Linux storage1 2.6.11.7 #4 Fri Oct 7 20:00:25 GST 2005 i686 GNU/Linux
+brad@storage1:~$ /sbin/mdadm --version
+mdadm - v1.9.0 - 04 February 2005
 
-> If you want to help test raid patch (and I do appreciate the help), it
-> is really best if you use the most recent kernel, otherwise there
-> could be unexpected interactions which invalidate the test.
- 	I am definately willing to test patch sets .  Whether I'll be able to
- 	do so for very long is another matter .  Tnx ,  JimL
+Brad
 -- 
-+------------------------------------------------------------------+
-| James   W.   Laferriere | System    Techniques | Give me VMS     |
-| Network        Engineer | 3542 Broken Yoke Dr. |  Give me Linux  |
-| babydr@baby-dragons.com | Billings , MT. 59105 |   only  on  AXP |
-+------------------------------------------------------------------+
+"Human beings, who are almost unique in having the ability
+to learn from the experience of others, are also remarkable
+for their apparent disinclination to do so." -- Douglas Adams
