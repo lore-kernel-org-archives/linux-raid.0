@@ -1,25 +1,31 @@
-From: Jennifer Jarvis <somewhere@palletalliance.com>
-Subject: Shopping for software? Now in your language & currency!
-Date: Tue, 18 Oct 2005 08:18:12 -0400
-Message-ID: <123815121432.99707104499@host81-156-185-91.range81-156.btcentralplus.com>
+From: "Arlene McMahon" <amcMahonyd@actionsteel.com>
+Subject: =?iso-8859-1?b?RWZmb3J0bGVzcyBtZWRpY2F0aW9uIFNvbHV0aW9ucw==?=
+Date: Wed, 19 Oct 2005 02:13:47 +0000
+Message-ID: <HJDAIPMPFNHHFPECMJPJABEPILAB.amcMahonyd@actionsteel.com>
+References: <ad5901c5d25c$7eb8d9cc$825c6949@v4qdz32>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <ad5901c5d25c$7eb8d9cc$825c6949@v4qdz32>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Reach new customers on the internet and grow your business... with dynamic software, you can!
-http://yzyqv.9tf3wdfiwjwhr9r4wr9mw99r.prancingch.com/?xwszll
+=C2Hi there
 
+=C2You will never find better weekly deals than we can offer.
 
-There is nothing either good or bad, but thinking makes it so. 
-When money talks, nobody notices what grammar it uses.    
+=C2You cannot find better prices.
 
-What breaks in a moment may take years to mend.   
-I expect nothing. I fear no one. I am free.   
+=C2Save 80% on all stocked products.
+=C2Dont need a prescription
 
-To expect defeat is nine-tenths of defeat itself.     
-Conceal a flaw, and the world will imagine the worst.   
+=C2http://p.oomort.net/p/
 
+=C2..Best wishes from ReliablePharm
 
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
