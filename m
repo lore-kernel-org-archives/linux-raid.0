@@ -1,31 +1,73 @@
-From: "Sheryl T. Cornell" <sheryl.t.cornell_nk@m-tekinc.com>
-Subject: =?iso-8859-1?B?VG9wIG5hcmNvdGljIFByb2Zlc3Npb25hbHM=?=
-Date: Thu, 20 Oct 2005 08:49:48 +0000
-Message-ID: <79a901c5d553$3361541d$aed5fe2b@90cqg72>
-References: <352301c5d416$380006dc$617d1b87@efbev21>
+From: Robin Bowes <robin-lists@robinbowes.com>
+Subject: Re: Best way to achieve large, expandable, cheap storage?
+Date: Thu, 20 Oct 2005 11:23:30 +0100
+Message-ID: <43577022.5010306@robinbowes.com>
+References: <dhje16$tmq$1@sea.gmane.org> <433F63BB.3020008@nighthawkrad.net> <7f55de720510030933k26608cfsda63326a8438e35d@mail.gmail.com> <43420091.9060601@nighthawkrad.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <352301c5d416$380006dc$617d1b87@efbev21>
+In-Reply-To: <43420091.9060601@nighthawkrad.net>
 Sender: linux-raid-owner@vger.kernel.org
+To: Christopher Smith <csmith@nighthawkrad.net>
+Cc: Sebastian Kuzminsky <seb.kuzminsky@gmail.com>, Robin Bowes <robin-lists@robinbowes.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-=C2Hello!
+Christopher Smith said the following on 04/10/2005 05:09:
+> Yep, that's pretty much bang on.  The only thing you've missed is using 
+> pvmove to physically move the data off the soon-to-be-decomissioned 
+> PVs(/RAID arrays).
+> 
+> Be warned, for those who haven't used it before, pvmove is _very_ slow.
 
-=C2Check out the great weekly specials.=20
+I've just been re-reading this thread.
 
-=C2Can't find a better deal anywhere else.
+I'd like to just check if I understand how this will work.
 
-=C2Save over 80% on your prescription.
-=C2Never need a prescription
+Assume the following setup (hypothetical).
 
-=C2http://uk.geocities.com/rickyswenson/
+VG:
+big_vg - contains /dev/md1, /dev/md2; 240GB
 
-=C2..All the best wishes from CheapMe/dz=20
+PV:
+/dev/md1 - 4 x 40GB drives (RAID5 - 120GB total)
+/dev/md2 - 4 x 40GB drives (RAID5 - 120GB total)
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+LV:
+big_lv - in big_vg - 240GB
+
+Filesystems:
+/home - xfs filesystem in big_lv - 240GB
+
+Suppose I then add a new PV:
+/dev/md3 - 4 x 300GB drives (RAID5 - 900GB total)
+
+I want to replace /dev/md1 with /dev/md3
+
+I use pvmove something like this:
+
+# pvmove /dev/md1 /dev/md3
+
+When this finishes, big_vg will contain /dev/md2 + /dev/md3 (1020GB 
+total). /dev/md1 will be unused.
+
+big_lv will still be using just 240GB of big_vg.
+
+I then use lvextend to increase the size of big_lv
+
+big_lv will now use all 1020GB of big_vg.
+
+However, the /home filesystem will still just use 240GB of big_lv
+
+I can then use xfs_growfs to expand the /home filesystem to use all 
+1020GB of big_lv.
+
+Have I missed anything?
+
+R.
+-- 
+http://robinbowes.com
+
+If a man speaks in a forest,
+and his wife's not there,
+is he still wrong?
