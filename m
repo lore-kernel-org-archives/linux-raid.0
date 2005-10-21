@@ -1,65 +1,161 @@
-From: Christopher Smith <csmith@nighthawkrad.net>
-Subject: Re: Best way to achieve large, expandable, cheap storage?
-Date: Fri, 21 Oct 2005 14:42:12 +1000
-Message-ID: <435871A4.8040304@nighthawkrad.net>
-References: <dhje16$tmq$1@sea.gmane.org> <433F63BB.3020008@nighthawkrad.net> <7f55de720510030933k26608cfsda63326a8438e35d@mail.gmail.com> <43420091.9060601@nighthawkrad.net> <43577022.5010306@robinbowes.com> <20051020111943.GA9757@anthropohedron.net>
+From: sagawo1@sunumail.sn
+Subject: Aide de Projet
+Date: Fri, 21 Oct 2005 10:18:35 -0000 (GMT)
+Message-ID: <46626.213.136.113.98.1129889915.sunumail@www.sunumail.sn>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20051020111943.GA9757@anthropohedron.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: gsslist+linuxraid@anthropohedron.net
-Cc: linux-raid@vger.kernel.org
+To: sagawo1@sunumail.sn
 List-Id: linux-raid.ids
 
-Gregory Seidman wrote:
-> You should at least read the following before using RAID5. You can agree or
-> disagree, but you should take the arguments into account:
-> 
-> http://www.miracleas.com/BAARF/RAID5_versus_RAID10.txt
+Mlle Sagawo Sankoh
+AVE. 16 Treichville
+Abidjan, la C=F4te d'Ivoire
+T=E9l : + 225 07 05 56 57
+Adresse email:sagawo1@sunumail.sn
 
-This bloke makes some good points about the various downsides of RAID5 
-(which everyone involved in actually implementing production RAID 
-systems should already know), but IMHO he also makes some poor 
-assumptions and specious claims.
 
-For example, his article suggests that "partial media failure" is a 
-problem that would only affect RAID5, when really it would negatively 
-impact any RAID system (your newly-synced mirror isn't much good if half 
-the data that just got mirrored to it was corrupted, nor is the speed 
-boost from RAID0 very helpful if half the data is corrupted).  I'm also 
-not sure about his claims of RAID3 & 4 "always" checking parity - that 
-sounds like a vendor-specific implementation (and while I'm not a 
-developer, I fail to see why a RAID5 implementation couldn't be made to 
-do the same).
+Cher bonjour,
 
-As another example, I'm 99% sure that SCSI drives *do* inform the OS 
-when they remap a bad sector and that any remotely modern IDE drive also 
-does sector remapping.
+                  Aide de Projet
 
-He also focuses solely on the worst-case scenario as a reason for 
-avoiding RAID5 completely.  Certainly you have to take that into 
-account, but it's rather unfair to draw a general conclusion based only 
-on how a particular scenario might happen.
+Je n'ai comprendre pas fran=E7ais mais j'ai essay=E9 de traduire en fra=
+n=E7ais
+pour vous pour avoir lire. Je parle l'anglais allez s'il vous pla=EEt i=
+ls
+lisent mon =E9mail et me r=E9pondent en fran=E7ais ou anglais.
 
-Added to that, he completely discounts a few things:
-1.  Where it's "handy" to keep lots of data easily available, but its 
-entire loss is not catastrophic - ie: data volume is more important than 
-redundancy (my workplace has such a requirement, although we use RAID6 - 
-but RAID6 suffers most of the same "problems" he's talking about)
-2.  Where cost is a significant factor.  Certainly for a business, the 
-cost of going RAID10 over RAID5, when taking into account possible 
-losses, is probably not large.  However, in a "home user" scenario, 
-where cost is almost always the deciding factor and performance is not 
-particularly important, going RAID10 over RAID5 is difficult to justify. 
-  Similarly, if large amounts of data (10s of terabytes) is being 
-stored, the additional cost of RAID10 can become substantial.
-3.  You could potentially need a _lot_ more physical space to get the 
-same amount of logical storage in a RAID10 vs a RAID5, with associated 
-powering, cooling and logistical issues.
+Cependant, permettez-moi de rechercher pour votre aide honorable sur le
+projet d'investissement dans votre pays.
 
-In short, RAID5 has its place.  It's certainly not the 
-only-an-idiot-would-use-it train wreck that page makes it out to be.
+Bien que nous ne nous ayons pas rencontr=E9 face =E0 face auparavant, j=
+e crois
+que vous pouvez m'aider dans ce projet de honorable pour notre avantage
+mutuel.
 
-CS
+Je suis Mlle Sagawo Sankoh la seule fille de Caporal Foday Sankoh de la
+Sierra Leone. J'ai 17 ans et je viens de la R=E9publique de Sierra Leon=
+e.
+
+Comme vous savez que mon p=E8re a =E9t=E9 accus=E9 de mener un mouvemen=
+t de
+rebelle ( R. U.F) contre le gouvernement pr=E9sent de Sierra Leone diri=
+g=E9e
+par Alhaji Tijan Kabbah.
+
+Apr=E8s l'entente de paix =E0 Lom=E9 en 1999, entre le gouvernement et =
+le R.U.F
+le parti politique de mon p=E8re, mon p=E8re a =E9t=E9 nomm=E9 le minis=
+tre et Vice
+Pr=E9sident du Pr=E9sident Kabbah et il a =E9t=E9 juste =E0 arr=EAter e=
+t a d=E9tenu
+quelques mois plus tard pour des crimes de guerre.
+
+Apr=E8s plusieurs apparences(convenances) de cour au criminel de guerre
+International le Tribunal en Sierra Leone mon p=E8re est mort plus tard=
+ le
+29/07/2003 =E0 l'h=F4pital en raison de la mauvaise sant=E9 tandis que =
+toujours
+sous la garde gouvernement de prison.
+
+Mais, Avant la mort de mon p=E8re =E0 l'h=F4pital, il m'a appel=E9 et m=
+on fr=E8re
+junior et nous informer d'un D=C9P=D4T D'ARGENT SECRET de 16.5 millions=
+ de
+DOLLARS (seize millions cinq cent mille dollars des Etats-Unis) dans un=
+e
+bo=EEte de tronc(coffre)qu'il a d=E9pos=E9e avec LA SOCI=C9T=C9 DE S=C9=
+CURIT=C9 ET
+=46INANCE A Abidjan, la R=E9publique de la C=F4te d'Ivoire.
+
+Il a enregistr=E9 la bo=EEte contenant de l'argent comme des ARTICLES D=
+E
+=46AMILLE ET VALAUBLES pour la raison de s=E9curit=E9 pour que la soci=E9=
+t=E9 de
+s=E9curit=E9 ne sache pas que c'est de l'argent qui est =E0 l'int=E9rie=
+ur de la
+bo=EEte autrement ils confisqueront de L'argent parce que l'argent est =
+trop.
+
+Il m'a conseill=E9 de chercher un associ=E9 =E0 l'=E9tranger qui est ho=
+nn=EAte qui
+ne me trahira pas et mon petit fr=E8re pour nous aider =E0 transf=E9rer=
+ cet
+argent =E0 l'=E9tranger pour l'investissement parce qu'il n'est plus s=FB=
+r
+d'=EAtre vivant de nouveau pour se servir de l'argent personnellement c=
+omme
+il avait projet=E9.
+
+Donc maintenant, mon p=E8re est morte comme vous savez. Moi et mon peti=
+t
+fr=E8re nous sommes pr=E9sentement =E0 Abidjan, la R=E9publique de C=F4=
+te d'Ivoire
+et nous sommes partis a LA SOCI=C9T=C9 DE S=C9CURIT=C9 ET FINANCE ici v=
+oir et
+confirmer le d=E9p=F4t de notre argent dans le coffre.
+
+Je veux que vous nous aider comme suit :
+
+1. Aider-moi et mon petit fr=E8re =E0 r=E9cup=E9rer la boite de la comp=
+agnie de
+s=E9curit=E9 comme le b=E9n=E9ficiaire =E0 cause de notre petit =E2ge e=
+t transf=E9rer
+cet argent en votre nom =E0 votre propre compte dans votre pays pour un
+investissement lucratif avec vous comme le principal g=E9rant et tenir =
+cette
+transaction tr=E8s, tr=E8s secret pour =E9viter la trahison.
+
+2. Moi et mon petit fr=E8re ont consenti =E0 vous donner 20 % de l'arge=
+nt
+total avec LA SOCI=C9T=C9 DE S=C9CURIT=C9 ET FINANCE pour votre Aide si=
+nc=E8re.
+
+3. Vous serez le G=E9rant g=E9n=E9ral de l'investissement de notre arge=
+nt dans
+votre pays dans n'importe quel investissement que vous pouvez recommand=
+er
+
+4. Nous croyons que vous ne nous trahirez pas quand cet argent est
+Transf=E9r=E9 =E0 compte dans votre pays
+
+5. Vous nous aiderez =E0 faire nos papiers de voyage pour vous rencontr=
+er
+dans votre pays imm=E9diatement cet argent est transf=E9r=E9 =E0 votre =
+compte dans
+votre pays parce que nous voulons investir cet argent ensemble avec vou=
+s
+et en direct dans votre pays et continuer notre =E9ducation et reste de
+notre vie dans votre pays.
+
+Ainsi si vous savez que vous pouvez manipuler ce projet pour nous appel=
+le
+moi sur num=E9ro avec mon petit fr=E8re sur notre num=E9ro de t=E9l=E9p=
+hone direct
+ci-dessus: :+225 07 05 56 57 pour que nous discutons ou vous m'envoyez =
+une
+r=E9ponse d'=E9mail imm=E9diate pour que nous puissions faire des dispo=
+sitions
+finales comme nous ne voulons pas retarder le mouvement de ce fonds =E0
+votre pays soit envoyer moi un =E9mail sur mon adresse =E9mail:
+sagawo1@sunumail.sn
+
+
+Nous attendons votre r=E9ponse imm=E9diate et gentille.
+
+Veuillez agr=E9er l'expression de mes sentiments les plus distingu=E9s.
+
+Mes sinc=E8res salutations.
+
+Mlle Sagawo Sankoh
+
+
+
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
