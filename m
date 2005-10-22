@@ -1,7 +1,7 @@
-From: Evelyn Pearce <touchiest@cablenet.com.ni>
-Subject: more people buy drugs online
-Date: Fri, 21 Oct 2005 22:07:28 -0400
-Message-ID: <47520109379.1538869159@67-41-93-100.cdrr.qwest.net>
+From: Andromache Duffy <melts@rowell.com>
+Subject: Male sexual enhancement formula
+Date: Sat, 22 Oct 2005 05:44:06 -0400
+Message-ID: <2728844799.4239072422@dslb-084-057-068-155.pools.arcor-ip.net>
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
@@ -9,18 +9,17 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Cialis will help you. Get erection whenever you want.
-http://subsumes.ghew.com/pha/lib/
+Hey - Don't get ripped off!
+http://www.sulige.com/pt/
 
 
 
+Never grow a wishbone, daughter, where your backbone ought to be.  
+Put more trust in nobility of character than in an oath.  
 
-Love is my Sword, Goodness my Armor, And Humor my Shield.  
-If winning isn't everything, why do they keep score?    
-Frugality without creativity is deprivation.        
-Happiness isn't something you experience; it's something you remember.    
+Honesty is the best image.        
+There are more tears shed over answered prayers than over unanswered prayers. 
 
-The important thing is not to stop questioning.     
-There are more pleasant things to do than beat up people.  
+Courage conquers all things.         
 
 
