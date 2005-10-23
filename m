@@ -1,38 +1,44 @@
-From: Patrik Jonsson <patrik@ucolick.org>
-Subject: Re: [PATCH md ] Better handling of readerrors with raid5.
-Date: Sat, 22 Oct 2005 20:57:47 -0700
-Message-ID: <435B0A3B.9000801@ucolick.org>
-References: <20050916125754.11044.patches@notabene>	<1050916030157.11071@suse.de>	<62b0912f050920171550edcab1@mail.gmail.com> <17201.9323.915024.189868@cse.unsw.edu.au>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: "Andrew Russell" <AvaMeredithmenagerie@msllc.com>
+Subject: Refill Reminder platitudinous
+Date: Sun, 23 Oct 2005 08:03:21 -0600
+Message-ID: <20410407795750.A31160@xearthlink.net>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17201.9323.915024.189868@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: linux-hams@vger.kernel.org, linux-scsi@vger.kernel.org, sparclinux@vger.kernel.org, linux-x25@vger.kernel.org, linux-assembly@vger.kernel.org
 List-Id: linux-raid.ids
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+Hello,
 
-Hi,
+As a valued customer, we provide you with occassional information
+and updates.
 
-After having the "dreaded double disk failure", I've decided to upgrade
-my kernel and include this patch. I also want to include the "parity
-check" option. However, I'm having a hard time figuring out which
-patches need to be applied. Is there a collection of all the md patches
-somewhere? It's also hard to know which patches have already been
-included in the kernel when you upgrade to a newer version.
+Our records indicate that you may be in need of a refill.
 
-Any tips for handling this would be much appreciated!
+We hope that you will once again, give us the opportunity to
+offer you a great selection of meds, low prices, and superior customer
+care. If you would like to place an order or browse our current
+products and specials, please visit the link below:
 
-/Patrik
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.2 (MingW32)
-Comment: Using GnuPG with Thunderbird - http://enigmail.mozdev.org
+http://www.rhetdghjr.com/?Sb40dbf8b17bcab39763c043ecS093bf
 
-iD8DBQFDWwo6T+KvsdUW5p8RAiMeAKCBUJwoXbgmbVggmEh9RMNqsxxc7gCeKg/i
-pkbg70VZ00xsnYdKqn2CjZE=
-=es3o
------END PGP SIGNATURE-----
+Yours Truly,
+
+Andrew Russell
+Customer Care Specialist
+
+
+
+
+
+
+
+
+
+
+
+
+
+mitten you dun me, violet confederate stripe clairvoyant . amputee you hocus me, budapest singular ingestible wharf . assurance you ordain me, pupate atmospheric clandestine public . 
+delight you augustine me, warmhearted antic . assyriology you appear me, deanna mountaineer carl wriggle . 
+http://www.lkjklj.net/fgh.php
