@@ -1,35 +1,39 @@
-From: Jeff Breidenbach <jeff@jab.org>
+From: Paul Clements <paul.clements@steeleye.com>
 Subject: Re: split RAID1 during backups?
-Date: Mon, 24 Oct 2005 05:07:28 -0700
-Message-ID: <E1EU16u-0002ZK-00@toko.jab.org>
+Date: Mon, 24 Oct 2005 09:26:56 -0400
+Message-ID: <435CE120.2030003@steeleye.com>
+References: <E1EU16u-0002ZK-00@toko.jab.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <E1EU16u-0002ZK-00@toko.jab.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Jeff Breidenbach <jeff@jab.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Jeff Breidenbach wrote:
 
->First of all, if the data is mostly static, rsync might work faster.
+>>However you will endure a rebuild on md0 when you re-add the disk, but
+>>given everything is mounted read-only, you should not practically be
+>>doing anything
+> 
+> 
+> If the rebuild operation is a no-op, then that sounds like a great
+> idea. If the rebuild operation requires scanning over all data in both
+> drives, I think that's going to be at least as expensive as the
+> current 10 hour process.
 
-Any operation that stats the individual files - even to just look at
-timestamps - takes about two weeks. Therefore it is hard for me to see
-rsync as a viable solution, even though the data is mostly
-static. About 400,000 files change between weekly backups.
+You seem to be using a pretty bleeding edge kernel (2.6.12). If you were 
+to upgrade to 2.6.13, the md bitmap (intent logging) functionality that 
+is present in that kernel will allow the resync to be a no-op. 
+Basically, the bitmap tracks writes to the md array, and then when 
+resync occurs, only syncs blocks that have been written. Since the array 
+would be readonly while you're doing backups, there would be nothing to 
+resync.
 
->I take it sdc and sdd using SATA don't influence each other?
+See the list archives for more details on md bitmap.
 
-Correct.
-
->However you will endure a rebuild on md0 when you re-add the disk, but
->given everything is mounted read-only, you should not practically be
->doing anything
-
-If the rebuild operation is a no-op, then that sounds like a great
-idea. If the rebuild operation requires scanning over all data in both
-drives, I think that's going to be at least as expensive as the
-current 10 hour process.
-
-Thanks for the suggestions so far.
-
-Cheers,
-Jeff
-
+--
+Paul
