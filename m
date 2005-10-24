@@ -1,39 +1,28 @@
-From: Paul Clements <paul.clements@steeleye.com>
-Subject: Re: split RAID1 during backups?
-Date: Mon, 24 Oct 2005 09:26:56 -0400
-Message-ID: <435CE120.2030003@steeleye.com>
-References: <E1EU16u-0002ZK-00@toko.jab.org>
+From: "H. Peter Anvin" <hpa@zytor.com>
+Subject: Re: mdadm 2.0 and 2.1 compile error
+Date: Mon, 24 Oct 2005 11:48:51 -0700 (PDT)
+Message-ID: <djjaaj$j0h$1@terminus.zytor.com>
+References: <Pine.LNX.4.63.0509262217180.24352@adsl.a2000.nu> <17208.63983.493938.764444@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <E1EU16u-0002ZK-00@toko.jab.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jeff Breidenbach <jeff@jab.org>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Jeff Breidenbach wrote:
-
->>However you will endure a rebuild on md0 when you re-add the disk, but
->>given everything is mounted read-only, you should not practically be
->>doing anything
+Followup to:  <17208.63983.493938.764444@cse.unsw.edu.au>
+By author:    Neil Brown <neilb@suse.de>
+In newsgroup: linux.dev.raid
 > 
+> This means your distro is crazy.  endian.h does not contain the
+> defines that I need from byteorder.h.
+> Just remove the '-Werror' from the Makefile and try again.
 > 
-> If the rebuild operation is a no-op, then that sounds like a great
-> idea. If the rebuild operation requires scanning over all data in both
-> drives, I think that's going to be at least as expensive as the
-> current 10 hour process.
+> NeilBrown
+> 
 
-You seem to be using a pretty bleeding edge kernel (2.6.12). If you were 
-to upgrade to 2.6.13, the md bitmap (intent logging) functionality that 
-is present in that kernel will allow the resync to be a no-op. 
-Basically, the bitmap tracks writes to the md array, and then when 
-resync occurs, only syncs blocks that have been written. Since the array 
-would be readonly while you're doing backups, there would be nothing to 
-resync.
+-Werror is (arguably) great for local debugging, but it's a bad idea
+to use for distributed software.
 
-See the list archives for more details on md bitmap.
-
---
-Paul
+	-hpa
