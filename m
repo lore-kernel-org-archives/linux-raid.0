@@ -1,54 +1,74 @@
-From: dean gaudet <dean-list-linux-raid@arctic.org>
-Subject: Re: split RAID1 during backups?
-Date: Mon, 24 Oct 2005 21:07:24 -0700 (PDT)
-Message-ID: <Pine.LNX.4.63.0510242050360.23767@twinlark.arctic.org>
-References: <E1EUFcV-0005s3-00@toko.jab.org>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+From: NeilBrown <neilb@suse.de>
+Subject: [PATCH] Make sure mdthreads will always respond to kthread_stop
+Date: Tue, 25 Oct 2005 14:21:43 +1000
+Message-ID: <1051025042143.30979@suse.de>
+References: <20051025141735.30947.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <E1EUFcV-0005s3-00@toko.jab.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jeff Breidenbach <jeff@jab.org>
+To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 24 Oct 2005, Jeff Breidenbach wrote:
+I know it's kinda-late but I just found another hiccup caused by the
+changeover to kthreads in md.  There is another situation where it can
+be hard to stop and md array because a thread doesn't respond to a
+shutdown request properly.
 
-> Dean, the comment about "write-mostly" is confusing to me.  Let's say
-> I somehow marked one of the component drives write-mostly to quiet it
-> down. How do I get at it? Linux will not let me mount the component
-> partition if md0 is also mounted. Do you think "write-mostly" or
-> "write-behind" are likely enough to be magic bullets that I should
-> learn all about them?
+If this patch, against 2.6.14-rc5-git4, could slip into 2.6.14, I'd
+appreciate it, (if not, I expect 2.6.14.1 will be ok).
 
-if one drive is write-mostly, and you remount the filesystem read-only... 
-then no writes should be occuring... and you could dd from the component 
-drive directly and get a consistent fs image.  (i'm assuming you can 
-remount the filesystem read-only for the duration of the backup because it 
-sounds like that's how you do it now; and i'm assuming you're happy enough 
-with your dd_rescue image...)
+All it does is treat 'kthread_should_stop' the same as
+'signal_pending', both of which mean "time to stop what you are doing.
 
-myself i've been considering a related problem... i don't trust LVM/DM 
-snapshots in 2.6.x yet, and i've been holding back a 2.4.x box waiting for 
-them to stabilise... but that seems to be taking a long time.  the box 
-happens to have a 3-way raid1 anyhow, and 2.6.x bitmapped intent logging 
-would give me a great snapshot backup option:  just break off one disk 
-during the backup and put it back in the mirror when done.
-
-there's probably one problem with this 3-way approach... i'll need some 
-way to get the fs (ext3) to reach a "safe" point where no log recovery 
-would be required on the disk i break out of the mirror... because under 
-no circumstances do you want to write on the disk while it's outside the 
-mirror.  (LVM snapshotting in 2.4.x requires a "VFS lock" patch which does 
-exactly this when you create a snapshot.)
+Thanks,
+NeilBrown
 
 
-> John, I'm using 4KB blocks in reiserfs with tail packing.
+---
 
-i didn't realise you were using reiserfs... i'd suggest disabling tail 
-packing... but then i've never used reiser, and i've only ever seen 
-reports of tail packing having serious performance impact.  you're really 
-only saving yourself an average of half a block per inode... maybe try a 
-smaller block size if the disk space is an issue due to lots of inodes.
+There are still a couple of cases where md threads (the
+resync/recovery thread) is not interruptible since the change to use
+kthreads.  All places there it tests "signal_pending", it should also
+test kthread_should_stop, as with this patch.
 
--dean
+
+Signed-off-by: Neil Brown <neilb@suse.de>
+
+### Diffstat output
+ ./drivers/md/md.c |   10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
+
+diff ./drivers/md/md.c~current~ ./drivers/md/md.c
+--- ./drivers/md/md.c~current~	2005-10-25 13:58:44.000000000 +1000
++++ ./drivers/md/md.c	2005-10-25 13:59:03.000000000 +1000
+@@ -3568,7 +3568,8 @@ static void md_do_sync(mddev_t *mddev)
+ 		mddev->curr_resync = 2;
+ 
+ 	try_again:
+-		if (signal_pending(current)) {
++		if (signal_pending(current) ||
++		    kthread_should_stop()) {
+ 			flush_signals(current);
+ 			set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+ 			goto skip;
+@@ -3590,8 +3591,9 @@ static void md_do_sync(mddev_t *mddev)
+ 					 */
+ 					continue;
+ 				prepare_to_wait(&resync_wait, &wq, TASK_INTERRUPTIBLE);
+-				if (!signal_pending(current)
+-				    && mddev2->curr_resync >= mddev->curr_resync) {
++				if (!signal_pending(current) &&
++				    !kthread_should_stop() &&
++				    mddev2->curr_resync >= mddev->curr_resync) {
+ 					printk(KERN_INFO "md: delaying resync of %s"
+ 					       " until %s has finished resync (they"
+ 					       " share one or more physical units)\n",
+@@ -3697,7 +3699,7 @@ static void md_do_sync(mddev_t *mddev)
+ 		}
+ 
+ 
+-		if (signal_pending(current)) {
++		if (signal_pending(current) || kthread_should_stop()) {
+ 			/*
+ 			 * got a signal, exit.
+ 			 */
