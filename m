@@ -1,74 +1,64 @@
-From: NeilBrown <neilb@suse.de>
-Subject: [PATCH] Make sure mdthreads will always respond to kthread_stop
-Date: Tue, 25 Oct 2005 14:21:43 +1000
-Message-ID: <1051025042143.30979@suse.de>
-References: <20051025141735.30947.patches@notabene>
+From: Thomas Garner <tlg1466@neo.tamu.edu>
+Subject: Re: split RAID1 during backups?
+Date: Tue, 25 Oct 2005 00:30:07 -0400
+Message-ID: <435DB4CF.9080301@neo.tamu.edu>
+References: <E1EU01c-0001sZ-00@toko.jab.org>
+Reply-To: tlg1466@neo.tamu.edu
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <E1EU01c-0001sZ-00@toko.jab.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+To: Jeff Breidenbach <jeff@jab.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I know it's kinda-late but I just found another hiccup caused by the
-changeover to kthreads in md.  There is another situation where it can
-be hard to stop and md array because a thread doesn't respond to a
-shutdown request properly.
+Should there be any consideration for the utilization of the gigabit 
+interface that is passing all of this backup traffic, as well as the 
+speed of the drive that is doing all of the writing during this 
+transaction?  Is the 18MB/s how fast the data is being copied over the 
+network, or is it some metric within the host system?
 
-If this patch, against 2.6.14-rc5-git4, could slip into 2.6.14, I'd
-appreciate it, (if not, I expect 2.6.14.1 will be ok).
+Thomas
 
-All it does is treat 'kthread_should_stop' the same as
-'signal_pending', both of which mean "time to stop what you are doing.
-
-Thanks,
-NeilBrown
-
-
----
-
-There are still a couple of cases where md threads (the
-resync/recovery thread) is not interruptible since the change to use
-kthreads.  All places there it tests "signal_pending", it should also
-test kthread_should_stop, as with this patch.
-
-
-Signed-off-by: Neil Brown <neilb@suse.de>
-
-### Diffstat output
- ./drivers/md/md.c |   10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
-
-diff ./drivers/md/md.c~current~ ./drivers/md/md.c
---- ./drivers/md/md.c~current~	2005-10-25 13:58:44.000000000 +1000
-+++ ./drivers/md/md.c	2005-10-25 13:59:03.000000000 +1000
-@@ -3568,7 +3568,8 @@ static void md_do_sync(mddev_t *mddev)
- 		mddev->curr_resync = 2;
- 
- 	try_again:
--		if (signal_pending(current)) {
-+		if (signal_pending(current) ||
-+		    kthread_should_stop()) {
- 			flush_signals(current);
- 			set_bit(MD_RECOVERY_INTR, &mddev->recovery);
- 			goto skip;
-@@ -3590,8 +3591,9 @@ static void md_do_sync(mddev_t *mddev)
- 					 */
- 					continue;
- 				prepare_to_wait(&resync_wait, &wq, TASK_INTERRUPTIBLE);
--				if (!signal_pending(current)
--				    && mddev2->curr_resync >= mddev->curr_resync) {
-+				if (!signal_pending(current) &&
-+				    !kthread_should_stop() &&
-+				    mddev2->curr_resync >= mddev->curr_resync) {
- 					printk(KERN_INFO "md: delaying resync of %s"
- 					       " until %s has finished resync (they"
- 					       " share one or more physical units)\n",
-@@ -3697,7 +3699,7 @@ static void md_do_sync(mddev_t *mddev)
- 		}
- 
- 
--		if (signal_pending(current)) {
-+		if (signal_pending(current) || kthread_should_stop()) {
- 			/*
- 			 * got a signal, exit.
- 			 */
+Jeff Breidenbach wrote:
+> Hi all,
+> 
+> I have a two drive RAID1 serving data for a busy website. The
+> partition is 500GB and contains millions of 10KB files. For reference,
+> here's /proc/mdstat
+> 
+> Personalities : [raid1]
+> md0 : active raid1 sdc1[0] sdd1[1]
+>       488383936 blocks [2/2] [UU]
+> 
+> For backups, I set the md0 partition to readonly and then use dd_rescue
+> + netcat to copy the parition over a gigabit network. Unfortuantely,
+> this process takes almost 10 hours. I'm only able to copy about 18MB/s
+> from md0 due to disk contention with the webserver. If I had the full
+> attention of a single disk, I could read at nearly 60MB/s.
+> 
+> So - I'm thinking of the following backup scenario.  First, remount
+> /dev/md0 readonly just to be safe. Then mount the two component
+> paritions (sdc1, sdd1) readonly. Tell the webserver to work from one
+> component partition, and tell the backup process to work from the
+> other component partition. Once the backup is complete, point the
+> webserver back at /dev/md0, unmount the component partitions, then
+> switch read-write mode back on.
+> 
+> Am I insane? 
+> 
+> Everything on this system seems bottlenecked by disk I/O. That
+> includes the rate web pages are served as well as the backup process
+> described above. While I'm always hungry for perforance tips, faster
+> backups are the current focus. For those interested in gory details
+> such as drive types, NCQ settings, kernel version and whatnot, I
+> dumped a copy of dmesg output here: http://www.jab.org/dmesg
+> 
+> Cheers,
+> Jeff
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
