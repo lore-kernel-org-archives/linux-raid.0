@@ -1,29 +1,31 @@
-From: Rainer Fuegenstein <rfu@kaneda.iguw.tuwien.ac.at>
-Subject: Re[2]: split RAID1 during backups?
-Date: Tue, 25 Oct 2005 22:48:38 +0200
-Message-ID: <1044207669.20051025224838@kaneda.iguw.tuwien.ac.at>
-References: <E1EUGvu-0006Sr-00@toko.jab.org>
-Reply-To: Rainer Fuegenstein <rfu@kaneda.iguw.tuwien.ac.at>
+From: David Greaves <david@dgreaves.com>
+Subject: Re: split RAID1 during backups?
+Date: Tue, 25 Oct 2005 23:18:27 +0100
+Message-ID: <435EAF33.10406@dgreaves.com>
+References: <E1EU8w7-0003Bp-00@toko.jab.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <E1EUGvu-0006Sr-00@toko.jab.org>
+In-Reply-To: <E1EU8w7-0003Bp-00@toko.jab.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Jeff Breidenbach <jeff@jab.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+Jeff Breidenbach wrote:
 
-don't know if my comment helps:
+>Individual directories contain up to about 150,000 files. If I run ls
+>-U on all directories, it completes in a reasonably amount of time (I
+>forget how much, but I think it is well under an hour). Reiserfs is
+>supposed to be good at this sort of thing. If I were to stat each
+>file, then it's a different story.
+>  
+>
+Have you tried / can you try XFS.
 
-how about using xfs instead of reiserfs ? xfs was designed for high
-performance on heavy-loaded big irons.
+IIRC it is very good indeed at this kind of scenario (used to be an
+*excellent* nntp server fs)
 
-since we now have such a heavy-loaded big iron here, it would be
-interesting to see the difference in performance.
-
--- 
-Best regards,
- Rainer                            mailto:rfu@kaneda.iguw.tuwien.ac.at
+David
 
