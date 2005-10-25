@@ -1,65 +1,40 @@
-From: "John Stoffel" <john@stoffel.org>
-Subject: Re: split RAID1 during backups?
-Date: Mon, 24 Oct 2005 16:58:40 -0400
-Message-ID: <17245.19200.846162.15129@smtp.charter.net>
-References: <E1EU8w7-0003Bp-00@toko.jab.org>
+From: Sherrie Goodman <lstoneeexr@cvty.com>
+Subject: IRG: Job for everyone
+Date: Mon, 24 Oct 2005 19:53:32 -0500
+Message-ID: <206708993594.297865183549@cvty.com>
+Reply-To: Sherrie Goodman <morethanjob@mail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <E1EU8w7-0003Bp-00@toko.jab.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jeff Breidenbach <jeff@jab.org>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->>>>> "Jeff" == Jeff Breidenbach <jeff@jab.org> writes:
+Good day sir/madam,
+
+We inform you about new vacancies in our company.
+
+Do you want to start a successful carrier right now without any entrance fees, without buying goods or involving other people? Do you want to start a successful career in financial sphere without economical education or special experience? Do you want to work at home? If it is so, this suggestion is for you!
+Our company is ready to offer you the chance. At this moment we are enlarging our staff and you have a chance to become a member of our team and get additional earnings spending 2 - 3 hours per week. But it isn.t all. We can send you a long term contract if you prove us your reliability.
+
+Our company.s name is IRG "Italy Representative Group". Our company is new and fast developing in the USA commercial holding. We work with clients and companies from all over the world and now we are looking for talents in the USA. Our firm is founded in 1993 and our head office is located in Viale Praco de Medici 37 00148 Roma, Italy.
+
+You can earn up to 5000 USD per month, taking into the account the fact that you will work at home, have a flexible working schedule, simple and small amount of work.You will receive 7 % from the sum of payment for this service (you just take this sum out of the total amount of money you get).
+
+To qualify, you MUST: 
+ 
+1. Be at least 21. 
+2. Check your email several times a day (each hour
+if possible). 
+3. You need to respond immediately to emails. 
+4. Be responsible, hard working and communicable. 
+5. Be able to answer phone calls.
+
+If you are interested in our suggestion please e-mail to our manager
+Laurie Fantauzzi <morethanjob@mail.com>
+
+Regards,
+"Italy Representative Group"
 
 
-Jeff> # mount | grep md0
-Jeff> /dev/md0 on /data1 type reiserfs (rw,noatime,nodiratime)
-
-Ah, you're using reiserfs on here.  It may or may not be having
-problems with all those files per-directory that you have.  Is there
-any way you can split them up more into sub-directories?  
-
-Old news servers used to run into this exact same problem, and what
-they did was move all files starting with 'a' into the 'a/' directory,
-all files starting with 'b' into b/... etc.  You can go down as many
-levels as you want.  
-
-Jeff> Individual directories contain up to about 150,000 files. If I
-Jeff> run ls -U on all directories, it completes in a reasonably
-Jeff> amount of time (I forget how much, but I think it is well under
-Jeff> an hour). Reiserfs is supposed to be good at this sort of
-Jeff> thing. If I were to stat each file, then it's a different story.
-
-Do you stat the files in inode order (not sure how reiserfs stores
-files), when you're doing a readdir() on the directory contents?  You
-don't want to bother sorting at all, you just want to pull them off
-the disk as efficiently as possible.
-
-I think you'll get alot more performance out of your system if you can
-just re-do how the application writes/reads the files you're using.
-It almost sounds like some sort of cache system...
-
-The other idea would be to use 'inotify' and just copy those files
-which change to the cloned box.
-
-Another idea, which would require more hardware would be to make some
-readonly copies of the system and have all reads go there, and only
-writes goto the master system.  If the master dies, you just promote a
-slave into that role.  If a slave dies, you have extras running
-around.  Then you could do your backups against the readonly systems,
-in parallel to get the most performance out of your backups.
-
-But knowing more about the application would help.  Millions of tiny
-files aren't optimal these days.  
-
-Oh yeah, what kinds of block size are you using on the filesystem?
-And how many disks?  Splitting the load across more smaller disks will
-probably help as well, since I suspect that your times are dominated
-by seek and directory overhead, not actually reading of all these tiny
-files.
-
-John
