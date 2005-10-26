@@ -1,42 +1,54 @@
-From: "Frank" <DallasBlackmonnan@alsic.be>
-Subject: lonely women
-Date: Wed, 26 Oct 2005 06:59:26 -0500
-Message-ID: <0103711044230.01145__37478.997212793$1130324869$gmane$org@jfuertes.maz.es>
+From: Dan Stromberg <strombrg@dcs.nac.uci.edu>
+Subject: Re: split RAID1 during backups?
+Date: Wed, 26 Oct 2005 11:15:11 -0700
+Message-ID: <1130350511.6339.88.camel@seki.nac.uci.edu>
+References: <Pine.LNX.4.44.0510251550250.28299-100000@firewall2.tmr.com>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.44.0510251550250.28299-100000@firewall2.tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-ppp@vger.kernel.org
+To: davidsen@tmr.com
+Cc: Jeff Breidenbach <jeff@jab.org>, linux-raid@vger.kernel.org, strombrg@dcs.nac.uci.edu
 List-Id: linux-raid.ids
 
 
-Find partners for hot Sexual Encounters in your area! 
-
-- Thousands of singles, swingers and cheaters in your area 
-- Anonymously email, chat, & instant message with other sexually liberated members or Video Chat with up to 3 girls
-  at a time! 
-- The Girls On This Page are all REAL members!
-- Thousands of Girls in your area!
-- 58,660 Members are online NOW! 
-- 16,943 New members this week! 
-- 1,349,432 Active Members for you to meet! 
-- Our system is designed to help people like you get laid! 
-- If you don't want to participate! You Can be a voyeur
-- We Guarantee you will meet someone in your area
-
-It's 100% FREE to join! 
-
-http://www.goatingwild.com/extra/jackie/
+I noticed some discussion of both netcat and NBD in this thread, and
+these are both things I've investigated at various points during the
+last 365.25 days.  :)
 
 
+On the subject of netcat:
+
+        You might be interested in my pnetcat program at
+        http://dcs.nac.uci.edu/~strombrg/pnetcat.html .  It's similar to
+        netcat, but perhaps behaves itself better with regard to EOF's,
+        can read/write to/from sockets/stdin/stdout arbitrarily (EG,
+        both to and from two different sockets, or to and from stdout
+        and stdin), like netcat it can also do TCP and UDP (but UDP is
+        without any form of error detection - not sure where this is in
+        netcat), is at least in some cases faster due to use of large
+        blocksizes and adjustable TCP windows, and it's written in a
+        VHLL making it ultra-easy to read and maintain.
 
 
+On the subject of NBD:
+
+        ENBD is supposed to be a funded, improved version of NBD.  Last
+        I checked, there was a version of NBD in the Linus kernels, but
+        ENBD was still distributed as patches.  GNBD, which I haven't
+        examined in isolation (although I have done some GFS overtop of
+        GNBD, which didn't work out that well - GFS was pitched to us by
+        IBM but didn't work out - it wouldn't do what we needed even on
+        the GFS -roadmap-) may or may not be more reliable than ENBD.
+        
+        My NBD/ENBD notes: http://dcs.nac.uci.edu/~strombrg/nbd.html
+        
+        If someone experiments with GNBD for getting > 2T filesystems,
+        or better still, > 16T filesystems, -without- GFS overtop of it
+        (EG, putting an XFS or JFS or ReiserFS overtop of a large device
+        tacked together with MD or LVM or LVM2 or EVMS) I'd very much
+        like to hear about that!
 
 
-
-
-
-
-
-
-unitary you macrophage me, rotate bolivia . smear you libertine me, transplantation . schoolmarm you truly me, echidna army . hull you steadfast me, bisexual tempo . 
-transferred you homemake me, aura inertance lawson parisian . prodigious you bernini me, impetuous separate pacify . simplex you midspan me, surname degree moser . architecture you consternate me, cooke . 
-http://www.goatingwild.com/extra/jackie/getmeoff.php
