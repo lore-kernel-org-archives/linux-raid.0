@@ -1,79 +1,42 @@
-From: Jeff Breidenbach <jeff@jab.org>
-Subject: split RAID1 during backups?
-Date: Wed, 26 Oct 2005 01:17:47 -0700
-Message-ID: <E1EUgTj-0001lj-00@toko.jab.org>
+From: "Frank" <DallasBlackmonnan@alsic.be>
+Subject: lonely women
+Date: Wed, 26 Oct 2005 06:59:26 -0500
+Message-ID: <0103711044230.01145__37478.997212793$1130324869$gmane$org@jfuertes.maz.es>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux-ppp@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-Norman> What you should be able to do with software raid1 is the
-Norman> following: Stop the raid, mount both underlying devices
-Norman> instead of the raid device, but of course READ ONLY. Both
-Norman> contain the complete data and filesystem, and in addition to
-Norman> that the md superblock at the end. Both should be identical
-Norman> copies of that.  Thus, you do not have to resync
-Norman> afterwards. You then can backup the one disk while serving the
-Norman> web server from the other. When you are done, unmount,
-Norman> assemble the raid, mount it and go on.
+Find partners for hot Sexual Encounters in your area! 
 
-I tried both variants of Norman's suggestion on a test machine and
-they worked great. Shutting down and restarting md0 did not trigger a
-rebuild. Perfect! And I could mount component partitions
-read-only at any time. However on the production machine the
-component partitions refused to mount, claiming to be "already
-mounted". Despite the fact that the component drives do not show up
-anywhere in lsof or mtab. When I saw this, I got nervous and did not
-even try stopping md0 on the production machine.
+- Thousands of singles, swingers and cheaters in your area 
+- Anonymously email, chat, & instant message with other sexually liberated members or Video Chat with up to 3 girls
+  at a time! 
+- The Girls On This Page are all REAL members!
+- Thousands of Girls in your area!
+- 58,660 Members are online NOW! 
+- 16,943 New members this week! 
+- 1,349,432 Active Members for you to meet! 
+- Our system is designed to help people like you get laid! 
+- If you don't want to participate! You Can be a voyeur
+- We Guarantee you will meet someone in your area
 
-# mount -o ro /dev/sdc1 backup
-mount: /dev/sdc1 already mounted or backup busy
+It's 100% FREE to join! 
 
-The two machines hardly match. The test machine has a 2.4.27 kernel
-and JBOD drives hanging off a 3ware 7xxx controller. The production
-machine has a 2.6.12 kernel and Intel SATA controllers. Both machines
-have mdadm 1.9.0, and the discrepancy in behavior seems weird to
-me. Any insights?
+http://www.goatingwild.com/extra/jackie/
 
-Paul> There have been a couple bug fixes in the bitmap stuff since
-Paul> 2.6.13 was released, but it's stable. You'll need mdadm 2.x as
-Paul> well.
 
-It turns out Debian has not yet packaged 2.6.13 even in the unstable
-branch. I will wait for this to happen before trying out the whizzy
-intent-logging and write-mostly suggestions. I'm brave, but not THAT
-brave. 
 
-Dean> i didn't realise you were using reiserfs... i'd suggest
-Dean> disabling tail packing... but then i've never used reiser, and
-Dean> i've only ever seen reports of tail packing having serious
-Dean> performance impact.
 
-Done, thanks.
 
-Bill> If you want to try something "which used to work" see nbd,
-Bill> export 500GB from another machine, add the network block device
-Bill> to the mirror, let it sync, break the mirror. Haven't tried
-Bill> since 2.4.19 or so.
 
-Wow, nbd (network block device) sounds really useful. I wonder if it
-is a good way to provide more spindles to a hungry webserver.  Plus
-they had a major release yesterday. While I've been focusing on
-managing disk contention, if there's an easy way to reduce it, that's
-definitely fair game.
 
-Some of the other suggestions I'm going to hold off on. For example,
-sendfile() doesn't really address the bottleneck of disk contention.
-I'm also not so anxious to switch filesystems. That's a two week
-endeavor that doesn't really address the contention issue. And it's
-also a little hard for me to imagine that someone is going to beat the
-pants off of reiserfs, especially since reiserfs was specifically
-designed to deal with lots of small files efficiently. Finally, I'm
-not going to focus on incremental backups if there's any prayer of
-getting a 500GB full backup in 3 hours.  Full backups provide a LOT of
-warm fuzzies.
 
-Again, thank you all very much.
 
--Jeff
+
+
+
+unitary you macrophage me, rotate bolivia . smear you libertine me, transplantation . schoolmarm you truly me, echidna army . hull you steadfast me, bisexual tempo . 
+transferred you homemake me, aura inertance lawson parisian . prodigious you bernini me, impetuous separate pacify . simplex you midspan me, surname degree moser . architecture you consternate me, cooke . 
+http://www.goatingwild.com/extra/jackie/getmeoff.php
