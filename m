@@ -1,26 +1,31 @@
-From: Andrew Burgess <aab@cichlid.com>
-Subject: Re: Best way to achieve large, expandable, cheap storage?
-Date: Thu, 27 Oct 2005 12:12:21 -0700
-Message-ID: <200510271912.j9RJCLYH008288@cichlid.com>
+From: "Jordan Sullivan" <jordan_sullivan_ap@spadeapps.com>
+Subject: =?ISO-8859-1?b?VG9wIGRydWcgT2ZmZXI=?=
+Date: Fri, 28 Oct 2005 11:24:06 +0000
+Message-ID: <2.2.32.20050928112406002414f5@spadeapps.com>
+References: <6ea701c5da93$994e4e33$20a949e5@2lqgys3>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <6ea701c5da93$994e4e33$20a949e5@2lqgys3>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->> The partial media failure problem described here is exactly why it's
->> important to run smartmontools in combination with your RAID array
->> of any level.  By running regular checks of the disk surface you can
->> know well ahead of time that you're going to have trouble.  in
->> practice this more than mitigates the risk of partial media failure.
->> 
->> http://smartmontools.sourceforge.net/
+=C2Hi there
 
-><sigh> I wish the code to enable SMART for SATA drives would make it 
->into mainstream *real* soon now.
+=C2We have outstanding weekly specials on all products.
 
-In addition to the libatapatches, the 3ware sata controllers support SMART.
-They are about $250 used on ebay for a 12 drive card. Still 4x as
-expensive as a 4 drive controller but only one slot VS three...
+=C2Lowest prices on Internet.
 
-HTH
+=C2July lets you save 80%+ on all stock.
+=C2No prescription required
 
+=C2http://uk.geocities.com/ksjajk2kj3j/
+
+=C2-Thank you, Great Buys Inc. staff
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
