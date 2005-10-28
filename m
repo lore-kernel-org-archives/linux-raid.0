@@ -1,31 +1,24 @@
-From: "Jordan Sullivan" <jordan_sullivan_ap@spadeapps.com>
-Subject: =?ISO-8859-1?b?VG9wIGRydWcgT2ZmZXI=?=
-Date: Fri, 28 Oct 2005 11:24:06 +0000
-Message-ID: <2.2.32.20050928112406002414f5@spadeapps.com>
-References: <6ea701c5da93$994e4e33$20a949e5@2lqgys3>
-Mime-Version: 1.0
+From: Phil Hutchins <spiritedly@prxs.com>
+Subject: Than you cannot even imagine what it is like to be a real man in bed!
+Date: Fri, 28 Oct 2005 16:57:31 -0400
+Message-ID: <5292482278.10367373550@dsl-201-154-85-53.prod-infinitum.com.mx>
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <6ea701c5da93$994e4e33$20a949e5@2lqgys3>
 Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-=C2Hi there
+Have you ever used an online pharmacy?
+that will be accessing this feed.You are not allowed to access this page from this IP address.
 
-=C2We have outstanding weekly specials on all products.
 
-=C2Lowest prices on Internet.
+Be a fountain, not a drain.       
+Love: The delusion that one woman differs from another.    
+Courage is the ladder on which all other virtues mount.   
 
-=C2July lets you save 80%+ on all stock.
-=C2No prescription required
+Women who seek to be equal with men lack ambition.   
+One picture is worth a thousand words.      
+Everything in the world may be endured, except continual prosperity.   
+Of those who say nothing, few are silent.     
 
-=C2http://uk.geocities.com/ksjajk2kj3j/
-
-=C2-Thank you, Great Buys Inc. staff
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
