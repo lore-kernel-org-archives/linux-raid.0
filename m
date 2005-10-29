@@ -1,63 +1,25 @@
-From: Sean Puttergill <puttergi@yahoo.ca>
-Subject: Superblock updates to failed spare
-Date: Fri, 28 Oct 2005 21:43:03 -0400 (EDT)
-Message-ID: <20051029014303.43297.qmail@web32812.mail.mud.yahoo.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Superblock updates to failed spare
+Date: Sat, 29 Oct 2005 14:49:12 +1000
+Message-ID: <17250.65352.929219.710399@cse.unsw.edu.au>
+References: <20051029014303.43297.qmail@web32812.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from Sean Puttergill on Friday October 28
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Sean Puttergill <puttergi@yahoo.ca>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-If I create a raid array with a hot spare, put a
-filesystem on the array, mount it, then physically
-remove the spare (SATA) drive (simulating a failure of
-the spare), I get infinite, periodic superblock update
-failures to the spare like this:
+On Friday October 28, puttergi@yahoo.ca wrote:
+> 
+> I am running kernel 2.6.11
+> 
 
-"
-scsi2 (0:0): rejecting I/O to dead device
+.. which is about 6 months old, and 2.6.14 was just released...
 
-md: write_disk_sb failed for device sdc
+Yes, this is a known bug, that was fixed in April (I think).
 
-md: errors occurred during superblock update,
-repeating
-
-[repeated many times and then eventually ...]
-
-md: excessive errors occurred during superblock
-update, exiting
-"
-
-This repeats every few seconds.
-
-I understand that the superblock on the spare is being
-periodically updated along with the superblocks on the
-active drives, but md should recognize that the spare
-is bad and kick it out of the array.  If the spare
-were to actually fail you would end up with your logs
-being clogged with the above messages.
-
-On a related note, has any work been done to modify md
-such that it doesn't update the superblock on the
-spare?  This would allow the spare to remain asleep
-until it is really needed for a rebuild (preserving
-the health of the spare).
-
-I am running kernel 2.6.11
-
-
-Cheers,
-Sean
-
-
-
-
-
-	
-
-	
-		
-__________________________________________________________ 
-Find your next car at http://autos.yahoo.ca
+NeilBrown
