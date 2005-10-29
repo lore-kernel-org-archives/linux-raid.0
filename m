@@ -1,24 +1,63 @@
-From: Phil Hutchins <spiritedly@prxs.com>
-Subject: Than you cannot even imagine what it is like to be a real man in bed!
-Date: Fri, 28 Oct 2005 16:57:31 -0400
-Message-ID: <5292482278.10367373550@dsl-201-154-85-53.prod-infinitum.com.mx>
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+From: Sean Puttergill <puttergi@yahoo.ca>
+Subject: Superblock updates to failed spare
+Date: Fri, 28 Oct 2005 21:43:03 -0400 (EDT)
+Message-ID: <20051029014303.43297.qmail@web32812.mail.mud.yahoo.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Have you ever used an online pharmacy?
-that will be accessing this feed.You are not allowed to access this page from this IP address.
+If I create a raid array with a hot spare, put a
+filesystem on the array, mount it, then physically
+remove the spare (SATA) drive (simulating a failure of
+the spare), I get infinite, periodic superblock update
+failures to the spare like this:
+
+"
+scsi2 (0:0): rejecting I/O to dead device
+
+md: write_disk_sb failed for device sdc
+
+md: errors occurred during superblock update,
+repeating
+
+[repeated many times and then eventually ...]
+
+md: excessive errors occurred during superblock
+update, exiting
+"
+
+This repeats every few seconds.
+
+I understand that the superblock on the spare is being
+periodically updated along with the superblocks on the
+active drives, but md should recognize that the spare
+is bad and kick it out of the array.  If the spare
+were to actually fail you would end up with your logs
+being clogged with the above messages.
+
+On a related note, has any work been done to modify md
+such that it doesn't update the superblock on the
+spare?  This would allow the spare to remain asleep
+until it is really needed for a rebuild (preserving
+the health of the spare).
+
+I am running kernel 2.6.11
 
 
-Be a fountain, not a drain.       
-Love: The delusion that one woman differs from another.    
-Courage is the ladder on which all other virtues mount.   
+Cheers,
+Sean
 
-Women who seek to be equal with men lack ambition.   
-One picture is worth a thousand words.      
-Everything in the world may be endured, except continual prosperity.   
-Of those who say nothing, few are silent.     
 
+
+
+
+	
+
+	
+		
+__________________________________________________________ 
+Find your next car at http://autos.yahoo.ca
