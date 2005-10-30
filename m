@@ -1,50 +1,47 @@
-From: =?ISO-8859-1?Q?=20=22G=F6rsel?=  =?ISO-8859-1?Q?=20Tasar=FDm?= -  =?ISO-8859-1?Q?=20Foto=F0?=
-	=?ISO-8859-1?Q?rafc=FDl=FDk?=  =?ISO-8859-1?Q?=20Reklamc=FDl=FDk?= Hizmetleri"
-	<ismailacar.net@gmail.com>
-Subject: =?ISO-8859-1?Q?=20=DEirketlere?=  =?ISO-8859-1?Q?=20=F6zel?= Katalog - Profesyonel  =?ISO-8859-1?Q?=20g?=
-	=?ISO-8859-1?Q?=F6rsel?= Hizmetlerimiz  =?ISO-8859-1?Q?=20Hakk=FDnda?=
-Date: Sun, 30 Oct 2005 02:08:03 +0200
-Message-ID: <200510300008.j9U080Um018851@zeus1.kernel.org>
-Reply-To: ismailacar.net@gmail.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1254
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Jeff Breidenbach <jeff@jab.org>
+Subject: Re: split RAID1 during backups?
+Date: Sat, 29 Oct 2005 20:06:54 -0700
+Message-ID: <E1EW3X4-0005gu-00@toko.jab.org>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-* * * * * * * * * * * * * * * * * * * * * * * * * * * * *=20
-          ISMAIL ACAR TANITIM H=DDZMETLERI
-* * * * * * * * * * * * * * * * * * * * * * * * * * * * *=20
-     Iyi g=FCnler...
-      =20
-    Tan=FDt=FDm foto=F0raf=E7=FDl=FD=F0=FD yapan firmam=FDz size profes=
-yonel alternatif=20
- g=F6rsel =E7=F6z=FCmler sunuyor.Bizi arayarak Katalaog tasar=FDmlar=FD=
-n=FDz ve=20
- firmam=FDz=FDn =E7al=FD=FEmalar=FD ve referanslar=FD hakk=FDnda bilgi =
-alabilirsiniz.
+Thanks to good advice from many people, here are my findings and
+conclusions.
 
- Bize 212 2191782=20
-        536 2768940 ' dan yada
- ismailacar.net-den bize ula=FEabilirsiniz.
+(1) Splitting the RAID works. I have now implemented this technique on
+the production system and am making a backup right now.
 
-                                                               Sayg=FDl=
-ar=FDmla
-                                                               Ismail A=
-CAR
+(2) NBD is cool, works well on Debian, and is very convenient. A
+couple experiments suggest it may be slower compared to netcat for
+blasting data across the network. By slower, I mean less throughput to
+the point where the network can become a bottleneck. I don't have
+conclusive data yet, so take with a large grain of salt. I am using
+netcat for now.
 
-* * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-          REKLAMCILIK VE TANITIM HIZMETLER=DD
-* * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+(3) End-to-end throughput is not quite as high as I'd hoped.  At this
+point it appears the limiting factor is the speed (throughput) of the
+destination disks. During earlier testing, I had been dumping bits to
+/dev/null on the destination machine instead of the actual destination
+partition. No worries, this can be addressed.
 
+(4) I'll play with fancier options like "write-mostly" when Debian
+releases a 2.6.13 kernel, and when I'm convinced that I'm not going
+accidentally introduce slower disks into the RAID and bog the entire
+system down for writes.
 
+>sendfile() bypasses the copy to user buffer, which in turn will bypass
+>copy to system buffers, which eliminates contention for buffer space. Use
+>vmstat to check, if you have a lot of system time and lots of space in
+>buffers of various kinds, there's a good possibility that the problem is
+>there.
 
+I use the -d option in dd_rescue, which invokes O_DIRECT and therefore
+doesn't trash Linux's disk buffer. Unfortunately because of the very
+random access patterns of the web server, cache misses are extremely
+common anyway.
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Cheers,
+Jeff
