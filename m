@@ -1,15 +1,38 @@
-From: Hari Bhaskaran <hbhaskaran@gmail.com>
-Subject: s/w raid and bios renumbering HDs
-Date: Mon, 31 Oct 2005 07:56:32 -0800
-Message-ID: <8d03025a0510310756q7410ef13v6ffb4764229b2eb6@mail.gmail.com>
+From: "Callahan, Tom" <CallahanT@tessco.com>
+Subject: RE: s/w raid and bios renumbering HDs
+Date: Mon, 31 Oct 2005 11:42:00 -0500
+Message-ID: <0481A62A3E95A044AC20A1A45899645C06B02F1B@glc-mail-1.tessco.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: 'Hari Bhaskaran' <hbhaskaran@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+You are testing failover with reboots. So when Linux probes the disks, it is
+putting "hdc" where "hda" used to be.... This seems a bit strange, as
+hda/hdb should theoretically be IDE1 and hdc/hdd should be IDE2....
+
+As far as your grub setup, it looks perfectly fine. You should have two
+entries as you have, because if disc1 fails, you cannot boot to hd(0,0) and
+vice-versa.
+One gotcha, make sure grub is installed in the MBR of BOTH drives, not just
+the MD device....
+
+Thanks,
+Tom Callahan
+TESSCO Technologies Inc.
+410-229-1361
+
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org]On Behalf Of Hari Bhaskaran
+Sent: Monday, October 31, 2005 10:57 AM
+To: linux-raid@vger.kernel.org
+Subject: s/w raid and bios renumbering HDs
+
 
 Hi,
 
@@ -66,3 +89,7 @@ the equivalent syntax for mdadm.
 
 --
 Hari
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
