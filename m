@@ -1,29 +1,33 @@
-From: Ming Zhang <mingz@ele.uri.edu>
-Subject: raid0 fail to detect drive failure
-Date: Tue, 01 Nov 2005 11:02:54 -0500
-Message-ID: <1130860974.9447.19.camel@localhost.localdomain>
-Reply-To: mingz@ele.uri.edu
+From: Meik Nienaber <usenet@saeder-krupp.com>
+Subject: raid5 two disk failure
+Date: Tue, 1 Nov 2005 16:13:03 +0000 (UTC)
+Message-ID: <loom.20051101T170851-919@post.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi folks
+Hi,
 
-I have a raid0 on top of 2 sata disk sda and sdb. after i hot unplug
-sda, the raid0 still shows online and active. run dd to write to it will
-fail and dmesg shows scsi io error. but /proc/mdstat shows everything is
-ok.
+The story:
 
-checked 2.4.27 and 2.6.11.2, both show same problem.
+- raid5 set with four disks
+- after power outage two disks were marked faulty
+- reassembled the set with 3 disks (1,2,3)
+- added the forth disk
+- reconstruction of the set failed because of an uncorrectable sector of disk 3
+- tried to reassemble the set with disk 1,2,4. Not possible because disk 4 is in
+spare mode.
 
-mdadm is 1.8
+Any opportunities to get the set back with disks 1,2,4? Thanks in advance for 
+your help.
 
-any hint?
+mdadm v1.9.0
+linux 2.6.12.3
 
-Ming
-
+Cheers
+Meik
 
