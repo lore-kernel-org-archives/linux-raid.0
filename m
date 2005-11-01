@@ -1,76 +1,29 @@
-From: <news@briefing.com>
-Subject: Immediate Radar Alert
-Date: Mon, 31 Oct 2005 22:37:46 -0500
-Message-ID: <24542115424.1337234271@218.188.1.49>
-Content-Type: text/plain; charset=us-ascii
+From: Ming Zhang <mingz@ele.uri.edu>
+Subject: raid0 fail to detect drive failure
+Date: Tue, 01 Nov 2005 11:02:54 -0500
+Message-ID: <1130860974.9447.19.camel@localhost.localdomain>
+Reply-To: mingz@ele.uri.edu
+Mime-Version: 1.0
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-The Solvis Group Strategic Alliance Agreement With SSL Expected 
-to Provide $25 Million in Additional Revenues in 90 Days 
+Hi folks
 
-Immediate Radar Alert
-The Solvis Group Inc. **SLVG**
-The Solvis Group is a subsidiary of Dalrada Financial Corporation 
+I have a raid0 on top of 2 sata disk sda and sdb. after i hot unplug
+sda, the raid0 still shows online and active. run dd to write to it will
+fail and dmesg shows scsi io error. but /proc/mdstat shows everything is
+ok.
 
-0.07 <-- ridiculous in our opinion 
-Ride this wave starting Now 
+checked 2.4.27 and 2.6.11.2, both show same problem.
 
-Why you ask?  Let's start right here. Recent news releases...
-Talk about flying under the radar?  Isn't that what we look for? 
+mdadm is 1.8
 
+any hint?
 
-Recent News Headlines!  No dreaming here! 
-The Solvis Group Strategic Alliance Agreement With SSL Expected 
-to Provide $25 Million in Additional Revenues in 90 Days 
-The agreement calls for SSL to refer a minimum of $25 million in business 
-to The Solvis Group within the next 90 days. The alliance has already generated 
-more than $7.5 million in new business, on an annualized basis. 
-
-The Solvis Group, Formerly Quik Pix Inc., Announces Sale of Subsidiary 
-to Global Food Technologies James Bouskos, Chairman and CEO of Global Food Technologies 
-said that "our company is pleased to report that our transaction with The Solvis Group 
-for the acquisition of Boulevard Acquisition Corporation, the publicly-reporting shell 
-and wholly owned subsidiary of The Solvis Group, has closed. 
-
-The Solvis Group Launches 'Benefits Bank' Program to Bring Employees at All Compensation 
-Levels Key Benefits  "The Benefits Bank represents a comprehensive response 
-by The Solvis Group to address the needs of employees at all compensation levels 
-to participate in benefits generally available only to large corporations," 
-said Brian Bonar, CEO. 
-
-
-About The Solvis Group: 
-
-The Solvis Group, a subsidiary of Dalrada Financial Corporation includes a number 
-of operating units, including M&M Nursing Services, CallCenterHR(TM), and Jackson Staffing. 
-The Company provides a variety of innovative financial services to businesses, 
-including comprehensive human resource administration including payroll 
-and workers compensation insurance; and employee benefits such as health insurance, 
-supplemental insurance, HSA savings plans, 125 cafeteria plans, and 401(k) plans. 
-The Company also offers debit card payroll accounts and payroll advances. 
-These services enable small employers to offer benefits and services to their employees 
-that are generally available only to large companies. 
-
-The Company also includes an imaging products and services unit, Imaging Tech, Inc., 
-which provides a variety of innovating products and services associated with graphics, 
-photography, and color management. Its technologies include ColorBlindr software 
-and PhotoMotion Images(TM). 
-
-How many times have you seen issues explode but you couldn't get your hands on them? 
-Here is a special company that may be set to make a move in the near future - 
-this could be your opportunity to be ahead of the curve!  Start your research now! 
-
-TheStreet reported on Nov. 1, 2004, that "Large-cap stocks make the headlines, 
-but lately [small-cap] stocks have been making investors money." 
-
-Mary Lisanti, of AH Lisanti Capital Growth said these stocks "will rule the world 
-for a while. I don't see anything to change that." 
-
-We agree! Pay attention this coming week and do not take your eyes off **SLVG**
-
+Ming
 
 
