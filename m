@@ -1,71 +1,76 @@
-From: dean gaudet <dean-list-linux-raid@arctic.org>
-Subject: Re: s/w raid and bios renumbering HDs
-Date: Mon, 31 Oct 2005 16:37:19 -0800 (PST)
-Message-ID: <Pine.LNX.4.63.0510311623470.25152@twinlark.arctic.org>
-References: <8d03025a0510310756q7410ef13v6ffb4764229b2eb6@mail.gmail.com>
- <Pine.LNX.4.63.0510311126200.25465@twinlark.arctic.org> <4366AFEA.6030906@gmail.com>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+From: <news@briefing.com>
+Subject: Immediate Radar Alert
+Date: Mon, 31 Oct 2005 22:37:46 -0500
+Message-ID: <24542115424.1337234271@218.188.1.49>
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4366AFEA.6030906@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Hari Bhaskaran <hbhaskaran@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+The Solvis Group Strategic Alliance Agreement With SSL Expected 
+to Provide $25 Million in Additional Revenues in 90 Days 
+
+Immediate Radar Alert
+The Solvis Group Inc. **SLVG**
+The Solvis Group is a subsidiary of Dalrada Financial Corporation 
+
+0.07 <-- ridiculous in our opinion 
+Ride this wave starting Now 
+
+Why you ask?  Let's start right here. Recent news releases...
+Talk about flying under the radar?  Isn't that what we look for? 
 
 
-On Mon, 31 Oct 2005, Hari Bhaskaran wrote:
+Recent News Headlines!  No dreaming here! 
+The Solvis Group Strategic Alliance Agreement With SSL Expected 
+to Provide $25 Million in Additional Revenues in 90 Days 
+The agreement calls for SSL to refer a minimum of $25 million in business 
+to The Solvis Group within the next 90 days. The alliance has already generated 
+more than $7.5 million in new business, on an annualized basis. 
 
-> So that "DEVICE paritions" line was really supposed to be there? Hehe... I
-> thought it was just a
-> help message and replaced it with "DEVICE /dev/hda1 /dev/hdc1" :)
+The Solvis Group, Formerly Quik Pix Inc., Announces Sale of Subsidiary 
+to Global Food Technologies James Bouskos, Chairman and CEO of Global Food Technologies 
+said that "our company is pleased to report that our transaction with The Solvis Group 
+for the acquisition of Boulevard Acquisition Corporation, the publicly-reporting shell 
+and wholly owned subsidiary of The Solvis Group, has closed. 
 
-you can use "DEVICE /dev/hda1 /dev/hdc1" ... but then mdadm scans will 
-only consider those two partitions... if you use "DEVICE partitions" it'll 
-look at all detected partitions for the components.  it makes it easy when 
-you move disks around to new controllers and their location changes, 
-things will continue to jfw.
-
-
-> If I ever end up in a situation with a non-root raid down (say I did --stop),
-> how do I start it back up? (--run seems
-> to give me some errors). Anyways, more "rtfm" to do.
-
-you want --assemble ...
+The Solvis Group Launches 'Benefits Bank' Program to Bring Employees at All Compensation 
+Levels Key Benefits  "The Benefits Bank represents a comprehensive response 
+by The Solvis Group to address the needs of employees at all compensation levels 
+to participate in benefits generally available only to large corporations," 
+said Brian Bonar, CEO. 
 
 
-> > the root is the only one which you need to be careful with -- when debian
-> > installs your kernel it constructs an initrd which lists the minimum places
-> > it will search for the root raid components... for example on one of my
-> > boxes:
-> > 
-> > # mkdir /mnt/cramfs
-> > # mount -o ro,loop /boot/initrd.img-2.6.13-1-686-smp /mnt/cramfs
-> > # cat /mnt/cramfs/script
-> > ROOT=/dev/md3
-> > mdadm -A /dev/md3 -R -u 2b3a5b77:c7b4ab81:a2b8322a:db5c4e88 /dev/sdb4
-> > /dev/sda4
-> > # umount /mnt/cramfs
-> >   
-> Did u install yours with raid options in the debian installer? I dont think my
-> initrd image would have all these ( I dont have
-> access to the machine now to check) - but I wouldn't think the mkinitrd that I
-> used to created the initrd image would
-> know that I am using raid or not ( I am talking about the mdadm references in
-> your script). Or are you saying you
-> added these yourself?
+About The Solvis Group: 
 
-there's really no reason to avoid the debian installer's raid support if 
-you know you want raid, but i haven't used it much.
+The Solvis Group, a subsidiary of Dalrada Financial Corporation includes a number 
+of operating units, including M&M Nursing Services, CallCenterHR(TM), and Jackson Staffing. 
+The Company provides a variety of innovative financial services to businesses, 
+including comprehensive human resource administration including payroll 
+and workers compensation insurance; and employee benefits such as health insurance, 
+supplemental insurance, HSA savings plans, 125 cafeteria plans, and 401(k) plans. 
+The Company also offers debit card payroll accounts and payroll advances. 
+These services enable small employers to offer benefits and services to their employees 
+that are generally available only to large companies. 
 
-you only need to do initrd edits by hand once if you're converting root to 
-a raid. there's a few steps in the debian doc about this (see Part II. 
-RAID using initrd and grub) /usr/share/doc/mdadm/rootraiddoc.97.html.
+The Company also includes an imaging products and services unit, Imaging Tech, Inc., 
+which provides a variety of innovating products and services associated with graphics, 
+photography, and color management. Its technologies include ColorBlindr software 
+and PhotoMotion Images(TM). 
 
-after that initial change, and you've managed to boot with root on raid 
-then subsequent mkinitrd *should* fill in the details automatically... 
-i.e. every time you upgrade your kernel you get a new initrd, and it 
-should automatically include the root raid setup.
+How many times have you seen issues explode but you couldn't get your hands on them? 
+Here is a special company that may be set to make a move in the near future - 
+this could be your opportunity to be ahead of the curve!  Start your research now! 
 
--dean
+TheStreet reported on Nov. 1, 2004, that "Large-cap stocks make the headlines, 
+but lately [small-cap] stocks have been making investors money." 
+
+Mary Lisanti, of AH Lisanti Capital Growth said these stocks "will rule the world 
+for a while. I don't see anything to change that." 
+
+We agree! Pay attention this coming week and do not take your eyes off **SLVG**
+
+
+
