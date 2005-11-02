@@ -1,148 +1,43 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PATCH md 008 of 10] Complete conversion of md to use kthreads.
-Date: Wed, 2 Nov 2005 21:15:47 +1100
-Message-ID: <1051102101547.23954@suse.de>
-References: <20051102205640.22689.patches@notabene>
+Subject: [PATCH md 000 of 10] Introduction
+Date: Wed, 2 Nov 2005 21:14:42 +1100
+Message-ID: <20051102205640.22689.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: Andrew Morton <akpm@osdl.org>
-Cc: linux-raid@vger.kernel.org
+Cc: Greg KH <greg@kroah.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Following are 10 patches for md against what is currently in -mm.
+'8' probbly applied to 2.6.14, but the rest do not as they are 
+fixes and improvements to stuff that is only in -mm.
 
-There are a few loose ends following the conversion of md
-to use kthreads:
- - Some fields in mdk_thread_t that aren't needed (kthreads does
-   it's own completion and manages it's own name).
- - thread->run is now never NULL, so no need to check
- - Some tests for signal_pending that aren't needed
-    (As we don't use signals to stop threads any more)
- - Some flush_signals are not needed
- - Some waits are interruptible and don't need to be.
+The bulk of these patches are refining the new sysfs-based interface
+to md devices (/sys/block/mdX/md/...) and fixing up some of the
+functionality provided by that interface.  The interface is a long way
+from complete, but at least with these patches it should be correct.
 
-Signed-off-by: Neil Brown <neilb@suse.de>
+Notable patches include '4' which fixes some issues with module ref-counting
+that I had missed, and protect against the possibility of a sysfs file
+being openned with an array is active, and read after it has been stopped.
+Also '10' is notable as it contains some documentation for the interface.
 
-### Diffstat output
- ./drivers/md/md.c           |   33 ++++++++++-----------------------
- ./include/linux/raid/md_k.h |    2 --
- 2 files changed, 10 insertions(+), 25 deletions(-)
+At Andrew's request I'm cc:ing some of these to Greg KH - those that specifically
+involve sysfs stuff (and are marked with an '*').
 
-diff ./drivers/md/md.c~current~ ./drivers/md/md.c
---- ./drivers/md/md.c~current~	2005-11-02 17:33:29.000000000 +1100
-+++ ./drivers/md/md.c	2005-11-02 17:33:34.000000000 +1100
-@@ -3424,21 +3424,17 @@ static int md_thread(void * arg)
- 	 */
- 
- 	allow_signal(SIGKILL);
--	complete(thread->event);
- 	while (!kthread_should_stop()) {
--		void (*run)(mddev_t *);
- 
--		wait_event_interruptible_timeout(thread->wqueue,
--						 test_bit(THREAD_WAKEUP, &thread->flags)
--						 || kthread_should_stop(),
--						 thread->timeout);
-+		wait_event_timeout(thread->wqueue,
-+				   test_bit(THREAD_WAKEUP, &thread->flags)
-+				   || kthread_should_stop(),
-+				   thread->timeout);
- 		try_to_freeze();
- 
- 		clear_bit(THREAD_WAKEUP, &thread->flags);
- 
--		run = thread->run;
--		if (run)
--			run(thread->mddev);
-+		thread->run(thread->mddev);
- 	}
- 
- 	return 0;
-@@ -3457,7 +3453,6 @@ mdk_thread_t *md_register_thread(void (*
- 				 const char *name)
- {
- 	mdk_thread_t *thread;
--	struct completion event;
- 
- 	thread = kmalloc(sizeof(mdk_thread_t), GFP_KERNEL);
- 	if (!thread)
-@@ -3466,18 +3461,14 @@ mdk_thread_t *md_register_thread(void (*
- 	memset(thread, 0, sizeof(mdk_thread_t));
- 	init_waitqueue_head(&thread->wqueue);
- 
--	init_completion(&event);
--	thread->event = &event;
- 	thread->run = run;
- 	thread->mddev = mddev;
--	thread->name = name;
- 	thread->timeout = MAX_SCHEDULE_TIMEOUT;
- 	thread->tsk = kthread_run(md_thread, thread, name, mdname(thread->mddev));
- 	if (IS_ERR(thread->tsk)) {
- 		kfree(thread);
- 		return NULL;
- 	}
--	wait_for_completion(&event);
- 	return thread;
- }
- 
-@@ -3941,9 +3932,7 @@ static void md_do_sync(mddev_t *mddev)
- 		mddev->curr_resync = 2;
- 
- 	try_again:
--		if (signal_pending(current) ||
--		    kthread_should_stop()) {
--			flush_signals(current);
-+		if (kthread_should_stop()) {
- 			set_bit(MD_RECOVERY_INTR, &mddev->recovery);
- 			goto skip;
- 		}
-@@ -3963,9 +3952,8 @@ static void md_do_sync(mddev_t *mddev)
- 					 * time 'round when curr_resync == 2
- 					 */
- 					continue;
--				prepare_to_wait(&resync_wait, &wq, TASK_INTERRUPTIBLE);
--				if (!signal_pending(current) &&
--				    !kthread_should_stop() &&
-+				prepare_to_wait(&resync_wait, &wq, TASK_UNINTERRUPTIBLE);
-+				if (!kthread_should_stop() &&
- 				    mddev2->curr_resync >= mddev->curr_resync) {
- 					printk(KERN_INFO "md: delaying resync of %s"
- 					       " until %s has finished resync (they"
-@@ -4074,13 +4062,12 @@ static void md_do_sync(mddev_t *mddev)
- 		}
- 
- 
--		if (signal_pending(current) || kthread_should_stop()) {
-+		if (kthread_should_stop()) {
- 			/*
- 			 * got a signal, exit.
- 			 */
- 			printk(KERN_INFO 
- 				"md: md_do_sync() got signal ... exiting\n");
--			flush_signals(current);
- 			set_bit(MD_RECOVERY_INTR, &mddev->recovery);
- 			goto out;
- 		}
-@@ -4102,7 +4089,7 @@ static void md_do_sync(mddev_t *mddev)
- 		if (currspeed > sysctl_speed_limit_min) {
- 			if ((currspeed > sysctl_speed_limit_max) ||
- 					!is_mddev_idle(mddev)) {
--				msleep_interruptible(250);
-+				msleep(250);
- 				goto repeat;
- 			}
- 		}
+With these in place, I think the md stuff in -mm is ready to go to Linus.
 
-diff ./include/linux/raid/md_k.h~current~ ./include/linux/raid/md_k.h
---- ./include/linux/raid/md_k.h~current~	2005-11-02 17:32:28.000000000 +1100
-+++ ./include/linux/raid/md_k.h	2005-11-02 17:33:34.000000000 +1100
-@@ -334,10 +334,8 @@ typedef struct mdk_thread_s {
- 	mddev_t			*mddev;
- 	wait_queue_head_t	wqueue;
- 	unsigned long           flags;
--	struct completion	*event;
- 	struct task_struct	*tsk;
- 	unsigned long		timeout;
--	const char		*name;
- } mdk_thread_t;
- 
- #define THREAD_WAKEUP  0
+Thanks,
+NeilBrown
+
+
+*[PATCH md 001 of 10] Make sure /block link in /sys/.../md/ goes to correct devices.
+ [PATCH md 002 of 10] Make manual repair work for raid1.
+ [PATCH md 003 of 10] Make sure a user-request sync of raid5 ignores intent bitmap
+*[PATCH md 004 of 10] Fix some locking and module refcounting issues with md's use of sysfs.
+*[PATCH md 005 of 10] Split off some md attributes in sysfs to a separate group.
+ [PATCH md 006 of 10] Only try to print recovery/resync status for personalities that support recovery
+ [PATCH md 007 of 10] Ignore auto-readonly flag for arrays where it isn't meaningful.
+ [PATCH md 008 of 10] Complete conversion of md to use kthreads.
+*[PATCH md 009 of 10] Improve 'scan_mode' and rename it to 'sync_action'
+*[PATCH md 010 of 10] Document sysfs usage of md, and make a couple of small refinements.
