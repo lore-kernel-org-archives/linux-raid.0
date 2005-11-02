@@ -1,27 +1,31 @@
-From: "Kenton Dahl" <uonqewdxlvcgrf@msn.com>
-Subject: Best Losing Weight Hoodia Gp
-Date: Wed, 02 Nov 2005 13:58:47 -0400
-Message-ID: <12693969.986uonqewdxlvcgrf__1722.65285295925$1130954879$gmane$org@msn.com>
+From: Greg KH <greg@kroah.com>
+Subject: Re: [PATCH md 005 of 10] Split off some md attributes in sysfs to a separate group.
+Date: Wed, 2 Nov 2005 13:48:10 -0800
+Message-ID: <20051102214810.GG23247@kroah.com>
+References: <20051102205640.22689.patches@notabene> <1051102101516.23901@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Subject: Proposed charter
+Content-Disposition: inline
+In-Reply-To: <1051102101516.23901@suse.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-ppp@vger.kernel.org
-Cc: linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, linux-serial@vger.kernel.org, linux-sound@vger.kernel.org, linux-tape@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Andrew Morton <akpm@osdl.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Wed, Nov 02, 2005 at 09:15:16PM +1100, NeilBrown wrote:
+> 
+> Some, but not all, md array support data redundancy and hence
+> support checking and restoring that redundancy (resync, rebuild).
+> 
+> Some attributes apply specifically to functions involving this
+> redundancy, and so should only appear for md arrays for which they
+> are meaningful.  i.e. they should not appear for raid0, linear, multpath,
+> faulty.
+> 
+> This patch separates these into a distinct group and creates
+> the group only if the personality supports sync_request.
+> 
+> Signed-off-by: Neil Brown <neilb@suse.de>
 
-Revolutionary "Transform" which works
-effectively burning fats without hunger,
-chemicals intake or heavy exercise.
-Suppress your appetite and enjoying your
-very nice V-Shape body in just a week.
-
-You won't regret.
-
-http://go2mania.info
-
-
-MQ1
+Acked-by: Greg Kroah-Hartman <gregkh@suse.de>
