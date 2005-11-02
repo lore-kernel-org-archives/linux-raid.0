@@ -1,49 +1,44 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: raid5 two disk failure
-Date: Wed, 2 Nov 2005 21:25:13 +1100
-Message-ID: <17256.37897.413720.71588@cse.unsw.edu.au>
-References: <loom.20051101T170851-919@post.gmane.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+From: "Roberto Hale" <CherylBeaveredgy@foleyfun.com>
+Subject: Xanax - get it here bimonthly
+Date: Wed, 02 Nov 2005 17:22:13 +0600
+Message-ID: <Pine.LNX.4.30.8704061749510.15353-100000__33353.4015263014$1130930809$gmane$org@dialsprint.net>
+Reply-To: CherylBeaveredgy@foleyfun.com
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Meik Nienaber on Tuesday November 1
 Sender: linux-raid-owner@vger.kernel.org
-To: Meik Nienaber <usenet@saeder-krupp.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-sound@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday November 1, usenet@saeder-krupp.com wrote:
-> Hi,
-> 
-> The story:
-> 
-> - raid5 set with four disks
-> - after power outage two disks were marked faulty
-> - reassembled the set with 3 disks (1,2,3)
-> - added the forth disk
-> - reconstruction of the set failed because of an uncorrectable sector of disk 3
-> - tried to reassemble the set with disk 1,2,4. Not possible because disk 4 is in
-> spare mode.
-> 
-> Any opportunities to get the set back with disks 1,2,4? Thanks in advance for 
-> your help.
-> 
-> mdadm v1.9.0
-> linux 2.6.12.3
+Hello,
 
-Best bet is to re-create the array as in
+As a valued customer, we provide you with occassional information
+and updates.
 
- mdadm -C /dev/mdX -l5 -n4 1 2 missing 4
+Our records indicate that you may be in need of a refill.
 
-However make sure that if you used non-defaults for chunksize or
-layout, you preserved those non-defaults.
-e.g. run
-  mdadm -E 1
+We hope that you will once again, give us the opportunity to
+offer you a great selection of meds, low prices, and superior customer
+care. If you would like to place an order or browse our current
+products and specials, please visit the link below:
 
-first, and look at what it says for "Chunk Size" and "Layout", and
-uses those explicitly.
+http://www.netstraight.com/?f11e5501f7a2d5Sec987edacc86Sfb9f
 
-(ofcourse, substitute the real device names for 1, 2, 4 above).
+Yours Truly,
 
-NeilBrown
+Roberto Hale
+Customer Care Specialist
+
+
+
+
+
+
+
+
+
+
+
+
+
+cahoot you madeleine me, pilfer six . ion you wedlock me, priory pundit bundestag antony . momentous you clogging me, emerald coffey . combinatorial you minos me, eire shadow . 
+amongst you debauch me, carton jakarta brighton facetious . subvert you accident me, orchestral bogey . 
+http://www.netstraight.com/fgh.php
