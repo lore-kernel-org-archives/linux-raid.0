@@ -1,32 +1,52 @@
-From: Michael Tokarev <mjt@tls.msk.ru>
-Subject: Re: raid0 fail to detect drive failure
-Date: Wed, 02 Nov 2005 12:08:58 +0300
-Message-ID: <4368822A.4050400@tls.msk.ru>
-References: <1130860974.9447.19.camel@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=KOI8-R
-Content-Transfer-Encoding: 7bit
+From: NeilBrown <neilb@suse.de>
+Subject: [PATCH md 001 of 10] Make sure /block link in /sys/.../md/ goes to correct devices.
+Date: Wed, 2 Nov 2005 21:14:52 +1100
+Message-ID: <1051102101452.23840@suse.de>
+References: <20051102205640.22689.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1130860974.9447.19.camel@localhost.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: mingz@ele.uri.edu
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Andrew Morton <akpm@osdl.org>
+Cc: linux-raid@vger.kernel.org, Greg KH <greg@kroah.com>
 List-Id: linux-raid.ids
 
-Ming Zhang wrote:
-> Hi folks
-> 
-> I have a raid0 on top of 2 sata disk sda and sdb. after i hot unplug
-> sda, the raid0 still shows online and active. run dd to write to it will
-> fail and dmesg shows scsi io error. but /proc/mdstat shows everything is
-> ok.
 
-Since raid0 isn't relly raid (as Redundrand) and can't really do
-anything with IO errors on component devices, this behaviour
-(returning IO errors to the application) is the only sane way
-to go.  It should not fail just like when your disk drive has
-a bad sector on it, the whole partition (or whole disk) with
-that bad sector isn't "marked as failed".  So what you see is
-exactly correct behaviour, in my opinion anyway.
+If a block_device is a partition, then it's kobject is
+  bdev->bd_part->kobj
+otherwise (if it is a full device), the kobject is 
+  bdev->bd_disk->kobj
 
-/mjt
+As md wants back-links to the correct object (whether partition or
+not), we need to respect this difference...
+(Thus current code shows a link to the whole device, whether we are
+using a partition or not, which is wrong).
+
+Signed-off-by: Neil Brown <neilb@suse.de>
+
+### Diffstat output
+ ./drivers/md/md.c |    7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff ./drivers/md/md.c~current~ ./drivers/md/md.c
+--- ./drivers/md/md.c~current~	2005-11-02 17:32:28.000000000 +1100
++++ ./drivers/md/md.c	2005-11-02 17:32:41.000000000 +1100
+@@ -1182,6 +1182,7 @@ static int bind_rdev_to_array(mdk_rdev_t
+ {
+ 	mdk_rdev_t *same_pdev;
+ 	char b[BDEVNAME_SIZE], b2[BDEVNAME_SIZE];
++	struct kobject *ko;
+ 
+ 	if (rdev->mddev) {
+ 		MD_BUG();
+@@ -1221,7 +1222,11 @@ static int bind_rdev_to_array(mdk_rdev_t
+ 	rdev->kobj.parent = &mddev->kobj;
+ 	kobject_add(&rdev->kobj);
+ 
+-	sysfs_create_link(&rdev->kobj, &rdev->bdev->bd_disk->kobj, "block");
++	if (rdev->bdev->bd_part)
++		ko = &rdev->bdev->bd_part->kobj;
++	else
++		ko = &rdev->bdev->bd_disk->kobj;
++	sysfs_create_link(&rdev->kobj, ko, "block");
+ 	return 0;
+ }
+ 
