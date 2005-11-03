@@ -1,39 +1,26 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: [PATCH md 004 of 10] Fix some locking and module refcounting issues with md's use of sysfs.
-Date: Wed, 2 Nov 2005 13:47:22 -0800
-Message-ID: <20051102214722.GF23247@kroah.com>
-References: <20051102205640.22689.patches@notabene> <1051102101510.23887@suse.de>
+From: Hari Bhaskaran <hbhaskaran@gmail.com>
+Subject: raid-1 without marking partition as type "fd"
+Date: Wed, 02 Nov 2005 18:57:24 -0800
+Message-ID: <43697C94.3080400@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1051102101510.23887@suse.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Andrew Morton <akpm@osdl.org>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Nov 02, 2005 at 09:15:10PM +1100, NeilBrown wrote:
-> 
-> 1/ I really should be using the __ATTR macros for defining attributes, so
->  that the .owner field get set properly, otherwise modules can be removed
->  while sysfs files are open.
->  This also involves some name changes of _show routines.
-> 
-> 2/ Always lock the mddev (against reconfiguration) for all sysfs
->  attribute access.  This easily avoid certain races and is completely
->  consistant with other interfaces (ioctl and /proc/mdstat both 
->  always lock against reconfiguration).
-> 
-> 3/ raid5 attributes must check that the 'conf' structure actually 
->   exists (the array could have been stopped while an attribute file
->   was open).
-> 
-> 4/ A missing 'kfree' from when the raid5_conf_t was converted to have
->   a kobject embedded, and then converted back again.
-> 
-> 
-> 
-> Signed-off-by: Neil Brown <neilb@suse.de>
+Hi,
 
-Acked-by: Greg Kroah-Hartman <gregkh@suse.de>
+I am following rootraiddoc.97.html  howto and it suggests creating an 
+"fd" (RAID) parition. I didn't do this and I still have a working raid-1 
+bootable partition. I left the both partitions are regular "linux" and 
+everything seems to work fine.
+Isn't this a better approach than marking it "fd"? This way I can take 
+one of the disks to a machine that knows nothing about raid and still 
+read data. I know this might work only with raid-1. Am I missing something?
+
+Any help is appreciated
+--
+Hari
+
