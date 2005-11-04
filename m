@@ -1,27 +1,42 @@
-From: "Maurice Dooley" <mauricedooley_tn@sielite.com>
-Subject: =?ISO-8859-1?B?VGltZWx5IG5hcmNvdGljIFByb2Zlc3Npb25hbHM=?=
-Date: Fri, 04 Nov 2005 17:42:11 +0000
-Message-ID: <a43b01c5e167$141dabeb$698367f2@g2vks3s>
-References: <9a6901c5e0ee$1d88ba7a$9180a69e@v30slij>
+From: Forrest Taylor <ftaylor@redhat.com>
+Subject: Re: still a boot issue
+Date: Fri, 04 Nov 2005 11:33:08 -0700
+Message-ID: <1131129189.18407.44.camel@maddy.taylor.com>
+References: <1131123603.4595.11.camel@plauda5.rx30.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <9a6901c5e0ee$1d88ba7a$9180a69e@v30slij>
+In-Reply-To: <1131123603.4595.11.camel@plauda5.rx30.com>
 Sender: linux-raid-owner@vger.kernel.org
+To: Peter Lauda <plauda@rx30.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Good Morning
+On Fri, 2005-11-04 at 11:59 -0500, Peter Lauda wrote:
+> I have been making some progress with my attempted raid1 of boot and
+> root... but I just can't get it to boot. I have looked at several docs
+> and tried umpteen times to tweak based on suggestions and documentation.
+> So if there is any other advice out there.. please... I am near the end
+> of my rope.
+> 
+> I have a system with two sata drives and a 2.4.29 kernel w/mdadm and the
+> md driver in the kernel. I see the raid personalities in /proc/mdstat
+> when the system boots.
+> 
+> I have added a kernel parm md=1,/dev/sda3,/dev/sdb3  to my grub.conf
+> line. 
+> 
+> When I boot the system it fails to setup the array md1 because it cannot
+> read the superblock for the array. Is this because the /dev/sda3 fs is
+> already loading or mounted?  
+> 
+> An entry in /var/log/messages tells me:
+> 
+> md: could not lock [08:03] zero size?
 
-We have outstanding weekly specials on all products.
+I haven't been following your thread, but did you include the raid1
+module in your initrd.img, or did you build it into the kernel?
 
-Amazing deals on all products.
-
-80% in savings on everything!
-Dont need a prescription
-
-http://uk.geocities.com/qualitygenerics4u/
-
-.Customer Service at TopPharm
+Forrest
 
