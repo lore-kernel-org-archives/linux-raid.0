@@ -1,57 +1,39 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Replacement disk is slightly smaller
-Date: Wed, 9 Nov 2005 18:27:48 +1100
-Message-ID: <17265.42228.180657.810453@cse.unsw.edu.au>
-References: <20051109024211.GS7163@strugglers.net>
+From: Konstantin Olchanski <olchansk@sam.triumf.ca>
+Subject: Re: udev and mdadm -- I'm lost
+Date: Tue, 8 Nov 2005 23:57:32 -0800
+Message-ID: <20051109075732.GB7815@sam.triumf.ca>
+References: <1b9.203c2461.30a28d17@aol.com> <43713767.1060602@mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Andy Smith on Wednesday November 9
+Content-Disposition: inline
+In-Reply-To: <43713767.1060602@mvista.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andy Smith <andy@lug.org.uk>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Dave Jiang <djiang@mvista.com>
+Cc: AndyLiebman@aol.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday November 9, andy@lug.org.uk wrote:
+On Tue, Nov 08, 2005 at 04:40:23PM -0700, Dave Jiang wrote:
+> >I see there is an mdadm  --auto option now...
 > 
-> But what's the easiest way to do this?  I can't start creating
-> partitions at the end can I?  Or maybe I can, in something other
-> than fdisk.
+> Just use --auto or --auto=yes and it should take care of the device node 
+>  creations. I have a /etc/mdadm.conf so I just do:
+> mdadm -As --auto=yes and it brings everything up over udev.
 
-You can create partitions in any way you like.  cfdisk is quite good
-at making this ... not trivial, but not hard.
-Create a tiny "1s" partition at the Beginning of the device.  This will be
-sdb1.  Create another tiny partition - sdb2
-Change the Units to 'sectors'.  Create another partition - sdb3 of the
-desired size at the End. - put an 's' at the end of the number to
-indicate sectors
-   218837432s
+I face a similar problem each time I use KNOPPIX to revive a non-booting
+server. It always takes me 10-20 minutes to figure out the right
+mdadm incantation to start the md devices. It does not help that mdadm
+wants an /etc/mdadm.conf which is on an md device itself, unaccessible.
 
-Then delete sdb2 and create a new sdb2 using all the space.
+I wish there were a simple command to find and start all md devices, something
+along the lines of:
 
-Then add sdb3 to the raid5, and make a new raid0 array with
-sd[abcd]2.  This will use all of the space of all those partitions
-even though they aren't the same size.
+mdadm --please-find-and-start-all-my-md-devices-please-please-please
+or
+mdadm --start-all, or whatever.
 
-> 
-> Oh, and, will I need to do anything special (like shrink sd[acd]2)
-> when trying to rebuild the stripe (md1) with the smaller patition
-> from sdb?
-
-No.  raid0 (like linear) does not need all the devices to be the same
-size - it makes use of all available space.
-
-> 
-> Cheers,
-> Andy
-> 
-> [1] Did it like that because I wanted /boot on a RAID 1, but I keep it
->     read only most of the time and didn't see the point in having it
->     a 4-way RAID 1.  But then, there isn't much to do with two
->     70-odd MB disk partitions so I made them hot spares.
-
-You could have included them in the raid0, but having a least one
-hot-spare for boot is a good idea.
-
-NeilBrown
+-- 
+Konstantin Olchanski
+Data Acquisition Systems: The Bytes Must Flow!
+Email: olchansk-at-triumf-dot-ca
+Snail mail: 4004 Wesbrook Mall, TRIUMF, Vancouver, B.C., V6T 2A3, Canada
