@@ -1,58 +1,46 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: intent-logging, not synchronizing written blocks?
-Date: Thu, 10 Nov 2005 09:50:19 +1100
-Message-ID: <17266.32043.52698.717602@cse.unsw.edu.au>
-References: <17266.30693.504831.133082@fisica.ufpr.br>
+From: "Spencer Tuttle" <rodeojones@fastmail.fm>
+Subject: New raid5 took 5 days for initial build on spare drive
+Date: Wed, 09 Nov 2005 15:57:10 -0700
+Message-ID: <1131577030.27623.247169656@webmail.messagingengine.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="ISO-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Carlos Carvalho on Wednesday November 9
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Carlos Carvalho <carlos@fisica.ufpr.br>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday November 9, carlos@fisica.ufpr.br wrote:
-> Hi,
-> 
-> Is intent-logging for raid5 already in mainline or only in -mm? I
-> looked for it in 2.6.14 and found nothing...
+Ok, I just created my first ever raid 5 using software raid.
 
-raid5 is in 2.6.14.  raid6 and raid10 should be in 2.6.16.
-What did you look for?
+I am using a 2.6.14 kernel and the just newly supported MV88SX6041
+Marvell SATA Controller. I received the following errors when the device
+is initialized in the kernel
 
-> 
-> It seems that intent-logging accelerates synchronization by skipping
-> the blocks that have not changed since the array went out of sync.
+blk_queue_max_hw_segments: set to minimum 1
 
-I'm not sure what you mean by 'went out of sync'.  When an array is
-active and being written to, many stripes could be out-of-sync at any
-time, as writes have been started, but haven't completed yet.
-Intent logging record the intent to write somewhere before doing the
-write, and then clears the intent sometime after the write completes.
+repeated a bunch of times.
 
-After a crash, some intents will still be recorded, and only the
-stripes associated with these risk being out-of-sync, so only those
-need to be resynced.
+And I wonder if this is why it is so slow, my /proc/mdstat shows the
+following:
+orion ~ # cat /proc/mdstat
+Personalities : [raid5]
+md_d0 : active raid5 sda1[0] sdd1[4] sdc1[2] sdb1[1]
+      234444288 blocks level 5, 64k chunk, algorithm 2 [4/3] [UUU_]
+      [===================>.]  recovery = 98.9% (77292696/78148096)
+      finish=102.9min speed=136K/sec
 
-If you take a device out of an array, and then re-add it "--re-add",
-then recovery will only recover those blocks that have changed since
-the device was removed.
+unused devices: <none>
 
+As you can see it is almost finished, but it has been a little over 5
+days, seems a little high, for 80GB drives, but then again this is my
+first time using mdadm. 
 
->  I'm
-> not sure but if this is correct I thought that another way to speed
-> re-sync would be to not sync the blocks that were written to the array
-> after it started, since they should be already up to date. Is there a
-> way to do this? Does intent-logging takes this into account?
+Could someone let me know if this is normal or if I have something
+really messed up.
 
-intent-logging does not try to take this into account.  The chuck-size
-for intent logging is usually quite large.  A single write it
-unlikely to completely update an intent-chuck, so would need to keep
-track of lots of recent writes to see if any collection of them
-completely cover any intent-chuck.  The effort isn't worth it for the
-saving.
+Spencer
 
-NeilBrown
+-- 
+http://www.fastmail.fm - mmm... Fastmail...
 
