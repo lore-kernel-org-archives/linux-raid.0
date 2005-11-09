@@ -1,57 +1,23 @@
-From: andyliebman@editshare.com
-Subject: Re: Still Need Help on mdadm and udev
-Date: Wed, 9 Nov 2005 11:28:03 -0800 (PST)
-Message-ID: <1235.146.115.27.35.1131564483.squirrel@webmail.editshare.com>
-References: <1200.146.115.27.35.1131563572.squirrel@webmail.editshare.com>
+From: carlos@fisica.ufpr.br (Carlos Carvalho)
+Subject: intent-logging, not synchronizing written blocks?
+Date: Wed, 9 Nov 2005 20:27:49 -0200
+Message-ID: <17266.30693.504831.133082@fisica.ufpr.br>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1200.146.115.27.35.1131563572.squirrel@webmail.editshare.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: andyliebman@editshare.com
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> Okay,
->
-> PLEASE somebody who knows answer the following:
->
-> 1)  what is the difference between running
->
->              mdadm -A -ayes 1/dev/md1--uuid=xxxxx /dev/sd*
->
->     and
->
->              mdadm -A -amd 1/dev/md1 --uuid=xxxxx /dev/sd*
->
->
->     In other words, how do the "yes" and "md" options behave differently.
->
->
-> 2)  If you create an array /dev/md0 with mdadm, is there any reason why
-> you shouldn't start it as /dev/md1?
->
-> The second option above (-amd 1) would NOT start an array that was created
-> as /dev/md0 (under an older mdadm -- 1.8.? ) whereas the first option
-> (-ayes /dev/md1) had no difficulty.
->
-> Thank you.
-> Andy Liebman
->
->
+Hi,
 
-Sorry, my bad:
+Is intent-logging for raid5 already in mainline or only in -mm? I
+looked for it in 2.6.14 and found nothing...
 
-I meant to give as my examples:
-
-      mdadm -A -amd 1 --uuid=xxxxx /dev/sd*
-
-   and
-
-      mdadm -A -ayes /dev/md1 --uuid=xxxxx /dev/sd*
-
-
-Andy
-
-
+It seems that intent-logging accelerates synchronization by skipping
+the blocks that have not changed since the array went out of sync. I'm
+not sure but if this is correct I thought that another way to speed
+re-sync would be to not sync the blocks that were written to the array
+after it started, since they should be already up to date. Is there a
+way to do this? Does intent-logging takes this into account?
