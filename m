@@ -1,28 +1,27 @@
-From: "Jacqueline Wagner" <jacqueline_wagnervn@stevensgroup.com>
-Subject: =?ISO-8859-1?b?WW91ciBOYXJjb3RpYyBTb2x1dGlvbnM=?=
-Date: Fri, 11 Nov 2005 15:45:17 +0000
-Message-ID: <560101c5e6d6$f7dd6162$fccd8b7d@0yfxb52>
-References: <661601c5e67f$9e9cc500$9194cc88@xkbsn23>
+From: Spencer Tuttle <rodeojones@fastmail.fm>
+Subject: Re: New raid5 took 5 days for initial build on spare drive
+Date: Fri, 11 Nov 2005 12:42:54 -0700
+Message-ID: <4374F43E.40308@fastmail.fm>
+References: <1131577030.27623.247169656@webmail.messagingengine.com> <43728312.5010701@panix.com> <43728AD6.2080002@fastmail.fm>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <661601c5e67f$9e9cc500$9194cc88@xkbsn23>
+In-Reply-To: <43728AD6.2080002@fastmail.fm>
 Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi
+Spencer Tuttle wrote:
+> berk walker wrote:
+> 
+>> Just a couple of things to think about before the board explodes. :-)
+>>
+>> Are your drives doing DMA?  Important.
 
-You will not find a better price/selection on your meds
+No, I was not using DMA. I found the patches for the driver I needed 
+applied them now, I am creating an array on the same disks in 30 mins 
+not 5 days.
 
-Discount Meds without sacrificing quality
-
-November let's you save 80% on all items
-
-perscriptions not nessesary
-
-http://uk.geocities.com/yourxperts/
-
-Your friends at BestMeds
-
+Thank You,
+Spencer
