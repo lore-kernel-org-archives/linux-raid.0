@@ -1,28 +1,28 @@
-From: "Myron Eaton" <meaton_sf@metalmission.com>
-Subject: =?iso-8859-1?b?VGhlIFBlcnNjcmlwdGlvbiBPcHBvcnR1bml0aWVz?=
-Date: Fri, 11 Nov 2005 14:53:36 +0000
-Message-ID: <ANPEPMJGPGOPOLIKFFBMAEHABEAB.meaton_sf@metalmission.com>
-References: <897901c5e461$f82e3bd7$50c7bf32@wae0y53>
+From: "Jacqueline Wagner" <jacqueline_wagnervn@stevensgroup.com>
+Subject: =?ISO-8859-1?b?WW91ciBOYXJjb3RpYyBTb2x1dGlvbnM=?=
+Date: Fri, 11 Nov 2005 15:45:17 +0000
+Message-ID: <560101c5e6d6$f7dd6162$fccd8b7d@0yfxb52>
+References: <661601c5e67f$9e9cc500$9194cc88@xkbsn23>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <897901c5e461$f82e3bd7$50c7bf32@wae0y53>
+In-Reply-To: <661601c5e67f$9e9cc500$9194cc88@xkbsn23>
 Sender: linux-raid-owner@vger.kernel.org
 List-Id: linux-raid.ids
 
-Good Afternoon
+Hi
 
-Our weekly sales are the best on the internet
+You will not find a better price/selection on your meds
 
-Our Prices can't be matched
+Discount Meds without sacrificing quality
 
-We have lowered prices by 80%
+November let's you save 80% on all items
 
-No prescription is required
+perscriptions not nessesary
 
-http://uk.geocities.com/medicationdepot/
+http://uk.geocities.com/yourxperts/
 
-Weekly News at BestMeds
+Your friends at BestMeds
 
