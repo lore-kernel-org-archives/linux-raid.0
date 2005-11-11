@@ -1,23 +1,28 @@
-From: dean gaudet <dean-list-linux-raid@arctic.org>
-Subject: Re: Still Need Help on mdadm and udev
-Date: Thu, 10 Nov 2005 13:20:36 -0800 (PST)
-Message-ID: <Pine.LNX.4.63.0511101317070.13184@twinlark.arctic.org>
-References: <Pine.LNX.4.44.0511101421260.19226-100000@firewall2.tmr.com>
+From: "Vito Sosa" <v_sosa_pu@se.gm-fiat-wwp.com>
+Subject: =?ISO-8859-1?b?QmVzdCBQaGFybWFjZXV0bGNhfCBTb2x1dGlvbnM=?=
+Date: Fri, 11 Nov 2005 01:09:10 +0000
+Message-ID: <e01101c5e65c$1a40ca6c$ce8c7820@l0mtux2>
+References: <a8ac01c5e4dc$2e64197f$f6f0f039@hpgn021>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44.0511101421260.19226-100000@firewall2.tmr.com>
+In-Reply-To: <a8ac01c5e4dc$2e64197f$f6f0f039@hpgn021>
 Sender: linux-raid-owner@vger.kernel.org
-To: davidsen@tmr.com
-Cc: Neil Brown <neilb@suse.de>, andyliebman@editshare.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 10 Nov 2005, Bill Davidsen wrote:
+Good Day
 
-> I haven't had a good use for a partitionable device
+We are offering weekly sales on a vast selection
 
-i've used it to have root, swap, and some external xfs/ext3 logs on a 
-single raid1... (the xfs/ext3 logs are for filesystems on another raid5) 
-rather than managing 4 or 5 separate raid1s on the same 2 disks.
+Our prices will please you
 
--dean
+Find over 80% in savings, on all products
+
+No doctors visits, no perscription
+
+http://uk.geocities.com/costlessmeds/
+
+Support at Medsave
+
