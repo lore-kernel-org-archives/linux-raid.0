@@ -1,42 +1,47 @@
-From: "kyle" <kylewong@southa.com>
-Subject: questions about ext3, raid-5, small files and wasted disk space
-Date: Sat, 12 Nov 2005 04:32:27 +0800
-Message-ID: <000901c5e6ff$0865deb0$b7df0f3d@kyleont8n3poyo>
-Reply-To: "kyle" <kylewong@southa.com>
+From: Christophe Varoqui <christophe.varoqui@free.fr>
+Subject: [ANNOUNCE] multipath-tools-0.4.6
+Date: Fri, 11 Nov 2005 23:05:27 +0100
+Message-ID: <1131746727.7463.96.camel@zezette>
+Reply-To: christophe.varoqui@free.fr
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: device-mapper development <dm-devel@redhat.com>
+Cc: "linux-hotplug-devel@lists.sourceforge.net" <linux-hotplug-devel@lists.sourceforge.net>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi,
+Hello,
 
-Assume I want to build a 8 x 250GB disks RAID-5, totally around 1.7TB, with
-ext3 file system, 4KB block size, and 32KB chunk size.
+here goes multipath-tools-0.4.6.
 
-Almost half of the files will be very small ( < 8KB), I'm quite confused
-with how RAID-5 store data so I want to understand how relation between file
-system block size and RAID5 chunk size, to minimize possible wasted space.
+Distributors using mostly-unmodified upstream package are encouraged to
+upgrade. This version brings important bugfixes and nice new features,
+including :
 
-I understand that if I store a 224KB file into the RAID5, the file will be
-divided into 7 parts x 32KB, plus 32KB parity. (Am I correct in this?)
+* add/del cli commands accept map names as param
+  * new add "reinstate/fail" cli commands
+  * new add "suspend/resume" cli commands
+  * extended information display in "show map/paths" cli commands
+  * fix thread reaping logic
+  * user friendly map names (mpath[0..n]) without alias defines (!!!
+    warning : chances are your current device naming will change !!!)
+  * option to disable io queueing if no valid path after a delay
+  * vendor/product as regexp in config file
+  * set devmap uuid as multipath wwid
+  * move hotplug logic to udev's rules.d/
+  * configlets now adds up or replace the hardcoded ones
+  * ALUA prioritizer update
+  * option to use priorities as weights in the round-robin scheduler
+  * add the directio checker
 
-However, If I store a file smaller than chunk size into the RAID5, what will
-happen?  For example, If  I store a 1KB file into it, how much disk space
-will be used? will it 4KB (plus 4KB parity or 1KB parity) ?
+As usual, doc and download at :
+http://christophe.varoqui.free.fr/
 
-Similiarly, If I store a 6KB file, will it takes 8KB (plus 8KB parity or 6KB
-parity) ?
+Archive mirror at ftp://sources.redhat.com/pub/dm/multipath-tools/
 
-If  ALL of my files are 6KB, will the physical disk space allocated to
-parity NOT ENOUGH to serve the whole filesystem?
-
-Please CC me if possible, thanks.
-
-Kyle
-
+Regards,
+cvaroqui
 
 
