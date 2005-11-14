@@ -1,44 +1,27 @@
-From: Shane Bishop <sbishop@trinitybiblecollege.edu>
-Subject: Re: help!
-Date: Mon, 14 Nov 2005 13:24:55 -0600
-Message-ID: <4378E487.6050402@trinitybiblecollege.edu>
-References: <4378C76A.9070906@trinitybiblecollege.edu> <17272.56732.538446.471537@fisica.ufpr.br>
+From: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
+Subject: raid5 recovery fails
+Date: Mon, 14 Nov 2005 21:27:25 +0200
+Message-ID: <5d96567b0511141127v63377f0and41f998230a38dd7@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17272.56732.538446.471537@fisica.ufpr.br>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+Cc: raziebe@gmail.com
 List-Id: linux-raid.ids
 
+I have made the following test with my raid5:
+1. created raid5 with 4 sata disks.
+2. waited untill raid was fully initialized.
+3. pulled a disk from the panel.
+4. shut the system.
+5. put back the disk.
+6. turn on the system.
 
-Carlos Carvalho wrote:
-
->Shane Bishop (sbishop@trinitybiblecollege.edu) wrote on 14 November 2005 11:20:
-> >I had an mdadm device running fine, and had created my own scripts for 
-> >shutting it down and such. I upgraded my distro, and all of a sudden it 
-> >decided to start initializing md devices on it's own, which include one 
-> >that I want removed.
->
->Probably the filesystem type in the partition table is set to raid
->autodetect (fd). Try changing it to something else, for example 83.
->Note that these are hexadecimal numbers.
->-
->To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->  
->
-They were indeed set to raid autodetect. I was unaware of what that 
-actually did, I think I must have followed that step in a how-to when I 
-originally set it up. The odd thing is that these are the partition 
-pairs that were being mounted:
-sda sdb
-sda1 sdb1
-sdc1 sdd1
-The last 2 are the ones I actually wanted, but the first one was 
-something I had done when I was first playing around with it, if memory 
-serves me correct. Is that possible, or does it point to some other issue?
-
-Shane
+The raid failed failed to recver. i got message from the md layer
+saying that it rejects the dirty disk.
+Anyone ?
+--
+Raz
