@@ -1,41 +1,40 @@
-From: Andrew Burgess <aab@cichlid.com>
-Subject: Re: Crooked raid
-Date: Tue, 15 Nov 2005 10:44:47 -0800
-Message-ID: <200511151844.jAFIil2k006410@cichlid.com>
+From: "Jim Buttafuoco" <jim@contactbda.com>
+Subject: HELP 13 disk raid 5 not starting
+Date: Tue, 15 Nov 2005 16:50:47 -0500
+Message-ID: <20051115214704.M9636@contactbda.com>
+Reply-To: jim@contactbda.com
+Mime-Version: 1.0
+Content-Type: text/plain;
+	charset=iso-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: gfk@logidac.com
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->Some time ago, I wanted to setup a software RAID-1 between hdc2 and 
->hdg2. However, not being familiar with mdadm and software raid, I made a 
->couple of bad commands. I don't remember the exact commands, but it's in 
->  the order of setting /dev/hdc, /dev/hdc2, /dev/hdg and /dev/hdg2 in 
->the same RAID. 
+all,
 
-Oops
+I have a 13 disk raid 5 set with 4 disks marks as "clean" and the rest marked as dirty.  When I do the following command
+to start the raid set (md0) I get an error.  Any ideas on how to recover?
 
->Because of this, I was getting all sorts of errors in my 
->dmesg (see dmesg-broken below), but otherwise the RAID would work fine.
+This is a debian sarge system running kernel 2.6.8-1-686-smp and mdadm version v1.4.0 - 29 Oct 2003
 
->After setting my /etc/mdadm/mdadm.conf to:
->DEVICE /dev/hdc2 /dev/hdg2
->ARRAY /dev/md0 level=raid1 num-devices=2 
->UUID=b013e39b:ec629293:98df4657:97255939
+Thanks
+Jim
 
->I tried to
->mdadm /dev/md0 --remove /dev/hdc
->but without success:
->mdadm: hot remove failed for /dev/hdc: No such device or address
+# mdadm --assemble --scan
+mdadm: /dev/md0 assembled from 6 drives and 1 spare - not enough to start the array.
 
-Look at:
-  mdadm -E /dev/hdc
-If it has a superblock, zero it with 'mdadm --zero-superblock /dev/hdc'
+my /etc/mdadm/mdadm.conf looks like
 
-Same for hdg
+DEVICE partitions
+ARRAY /dev/md0 level=raid5 num-devices=12 UUID=c9669a6b:cdc5b9d4:1df0802c:86d53e17
 
-Just as a failsafe test, before you zero, compare mdadm -E for hdc2 and hdc,
-they should print different things. You want to insure you don't zero hd[cg]2
-accidently.
+
+and /proc/mdstat looks like
+
+Personalities : [raid5] 
+md0 : inactive sdb1[0] sdm1[12] sdn1[11] sdl1[10] sdk1[9] sdj1[8] sdi1[7] sdh1[6] sdg1[5] sdf1[4] sde1[3] sdd1[2] sdc1[1]
+      3173710592 blocks
+unused devices: <none>
+
 
