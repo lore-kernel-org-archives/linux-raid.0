@@ -1,7 +1,7 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PATCH md 001 of 2] Mark START_ARRAY deprecated with a date.
-Date: Tue, 15 Nov 2005 12:56:36 +1100
-Message-ID: <1051115015636.9379@suse.de>
+Subject: [PATCH md 002 of 2] Make md threads interruptible again.
+Date: Tue, 15 Nov 2005 12:56:41 +1100
+Message-ID: <1051115015641.9393@suse.de>
 References: <20051115125442.9317.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
@@ -10,43 +10,40 @@ Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-This was marked deprecated "after 2.6" back in the 2.5 days.  
-But now it seems there isn't going to be any "after 2.6", and
-we deprecate by date now.  So set a date.
+Despite the fact that md threads don't need to be signalled, and won't
+respond to signals anyway, we need to have an 'interruptible' wait,
+else they stay in 'D' state and add to the load average.
 
 Signed-off-by: Neil Brown <neilb@suse.de>
 
 ### Diffstat output
- ./Documentation/feature-removal-schedule.txt |    9 +++++++++
- ./drivers/md/md.c                            |    2 +-
- 2 files changed, 10 insertions(+), 1 deletion(-)
-
-diff ./Documentation/feature-removal-schedule.txt~current~ ./Documentation/feature-removal-schedule.txt
---- ./Documentation/feature-removal-schedule.txt~current~	2005-11-15 10:25:30.000000000 +1100
-+++ ./Documentation/feature-removal-schedule.txt	2005-11-15 10:25:30.000000000 +1100
-@@ -131,3 +131,12 @@ What:	EXPORT_SYMBOL(lookup_hash)
- When:	January 2006
- Why:	Too low-level interface.  Use lookup_one_len or lookup_create instead.
- Who:	Christoph Hellwig <hch@lst.de>
-+
-+---------------------------
-+
-+What:	START_ARRAY ioctl for md
-+When:	July 2006
-+Files:	drivers/md/md.c
-+Why:	Not reliable by design - can fail when most needed.
-+	Alternatives exist
-+Who:	NeilBrown <neilb@suse.de>
+ ./drivers/md/md.c |   17 +++++++++++++----
+ 1 file changed, 13 insertions(+), 4 deletions(-)
 
 diff ./drivers/md/md.c~current~ ./drivers/md/md.c
 --- ./drivers/md/md.c~current~	2005-11-15 10:25:30.000000000 +1100
-+++ ./drivers/md/md.c	2005-11-15 10:25:30.000000000 +1100
-@@ -3156,7 +3156,7 @@ static int md_ioctl(struct inode *inode,
- 		if (cnt > 0 ) {
- 			printk(KERN_WARNING
- 			       "md: %s(pid %d) used deprecated START_ARRAY ioctl. "
--			       "This will not be supported beyond 2.6\n",
-+			       "This will not be supported beyond July 2006\n",
- 			       current->comm, current->pid);
- 			cnt--;
- 		}
++++ ./drivers/md/md.c	2005-11-15 10:28:30.000000000 +1100
+@@ -3437,10 +3437,19 @@ static int md_thread(void * arg)
+ 	allow_signal(SIGKILL);
+ 	while (!kthread_should_stop()) {
+ 
+-		wait_event_timeout(thread->wqueue,
+-				   test_bit(THREAD_WAKEUP, &thread->flags)
+-				   || kthread_should_stop(),
+-				   thread->timeout);
++		/* We need to wait INTERRUPTIBLE so that
++		 * we don't add to the load-average.
++		 * That means we need to be sure no signals are
++		 * pending
++		 */
++		if (signal_pending(current))
++			flush_signals(current);
++
++		wait_event_interruptible_timeout
++			(thread->wqueue,
++			 test_bit(THREAD_WAKEUP, &thread->flags)
++			 || kthread_should_stop(),
++			 thread->timeout);
+ 		try_to_freeze();
+ 
+ 		clear_bit(THREAD_WAKEUP, &thread->flags);
