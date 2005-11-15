@@ -1,37 +1,39 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: 3-disk RAID1 - only two disks active
-Date: Wed, 16 Nov 2005 10:01:10 +1100
-Message-ID: <17274.26806.260020.822459@cse.unsw.edu.au>
-References: <20051115152622.A2237@turing.netspan.fi>
+From: Spencer Tuttle <rodeojones@fastmail.fm>
+Subject: Re: Autostart RAID1 on boot
+Date: Tue, 15 Nov 2005 16:05:37 -0700
+Message-ID: <437A69C1.6070105@fastmail.fm>
+References: <437A11F3.90204@fastmail.fm> <20051115170603.GA32673@jose.lug.udel.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from vherva@turing.netspan.fi on Tuesday November 15
+In-Reply-To: <20051115170603.GA32673@jose.lug.udel.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org, vherva@turing.netspan.fi
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday November 15, vherva@turing.netspan.fi wrote:
-> I had two disks taken off from the three-disk raid set (hda,hdb,hdc - hdc
-> failed by itself, hdb was marked bad with raidsetfaulty). When the new disks
-> were added back to the set (with raidhotadd), only two of them became active
-> and one remained as a hot spare.
+Ross Vandegrift wrote:
+> On Tue, Nov 15, 2005 at 09:50:59AM -0700, Spencer Tuttle wrote:
 > 
-> I there a way to reconfigure all three to become active again?
-
-It looks from the details you gave that it never was a three-disk
-set.  It was only ever two-disk, possibly with a spare.
-
+>>What do I have to do to autostart this array on boot?
 > 
-> This is kernel 2.4.32-rc1.
+> 
+> Read Documentation/md.txt in your kernel source.  Has lots of cool
+> options for setting up kernel assembly on boot.
+> 
+> If you have a reasonably recent array with persistent superblocks,
+> something like this will do you fine for your root partition:
+> 	md=0,/dev/hda1,/dev/hdc1
+> 
+> If you use initrd/early userspace stuff then you can also drop mdadm
+> in your initrd image and get it to start the array.  If you're using
+> Debian, it's mkinitrd scripts automatically support that if you get
+> things setup properly.
+> 
 
-With a recent 2.6 kernel, you could
-   mdadm --grow --raid-disk=3 /dev/md1
-but with a 2.4 kernel, the only option is to re-create the array:
+That was it I was appending "md=d0,hda,hdb".
 
-  mdadm --stop /dev/md1
-  mdadm --create /dev/md1 --level=1 --raid-disks=3 /dev/hda1 /dev/hdc1 missing
-  mdadm /dev/md1 --add /dev/hdb1
+I changed to to "md=d0,/dev/hda,/dev/hdb" and It starting working like a 
+champ.
 
-NeilBrown
+Thank You
