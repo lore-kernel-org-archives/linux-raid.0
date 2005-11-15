@@ -1,99 +1,41 @@
-From: vherva@turing.netspan.fi
-Subject: 3-disk RAID1 - only two disks active
-Date: Tue, 15 Nov 2005 15:26:22 +0200
-Message-ID: <20051115152622.A2237@turing.netspan.fi>
-Reply-To: linux-raid@vger.kernel.org, vherva@turing.netspan.fi
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Andrew Burgess <aab@cichlid.com>
+Subject: Re: help!
+Date: Tue, 15 Nov 2005 06:29:42 -0800
+Message-ID: <200511151429.jAFETgfK014238@cichlid.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I had two disks taken off from the three-disk raid set (hda,hdb,hdc - hdc
-failed by itself, hdb was marked bad with raidsetfaulty). When the new disks
-were added back to the set (with raidhotadd), only two of them became active
-and one remained as a hot spare.
+>> >I had an mdadm device running fine, and had created my own scripts for 
+>> >shutting it down and such. I upgraded my distro, and all of a sudden it 
+>> >decided to start initializing md devices on it's own, which include one 
+>> >that I want removed.
+>>
+>They were indeed set to raid autodetect. I was unaware of what that 
+>actually did, I think I must have followed that step in a how-to when I 
+>originally set it up. The odd thing is that these are the partition 
+>pairs that were being mounted:
+>sda sdb
+>sda1 sdb1
+>sdc1 sdd1
+>The last 2 are the ones I actually wanted, but the first one was 
+>something I had done when I was first playing around with it, if memory 
+>serves me correct. Is that possible, or does it point to some other issue?
 
-I there a way to reconfigure all three to become active again?
+If changing the partition type does not work then you might try
+zeroing the superblock with 'mdadm --zero-superblock /dev/sda'
+etc.
 
-This is kernel 2.4.32-rc1.
+AFAIK the superblock and the mdadm.conf file are mdadms only
+information sources. Remove them both and it should be impossible
+for the unwanted raid devices to start.
 
-> cat /proc/mdstat
-Personalities : [raid1]
-read_ahead 1024 sectors
-md1 : active raid1 hdb1[2] hdc1[1] hda1[0]
-      102720 blocks [2/2] [UU]
+A funny thing here is that I believe the superblock for sda and
+sda1 are in exactly the same place, at the end of the disk, so I
+can't see how it would find two different raid devices. What
+version superblocks are you using? I think v1 superblocks are at
+the beginning of the device and I'm not sure if the first disk
+block for sda is the same as the first block for sda1...
 
-md2 : active raid1 hdb2[2] hdc2[1] hda2[0]
-      1024064 blocks [2/2] [UU]
-
-md3 : active raid1 hdb3[2] hdc3[1] hda3[0]
-      37955648 blocks [2/2] [UU]
-
-unused devices: <none>
-
-> mdadm --detail /dev/md1
-/dev/md1:
-        Version : 00.90.00
-  Creation Time : Fri May 10 13:42:55 2002
-     Raid Level : raid1
-     Array Size : 102720 (100.33 MiB 105.19 MB)
-    Device Size : 102720 (100.33 MiB 105.19 MB)
-   Raid Devices : 2
-  Total Devices : 3
-Preferred Minor : 1
-    Persistence : Superblock is persistent
-
-    Update Time : Mon Nov 14 23:17:03 2005
-          State : active
- Active Devices : 2
-Working Devices : 3
- Failed Devices : 0
-  Spare Devices : 1
-           
-           UUID : d3f91d5b:5587896d:982609b1:c6a3e584
-         Events : 0.191
-    
-    Number   Major   Minor   RaidDevice State
-       0       3        1        0      active sync   /dev/hda1
-       1      22        1        1      active sync   /dev/hdc1
-       
-       2       3       65        2      spare   /dev/hdb1
-
-
-> cat /etc/raidtab
-raiddev             /dev/md3
-raid-level                  1
-nr-raid-disks               3
-persistent-superblock       1
-nr-spare-disks              0
-    device          /dev/hda3
-    raid-disk     0
-    device          /dev/hdb3
-    raid-disk     1
-    device          /dev/hdc3
-    raid-disk     2
-raiddev             /dev/md2
-raid-level                  1
-nr-raid-disks               3
-persistent-superblock       1
-nr-spare-disks              0
-    device          /dev/hda2
-    raid-disk     0
-    device          /dev/hdb2
-    raid-disk     1
-    device          /dev/hdc2
-    raid-disk     2
-raiddev             /dev/md1
-raid-level                  1
-nr-raid-disks               3
-persistent-superblock       1
-nr-spare-disks              0
-    device          /dev/hda1
-    raid-disk     0
-    device          /dev/hdb1
-    raid-disk     1
-    device          /dev/hdc1
-    raid-disk     2
+HTH (and it could be all wrong)
