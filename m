@@ -1,40 +1,37 @@
-From: "Jim Buttafuoco" <jim@contactbda.com>
-Subject: HELP 13 disk raid 5 not starting
-Date: Tue, 15 Nov 2005 16:50:47 -0500
-Message-ID: <20051115214704.M9636@contactbda.com>
-Reply-To: jim@contactbda.com
+From: Neil Brown <neilb@suse.de>
+Subject: Re: 3-disk RAID1 - only two disks active
+Date: Wed, 16 Nov 2005 10:01:10 +1100
+Message-ID: <17274.26806.260020.822459@cse.unsw.edu.au>
+References: <20051115152622.A2237@turing.netspan.fi>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from vherva@turing.netspan.fi on Tuesday November 15
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org, vherva@turing.netspan.fi
 List-Id: linux-raid.ids
 
-all,
+On Tuesday November 15, vherva@turing.netspan.fi wrote:
+> I had two disks taken off from the three-disk raid set (hda,hdb,hdc - hdc
+> failed by itself, hdb was marked bad with raidsetfaulty). When the new disks
+> were added back to the set (with raidhotadd), only two of them became active
+> and one remained as a hot spare.
+> 
+> I there a way to reconfigure all three to become active again?
 
-I have a 13 disk raid 5 set with 4 disks marks as "clean" and the rest marked as dirty.  When I do the following command
-to start the raid set (md0) I get an error.  Any ideas on how to recover?
+It looks from the details you gave that it never was a three-disk
+set.  It was only ever two-disk, possibly with a spare.
 
-This is a debian sarge system running kernel 2.6.8-1-686-smp and mdadm version v1.4.0 - 29 Oct 2003
+> 
+> This is kernel 2.4.32-rc1.
 
-Thanks
-Jim
+With a recent 2.6 kernel, you could
+   mdadm --grow --raid-disk=3 /dev/md1
+but with a 2.4 kernel, the only option is to re-create the array:
 
-# mdadm --assemble --scan
-mdadm: /dev/md0 assembled from 6 drives and 1 spare - not enough to start the array.
+  mdadm --stop /dev/md1
+  mdadm --create /dev/md1 --level=1 --raid-disks=3 /dev/hda1 /dev/hdc1 missing
+  mdadm /dev/md1 --add /dev/hdb1
 
-my /etc/mdadm/mdadm.conf looks like
-
-DEVICE partitions
-ARRAY /dev/md0 level=raid5 num-devices=12 UUID=c9669a6b:cdc5b9d4:1df0802c:86d53e17
-
-
-and /proc/mdstat looks like
-
-Personalities : [raid5] 
-md0 : inactive sdb1[0] sdm1[12] sdn1[11] sdl1[10] sdk1[9] sdj1[8] sdi1[7] sdh1[6] sdg1[5] sdf1[4] sde1[3] sdd1[2] sdc1[1]
-      3173710592 blocks
-unused devices: <none>
-
-
+NeilBrown
