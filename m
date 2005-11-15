@@ -1,57 +1,39 @@
-From: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
-Subject: Re: [PATCH md 000 of 2] Introduction
-Date: Tue, 15 Nov 2005 09:55:30 -0700 (MST)
-Message-ID: <Pine.LNX.4.64.0511150859360.15915@filesrv1.baby-dragons.com>
-References: <20051115125442.9317.patches@notabene>
+From: ross@jose.lug.udel.edu (Ross Vandegrift)
+Subject: Re: Autostart RAID1 on boot
+Date: Tue, 15 Nov 2005 12:06:03 -0500
+Message-ID: <20051115170603.GA32673@jose.lug.udel.edu>
+References: <437A11F3.90204@fastmail.fm>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20051115125442.9317.patches@notabene>
+Content-Disposition: inline
+In-Reply-To: <437A11F3.90204@fastmail.fm>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid maillist <linux-raid@vger.kernel.org>
+To: Spencer Tuttle <rodeojones@fastmail.fm>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
- 	Hello Neil ,
+On Tue, Nov 15, 2005 at 09:50:59AM -0700, Spencer Tuttle wrote:
+> What do I have to do to autostart this array on boot?
 
-On Tue, 15 Nov 2005, NeilBrown wrote:
-> Following are two patches for md in 2.6.14-mm2 that are suitable to go
-> into the 2.6.15-rc series.
->
-> The first adds a date to the deprecation of START_ARRAY ioctl.
->
-> The second fixes a recently introduced problem that causes md threads
-> to permanently add to the load average (other than that, every works
-> fine).
->
-> [PATCH md 001 of 2] Mark START_ARRAY deprecated with a date.
-> [PATCH md 002 of 2] Make md threads interruptible again.
+Read Documentation/md.txt in your kernel source.  Has lots of cool
+options for setting up kernel assembly on boot.
 
-> diff ./Documentation/feature-removal-schedule.txt~current~ /Documentation/feature-removal-schedule.txt
-> --- ./Documentation/feature-removal-schedule.txt~current~       2005-11-15 10:25:30.000000000 +1100
-> +++ ./Documentation/feature-removal-schedule.txt        2005-11-15 10:25:30.000000000 +1100
-> @@ -131,3 +131,12 @@ What:      EXPORT_SYMBOL(lookup_hash)
->  When:  January 2006
->  Why:   Too low-level interface.  Use lookup_one_len or lookup_create instead.
->  Who:   Christoph Hellwig <hch@lst.de>
-> +
-> +---------------------------
-> +
-> +What:  START_ARRAY ioctl for md
-> +When:  July 2006
-> +Files: drivers/md/md.c
-> +Why:   Not reliable by design - can fail when most needed.
-> +       Alternatives exist
-> +Who:   NeilBrown <neilb@suse.de>
+If you have a reasonably recent array with persistent superblocks,
+something like this will do you fine for your root partition:
+	md=0,/dev/hda1,/dev/hdc1
 
- 	Would some please update Documentation/md.txt with the alternates
- 	that exist to replace START_ARRAY ?  Or for that matter any kernel
- 	related document that covers the md driver &/or its tools .
- 		Tia ,  JimL
+If you use initrd/early userspace stuff then you can also drop mdadm
+in your initrd image and get it to start the array.  If you're using
+Debian, it's mkinitrd scripts automatically support that if you get
+things setup properly.
 
 -- 
-+------------------------------------------------------------------+
-| James   W.   Laferriere | System    Techniques | Give me VMS     |
-| Network        Engineer | 3542 Broken Yoke Dr. |  Give me Linux  |
-| babydr@baby-dragons.com | Billings , MT. 59105 |   only  on  AXP |
-+------------------------------------------------------------------+
+Ross Vandegrift
+ross@lug.udel.edu
+
+"The good Christian should beware of mathematicians, and all those who
+make empty prophecies. The danger already exists that the mathematicians
+have made a covenant with the devil to darken the spirit and to confine
+man in the bonds of Hell."
+	--St. Augustine, De Genesi ad Litteram, Book II, xviii, 37
