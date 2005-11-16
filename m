@@ -1,58 +1,48 @@
-From: Ville Herva <vherva@vianova.fi>
-Subject: Re: 3-disk RAID1 - only two disks active
-Date: Wed, 16 Nov 2005 05:23:09 +0200
-Message-ID: <20051116032309.GT6966@vianova.fi>
-References: <20051115152622.A2237@turing.netspan.fi> <17274.26806.260020.822459@cse.unsw.edu.au>
-Reply-To: vherva@netspan.fi, linux-raid@vger.kernel.org
+From: Guillaume Filion <gfk@logidac.com>
+Subject: Re: Crooked raid
+Date: Wed, 16 Nov 2005 08:47:36 -0500
+Message-ID: <437B3878.1080308@logidac.com>
+References: <4379FCC8.5090903@logidac.com> <17274.27186.622362.978757@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <17274.26806.260020.822459@cse.unsw.edu.au>
+In-Reply-To: <17274.27186.622362.978757@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, Samuli =?iso-8859-1?Q?K=E4rkk=E4inen?= <Samuli.Karkkainen@netspan.fi>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Nov 16, 2005 at 10:01:10AM +1100, you [Neil Brown] wrote:
-> On Tuesday November 15, vherva@turing.netspan.fi wrote:
-> > I had two disks taken off from the three-disk raid set (hda,hdb,hdc - hdc
-> > failed by itself, hdb was marked bad with raidsetfaulty). When the new disks
-> > were added back to the set (with raidhotadd), only two of them became active
-> > and one remained as a hot spare.
-> > 
-> > I there a way to reconfigure all three to become active again?
-> 
-> It looks from the details you gave that it never was a three-disk
-> set.  It was only ever two-disk, possibly with a spare.
+Neil Brown a =E9crit :
+> It's not entirely clear to me what is happening,  In particular, why
+> md is tring to bind '..../disc,*' to an array. =20
 
-I can't dig up any hard evidence, but my impression is that it _was_ [UUU]
-back when I had three disks in it the last time. That was in 2003, though.
-It was created with the mentioned raidtab and 0.90 raidttools - shouldn't
-that result into three active disks? 
+It's not clear to me either! :-)
 
-Later one disk was removed, and later one broken. Now two have been added
-back.
+> Maybe something is
+> running 'raidstart'.  Do you have an '/etc/raidtab'?? If so, remove
+> it.
 
-Anyway, you may well be right, perhaps I misremember and it was 2 active + 1
-one spare.
+No I don't have a /etc/raidtab
 
-> > This is kernel 2.4.32-rc1.
-> 
-> With a recent 2.6 kernel, you could
->    mdadm --grow --raid-disk=3 /dev/md1
-> but with a 2.4 kernel, the only option is to re-create the array:
-> 
->   mdadm --stop /dev/md1
->   mdadm --create /dev/md1 --level=1 --raid-disks=3 /dev/hda1 /dev/hdc1 missing
->   mdadm /dev/md1 --add /dev/hdb1
+> If md0 doesn't hold your root filesystem, try unmounting it, stopping
+> it with
+>   mdadm --stop /dev/md0
+> and restarting with
+>   mdadm --assemble /dev/md0 --update=3Dsummaries /dev/hd[gc]2
 
-Ok, thanks. One of the md's is rootfs, so I'll have to wait for a reboot to
-try that.
+Unfortunately, it does hold my root filesystem. Maibe, I could boot fro=
+m=20
+a rescue floppy/CD with mdadm?
 
-
-
--- v -- 
-
-v@iki.fi
-
+Thanks,
+GFK's
+--=20
+Guillaume Filion, ing. jr
+Logidac Tech., Beaumont, Qu=E9bec, Canada - http://logidac.com/
+PGP Key and more: http://guillaume.filion.org/
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
