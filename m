@@ -1,68 +1,58 @@
-From: "Jim Buttafuoco" <jim@contactbda.com>
-Subject: Re: HELP 13 disk raid 5 not starting
-Date: Tue, 15 Nov 2005 18:30:44 -0500
-Message-ID: <20051115232816.M41786@contactbda.com>
-References: <20051115214704.M9636@contactbda.com> <17274.27718.311366.545389@cse.unsw.edu.au> <1132097225.23464.351.camel@seki.nac.uci.edu>
-Reply-To: jim@contactbda.com
+From: Ville Herva <vherva@vianova.fi>
+Subject: Re: 3-disk RAID1 - only two disks active
+Date: Wed, 16 Nov 2005 05:23:09 +0200
+Message-ID: <20051116032309.GT6966@vianova.fi>
+References: <20051115152622.A2237@turing.netspan.fi> <17274.26806.260020.822459@cse.unsw.edu.au>
+Reply-To: vherva@netspan.fi, linux-raid@vger.kernel.org
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1132097225.23464.351.camel@seki.nac.uci.edu>
+Content-Disposition: inline
+In-Reply-To: <17274.26806.260020.822459@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Stromberg <strombrg@dcs.nac.uci.edu>, Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org, Samuli =?iso-8859-1?Q?K=E4rkk=E4inen?= <Samuli.Karkkainen@netspan.fi>
 List-Id: linux-raid.ids
 
-The disks contain a ~2TB Postgresql database so i was unable to copy to another system.  The force worked as suggested 
-by Neil.
-
-Thanks for the reply
-Jim
-
-
-
----------- Original Message -----------
-From: Dan Stromberg <strombrg@dcs.nac.uci.edu>
-To: Neil Brown <neilb@suse.de>
-Cc: jim@contactbda.com, linux-raid@vger.kernel.org, strombrg@dcs.nac.uci.edu
-Sent: Tue, 15 Nov 2005 15:27:04 -0800
-Subject: Re: HELP 13 disk raid 5 not starting
-
-> On Wed, 2005-11-16 at 10:16 +1100, Neil Brown wrote:
-> > On Tuesday November 15, jim@contactbda.com wrote:
-> > > all,
-> > > 
-> > > I have a 13 disk raid 5 set with 4 disks marks as "clean" and the
-> > > rest marked as dirty.
+On Wed, Nov 16, 2005 at 10:01:10AM +1100, you [Neil Brown] wrote:
+> On Tuesday November 15, vherva@turing.netspan.fi wrote:
+> > I had two disks taken off from the three-disk raid set (hda,hdb,hdc - hdc
+> > failed by itself, hdb was marked bad with raidsetfaulty). When the new disks
+> > were added back to the set (with raidhotadd), only two of them became active
+> > and one remained as a hot spare.
 > > 
-> > And important question to answer is 'how did this happen'?
-> > 
-> > > When I do the following command
-> > > to start the raid set (md0) I get an error.  Any ideas on how to
-> > > recover?
-> > 
-> > Add '--force' to the 'mdadm --assemble' command.  This tells mdadm to
-> > try really hard to assemble the array, modifying info in the
-> > super blocks if necessary.
-> > Be aware that though doing this will normally give you a working
-> > array, there may be data corruption within the array (it depends
-> > somewhat on the answer to that first important question).
-> > I would recommend at least an 'fsck' if that is practical.
-> > 
-> > The array will be assembled degraded.  You will need to add in a spare
-> > if you are happy that the data is sufficiently intact.
+> > I there a way to reconfigure all three to become active again?
 > 
-> Before you do anything that might make things worse (--force is a good
-> thing to try, I'm sure, but sometimes the good thing to try causes
-> further problems, EG sometimes fsck goes kerflooey on ya), you might
-> want to see about getting an image backup of all the drives in the RAID
-> array to some other system, if you have the space.  If your array wasn't
-> that full, you may be able to compress the image backups to good effect.
+> It looks from the details you gave that it never was a three-disk
+> set.  It was only ever two-disk, possibly with a spare.
+
+I can't dig up any hard evidence, but my impression is that it _was_ [UUU]
+back when I had three disks in it the last time. That was in 2003, though.
+It was created with the mentioned raidtab and 0.90 raidttools - shouldn't
+that result into three active disks? 
+
+Later one disk was removed, and later one broken. Now two have been added
+back.
+
+Anyway, you may well be right, perhaps I misremember and it was 2 active + 1
+one spare.
+
+> > This is kernel 2.4.32-rc1.
 > 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-------- End of Original Message -------
+> With a recent 2.6 kernel, you could
+>    mdadm --grow --raid-disk=3 /dev/md1
+> but with a 2.4 kernel, the only option is to re-create the array:
+> 
+>   mdadm --stop /dev/md1
+>   mdadm --create /dev/md1 --level=1 --raid-disks=3 /dev/hda1 /dev/hdc1 missing
+>   mdadm /dev/md1 --add /dev/hdb1
+
+Ok, thanks. One of the md's is rootfs, so I'll have to wait for a reboot to
+try that.
+
+
+
+-- v -- 
+
+v@iki.fi
 
