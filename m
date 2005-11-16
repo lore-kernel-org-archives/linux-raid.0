@@ -1,48 +1,84 @@
-From: Guillaume Filion <gfk@logidac.com>
+From: Andrew Burgess <aab@cichlid.com>
 Subject: Re: Crooked raid
-Date: Wed, 16 Nov 2005 08:47:36 -0500
-Message-ID: <437B3878.1080308@logidac.com>
-References: <4379FCC8.5090903@logidac.com> <17274.27186.622362.978757@cse.unsw.edu.au>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Date: Wed, 16 Nov 2005 07:41:11 -0800
+Message-ID: <200511161541.jAGFfBjZ027253@cichlid.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17274.27186.622362.978757@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown a =E9crit :
-> It's not entirely clear to me what is happening,  In particular, why
-> md is tring to bind '..../disc,*' to an array. =20
+>> Look at:
+>>   mdadm -E /dev/hdc
+>> If it has a superblock, zero it with 'mdadm --zero-superblock /dev/hdc'
+> > Same for hdg
 
-It's not clear to me either! :-)
+>I did this, rebooted and the system wouldn't reboot. Yikes! I was 
+>however able to boot with giving root=/dev/hdc2 to the kernel.
 
-> Maybe something is
-> running 'raidstart'.  Do you have an '/etc/raidtab'?? If so, remove
-> it.
+I didn't realize we were talking about your root filesystem else I would have
+been more cautious (or maybe just kept my mouth shut). Glad you got it to boot!
+Do you recall why it didn't want to boot? What are the kernel command line args?
 
-No I don't have a /etc/raidtab
+Did you check for a bootup script somewhere screwing things up?
+  egrep -i 'raid|mdadm' /etc/rc.d/* /etc/rc.d/init.d/* /etc/*
 
-> If md0 doesn't hold your root filesystem, try unmounting it, stopping
-> it with
->   mdadm --stop /dev/md0
-> and restarting with
->   mdadm --assemble /dev/md0 --update=3Dsummaries /dev/hd[gc]2
+And did you already say that you don't have a mdadm.conf file?
 
-Unfortunately, it does hold my root filesystem. Maibe, I could boot fro=
-m=20
-a rescue floppy/CD with mdadm?
+You might need to pick which mirror (hdc2 or hdg2) you trust more as your root
+filesystem (since they may be different now) and then start over and follow the
+HowTo for making a normal root filesystem into a raided one.
 
-Thanks,
-GFK's
---=20
-Guillaume Filion, ing. jr
-Logidac Tech., Beaumont, Qu=E9bec, Canada - http://logidac.com/
-PGP Key and more: http://guillaume.filion.org/
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+But if you can't find out why the system is still looking at hdc then it might
+all happen again...
+
+>Here's the relevant part of dmesg:
+>device-mapper: 4.1.1-ioctl (2004-04-07) initialised: dm-devel@redhat.com
+>md: can not import ide/host0/bus1/target0/lun0/part2, has active inodes!
+
+I guess this is because you booted from it as hdc2 so its busy and mdadm
+won't try to use it?
+
+Do you know why the system sometimes says ide/host0/bus1/target0/lun0/part2 and
+sometimes says hd[cg]2 ? Its confusing...
+
+>md0 : active raid1 ide/host2/bus1/target0/lun0/part2[0]
+>       77508032 blocks [2/1] [U_]
+
+>/dev/md0:
+>    Raid Devices : 2
+>   Total Devices : 2
+>           State : active, degraded
+>  Active Devices : 1
+>Working Devices : 1
+>  Failed Devices : 1
+>        0      34        2        0      active sync   /dev/hdg2
+>        1       0        0        1      faulty removed
+
+>mdadm: No super block found on /dev/hdc (Expected magic a92b4efc, got 
+>00000000)
+>mdadm: No super block found on /dev/hdg (Expected magic a92b4efc, got 
+>00000000)
+
+Those two results are good
+
+>/dev/hdc2:
+..
+>this     1      22        2        1      active sync   /dev/hdc2
+>    0     0      34        2        0      active sync   /dev/hdg2
+>    1     1      22        2        1      active sync   /dev/hdc2
+
+>/dev/hdg2:
+..
+>this     0      34        2        0      active sync   /dev/hdg2
+>    0     0      34        2        0      active sync   /dev/hdg2
+>    1     1       0        0        1      faulty removed
+
+I still don't see where hdc comes from. Sorry!
+
+Any other raid superblocks around?
+  for dev in /dev/hd? /dev/hd??; do mdadm -E $dev; done
+
+And any raid autodetect partitions around?
+  fdisk -l | grep raid
+
+
