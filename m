@@ -1,66 +1,44 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH md 002 of 2] Make md threads interruptible again.
-Date: Fri, 18 Nov 2005 11:24:23 +1100
-Message-ID: <17277.7991.33335.100135@cse.unsw.edu.au>
-References: <20051115125442.9317.patches@notabene>
-	<1051115015641.9393@suse.de>
-	<20051114180805.01dbf4b9.akpm@osdl.org>
+From: Jure =?UTF-8?Q?Pe=C4=8Dar?= <pegasus@nerv.eu.org>
+Subject: raid5 write performance
+Date: Fri, 18 Nov 2005 15:05:43 +0100
+Message-ID: <20051118150543.59fbdfd9.pegasus@nerv.eu.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Andrew Morton on Monday November 14
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday November 14, akpm@osdl.org wrote:
-> NeilBrown <neilb@suse.de> wrote:
-> >
-> > 
-> > Despite the fact that md threads don't need to be signalled, and won't
-> > respond to signals anyway, we need to have an 'interruptible' wait,
-> > else they stay in 'D' state and add to the load average.
-> > 
-> > ...
-> > +		if (signal_pending(current))
-> > +			flush_signals(current);
-> 
-> Kernel threads don't accept signals by default, so the above is
-> unneeded.
 
-Not by default, but md_thread calls
-	allow_signal(SIGKILL);
+Hi all,
 
-because md_check_recovery (called by some, but not all, md_threads)
-does
-	if (signal_pending(current)) {
-		if (mddev->pers->sync_request) {
-			printk(KERN_INFO "md: %s in immediate safe mode\n",
-			       mdname(mddev));
-			mddev->safemode = 2;
-		}
-		flush_signals(current);
-	}
+Currently zfs is a major news in the storage area. It is very interesti=
+ng to read various details about it on varios blogs of Sun employees. A=
+mong the more interesting I found was this:
 
-i.e. We allow that if SIGKILL is sent to an md array controller thread
-(as opposed to a resync thread), the array will be switched to
-'immediate safe mode'.  In this mode the superblock is marked clean as
-soon as there are no outstanding writes, rather than 20msecs later.
-This if you 'alt-sysrq-K' then you can be fairly sure that the array
-is marked clean NOW.
+http://blogs.sun.com/roller/page/bonwick?entry=3Draid_z
 
-One of the reasons I did this was that I didn't like the whole idea of
-md_notify_reboot which is hooked into the reboot notifiers chain and
-switches all arrays to read-only, thus marking the superblock clean.
-Having effectively the same thing happen on a SIGKILL to all processes
-seemed a reasonable replacement.  However I haven't actually removed
-md_notify_reboot yet....
+The point the guy makes is that it is impossible to atomically both wri=
+te data and update parity, which leaves a window of crash that would si=
+lently leave on-disk data+paritiy in an inconsistent state. Then he men=
+tions that there are software only workarounds for that but that they a=
+re very very slow.
 
-NeilBrown
+It's interesting that my expirience with veritas raid5 for example is j=
+ust that: slow to the point of being unuseable. Now, I'm wondering what=
+ kind of magic does linux md raid5 does, since its write performance is=
+ quite good? Or, does it actually do something regarding this? :)
 
-> 
-> I'll leave it in there now, since that's how things used to be, but please
-> make a note to nuke that check, then test it to make sure I'm telling the
-> truth, then fix it up later on?
+Niel?
+
+--=20
+
+Jure Pe=C4=8Dar
+http://jure.pecar.org
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
