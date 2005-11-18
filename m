@@ -1,79 +1,78 @@
-From: Mike Hardy <mhardy@h3c.com>
-Subject: Re: raid5 write performance
-Date: Fri, 18 Nov 2005 11:23:47 -0800
-Message-ID: <437E2A43.4090207@h3c.com>
-References: <20051118150543.59fbdfd9.pegasus@nerv.eu.org> <1132341596.28924.10.camel@seki.nac.uci.edu>
+From: Andreas Haumer <andreas@xss.co.at>
+Subject: mdadm 2.1: command line option parsing bug?
+Date: Fri, 18 Nov 2005 20:34:14 +0100
+Message-ID: <437E2CB6.2030903@xss.co.at>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1132341596.28924.10.camel@seki.nac.uci.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Stromberg <strombrg@dcs.nac.uci.edu>
-Cc: =?ISO-8859-2?Q?Jure_Pe=E8ar?= <pegasus@nerv.eu.org>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-Moreover, and I'm sure Neil will chime in here, isn't the clean/unclean
-thing designed to prevent this exact scenario?
+Hi!
 
-The array is marked unclean immediately prior to write, then the write
-and parity write happens, then the array is marked clean.
+I just upgraded to mdadm-2.1 from mdadm-1.12.0 and noticed
+that the following command (which is even mentioned in the
+manual page) doesn't work anymore:
 
-If you crash during the write but before parity is correct, the array i=
-s
-unclean and you resync (quickly now thanks to intent logging if you hav=
-e
-that on)
+root@tolstoi:~ {838} $ mdadm -Ebsc partitions
+mdadm: cannot open partitions: No such file or directory
 
-The non-parity blocks that were partially written are then the
-responsibility of your journalling filesystem, which should make sure
-there is no corruption, silent or otherwise.
 
-If I'm misunderstanding that, I'd love to be corrected. I was under the
-impression that the "silent corruption" issue was mythical at this poin=
-t
-and if it's not I'd like to know.
+(I always use this command to create my mdadm.conf file,
+so I found the problem very quickly after upgrading ;-)
 
--Mike
+After playing a little bit with the available commandline
+options I found that the following commands do work:
 
-Dan Stromberg wrote:
-> Would it really be that much slower to have a journal of RAID 5 write=
-s?
->=20
-> On Fri, 2005-11-18 at 15:05 +0100, Jure Pe=E8ar wrote:
->=20
->>Hi all,
->>
->>Currently zfs is a major news in the storage area. It is very interes=
-ting to read various details about it on varios blogs of Sun employees.=
- Among the more interesting I found was this:
->>
->>http://blogs.sun.com/roller/page/bonwick?entry=3Draid_z
->>
->>The point the guy makes is that it is impossible to atomically both w=
-rite data and update parity, which leaves a window of crash that would =
-silently leave on-disk data+paritiy in an inconsistent state. Then he m=
-entions that there are software only workarounds for that but that they=
- are very very slow.
->>
->>It's interesting that my expirience with veritas raid5 for example is=
- just that: slow to the point of being unuseable. Now, I'm wondering wh=
-at kind of magic does linux md raid5 does, since its write performance =
-is quite good? Or, does it actually do something regarding this? :)
->>
->>Niel?
->>
->=20
->=20
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+root@tolstoi:~ {839} $ mdadm -Eb -sc partitions
+ARRAY /dev/md/1 level=raid1 num-devices=3 UUID=c2c22b31:909b7973:0e4224bb:19cf529d
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ARRAY /dev/md/0 level=raid5 num-devices=3 UUID=7abbd703:643ffe8e:d6ae4d0e:1b0908aa
+
+as well as the following variations:
+
+root@tolstoi:~ {840} $ mdadm -Eb -s -c partitions
+ARRAY /dev/md/1 level=raid1 num-devices=3 UUID=c2c22b31:909b7973:0e4224bb:19cf529d
+
+ARRAY /dev/md/0 level=raid5 num-devices=3 UUID=7abbd703:643ffe8e:d6ae4d0e:1b0908aa
+
+
+root@tolstoi:~ {841} $ mdadm --examine --brief --scan --config=partitions
+ARRAY /dev/md/1 level=raid1 num-devices=3 UUID=c2c22b31:909b7973:0e4224bb:19cf529d
+
+ARRAY /dev/md/0 level=raid5 num-devices=3 UUID=7abbd703:643ffe8e:d6ae4d0e:1b0908aa
+
+
+So it looks like the commandline option parsing algorithm
+in mdadm.c (which is way too complicated for me to find out
+quickly what is going wrong here... ;-) has some problem with
+the "-Ebsc partitions" variant.
+
+Seems to be a bug?
+
+I also noticed that there is now an additional newline between
+the "ARRAY" lines. Is that intentional? IMHO there should only
+by one newline after each line here.
+
+HTH
+
+- - andreas
+
+- --
+Andreas Haumer                     | mailto:andreas@xss.co.at
+*x Software + Systeme              | http://www.xss.co.at/
+Karmarschgasse 51/2/20             | Tel: +43-1-6060114-0
+A-1100 Vienna, Austria             | Fax: +43-1-6060114-71
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.2 (GNU/Linux)
+Comment: Using GnuPG with Thunderbird - http://enigmail.mozdev.org
+
+iD8DBQFDfiy0xJmyeGcXPhERAp9KAKCfQru5tViXFM3I+MGwEfTfSS7zwACgxD0C
+ExjRVCIUb3ik5x1zCFYslFo=
+=Rc7n
+-----END PGP SIGNATURE-----
