@@ -1,82 +1,42 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: raid5 reliability (was raid5 write performance)
-Date: Sat, 19 Nov 2005 19:27:10 -0500
-Message-ID: <200511200027.jAK0RQw19221@www.watkins-home.com>
-References: <17279.32081.740196.178730@fisica.ufpr.br>
+From: =?ISO-8859-1?Q?=20=22S=DDSTEM?=
+	  =?ISO-8859-1?Q?=20ORGAN=DDZASYON=22?=
+	 <sistemorganizasyon@ttnet.net>
+Subject: =?ISO-8859-1?Q?=20=C7AMYUVA?= KONUTLARINI  =?ISO-8859-1?Q?=20G=D6RMEDEN?= EV ALMAYIN...
+Date: Sun, 20 Nov 2005 04:47:44 +0200
+Message-ID: <200511200247.jAK2lYHB012192@zeus2.kernel.org>
+Reply-To: sistemorganizasyon@ttnet.net
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=windows-1254
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17279.32081.740196.178730@fisica.ufpr.br>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Carlos Carvalho' <carlos@fisica.ufpr.br>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> owner@vger.kernel.org] On Behalf Of Carlos Carvalho
-> Sent: Saturday, November 19, 2005 2:30 PM
-> To: linux-raid@vger.kernel.org
-> Subject: raid5 reliability (was raid5 write performance)
-> 
-> Guy (bugzilla@watkins-home.com) wrote on 19 November 2005 00:56:
->  >Assume a single stripe has data for 2 different files (A and B).  A disk
-> has
->  >failed.  The file system writes a 4K chunk of data to file A.  The
-> parity
->  >gets updated, but not the data.  Or the data gets updated but not the
->  >parity.  The system crashes or power fails.  The system recovers, but
-> can't
->  >do anything about the parity with a failed disk.
-> 
-> But this is just the case Neil mentioned: an unclean degraded array.
-> This is the only case where data corruption can appear.
+mail almak istemeyenler l=FCtfen bilgi@camyuvakonutlari.com adresine bo=
+=FE bir mail g=F6nderiniz.
 
-Ok, so Neil hit send 1 minute before me, sorry.  :)
+=DCMRAN=DDYE =C7AMYUVA KONUTLARINDA 40 AYA KADAR SAB=DDT TAKS=DDTLE 122=
+ M2 DA=DDRELER..D=DDLERSEN=DDZ BANKA KRED=DDS=DDNE UYGUN M=DCSTAK=DDL T=
+APULU 240 M2 DUBLEXLER,122 M2 3 ODA SALON SIFIR DA=DDRELER..=C7OCUK OYU=
+N ALANLARI,=D6ZEL G=DCVENL=DDK,
+=D6ZEL OTOPARK,SPOR ALANLARI..
+GEN=DD=DE B=DDLG=DD VE FOTO=D0RAFLAR =DD=C7=DDN www.camyuvakonutlari.co=
+m ADRES=DDNE TIKLAYAB=DDL=DDRS=DDN=DDZ..
+HAFTANIN HER G=DCN=DC =DEANT=DDYEM=DDZ=DD VE =D6RNEK DA=DDRELER=DDM=DDZ=
+=DD G=D6REB=DDL=DDRS=DDN=DDZ.
+bilgi@camyuvakonutlari.com
+Merkez Sat=FD=FE  Ofisi
+Eminali Pa=FEa Cd.117/7 Bostanc=FD-=DDSTANBUL
+0216 464 86 40
+gsm.0555 222 88 60
+Mehmet Ba=FEaran
+Sat=FD=FE Koord.
+www.camyuvakonutlari.com
 
-> 
->  >Also, after a power failure, I have seen the system come back with a
-> single
->  >disk failed.  I guess that 1 disk had an expired superblock.
-> 
-> You mean the disk was fine and operating in the array before the power
-> failure? If so the superblocks were all in sync. If one of the
-> superblocks was different the array was already degraded and after the
-> power failure it'll also be dirty, and we're back at the case above.
 
-Yes, everything was fine, but while the superblocks were being updated,
-BANG!  Now 1 is out of date.  I think on reboot that 1 disk will be failed.
-But I am not sure of this.  I do know I had 1 disk dropped from my array
-after a loss of power.  I did not have any emails telling me a disk had
-failed.  So, I think the power failure led to the disk being dropped from
-the array.  I did not pursue how or why, I just added the disk back.  I
-don't really know if this can lead to data corruption.  I guess the stripes
-would be updated before the superblock updates start.  But not sure.  But if
-so, then I don't see how this case can corrupt data.
-
-> 
->  >When you add that disk back, any stripes that were not up to date
->  >will be re-constructed with invalid data.
-> 
-> If the array was not degraded the reconstruction data will not be
-> invalid. Only the parity will be rebuilt and no data corruption will
-> happen.
-
-No, if you add a disk, it is re-built 100%.  At least with my version.  The
-intent log may resolve this, but I am not sure.
-
-> 
->  >I don't know if the intent logging will help here or not.
-> 
-> It won't change anything, it only helps to accelerate the resync by
-> not re-writing stripes that were up to date.
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-To the best of my knowledge, I have never had corrupt data.
-
-Guy
-
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
