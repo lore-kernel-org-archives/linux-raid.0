@@ -1,210 +1,29 @@
-From: Remi Broemeling <rbroemeling@gmail.com>
-Subject: Re: Recovering a 4-disk RAID5 array from 2 clean disks and 2 spares
-Date: Sun, 20 Nov 2005 12:14:41 -0700
-Message-ID: <77c153970511201114i230d154dk46f82a08652b3034@mail.gmail.com>
-References: <77c153970511200123xb1eb1f3qb8c4f5dc03eb1179@mail.gmail.com>
+From: Paul Clements <paul.clements@steeleye.com>
+Subject: Re: raid5 write performance
+Date: Sun, 20 Nov 2005 14:54:33 -0500
+Message-ID: <4380D479.2030203@steeleye.com>
+References: <200511190440.jAJ4efw15919@www.watkins-home.com>	<437EB0A6.8040807@h3c.com>	<17278.48635.585763.580503@cse.unsw.edu.au> <17279.33422.273880.463498@fisica.ufpr.br>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <77c153970511200123xb1eb1f3qb8c4f5dc03eb1179@mail.gmail.com>
-Content-Disposition: inline
+In-Reply-To: <17279.33422.273880.463498@fisica.ufpr.br>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Carlos Carvalho <carlos@fisica.ufpr.br>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil, thanks very much.  I found the answer to my problem in the
-archives of this list, after no small amount of searching.
+Carlos Carvalho wrote:
 
-What I did was recreate the array, re-writing all of the superblocks,
-and leaving out the drive that wasn't fully reconstructed:
+> I think the demand for any solution to the unclean array is indeed low
+> because of the small probability of a double failure. Those that want
+> more reliability can use a spare drive that resyncs automatically or
+> raid6 (or both).
 
-mdadm --create /dev/md0 -c32 -l5 -n4 /dev/hda1 missing /dev/hde1 /dev/hdg1
+A spare disk would help, but note that raid6 does not decrease the 
+probability of the silent corruption problem. Losing one disk in a raid6 
+still means that you are degraded (i.e., you rely on parity to 
+recalculate data, so an incomplete stripe write means corruption).
 
-Then I FSCK'ed the filesystem (read-only) to see if it was reasonable.
-
-root@radon:/mnt# fsck -n /dev/md0
-fsck 1.37 (21-Mar-2005)
-e2fsck 1.37 (21-Mar-2005)
-Warning: skipping journal recovery because doing a read-only filesystem check.
-/dev/md0: clean, 94101/29327360 files, 51942315/58633008 blocks
-
-All clean :)
-
-mount -o ro /dev/md0 /mnt/files
-
-Then I mounted it ro and was able to copy files off.  Thanks linux-raid! :)
-
-On 11/20/05, Remi Broemeling <rbroemeling@gmail.com> wrote:
-> I have (had?) a 4-disk RAID5 array (/dev/md1), consisting of:
->
-> /dev/hda1
-> /dev/hdc1
-> /dev/hde1
-> /dev/hdg1
->
-> After some months of uptime, I had to reboot the system for a
-> non-related issue -- and when it came back up, the array was running
-> in degraded mode.  After further investigating, I had found that it
-> did not auto-add /dev/hdc1 to the RAID5 array because I had forgotten
-> to set it's type to 0xFD.  My bad.
->
-> I made up my mind to fix it, but didn't have the time at the moment
-> and so I shrugged, made a mental note of it, and re-added the drive to
-> the array manually with:
->
-> mdadm /dev/md1 -a /dev/hdc1
->
-> A `cat /proc/mdstat` showed me what I expected (that the array was
-> rebuilding), so I shrugged and went to do other things.
->
-> Some hours later, I returned to see that /dev/hdg1 had failed during
-> the rebuild process.  Now I have a completely snarfed array, with two
-> drives that mdadm sees as clean (/dev/hda1 and /dev/hde1), a
-> could-be-mostly-rebuilt-but-still-partial drive (/dev/hdc1) and a
-> corrupted-but-who-knows-how-badly drive (/dev/hdg1).
->
-> I was considering retiring the machine anyway, to be replaced with
-> something newer... so right now I just want to save anything that I
-> can off of the machine.  Is there any way for me to resurrect the
-> array and get some of my data off of it?
->
-> I tried the following, which I saw in the list archives:
->
-> mdadm -A /dev/md1 --uuid=a38910a6:51582805:6ccb5711:4ac501b2 --force
-> /dev/hdg1 /dev/hde1 /dev/hda1 /dev/hdc1
->
-> ... but the response message was:
->
-> "mdadm: /dev/md1 assembled from 2 drives and 2 spares - not enough to
-> start the array."
->
-> Any help would be greatly appreciated.
->
-> mdadm --examine output for each of the involved partitions follows.
->
-> /dev/hdg1:
->           Magic : a92b4efc
->         Version : 00.90.00
->            UUID : a38910a6:51582805:6ccb5711:4ac501b2
->   Creation Time : Mon Oct  4 14:48:20 2004
->      Raid Level : raid5
->    Raid Devices : 4
->   Total Devices : 3
-> Preferred Minor : 1
->
->     Update Time : Sun Nov 20 01:11:15 2005
->           State : clean
->  Active Devices : 2
-> Working Devices : 3
->  Failed Devices : 2
->   Spare Devices : 1
->        Checksum : dfd92d15 - correct
->          Events : 0.5800013
->
->          Layout : left-symmetric
->      Chunk Size : 32K
->
->       Number   Major   Minor   RaidDevice State
-> this     4      34        1        4      spare   /dev/hdg1
->
->    0     0       3        1        0      active sync   /dev/hda1
->    1     1       0        0        1      faulty removed
->    2     2      33        1        2      active sync   /dev/hde1
->    3     3       0        0        3      faulty removed
->    4     4      34        1        4      spare   /dev/hdg1
->
-> /dev/hde1:
->           Magic : a92b4efc
->         Version : 00.90.00
->            UUID : a38910a6:51582805:6ccb5711:4ac501b2
->   Creation Time : Mon Oct  4 14:48:20 2004
->      Raid Level : raid5
->    Raid Devices : 4
->   Total Devices : 3
-> Preferred Minor : 1
->
->     Update Time : Sun Nov 20 01:11:15 2005
->           State : clean
->  Active Devices : 2
-> Working Devices : 3
->  Failed Devices : 2
->   Spare Devices : 1
->        Checksum : dfd92d16 - correct
->          Events : 0.5800013
->
->          Layout : left-symmetric
->      Chunk Size : 32K
->
->       Number   Major   Minor   RaidDevice State
-> this     2      33        1        2      active sync   /dev/hde1
->
->    0     0       3        1        0      active sync   /dev/hda1
->    1     1       0        0        1      faulty removed
->    2     2      33        1        2      active sync   /dev/hde1
->    3     3       0        0        3      faulty removed
->    4     4      34        1        4      spare   /dev/hdg1
->
-> /dev/hdc1:
->           Magic : a92b4efc
->         Version : 00.90.00
->            UUID : a38910a6:51582805:6ccb5711:4ac501b2
->   Creation Time : Mon Oct  4 14:48:20 2004
->      Raid Level : raid5
->    Raid Devices : 4
->   Total Devices : 4
-> Preferred Minor : 1
->
->     Update Time : Sun Nov 20 01:10:31 2005
->           State : clean
->  Active Devices : 2
-> Working Devices : 4
->  Failed Devices : 2
->   Spare Devices : 2
->        Checksum : dfd92d01 - correct
->          Events : 0.5800012
->
->          Layout : left-symmetric
->      Chunk Size : 32K
->
->       Number   Major   Minor   RaidDevice State
-> this     5      22        1        5      spare   /dev/hdc1
->
->    0     0       3        1        0      active sync   /dev/hda1
->    1     1       0        0        1      faulty removed
->    2     2      33        1        2      active sync   /dev/hde1
->    3     3       0        0        3      faulty removed
->    4     4      34        1        4      spare   /dev/hdg1
->    5     5      22        1        5      spare   /dev/hdc1
->
-> /dev/hda1:
->           Magic : a92b4efc
->         Version : 00.90.00
->            UUID : a38910a6:51582805:6ccb5711:4ac501b2
->   Creation Time : Mon Oct  4 14:48:20 2004
->      Raid Level : raid5
->    Raid Devices : 4
->   Total Devices : 3
-> Preferred Minor : 1
->
->     Update Time : Sun Nov 20 01:11:15 2005
->           State : clean
->  Active Devices : 2
-> Working Devices : 3
->  Failed Devices : 2
->   Spare Devices : 1
->        Checksum : dfd92cf4 - correct
->          Events : 0.5800013
->
->          Layout : left-symmetric
->      Chunk Size : 32K
->
->       Number   Major   Minor   RaidDevice State
-> this     0       3        1        0      active sync   /dev/hda1
->
->    0     0       3        1        0      active sync   /dev/hda1
->    1     1       0        0        1      faulty removed
->    2     2      33        1        2      active sync   /dev/hde1
->    3     3       0        0        3      faulty removed
->    4     4      34        1        4      spare   /dev/hdg1
->
+--
+Paul
