@@ -1,49 +1,47 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: raid5 write performance
-Date: Mon, 21 Nov 2005 10:39:11 +1100
-Message-ID: <17281.2335.968305.691148@cse.unsw.edu.au>
-References: <200511190440.jAJ4efw15919@www.watkins-home.com>
-	<437EB0A6.8040807@h3c.com>
-	<17278.48635.585763.580503@cse.unsw.edu.au>
-	<437F13B4.1070308@bppiac.hu>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: comparing FreeBSD to linux
+Date: Sun, 20 Nov 2005 18:54:23 -0500
+Message-ID: <200511202354.jAKNsOw25852@www.watkins-home.com>
+References: <5d96567b0511200350x215f37a1r5185d7b188f37639@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Farkas Levente on Saturday November 19
+In-Reply-To: <5d96567b0511200350x215f37a1r5185d7b188f37639@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Farkas Levente <lfarkas@bppiac.hu>
-Cc: linux-raid@vger.kernel.org
+To: "'Raz Ben-Jehuda(caro)'" <raziebe@gmail.com>, 'Linux RAID Mailing List' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Saturday November 19, lfarkas@bppiac.hu wrote:
-> Neil Brown wrote:
+> -----Original Message-----
+> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+> owner@vger.kernel.org] On Behalf Of Raz Ben-Jehuda(caro)
+> Sent: Sunday, November 20, 2005 6:50 AM
+> To: Linux RAID Mailing List
+> Subject: comparing FreeBSD to linux
 > 
-> > The other is to use a filesystem that allows the problem to be avoided
-> > by making sure that the only blocks that can be corrupted are dead
-> > blocks.
-> > This could be done with a copy-on-write filesystem that knows about the
-> > raid5 geometry, and only ever writes to a stripe when no other blocks
-> > on the stripe contain live data.
-> > I've been working on a filesystem which does just this, and hope to
-> > have it available in a year or two (it is a back-ground 'hobby'
-> > project). 
+> I have evaluated which is better in terms cpu load when dealing with raid.
+> FreeBSD vinum's or linux raid.
+> When i issued a huge amount of io's read to linux raid i got 93% cpu
+> load ( 7% idle),
+> while i having 10% cpu load  ( 90% idle ) in the freebsd.
+
+Maybe a silly question...  But is it 9.3 times faster under Linux?  :)
+That would explain the 9.3 times increase in CPU load.
+
+It is important that you are comparing the CPU load at the same disks rate,
+or at least factor in the disk rate.
+
+Guy
+
 > 
-> why are you waiting so long? why not just release the project plan, and 
-> any pre-pre-alpha code? that's the point of the cathedral and the 
-> bazaar. may be others can help, find bugs, write code, etc..
+> I need to switch to linux from freebsd. I am using in linux 2.6.6 kernel .
+> is problem is a known issue in linux , is it fixed ?
+> 
+> --
+> Raz
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Uhmm... maybe I'm just selfish and want to have all the fun to myself (it
-is as much a learning exercise as anything else)... or maybe I want to
-be a coder rather than a project manager...
-
-Despite the 'release early / release often' mantra, I think it is
-possible to release something too early.  People look, find nothing
-there, lose interest and never come back.
-
-However I'm possibly at the stage were it might be worth making the
-project more visible...  I'll think about it and let you know....
-
-Thanks for your interest
-
-NeilBrown
