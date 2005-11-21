@@ -1,36 +1,64 @@
-From: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
-Subject: Re: Adding Reed-Solomon Personality to MD, need help/advice
-Date: Mon, 21 Nov 2005 14:11:40 +0100
-Message-ID: <dlsh2c$2h0$1@sea.gmane.org>
-References: <6.0.1.1.2.20040130235924.03f39710@mail.athenet.net>
+From: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
+Subject: Re: comparing FreeBSD to linux
+Date: Mon, 21 Nov 2005 16:47:12 +0200
+Message-ID: <5d96567b0511210647n144bcda6p53d2eb9ba20a8ebc@mail.gmail.com>
+References: <5d96567b0511200350x215f37a1r5185d7b188f37639@mail.gmail.com>
+	 <200511202354.jAKNsOw25852@www.watkins-home.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <200511202354.jAKNsOw25852@www.watkins-home.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Guy <bugzilla@watkins-home.com>
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hello,
+fetching from a disk a random block of 1 MB is aproximately
+20MB/s for a sata disk ( randomly , all over the disk and over a file
+system).
+god help us if the cpu what that slow.
 
-Nathan Lewis <nathapl@cs.okstate.edu> wrote:
-> As part of my Master's thesis, I am working on adding a Reed-Solomon 
-> personality to the existing linux RAID structure and I would like some 
+On 11/21/05, Guy <bugzilla@watkins-home.com> wrote:
+> > -----Original Message-----
+> > From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+> > owner@vger.kernel.org] On Behalf Of Raz Ben-Jehuda(caro)
+> > Sent: Sunday, November 20, 2005 6:50 AM
+> > To: Linux RAID Mailing List
+> > Subject: comparing FreeBSD to linux
+> >
+> > I have evaluated which is better in terms cpu load when dealing with raid.
+> > FreeBSD vinum's or linux raid.
+> > When i issued a huge amount of io's read to linux raid i got 93% cpu
+> > load ( 7% idle),
+> > while i having 10% cpu load  ( 90% idle ) in the freebsd.
+>
+> Maybe a silly question...  But is it 9.3 times faster under Linux?  :)
+> That would explain the 9.3 times increase in CPU load.
+>
+> It is important that you are comparing the CPU load at the same disks rate,
+> or at least factor in the disk rate.
+>
+> Guy
+>
+> >
+> > I need to switch to linux from freebsd. I am using in linux 2.6.6 kernel .
+> > is problem is a known issue in linux , is it fixed ?
+> >
+> > --
+> > Raz
+> > -
+> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-Is there any progress in implementing a generic Reed-Solomon personality
-in MD since this mail from 31 Jan 2004?
-Regarding the intention-question... for me, personally, it would be the
-logical step inbetween raid5 resp. raid6 with survival of 1 resp. 2
-simultaneous disk failures and raid10 with survival of n/2 simultaneous
-disk failures. RaidRS would give users the chance to configure
-redundancy and thus survivability exactly on their demands.
-This would especially make sense when I see the raid5 configurations
-with 14 and more devices which some users refer to on this list.
-To be honest, I was thinking about such a personality myself, too, and
-then was crawling the list's archive.
 
-
-regards
-   Mario
--- 
-*axiom* welcher sensorische input bewirkte die output-aktion,
-        den irc-chatter mit dem nick "dus" des irc-servers
-        mittels eines kills zu verweisen?
-
+--
+Raz
