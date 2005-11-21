@@ -1,29 +1,62 @@
-From: Gil <gil@fooplanet.com>
-Subject: Re: comparing FreeBSD to linux
-Date: Mon, 21 Nov 2005 11:00:59 -0800
-Message-ID: <4382196B.2030209@fooplanet.com>
-References: <5d96567b0511210647n144bcda6p53d2eb9ba20a8ebc@mail.gmail.com> <200511211733.jALHXGE01893@www.watkins-home.com> <5d96567b0511211010j36f37f06we47f3b6edc35d314@mail.gmail.com> <5d96567b0511211015w88b5005n696899abb43c356e@mail.gmail.com> <20051121182024.GA4590@havoc.gtf.org>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: mdadm 2.1: command line option parsing bug?
+Date: Tue, 22 Nov 2005 10:21:12 +1100
+Message-ID: <17282.22120.327672.720044@cse.unsw.edu.au>
+References: <437E2CB6.2030903@xss.co.at>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20051121182024.GA4590@havoc.gtf.org>
+In-Reply-To: message from Andreas Haumer on Friday November 18
 Sender: linux-raid-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>, Guy <bugzilla@watkins-home.com>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Andreas Haumer <andreas@xss.co.at>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Jeff Garzik wrote:
-> On Mon, Nov 21, 2005 at 10:15:11AM -0800, Raz Ben-Jehuda(caro)
-> wrote:
+On Friday November 18, andreas@xss.co.at wrote:
+> -----BEGIN PGP SIGNED MESSAGE-----
+> Hash: SHA1
 > 
->> Well , i have tested the disk with a new tester i have written.
->> it seems that the ata driver causes the high cpu and not raid.
+> Hi!
 > 
-> Which drivers are you using?  lspci and kernel .config?
+> I just upgraded to mdadm-2.1 from mdadm-1.12.0 and noticed
+> that the following command (which is even mentioned in the
+> manual page) doesn't work anymore:
+> 
+> root@tolstoi:~ {838} $ mdadm -Ebsc partitions
+> mdadm: cannot open partitions: No such file or directory
 
-And have you turned on DMA?
+No.... I guess I should fix the man page, and maybe the code :-(
 
-hdparm /dev/hda
+In mdadm-2 we've added --bitmap= and use '-b' as a short version.
+So sometimes -b takes an argument (--bitmap) and sometimes not
+(--brief).  So getopt is told that it takes an optional argument.
+This explains the observed behaviour.
+Possibly this was a mistake....
 
---Gil
+I would like it to take an argument in contexts where --bitmap was
+meaningful (Create, Assemble, Grow) and not where --brief is
+meaningful (Examine, Detail).  but I don't know if getopt_long will
+allow the 'short_opt' string to be changed half way through
+processing...
+
+At the very least, I can print a message if '-b' is being interpreted
+as as --brief, but the option argument is present.
+
+-a has the same problem (--add vs --auto).
+
+I'll see what I can do,
+Thanks.
+
+
+> 
+> I also noticed that there is now an additional newline between
+> the "ARRAY" lines. Is that intentional? IMHO there should only
+> by one newline after each line here.
+> 
+
+Oh yes.  That blank line gets filled with 'spares=' if there are
+any spares, and =devices=' if --verbose.  But I should remove it in
+other cases.  Thanks.
+
+NeilBrown
