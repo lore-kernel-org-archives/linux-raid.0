@@ -1,39 +1,50 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: hangs with 2.6.15-rc5
-Date: Wed, 21 Dec 2005 12:14:17 +1100
-Message-ID: <17320.44137.337545.50069@cse.unsw.edu.au>
-References: <E1Eoqi0-0000FX-Im@highlab.com>
+From: "JaniD++" <djani22@dynamicweb.hu>
+Subject: Re: RAID0 performance question
+Date: Tue, 22 Nov 2005 02:14:31 +0100
+Message-ID: <00ce01c5ef02$2192f7a0$a700a8c0@dcccs>
+References: <437E2CB6.2030903@xss.co.at> <200512022253.17282.a1426z@gawab.com> <00fd01c60367$d8d8f5d0$0400a8c0@dcccs> <200512191416.10665.a1426z@gawab.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Sebastian Kuzminsky on Tuesday December 20
 Sender: linux-raid-owner@vger.kernel.org
-To: Sebastian Kuzminsky <seb@highlab.com>
+To: Al Boldi <a1426z@gawab.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday December 20, seb@highlab.com wrote:
-> I'm seeing hard system lockups with 2.6.15-rc5 when trying to use a
-> RAID-6 array as a PV for LVM2.
-> 
-> I've got four SATA disks hanging off a Marvell 6081 controller.  The disks
-> work great when I access them "raw" (without going through md or dm).
-> Nice & fast & reliable.  The disks work great when used "raw" as PVs
-> for an LVM2 setup.  And they work great when used in a RAID-6 array.
-> 
-> The problem comes when I build a RAID-6 array and try to use the array
-> as a PV.  The system hangs within several seconds of touching the array.
-> No messages on the console, no blinky on the Caps Lock, and no pingy on
-> the network...
-> 
-> My guess is it's an interaction between the RAID code and the LVM code,
-> since both pieces work fine on their own.
-> 
-> Any suggestions on how to debug this?  I'm kind of stumped here...
-> 
 
-alt-sysrq-P ?
-alt-sysrq-T ?
+----- Original Message ----- 
+From: "Al Boldi" <a1426z@gawab.com>
+To: "JaniD++" <djani22@dynamicweb.hu>
+Cc: <linux-raid@vger.kernel.org>
+Sent: Monday, December 19, 2005 12:16 PM
+Subject: Re: RAID0 performance question
 
-NeilBrown
+
+> JaniD++ wrote:
+> > For me, the performance bottleneck is cleanly about RAID0 layer used
+> > exactly as "concentrator" to join the 4x2TB to 1x8TB.
+>
+> Did you try running RAID0 over nbd directly and found it to be faster?
+
+At this time i cannot test it, because the system is loaded, and the result
+will fase.
+Anyway i will probe this....
+
+>
+> IIRC, stacking raid modules does need a considerable amount of tuning, and
+> even then it does not scale linearly.
+>
+> Maybe NeilBrown can help?
+
+Maybe, but it looks like Neil is not interested. :-(
+
+And the more probles is, i plan to modify the entire system structure, and
+will not be spare drives to testing soon... :-/
+
+Cheers,
+Janos
+
+
+
