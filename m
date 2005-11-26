@@ -1,37 +1,44 @@
-From: Lajber Zoltan <lajbi@lajli.gau.hu>
-Subject: Re: RAID0 performance question
-Date: Sat, 26 Nov 2005 18:11:50 +0100 (CET)
-Message-ID: <Pine.LNX.4.58.0511261810350.1482@lajli.gau.hu>
-References: <437E2CB6.2030903@xss.co.at> <17282.22120.327672.720044@cse.unsw.edu.au>
- <20051122220531.GU26862@skl-net.de> <015c01c5f292$57e0e270$0400a8c0@dcccs>
- <5d96567b0511260756t3989df8ep8c98326fc394ca18@mail.gmail.com>
- <01ca01c5f2a3$ab6ebf00$0400a8c0@dcccs>
+From: "David M. Strang" <dstrang@shellpower.net>
+Subject: Re: Booting from raid1 -- md: invalid raid superblock magic on sdb1
+Date: Sat, 26 Nov 2005 12:36:24 -0500
+Message-ID: <052101c5f2af$ec7a16f0$200a11ac@NCNF5131FTH>
+References: <050501c5f2a4$fe72c560$200a11ac@NCNF5131FTH> <559c115f0605930c434a98c6cfd8fd66@logidac.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=iso-8859-1;
+	format=flowed	reply-type=response
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <01ca01c5f2a3$ab6ebf00$0400a8c0@dcccs>
 Sender: linux-raid-owner@vger.kernel.org
-To: JaniD++ <djani22@dynamicweb.hu>
+To: Guillaume Filion <gfk@logidac.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, 26 Nov 2005, JaniD++ wrote:
-
-> Hello, Raz,
+On Saturday 26 November 2005 12:16:14, Guillaume Filion wrote:
+> Le 05-11-26, =E0 11:18, David M. Strang a =E9crit :
+> > md: invalid raid superblock magic on sdb1
 >
-> Think this is not cpu usage problem. :-)
-> The system is divided to 4 cpuset, and each cpuset uses only one disknode.
-> (CPU0->nb0, CPU1->nb1, ...)
+> Did you include the md and raid1 modules in mkinirtd.conf?
+>
+> I'll admit that while I have my root on a raid1 device, I'm a bit con=
+fused=20
+> by the whole process... :-/
+>
 
-Seams to be CPU problem. Which kind of NIC do you have?
+Well, actually... I don't use an initrd. All my drivers are straight=20
+compiled into the kernel.
 
-> CPU2 states:   2.0% user  74.0% system    0.0% nice   3.0% iowait  18.0%
-> idle
-> CPU3 states:  10.0% user  57.0% system    0.0% nice   5.0% iowait  26.0%
+> I found this document particularly helpful:
+> http://xtronics.com/reference/SATA-RAID-Debian.htm
+>
 
-Do you have 4 cpu, or 2 HT cpu?
+Good document, I've looked at that one a bit too. It seems that the md.=
+txt=20
+from the kernel Documentation is perhaps what is throwing me awry.
 
-Bye,
--=Lajbi=----------------------------------------------------------------
- LAJBER Zoltan               Szent Istvan Egyetem,  Informatika Hivatal
- Most of the time, if you think you are in trouble, crank that throttle!
+-- David M. Strang=20
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
