@@ -1,127 +1,37 @@
-From: "David M. Strang" <dstrang@shellpower.net>
-Subject: Booting from raid1 -- md: invalid raid superblock magic on sdb1
-Date: Sat, 26 Nov 2005 11:18:10 -0500
-Message-ID: <050501c5f2a4$fe72c560$200a11ac@NCNF5131FTH>
+From: Lajber Zoltan <lajbi@lajli.gau.hu>
+Subject: Re: RAID0 performance question
+Date: Sat, 26 Nov 2005 18:11:50 +0100 (CET)
+Message-ID: <Pine.LNX.4.58.0511261810350.1482@lajli.gau.hu>
+References: <437E2CB6.2030903@xss.co.at> <17282.22120.327672.720044@cse.unsw.edu.au>
+ <20051122220531.GU26862@skl-net.de> <015c01c5f292$57e0e270$0400a8c0@dcccs>
+ <5d96567b0511260756t3989df8ep8c98326fc394ca18@mail.gmail.com>
+ <01ca01c5f2a3$ab6ebf00$0400a8c0@dcccs>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="iso-8859-1";
-	reply-type=original
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <01ca01c5f2a3$ab6ebf00$0400a8c0@dcccs>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: JaniD++ <djani22@dynamicweb.hu>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello all --
+On Sat, 26 Nov 2005, JaniD++ wrote:
 
-I've read, and read, and read -- and I'm still not having ANY luck booting 
-completely from a raid1 device.
+> Hello, Raz,
+>
+> Think this is not cpu usage problem. :-)
+> The system is divided to 4 cpuset, and each cpuset uses only one disknode.
+> (CPU0->nb0, CPU1->nb1, ...)
 
-This is my setup...
+Seams to be CPU problem. Which kind of NIC do you have?
 
-sda1 is booting, working great. I'm attempting to transition to a bootable 
-raid1.
+> CPU2 states:   2.0% user  74.0% system    0.0% nice   3.0% iowait  18.0%
+> idle
+> CPU3 states:  10.0% user  57.0% system    0.0% nice   5.0% iowait  26.0%
 
-sdb1 is a 400GB partition -- it is type FD.
+Do you have 4 cpu, or 2 HT cpu?
 
-Disk /dev/sdb: 400.0 GB, 400088457216 bytes
-2 heads, 4 sectors/track, 97677846 cylinders
-Units = cylinders of 8 * 512 = 4096 bytes
-
-   Device Boot      Start         End      Blocks   Id  System
-/dev/sdb1               1    97677846   390711382   fd  Linux raid 
-autodetect
-
-I have created my raid1 mirror with the following command:
-
-mdadm --create /dev/md_d0 -e1 -ap --level=1 --raid-devices=2 
-missing,/dev/sdb1
-
-The raid created correctly, I then partitioned md_d0 to match sda1.
-
-
-
-Disk /dev/sda: 400.0 GB, 400088457216 bytes
-2 heads, 4 sectors/track, 97677846 cylinders
-Units = cylinders of 8 * 512 = 4096 bytes
-
-   Device Boot      Start         End      Blocks   Id  System
-/dev/sda1   *           1    25000000    99999998   83  Linux
-/dev/sda2        25000001    95677734   282710936   83  Linux
-/dev/sda3        95677735    96177734     2000000   83  Linux
-/dev/sda4        96177735    97677824     6000360   82  Linux swap / Solaris
-
-
-Disk /dev/md_d0: 400.0 GB, 400088444928 bytes
-2 heads, 4 sectors/track, 97677843 cylinders
-Units = cylinders of 8 * 512 = 4096 bytes
-
-      Device Boot      Start         End      Blocks   Id  System
-/dev/md_d0p1   *           1    25000000    99999998   83  Linux
-/dev/md_d0p2        25000001    95677734   282710936   83  Linux
-/dev/md_d0p3        95677735    96177734     2000000   83  Linux
-/dev/md_d0p4        96177735    97677843     6000436   82  Linux swap / 
-Solaris
-
-
-Here is my lilo.conf settings; I'm attempting to get it to mount md_d0 when 
-the kernel starts. I realize that automount (type FD) no longer functions 
-with a version-1 superblock.
-
-#
-# /etc/lilo.conf: lilo(8) configuration, see lilo.conf(5)
-#
-
-lba32
-install=text
-boot=/dev/sda
-map=/boot/System.map
-image=/vmlinuz
-        label=CRUX
-        root=/dev/sda1
-        read-only
-        append="quiet md=d0,/dev/sdb1"
-
-# End of file
-
-
-Without fail, every time the system boots -- I get the following message:
-
-md: invalid raid superblock magic on sdb1
-
-The odd thing is; if I login -- I can execute the following:
-
--(root@xenogenesis)-(~)- # mdadm -A /dev/md_d0 /dev/sdb1
-mdadm: /dev/md_d0 has been started with 1 drive (out of 2).
--(root@xenogenesis)-(~)- # mdadm -E /dev/sdb1
-/dev/sdb1:
-          Magic : a92b4efc
-        Version : 01.00
-     Array UUID : 0d7a60d0:af2843fe:cde2a4dc:207bbd63
-           Name : CRUX x64
-  Creation Time : Sat Nov 26 03:24:23 2005
-     Raid Level : raid1
-   Raid Devices : 2
-
-    Device Size : 781422744 (372.61 GiB 400.09 GB)
-   Super Offset : 781422744 sectors
-          State : clean
-    Device UUID : 86be5e9e:b7c740ab:46bfb508:090a0e42
-    Update Time : Sat Nov 26 04:03:43 2005
-       Checksum : ebed5cb5 - correct
-         Events : 168
-
-
-   Array State : _U 1 failed
--(root@xenogenesis)-(~)- # mdadm -Q /dev/sdb1
-/dev/sdb1: is not an md array
-/dev/sdb1: device 1 in 2 device unknown raid1 array.  Use mdadm --examine 
-for more detail.
-
-
-I'm really confused; mdadm seems to recognize it and load it fine... why 
-can't I get the kernel to load it?
-
--- David M. Strang 
-
+Bye,
+-=Lajbi=----------------------------------------------------------------
+ LAJBER Zoltan               Szent Istvan Egyetem,  Informatika Hivatal
+ Most of the time, if you think you are in trouble, crank that throttle!
