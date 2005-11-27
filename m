@@ -1,55 +1,63 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PATCH md 000 of 18] Introduction
-Date: Mon, 28 Nov 2005 10:39:35 +1100
-Message-ID: <20051128102824.14498.patches@notabene>
+Subject: [PATCH md 003 of 18] Fix problem with raid6 intent bitmap
+Date: Mon, 28 Nov 2005 10:39:52 +1100
+Message-ID: <1051127233952.14769@suse.de>
+References: <20051128102824.14498.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: Andrew Morton <akpm@osdl.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Following are 18 patches against md/raid in 2.6.15-rc2-mm1
 
-The first 5 are bug fixes against recent additions to 2.6.15-rc.
-They should preferrable go to Linus for inclusion in 2.6.15.
+When doing a recovery, we need to know whether the array will
+still be degraded after the recovery has finished, so we can 
+know whether bits can be clearred yet or not.  This patch
+performs the required check.
 
-The remaining 13 are code cleanups and new functionality.  These
-should sit in -mm until 2.6.16-rc opens up.
 
-The main elements of functionality I have been working on are
- - bitmap based write intent logging
-      This is now available in all raid levels (where useful).
- - better handling of read errors
-      This is now available for raid5, raid6, raid1
-      raid10 is still outstanding
- - Support 'check' action which checks redundancy but doesn't repair.
-      This is now available in raid5 and raid6
-      raid10 and raid1 are still outstanding.
+Signed-off-by: Neil Brown <neilb@suse.de>
 
-Future work includes
-  - enhancements to the sysfs interface
-  - improve raid5/6 read speed by bypassing cache
+### Diffstat output
+ ./drivers/md/raid6main.c |   15 +++++++++++++--
+ 1 file changed, 13 insertions(+), 2 deletions(-)
 
-Thanks,
-NeilBrown
-
-2.6.15 material
- [PATCH md 001 of 18] Improve read speed to raid10 arrays using 'far copies'.
- [PATCH md 002 of 18] Fix locking problem in r5/r6
- [PATCH md 003 of 18] Fix problem with raid6 intent bitmap
- [PATCH md 004 of 18] Set default_bitmap_offset properly in set_array_info
- [PATCH md 005 of 18] Fix --re-add for raid1 and raid6
-2.6.16 material
- [PATCH md 006 of 18] Improve raid1 "IO Barrier" concept.
- [PATCH md 007 of 18] Improve raid10 "IO Barrier" concept.
- [PATCH md 008 of 18] Small cleanups for raid5
- [PATCH md 009 of 18] Allow dirty raid[456] arrays to be started at boot.
- [PATCH md 010 of 18] Move bitmap_create to after md array has been initialised.
- [PATCH md 011 of 18] Write intent bitmap support for raid10
- [PATCH md 012 of 18] Fix raid6 resync check/repair code.
- [PATCH md 013 of 18] Improve handing of read errors with raid6
- [PATCH md 014 of 18] Attempt to auto-correct read errors in raid1.
- [PATCH md 015 of 18] Tidyup some issues with raid1 resync and prepare for catching read errors.
- [PATCH md 016 of 18] Better handling for read error in raid1 during resync
- [PATCH md 017 of 18] Handle errors when read-only
- [PATCH md 018 of 18] Fix up some rdev rcu locking in raid5/6
+diff ./drivers/md/raid6main.c~current~ ./drivers/md/raid6main.c
+--- ./drivers/md/raid6main.c~current~	2005-11-28 10:08:33.000000000 +1100
++++ ./drivers/md/raid6main.c	2005-11-28 10:09:27.000000000 +1100
+@@ -1702,6 +1702,8 @@ static sector_t sync_request(mddev_t *md
+ 	int data_disks = raid_disks - 2;
+ 	sector_t max_sector = mddev->size << 1;
+ 	int sync_blocks;
++	int still_degraded = 0;
++	int i;
+ 
+ 	if (sector_nr >= max_sector) {
+ 		/* just being told to finish up .. nothing much to do */
+@@ -1710,7 +1712,7 @@ static sector_t sync_request(mddev_t *md
+ 		if (mddev->curr_resync < max_sector) /* aborted */
+ 			bitmap_end_sync(mddev->bitmap, mddev->curr_resync,
+ 					&sync_blocks, 1);
+-		else /* compelted sync */
++		else /* completed sync */
+ 			conf->fullsync = 0;
+ 		bitmap_close_sync(mddev->bitmap);
+ 
+@@ -1748,7 +1750,16 @@ static sector_t sync_request(mddev_t *md
+ 		 */
+ 		schedule_timeout_uninterruptible(1);
+ 	}
+-	bitmap_start_sync(mddev->bitmap, sector_nr, &sync_blocks, 0);
++	/* Need to check if array will still be degraded after recovery/resync
++	 * We don't need to check the 'failed' flag as when that gets set,
++	 * recovery aborts.
++	 */
++	for (i=0; i<mddev->raid_disks; i++)
++		if (conf->disks[i].rdev == NULL)
++			still_degraded = 1;
++
++	bitmap_start_sync(mddev->bitmap, sector_nr, &sync_blocks, still_degraded);
++
+ 	spin_lock(&sh->lock);
+ 	set_bit(STRIPE_SYNCING, &sh->state);
+ 	clear_bit(STRIPE_INSYNC, &sh->state);
