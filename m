@@ -1,7 +1,7 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PATCH md 010 of 18] Move bitmap_create to after md array has been initialised.
-Date: Mon, 28 Nov 2005 10:40:27 +1100
-Message-ID: <1051127234027.14853@suse.de>
+Subject: [PATCH md 013 of 18] Improve handing of read errors with raid6
+Date: Mon, 28 Nov 2005 10:40:43 +1100
+Message-ID: <1051127234043.14889@suse.de>
 References: <20051128102824.14498.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
@@ -10,159 +10,130 @@ Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-This is important because bitmap_create uses
-  mddev->resync_max_sectors
-and that doesn't have a valid value until after the array
-has been initialised (with pers->run()).
-[It doesn't make a difference for current personalities that 
- support bitmaps, but will make a difference for raid10]
-
-This has the added advantage of meaning with can move the
-thread->timeout manipulation inside the bitmap.c code instead
-of sprinkling identical code throughout all personalities.
-
+This is a simple port of match functionality across from raid5.
+If we get a read error, we don't kick the drive straight away, but
+try to over-write with good data first.
 
 Signed-off-by: Neil Brown <neilb@suse.de>
 
 ### Diffstat output
- ./drivers/md/bitmap.c    |    4 ++++
- ./drivers/md/md.c        |   16 +++++++++-------
- ./drivers/md/raid1.c     |    8 --------
- ./drivers/md/raid5.c     |   11 +----------
- ./drivers/md/raid6main.c |   11 +----------
- 5 files changed, 15 insertions(+), 35 deletions(-)
-
-diff ./drivers/md/bitmap.c~current~ ./drivers/md/bitmap.c
---- ./drivers/md/bitmap.c~current~	2005-11-28 10:08:19.000000000 +1100
-+++ ./drivers/md/bitmap.c	2005-11-28 10:12:40.000000000 +1100
-@@ -1530,6 +1530,8 @@ void bitmap_destroy(mddev_t *mddev)
- 		return;
- 
- 	mddev->bitmap = NULL; /* disconnect from the md device */
-+	if (mddev->thread)
-+		mddev->thread->timeout = MAX_SCHEDULE_TIMEOUT;
- 
- 	bitmap_free(bitmap);
- }
-@@ -1636,6 +1638,8 @@ int bitmap_create(mddev_t *mddev)
- 
- 	if (IS_ERR(bitmap->writeback_daemon))
- 		return PTR_ERR(bitmap->writeback_daemon);
-+	mddev->thread->timeout = bitmap->daemon_sleep * HZ;
-+
- 	return bitmap_update_sb(bitmap);
- 
-  error:
-
-diff ./drivers/md/md.c~current~ ./drivers/md/md.c
---- ./drivers/md/md.c~current~	2005-11-28 10:12:33.000000000 +1100
-+++ ./drivers/md/md.c	2005-11-28 10:12:40.000000000 +1100
-@@ -2054,13 +2054,15 @@ static int do_md_run(mddev_t * mddev)
- 	if (start_readonly)
- 		mddev->ro = 2; /* read-only, but switch on first write */
- 
--	/* before we start the array running, initialise the bitmap */
--	err = bitmap_create(mddev);
--	if (err)
--		printk(KERN_ERR "%s: failed to create bitmap (%d)\n",
--			mdname(mddev), err);
--	else
--		err = mddev->pers->run(mddev);
-+	err = mddev->pers->run(mddev);
-+	if (!err && mddev->pers->sync_request) {
-+		err = bitmap_create(mddev);
-+		if (err) {
-+			printk(KERN_ERR "%s: failed to create bitmap (%d)\n",
-+			       mdname(mddev), err);
-+			mddev->pers->stop(mddev);
-+		}
-+	}
- 	if (err) {
- 		printk(KERN_ERR "md: pers->run() failed ...\n");
- 		module_put(mddev->pers->owner);
-
-diff ./drivers/md/raid1.c~current~ ./drivers/md/raid1.c
---- ./drivers/md/raid1.c~current~	2005-11-28 10:12:17.000000000 +1100
-+++ ./drivers/md/raid1.c	2005-11-28 10:12:40.000000000 +1100
-@@ -1610,7 +1610,6 @@ static int run(mddev_t *mddev)
- 		       mdname(mddev));
- 		goto out_free_conf;
- 	}
--	if (mddev->bitmap) mddev->thread->timeout = mddev->bitmap->daemon_sleep * HZ;
- 
- 	printk(KERN_INFO 
- 		"raid1: raid set %s active with %d out of %d mirrors\n",
-@@ -1782,13 +1781,6 @@ static void raid1_quiesce(mddev_t *mddev
- 		lower_barrier(conf);
- 		break;
- 	}
--	if (mddev->thread) {
--		if (mddev->bitmap)
--			mddev->thread->timeout = mddev->bitmap->daemon_sleep * HZ;
--		else
--			mddev->thread->timeout = MAX_SCHEDULE_TIMEOUT;
--		md_wakeup_thread(mddev->thread);
--	}
- }
- 
- 
-
-diff ./drivers/md/raid5.c~current~ ./drivers/md/raid5.c
---- ./drivers/md/raid5.c~current~	2005-11-28 10:12:33.000000000 +1100
-+++ ./drivers/md/raid5.c	2005-11-28 10:12:40.000000000 +1100
-@@ -1963,9 +1963,6 @@ memory = conf->max_nr_stripes * (sizeof(
- 	/* Ok, everything is just fine now */
- 	sysfs_create_group(&mddev->kobj, &raid5_attrs_group);
- 
--	if (mddev->bitmap)
--		mddev->thread->timeout = mddev->bitmap->daemon_sleep * HZ;
--
- 	mddev->queue->unplug_fn = raid5_unplug_device;
- 	mddev->queue->issue_flush_fn = raid5_issue_flush;
- 
-@@ -2199,14 +2196,8 @@ static void raid5_quiesce(mddev_t *mddev
- 		spin_unlock_irq(&conf->device_lock);
- 		break;
- 	}
--	if (mddev->thread) {
--		if (mddev->bitmap)
--			mddev->thread->timeout = mddev->bitmap->daemon_sleep * HZ;
--		else
--			mddev->thread->timeout = MAX_SCHEDULE_TIMEOUT;
--		md_wakeup_thread(mddev->thread);
--	}
- }
-+
- static mdk_personality_t raid5_personality=
- {
- 	.name		= "raid5",
+ ./drivers/md/raid6main.c |   70 ++++++++++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 66 insertions(+), 4 deletions(-)
 
 diff ./drivers/md/raid6main.c~current~ ./drivers/md/raid6main.c
---- ./drivers/md/raid6main.c~current~	2005-11-28 10:12:33.000000000 +1100
-+++ ./drivers/md/raid6main.c	2005-11-28 10:12:40.000000000 +1100
-@@ -1990,9 +1990,6 @@ static int run(mddev_t *mddev)
- 	/* Ok, everything is just fine now */
- 	mddev->array_size =  mddev->size * (mddev->raid_disks - 2);
- 
--	if (mddev->bitmap)
--		mddev->thread->timeout = mddev->bitmap->daemon_sleep * HZ;
--
- 	mddev->queue->unplug_fn = raid6_unplug_device;
- 	mddev->queue->issue_flush_fn = raid6_issue_flush;
- 	return 0;
-@@ -2228,14 +2225,8 @@ static void raid6_quiesce(mddev_t *mddev
- 		spin_unlock_irq(&conf->device_lock);
- 		break;
- 	}
--	if (mddev->thread) {
--		if (mddev->bitmap)
--			mddev->thread->timeout = mddev->bitmap->daemon_sleep * HZ;
--		else
--			mddev->thread->timeout = MAX_SCHEDULE_TIMEOUT;
--		md_wakeup_thread(mddev->thread);
--	}
+--- ./drivers/md/raid6main.c~current~	2005-11-28 10:12:56.000000000 +1100
++++ ./drivers/md/raid6main.c	2005-11-28 10:12:59.000000000 +1100
+@@ -367,8 +367,8 @@ static void shrink_stripes(raid6_conf_t 
+ 	conf->slab_cache = NULL;
  }
-+
- static mdk_personality_t raid6_personality=
+ 
+-static int raid6_end_read_request (struct bio * bi, unsigned int bytes_done,
+-				   int error)
++static int raid6_end_read_request(struct bio * bi, unsigned int bytes_done,
++				  int error)
  {
- 	.name		= "raid6",
+  	struct stripe_head *sh = bi->bi_private;
+ 	raid6_conf_t *conf = sh->raid_conf;
+@@ -420,9 +420,35 @@ static int raid6_end_read_request (struc
+ #else
+ 		set_bit(R5_UPTODATE, &sh->dev[i].flags);
+ #endif
++		if (test_bit(R5_ReadError, &sh->dev[i].flags)) {
++			printk(KERN_INFO "raid6: read error corrected!!\n");
++			clear_bit(R5_ReadError, &sh->dev[i].flags);
++			clear_bit(R5_ReWrite, &sh->dev[i].flags);
++		}
++		if (atomic_read(&conf->disks[i].rdev->read_errors))
++			atomic_set(&conf->disks[i].rdev->read_errors, 0);
+ 	} else {
+-		md_error(conf->mddev, conf->disks[i].rdev);
++		int retry = 0;
+ 		clear_bit(R5_UPTODATE, &sh->dev[i].flags);
++		atomic_inc(&conf->disks[i].rdev->read_errors);
++		if (conf->mddev->degraded)
++			printk(KERN_WARNING "raid6: read error not correctable.\n");
++		else if (test_bit(R5_ReWrite, &sh->dev[i].flags))
++			/* Oh, no!!! */
++			printk(KERN_WARNING "raid6: read error NOT corrected!!\n");
++		else if (atomic_read(&conf->disks[i].rdev->read_errors)
++			 > conf->max_nr_stripes)
++			printk(KERN_WARNING
++			       "raid6: Too many read errors, failing device.\n");
++		else
++			retry = 1;
++		if (retry)
++			set_bit(R5_ReadError, &sh->dev[i].flags);
++		else {
++			clear_bit(R5_ReadError, &sh->dev[i].flags);
++			clear_bit(R5_ReWrite, &sh->dev[i].flags);
++			md_error(conf->mddev, conf->disks[i].rdev);
++		}
+ 	}
+ 	rdev_dec_pending(conf->disks[i].rdev, conf->mddev);
+ #if 0
+@@ -1079,6 +1105,12 @@ static void handle_stripe(struct stripe_
+ 		if (dev->written) written++;
+ 		rdev = conf->disks[i].rdev; /* FIXME, should I be looking rdev */
+ 		if (!rdev || !test_bit(In_sync, &rdev->flags)) {
++			/* The ReadError flag will just be confusing now */
++			clear_bit(R5_ReadError, &dev->flags);
++			clear_bit(R5_ReWrite, &dev->flags);
++		}
++		if (!rdev || !test_bit(In_sync, &rdev->flags)
++		    || test_bit(R5_ReadError, &dev->flags)) {
+ 			if ( failed < 2 )
+ 				failed_num[failed] = i;
+ 			failed++;
+@@ -1095,6 +1127,14 @@ static void handle_stripe(struct stripe_
+ 	if (failed > 2 && to_read+to_write+written) {
+ 		for (i=disks; i--; ) {
+ 			int bitmap_end = 0;
++
++			if (test_bit(R5_ReadError, &sh->dev[i].flags)) {
++				mdk_rdev_t *rdev = conf->disks[i].rdev;
++				if (rdev && test_bit(In_sync, &rdev->flags))
++					/* multiple read failures in one stripe */
++					md_error(conf->mddev, rdev);
++			}
++
+ 			spin_lock_irq(&conf->device_lock);
+ 			/* fail all writes first */
+ 			bi = sh->dev[i].towrite;
+@@ -1130,7 +1170,8 @@ static void handle_stripe(struct stripe_
+ 			}
+ 
+ 			/* fail any reads if this device is non-operational */
+-			if (!test_bit(R5_Insync, &sh->dev[i].flags)) {
++			if (!test_bit(R5_Insync, &sh->dev[i].flags) ||
++			    test_bit(R5_ReadError, &sh->dev[i].flags)) {
+ 				bi = sh->dev[i].toread;
+ 				sh->dev[i].toread = NULL;
+ 				if (test_and_clear_bit(R5_Overlap, &sh->dev[i].flags))
+@@ -1457,6 +1498,27 @@ static void handle_stripe(struct stripe_
+ 		clear_bit(STRIPE_SYNCING, &sh->state);
+ 	}
+ 
++	/* If the failed drives are just a ReadError, then we might need
++	 * to progress the repair/check process
++	 */
++	if (failed <= 2 && ! conf->mddev->ro)
++		for (i=0; i<failed;i++) {
++			dev = &sh->dev[failed_num[i]];
++			if (test_bit(R5_ReadError, &dev->flags)
++			    && !test_bit(R5_LOCKED, &dev->flags)
++			    && test_bit(R5_UPTODATE, &dev->flags)
++				) {
++				if (!test_bit(R5_ReWrite, &dev->flags)) {
++					set_bit(R5_Wantwrite, &dev->flags);
++					set_bit(R5_ReWrite, &dev->flags);
++					set_bit(R5_LOCKED, &dev->flags);
++				} else {
++					/* let's read it back */
++					set_bit(R5_Wantread, &dev->flags);
++					set_bit(R5_LOCKED, &dev->flags);
++				}
++			}
++		}
+ 	spin_unlock(&sh->lock);
+ 
+ 	while ((bi=return_bi)) {
