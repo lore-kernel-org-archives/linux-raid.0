@@ -1,7 +1,7 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PATCH md 015 of 18] Tidyup some issues with raid1 resync and prepare for catching read errors.
-Date: Mon, 28 Nov 2005 10:40:54 +1100
-Message-ID: <1051127234054.14913@suse.de>
+Subject: [PATCH md 018 of 18] Fix up some rdev rcu locking in raid5/6
+Date: Mon, 28 Nov 2005 10:41:09 +1100
+Message-ID: <1051127234109.14949@suse.de>
 References: <20051128102824.14498.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
@@ -10,212 +10,213 @@ Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-We are dereferencing ->rdev without an rcu lock!
+There is this "FIXME" comment with a typo in it!! that been annoying
+me for days, so I just had to remove it.
+
+conf->disks[i].rdev should only be accessed if
+  - we know we hold a reference or
+  - the mddev->reconfig_sem is down or
+  - we have a rcu_readlock
+
+handle_stripe was referencing rdev in three places without any of these.
+For the first two, get an rcu_readlock.
+For the last, the same access (md_sync_acct call) is made a little later
+after the rdev has been claimed under and rcu_readlock, if R5_Syncio is set.
+So just use that access...  However R5_Syncio isn't really needed as the
+'syncing' variable contains the same information. So use that instead.
+
+Issues, comment, and fix are identical in raid5 and raid6.
 
 Signed-off-by: Neil Brown <neilb@suse.de>
 
 ### Diffstat output
- ./drivers/md/raid1.c |  112 +++++++++++++++++++++++++--------------------------
- 1 file changed, 57 insertions(+), 55 deletions(-)
+ ./drivers/md/raid5.c         |   16 ++++++++--------
+ ./drivers/md/raid6main.c     |   19 ++++++++-----------
+ ./include/linux/raid/raid5.h |    1 -
+ 3 files changed, 16 insertions(+), 20 deletions(-)
 
-diff ./drivers/md/raid1.c~current~ ./drivers/md/raid1.c
---- ./drivers/md/raid1.c~current~	2005-11-28 10:13:11.000000000 +1100
-+++ ./drivers/md/raid1.c	2005-11-28 10:13:14.000000000 +1100
-@@ -177,6 +177,13 @@ static inline void free_r1bio(r1bio_t *r
- static inline void put_buf(r1bio_t *r1_bio)
- {
- 	conf_t *conf = mddev_to_conf(r1_bio->mddev);
-+	int i;
-+
-+	for (i=0; i<conf->raid_disks; i++) {
-+		struct bio *bio = r1_bio->bios[i];
-+		if (bio->bi_end_io)
-+			rdev_dec_pending(conf->mirrors[i].rdev, r1_bio->mddev);
-+	}
+diff ./drivers/md/raid5.c~current~ ./drivers/md/raid5.c
+--- ./drivers/md/raid5.c~current~	2005-11-28 10:12:40.000000000 +1100
++++ ./drivers/md/raid5.c	2005-11-28 10:13:37.000000000 +1100
+@@ -960,11 +960,11 @@ static void handle_stripe(struct stripe_
+ 	syncing = test_bit(STRIPE_SYNCING, &sh->state);
+ 	/* Now to look around and see what can be done */
  
- 	mempool_free(r1_bio, conf->r1buf_pool);
- 
-@@ -1084,7 +1091,6 @@ static int end_sync_read(struct bio *bio
- 			 conf->mirrors[r1_bio->read_disk].rdev);
- 	} else
- 		set_bit(R1BIO_Uptodate, &r1_bio->state);
--	rdev_dec_pending(conf->mirrors[r1_bio->read_disk].rdev, conf->mddev);
- 	reschedule_retry(r1_bio);
- 	return 0;
- }
-@@ -1115,7 +1121,6 @@ static int end_sync_write(struct bio *bi
- 		md_done_sync(mddev, r1_bio->sectors, uptodate);
- 		put_buf(r1_bio);
- 	}
--	rdev_dec_pending(conf->mirrors[mirror].rdev, mddev);
- 	return 0;
- }
- 
-@@ -1152,10 +1157,14 @@ static void sync_request_write(mddev_t *
- 	atomic_set(&r1_bio->remaining, 1);
- 	for (i = 0; i < disks ; i++) {
- 		wbio = r1_bio->bios[i];
--		if (wbio->bi_end_io != end_sync_write)
-+		if (wbio->bi_end_io == NULL ||
-+		    (wbio->bi_end_io == end_sync_read &&
-+		     (i == r1_bio->read_disk ||
-+		      !test_bit(MD_RECOVERY_SYNC, &mddev->recovery))))
- 			continue;
- 
--		atomic_inc(&conf->mirrors[i].rdev->nr_pending);
-+		wbio->bi_rw = WRITE;
-+		wbio->bi_end_io = end_sync_write;
- 		atomic_inc(&r1_bio->remaining);
- 		md_sync_acct(conf->mirrors[i].rdev->bdev, wbio->bi_size >> 9);
- 
-@@ -1387,14 +1396,13 @@ static int init_resync(conf_t *conf)
- static sector_t sync_request(mddev_t *mddev, sector_t sector_nr, int *skipped, int go_faster)
- {
- 	conf_t *conf = mddev_to_conf(mddev);
--	mirror_info_t *mirror;
- 	r1bio_t *r1_bio;
- 	struct bio *bio;
- 	sector_t max_sector, nr_sectors;
--	int disk;
-+	int disk = -1;
- 	int i;
--	int wonly;
--	int write_targets = 0;
-+	int wonly = -1;
-+	int write_targets = 0, read_targets = 0;
- 	int sync_blocks;
- 	int still_degraded = 0;
- 
-@@ -1446,44 +1454,24 @@ static sector_t sync_request(mddev_t *md
- 
- 	conf->next_resync = sector_nr;
- 
--	/*
--	 * If reconstructing, and >1 working disc,
--	 * could dedicate one to rebuild and others to
--	 * service read requests ..
--	 */
--	disk = conf->last_used;
--	/* make sure disk is operational */
--	wonly = disk;
--	while (conf->mirrors[disk].rdev == NULL ||
--	       !test_bit(In_sync, &conf->mirrors[disk].rdev->flags) ||
--	       test_bit(WriteMostly, &conf->mirrors[disk].rdev->flags)
--		) {
--		if (conf->mirrors[disk].rdev  &&
--		    test_bit(In_sync, &conf->mirrors[disk].rdev->flags))
--			wonly = disk;
--		if (disk <= 0)
--			disk = conf->raid_disks;
--		disk--;
--		if (disk == conf->last_used) {
--			disk = wonly;
--			break;
--		}
--	}
--	conf->last_used = disk;
--	atomic_inc(&conf->mirrors[disk].rdev->nr_pending);
--
--
--	mirror = conf->mirrors + disk;
--
- 	r1_bio = mempool_alloc(conf->r1buf_pool, GFP_NOIO);
 +	rcu_read_lock();
-+	/*
-+	 * If we get a correctably read error during resync or recovery,
-+	 * we might want to read from a different device.  So we
-+	 * flag all drives that could conceivably be read from for READ,
-+	 * and any others (which will be non-In_sync devices) for WRITE.
-+	 * If a read fails, we try reading from something else for which READ
-+	 * is OK.
-+	 */
+ 	for (i=disks; i--; ) {
+ 		mdk_rdev_t *rdev;
+ 		dev = &sh->dev[i];
+ 		clear_bit(R5_Insync, &dev->flags);
+-		clear_bit(R5_Syncio, &dev->flags);
  
- 	r1_bio->mddev = mddev;
- 	r1_bio->sector = sector_nr;
- 	r1_bio->state = 0;
- 	set_bit(R1BIO_IsSync, &r1_bio->state);
--	r1_bio->read_disk = disk;
- 
- 	for (i=0; i < conf->raid_disks; i++) {
-+		mdk_rdev_t *rdev;
- 		bio = r1_bio->bios[i];
- 
- 		/* take from bio_init */
-@@ -1498,35 +1486,49 @@ static sector_t sync_request(mddev_t *md
- 		bio->bi_end_io = NULL;
- 		bio->bi_private = NULL;
- 
--		if (i == disk) {
--			bio->bi_rw = READ;
--			bio->bi_end_io = end_sync_read;
--		} else if (conf->mirrors[i].rdev == NULL ||
--			   test_bit(Faulty, &conf->mirrors[i].rdev->flags)) {
-+		rdev = rcu_dereference(conf->mirrors[i].rdev);
-+		if (rdev == NULL ||
-+			   test_bit(Faulty, &rdev->flags)) {
- 			still_degraded = 1;
- 			continue;
--		} else if (!test_bit(In_sync, &conf->mirrors[i].rdev->flags) ||
--			   sector_nr + RESYNC_SECTORS > mddev->recovery_cp   ||
--			   test_bit(MD_RECOVERY_REQUESTED, &mddev->recovery)) {
-+		} else if (!test_bit(In_sync, &rdev->flags)) {
- 			bio->bi_rw = WRITE;
- 			bio->bi_end_io = end_sync_write;
- 			write_targets ++;
--		} else
--			/* no need to read or write here */
--			continue;
--		bio->bi_sector = sector_nr + conf->mirrors[i].rdev->data_offset;
--		bio->bi_bdev = conf->mirrors[i].rdev->bdev;
-+		} else {
-+			/* may need to read from here */
-+			bio->bi_rw = READ;
-+			bio->bi_end_io = end_sync_read;
-+			if (test_bit(WriteMostly, &rdev->flags)) {
-+				if (wonly < 0)
-+					wonly = i;
-+			} else {
-+				if (disk < 0)
-+					disk = i;
-+			}
-+			read_targets++;
-+		}
-+		atomic_inc(&rdev->nr_pending);
-+		bio->bi_sector = sector_nr + rdev->data_offset;
-+		bio->bi_bdev = rdev->bdev;
- 		bio->bi_private = r1_bio;
+ 		PRINTK("check %d: state 0x%lx read %p write %p written %p\n",
+ 			i, dev->flags, dev->toread, dev->towrite, dev->written);
+@@ -1003,7 +1003,7 @@ static void handle_stripe(struct stripe_
+ 				non_overwrite++;
+ 		}
+ 		if (dev->written) written++;
+-		rdev = conf->disks[i].rdev; /* FIXME, should I be looking rdev */
++		rdev = rcu_dereference(conf->disks[i].rdev);
+ 		if (!rdev || !test_bit(In_sync, &rdev->flags)) {
+ 			/* The ReadError flag will just be confusing now */
+ 			clear_bit(R5_ReadError, &dev->flags);
+@@ -1016,6 +1016,7 @@ static void handle_stripe(struct stripe_
+ 		} else
+ 			set_bit(R5_Insync, &dev->flags);
  	}
 +	rcu_read_unlock();
-+	if (disk < 0)
-+		disk = wonly;
-+	r1_bio->read_disk = disk;
+ 	PRINTK("locked=%d uptodate=%d to_read=%d"
+ 		" to_write=%d failed=%d failed_num=%d\n",
+ 		locked, uptodate, to_read, to_write, failed, failed_num);
+@@ -1027,10 +1028,13 @@ static void handle_stripe(struct stripe_
+ 			int bitmap_end = 0;
  
--	if (write_targets == 0) {
-+	if (test_bit(MD_RECOVERY_SYNC, &mddev->recovery) && read_targets > 0)
-+		/* extra read targets are also write targets */
-+		write_targets += read_targets-1;
-+
-+	if (write_targets == 0 || read_targets == 0) {
- 		/* There is nowhere to write, so all non-sync
- 		 * drives must be failed - so we are finished
- 		 */
- 		sector_t rv = max_sector - sector_nr;
- 		*skipped = 1;
- 		put_buf(r1_bio);
--		rdev_dec_pending(conf->mirrors[disk].rdev, mddev);
- 		return rv;
+ 			if (test_bit(R5_ReadError, &sh->dev[i].flags)) {
+-				mdk_rdev_t *rdev = conf->disks[i].rdev;
++				mdk_rdev_t *rdev;
++				rcu_read_lock();
++				rdev = rcu_dereference(conf->disks[i].rdev);
+ 				if (rdev && test_bit(In_sync, &rdev->flags))
+ 					/* multiple read failures in one stripe */
+ 					md_error(conf->mddev, rdev);
++				rcu_read_unlock();
+ 			}
+ 
+ 			spin_lock_irq(&conf->device_lock);
+@@ -1179,9 +1183,6 @@ static void handle_stripe(struct stripe_
+ 					locked++;
+ 					PRINTK("Reading block %d (sync=%d)\n", 
+ 						i, syncing);
+-					if (syncing)
+-						md_sync_acct(conf->disks[i].rdev->bdev,
+-							     STRIPE_SECTORS);
+ 				}
+ 			}
+ 		}
+@@ -1325,7 +1326,6 @@ static void handle_stripe(struct stripe_
+ 			clear_bit(STRIPE_DEGRADED, &sh->state);
+ 			locked++;
+ 			set_bit(STRIPE_INSYNC, &sh->state);
+-			set_bit(R5_Syncio, &dev->flags);
+ 		}
  	}
+ 	if (syncing && locked == 0 && test_bit(STRIPE_INSYNC, &sh->state)) {
+@@ -1391,7 +1391,7 @@ static void handle_stripe(struct stripe_
+ 		rcu_read_unlock();
+  
+ 		if (rdev) {
+-			if (test_bit(R5_Syncio, &sh->dev[i].flags))
++			if (syncing)
+ 				md_sync_acct(rdev->bdev, STRIPE_SECTORS);
  
-@@ -1577,10 +1579,10 @@ static sector_t sync_request(mddev_t *md
- 		sync_blocks -= (len>>9);
- 	} while (r1_bio->bios[disk]->bi_vcnt < RESYNC_PAGES);
-  bio_full:
--	bio = r1_bio->bios[disk];
-+	bio = r1_bio->bios[r1_bio->read_disk];
- 	r1_bio->sectors = nr_sectors;
+ 			bi->bi_bdev = rdev->bdev;
+
+diff ./drivers/md/raid6main.c~current~ ./drivers/md/raid6main.c
+--- ./drivers/md/raid6main.c~current~	2005-11-28 10:12:59.000000000 +1100
++++ ./drivers/md/raid6main.c	2005-11-28 10:13:37.000000000 +1100
+@@ -1060,11 +1060,11 @@ static void handle_stripe(struct stripe_
+ 	syncing = test_bit(STRIPE_SYNCING, &sh->state);
+ 	/* Now to look around and see what can be done */
  
--	md_sync_acct(mirror->rdev->bdev, nr_sectors);
-+	md_sync_acct(conf->mirrors[r1_bio->read_disk].rdev->bdev, nr_sectors);
++	rcu_read_lock();
+ 	for (i=disks; i--; ) {
+ 		mdk_rdev_t *rdev;
+ 		dev = &sh->dev[i];
+ 		clear_bit(R5_Insync, &dev->flags);
+-		clear_bit(R5_Syncio, &dev->flags);
  
- 	generic_make_request(bio);
+ 		PRINTK("check %d: state 0x%lx read %p write %p written %p\n",
+ 			i, dev->flags, dev->toread, dev->towrite, dev->written);
+@@ -1103,7 +1103,7 @@ static void handle_stripe(struct stripe_
+ 				non_overwrite++;
+ 		}
+ 		if (dev->written) written++;
+-		rdev = conf->disks[i].rdev; /* FIXME, should I be looking rdev */
++		rdev = rcu_dereference(conf->disks[i].rdev);
+ 		if (!rdev || !test_bit(In_sync, &rdev->flags)) {
+ 			/* The ReadError flag will just be confusing now */
+ 			clear_bit(R5_ReadError, &dev->flags);
+@@ -1117,6 +1117,7 @@ static void handle_stripe(struct stripe_
+ 		} else
+ 			set_bit(R5_Insync, &dev->flags);
+ 	}
++	rcu_read_unlock();
+ 	PRINTK("locked=%d uptodate=%d to_read=%d"
+ 	       " to_write=%d failed=%d failed_num=%d,%d\n",
+ 	       locked, uptodate, to_read, to_write, failed,
+@@ -1129,10 +1130,13 @@ static void handle_stripe(struct stripe_
+ 			int bitmap_end = 0;
  
+ 			if (test_bit(R5_ReadError, &sh->dev[i].flags)) {
+-				mdk_rdev_t *rdev = conf->disks[i].rdev;
++				mdk_rdev_t *rdev;
++				rcu_read_lock();
++				rdev = rcu_dereference(conf->disks[i].rdev);
+ 				if (rdev && test_bit(In_sync, &rdev->flags))
+ 					/* multiple read failures in one stripe */
+ 					md_error(conf->mddev, rdev);
++				rcu_read_unlock();
+ 			}
+ 
+ 			spin_lock_irq(&conf->device_lock);
+@@ -1307,9 +1311,6 @@ static void handle_stripe(struct stripe_
+ 					locked++;
+ 					PRINTK("Reading block %d (sync=%d)\n",
+ 						i, syncing);
+-					if (syncing)
+-						md_sync_acct(conf->disks[i].rdev->bdev,
+-							     STRIPE_SECTORS);
+ 				}
+ 			}
+ 		}
+@@ -1463,14 +1464,12 @@ static void handle_stripe(struct stripe_
+ 				locked++;
+ 				set_bit(R5_LOCKED, &dev->flags);
+ 				set_bit(R5_Wantwrite, &dev->flags);
+-				set_bit(R5_Syncio, &dev->flags);
+ 			}
+ 			if (failed >= 1) {
+ 				dev = &sh->dev[failed_num[0]];
+ 				locked++;
+ 				set_bit(R5_LOCKED, &dev->flags);
+ 				set_bit(R5_Wantwrite, &dev->flags);
+-				set_bit(R5_Syncio, &dev->flags);
+ 			}
+ 
+ 			if (update_p) {
+@@ -1478,14 +1477,12 @@ static void handle_stripe(struct stripe_
+ 				locked ++;
+ 				set_bit(R5_LOCKED, &dev->flags);
+ 				set_bit(R5_Wantwrite, &dev->flags);
+-				set_bit(R5_Syncio, &dev->flags);
+ 			}
+ 			if (update_q) {
+ 				dev = &sh->dev[qd_idx];
+ 				locked++;
+ 				set_bit(R5_LOCKED, &dev->flags);
+ 				set_bit(R5_Wantwrite, &dev->flags);
+-				set_bit(R5_Syncio, &dev->flags);
+ 			}
+ 			clear_bit(STRIPE_DEGRADED, &sh->state);
+ 
+@@ -1557,7 +1554,7 @@ static void handle_stripe(struct stripe_
+ 		rcu_read_unlock();
+ 
+ 		if (rdev) {
+-			if (test_bit(R5_Syncio, &sh->dev[i].flags))
++			if (syncing)
+ 				md_sync_acct(rdev->bdev, STRIPE_SECTORS);
+ 
+ 			bi->bi_bdev = rdev->bdev;
+
+diff ./include/linux/raid/raid5.h~current~ ./include/linux/raid/raid5.h
+--- ./include/linux/raid/raid5.h~current~	2005-11-28 10:12:56.000000000 +1100
++++ ./include/linux/raid/raid5.h	2005-11-28 10:13:37.000000000 +1100
+@@ -152,7 +152,6 @@ struct stripe_head {
+ #define	R5_Insync	3	/* rdev && rdev->in_sync at start */
+ #define	R5_Wantread	4	/* want to schedule a read */
+ #define	R5_Wantwrite	5
+-#define	R5_Syncio	6	/* this io need to be accounted as resync io */
+ #define	R5_Overlap	7	/* There is a pending overlapping request on this block */
+ #define	R5_ReadError	8	/* seen a read error here recently */
+ #define	R5_ReWrite	9	/* have tried to over-write the readerror */
