@@ -1,7 +1,7 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PATCH md 003 of 18] Fix problem with raid6 intent bitmap
-Date: Mon, 28 Nov 2005 10:39:52 +1100
-Message-ID: <1051127233952.14769@suse.de>
+Subject: [PATCH md 002 of 18] Fix locking problem in r5/r6
+Date: Mon, 28 Nov 2005 10:39:45 +1100
+Message-ID: <1051127233945.14757@suse.de>
 References: <20051128102824.14498.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
@@ -10,54 +10,40 @@ Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-When doing a recovery, we need to know whether the array will
-still be degraded after the recovery has finished, so we can 
-know whether bits can be clearred yet or not.  This patch
-performs the required check.
-
+bitmap_unplug actually writes data (bits) to storage, so we
+shouldn't be holding a spinlock...
 
 Signed-off-by: Neil Brown <neilb@suse.de>
 
 ### Diffstat output
- ./drivers/md/raid6main.c |   15 +++++++++++++--
- 1 file changed, 13 insertions(+), 2 deletions(-)
+ ./drivers/md/raid5.c     |    2 ++
+ ./drivers/md/raid6main.c |    2 ++
+ 2 files changed, 4 insertions(+)
+
+diff ./drivers/md/raid5.c~current~ ./drivers/md/raid5.c
+--- ./drivers/md/raid5.c~current~	2005-11-28 10:08:19.000000000 +1100
++++ ./drivers/md/raid5.c	2005-11-28 10:08:33.000000000 +1100
+@@ -1704,7 +1704,9 @@ static void raid5d (mddev_t *mddev)
+ 
+ 		if (conf->seq_flush - conf->seq_write > 0) {
+ 			int seq = conf->seq_flush;
++			spin_unlock_irq(&conf->device_lock);
+ 			bitmap_unplug(mddev->bitmap);
++			spin_lock_irq(&conf->device_lock);
+ 			conf->seq_write = seq;
+ 			activate_bit_delay(conf);
+ 		}
 
 diff ./drivers/md/raid6main.c~current~ ./drivers/md/raid6main.c
---- ./drivers/md/raid6main.c~current~	2005-11-28 10:08:33.000000000 +1100
-+++ ./drivers/md/raid6main.c	2005-11-28 10:09:27.000000000 +1100
-@@ -1702,6 +1702,8 @@ static sector_t sync_request(mddev_t *md
- 	int data_disks = raid_disks - 2;
- 	sector_t max_sector = mddev->size << 1;
- 	int sync_blocks;
-+	int still_degraded = 0;
-+	int i;
+--- ./drivers/md/raid6main.c~current~	2005-11-28 10:08:19.000000000 +1100
++++ ./drivers/md/raid6main.c	2005-11-28 10:08:33.000000000 +1100
+@@ -1784,7 +1784,9 @@ static void raid6d (mddev_t *mddev)
  
- 	if (sector_nr >= max_sector) {
- 		/* just being told to finish up .. nothing much to do */
-@@ -1710,7 +1712,7 @@ static sector_t sync_request(mddev_t *md
- 		if (mddev->curr_resync < max_sector) /* aborted */
- 			bitmap_end_sync(mddev->bitmap, mddev->curr_resync,
- 					&sync_blocks, 1);
--		else /* compelted sync */
-+		else /* completed sync */
- 			conf->fullsync = 0;
- 		bitmap_close_sync(mddev->bitmap);
- 
-@@ -1748,7 +1750,16 @@ static sector_t sync_request(mddev_t *md
- 		 */
- 		schedule_timeout_uninterruptible(1);
- 	}
--	bitmap_start_sync(mddev->bitmap, sector_nr, &sync_blocks, 0);
-+	/* Need to check if array will still be degraded after recovery/resync
-+	 * We don't need to check the 'failed' flag as when that gets set,
-+	 * recovery aborts.
-+	 */
-+	for (i=0; i<mddev->raid_disks; i++)
-+		if (conf->disks[i].rdev == NULL)
-+			still_degraded = 1;
-+
-+	bitmap_start_sync(mddev->bitmap, sector_nr, &sync_blocks, still_degraded);
-+
- 	spin_lock(&sh->lock);
- 	set_bit(STRIPE_SYNCING, &sh->state);
- 	clear_bit(STRIPE_INSYNC, &sh->state);
+ 		if (conf->seq_flush - conf->seq_write > 0) {
+ 			int seq = conf->seq_flush;
++			spin_unlock_irq(&conf->device_lock);
+ 			bitmap_unplug(mddev->bitmap);
++			spin_lock_irq(&conf->device_lock);
+ 			conf->seq_write = seq;
+ 			activate_bit_delay(conf);
+ 		}
