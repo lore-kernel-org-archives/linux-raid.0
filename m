@@ -1,104 +1,50 @@
-From: "JaniD++" <djani22@dynamicweb.hu>
-Subject: Re: RAID0 performance question
-Date: Sun, 27 Nov 2005 20:02:35 +0100
-Message-ID: <009d01c5f385$24d02d70$0400a8c0@dcccs>
-References: <437E2CB6.2030903@xss.co.at> <200511271839.16480.a1426z@gawab.com> <001f01c5f36e$9ec7e620$0400a8c0@dcccs> <200511272040.47644.a1426z@gawab.com>
+From: "David M. Strang" <dstrang@shellpower.net>
+Subject: Re: Booting from raid1 -- md: invalid raid superblock magic on sdb1
+Date: Sun, 27 Nov 2005 14:14:10 -0500
+Message-ID: <058201c5f386$bf23d150$200a11ac@NCNF5131FTH>
+References: <050501c5f2a4$fe72c560$200a11ac@NCNF5131FTH> <054001c5f2bc$642a62c0$200a11ac@NCNF5131FTH> <055901c5f30c$282ad520$200a11ac@NCNF5131FTH>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="iso-8859-1"
+	format=flowed;
+	charset="iso-8859-1";
+	reply-type=response
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Al Boldi <a1426z@gawab.com>
-Cc: linux-raid@vger.kernel.org, Neil Brown <neilb@suse.de>
+To: linux-raid@vger.kernel.org, Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-
------ Original Message ----- 
-From: "Al Boldi" <a1426z@gawab.com>
-To: "JaniD++" <djani22@dynamicweb.hu>
-Cc: <linux-raid@vger.kernel.org>
-Sent: Sunday, November 27, 2005 6:40 PM
-Subject: Re: RAID0 performance question
-
-
-> JaniD++ wrote:
-> > Al Boldi wrote:
-> > > Neil Brown wrote:
-> > > > On Saturday November 26, djani22@dynamicweb.hu wrote:
-> > > > > The cat /dev/nb# >/dev/null    makes ~ 350 Mbit/s on each nodes.
-> > > > > The cat /dev/nb0 + nb1 + nb2 + nb3 in one time parallel makes
-> > > > > ~780-800 Mbit/s. - i think this is my network bottleneck.
-> > >
-> > > How much do you get w/ nb0+1,2,3 and nb0+1+2,3 respectively?
-> >
-> > I unable to test write, because this is a productive system.
-> > Think this value is about 75-80 per node and ~200-250 in md31.
+On Saturday 26 November 2005 23:32:51, David M. Strang wrote
+> Please forgive me for pinging you direct on this Neil; but I fear you are 
+> the only one who can answer it.
 >
-> How much do you get with:
-> cat nb# + nb# > /dev/null
-> cat nb# + nb# + nb# > /dev/null
-> respectively?
-
-md1 = 280- 291Mbit
-md1+md2 = 450-480 Mbit
-md1+md2+md3 = 615-630 Mbit
-md1+md2+md3+md4 = now the peak is 674 Mbit....
-
-...on a lightly used online system.  (~44Mbit download + ~60Mbit upload)
-This time dd if=/dev/md1 of=/dev/null bs=1M count=4096 what i have used.
-
-I think, this is normal.
-
-I have try the md31 with different readahead settings:
-
-1. nb0,1,2,3 + md1,2,3,4 readahead = 0 and md31 readahead =4096
-result: 380 Mbit
-
-2 all readahead . = 0
-result:  88-98 Mbit
-
-3. nb0,1,2,3 + md1,2,3,4 readahead = 2048 and md31 readahead = 0
-result: 88-96 Mbit   - I wonder! :-O
-
-4. nb# + md# readahead = 0 and md31 readahead = 8192
-result: 96-114 Mbit
-
-The winner is my default profile :-D
-all 2048 and md31 = 4096
-
-result : 403-423 Mbit
-
-Neil!
-
-What do you say? :-)
-
+> I am a bit considered by this in the startup log:
 >
-> > > > > But the cat /dev/md31 >/dev/null (RAID0, the sum of 4 nodes) only
-> > > > > makes ~450-490 Mbit/s, and i dont know why....
-> > > > >
-> > > > > Somebody have an idea? :-)
-> > > >
-> > > > Try increasing the read-ahead setting on /dev/md31 using 'blockdev'.
-> > > > network block devices are likely to have latency issues and would
-> > > > benefit from large read-ahead.
-> > >
-> > > Also try larger chunk-size ~4mb.
-> >
-> > Ahh.
-> > This is what i can't do. :-(
-> > I dont know how to backup 8TB! ;-)
+> Nov 26 21:47:35 xenogenesis kernel: md: raid1 personality registered as nr 
+> 3
+> Nov 26 21:47:35 xenogenesis kernel: md: md driver 0.90.2 MAX_MD_DEVS=256, 
+> MD_SB_DISKS=27
+> Nov 26 21:47:35 xenogenesis kernel: md: bitmap version 3.39
 >
-> Maybe you could use your mirror!?
-
-There is no mirrors!
-This is only further options!
-To be able easy replace, repair one node....
-
-Thanks
-Janos
-
+> While mdadm lets me start a v1.0 superblock; I fear that I missing some 
+> level of kernel patch.
 >
-> --
-> Al
+> Nov 26 21:47:35 xenogenesis kernel: md: Loading md_d0: /dev/sdb1
+> Nov 26 21:47:35 xenogenesis kernel: md: invalid raid superblock magic on 
+> sdb1
+> Nov 26 21:47:35 xenogenesis kernel: md: sdb1 has invalid sb, not 
+> importing!
+> Nov 26 21:47:35 xenogenesis kernel: md: md_import_device returned -22
+
+Just a quick update; I've been putting forth some due diligence on this --  
+and it appears basically, that do_mounts_md.c is an antique. I've added a 
+small debug line to md.c under md_import_device; and then also traced thru 
+the do_mounts_md.c code; and basically the crux of the situation is 
+do_mounts_md.c doesn't evaluate the superblock of the device and set 
+SET_ARRAY_INFO for persistent superblocks. So, everything defaults to the 
+legacy superblock type. (Superblock v0.90.x)
+
+-- David M. Strang
+
+
 
