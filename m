@@ -1,33 +1,45 @@
-From: Trevor Cordes <trevor@tecnopolis.ca>
-Subject: DeviceDisappeared events on reboot
-Date: Sun, 27 Nov 2005 08:39:19 -0600
-Message-ID: <20051127143919.GA6160@pog.tecnopolis.ca>
+From: Al Boldi <a1426z@gawab.com>
+Subject: Re: RAID0 performance question
+Date: Sun, 27 Nov 2005 18:39:16 +0300
+Message-ID: <200511271839.16480.a1426z@gawab.com>
+References: <437E2CB6.2030903@xss.co.at> <015c01c5f292$57e0e270$0400a8c0@dcccs> <17288.61257.912938.278958@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <17288.61257.912938.278958@cse.unsw.edu.au>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: JaniD++ <djani22@dynamicweb.hu>
+Cc: linux-raid@vger.kernel.org, Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-I setup a 2TB 10 disk RAID 6 IDE array.  Works great.  But when I reboot, 
-mdadm emails me about a "DeviceDisappeared /dev/md3 Wrong-Level" event.  I 
-can't find anything in the /var/log/messages related to this.
+Neil Brown wrote:
+> On Saturday November 26, djani22@dynamicweb.hu wrote:
+> >
+> > The cat /dev/nb# >/dev/null    makes ~ 350 Mbit/s on each nodes.
 
-The RAID 6 array is brought up manually on boot from the standard FC3 
-mdadm -A -s call in /etc/rc.sysinit.  My mdadm.conf looks like:
+Why is this so slow?
+Or is this the max node-HD throughput?
+What's the node HW config?
 
-DEVICE partitions
-ARRAY /dev/md3 UUID=dda56415:b7c1cb8e:bf0a1553:5cc3ad55
+> > The cat /dev/nb0 + nb1 + nb2 + nb3 in one time parallel makes ~ 780-800
+> > Mbit/s. - i think this is my network bottleneck.
 
-I also use separate RAID1 arrays for boot, root and swap.  Those arrays 
-are on 2 bigger disks shared with the RAID 6 array.
+How much do you get w/ nb0+1,2,3 and nb0+1+2,3 respectively?
 
-I can't tell if the system is emailing me when it's shutting down or when 
-it's coming back up, but I believe based on the time of the email it's the 
-latter.
+> > But the cat /dev/md31 >/dev/null (RAID0, the sum of 4 nodes) only makes
+> > ~450-490 Mbit/s, and i dont know why....
+> >
+> > Somebody have an idea? :-)
+>
+> Try increasing the read-ahead setting on /dev/md31 using 'blockdev'.
+> network block devices are likely to have latency issues and would
+> benefit from large read-ahead.
 
-Should I be worried about this DeviceDisappeared error?  Everything seems 
-ok.  What does it mean?  How do I fix it?
+Also try larger chunk-size ~4mb.
 
-Thanks!
+--
+Al
+
