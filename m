@@ -1,28 +1,23 @@
-From: Lajber Zoltan <lajbi@lajli.gau.hu>
-Subject: Re: building a disk server
-Date: Tue, 29 Nov 2005 08:41:48 +0100 (CET)
-Message-ID: <Pine.LNX.4.58.0511290841070.11619@lajli.gau.hu>
-References: <7f55de720511281555s6b30355atf2b943b5148b8c37@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+From: Sara Walls <dilates@astoriacommunications.com>
+Subject: The best moments in your life happen suddenly...
+Date: Tue, 29 Nov 2005 06:19:22 -0500
+Message-ID: <3992411719.70258121004@rba-cache1-vif0.saix.net>
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <7f55de720511281555s6b30355atf2b943b5148b8c37@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+You have nothing to be ashamed more! Your women will adore you!
+http://ubwuc.o7cvu8csccceoo6hb66ht6oo.localizekf.com/?pfqfhpn
 
-On Mon, 28 Nov 2005, Sebastian Kuzminsky wrote:
 
-> Hi folks, I want to pick your brains.  I'm building a new disk server
-> for a small company, about 20 people.  We need about 2 TB now and
-> maybe another 2 TB in a year or so.  Price is a factor, but
-> reliability is more important.
+If you aren't fired with enthusiasm, you will be fired with enthusiasm. 
+If pregnancy were a book they would cut the last two chapters. 
 
-Take a look at http://www.coraid.com
+He deserves Paradise who makes his companions laugh.     
 
-Bye,
--=Lajbi=----------------------------------------------------------------
- LAJBER Zoltan               Szent Istvan Egyetem,  Informatika Hivatal
- Most of the time, if you think you are in trouble, crank that throttle!
+Transcend political correctness and strive for human righteousness.     
+
+
