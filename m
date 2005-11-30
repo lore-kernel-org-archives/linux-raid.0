@@ -1,35 +1,22 @@
-From: "Undulate G. Hauptmann" <dwmalone@glissnik.de>
-Subject: Software
-Date: Wed, 30 Nov 2005 13:20:04 -0600
-Message-ID: <7014912673.20051130132004@glissnik.de>
+From: carlos@fisica.ufpr.br (Carlos Carvalho)
+Subject: Re: [PATCH md 013 of 18] Improve handing of read errors with raid6
+Date: Wed, 30 Nov 2005 20:33:56 -0200
+Message-ID: <17294.10452.328325.214081@fisica.ufpr.br>
+References: <20051128102824.14498.patches@notabene>
+	<1051127234043.14889@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1051127234043.14889@suse.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-soft at incredibly low prices 
-cheap oem soft shipping worldwide 
+NeilBrown (neilb@suse.de) wrote on 28 November 2005 10:40:
+ >This is a simple port of match functionality across from raid5.
+ >If we get a read error, we don't kick the drive straight away, but
+ >try to over-write with good data first.
 
-New software on our site:
-
-Windows 2000 Advanced Server - $69.95
-Windows NT 4.0 Terminal Server - $49.95
-Office 2003 Professional (1 CD Edition) - $89.95
-Windows Millenium - $59.95
-Windows 98 - $49.95
-Norton System Works 2003 - $59.95
-After Effects 6 - $69.95
-Office 2000 Premium Edition PE (2CD) - $59.95
-Dreamweaver MX 2004 $69.95
-InDesign CS PageMaker Edition (2CD) - $69.95
-Picture It Premium 9 - $59.95
-WordPerfect Office 10 - $69.95
-WordPerfect Office 10 - $69.95
-Photoshop CS $99.95
-
-Our site:
-http://togzh1hxzbzocbtoytb6gbbb.freyadi.com
-
+Does it really mean that this funcionality is already available for
+raid5??? That would be great news.
