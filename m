@@ -1,44 +1,35 @@
-From: Jure =?ISO-8859-2?Q?Pe=E8ar?= <pegasus@nerv.eu.org>
-Subject: Re: Journal-guided Resynchronization for Software RAID
-Date: Thu, 1 Dec 2005 21:01:04 +0100
-Message-ID: <20051201210104.729a6e6a.pegasus@nerv.eu.org>
-References: <Pine.LNX.4.58.0511301015520.14240@macduff.cs.wisc.edu>
-	<17294.34794.477608.760700@cse.unsw.edu.au>
+From: Eyal Lebedinsky <eyal@eyal.emu.id.au>
+Subject: Re: quick Q re raid reconstruction
+Date: Fri, 02 Dec 2005 08:55:34 +1100
+Message-ID: <438F7156.9000109@eyal.emu.id.au>
+References: <438EE429.2030903@eyal.emu.id.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17294.34794.477608.760700@cse.unsw.edu.au>
+In-Reply-To: <438EE429.2030903@eyal.emu.id.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux-raid list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, 1 Dec 2005 16:19:38 +1100
-Neil Brown <neilb@suse.de> wrote:
+Eyal Lebedinsky wrote:
+> I have (had) a 4 disk RAID5 /dev/sd[abcd]1.
+[trim]
 
-> What I would really like is a cheap (Well, not too expensive) board
-> that had at least 100Meg of NVRAM which was addressable on the PCI
-> buss, and an XOR and RAID-6 engine connected to the DMA engine.  Then
-> we could use the NVRAM as a write-behind cache and offload all the
-> parity calculation to it, while still having all the flexibility of
-> software raid...
+By this evening this will become urgent, so if anyone can
+reply then please do.
 
-There are some things near enough what you wish:
+To bring it up in degraded mode, can I do a --create and tell
+it to use sd[abc] and mark sdd as failed? I can then force
+--run. An --assemble with '--failed /dev/sdd1' was not happy
+because it could not see sdd (naturally).
 
-How to use gfx memory as nvram (no batteries tho :)
-http://hedera.linuxnews.pl/_news/2002/09/03/_long/1445.html
+With the new disk (sda) added, can I safely do
+	mdadm --assemble /dev/md0 /dev/sd[bcd]1 --fail /dev/sda1
+and maybe --force or --run to bring it up?
 
-Or not really pci mapped, but presented as sata disk:
-http://www.anandtech.com/storage/showdoc.aspx?i=3D2480&p=3D1
+TIA
 
-As for XOR, Jeff Garzik reports Promise SX4 is something like that.
-
---=20
-
-Jure Pe=E8ar
-http://jure.pecar.org/
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Eyal Lebedinsky (eyal@eyal.emu.id.au) <http://samba.org/eyal/>
+	attach .zip as .dat
