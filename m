@@ -1,30 +1,44 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: [PATCH md 008 of 14] Convert md to use kzalloc throughout
-Date: Thu, 1 Dec 2005 14:42:52 -0800
-Message-ID: <20051201144252.768ea121.akpm@osdl.org>
-References: <20051201141508.29384.patches@notabene>
-	<1051201032328.29641@suse.de>
+From: Eyal Lebedinsky <eyal@eyal.emu.id.au>
+Subject: Re: quick Q re raid reconstruction
+Date: Fri, 02 Dec 2005 09:42:19 +1100
+Message-ID: <438F7C4B.1090404@eyal.emu.id.au>
+References: <438EE429.2030903@eyal.emu.id.au> <17295.29744.13292.368041@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1051201032328.29641@suse.de>
+In-Reply-To: <17295.29744.13292.368041@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-NeilBrown <neilb@suse.de> wrote:
->
-> -	conf = kmalloc (sizeof (*conf) + mddev->raid_disks*sizeof(dev_info_t),
->  +	conf = kzalloc (sizeof (*conf) + mddev->raid_disks*sizeof(dev_info_t),
->  -	new = (mddev_t *) kmalloc(sizeof(*new), GFP_KERNEL);
->  +	new = (mddev_t *) kzalloc(sizeof(*new), GFP_KERNEL);
->  -	rdev = (mdk_rdev_t *) kmalloc(sizeof(*rdev), GFP_KERNEL);
->  +	rdev = (mdk_rdev_t *) kzalloc(sizeof(*rdev), GFP_KERNEL);
+Neil Brown wrote:
+>>Q1) What is the correct command to bring these three up as
+>>    degraded?
+> 
+> 
+>   mdadm --assemble --force /dev/mdX /dev/sd[abc]1
+> 
+> However this won't work with the superblocks you have. So
+> 
+>   mdadm --create /dev/mdX -l5 -c256 -n4 missing /dev/sda /dev/sdb /dev/sdc
 
-It'd be nice to nuke the unneeded cast while we're there.
+I do not see 'missing' the the mdadm manpage, but maybe Debian is too
+far behind?
 
-<edits the diff>
+# mdadm --version
+mdadm - v1.9.0 - 04 February 2005
 
-OK, I did that.
+Should I use 2.1 (is it safe to upgrade to it)?
+
+I built it anyway and I do not see 'missing' listed in
+	mdadm --create --help
+
+Reading the new mdadm.man I can see what .missing' does, good.
+
+I got it up (fsck now running), thanks a lot.
+
+-- 
+Eyal Lebedinsky (eyal@eyal.emu.id.au) <http://samba.org/eyal/>
+	attach .zip as .dat
