@@ -1,53 +1,132 @@
-From: "JaniD++" <djani22@dynamicweb.hu>
-Subject: Re: RAID0 performance question
-Date: Thu, 1 Dec 2005 00:13:37 +0100
-Message-ID: <041e01c5f605$6a7c0830$0400a8c0@dcccs>
-References: <437E2CB6.2030903@xss.co.at> <200511271839.16480.a1426z@gawab.com> <001f01c5f36e$9ec7e620$0400a8c0@dcccs> <200511272040.47644.a1426z@gawab.com>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
+From: Andrew Burgess <aab@cichlid.com>
+Subject: need help with raid6 recovery
+Date: Wed, 30 Nov 2005 16:05:54 -0800
+Message-ID: <200512010005.jB105sXr002565@cichlid.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Al Boldi <a1426z@gawab.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
+I have an 8 device raid6 array with 3 bad devices. Two
+of the bad devices are recognized as spares belonging to
+the array, the third device, the one that was most recently
+an active sync part of the array somehow losts its superblock.
 
-> > > > > But the cat /dev/md31 >/dev/null (RAID0, the sum of 4 nodes) only
-> > > > > makes ~450-490 Mbit/s, and i dont know why....
-> > > > >
-> > > > > Somebody have an idea? :-)
-> > > >
-> > > > Try increasing the read-ahead setting on /dev/md31 using 'blockdev'.
-> > > > network block devices are likely to have latency issues and would
-> > > > benefit from large read-ahead.
-> > >
-> > > Also try larger chunk-size ~4mb.
-> >
-> > Ahh.
-> > This is what i can't do. :-(
-> > I dont know how to backup 8TB! ;-)
->
-> Maybe you could use your mirror!?
+I'd like to try running the array with each of the bad devices
+and see which makes an array with the least damaged filesystem.
+One problem is how to add the device without the superblock.
+I want to make sure it goes into position[0] in the array and
+I'm not sure how to specifiy that with mdadm.
 
-I have one idea! :-)
+sdq1 is the device without the superblock, sdn1 and sde1 are
+marked as spares but they were in sync recently.
 
-I can use the spare drives in the disknodes! :-)
+To add sdq1 as device [0] even though it has no superblock would it be enough
+to specify all the devices in the right order and leave the two that I'm not
+experimenting with as missing?
 
-But i don't know exactly what to try.
-increase or decrease the chunksize?
-In the top layer raid (md31,raid0) or in the middle layer raids (md1-4,
-raid1) or both?
+mdadm -A /dev/md1 --force /dev/sdq1 /dev/sds1 /dev/sdab1 missing /dev/sdaa3 /dev/sdo1 /dev/sdu1 missing
 
-Can somebody help me to find the performance problem source?
+And to try each spare in positions [3] and [7] a similar command, even though
+the superblocks on the spares say [8] and [9]?
 
-Thanks,
-Janos
+I want to avoid md doing any resyncing or recovery until I find the best
+'bad' device to use.
+
+Thanks for any help!
+Andrew
+
+PS This all happened when I upgraded the motherboard and the kernel version
+at the same time, the resulting combination worked badly with my disk controllers
+causing md to think drives were bad when they really weren't. Though how the
+superblock vanished on the one drive is a mystery...
+
+=======================================================
+
+root # cat /proc/mdstat
+md1 : inactive sds1[1] sde1[9] sdn1[8] sdu1[6] sdo1[5] sdaa3[4] sdab1[2]
+      2051009792 blocks
+
+root # mdadm -A /dev/md1
+mdadm: /dev/md1 assembled from 5 drives and 2 spares - not enough to start the array.
+
+root # mdadm -A -v /dev/md1 2>&1 | grep added
+mdadm: added /dev/sdab1 to /dev/md1 as 2
+mdadm: added /dev/sdaa3 to /dev/md1 as 4
+mdadm: added /dev/sdo1 to /dev/md1 as 5
+mdadm: added /dev/sdu1 to /dev/md1 as 6
+mdadm: added /dev/sdn1 to /dev/md1 as 8
+mdadm: added /dev/sde1 to /dev/md1 as 9
+mdadm: added /dev/sds1 to /dev/md1 as 1
+
+root # mdadm -E /dev/sde1
+/dev/sde1:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : 7fdb1d16:24896504:7df4ea3b:c7f0bf96
+  Creation Time : Sat Nov 12 12:43:57 2005
+     Raid Level : raid6
+    Device Size : 292969216 (279.40 GiB 300.00 GB)
+   Raid Devices : 8
+  Total Devices : 8
+Preferred Minor : 1
+
+    Update Time : Wed Nov 30 08:12:57 2005
+          State : clean
+ Active Devices : 6
+Working Devices : 8
+ Failed Devices : 2
+  Spare Devices : 2
+       Checksum : 2c0e61a6 - correct
+         Events : 0.930007
 
 
->
-> --
-> Al
+      Number   Major   Minor   RaidDevice State
+this     9       8       65        9      spare   /dev/sde1
 
+   0     0      65        1        0      active sync   /dev/sdq1
+   1     1      65       33        1      active sync   /dev/sds1
+   2     2      65      177        2      active sync   /dev/sdab1
+   3     3       0        0        3      faulty removed
+   4     4      65      163        4      active sync   /dev/sdaa3
+   5     5       8      225        5      active sync   /dev/sdo1
+   6     6      65       65        6      active sync   /dev/sdu1
+   7     7       0        0        7      faulty removed
+   8     8       8      209        8      spare   /dev/sdn1
+   9     9       8       65        9      spare   /dev/sde1
+
+root # mdadm -E /dev/sdn1
+/dev/sdn1:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : 7fdb1d16:24896504:7df4ea3b:c7f0bf96
+  Creation Time : Sat Nov 12 12:43:57 2005
+     Raid Level : raid6
+    Device Size : 292969216 (279.40 GiB 300.00 GB)
+   Raid Devices : 8
+  Total Devices : 8
+Preferred Minor : 1
+
+    Update Time : Wed Nov 30 08:12:57 2005
+          State : clean
+ Active Devices : 6
+Working Devices : 8
+ Failed Devices : 2
+  Spare Devices : 2
+       Checksum : 2c0e6234 - correct
+         Events : 0.930007
+
+
+      Number   Major   Minor   RaidDevice State
+this     8       8      209        8      spare   /dev/sdn1
+
+   0     0      65        1        0      active sync   /dev/sdq1
+   1     1      65       33        1      active sync   /dev/sds1
+   2     2      65      177        2      active sync   /dev/sdab1
+   3     3       0        0        3      faulty removed
+   4     4      65      163        4      active sync   /dev/sdaa3
+   5     5       8      225        5      active sync   /dev/sdo1
+   6     6      65       65        6      active sync   /dev/sdu1
+   7     7       0        0        7      faulty removed
+   8     8       8      209        8      spare   /dev/sdn1
+   9     9       8       65        9      spare   /dev/sde1
