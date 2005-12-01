@@ -1,28 +1,82 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: [PATCH md 010 of 14] Convert various kmap calls to kmap_atomic
-Date: Thu, 1 Dec 2005 14:46:37 -0800
-Message-ID: <20051201144637.289592c8.akpm@osdl.org>
-References: <20051201141508.29384.patches@notabene>
-	<1051201032339.29666@suse.de>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: quick Q re raid reconstruction
+Date: Fri, 2 Dec 2005 09:56:48 +1100
+Message-ID: <17295.32688.483645.390383@cse.unsw.edu.au>
+References: <438EE429.2030903@eyal.emu.id.au>
+	<17295.29744.13292.368041@cse.unsw.edu.au>
+	<438F7C4B.1090404@eyal.emu.id.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1051201032339.29666@suse.de>
+In-Reply-To: message from Eyal Lebedinsky on Friday December 2
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: Eyal Lebedinsky <eyal@eyal.emu.id.au>
+Cc: linux-raid list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-NeilBrown <neilb@suse.de> wrote:
->
-> +				paddr = kmap_atomic(page, KM_USER0);
->  +				memset(paddr + offset, 0xff,
->   				       PAGE_SIZE - offset);
+On Friday December 2, eyal@eyal.emu.id.au wrote:
+> Neil Brown wrote:
+> >>Q1) What is the correct command to bring these three up as
+> >>    degraded?
+> > 
+> > 
+> >   mdadm --assemble --force /dev/mdX /dev/sd[abc]1
+> > 
+> > However this won't work with the superblocks you have. So
+> > 
+> >   mdadm --create /dev/mdX -l5 -c256 -n4 missing /dev/sda /dev/sdb /dev/sdc
+> 
+> I do not see 'missing' the the mdadm manpage, but maybe Debian is too
+> far behind?
 
-This page which is being altered is a user-visible one, no?  A pagecache
-page?
+It is in the section on "CREATE MODE"
 
-We must always run flush_dcache_page() against a page when the kernel
-modifies a user-visible page's contents.  Otherwise, on some architectures,
-the modification won't be visible at the different virtual address.
+       To create a "degraded" array in which some devices are missing,  simply
+       give  the  word  "missing"  in place of a device name.  This will cause
+       mdadm to leave the corresponding slot in the array empty.  For a  RAID4
+       or  RAID5 array at most one slot can be "missing"; for a RAID6 array at
+       most two slots.  For a RAID1 array, only one real device  needs  to  be
+       given.  All of the others can be "missing".
+
+
+> 
+> # mdadm --version
+> mdadm - v1.9.0 - 04 February 2005
+
+The section I quoted is from the man page for 1.12.0, but that text
+certainly predates 1.9.0.
+
+> 
+> Should I use 2.1 (is it safe to upgrade to it)?
+
+You don't need to, but you can.  It is safe to upgrade.
+
+> 
+> I built it anyway and I do not see 'missing' listed in
+> 	mdadm --create --help
+
+I do.
+
+$ /sbin/mdadm --create --help
+Usage:  mdadm --create device -chunk=X --level=Y --raid-devices=Z devices
+
+ This usage will initialise a new md array, associate some
+ devices with it, and activate the array.   In order to create an
+ array with some devices missing, use the special word 'missing' in
+                                                        ^^^^^^^
+ place of the relevant device name.
+
+> 
+> Reading the new mdadm.man I can see what .missing' does, good.
+> 
+> I got it up (fsck now running), thanks a lot.
+
+Good to hear.
+
+NeilBrown
+
+> 
+> -- 
+> Eyal Lebedinsky (eyal@eyal.emu.id.au) <http://samba.org/eyal/>
+> 	attach .zip as .dat
