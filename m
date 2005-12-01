@@ -1,44 +1,28 @@
-From: Eyal Lebedinsky <eyal@eyal.emu.id.au>
-Subject: Re: quick Q re raid reconstruction
-Date: Fri, 02 Dec 2005 09:42:19 +1100
-Message-ID: <438F7C4B.1090404@eyal.emu.id.au>
-References: <438EE429.2030903@eyal.emu.id.au> <17295.29744.13292.368041@cse.unsw.edu.au>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: [PATCH md 010 of 14] Convert various kmap calls to kmap_atomic
+Date: Thu, 1 Dec 2005 14:46:37 -0800
+Message-ID: <20051201144637.289592c8.akpm@osdl.org>
+References: <20051201141508.29384.patches@notabene>
+	<1051201032339.29666@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17295.29744.13292.368041@cse.unsw.edu.au>
+In-Reply-To: <1051201032339.29666@suse.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid list <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
->>Q1) What is the correct command to bring these three up as
->>    degraded?
-> 
-> 
->   mdadm --assemble --force /dev/mdX /dev/sd[abc]1
-> 
-> However this won't work with the superblocks you have. So
-> 
->   mdadm --create /dev/mdX -l5 -c256 -n4 missing /dev/sda /dev/sdb /dev/sdc
+NeilBrown <neilb@suse.de> wrote:
+>
+> +				paddr = kmap_atomic(page, KM_USER0);
+>  +				memset(paddr + offset, 0xff,
+>   				       PAGE_SIZE - offset);
 
-I do not see 'missing' the the mdadm manpage, but maybe Debian is too
-far behind?
+This page which is being altered is a user-visible one, no?  A pagecache
+page?
 
-# mdadm --version
-mdadm - v1.9.0 - 04 February 2005
-
-Should I use 2.1 (is it safe to upgrade to it)?
-
-I built it anyway and I do not see 'missing' listed in
-	mdadm --create --help
-
-Reading the new mdadm.man I can see what .missing' does, good.
-
-I got it up (fsck now running), thanks a lot.
-
--- 
-Eyal Lebedinsky (eyal@eyal.emu.id.au) <http://samba.org/eyal/>
-	attach .zip as .dat
+We must always run flush_dcache_page() against a page when the kernel
+modifies a user-visible page's contents.  Otherwise, on some architectures,
+the modification won't be visible at the different virtual address.
