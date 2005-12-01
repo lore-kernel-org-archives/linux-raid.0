@@ -1,7 +1,7 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PATCH md 009 of 14] Tidy up raid5/6 hash table code.
-Date: Thu, 1 Dec 2005 14:23:33 +1100
-Message-ID: <1051201032333.29653@suse.de>
+Subject: [PATCH md 010 of 14] Convert various kmap calls to kmap_atomic
+Date: Thu, 1 Dec 2005 14:23:39 +1100
+Message-ID: <1051201032339.29666@suse.de>
 References: <20051201141508.29384.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
@@ -10,276 +10,191 @@ Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-- replace open-coded hash chain with hlist macros
-- Fix hash-table size at one page - it is already quite
-  generous, so there will never be a need to use multiple
-  pages, so no need for __get_free_pages
-
-No functional change.
 
 Signed-off-by: Neil Brown <neilb@suse.de>
 
 ### Diffstat output
- ./drivers/md/raid5.c         |   40 +++++++++++++------------------------
- ./drivers/md/raid6main.c     |   46 +++++++++++++++----------------------------
- ./include/linux/raid/raid5.h |    4 +--
- 3 files changed, 33 insertions(+), 57 deletions(-)
+ ./drivers/md/bitmap.c |   44 +++++++++++++++++++++-----------------------
+ 1 file changed, 21 insertions(+), 23 deletions(-)
 
-diff ./drivers/md/raid5.c~current~ ./drivers/md/raid5.c
---- ./drivers/md/raid5.c~current~	2005-12-01 14:01:46.000000000 +1100
-+++ ./drivers/md/raid5.c	2005-12-01 14:01:59.000000000 +1100
-@@ -35,12 +35,10 @@
- #define STRIPE_SHIFT		(PAGE_SHIFT - 9)
- #define STRIPE_SECTORS		(STRIPE_SIZE>>9)
- #define	IO_THRESHOLD		1
--#define HASH_PAGES		1
--#define HASH_PAGES_ORDER	0
--#define NR_HASH			(HASH_PAGES * PAGE_SIZE / sizeof(struct stripe_head *))
-+#define NR_HASH			(PAGE_SIZE / sizeof(struct hlist_head))
- #define HASH_MASK		(NR_HASH - 1)
- 
--#define stripe_hash(conf, sect)	((conf)->stripe_hashtbl[((sect) >> STRIPE_SHIFT) & HASH_MASK])
-+#define stripe_hash(conf, sect)	(&((conf)->stripe_hashtbl[((sect) >> STRIPE_SHIFT) & HASH_MASK]))
- 
- /* bio's attached to a stripe+device for I/O are linked together in bi_sector
-  * order without overlap.  There may be several bio's per stripe+device, and
-@@ -113,29 +111,21 @@ static void release_stripe(struct stripe
- 	spin_unlock_irqrestore(&conf->device_lock, flags);
- }
- 
--static void remove_hash(struct stripe_head *sh)
-+static inline void remove_hash(struct stripe_head *sh)
- {
- 	PRINTK("remove_hash(), stripe %llu\n", (unsigned long long)sh->sector);
- 
--	if (sh->hash_pprev) {
--		if (sh->hash_next)
--			sh->hash_next->hash_pprev = sh->hash_pprev;
--		*sh->hash_pprev = sh->hash_next;
--		sh->hash_pprev = NULL;
--	}
-+	hlist_del_init(&sh->hash);
- }
- 
--static __inline__ void insert_hash(raid5_conf_t *conf, struct stripe_head *sh)
-+static inline void insert_hash(raid5_conf_t *conf, struct stripe_head *sh)
- {
--	struct stripe_head **shp = &stripe_hash(conf, sh->sector);
-+	struct hlist_head *hp = stripe_hash(conf, sh->sector);
- 
- 	PRINTK("insert_hash(), stripe %llu\n", (unsigned long long)sh->sector);
- 
- 	CHECK_DEVLOCK();
--	if ((sh->hash_next = *shp) != NULL)
--		(*shp)->hash_pprev = &sh->hash_next;
--	*shp = sh;
--	sh->hash_pprev = shp;
-+	hlist_add_head(&sh->hash, hp);
- }
- 
- 
-@@ -228,10 +218,11 @@ static inline void init_stripe(struct st
- static struct stripe_head *__find_stripe(raid5_conf_t *conf, sector_t sector)
- {
- 	struct stripe_head *sh;
-+	struct hlist_node *hn;
- 
- 	CHECK_DEVLOCK();
- 	PRINTK("__find_stripe, sector %llu\n", (unsigned long long)sector);
--	for (sh = stripe_hash(conf, sector); sh; sh = sh->hash_next)
-+	hlist_for_each_entry(sh, hn, stripe_hash(conf, sector), hash)
- 		if (sh->sector == sector)
- 			return sh;
- 	PRINTK("__stripe %llu not in cache\n", (unsigned long long)sector);
-@@ -1834,9 +1825,8 @@ static int run(mddev_t *mddev)
- 
- 	conf->mddev = mddev;
- 
--	if ((conf->stripe_hashtbl = (struct stripe_head **) __get_free_pages(GFP_ATOMIC, HASH_PAGES_ORDER)) == NULL)
-+	if ((conf->stripe_hashtbl = kzalloc(PAGE_SIZE, GFP_KERNEL)) == NULL)
- 		goto abort;
--	memset(conf->stripe_hashtbl, 0, HASH_PAGES * PAGE_SIZE);
- 
- 	spin_lock_init(&conf->device_lock);
- 	init_waitqueue_head(&conf->wait_for_stripe);
-@@ -1971,9 +1961,7 @@ memory = conf->max_nr_stripes * (sizeof(
- abort:
- 	if (conf) {
- 		print_raid5_conf(conf);
--		if (conf->stripe_hashtbl)
--			free_pages((unsigned long) conf->stripe_hashtbl,
--							HASH_PAGES_ORDER);
-+		kfree(conf->stripe_hashtbl);
- 		kfree(conf);
+diff ./drivers/md/bitmap.c~current~ ./drivers/md/bitmap.c
+--- ./drivers/md/bitmap.c~current~	2005-12-01 14:02:54.000000000 +1100
++++ ./drivers/md/bitmap.c	2005-12-01 14:02:50.000000000 +1100
+@@ -406,11 +406,11 @@ int bitmap_update_sb(struct bitmap *bitm
+ 		return 0;
  	}
- 	mddev->private = NULL;
-@@ -1990,7 +1978,7 @@ static int stop(mddev_t *mddev)
- 	md_unregister_thread(mddev->thread);
- 	mddev->thread = NULL;
- 	shrink_stripes(conf);
--	free_pages((unsigned long) conf->stripe_hashtbl, HASH_PAGES_ORDER);
-+	kfree(conf->stripe_hashtbl);
- 	blk_sync_queue(mddev->queue); /* the unplug fn references 'conf'*/
- 	sysfs_remove_group(&mddev->kobj, &raid5_attrs_group);
- 	kfree(conf);
-@@ -2018,12 +2006,12 @@ static void print_sh (struct stripe_head
- static void printall (raid5_conf_t *conf)
- {
- 	struct stripe_head *sh;
-+	struct hlist_node *hn;
- 	int i;
- 
- 	spin_lock_irq(&conf->device_lock);
- 	for (i = 0; i < NR_HASH; i++) {
--		sh = conf->stripe_hashtbl[i];
--		for (; sh; sh = sh->hash_next) {
-+		hlist_for_each_entry(sh, hn, &conf->stripe_hashtbl[i], hash) {
- 			if (sh->raid_conf != conf)
- 				continue;
- 			print_sh(sh);
-
-diff ./drivers/md/raid6main.c~current~ ./drivers/md/raid6main.c
---- ./drivers/md/raid6main.c~current~	2005-12-01 13:59:45.000000000 +1100
-+++ ./drivers/md/raid6main.c	2005-12-01 14:01:58.000000000 +1100
-@@ -40,12 +40,10 @@
- #define STRIPE_SHIFT		(PAGE_SHIFT - 9)
- #define STRIPE_SECTORS		(STRIPE_SIZE>>9)
- #define	IO_THRESHOLD		1
--#define HASH_PAGES		1
--#define HASH_PAGES_ORDER	0
--#define NR_HASH			(HASH_PAGES * PAGE_SIZE / sizeof(struct stripe_head *))
-+#define NR_HASH			(PAGE_SIZE / sizeof(struct hlist_head))
- #define HASH_MASK		(NR_HASH - 1)
- 
--#define stripe_hash(conf, sect)	((conf)->stripe_hashtbl[((sect) >> STRIPE_SHIFT) & HASH_MASK])
-+#define stripe_hash(conf, sect)	(&((conf)->stripe_hashtbl[((sect) >> STRIPE_SHIFT) & HASH_MASK]))
- 
- /* bio's attached to a stripe+device for I/O are linked together in bi_sector
-  * order without overlap.  There may be several bio's per stripe+device, and
-@@ -132,29 +130,21 @@ static void release_stripe(struct stripe
- 	spin_unlock_irqrestore(&conf->device_lock, flags);
+ 	spin_unlock_irqrestore(&bitmap->lock, flags);
+-	sb = (bitmap_super_t *)kmap(bitmap->sb_page);
++	sb = (bitmap_super_t *)kmap_atomic(bitmap->sb_page, KM_USER0);
+ 	sb->events = cpu_to_le64(bitmap->mddev->events);
+ 	if (!bitmap->mddev->degraded)
+ 		sb->events_cleared = cpu_to_le64(bitmap->mddev->events);
+-	kunmap(bitmap->sb_page);
++	kunmap_atomic(sb, KM_USER0);
+ 	return write_page(bitmap, bitmap->sb_page, 1);
  }
  
--static void remove_hash(struct stripe_head *sh)
-+static inline void remove_hash(struct stripe_head *sh)
- {
- 	PRINTK("remove_hash(), stripe %llu\n", (unsigned long long)sh->sector);
+@@ -421,7 +421,7 @@ void bitmap_print_sb(struct bitmap *bitm
  
--	if (sh->hash_pprev) {
--		if (sh->hash_next)
--			sh->hash_next->hash_pprev = sh->hash_pprev;
--		*sh->hash_pprev = sh->hash_next;
--		sh->hash_pprev = NULL;
--	}
-+	hlist_del_init(&sh->hash);
+ 	if (!bitmap || !bitmap->sb_page)
+ 		return;
+-	sb = (bitmap_super_t *)kmap(bitmap->sb_page);
++	sb = (bitmap_super_t *)kmap_atomic(bitmap->sb_page, KM_USER0);
+ 	printk(KERN_DEBUG "%s: bitmap file superblock:\n", bmname(bitmap));
+ 	printk(KERN_DEBUG "         magic: %08x\n", le32_to_cpu(sb->magic));
+ 	printk(KERN_DEBUG "       version: %d\n", le32_to_cpu(sb->version));
+@@ -440,7 +440,7 @@ void bitmap_print_sb(struct bitmap *bitm
+ 	printk(KERN_DEBUG "     sync size: %llu KB\n",
+ 			(unsigned long long)le64_to_cpu(sb->sync_size)/2);
+ 	printk(KERN_DEBUG "max write behind: %d\n", le32_to_cpu(sb->write_behind));
+-	kunmap(bitmap->sb_page);
++	kunmap_atomic(sb, KM_USER0);
  }
  
--static __inline__ void insert_hash(raid6_conf_t *conf, struct stripe_head *sh)
-+static inline void insert_hash(raid6_conf_t *conf, struct stripe_head *sh)
- {
--	struct stripe_head **shp = &stripe_hash(conf, sh->sector);
-+	struct hlist_head *hp = stripe_hash(conf, sh->sector);
- 
- 	PRINTK("insert_hash(), stripe %llu\n", (unsigned long long)sh->sector);
- 
- 	CHECK_DEVLOCK();
--	if ((sh->hash_next = *shp) != NULL)
--		(*shp)->hash_pprev = &sh->hash_next;
--	*shp = sh;
--	sh->hash_pprev = shp;
-+	hlist_add_head(&sh->hash, hp);
- }
- 
- 
-@@ -247,10 +237,11 @@ static inline void init_stripe(struct st
- static struct stripe_head *__find_stripe(raid6_conf_t *conf, sector_t sector)
- {
- 	struct stripe_head *sh;
-+	struct hlist_node *hn;
- 
- 	CHECK_DEVLOCK();
- 	PRINTK("__find_stripe, sector %llu\n", (unsigned long long)sector);
--	for (sh = stripe_hash(conf, sector); sh; sh = sh->hash_next)
-+	hlist_for_each_entry (sh, hn,  stripe_hash(conf, sector), hash)
- 		if (sh->sector == sector)
- 			return sh;
- 	PRINTK("__stripe %llu not in cache\n", (unsigned long long)sector);
-@@ -1931,17 +1922,15 @@ static int run(mddev_t *mddev)
- 		return -EIO;
+ /* read the superblock from the bitmap file and initialize some bitmap fields */
+@@ -466,7 +466,7 @@ static int bitmap_read_sb(struct bitmap 
+ 		return err;
  	}
  
--	mddev->private = kmalloc (sizeof (raid6_conf_t)
--				  + mddev->raid_disks * sizeof(struct disk_info),
--				  GFP_KERNEL);
-+	mddev->private = kzalloc(sizeof (raid6_conf_t)
-+				 + mddev->raid_disks * sizeof(struct disk_info),
-+				 GFP_KERNEL);
- 	if ((conf = mddev->private) == NULL)
- 		goto abort;
--	memset (conf, 0, sizeof (*conf) + mddev->raid_disks * sizeof(struct disk_info) );
- 	conf->mddev = mddev;
+-	sb = (bitmap_super_t *)kmap(bitmap->sb_page);
++	sb = (bitmap_super_t *)kmap_atomic(bitmap->sb_page, KM_USER0);
  
--	if ((conf->stripe_hashtbl = (struct stripe_head **) __get_free_pages(GFP_ATOMIC, HASH_PAGES_ORDER)) == NULL)
-+	if ((conf->stripe_hashtbl = kzalloc(PAGE_SIZE, GFP_KERNEL)) == NULL)
- 		goto abort;
--	memset(conf->stripe_hashtbl, 0, HASH_PAGES * PAGE_SIZE);
- 
- 	conf->spare_page = alloc_page(GFP_KERNEL);
- 	if (!conf->spare_page)
-@@ -2085,9 +2074,7 @@ abort:
- 		print_raid6_conf(conf);
- 		if (conf->spare_page)
- 			put_page(conf->spare_page);
--		if (conf->stripe_hashtbl)
--			free_pages((unsigned long) conf->stripe_hashtbl,
--							HASH_PAGES_ORDER);
-+		kfree(conf->stripe_hashtbl);
- 		kfree(conf);
+ 	if (bytes_read < sizeof(*sb)) { /* short read */
+ 		printk(KERN_INFO "%s: bitmap file superblock truncated\n",
+@@ -535,7 +535,7 @@ success:
+ 		bitmap->events_cleared = bitmap->mddev->events;
+ 	err = 0;
+ out:
+-	kunmap(bitmap->sb_page);
++	kunmap_atomic(sb, KM_USER0);
+ 	if (err)
+ 		bitmap_print_sb(bitmap);
+ 	return err;
+@@ -560,7 +560,7 @@ static void bitmap_mask_state(struct bit
  	}
- 	mddev->private = NULL;
-@@ -2104,7 +2091,7 @@ static int stop (mddev_t *mddev)
- 	md_unregister_thread(mddev->thread);
- 	mddev->thread = NULL;
- 	shrink_stripes(conf);
--	free_pages((unsigned long) conf->stripe_hashtbl, HASH_PAGES_ORDER);
-+	kfree(conf->stripe_hashtbl);
- 	blk_sync_queue(mddev->queue); /* the unplug fn references 'conf'*/
- 	kfree(conf);
- 	mddev->private = NULL;
-@@ -2131,12 +2118,13 @@ static void print_sh (struct seq_file *s
- static void printall (struct seq_file *seq, raid6_conf_t *conf)
- {
- 	struct stripe_head *sh;
-+	struct hlist_node *hn;
- 	int i;
+ 	get_page(bitmap->sb_page);
+ 	spin_unlock_irqrestore(&bitmap->lock, flags);
+-	sb = (bitmap_super_t *)kmap(bitmap->sb_page);
++	sb = (bitmap_super_t *)kmap_atomic(bitmap->sb_page, KM_USER0);
+ 	switch (op) {
+ 		case MASK_SET: sb->state |= bits;
+ 				break;
+@@ -568,7 +568,7 @@ static void bitmap_mask_state(struct bit
+ 				break;
+ 		default: BUG();
+ 	}
+-	kunmap(bitmap->sb_page);
++	kunmap_atomic(sb, KM_USER0);
+ 	put_page(bitmap->sb_page);
+ }
  
- 	spin_lock_irq(&conf->device_lock);
- 	for (i = 0; i < NR_HASH; i++) {
- 		sh = conf->stripe_hashtbl[i];
--		for (; sh; sh = sh->hash_next) {
-+		hlist_for_each_entry(sh, hn, &conf->stripe_hashtbl[i], hash) {
- 			if (sh->raid_conf != conf)
- 				continue;
- 			print_sh(seq, sh);
-
-diff ./include/linux/raid/raid5.h~current~ ./include/linux/raid/raid5.h
---- ./include/linux/raid/raid5.h~current~	2005-12-01 13:59:45.000000000 +1100
-+++ ./include/linux/raid/raid5.h	2005-12-01 14:01:58.000000000 +1100
-@@ -126,7 +126,7 @@
-  */
+@@ -854,6 +854,7 @@ static int bitmap_init_from_disk(struct 
+ 	unsigned long bytes, offset, dummy;
+ 	int outofdate;
+ 	int ret = -ENOSPC;
++	void *paddr;
  
- struct stripe_head {
--	struct stripe_head	*hash_next, **hash_pprev; /* hash pointers */
-+	struct hlist_node	hash;
- 	struct list_head	lru;			/* inactive_list or handle_list */
- 	struct raid5_private_data	*raid_conf;
- 	sector_t		sector;			/* sector of this row */
-@@ -204,7 +204,7 @@ struct disk_info {
- };
+ 	chunks = bitmap->chunks;
+ 	file = bitmap->file;
+@@ -899,8 +900,6 @@ static int bitmap_init_from_disk(struct 
+ 		bit = file_page_offset(i);
+ 		if (index != oldindex) { /* this is a new page, read it in */
+ 			/* unmap the old page, we're done with it */
+-			if (oldpage != NULL)
+-				kunmap(oldpage);
+ 			if (index == 0) {
+ 				/*
+ 				 * if we're here then the superblock page
+@@ -923,18 +922,18 @@ static int bitmap_init_from_disk(struct 
  
- struct raid5_private_data {
--	struct stripe_head	**stripe_hashtbl;
-+	struct hlist_head	*stripe_hashtbl;
- 	mddev_t			*mddev;
- 	struct disk_info	*spare;
- 	int			chunk_size, level, algorithm;
+ 			oldindex = index;
+ 			oldpage = page;
+-			kmap(page);
+ 
+ 			if (outofdate) {
+ 				/*
+ 				 * if bitmap is out of date, dirty the
+ 			 	 * whole page and write it out
+ 				 */
+-				memset(page_address(page) + offset, 0xff,
++				paddr = kmap_atomic(page, KM_USER0);
++				memset(paddr + offset, 0xff,
+ 				       PAGE_SIZE - offset);
++				kunmap_atomic(paddr, KM_USER0);
+ 				ret = write_page(bitmap, page, 1);
+ 				if (ret) {
+-					kunmap(page);
+ 					/* release, page not in filemap yet */
+ 					put_page(page);
+ 					goto out;
+@@ -943,10 +942,12 @@ static int bitmap_init_from_disk(struct 
+ 
+ 			bitmap->filemap[bitmap->file_pages++] = page;
+ 		}
++		paddr = kmap_atomic(page, KM_USER0);
+ 		if (bitmap->flags & BITMAP_HOSTENDIAN)
+-			b = test_bit(bit, page_address(page));
++			b = test_bit(bit, paddr);
+ 		else
+-			b = ext2_test_bit(bit, page_address(page));
++			b = ext2_test_bit(bit, paddr);
++		kunmap_atomic(paddr, KM_USER0);
+ 		if (b) {
+ 			/* if the disk bit is set, set the memory bit */
+ 			bitmap_set_memory_bits(bitmap, i << CHUNK_BLOCK_SHIFT(bitmap),
+@@ -961,9 +962,6 @@ static int bitmap_init_from_disk(struct 
+ 	ret = 0;
+ 	bitmap_mask_state(bitmap, BITMAP_STALE, MASK_UNSET);
+ 
+-	if (page) /* unmap the last page */
+-		kunmap(page);
+-
+ 	if (bit_cnt) { /* Kick recovery if any bits were set */
+ 		set_bit(MD_RECOVERY_NEEDED, &bitmap->mddev->recovery);
+ 		md_wakeup_thread(bitmap->mddev->thread);
+@@ -1019,6 +1017,7 @@ int bitmap_daemon_work(struct bitmap *bi
+ 	int err = 0;
+ 	int blocks;
+ 	int attr;
++	void *paddr;
+ 
+ 	if (bitmap == NULL)
+ 		return 0;
+@@ -1075,14 +1074,12 @@ int bitmap_daemon_work(struct bitmap *bi
+ 					set_page_attr(bitmap, lastpage, BITMAP_PAGE_NEEDWRITE);
+ 					spin_unlock_irqrestore(&bitmap->lock, flags);
+ 				}
+-				kunmap(lastpage);
+ 				put_page(lastpage);
+ 				if (err)
+ 					bitmap_file_kick(bitmap);
+ 			} else
+ 				spin_unlock_irqrestore(&bitmap->lock, flags);
+ 			lastpage = page;
+-			kmap(page);
+ /*
+ 			printk("bitmap clean at page %lu\n", j);
+ */
+@@ -1105,10 +1102,12 @@ int bitmap_daemon_work(struct bitmap *bi
+ 						  -1);
+ 
+ 				/* clear the bit */
++				paddr = kmap_atomic(page, KM_USER0);
+ 				if (bitmap->flags & BITMAP_HOSTENDIAN)
+-					clear_bit(file_page_offset(j), page_address(page));
++					clear_bit(file_page_offset(j), paddr);
+ 				else
+-					ext2_clear_bit(file_page_offset(j), page_address(page));
++					ext2_clear_bit(file_page_offset(j), paddr);
++				kunmap_atomic(paddr, KM_USER0);
+ 			}
+ 		}
+ 		spin_unlock_irqrestore(&bitmap->lock, flags);
+@@ -1116,7 +1115,6 @@ int bitmap_daemon_work(struct bitmap *bi
+ 
+ 	/* now sync the final page */
+ 	if (lastpage != NULL) {
+-		kunmap(lastpage);
+ 		spin_lock_irqsave(&bitmap->lock, flags);
+ 		if (get_page_attr(bitmap, lastpage) &BITMAP_PAGE_NEEDWRITE) {
+ 			clear_page_attr(bitmap, lastpage, BITMAP_PAGE_NEEDWRITE);
