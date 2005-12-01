@@ -1,7 +1,7 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PATCH md 006 of 14] Make /proc/mdstat pollable.
-Date: Thu, 1 Dec 2005 14:23:16 +1100
-Message-ID: <1051201032316.29617@suse.de>
+Subject: [PATCH md 005 of 14] raid10 read-error handling - resync and read-only
+Date: Thu, 1 Dec 2005 14:23:11 +1100
+Message-ID: <1051201032311.29605@suse.de>
 References: <20051201141508.29384.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
@@ -10,229 +10,167 @@ Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-With this patch it is possible to poll /proc/mdstat to detect
-arrays appearing or disappearing, to detect failures,
-recovery starting, recovery completing, and devices being
-added and removed.
+Add in correct read-error handling for resync and read-only
+situations.
+When read-only, we don't over-write, so we need to mark the failed
+drive in the r10_bio so we don't re-try it.
+During resync, we always read all blocks, so if there is a read error,
+we simply over-write it with the good block that we found (assuming
+we found one).
 
-It is similar to the poll-ability of /proc/mounts, though different in that:
-
-We always report that the file is readable (because face it, it is, even
-if only for EOF).
-We report POLLPRI when there is a change so that select() can detect
-it as an exceptional event.  Not only are these exceptional events, but 
-that is the mechanism that the current 'mdadm' uses to watch for events
-(It also polls after a timeout).
-(We also report POLLERR like /proc/mounts).
-Finally, we only reset the per-file event counter when the start of the 
-file is read, rather than when poll() returns an event.  This is more
-robust as it means that an fd will continue to report activity to poll/select
-until the program clearly responds to that activity.
-
-md_new_event takes an 'mddev' which isn't currently used, but it will
-be soon.
+Note that the recovery case still isn't handled in an interesting way.
+There is nothing useful to do for the 2-copies case.  If there are 3
+or more copies, then we could try reading from one of the non-missing
+copies, but this is a bit complicated and very rarely would be used,
+so I'm leaving it for now.
 
 Signed-off-by: Neil Brown <neilb@suse.de>
 
 ### Diffstat output
- ./drivers/md/md.c |   81 ++++++++++++++++++++++++++++++++++++++++++++++++++----
- 1 file changed, 76 insertions(+), 5 deletions(-)
+ ./drivers/md/raid10.c         |   56 ++++++++++++++++++++++++++----------------
+ ./include/linux/raid/raid10.h |    7 +++++
+ 2 files changed, 42 insertions(+), 21 deletions(-)
 
-diff ./drivers/md/md.c~current~ ./drivers/md/md.c
---- ./drivers/md/md.c~current~	2005-12-01 13:56:49.000000000 +1100
-+++ ./drivers/md/md.c	2005-12-01 13:57:01.000000000 +1100
-@@ -42,6 +42,7 @@
- #include <linux/devfs_fs_kernel.h>
- #include <linux/buffer_head.h> /* for invalidate_bdev */
- #include <linux/suspend.h>
-+#include <linux/poll.h>
+diff ./drivers/md/raid10.c~current~ ./drivers/md/raid10.c
+--- ./drivers/md/raid10.c~current~	2005-11-29 14:07:05.000000000 +1100
++++ ./drivers/md/raid10.c	2005-11-29 14:11:01.000000000 +1100
+@@ -172,7 +172,7 @@ static void put_all_bios(conf_t *conf, r
  
- #include <linux/init.h>
- 
-@@ -134,6 +135,24 @@ static struct block_device_operations md
- static int start_readonly;
- 
- /*
-+ * We have a system wide 'event count' that is incremented
-+ * on any 'interesting' event, and readers of /proc/mdstat
-+ * can use 'poll' or 'select' to find out when the event
-+ * count increases.
-+ *
-+ * Events are:
-+ *  start array, stop array, error, add device, remove device,
-+ *  start build, activate spare
-+ */
-+DECLARE_WAIT_QUEUE_HEAD(md_event_waiters);
-+static atomic_t md_event_count;
-+void md_new_event(mddev_t *mddev)
-+{
-+	atomic_inc(&md_event_count);
-+	wake_up(&md_event_waiters);
-+}
-+
-+/*
-  * Enables to iterate over all existing md arrays
-  * all_mddevs_lock protects this list.
-  */
-@@ -2111,6 +2130,7 @@ static int do_md_run(mddev_t * mddev)
- 	mddev->queue->make_request_fn = mddev->pers->make_request;
- 
- 	mddev->changed = 1;
-+	md_new_event(mddev);
- 	return 0;
- }
- 
-@@ -2238,6 +2258,7 @@ static int do_md_stop(mddev_t * mddev, i
- 		printk(KERN_INFO "md: %s switched to read-only mode.\n",
- 			mdname(mddev));
- 	err = 0;
-+	md_new_event(mddev);
- out:
- 	return err;
- }
-@@ -2712,6 +2733,7 @@ static int hot_remove_disk(mddev_t * mdd
- 
- 	kick_rdev_from_array(rdev);
- 	md_update_sb(mddev);
-+	md_new_event(mddev);
- 
- 	return 0;
- busy:
-@@ -2802,7 +2824,7 @@ static int hot_add_disk(mddev_t * mddev,
- 	 */
- 	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
- 	md_wakeup_thread(mddev->thread);
--
-+	md_new_event(mddev);
- 	return 0;
- 
- abort_unbind_export:
-@@ -3523,6 +3545,7 @@ void md_error(mddev_t *mddev, mdk_rdev_t
- 	set_bit(MD_RECOVERY_INTR, &mddev->recovery);
- 	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
- 	md_wakeup_thread(mddev->thread);
-+	md_new_event(mddev);
- }
- 
- /* seq_file implementation /proc/mdstat */
-@@ -3663,12 +3686,17 @@ static void md_seq_stop(struct seq_file 
- 		mddev_put(mddev);
- }
- 
-+struct mdstat_info {
-+	int event;
-+};
-+
- static int md_seq_show(struct seq_file *seq, void *v)
- {
- 	mddev_t *mddev = v;
- 	sector_t size;
- 	struct list_head *tmp2;
- 	mdk_rdev_t *rdev;
-+	struct mdstat_info *mi = seq->private;
- 	int i;
- 	struct bitmap *bitmap;
- 
-@@ -3681,6 +3709,7 @@ static int md_seq_show(struct seq_file *
- 
- 		spin_unlock(&pers_lock);
- 		seq_printf(seq, "\n");
-+		mi->event = atomic_read(&md_event_count);
- 		return 0;
+ 	for (i = 0; i < conf->copies; i++) {
+ 		struct bio **bio = & r10_bio->devs[i].bio;
+-		if (*bio)
++		if (*bio && *bio != IO_BLOCKED)
+ 			bio_put(*bio);
+ 		*bio = NULL;
  	}
- 	if (v == (void*)2) {
-@@ -3789,16 +3818,52 @@ static struct seq_operations md_seq_ops 
- static int md_seq_open(struct inode *inode, struct file *file)
- {
- 	int error;
-+	struct mdstat_info *mi = kmalloc(sizeof(*mi), GFP_KERNEL);
-+	if (mi == NULL)
-+		return -ENOMEM;
+@@ -500,6 +500,7 @@ static int read_balance(conf_t *conf, r1
+ 		disk = r10_bio->devs[slot].devnum;
  
- 	error = seq_open(file, &md_seq_ops);
-+	if (error)
-+		kfree(mi);
-+	else {
-+		struct seq_file *p = file->private_data;
-+		p->private = mi;
-+		mi->event = atomic_read(&md_event_count);
-+	}
- 	return error;
+ 		while ((rdev = rcu_dereference(conf->mirrors[disk].rdev)) == NULL ||
++		       r10_bio->devs[slot].bio == IO_BLOCKED ||
+ 		       !test_bit(In_sync, &rdev->flags)) {
+ 			slot++;
+ 			if (slot == conf->copies) {
+@@ -517,6 +518,7 @@ static int read_balance(conf_t *conf, r1
+ 	slot = 0;
+ 	disk = r10_bio->devs[slot].devnum;
+ 	while ((rdev=rcu_dereference(conf->mirrors[disk].rdev)) == NULL ||
++	       r10_bio->devs[slot].bio == IO_BLOCKED ||
+ 	       !test_bit(In_sync, &rdev->flags)) {
+ 		slot ++;
+ 		if (slot == conf->copies) {
+@@ -537,6 +539,7 @@ static int read_balance(conf_t *conf, r1
+ 
+ 
+ 		if ((rdev=rcu_dereference(conf->mirrors[ndisk].rdev)) == NULL ||
++		    r10_bio->devs[nslot].bio == IO_BLOCKED ||
+ 		    !test_bit(In_sync, &rdev->flags))
+ 			continue;
+ 
+@@ -1104,7 +1107,6 @@ abort:
+ 
+ static int end_sync_read(struct bio *bio, unsigned int bytes_done, int error)
+ {
+-	int uptodate = test_bit(BIO_UPTODATE, &bio->bi_flags);
+ 	r10bio_t * r10_bio = (r10bio_t *)(bio->bi_private);
+ 	conf_t *conf = mddev_to_conf(r10_bio->mddev);
+ 	int i,d;
+@@ -1119,7 +1121,10 @@ static int end_sync_read(struct bio *bio
+ 		BUG();
+ 	update_head_pos(i, r10_bio);
+ 	d = r10_bio->devs[i].devnum;
+-	if (!uptodate)
++
++	if (test_bit(BIO_UPTODATE, &bio->bi_flags))
++		set_bit(R10BIO_Uptodate, &r10_bio->state);
++	else if (!test_bit(MD_RECOVERY_SYNC, &conf->mddev->recovery))
+ 		md_error(r10_bio->mddev,
+ 			 conf->mirrors[d].rdev);
+ 
+@@ -1209,25 +1214,30 @@ static void sync_request_write(mddev_t *
+ 	fbio = r10_bio->devs[i].bio;
+ 
+ 	/* now find blocks with errors */
+-	for (i=first+1 ; i < conf->copies ; i++) {
+-		int vcnt, j, d;
++	for (i=0 ; i < conf->copies ; i++) {
++		int  j, d;
++		int vcnt = r10_bio->sectors >> (PAGE_SHIFT-9);
+ 
+-		if (!test_bit(BIO_UPTODATE, &r10_bio->devs[i].bio->bi_flags))
+-			continue;
+-		/* We know that the bi_io_vec layout is the same for
+-		 * both 'first' and 'i', so we just compare them.
+-		 * All vec entries are PAGE_SIZE;
+-		 */
+ 		tbio = r10_bio->devs[i].bio;
+-		vcnt = r10_bio->sectors >> (PAGE_SHIFT-9);
+-		for (j = 0; j < vcnt; j++)
+-			if (memcmp(page_address(fbio->bi_io_vec[j].bv_page),
+-				   page_address(tbio->bi_io_vec[j].bv_page),
+-				   PAGE_SIZE))
+-				break;
+-		if (j == vcnt)
++
++		if (tbio->bi_end_io != end_sync_read)
++			continue;
++		if (i == first)
+ 			continue;
+-		mddev->resync_mismatches += r10_bio->sectors;
++		if (test_bit(BIO_UPTODATE, &r10_bio->devs[i].bio->bi_flags)) {
++			/* We know that the bi_io_vec layout is the same for
++			 * both 'first' and 'i', so we just compare them.
++			 * All vec entries are PAGE_SIZE;
++			 */
++			for (j = 0; j < vcnt; j++)
++				if (memcmp(page_address(fbio->bi_io_vec[j].bv_page),
++					   page_address(tbio->bi_io_vec[j].bv_page),
++					   PAGE_SIZE))
++					break;
++			if (j == vcnt)
++				continue;
++			mddev->resync_mismatches += r10_bio->sectors;
++		}
+ 		if (test_bit(MD_RECOVERY_CHECK, &mddev->recovery))
+ 			/* Don't fix anything. */
+ 			continue;
+@@ -1308,7 +1318,10 @@ static void recovery_request_write(mddev
+ 
+ 	atomic_inc(&conf->mirrors[d].rdev->nr_pending);
+ 	md_sync_acct(conf->mirrors[d].rdev->bdev, wbio->bi_size >> 9);
+-	generic_make_request(wbio);
++	if (test_bit(R10BIO_Uptodate, &r10_bio->state))
++		generic_make_request(wbio);
++	else
++		bio_endio(wbio, wbio->bi_size, -EIO);
  }
  
-+static int md_seq_release(struct inode *inode, struct file *file)
-+{
-+	struct seq_file *m = file->private_data;
-+	struct mdstat_info *mi = m->private;
-+	m->private = NULL;
-+	kfree(mi);
-+	return seq_release(inode, file);
-+}
-+
-+static unsigned int mdstat_poll(struct file *filp, poll_table *wait)
-+{
-+	struct seq_file *m = filp->private_data;
-+	struct mdstat_info *mi = m->private;
-+	int mask;
-+
-+	poll_wait(filp, &md_event_waiters, wait);
-+
-+	/* always allow read */
-+	mask = POLLIN | POLLRDNORM;
-+
-+	if (mi->event != atomic_read(&md_event_count))
-+		mask |= POLLERR | POLLPRI;
-+	return mask;
-+}
-+
- static struct file_operations md_seq_fops = {
- 	.open           = md_seq_open,
- 	.read           = seq_read,
- 	.llseek         = seq_lseek,
--	.release	= seq_release,
-+	.release	= md_seq_release,
-+	.poll		= mdstat_poll,
+ 
+@@ -1445,7 +1458,8 @@ static void raid10d(mddev_t *mddev)
+ 			unfreeze_array(conf);
+ 
+ 			bio = r10_bio->devs[r10_bio->read_slot].bio;
+-			r10_bio->devs[r10_bio->read_slot].bio = NULL;
++			r10_bio->devs[r10_bio->read_slot].bio =
++				mddev->ro ? IO_BLOCKED : NULL;
+ 			bio_put(bio);
+ 			mirror = read_balance(conf, r10_bio);
+ 			if (mirror == -1) {
+
+diff ./include/linux/raid/raid10.h~current~ ./include/linux/raid/raid10.h
+--- ./include/linux/raid/raid10.h~current~	2005-11-29 14:07:05.000000000 +1100
++++ ./include/linux/raid/raid10.h	2005-11-29 12:09:11.000000000 +1100
+@@ -104,6 +104,13 @@ struct r10bio_s {
+ 	} devs[0];
  };
  
- int register_md_personality(int pnum, mdk_personality_t *p)
-@@ -4068,7 +4133,11 @@ static void md_do_sync(mddev_t *mddev)
- 
- 		j += sectors;
- 		if (j>1) mddev->curr_resync = j;
--
-+		if (last_check == 0)
-+			/* this is the earliers that rebuilt will be
-+			 * visible in /proc/mdstat
-+			 */
-+			md_new_event(mddev);
- 
- 		if (last_check + window > io_sectors || j == max_sectors)
- 			continue;
-@@ -4254,6 +4323,7 @@ void md_check_recovery(mddev_t *mddev)
- 			mddev->recovery = 0;
- 			/* flag recovery needed just to double check */
- 			set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
-+			md_new_event(mddev);
- 			goto unlock;
- 		}
- 		/* Clear some bits that don't mean anything, but
-@@ -4291,6 +4361,7 @@ void md_check_recovery(mddev_t *mddev)
- 						sprintf(nm, "rd%d", rdev->raid_disk);
- 						sysfs_create_link(&mddev->kobj, &rdev->kobj, nm);
- 						spares++;
-+						md_new_event(mddev);
- 					} else
- 						break;
- 				}
-@@ -4323,9 +4394,9 @@ void md_check_recovery(mddev_t *mddev)
- 					mdname(mddev));
- 				/* leave the spares where they are, it shouldn't hurt */
- 				mddev->recovery = 0;
--			} else {
-+			} else
- 				md_wakeup_thread(mddev->sync_thread);
--			}
-+			md_new_event(mddev);
- 		}
- 	unlock:
- 		mddev_unlock(mddev);
++/* when we get a read error on a read-only array, we redirect to another
++ * device without failing the first device, or trying to over-write to
++ * correct the read error.  To keep track of bad blocks on a per-bio
++ * level, we store IO_BLOCKED in the appropriate 'bios' pointer
++ */
++#define IO_BLOCKED ((struct bio*)1)
++
+ /* bits for r10bio.state */
+ #define	R10BIO_Uptodate	0
+ #define	R10BIO_IsSync	1
