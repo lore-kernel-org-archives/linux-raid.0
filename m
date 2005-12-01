@@ -1,148 +1,52 @@
-From: NeilBrown <neilb@suse.de>
-Subject: [PATCH md 014 of 14] Fix possible problem in raid1/raid10 error overwriting.
-Date: Thu, 1 Dec 2005 14:24:02 +1100
-Message-ID: <1051201032402.29735@suse.de>
-References: <20051201141508.29384.patches@notabene>
+From: Sebastian Kuzminsky <seb.kuzminsky@gmail.com>
+Subject: Re: building a disk server
+Date: Wed, 30 Nov 2005 20:38:22 -0700
+Message-ID: <7f55de720511301938q1911a5bcx2a782b73bb39e87a@mail.gmail.com>
+References: <E1EhDvc-00083b-00@toko.jab.org>
+	 <20051130011853.GE28741@strugglers.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20051130011853.GE28741@strugglers.net>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Ok, I've been looking around some more.  I like the flexibility of
+having the disks external to the "head" computer.  Looks like AoE is
+not quite ready for the prime time yet.  SCSI seems overpriced for
+what you get.  eSATA looks sweet.
 
-The code to overwrite/reread for addressing read errors
-in raid1/raid10 currently assumes that the read will
-not alter the buffer which could be used to write to
-the next device.  This is not a safe assumption to make.
+Sonnet makes an 8-channel eSATA controller, PCI-X, using the Marvell
+6081 chipset.  Supported in 2.6.14.  About $275. 
+<http://www.sonnettech.com/product/tempo-x_esata8.html>
 
-So we split the loops into a overwrite loop and a separate re-read
-loop, so that the writing is complete before reading is attempted.
+Addonics makes a 4-channel eSATA controller, also PCI-X, using the Sil
+3124 chipset, also supported in 2.6.14.  About $90. 
+<http://addonics.com/products/host_controller/adsa3gx4r-e.asp>
 
-Cc: Paul Clements <paul.clements@steeleye.com>
-Signed-off-by: Neil Brown <neilb@suse.de>
+Anyone know of any other PCI-X multi-channel eSATA controllers? 
+There's also the option of getting a regular (non-external) SATA
+controller and the little SATA-to-eSATA converters, but I'd prefer to
+cut down on the number of in-line connectors.
 
-### Diffstat output
- ./drivers/md/raid1.c  |   38 ++++++++++++++++++++++++++++++--------
- ./drivers/md/raid10.c |   22 ++++++++++++++++++----
- 2 files changed, 48 insertions(+), 12 deletions(-)
 
-diff ./drivers/md/raid1.c~current~ ./drivers/md/raid1.c
---- ./drivers/md/raid1.c~current~	2005-12-01 14:03:25.000000000 +1100
-+++ ./drivers/md/raid1.c	2005-12-01 14:03:40.000000000 +1100
-@@ -1252,6 +1252,7 @@ static void sync_request_write(mddev_t *
- 			} while (!success && d != r1_bio->read_disk);
- 
- 			if (success) {
-+				int start = d;
- 				/* write it back and re-read */
- 				set_bit(R1BIO_Uptodate, &r1_bio->state);
- 				while (d != r1_bio->read_disk) {
-@@ -1265,14 +1266,23 @@ static void sync_request_write(mddev_t *
- 							 sect + rdev->data_offset,
- 							 s<<9,
- 							 bio->bi_io_vec[idx].bv_page,
--							 WRITE) == 0 ||
--					    sync_page_io(rdev->bdev,
-+							 WRITE) == 0)
-+						md_error(mddev, rdev);
-+				}
-+				d = start;
-+				while (d != r1_bio->read_disk) {
-+					if (d == 0)
-+						d = conf->raid_disks;
-+					d--;
-+					if (r1_bio->bios[d]->bi_end_io != end_sync_read)
-+						continue;
-+					rdev = conf->mirrors[d].rdev;
-+					if (sync_page_io(rdev->bdev,
- 							 sect + rdev->data_offset,
- 							 s<<9,
- 							 bio->bi_io_vec[idx].bv_page,
--							 READ) == 0) {
-+							 READ) == 0)
- 						md_error(mddev, rdev);
--					}
- 				}
- 			} else {
- 				char b[BDEVNAME_SIZE];
-@@ -1444,6 +1454,7 @@ static void raid1d(mddev_t *mddev)
- 
- 				if (success) {
- 					/* write it back and re-read */
-+					int start = d;
- 					while (d != r1_bio->read_disk) {
- 						if (d==0)
- 							d = conf->raid_disks;
-@@ -1453,13 +1464,24 @@ static void raid1d(mddev_t *mddev)
- 						    test_bit(In_sync, &rdev->flags)) {
- 							if (sync_page_io(rdev->bdev,
- 									 sect + rdev->data_offset,
--									 s<<9, conf->tmppage, WRITE) == 0 ||
--							    sync_page_io(rdev->bdev,
-+									 s<<9, conf->tmppage, WRITE) == 0)
-+								/* Well, this device is dead */
-+								md_error(mddev, rdev);
-+						}
-+					}
-+					d = start;
-+					while (d != r1_bio->read_disk) {
-+						if (d==0)
-+							d = conf->raid_disks;
-+						d--;
-+						rdev = conf->mirrors[d].rdev;
-+						if (rdev &&
-+						    test_bit(In_sync, &rdev->flags)) {
-+							if (sync_page_io(rdev->bdev,
- 									 sect + rdev->data_offset,
--									 s<<9, conf->tmppage, READ) == 0) {
-+									 s<<9, conf->tmppage, READ) == 0)
- 								/* Well, this device is dead */
- 								md_error(mddev, rdev);
--							}
- 						}
- 					}
- 				} else {
+There are lots of eSATA enclosures available, holding from 1 to 8
+drives.  Here's just one example:
+<http://www.macgurus.com/productpages/sata/hotswapsatakits.php>. 
+However, none of the enclosures I've found have redundant power
+supplies.  I'm thinking to use RAID-6, and a pile of 2x enclosures, so
+if a power supply goes I lose just 2 disks and my array stays up.  If
+I can find an 8x enclosure with redundant power supplies that would be
+preferable.
 
-diff ./drivers/md/raid10.c~current~ ./drivers/md/raid10.c
---- ./drivers/md/raid10.c~current~	2005-12-01 14:03:25.000000000 +1100
-+++ ./drivers/md/raid10.c	2005-12-01 14:03:41.000000000 +1100
-@@ -1421,6 +1421,7 @@ static void raid10d(mddev_t *mddev)
- 				} while (!success && sl != r10_bio->read_slot);
- 
- 				if (success) {
-+					int start = sl;
- 					/* write it back and re-read */
- 					while (sl != r10_bio->read_slot) {
- 						int d;
-@@ -1434,14 +1435,27 @@ static void raid10d(mddev_t *mddev)
- 							if (sync_page_io(rdev->bdev,
- 									 r10_bio->devs[sl].addr +
- 									 sect + rdev->data_offset,
--									 s<<9, conf->tmppage, WRITE) == 0 ||
--							    sync_page_io(rdev->bdev,
-+									 s<<9, conf->tmppage, WRITE) == 0)
-+								/* Well, this device is dead */
-+								md_error(mddev, rdev);
-+						}
-+					}
-+					sl = start;
-+					while (sl != r10_bio->read_slot) {
-+						int d;
-+						if (sl==0)
-+							sl = conf->copies;
-+						sl--;
-+						d = r10_bio->devs[sl].devnum;
-+						rdev = conf->mirrors[d].rdev;
-+						if (rdev &&
-+						    test_bit(In_sync, &rdev->flags)) {
-+							if (sync_page_io(rdev->bdev,
- 									 r10_bio->devs[sl].addr +
- 									 sect + rdev->data_offset,
--									 s<<9, conf->tmppage, READ) == 0) {
-+									 s<<9, conf->tmppage, READ) == 0)
- 								/* Well, this device is dead */
- 								md_error(mddev, rdev);
--							}
- 						}
- 					}
- 				} else {
+Does anyone have any experience with any eSATA enclosures, good or bad?
+
+
+Comments?
+
+
+--
+Sebastian Kuzminsky
