@@ -1,40 +1,57 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Data errors on clean, degraded Raid5. Help Please.
-Date: Fri, 2 Dec 2005 16:24:48 +1100
-Message-ID: <17295.55968.810625.163694@cse.unsw.edu.au>
-References: <d39ad6430512011852g47d155a7i3f03db36996c01b2@mail.gmail.com>
-	<17295.50156.217214.617838@cse.unsw.edu.au>
-	<d39ad6430512012112y5545c2b1v29f93c741d41ffdb@mail.gmail.com>
+From: "bilgi@yazarcizer.com" <bilgi@yazarcizer.com>
+Subject: =?ISO-8859-1?Q?=20SAH=DDP?=  =?ISO-8859-1?Q?=20=C7IKMAK?=  =?ISO-8859-1?Q?=20G=D6REV=DD?=
+	=?ISO-8859-1?Q?M=DDZ?=
+Date: Fri, 2 Dec 2005 10:53:57 +0200
+Message-ID: <20051202095758.667A627E4F__36794.3807774738$1133514431$gmane$org@diablo.beysis.net>
+Reply-To: <extreay@walla.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="Windows-1251"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Erich Newell on Friday December 2
 Sender: linux-raid-owner@vger.kernel.org
-To: Erich Newell <erich.newell@gmail.com>
-Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Friday December 2, erich.newell@gmail.com wrote:
-> Thank you for the feedback Neil.
-> 
-> Although, your last comment did confuse me a little...run what in
-> parallel? Should I be running badblocks against the unassembled
-> components of the raid and then doing something like:
->      >fsck -l /badblockfile_sda3.txt /dev/md0
->      >fsck -l /badblockfile_sdb3.txt /dev/md0
->      >fsck -l /badblockfile_sdc3.txt /dev/md0
->      >fsck -l /badblockfile_sdd3.txt /dev/md0
+Medyanýn ve kamuoyunun gözü önünde 27 Kasým`da Swissotelde bir satýþ gerçekleþti.
 
-type in haste, repent at leisure....
+Cumhuriyet kurucumuz Mustafa Kemal Atatürk’e ait belge, bilgi, doküman ve eþyalarý 
+müzayedede satýþa sunulmuþtur.Duyarlýlýk noktalarýný yitirmiþ, skandallarýn olaðanlaþtýðý, 
+bir toplum olduðumuzu gözler önüne seren bu duruma yine de insani ve ülkesini seven 
+insanlar olarak dur demeyi vicdani ahlaki ve düþünsel olarak karþý gelmeyi borç bildik.
 
-I was thinking that you wold be using 'badblocks' directly rather then
-via fsck, and was suggesting
-   badblocks -n /dev/sda3 & badblocks /dev/sdb3 & badblocks /dev/sdd3
-   ....
+Cumhuriyetin kurumlarý, cumhuriyet kurucusunun eserlerine sahip çýkmazken, mezatlarda 
+satýlýrken yüreðimizin acýdýðýný bir kez daha ifade etmek istedik.Ülkemi pazarlarým diyen 
+tüccar zihniyetli Baþbakaný,hükümeti,bakanlýklarý ve  adý Atatürk ile baþlayan 
+tüm kurumlarýn buradaki sessizliðini ve suç ortaklýðýný bozmak istiyoruz.
 
-Running 'badblocks' across a raid5 array isn't a good idea, as if
-there are any bad block, the devices will be kicked from the array,
-and the test will abort.
+Tarihini parça parça satan bir ülkenin onursuz insaný olmamak için  imzalarýmýzý atýyoruz.
+Baþta hükümet olmak üzere, tüm kurumlarý ve yurttaþlarýmýzý, Atatürk’e ait olan eþya, bilgi, 
+doküman ve belgelerin ülkemize ve tüm cumhuriyet yurttaþlarýna ait olduðu gerçeðinin altýný 
+bir kez daha çiziyoruz.Tarihimize ve hepimize ait olan bu deðerlerin kiþisel mülkiyete geçemeyeceðini 
+ifade ediyoruz.Tarihi eser kaçakçýlýðý içermesi bir yana tarihinin de parça parça satýlmasý anlamýna
+ gelen bu duruma son verilerek, satýlan bu eþyalarýn topluma kazandýrýlarak korunmasýný ve  
+herkesin görebileceði yerde  sergilenmesini istiyoruz.
 
-NeilBrown
+Ulusal bir önderin hiçbir özel eþyasý kiþiselleþtirilemez.
+
+Saygýlarýmla
+Erdoðan Aslanoðlu
+www.yazarcizer.com
+Genel Yayýn Yönetmeni
+
+www.yazarcizer.com sitesi olarak bu konuda baþta tüm yurttaþlarýmýz ve kuruluþlarýn 
+duyarlýlýk göstererek aþaðýdaki kurumlara e-posta atarak tepkilerini dile getirmelerini ve 
+bu kampanyanýn takipçisi olmalarýný rica ediyoruz.
+
+TBMM : bilgiedinme@tbmm.gov.tr
+Baþbakanlýk : halkilis@basbakanlik.gov.tr
+Ýçiþleri Bakanlýðý : i-basin@icisleri.gov.tr
+Kültür ve Turizm Bakanlýðý : ozelkalem@kulturturizm.gov.tr
+Kültür Varlýklarý ve Müzeler Genel Müdürlüðü : kulturvarlikmuze@kulturturizm.gov.tr
+Genelkurmay Baþkanlýðý : gnkur@tsk.mil.tr
+Türk Tarih Kurumu : ttkinfo@ttk.org.tr
+
+Kampanyamýza, baþta siz olmak üzere 
+arkadaþlarýnýza sitelere önerebilir ve sesimizi çoðaltabilirsiniz.
+
+ 
