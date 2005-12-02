@@ -1,99 +1,82 @@
-From: Eyal Lebedinsky <eyal@eyal.emu.id.au>
-Subject: Re: quick Q re raid reconstruction
-Date: Fri, 02 Dec 2005 10:06:34 +1100
-Message-ID: <438F81FA.8080307@eyal.emu.id.au>
-References: <438EE429.2030903@eyal.emu.id.au>	<17295.29744.13292.368041@cse.unsw.edu.au>	<438F7C4B.1090404@eyal.emu.id.au> <17295.32688.483645.390383@cse.unsw.edu.au>
+From: Erich Newell <erich.newell@gmail.com>
+Subject: Data errors on clean, degraded Raid5. Help Please.
+Date: Fri, 2 Dec 2005 02:52:08 +0000
+Message-ID: <d39ad6430512011852g47d155a7i3f03db36996c01b2@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17295.32688.483645.390383@cse.unsw.edu.au>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid list <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> On Friday December 2, eyal@eyal.emu.id.au wrote:
-> 
->>Neil Brown wrote:
->>
->>>>Q1) What is the correct command to bring these three up as
->>>>   degraded?
->>>
->>>
->>>  mdadm --assemble --force /dev/mdX /dev/sd[abc]1
->>>
->>>However this won't work with the superblocks you have. So
->>>
->>>  mdadm --create /dev/mdX -l5 -c256 -n4 missing /dev/sda /dev/sdb /dev/sdc
->>
->>I do not see 'missing' the the mdadm manpage, but maybe Debian is too
->>far behind?
-> 
-> 
-> It is in the section on "CREATE MODE"
-> 
->        To create a "degraded" array in which some devices are missing,  simply
->        give  the  word  "missing"  in place of a device name.  This will cause
->        mdadm to leave the corresponding slot in the array empty.  For a  RAID4
->        or  RAID5 array at most one slot can be "missing"; for a RAID6 array at
->        most two slots.  For a RAID1 array, only one real device  needs  to  be
->        given.  All of the others can be "missing".
-> 
-> 
-> 
->># mdadm --version
->>mdadm - v1.9.0 - 04 February 2005
-> 
-> 
-> The section I quoted is from the man page for 1.12.0, but that text
-> certainly predates 1.9.0.
+I apologize for being so verbose in my last post...it was late. My
+problem again, in a more succinct form:
 
-Here is the Debian (stable) relevant 'man mdadm' section:
+After a system crash during bootup, I attempted:
+     > mdadm --add /dev/md0 /dev/sdb3
 
-CREATE MODE
-       Usage: mdadm --create device --chunk=X --level=Y
-                   --raid-disks=Z devices
+This caused the following:
+  Number   Major   Minor   RaidDevice State
+     0       8       51        0     active sync   /dev/sdd3
+     1       8       35        1     active sync   /dev/sdc3
+     2       0        0         -      removed
+     3       0        0         -      removed
+     4       8       19        -      spare   /dev/sdb3
+     5       8        3         -      faulty   /dev/sda3
 
-       This usage will initialise a new md array, associate some devices  with
-       it, and activate the array.
+I then did:
+     >mdadm --assemble --force /dev/md0
 
-       As  devices  are  added,  they  are checked to see if they contain raid
-       superblocks or filesystems. They are also check to see if the  variance
-       in device size exceeds 1%.
+Which gave me:
+    Number   Major   Minor   RaidDevice State
+       0       8       51        0      active sync   /dev/sdd3
+       1       8       35        1      active sync   /dev/sdc3
+       0       0        0        0      removed
+       3       8        3        3      active sync   /dev/sda3
 
-       If  any  discrepancy is found, the array will not automatically be run,
-       though the presence of a --run can override this caution.
 
-       The General Management options that are valid with --create are:
+Which generates errors when I try and copy off large amounts of data:
+     About ten of these:
+          ata1: translated ATA stat/err 0x25/00 to SCSI SK/ASC/ASCQ 0x4/00/00
+          ata1: status=0x25 { DeviceFault CorrectedError Error }
+          SCSI error : <0 0 0 0> return code = 0x8000002
+          sda: Current: sense key: Hardware Error
+          Additional sense: No additional sense information
+          end_request: I/O error, dev sda, sector 489794513
 
-       --run  insist of running the array even if some devices look like  they
-              might be in use.
+     And a ton of these:
+          EXT3-fs error (device md0): ext3_get_inode_loc: unable to
+read inode block - inode=229379, block=458799
 
-       --readonly
-              start the array readonly - not supported yet.
+Yet fsck reports clean:
+     > fsck -n /dev/md0
+     fsck 1.38 (30-Jun-2005)
+     e2fsck 1.38 (30-Jun-2005)
+      /: clean, 514472/90718208 files, 114796878/181417968 blocks
 
-Maybe they have their own "special" man page?
+Should I do this:
+    > fsck -n -c /dev/md0
+    > mdadm --assemble /dev/md0
+    > mdadm --add /dev/md0 /dev/sdb3
 
->>I built it anyway and I do not see 'missing' listed in
->>	mdadm --create --help
-> 
-> I do.
-> 
-> $ /sbin/mdadm --create --help
-> Usage:  mdadm --create device -chunk=X --level=Y --raid-devices=Z devices
-> 
->  This usage will initialise a new md array, associate some
->  devices with it, and activate the array.   In order to create an
->  array with some devices missing, use the special word 'missing' in
->                                                         ^^^^^^^
->  place of the relevant device name.
+or this:
+     > mdadm -c /dev/md0 -l 5 -n 4 -x 0 -f /dev/sdd3 /dev/sdc3
+/dev/sdb3 /dev/sda3
+     > mdadm -S /dev/md0
+     > mdadm --assemble --update=resync /dev/md0
 
-True, I missed it :-(
+or ???
 
-fsck finished clean too, thanks again.
+If anyone has this knowledge, please share. I'm in over my head on this one.
 
--- 
-Eyal Lebedinsky (eyal@eyal.emu.id.au) <http://samba.org/eyal/>
-	attach .zip as .dat
+Thanks in advance!
+
+P.S. I am currently running a non-distructive badblock check while I
+wait for expert advice:
+> fsck -n -c -c /dev/md0
+fsck 1.38 (30-Jun-2005)
+e2fsck 1.38 (30-Jun-2005)
+Checking for bad blocks (non-destructive read-write test)
+Testing with random pattern:         4964224/      181417968
