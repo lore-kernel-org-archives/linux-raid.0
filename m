@@ -1,33 +1,35 @@
-From: "handeparlakli27@hotmail.com" <pervinsilikton@hotmail.com>
-Subject: bilginize!
-Date: Fri, 2 Dec 2005 20:49:35 +0200
-Message-ID: <200512021849.jB2InYnx026584@zeus2.kernel.org>
-Reply-To: filizcet@xl.com
+From: Adam Nevins <univac@comcast.net>
+Subject: is it possible to change the UUID of an array?
+Date: Fri, 02 Dec 2005 14:41:28 -0500
+Message-ID: <1133552488.24610.18.camel@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-ABONE EROTIK MARKET
+Hi,
 
-cinsel urun satis merkezi '' Cinsel sorunlara etkin ve kesin cozum ,enson yenilikler''
+I had a RAID-1 with two mirrors as my root partition.  I decided to
+fail/remove one of the mirrors prior to upgrading parts of the OS so
+that I'd have a backup just in case things went horribly wrong.  After
+doing the upgrade, I wanted to compare the two mirrors, so I assembled a
+new md with the failed mirror.  So far, so good.
 
--Ereksiyon geciktiriciler
--Cinsel guc ve istek artiricilar
--Erotik ic giyim
-ve cok daha fazlasi ...
+The problem is that I now have two arrays with the same UUID.  I'm
+assuming that automatic assembly is now broken.  For now, I've changed
+mdadm.conf to specify the physical devices, but what I'd like to do is
+generate a new UUID for one of the mirrors.  I haven't found a way to do
+this without recreating the array.
 
-www.aboneshop.com
+kernel version: 2.6.11
+mdadm version:  1.12.0
 
-NOT:
-16 yasindan kucukkler icin sakincali olabilecek emareler icermektedir.
+Thanks in advance,
 
-Bu mail 'in size ait olmadýgini dusunuyor iseniz OZUR DILERIZ!
-mailinizin kayýýtlarýmýzdan cikartýimasi icin lutfen bos bir cevap atiniz.
-isleminiz derhal gerceklesecektir.
-
-
+Adam
+-- 
+Adam Nevins <univac@comcast.net>
 
