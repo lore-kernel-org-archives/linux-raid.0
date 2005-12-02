@@ -1,91 +1,161 @@
-From: Mats Johnson <mats@jupp.se>
-Subject: Please help with reconstruction of RAID 5
-Date: Fri, 02 Dec 2005 13:47:04 +0100
-Message-ID: <43904248.3090001@jupp.se>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Andrew Burgess <aab@cichlid.com>
+Subject: Re: need help with raid6 recovery
+Date: Fri, 2 Dec 2005 06:07:04 -0800
+Message-ID: <200512021407.jB2E74ae005786@cichlid.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I had a 4 device RAID 5 array consisting of the devices sda, sdb, sdc
-and sdd.
+I tried:
 
-Then the sda device failed. I had the (perhaps not so brilliant) idea
-that it was probably just some glitch, and that it wasn't really broken,
-so I removed it from the array, then added it back again.
+root # mdadm -A /dev/md1 -v --force /dev/sdq1 /dev/sds1 /dev/sdab1 missing /dev/sdaa3 /dev/sdo1 /dev/sdu1 missing
+mdadm: looking for devices for /dev/md1
+mdadm: no recogniseable superblock
+mdadm: /dev/sdq1 has no superblock - assembly aborted
 
-As expected the resynchronisation started, however at 58% it got stuck
-and nothing more happened. Anything I did after that that touched the
-raid hung, so I restarted the machine.
+and:
 
-When booting the broken sda device didn't respond and so there were
-only three disc devices, now they were called sda (formerly sdb),
-sdb (formerly sdc) and sdc (formerly sdd).
+root # mdadm -A /dev/md1 -v --update=summaries --force /dev/sdq1 /dev/sds1 /dev/sdab1 missing /dev/sdaa3 /dev/sdo1 /dev/sdu1 missing
+mdadm: looking for devices for /dev/md1
+mdadm: no recogniseable superblock
+mdadm: /dev/sdq1 has no superblock - assembly aborted
 
-Now the raid wouldn't start, I think because it had the impression that
-sdd was also missing. I ordered a replacement disc, thinking that this
-would fix the confusion, when it was inserted as sda. After installing
-this the devices are called sda, sdb, sdc and sdd again.
+My next idea is to use dd to copy the superblock from a working device to sdq1
+and edit it for the correct index.
 
-So the actual state of the discs are now that sda is new and has been
-partitioned the same as the other ones. sdb, sdc and sdd I'm convinced
-contain good raid 5 data, "mdadm -E" for all three says checksums are
-correct, state is clean and "Events" are equal.
+Any thoughts?
 
-The table of raid devices is a bit messed up however, it shows sda, sdb
-and sdc as "active sync", sdd as "spare" and another "device" as "faulty
-removed".
+Is there a more automatic way to do this?
 
-So, I thought I'd tell mdadm to assemble the array from the three good
-devices:
-# mdadm --assemble /dev/md0 /dev/sdb /dev/sdc /dev/sdd
-mdadm: /dev/md0 assembled from 2 drives and 1 spare - not enough to 
-start the array.
-...which didn't work, I assume because it thinks sdd is "spare". I
-tried adding "--force" but that didn't change anything.
+Thanks for any help
+Andrew
 
-I'm using Debian, Sarge (kernel 2.6.8).
-"mdadm --version" returns "mdadm - v1.9.0 - 04 February 2005"
-On boot the md driver says:
-    "md driver 0.90.0 MAX_MD_DEVS=256, MD_SB_DISKS=27"
-The disks are all Seagate Barracuda 7200.8 SATA NCQ - ST3300831AS.
-They are all partitioned into a single partition.
 
-Below is the output of "mdadm --examine /dev/sdd", the others are
-exactly the same (except for the "this"-line and checksum values,
-naturally).
+On 2005-12-01 0:05:54, Andrew Burgess aab@cichlid.com said:
 
-/dev/sdd:
-           Magic : a92b4efc
-         Version : 00.90.00
-            UUID : b7ab9c13:23c0ec3b:ca61051c:b536662c
-   Creation Time : Wed Apr 20 15:24:36 2005
-      Raid Level : raid5
-    Raid Devices : 4
-   Total Devices : 4
-Preferred Minor : 0
-
-     Update Time : Wed Apr 20 17:18:04 2005
-           State : clean
-  Active Devices : 3
-Working Devices : 4
-  Failed Devices : 1
-   Spare Devices : 1
-        Checksum : 9a747d6d - correct
-          Events : 0.1851
-
-          Layout : left-symmetric
-      Chunk Size : 64K
-
-       Number   Major   Minor   RaidDevice State
-this     4       8       48        4      spare   /dev/sdd
-
-    0     0       8        0        0      active sync   /dev/sda
-    1     1       8       16        1      active sync   /dev/sdb
-    2     2       8       32        2      active sync   /dev/sdc
-    3     3       0        0        3      faulty removed
-    4     4       8       48        4      spare   /dev/sdd
-
+> I have an 8 device raid6 array with 3 bad devices. Two
+> of the bad devices are recognized as spares belonging to
+> the array, the third device, the one that was most recently
+> an active sync part of the array somehow losts its superblock.
+> 
+> I'd like to try running the array with each of the bad devices
+> and see which makes an array with the least damaged filesystem.
+> One problem is how to add the device without the superblock.
+> I want to make sure it goes into position[0] in the array and
+> I'm not sure how to specifiy that with mdadm.
+> 
+> sdq1 is the device without the superblock, sdn1 and sde1 are
+> marked as spares but they were in sync recently.
+> 
+> To add sdq1 as device [0] even though it has no superblock would it be enough
+> to specify all the devices in the right order and leave the two that I'm not
+> experimenting with as missing?
+> 
+> mdadm -A /dev/md1 --force /dev/sdq1 /dev/sds1 /dev/sdab1 missing /dev/sdaa3 /dev/sdo1 /dev/sdu1 missing
+> 
+> And to try each spare in positions [3] and [7] a similar command, even though
+> the superblocks on the spares say [8] and [9]?
+> 
+> I want to avoid md doing any resyncing or recovery until I find the best
+> 'bad' device to use.
+> 
+> Thanks for any help!
+> Andrew
+> 
+> PS This all happened when I upgraded the motherboard and the kernel version
+> at the same time, the resulting combination worked badly with my disk controllers
+> causing md to think drives were bad when they really weren't. Though how the
+> superblock vanished on the one drive is a mystery...
+> 
+> =======================================================
+> 
+> root # cat /proc/mdstat
+> md1 : inactive sds1[1] sde1[9] sdn1[8] sdu1[6] sdo1[5] sdaa3[4] sdab1[2]
+>       2051009792 blocks
+> 
+> root # mdadm -A /dev/md1
+> mdadm: /dev/md1 assembled from 5 drives and 2 spares - not enough to start the array.
+> 
+> root # mdadm -A -v /dev/md1 2>&1 | grep added
+> mdadm: added /dev/sdab1 to /dev/md1 as 2
+> mdadm: added /dev/sdaa3 to /dev/md1 as 4
+> mdadm: added /dev/sdo1 to /dev/md1 as 5
+> mdadm: added /dev/sdu1 to /dev/md1 as 6
+> mdadm: added /dev/sdn1 to /dev/md1 as 8
+> mdadm: added /dev/sde1 to /dev/md1 as 9
+> mdadm: added /dev/sds1 to /dev/md1 as 1
+> 
+> root # mdadm -E /dev/sde1
+> /dev/sde1:
+>           Magic : a92b4efc
+>         Version : 00.90.00
+>            UUID : 7fdb1d16:24896504:7df4ea3b:c7f0bf96
+>   Creation Time : Sat Nov 12 12:43:57 2005
+>      Raid Level : raid6
+>     Device Size : 292969216 (279.40 GiB 300.00 GB)
+>    Raid Devices : 8
+>   Total Devices : 8
+> Preferred Minor : 1
+> 
+>     Update Time : Wed Nov 30 08:12:57 2005
+>           State : clean
+>  Active Devices : 6
+> Working Devices : 8
+>  Failed Devices : 2
+>   Spare Devices : 2
+>        Checksum : 2c0e61a6 - correct
+>          Events : 0.930007
+> 
+> 
+>       Number   Major   Minor   RaidDevice State
+> this     9       8       65        9      spare   /dev/sde1
+> 
+>    0     0      65        1        0      active sync   /dev/sdq1
+>    1     1      65       33        1      active sync   /dev/sds1
+>    2     2      65      177        2      active sync   /dev/sdab1
+>    3     3       0        0        3      faulty removed
+>    4     4      65      163        4      active sync   /dev/sdaa3
+>    5     5       8      225        5      active sync   /dev/sdo1
+>    6     6      65       65        6      active sync   /dev/sdu1
+>    7     7       0        0        7      faulty removed
+>    8     8       8      209        8      spare   /dev/sdn1
+>    9     9       8       65        9      spare   /dev/sde1
+> 
+> root # mdadm -E /dev/sdn1
+> /dev/sdn1:
+>           Magic : a92b4efc
+>         Version : 00.90.00
+>            UUID : 7fdb1d16:24896504:7df4ea3b:c7f0bf96
+>   Creation Time : Sat Nov 12 12:43:57 2005
+>      Raid Level : raid6
+>     Device Size : 292969216 (279.40 GiB 300.00 GB)
+>    Raid Devices : 8
+>   Total Devices : 8
+> Preferred Minor : 1
+> 
+>     Update Time : Wed Nov 30 08:12:57 2005
+>           State : clean
+>  Active Devices : 6
+> Working Devices : 8
+>  Failed Devices : 2
+>   Spare Devices : 2
+>        Checksum : 2c0e6234 - correct
+>          Events : 0.930007
+> 
+> 
+>       Number   Major   Minor   RaidDevice State
+> this     8       8      209        8      spare   /dev/sdn1
+> 
+>    0     0      65        1        0      active sync   /dev/sdq1
+>    1     1      65       33        1      active sync   /dev/sds1
+>    2     2      65      177        2      active sync   /dev/sdab1
+>    3     3       0        0        3      faulty removed
+>    4     4      65      163        4      active sync   /dev/sdaa3
+>    5     5       8      225        5      active sync   /dev/sdo1
+>    6     6      65       65        6      active sync   /dev/sdu1
+>    7     7       0        0        7      faulty removed
+>    8     8       8      209        8      spare   /dev/sdn1
+>    9     9       8       65        9      spare   /dev/sde1
+> 
+> 
