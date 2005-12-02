@@ -1,161 +1,96 @@
-From: Andrew Burgess <aab@cichlid.com>
-Subject: Re: need help with raid6 recovery
-Date: Fri, 2 Dec 2005 06:07:04 -0800
-Message-ID: <200512021407.jB2E74ae005786@cichlid.com>
+From: Robin Bowes <robin-lists@robinbowes.com>
+Subject: Re: ATAn timeout errors
+Date: Fri, 02 Dec 2005 14:18:08 +0000
+Message-ID: <dmpl2s$6ul$1@sea.gmane.org>
+References: <dhu42t$216$1@sea.gmane.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <dhu42t$216$1@sea.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I tried:
+My server is now unusable - I've rebuilt the array using a boot CD and 
+it completed OK.
 
-root # mdadm -A /dev/md1 -v --force /dev/sdq1 /dev/sds1 /dev/sdab1 missing /dev/sdaa3 /dev/sdo1 /dev/sdu1 missing
-mdadm: looking for devices for /dev/md1
-mdadm: no recogniseable superblock
-mdadm: /dev/sdq1 has no superblock - assembly aborted
+I rebooted from the internal drives and it came up OK, then crashed with 
+  an "ata6: commain timeout" error.
 
-and:
+I guess there must be a hardware issue somewhere, but I have no idea where.
 
-root # mdadm -A /dev/md1 -v --update=summaries --force /dev/sdq1 /dev/sds1 /dev/sdab1 missing /dev/sdaa3 /dev/sdo1 /dev/sdu1 missing
-mdadm: looking for devices for /dev/md1
-mdadm: no recogniseable superblock
-mdadm: /dev/sdq1 has no superblock - assembly aborted
+Anyone got any ideas or suggestions?
 
-My next idea is to use dd to copy the superblock from a working device to sdq1
-and edit it for the correct index.
+R.
 
-Any thoughts?
+Robin Bowes said the following on 04/10/2005 15:37:
+> I posted this on the linux-ide list but got no response so I thought I'd 
+> try here.
+> 
+> My setup is as follows:
+> 
+> Epox EP-D3VA
+> Dual PIII 1GHZ processors
+> 1.5GB RAM
+> Two of Promise SATA150 TX4 controllers
+> Six of Maxtor 250GB SATA drives (7Y250M0) - three per controller
+> 
+> Running Fedora Core 4 with "stock" FC4 kernel 
+> (kernel-smp-2.6.12-1.1456_FC4)
+> 
+> I have four md arrays as follows:
+> 
+> /dev/md0 RAID1 /dev/sd[ad]
+> /dev/md1 RAID1 /dev/sd[be]1
+> /dev/md2 RAID1 /dev/sd[cf]1
+> /dev/md5 RAID5 /dev/sd[abcef]2 (/dev/sdd2 is a hot spare)
+> 
+> md[0-2] are 1.5 MB areas
+> /dev/md0 is /
+> /dev/md1 is swap
+> /dev/md2 is currently not used
+> 
+> md5 is 929GB and I have used lvm to create:
+> 
+> /home home_lv audio_vg -wi-ao 914.38G
+> /usr  usr_lv  audio_vg -wi-ao  10.00G
+> /var  var_lv  audio_vg -wi-ao   5.00G
+> 
+> Ok, onto the problem...
+> 
+> After a couple of power outages I recently got myself a UPS but 
+> (typically) didn't get round to installing it before another outage (doh!).
+> 
+> The server came back up OK with /dev/md5 dirty and needing to resync.
+> 
+> However, during the re-sync, one or more of the disks clunked and I saw 
+> an "ATAn Timeout" message on the console and the system froze. (n 
+> varied, e.g. ATA2, ATA1, ATA4, etc.)  This seemed to be triggered by 
+> doing something that caused disk activity during the resync.
+> 
+> I've seen this before and done a hard-reset to start again - eventually 
+> the resync has completed and everything's back to normal.
+> 
+> However, this time, I had to drop to single-user mode and reduce the 
+> RAID sync speed (echo 5000 > /proc/sys/dev/raid/speed_limit_max) to get 
+> the resync to complete.
+> 
+> The server then hung again - same error - so I used Maxtor's PowerMax 
+> utility to perform a full test of all drives and all passed 
+> successfully. I then rebooted and left it re-syncing in multi-user mode 
+> (with fingers crossed) and this time it completed successfully.
+> 
+> Can anyone tell me if this is a bug somewhere or might it be a hardware 
+> limitation, i.e. saturating the PCI bus when resyncing? Is there 
+> anything I can do to prevent it from happening?
+> 
+> I'm not too bothered about RAID performance - I mainly use it to store 
+> .flac audio files which don't need great throuhgput to stream off the disk.
+> 
+> Any suggestions (or fixes!) appreciated.
+> 
+> Thanks,
+> 
+> R.
 
-Is there a more automatic way to do this?
-
-Thanks for any help
-Andrew
-
-
-On 2005-12-01 0:05:54, Andrew Burgess aab@cichlid.com said:
-
-> I have an 8 device raid6 array with 3 bad devices. Two
-> of the bad devices are recognized as spares belonging to
-> the array, the third device, the one that was most recently
-> an active sync part of the array somehow losts its superblock.
-> 
-> I'd like to try running the array with each of the bad devices
-> and see which makes an array with the least damaged filesystem.
-> One problem is how to add the device without the superblock.
-> I want to make sure it goes into position[0] in the array and
-> I'm not sure how to specifiy that with mdadm.
-> 
-> sdq1 is the device without the superblock, sdn1 and sde1 are
-> marked as spares but they were in sync recently.
-> 
-> To add sdq1 as device [0] even though it has no superblock would it be enough
-> to specify all the devices in the right order and leave the two that I'm not
-> experimenting with as missing?
-> 
-> mdadm -A /dev/md1 --force /dev/sdq1 /dev/sds1 /dev/sdab1 missing /dev/sdaa3 /dev/sdo1 /dev/sdu1 missing
-> 
-> And to try each spare in positions [3] and [7] a similar command, even though
-> the superblocks on the spares say [8] and [9]?
-> 
-> I want to avoid md doing any resyncing or recovery until I find the best
-> 'bad' device to use.
-> 
-> Thanks for any help!
-> Andrew
-> 
-> PS This all happened when I upgraded the motherboard and the kernel version
-> at the same time, the resulting combination worked badly with my disk controllers
-> causing md to think drives were bad when they really weren't. Though how the
-> superblock vanished on the one drive is a mystery...
-> 
-> =======================================================
-> 
-> root # cat /proc/mdstat
-> md1 : inactive sds1[1] sde1[9] sdn1[8] sdu1[6] sdo1[5] sdaa3[4] sdab1[2]
->       2051009792 blocks
-> 
-> root # mdadm -A /dev/md1
-> mdadm: /dev/md1 assembled from 5 drives and 2 spares - not enough to start the array.
-> 
-> root # mdadm -A -v /dev/md1 2>&1 | grep added
-> mdadm: added /dev/sdab1 to /dev/md1 as 2
-> mdadm: added /dev/sdaa3 to /dev/md1 as 4
-> mdadm: added /dev/sdo1 to /dev/md1 as 5
-> mdadm: added /dev/sdu1 to /dev/md1 as 6
-> mdadm: added /dev/sdn1 to /dev/md1 as 8
-> mdadm: added /dev/sde1 to /dev/md1 as 9
-> mdadm: added /dev/sds1 to /dev/md1 as 1
-> 
-> root # mdadm -E /dev/sde1
-> /dev/sde1:
->           Magic : a92b4efc
->         Version : 00.90.00
->            UUID : 7fdb1d16:24896504:7df4ea3b:c7f0bf96
->   Creation Time : Sat Nov 12 12:43:57 2005
->      Raid Level : raid6
->     Device Size : 292969216 (279.40 GiB 300.00 GB)
->    Raid Devices : 8
->   Total Devices : 8
-> Preferred Minor : 1
-> 
->     Update Time : Wed Nov 30 08:12:57 2005
->           State : clean
->  Active Devices : 6
-> Working Devices : 8
->  Failed Devices : 2
->   Spare Devices : 2
->        Checksum : 2c0e61a6 - correct
->          Events : 0.930007
-> 
-> 
->       Number   Major   Minor   RaidDevice State
-> this     9       8       65        9      spare   /dev/sde1
-> 
->    0     0      65        1        0      active sync   /dev/sdq1
->    1     1      65       33        1      active sync   /dev/sds1
->    2     2      65      177        2      active sync   /dev/sdab1
->    3     3       0        0        3      faulty removed
->    4     4      65      163        4      active sync   /dev/sdaa3
->    5     5       8      225        5      active sync   /dev/sdo1
->    6     6      65       65        6      active sync   /dev/sdu1
->    7     7       0        0        7      faulty removed
->    8     8       8      209        8      spare   /dev/sdn1
->    9     9       8       65        9      spare   /dev/sde1
-> 
-> root # mdadm -E /dev/sdn1
-> /dev/sdn1:
->           Magic : a92b4efc
->         Version : 00.90.00
->            UUID : 7fdb1d16:24896504:7df4ea3b:c7f0bf96
->   Creation Time : Sat Nov 12 12:43:57 2005
->      Raid Level : raid6
->     Device Size : 292969216 (279.40 GiB 300.00 GB)
->    Raid Devices : 8
->   Total Devices : 8
-> Preferred Minor : 1
-> 
->     Update Time : Wed Nov 30 08:12:57 2005
->           State : clean
->  Active Devices : 6
-> Working Devices : 8
->  Failed Devices : 2
->   Spare Devices : 2
->        Checksum : 2c0e6234 - correct
->          Events : 0.930007
-> 
-> 
->       Number   Major   Minor   RaidDevice State
-> this     8       8      209        8      spare   /dev/sdn1
-> 
->    0     0      65        1        0      active sync   /dev/sdq1
->    1     1      65       33        1      active sync   /dev/sds1
->    2     2      65      177        2      active sync   /dev/sdab1
->    3     3       0        0        3      faulty removed
->    4     4      65      163        4      active sync   /dev/sdaa3
->    5     5       8      225        5      active sync   /dev/sdo1
->    6     6      65       65        6      active sync   /dev/sdu1
->    7     7       0        0        7      faulty removed
->    8     8       8      209        8      spare   /dev/sdn1
->    9     9       8       65        9      spare   /dev/sde1
-> 
-> 
