@@ -1,25 +1,25 @@
-From: "Abraham Dewitt" <EVNZHCY@yahoo.com>
-Subject: People Laugh at You? cdLAHS
-Date: Sat, 03 Dec 2005 10:03:58 -0500
-Message-ID: <CFE9.9A5.3028898B8C__43598.1319322765$1133622779$gmane$org@mopalinux.com>
+From: Andrew Burgess <aab@cichlid.com>
+Subject: Does mdadm --create harm existing data?
+Date: Sat, 3 Dec 2005 08:01:58 -0800
+Message-ID: <200512031601.jB3G1wVd019559@cichlid.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-newbie@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Other than the superblocks, does 'mdadm --create' harm existing data?
 
-Suffering from short penniss?
-Introduce revolution "Thunder" formula which
-gauranteees sizes increase or moneey baack.
+It would seem that a fault tolerant array would need to be synchronized but I
+don't recall this happening when I created raid6 arrays and it also seems that
+you don't really care if parts of the array that haven't been written yet are
+in sync.
 
-Users reported:
-- 2 inches extra in size
-- 3x pleasurable orgasms
-- 27% thicker
+The '--assume-clean' option would seem to be what I want but the man page say
+it's for --build only.
 
-Why waiting?
+I want to assemble an array from various damaged pieces to find the least
+damaged configuration so I don't want any device writing or sync to happen.
+I've been editing superblocks by hand but it's a bit of a pain :-)
 
-http://thunder14.fastherb.biz
+Thanks for any help.
 
-
-iuamCk
