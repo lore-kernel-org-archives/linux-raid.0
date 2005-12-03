@@ -1,35 +1,35 @@
-From: dean gaudet <dean-list-linux-raid@arctic.org>
-Subject: Re: Journal-guided Resynchronization for Software RAID
-Date: Fri, 2 Dec 2005 22:17:05 -0800 (PST)
-Message-ID: <Pine.LNX.4.63.0512022211460.4248@twinlark.arctic.org>
-References: <Pine.LNX.4.58.0511301015520.14240@macduff.cs.wisc.edu>
- <17294.34794.477608.760700@cse.unsw.edu.au>
+From: Eyal Lebedinsky <eyal@eyal.emu.id.au>
+Subject: what does this mean: ioctl lock interrupted
+Date: Sat, 03 Dec 2005 19:55:17 +1100
+Message-ID: <43915D75.5040601@eyal.emu.id.au>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17294.34794.477608.760700@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: "Timothy E. Denehy" <tedenehy@cs.wisc.edu>, linux-raid@vger.kernel.org, ext2-devel@lists.sourceforge.net, tytso@mit.edu, akpm@osdl.org
+To: linux-raid list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, 1 Dec 2005, Neil Brown wrote:
+I am testing my Promise SATA-II-150-TX4.
 
-> What I would really like is a cheap (Well, not too expensive) board
-> that had at least 100Meg of NVRAM which was addressable on the PCI
-> buss, and an XOR and RAID-6 engine connected to the DMA engine.
+I ran 'e2fsck -f' for a few hours and all is well.
+I then wanted some writing to so I changed to 'e2fsck -cc'.
 
-there's the mythical giga-byte i-ram ... i say mythical because i've seen
-lots of reviews but haven't been able to find it for sale:
+I am seeing the following messages. Is this a problem?
+It seems to continue unharmed though.
 
-http://www.giga-byte.com/Peripherals/Products/Products_GC-RAMDISK%20(Rev%201.1).htm
+Dec  3 18:24:09 eyal kernel: [4322441.538000] md: ioctl lock interrupted, reason -4, cmd 4705
+Dec  3 18:35:23 eyal kernel: [4323115.688000] md: ioctl lock interrupted, reason -4, cmd 4705
+Dec  3 18:36:42 eyal kernel: [4323194.933000] md: ioctl lock interrupted, reason -4, cmd 4705
+Dec  3 18:36:54 eyal kernel: [4323207.259000] md: ioctl lock interrupted, reason -4, cmd 4705
+Dec  3 18:37:59 eyal kernel: [4323271.650000] md: ioctl lock interrupted, reason -4, cmd 4705
+Dec  3 18:38:21 eyal kernel: [4323293.902000] md: ioctl lock interrupted, reason -4, cmd 4705
+Dec  3 19:04:03 eyal kernel: [4324835.969000] md: ioctl lock interrupted, reason -4, cmd 4705
 
-the only problem with the i-ram is the lack of ecc (it could be 
-implemented in a software layer though).
 
-umem.com have what look like excellent boards but they seem unwilling to 
-sell in small quantities...
+$ uname -a
+Linux e7 2.6.15-rc4 #2 PREEMPT Fri Dec 2 08:09:23 EST 2005 i686 GNU/Linux
 
-http://umem.com/Umem_NVRAM_Cards.html
-
--dean
+-- 
+Eyal Lebedinsky (eyal@eyal.emu.id.au) <http://samba.org/eyal/>
+	attach .zip as .dat
