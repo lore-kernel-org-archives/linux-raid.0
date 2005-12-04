@@ -1,38 +1,61 @@
 From: Neil Brown <neilb@suse.de>
 Subject: Re: RAID5 problem
-Date: Mon, 5 Dec 2005 08:49:13 +1100
-Message-ID: <17299.25689.258895.886749@cse.unsw.edu.au>
-References: <200512042128.jB4LSwef010890@cichlid.com>
+Date: Mon, 5 Dec 2005 08:47:50 +1100
+Message-ID: <17299.25606.806494.749914@cse.unsw.edu.au>
+References: <4392FB7C.6080600@gmx.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Andrew Burgess on Sunday December 4
+In-Reply-To: message from Alfons Andorfer on Sunday December 4
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Burgess <aab@cichlid.com>
-Cc: linux-raid@vger.kernel.org
+To: Alfons Andorfer <a_a@gmx.de>
+Cc: linux-raid@vger.kernel.org, n@suse.de
 List-Id: linux-raid.ids
 
-On Sunday December 4, aab@cichlid.com wrote:
+On Sunday December 4, a_a@gmx.de wrote:
+> Hi,
 > 
-> PS to Neil. I thought I might submit a patch to you that added a little 
-> more info the the above lines, the slot number and the raid device
+> I have a RAID5 array consisting of 4 disks:
 > 
-> So it would read:
+> /dev/hda3
+> /dev/hdc3
+> /dev/hde3
+> /dev/hdg3
 > 
-> mdadm: /dev/hdc3 appears to be part of a raid array:
->      /dev/md0 slot[1] level=5 devices=4 ctime=Fri May 30 14:25:47 2003
-> 
-> I find this to be information that I have to search for using 'mdadm -E' so it
-> would be handy to see it all at once when having to force a broken array to
-> assemble.
-> 
-> Also it would be handy to see the update time rather than the creation time
-> (IMHO) so I can see how far apart the devices are (or maybe the event count
-> would be better for this) and whether or not the device was marked 'clean'.
-> 
-> What do you think?
+> and the Linux machine that this system was running on crashed yesterday 
+> due to a faulty Kernel driver (i.e. the machine just halted).
+> So I resetted it, but it didn't come up again.
+> I started the machine with a Knoppix CD and found out that the array had 
+> been running in degraded mode for about two months (/dev/hda3 went off 
+> then).
 
-Sounds reasonable - just send that patch.
+You want to be running "mdadm --monitor".  You really really do!
+Anyone out there who is listening: if you have any md/raid arrays
+(other than linear/raid0) and are not running "mdadm --monitor",
+please do so.  Now.
+Also run "mdadm --monitor --oneshot --scan" (or similar) from a
+nightly cron job, so it will nag you about degraded arrays.
+Please!
+
+But why do you think that hda3 dropped out of the array 2 months ago?
+The update time reported by mdadm --examine is
+       Update Time : Sat Dec  3 18:56:59 2005
+
+The superblock from hda3 seems to suggest that it was hdc3 that was
+the problem.... odd.
+
+
+> 
+> "pass 1: checking Inodes, Blocks, and sizes
+> read error - Block 131460 (Attempt to read block from filesystem 
+> resulted in short read) during Inode-Scan  Ignore error?"
+
+
+This strongly suggests there is a problem with one of the drives - it
+is returning read errors.  Are there any informative kernel logs.
+If it is hdc that is reporting errors, try to re-assemble the array
+from hda3, hde3, hdg3.
+
 
 NeilBrown
