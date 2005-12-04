@@ -1,64 +1,77 @@
 From: Neil Brown <neilb@suse.de>
 Subject: Re: Journal-guided Resynchronization for Software RAID
-Date: Mon, 5 Dec 2005 09:23:16 +1100
-Message-ID: <17299.27732.251785.345960@cse.unsw.edu.au>
+Date: Mon, 5 Dec 2005 09:40:18 +1100
+Message-ID: <17299.28754.5370.230602@cse.unsw.edu.au>
 References: <Pine.LNX.4.58.0511301015520.14240@macduff.cs.wisc.edu>
 	<17294.34794.477608.760700@cse.unsw.edu.au>
-	<Pine.LNX.4.63.0512022211460.4248@twinlark.arctic.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from dean gaudet on Friday December 2
-Sender: linux-raid-owner@vger.kernel.org
-To: dean gaudet <dean-list-linux-raid@arctic.org>
-Cc: "Timothy E. Denehy" <tedenehy@cs.wisc.edu>, linux-raid@vger.kernel.org, ext2-devel@lists.sourceforge.net, tytso@mit.edu, akpm@osdl.org
+Return-path: <ext2-devel-admin@lists.sourceforge.net>
+In-Reply-To: message from Neil Brown on Thursday December 1
+Sender: ext2-devel-admin@lists.sourceforge.net
+Errors-To: ext2-devel-admin@lists.sourceforge.net
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/ext2-devel>,
+	<mailto:ext2-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Post: <mailto:ext2-devel@lists.sourceforge.net>
+List-Help: <mailto:ext2-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/ext2-devel>,
+	<mailto:ext2-devel-request@lists.sourceforge.net?subject=subscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=ext2-devel>
+To: "Timothy E. Denehy" <tedenehy@cs.wisc.edu>
+Cc: linux-raid@vger.kernel.org, ext2-devel@lists.sourceforge.net, tytso@mit.edu, akpm@osdl.org
 List-Id: linux-raid.ids
 
-On Friday December 2, dean-list-linux-raid@arctic.org wrote:
-> On Thu, 1 Dec 2005, Neil Brown wrote:
+On Thursday December 1, neilb@suse.de wrote:
 > 
-> > What I would really like is a cheap (Well, not too expensive) board
-> > that had at least 100Meg of NVRAM which was addressable on the PCI
-> > buss, and an XOR and RAID-6 engine connected to the DMA engine.
-> 
-> there's the mythical giga-byte i-ram ... i say mythical because i've seen
-> lots of reviews but haven't been able to find it for sale:
-> 
-> http://www.giga-byte.com/Peripherals/Products/Products_GC-RAMDISK%20(Rev%201.1).htm
-> 
-> the only problem with the i-ram is the lack of ecc (it could be 
-> implemented in a software layer though).
+> I'd probably be happy to consider the 'verified read' enhancements to
+> md for inclusion in mainline.
 
-The lack of ECC is a real killer for any sort of raid/journalling
-application.  You want your journal to be more-resilient to failure
-than your main array, not less.
-And the fact that the board presents like an IDE controller (if I read
-that right) means it is meant as fast-disk.  Not as a generally useful
-board to do interesting things with :-(
+A couple more thoughts on this:
 
-The idea of just providing memory slots that you plug your own memory
-into is certainly interesting.  It would mean making just one board
-and the custom could choose how much memory they wanted to buy. (umem
-below may several different sizes).  I wonder if it affects
-reliability at all... 
+1/ What do you do for a 'verified read' when the array is degraded. 
+  For raid1, you can just check whichever devices are working,  but
+  for raid5 you really need to report a read error!  
 
-> 
-> umem.com have what look like excellent boards but they seem unwilling to 
-> sell in small quantities...
-> 
-> http://umem.com/Umem_NVRAM_Cards.html
+2/ Quoting from the end of section 4.3
 
-I have two of these in two different servers... I must have got them
-at a time when small quantities weren't so unpalatable.   They have
-full ECC, and even have a driver in kernel.org kernels (I had to
-convince them that GPL wasn't bad, but that wasn't too hard).
-The boards I got only presented a 64M (I think) window to the PCI
-buss, though I believe they have versions that present to whole of
-memory instead of just one window.
+] 
+]    Finally, an option is added to the software RAID-5
+] layer to disable resynchronization after a crash. This
+] is our most signicant modication to the strict layering
+] of the storage stack. The RAID module is asked to en-
+] trust its functionality to another component for the over-
+] all good of the system. Instead, an apprehensive software
+] RAID implementation may delay its own efforts in hopes
+] of receiving the necessary verify read requests from the
+] file system above. If no such requests arrive, it could
+] start its own resynchronization to ensure the integrity of
+] its data and parity blocks.
+] 
 
-One of these with built in xor and raid6 would be nice, but I'm not
-sure I could guarantee a big enough market for them to try convincing
-them to make one...
+I agree that this modification doesn't feel ideal. 
+An alternate approach would be to have a 'verifiable write' (or some
+other more apt name).  The meaning is that the write request says
+essentially "don't mark the array as 'dirty' just because of this
+request".  The implication is that the after a crash, the fs will do
+any 'verified reads' that are required.
 
-NeilBrown 
+If write-intent logging were in use, 'verifiable writes' wouldn't get
+recorded in the log and so wouldn't get resynced.  If two different
+filesystems were sharing the array (via partitioning) then the part
+which got only verifiable writes would not be resynced, but the part
+which got normal writes would be.
+(If write-intent logging weren't in use, then it will still be an
+all-or-nothing situation).
+
+Maybe swap could then use 'verifiable writes' so that the swap
+partition would never need to be resynced.
+
+NeilBrown
+
+
+-------------------------------------------------------
+This SF.net email is sponsored by: Splunk Inc. Do you grep through log files
+for problems?  Stop!  Download the new AJAX search engine that makes
+searching your log files as easy as surfing the  web.  DOWNLOAD SPLUNK!
+http://ads.osdn.com/?ad_id=7637&alloc_id=16865&op=click
