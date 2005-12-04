@@ -1,89 +1,64 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: newbie - mdadm create raid1 mirrors on large drives
-Date: Mon, 5 Dec 2005 09:13:26 +1100
-Message-ID: <17299.27142.901162.564588@cse.unsw.edu.au>
-References: <002501c5f835$cb6bec50$1e00a8c0@LABWXP>
+Subject: Re: Journal-guided Resynchronization for Software RAID
+Date: Mon, 5 Dec 2005 09:23:16 +1100
+Message-ID: <17299.27732.251785.345960@cse.unsw.edu.au>
+References: <Pine.LNX.4.58.0511301015520.14240@macduff.cs.wisc.edu>
+	<17294.34794.477608.760700@cse.unsw.edu.au>
+	<Pine.LNX.4.63.0512022211460.4248@twinlark.arctic.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932356AbVLDWNm@vger.kernel.org>
-In-Reply-To: message from Larry Bates on Saturday December 3
-Sender: linux-kernel-owner@vger.kernel.org
-To: Larry Bates <lbates@syscononline.com>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from dean gaudet on Friday December 2
+Sender: linux-raid-owner@vger.kernel.org
+To: dean gaudet <dean-list-linux-raid@arctic.org>
+Cc: "Timothy E. Denehy" <tedenehy@cs.wisc.edu>, linux-raid@vger.kernel.org, ext2-devel@lists.sourceforge.net, tytso@mit.edu, akpm@osdl.org
 List-Id: linux-raid.ids
 
-On Saturday December 3, lbates@syscononline.com wrote:
-> I hope this is the correct list for this question.
+On Friday December 2, dean-list-linux-raid@arctic.org wrote:
+> On Thu, 1 Dec 2005, Neil Brown wrote:
+> 
+> > What I would really like is a cheap (Well, not too expensive) board
+> > that had at least 100Meg of NVRAM which was addressable on the PCI
+> > buss, and an XOR and RAID-6 engine connected to the DMA engine.
+> 
+> there's the mythical giga-byte i-ram ... i say mythical because i've seen
+> lots of reviews but haven't been able to find it for sale:
+> 
+> http://www.giga-byte.com/Peripherals/Products/Products_GC-RAMDISK%20(Rev%201.1).htm
+> 
+> the only problem with the i-ram is the lack of ecc (it could be 
+> implemented in a software layer though).
 
- linux-raid@vger.kernel.org is possibly better, but linux-kernel is
- probably a suitable catch-all.
+The lack of ECC is a real killer for any sort of raid/journalling
+application.  You want your journal to be more-resilient to failure
+than your main array, not less.
+And the fact that the board presents like an IDE controller (if I read
+that right) means it is meant as fast-disk.  Not as a generally useful
+board to do interesting things with :-(
+
+The idea of just providing memory slots that you plug your own memory
+into is certainly interesting.  It would mean making just one board
+and the custom could choose how much memory they wanted to buy. (umem
+below may several different sizes).  I wonder if it affects
+reliability at all... 
 
 > 
-> I've just recently begun using mdadm to set up some
-> arrays using large drives (300-400Gb).  One of the 
-> things I don't understand is this: when you first 
-> create a raid1 (mirrored) array from two drives 
-> mdadm insists on mirroring the contents of the first
-> drive to the second even though the drives are
-> entirely blank (e.g. new drives don't have anything
-> on them).  
+> umem.com have what look like excellent boards but they seem unwilling to 
+> sell in small quantities...
+> 
+> http://umem.com/Umem_NVRAM_Cards.html
 
-Well... they do have something one them - lots of zeros and ones, or
-maybe just zeros, or maybe just ones.  Sure, you may not be interested
-in that data, but it is there.
+I have two of these in two different servers... I must have got them
+at a time when small quantities weren't so unpalatable.   They have
+full ECC, and even have a driver in kernel.org kernels (I had to
+convince them that GPL wasn't bad, but that wasn't too hard).
+The boards I got only presented a 64M (I think) window to the PCI
+buss, though I believe they have versions that present to whole of
+memory instead of just one window.
 
+One of these with built in xor and raid6 would be nice, but I'm not
+sure I could guarantee a big enough market for them to try convincing
+them to make one...
 
->            In one configuration I have, this takes
-> about 16 hours on a 400Gb drive.  When I do 5 of them
-> simultaneously this takes 2+ days to complete.  Is 
-> there some way to tell mdadm that you want to create 
-> a mirrored set but skip this rather long initial 
-> mirroring process?  I don't really see that it actually
-> accomplishes anything.
-
-No, there is no way to tell mdadm to skip the initial copying
-process.  It is not clear to me that you really want to do this(*)
-(though on the "enough rope" principle I'm probably going to extend
-the "--assume-clean" option to work in --create mode).
-
-I suggest you simply ignore the fact that it is doing the copy.  Just
-keep using the array as though it wasn't.  If this seems to be
-impacting over-all system performance, tune /proc/sys/dev/raid/speed_*
-to slow it down even more.
-If you reboot, it should remember where it was up to and restart from
-the same place (providing you are using a 2.6 kernel).
-
-If you have 5 of these 400Gb raid1's, then I suspect you really want
-to avoid the slow resync that happens after a crash.  You should look
-into adding a bitmap write-intent log.  This requires 2.6.14, and
-mdadm 2.1, and is as easy as
-   mdadm --grow --bitmap=internal /dev/md3
-while the array is running.
-
-This should dramatically reduce resync time, at a possible small cost
-in write throughput.  Some limited measurements I have done suggest
-up-to 10% slowdown, though usually less.  Possibly some tuning can
-make it much better.
-
-(*)
-A raid array can suffer from sleeping bad blocks.  i.e. blocks that
-you cannot read, but normally you never do (because they haven't been
-allocated to a file yet).  When a drive fails, and you are
-recovering the data onto a spare, hitting that sleeper can kill your
-array. 
-For this reason it is good to regularly (daily, or weekly, maybe
-monthly) read through the entire array making sure everything is OK.
-In 2.6.16 (with complete functionality in 2.6.17) you will be able to
-trigger a background read-test of the whole array:
-  echo check > /sys/block/mdX/md/sync_action
-
-If you were to create an array with --assume-clean, then whenever you
-run this it will report lots of errors, though you can fix them with
-   echo repair > /sys/block/mdX/md/sync_action
-
-If you are going to be doing that (and I would recommend it) then you
-may as well allow the initial sync, especially as you can quite
-happily ignore the fact that it is happening.
-
-NeilBrown
+NeilBrown 
