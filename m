@@ -1,29 +1,89 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: Does mdadm --create harm existing data?
-Date: Mon, 5 Dec 2005 08:54:17 +1100
-Message-ID: <17299.25993.708991.834239@cse.unsw.edu.au>
-References: <200512032330.jB3NUWX9017265@cichlid.com>
+Subject: Re: newbie - mdadm create raid1 mirrors on large drives
+Date: Mon, 5 Dec 2005 09:13:26 +1100
+Message-ID: <17299.27142.901162.564588@cse.unsw.edu.au>
+References: <002501c5f835$cb6bec50$1e00a8c0@LABWXP>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Andrew Burgess on Saturday December 3
-Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Burgess <aab@cichlid.com>
-Cc: linux-raid@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932356AbVLDWNm@vger.kernel.org>
+In-Reply-To: message from Larry Bates on Saturday December 3
+Sender: linux-kernel-owner@vger.kernel.org
+To: Larry Bates <lbates@syscononline.com>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Saturday December 3, aab@cichlid.com wrote:
-> In mail.linux.raid I write:
-> 
-> >Other than the superblocks, does 'mdadm --create' harm existing data?
-> 
-> It would seem not according to this test:
+On Saturday December 3, lbates@syscononline.com wrote:
+> I hope this is the correct list for this question.
 
-If resync starts (as it normally does with mdadm --create), and if you
-assembled the array 'wrongly', then you could possibly corrupt data.
-If you want to be cautious, always create the array degraded (with a
-suitable number of 'missing' entries).  Then you can be sure that only
-the superblocks will be changed.
+ linux-raid@vger.kernel.org is possibly better, but linux-kernel is
+ probably a suitable catch-all.
+
+> 
+> I've just recently begun using mdadm to set up some
+> arrays using large drives (300-400Gb).  One of the 
+> things I don't understand is this: when you first 
+> create a raid1 (mirrored) array from two drives 
+> mdadm insists on mirroring the contents of the first
+> drive to the second even though the drives are
+> entirely blank (e.g. new drives don't have anything
+> on them).  
+
+Well... they do have something one them - lots of zeros and ones, or
+maybe just zeros, or maybe just ones.  Sure, you may not be interested
+in that data, but it is there.
+
+
+>            In one configuration I have, this takes
+> about 16 hours on a 400Gb drive.  When I do 5 of them
+> simultaneously this takes 2+ days to complete.  Is 
+> there some way to tell mdadm that you want to create 
+> a mirrored set but skip this rather long initial 
+> mirroring process?  I don't really see that it actually
+> accomplishes anything.
+
+No, there is no way to tell mdadm to skip the initial copying
+process.  It is not clear to me that you really want to do this(*)
+(though on the "enough rope" principle I'm probably going to extend
+the "--assume-clean" option to work in --create mode).
+
+I suggest you simply ignore the fact that it is doing the copy.  Just
+keep using the array as though it wasn't.  If this seems to be
+impacting over-all system performance, tune /proc/sys/dev/raid/speed_*
+to slow it down even more.
+If you reboot, it should remember where it was up to and restart from
+the same place (providing you are using a 2.6 kernel).
+
+If you have 5 of these 400Gb raid1's, then I suspect you really want
+to avoid the slow resync that happens after a crash.  You should look
+into adding a bitmap write-intent log.  This requires 2.6.14, and
+mdadm 2.1, and is as easy as
+   mdadm --grow --bitmap=internal /dev/md3
+while the array is running.
+
+This should dramatically reduce resync time, at a possible small cost
+in write throughput.  Some limited measurements I have done suggest
+up-to 10% slowdown, though usually less.  Possibly some tuning can
+make it much better.
+
+(*)
+A raid array can suffer from sleeping bad blocks.  i.e. blocks that
+you cannot read, but normally you never do (because they haven't been
+allocated to a file yet).  When a drive fails, and you are
+recovering the data onto a spare, hitting that sleeper can kill your
+array. 
+For this reason it is good to regularly (daily, or weekly, maybe
+monthly) read through the entire array making sure everything is OK.
+In 2.6.16 (with complete functionality in 2.6.17) you will be able to
+trigger a background read-test of the whole array:
+  echo check > /sys/block/mdX/md/sync_action
+
+If you were to create an array with --assume-clean, then whenever you
+run this it will report lots of errors, though you can fix them with
+   echo repair > /sys/block/mdX/md/sync_action
+
+If you are going to be doing that (and I would recommend it) then you
+may as well allow the initial sync, especially as you can quite
+happily ignore the fact that it is happening.
 
 NeilBrown
