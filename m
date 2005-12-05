@@ -1,62 +1,31 @@
-From: Neil Brown <neilb@suse.de>
-Subject: ANNOUNCE: mdadm 2.2 - A tool for managing Soft RAID under Linux
-Date: Mon, 5 Dec 2005 17:08:38 +1100
-Message-ID: <17299.55654.747972.455172@cse.unsw.edu.au>
+From: Eyal Lebedinsky <eyal@eyal.emu.id.au>
+Subject: Re: what does this mean: ioctl lock interrupted
+Date: Mon, 05 Dec 2005 20:12:47 +1100
+Message-ID: <4394048F.1090906@eyal.emu.id.au>
+References: <43915D75.5040601@eyal.emu.id.au> <17299.44022.145167.504614@cse.unsw.edu.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <17299.44022.145167.504614@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Neil Brown wrote:
+> If you feel adventurous, you could edit drivers/md/md.c, find
+> where it prints that message, and get it to print the string
+>   current->comm
+> as well. 
 
+Seeing how I was running 'e2fsck -cc /dev/md0' this may not be
+a big surprise:
 
-I am pleased to announce the availability of
-   mdadm version 2.2
+md: ioctl lock interrupted, reason -4, cmd 4705 current->comm='badblocks'
+md: ioctl lock interrupted, reason -4, cmd 4705 current->comm='badblocks'
+rtc: lost some interrupts at 1024Hz.
 
-It is available at the usual places:
-   http://www.cse.unsw.edu.au/~neilb/source/mdadm/
-and
-   http://www.{countrycode}.kernel.org/pub/linux/utils/raid/mdadm/
-
-mdadm is a tool for creating, managing and monitoring
-device arrays using the "md" driver in Linux, also
-known as Software RAID arrays.
-
-Release 2.2 fixes a few small bugs and add as few small elements of
-functionality.  Possibly the most interesting is the addition of
-'README.initramfs' and 'mkinitramfs'.  Feedback on these would be
-most welcome.
-
-Changelog Entries:
-    -   Assorted bug fixes
-    -   Support write-intent-bitmaps on raid10
-    -   Support little-endian (Rather than hostendian) bitmaps.
-    -   Return correct error code from 'mdadm -S'
-    -   Remove extra blank line from 'mdadm -Eb' output.
-    -   Improve option parsing so that -a and -b do not have
-	optional arguements: the arg is either required or not
-	depending on context.
-    -   Allow scanning of devices listed in /proc/partitions even
-	if they don't appear in /dev.
-    -   Support --assume-clean in --create mode as well as --build
-    -   Add support for --monitor to report to syslog: -y or --syslog.
-	Thanks to Ross Vandegrift
-    -   --monitor now reports which device failed in a 'Fail' message
-	   This broke with 2.6
-    -   Improve chance of array starting properly after a crash.
-	mdadm was insisting the event numbers were identical, but this
-	isn't needed, and is a problem if the crash was while the metadata
-	was being updated.
-    -   Support --update==uuid
-    -   Added README.initramfs and mkinitramfs to help people use an
-	initram for starting md arrays at boot.
-
-
-Development of mdadm is sponsored by
- SUSE Labs, Novell Inc.
-
-NeilBrown  5th December 2005
-
-
+-- 
+Eyal Lebedinsky (eyal@eyal.emu.id.au) <http://samba.org/eyal/>
+	attach .zip as .dat
