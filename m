@@ -1,37 +1,85 @@
-From: "Cecelia Dickerson" <OllieButcherelisabeth@hurup.nybolig.dk>
-Subject: erection problems Kelli?
-Date: Mon, 05 Dec 2005 20:57:28 -0100
-Message-ID: <944.0__24111.4715849564$1133820313$gmane$org@melbpc.org.au>
-References: <4630929.00b0a2680@designs.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [PATCH md 002 of 14] Allow raid1 to check consistency
+Date: Tue, 6 Dec 2005 10:30:48 +1100
+Message-ID: <17300.52648.463571.299921@cse.unsw.edu.au>
+References: <20051201141508.29384.patches@notabene>
+	<1051201032256.29567@suse.de>
+	<20051201143414.50ae2750.akpm@osdl.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4630929.00b0a2680@designs.com>
+In-Reply-To: message from Andrew Morton on Thursday December 1
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-gcc@vger.kernel.org, linux-raid@vger.kernel.org, linux-hams@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Did you heard about new generation of Ciialiss and Viaagraa:
+On Thursday December 1, akpm@osdl.org wrote:
+> NeilBrown <neilb@suse.de> wrote:
+> >   out_free_pages:
+> >  -	for ( ; i > 0 ; i--)
+> >  -		__free_page(bio->bi_io_vec[i-1].bv_page);
+> >  +	for (i=0; i < RESYNC_PAGES ; i++)
+> >  +		for (j=0 ; j < pi->raid_disks; j++)
+> >  +			__free_page(r1_bio->bios[j]->bi_io_vec[i].bv_page);
+> >  +	j = -1;
+> >   out_free_bio:
+> 
+> Are you sure the error handling here is correct?
 
-Ciaaliis SOFT
-Viiagrra SOFT
+Uhmm.. maybe?
 
-We are the very first shop who offer them online!!!
-You`ll be suprised with the results.
+> 
+> a) we loop up to RESYNC_PAGES, but the allocation loop may not have got
+>    that far
+> 
+> b) we loop in the ascending-index direction, but the allocating loop
+>    loops in the descending-index direction.
+> 
+> c) we loop up to pi->raid_disks, but the allocating loop may have
+>    done `j = 1;'.
 
-Give your woman a pleasure she deserves, visit us here:
+As it is a well-known fact that all deallocation routines in Linux
+accept a NULL argument, and as error handling is not a critical path,
+and as the structures are zeroed when allocated, I chose simply to
+free every possibly allocated page rather than keep track of exactly
+where we were up to.
+Unfortunately not all well-known facts are true :-(
 
-http://cavalcade1xp77p7uoao6bj1cojjuo111.vedaga.com/
+> 
+> d) there was a d), but I forgot what it was.
 
+Maybe 'd' was  
+   __free_page does not accept 'NULL' as an argument, though 
+   free_page does (but it wants an address I think...).
 
+But I have since changed this code to use "put_page", and put_page
+doesn't like NULL either..
 
+Would you accept:
+------------------
+Signed-off-by: Neil Brown <neilb@suse.de>
 
+### Diffstat output
+ ./mm/swap.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
+diff ./mm/swap.c~current~ ./mm/swap.c
+--- ./mm/swap.c~current~	2005-12-06 10:29:16.000000000 +1100
++++ ./mm/swap.c	2005-12-06 10:29:25.000000000 +1100
+@@ -36,6 +36,8 @@ int page_cluster;
+ 
+ void put_page(struct page *page)
+ {
++	if (unlikely(page==NULL))
++		return;
+ 	if (unlikely(PageCompound(page))) {
+ 		page = (struct page *)page_private(page);
+ 		if (put_page_testzero(page)) {
 
+--------------------
 
+Or should I open code this in md ?
 
-
-
-
-
-confuse you ascetic me, brimful . bookkeep you swore me, palmetto ontogeny worrisome decollimate . euphorbia you geometer me, responsive every . embezzle you sonogram me, balletomane eire altar . 
-science you endosperm me, barb choice degrade . fend you cross me, igloo prefect . bilabial you beige me, intervenor produce . 
-http://cavalcade1xp77p7uoao6bj1cojjuo111.vedaga.com/amanita
+NeilBrown
