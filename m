@@ -1,41 +1,56 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: RAID5 problem
-Date: Mon, 5 Dec 2005 13:44:17 +1100
-Message-ID: <17299.43393.992231.121500@cse.unsw.edu.au>
-References: <4392FB7C.6080600@gmx.de>
-	<17299.25606.806494.749914@cse.unsw.edu.au>
-	<20051205014408.GA20602@jose.lug.udel.edu>
+Subject: Re: what does this mean: ioctl lock interrupted
+Date: Mon, 5 Dec 2005 13:54:46 +1100
+Message-ID: <17299.44022.145167.504614@cse.unsw.edu.au>
+References: <43915D75.5040601@eyal.emu.id.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Ross Vandegrift on Sunday December 4
+In-Reply-To: message from Eyal Lebedinsky on Saturday December 3
 Sender: linux-raid-owner@vger.kernel.org
-To: Ross Vandegrift <ross@jose.lug.udel.edu>
-Cc: Alfons Andorfer <a_a@gmx.de>, linux-raid@vger.kernel.org
+To: Eyal Lebedinsky <eyal@eyal.emu.id.au>
+Cc: linux-raid list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sunday December 4, ross@jose.lug.udel.edu wrote:
+On Saturday December 3, eyal@eyal.emu.id.au wrote:
+> I am testing my Promise SATA-II-150-TX4.
 > 
-> Neil - did you get a chance to look at the syslog and text
-> messaging patches I posted?
+> I ran 'e2fsck -f' for a few hours and all is well.
+> I then wanted some writing to so I changed to 'e2fsck -cc'.
+> 
+> I am seeing the following messages. Is this a problem?
+> It seems to continue unharmed though.
+> 
+> Dec  3 18:24:09 eyal kernel: [4322441.538000] md: ioctl lock interrupted, reason -4, cmd 4705
+> Dec  3 18:35:23 eyal kernel: [4323115.688000] md: ioctl lock interrupted, reason -4, cmd 4705
+> Dec  3 18:36:42 eyal kernel: [4323194.933000] md: ioctl lock interrupted, reason -4, cmd 4705
+> Dec  3 18:36:54 eyal kernel: [4323207.259000] md: ioctl lock interrupted, reason -4, cmd 4705
+> Dec  3 18:37:59 eyal kernel: [4323271.650000] md: ioctl lock interrupted, reason -4, cmd 4705
+> Dec  3 18:38:21 eyal kernel: [4323293.902000] md: ioctl lock interrupted, reason -4, cmd 4705
+> Dec  3 19:04:03 eyal kernel: [4324835.969000] md: ioctl lock interrupted, reason -4, cmd 4705
 > 
 
-Didn't I reply to those?... No, I guess I didn't.  Thanks for the
-reminder.
+It is strange.  It means that some process got signalled while trying
+to perform an 'ioctl' on an md device that was busy in some way that
+prevented any ioctl.  However md devices are not 'busy' in this way
+for extended periods of time, so getting interrupted while waiting for
+the lock would be quite unusual.
 
-The text-messaging I don't like.  That is what the --program option if
-for.  If you don't want the very-basic email message, then write
-yourself a little script to do exactly what you want.
+The ioctl in question is number 4705, or 0x1261.
+This means that '0x12' group of ioctls, number 0x61.
 
-The 'syslog' stuff looks fine : -y and --syslog.... though I wander if
---syslog should be the default...
+All md ioctls are group '9', so it isn't an md ioctl.
 
-I wish I could remember why I didn't do this at the start!  I have a
-strong feeling that it was more than just laziness, but I cannot
-remember what more :-(
+It might help to know what command was causing it...
 
-Oh well... expect to see you syslog support in 2.2.
+If you feel adventurous, you could edit drivers/md/md.c, find
+where it prints that message, and get it to print the string
+  current->comm
+as well. 
 
-Thanks,
+If not, probably don't worry about it.
+I suspect it is harmless, though it is puzzling.
+
 NeilBrown
+
