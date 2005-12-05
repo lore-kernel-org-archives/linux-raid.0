@@ -1,31 +1,33 @@
-From: Eyal Lebedinsky <eyal@eyal.emu.id.au>
-Subject: Re: what does this mean: ioctl lock interrupted
-Date: Mon, 05 Dec 2005 20:12:47 +1100
-Message-ID: <4394048F.1090906@eyal.emu.id.au>
-References: <43915D75.5040601@eyal.emu.id.au> <17299.44022.145167.504614@cse.unsw.edu.au>
+From: Michael Tokarev <mjt@tls.msk.ru>
+Subject: mdadm --size and --update=uuid etc options...
+Date: Mon, 05 Dec 2005 13:49:53 +0300
+Message-ID: <43941B51.5090601@tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17299.44022.145167.504614@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid list <linux-raid@vger.kernel.org>
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> If you feel adventurous, you could edit drivers/md/md.c, find
-> where it prints that message, and get it to print the string
->   current->comm
-> as well. 
+I found it's quite difficult, after resizing underlying
+partitions, to compute the new size for
+  mdadm /dev/mdX -G --size=xyz
+command, because of the way how it finds the superblock
+offset.  So, the question is -- is it possible to make
+the argument of --size to be optional, and let mdadm to
+compute the size automatically, just like resize2fs does
+now?  Or, maybe, to keep backward compatibility for
+those people who used --size z (as opposed to --size=z),
+to recognize `0' as special size, to mean "whole partition"
+or "max size".  The latter is probably the best, i think.
 
-Seeing how I was running 'e2fsck -cc /dev/md0' this may not be
-a big surprise:
+The same is for newly appeared --update=uuid:xyz: I'd let
+mdadm to choose an uuid just like it does for newly create
+array, if the uuid argument isn't specified, like:
+  --update=uuid:1234 --- use uuid=1234
+  --update=uuid      --- choose random uid
 
-md: ioctl lock interrupted, reason -4, cmd 4705 current->comm='badblocks'
-md: ioctl lock interrupted, reason -4, cmd 4705 current->comm='badblocks'
-rtc: lost some interrupts at 1024Hz.
+Does it all look ok?
 
--- 
-Eyal Lebedinsky (eyal@eyal.emu.id.au) <http://samba.org/eyal/>
-	attach .zip as .dat
+/mjt, who goes to produce some patches...
