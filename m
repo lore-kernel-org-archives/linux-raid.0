@@ -1,70 +1,30 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH md 002 of 14] Allow raid1 to check consistency
-Date: Tue, 6 Dec 2005 10:30:48 +1100
-Message-ID: <17300.52648.463571.299921@cse.unsw.edu.au>
-References: <20051201141508.29384.patches@notabene>
-	<1051201032256.29567@suse.de>
-	<20051201143414.50ae2750.akpm@osdl.org>
+Subject: Re: 2.6.15-rc5-mm1: raid related oops
+Date: Tue, 6 Dec 2005 10:33:21 +1100
+Message-ID: <17300.52801.734773.284847@cse.unsw.edu.au>
+References: <20051205195004.GA11243@amd64.of.nowhere>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Andrew Morton on Thursday December 1
-Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-raid@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S964873AbVLEXdq@vger.kernel.org>
+In-Reply-To: message from jurriaan on Monday December 5
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jurriaan <thunder7@xs4all.nl>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday December 1, akpm@osdl.org wrote:
-> NeilBrown <neilb@suse.de> wrote:
-> >   out_free_pages:
-> >  -	for ( ; i > 0 ; i--)
-> >  -		__free_page(bio->bi_io_vec[i-1].bv_page);
-> >  +	for (i=0; i < RESYNC_PAGES ; i++)
-> >  +		for (j=0 ; j < pi->raid_disks; j++)
-> >  +			__free_page(r1_bio->bios[j]->bi_io_vec[i].bv_page);
-> >  +	j = -1;
-> >   out_free_bio:
+On Monday December 5, thunder7@xs4all.nl wrote:
+> Written by hand:
 > 
-> Are you sure the error handling here is correct?
+> Null pointer dereference
+> last sysfs file /block/md0/md/sync_action
+> put_page
 
-Uhmm.. maybe?
+ohh dear, it seems that, unlike kfree, put_page doesn't like 'NULL' as
+an argument.
 
-> 
-> a) we loop up to RESYNC_PAGES, but the allocation loop may not have got
->    that far
-> 
-> b) we loop in the ascending-index direction, but the allocating loop
->    loops in the descending-index direction.
-> 
-> c) we loop up to pi->raid_disks, but the allocating loop may have
->    done `j = 1;'.
-
-As it is a well-known fact that all deallocation routines in Linux
-accept a NULL argument, and as error handling is not a critical path,
-and as the structures are zeroed when allocated, I chose simply to
-free every possibly allocated page rather than keep track of exactly
-where we were up to.
-Unfortunately not all well-known facts are true :-(
-
-> 
-> d) there was a d), but I forgot what it was.
-
-Maybe 'd' was  
-   __free_page does not accept 'NULL' as an argument, though 
-   free_page does (but it wants an address I think...).
-
-But I have since changed this code to use "put_page", and put_page
-doesn't like NULL either..
-
-Would you accept:
+You can try
 ------------------
-Signed-off-by: Neil Brown <neilb@suse.de>
-
-### Diffstat output
- ./mm/swap.c |    2 ++
- 1 file changed, 2 insertions(+)
-
 diff ./mm/swap.c~current~ ./mm/swap.c
 --- ./mm/swap.c~current~	2005-12-06 10:29:16.000000000 +1100
 +++ ./mm/swap.c	2005-12-06 10:29:25.000000000 +1100
@@ -78,8 +38,10 @@ diff ./mm/swap.c~current~ ./mm/swap.c
  		page = (struct page *)page_private(page);
  		if (put_page_testzero(page)) {
 
---------------------
+-------------------
+for now.  If Andrew doesn't like that I'll make the code in raid1
+more careful (maybe I'll define put_page_unless_null :-)
 
-Or should I open code this in md ?
+Thanks for the testing and the report.
 
 NeilBrown
