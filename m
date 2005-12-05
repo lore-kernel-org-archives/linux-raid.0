@@ -1,25 +1,62 @@
-From: NeilBrown <neilb@suse.de>
-Subject: [PATCH md 000 of 2] Introduction
-Date: Mon, 5 Dec 2005 14:17:00 +1100
-Message-ID: <20051205141310.20937.patches@notabene>
+From: Neil Brown <neilb@suse.de>
+Subject: ANNOUNCE: mdadm 2.2 - A tool for managing Soft RAID under Linux
+Date: Mon, 5 Dec 2005 17:08:38 +1100
+Message-ID: <17299.55654.747972.455172@cse.unsw.edu.au>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Following are two patches for md in 2.6.15-rc what should get into
-2.6.15-final if possible.
-
-The first refines a newly created interface (/sys/block/mdX/md/level).
-I've decided that 'raid5' is better than 'RAID-5' after all.
-
-The second removes some limits that shouldn't really be imposed in the kernel.
-
-Thanks,
-NeilBrown
 
 
+I am pleased to announce the availability of
+   mdadm version 2.2
 
- [PATCH md 001 of 2] Change case of raid level reported in sys/mdX/md/level
- [PATCH md 002 of 2] Remove inappropriate limits in md/bitmap configuration.
+It is available at the usual places:
+   http://www.cse.unsw.edu.au/~neilb/source/mdadm/
+and
+   http://www.{countrycode}.kernel.org/pub/linux/utils/raid/mdadm/
+
+mdadm is a tool for creating, managing and monitoring
+device arrays using the "md" driver in Linux, also
+known as Software RAID arrays.
+
+Release 2.2 fixes a few small bugs and add as few small elements of
+functionality.  Possibly the most interesting is the addition of
+'README.initramfs' and 'mkinitramfs'.  Feedback on these would be
+most welcome.
+
+Changelog Entries:
+    -   Assorted bug fixes
+    -   Support write-intent-bitmaps on raid10
+    -   Support little-endian (Rather than hostendian) bitmaps.
+    -   Return correct error code from 'mdadm -S'
+    -   Remove extra blank line from 'mdadm -Eb' output.
+    -   Improve option parsing so that -a and -b do not have
+	optional arguements: the arg is either required or not
+	depending on context.
+    -   Allow scanning of devices listed in /proc/partitions even
+	if they don't appear in /dev.
+    -   Support --assume-clean in --create mode as well as --build
+    -   Add support for --monitor to report to syslog: -y or --syslog.
+	Thanks to Ross Vandegrift
+    -   --monitor now reports which device failed in a 'Fail' message
+	   This broke with 2.6
+    -   Improve chance of array starting properly after a crash.
+	mdadm was insisting the event numbers were identical, but this
+	isn't needed, and is a problem if the crash was while the metadata
+	was being updated.
+    -   Support --update==uuid
+    -   Added README.initramfs and mkinitramfs to help people use an
+	initram for starting md arrays at boot.
+
+
+Development of mdadm is sponsored by
+ SUSE Labs, Novell Inc.
+
+NeilBrown  5th December 2005
+
+
