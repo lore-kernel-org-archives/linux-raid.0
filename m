@@ -1,126 +1,89 @@
-From: Alfons Andorfer <a_a@gmx.de>
-Subject: Re: RAID5 problem
-Date: Mon, 05 Dec 2005 11:59:40 +0100
-Message-ID: <43941D9C.4010206@gmx.de>
-References: <4392FB7C.6080600@gmx.de> <17299.25606.806494.749914@cse.unsw.edu.au>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: mdadm --size and --update=uuid etc options...
+Date: Mon, 5 Dec 2005 22:46:46 +1100
+Message-ID: <17300.10406.203538.561947@cse.unsw.edu.au>
+References: <43941B51.5090601@tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17299.25606.806494.749914@cse.unsw.edu.au>
+In-Reply-To: message from Michael Tokarev on Monday December 5
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, n@suse.de
+To: Michael Tokarev <mjt@tls.msk.ru>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
+On Monday December 5, mjt@tls.msk.ru wrote:
+> I found it's quite difficult, after resizing underlying
+> partitions, to compute the new size for
+>   mdadm /dev/mdX -G --size=xyz
+> command, because of the way how it finds the superblock
+> offset.  So, the question is -- is it possible to make
+> the argument of --size to be optional, and let mdadm to
+> compute the size automatically, just like resize2fs does
+> now?  Or, maybe, to keep backward compatibility for
+> those people who used --size z (as opposed to --size=z),
+> to recognize `0' as special size, to mean "whole partition"
+> or "max size".  The latter is probably the best, i think.
 
-> On Sunday December 4, a_a@gmx.de wrote:
+ From the man page:
+OPTIONS
+....
+For create or build:
+....
+       -z, --size=
+       ....
+
+              This value can be set with --grow for RAID level 1/4/5/6. If the
+              array was created with a size smaller than the currently  active
+              drives,  the extra space can be accessed using --grow.  The size
+              can be given as max which means to choose the largest size  that
+              fits on all current drives.
+
+(The word 'max' is in bold).
+
+So maybe it should be "For create, build, or grow", but it seems to be
+there:
+  mdadm --grow /dev/mdX --size=max
+does the trick.
+That text in the man page was added for 1.12.0.
+
 > 
->>Hi,
->>
->>I have a RAID5 array consisting of 4 disks:
->>
->>/dev/hda3
->>/dev/hdc3
->>/dev/hde3
->>/dev/hdg3
->>
->>and the Linux machine that this system was running on crashed yesterday 
->>due to a faulty Kernel driver (i.e. the machine just halted).
->>So I resetted it, but it didn't come up again.
->>I started the machine with a Knoppix CD and found out that the array had 
->>been running in degraded mode for about two months (/dev/hda3 went off 
->>then).
-Here is a short snipped of the syslog:
---------------------------------------
-Oct 22 15:30:07 omega kernel: hda: dma_intr: status=0x51 { DriveReady 
-SeekComplete Error }
-Oct 22 15:30:07 omega kernel: hda: dma_intr: error=0x40 { 
-UncorrectableError }, LBAsect=454088, sector=4264
-Oct 22 15:30:07 omega kernel: end_request: I/O error, dev 03:03 (hda), 
-sector 4264
-Oct 22 15:30:07 omega kernel: raid5: Disk failure on hda3, disabling 
-device. Operation continuing on 3 devices
-Oct 22 15:30:07 omega kernel: md: updating md0 RAID superblock on device
-Oct 22 15:30:07 omega kernel: md: hda3 (skipping faulty)
-Oct 22 15:30:07 omega kernel: md: hdc3 [events: 00000137]
-Oct 22 15:30:07 omega kernel: (write) hdc3's sb offset: 119834496
-Oct 22 15:30:07 omega kernel: md: recovery thread got woken up ...
-Oct 22 15:30:07 omega kernel: md: hde3 [events: 00000137]
-Oct 22 15:30:07 omega kernel: (write) hde3's sb offset: 119834496
-Oct 22 15:30:07 omega kernel: md: hdg3 [events: 00000137]
-Oct 22 15:30:07 omega kernel: (write) hdg3's sb offset: 119834496
-Oct 22 15:30:07 omega kernel: md0: no spare disk to reconstruct array! 
--- continuing in degraded mode
-Oct 22 15:30:07 omega kernel: md: recovery thread finished ...
+> The same is for newly appeared --update=uuid:xyz: I'd let
+> mdadm to choose an uuid just like it does for newly create
+> array, if the uuid argument isn't specified, like:
+>   --update=uuid:1234 --- use uuid=1234
+>   --update=uuid      --- choose random uid
 
+Again from the man page:
+OPTIONS
+....
+For assemble:
+....
+       -U, --update=
+              Update the superblock on each device while assembling the array.
+              The  argument  given  to  this flag can be one of sparc2.2, sum-
+              maries, uuid, resync, byteorder, or super-minor.
 
-> You want to be running "mdadm --monitor".  You really really do!
-> Anyone out there who is listening: if you have any md/raid arrays
-> (other than linear/raid0) and are not running "mdadm --monitor",
-> please do so.  Now.
-> Also run "mdadm --monitor --oneshot --scan" (or similar) from a
-> nightly cron job, so it will nag you about degraded arrays.
-> Please!
-Yes you are absolutely right! It was my first thought when I saw the 
-broken array: "There _must_ be a program that monitors the array 
-automatically for me and gives an alert if something goes wrong!
-And it will be the first thing to do after the array is running again!
+       ....
 
+              The uuid option will change the uuid of the array.  If a UUID is
+              given with the "--uuid" option that UUID will be used as  a  new
+              UUID  and  with  NOT be used to help identify the devices in the
+              array.  If no "--uuid" is given, a random uuid is chosen.
 
-> But why do you think that hda3 dropped out of the array 2 months ago?
-> The update time reported by mdadm --examine is
->        Update Time : Sat Dec  3 18:56:59 2005
-This comes from an attemt to assemble the array from hda3, hde3 and 
-hdg3. The first "mdadm --examine" printed out an update time for hda3 
-something in October...
+So I guess it already does what you want.
 
+Any suggestion on how to make the man page clear will be welcome.
 
-> The superblock from hda3 seems to suggest that it was hdc3 that was
-> the problem.... odd.
+Thanks,
+NeilBrown
+
 > 
+> Does it all look ok?
 > 
-> 
->>"pass 1: checking Inodes, Blocks, and sizes
->>read error - Block 131460 (Attempt to read block from filesystem 
->>resulted in short read) during Inode-Scan  Ignore error?"
-> 
-> 
-> 
-> This strongly suggests there is a problem with one of the drives - it
-> is returning read errors.  Are there any informative kernel logs.
-> If it is hdc that is reporting errors, try to re-assemble the array
-> from hda3, hde3, hdg3.
-That is what I already tried, but didn't succeed. So I tried it with 
-hd[ceg]3 and could even mount the array and the data seem to be OK at 
-first glance. What I could certainly do is to plug in an external USB 
-hard drive and to copy as many data as possible to the USB drive, but 
-the problem is that the array consists of 4x120GB resulting in about 
-360GB of data. So I hope I can reconstruct it without copying...
-
-
-But the real strange thing to me is that I can mount the array and the 
-data seem to be OK, but the "fsck" produces so many errors....
-
-The other question is why does /dev/hdg3 appear _two_times_ and 
-/dev/hda3 _doesn't_at_all_ when I type
-
-mdadm --create /dev/md0 -c32 -l5 -n4 missing /dev/hdc3 /dev/hde3 /dev/hdg3
-
-mdadm: /dev/hdc3 appears to be part of a raid array:
-     level=5 devices=4 ctime=Fri May 30 14:25:47 2003
-mdadm: /dev/hde3 appears to be part of a raid array:
-     level=5 devices=4 ctime=Fri May 30 14:25:47 2003
-mdadm: /dev/hdg3 appears to contain an ext2fs file system
-     size=493736704K  mtime=Tue Jan  3 04:48:21 2006
-mdadm: /dev/hdg3 appears to be part of a raid array:
-     level=5 devices=4 ctime=Fri May 30 14:25:47 2003
-Continue creating array? no
-mdadm: create aborted.
-
-
-Thanks in advance
-
-Alfons
-
+> /mjt, who goes to produce some patches...
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
