@@ -1,47 +1,37 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: 2.6.15-rc5-mm1: raid related oops
-Date: Tue, 6 Dec 2005 10:33:21 +1100
-Message-ID: <17300.52801.734773.284847@cse.unsw.edu.au>
-References: <20051205195004.GA11243@amd64.of.nowhere>
+Subject: Re: [PATCH md 010 of 14] Convert various kmap calls to kmap_atomic
+Date: Tue, 6 Dec 2005 10:43:50 +1100
+Message-ID: <17300.53430.981206.9311@cse.unsw.edu.au>
+References: <20051201141508.29384.patches@notabene>
+	<1051201032339.29666@suse.de>
+	<20051201144637.289592c8.akpm@osdl.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S964873AbVLEXdq@vger.kernel.org>
-In-Reply-To: message from jurriaan on Monday December 5
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jurriaan <thunder7@xs4all.nl>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from Andrew Morton on Thursday December 1
+Sender: linux-raid-owner@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday December 5, thunder7@xs4all.nl wrote:
-> Written by hand:
+On Thursday December 1, akpm@osdl.org wrote:
+> NeilBrown <neilb@suse.de> wrote:
+> >
+> > +				paddr = kmap_atomic(page, KM_USER0);
+> >  +				memset(paddr + offset, 0xff,
+> >   				       PAGE_SIZE - offset);
 > 
-> Null pointer dereference
-> last sysfs file /block/md0/md/sync_action
-> put_page
+> This page which is being altered is a user-visible one, no?  A pagecache
+> page?
 
-ohh dear, it seems that, unlike kfree, put_page doesn't like 'NULL' as
-an argument.
+It can be, but also may not be..
 
-You can try
-------------------
-diff ./mm/swap.c~current~ ./mm/swap.c
---- ./mm/swap.c~current~	2005-12-06 10:29:16.000000000 +1100
-+++ ./mm/swap.c	2005-12-06 10:29:25.000000000 +1100
-@@ -36,6 +36,8 @@ int page_cluster;
- 
- void put_page(struct page *page)
- {
-+	if (unlikely(page==NULL))
-+		return;
- 	if (unlikely(PageCompound(page))) {
- 		page = (struct page *)page_private(page);
- 		if (put_page_testzero(page)) {
+> 
+> We must always run flush_dcache_page() against a page when the kernel
+> modifies a user-visible page's contents.  Otherwise, on some architectures,
+> the modification won't be visible at the different virtual address.
 
--------------------
-for now.  If Andrew doesn't like that I'll make the code in raid1
-more careful (maybe I'll define put_page_unless_null :-)
-
-Thanks for the testing and the report.
+Ok, I'll add that at an appropriate place, thanks.
 
 NeilBrown
