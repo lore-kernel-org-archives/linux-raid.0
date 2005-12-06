@@ -1,37 +1,69 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH md 010 of 14] Convert various kmap calls to kmap_atomic
-Date: Tue, 6 Dec 2005 10:43:50 +1100
-Message-ID: <17300.53430.981206.9311@cse.unsw.edu.au>
-References: <20051201141508.29384.patches@notabene>
-	<1051201032339.29666@suse.de>
-	<20051201144637.289592c8.akpm@osdl.org>
+From: "JaniD++" <djani22@dynamicweb.hu>
+Subject: RAID5 resync question
+Date: Tue, 6 Dec 2005 01:18:11 +0100
+Message-ID: <045901c5f9fa$8f2b7fa0$0400a8c0@dcccs>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="iso-8859-2"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Andrew Morton on Thursday December 1
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday December 1, akpm@osdl.org wrote:
-> NeilBrown <neilb@suse.de> wrote:
-> >
-> > +				paddr = kmap_atomic(page, KM_USER0);
-> >  +				memset(paddr + offset, 0xff,
-> >   				       PAGE_SIZE - offset);
-> 
-> This page which is being altered is a user-visible one, no?  A pagecache
-> page?
+Hello, list,
 
-It can be, but also may not be..
 
-> 
-> We must always run flush_dcache_page() against a page when the kernel
-> modifies a user-visible page's contents.  Otherwise, on some architectures,
-> the modification won't be visible at the different virtual address.
+Is there a way to force the raid to skip this type of resync?
 
-Ok, I'll add that at an appropriate place, thanks.
+Every 2s: cat /proc/mdstat                              Tue Dec  6 01:28:55
+2005
 
-NeilBrown
+Personalities : [linear] [raid0] [raid1] [raid5] [multipath] [raid6]
+[raid10] [f
+aulty]
+md0 : active raid5 sdb1[4] sda1[10] hds1[5] hdq1[2] hdo1[3] hdm1[8] hdk1[6]
+hdi1
+[7] hde1[9] hdc1[1] hda1[0]
+      1953583360 blocks level 5, 32k chunk, algorithm 2 [11/11]
+[UUUUUUUUUUU]
+      [=>...................]  resync =  6.0% (11758724/195358336)
+finish=1216.8
+min speed=2512K/sec
+
+unused devices: <none>
+
+
+md: Autodetecting RAID arrays.
+md: autorun ...
+md: considering sdb1 ...
+md:  adding sdb1 ...
+md:  adding sda1 ...
+md:  adding hds1 ...
+md:  adding hdq1 ...
+md:  adding hdo1 ...
+md:  adding hdm1 ...
+md:  adding hdk1 ...
+md:  adding hdi1 ...
+md:  adding hde1 ...
+md:  adding hdc1 ...
+md:  adding hda1 ...
+md: created md0
+md: bind<hda1>
+md: bind<hdc1>
+md: bind<hde1>
+md: bind<hdi1>
+md: bind<hdk1>
+md: bind<hdm1>
+md: bind<hdo1>
+md: bind<hdq1>
+md: bind<hds1>
+md: bind<sda1>
+md: bind<sdb1>
+md: running:
+<sdb1><sda1><hds1><hdq1><hdo1><hdm1><hdk1><hdi1><hde1><hdc1><hda1>
+md: md0: raid array is not clean -- starting background reconstruction
+
+Thanks,
+Janos
+
