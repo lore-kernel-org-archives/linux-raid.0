@@ -1,42 +1,48 @@
-From: ross@jose.lug.udel.edu (Ross Vandegrift)
-Subject: Re: RAID5 problem
-Date: Mon, 5 Dec 2005 21:26:45 -0500
-Message-ID: <20051206022645.GA22413@jose.lug.udel.edu>
-References: <4392FB7C.6080600@gmx.de> <17299.25606.806494.749914@cse.unsw.edu.au> <20051205014408.GA20602@jose.lug.udel.edu> <17299.43393.992231.121500@cse.unsw.edu.au>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: [PATCH md 002 of 14] Allow raid1 to check consistency
+Date: Tue, 6 Dec 2005 14:50:46 +1100
+Message-ID: <20051206145046.24114a9e.akpm@osdl.org>
+References: <20051201141508.29384.patches@notabene>
+	<1051201032256.29567@suse.de>
+	<20051201143414.50ae2750.akpm@osdl.org>
+	<17300.52648.463571.299921@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <17299.43393.992231.121500@cse.unsw.edu.au>
+In-Reply-To: <17300.52648.463571.299921@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
 To: Neil Brown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Dec 05, 2005 at 01:44:17PM +1100, Neil Brown wrote:
-> The text-messaging I don't like.  That is what the --program option if
-> for.  If you don't want the very-basic email message, then write
-> yourself a little script to do exactly what you want.
+Neil Brown <neilb@suse.de> wrote:
+>
+> Would you accept:
+>  ------------------
+>  Signed-off-by: Neil Brown <neilb@suse.de>
+> 
+>  ### Diffstat output
+>   ./mm/swap.c |    2 ++
+>   1 file changed, 2 insertions(+)
+> 
+>  diff ./mm/swap.c~current~ ./mm/swap.c
+>  --- ./mm/swap.c~current~	2005-12-06 10:29:16.000000000 +1100
+>  +++ ./mm/swap.c	2005-12-06 10:29:25.000000000 +1100
+>  @@ -36,6 +36,8 @@ int page_cluster;
+>   
+>   void put_page(struct page *page)
+>   {
+>  +	if (unlikely(page==NULL))
+>  +		return;
+>   	if (unlikely(PageCompound(page))) {
+>   		page = (struct page *)page_private(page);
+>   		if (put_page_testzero(page)) {
+> 
 
-Heh - had I known about that feature it would've saved me the time it
-took to write in C!
+eek.  That's an all-over-the-place-fast-path!
 
-> The 'syslog' stuff looks fine : -y and --syslog.... though I wander if
-> --syslog should be the default...
+> 
+>  Or should I open code this in md ?
 
-Maybe - I can't really imagine not enabling it.  But I didn't want to
-wrap a policy change into a feature.
-
-> I wish I could remember why I didn't do this at the start!  I have a
-> strong feeling that it was more than just laziness, but I cannot
-> remember what more :-(
-
-Hmm - I've give this some thought.  The only bad thing I can think of
-are the non-events that can potentially be logged when things don't
-check for undefined configuration.
-
-For example - is my other change to test for UnDef spare drives
-incorrect in some way?  I'm not too sure since I'm not really familiar
-with the code.
-
-Ross
+Yes please.
