@@ -1,63 +1,35 @@
-From: Milo <search.lists@gmail.com>
-Subject: raid5 in degraded mode; trying to revive
-Date: Tue, 6 Dec 2005 00:15:57 -0800
-Message-ID: <dc164f000512060015v2e211817gefb9005fd9b26f08@mail.gmail.com>
+From: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
+Subject: Re: Journal-guided Resynchronization for Software RAID
+Date: Tue, 6 Dec 2005 09:58:41 +0100
+Message-ID: <dn3js1$u3h$1@sea.gmane.org>
+References: <Pine.LNX.4.58.0511301015520.14240@macduff.cs.wisc.edu> <17294.34794.477608.760700@cse.unsw.edu.au> <20051201210104.729a6e6a.pegasus@nerv.eu.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=iso-8859-15
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello, I have been trying to figure out how to fix my raid system,
-SUSE 9.3, linux 2.6.11.4-21.9-default. A hard reset put my raid in
-unstable state, almost same errors as
-http://sumo.genetics.ucla.edu/pipermail/nelsonlab-dev/2004-August/000150.html
-except, sda1 seems to be the problem.
-md: kicking non-fresh sda1 from array!
+Jure Pe=E8ar <pegasus@nerv.eu.org> wrote:
+> How to use gfx memory as nvram (no batteries tho :)
+> http://hedera.linuxnews.pl/_news/2002/09/03/_long/1445.html
 
-I did
-mdadm -A -f /dev/md0 /dev/sda1 /dev/sdb1 /dev/sdc1
-and then /proc/mdstat shows the 2 disk raid active, but I could not
-mount it, mounting /dev/md0 hangs.  Later I tried
-mdadm --assemble /dev/md0 --force /dev/sda1 /dev/sdb1 /dev/sdc1
-same thing.
+Where's the 'n' in nvram there? You and the author mean vram, i.e.
+Video-RAM, which is quite different from nvram, i.e. Non-Volatile RAM.
 
-If the raid is ok in degraded (missing 1 drive) mode, shouldn't I be
-able to mount it?
+Anyways - nice idea :)
 
-Also, another strange effect before I had the guts to run any real
-commands was that I could only run one mdadm command; all commands
-after the first would hang. Because of this I could not reboot, I have
-been doing soft resets and booting a livecd ever since this problem
-occured.
 
-The next potential step after mdadm -A -f is mdadm -a /dev/md0
-/dev/sda1. Since I really don't know what I'm doing, I thought I'd
-ask for help and I kind of value this personal data, I don't really
-want to risk losing it. I'm considering paying to get some help in
-debugging this remotely ... also I'm kicking myself now for not
-monitoring the raid.
+regards
+   Mario
+--=20
+*axiom* welcher sensorische input bewirkte die output-aktion,
+        den irc-chatter mit dem nick "dus" des irc-servers
+        mittels eines kills zu verweisen?
 
-Here is my /etc/raidtab :
-
-raiddev /dev/md0
-   raid-level 5
-   nr-raid-disks 3
-   nr-spare-disks 0
-   persistent-superblock 1
-   parity-algorithm left-symmetric
-   chunk-size 128
-   device /dev/sda1
-   raid-disk 0
-   device /dev/sdb1
-   raid-disk 1
-   device /dev/sdc1
-   raid-disk 2
-
-Thanks for any advice!!
-
---
-Milan Andric
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
