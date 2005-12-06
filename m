@@ -1,34 +1,26 @@
-From: Michael Stumpf <mjstumpf@pobox.com>
-Subject: random lockups, raid problems SOLVED (plus a question)
-Date: Tue, 06 Dec 2005 14:19:37 -0600
-Message-ID: <4395F259.1080801@pobox.com>
-Reply-To: mjstumpf@pobox.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+From: Maude Hilton <Pauling@feature.ch>
+Subject: Microsoft Digital Image Suite Pro v10.0 - $19.95
+Date: Tue, 6 Dec 2005 18:39:41 -0500
+Message-ID: <111210116029.315151881@82-39-78-118.cable.ubr02.jarr.blueyonder.co.uk>
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Sure it's a FAQ.  It's probably even documented.  And, I know it, but it 
-still surprised me.  Such is life:
+Microsoft Digital Image Suite Pro v10.0 - $19.95
+http://Eaton.oemdg.com/
 
-2/3 sticks of perfectly good ECC ram in an old server class p3 board 
-apparently have gone bad.  Result?  Random lockups/reboots with nothing 
-in the system logs to even lend a clue.
 
-Memtest86 showed one problem immediately, and after some time, exposed 
-some more.  Remove the bad memory and it works fine.
 
-Is there some daemon that can more actively monitor memory function?  I 
-must have had this problem for months, but with sputtering hard drives 
-that were slowly dying and causing very similar problems, this diagnosis 
-got muddled.
 
-Regards-
-Michael Stumpf
 
+Hell hath no fury like a bureaucrat scorned.     
+
+All power corrupts, but we need the electricity.     
+The Net interprets censorship as damage... and routes around it.   
+Anywhere is walking distance, if you've got the time.    
 
 
 
