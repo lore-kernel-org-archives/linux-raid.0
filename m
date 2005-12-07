@@ -1,106 +1,71 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: RAID5 resync question
-Date: Wed, 7 Dec 2005 10:50:54 +1100
-Message-ID: <17302.9182.322057.18613@cse.unsw.edu.au>
-References: <045901c5f9fa$8f2b7fa0$0400a8c0@dcccs>
-	<17300.56329.638969.509384@cse.unsw.edu.au>
-	<004201c5f9fe$50cc41a0$0400a8c0@dcccs>
-	<17300.58327.193597.248431@cse.unsw.edu.au>
-	<002b01c5fa53$cd3d3fa0$0400a8c0@dcccs>
+Subject: Re: Raid1 "synchronous" mirror question
+Date: Wed, 7 Dec 2005 11:01:47 +1100
+Message-ID: <17302.9835.421430.402621@cse.unsw.edu.au>
+References: <43955E0F.6090704@gmx.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from JaniD++ on Tuesday December 6
+In-Reply-To: message from Robert Heinzmann on Tuesday December 6
 Sender: linux-raid-owner@vger.kernel.org
-To: JaniD++ <djani22@dynamicweb.hu>
+To: Robert Heinzmann <Robert.Heinzmann@gmx.net>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday December 6, djani22@dynamicweb.hu wrote:
+On Tuesday December 6, Robert.Heinzmann@gmx.net wrote:
+> Hello,
 > 
-> > > I know, it is some chance to leave some incorrect parity information on
-> the
-> > > array, but may be corrected by next write.
-> >
-> > Or it may not be corrected by the next write.  The parity-update
-> > algorithm assumes that the parity is correct.
+> I'm currently trying to understand the "flow" of the I/O in Linux raid1 
+> devices in regard to superblock updates and resynces on machine crashes. 
+> I looked at the source (2.6 kernel) and made some guesses about the 
+> working of  the raid1 kernel module. The problem is that I'm not an 
+> kernel expert so I try to point out the basic algotithms and it would be 
+> great if some expert could give ma a yes/no answer :)
 > 
-> Hmm.
-> If it works with parity-update algorithm, instead of parity "rewrite
-> algorithm", you have right.
+> 1) As soon as the first write is made, the superblock is updated and 
+> mddev->in_sync is set to 0
 
-It chooses read-modify-write(depending on old parity), or
-reconstruct-write (not depending on old parity) depending on how much
-pre-reading each option requires.
+Yes.
 
+> 2) There is a machanism (can you tell me which part of the kernel does 
+> this ?) that looks if all write requests have been written to both disks 
+> and if no write requests are queued anymore, the superblock is updated 
+> with the information mddev->in_sync=1
 
-> But it works block-based, and if the entire block is written, the parity is
-> turned to de correct, or not? :-)
+Before a write request starts, md_write_start is called.  If in_sync
+was set, this clears it and writes the superblock.
+It also keeps count of the number of outstanding writes in
+->writes_pending.
 
-Not.
+When a write completes, md_write_end is called.  This decrements
+->writes_pending.
+If it reaches zero, then a timer is started (safemode_timer) to count
+for safemode_delay (20msec).  When the timer expires, in_sync is set and the
+superblock is written (by md_check_recovery).
 
-> What is the block size?
-
-PAGE_SIZE (4K)
-
-> It isequal to chunk-size?
-
-no.
-> 
-> > > What does this exactly?
-> >
-> > Divides the array into approximately 200,000 sections (all a power of
-> > 2 in size) and keeps track (in a bitmap) of which sections might have
-> > inconsistent parity.  if you crash, it only syncs sections recorded in
-> > the bitmap.
-> >
-> > > Changes the existing array's structure?
-> >
-> > In a forwards/backwards compatible way (makes use of some otherwise
-> > un-used space).
-> 
-> What unused space?
-> In the raid superblock?
-
-The raid superblock is 4k in size, placed at least 64k from the end of
-the devices.  Thus there is always at least 60k of dead space.
-
-> The end of the drives or the end of the array?
-
-end of the drives.  bitmap is stored (similar to raid1) on all
-drivers.
-
-> It leaves the raid structure unchanged except the superblocks?
-
-yes.
 
 > 
-> >
-> > > To use some checkpoints in ext file or device to resync an array?
-> > > And the better handling of half-synced array?
-> >
-> > I don't know what these mean.
 > 
-> (a little background:
-> I have write a little stat program, using /sys/block/#/stat -files, to find
-> performance bottlenecks.
-> In the stat files i can see, if the device is reads or writes, and the
-> needed times for these.)
-> 
-> One time while my array is really rebuild one disk (paralel normal
-> workload), i see, the new drive in the array *only* writes.
-> i means with "better handling of half-synced array" is this:
-> If read request comes to the ?% synced array, and if the read is on the
-> synced half, only need to read from *new* device, instead reading all other
-> to calculate data from parity.
-> 
-> On a working system this can be a little speed up the rebuild process, and
-> some offload the system.
-> Or i'm on a wrong clue? :-)
+> The question is, whats the maximal time that data can be "out of sync" 
+> on both mirrors making the mirror an NON-synchronous mirror ?
+> Is there a way to make the mirror a "real" synchronous mirror ?
 
-Yes, it would probably be possible to get it to read from the
-recovering drive once that section had been recovered.  I'll put it on
-my todo list.
+What do you mean by a "real" synchronous mirror?  md/raid1 is as
+synchronous as it makes sense to be.
+It is not physically possible to write a block to both drives at
+exactly the same time.
+When a filesystem requests a write, md/raid1 will submit the write to
+all drives, and will not tell the filesystem that the write is
+complete until it is complete on all working drives.
+
+If you crash, there is a chance that there will be different data on
+the different drives, and there is absolutely nothing that can
+possibly be done about that.  What can be done is fixing any
+differences quickly.  For that purpose we have resync, and
+bitmap-assisted resync, and other possibilities requiring support from
+the filesystem (see recent post to linux-raid titled
+   Journal-guided Resynchronization for Software RAID
+)
 
 NeilBrown
