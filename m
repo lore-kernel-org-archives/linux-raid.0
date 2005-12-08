@@ -1,57 +1,64 @@
-From: ross@jose.lug.udel.edu (Ross Vandegrift)
-Subject: Re: RAID5 problem
-Date: Wed, 7 Dec 2005 20:49:50 -0500
-Message-ID: <20051208014950.GA23381@jose.lug.udel.edu>
-References: <4392FB7C.6080600@gmx.de> <17299.25606.806494.749914@cse.unsw.edu.au> <20051205014408.GA20602@jose.lug.udel.edu> <43977948.6050507@promotionstudios.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: raid5 in degraded mode; trying to revive
+Date: Thu, 8 Dec 2005 14:48:58 +1100
+Message-ID: <17303.44330.447062.271960@cse.unsw.edu.au>
+References: <dc164f000512060015v2e211817gefb9005fd9b26f08@mail.gmail.com>
+	<17302.10018.330421.986669@cse.unsw.edu.au>
+	<dc164f000512062258r21ebb844w4b59238612635d7f@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <43977948.6050507@promotionstudios.com>
+In-Reply-To: message from Milo on Tuesday December 6
 Sender: linux-raid-owner@vger.kernel.org
-To: James Neale <james@promotionstudios.com>
+To: Milo <search.lists@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Dec 08, 2005 at 11:07:36AM +1100, James Neale wrote:
-> Hi Ross
-> I'm a bit of a mdadm newb and have been wrangling with -monitor rather 
-> unsucccessfully.
-> Currently  I'm manually checking /proc/mdstat until I've sorted out 
-> something better.
-> I'm running a single 1TB raid5 on 6 disks (one is spare) which has been 
-> smooth so far.
-> Any pointers or examples for that reliable noisy mailing beeping script 
-> of yours in /etc/bashrc
+On Tuesday December 6, search.lists@gmail.com wrote:
+> On 12/6/05, Neil Brown <neilb@suse.de> wrote:
+> > > If the raid is ok in degraded (missing 1 drive) mode, shouldn't I be
+> > > able to mount it?
+> >
+> > Yes you should.
+> > The fact that you cannot tends to suggest something wrong at a
+> > hardware level, but it is hard to be sure.
+> >
+> > Can you get any kernel messages between assembling the array and the
+> > mount hanging?
+> > If you could
+> >    echo t > /proc/sysrq_trigger
+> >
+> > and capture the output
+> >    dmesg > /some/file
+> >
+> > that might also be helpful.
+> >
+> > NeilBrown
+> >
+> 
+> Ok, I managed to capture some output, but it doesn't mean much to me. 
+> If anyone can help with some type of diagnosis, I would much
+> appreciate it since i'm killing myself over this one.  The dmesg
+> output is at (appended with timestamp):
+> http://www.lebox.org/milan/debug/
 
-The blob is below, just stick it in your bashrc.  My idea was that
-everytime I spawn a shell (which is a lot!), mdstat gets checked.
+Yes, that is very helpful.
 
-What issues are you having with --monitor?  It should be pretty
-automatic if you let it scan.  I just run something like this:
+The drive is not being assembled successfully. 
+When you try to mount it, a raid bug (which has since been fixed)
+causes the mount processed to crash.
+You should be able to assemble the array with:
 
-/sbin/mdadm -F -s -f -y
+  mdadm -A /dev/md0 -f /dev/sdb1 /dev/sdc1
 
-This stats mdadm in --monitor mode, scans for devices, daemonizes, and
-records its results in syslog.
+Please try that, then take a copy of 
+  cat /proc/mdstat
+  mdadm -D /dev/md0
 
-Here's what runs in my bashrc:
+and then try mounting the filesystem.
+If the mount still fails, send me the output of those commands.
 
-# Scream and cry a lot if the RAID looks weird!
-if /bin/grep _ /proc/mdstat; then
-        for ((scream = 0; scream < 5; scream ++)); do
-                echo -e "POSSIBLE PROBLEM WITH RAID"
-                sleep 0.1
-        done
-        cat /proc/mdstat
-fi
+Thanks,
+NeilBrown
 
--- 
-Ross Vandegrift
-ross@lug.udel.edu
-
-"The good Christian should beware of mathematicians, and all those who
-make empty prophecies. The danger already exists that the mathematicians
-have made a covenant with the devil to darken the spirit and to confine
-man in the bonds of Hell."
-	--St. Augustine, De Genesi ad Litteram, Book II, xviii, 37
