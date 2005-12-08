@@ -1,21 +1,26 @@
-From: "Shannon Jewell" <HKMOWFWSBM@msn.com>
-Subject: Look...Here q6HtJ
-Date: Thu, 08 Dec 2005 21:56:10 +0200
-Message-ID: <LAW18.OE649yfB4mvo625753d5__49080.0906125971$1134072324$gmane$org@motmail.com>
+From: dean gaudet <dean-list-linux-raid@arctic.org>
+Subject: Re: Journal-guided Resynchronization for Software RAID
+Date: Thu, 8 Dec 2005 14:48:55 -0800 (PST)
+Message-ID: <Pine.LNX.4.63.0512081442190.17577@twinlark.arctic.org>
+References: <Pine.LNX.4.58.0511301015520.14240@macduff.cs.wisc.edu>
+ <17294.34794.477608.760700@cse.unsw.edu.au> <Pine.LNX.4.63.0512022211460.4248@twinlark.arctic.org>
+ <17299.27732.251785.345960@cse.unsw.edu.au>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <17299.27732.251785.345960@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-ppp@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: "Timothy E. Denehy" <tedenehy@cs.wisc.edu>, linux-raid@vger.kernel.org, ext2-devel@lists.sourceforge.net, tytso@mit.edu, akpm@osdl.org
 List-Id: linux-raid.ids
 
+On Mon, 5 Dec 2005, Neil Brown wrote:
 
-The most complete Phar macy Online
-We carry all major medds at bargain price
-Viggra, Ci ialis, VaIium, Xa naax
-Phantermiine, Ulltraam and etc...
-SatiisfactIon Gua ranteeed
+> One of these with built in xor and raid6 would be nice, but I'm not
+> sure I could guarantee a big enough market for them to try convincing
+> them to make one...
 
-http://midwindow.net
+i wonder if the areca cards <http://www.areca.com.tw/> are 
+re-programmable... they seem to have all the hardware you're looking for.
 
-
-gy
-
+-dean
