@@ -1,42 +1,57 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: RAID5 resync question BUGREPORT!
-Date: Fri, 9 Dec 2005 10:43:38 +1100
-Message-ID: <17304.50474.390938.734714@cse.unsw.edu.au>
-References: <045901c5f9fa$8f2b7fa0$0400a8c0@dcccs>
-	<17300.56329.638969.509384@cse.unsw.edu.au>
-	<004201c5f9fe$50cc41a0$0400a8c0@dcccs>
-	<17300.58327.193597.248431@cse.unsw.edu.au>
-	<035b01c5fc4b$416c98f0$0400a8c0@dcccs>
+Subject: Re: raid5 in degraded mode; trying to revive
+Date: Fri, 9 Dec 2005 10:47:55 +1100
+Message-ID: <17304.50731.507934.131132@cse.unsw.edu.au>
+References: <dc164f000512060015v2e211817gefb9005fd9b26f08@mail.gmail.com>
+	<17302.10018.330421.986669@cse.unsw.edu.au>
+	<dc164f000512062258r21ebb844w4b59238612635d7f@mail.gmail.com>
+	<17303.44330.447062.271960@cse.unsw.edu.au>
+	<dc164f000512072201w1779863bw1ac1d7b14a5a52ac@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from JaniD++ on Friday December 9
+In-Reply-To: message from Milo on Wednesday December 7
 Sender: linux-raid-owner@vger.kernel.org
-To: JaniD++ <djani22@dynamicweb.hu>
+To: Milo <search.lists@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Friday December 9, djani22@dynamicweb.hu wrote:
-> Hello, Neil,
+On Wednesday December 7, search.lists@gmail.com wrote:
+> >
+> > Yes, that is very helpful.
+> >
+> > The drive is not being assembled successfully.
+> > When you try to mount it, a raid bug (which has since been fixed)
+> > causes the mount processed to crash.
+> > You should be able to assemble the array with:
+> >
+> >   mdadm -A /dev/md0 -f /dev/sdb1 /dev/sdc1
+> >
+> > Please try that, then take a copy of
+> >   cat /proc/mdstat
+> >   mdadm -D /dev/md0
 > 
-> [root@st-0001 mdadm-2.2]# mdadm --grow /dev/md0 --bitmap=internal
-> mdadm: Warning - bitmaps created on this kernel are not portable
->   between different architectured.  Consider upgrading the Linux kernel.
+> # mdadm -A /dev/md0 -f /dev/sdb1 /dev/sdc1
+> mdadm: /dev/md0 has been started with 2 drives (out of 3).
+> # cat /proc/mdstat
+> Personalities : [raid5]
+> md0 : active raid5 sdb1[1] sdc1[2]
+>       490191104 blocks level 5, 128k chunk, algorithm 2 [3/2] [_UU]
 > 
-> Dec  8 23:59:45 st-0001 kernel: md0: bitmap file is out of date (0 <
-> 81015178) -- forcing full recovery
-> Dec  8 23:59:45 st-0001 kernel: md0: bitmap file is out of date, doing full
-> recovery
-> Dec  8 23:59:46 st-0001 kernel: md0: bitmap initialized from disk: read
-> 12/12 pages, set 381560 bits, status: 0
-> Dec  8 23:59:46 st-0001 kernel: created bitmap (187 pages) for device md0
+> unused devices: <none>
 > 
-> And the system is crashed.
-> no ping reply, no netconsole error logging, no panic and reboot.
+> then mdadm -D /dev/md0 hangs, then i make another trace ...
+> http://www.lebox.org/milan/debug/dmesg.1134020701
+> 
 
-Hmmm, that's unfortunate :-(
+It looks like the computer was already quite sick.  It probably tried
+to assemble the array at boot, failed, and left things in an
+unfortunate state.
+Can you boot with
+   raid=noautodetect
 
-Exactly what kernel were you running?
+And then try the 'mdadm ..' command again?
 
+Thanks,
 NeilBrown
