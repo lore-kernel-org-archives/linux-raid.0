@@ -1,61 +1,57 @@
-From: "JaniD++" <djani22@dynamicweb.hu>
-Subject: performance question about cache/buffers  (not exactly raid)
-Date: Thu, 8 Dec 2005 01:09:46 +0100
-Message-ID: <047101c5fb8b$b4dc2780$0400a8c0@dcccs>
+From: ross@jose.lug.udel.edu (Ross Vandegrift)
+Subject: Re: RAID5 problem
+Date: Wed, 7 Dec 2005 20:49:50 -0500
+Message-ID: <20051208014950.GA23381@jose.lug.udel.edu>
+References: <4392FB7C.6080600@gmx.de> <17299.25606.806494.749914@cse.unsw.edu.au> <20051205014408.GA20602@jose.lug.udel.edu> <43977948.6050507@promotionstudios.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-2"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <43977948.6050507@promotionstudios.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: James Neale <james@promotionstudios.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello, list,
+On Thu, Dec 08, 2005 at 11:07:36AM +1100, James Neale wrote:
+> Hi Ross
+> I'm a bit of a mdadm newb and have been wrangling with -monitor rather 
+> unsucccessfully.
+> Currently  I'm manually checking /proc/mdstat until I've sorted out 
+> something better.
+> I'm running a single 1TB raid5 on 6 disks (one is spare) which has been 
+> smooth so far.
+> Any pointers or examples for that reliable noisy mailing beeping script 
+> of yours in /etc/bashrc
 
-I use 4 disk nodes (2TB RAID5 in each) with nbd.
+The blob is below, just stick it in your bashrc.  My idea was that
+everytime I spawn a shell (which is a lot!), mdstat gets checked.
 
-The question is how can i configure the system, to use more cache (or
-buffers) ?
-All the nodes have 2GB ram, but never use more than 1.1GB.
+What issues are you having with --monitor?  It should be pretty
+automatic if you let it scan.  I just run something like this:
 
-[root@st-0001 root]# free
-             total       used       free     shared    buffers     cached
-Mem:       2072972     913048    1159924          0     838964      24568
--/+ buffers/cache:      49516    2023456
-Swap:            0          0          0
-[root@st-0001 root]# cat /proc/meminfo
-MemTotal:      2072972 kB
-MemFree:       1159052 kB
-Buffers:        839772 kB
-Cached:          25052 kB
-SwapCached:          0 kB
-Active:          10000 kB
-Inactive:       857180 kB
-HighTotal:     1179584 kB
-HighFree:      1150596 kB
-LowTotal:       893388 kB
-LowFree:          8456 kB
-SwapTotal:           0 kB
-SwapFree:            0 kB
-Dirty:             848 kB
-Writeback:           0 kB
-Mapped:           4884 kB
-Slab:            27320 kB
-CommitLimit:   1036484 kB
-Committed_AS:     9460 kB
-PageTables:        248 kB
-VmallocTotal:   114680 kB
-VmallocUsed:       452 kB
-VmallocChunk:   113484 kB
-[root@st-0001 root]#
+/sbin/mdadm -F -s -f -y
 
-The readahead and the performance is very important for me.
-I have allready try to tune the vm, but the used cache/buffer is still
-unchanged.
+This stats mdadm in --monitor mode, scans for devices, daemonizes, and
+records its results in syslog.
 
-If somebody have an idea, please let me know! :-)
+Here's what runs in my bashrc:
 
-Thanks,
-Janos
+# Scream and cry a lot if the RAID looks weird!
+if /bin/grep _ /proc/mdstat; then
+        for ((scream = 0; scream < 5; scream ++)); do
+                echo -e "POSSIBLE PROBLEM WITH RAID"
+                sleep 0.1
+        done
+        cat /proc/mdstat
+fi
 
+-- 
+Ross Vandegrift
+ross@lug.udel.edu
+
+"The good Christian should beware of mathematicians, and all those who
+make empty prophecies. The danger already exists that the mathematicians
+have made a covenant with the devil to darken the spirit and to confine
+man in the bonds of Hell."
+	--St. Augustine, De Genesi ad Litteram, Book II, xviii, 37
