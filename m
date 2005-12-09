@@ -1,26 +1,21 @@
-From: Horatio Lehman <Egyptianize@150th.com>
-Subject: Low price branded software
-Date: Fri, 9 Dec 2005 02:49:42 -0500
-Message-ID: <611936993.11895713066@aew202.internetdsl.tpnet.pl>
-Content-Type: text/plain; charset=us-ascii
+From: "Kyle Wong" <kylewong@southa.com>
+Subject: stripe_cache_size ?
+Date: Fri, 9 Dec 2005 16:44:16 +0800
+Message-ID: <01a501c5fc9c$bd138d00$9d02a8c0@southa.com>
+Mime-Version: 1.0
+Content-Type: text/plain;
+	charset="big5"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-70% discounts on popular software
-http://mattresses.oemfi.com/
+Hi,
 
+I found that there's a new sysfs "stripe_cache_size" variable. I want to
+know how does it affect RAID5 read / write performance (if any) ?
+Please cc to me if possible, thanks.
 
-
-Now is the time for all good men to come to.  
-There is nothing stronger in the world than gentleness.    
-Big Brother is watching you.        
-
-
-When you have no basis of argument, abuse the plaintiff.   
-Every day, in every way, I am getting better and better.  
-
-
+Kyle
 
