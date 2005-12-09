@@ -1,83 +1,76 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: RAID5 resync question BUGREPORT!
-Date: Fri, 9 Dec 2005 15:49:17 +1100
-Message-ID: <17305.3277.821697.223406@cse.unsw.edu.au>
-References: <045901c5f9fa$8f2b7fa0$0400a8c0@dcccs>
-	<17300.56329.638969.509384@cse.unsw.edu.au>
-	<004201c5f9fe$50cc41a0$0400a8c0@dcccs>
-	<17300.58327.193597.248431@cse.unsw.edu.au>
-	<035b01c5fc4b$416c98f0$0400a8c0@dcccs>
-	<17304.50474.390938.734714@cse.unsw.edu.au>
-	<001101c5fc75$a28cb230$0400a8c0@dcccs>
+From: Mike Hardy <mhardy@h3c.com>
+Subject: mdadm source rpm build error + command-line parsing error + resync
+ reporting problem
+Date: Thu, 08 Dec 2005 21:11:59 -0800
+Message-ID: <4399121F.9060906@h3c.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from JaniD++ on Friday December 9
 Sender: linux-raid-owner@vger.kernel.org
-To: JaniD++ <djani22@dynamicweb.hu>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Friday December 9, djani22@dynamicweb.hu wrote:
-> Hi,
-> 
-> After i get this on one of my disk node, imediately send this letter, and go
-> to the hosting company, to see, is any message on the screen.
-> But unfortunately nothing what i found.
-> simple freeze.
-> no message, no ping, no num lock!
-> 
-> The full message of  the node next reboot is here:
-> http://download.netcenter.hu/bughunt/20051209/boot.log
 
-Ahh.... Ok, I know the problem.
-I had originally only tested bitmaps for raid5 and raid6 on a
-single-processor machine.  When you try it on an SMP machine you get a
-deadlock.
-The following patch - which will be in 2.6.15 - fixes the problem.
+I got this when I attempted to rpmbuild -ba mdadm.spec:
+------------------------
 
-Thanks for your testing.
+In file included from super0.c:31:
+/usr/include/asm/byteorder.h:6:2: error: #warning using private kernel
+header; include <endian.h> instead!
+make: *** [super0.o] Error 1
+error: Bad exit status from /var/tmp/rpm-tmp.64960 (%build)
 
-NeilBrown
 
--------------------------------
-Fix locking problem in r5/r6
+RPM build errors:
+    Bad exit status from /var/tmp/rpm-tmp.64960 (%build)
+[root@istanbul ~]# uname -a
+Linux istanbul.tacitknowledge.com 2.6.14-1.1644_FC4smp #1 SMP Sun Nov 27
+03:39:31 EST 2005 i686 i686 i386 GNU/Linux
+[root@istanbul ~]# cat /etc/redhat-release
+Fedora Core release 4 (Stentz)
 
-bitmap_unplug actually writes data (bits) to storage, so we
-shouldn't be holding a spinlock...
+--------------------------
 
-Signed-off-by: Neil Brown <neilb@suse.de>
+This occurs for the files super0.c, super1.c, and bitmap.c.
 
-### Diffstat output
- ./drivers/md/raid5.c     |    2 ++
- ./drivers/md/raid6main.c |    2 ++
- 2 files changed, 4 insertions(+)
+If you remove the -Werror flag from the Makefile, it works though it
+still generates warnings.
 
-diff ./drivers/md/raid5.c~current~ ./drivers/md/raid5.c
---- ./drivers/md/raid5.c	2005-12-06 11:06:53.000000000 +1100
-+++ ./drivers/md/raid5.c~current~	2005-12-06 11:07:10.000000000 +1100
-@@ -1704,7 +1704,9 @@ static void raid5d (mddev_t *mddev)
- 
- 		if (conf->seq_flush - conf->seq_write > 0) {
- 			int seq = conf->seq_flush;
-+			spin_unlock_irq(&conf->device_lock);
- 			bitmap_unplug(mddev->bitmap);
-+			spin_lock_irq(&conf->device_lock);
- 			conf->seq_write = seq;
- 			activate_bit_delay(conf);
- 		}
+I installed the new version of mdadm in the hopes that it would improve
+the situation with the grow mode commandline parsing, which was broken
+in the 1.11 that FC4 ships. Alas, it did not:
 
-diff ./drivers/md/raid6main.c~current~ ./drivers/md/raid6main.c
---- ./drivers/md/raid6main.c	2005-12-06 11:06:53.000000000 +1100
-+++ ./drivers/md/raid6main.c~current~	2005-12-06 11:07:10.000000000 +1100
-@@ -1784,7 +1784,9 @@ static void raid6d (mddev_t *mddev)
- 
- 		if (conf->seq_flush - conf->seq_write > 0) {
- 			int seq = conf->seq_flush;
-+			spin_unlock_irq(&conf->device_lock);
- 			bitmap_unplug(mddev->bitmap);
-+			spin_lock_irq(&conf->device_lock);
- 			conf->seq_write = seq;
- 			activate_bit_delay(conf);
- 		}
+[root@istanbul redhat]# mdadm -G /dev/md1
+mdadm: no changes to --grow
+[root@istanbul redhat]# mdadm -G /dev/md1 --size
+mdadm: option `--size' requires an argument
+
+The man page indicates that if I don't set the size, it will grow to
+fill the smallest device in the array. It's definitely not doing that...
+
+I read mdadm.c, and see that 'max' is the argument that mdadm is looking
+for, but the man page isn't mentioning.
+
+Finally, and I think was reported once before, but I don't recall a
+resolution for it, I got this once I specified that it grow to maximum size:
+
+[root@istanbul mdadm-2.1]# cat /proc/mdstat
+Personalities : [raid1]
+md2 : active raid1 sdb1[0] sda1[1]
+      98176 blocks [2/2] [UU]
+
+md1 : active raid1 sdb3[0] sda3[1]
+      70573440 blocks [2/2] [UU]
+      [=========>...........]  resync = 49.9% (35220224/70573440)
+finish=0.2min speed=2515730K/sec
+
+md0 : active raid1 sdb2[0] sda2[1]
+      977856 blocks [2/2] [UU]
+
+unused devices: <none>
+
+This is a dual Xeon (so it looks like a 4-CPU machine). Not sure what's
+causing that though...
+
+-Mike
