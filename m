@@ -1,35 +1,103 @@
-From: "Denoting H. Ariz" <steven@grandlin.com>
-Subject: Software
-Date: Sun, 11 Dec 2005 01:13:16 -0600
-Message-ID: <4608440258.20051211011316@grandlin.com>
+From: Yanggun <yang.geum.seok@gmail.com>
+Subject: Re: raid1 mysteriously switching to read-only
+Date: Mon, 12 Dec 2005 08:28:03 +0900
+Message-ID: <ee0ae26a0512111528t153723fes@mail.gmail.com>
+References: <1051127234104.14937@suse.de>
+	 <17306.31969.240202.416327@cse.unsw.edu.au>
+	 <ee0ae26a0512092350k43b6dc8l@mail.gmail.com>
+	 <17306.35737.880103.939683@cse.unsw.edu.au>
+	 <ee0ae26a0512100010v4d93d107k@mail.gmail.com>
+	 <17306.50617.458648.8740@cse.unsw.edu.au>
+	 <ee0ae26a0512110504y63589bck@mail.gmail.com>
+	 <439C344F.9020408@ucolick.org>
+	 <ee0ae26a0512110629u24a32a2fw@mail.gmail.com>
+	 <20051211171350.GA18610@jose.lug.udel.edu>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20051211171350.GA18610@jose.lug.udel.edu>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux <linux-raid@vger.kernel.org>
+To: Ross Vandegrift <ross@jose.lug.udel.edu>
+Cc: Patrik Jonsson <patrik@ucolick.org>, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-You know how it? to work with stable software! 
-Need s0ftware? Click here. 
+thanks.
 
-New software on our site:
+I am really appreciative for explaining painting.
 
-Photoshop 7 - $69.95 
-Photoshop Elements 3.0 Windows - $59.95
-WordPerfect Office 10 - $69.95
-Acrobat 6 Professional - $79.95
-Encarta Encyclopedia Delux 2004 (3CD) - $89.95
-Picture It Premium 9 - $59.95
-Studio MX 2004 with Director MX 2004 - $139.95
-Painter 8 - $59.95
-Illustrator CS - $69.95
-Windows 98 Second Edition - $49.95
-Visio 2003 Professional - $69.95
-Fireworks MX 2004 - $69.95
-FreeHand MX - $69.95
-Norton System Works 2003 - $59.95
+Yanggun.
 
-Our site:
-http://armrestnk.com
-
+2005/12/12, Ross Vandegrift <ross@jose.lug.udel.edu>:
+> On Sun, Dec 11, 2005 at 11:29:23PM +0900, Yanggun wrote:
+> > I did not find involved part with this in the document.
+> >
+> > I am sorry, inform it is what section.
+>
+> Basically, the md driver acts like another hard disk.  So a regular
+> setup looks like this:
+>
+> ---------------------------------
+> |                               |
+> |       Applications (ls, cat)  |
+> |                               |
+> ---------------------------------
+>                 |
+>                 v
+> ---------------------------------
+> |                               |
+> |       Filesystem (ext3)       |
+> |                               |
+> ---------------------------------
+>                 |
+>                 v
+> ---------------------------------
+> |                               |
+> |       Block layer (sda1/sdb1) |
+> |                               |
+> ---------------------------------
+>
+> and a software RAID setup looks like this:
+>
+> ---------------------------------
+> |                               |
+> |       Applications (ls, cat)  |
+> |                               |
+> ---------------------------------
+>                 |
+>                 v
+> ---------------------------------
+> |                               |
+> |       Filesystem (ext3)       |
+> |                               |
+> ---------------------------------
+>                 |
+>                 v
+> ---------------------------------
+> |                               |
+> |       Block layer (md0)       |
+> |                               |
+> ---------------------------------
+>                 |
+>                 v
+> ---------------------------------
+> |                               |
+> |       Block Layer (sda1/sdb1) |
+> |                               |
+> ---------------------------------
+>
+> The format of sda1/sdb1 is the RAID data that the md driver writes to
+> them.  It form a complete layer of abstraction between your
+> applications and the actual devices you are storing data on.
+>
+> --
+> Ross Vandegrift
+> ross@lug.udel.edu
+>
+> "The good Christian should beware of mathematicians, and all those who
+> make empty prophecies. The danger already exists that the mathematicians
+> have made a covenant with the devil to darken the spirit and to confine
+> man in the bonds of Hell."
+>         --St. Augustine, De Genesi ad Litteram, Book II, xviii, 37
+>
