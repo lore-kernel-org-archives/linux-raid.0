@@ -1,103 +1,51 @@
-From: Yanggun <yang.geum.seok@gmail.com>
-Subject: Re: raid1 mysteriously switching to read-only
-Date: Mon, 12 Dec 2005 08:28:03 +0900
-Message-ID: <ee0ae26a0512111528t153723fes@mail.gmail.com>
-References: <1051127234104.14937@suse.de>
-	 <17306.31969.240202.416327@cse.unsw.edu.au>
-	 <ee0ae26a0512092350k43b6dc8l@mail.gmail.com>
-	 <17306.35737.880103.939683@cse.unsw.edu.au>
-	 <ee0ae26a0512100010v4d93d107k@mail.gmail.com>
-	 <17306.50617.458648.8740@cse.unsw.edu.au>
-	 <ee0ae26a0512110504y63589bck@mail.gmail.com>
-	 <439C344F.9020408@ucolick.org>
-	 <ee0ae26a0512110629u24a32a2fw@mail.gmail.com>
-	 <20051211171350.GA18610@jose.lug.udel.edu>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+From: NeilBrown <neilb@suse.de>
+Subject: [PATCH md 001 of 20] Fix a use-after-free bug in raid1
+Date: Mon, 12 Dec 2005 14:10:17 +1100
+Message-ID: <1051212031017.4861@suse.de>
+References: <20051212135705.4561.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20051211171350.GA18610@jose.lug.udel.edu>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Ross Vandegrift <ross@jose.lug.udel.edu>
-Cc: Patrik Jonsson <patrik@ucolick.org>, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-thanks.
 
-I am really appreciative for explaining painting.
+Who would submit code with a FIXME like that in it !!!!
 
-Yanggun.
 
-2005/12/12, Ross Vandegrift <ross@jose.lug.udel.edu>:
-> On Sun, Dec 11, 2005 at 11:29:23PM +0900, Yanggun wrote:
-> > I did not find involved part with this in the document.
-> >
-> > I am sorry, inform it is what section.
->
-> Basically, the md driver acts like another hard disk.  So a regular
-> setup looks like this:
->
-> ---------------------------------
-> |                               |
-> |       Applications (ls, cat)  |
-> |                               |
-> ---------------------------------
->                 |
->                 v
-> ---------------------------------
-> |                               |
-> |       Filesystem (ext3)       |
-> |                               |
-> ---------------------------------
->                 |
->                 v
-> ---------------------------------
-> |                               |
-> |       Block layer (sda1/sdb1) |
-> |                               |
-> ---------------------------------
->
-> and a software RAID setup looks like this:
->
-> ---------------------------------
-> |                               |
-> |       Applications (ls, cat)  |
-> |                               |
-> ---------------------------------
->                 |
->                 v
-> ---------------------------------
-> |                               |
-> |       Filesystem (ext3)       |
-> |                               |
-> ---------------------------------
->                 |
->                 v
-> ---------------------------------
-> |                               |
-> |       Block layer (md0)       |
-> |                               |
-> ---------------------------------
->                 |
->                 v
-> ---------------------------------
-> |                               |
-> |       Block Layer (sda1/sdb1) |
-> |                               |
-> ---------------------------------
->
-> The format of sda1/sdb1 is the RAID data that the md driver writes to
-> them.  It form a complete layer of abstraction between your
-> applications and the actual devices you are storing data on.
->
-> --
-> Ross Vandegrift
-> ross@lug.udel.edu
->
-> "The good Christian should beware of mathematicians, and all those who
-> make empty prophecies. The danger already exists that the mathematicians
-> have made a covenant with the devil to darken the spirit and to confine
-> man in the bonds of Hell."
->         --St. Augustine, De Genesi ad Litteram, Book II, xviii, 37
->
+
+Signed-off-by: Neil Brown <neilb@suse.de>
+
+### Diffstat output
+ ./drivers/md/raid1.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff ./drivers/md/raid1.c~current~ ./drivers/md/raid1.c
+--- ./drivers/md/raid1.c~current~	2005-12-12 10:45:16.000000000 +1100
++++ ./drivers/md/raid1.c	2005-12-12 10:45:22.000000000 +1100
+@@ -323,7 +323,6 @@ static int raid1_end_write_request(struc
+ 		 * this branch is our 'one mirror IO has finished' event handler:
+ 		 */
+ 		r1_bio->bios[mirror] = NULL;
+-		bio_put(bio);
+ 		if (!uptodate) {
+ 			md_error(r1_bio->mddev, conf->mirrors[mirror].rdev);
+ 			/* an I/O failed, we can't clear the bitmap */
+@@ -380,7 +379,6 @@ static int raid1_end_write_request(struc
+ 		}
+ 		if (test_bit(R1BIO_BehindIO, &r1_bio->state)) {
+ 			/* free extra copy of the data pages */
+-/* FIXME bio has been freed!!! */
+ 			int i = bio->bi_vcnt;
+ 			while (i--)
+ 				put_page(bio->bi_io_vec[i].bv_page);
+@@ -394,6 +392,9 @@ static int raid1_end_write_request(struc
+ 		raid_end_bio_io(r1_bio);
+ 	}
+ 
++	if (r1_bio->bios[mirror]==NULL)
++		bio_put(bio);
++
+ 	rdev_dec_pending(conf->mirrors[mirror].rdev, conf->mddev);
+ 	return 0;
+ }
