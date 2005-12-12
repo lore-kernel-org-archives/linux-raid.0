@@ -1,7 +1,7 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PATCH md 014 of 20] Allow md/raid_disks to be settable.
-Date: Mon, 12 Dec 2005 14:15:24 +1100
-Message-ID: <1051212031524.5140@suse.de>
+Subject: [PATCH md 019 of 20] Support adding new devices to md arrays via sysfs
+Date: Mon, 12 Dec 2005 14:15:53 +1100
+Message-ID: <1051212031553.5225@suse.de>
 References: <20051212135705.4561.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
@@ -10,125 +10,109 @@ Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-If array is active, try to reshape, else just set the value.
-
+Writing major:minor to md/new_dev will bind that device to the
+array. 
 
 Signed-off-by: Neil Brown <neilb@suse.de>
 
 ### Diffstat output
- ./Documentation/md.txt |    3 +
- ./drivers/md/md.c      |   74 +++++++++++++++++++++++++++++++++----------------
- 2 files changed, 54 insertions(+), 23 deletions(-)
+ ./Documentation/md.txt |    8 ++++++
+ ./drivers/md/md.c      |   60 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 68 insertions(+)
 
 diff ./Documentation/md.txt~current~ ./Documentation/md.txt
---- ./Documentation/md.txt~current~	2005-12-12 11:34:21.000000000 +1100
-+++ ./Documentation/md.txt	2005-12-12 11:35:01.000000000 +1100
-@@ -165,6 +165,9 @@ All md devices contain:
-      in a fully functional array.  If this is not yet known, the file
-      will be empty.  If an array is being resized (not currently
-      possible) this will contain the larger of the old and new sizes.
-+     Some raid level (RAID1) allow this value to be set while the
-+     array is active.  This will reconfigure the array.   Otherwise
-+     it can only be set while assembling an array.
+--- ./Documentation/md.txt~current~	2005-12-12 11:57:28.000000000 +1100
++++ ./Documentation/md.txt	2005-12-12 11:57:31.000000000 +1100
+@@ -200,6 +200,14 @@ All md devices contain:
+      This can be written only while the array is being assembled, not
+      after it is started.
  
-   chunk_size
-      This is the size if bytes for 'chunks' and is only relevant to
++   new_dev
++     This file can be written but not read.  The value written should
++     be a block device number as major:minor.  e.g. 8:0
++     This will cause that device to be attached to the array, if it is
++     available.  It will then appear at md/dev-XXX (depending on the
++     name of the device) and further configuration is then possible.
++
++
+ As component devices are added to an md array, they appear in the 'md'
+ directory as new directories named
+       dev-XXX
 
 diff ./drivers/md/md.c~current~ ./drivers/md/md.c
---- ./drivers/md/md.c~current~	2005-12-12 11:34:37.000000000 +1100
-+++ ./drivers/md/md.c	2005-12-12 11:35:53.000000000 +1100
-@@ -1843,7 +1843,27 @@ raid_disks_show(mddev_t *mddev, char *pa
- 	return sprintf(page, "%d\n", mddev->raid_disks);
- }
+--- ./drivers/md/md.c~current~	2005-12-12 11:57:28.000000000 +1100
++++ ./drivers/md/md.c	2005-12-12 11:57:49.000000000 +1100
+@@ -1987,6 +1987,65 @@ chunk_size_store(mddev_t *mddev, const c
+ static struct md_sysfs_entry md_chunk_size =
+ __ATTR(chunk_size, 0644, chunk_size_show, chunk_size_store);
  
--static struct md_sysfs_entry md_raid_disks = __ATTR_RO(raid_disks);
-+static int update_raid_disks(mddev_t *mddev, int raid_disks);
++static ssize_t
++null_show(mddev_t *mddev, char *page)
++{
++	return -EINVAL;
++}
 +
 +static ssize_t
-+raid_disks_store(mddev_t *mddev, const char *buf, size_t len)
++new_dev_store(mddev_t *mddev, const char *buf, size_t len)
 +{
-+	/* can only set raid_disks if array is not yet active */
++	/* buf must be %d:%d\n? giving major and minor numbers */
++	/* The new device is added to the array.
++	 * If the array has a persistent superblock, we read the
++	 * superblock to initialise info and check validity.
++	 * Otherwise, only checking done is that in bind_rdev_to_array,
++	 * which mainly checks size.
++	 */
 +	char *e;
-+	int rv = 0;
-+	unsigned long n = simple_strtoul(buf, &e, 10);
++	int major = simple_strtoul(buf, &e, 10);
++	int minor;
++	dev_t dev;
++	mdk_rdev_t *rdev;
++	int err;
 +
-+	if (!*buf || (*e && *e != '\n'))
++	if (!*buf || *e != ':' || !e[1] || e[1] == '\n')
 +		return -EINVAL;
++	minor = simple_strtoul(e+1, &e, 10);
++	if (*e && *e != '\n')
++		return -EINVAL;
++	dev = MKDEV(major, minor);
++	if (major != MAJOR(dev) ||
++	    minor != MINOR(dev))
++		return -EOVERFLOW;
 +
-+	if (mddev->pers)
-+		rv = update_raid_disks(mddev, n);
-+	else
-+		mddev->raid_disks = n;
-+	return rv ? rv : len;
++
++	if (mddev->persistent) {
++		rdev = md_import_device(dev, mddev->major_version,
++					mddev->minor_version);
++		if (!IS_ERR(rdev) && !list_empty(&mddev->disks)) {
++			mdk_rdev_t *rdev0 = list_entry(mddev->disks.next,
++						       mdk_rdev_t, same_set);
++			err = super_types[mddev->major_version]
++				.load_super(rdev, rdev0, mddev->minor_version);
++			if (err < 0)
++				goto out;
++		}
++	} else
++		rdev = md_import_device(dev, -1, -1);
++
++	if (IS_ERR(rdev))
++		return PTR_ERR(rdev);
++	err = bind_rdev_to_array(rdev, mddev);
++ out:
++	if (err)
++		export_rdev(rdev);
++	return err ? err : len;
 +}
-+static struct md_sysfs_entry md_raid_disks =
-+__ATTR(raid_disks, 0644, raid_disks_show, raid_disks_store);
++
++static struct md_sysfs_entry md_new_device =
++__ATTR(new_dev, 0200, null_show, new_dev_store);
  
  static ssize_t
- chunk_size_show(mddev_t *mddev, char *page)
-@@ -3201,6 +3221,33 @@ static int update_size(mddev_t *mddev, u
- 	return rv;
- }
+ size_show(mddev_t *mddev, char *page)
+@@ -2144,6 +2203,7 @@ static struct attribute *md_default_attr
+ 	&md_chunk_size.attr,
+ 	&md_size.attr,
+ 	&md_metadata.attr,
++	&md_new_device.attr,
+ 	NULL,
+ };
  
-+static int update_raid_disks(mddev_t *mddev, int raid_disks)
-+{
-+	int rv;
-+	/* change the number of raid disks */
-+	if (mddev->pers->reshape == NULL)
-+		return -EINVAL;
-+	if (raid_disks <= 0 ||
-+	    raid_disks >= mddev->max_disks)
-+		return -EINVAL;
-+	if (mddev->sync_thread)
-+		return -EBUSY;
-+	rv = mddev->pers->reshape(mddev, raid_disks);
-+	if (!rv) {
-+		struct block_device *bdev;
-+
-+		bdev = bdget_disk(mddev->gendisk, 0);
-+		if (bdev) {
-+			down(&bdev->bd_inode->i_sem);
-+			i_size_write(bdev->bd_inode, mddev->array_size << 10);
-+			up(&bdev->bd_inode->i_sem);
-+			bdput(bdev);
-+		}
-+	}
-+	return rv;
-+}
-+
-+
- /*
-  * update_array_info is used to change the configuration of an
-  * on-line array.
-@@ -3252,28 +3299,9 @@ static int update_array_info(mddev_t *md
- 	if (mddev->size != info->size)
- 		rv = update_size(mddev, info->size);
- 
--	if (mddev->raid_disks    != info->raid_disks) {
--		/* change the number of raid disks */
--		if (mddev->pers->reshape == NULL)
--			return -EINVAL;
--		if (info->raid_disks <= 0 ||
--		    info->raid_disks >= mddev->max_disks)
--			return -EINVAL;
--		if (mddev->sync_thread)
--			return -EBUSY;
--		rv = mddev->pers->reshape(mddev, info->raid_disks);
--		if (!rv) {
--			struct block_device *bdev;
--
--			bdev = bdget_disk(mddev->gendisk, 0);
--			if (bdev) {
--				down(&bdev->bd_inode->i_sem);
--				i_size_write(bdev->bd_inode, mddev->array_size << 10);
--				up(&bdev->bd_inode->i_sem);
--				bdput(bdev);
--			}
--		}
--	}
-+	if (mddev->raid_disks    != info->raid_disks)
-+		rv = update_raid_disks(mddev, info->raid_disks);
-+
- 	if ((state ^ info->state) & (1<<MD_SB_BITMAP_PRESENT)) {
- 		if (mddev->pers->quiesce == NULL)
- 			return -EINVAL;
