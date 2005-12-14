@@ -1,53 +1,56 @@
-From: amritanshu johri <jeane.genet@gmail.com>
-Subject: Need for init:query
-Date: Wed, 14 Dec 2005 20:15:05 +0800
-Message-ID: <53aae5ff0512140415m54ea4162y48517f989e06eb40@mail.gmail.com>
+From: Michael Stumpf <mjstumpf@pobox.com>
+Subject: Re: resize2fs failing--how to resize my fs?
+Date: Wed, 14 Dec 2005 14:33:09 -0600
+Message-ID: <43A08185.8020209@pobox.com>
+References: <439EF019.7060800@pobox.com>
+Reply-To: mjstumpf@pobox.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <439EF019.7060800@pobox.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
-My query has more to do with raid algorithms rather than the Linux
-implementation.
-Let me know if I'm off topic :).
+Michael Stumpf wrote:
 
-I am planning to build system where it is possible to create 100's of
-array(raid 5) at a time, that means some of them can go faulty even
-before init-task is complete.If INIT hasn't completed then there is no
-way to rebuild the array(?).
-
-Lets say raid-subsystem does things this way.
-We bypass init.
-Array is RUNNING The stripes are always cached in memory.
-a)whenever a cache miss happens we read the whole stripe(except parity)=
-=2E
-b) whenever we write to the disk we recompute parity based on the data
-and write it to disk.
-c)Now if a single disk fault happens the array is in REBUILD_REQUIRED
-state,for every read we recompute the parity and give the data back.
-
-The assumption here I make is that reads wont happen for locations
-where writes haven't happened. The exceptions are for boot sector and
-partition tables.
-
-I wanted to know if this is the right approach am I overlooking some as=
-pect?
-
-Please excuse my poor English. I hope I was able to convey the qry.
-
-Regards,
-Jeane.
+> I get this from the latest stable resize2fs:
+>
+> [root@foo parted]# resize2fs /dev/my_vol_grp/my_log_vol
+> resize2fs 1.38 (30-Jun-2005)
+> Resizing the filesystem on /dev/my_vol_grp/my_log_vol to 488390656 
+> (4k) blocks.
+> Killed
+>
+> Parted (again, latest stable) tells me the following:
+> Using /dev/mapper/my_vol_grp-my_log_vol
+> (parted) resize 1 0 
+> 100%                                                 No 
+> Implementation: This ext2 file system has a rather strange layout!  
+> Parted can't resize this (yet).
+> (parted)
+> Similar results from ext2resize/ext2online.  This is an ordinary ext3 
+> fs, living inside an LVM2 that has already been increased to 
+> accomodate (used all free extents)..  I've resized it down and up 
+> before, though it is possible I am resizing it larger than it has been 
+> before (1.8TB).
+> Not sure what's up.  Any advice welcome; my research in this has me 
+> getting a bit nervous about lvm2 bugs causing loss of data.  While I 
+> want a single resilient (via raid 5) volume, I may be willing to ditch 
+> a whole layer of software (lvm2) to get some security.
 
 
---
-"L'existence pr=E9c=E8de et commande l'essence."  --Jeane Paul Sartre
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Surprised noone has hit this before.  It turns out that somehow my swap 
+space disappeared in a system migration.  This became more obvious as I 
+explicitly tried to extend the fs to a lower limit (438390656), where 
+resize2fs worked for a while, then informed me that it couldn't allocate 
+some memory.
+
+Add 512mb of swap and problem solved.. never used more than ~100mb of 
+swap (256mb main memory).
+
+Hope this helps someone.
+
+
+
