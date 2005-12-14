@@ -1,17 +1,27 @@
-From: Michael Stumpf <mjstumpf@pobox.com>
-Subject: Re: resize2fs failing--how to resize my fs?
-Date: Wed, 14 Dec 2005 14:33:09 -0600
-Message-ID: <43A08185.8020209@pobox.com>
-References: <439EF019.7060800@pobox.com>
-Reply-To: mjstumpf@pobox.com
+From: "Callahan, Tom" <CallahanT@tessco.com>
+Subject: RE: resize2fs failing--how to resize my fs?
+Date: Wed, 14 Dec 2005 15:45:19 -0500
+Message-ID: <0481A62A3E95A044AC20A1A45899645C06B02F45@glc-mail-1.tessco.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <439EF019.7060800@pobox.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: "'mjstumpf@pobox.com'" <mjstumpf@pobox.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+Was this resize done while the FS was mounted?
+
+Thanks,
+Tom Callahan
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org]On Behalf Of Michael Stumpf
+Sent: Wednesday, December 14, 2005 3:33 PM
+To: linux-raid@vger.kernel.org
+Subject: Re: resize2fs failing--how to resize my fs?
+
 
 Michael Stumpf wrote:
 
@@ -54,3 +64,7 @@ Hope this helps someone.
 
 
 
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
