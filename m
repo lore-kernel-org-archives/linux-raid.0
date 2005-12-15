@@ -1,7 +1,7 @@
 From: Robert Heinzmann <Robert.Heinzmann@gmx.net>
-Subject: mdadm 2.2 new option
-Date: Thu, 15 Dec 2005 23:14:02 +0100
-Message-ID: <43A1EAAA.6090802@gmx.net>
+Subject: mdadm 2.2 compile problem
+Date: Thu, 15 Dec 2005 23:25:30 +0100
+Message-ID: <43A1ED5A.2050406@gmx.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
@@ -11,39 +11,30 @@ To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 Hello,
+I tried to compile mdadm 2.2 on my machine (sles8)
 
-i just downloaded the mdadm 2.2 version. It seems that there are some 
-new options which are not explained in details. of special interest are 
-2 options.
+Kernel: 2.4.21-295-athlon
+gcc: gcc version 2.95.3 20010315
 
--GROW
-The new grow mode is very very helpfull for us. It would allow us to do 
-resize operations with md devices at last - without the need for LVM.
-The manpage states that the GROW mode requires kernel support to work. 
-There is no note that states, which kernel supports the options. Also 
-with various distributions with patched kernels its not possible to say 
-version X.Y.Z. of the kernel contains the required patches.
+The compile fails with this error message:
 
-Is there a way to find out via mdadm, if the current kernel supports the 
-GROW mode, prior to performing the GROW ?
+cc1: warnings being treated as errors
+In file included from mdadm.h:219,
+                 from bitmap.c:23:
+/usr/include/ftw.h:93: warning: `struct stat64' declared inside 
+parameter list
+/usr/include/ftw.h:93: warning: its scope is only this definition or 
+declaration, which is probably not what you want.
+/usr/include/ftw.h:102: warning: `struct stat64' declared inside 
+parameter list
+bitmap.c: In function `bitmap_fd_read':
+bitmap.c:130: warning: unknown conversion type character `z' in format
+bitmap.c:130: warning: too many arguments for format
+make: *** [bitmap.o] Error 1
 
--bitmap
+I changed the makefile and removed -Werror. Is there another way to fix 
+this issue ?
 
-As far as I understand this bitmap options, in incorperates write intend 
-logging.
-Is this based on paper by James Bottomley ? Also is there a way to find 
-out via mdadm if the running kernel supports intend logging via mdadm ?
-
--There is also an option --write-mostly since 2.0.
-
-I guess this especially usefull for MD devices with large storage arrays 
-as backend. They have clever caches and read ahead paramaters, that can 
-be non-effective if we change the disk for each read. Does this option 
-require a kernel modification too ?
-
-One last question. Besindes the source code and manpage is there oterh 
-documentation available on how the md works internally ? (update of 
-superblock, handling of device renaming inside the superblock etc.)
-
-Thanks,
+Regards,
 Robert Heinzmann
+
