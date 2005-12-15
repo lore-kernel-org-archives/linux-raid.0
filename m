@@ -1,99 +1,137 @@
-From: "Callahan, Tom" <CallahanT@tessco.com>
+From: Andargor The Wise <andargor@yahoo.com>
 Subject: RE: First RAID Setup
-Date: Thu, 15 Dec 2005 14:35:35 -0500
-Message-ID: <0481A62A3E95A044AC20A1A45899645C06B02F4A@glc-mail-1.tessco.com>
+Date: Thu, 15 Dec 2005 11:44:38 -0800 (PST)
+Message-ID: <20051215194438.32369.qmail@web54610.mail.yahoo.com>
+References: <0481A62A3E95A044AC20A1A45899645C06B02F4A@glc-mail-1.tessco.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <0481A62A3E95A044AC20A1A45899645C06B02F4A@glc-mail-1.tessco.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Andargor The Wise' <andargor@yahoo.com>, linux-raid@vger.kernel.org
+To: "Callahan, Tom" <CallahanT@tessco.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-You "should" have a designated spare for RAID-5.
+The RAID1 partitions are to make sure:
 
-Not sure why you have 3 disks for each RAID1, RAID1 is mirror, and unless
-the third drive is a spare, it is not needed.
+1) The machine is able to boot even if a disk is lost
+(/boot).
+2) The machine isn't brought down if a disk is lost
+(swap)
 
-Thanks,
-Tom Callahan
-
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org]On Behalf Of Andargor The Wise
-Sent: Thursday, December 15, 2005 2:10 PM
-To: linux-raid@vger.kernel.org
-Subject: First RAID Setup
-
-
-I admit it. I'm a RAID virgin.
-
-However, after a disastrous failure of the sole drive
-I wasn't backing up, I decided to go RAID-5 under
-Slack 10.2 (first time ever with RAID-5).
-
-The config:
-
-Asus P5GL-MX (ICH6) mobo w/1 GB RAM, 4 x SATA ports
-P4 3.0G/1M
-3 x WD2000JS 200.0 GB SATA drives
-
-First, a question: the BIOS on this machine seems to
-list the SATA ports as "third/fourth IDE
-master/slave". Further, the documentation seems to say
-that SATA 1/2 are "master" and SATA 3/4 are "slave"
-(black and red connectors, respectively).
-
-My understanding is that SATA drives are each on
-separate buses. Is this because the BIOS offers a
-P-ATA emulation mode for SATA and it makes it "easier"
-to understand for novices to show them that way?
-
-I ask because people have said that it is not a good
-idea to have both IDE masters and slaves on the same
-bus as part of a RAID-5 array. I know SATA is
-different, but will using three of the SATA ports on
-this mobo be OK?
-
-Second, after reading the excellent advice in this
-list, I decided that booting from RAID-5 might not be
-a good idea. So this is what I've been thinking:
-
-Each disk partitioned alike:
-	1	30MB 
-	2	8GB (to allow for memory upgrades later)
-	5	rest_of_disk
-
-mds:
-	md0	raid1 sda1 sdb1 sdc1
-	md1	raid1 sda2 sdb2 sdc2
-	md2	raid5 sda5 sdb5 sdc5
-
-	md0	/boot
-	md1	swap
-	md2	/
-
-Does this look OK? What should the stripe and chunk
-sizes be, considering I'll be going with reiserfs?
-Typical usage: development machine, some DB apps with
-medium load, read-only mostly, not many writes. Very
-few large files (such as multimedia).
-
-Or should I set up separate RAID-5's for /usr and /var
-as well?
-
-Lastly, can I install directly to this configuration,
-or should I install on a separate disk and move things
-into the array?
+I thought about a spare drive, but I don't need high
+availability. I'm satisfied with being able to recover
+my data.
 
 Andargor
+
+
+--- "Callahan, Tom" <CallahanT@tessco.com> wrote:
+
+> You "should" have a designated spare for RAID-5.
+> 
+> Not sure why you have 3 disks for each RAID1, RAID1
+> is mirror, and unless
+> the third drive is a spare, it is not needed.
+> 
+> Thanks,
+> Tom Callahan
+> 
+> -----Original Message-----
+> From: linux-raid-owner@vger.kernel.org
+> [mailto:linux-raid-owner@vger.kernel.org]On Behalf
+> Of Andargor The Wise
+> Sent: Thursday, December 15, 2005 2:10 PM
+> To: linux-raid@vger.kernel.org
+> Subject: First RAID Setup
+> 
+> 
+> I admit it. I'm a RAID virgin.
+> 
+> However, after a disastrous failure of the sole
+> drive
+> I wasn't backing up, I decided to go RAID-5 under
+> Slack 10.2 (first time ever with RAID-5).
+> 
+> The config:
+> 
+> Asus P5GL-MX (ICH6) mobo w/1 GB RAM, 4 x SATA ports
+> P4 3.0G/1M
+> 3 x WD2000JS 200.0 GB SATA drives
+> 
+> First, a question: the BIOS on this machine seems to
+> list the SATA ports as "third/fourth IDE
+> master/slave". Further, the documentation seems to
+> say
+> that SATA 1/2 are "master" and SATA 3/4 are "slave"
+> (black and red connectors, respectively).
+> 
+> My understanding is that SATA drives are each on
+> separate buses. Is this because the BIOS offers a
+> P-ATA emulation mode for SATA and it makes it
+> "easier"
+> to understand for novices to show them that way?
+> 
+> I ask because people have said that it is not a good
+> idea to have both IDE masters and slaves on the same
+> bus as part of a RAID-5 array. I know SATA is
+> different, but will using three of the SATA ports on
+> this mobo be OK?
+> 
+> Second, after reading the excellent advice in this
+> list, I decided that booting from RAID-5 might not
+> be
+> a good idea. So this is what I've been thinking:
+> 
+> Each disk partitioned alike:
+> 	1	30MB 
+> 	2	8GB (to allow for memory upgrades later)
+> 	5	rest_of_disk
+> 
+> mds:
+> 	md0	raid1 sda1 sdb1 sdc1
+> 	md1	raid1 sda2 sdb2 sdc2
+> 	md2	raid5 sda5 sdb5 sdc5
+> 
+> 	md0	/boot
+> 	md1	swap
+> 	md2	/
+> 
+> Does this look OK? What should the stripe and chunk
+> sizes be, considering I'll be going with reiserfs?
+> Typical usage: development machine, some DB apps
+> with
+> medium load, read-only mostly, not many writes. Very
+> few large files (such as multimedia).
+> 
+> Or should I set up separate RAID-5's for /usr and
+> /var
+> as well?
+> 
+> Lastly, can I install directly to this
+> configuration,
+> or should I install on a separate disk and move
+> things
+> into the array?
+> 
+> Andargor
+> 
+> 
+> __________________________________________________
+> Do You Yahoo!?
+> Tired of spam?  Yahoo! Mail has the best spam
+> protection around 
+> http://mail.yahoo.com 
+> -
+> To unsubscribe from this list: send the line
+> "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at 
+> http://vger.kernel.org/majordomo-info.html
+> 
 
 
 __________________________________________________
 Do You Yahoo!?
 Tired of spam?  Yahoo! Mail has the best spam protection around 
 http://mail.yahoo.com 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
