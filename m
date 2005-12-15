@@ -1,16 +1,47 @@
-From: Andargor The Wise <andargor@yahoo.com>
+From: "Callahan, Tom" <CallahanT@tessco.com>
 Subject: RE: First RAID Setup
-Date: Thu, 15 Dec 2005 11:44:38 -0800 (PST)
-Message-ID: <20051215194438.32369.qmail@web54610.mail.yahoo.com>
-References: <0481A62A3E95A044AC20A1A45899645C06B02F4A@glc-mail-1.tessco.com>
+Date: Thu, 15 Dec 2005 15:02:02 -0500
+Message-ID: <0481A62A3E95A044AC20A1A45899645C06B02F4B@glc-mail-1.tessco.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <0481A62A3E95A044AC20A1A45899645C06B02F4A@glc-mail-1.tessco.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Callahan, Tom" <CallahanT@tessco.com>, linux-raid@vger.kernel.org
+To: 'Andargor The Wise' <andargor@yahoo.com>, "Callahan, Tom" <CallahanT@tessco.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+I understand the reason for the RAID1 devices..... I was asking why you have
+3 devices in the RAID1 setup? RAID1 is a mirrored configuration, requiring
+only 2 disks for operation.
+
+It is always wise to build in a spare however, that being said about all
+raid levels. In your configuration, if a disk fails in your RAID5, your
+array will go down. RAID5 is usually 3+ disks, with a mirror. So you should
+have 3 disks at minimum, and then a 4th as a spare.
+
+The MD modules/subsystem will then automagically bring in that spare disk if
+any of the existing 3 in your RAID5 setup fail.
+
+It is wise to think through your layout prior to building, and I commend you
+for that. You may also want to review/experiment with the MD subsystem. For
+instance, There is a neat --grow mode that is not mentioned in many vendor
+man pages that can allow you to grow an MD device as needed.
+
+Another gotcha, it's usually better to use entire disks, if you can afford
+to, in an MD array. This alleviates growing pains of having to manually
+repartition if you want to grow an exisiting filesystem. This may not make
+much sense now, but once you have to do it, you'll smack your forehead in
+grief.
+
+Thanks,
+Tom Callahan
+
+-----Original Message-----
+From: Andargor The Wise [mailto:andargor@yahoo.com]
+Sent: Thursday, December 15, 2005 2:45 PM
+To: Callahan, Tom; linux-raid@vger.kernel.org
+Subject: RE: First RAID Setup
+
 
 The RAID1 partitions are to make sure:
 
