@@ -1,34 +1,39 @@
-From: Brad Campbell <brad@wasp.net.au>
+From: Tobias Hofmann <tobias.hofmann@medien.uni-weimar.de>
 Subject: Re: First RAID Setup
-Date: Fri, 16 Dec 2005 00:46:58 +0400
-Message-ID: <43A1D642.2010301@wasp.net.au>
-References: <0481A62A3E95A044AC20A1A45899645C06B02F4B@glc-mail-1.tessco.com>
+Date: Thu, 15 Dec 2005 22:31:58 +0100
+Message-ID: <43A1E0CE.7090805@medien.uni-weimar.de>
+References: <0481A62A3E95A044AC20A1A45899645C06B02F4B@glc-mail-1.tessco.com> <43A1D642.2010301@wasp.net.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <0481A62A3E95A044AC20A1A45899645C06B02F4B@glc-mail-1.tessco.com>
+In-Reply-To: <43A1D642.2010301@wasp.net.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Callahan, Tom" <CallahanT@tessco.com>
-Cc: 'Andargor The Wise' <andargor@yahoo.com>, linux-raid@vger.kernel.org
+To: Brad Campbell <brad@wasp.net.au>
+Cc: "Callahan, Tom" <CallahanT@tessco.com>, 'Andargor The Wise' <andargor@yahoo.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Callahan, Tom wrote:
+<delurk>
 
-> It is always wise to build in a spare however, that being said about all
-> raid levels. In your configuration, if a disk fails in your RAID5, your
-> array will go down. RAID5 is usually 3+ disks, with a mirror. So you should
-> have 3 disks at minimum, and then a 4th as a spare.
+On 15.12.2005 21:46, Brad Campbell wrote:
+> Callahan, Tom wrote:
 > 
+>> It is always wise to build in a spare however, that being said about all
+>> raid levels. In your configuration, if a disk fails in your RAID5, your
+>> array will go down. RAID5 is usually 3+ disks, with a mirror. So you 
+>> should
+>> have 3 disks at minimum, and then a 4th as a spare.
+> 
+> /me wonders in the days of reliable RAID-6 why we use RAID-5 + spare?
 
-/me wonders in the days of reliable RAID-6 why we use RAID-5 + spare?
+Me too. ;) So, with holidays ahead, two questions (as I might tackle 
+that soon and have not found it mentioned):
 
-RAID-6 has saved me twice now from dual drive failures on a 15 disk array.
-It's schweeeeeeeeeett
+- How would one "switch" from the latter to the former? Is there 
+something like "grow_to_RAID_6"?
+- Does RAID6 have disadvantages wrt write speed?
 
-Regards,
-Brad
--- 
-"Human beings, who are almost unique in having the ability
-to learn from the experience of others, are also remarkable
-for their apparent disinclination to do so." -- Douglas Adams
+TIA for any comments,
+
+greets, tobi... :)
+
