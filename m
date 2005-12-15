@@ -1,16 +1,26 @@
-From: Andargor The Wise <andargor@yahoo.com>
+From: "Callahan, Tom" <CallahanT@tessco.com>
 Subject: RE: First RAID Setup
-Date: Thu, 15 Dec 2005 12:22:00 -0800 (PST)
-Message-ID: <20051215202200.96277.qmail@web54603.mail.yahoo.com>
-References: <0481A62A3E95A044AC20A1A45899645C06B02F4B@glc-mail-1.tessco.com>
+Date: Thu, 15 Dec 2005 15:37:54 -0500
+Message-ID: <0481A62A3E95A044AC20A1A45899645C06B02F4D@glc-mail-1.tessco.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <0481A62A3E95A044AC20A1A45899645C06B02F4B@glc-mail-1.tessco.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Callahan, Tom" <CallahanT@tessco.com>, linux-raid@vger.kernel.org
+To: 'Andargor The Wise' <andargor@yahoo.com>, "Callahan, Tom" <CallahanT@tessco.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+Sorry, I'm programmed for HA lately. Your plan sounds good then, I wish you
+the best of luck.
+
+Tom Callahan
+
+-----Original Message-----
+From: Andargor The Wise [mailto:andargor@yahoo.com]
+Sent: Thursday, December 15, 2005 3:22 PM
+To: Callahan, Tom; linux-raid@vger.kernel.org
+Subject: RE: First RAID Setup
+
 
 
 
