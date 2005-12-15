@@ -1,17 +1,29 @@
-From: Tobias Hofmann <tobias.hofmann@medien.uni-weimar.de>
-Subject: Re: First RAID Setup
-Date: Thu, 15 Dec 2005 22:31:58 +0100
-Message-ID: <43A1E0CE.7090805@medien.uni-weimar.de>
-References: <0481A62A3E95A044AC20A1A45899645C06B02F4B@glc-mail-1.tessco.com> <43A1D642.2010301@wasp.net.au>
+From: "Callahan, Tom" <CallahanT@tessco.com>
+Subject: RE: First RAID Setup
+Date: Thu, 15 Dec 2005 16:46:37 -0500
+Message-ID: <0481A62A3E95A044AC20A1A45899645C06B02F4E@glc-mail-1.tessco.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <43A1D642.2010301@wasp.net.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Brad Campbell <brad@wasp.net.au>
+To: 'Tobias Hofmann' <tobias.hofmann@medien.uni-weimar.de>, Brad Campbell <brad@wasp.net.au>
 Cc: "Callahan, Tom" <CallahanT@tessco.com>, 'Andargor The Wise' <andargor@yahoo.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+You forgot to </delurk>
+
+:) Happy Holidays
+
+Tom Callahan
+
+-----Original Message-----
+From: Tobias Hofmann [mailto:tobias.hofmann@medien.uni-weimar.de]
+Sent: Thursday, December 15, 2005 4:32 PM
+To: Brad Campbell
+Cc: Callahan, Tom; 'Andargor The Wise'; linux-raid@vger.kernel.org
+Subject: Re: First RAID Setup
+
 
 <delurk>
 
