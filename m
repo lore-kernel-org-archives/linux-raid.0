@@ -1,14 +1,30 @@
-From: Andargor The Wise <andargor@yahoo.com>
-Subject: First RAID Setup
-Date: Thu, 15 Dec 2005 11:09:33 -0800 (PST)
-Message-ID: <20051215190933.16009.qmail@web54612.mail.yahoo.com>
+From: "Callahan, Tom" <CallahanT@tessco.com>
+Subject: RE: First RAID Setup
+Date: Thu, 15 Dec 2005 14:35:35 -0500
+Message-ID: <0481A62A3E95A044AC20A1A45899645C06B02F4A@glc-mail-1.tessco.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: 'Andargor The Wise' <andargor@yahoo.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+You "should" have a designated spare for RAID-5.
+
+Not sure why you have 3 disks for each RAID1, RAID1 is mirror, and unless
+the third drive is a spare, it is not needed.
+
+Thanks,
+Tom Callahan
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org]On Behalf Of Andargor The Wise
+Sent: Thursday, December 15, 2005 2:10 PM
+To: linux-raid@vger.kernel.org
+Subject: First RAID Setup
+
 
 I admit it. I'm a RAID virgin.
 
@@ -77,3 +93,7 @@ __________________________________________________
 Do You Yahoo!?
 Tired of spam?  Yahoo! Mail has the best spam protection around 
 http://mail.yahoo.com 
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
