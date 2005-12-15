@@ -1,51 +1,49 @@
-From: "Callahan, Tom" <CallahanT@tessco.com>
-Subject: RE: First RAID Setup
-Date: Thu, 15 Dec 2005 16:46:37 -0500
-Message-ID: <0481A62A3E95A044AC20A1A45899645C06B02F4E@glc-mail-1.tessco.com>
+From: Robert Heinzmann <Robert.Heinzmann@gmx.net>
+Subject: mdadm 2.2 new option
+Date: Thu, 15 Dec 2005 23:14:02 +0100
+Message-ID: <43A1EAAA.6090802@gmx.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Tobias Hofmann' <tobias.hofmann@medien.uni-weimar.de>, Brad Campbell <brad@wasp.net.au>
-Cc: "Callahan, Tom" <CallahanT@tessco.com>, 'Andargor The Wise' <andargor@yahoo.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-You forgot to </delurk>
+Hello,
 
-:) Happy Holidays
+i just downloaded the mdadm 2.2 version. It seems that there are some 
+new options which are not explained in details. of special interest are 
+2 options.
 
-Tom Callahan
+-GROW
+The new grow mode is very very helpfull for us. It would allow us to do 
+resize operations with md devices at last - without the need for LVM.
+The manpage states that the GROW mode requires kernel support to work. 
+There is no note that states, which kernel supports the options. Also 
+with various distributions with patched kernels its not possible to say 
+version X.Y.Z. of the kernel contains the required patches.
 
------Original Message-----
-From: Tobias Hofmann [mailto:tobias.hofmann@medien.uni-weimar.de]
-Sent: Thursday, December 15, 2005 4:32 PM
-To: Brad Campbell
-Cc: Callahan, Tom; 'Andargor The Wise'; linux-raid@vger.kernel.org
-Subject: Re: First RAID Setup
+Is there a way to find out via mdadm, if the current kernel supports the 
+GROW mode, prior to performing the GROW ?
 
+-bitmap
 
-<delurk>
+As far as I understand this bitmap options, in incorperates write intend 
+logging.
+Is this based on paper by James Bottomley ? Also is there a way to find 
+out via mdadm if the running kernel supports intend logging via mdadm ?
 
-On 15.12.2005 21:46, Brad Campbell wrote:
-> Callahan, Tom wrote:
-> 
->> It is always wise to build in a spare however, that being said about all
->> raid levels. In your configuration, if a disk fails in your RAID5, your
->> array will go down. RAID5 is usually 3+ disks, with a mirror. So you 
->> should
->> have 3 disks at minimum, and then a 4th as a spare.
-> 
-> /me wonders in the days of reliable RAID-6 why we use RAID-5 + spare?
+-There is also an option --write-mostly since 2.0.
 
-Me too. ;) So, with holidays ahead, two questions (as I might tackle 
-that soon and have not found it mentioned):
+I guess this especially usefull for MD devices with large storage arrays 
+as backend. They have clever caches and read ahead paramaters, that can 
+be non-effective if we change the disk for each read. Does this option 
+require a kernel modification too ?
 
-- How would one "switch" from the latter to the former? Is there 
-something like "grow_to_RAID_6"?
-- Does RAID6 have disadvantages wrt write speed?
+One last question. Besindes the source code and manpage is there oterh 
+documentation available on how the md works internally ? (update of 
+superblock, handling of device renaming inside the superblock etc.)
 
-TIA for any comments,
-
-greets, tobi... :)
-
+Thanks,
+Robert Heinzmann
