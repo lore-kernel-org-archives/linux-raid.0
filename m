@@ -1,8 +1,8 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: mdadm 2.2 compile problem
-Date: Fri, 16 Dec 2005 12:44:10 +1100
-Message-ID: <17314.7146.595860.14295@cse.unsw.edu.au>
-References: <43A1ED5A.2050406@gmx.net>
+Subject: Re: mdadm 2.2 new option
+Date: Fri, 16 Dec 2005 12:50:29 +1100
+Message-ID: <17314.7525.203935.577073@cse.unsw.edu.au>
+References: <43A1EAAA.6090802@gmx.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
@@ -15,77 +15,56 @@ List-Id: linux-raid.ids
 
 On Thursday December 15, Robert.Heinzmann@gmx.net wrote:
 > Hello,
-> I tried to compile mdadm 2.2 on my machine (sles8)
 > 
-> Kernel: 2.4.21-295-athlon
-> gcc: gcc version 2.95.3 20010315
+> i just downloaded the mdadm 2.2 version. It seems that there are some 
+> new options which are not explained in details. of special interest are 
+> 2 options.
 > 
-> The compile fails with this error message:
+> -GROW
+> The new grow mode is very very helpfull for us. It would allow us to do 
+> resize operations with md devices at last - without the need for LVM.
+> The manpage states that the GROW mode requires kernel support to work. 
+> There is no note that states, which kernel supports the options. Also 
+> with various distributions with patched kernels its not possible to say 
+> version X.Y.Z. of the kernel contains the required patches.
 > 
-> cc1: warnings being treated as errors
-> In file included from mdadm.h:219,
->                  from bitmap.c:23:
-> /usr/include/ftw.h:93: warning: `struct stat64' declared inside 
-> parameter list
-> /usr/include/ftw.h:93: warning: its scope is only this definition or 
-> declaration, which is probably not what you want.
-> /usr/include/ftw.h:102: warning: `struct stat64' declared inside 
-> parameter list
-> bitmap.c: In function `bitmap_fd_read':
-> bitmap.c:130: warning: unknown conversion type character `z' in format
-> bitmap.c:130: warning: too many arguments for format
-> make: *** [bitmap.o] Error 1
+> Is there a way to find out via mdadm, if the current kernel supports the 
+> GROW mode, prior to performing the GROW ?
+
+No, there isn't.  However if your kernel doesn't support the
+operation, it will fail cleanly so there is no risk.
+
 > 
-> I changed the makefile and removed -Werror. Is there another way to fix 
-> this issue ?
+> -bitmap
+> 
+> As far as I understand this bitmap options, in incorperates write intend 
+> logging.
+> Is this based on paper by James Bottomley ? Also is there a way to find 
+> out via mdadm if the running kernel supports intend logging via
+> mdadm ?
 
-Yes.  You can 
-   make CWFLAGS=
+Yes, it is comes (indirectly) from James.
+No, you cannot query the kernel.
 
-or you can report it like you did (thanks) and get a patch.
-(One of the reasons I still have -Werror in there is to encourage
-people to report these warnings, so I can fix them for the next version).
+> 
+> -There is also an option --write-mostly since 2.0.
+> 
+> I guess this especially usefull for MD devices with large storage arrays 
+> as backend. They have clever caches and read ahead paramaters, that can 
+> be non-effective if we change the disk for each read. Does this option 
+> require a kernel modification too ?
 
-The following allows mdadm to compile with gcc-2.95
+Yes, this also requires a recent kernel - 2.6.14 I think.
+It is intended for mirrored situations where one mirror is over a slow
+link (e.g. over the Internet). .
 
-Thanks,
+> 
+> One last question. Besindes the source code and manpage is there oterh 
+> documentation available on how the md works internally ? (update of 
+> superblock, handling of device renaming inside the superblock etc.)
+
+No there isn't, though I am seeing more and more requests for this and
+am starting to wonder if I should commit some time to writing
+something.
+
 NeilBrown
-
-
-### Diffstat output
- ./bitmap.c |    5 +++++
- ./mdadm.h  |    4 ++++
- 2 files changed, 9 insertions(+)
-
-diff ./bitmap.c~current~ ./bitmap.c
---- ./bitmap.c~current~	2005-12-05 16:52:22.000000000 +1100
-+++ ./bitmap.c	2005-12-16 12:41:31.000000000 +1100
-@@ -126,8 +126,13 @@ bitmap_info_t *bitmap_fd_read(int fd, in
- 
- 	info = malloc(sizeof(*info));
- 	if (info == NULL) {
-+#if __GNUC__ < 3
-+		fprintf(stderr, Name ": failed to allocate %d bytes\n",
-+				(int)sizeof(*info));
-+#else
- 		fprintf(stderr, Name ": failed to allocate %zd bytes\n",
- 				sizeof(*info));
-+#endif
- 		return NULL;
- 	}
- 
-
-diff ./mdadm.h~current~ ./mdadm.h
---- ./mdadm.h~current~	2005-12-05 16:55:02.000000000 +1100
-+++ ./mdadm.h	2005-12-16 12:40:47.000000000 +1100
-@@ -211,6 +211,10 @@ struct supertype {
- extern struct supertype *super_by_version(int vers, int minor);
- extern struct supertype *guess_super(int fd);
- 
-+#if __GNUC__ < 3
-+struct stat64;
-+#endif
-+
- #ifdef UCLIBC
-   struct FTW {};
- # define FTW_PHYS 1
