@@ -1,61 +1,48 @@
-From: Hendrik Naumann <hn75@gmx.de>
-Subject: recorvery from Raid5 multiple disk failture
-Date: Fri, 16 Dec 2005 13:45:32 +0100
-Message-ID: <200512161345.33159.hn75@gmx.de>
+From: Carles Pina i Estany <carles@pinux.info>
+Subject: LILO Error 09
+Date: Fri, 16 Dec 2005 14:27:25 +0100
+Message-ID: <20051216132725.GA5388@pinux.info>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1498640.PL0efqytk7";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---nextPart1498640.PL0efqytk7
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
 
-Hi
+Hello,
 
-I have a Linux-Software-Raid5 consisting of three partitions (hda2,
-hde2 and hdf2). After a failure of hdf I replaced the disk and added
-hdf2 into the raid again. During the resynchronization process hda
-broke down.=20
+I have two computers using RAID 1, with only one problem.
 
-I am not completely shure how much of the synchronization
-was already done, but I think it was quite at the end, because the=20
-gzipped dd-image of hdf2 and hde2 have very similar sizes.=20
+I am using hda and hdc, ReiserFS, Kernel 2.6.14.
 
-mdadm shows hde2 as a active, clean disk within the raid and hdf2 as a
-clean spare disk. In the Software-Raid-Howto it was stated that
-rewriting the superblocks (I suspect hdf2 to clean active) could be a
-possibility to regain some data from the Raid.=20
+I installed LILO on both hard disks, so I can disconnect primary master
+and then BIOS tries to boot using hdc and it works fine.
 
-How is this possible with mdadm? Or is there some other tool for
-manipulation the superblocks?
+When I was installing it I made some tests, and one time (with working
+configuration) I just restarted and LILO wrote 09 09 09 09 09 (lot of
+times, something like half screen). Then I restarted again and it worked
+fine, and I had no more time to check it.
 
-Many thanks in advance
+Today, after power failure and shutdown (UPC) system was not starting,
+with this same problem.
 
-Hendrik Naummann=20
+In Manual.txt of Lilo I can read:
+   
+   0x09   "DMA attempt across 64k boundary". This shouldn't happen, but may 
+       inicate a disk geometry mis-match. Try omitting the COMPACT option. You 
+       may need to specify the disk geometry yourself.  
 
-PS. Please add a CC hn75@gmx.de because up to now I am no subscriber=20
-to this list.
-=2D-=20
-PGP ID 65C92061
+I never had this problem, and usually I works on Lilo. So I think
+that maybe I have something in Lilo + RAID that is not fine. I don't
+have "compact" option in LILO, and Lilo has not said to me any warning when
+I installed it.
 
---nextPart1498640.PL0efqytk7
-Content-Type: application/pgp-signature
+Any idea?
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
+Thank you very much,
 
-iD8DBQBDorbsIfCsAmXJIGERAu1nAJ9YhBQUtW2ygFu+JKpGR3jehOIVLQCfdwiU
-ZQ21AryKxfd3DY1Qlqfd56k=
-=tIMj
------END PGP SIGNATURE-----
-
---nextPart1498640.PL0efqytk7--
+-- 
+Carles Pina i Estany		GPG id: 0x8CBDAE64
+	http://pinux.info	Manresa - Barcelona
