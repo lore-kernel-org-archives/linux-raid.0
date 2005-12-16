@@ -1,15 +1,22 @@
-From: "Roman" <Adamku@adelphia.net>
-Subject: The Pharm Solutions ty
-Date: Fri, 16 Dec 2005 12:03:06 -0500
-Message-ID: <200512161703.jBGH324Z007255@zeus2.kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: "Lindsay Moran" <ksncehxfof@yahoo.com>
+Subject: We Are the Best GUqw
+Date: Fri, 16 Dec 2005 23:53:23 +0600
+Message-ID: <CFE4.9A9.3069698B8C__18886.4364558414$1134756115$gmane$org@mopalinux.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux-laptop@vger.kernel.org
+Cc: linux-net@vger.kernel.org, linux-newbie@vger.kernel.org, linux-ppp@vger.kernel.org, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, linux-serial@vger.kernel.org, linux-sound@vger.kernel.org
 List-Id: linux-raid.ids
 
-We are your solution for Astronomical Meds Savings
 
-http://uk.geocities.com/DoreenSchmidt1725/
+The most complete Phar macy Online
+We carry all major medds at bargain price
+Viggra, Ci ialis, VaIium, Xa naax
+Phantermiine, Ulltraam and etc...
+SatiisfactIon Gua ranteeed
+
+http://firstcentre.com
+
+
+KL1
 
