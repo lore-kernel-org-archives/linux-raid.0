@@ -1,58 +1,56 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: RAID5 resync question BUGREPORT!
-Date: Mon, 19 Dec 2005 11:57:29 +1100
-Message-ID: <17318.1401.296396.667001@cse.unsw.edu.au>
-References: <045901c5f9fa$8f2b7fa0$0400a8c0@dcccs>
-	<17300.56329.638969.509384@cse.unsw.edu.au>
-	<004201c5f9fe$50cc41a0$0400a8c0@dcccs>
-	<17300.58327.193597.248431@cse.unsw.edu.au>
-	<035b01c5fc4b$416c98f0$0400a8c0@dcccs>
-	<17304.50474.390938.734714@cse.unsw.edu.au>
-	<001101c5fc75$a28cb230$0400a8c0@dcccs>
-	<17305.3277.821697.223406@cse.unsw.edu.au>
-	<000001c5eb50$4e6fada0$a700a8c0@dcccs>
+Subject: Re: First RAID Setup
+Date: Mon, 19 Dec 2005 12:02:30 +1100
+Message-ID: <17318.1702.810296.329634@cse.unsw.edu.au>
+References: <0481A62A3E95A044AC20A1A45899645C06B02F4B@glc-mail-1.tessco.com>
+	<43A1D642.2010301@wasp.net.au>
+	<43A1E0CE.7090805@medien.uni-weimar.de>
+	<17314.7734.707554.88728@cse.unsw.edu.au>
+	<43A275EA.9020104@medien.uni-weimar.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from JaniD++ on Thursday November 17
+In-Reply-To: message from Tobias Hofmann on Friday December 16
 Sender: linux-raid-owner@vger.kernel.org
-To: JaniD++ <djani22@dynamicweb.hu>
-Cc: linux-raid@vger.kernel.org
+To: Tobias Hofmann <tobias.hofmann@medien.uni-weimar.de>
+Cc: Brad Campbell <brad@wasp.net.au>, "Callahan, Tom" <CallahanT@tessco.com>, 'Andargor The Wise' <andargor@yahoo.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday November 17, djani22@dynamicweb.hu wrote:
-> Hello,
+On Friday December 16, tobias.hofmann@medien.uni-weimar.de wrote:
+> >>
+> >>- How would one "switch" from the latter to the former? Is there 
+> >>something like "grow_to_RAID_6"?
+> > 
+> > 
+> > No... at least not yet....
 > 
-> Now i trying the patch....
+> Hm. :) Around here, it is pretty much Christmas time, with all the 
+> "wishing" going on - hint, hint? ;)
 > 
-> [root@st-0001 root]# mdadm -G --bitmap=/raid.bm /dev/md0
-> mdadm: Warning - bitmaps created on this kernel are not portable
->   between different architectured.  Consider upgrading the Linux kernel.
-> mdadm: Cannot set bitmap file for /dev/md0: Cannot allocate memory
 
-How big is your array?
-The default bitmap-chunk-size when the bitmap is in a file is 4K, this
-makes a very large bitmap on a large array.
-Try a larger bitmap-chunk size e.g.
+Growing a raid5 to a raid6 with the same amount of data is only really
+achievable if we use a modified raid6 layout with the Q syndrome all
+on the one drive (a bit like raid4 which has parity all on the one
+drive).
+This gives you the better redundancy, but you have a hot-spot for
+writes and don't distribute the reads any better.
 
-   mdadm -G --bitmap-chunk=256 --bitmap=/raid.bm /dev/md0
+This sort of conversion may be available in a couple of months.
 
-> [root@st-0001 root]# free
->              total       used       free     shared    buffers     cached
-> Mem:       2073152      75036    1998116          0          4      29304
-> -/+ buffers/cache:      45728    2027424
-> Swap:            0          0          0
-> [root@st-0001 root]# mdadm -X /dev/md0
 
-This usage is only appropriate for arrays with internal bitmaps (I
-should get mdadm to check that..).
-> 
-> And now what? :-)
+Rearranging the data blocks is impractical as you need a temporary
+storage:
+    copy to blocks somewhere else and be sure they are safe
+    there.  Then copy them back and be sure they are safe in the new
+    place. 
+Without this it is not possible to be sure to survive a crash.
 
-Either create an 'internal' bitmap, or choose a --bitmap-chunk size
-that is larger.
+Converting a raid5 to a raid6 with 2 extra drives (thus having more
+space as well as more redundancy) is a possibility as the extra space
+can be effectively used to keep to old copy of a stripe safe while
+writing the new copy.
 
-Thanks for the report.
+This sort of conversion is planned, but will take somewhat longer.
 
 NeilBrown
