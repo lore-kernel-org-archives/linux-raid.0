@@ -1,67 +1,28 @@
-From: Matt Darcy <kernel-lists@projecthugo.co.uk>
-Subject: RAID 5 - Botched Output information
-Date: Tue, 20 Dec 2005 10:42:00 +0000
-Message-ID: <43A7DFF8.80203@projecthugo.co.uk>
-Reply-To: kernel-lists@projecthugo.co.uk
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Sebastian Kuzminsky <seb@highlab.com>
+Subject: Raid sync observations
+Date: Tue, 20 Dec 2005 10:18:26 -0700
+Message-ID: <E1Eol86-0008Ju-3J@highlab.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello all,
-
-I'm experimenting with the experimental "sata_mv" driver in the 
-2.6.15-rc5-mm kernel.
-
-I've found it "works" but its rather flakey and fails a lot (I'll be 
-posting seperate information on this in another post)
-
-I've just created a raid 5 array as a test made up of 5 x 250 GB sata disks.
-
-It seems to complete after a life time (hey - its a lot of disk - no rush)
-
-However dmesg shows the following ouptut (just included the raid 5 
-devices output)
+I just created a RAID array (4-disk RAID-6).  When "mdadm -C" returned,
+/proc/mdstat showed it syncing the new array at about 17 MB/s.  "vmstat 1"
+showed hardly any blocks in or out, and an almost completely idle cpu.
 
 
-md: md6: sync done.
-RAID5 conf printout:
- --- rd:5 wd:5 fd:0
- disk 0, o:1, dev:sdc1
- disk 1, o:1, dev:sdd1
- disk 2, o:1, dev:sde1
- disk 3, o:1, dev:sdf1
- disk 4, o:1, dev:sdg1
-ata10: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
-ata10: status=0xd0 { Busy }
-ata9: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
-ata9: status=0xd0 { Busy }
-blk: request botched
-ata8: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
-ata8: status=0xd0 { Busy }
-blk: request botched
-ata6: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
-ata6: status=0xd0 { Busy }
-blk: request botched
-ata4: translated ATA stat/err 0xd0/00 to SCSI SK/ASC/ASCQ 0xb/47/00
-ata4: status=0xd0 { Busy }
-blk: request botched
+Question 1: Why didnt the raid sync I/O show up with vmstat?
 
 
-I'm interested in the statement  blk: request botched
+Question 2: Why was it limited to 17 MB per second?  The maximum was
+left at the default, 200 MB/s.  The min was also at the default, 1 MB/s.
+I get 60 MB/s per disk with "hdparm -tT" (that's using one disk at a time,
+but still).  The checksumming code does > 3 GB/s.
 
-Google turns up many interesting theories about this statments which 
-seems to be caused by meny theoretical solutions (I think the people 
-responding on the threads found on google are making random guesses to 
-be honest)
 
-I thought I'd ask here to get a better understanding of the "blk: 
-request botched" statement.
+Just curious really.  This is with 2.6.15-rc5 and SATA disks via libata.
 
-Thanks for the input.
 
-Matt
-
+-- 
+Sebastian Kuzminsky
