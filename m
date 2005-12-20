@@ -1,39 +1,31 @@
-From: Jeff Breidenbach <jeff@jab.org>
-Subject: Re: Raid sync observations
-Date: Tue, 20 Dec 2005 14:09:19 -0800
-Message-ID: <E1Eopfb-0005R2-00@toko.jab.org>
+From: "Preston Mohr" <njscbbu@ono.com>
+Subject: Pre-approved Application #32105                                                                                    |
+Date: Tue, 20 Dec 2005 22:22:18 +0100
+Message-ID: <1044137572.5079.0.camel@latitude-cs>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hello,
 
->I'll just call it sync access pattern overhead then.
+You have been chosen to participate in an invitation only limited time event!
+Are you currently paying over 3% for your mortgage? STOP! We can help you lower that today!
+Answer only a few questions and we can give you an approval in under 30 seconds  it's that simple! 
 
-As another data point, I've been adding more and more
-drives to a RAID-1 array. Yesterday I just added a fourth
-disk which is still syncing.
+http://timet0save.net/save2.asp
 
-       mdadm --grow /dev/md0 -n4
-       mdadm --manage /dev/md0 --add /dev/sde
+And stop fighting for lenders  let them fight for you! Make them work for your business by giving you the lowest rates around!
+$230,000 loans are available for only $340/month! WE'RE PRACTICALLY GIVING AWAY MONEY!
 
-md0 : active raid1 sde1[4] sdc1[0] sdb1[2] sdd1[1]
-      488383936 blocks [4/3] [UUU_]
-      [=====>...............]  recovery = 27.6% (134963968/488383936) finish=1739.7min speed=3384K/sec
+Think your credit is too bad to get a deal like this? THINK AGAIN! We will have you saving your money in no time!
+Are you ready to save your money?
 
-In general I'm seeing somewhere between 2 to 4 MB/s on the currently
-running sync. Which is fine, no problem. The array is live and
-currently handling some traffic. But these are pretty fast disks, and
-running simple things like
+http://timet0save.net/save2.asp
 
-	hdparm -tT /dev/sde
-	nice dd_rescue /dev/md0 /dev/null
-
-all show pretty big numbers. This provides some intuition that there
-may be room for improvement in sync speed. Kernel 2.6.14, no fancy
-RAID bitmaps involved.
-
-Jeff
-
-
+Regards,
+Preston Mohr
 
