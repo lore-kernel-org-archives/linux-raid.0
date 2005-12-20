@@ -1,33 +1,39 @@
-From: Sebastian Kuzminsky <seb@highlab.com>
+From: Jeff Breidenbach <jeff@jab.org>
 Subject: Re: Raid sync observations
-Date: Tue, 20 Dec 2005 14:33:58 -0700
-Message-ID: <E1Eop7O-00005k-JG@highlab.com>
-References: <E1Eol86-0008Ju-3J@highlab.com> <17320.30528.417691.57401@cse.unsw.edu.au>
+Date: Tue, 20 Dec 2005 14:09:19 -0800
+Message-ID: <E1Eopfb-0005R2-00@toko.jab.org>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: <17320.30528.417691.57401@cse.unsw.edu.au> 
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown <neilb@suse.de> wrote:
->  You can get better speed on creation with
->    mdadm -C -l6 -n4 -x2 /dev/sd[ab] missing missing /dev/sd[cd]
-> 
->  i.e. create with 2 missing devices and 2 spares.  Recovery onto the
->  spares will do purely sequential IO on all devices and so will go
->  much faster.
->  Doing this requires regenerating datablocks which is more cpu
->  intensive that generating P and Q, so there might be some CPU
->  overhead, but the disk throughput is still much faster.
-> 
->  In 2.6.16, raid6 resync has been improved somewhat.  This will not
->  affect the initial sync, but resync after a crash will only write
->  P/Q blocks which are wrong and there are usually very few of those.
->  This means that it will mostly to sequential reads on all drives, so
->  you get full device speed.
 
-Thanks!!
+>I'll just call it sync access pattern overhead then.
+
+As another data point, I've been adding more and more
+drives to a RAID-1 array. Yesterday I just added a fourth
+disk which is still syncing.
+
+       mdadm --grow /dev/md0 -n4
+       mdadm --manage /dev/md0 --add /dev/sde
+
+md0 : active raid1 sde1[4] sdc1[0] sdb1[2] sdd1[1]
+      488383936 blocks [4/3] [UUU_]
+      [=====>...............]  recovery = 27.6% (134963968/488383936) finish=1739.7min speed=3384K/sec
+
+In general I'm seeing somewhere between 2 to 4 MB/s on the currently
+running sync. Which is fine, no problem. The array is live and
+currently handling some traffic. But these are pretty fast disks, and
+running simple things like
+
+	hdparm -tT /dev/sde
+	nice dd_rescue /dev/md0 /dev/null
+
+all show pretty big numbers. This provides some intuition that there
+may be room for improvement in sync speed. Kernel 2.6.14, no fancy
+RAID bitmaps involved.
+
+Jeff
 
 
--- 
-Sebastian Kuzminsky
+
