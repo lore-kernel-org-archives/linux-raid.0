@@ -1,7 +1,7 @@
-From: Katie Mendoza <humiliate@livingfaithusa.org>
-Subject: Looking for cheap high-quality software?
-Date: Mon, 19 Dec 2005 21:11:00 -0500
-Message-ID: <5563832471.5429466682@client-201.230.124.152.speedy.net.pe>
+From: Tilda Mcguire <atomics@educationalministries.com>
+Subject: All main products from Microsoft, Adobe, Macromedia, Corel, etc.
+Date: Mon, 19 Dec 2005 21:18:59 -0500
+Message-ID: <9164448591.1019037423@client-201.240.61.133.speedy.net.pe>
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
@@ -9,15 +9,15 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Download and Buy CDS all software under $15-$99
-http://uea.cm0bzc03i9hkccu7hcupzccu.turihc.com/?cfessqd
+You best friends and family deserve the BEST internet photo album! 
+http://xbkh.iaoz50orofnq00id5i0d5i0i.turihc.com/?lfphqtq
 
 
-He helps others most, who shows them how to help themselves.  
-Coolidge is dead How could they tell?      
-Copy from one, it's plagiarism; copy from two, it's research.   
-Remember that happiness is a way of travel - not a destination. 
-A lady is one who never shows her underwear unintentionally.   
-Put yourself on view. This brings your talents to light.   
+Praise the bridge that carried you over.      
+Mistakes are the portals of discovery.       
+
+Science is but the statement of truth found out.    
+I hate quotations.          
+If all else fails, immortality can always be assured by spectacular error. 
 
 
