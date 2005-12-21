@@ -1,7 +1,7 @@
-From: "Jody" <amycu@accesscomm.ca>
-Subject: Superior <i@lis Service eu
-Date: Wed, 21 Dec 2005 00:57:25 -0500
-Message-ID: <200512210557.jBL5vDY2011321@zeus1.kernel.org>
+From: "Maggie" <rogerxt@aci.on.ca>
+Subject: Best ED Offer wf
+Date: Wed, 21 Dec 2005 06:42:56 -0500
+Message-ID: <200512211142.jBLBgUZM027440@zeus2.kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
@@ -9,7 +9,7 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-We are your solution for Considerable ST-\/i@gra Offers
+We are your source for Substantial Soft Tab ~ <I@L1S Savings
 
-http://uk.geocities.com/ChristinaFink662/
+http://uk.geocities.com/EdwinaPittman9750/
 
