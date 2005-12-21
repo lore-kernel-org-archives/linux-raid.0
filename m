@@ -1,25 +1,25 @@
-From: Sebastian Kuzminsky <seb@highlab.com>
-Subject: Re: hangs with 2.6.15-rc5
-Date: Tue, 20 Dec 2005 21:34:45 -0700
-Message-ID: <E1Eovgb-0000Uk-P0@highlab.com>
-References: <E1Eoqi0-0000FX-Im@highlab.com> <17320.44137.337545.50069@cse.unsw.edu.au>
+From: Mary Todd <decathlon@globalorg.com>
+Subject: Same medicine, different price!
+Date: Wed, 21 Dec 2005 00:49:05 -0500
+Message-ID: <1315519996.2903011204@mala.rybka.shark.pl>
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: <17320.44137.337545.50069@cse.unsw.edu.au> 
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown <neilb@suse.de> wrote:
-> On Tuesday December 20, seb@highlab.com wrote:
-> > I'm seeing hard system lockups with 2.6.15-rc5 when trying to use a
-> > RAID-6 array as a PV for LVM2.
-> 
-> alt-sysrq-P ?
-> alt-sysrq-T ?
-
-Didn't try P or T, but my normal mantra of S-U-B had no effect.  I can
-try P and T tomorrow, but my guess is it's dead.
+Easy, convenient and discreet - order prescription drugs online.
+http://deflate./?appertainsxtvuywartimezsvarchiving
 
 
--- 
-Sebastian Kuzminsky
+
+Freedom is just Chaos, with better lighting.      
+Mediocrity is not allowed to poets, either by the gods or man. 
+The only thing we have to fear is fear itself.   
+Vanity makes us do more things against inclination than reason.   
+If you want to be respected, you must respect yourself.   
+When angry, count four; when very angry, swear.     
+Justice is incedental to law and order.      
+
+
