@@ -1,50 +1,60 @@
-From: "JaniD++" <djani22@dynamicweb.hu>
+From: Neil Brown <neilb@suse.de>
 Subject: Re: RAID0 performance question
-Date: Tue, 22 Nov 2005 02:14:31 +0100
-Message-ID: <00ce01c5ef02$2192f7a0$a700a8c0@dcccs>
-References: <437E2CB6.2030903@xss.co.at> <200512022253.17282.a1426z@gawab.com> <00fd01c60367$d8d8f5d0$0400a8c0@dcccs> <200512191416.10665.a1426z@gawab.com>
+Date: Wed, 21 Dec 2005 12:40:35 +1100
+Message-ID: <17320.45715.533255.759042@cse.unsw.edu.au>
+References: <437E2CB6.2030903@xss.co.at>
+	<200511272040.47644.a1426z@gawab.com>
+	<041e01c5f605$6a7c0830$0400a8c0@dcccs>
+	<200512022253.17282.a1426z@gawab.com>
+	<00fd01c60367$d8d8f5d0$0400a8c0@dcccs>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from JaniD++ on Sunday December 18
 Sender: linux-raid-owner@vger.kernel.org
-To: Al Boldi <a1426z@gawab.com>
-Cc: linux-raid@vger.kernel.org
+To: JaniD++ <djani22@dynamicweb.hu>
+Cc: Al Boldi <a1426z@gawab.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Sunday December 18, djani22@dynamicweb.hu wrote:
+> 
+> The raid (md) device why dont have scheduler in sysfs?
+> And if it have scheduler, where can i tune it?
 
------ Original Message ----- 
-From: "Al Boldi" <a1426z@gawab.com>
-To: "JaniD++" <djani22@dynamicweb.hu>
-Cc: <linux-raid@vger.kernel.org>
-Sent: Monday, December 19, 2005 12:16 PM
-Subject: Re: RAID0 performance question
+raid0 doesn't do any scheduling.
+All it does is take requests from the filesystem, decide which device
+they should go do (possibly splitting them if needed) and forwarding
+them on to the device.  That is all.
+
+> The raid0 can handle multiple requests at one time?
+
+Yes.  But raid0 doesn't exactly 'handle' requests.  It 'directs'
+requests for other devices to 'handle'.
+
+> 
+> For me, the performance bottleneck is cleanly about RAID0 layer used exactly
+> as "concentrator" to join the 4x2TB to 1x8TB.
+> But it is only a software, and i cant beleave it is unfixable, or
+> tunable.
+
+There is really nothing to tune apart from chunksize.
+
+You can tune the way the filesystem/vm accesses the device by setting
+readahead (readahead on component devices of a raid0 has exactly 0
+effect). 
+
+You can tune the underlying devices by choosing a scheduler (for a
+disk drive) or a packet size (for over-the-network devices) or
+whatever. 
+
+But there is nothing to tune in raid0.
 
 
-> JaniD++ wrote:
-> > For me, the performance bottleneck is cleanly about RAID0 layer used
-> > exactly as "concentrator" to join the 4x2TB to 1x8TB.
->
-> Did you try running RAID0 over nbd directly and found it to be faster?
-
-At this time i cannot test it, because the system is loaded, and the result
-will fase.
-Anyway i will probe this....
-
->
-> IIRC, stacking raid modules does need a considerable amount of tuning, and
-> even then it does not scale linearly.
->
-> Maybe NeilBrown can help?
-
-Maybe, but it looks like Neil is not interested. :-(
-
-And the more probles is, i plan to modify the entire system structure, and
-will not be spare drives to testing soon... :-/
-
-Cheers,
-Janos
+Also, rather than doing measurements on the block devices (/dev/mdX)
+do measurements on a filesystem created on that device.
+I have often found that the filesystem goes faster than the block
+device.
 
 
-
+NeilBrown
