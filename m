@@ -1,25 +1,15 @@
-From: Mary Todd <decathlon@globalorg.com>
-Subject: Same medicine, different price!
-Date: Wed, 21 Dec 2005 00:49:05 -0500
-Message-ID: <1315519996.2903011204@mala.rybka.shark.pl>
+From: "Jody" <amycu@accesscomm.ca>
+Subject: Superior <i@lis Service eu
+Date: Wed, 21 Dec 2005 00:57:25 -0500
+Message-ID: <200512210557.jBL5vDY2011321@zeus1.kernel.org>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Easy, convenient and discreet - order prescription drugs online.
-http://deflate./?appertainsxtvuywartimezsvarchiving
+We are your solution for Considerable ST-\/i@gra Offers
 
-
-
-Freedom is just Chaos, with better lighting.      
-Mediocrity is not allowed to poets, either by the gods or man. 
-The only thing we have to fear is fear itself.   
-Vanity makes us do more things against inclination than reason.   
-If you want to be respected, you must respect yourself.   
-When angry, count four; when very angry, swear.     
-Justice is incedental to law and order.      
-
+http://uk.geocities.com/ChristinaFink662/
 
