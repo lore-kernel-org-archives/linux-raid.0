@@ -1,40 +1,28 @@
-From: "John Stoffel" <john@stoffel.org>
-Subject: Re: Linux RAID Enterprise-Level Capabilities and If It Supports Raid Level Migration and Online Capacity Expansion
-Date: Thu, 22 Dec 2005 15:15:10 -0500
-Message-ID: <17323.2382.350576.347316@smtp.charter.net>
-References: <200512221707.jBMH7PCS028943@cichlid.com>
+From: Andre Noll <maan@systemlinux.org>
+Subject: mdadm-2.2 SEGFAULT: mdadm --assemble --scan
+Date: Thu, 22 Dec 2005 21:58:09 +0100
+Message-ID: <20051222205809.GC492@skl-net.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200512221707.jBMH7PCS028943@cichlid.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Burgess <aab@cichlid.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
->>>>> "Andrew" == Andrew Burgess <aab@cichlid.com> writes:
+sorry if this is already known/fixed: Assemble() is called from mdadm.c with
+the "update" argument equal to NULL:
 
->> 3) Performance issues:  I'm currently thinking of
->> using either RAID 10 or LVM2 with RAID 5 to serve as a
->> RAID server.
+	Assemble(ss, array_list->devname, mdfd, array_list, configfile,
+		NULL, readonly, runstop, NULL, verbose-quiet, force);
 
-Andrew> I think you always want LVM2 between raid and the
-Andrew> filesystem. Not only can you expand things but you can discard
-Andrew> older raid arrays when you upgrade. At least you should study
-Andrew> the docs for LVM to see if it would be good for your
-Andrew> application.
+But in Assemble.c we have
 
-I agree with this, having LVM between MD and the filesystem lets you
-move the data from one MD to another without any major downtime or
-even your users having to notice.  Which is cool.  
+	if (ident->uuid_set && (!update && strcmp(update, "uuid")!= 0) && ...
 
-I really really like ext3 for it's reliability, but a filesystem which
-you can grow/shrink while mounted would be nice.  I really like VxFS
-from Veritas, but obviously you won't find it one Linux right now.  
+which yields a segfault in glibc's strcmp().
 
-I've been tempted by XFS at times, but I worry, esp since alot of
-other people who are core developers don't care for XFS as much.  But
-maybe I'll move that way for my next system.
-
-John
+Andre
+-- 
+Jesus not only saves, he also frequently makes backups
