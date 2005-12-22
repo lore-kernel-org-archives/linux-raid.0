@@ -1,91 +1,48 @@
-From: Andargor The Wise <andargor@yahoo.com>
-Subject: Re: First RAID Setup
-Date: Thu, 22 Dec 2005 07:00:02 -0800 (PST)
-Message-ID: <20051222150002.4421.qmail@web54614.mail.yahoo.com>
-References: <43AAB7D1.8090400@tmr.com>
+From: ross@lug.udel.edu (Ross Vandegrift)
+Subject: Re: Linux RAID Enterprise-Level Capabilities and If It Supports Raid Level Migration and Online Capacity Expansion
+Date: Thu, 22 Dec 2005 10:06:31 -0500
+Message-ID: <20051222150631.GC31400@lug.udel.edu>
+References: <20051222100703.23157.qmail@web52909.mail.yahoo.com> <62b0912f0512220431l4d1ec130q137b737c1956ddd9@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <43AAB7D1.8090400@tmr.com>
+Content-Disposition: inline
+In-Reply-To: <62b0912f0512220431l4d1ec130q137b737c1956ddd9@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: "Callahan, Tom" <CallahanT@tessco.com>, linux-raid@vger.kernel.org
+To: Molle Bestefich <molle.bestefich@gmail.com>
+Cc: Rik Herrin <rikherrin@yahoo.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Thu, Dec 22, 2005 at 12:31:25PM +0000, Molle Bestefich wrote:
+> Since you say "we", I assume you're part of a very large corporation
+> and thus intend to RAID a whole bunch of disks.  Go with RAID6 + a
+> couple of spares for that.  If you intend to use really many disks,
+> make multiple arrays.  (Not sure whether you can share spares across
+> arrays, but I think you can.)
 
+A recent foray through mdadm's code verifies this.  If it noticies a
+failure and there is a spare, it attempts to migrate the spare to the
+array that needs it.  Very cool feature!
 
---- Bill Davidsen <davidsen@tmr.com> wrote:
+> I've seen lots of MD tests, but none that covered profiling MD's
+> random access performance.  So I suppose that most hardware solutions
+> will do a lot better than MD here since they have been profiled with
+> this in mind.
 
-> Andargor The Wise wrote:
-> 
-> >Yet another thing, someone has suggested that I
-> should
-> >increase the chunk size for my RAID5 from 32 to
-> either
-> >64 or 128.
-> >
-> >Is it worth it, considering that the system doesn't
-> >normally run on a heavy load? Mail for a few users,
-> >some read-only database applications, website, etc.
-> >Mostly a development machine.
-> >  
-> >
-> Can't think of a case where it's not worth having
-> better performance... 
-> I should write a WP on stripe size, and what happens
-> as you change it 
-> with given loads.
->
+Well, it depends on the RAID level, disk, configuration, and how
+you're using it.  In general, RAID 0+1 has better seek properties
+because reads can be done independantly from many disks.  RAID5 is
+always going to be slow because n-1 disks need to all simultaneously
+read their stripe, and this can cause spindle contention.
 
-If anyone's interested, I ran some benchmarks:
+Of course, you lose more space to overhead as RAID 0+1 arrays grow...
 
-http://www.andargor.com/raid5.html
+-- 
+Ross Vandegrift
+ross@lug.udel.edu
 
-I'll be spending the time to go to 128k chunks. :)
-
-I was considering raidreconf, and tested it on a
-scratch partition. It worked ok, but it was slow (1.17
-MB/sec overall). I'll rsync or find -xdev | cpio
--admpv instead to mirror the existing stuff elsewhere
-before blowing away the array.
-
-
-> >Would this alleviate the "pauses" during large file
-> >transfers/copies that I have indicated in my
-> previous
-> >post?
-> >
-> >I'm asking because backing up ~176 GB,
-> reconfiguring
-> >the RAID, and restoring it properly so the machine
-> >boots (the RAID5 is /) is quite a PITA.
-> >
-> 
-> You may have some special case, but I would never
-> put data that large in 
-> / just as a system admin issue. It makes backups and
-> restores, as well 
-> as upgrades quite unpleasant. I guess you may have
-> noticed that by now 
-> ;-) Good luck!
-
-Concerning the "pause" issue, I believe my problem was
-not really a problem at all. The priority isn't on
-intreactive traffic (CONFIG_PREEMPT=n), so it was just
-a perception of a pause during "ls". If I had real
-"pauses" in my IO, I would have seen dismal benchmark
-results.
-
-Since I'll be recreating the array anyway, I might as
-well split /, /home, and /var into three RAID5's.
-
-Andargor
-
-
-
-
-__________________________________________________
-Do You Yahoo!?
-Tired of spam?  Yahoo! Mail has the best spam protection around 
-http://mail.yahoo.com 
+"The good Christian should beware of mathematicians, and all those who
+make empty prophecies. The danger already exists that the mathematicians
+have made a covenant with the devil to darken the spirit and to confine
+man in the bonds of Hell."
+	--St. Augustine, De Genesi ad Litteram, Book II, xviii, 37
