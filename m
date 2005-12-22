@@ -1,72 +1,64 @@
-From: Matt Darcy <kernel-lists@projecthugo.co.uk>
-Subject: mdadm --spare options
-Date: Thu, 22 Dec 2005 15:12:50 +0000
-Message-ID: <43AAC272.6070903@projecthugo.co.uk>
-Reply-To: kernel-lists@projecthugo.co.uk
+From: Molle Bestefich <molle.bestefich@gmail.com>
+Subject: Re: Linux RAID Enterprise-Level Capabilities and If It Supports Raid Level Migration and Online Capacity Expansion
+Date: Thu, 22 Dec 2005 15:20:10 +0000
+Message-ID: <62b0912f0512220720i30d86919we67901d35e4e81c@mail.gmail.com>
+References: <20051222100703.23157.qmail@web52909.mail.yahoo.com>
+	 <62b0912f0512220431l4d1ec130q137b737c1956ddd9@mail.gmail.com>
+	 <20051222150631.GC31400@lug.udel.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20051222150631.GC31400@lug.udel.edu>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Ross Vandegrift <ross@lug.udel.edu>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi all,
+Ross Vandegrift wrote:
+> Molle Bestefich wrote:
+> > Since you say "we", I assume you're part of a very large corporation
+> > and thus intend to RAID a whole bunch of disks.  Go with RAID6 + a
+> > couple of spares for that.  If you intend to use really many disks,
+> > make multiple arrays.  (Not sure whether you can share spares across
+> > arrays, but I think you can.)
+>
+> A recent foray through mdadm's code verifies this.  If it noticies a
+> failure and there is a spare, it attempts to migrate the spare to the
+> array that needs it.  Very cool feature!
 
-I'm looking for some one to clear up a missunderstanding on my part.
+Super =)
 
-I have 7 sata disks, /dev/sdc - /dev/sdi
+> > I've seen lots of MD tests, but none that covered profiling MD's
+> > random access performance.  So I suppose that most hardware solutions
+> > will do a lot better than MD here since they have been profiled with
+> > this in mind.
+>
+> Well, it depends on the RAID level, disk, configuration, and how
+> you're using it.
 
-They all have 1 partition on them.
+Still a shame for MD that noone has done these tests.
 
-I am trying to make a raid5 array out of the 7 disks including 1 spare.
+Also a shame that noone has setup up a test farm with:
+ * A test box that regularly profiles MD, for seek time, throughput
+and CPU usage with various personalities.
+ * Another test box, exactly the same hardware as the first one,
+suited for plugging in new hardware RAID adapters (while retaining
+disks and other hardware) to test hardware RAID solutions with
+consistent results even when new products come out.
 
-Sounds simple enough.
+> In general, RAID 0+1 has better seek properties
+> because reads can be done independantly from many disks.  RAID5 is
+> always going to be slow because n-1 disks need to all simultaneously
+> read their stripe, and this can cause spindle contention.
 
-I wasn't sure if the the ---raid-devices included the --spare-devices 
-option, I assumed not due to the --spare-devices, being marked as "extra."
+Why would you need to send all of the disks in a RAID5 to the same
+stripe if only fx. one block in the stripe was requested?  Doesn't
+make much sense to me..
 
-I've issued the following command to do this
+> Of course, you lose more space to overhead as RAID 0+1 arrays grow...
 
-mdadm  --create /dev/md6 --level=5 --raid-devices=6 --spare-devices=1 
-/dev/sdc1 /dev/sdd1 /dev/sde1 /dev/sdf1 /dev/sdg1 /dev/sdh1 /dev/sdi1
-
-Which starting making the array no problem.
-
-A quick check on the raid progress and I see this
-
-md6 : active raid5 sdh1[7] sdi1[6](S) sdg1[4] sdf1[3] sde1[2] sdd1[1] 
-sdc1[0]
-      1225558080 blocks level 5, 64k chunk, algorithm 2 [6/5] [UUUUU_]
-      [==========>..........]  recovery = 54.3% (133157472/245111616) 
-finish=154.9min speed=12041K/sec
-
-
-which to me reads as sc1 disk 0 sdd disk1 sde disk 2 etc etc.
-The questions are
-
-1.) what happened to the disk order - shy is sdi (the spare) disk 6 
-before sdh disk 7
-2.) is there a way I can specifcy which disk I want to use as the 
-"spare" - thats not critical, but would be handy.
-3.) the UUUUU_ suggests that 5 disks are in use and will go to UUUUUU 
-when all 6 disks are synced, is there a marker for the spare, or should 
-there be a marker for the spare ? again I assume not bet I've not used 
-the "spare" option on the software level before.
-4.) I've accepted the default, right to left striping, I'm curious to 
-the pros and cons of using left to right and symentic or even asymetric. 
-I can think of uses for asymetric, but the other parity layouts I'd be 
-interested in hearing peoples thoughts.
-
-Many thanks,
-
-Matt
-
-
-
-
-
-
-
-
-
+Of course.  It seems to me that RAID 1+0 has the exact same
+performance properties as RAID 0+1 if things are done properly in
+whatever RAID hardware/software used..
