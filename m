@@ -1,49 +1,112 @@
-From: "JaniD++" <djani22@dynamicweb.hu>
-Subject: Re: RAID0 performance question
-Date: Wed, 23 Nov 2005 11:48:10 +0100
-Message-ID: <013901c5f01b$6aae7ad0$a700a8c0@dcccs>
-References: <437E2CB6.2030903@xss.co.at> <200512022253.17282.a1426z@gawab.com> <00fd01c60367$d8d8f5d0$0400a8c0@dcccs> <200512191416.10665.a1426z@gawab.com>
+From: Molle Bestefich <molle.bestefich@gmail.com>
+Subject: Re: Linux RAID Enterprise-Level Capabilities and If It Supports Raid Level Migration and Online Capacity Expansion
+Date: Thu, 22 Dec 2005 12:31:25 +0000
+Message-ID: <62b0912f0512220431l4d1ec130q137b737c1956ddd9@mail.gmail.com>
+References: <20051222100703.23157.qmail@web52909.mail.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20051222100703.23157.qmail@web52909.mail.yahoo.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Al Boldi <a1426z@gawab.com>
+To: Rik Herrin <rikherrin@yahoo.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
------ Original Message ----- 
-From: "Al Boldi" <a1426z@gawab.com>
-To: "JaniD++" <djani22@dynamicweb.hu>
-Cc: <linux-raid@vger.kernel.org>
-Sent: Monday, December 19, 2005 12:16 PM
-Subject: Re: RAID0 performance question
+Rik Herrin wrote:
+> I was interested in Linux's RAID capabilities and
+> read that mdadm was the tool of choice.  We are
+> currently comparing software RAID with hardware RAID
 
+MD is far superior to most of the hardware RAID solutions I've touched.
+In short, it seems MD is developed with the goal of keeping your data
+safe, not selling hardware.
 
-> JaniD++ wrote:
-> > For me, the performance bottleneck is cleanly about RAID0 layer used
-> > exactly as "concentrator" to join the 4x2TB to 1x8TB.
->
-> Did you try running RAID0 over nbd directly and found it to be faster?
+I've had problems both with MD and with hardware RAID.  With hardware
+RAID, once things go bad, they really go bad.  With MD, there's
+usually a straight-forward way to rescue things.  And when there's
+not, Neil's a real nice guy who always stands up to help and fix bugs.
 
-Now i trying the NBD + RAID0 without the middle layer raid1.
-I wondering, the speed is much more better!
+I would trust my data with MD over any hardware RAID solution,
+including professional server RAID solutions from eg. Compaq or IBM.
 
-If i use dd in the raid0 and the raid1 layer is active, the traffic is
-350-400Mbit/s
-If i use dd in the raid0 and the raid1 layer is inactive, the traffic is
-512-620Mbit/s!
-If i use parallel dd on all NBD devices, the traffic is 650-720Mbit/s.
+MD is a little more difficult to set up and also lacks in that it
+doesn't integrate with BIOS level stuff and boot loaders (maybe
+there's minimal MD RAID 1 support in Lilo, not sure).  Depending on
+your choice of hardware, you might also get more features than MD can
+currently offer.
 
-(on my system's current minimal load)
+> 	1) OCE: Online Capacity Expansion:  From the latest
+> version of mdadm (v2.2), it ssems that there is
+> support for it with the -G option.  How well tested is
+> this?
 
-I found it very interesting!
-The kernel never reports timing information about raids in
-/sys/block/mdX/stat files!
+New feature, so obviously not tested very well.
 
-I cannot understand...
+Neil said at one point that he was going to release this to the
+general public when it's stable and when it can recover an interrupted
+resize process.  Sounds like a very reasonable and sane goal to me, I
+hope that this is still the case.
 
-Cheers,
-Janos
+Otherwise, it's easy to work around - you can just create a new RAID
+array on your new disks / extra disk space and then join it to the end
+of the old array using MD's linear personality or DM.  Never tried it,
+but should work just fine.
 
+>  Also, in the Readme / Man page, it mentions:
+> 		This usage causes mdadm to attempt to reconfigure a
+> running array.  This is only possibly if the kernel
+> being used supports a particular reconfiguration.
+> 	How can I know if the kernel I am using supports this
+> reconfiguration?  What if I'm compiling the kernel by
+> hand.  What options would I have to enable?
+
+Just the usual MD stuff I think.
+You'll probably need a quite new kernel where Neil's bitmap patches
+has been applied.
+Hopefully MD will detect whether the kernel is new enough or not, but
+I haven't tried myself ;-).
+
+> 	2) RAID Level Migration:  Does mdadm currently
+> support this feature?
+
+I don't think so, but sounds like RAID5 --> RAID6 is planned.
+Check back in a year or so ;-).
+
+Or choose the RAID level you *really* want to begin with (duh).
+
+Since you say "we", I assume you're part of a very large corporation
+and thus intend to RAID a whole bunch of disks.  Go with RAID6 + a
+couple of spares for that.  If you intend to use really many disks,
+make multiple arrays.  (Not sure whether you can share spares across
+arrays, but I think you can.)
+
+> 	3) Performance issues:  I'm currently thinking of
+> using either RAID 10 or LVM2 with RAID 5 to serve as a
+> RAID server.  The machine will be running either an
+> AMD 64 processor or a dual-core AMD 64 processor, so I
+> don't think the CPU will be a bottleneck.  In fact, it
+> should easily pass the speed of most "hardware" based
+> RAID systems.
+
+I think there's two issues to cover,
+ * Throughput
+ * Seek times
+
+And of course they're not entirely separate issues - throughput will
+be lower when you're doing random access (seeking) and seek times will
+be higher when you're pulling lots of data out.
+
+I've seen lots of MD tests, but none that covered profiling MD's
+random access performance.  So I suppose that most hardware solutions
+will do a lot better than MD here since they have been profiled with
+this in mind.
+
+Throughput-wise, I think MD is probably very good.
+But I can't back that up with factual data, sorry.
+
+> 	4) Would anyone recommend a certain hotswap
+> enclosure?
+
+I would, but can't remember their name, sorry :-)
