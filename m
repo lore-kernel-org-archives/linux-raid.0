@@ -1,36 +1,29 @@
 From: Sebastian Kuzminsky <seb@highlab.com>
-Subject: more info on the hang with 2.6.15-rc5
-Date: Wed, 21 Dec 2005 22:07:15 -0700
-Message-ID: <E1EpIfb-0001e2-GR@highlab.com>
+Subject: Re: hangs with 2.6.15-rc5
+Date: Wed, 21 Dec 2005 22:10:21 -0700
+Message-ID: <E1EpIib-0001f2-Ab@highlab.com>
+References: <200512211710.jBLHAh2T027517@cichlid.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-reply-to: <200512211710.jBLHAh2T027517@cichlid.com> 
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org, linux-lvm@redhat.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Now it works, but I dont trust it one bit.
+Andrew Burgess <aab@cichlid.com> wrote:
+> >I'm seeing hard system lockups with 2.6.15-rc5 when trying to use a
+> >RAID-6 array as a PV for LVM2.
+> 
+> >I've got four SATA disks hanging off a Marvell 6081 controller.  The disks
+> >work great when I access them "raw" (without going through md or dm).
+> >Nice & fast & reliable.  The disks work great when used "raw" as PVs
+> >for an LVM2 setup.  And they work great when used in a RAID-6 array.
+> 
+> I've been unable to use either 2.6.14 or 2.6.15 due to bogus scsi errors, not
+> exactly what you see but you might try 2.6.13.4 which works flawlessly for me,
+> LVM using raid6 PV's, some of the raid6 devices use some raid1 components.
 
-I had been seeing almost immediate, perfectly repeatable hard lockups
-in 2.6.15-rc5 and 2.6.15-rc5-mm3, when using sata_mv, RAID, and LVM
-together.  Nothing in the syslog or on the console, and the system is
-totally unresponsive to the keyboard & network.
-
-My hardware setup is: four Seagate Barracuda 500 GB disks, on a Marvell
-MV88SX6081 8-port SATA-II PCI-X controller, on a PCI-X bus (64/66).
-
-The disks work great when accessed directly.  They work great when used
-as four PVs for LVM, and when assembled into a 4-disk RAID-6.
-
-But when I make a RAID-6 array out of them, and use the array as a PV,
-the system would hang completely, within seconds.  (This is with LVM
-2.02.01, libdevicemapper 1.02.02, and dm-driver 4.5.0.)
-
-I turned on all the debugging options in the kernel config hoping to get
-some insight, but this "debug" kernel doesnt crash.  It's running fine,
-and I'm pounding on it.  A timing problem in the interaction between
-LVM and RAID?  Some kind of wierd heisenbug....
-
-
-I'd be happy to do any debugging tests people suggest.
+Are you using a Marvell controller?  Do you have MSI enabled by any
+chance?  I had to disable MSI to get it to communicate reliably.
 
 
 -- 
