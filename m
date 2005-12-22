@@ -1,28 +1,38 @@
-From: Andre Noll <maan@systemlinux.org>
-Subject: mdadm-2.2 SEGFAULT: mdadm --assemble --scan
-Date: Thu, 22 Dec 2005 21:58:09 +0100
-Message-ID: <20051222205809.GC492@skl-net.de>
+From: Robert Heinzmann <Robert.Heinzmann@gmx.net>
+Subject: Re: Linux RAID Enterprise-Level Capabilities and If It Supports Raid
+ Level Migration and Online Capacity Expansion
+Date: Thu, 22 Dec 2005 22:37:09 +0100
+Message-ID: <43AB1C85.8030508@gmx.net>
+References: <20051222100703.23157.qmail@web52909.mail.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <20051222100703.23157.qmail@web52909.mail.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Neil Brown <neilb@suse.de>
+To: Rik Herrin <rikherrin@yahoo.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-sorry if this is already known/fixed: Assemble() is called from mdadm.c with
-the "update" argument equal to NULL:
+Hi Rik,
 
-	Assemble(ss, array_list->devname, mdfd, array_list, configfile,
-		NULL, readonly, runstop, NULL, verbose-quiet, force);
+Neil answered some of the questions earlier:
 
-But in Assemble.c we have
 
-	if (ident->uuid_set && (!update && strcmp(update, "uuid")!= 0) && ...
+>	How can I know if the kernel I am using supports this
+>reconfiguration?  What if I'm compiling the kernel by
+>hand.  What options would I have to enable?
+>  
+>
+>PS.  Some of the terms used in the man page are a bit
+>ambiguous.  For example, what does --write-mostly
+>refer to?  Thanks for your time.
+>  
+>
+See Message : 
+http://www.opensubscriber.com/message/linux-raid@vger.kernel.org/2852873.html
 
-which yields a segfault in glibc's strcmp().
 
-Andre
--- 
-Jesus not only saves, he also frequently makes backups
+Reagards,
+Robert Heinzmann
+
