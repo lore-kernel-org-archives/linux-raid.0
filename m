@@ -1,36 +1,64 @@
-From: Lajber Zoltan <lajbi@lajli.gau.hu>
-Subject: Re: Linux RAID Enterprise-Level Capabilities and If It Supports Raid
- Level Migration and Online Capacity Expansion
-Date: Fri, 23 Dec 2005 00:02:24 +0100 (CET)
-Message-ID: <Pine.LNX.4.58.0512222359390.13179@lajli.gau.hu>
-References: <200512221707.jBMH7PCS028943@cichlid.com>
- <17323.2382.350576.347316@smtp.charter.net>
+From: "Mirazol" <mahal1970@excite.com>
+Subject: Catch up the LATEST and a VERY GOOD opportunity too...
+Date: Fri, 23 Dec 2005 09:51:14
+Message-ID: <200512230149.jBN1nDHA024203@zeus2.kernel.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="iso-8859-1"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17323.2382.350576.347316@smtp.charter.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Stoffel <john@stoffel.org>
-Cc: Andrew Burgess <aab@cichlid.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 22 Dec 2005, John Stoffel wrote:
+To all Networkers and Customers
 
-> I've been tempted by XFS at times, but I worry, esp since alot of
-> other people who are core developers don't care for XFS as much.  But
-> maybe I'll move that way for my next system.
+Good day.
 
-We use xfs since 2.6.x in production. Typical config for us:
-/ in raid1, ext3
-swap in raid1
-lvm2 for the remaining with XFS above it.
+I have found a brand new company with a new product that has just started up. 
+Be among the first 1,000 leaders worldwide. Moreover, it is beneficial to us as 
+leaders and marketers, not only monetarily, but, also in support of their members. 
+Unlike other companies, where you have to pay them to sell their product, 
+this company pays you to sell their product with added bonuses and incentives.
 
-The lvm2 array raid1 or raid5. If raid1, the / and swap have hot spare
-partitions.
+Selling a liquid vitamin and mineral supplement. Now would be a perfect time 
+to join this real business opportunity with a company that is willing to 
+back us and support us in this new market.
 
-The main reason for this is that you can't have boot block in XFS.
+For the leaders who come on board at this time in this virgin market, 
+the monetary potential will be unlimited.
 
-Bye,
--=Lajbi=----------------------------------------------------------------
- LAJBER Zoltan               Szent Istvan Egyetem,  Informatika Hivatal
- Most of the time, if you think you are in trouble, crank that throttle!
+Your FREE No Obligation 30 Day Trial Proves How Simple It Can BE For You 
+To Earn An Extra $2,000+ Per Month In As Little As 90 Days
+
+Take Our FREE Tour now and LOCK your POSITION NOW.
+
+    http://tinyurl.com/7ny2s
+
+See you at the top!
+
+Mirazol
+mahal1970@excite.com
+
+======================================================
+FOR YOUR CHEAP AND FRESH LEADS
+     http://tinyurl.com/8b873
+
+ WERE THE TOP NETWORKERS CHOICE;
+
+======================================================
+FOR (FUTURE) PURCHASE OR FOR MAKING MONEY, YOU CAN 
+JOIN HERE FOR FREE...A VERY GOOD PRODUCT...PLS. CHECK;
+
+   http://shmyl.com/rhimson
+
+======================================================
+(DISCLAIMER AND REMOVAL INSTRUCTIONS)
+======================================================
+If you dont want to received this message again, please
+request its removal at the above email address,putting 
+REMOVE in the subject.
+
+Please allow 48 hours for your email to be removed.
+
+Thank You!
+
+------------------------------------------------------------
