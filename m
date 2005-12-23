@@ -1,22 +1,20 @@
-From: "Ezra Major" <qynwwyvvlxnf@hotmail.com>
-Subject: Watches Lovers Love this oQwGN
-Date: Fri, 23 Dec 2005 04:57:56 -0700
-Message-ID: <LAW95.OE649yfB4mvo312753d5__10187.8783469603$1135339106$gmane$org@motmail.com>
+From: "Chrystal K. Caudill" <caudill_pm@cicb.be>
+Subject: Buiy cials-tabs at Unbelievable Prices
+Date: Fri, 23 Dec 2005 14:24:46 +0100
+Message-ID: <319e01c607c4$fb6e619d$8943b0c3@moebelspedition.de>
+Mime-Version: 1.0
+Content-Type: text/plain; format=flowed; charset=iso-8859-1; reply-type=original
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-net@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-World Top10 Branded Watches at 90% off 
-the original price. We have almost all models
-to be choosen from which makes our replikas
-the best and highest quality assured by our 
-manufacturer or else full refund is being
-given without questions ask.
+Be ERECT in under 15 mins
 
-Check us out toooday..
-http://043.foodprocesormaker.com
+PRlCE: $ 2 / use
+
+visit our megasite --> onlineclear.com
 
 
-Evrvh
