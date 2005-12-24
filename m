@@ -1,23 +1,23 @@
-From: Ben Hoover <reappraisals@bowhausdesign.com>
-Subject: Your trusted source for prescription medication.
-Date: Sat, 24 Dec 2005 09:04:17 -0500
-Message-ID: <9530987496.4370690766@p508372D6.dip.t-dialin.net>
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+From: Andrew Burgess <aab@cichlid.com>
+Subject: Re: moving failing system disk to 2xnew RAID1
+Date: Sat, 24 Dec 2005 11:24:12 -0800
+Message-ID: <200512241924.jBOJOCTQ002276@cichlid.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Become self-confident! Make it happen!
-http://ktya.w1231ajn2q2meww8jewq1eew.vernallyda.com/?algrnvzl
+>> What would the procedure be for moving the data off my (single) Maxtor onto a 
+>> RAID1 of 2 WD800JBs?
 
+>I wonder if I should just use the fedora installation disk to create a 
+>RAID1 from the two WD disks and install it on there, then somehow copy 
+>over the data from the Maxtor (perhaps while booted from a Live Linux CD)?
 
-Big Brother is watching you.        
-A lot of women are getting alimony who don't earn it.  
-To my embarrassment I was born in bed with a lady.  
-I believe in looking reality straight in the eye and denying it. 
-Don't let your sorrow come higher than your knees.    
-The guilty catch themselves.         
+Create the raid1 and mkfs. Then 
+  cp -aux / /raid
+then boot single user and do it again to get the few files that have changed
+(logs etc)
 
+then adjust your boot program to boot from the raid
 
