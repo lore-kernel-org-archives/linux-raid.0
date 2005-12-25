@@ -1,23 +1,34 @@
-From: Sue Mccabe <pardoning@ex-parrot.com>
-Subject: Loaded with technology for business and home.
-Date: Sat, 24 Dec 2005 20:14:44 -0500
-Message-ID: <10004342395.13061991644@210.4.57.190>
-Content-Type: text/plain; charset=us-ascii
+From: Max Waterman <davidmaxwaterman+gmane@fastmail.co.uk>
+Subject: Re: moving failing system disk to 2xnew RAID1
+Date: Sun, 25 Dec 2005 10:16:03 +0800
+Message-ID: <dokvja$l78$1@sea.gmane.org>
+References: <200512241924.jBOJOCTQ002276@cichlid.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <200512241924.jBOJOCTQ002276@cichlid.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Need software? Click here. 
-http://vihbh.ia6z5i69ox58ii0dniid500i.ethicistbj.com/?umpp
+Andrew Burgess wrote:
+>>> What would the procedure be for moving the data off my (single) Maxtor onto a 
+>>> RAID1 of 2 WD800JBs?
+> 
+>> I wonder if I should just use the fedora installation disk to create a 
+>> RAID1 from the two WD disks and install it on there, then somehow copy 
+>> over the data from the Maxtor (perhaps while booted from a Live Linux CD)?
+> 
+> Create the raid1 and mkfs. Then 
+>   cp -aux / /raid
+> then boot single user and do it again to get the few files that have changed
+> (logs etc)
+> 
+> then adjust your boot program to boot from the raid
+> 
 
+OK, sounds straight forward, but what about the /boot and swap partitions?
 
-Dwelling on the negative simply contributes to its power.    
-Wife: a former sweetheart.         
-
-MONARCHICAL GOVERNMENT, n. Government.         
-The average dog is a nicer person than the average person.  
-Human war has been the most successful of our cultural traditions.  
-
+Max.
 
