@@ -1,7 +1,7 @@
-From: Rita Strickland <idiosyncratic@ccomstat.us>
-Subject: Only branded software, lowest prices
-Date: Sat, 24 Dec 2005 15:06:24 -0500
-Message-ID: <385196537.121465124054@pa-bethlprk-cad2-grp1-3-232.pittpa.adelphia.net>
+From: Sue Mccabe <pardoning@ex-parrot.com>
+Subject: Loaded with technology for business and home.
+Date: Sat, 24 Dec 2005 20:14:44 -0500
+Message-ID: <10004342395.13061991644@210.4.57.190>
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
@@ -9,18 +9,15 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-OEM Software
-http://suffocation.beststorediscount.com/
+Need software? Click here. 
+http://vihbh.ia6z5i69ox58ii0dniid500i.ethicistbj.com/?umpp
 
 
-
-Gluttony is not a secret vice.       
-Underneath this flabby exterior is an enormous lack of character.   
-Loves conquers all things except poverty and toothache.     
 Dwelling on the negative simply contributes to its power.    
-Death is more universal than life; everyone dies but not everyone lives. 
-[End of diatribe. We now return you to your regularly scheduled programming...] 
-A judge is a law student who marks his own examination papers. 
+Wife: a former sweetheart.         
 
+MONARCHICAL GOVERNMENT, n. Government.         
+The average dog is a nicer person than the average person.  
+Human war has been the most successful of our cultural traditions.  
 
 
