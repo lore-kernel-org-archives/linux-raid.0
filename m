@@ -1,23 +1,22 @@
-From: Gil Christopher <Yankee@asalarsson.com>
-Subject: Fully functional, unrestricted copy of the software. Get MORE results with LESS efforts.
-Date: Sun, 25 Dec 2005 14:28:11 -0500
-Message-ID: <7580583349.5030097290@200-103-89-26.cbace702.dsl.brasiltelecom.net.br>
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+From: "Delmer Eaton" <VQRSKDNRC@hotmail.com>
+Subject: Watches Lovers Love this M0U
+Date: Tue, 27 Dec 2005 00:52:21 -0100
+Message-ID: <LAW31.OE649yfB4mvo024753d5@motmail.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux-net@vger.kernel.org
 List-Id: linux-raid.ids
 
-Why pay big bucks? Create your OWN website now! 
-http://ezbk.kuq1pkqbqz7skkkf722x722k.velumenjg.com/?utlc
+
+World Top10 Branded Watches at 90% off 
+the original price. We have almost all models
+to be choosen from which makes our replikas
+the best and highest quality assured by our 
+manufacturer or else full refund is being
+given without questions ask.
+
+Check us out toooday..
+http://043.smartphonessmart.com
 
 
-Never offend people with style when you can offend them with substance. 
-People who are always making allowances for themselves soon go bankrupt.  
-Hell hath no fury like a bureaucrat scorned.     
-Never read a book through merely because you have begun it.  
-Whatever advice you give, be brief.       
-A teacher affects eternity; he can never tell where his influence stops. 
-
-
+oNftgv
