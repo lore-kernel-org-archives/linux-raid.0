@@ -1,113 +1,52 @@
-From: Mitchell Laks <mlaks@verizon.net>
-Subject: raid1: All my data completely vanished into the void
-Date: Tue, 27 Dec 2005 23:40:48 -0500
-Message-ID: <200512272340.48483.mlaks@verizon.net>
+From: Mike Hardy <mhardy@h3c.com>
+Subject: Re: raid1: All my data completely vanished into the void
+Date: Tue, 27 Dec 2005 20:33:03 -0800
+Message-ID: <43B2157F.8030505@h3c.com>
+References: <200512272340.48483.mlaks@verizon.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-disposition: inline
+In-Reply-To: <200512272340.48483.mlaks@verizon.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Mitchell Laks <mlaks@verizon.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
 
-I just set up a new server running stable Debian Sarge, fresh install,
-mdadm 1.9.0,  linux kernel 2.6.8-2 
-and all my (test) data has vanished into the ether. 
-
-What did I do wrong? I don't want this to happen in real life :).
-
-I have 6x 400Gb Western Digital sata drives attached to  sata controllers. One 
-pair of channels  is on the motherboard using VIA VT8237 controller 
-and 2 highpoint 1520 sata cards give 4 other channels.
-
-/dev/sda
-/dev/sdb
-/dev/sdc
-/dev/sdd
-/dev/sde
-/dev/sdf
-
-I partioned each hard drive completely as 1 partition, type fd
-ie  fdisk then "n p 1 enter t fd w q":
-
-/dev/sda1
-/dev/sdb1
-/dev/sdc1
-/dev/sdd1
-/dev/sde1
-/dev/sdf1
-
-I then created 3 raid1 arrays
-mdadm -Cv -n2 -l1 /dev/md0 /dev/sda1 /dev/sdb1
-mdadm -Cv -n2 -l1 /dev/md1 /dev/sdc1 /dev/sdd1
-mdadm -Cv -n2 -l1 /dev/md2 /dev/sde1 /dev/sdf1
-
-I then formated
-mkfs.ext3 /dev/md0
-mkfs.ext3 /dev/md1
-mkfs.ext3 /dev/md2
-
-I then mounted
-mount /dev/md0 /home/big0
-mount /dev/md1 /home/big1
-mount /dev/md2 /home/big2
-
-I then waited until all syncing was done.
-
-Then I copied 3 gb of data to the 3 arrays from another machine over the 
-network via rsync.
+Mitchell Laks wrote:
+> Hi,
+> 
+> I just set up a new server running stable Debian Sarge, fresh install,
+> mdadm 1.9.0,  linux kernel 2.6.8-2 
+> and all my (test) data has vanished into the ether. 
+> 
+> What did I do wrong? I don't want this to happen in real life :).
 
 
-I did df -h and indeed the data was there. I cd into the directories and there 
-was data there.
+[ description of sane-looking md setup snipped ]
 
-Then I did 
-shutdown -h now
+> Did I screw up everything by not unmounting the devices? What happened?
 
-however I did not!! (?evil) umount the different devices 
-/dev/md0 /dev/md1 /dev/md2 before doing that.
+Failure to unmount the devices should have resulted in possibly last
+writes but a journalling filesystem would have kept things consistent.
 
-Now I reboot into linux. 
+Failure to nicely stop the arrays also could have possibly degraged the
+arrays if they were being written to as the machine went down, but they
+should be there.
 
-I try to assemble the arrays
-mdadm -A /dev/md0 /dev/sda1 /dev/sdb1
+In short: it *definitely* should *not* have come back with what you saw.
+I have no clue why this happened, all I can say is that I use md on
+around 10 business critical production machines in exactly the way you
+describe, and I have not seen this (though I've seen the failure modes I
+described!).
 
-mdadm --detail --scan gives me nothing at all.
+Are you positively sure that nothing else weird could have been going
+on? Some layer that remaps drive names? funky hardware? write caching
+capable of holding 3GB before writing out? Write caching of some sort is
+actually my best guess.
 
-And I get nothing.
-I do fdisk -l
+If there's no extra data to explain this, I'm at a loss.
 
-and no trace of any of the partitions. It is as if there are no 
-partitions /dev/sdX1, where X is a-f.
-I do 
-fdisk /dev/sda
+Anyone else?
 
-I get message:
-
-Device contains neither a valid DOS partition table, nor Sun, SGI or OSF 
-disklabel
-Building a new DOS disklabel. Changes will remain in memory only,
-until you decide to write them. After that, of course, the previous
-content won't be recoverable.
-
-
-The number of cylinders for this disk is set to 48641.
-There is nothing wrong with that, but this is larger than 1024,
-and could in certain setups cause problems with:
-1) software that runs at boot time (e.g., old versions of LILO)
-2) booting and partitioning software from other OSs
-   (e.g., DOS FDISK, OS/2 FDISK)
-Warning: invalid flag 0x0000 of partition table 4 will be corrected by w(rite)
-
-p shows nothing!!
-
-??????????????????????????????
-
-Did I screw up everything by not unmounting the devices? What happened?
-
-  
-Thanks,
-Mitchell Laks
+-Mike
