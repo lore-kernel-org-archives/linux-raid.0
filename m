@@ -1,48 +1,38 @@
-From: Daniel Pittman <daniel@rimspace.net>
-Subject: Re: raid1: All my data completely vanished into the void
-Date: Wed, 28 Dec 2005 21:34:12 +1100
-Message-ID: <87acelse6z.fsf@rimspace.net>
-References: <200512280030.51387.mlaks@verizon.net>
-	<E1ErULq-0007Nu-5l@highlab.com> <87ek3xsoub.fsf@rimspace.net>
-	<doti2m$tu5$1@sea.gmane.org>
+From: Ewan Grantham <ewan.grantham@gmail.com>
+Subject: Re: RAID-5 using CLOOP devices
+Date: Wed, 28 Dec 2005 07:21:08 -0600
+Message-ID: <6d5bedd80512280521v47711d7ejdf22cb60b7fc3b41@mail.gmail.com>
+References: <6d5bedd80512271108q6dda3d2ax23b226caba823caa@mail.gmail.com>
+	 <20051228023031.GA31926@lug.udel.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20051228023031.GA31926@lug.udel.edu>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Ross Vandegrift <ross@lug.udel.edu>
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Max Waterman <davidmaxwaterman+gmane@fastmail.co.uk> writes:
-> Daniel Pittman wrote:
->> Sebastian Kuzminsky <seb@highlab.com> writes:
->>> Mitchell Laks <mlaks@verizon.net> wrote:
->>>> What does doing
->>>>
->>>> mdadm -Cv -n2 -l1 /dev/md0 /dev/sda /dev/sdb
->>>>
->>>> do to the partition tables??? (And why can I still access the data
->>>> if I messed up the partitions??? very odd).
->>>> Can you point me at an explanation of the effects of what I did?
->>> I'd expect that command to overwrite the partition table with the
->>> MD metadata, or at least put the partition table at risk of being
->>> overwritten later.
->> Nope: the MD metadata lives at the end of the disk, not the start, so
->> your partition table would still be there when the filesystem wrote over
->> the first block of the disk...
->> ....and, if the partition table lived through that, I guess the
->> filesystem doesn't use (or respects) that block itself.
+On 12/27/05, Ross Vandegrift <ross@lug.udel.edu> wrote:
+> Wait - so what is the difference?
 >
-> ...but, just so as I understand, by using the whole disk (ie /dev/sda
-> and not /dev/sda1, etc), you're telling md to make the whole disk
-> available to your filesystem (or whatever), including the space normally
-> used to store the partition table, and so any partition table that
-> happens to be on the disk(s) is likely to be over-written.
+> Right now, you are using md to make a RAID5 of cloop devices, on
+> something like a virtual environment.
 >
-> right?
+> Soon, you'll use md to make a RAID5 of cloop devices, on a total
+> physical environment.
+>
+> If it's working now, how could it possibly not work?
+> Maybe I don't understand the situation...
 
-Yeah, pretty much.  You lose around 128KB from the end of the disk, but
-the MD device should start the data at sector zero, right where the
-partition table is.
+The problem is that currently md doesn't think it's talking to a group
+of cloop devices, it thinks it's talking to "real" devices (cbod to be
+exact) that are hosting ext3 partitions. Technically, I suspect that
+it "should" work to just change the membership of the RAID on the
+Linux side, but given the amount of data, I'd like to avoid having to
+rebuild an array and have to reload all the data.
 
-          Daniel
-
+FWIW,
+Ewan
