@@ -1,115 +1,41 @@
-From: "James Northrup" <jim@grrrrr.gotdns.com>
-Subject: Re: Good, recent FS comparison?
-Date: Tue, 27 Dec 2005 18:02:06 -0800
-Message-ID: <007201c60b52$b4124d80$c60c150a@zero>
-References: <6d5bedd8050915131148b8108a@mail.gmail.com><432A37BF.7060305@dtbb.net><200509162258.37730.a1426z@gawab.com><432D3024.3080302@dtbb.net><002c01c60b3d$ea98c970$c60c150a@zero> <20051227174552.4d19ab6f.rdunlap@xenotime.net>
+From: ross@lug.udel.edu (Ross Vandegrift)
+Subject: Re: RAID-5 using CLOOP devices
+Date: Tue, 27 Dec 2005 21:30:31 -0500
+Message-ID: <20051228023031.GA31926@lug.udel.edu>
+References: <6d5bedd80512271108q6dda3d2ax23b226caba823caa@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="iso-8859-1";
-	reply-type=original
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <6d5bedd80512271108q6dda3d2ax23b226caba823caa@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Randy.Dunlap" <rdunlap@xenotime.net>
-Cc: pml@dtbb.net, a1426z@gawab.com, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, linux-xfs@oss.sgi.com
+To: Ewan Grantham <ewan.grantham@gmail.com>
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-http://ioi.homelinux.net/~jnorthrup/filesystem%20benchresults.xls
-http://ioi.homelinux.net/~jnorthrup/fsbench
+On Tue, Dec 27, 2005 at 01:08:32PM -0600, Ewan Grantham wrote:
+> I have been successfully using a RAID-5 array under Windows XP using
+> the coLinux 0.7 embedded Linux software (colinux.sourceforge.net) with
+> a Debian setup and mdadm (and Samba to make the array available to the
+> Windows side of the machine).
 
-Sorry, apache was being too helpful here...
+Wait - so what is the difference?
 
------ Original Message ----- 
-From: "Randy.Dunlap" <rdunlap@xenotime.net>
-To: "James Northrup" <jim@grrrrr.gotdns.com>
-Cc: <pml@dtbb.net>; <a1426z@gawab.com>; <linux-fsdevel@vger.kernel.org>; 
-<linux-raid@vger.kernel.org>; <linux-xfs@oss.sgi.com>
-Sent: Tuesday, December 27, 2005 5:45 PM
-Subject: Re: Good, recent FS comparison?
+Right now, you are using md to make a RAID5 of cloop devices, on
+something like a virtual environment.
 
+Soon, you'll use md to make a RAID5 of cloop devices, on a total
+physical environment.
 
-> On Tue, 27 Dec 2005 15:33:18 -0800 James Northrup wrote:
->
->> late reply... but ...
->>
->> this is a benchmark I performed for grins sometime about February using 
->> two
->> PATA udma5 volumes as software raid0.
->>
->> http://kiwi.io-informatics.com/~jnorthrup/filesystem%20benchresults.xls
->>
->>
->> the uname -a isn't anywhere to be found but it was circa 2.6.8
->>
->> the script is rpesumably still useful, for an experienced data groomer.
->>
->> http://kiwi.io-informatics.com/~jnorthrup/fsbench
->
-> Do you have a URL that works?
->
->
->> ----- Original Message ----- 
->> From: "Tyler" <pml@dtbb.net>
->> To: "Al Boldi" <a1426z@gawab.com>
->> Cc: <linux-fsdevel@vger.kernel.org>; "Linux RAID Mailing List"
->> <linux-raid@vger.kernel.org>; <linux-xfs@oss.sgi.com>
->> Sent: Sunday, September 18, 2005 1:15 AM
->> Subject: Re: Good, recent FS comparison?
->>
->>
->> >
->> > Al Boldi wrote:
->> >
->> >>Tyler wrote:
->> >>
->> >>>Ewan Grantham wrote:
->> >>>
->> >>>>I've just setup a nice, 6-disk, USB-2 300 Gig/disk array, and was
->> >>>>prepared to follow my normal pattern of installing ext3 as the
->> >>>>filesystem. However, I saw the interview with Hans Reiser about
->> >>>>ReiserFS4, and am now wondering if reiser has really improved enough
->> >>>>to use it, or if ext3 is still the way to go?
->> >>>>
->> >>>You'd be best off trying some tests of your own, using files of the 
->> >>>size
->> >>>and quantity you expect to use on a regular basis.  I would consider
->> >>>ext3, xfs, and reiser3/4... and run some tests with them.  We've had
->> >>>really good luck using XFS on large raids, I personally had a bad
->> >>>experience with reiserfs 3, it lost data on a USB based drive, as if 
->> >>>it
->> >>>were never even there, even after trying the recovery tools.
->> >>>
->> >>
->> >>Don't touch anything that doesn't do ordered-mode journaling, 
->> >>especially
->> >>if you use raid, unless your data-consistency requirements don't 
->> >>require
->> >>this.
->> >>
->> >>XFS is best, but does not support ordered-mode.
->> >>reiser4 is still new.
->> >>ext3 is rock-solid!
->> >>
->> >>--
->> >>Al
->> >>
->> >>-
->> >>To unsubscribe from this list: send the line "unsubscribe linux-raid" 
->> >>in
->> >>the body of a message to majordomo@vger.kernel.org
->> >>More majordomo info at  http://vger.kernel.org/majordomo-info.html
->> >>
->> > Al... you've given us some "do's" .. can you give us some "why's" to go
->> > along with them? :)  I would appreciate a run-down with some more 
->> > specific
->> > info as to what/why.
->> >
->> > Thanks,
->> > Tyler.
->
->
-> ---
-> ~Randy
-> 
+If it's working now, how could it possibly not work?
+Maybe I don't understand the situation...
 
+-- 
+Ross Vandegrift
+ross@lug.udel.edu
+
+"The good Christian should beware of mathematicians, and all those who
+make empty prophecies. The danger already exists that the mathematicians
+have made a covenant with the devil to darken the spirit and to confine
+man in the bonds of Hell."
+	--St. Augustine, De Genesi ad Litteram, Book II, xviii, 37
