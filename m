@@ -1,33 +1,42 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: Adding Reed-Solomon Personality to MD, need help/advice
-Date: Thu, 29 Dec 2005 13:14:08 -0800
-Message-ID: <43B451A0.1060601@zytor.com>
-References: <6.0.1.1.2.20040130235924.03f39710@mail.athenet.net>	 <dlsh2c$2h0$1@sea.gmane.org> <dp1aj1$su0$1@terminus.zytor.com> <e03b90ae0512291154x1745986dqef443a6b0b4787bc@mail.gmail.com>
+From: ross@lug.udel.edu (Ross Vandegrift)
+Subject: Re: RAID-5 using CLOOP devices
+Date: Thu, 29 Dec 2005 16:52:32 -0500
+Message-ID: <20051229215232.GA27346@lug.udel.edu>
+References: <6d5bedd80512271108q6dda3d2ax23b226caba823caa@mail.gmail.com> <20051228023031.GA31926@lug.udel.edu> <6d5bedd80512280521v47711d7ejdf22cb60b7fc3b41@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <e03b90ae0512291154x1745986dqef443a6b0b4787bc@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <6d5bedd80512280521v47711d7ejdf22cb60b7fc3b41@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: jeff@jab.org
-Cc: linux-raid@vger.kernel.org
+To: Ewan Grantham <ewan.grantham@gmail.com>
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Jeff Breidenbach wrote:
->>The fundamental problem is that generic RS requires table lookups even
->>in the common case, whereas RAID-6 uses shortcuts to substantially
->>speed up the computation in the common case.
-> 
-> 
-> If one wanted to support a typical 8-bit RS code (which supports a max of
-> 256 drives, including ECC drives) it is already way too big to use a table. RS
-> is typically done with finite field math calculations which are -
-> relatively - fast
-> but they are much heavier than a parity calculation. Here is one commercial
-> benchmark, note the throughput numbers at the bottom of the page.
-> 
+On Wed, Dec 28, 2005 at 07:21:08AM -0600, Ewan Grantham wrote:
+> The problem is that currently md doesn't think it's talking to a group
+> of cloop devices, it thinks it's talking to "real" devices (cbod to be
+> exact) that are hosting ext3 partitions.
 
-Well, most of them are implemented via tables (GF log table, etc.)  They 
-tend to perform poorly on modern hardware.
+Well, in a very good sense no block device is anymore "real" than
+anything else.  As far as md knows, a block device is a block device.
+Whether the actual backing storage is a disk or some software block
+device is immaterial.
 
-	-hpa
+If your arrays are assembled via UUIDs, things will probably just
+work.  If they are assembled via devices, you will probably have to
+change the command line to assemble them.
+
+The hitches with software devices are only in making sure that the
+devices are active before assembling the array.  So for cloop, you'll
+just need to start the devs before assembling your md.
+
+-- 
+Ross Vandegrift
+ross@lug.udel.edu
+
+"The good Christian should beware of mathematicians, and all those who
+make empty prophecies. The danger already exists that the mathematicians
+have made a covenant with the devil to darken the spirit and to confine
+man in the bonds of Hell."
+	--St. Augustine, De Genesi ad Litteram, Book II, xviii, 37
