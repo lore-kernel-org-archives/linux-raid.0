@@ -1,48 +1,38 @@
-From: "Bill Rugolsky Jr." <bill@rugolsky.com>
+From: Jeff Breidenbach <breidenbach@gmail.com>
 Subject: Re: Adding Reed-Solomon Personality to MD, need help/advice
-Date: Thu, 29 Dec 2005 14:23:02 -0500
-Message-ID: <20051229192302.GE1493@ti64.telemetry-investments.com>
-References: <6.0.1.1.2.20040130235924.03f39710@mail.athenet.net> <dlsh2c$2h0$1@sea.gmane.org> <dp1aj1$su0$1@terminus.zytor.com>
+Date: Thu, 29 Dec 2005 11:54:07 -0800
+Message-ID: <e03b90ae0512291154x1745986dqef443a6b0b4787bc@mail.gmail.com>
+References: <6.0.1.1.2.20040130235924.03f39710@mail.athenet.net>
+	 <dlsh2c$2h0$1@sea.gmane.org> <dp1aj1$su0$1@terminus.zytor.com>
+Reply-To: jeff@jab.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 In-Reply-To: <dp1aj1$su0$1@terminus.zytor.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: "H. Peter Anvin" <hpa@zytor.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Dec 29, 2005 at 10:40:33AM -0800, H. Peter Anvin wrote:
-> It's not really in-between; generic RS RAID would be many times slower
-> than either; however, unlike raid10 it could survive *any* m failures
-> where m is the number of redundancy drives.
-> 
 > The fundamental problem is that generic RS requires table lookups even
 > in the common case, whereas RAID-6 uses shortcuts to substantially
-> speed up the computation in the common case.  RAID-6 is an important
-> corner of the problem space, since it deals with the unfortunately
-> fairly common problem of "disk failure discovered during recovery"
-> with RAID-5.
-> 
-> That doesn't mean there couldn't be a problem space where it would
-> make sense (in fact, on the contrary), but it's still a substantial
-> engineering effort that would have to be justified.
-> 
-> Heck, I might even be persuaded to look for generic RS shortcuts if
-> someone tempted me enough...
+> speed up the computation in the common case.
 
-Funny, I was just thinking about this last night ...
- 
-The "obvious" case is distributed RAID (RAIS?), where one might
-want something to survive 50% loss or more.  But as you know,
-the generic RS suffers from the same read-modify-write latency as
-all parity-based RAID levels except Daniel Phillips's RAID 3.5
-[ http://sources.redhat.com/cluster/ddraid/ ].
+If one wanted to support a typical 8-bit RS code (which supports a max of
+256 drives, including ECC drives) it is already way too big to use a table. RS
+is typically done with finite field math calculations which are -
+relatively - fast
+but they are much heavier than a parity calculation. Here is one commercial
+benchmark, note the throughput numbers at the bottom of the page.
 
-For archival purposes though, slow writes might not be a big deal.
-At the margin, this use case begins to overlap various p2p technologies.
+   http://www.4i2i.com/reed_solomon_codes.htm
 
-Regards,
+I can easily imagine CPU being the bottleneck for a large RS RAID, especially
+when run in degraded mode. Rakhi Motwani and I worked on a RS based,
+RAID-like storage system, although not for magnetic disks. Search for
+"Collocated DataGlyph Protocol" if you are interested. It was a lot of fun.
 
-	Bill Rugolsky
+Cheers,
+Jeff
