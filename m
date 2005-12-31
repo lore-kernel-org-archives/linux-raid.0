@@ -1,68 +1,55 @@
-From: Mitchell Laks <mlaks@verizon.net>
-Subject: hard drives with "variable"  device names - mdadm raid assembly
- options setup
-Date: Fri, 30 Dec 2005 09:08:18 -0500
-Message-ID: <200512300908.19390.mlaks@verizon.net>
+From: Daniel Pittman <daniel@rimspace.net>
+Subject: Re: hard drives with "variable"  device names - mdadm raid assembly options setup
+Date: Sat, 31 Dec 2005 11:44:32 +1100
+Message-ID: <87d5jep027.fsf@rimspace.net>
+References: <200512300908.19390.mlaks@verizon.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+Mitchell Laks <mlaks@verizon.net> writes:
 
-I notice on my system that the hard drives "device names" can change.
-Ie . 
+G'day Mitchell.
 
-The hard drives  are connected to the motherboard  SATA connectors or to PCI 
-SATA cards. They get different "names" /dev/sda or /dev/sdc depending how 
-many of the cards are "active". 
+> I notice on my system that the hard drives "device names" can change.
+>
+> The hard drives are connected to the motherboard SATA connectors or to
+> PCI SATA cards. They get different "names" /dev/sda or /dev/sdc
+> depending how many of the cards are "active".
+>
+> For instance the hard drives on the motherboard itself are called
+> /dev/sde and /dev/sdf if there are hard drives on the 2 PCI cards and
+> are called /dev/sda and /dev/sdb if there are none.
 
-For instance the hard drives on the motherboard itself are called /dev/sde 
-and /dev/sdf if there are hard drives on the 2 PCI cards and are 
-called /dev/sda and /dev/sdb if there are none.
+Well, one solution is udev, but since you prefer to avoid that...
 
-This is disconcerting, as I am setting up a remote site that I want to be able 
-to visit rarely. I want to leave the "extra" hard drives on the PCI cards 
-"off" for a few months, and am worried of FUD (fear uncertainty and doubt)
-when I zoom in - to adjust the system - in a few months time when I come to 
-connect the additional drives.
+[...]
 
-(Note: I am completely confused by udev which makes my raid life difficult - 
-and I completely removed it so I am working with a static /dev/ 
-directory :) )
+> Now I am confused:  unfortunately this does not seem to help me: 
+> if it relys on the configuration file /etc/mdadm/mdadm.conf 
+> this config file - i create with the aid of mdadm --detail --scan 
+> seems to still have the (problematic) "variable" device names in it. 
 
-I notice that there is a -u option based on the fixed uuid
-mdadm -A /dev/md0 -u ?????
+...you can simply remove the 'device names' variable, and list the
+theoretically possible devices for MD stuff in the configuration:
 
-now I read in the man page:
+DEVICE /dev/hd*
+DEVICE /dev/sd*
 
-If precisely one device is listed, but --scan is not given, then  mdadm
-       acts  as  though --scan was given and identify information is extracted
-       from the configuration file.
+That will include all the IDE and SCSI disks (including SATA), so they
+will be scanned at an appropriate time.
 
-       The identity can be given with the --uuid  option,  with  the  --super-
-       minor  option,  can be found  in the config file, or will be taken from
-       the super block on the first component-device  listed  on  the  command
-       line.
+Then, list your arrays:
 
-Now I am confused:  unfortunately this does not seem to help me: 
-if it relys on the configuration file /etc/mdadm/mdadm.conf 
-this config file - i create with the aid of mdadm --detail --scan 
-seems to still have the (problematic) "variable" device names in it. 
-I want only to use the uuid and not the "device name" which may change.
-How can I deal effectively with my problem?  
+ARRAY /dev/md2 level=raid1 num-devices=2 UUID=529d70fa:e5fe992b:ceb05593:bfcc6c25
 
-I want to  set up my assemble line in my startup script so that all I need to 
-do is 
-1) connect the additional hard drives and 
-2) uncomment a line in a startup script that will refer to the new hard drives 
-only by their uuid so that I can be assured that the new device /dev/md1 will 
-be the new drives and not a switcheroo? 
+That will cause mdadm to scan all those device entries (all the disks
+and partitions) looking for an array with the right UUID, and assemble
+it from all the components it finds.
 
-Thanks!
+Regards,
+        Daniel
 
-Mitchell
