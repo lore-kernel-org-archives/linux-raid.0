@@ -1,65 +1,88 @@
-From: Gregory Seidman <gsslist+linuxraid@anthropohedron.net>
-Subject: Re: hard drives with "variable"  device names - mdadm raid assembly options setup
-Date: Sat, 31 Dec 2005 08:09:45 -0500
-Message-ID: <20051231130945.GA10745@anthropohedron.net>
-References: <200512300908.19390.mlaks@verizon.net> <87d5jep027.fsf@rimspace.net>
-Reply-To: gsslist+linuxraid@anthropohedron.net
+From: Andreas Haumer <andreas@xss.co.at>
+Subject: Re: mdadm-2.2 SEGFAULT: mdadm --assemble --scan
+Date: Sat, 31 Dec 2005 16:17:13 +0100
+Message-ID: <43B6A0F9.8040100@xss.co.at>
+References: <20051222205809.GC492@skl-net.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+ boundary="------------030300070105060600010506"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <87d5jep027.fsf@rimspace.net>
+In-Reply-To: <20051222205809.GC492@skl-net.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Andre Noll <maan@systemlinux.org>
+Cc: linux-raid@vger.kernel.org, Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-On Sat, Dec 31, 2005 at 11:44:32AM +1100, Daniel Pittman wrote:
-} Mitchell Laks <mlaks@verizon.net> writes:
-} 
-} G'day Mitchell.
-} 
-} > I notice on my system that the hard drives "device names" can change.
-} >
-} > The hard drives are connected to the motherboard SATA connectors or to
-} > PCI SATA cards. They get different "names" /dev/sda or /dev/sdc
-} > depending how many of the cards are "active".
-} >
-} > For instance the hard drives on the motherboard itself are called
-} > /dev/sde and /dev/sdf if there are hard drives on the 2 PCI cards and
-} > are called /dev/sda and /dev/sdb if there are none.
-} 
-} Well, one solution is udev, but since you prefer to avoid that...
-[...]
+This is a multi-part message in MIME format.
+--------------030300070105060600010506
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-I have an 8-tray SCSI hotswap rack, and I had a similar problem. I use
-scsidev, from the scsitools package (under Debian, at least), to create
-appropriately named block devices at boot before mdadm starts any md
-devices. My /etc/scsi.alias:
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-id=0, hostname="Adaptec AIC7XXX", devtype=disk, alias=rack0
-id=1, hostname="Adaptec AIC7XXX", devtype=disk, alias=rack1
-id=2, hostname="Adaptec AIC7XXX", devtype=disk, alias=rack2
-id=3, hostname="Adaptec AIC7XXX", devtype=disk, alias=rack3
-id=8, hostname="Adaptec AIC7XXX", devtype=disk, alias=rack4
-id=9, hostname="Adaptec AIC7XXX", devtype=disk, alias=rack5
-id=10, hostname="Adaptec AIC7XXX", devtype=disk, alias=rack6
-id=11, hostname="Adaptec AIC7XXX", devtype=disk, alias=rack7
+Hi!
 
-Now, this is just matching by SCSI id (and SCSI host) since I don't want to
-have to reconfigure on hotswap and the tray position controls the SCSI id,
-but it can match by any combination of manufacturer, serial_number, model,
-rev, wwid, lun, chan, hostname, hostid, and hostnum. Running scsidev -f
-will create block devices in /dev/scsi; I have /dev/scsi/rack[0-7]. Then my
-/etc/mdadm/mdadm.conf looks like this:
+Andre Noll schrieb:
+> sorry if this is already known/fixed: Assemble() is called from mdadm.c with
+> the "update" argument equal to NULL:
+> 
+> 	Assemble(ss, array_list->devname, mdfd, array_list, configfile,
+> 		NULL, readonly, runstop, NULL, verbose-quiet, force);
+> 
+> But in Assemble.c we have
+> 
+> 	if (ident->uuid_set && (!update && strcmp(update, "uuid")!= 0) && ...
+> 
+> which yields a segfault in glibc's strcmp().
+> 
+I just found the same problem after upgrading to mdadm-2.2
+The logic to test for update not being NULL seems to be
+reversed.
 
-DEVICE /dev/scsi/rack[01234567]
-ARRAY /dev/md0 devices=/dev/scsi/rack0,/dev/scsi/rack1,/dev/scsi/rack2,/dev/scsi/rack3,/dev/scsi/rack4,/dev/scsi/rack5,/dev/scsi/rack6,/dev/scsi/rack7
+I created a small patch which seems to cure the problem
+(see attached file)
 
-Very simple, very easy. The scsitools package includes scsiinfo, which
-should work on SATA (or ieee1394, or USB) drives to retrieve serial
-numbers. 
+HTH
 
-} Regards,
-}         Daniel
---Greg
+- - andreas
 
+- --
+Andreas Haumer                     | mailto:andreas@xss.co.at
+*x Software + Systeme              | http://www.xss.co.at/
+Karmarschgasse 51/2/20             | Tel: +43-1-6060114-0
+A-1100 Vienna, Austria             | Fax: +43-1-6060114-71
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.2 (GNU/Linux)
+Comment: Using GnuPG with Thunderbird - http://enigmail.mozdev.org
+
+iD8DBQFDtqD0xJmyeGcXPhERAsdiAJ0Ve787gscq4VOGtT+9Qp3k62iUEgCgs9pH
+Ekg0gkLEk+99XXHw+1ezdu8=
+=rh66
+-----END PGP SIGNATURE-----
+
+--------------030300070105060600010506
+Content-Type: text/plain;
+ name="update_uuid.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="update_uuid.patch"
+
+Index: mdadm/Assemble.c
+===================================================================
+RCS file: /home/cvs/repository/distribution/Utilities/mdadm/Assemble.c,v
+retrieving revision 1.1.1.7
+diff -u -r1.1.1.7 Assemble.c
+--- mdadm/Assemble.c	5 Dec 2005 05:56:20 -0000	1.1.1.7
++++ mdadm/Assemble.c	31 Dec 2005 15:01:34 -0000
+@@ -219,7 +219,7 @@
+ 		}
+ 		if (dfd >= 0) close(dfd);
+ 
+-		if (ident->uuid_set && (!update && strcmp(update, "uuid")!= 0) &&
++		if (ident->uuid_set && (update && strcmp(update, "uuid")!= 0) &&
+ 		    (!super || same_uuid(info.uuid, ident->uuid, tst->ss->swapuuid)==0)) {
+ 			if ((inargv && verbose >= 0) || verbose > 0)
+ 				fprintf(stderr, Name ": %s has wrong uuid.\n",
+
+--------------030300070105060600010506--
