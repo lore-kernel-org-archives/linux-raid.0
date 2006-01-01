@@ -1,17 +1,17 @@
 From: Matt Darcy <kernel-lists@projecthugo.co.uk>
-Subject: 2.6.15-rc5-mm3 sata_mv raid5 array failure to start
-Date: Sun, 01 Jan 2006 19:27:30 +0000
-Message-ID: <43B82D22.7080705@projecthugo.co.uk>
+Subject: 2.6.15-mm3 sata_mv / raid 5 array start failure on boot
+Date: Sun, 01 Jan 2006 19:30:38 +0000
+Message-ID: <43B82DDE.3060509@projecthugo.co.uk>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="------------080200020308010406040907"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
+ boundary="------------040605060701060808050805"
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
 To: linux-ide@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 This is a multi-part message in MIME format.
---------------080200020308010406040907
+--------------040605060701060808050805
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 
@@ -107,9 +107,389 @@ I'd get input before blindly upgrading.
 
 Matt
 
+--------------040605060701060808050805
+Content-Type: text/plain;
+ name="dmesg.out.txt"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="dmesg.out.txt"
 
+ion 1.20 loaded.
+sata_via 0000:00:0f.0: version 1.1
+ACPI: PCI Interrupt 0000:00:0f.0[B] -> Link [LNKB] -> GSI 10 (level, low) -> IRQ 10
+sata_via 0000:00:0f.0: routed to hard irq line 10
+ata1: SATA max UDMA/133 cmd 0xE200 ctl 0xE302 bmdma 0xE600 irq 10
+ata2: SATA max UDMA/133 cmd 0xE400 ctl 0xE502 bmdma 0xE608 irq 10
+ata1: SATA link up 1.5 Gbps (SStatus 113)
+ata1: dev 0 cfg 49:2f00 82:346b 83:7d01 84:4003 85:3469 86:3c01 87:4003 88:407f
+ata1: dev 0 ATA-6, max UDMA/133, 156301488 sectors: LBA48
+ata1: dev 0 configured for UDMA/133
+scsi0 : sata_via
+ata2: SATA link up 1.5 Gbps (SStatus 113)
+ata2: dev 0 cfg 49:2f00 82:346b 83:7d01 84:4003 85:3469 86:3c01 87:4003 88:407f
+ata2: dev 0 ATA-6, max UDMA/133, 156301488 sectors: LBA48
+ata2: dev 0 configured for UDMA/133
+scsi1 : sata_via
+  Vendor: ATA       Model: ST380817AS        Rev: 3.42
+  Type:   Direct-Access                      ANSI SCSI revision: 05
+  Vendor: ATA       Model: ST380817AS        Rev: 3.42
+  Type:   Direct-Access                      ANSI SCSI revision: 05
+sata_mv 0000:00:0c.0: version 0.5
+ACPI: PCI Interrupt 0000:00:0c.0[A] -> Link [LNKD] -> GSI 11 (level, low) -> IRQ 11
+sata_mv 0000:00:0c.0: 32 slots 8 ports SCSI mode IRQ via INTx
+ata3: SATA max UDMA/133 cmd 0x0 ctl 0xF8922120 bmdma 0x0 irq 11
+ata4: SATA max UDMA/133 cmd 0x0 ctl 0xF8924120 bmdma 0x0 irq 11
+ata5: SATA max UDMA/133 cmd 0x0 ctl 0xF8926120 bmdma 0x0 irq 11
+ata6: SATA max UDMA/133 cmd 0x0 ctl 0xF8928120 bmdma 0x0 irq 11
+ata7: SATA max UDMA/133 cmd 0x0 ctl 0xF8932120 bmdma 0x0 irq 11
+ata8: SATA max UDMA/133 cmd 0x0 ctl 0xF8934120 bmdma 0x0 irq 11
+ata9: SATA max UDMA/133 cmd 0x0 ctl 0xF8936120 bmdma 0x0 irq 11
+ata10: SATA max UDMA/133 cmd 0x0 ctl 0xF8938120 bmdma 0x0 irq 11
+ata3: no device found (phy stat 00000000)
+scsi2 : sata_mv
+ata4: dev 0 cfg 49:2f00 82:7c6b 83:7f09 84:4673 85:7c69 86:3e01 87:4663 88:007f
+ata4: dev 0 ATA-7, max UDMA/133, 490234752 sectors: LBA48
+ata4: dev 0 configured for UDMA/133
+scsi3 : sata_mv
+ata5: dev 0 cfg 49:2f00 82:7c6b 83:7f09 84:4773 85:7c69 86:3e01 87:4763 88:407f
+ata5: dev 0 ATA-7, max UDMA/133, 490234752 sectors: LBA48
+ata5: dev 0 configured for UDMA/133
+scsi4 : sata_mv
+ata6: dev 0 cfg 49:2f00 82:7c6b 83:7f09 84:4673 85:7c69 86:3e01 87:4663 88:007f
+ata6: dev 0 ATA-7, max UDMA/133, 490234752 sectors: LBA48
+ata6: dev 0 configured for UDMA/133
+scsi5 : sata_mv
+ata7: dev 0 cfg 49:2f00 82:7c6b 83:7f09 84:4773 85:7c69 86:3e01 87:4763 88:407f
+ata7: dev 0 ATA-7, max UDMA/133, 490234752 sectors: LBA48
+ata7: dev 0 configured for UDMA/133
+scsi6 : sata_mv
+ata8: dev 0 cfg 49:2f00 82:7c6b 83:7f09 84:4673 85:7c69 86:3e01 87:4663 88:007f
+ata8: dev 0 ATA-7, max UDMA/133, 490234752 sectors: LBA48
+ata8: dev 0 configured for UDMA/133
+scsi7 : sata_mv
+ata9: dev 0 cfg 49:2f00 82:7c6b 83:7f09 84:4673 85:7c69 86:3e01 87:4663 88:007f
+ata9: dev 0 ATA-7, max UDMA/133, 490234752 sectors: LBA48
+ata9: dev 0 configured for UDMA/133
+scsi8 : sata_mv
+ata10: dev 0 cfg 49:2f00 82:7c6b 83:7f09 84:4063 85:7c69 86:3e01 87:4063 88:007f
+ata10: dev 0 ATA-7, max UDMA/133, 490234752 sectors: LBA48
+ata10: dev 0 configured for UDMA/133
+scsi9 : sata_mv
+  Vendor: ATA       Model: Maxtor 6L250S0    Rev: BANC
+  Type:   Direct-Access                      ANSI SCSI revision: 05
+  Vendor: ATA       Model: Maxtor 6V250F0    Rev: VA11
+  Type:   Direct-Access                      ANSI SCSI revision: 05
+  Vendor: ATA       Model: Maxtor 6L250S0    Rev: BANC
+  Type:   Direct-Access                      ANSI SCSI revision: 05
+  Vendor: ATA       Model: Maxtor 6V250F0    Rev: VA11
+  Type:   Direct-Access                      ANSI SCSI revision: 05
+  Vendor: ATA       Model: Maxtor 6L250S0    Rev: BANC
+  Type:   Direct-Access                      ANSI SCSI revision: 05
+  Vendor: ATA       Model: Maxtor 6L250S0    Rev: BANC
+  Type:   Direct-Access                      ANSI SCSI revision: 05
+  Vendor: ATA       Model: Maxtor 6L250S0    Rev: BANC
+  Type:   Direct-Access                      ANSI SCSI revision: 05
+SCSI device sda: 156301488 512-byte hdwr sectors (80026 MB)
+SCSI device sda: drive cache: write back
+SCSI device sda: 156301488 512-byte hdwr sectors (80026 MB)
+SCSI device sda: drive cache: write back
+ sda: sda1 sda2 sda3 sda4 < sda5 sda6 sda7 >
+sd 0:0:0:0: Attached scsi disk sda
+SCSI device sdb: 156301488 512-byte hdwr sectors (80026 MB)
+SCSI device sdb: drive cache: write back
+SCSI device sdb: 156301488 512-byte hdwr sectors (80026 MB)
+SCSI device sdb: drive cache: write back
+ sdb: sdb1 sdb2 sdb3 sdb4 < sdb5 sdb6 sdb7 >
+sd 1:0:0:0: Attached scsi disk sdb
+SCSI device sdc: 490234752 512-byte hdwr sectors (251000 MB)
+SCSI device sdc: drive cache: write back
+SCSI device sdc: 490234752 512-byte hdwr sectors (251000 MB)
+SCSI device sdc: drive cache: write back
+ sdc: sdc1
+sd 3:0:0:0: Attached scsi disk sdc
+SCSI device sdd: 490234752 512-byte hdwr sectors (251000 MB)
+SCSI device sdd: drive cache: write back
+SCSI device sdd: 490234752 512-byte hdwr sectors (251000 MB)
+SCSI device sdd: drive cache: write back
+ sdd: sdd1
+sd 4:0:0:0: Attached scsi disk sdd
+SCSI device sde: 490234752 512-byte hdwr sectors (251000 MB)
+SCSI device sde: drive cache: write back
+SCSI device sde: 490234752 512-byte hdwr sectors (251000 MB)
+SCSI device sde: drive cache: write back
+ sde: sde1
+sd 5:0:0:0: Attached scsi disk sde
+SCSI device sdf: 490234752 512-byte hdwr sectors (251000 MB)
+SCSI device sdf: drive cache: write back
+SCSI device sdf: 490234752 512-byte hdwr sectors (251000 MB)
+SCSI device sdf: drive cache: write back
+ sdf: sdf1
+sd 6:0:0:0: Attached scsi disk sdf
+SCSI device sdg: 490234752 512-byte hdwr sectors (251000 MB)
+SCSI device sdg: drive cache: write back
+SCSI device sdg: 490234752 512-byte hdwr sectors (251000 MB)
+SCSI device sdg: drive cache: write back
+ sdg: sdg1
+sd 7:0:0:0: Attached scsi disk sdg
+SCSI device sdh: 490234752 512-byte hdwr sectors (251000 MB)
+SCSI device sdh: drive cache: write back
+SCSI device sdh: 490234752 512-byte hdwr sectors (251000 MB)
+SCSI device sdh: drive cache: write back
+ sdh: sdh1
+sd 8:0:0:0: Attached scsi disk sdh
+SCSI device sdi: 490234752 512-byte hdwr sectors (251000 MB)
+SCSI device sdi: drive cache: write back
+SCSI device sdi: 490234752 512-byte hdwr sectors (251000 MB)
+SCSI device sdi: drive cache: write back
+ sdi: sdi1
+sd 9:0:0:0: Attached scsi disk sdi
+sd 0:0:0:0: Attached scsi generic sg0 type 0
+sd 1:0:0:0: Attached scsi generic sg1 type 0
+sd 3:0:0:0: Attached scsi generic sg2 type 0
+sd 4:0:0:0: Attached scsi generic sg3 type 0
+sd 5:0:0:0: Attached scsi generic sg4 type 0
+sd 6:0:0:0: Attached scsi generic sg5 type 0
+sd 7:0:0:0: Attached scsi generic sg6 type 0
+sd 8:0:0:0: Attached scsi generic sg7 type 0
+sd 9:0:0:0: Attached scsi generic sg8 type 0
+usbmon: debugfs is not available
+ACPI: PCI Interrupt Link [LNKC] enabled at IRQ 3
+PCI: setting IRQ 3 as level-triggered
+ACPI: PCI Interrupt 0000:00:10.4[C] -> Link [LNKC] -> GSI 3 (level, low) -> IRQ 3
+ehci_hcd 0000:00:10.4: EHCI Host Controller
+ehci_hcd 0000:00:10.4: new USB bus registered, assigned bus number 1
+ehci_hcd 0000:00:10.4: irq 3, io mem 0xe20a1000
+ehci_hcd 0000:00:10.4: USB 2.0 started, EHCI 1.00, driver 10 Dec 2004
+usb usb1: configuration #1 chosen from 1 choice
+hub 1-0:1.0: USB hub found
+hub 1-0:1.0: 8 ports detected
+USB Universal Host Controller Interface driver v2.3
+ACPI: PCI Interrupt 0000:00:10.0[A] -> Link [LNKA] -> GSI 10 (level, low) -> IRQ 10
+PCI: Via IRQ fixup for 0000:00:10.0, from 5 to 10
+uhci_hcd 0000:00:10.0: UHCI Host Controller
+uhci_hcd 0000:00:10.0: new USB bus registered, assigned bus number 2
+uhci_hcd 0000:00:10.0: irq 10, io base 0x0000e900
+usb usb2: configuration #1 chosen from 1 choice
+hub 2-0:1.0: USB hub found
+hub 2-0:1.0: 2 ports detected
+ACPI: PCI Interrupt 0000:00:10.1[A] -> Link [LNKA] -> GSI 10 (level, low) -> IRQ 10
+PCI: Via IRQ fixup for 0000:00:10.1, from 5 to 10
+uhci_hcd 0000:00:10.1: UHCI Host Controller
+uhci_hcd 0000:00:10.1: new USB bus registered, assigned bus number 3
+uhci_hcd 0000:00:10.1: irq 10, io base 0x0000ea00
+usb usb3: configuration #1 chosen from 1 choice
+hub 3-0:1.0: USB hub found
+hub 3-0:1.0: 2 ports detected
+ACPI: PCI Interrupt 0000:00:10.2[B] -> Link [LNKB] -> GSI 10 (level, low) -> IRQ 10
+uhci_hcd 0000:00:10.2: UHCI Host Controller
+uhci_hcd 0000:00:10.2: new USB bus registered, assigned bus number 4
+uhci_hcd 0000:00:10.2: irq 10, io base 0x0000eb00
+usb usb4: configuration #1 chosen from 1 choice
+hub 4-0:1.0: USB hub found
+hub 4-0:1.0: 2 ports detected
+ACPI: PCI Interrupt 0000:00:10.3[B] -> Link [LNKB] -> GSI 10 (level, low) -> IRQ 10
+uhci_hcd 0000:00:10.3: UHCI Host Controller
+uhci_hcd 0000:00:10.3: new USB bus registered, assigned bus number 5
+uhci_hcd 0000:00:10.3: irq 10, io base 0x0000ec00
+usb usb5: configuration #1 chosen from 1 choice
+hub 5-0:1.0: USB hub found
+hub 5-0:1.0: 2 ports detected
+usbcore: registered new driver usblp
+drivers/usb/class/usblp.c: v0.13: USB Printer Device Class driver
+Initializing USB Mass Storage driver...
+usbcore: registered new driver usb-storage
+USB Mass Storage support registered.
+usbcore: registered new driver usbhid
+drivers/usb/input/hid-core.c: v2.6:USB HID core driver
+md: linear personality registered for level -1
+md: raid0 personality registered for level 0
+md: raid1 personality registered for level 1
+md: raid5 personality registered for level 5
+md: raid4 personality registered for level 4
+raid5: automatically using best checksumming function: pIII_sse
+   pIII_sse  :  4865.000 MB/sec
+raid5: using function: pIII_sse (4865.000 MB/sec)
+md: faulty personality registered for level -5
+md: md driver 0.90.3 MAX_MD_DEVS=256, MD_SB_DISKS=27
+md: bitmap version 4.39
+device-mapper: 4.5.0-ioctl (2005-10-04) initialised: dm-devel@redhat.com
+MC: drivers/edac/edac_mc.c version MC $Revision: 1.4.2.10 $
+NET: Registered protocol family 2
+IP route cache hash table entries: 32768 (order: 5, 131072 bytes)
+TCP established hash table entries: 131072 (order: 7, 524288 bytes)
+TCP bind hash table entries: 65536 (order: 6, 262144 bytes)
+TCP: Hash tables configured (established 131072 bind 65536)
+TCP reno registered
+ip_conntrack version 2.4 (8183 buckets, 65464 max) - 232 bytes per conntrack
+ip_conntrack_pptp version 3.1 loaded
+ip_tables: (C) 2000-2002 Netfilter core team
+ipt_recent v0.3.1: Stephen Frost <sfrost@snowman.net>.  http://snowman.net/projects/ipt_recent/
+arp_tables: (C) 2002 David S. Miller
+TCP bic registered
+NET: Registered protocol family 1
+NET: Registered protocol family 17
+Using IPI Shortcut mode
+ACPI wakeup devices: 
+SLPB PCI0 USB3 USB4 USB5 USB6 USB7 LAN0 UAR1 ECP1 
+ACPI: (supports S0 S1 S4 S5)
+md: Autodetecting RAID arrays.
+md: invalid superblock checksum on sdh1
+md: sdh1 has invalid sb, not importing!
+md: autorun ...
+md: considering sdi1 ...
+md:  adding sdi1 ...
+md:  adding sdg1 ...
+md:  adding sdf1 ...
+md:  adding sde1 ...
+md:  adding sdd1 ...
+md:  adding sdc1 ...
+md: sdb7 has different UUID to sdi1
+md: sdb6 has different UUID to sdi1
+md: sdb5 has different UUID to sdi1
+md: sdb3 has different UUID to sdi1
+md: sdb2 has different UUID to sdi1
+md: sdb1 has different UUID to sdi1
+md: sda7 has different UUID to sdi1
+md: sda6 has different UUID to sdi1
+md: sda5 has different UUID to sdi1
+md: sda3 has different UUID to sdi1
+md: sda2 has different UUID to sdi1
+md: sda1 has different UUID to sdi1
+md: created md6
+md: bind<sdc1>
+md: bind<sdd1>
+md: bind<sde1>
+md: bind<sdf1>
+md: bind<sdg1>
+md: export_rdev(sdi1)
+md: running: <sdg1><sdf1><sde1><sdd1><sdc1>
+md: kicking non-fresh sdf1 from array!
+md: unbind<sdf1>
+md: export_rdev(sdf1)
+raid5: device sdg1 operational as raid disk 4
+raid5: device sde1 operational as raid disk 2
+raid5: device sdd1 operational as raid disk 1
+raid5: device sdc1 operational as raid disk 0
+raid5: not enough operational devices for md6 (2/6 failed)
+RAID5 conf printout:
+ --- rd:6 wd:4 fd:2
+ disk 0, o:1, dev:sdc1
+ disk 1, o:1, dev:sdd1
+ disk 2, o:1, dev:sde1
+ disk 4, o:1, dev:sdg1
+raid5: failed to run raid set md6
+md: pers->run() failed ...
+md: do_md_run() returned -5
+md: md6 stopped.
+md: unbind<sdg1>
+md: export_rdev(sdg1)
+md: unbind<sde1>
+md: export_rdev(sde1)
+md: unbind<sdd1>
+md: export_rdev(sdd1)
+md: unbind<sdc1>
+md: export_rdev(sdc1)
+md: considering sdb7 ...
+md:  adding sdb7 ...
+md: sdb6 has different UUID to sdb7
+md: sdb5 has different UUID to sdb7
+md: sdb3 has different UUID to sdb7
+md: sdb2 has different UUID to sdb7
+md: sdb1 has different UUID to sdb7
+md:  adding sda7 ...
+md: sda6 has different UUID to sdb7
+md: sda5 has different UUID to sdb7
+md: sda3 has different UUID to sdb7
+md: sda2 has different UUID to sdb7
+md: sda1 has different UUID to sdb7
+md: created md5
+md: bind<sda7>
+md: bind<sdb7>
+md: running: <sdb7><sda7>
+raid1: raid set md5 active with 2 out of 2 mirrors
+md: considering sdb6 ...
+md:  adding sdb6 ...
+md: sdb5 has different UUID to sdb6
+md: sdb3 has different UUID to sdb6
+md: sdb2 has different UUID to sdb6
+md: sdb1 has different UUID to sdb6
+md:  adding sda6 ...
+md: sda5 has different UUID to sdb6
+md: sda3 has different UUID to sdb6
+md: sda2 has different UUID to sdb6
+md: sda1 has different UUID to sdb6
+md: created md4
+md: bind<sda6>
+md: bind<sdb6>
+md: running: <sdb6><sda6>
+raid1: raid set md4 active with 2 out of 2 mirrors
+md: considering sdb5 ...
+md:  adding sdb5 ...
+md: sdb3 has different UUID to sdb5
+md: sdb2 has different UUID to sdb5
+md: sdb1 has different UUID to sdb5
+md:  adding sda5 ...
+md: sda3 has different UUID to sdb5
+md: sda2 has different UUID to sdb5
+md: sda1 has different UUID to sdb5
+md: created md3
+md: bind<sda5>
+md: bind<sdb5>
+md: running: <sdb5><sda5>
+raid1: raid set md3 active with 2 out of 2 mirrors
+md: considering sdb3 ...
+md:  adding sdb3 ...
+md: sdb2 has different UUID to sdb3
+md: sdb1 has different UUID to sdb3
+md:  adding sda3 ...
+md: sda2 has different UUID to sdb3
+md: sda1 has different UUID to sdb3
+md: created md2
+md: bind<sda3>
+md: bind<sdb3>
+md: running: <sdb3><sda3>
+raid1: raid set md2 active with 2 out of 2 mirrors
+md: considering sdb2 ...
+md:  adding sdb2 ...
+md: sdb1 has different UUID to sdb2
+md:  adding sda2 ...
+md: sda1 has different UUID to sdb2
+md: created md0
+md: bind<sda2>
+md: bind<sdb2>
+md: running: <sdb2><sda2>
+raid1: raid set md0 active with 2 out of 2 mirrors
+md: considering sdb1 ...
+md:  adding sdb1 ...
+md:  adding sda1 ...
+md: created md1
+md: bind<sda1>
+md: bind<sdb1>
+md: running: <sdb1><sda1>
+raid1: raid set md1 active with 2 out of 2 mirrors
+md: ... autorun DONE.
+EXT3-fs: mounted filesystem with ordered data mode.
+VFS: Mounted root (ext3 filesystem) readonly.
+Freeing unused kernel memory: 200k freed
+kjournald starting.  Commit interval 5 seconds
+Adding 4008120k swap on /dev/md2.  Priority:1 extents:1 across:4008120k
+EXT3 FS on md0, internal journal
+kjournald starting.  Commit interval 5 seconds
+EXT3 FS on md1, internal journal
+EXT3-fs: mounted filesystem with ordered data mode.
+kjournald starting.  Commit interval 5 seconds
+EXT3 FS on md3, internal journal
+EXT3-fs: mounted filesystem with ordered data mode.
+kjournald starting.  Commit interval 5 seconds
+EXT3 FS on md4, internal journal
+EXT3-fs: mounted filesystem with ordered data mode.
+kjournald starting.  Commit interval 5 seconds
+EXT3 FS on md5, internal journal
+EXT3-fs: mounted filesystem with ordered data mode.
+eth1: link up, 100Mbps, full-duplex, lpa 0x41E1
+r8169: eth2: link up
 
---------------080200020308010406040907
+--------------040605060701060808050805
 Content-Type: text/plain;
  name="sys.log.txt"
 Content-Transfer-Encoding: 7bit
@@ -558,386 +938,4 @@ Jan  1 17:18:30 berger ntpd[2241]: synchronized to 212.85.158.10, stratum=3
 Jan  1 17:18:32 berger ntpd[2241]: synchronized to 146.64.241.229, stratum=2
 Jan  1 17:27:05 berger ntpd[2241]: kernel time sync enabled 0001
 
---------------080200020308010406040907
-Content-Type: text/plain;
- name="dmesg.out.txt"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="dmesg.out.txt"
-
-ion 1.20 loaded.
-sata_via 0000:00:0f.0: version 1.1
-ACPI: PCI Interrupt 0000:00:0f.0[B] -> Link [LNKB] -> GSI 10 (level, low) -> IRQ 10
-sata_via 0000:00:0f.0: routed to hard irq line 10
-ata1: SATA max UDMA/133 cmd 0xE200 ctl 0xE302 bmdma 0xE600 irq 10
-ata2: SATA max UDMA/133 cmd 0xE400 ctl 0xE502 bmdma 0xE608 irq 10
-ata1: SATA link up 1.5 Gbps (SStatus 113)
-ata1: dev 0 cfg 49:2f00 82:346b 83:7d01 84:4003 85:3469 86:3c01 87:4003 88:407f
-ata1: dev 0 ATA-6, max UDMA/133, 156301488 sectors: LBA48
-ata1: dev 0 configured for UDMA/133
-scsi0 : sata_via
-ata2: SATA link up 1.5 Gbps (SStatus 113)
-ata2: dev 0 cfg 49:2f00 82:346b 83:7d01 84:4003 85:3469 86:3c01 87:4003 88:407f
-ata2: dev 0 ATA-6, max UDMA/133, 156301488 sectors: LBA48
-ata2: dev 0 configured for UDMA/133
-scsi1 : sata_via
-  Vendor: ATA       Model: ST380817AS        Rev: 3.42
-  Type:   Direct-Access                      ANSI SCSI revision: 05
-  Vendor: ATA       Model: ST380817AS        Rev: 3.42
-  Type:   Direct-Access                      ANSI SCSI revision: 05
-sata_mv 0000:00:0c.0: version 0.5
-ACPI: PCI Interrupt 0000:00:0c.0[A] -> Link [LNKD] -> GSI 11 (level, low) -> IRQ 11
-sata_mv 0000:00:0c.0: 32 slots 8 ports SCSI mode IRQ via INTx
-ata3: SATA max UDMA/133 cmd 0x0 ctl 0xF8922120 bmdma 0x0 irq 11
-ata4: SATA max UDMA/133 cmd 0x0 ctl 0xF8924120 bmdma 0x0 irq 11
-ata5: SATA max UDMA/133 cmd 0x0 ctl 0xF8926120 bmdma 0x0 irq 11
-ata6: SATA max UDMA/133 cmd 0x0 ctl 0xF8928120 bmdma 0x0 irq 11
-ata7: SATA max UDMA/133 cmd 0x0 ctl 0xF8932120 bmdma 0x0 irq 11
-ata8: SATA max UDMA/133 cmd 0x0 ctl 0xF8934120 bmdma 0x0 irq 11
-ata9: SATA max UDMA/133 cmd 0x0 ctl 0xF8936120 bmdma 0x0 irq 11
-ata10: SATA max UDMA/133 cmd 0x0 ctl 0xF8938120 bmdma 0x0 irq 11
-ata3: no device found (phy stat 00000000)
-scsi2 : sata_mv
-ata4: dev 0 cfg 49:2f00 82:7c6b 83:7f09 84:4673 85:7c69 86:3e01 87:4663 88:007f
-ata4: dev 0 ATA-7, max UDMA/133, 490234752 sectors: LBA48
-ata4: dev 0 configured for UDMA/133
-scsi3 : sata_mv
-ata5: dev 0 cfg 49:2f00 82:7c6b 83:7f09 84:4773 85:7c69 86:3e01 87:4763 88:407f
-ata5: dev 0 ATA-7, max UDMA/133, 490234752 sectors: LBA48
-ata5: dev 0 configured for UDMA/133
-scsi4 : sata_mv
-ata6: dev 0 cfg 49:2f00 82:7c6b 83:7f09 84:4673 85:7c69 86:3e01 87:4663 88:007f
-ata6: dev 0 ATA-7, max UDMA/133, 490234752 sectors: LBA48
-ata6: dev 0 configured for UDMA/133
-scsi5 : sata_mv
-ata7: dev 0 cfg 49:2f00 82:7c6b 83:7f09 84:4773 85:7c69 86:3e01 87:4763 88:407f
-ata7: dev 0 ATA-7, max UDMA/133, 490234752 sectors: LBA48
-ata7: dev 0 configured for UDMA/133
-scsi6 : sata_mv
-ata8: dev 0 cfg 49:2f00 82:7c6b 83:7f09 84:4673 85:7c69 86:3e01 87:4663 88:007f
-ata8: dev 0 ATA-7, max UDMA/133, 490234752 sectors: LBA48
-ata8: dev 0 configured for UDMA/133
-scsi7 : sata_mv
-ata9: dev 0 cfg 49:2f00 82:7c6b 83:7f09 84:4673 85:7c69 86:3e01 87:4663 88:007f
-ata9: dev 0 ATA-7, max UDMA/133, 490234752 sectors: LBA48
-ata9: dev 0 configured for UDMA/133
-scsi8 : sata_mv
-ata10: dev 0 cfg 49:2f00 82:7c6b 83:7f09 84:4063 85:7c69 86:3e01 87:4063 88:007f
-ata10: dev 0 ATA-7, max UDMA/133, 490234752 sectors: LBA48
-ata10: dev 0 configured for UDMA/133
-scsi9 : sata_mv
-  Vendor: ATA       Model: Maxtor 6L250S0    Rev: BANC
-  Type:   Direct-Access                      ANSI SCSI revision: 05
-  Vendor: ATA       Model: Maxtor 6V250F0    Rev: VA11
-  Type:   Direct-Access                      ANSI SCSI revision: 05
-  Vendor: ATA       Model: Maxtor 6L250S0    Rev: BANC
-  Type:   Direct-Access                      ANSI SCSI revision: 05
-  Vendor: ATA       Model: Maxtor 6V250F0    Rev: VA11
-  Type:   Direct-Access                      ANSI SCSI revision: 05
-  Vendor: ATA       Model: Maxtor 6L250S0    Rev: BANC
-  Type:   Direct-Access                      ANSI SCSI revision: 05
-  Vendor: ATA       Model: Maxtor 6L250S0    Rev: BANC
-  Type:   Direct-Access                      ANSI SCSI revision: 05
-  Vendor: ATA       Model: Maxtor 6L250S0    Rev: BANC
-  Type:   Direct-Access                      ANSI SCSI revision: 05
-SCSI device sda: 156301488 512-byte hdwr sectors (80026 MB)
-SCSI device sda: drive cache: write back
-SCSI device sda: 156301488 512-byte hdwr sectors (80026 MB)
-SCSI device sda: drive cache: write back
- sda: sda1 sda2 sda3 sda4 < sda5 sda6 sda7 >
-sd 0:0:0:0: Attached scsi disk sda
-SCSI device sdb: 156301488 512-byte hdwr sectors (80026 MB)
-SCSI device sdb: drive cache: write back
-SCSI device sdb: 156301488 512-byte hdwr sectors (80026 MB)
-SCSI device sdb: drive cache: write back
- sdb: sdb1 sdb2 sdb3 sdb4 < sdb5 sdb6 sdb7 >
-sd 1:0:0:0: Attached scsi disk sdb
-SCSI device sdc: 490234752 512-byte hdwr sectors (251000 MB)
-SCSI device sdc: drive cache: write back
-SCSI device sdc: 490234752 512-byte hdwr sectors (251000 MB)
-SCSI device sdc: drive cache: write back
- sdc: sdc1
-sd 3:0:0:0: Attached scsi disk sdc
-SCSI device sdd: 490234752 512-byte hdwr sectors (251000 MB)
-SCSI device sdd: drive cache: write back
-SCSI device sdd: 490234752 512-byte hdwr sectors (251000 MB)
-SCSI device sdd: drive cache: write back
- sdd: sdd1
-sd 4:0:0:0: Attached scsi disk sdd
-SCSI device sde: 490234752 512-byte hdwr sectors (251000 MB)
-SCSI device sde: drive cache: write back
-SCSI device sde: 490234752 512-byte hdwr sectors (251000 MB)
-SCSI device sde: drive cache: write back
- sde: sde1
-sd 5:0:0:0: Attached scsi disk sde
-SCSI device sdf: 490234752 512-byte hdwr sectors (251000 MB)
-SCSI device sdf: drive cache: write back
-SCSI device sdf: 490234752 512-byte hdwr sectors (251000 MB)
-SCSI device sdf: drive cache: write back
- sdf: sdf1
-sd 6:0:0:0: Attached scsi disk sdf
-SCSI device sdg: 490234752 512-byte hdwr sectors (251000 MB)
-SCSI device sdg: drive cache: write back
-SCSI device sdg: 490234752 512-byte hdwr sectors (251000 MB)
-SCSI device sdg: drive cache: write back
- sdg: sdg1
-sd 7:0:0:0: Attached scsi disk sdg
-SCSI device sdh: 490234752 512-byte hdwr sectors (251000 MB)
-SCSI device sdh: drive cache: write back
-SCSI device sdh: 490234752 512-byte hdwr sectors (251000 MB)
-SCSI device sdh: drive cache: write back
- sdh: sdh1
-sd 8:0:0:0: Attached scsi disk sdh
-SCSI device sdi: 490234752 512-byte hdwr sectors (251000 MB)
-SCSI device sdi: drive cache: write back
-SCSI device sdi: 490234752 512-byte hdwr sectors (251000 MB)
-SCSI device sdi: drive cache: write back
- sdi: sdi1
-sd 9:0:0:0: Attached scsi disk sdi
-sd 0:0:0:0: Attached scsi generic sg0 type 0
-sd 1:0:0:0: Attached scsi generic sg1 type 0
-sd 3:0:0:0: Attached scsi generic sg2 type 0
-sd 4:0:0:0: Attached scsi generic sg3 type 0
-sd 5:0:0:0: Attached scsi generic sg4 type 0
-sd 6:0:0:0: Attached scsi generic sg5 type 0
-sd 7:0:0:0: Attached scsi generic sg6 type 0
-sd 8:0:0:0: Attached scsi generic sg7 type 0
-sd 9:0:0:0: Attached scsi generic sg8 type 0
-usbmon: debugfs is not available
-ACPI: PCI Interrupt Link [LNKC] enabled at IRQ 3
-PCI: setting IRQ 3 as level-triggered
-ACPI: PCI Interrupt 0000:00:10.4[C] -> Link [LNKC] -> GSI 3 (level, low) -> IRQ 3
-ehci_hcd 0000:00:10.4: EHCI Host Controller
-ehci_hcd 0000:00:10.4: new USB bus registered, assigned bus number 1
-ehci_hcd 0000:00:10.4: irq 3, io mem 0xe20a1000
-ehci_hcd 0000:00:10.4: USB 2.0 started, EHCI 1.00, driver 10 Dec 2004
-usb usb1: configuration #1 chosen from 1 choice
-hub 1-0:1.0: USB hub found
-hub 1-0:1.0: 8 ports detected
-USB Universal Host Controller Interface driver v2.3
-ACPI: PCI Interrupt 0000:00:10.0[A] -> Link [LNKA] -> GSI 10 (level, low) -> IRQ 10
-PCI: Via IRQ fixup for 0000:00:10.0, from 5 to 10
-uhci_hcd 0000:00:10.0: UHCI Host Controller
-uhci_hcd 0000:00:10.0: new USB bus registered, assigned bus number 2
-uhci_hcd 0000:00:10.0: irq 10, io base 0x0000e900
-usb usb2: configuration #1 chosen from 1 choice
-hub 2-0:1.0: USB hub found
-hub 2-0:1.0: 2 ports detected
-ACPI: PCI Interrupt 0000:00:10.1[A] -> Link [LNKA] -> GSI 10 (level, low) -> IRQ 10
-PCI: Via IRQ fixup for 0000:00:10.1, from 5 to 10
-uhci_hcd 0000:00:10.1: UHCI Host Controller
-uhci_hcd 0000:00:10.1: new USB bus registered, assigned bus number 3
-uhci_hcd 0000:00:10.1: irq 10, io base 0x0000ea00
-usb usb3: configuration #1 chosen from 1 choice
-hub 3-0:1.0: USB hub found
-hub 3-0:1.0: 2 ports detected
-ACPI: PCI Interrupt 0000:00:10.2[B] -> Link [LNKB] -> GSI 10 (level, low) -> IRQ 10
-uhci_hcd 0000:00:10.2: UHCI Host Controller
-uhci_hcd 0000:00:10.2: new USB bus registered, assigned bus number 4
-uhci_hcd 0000:00:10.2: irq 10, io base 0x0000eb00
-usb usb4: configuration #1 chosen from 1 choice
-hub 4-0:1.0: USB hub found
-hub 4-0:1.0: 2 ports detected
-ACPI: PCI Interrupt 0000:00:10.3[B] -> Link [LNKB] -> GSI 10 (level, low) -> IRQ 10
-uhci_hcd 0000:00:10.3: UHCI Host Controller
-uhci_hcd 0000:00:10.3: new USB bus registered, assigned bus number 5
-uhci_hcd 0000:00:10.3: irq 10, io base 0x0000ec00
-usb usb5: configuration #1 chosen from 1 choice
-hub 5-0:1.0: USB hub found
-hub 5-0:1.0: 2 ports detected
-usbcore: registered new driver usblp
-drivers/usb/class/usblp.c: v0.13: USB Printer Device Class driver
-Initializing USB Mass Storage driver...
-usbcore: registered new driver usb-storage
-USB Mass Storage support registered.
-usbcore: registered new driver usbhid
-drivers/usb/input/hid-core.c: v2.6:USB HID core driver
-md: linear personality registered for level -1
-md: raid0 personality registered for level 0
-md: raid1 personality registered for level 1
-md: raid5 personality registered for level 5
-md: raid4 personality registered for level 4
-raid5: automatically using best checksumming function: pIII_sse
-   pIII_sse  :  4865.000 MB/sec
-raid5: using function: pIII_sse (4865.000 MB/sec)
-md: faulty personality registered for level -5
-md: md driver 0.90.3 MAX_MD_DEVS=256, MD_SB_DISKS=27
-md: bitmap version 4.39
-device-mapper: 4.5.0-ioctl (2005-10-04) initialised: dm-devel@redhat.com
-MC: drivers/edac/edac_mc.c version MC $Revision: 1.4.2.10 $
-NET: Registered protocol family 2
-IP route cache hash table entries: 32768 (order: 5, 131072 bytes)
-TCP established hash table entries: 131072 (order: 7, 524288 bytes)
-TCP bind hash table entries: 65536 (order: 6, 262144 bytes)
-TCP: Hash tables configured (established 131072 bind 65536)
-TCP reno registered
-ip_conntrack version 2.4 (8183 buckets, 65464 max) - 232 bytes per conntrack
-ip_conntrack_pptp version 3.1 loaded
-ip_tables: (C) 2000-2002 Netfilter core team
-ipt_recent v0.3.1: Stephen Frost <sfrost@snowman.net>.  http://snowman.net/projects/ipt_recent/
-arp_tables: (C) 2002 David S. Miller
-TCP bic registered
-NET: Registered protocol family 1
-NET: Registered protocol family 17
-Using IPI Shortcut mode
-ACPI wakeup devices: 
-SLPB PCI0 USB3 USB4 USB5 USB6 USB7 LAN0 UAR1 ECP1 
-ACPI: (supports S0 S1 S4 S5)
-md: Autodetecting RAID arrays.
-md: invalid superblock checksum on sdh1
-md: sdh1 has invalid sb, not importing!
-md: autorun ...
-md: considering sdi1 ...
-md:  adding sdi1 ...
-md:  adding sdg1 ...
-md:  adding sdf1 ...
-md:  adding sde1 ...
-md:  adding sdd1 ...
-md:  adding sdc1 ...
-md: sdb7 has different UUID to sdi1
-md: sdb6 has different UUID to sdi1
-md: sdb5 has different UUID to sdi1
-md: sdb3 has different UUID to sdi1
-md: sdb2 has different UUID to sdi1
-md: sdb1 has different UUID to sdi1
-md: sda7 has different UUID to sdi1
-md: sda6 has different UUID to sdi1
-md: sda5 has different UUID to sdi1
-md: sda3 has different UUID to sdi1
-md: sda2 has different UUID to sdi1
-md: sda1 has different UUID to sdi1
-md: created md6
-md: bind<sdc1>
-md: bind<sdd1>
-md: bind<sde1>
-md: bind<sdf1>
-md: bind<sdg1>
-md: export_rdev(sdi1)
-md: running: <sdg1><sdf1><sde1><sdd1><sdc1>
-md: kicking non-fresh sdf1 from array!
-md: unbind<sdf1>
-md: export_rdev(sdf1)
-raid5: device sdg1 operational as raid disk 4
-raid5: device sde1 operational as raid disk 2
-raid5: device sdd1 operational as raid disk 1
-raid5: device sdc1 operational as raid disk 0
-raid5: not enough operational devices for md6 (2/6 failed)
-RAID5 conf printout:
- --- rd:6 wd:4 fd:2
- disk 0, o:1, dev:sdc1
- disk 1, o:1, dev:sdd1
- disk 2, o:1, dev:sde1
- disk 4, o:1, dev:sdg1
-raid5: failed to run raid set md6
-md: pers->run() failed ...
-md: do_md_run() returned -5
-md: md6 stopped.
-md: unbind<sdg1>
-md: export_rdev(sdg1)
-md: unbind<sde1>
-md: export_rdev(sde1)
-md: unbind<sdd1>
-md: export_rdev(sdd1)
-md: unbind<sdc1>
-md: export_rdev(sdc1)
-md: considering sdb7 ...
-md:  adding sdb7 ...
-md: sdb6 has different UUID to sdb7
-md: sdb5 has different UUID to sdb7
-md: sdb3 has different UUID to sdb7
-md: sdb2 has different UUID to sdb7
-md: sdb1 has different UUID to sdb7
-md:  adding sda7 ...
-md: sda6 has different UUID to sdb7
-md: sda5 has different UUID to sdb7
-md: sda3 has different UUID to sdb7
-md: sda2 has different UUID to sdb7
-md: sda1 has different UUID to sdb7
-md: created md5
-md: bind<sda7>
-md: bind<sdb7>
-md: running: <sdb7><sda7>
-raid1: raid set md5 active with 2 out of 2 mirrors
-md: considering sdb6 ...
-md:  adding sdb6 ...
-md: sdb5 has different UUID to sdb6
-md: sdb3 has different UUID to sdb6
-md: sdb2 has different UUID to sdb6
-md: sdb1 has different UUID to sdb6
-md:  adding sda6 ...
-md: sda5 has different UUID to sdb6
-md: sda3 has different UUID to sdb6
-md: sda2 has different UUID to sdb6
-md: sda1 has different UUID to sdb6
-md: created md4
-md: bind<sda6>
-md: bind<sdb6>
-md: running: <sdb6><sda6>
-raid1: raid set md4 active with 2 out of 2 mirrors
-md: considering sdb5 ...
-md:  adding sdb5 ...
-md: sdb3 has different UUID to sdb5
-md: sdb2 has different UUID to sdb5
-md: sdb1 has different UUID to sdb5
-md:  adding sda5 ...
-md: sda3 has different UUID to sdb5
-md: sda2 has different UUID to sdb5
-md: sda1 has different UUID to sdb5
-md: created md3
-md: bind<sda5>
-md: bind<sdb5>
-md: running: <sdb5><sda5>
-raid1: raid set md3 active with 2 out of 2 mirrors
-md: considering sdb3 ...
-md:  adding sdb3 ...
-md: sdb2 has different UUID to sdb3
-md: sdb1 has different UUID to sdb3
-md:  adding sda3 ...
-md: sda2 has different UUID to sdb3
-md: sda1 has different UUID to sdb3
-md: created md2
-md: bind<sda3>
-md: bind<sdb3>
-md: running: <sdb3><sda3>
-raid1: raid set md2 active with 2 out of 2 mirrors
-md: considering sdb2 ...
-md:  adding sdb2 ...
-md: sdb1 has different UUID to sdb2
-md:  adding sda2 ...
-md: sda1 has different UUID to sdb2
-md: created md0
-md: bind<sda2>
-md: bind<sdb2>
-md: running: <sdb2><sda2>
-raid1: raid set md0 active with 2 out of 2 mirrors
-md: considering sdb1 ...
-md:  adding sdb1 ...
-md:  adding sda1 ...
-md: created md1
-md: bind<sda1>
-md: bind<sdb1>
-md: running: <sdb1><sda1>
-raid1: raid set md1 active with 2 out of 2 mirrors
-md: ... autorun DONE.
-EXT3-fs: mounted filesystem with ordered data mode.
-VFS: Mounted root (ext3 filesystem) readonly.
-Freeing unused kernel memory: 200k freed
-kjournald starting.  Commit interval 5 seconds
-Adding 4008120k swap on /dev/md2.  Priority:1 extents:1 across:4008120k
-EXT3 FS on md0, internal journal
-kjournald starting.  Commit interval 5 seconds
-EXT3 FS on md1, internal journal
-EXT3-fs: mounted filesystem with ordered data mode.
-kjournald starting.  Commit interval 5 seconds
-EXT3 FS on md3, internal journal
-EXT3-fs: mounted filesystem with ordered data mode.
-kjournald starting.  Commit interval 5 seconds
-EXT3 FS on md4, internal journal
-EXT3-fs: mounted filesystem with ordered data mode.
-kjournald starting.  Commit interval 5 seconds
-EXT3 FS on md5, internal journal
-EXT3-fs: mounted filesystem with ordered data mode.
-eth1: link up, 100Mbps, full-duplex, lpa 0x41E1
-r8169: eth2: link up
-
---------------080200020308010406040907--
+--------------040605060701060808050805--
