@@ -1,50 +1,30 @@
-From: Andargor The Wise <andargor@yahoo.com>
-Subject: Re: SATA performace
-Date: Tue, 3 Jan 2006 00:36:37 -0800 (PST)
-Message-ID: <20060103083637.87333.qmail@web54614.mail.yahoo.com>
-References: <000d01c61017$ea630d10$3224050a@avilespaxp>
+From: Ric Wheeler <ric@emc.com>
+Subject: Re: disk light remains on
+Date: Tue, 03 Jan 2006 08:01:32 -0500
+Message-ID: <43BA75AC.6010306@emc.com>
+References: <20060103033213.GB7888@adsl-64-142-29-25.sonic.net> <20060103044914.GB8876@lug.udel.edu> <20060103052147.GA8380@adsl-64-142-29-25.sonic.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <000d01c61017$ea630d10$3224050a@avilespaxp>
+In-Reply-To: <20060103052147.GA8380@adsl-64-142-29-25.sonic.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Paul Aviles <paul.aviles@palei.com>, linux-raid@vger.kernel.org
+To: debian@good-with-numbers.com
+Cc: Ross Vandegrift <ross@jose.lug.udel.edu>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---- Paul Aviles <paul.aviles@palei.com> wrote:
-
-> Are SATA drives similar in performance than IDE
-> drives? I have tested 
-> Barracudas 7200.0 (500Gb) and WD too on the same
-> type of servers (more than 
-> 1 unit) and what I am getting is painfully slow in
-> terms of read/writes. 
-> Anyone out there with similar experience or this is
-> just my isolated 
-> results?
+debian@good-with-numbers.com wrote:
+> Thanks for the reply.
 > 
-> Thanks
+> On Mon, Jan 02, 2006 at 11:49:14PM -0500, Ross Vandegrift wrote:
 > 
-> Paul Aviles 
-> 
+>>>I just began using RAID-1 (in 2.6.12) on a pair of SATA drives, and
+>>>now the hard disk drive light comes on during booting--about when the
+>>>RAID system is loaded--and stays on.
+>>
 
-Don't know about IDE, but I did some SATA tests on
-RAID-5, if it can give you an indication:
+There was a bug in libata that did not clear the register that set the 
+drive light - you should be able to get rid of this issue with an 
+updated kernel or simply ignore it,
 
-http://www.andargor.com/raid5.html
-
-BTW, EVMS will cut your performance about 50% (the
-tests were run with straight MD, no EVMS). I don't
-know about LVM, but that might add some overhead as
-well...
-
-Andargor
-
-
-
-	
-		
-__________________________________ 
-Yahoo! for Good - Make a difference this year. 
-http://brand.yahoo.com/cybergivingweek2005/
+ric
