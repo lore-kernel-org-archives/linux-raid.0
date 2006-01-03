@@ -1,26 +1,19 @@
-From: John Rowe <rowe@excc.ex.ac.uk>
-Subject: RAID 5 recovery?
-Date: Tue, 03 Jan 2006 15:24:28 +0000
-Message-ID: <1136301868.2785.23.camel@dogbert>
+From: "Katelyn" <billnl@accesscomm.ca>
+Subject: Your Pharmaceutlca| Faciliation xi
+Date: Tue, 3 Jan 2006 09:34:34 -0500
+Message-ID: <200601031534.k03FYRKK031342@zeus2.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Check Out our new web Ph¡rm¡cy and Keep up to 85%
 
-Due to an extended power outage over the new year, I have a RAID5 array
-with two dirty devices so it won't come up. The HOWTO suggests running:
+Tons of Brands to Check out
 
- mdadm --assemble --force
+http://uk.geocities.com/CamilleHogue7141/
 
-Is this good advice? I'm running RedHat 9 so I don't have mdadm but of
-course I'm happy to install it.
-
-Thanks
-
-John
-
+We are your source for Astronomical Deals
 
