@@ -1,18 +1,27 @@
-From: debian@good-with-numbers.com
-Subject: disk light remains on
-Date: Mon, 2 Jan 2006 19:32:13 -0800
-Message-ID: <20060103033213.GB7888@adsl-64-142-29-25.sonic.net>
+From: "Paul Aviles" <paul.aviles@palei.com>
+Subject: SATA performace
+Date: Mon, 2 Jan 2006 22:43:47 -0500
+Message-ID: <000d01c61017$ea630d10$3224050a@avilespaxp>
+References: <17336.42843.779496.644030@smtp.charter.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	format=flowed;
+	charset="iso-8859-1";
+	reply-type=original
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I just began using RAID-1 (in 2.6.12) on a pair of SATA drives, and
-now the hard disk drive light comes on during booting--about when the
-RAID system is loaded--and stays on.  I didn't see this behavior while
-I was running Linux without RAID (in the Debian installer).
+Are SATA drives similar in performance than IDE drives? I have tested 
+Barracudas 7200.0 (500Gb) and WD too on the same type of servers (more than 
+1 unit) and what I am getting is painfully slow in terms of read/writes. 
+Anyone out there with similar experience or this is just my isolated 
+results?
 
-Is this observed/expected behavior?
+Thanks
+
+Paul Aviles 
+
+
