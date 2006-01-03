@@ -1,19 +1,23 @@
-From: "Raymond Gilbert" <raymondgilbert_dm@moerder-rap.de>
-Subject: cials-tabs Pre.scriptions
-Date: Tue, 03 Jan 2006 13:11:24 +0100
-Message-ID: <b23301c6105e$dc5425b0$26cec0d2@tvvital.de>
+From: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
+Subject: raid5 read performance
+Date: Tue, 3 Jan 2006 16:16:45 +0200
+Message-ID: <5d96567b0601030616n42d95089pf6422002591b5d78@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; format=flowed; charset=iso-8859-1; reply-type=original
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+I am checking raid5 performance.
+I am using asynchronous ios with buffer size as the stripe size.
+In this case i am using a stripe size of 1M with 2+1 disks.
+Unlike raid0 , raid5 drops the performance by 50% .
+Why ?
+Is it because it does parity checkings ?
 
-Be ERECT in under 15 mins
-
-PRlCE: $ 2 / use
-
-visit our megasite --> directloqii.com
-
+thank you
+--
+Raz
