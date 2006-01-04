@@ -1,21 +1,19 @@
-From: "Concepcion Bryson" <akifmsvgmtw@yahoo.com>
-Subject: Vaigrra from $139.95 dMU
-Date: Wed, 04 Jan 2006 23:31:25 -0700
-Message-ID: <68OB87FE.0S24.akifmsvgmtw__22885.4081164629$1136384828$gmane$org@yahoo.com>
+From: "Bruno Bell" <bbelljp@emax.ru>
+Subject: insftant hardons
+Date: Wed, 04 Jan 2006 16:37:17 +0100
+Message-ID: <27e501c61144$114572a4$d82acc40@0space.abel.co.uk>
+Mime-Version: 1.0
+Content-Type: text/plain; format=flowed; charset=iso-8859-1; reply-type=original
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-net@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
+Be ERECT in only 15 mins
 
-Loking for quality meds at affordable
-price?
-We have widest range of meds at very
-competitive price.
-Money baack guaranteesss...
+PRlCE: $ 2 / use
 
-http://cssc2006.com
+go to our megasite --> directloqii.com
 
-
-lT
