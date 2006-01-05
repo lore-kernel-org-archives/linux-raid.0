@@ -1,40 +1,62 @@
-From: Daniel Pittman <daniel@rimspace.net>
-Subject: Re: ANNOUNCE: mdadm 2.2 - A tool for managing Soft RAID under Linux
-Date: Thu, 05 Jan 2006 17:00:31 +1100
-Message-ID: <87zmmb2ozk.fsf@rimspace.net>
-References: <17299.55654.747972.455172@cse.unsw.edu.au>
-	<20051206145939.GD26862@skl-net.de>
-	<00a201c6119b$25f58bd0$c100a8c0@NCNF5131FTH>
+From: Lorac Thelmwood <lorac.web@gmail.com>
+Subject: Re: corrupt raid 5
+Date: Wed, 4 Jan 2006 22:14:18 -0800
+Message-ID: <5981e8c80601042214p4096de18reed2ce669b7dc764@mail.gmail.com>
+References: <5981e8c80601031907l6d612bfcsf4a81826efc97f@mail.gmail.com>
+	 <17339.20993.529499.281141@smtp.charter.net>
+	 <5981e8c80601032135p312a37e0kf8c4e3d6edd05e53@mail.gmail.com>
+	 <17340.13263.40580.460585@smtp.charter.net>
+	 <5981e8c80601042213j7e4b42gb71690d634ce0050@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <5981e8c80601042213j7e4b42gb71690d634ce0050@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-"David M. Strang" <dstrang@shellpower.net> writes:
-
-[...]
-
-> I'm not very initrd savvy; and I'm having a heck of a time making the
-> initramfs instructions in mdadm work. Does anyone have a working example
-> of them?
-
-[...]
-
-> I've added a /dev directory to the init.cpio.gz as well. It seems like I
-> may have some cart before the horse syndrome tho, as mdadm cannot find
-> /dev/sdb1... which I'm assuming is because udev hasn't started.
-
-Perhaps you would be better served by starting with a fully functional
-initramfs (or initrd) implementation that is in active use, then
-extending (or adapting) it to do what you wanted?
-
-Ubuntu Linux and Debian unstable have the 'initramfs-tools' package
-which currently boots a number of software RAID machines for me, and
-seems a fairly reasonably understandable implementation of the concept.
-
-Regards,
-        Daniel
-
-
+On 1/4/06, Lorac Thelmwood <lorac.web@gmail.com> wrote:
+> failed to RUN_ARRAY /dev/md1: Invalid argument
+>
+>
+> I don't think it will start even whe the reconstruction is complete to
+> due to that bad superblock
+>
+> On 1/4/06, John Stoffel <john@stoffel.org> wrote:
+> > >>>>> "Lorac" == Lorac Thelmwood <lorac.web@gmail.com> writes:
+> > >>
+> > Lorac> First I can't start the array because it complains about a bad
+> > Lorac> superblock.
+> >
+> > Have you tried forcing the start of the array with the --force flag?
+> > Something like this:
+> >
+> >         mdadm -A --run /dev/md1
+> >
+> > Please give the output of the command.
+> >
+> > Lorac> What's the output of 'cat /proc/mdstat' and 'mdadm
+> > >> --detail /dev/md?' where ? is the number of your raid 5 array?
+> >
+> > Lorac> debian:~# cat /proc/mdstat
+> > Lorac> Personalities : [raid1] [raid5]
+> > Lorac> md1 : inactive hdh1[4] hdc1[0] hdg1[3] hdf1[2] hde1[1]
+> > Lorac>       976791680 blocks
+> >
+> > This is the key info, the array is assembled, but it hasn't been
+> > started properly, probably because of the missing disk.  Try the --run
+> > args as above and see what it does for you.
+> >
+> > See how it says 'inactive', this means you need to get it running
+> > first.
+> >
+> > Good luck,
+> > John
+> > -
+> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >
+>
