@@ -1,43 +1,73 @@
-From: Daniel Pittman <daniel@rimspace.net>
-Subject: Re: Fwd: Linux MD raid5 and reiser4... Any experience ?
-Date: Thu, 05 Jan 2006 21:14:00 +1100
-Message-ID: <87oe2r2d93.fsf@rimspace.net>
-References: <fd8d0180601050104x15079396h@mail.gmail.com>
-	<fd8d0180601050106s5f5b4306o@mail.gmail.com>
+From: "JaniD++" <djani22@dynamicweb.hu>
+Subject: Re: where is the spare drive? :-)
+Date: Thu, 5 Jan 2006 12:06:25 +0100
+Message-ID: <007f01c611e8$135573d0$a400a8c0@dcccs>
+References: <02a801c60f2a$de619ce0$a400a8c0@dcccs> <20060105061133.M54165@liquid-nexus.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Marc <linux-raid@liquid-nexus.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Francois Barre <francois.barre@gmail.com> writes:
 
-G'day Francois.
+----- Original Message ----- 
+From: "Marc" <linux-raid@liquid-nexus.net>
+To: "JaniD++" <djani22@dynamicweb.hu>; <linux-raid@vger.kernel.org>
+Sent: Thursday, January 05, 2006 7:16 AM
+Subject: Re: where is the spare drive? :-)
 
-> Well, I think everything is in the subject... I am looking at this
-> solution for a 6*250GB raid5 data server, evolving in a 12*250 rai5 in
-> the months to come... Performance is absolutely not a big issue for
-> me, but I would not appreciate any data loss.
 
-If your key interest is data integrity, and you don't care a fig about
-performance, you would be much better off using ext3 on that filesystem.
+> On Mon, 2 Jan 2006 00:26:58 +0100, JaniD++ wrote
+> > Hello, list,
+> >
+> > I found something interesting when i try to create a brand new array
+> > on brand new drives....
+> >
+>
+> <snip>
+>
+> > 5. The question
+> >
+> > Why shows sdh2 as spare?
+> > The MD array size is correct.
+> > And i really can see, the all drive is reading, and sdh2 is *ONLY*
+writing.
+> >
+>
+> I'm not 100% sure but from a post by Neil a while a go on the list, the
+spare
+> device is a temporary construct created during the resync operation. Once
+the
+> resync is complete it should disappear.
+>
+> You could try searching the list archives for the post - choice of
+keywords is
+> up to you ;)
 
-Depending on the test, ext3 may not do better than other filesystems,
-but it is really quite hard to go past the long history of reliability
-and stability that it has.
+Thanks, but i have found the bug already. ;-)
 
-It also has extremely good tools for recovering if something /does/ go
-wrong, and is very resilient to damage on the disk.  Reiserfs has,
-historically, had some issues in those areas, especially in recovery
-from corruption.
+If i create new raid5, it should only parity resyncing, and not spare
+rebuilding!
 
-> Furthermore, I would prefer not to use LVM nor any middle layer
-> between MD and the fs... Is this middle layer *very* usefull when I'm
-> sure my partitions layout will not evolve (e.g. only one enormous fs)
+This happens, only if i use mdadm.
+With raidtools works fine.
 
-Nope, pretty much no advantage at all, if you are just planning on using
-this to store volume data.
+My problem is now the bitmap. :(
+Only mdadm supports this....
 
-      Daniel
+Cheers,
+Janos
+
+>
+> Regards,
+> Marc
+>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
