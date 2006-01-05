@@ -1,26 +1,30 @@
-From: "Lila Nickerson" <wbkkrxyrr@yahoo.com>
-Subject: Look...Here TGf
-Date: Fri, 12 Mar 2004 07:00:42 +0200
-Message-ID: <9A367EE3.7684.6015C2D5__24052.0285828554$1136415091$gmane$org@localhost>
+From: "Anibal" <Tomas@futurelink.com>
+Subject: Hi
+Date: Thu, 05 Jan 2006 11:50:39 +1100
+Message-ID: <EAABA228.1D02F28@futurelink.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-net@vger.kernel.org
-Cc: linux-newbie@vger.kernel.org, linux-ppp@vger.kernel.org, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, linux-serial@vger.kernel.org, linux-sound@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Hey linux-raid,
 
+The holidays are finally here and it's time to relax and enjoy.
 
+Just this yr we've become the leader in e-p harm and online products for
+all your needs. We've been distributing across the US for over 3 yrs and
+counting.
 
-The most complete Phar macy Online
-We carry all major medds at bargain price
-Viggra, Ci ialis, VaIium, Xa naax
-Phantermiine, Ulltraam and etc...
-SatiisfactIon Gua ranteeed
+If your sick and tire of paying those high prices and want to avoid the
+hassle of a do c's visit then here's the place to visit..
 
-http://aliashere.com
+www.toppestflight.com/p/dec05/Sr
 
+Cheers,
+Case
 
-uOP
 
