@@ -1,202 +1,44 @@
-From: "aziro.linux.adm" <aziro.linux.adm@gmail.com>
-Subject: Re: Raid 5 array problem: 2 disks became spare in stead of member.
-Date: Thu, 05 Jan 2006 13:57:00 +0200
-Message-ID: <43BD098C.9000104@gmail.com>
-References: <004d01c60e29$97f9b410$1b64a8c0@Tomsworld.local>
+From: berk walker <berk@panix.com>
+Subject: Re: Fwd: Linux MD raid5 and reiser4... Any experience ?
+Date: Thu, 05 Jan 2006 06:59:18 -0500
+Message-ID: <43BD0A16.7070700@panix.com>
+References: <fd8d0180601050104x15079396h@mail.gmail.com>	 <fd8d0180601050106s5f5b4306o@mail.gmail.com>	 <87oe2r2d93.fsf@rimspace.net> <43BD026C.4050705@panix.com> <fd8d0180601050335ob7b791cm@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <004d01c60e29$97f9b410$1b64a8c0@Tomsworld.local>
+In-Reply-To: <fd8d0180601050335ob7b791cm@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Tom De Clercq <tom@tomsworld.be>
+To: Francois Barre <francois.barre@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Tom De Clercq wrote:
+Francois Barre wrote:
 
-> Hi all,
+>2006/1/5, berk walker <berk@panix.com>:
+>[...]
+>  
 >
-> First of all the best wishes for 2006.
+>>>      
+>>>
+>>Ext3 does have a fine record.  Might I also suggest an added expense of
+>>18 1/2% and do RAID6 for better protection against data loss?
+>>b-
+>>
+>>    
+>>
 >
-> I am searching for a solution for my raid since last Thursday.  What 
-> just happened I didn't know for sure, only thing I could see was that 
-> my server rebooted multiple times and my raid-5 array went offline.
+>Well, I guess so. I just hope I'll be given enough money for it, since
+>it increases the cost per GB. Anyway I guess that it is preferable
+>than a raid5 + 1 spare.
+>By the way, not really a raid-oriented question, but what is the exact
+>robustness of ext3 resizing ? I mean : what happens if the box crashes
+>while resizing an ext3 ?
+>This implies, of course, resizing capabilities for raid6, which is not
+>implement yet. Is it ?
+>-
+>  
 >
-> Os debian stable: Linux tigger.tomsworld.local 2.6.11 #5 SMP Sun Jul 
-> 24 23:55:45 CEST 2005 i686 GNU/Linux
-> Mdadm upgraded to the currently lastest stable version:
-> root@tigger:/home/tom# mdadm -V
-> mdadm - v2.2 - 5 December 2005
->
->
-> It is a raid-5 array 3*160 GB ATA disk. (mdadm output on the end of 
-> this mail)
->
-> But now at the moment 2 drives of the array are marked as spare.  I 
-> googled & searched the archives of this list but nothing seems to 
-> resolve the problem.
->
->
-> I tried booting with only the disks marked as "Spare", but the array 
-> wouldn't come up either.
-> Tried to boot with the 1 disk of the array one other: same result.
->
-> I'm trying to force the spare disk into being an array member again.
->
-> Could someone of you give me any idea how I could resolve this matter?
->
-> Some info:
->
-> /etc/raidtab
->
-> raiddev /dev/md0
-> raid-level 5
-> nr-raid-disks 3
-> nr-spare-disks 0
-> persistent-superblock 1
-> parity-algorithm left-symmetric
-> chunk-size 32
-> device /dev/hde1
-> raid-disk 0
-> device /dev/hdf1
-> raid-disk 1
-> device /dev/hdh1
-> raid-disk 2
->
->
-> root@tigger:/tmp/mdctl-0.5# mdadm --examine /dev/hde1
-> /dev/hde1:
-> Magic : a92b4efc
-> Version : 00.90.01
-> UUID : 6644de41:0e38ffb1:e5f77c38:825553ae
-> Creation Time : Tue May 31 21:24:31 2005
-> Raid Level : raid5
-> Raid Devices : 3
-> Total Devices : 3
-> Preferred Minor : 0
->
-> Update Time : Thu Dec 29 11:33:33 2005
-> State : clean
-> Active Devices : 1
-> Working Devices : 3
-> Failed Devices : 2
-> Spare Devices : 2
-> Checksum : 1ed2c2c5 - correct
-> Events : 0.75536395
->
-> Layout : left-symmetric
-> Chunk Size : 32K
->
-> Number Major Minor RaidDevice State
-> this 3 33 1 3 spare /dev/hde1
->
-> 0 0 33 65 0 active sync /dev/hdf1
-> 1 1 0 0 1 faulty removed
-> 2 2 0 0 2 faulty removed
-> 3 3 33 1 3 spare /dev/hde1
-> 4 4 34 65 4 spare /dev/hdh1
-> root@tigger:/tmp/mdctl-0.5# mdadm --examine /dev/hdf1
-> /dev/hdf1:
-> Magic : a92b4efc
-> Version : 00.90.01
-> UUID : 6644de41:0e38ffb1:e5f77c38:825553ae
-> Creation Time : Tue May 31 21:24:31 2005
-> Raid Level : raid5
-> Raid Devices : 3
-> Total Devices : 3
-> Preferred Minor : 0
->
-> Update Time : Thu Dec 29 11:33:33 2005
-> State : clean
-> Active Devices : 1
-> Working Devices : 3
-> Failed Devices : 2
-> Spare Devices : 2
-> Checksum : 1ed2c301 - correct
-> Events : 0.75536395
->
-> Layout : left-symmetric
-> Chunk Size : 32K
->
-> Number Major Minor RaidDevice State
-> this 0 33 65 0 active sync /dev/hdf1
->
-> 0 0 33 65 0 active sync /dev/hdf1
-> 1 1 0 0 1 faulty removed
-> 2 2 0 0 2 faulty removed
-> 3 3 33 1 1 spare /dev/hde1
-> 4 4 34 65 2 spare /dev/hdh1
-> root@tigger:/tmp/mdctl-0.5# mdadm --examine /dev/hdh1
-> /dev/hdh1:
-> Magic : a92b4efc
-> Version : 00.90.01
-> UUID : 6644de41:0e38ffb1:e5f77c38:825553ae
-> Creation Time : Tue May 31 21:24:31 2005
-> Raid Level : raid5
-> Raid Devices : 3
-> Total Devices : 3
-> Preferred Minor : 0
->
-> Update Time : Thu Dec 29 11:33:33 2005
-> State : clean
-> Active Devices : 1
-> Working Devices : 3
-> Failed Devices : 2
-> Spare Devices : 2
-> Checksum : 1ed2c308 - correct
-> Events : 0.75536395
->
-> Layout : left-symmetric
-> Chunk Size : 32K
->
-> Number Major Minor RaidDevice State
-> this 4 34 65 4 spare /dev/hdh1
->
-> 0 0 33 65 0 active sync /dev/hdf1
-> 1 1 0 0 1 faulty removed
-> 2 2 0 0 2 faulty removed
-> 3 3 33 1 3 spare /dev/hde1
-> 4 4 34 65 4 spare /dev/hdh1
-> root@tigger:/tmp/mdctl-0.5#
-> root@tigger:/tmp/mdctl-0.5# mdadm --create /dev/md0 -l5 -n3 /dev/hde1 
-> /dev/hdf1 /dev/hdh1
-> mdadm: /dev/hde1 appears to be part of a raid array:
-> level=5 devices=3 ctime=Tue May 31 21:24:31 2005
-> mdadm: /dev/hdf1 appears to contain an ext2fs file system
-> size=320159104K mtime=Thu Dec 29 09:51:49 2005
-> mdadm: /dev/hdf1 appears to be part of a raid array:
-> level=5 devices=3 ctime=Tue May 31 21:24:31 2005
-> mdadm: /dev/hdh1 appears to contain an ext2fs file system
-> size=341131652K mtime=Mon Dec 20 21:49:29 1971
-> mdadm: /dev/hdh1 appears to be part of a raid array:
-> level=5 devices=3 ctime=Tue May 31 21:24:31 2005
-> Continue creating array? n
-> mdadm: create aborted.
-> root@tigger:/tmp/mdctl-0.5#
->
->
-> Thanks a lot in advance.
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-Hi, Tom
-I think you must tray with :
-
-mdadm -A /dev/md0 -f /dev/hd[efh]1
-
-or more humman readable:
-
-mdadm --assemble /dev/md0 --force /dev/hd[efh]1
-
-This way mdadm will assemble the your existing array, but for  RAID5  
-mdadm require minimum 3 + 1 spare disk I think, but not absolutly sure:)
-May mdadm require minimum 3 + 1 spare only with --create mode, to create 
-RAID level 5.
-
-Good luck!
-
+I can not speak to that, sorry.
+b-
 
