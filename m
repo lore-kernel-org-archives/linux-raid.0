@@ -1,39 +1,34 @@
-From: Gordon Henderson <gordon@drogon.net>
+From: Francois Barre <francois.barre@gmail.com>
 Subject: Re: Fwd: Linux MD raid5 and reiser4... Any experience ?
-Date: Thu, 5 Jan 2006 11:31:49 +0000 (GMT)
-Message-ID: <Pine.LNX.4.56.0601051127470.30112@lion.drogon.net>
+Date: Thu, 5 Jan 2006 12:35:12 +0100
+Message-ID: <fd8d0180601050335ob7b791cm@mail.gmail.com>
 References: <fd8d0180601050104x15079396h@mail.gmail.com>
- <fd8d0180601050106s5f5b4306o@mail.gmail.com>  <87oe2r2d93.fsf@rimspace.net>
- <fd8d0180601050321k19f12f53r@mail.gmail.com>
+	 <fd8d0180601050106s5f5b4306o@mail.gmail.com>
+	 <87oe2r2d93.fsf@rimspace.net> <43BD026C.4050705@panix.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <fd8d0180601050321k19f12f53r@mail.gmail.com>
+In-Reply-To: <43BD026C.4050705@panix.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 5 Jan 2006, Francois Barre wrote:
+2006/1/5, berk walker <berk@panix.com>:
+[...]
+> >
+> >
+> Ext3 does have a fine record.  Might I also suggest an added expense of
+> 18 1/2% and do RAID6 for better protection against data loss?
+> b-
+>
 
-> Well, anyway, thanks for the advice. Guess I'll have to stay on ext3
-> if I don't want to have nightmares...
-
-And you can always mount it as ext2 if you think the journal is corrupt.
-
-Have you considered Raid-6 rather than R5?
-
-The biggest worry I have is having a 2nd disk fail during a
-reconstruction. True, you lose another disks worth of space, but disk is
-cheap these days, right? :)
-
-Especially with 12 disks in the array.
-
-What I do now is do a read-only badblocks test on all the
-drives/partitions in a set if I ever have a drive failure. That way I will
-know in advance if a disk is going to fail during the reconstruction -
-however, this takes time (and can severely impact performance) but
-hopefully the time window between checking the disks and the
-reconstruction would be small enough that another disk shouldn't go
-faulty...
-
-Gordon
+Well, I guess so. I just hope I'll be given enough money for it, since
+it increases the cost per GB. Anyway I guess that it is preferable
+than a raid5 + 1 spare.
+By the way, not really a raid-oriented question, but what is the exact
+robustness of ext3 resizing ? I mean : what happens if the box crashes
+while resizing an ext3 ?
+This implies, of course, resizing capabilities for raid6, which is not
+implement yet. Is it ?
