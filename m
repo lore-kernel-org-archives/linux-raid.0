@@ -1,42 +1,34 @@
-From: Andre Majorel <aym-xunil@teaser.fr>
+From: Francois Barre <francois.barre@gmail.com>
 Subject: Re: Fwd: Linux MD raid5 and reiser4... Any experience ?
-Date: Fri, 6 Jan 2006 11:49:31 +0100
-Message-ID: <20060106104931.GB20546@atc5.vermine.org>
-References: <fd8d0180601050104x15079396h@mail.gmail.com> <fd8d0180601050106s5f5b4306o@mail.gmail.com> <17341.8541.33899.167524@smtp.charter.net> <fd8d0180601050603t6f62ff91o@mail.gmail.com> <17341.27534.41206.232976@smtp.charter.net> <fd8d0180601060108rbe9d663p@mail.gmail.com>
+Date: Fri, 6 Jan 2006 11:50:25 +0100
+Message-ID: <fd8d0180601060250te7a07c7s@mail.gmail.com>
+References: <fd8d0180601050104x15079396h@mail.gmail.com>
+	 <fd8d0180601050106s5f5b4306o@mail.gmail.com>
+	 <87oe2r2d93.fsf@rimspace.net>
+	 <fd8d0180601050321k19f12f53r@mail.gmail.com>
+	 <43BE3C99.4050706@ieee.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <43BE3C99.4050706@ieee.org>
 Content-Disposition: inline
-In-Reply-To: <fd8d0180601060108rbe9d663p@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2006-01-06 10:08 +0100, Francois Barre wrote:
-> > No, backups do not mean snapshots.
-> > Snapshots are merely a way to take backups of a consistent view of =
-the
-> filesystem...
-> [...]
-> > Don't mix them up, you'll be really really unhappy.
-> Wll, I may not be fully awoken yet, but what is the interrest of
-> having non-consistent backups ? For sure, backuping implies one of :
-> 1. Forbidding write access to data for users
-> 2. Having the capability to have snapshots.
+>  AFAIK, ext3 volume cannot be bigger than 4TB on a 32 bits system.
+> I think it is important you know that in case it could be a concern
+> for you.
 
-With LVM, you can create a snapshot of the block device at any
-time, mount the snapshot read-only (looks like another block
-device) and backup that. Ensuring consistency at application level
-is still up to you but at least, if that involves stopping
-services, the unavailability window is greatly reduced.
+What ? What ? .... What ?
+<dased_and_confused>Are you sure ? I may search for it more
+extensively... Anyway, the total size cannot be more than sizeof(block
+size) * block size, and with 32bits systems and 4k pages, that makes
+16TB. Are you sure ?</dased_and_confused>
 
---=20
-Andr=E9 Majorel <URL:http://www.teaser.fr/~amajorel/>
-Do not use this account for regular correspondence.
-See the URL above for contact information.
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>  XFS is finally much faster than EXT3 and self-defragmenting, but
+> that was not a concern for you anyway.
+
+Well, I'm currently looking at this solution... Never used XFS before,
+but I always been tought of it for as a good thing...
