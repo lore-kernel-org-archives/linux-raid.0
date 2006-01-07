@@ -1,45 +1,26 @@
-From: "Jarrod Holloway" <PXNERUYK@msn.com>
-Subject: Save 33% on your Monthly Loan 39Ebj
-Date: Sat, 07 Jan 2006 00:29:26 -0400
-Message-ID: <LAW26.OE649yfB4mvo368753d5__46028.9402668879$1136608483$gmane$org@motmail.com>
+From: Cornelius Mcmahon <ash@beachculture.com.au>
+Subject: DVD X Copy Platinum 4.0.38 - $19.95
+Date: Fri, 6 Jan 2006 21:39:56 -0800
+Message-ID: <2310922588.1310121381@58.74.246.202>
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-net@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
-Dear Home Owner,
-
-Your credit doesn't matter to us! If you OWN real estate
-and want IMMEDIATE cash to spend ANY way you like, or simply wish
-to LOWER your monthly payments by a third or more, here are the deals
-we have TODAY (hurry, these offers will expire TONIGHT) :
-
-$450,000.00 at a 3.85% fixed-rate
-$374,000.00 at a 3.54% variable-rate
-$464,000.00 at a 3.77% interest-only
-$214,000.00 at a 3.54% fixed-rate
-$134,000.00 at a 3.75% variable-rate
-
-Hurry, when these deals are gone, they are gone!
-Simply fill out this one-minute form...
-
-http://D7S1Id.washyde.com/af
-
-Don't worry about approval, your credit will not disqualify you!
-
-http://umMn.washyde.com/af
-
-Sincerely,
-Bridget Hurd
-Approval Manager
+Adobe Acrobat 7.0 Professional - $44.95
+http://enervate.oemzs.com/
 
 
 
+Those who make peaceful revolution impossible, make violent revolution inevitable.   
+Never go to bed mad. Stay up and fight.    
+In an optimal world, I would not be necessary.    
+I am a part of all that I have met.   
+You can't fight in here....this is the War Room!!    
+
+Shut up he explained.         
 
 
 
-stop the current promo
-http://washyde.com/rem
-
-HxJOLv
