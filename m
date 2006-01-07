@@ -1,97 +1,45 @@
-From: "Quazi Hossain" <quazi_hossain434@yahoo.com.au>
-Subject: HAPPY NEW YEAR
-Date: Sat, 07 Jan 2006 09:29:04 +1000
-Message-ID: <600601c6136c$ccdc6770$d3e04e17@quazi_hossain434>
-Reply-To: "Quazi Hossain" <quazi_hossain434@yahoo.com.au>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+From: "Jarrod Holloway" <PXNERUYK@msn.com>
+Subject: Save 33% on your Monthly Loan 39Ebj
+Date: Sat, 07 Jan 2006 00:29:26 -0400
+Message-ID: <LAW26.OE649yfB4mvo368753d5__46028.9402668879$1136608483$gmane$org@motmail.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Thanks <linux-raid@vger.kernel.org>
+To: linux-net@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello!
 
-Compliments
+Dear Home Owner,
 
-I have been searching for a person whom we can jointly invest, Trust in and
-also solicit an honorable partnership with. 
+Your credit doesn't matter to us! If you OWN real estate
+and want IMMEDIATE cash to spend ANY way you like, or simply wish
+to LOWER your monthly payments by a third or more, here are the deals
+we have TODAY (hurry, these offers will expire TONIGHT) :
 
-I want to confirm that your contact information was got from a web email
-directory. I represent a client who is interested in investing in your
-country in areas related to agriculture or any business of your choice, to
-initiate a proper and structured relationship. Please let me know what your
-response will be to an offer to receive investment funds in cash if; 
+$450,000.00 at a 3.85% fixed-rate
+$374,000.00 at a 3.54% variable-rate
+$464,000.00 at a 3.77% interest-only
+$214,000.00 at a 3.54% fixed-rate
+$134,000.00 at a 3.75% variable-rate
 
-1. The said fund amounts to US$38,500,000 (Thirty Eight Million, Five
-hundred Thousand US Dollars).
+Hurry, when these deals are gone, they are gone!
+Simply fill out this one-minute form...
 
-2. The said fund is in cash and needs to be transferred in the same state,
-due to some covert reasons.
+http://D7S1Id.washyde.com/af
 
-3. The fund could be invested through your agency in the purchase of
-facility and assets for investment purposes within your country, in
-collaboration with the agency of the current brokers.
+Don't worry about approval, your credit will not disqualify you!
 
-4. This transaction will result in you being paid a commission of 10% off
-the investment capital.
-
-5. The fund owners desire absolute confidentiality and professionalism
-in the handling of this matter, due to risks of seizure of the fund and
-litigation if personalities are revealed. 
-
-The fund owners have interest to invest in any of the following industries,
-depending on which is most transparent, low risk, and average profit
-yielding: Power Generation, Telecommunication and Software Development, Film
-Production, Hardware Manufacturing and Export, Medicine, Construction or
-Real-Estate Development.
-
-Based upon the information provided above, I would like to know if you
-shall be able to assist in the nature of managing the investment fund. You
-must note that the fund can only be transferred in cash, therefore if you
-are in acceptance to participate with us in the investment of the fund, you
-shall also need to participate with us in the transfer of the fund in cash
-in the manner of receiving the fund in cash and depositing it in a Trusted
-account opened in favour of the investment to be established.
-
-And this account would serve as the base or operating account for the
-investment. I am obliged to believe that you would be able to understand the
-information above, and should you need further information, please do not
-hesitate to ask.
-
-Kindly confirm receipt of this email by sending all correspondence to:
-quazihossain77@netscape.net
-
- 
+http://umMn.washyde.com/af
 
 Sincerely,
-
-Quazi Hossain (Esq.)
-
-Tel:00870763970080
-Fax:00870763970082
+Bridget Hurd
+Approval Manager
 
 
 
 
 
 
+stop the current promo
+http://washyde.com/rem
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+HxJOLv
