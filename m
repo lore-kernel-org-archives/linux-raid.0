@@ -1,49 +1,97 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: more info on the hang with 2.6.15-rc5
-Date: Sun, 08 Jan 2006 13:20:59 -0500
-Message-ID: <43C1580B.9020609@tmr.com>
-References: <E1EpIfb-0001e2-GR@highlab.com>
+Subject: Re: mdadm-2.2 SEGFAULT: mdadm --assemble --scan
+Date: Sun, 08 Jan 2006 16:23:35 -0500
+Message-ID: <43C182D7.5030105@tmr.com>
+References: <20051222205809.GC492@skl-net.de> <43B6A0F9.8040100@xss.co.at>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <E1EpIfb-0001e2-GR@highlab.com>
+In-Reply-To: <43B6A0F9.8040100@xss.co.at>
 Sender: linux-raid-owner@vger.kernel.org
-To: Sebastian Kuzminsky <seb@highlab.com>
-Cc: linux-raid@vger.kernel.org, linux-lvm@redhat.com
+To: Andreas Haumer <andreas@xss.co.at>
+Cc: Andre Noll <maan@systemlinux.org>, linux-raid@vger.kernel.org, Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-Sebastian Kuzminsky wrote:
+Andreas Haumer wrote:
 
->Now it works, but I dont trust it one bit.
+>-----BEGIN PGP SIGNED MESSAGE-----
+>Hash: SHA1
 >
->I had been seeing almost immediate, perfectly repeatable hard lockups
->in 2.6.15-rc5 and 2.6.15-rc5-mm3, when using sata_mv, RAID, and LVM
->together.  Nothing in the syslog or on the console, and the system is
->totally unresponsive to the keyboard & network.
+>Hi!
 >
->My hardware setup is: four Seagate Barracuda 500 GB disks, on a Marvell
->MV88SX6081 8-port SATA-II PCI-X controller, on a PCI-X bus (64/66).
->
->The disks work great when accessed directly.  They work great when used
->as four PVs for LVM, and when assembled into a 4-disk RAID-6.
->
->But when I make a RAID-6 array out of them, and use the array as a PV,
->the system would hang completely, within seconds.  (This is with LVM
->2.02.01, libdevicemapper 1.02.02, and dm-driver 4.5.0.)
->
->I turned on all the debugging options in the kernel config hoping to get
->some insight, but this "debug" kernel doesnt crash.  It's running fine,
->and I'm pounding on it.  A timing problem in the interaction between
->LVM and RAID?  Some kind of wierd heisenbug....
->
->
->I'd be happy to do any debugging tests people suggest.
->
->
+>Andre Noll schrieb:
 >  
 >
-I've been waiting for more info on this, did it get fixed? 2.6.15?
+>>sorry if this is already known/fixed: Assemble() is called from mdadm.c with
+>>the "update" argument equal to NULL:
+>>
+>>	Assemble(ss, array_list->devname, mdfd, array_list, configfile,
+>>		NULL, readonly, runstop, NULL, verbose-quiet, force);
+>>
+>>But in Assemble.c we have
+>>
+>>	if (ident->uuid_set && (!update && strcmp(update, "uuid")!= 0) && ...
+>>
+>>which yields a segfault in glibc's strcmp().
+>>
+>>    
+>>
+>I just found the same problem after upgrading to mdadm-2.2
+>The logic to test for update not being NULL seems to be
+>reversed.
+>
+>I created a small patch which seems to cure the problem
+>(see attached file)
+>
+>HTH
+>
+>- - andreas
+>
+>- --
+>Andreas Haumer                     | mailto:andreas@xss.co.at
+>*x Software + Systeme              | http://www.xss.co.at/
+>Karmarschgasse 51/2/20             | Tel: +43-1-6060114-0
+>A-1100 Vienna, Austria             | Fax: +43-1-6060114-71
+>-----BEGIN PGP SIGNATURE-----
+>Version: GnuPG v1.4.2 (GNU/Linux)
+>Comment: Using GnuPG with Thunderbird - http://enigmail.mozdev.org
+>
+>iD8DBQFDtqD0xJmyeGcXPhERAsdiAJ0Ve787gscq4VOGtT+9Qp3k62iUEgCgs9pH
+>Ekg0gkLEk+99XXHw+1ezdu8=
+>=rh66
+>-----END PGP SIGNATURE-----
+>  
+>
+>------------------------------------------------------------------------
+>
+>Index: mdadm/Assemble.c
+>===================================================================
+>RCS file: /home/cvs/repository/distribution/Utilities/mdadm/Assemble.c,v
+>retrieving revision 1.1.1.7
+>diff -u -r1.1.1.7 Assemble.c
+>--- mdadm/Assemble.c	5 Dec 2005 05:56:20 -0000	1.1.1.7
+>+++ mdadm/Assemble.c	31 Dec 2005 15:01:34 -0000
+>@@ -219,7 +219,7 @@
+> 		}
+> 		if (dfd >= 0) close(dfd);
+> 
+>-		if (ident->uuid_set && (!update && strcmp(update, "uuid")!= 0) &&
+>+		if (ident->uuid_set && (update && strcmp(update, "uuid")!= 0) &&
+> 		    (!super || same_uuid(info.uuid, ident->uuid, tst->ss->swapuuid)==0)) {
+> 			if ((inargv && verbose >= 0) || verbose > 0)
+> 				fprintf(stderr, Name ": %s has wrong uuid.\n",
+>  
+>
+Is that right now? Because && evaluates to zero or one left to right, 
+the parens and the "!=0" are not needed, and I assume they're in for a 
+reason (other than to make the code hard to understand). A comment 
+before that if would make the intention clear, I originally though the 
+"(!update" was intended to be "!(update" which would explain the parens, 
+but that seems wrong.
+
+If it actually works as intended with the patch, perhaps a comment and 
+cleanup in 2.3?
 
 -- 
 bill davidsen <davidsen@tmr.com>
