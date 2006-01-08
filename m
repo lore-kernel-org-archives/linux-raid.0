@@ -1,64 +1,48 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: Using a disk image file as a device in a raid set (like a loopback
- device)
-Date: Sun, 08 Jan 2006 10:40:42 +0000
-Message-ID: <43C0EC2A.4040607@dgreaves.com>
-References: <43C0E89D.3040209@dgreaves.com>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Adding Reed-Solomon Personality to MD, need help/advice
+Date: Sun, 08 Jan 2006 12:49:33 -0500
+Message-ID: <43C150AD.1080601@tmr.com>
+References: <E26C409DCE780347BD93D08771FF08E90129DB3D@usahm236.amer.corp.eds.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <43C0E89D.3040209@dgreaves.com>
+In-Reply-To: <E26C409DCE780347BD93D08771FF08E90129DB3D@usahm236.amer.corp.eds.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: "Bailey, Scott" <scott.bailey@eds.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-doh!
+Bailey, Scott wrote:
 
-I'm so used to doing mount -oloop that I forgot how much it does for you :)
+>Interestingly, I was just browsing this paper
+>http://www.cs.utk.edu/%7Eplank/plank/papers/CS-05-569.html which appears
+>to be quite on-topic for this discussion. I admit my eyes glaze over
+>during intensive math discussions but it appears tuned RS might not be
+>as horrible as you'd think since apparently state-of-the-art now
+>provides tricks to avoid the Galois Field operations that used to be
+>required.
+>
+>The thought that came to my mind was "how does md's RAID-6 personality
+>compare to EVENODD coding?"
+>
+>Wondering if my home server will ever have enough storage for these
+>discussions to become non-academic for me, :-) 
+>
+The problem is not having storage, it's having backup. The properties of 
+backup are
+- able to be moved to off-site storage
+- cheap and fast enough to use regularly
 
-losetup /dev/loop0 /space/sdb2.dd_image
-mdadm -B /dev/md0 -l linear -n2 /dev/sdc2 /dev/loop0
-
-works fine.
-
-Sorry for the noise
-
-David
-
-
-David Greaves wrote:
-
->Hi
->
->First, this is not a raid recovery problem !!!
->
->I'm recovering a disk failure and for various reasons I've ended up with
->a partition that's too small to hold the file system that belongs in it.
->
->I managed to create a second small partition on a good bit of the
->failing disk and use linear mode to concatenate the almost big enough
->partition (sdc2) with the temp partition (sdb2) to make a big enough
->space to ddrescue the failing data.
->
->All is now good with 95% of data on the good disk and the small
->partition is holding up.  However I need to get rid of it ASAP.
->So I dd'ed the small partition onto a good filesystem on sdc1.
->Now I want to:
->
->mdadm -B /dev/md0 -l linear -n2 /dev/sdc2 /space/sdb2.dd_image
->
->but of course mdadm correctly complains that /space/sdb2.dd_image isn't
->a block device.
->
->Does anyone know how I can do this?
->
->
->David
->
->  
->
-
+Making storage more reliable is a desirable end, but it doesn't guard 
+against many common failures such as controllers going bad and writing 
+unreadable sectors all over before total failure, fire, flood, and 
+software errors in the kernel code. While none of these is common in the 
+sense of everyday, they are all common in the sense of "I never heard of 
+that happening" response.
 
 -- 
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+  Doing interesting things with small computers since 1979
 
