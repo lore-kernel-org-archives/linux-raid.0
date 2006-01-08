@@ -1,89 +1,42 @@
-From: Daniel Pittman <daniel@rimspace.net>
-Subject: Re: Fwd: Linux MD raid5 and reiser4... Any experience ?
-Date: Sun, 08 Jan 2006 13:53:07 +1100
-Message-ID: <87ace7sa5o.fsf@rimspace.net>
-References: <fd8d0180601050104x15079396h@mail.gmail.com>
-	<fd8d0180601050106s5f5b4306o@mail.gmail.com>
-	<87oe2r2d93.fsf@rimspace.net>
-	<fd8d0180601050321k19f12f53r@mail.gmail.com>
-	<43BE3C99.4050706@ieee.org>
+From: David Greaves <david@dgreaves.com>
+Subject: Using a disk image file as a device in a raid set (like a loopback
+ device)
+Date: Sun, 08 Jan 2006 10:25:33 +0000
+Message-ID: <43C0E89D.3040209@dgreaves.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Simon Valiquette <v.simon@ieee.org> writes:
-> Francois Barre a =E9crit :
->> 2006/1/5, Daniel Pittman <daniel@rimspace.net>:
->>>Francois Barre <francois.barre@gmail.com> writes:
+Hi
 
-[...]
+First, this is not a raid recovery problem !!!
 
-> AFAIK, ext3 volume cannot be bigger than 4TB on a 32 bits system.  I
-> think it is important you know that in case it could be a concern for
-> you.
+I'm recovering a disk failure and for various reasons I've ended up with
+a partition that's too small to hold the file system that belongs in it.
 
-Others have pointed out that this is not correct, so I don't repeat the
-reasons there.
+I managed to create a second small partition on a good bit of the
+failing disk and use linear mode to concatenate the almost big enough
+partition (sdc2) with the temp partition (sdb2) to make a big enough
+space to ddrescue the failing data.
 
-[...]
+All is now good with 95% of data on the good disk and the small
+partition is holding up.  However I need to get rid of it ASAP.
+So I dd'ed the small partition onto a good filesystem on sdc1.
+Now I want to:
 
-> On production server with large RAID array, I tends to like very much
-> XFS and trust it more than ReiserFS (I had some bad experience with
-> ReiserFS in the past).  You can also grow a XFS filesystem live, whic=
-h
-> is really nice.
->
-> XFS is finally much faster than EXT3 and self-defragmenting, but that
-> was not a concern for you anyway.
+mdadm -B /dev/md0 -l linear -n2 /dev/sdc2 /space/sdb2.dd_image
 
-This is true.  I wouldn't recommend, personally, using XFS on a
-production machine that didn't have a very reliable UPS associated.
+but of course mdadm correctly complains that /space/sdb2.dd_image isn't
+a block device.
 
-XFS only journals meta-data, and writes that to disk quite frequently.
-It, like most other filesystems, is much more relaxed about writing the
-actual data to disk.
-
-This is great from a hard restart situation -- it means no long fsck to
-get the metadata consistent.
-
-Unfortunately, the way that XFS is put together this means that any fil=
-e
-that you were actively writing it in the last minute or so before an
-unclean restart has a good chance of having the metadata in journal, bu=
-t
-the data blocks unwritten.
-
-That will have XFS replace the file content with ASCII NULL for you --
-secure, but somewhat frustrating if you just lost critical system files
-as a result.[1]
+Does anyone know how I can do this?
 
 
-Assuming that you have otherwise reliable hardware, power problems are
-the most common cause of unclean restarts.  The risks of XFS data loss,
-in my experience, offset the performance benefits for most production
-use.
+David
 
-ext3, for reference, can be asked to operate in the same mode as XFS
-but, by default, does not do so.
+-- 
 
-Regards,
-        Daniel
-
-=46ootnotes:=20
-[1]  I may be somewhat bitter here, as I support a dozen machines that
-     use XFS and are, sadly, not terribly reliable hardware.  As a
-     result I spend far too much time pulling critical files back of
-     backup tapes, and can look forward to that continuing until our
-     migration away from that hardware is complete. :/
-    =20
-
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
