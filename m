@@ -1,100 +1,116 @@
-From: PFC <lists@peufeu.com>
-Subject: Re: Kanotix crashed my raid...
-Date: Mon, 09 Jan 2006 19:30:25 +0100
-Message-ID: <op.s24i0zf0cigqcu@apollo13>
-References: <fd8d0180601050104x15079396h@mail.gmail.com> <op.s2yhczepcigqcu@apollo13> <op.s2y8sekvcigqcu@apollo13> <200601090803.03588.mlaks@verizon.net>
+From: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
+Subject: Re: raid5 read performance
+Date: Tue, 10 Jan 2006 01:25:35 +0200
+Message-ID: <5d96567b0601091525h355b0d75tad6b4710b8355abc@mail.gmail.com>
+References: <5d96567b0601030616n42d95089pf6422002591b5d78@mail.gmail.com>
+	 <Pine.LNX.4.44.0601031533460.14492-100000@coffee.psychology.mcmaster.ca>
+	 <5d96567b0601040014y7f1410c3n665fd65aa15f435c@mail.gmail.com>
+	 <013a01c6110c$d2353560$a400a8c0@dcccs>
+	 <5d96567b0601040549g36de7891w47e7d99afb09e718@mail.gmail.com>
+	 <045b01c61178$9efdaad0$a400a8c0@dcccs>
 Mime-Version: 1.0
-Content-Type: text/plain; format=flowed; delsp=yes; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200601090803.03588.mlaks@verizon.net>
+In-Reply-To: <045b01c61178$9efdaad0$a400a8c0@dcccs>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Mitchell Laks <mlaks@verizon.net>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: JaniD++ <djani22@dynamicweb.hu>
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
->> 	OK, I bit the bullet and removed the "goto abort" in raid5.c
->>
->> 	I was then able to mount everything and recover all of my data without
->> any problem. Hm.
->>
->> 	There should be a way to do this with mdadm without recompiling the
->> kernel, but anyway, opensource saved my ass xDDD
-> Could you explain to me what you did? It sounds very important for me to
-> understand!
+1. it is not good to use so many disks in one raid. this means that in
+degraded mode
+    10 disks would be needed to reconstruct one slice of data.
+2. i did not understand what is raid purpose.
+3. 10 MB/s is very slow. what sort of disks do u have ?
+4. what is the raid stripe size ?
 
-	Well, I ought to update.
+On 1/4/06, JaniD++ <djani22@dynamicweb.hu> wrote:
+>
+> ----- Original Message -----
+> From: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
+> To: "JaniD++" <djani22@dynamicweb.hu>
+> Cc: "Linux RAID Mailing List" <linux-raid@vger.kernel.org>
+> Sent: Wednesday, January 04, 2006 2:49 PM
+> Subject: Re: raid5 read performance
+>
+>
+> > 1. do you want the code ?
+>
+> Yes.
+> If it is difficult to set.
+> I use 4 big raid5 array (4 disk node), and the performace is not too good.
+> My standalone disk can do ~50MB/s, but 11 disk in one raid array does only
+> ~150Mbit/s.
+> (With linear read using dd)
+> At this time i think this is my systems pci-bus bottleneck.
+> But on normal use, and random seeks, i am happy, if one disk-node can do
+> 10MB/s ! :-(
+>
+> Thats why i am guessing this...
+>
+> > 2. I managed to gain linear perfromance with raid5.
+> >     it seems that both raid 5 and raid 0 are caching read a head buffers.
+> >     raid 5 cached small amount of read a head while raid0 did not.
+>
+> Aham.
+> But...
+> I dont understand...
+> You wrote that, the RAID5 is slower than RAID0.
+> The read a head buffering/caching is bad for performance?
+>
+> Cheers,
+> Janos
+>
+>
+> >
+> >
+> > On 1/4/06, JaniD++ <djani22@dynamicweb.hu> wrote:
+> > >
+> > > ----- Original Message -----
+> > > From: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
+> > > To: "Mark Hahn" <hahn@physics.mcmaster.ca>
+> > > Cc: "Linux RAID Mailing List" <linux-raid@vger.kernel.org>
+> > > Sent: Wednesday, January 04, 2006 9:14 AM
+> > > Subject: Re: raid5 read performance
+> > >
+> > >
+> > > > I guess i was not clear enough.
+> > > >
+> > > > i am using raid5 over 3 maxtor disks. the chunk size is 1MB.
+> > > > i mesured the io coming from one disk alone when I READ
+> > > > from it with 1MB buffers , and i know that it is ~32MB/s.
+> > > >
+> > > > I created raid0 over two disks and my throughput grown to
+> > > > 64 MB/s.
+> > > >
+> > > > Doing the same thing with raid5 ended in 32 MB/s.
+> > > >
+> > > > I am using async io since i do not want to wait for several disks
+> > > > when i send an IO. By sending a buffer which is striped aligned
+> > > > i am supposed to have one to one relation between a disk and an
+> > > > io.
+> > > >
+> > > > iostat show that all of the three disks work but not fully.
+> > >
+> > > Hello,
+> > >
+> > > How do you set sync/async io?
+> > > Please, let me know! :-)
+> > >
+> > > Thanks,
+> > > Janos
+> > >
+> > >
+> > >
+> >
+> >
+> > --
+> > Raz
+>
+>
 
-	So the kernel refused to start my raid because it was dirty and degraded.  
-I understand this, but getting some data out is better than none. I knew  
-that the PC had crashed while starting the array. So, it wouldn't have had  
-much time to cause a lot of corruption. Most likely everything was  
-alright, just marked dirty. So I just removed the test in the kernel which  
-refuses to start the array in this condition (that's why I love  
-opensource). And it worked.
 
-	raid5.c in the 2.6.14 kernel :
-
-if (mddev->degraded == 1 &&
-     mddev->recovery_cp != MaxSector) {
-printk(KERN_ERR "raid5: cannot start dirty degraded array for  
-%s",mdname(mddev));
-goto abort;
-}
-
-	I just commented out the goto abort.
-
-	Anyway, that's not the end ! I got 3 harddisk failures in a week. All  
-maxtor 250G SATA HDDs. I RMA'd the first one and got a new drive. It  
-worked for 2 days and then boom. So I went to all the computer shops  
-around here and they only had maxtor so I bought another maxtor. AND  
-YESTERDAY IT DIED TOO.
-
-	I spent a lot of time with google, and :	
-
-	Kanotix was not the culprit ; it's nvidia. Turns out the nforce 3 and 4  
-chipsets have some SATA problems. This might be a hardware issue, or maybe  
-a driver issue, who knows, but the end result is this :
-
-	- My nforce 3 / Athlon 64 PC running Linux has 4 SATA ports (2x 2 ports)
-	- 2 of these ports (sda and sdb) are compatible with maxtor harddrives  
-(ie. it seems it works)
-	- the other two (sdc and sdd) are not compatible with maxtor drives.
-
-	My other computer, which has a nforce4 mobo / Athlon 64 PC and runs  
-windows, has the exactly same problem !
-
-	- If I plug a seagate harddrive as sda,b,c,d, it works.
-	- If I plug a maxtor harddrive as sda or sdb, it works.
-	- If I plug a maxtor harddrive as sdc or sdd (the other sata ports), on  
-linux it works for a day or two then the drive "dies" ; on windows it just  
-fucks everything up (takes forever to boot, disk management console  
-crashes, mouse freezes, disk exists then disappears, etc).
-
-	Re-plugging the "dead" drive as sda or sdb makes it work ! So now all is  
-well. I have plugged my 2 maxtor drives on the "maxtorphile" sata sockets,  
-and the 2 seagate drives on the "maxtorphobe" sata sockets. Everything  
-works. I feel like banging head against wall.
-
-	Oh yeah, on linux I also deactivated USB, firewire, and unplugged teh  
-CDROM drive. Who knows. It seems to work now. At least it has worked for  
-24 hours now.
-
-	Actually it's quite hallucinating. And I found people in forums with the  
-same experience ! Some guy had to unplug his IDE CDR to get his SATA hdd  
-to work. On windows. Cool. Actually sata + nforce = broken.
-
-	(the "maxtorphile" sata sockets are not driven by the nforce chipset but  
-by a SIS chip, or so it seems).
-
-	DON'T BUY NFORCE FOR MAKING SATA RAID !!!
-
-
-
-
-
-
-
-
-
-
-
+--
+Raz
