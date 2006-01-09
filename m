@@ -1,8 +1,8 @@
 From: "aziro.linux.adm" <aziro.linux.adm@gmail.com>
-Subject: [RAID5 with 8th SCSI with mdadm -- Is possible one 9th Spare Disk
- after?]
-Date: Mon, 09 Jan 2006 12:53:41 +0200
-Message-ID: <43C240B5.2000802@gmail.com>
+Subject: RAID5 with 8th SCSI with mdadm -- Is possible one 9th Spare Disk
+ after?
+Date: Mon, 09 Jan 2006 14:37:38 +0200
+Message-ID: <43C25912.50606@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
@@ -98,4 +98,5 @@ Thanks for all answares!
 ***********************
 *  Happy New 2k6 Year !   *
 ***********************
+
 
