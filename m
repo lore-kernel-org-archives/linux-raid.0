@@ -1,305 +1,100 @@
-From: "Anton A. Nesterov" <dj_bandit@mail.ru>
-Subject: Raid 5 trouble, need help
-Date: Tue, 10 Jan 2006 00:09:21 +0600
-Message-ID: <E1Ew1SI-000PkF-00.dj_bandit-mail-ru@mx3.mail.ru>
-Reply-To: <dj_bandit@mail.ru>
+From: PFC <lists@peufeu.com>
+Subject: Re: Kanotix crashed my raid...
+Date: Mon, 09 Jan 2006 19:30:25 +0100
+Message-ID: <op.s24i0zf0cigqcu@apollo13>
+References: <fd8d0180601050104x15079396h@mail.gmail.com> <op.s2yhczepcigqcu@apollo13> <op.s2y8sekvcigqcu@apollo13> <200601090803.03588.mlaks@verizon.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="koi8-r"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; format=flowed; delsp=yes; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <200601090803.03588.mlaks@verizon.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Mitchell Laks <mlaks@verizon.net>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi!
-Sorry for my bad english...
-I use:
-software: debian Sarge, kernel 2.4.27-2-686, mdadm - v1.9.0 (install from
-packages).
-hardware: Microstar MS-6315 i815 mainboard , PIII 1100, 200Gb HDD x 10
-different manufactures + 2Gb HDD for system, Promise Ultra100 TX2 x 2
+>> 	OK, I bit the bullet and removed the "goto abort" in raid5.c
+>>
+>> 	I was then able to mount everything and recover all of my data without
+>> any problem. Hm.
+>>
+>> 	There should be a way to do this with mdadm without recompiling the
+>> kernel, but anyway, opensource saved my ass xDDD
+> Could you explain to me what you did? It sounds very important for me to
+> understand!
 
-HDD list:
-/dev/hda: ST32122A
-/dev/hdc: WDC WD2000LB-00EDA0
-/dev/hdd: ST3200826A
-/dev/hde: ST3200826A
-/dev/hdf: WDC WD2000BB-55GUA0
-/dev/hdg: WDC WD2000LB-00EDA0
-/dev/hdh: WDC WD2000JB-00FUA0
-/dev/hdi: WDC WD2000LB-00EDA0
-/dev/hdj: WDC WD2000JB-00GVA0
-/dev/hdk: WDC WD2000BB-00GUC0
-/dev/hdl: WDC WD2000BB-00GUC0
+	Well, I ought to update.
 
-I have made the following:
-Create RAID5:
-# mdadm --create --verbose /dev/md0 --level=5 --raid-devices=10
---spare-devices=0 -c256 /dev/hd{c,d,e,f,g,h,i,j,k,l}1 Create a file system:
-# mke2fs -b 4096 -j -R stride=64 /dev/md0 And mount it in /dev/hdd Then, I
-copy many files (>150Gb) on /dev/hdd and have next trouble:
+	So the kernel refused to start my raid because it was dirty and degraded.  
+I understand this, but getting some data out is better than none. I knew  
+that the PC had crashed while starting the array. So, it wouldn't have had  
+much time to cause a lot of corruption. Most likely everything was  
+alright, just marked dirty. So I just removed the test in the kernel which  
+refuses to start the array in this condition (that's why I love  
+opensource). And it worked.
 
-1. Power disapired. md start automatically, but in degrated mode
-	In kern.log:
-Jan  6 20:54:05 FileServer kernel: md0: former device hdh1 is unavailable,
-removing from array!
-.
-.
-Jan  6 20:54:05 FileServer kernel: md0: no spare disk to reconstruct array!
--- continuing in degraded mode Jan  6 20:54:05 FileServer kernel: md:
-recovery thread finished ...
-I attempt add disk to array manually: 
-# mdadm --manage /dev/md0 --add /dev/hdh1
-Result: hot add failed, no space left on device
-	In kern.log:
-Jan  6 21:45:20 FileServer kernel: md: trying to hot-add
-ide/host2/bus1/target1/lun0/part1 to md0 ...
-Jan  6 21:45:20 FileServer kernel: md0: disk size 195358208 blocks < array
-size 195358336 Jan  6 21:45:20 FileServer kernel: md:
-export_rdev(ide/host2/bus1/target1/lun0/part1)
+	raid5.c in the 2.6.14 kernel :
 
-But I did not change drive and partition table.
-I make: dd if=/dev/zero of=/dev/hdh1 bs=32768 count=4, test and write zeros
-with a WD Diagnostics, re create partition table...
-Without results, md say: no space left on device...
-# cat /proc/partitions |grep host2/bus1/target1/lun0/part1
-  34    65  195358401 ide/host2/bus1/target1/lun0/part1 1 11 24 20 0 0 0 0 0
-20 20
-Why md define 195358208 blocks???
-How could it be?
-This is the first question.
+if (mddev->degraded == 1 &&
+     mddev->recovery_cp != MaxSector) {
+printk(KERN_ERR "raid5: cannot start dirty degraded array for  
+%s",mdname(mddev));
+goto abort;
+}
 
-I continued in degraded mode...
-Array configurations:
-Number   Major   Minor   RaidDevice State
-       0      22        1        0      active sync   /dev/hdc1
-       1      22       65        1      active sync   /dev/hdd1
-       2      33        1        2      active sync   /dev/hde1
-       3      33       65        3      active sync   /dev/hdf1
-       4      34        1        4      active sync   /dev/hdg1
-       5       0        0        5      faulty removed
-       6      56        1        6      active sync   /dev/hdi1
-       7      56       65        7      active sync   /dev/hdj1
-       8      57        1        8      active sync   /dev/hdk1
-       9      57       65        9      active sync   /dev/hdl1
+	I just commented out the goto abort.
 
-Next day:
-Jan  7 12:08:49 FileServer kernel: attempt to access beyond end of device
-Jan  7 12:08:49 FileServer kernel: 16:01: rw=0, want=195358404,
-limit=195358401 Jan  7 12:08:49 FileServer kernel: md: updating md0 RAID
-superblock on device Jan  7 12:08:49 FileServer kernel: md: (skipping faulty
-ide/host0/bus1/target0/lun0/part1 ) Jan  7 12:08:49 FileServer kernel: md:
-(skipping faulty ide/host4/bus1/target1/lun0/part1 ) Jan  7 12:08:49
-FileServer kernel: md: (skipping faulty ide/host4/bus1/target0/lun0/part1 )
-Jan  7 12:08:49 FileServer kernel: md: (skipping faulty
-ide/host4/bus0/target1/lun0/part1 ) Jan  7 12:08:49 FileServer kernel: md:
-(skipping faulty ide/host4/bus0/target0/lun0/part1 ) Jan  7 12:08:49
-FileServer kernel: md: ide/host2/bus1/target0/lun0/part1 [events:
-00000039]<6>(write
-) ide/host2/bus1/target0/lun0/part1's sb offset: 195358336 Jan  7 12:08:49
-FileServer kernel: md: recovery thread got woken up ...
-Jan  7 12:08:49 FileServer kernel: md: recovery thread finished ...
-Jan  7 12:08:49 FileServer kernel: md: ide/host2/bus0/target1/lun0/part1
-[events: 00000039]<6>(write
-) ide/host2/bus0/target1/lun0/part1's sb offset: 195358336 Jan  7 12:08:49
-FileServer kernel: md: ide/host2/bus0/target0/lun0/part1 [events:
-00000039]<6>(write
-) ide/host2/bus0/target0/lun0/part1's sb offset: 195358336 Jan  7 12:08:49
-FileServer kernel: md: ide/host0/bus1/target1/lun0/part1 [events:
-00000039]<6>(write
-) ide/host0/bus1/target1/lun0/part1's sb offset: 195358336 I am a panic....
-I make:
-# mdadm -S /dev/md0
-# mdadm --assemble --force /dev/md0
-It has helped...
-Array has returned to active mode.
+	Anyway, that's not the end ! I got 3 harddisk failures in a week. All  
+maxtor 250G SATA HDDs. I RMA'd the first one and got a new drive. It  
+worked for 2 days and then boom. So I went to all the computer shops  
+around here and they only had maxtor so I bought another maxtor. AND  
+YESTERDAY IT DIED TOO.
 
-Number   Major   Minor   RaidDevice State
-       0      22        1        0      active sync   /dev/hdc1
-       1      22       65        1      active sync   /dev/hdd1
-       2      33        1        2      active sync   /dev/hde1
-       3      33       65        3      active sync   /dev/hdf1
-       4      34        1        4      active sync   /dev/hdg1
-       5       0        0        5      faulty removed
-       6      56        1        6      active sync   /dev/hdi1
-       7      56       65        7      active sync   /dev/hdj1
-       8      57        1        8      active sync   /dev/hdk1
-       9      57       65        9      active sync   /dev/hdl1
+	I spent a lot of time with google, and :	
 
-This situation repeated several times, but with different disks:
-Jan  7 16:07:40 FileServer kernel: attempt to access beyond end of device
-Jan  7 16:07:40 FileServer kernel: 16:01: rw=0, want=195358404,
-limit=195358401 Jan  7 16:07:40 FileServer kernel: md: updating md0 RAID
-superblock on device Jan  7 16:07:40 FileServer kernel: md: (skipping faulty
-ide/host0/bus1/target0/lun0/part1 ) Jan  7 16:07:40 FileServer kernel: md:
-(skipping faulty ide/host4/bus1/target1/lun0/part1 ) Jan  7 16:07:40
-FileServer kernel: md: (skipping faulty ide/host4/bus1/target0/lun0/part1 )
-Jan  7 16:07:40 FileServer kernel: md: (skipping faulty
-ide/host4/bus0/target1/lun0/part1 ) Jan  7 16:07:40 FileServer kernel: md:
-(skipping faulty ide/host4/bus0/target0/lun0/part1 ) Jan  7 16:07:40
-FileServer kernel: md: ide/host2/bus1/target0/lun0/part1 [events:
-00000040]<6>(write
-) ide/host2/bus1/target0/lun0/part1's sb offset: 195358336 Jan  7 16:07:40
-FileServer kernel: md: recovery thread got woken up ...
-Jan  7 16:07:40 FileServer kernel: md: recovery thread finished ...
-Jan  7 16:07:40 FileServer kernel: md: ide/host2/bus0/target1/lun0/part1
-[events: 00000040]<6>(write
-) ide/host2/bus0/target1/lun0/part1's sb offset: 195358336 Jan  7 16:07:40
-FileServer kernel: md: ide/host2/bus0/target0/lun0/part1 [events:
-00000040]<6>(write
-) ide/host2/bus0/target0/lun0/part1's sb offset: 195358336 Jan  7 16:07:40
-FileServer kernel: md: ide/host0/bus1/target1/lun0/part1 [events:
-00000040]<6>(write
-) ide/host0/bus1/target1/lun0/part1's sb offset: 195358336 .
-Jan  7 16:33:43 FileServer kernel: attempt to access beyond end of device
-Jan  7 16:33:43 FileServer kernel: 16:01: rw=0, want=195358404,
-limit=195358401 Jan  7 16:33:43 FileServer kernel: md: updating md0 RAID
-superblock on device Jan  7 16:33:43 FileServer kernel: md: (skipping faulty
-ide/host0/bus1/target0/lun0/part1 ) Jan  7 16:33:43 FileServer kernel: md:
-(skipping faulty ide/host4/bus1/target1/lun0/part1 ) Jan  7 16:33:43
-FileServer kernel: md: (skipping faulty ide/host4/bus1/target0/lun0/part1 )
-Jan  7 16:33:43 FileServer kernel: md: (skipping faulty
-ide/host4/bus0/target1/lun0/part1 ) Jan  7 16:33:43 FileServer kernel: md:
-(skipping faulty ide/host4/bus0/target0/lun0/part1 ) Jan  7 16:33:43
-FileServer kernel: md: ide/host2/bus1/target0/lun0/part1 [events:
-00000045]<6>(write
-) ide/host2/bus1/target0/lun0/part1's sb offset: 195358336 Jan  7 16:33:43
-FileServer kernel: md: recovery thread got woken up ...
-Jan  7 16:33:43 FileServer kernel: md: recovery thread finished ...
-Jan  7 16:33:43 FileServer kernel: md: ide/host2/bus0/target1/lun0/part1
-[events: 00000045]<6>(write
-) ide/host2/bus0/target1/lun0/part1's sb offset: 195358336 Jan  7 16:33:43
-FileServer kernel: md: ide/host2/bus0/target0/lun0/part1 [events:
-00000045]<6>(write
-) ide/host2/bus0/target0/lun0/part1's sb offset: 195358336 Jan  7 16:33:43
-FileServer kernel: md: ide/host0/bus1/target1/lun0/part1 [events:
-00000045]<6>(write
-) ide/host0/bus1/target1/lun0/part1's sb offset: 195358336 .
-.
-an  7 18:04:55 FileServer kernel: attempt to access beyond end of device Jan
-7 18:04:55 FileServer kernel: 16:41: rw=0, want=195358452, limit=195358401
-Jan  7 18:04:55 FileServer kernel: md: updating md0 RAID superblock on
-device Jan  7 18:04:55 FileServer kernel: md:
-ide/host0/bus1/target0/lun0/part1 [events: 0000004a]<6>(write
-) ide/host0/bus1/target0/lun0/part1's sb offset: 195358336 Jan  7 18:04:55
-FileServer kernel: md: recovery thread got woken up ...
-Jan  7 18:04:55 FileServer kernel: md: recovery thread finished ...
-Jan  7 18:04:55 FileServer kernel: md: ide/host4/bus1/target1/lun0/part1
-[events: 0000004a]<6>(write
-) ide/host4/bus1/target1/lun0/part1's sb offset: 195358336 Jan  7 18:04:55
-FileServer kernel: md: ide/host4/bus1/target0/lun0/part1 [events:
-0000004a]<6>(write
-) ide/host4/bus1/target0/lun0/part1's sb offset: 195358336 Jan  7 18:04:55
-FileServer kernel: md: ide/host4/bus0/target1/lun0/part1 [events:
-0000004a]<6>(write
-) ide/host4/bus0/target1/lun0/part1's sb offset: 195358336 Jan  7 18:04:55
-FileServer kernel: md: ide/host4/bus0/target0/lun0/part1 [events:
-0000004a]<6>(write
-) ide/host4/bus0/target0/lun0/part1's sb offset: 195358336 Jan  7 18:04:55
-FileServer kernel: md: ide/host2/bus1/target0/lun0/part1 [events:
-0000004a]<6>(write
-) ide/host2/bus1/target0/lun0/part1's sb offset: 195358336 Jan  7 18:04:55
-FileServer kernel: md: (skipping faulty ide/host2/bus0/target1/lun0/part1 )
-Jan  7 18:04:55 FileServer kernel: md: (skipping faulty
-ide/host2/bus0/target0/lun0/part1 ) Jan  7 18:04:55 FileServer kernel: md:
-(skipping faulty ide/host0/bus1/target1/lun0/part1 ) . 
-.
-Jan  7 20:55:32 FileServer kernel: attempt to access beyond end of device
-Jan  7 20:55:32 FileServer kernel: 16:01: rw=0, want=195358404,
-limit=195358401 Jan  7 20:55:32 FileServer kernel: md: updating md0 RAID
-superblock on device Jan  7 20:55:32 FileServer kernel: md: (skipping faulty
-ide/host0/bus1/target0/lun0/part1 ) Jan  7 20:55:32 FileServer kernel: md:
-(skipping faulty ide/host4/bus1/target1/lun0/part1 ) Jan  7 20:55:32
-FileServer kernel: md: (skipping faulty ide/host4/bus1/target0/lun0/part1 )
-Jan  7 20:55:32 FileServer kernel: md: (skipping faulty
-ide/host4/bus0/target1/lun0/part1 ) Jan  7 20:55:32 FileServer kernel: md:
-(skipping faulty ide/host4/bus0/target0/lun0/part1 ) Jan  7 20:55:32
-FileServer kernel: md: ide/host2/bus1/target0/lun0/part1 [events:
-0000004e]<6>(write
-) ide/host2/bus1/target0/lun0/part1's sb offset: 195358336 Jan  7 20:55:32
-FileServer kernel: md: recovery thread got woken up ...
-Jan  7 20:55:32 FileServer kernel: md: recovery thread finished ...
-Jan  7 20:55:32 FileServer kernel: md: ide/host2/bus0/target1/lun0/part1
-[events: 0000004e]<6>(write
-) ide/host2/bus0/target1/lun0/part1's sb offset: 195358336 Jan  7 20:55:32
-FileServer kernel: md: ide/host2/bus0/target0/lun0/part1 [events:
-0000004e]<6>(write
-) ide/host2/bus0/target0/lun0/part1's sb offset: 195358336 Jan  7 20:55:32
-FileServer kernel: md: ide/host0/bus1/target1/lun0/part1 [events:
-0000004e]<6>(write
-) ide/host0/bus1/target1/lun0/part1's sb offset: 195358336 .
-.
-Jan  8 08:59:04 FileServer kernel: attempt to access beyond end of device
-Jan  8 08:59:04 FileServer kernel: 16:41: rw=0, want=195358404,
-limit=195358401 Jan  8 08:59:04 FileServer kernel: md: updating md0 RAID
-superblock on device Jan  8 08:59:04 FileServer kernel: md:
-ide/host0/bus1/target0/lun0/part1 [events: 00000057]<6>(write
-) ide/host0/bus1/target0/lun0/part1's sb offset: 195358336 Jan  8 08:59:04
-FileServer kernel: md: recovery thread got woken up ...
-Jan  8 08:59:04 FileServer kernel: md: recovery thread finished ...
-Jan  8 08:59:04 FileServer kernel: md: ide/host4/bus1/target1/lun0/part1
-[events: 00000057]<6>(write
-) ide/host4/bus1/target1/lun0/part1's sb offset: 195358336 Jan  8 08:59:04
-FileServer kernel: md: ide/host4/bus1/target0/lun0/part1 [events:
-00000057]<6>(write
-) ide/host4/bus1/target0/lun0/part1's sb offset: 195358336 Jan  8 08:59:04
-FileServer kernel: md: ide/host4/bus0/target1/lun0/part1 [events:
-00000057]<6>(write
-) ide/host4/bus0/target1/lun0/part1's sb offset: 195358336 Jan  8 08:59:04
-FileServer kernel: md: ide/host4/bus0/target0/lun0/part1 [events:
-00000057]<6>(write
-) ide/host4/bus0/target0/lun0/part1's sb offset: 195358336 Jan  8 08:59:04
-FileServer kernel: md: ide/host2/bus1/target0/lun0/part1 [events:
-00000057]<6>(write
-) ide/host2/bus1/target0/lun0/part1's sb offset: 195358336 Jan  8 08:59:04
-FileServer kernel: md: ide/host2/bus0/target1/lun0/part1 [events:
-00000057]<6>(write
-) ide/host2/bus0/target1/lun0/part1's sb offset: 195358336 Jan  8 08:59:04
-FileServer kernel: md: (skipping faulty ide/host2/bus0/target0/lun0/part1 )
-Jan  8 08:59:04 FileServer kernel: md: (skipping faulty
-ide/host0/bus1/target1/lun0/part1 ) Jan  8 09:03:45 FileServer kernel: md:
-marking sb clean... 
-Jan  8 09:03:45 FileServer kernel: md: updating md0 RAID superblock on
-device Jan  8 09:03:45 FileServer kernel: md:
-ide/host0/bus1/target0/lun0/part1 [events: 00000058]<6>(write
-) ide/host0/bus1/target0/lun0/part1's sb offset: 195358336 Jan  8 09:03:45
-FileServer kernel: md: ide/host4/bus1/target1/lun0/part1 [events:
-00000058]<6>(write
-) ide/host4/bus1/target1/lun0/part1's sb offset: 195358336 Jan  8 09:03:45
-FileServer kernel: md: ide/host4/bus1/target0/lun0/part1 [events:
-00000058]<6>(write
-) ide/host4/bus1/target0/lun0/part1's sb offset: 195358336 Jan  8 09:03:45
-FileServer kernel: md: ide/host4/bus0/target1/lun0/part1 [events:
-00000058]<6>(write
-) ide/host4/bus0/target1/lun0/part1's sb offset: 195358336 Jan  8 09:03:45
-FileServer kernel: md: ide/host4/bus0/target0/lun0/part1 [events:
-00000058]<6>(write
-) ide/host4/bus0/target0/lun0/part1's sb offset: 195358336 Jan  8 09:03:45
-FileServer kernel: md: ide/host2/bus1/target0/lun0/part1 [events:
-00000058]<6>(write
-) ide/host2/bus1/target0/lun0/part1's sb offset: 195358336 Jan  8 09:03:45
-FileServer kernel: md: ide/host2/bus0/target1/lun0/part1 [events:
-00000058]<6>(write
-) ide/host2/bus0/target1/lun0/part1's sb offset: 195358336 Jan  8 09:03:45
-FileServer kernel: md: (skipping faulty ide/host2/bus0/target0/lun0/part1 )
-Jan  8 09:03:45 FileServer kernel: md: (skipping faulty
-ide/host0/bus1/target1/lun0/part1 )
+	Kanotix was not the culprit ; it's nvidia. Turns out the nforce 3 and 4  
+chipsets have some SATA problems. This might be a hardware issue, or maybe  
+a driver issue, who knows, but the end result is this :
 
-I make:
-# mdadm --assemble --force /dev/md0      
-mdadm: SET_ARRAY_INFO failed for /dev/md0: File exists # mdadm -S /dev/md0 #
-mdadm --assemble --force /dev/md0
-mdadm: /dev/md0 assembled from 7 drives - not enough to start the array.
-# mdadm -E /dev/hdd1
-mdadm: No super block found on /dev/hdd1 (Expected magic a92b4efc, got
-db492716) # mdadm -E /dev/hde1
-mdadm: No super block found on /dev/hde1 (Expected magic a92b4efc, got
-db492716)
+	- My nforce 3 / Athlon 64 PC running Linux has 4 SATA ports (2x 2 ports)
+	- 2 of these ports (sda and sdb) are compatible with maxtor harddrives  
+(ie. it seems it works)
+	- the other two (sdc and sdd) are not compatible with maxtor drives.
 
-The second question: can I restore my data? Is it possible?
-And last quiestion: What is the reason of such malfunction? What to do for
-the stable work stable of RAID?
-Thanks...
-Anton A. Nesterov
+	My other computer, which has a nforce4 mobo / Athlon 64 PC and runs  
+windows, has the exactly same problem !
+
+	- If I plug a seagate harddrive as sda,b,c,d, it works.
+	- If I plug a maxtor harddrive as sda or sdb, it works.
+	- If I plug a maxtor harddrive as sdc or sdd (the other sata ports), on  
+linux it works for a day or two then the drive "dies" ; on windows it just  
+fucks everything up (takes forever to boot, disk management console  
+crashes, mouse freezes, disk exists then disappears, etc).
+
+	Re-plugging the "dead" drive as sda or sdb makes it work ! So now all is  
+well. I have plugged my 2 maxtor drives on the "maxtorphile" sata sockets,  
+and the 2 seagate drives on the "maxtorphobe" sata sockets. Everything  
+works. I feel like banging head against wall.
+
+	Oh yeah, on linux I also deactivated USB, firewire, and unplugged teh  
+CDROM drive. Who knows. It seems to work now. At least it has worked for  
+24 hours now.
+
+	Actually it's quite hallucinating. And I found people in forums with the  
+same experience ! Some guy had to unplug his IDE CDR to get his SATA hdd  
+to work. On windows. Cool. Actually sata + nforce = broken.
+
+	(the "maxtorphile" sata sockets are not driven by the nforce chipset but  
+by a SIS chip, or so it seems).
+
+	DON'T BUY NFORCE FOR MAKING SATA RAID !!!
+
+
+
+
+
+
+
+
+
+
 
