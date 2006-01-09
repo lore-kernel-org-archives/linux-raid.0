@@ -1,79 +1,101 @@
-From: Matt Darcy <kernel-lists@projecthugo.co.uk>
-Subject: Re: more info on the hang with 2.6.15-rc5
-Date: Mon, 09 Jan 2006 09:54:44 +0000
-Message-ID: <43C232E4.1060504@projecthugo.co.uk>
-References: <E1EpIfb-0001e2-GR@highlab.com> <43C1580B.9020609@tmr.com>
-Reply-To: kernel-lists@projecthugo.co.uk
+From: "aziro.linux.adm" <aziro.linux.adm@gmail.com>
+Subject: [RAID5 with 8th SCSI with mdadm -- Is possible one 9th Spare Disk
+ after?]
+Date: Mon, 09 Jan 2006 12:53:41 +0200
+Message-ID: <43C240B5.2000802@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <43C1580B.9020609@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Sebastian Kuzminsky <seb@highlab.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Bill Davidsen wrote:
+   Hi, Folk
+I've bad experience with a two SCSI Seagate 73,4 10K.6 Ultra320 disks
+failed one by one in my software RAID5 from 8th SCSI Disks -- Hot Swapable.
+ From /var/log/messages i see /dev/sdb1 failed first, and after
+/dev/sda1 failed second. RAID5 stop your functionality.
+Then i reboot my Fedora Core 3 Linux
 
-> Sebastian Kuzminsky wrote:
->
->> Now it works, but I dont trust it one bit.
->>
->> I had been seeing almost immediate, perfectly repeatable hard lockups
->> in 2.6.15-rc5 and 2.6.15-rc5-mm3, when using sata_mv, RAID, and LVM
->> together.  Nothing in the syslog or on the console, and the system is
->> totally unresponsive to the keyboard & network.
->>
->> My hardware setup is: four Seagate Barracuda 500 GB disks, on a Marvell
->> MV88SX6081 8-port SATA-II PCI-X controller, on a PCI-X bus (64/66).
->>
->> The disks work great when accessed directly.  They work great when used
->> as four PVs for LVM, and when assembled into a 4-disk RAID-6.
->>
->> But when I make a RAID-6 array out of them, and use the array as a PV,
->> the system would hang completely, within seconds.  (This is with LVM
->> 2.02.01, libdevicemapper 1.02.02, and dm-driver 4.5.0.)
->>
->> I turned on all the debugging options in the kernel config hoping to get
->> some insight, but this "debug" kernel doesnt crash.  It's running fine,
->> and I'm pounding on it.  A timing problem in the interaction between
->> LVM and RAID?  Some kind of wierd heisenbug....
->>
->>
->> I'd be happy to do any debugging tests people suggest.
->>
->>
->>  
->>
-> I've been waiting for more info on this, did it get fixed? 2.6.15?
->
-No,
+#uname -a
+Linux server 2.6.9-1.667smp #1 SMP Tue Nov 2 14:59:52 EST 2004 i686 i686
+i386 GNU/Linux
 
-not at all.
+and in rescue mode begin with recover procedure.
 
-The stability of the driver in 2.6.15 is totally unusable. The 
-2.6.15-rc5-mm3 appears to be the most usable driver from my experience, 
-although this too has problems with it. Keep in mind that this is a very 
-early driver development tree.  I'm currently using the libata git tree 
-kernel, and some of the usability of the sata_mv driver appears a bit 
-better, however the stability is still unusable (300 minutes to build a 
-1.4 TB raid 5 array - constant hangs on about %25-30 completion of the 
-array build)
+#mdadm -V
+mdadm - v1.6.0 - 4 June 2004
 
-Take a look at my other posts with the subjects
+I success made mdadm -A /dev/md0 -f /dev/sd[acdefgh]1, and after
+assemble my RAID5 i add failed first /dev/sdb1, mdadm /dev/md0 -a /dev/sdb1.
+When, with mdadm create my RAID5 i use all 8 SCSI Disks, but not define
+"--spare-devices=1" by --create options.
+Is possible to add one more nine SCSI Seagate 73,4 10K.6 Ultra320 disk
+like spare one.
 
-[git patches] 2.6 libata updates
-2.6.15-rc5 mm3 V mm3 (although it should be mm1 V mm3)
+And if one from 8th SCSI Disks failed the mdadm will automatic use this
+spare for reconstruction.
 
-I'd be happy to talk this through more with you so that more feecback 
-can be given to the sata_mv driver (which looks like its actually in 
-quite reasonable demand)
+How can do this if possible with mdadm or if add in /etc/mdadm.conf
+something like follows: changes in [2]: spares=1    /dev/sdj1
+[1]original /etc/mdadm.conf
+# mdadm.conf written out by anaconda
+DEVICE /dev/sd[abcdefgh]1
+MAILADDR admin@domain.com
+ARRAY /dev/md0 super-minor=0
+ARRAY /dev/md0 level=raid5 num-devices=8
+UUID=656519ce:b6b59cb5:d5a5aaf2:25a61506
 
-Matt
+devices=/dev/sda1,/dev/sdb1,/dev/sdc1,/dev/sdd1,/dev/sde1,/dev/sdf1,/dev/sdg1,/dev/sdh1
+============================================================================
+[2]after possible modification /etc/mdadm.conf
+# mdadm.conf written out by anaconda
+DEVICE /dev/sd[abcdefgh]1
+MAILADDR admin@domain.com
+ARRAY /dev/md0 super-minor=0
+ARRAY /dev/md0 level=raid5 num-devices=9 spare=1
+UUID=656519ce:b6b59cb5:d5a5aaf2:25a61506
+
+devices=/dev/sda1,/dev/sdb1,/dev/sdc1,/dev/sdd1,/dev/sde1,/dev/sdf1,/dev/sdg1,/dev/sdh1,/dev/sdj1
+============================================================================
+Current mdadm -D /dev/md0 is follows:
+/dev/md0:
+        Version : 00.90.01
+  Creation Time : Wed Aug  3 14:37:00 2005
+     Raid Level : raid5
+     Array Size : 501773440 (478.53 GiB 513.82 GB)
+    Device Size : 71681920 (68.36 GiB 73.40 GB)
+   Raid Devices : 8
+  Total Devices : 8
+Preferred Minor : 0
+    Persistence : Superblock is persistent
+
+    Update Time : Fri Jan  6 17:37:48 2006
+          State : clean
+Active Devices : 8
+Working Devices : 8
+Failed Devices : 0
+  Spare Devices : 0
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+    Number   Major   Minor   RaidDevice State
+       0       8        1        0      active sync   /dev/sda1
+       1       8       17        1      active sync   /dev/sdb1
+       2       8       33        2      active sync   /dev/sdc1
+       3       8       49        3      active sync   /dev/sdd1
+       4       8       65        4      active sync   /dev/sde1
+       5       8       81        5      active sync   /dev/sdf1
+       6       8       97        6      active sync   /dev/sdg1
+       7       8      113        7      active sync   /dev/sdh1
+           UUID : 656519ce:b6b59cb5:d5a5aaf2:25a61506
+         Events : 0.2120052
 
 
-
-
-
+Thanks for all answares!
+***********************
+*  Happy New 2k6 Year !   *
+***********************
 
