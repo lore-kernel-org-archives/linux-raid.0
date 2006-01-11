@@ -1,150 +1,68 @@
-From: <bhess@patmedia.net>
-Subject: (unknown)
-Date: Wed, 11 Jan 2006 09:47:03 -0500
-Message-ID: <20060111144943.93BAA396A20@mxo3.broadbandsupport.net>
-Reply-To: bhess@patmedia.net
+From: ross@lug.udel.edu (Ross Vandegrift)
+Subject: Re: your mail
+Date: Wed, 11 Jan 2006 12:44:33 -0500
+Message-ID: <20060111174433.GA9970@lug.udel.edu>
+References: <20060111144943.93BAA396A20@mxo3.broadbandsupport.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
+In-Reply-To: <20060111144943.93BAA396A20@mxo3.broadbandsupport.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: bhess@patmedia.net
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-linux-raid@vger.kernel.org
-
-
-
-I originally sent this to Neil Brown who suggested I sent it to you.
-
-
-
-
-
-
-
-Any help would be appreciated.
-
-
-
-
-
-
-
-Has anyone put an effort into building a raid 1 based on USB connected
-
-drives under Redhat 3/4 not as the root/boot
-
-drive. A year ago I don't think this made any sense but with the
-
-price of drives being far less that then the equivalent tape media
-
-and the simple USB to IDE smart cable I am evaluating an expandable
-
-USB disk farm for two uses. A reasonable robust place to store
-
-data until I can select what I want to put on tape. The second
-
-is secondary storage for all of the family video tapes that I am
-
-capturing in preparation for editing to DVD. The system does not
-
-have to be fast just large, robust, expandable and cheep.
-
-
-
-I currently run a Redhat sandbox with a hardware raid 5 and 4 120G
-
-SATA drives. I have added USB drives and have them mount with
-
-the LABEL=/PNAME option in fstab. In this manner they end up
-
-in the right place after reboot. I do not know enough about
-
-the Linux drive interface to know if USB attached devices will
-
-get properly mounted into the raid at reboot and after changes
-
-or additions of drives to the USB.
-
-
-
-I am a retired Bell Labs Research supervisor. I was in Murray Hill
-
-when UNIX was born and still use Intel based UNIX in the current
-
-form of SCO Unixware both professionally and personally. Unixware
-
-is no longer a viable product since I see no future in it and
-
-Oracle is not supported. I know way to much about how the guts
-
-of Unixware works thanks to a friend who was one of SCO's kernel
-
-and storage designers. I know way to little how Linux works to
-
-get a USB based raid up without a lot of research and tinkering.
-
-I don't mind research and tinkering but I don't like reinventing
-
-the wheel.
-
-
-
-I have read The Software-RAID HOWTO by Jakob 0stergaard and
-
-Emilio Bueso and downloaded mdadm. I have not tried it yet.
-
-
-
-
-
-The system I have in mind uses a Intel server motherboard,
-
-hardware raid 1 SATA root/boot/swap drive, SCSI tape drive
-
-and a 4 port USB card. In a 2U chasses. A second 2U chassis
-
-will contain a supply, up to 14 drives and lots of fans.
-
-I have everything except the drives. The sole use of this system
-
-will be a disk farm with a NFS and Samba server. It will run
-
-under Redhat 3 or 4. I am leaning toward Redhat 4 since I
-
-understand SCSI tape support is more stable under 4. Any
-
-comment in this area would also be appreciated.
-
-
-
-Can you point me in the direction of newer articles that cover
-
-Linux raid using USB connected drives or do you have any
-
-suggestions on the configuration of a system. My main concern
-
-is how to get USB drives correctly put back in the raid after
-
-boot and/or a USB change since I do not know how they are assigned
-
-to /dev/sdxy in the first place and how USB hubs interact with
-
-the assignments. I realize I should have other concerns and
-
-just don't know enough. Ignorance is bliss, up to an init 6.
-
-
-
-Thank You for your time.
-
-
-
-Bill Hess
-
-
-
-bhess@patmedia.net 
-
+On Wed, Jan 11, 2006 at 09:47:03AM -0500, bhess@patmedia.net wrote:
+> Has anyone put an effort into building a raid 1 based on USB connected
+> drives under Redhat 3/4 not as the root/boot
+> drive.
+
+No, I haven't actually tried this, but I do know that it'll work
+without any problem.
+
+The main issue that you'll confront - USB devices do not have fixed
+device numbers.  They can change every time they are plugged/unplugged.
+As a result, you may not be able to depend on your disks to always be
+(for example) /dev/sde and /dev/sdf.
+
+There's a user-space daemon called hotplug that manages this stuff.
+It load appropriate drivers for the devices it sees plugged into the
+USB bus.  I don't know enough about to tell you specifically how it
+will handle your setup.
+
+My initial suggestion:
+	1) Start with no driver plugged
+	2) cat /proc/partitions > ~/nousb
+	3) Plug one drive in
+	4) cat /proc/partitions > ~/oneusb
+	5) Plug second drive in
+	6) cat /proc/parititons > ~/twousb
+	7) diff -u ~/nousb ~/oneusb
+	8) diff -u ~/oneusb ~/twousb
+
+This should give you a good idea of how the kernel treats the
+situation from the device perspective.
+
+As far as the RAID part - that's easy.  Once you know what the block
+devices look like, make your RAID.  I promise the md driver will work.
+I've run md across all sorts of weird device setups and so long as
+it's a working block device, md is happy!
+
+Finally, if you use mdadm's --uuid option to assemble your array after
+creating it, it should just find the USB disks, regardless of where
+they came up.  That way, you only need to worry about what device node
+they are using when you first create the array.
+
+Good luck! 
+
+
+-- 
+Ross Vandegrift
+ross@lug.udel.edu
+
+"The good Christian should beware of mathematicians, and all those who
+make empty prophecies. The danger already exists that the mathematicians
+have made a covenant with the devil to darken the spirit and to confine
+man in the bonds of Hell."
+	--St. Augustine, De Genesi ad Litteram, Book II, xviii, 37
