@@ -1,206 +1,191 @@
-From: "JaniD++" <djani22@dynamicweb.hu>
-Subject: Re: raid5 read performance
-Date: Wed, 11 Jan 2006 02:08:35 +0100
-Message-ID: <003901c6164d$4baed640$a400a8c0@dcccs>
-References: <5d96567b0601030616n42d95089pf6422002591b5d78@mail.gmail.com> <Pine.LNX.4.44.0601031533460.14492-100000@coffee.psychology.mcmaster.ca> <5d96567b0601040014y7f1410c3n665fd65aa15f435c@mail.gmail.com> <013a01c6110c$d2353560$a400a8c0@dcccs> <5d96567b0601040549g36de7891w47e7d99afb09e718@mail.gmail.com> <045b01c61178$9efdaad0$a400a8c0@dcccs> <5d96567b0601091525h355b0d75tad6b4710b8355abc@mail.gmail.com> <006701c615d7$b17f74f0$a400a8c0@dcccs> <5d96567b0601101205o6ecd1987vef0766234940bbf4@mail.gmail.com>
+From: Michael Alger <linux-raid@mm.quex.org>
+Subject: Updating superblock to reflect new disc locations
+Date: Wed, 11 Jan 2006 13:20:58 +0800
+Message-ID: <43C495BA.9070502@mm.quex.org>
+Reply-To: linux-raid@vger.kernel.org
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="ISO-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
------ Original Message ----- 
-From: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
-To: "JaniD++" <djani22@dynamicweb.hu>
-Cc: <linux-raid@vger.kernel.org>
-Sent: Tuesday, January 10, 2006 9:05 PM
-Subject: Re: raid5 read performance
+I'm running Debian sarge on a system with two IDE drives. I used the 
+installer to create a mirrored filesystem on the first partition of both 
+discs and it's mounted as the root; everything was working fine.
+
+Unfortunately, I noticed the two devices were on the same IDE channel 
+(i.e. /dev/hda1 and /dev/hdb1), so I moved them on to different channels 
+(/dev/hda1 and /dev/hdc1). Now, the array only finds the one device when 
+it starts up (/dev/hda1). In case it's relevant, because of the cable 
+lengths the drives moved as follows:
+
+dev/hda -> dev/hdc
+dev/hdb -> dev/hda
+
+I believe all I really need to do is update the superblock on /dev/hda1 
+so the md driver knows to look at /dev/hdc1 rather than /dev/hdb1. 
+Unfortunately, I can't work out how to do this. The only references I've 
+seen to rewriting the superblock is with mdadm --assemble, but I can't 
+use that because it's already running.
+
+I've tried removing both drives from the array (not at the same time, of 
+course), then re-adding them and waiting for it to finish syncing, but 
+that doesn't help. After a reboot, I still get the same problem. In 
+fact, now it looks like it's not even trying /dev/hdb1; it looks like it 
+recorded the fact I had removed the drive, but not the fact I'd added it 
+again.
+
+After using mdadm --manage /dev/md0 --add /dev/hdc1 and waiting for the 
+array to resync, the superblock info on both discs match.
+
+Below is the current situation in terms of mdadm output, after re-adding 
+/dev/hdc1 to /dev/md0 and waiting for it to resync. (md1 is on hda1 and 
+hdc1, and has the same problem.)
 
 
-> NBD for network block device ?
+# cat /proc/mdstat
+Personalities : [raid1]
+md1 : active raid1 hda3[1]
+      9767424 blocks [2/1] [_U]
 
-Yes. :-)
+md0 : active raid1 hdc1[0] hda1[1]
+      2441728 blocks [2/2] [UU]
 
-> why do u use it ?
+unused devices: <none>
 
-I need only one big block device.
-In the beginning, i try almost all tool to transport the block devices to
-the concentrator, and the best choise (speed and stability) looks like
-RedHat's GNBD.
-But GNBD is have the same problem, like NBD, the old deadlock problem on
-heavy write.
-The only difference is the GNBD issues that rarely than NBD.
-Couple of months ago, Herbert Xu have fixed the NBD-deadlock problem (with
-my help:-), and now the fixed NBD is the best choise!
 
-Do you have better idea? :-)
-Please let me know!
+The superblocks look correct to me, as the following shows:
 
-> what type of elevator do you use ?
+# mdadm --misc --examine /dev/hda1
+/dev/hda1:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : d2b494fc:a181e190:a09f1dfb:b226ea79
+  Creation Time : Tue Jan 10 15:53:02 2006
+     Raid Level : raid1
+   Raid Devices : 2
+  Total Devices : 2
+Preferred Minor : 0
 
-Elevator?
-What do you think exactly?
-My system's actually performance is thanks to block devices good readahead
-settings. (in all layer, including nbd)
+    Update Time : Wed Jan 11 13:10:10 2006
+          State : clean
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 0
+       Checksum : f7d5252c - correct
+         Events : 0.3266
 
-Cheers,
-Janos
+      Number   Major   Minor   RaidDevice State
+this     1       3        1        1      active sync   /dev/hda1
 
->
->
-> On 1/10/06, JaniD++ <djani22@dynamicweb.hu> wrote:
-> >
-> > ----- Original Message -----
-> > From: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
-> > To: "JaniD++" <djani22@dynamicweb.hu>
-> > Cc: "Linux RAID Mailing List" <linux-raid@vger.kernel.org>
-> > Sent: Tuesday, January 10, 2006 12:25 AM
-> > Subject: Re: raid5 read performance
-> >
-> >
-> > > 1. it is not good to use so many disks in one raid. this means that in
-> > > degraded mode
-> > >     10 disks would be needed to reconstruct one slice of data.
-> > > 2. i did not understand what is raid purpose.
-> >
-> > Yes, i know that.
-> > In my system, this was the best choise.
-> >
-> > I have 4 disk node inside 4x12 Maxtor 200GB (exactly 10xIDE+2xSATA).
-> > The disk nodes sevres nbd.
-> > The concentrator joins the nodes with sw-raid0
-> >
-> > The system is a generally free web storage.
-> >
-> > > 3. 10 MB/s is very slow. what sort of disks do u have ?
-> >
-> > 4x(2xSATA+10xIDE) Maxtor 200GB
-> >
-> > The system sometimes have 500-800-1000 downloaders at same time.
-> > In this load, the per node traffic is only 10MB/s. (~100Mbit/s)
-> >
-> > First i think the sync/async IO problem.
-> > At this time i think the bottleneck on the nodes is the PCI-32 with 8
-HDD.
-> > :(
-> >
-> > > 4. what is the raid stripe size ?
-> >
-> > Currently all raid layers have 32KB chunks.
-> >
-> > Cheers,
-> > Janos
-> >
-> > >
-> > > On 1/4/06, JaniD++ <djani22@dynamicweb.hu> wrote:
-> > > >
-> > > > ----- Original Message -----
-> > > > From: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
-> > > > To: "JaniD++" <djani22@dynamicweb.hu>
-> > > > Cc: "Linux RAID Mailing List" <linux-raid@vger.kernel.org>
-> > > > Sent: Wednesday, January 04, 2006 2:49 PM
-> > > > Subject: Re: raid5 read performance
-> > > >
-> > > >
-> > > > > 1. do you want the code ?
-> > > >
-> > > > Yes.
-> > > > If it is difficult to set.
-> > > > I use 4 big raid5 array (4 disk node), and the performace is not too
-> > good.
-> > > > My standalone disk can do ~50MB/s, but 11 disk in one raid array
-does
-> > only
-> > > > ~150Mbit/s.
-> > > > (With linear read using dd)
-> > > > At this time i think this is my systems pci-bus bottleneck.
-> > > > But on normal use, and random seeks, i am happy, if one disk-node
-can do
-> > > > 10MB/s ! :-(
-> > > >
-> > > > Thats why i am guessing this...
-> > > >
-> > > > > 2. I managed to gain linear perfromance with raid5.
-> > > > >     it seems that both raid 5 and raid 0 are caching read a head
-> > buffers.
-> > > > >     raid 5 cached small amount of read a head while raid0 did not.
-> > > >
-> > > > Aham.
-> > > > But...
-> > > > I dont understand...
-> > > > You wrote that, the RAID5 is slower than RAID0.
-> > > > The read a head buffering/caching is bad for performance?
-> > > >
-> > > > Cheers,
-> > > > Janos
-> > > >
-> > > >
-> > > > >
-> > > > >
-> > > > > On 1/4/06, JaniD++ <djani22@dynamicweb.hu> wrote:
-> > > > > >
-> > > > > > ----- Original Message -----
-> > > > > > From: "Raz Ben-Jehuda(caro)" <raziebe@gmail.com>
-> > > > > > To: "Mark Hahn" <hahn@physics.mcmaster.ca>
-> > > > > > Cc: "Linux RAID Mailing List" <linux-raid@vger.kernel.org>
-> > > > > > Sent: Wednesday, January 04, 2006 9:14 AM
-> > > > > > Subject: Re: raid5 read performance
-> > > > > >
-> > > > > >
-> > > > > > > I guess i was not clear enough.
-> > > > > > >
-> > > > > > > i am using raid5 over 3 maxtor disks. the chunk size is 1MB.
-> > > > > > > i mesured the io coming from one disk alone when I READ
-> > > > > > > from it with 1MB buffers , and i know that it is ~32MB/s.
-> > > > > > >
-> > > > > > > I created raid0 over two disks and my throughput grown to
-> > > > > > > 64 MB/s.
-> > > > > > >
-> > > > > > > Doing the same thing with raid5 ended in 32 MB/s.
-> > > > > > >
-> > > > > > > I am using async io since i do not want to wait for several
-disks
-> > > > > > > when i send an IO. By sending a buffer which is striped
-aligned
-> > > > > > > i am supposed to have one to one relation between a disk and
-an
-> > > > > > > io.
-> > > > > > >
-> > > > > > > iostat show that all of the three disks work but not fully.
-> > > > > >
-> > > > > > Hello,
-> > > > > >
-> > > > > > How do you set sync/async io?
-> > > > > > Please, let me know! :-)
-> > > > > >
-> > > > > > Thanks,
-> > > > > > Janos
-> > > > > >
-> > > > > >
-> > > > > >
-> > > > >
-> > > > >
-> > > > > --
-> > > > > Raz
-> > > >
-> > > >
-> > >
-> > >
-> > > --
-> > > Raz
-> > > -
-> > > To unsubscribe from this list: send the line "unsubscribe linux-raid"
-in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >
-> >
->
->
-> --
-> Raz
+   0     0      22        1        0      active sync   /dev/hdc1
+   1     1       3        1        1      active sync   /dev/hda1
 
+# mdadm --misc --examine /dev/hdc1
+/dev/hdc1:
+(I removed the status information here to make it more readable; it is 
+identical for both devices, so it looks like they are properly 
+synchronized.)
+
+      Number   Major   Minor   RaidDevice State
+this     0      22        1        0      active sync   /dev/hdc1
+
+   0     0      22        1        0      active sync   /dev/hdc1
+   1     1       3        1        1      active sync   /dev/hda1
+
+
+
+After a reboot:
+
+# cat /proc/mdstat
+Personalities : [raid1]
+md1 : active raid1 hda3[1]
+      9767424 blocks [2/1] [_U]
+
+md0 : active raid1 hda1[1]
+      2441728 blocks [2/1] [_U]
+
+unused devices: <none>
+
+# mdadm --misc --examine /dev/hda1
+/dev/hda1:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : d2b494fc:a181e190:a09f1dfb:b226ea79
+  Creation Time : Tue Jan 10 15:53:02 2006
+     Raid Level : raid1
+   Raid Devices : 2
+  Total Devices : 1
+Preferred Minor : 0
+
+    Update Time : Wed Jan 11 13:17:37 2006
+          State : clean
+ Active Devices : 1
+Working Devices : 1
+ Failed Devices : 0
+  Spare Devices : 0
+       Checksum : f7d5275f - correct
+         Events : 0.3336
+
+
+      Number   Major   Minor   RaidDevice State
+this     1       3        1        1      active sync   /dev/hda1
+
+   0     0       0        0        0      removed
+   1     1       3        1        1      active sync   /dev/hda1
+
+# mdadm --misc --examine /dev/hdc1
+/dev/hdc1:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : d2b494fc:a181e190:a09f1dfb:b226ea79
+  Creation Time : Tue Jan 10 15:53:02 2006
+     Raid Level : raid1
+   Raid Devices : 2
+  Total Devices : 2
+Preferred Minor : 0
+
+    Update Time : Wed Jan 11 13:12:00 2006
+          State : clean
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 0
+       Checksum : f7d525d7 - correct
+         Events : 0.3288
+
+
+      Number   Major   Minor   RaidDevice State
+this     0      22        1        0      active sync   /dev/hdc1
+
+   0     0      22        1        0      active sync   /dev/hdc1
+   1     1       3        1        1      active sync   /dev/hda1
+
+
+Relevant parts of the boot process:
+
+Kernel command line: root=/dev/md0 ro
+hda: ST380011A, ATA DISK drive
+Using anticipatory io scheduler
+ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
+hda: max request size: 128KiB
+hda: 156301488 sectors (80026 MB) w/2048KiB Cache, CHS=65535/16/63, 
+UDMA(100)
+ /dev/ide/host0/bus0/target0/lun0: p1 p2 p3 p4 < p5 p6 >
+hdc: ST380011A, ATA DISK drive
+ide1 at 0x170-0x177,0x376 on irq 15
+hdc: max request size: 128KiB
+hdc: 156301488 sectors (80026 MB) w/2048KiB Cache, CHS=65535/16/63, 
+UDMA(100)
+ /dev/ide/host0/bus1/target0/lun0: p1 p2 p3 p4 < p5 p6 >
+md: md0 stopped.
+md: bind<hda1>
+raid1: raid set md0 active with 1 out of 2 mirrors
+
+
+Any suggestions would be greatly appreciated. The system's new and not 
+yet in production, so I can reinstall it if I have to, but I'd prefer to 
+be able to fix something as simple as this.
