@@ -1,96 +1,82 @@
-From: Matt Darcy <kernel-lists@projecthugo.co.uk>
-Subject: Re: 2.6.15-rc5-mm3 sata_mv raid5 array failure to start
-Date: Wed, 11 Jan 2006 10:11:38 +0000
-Message-ID: <43C4D9DA.4030008@projecthugo.co.uk>
-References: <43B82D22.7080705@projecthugo.co.uk> <17347.3596.845986.167120@cse.unsw.edu.au>
-Reply-To: kernel-lists@projecthugo.co.uk
+From: Andreas Haumer <andreas@xss.co.at>
+Subject: Re: mdadm-2.2 SEGFAULT: mdadm --assemble --scan
+Date: Wed, 11 Jan 2006 14:51:56 +0100
+Message-ID: <43C50D7C.30106@xss.co.at>
+References: <20051222205809.GC492@skl-net.de> <43B6A0F9.8040100@xss.co.at> <43C182D7.5030105@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17347.3596.845986.167120@cse.unsw.edu.au>
+In-Reply-To: <43C182D7.5030105@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-ide@vger.kernel.org, linux-raid@vger.kernel.org
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: Andre Noll <maan@systemlinux.org>, linux-raid@vger.kernel.org, Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
->On Sunday January 1, kernel-lists@projecthugo.co.uk wrote:
->  
->
->>Hello all,
->>
->>I am still persisting with my quest for a usable sata_mv driver.
->>
->>The 2.5.15-rc5-m3 kernel appear to have been good to me.
->>
->>Before I attempt moving to later releases of the 2.6.15 tree I thought 
->>I'd get feedback from the people in the know
->>
->>This is an intentional cross-post as I'm not %100 sure if the problems 
->>sits in the raid error or the actual libata/driver area (more probable)
->>
->>I have 7 SATA disks hanging of an 8 port controller which uses the 
->>sata_mv driver.
->>
->>I create a raid 5 array consisting of 6 disks (using 1 full disk 
->>partition) and 1 spare
->>    
->>
->
->"1 full disk partition"... So I would expect the array consist of
->   sdc1 sdd1 sde1 ...
->
->but..
->  
->
->>The array builds fine - although it takes 300 minutes so its not a quick 
->>process to run through tests.
->>
->>
->>md6 : active raid5 sdh[5] sdi[6](S) sdg[4] sdf[3] sde[2] sdd[1] sdc[0]
->>      1225586560 blocks level 5, 64k chunk, algorithm 2 [6/6] [UUUUUU]
->>
->>    
->>
->
->It doesn't.  It is created using the full disks (sdc, sdd, ... No partitioning).
->  
->
+Hi!
 
-My mistake in this example (I've built this array <15 times - this 
-occasion was a typo - %100 my mistake)
+Bill Davidsen schrieb:
+> Andreas Haumer wrote:
+> 
 
-however.......
+- ------------------------------------------------------------------------
+>>
+Index: mdadm/Assemble.c
+===================================================================
+RCS file: /home/cvs/repository/distribution/Utilities/mdadm/Assemble.c,v
+retrieving revision 1.1.1.7
+diff -u -r1.1.1.7 Assemble.c
+- --- mdadm/Assemble.c    5 Dec 2005 05:56:20 -0000    1.1.1.7
++++ mdadm/Assemble.c    31 Dec 2005 15:01:34 -0000
+@@ -219,7 +219,7 @@
+        }
+        if (dfd >= 0) close(dfd);
+>>
+- -        if (ident->uuid_set && (!update && strcmp(update, "uuid")!=
+0) &&
++        if (ident->uuid_set && (update && strcmp(update, "uuid")!= 0) &&
+            (!super || same_uuid(info.uuid, ident->uuid,
+tst->ss->swapuuid)==0)) {
+            if ((inargv && verbose >= 0) || verbose > 0)
+                fprintf(stderr, Name ": %s has wrong uuid.\n",
 
->and them on reboot, md tried to assemble an array from the partitions,
->presumably because you set the partition type to raid-auto-detect.
->This doesn't work because the array wasn't made from partitions.
->
->I suggest you recreate the array using partitions and see how that
->goes:
->
->  mdadm -C /dev/md6 -l5 -n6 -x1 /dev/sd[cdefghi]1
->
->NeilBrown
->-
->To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->  
->
+>>
+> Is that right now? Because && evaluates to zero or one left to right,
+> the parens and the "!=0" are not needed, and I assume they're in for a
+> reason (other than to make the code hard to understand). A comment
+> before that if would make the intention clear, I originally though the
+> "(!update" was intended to be "!(update" which would explain the parens,
+> but that seems wrong.
 
-using the partitions for the array (which I had done in previous tests 
-despite my typo mentioned above on this case) I get the same problem,
+I made this modification out of the following reasoning:
 
-the array starts to build, gets around %35-ish through and then the 
-system hangs.
+It does not make sense to check if update is NULL and
+then use it in a strcmp(). It only makes sense to check
+if update is _not_ NULL and then do the strcmp()
 
-I don't believe this is a raid issue, more a case of the sata_mv driver.
+(a similar code fragment can be found in the same sourcefile
+several lines below)
 
-Thanks for the input.
+This cures the segfault, but I can not really say if the
+whole construct is logically correct (you are right, it
+looks suspicious...)
+That should be answered by Neil ;-)
 
-Matt
+- - andreas
 
+- --
+Andreas Haumer                     | mailto:andreas@xss.co.at
+*x Software + Systeme              | http://www.xss.co.at/
+Karmarschgasse 51/2/20             | Tel: +43-1-6060114-0
+A-1100 Vienna, Austria             | Fax: +43-1-6060114-71
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.2 (GNU/Linux)
+Comment: Using GnuPG with Thunderbird - http://enigmail.mozdev.org
 
+iD8DBQFDxQ16xJmyeGcXPhERAs2fAJ44Pta06tMd6yI5HqXuRvYkKbWHSACfcPjD
+y+b0ddT/ezuqf+rHurm2+Wo=
+=SkuC
+-----END PGP SIGNATURE-----
