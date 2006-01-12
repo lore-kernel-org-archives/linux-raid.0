@@ -1,22 +1,36 @@
-From: "m l" <cmoimartin@hotmail.com>
-Subject: Mdadm -- how to add another device in a linear mode?
-Date: Thu, 12 Jan 2006 09:27:58 -0500
-Message-ID: <BAY107-F20BDB03238474AB39AA90BCA270@phx.gbl>
+From: "Filipe Maia" <fmaia@gmx.net>
+Subject: Re: proactive raid5 related bug
+Date: Thu, 12 Jan 2006 15:43:53 +0100
+Message-ID: <op.s29sjfimi22er4@xray.bmc.uu.se>
+References: <op.s29qvnb9i22er4@xray.bmc.uu.se>
 Mime-Version: 1.0
-Content-Type: text/plain; format=flowed
+Content-Type: text/plain; format=flowed; delsp=yes; charset=utf-8
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <op.s29qvnb9i22er4@xray.bmc.uu.se>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi all,
+Also if i do something like:
 
-1- I would like to create a linear raid level with one device. (or with 
-raid0)
-2- I would like to add another device to the first one.
+# grow bad blocks as ma*tor does :)
+mdadm --grow -l faulty -p rp454 /dev/md2
+mdadm --grow -l faulty -p rp738 /dev/md3
 
-Anyone knows how ?
+# add a spare
+mdadm -a /dev/md5 /dev/ram5
 
-Martin
+mdadm -f /dev/md5 /dev/md2 && mdadm -f /dev/md5 /dev/md2
 
 
+After the initial reconstruction i get this:
+mdadm: set /dev/md2 faulty in /dev/md5
+Segmentation fault
+
+And then the computer enters in some kind of loop that makes it almost
+completely unresponsive
+
+-- 
+All generalizations are false, including this one.
+          -- Mark Twain
