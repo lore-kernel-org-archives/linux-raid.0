@@ -1,99 +1,38 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: 2.6.15-mm3 hangs during boot (raid related?)
-Date: Thu, 12 Jan 2006 19:05:41 +0100
-Message-ID: <20060112180541.GV3945@suse.de>
-References: <20060112062310.GA12471@gates.of.nowhere> <17349.63738.220760.681335@cse.unsw.edu.au> <20060112172900.GA3687@gates.of.nowhere>
+From: "Filipe Maia" <fmaia@gmx.net>
+Subject: Re: proactive raid5 related bug2
+Date: Thu, 12 Jan 2006 20:06:18 +0100
+Message-ID: <op.s294osbki22er4@xray.bmc.uu.se>
+References: <op.s29xuno5i22er4@xray.bmc.uu.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; format=flowed; delsp=yes; charset=utf-8
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20060112172900.GA3687@gates.of.nowhere>
+In-Reply-To: <op.s29xuno5i22er4@xray.bmc.uu.se>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jurriaan on adsl-gate <thunder7@xs4all.nl>
-Cc: neilb@suse.de, linux-raid@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, Jan 12 2006, Jurriaan on adsl-gate wrote:
-> From: Neil Brown <neilb@suse.de>
-> Date: Thu, Jan 12, 2006 at 05:36:42PM +1100
-> Sent-To: 
-> > On Thursday January 12, thunder7@xs4all.nl wrote:
-> > > 
-> > > 2.6.15-mm3 hangs during boot for me, after the lines
-> > > 
-> > > ========
-> > > md4: bitmap initialized from disk: read 15/15 pages, set 51 bits, status: 0
-> > > created bitmap (224 pages) for device md4
-> > > ========
-> > > 
-> > > ctrl-alt-del to reboot works sometimes (2 out of 3). Below is complete
-> > > dmesg (from 2.6.15-mm2, ver_linux output, .config and raid details).
-> > 
-> > Yep, this is probably a known problem with recent changes to the
-> > 'barrier' code.
-> > 
-> > Try to convince md not to use barrier by changing md_super_write in
-> > drivers/md/md.c.  Simply remove
-> > 
-> > 	if (!test_bit(BarriersNotsupp, &rdev->flags)) {
-> > 		struct bio *rbio;
-> > 		rw |= (1<<BIO_RW_BARRIER);
-> > 		rbio = bio_clone(bio, GFP_NOIO);
-> > 		rbio->bi_private = bio;
-> > 		rbio->bi_end_io = super_written_barrier;
-> > 		submit_bio(rw, rbio);
-> > 	} else
-> > 
-> > leaving the
-> > 		submit_bio(rw, rbio);
-> > 
-> > which comes after it.
-> > 
-> With this patch, it boots and works just fine.
+On Thu, 12 Jan 2006 17:38:37 +0100, Filipe Maia <fmaia@gmx.net> wrote:
 
-Please reverse that patch and try this on top of -mm2/3 instead (it's
-the patch from Tejun to fix the actual issue, from another similar
-thread):
+> Another CPU lockup this time due to read persistent errors while  
+> building the array.
+> I have a script with which i can reproduce the bug and another one which  
+> simply removes
+> the read persistent errors that already works correctly.
+> Kernel is 2.6.14 with proactive patch.
+> I'm not sure what are the practical implications of this bug (meaning if  
+> it actually
+> happens in real use).
+> I have 16 ram disks with 8MB each.
+>
+>
 
-diff --git a/block/elevator.c b/block/elevator.c
-index 1b5b5d9..f905e47 100644
---- a/block/elevator.c
-+++ b/block/elevator.c
-@@ -615,23 +615,23 @@ void elv_completed_request(request_queue
- 	 * request is released from the driver, io must be done
- 	 */
- 	if (blk_account_rq(rq)) {
--		struct request *first_rq = list_entry_rq(q->queue_head.next);
--
- 		q->in_flight--;
-+		if (blk_sorted_rq(rq) && e->ops->elevator_completed_req_fn)
-+			e->ops->elevator_completed_req_fn(q, rq);
-+	}
- 
--		/*
--		 * Check if the queue is waiting for fs requests to be
--		 * drained for flush sequence.
--		 */
--		if (q->ordseq && q->in_flight == 0 &&
-+	/*
-+	 * Check if the queue is waiting for fs requests to be
-+	 * drained for flush sequence.
-+	 */
-+	if (unlikely(q->ordseq)) {
-+		struct request *first_rq = list_entry_rq(q->queue_head.next);
-+		if (q->in_flight == 0 &&
- 		    blk_ordered_cur_seq(q) == QUEUE_ORDSEQ_DRAIN &&
- 		    blk_ordered_req_seq(first_rq) > QUEUE_ORDSEQ_DRAIN) {
- 			blk_ordered_complete_seq(q, QUEUE_ORDSEQ_DRAIN, 0);
- 			q->request_fn(q);
- 		}
--
--		if (blk_sorted_rq(rq) && e->ops->elevator_completed_req_fn)
--			e->ops->elevator_completed_req_fn(q, rq);
- 	}
- }
+Even in the standard kernel this basically locks up the machine, in an  
+infinite
+loop although there is no real freeze.
+
 
 
 -- 
-Jens Axboe
-
+All generalizations are false, including this one.
+          -- Mark Twain
