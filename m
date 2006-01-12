@@ -1,79 +1,146 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re:
-Date: Thu, 12 Jan 2006 11:16:36 +0000
-Message-ID: <43C63A94.2020702@dgreaves.com>
-References: <20060111144943.93BAA396A20@mxo3.broadbandsupport.net>
+From: Matt Darcy <kernel-lists@projecthugo.co.uk>
+Subject: Re: [git patch] 2.6.x libata fix
+Date: Thu, 12 Jan 2006 11:46:10 +0000
+Message-ID: <43C64182.1000702@projecthugo.co.uk>
+References: <20060109171104.GA25793@havoc.gtf.org> <43C4DB86.7030603@projecthugo.co.uk> <43C628FE.9020303@projecthugo.co.uk>
+Reply-To: kernel-lists@projecthugo.co.uk
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20060111144943.93BAA396A20@mxo3.broadbandsupport.net>
-Sender: linux-raid-owner@vger.kernel.org
-To: bhess@patmedia.net
-Cc: linux-raid@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <43C628FE.9020303@projecthugo.co.uk>
+Sender: linux-ide-owner@vger.kernel.org
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-bhess@patmedia.net wrote:
 
-><snip - a lot!!>
->  
 >
-can I summarise (!) as:
-I want to create a non-system data-storage raid array (ie can be
-initialised well after boot)
-I want to use a mix of SCSI, sata + USB devices
-Will this work if the USB devices change their 'order'
+>
+> I can now provide further updates for this, although this are not 
+> really super useful.
+>
+> I've copied the linux-raid list in as well, as after a little more 
+> testing on my part I'd appriciate some input from the raid guys also.
+>
+> First of all, please ignore the comments above, there was a problem 
+> with grub and it actually "failed back" and booted into the older git 
+> release, so my initial test was actually done running the wrong kenel 
+> which I didn't notice. Appologies to all for this.
+>
+> Last nights tests where done using the correct kernel (I fixed the 
+> grub typo) 2.6.15-g5367f2d6
+>
+> The details I have are as follows.
+>
+> I can run the machine accessing the 7 maxtor SATA disks as individual 
+> disks for around 12 hours now, without any hangs or errors or any real 
+> problems. I've not hit them very hard, but initial performance seems 
+> fine and more than usable.
+>
+> The actual problems occurr when including these disks in a raid group.
+>
+> root@berger:~# fdisk -l /dev/sdc
+>
+> Disk /dev/sdc: 251.0 GB, 251000193024 bytes
+> 255 heads, 63 sectors/track, 30515 cylinders
+> Units = cylinders of 16065 * 512 = 8225280 bytes
+>
+>   Device Boot      Start         End      Blocks   Id  System
+> /dev/sdc1               1       30515   245111706   fd  Linux raid 
+> autodetect
+>
+> root@berger:~# fdisk -l /dev/sde
+>
+> Disk /dev/sde: 251.0 GB, 251000193024 bytes
+> 255 heads, 63 sectors/track, 30515 cylinders
+> Units = cylinders of 16065 * 512 = 8225280 bytes
+>
+>   Device Boot      Start         End      Blocks   Id  System
+> /dev/sde1               1       30515   245111706   fd  Linux raid 
+> autodetect
+>
+>
+> As you can see from my two random disks examples, they are partitioned 
+> and makred as raid auto detect.
+>
+> I issue the mdadm command to build the raid 5 array
+>
+> mdadm -C /dev/md6 -l5 -n6 -x1 /dev/sdc1 /dev/sdd1 /dev/sde1 /dev/sdf1 
+> /dev/sdg1 /dev/sdh1 /dev/sdi1
+>
+> and the array starts to build.......
+>
+> md6 : active raid5 sdh1[7] sdi1[6](S) sdg1[4] sdf1[3] sde1[2] sdd1[1] 
+> sdc1[0]
+>      1225558080 blocks level 5, 64k chunk, algorithm 2 [6/5] [UUUUU_]
+>      [>....................]  recovery =  0.1% (374272/245111616) 
+> finish=337.8min speed=12073K/sec
+>
+>
+> however at around %25 - %40 completion the box will simpley just hang 
+> - I'm getting no on screen messages and the sylog is not reporting 
+> anything.
+>
+> SysRQ is unusable.
+>
+> I'm open to options on how to resolve this and move the driver forward 
+> (assuming it is the drivers interfaction with the raid sub system)
+> or
+> how to get some meaningful debug out to report back to the appropriate 
+> development groups.
+>
+> thanks.
+>
+> Matt.
+>
+>
+>
+Further further information
 
-Short answer: yes, with the right kernel/mdadm versions
+The speed that the raid array is being built att appears to drop as the 
+array is created
 
-Longer:
+[=====>...............]  recovery = 29.2% (71633360/245111616) 
+finish=235.1min speed=12296K/sec
+[=====>...............]  recovery = 29.3% (71874512/245111616) 
+finish=235.2min speed=12269K/sec
+[=====>...............]  recovery = 29.4% (72115872/245111616) 
+finish=236.0min speed=12209K/sec
+[=====>...............]  recovery = 29.7% (72839648/245111616) 
+finish=237.4min speed=12091K/sec
+[=====>...............]  recovery = 29.8% (73078560/245111616) 
+finish=238.6min speed=12010K/sec
+[=====>...............]  recovery = 29.8% (73139424/245111616) 
+finish=350.5min speed=8176K/sec
+[=====>...............]  recovery = 29.8% (73139424/245111616) 
+finish=499.6min speed=5735K/sec
+[=====>...............]  recovery = 29.8% (73139776/245111616) 
+finish=691.0min speed=4147K/sec
 
-I use debian so don't know what version of the kernel you use? also mdadm?
-You need to look at UUIDs
-Use the --assemble, --uid and --scan options *after* you know usb
-devices are online (and make sure they're listed in the conf (or use
---config=partitions)). It's safe, mdadm won't assemble an array that's
-not complete.
+Now the box is hung
 
-Maybe you'd like to script a test for the usb devices and only attempt
-an assemble when all devices are available.
+I didn't notice this until about %20 through the creation of the array 
+then I started paying attention to this. These snap shots are taken 
+every 30 seconds
 
-AFAIK there are no issues with the hardware/bus type. A block device is
-a block device is a block device is a.... :)
+So the problem appears to sap bandwidth on the card to the point there 
+the box hangs.
 
-Now, advice...
+This may have some relevance, or it may not, but worth mentioning at least.
 
-ok, first off: a 14 device raid1 is 14 times more likely to lose *all*
-your data than a single device. I have a scsi device running in one of
-my machines since 1995. I am about to RMA a 1yr old maxtor sata drive
-(I've RMA'd about 30% of my consumer grade ides/sata drives over the
-last few years - ie failed *in* warranty). You appear to be jumping into
-consumer grade (usb) devices and it may bite you!
+Matt
 
-Why not just have a lot of individual filesystems and manage the data by
-hand?
 
-Also, if you go the one-device way, why not consider lvm2 instead?
-The reason is that it seems *very* likely that you'll be looking to swap
-devices in and maybe out (when smart tells you a drive is about to fail)
-of this ad-hoc storage.
-LVM allows you to see each device as a large number of 'chunks'. You
-then gather all those chunks from many devices into a 'pool'. You can
-then allocate chunks from the pool to create virtual devices and then
-make filesystems on them.
 
-This is good because you can then add another device to the 'pool' and
-use those chunks to either:
-* swap out a failing (SMART) drive if you're lucky
-* grow the virtual drive
-* take 'snapshots' (OK you don't need this but it's cool!)
 
-finally, watch the filesystem - eg xfs is excellent for big files but
-can't shrink
 
-HTH
 
-David
 
--- 
+
+
+
+[=====>...............]  recovery = 29.8% (73139424/245111616) 
+finish=350.5min speed=8176K/sec
+
+
 
