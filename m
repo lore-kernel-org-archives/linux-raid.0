@@ -1,37 +1,79 @@
-From: PFC <lists@peufeu.com>
-Subject: Re: [git patch] 2.6.x libata fix
-Date: Thu, 12 Jan 2006 11:57:49 +0100
-Message-ID: <op.s29h2nbncigqcu@apollo13>
-References: <20060109171104.GA25793@havoc.gtf.org> <43C4DB86.7030603@projecthugo.co.uk> <43C628FE.9020303@projecthugo.co.uk>
+From: David Greaves <david@dgreaves.com>
+Subject: Re:
+Date: Thu, 12 Jan 2006 11:16:36 +0000
+Message-ID: <43C63A94.2020702@dgreaves.com>
+References: <20060111144943.93BAA396A20@mxo3.broadbandsupport.net>
 Mime-Version: 1.0
-Content-Type: text/plain; format=flowed; delsp=yes; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <43C628FE.9020303@projecthugo.co.uk>
+In-Reply-To: <20060111144943.93BAA396A20@mxo3.broadbandsupport.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: kernel-lists@projecthugo.co.uk, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org
+To: bhess@patmedia.net
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+bhess@patmedia.net wrote:
 
-	Hello,
+><snip - a lot!!>
+>  
+>
+can I summarise (!) as:
+I want to create a non-system data-storage raid array (ie can be
+initialised well after boot)
+I want to use a mix of SCSI, sata + USB devices
+Will this work if the USB devices change their 'order'
 
-	I've had a lot of problems with nv_sata (nforce3) and Maxtor harddrives.  
-Basically it always boils down to :
+Short answer: yes, with the right kernel/mdadm versions
 
-Dec 24 23:04:34 apollo13 ata3: command 0x35 timeout, stat 0xd0 host_stat  
-0x21
-Dec 24 23:04:34 apollo13 ata3: translated ATA stat/err 0x35/00 to SCSI  
-SK/ASC/ASCQ 0x4/00/00
-Dec 24 23:04:34 apollo13 ata3: status=0x35 { DeviceFault SeekComplete  
-CorrectedError Error }
-Dec 24 23:04:34 apollo13 sd 2:0:0:0: SCSI error: return code = 0x8000002
-Dec 24 23:04:34 apollo13 sdc: Current: sense key=0x4
-Dec 24 23:04:34 apollo13 ASC=0x0 ASCQ=0x0
-Dec 24 23:04:34 apollo13 end_request: I/O error, dev sdc, sector 490223295
-Dec 24 23:04:34 apollo13 raid5: Disk failure on sdc1, disabling device.  
-Operation continuing on 3 devices
+Longer:
 
-	Plugging the Maxtor drives on the not-nv SATA sockets solved it (thanks  
-god I have 2 maxtor and 2 seagate drives)...
+I use debian so don't know what version of the kernel you use? also mdadm?
+You need to look at UUIDs
+Use the --assemble, --uid and --scan options *after* you know usb
+devices are online (and make sure they're listed in the conf (or use
+--config=partitions)). It's safe, mdadm won't assemble an array that's
+not complete.
 
-	If you want more info, just ask.
+Maybe you'd like to script a test for the usb devices and only attempt
+an assemble when all devices are available.
+
+AFAIK there are no issues with the hardware/bus type. A block device is
+a block device is a block device is a.... :)
+
+Now, advice...
+
+ok, first off: a 14 device raid1 is 14 times more likely to lose *all*
+your data than a single device. I have a scsi device running in one of
+my machines since 1995. I am about to RMA a 1yr old maxtor sata drive
+(I've RMA'd about 30% of my consumer grade ides/sata drives over the
+last few years - ie failed *in* warranty). You appear to be jumping into
+consumer grade (usb) devices and it may bite you!
+
+Why not just have a lot of individual filesystems and manage the data by
+hand?
+
+Also, if you go the one-device way, why not consider lvm2 instead?
+The reason is that it seems *very* likely that you'll be looking to swap
+devices in and maybe out (when smart tells you a drive is about to fail)
+of this ad-hoc storage.
+LVM allows you to see each device as a large number of 'chunks'. You
+then gather all those chunks from many devices into a 'pool'. You can
+then allocate chunks from the pool to create virtual devices and then
+make filesystems on them.
+
+This is good because you can then add another device to the 'pool' and
+use those chunks to either:
+* swap out a failing (SMART) drive if you're lucky
+* grow the virtual drive
+* take 'snapshots' (OK you don't need this but it's cool!)
+
+finally, watch the filesystem - eg xfs is excellent for big files but
+can't shrink
+
+HTH
+
+David
+
+-- 
+
