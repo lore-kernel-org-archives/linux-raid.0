@@ -1,23 +1,41 @@
-From: Adam Talbot <talbotx@comcast.net>
-Subject: RAID tuning?
-Date: Mon, 12 Jun 2006 18:18:55 -0700
-Message-ID: <448E127F.5010708@comcast.net>
-References: <4558af040606121737w1bab008am1110e4e1c2cd8934@mail.gmail.com> <17550.2944.728044.154492@cse.unsw.edu.au>
+From: "Cornelia Drake" <CorneliaDrake@0451.com>
+Subject: :), muscle-kneading
+Date: Thu, 12 Jan 2006 17:55:28 -0420
+Message-ID: <5452046108.20060112175528__34546.0670804188$1150165832$gmane$org@0451.com>
+Reply-To: "Cornelia Drake" <CorneliaDrake@0451.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17550.2944.728044.154492@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux-userfs@vger.kernel.org
 List-Id: linux-raid.ids
 
-RAID tuning?
-Just got my new array setup running RAID 6 on 6 disks.  Now I am looking
-to tune it.  I am still testing and playing with it, so I dont mind
-rebuild the array a few times.
+Join and Play at the best Emperial zCASINOz!
+As a Special Welcome TODAY, we will DOUBL your 1 Deposit up to 200 bucks!
 
-Is chunk size per disk or is it total stripe?  
-Will using mkfs.ext3 -b N make a performance difference?
-Are there any other things that I should keep in mind?
--Adam
+For example:
+Deposit 50 play with 100!
+Deposit 100 play with 200!
+And your FREE Bonuses will be INSTANTLY added to your acount!
+
+Try us, inhere: 
+
+http://F6R6PV.erprost.com/d1/today
+
+==========
+on mice instead  of  fish.  My  father  was  right.  I  must  forget  this
+     "Nothing in particular," I said. "Someone squealed on me, that's all."
+schoolboy, that a  college student published the coordinates,  but that  for
+everywhere at once across space and time.
+Canada  do they find these  guys? Have they  been sent out here to breed? In
+==
+startled that you obliged them so well."
+But  they  insisted that it was a powerful thunderbolt that blinded them. By
+to begin to fly up and know the meaning of kindness and of love."
+==
+in arresting you, they're  terrified that you're contaminated. All they want
+poor limited seagull.
+     "And they'll put me away for two years."
+
+
