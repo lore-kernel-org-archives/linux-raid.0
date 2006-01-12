@@ -1,40 +1,39 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: Updating superblock to reflect new disc locations
-Date: Thu, 12 Jan 2006 14:01:18 +1100
-Message-ID: <17349.50814.993086.189022@cse.unsw.edu.au>
-References: <43C495BA.9070502@mm.quex.org>
+Subject: Re: where is the spare drive? :-)
+Date: Thu, 12 Jan 2006 14:07:01 +1100
+Message-ID: <17349.51157.745149.135889@cse.unsw.edu.au>
+References: <02a801c60f2a$de619ce0$a400a8c0@dcccs>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Michael Alger on Wednesday January 11
+In-Reply-To: message from JaniD++ on Monday January 2
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: JaniD++ <djani22@dynamicweb.hu>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday January 11, linux-raid@mm.quex.org wrote:
+On Monday January 2, djani22@dynamicweb.hu wrote:
 > 
+> 5. The question
 > 
-> Any suggestions would be greatly appreciated. The system's new and not 
-> yet in production, so I can reinstall it if I have to, but I'd prefer to 
-> be able to fix something as simple as this.
+> Why shows sdh2 as spare?
+> The MD array size is correct.
+> And i really can see, the all drive is reading, and sdh2 is *ONLY* writing.
+> 
 
-Debian's installer - the mkinitrd part in particular - is broken.
-If you look in the "initrd" (it is just a compressed CPIO file) you
-will find the mdadm command used to start the root array explicitly
-lists the devices to use.  As soon as you change the devices, it stops
-working :-(  Someone should tell them about uuids.
+ man mdadm
 
-I think you can probably fix you situation by:
-  Booting up and having a degraded array
-  hot-add the missing device and wait for it to rebuilt
-  rerun mkinitrd
+Towards the end of the CREATE MODE section:
 
-The last bit might require some learning on your part.  I don't know
-in Debian's mkinitrd requires and command line args, or where it puts
-the result, or whether you have to tell lilo/grub about the new files.
+       When creating a RAID5 array, mdadm will automatically create a degraded
+       array with an extra spare drive.  This is because  building  the  spare
+       into a degraded array is in general faster than resyncing the parity on
+       a non-degraded, but not clean, array.  This feature can be  over-ridden
+       with the --force option.
 
-I would try just running "mkinitrd" with no args, and the "lilo" - if
-you are using lilo, and reboot.  See what happens....
+
+I hope this clarifies the situation.
 
 NeilBrown
+
