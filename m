@@ -1,71 +1,71 @@
-From: Jared Johnson <spongebobsquarehat@gmail.com>
-Subject: Re: "too small for md"
-Date: Thu, 12 Jan 2006 23:10:03 -0600
-Message-ID: <c571c4540601122110r73d1a942td4c1787aef815c48@mail.gmail.com>
-References: <c571c4540601122053o5ea8224dq3676fb51f19bca22@mail.gmail.com>
-	 <17351.13326.363637.158332@cse.unsw.edu.au>
+From: Max Waterman <davidmaxwaterman+gmane@fastmail.co.uk>
+Subject: md faster than h/w?
+Date: Fri, 13 Jan 2006 15:06:54 +0800
+Message-ID: <dq7jii$n1c$1@sea.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17351.13326.363637.158332@cse.unsw.edu.au>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-thanks a lot for your quick reply, you live up to your reputation :)
+Hi,
 
-however I sort of randomly decided to just try rebooting, and it
-magically worked.  I don't know if I can say this fixed it forever,
-but an strace probably won't help now at any rate.  as for my other
-ignorances, once the raid was available i figured them out pretty
-quickly.
+I've been trying to increase the i/o performance of a new server.
 
-in any case,
-chunks:/mnt/raid5# mdadm --version
-mdadm - v1.12.0 - 14 June 2005
+The server is a Dell PowerEdge 2850. It has 2(x2) Intel Xeon 3GHz CPUs, 
+  4GB RAM, a Perc4/DC RAID controller (AKA MegaRAID SCSI 320-2), and we 
+have 5 Fujitsu MAX3073NC drives attached to one of it's channels (can't 
+use the other channel due to a missing 'option').
 
-perhaps things will continue working forever now.. i will be back
-later with an strace :)
+According to Fujitsu's web site, the disks can each do internal IO at 
+upto 147MB/s, and burst upto 320MB/s. According to the LSI Logic web 
+page, the controller can do upto 320MB/s. All theoretical numbers, of 
+course.
 
-thanks again
+So, we're trying to measure the performance. We've been using 'bonnie++' 
+and 'hdparm -t'.
 
--Jared
+We're primarily focusing on read performance at the moment.
 
-On 1/12/06, Neil Brown <neilb@suse.de> wrote:
-> On Thursday January 12, spongebobsquarehat@gmail.com wrote:
-> > hi,
-> >
-> > I created a raid5 array with 6 parts but one "missing", thus with 5
-> > drives.  I stuck some data on it and all was well.  I rebooted and it
-> > didn't exist.  I think I needed to add something to mdadm.conf or
-> > whatnot, but anyway.  I tried to manually assemble it but it told me
-> > that one of the drives had no superblock. I did mdadm --examine
-> > /dev/hda2 (the partition in question) and it tells me:
-> >
-> > mdadm: /dev/hda2 is too small for md.
-> >
-> > I don't really understand superblocks at all.  I google'd around and
-> > saw some suggestions that such things might be caused by corrupt
-> > superblocks, really very little information though.  Since my data is
-> > backed up, I decided to try mdadm --zero-superblock /dev/hda2 althogh
-> > I am not sure whether that will just certainly break things.  I get
-> > the same "too small for md".  I tried everything with --force as well
-> > with no change.  The partition in question, btw, is 220GB.
-> >
-> > Any ideas?
->
-> You didn't say what version of mdadm you are using.
-> Can you tell us, and all run
->
->    strace mdadm --examine /dev/hda2
->
-> and send the output.
->
-> Thanks,
-> NeilBrown
->
->
->
+We set up the os (debian) on one of the disks (sda), and we're playing 
+around with the others in various configurations.
+
+I figured it'd be good to measure the maximum performance of the array, 
+so we have been working with the 4 disks in a raid0 configuration 
+(/dev/sdb).
+
+Initially, we were getting 'hdparm -t' numbers around 80MB/s, but this 
+was when we were testing /dev/sdb1 - the (only) partition on the device. 
+When we started testing /dev/sdb, it increased significantly to around 
+180MB/s. I'm not sure what to conclude from this.
+
+In any case, our bonnie++ results weren't so high, at around 100MB/s.
+
+Using theoretical numbers as a maximum, we should be able to read at the 
+greater of 4 times a single drive speed (=588MB/s) or the SCSI bus speed 
+(320MB/s) ie 320MB/s.
+
+So, 100MB/s seems like a poor result.
+
+I thought I'd try one other thing and that was to configure the drives 
+as JBOD (which is actually having each one as RAID0 in the controller 
+config s/w), and configure as s/w raid0.
+
+Doing this initially resulted in a doubling of bonnie++ speed at over 
+200MB/s, though I have been unable to reproduce this result - the most 
+common result is still about 180MB/s.
+
+One further strangeness is that our best results have been while using a 
+uni-processor kernel - 2.6.8. We would prefer it if our best results 
+were with the most recent kernel we have, which is 2.6.15, but no.
+
+So, any advice on how to obtain best performance (mainly web and mail 
+server stuff)?
+Is 180MB/s-200MB/s a reasonable number for this h/w?
+What numbers do other people see on their raid0 h/w?
+Any other advice/comments?
+
+Max.
+
