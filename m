@@ -1,141 +1,92 @@
-From: <bhess@patmedia.net>
-Subject: Re Re USB Raid
-Date: Fri, 13 Jan 2006 14:48:02 -0500
-Message-ID: <20060113195010.2FAF435CE19@mxo1.broadbandsupport.net>
-Reply-To: bhess@patmedia.net
+From: Matt Darcy <kernel-lists@projecthugo.co.uk>
+Subject: Re: [git patch] 2.6.x libata fix more information (sata_mv problems
+ continued)
+Date: Fri, 13 Jan 2006 19:51:06 +0000
+Message-ID: <43C804AA.1050303@projecthugo.co.uk>
+References: <20060109171104.GA25793@havoc.gtf.org> <43C4DB86.7030603@projecthugo.co.uk> <43C628FE.9020303@projecthugo.co.uk> <43C64182.1000702@projecthugo.co.uk> <43C78E77.4010603@projecthugo.co.uk> <E1ExSVL-0002Tx-Vk@highlab.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <E1ExSVL-0002Tx-Vk@highlab.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: ross@jose.lug.udel.edu, david@dgreaves.com, linux-raid@vger.kernel.org
-Cc: bhess@patmedia.net
+To: Sebastian Kuzminsky <seb@highlab.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-All=0D
-Thank you for the responses.  =0D
-=0D
-When I wrote the initial email I left out detail in order to keep the t=
-hings short.=0D
-=0D
-To address a few of the concerns and suggestions.=0D
-=0D
-The construction of the =93Disk Farm=94 will be as needed starting =0D
-with two 200G dirves raid 1 that will be NFS and Samba advertised =0D
-and two 160G drives raid 1 that will be separately advertised.  =0D
-I picked these up yesterday.  In the future raid 1 pairs will be =0D
-added as required and offered as individual resources that I will manag=
-e.  =0D
-Other members of my family tend to use disk space and I need to control=
-=0D
-whos computer can consume what.   I am by far the biggest culprit.  =0D
-=0D
-One other point, that I will test, is in the event of a server or =0D
-disk failure I can disconnect the good drive and connect it to =0D
-another system and manually mount it to retrieve the data =0D
-instead of replacing the failed drive and rebuilding the raid.  =0D
-This is why I am using raid 1 and not raid 5.  =0D
-ANY COMMENT ON THIS appreciated.  =0D
-=0D
-160G ATA drives can be found around here for $39.99 on =0D
-sale and $200G for $89 any day of the week.  =0D
-=0D
-Each drive in a pair will be connected through separate =0D
-USB ports on the server and USB Hubs.  This pushes =0D
-the single point of failure back to the server on one end =0D
-the power supply in the disk farm on the other.=0D
-=0D
-I am using USB to IDE cables without individual power =0D
-supplies.  All of the drives will be mounted in a 2U case =0D
-with a PC Power and Cooling supply with an opto-isolater =0D
-controlling the supply turn on slaved to the server=92s 5 volt =0D
-supply.  Unused outputs on the   PC Power and Cooling =0D
-supply that require a minimum load will be terminated with =0D
-resistors.  As I add disks the spin up load on the supply =0D
-will be measured to stay in spec.  The nice thing with =0D
-the USB connection is I can start another farm in another =0D
-case, within reason.  The number 14 for total disk count =0D
-is limited by the case size and more importantly the =0D
-thermal management inside the case.  A serial connected =0D
-temperature probe located near the air exit port will be =0D
-monitored by the server.  =0D
-=0D
-Professionally I use Sun Solaris on high end machines =0D
-and am switching to RedHat from Unixware for the low end.  =0D
-I run Oracle on both.  Personally I use the CENTOS, which =0D
-is where the disk farm will be attached.  A second CENTOS =0D
-system will take over by Oracle database from Unixware.  =0D
-I picked CENTOS because I only have time to port Unixware =0D
-to one other OS and CENTOS is RedHat.  RedHat  was =0D
-selected purely based on support availability for the OS/Oracle combina=
-tion.   =0D
-=0D
-=46urther suggestions or discussion are welcome=0D
-=0D
-Bill Hess=0D
-=0D
-bhess@patmedia.net=0D
-=0D
-=0D
-=0D
-=0D
-=0D
-=0D
-On Thu Jan 12 12:20 , ross@jose.lug.udel.edu (Ross Vandegrift) sent:=0D
-=0D
-    On Thu, Jan 12, 2006 at 11:16:36AM +0000, David Greaves wrote:=0D
-    > ok, first off: a 14 device raid1 is 14 times more likely to lose =
-*all*=0D
-    > your data than a single device.=0D
-=0D
-    No, this is completely incorrect. Let A denote the event that a sin=
-gle=0D
-    disk has failed, A_i denote the event that i disks have failed.=0D
-    Suppose P(A) =3D x. Then by Bayes's Law the probability that an n d=
-isk RAID=0D
-    will lose all of your data is:=0D
-=0D
-    n_1 =3D P(A) =3D x=0D
-    n_2 =3D P(A_2) =3D P(A) * P(A_1 | A) =3D x^2=0D
-    n_3 =3D P(A_3) =3D P(A) * P(A_2 | A) =3D x^3=0D
-    ...=0D
-    n_i =3D P(A_i) =3D P(A) * P(A_{i-1} | A) =3D x^i=0D
-=0D
-    ie, RAID1 is expoentially more reliable as you add extra disks!=0D
-=0D
-    This assumes that disk failures are independant - ie, that you=0D
-    correctly configure disks (don't use master and slave on an IDE=0D
-    channel!), and replace failed disks as soon as they fail.=0D
-=0D
-    This is why adding more disks to a RAID1 is rare - x^2 is going to =
-be=0D
-    a really low probability! It will be far, far more common for=0D
-    operator error to break a RAID than for both devices to honestly fa=
-il.=0D
-=0D
-    -- =0D
-    Ross Vandegrift=0D
-    ross@lug.udel.edu=0D
-=0D
-    "The good Christian should beware of mathematicians, and all those =
-who=0D
-    make empty prophecies. The danger already exists that the mathemati=
-cians=0D
-    have made a covenant with the devil to darken the spirit and to con=
-fine=0D
-    man in the bonds of Hell."=0D
-    --St. Augustine, De Genesi ad Litteram, Book II, xviii, 37=0D
-=0D
-=0D
-ross@jose.lug.udel.edu (Ross Vandegrift)=0D
-David Greaves <david@dgreaves.com>=0D
-bhess@patmedia.net, linux-raid@vger.kernel.org=0D
-=0D
-=0D
-=0D
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Sebastian Kuzminsky wrote:
+
+>Matt Darcy <kernel-lists@projecthugo.co.uk> wrote:
+>  
+>
+>>Its almost as if there is an "IO leak" which is the only way I can think 
+>>of to describe it.the card / system performaces quite well as individual 
+>>disks, but as soon as its entered into a raid 5 configuration using the 
+>>any number of disks the creation of the array appears to be fine until 
+>>around %20-%30 through the assembly, the speed of the arrays creations 
+>>plummits and the machine hangs.
+>>    
+>>
+>
+>You have 7x250G disks in Raid-5, so that's 6x250G or 1.5T total space.
+>In the beginning of raid recovery, when the system is good, you're
+>getting 12M/s.  It slows then dies after 25% to 40% of completion.
+>
+>6x250G is 1536000M, at 12M/s that's about 35 hours.  You tested the
+>disks individually (without Raid) for ~12 hours, which is about 34%
+>of 35 hours.  So it's possible you'd see the the same slowdown & hang
+>if you tested the individual disks longer.
+>
+>You're having these problems on a Marvell controller with 2.6.15 and the
+>in-kernel sata_mv driver, right?  I've got a very similar system with
+>unexplained hard hangs too.  On my system the individual disks seem to
+>work fine, Raid-6 of the disks seems work fine, LVM of the disks seems
+>to work fine, but LVM of a Raid-6 of the disks hangs.
+>
+>One wierd thing I've discovered is that if I enable all the kernel
+>debugging options, the system is perfectly stable, and all the debug
+>tests report no warnings or errors to the logs.  Seems like a race
+>condition somewhere, I'm suspecting in the interaction of Raid-6 and
+>LVM, but it could be anywhere I suppose.  I've attached the .config of
+>the production (non-debug) kernel that hangs, and the diff to the debug
+>kernel that works.
+>
+>  
+>
+
+
+Just to clarify a few things,
+
+using the 2.6.15 kernel I can use and assemble the raid 5 array without 
+a problem, however using it lvm2 causes it to hang exactly as you have 
+mentioned before.
+
+When I first started working this problem through I started using some 
+of he mm patches with the 2.6.15-rc's which made a good difference, in 
+that I could build and use the array and even with lvm2 for a period of 
+time, however there was a few quirky bugs with it, in that it couldn't 
+maintain the arrays stability, on certain occasions, if I rebooted the 
+box, most of the disks would be marked as unsuable and the array would 
+refuse to start until it was rebuilt, to futher progress this I started 
+using the libata git branch which again made things a "little" better, 
+until the last 2 git versions where I have this problem with the raid 
+array not being able to build.
+
+from the results I have,  have a gut feeling that this is a driver 
+issue, simpley due to the different results i get with the different 
+kernels.
+
+I've been given some good thoughts today (last mail in from Mark Haln 
+has some good suggestions), so all I can do is run the tests Mark 
+suggested and report back the results to try to progress this forward, 
+although Marks tests seem to point to hardware issues, such as heat, 
+vibration etc I still believe this lies at a software driver level, but 
+its worth running the tests to see what additional data I can get, and 
+to prove/disprove Marks suggestoins.
+
+I shall report back later
+
+thanks,
+
+Matt
+
