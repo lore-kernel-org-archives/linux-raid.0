@@ -1,57 +1,51 @@
-From: Matt Darcy <kernel-lists@projecthugo.co.uk>
-Subject: Re: [git patch] 2.6.x libata fix
-Date: Fri, 13 Jan 2006 09:26:03 +0000
-Message-ID: <43C7722B.2060408@projecthugo.co.uk>
-References: <20060109171104.GA25793@havoc.gtf.org> <43C4DB86.7030603@projecthugo.co.uk> <43C628FE.9020303@projecthugo.co.uk> <op.s29h2nbncigqcu@apollo13>
-Reply-To: kernel-lists@projecthugo.co.uk
+From: Adrian Bunk <bunk@stusta.de>
+Subject: Re: powerpc: raid6 (raid6int8) compilation error
+Date: Fri, 13 Jan 2006 12:17:53 +0100
+Message-ID: <20060113111753.GF29663@stusta.de>
+References: <20060110202831.GA10837@sergelap.austin.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <op.s29h2nbncigqcu@apollo13>
+Content-Disposition: inline
+In-Reply-To: <20060110202831.GA10837@sergelap.austin.ibm.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: PFC <lists@peufeu.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org
+To: "Serge E. Hallyn" <serue@us.ibm.com>
+Cc: lkml <linux-kernel@vger.kernel.org>, mingo@redhat.com, linux-raid@vger.kernel.org, neilb@cse.unsw.edu.au
 List-Id: linux-raid.ids
 
-PFC wrote:
+On Tue, Jan 10, 2006 at 02:28:31PM -0600, Serge E. Hallyn wrote:
+> Since 2.6.15-rc6, and continuing through 2.6.15-mm2, I get the following
+> error when compiling a kernel with gcc 3.4.4 on a power5 with RHEL4U1
+> installed and uptodate:
+> 
+> drivers/md/raid6int8.c: In function `raid6_int8_gen_syndrome':
+> drivers/md/raid6int8.c:185: error: unable to find a register to spill in
+> class `FLOAT_REGS'
+> drivers/md/raid6int8.c:185: error: this is the insn:
+> (insn:HI 619 621 640 4 (set (mem:DI (plus:DI (reg/v/f:DI 122 [ p ])
+>                 (reg/v:DI 66 ctr [orig:124 d ] [124])) [0 S8 A64])
+>         (reg/v:DI 129 [ wp0 ])) 320 {*movdi_internal64} (nil)
+> 	    (expr_list:REG_DEAD (reg/v:DI 129 [ wp0 ])
+> 	            (nil)))
+> drivers/md/raid6int8.c:185: confused by earlier errors, bailing out
+>   CC [M]  drivers/md/raid6altivec4.o
+> 
+> 2.6.14-rc5 does not give this error...
+>...
 
->
->     Hello,
->
->     I've had a lot of problems with nv_sata (nforce3) and Maxtor 
-> harddrives.  Basically it always boils down to :
->
-> Dec 24 23:04:34 apollo13 ata3: command 0x35 timeout, stat 0xd0 
-> host_stat  0x21
-> Dec 24 23:04:34 apollo13 ata3: translated ATA stat/err 0x35/00 to 
-> SCSI  SK/ASC/ASCQ 0x4/00/00
-> Dec 24 23:04:34 apollo13 ata3: status=0x35 { DeviceFault SeekComplete  
-> CorrectedError Error }
-> Dec 24 23:04:34 apollo13 sd 2:0:0:0: SCSI error: return code = 0x8000002
-> Dec 24 23:04:34 apollo13 sdc: Current: sense key=0x4
-> Dec 24 23:04:34 apollo13 ASC=0x0 ASCQ=0x0
-> Dec 24 23:04:34 apollo13 end_request: I/O error, dev sdc, sector 
-> 490223295
-> Dec 24 23:04:34 apollo13 raid5: Disk failure on sdc1, disabling 
-> device.  Operation continuing on 3 devices
->
->     Plugging the Maxtor drives on the not-nv SATA sockets solved it 
-> (thanks  god I have 2 maxtor and 2 seagate drives)...
->
->
+This is an internal error in gcc.
+You should report this as a bug in gcc to RedHat.
 
-Thanks for the message,
+> thanks,
+> -serge
 
-I'm not using nv_sata, I'm using sata_mv,
+cu
+Adrian
 
-just to clarify.
+-- 
 
-Could we please try to keep this thread on topic.
-
-Regards,
-
-Matt
-
-
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
 
