@@ -1,7 +1,7 @@
-From: Max Waterman <davidmaxwaterman@fastmail.co.uk>
+From: Max Waterman <davidmaxwaterman+gmane@fastmail.co.uk>
 Subject: Re: md faster than h/w?
-Date: Sat, 14 Jan 2006 09:19:41 +0800
-Message-ID: <43C851AD.80006@fastmail.co.uk>
+Date: Sat, 14 Jan 2006 09:22:16 +0800
+Message-ID: <43C85248.6020405@fastmail.co.uk>
 References: <dq7jii$n1c$1@sea.gmane.org> <20060113144640.GA10566@lug.udel.edu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
@@ -9,8 +9,7 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20060113144640.GA10566@lug.udel.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ross Vandegrift <ross@lug.udel.edu>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 Ross Vandegrift wrote:
@@ -55,18 +54,18 @@ OK, this sounds good.
 
 I still wonder where all the theoretical numbers went though.
 
-The scsi channel should be able to handle 320MB/s, and we should have 
-enough disks to push that (each disk is 147-320MB/s and we have 4 of 
+The scsi channel should be able to handle 320MB/s, and we should have
+enough disks to push that (each disk is 147-320MB/s and we have 4 of
 them) - theoretically.
 
-Why does the bandwidth seem to plateau with two disks - adding more into 
+Why does the bandwidth seem to plateau with two disks - adding more into
 the raid0 doesn't seem to improve performance at all?
 
-Why do I get better numbers using the file for the while device (is 
-there a better name for it), rather than for a partition (ie /dev/sdb is 
+Why do I get better numbers using the file for the while device (is
+there a better name for it), rather than for a partition (ie /dev/sdb is
 faster than /dev/sdb1 - by a lot)?
 
-Can you explain why raid1 would be faster than raid0? I don't see why 
+Can you explain why raid1 would be faster than raid0? I don't see why
 that would be...
 
 Things I have to try from your email so far are :
@@ -76,3 +75,4 @@ Things I have to try from your email so far are :
 3) kernels in between 2.6.8 and 2.6.15
 
 Max.
+
