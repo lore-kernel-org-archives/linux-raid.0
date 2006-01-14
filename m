@@ -1,112 +1,121 @@
-From: Mark Hahn <hahn@physics.mcmaster.ca>
+From: Max Waterman <davidmaxwaterman+gmane@fastmail.co.uk>
 Subject: Re: md faster than h/w?
-Date: Sat, 14 Jan 2006 01:40:53 -0500 (EST)
-Message-ID: <Pine.LNX.4.44.0601131720090.24299-100000@coffee.psychology.mcmaster.ca>
-References: <dq7jii$n1c$1@sea.gmane.org>
+Date: Sat, 14 Jan 2006 16:26:13 +0800
+Message-ID: <43C8B5A5.5010500@fastmail.co.uk>
+References: <dq7jii$n1c$1@sea.gmane.org> <20060113144640.GA10566@lug.udel.edu> <43C851AD.80006@fastmail.co.uk> <20060114020523.GB24976@lug.udel.edu>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <dq7jii$n1c$1@sea.gmane.org>
+In-Reply-To: <20060114020523.GB24976@lug.udel.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Max Waterman <davidmaxwaterman+gmane@fastmail.co.uk>
+To: Ross Vandegrift <ross@lug.udel.edu>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> have 5 Fujitsu MAX3073NC drives attached to one of it's channels (can't 
-...
-> According to Fujitsu's web site, the disks can each do internal IO at 
-> upto 147MB/s, and burst upto 320MB/s. According to the LSI Logic web 
+Ross Vandegrift wrote:
+> On Sat, Jan 14, 2006 at 09:19:41AM +0800, Max Waterman wrote:
+>> I still wonder where all the theoretical numbers went though.
+>>
+>> The scsi channel should be able to handle 320MB/s, and we should have 
+>> enough disks to push that (each disk is 147-320MB/s and we have 4 of 
+>> them) - theoretically.
+> 
+> LOL, they went where all theoretical performance numbers go.
+> Whereever that is, and, lemme tell you it's not anywhere near me ::-).
 
-the meaning of "internal transfer rate" is a bit fuzzy - 
-let's assume it means the raw bandwidth coming off the head,
-before encoding and ECC overhead.  I believe the real sustained
-transfer rate (at the scsi connector) would be under 100 MB/s,
-decreasing noticably on inner tracks.
+:D Good to know, at least :)
 
-note also that the MegaRAID SCSI 320-2 is just a 64x66 card,
-meaning its peak theoretical bandwidth is 533 MB/s, and you 
-probably should expect closer to 50% of that peak under the 
-best circumstances.  have you examined your PCI topology, as well
-as some of the tweakable settings like the latency timer?
+> 
+> While your disks claim 147-320MB/sec I'd bet a whole lot they aren't
+> breaking 100MB/sec.  I don't think I've ever seen a single disk
+> beat 80-90MB/sec of raw throughput.
 
-the 2850 seems to be a pretty reasonable server, and should
-certainly not be starving you for host memory bandwidth, for instance.
+That's about what I'm getting for a single disk.
 
-> So, we're trying to measure the performance. We've been using 'bonnie++' 
-> and 'hdparm -t'.
+> The maximum read throughput
+> listed on storagereview.com is 97.4MB/sec:
+> http://www.storagereview.com/php/benchmark/bench_sort.php
 
-they each have flaws.  I prefer to attempt to get more basic numbers
-by ignoring filesystem issues entirely, ignoring seek rates, and 
-measuring pure read/write streaming bandwidth.  I've written a fairly
-simple bandwidth-reporting tool:
-	http://www.sharcnet.ca/~hahn/iorate.c
+Ah, a good resource, thanks :)
 
-it prints incremental bandwidth, which I find helpful because it shows
-recording zones, like this slightly odd Samsung:
-	http://www.sharcnet.ca/~hahn/sp0812c.png
+> On top of that, disk seeks are going to make that go way down.
+> 80MB/sec was on an extended read.  Seeking around costs time, which
+> affects your throughput.
 
-> Initially, we were getting 'hdparm -t' numbers around 80MB/s, but this 
-> was when we were testing /dev/sdb1 - the (only) partition on the device. 
-> When we started testing /dev/sdb, it increased significantly to around 
-> 180MB/s. I'm not sure what to conclude from this.
+Indeed. Looking primarily at the 'Sequential Input/Block', this is the best output I've had from bonnie++ :
 
-there are some funny interactions between partitions, filesystems 
-and low-level parameters like readahead.
++------------------------------------------------------------------------+
+|          |Sequential Output             |Sequential Input    |         |
+|----------+------------------------------+--------------------|Random   |
+|Size:Chunk|Per Char |Block     |Rewrite  |Per Char |Block     |Seeks    |
+|Size      |         |          |         |         |          |         |
+|----------+---------+----------+---------+---------+----------+---------|
+|          |K/sec|%  |K/sec |%  |K/sec|%  |K/sec|%  |K/sec |%  |/ sec|%  |
+|          |     |CPU|      |CPU|     |CPU|     |CPU|      |CPU|     |CPU|
+|----------+-----+---+------+---+-----+---+-----+---+------+---+-----+---|
+|2G        |48024|96 |121412|13 |59714|10 |47844|95 |200264|21 |942.8|1  |
++------------------------------------------------------------------------+
 
-> Using theoretical numbers as a maximum, we should be able to read at the 
-> greater of 4 times a single drive speed (=588MB/s) or the SCSI bus speed 
-> (320MB/s) ie 320MB/s.
+Anything interesting in those numbers?
 
-you should really measure the actual speed of one drive alone first.  
-I'd guess it starts at ~90 MB/s and drops to 70 or so..
+> 
+>> Why does the bandwidth seem to plateau with two disks - adding more into 
+>> the raid0 doesn't seem to improve performance at all?
+> 
+> Lets say you read an 8MB file off a disk that runs at 40MB/sec.  That
+> means it takes 0.2 seconds to stream that data.  If you stripe that
+> disk, and in theory double read performance, you'll complete in 0.1
+> seconds instead.
+> 
+> But if you read 8GB, that'll take you about 200 seconds.  Stripe it,
+> and in theory you're down to 100 seconds.  Throw a third disk, you've
+> dropped it to 66 seconds - a smaller payoff than the first disk.  If
+> you add a fourth, you can in theory read it in 50 seconds.
+> 
+> So the second disk you added cut 100 seconds off the read time, but
+> the fourth only cut off 16.  If we go back to back to the 8MB case,
+> your second disk saved 0.1 seconds.  If you added a third, it saved
+> 0.04 seconds.
 
-> Doing this initially resulted in a doubling of bonnie++ speed at over 
-> 200MB/s, though I have been unable to reproduce this result - the most 
-> common result is still about 180MB/s.
+OK. All makes sense. However, the 'hdparm -t' numbers (didn't try bonnie++)
+did seem to actually go down (slightly - eg 170MB/s to 160MB/s) when I added
+the 3rd disk.
 
-200 is pretty easy to achieve using MD raid0, and pretty impressive for 
-hardware raid, at least traditionally.  there are millions and millions
-of hardware raid solutions out there that wind up being disgustingly 
-slow, with very little correlation to price, marketing features, etc.
-you can pretty safely assume that older HW raid solutions suck, though:
-the only ones I've seen perform well are new or fundamental redesigns 
-happening in the last ~2 years.
+> 
+> This is probably what you're seeing.  And I'll bet you're close to the
+> 8MB end of the scale than the 8GB end.
 
-I suspect you can actually tell a lot about the throughput of a HW 
-raid solution just by looking at the card: estimate the local memory
-bandwidth.  for instance, the Megaraid, like many HW raid cards,
-takes a 100 MHz ECC sdram dimm, which means it has 2-300 MB/s to work
-with.  compare this to a (new) 3ware 9550 card, which has ddr2/400,
-(8x peak bandwidth, I believe - it actually has BGA memory chips on both
-sides of the board like a GPU...)
+Well, with bonnie++, it said it was using a 'size' of either 2G (2.6.8) or
+7G (2.6.15-smp). I'm not sure why it picked a different size...
 
-> One further strangeness is that our best results have been while using a 
-> uni-processor kernel - 2.6.8. We would prefer it if our best results 
-> were with the most recent kernel we have, which is 2.6.15, but no.
+>> Why do I get better numbers using the file for the while device (is 
+>> there a better name for it), rather than for a partition (ie /dev/sdb is 
+>> faster than /dev/sdb1 - by a lot)?
+> 
+> That's a bit weird and I don't have a good explanation.  I'd go to
+> linux-kernel@vger.kernel.org with that information, some test cases,
+> and I'll bet it's a bug.
 
-hmm, good one.  I haven't scrutinized the changelogs in enough detail,
-but I don't see a lot of major overhaul happening.  how much difference 
-are you talking about?
+OK, I'll take the referral for that, thanks :D
 
-> So, any advice on how to obtain best performance (mainly web and mail 
-> server stuff)?
+> 
+> Was this true across kernel versions?
+> 
+>> Can you explain why raid1 would be faster than raid0? I don't see why 
+>> that would be...
+> 
+> Though reading is the same in theory, I like RAID1 better ::-).  If I
+> were you, I'd test all applicable configurations.  But of course we
+> haven't even gotten into write speed...
 
-do you actually need large/streaming bandwidth?  best performance 
-is when the file is in page cache already, which is why it sometimes 
-makes sense to put lots of GB into this kind of machine...
+My preference will probably be raid10 - ie raid0 2 drives, raid0
+another 2 drives, and then raid1 both raid0s. My 5th disk can be a hot
+spare. Round reasonable?
 
-> Is 180MB/s-200MB/s a reasonable number for this h/w?
+Alternatively, we could probably get a 6th disk and do raid1 on
+disk #5 & #6 and install the OS on that - keeping the application
+data separate. This would be ideal, I think. For some reason, I like
+to keep os separate from application data.
 
-somewhat, but it's not really a high-performance card.  it might be
-instructive to try a single disk, then 2x raid0, then 3x, 4x.  I'm guessing
-that you get most of that speed with just 2 or 3 disks, and that adding the 
-fourth is hitting a bottleneck, probably on the card.
-
-> What numbers do other people see on their raid0 h/w?
-
-I'm about to test an 8x 3ware 9550 this weekend.  but 4x disks on a $US 60
-promise tx2 will already beat your system ;)
-
-
-
-
+Max.
