@@ -1,34 +1,54 @@
-From: Max Waterman <davidmaxwaterman+gmane@fastmail.co.uk>
-Subject: Re: md faster than h/w?
-Date: Mon, 16 Jan 2006 14:31:22 +0800
-Message-ID: <43CB3DBA.405@fastmail.co.uk>
-References: <dq7jii$n1c$1@sea.gmane.org> <Pine.LNX.4.44.0601131720090.24299-100000@coffee.psychology.mcmaster.ca>
+From: Johnny Ljunggren <johnny@navtek.no>
+Subject: Fix a broken RAID 5 system
+Date: Mon, 16 Jan 2006 12:45:45 +0100
+Message-ID: <43CB8769.4080505@navtek.no>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44.0601131720090.24299-100000@coffee.psychology.mcmaster.ca>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Mark Hahn wrote:
-> I've written a fairly
-> simple bandwidth-reporting tool:
-> 	http://www.sharcnet.ca/~hahn/iorate.c
-> 
-> it prints incremental bandwidth, which I find helpful because it shows
-> recording zones, like this slightly odd Samsung:
-> 	http://www.sharcnet.ca/~hahn/sp0812c.png
-> 
 
-Using iorate.c, I guess somewhat different numbers for the 2.6.15 kernel than
-for the 2.6.8 kernel - the 2.6.15 kernel starts off at 105MB/s and head down
-to 94MB/s, while 2.6.8 starts at 140MB/s and heads town to 128MB/s.
+Hello everyone!
 
-That seems like a significant difference to me?
+I have a RAID 5 setup of five disks where one of them was set up as 
+spare. A while ago the onboard IDE controller stopped working so I had 
+to move all my harddrives to another machine. It wouldn't start so 
+Knoppix to my rescue.
 
-What to do?
+I did some mdadm --examine, and some tests with mdadm --assemble 
+<different options> and where partly successfull with this: mdadm 
+--assemble /dev/md0 --force --update=summaries /dev/hda1 /dev/hdc1 
+/dev/hde1 /dev/hdf1 /dev/hdg1
+It complained about one faulty drive, but could mount. I decided to flag 
+drive as faulty, remove and add it. It then started to rebuild the 
+entire RAID.
+When I checked the next morning though, mdadm --examine showed that 
+/two/ drives now where set as spare, and thus I could not mount the 
+array anymore.
+Examine now shows (edited):
+  Active Devices : 3
+Working Devices : 5
+  Failed Devices : 0
+   Spare Devices : 2
+    0     0       3        1        0      active sync
+    1     1       0        0        1      faulty removed
+    2     2       0        0        2      faulty removed
+    3     3      33        1        3      active sync
+    4     4      33       65        4      active sync
+    5     5      34        1        5      spare
+    6     6      22        1        6      spare
 
-Max.
+I'm pretty sure that one of the spare ones is still intact, but how do I 
+change it from being a spare to an active sync?
+
+Since I'm still running from Knoppix, please reply to my address too :/
+
+regards
+Johnny Ljunggren
+
+
+
 
