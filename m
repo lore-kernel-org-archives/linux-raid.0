@@ -1,44 +1,42 @@
-From: "JaniD++" <djani22@dynamicweb.hu>
+From: Jacob Schmidt Madsen <jacob@mungo.dk>
 Subject: Re: Expanding RAID array?
-Date: Tue, 17 Jan 2006 00:30:37 +0100
-Message-ID: <024201c61af4$dec2ab40$a400a8c0@dcccs>
-References: <1137424449.3953.38.camel@kenny> <17356.8228.325002.652805@cse.unsw.edu.au>
+Date: Tue, 17 Jan 2006 00:37:26 +0100
+Message-ID: <43CC2E36.60309@mungo.dk>
+References: <1137424449.3953.38.camel@kenny> <17356.8228.325002.652805@cse.unsw.edu.au> <Pine.LNX.4.56.0601162244220.1836@lion.drogon.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="ISO-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.56.0601162244220.1836@lion.drogon.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, rowe@excc.ex.ac.uk
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+Hey,
 
------ Original Message ----- 
-From: "Neil Brown" <neilb@suse.de>
-To: "John Rowe" <rowe@excc.ex.ac.uk>
-Cc: <linux-raid@vger.kernel.org>
-Sent: Monday, January 16, 2006 11:37 PM
-Subject: Re: Expanding RAID array?
+I was wondering where I can find raidreconfig? google doesnt seem to
+know a website for it.
 
-
-> On Monday January 16, rowe@excc.ex.ac.uk wrote:
-> > I have a 5-disk RAID5 array. Is it possible to add disks to increase the
-> > array size and/or convert it to RAID6? (Indeed, what is the status of
-> > RAID6?)
+Gordon Henderson wrote:
+> On Tue, 17 Jan 2006, Neil Brown wrote:
 >
-> - add disks to increase size of raid5
->     Possible offline with raidreconfig
->     Possible online with alpha-quality patches that I am
->       working on today. Will publish for experimentation/testing
->       later this week.  Hopefully stable by late Feb.
-
-This patch will can do also chunksize conversion? :-)
-And / or converting from N disk to N disk with different chunksize?
-
-I think i will test it if i can get a copy. :-)
-
-Cheers,
-Janos
+>   
+>> - status of RAID6
+>>     I believe it is as stable/reliable as raid5.
+>>     
+>
+> FWIW: I've been using RAID-6 since early last year in production
+> environments and so-far so good. Kernels 2.6.11 to 2.6.15 (on a Dell 2850
+> server I'm building tonight with 6 drives). I did have some early issues
+> with it, but it was actually due to "intersting" hardware... I've not had
+> a disk failure for real yet, but it's "just worked" every time I've done
+> tests on it.
+>
+> Gordon
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>   
 
