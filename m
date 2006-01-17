@@ -1,7 +1,8 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 000 of 5] md: Introduction
-Date: Tue, 17 Jan 2006 17:56:04 +1100
-Message-ID: <20060117174531.27739.patches@notabene>
+Subject: [PATCH 001 of 5] md: Split disks array out of raid5 conf structure so it is easier to grow.
+Date: Tue, 17 Jan 2006 17:56:14 +1100
+Message-ID: <1060117065614.27831@suse.de>
+References: <20060117174531.27739.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
@@ -9,41 +10,105 @@ Cc: "Steinar H. Gunderson" <sgunderson@bigfoot.com>
 List-Id: linux-raid.ids
 
 
-Greetings.
-
-In line with the principle of "release early", following are 5 patches
-against md in 2.6.latest which implement reshaping of a raid5 array.
-By this I mean adding 1 or more drives to the array and then re-laying
-out all of the data.
-
-This is still EXPERIMENTAL and could easily eat your data.  Don't use it on
-valuable data.  Only use it for review and testing.
-
-This release does not make ANY attempt to record how far the reshape
-has progressed on stable storage.  That means that if the process is
-interrupted either by a crash or by "mdadm -S", then you completely
-lose your data.  All of it.
-So don't use it on valuable data.
-
-There are 5 patches to (hopefully) ease review.  Comments are most
-welcome, as are test results (providing they aren't done on valuable data:-).
-
-You will need to enable the experimental MD_RAID5_RESHAPE config option
-for this to work.  Please read the help message that come with it.  
-It gives an example mdadm command to effect a reshape (you do not need
-a new mdadm, and vaguely recent version should work).
-
-This code is based in part on earlier work by
-  "Steinar H. Gunderson" <sgunderson@bigfoot.com>
-Though little of his code remains, having access to it, and having
-discussed the issues with him greatly eased the processed of creating
-these patches.  Thanks Steinar.
-
-NeilBrown
+Previously the array of disk information was included in the
+raid5 'conf' structure which was allocated to an appropriate size.
+This makes it awkward to change the size of that array.
+So we split it off into a separate kmalloced array which will
+require a little extra indexing, but is much easier to grow.
 
 
- [PATCH 001 of 5] md: Split disks array out of raid5 conf structure so it is easier to grow.
- [PATCH 002 of 5] md: Allow stripes to be expanded in preparation for expanding an array.
- [PATCH 003 of 5] md: Infrastructure to allow normal IO to continue while array is expanding.
- [PATCH 004 of 5] md: Core of raid5 resize process
- [PATCH 005 of 5] md: Final stages of raid5 expand code.
+Signed-off-by: Neil Brown <neilb@suse.de>
+
+### Diffstat output
+ ./drivers/md/raid5.c         |   10 +++++++---
+ ./drivers/md/raid6main.c     |   11 ++++++++---
+ ./include/linux/raid/raid5.h |    2 +-
+ 3 files changed, 16 insertions(+), 7 deletions(-)
+
+diff ./drivers/md/raid5.c~current~ ./drivers/md/raid5.c
+--- ./drivers/md/raid5.c~current~	2006-01-17 17:33:05.000000000 +1100
++++ ./drivers/md/raid5.c	2006-01-17 17:33:09.000000000 +1100
+@@ -1821,11 +1821,13 @@ static int run(mddev_t *mddev)
+ 		return -EIO;
+ 	}
+ 
+-	mddev->private = kzalloc(sizeof (raid5_conf_t)
+-				 + mddev->raid_disks * sizeof(struct disk_info),
+-				 GFP_KERNEL);
++	mddev->private = kzalloc(sizeof (raid5_conf_t), GFP_KERNEL);
+ 	if ((conf = mddev->private) == NULL)
+ 		goto abort;
++	conf->disks = kzalloc(mddev->raid_disks * sizeof(struct disk_info),
++			      GFP_KERNEL);
++	if (!conf->disks)
++		goto abort;
+ 
+ 	conf->mddev = mddev;
+ 
+@@ -1965,6 +1967,7 @@ static int run(mddev_t *mddev)
+ abort:
+ 	if (conf) {
+ 		print_raid5_conf(conf);
++		kfree(conf->disks);
+ 		kfree(conf->stripe_hashtbl);
+ 		kfree(conf);
+ 	}
+@@ -1985,6 +1988,7 @@ static int stop(mddev_t *mddev)
+ 	kfree(conf->stripe_hashtbl);
+ 	blk_sync_queue(mddev->queue); /* the unplug fn references 'conf'*/
+ 	sysfs_remove_group(&mddev->kobj, &raid5_attrs_group);
++	kfree(conf->disks);
+ 	kfree(conf);
+ 	mddev->private = NULL;
+ 	return 0;
+
+diff ./drivers/md/raid6main.c~current~ ./drivers/md/raid6main.c
+--- ./drivers/md/raid6main.c~current~	2006-01-17 17:33:05.000000000 +1100
++++ ./drivers/md/raid6main.c	2006-01-17 17:33:09.000000000 +1100
+@@ -1925,11 +1925,14 @@ static int run(mddev_t *mddev)
+ 		return -EIO;
+ 	}
+ 
+-	mddev->private = kzalloc(sizeof (raid6_conf_t)
+-				 + mddev->raid_disks * sizeof(struct disk_info),
+-				 GFP_KERNEL);
++	mddev->private = kzalloc(sizeof (raid6_conf_t), GFP_KERNEL);
+ 	if ((conf = mddev->private) == NULL)
+ 		goto abort;
++	conf->disks = kzalloc(mddev->raid_disks * sizeof(struct disk_info),
++				 GFP_KERNEL);
++	if (!conf->disks)
++		goto abort;
++
+ 	conf->mddev = mddev;
+ 
+ 	if ((conf->stripe_hashtbl = kzalloc(PAGE_SIZE, GFP_KERNEL)) == NULL)
+@@ -2077,6 +2080,7 @@ abort:
+ 		print_raid6_conf(conf);
+ 		safe_put_page(conf->spare_page);
+ 		kfree(conf->stripe_hashtbl);
++		kfree(conf->disks);
+ 		kfree(conf);
+ 	}
+ 	mddev->private = NULL;
+@@ -2095,6 +2099,7 @@ static int stop (mddev_t *mddev)
+ 	shrink_stripes(conf);
+ 	kfree(conf->stripe_hashtbl);
+ 	blk_sync_queue(mddev->queue); /* the unplug fn references 'conf'*/
++	kfree(conf->disks);
+ 	kfree(conf);
+ 	mddev->private = NULL;
+ 	return 0;
+
+diff ./include/linux/raid/raid5.h~current~ ./include/linux/raid/raid5.h
+--- ./include/linux/raid/raid5.h~current~	2006-01-17 17:33:05.000000000 +1100
++++ ./include/linux/raid/raid5.h	2006-01-17 17:33:09.000000000 +1100
+@@ -240,7 +240,7 @@ struct raid5_private_data {
+ 							 * waiting for 25% to be free
+ 							 */        
+ 	spinlock_t		device_lock;
+-	struct disk_info	disks[0];
++	struct disk_info	*disks;
+ };
+ 
+ typedef struct raid5_private_data raid5_conf_t;
