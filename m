@@ -1,72 +1,60 @@
-From: Wolfram Schlich <lists@wolfram.schlich.org>
-Subject: Re: block size issue when re-syncing RAID1 with ext2fs on top
-Date: Tue, 17 Jan 2006 01:10:10 +0100
-Message-ID: <20060117001010.ALLYOURBASEAREBELONGTOUS.S23957@bla.fasel.org>
-References: <20060116175549.ALLYOURBASEAREBELONGTOUS.M23957@bla.fasel.org> <17356.8586.574751.179265@cse.unsw.edu.au>
+From: "JaniD++" <djani22@dynamicweb.hu>
+Subject: mdadm options, and man page
+Date: Tue, 17 Jan 2006 01:24:03 +0100
+Message-ID: <026f01c61afc$54d40660$a400a8c0@dcccs>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="iso-8859-2"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <17356.8586.574751.179265@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
 To: Neil Brown <neilb@suse.de>
-Cc: ext2-devel@lists.sourceforge.net, linux-raid@vger.kernel.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-* Neil Brown <neilb@suse.de> [2006-01-16 23:38]:
-> On Monday January 16, lists@wolfram.schlich.org wrote:
-> > Hi,
-> > 
-> > I'm experiencing a problem on a 2.2.16C37_III driven Cobalt RaQ4
-> > after I add a new 2nd disk to a RAID1.
-> 
-> 2.2.16 .... that's old, isn't it!
+Hello, Neil,
 
-No question :-) I don't really use it voluntarily ;-)
+Some days before, i read the entire mdadm man page.
 
-> raid1 was only every available as external patches for 2.2 kernels...
+I have some ideas, and questions:
 
-Ah, hmm. That is a heavily patched Cobalt kernel, indeed.
+Ideas:
+1. i think, it is neccessary, to make another one mode to mdadm like "nop"
+or similar, just for bitmaps, and another options, that only works with
+assemble, and create (or grow) modes.
 
-> > I'm uncertain whether this is a RAID, ext2fs or even a hardware
-> > issue, that's why I'm writing both to ext2-devel and linux-raid.
-> > 
-> > Setup:
-> > - /dev/md1(hd[ab]1): ext2: /
-> > - /dev/md3(hd[ab]3): ext2: /var
-> > - /dev/md4(hd[ab]4): ext2: /home
-> > - /dev/md6(hd[ab]6): swap: -
-> > 
-> > When I boot up the system with only hda, everything is fine (except
-> > that the RAIDs run degraded, but that's expected :P), even e2fsck
-> > doesn't complain when checking md[134].
-> > 
-> > Now, when I connect hdb and boot the machine, the Cobalt init scripts
-> > detect a broken RAID, clone the hda partition table to hdb and then
-> > add the newly created hdb partitions to the corresponding md.
-> > That's the point where it breaks:
-> > 
-> > --8<--[ lots of ]--8<--
-> > ll_rw_block: device 03:01: only 4096-char blocks implemented (1024)
-> > EXT2-fs error (device ide0(3,1)): ext2_write_inode: unable to read \
-> > 	inode block [...]
-> > --8<--
-> 
-> The fact that EXT2 is reporting an error with ide0(3,1) is a worry.
-> Ext2 shouldn't even see the ide drives.  It should just see md devices
-> which should hide all the underlying details.
-> 
-> So I suspect the problem is that you are mounting the root filesystem
-> of hda1 rather than md1
-> 
-> The resync code will set the blocksize for hda1 to 4096, and the ext2
-> code will try to read 1024byte blocks, and it fails with the message
-> you see.
+2. i think the raid5 creation virtual spare drive technique necessary to be
+standalone option, to avoid more people to data lost, with re-creating the
+raid5 arrays, and who did'nt read carefully the entire man.
 
-Ah! That enlightens the dark. I guess it's due to the fact that the
-Cobalt boot loader seems to pass "root=/dev/hda1" instead of
-"root=/dev/md1" to the kernel.
+3. i think it will be an usefull thing, set the recovery, resyncing
+order(eg. from the end of the drive to the beginning) of array, or set the
+"from" and "to" limits for it, or stop, restart(retry) this function, if it
+is possible again.
+(only experimental, it will be allow very easy to loose data.)
+This is useful in very big arrays, wich takes some days to resync.
+Yes, i know this caused to write the bitmap code, but i think the linux is
+beautiful because it is very configurable. :-)
+... i did not like the automated things, what i cannot controll....
 
-Thanks a lot!
--- 
-Wolfram Schlich
+
+Questions:
+1. it will be possible to set/unset the --write-mostly, --write-behind
+options online?
+(i know, currently not.)
+
+2. it will be possible to create a bitmap in raid5 when it is resyncing, or
+recovering?
+
+3. it is possible to set unset the clean state of the array online? (useful
+for idea #3)
+
+4. why the md did not support raid4,5 with non-persistent superblock?
+I think the non-persistent superblock raid4 is very useful thing to easy
+upgrade (protect) from one big legacy raid0 array to raid4 with an existing
+data! :-)
+At this time i need it too. :-)
+
+Thanks,
+Janos
+
