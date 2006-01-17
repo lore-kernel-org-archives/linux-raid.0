@@ -1,43 +1,51 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH 000 of 5] md: Introduction
-Date: Wed, 18 Jan 2006 09:57:08 +1100
-Message-ID: <17357.30276.327186.496018@cse.unsw.edu.au>
-References: <20060117174531.27739.patches@notabene>
-	<43CCA80B.4020603@tls.msk.ru>
-	<20060117095019.GA27262@localhost.localdomain>
-	<43CCD453.9070900@tls.msk.ru>
-	<43CD71FA.4090908@cfl.rr.com>
+Subject: Re: paralellism of device use in md
+Date: Wed, 18 Jan 2006 10:04:52 +1100
+Message-ID: <17357.30740.574254.703987@cse.unsw.edu.au>
+References: <20060117120927.GU7017@strugglers.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Phillip Susi on Tuesday January 17
+In-Reply-To: message from Andy Smith on Tuesday January 17
 Sender: linux-raid-owner@vger.kernel.org
-To: Phillip Susi <psusi@cfl.rr.com>
-Cc: Michael Tokarev <mjt@tls.msk.ru>, sander@humilis.net, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, "Steinar H. Gunderson" <sgunderson@bigfoot.com>
+To: Andy Smith <andy@lug.org.uk>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tuesday January 17, psusi@cfl.rr.com wrote:
->                                                                  I was 
-> also under the impression that md was going to be phased out and 
-> replaced by the device mapper.
+On Tuesday January 17, andy@lug.org.uk wrote:
+> I'm wondering: how well does md currently make use of the fact there
+> are multiple devices in the different (non-parity) RAID levels for
+> optimising reading and writing?
 
-I wonder where this sort of idea comes from....
+It does the best it can.  Every request from the filesystem goes
+directly to which device it should.  Ofcourse if all the blocks the
+filesystem requests happen to be on the same drive, there isn't alot
+that md can do...
 
-Obviously individual distributions are free to support or not support
-whatever bits of code they like.  And developers are free to add
-duplicate functionality to the kernel (I believe someone is working on
-a raid5 target for dm).  But that doesn't mean that anything is going
-to be 'phased out'.
 
-md and dm, while similar, are quite different.  They can both
-comfortably co-exist even if they have similar functionality.
-What I expect will happen (in line with what normally happens in
-Linux) is that both will continue to evolve as long as there is
-interest and developer support.  They will quite possibly borrow ideas
-from each other where that is relevant.  Parts of one may lose
-support and eventually die (as md/multipath is on the way to doing)
-but there is no wholesale 'phasing out' going to happen in either
-direction. 
+> 
+> For example, are *writes* to a 2 device RAID-0 approaching twice as
+> fast as to a single device?  If not, are they any faster at all?
+> Are reads from a 2 device RAID-1 twice as fast as from a single
+> device?  If there are benefits, how quickly do they degrade to
+> nothing as disks are added?
+
+Yes.  For a reasonably heavy loads both read and write will be close to
+twice as fast on a 2 device RAID-0 compared to a single device
+(providing that the buss doesn't become a bottleneck).
+
+> 
+> What does the picture look like for reads and writes to a 4 device
+> RAID-10?
+
+Much the same.
+
+> 
+> Sorry if my subject line isn't clear, but I coudn't think of a
+> better way to put it.
+
+Clear enough.
+
 
 NeilBrown
