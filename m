@@ -1,31 +1,31 @@
-From: "Steinar H. Gunderson" <sgunderson@bigfoot.com>
-Subject: Re: [PATCH 000 of 5] md: Introduction
-Date: Tue, 17 Jan 2006 15:10:19 +0100
-Message-ID: <20060117141019.GA32232@uio.no>
-References: <20060117174531.27739.patches@notabene> <43CCA80B.4020603@tls.msk.ru>
+From: "John Stoffel" <john@stoffel.org>
+Subject: Re: [PATCH 001 of 5] md: Split disks array out of raid5 conf structure so it is easier to grow.
+Date: Tue, 17 Jan 2006 09:37:03 -0500
+Message-ID: <17357.271.619918.45917@smtp.charter.net>
+References: <20060117174531.27739.patches@notabene>
+	<1060117065614.27831@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932505AbWAQOK0@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <43CCA80B.4020603@tls.msk.ru>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Michael Tokarev <mjt@tls.msk.ru>
-Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1060117065614.27831@suse.de>
+Sender: linux-raid-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, "Steinar H. Gunderson" <sgunderson@bigfoot.com>
 List-Id: linux-raid.ids
 
-On Tue, Jan 17, 2006 at 11:17:15AM +0300, Michael Tokarev wrote:
-> Neil, is this online resizing/reshaping really needed?  I understand
-> all those words means alot for marketing persons - zero downtime,
-> online resizing etc, but it is much safer and easier to do that stuff
-> 'offline', on an inactive array, like raidreconf does - safer, easier,
-> faster, and one have more possibilities for more complex changes. 
+>>>>> "NeilBrown" == NeilBrown  <neilb@suse.de> writes:
 
-Try the scenario where the resize takes a week, and you don't have enough
-spare disks to move it onto another server -- besides, that would take
-several days alone... This is the kind of use-case for which I wrote the
-original patch, and I'm grateful that Neil has picked it up again so we can
-finally get something working in.
+NeilBrown> Previously the array of disk information was included in
+NeilBrown> the raid5 'conf' structure which was allocated to an
+NeilBrown> appropriate size.  This makes it awkward to change the size
+NeilBrown> of that array.  So we split it off into a separate
+NeilBrown> kmalloced array which will require a little extra indexing,
+NeilBrown> but is much easier to grow.
 
-/* Steinar */
--- 
-Homepage: http://www.sesse.net/
+Neil,
+
+Instead of setting mddev->private = NULL, should you be doing a kfree
+on it as well when you are in an abort state?
+
+John
