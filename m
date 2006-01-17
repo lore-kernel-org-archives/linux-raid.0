@@ -1,50 +1,25 @@
-From: ross@lug.udel.edu (Ross Vandegrift)
-Subject: Re: [PATCH 000 of 5] md: Introduction
-Date: Tue, 17 Jan 2006 11:08:30 -0500
-Message-ID: <20060117160829.GA16606@lug.udel.edu>
-References: <20060117174531.27739.patches@notabene> <43CCA80B.4020603@tls.msk.ru> <20060117095019.GA27262@localhost.localdomain> <43CCD453.9070900@tls.msk.ru>
+From: Jacob Madsen <jacob@mungo.dk>
+Subject: Re: blog entry on RAID limitation
+Date: Tue, 17 Jan 2006 17:42:02 +0100
+Message-ID: <43CD1E5A.3050802@mungo.dk>
+References: <8E5ACAE05E6B9E44A2903C693A5D4E8A097F6C86@hqemmail02.nvidia.com>	<1137487538.309F9186@bd12.dngr.org> <17356.51593.481883.173707@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <43CCD453.9070900@tls.msk.ru>
+In-Reply-To: <17356.51593.481883.173707@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Michael Tokarev <mjt@tls.msk.ru>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Jan 17, 2006 at 02:26:11PM +0300, Michael Tokarev wrote:
-> Raid code is already too fragile, i'm afraid "simple" I/O errors
-> (which is what we need raid for) may crash the system already, and
-> am waiting for the next whole system crash due to eg superblock
-> update error or whatnot.
+Neil Brown wrote:
+> In general, I think increasing the connection between the filesystem
+> and the volume manager/virtual storage is a good idea.  Finding the
+> right balance is not going to be trivial.  ZFS has taken one very
+> interesting approach.  There are others.
+>   
+Just out of curiosity... When you say there are others, are you then
+refering to existing solutions or just saying other approaches will be
+developed in the future?
 
-I think you've got some other issue if simple I/O errors cause issues.
-I've managed hundreds of MD arrays over the past ~ten years.  MD is
-rock solid.  I'd guess that I've recovered at least a hundred disk failures
-where data was saved by mdadm.
 
-What is your setup like?  It's also possible that you've found a bug.
-
-> I saw all sorts of failures due to
-> linux softraid already (we use it here alot), including ones
-> which required complete array rebuild with heavy data loss.
-
-Are you sure?  The one thing that's not always intuitive about MD - a
-faild array often still has your data and you can recover it.  Unlike
-hardware RAID solutions, you have a lot of control over how the disks
-are assembled and used - this can be a major advantage.
-
-I'd say once a week someone comes on the linux-raid list and says "Oh no!
-I accidently ruined my RAID array!".  Neil almost always responds "Well,
-don't do that!  But since you did, this might help...".
-
--- 
-Ross Vandegrift
-ross@lug.udel.edu
-
-"The good Christian should beware of mathematicians, and all those who
-make empty prophecies. The danger already exists that the mathematicians
-have made a covenant with the devil to darken the spirit and to confine
-man in the bonds of Hell."
-	--St. Augustine, De Genesi ad Litteram, Book II, xviii, 37
