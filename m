@@ -1,60 +1,50 @@
-From: "JaniD++" <djani22@dynamicweb.hu>
-Subject: mdadm options, and man page
-Date: Tue, 17 Jan 2006 01:24:03 +0100
-Message-ID: <026f01c61afc$54d40660$a400a8c0@dcccs>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Expanding RAID array?
+Date: Tue, 17 Jan 2006 11:52:32 +1100
+Message-ID: <17356.16336.104087.303806@cse.unsw.edu.au>
+References: <1137424449.3953.38.camel@kenny>
+	<17356.8228.325002.652805@cse.unsw.edu.au>
+	<024201c61af4$dec2ab40$a400a8c0@dcccs>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-2"
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from JaniD++ on Tuesday January 17
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: JaniD++ <djani22@dynamicweb.hu>
+Cc: linux-raid@vger.kernel.org, rowe@excc.ex.ac.uk
 List-Id: linux-raid.ids
 
-Hello, Neil,
+On Tuesday January 17, djani22@dynamicweb.hu wrote:
+> >
+> > - add disks to increase size of raid5
+> >     Possible offline with raidreconfig
+> >     Possible online with alpha-quality patches that I am
+> >       working on today. Will publish for experimentation/testing
+> >       later this week.  Hopefully stable by late Feb.
+> 
+> This patch will can do also chunksize conversion? :-)
 
-Some days before, i read the entire mdadm man page.
+Not currently, but it shouldn't be too hard to add.
 
-I have some ideas, and questions:
+> And / or converting from N disk to N disk with different chunksize?
 
-Ideas:
-1. i think, it is neccessary, to make another one mode to mdadm like "nop"
-or similar, just for bitmaps, and another options, that only works with
-assemble, and create (or grow) modes.
+No.  This is impossible to do both efficiently and safely with NVRAM.
+Even if you give up "efficiently" you need some temporary storage space.
 
-2. i think the raid5 creation virtual spare drive technique necessary to be
-standalone option, to avoid more people to data lost, with re-creating the
-raid5 arrays, and who did'nt read carefully the entire man.
+You would need to 
+  copy a stripe to some temporary storage
+  Update the metadata to record that the stripe has moved
+  copy the stripe back with the new geometry 
+  Update the metadata to record the movement
+ repeat
 
-3. i think it will be an usefull thing, set the recovery, resyncing
-order(eg. from the end of the drive to the beginning) of array, or set the
-"from" and "to" limits for it, or stop, restart(retry) this function, if it
-is possible again.
-(only experimental, it will be allow very easy to loose data.)
-This is useful in very big arrays, wich takes some days to resync.
-Yes, i know this caused to write the bitmap code, but i think the linux is
-beautiful because it is very configurable. :-)
-... i did not like the automated things, what i cannot controll....
+It certainly could be done, but I doubt the demand would be high
+enough to justify it.
 
+The situation is similar for raid5-raid6 or raid0-raid5 conversions
+that done increase the size of the array (i.e. only add one device).
+They require update-in-place which is hard to do in a way that still
+protects your data if there is a power failure.
 
-Questions:
-1. it will be possible to set/unset the --write-mostly, --write-behind
-options online?
-(i know, currently not.)
-
-2. it will be possible to create a bitmap in raid5 when it is resyncing, or
-recovering?
-
-3. it is possible to set unset the clean state of the array online? (useful
-for idea #3)
-
-4. why the md did not support raid4,5 with non-persistent superblock?
-I think the non-persistent superblock raid4 is very useful thing to easy
-upgrade (protect) from one big legacy raid0 array to raid4 with an existing
-data! :-)
-At this time i need it too. :-)
-
-Thanks,
-Janos
-
+NeilBrown
