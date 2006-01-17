@@ -1,51 +1,49 @@
-From: Brad Campbell <brad@wasp.net.au>
-Subject: Re: Expanding RAID array?
-Date: Tue, 17 Jan 2006 10:43:44 +0400
-Message-ID: <43CC9220.8000800@wasp.net.au>
-References: <1137424449.3953.38.camel@kenny> <17356.8228.325002.652805@cse.unsw.edu.au>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: NeilBrown <neilb@suse.de>
+Subject: [PATCH 000 of 5] md: Introduction
+Date: Tue, 17 Jan 2006 17:56:04 +1100
+Message-ID: <20060117174531.27739.patches@notabene>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17356.8228.325002.652805@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: John Rowe <rowe@excc.ex.ac.uk>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: "Steinar H. Gunderson" <sgunderson@bigfoot.com>
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
 
-> - add disks to convert to raid6.
->     I don't think this is possible, but you should check the latest
->     raid reconfig.
+Greetings.
 
-It's not. I started work on it Feb last year but then real life got in the way again.
-In the longer term, I think raidreconf as it stands is going to die (mainly because it's 
-infrastructure relies on the old raidtab architecture). I thought about perhaps porting it as an 
-addon to mdadm, but then I ran out of drives/machines/time to test it on.
+In line with the principle of "release early", following are 5 patches
+against md in 2.6.latest which implement reshaping of a raid5 array.
+By this I mean adding 1 or more drives to the array and then re-laying
+out all of the data.
 
->     Might be supported online with a limited raid6 in which the Q
->     syndrome (second 'parity' block) isn't rotated among disks.
+This is still EXPERIMENTAL and could easily eat your data.  Don't use it on
+valuable data.  Only use it for review and testing.
 
-In theory I would have thought it not that much different than a raid-5 expand, just inserting an 
-extra block for the Q syndrome.
+This release does not make ANY attempt to record how far the reshape
+has progressed on stable storage.  That means that if the process is
+interrupted either by a crash or by "mdadm -S", then you completely
+lose your data.  All of it.
+So don't use it on valuable data.
 
-> - status of RAID6
->     I believe it is as stable/reliable as raid5.
+There are 5 patches to (hopefully) ease review.  Comments are most
+welcome, as are test results (providing they aren't done on valuable data:-).
 
-Mine has been running since Feb last year with fairly moderate use and no hiccups.
-I have just upgraded to the latest 2.6.15-git on that machine to give some of the newer raid patches 
-(like check & repair) a whirl. Seems fairly solid.
+You will need to enable the experimental MD_RAID5_RESHAPE config option
+for this to work.  Please read the help message that come with it.  
+It gives an example mdadm command to effect a reshape (you do not need
+a new mdadm, and vaguely recent version should work).
 
-Let's say I've never had any raid-6 related data loss, or even near misses, but it has saved my 
-bacon in 2 dual drive failures in the last year.
+This code is based in part on earlier work by
+  "Steinar H. Gunderson" <sgunderson@bigfoot.com>
+Though little of his code remains, having access to it, and having
+discussed the issues with him greatly eased the processed of creating
+these patches.  Thanks Steinar.
 
-Oh, and the new read and check code (rather than just rebuild the parity blocks) shaves about 1 hour 
-of what was an 11 hour rebuild time on this particular raid-6. Thanks Neil!
+NeilBrown
 
-Regards,
-Brad
--- 
-"Human beings, who are almost unique in having the ability
-to learn from the experience of others, are also remarkable
-for their apparent disinclination to do so." -- Douglas Adams
+
+ [PATCH 001 of 5] md: Split disks array out of raid5 conf structure so it is easier to grow.
+ [PATCH 002 of 5] md: Allow stripes to be expanded in preparation for expanding an array.
+ [PATCH 003 of 5] md: Infrastructure to allow normal IO to continue while array is expanding.
+ [PATCH 004 of 5] md: Core of raid5 resize process
+ [PATCH 005 of 5] md: Final stages of raid5 expand code.
