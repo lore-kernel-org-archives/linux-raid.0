@@ -1,39 +1,45 @@
-From: Bill Cizek <cizek@rcn.com>
-Subject: Adding a device to an active RAID1 array
-Date: Wed, 18 Jan 2006 12:58:36 -0600
-Message-ID: <43CE8FDC.4020501@rcn.com>
+From: Neil Brown <neilb@suse.de>
+Subject: RE: [PATCH 000 of 5] md: Introduction
+Date: Thu, 19 Jan 2006 10:19:24 +1100
+Message-ID: <17358.52476.290687.858954@cse.unsw.edu.au>
+References: <26A66BC731DAB741837AF6B2E29C1017D47EA0@xmb-hkg-413.apac.cisco.com>
+	<Pine.LNX.4.61.0601181427090.19392@yvahk01.tjqt.qr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1161050AbWARXTh@vger.kernel.org>
+In-Reply-To: message from Jan Engelhardt on Wednesday January 18
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jan Engelhardt <jengelh@linux01.gwdg.de>
+Cc: "Lincoln Dale (ltd)" <ltd@cisco.com>, Michael Tokarev <mjt@tls.msk.ru>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, "Steinar H. Gunderson" <sgunderson@bigfoot.com>
 List-Id: linux-raid.ids
 
+On Wednesday January 18, jengelh@linux01.gwdg.de wrote:
+> 
+> >personally, I think this this useful functionality, but my personal
+> >preference is that this would be in DM/LVM2 rather than MD.  but given
+> >Neil is the MD author/maintainer, I can see why he'd prefer to do it in
+> >MD. :)
+> 
+> Why don't MD and DM merge some bits?
+> 
 
-Hi,
+Which bits?
+Why?
 
-Are there any known issues with changing the number of active devices in 
-a RAID1 array?
+My current opinion is that you should:
 
-I'm trying to add a third mirror to an existing RAID1 array of two disks.
+ Use md for raid1, raid5, raid6 - anything with redundancy.
+ Use dm for multipath, crypto, linear, LVM, snapshot
+ Use either for raid0 (I don't think dm has particular advantages
+     for md or md over dm).
 
-I have /dev/md5 as a mirrored pair of two 40 GB disks.  Directly on top 
-of it is a 40 GB XFS filesystem.
+These can be mixed together quite effectively:
+  You can have dm/lvm over md/raid1 over dm/multipath
+with no problems.
 
-When I do "mdadm --grow /dev/md5 -n 3" the count of devices changes from 
-2 to 3, as expected.
-If the XFS filesystem is mounted, the array size changes to 3.0 GB.
-If it is not mounted everything works fine.
+If there is functionality missing from any of these recommended
+components, then make a noise about it, preferably but not necessarily
+with code, and it will quite possibly be fixed.
 
-Is this supposed to work, is it required that the array be inactive to 
-add a disk, or am I just doing
-something stupid?
-
-If there is a better forum for this question, please direct me there.
-In any case TIA for any help.
-
--Bill
-
-
-
+NeilBrown
