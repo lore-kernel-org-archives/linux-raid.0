@@ -1,34 +1,33 @@
-From: Brad Campbell <brad@wasp.net.au>
-Subject: Re: RAID 1 vs RAID 0
-Date: Wed, 18 Jan 2006 12:40:28 +0400
-Message-ID: <43CDFEFC.5070109@wasp.net.au>
-References: <dqkie5$mf2$3@sea.gmane.org> <Pine.LNX.4.44.0601180228370.2456-100000@coffee.psychology.mcmaster.ca> <dqksi3$mf2$5@sea.gmane.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 000 of 5] md: Introduction
+Date: Wed, 18 Jan 2006 09:03:22 +0000
+Message-ID: <1137575002.25819.3.camel@localhost.localdomain>
+References: <20060117174531.27739.patches@notabene>
+	 <43CCA80B.4020603@tls.msk.ru>
+	 <20060117095019.GA27262@localhost.localdomain>
+	 <43CCD453.9070900@tls.msk.ru> <20060117160829.GA16606@lug.udel.edu>
+	 <43CD3388.9050107@tls.msk.ru>
+	 <20060118081407.GC18945@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <dqksi3$mf2$5@sea.gmane.org>
+In-Reply-To: <20060118081407.GC18945@localhost.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: Max Waterman <davidmaxwaterman+gmane@fastmail.co.uk>
-Cc: linux-raid@vger.kernel.org
+To: sander@humilis.net
+Cc: Michael Tokarev <mjt@tls.msk.ru>, Ross Vandegrift <ross@jose.lug.udel.edu>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Max Waterman wrote:
-> 
-> Still, it seems like it should be a solvable problem...if you order the 
-> data differently on each disk; for example, in the two disk case, 
-> putting odd and even numbered 'stripes' on different platters [or sides 
-> of platters].
-> 
+On Mer, 2006-01-18 at 09:14 +0100, Sander wrote:
+> If the (harddisk internal) remap succeeded, the OS doesn't see the bad
+> sector at all I believe.
 
-The only problem there is determining the internal geometry of the disk, and knowing that each disk 
-is probably different. How do you know which logical sector number correlates to which surface and 
-where abouts on the surface? Just thinking about it makes my brain hurt.
+True for ATA, in the SCSI case you may be told about the remap having
+occurred but its a "by the way" type message not an error proper.
 
-Not like the good old days of the old stepper disks.
+> If you (the OS) do see a bad sector, the disk couldn't remap, and goes
+> downhill from there, right?
 
-Brad
--- 
-"Human beings, who are almost unique in having the ability
-to learn from the experience of others, are also remarkable
-for their apparent disinclination to do so." -- Douglas Adams
+If a hot spare is configured it will be dropped into the configuration
+at that point.
+
