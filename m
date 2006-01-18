@@ -1,36 +1,30 @@
-From: Sander <sander@humilis.net>
-Subject: Re: [PATCH 000 of 5] md: Introduction
-Date: Wed, 18 Jan 2006 09:14:07 +0100
-Message-ID: <20060118081407.GC18945@localhost.localdomain>
-References: <20060117174531.27739.patches@notabene> <43CCA80B.4020603@tls.msk.ru> <20060117095019.GA27262@localhost.localdomain> <43CCD453.9070900@tls.msk.ru> <20060117160829.GA16606@lug.udel.edu> <43CD3388.9050107@tls.msk.ru>
-Reply-To: sander@humilis.net
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
+Subject: Re: paralellism of device use in md
+Date: Wed, 18 Jan 2006 09:16:30 +0100
+Message-ID: <dqktgu$fea$1@sea.gmane.org>
+References: <20060117120927.GU7017@strugglers.net> <43CD8A73.90703@nsr500.net> <dqkrfm$9k9$1@sea.gmane.org>
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <43CD3388.9050107@tls.msk.ru>
 Sender: linux-raid-owner@vger.kernel.org
-To: Michael Tokarev <mjt@tls.msk.ru>
-Cc: Ross Vandegrift <ross@lug.udel.edu>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Michael Tokarev wrote (ao):
-> Most problematic case so far, which I described numerous times (like,
-> "why linux raid isn't Raid really, why it can be worse than plain
-> disk") is when, after single sector read failure, md kicks the whole
-> disk off the array, and when you start resync (after replacing the
-> "bad" drive or just remapping that bad sector or even doing nothing,
-> as it will be remapped in almost all cases during write, on real
-> drives anyway),
+Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE> wrote:
+> scheduled read-requests. Would it probably make sense to split one
+> single read over all mirrors that are currently idle?
 
-If the (harddisk internal) remap succeeded, the OS doesn't see the bad
-sector at all I believe.
+A I got it from the other thread - seek times :)
+Perhaps using some big (virtual) chunk size could do the trick? What
+about using chunks that big that seeking is faster than data-transfer...
+assuming a data rate of 50MB/s and 9ms average seek time would result in
+at least 500kB chunks, 14ms average seek time would result in at least
+750kB chunks.
+However, since the blocks being read are most likely somewhat close
+together, it's not a typical average seek, so probably smaller chunks
+would also be possible.
 
-If you (the OS) do see a bad sector, the disk couldn't remap, and goes
-downhill from there, right?
 
-	Sander
-
+regards
+   Mario
 -- 
-Humilis IT Services and Solutions
-http://www.humilis.net
+<Sique> Huch? 802.1q? Was sucht das denn hier? Wie kommt das ans TAGgeslicht?
+
