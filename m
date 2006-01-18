@@ -1,31 +1,61 @@
-From: Gordon Henderson <gordon@drogon.net>
-Subject: Re: [PATCH 000 of 5] md: Introduction
-Date: Wed, 18 Jan 2006 12:51:01 +0000 (GMT)
-Message-ID: <Pine.LNX.4.56.0601181248460.19220@lion.drogon.net>
-References: <20060117174531.27739.patches@notabene> <43CCA80B.4020603@tls.msk.ru>
- <20060117095019.GA27262@localhost.localdomain> <43CCD453.9070900@tls.msk.ru>
- <20060117160829.GA16606@lug.udel.edu> <43CD3388.9050107@tls.msk.ru>
- <20060118081407.GC18945@localhost.localdomain> <43CE3898.7090207@xs4all.nl>
+From: John Hendrikx <hjohn@xs4all.nl>
+Subject: Re: RAID 1 vs RAID 0
+Date: Wed, 18 Jan 2006 14:02:13 +0100
+Message-ID: <43CE3C55.4050204@xs4all.nl>
+References: <dqkie5$mf2$3@sea.gmane.org> <Pine.LNX.4.44.0601180228370.2456-100000@coffee.psychology.mcmaster.ca> <dqksi3$mf2$5@sea.gmane.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <43CE3898.7090207@xs4all.nl>
+In-Reply-To: <dqksi3$mf2$5@sea.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Max Waterman <davidmaxwaterman+gmane@fastmail.co.uk>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 18 Jan 2006, John Hendrikx wrote:
+Max Waterman wrote:
+> Mark Hahn wrote:
+>>> They seem to suggest RAID 0 is faster for reading than RAID 1, and I 
+>>> can't figure out why.
+>>
+>> with R0, streaming from two disks involves no seeks;
+>> with R1, a single stream will have to read, say 0-64K from the first 
+>> disk,
+>> and 64-128K from the second.  these could happen at the same time, 
+>> and would indeed match R0 bandwidth.  but with R1, each disk has to 
+>> seek past
+>> the blocks being read from the other disk.  seeking tends to be slow...
+>
+> Ah, a good way of putting it...I think I was pretty much there with my 
+> followup message.
+>
+> Still, it seems like it should be a solvable problem...if you order 
+> the data differently on each disk; for example, in the two disk case, 
+> putting odd and even numbered 'stripes' on different platters [or 
+> sides of platters].
+I don't think the example above is really that much of an issue.  AFAIK, 
+most hard disks will read the current track (all platters) at once as 
+soon as the heads are positioned.  It doesn't even wait for the start of 
+the track, it just starts reading as soon as possible and stores all of 
+it in the internal buffer (it will determine the real start of the track 
+by looking for markers in the buffer).  It will then return the data 
+from the buffer.
 
-> I agree with the original poster though, I'd really love to see Linux
-> Raid take special action on sector read failures.  It happens about 5-6
-> times a year here that a disk gets kicked out of the array for a simple
-> read failure.  A rebuild of the array will fix it without a trace, but a
-> rebuild takes about 3 hours :)
+Anyway, the track buffer is quite large because it needs to be able to 
+hold the data from an entire track, which is usually quite a bit larger 
+than the stripe size (I'd say around 1 to 2 MB).  It's highly unlikely 
+that your hard disk will need to seek to read 0-64k, then 128-192k, then 
+256-320k, and so on.  There's a good chance that all of that data is 
+stored on the same track and can be returned directly from the buffer.  
+Even if a seek is required, it would only be a seek of 1 track which are 
+relatively fast compared to a random seek.
 
-One thing that's well worth doing before simply fail/remove/add the drive
-with the bad sector, is to do a read-only test on the other
-drives/paritions in the rest of the set. That way you won't find out
-half-way through the resync that other drives have failures, and then lose
-the lot. It adds time to the whole operation, but it's worth it IMO.
+The only reason I could think of why a mirror would be slower than a 
+stripe is the fact that about twice as many single track seeks are 
+needed when reading huge files.  That can be avoided if you increase the 
+size of the reads significantly though (for example, reading the 1st 
+half of the file from one disk, and the 2nd half of the file from the 
+other).
 
-Gordon
+--John
+
