@@ -1,39 +1,42 @@
-From: Mark Hahn <hahn@physics.mcmaster.ca>
-Subject: Re: RAID 1 vs RAID 0
-Date: Wed, 18 Jan 2006 02:40:04 -0500 (EST)
-Message-ID: <Pine.LNX.4.44.0601180228370.2456-100000@coffee.psychology.mcmaster.ca>
-References: <dqkie5$mf2$3@sea.gmane.org>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+From: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
+Subject: Re: paralellism of device use in md
+Date: Wed, 18 Jan 2006 08:41:42 +0100
+Message-ID: <dqkrfm$9k9$1@sea.gmane.org>
+References: <20060117120927.GU7017@strugglers.net> <43CD8A73.90703@nsr500.net>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <dqkie5$mf2$3@sea.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Max Waterman <davidmaxwaterman+gmane@fastmail.co.uk>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> They seem to suggest RAID 0 is faster for reading than RAID 1, and I 
-> can't figure out why.
+Tim Moore <linux-raid@nsr500.net> wrote:
+> Andy Smith wrote:
+>> Are reads from a 2 device RAID-1 twice as fast as from a single
+> md14 : active raid0 sdb13[1] sda13[0]
+> md13 : active raid1 sdb12[1] sda12[0]
+>
+> /dev/md14:
+>   Timing buffered disk reads:  272 MB in  3.01 seconds =  90.37 MB/sec
+> /dev/md13:
+>   Timing buffered disk reads:  164 MB in  3.00 seconds =  54.67 MB/sec
 
-with R0, streaming from two disks involves no seeks;
-with R1, a single stream will have to read, say 0-64K from the first disk,
-and 64-128K from the second.  these could happen at the same time, and 
-would indeed match R0 bandwidth.  but with R1, each disk has to seek past
-the blocks being read from the other disk.  seeking tends to be slow...
+And this is exactly the strange thing which I'm also experiencing and
+which was asked a lot of times on this list already, IIRC.
 
-> Clearly, the write performance is worse for RAID 1 than RAID 0 since 
-> with RAID 1 that data you are writing at the same time is the same for 
-> both drives;
+Why is the single-stream read-performance of a RAID1 so much worse than
+the read-performance of a RAID0. A RAID1 should easily be able to gain
+(or perhaps even advance, since it's not bound to chunk borders) the
+read-performance of a RAID0.
 
-the cost for doing the double writes in R1 is not high, unless you've 
-already got a bottleneck somewhere that limits you to talking to one disk
-at a time.  for instance, R1 to a pair of disks at 50 MB/s apiece is 
-basically trivial for a decent server, since it's about 1% of memory
-bandwidth, and a smallish fraction of even plain old 64x66 PCI.
+As far as I can see, RAID1 only does that in case of lots of parallel
+scheduled read-requests. Would it probably make sense to split one
+single read over all mirrors that are currently idle?
 
-> array has more than two disks, that would make RAID 1 *faster* than RAID 0.
 
-R1 is not going to be faster than R0 on the same number of disks.
-
-regards, mark hahn.
+regards
+   Mario
+-- 
+I've never been certain whether the moral of the Icarus story should
+only be, as is generally accepted, "Don't try to fly too high," or
+whether it might also be thought of as, "Forget the wax and feathers
+and do a better job on the wings."            -- Stanley Kubrick
 
