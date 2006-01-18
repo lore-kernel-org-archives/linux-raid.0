@@ -1,41 +1,29 @@
-From: Andy Smith <andy@lug.org.uk>
-Subject: Re: paralellism of device use in md
-Date: Wed, 18 Jan 2006 09:50:52 +0000
-Message-ID: <20060118095052.GG7017@strugglers.net>
-References: <20060117120927.GU7017@strugglers.net>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="W9vGU1oaykqH3YL2"
+From: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
+Subject: Re: RAID 1 vs RAID 0
+Date: Wed, 18 Jan 2006 11:33:22 +0100
+Message-ID: <dql5hi$ald$1@sea.gmane.org>
+References: <dqkie5$mf2$3@sea.gmane.org> <Pine.LNX.4.44.0601180228370.2456-100000@coffee.psychology.mcmaster.ca> <dqksi3$mf2$5@sea.gmane.org>
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20060117120927.GU7017@strugglers.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Max Waterman <davidmaxwaterman+gmane@fastmail.co.uk> wrote:
+> Still, it seems like it should be a solvable problem...if you order the 
+> data differently on each disk; for example, in the two disk case, 
+> putting odd and even numbered 'stripes' on different platters [or sides 
 
---W9vGU1oaykqH3YL2
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Well, unfortunately for todays hard disks the OS doesn't know anything
+anymore about platters, cylinders, sectors, zones etc.
+Furthermore, such an attempt would break the (really nice!) ability to
+use each single RAID1 mirror as a plain blockdevice with a plain
+filesystem on it.
 
-On Tue, Jan 17, 2006 at 12:09:27PM +0000, Andy Smith wrote:
-> I'm wondering: how well does md currently make use of the fact there
-> are multiple devices in the different (non-parity) RAID levels for
-> optimising reading and writing?
 
-Thanks all for your answers.
+regards
+   Mario
+-- 
+It is a capital mistake to theorize before one has data.
+Insensibly one begins to twist facts to suit theories instead of theories
+to suit facts.                   -- Sherlock Holmes by Arthur Conan Doyle
 
---W9vGU1oaykqH3YL2
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-
-iD8DBQFDzg98IJm2TL8VSQsRAlRYAJ9YIvjX8b57XoyTos28LeJpVzZeiwCfaziY
-bz7APq0kdGbx4J1sr1YBsEY=
-=2mwB
------END PGP SIGNATURE-----
-
---W9vGU1oaykqH3YL2--
