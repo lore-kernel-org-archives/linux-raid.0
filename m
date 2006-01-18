@@ -1,30 +1,48 @@
-From: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
-Subject: Re: paralellism of device use in md
-Date: Wed, 18 Jan 2006 09:16:30 +0100
-Message-ID: <dqktgu$fea$1@sea.gmane.org>
-References: <20060117120927.GU7017@strugglers.net> <43CD8A73.90703@nsr500.net> <dqkrfm$9k9$1@sea.gmane.org>
+From: Brad Campbell <brad@wasp.net.au>
+Subject: Re: [PATCH 000 of 5] md: Introduction
+Date: Wed, 18 Jan 2006 12:37:11 +0400
+Message-ID: <43CDFE37.504@wasp.net.au>
+References: <20060117174531.27739.patches@notabene> <43CCA80B.4020603@tls.msk.ru> <20060117095019.GA27262@localhost.localdomain> <43CCD453.9070900@tls.msk.ru> <20060117160829.GA16606@lug.udel.edu> <43CD3388.9050107@tls.msk.ru> <20060118081407.GC18945@localhost.localdomain>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20060118081407.GC18945@localhost.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: sander@humilis.net
+Cc: Michael Tokarev <mjt@tls.msk.ru>, Ross Vandegrift <ross@lug.udel.edu>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE> wrote:
-> scheduled read-requests. Would it probably make sense to split one
-> single read over all mirrors that are currently idle?
+linux-kernel snipped from cc list.
 
-A I got it from the other thread - seek times :)
-Perhaps using some big (virtual) chunk size could do the trick? What
-about using chunks that big that seeking is faster than data-transfer...
-assuming a data rate of 50MB/s and 9ms average seek time would result in
-at least 500kB chunks, 14ms average seek time would result in at least
-750kB chunks.
-However, since the blocks being read are most likely somewhat close
-together, it's not a typical average seek, so probably smaller chunks
-would also be possible.
+Sander wrote:
+> Michael Tokarev wrote (ao):
+>> Most problematic case so far, which I described numerous times (like,
+>> "why linux raid isn't Raid really, why it can be worse than plain
+>> disk") is when, after single sector read failure, md kicks the whole
+>> disk off the array, and when you start resync (after replacing the
+>> "bad" drive or just remapping that bad sector or even doing nothing,
+>> as it will be remapped in almost all cases during write, on real
+>> drives anyway),
 
+This particular case has been addressed in the latest kernels. md will now attempt to write the bad 
+block back using reconstructed data and the disk will only be punted after multiple failures or a 
+write failure (if my understanding of the patches is any good anyway)
 
-regards
-   Mario
+> If the (harddisk internal) remap succeeded, the OS doesn't see the bad
+> sector at all I believe.
+
+If the disk can get a good read then it will re-map on the fly and the OS has no idea there was an 
+issue. If not then it returns a read error to the OS. When that sector is next written it will be 
+re-mapped by the drive and the error disappears.
+
+> If you (the OS) do see a bad sector, the disk couldn't remap, and goes
+> downhill from there, right?
+
+With the older md code, yes, however as stated above this should almost become a non-issue now. (yay!)
+
+Brad
 -- 
-<Sique> Huch? 802.1q? Was sucht das denn hier? Wie kommt das ans TAGgeslicht?
-
+"Human beings, who are almost unique in having the ability
+to learn from the experience of others, are also remarkable
+for their apparent disinclination to do so." -- Douglas Adams
