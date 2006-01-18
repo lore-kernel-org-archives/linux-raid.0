@@ -1,52 +1,57 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: RAID 1 vs RAID 0
-Date: Wed, 18 Jan 2006 22:43:04 +1100
-Message-ID: <17358.10696.538733.693819@cse.unsw.edu.au>
-References: <dqkie5$mf2$3@sea.gmane.org>
-	<Pine.LNX.4.44.0601180228370.2456-100000@coffee.psychology.mcmaster.ca>
-	<dqksi3$mf2$5@sea.gmane.org>
+From: John Hendrikx <hjohn@xs4all.nl>
+Subject: Re: [PATCH 000 of 5] md: Introduction
+Date: Wed, 18 Jan 2006 13:46:16 +0100
+Message-ID: <43CE3898.7090207@xs4all.nl>
+References: <20060117174531.27739.patches@notabene> <43CCA80B.4020603@tls.msk.ru> <20060117095019.GA27262@localhost.localdomain> <43CCD453.9070900@tls.msk.ru> <20060117160829.GA16606@lug.udel.edu> <43CD3388.9050107@tls.msk.ru> <20060118081407.GC18945@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Max Waterman on Wednesday January 18
+In-Reply-To: <20060118081407.GC18945@localhost.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: Max Waterman <davidmaxwaterman+gmane@fastmail.co.uk>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday January 18, davidmaxwaterman+gmane@fastmail.co.uk wrote:
-> Mark Hahn wrote:
-> >> They seem to suggest RAID 0 is faster for reading than RAID 1, and I 
-> >> can't figure out why.
-> > 
-> > with R0, streaming from two disks involves no seeks;
-> > with R1, a single stream will have to read, say 0-64K from the first disk,
-> > and 64-128K from the second.  these could happen at the same time, and 
-> > would indeed match R0 bandwidth.  but with R1, each disk has to seek past
-> > the blocks being read from the other disk.  seeking tends to be slow...
-> 
-> Ah, a good way of putting it...I think I was pretty much there with my 
-> followup message.
-> 
-> Still, it seems like it should be a solvable problem...if you order the 
-> data differently on each disk; for example, in the two disk case, 
-> putting odd and even numbered 'stripes' on different platters [or sides 
-> of platters].
+Sander wrote:
+> Michael Tokarev wrote (ao):
+>   
+>> Most problematic case so far, which I described numerous times (like,
+>> "why linux raid isn't Raid really, why it can be worse than plain
+>> disk") is when, after single sector read failure, md kicks the whole
+>> disk off the array, and when you start resync (after replacing the
+>> "bad" drive or just remapping that bad sector or even doing nothing,
+>> as it will be remapped in almost all cases during write, on real
+>> drives anyway),
+>>     
+>
+> If the (harddisk internal) remap succeeded, the OS doesn't see the bad
+> sector at all I believe.
+>   
+Most hard disks will not remap sectors when reading fails, because then 
+the contents would be lost permanently. 
 
-raid10 'far' mode is exactly designed to address this issue.
-If you create a raid10 with 2 drives and a layout of 'f2':
+Instead, they will report a failure to the OS, hoping that the sector 
+might be readable at some later time.
 
-  mdadm -C /dev/mdX --level=10 --layout=f2 --raid-disks=2 /dev/XX /dev/YY
+What Linux Raid could do is reconstructing the sector that failed from 
+the other drives and then writing it to disk.  Because the original 
+contents of the sector will be lost on writing, your hard disk can 
+safely remap the sector (and it will -- I often "repaired" bad sectors 
+by writing to them).
 
-then reads should be comparable to a raid0 of 2 drives, but you still
-get raid1 protections.
-Writes may be substantially slower though I haven't measured to be
-sure.
+> If you (the OS) do see a bad sector, the disk couldn't remap, and goes
+> downhill from there, right?
+>   
+Not necessarily, if you see a bad sector after *writing* to it (several 
+times), then your hard disk will probably go bad soon.  Most hard disks 
+only remap sectors on write, so a simple full format can fix sectors 
+that failed on read.
 
-It doesn't do "different sides of platters" as that is not possible
-with modern drives (you have no knowledge and no control).  It does
-different 'ends' of the drive.
+I agree with the original poster though, I'd really love to see Linux 
+Raid take special action on sector read failures.  It happens about 5-6 
+times a year here that a disk gets kicked out of the array for a simple 
+read failure.  A rebuild of the array will fix it without a trace, but a 
+rebuild takes about 3 hours :)
 
-NeilBrown
+--John
 
