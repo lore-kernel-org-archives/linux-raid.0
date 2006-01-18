@@ -1,55 +1,46 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: paralellism of device use in md
-Date: Thu, 19 Jan 2006 10:34:28 +1100
-Message-ID: <17358.53380.670707.439455@cse.unsw.edu.au>
-References: <20060117120927.GU7017@strugglers.net>
-	<43CD8A73.90703@nsr500.net>
-	<dqkrfm$9k9$1@sea.gmane.org>
-	<dqktgu$fea$1@sea.gmane.org>
-	<fd8d0180601180955j691f5d2bn@mail.gmail.com>
+Subject: Re: [PATCH 000 of 5] md: Introduction
+Date: Thu, 19 Jan 2006 10:51:42 +1100
+Message-ID: <17358.54414.410350.594083@cse.unsw.edu.au>
+References: <20060117174531.27739.patches@notabene>
+	<43CCA80B.4020603@tls.msk.ru>
+	<20060117095019.GA27262@localhost.localdomain>
+	<43CCD453.9070900@tls.msk.ru>
+	<20060117160829.GA16606@lug.udel.edu>
+	<43CD3388.9050107@tls.msk.ru>
+	<20060118081407.GC18945@localhost.localdomain>
+	<43CE3898.7090207@xs4all.nl>
+	<Pine.LNX.4.56.0601181248460.19220@lion.drogon.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Francois Barre on Wednesday January 18
+In-Reply-To: message from Gordon Henderson on Wednesday January 18
 Sender: linux-raid-owner@vger.kernel.org
-To: Francois Barre <francois.barre@gmail.com>
+To: Gordon Henderson <gordon@drogon.net>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday January 18, francois.barre@gmail.com wrote:
-> 2006/1/18, Mario 'BitKoenig' Holbe <Mario.Holbe@tu-ilmenau.de>:
-> > Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE> wrote:
-> > > scheduled read-requests. Would it probably make sense to split one
-> > > single read over all mirrors that are currently idle?
-> >
-> > A I got it from the other thread - seek times :)
-> > Perhaps using some big (virtual) chunk size could do the trick? What
-> > about using chunks that big that seeking is faster than data-transfer...
-> > assuming a data rate of 50MB/s and 9ms average seek time would result in
-> > at least 500kB chunks, 14ms average seek time would result in at least
-> > 750kB chunks.
-> > However, since the blocks being read are most likely somewhat close
-> > together, it's not a typical average seek, so probably smaller chunks
-> > would also be possible.
-> >
-> >
-> > regards
-> >   Mario
+On Wednesday January 18, gordon@drogon.net wrote:
+> On Wed, 18 Jan 2006, John Hendrikx wrote:
 > 
-> Stop me if I'm wrong, but this is called... huge readahead. Instead of
-> reading 32k on drive0 then 32k on drive1, you read continuous 512k
-> from drive0 (16*32k) and 512k from drive1, resulting in a 1M read.
-> Maybe for a single 4k page...
+> > I agree with the original poster though, I'd really love to see Linux
+> > Raid take special action on sector read failures.  It happens about 5-6
+> > times a year here that a disk gets kicked out of the array for a simple
+> > read failure.  A rebuild of the array will fix it without a trace, but a
+> > rebuild takes about 3 hours :)
 > 
-> So my additionnal question to this would be : how well does md fit
-> with linux's/fs readahead policies ?
+> One thing that's well worth doing before simply fail/remove/add the drive
+> with the bad sector, is to do a read-only test on the other
+> drives/paritions in the rest of the set. That way you won't find out
+> half-way through the resync that other drives have failures, and then lose
+> the lot. It adds time to the whole operation, but it's worth it IMO.
 
-The read balancing in raid1 is clunky at best.  I've often thought
-"there must be a better way".  I've never thought what the better way
-might be (though I haven't tried very hard).
+But what do you do if the read-only test fails... I guess you try to
+reconstruct using the nearly-failed drive...
 
-If anyone would like to experiment with the read-balancing code,
-suggest and test changes, it would be most welcome.
+What might be good and practical is to not remove a failed drive
+completely, but to hold on to it and only read from it in desperation
+while reconstructing a spare.  That might be worth the effort...
 
 NeilBrown
