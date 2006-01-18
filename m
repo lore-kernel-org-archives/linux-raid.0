@@ -1,89 +1,39 @@
-From: Max Waterman <davidmaxwaterman+gmane@fastmail.co.uk>
+From: Mark Hahn <hahn@physics.mcmaster.ca>
 Subject: Re: RAID 1 vs RAID 0
-Date: Wed, 18 Jan 2006 13:20:44 +0800
-Message-ID: <dqkj7c$mf2$4@sea.gmane.org>
+Date: Wed, 18 Jan 2006 02:40:04 -0500 (EST)
+Message-ID: <Pine.LNX.4.44.0601180228370.2456-100000@coffee.psychology.mcmaster.ca>
 References: <dqkie5$mf2$3@sea.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <dqkie5$mf2$3@sea.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Max Waterman <davidmaxwaterman+gmane@fastmail.co.uk>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Ah, it's something to with RAID1 drives having to skip blocks that are 
-read from the other drives, right?
-
-i.e., it's about the head having to move further, instead of to just the 
-next block? I suppose that's only important for sequential reads, and it 
-would be 'fixed' to some extent by the drives' cache...
-
-Max.
-
-Max Waterman wrote:
-> Hi,
-> 
-> I've been reading a bit about RAID 1 vs RAID 0 on these pages :
-> 
-> <http://www.pcguide.com/ref/hdd/perf/raid/levels/single_Level1.htm>
-> 
 > They seem to suggest RAID 0 is faster for reading than RAID 1, and I 
 > can't figure out why.
-> 
+
+with R0, streaming from two disks involves no seeks;
+with R1, a single stream will have to read, say 0-64K from the first disk,
+and 64-128K from the second.  these could happen at the same time, and 
+would indeed match R0 bandwidth.  but with R1, each disk has to seek past
+the blocks being read from the other disk.  seeking tends to be slow...
+
 > Clearly, the write performance is worse for RAID 1 than RAID 0 since 
 > with RAID 1 that data you are writing at the same time is the same for 
-> both drives; but for reading, why can't the two drives be read as if 
-> they were a stripe.
-> 
-> You could even read the stripe in any 'direction'...when the RAID 1 
+> both drives;
+
+the cost for doing the double writes in R1 is not high, unless you've 
+already got a bottleneck somewhere that limits you to talking to one disk
+at a time.  for instance, R1 to a pair of disks at 50 MB/s apiece is 
+basically trivial for a decent server, since it's about 1% of memory
+bandwidth, and a smallish fraction of even plain old 64x66 PCI.
+
 > array has more than two disks, that would make RAID 1 *faster* than RAID 0.
-> 
-> ie
-> 
-> RAID 0
-> file is like this
-> 0 1 2 3 4
-> 
-> can only be read in that order :
-> 0 1 2 3 4 but
-> 
-> RAID 1
-> file is like this
-> A B C D E
-> ---------
-> 0 0 0 0 0
-> 1 1 1 1 1
-> 2 2 2 2 2
-> 3 3 3 3 3
-> 4 4 4 4 4
-> 
-> can be read as
-> A B C D E
-> 0
->   1
->     2
->       3
->         4
-> 
-> or
-> 1
->   0
->     3
->       4
->         2
-> 
-> or whatever...
-> 
-> Could it not help with small files and when not streaming?
-> 
-> Am I missing something?
-> 
-> Max.
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+
+R1 is not going to be faster than R0 on the same number of disks.
+
+regards, mark hahn.
 
