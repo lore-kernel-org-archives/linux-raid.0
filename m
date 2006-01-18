@@ -1,69 +1,55 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: Adding a device to an active RAID1 array
-Date: Thu, 19 Jan 2006 10:31:18 +1100
-Message-ID: <17358.53190.557928.948108@cse.unsw.edu.au>
-References: <43CE8FDC.4020501@rcn.com>
+Subject: Re: paralellism of device use in md
+Date: Thu, 19 Jan 2006 10:34:28 +1100
+Message-ID: <17358.53380.670707.439455@cse.unsw.edu.au>
+References: <20060117120927.GU7017@strugglers.net>
+	<43CD8A73.90703@nsr500.net>
+	<dqkrfm$9k9$1@sea.gmane.org>
+	<dqktgu$fea$1@sea.gmane.org>
+	<fd8d0180601180955j691f5d2bn@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Bill Cizek on Wednesday January 18
+In-Reply-To: message from Francois Barre on Wednesday January 18
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Cizek <cizek@rcn.com>
+To: Francois Barre <francois.barre@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday January 18, cizek@rcn.com wrote:
+On Wednesday January 18, francois.barre@gmail.com wrote:
+> 2006/1/18, Mario 'BitKoenig' Holbe <Mario.Holbe@tu-ilmenau.de>:
+> > Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE> wrote:
+> > > scheduled read-requests. Would it probably make sense to split one
+> > > single read over all mirrors that are currently idle?
+> >
+> > A I got it from the other thread - seek times :)
+> > Perhaps using some big (virtual) chunk size could do the trick? What
+> > about using chunks that big that seeking is faster than data-transfer...
+> > assuming a data rate of 50MB/s and 9ms average seek time would result in
+> > at least 500kB chunks, 14ms average seek time would result in at least
+> > 750kB chunks.
+> > However, since the blocks being read are most likely somewhat close
+> > together, it's not a typical average seek, so probably smaller chunks
+> > would also be possible.
+> >
+> >
+> > regards
+> >   Mario
 > 
-> Hi,
+> Stop me if I'm wrong, but this is called... huge readahead. Instead of
+> reading 32k on drive0 then 32k on drive1, you read continuous 512k
+> from drive0 (16*32k) and 512k from drive1, resulting in a 1M read.
+> Maybe for a single 4k page...
 > 
-> Are there any known issues with changing the number of active devices in 
-> a RAID1 array?
+> So my additionnal question to this would be : how well does md fit
+> with linux's/fs readahead policies ?
 
-There is now, thanks.
+The read balancing in raid1 is clunky at best.  I've often thought
+"there must be a better way".  I've never thought what the better way
+might be (though I haven't tried very hard).
 
-> 
-> I'm trying to add a third mirror to an existing RAID1 array of two disks.
-> 
-> I have /dev/md5 as a mirrored pair of two 40 GB disks.  Directly on top 
-> of it is a 40 GB XFS filesystem.
-> 
-> When I do "mdadm --grow /dev/md5 -n 3" the count of devices changes from 
-> 2 to 3, as expected.
-> If the XFS filesystem is mounted, the array size changes to 3.0 GB.
-> If it is not mounted everything works fine.
-> 
-> Is this supposed to work, is it required that the array be inactive to 
-> add a disk, or am I just doing
-> something stupid?
-
-It is supposed to work, it doesn't, but it is the code doing something
-stupid, not you.
-Try the patch below.
-
-> 
-> If there is a better forum for this question, please direct me there.
-> In any case TIA for any help.
-
-This is exactly the correct forum.
+If anyone would like to experiment with the read-balancing code,
+suggest and test changes, it would be most welcome.
 
 NeilBrown
-
-Signed-off-by: Neil Brown <neilb@suse.de>
-
-### Diffstat output
- ./drivers/md/md.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff ./drivers/md/md.c~current~ ./drivers/md/md.c
---- ./drivers/md/md.c~current~	2006-01-17 17:42:31.000000000 +1100
-+++ ./drivers/md/md.c	2006-01-19 10:29:46.000000000 +1100
-@@ -3488,7 +3488,7 @@ static int update_raid_disks(mddev_t *md
- 		bdev = bdget_disk(mddev->gendisk, 0);
- 		if (bdev) {
- 			mutex_lock(&bdev->bd_inode->i_mutex);
--			i_size_write(bdev->bd_inode, mddev->array_size << 10);
-+			i_size_write(bdev->bd_inode, (loff_t)mddev->array_size << 10);
- 			mutex_unlock(&bdev->bd_inode->i_mutex);
- 			bdput(bdev);
- 		}
