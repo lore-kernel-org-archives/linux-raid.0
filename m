@@ -1,31 +1,23 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH 000 of 5] md: Introduction
-Date: Fri, 20 Jan 2006 09:32:51 +1100
-Message-ID: <17360.5011.975665.371008@cse.unsw.edu.au>
-References: <26A66BC731DAB741837AF6B2E29C1017D47EA0@xmb-hkg-413.apac.cisco.com>
-	<Pine.LNX.4.61.0601181427090.19392@yvahk01.tjqt.qr>
-	<17358.52476.290687.858954@cse.unsw.edu.au>
-	<43D00FFA.1040401@cfl.rr.com>
+From: PFC <lists@peufeu.com>
+Subject: Re: raid reconstruction speed
+Date: Thu, 19 Jan 2006 23:37:41 +0100
+Message-ID: <op.s3nc43g4cigqcu@apollo13>
+References: <op.s3mjqms2i22er4@xray.bmc.uu.se> <op.s3m7n1pucigqcu@apollo13> <op.s3m9znsqcigqcu@apollo13> <17360.4708.429259.765358@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; format=flowed; delsp=yes; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Phillip Susi on Thursday January 19
+In-Reply-To: <17360.4708.429259.765358@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phillip Susi <psusi@cfl.rr.com>
-Cc: Jan Engelhardt <jengelh@linux01.gwdg.de>, "Lincoln Dale (ltd)" <ltd@cisco.com>, Michael Tokarev <mjt@tls.msk.ru>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, "Steinar H. Gunderson" <sgunderson@bigfoot.com>
+To: Neil Brown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thursday January 19, psusi@cfl.rr.com wrote:
-> I'm currently of the opinion that dm needs a raid5 and raid6 module 
-> added, then the user land lvm tools fixed to use them, and then you 
-> could use dm instead of md.  The benefit being that dm pushes things 
-> like volume autodetection and management out of the kernel to user space 
-> where it belongs.  But that's just my opinion...
+> What kernel are you using?
+>
+> NeilBrown
 
-The in-kernel autodetection in md is purely legacy support as far as I
-am concerned.  md does volume detection in user space via 'mdadm'.
+Kernel version : 2.6.15-gentoo
 
-What other "things like" were you thinking of.
-
-NeilBrown
+Yes, it's strange... Not very annoying, as the rebuild is finished already  
+(at 40 MB/s it was short), but strange.
