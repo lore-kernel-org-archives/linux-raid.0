@@ -1,45 +1,42 @@
-From: Phillip Susi <psusi@cfl.rr.com>
-Subject: Re: [PATCH 000 of 5] md: Introduction
-Date: Thu, 19 Jan 2006 17:17:30 -0500
-Message-ID: <43D00FFA.1040401@cfl.rr.com>
-References: <26A66BC731DAB741837AF6B2E29C1017D47EA0@xmb-hkg-413.apac.cisco.com> <Pine.LNX.4.61.0601181427090.19392@yvahk01.tjqt.qr> <17358.52476.290687.858954@cse.unsw.edu.au>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: raid reconstruction speed
+Date: Fri, 20 Jan 2006 09:27:48 +1100
+Message-ID: <17360.4708.429259.765358@cse.unsw.edu.au>
+References: <op.s3mjqms2i22er4@xray.bmc.uu.se>
+	<op.s3m7n1pucigqcu@apollo13>
+	<op.s3m9znsqcigqcu@apollo13>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17358.52476.290687.858954@cse.unsw.edu.au>
+In-Reply-To: message from PFC on Thursday January 19
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Jan Engelhardt <jengelh@linux01.gwdg.de>, "Lincoln Dale (ltd)" <ltd@cisco.com>, Michael Tokarev <mjt@tls.msk.ru>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, "Steinar H. Gunderson" <sgunderson@bigfoot.com>
+To: PFC <lists@peufeu.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-I'm currently of the opinion that dm needs a raid5 and raid6 module 
-added, then the user land lvm tools fixed to use them, and then you 
-could use dm instead of md.  The benefit being that dm pushes things 
-like volume autodetection and management out of the kernel to user space 
-where it belongs.  But that's just my opinion...
+On Thursday January 19, lists@peufeu.com wrote:
+> 
+> 	Sorry for flooding ;)
+> 
+> 	I have the following configuration :
+> 	- two disks (hda and sda)
+> 	- each disk has 2 partitions (hda1/sda1) and (hda2/sda2)
+> 	- two raid1 md devices are made :
+> 	md0 = sda1 + hda1, contains the OS
+> 	md1 = sda2 + hda2, contains a database
+> 
+> 	I made 2 devices because I wanted to use different FS's.
+> 
+> 	When rebuilding md1, it does not realize accesses to md0 wait for the  
+> same disks. Thus reconstruction of md1 runs happily at full speed, and the  
+> machine is dog slow, because the OS and everything is on md0.
 
+Hmmm.. it should.  md measures activity on a component by looking at
+the activity of the whole device holding that component.    So any
+activity on hda or sda should slow down rebuild of md0 or md1.
+It is very strange that it doesn't...
 
-I'm using dm at home because I have a sata hardware fakeraid raid-0 
-between two WD 10,000 rpm raptors, and the dmraid utility correctly 
-recognizes that and configures device mapper to use it. 
+What kernel are you using?
 
-
-Neil Brown wrote:
-> Which bits?
-> Why?
->
-> My current opinion is that you should:
->
->  Use md for raid1, raid5, raid6 - anything with redundancy.
->  Use dm for multipath, crypto, linear, LVM, snapshot
->  Use either for raid0 (I don't think dm has particular advantages
->      for md or md over dm).
->
-> These can be mixed together quite effectively:
->   You can have dm/lvm over md/raid1 over dm/multipath
-> with no problems.
->
-> If there is functionality missing from any of these recommended
-> components, then make a noise about it, preferably but not necessarily
-> with code, and it will quite possibly be fixed.
+NeilBrown
