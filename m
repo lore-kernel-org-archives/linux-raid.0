@@ -1,39 +1,41 @@
-From: Jan Engelhardt <jengelh@linux01.gwdg.de>
-Subject: RE: [PATCH 000 of 5] md: Introduction
-Date: Thu, 19 Jan 2006 21:12:02 +0100 (MET)
-Message-ID: <Pine.LNX.4.61.0601192104560.26558@yvahk01.tjqt.qr>
-References: <26A66BC731DAB741837AF6B2E29C1017D47EA0@xmb-hkg-413.apac.cisco.com>
- <Pine.LNX.4.61.0601181427090.19392@yvahk01.tjqt.qr> <17358.52476.290687.858954@cse.unsw.edu.au>
+From: PFC <lists@peufeu.com>
+Subject: attempt to access beyond end of device
+Date: Thu, 19 Jan 2006 21:39:27 +0100
+Message-ID: <op.s3m7n1pucigqcu@apollo13>
+References: <op.s3mjqms2i22er4@xray.bmc.uu.se>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1161394AbWASUM2@vger.kernel.org>
-In-Reply-To: <17358.52476.290687.858954@cse.unsw.edu.au>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: "Lincoln Dale (ltd)" <ltd@cisco.com>, Michael Tokarev <mjt@tls.msk.ru>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, "Steinar H. Gunderson" <sgunderson@bigfoot.com>
+Content-Type: text/plain; format=flowed; delsp=yes; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <op.s3mjqms2i22er4@xray.bmc.uu.se>
+Sender: linux-raid-owner@vger.kernel.org
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
->> >personally, I think this this useful functionality, but my personal
->> >preference is that this would be in DM/LVM2 rather than MD.  but given
->> >Neil is the MD author/maintainer, I can see why he'd prefer to do it in
->> >MD. :)
->> 
->> Why don't MD and DM merge some bits?
->
->Which bits?
->Why?
->
->My current opinion is that you should:
->
-> Use md for raid1, raid5, raid6 - anything with redundancy.
-> Use dm for multipath, crypto, linear, LVM, snapshot
 
-There are pairs of files that look like they would do the same thing:
+	OK, I was a bit stupid...
 
-  raid1.c  <-> dm-raid1.c
-  linear.c <-> dm-linear.c
+	I changed a drive today, so I rebuilt a software RAID1.
+	I have a RAID1 in degraded mode (1 out of 2 drives), and I added a new  
+partition to it. When I say I was stupid, I mean the partition I added was  
+a tiny little bit smaller than what it should have been.
+
+	md happily added it, synced, then at the very end :
+
+Jan 19 21:33:27 apollo13 attempt to access beyond end of device
+Jan 19 21:33:27 apollo13 sda7: rw=1, want=12498560, limit=12498507
+Jan 19 21:33:27 apollo13 raid1: Disk failure on sda7, disabling device.
+Jan 19 21:33:27 apollo13        Operation continuing on 1 devices
+
+	Of course, "attempt to access beyond end of device", I made the device  
+too small. Duh.
+
+	No problem, I'll just fix my partition, but a warning message on the  
+mdadm --add would have avoided losing time doing the sync, and at the end,  
+a few seconds of "WTF ? it failed ? ah, ok..."
+
+	Have a nice day !
 
 
-
-Jan Engelhardt
--- 
+mdadm --version
+mdadm - v2.1 - 12 September 2005
