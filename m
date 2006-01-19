@@ -1,61 +1,36 @@
-From: Jakob Oestergaard <jakob@unthought.net>
-Subject: Re: [PATCH 000 of 5] md: Introduction
-Date: Thu, 19 Jan 2006 10:01:14 +0100
-Message-ID: <20060119090114.GF2729@unthought.net>
-References: <20060117174531.27739.patches@notabene> <43CCA80B.4020603@tls.msk.ru> <20060117095019.GA27262@localhost.localdomain> <43CCD453.9070900@tls.msk.ru> <20060117160829.GA16606@lug.udel.edu> <43CD3388.9050107@tls.msk.ru> <17358.56263.806371.53617@cse.unsw.edu.au>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
+Subject: Re: paralellism of device use in md
+Date: Thu, 19 Jan 2006 12:30:47 +0100
+Message-ID: <dqnt97$kj$1@sea.gmane.org>
+References: <20060117120927.GU7017@strugglers.net> <43CD8A73.90703@nsr500.net> <dqkrfm$9k9$1@sea.gmane.org> <dqktgu$fea$1@sea.gmane.org> <fd8d0180601180955j691f5d2bn@mail.gmail.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <17358.56263.806371.53617@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Michael Tokarev <mjt@tls.msk.ru>, Ross Vandegrift <ross@lug.udel.edu>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Jan 19, 2006 at 11:22:31AM +1100, Neil Brown wrote:
-...
-> Compare this to an offline solution (raidreconfig) where all the code
-> is only used occasionally.  You could argue that the online version
-> has more code safety than the offline version....
+Francois Barre <francois.barre@gmail.com> wrote:
+> 2006/1/18, Mario 'BitKoenig' Holbe <Mario.Holbe@tu-ilmenau.de>:
+>> Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE> wrote:
+>> Perhaps using some big (virtual) chunk size could do the trick? What
+> Stop me if I'm wrong, but this is called... huge readahead. Instead of
+> reading 32k on drive0 then 32k on drive1, you read continuous 512k
+> from drive0 (16*32k) and 512k from drive1, resulting in a 1M read.
+> Maybe for a single 4k page...
 
-Correct.
+Yes, this would be the consequence.
+However, this would probably not be a big issue, since a) the current
+default read-ahead for RAID1 is 1024 (in 512-byte sectors) anyways.
+Furthermore, in the hardware-RAID sector b) at least the 3ware support
+recommends huge read-aheads for speeding up their RAID1s, too...
+afaik they recommend:
+vm.{min,max}-readahead=512
+blockdev --setra 6144 /dev/...
+which is far more than 1M. I don't know why they do so but I could
+imagine they also use some strategy similar to the one I suggested.
 
-raidreconf, however, can convert a 2 disk RAID-0 to a 4 disk RAID-5 for
-example - the whole design of raidreconf is fundamentally different (of
-course) from the on-line reshape.  The on-line reshape can be (and
-should be) much simpler.
 
-Now, back when I wrote raidreconf, my thoughts were that md would be
-merged into dm, and that raidreconf should evolve into something like
-'pvmove' - a user-space tool that moves blocks around, interfacing with
-the kernel as much as strictly necessary, allowing hot reconfiguration
-of RAID setups.
-
-That was the idea.
-
-Reality, however, seems to be that MD is not moving quickly into DM (for
-whatever reasons). Also, I haven't had the time to actually just move on
-this myself. Today, raidreconf is used by some, but it is not
-maintained, and it is often too slow for comfortable off-line usage
-(reconfiguration of TB sized arrays is slow - not so much because of
-raidreconf, but because there simply is a lot of data that needs to be
-moved around).
-
-I still think that putting MD into DM and extending pvmove to include
-raidreconf functionality, would be the way to go. The final solution
-should also be tolerant (like pvmove is today) of power cycles during
-reconfiguration - the operation should be re-startable.
-
-Anyway - this is just me dreaming - I don't have time to do this and it
-seems that currently noone else has either.
-
-Great initiative with the reshape Neil - hot reconfiguration is much
-needed - personally I still hope to see MD move into DM and pvmove
-including raidreconf functionality, but I guess that when we're eating
-an elephant we should be satisfied with taking one bite at a time  :)
-
+regards
+   Mario
 -- 
-
- / jakob
+Ho ho ho! I am Santa Claus of Borg. Nice assimilation all together!
 
