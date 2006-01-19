@@ -1,36 +1,57 @@
-From: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
-Subject: Re: paralellism of device use in md
-Date: Thu, 19 Jan 2006 12:30:47 +0100
-Message-ID: <dqnt97$kj$1@sea.gmane.org>
-References: <20060117120927.GU7017@strugglers.net> <43CD8A73.90703@nsr500.net> <dqkrfm$9k9$1@sea.gmane.org> <dqktgu$fea$1@sea.gmane.org> <fd8d0180601180955j691f5d2bn@mail.gmail.com>
+From: Al Boldi <a1426z@gawab.com>
+Subject: Re: io performance...
+Date: Thu, 19 Jan 2006 14:39:22 +0300
+Message-ID: <200601191439.22686.a1426z@gawab.com>
+Mime-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Francois Barre <francois.barre@gmail.com> wrote:
-> 2006/1/18, Mario 'BitKoenig' Holbe <Mario.Holbe@tu-ilmenau.de>:
->> Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE> wrote:
->> Perhaps using some big (virtual) chunk size could do the trick? What
-> Stop me if I'm wrong, but this is called... huge readahead. Instead of
-> reading 32k on drive0 then 32k on drive1, you read continuous 512k
-> from drive0 (16*32k) and 512k from drive1, resulting in a 1M read.
-> Maybe for a single 4k page...
+Jeff V. Merkey wrote:
+> Jens Axboe wrote:
+> >On Mon, Jan 16 2006, Jeff V. Merkey wrote:
+> >>Max Waterman wrote:
+> >>>I've noticed that I consistently get better (read) numbers from kernel 
+> >>>2.6.8 than from later kernels.
+> >>
+> >>To open the bottlenecks, the following works well.  Jens will shoot me
+> >>-#define BLKDEV_MIN_RQ        4
+> >>-#define BLKDEV_MAX_RQ        128     /* Default maximum */
+> >>+#define BLKDEV_MIN_RQ        4096
+> >>+#define BLKDEV_MAX_RQ        8192    /* Default maximum */
+> >
+> >Yeah I could shoot you. However I'm more interested in why this is
+> >necessary, eg I'd like to see some numbers from you comparing:
+> >
+> >- Doing
+> >        # echo 8192 > /sys/block/<dev>/queue/nr_requests
+> >  for each drive you are accessing.
+> >
+> >The BLKDEV_MIN_RQ increase is just silly and wastes a huge amount of
+> >memory for no good reason.
+>
+> Yep. I build it into the kernel to save the trouble of sending it to proc.
+> Jens recommendation will work just fine. It has the same affect of
+> increasing the max requests outstanding.
 
-Yes, this would be the consequence.
-However, this would probably not be a big issue, since a) the current
-default read-ahead for RAID1 is 1024 (in 512-byte sectors) anyways.
-Furthermore, in the hardware-RAID sector b) at least the 3ware support
-recommends huge read-aheads for speeding up their RAID1s, too...
-afaik they recommend:
-vm.{min,max}-readahead=512
-blockdev --setra 6144 /dev/...
-which is far more than 1M. I don't know why they do so but I could
-imagine they also use some strategy similar to the one I suggested.
+Your suggestion doesn't do anything here on 2.6.15, but
+	echo 192 > /sys/block/<dev>/queue/max_sectors_kb 
+	echo 192 > /sys/block/<dev>/queue/read_ahead_kb 
+works wonders!
 
+I don't know why, but anything less than 64 and more than 256 makes the queue 
+collapse miserably, causing some strange __copy_to_user calls?!?!?
 
-regards
-   Mario
--- 
-Ho ho ho! I am Santa Claus of Borg. Nice assimilation all together!
+Also, it seems that changing the kernel HZ has some drastic effects on the 
+queues.  A simple lilo gets delayed 400% and 200% using 100HZ and 250HZ 
+respectively.
+
+--
+Al
 
