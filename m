@@ -1,44 +1,97 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH 000 of 5] md: Introduction
-Date: Thu, 19 Jan 2006 11:35:33 +1100
-Message-ID: <17358.57045.876284.256190@cse.unsw.edu.au>
-References: <20060117174531.27739.patches@notabene>
-	<43CCA80B.4020603@tls.msk.ru>
-	<fd8d0180601170121s1e6a55b7o@mail.gmail.com>
-	<fd8d0180601170138m6847fb14k@mail.gmail.com>
+Subject: Re: mdadm options, and man page
+Date: Thu, 19 Jan 2006 13:09:36 +1100
+Message-ID: <17358.62688.202905.508607@cse.unsw.edu.au>
+References: <026f01c61afc$54d40660$a400a8c0@dcccs>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Francois Barre on Tuesday January 17
+In-Reply-To: message from JaniD++ on Tuesday January 17
 Sender: linux-raid-owner@vger.kernel.org
-To: Francois Barre <francois.barre@gmail.com>
+To: JaniD++ <djani22@dynamicweb.hu>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday January 17, francois.barre@gmail.com wrote:
-> Regarding box crash and process interruption, what is the remaining
-> work to be done to save the process status efficiently, in order to
-> resume resize process ?
+On Tuesday January 17, djani22@dynamicweb.hu wrote:
+> Hello, Neil,
+> 
+> Some days before, i read the entire mdadm man page.
 
-design and implement ...
-It's not particularly hard, but it is a separate task and I wanted to
-keep it separate to ease code review.
-
-> In my case, I would really wish to trust resizing enough to use it on
-> working env.
-> May I help you ?
-
-Testing and code review is probably the most helpful thing you can do,
-thanks.
-
+Excellent...
 
 > 
-> Anyway, the patchset you submitted appeared to me so clearly, neat and
-> simple, that it looks a piece of cake to make it secure. I know it's
-> wrong, but you know, you can take it as a congratulation for your code
-> quality :-p
+> I have some ideas, and questions:
+> 
+> Ideas:
+> 1. i think, it is neccessary, to make another one mode to mdadm like "nop"
+> or similar, just for bitmaps, and another options, that only works with
+> assemble, and create (or grow) modes.
 
-Thanks :-)
+This sounds like the 'misc' mode.  What exactly would you want to do
+with it?
 
-NeilBrown 
+> 
+> 2. i think the raid5 creation virtual spare drive technique necessary to be
+> standalone option, to avoid more people to data lost, with re-creating the
+> raid5 arrays, and who did'nt read carefully the entire man.
+
+I don't see why this could cause loss of data.  Can you explain?
+
+> 
+> 3. i think it will be an usefull thing, set the recovery, resyncing
+> order(eg. from the end of the drive to the beginning) of array, or set the
+> "from" and "to" limits for it, or stop, restart(retry) this function, if it
+> is possible again.
+> (only experimental, it will be allow very easy to loose data.)
+> This is useful in very big arrays, wich takes some days to resync.
+> Yes, i know this caused to write the bitmap code, but i think the linux is
+> beautiful because it is very configurable. :-)
+> ... i did not like the automated things, what i cannot controll....
+
+Why would you want to resync from the end to the beginning?
+
+I am looking into make raid1 be usable on a cluster and that would
+require better control of resyncing, but I'm not sure what exactly it
+is that you want, or how it would be useful.
+
+> 
+> 
+> Questions:
+> 1. it will be possible to set/unset the --write-mostly, --write-behind
+> options online?
+> (i know, currently not.)
+
+Hmmm... I'll look into that.
+
+> 
+> 2. it will be possible to create a bitmap in raid5 when it is resyncing, or
+> recovering?
+
+No.  You new to either wait for the resync/recovery to complete, or
+abort it.
+
+> 
+> 3. it is possible to set unset the clean state of the array online? (useful
+> for idea #3)
+
+There are some new attributes in /sys/block/mdX/md/ which might be of
+interest.
+Read through Documentation/md.txt in 2.5.16-rc1.
+
+> 
+> 4. why the md did not support raid4,5 with non-persistent superblock?
+> I think the non-persistent superblock raid4 is very useful thing to easy
+> upgrade (protect) from one big legacy raid0 array to raid4 with an existing
+> data! :-)
+> At this time i need it too. :-)
+
+You need metadata (superblock) to be able to track failure and
+rebuilds and such.  Even raid1 with non-persistent superblock is
+something you have to be careful with.  You wouldn't use it for a
+long-lived array, only to copy data from one place to another but
+still have the data live.
+
+Hope that helps,
+
+NeilBrown
