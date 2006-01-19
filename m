@@ -1,23 +1,20 @@
-From: PFC <lists@peufeu.com>
+From: Mark Hahn <hahn@physics.mcmaster.ca>
 Subject: Re: raid reconstruction speed
-Date: Thu, 19 Jan 2006 23:37:41 +0100
-Message-ID: <op.s3nc43g4cigqcu@apollo13>
-References: <op.s3mjqms2i22er4@xray.bmc.uu.se> <op.s3m7n1pucigqcu@apollo13> <op.s3m9znsqcigqcu@apollo13> <17360.4708.429259.765358@cse.unsw.edu.au>
+Date: Thu, 19 Jan 2006 18:27:09 -0500 (EST)
+Message-ID: <Pine.LNX.4.44.0601191825370.20928-100000@coffee.psychology.mcmaster.ca>
+References: <43D00E3A.5090102@h3c.com>
 Mime-Version: 1.0
-Content-Type: text/plain; format=flowed; delsp=yes; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17360.4708.429259.765358@cse.unsw.edu.au>
+In-Reply-To: <43D00E3A.5090102@h3c.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> What kernel are you using?
->
-> NeilBrown
+> echo "10000" > /proc/sys/dev/raid/speed-limit-max (or similar?)
+> 
+> You can do that in /etc/rc.local or something to make sure it sticks,
 
-Kernel version : 2.6.15-gentoo
+echo "dev.raid.speed_limit_max = 10000" >> /etc/sysctl.conf
+is another, perhaps nicer way to make the setting permanent.
 
-Yes, it's strange... Not very annoying, as the rebuild is finished already  
-(at 40 MB/s it was short), but strange.
