@@ -1,44 +1,61 @@
-From: dean gaudet <dean@arctic.org>
+From: Jakob Oestergaard <jakob@unthought.net>
 Subject: Re: [PATCH 000 of 5] md: Introduction
-Date: Thu, 19 Jan 2006 00:01:10 -0800 (PST)
-Message-ID: <Pine.LNX.4.63.0601182338560.29932@twinlark.arctic.org>
-References: <20060117174531.27739.patches@notabene> <43CCA80B.4020603@tls.msk.ru>
- <20060117095019.GA27262@localhost.localdomain> <43CCD453.9070900@tls.msk.ru>
- <20060117160829.GA16606@lug.udel.edu> <43CD3388.9050107@tls.msk.ru>
- <20060118081407.GC18945@localhost.localdomain> <43CE3898.7090207@xs4all.nl>
- <Pine.LNX.4.56.0601181248460.19220@lion.drogon.net> <17358.54414.410350.594083@cse.unsw.edu.au>
- <op.s3l6o9krcigqcu@apollo13>
+Date: Thu, 19 Jan 2006 10:01:14 +0100
+Message-ID: <20060119090114.GF2729@unthought.net>
+References: <20060117174531.27739.patches@notabene> <43CCA80B.4020603@tls.msk.ru> <20060117095019.GA27262@localhost.localdomain> <43CCD453.9070900@tls.msk.ru> <20060117160829.GA16606@lug.udel.edu> <43CD3388.9050107@tls.msk.ru> <17358.56263.806371.53617@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <op.s3l6o9krcigqcu@apollo13>
+Content-Disposition: inline
+In-Reply-To: <17358.56263.806371.53617@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: PFC <lists@peufeu.com>
-Cc: Neil Brown <neilb@suse.de>, Gordon Henderson <gordon@drogon.net>, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Michael Tokarev <mjt@tls.msk.ru>, Ross Vandegrift <ross@lug.udel.edu>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 19 Jan 2006, PFC wrote:
+On Thu, Jan 19, 2006 at 11:22:31AM +1100, Neil Brown wrote:
+...
+> Compare this to an offline solution (raidreconfig) where all the code
+> is only used occasionally.  You could argue that the online version
+> has more code safety than the offline version....
 
-> 	This isn't really a md issue, but it's really annoying only when using
-> RAID, because it makes a normal process (kicking a dead drive out) so slow
-> it's almost non-functional. Is there a way to modify the timeout in question ?
+Correct.
 
-yeah i posted to l-k about similar problems a while back... i've got a 
-disk which boots fine but fails all writes... useful for showing just how 
-bad the system can become with a dead/dying disk.
+raidreconf, however, can convert a 2 disk RAID-0 to a 4 disk RAID-5 for
+example - the whole design of raidreconf is fundamentally different (of
+course) from the on-line reshape.  The on-line reshape can be (and
+should be) much simpler.
 
-western digital is selling "raid edition" disks now -- and part of their 
-marketing material discusses the long timeout which commodity disks 
-implement <http://www.westerndigital.com/en/library/sata/2579-001098.pdf>.  
-the raid edition disks give up earlier on the assumption the raid layer is 
-going to take care of things.  it's really too bad this isn't just a 
-tunable parameter of the disk.
+Now, back when I wrote raidreconf, my thoughts were that md would be
+merged into dm, and that raidreconf should evolve into something like
+'pvmove' - a user-space tool that moves blocks around, interfacing with
+the kernel as much as strictly necessary, allowing hot reconfiguration
+of RAID setups.
 
-even still -- the linux kernel could probably do something about this... 
-drivers could have a blockdev(8) tunable timeout, and a mode where the 
-driver just gives up entirely on the device at the first error/timeout and 
-return EIO for all outstanding requests at that point... and the driver 
-could remain in this state until an explicit request to re-attempt normal 
-operations.
+That was the idea.
 
--dean
+Reality, however, seems to be that MD is not moving quickly into DM (for
+whatever reasons). Also, I haven't had the time to actually just move on
+this myself. Today, raidreconf is used by some, but it is not
+maintained, and it is often too slow for comfortable off-line usage
+(reconfiguration of TB sized arrays is slow - not so much because of
+raidreconf, but because there simply is a lot of data that needs to be
+moved around).
+
+I still think that putting MD into DM and extending pvmove to include
+raidreconf functionality, would be the way to go. The final solution
+should also be tolerant (like pvmove is today) of power cycles during
+reconfiguration - the operation should be re-startable.
+
+Anyway - this is just me dreaming - I don't have time to do this and it
+seems that currently noone else has either.
+
+Great initiative with the reshape Neil - hot reconfiguration is much
+needed - personally I still hope to see MD move into DM and pvmove
+including raidreconf functionality, but I guess that when we're eating
+an elephant we should be satisfied with taking one bite at a time  :)
+
+-- 
+
+ / jakob
+
