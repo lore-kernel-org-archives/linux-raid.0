@@ -1,28 +1,24 @@
-From: "Filipe Maia" <fmaia@gmx.net>
-Subject: Handling of read errors in raid6
-Date: Thu, 19 Jan 2006 13:02:36 +0100
-Message-ID: <op.s3mjqms2i22er4@xray.bmc.uu.se>
+From: Mark Hahn <hahn@physics.mcmaster.ca>
+Subject: RE: [PATCH 000 of 5] md: Introduction
+Date: Thu, 19 Jan 2006 10:33:27 -0500 (EST)
+Message-ID: <Pine.LNX.4.44.0601191031400.20928-100000@coffee.psychology.mcmaster.ca>
+References: <17358.52476.290687.858954@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; format=flowed; delsp=yes; charset=utf-8
-Content-Transfer-Encoding: 8BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <17358.52476.290687.858954@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Neil Brown <neilb@suse.de>
+Cc: Jan Engelhardt <jengelh@linux01.gwdg.de>, "Lincoln Dale (ltd)" <ltd@cisco.com>, Michael Tokarev <mjt@tls.msk.ru>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, "Steinar H. Gunderson" <sgunderson@bigfoot.com>
 List-Id: linux-raid.ids
 
-Is it easy to port the "readerrors rewrite" patch to RAID6?
+>  Use either for raid0 (I don't think dm has particular advantages
+>      for md or md over dm).
 
-Are there any plans to do it?
+I measured this a few months ago, and was surprised to find that 
+DM raid0 was very noticably slower than MD raid0.  same machine,
+same disks/controller/kernel/settings/stripe-size.  I didn't try
+to find out why, since I usually need redundancy...
 
-If there are are they short or long term?
+regards, mark hahn.
 
-(I have some stuff in a RAID6 that has more than 2 disks with
-bad sectors and i would like to see if it would be possible to
-recover them without going through all the dd stuff).
-
-Thanks for the help.
-
-
--- 
-All generalizations are false, including this one.
-          -- Mark Twain
