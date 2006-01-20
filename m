@@ -1,84 +1,70 @@
-From: Bill Cizek <cizek@rcn.com>
-Subject: Re: Followup: Adding a device to an active RAID1 array
-Date: Thu, 19 Jan 2006 19:30:22 -0600
-Message-ID: <43D03D2E.3000504@rcn.com>
+From: Phillip Susi <psusi@cfl.rr.com>
+Subject: Re: [PATCH 000 of 5] md: Introduction
+Date: Thu, 19 Jan 2006 21:17:12 -0500
+Message-ID: <43D04828.8010107@cfl.rr.com>
+References: <26A66BC731DAB741837AF6B2E29C1017D47EA0@xmb-hkg-413.apac.cisco.com> <Pine.LNX.4.61.0601181427090.19392@yvahk01.tjqt.qr> <17358.52476.290687.858954@cse.unsw.edu.au> <43D00FFA.1040401@cfl.rr.com> <17360.5011.975665.371008@cse.unsw.edu.au> <43D02033.4070008@cfl.rr.com> <17360.9233.215291.380922@cse.unsw.edu.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <17360.9233.215291.380922@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>, Neil Brown <neilb@suse.de>
+To: Neil Brown <neilb@suse.de>
+Cc: Jan Engelhardt <jengelh@linux01.gwdg.de>, "Lincoln Dale (ltd)" <ltd@cisco.com>, Michael Tokarev <mjt@tls.msk.ru>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, "Steinar H. Gunderson" <sgunderson@bigfoot.com>
 List-Id: linux-raid.ids
 
 Neil Brown wrote:
 
- >On Wednesday January 18, cizek@rcn.com wrote:
- >
- >>Hi,
- >>
- >>Are there any known issues with changing the number of active devices in
- >>a RAID1 array?
- >
- >
- >There is now, thanks.
- >
- >>I'm trying to add a third mirror to an existing RAID1 array of two disks.
- >>
- >>I have /dev/md5 as a mirrored pair of two 40 GB disks.  Directly on top
- >>of it is a 40 GB XFS filesystem.
- >>
- >>When I do "mdadm --grow /dev/md5 -n 3" the count of devices changes from
- >>2 to 3, as expected.
- >>If the XFS filesystem is mounted, the array size changes to 3.0 GB.
- >>If it is not mounted everything works fine.
- >>
- >>Is this supposed to work, is it required that the array be inactive to
- >>add a disk, or am I just doing
- >>something stupid?
- >
- >
- >It is supposed to work, it doesn't, but it is the code doing something
- >stupid, not you.
- >Try the patch below.
- >
+>Maybe the problem here is thinking of md and dm as different things.
+>Try just not thinking of them at all.  
+>Think about it like this:
+>  The linux kernel support lvm
+>  The linux kernel support multipath
+>  The linux kernel support snapshots
+>  The linux kernel support raid0
+>  The linux kernel support raid1
+>  The linux kernel support raid5
+>
+>Use the bits that you want, and not the bits that you don't.
+>
+>dm and md are just two different interface styles to various bits of
+>this.  Neither is clearly better than the other, partly because
+>different people have different tastes.
+>
+>Maybe what you really want is for all of these functions to be managed
+>under the one umbrella application.  I think that is was EVMS tried to
+>do. 
+>
+>  
+>
 
-[snip]
-
-The patch you gave me worked, Neil, but the I ran into an odd problem where
- the change is lost after a reboot.
-
-I have raid1 devices for both superblocks 0.90.? and 1.0
-If I update the superblock 1.0 device,  mdadm --detail shows the update, 
-but if I reboot it is lost.
-As well, evms complains about a mismatch between the kernel and disk 
-(this is how I first noticed it).
-Superblock 0.90 works fine.
-
-i.e.  Starting with /dev/md4, superblock 1.0 with 2 devices:
-
-mdadm --detail /dev/md4 shows
-
-   Raid Devices : 2
-Active Devices : 2
+I am under the impression that dm is simpler/cleaner than md.  That 
+impression very well may be wrong, but if it is simpler, then that's a 
+good thing. 
 
 
-I do "mdadm --grow /dev/md4 -n3"
+>One big selling point that 'dm' has is 'dmraid' - a tool that allows
+>you to use a lot of 'fakeraid' cards.  People would like dmraid to
+>work with raid5 as well, and that is a good goal.
+>  
+>
 
-mdadm --detail /dev/md4 shows
+AFAIK, the hardware fakeraid solutions on the market don't support raid5 
+anyhow ( at least mine doesn't ), so dmraid won't either. 
 
-   Raid Devices : 3
-Active Devices : 2
+>However it doesn't mean that dm needs to get it's own raid5
+>implementation or that md/raid5 needs to be merged with dm.
+>It can be achieved by giving md/raid5 the right interfaces so that
+>metadata can be managed from userspace (and I am nearly there).
+>Then 'dmraid' (or a similar tool) can use 'dm' interfaces for some
+>raid levels and 'md' interfaces for others.
+>
 
-I reboot....
-
-mdadm --detail /dev/md4 shows
-
-   Raid Devices : 2
-Active Devices : 2
-
-Hope this makes sense.
-
-Thanks,
--Bill
+Having two sets of interfaces and retrofiting a new interface onto a 
+system that wasn't designed for it seems likely to bloat the kernel with 
+complex code.  I don't really know if that is the case because I have 
+not studied the code, but that's the impression I get, and if it's 
+right, then I'd say it is better to stick with dm rather than retrofit 
+md.  In either case, it seems overly complex to have to deal with both. 
 
 
