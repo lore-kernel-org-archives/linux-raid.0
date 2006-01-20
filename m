@@ -1,8 +1,9 @@
-From: ross@lug.udel.edu (Ross Vandegrift)
+From: Heinz Mauelshagen <mauelshagen@redhat.com>
 Subject: Re: [PATCH 000 of 5] md: Introduction
-Date: Fri, 20 Jan 2006 12:29:32 -0500
-Message-ID: <20060120172932.GC27141@lug.udel.edu>
+Date: Fri, 20 Jan 2006 19:36:21 +0100
+Message-ID: <20060120183621.GA2799@redhat.com>
 References: <26A66BC731DAB741837AF6B2E29C1017D47EA0@xmb-hkg-413.apac.cisco.com> <Pine.LNX.4.61.0601181427090.19392@yvahk01.tjqt.qr> <17358.52476.290687.858954@cse.unsw.edu.au> <43D00FFA.1040401@cfl.rr.com> <17360.5011.975665.371008@cse.unsw.edu.au> <43D02033.4070008@cfl.rr.com> <17360.9233.215291.380922@cse.unsw.edu.au>
+Reply-To: mauelshagen@redhat.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
@@ -14,28 +15,81 @@ Cc: Phillip Susi <psusi@cfl.rr.com>, Jan Engelhardt <jengelh@linux01.gwdg.de>, "
 List-Id: linux-raid.ids
 
 On Fri, Jan 20, 2006 at 10:43:13AM +1100, Neil Brown wrote:
+> On Thursday January 19, psusi@cfl.rr.com wrote:
+> > Neil Brown wrote:
+> > > 
+> > > The in-kernel autodetection in md is purely legacy support as far as I
+> > > am concerned.  md does volume detection in user space via 'mdadm'.
+> > > 
+> > > What other "things like" were you thinking of.
+> > > 
+> > 
+> > Oh, I suppose that's true.  Well, another thing is your new mods to 
+> > support on the fly reshaping, which dm could do from user space.  Then 
+> > of course, there's multipath and snapshots and other lvm things which 
+> > you need dm for, so why use both when one will do?  That's my take on it.
+> 
+> Maybe the problem here is thinking of md and dm as different things.
+> Try just not thinking of them at all.  
+> Think about it like this:
+>   The linux kernel support lvm
+>   The linux kernel support multipath
+>   The linux kernel support snapshots
+>   The linux kernel support raid0
+>   The linux kernel support raid1
+>   The linux kernel support raid5
+> 
+> Use the bits that you want, and not the bits that you don't.
+> 
 > dm and md are just two different interface styles to various bits of
 > this.  Neither is clearly better than the other, partly because
 > different people have different tastes.
+> 
+> Maybe what you really want is for all of these functions to be managed
+> under the one umbrella application.  I think that is was EVMS tried to
+> do. 
+> 
+> One big selling point that 'dm' has is 'dmraid' - a tool that allows
+> you to use a lot of 'fakeraid' cards.  People would like dmraid to
+> work with raid5 as well, and that is a good goal.
+> However it doesn't mean that dm needs to get it's own raid5
+> implementation or that md/raid5 needs to be merged with dm.
 
-Here's why it's great to have both: they have different toolkits.  I'm
-really familiar with md's toolkit.  I can do most anything I need.
-But I'll bet that I've never gotten a pvmove to finish sucessfully
-because I am doing something wrong and I don't know it.
+That's a valid point to make but it can ;)
 
-Becuase we're talking about data integrity, the toolkit issue alone
-makes it worth keeping both code paths.  md does 90% of what I need,
-so why should I spend the time to learn a new system that doesn't
-offer any advantages?
+> It can be achieved by giving md/raid5 the right interfaces so that
+> metadata can be managed from userspace (and I am nearly there).
 
-[1] I'm intentionally neglecting the 4k stack issue
+Yeah, and I'm nearly there to have a RAID4 and RAID5 target for dm
+(which took advantage of the raid address calculation and the bio to
+stripe cache copy code of md raid5).
+
+See http://people.redhat.com/heinzm/sw/dm/dm-raid45/dm-raid45_2.6.15_200601201914.patch.bz2 (no Makefile / no Kconfig changes) for early code reference.
+
+> Then 'dmraid' (or a similar tool) can use 'dm' interfaces for some
+> raid levels and 'md' interfaces for others.
+
+Yes, that's possible but there's recommendations to have a native target
+for dm to do RAID5, so I started to implement it.
+
+> 
+> NeilBrown
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 -- 
-Ross Vandegrift
-ross@lug.udel.edu
 
-"The good Christian should beware of mathematicians, and all those who
-make empty prophecies. The danger already exists that the mathematicians
-have made a covenant with the devil to darken the spirit and to confine
-man in the bonds of Hell."
-	--St. Augustine, De Genesi ad Litteram, Book II, xviii, 37
+Regards,
+Heinz    -- The LVM Guy --
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+Heinz Mauelshagen                                 Red Hat GmbH
+Consulting Development Engineer                   Am Sonnenhang 11
+Cluster and Storage Development                   56242 Marienrachdorf
+                                                  Germany
+Mauelshagen@RedHat.com                            +49 2626 141200
+                                                       FAX 924446
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
