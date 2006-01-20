@@ -1,51 +1,95 @@
-From: "Andre' Breiler" <andre.breiler@null-mx.org>
-Subject: Re: [PATCH 000 of 5] md: Introduction
-Date: Fri, 20 Jan 2006 03:43:28 +0000 (GMT)
-Message-ID: <Pine.LNX.4.33.0601200326590.17229-100000@pegasus.teamwerk.com>
-References: <43D09671.3010405@reub.net>
+From: Mario =?UTF-8?B?RMO2cmluZw==?= <mario@dedenet.de>
+Subject: array broken or mdadm issue?
+Date: Fri, 20 Jan 2006 11:09:05 +0100
+Message-ID: <20060120110905.44c505c5@snibbles.dedenet.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <43D09671.3010405@reub.net>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+Hello :)
 
-On Fri, 20 Jan 2006, Reuben Farrelly wrote:
+The command "mdadm -Q /dev/md0" returns the following:
 
-> On 20/01/2006 11:32 a.m., Neil Brown wrote:
-> >
-> > The in-kernel autodetection in md is purely legacy support as far as I
-> > am concerned.  md does volume detection in user space via 'mdadm'.
->
-> Hrm.  <puzzled look>   How would I then start my md0 raid-1 array that is
-> mounted as the root partition / if I'm not doing this when the kernel is
-> starting up?  Because without it I've got no userspace to actually execute.
+/dev/md0: 228.34GiB raid10 4 devices, 0 spares. Use mdadm --detail for
+more detail.
+/dev/md0: device 0 in 2 device undetected raid0 /dev/.tmp.md4.  Use
+mdadm --examine for more detail.
 
-Indeed you won't be able to use a 'plain kernel' anymore but switch to
-kernel + initrd.
-This adds a good amount of useful flexibility (but makes life a little bit
-harder).
 
-The autodetect feature got discussed multiple time with pro/cons for it
-(so I will skip it there) with the overall outcome that it's a to
-dangerous feature to leave in kernel space (btw. on some architectures
-it doesn't work at all anyway) in the long term.
+What is /dev/.tmp.md4 ?
+If I delete it and rerun the command above, it gets created again.
 
-> Some of the other arrays with things like /var and /home could obviously be
-> easily assembled soon after the kernel hands over control to userspace before
-> the filesystem points are mounted, but for the root I am not quite sure
-> how it
-> could work...
 
-A simple initrd. If you look at random distributions (e.g. Debian) you
-will see it done that way (yes I don't think it's perfect as it is yet).
+Here is some additional info:
 
-Personally on systems which change often I run without auto detect.
-On systems which hardly change and if get wiped disks I use the
-autodetection.
+# mdadm -Q /dev/md1
+/dev/md1: 95.88MiB raid1 4 devices, 0 spares. Use mdadm --detail for
+more detail.
 
-Andre'
+
+
+# mdadm -Q /dev/.tmp.md4
+/dev/.tmp.md4: is an md device which is not active
+
+
+
+# cat /proc/mdstat
+Personalities : [raid0] [raid1] [raid10]
+md1 : active raid1 hdh1[3] hdg1[2] hdf1[1] hde1[0]
+      98176 blocks [4/4] [UUUU]
+
+md0 : active raid10 hdh3[3] hdg3[2] hdf3[1] hde3[0]
+      239436160 blocks 64K chunks 2 near-copies [4/4] [UUUU]
+
+unused devices: <none>
+
+
+
+# mdadm --misc --examine /dev/md0
+/dev/md0:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : a6f921c5:84cf1916:4981aad5:dd540810
+  Creation Time : Sun Oct 30 20:33:07 2005
+     Raid Level : raid0
+    Device Size : 0
+   Raid Devices : 2
+  Total Devices : 2
+Preferred Minor : 4
+
+    Update Time : Sun Oct 30 20:33:07 2005
+          State : active
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 0
+       Checksum : 82947d3c - correct
+         Events : 0.1
+
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this     0       9        0        0      active sync   /dev/md/0
+
+   0     0       9        0        0      active sync   /dev/md/0
+   1     1       9        1        1      active sync   /dev/md/1
+
+
+
+Should I be concerned about that? :)
+What does it mean anyways? And which device is undetected?
+
+And why does "mdadm --misc --examine /dev/md0" prints "raid level:
+raid0" even though it is a raid10?
+
+I use mdadm-2.1, but have tried mdadm-2.2 as well.
+
+Thanks in advance for any help.
+
+Bye,
+Mario.
 
