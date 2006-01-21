@@ -1,90 +1,35 @@
-From: "John Stoffel" <john@stoffel.org>
-Subject: Re: [PATCH 001 of 5] md: Split disks array out of raid5 conf structure so it is easier to grow.
-Date: Fri, 20 Jan 2006 22:37:25 -0500
-Message-ID: <17361.44149.200493.916170@smtp.charter.net>
-References: <20060117174531.27739.patches@notabene>
-	<1060117065614.27831@suse.de>
-	<17357.271.619918.45917@smtp.charter.net>
-	<17358.56490.127364.327688@cse.unsw.edu.au>
+From: "Recessionals A. Scummier" <akee@greentam.com>
+Subject: Software
+Date: Fri, 20 Jan 2006 21:48:33 -0500
+Message-ID: <1866149030.20060120214833@greentam.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17358.56490.127364.327688@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: John Stoffel <john@stoffel.org>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, "Steinar H. Gunderson" <sgunderson@bigfoot.com>
+To: Linux <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
->>>>> "Neil" == Neil Brown <neilb@suse.de> writes:
+Corel draw! just at best price 
+Understanding 0EM software 
 
-Neil> On Tuesday January 17, john@stoffel.org wrote:
->> >>>>> "NeilBrown" == NeilBrown  <neilb@suse.de> writes:
->> 
-NeilBrown> Previously the array of disk information was included in
-NeilBrown> the raid5 'conf' structure which was allocated to an
-NeilBrown> appropriate size.  This makes it awkward to change the size
-NeilBrown> of that array.  So we split it off into a separate
-NeilBrown> kmalloced array which will require a little extra indexing,
-NeilBrown> but is much easier to grow.
+New software on our site:
 
->> Instead of setting mddev->private = NULL, should you be doing a kfree
->> on it as well when you are in an abort state?
+Photoshop 7 - $69.95 
+Money 2004 - $69.95
+Illustrator CS CE - $69.95
+Streets and Trips 2004 North America (2CD) - $69.95
+Windows NT 4.0 Terminal Server - $49.95
+Fireworks MX 2004 - $69.95
+Encarta Encyclopedia Delux 2004 (3CD) - $89.95
+After Effects 6 - $69.95
+PageMaker 7 (2CD) - $69.95
+Illustrator CS - $69.95
+WordPerfect Office 10 - $69.95
+Streets and Trips 2004 North America (2CD) - $69.95
+Office 2000 Premium Edition PE (2CD) - $59.95
+Office 2000 Premium Edition PE (2CD) - $59.95
 
-Neil> The only times I set 
-mddev-> private = NULL
-Neil> it is immediately after
-Neil>    kfree(conf)
-Neil> and as conf is the thing that is assigned to mddev->private, this
-Neil> should be doing exactly what you suggest.
+Our site:
+http://humbugkl.com
 
-Neil> Does that make sense?
-
-Now that I've had some time to actually apply your patches to
-2.6.16-rc1 and look them over more carefully, I see my mistake.  I
-overlooked the assignment of 
-
-	conf = mddev->private 
-
-In the lines just below there, and I see how you do clean it up.  I
-guess I would have just done it the other way around:
-
-	conf = kzalloc()
-	if (!conf) 
-		goto abort:
-	.
-	.	
-	.
-	mddev->private = conf;
-
-Though now that I look at it, don't we have a circular reference
-here?  Let me quote the code section, which starts of with where I was
-confused: 
-
-        mddev->private = kzalloc(sizeof (raid5_conf_t), GFP_KERNEL);
-        if ((conf = mddev->private) == NULL)
-                goto abort;
-        conf->disks = kzalloc(mddev->raid_disks * sizeof(struct disk_info),
-                              GFP_KERNEL);
-        if (!conf->disks)
-                goto abort;
-
-        conf->mddev = mddev;
-
-        if ((conf->stripe_hashtbl = kzalloc(PAGE_SIZE, GFP_KERNEL)) == NULL)
-                goto abort;
-
-
-Now we seem to end up with:
-
-	mddev->private = conf;
-	conf->mddev = mddev;
-
-which looks a little strange to me, and possibly something that could
-lead to endless loops.  But I need to find the time to sit down and
-try to understand the code, so don't waste much time educating me
-here.
-
-Thanks for all your work on this Neil, I for one really appreciate it!
-
-John
