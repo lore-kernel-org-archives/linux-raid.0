@@ -1,35 +1,23 @@
-From: "Recessionals A. Scummier" <akee@greentam.com>
-Subject: Software
-Date: Fri, 20 Jan 2006 21:48:33 -0500
-Message-ID: <1866149030.20060120214833@greentam.com>
+From: Andy Gajetzki <andy.gajetzki@gmail.com>
+Subject: linear raid space utilization
+Date: Sat, 21 Jan 2006 00:12:48 -0700
+Message-ID: <cc5782160601202312y25bc339cvcb1973c24208da3@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Corel draw! just at best price 
-Understanding 0EM software 
+Hi there,  I recently had a disk go bad in a linear RAID built with
+mdadm. The particular disk that failed was the last  device of the
+RAID. I am curious about how  devices are utilized in a linear RAID.
+Would the md be filled sequentially from device 1 upto 5? In other
+words, what are the odds that the last disk was "empty" when it went
+south?
 
-New software on our site:
+Thanks for your time,
 
-Photoshop 7 - $69.95 
-Money 2004 - $69.95
-Illustrator CS CE - $69.95
-Streets and Trips 2004 North America (2CD) - $69.95
-Windows NT 4.0 Terminal Server - $49.95
-Fireworks MX 2004 - $69.95
-Encarta Encyclopedia Delux 2004 (3CD) - $89.95
-After Effects 6 - $69.95
-PageMaker 7 (2CD) - $69.95
-Illustrator CS - $69.95
-WordPerfect Office 10 - $69.95
-Streets and Trips 2004 North America (2CD) - $69.95
-Office 2000 Premium Edition PE (2CD) - $59.95
-Office 2000 Premium Edition PE (2CD) - $59.95
-
-Our site:
-http://humbugkl.com
-
+Andy
