@@ -1,38 +1,49 @@
-From: carlos@fisica.ufpr.br (Carlos Carvalho)
-Subject: Re: blog entry on RAID limitation
-Date: Sat, 21 Jan 2006 18:50:29 -0200
-Message-ID: <17362.40597.2229.222073@fisica.ufpr.br>
-References: <8E5ACAE05E6B9E44A2903C693A5D4E8A097F6C86@hqemmail02.nvidia.com>
-	<1137487538.309F9186@bd12.dngr.org>
-	<17356.51593.481883.173707@cse.unsw.edu.au>
-	<43CD1E5A.3050802@mungo.dk>
-	<17357.29686.842091.898632@cse.unsw.edu.au>
+From: Mark Hahn <hahn@physics.mcmaster.ca>
+Subject: Re: Save to use spindown?
+Date: Sat, 21 Jan 2006 16:32:58 -0500 (EST)
+Message-ID: <Pine.LNX.4.44.0601211616510.24057-100000@coffee.psychology.mcmaster.ca>
+References: <Pine.LNX.4.56.0601212009570.20336@lion.drogon.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17357.29686.842091.898632@cse.unsw.edu.au>
+In-Reply-To: <Pine.LNX.4.56.0601212009570.20336@lion.drogon.net>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown (neilb@suse.de) wrote on 18 January 2006 09:47:
- >On Tuesday January 17, jacob@mungo.dk wrote:
- >> Neil Brown wrote:
- >> > In general, I think increasing the connection between the filesystem
- >> > and the volume manager/virtual storage is a good idea.
+> > accessed for days, so I wonder if I can extend the life of the disks
+> > by spinning them down, eg by setting the spindown timeout for the
 
-Well, I agree in principle however the increase in complexity is
-likely to make the whole thing even harder to be as reliable as one
-needs... Just consider the complication of xfs or reiser4...
+you seem to be assuming that the drives have a lifespan measured 
+in hours-spinning.  that's not at all clear.  for instance, drives
+are typically rated 40-50K start-stop cycles, which is ~40/day
+over a 3-year service life.
 
- >I have had a project underway for some time (about half a day a week
- >at the moment) to create a file system which is raid-friendly.  When
- >configured on a raid5, it will always write a full stripe at a time,
- >and never over-write live data.  This means that there is no need to
- >pre-read parity or data, and it completely removes the "write hole".
+you clearly do not want to auto-spindown unless you are sure that 
+they'll spun-down for a fairly long time.  even ignoring delay in 
+spinup...
 
-This seems interesting not so much because of the write-hole but
-because of the possible increase in speed. I'm not going to ask about
-the filesystem features because I think you already said in the list
-that you want to play with it yourself :-)
+
+> that good. Too many things running on your server will keep them going -
+> eg. ext3 likes to peek at the drives every 5 seconds (and it's probable
+> that other journaling FS's to some extent or other).
+
+I don't believe ext3 will generate journal forces unless you do something
+that generates data or journal IO.  for instance, atime updates are often
+overlooked here.  I generally turn atime stuff off anyway.
+
+> Then there's
+> log-files - you'll need to go through syslog.conf and "-" every file to
+> suppress the fflush.
+
+often a good idea anyway, especially if your server generates lots of logs.
+or how about logging to some other machine (which has additional advantages...)
+
+> And then the kernel just wants to flush its buffers
+> from time to time because it's in a good mood.
+
+for some reason I don't tend to anthropomorphize the kernel ;)
+but really, I can't think of any random, spontaneous flushes.
+things like dirty pagecache stuff will get pdflushed on a clear 
+schedule (/proc/sys/vm/*centiseconds).
+
