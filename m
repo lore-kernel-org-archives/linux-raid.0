@@ -1,36 +1,66 @@
-From: Lars Marowsky-Bree <lmb@suse.de>
+From: David Greaves <david@dgreaves.com>
 Subject: Re: [PATCH 000 of 5] md: Introduction
-Date: Sat, 21 Jan 2006 01:13:11 +0100
-Message-ID: <20060121001311.GA22163@marowsky-bree.de>
-References: <17358.52476.290687.858954@cse.unsw.edu.au> <43D00FFA.1040401@cfl.rr.com> <17360.5011.975665.371008@cse.unsw.edu.au> <43D02033.4070008@cfl.rr.com> <17360.9233.215291.380922@cse.unsw.edu.au> <20060120183621.GA2799@redhat.com> <20060120225724.GW22163@marowsky-bree.de> <20060121000142.GR2801@redhat.com> <20060121000344.GY22163@marowsky-bree.de> <20060121000806.GT2801@redhat.com>
+Date: Sat, 21 Jan 2006 00:42:03 +0000
+Message-ID: <43D1835B.1040105@dgreaves.com>
+References: <Pine.LNX.4.33.0601200326590.17229-100000@pegasus.teamwerk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20060121000806.GT2801@redhat.com>
+In-Reply-To: <Pine.LNX.4.33.0601200326590.17229-100000@pegasus.teamwerk.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Heinz Mauelshagen <mauelshagen@redhat.com>
-Cc: Neil Brown <neilb@suse.de>, Phillip Susi <psusi@cfl.rr.com>, Jan Engelhardt <jengelh@linux01.gwdg.de>, "Lincoln Dale (ltd)" <ltd@cisco.com>, Michael Tokarev <mjt@tls.msk.ru>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, "Steinar H. Gunderson" <sgunderson@bigfoot.com>
+To: Andre' Breiler <andre.breiler@null-mx.org>, neilb@suse.de
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2006-01-21T01:08:06, Heinz Mauelshagen <mauelshagen@redhat.com> wrote:
+Andre' Breiler wrote:
 
-> > A dm-md wrapper would give you the same?
-> No, we'ld need to stack more complex to achieve mappings.
-> Think lvm2 and logical volume level raid5.
+>Hi,
+>
+>On Fri, 20 Jan 2006, Reuben Farrelly wrote:
+>  
+>
+>>On 20/01/2006 11:32 a.m., Neil Brown wrote:
+>>    
+>>
+>>>The in-kernel autodetection in md is purely legacy support as far as I
+>>>am concerned.  md does volume detection in user space via 'mdadm'.
+>>>      
+>>>
+>>Hrm.  <puzzled look>   How would I then start my md0 raid-1 array that is
+>>mounted as the root partition / if I'm not doing this when the kernel is
+>>starting up?  Because without it I've got no userspace to actually execute.
+>>    
+>>
+>
+>Indeed you won't be able to use a 'plain kernel' anymore but switch to
+>kernel + initrd.
+>  
+>
+I understand the anti-autodetect arguments and was easily persuaded by
+them...
 
-How would you not get that if you had a wrapper around md which made it
-into an dm personality/target?
+Can I however suggest  we have autodetect only actually triggers if the
+kernel is supplied with the UUID of an md0 as a boot option.
+ie: root=/dev/md0 md0=b87a211e:8a9bef34:ccc334d8:f84216d6
 
-Besides, stacking between dm devices so far (ie, if I look how kpartx
-does it, or LVM2 on top of MPIO etc, which works just fine) is via the
-block device layer anyway - and nothing stops you from putting md on top
-of LVM2 LVs either.
+I'm not sure I ever saw this proposed during the debate.
 
-I use the regularly to play with md and other stuff...
+It's just *so* nice not to have to bother with initrd (having just moved
+to a mirrored root and finding it wonderfully easy to specify
+root=/dev/md0 and have it 'just work')
 
-So I remain unconvinced that code duplication is worth it for more than
-"hark we want it so!" ;-)
+It looks easy enough to add into autorun_devices() in md.c
 
+Maybe then deprecate autodetect more quickly by having it optional in
+2.6.17(?) - but if even one UUID *is* specified then no other devices
+are autodetected. Eventually having no devices autodetected *unless* a
+UUID is specified (for convenience printk the UUIDs of devices that
+*are* found just in case you mistype it...)
 
+Please forgive me if I've missed the reason that this is a bad idea.
+
+David
+
+-- 
 
