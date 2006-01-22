@@ -1,36 +1,36 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH 001 of 5] md: Split disks array out of raid5 conf structure so it is easier to grow.
-Date: Mon, 23 Jan 2006 09:57:05 +1100
-Message-ID: <17364.3521.662774.431030@cse.unsw.edu.au>
-References: <20060117174531.27739.patches@notabene>
-	<1060117065614.27831@suse.de>
-	<17357.271.619918.45917@smtp.charter.net>
-	<17358.56490.127364.327688@cse.unsw.edu.au>
-	<17361.44149.200493.916170@smtp.charter.net>
+Subject: Re: force mdadm
+Date: Mon, 23 Jan 2006 10:06:01 +1100
+Message-ID: <17364.4057.597729.853778@cse.unsw.edu.au>
+References: <43D36563.4010605@bppiac.hu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from John Stoffel on Friday January 20
+In-Reply-To: message from Farkas Levente on Sunday January 22
 Sender: linux-raid-owner@vger.kernel.org
-To: John Stoffel <john@stoffel.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, "Steinar H. Gunderson" <sgunderson@bigfoot.com>
+To: Farkas Levente <lfarkas@bppiac.hu>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Friday January 20, john@stoffel.org wrote:
-> Though now that I look at it, don't we have a circular reference
-> here?  Let me quote the code section, which starts of with where I was
-> confused: 
-..
-> 
-> Now we seem to end up with:
-> 
-> 	mddev->private = conf;
-> 	conf->mddev = mddev;
-> 
+On Sunday January 22, lfarkas@bppiac.hu wrote:
+> hi,
+> is there any way to force to put together a raid5 array? we've to a 7+1
+> disks raid5 array (with 7 disks and 1 spare), but it's faild (probably
+> because of heat). so currently it's 4+3:-( is there any way to force
+> mdadm to put together the array and hope that we can save at least part
+> of it's data?
+> thank you for your help in advance.
+> yours.
 
-This is simply to related structures each holding a reference to the
-other.  It's like the child pointing to the parent, and the parent
-pointing to the child, which you get all the time.
+You could try the "--force" option...
+
+ mdadm --assemble /dev/mdX --force /dev/sd[a-h]1
+
+or whatever the device names are.
+
+If that doesn't work, you will need to try to recreate the array.
+Create it degraded (one missing device) using the 6 devices (in their
+correct positions) that you think are most likely to have good data.
 
 NeilBrown
