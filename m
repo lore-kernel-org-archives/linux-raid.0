@@ -1,48 +1,29 @@
 From: John Hendrikx <hjohn@xs4all.nl>
-Subject: Re: Save to use spindown?
-Date: Sun, 22 Jan 2006 03:10:46 +0100
-Message-ID: <43D2E9A6.8000703@xs4all.nl>
-References: <Pine.LNX.4.44.0601211616510.24057-100000@coffee.psychology.mcmaster.ca>
+Subject: Selective spin-up
+Date: Sun, 22 Jan 2006 03:19:45 +0100
+Message-ID: <43D2EBC1.1000007@xs4all.nl>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44.0601211616510.24057-100000@coffee.psychology.mcmaster.ca>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Mark Hahn wrote:
-> you seem to be assuming that the drives have a lifespan measured in 
-> hours-spinning.  that's not at all clear.  for instance, drives
-> are typically rated 40-50K start-stop cycles, which is ~40/day
-> over a 3-year service life.
->
-> you clearly do not want to auto-spindown unless you are sure that 
-> they'll spun-down for a fairly long time.  even ignoring delay in 
-> spinup...
->   
-Hm, 40-50k start-stop cycles?  That's far more than I would have 
-thought.  I always figured that my hard drives would live longer if I 
-kept them spinning instead of spinning them down even once a day.  Most 
-of my drives at the moment are below 10 start-stop cycles, even though 
-the array is only used very lightly for a few hours every day.
+I recently extended my raid array with a 9th drive, and I find that the 
+300 watt PSU I use is insufficient to start the system.  What happens is 
+that I activate the machine, the machine starts powering up for 3 
+seconds orso (spinning all the hard drives up about half way) then power 
+cuts out.  I've heard that it is possible to spin up disks one at a time 
+or in groups, but cannot find any such option in the BIOS (Asus A8N-E 
+board).  Any ideas?
 
-It sounds to me it might not be a bad idea for me to spin the drives 
-down in my case.
+What's fun however is that if I press the power button again immediately 
+after it powers down (while the drives are still half way spinned up), 
+it will have enough power to spin up the disks all the way, and the 
+system starts normally.  It runs rock solid after that.
 
->> that good. Too many things running on your server will keep them going -
->> eg. ext3 likes to peek at the drives every 5 seconds (and it's probable
->> that other journaling FS's to some extent or other).
->>     
->
-> I don't believe ext3 will generate journal forces unless you do something
-> that generates data or journal IO.  for instance, atime updates are often
-> overlooked here.  I generally turn atime stuff off anyway.
->   
-But accessing the drive will spin it up anyway, so why would it be 
-prudent to turn atime off (apart from the fact that it is often not 
-needed anyway)?
 
---John
+
+
 
