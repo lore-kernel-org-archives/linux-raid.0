@@ -1,36 +1,32 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: force mdadm
-Date: Mon, 23 Jan 2006 10:06:01 +1100
-Message-ID: <17364.4057.597729.853778@cse.unsw.edu.au>
-References: <43D36563.4010605@bppiac.hu>
+Subject: Re: blog entry on RAID limitation
+Date: Mon, 23 Jan 2006 10:08:48 +1100
+Message-ID: <17364.4224.511674.30104@cse.unsw.edu.au>
+References: <20060122115231.9294.qmail@web52910.mail.yahoo.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Farkas Levente on Sunday January 22
+In-Reply-To: message from Rik Herrin on Sunday January 22
 Sender: linux-raid-owner@vger.kernel.org
-To: Farkas Levente <lfarkas@bppiac.hu>
+To: Rik Herrin <rikherrin@yahoo.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sunday January 22, lfarkas@bppiac.hu wrote:
-> hi,
-> is there any way to force to put together a raid5 array? we've to a 7+1
-> disks raid5 array (with 7 disks and 1 spare), but it's faild (probably
-> because of heat). so currently it's 4+3:-( is there any way to force
-> mdadm to put together the array and hope that we can save at least part
-> of it's data?
-> thank you for your help in advance.
-> yours.
+On Sunday January 22, rikherrin@yahoo.com wrote:
+> Wouldn't connecting a UPS + using a stable kernel
+> version remove 90% or so of the "RAID-5 write hole"
+> problem?  Are there any other means to know when this
+> has occurred?
 
-You could try the "--force" option...
+A UPS would help, as would a well-tested stable kernel.
+However sometimes power supplies die, so make sure you have two of
+them...
 
- mdadm --assemble /dev/mdX --force /dev/sd[a-h]1
-
-or whatever the device names are.
-
-If that doesn't work, you will need to try to recreate the array.
-Create it degraded (one missing device) using the 6 devices (in their
-correct positions) that you think are most likely to have good data.
+Yes, there are several ways to mitigate the risk.  However they cost
+money and the risk is actually already very small in the first place.  
+Coming up with a by-design approach that removes the risk completely
+is still a good goal, providing the performance costs are reasonable
+(i.e. almost zero).
 
 NeilBrown
