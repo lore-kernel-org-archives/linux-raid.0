@@ -1,69 +1,126 @@
-From: Mark Hahn <hahn@physics.mcmaster.ca>
-Subject: Re: Need to upgrade to latest stable mdadm version?
-Date: Sun, 22 Jan 2006 17:31:29 -0500 (EST)
-Message-ID: <Pine.LNX.4.44.0601221719020.24057-100000@coffee.psychology.mcmaster.ca>
-References: <43D3C5A8.3070200@dgreaves.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [PATCH 000 of 5] md: Introduction
+Date: Mon, 23 Jan 2006 09:52:50 +1100
+Message-ID: <17364.3266.29943.914861@cse.unsw.edu.au>
+References: <20060117174531.27739.patches@notabene>
+	<20060121234234.A32306@mail.kroptech.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <43D3C5A8.3070200@dgreaves.com>
+In-Reply-To: message from Adam Kropelin on Saturday January 21
 Sender: linux-raid-owner@vger.kernel.org
-To: David Greaves <david@dgreaves.com>
-Cc: Mitchell Laks <mlaks@verizon.net>, linux-raid@vger.kernel.org
+To: Adam Kropelin <akropel1@rochester.rr.com>
+Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, "Steinar H. Gunderson" <sgunderson@bigfoot.com>
 List-Id: linux-raid.ids
 
-> >and with the ETCH testing 2.6.12:  the sata_via module fails with
+On Saturday January 21, akropel1@rochester.rr.com wrote:
+> NeilBrown <neilb@suse.de> wrote:
+> > In line with the principle of "release early", following are 5 patches
+> > against md in 2.6.latest which implement reshaping of a raid5 array.
+> > By this I mean adding 1 or more drives to the array and then re-laying
+> > out all of the data.
+> 
+> I've been looking forward to a feature like this, so I took the
+> opportunity to set up a vmware session and give the patches a try. I
+> encountered both success and failure, and here are the details of both.
+> 
+> On the first try I neglected to read the directions and increased the
+> number of devices first (which worked) and then attempted to add the
+> physical device (which didn't work; at least not the way I intended).
+> The result was an array of size 4, operating in degraded mode, with 
+> three active drives and one spare. I was unable to find a way to coax
+> mdadm into adding the 4th drive as an active device instead of a 
+> spare. I'm not an mdadm guru, so there may be a method I overlooked.
+> Here's what I did, interspersed with trimmed /proc/mdstat output:
 
-I'm sure you know that no kernel developer really cares about distro-hacked 
-kernels.  why not test a real (kernel.org) kernel?
+Thanks, this is exactly the sort of feedback I was hoping for - people
+testing thing that I didn't think to...
 
-> >ata1: status=0x51 { DriveReady SeekComplete Error }
-> >ata1: error=0x84 { DriveStatusError BadCRC }
+> 
+>   mdadm --create -l5 -n3 /dev/md0 /dev/sda /dev/sdb /dev/sdc
+> 
+>     md0 : active raid5 sda[0] sdc[2] sdb[1]
+>           2097024 blocks level 5, 64k chunk, algorithm 2 [3/3] [UUU]
+> 
+>   mdadm --grow -n4 /dev/md0
+> 
+>     md0 : active raid5 sda[0] sdc[2] sdb[1]
+>           3145536 blocks level 5, 64k chunk, algorithm 2 [4/3] [UUU_]
 
-badcrc's are a sign that the link is failing - bad cable, bad power,
-overclocking, possibly an error in the driver's timing config.
-it cannot possibly be an mdadm problem, and cannot be related to 
-other software (kernel memory management, say.)
+I assume that no "resync" started at this point?  It should have done.
 
-> >ata1: command 0x35 timeout, stat 0xd0 host_stat 0x0
-> >ata1: status=0xd0 { Busy }
-> >SCSI error : <0 0 0 0> return code = 0x8000002
-> >sda: Current: sense key: Aborted Command
-> >    Additional sense: Scsi parity error
-> >end_request: I/O error, dev sda, sector 94109775
-> >raid1: Disk failure on sda1, disabling device.
+> 
+>   mdadm --manage --add /dev/md0 /dev/sdd
+> 
+>     md0 : active raid5 sdd[3](S) sda[0] sdc[2] sdb[1]
+>           3145536 blocks level 5, 64k chunk, algorithm 2 [4/3] [UUU_]
+> 
+>   mdadm --misc --stop /dev/md0
+>   mdadm --assemble /dev/md0 /dev/sda /dev/sdb /dev/sdc /dev/sdd
+> 
+>     md0 : active raid5 sdd[3](S) sda[0] sdc[2] sdb[1]
+>           3145536 blocks level 5, 64k chunk, algorithm 2 [4/3] [UUU_]
 
-I don't know the code well enough to tell whether that CRC error is
-triggering that cascade of scsi->raid errors.
+This really should have started a recovery.... I'll look into that
+too.
 
-> >Note these messages are not caused by the hard drive (reproduced on multiple 
-> >hard drives which fine work with the Promise controller), nor is it the 
-> >controller hardware (occurs with multiple asus A8v motherboards) - because it 
 
-being triggered by a CRC error means that it's definitely a problem in the 
-cable, though it may simply that something has mis-programmed the timing
-of the port.  working with a different controller also doesn't rule out 
-power problems.
+> 
+> For my second try I actually read the directions and things went much
+> better, aside from a possible /proc/mdstat glitch shown below.
+> 
+>   mdadm --create -l5 -n3 /dev/md0 /dev/sda /dev/sdb /dev/sdc
+> 
+>     md0 : active raid5 sda[0] sdc[2] sdb[1]
+>           2097024 blocks level 5, 64k chunk, algorithm 2 [3/3] [UUU]
+> 
+>   mdadm --manage --add /dev/md0 /dev/sdd
+> 
+>     md0 : active raid5 sdd[3](S) sdc[2] sdb[1] sda[0]
+>           2097024 blocks level 5, 64k chunk, algorithm 2 [3/3] [UUU]
+> 
+>   mdadm --grow -n4 /dev/md0
+> 
+>     md0 : active raid5 sdd[3] sdc[2] sdb[1] sda[0]
+>           2097024 blocks level 5, 64k chunk, algorithm 2 [4/4] [UUUU]
+>                                 ...should this be... --> [4/3] [UUU_] perhaps?
 
-> >only happens when both the sata_via and sata_promise controller are loaded by 
-> >the ETCH debian 2.6.12 kernel.
+Well, part of the array is "4/4 UUUU" and part is "3/3 UUU".  How do
+you represent that?  I think "4/4 UUUU" is best.
 
-I don't see how driver interaction could cause the BadCRC, unless one driver
-is screwing with the timing registers of the other's hardware.
 
-> >So I have to compile my own 2.6.15 kernel. So what version of mdadm do I use? 
-> >How shall I install it? 
+>           [>....................]  recovery =  0.4% (5636/1048512) finish=9.1min speed=1878K/sec
+> 
+>     [...time passes...]
+> 
+>     md0 : active raid5 sdd[3] sdc[2] sdb[1] sda[0]
+>           3145536 blocks level 5, 64k chunk, algorithm 2 [4/4] [UUUU]
+> 
+> My final test was a repeat of #2, but with data actively being written
+> to the array during the reshape (the previous tests were on an idle,
+> unmounted array). This one failed pretty hard, with several processes
+> ending up in the D state. I repeated it twice and sysrq-t dumps can be
+> found at <http://www.kroptech.com/~adk0212/md-raid5-reshape-wedge.txt>.
+> The writeout load was a kernel tree untar started shortly before the
+> 'mdadm --grow' command was given. mdadm hung, as did tar. Any process
+> which subsequently attmpted to access the array hung as well. A second
+> attempt at the same thing hung similarly, although only pdflush shows up
+> hung in that trace. mdadm and tar are missing for some reason.
 
-why do you think mdadm has anything to do with it?  it's a user-level tool
-for manipilating md.  it only knows blockdevs, not drivers, CRC's, etc.
+Hmmm... I tried similar things but didn't get this deadlock.  Somehow
+the fact that mdadm is holding the reconfig_sem semaphore means that
+some IO cannot proceed and so mdadm cannot grab and resize all the
+stripe heads... I'll have to look more deeply into this.
 
-> >Does it make sense to simply compile mdadm  2.2 and replace /sbin/mdadm with 
-> >the new version?????? How can I get the best recent mdadm? I am using raid1.
+> 
+> I'm happy to do more tests. It's easy to conjur up virtual disks and
+> load them with irrelevant data (like kernel trees ;)
 
-mdadm cannot possibly have anything to do with causing BadCRC's.  upgrade if
-you feel like it, but not because of this problem.
+Great.  I'll probably be putting out a new patch set  late this week
+or early next.  Hopefully it will fix the issues you can found and you
+can try it again..
 
-> I am running the *stock* 2.6.15 and get the same problems (ata timeouts etc)
 
-is there a reason you call this a timeout, rather than a BadCRC?
-
+Thanks again,
+NeilBrown
