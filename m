@@ -1,84 +1,90 @@
-From: Tuomas Leikola <tuomas.leikola@gmail.com>
-Subject: Re: paralellism of device use in md
-Date: Sun, 22 Jan 2006 18:43:07 +0200
-Message-ID: <5b170a7d0601220843p323a1d6ew6c22a5e952513ef6@mail.gmail.com>
-References: <20060117120927.GU7017@strugglers.net> <43CD8A73.90703@nsr500.net>
-	 <dqkrfm$9k9$1@sea.gmane.org> <dqktgu$fea$1@sea.gmane.org>
-	 <fd8d0180601180955j691f5d2bn@mail.gmail.com>
-	 <17358.53380.670707.439455@cse.unsw.edu.au>
+From: Michael Barnwell <xterminate@xterminate.me.uk>
+Subject: Silent Corruption on RAID5
+Date: Sun, 22 Jan 2006 16:44:37 +0000
+Message-ID: <43D3B675.20804@xterminate.me.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17358.53380.670707.439455@cse.unsw.edu.au>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 1/19/06, Neil Brown <neilb@suse.de> wrote:
->
-> The read balancing in raid1 is clunky at best.  I've often thought
-> "there must be a better way".  I've never thought what the better way
-> might be (though I haven't tried very hard).
->
-> If anyone would like to experiment with the read-balancing code,
-> suggest and test changes, it would be most welcome.
->
+Hi,
 
-An interesting and desperately complex topic, intertwined with IO
-schedulers in general. I'll follow with my 2 cents.
+I'm experiencing silent data corruption on my RAID 5 set of four 400GB 
+SATA disks.
 
-The way I see this, there are two fundamentally different approaches:
-optimize for throughput or latency.
+I first had the problem a couple of weeks ago and thought it was related 
+to using reiserfs on my system because I hadn't used it before but have 
+another perfectly functional RAID 5 array running ext3 after lots of 
+testing I find the problem happens with ext3 on the array as well, and 
+after even more testing I find that the problem only occurs on the array 
+not the individual hard disks.
 
-When optimizing for latency, the balancer would always choose a device
-that can serve a request in the shortest time. This is close to what
-the current code does, altough it doesn't seem to account for devices'
-pending request queue lengths. (I'd estimate for a traditional ATA
-disk, around 2-3 short seek requests is worth 1 long seek, because of
-spindle latency). I'd assume a "fair" in-order service for the latency
-mode.
+My test consists of making a ~10GB file of zeros, then checking it for 
+non-zero bytes, I've also tried creating the file of zeros on a 
+functional array and copying it across with the same results.
 
-When optimizing for throughput, the balancer would choose a device
-that will have it's total queue completion time increased the least.
-This indicates reordering of requests etc.
+dd bs=1024 count=10000k if=/dev/zero of=./10GB.tst
+od -t x1 s0/10GB.tst
 
-For queue depth of 1, the thoughput balancer would pick the "closest"
-available device as long as the devices are idle, and when they are
-all busy, leave the requests into array-wide queue until one of the
-devices becomes available, and then dequeue the request the device can
-serve fastest (or one that's had its deadline exceeded).
+These commands give me one row of zeros on my other RAID 5 set on the 
+same box and on each individual hard disk in the array when I put ext3 
+on them all to see if one was faulty but when they are in RAID the od 
+spouts lots of non-zeros at me.
 
-Both approaches become difficult when taking into account device
-queues. The throughput balancer, as described, could just estimate how
-close the new request is to all others already in the device, and pick
-one that is nearby the other work. The latency scheduler is propably
-pretty much useless in this scenario, as its definition will change if
-requests can push each other around. I'd expect it to be useful in the
-common desktop configuration with no device queues though.
+<snip>
+21524747740 00 00 00 00 00 00 00 00 00 00 00 00 00 50 5c 36
+21524747760 00 10 00 00 00 00 a7 23 00 10 00 80 00 00 00 00
+21524750000 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+*
+21525147740 00 00 00 00 00 00 00 00 00 00 00 00 00 50 5c 36
+21525147760 00 10 00 00 00 00 a7 23 00 10 00 80 00 00 00 00
+21525150000 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+<snip>
 
-One thing i'd like to see is more powerful estimates of request cost
-for a device. It's possible, if not practical, to profile devices for
-things like spindle latency and sector locations. If this cost
-estimation data is correct enough, per-device queues become less
-important as performance factors. As it is now, one can only hope that
-requests that are near LBA-wise are near timewise, which is not true
-for most devices. Yes, i know it's mostly wishful thinking.
-Measurements would be tricky and would provide complex maps for
-estimating costs, and (I think) would be virtually impossible to do
-correctly for anything with device queues.
+There is a fair bit of that and the last time I ran it I got an I/O 
+array and the mount went into read only mode.
 
-I'd expect that no drives in the market expose this kind of latency
-estimation data to the controller or OS. I'd also expect that high end
-storage system vendors use the very same information in their hardware
-raid implementations to provide better queuing and load balancing.
+I figure the problem is either with the Silicon Image 3114 hardware or 
+driver that supports the array or the RAID subsystem but like I 
+mentioned earlier my other RAID 5 set of three 120GB drives on two IDE 
+controllers works fine.
 
-Both the described balancer algorithms can be implemented somewhat
-easily, and (I'd expect) will work relatively well with common desktop
-drives. They could be optional (like the IO schedulers currently are),
-and different cost estimation algorithms could also be optional (and
-tunable if autotuning is out of question). Unfortunately my kernel
-hacking skills are too weak for most of this - there needs to be
-another who's interested enough.
+I'm running Debian sarge with a 2.6.15-1 kernel, it has an Athlon 
+XP2200, 1GB of RAM, Asus A7N8X-Deluxe motherboard, 2 Maxtor IDE 
+controllers, one Silicon Image 3114 PCI adapter, along with the on-board 
+Silicon Image 3112 controller - 2x 10GB IDE disks and a DVD ROM drive on 
+the on-board IDE controller, 3x 120GB Seagate hard disks on the PCI IDE 
+adapters, 2x 80GB Seagate disks on the on-board SilImg 3112 controller 
+and finally 4x 400GB disks on the SilImg 3114 PCI adapter.
+
+
+biggs:/mnt/test/s0# uname -a
+Linux biggs 2.6.15.1.060121 #1 Sat Jan 21 17:01:30 GMT 2006 i686 GNU/Linux
+biggs:/mnt/test/s0# cat /proc/mdstat
+Personalities : [raid1] [raid5]
+md2 : active raid5 sdd1[4] sdc1[2] sdb1[1] sda1[0]
+       1172126208 blocks level 5, 64k chunk, algorithm 2 [4/3] [UUU_]
+       [=>...................]  recovery =  8.3% (32500608/390708736) 
+finish=253.3min speed=23564K/sec
+
+md1 : active raid5 hdg1[0] hde1[2] hdi1[1]
+       234436352 blocks level 5, 64k chunk, algorithm 2 [3/3] [UUU]
+
+md0 : active raid1 hdb2[0] hda2[1]
+       9502336 blocks [2/2] [UU]
+
+unused devices: <none>
+
+(Note: md2 is the array with problems, and I've done the tests when its 
+been fully synced with the same results)
+
+
+So, does anyone have any suggestions or tests I could perform to narrow 
+down where my problem is?
+
+Regards,
+
+Michael Barnwell.
