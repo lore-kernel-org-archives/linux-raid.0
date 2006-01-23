@@ -1,96 +1,34 @@
-From: Heinz Mauelshagen <mauelshagen@redhat.com>
-Subject: Re: [PATCH 000 of 5] md: Introduction
-Date: Mon, 23 Jan 2006 14:54:28 +0100
-Message-ID: <20060123135428.GA2801@redhat.com>
-References: <43D02033.4070008@cfl.rr.com> <17360.9233.215291.380922@cse.unsw.edu.au> <20060120183621.GA2799@redhat.com> <20060120225724.GW22163@marowsky-bree.de> <20060121000142.GR2801@redhat.com> <20060121000344.GY22163@marowsky-bree.de> <20060121000806.GT2801@redhat.com> <20060121001311.GA22163@marowsky-bree.de> <20060123094418.GX2801@redhat.com> <20060123125420.GE1686@vianova.fi>
-Reply-To: mauelshagen@redhat.com
+From: Brad Campbell <brad@wasp.net.au>
+Subject: Re: Need to upgrade to latest stable mdadm version?
+Date: Mon, 23 Jan 2006 17:58:11 +0400
+Message-ID: <43D4E0F3.3070406@wasp.net.au>
+References: <200601221241.54689.mlaks@verizon.net> <43D3C5A8.3070200@dgreaves.com> <200601230902.45171.mlaks@verizon.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20060123125420.GE1686@vianova.fi>
+In-Reply-To: <200601230902.45171.mlaks@verizon.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ville Herva <vherva@vianova.fi>
-Cc: Heinz Mauelshagen <mauelshagen@redhat.com>, Lars Marowsky-Bree <lmb@suse.de>, Neil Brown <neilb@suse.de>, Phillip Susi <psusi@cfl.rr.com>, Jan Engelhardt <jengelh@linux01.gwdg.de>, "Lincoln Dale (ltd)" <ltd@cisco.com>, Michael Tokarev <mjt@tls.msk.ru>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, "Steinar H. Gunderson" <sgunderson@bigfoot.com>
+To: Mitchell Laks <mlaks@verizon.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Jan 23, 2006 at 02:54:20PM +0200, Ville Herva wrote:
-> On Mon, Jan 23, 2006 at 10:44:18AM +0100, you [Heinz Mauelshagen] wrote:
-> > > 
-> > > I use the regularly to play with md and other stuff...
-> > 
-> > Me too but for production, I want to avoid the
-> > additional stacking overhead and complexity.
-> > 
-> > > So I remain unconvinced that code duplication is worth it for more than
-> > > "hark we want it so!" ;-)
-> > 
-> > Shall I remove you from the list of potential testers of dm-raid45 then ;-)
-> 
-> Heinz, 
-> 
-> If you really want the rest of us to convert from md to lvm, you should
-> perhaps give some attention to thee brittle userland (scripts and and
-> binaries).
+Mitchell Laks wrote:
 
-Sure :-)
+> It does not work with the debian sid 2.6.15 kernel. You were far more 
+> observant than I. I thought that my 2 raids were working with the debian 
+> 2.6.15 but in fact it one of the drives had failed out of the  array (thats 
+> why it seemed to work, I hadn't slept enough...).
+> 
+> In fact your diagnosis is completely correct. I cannot get both sata_via and 
+> sata_promise up at the same time, without timeout problems. 
 
-> 
-> It is very tedious to have to debug a production system for a few hours in
-> order to get the rootfs mounted after each kernel update. 
-> 
-> The lvm error messages give almost no clue on the problem. 
-> 
-> Worse yet, problem reports on these issues are completely ignored on the lvm
-> mailing list, even when a patch is attached.
-> 
-> (See
->  http://marc.theaimsgroup.com/?l=linux-lvm&m=113775502821403&w=2
->  http://linux.msede.com/lvm_mlist/archive/2001/06/0205.html
->  http://linux.msede.com/lvm_mlist/archive/2001/06/0271.html
->  for reference.)
+I _hope_ this is just an anomaly as I have a production machine here with 2.6.10, 3 sata_pro6mise 
+cards and using the on-board sata_via interface also.. I was planning on upgrading it to 2.6.15 or 
+2.6.16 when it's released to gain the benefit of the new raid-5 error recovery patches.
 
-Hrm, those are initscripts related, not lvm directly
-
-> 
-> Such experience gives an impression lvm is not yet ready for serious
-> production use.
-
-initscripts/initramfs surely need to do the right thing
-in case root is on lvm.
-
-> 
-> No offense intended, lvm kernel (lvm1 nor lvm2) code has never given me
-> trouble, and is probably as solid as anything. 
-
-Alright.
-Is the initscript issue fixed now or still open ?
-Had you filed a bug against the distros initscripts ?
-
-> 
-> 
-> -- v -- 
-> 
-> v@iki.fi
-> 
-> PS: Speaking of debugging failing initrd init scripts; it would be nice if
-> the kernel gave an error message on wrong initrd format rather than silently
-> failing... Yes, I forgot to make the cpio with the "-H newc" option :-/.
 
 -- 
-
-Regards,
-Heinz    -- The LVM Guy --
-
-*** Software bugs are stupid.
-    Nevertheless it needs not so stupid people to solve them ***
-
-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
-Heinz Mauelshagen                                 Red Hat GmbH
-Consulting Development Engineer                   Am Sonnenhang 11
-Cluster and Storage Development                   56242 Marienrachdorf
-                                                  Germany
-Mauelshagen@RedHat.com                            +49 2626 141200
-                                                       FAX 924446
-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+"Human beings, who are almost unique in having the ability
+to learn from the experience of others, are also remarkable
+for their apparent disinclination to do so." -- Douglas Adams
