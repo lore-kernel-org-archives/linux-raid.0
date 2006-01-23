@@ -1,61 +1,105 @@
-From: Mattias Wadenstein <maswan@acc.umu.se>
-Subject: Re: Selective spin-up
-Date: Mon, 23 Jan 2006 17:09:25 +0100 (MET)
-Message-ID: <Pine.GSO.4.62.0601231648480.14030@shaka.acc.umu.se>
-References: <43D2EBC1.1000007@xs4all.nl> <43D32E3A.4020508@wasp.net.au>
+From: Shawn Usry <shawn@joebacardi.com>
+Subject: Re: multiple Sata SATAII 150, TX4  - how to tell which drive is which?
+	headaches galore!
+Date: Mon, 23 Jan 2006 10:27:58 -0600
+Message-ID: <20060123162758.0178b58b@ted.secure-tunnel.com>
+References: <200601230336.55220.mlaks@verizon.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <43D32E3A.4020508@wasp.net.au>
+In-Reply-To: <200601230336.55220.mlaks@verizon.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Brad Campbell <brad@wasp.net.au>
-Cc: John Hendrikx <hjohn@xs4all.nl>, linux-raid@vger.kernel.org
+To: Mitchell Laks <mlaks@verizon.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, 22 Jan 2006, Brad Campbell wrote:
+Mitchell:
 
-> John Hendrikx wrote:
->> I recently extended my raid array with a 9th drive, and I find that the 300 
->> watt PSU I use is insufficient to start the system.  What happens is that I 
->> activate the machine, the machine starts powering up for 3 seconds orso 
->> (spinning all the hard drives up about half way) then power cuts out.  I've 
->> heard that it is possible to spin up disks one at a time or in groups, but 
->> cannot find any such option in the BIOS (Asus A8N-E board).  Any ideas?
+----- Original Message -----
+From: Mitchell Laks
+[mailto:mlaks@verizon.net]
+To: linux-raid@vger.kernel.org
+Sent: Mon, 23 Jan
+2006 02:36:54 -0600
+Subject: multiple Sata SATAII 150, TX4  - how to tell
+which drive is which? headaches galore!
 
-And just in response to the original question, this is called "staggered 
-spin-up" and is usually a feature of larger raid/scsi controllers and 
-intelligent backplanes. Usually not found in cheap hardware.
 
-> I had a similar problem with a 480W PSU and my 15 drive array..
-> I looked for selective spinup and other hacks, but to be honest I figured 
-> that even if the trip point is under spin up load only, I was running the PSU 
-> too close to the wire to be comfortable.
-> I bought a 600W unit and re-wired it's dual 12V rails to do the job.. Problem 
-> solved.
-
-Heh, I just did this for an 18 drive machine too. Much better than the old 
-duct-taped 2 PSU "solution":
-
-http://www.acc.umu.se/~maswan/bilder/20060117-Kryddis/
-
-> I also run a smart check every morning (6 days short 1 day long) 
-> simultaneously on all drives to make sure the system behaves under load.
->
-> Do yourself a favour and grab a shiny new PSU.. I have 14 Drives hanging off 
-> a 420W unit in my other box that behave perfectly..
->
-> Just look at the the 12V rail capacity on any PSU you choose and make sure it 
-> will cope with the spool up load. I grabbed Maxtor's docs on these drives, 
-> calculated the load for 15 drives and worked from there.. My practical 
-> measurements came to within about 15% of the theoretical so the docs are not 
-> to bad.
-
-Don't forget to take a look at the 5V load too. The last batch of drives I 
-got for that machine was hitatchi sata drives which claims 1.3A in "max 
-r/w load". Lots of PSUs even with high W-ratings (600/800) have only 20 or 
-30A rated 5V load, and you want some left over for the rest of the system.
-
-Now, if I could only get rid of these load-induced sata_sil (or whatever 
-it is) cold hangs everything would be awesome. :)
-
-/Mattias Wadenstein
+> Dear Experts,
+> 
+> I wanted to ask for any experience with running raid with SATA drives and 
+> controllers here under linux.
+> 
+> I have been having an interesting time!
+> 
+> I initially tried to use raid1 on  my asus A8v motherboard 
+> using  a mixture of SATA controllers - 
+> the built in motherboard SATA controller (via vt8237) 
+> as well as a  Promise PCI card SATAII 150, 
+> but had problems with the kernel. My drives gave me all sorts of errors
+> while 
+> trying to build the  raids and while running mkfs.ext3
+> and i couldn't  get it to work reliably with the any of the current kernels
+> I 
+> tried, including 2.6.15.1 the current stable kernel. 
+> I get countless kernel errors as I mentioned in an earlier post.
+> 
+> Now I have switched to only using the PCI card controllers ( Well, I can put
+> 
+> multiple controllers into the motherboard). So I use only sata_promise and 
+> get rid of sata_via, which conflicts (according to my experience). 
+> 
+> Now however, when a drive gives me errors - how can I identify which drive
+> on 
+> which device is failing? 
+> 
+> The kernel seems to name things randomly.
+> 
+> This is important when a drive 'fails'. Which drive failed? If I am dealing 
+> with /dev/hda1 /dev/hdb1 /dev/hdc1 /dev/hdd1  on the two ide channels
+> then  I 'know' which is which.
+> 
+> Even crazier (from an accounting point of view) is  the following.
+> 
+> if I have 2 of these cards, then the sata_promise driver does not appear to 
+> distinguish "where" (ie: which physical controller port on ___which___ card)
+> 
+> the drives are. 
+> 
+> The letters don't skip to show you are on a second controller -even if you 
+> leave blank slots to try to see...
+> The kernel  randomly  calls the drives sda sdb sdc sdd sde and they seem to
+> be 
+> anywhere on the physical controllers.  It seems to be completely random. 
+> HELP!
+> 
+> I since I run a bunch of raid1's, if I get errors I have a major chore. So I
+> 
+> must stop and reboot countless times doing a binary search using mdadm 
+> -E /dev/sd[ab]1 |grep UU to find the UUID's of the misbehaving drives.  
+> Then 
+> look closely at mdadm -E of the 2 final candidates to see which one gave me 
+> these errors. 
+> 
+> For instance a new drive failed while I was installing the raid, and
+> testing.
+> To find the erroring drive I had to reproduce the errors each time by  
+> creating the raids, and running mkfs.ext3 which seems to cause the errors. 
+> What if the errors were more occult????
+> 
+> Each card had 4 controllers - however when I have more than 1 card it can be
+> 
+> even more difficult to identify where we are.
+> 
+> Any experience out there to help me?
+> 
+> Thanks,
+> 
+> Mitchell Laks
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
