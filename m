@@ -1,51 +1,113 @@
-From: PFC <lists@peufeu.com>
-Subject: Re: multiple Sata SATAII 150, TX4  - how to tell which drive is which? headaches galore!
-Date: Mon, 23 Jan 2006 13:20:59 +0100
-Message-ID: <op.s3ty89rfcigqcu@apollo13>
-References: <200601230336.55220.mlaks@verizon.net>
+From: David Greaves <david@dgreaves.com>
+Subject: Possible libata/sata/Asus problem (was Re: Need to upgrade to latest
+ stable mdadm version?)
+Date: Mon, 23 Jan 2006 12:31:24 +0000
+Message-ID: <43D4CC9C.9060500@dgreaves.com>
+References: <Pine.LNX.4.44.0601221719020.24057-100000@coffee.psychology.mcmaster.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; format=flowed; delsp=yes; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200601230336.55220.mlaks@verizon.net>
+In-Reply-To: <Pine.LNX.4.44.0601221719020.24057-100000@coffee.psychology.mcmaster.ca>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mitchell Laks <mlaks@verizon.net>, linux-raid@vger.kernel.org
+To: Mark Hahn <hahn@physics.mcmaster.ca>
+Cc: Mitchell Laks <mlaks@verizon.net>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, IDE Linux <linux-ide@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, 23 Jan 2006 09:36:54 +0100, Mitchell Laks <mlaks@verizon.net>  
-wrote:
+Mark Hahn wrote:
 
-> Dear Experts,
+>>>and with the ETCH testing 2.6.12:  the sata_via module fails with
+>>>      
+>>>
+>I'm sure you know that no kernel developer really cares about distro-hacked 
+>kernels.  why not test a real (kernel.org) kernel?
+>  
 >
-> I wanted to ask for any experience with running raid with SATA drives and
-> controllers here under linux.
+Only because if the problem exists on the stock kernel and not on the
+distro kernel then there could be assistance in determining which patch
+solves (or hides!) the problem. This may or may not actually be helpful.
+
+
+>>>ata1: status=0x51 { DriveReady SeekComplete Error }
+>>>ata1: error=0x84 { DriveStatusError BadCRC }
+>>>      
+>>>
+>badcrc's are a sign that the link is failing - bad cable, bad power,
+>overclocking,
 >
+OK
 
-	Well, here's mine :
+>possibly an error in the driver's timing config.
+>  
+>
+A-ha!
 
-	Maxtor SATA drives series 6V (those with 16 MB cache) are incompatible  
-with nforce 3-4 SATA controllers. Maxtor acknowledges this. Symptom is a  
-slow death of the drive, ending with command timeouts. When reverting the  
-drive to SATA 1.5Gbps with the jumper, it works perfectly again (for a few  
-days...). nvidia doesn't care. This is on windows and linux. In windows,  
-you have to use fucking PIO mode or you get corruptions. nforce4 sata also  
-has problems with plextor sata burners, and possibly others.
+>it cannot possibly be an mdadm problem, and cannot be related to 
+>other software (kernel memory management, say.)
+>  
+>
+Agreed.
 
-	The Maxtor 6L series (with 8 MB cache) work flawlessly.
+> I don't see how driver interaction could cause the BadCRC, unless one
+> driver
+>
+>is screwing with the timing registers of the other's hardware.
+>  
+>
+And maybe, on a lightly loaded system, RAID causes concurrent access
+(and potentially triggers problems) more often than a non-RAID solution?
 
-	I currently have these SATA drives, on a nforce3 MSI mobo :
+> mdadm cannot possibly have anything to do with causing BadCRC's.
+> upgrade if
+>
+>you feel like it, but not because of this problem.
+>  
+>
+Completely agree.
 
-# hdparm -I /dev/sd? |grep "Model Numb"
+>>I am running the *stock* 2.6.15 and get the same problems (ata timeouts etc)
+>>    
+>>
+>is there a reason you call this a timeout, rather than a BadCRC?
+>  
+>
+I had:
+  ata2: command 0x25 timeout, stat 0x51 host_stat 0x0
 
-         Model Number:       Maxtor 6L200M0
-         Model Number:       Maxtor 6L250S0
-         Model Number:       ST3250823AS
-         Model Number:       ST3250823AS
+It stuck in my head. It's not that representative. My bad.
 
-	All work. I RMA'd the 6V250 drive and exchanged it against a good, old,  
-IDE drive, which works perfect.
+most errors (for me) were:
 
-	It took me a month, 3 maxtor drives, and nights of googling to figure  
-this out...
+Jan 19 15:23:05 haze kernel: ata1: PIO error
+Jan 19 15:23:05 haze kernel: ata1: status=0x50 { DriveReady SeekComplete }
+Jan 19 15:23:05 haze kernel: ata1: PIO error
+Jan 19 15:23:05 haze kernel: ata1: status=0x50 { DriveReady SeekComplete }
+Jan 19 15:23:05 haze kernel: ata1: PIO error
 
-	My gut feeling is that SATA isn't that ready for prime-time after all...
+
+But if you look at:
+http://marc.theaimsgroup.com/?l=linux-kernel&m=113769509617034&w=2
+
+you'll see that I had what looked like a 'spurious' bad-block error -
+and I have an Asus motherboard, am using the via_sata driver, have
+another sata driver loaded and am using md - all under 2.6.15 .... hence
+the tentative association of the problems :)
+
+Oh, and libata's error handling is embryonic - maybe it should be
+retrying. I dunno.
+
+I've seen other potentially related problems in the
+sata/motherboard/raid area.
+Personally I suspect buggy Asus motherboards.
+I wonder if the bug is triggered by multiple drivers or some concurrency
+- hence raid's involvment...
+(Since I suspect md is actually tickling it, not causing it moving to
+lkml and linux-ide too)
+
+Of course I plan to do some tests - but mentioning it may give others
+ideas too... And maybe I/we'll get suggestions as to what to try next...
+
+David
+
+-- 
+
