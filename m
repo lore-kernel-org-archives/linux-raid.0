@@ -1,61 +1,43 @@
-From: Gilberto Diaz <gilberto@ula.ve>
-Subject: cpu consumption
-Date: Mon, 23 Jan 2006 18:28:06 -0400
-Message-ID: <43D55876.5020800@ula.ve>
+From: Gordon Henderson <gordon@drogon.net>
+Subject: Re: cpu consumption
+Date: Mon, 23 Jan 2006 22:40:18 +0000 (GMT)
+Message-ID: <Pine.LNX.4.56.0601232238440.23760@lion.drogon.net>
+References: <43D55876.5020800@ula.ve>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <43D55876.5020800@ula.ve>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Gilberto Diaz <gilberto@ula.ve>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello Everybody
+On Mon, 23 Jan 2006, Gilberto Diaz wrote:
 
-   I have checked the list archive but I could not find any message that
-help. So I'm asking for help here. I have a Sun storege with 12 sata
-hard disks connected to a normal PC using a QLogic ISP2300 host adapter
-card. I have configured 6 raid1, (2 hard disk each). I excecuted the
-following commands to create all of the them
+>    The problem is that the following proccesses are using a lot of cpu
+> time.
+>
+>     md1_raid1
+>     md1_resync
+>     ......
+>     md6_raid1
+>     md6_resync
+>
+>     Here is a sample of the uptime command
+>
+> 17:54:16 up  5:48,  2 users,  load average: 5.02, 5.05, 5.26
+>
+>     Does anybody have an idea what is the problem? Thank a lot in advance
 
-mdadm --create --verbose /dev/md1 --level=raid1 --raid-devices=2
-/dev/sda /dev/sdb
-mdadm --create --verbose /dev/md2 --level=raid1 --raid-devices=2
-/dev/sdc /dev/sdd
-mdadm --create --verbose /dev/md3 --level=raid1 --raid-devices=2
-/dev/sde /dev/sdf
-mdadm --create --verbose /dev/md4 --level=raid1 --raid-devices=2
-/dev/sdg /dev/sdh
-mdadm --create --verbose /dev/md5 --level=raid1 --raid-devices=2
-/dev/sdi /dev/sdj
-mdadm --create --verbose /dev/md6 --level=raid1 --raid-devices=2
-/dev/sdk /dev/sdl
+to me, it looks like the "problem" is that the RAID system is still
+creating the array and syncing all the partitions up. Once it's finished
+your system will be idle.
 
-Here is my /etc/mdadm/mdadm.conf file
+I bet it's stopped doing it by the time you get this email... What does
+the output of
 
-DEVICE /dev/sd[abcdefghijkl] /dev/md1 /dev/md2 /dev/md3 /dev/md4
-/dev/md5 /dev/md6
-ARRAY /dev/md1 devices=/dev/sda,/dev/sdb
-ARRAY /dev/md2 devices=/dev/sdc,/dev/sdd
-ARRAY /dev/md3 devices=/dev/sde,/dev/sdf
-ARRAY /dev/md4 devices=/dev/sdg,/dev/sdh
-ARRAY /dev/md5 devices=/dev/sdi,/dev/sdj
-ARRAY /dev/md6 devices=/dev/sdk,/dev/sdl
+  cat /proc/mdstat
 
-   The problem is that the following proccesses are using a lot of cpu
-time.
+look like?
 
-    md1_raid1
-    md1_resync
-    ......
-    md6_raid1
-    md6_resync
-
-    Here is a sample of the uptime command
-
-17:54:16 up  5:48,  2 users,  load average: 5.02, 5.05, 5.26
-
-    Does anybody have an idea what is the problem? Thank a lot in advance
-
-Best regards
-Gilberto Diaz
+Gordon
