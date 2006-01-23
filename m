@@ -1,34 +1,52 @@
-From: Brad Campbell <brad@wasp.net.au>
-Subject: Re: Need to upgrade to latest stable mdadm version?
-Date: Mon, 23 Jan 2006 17:58:11 +0400
-Message-ID: <43D4E0F3.3070406@wasp.net.au>
-References: <200601221241.54689.mlaks@verizon.net> <43D3C5A8.3070200@dgreaves.com> <200601230902.45171.mlaks@verizon.net>
+From: Turbo Fredriksson <turbo@bayour.com>
+Subject: Re: Expanding RAID array?
+Date: Mon, 23 Jan 2006 15:28:34 +0100
+Message-ID: <87slrfuigd.fsf@pumba.bayour.com>
+References: <1137424449.3953.38.camel@kenny>
+	<17356.8228.325002.652805@cse.unsw.edu.au>
+	<Pine.LNX.4.56.0601162244220.1836@lion.drogon.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200601230902.45171.mlaks@verizon.net>
+In-Reply-To: <Pine.LNX.4.56.0601162244220.1836@lion.drogon.net> (Gordon
+ Henderson's message of "Mon, 16 Jan 2006 22:48:04 +0000 (GMT)")
 Sender: linux-raid-owner@vger.kernel.org
-To: Mitchell Laks <mlaks@verizon.net>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Mitchell Laks wrote:
+Quoting Gordon Henderson <gordon@drogon.net>:
 
-> It does not work with the debian sid 2.6.15 kernel. You were far more 
-> observant than I. I thought that my 2 raids were working with the debian 
-> 2.6.15 but in fact it one of the drives had failed out of the  array (thats 
-> why it seemed to work, I hadn't slept enough...).
-> 
-> In fact your diagnosis is completely correct. I cannot get both sata_via and 
-> sata_promise up at the same time, without timeout problems. 
+> On Tue, 17 Jan 2006, Neil Brown wrote:
+>
+>> - status of RAID6
+>>     I believe it is as stable/reliable as raid5.
+>
+> FWIW: I've been using RAID-6 since early last year in production
+> environments and so-far so good.
 
-I _hope_ this is just an anomaly as I have a production machine here with 2.6.10, 3 sata_pro6mise 
-cards and using the on-board sata_via interface also.. I was planning on upgrading it to 2.6.15 or 
-2.6.16 when it's released to gain the benefit of the new raid-5 error recovery patches.
+Ditto. On a VERY loaded system (so loaded that it crash every now and
+then because of the load). Haven't had ANY trouble what so ever with
+RAID6. I'm very (!) happy with it!
 
+This on 4x9Gb + 2 spares. Use it on the system/root filesystem only
+though... Which isn't THAT loaded now when I think about it...
 
+If I could, i'd convert all my RAID5 sets to RAID6. But I don't have
+time for the downtime. I'll monitor this subject closely though... :)
+
+> Kernels 2.6.11 to 2.6.15 (on a Dell 2850 server I'm building tonight with 6 drives).
+
+Mine is a 2.6.12.4 on a Sun Blade 1000 (2x750MHz UltraSPARC III) CPU's
+(now) with 2Gb mem...
+
+> I've not had a disk failure for real yet, but it's "just worked" every time I've done
+> tests on it.
+
+Same here. I've been fortunate to not have a disk crash so I can't
+say how stable/good RAID6 is if disks start krashing :)
 -- 
-"Human beings, who are almost unique in having the ability
-to learn from the experience of others, are also remarkable
-for their apparent disinclination to do so." -- Douglas Adams
+PLO SEAL Team 6 domestic disruption jihad nuclear terrorist Clinton
+colonel Qaddafi congress Marxist Peking bomb explosion South Africa
+[See http://www.aclu.org/echelonwatch/index.html for more about this]
+[Or http://www.europarl.eu.int/tempcom/echelon/pdf/rapport_echelon_en.pdf]
+If neither of these works, try http://www.aclu.org and search for echelon.
