@@ -1,80 +1,130 @@
-From: Ville Herva <vherva@vianova.fi>
-Subject: Re: [PATCH 000 of 5] md: Introduction
-Date: Mon, 23 Jan 2006 19:33:32 +0200
-Message-ID: <20060123173332.GF1686@vianova.fi>
-References: <17360.9233.215291.380922@cse.unsw.edu.au> <20060120183621.GA2799@redhat.com> <20060120225724.GW22163@marowsky-bree.de> <20060121000142.GR2801@redhat.com> <20060121000344.GY22163@marowsky-bree.de> <20060121000806.GT2801@redhat.com> <20060121001311.GA22163@marowsky-bree.de> <20060123094418.GX2801@redhat.com> <20060123125420.GE1686@vianova.fi> <20060123135428.GA2801@redhat.com>
-Reply-To: vherva@vianova.fi
+From: Shawn Usry <shawn@joebacardi.com>
+Subject: Re: multiple Sata SATAII 150, TX4  - how to tell which drive is which?
+	headaches galore!
+Date: Mon, 23 Jan 2006 11:41:01 -0600
+Message-ID: <20060123174101.4ecf90b0@ted.secure-tunnel.com>
+References: <200601230336.55220.mlaks@verizon.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20060123135428.GA2801@redhat.com>
+In-Reply-To: <200601230336.55220.mlaks@verizon.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Heinz Mauelshagen <mauelshagen@redhat.com>
-Cc: Lars Marowsky-Bree <lmb@suse.de>, Neil Brown <neilb@suse.de>, Phillip Susi <psusi@cfl.rr.com>, Jan Engelhardt <jengelh@linux01.gwdg.de>, "Lincoln Dale (ltd)" <ltd@cisco.com>, Michael Tokarev <mjt@tls.msk.ru>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, "Steinar H. Gunderson" <sgunderson@bigfoot.com>
+To: Mitchell Laks <mlaks@verizon.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Jan 23, 2006 at 02:54:28PM +0100, you [Heinz Mauelshagen] wrote:
-> > 
-> > It is very tedious to have to debug a production system for a few hours in
-> > order to get the rootfs mounted after each kernel update. 
-> > 
-> > The lvm error messages give almost no clue on the problem. 
-> > 
-> > Worse yet, problem reports on these issues are completely ignored on the lvm
-> > mailing list, even when a patch is attached.
-> > 
-> > (See
-> >  http://marc.theaimsgroup.com/?l=linux-lvm&m=113775502821403&w=2
-> >  http://linux.msede.com/lvm_mlist/archive/2001/06/0205.html
-> >  http://linux.msede.com/lvm_mlist/archive/2001/06/0271.html
-> >  for reference.)
+Apologies for the previous uncompleted post.
+
+Anyhoo - Mitchell, I've recently been experimenting with the the same board (TX4) in FC4.  Currently, I've got 2 boards installed.  
+
+I've noticed, that when using the stock libata / sata_promise drivers that are in FC4, the discovery order on each board is:
+
+3-2-4-1
+
+Where each number represents the physical port label number imprinted on the TX4 board.
+
+In other words:
+
+/dev/sda = port 3
+/dev/sdb = port 2
+
+etc...
+
+However, just last night I compiled and insmod'd the Promise-provided linux driver (I forget the module name), and noticed that the discovery order changes, to be exactly the same as the order that the TX4 bios discovers the drives.  I have not had a chance yet to figure out what this translates to in terms of the physical port labeling - I'll try to get that hammered out tonite and repost.
+
+I also noticed, that with EITHER driver, the discovery order does stay within the bounds of one card, before moving on to the next TX4 board you might have installed.  In other words, you won't end up with /dev/sda being a drive in board A, and /dev/sdb being a drive in board B.  It will discover sequentially, at least with respect to the boards.
+
+Hope this helps a bit.
+
+
+
+
+
+----- Original Message -----
+From: Mitchell Laks
+[mailto:mlaks@verizon.net]
+To: linux-raid@vger.kernel.org
+Sent: Mon, 23 Jan
+2006 02:36:54 -0600
+Subject: multiple Sata SATAII 150, TX4  - how to tell
+which drive is which? headaches galore!
+
+
+> Dear Experts,
 > 
-> Hrm, those are initscripts related, not lvm directly
-
-With the ancient LVM1 issue, my main problem was indeed that mkinitrd did
-not reserve enough space for the initrd. The LVM issue I posted to the LVM
-list was that LVM userland (vg_cfgbackup.c) did not check for errors while
-writing to the fs. The (ignored) patch added some error checking.
-
-But that's ancient, I think we can forget about that.
-
-The current issue (please see the first link) is about the need to add
-a "sleep 5" between 
- lvm vgmknodes
-and
- mount -o defaults --ro -t ext3 /dev/root /sysroot 
-. 
-
-Otherwise, mounting fails. (Actually, I added "sleep 5" after every lvm
-command in the init script and did not narrow it down any more, since this
-was a production system, each boot took ages, and I had to get the system up
-as soon as possible.)
-
-To me it seemed some kind of problem with the lvm utilities, not with the
-initscripts. At least, the correct solution cannot be adding "sleep 5" here
-and there in the initscripts...
- 
-> Alright.
-> Is the initscript issue fixed now or still open ?
-
-It is still open.
-
-Sadly, the only two systems this currently happens are production boxes and
-I cannot boot them at will for debugging. It is, however, 100% reproducible
-and I can try reasonable suggestions when I boot them the next time. Sorry
-about this.
-
-> Had you filed a bug against the distros initscripts ?
-
-No, since I wasn't sure the problem actually was in the initscript. Perhaps
-it does do something wrong, but the "sleep 5" workaround is pretty
-suspicious.
-
-Thanks for the reply.
-
-
-
--- v -- 
-
-v@iki.fi
+> I wanted to ask for any experience with running raid with SATA drives and 
+> controllers here under linux.
+> 
+> I have been having an interesting time!
+> 
+> I initially tried to use raid1 on  my asus A8v motherboard 
+> using  a mixture of SATA controllers - 
+> the built in motherboard SATA controller (via vt8237) 
+> as well as a  Promise PCI card SATAII 150, 
+> but had problems with the kernel. My drives gave me all sorts of errors
+> while 
+> trying to build the  raids and while running mkfs.ext3
+> and i couldn't  get it to work reliably with the any of the current kernels
+> I 
+> tried, including 2.6.15.1 the current stable kernel. 
+> I get countless kernel errors as I mentioned in an earlier post.
+> 
+> Now I have switched to only using the PCI card controllers ( Well, I can put
+> 
+> multiple controllers into the motherboard). So I use only sata_promise and 
+> get rid of sata_via, which conflicts (according to my experience). 
+> 
+> Now however, when a drive gives me errors - how can I identify which drive
+> on 
+> which device is failing? 
+> 
+> The kernel seems to name things randomly.
+> 
+> This is important when a drive 'fails'. Which drive failed? If I am dealing 
+> with /dev/hda1 /dev/hdb1 /dev/hdc1 /dev/hdd1  on the two ide channels
+> then  I 'know' which is which.
+> 
+> Even crazier (from an accounting point of view) is  the following.
+> 
+> if I have 2 of these cards, then the sata_promise driver does not appear to 
+> distinguish "where" (ie: which physical controller port on ___which___ card)
+> 
+> the drives are. 
+> 
+> The letters don't skip to show you are on a second controller -even if you 
+> leave blank slots to try to see...
+> The kernel  randomly  calls the drives sda sdb sdc sdd sde and they seem to
+> be 
+> anywhere on the physical controllers.  It seems to be completely random. 
+> HELP!
+> 
+> I since I run a bunch of raid1's, if I get errors I have a major chore. So I
+> 
+> must stop and reboot countless times doing a binary search using mdadm 
+> -E /dev/sd[ab]1 |grep UU to find the UUID's of the misbehaving drives.  
+> Then 
+> look closely at mdadm -E of the 2 final candidates to see which one gave me 
+> these errors. 
+> 
+> For instance a new drive failed while I was installing the raid, and
+> testing.
+> To find the erroring drive I had to reproduce the errors each time by  
+> creating the raids, and running mkfs.ext3 which seems to cause the errors. 
+> What if the errors were more occult????
+> 
+> Each card had 4 controllers - however when I have more than 1 card it can be
+> 
+> even more difficult to identify where we are.
+> 
+> Any experience out there to help me?
+> 
+> Thanks,
+> 
+> Mitchell Laks
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
