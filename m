@@ -1,76 +1,62 @@
-From: Mitchell Laks <mlaks@verizon.net>
-Subject: multiple Sata SATAII 150, TX4  - how to tell which drive is which?
- headaches galore!
-Date: Mon, 23 Jan 2006 03:36:54 -0500
-Message-ID: <200601230336.55220.mlaks@verizon.net>
+From: Heinz Mauelshagen <mauelshagen@redhat.com>
+Subject: Re: [PATCH 000 of 5] md: Introduction
+Date: Mon, 23 Jan 2006 10:44:18 +0100
+Message-ID: <20060123094418.GX2801@redhat.com>
+References: <43D00FFA.1040401@cfl.rr.com> <17360.5011.975665.371008@cse.unsw.edu.au> <43D02033.4070008@cfl.rr.com> <17360.9233.215291.380922@cse.unsw.edu.au> <20060120183621.GA2799@redhat.com> <20060120225724.GW22163@marowsky-bree.de> <20060121000142.GR2801@redhat.com> <20060121000344.GY22163@marowsky-bree.de> <20060121000806.GT2801@redhat.com> <20060121001311.GA22163@marowsky-bree.de>
+Reply-To: mauelshagen@redhat.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-disposition: inline
+Content-Disposition: inline
+In-Reply-To: <20060121001311.GA22163@marowsky-bree.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Lars Marowsky-Bree <lmb@suse.de>
+Cc: Heinz Mauelshagen <mauelshagen@redhat.com>, Neil Brown <neilb@suse.de>, Phillip Susi <psusi@cfl.rr.com>, Jan Engelhardt <jengelh@linux01.gwdg.de>, "Lincoln Dale (ltd)" <ltd@cisco.com>, Michael Tokarev <mjt@tls.msk.ru>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, "Steinar H. Gunderson" <sgunderson@bigfoot.com>
 List-Id: linux-raid.ids
 
-Dear Experts,
+On Sat, Jan 21, 2006 at 01:13:11AM +0100, Lars Marowsky-Bree wrote:
+> On 2006-01-21T01:08:06, Heinz Mauelshagen <mauelshagen@redhat.com> wrote:
+> 
+> > > A dm-md wrapper would give you the same?
+> > No, we'ld need to stack more complex to achieve mappings.
+> > Think lvm2 and logical volume level raid5.
+> 
+> How would you not get that if you had a wrapper around md which made it
+> into an dm personality/target?
 
-I wanted to ask for any experience with running raid with SATA drives and 
-controllers here under linux.
+You could with deeper stacking. That's why I mentioned it above.
 
-I have been having an interesting time!
+> 
+> Besides, stacking between dm devices so far (ie, if I look how kpartx
+> does it, or LVM2 on top of MPIO etc, which works just fine) is via the
+> block device layer anyway - and nothing stops you from putting md on top
+> of LVM2 LVs either.
+> 
+> I use the regularly to play with md and other stuff...
 
-I initially tried to use raid1 on  my asus A8v motherboard 
-using  a mixture of SATA controllers - 
-the built in motherboard SATA controller (via vt8237) 
-as well as a  Promise PCI card SATAII 150, 
-but had problems with the kernel. My drives gave me all sorts of errors while 
-trying to build the  raids and while running mkfs.ext3
-and i couldn't  get it to work reliably with the any of the current kernels I 
-tried, including 2.6.15.1 the current stable kernel. 
-I get countless kernel errors as I mentioned in an earlier post.
+Me too but for production, I want to avoid the
+additional stacking overhead and complexity.
 
-Now I have switched to only using the PCI card controllers ( Well, I can put 
-multiple controllers into the motherboard). So I use only sata_promise and 
-get rid of sata_via, which conflicts (according to my experience). 
+> 
+> So I remain unconvinced that code duplication is worth it for more than
+> "hark we want it so!" ;-)
 
-Now however, when a drive gives me errors - how can I identify which drive on 
-which device is failing? 
+Shall I remove you from the list of potential testers of dm-raid45 then ;-)
 
-The kernel seems to name things randomly.
+> 
+> 
 
-This is important when a drive 'fails'. Which drive failed? If I am dealing 
-with /dev/hda1 /dev/hdb1 /dev/hdc1 /dev/hdd1  on the two ide channels
-then  I 'know' which is which.
+-- 
 
-Even crazier (from an accounting point of view) is  the following.
+Regards,
+Heinz    -- The LVM Guy --
 
-if I have 2 of these cards, then the sata_promise driver does not appear to 
-distinguish "where" (ie: which physical controller port on ___which___ card) 
-the drives are. 
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-The letters don't skip to show you are on a second controller -even if you 
-leave blank slots to try to see...
-The kernel  randomly  calls the drives sda sdb sdc sdd sde and they seem to be 
-anywhere on the physical controllers.  It seems to be completely random. 
-HELP!
-
-I since I run a bunch of raid1's, if I get errors I have a major chore. So I 
-must stop and reboot countless times doing a binary search using mdadm 
--E /dev/sd[ab]1 |grep UU to find the UUID's of the misbehaving drives.   Then 
-look closely at mdadm -E of the 2 final candidates to see which one gave me 
-these errors. 
-
-For instance a new drive failed while I was installing the raid, and testing.
-To find the erroring drive I had to reproduce the errors each time by  
-creating the raids, and running mkfs.ext3 which seems to cause the errors. 
-What if the errors were more occult????
-
-Each card had 4 controllers - however when I have more than 1 card it can be 
-even more difficult to identify where we are.
-
-Any experience out there to help me?
-
-Thanks,
-
-Mitchell Laks
-
+Heinz Mauelshagen                                 Red Hat GmbH
+Consulting Development Engineer                   Am Sonnenhang 11
+Cluster and Storage Development                   56242 Marienrachdorf
+                                                  Germany
+Mauelshagen@RedHat.com                            +49 2626 141200
+                                                       FAX 924446
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
