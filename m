@@ -1,113 +1,62 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Possible libata/sata/Asus problem (was Re: Need to upgrade to latest
- stable mdadm version?)
-Date: Mon, 23 Jan 2006 12:31:24 +0000
-Message-ID: <43D4CC9C.9060500@dgreaves.com>
-References: <Pine.LNX.4.44.0601221719020.24057-100000@coffee.psychology.mcmaster.ca>
+From: Ville Herva <vherva@vianova.fi>
+Subject: Re: [PATCH 000 of 5] md: Introduction
+Date: Mon, 23 Jan 2006 14:54:20 +0200
+Message-ID: <20060123125420.GE1686@vianova.fi>
+References: <17360.5011.975665.371008@cse.unsw.edu.au> <43D02033.4070008@cfl.rr.com> <17360.9233.215291.380922@cse.unsw.edu.au> <20060120183621.GA2799@redhat.com> <20060120225724.GW22163@marowsky-bree.de> <20060121000142.GR2801@redhat.com> <20060121000344.GY22163@marowsky-bree.de> <20060121000806.GT2801@redhat.com> <20060121001311.GA22163@marowsky-bree.de> <20060123094418.GX2801@redhat.com>
+Reply-To: vherva@vianova.fi
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44.0601221719020.24057-100000@coffee.psychology.mcmaster.ca>
+Content-Disposition: inline
+In-Reply-To: <20060123094418.GX2801@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mark Hahn <hahn@physics.mcmaster.ca>
-Cc: Mitchell Laks <mlaks@verizon.net>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, IDE Linux <linux-ide@vger.kernel.org>
+To: Heinz Mauelshagen <mauelshagen@redhat.com>
+Cc: Lars Marowsky-Bree <lmb@suse.de>, Neil Brown <neilb@suse.de>, Phillip Susi <psusi@cfl.rr.com>, Jan Engelhardt <jengelh@linux01.gwdg.de>, "Lincoln Dale (ltd)" <ltd@cisco.com>, Michael Tokarev <mjt@tls.msk.ru>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, "Steinar H. Gunderson" <sgunderson@bigfoot.com>
 List-Id: linux-raid.ids
 
-Mark Hahn wrote:
+On Mon, Jan 23, 2006 at 10:44:18AM +0100, you [Heinz Mauelshagen] wrote:
+> > 
+> > I use the regularly to play with md and other stuff...
+> 
+> Me too but for production, I want to avoid the
+> additional stacking overhead and complexity.
+> 
+> > So I remain unconvinced that code duplication is worth it for more than
+> > "hark we want it so!" ;-)
+> 
+> Shall I remove you from the list of potential testers of dm-raid45 then ;-)
 
->>>and with the ETCH testing 2.6.12:  the sata_via module fails with
->>>      
->>>
->I'm sure you know that no kernel developer really cares about distro-hacked 
->kernels.  why not test a real (kernel.org) kernel?
->  
->
-Only because if the problem exists on the stock kernel and not on the
-distro kernel then there could be assistance in determining which patch
-solves (or hides!) the problem. This may or may not actually be helpful.
+Heinz, 
 
+If you really want the rest of us to convert from md to lvm, you should
+perhaps give some attention to thee brittle userland (scripts and and
+binaries).
 
->>>ata1: status=0x51 { DriveReady SeekComplete Error }
->>>ata1: error=0x84 { DriveStatusError BadCRC }
->>>      
->>>
->badcrc's are a sign that the link is failing - bad cable, bad power,
->overclocking,
->
-OK
+It is very tedious to have to debug a production system for a few hours in
+order to get the rootfs mounted after each kernel update. 
 
->possibly an error in the driver's timing config.
->  
->
-A-ha!
+The lvm error messages give almost no clue on the problem. 
 
->it cannot possibly be an mdadm problem, and cannot be related to 
->other software (kernel memory management, say.)
->  
->
-Agreed.
+Worse yet, problem reports on these issues are completely ignored on the lvm
+mailing list, even when a patch is attached.
 
-> I don't see how driver interaction could cause the BadCRC, unless one
-> driver
->
->is screwing with the timing registers of the other's hardware.
->  
->
-And maybe, on a lightly loaded system, RAID causes concurrent access
-(and potentially triggers problems) more often than a non-RAID solution?
+(See
+ http://marc.theaimsgroup.com/?l=linux-lvm&m=113775502821403&w=2
+ http://linux.msede.com/lvm_mlist/archive/2001/06/0205.html
+ http://linux.msede.com/lvm_mlist/archive/2001/06/0271.html
+ for reference.)
 
-> mdadm cannot possibly have anything to do with causing BadCRC's.
-> upgrade if
->
->you feel like it, but not because of this problem.
->  
->
-Completely agree.
+Such experience gives an impression lvm is not yet ready for serious
+production use.
 
->>I am running the *stock* 2.6.15 and get the same problems (ata timeouts etc)
->>    
->>
->is there a reason you call this a timeout, rather than a BadCRC?
->  
->
-I had:
-  ata2: command 0x25 timeout, stat 0x51 host_stat 0x0
-
-It stuck in my head. It's not that representative. My bad.
-
-most errors (for me) were:
-
-Jan 19 15:23:05 haze kernel: ata1: PIO error
-Jan 19 15:23:05 haze kernel: ata1: status=0x50 { DriveReady SeekComplete }
-Jan 19 15:23:05 haze kernel: ata1: PIO error
-Jan 19 15:23:05 haze kernel: ata1: status=0x50 { DriveReady SeekComplete }
-Jan 19 15:23:05 haze kernel: ata1: PIO error
+No offense intended, lvm kernel (lvm1 nor lvm2) code has never given me
+trouble, and is probably as solid as anything. 
 
 
-But if you look at:
-http://marc.theaimsgroup.com/?l=linux-kernel&m=113769509617034&w=2
+-- v -- 
 
-you'll see that I had what looked like a 'spurious' bad-block error -
-and I have an Asus motherboard, am using the via_sata driver, have
-another sata driver loaded and am using md - all under 2.6.15 .... hence
-the tentative association of the problems :)
+v@iki.fi
 
-Oh, and libata's error handling is embryonic - maybe it should be
-retrying. I dunno.
-
-I've seen other potentially related problems in the
-sata/motherboard/raid area.
-Personally I suspect buggy Asus motherboards.
-I wonder if the bug is triggered by multiple drivers or some concurrency
-- hence raid's involvment...
-(Since I suspect md is actually tickling it, not causing it moving to
-lkml and linux-ide too)
-
-Of course I plan to do some tests - but mentioning it may give others
-ideas too... And maybe I/we'll get suggestions as to what to try next...
-
-David
-
--- 
-
+PS: Speaking of debugging failing initrd init scripts; it would be nice if
+the kernel gave an error message on wrong initrd format rather than silently
+failing... Yes, I forgot to make the cpio with the "-H newc" option :-/.
