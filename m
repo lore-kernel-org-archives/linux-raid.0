@@ -1,52 +1,61 @@
-From: Turbo Fredriksson <turbo@bayour.com>
-Subject: Re: Expanding RAID array?
-Date: Mon, 23 Jan 2006 15:28:34 +0100
-Message-ID: <87slrfuigd.fsf@pumba.bayour.com>
-References: <1137424449.3953.38.camel@kenny>
-	<17356.8228.325002.652805@cse.unsw.edu.au>
-	<Pine.LNX.4.56.0601162244220.1836@lion.drogon.net>
+From: Mattias Wadenstein <maswan@acc.umu.se>
+Subject: Re: Selective spin-up
+Date: Mon, 23 Jan 2006 17:09:25 +0100 (MET)
+Message-ID: <Pine.GSO.4.62.0601231648480.14030@shaka.acc.umu.se>
+References: <43D2EBC1.1000007@xs4all.nl> <43D32E3A.4020508@wasp.net.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.56.0601162244220.1836@lion.drogon.net> (Gordon
- Henderson's message of "Mon, 16 Jan 2006 22:48:04 +0000 (GMT)")
+In-Reply-To: <43D32E3A.4020508@wasp.net.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Brad Campbell <brad@wasp.net.au>
+Cc: John Hendrikx <hjohn@xs4all.nl>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Quoting Gordon Henderson <gordon@drogon.net>:
+On Sun, 22 Jan 2006, Brad Campbell wrote:
 
-> On Tue, 17 Jan 2006, Neil Brown wrote:
+> John Hendrikx wrote:
+>> I recently extended my raid array with a 9th drive, and I find that the 300 
+>> watt PSU I use is insufficient to start the system.  What happens is that I 
+>> activate the machine, the machine starts powering up for 3 seconds orso 
+>> (spinning all the hard drives up about half way) then power cuts out.  I've 
+>> heard that it is possible to spin up disks one at a time or in groups, but 
+>> cannot find any such option in the BIOS (Asus A8N-E board).  Any ideas?
+
+And just in response to the original question, this is called "staggered 
+spin-up" and is usually a feature of larger raid/scsi controllers and 
+intelligent backplanes. Usually not found in cheap hardware.
+
+> I had a similar problem with a 480W PSU and my 15 drive array..
+> I looked for selective spinup and other hacks, but to be honest I figured 
+> that even if the trip point is under spin up load only, I was running the PSU 
+> too close to the wire to be comfortable.
+> I bought a 600W unit and re-wired it's dual 12V rails to do the job.. Problem 
+> solved.
+
+Heh, I just did this for an 18 drive machine too. Much better than the old 
+duct-taped 2 PSU "solution":
+
+http://www.acc.umu.se/~maswan/bilder/20060117-Kryddis/
+
+> I also run a smart check every morning (6 days short 1 day long) 
+> simultaneously on all drives to make sure the system behaves under load.
 >
->> - status of RAID6
->>     I believe it is as stable/reliable as raid5.
+> Do yourself a favour and grab a shiny new PSU.. I have 14 Drives hanging off 
+> a 420W unit in my other box that behave perfectly..
 >
-> FWIW: I've been using RAID-6 since early last year in production
-> environments and so-far so good.
+> Just look at the the 12V rail capacity on any PSU you choose and make sure it 
+> will cope with the spool up load. I grabbed Maxtor's docs on these drives, 
+> calculated the load for 15 drives and worked from there.. My practical 
+> measurements came to within about 15% of the theoretical so the docs are not 
+> to bad.
 
-Ditto. On a VERY loaded system (so loaded that it crash every now and
-then because of the load). Haven't had ANY trouble what so ever with
-RAID6. I'm very (!) happy with it!
+Don't forget to take a look at the 5V load too. The last batch of drives I 
+got for that machine was hitatchi sata drives which claims 1.3A in "max 
+r/w load". Lots of PSUs even with high W-ratings (600/800) have only 20 or 
+30A rated 5V load, and you want some left over for the rest of the system.
 
-This on 4x9Gb + 2 spares. Use it on the system/root filesystem only
-though... Which isn't THAT loaded now when I think about it...
+Now, if I could only get rid of these load-induced sata_sil (or whatever 
+it is) cold hangs everything would be awesome. :)
 
-If I could, i'd convert all my RAID5 sets to RAID6. But I don't have
-time for the downtime. I'll monitor this subject closely though... :)
-
-> Kernels 2.6.11 to 2.6.15 (on a Dell 2850 server I'm building tonight with 6 drives).
-
-Mine is a 2.6.12.4 on a Sun Blade 1000 (2x750MHz UltraSPARC III) CPU's
-(now) with 2Gb mem...
-
-> I've not had a disk failure for real yet, but it's "just worked" every time I've done
-> tests on it.
-
-Same here. I've been fortunate to not have a disk crash so I can't
-say how stable/good RAID6 is if disks start krashing :)
--- 
-PLO SEAL Team 6 domestic disruption jihad nuclear terrorist Clinton
-colonel Qaddafi congress Marxist Peking bomb explosion South Africa
-[See http://www.aclu.org/echelonwatch/index.html for more about this]
-[Or http://www.europarl.eu.int/tempcom/echelon/pdf/rapport_echelon_en.pdf]
-If neither of these works, try http://www.aclu.org and search for echelon.
+/Mattias Wadenstein
