@@ -1,79 +1,86 @@
-From: "Adam Kropelin" <akropel1@rochester.rr.com>
-Subject: Re: [PATCH 000 of 5] md: Introduction
-Date: Mon, 23 Jan 2006 18:02:56 -0500
-Message-ID: <0ad101c62071$261ebde0$03c8a8c0@kroptech.com>
-References: <20060117174531.27739.patches@notabene> <20060121234234.A32306@mail.kroptech.com> <17364.3266.29943.914861@cse.unsw.edu.au>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: cpu consumption
+Date: Mon, 23 Jan 2006 18:08:15 -0500
+Message-ID: <200601232308.k0NN8Kq32567@www.watkins-home.com>
+References: <43D55876.5020800@ula.ve>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	format=flowed;
-	charset="iso-8859-1";
-	reply-type=original
+	charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <43D55876.5020800@ula.ve>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, "Steinar H. Gunderson" <sgunderson@bigfoot.com>
+To: 'Gilberto Diaz' <gilberto@ula.ve>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> On Saturday January 21, akropel1@rochester.rr.com wrote:
->> On the first try I neglected to read the directions and increased the
->> number of devices first (which worked) and then attempted to add the
->> physical device (which didn't work; at least not the way I intended).
->
-> Thanks, this is exactly the sort of feedback I was hoping for - people
-> testing thing that I didn't think to...
->
->>   mdadm --create -l5 -n3 /dev/md0 /dev/sda /dev/sdb /dev/sdc
->>
->>     md0 : active raid5 sda[0] sdc[2] sdb[1]
->>           2097024 blocks level 5, 64k chunk, algorithm 2 [3/3] [UUU]
->>
->>   mdadm --grow -n4 /dev/md0
->>
->>     md0 : active raid5 sda[0] sdc[2] sdb[1]
->>           3145536 blocks level 5, 64k chunk, algorithm 2 [4/3] [UUU_]
->
-> I assume that no "resync" started at this point?  It should have done.
 
-Actually, it did start a resync. Sorry, I should have mentioned that. I 
-waited until the resync completed before I issued the 'mdadm --add' 
-command.
 
->>     md0 : active raid5 sdd[3] sdc[2] sdb[1] sda[0]
->>           2097024 blocks level 5, 64k chunk, algorithm 2 [4/4] [UUUU]
->>                                 ...should this be... --> [4/3]
->> [UUU_] perhaps?
->
-> Well, part of the array is "4/4 UUUU" and part is "3/3 UUU".  How do
-> you represent that?  I think "4/4 UUUU" is best.
+} -----Original Message-----
+} From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+} owner@vger.kernel.org] On Behalf Of Gilberto Diaz
+} Sent: Monday, January 23, 2006 5:28 PM
+} To: linux-raid@vger.kernel.org
+} Subject: cpu consumption
+} 
+} Hello Everybody
+} 
+}    I have checked the list archive but I could not find any message that
+} help. So I'm asking for help here. I have a Sun storege with 12 sata
+} hard disks connected to a normal PC using a QLogic ISP2300 host adapter
+} card. I have configured 6 raid1, (2 hard disk each). I excecuted the
+} following commands to create all of the them
+} 
+} mdadm --create --verbose /dev/md1 --level=raid1 --raid-devices=2
+} /dev/sda /dev/sdb
+} mdadm --create --verbose /dev/md2 --level=raid1 --raid-devices=2
+} /dev/sdc /dev/sdd
+} mdadm --create --verbose /dev/md3 --level=raid1 --raid-devices=2
+} /dev/sde /dev/sdf
+} mdadm --create --verbose /dev/md4 --level=raid1 --raid-devices=2
+} /dev/sdg /dev/sdh
+} mdadm --create --verbose /dev/md5 --level=raid1 --raid-devices=2
+} /dev/sdi /dev/sdj
+} mdadm --create --verbose /dev/md6 --level=raid1 --raid-devices=2
+} /dev/sdk /dev/sdl
+} 
+} Here is my /etc/mdadm/mdadm.conf file
+} 
+} DEVICE /dev/sd[abcdefghijkl] /dev/md1 /dev/md2 /dev/md3 /dev/md4
+} /dev/md5 /dev/md6
+} ARRAY /dev/md1 devices=/dev/sda,/dev/sdb
+} ARRAY /dev/md2 devices=/dev/sdc,/dev/sdd
+} ARRAY /dev/md3 devices=/dev/sde,/dev/sdf
+} ARRAY /dev/md4 devices=/dev/sdg,/dev/sdh
+} ARRAY /dev/md5 devices=/dev/sdi,/dev/sdj
+} ARRAY /dev/md6 devices=/dev/sdk,/dev/sdl
+} 
+}    The problem is that the following proccesses are using a lot of cpu
+} time.
+} 
+}     md1_raid1
+}     md1_resync
+}     ......
+}     md6_raid1
+}     md6_resync
+} 
+}     Here is a sample of the uptime command
+} 
+} 17:54:16 up  5:48,  2 users,  load average: 5.02, 5.05, 5.26
 
-I see your point. I was expecting some indication that that my array was 
-vulnerable and that the new disk was not fully utilized yet. I guess the 
-resync in progress indicator is sufficient.
+What is the CPU load?  The above does not reflect CPU usage.
+I beleve it reports on average outsanding IOs.  With 6 arrays syncing, I
+would have expected 6 or 12.
 
->> My final test was a repeat of #2, but with data actively being
->> written
->> to the array during the reshape (the previous tests were on an idle,
->> unmounted array). This one failed pretty hard, with several processes
->> ending up in the D state.
->
-> Hmmm... I tried similar things but didn't get this deadlock.  Somehow
-> the fact that mdadm is holding the reconfig_sem semaphore means that
-> some IO cannot proceed and so mdadm cannot grab and resize all the
-> stripe heads... I'll have to look more deeply into this.
+Run "top", or "sar -u 10 10" to see CPU usage.
 
-For what it's worth, I'm using the Buslogic SCSI driver for the disks in 
-the array.
-
->> I'm happy to do more tests. It's easy to conjur up virtual disks and
->> load them with irrelevant data (like kernel trees ;)
->
-> Great.  I'll probably be putting out a new patch set  late this week
-> or early next.  Hopefully it will fix the issues you can found and you
-> can try it again..
-
-Looking forward to it...
-
---Adam
+Guy
+} 
+}     Does anybody have an idea what is the problem? Thank a lot in advance
+} 
+} Best regards
+} Gilberto Diaz
+} -
+} To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+} the body of a message to majordomo@vger.kernel.org
+} More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
