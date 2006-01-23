@@ -1,33 +1,57 @@
-From: "Steinar H. Gunderson" <sgunderson@bigfoot.com>
-Subject: Re: [PATCH 000 of 5] md: Introduction
-Date: Mon, 23 Jan 2006 14:00:30 +0100
-Message-ID: <20060123130030.GA1082@uio.no>
-References: <43D02033.4070008@cfl.rr.com> <17360.9233.215291.380922@cse.unsw.edu.au> <20060120183621.GA2799@redhat.com> <20060120225724.GW22163@marowsky-bree.de> <20060121000142.GR2801@redhat.com> <20060121000344.GY22163@marowsky-bree.de> <20060121000806.GT2801@redhat.com> <20060121001311.GA22163@marowsky-bree.de> <20060123094418.GX2801@redhat.com> <20060123125420.GE1686@vianova.fi>
+From: Mitchell Laks <mlaks@verizon.net>
+Subject: Re: Need to upgrade to latest stable mdadm version?
+Date: Mon, 23 Jan 2006 09:02:43 -0500
+Message-ID: <200601230902.45171.mlaks@verizon.net>
+References: <200601221241.54689.mlaks@verizon.net>
+ <43D3C5A8.3070200@dgreaves.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20060123125420.GE1686@vianova.fi>
+In-reply-to: <43D3C5A8.3070200@dgreaves.com>
+Content-disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Ville Herva <vherva@vianova.fi>
-Cc: Heinz Mauelshagen <mauelshagen@redhat.com>, Lars Marowsky-Bree <lmb@suse.de>, Neil Brown <neilb@suse.de>, Phillip Susi <psusi@cfl.rr.com>, Jan Engelhardt <jengelh@linux01.gwdg.de>, "Lincoln Dale (ltd)" <ltd@cisco.com>, Michael Tokarev <mjt@tls.msk.ru>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Jan 23, 2006 at 02:54:20PM +0200, Ville Herva wrote:
-> If you really want the rest of us to convert from md to lvm, you should
-> perhaps give some attention to thee brittle userland (scripts and and
-> binaries).
+On Sunday 22 January 2006 12:49 pm, David Greaves wrote:
 
-If you do not like the LVM userland, you might want to try the EVMS userland,
-which uses the same kernel code and (mostly) the same on-disk formats, but
-has a different front-end.
+> Just FYI
+> I am running the *stock* 2.6.15 and get the same problems (ata timeouts
+> etc)
+>
+> I recently wrote to the lkml and ide lists following up an old post.
+> No replies yet.
+>
+> I run sata_via and sata_sil
+> (I've seen just a few people with these problems - various kernels -
+> all, to my recollection, seem to have two sets of sata controller
+> chips.... I wonder....)
+>
+> I note you say the *sid* kernel doesn't have these problems so I'll try
+> that. I just wanted to mention that the problem may exist on stock
+> kernels 'cos you talk about rolling your own...
+David! you are right!
 
-> It is very tedious to have to debug a production system for a few hours in
-> order to get the rootfs mounted after each kernel update. 
+It does not work with the debian sid 2.6.15 kernel. You were far more 
+observant than I. I thought that my 2 raids were working with the debian 
+2.6.15 but in fact it one of the drives had failed out of the  array (thats 
+why it seemed to work, I hadn't slept enough...).
 
-This sounds a bit like an issue with your distribution, which should normally
-fix initrd/initramfs issues for you.
+In fact your diagnosis is completely correct. I cannot get both sata_via and 
+sata_promise up at the same time, without timeout problems. 
 
-/* Steinar */
--- 
-Homepage: http://www.sesse.net/
+I am hereby switching exclusively to sata_promise as I can install multiple 
+cards on the same machine.
+
+Mitchell
+
+
+>
+> David
+>
+>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
