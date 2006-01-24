@@ -1,46 +1,45 @@
-From: Christopher Smith <csmith@nighthawkrad.net>
-Subject: Re: Problems with multiple Promise SATA150 TX4 cards
-Date: Tue, 24 Jan 2006 17:58:50 +1100
-Message-ID: <43D5D02A.4020909@nighthawkrad.net>
-References: <Pine.LNX.4.44.0601240132560.32305-100000@coffee.psychology.mcmaster.ca>
+From: Francois Barre <francois.barre@gmail.com>
+Subject: Raid5 degraded mode : what happens for real, and when resync will occur ?
+Date: Tue, 24 Jan 2006 09:46:24 +0100
+Message-ID: <fd8d0180601240046l1c516f68p@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44.0601240132560.32305-100000@coffee.psychology.mcmaster.ca>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Mark Hahn <hahn@physics.mcmaster.ca>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Mark Hahn wrote:
->> I have shuffled the cards,cables and physical drives around to determine 
->> that this is not a problem with any of them individually - no matter the 
->> combination, it only ever happens to drives that are at sd[abcd] (ie: if 
->> I rejig the hardware so the drive at /dev/sdh, which was working fine, 
->> is on a different cable and controller, but appears at /dev/sdb, it will 
->> produce the errors).
-> 
-> did you test the case where all disks had power, but only 8 were plugged 
-> into controllers? 
-> 
->> no individual card, cable or drive was responsible.  The errors _only_ 
->> occur with three cards in the system, _only_ with whichever drives are 
->> attached to the "first" controller (ie: sd[abcd]) and _regardless_ of 
->> other system activity.
-> 
-> the "first" card would correspond to position on the PCI bus (slot),
-> so perhaps that card is getting iffy power.  but did you actually move
-> around which power cables are supplying which disks?
+Hi all,
 
-Power supply was also one of my suspicions, so I tried powering up half 
-a dozen of the drives off another ATX power supply I had and the 
-remainder off the system PSU.  The same problems occurred, which I think 
-rules out the possibility of insufficient power (I did try with all 
-drives powered, but only two cards installed and that worked fine - but 
-I haven't moved around the power plugs of individual drives).
+Please forgive me for my early-morning wonderings, but I am planning
+to make a non-raid -> raid5 migration in a way that could be summed up
+like this :
+Let sda5 be the originial partition. Let sd[bcd]5 be the additionnal
+ones to build up the raid5.
+After security backups and sd[bcd]5 partition creation, I would try and do :
+Step 0 :
+mdadm -l 5 -n 4 /dev/sd[bcd]5 missing
+Step 1 :
+(start the array as degraded)
+Step 2 :
+Format /dev/md0, copy sda5 contents to md0, re-create partitions on sda
+Step 3 :
+mdadm -a /dev/md0 /dev/sda5
 
-I'll try again tonight with all the drives powered off their own PSU, 
-just to be sure.
+At the end of Step 3, we have a working raid5 4-disk array, with the
+contents of the previous sda5.
+My questions are :
+* When will the (real/final) resync occur ? I guess it's in step3,
+because during all steps before, there is nothing to resync... Am I
+right or wrong ?
+* What happens for real during Step1/2 ? Id est for a given stripe,
+will the parity block be computed and written as well ? Does a
+degraded array work exactly as a normal one for blocks layout ? (I
+can't help wondering, because IHMO, this is a terrific algorithmic
+issue).
 
-CS
+Well, having written down my questions I guess I have the answer, so
+if you just can say 'yes little boy, you're right, md is good for
+you', I would be pleased.
