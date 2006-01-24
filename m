@@ -1,59 +1,38 @@
-From: Shawn Usry <shawn@joebacardi.com>
-Subject: Re: multiple Sata SATAII 150, TX4  - how to tell which drive is
-	which?headaches galore!
-Date: Tue, 24 Jan 2006 10:10:43 -0600
-Message-ID: <20060124161043.e90064b0@ted.secure-tunnel.com>
-References: <43D62360.5060001@dgreaves.com>
+From: David Greaves <david@dgreaves.com>
+Subject: Re: multiple Sata SATAII 150, TX4  - how to tell which drive is	which?headaches
+ galore!
+Date: Tue, 24 Jan 2006 17:02:18 +0000
+Message-ID: <43D65D9A.9000809@dgreaves.com>
+References: <20060124161043.e90064b0@ted.secure-tunnel.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <43D62360.5060001@dgreaves.com>
+In-Reply-To: <20060124161043.e90064b0@ted.secure-tunnel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Greaves <david@dgreaves.com>, linux-raid@vger.kernel.org
+To: Shawn Usry <shawn@joebacardi.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hmm..that brings up an interesting question -
+Well, I just ordered this:
+  http://www.trustedreviews.com/article.aspx?head=64&page=2281
 
-Could/would/should a lack of sufficient power to the system, cause disk errors to show up, especially under high I/O?
+Akasa PaxPower 460W PSU (4hdd + gfx card + Athlon3000 so this should be
+fine) on next day delivery - so if my disk problems go away I'll be sure
+to tell ...
 
-Anyone with experience in this?
+...and if they don't then I'll want some answers!!!!   ;)
 
-
------ Original Message -----
-From: David Greaves
-[mailto:david@dgreaves.com]
-To: linux-raid@vger.kernel.org
-Sent: Tue, 24 Jan
-2006 06:53:52 -0600
-Subject: Re: multiple Sata SATAII 150, TX4  - how to
-tell which drive is which?headaches galore!
+David
 
 
-> Mitchell Laks wrote:
-> 
-> >I just discovered that I need a second power supply because
-> >a 450W antec smartpower 2.0 is not enough power for 9 active drives and
-> fans
-> >on my system :(.
-> >
-> >I must look for a better power supply. What do you recommend for big
-> >multidrive systems?
-> >
-> >  
-> >
-> FYI... http://www.trustedreviews.com/article.aspx?art=1014
-> 
-> David
-> PS Mitchell, replies direct to you bounce. Verizon are apparently still
-> blocking us 'dangerous' european spammers! Maybe consider switching to
-> an ISP that's less antisocial ? :)
-> 
-> -- 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Shawn Usry wrote:
+
+>Hmm..that brings up an interesting question -
+>
+>Could/would/should a lack of sufficient power to the system, cause disk errors to show up, especially under high I/O?
+>
+>Anyone with experience in this?
+>  
+>
+
