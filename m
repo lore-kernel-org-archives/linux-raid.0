@@ -1,144 +1,153 @@
-From: "Shawn Usry" <shawn@joebacardi.com>
-Subject: RE: multiple Sata SATAII 150, TX4  - how to tell which drive is which?headaches galore!
-Date: Mon, 23 Jan 2006 20:46:59 -0600
-Message-ID: <002401c62090$741e9aa0$7601a8c0@homer>
-References: <20060123174101.4ecf90b0@ted.secure-tunnel.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Fw: mdadm options, and man page
+Date: Tue, 24 Jan 2006 13:55:49 +1100
+Message-ID: <17365.38709.642096.294321@cse.unsw.edu.au>
+References: <044201c62016$c9524820$1400a8c0@dcccs>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="utf-8"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20060123174101.4ecf90b0@ted.secure-tunnel.com>
-Content-Class: urn:content-classes:message
+In-Reply-To: message from JaniD++ on Monday January 23
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Shawn Usry' <shawn@joebacardi.com>, 'Mitchell Laks' <mlaks@verizon.net>, linux-raid@vger.kernel.org
+To: JaniD++ <djani22@dynamicweb.hu>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Confirmed.  Using the promise OEM driver, (ulsata2.ko) module the FC4 discovery order comes in exactly as printed on the board's themselves, ports 1-4.
- 
-
------Original Message-----
-From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Shawn Usry
-Sent: Monday, January 23, 2006 11:41 AM
-To: Mitchell Laks; linux-raid@vger.kernel.org
-Subject: Re: multiple Sata SATAII 150, TX4 - how to tell which drive is which?headaches galore!
-
-Apologies for the previous uncompleted post.
-
-Anyhoo - Mitchell, I've recently been experimenting with the the same board (TX4) in FC4.  Currently, I've got 2 boards installed.  
-
-I've noticed, that when using the stock libata / sata_promise drivers that are in FC4, the discovery order on each board is:
-
-3-2-4-1
-
-Where each number represents the physical port label number imprinted on the TX4 board.
-
-In other words:
-
-/dev/sda = port 3
-/dev/sdb = port 2
-
-etc...
-
-However, just last night I compiled and insmod'd the Promise-provided linux driver (I forget the module name), and noticed that the discovery order changes, to be exactly the same as the order that the TX4 bios discovers the drives.  I have not had a chance yet to figure out what this translates to in terms of the physical port labeling - I'll try to get that hammered out tonite and repost.
-
-I also noticed, that with EITHER driver, the discovery order does stay within the bounds of one card, before moving on to the next TX4 board you might have installed.  In other words, you won't end up with /dev/sda being a drive in board A, and /dev/sdb being a drive in board B.  It will discover sequentially, at least with respect to the boards.
-
-Hope this helps a bit.
-
-
-
-
-
------ Original Message -----
-From: Mitchell Laks
-[mailto:mlaks@verizon.net]
-To: linux-raid@vger.kernel.org
-Sent: Mon, 23 Jan
-2006 02:36:54 -0600
-Subject: multiple Sata SATAII 150, TX4  - how to tell which drive is which? headaches galore!
-
-
-> Dear Experts,
+On Monday January 23, djani22@dynamicweb.hu wrote:
 > 
-> I wanted to ask for any experience with running raid with SATA drives 
-> and controllers here under linux.
+> ----- Original Message ----- 
+> From: "Neil Brown" <neilb@suse.de>
+> To: "JaniD++" <djani22@dynamicweb.hu>
+> Cc: <linux-raid@vger.kernel.org>
+> Sent: Thursday, January 19, 2006 3:09 AM
+> Subject: Re: mdadm options, and man page
 > 
-> I have been having an interesting time!
 > 
-> I initially tried to use raid1 on  my asus A8v motherboard using  a 
-> mixture of SATA controllers - the built in motherboard SATA controller 
-> (via vt8237) as well as a  Promise PCI card SATAII 150, but had 
-> problems with the kernel. My drives gave me all sorts of errors while 
-> trying to build the  raids and while running mkfs.ext3 and i couldn't  
-> get it to work reliably with the any of the current kernels I tried, 
-> including 2.6.15.1 the current stable kernel.
-> I get countless kernel errors as I mentioned in an earlier post.
+> > On Tuesday January 17, djani22@dynamicweb.hu wrote:
+> > > Hello, Neil,
+> > >
+> > > Some days before, i read the entire mdadm man page.
+> >
+> > Excellent...
+> >
+> > >
+> > > I have some ideas, and questions:
+> > >
+> > > Ideas:
+> > > 1. i think, it is neccessary, to make another one mode to mdadm like
+> "nop"
+> > > or similar, just for bitmaps, and another options, that only works with
+> > > assemble, and create (or grow) modes.
+> >
+> > This sounds like the 'misc' mode.  What exactly would you want to do
+> > with it?
 > 
-> Now I have switched to only using the PCI card controllers ( Well, I 
-> can put
-> 
-> multiple controllers into the motherboard). So I use only sata_promise 
-> and get rid of sata_via, which conflicts (according to my experience).
-> 
-> Now however, when a drive gives me errors - how can I identify which 
-> drive on which device is failing?
-> 
-> The kernel seems to name things randomly.
-> 
-> This is important when a drive 'fails'. Which drive failed? If I am 
-> dealing with /dev/hda1 /dev/hdb1 /dev/hdc1 /dev/hdd1  on the two ide 
-> channels then  I 'know' which is which.
-> 
-> Even crazier (from an accounting point of view) is  the following.
-> 
-> if I have 2 of these cards, then the sata_promise driver does not 
-> appear to distinguish "where" (ie: which physical controller port on 
-> ___which___ card)
-> 
-> the drives are. 
-> 
-> The letters don't skip to show you are on a second controller -even if 
-> you leave blank slots to try to see...
-> The kernel  randomly  calls the drives sda sdb sdc sdd sde and they 
-> seem to be anywhere on the physical controllers.  It seems to be 
-> completely random.
-> HELP!
-> 
-> I since I run a bunch of raid1's, if I get errors I have a major 
-> chore. So I
-> 
-> must stop and reboot countless times doing a binary search using mdadm 
-> -E /dev/sd[ab]1 |grep UU to find the UUID's of the misbehaving drives.
-> Then
-> look closely at mdadm -E of the 2 final candidates to see which one 
-> gave me these errors.
-> 
-> For instance a new drive failed while I was installing the raid, and 
-> testing.
-> To find the erroring drive I had to reproduce the errors each time by 
-> creating the raids, and running mkfs.ext3 which seems to cause the errors.
-> What if the errors were more occult????
-> 
-> Each card had 4 controllers - however when I have more than 1 card it 
-> can be
-> 
-> even more difficult to identify where we are.
-> 
-> Any experience out there to help me?
-> 
-> Thanks,
-> 
-> Mitchell Laks
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" 
-> in the body of a message to majordomo@vger.kernel.org More majordomo 
-> info at  http://vger.kernel.org/majordomo-info.html
-> 
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in the body of a message to majordomo@vger.kernel.org More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Example:
+> I have one raid5 array, without bitmap, on already replaced bigger drives.
+> (for planned growing)
+> The array is online, dont want to stop, and need to create the bitmap
+> without to do the resizing of array.
+
+'--grow' doesn't always change the size of an array.  It can also
+'grow' the amount of redundancy, or 'grow' a bitmap in an array...
+Possibly a confusing name choice, but it worked for me...
+Anyway, to add a bitmap to an active array you can e.g.:
+
+   mdadm --grow /dev/mdX --bitmap=internal
+
+This will not change the size of the array, just add a bitmap.
+The 'size' will only change if you ask it to, e.g.
+   mdadm --grow /dev/mdX --size=max
 
 
+> 
+> >
+> > >
+> > > 2. i think the raid5 creation virtual spare drive technique necessary to
+> be
+> > > standalone option, to avoid more people to data lost, with re-creating
+> the
+> > > raid5 arrays, and who did'nt read carefully the entire man.
+> >
+> > I don't see why this could cause loss of data.  Can you explain?
+> 
+> One time i almost do that:
+> One big (2TB) raid5 array, the system crashed. (no bitmap at this time in
+> the array)
+> After the reboot, the system starts to resync, and don't want to wait until
+> its done, but with high workload and resync is too much work to the system.
+> (Yes, i know it is possible to set the minimum and maximum kb/s in proc...)
+> This time i plan to do that:
+> Stop the resync, with recreating the array, with --assume-clean, to stop the
+> resyncing.
+> After the weekend load is gone, recreate the array, with normal parameters,
+> to resync the entire parity infos, and this time if i dont know this
+> exception, i will loose some data!
+> The raid will overwrite the last disk, from half-clean parity
+> information.
 
+Hmmm.... I see you point, but I don't find it very convincing.  People
+who try to do something like what you did without reading "the spots
+off" the documentation are asking for trouble.... and you really
+should have just set the 'min' resync speed down to near-zero.
 
+> >
+> > >
+> > > 3. i think it will be an usefull thing, set the recovery, resyncing
+> > > order(eg. from the end of the drive to the beginning) of array, or set
+> the
+> > > "from" and "to" limits for it, or stop, restart(retry) this function, if
+> it
+> > > is possible again.
+> > > (only experimental, it will be allow very easy to loose data.)
+> > > This is useful in very big arrays, wich takes some days to resync.
+> > > Yes, i know this caused to write the bitmap code, but i think the linux
+> is
+> > > beautiful because it is very configurable. :-)
+> > > ... i did not like the automated things, what i cannot controll....
+> >
+> > Why would you want to resync from the end to the beginning?
+> >
+> > I am looking into make raid1 be usable on a cluster and that would
+> > require better control of resyncing, but I'm not sure what exactly it
+> > is that you want, or how it would be useful.
+> 
+> Again big arrays...
+> I guess, you know this feeling, if the N TB array is synced about 95%, and
+> the system crashes again. :-)
+> 
+> 1 pass sync the array from 0-95%, than crash, reboot.
+> 2 pass sync the array from 100% to 90%, and marked to be clean by
+> hand. :-)
+
+This would be a very silly thing to do.  I wouldn't want to encourage
+it.
+
+> 
+> Additional info:
+> I use currently 4x 2TB disk nodes, and if i need to repair, change, or sg
+> the nodes, the only way is to riad1 resync with the spare node.
+> On the online system, the 2TB resync between the nodes, takes some days.
+> I am really happy, if the raid1 starts to resync from the beginning, after
+> crash. :-)
+> 
+> Another issue:
+> The man pages did not contains info about the the spare drive in raid1 and
+> parity on raid4!
+> I mean wich drive will be the source, and wich the copy on raid1, and wich
+> the parity on raid4.
+> This is neccessary to avoid data lost on create (build) arrays, on pre
+> existent devices...
+
+raid4:  The last drive is the parity drive.  Yes, it isn't documented.
+
+raid1: people keep asking this question, but it really is a
+non-question.  You really don't need to know the answer.
+If you are creating a raid1 array using a drive with known-good data,
+you create a degraded array with just that drive and all other slots
+'missing'.  Then you hot-add the drives that you want data to be
+copied on to.  If you do it this way, there is no way it could matter
+which device is used as the source for resync, as you never do a
+resync, only a recovery.
+
+NeilBrown
