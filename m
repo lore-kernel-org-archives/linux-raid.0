@@ -1,43 +1,50 @@
-From: Lars Marowsky-Bree <lmb@suse.de>
+From: Neil Brown <neilb@suse.de>
 Subject: Re: [PATCH 000 of 7] md: Introduction - raid5 reshape mark-2
-Date: Tue, 24 Jan 2006 10:23:03 +0100
-Message-ID: <20060124092303.GD22870@marowsky-bree.de>
+Date: Tue, 24 Jan 2006 20:32:02 +1100
+Message-ID: <17365.62482.462589.875480@cse.unsw.edu.au>
 References: <20060124112626.4447.patches@notabene>
+	<20060124092303.GD22870@marowsky-bree.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20060124112626.4447.patches@notabene>
+In-Reply-To: message from Lars Marowsky-Bree on Tuesday January 24
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Lars Marowsky-Bree <lmb@suse.de>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2006-01-24T11:40:47, NeilBrown <neilb@suse.de> wrote:
+On Tuesday January 24, lmb@suse.de wrote:
+> On 2006-01-24T11:40:47, NeilBrown <neilb@suse.de> wrote:
+> 
+> > I am expecting that I will ultimately support online conversion of
+> > raid5 to raid6 with only one extra device.  This process is not
+> > (efficiently) checkpointable and so will be at-your-risk.
+> 
+> So the best way to go about that, if one wants to keep that option open
+> w/o that risk, would be to not create a raid5 in the first place, but a
+> raid6 with one disk missing?
+> 
+> Maybe even have mdadm default to that - as long as just one parity disk
+> is missing, no slowdown should happen, right?
 
-> I am expecting that I will ultimately support online conversion of
-> raid5 to raid6 with only one extra device.  This process is not
-> (efficiently) checkpointable and so will be at-your-risk.
+Not exactly....
 
-So the best way to go about that, if one wants to keep that option open
-w/o that risk, would be to not create a raid5 in the first place, but a
-raid6 with one disk missing?
+raid6 has rotating parity drives, for both P and Q (the two different
+'parity' blocks).
+With one missing device, some Ps, some Qs, and some data would be
+missing, and you would definitely get a slowdown trying to generate
+some of it.
 
-Maybe even have mdadm default to that - as long as just one parity disk
-is missing, no slowdown should happen, right?
+We could define a raid6 layout that didn't rotate Q.  Then you would
+be able to do what you suggest.
+However it would then be no different from creating a normal raid5 and
+supporting online conversion from raid5 to raid6-with-non-rotating-Q.
+This conversion doesn't need an reshaping pass, just a recovery of the
+now-missing device.
 
+raid6-with-non-rotating-Q would have similar issues to raid4 - one
+drive becomes a hot-spot for writes.  I don't know how much of an
+issue this really is though.
 
-Sincerely,
-    Lars Marowsky-Br=E9e
-
---=20
-High Availability & Clustering
-SUSE Labs, Research and Development
-SUSE LINUX Products GmbH - A Novell Business	 -- Charles Darwin
-"Ignorance more frequently begets confidence than does knowledge"
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+NeilBrown
