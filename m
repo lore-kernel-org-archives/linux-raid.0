@@ -1,37 +1,28 @@
-From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 002 of 5] md: Make sure array geometry changes persist with version-1 superblocks.
-Date: Tue, 24 Jan 2006 14:58:27 +1100
-Message-ID: <1060124035827.28824@suse.de>
-References: <20060124145516.28734.patches@notabene>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Followup: Adding a device to an active RAID1 array
+Date: Tue, 24 Jan 2006 15:01:57 +1100
+Message-ID: <17365.42677.815057.932378@cse.unsw.edu.au>
+References: <43D03D2E.3000504@rcn.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from Bill Cizek on Thursday January 19
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Bill Cizek <cizek@rcn.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+On Thursday January 19, cizek@rcn.com wrote:
+> 
+> The patch you gave me worked, Neil, but the I ran into an odd problem where
+>  the change is lost after a reboot.
+> 
+> I have raid1 devices for both superblocks 0.90.? and 1.0
+> If I update the superblock 1.0 device,  mdadm --detail shows the update, 
+> but if I reboot it is lost.
 
-super_1_sync only updates fields in the superblock that might
-have changed.
-'raid_disks' and 'size' could have changed, but this information
-doesn't get updated.... until this patch.
+Thanks for the report.  I've just sent of a patch which fixes the
+problem... you should see it go past on linux-raid.
 
-
-Signed-off-by: Neil Brown <neilb@suse.de>
-
-### Diffstat output
- ./drivers/md/md.c |    3 +++
- 1 file changed, 3 insertions(+)
-
-diff ./drivers/md/md.c~current~ ./drivers/md/md.c
---- ./drivers/md/md.c~current~	2006-01-24 13:32:25.000000000 +1100
-+++ ./drivers/md/md.c	2006-01-24 13:42:29.000000000 +1100
-@@ -1162,6 +1162,9 @@ static void super_1_sync(mddev_t *mddev,
- 
- 	sb->cnt_corrected_read = atomic_read(&rdev->corrected_errors);
- 
-+	sb->raid_disks = cpu_to_le32(mddev->raid_disks);
-+	sb->size = cpu_to_le64(mddev->size);
-+
- 	if (mddev->bitmap && mddev->bitmap_file == NULL) {
- 		sb->bitmap_offset = cpu_to_le32((__u32)mddev->bitmap_offset);
- 		sb->feature_map = cpu_to_le32(MD_FEATURE_BITMAP_OFFSET);
+NeilBrown
