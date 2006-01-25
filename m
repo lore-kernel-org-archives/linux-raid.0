@@ -1,76 +1,41 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: mdadm: superblock on /dev/sdr1 doesn't match others - assembly aborted
-Date: Wed, 25 Jan 2006 12:23:28 +1100
-Message-ID: <17366.54032.174297.848326@cse.unsw.edu.au>
-References: <1138145033.43d6b70968906@mail.lr-netcon.de>
+From: Mattias Wadenstein <maswan@acc.umu.se>
+Subject: Re: Problems with multiple Promise SATA150 TX4 cards
+Date: Wed, 25 Jan 2006 06:33:12 +0100 (MET)
+Message-ID: <Pine.GSO.4.62.0601250623520.14030@shaka.acc.umu.se>
+References: <Pine.LNX.4.44.0601240132560.32305-100000@coffee.psychology.mcmaster.ca>
+ <43D5EF58.9010807@wasp.net.au> <43D62B4F.1080505@nighthawkrad.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from mdadm@lr-netcon.de on Wednesday January 25
+In-Reply-To: <43D62B4F.1080505@nighthawkrad.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: mdadm@lr-netcon.de
-Cc: linux-raid@vger.kernel.org
+To: Christopher Smith <csmith@nighthawkrad.net>
+Cc: Brad Campbell <brad@wasp.net.au>, Mark Hahn <hahn@physics.mcmaster.ca>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday January 25, mdadm@lr-netcon.de wrote:
-> Hi,
-> 
-> I am using a 8 disc scsi raid5 array on a fedora 3 system.
-> 
-> after a system crash, while the array was rebuilding a missing hd, 
-> i am now unable to get this array running again.
-> 
-> thats all i get (/dev/sdr1 is not the one which was rebuild):
-> # mdadm -R /dev/md4
-> mdadm: failed to run array /dev/md4: Invalid argument   
-> 
-> # mdadm -A /dev/md4 -
-> v /dev/sdk1 /dev/sdl1 /dev/sdm1 /dev/sdn1 /dev/sdo1 /dev/sdp1 /dev/sdq1 /dev/sdr
-> 1
-> looking for devices for /dev/md4
-> /dev/sdk1 is identified as a member of /dev/md4, slot 0.
-> /dev/sdl1 is identified as a member of /dev/md4, slot 1.
-> /dev/sdm1 is identified as a member of /dev/md4, slot 2.
-> /dev/sdn1 is identified as a member of /dev/md4, slot 8.
-> /dev/sdo1 is identified as a member of /dev/md4, slot 4.
-> /dev/sdp1 is identified as a member of /dev/md4, slot 5.
-> /dev/sdq1 is identified as a member of /dev/md4, slot 6.
-> mdadm: superblock on /dev/sdr1 doesn't match others - assembly aborted    
-> 
-> 
-> # mdadm --examine /dev/sdk1
-> /dev/sdk1:
->           Magic : a92b4efc
->         Version : 00.90.01
->            UUID : 232635af:1afe6aa5:e06f8828:99966325
-snip
-> 
-> 
-> 
-> # mdadm --examine /dev/sdr1
-> /dev/sdr1:
->           Magic : a92b4efc
->         Version : 00.90.01
->            UUID : 232605af:1afe6aa5:e06f8828:99966325
+On Wed, 25 Jan 2006, Christopher Smith wrote:
 
-Putting those UUIDs right next to each other:
->            UUID : 232635af:1afe6aa5:e06f8828:99966325
->            UUID : 232605af:1afe6aa5:e06f8828:99966325
-                        ^
-                        |
+> Something else I tried was some crappy dual-port SIL-based SATA card 
+> with two of the Promise TX4s, and that worked without a problem.  While 
+> I'm waiting to find out what this is, I might buy another one and use 
+> the two of them temporarily so I can build my RAID array, at least.
 
-We have 2 bits of difference.  This suggests a bad drive, bad RAM, bad
-cabling or.... something.
+This suddenly sounds familiar from my experiences with Promise cards, but 
+during the PATA days. Two cards worked fine, but adding a third made lots 
+of strange problems appear.  So my experience matches yours, max 2 promise 
+cards in one machine.
 
-You could be able to recreate the array:
+This experience of strange and not strictly reproducable problems when it 
+comes to both stability and drive detection made me stay away from buying 
+more Promise cards in favour of "crappy" SIL-based SATA cards in the 
+latest upgrade.
 
- mdadm -C /dev/md4 -l5 -n8 -c4 -pls /dev/sdk1 /dev/sdl1 /dev/sdm1 \
-         missing /dev/sdo1 /dev/sdp1 /dev/sdq1 /dev/sdr1
+Unfortunately, this did not help stability that much, I'm currently 
+hunting down a reproducable hard hang when doing raid action on the 
+drives. So far reads with dd from the individual disk devices are fine 
+(even from all at the same time), but dd from the raid5 over the disks 
+hangs the system in an hour or so. But more regarding this in a separate 
+thread when I have enough info to be useful and I'm sure the numbers are 
+repeatable (unless someone finds preliminary findings really interesting).
 
-(double check all of that before you actually run it, I think I have
-the order right...)
-but be warned that you have some dodgey hardware somewhere, and data
-corruption is a real possibility.... What caused the system crash?
-
-NeilBrown
+/Mattias Wadenstein
