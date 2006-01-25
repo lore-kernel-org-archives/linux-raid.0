@@ -1,92 +1,96 @@
-From: Erik Slagter <erik@slagter.name>
-Subject: Re: Problems with multiple Promise SATA150 TX4 cards
-Date: Wed, 25 Jan 2006 11:04:45 +0100
-Message-ID: <1138183485.27604.49.camel@localhost.localdomain>
-References: <Pine.LNX.4.44.0601240132560.32305-100000@coffee.psychology.mcmaster.ca>
-	 <43D5EF58.9010807@wasp.net.au>  <43D66681.708@dgreaves.com>
+From: mdadm@lr-netcon.de
+Subject: Re: mdadm: superblock on /dev/sdr1 doesn't match others - assembly aborted
+Date: Wed, 25 Jan 2006 22:28:22 +0100
+Message-ID: <1138224502.43d7ed76d888a@mail.lr-netcon.de>
+References: <1138145033.43d6b70968906@mail.lr-netcon.de> <17366.54032.174297.848326@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=sha1; protocol="application/x-pkcs7-signature"; boundary="=-QACE8WpRQDS9Uq5btfHL"
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <43D66681.708@dgreaves.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: David Greaves <david@dgreaves.com>
-Cc: Brad Campbell <brad@wasp.net.au>, linux-raid@vger.kernel.org, IDE Linux <linux-ide@vger.kernel.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <17366.54032.174297.848326@cse.unsw.edu.au>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi
 
---=-QACE8WpRQDS9Uq5btfHL
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Thanks a lot, this helped me to get the raid up again. Now I am trying to copy 
+anything to another place.
+ATM I am still not sure about what caused the crash, maybe you are right and 
+there is a hw problem. I assume it is the  memory.
 
-On Tue, 2006-01-24 at 17:40 +0000, David Greaves wrote:
-> >> sounds like a spinup time on marginal power to me.
-
-> > No, it's a limitation of the Promise BIOS on the cards, it will only
-> > detect a maximum of 8 drives. I had a quick convo with tech support
-> > from Promise over this and they told me they don't support more than
-> > one card in a machine in any case. (Which is odd given they advertise
-> > the ability to RAID-5 across 2 cards!)
-
-> > <snipped the rest about power issues>
-
-I'd really consider the PSU. I had all sorts of weird problems with my
-promise SATA150 TX2plus until I replaced the PSU. Apparently it doesn't
-suffice to supply _enough_ power.
-
---=-QACE8WpRQDS9Uq5btfHL
-Content-Type: application/x-pkcs7-signature; name=smime.p7s
-Content-Disposition: attachment; filename=smime.p7s
-Content-Transfer-Encoding: base64
-
-MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIILzCCAnIw
-ggHboAMCAQICAw/xBDANBgkqhkiG9w0BAQQFADBiMQswCQYDVQQGEwJaQTElMCMGA1UEChMcVGhh
-d3RlIENvbnN1bHRpbmcgKFB0eSkgTHRkLjEsMCoGA1UEAxMjVGhhd3RlIFBlcnNvbmFsIEZyZWVt
-YWlsIElzc3VpbmcgQ0EwHhcNMDUxMTI5MTc0MTQ0WhcNMDYxMTI5MTc0MTQ0WjBqMRAwDgYDVQQE
-EwdTbGFndGVyMRUwEwYDVQQqEwxFcmlrIE1hcnRpam4xHTAbBgNVBAMTFEVyaWsgTWFydGlqbiBT
-bGFndGVyMSAwHgYJKoZIhvcNAQkBFhFlcmlrQHNsYWd0ZXIubmFtZTCBnzANBgkqhkiG9w0BAQEF
-AAOBjQAwgYkCgYEAtYqGuTSGbsTHZPiKQnNmvpVaxVuBZS6rV5xuKD47J9hz8Vq3Xh4PpuGYNW5L
-vevp80oj6sYAhNuU380UNRqALFaer8MtG6fXpvBgq+MCxVQzMyYxAnopqWlZQIUQNQX9wZmI0gVv
-gY6vwcXRBXkMyrzm41dy4oFwh+PTj3U+xwcCAwEAAaMuMCwwHAYDVR0RBBUwE4ERZXJpa0BzbGFn
-dGVyLm5hbWUwDAYDVR0TAQH/BAIwADANBgkqhkiG9w0BAQQFAAOBgQCf5+l4khcSjUOL8WcuJ7Q1
-eXhSPe0VJEsHSfVJCNFmfFZFiGZNwQRliOuGFxSy+uPb8ZVIZ3cBIen/K0k2hWS6pCiDm3xNdkFU
-mhWsibmyMoc91I0Re2ZWPmL6isxiyr56Qv7vNz2UHSinLJr/QtsvRv/RKFlcO1gm1wsCOPkyITCC
-AnIwggHboAMCAQICAw/xBDANBgkqhkiG9w0BAQQFADBiMQswCQYDVQQGEwJaQTElMCMGA1UEChMc
-VGhhd3RlIENvbnN1bHRpbmcgKFB0eSkgTHRkLjEsMCoGA1UEAxMjVGhhd3RlIFBlcnNvbmFsIEZy
-ZWVtYWlsIElzc3VpbmcgQ0EwHhcNMDUxMTI5MTc0MTQ0WhcNMDYxMTI5MTc0MTQ0WjBqMRAwDgYD
-VQQEEwdTbGFndGVyMRUwEwYDVQQqEwxFcmlrIE1hcnRpam4xHTAbBgNVBAMTFEVyaWsgTWFydGlq
-biBTbGFndGVyMSAwHgYJKoZIhvcNAQkBFhFlcmlrQHNsYWd0ZXIubmFtZTCBnzANBgkqhkiG9w0B
-AQEFAAOBjQAwgYkCgYEAtYqGuTSGbsTHZPiKQnNmvpVaxVuBZS6rV5xuKD47J9hz8Vq3Xh4PpuGY
-NW5Lvevp80oj6sYAhNuU380UNRqALFaer8MtG6fXpvBgq+MCxVQzMyYxAnopqWlZQIUQNQX9wZmI
-0gVvgY6vwcXRBXkMyrzm41dy4oFwh+PTj3U+xwcCAwEAAaMuMCwwHAYDVR0RBBUwE4ERZXJpa0Bz
-bGFndGVyLm5hbWUwDAYDVR0TAQH/BAIwADANBgkqhkiG9w0BAQQFAAOBgQCf5+l4khcSjUOL8Wcu
-J7Q1eXhSPe0VJEsHSfVJCNFmfFZFiGZNwQRliOuGFxSy+uPb8ZVIZ3cBIen/K0k2hWS6pCiDm3xN
-dkFUmhWsibmyMoc91I0Re2ZWPmL6isxiyr56Qv7vNz2UHSinLJr/QtsvRv/RKFlcO1gm1wsCOPky
-ITCCAz8wggKooAMCAQICAQ0wDQYJKoZIhvcNAQEFBQAwgdExCzAJBgNVBAYTAlpBMRUwEwYDVQQI
-EwxXZXN0ZXJuIENhcGUxEjAQBgNVBAcTCUNhcGUgVG93bjEaMBgGA1UEChMRVGhhd3RlIENvbnN1
-bHRpbmcxKDAmBgNVBAsTH0NlcnRpZmljYXRpb24gU2VydmljZXMgRGl2aXNpb24xJDAiBgNVBAMT
-G1RoYXd0ZSBQZXJzb25hbCBGcmVlbWFpbCBDQTErMCkGCSqGSIb3DQEJARYccGVyc29uYWwtZnJl
-ZW1haWxAdGhhd3RlLmNvbTAeFw0wMzA3MTcwMDAwMDBaFw0xMzA3MTYyMzU5NTlaMGIxCzAJBgNV
-BAYTAlpBMSUwIwYDVQQKExxUaGF3dGUgQ29uc3VsdGluZyAoUHR5KSBMdGQuMSwwKgYDVQQDEyNU
-aGF3dGUgUGVyc29uYWwgRnJlZW1haWwgSXNzdWluZyBDQTCBnzANBgkqhkiG9w0BAQEFAAOBjQAw
-gYkCgYEAxKY8VXNV+065yplaHmjAdQRwnd/p/6Me7L3N9VvyGna9fww6YfK/Uc4B1OVQCjDXAmNa
-LIkVcI7dyfArhVqqP3FWy688Cwfn8R+RNiQqE88r1fOCdz0Dviv+uxg+B79AgAJk16emu59l0cUq
-VIUPSAR/p7bRPGEEQB5kGXJgt/sCAwEAAaOBlDCBkTASBgNVHRMBAf8ECDAGAQH/AgEAMEMGA1Ud
-HwQ8MDowOKA2oDSGMmh0dHA6Ly9jcmwudGhhd3RlLmNvbS9UaGF3dGVQZXJzb25hbEZyZWVtYWls
-Q0EuY3JsMAsGA1UdDwQEAwIBBjApBgNVHREEIjAgpB4wHDEaMBgGA1UEAxMRUHJpdmF0ZUxhYmVs
-Mi0xMzgwDQYJKoZIhvcNAQEFBQADgYEASIzRUIPqCy7MDaNmrGcPf6+svsIXoUOWlJ1/TCG4+DYf
-qi2fNi/A9BxQIJNwPP2t4WFiw9k6GX6EsZkbAMUaC4J0niVQlGLH2ydxVyWN3amcOY6MIE9lX5Xa
-9/eH1sYITq726jTlEBpbNU1341YheILcIRk13iSx0x1G/11fZU8xggJmMIICYgIBATBpMGIxCzAJ
-BgNVBAYTAlpBMSUwIwYDVQQKExxUaGF3dGUgQ29uc3VsdGluZyAoUHR5KSBMdGQuMSwwKgYDVQQD
-EyNUaGF3dGUgUGVyc29uYWwgRnJlZW1haWwgSXNzdWluZyBDQQIDD/EEMAkGBSsOAwIaBQCgggFT
-MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTA2MDEyNTEwMDQ0NVow
-IwYJKoZIhvcNAQkEMRYEFKx+8OBlRNyo20gM9sQjxzyV8CVrMHgGCSsGAQQBgjcQBDFrMGkwYjEL
-MAkGA1UEBhMCWkExJTAjBgNVBAoTHFRoYXd0ZSBDb25zdWx0aW5nIChQdHkpIEx0ZC4xLDAqBgNV
-BAMTI1RoYXd0ZSBQZXJzb25hbCBGcmVlbWFpbCBJc3N1aW5nIENBAgMP8QQwegYLKoZIhvcNAQkQ
-Agsxa6BpMGIxCzAJBgNVBAYTAlpBMSUwIwYDVQQKExxUaGF3dGUgQ29uc3VsdGluZyAoUHR5KSBM
-dGQuMSwwKgYDVQQDEyNUaGF3dGUgUGVyc29uYWwgRnJlZW1haWwgSXNzdWluZyBDQQIDD/EEMA0G
-CSqGSIb3DQEBAQUABIGAs677aPnnUrQKo5PHnP7S38Nhz3yLLqRGHoZxuy9i/yRXgMMOpTnEVEy7
-CwguElOk5bQo+3VzXSnyN3KtZXU6bxf2Fth2D2+J1Z8cf1HZwTCZqV/8ssJGScPbxi3K6kI+84wM
-LQH1rVByPoC5R5qJKJWCXIg3nJzwVNoOFh/q/b4AAAAAAAA=
+thx
+thomas
 
 
---=-QACE8WpRQDS9Uq5btfHL--
+Zitat von Neil Brown <neilb@suse.de>:
+
+> On Wednesday January 25, mdadm@lr-netcon.de wrote:
+> > Hi,
+> > 
+> > I am using a 8 disc scsi raid5 array on a fedora 3 system.
+> > 
+> > after a system crash, while the array was rebuilding a missing hd, 
+> > i am now unable to get this array running again.
+> > 
+> > thats all i get (/dev/sdr1 is not the one which was rebuild):
+> > # mdadm -R /dev/md4
+> > mdadm: failed to run array /dev/md4: Invalid argument   
+> > 
+> > # mdadm -A /dev/md4 -
+> > v /dev/sdk1 /dev/sdl1 /dev/sdm1 /dev/sdn1 /dev/sdo1 /dev/sdp1 /dev/sdq1
+> /dev/sdr
+> > 1
+> > looking for devices for /dev/md4
+> > /dev/sdk1 is identified as a member of /dev/md4, slot 0.
+> > /dev/sdl1 is identified as a member of /dev/md4, slot 1.
+> > /dev/sdm1 is identified as a member of /dev/md4, slot 2.
+> > /dev/sdn1 is identified as a member of /dev/md4, slot 8.
+> > /dev/sdo1 is identified as a member of /dev/md4, slot 4.
+> > /dev/sdp1 is identified as a member of /dev/md4, slot 5.
+> > /dev/sdq1 is identified as a member of /dev/md4, slot 6.
+> > mdadm: superblock on /dev/sdr1 doesn't match others - assembly aborted    
+> > 
+> > 
+> > # mdadm --examine /dev/sdk1
+> > /dev/sdk1:
+> >           Magic : a92b4efc
+> >         Version : 00.90.01
+> >            UUID : 232635af:1afe6aa5:e06f8828:99966325
+> snip
+> > 
+> > 
+> > 
+> > # mdadm --examine /dev/sdr1
+> > /dev/sdr1:
+> >           Magic : a92b4efc
+> >         Version : 00.90.01
+> >            UUID : 232605af:1afe6aa5:e06f8828:99966325
+> 
+> Putting those UUIDs right next to each other:
+> >            UUID : 232635af:1afe6aa5:e06f8828:99966325
+> >            UUID : 232605af:1afe6aa5:e06f8828:99966325
+>                         ^
+>                         |
+> 
+> We have 2 bits of difference.  This suggests a bad drive, bad RAM, bad
+> cabling or.... something.
+> 
+> You could be able to recreate the array:
+> 
+>  mdadm -C /dev/md4 -l5 -n8 -c4 -pls /dev/sdk1 /dev/sdl1 /dev/sdm1 \
+>          missing /dev/sdo1 /dev/sdp1 /dev/sdq1 /dev/sdr1
+> 
+> (double check all of that before you actually run it, I think I have
+> the order right...)
+> but be warned that you have some dodgey hardware somewhere, and data
+> corruption is a real possibility.... What caused the system crash?
+> 
+> NeilBrown
+> 
+
+
+
+
+----------------------------------------------------------------------
+This mail sent through L&R NetCon webmail Client
