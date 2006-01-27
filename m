@@ -1,29 +1,38 @@
-From: Matthias Urlichs <smurf@smurf.noris.de>
-Subject: Re: hard drives with "variable"  device names - mdadm raid assembly options setup
-Date: Fri, 27 Jan 2006 12:39:12 +0100
-Message-ID: <pan.2006.01.27.11.39.12.759060@smurf.noris.de>
-References: <200512300908.19390.mlaks@verizon.net> <87d5jep027.fsf@rimspace.net> <dp52bc$nh8$1@sea.gmane.org> <87psncnqw2.fsf@rimspace.net>
+From: Molle Bestefich <molle.bestefich@gmail.com>
+Subject: Re: Silent Corruption on RAID5
+Date: Fri, 27 Jan 2006 13:29:44 +0100
+Message-ID: <62b0912f0601270429vc586bdcxb0cbed9474ff8855@mail.gmail.com>
+References: <43D3B675.20804@xterminate.me.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <43D3B675.20804@xterminate.me.uk>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Michael Barnwell <xterminate@xterminate.me.uk>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi, Daniel Pittman wrote:
+Michael Barnwell wrote:
+> I'm experiencing silent data corruption
+> on my RAID 5 set of four 400GB SATA disks.
 
-> The UUID is presented as four blocks, with a ':' between them, by mdadm
-> for some reason beyond my understanding
+I have circa the same hardware:
+ * AMD Opteron 250
+ * Silicon Image 3114
+ * 300 GB Maxtor SATA
 
-Human beings cannot remember 32 hex digits all at once, so if you ever
-need to type the thing (or just compare them) it's helpful to have some
-structure, even if arbitrary.
+Just to add a data point, I've run your test on my RAID 1 (not RAID 5
+!) without problems.
 
--- 
-Matthias Urlichs   |   {M:U} IT Design @ m-u-it.de   |  smurf@smurf.noris.de
-Disclaimer: The quote was selected randomly. Really. | http://smurf.noris.de
- - -
-Duckies are fun!
-
-
+localhost ~ # dd bs=1024 count=10000k if=/dev/zero of=./10GB.tst
+10240000+0 records in
+10240000+0 records out
+localhost ~ # od -t x1 ./10GB.tst
+0000000 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+*
+116100000000
+localhost ~ # uname -a
+Linux localhost 2.6.12.6-xen #6 SMP Fri Jan 6 06:49:53 CET 2006 x86_64
+AMD Opteron(tm) Processor 250 AuthenticAMD GNU/Linux
