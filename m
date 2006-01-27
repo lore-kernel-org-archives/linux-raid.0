@@ -1,70 +1,55 @@
-From: Stephan van Hienen <raid@a2000.nu>
-Subject: mdadm 2.2 segmentation fault
-Date: Fri, 27 Jan 2006 14:12:16 +0100 (CET)
-Message-ID: <Pine.LNX.4.64.0601271406410.30850@adsl.a2000.nu>
+From: berk walker <berk@panix.com>
+Subject: Re: Problems with multiple Promise SATA150 TX4 cards
+Date: Fri, 27 Jan 2006 08:21:07 -0500
+Message-ID: <43DA1E43.4010308@panix.com>
+References: <Pine.LNX.4.44.0601240132560.32305-100000@coffee.psychology.mcmaster.ca> <43D8DB09.2010005@dgreaves.com> <1138286670.28634.448.camel@linux> <200601270100.54436.mlaks@verizon.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <200601270100.54436.mlaks@verizon.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Mitchell Laks <mlaks@verizon.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-when i try to start my raid with mdadm 2.2 it gives a segfault :
+Mitchell Laks wrote:
 
-]# mdadm  -A /dev/md0
-Segmentation fault
+>Hi,
+>Thank  you all for all of your work on this topic.
+>
+>1) I apologize for my email bouncing. I have  no real choice in dsl service. 
+>Perhaps I will consider cable to prevent my mail bouncing! :)
+>
+>2) I am able to hang 10 drives on 3 of the Promise SATA150 TX4 cards. So far 
+>the construction of 5 raid1's  and mkfs.ext3 is ok without kernel  error.  
+>All 10 drives are recognized by the promise BIOS (it shows drives 0-9) during 
+>system turnon. I use two separate 450 W antec power supplies.
+>
+>If I put on 12 drives, 4 on each one, the promise bios does  not let me go 
+>further. It hangs. Says something about not able to recognize hardware 
+>configuration or something.
+>
+>This may be a hardware limitation, or even a faulty channel or two or perhaps 
+>one/two  of the  additional drives is not working. I dont know. I did notice 
+>this  "not booting behavior for TX4" with no adequate hints as to what is 
+>going on earlier when i tried to hang a for a non funcioning sata drive on 
+>the card that failed right after purchase". I tried 11 drives also and   no 
+>go. only 8 or less.
+>
+>
+>Thank you all and I will let you know what i discover..
+>
+>mitchell laks
+>-
+>To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>  
+>
+In the past, I've had boxes that couldn't handle all of the extra PCI 
+requirements of the Promise boards.  My newer stuff seemed OK.
+Email problem comment sent off-channel, pvt.
+b-
 
-and dmesg shows :
-md: md0 stopped.
-
-mdadm 1.12 shows :
-
-]# mdadm  -A /dev/md0
-mdadm: /dev/md0 has been started with 15 drives.
-
-after i start the md0 with mdadm 1.12, it looks like 2.2 is working ok :
-
-]# mdadm  -D /dev/md0
-/dev/md0:
-         Version : 00.90.03
-   Creation Time : Wed Dec  1 16:38:32 2004
-      Raid Level : raid5
-      Array Size : 2461523456 (2347.49 GiB 2520.60 GB)
-     Device Size : 175823104 (167.68 GiB 180.04 GB)
-    Raid Devices : 15
-   Total Devices : 15
-Preferred Minor : 0
-     Persistence : Superblock is persistent
-
-     Update Time : Fri Jan 27 14:06:15 2006
-           State : clean
-  Active Devices : 15
-Working Devices : 15
-  Failed Devices : 0
-   Spare Devices : 0
-
-          Layout : left-symmetric
-      Chunk Size : 256K
-
-            UUID : 784fce06:6999eec1:ad90674e:e415169f
-          Events : 0.3082763
-
-     Number   Major   Minor   RaidDevice State
-        0       8       49        0      active sync   /dev/sdd1
-        1       8       33        1      active sync   /dev/sdc1
-        2       8       17        2      active sync   /dev/sdb1
-        3       8       65        3      active sync   /dev/sde1
-        4       8       81        4      active sync   /dev/sdf1
-        5       8       97        5      active sync   /dev/sdg1
-        6       8      113        6      active sync   /dev/sdh1
-        7       8      129        7      active sync   /dev/sdi1
-        8       8      145        8      active sync   /dev/sdj1
-        9       8      161        9      active sync   /dev/sdk1
-       10       8      177       10      active sync   /dev/sdl1
-       11       8      193       11      active sync   /dev/sdm1
-       12       8      209       12      active sync   /dev/sdn1
-       13       8      225       13      active sync   /dev/sdo1
-       14       8      241       14      active sync   /dev/sdp1
-
-
-is there anything i can test/debug ?
