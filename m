@@ -1,7 +1,7 @@
-From: "Josephine" <josephinexx@aci.on.ca>
-Subject: The Narcotic Support
-Date: Sun, 29 Jan 2006 11:54:22 -0500
-Message-ID: <200601291054.k0TAsGeN000376@zeus2.kernel.org>
+From: "Anne" <annexx@accesscomm.ca>
+Subject: Superior Narcotic Support
+Date: Sun, 29 Jan 2006 23:43:26 -0500
+Message-ID: <200601291543.k0TFhLsd007832@zeus1.kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
@@ -11,9 +11,9 @@ List-Id: linux-raid.ids
 
 Have a look at our new web Ph¡rm@cy and Keep up to 85%
 
-Dozens of Brands to Purchase
+Dozens of Brands to Check out
 
-http://www.amb5.com/
+http://www.rgry.com/
 
-We are your One Stop Shop for Substantial Offers
+We are your source for Astronomical Offers
 
