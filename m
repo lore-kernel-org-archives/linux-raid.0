@@ -1,76 +1,56 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: raid not creating
-Date: Mon, 30 Jan 2006 16:17:10 +1100
-Message-ID: <17373.41302.629136.871372@cse.unsw.edu.au>
-References: <57285.192.55.52.1.1138383357.squirrel@bugs.osu.edu>
-	<17370.35932.856350.327787@cse.unsw.edu.au>
-	<43DAD418.9040803@bugs.osu.edu>
-	<17373.14913.427109.184586@cse.unsw.edu.au>
-	<43DD7A27.6070806@bugs.osu.edu>
-	<17373.33567.411470.796966@cse.unsw.edu.au>
-	<43DD9DEB.7060502@bugs.osu.edu>
+From: Francois Barre <francois.barre@gmail.com>
+Subject: Raid5 over sbp2 : sbp2 command abort
+Date: Mon, 30 Jan 2006 14:50:03 +0100
+Message-ID: <fd8d0180601300550k7316bb14t@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Wade Pinkston on Sunday January 29
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Wade Pinkston <blata@bugs.osu.edu>
-Cc: linux-raid@vger.kernel.org
+To: linux1394-devel@lists.sourceforge.net, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sunday January 29, blata@bugs.osu.edu wrote:
-> > 
-> > What exactly are you trying to achieve?
-> > 
-> > NeilBrown
-> > 
-> I live in California and this server is in Ohio  ~3000 mi away.  Any way I
-> am rebuilding it remotely do some problems from a few months ago.  Anyway I
-> had someone in Ohio format the four drives.  I was then left with a system
-> on drives a and e.  Now after the fact I'm trying to get the software raid
-> working on a-c e-g.  but I am unable to do so using mdadm.  I'm trying to
-> coordinate this with my Ohio counterpart when he is available.
-> 
-> At this point I am thinking that I need to have him boot the box into
-> rescue mode issue the mdadm commands, edit the fstab file and then reboot.
->  Does this sound like a feasible approach?
+Hello all,
 
-Feasible, but maybe not ideal.
+This is a cross-post (sorry for that), but I don't know where it comes =
+from yet.
+A. The setup
+VIA EPIA 10k Nehemiah, OHCI with VIA
+4 sbp2 250Go IDE drives
+Vanilla 2.6.15.1 kernel, mdadm 2.2, superblock 0.90
+ohci1394+sbp2 in kernel (default params : serialize_io=3D1, ...), raid5
+as a module.
 
-If you have an active root filesystem on 'a' and want to have it on a
-mirrored pair 'a' and 'c', the normal approach, which I'm sure is
-documented in some HowTo somewhere - look for "linux root raid" or
-similar - is to:
+B. The tests
+Test0 : Creating a 4-drive raid5 with 1 drive missing, copying the 4th
+drive content to the raid5, works great.
+Stress-testing multiple drive copy seems to be ok (Test0 + various
+tests), very responsive, absolutely no error, but Test1 has a lot of
+'command abort' errors, which blocks io for seconds, then starts
+again.
 
- 1/ create the mirrored pair with only one active device:
+Test1 : Building from scratch the raid5 with 4 drives (i.e. none
+missing), causes 'sbp2 : command abort' messages.
+At the end of Test1, raid5 is not created : one drive is set faulty.
 
-    mdadm --create /dev/md0 -l1 -n2 missing /dev/hdc1
+C. The questions :
+How could I run a parano=EFd/degraded bandwidth mode ? I tried playing
+with /proc/sys/dev/raid/speed_limit_max, reducing to far away from
+highest bandwidth, but it did not have the expected behaviour : io
+runs to highest bw for seconds, then stops, then runs again at highest
+rate, ...
+Is there a way to avoid write back at sbp2 level ? I could not find
+any way to do so...
 
- 2/ create a filesystem there and copy the data over
+What kernel version should I rather use ? Seems like scsi on 2.6.15.x
+is not really trustworthy, should I run 2.6.14.x ?
 
-    mkfs -j /dev/md0
-    mount /dev/md0 /mnt
-    cp -ax / /mnt
- 
- 3/ Arrange that you will boot of md0 at next boot.
-   e.g. in lilo.conf
-  
-       append = "md=0,/dev/hdc1 root=/dev/md0"
+Best regards,
 
-   
- 4/ reboot, and hopefully find yourself with /dev/md0 as root.
-
- 5/ add the old root partition into the array
-
-     mdadm /dev/md0 --add /dev/hda1
-
- 6/ make sure hda1 gets included in future. e.g.
-   change the lilo.conf line to
-
-      append = "md=0/dev/hda1,/dev/hdc1 root=/dev/md0"
-
-Good luck.
-
-NeilBrown
-
+=46.-E.B.
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
