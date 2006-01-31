@@ -1,65 +1,33 @@
-From: IPSI Conferences <ipsi2006@3dnet.co.yu>
-Subject: Invitation to subscribe to 2006 IPSI/IPS-USA conference calls; c/ba
-Date: Tue, 31 Jan 2006 00:22:47 +0100 (CET)
-Message-ID: <20060130232247.88E23278C@mail1.3dnet.co.yu>
+From: "H. Peter Anvin" <hpa@zytor.com>
+Subject: Exporting which partitions to md-configure
+Date: Mon, 30 Jan 2006 16:52:08 -0800
+Message-ID: <43DEB4B8.5040607@zytor.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@cse.unsw.edu.au>
+Cc: klibc list <klibc@zytor.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Dear potential speaker:
+I'm putting the final touches on kinit, which is the user-space 
+replacement (based on klibc) for the whole in-kernel root-mount complex. 
+   Pretty much the one thing remaining -- other than lots of testing -- 
+is to handle automatically mounted md devices.  In order to do that, 
+without adding userspace versions of all the paritition code (which may 
+be a future change, but a pretty big one) it would be good if the 
+partition flag to auto-configure RAID was available in userspace, 
+presumably through sysfs.
 
-Please, read carefully and respond with "SUBSCRIBE."  We will be informing you about our future conferences 4 to 6 times per year, only if you subscribe now! If you do not respond to this email, we will NEVER send you an email invitation again.
+Any feeling how best to do that?  My current thinking is to export a 
+"flags" entry in addition to the current ones, presumably based on 
+"struct parsed_partitions->parts[].flags" (fs/partitions/check.h), which 
+seems to be what causes md_autodetect_dev() to be called.
 
-The list of our 2006 conferences is given below. If you like to check details, just go to Google and type the conference name given below!
+Note that this should be available even if md isn't compiled into the 
+kernel, thus making it possible to load md as a module before running 
+kinit, or to make the equivalent of the kernel mounting sequence from a 
+totally runtime user tool.
 
-IPS-USA-2006 NEW YORK
-New York, USA, January 5-8, 2006
-
-IPS-USA-2006 SAN FRANCISCO
-San Francisco (Stanford Terrace in Palo Alto), USA, Jan 8-11, 2006
-
-IPSI-2006 MARBELLA
-Marbella, Costa del Sol, Spain, February 10-13, 2006
-
-IPSI-2006 AMALFI
-Amalfi, Italy (near Naples, Capri, and Pompei), March 23-26, 2006
-
-IPSI-2006 FRANCE
-Carcassonne, France, April 27-30, 2006
-
-IPSI-2006 SPAIN
-S'Agaro, Costa Brava, Spain, May 4-7, 2006
-
-IPSI-2006 MONTREAL
-Montreal, Canada, June 30 - July 3, 2006
-
-IPS-USA-2006 NEW YORK
-New York, USA, July 3-6, 2006
-
-IPS-USA-2006 BOSTON
-Boston (Hotel@MIT, Cambridge), USA, July 6-9, 2006
-
-IPSI-2006 ITALY
-Castello Chiola (Loreto, near Pescara + Rome), Italy, Aug 19-26, 2006
-
-IPSI-2006 LONDON
-London, England, UK, August 31 - September 3, 2006
-
-IPSI-2006 MONTENEGRO
-Sveti Stefan, Montenegro, September 23-30, 2006
-
-IPSI-2006 VENICE
-Venice, Italy, October 12-15, 2006
-
-IPSI-2006 SLOVENIA
-Lake Bled, Slovenia, November 30 - December 3, 2006
-
-All our conferences are non-profit. They bring together the elite of the world science; so far, we have had 7 times 7 different Nobel Laureates speaking at opening ceremonies!
-
-Sincerely Yours,
-
-Prof. Veljko Milutinovic, Chairman
-IPSI Conferences, Journals, Tutorials,
-Consulting, Research, and Development
-
+	-hpa
