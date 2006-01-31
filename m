@@ -1,33 +1,30 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Exporting which partitions to md-configure
-Date: Mon, 30 Jan 2006 16:52:08 -0800
-Message-ID: <43DEB4B8.5040607@zytor.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Exporting which partitions to md-configure
+Date: Tue, 31 Jan 2006 12:10:32 +1100
+Message-ID: <17374.47368.715991.422607@cse.unsw.edu.au>
+References: <43DEB4B8.5040607@zytor.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@cse.unsw.edu.au>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030254AbWAaBKj@vger.kernel.org>
+In-Reply-To: message from H. Peter Anvin on Monday January 30
+Sender: linux-kernel-owner@vger.kernel.org
+To: "H. Peter Anvin" <hpa@zytor.com>
 Cc: klibc list <klibc@zytor.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I'm putting the final touches on kinit, which is the user-space 
-replacement (based on klibc) for the whole in-kernel root-mount complex. 
-   Pretty much the one thing remaining -- other than lots of testing -- 
-is to handle automatically mounted md devices.  In order to do that, 
-without adding userspace versions of all the paritition code (which may 
-be a future change, but a pretty big one) it would be good if the 
-partition flag to auto-configure RAID was available in userspace, 
-presumably through sysfs.
+On Monday January 30, hpa@zytor.com wrote:
+> 
+> Any feeling how best to do that?  My current thinking is to export a 
+> "flags" entry in addition to the current ones, presumably based on 
+> "struct parsed_partitions->parts[].flags" (fs/partitions/check.h), which 
+> seems to be what causes md_autodetect_dev() to be called.
+> 
 
-Any feeling how best to do that?  My current thinking is to export a 
-"flags" entry in addition to the current ones, presumably based on 
-"struct parsed_partitions->parts[].flags" (fs/partitions/check.h), which 
-seems to be what causes md_autodetect_dev() to be called.
+I think I would prefer a 'type' attribute in each partition that
+records the 'type' from the partition table.  This might be more
+generally useful than just for md.
+Then your userspace code would have to look for '253' and use just
+those partitions.
 
-Note that this should be available even if md isn't compiled into the 
-kernel, thus making it possible to load md as a module before running 
-kinit, or to make the equivalent of the kernel mounting sequence from a 
-totally runtime user tool.
-
-	-hpa
+NeilBrown
