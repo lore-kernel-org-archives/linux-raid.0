@@ -1,119 +1,50 @@
-From: Gordon Henderson <gordon@drogon.net>
-Subject: Re: Fw: Re: Configuring combination of RAID-1 RAID-5
-Date: Tue, 31 Jan 2006 17:23:35 +0000 (GMT)
-Message-ID: <Pine.LNX.4.56.0601311720010.17400@lion.drogon.net>
-References: <20060131163248.M20133@mail.uadec.mx>
- <Pine.LNX.4.56.0601311658220.17400@lion.drogon.net> <20060131165932.M47478@mail.uadec.mx>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: Raid5 over sbp2 : sbp2 command abort
+Date: Tue, 31 Jan 2006 19:26:02 +0100
+Message-ID: <43DFABBA.50303@s5r6.in-berlin.de>
+References: <fd8d0180601300550k7316bb14t@mail.gmail.com>	<43DE7053.1030706@s5r6.in-berlin.de> <17374.36482.175051.360224@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20060131165932.M47478@mail.uadec.mx>
+In-Reply-To: <17374.36482.175051.360224@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Enrique Garcia Briones <egarcia@mail.uadec.mx>
-Cc: linux-raid@vger.kernel.org
+To: Francois Barre <francois.barre@gmail.com>
+Cc: linux1394-devel@lists.sourceforge.net, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 31 Jan 2006, Enrique Garcia Briones wrote:
+Francois Barre wrote in personal mail:
+> it appeared that it was a harddrive problem. A
+> simple dd from was showing the abort messages as well
 
-> Thanks Gordon,
->
-> I will then read and re-read the RAID-6 configuration, and something I miss
-> to explain, may be is not to be discussed here, is that when I installed the
-> Linux with the A1000 pulled out everything went out well but, when I
-> reconnect the A1000 the system didn't start up correctly... so my unique way
-> was to install the Linux in the first hard drive of the A1000 and it seems
-> to be working fine, Is that alternative functional?
+Over SBP-2 or IDE? Either way, md is no longer a suspect, and we don't 
+need to bother linux-raid anymore. :-)
 
-I'd be tempted to remove the A1000 and install on the 2 internal drives,
-then once that's happy, plug the A1000 back in again. It might be that the
-OBP (Open Boot Prom) code is favouring the external device to boot off,
-but it's been a very long time since I've dabbled in that. You'd need to
-push Stop+A at boot time then enter some runes at the OK prompt to
-check/reconfigure the boot device.
+>> What about sbp2's max_speed parameter?
+> 
+> Hidden option of the level37 ? I've never seen it...
 
-The A1000 devices I've used had an on-board RAID controller and some
-software that ran under Solaris to configure it, so that might be
-somethign to look into too - to make sure it's doing what you expect it to
-be doing.
+It is listed on www.linux1394.org's sbp2 page (Linux 2.4 syntax) and of 
+course in the source. Anyway, it is not important. Since you don't get 
+any error messages from the 1394 stack's lower layers, it is obviously 
+not an issue of an electrically unreliable bus which would be the main 
+reason to use sbp2's max_speed parameter.
 
-Gordon
+> I was wondering if sbp2 didn't behave as if it was buffering
+> writes, waiting for a sufficient amount of data before sending it to
+> drives... Regardless of the io scheduler I mean...
 
+No, there is no additional scheduling in sbp2 or in the ieee1394 
+transactions layer.
 
-
->
-> thanks
->
-> ---------- Forwarded Message -----------
-> From: Gordon Henderson <gordon@drogon.net>
-> To: Enrique Garcia Briones <egarcia@mail.uadec.mx>
-> Cc: linux-raid@vger.kernel.org
-> Sent: Tue, 31 Jan 2006 17:05:12 +0000 (GMT)
-> Subject: Re: Configuring combination of RAID-1 RAID-5
->
-> On Tue, 31 Jan 2006, Enrique Garcia Briones wrote:
->
-> > Hi,
-> >
-> > Let me introduce myself.
-> >
-> > I'm newbie in linux and in RAID over linux, I have configured a RAID-0 in a
-> > NetBSD 2.0 BOX. so, now let me explain what I'm trying to do,
-> >
-> > Antecedents/Equipment:
-> >
-> > I have a Sparc 420 with 4 processors and 4 Gb in RAM, two SCSI SEAGATE
-> > internal hard disk with an array of 12 hard disks (Storedge 1000).
-> >
-> > What we want to have:
-> >
-> > We installed Debian Linux (I think it is 3.1 with kernel 2.4), and we want
-> > to have the following configuration:
-> >
-> > 1 System Harddisk
-> > 1 RAID-1 Mirror Hard Drive
-> > 12 Hard drives in RAID-5, 10 working and 2 as spare disks.
-> >
-> > I have read the setting-up for the raid-5 and 1, but I would like to ask
-> you
-> > if I can set-up a combined RAID configuration as mentioned above, since all
-> > the examples I found upto now just talk of one RAD configuration, besides
-> > this, I would like to ask you that if the configuration I want to have is
-> > STRONG enough for the quantity of disk in the box, or if there must be any
-> > other considerations to have.
->
-> Wow. an A1000. Ancient, but probably still OK. I'm not sure if there are
-> any management utilities for them that'll run under Linux - I've only ever
-> seen 2 of these and they seem to be able to run RAID themselves - might be
-> faster, but the ones I had were slow anyway - maybe you can re-configure
-> them to just look like 12 disks and let Linux do the RAID on them...
->
-> Heres my suggestion:
->
-> Install a 2.6 kernel.
->
-> Partition both internal disks identically, then then combine all the
-> partitions with RAID-1. Boot off RAID-1, if you can - I'm not up on the
-> SLILO/whatever boot loaders for Sparc though.
->
-> Configure the 12 external disks using RAID-6. You'll get one disk more
-> worth of storage that way and still be able to sustain a 2 disk failure.
->
-> Gordon
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> ------- End of Forwarded Message -------
->
->
-> --
-> UAdeC
-> En el Bien fincamos el Saber
-> Open WebMail Project (http://openwebmail.org)
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+It works a bit different anyway: Sbp2 gets pointers to the scsi layer's 
+data buffers, puts SCSI commands into additional small buffers, and 
+notifies the target (disk) of new commands. The target fetches commands, 
+fetches data or sends data, and sends completion status. IOW the target 
+is performing all the data movement. So, strictly speaking, there is 
+also some kind of scheduler on the other side of the wire involved (the 
+target's fetch agent).
+-- 
+Stefan Richter
+-=====-=-==- ---= =====
+http://arcgraph.de/sr/
