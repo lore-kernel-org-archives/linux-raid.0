@@ -1,46 +1,52 @@
-From: "Charlene Hogan" <vskavnpug@deda.com>
-Subject: Don't let your dream mate pass you by
-Date: Tue, 31 Jan 2006 09:03:29 -0300
-Message-ID: <251212032200.30151.casey__49446.1577538916$1138709336$gmane$org@outbacklinux.com>
+From: "Enrique Garcia Briones" <egarcia@mail.uadec.mx>
+Subject: Configuring combination of RAID-1 RAID-5
+Date: Tue, 31 Jan 2006 10:43:59 -0600
+Message-ID: <20060131163248.M20133@mail.uadec.mx>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset=iso-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-sound@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi,
 
-If YOU would like to ...
-- Become a lot more sexually attractive.
-- Meet more beautiful women, MUCH more easily.
-- Grab the attention and get approached by women far more often.
-- Make a fantastic, memorable, compelling impression , every time.
-- Increase your self-confidence and masculinity BIG-time=85=20
+Let me introduce myself.
 
-Then this may be the most important news you will read all year:
+I'm newbie in linux and in RAID over linux, I have configured a RAID-0 in a 
+NetBSD 2.0 BOX. so, now let me explain what I'm trying to do,
 
-http://www.hornypillzz.net/ph/?77
+Antecedents/Equipment:
 
+I have a Sparc 420 with 4 processors and 4 Gb in RAM, two SCSI SEAGATE 
+internal hard disk with an array of 12 hard disks (Storedge 1000).
 
+What we want to have:
 
+We installed Debian Linux (I think it is 3.1 with kernel 2.4), and we want 
+to have the following configuration:
 
+1 System Harddisk
+1 RAID-1 Mirror Hard Drive
+12 Hard drives in RAID-5, 10 working and 2 as spare disks.
 
+I have read the setting-up for the raid-5 and 1, but I would like to ask you 
+if I can set-up a combined RAID configuration as mentioned above, since all 
+the examples I found upto now just talk of one RAD configuration, besides 
+this, I would like to ask you that if the configuration I want to have is 
+STRONG enough for the quantity of disk in the box, or if there must be any 
+other considerations to have.
 
+I really don't expect you to gave me all the answers, just to aimed me to 
+the right direction would be really appreciated.
 
+Thanks in Advance
 
+Enrique Garcia Briones
 
+--
+UAdeC http://www.uadec.mx
+En el Bien fincamos el Saber
+Open WebMail Project (http://openwebmail.org)
 
-
-
-contralto you cocklebur me, dicotyledon two . basel you incoherent me, =
-perle afresh cabbage . allyl you epithelial me, platonism .=20
-auriga you clever me, incurring exorcise gondola . barge you blithe me,=
- propaganda anecdote eighteen congestion . usher you declassify me, raf=
-fia . surtout you believe me, complexion cluck inviable onto .=20
-hornypillzz.net/u.php
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
