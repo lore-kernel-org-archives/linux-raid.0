@@ -1,33 +1,58 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
+From: Neil Brown <neilb@suse.de>
 Subject: Re: Exporting which partitions to md-configure
-Date: Mon, 30 Jan 2006 17:45:59 -0800
-Message-ID: <43DEC157.1000002@zytor.com>
-References: <43DEB4B8.5040607@zytor.com> <17374.47368.715991.422607@cse.unsw.edu.au> <859CB9D0-A1D3-4931-9D9F-96153D0F3E1B@mac.com>
+Date: Tue, 31 Jan 2006 13:01:03 +1100
+Message-ID: <17374.50399.1898.458649@cse.unsw.edu.au>
+References: <43DEB4B8.5040607@zytor.com>
+	<17374.47368.715991.422607@cse.unsw.edu.au>
+	<43DEC095.2090507@zytor.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <859CB9D0-A1D3-4931-9D9F-96153D0F3E1B@mac.com>
+In-Reply-To: message from H. Peter Anvin on Monday January 30
 Sender: linux-raid-owner@vger.kernel.org
-To: Kyle Moffett <mrmacman_g4@mac.com>
-Cc: Neil Brown <neilb@suse.de>, klibc list <klibc@zytor.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org
+To: "H. Peter Anvin" <hpa@zytor.com>
+Cc: klibc list <klibc@zytor.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Kyle Moffett wrote:
+On Monday January 30, hpa@zytor.com wrote:
+> Neil Brown wrote:
+> > On Monday January 30, hpa@zytor.com wrote:
+> > 
+> >>Any feeling how best to do that?  My current thinking is to export a 
+> >>"flags" entry in addition to the current ones, presumably based on 
+> >>"struct parsed_partitions->parts[].flags" (fs/partitions/check.h), which 
+> >>seems to be what causes md_autodetect_dev() to be called.
+> > 
+> > I think I would prefer a 'type' attribute in each partition that
+> > records the 'type' from the partition table.  This might be more
+> > generally useful than just for md.
+> > Then your userspace code would have to look for '253' and use just
+> > those partitions.
+> > 
 > 
-> Well, for an MSDOS partition table, you would look for '253', for a  Mac 
-> partition table you could look for something like 'Linux_RAID' or  
-> similar (just arbitrarily define some name beginning with the Linux_  
-> prefix), etc.  This means that the partition table type would need to  
-> be exposed as well (I don't know if it is already).
-> 
+> What about non-DOS partitions?
 
-It's not, but perhaps exporting "format" and "type" as distinct 
-attributes is the way to go.  The policy for which partitions to 
-consider would live entirely in kinit that way.
+Well, grepping through fs/partitions/*.c, the 'flags' thing is set by
+ efi.c, msdos.c sgi.c sun.c
 
-type would be format-specific; in EFI it's a UUID.
+Of these, efi compares something against PARTITION_LINUX_RAID_GUID,
+and msdos.c, sgi.c and sun. compare something against
+LINUX_RAID_PARTITION.
 
-This, of course, is a bigger change, but it just might be worth it.
+The former would look like
+  e6d6d379-f507-44c2-a23c-238f2a3df928
+in sysfs (I think);
+The latter would look like
+  fd
+(I suspect).
 
-	-hpa
+These are both easily recognisable with no real room for confusion.
+
+And if other partition styles wanted to add support for raid auto
+detect, tell them "no". It is perfectly possible and even preferable
+to live without autodetect.   We should support legacy usage (those
+above) but should discourage any new usage.
+
+NeilBrown
+
