@@ -1,50 +1,63 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: Raid5 over sbp2 : sbp2 command abort
-Date: Tue, 31 Jan 2006 19:26:02 +0100
-Message-ID: <43DFABBA.50303@s5r6.in-berlin.de>
-References: <fd8d0180601300550k7316bb14t@mail.gmail.com>	<43DE7053.1030706@s5r6.in-berlin.de> <17374.36482.175051.360224@cse.unsw.edu.au>
+From: linas@austin.ibm.com (linas)
+Subject: Re: 2.6.15: mdrun, udev -- who creates nodes?
+Date: Tue, 31 Jan 2006 13:26:43 -0600
+Message-ID: <20060131192643.GU19465@austin.ibm.com>
+References: <43DCA9CA.5020505@bl.com> <20060129123532.GA6158@wonderland.linux.it> <43DCD614.20705@pobox.com> <20060130204231.GP19465@austin.ibm.com> <20060130204743.GA13902@wonderland.linux.it> <dro3ue$ntb$1@sea.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17374.36482.175051.360224@cse.unsw.edu.au>
+Content-Disposition: inline
+In-Reply-To: <dro3ue$ntb$1@sea.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Francois Barre <francois.barre@gmail.com>
-Cc: linux1394-devel@lists.sourceforge.net, linux-raid@vger.kernel.org
+To: Jason Lunz <lunz@falooley.org>, neilb@suse.de
+Cc: linux-hotplug-devel@lists.sourceforge.net, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Francois Barre wrote in personal mail:
-> it appeared that it was a harddrive problem. A
-> simple dd from was showing the abort messages as well
-
-Over SBP-2 or IDE? Either way, md is no longer a suspect, and we don't 
-need to bother linux-raid anymore. :-)
-
->> What about sbp2's max_speed parameter?
+On Tue, Jan 31, 2006 at 04:40:46PM +0000, Jason Lunz was heard to remark:
+> md@Linux.IT said:
+> >> -- kernel scans /dev/hda1, looking for md superblock
+> >> -- kernel assembles devices according to info found in the superblocks
+> >> -- udev creates /dev/md0, etc.=20
+> > The problem is that some users and distributions build the drivers as
+> > modules and/or disable in-kernel auto-assembly.
 > 
-> Hidden option of the level37 ? I've never seen it...
+> Not only that, the raid developers themselves consider autoassembly
+> deprecated.
+> 
+> http://article.gmane.org/gmane.linux.kernel/373620
 
-It is listed on www.linux1394.org's sbp2 page (Linux 2.4 syntax) and of 
-course in the source. Anyway, it is not important. Since you don't get 
-any error messages from the 1394 stack's lower layers, it is obviously 
-not an issue of an electrically unreliable bus which would be the main 
-reason to use sbp2's max_speed parameter.
+Hmm. My knee-jerk, didn't-stop-to-think-about-it reaction is that 
+this is one of the finest features of linux raid, so why remove it?
 
-> I was wondering if sbp2 didn't behave as if it was buffering
-> writes, waiting for a sufficient amount of data before sending it to
-> drives... Regardless of the io scheduler I mean...
+Speaking as a real-life sysadmin, with actual servers and actual failed
+disks, disk cables and disk controllers, this is a life-saving feature. 
+Persistant naming of devices in Linux has long been a problem, and in
+this case, it seemed to work.
 
-No, there is no additional scheduling in sbp2 or in the ieee1394 
-transactions layer.
+<story>
+I once had an ide controller fail on an x86 board. I bought a new 
+controller at the local store, recabled the disks, and booted. 
+I was alarmed to find that the system was trying to mount /home 
+as /usr, and /usr as /lib, etc. Turned out that /dev/hdc had  
+gotten renamed as /dev/hde, etc. and  had to go through a long,
+painful, rocket-science (yes, I *do* have a PhD) boot-floppy rescue
+to restore the system to working order.
+ 
+I shudder to think what would have happened if RAID reconstruction 
+had started based on faulty device names. Worse, as part of my rescue
+ops, I had to make multle copies of /etc/fstab, which resided on
+different disks (my root volume was raided), as well as the boot 
+floppy, and each contained inconsistent info (needed to bootstrap 
+my way back). Along the way, I made multiple errors in editing 
+the /etc/fstab since I could not keep them straight; twiddling 
+BIOS settings added to the confusion.  If this had been /etc/raid.conf 
+instead, with reconstruction triggered off of it, this could have 
+been an absolute disaster.
+</story>
 
-It works a bit different anyway: Sbp2 gets pointers to the scsi layer's 
-data buffers, puts SCSI commands into additional small buffers, and 
-notifies the target (disk) of new commands. The target fetches commands, 
-fetches data or sends data, and sends completion status. IOW the target 
-is performing all the data movement. So, strictly speaking, there is 
-also some kind of scheduler on the other side of the wire involved (the 
-target's fetch agent).
--- 
-Stefan Richter
--=====-=-==- ---= =====
-http://arcgraph.de/sr/
+Based on the above, real-life experience, my gut reaction is 
+raid assembly based on config files is a bad idea. I don't 
+understand how innocent, "minor" errors made by the sysadmin 
+won't result in catastrophic data loss.
+
+--linas
