@@ -1,157 +1,73 @@
-From: "Enrique Garcia Briones" <egarcia@mail.uadec.mx>
+From: Gordon Henderson <gordon@drogon.net>
 Subject: Re: Fw: Re: Configuring combination of RAID-1 RAID-5
-Date: Wed, 1 Feb 2006 11:48:54 -0600
-Message-ID: <20060201174154.M26811@mail.uadec.mx>
-References: <20060131163248.M20133@mail.uadec.mx> <Pine.LNX.4.56.0601311658220.17400@lion.drogon.net> <20060131165932.M47478@mail.uadec.mx> <Pine.LNX.4.56.0601311720010.17400@lion.drogon.net>
+Date: Wed, 1 Feb 2006 18:16:45 +0000 (GMT)
+Message-ID: <Pine.LNX.4.56.0602011805150.3632@lion.drogon.net>
+References: <20060131163248.M20133@mail.uadec.mx>
+ <Pine.LNX.4.56.0601311658220.17400@lion.drogon.net> <20060131165932.M47478@mail.uadec.mx>
+ <Pine.LNX.4.56.0601311720010.17400@lion.drogon.net> <20060201174154.M26811@mail.uadec.mx>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset=iso-8859-1
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.56.0601311720010.17400@lion.drogon.net>
+In-Reply-To: <20060201174154.M26811@mail.uadec.mx>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Enrique Garcia Briones <egarcia@mail.uadec.mx>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi again...
+On Wed, 1 Feb 2006, Enrique Garcia Briones wrote:
 
-On Tue, 31 Jan 2006 17:23:35 +0000 (GMT), Gordon Henderson wrote
-> On Tue, 31 Jan 2006, Enrique Garcia Briones wrote:
-> 
-> > Thanks Gordon,
+> > I'd be tempted to remove the A1000 and install on the 2 internal
+> > drives, then once that's happy, plug the A1000 back in again. It
+> > might be that the OBP (Open Boot Prom) code is favouring the
+> > external device to boot off, but it's been a very long time since
+> > I've dabbled in that. You'd need to push Stop+A at boot time then
+> > enter some runes at the OK prompt to check/reconfigure the boot device.
 > >
-> > I will then read and re-read the RAID-6 configuration, and something I 
-miss
-> > to explain, may be is not to be discussed here, is that when I installed 
-the
-> > Linux with the A1000 pulled out everything went out well but, when I
-> > reconnect the A1000 the system didn't start up correctly... so my unique 
-way
-> > was to install the Linux in the first hard drive of the A1000 and it 
-seems
-> > to be working fine, Is that alternative functional?
-> 
-> I'd be tempted to remove the A1000 and install on the 2 internal 
-> drives, then once that's happy, plug the A1000 back in again. It 
-> might be that the OBP (Open Boot Prom) code is favouring the 
-> external device to boot off, but it's been a very long time since 
-> I've dabbled in that. You'd need to push Stop+A at boot time then 
-> enter some runes at the OK prompt to check/reconfigure the boot device.
-> 
-I already did that, and modify the boot_device to the first of the internal 
-hard drives, but, when the Linux tries to came up, it shows an error... that 
-I cannot remember now. :S
+> I already did that, and modify the boot_device to the first of the internal
+> hard drives, but, when the Linux tries to came up, it shows an error... that
+> I cannot remember now. :S
 
-> The A1000 devices I've used had an on-board RAID controller and some
-> software that ran under Solaris to configure it, so that might be
-> somethign to look into too - to make sure it's doing what you expect 
-> it to be doing.
-> 
+Oops....
 
-The raid controler that you are mentioning is possible to configure it under 
-Solaris and still have it working with debian??
+> > The A1000 devices I've used had an on-board RAID controller and some
+> > software that ran under Solaris to configure it, so that might be
+> > somethign to look into too - to make sure it's doing what you expect
+> > it to be doing.
+>
+> The raid controler that you are mentioning is possible to configure it under
+> Solaris and still have it working with debian??
 
-I was unable to find any good enough documentation regarding the 
-configuration of raid-6, under debian linux, or similar, I feel like I am 
-shipwrecked, can anyone aimed me to the correct direction?
+There are utilities to do this under Solaris - I did this many moons ago
+(but then used it under Solaris) AIUI, the box looked like one SCSI device
+with the RAID units appearing as LUNs. (I had the boxes populated with 3
+RAID-5 arrays running over 4 disks each) I'd hope you could set it to jsut
+look like 12 disks, but as theres only one SCSI cable going into it, don't
+exect stellar performance. (I recall it was dog-slow anyway, but that
+might just have been Slowaris ;-)
 
-Enrique
+I also recall something about the Debian servers running with one of these
+devices once upon a time - maybe there's someone on the Debian lists who
+can help with the device & configuring?
 
-> Gordon
-> 
-> >
-> > thanks
-> >
-> > ---------- Forwarded Message -----------
-> > From: Gordon Henderson <gordon@drogon.net>
-> > To: Enrique Garcia Briones <egarcia@mail.uadec.mx>
-> > Cc: linux-raid@vger.kernel.org
-> > Sent: Tue, 31 Jan 2006 17:05:12 +0000 (GMT)
-> > Subject: Re: Configuring combination of RAID-1 RAID-5
-> >
-> > On Tue, 31 Jan 2006, Enrique Garcia Briones wrote:
-> >
-> > > Hi,
-> > >
-> > > Let me introduce myself.
-> > >
-> > > I'm newbie in linux and in RAID over linux, I have configured a RAID-0 
-in a
-> > > NetBSD 2.0 BOX. so, now let me explain what I'm trying to do,
-> > >
-> > > Antecedents/Equipment:
-> > >
-> > > I have a Sparc 420 with 4 processors and 4 Gb in RAM, two SCSI SEAGATE
-> > > internal hard disk with an array of 12 hard disks (Storedge 1000).
-> > >
-> > > What we want to have:
-> > >
-> > > We installed Debian Linux (I think it is 3.1 with kernel 2.4), and we 
-want
-> > > to have the following configuration:
-> > >
-> > > 1 System Harddisk
-> > > 1 RAID-1 Mirror Hard Drive
-> > > 12 Hard drives in RAID-5, 10 working and 2 as spare disks.
-> > >
-> > > I have read the setting-up for the raid-5 and 1, but I would like to 
-ask
-> > you
-> > > if I can set-up a combined RAID configuration as mentioned above, 
-since all
-> > > the examples I found upto now just talk of one RAD configuration, 
-besides
-> > > this, I would like to ask you that if the configuration I want to have 
-is
-> > > STRONG enough for the quantity of disk in the box, or if there must be 
-any
-> > > other considerations to have.
-> >
-> > Wow. an A1000. Ancient, but probably still OK. I'm not sure if there are
-> > any management utilities for them that'll run under Linux - I've only 
-ever
-> > seen 2 of these and they seem to be able to run RAID themselves - might 
-be
-> > faster, but the ones I had were slow anyway - maybe you can re-configure
-> > them to just look like 12 disks and let Linux do the RAID on them...
-> >
-> > Heres my suggestion:
-> >
-> > Install a 2.6 kernel.
-> >
-> > Partition both internal disks identically, then then combine all the
-> > partitions with RAID-1. Boot off RAID-1, if you can - I'm not up on the
-> > SLILO/whatever boot loaders for Sparc though.
-> >
-> > Configure the 12 external disks using RAID-6. You'll get one disk more
-> > worth of storage that way and still be able to sustain a 2 disk failure.
-> >
-> > Gordon
-> >
-> > -
-> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > ------- End of Forwarded Message -------
-> >
-> >
-> > --
-> > UAdeC
-> > En el Bien fincamos el Saber
-> > Open WebMail Project (http://openwebmail.org)
-> >
-> > -
-> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-
-> raid" in the body of a message to majordomo@vger.kernel.org More 
-> majordomo info at  http://vger.kernel.org/majordomo-info.html
+> I was unable to find any good enough documentation regarding the
+> configuration of raid-6, under debian linux, or similar, I feel like I am
+> shipwrecked, can anyone aimed me to the correct direction?
 
+List archives :-) but setting it up is easy... You need a recent 2.6
+kernel and mdadm 1.8 or greater (maybe 1.9) there is nothing fancy in the
+mdadm command line:
 
---
-UAdeC
-En el Bien fincamos el Saber
-Open WebMail Project (http://openwebmail.org)
+  mdadm --create /dev/md1 --raid-disks=12 --level=6 	\
+	/dev/sd{a,b,c,d,e,f,g,h,i,j,k,l}1
 
+modify to suit...
+
+Then wait.. and wait.. for it to sync..
+
+  watch -n2 cat /proc/mdstat
+
+Although like all the other raid levels, it's ready to use right away,
+just might not survive losing a disk very well until the entire array is
+synced up.
+
+Gordon
