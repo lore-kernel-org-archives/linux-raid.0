@@ -1,57 +1,67 @@
-From: Andy Smith <andy@lug.org.uk>
-Subject: Re: RAID 16?
-Date: Thu, 2 Feb 2006 21:29:30 +0000
-Message-ID: <20060202212930.GA7017@strugglers.net>
-References: <43E19FAB.4000603@cogweb.net> <pan.2006.02.02.16.17.03.859560@smurf.noris.de> <Pine.GSO.4.62.0602021726010.14030@shaka.acc.umu.se> <Pine.LNX.4.56.0602021651370.19057@lion.drogon.net> <43E27716.10506@dynaconnections.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [PATCH 000 of 3] md: Introduction
+Date: Fri, 3 Feb 2006 08:53:08 +1100
+Message-ID: <17378.32580.843867.356162@cse.unsw.edu.au>
+References: <20060202165638.15890.patches@notabene>
+	<Pine.LNX.4.64.0602020945460.1426@filesrv1.baby-dragons.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="n83m4gEp0LancY77"
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <43E27716.10506@dynaconnections.com>
+In-Reply-To: message from Mr. James W. Laferriere on Thursday February 2
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
+Cc: linux-raid maillist <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-
---n83m4gEp0LancY77
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On Thu, Feb 02, 2006 at 03:18:14PM -0600, J. Ryan Earl wrote:
-> Gordon Henderson wrote:
->=20
-> >I've actually had very good results hot swapping  SCSI drives on a live
-> >linux system though.
+On Thursday February 2, babydr@baby-dragons.com wrote:
+>  	Hello Neil ,
+> 
+> On Thu, 2 Feb 2006, NeilBrown wrote:
+> > Three patches for 2.6.lastest. All should go in 2.6.16.
+> > One won't apply against -rc1-git5 as it fixes a bug in a patch
+> > in -mm that hasn't quite got to -linus yes.
 > >
-> >Anyone tried SATA drives yet?
+> > They are mostly little fixes.  I've been doing some more testing,
+> > particularly creating a raid1 over 2 6TB arrays.  This requires
+> > version-1 superblocks, so they have had a bit more testing too.
 > >
-> Yes, and it does NOT work yet.  libata does not support hotplugging of=20
-> harddrives yet: http://linux.yyz.us/sata/features.html=20
->=20
-> It supports hotplugging of the PCI controller itself, but not harddrives.
+> > (No, I didn't try to resync the 6TB raid1.  I created it
+> > --assume-clean and gave it a write-intent bitmap so a full resync
+> > would never be needed.  If one side died, a recovery would take
+> > ages!!!! but for me it was only an experiment, not a serious configuration).
+> > (You will need mdadm-2.3 if you too want a 6TB raid1).
+> >
+> > [PATCH 001 of 3] md: Handle overflow of mdu_array_info_t->size better.
+> > [PATCH 002 of 3] md: Assorted little md fixes:
+> > [PATCH 003 of 3] md: Make sure rdev->size gets set for version-1 superblocks.
+>  	Would you be so kind and share the commands you ran in order to
+>  	build this array ?  Please ,  Please !-)   Tia ,  JimL
 
-Hotplugging of SATA II drives works with 3ware raid controllers
-*when installed in a chassis that supports it*.  I believe pretty
-much any chassis that says it supports SATA hotplug will do.
-Personally I have had success with Chenbro 1U chassis.
+Well, I don't have 12TB of storage so:
 
---=20
-http://strugglers.net/wiki/Xen_hosting -- A Xen VPS hosting hobby
-Encrypted mail welcome - keyid 0x604DE5DB
+# create some sparse 2G loopback devices
+for i in 1 2 3 4 5 6
+do
+ dd if=/dev/full of=Big$i bs=1024k seek=2000000 count=1
+ losetup /dev/loop$i Big$1
+done
 
---n83m4gEp0LancY77
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
+# combine them into 6G linear arrays
+mdadm -C /dev/md4 -l linear -n 3 /dev/loop[123]
+mdadm -C /dev/md5 -l linear -n 3 /dev/loop[456]
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
+# now make the 6G mirrored pair.
+mdadm -C /dev/md3 -l 1 -n2 --assume-clean --bitmap=internal /dev/md[45]
 
-iD8DBQFD4nm6IJm2TL8VSQsRAsqkAJ0fMzroHxHnikAPvCVibLYPYeXFggCfUuuj
-mKbIfqkSSQcnVVdPYKApPyg=
-=ENoU
------END PGP SIGNATURE-----
+Providing you are using mdadm 2.3, this will automatically select
+version-1 superblocks and create the array marking it clean without
+any resync.
 
---n83m4gEp0LancY77--
+Ofcourse, as this particular array is based on sparse files, actually
+trying to store much data on it will quickly run you into trouble, but
+as a proof-of-implementation, it works OK.
+
+Was that what you were after?
+
+NeilBrown
