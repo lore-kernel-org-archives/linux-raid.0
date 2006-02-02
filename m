@@ -1,19 +1,29 @@
-From: "Johanna" <johannaxx@adelphia.net>
-Subject: The Pill Offerings
-Date: Thu, 2 Feb 2006 10:55:50 -0500
-Message-ID: <200602020255.k122t0YA004815@zeus1.kernel.org>
+From: dean gaudet <dean@arctic.org>
+Subject: Re: Configuring combination of RAID-1 RAID-5
+Date: Wed, 1 Feb 2006 21:06:58 -0800 (PST)
+Message-ID: <Pine.LNX.4.64.0602012052250.12264@twinlark.arctic.org>
+References: <20060131163248.M20133@mail.uadec.mx>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20060131163248.M20133@mail.uadec.mx>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Enrique Garcia Briones <egarcia@mail.uadec.mx>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Check Out our new Online Ph@rmÁcy and Keep up to 85%
+On Tue, 31 Jan 2006, Enrique Garcia Briones wrote:
 
-Dozens of Pills to Check out
+> I have read the setting-up for the raid-5 and 1, but I would like to ask you 
+> if I can set-up a combined RAID configuration as mentioned above, since all 
+> the examples I found upto now just talk of one RAD configuration
 
-http://www.rgry.com/
+you can have more than one /dev/mdN device no problem...
 
-We are your solution for Astronomical Deals
+if you've got a raid1 root disk setup on a box with raid5/6, and you want 
+to use a journalling filesystem on the raid5/6 you should seriously 
+consider saving space on the root disk for an external journal for the 
+raid5/6 filesystem.  it really helps metadata-heavy operations to offload 
+the journal writes to the raid1 spindles.
 
+-dean
