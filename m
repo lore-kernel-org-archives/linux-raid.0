@@ -1,31 +1,51 @@
-From: Joshua Baker-LePain <jlb17@duke.edu>
-Subject: Re: benchmarking
-Date: Wed, 1 Feb 2006 19:35:23 -0500 (EST)
-Message-ID: <Pine.LNX.4.62.0602011934050.11725@chaos.egr.duke.edu>
-References: <5.1.0.14.2.20060201182533.0b78b008@localhost>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: 2.6.15: mdrun, udev -- who creates nodes?
+Date: Thu, 2 Feb 2006 12:27:55 +1100
+Message-ID: <17377.24603.320734.849367@cse.unsw.edu.au>
+References: <20060129123532.GA6158@wonderland.linux.it>
+	<43DCD614.20705@pobox.com>
+	<20060130204231.GP19465@austin.ibm.com>
+	<20060130204743.GA13902@wonderland.linux.it>
+	<dro3ue$ntb$1@sea.gmane.org>
+	<20060131192643.GU19465@austin.ibm.com>
+	<62b0912f0601311219x78cbb29dof3768c1449bc8349@mail.gmail.com>
+	<20060131205202.GD27268@knob.reflex>
+	<20060131211317.GB19465@austin.ibm.com>
+	<62b0912f0601311358t5e028beeqdc61302ade37ecf0@mail.gmail.com>
+	<20060201092758.GQ7017@strugglers.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5.1.0.14.2.20060201182533.0b78b008@localhost>
+In-Reply-To: message from Andy Smith on Wednesday February 1
 Sender: linux-raid-owner@vger.kernel.org
-To: Tom Peters <tpeters@mixcom.com>
+To: Andy Smith <andy@lug.org.uk>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 1 Feb 2006 at 6:28pm, Tom Peters wrote
+On Wednesday February 1, andy@lug.org.uk wrote:
+> On Tue, Jan 31, 2006 at 10:58:03PM +0100, Molle Bestefich wrote:
+> > Quoting Luca Berra:
+> > > the in kernel auto assembly should be removed for good
+> > > it should be replaced by auto assembly in user space (mdadm),
+> > > which does not suffer from the problems that in-kernel has.
+> > 
+> > If people could start saying
+> >  "we need to get rid of in-kernel autodetection"
+> > instead of
+> >  "we need to get rid of autodetection",
+> > I think there would be much less confusion.
+> 
+> And force us all to use initrd/initramfs :(
 
-> Does Linux (SuSE 9) have a tool that will give me a handle on read/write 
-> throughput to a drive without trashing anything on the drive (i.e. using 
-> empty space on it)?  I have an 8-drive array and sometimes writes to it fail 
-> over the network (Samba) and I can't prove its the array and not the network.
->
-> I've played with hdparm -Tt and gotten some idea. What else can I try that 
-> won't take a lot of setup?
+Don't think of it as 'forcing' you.  Think of it as encouraging you to
+be an early adopter...
+I suspect it won't be many years (maybe 1) before you have to have an
+initramfs to boot.  There will be a standard one distributed with the
+kernel, but it will (hopefully) be fairly easy to add stuff.
 
-bonnie++ is very easy to compile and use, and tiobench only slightly less 
-so.
+So get with the program. Initramfs is *easy*.  Just DO it.
 
--- 
-Joshua Baker-LePain
-Department of Biomedical Engineering
-Duke University
+(mdadm-2.2 comes with a script to make an initramfs which "works for me").
+
+NeilBrown
