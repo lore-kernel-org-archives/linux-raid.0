@@ -1,9 +1,9 @@
-From: Neil Brown <neilb@suse.de>
-Subject: ANNOUNCE: mdadm 2.3 - A tool for managing Soft RAID under Linux
-Date: Thu, 2 Feb 2006 16:18:33 +1100
-Message-ID: <17377.38441.974634.267086@cse.unsw.edu.au>
+From: David Liontooth <liontooth@cogweb.net>
+Subject: RAID 16?
+Date: Wed, 01 Feb 2006 21:59:07 -0800
+Message-ID: <43E19FAB.4000603@cogweb.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
@@ -11,51 +11,18 @@ To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
+We're wondering if it's possible to run the following --
 
-I am pleased to announce the availability of
-   mdadm version 2.3
+  * define 4 pairs of RAID 1 with an 8-port 3ware 9500S card
+  * the OS will see these are four normal drives
+  * use md to configure them into a RAID 6 array
 
-It is available at the usual places:
-   http://www.cse.unsw.edu.au/~neilb/source/mdadm/
-and
-   http://www.{countrycode}.kernel.org/pub/linux/utils/raid/mdadm/
+Would this work? Would it be better than RAID 15? We're looking for a
+very high redundancy system.
 
-mdadm is a tool for creating, managing and monitoring
-device arrays using the "md" driver in Linux, also
-known as Software RAID arrays.
+This is on a Debian system running the 2.6 kernel. We're contemplating
+running EVMS on top.
 
-Release 2.3 fixes an assortment of bugs including the "--assemble --scan"
-crash.  It also makes mdadm better at handling very large arrays.
-Finally, it adds some functionality to support some pending kernel
-features such as raid5 reshaping.
+Dave
 
-Changelog Entries:
-    -   Try /etc/mdadm/mdadm.conf if /etc/mdadm.conf doesn't exist.
-	This provided compatability for Debian.
-    -   Fixed for version-1 superblock:
-	 report chunksize for raid6 and raid10
-	 make sure device size used is a multiple of chunksize
-    -   Fix "--assemble --scan" crash.
-    -   Fix completely failure to create array on ppc64
-    -   Fix memcmp in place of memcpy
-    -   A few minor improvements to online help
-    -   Clean up usage of 'long long' for used-size of devices, so
-	that it is possible to create a raid1 of 7TB devices!
-    -   Make internal bitmaps work on 7TB raid1 arrays.
-    -   Provide error message if --examine doesn't find any superblock.
-    -   Report 'reshape' status in --examine - this depends on kernel
-	patches that are not yet finalised.
-    -   Report bitmap status in --detail and --examine
-    -   Default to v1 superblocks instead of v0.90 if the array
-	is too big for 0.90 to handle.
-    -   Sort the output of "mdadm --detail --scan" so that it is
-	in a suitable order for assembling arrays. i.e. components come
-	before an array that they are part of.
-    -   Print size of large reiserfs array properly went warning of
-        possible confilcts.
-
-Development of mdadm is sponsored by
- SUSE Labs, Novell Inc.
-
-NeilBrown  2nd February 2006
 
