@@ -1,33 +1,28 @@
-From: Matthias Urlichs <smurf@smurf.noris.de>
+From: "J. Ryan Earl" <ryan@dynaconnections.com>
 Subject: Re: RAID 16?
-Date: Thu, 02 Feb 2006 21:34:02 +0100
-Message-ID: <pan.2006.02.02.20.34.02.59627@smurf.noris.de>
-References: <43E19FAB.4000603@cogweb.net> <pan.2006.02.02.16.17.03.859560@smurf.noris.de> <drtjq9$4le$1@sea.gmane.org>
+Date: Thu, 02 Feb 2006 15:18:14 -0600
+Message-ID: <43E27716.10506@dynaconnections.com>
+References: <43E19FAB.4000603@cogweb.net> <pan.2006.02.02.16.17.03.859560@smurf.noris.de> <Pine.GSO.4.62.0602021726010.14030@shaka.acc.umu.se> <Pine.LNX.4.56.0602021651370.19057@lion.drogon.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.56.0602021651370.19057@lion.drogon.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Gordon Henderson <gordon@drogon.net>
+Cc: Mattias Wadenstein <maswan@acc.umu.se>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi, Mario 'BitKoenig' Holbe wrote:
+Gordon Henderson wrote:
 
->> Hmm. You'd have eight disks, five(!) may fail at any time, giving you
-> 
-> Four, isn't it?
-> RAID6 covers the failure of 2 of the underlying RAID1s, which, in turn,
-> means failures of 2 disks each, so four. Sometimes even 5, yes - given the
-> right ones fail.
+>I've actually had very good results hot swapping  SCSI drives on a live
+>linux system though.
+>
+>Anyone tried SATA drives yet?
+>
+Yes, and it does NOT work yet.  libata does not support hotplugging of 
+harddrives yet: http://linux.yyz.us/sata/features.html 
 
-No -- with any four failed disks you still do not have a single point of
-failure. Only when you take out two RAID1 pairs and one disk in a third
-pair does the second disk in that third pair become a SPOF.
+It supports hotplugging of the PCI controller itself, but not harddrives.
 
--- 
-Matthias Urlichs   |   {M:U} IT Design @ m-u-it.de   |  smurf@smurf.noris.de
-Disclaimer: The quote was selected randomly. Really. | http://smurf.noris.de
- - -
-Man created God in his own image.
-
-
+-ryan
