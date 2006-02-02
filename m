@@ -1,57 +1,50 @@
-From: Andy Smith <andy@lug.org.uk>
-Subject: Re: 2.6.15: mdrun, udev -- who creates nodes?
-Date: Wed, 1 Feb 2006 22:14:52 +0000
-Message-ID: <20060201221452.GC7017@strugglers.net>
-References: <20060130204231.GP19465@austin.ibm.com> <20060130204743.GA13902@wonderland.linux.it> <dro3ue$ntb$1@sea.gmane.org> <20060131192643.GU19465@austin.ibm.com> <62b0912f0601311219x78cbb29dof3768c1449bc8349@mail.gmail.com> <20060131205202.GD27268@knob.reflex> <20060131211317.GB19465@austin.ibm.com> <62b0912f0601311358t5e028beeqdc61302ade37ecf0@mail.gmail.com> <20060201092758.GQ7017@strugglers.net> <20060201194419.GA14438@percy.comedia.it>
+From: Tom Peters <tpeters@mixcom.com>
+Subject: benchmarking
+Date: Wed, 01 Feb 2006 18:28:43 -0600
+Message-ID: <5.1.0.14.2.20060201182533.0b78b008@localhost>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="rwscYzhiyJj14ziJ"
+Content-Type: text/plain; charset=iso-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20060201194419.GA14438@percy.comedia.it>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Does Linux (SuSE 9) have a tool that will give me a handle on read/writ=
+e=20
+throughput to a drive without trashing anything on the drive (i.e. usin=
+g=20
+empty space on it)?  I have an 8-drive array and sometimes writes to it=
+=20
+fail over the network (Samba) and I can't prove its the array and not t=
+he=20
+network.
 
---rwscYzhiyJj14ziJ
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+I've played with hdparm -Tt and gotten some idea. What else can I try t=
+hat=20
+won't take a lot of setup?
 
-On Wed, Feb 01, 2006 at 08:44:19PM +0100, Luca Berra wrote:
-> On Wed, Feb 01, 2006 at 09:27:58AM +0000, Andy Smith wrote:
-> >On Tue, Jan 31, 2006 at 10:58:03PM +0100, Molle Bestefich wrote:
-> >>If people could start saying
-> >> "we need to get rid of in-kernel autodetection"
-> >>instead of
-> >> "we need to get rid of autodetection",
-> >>I think there would be much less confusion.
-> >
-> >And force us all to use initrd/initramfs :(
-> >
-> i believe that if you looked in this ml archives you'll know you can use
-> the kernel command line to build an array, if you don't want to use
-> initrd/initramfs.
 
-I am aware and I do.  However that is in-kernel.  If it needs
-userland as has been stated here then it requires initrd, no?
 
---=20
-http://strugglers.net/wiki/Xen_hosting -- A Xen VPS hosting hobby
-Encrypted mail welcome - keyid 0x604DE5DB
 
---rwscYzhiyJj14ziJ
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
 
-iD8DBQFD4TLcIJm2TL8VSQsRAqsQAKCt9nE7hTkRtHnI+Ju4sArY9xr4tACeIIiU
-BqsJim4T3Hz/6ioo7UDadTU=
-=gby0
------END PGP SIGNATURE-----
+[Computing] B can be thought of as C without types; more accurately,
+it is BCPL squeezed into 8K bytes of memory and filtered through
+Thompson's brain. --Dennis Ritchie
+--... ...--  -.. .  -. ----. --.- --.- -...
+tpeters@nospam.mixcom.com   (remove "nospam") N9QQB (amateur radio)
+"HEY YOU" (loud shouting)  WEB ADDRESS http//www.mixweb.com/tpeters
+43=B0 7' 17.2" N by 88=B0 6' 28.9" W,  Elevation 815',  Grid Square EN5=
+3wc
+WAN/LAN/Telcom Analyst, Tech Writer, MCP, CCNA, Registered Linux User 3=
+85531
 
---rwscYzhiyJj14ziJ--
+
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
