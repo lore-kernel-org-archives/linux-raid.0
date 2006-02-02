@@ -1,53 +1,42 @@
-From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 003 of 3] md: Make sure rdev->size gets set for version-1 superblocks.
-Date: Thu, 2 Feb 2006 17:02:15 +1100
-Message-ID: <1060202060215.15984@suse.de>
-References: <20060202165638.15890.patches@notabene>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: RAID 16?
+Date: Thu, 2 Feb 2006 17:03:38 +1100
+Message-ID: <17377.41146.565087.713849@cse.unsw.edu.au>
+References: <43E19FAB.4000603@cogweb.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from David Liontooth on Wednesday February 1
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: David Liontooth <liontooth@cogweb.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Wednesday February 1, liontooth@cogweb.net wrote:
+> 
+> We're wondering if it's possible to run the following --
+> 
+>   * define 4 pairs of RAID 1 with an 8-port 3ware 9500S card
+>   * the OS will see these are four normal drives
+>   * use md to configure them into a RAID 6 array
+> 
+> Would this work? Would it be better than RAID 15? We're looking for a
+> very high redundancy system.
 
-Sometimes it doesn't so make the code more like the version-0 code
-which works.
+There is no reason why this shouldn't work.  Go for it....
 
-Signed-off-by: Neil Brown <neilb@suse.de>
+NeilBrown
 
-### Diffstat output
- ./drivers/md/md.c |    8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
 
-diff ./drivers/md/md.c~current~ ./drivers/md/md.c
---- ./drivers/md/md.c~current~	2006-02-02 16:51:46.000000000 +1100
-+++ ./drivers/md/md.c	2006-02-02 16:56:12.000000000 +1100
-@@ -1025,7 +1025,7 @@ static int super_1_load(mdk_rdev_t *rdev
- 		rdev-> sb_size = (rdev->sb_size | bmask)+1;
- 
- 	if (refdev == 0)
--		return 1;
-+		ret = 1;
- 	else {
- 		__u64 ev1, ev2;
- 		struct mdp_superblock_1 *refsb = 
-@@ -1045,7 +1045,9 @@ static int super_1_load(mdk_rdev_t *rdev
- 		ev2 = le64_to_cpu(refsb->events);
- 
- 		if (ev1 > ev2)
--			return 1;
-+			ret = 1;
-+		else
-+			ret = 0;
- 	}
- 	if (minor_version) 
- 		rdev->size = ((rdev->bdev->bd_inode->i_size>>9) - le64_to_cpu(sb->data_offset)) / 2;
-@@ -1059,7 +1061,7 @@ static int super_1_load(mdk_rdev_t *rdev
- 
- 	if (le32_to_cpu(sb->size) > rdev->size*2)
- 		return -EINVAL;
--	return 0;
-+	return ret;
- }
- 
- static int super_1_validate(mddev_t *mddev, mdk_rdev_t *rdev)
+> 
+> This is on a Debian system running the 2.6 kernel. We're contemplating
+> running EVMS on top.
+> 
+> Dave
+> 
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
