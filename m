@@ -1,29 +1,61 @@
-From: dean gaudet <dean@arctic.org>
-Subject: Re: Configuring combination of RAID-1 RAID-5
-Date: Wed, 1 Feb 2006 21:06:58 -0800 (PST)
-Message-ID: <Pine.LNX.4.64.0602012052250.12264@twinlark.arctic.org>
-References: <20060131163248.M20133@mail.uadec.mx>
+From: Neil Brown <neilb@suse.de>
+Subject: ANNOUNCE: mdadm 2.3 - A tool for managing Soft RAID under Linux
+Date: Thu, 2 Feb 2006 16:18:33 +1100
+Message-ID: <17377.38441.974634.267086@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20060131163248.M20133@mail.uadec.mx>
 Sender: linux-raid-owner@vger.kernel.org
-To: Enrique Garcia Briones <egarcia@mail.uadec.mx>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 31 Jan 2006, Enrique Garcia Briones wrote:
 
-> I have read the setting-up for the raid-5 and 1, but I would like to ask you 
-> if I can set-up a combined RAID configuration as mentioned above, since all 
-> the examples I found upto now just talk of one RAD configuration
 
-you can have more than one /dev/mdN device no problem...
+I am pleased to announce the availability of
+   mdadm version 2.3
 
-if you've got a raid1 root disk setup on a box with raid5/6, and you want 
-to use a journalling filesystem on the raid5/6 you should seriously 
-consider saving space on the root disk for an external journal for the 
-raid5/6 filesystem.  it really helps metadata-heavy operations to offload 
-the journal writes to the raid1 spindles.
+It is available at the usual places:
+   http://www.cse.unsw.edu.au/~neilb/source/mdadm/
+and
+   http://www.{countrycode}.kernel.org/pub/linux/utils/raid/mdadm/
 
--dean
+mdadm is a tool for creating, managing and monitoring
+device arrays using the "md" driver in Linux, also
+known as Software RAID arrays.
+
+Release 2.3 fixes an assortment of bugs including the "--assemble --scan"
+crash.  It also makes mdadm better at handling very large arrays.
+Finally, it adds some functionality to support some pending kernel
+features such as raid5 reshaping.
+
+Changelog Entries:
+    -   Try /etc/mdadm/mdadm.conf if /etc/mdadm.conf doesn't exist.
+	This provided compatability for Debian.
+    -   Fixed for version-1 superblock:
+	 report chunksize for raid6 and raid10
+	 make sure device size used is a multiple of chunksize
+    -   Fix "--assemble --scan" crash.
+    -   Fix completely failure to create array on ppc64
+    -   Fix memcmp in place of memcpy
+    -   A few minor improvements to online help
+    -   Clean up usage of 'long long' for used-size of devices, so
+	that it is possible to create a raid1 of 7TB devices!
+    -   Make internal bitmaps work on 7TB raid1 arrays.
+    -   Provide error message if --examine doesn't find any superblock.
+    -   Report 'reshape' status in --examine - this depends on kernel
+	patches that are not yet finalised.
+    -   Report bitmap status in --detail and --examine
+    -   Default to v1 superblocks instead of v0.90 if the array
+	is too big for 0.90 to handle.
+    -   Sort the output of "mdadm --detail --scan" so that it is
+	in a suitable order for assembling arrays. i.e. components come
+	before an array that they are part of.
+    -   Print size of large reiserfs array properly went warning of
+        possible confilcts.
+
+Development of mdadm is sponsored by
+ SUSE Labs, Novell Inc.
+
+NeilBrown  2nd February 2006
+
