@@ -1,8 +1,8 @@
 From: Matthias Urlichs <smurf@smurf.noris.de>
 Subject: Re: RAID 16?
-Date: Thu, 02 Feb 2006 21:24:30 +0100
-Message-ID: <pan.2006.02.02.20.24.27.869975@smurf.noris.de>
-References: <43E19FAB.4000603@cogweb.net> <pan.2006.02.02.16.17.03.859560@smurf.noris.de> <Pine.GSO.4.62.0602021726010.14030@shaka.acc.umu.se> <Pine.LNX.4.56.0602021651370.19057@lion.drogon.net>
+Date: Thu, 02 Feb 2006 21:34:02 +0100
+Message-ID: <pan.2006.02.02.20.34.02.59627@smurf.noris.de>
+References: <43E19FAB.4000603@cogweb.net> <pan.2006.02.02.16.17.03.859560@smurf.noris.de> <drtjq9$4le$1@sea.gmane.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -11,30 +11,23 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi, Gordon Henderson wrote:
+Hi, Mario 'BitKoenig' Holbe wrote:
 
-> I've actually had very good results hot swapping  SCSI drives on a live
-> linux system though. I guess you do run the risk of something crowbarring
-> the SCSI bus for a few cycles when the drive is unplugged or plugged in,
-> but it's all parity/checksummed, isn't it?
+>> Hmm. You'd have eight disks, five(!) may fail at any time, giving you
+> 
+> Four, isn't it?
+> RAID6 covers the failure of 2 of the underlying RAID1s, which, in turn,
+> means failures of 2 disks each, so four. Sometimes even 5, yes - given the
+> right ones fail.
 
-You run the very real risks of unbalancing the bus when you plug/unplug,
-thereby creating power spikes which may or may not destry your hardware.
-
-I did what you do for years. Always when the bus was idle, and with
-antistatic precautions. One day, all SCSI driver chips on the bus were
-shot afterwards. That was the last time I *ever* touched a powered SCSI
-bus.
-
-(I had to replace the SCSI interface chip in my tape drive (fiddly work
- with the soldering iron); luckily it used a standard one that was
- available.)
+No -- with any four failed disks you still do not have a single point of
+failure. Only when you take out two RAID1 pairs and one disk in a third
+pair does the second disk in that third pair become a SPOF.
 
 -- 
 Matthias Urlichs   |   {M:U} IT Design @ m-u-it.de   |  smurf@smurf.noris.de
 Disclaimer: The quote was selected randomly. Really. | http://smurf.noris.de
  - -
-Reality continues to ruin my life.
-		-- Calvin
+Man created God in his own image.
 
 
