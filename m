@@ -1,67 +1,43 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH 000 of 3] md: Introduction
-Date: Fri, 3 Feb 2006 08:53:08 +1100
-Message-ID: <17378.32580.843867.356162@cse.unsw.edu.au>
-References: <20060202165638.15890.patches@notabene>
-	<Pine.LNX.4.64.0602020945460.1426@filesrv1.baby-dragons.com>
+From: Konstantin Olchanski <olchansk@triumf.ca>
+Subject: Re: RAID 16?
+Date: Thu, 2 Feb 2006 14:38:59 -0800
+Message-ID: <20060202223859.GA26059@sam.triumf.ca>
+References: <43E19FAB.4000603@cogweb.net> <pan.2006.02.02.16.17.03.859560@smurf.noris.de> <Pine.GSO.4.62.0602021726010.14030@shaka.acc.umu.se> <Pine.LNX.4.56.0602021651370.19057@lion.drogon.net> <43E27716.10506@dynaconnections.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Mr. James W. Laferriere on Thursday February 2
+Content-Disposition: inline
+In-Reply-To: <43E27716.10506@dynaconnections.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
-Cc: linux-raid maillist <linux-raid@vger.kernel.org>
+To: "J. Ryan Earl" <ryan@dynaconnections.com>
+Cc: Gordon Henderson <gordon@drogon.net>, Mattias Wadenstein <maswan@acc.umu.se>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday February 2, babydr@baby-dragons.com wrote:
->  	Hello Neil ,
-> 
-> On Thu, 2 Feb 2006, NeilBrown wrote:
-> > Three patches for 2.6.lastest. All should go in 2.6.16.
-> > One won't apply against -rc1-git5 as it fixes a bug in a patch
-> > in -mm that hasn't quite got to -linus yes.
+On Thu, Feb 02, 2006 at 03:18:14PM -0600, J. Ryan Earl wrote:
 > >
-> > They are mostly little fixes.  I've been doing some more testing,
-> > particularly creating a raid1 over 2 6TB arrays.  This requires
-> > version-1 superblocks, so they have had a bit more testing too.
-> >
-> > (No, I didn't try to resync the 6TB raid1.  I created it
-> > --assume-clean and gave it a write-intent bitmap so a full resync
-> > would never be needed.  If one side died, a recovery would take
-> > ages!!!! but for me it was only an experiment, not a serious configuration).
-> > (You will need mdadm-2.3 if you too want a 6TB raid1).
-> >
-> > [PATCH 001 of 3] md: Handle overflow of mdu_array_info_t->size better.
-> > [PATCH 002 of 3] md: Assorted little md fixes:
-> > [PATCH 003 of 3] md: Make sure rdev->size gets set for version-1 superblocks.
->  	Would you be so kind and share the commands you ran in order to
->  	build this array ?  Please ,  Please !-)   Tia ,  JimL
+> > Anyone tried [to how-swap] SATA drives yet?
+>
+> Yes, and it does NOT work yet.  libata does not support hotplugging of 
+> harddrives yet: http://linux.yyz.us/sata/features.html
 
-Well, I don't have 12TB of storage so:
+Despite the claims for the opposite, hot-swap SATA does work,
+albeit with caveats and depending on chipsets and drivers.
 
-# create some sparse 2G loopback devices
-for i in 1 2 3 4 5 6
-do
- dd if=/dev/full of=Big$i bs=1024k seek=2000000 count=1
- losetup /dev/loop$i Big$1
-done
+Hot-unplug and hot-plug works for me with 3ware (8506) and LSI
+Megaraid (8-port SATA) controllers. Take a drive out, put it back in,
+type in a magic controller dependant command to enable it, then
+run mdadm --add.
 
-# combine them into 6G linear arrays
-mdadm -C /dev/md4 -l linear -n 3 /dev/loop[123]
-mdadm -C /dev/md5 -l linear -n 3 /dev/loop[456]
+With the SATA Rocketraid 1820 (hptmv.ko) hot-unplug works,
+but hot plug does not (hptmv.ko reports "drive plugged in and enabled,
+but Linux I/O fails with errors).
 
-# now make the 6G mirrored pair.
-mdadm -C /dev/md3 -l 1 -n2 --assume-clean --bitmap=internal /dev/md[45]
+With Promise PDC20319 (4-port SATA), I hot swap by "rmmod sata_promise;
+remove old disk; connect new disk; modprobe sata_promise". I am sure
+this "rmmod" trick works for hot-swapping disks on any SATA controller.
 
-Providing you are using mdadm 2.3, this will automatically select
-version-1 superblocks and create the array marking it clean without
-any resync.
-
-Ofcourse, as this particular array is based on sparse files, actually
-trying to store much data on it will quickly run you into trouble, but
-as a proof-of-implementation, it works OK.
-
-Was that what you were after?
-
-NeilBrown
+-- 
+Konstantin Olchanski
+Data Acquisition Systems: The Bytes Must Flow!
+Email: olchansk-at-triumf-dot-ca
+Snail mail: 4004 Wesbrook Mall, TRIUMF, Vancouver, B.C., V6T 2A3, Canada
