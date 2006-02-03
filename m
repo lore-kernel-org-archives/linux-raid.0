@@ -1,45 +1,53 @@
-From: dean gaudet <dean@arctic.org>
-Subject: Re: Raid5 & Debian Yaird Woes
-Date: Thu, 2 Feb 2006 18:13:54 -0800 (PST)
-Message-ID: <Pine.LNX.4.64.0602021808100.6557@twinlark.arctic.org>
-References: <200602031229.37972.mylists@blue-matrix.org>
+From: ross@lug.udel.edu (Ross Vandegrift)
+Subject: Re: RAID 16?
+Date: Thu, 2 Feb 2006 21:31:56 -0500
+Message-ID: <20060203023156.GA32621@lug.udel.edu>
+References: <43E19FAB.4000603@cogweb.net> <pan.2006.02.02.16.17.03.859560@smurf.noris.de> <Pine.GSO.4.62.0602021726010.14030@shaka.acc.umu.se> <Pine.LNX.4.56.0602021651370.19057@lion.drogon.net> <43E27716.10506@dynaconnections.com> <20060202223859.GA26059@sam.triumf.ca>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200602031229.37972.mylists@blue-matrix.org>
+Content-Disposition: inline
+In-Reply-To: <20060202223859.GA26059@sam.triumf.ca>
 Sender: linux-raid-owner@vger.kernel.org
-To: Lewis Shobbrook <mylists@blue-matrix.org>
-Cc: linux-raid@vger.kernel.org, dr@jones.dk
+To: Konstantin Olchanski <olchansk@triumf.ca>
+Cc: "J. Ryan Earl" <ryan@dynaconnections.com>, Gordon Henderson <gordon@drogon.net>, Mattias Wadenstein <maswan@acc.umu.se>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-i've never looked at yaird in detail -- but you can probably use 
-initramfs-tools instead of yaird... the deb 2.6.14 and later kernels will 
-use whichever one of those is installed.  i know that initramfs-tools uses 
-mdrun to start the root partition based on its UUID -- and so it should 
-work fine (to get root mounted) even without dorking around with 
-mdadm.conf.
+On Thu, Feb 02, 2006 at 02:38:59PM -0800, Konstantin Olchanski wrote:
+> Despite the claims for the opposite, hot-swap SATA does work,
+> albeit with caveats and depending on chipsets and drivers.
+> 
+> Hot-unplug and hot-plug works for me with 3ware (8506) and LSI
+> Megaraid (8-port SATA) controllers. Take a drive out, put it back in,
+> type in a magic controller dependant command to enable it, then
+> run mdadm --add.
 
-but if you want to stick with yaird:
+But in both of these cases, the Linux kernel never interacts directly
+with individual drives, only with SCSI disks presented to the OS by
+the controller.
 
-On Fri, 3 Feb 2006, Lewis Shobbrook wrote:
+In other words, the cards and controllers take care of the hotswap so
+libata doesn't need to.
 
-> My mdadm.conf (I never needed to use at all previous to the yaird system) is
-> as follows...
-> ARRAY /dev/md0 level=raid1 num-devices=3 devices=/dev/sda2,/dev/sdb2,/dev/sdc2
-> auto=yes
-> ARRAY /dev/md1 level=raid5 num-devices=3 auto=yes
-> UUID=a3452240:a1578a31:737679af:58f53690
-> DEVICE partitions
+> With Promise PDC20319 (4-port SATA), I hot swap by "rmmod sata_promise;
+> remove old disk; connect new disk; modprobe sata_promise". I am sure
+> this "rmmod" trick works for hot-swapping disks on any SATA controller.
 
-some wrapping occured there i'm guessing...
+I used to do this to hot swap ISA cards ::-)
 
-you might be a lot happier if your /dev/md0 also specified the UUID rather 
-than the individual devices.  this is probably the source of your 
-troubles.
+I had a box with two ISA slots.  I only had ISA modem, sound card, and
+NIC.  The NIC stayed in.  The modem and the sound card were both PnP,
+so I could run isapnp to bring them up after a swap.  Never fried
+anything, despite it being a horribly bad idea!
 
-you can get the UUID by doing "mdadm --examine /dev/sda2".
+Don't try that at home...
 
-or you can try:  mdadm --examine --scan --brief ... just prepend "DEVICE 
-partitions" in front of that and you should be happy.
+-- 
+Ross Vandegrift
+ross@lug.udel.edu
 
--dean
+"The good Christian should beware of mathematicians, and all those who
+make empty prophecies. The danger already exists that the mathematicians
+have made a covenant with the devil to darken the spirit and to confine
+man in the bonds of Hell."
+	--St. Augustine, De Genesi ad Litteram, Book II, xviii, 37
