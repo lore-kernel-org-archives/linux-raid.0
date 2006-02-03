@@ -1,50 +1,45 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [RFC][PATCH 000 of 3] MD Acceleration and the ADMA interface:
- Introduction
-Date: Thu, 02 Feb 2006 21:01:35 -0500
-Message-ID: <43E2B97F.305@pobox.com>
-References: <1138931168.6620.8.camel@dwillia2-linux.ch.intel.com>
+From: dean gaudet <dean@arctic.org>
+Subject: Re: Raid5 & Debian Yaird Woes
+Date: Thu, 2 Feb 2006 18:13:54 -0800 (PST)
+Message-ID: <Pine.LNX.4.64.0602021808100.6557@twinlark.arctic.org>
+References: <200602031229.37972.mylists@blue-matrix.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1138931168.6620.8.camel@dwillia2-linux.ch.intel.com>
+In-Reply-To: <200602031229.37972.mylists@blue-matrix.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, Evgeniy Polyakov <johnpol@2ka.mipt.ru>, Chris Leech <christopher.leech@intel.com>, "Grover, Andrew" <andrew.grover@intel.com>, Deepak Saxena <dsaxena@plexity.net>
+To: Lewis Shobbrook <mylists@blue-matrix.org>
+Cc: linux-raid@vger.kernel.org, dr@jones.dk
 List-Id: linux-raid.ids
 
-Dan Williams wrote:
-> This patch set was originally posted to linux-raid, Neil suggested that
-> I send to linux-kernel as well:
-> 
-> Per the discussion in this thread (http://marc.theaimsgroup.com/?
-> t=112603120100004&r=1&w=2) these patches implement the first phase of MD
-> acceleration, pre-emptible xor.  To date these patches only cover raid5
-> calls to compute_parity for read/modify and reconstruct writes.  The
-> plan is to expand this to cover raid5 check parity, raid5 compute block,
-> as well as the raid6 equivalents.
-> 
-> The ADMA (Asynchronous / Application Specific DMA) interface is proposed
-> as a cross platform mechanism for supporting system CPU offload engines.
-> The goal is to provide a unified asynchronous interface to support
-> memory copies, block xor, block pattern setting, block compare, CRC
-> calculation, cryptography etc.  The ADMA interface should support a PIO
-> fallback mode allowing a given ADMA engine implementation to use the
-> system CPU for operations without a hardware accelerated backend.  In
-> other words a client coded to the ADMA interface transparently receives
-> hardware acceleration for its operations depending on the features of
-> the underlying platform.
+i've never looked at yaird in detail -- but you can probably use 
+initramfs-tools instead of yaird... the deb 2.6.14 and later kernels will 
+use whichever one of those is installed.  i know that initramfs-tools uses 
+mdrun to start the root partition based on its UUID -- and so it should 
+work fine (to get root mounted) even without dorking around with 
+mdadm.conf.
 
-Here are some other things out there worth considering:
+but if you want to stick with yaird:
 
-* SCSI XOR commands
+On Fri, 3 Feb 2006, Lewis Shobbrook wrote:
 
-* Figuring out how to support Promise SX4 (e.g. device offload), which 
-is a chip with integrated XOR engine and attached DIMM.  RAID1 and RAID5 
-are best implemented on-card, but the Linux driver is responsible for 
-implementing all on-card actions, not a firmware.
+> My mdadm.conf (I never needed to use at all previous to the yaird system) is
+> as follows...
+> ARRAY /dev/md0 level=raid1 num-devices=3 devices=/dev/sda2,/dev/sdb2,/dev/sdc2
+> auto=yes
+> ARRAY /dev/md1 level=raid5 num-devices=3 auto=yes
+> UUID=a3452240:a1578a31:737679af:58f53690
+> DEVICE partitions
 
-	Jeff
+some wrapping occured there i'm guessing...
 
+you might be a lot happier if your /dev/md0 also specified the UUID rather 
+than the individual devices.  this is probably the source of your 
+troubles.
 
+you can get the UUID by doing "mdadm --examine /dev/sda2".
+
+or you can try:  mdadm --examine --scan --brief ... just prepend "DEVICE 
+partitions" in front of that and you should be happy.
+
+-dean
