@@ -1,40 +1,59 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [RFC][PATCH 000 of 3] MD Acceleration and the ADMA interface:
- Introduction
-Date: Fri, 03 Feb 2006 13:58:00 -0500
-Message-ID: <43E3A7B8.2050607@pobox.com>
-References: <1138931168.6620.8.camel@dwillia2-linux.ch.intel.com> <43E39F2B.5080408@drzeus.cx>
+From: jurriaan <thunder7@xs4all.nl>
+Subject: ludicrous speed: raid6 reconstruction
+Date: Fri, 3 Feb 2006 22:15:58 +0100
+Message-ID: <20060203211558.GA7559@amd64.of.nowhere>
+Reply-To: Jurriaan <thunder7@xs4all.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1422668AbWBCS6M@vger.kernel.org>
-In-Reply-To: <43E39F2B.5080408@drzeus.cx>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Pierre Ossman <drzeus-list@drzeus.cx>
-Cc: Dan Williams <dan.j.williams@intel.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, Evgeniy Polyakov <johnpol@2ka.mipt.ru>, Chris Leech <christopher.leech@intel.com>, "Grover, Andrew" <andrew.grover@intel.com>, Deepak Saxena <dsaxena@plexity.net>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Pierre Ossman wrote:
-> Dan Williams wrote:
-> 
->>The ADMA (Asynchronous / Application Specific DMA) interface is proposed
->>as a cross platform mechanism for supporting system CPU offload engines.
->>The goal is to provide a unified asynchronous interface to support
->>memory copies, block xor, block pattern setting, block compare, CRC
->>calculation, cryptography etc.  The ADMA interface should support a PIO
->>fallback mode allowing a given ADMA engine implementation to use the
->>system CPU for operations without a hardware accelerated backend.  In
->>other words a client coded to the ADMA interface transparently receives
->>hardware acceleration for its operations depending on the features of
->>the underlying platform.
->>
-> 
-> 
-> I'm wondering, how common is this ADMA acronym? I've been writing a MMC
+Personalities : [linear] [raid0] [raid1] [raid5] [raid4] [raid6] 
+md0 : active raid6 sdh1[7] sdg1[6] sdf1[5] sde1[4] sdd1[3] sdc1[2] sdb1[1] sda1[0]
+      1465175424 blocks level 6, 64k chunk, algorithm 2 [8/8] [UUUUUUUU]
+      [==================>..]  resync = 91.0% (222239104/244195904) finish=0.0min speed=7369041K/sec
+      bitmap: 23/233 pages [92KB], 512KB chunk
+I am reminded of Spaceball's 'ludicrous speed' here. This is after a
+reboot from 2.6.16-rc1-mm3 (where the array was built) to 2.6.16-rc1-mm5
+(where rebuilding continued thanks to the bitmap).
 
-In ATA land, ADMA is a hardware ATA controller interface, similar to 
-AHCI.  We even have a pdc_adma (Pacific Digital ADMA) driver in the 
-tree, and NVIDIA uses a variant of the ADMA interface in their SATA 
-controllers.
-
-	Jeff
+/dev/md0:
+        Version : 00.90.03
+  Creation Time : Fri Feb  3 19:52:27 2006
+     Raid Level : raid6
+     Array Size : 1465175424 (1397.30 GiB 1500.34 GB)
+    Device Size : 244195904 (232.88 GiB 250.06 GB)
+   Raid Devices : 8
+  Total Devices : 8
+Preferred Minor : 0
+    Persistence : Superblock is persistent
+  Intent Bitmap : Internal
+    Update Time : Fri Feb  3 21:53:55 2006
+          State : active, resyncing
+ Active Devices : 8
+Working Devices : 8
+ Failed Devices : 0
+  Spare Devices : 0
+     Chunk Size : 64K
+ Rebuild Status : 91% complete
+           UUID : 128dc711:3f60812f:79b28619:8d0aa46d
+         Events : 0.8
+    Number   Major   Minor   RaidDevice State
+       0       8        1        0      active sync   /dev/sda1
+       1       8       17        1      active sync   /dev/sdb1
+       2       8       33        2      active sync   /dev/sdc1
+       3       8       49        3      active sync   /dev/sdd1
+       4       8       65        4      active sync   /dev/sde1
+       5       8       81        5      active sync   /dev/sdf1
+       6       8       97        6      active sync   /dev/sdg1
+       7       8      113        7      active sync   /dev/sdh1
+Might I also add this bitmap idea is a GREAT thing to have!
+Jurriaan
+-- 
+I will dedicate myself to the study of dangerous assumptions.
+There is power in them, which the Nahia have neglected.
+	Stephen R Donaldson - The Killing Stroke
+Debian (Unstable) GNU/Linux 2.6.16-rc1-mm5 4427 bogomips load 6.27
