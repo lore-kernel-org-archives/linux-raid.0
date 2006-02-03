@@ -1,58 +1,53 @@
-From: "JaniD++" <djani22@dynamicweb.hu>
-Subject: Re: raid 4, and bitmap.
-Date: Fri, 3 Feb 2006 01:15:52 +0100
-Message-ID: <04cc01c62856$ff18c630$9d00a8c0@dcccs>
-References: <04c201c62855$5efda450$9d00a8c0@dcccs> <17378.40767.339455.85486@cse.unsw.edu.au>
+From: "Guy" <bugzilla@watkins-home.com>
+Subject: RE: RAID 16?
+Date: Thu, 2 Feb 2006 19:20:10 -0500
+Message-ID: <200602030020.k130KGq13372@www.watkins-home.com>
+References: <drtjq9$4le$1@sea.gmane.org>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="iso-8859-1"
+	charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <drtjq9$4le$1@sea.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: 'Mario 'BitKoenig' Holbe' <Mario.Holbe@TU-Ilmenau.DE>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+He can loose 1 disk from any 2 RAID1 arrays.  And then 2 disks from the
+other 2 RAID1 arrays.  A total of 6 of 8 disks can fail if chosen correctly.
 
------ Original Message ----- 
-From: "Neil Brown" <neilb@suse.de>
-To: "JaniD++" <djani22@dynamicweb.hu>
-Cc: <linux-raid@vger.kernel.org>
-Sent: Friday, February 03, 2006 1:09 AM
-Subject: Re: raid 4, and bitmap.
+I would go with an 8 disk RAID6, which would give the space of 6 disks and
+support any 2 disks failing.  Or a 7 disk RAID6 with 1 spare, but I think
+that is over kill.
 
+Guy
 
-> On Friday February 3, djani22@dynamicweb.hu wrote:
-> > Hello, list, Neil,
-> >
-> > I try to add bitmaps to raid4, and mdadm is done this fine.
-> > In the /proc/mdstat shows this, and it is really works well.
-> >
-> > But on reboot, the kernel drops the bitmap(, and resync the entire array
-if
-> > it is unclean). :(
-> >
-> > It is still uncomplete now? (2.6.16-rc1)
->
->
-> It is an 'internal' bitmap, or is the bitmap in a file?
-
-It is internal.
-The external bitmap is not works for me, because on the boot, only the NFS
-is reachable, and it cause crash.
-
-(note: this is raid4 not raid5!)
-
->
-> If the bitmap is in a file, you need to me sure that the file is
-> provided by mdadm when the array is assembled - using in-kernel
-> autodetect won't work.
->
-> If it is an internal bitmap.... it should work.
-> Are there any kernel messages during boot that might be interesting?
-
-It is something, i will find it one minute! :-)
-
->
-> NeilBrown
+} -----Original Message-----
+} From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+} owner@vger.kernel.org] On Behalf Of Mario 'BitKoenig' Holbe
+} Sent: Thursday, February 02, 2006 1:42 PM
+} To: linux-raid@vger.kernel.org
+} Subject: Re: RAID 16?
+} 
+} Matthias Urlichs <smurf@smurf.noris.de> wrote:
+} > Hi, David Liontooth wrote:
+} >>   * define 4 pairs of RAID 1 with an 8-port 3ware 9500S card * the OS
+} will
+} > Hmm. You'd have eight disks, five(!) may fail at any time, giving you
+} 
+} Four, isn't it?
+} RAID6 covers the failure of 2 of the underlying RAID1s, which, in turn,
+} means failures of 2 disks each, so four.
+} Sometimes even 5, yes - given the right ones fail.
+} 
+} 
+} regards
+}    Mario
+} --
+} We are the Bore. Resistance is futile. You will be bored.
+} 
+} -
+} To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+} the body of a message to majordomo@vger.kernel.org
+} More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
