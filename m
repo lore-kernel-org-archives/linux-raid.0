@@ -1,195 +1,156 @@
 From: Evgeniy Polyakov <johnpol@2ka.mipt.ru>
-Subject: Re: [RFC][PATCH 002 of 3] MD Acceleration: md_adma driver for raid5 offload
-Date: Fri, 3 Feb 2006 11:15:22 +0300
-Message-ID: <20060203081521.GB3434@2ka.mipt.ru>
-References: <1138929179.20036.44.camel@dwillia2-linux.ch.intel.com>
+Subject: Re: [RFC][PATCH 001 of 3] MD Acceleration: Base ADMA interface
+Date: Fri, 3 Feb 2006 11:19:59 +0300
+Message-ID: <20060203081958.GC3434@2ka.mipt.ru>
+References: <1138929154.20036.43.camel@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1138929179.20036.44.camel@dwillia2-linux.ch.intel.com>
+In-Reply-To: <1138929154.20036.43.camel@dwillia2-linux.ch.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Dan Williams <dan.j.williams@intel.com>
 Cc: linux-raid@vger.kernel.org, Chris Leech <christopher.leech@intel.com>, "Grover, Andrew" <andrew.grover@intel.com>, Deepak Saxena <dsaxena@plexity.net>
 List-Id: linux-raid.ids
 
-Hello, Dan.
+Trivial locking comment.
+Selected functions below (adma_queue_desc() and adma_run()) protects
+list of descriptor manipulations by only simple lock.
+If it is possible to queue descriptors from interrupt/bh context,
+locking should be changed.
 
-Couple of comments.
+On Thu, Feb 02, 2006 at 06:12:34PM -0700, Dan Williams (dan.j.williams@intel.com) wrote:
 
-On Thu, Feb 02, 2006 at 06:12:59PM -0700, Dan Williams (dan.j.williams@intel.com) wrote:
+> +/* add descriptor to the process list and conditionally initiate operations */
+> +void adma_queue_desc(adma_desc_t *desc, int wake)
+> +{
+> +	adma_engine_t *eng = desc->engine;
+> +
+> +	spin_lock(&eng->lock);
+> +	list_add_tail(&desc->chain, &eng->desc_chain);
+> +	atomic_inc(&eng->ops_pending);
+
+This counter is never used actually...
+
+> +	spin_unlock(&eng->lock);
+> +
+> +	if (wake) adma_wakeup_thread(eng->thread);
+> +
+> +	dump_desc(desc);
+> +}
 
 ...
+
+> +
 > +/*
-> + * Issue a copy data operation between a page in the stripe cache, and a bio.
-> + * There are no alignment or size guarantees between the page or the
-> + * bio except that there is some overlap.
-> + * All iovecs in the bio must be considered.
-> + *
-> + * Assumes being called under sh->lock
-> + * 
-> + * @dev_idx: the raid device index that is being modified
-> + * 
-> + * Returns true if the copy is complete, returns false if copy is asynchronous
+> + * This thread churns through the descriptor chain
+> + * Runs the command and if necessary calls the callback function.
+> + * Note: This thread makes pio_adma_engine assumptions for now
 > + */
-> +int md_issue_copy_data(int frombio, struct bio *bio,
-> +		     struct page *page, sector_t sector,
-> +		     struct stripe_head *sh, int dev_idx)
+> +void adma_run(adma_engine_t *eng)
 > +{
-> +	char *pa = page_address(page);
-> +	struct bio_vec *bvl;
-> +	int i, desc_cnt = 0, pio = 0;
-> +	int page_offset;
-> +	void *buf[2];
-> +	adma_engine_t *eng = sh->raid_conf->adma_engine;
-> +	adma_desc_t *desc = adma_get_desc(eng), *next_desc = 0;
+> +	adma_desc_t *desc, *prev_desc;
+> +	int op = 0;
 > +
-> +	if(!test_bit(ADMA_ENG_CAP_COPY, &eng->flags))
-> +		pio++;
+> +	while(1) {
+> +		struct list_head *first;
 > +
-> +	if (bio->bi_sector >= sector)
-> +		page_offset = (signed)(bio->bi_sector - sector) * 512;
-> +	else
-> +		page_offset = (signed)(sector - bio->bi_sector) * -512;
-> +	bio_for_each_segment(bvl, bio, i) {
-> +		int len = bio_iovec_idx(bio,i)->bv_len;
-> +		int clen;
-> +		int b_offset = 0;
-> +
-> +		if (page_offset < 0) {
-> +			b_offset = -page_offset;
-> +			page_offset += b_offset;
-> +			len -= b_offset;
-> +		}
-> +
-> +		if (len > 0 && page_offset + len > STRIPE_SIZE)
-> +			clen = STRIPE_SIZE - page_offset;
-> +		else clen = len;
-> +			
-> +		if (clen > 0) {
-> +			char *ba = __bio_kmap_atomic(bio, i, KM_USER0);
-> +
-> +			if (desc_cnt) {
-> +				eng->queue_desc(desc, MD_ADMA_QUEUE);
-> +				next_desc = adma_get_desc(eng);
-> +				if (next_desc) adma_set_desc_flags(desc, ADMA_AUTO_REAP);
-> +			}
-> +
-> +			if (frombio) {
-> +				buf[0] = pa+page_offset;
-> +				buf[1] = ba+b_offset;
-> +			} else {
-> +				buf[0] = ba+b_offset;
-> +				buf[1] = pa+page_offset;
-> +			}
-> +
-> +			if (pio) goto pio_memcpy;
-> +
-> +			/* if the adma engine can not access the bio page directly
-> +			 * (pio_adma on highmem platforms or dma address restrictions) 
-> +			 * then we must copy synchronously.
-> +			 * i.e. we can't / shouldn't hold a true atomic mapping while the
-> +			 * adma_engine performs an asynchronous memcpy
-> +			 */
-> +			#ifdef CONFIG_HIGHMEM
-> +			if(!test_bit(ADMA_ENG_CAP_HIGHMEM, &eng->flags))
-> +				goto pio_memcpy;
-> +			#endif
-> +
-> +
-> +			/* handle memory allocation failures:
-> +			 * if we fail to allocate the necessary structures then
-> +			 * (re)do everything as a pio memcpy.  If some descriptors have
-> +			 * already been successfully queued then we need to run
-> +			 * the adma thread to get them cleaned up
-> +			 */
-> +			if (unlikely(!desc || (desc_cnt && !next_desc))) {
-> +				if (desc_cnt) {
-> +					/* we run the thread directly since we are not 
-> +					 * preemptible
-> +					 */
-> +					adma_run(eng);
-> +					/* we busy wait on prev_desc so
-> +					 * that the pio operation does not
-> +					 * conflict with the engine.
-> +					 */
-> +					adma_spin_wait_desc(desc);
-> +					adma_put_desc(desc);
-> +					desc_cnt = 0;
-> +				} else if (desc) /* we don't have args, and never will */
-> +					adma_put_desc(desc);
-> +				 
-> +				goto pio_memcpy;
-> +			}
-> +
-> +			if (desc_cnt) {
-> +				desc = next_desc;
-> +				next_desc = NULL;
-> +			}
-> +
-> +			eng->build_desc(desc, ADMA_COPY, buf, ARRAY_SIZE(buf), clen, 0);
-> +			desc_cnt++;
-> +			continue;
-
-It looks like if pio mode is not enabled and memory allocation
-succeds bio mapping is leaked?
-
-> +
-> +pio_memcpy:		pio++;
-> +			memcpy(buf[0], buf[1], clen);
-> +			__bio_kunmap_atomic(ba, KM_USER0);
-> +
-> +		}
-> +		if (clen < len) /* hit end of page */
+> +		spin_lock(&eng->lock);
+> +		if (list_empty(&eng->desc_chain))
 > +			break;
-> +		page_offset +=  len;
-> +	}
-> +	
-> +	if (desc) { /* queue and run the final descriptor */
-> +		adma_set_desc_flags(desc, 0);
-> +		adma_set_callback(desc, md_adma_copy_data_callback, sh, dev_idx);
-> +		eng->queue_desc(desc, MD_ADMA_QUEUE);
-> +		if(!frombio) { /* we are reading so client expects data immediately */
-> +			adma_run(eng);
-> +			adma_spin_wait_desc(desc);
-> +		} else adma_wakeup_thread(eng->thread);
-> +	} else if (pio) 
-> +		__md_adma_copy_data_callback(sh, dev_idx);
 > +
-> +	return pio;
+> +		first = eng->desc_chain.next;
+> +
+> +		/* will be used to satisfy ordering requirements for adma
+> +		 * engines that process copy and xor operatations on different
+> +		 * channels 
+> +		 */ 
+> +		prev_desc = op++ ? desc : NULL;
+> +		desc = list_entry(first, adma_desc_t, chain);
+> +		dump_desc(desc);
+> +
+> +		list_del_init(first);
+> +
+> +		atomic_dec(&eng->ops_pending);
+> +		spin_unlock(&eng->lock);
+
+
+If ops_pending could be used as engine's reference counter, it should
+not be dropped here, but it looks like it is unused.
+
+> +		switch(desc->command) {
+> +			case ADMA_COPY:
+> +				eng->cpy_op(desc->buf[0], desc->buf[1], desc->len);
+> +				break;
+> +			case ADMA_SET:
+> +				eng->set_block_op(desc->sources, desc->len, desc->buf, desc->pattern);
+> +				break;
+> +			case ADMA_COMPARE:
+> +				if (eng->cmp_op(desc->buf[0], 
+> +				    desc->buf[1], 
+> +				    desc->len))
+> +					set_bit(ADMA_STAT_CMP, &desc->flags);
+> +				else
+> +					clear_bit(ADMA_STAT_CMP, &desc->flags);
+> +				break;
+> +			case ADMA_XOR:
+> +				eng->xor_block_op(desc->sources, desc->len, desc->buf);
+> +				break;
+> +			case ADMA_PQXOR:
+> +				printk("%s: Error ADMA_PQXOR not yet implemented\n", __FUNCTION__);
+> +				BUG();
+> +				break;
+> +		}
+> +		adma_check_status(desc);
+> +
+> +		if(desc->callback)
+> +			desc->callback(desc, desc->args);
+> +		else if(test_bit(ADMA_AUTO_REAP, &desc->flags)) {
+> +			BUG_ON(desc->args != NULL);
+> +			adma_put_desc(desc);
+> +		}
+> +	}
+> +	spin_unlock(&eng->lock);
 > +}
 > +
-> +#define check_xor() do {						    \
-> +if (likely(desc))							    \
-> +	 max_sources = adma_get_source_count(eng);			    \
-> +else									    \
-> +	 max_sources = MAX_XOR_BLOCKS;					    \
-> +if (count == max_sources || last || mid) {				    \
-> +	if (desc) {							    \
-> +		eng->build_desc(desc, ADMA_XOR, ptr, count, STRIPE_SIZE, 0);\
-> +		if (last) {						    \
-> +			adma_set_callback(desc, raid5_adma_xor_callback, sh, method);\
-> +			next_desc = NULL;				    \
-> +		} else {						    \
-> +			next_desc = adma_get_desc(eng);			    \
-> +			if (likely(next_desc))				    \
-> +				adma_set_desc_flags(desc, ADMA_AUTO_REAP);  \
-> +		}							    \
-> +		eng->queue_desc(desc, last ? 1 : MD_ADMA_QUEUE);	    \
-> +		if (likely(!last) && unlikely(!next_desc)) {		    \
-> +			adma_run(eng);					    \
-> +			adma_spin_wait_desc(desc);			    \
-> +			adma_put_desc(desc);				    \
-> +      		}							    \
-> +      		desc = last ? desc : next_desc;				    \
-> +	} else xor_block(count, STRIPE_SIZE, ptr);			    \
-> +	count = 1;							    \
-> +}									    \
-> +} while(0)
-
-
-Ugh...
-Maybe better to place such a macro into inline function?
+> +static int adma_thread(void * arg)
+> +{
+> +	adma_thread_t *thread = arg;
+> +
+> +	/*
+> +	 * This thread handles:
+> +	 *	> issuing descriptors to an adma engine
+> +	 *	> maintaining order between dependent operations
+> +	 *	> garbage collecting descriptor resources (upon request)
+> +	 *	> running the pio version of an operation when underlying
+> +	 *	  hardware support is not present
+> +	 */
+> +
+> +	allow_signal(SIGKILL);
+> +	while (!kthread_should_stop()) {
+> +
+> +		/* We need to wait INTERRUPTIBLE so that
+> +		 * we don't add to the load-average.
+> +		 * That means we need to be sure no signals are
+> +		 * pending
+> +		 */
+> +		if (signal_pending(current))
+> +			flush_signals(current);
+> +
+> +		wait_event_interruptible_timeout
+> +			(thread->wqueue,
+> +			 test_bit(THREAD_WAKEUP, &thread->flags)
+> +			 || kthread_should_stop(),
+> +			 thread->timeout);
+> +		try_to_freeze();
+> +
+> +		clear_bit(THREAD_WAKEUP, &thread->flags);
+> +
+> +		thread->run(thread->eng);
+> +	}
+> +
+> +	return 0;
+> +}
 
 -- 
 	Evgeniy Polyakov
