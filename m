@@ -1,83 +1,70 @@
 From: "JaniD++" <djani22@dynamicweb.hu>
-Subject: Re: Raid 4 resize, raid0 limit question
-Date: Fri, 3 Feb 2006 01:24:41 +0100
-Message-ID: <04dd01c62858$3c068090$9d00a8c0@dcccs>
-References: <04b801c62854$d2365da0$9d00a8c0@dcccs> <17378.40947.719361.616481@cse.unsw.edu.au>
+Subject: Fw: raid 4, and bitmap.
+Date: Fri, 3 Feb 2006 01:25:12 +0100
+Message-ID: <04e601c62858$4c790330$9d00a8c0@dcccs>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
 ----- Original Message ----- 
-From: "Neil Brown" <neilb@suse.de>
-To: "JaniD++" <djani22@dynamicweb.hu>
-Cc: <linux-raid@vger.kernel.org>
-Sent: Friday, February 03, 2006 1:12 AM
-Subject: Re: Raid 4 resize, raid0 limit question
+From: "JaniD++" <djani22@dynamicweb.hu>
+To: "Neil Brown" <neilb@suse.de>
+Sent: Friday, February 03, 2006 1:20 AM
+Subject: Re: raid 4, and bitmap.
 
 
-> On Friday February 3, djani22@dynamicweb.hu wrote:
-> > Hello, list,
+>
+> ----- Original Message ----- 
+> From: "Neil Brown" <neilb@suse.de>
+> To: "JaniD++" <djani22@dynamicweb.hu>
+> Cc: <linux-raid@vger.kernel.org>
+> Sent: Friday, February 03, 2006 1:09 AM
+> Subject: Re: raid 4, and bitmap.
+>
+>
+> > On Friday February 3, djani22@dynamicweb.hu wrote:
+> > > Hello, list, Neil,
+> > >
+> > > I try to add bitmaps to raid4, and mdadm is done this fine.
+> > > In the /proc/mdstat shows this, and it is really works well.
+> > >
+> > > But on reboot, the kernel drops the bitmap(, and resync the entire
+array
+> if
+> > > it is unclean). :(
+> > >
+> > > It is still uncomplete now? (2.6.16-rc1)
 > >
-> > I plan to resize (grow) one raid4 array.
 > >
-> > 1. stop the array.
-> > 2. resize the partition on all disks to fit the maximum size.
->
-> The approach is currently not supported.  It would need a change to
-> mdadm to find the old superblock and relocate it to the new end of the
-> partition.
->
-> The only currently 'supported' way it to remove devices one at a time,
-> resize them, and add them back in as new devices, waiting for the
-> resync.
-
-Good news! :-)
-This takes about 1 weeks for me... :-(
-I should recreate....
-
-
->
-> NeilBrown
->
->
+> > It is an 'internal' bitmap, or is the bitmap in a file?
 > >
-> > After this restart(assemble) the array is possiple?
-> > I mean, how can the kernel find the superblock fits on the half of the
-new
-> > partitions?
-> > I need to recreate the array instead of using -G option?
-> > Can i force raid to resync only the new area?
+> > If the bitmap is in a file, you need to me sure that the file is
+> > provided by mdadm when the array is assembled - using in-kernel
+> > autodetect won't work.
 > >
-> > The raid0 in 2.6.16-rc1 supports 4x 3.6TB soure devices? :-)
+> > If it is an internal bitmap.... it should work.
+> > Are there any kernel messages during boot that might be interesting?
 >
-> ... maybe?
-> I think it does, but I cannot promise anything.
-
-Anyway, i will test it on the weekend, and i dont need to grow the FS too on
-it.
-
-How can i safe test it (and NBD >2TB) to work well, without data lost?
-
-Thanks,
-Janos
-
+> Sorry, i did not log this, and i dont want to restart the sync and system
+> for this.
+> Anyway, i add back the bitmap, and the next crash we will see....
 >
-> NeilBrown
+> I mean this was:
+> "bitmap is only support in raid1.
+> bitmap is removed."
 >
+> But not so sure. :(
+>
+> Cheers,
+> Janos
 >
 > >
-> > Thanks,
-> > Janos
-> >
-> > -
-> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > NeilBrown
+>
 
