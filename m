@@ -1,50 +1,40 @@
 From: Bill Davidsen <tmrbill@tmr.com>
 Subject: Re: RAID 16?
-Date: Thu, 2 Feb 2006 21:32:44 -0500 (EST)
-Message-ID: <Pine.LNX.4.44.0602022119380.12829-100000@firewall2.tmr.com>
-References: <43E19FAB.4000603@cogweb.net>
+Date: Thu, 2 Feb 2006 21:54:59 -0500 (EST)
+Message-ID: <Pine.LNX.4.44.0602022152320.12829-100000@firewall2.tmr.com>
+References: <43E27716.10506@dynaconnections.com>
 Reply-To: davidsen@tmr.com
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <43E19FAB.4000603@cogweb.net>
+In-Reply-To: <43E27716.10506@dynaconnections.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Liontooth <liontooth@cogweb.net>
-Cc: linux-raid@vger.kernel.org
+To: "J. Ryan Earl" <ryan@dynaconnections.com>
+Cc: Gordon Henderson <gordon@drogon.net>, Mattias Wadenstein <maswan@acc.umu.se>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 1 Feb 2006, David Liontooth wrote:
+On Thu, 2 Feb 2006, J. Ryan Earl wrote:
 
+>      
+> X-UID: 40928
 > 
-> We're wondering if it's possible to run the following --
+> Gordon Henderson wrote:
 > 
->   * define 4 pairs of RAID 1 with an 8-port 3ware 9500S card
->   * the OS will see these are four normal drives
->   * use md to configure them into a RAID 6 array
+> >I've actually had very good results hot swapping  SCSI drives on a live
+> >linux system though.
+> >
+> >Anyone tried SATA drives yet?
+> >
+> Yes, and it does NOT work yet.  libata does not support hotplugging of 
+> harddrives yet: http://linux.yyz.us/sata/features.html 
 > 
-> Would this work? Would it be better than RAID 15? We're looking for a
-> very high redundancy system.
+> It supports hotplugging of the PCI controller itself, but not harddrives.
 
-You only get the size of two drives with that! I think you would get the 
-same reliability and better performance with four RAID-1 mirror arrays and 
-RAID-5 over that. You still have to lose four drives to lose data, but you 
-get the size of three instead of two.
+I can add controllers but no devices? I have to think the norm is exactly 
+the opposite... One of the SATA controllers with the plugs on the back for 
+your little external box.
 
-If you really care about it, use two controllers, put four sets mirrored 
-one drive on each controller, then RAID-5 over that.
-
-> 
-> This is on a Debian system running the 2.6 kernel. We're contemplating
-> running EVMS on top.
-> 
-> Dave
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+A work in progress, I realize.
 
 -- 
 bill davidsen <davidsen@tmr.com>
