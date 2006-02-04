@@ -1,39 +1,29 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: Re: ANNOUNCE: mdadm 2.3 - A tool for managing Soft RAID under Linux
-Date: Sat, 4 Feb 2006 20:54:19 +0100
-Message-ID: <20060204195418.GC32334@percy.comedia.it>
-References: <17377.38441.974634.267086@cse.unsw.edu.au> <20060204173744.GB31715@percy.comedia.it>
+From: "Corine Donahue" <IDZVF@yahoo.com>
+Subject: SU-per Hu^ge 0ffers 6J
+Date: Sat, 04 Feb 2006 20:51:13 -0200
+Message-ID: <9A887EE3.7684.8715C2D5@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20060204173744.GB31715@percy.comedia.it>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: linux-net@vger.kernel.org, linux-newbie@vger.kernel.org, linux-ppp@vger.kernel.org, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, linux-serial@vger.kernel.org, linux-sound@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, Feb 04, 2006 at 06:37:45PM +0100, Luca Berra wrote:
->On Thu, Feb 02, 2006 at 04:18:33PM +1100, Neil Brown wrote:
->>
->>
->>I am pleased to announce the availability of
->>   mdadm version 2.3
->>
->and i am pleased to reply with the first patch for mdadm 2.3,
->which will allow building on 64bit machines.
->
-A more knowledgeable C programmer than me suggested using PRIu64
-instead of casting to format correctly theese printfs, what do you
-think about it?
 
 
-Regards,
-L.
 
--- 
-Luca Berra -- bluca@comedia.it
-        Communication Media & Services S.r.l.
- /"\
- \ /     ASCII RIBBON CAMPAIGN
-  X        AGAINST HTML MAIL
- / \
+Best offer of the month:
+
+Viggra - $76.95
+Ci ialis - $98.95
+VaIium - $104.95
+Xa naax - $120.95
+Phantermiine - $106.95
+Cod-deine - $111.95
+
+Only for limiited time..
+
+http://artistsand.com/?a=444
+
+
+F6
