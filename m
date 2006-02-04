@@ -1,58 +1,32 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Help on rebuilding an array that had a massive failure.
-Date: Sat, 4 Feb 2006 16:48:13 +1100
-Message-ID: <17380.16413.243841.797524@cse.unsw.edu.au>
-References: <3984.192.203.83.7.1139023706.squirrel@192.203.83.14>
+From: Evgeniy Polyakov <johnpol@2ka.mipt.ru>
+Subject: Re: [RFC][PATCH 001 of 3] MD Acceleration: Base ADMA interface
+Date: Sat, 4 Feb 2006 11:06:00 +0300
+Message-ID: <20060204080600.GA15983@2ka.mipt.ru>
+References: <1138929154.20036.43.camel@dwillia2-linux.ch.intel.com> <20060203081121.GA3434@2ka.mipt.ru> <e9c3a7c20602031558m2b3498d5sd9be09bc072fed57@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Oren Ben-Menachem on Saturday February 4
+Content-Disposition: inline
+In-Reply-To: <e9c3a7c20602031558m2b3498d5sd9be09bc072fed57@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: oren@kcbbs.gen.nz
-Cc: linux-raid@vger.kernel.org
+To: Dan Williams <dan.j.williams@gmail.com>
+Cc: Dan Williams <dan.j.williams@intel.com>, linux-raid@vger.kernel.org, Chris Leech <christopher.leech@intel.com>, "Grover, Andrew" <andrew.grover@intel.com>, Deepak Saxena <dsaxena@plexity.net>
 List-Id: linux-raid.ids
 
-On Saturday February 4, oren@kcbbs.gen.nz wrote:
-> Hi all,
-> 
-> I recently had a machine (Debian 2.6.7) with a raid array have a failure,
-> the disk controller card died partially ( so a couple of disks went
-> offline) then died permantly taking a further two drives out of the array.
-> 
-> The array (/dev/md1) was made up of /dev/hda3, /dev/hdi3, /dev/hdk3,
-> /dev/hdl3 and /dev/hdj3) the array was made up of the first three and then
-> the fourth was added (I believe).
-> 
-> Mdadm.conf looks like:
-> ARRAY /dev/md1 level=raid5 num-devices=5
-> UUID=aeb44e5d:14388f60:8c2f39ec:9488facd
->    devices=/dev/hda3,/dev/hdc3,/dev/hdd3,/dev/hde3,/dev/hdf3
-> 
-> Due to the controller death I've moved the disks across to another
-> machine, which has relabelled the disks as hda, hdc, hdd, hde, hdf.
-> 
-> I've attached the output of mdadm -E, below and have at least worked out
-> what the mapping is from old to new. (ie hda-hda, hdi-hdc, hdk-hde,
-> hdl-hdf, hdj-hdd).
-> 
-> When I try to assemble the drives I either get a 3 disk array mounted or
-> the following output:
-> phineas:/etc# mdadm --assemble /dev/md1 /dev/hda3 /dev/hdc3 /dev/hde3
-> /dev/hdf3 /dev/hdd3
-> mdadm: failed to add /dev/hdf3 to /dev/md1: Invalid argument
-> mdadm: failed to add /dev/hdd3 to /dev/md1: Invalid argument
-> mdadm: /dev/md1 assembled from 3 drives - not enough to start the array.
+Hello, Dan.
+
+On Fri, Feb 03, 2006 at 04:58:02PM -0700, Dan Williams (dan.j.williams@gmail.com) wrote:
+> Thanks for the feedback, I will implement these changes.  Also, now
+> that you have given me some hints as to the acrypto vocabulary, I can
+> start looking into integration and cross pollenation efforts.
 > 
 
-hdf3 and hdd3 have bad checksums somehow, but otherwise look fine.
-You should be able to fix this with
+You can find more documentation about acrypto design and
+implementation on project's page:
 
-  mdadm --assemble /dev/md1 --update=summaries /dev/hd[acefd]3
+http://tservice.net.ru/~s0mbre/old/index.php?section=projects&item=acrypto
 
-If that doesn't work, could just recreate the array:
-  mdadm --create /dev/md1 -l5 -c128 -n5 /dev/hda3 /dev/hdc3 /dev/hde3 \
-            /dev/hdf3 /dev/hdd3
+> Dan
 
-NeilBrown
-
+-- 
+	Evgeniy Polyakov
