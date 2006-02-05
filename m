@@ -1,42 +1,52 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: Newbie questions: Max Active disks, RAID migration, Compiling mdadm 2.3
-Date: Mon, 6 Feb 2006 09:49:11 +1100
-Message-ID: <17382.32999.717631.194507@cse.unsw.edu.au>
-References: <Pine.LNX.4.44.0602051634590.14014-100000@coffee.psychology.mcmaster.ca>
-	<7D3A6EBD-6C6D-44B5-BE1C-24BBDB2B391A@mac.com>
+Subject: Re: raid 4, and bitmap.
+Date: Mon, 6 Feb 2006 10:03:33 +1100
+Message-ID: <17382.33861.622843.613018@cse.unsw.edu.au>
+References: <04c201c62855$5efda450$9d00a8c0@dcccs>
+	<17378.40767.339455.85486@cse.unsw.edu.au>
+	<04d701c62857$9eb02e90$9d00a8c0@dcccs>
+	<17378.41629.709430.775224@cse.unsw.edu.au>
+	<04f401c62859$407f6910$9d00a8c0@dcccs>
+	<00b001c62987$290a4320$9d00a8c0@dcccs>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Martin Ritchie on Sunday February 5
+In-Reply-To: message from JaniD++ on Saturday February 4
 Sender: linux-raid-owner@vger.kernel.org
-To: Martin Ritchie <ritchiem@mac.com>
+To: JaniD++ <djani22@dynamicweb.hu>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sunday February 5, ritchiem@mac.com wrote:
-> I can see what I did now. Very silly.
+On Saturday February 4, djani22@dynamicweb.hu wrote:
+> > Ahh, i almost forget!
+> > The mdadm is sometimes drop "cannot allocate memory" and next try
+> "segfault"
+> > when i try -G --bitmap=internal on 2TB arrays!
+> > And after segfault, the full raid is stops...
+> >
+> > Cheers,
+> > Janos
 > 
-> I created a RAID 5 with 4 disks then went about hot adding disks.  
-> Silly me thinking it would increase the active space. Of course with  
-> the parity being shared through the active disks this doesn't makes  
-> sense.
+> I think i found the bug, its me. :-)
 > 
-> I was wanting to define a systematic way that I could start with a  
-> small number of disks and then expand the RAID as I needed more space  
-> (and could afford more disks).
+> Today it happens again, and i see, i have misstyped the "internal" word like
+> "intarnal".
+> The mdadm is accepted that, and try to make the bitmap on NFS again, and
+> crashed the raid.
 > 
-> Is raidreconf the only way for reconfiguring a live system?
+> I think it is neccessary to better test:
 > 
+> - the bitmap file's fs
+> - the filename itself.
+> (i mean did not allow the current directory, or the internal and none to be
+> a separated option)
 
-raidreconf doesn't allow you to reconfigure a live system - only an
-inactive system.
-But for the moment, that is the only way, yes.
+That sound's like a good idea... require a filename to contain at
+least one '/', and quite possibly test the filesystem type.  bitmaps
+are known to have problems on reiserfs and nfs.  They were developed
+and tested on ext3 and there is some slightly hairy code in there...
 
-In 2.6.17 or 2.6.18 it should be possible to restripe a raid5 to have
-a larger number of devices.  This can happen while the array is in
-active use.
-The code is mostly written, and could be used today, but I don't
-recommend it on valuable data yet as there are known bugs.
+Thanks for the suggestions.
 
 NeilBrown
