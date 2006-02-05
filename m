@@ -1,40 +1,47 @@
-From: "Black" <WHITEMANzvus@yahoo.co.in>
-Subject: Fw:
-Date: Sun, 05 Feb 2006 22:15:29 -0100
-Message-ID: <mm3rEq618.PX18.ik1.861M1Y4I1@localhost>
+From: David Liontooth <liontooth@cogweb.net>
+Subject: Hard drive lifetime: wear from spinning up or rebooting vs running
+Date: Sun, 05 Feb 2006 15:42:26 -0800
+Message-ID: <43E68D62.4080704@cogweb.net>
+References: <Pine.LNX.4.44.0602022119380.12829-100000@firewall2.tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Return-path: <linux-smp-owner@vger.kernel.org>
-Sender: linux-smp-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.44.0602022119380.12829-100000@firewall2.tmr.com>
+Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Good day,
+In designing an archival system, we're trying to find data on when it
+pays to power or spin the drives down versus keeping them running. 
 
-This is the last week for fixed, l0w !nterest r@ tes.
+Is there a difference between spinning up the drives from sleep and from
+a reboot? Leaving out the cost imposed on the (separate) operating
+system drive.
 
-Get your oMONoEY fast. We can close your L0oAN in days, not months.
+Temperature obviously matters -- a linear approximation might look like
+this,
+
+     Lifetime = 60 - 12 [(t-40)/2.5]
+
+where 60 is the average maximum lifetime, achieved at 40 degrees C and
+below, and lifetime decreases by a year for every 2.5 degree rise in
+temperature.  Does anyone have an actual formula?
+
+To keep it simple, let's assume we keep temperature at or below what is
+required to reach average maximum lifetime. What is the cost of spinning
+up the drives in the currency of lifetime months?
+
+My guess would be that the cost is tiny -- in the order of minutes.
+
+Or are different components stressed in a running drive versus one that
+is spinning up, so it's not possible to translate the cost of one into
+the currency of the other?
+
+Finally, is there passive decay of drive components in storage?
+
+Dave
 
 
-U S  $ 300 ,000       oL0 oANS        are avai lable for only $277 / month=
-! WE'RE oPRACT ICALLY oGIVIoNG oAWAY MOoNEY!
-
----------------------------------
-
-COPY the Addreoss below and paste in your WEoB BROoWSER:
-
-blennophlogisma.realquikx.com
-
-----------------------------------
-
-V a l id for 24 Hrs.
-
-While ravening clouds, the burial clouds, in black masses spreading,.
-And his pants have been carelessly hung on the door..
-Children, I come back today=20.
-I had only hope then , but now through you,=20.
-I give thee the first suggestion, the problem and indirection,)=20.
 
 
-Goodbye,
-Glen Wiley=20
