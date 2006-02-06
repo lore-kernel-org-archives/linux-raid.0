@@ -1,47 +1,58 @@
-From: David Liontooth <liontooth@cogweb.net>
-Subject: Hard drive lifetime: wear from spinning up or rebooting vs running
-Date: Sun, 05 Feb 2006 15:42:26 -0800
-Message-ID: <43E68D62.4080704@cogweb.net>
-References: <Pine.LNX.4.44.0602022119380.12829-100000@firewall2.tmr.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: How do I find endian-conversion function on Redhar/Fedora
+Date: Mon, 6 Feb 2006 11:18:25 +1100
+Message-ID: <17382.38353.505917.198557@cse.unsw.edu.au>
+References: <10AE6EFE-5542-4B43-8E19-87A66C4FFE6D@mac.com>
+	<17382.30814.778053.416244@cse.unsw.edu.au>
+	<43E68646.4000209@fooplanet.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44.0602022119380.12829-100000@firewall2.tmr.com>
+In-Reply-To: message from Gil on Sunday February 5
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Gil <gil@fooplanet.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-In designing an archival system, we're trying to find data on when it
-pays to power or spin the drives down versus keeping them running. 
+On Sunday February 5, gil@fooplanet.com wrote:
+> Neil Brown wrote:
+> > So my plea for help:  Could someone with a Redhat installation
+> > please see if there is any way to get functions that convert
+> > between little endian and host endian, or if there is some name I
+> > can #define to disable the 'private kernel header' warning..
+> 
+> I have an FC4 machine that I tried this out on.  I have no idea if
+> this is the right way to use these headers in /usr/include/linux,
+> but it made the compile problem go away at least.
 
-Is there a difference between spinning up the drives from sleep and from
-a reboot? Leaving out the cost imposed on the (separate) operating
-system drive.
+Ok,.... that's interesting. 
+I would in one sense just be moving the problem and maybe Redhat would
+try to declare linux/byteorder/* off limits, but I guess I could
+simply include them in the mdadm distrib if they did that.
 
-Temperature obviously matters -- a linear approximation might look like
-this,
+Thanks.  If nothing better surfaces I'll probably include this in
+mdadm 2.4.
 
-     Lifetime = 60 - 12 [(t-40)/2.5]
+NeilBrown
 
-where 60 is the average maximum lifetime, achieved at 40 degrees C and
-below, and lifetime decreases by a year for every 2.5 degree rise in
-temperature.  Does anyone have an actual formula?
-
-To keep it simple, let's assume we keep temperature at or below what is
-required to reach average maximum lifetime. What is the cost of spinning
-up the drives in the currency of lifetime months?
-
-My guess would be that the cost is tiny -- in the order of minutes.
-
-Or are different components stressed in a running drive versus one that
-is spinning up, so it's not possible to translate the cost of one into
-the currency of the other?
-
-Finally, is there passive decay of drive components in storage?
-
-Dave
-
-
-
-
+> 
+> --Gil
+> diff -r -u mdadm-2.3/bitmap.c mdadm-2.3-patched/bitmap.c
+> --- mdadm-2.3/bitmap.c	2005-12-15 17:41:31.000000000 -0800
+> +++ mdadm-2.3-patched/bitmap.c	2006-02-05 15:09:32.000000000 -0800
+> @@ -21,7 +21,16 @@
+>  #include <sys/types.h>
+>  #include <sys/stat.h>
+>  #include "mdadm.h"
+> -#include <asm/byteorder.h>
+> +#include <endian.h>
+> +#if __BYTE_ORDER == __LITTLE_ENDIAN
+> +#  include <linux/byteorder/little_endian.h>
+> +#elif __BYTE_ORDER == __BIG_ENDIAN
+> +#  include <linux/byteorder/big_endian.h>
+> +#elif __BYTE_ORDER == __PDP_ENDIAN
+> +#  include <linux/byteorder/pdp_endian.h>
+> +#else
+> +#  error "unknown endianness."
+> +#endif
