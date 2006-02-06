@@ -1,38 +1,45 @@
-From: "Philip F. Bartlett, II" <missdreamflammablenruq@yahoo.co.jp>
-Subject: Fw:
-Date: Mon, 06 Feb 2006 04:03:31 -0700
-Message-ID: <mm9qNs664.OX49.uk4.425Y7L4F0@localhost>
+From: Chris Osicki <osk@admin.swisscom-mobile.ch>
+Subject: Question: read-only array
+Date: Mon, 6 Feb 2006 17:41:21 +0100
+Message-ID: <20060206174121.2b528f5f@mwdsp001.swissptt.ch>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Return-path: <linux-smp-owner@vger.kernel.org>
-Sender: linux-smp-owner@vger.kernel.org
-To: linux-net@vger.kernel.org
-Cc: linux-raid@vger.kernel.org, linux-smp@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid maillist <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Good day,
 
-We truly hope our website will be a one-stop Syber phaa rm acy and help yo=
-u get their prea scrip tions.
+Hi
 
-Best stuff on Tigera only at $ 1.56/ peill, and all others too in same bra=
-ckets
+I've just noticed that setting an array readonly doesn't really make
+it readonly.
 
-Fraee delivery and unique packaging.
+I have a RAID1 array and LVM on top of it.
 
-------------------------
+When I run 
 
-Co py the   Ad dress   below and paste in i your web browser:
+/sbin/mdadm --misc --readonly /dev/md0
 
-apiolin.icejoker.com
+/proc/mdstat shows:
 
-------------------------
+Personalities : [raid1]
+md0 : active (read-only) raid1 sda[0] sdb[1]
+      160436096 blocks [2/2] [UU]
 
-v a li d  for 24 hirs.
+However, it doesn't prevent me from activating volume groups, mounting 
+filesystems and write files onto it.
+
+Is it a bug, feature or my misunderstanding of the meaning of readonly flag?
 
 
-The Modern Man I sing..
-Nothing has more possibilities.
-Through gazing on the unquiet sky;.
-His books are all jammed in the closet,.
-The great stars and the little ones shall shine out again=97they endure;=20=
+I use RedHat AS 4 (U1) on a dual core Opteron machine.
+Kernel 2.6.9-11.ELsmp as delivered with RH.
+
+mdadm - v1.12.0 - 14 June 2005
+
+Thanks for your time.
+
+Regards,
+Chris
