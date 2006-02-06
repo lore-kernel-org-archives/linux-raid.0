@@ -1,45 +1,73 @@
-From: Chris Osicki <osk@admin.swisscom-mobile.ch>
-Subject: Question: read-only array
-Date: Mon, 6 Feb 2006 17:41:21 +0100
-Message-ID: <20060206174121.2b528f5f@mwdsp001.swissptt.ch>
+From: David Liontooth <liontooth@cogweb.net>
+Subject: Re: Hard drive lifetime: wear from spinning up or rebooting vs running
+Date: Mon, 06 Feb 2006 08:45:41 -0800
+Message-ID: <43E77D35.1040905@cogweb.net>
+References: <Pine.LNX.4.44.0602022119380.12829-100000@firewall2.tmr.com> <43E68D62.4080704@cogweb.net> <Pine.GSO.4.62.0602061105300.14030@shaka.acc.umu.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <Pine.GSO.4.62.0602061105300.14030@shaka.acc.umu.se>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid maillist <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Mattias Wadenstein wrote:
 
-Hi
+> On Sun, 5 Feb 2006, David Liontooth wrote:
+>
+>> In designing an archival system, we're trying to find data on when i=
+t
+>> pays to power or spin the drives down versus keeping them running.
+>
+> Hitachi claims "5 years (Surface temperature of HDA is 45=B0C or less=
+)
+> Life of the drive does not change in the case that the drive is used
+> intermittently." for their ultrastar 10K300 drives. I suspect that th=
+e
+> best estimates you're going to get is from the manufacturers, if you
+> can find the right documents (OEM specifications, not marketing blurb=
+s).
 
-I've just noticed that setting an array readonly doesn't really make
-it readonly.
+"Intermittent" may assume the drive is powered on and in regular use an=
+d
+may simply be a claim that spindle drive components are designed to fai=
+l
+simultaneously with disk platter and head motor components.=20
 
-I have a RAID1 array and LVM on top of it.
+Konstantin's observation that "disk die about evenly from 3 causes: no
+spinning (dead spindle motor power electronics), heads do not move (dea=
+d
+head motor power electronics), or spontaneusly developing bad sectors
+(disk platter contamination?)" is consistent with a rational goal of
+manufacturing components with similar lifetimes under normal use.=20
 
-When I run 
+> For their deskstar (sata/pata) drives I didn't find life time
+> estimates beyond 50000 start-stop-cycles.
 
-/sbin/mdadm --misc --readonly /dev/md0
+If components are in fact manufactured to fail simultaneously under
+normal use (including a dozen or two start-stop cycles a day), then
+taking the drive off-line for more than a few hours should
+unproblematically extend its life.
 
-/proc/mdstat shows:
+Appreciate all the good advice and references. While we have to rely on
+specifications rather than actual long-term tests, this should still
+move us in the right direction. One of the problems with creating a
+digital archive is that the technology has no archival history. We know
+acid-free paper lasts millennia; how long do modern hard drives last in
+cold storage?  To some people's horror, we now know home-made CDs last =
+a
+couple of years.
 
-Personalities : [raid1]
-md0 : active (read-only) raid1 sda[0] sdb[1]
-      160436096 blocks [2/2] [UU]
-
-However, it doesn't prevent me from activating volume groups, mounting 
-filesystems and write files onto it.
-
-Is it a bug, feature or my misunderstanding of the meaning of readonly flag?
+Dave
 
 
-I use RedHat AS 4 (U1) on a dual core Opteron machine.
-Kernel 2.6.9-11.ELsmp as delivered with RH.
 
-mdadm - v1.12.0 - 14 June 2005
 
-Thanks for your time.
 
-Regards,
-Chris
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
