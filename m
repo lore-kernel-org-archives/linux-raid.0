@@ -1,8 +1,8 @@
-From: Brad Dameron <brad@seatab.com>
+From: Dan Stromberg <strombrg@dcs.nac.uci.edu>
 Subject: Re: Hard drive lifetime: wear from spinning up or rebooting vs
 	running
-Date: Mon, 06 Feb 2006 11:22:33 -0800
-Message-ID: <1139253753.10903.2.camel@dhcpc226.office.pivotlink.com>
+Date: Mon, 06 Feb 2006 13:15:53 -0800
+Message-ID: <1139260553.3067.55.camel@seki.nac.uci.edu>
 References: <Pine.LNX.4.44.0602022119380.12829-100000@firewall2.tmr.com>
 	 <43E68D62.4080704@cogweb.net>
 Mime-Version: 1.0
@@ -11,8 +11,69 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <43E68D62.4080704@cogweb.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: David Liontooth <liontooth@cogweb.net>
+Cc: linux-raid@vger.kernel.org, strombrg@dcs.nac.uci.edu
 List-Id: linux-raid.ids
+
+
+Drives are probably going to have a lifetime that is proportionate to a
+variety of things, and while I'm not a physicist or mechanical engineer,
+nor in the hard disk business, the things that come to mind first are:
+
+1) Thermal stress due to temperate changes - with more rapid changes
+being more severe (expansion and contraction, I assume - viiz one of
+those projectors or cars that run hot, and leave a fan running for a
+while before fully powering off)
+
+2) The amount of time a disk spends in a powered-off state (EG,
+lubricants may congeal, and about every time my employer, UCI, has a
+campus-wide power outage, -some- piece of equipment somewhere on campus
+fails to come back up - probably due to thermal stress)
+
+3) The number of times a disk goes to a powered-off state (thermal
+stress again)
+
+4) The amount of bumping around the disk undergoes, which may to an
+extent be greater in disks that are surrounded by other disks, with
+disks on the physical periphery of your RAID solution bumping around a
+little less - those little rubber things that you screw the drive into
+may help here.
+
+5) The materials used in the platters, heads, servo, etc.
+
+6) The number of alternate blocks for remapping bad blocks
+
+7) The degree of tendency for a head crash to peel off a bunch of
+material, or to just make a tiny scratch, and the degree of tendency for
+scratched-off particles to bang into platters or heads later and scrape
+off more particles - which can sometimes yield an exponential decay of
+drive usability
+
+8) How good the clean room(s) the drive was built in was/were
+
+9) How good a drive is at parking the hards over unimportant parts of
+the platters, when bumped, dropped, in an earth quake, when turned off,
+etc.
+
+If you want to be thorough with this, you probably want to employ some
+materials scientists, some statisticians, get a bunch of different kinds
+of drives and characterize their designs somehow, do multiple
+longitudinal studies, hunt for correlations between drive attributes and
+lifetimes, etc.
+
+And I totally agree with a previous poster - this stuff may all change
+quite a bit by the time the study is done, so it'd be a really good idea
+to look for ways of increasing your characterizations longevity somehow,
+possibly by delving down into individual parts of the drives and looking
+at their lifetime.  But don't rule out holistic/chaotic effects
+unnecessarily, even if "the light's better over here" when looking at
+the reductionistic view of drives.
+
+PS: Letting a drive stay powered without spinning is sometimes called a
+"warm spare", while a drive that's spinning all the time even while not
+in active use in a RAID array is called a "cold spare".
+
+HTH :)
 
 On Sun, 2006-02-05 at 15:42 -0800, David Liontooth wrote:
 > In designing an archival system, we're trying to find data on when it
@@ -44,14 +105,13 @@ On Sun, 2006-02-05 at 15:42 -0800, David Liontooth wrote:
 > Finally, is there passive decay of drive components in storage?
 > 
 > Dave
-
-I read somewhere, still looking for the link, that the constant on/off
-of a drive actually decrease's the drives lifespan due to the
-heating/cooling of the bearings. It was actually determined to be best
-to leave the drive spinning. 
-
-Brad Dameron
-SeaTab Software
-www.seatab.com
-
+> 
+> 
+> 
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
