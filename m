@@ -1,58 +1,118 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: How do I find endian-conversion function on Redhar/Fedora
-Date: Mon, 6 Feb 2006 11:18:25 +1100
-Message-ID: <17382.38353.505917.198557@cse.unsw.edu.au>
-References: <10AE6EFE-5542-4B43-8E19-87A66C4FFE6D@mac.com>
-	<17382.30814.778053.416244@cse.unsw.edu.au>
-	<43E68646.4000209@fooplanet.com>
+Subject: Re: Exporting which partitions to md-configure
+Date: Mon, 6 Feb 2006 12:46:38 +1100
+Message-ID: <17382.43646.567406.987585@cse.unsw.edu.au>
+References: <43DEB4B8.5040607@zytor.com>
+	<17374.47368.715991.422607@cse.unsw.edu.au>
+	<43DEC095.2090507@zytor.com>
+	<17374.50399.1898.458649@cse.unsw.edu.au>
+	<43DEC5DC.1030709@zytor.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Gil on Sunday February 5
+In-Reply-To: message from H. Peter Anvin on Monday January 30
 Sender: linux-raid-owner@vger.kernel.org
-To: Gil <gil@fooplanet.com>
-Cc: linux-raid@vger.kernel.org
+To: "H. Peter Anvin" <hpa@zytor.com>
+Cc: klibc list <klibc@zytor.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sunday February 5, gil@fooplanet.com wrote:
+On Monday January 30, hpa@zytor.com wrote:
 > Neil Brown wrote:
-> > So my plea for help:  Could someone with a Redhat installation
-> > please see if there is any way to get functions that convert
-> > between little endian and host endian, or if there is some name I
-> > can #define to disable the 'private kernel header' warning..
+> > 
+> > Well, grepping through fs/partitions/*.c, the 'flags' thing is set by
+> >  efi.c, msdos.c sgi.c sun.c
+> > 
+> > Of these, efi compares something against PARTITION_LINUX_RAID_GUID,
+> > and msdos.c, sgi.c and sun. compare something against
+> > LINUX_RAID_PARTITION.
+> > 
+> > The former would look like
+> >   e6d6d379-f507-44c2-a23c-238f2a3df928
+> > in sysfs (I think);
+> > The latter would look like
+> >   fd
+> > (I suspect).
+> > 
+> > These are both easily recognisable with no real room for confusion.
 > 
-> I have an FC4 machine that I tried this out on.  I have no idea if
-> this is the right way to use these headers in /usr/include/linux,
-> but it made the compile problem go away at least.
+> Well, if we're going to have a generic facility it should make sense 
+> across the board.  If all we're doing is supporting legacy usage we 
+> might as well export a flag.
+> 
+> I guess we could have a single entry with a string of the form 
+> "efi:e6d6d379-f507-44c2-a23c-238f2a3df928" or "msdos:fd" etc -- it 
+> really doesn't make any difference to me, but it seems cleaner to have 
+> two pieces of data in two different sysfs entries.
 
-Ok,.... that's interesting. 
-I would in one sense just be moving the problem and maybe Redhat would
-try to declare linux/byteorder/* off limits, but I guess I could
-simply include them in the mdadm distrib if they did that.
+What constitutes 'a piece of data'?  A bit? a byte?
 
-Thanks.  If nothing better surfaces I'll probably include this in
-mdadm 2.4.
+I would say that 
+   msdos:fd
+is one piece of data.  The 'fd' is useless without the 'msdos'.
+The 'msdos' is, I guess, not completely useless with the fd.
+
+I would lean towards the composite, but I wouldn't fight a separation.
+
+
+> 
+> > 
+> > And if other partition styles wanted to add support for raid auto
+> > detect, tell them "no". It is perfectly possible and even preferable
+> > to live without autodetect.   We should support legacy usage (those
+> > above) but should discourage any new usage.
+> > 
+> 
+> Why is that, keeping in mind this will all be done in userspace?
+> 
+
+partition-type based autodetect is easily fooled.
+If you take a pair of drives from a failed computer, plug them into a
+similar computer for data recovery, and boot:  you might have two
+different pairs of drives that both want to be 'md0'.  Which wins?
+
+I believe there needs to be a clear, non ambigous, causality path from
+the kernel paramters, initramfs, or machine hardware that leads to the
+arrays to be assembled and hence the filesystem to be mounted.  These
+should identify the array by some reasonably unique identifier.  The
+'minor number' stored in the raid superblock and used by
+partition-based autodetect is not 'reasonably unique'.
+
+There are many many possibilites.  Some are:
+
+ kernel parameter  md=0,/dev/hda,/dev/hdc
+
+    'hda' and 'hdc' on 'this' machine are (I think) still unique
+    identifiers of hardware, and so this can identify drives to assemble
+    into an array.  Note that this would *not* be reliable with
+          md=0,/dev/sda,/dev/sdb
+
+ kernel parameter md_root_uuid=xxyy:zzyy:aabb:ccdd...
+    This could be interpreted by an initramfs script to run mdadm 
+    to find and assemble the array with that uuid.  The uuid of 
+    each array is reasonably unique.
+
+ initramfs containing preconfigured /etc/mdadm.conf
+    This mdadm.conf would contain the uuid's of the arrays to
+    assemble.
+
+ kernel hardware MAC address
+    This could be mapped through DHCP to a host name.  The host name
+    is then given to mdadm such that it finds and assemble the array
+    with 'name' (only supported in version-1 superblocks) of
+         $HOST-root
+    or whatever.
+
+
+Just as there is a direct unambiguous causal path from something
+present at early boot to the root filesystem that is mounted (and the
+root filesystem specifies all other filesystems through fstab)
+similarly there should be an unambiguous causal path from something
+present at early boot to the array which holds the root filesystem -
+and the root filesystem should describe all other arrays via
+mdadm.conf
+
+Does that make sense?
 
 NeilBrown
 
-> 
-> --Gil
-> diff -r -u mdadm-2.3/bitmap.c mdadm-2.3-patched/bitmap.c
-> --- mdadm-2.3/bitmap.c	2005-12-15 17:41:31.000000000 -0800
-> +++ mdadm-2.3-patched/bitmap.c	2006-02-05 15:09:32.000000000 -0800
-> @@ -21,7 +21,16 @@
->  #include <sys/types.h>
->  #include <sys/stat.h>
->  #include "mdadm.h"
-> -#include <asm/byteorder.h>
-> +#include <endian.h>
-> +#if __BYTE_ORDER == __LITTLE_ENDIAN
-> +#  include <linux/byteorder/little_endian.h>
-> +#elif __BYTE_ORDER == __BIG_ENDIAN
-> +#  include <linux/byteorder/big_endian.h>
-> +#elif __BYTE_ORDER == __PDP_ENDIAN
-> +#  include <linux/byteorder/pdp_endian.h>
-> +#else
-> +#  error "unknown endianness."
-> +#endif
