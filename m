@@ -1,54 +1,55 @@
-From: James Lamanna <jlamanna@gmail.com>
-Subject: Problems making a RAID-0 over 2 gpt partitions...
-Date: Mon, 6 Feb 2006 22:32:00 -0800
-Message-ID: <aa4c40ff0602062232x6347c7e2lbe633f67e61eba27@mail.gmail.com>
+From: Evgeniy Polyakov <johnpol@2ka.mipt.ru>
+Subject: Re: [RFC][PATCH 000 of 3] MD Acceleration and the ADMA interface: Introduction
+Date: Tue, 7 Feb 2006 10:23:54 +0300
+Message-ID: <20060207072354.GB11041@2ka.mipt.ru>
+References: <1138931168.6620.8.camel@dwillia2-linux.ch.intel.com> <17382.49851.373366.929920@cse.unsw.edu.au> <e9c3a7c20602061125j4a1fb48agd23cd600b0cdf6d0@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
+In-Reply-To: <e9c3a7c20602061125j4a1fb48agd23cd600b0cdf6d0@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Dan Williams <dan.j.williams@gmail.com>
+Cc: Neil Brown <neilb@suse.de>, Dan Williams <dan.j.williams@intel.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, Chris Leech <christopher.leech@intel.com>, "Grover, Andrew" <andrew.grover@intel.com>, Deepak Saxena <dsaxena@plexity.net>
 List-Id: linux-raid.ids
 
-I recently acquired a 7TB Xserve RAID. It is configured in hardware as
-2 RAID 5 arrays of 3TB each.
-Now I'm trying to configure a RAID 0 over these 2 drives (so RAID 50 in total).
+On Mon, Feb 06, 2006 at 12:25:22PM -0700, Dan Williams (dan.j.williams@gmail.com) wrote:
+> On 2/5/06, Neil Brown <neilb@suse.de> wrote:
+> > I've looked through the patches - not exhaustively, but hopefully
+> > enough to get a general idea of what is happening.
+> > There are some things I'm not clear on and some things that I could
+> > suggest alternates too...
+> 
+> I have a few questions to check that I understand your suggestions.
+> 
+> >  - Each ADMA client (e.g. a raid5 array) gets a dedicated adma thread
+> >    to handle all its requests.  And it handles them all in series.  I
+> >    wonder if this is really optimal.  If there are multiple adma
+> >    engines, then a single client could only make use of one of them
+> >    reliably.
+> >    It would seem to make more sense to have just one thread - or maybe
+> >    one per processor or one per adma engine - and have any ordering
+> >    between requests made explicit in the interface.
+> >
+> >    Actually as each processor could be seen as an ADMA engine, maybe
+> >    you want one thread per processor AND one per engine.  If there are
+> >    no engines, the per-processor threads run with high priority, else
+> >    with low.
+> 
+> ...so the engine thread would handle explicit client requested
+> ordering constraints and then hand the operations off to per processor
+> worker threads in the "pio" case or queue directly to hardware in the
+> presence of such an engine.  In md_thread you talk about priority
+> inversion deadlocks, do those same concerns apply here?
 
-I only wanted to make 1 large partition on each array, so I used
-parted as follows:
-parted /dev/sd[bc]
-(parted) mklabel gpt
-(parted) mkpart primary 0 3000600
-(parted) set 1 raid on
-(parted) q
+Just for reference: the more threads you have, the less stable your
+system is. Ping-ponging work between several completely independent
+entities is always a bad idea. Even completion of the request postponed
+to workqueue from current execution unit introduces noticeble latencies.
+System should be able to process as much as possible of it's work in one
+flow.
 
-for each of the disks.
+> Dan
 
-Then I went to go make the RAID array:
-mdadm -C -l 0 --raid-devices=2 /dev/md0 /dev/sdb1 /dev/sdc1
-
-Everything seems ok at this point, /etc/mdstat lists the array as active..
-I then wanted to put LVM on top of this for future expansion:
-
-pvcreate /dev/md0
-vgcreate imagery /dev/md0
-lvcreate -l xxxxxxx -n image1 imagery (xxxxx is the number of PEs for
-the whole disk, couldn't remember the number off the top of my head)
-
-then a filesystem..
-mkfs.xfs /dev/imagery/image1
-
-Everything works fine up to this point until I reboot.
-after reboot, the md array does not reassemble itself, and manually
-doing it results in:
-mdadm -A /dev/md0 /dev/sdb1 /dev/sdc1
-/dev/sdb1: no RAID superblock
-
-Kernel is 2.6.14
-mdadm is 1.12.0
-
-Did I miss a partitioning step here (or do something else sufficiently stupid)?
-
-Thanks in advance, and please CC me for I am not subscribed.
--- James
+-- 
+	Evgeniy Polyakov
