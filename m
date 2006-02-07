@@ -1,41 +1,50 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: Re: Raid 1 always degrades after a reboot.
-Date: Tue, 7 Feb 2006 11:52:25 +0100
-Message-ID: <20060207105225.GE22221@percy.comedia.it>
-References: <001b01c62b72$3128a050$f400a8c0@tweety>
+From: Bill Davidsen <tmrbill@tmr.com>
+Subject: Re: with the latest mdadm
+Date: Tue, 7 Feb 2006 08:33:29 -0500 (EST)
+Message-ID: <Pine.LNX.4.44.0602070829120.22031-100000@firewall2.tmr.com>
+References: <17384.26402.724978.284042@cse.unsw.edu.au>
+Reply-To: davidsen@tmr.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <001b01c62b72$3128a050$f400a8c0@tweety>
+In-Reply-To: <17384.26402.724978.284042@cse.unsw.edu.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Farkas Levente <lfarkas@bppiac.hu>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Feb 06, 2006 at 03:08:07PM -0800, Hans Rasmussen wrote:
->Hi all.
->
->After every reboot, my brand new Raid1 array comes up degraded.  It's 
->always /dev/sdb1 that is unavailable or removed.
-...
->Mandriva 2006 download edition, upgraded from Mandrake 9.1
->Kernel 2.6.12-15mdk (not rebuilt)
->MDADM version 00.90.01
-this is the version of the md driver in the kernel, mdadm on 2006 is
-1.12.0
+On Tue, 7 Feb 2006, Neil Brown wrote:
 
-could you please check if the array is stopped correctly at shutdown
-maybe temporarily removing the splash thing from lilo/grub will allow
-you to see more clearly.
-Q. does the SATA300 TX2Plus card support fakeraid?
-in case it does and it is enable that could conflict with md.
+> On Tuesday February 7, lfarkas@bppiac.hu wrote:
+> > hi,
+> > with the latest mdadm-2.3.1 we've got the following message:
+> > -------------------------------------
+> > md: md4: sync done.
+> > RAID1 conf printout:
+> >  --- wd:2 rd:2
+> >  disk 0, wo:0, o:1, dev:sda2
+> >  disk 1, wo:0, o:1, dev:sdb2
+> > md: mdadm(pid 8003) used obsolete MD ioctl, upgrade your software to use
+> > new ictls.
+> > -------------------------------------
+> > this is just a warning or some kind of problem with mdadm?
+> 
+> This is with a 2.4 kernel, isn't it.
+> 
+> The md driver is incorrectly interpreting an ioctl that it doesn't
+> recognise as an obsolete ioctl.  In fact it is a new ioctl that 2.4
+> doesn't know about (I suspect it is GET_BITMAP_FILE).
+> 
+> The message should probably be removed from 2.4, but as 2.4 is in
+> deep-maintenance mode, I suspect that is unlikely....
 
-L.
+More to the point, why is mdadm trying to use an illegal ioctl instead of 
+checking the kernel version and disabling features which won't work? Users 
+are trusting their data to this software, and "try it and see if it works" 
+ioctls don't give me a warm fuzzy feeling about correct operation.
 
 -- 
-Luca Berra -- bluca@comedia.it
-        Communication Media & Services S.r.l.
- /"\
- \ /     ASCII RIBBON CAMPAIGN
-  X        AGAINST HTML MAIL
- / \
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+Doing interesting things with little computers since 1979
+
