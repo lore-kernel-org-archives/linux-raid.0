@@ -1,65 +1,54 @@
-From: dean gaudet <dean@arctic.org>
-Subject: Re: Raid5 & Debian Yaird Woes
-Date: Mon, 6 Feb 2006 18:52:48 -0800 (PST)
-Message-ID: <Pine.LNX.4.64.0602061843510.12302@twinlark.arctic.org>
-References: <200602031229.37972.mylists@blue-matrix.org>
- <200602040958.20183.mylists@blue-matrix.org> <Pine.LNX.4.64.0602031622100.19604@twinlark.arctic.org>
- <200602050907.31735.mylists@blue-matrix.org>
+From: James Lamanna <jlamanna@gmail.com>
+Subject: Problems making a RAID-0 over 2 gpt partitions...
+Date: Mon, 6 Feb 2006 22:32:00 -0800
+Message-ID: <aa4c40ff0602062232x6347c7e2lbe633f67e61eba27@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200602050907.31735.mylists@blue-matrix.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Lewis Shobbrook <mylists@blue-matrix.org>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, 5 Feb 2006, Lewis Shobbrook wrote:
+I recently acquired a 7TB Xserve RAID. It is configured in hardware as
+2 RAID 5 arrays of 3TB each.
+Now I'm trying to configure a RAID 0 over these 2 drives (so RAID 50 in total).
 
-> On Saturday 04 February 2006 11:22 am, you wrote:
-> > On Sat, 4 Feb 2006, Lewis Shobbrook wrote:
-> > > Is there any way to avoid this requirement for input, so that the system
-> > > skips the missing drive as the raid/initrd system did previously?
-> >
-> > what boot errors are you getting before it drops you to the root password
-> > prompt?
-> 
-> Basically it just states waiting X seconds for /dev/sdx3 (corresponding to the 
-> missing raid5 member). Where X cycles from 2,4,8,16 and then drops you into a 
-> recovery console, no root pwd prompt.
-> It will only occur if the partition is completely missing, such as a 
-> replacement disk with a blank partition table, or a completely missing/failed 
-> drive.
-> > is it trying to fsck some filesystem it doesn't have access to?
-> 
-> No fsck seen for bad extX partitions etc.
+I only wanted to make 1 large partition on each array, so I used
+parted as follows:
+parted /dev/sd[bc]
+(parted) mklabel gpt
+(parted) mkpart primary 0 3000600
+(parted) set 1 raid on
+(parted) q
 
-try something like this...
+for each of the disks.
 
-	cd /tmp
-	mkdir t
-	cd t
-	zcat /boot/initrd.img-`uname -r` | cpio -i
-	grep -r sd.3 .
+Then I went to go make the RAID array:
+mdadm -C -l 0 --raid-devices=2 /dev/md0 /dev/sdb1 /dev/sdc1
 
-that should show us what script is directly accessing /dev/sdx3 ... maybe 
-there's something more we can do about it.
+Everything seems ok at this point, /etc/mdstat lists the array as active..
+I then wanted to put LVM on top of this for future expansion:
 
-i did find a possible deficiency with the patch i posted... looking more 
-closely at my yaird /init i see this:
+pvcreate /dev/md0
+vgcreate imagery /dev/md0
+lvcreate -l xxxxxxx -n image1 imagery (xxxxx is the number of PEs for
+the whole disk, couldn't remember the number off the top of my head)
 
-	mkbdev '/dev/sdb' 'sdb'
-	mkbdev '/dev/sdb4' 'sdb/sdb4'
-	mkbdev '/dev/sda' 'sda'
-	mkbdev '/dev/sda4' 'sda/sda4'
+then a filesystem..
+mkfs.xfs /dev/imagery/image1
 
-and i think that means that "mdadm -Ac partitions" will fail if one of my 
-root disks ends up somewhere other than sda or sdb... because the device 
-nodes won't exist.
+Everything works fine up to this point until I reboot.
+after reboot, the md array does not reassemble itself, and manually
+doing it results in:
+mdadm -A /dev/md0 /dev/sdb1 /dev/sdc1
+/dev/sdb1: no RAID superblock
 
-i suspect i should update the patch to use mdrun instead of "mdadm -Ac 
-partitions"... because mdrun will create temporary device nodes for 
-everything in /proc/partitions in order to find all the possible raid 
-pieces.
+Kernel is 2.6.14
+mdadm is 1.12.0
 
--dean
+Did I miss a partitioning step here (or do something else sufficiently stupid)?
+
+Thanks in advance, and please CC me for I am not subscribed.
+-- James
