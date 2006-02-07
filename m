@@ -1,39 +1,40 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: Re: [klibc] Re: Exporting which partitions to md-configure
-Date: Tue, 7 Feb 2006 18:03:15 +0100
-Message-ID: <20060207170315.GC12480@percy.comedia.it>
-References: <17374.47368.715991.422607@cse.unsw.edu.au> <43DEC095.2090507@zytor.com> <17374.50399.1898.458649@cse.unsw.edu.au> <43DEC5DC.1030709@zytor.com> <17382.43646.567406.987585@cse.unsw.edu.au> <43E80A5A.5040002@zytor.com> <20060207104311.GD22221@percy.comedia.it> <43E8C0F3.5080205@zytor.com> <20060207164730.GA12480@percy.comedia.it> <43E8D0F9.50205@zytor.com>
+From: Henrik Holst <henrik.holst@idgmail.se>
+Subject: Re: [PATCH 000 of 7] md: Introduction - raid5 reshape mark-2
+Date: Tue, 07 Feb 2006 18:13:34 +0100
+Message-ID: <43E8D53E.4010202@idgmail.se>
+References: <20060124112626.4447.patches@notabene>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <43E8D0F9.50205@zytor.com>
+In-Reply-To: <20060124112626.4447.patches@notabene>
 Sender: linux-raid-owner@vger.kernel.org
-To: "H. Peter Anvin" <hpa@zytor.com>
-Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, klibc list <klibc@zytor.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Feb 07, 2006 at 08:55:21AM -0800, H. Peter Anvin wrote:
->Luca Berra wrote:
->>
->>making it harder for the user is a good thing, but please not at the
->>expense of usability
->>
+Hello linux world!
+
+Excuse me for being so ignorant but /exactly how/ do I go about to find
+out which files to download from kernel.org that will approve these
+patches?
+
+[snip from N. Browns initial post]
+
 >
->What's the usability problem?
+> [PATCH 001 of 7] md: Split disks array out of raid5 conf structure so it is easier to grow.
+> [PATCH 002 of 7] md: Allow stripes to be expanded in preparation for expanding an array.
+> [PATCH 003 of 7] md: Infrastructure to allow normal IO to continue while array is expanding.
+> [PATCH 004 of 7] md: Core of raid5 resize process
+> [PATCH 005 of 7] md: Final stages of raid5 expand code.
+> [PATCH 006 of 7] md: Checkpoint and allow restart of raid5 reshape
+> [PATCH 007 of 7] md: Only checkpoint expansion progress occasionally.
 >
-if we fail to support all partitioning schemes and we do not support
-non partitioned devices.
 
-if we manage to support all this without too much code bloat i'll shut
-up.
+I only get lot's of "chunk failed" when running patch command on my
+src.tar.gz kernels. :-(
 
-L.
+Thanks for advice,
 
--- 
-Luca Berra -- bluca@comedia.it
-        Communication Media & Services S.r.l.
- /"\
- \ /     ASCII RIBBON CAMPAIGN
-  X        AGAINST HTML MAIL
- / \
+Henrik Holst. Certified kernel patch noob.
+
+
