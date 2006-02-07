@@ -1,47 +1,47 @@
-From: Farkas Levente <lfarkas@bppiac.hu>
-Subject: Re: with the latest mdadm
-Date: Tue, 07 Feb 2006 16:35:23 +0100
-Message-ID: <43E8BE3B.5010301@bppiac.hu>
-References: <43E86468.8030508@bppiac.hu> <17384.26402.724978.284042@cse.unsw.edu.au>
+From: "H. Peter Anvin" <hpa@zytor.com>
+Subject: Re: [klibc] Re: Exporting which partitions to md-configure
+Date: Tue, 07 Feb 2006 07:46:59 -0800
+Message-ID: <43E8C0F3.5080205@zytor.com>
+References: <43DEB4B8.5040607@zytor.com> <17374.47368.715991.422607@cse.unsw.edu.au> <43DEC095.2090507@zytor.com> <17374.50399.1898.458649@cse.unsw.edu.au> <43DEC5DC.1030709@zytor.com> <17382.43646.567406.987585@cse.unsw.edu.au> <43E80A5A.5040002@zytor.com> <20060207104311.GD22221@percy.comedia.it>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17384.26402.724978.284042@cse.unsw.edu.au>
+In-Reply-To: <20060207104311.GD22221@percy.comedia.it>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: Luca Berra <bluca@comedia.it>
+Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, klibc list <klibc@zytor.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> On Tuesday February 7, lfarkas@bppiac.hu wrote:
+Luca Berra wrote:
 > 
->>hi,
->>with the latest mdadm-2.3.1 we've got the following message:
->>-------------------------------------
->>md: md4: sync done.
->>RAID1 conf printout:
->> --- wd:2 rd:2
->> disk 0, wo:0, o:1, dev:sda2
->> disk 1, wo:0, o:1, dev:sdb2
->>md: mdadm(pid 8003) used obsolete MD ioctl, upgrade your software to use
->>new ictls.
->>-------------------------------------
->>this is just a warning or some kind of problem with mdadm?
+>> This, in fact is *EXACTLY* what we're talking about; it does require 
+>> autoassemble.  Why do we care about the partition types at all?  The 
+>> reason is that since the md superblock is at the end, it doesn't get 
+>> automatically wiped if the partition is used as a raw filesystem, and 
+>> so it's important that there is a qualifier for it.
 > 
+> I don't like using partition type as a qualifier, there is people who do
+> not wish to partition their drives, there are systems not supporting
+> msdos like partitions, heck even m$ is migrating away from those.
 > 
-> This is with a 2.4 kernel, isn't it.
 
-no. it's rhel latest kernel 2.6.9-22.0.2.ELsmp.
+That's why we're talking about non-msdos partitioning schemes.
 
-> The md driver is incorrectly interpreting an ioctl that it doesn't
-> recognise as an obsolete ioctl.  In fact it is a new ioctl that 2.4
-> doesn't know about (I suspect it is GET_BITMAP_FILE).
-> 
-> The message should probably be removed from 2.4, but as 2.4 is in
-> deep-maintenance mode, I suspect that is unlikely....
+> In any case if that has to be done it should be done into mdadm, not
+> in a different scrip that is going to call mdadm (behaviour should be
+> consistent between mdadm invoked by initramfs and mdadm invoked on a
+> running system).
 
-it's 2.6:-(
+Agreed.  mdadm is the best place for it.
 
--- 
-  Levente                               "Si vis pacem para bellum!"
+> If the user wants to reutilize a device that was previously a member of
+> an md array he/she should use mdadm --zero-superblock to remove the
+> superblock.
+> I see no point in having a system that tries to compensate for users not
+> following correct procedures. sorry.
+
+You don't?  That surprises me... making it harder for the user to have 
+accidental data loss sounds like a very good thing to me.
+	
+	-hpa
