@@ -1,55 +1,68 @@
-From: Evgeniy Polyakov <johnpol@2ka.mipt.ru>
-Subject: Re: [RFC][PATCH 000 of 3] MD Acceleration and the ADMA interface: Introduction
-Date: Tue, 7 Feb 2006 10:23:54 +0300
-Message-ID: <20060207072354.GB11041@2ka.mipt.ru>
-References: <1138931168.6620.8.camel@dwillia2-linux.ch.intel.com> <17382.49851.373366.929920@cse.unsw.edu.au> <e9c3a7c20602061125j4a1fb48agd23cd600b0cdf6d0@mail.gmail.com>
+From: Hans Kristian Rosbach <hk@isphuset.no>
+Subject: Re: Hard drive lifetime: wear from spinning up or rebooting vs
+	running
+Date: Tue, 07 Feb 2006 09:44:17 +0100
+Message-ID: <1139301857.10590.55.camel@linux>
+References: <Pine.LNX.4.44.0602022119380.12829-100000@firewall2.tmr.com>
+	 <43E68D62.4080704@cogweb.net>
+	 <Pine.GSO.4.62.0602061105300.14030@shaka.acc.umu.se>
+	 <43E77D35.1040905@cogweb.net>  <fd8d0180602060912q6181d52bs@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <e9c3a7c20602061125j4a1fb48agd23cd600b0cdf6d0@mail.gmail.com>
+In-Reply-To: <fd8d0180602060912q6181d52bs@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@gmail.com>
-Cc: Neil Brown <neilb@suse.de>, Dan Williams <dan.j.williams@intel.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, Chris Leech <christopher.leech@intel.com>, "Grover, Andrew" <andrew.grover@intel.com>, Deepak Saxena <dsaxena@plexity.net>
+To: Francois Barre <francois.barre@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Feb 06, 2006 at 12:25:22PM -0700, Dan Williams (dan.j.williams@gmail.com) wrote:
-> On 2/5/06, Neil Brown <neilb@suse.de> wrote:
-> > I've looked through the patches - not exhaustively, but hopefully
-> > enough to get a general idea of what is happening.
-> > There are some things I'm not clear on and some things that I could
-> > suggest alternates too...
-> 
-> I have a few questions to check that I understand your suggestions.
-> 
-> >  - Each ADMA client (e.g. a raid5 array) gets a dedicated adma thread
-> >    to handle all its requests.  And it handles them all in series.  I
-> >    wonder if this is really optimal.  If there are multiple adma
-> >    engines, then a single client could only make use of one of them
-> >    reliably.
-> >    It would seem to make more sense to have just one thread - or maybe
-> >    one per processor or one per adma engine - and have any ordering
-> >    between requests made explicit in the interface.
-> >
-> >    Actually as each processor could be seen as an ADMA engine, maybe
-> >    you want one thread per processor AND one per engine.  If there are
-> >    no engines, the per-processor threads run with high priority, else
-> >    with low.
-> 
-> ...so the engine thread would handle explicit client requested
-> ordering constraints and then hand the operations off to per processor
-> worker threads in the "pio" case or queue directly to hardware in the
-> presence of such an engine.  In md_thread you talk about priority
-> inversion deadlocks, do those same concerns apply here?
+On Mon, 2006-02-06 at 18:12 +0100, Francois Barre wrote:
+> 2006/2/6, David Liontooth <liontooth@cogweb.net>:
+> > how long do modern hard drives last in cold storage?
+> Demagnetation ?
+> A couple of years back in time, there were some tools to read and then
+> rewrite floppy contents to remagnet the floppy content. I guess it
+> shall be the same for the drive : periodically re-read and re-write
+> each and every sector of the drive to grant a good magnetation of the
+> surface.
+> I would not give more than 100 years for a drive to lose all its
+> content by demagnetation... Anyway, in 100 years, no computer will
+> have the controllers to plug a sata nor a scsi :-p.
+> I guess a long-living system should not stay cool, and
+> re-activate/check its content periodically...
 
-Just for reference: the more threads you have, the less stable your
-system is. Ping-ponging work between several completely independent
-entities is always a bad idea. Even completion of the request postponed
-to workqueue from current execution unit introduces noticeble latencies.
-System should be able to process as much as possible of it's work in one
-flow.
+A program called Spinrite can fix such floppies (have done several
+times for me. Even floppies I formatted just 15min ago and suddenly
+cannot be read in another computer. One swipe with spinrite and it
+worked 100%.
 
-> Dan
+It also can remagnetise and even exercise bad sectors on HDDs.
+I have tried this on about 20 working disks now, and it has found
+blocks that were hard to read on 4 of them. These were fixed using
+statistical recovery. After running it again a week later it found
+nothing wrong with the disk.
 
--- 
-	Evgeniy Polyakov
+http://grc.com/spinrite.htm
+PS: The website looks a bit suspect, but the program actually does
+work as advertised as far as I have found.
+
+PS: Seems it does not like some adaptec scsi cards, no matter what
+    disk I tested it got read errors on every sector. Both disks and
+    controllers works fine for booting Linux/Windows so I guess it's
+    the scsi bios/dos interaction that is making problems for Spinrite.
+
+> > we now know home-made CDs last a couple of years.
+> I thought it was said to be at least a century... But with the
+> enormous cost reduction operated in this area, it's no surprise the
+> lifetime decreased so much.
+
+I've seen cd's be destroyed just because of morning moisture. The
+up-side (reflective side) is often unprotected and _very_ sensitive
+to moisture. Imagine sprinklers going off in your offices, how much
+valuable data is on those cds you do not store in a safe?
+
+I have heard that some recovery companies can recover data from
+such damaged cds since the data is not stored in the reflective layer.
+But I imagine it is a very costly experience.
+
