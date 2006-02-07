@@ -1,40 +1,43 @@
-From: Henrik Holst <henrik.holst@idgmail.se>
-Subject: Re: [PATCH 000 of 7] md: Introduction - raid5 reshape mark-2
-Date: Tue, 07 Feb 2006 18:13:34 +0100
-Message-ID: <43E8D53E.4010202@idgmail.se>
-References: <20060124112626.4447.patches@notabene>
+From: Chris Osicki <osk@admin.swisscom-mobile.ch>
+Subject: Question: array locking, possible?
+Date: Tue, 7 Feb 2006 18:55:17 +0100
+Message-ID: <20060207185517.7bc96486@mwdsp001.swissptt.ch>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20060124112626.4447.patches@notabene>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello linux world!
 
-Excuse me for being so ignorant but /exactly how/ do I go about to find
-out which files to download from kernel.org that will approve these
-patches?
+Hi
 
-[snip from N. Browns initial post]
+Is there any way to "lock" an active array?
 
->
-> [PATCH 001 of 7] md: Split disks array out of raid5 conf structure so it is easier to grow.
-> [PATCH 002 of 7] md: Allow stripes to be expanded in preparation for expanding an array.
-> [PATCH 003 of 7] md: Infrastructure to allow normal IO to continue while array is expanding.
-> [PATCH 004 of 7] md: Core of raid5 resize process
-> [PATCH 005 of 7] md: Final stages of raid5 expand code.
-> [PATCH 006 of 7] md: Checkpoint and allow restart of raid5 reshape
-> [PATCH 007 of 7] md: Only checkpoint expansion progress occasionally.
->
+To make clear what I'm after:
 
-I only get lot's of "chunk failed" when running patch command on my
-src.tar.gz kernels. :-(
+I have two machines forming a fail-over cluster connected over SAN to
+two storage boxes which provide them with a "disk" each.
+I created a RAID1 using those two "disks". 
 
-Thanks for advice,
+Both cluster nodes see both disks but only one node, the active
+one uses them by assembling the array.
 
-Henrik Holst. Certified kernel patch noob.
+During a fail-over I stop the array on the active node and assemble
+it on the node becoming active. It works OK, or at least I haven't
+seen any problems for quite a long time now.
 
+The problem now is how to prevent somebody on the other host from
+accidentally assembling the array. Because the result of doing so would
+be something from strange to catastrophic ;-)
 
+To rephrase my question, is there any way to make it visible to the
+other host that the array is up an running on the this host?
+
+Any comments, ideas?
+
+Thanks for your time.
+
+Regards,
+Chris
