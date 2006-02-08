@@ -1,28 +1,27 @@
-From: Paul Clements <paul.clements@steeleye.com>
-Subject: Re: Question: array locking, possible?
-Date: Tue, 07 Feb 2006 14:26:13 -0500
-Message-ID: <43E8F455.2020800@steeleye.com>
-References: <20060207185517.7bc96486@mwdsp001.swissptt.ch>
+From: "discman (sent by Nabble.com)" <lists@nabble.com>
+Subject: mdadm and monitoring
+Date: Wed, 8 Feb 2006 02:28:59 -0800 (PST)
+Message-ID: <2818693.post@talk.nabble.com>
+Reply-To: discman <ixguy@hotmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20060207185517.7bc96486@mwdsp001.swissptt.ch>
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris Osicki <osk@admin.swisscom-mobile.ch>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Chris Osicki wrote:
-> The problem now is how to prevent somebody on the other host from
-> accidentally assembling the array. Because the result of doing so would
-> be something from strange to catastrophic ;-)
-> 
-> To rephrase my question, is there any way to make it visible to the
-> other host that the array is up an running on the this host?
 
-I don't know how the storage boxes are attached to the servers, but you 
-might be able to use SCSI reservations, if the storage supports them.
+Hi.
 
+Anyone with some experience on mdadm?
+I have a running RAID0-array with mdadm and it`s using monitor-mode with an
+e-mail address.
+Anyone knows how to remove that e-mail adress without deleting the raid?
+
+
+thanx
 --
-Paul
+View this message in context: http://www.nabble.com/mdadm-and-monitoring-t1081896.html#a2818693
+Sent from the linux-raid forum at Nabble.com.
+
