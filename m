@@ -1,43 +1,42 @@
-From: Chris Osicki <osk@admin.swisscom-mobile.ch>
-Subject: Re: Question: array locking, possible?
-Date: Wed, 8 Feb 2006 11:55:49 +0100
-Message-ID: <20060208115549.2c771ecb@mwdsp001.swissptt.ch>
-References: <20060207185517.7bc96486@mwdsp001.swissptt.ch>
-	<43E8F455.2020800@steeleye.com>
+From: Gordon Henderson <gordon@drogon.net>
+Subject: Re: mdadm and monitoring
+Date: Wed, 8 Feb 2006 11:06:42 +0000 (GMT)
+Message-ID: <Pine.LNX.4.56.0602081101090.18903@lion.drogon.net>
+References: <2818693.post@talk.nabble.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <43E8F455.2020800@steeleye.com>
+In-Reply-To: <2818693.post@talk.nabble.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Paul Clements <paul.clements@steeleye.com>
+To: discman <ixguy@hotmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Wed, 8 Feb 2006, discman (sent by Nabble.com) wrote:
 
+> Hi.
+>
+> Anyone with some experience on mdadm?
 
-I was thinking about it, I have no idea how to do it on Linux if ever possible.
-I connect over fibre channel SAN, using QLogic QLA2312 HBAS, if it matters.
+Just about everyone here, I'd hope ;-)
 
-Anyone any hints?
+> I have a running RAID0-array with mdadm and it`s using monitor-mode with an
+> e-mail address.
+> Anyone knows how to remove that e-mail adress without deleting the raid?
 
-Thanks and regards,
-Chris
+It all depends on how you setup mdadm in the first place - or if it was
+supplied with your distro.
 
-On Tue, 07 Feb 2006 14:26:13 -0500
-Paul Clements <paul.clements@steeleye.com> wrote:
+mdadm will be running in monitor mode with flags something like:
 
-> Chris Osicki wrote:
-> > The problem now is how to prevent somebody on the other host from
-> > accidentally assembling the array. Because the result of doing so would
-> > be something from strange to catastrophic ;-)
-> > 
-> > To rephrase my question, is there any way to make it visible to the
-> > other host that the array is up an running on the this host?
-> 
-> I don't know how the storage boxes are attached to the servers, but you 
-> might be able to use SCSI reservations, if the storage supports them.
-> 
-> --
-> Paul
-> 
+  /sbin/mdadm -F -i /var/run/mdadm.pid -m root -f -s
+
+The -m flag says who gets emailled. If it's started at boot-time then
+you'll need to trace through the /etc/init.d/mdadm (probably) file to see
+where it gets it's parameters from.
+
+Debian (sarge) puts this email address directly in the /etc/init.d/mdadm
+file, and stoping & starting the monitor process won't have any effect on
+your array whatsoever.
+
+Gordon
