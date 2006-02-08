@@ -1,34 +1,47 @@
-From: Bill Davidsen <tmrbill@tmr.com>
-Subject: RAID 106 array
-Date: Wed, 8 Feb 2006 14:10:18 -0500 (EST)
-Message-ID: <Pine.LNX.4.44.0602081356540.8063-100000@firewall2.tmr.com>
-Reply-To: davidsen@tmr.com
+From: Jure =?ISO-8859-2?Q?Pe=E8ar?= <pegasus@nerv.eu.org>
+Subject: Re: Question: array locking, possible?
+Date: Wed, 8 Feb 2006 21:45:33 +0100
+Message-ID: <20060208214533.39653804.pegasus@nerv.eu.org>
+References: <20060207185517.7bc96486@mwdsp001.swissptt.ch>
+	<43E8F455.2020800@steeleye.com>
+	<20060208115549.2c771ecb@mwdsp001.swissptt.ch>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-2
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20060208115549.2c771ecb@mwdsp001.swissptt.ch>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I was doing some advanced planning for storage, and it came to me that 
-there might be benefit from thinking outside the box on RAID config. 
-Therefore I offer this for comment.
+On Wed, 8 Feb 2006 11:55:49 +0100
+Chris Osicki <osk@admin.swisscom-mobile.ch> wrote:
 
-The object is reliability with performance. The means is to set up two 
-arrays on physical devices, one RAID-0 for performance, one RAID-6 for 
-reliability. Let's call them four and seven drives for the RAID-0 and 
-RAID-6+Spare. Then configure RAID-1 over the two arrays, marking the 
-RAID-6 as write-mostly.
+>=20
+>=20
+> I was thinking about it, I have no idea how to do it on Linux if ever=
+ possible.
+> I connect over fibre channel SAN, using QLogic QLA2312 HBAS, if it ma=
+tters.
+>=20
+> Anyone any hints?
 
-The intension is that under heavy load the RAID-6 would have a lot of head 
-motion going on writing two parity blocks for every one data write, while 
-the RAID-0 would be doing as little work as possible for writes and would 
-therefore have more ability to handle reads quickly.
+I too am running a jbod with md raid between two machines. So far md ne=
+ver
+caused any kind of problems, altough I did have situations where both
+machines were syncing mirrors at once.
 
-Just a thought experiment at the moment.
+If there's a little tool to reserve a disk via scsi, I'd like to know a=
+bout
+it too. Even a piece of code would be enough.
 
--- 
-bill davidsen <davidsen@tmr.com>
-  CTO TMR Associates, Inc
-Doing interesting things with little computers since 1979
 
+--=20
+
+Jure Pe=E8ar
+http://jure.pecar.org/
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
