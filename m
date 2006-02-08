@@ -1,96 +1,77 @@
-From: Krekna Mektek <krekna@gmail.com>
-Subject: RAID 5 inaccessible
-Date: Wed, 8 Feb 2006 13:29:33 +0100
-Message-ID: <8b24c8b10602080429q6d45d513m@mail.gmail.com>
+From: Richard Mittendorfer <delist@gmx.net>
+Subject: Re: mdraid0 worries on 2.6
+Date: Wed, 8 Feb 2006 15:26:26 +0100
+Message-ID: <20060208152626.5dd2f601.delist@gmx.net>
+References: <20060207011220.711e2424.delist@gmx.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <20060207011220.711e2424.delist@gmx.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi,
+Also sprach Richard Mittendorfer <delist@gmx.net> (Tue, 7 Feb 2006
+01:12:20 +0100):
+> Hi,
+> 
+> I do have _great_ performance troubles with software raid0 with 2.6.12
+> to .15. I have not tried earlier 2.6's, but 2.4 (tested up to 2.4.24)
+> do it right.
+> 
+> In fact, mdraid0 over 2 rather old 9G scsi disks here in my home
+> server show same throughput as a single drive. I did try to tune
+> readahead, tune various proc settings, used reiserfs and xfs or mdadm
+> with different
+> settings -- nothing helped. I'm clueless.
 
-I found out that my storage drive was gone and I went to my server to
-check out what wrong.
-I've got 3 400GB disks wich form the array.
+Looks like you're right. First, I didn't messure right: My fault was to
+use to small testfiles and so messured RAM also. No wonder I came above
+20MB/sec. Here are bonnie++(v1.03) results on xfs and reiserfs over a
+raid0 [sda|sdb]. I did no tuning of drive/mount parameters or VM with
+2.4.
 
-I found out I had one spare and one faulty drive, and the RAID 5 array
-was not able to recover.
-After a reboot because of some stuff with Xen my main rootdisk (hda)
-was also failing, and the whole machine was not able to boot anymore.
-And there I was...
-After I tried to commit suicide and did not succeed, I went back to my
-server to try something out.
-I booted with Knoppix 4.02 and edited the mdadm.conf as follows:
+hdparm -tT
+2.4.32 disks:
+/dev/sdb  364MB in 2.01 sec =    181 MB/sec
+           44MB in 3.14 sec =  14.01 MB/sec
+/dev/sdc  360MB in 2.01 sec = 179.10 MB/sec
+           44MB in 3.12 sec =  14.10 MB/sec
+/dev/md4  352MB in 2.01 sec = 175.12 MB/sec
+           44MB in 3.02 sec =  14.57 MB/sec
 
-DEVICE /dev/hd[bcd]1
-ARRAY /dev/md0 devices=/dev/hdb1,/dev/hdc1,/dev/hdd1
+2.6.15 disks: (see above)
 
+2.4.23 mem=256M / bonnie++ -s 512M
+reiserfs (no mountoptions):
+cell,512M,5686,88,21261,46,7710,10,5508,79,16705,9,342.4,3,
+     16,3609,92,+++++,+++,6894,99,3727,95,+++++,+++,5054,88
+xfs (logbufs=8)
+cell,512M,6668,96,23106,25,7807,9,5468,79,16902,9,295.7,3,
+     16,1170,57,+++++,+++,1410,48,1123,54,+++++,+++,758,36
 
-I executed mdrun and the following messages appeared:
+2.4.23 mem=128M / bonnie++ -s 512M
+reiserfs (no mountoptions)
+cell,512M,6107,95,19152,41,8097,10,5815,84,16976,10,237.9,2,
+     16,5710,94,+++++,+++,6884,99,5804,97,+++++,+++,5091,88
+xfs (logbufs=8)
+cell,512M,6716,97,19943,21,8145,9,5809,83,17167,9,209.9,2,
+     16,898,44,+++++,+++,1523,54,863,44,+++++,+++,936,38
 
-Forcing event count in /dev/hdd1(2) from 81190986 upto 88231796
-clearing FAULTY flag for device 2 in /dev/md0 for /dev/hdd1
-/dev/md0 has been started with 2 drives (out of 3) and 1 spare.
+When testing with RAM*4 files it shows that it (the HBA) can't deliver
+more than 20MB/sec. While I saw 25MB/sec (like the 23MB/sec seq.read
+above), it just was due to bad messurement with RAM*2 files (which
+didn't show up on 2.6 btw.).
 
-So I thought I was lucky enough, to get back my data, maybe a bit lost
-concerning the event count which is missing some. Am I right?
+2.6.15-cks3 mem=128M / bonnie++ -s 512M
+reiserfs (notail,noatime)
+cell,512M,9134,98,18200,32,8924,13,10224,99,18583,17,238.1,3,
+     16,5369,99,+++++,+++,6301,95,5197,100,+++++,+++,5443,100
+xfs (logbufs=8)
+cell,512M,9432,97,19480,25,8376,13,10914,97,18600,18,208.9,3,
+     16,854,38,+++++,+++,1257,40,830,38,+++++,+++,735,30
 
-But, when I tried to mount it the next day, this was also not
-happening. I ended up with one faulty, one spare and one active. After
-stopping and starting the array sometimes the array was rebuilding
-again. I found out that the disk that it needs to rebuilt the array
-(hdd1 that is) is
-getting errors and falls back to faulty again.
-
-
-
-    Number   Major   Minor   RaidDevice State
-       0       3       65        0      active sync
-       1       0        0        -      removed
-       2      22       65        2      active sync
-
-       3      22        1        1      spare rebuilding
-
-
-and then this:
-
-Rebuild Status : 1% complete
-
-    Number   Major   Minor   RaidDevice State
-       0       3       65        0      active sync
-       1       0        0        -      removed
-       2       0        0        -      removed
-
-       3      22        1        1      spare rebuilding
-       4      22       65        2      faulty
-
-And my dmesg is full of these errors coming from the faulty hdd:
-end_request: I/O error, dev hdd, sector 13614775
-hdd: dma_intr: status=0x51 { DriveReady SeekComplete Error }
-hdd: dma_intr: error=0x40 { UncorrectableError }, LBAsect=13615063,
-high=0, low=13615063, sector=13614783
-ide: failed opcode was: unknown
-end_request: I/O error, dev hdd, sector 13614783
-
-
-I guess this will never succeed...
-
-Is there away to get this data back from the individual disks perhaps?
-
-
-FYI:
-
-
-root@6[~]# cat /proc/mdstat
-Personalities : [raid5]
-md0 : active raid5 hdb1[0] hdc1[3] hdd1[4](F)
-      781417472 blocks level 5, 64k chunk, algorithm 2 [3/1] [U__]
-      [>....................]  recovery =  1.7% (6807460/390708736)
-finish=3626.9min speed=1764K/sec
-unused devices: <none>
-
-Krekna
+sorry for the noise
+ 
+ritch
