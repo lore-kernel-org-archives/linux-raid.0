@@ -1,46 +1,34 @@
-From: "Myrna Roe" <risbxiv@hotmail.com>
-Subject: Unbelievable Refinance Offer cmp03y
-Date: Wed, 08 Feb 2006 10:54:14 -0500
-Message-ID: <CFE2.9A5.3009298B8C__32050.4673211419$1139414537$gmane$org@mopalinux.com>
+From: Bill Davidsen <tmrbill@tmr.com>
+Subject: RAID 106 array
+Date: Wed, 8 Feb 2006 14:10:18 -0500 (EST)
+Message-ID: <Pine.LNX.4.44.0602081356540.8063-100000@firewall2.tmr.com>
+Reply-To: davidsen@tmr.com
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-net@vger.kernel.org
-Cc: linux-newbie@vger.kernel.org, linux-ppp@vger.kernel.org, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, linux-serial@vger.kernel.org, linux-sound@vger.kernel.org, linux-tape@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+I was doing some advanced planning for storage, and it came to me that 
+there might be benefit from thinking outside the box on RAID config. 
+Therefore I offer this for comment.
 
-Dear Home Owner,
+The object is reliability with performance. The means is to set up two 
+arrays on physical devices, one RAID-0 for performance, one RAID-6 for 
+reliability. Let's call them four and seven drives for the RAID-0 and 
+RAID-6+Spare. Then configure RAID-1 over the two arrays, marking the 
+RAID-6 as write-mostly.
 
-Your credit doesn't matter to us! If you OWN real estate
-and want IMMEDIATE cash to spend ANY way you like, or simply wish
-to LOWER your monthly payments by a third or more, here are the deals
-we have TODAY (hurry, these offers will expire TONIGHT) :
+The intension is that under heavy load the RAID-6 would have a lot of head 
+motion going on writing two parity blocks for every one data write, while 
+the RAID-0 would be doing as little work as possible for writes and would 
+therefore have more ability to handle reads quickly.
 
-$450,000.00 at a 3.85% fixed-rate
-$374,000.00 at a 3.54% variable-rate
-$464,000.00 at a 3.77% interest-only
-$214,000.00 at a 3.54% fixed-rate
-$134,000.00 at a 3.75% variable-rate
+Just a thought experiment at the moment.
 
-Hurry, when these deals are gone, they are gone!
-Simply fill out this one-minute form...
+-- 
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+Doing interesting things with little computers since 1979
 
-http://dNaqIv.l1fed33r.com/af
-
-Don't worry about approval, your credit will not disqualify you!
-
-http://vKx2.l1fed33r.com/af
-
-Sincerely,
-Sidney Mann
-Approval Manager
-
-
-
-
-
-
-stop the current promo
-http://up.l1fed33r.com/rem
-
-1Ih
