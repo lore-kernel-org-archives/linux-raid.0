@@ -1,66 +1,52 @@
-From: Chris Osicki <Krzysztof.Osicki@swisscom.com>
-Subject: Re: Question: array locking, possible?
-Date: Thu, 9 Feb 2006 11:25:54 +0100
-Message-ID: <20060209112554.20f43b24@mwdsp001.swissptt.ch>
-References: <20060207185517.7bc96486@mwdsp001.swissptt.ch>
-	<43E8F455.2020800@steeleye.com>
-	<20060208115549.2c771ecb@mwdsp001.swissptt.ch>
-	<20060208214533.39653804.pegasus@nerv.eu.org>
+From: "stephan sperber" <quinte17@gmx.de>
+Subject: create a partial raid5
+Date: Thu, 9 Feb 2006 12:40:44 +0100 (MET)
+Message-ID: <15869.1139485244@www090.gmx.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20060208214533.39653804.pegasus@nerv.eu.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hello!
+
+Is it possible to create a Radi5 with only 2 disks? (I know that Raid5 
+needs 3 to be really redundant)
+
+With a Raid1 I can do things like:
+mdadm -C /dev/md0 --force --raid-devices=1 /dev/hdb2
+mkreiserfs /dev/md0
+
+copy files from an older drive to the raid, get the old drive out and put 
+the new disk for the raid in.
+then
+mdadm -G /dev/md0 --raid-disks=2
+mdadm -a /dev/md0 /dev/hdc2
+
+and the raid1 is now a real raid1 (after sync)
+
+It would be great to have something similar for raid5:
+mdadm -C /dev/md0 --force --raid-devices=2 /dev/hdb2 /dev/hdc2
+mdadm -G /dev/md0 --raid-disks=3
+mdadm -a /dev/md0 /dev/hda2
+
+or
+mdadm -C /dev/md0 --force --fail=/dev/hda2 --raid-devices=3 /dev/hdb2 /
+dev/hdc2
+mdadm -a /dev/md0 /dev/hda2
+
+i know that this is possible with raidtools and /etc/raidtab.
+
+is this possible with the recent version of mdadm or is it a planned 
+feature (or not planned)?
+
+thanks in advance
+stephan
 
 
-It looks like we are the only two md users interested in such a
-feature.
-Not enough to get Neil's attention ;-)
 
-Regards,
-Chris
-
-On Wed, 8 Feb 2006 21:45:33 +0100
-Jure Pe=E8ar <pegasus@nerv.eu.org> wrote:
-
-> On Wed, 8 Feb 2006 11:55:49 +0100
-> Chris Osicki <osk@admin.swisscom-mobile.ch> wrote:
->=20
-> >=20
-> >=20
-> > I was thinking about it, I have no idea how to do it on Linux if ev=
-er possible.
-> > I connect over fibre channel SAN, using QLogic QLA2312 HBAS, if it =
-matters.
-> >=20
-> > Anyone any hints?
->=20
-> I too am running a jbod with md raid between two machines. So far md =
-never
-> caused any kind of problems, altough I did have situations where both
-> machines were syncing mirrors at once.
->=20
-> If there's a little tool to reserve a disk via scsi, I'd like to know=
- about
-> it too. Even a piece of code would be enough.
->=20
->=20
-> --=20
->=20
-> Jure Pe=E8ar
-> http://jure.pecar.org/
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->=20
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Telefonieren Sie schon oder sparen Sie noch?
+NEU: GMX Phone_Flat http://www.gmx.net/de/go/telefonie
