@@ -1,72 +1,66 @@
-From: Patrik Jonsson <patrik@ucolick.org>
-Subject: Kernels and MD versions (was: md: Introduction - raid5 reshape mark-2)
-Date: Wed, 08 Feb 2006 22:35:05 -0800
-Message-ID: <43EAE299.9000508@ucolick.org>
-References: <20060124112626.4447.patches@notabene>	<43E8D53E.4010202@idgmail.se> <17386.47069.138562.339803@cse.unsw.edu.au>
+From: Chris Osicki <Krzysztof.Osicki@swisscom.com>
+Subject: Re: Question: array locking, possible?
+Date: Thu, 9 Feb 2006 11:25:54 +0100
+Message-ID: <20060209112554.20f43b24@mwdsp001.swissptt.ch>
+References: <20060207185517.7bc96486@mwdsp001.swissptt.ch>
+	<43E8F455.2020800@steeleye.com>
+	<20060208115549.2c771ecb@mwdsp001.swissptt.ch>
+	<20060208214533.39653804.pegasus@nerv.eu.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enigEA77711232BA9EEBCACA208D"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17386.47069.138562.339803@cse.unsw.edu.au>
+In-Reply-To: <20060208214533.39653804.pegasus@nerv.eu.org>
 Sender: linux-raid-owner@vger.kernel.org
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enigEA77711232BA9EEBCACA208D
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
 
-Neil Brown wrote:
-> I always make them against the latest -mm kernel, so that would be a
-> good place to start.  However things change quickly and I can't
-> promise it will apply against whatever is the 'latest' today.
-> 
-> If you would like to nominate a particular recent kernel, I'll create
-> a patch set that is guaranteed to apply against that. (Testing is
-> always appreciated, and well worth that small effort on my part).
 
-I find this is a major problem for me, too. Even though I try to stay up
-to date with the md developments, I have a hard time piecing together
-which past patches went with which version, so if I get a recent version
-I don't know which patches need to be applied and which are already in
-there.
-
-My suggestion is that Neil, should he be willing, keep a log somewhere
-which detail kernel version and what major updates in md functionality
-go along with it. Something like
-2.6.14         raid5 read error correction
-2.6.15         md /sys interface
-2.6.16.rc1     raid5 reshape
-2.6.16.rc2-mm4 something else cool
-
-it would include the released kernels and the previews of the current
-kernel. That way, say I see that the latest FC4 kernel is 2.6.14, I
-could look and see that since the raid5 read error correction was
-included, I don't have to go looking for the patches.
-
-Maybe this is too much hassle (or maybe it's already out there
-somewhere) but I'm thinking simple, and I think it would give a
-high-level overview of the development for us who are not intimately
-involved in every kernel version.
+It looks like we are the only two md users interested in such a
+feature.
+Not enough to get Neil's attention ;-)
 
 Regards,
+Chris
 
-/Patrik
+On Wed, 8 Feb 2006 21:45:33 +0100
+Jure Pe=E8ar <pegasus@nerv.eu.org> wrote:
 
---------------enigEA77711232BA9EEBCACA208D
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.2 (MingW32)
-Comment: Using GnuPG with Thunderbird - http://enigmail.mozdev.org
-
-iD8DBQFD6uKZT+KvsdUW5p8RArW/AJ9O/WBQfZI11V/mEd2Mog/CKk8v0wCgp3cK
-BsrYZsHZ2GXcAyI3xzTKbDM=
-=h+8v
------END PGP SIGNATURE-----
-
---------------enigEA77711232BA9EEBCACA208D--
+> On Wed, 8 Feb 2006 11:55:49 +0100
+> Chris Osicki <osk@admin.swisscom-mobile.ch> wrote:
+>=20
+> >=20
+> >=20
+> > I was thinking about it, I have no idea how to do it on Linux if ev=
+er possible.
+> > I connect over fibre channel SAN, using QLogic QLA2312 HBAS, if it =
+matters.
+> >=20
+> > Anyone any hints?
+>=20
+> I too am running a jbod with md raid between two machines. So far md =
+never
+> caused any kind of problems, altough I did have situations where both
+> machines were syncing mirrors at once.
+>=20
+> If there's a little tool to reserve a disk via scsi, I'd like to know=
+ about
+> it too. Even a piece of code would be enough.
+>=20
+>=20
+> --=20
+>=20
+> Jure Pe=E8ar
+> http://jure.pecar.org/
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>=20
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
