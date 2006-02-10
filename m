@@ -1,42 +1,36 @@
-From: Erik Mouw <erik@harddisk-recovery.com>
-Subject: Re: NVRAM support
-Date: Fri, 10 Feb 2006 13:42:05 +0100
-Message-ID: <20060210124204.GC28676@harddisk-recovery.com>
-References: <43EC5655.1060504@web.de>
+From: Paul Clements <paul.clements@steeleye.com>
+Subject: Re: Question: array locking, possible?
+Date: Fri, 10 Feb 2006 12:17:49 -0500
+Message-ID: <43ECCABD.7040104@steeleye.com>
+References: <20060207185517.7bc96486@mwdsp001.swissptt.ch>	<43E8F455.2020800@steeleye.com>	<20060208115549.2c771ecb@mwdsp001.swissptt.ch> <20060208214533.39653804.pegasus@nerv.eu.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-2;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <43EC5655.1060504@web.de>
+In-Reply-To: <20060208214533.39653804.pegasus@nerv.eu.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mirko Benz <mirko.benz@web.de>
+To: =?ISO-8859-2?Q?Jure_Pe=E8ar?= <pegasus@nerv.eu.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Feb 10, 2006 at 10:01:09AM +0100, Mirko Benz wrote:
-> Does a high speed NVRAM device makes sense for Linux SW RAID? E.g. a PCI 
-> card that exports battery backed memory.
+Jure Pe=E8ar wrote:
 
-Unless it's very large (i.e.: as large as one of your disks), it
-doesn't make sense. It will probably break less often, but it doesn't
-help you in case a disk really breaks. It also won't speed up an MD
-device much.
+> I too am running a jbod with md raid between two machines. So far md =
+never
+> caused any kind of problems, altough I did have situations where both
+> machines were syncing mirrors at once.
+>=20
+> If there's a little tool to reserve a disk via scsi, I'd like to know=
+ about
+> it too. Even a piece of code would be enough.
 
-> Could that significantly improve write speed for RAID 5/6 (e.g. via an 
-> external journal, asynchronous operation and write caching)?
+The sg3_utils can do this, if your hardware is compatible.
 
-You could use it for an external journal, or you could use it as a swap
-device.
-
-> What changes would be required?
-
-None, ext3 supports external journals. Look for the -O option in the
-mke2fs manual page. Using the NVRAM device as swap is not different
-from a using "normal" swap partition.
-
-
-Erik
-
--- 
-+-- Erik Mouw -- www.harddisk-recovery.com -- +31 70 370 12 90 --
-| Lab address: Delftechpark 26, 2628 XH, Delft, The Netherlands
+--
+Paul
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
