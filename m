@@ -1,34 +1,35 @@
-From: Luca Berra <luca.berra@comedia.it>
+From: Neil Brown <neilb@suse.de>
 Subject: Re: Question: array locking, possible?
-Date: Thu, 9 Feb 2006 21:48:48 +0100
-Message-ID: <20060209204847.GA1387@percy.comedia.it>
-References: <1C4766A743ADF74FAEDF2AAD0679BAA20767917E@cacexc03.americas.cpqcorp.net>
+Date: Fri, 10 Feb 2006 11:00:38 +1100
+Message-ID: <17387.55206.605025.337883@cse.unsw.edu.au>
+References: <20060207185517.7bc96486@mwdsp001.swissptt.ch>
+	<43E8F455.2020800@steeleye.com>
+	<20060208115549.2c771ecb@mwdsp001.swissptt.ch>
+	<20060208214533.39653804.pegasus@nerv.eu.org>
+	<20060209112554.20f43b24@mwdsp001.swissptt.ch>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1C4766A743ADF74FAEDF2AAD0679BAA20767917E@cacexc03.americas.cpqcorp.net>
+In-Reply-To: message from Chris Osicki on Thursday February 9
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Chris Osicki <Krzysztof.Osicki@swisscom.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Feb 09, 2006 at 10:28:58AM -0800, Stern, Rick (Serviceguard Linux) wrote:
->There is more interest, just not vocal.
->
->May want to look at LVM2 and its ability to use tagging to control enablement of VGs. This way it is not HW dependent.
->
-I believe there is space in md1 superblock for a "cluster/exclusive"
-flag, if not the name field could be used
-what is missing is an interface between mdadm and cmcld so mdadm can ask
-cmcld permission to activate an array with the "cluster/exclusive" flag
-set.
+On Thursday February 9, Krzysztof.Osicki@swisscom.com wrote:
+> 
+> 
+> It looks like we are the only two md users interested in such a
+> feature.
+> Not enough to get Neil's attention ;-)
 
-L.
+:-)
 
--- 
-Luca Berra -- bluca@comedia.it
-        Communication Media & Services S.r.l.
- /"\
- \ /     ASCII RIBBON CAMPAIGN
-  X        AGAINST HTML MAIL
- / \
+Just because I haven't said anything doesn't mean I'm not listening.
+
+Cluster awareness is definitely on my radar.  I have no firm plans yet
+but I'm certainly interested in  understanding the issues.  So I'm
+listening..
+
+NeilBrown
