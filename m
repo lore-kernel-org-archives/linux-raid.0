@@ -1,50 +1,46 @@
-From: Guillaume Rousse <Guillaume.Rousse@inria.fr>
-Subject: heavy problem with raid initialisation
-Date: Fri, 10 Feb 2006 11:11:24 +0100
-Message-ID: <43EC66CC.4080001@inria.fr>
+From: Andy Smith <andy@lug.org.uk>
+Subject: lvm extent sizes, and mke2fs stride values
+Date: Fri, 10 Feb 2006 11:16:08 +0000
+Message-ID: <20060210111608.GY32687@strugglers.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="Y8PUpsPJkqCiojFW"
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hello.
 
-I'm using software raid with mdadm 1.7.0 on a mandrake linux 10.1, but
-I'm facing heavy initialisation troubles. The first array /dev/md0 is
-automatically created and launched at startup (though mdadm -As in init
-scripts), but not the second array /dev/md1.
+--Y8PUpsPJkqCiojFW
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-mdadm --examine --scan --config=partitions creates the second array as
-/dev/.tmp.md1, which I can then assemble using an explicit mdadm -A
-/dev/sda2 /dev/sdb2 command, but this is unpractical and failproof :/
+Hello,
 
-Here is my /etc/mdadm.conf:
-DEVICE /dev/sda* /dev/sdb*
-MAILADDR root
-ARRAY /dev/md1 level=raid1 num-devices=2
-UUID=e5e9302c:1844139b:d30d31e0:6f8477c3
-   devices=/dev/sda2,/dev/sdb2
-ARRAY /dev/md0 level=raid1 num-devices=2
-UUID=99375e60:af2e538e:59f01931:f86b50f4
-   devices=/dev/sda1,/dev/sdb1
+Given (what I imagine to be) the fairly common scenario of using an
+md device as a PV for LVM and then using multiple LVs from that:
 
-And here is content of /proc/mdstat once the second array is running:
+a) is there any benefit to altering the LV's extent size to match
+   the RAID stripe size?
 
-Personalities : [raid1]
-md1 : active raid1 sda2[0] sdb2[1]
-      78123968 blocks [2/2] [UU]
+b) is there any point in using the -E stride= option of mke2fs to
+   match up with the RAID stripe size?
 
-md0 : active raid1 sda1[0] sdb1[1]
-      78123968 blocks [2/2] [UU]
+Thanks,
+Andy
 
-unused devices: <none>
+--Y8PUpsPJkqCiojFW
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
 
-I've had a look at google, I found some report of similar troubles, some
-of them potentially linked with udev. I found some excerpts of mdadm
-code that show than this specific /dev/.tmp syntax use is volontary, but
-I found no explanation for it.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
 
-Any help appreciated.
+iD8DBQFD7HX4IJm2TL8VSQsRArIjAKDHp4U/YnJU7eihzR+Q9ccYkX6V8gCg1Fog
+SLwzuOT8sQ5JERWa4De3aB0=
+=57QH
+-----END PGP SIGNATURE-----
+
+--Y8PUpsPJkqCiojFW--
