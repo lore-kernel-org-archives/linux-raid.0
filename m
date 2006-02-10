@@ -1,41 +1,42 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: Re: heavy problem with raid initialisation
-Date: Fri, 10 Feb 2006 13:28:32 +0100
-Message-ID: <20060210122832.GA20903@percy.comedia.it>
-References: <43EC66CC.4080001@inria.fr>
+From: Erik Mouw <erik@harddisk-recovery.com>
+Subject: Re: NVRAM support
+Date: Fri, 10 Feb 2006 13:42:05 +0100
+Message-ID: <20060210124204.GC28676@harddisk-recovery.com>
+References: <43EC5655.1060504@web.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <43EC66CC.4080001@inria.fr>
+In-Reply-To: <43EC5655.1060504@web.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Guillaume Rousse <Guillaume.Rousse@inria.fr>
+To: Mirko Benz <mirko.benz@web.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Feb 10, 2006 at 11:11:24AM +0100, Guillaume Rousse wrote:
->Hello.
->
->I'm using software raid with mdadm 1.7.0 on a mandrake linux 10.1, but
->I'm facing heavy initialisation troubles. The first array /dev/md0 is
->automatically created and launched at startup (though mdadm -As in init
->scripts), but not the second array /dev/md1.
->
->mdadm --examine --scan --config=partitions creates the second array as
->/dev/.tmp.md1, which I can then assemble using an explicit mdadm -A
->/dev/sda2 /dev/sdb2 command, but this is unpractical and failproof :/
->
+On Fri, Feb 10, 2006 at 10:01:09AM +0100, Mirko Benz wrote:
+> Does a high speed NVRAM device makes sense for Linux SW RAID? E.g. a PCI 
+> card that exports battery backed memory.
 
-i think this issue was squashed in a newer version of mdadm
-can you try rebuilding the current cooker rpm on 10.1 and try again.
-i don't have a 10.1 laying around to test atm.
+Unless it's very large (i.e.: as large as one of your disks), it
+doesn't make sense. It will probably break less often, but it doesn't
+help you in case a disk really breaks. It also won't speed up an MD
+device much.
 
-L.
+> Could that significantly improve write speed for RAID 5/6 (e.g. via an 
+> external journal, asynchronous operation and write caching)?
+
+You could use it for an external journal, or you could use it as a swap
+device.
+
+> What changes would be required?
+
+None, ext3 supports external journals. Look for the -O option in the
+mke2fs manual page. Using the NVRAM device as swap is not different
+from a using "normal" swap partition.
+
+
+Erik
 
 -- 
-Luca Berra -- bluca@comedia.it
-        Communication Media & Services S.r.l.
- /"\
- \ /     ASCII RIBBON CAMPAIGN
-  X        AGAINST HTML MAIL
- / \
++-- Erik Mouw -- www.harddisk-recovery.com -- +31 70 370 12 90 --
+| Lab address: Delftechpark 26, 2628 XH, Delft, The Netherlands
