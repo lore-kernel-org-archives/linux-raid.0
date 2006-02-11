@@ -1,34 +1,33 @@
-From: Guillaume Rousse <Guillaume.Rousse@inria.fr>
-Subject: Re: heavy problem with raid initialisation
-Date: Fri, 10 Feb 2006 18:25:30 +0100
-Message-ID: <43ECCC8A.8080106@inria.fr>
-References: <43EC66CC.4080001@inria.fr> <20060210122832.GA20903@percy.comedia.it>
+From: dean gaudet <dean@arctic.org>
+Subject: Re: NVRAM support
+Date: Fri, 10 Feb 2006 17:02:02 -0800 (PST)
+Message-ID: <Pine.LNX.4.64.0602101700540.30925@twinlark.arctic.org>
+References: <43EC5655.1060504@web.de> <20060210124204.GC28676@harddisk-recovery.com>
+ <43ECB4A4.6010005@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20060210122832.GA20903@percy.comedia.it>
+In-Reply-To: <43ECB4A4.6010005@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: Erik Mouw <erik@harddisk-recovery.com>, Mirko Benz <mirko.benz@web.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Luca Berra wrote:
-> On Fri, Feb 10, 2006 at 11:11:24AM +0100, Guillaume Rousse wrote:
->> Hello.
->>
->> I'm using software raid with mdadm 1.7.0 on a mandrake linux 10.1, but
->> I'm facing heavy initialisation troubles. The first array /dev/md0 is
->> automatically created and launched at startup (though mdadm -As in init
->> scripts), but not the second array /dev/md1.
->>
->> mdadm --examine --scan --config=partitions creates the second array as
->> /dev/.tmp.md1, which I can then assemble using an explicit mdadm -A
->> /dev/sda2 /dev/sdb2 command, but this is unpractical and failproof :/
->>
+On Fri, 10 Feb 2006, Bill Davidsen wrote:
+
+> Erik Mouw wrote:
 > 
-> i think this issue was squashed in a newer version of mdadm
-> can you try rebuilding the current cooker rpm on 10.1 and try again.
-> i don't have a 10.1 laying around to test atm.
-I updated mdadm to 2.3.1, but the array is still seen as /dev/.tmp.md1.
-Putting this instead of /dev/md1 in /etc/mdadm.conf fix the issue, but
-it is quite inelegant :/
+> > You could use it for an external journal, or you could use it as a swap
+> > device.
+> >  
+> 
+> Let me concur, I used external journal on SSD a decade ago with jfs (AIX). If
+> you do a lot of operations which generate journal entries, file create,
+> delete, etc, then it will double your performance in some cases. Otherwise it
+> really doesn't help much, use as a swap device might be more helpful depending
+> on your config.
+
+it doesn't seem to make any sense at all to use a non-volatile external 
+memory for swap... swap has no purpose past a power outage.
+
+-dean
