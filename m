@@ -1,36 +1,56 @@
-From: Richard Scobie <richard@sauce.co.nz>
-Subject: Re: shared spare
-Date: Sun, 12 Feb 2006 16:29:53 +1300
-Message-ID: <43EEABB1.3010104@sauce.co.nz>
-References: <43ED1869.9000104@tmr.com>
+From: "John Stoffel" <john@stoffel.org>
+Subject: Re: Adding Latency To Disk Access
+Date: Sat, 11 Feb 2006 23:20:37 -0500
+Message-ID: <17390.46997.701250.780736@smtp.charter.net>
+References: <dd43dcfb0602061349l437a69b8w365dc38dc5809682@mail.gmail.com>
+	<43E7DF87.6060000@s5r6.in-berlin.de>
+	<dd43dcfb0602070312r1349d555r5217a4e246b7be6@mail.gmail.com>
+	<43E8A9B6.7040902@s5r6.in-berlin.de>
+	<dd43dcfb0602110150t2a1b6018va55323e5801fdbae@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <43ED1869.9000104@tmr.com>
+In-Reply-To: <dd43dcfb0602110150t2a1b6018va55323e5801fdbae@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: "Paul M." <paul@gpmidi.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Bill Davidsen wrote:
-> One of the things I like about the IBM ServeRAID controller is spare 
-> drive shared between two RAID groups. First to fail gets it. For 
-> software RAID is this at all in the future?
 
-Hi Bill,
+Paul>   I am currently trying to build a RAID5 array across 12
+Paul> disks. The problem is there is a bug in the linux firewire
+Paul> drivers that is causes problems when multiple disks are accessed
+Paul> randomly at the same time. 
 
-Unless I am misunderstanding something, software RAID has this already.
-I have not used it but reading from the mdadm man page in the "Monitor
-Mode" section:
+With that number of disks, and that transport, why aren't you looking
+at using RAID6 as well?  The rebuild time on RAID5 leaves a window
+where a second failure could really mess you up.
 
-"As  well  as  reporting  events, mdadm may move a spare drive from one
-array to another if they are in the same spare-group and if the
-destination array has a failed drive but not spares."
+Paul> As you can imagine the soft RAID5 drivers try to do exactly
+Paul> that - access all 12 disks at once.  Can the software raid
+Paul> drivers be made to only access one disk at a time and to wait
+Paul> for a requested to be fulfilled before submitting another?
 
-Regards,
+Kiss your system performance down the drain.  But you might be able to
+make this work.  Have you tried:
 
-Richard
+1. the serialize_io=1 option to the SBP driver?
 
+2. moving to USB2 instead?  I've never gotten my firewire enclosure to
+   work with Linux.  Prolific Chipset.
 
+3. Maybe tweak /sys/block/sd*/queue/nr_requests to be 1 for each
+   device, so that you don't queue up too many commands to each disk.
+   That way you can still run commands across all 12 disks, but only one
+   per disk.
 
+4. Do you have multiple firewire controllers as well?  That will help
+   performance.  
 
+Good luck, and let us know how it works out.  
+
+Oh yeah, more details on your kernel version, MD setup, etc would be
+helpful as well.
+
+John
