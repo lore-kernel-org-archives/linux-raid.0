@@ -1,71 +1,100 @@
-From: Andy Smith <andy@lug.org.uk>
-Subject: Re: block level vs. file level
-Date: Sun, 12 Feb 2006 21:31:57 +0000
-Message-ID: <20060212213157.GX32687@strugglers.net>
-References: <43EF8CFB.5080403@kfa.org>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Procedure for growing RAID1 array
+Date: Mon, 13 Feb 2006 09:16:31 +1100
+Message-ID: <17391.46015.6373.474659@cse.unsw.edu.au>
+References: <2030.69.143.89.15.1139764467.squirrel@hilbush.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="cnZewGtz8xdCmwBG"
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <43EF8CFB.5080403@kfa.org>
+In-Reply-To: message from Mark Hilbush on Sunday February 12
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Mark Hilbush <mark@hilbush.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Sunday February 12, mark@hilbush.com wrote:
+> It's still a little bit off in the distance, but I'll need to grow the
+> size of one of my RAID1 arrays.  I'm running mdadm 2.2 on an FC4 system,
+> and would appreciate some feedback on whether the following procedure
+> makes sense, or if there is something more efficient.  The idea is to
+> increase the size of one drive now, then do the other one some time later
+> (probably a few months), at which time I can then grow the size of the
+> array and the ext3 filesystem that sits on the array.
+> 
+> Here's the procedure.  Any and all comments are welcome.
 
---cnZewGtz8xdCmwBG
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+It looks like you have done your homework very well!
 
-On Sun, Feb 12, 2006 at 11:31:07AM -0800, it wrote:
-> The hardware raid does the mirroring on the block level, so it's=20
-> actually /dev/sda mirroring /dev/sdb - the whole drive, and not=20
-> partitions. There is a way to set this up on software raid. It takes=20
-> more configuration tweaking, but the mirroring then includes the=20
-> partition table as well. This way, if a drive fails, one can replace it=
-=20
-> without pre-partitioning it.
+There only one change I could suggest, and it is not essential, and
+only apply if you can physically have three drives connected at the
+same time.
 
-That can be less flexible though.  If I have say 4 drives then I
-quite often want small /boot, / and swap under RAID-1 then the rest
-as a single large partition in RAID-5, -6 or -10 as an LVM PV.
+Your current plan leaves you exposed to drive failure while adding the
+new, large drives.  This isn't necessary.
+You have use
+   mdadm --grow /dev/md0 --raid-devices=3
+to make it (temporarily) a three device array.  Then you can add the
+first new drive and let it recover before failing and removing the one
+you are replacing.  You can then
+   mdadm --grow /dev/md0 --raid-devices=2
+to revert to a 2-drive arrays to avoid "mdadm --monitor" from
+complaining about a degraded array.
 
-> This also raises another point, which is relevant for both cases - same=
-=20
-> exact models of hard disks have different number of cylinders, so if a=20
-> RAID partition is created on a larger drive it cannot be mirrored to a=20
-> smaller drive.
+Similarly when adding the second new drive - if possible, make it a
+three drive array during the change-over.
 
-Same exact models don't usually have different block counts, but
-certainly if you replace a dead drive with a different one of the
-same advertised capacity you can end up getting one slightly
-smaller.
+Hope that helps.
 
-> Does anyone have any experience with this?
+NeilBrown
 
-Yes, and it's a pain, but if you have to deal with it I think the
-wealth of options in md leaves you better able to handle it than
-with hardware RAID.  Here's something that happened to me:
 
-http://strugglers.net/wiki/becks.strugglers.net
-
---=20
-http://strugglers.net/wiki/Xen_hosting -- A Xen VPS hosting hobby
-Encrypted mail welcome - keyid 0x604DE5DB
-
---cnZewGtz8xdCmwBG
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-
-iD8DBQFD76lNIJm2TL8VSQsRAhxaAKCOCQQ588jWnIfbL/Ex0Z0D0ipt0gCePRJd
-KIuZV16qqOJltgV69yID87E=
-=1QRC
------END PGP SIGNATURE-----
-
---cnZewGtz8xdCmwBG--
+> 
+> - First, make sure I have a good backup
+> 
+> - Set drive 2 as faulty (e.g. mdadm --manage /dev/md0 --fail /dev/sdb1)
+> 
+> - Remove drive 2 (e.g. mdadm --manage /dev/md0 --remove /dev/sdb1)
+> 
+> - Add new drive and partition to be size of new drive (size of new drive
+> >> size of old drive)
+> 
+> - Add /dev/sdb1 back into the array (e.g. mdadm --manage /dev/md0 --add
+> /dev/sdb1)
+> 
+> ...
+> Some months later
+> ...
+> 
+> - Make sure I have a good backup
+> 
+> - Set drive 1 as faulty (e.g. mdadm --manage /dev/md0 --fail /dev/sda1)
+> 
+> - Remove drive 1 (e.g. mdadm --manage /dev/md0 --remove /dev/sda1)
+> 
+> - Add new drive and partition to be same size as drive 2 above
+> 
+> - Add /dev/sda1 back into the array & wait for resync to finish (e.g.
+> mdadm --manage /dev/md0 --add /dev/sda1)
+> 
+> - Grow array to be the full size of the new partitions (e.g. mdadm --grow
+> --size=max /dev/md0)
+> 
+> - Unmount the ext3 filesystem
+> 
+> - Resize the ext3 filesystem (e.g. resize2fs -p /dev/md0)
+> 
+> - Do a check of the filesystem
+> 
+> - Mount ext3 filesystem and I'm good to go
+> 
+> 
+> Thanks again for the feedback.
+> 
+> Mark Hilbush
+> 
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
