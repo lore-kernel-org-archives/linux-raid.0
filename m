@@ -1,56 +1,66 @@
-From: "John Stoffel" <john@stoffel.org>
-Subject: Re: Adding Latency To Disk Access
-Date: Sat, 11 Feb 2006 23:20:37 -0500
-Message-ID: <17390.46997.701250.780736@smtp.charter.net>
-References: <dd43dcfb0602061349l437a69b8w365dc38dc5809682@mail.gmail.com>
-	<43E7DF87.6060000@s5r6.in-berlin.de>
-	<dd43dcfb0602070312r1349d555r5217a4e246b7be6@mail.gmail.com>
-	<43E8A9B6.7040902@s5r6.in-berlin.de>
-	<dd43dcfb0602110150t2a1b6018va55323e5801fdbae@mail.gmail.com>
+From: "Mark Hilbush" <mark@hilbush.com>
+Subject: Procedure for growing RAID1 array
+Date: Sun, 12 Feb 2006 12:14:27 -0500 (EST)
+Message-ID: <2030.69.143.89.15.1139764467.squirrel@hilbush.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <dd43dcfb0602110150t2a1b6018va55323e5801fdbae@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Paul M." <paul@gpmidi.net>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+It's still a little bit off in the distance, but I'll need to grow the
+size of one of my RAID1 arrays.  I'm running mdadm 2.2 on an FC4 system,
+and would appreciate some feedback on whether the following procedure
+makes sense, or if there is something more efficient.  The idea is to
+increase the size of one drive now, then do the other one some time later
+(probably a few months), at which time I can then grow the size of the
+array and the ext3 filesystem that sits on the array.
 
-Paul>   I am currently trying to build a RAID5 array across 12
-Paul> disks. The problem is there is a bug in the linux firewire
-Paul> drivers that is causes problems when multiple disks are accessed
-Paul> randomly at the same time. 
+Here's the procedure.  Any and all comments are welcome.
 
-With that number of disks, and that transport, why aren't you looking
-at using RAID6 as well?  The rebuild time on RAID5 leaves a window
-where a second failure could really mess you up.
+- First, make sure I have a good backup
 
-Paul> As you can imagine the soft RAID5 drivers try to do exactly
-Paul> that - access all 12 disks at once.  Can the software raid
-Paul> drivers be made to only access one disk at a time and to wait
-Paul> for a requested to be fulfilled before submitting another?
+- Set drive 2 as faulty (e.g. mdadm --manage /dev/md0 --fail /dev/sdb1)
 
-Kiss your system performance down the drain.  But you might be able to
-make this work.  Have you tried:
+- Remove drive 2 (e.g. mdadm --manage /dev/md0 --remove /dev/sdb1)
 
-1. the serialize_io=1 option to the SBP driver?
+- Add new drive and partition to be size of new drive (size of new drive
+>> size of old drive)
 
-2. moving to USB2 instead?  I've never gotten my firewire enclosure to
-   work with Linux.  Prolific Chipset.
+- Add /dev/sdb1 back into the array (e.g. mdadm --manage /dev/md0 --add
+/dev/sdb1)
 
-3. Maybe tweak /sys/block/sd*/queue/nr_requests to be 1 for each
-   device, so that you don't queue up too many commands to each disk.
-   That way you can still run commands across all 12 disks, but only one
-   per disk.
+...
+Some months later
+...
 
-4. Do you have multiple firewire controllers as well?  That will help
-   performance.  
+- Make sure I have a good backup
 
-Good luck, and let us know how it works out.  
+- Set drive 1 as faulty (e.g. mdadm --manage /dev/md0 --fail /dev/sda1)
 
-Oh yeah, more details on your kernel version, MD setup, etc would be
-helpful as well.
+- Remove drive 1 (e.g. mdadm --manage /dev/md0 --remove /dev/sda1)
 
-John
+- Add new drive and partition to be same size as drive 2 above
+
+- Add /dev/sda1 back into the array & wait for resync to finish (e.g.
+mdadm --manage /dev/md0 --add /dev/sda1)
+
+- Grow array to be the full size of the new partitions (e.g. mdadm --grow
+--size=max /dev/md0)
+
+- Unmount the ext3 filesystem
+
+- Resize the ext3 filesystem (e.g. resize2fs -p /dev/md0)
+
+- Do a check of the filesystem
+
+- Mount ext3 filesystem and I'm good to go
+
+
+Thanks again for the feedback.
+
+Mark Hilbush
+
+
