@@ -1,16 +1,38 @@
-From: Chris Osicki <osk@admin.swisscom-mobile.ch>
-Subject: Re: Question: array locking, possible?
-Date: Mon, 13 Feb 2006 18:12:50 +0100
-Message-ID: <20060213181250.7901372c@mwdsp001.swissptt.ch>
-References: <1C4766A743ADF74FAEDF2AAD0679BAA20767917E@cacexc03.americas.cpqcorp.net>
+From: "Stern, Rick (Serviceguard Linux)" <rick.stern@hp.com>
+Subject: RE: Question: array locking, possible?
+Date: Mon, 13 Feb 2006 09:21:06 -0800
+Message-ID: <1C4766A743ADF74FAEDF2AAD0679BAA2076D204C@cacexc03.americas.cpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1C4766A743ADF74FAEDF2AAD0679BAA20767917E@cacexc03.americas.cpqcorp.net>
+Content-class: urn:content-classes:message
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Chris Osicki <osk@admin.swisscom-mobile.ch>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+I understand about HP-UX mirroring/LVM.
+
+I was a little too obtuse.
+
+LVM2 has a feature (not well advertised) that allows an VG to be tagged=
+ so it will not be activated by "system b" if it is already tagged as b=
+eing in use by "system a".  I was suggesting that a similar feature cou=
+ld be added to MD.  This way a MD array could be marked as "owned" and,=
+ if so, mdadm would not activate it from another system.  This way all =
+of the MD control is still within mdadm.
+
+If Neil is interested, I'll try to dig up more info.
+
+Regards,
+Rick =20
+
+-----Original Message-----
+=46rom: linux-raid-owner@vger.kernel.org [mailto:linux-raid-owner@vger.=
+kernel.org] On Behalf Of Chris Osicki
+Sent: Monday, February 13, 2006 9:13 AM
+To: linux-raid@vger.kernel.org
+Subject: Re: Question: array locking, possible?
 
 
 
@@ -100,6 +122,11 @@ d" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >=20
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 -
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
