@@ -1,46 +1,35 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: RAID 5 inaccessible - continued
-Date: Tue, 14 Feb 2006 17:41:14 +0000
-Message-ID: <43F2163A.6030302@dgreaves.com>
-References: <8b24c8b10602130708p3e2f9a1dh@mail.gmail.com>	 <8b24c8b10602140035t5ca2e41cv@mail.gmail.com>	 <17393.42370.394254.464935@cse.unsw.edu.au>	 <8b24c8b10602140235s7a4ef1fam@mail.gmail.com>	 <43F1FFE1.2010107@h3c.com> <8b24c8b10602140918s136b5075s@mail.gmail.com>
+From: "Blurb U. Melons" <kaleb@goettsch.com>
+Subject: Software
+Date: Tue, 14 Feb 2006 15:22:38 -0500
+Message-ID: <5088736103.20060214152238@goettsch.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <8b24c8b10602140918s136b5075s@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Krekna Mektek <krekna@gmail.com>
-Cc: Mike Hardy <mhardy@h3c.com>, linux-raid@vger.kernel.org
+To: Linux <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Krekna Mektek wrote:
+You know how it? to work with stable software! 
+P0pular software at low low price. 
 
->I want to rebuilt from the good one and the faulty one. That's why I
->wanted to dd the disk to an image file, but it complains it has no
->boot sector.
->
->  
->
->>>>I did the folowing:
->>>>
->>>>dd conv=noerror if=dev/hdd1 of=/mnt/hdb1/Faulty-RAIDDisk.img
->>>>losetup /dev/loop0 /mnt/hdb1/Faulty-RAIDDisk.img
->>>>        
->>>>
-You could try doing this again using ddrescue (google if you need to
-install it):
+New software on our site:
 
-   ddrescue dev/hdd1 /mnt/hdb1/Faulty-RAIDDisk.img  /mnt/hdb1/Faulty-RAIDDisk.log
+InDesign CS - $69.95
+Windows Millenium - $59.95
+Office XP Professional - $79.95
+Exchange 2003 Enterprise Server - $69.95
+CorelDraw Graphics Suite 11 - $59.95
+Illustrator CS - $69.95
+FileMaker 7.0 Professional - $69.95
+Acrobat 6 Professional - $79.95
+Photoshop 7 - $69.95 
+Windows 2000 Advanced Server - $69.95
+SQL Server 2000 Enterprise Edition - $69.95
+Quark Xpress 6 Passport Multilanguage - $69.95
+Encarta Encyclopedia Delux 2004 (3CD) - $89.95
+Windows NT 4.0 Server - $49.95
 
-Then do it again using -r10 (to increase the retries on the faulty sectors)
-
-   ddrescue -r10 dev/hdd1 /mnt/hdb1/Faulty-RAIDDisk.img  /mnt/hdb1/Faulty-RAIDDisk.log
-
-This will be much quicker because the log file contains details of the
-faulty sectors.
-With luck (mucho luck) you may not even lose data.
-
-David
-
--- 
+Our site:
+http://scarnmm.com
 
