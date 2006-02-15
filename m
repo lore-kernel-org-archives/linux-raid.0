@@ -1,34 +1,28 @@
-From: CaT <cat@zip.com.au>
-Subject: 2+ raid sets, sata and a missing hd question
-Date: Wed, 15 Feb 2006 13:45:21 +1100
-Message-ID: <20060215024521.GD8282@zip.com.au>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: "Hillary" <MickeyandSnakenpog@yahoo.gr>
+Subject: Re:
+Date: Wed, 15 Feb 2006 02:30:15 -0200
+Message-ID: <358.45e740d5.2a9JSL44@yahoo.co.jp>
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+Hello linux-raid@vger.kernel.org,
 
-Lets say I have the following setup:
+We sell brand-name and exact gen_ericcc equivalents.
 
-RAID 1 (as md1, md2, md3, md4, md5 for eg)
-sda, sdb
+Our prompt, courteous and disc#reet ser_vice will make you smile.
 
-RAID 5 (as md6)
-sdc, sdd, sde, sdf, sdg
+---------------------------------
 
-Seeing as how SATA drives can move around if one removes one from a set
-(ie given sda, sdb, sdc, if sdb was removed sdc drops to sdb) would md6
-come back up without problems if I were to remove either sda or sdb.
+copy the address below and paste in your web browser:
 
-All md partitions are of type fd (Linux raid autodetect).
+anorthite.techsmartjobs.com/?zz=3Dlowcost
 
-Thanks. :)
+----------------------------------
 
--- 
-    "To the extent that we overreact, we proffer the terrorists the
-    greatest tribute."
-    	- High Court Judge Michael Kirby
+
+
+push the "Perform Currency Conversion" button..
+Three hundred years in the deepest South:=20.
+Gnarled, twisted, and curled, the nails yellow and claw-like, it is as if,=
