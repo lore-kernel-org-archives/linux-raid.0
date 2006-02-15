@@ -1,61 +1,40 @@
-From: Burkhard Carstens <suse-ml@onlinehome.de>
-Subject: Re: RAID 5 inaccessible - continued
-Date: Wed, 15 Feb 2006 10:59:28 +0100
-Message-ID: <200602151059.28687.suse-ml@onlinehome.de>
-References: <8b24c8b10602130708p3e2f9a1dh@mail.gmail.com> <17393.42370.394254.464935@cse.unsw.edu.au> <8b24c8b10602140235s7a4ef1fam@mail.gmail.com>
+From: CaT <cat@zip.com.au>
+Subject: Re: 2+ raid sets, sata and a missing hd question
+Date: Wed, 15 Feb 2006 21:02:56 +1100
+Message-ID: <20060215100256.GE8282@zip.com.au>
+References: <20060215024521.GD8282@zip.com.au> <20060215065028.GA2452@percy.comedia.it>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <8b24c8b10602140235s7a4ef1fam@mail.gmail.com>
 Content-Disposition: inline
+In-Reply-To: <20060215065028.GA2452@percy.comedia.it>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Am Dienstag, 14. Februar 2006 11:35 schrieb Krekna Mektek:
-[...]
-> Actually, /dev/hdd1 partition is 390708801 blocks, the disk itself is
-> a Hitachi 400GB disk.
-> So this is 390708801 blocks of 1024 bytes. This is according to my
-> calculation 400085812224 bytes.
-> The Faulty-RAIDDisk.img is according to my ls -l 400085771264 bytes.
+On Wed, Feb 15, 2006 at 07:50:28AM +0100, Luca Berra wrote:
+> On Wed, Feb 15, 2006 at 01:45:21PM +1100, CaT wrote:
+> >Seeing as how SATA drives can move around if one removes one from a set
+> >(ie given sda, sdb, sdc, if sdb was removed sdc drops to sdb) would md6
+> >come back up without problems if I were to remove either sda or sdb.
+> 
+> if you configured mdadm correctly, you will have no problem :)
+> 
+> hint
+> echo DEVICE partitions >> /etc/mdadm.conf
+> mdadm -Esc partitions | grep ARRAY>> /etc/mdadm.conf
+
+So the md5 array will reconstruct itself after initial bootup where the
+kernel reconstructs the raid1 (as well as it can) for booting?
+
+> >All md partitions are of type fd (Linux raid autodetect).
 >
-> So it looks like they are quite the same, and the difference between
-> the two is 40960 bytes. These are 40 blocks, so 36 are missing?
->
-> The dd actually succeeded, and did finish the job in about one day.
-> The badblocks were found after about the first 7 Gigs.
->
-> Is there no way like the conv=noerror for mdadm, to just continue?
-> Can I restore the superblock on the .img file somehow?
-> Is it probably save to --zero-superblock all the three disks and that
-> the RAID array will create two new superblocks (Leaving the spare
-> out, because its probably out of date).
->
-> I can do the dd again, but I think it will do the same thing, because
-> it finished 'succesfully'.
-> The superblock is at the end of the disk I read, about the last
-> 64-128K or something.
+> this is surprisingly not at all relevant
 
-My experience is that dd conv=noerror doesn't do the job correctly!! It 
-still won't write a block that it cannot read.
-Please use "dd_rescue -A /dev/hdd1 /mnt/hdb1/Faulty-RAIDDisk.img" 
-instead. See "dd_rescue --help".
+Awww. But I like it when the kernel just, well, does it all and makes it
+all ready. :)
 
-> ADEVICE /dev/hdb1 /dev/hdc1 /dev/loop0
-> ARRAY /dev/md0 devices=/dev/hdb1,/dev/hdc1,/dev/loop0
-
-another thing: /mnt/hdb1/ is not the same hdb1, you are using in the 
-raid5, is it?
-
-It might be a bad idea to mount /dev/hdb1, write to it, 
-and afterwards assemble the array with hdb1 being part of it ... Extra 
-bad, if loop0 points to a file on hdb1 ?? However, if you did dd to a 
-file on the partition, that should be part of the degraded raid5 array, 
-I guess your data is already gone ...
-
-Good luck
- Burkhard
-
+-- 
+    "To the extent that we overreact, we proffer the terrorists the
+    greatest tribute."
+    	- High Court Judge Michael Kirby
