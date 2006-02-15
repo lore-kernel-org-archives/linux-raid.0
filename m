@@ -1,19 +1,17 @@
-From: "Alisha" <alisha@cgocable.ca>
-Subject: Superior Pills Offer
-Date: Wed, 15 Feb 2006 21:24:13 -0500
-Message-ID: <200602151324.k1FDNxuT012478@zeus2.kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: "Lupe Wall" <eriineel@svidanka.ru>
+Subject: WOW
+Date: Wed, 15 Feb 2006 07:00:43 -0500
+Message-ID: <154319780459.XAA13898olineten__29920.8111632199$1140015393$gmane$org@my.kazanova.info>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-net@vger.kernel.org, linux-raid@vger.kernel.org, linux-tape-owner@vger.kernel.org, linux-tape@vger.kernel.org, majordomo@vger.kernel.org
 List-Id: linux-raid.ids
 
-Come See our new web Ph¡rm¡cy and withhold up to 90%
+You have got to look at this. Its outstanding.   Its a major new business.
 
-Dozens of Products to Select
+http://www.legalrevenueservice.com/
 
-http://www.noteatte.com/
+Liz   
 
-We are your Online Store for Astronomical Dicounts
-
+Want to not receive info in the future?  takoineer@wifi.yandex.ru ...
