@@ -1,81 +1,47 @@
-From: Mirko Benz <mirko.benz@web.de>
-Subject: Re: NVRAM support
-Date: Wed, 15 Feb 2006 09:24:06 +0100
-Message-ID: <43F2E526.9010409@web.de>
-References: <43EC5655.1060504@web.de> <20060210124204.GC28676@harddisk-recovery.com> <43ECB4A4.6010005@tmr.com> <Pine.LNX.4.64.0602101700540.30925@twinlark.arctic.org> <20060213092204.GB3209@harddisk-recovery.nl>
+From: Krekna Mektek <krekna@gmail.com>
+Subject: Re: RAID 5 inaccessible - continued
+Date: Wed, 15 Feb 2006 10:35:14 +0100
+Message-ID: <8b24c8b10602150135l15b3da13s@mail.gmail.com>
+References: <8b24c8b10602130708p3e2f9a1dh@mail.gmail.com>
+	 <8b24c8b10602140035t5ca2e41cv@mail.gmail.com>
+	 <17393.42370.394254.464935@cse.unsw.edu.au>
+	 <8b24c8b10602140235s7a4ef1fam@mail.gmail.com>
+	 <43F1FFE1.2010107@h3c.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20060213092204.GB3209@harddisk-recovery.nl>
+In-Reply-To: <43F1FFE1.2010107@h3c.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Erik Mouw <erik@harddisk-recovery.com>
-Cc: dean gaudet <dean@arctic.org>, Bill Davidsen <davidsen@tmr.com>, linux-raid@vger.kernel.org
+To: Mike Hardy <mhardy@h3c.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+I tried this one yesterday, with 2.6.15 that is. The same thing
+happened, at the bad block sectors it tried and skipped some but after
+a minute or two it stopped again.
 
-My intention was not to use a NVRAM device for swap.
+Hmmmz.
 
-Enterprise storage systems use NVRAM for better data protection/faster=20
-recovery in case of a crash.
-Modern CPUs can do RAID calculation very fast. But Linux RAID is=20
-vulnerable when a crash during a write operation occurs.
-E.g. Data and parity write requests are issued in parallel but only one=
-=20
-finishes. This will
-lead to inconsistent data. It will be undetected and can not be=20
-repaired. Right?
+Krekna
 
-How can journaling be implemented within linux-raid?
-
-I have seen a paper that tries this in cooperation with a file system:
-=84Journal-guided Resynchronization for Software RAID=93
-www.cs.wisc.edu/adsl/Publications
-
-But I would rather see a solution within md so that other file systems=20
-or LVM can be used on top of md.
-
-Regards,
-Mirko
-
-Erik Mouw schrieb:
-> On Fri, Feb 10, 2006 at 05:02:02PM -0800, dean gaudet wrote:
->  =20
->> On Fri, 10 Feb 2006, Bill Davidsen wrote:
->>    =20
->>> Erik Mouw wrote:
->>>      =20
->>>> You could use it for an external journal, or you could use it as a=
- swap
->>>> device.
->>>> =20
->>>>        =20
->>> Let me concur, I used external journal on SSD a decade ago with jfs=
- (AIX). If
->>> you do a lot of operations which generate journal entries, file cre=
-ate,
->>> delete, etc, then it will double your performance in some cases. Ot=
-herwise it
->>> really doesn't help much, use as a swap device might be more helpfu=
-l depending
->>> on your config.
->>>      =20
->> it doesn't seem to make any sense at all to use a non-volatile exter=
-nal=20
->> memory for swap... swap has no purpose past a power outage.
->>    =20
->
-> No, but it is a very fast swap device. Much faster than a hard drive.
+2006/2/14, Mike Hardy <mhardy@h3c.com>:
 >
 >
-> Erik
+> Krekna Mektek wrote:
 >
->  =20
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > The dd actually succeeded, and did finish the job in about one day.
+> > The badblocks were found after about the first 7 Gigs.
+>
+> Is this a 3-disk raid5 array? With two healthy disks and one bad disk?
+>
+> If so, then what you really want is a new kernel (2.6.15+? 2.6.14+?)
+> that has raid5 read-error-handling code in it. Neil just coded that up.
+>
+> If it's missing a disk and has a disk with bad sectors, then you've
+> already lost data, but you could use a combination of smart tests and dd
+> to zero out those specific sectors (and only those sectors...) then sync
+> a new disk up with the array...
+>
+> -Mike
+>
