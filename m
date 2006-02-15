@@ -1,28 +1,38 @@
-From: "Hillary" <MickeyandSnakenpog@yahoo.gr>
-Subject: Re:
-Date: Wed, 15 Feb 2006 02:30:15 -0200
-Message-ID: <358.45e740d5.2a9JSL44@yahoo.co.jp>
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: 2+ raid sets, sata and a missing hd question
+Date: Wed, 15 Feb 2006 07:50:28 +0100
+Message-ID: <20060215065028.GA2452@percy.comedia.it>
+References: <20060215024521.GD8282@zip.com.au>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20060215024521.GD8282@zip.com.au>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello linux-raid@vger.kernel.org,
+On Wed, Feb 15, 2006 at 01:45:21PM +1100, CaT wrote:
+>Seeing as how SATA drives can move around if one removes one from a set
+>(ie given sda, sdb, sdc, if sdb was removed sdc drops to sdb) would md6
+>come back up without problems if I were to remove either sda or sdb.
 
-We sell brand-name and exact gen_ericcc equivalents.
+if you configured mdadm correctly, you will have no problem :)
 
-Our prompt, courteous and disc#reet ser_vice will make you smile.
+hint
+echo DEVICE partitions >> /etc/mdadm.conf
+mdadm -Esc partitions | grep ARRAY>> /etc/mdadm.conf
 
----------------------------------
+>All md partitions are of type fd (Linux raid autodetect).
+>
+this is surprisingly not at all relevant
 
-copy the address below and paste in your web browser:
+L.
 
-anorthite.techsmartjobs.com/?zz=3Dlowcost
-
-----------------------------------
-
-
-
-push the "Perform Currency Conversion" button..
-Three hundred years in the deepest South:=20.
-Gnarled, twisted, and curled, the nails yellow and claw-like, it is as if,=
+-- 
+Luca Berra -- bluca@comedia.it
+        Communication Media & Services S.r.l.
+ /"\
+ \ /     ASCII RIBBON CAMPAIGN
+  X        AGAINST HTML MAIL
+ / \
