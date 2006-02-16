@@ -1,156 +1,146 @@
-From: Andrew Nelson <freeandy@gmail.com>
-Subject: Re: will mdadm work with a raid created using raidtools
-Date: Thu, 16 Feb 2006 09:15:27 -0600
-Message-ID: <dt24uh$fv8$1@sea.gmane.org>
-References: <43F37BFB.4030908@gmail.com> <17395.45134.227188.527148@cse.unsw.edu.au>
+From: Krekna Mektek <krekna@gmail.com>
+Subject: Re: RAID 5 inaccessible - continued
+Date: Thu, 16 Feb 2006 17:42:49 +0100
+Message-ID: <8b24c8b10602160842w5896390ap@mail.gmail.com>
+References: <8b24c8b10602130708p3e2f9a1dh@mail.gmail.com>
+	 <17393.42370.394254.464935@cse.unsw.edu.au>
+	 <8b24c8b10602140235s7a4ef1fam@mail.gmail.com>
+	 <43F1FFE1.2010107@h3c.com>
+	 <8b24c8b10602140918s136b5075s@mail.gmail.com>
+	 <43F2163A.6030302@dgreaves.com>
+	 <8b24c8b10602151218i43886b75h@mail.gmail.com>
+	 <43F3B119.1000800@dgreaves.com>
+	 <8b24c8b10602160632h59111c54u@mail.gmail.com>
+	 <8b24c8b10602160708j248c1752u@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17395.45134.227188.527148@cse.unsw.edu.au>
+In-Reply-To: <8b24c8b10602160708j248c1752u@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: David Greaves <david@dgreaves.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> On Wednesday February 15, freeandy@gmail.com wrote:
-> 
->>I may be a bit late in asking this because I already gave it a try but will
->>mdadm work with a raid created using raidtools?
-> 
-> 
-> Yes.  There is no difference in the arrays created by raidtools or
-> mdadm.
-> 
-> 
+Oh man!
+I've never been so happy! Wow. My array is back, with the dd_rescue
+which indeed came to the rescue. Since I've configured my LVM again,
+the raid Array is accessible again.
+Guys, many thanks for your help!
 
-Cool.  Now I just gotta figure out why I can't create the raid.  Sadly when this
-system crashed I lost the old /etc/raidtab config so I really have no idea how
-the raid was set up, but here is what I've done so far.
+dd_rescue is indeed something different then a dd conv=noerror, though
+I tried that one only once.
 
+I need to buy another 500GB disk now to _FIRST_ backup the whole thing.
 
-alfalfa:~# mdadm --examine /dev/hdg
-/dev/hdg:
-          Magic : a92b4efc
-        Version : 00.90.00
-           UUID : 04407130:1c19b2b9:2c573158:ee8ac467
-  Creation Time : Sun Dec 21 16:19:13 2003
-     Raid Level : raid1
-   Raid Devices : 2
-  Total Devices : 2
-Preferred Minor : 0
+Krekna
 
-    Update Time : Tue Jan 13 23:12:57 2004
-          State : active
- Active Devices : 1
-Working Devices : 2
- Failed Devices : 0
-  Spare Devices : 1
-       Checksum : 6ff770df - correct
-         Events : 0.29
-
-
-      Number   Major   Minor   RaidDevice State
-this     2      34        0        2      spare   /dev/hdg
-
-   0     0      33        1        0      active sync   /dev/hde1
-   1     1       0        0        1      faulty removed
-   2     2      34        0        2      spare   /dev/hdg
-alfalfa:~# mdadm --examin /dev/hde
-mdadm: No super block found on /dev/hde (Expected magic a92b4efc, got ffffffff)
-alfalfa:~# mdadm --examin /dev/hde1
-/dev/hde1:
-          Magic : a92b4efc
-        Version : 00.90.00
-           UUID : 04407130:1c19b2b9:2c573158:ee8ac467
-  Creation Time : Sun Dec 21 16:19:13 2003
-     Raid Level : raid1
-   Raid Devices : 2
-  Total Devices : 2
-Preferred Minor : 0
-
-    Update Time : Tue Feb 14 21:44:46 2006
-          State : active
- Active Devices : 2
-Working Devices : 2
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : 73e5445d - correct
-         Events : 0.42
-
-
-      Number   Major   Minor   RaidDevice State
-this     0      33        1        0      active sync   /dev/hde1
-
-   0     0      33        1        0      active sync   /dev/hde1
-   1     1      34        1        1      active sync   /dev/hdg1
-alfalfa:~# mdadm --examin /dev/hdg1
-/dev/hdg1:
-          Magic : a92b4efc
-        Version : 00.90.00
-           UUID : 04407130:1c19b2b9:2c573158:ee8ac467
-  Creation Time : Sun Dec 21 16:19:13 2003
-     Raid Level : raid1
-   Raid Devices : 2
-  Total Devices : 2
-Preferred Minor : 0
-
-    Update Time : Tue Feb 14 21:44:46 2006
-          State : active
- Active Devices : 2
-Working Devices : 2
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : 73e54460 - correct
-         Events : 0.42
-
-
-      Number   Major   Minor   RaidDevice State
-this     1      34        1        1      active sync   /dev/hdg1
-
-   0     0      33        1        0      active sync   /dev/hde1
-   1     1      34        1        1      active sync   /dev/hdg1
-
-
-
-I then try to assemble the raid with
-
-mdadm --assemble /dev/md0 /dev/hdg1 /dev/hde1
-
-
-This appears to work fine but then the computer locks up.  With this info in syslog.
-
-
-Feb 14 21:57:19 localhost kernel: md: md driver 0.90.0 MAX_MD_DEVS=256, MD_SB_DI
-SKS=27
-Feb 14 21:57:19 localhost kernel: md: md0 stopped.
-Feb 14 21:57:51 localhost kernel: md: md0 stopped.
-Feb 14 21:57:52 localhost kernel: md: bind<hdg1>
-Feb 14 21:57:52 localhost kernel: md: bind<hde1>
-Feb 14 21:57:52 localhost kernel: md: md0: raid array is not clean -- starting b
-ackground reconstruction
-Feb 14 21:57:52 localhost kernel: md: raid1 personality registered as nr 3
-Feb 14 21:57:52 localhost kernel: raid1: raid set md0 active with 2 out of 2 mir
-rors
-Feb 14 21:57:52 localhost kernel: md: syncing RAID array md0
-Feb 14 21:57:52 localhost kernel: md: minimum _guaranteed_ reconstruction speed:
- 1000 KB/sec/disc.
-Feb 14 21:57:52 localhost kernel: md: using maximum available idle IO bandwith (
-but not more than 200000 KB/sec) for reconstruction.
-Feb 14 21:57:52 localhost kernel: md: using 128k window, over a total of 1953583
-36 blocks.
-Feb 14 21:58:36 localhost kernel: hde: dma_timer_expiry: dma status == 0x21
-Feb 14 21:58:46 localhost kernel: hde: DMA timeout error
-Feb 14 21:58:46 localhost kernel: hde: dma timeout error: status=0x51 { DriveRea
-dy SeekComplete Error }
-Feb 14 21:58:46 localhost kernel: hde: dma timeout error: error=0x40 { Uncorrect
-ableError }, LBAsect=1594001, high=0, low=1594001, sector=1593535
-Feb 14 21:58:46 localhost kernel: end_request: I/O error, dev hde, sector 159353
-5
-
-Does anyone have any idea what I'm doing wrong?
-
-Thanks much
-
-//andy
-
+2006/2/16, Krekna Mektek <krekna@gmail.com>:
+> Whoops, sorry, I remember something about LVM... I've setup the system
+> with LVM, I'm sure of that. In that case I can't mount /dev/md0 of
+> course..
+>
+> I need to find out how this stuff works again..
+>
+> Krekna
+>
+> 2006/2/16, Krekna Mektek <krekna@gmail.com>:
+> > Hi,
+> >
+> > Well, the dd_rescue did it's work, the array is now rebuilding, but
+> > it's doing its thing very slowly.
+> >
+> > But now the following, while the array is rebuilding and with the good
+> > image on my new disk (The FaultyRAIDDisk.img), I am trying to mount
+> > /dev/md0 already, but it now says :
+> >
+> > root@1[~]# fdisk -l /dev/md0
+> >
+> > Disk /dev/md0: 800.1 GB, 800171491328 bytes
+> > 2 heads, 4 sectors/track, 195354368 cylinders
+> > Units = cylinders of 8 * 512 = 4096 bytes
+> >
+> > Disk /dev/md0 doesn't contain a valid partition table
+> >
+> > How can some individual disks which crash destroy my partition table!? Help!
+> > Is there some way to get my data back from here??
+> >
+> >
+> >
+> > 2006/2/15, David Greaves <david@dgreaves.com>:
+> > > man ddrescue:
+> > >       -r, --max-retries=<n>
+> > >               exit after given retries (-1=infinity) [0]
+> > >
+> > >
+> > > So the -r10 basically tries to re-read each dodgy sector 10 times.
+> > >
+> > > Is it working?
+> > >
+> > > David
+> > >
+> > > Krekna Mektek wrote:
+> > >
+> > > >Hi,
+> > > >
+> > > >I am busy with it now, but what does the 10 mean in -r10 ? I
+> > > >understand from the --help that one can use the -r option, but without
+> > > >something behind it?
+> > > >
+> > > >Krekna
+> > > >
+> > > >2006/2/14, David Greaves <david@dgreaves.com>:
+> > > >
+> > > >
+> > > >>Krekna Mektek wrote:
+> > > >>
+> > > >>
+> > > >>
+> > > >>>I want to rebuilt from the good one and the faulty one. That's why I
+> > > >>>wanted to dd the disk to an image file, but it complains it has no
+> > > >>>boot sector.
+> > > >>>
+> > > >>>
+> > > >>>
+> > > >>>
+> > > >>>
+> > > >>>>>>I did the folowing:
+> > > >>>>>>
+> > > >>>>>>dd conv=noerror if=dev/hdd1 of=/mnt/hdb1/Faulty-RAIDDisk.img
+> > > >>>>>>losetup /dev/loop0 /mnt/hdb1/Faulty-RAIDDisk.img
+> > > >>>>>>
+> > > >>>>>>
+> > > >>>>>>
+> > > >>>>>>
+> > > >>You could try doing this again using ddrescue (google if you need to
+> > > >>install it):
+> > > >>
+> > > >>   ddrescue dev/hdd1 /mnt/hdb1/Faulty-RAIDDisk.img
+> > > >>/mnt/hdb1/Faulty-RAIDDisk.log
+> > > >>
+> > > >>Then do it again using -r10 (to increase the retries on the faulty sectors)
+> > > >>
+> > > >>   ddrescue -r10 dev/hdd1 /mnt/hdb1/Faulty-RAIDDisk.img
+> > > >>/mnt/hdb1/Faulty-RAIDDisk.log
+> > > >>
+> > > >>This will be much quicker because the log file contains details of the
+> > > >>faulty sectors.
+> > > >>With luck (mucho luck) you may not even lose data.
+> > > >>
+> > > >>David
+> > > >>
+> > > >>--
+> > > >>
+> > > >>
+> > > >>
+> > > >>
+> > > >
+> > > >
+> > > >
+> > >
+> > >
+> > > --
+> > >
+> > >
+> >
+>
