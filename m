@@ -1,27 +1,35 @@
-From: Francois Barre <francois.barre@gmail.com>
-Subject: Re: 4 disks: RAID-6 or RAID-10 ..
-Date: Fri, 17 Feb 2006 13:07:31 +0100
-Message-ID: <fd8d0180602170407ib160644v@mail.gmail.com>
-References: <Pine.LNX.4.56.0602171100420.22063@lion.drogon.net>
-	 <43F5B707.3030005@panix.com>
-	 <Pine.LNX.4.56.0602171153090.22063@lion.drogon.net>
+From: =?iso-8859-2?Q?Pawe=B3_Kowalski?= <pk@uop.pl>
+Subject: a little bug in mkraid.
+Date: Fri, 17 Feb 2006 14:11:23 +0100 (CET)
+Message-ID: <Pine.LNX.4.53.0602171411080.22200@strefa.uop.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: TEXT/PLAIN; charset=iso-8859-2
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.56.0602171153090.22063@lion.drogon.net>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Gordon Henderson <gordon@drogon.net>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-2006/2/17, Gordon Henderson <gordon@drogon.net>:
-> On Fri, 17 Feb 2006, berk walker wrote:
->
-> > RAID-6 *will* give you your required 2-drive redundancy.
->
-Anyway, if you wish to resize your setup to 5 drives one day or
-another, I guess raid 6 would be preferable, because one day or
-another, a patch will popup and make raid6 resizing possible. Or won't
-it ?
+
+Hi,
+I think I found a little bug in raidtools.
+When I try to add some new md devices everything is correct, but when w=
+e
+have active some device /dev/md10 - md11 etc.... (above /dev/md10) mkra=
+id
+is unable to make /dev/md1
+I think this situation is because something like "grep" taking patern m=
+d1
+from /proc/mdstat (it must do "grep -w" instead).
+
+Please, inform me that I'm right or not. Thanks.
+
+Best Regards,
+
+----
+Pawe=B3 Kowalski
+-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
