@@ -1,44 +1,43 @@
-From: Ewan Grantham <ewan.grantham@gmail.com>
-Subject: Re: Raid on USB2 ?
-Date: Fri, 17 Feb 2006 08:30:36 -0600
-Message-ID: <6d5bedd80602170630n5c2e3cd8s221a8def0c9f8a1@mail.gmail.com>
-References: <60F5F1E2B94AD4119F0B00B0D0215FFF01A6A25B@TEXTILES.BSC>
+From: Gordon Henderson <gordon@drogon.net>
+Subject: Re: 4 disks: RAID-6 or RAID-10 ..
+Date: Fri, 17 Feb 2006 15:14:37 +0000 (GMT)
+Message-ID: <Pine.LNX.4.56.0602171445280.22063@lion.drogon.net>
+References: <Pine.LNX.4.56.0602171100420.22063@lion.drogon.net>
+ <43F5B707.3030005@panix.com>  <Pine.LNX.4.56.0602171153090.22063@lion.drogon.net>
+ <fd8d0180602170407ib160644v@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <60F5F1E2B94AD4119F0B00B0D0215FFF01A6A25B@TEXTILES.BSC>
-Content-Disposition: inline
+In-Reply-To: <fd8d0180602170407ib160644v@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ken Walker <ken.walker@manchester.ac.uk>
+To: Francois Barre <francois.barre@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I have a six disk RAID-5 array that I run using embedded Linux
-(coLinux) to serve the array up using Samba to my Windows XP OS.
+On Fri, 17 Feb 2006, Francois Barre wrote:
 
-I've been doing this for a number of months (the dark tale is explained at:
-http://a1.blogspot.com/2005/08/step-by-step-to-windows-raid-using.html),
-and have had no data corruption - even when the machine has crashed
-due to Windows or Power issues.
+> 2006/2/17, Gordon Henderson <gordon@drogon.net>:
+> > On Fri, 17 Feb 2006, berk walker wrote:
+> >
+> > > RAID-6 *will* give you your required 2-drive redundancy.
+> >
+> Anyway, if you wish to resize your setup to 5 drives one day or
+> another, I guess raid 6 would be preferable, because one day or
+> another, a patch will popup and make raid6 resizing possible. Or won't
+> it ?
 
-Array runs fast enough to serve video files and watch them - though
-more commonly I am just copying files around. Write times are nothing
-to brag about, but they aren't horrible.
+Resizing isn't something I really care for. This particular box will be
+sent away to a data centre where it'll stay for 3 years until I replace
+it.
 
-Hope this helps,
-Ewan
+(And if I really do need more disk space in the meantime, I'll just build
+another :)
 
-On 2/17/06, Ken Walker <ken.walker@manchester.ac.uk> wrote:
-> Anybody tried a Raid1 or Raid5 on USB2.
->
-> If so did it crawl or was it usable ?
->
-> Many thanks
->
-> Ken :o)
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Still scratching my head, trying to work out if raid-10 can withstand
+(any) 2 disks of failure though, although after reading md(4) a few times
+now, I'm begining to think it can't (unless you are lucky!) So maybe I'll
+just stick with Raid-6 as I know that!
+
+Cheers,
+
+Gordon
