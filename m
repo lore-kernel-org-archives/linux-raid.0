@@ -1,41 +1,31 @@
-From: Francois Barre <francois.barre@gmail.com>
-Subject: Re: Raid on USB2 ?
-Date: Fri, 17 Feb 2006 12:03:42 +0100
-Message-ID: <fd8d0180602170303m395d7ffdk@mail.gmail.com>
-References: <60F5F1E2B94AD4119F0B00B0D0215FFF01A6A25B@TEXTILES.BSC>
+From: Gordon Henderson <gordon@drogon.net>
+Subject: 4 disks: RAID-6 or RAID-10 ..
+Date: Fri, 17 Feb 2006 11:10:57 +0000 (GMT)
+Message-ID: <Pine.LNX.4.56.0602171100420.22063@lion.drogon.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <60F5F1E2B94AD4119F0B00B0D0215FFF01A6A25B@TEXTILES.BSC>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Ken Walker <ken.walker@manchester.ac.uk>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-2006/2/17, Ken Walker <ken.walker@manchester.ac.uk>:
-> Anybody tried a Raid1 or Raid5 on USB2.
->
-> If so did it crawl or was it usable ?
->
-> Many thanks
->
-> Ken :o)
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
 
-Well... Let's say... Good luck.
-I am experimenting raid1 and raid5 over firewire, which is by far much
-more stable (in terms of bandwidth) than usb2. According to the tests
-I made, benchmarking usb2 and firewire makes usb2 dangerous to use :
-connection hangs, bus collision is somewhat hasardous, bandwidth is
-not really granted.
-Technically, it is really possible : you will have your usb2 drives
-accessible as scsi drives, put your raid on them, test them. But
-sincerely, good luck.
+I'm building a little test server and I wanted ~500GB of storage with
+2-drive redundancy, so the best price vs. num. drives vs. the need for 2
+drive redundancy came to 4 x 250GB drives. (And I have a mobo with 5 SATA
+ports, and taking into account case power requirements, etc. 4 drives has
+worked out quiet well, and cheaper than 2 x 500GB drives!)
 
-Regards,
+So RAID-6, which I have have been using for a year or so now with good
+results, or RAID-10, which I've never used.
+
+I suspect RAID-10 might give me more performance, not having the parity
+calculations to do, but is it stable and reliable? I've not been paying
+much attention to it recently ... (Servers intended use is what I
+understand is termed 'LAMP' these days - Linux, Apache, MySQL, PHP,
+although it's going to be handling up to 10,000 emails a day too with spam
+and virus checking)
+
+Cheers,
+
+Gordon
