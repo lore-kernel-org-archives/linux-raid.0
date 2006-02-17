@@ -1,65 +1,38 @@
-From: Andrew Nelson <freeandy@gmail.com>
-Subject: Re: will mdadm work with a raid created using raidtools
-Date: Thu, 16 Feb 2006 13:37:30 -0600
-Message-ID: <dt2k9q$c9d$1@sea.gmane.org>
-References: <43F37BFB.4030908@gmail.com> <17395.45134.227188.527148@cse.unsw.edu.au> <dt24uh$fv8$1@sea.gmane.org> <20060216171413.GG8762@intoxicatedmind.net> <dt2csr$gac$1@sea.gmane.org> <20060216174727.GH8762@intoxicatedmind.net> <dt2fvr$sea$1@sea.gmane.org>
+From: "Trinidad Simon" <spacecookektlp@yahoo.sg>
+Subject: Fwd:
+Date: Fri, 17 Feb 2006 01:57:28 -0200
+Message-ID: <6A556.ZG47.7og2.578U2Z1V8@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <dt2fvr$sea$1@sea.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Andrew Nelson wrote:
-> Frank Blendinger wrote:
-> 
->>On Thu, Feb 16, 2006 at 11:31:06AM -0600, Andrew Nelson wrote:
->>
->>
->>>>It's probably not your fault - blame /dev/hde! This sounds like a bad
->>>>error on the disk - you should really get a new one, and try to copy
->>>>/dev/hde to the new disk (with dd_rescue for example). This _might_ save
->>>>the data.
->>>>
->>>>Then you can try to create the array with the new disk and hope that
->>>>it will work.
->>>
->>>
->>>I thought the whole idea of a raid 1 was that if one drive went bad I could just
->>>plug a new drive in and the raid would rebuild without problems.
->>
->>
->>That is certainly right. I just wanted to tell you, that your /dev/hde
->>probably has a serious hardware error, and that you should replace it!
->>
->>Of course you can just throw it out, put in a new drive, rebuild the
->>array with your other drive and the new one, and then resync. This
->>should work just fine.
->>
->>I guess my first answer was quite confusing, sorry. It's absolutely not
->>necessary to copy the old hde with dd_rescue.
->>
->>
->>Greetings,
->>Frank
-> 
-> 
-> Is it possible to assemble the array with just /dev/hdg?  I swear I saw an
-> option somewhere that allowed just such a thing but now I can't find it anywhere.
-> 
-> //andy
-> 
 
-Never mind I figured it out.
+Hey linux-raid@vger.kernel.org,
 
-mdadm -AR /dev/md0 /dev/hdg1
+Get the Best M0RTG4GE R@atess online.
 
-So far this seems to work.
+Golden opportunity to re-establish your crrediitt.
 
-Thanks for all the help.  I'll replace hde ASAP :).
+$320k for 310 pm, v r    Justa    Giving    away
+
+----- ------------------- ---------
+
+COPY the Address below and paste in your BROaWSER:
+
+lowestpay.net
+
+----- ------ ---- ------------ --------
 
 
-//andy
+It might be a button of blue.
+Amid a transparent clear belt of ether yet left in the east,=20.
+Sometimes, the valley was filled with tears,=20.
+Forty four of the counties had real wage growth of 3 percent=20.
+While ravening clouds, the burial clouds, in black masses spreading,.
 
+
+Regards,
+Brandy Peel
